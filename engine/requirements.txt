@@ -1,0 +1,6 @@
+# Engine inherits backend deps plus:
+-r ../backend/requirements.txt
+
+# Additional for offline training/validation
+matplotlib>=3.8.0
+tqdm>=4.66.0
