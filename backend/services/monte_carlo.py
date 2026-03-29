@@ -277,9 +277,13 @@ def simulate_paths(
         sigma_t = np.clip(sigma_t + d_sigma, 0.04, 1.0)
 
         # Price dynamics (GBM with jumps + Merton compensator)
-        # dS/S = (mu - sigma^2/2 - lambda*k)dt + sigma*sqrt(dt)*Z + J*dN
+        # base_drift is already geometric (log) return, so NO extra -0.5*sigma^2
+        # (that would double-count the Ito correction — FIX 1: Variance Drag)
+        # Merton compensator: -lambda*k offsets expected jump loss
+        # Since jump_k < 0 for crash jumps, -jump_compensator > 0, restoring drift
+        # (FIX 2: Jump Compensator sign correction)
         drift_daily = (
-            base_drift - 0.5 * sigma_t**2 * dt + jump_compensator + mr_daily
+            base_drift - jump_compensator + mr_daily
         )
         diffusion = sigma_t * np.sqrt(dt) * Z_price[t]
 

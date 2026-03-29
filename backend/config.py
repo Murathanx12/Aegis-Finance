@@ -112,6 +112,7 @@ config: dict = {
             "sloos_ci": "DRTSCILM",             # Senior Loan Officer Survey: C&I tightening
             "sloos_cc": "DRTSCLCC",             # Senior Loan Officer Survey: CC tightening
             "initial_claims": "ICSA",            # Initial jobless claims (leading, weekly)
+            "initial_claims_4wk": "IC4WSA",      # 4-week avg initial claims (smoother leading)
             "nfci": "NFCI",                      # Chicago Fed NFCI (leading)
         },
     },
@@ -201,75 +202,66 @@ config: dict = {
     },
 
     # ── SCENARIO DEFINITIONS ─────────────────────────────────────────────
-    # ~65% positive/neutral, ~35% bearish (matches historical base rates)
+    # ~70% positive/neutral, ~30% bearish (matches historical base rates)
     "scenarios": {
         "Base Case": {
-            "base_probability": 0.35,
-            "return_multiplier": 1.0,
-            "absolute_return": None,
-            "volatility": 0.17,
+            "base_probability": 0.42,
+            "return_multiplier": None,
+            "absolute_return": 0.06,
+            "volatility": 0.16,
             "crash_multiplier": 1.0,
             "category": "neutral",
             "description": "Historical trends continue with moderate growth",
         },
         "AI Productivity Boom": {
             "base_probability": 0.15,
-            "return_multiplier": 1.50,
-            "absolute_return": None,
+            "return_multiplier": None,
+            "absolute_return": 0.14,
             "volatility": 0.22,
             "crash_multiplier": 0.6,
             "category": "bullish",
             "description": "AI drives sustained productivity gains across sectors",
         },
         "Soft Landing": {
-            "base_probability": 0.15,
-            "return_multiplier": 0.80,
-            "absolute_return": None,
-            "volatility": 0.15,
+            "base_probability": 0.13,
+            "return_multiplier": None,
+            "absolute_return": 0.04,
+            "volatility": 0.14,
             "crash_multiplier": 0.8,
             "category": "bullish",
             "description": "Fed engineers 2-3% inflation, steady growth, no recession",
         },
         "Market Correction": {
-            "base_probability": 0.10,
-            "return_multiplier": 0.40,
-            "absolute_return": None,
+            "base_probability": 0.12,
+            "return_multiplier": None,
+            "absolute_return": -0.02,
             "volatility": 0.24,
             "crash_multiplier": 1.5,
             "category": "neutral",
             "description": "Valuation normalization, P/E compression, slower growth",
         },
         "Stagflation": {
-            "base_probability": 0.07,
+            "base_probability": 0.08,
             "return_multiplier": None,
-            "absolute_return": 0.01,
+            "absolute_return": -0.04,
             "volatility": 0.23,
             "crash_multiplier": 1.8,
             "category": "bearish",
             "description": "1970s replay: persistent inflation + stagnant growth",
         },
         "Recession": {
-            "base_probability": 0.07,
+            "base_probability": 0.06,
             "return_multiplier": None,
-            "absolute_return": -0.02,
+            "absolute_return": -0.10,
             "volatility": 0.30,
             "crash_multiplier": 2.5,
             "category": "bearish",
             "description": "Economic contraction, rising unemployment, credit stress",
         },
-        "AI Bubble Collapse": {
-            "base_probability": 0.06,
-            "return_multiplier": None,
-            "absolute_return": -0.03,
-            "volatility": 0.32,
-            "crash_multiplier": 2.0,
-            "category": "bearish",
-            "description": "Tech mega-cap concentration unwinds, Nasdaq -40%",
-        },
         "Geopolitical Crisis": {
-            "base_probability": 0.05,
+            "base_probability": 0.04,
             "return_multiplier": None,
-            "absolute_return": -0.05,
+            "absolute_return": -0.15,
             "volatility": 0.35,
             "crash_multiplier": 3.0,
             "category": "bearish",
