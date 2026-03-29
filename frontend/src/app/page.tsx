@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useApi } from "@/hooks/use-api";
 import { getMarketStatus, getMacroIndicators, getSP500Projection, getSectors } from "@/lib/api";
 import { MarketBanner } from "@/components/dashboard/market-banner";
@@ -7,25 +8,60 @@ import { CrashGauge } from "@/components/dashboard/crash-gauge";
 import { SP500Chart } from "@/components/dashboard/sp500-chart";
 import { MacroCards } from "@/components/dashboard/macro-cards";
 import { SectorHeatmap } from "@/components/dashboard/sector-heatmap";
+import { HeroSection } from "@/components/dashboard/hero-section";
 import { ErrorCard } from "@/components/error-card";
 import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import { InfoTooltip } from "@/components/info-tooltip";
 
+const REFRESH_INTERVAL = 300_000; // 5 minutes
+
+/** Human-readable "X ago" from a timestamp */
+function timeAgo(ts: number): string {
+  const diff = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+  if (diff < 10) return "just now";
+  if (diff < 60) return `${diff}s ago`;
+  const min = Math.floor(diff / 60);
+  return `${min}m ${diff % 60}s ago`;
+}
+
 export default function DashboardPage() {
-  const market = useApi(getMarketStatus);
-  const macro = useApi(getMacroIndicators);
-  const projection = useApi(() => getSP500Projection(10000, 5));
-  const sectors = useApi(getSectors);
+  const opts = { refreshInterval: REFRESH_INTERVAL };
+  const market = useApi(getMarketStatus, [], opts);
+  const macro = useApi(getMacroIndicators, [], opts);
+  const projection = useApi(() => getSP500Projection(10000, 5), [], opts);
+  const sectors = useApi(getSectors, [], opts);
+
+  // Track last refresh time for the indicator
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
+  const [agoText, setAgoText] = useState("just now");
+
+  // Update lastRefresh whenever data arrives
+  useEffect(() => {
+    if (market.data) setLastRefresh(Date.now());
+  }, [market.data]);
+
+  // Tick the "ago" display every 10s
+  useEffect(() => {
+    const id = setInterval(() => setAgoText(timeAgo(lastRefresh)), 10_000);
+    return () => clearInterval(id);
+  }, [lastRefresh]);
 
   const anyError = market.error || macro.error || projection.error || sectors.error;
 
   return (
     <div className="space-y-6 lg:pt-0 pt-2 animate-slide-up">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          Real-time market intelligence powered by ML crash prediction
-        </p>
+      <HeroSection data={market.data} />
+
+      {/* Auto-refresh indicator */}
+      <div className="flex items-center justify-end -mt-3">
+        <span className="inline-flex items-center gap-1.5 rounded-md border border-border/50 bg-muted/30 px-2 py-1 text-[11px] text-muted-foreground">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          </span>
+          Auto-refreshes every 5 min
+          <span className="text-muted-foreground/60 ml-1">&middot; Updated {agoText}</span>
+        </span>
       </div>
 
       <DisclaimerBanner />

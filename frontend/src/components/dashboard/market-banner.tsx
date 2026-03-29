@@ -6,6 +6,41 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { InfoTooltip } from "@/components/info-tooltip";
 import type { MarketStatus } from "@/lib/api";
 
+type Mood = "Extreme Fear" | "Fear" | "Caution" | "Neutral" | "Optimism" | "Greed";
+
+interface MoodInfo {
+  label: Mood;
+  color: string;
+  emoji: string;
+}
+
+/**
+ * Compute a market mood from risk_score, regime, and vix.
+ * Risk score range: -4 (low risk) to +4 (extreme risk).
+ * Higher composite = more fear.
+ */
+function computeMood(riskScore: number, regime: string, vix: number | null): MoodInfo {
+  // Composite: risk_score is primary, VIX and regime add bias
+  let composite = riskScore;
+
+  // VIX contribution: 16 is baseline, scale above/below
+  if (vix != null) {
+    composite += (vix - 18) / 12; // vix=30 adds ~1, vix=12 subtracts ~0.5
+  }
+
+  // Regime nudge
+  if (regime === "Bull") composite -= 0.5;
+  if (regime === "Bear") composite += 0.5;
+  if (regime === "Volatile") composite += 0.3;
+
+  if (composite >= 3) return { label: "Extreme Fear", color: "text-red-500 bg-red-500/15 border-red-500/30", emoji: "!!" };
+  if (composite >= 1.5) return { label: "Fear", color: "text-red-400 bg-red-500/10 border-red-500/25", emoji: "!" };
+  if (composite >= 0.5) return { label: "Caution", color: "text-amber-400 bg-amber-500/10 border-amber-500/25", emoji: "~" };
+  if (composite >= -0.5) return { label: "Neutral", color: "text-blue-400 bg-blue-500/10 border-blue-500/25", emoji: "-" };
+  if (composite >= -1.5) return { label: "Optimism", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/25", emoji: "+" };
+  return { label: "Greed", color: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30", emoji: "++" };
+}
+
 const REGIME_COLORS: Record<string, string> = {
   Bull: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
   Neutral: "bg-blue-500/15 text-blue-400 border-blue-500/30",
@@ -76,6 +111,22 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
             {data.yield_curve?.toFixed(2) ?? "N/A"}%
           </p>
         </div>
+
+        {/* Market Mood */}
+        {(() => {
+          const mood = computeMood(data.risk_score, data.regime, data.vix);
+          return (
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center">
+                Market Mood
+                <InfoTooltip text="Composite sentiment derived from the 9-factor risk score, VIX level, and detected regime. Ranges from Extreme Fear to Greed." />
+              </p>
+              <Badge variant="outline" className={mood.color}>
+                {mood.label}
+              </Badge>
+            </div>
+          );
+        })()}
 
         {data.net_liquidity && data.net_liquidity.net_liquidity != null && (
           <div>
