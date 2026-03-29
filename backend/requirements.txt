@@ -21,6 +21,9 @@ arch>=6.0.0
 hmmlearn>=0.3.2
 statsmodels>=0.14.0
 
+# LLM (DeepSeek via OpenAI-compatible API)
+openai>=1.0.0
+
 # Utilities
 requests>=2.31.0
 python-dotenv>=1.0.0
