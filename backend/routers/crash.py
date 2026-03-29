@@ -13,11 +13,14 @@ import re
 from fastapi import APIRouter, HTTPException, Query
 
 from backend.cache import cache_get, cache_set
+from backend.config import config
 
 router = APIRouter(prefix="/api/crash", tags=["crash"])
 logger = logging.getLogger(__name__)
 
-_TICKER_RE = re.compile(r"^[A-Z0-9.]{1,10}$")
+_CACHE_TTL = config["cache"]
+
+_TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
 
 
 @router.get("/prediction")
@@ -27,7 +30,7 @@ async def get_crash_prediction(
 ):
     """Multi-horizon crash probability with optional SHAP explanation."""
     cache_key = f"crash_prediction:{horizon}:{explain}"
-    cached = cache_get(cache_key, 3600)
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_crash"])
     if cached is not None:
         return cached
 
@@ -134,7 +137,7 @@ async def get_ticker_crash(ticker: str = "SPY"):
     if not _TICKER_RE.match(ticker):
         raise HTTPException(status_code=422, detail="Invalid ticker format")
     cache_key = f"crash_ticker:{ticker}"
-    cached = cache_get(cache_key, 3600)
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_crash"])
     if cached is not None:
         return cached
 

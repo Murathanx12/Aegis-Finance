@@ -292,9 +292,17 @@ config: dict = {
         "min_history_days": 252,
     },
 
-    # ── CACHE ────────────────────────────────────────────────────────────
+    # ── CACHE TTLs (seconds) ──────────────────────────────────────────────
     "cache": {
         "ttl_hours": 1,
+        "ttl_stock": 900,           # 15 min for per-ticker data
+        "ttl_market": 300,          # 5 min for market-level endpoints
+        "ttl_sectors": 3600,        # 1 hr for sector analysis
+        "ttl_crash": 1800,          # 30 min for crash predictions
+        "ttl_news": 900,            # 15 min for news
+        "ttl_macro": 300,           # 5 min for macro indicators
+        "ttl_simulation": 3600,     # 1 hr for Monte Carlo sims
+        "ttl_portfolio": 0,         # No cache — unique per request body
     },
 
     # ── DATA QUALITY ─────────────────────────────────────────────────────

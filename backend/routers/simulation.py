@@ -13,9 +13,12 @@ import numpy as np
 from fastapi import APIRouter, HTTPException, Query
 
 from backend.cache import cache_get, cache_set
+from backend.config import config
 
 router = APIRouter(prefix="/api/simulation", tags=["simulation"])
 logger = logging.getLogger(__name__)
+
+_CACHE_TTL = config["cache"]
 
 
 @router.get("/sp500")
@@ -25,7 +28,7 @@ async def get_sp500_projection(
 ):
     """S&P 500 scenario-weighted Monte Carlo projection."""
     cache_key = f"sp500_projection:{n_sims}:{years}"
-    cached = cache_get(cache_key, 21600)  # 6 hours
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_simulation"])
     if cached is not None:
         return cached
 
@@ -108,7 +111,7 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
 @router.get("/scenarios")
 async def get_scenario_results():
     """Individual scenario breakdown with metrics."""
-    cached = cache_get("scenario_results", 21600)
+    cached = cache_get("scenario_results", _CACHE_TTL["ttl_simulation"])
     if cached is not None:
         return cached
 

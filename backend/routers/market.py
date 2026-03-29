@@ -12,15 +12,18 @@ import logging
 from fastapi import APIRouter, HTTPException
 
 from backend.cache import cache_get, cache_set
+from backend.config import config
 
 router = APIRouter(prefix="/api", tags=["market"])
 logger = logging.getLogger(__name__)
+
+_CACHE_TTL = config["cache"]
 
 
 @router.get("/market-status")
 async def get_market_status():
     """Unified market state: regime, risk score, VIX, yield curve, crash prob."""
-    cached = cache_get("market_status", 3600)
+    cached = cache_get("market_status", _CACHE_TTL["ttl_market"])
     if cached is not None:
         return cached
 
@@ -125,7 +128,7 @@ def _compute_market_status() -> dict:
 @router.get("/macro")
 async def get_macro_indicators():
     """FRED macro indicators with latest values."""
-    cached = cache_get("macro_indicators", 14400)  # 4 hours
+    cached = cache_get("macro_indicators", _CACHE_TTL["ttl_macro"])
     if cached is not None:
         return cached
 
@@ -182,7 +185,7 @@ def _compute_macro() -> dict:
 @router.get("/net-liquidity")
 async def get_net_liquidity_endpoint():
     """Fed Net Liquidity: WALCL - (TGA + RRP). Weekly data, 24hr cache."""
-    cached = cache_get("net_liquidity_endpoint", 86400)
+    cached = cache_get("net_liquidity_endpoint", _CACHE_TTL["ttl_macro"])
     if cached is not None:
         return cached
 
@@ -203,7 +206,7 @@ def _compute_net_liquidity() -> dict:
 @router.get("/data-quality")
 async def get_data_quality():
     """Run data quality checks on current market data."""
-    cached = cache_get("data_quality", 3600)
+    cached = cache_get("data_quality", _CACHE_TTL["ttl_market"])
     if cached is not None:
         return cached
 

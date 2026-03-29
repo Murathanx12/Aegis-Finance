@@ -18,7 +18,7 @@ from backend.services.portfolio_engine import PortfolioEngine
 router = APIRouter(prefix="/api/portfolio", tags=["portfolio"])
 logger = logging.getLogger(__name__)
 
-_TICKER_RE = re.compile(r"^[A-Z0-9.]{1,10}$")
+_TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
 
 
 class Holding(BaseModel):

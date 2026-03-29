@@ -11,15 +11,18 @@ import logging
 from fastapi import APIRouter, HTTPException
 
 from backend.cache import cache_get, cache_set
+from backend.config import config
 
 router = APIRouter(prefix="/api", tags=["sectors"])
 logger = logging.getLogger(__name__)
+
+_CACHE_TTL = config["cache"]
 
 
 @router.get("/sectors")
 async def get_sectors():
     """11-sector factor model with expected returns, momentum, risk."""
-    cached = cache_get("sector_analysis", 21600)  # 6 hours
+    cached = cache_get("sector_analysis", _CACHE_TTL["ttl_sectors"])
     if cached is not None:
         return cached
 
