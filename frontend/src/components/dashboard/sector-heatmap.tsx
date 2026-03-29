@@ -43,7 +43,7 @@ export function SectorHeatmap({ data }: { data: SectorsResponse | null }) {
                 {sector.sim_total_return >= 0 ? "+" : ""}{sector.sim_total_return.toFixed(1)}%
               </p>
               <p className="text-[10px] opacity-70">
-                Beta {sector.beta.toFixed(2)} | Crash {sector.crash_prob.toFixed(0)}%
+                Beta {sector.beta.toFixed(2)} | Vol {sector.sigma.toFixed(0)}%
               </p>
             </div>
           ))}
