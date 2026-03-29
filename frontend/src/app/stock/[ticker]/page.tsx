@@ -79,7 +79,7 @@ function KeyStatsGrid({ stats, currentPrice }: { stats: Record<string, number | 
     { label: "P/B Ratio", value: fmt(stats.price_to_book), tooltip: "Price-to-Book ratio. Below 1 may indicate undervaluation" },
     { label: "P/S Ratio", value: fmt(stats.price_to_sales), tooltip: "Price-to-Sales ratio. Lower is generally better" },
     { label: "EV/EBITDA", value: fmt(stats.ev_to_ebitda), tooltip: "Enterprise Value to EBITDA. Common valuation metric" },
-    { label: "Div Yield", value: stats.dividend_yield != null ? `${(stats.dividend_yield * 100).toFixed(2)}%` : "N/A", tooltip: "Annual dividend yield" },
+    { label: "Div Yield", value: stats.dividend_yield != null ? `${stats.dividend_yield.toFixed(2)}%` : "N/A", tooltip: "Annual dividend yield" },
     { label: "ROE", value: stats.roe != null ? `${(stats.roe * 100).toFixed(1)}%` : "N/A", tooltip: "Return on Equity — how effectively the company uses shareholders' equity" },
     { label: "Profit Margin", value: stats.profit_margin != null ? `${(stats.profit_margin * 100).toFixed(1)}%` : "N/A", tooltip: "Net profit margin" },
     { label: "Revenue", value: fmt(stats.revenue, "dollar"), tooltip: "Total revenue (trailing 12 months)" },

@@ -13,9 +13,9 @@ import {
   ResponsiveContainer, Cell,
 } from "recharts";
 
-function riskColor(crash: number): string {
-  if (crash > 50) return "text-red-400";
-  if (crash > 30) return "text-amber-400";
+function riskColor(drawdownProb: number): string {
+  if (drawdownProb > 95) return "text-red-400";
+  if (drawdownProb > 85) return "text-amber-400";
   return "text-emerald-400";
 }
 
@@ -71,7 +71,7 @@ function SectorTable({ sectors }: { sectors: SectorResult[] }) {
             <th className="py-2 pr-4 text-right hidden md:table-cell">Beta</th>
             <th className="py-2 pr-4 text-right hidden lg:table-cell">Mom 6M</th>
             <th className="py-2 pr-4 text-right hidden lg:table-cell">Mom 12M</th>
-            <th className="py-2 text-right">Crash Risk</th>
+            <th className="py-2 text-right">P(20% DD)</th>
           </tr>
         </thead>
         <tbody>
@@ -86,16 +86,16 @@ function SectorTable({ sectors }: { sectors: SectorResult[] }) {
                 {s.expected_annual >= 0 ? "+" : ""}{s.expected_annual.toFixed(1)}%
               </td>
               <td className="py-2.5 pr-4 text-right tabular-nums text-muted-foreground hidden md:table-cell">
-                {(s.sigma * 100).toFixed(1)}%
+                {s.sigma.toFixed(1)}%
               </td>
               <td className="py-2.5 pr-4 text-right tabular-nums hidden md:table-cell">
                 {s.beta.toFixed(2)}
               </td>
               <td className={`py-2.5 pr-4 text-right tabular-nums hidden lg:table-cell ${s.momentum_6m >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                {s.momentum_6m >= 0 ? "+" : ""}{(s.momentum_6m * 100).toFixed(1)}%
+                {s.momentum_6m >= 0 ? "+" : ""}{s.momentum_6m.toFixed(1)}%
               </td>
               <td className={`py-2.5 pr-4 text-right tabular-nums hidden lg:table-cell ${s.momentum_12m >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                {s.momentum_12m >= 0 ? "+" : ""}{(s.momentum_12m * 100).toFixed(1)}%
+                {s.momentum_12m >= 0 ? "+" : ""}{s.momentum_12m.toFixed(1)}%
               </td>
               <td className={`py-2.5 text-right tabular-nums ${riskColor(s.crash_prob)}`}>
                 {s.crash_prob.toFixed(0)}%
@@ -154,8 +154,8 @@ export default function SectorsPage() {
           <Card>
             <CardContent className="p-3">
               <p className="text-[10px] text-muted-foreground uppercase flex items-center">
-                Avg Crash Risk
-                <InfoTooltip text="Average crash probability across all 11 sectors. This reflects the market-wide crash model adjusted for each sector's beta." />
+                Avg P(20% DD)
+                <InfoTooltip text="Average probability of a 20%+ drawdown occurring at any point during the 5-year simulation. Over long horizons, even healthy markets can experience temporary drawdowns — values of 80-95% are normal for 5-year windows." />
               </p>
               <p className="text-xl font-bold tabular-nums">
                 {(data.sectors.reduce((acc, s) => acc + s.crash_prob, 0) / data.count).toFixed(0)}%
@@ -187,7 +187,7 @@ export default function SectorsPage() {
         <CardHeader>
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
             Sector Rankings
-            <InfoTooltip text="Sectors ranked by risk-adjusted expected return. Beta measures market sensitivity, momentum shows recent price trend, crash risk is beta-adjusted crash probability." />
+            <InfoTooltip text="Sectors ranked by risk-adjusted expected return. Beta measures market sensitivity, momentum shows recent price trend, P(20% DD) is simulated probability of experiencing a 20%+ drawdown over 5 years." />
           </CardTitle>
         </CardHeader>
         <CardContent>
