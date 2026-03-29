@@ -269,7 +269,7 @@ curl -X POST http://localhost:8000/api/savings/project \
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 14 (App Router), shadcn/ui, Tailwind CSS, Recharts |
+| Frontend | Next.js 14 (App Router), shadcn/ui, Tailwind CSS, Recharts, TanStack React Query |
 | Backend | FastAPI, Python 3.12 |
 | ML | LightGBM, scikit-learn (Logistic Regression), SHAP |
 | Statistical | GJR-GARCH, HMM (3-state), Jump-diffusion Monte Carlo |
@@ -345,7 +345,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and guidelines.
 
 ## Methodology
 
-See [ABSTRACT.md](ABSTRACT.md) for the full project abstract including methodology, validation results, and known limitations.
+See [ABSTRACT.md](ABSTRACT.md) for the project abstract and [docs/METHODOLOGY.md](docs/METHODOLOGY.md) for the full technical methodology (research paper foundation) covering:
+- Crash probability estimation (LightGBM + Logistic Regression, walk-forward validation)
+- Jump-diffusion Monte Carlo (Merton 1976 compensator, GJR-GARCH, HMM)
+- 9-factor composite risk scoring
+- Scenario framework with dynamic weight adjustment
+- External validation and regime confirmation
 
 ## Disclaimer
 
