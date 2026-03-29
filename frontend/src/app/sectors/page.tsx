@@ -1,8 +1,9 @@
 "use client";
 
-import { useApi } from "@/hooks/use-api";
+import { useQuery } from "@tanstack/react-query";
 import { getSectors } from "@/lib/api";
 import type { SectorResult } from "@/lib/api";
+import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfoTooltip } from "@/components/info-tooltip";
@@ -60,18 +61,18 @@ function SectorChart({ sectors }: { sectors: SectorResult[] }) {
 function SectorTable({ sectors }: { sectors: SectorResult[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-sm" aria-label="Sector rankings table">
         <thead>
           <tr className="border-b border-border text-left text-muted-foreground">
-            <th className="py-2 pr-2 w-8">#</th>
-            <th className="py-2 pr-4">Sector</th>
-            <th className="py-2 pr-4 text-right">Expected Return</th>
-            <th className="py-2 pr-4 text-right hidden sm:table-cell">Annual</th>
-            <th className="py-2 pr-4 text-right hidden md:table-cell">Volatility</th>
-            <th className="py-2 pr-4 text-right hidden md:table-cell">Beta</th>
-            <th className="py-2 pr-4 text-right hidden lg:table-cell">Mom 6M</th>
-            <th className="py-2 pr-4 text-right hidden lg:table-cell">Mom 12M</th>
-            <th className="py-2 text-right">P(20% DD)</th>
+            <th className="py-2 pr-2 w-8" scope="col">#</th>
+            <th className="py-2 pr-4" scope="col">Sector</th>
+            <th className="py-2 pr-4 text-right" scope="col">Expected Return</th>
+            <th className="py-2 pr-4 text-right hidden sm:table-cell" scope="col">Annual</th>
+            <th className="py-2 pr-4 text-right hidden md:table-cell" scope="col">Volatility</th>
+            <th className="py-2 pr-4 text-right hidden md:table-cell" scope="col">Beta</th>
+            <th className="py-2 pr-4 text-right hidden lg:table-cell" scope="col">Mom 6M</th>
+            <th className="py-2 pr-4 text-right hidden lg:table-cell" scope="col">Mom 12M</th>
+            <th className="py-2 text-right" scope="col">P(20% DD)</th>
           </tr>
         </thead>
         <tbody>
@@ -109,7 +110,11 @@ function SectorTable({ sectors }: { sectors: SectorResult[] }) {
 }
 
 export default function SectorsPage() {
-  const { data, loading, error, refetch } = useApi(getSectors);
+  const { data, isLoading: loading, error, refetch } = useQuery({
+    queryKey: queryKeys.sectors,
+    queryFn: getSectors,
+    staleTime: staleTimes.sectors,
+  });
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -122,7 +127,6 @@ export default function SectorsPage() {
 
       <DisclaimerBanner />
 
-      {/* Summary cards */}
       {data?.sectors && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Card>
@@ -165,7 +169,6 @@ export default function SectorsPage() {
         </div>
       )}
 
-      {/* Chart */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
@@ -182,7 +185,6 @@ export default function SectorsPage() {
         </CardContent>
       </Card>
 
-      {/* Table */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
@@ -203,7 +205,7 @@ export default function SectorsPage() {
         </CardContent>
       </Card>
 
-      {error && <ErrorCard message={error} onRetry={refetch} />}
+      {error && <ErrorCard message={(error as Error).message} onRetry={() => refetch()} />}
     </div>
   );
 }

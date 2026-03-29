@@ -1,7 +1,8 @@
 "use client";
 
-import { useApi } from "@/hooks/use-api";
+import { useQuery } from "@tanstack/react-query";
 import { getMarketNews } from "@/lib/api";
+import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,7 +21,7 @@ function EventScoreGauge({ score, interpretation }: { score: number; interpretat
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="relative w-32 h-32">
-        <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+        <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90" role="img" aria-label={`Event risk score: ${pct}%`}>
           <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="8" className="text-muted/30" />
           <circle
             cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="8"
@@ -72,7 +73,11 @@ function ToneChart({ data }: { data: number[] }) {
 }
 
 export default function NewsPage() {
-  const news = useApi(() => getMarketNews(), []);
+  const { data, isLoading: loading, error, refetch } = useQuery({
+    queryKey: queryKeys.news.market,
+    queryFn: getMarketNews,
+    staleTime: staleTimes.news,
+  });
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -87,18 +92,17 @@ export default function NewsPage() {
         <span>Educational tool only. Not financial advice. Sentiment scores are algorithmic estimates, not recommendations.</span>
       </div>
 
-      {news.loading ? (
+      {loading ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-40" />
           ))}
         </div>
-      ) : news.error ? (
-        <ErrorCard message={news.error} onRetry={news.refetch} />
-      ) : news.data ? (
+      ) : error ? (
+        <ErrorCard message={(error as Error).message} onRetry={() => refetch()} />
+      ) : data ? (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Event Score Gauge */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
@@ -108,13 +112,12 @@ export default function NewsPage() {
               </CardHeader>
               <CardContent className="flex justify-center">
                 <EventScoreGauge
-                  score={news.data.event_score.event_score}
-                  interpretation={news.data.event_score.interpretation}
+                  score={data.event_score.event_score}
+                  interpretation={data.event_score.interpretation}
                 />
               </CardContent>
             </Card>
 
-            {/* Component Scores */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -122,25 +125,12 @@ export default function NewsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <ScoreCard
-                  label="News Tone"
-                  value={news.data.event_score.components.tone_score}
-                  description="Negative sentiment in financial news"
-                />
-                <ScoreCard
-                  label="Volume Spike"
-                  value={news.data.event_score.components.volume_score}
-                  description="Unusual news volume activity"
-                />
-                <ScoreCard
-                  label="Geopolitical Risk"
-                  value={news.data.event_score.components.gpr_score}
-                  description="Conflict and geopolitical signals"
-                />
+                <ScoreCard label="News Tone" value={data.event_score.components.tone_score} description="Negative sentiment in financial news" />
+                <ScoreCard label="Volume Spike" value={data.event_score.components.volume_score} description="Unusual news volume activity" />
+                <ScoreCard label="Geopolitical Risk" value={data.event_score.components.gpr_score} description="Conflict and geopolitical signals" />
               </CardContent>
             </Card>
 
-            {/* GDELT Stats */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -151,38 +141,37 @@ export default function NewsPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-[10px] text-muted-foreground uppercase">Avg Tone</p>
-                    <p className={`text-lg font-bold ${news.data.gdelt.avg_tone < -1 ? "text-red-400" : news.data.gdelt.avg_tone > 1 ? "text-emerald-400" : ""}`}>
-                      {news.data.gdelt.avg_tone.toFixed(2)}
+                    <p className={`text-lg font-bold ${data.gdelt.avg_tone < -1 ? "text-red-400" : data.gdelt.avg_tone > 1 ? "text-emerald-400" : ""}`}>
+                      {data.gdelt.avg_tone.toFixed(2)}
                     </p>
                   </div>
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-[10px] text-muted-foreground uppercase">Tone Trend</p>
-                    <p className={`text-lg font-bold ${news.data.gdelt.tone_trend < -0.5 ? "text-red-400" : news.data.gdelt.tone_trend > 0.5 ? "text-emerald-400" : ""}`}>
-                      {news.data.gdelt.tone_trend >= 0 ? "+" : ""}{news.data.gdelt.tone_trend.toFixed(2)}
+                    <p className={`text-lg font-bold ${data.gdelt.tone_trend < -0.5 ? "text-red-400" : data.gdelt.tone_trend > 0.5 ? "text-emerald-400" : ""}`}>
+                      {data.gdelt.tone_trend >= 0 ? "+" : ""}{data.gdelt.tone_trend.toFixed(2)}
                     </p>
                   </div>
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-[10px] text-muted-foreground uppercase">Volume Z-Score</p>
-                    <p className={`text-lg font-bold ${news.data.gdelt.volume_zscore > 2 ? "text-amber-400" : ""}`}>
-                      {news.data.gdelt.volume_zscore.toFixed(1)}σ
+                    <p className={`text-lg font-bold ${data.gdelt.volume_zscore > 2 ? "text-amber-400" : ""}`}>
+                      {data.gdelt.volume_zscore.toFixed(1)}&sigma;
                     </p>
                   </div>
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-[10px] text-muted-foreground uppercase">Conflict</p>
-                    <p className={`text-lg font-bold ${news.data.gdelt.conflict_score > 0.5 ? "text-red-400" : ""}`}>
-                      {(news.data.gdelt.conflict_score * 100).toFixed(0)}%
+                    <p className={`text-lg font-bold ${data.gdelt.conflict_score > 0.5 ? "text-red-400" : ""}`}>
+                      {(data.gdelt.conflict_score * 100).toFixed(0)}%
                     </p>
                   </div>
                 </div>
-                {!news.data.gdelt.success && (
-                  <p className="text-xs text-amber-400">GDELT data unavailable: {news.data.gdelt.error}</p>
+                {!data.gdelt.success && (
+                  <p className="text-xs text-amber-400" role="alert">GDELT data unavailable: {data.gdelt.error}</p>
                 )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Tone Chart */}
-          {news.data.gdelt.raw_data.tone.length > 0 && (
+          {data.gdelt.raw_data.tone.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -190,13 +179,12 @@ export default function NewsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ToneChart data={news.data.gdelt.raw_data.tone} />
+                <ToneChart data={data.gdelt.raw_data.tone} />
               </CardContent>
             </Card>
           )}
 
-          {/* LLM Summary */}
-          {news.data.llm_summary ? (
+          {data.llm_summary ? (
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -204,20 +192,20 @@ export default function NewsPage() {
                     AI Market Summary
                   </CardTitle>
                   <Badge variant="outline" className={
-                    news.data.llm_summary.sentiment === "bullish" ? "text-emerald-400 border-emerald-400/30" :
-                    news.data.llm_summary.sentiment === "bearish" ? "text-red-400 border-red-400/30" :
-                    news.data.llm_summary.sentiment === "mixed" ? "text-amber-400 border-amber-400/30" :
+                    data.llm_summary.sentiment === "bullish" ? "text-emerald-400 border-emerald-400/30" :
+                    data.llm_summary.sentiment === "bearish" ? "text-red-400 border-red-400/30" :
+                    data.llm_summary.sentiment === "mixed" ? "text-amber-400 border-amber-400/30" :
                     "text-muted-foreground"
                   }>
-                    {news.data.llm_summary.sentiment}
+                    {data.llm_summary.sentiment}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm leading-relaxed">{news.data.llm_summary.summary}</p>
+                <p className="text-sm leading-relaxed">{data.llm_summary.summary}</p>
               </CardContent>
             </Card>
-          ) : !news.data.llm_available ? (
+          ) : !data.llm_available ? (
             <Card>
               <CardContent className="p-4 text-sm text-muted-foreground text-center">
                 AI analysis unavailable — set DEEPSEEK_API_KEY for market summaries
@@ -225,8 +213,7 @@ export default function NewsPage() {
             </Card>
           ) : null}
 
-          {/* News Feed */}
-          {news.data.news.length > 0 && (
+          {data.news.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -234,7 +221,7 @@ export default function NewsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {news.data.news.map((item, i) => (
+                {data.news.map((item, i) => (
                   <div key={i} className="flex items-start gap-3 py-2 border-b border-border/30 last:border-0">
                     <div className="flex-1 min-w-0">
                       {item.link ? (

@@ -20,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { useBeginnerMode } from "@/hooks/use-beginner-mode";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -61,6 +62,35 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
   );
 }
 
+function BeginnerToggle() {
+  const { beginner, toggle } = useBeginnerMode();
+
+  return (
+    <button
+      onClick={toggle}
+      className={cn(
+        "flex items-center gap-2 w-full rounded-lg px-3 py-2 text-xs font-medium transition-colors",
+        beginner
+          ? "bg-blue-500/15 text-blue-400"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+      )}
+      aria-pressed={beginner}
+      aria-label="Toggle beginner mode"
+    >
+      <span className={cn(
+        "inline-flex h-5 w-9 items-center rounded-full transition-colors",
+        beginner ? "bg-blue-500" : "bg-muted"
+      )}>
+        <span className={cn(
+          "h-3.5 w-3.5 rounded-full bg-white transition-transform",
+          beginner ? "translate-x-4.5" : "translate-x-0.5"
+        )} />
+      </span>
+      Beginner Mode
+    </button>
+  );
+}
+
 function SidebarContent({ onClick }: { onClick?: () => void }) {
   return (
     <div className="flex h-full flex-col">
@@ -69,7 +99,10 @@ function SidebarContent({ onClick }: { onClick?: () => void }) {
         <span className="text-lg font-bold tracking-tight">Aegis Finance</span>
       </div>
       <NavLinks onClick={onClick} />
-      <div className="mt-auto px-6 py-4">
+      <div className="mt-auto px-6 py-4 space-y-3">
+        <div className="px-0">
+          <BeginnerToggle />
+        </div>
         <p className="text-xs text-muted-foreground">
           Educational tool only. Not financial advice.
         </p>
