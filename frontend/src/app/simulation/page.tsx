@@ -1,7 +1,9 @@
 "use client";
 
-import { useApi } from "@/hooks/use-api";
+import { useQuery } from "@tanstack/react-query";
 import { getSP500Projection, getScenarios } from "@/lib/api";
+import type { SP500Projection } from "@/lib/api";
+import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfoTooltip } from "@/components/info-tooltip";
@@ -12,7 +14,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-function ProjectionChart({ data }: { data: ReturnType<typeof getSP500Projection> extends Promise<infer T> ? T : never }) {
+function ProjectionChart({ data }: { data: SP500Projection }) {
   const { percentile_paths } = data;
   const p5 = percentile_paths.p5 || [];
   const p25 = percentile_paths.p25 || [];
@@ -55,14 +57,14 @@ function ProjectionChart({ data }: { data: ReturnType<typeof getSP500Projection>
 function ScenarioTable({ scenarios }: { scenarios: { name: string; weight: number; median_return: number; p05_return: number; p95_return: number; prob_loss: number }[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-sm" aria-label="Scenario breakdown table">
         <thead>
           <tr className="border-b border-border text-left text-muted-foreground">
-            <th className="py-2 pr-4">Scenario</th>
-            <th className="py-2 pr-4 text-right">Weight</th>
-            <th className="py-2 pr-4 text-right">Median Return</th>
-            <th className="py-2 pr-4 text-right hidden sm:table-cell">Range (5-95th)</th>
-            <th className="py-2 text-right">P(Loss)</th>
+            <th className="py-2 pr-4" scope="col">Scenario</th>
+            <th className="py-2 pr-4 text-right" scope="col">Weight</th>
+            <th className="py-2 pr-4 text-right" scope="col">Median Return</th>
+            <th className="py-2 pr-4 text-right hidden sm:table-cell" scope="col">Range (5-95th)</th>
+            <th className="py-2 text-right" scope="col">P(Loss)</th>
           </tr>
         </thead>
         <tbody>
@@ -86,8 +88,16 @@ function ScenarioTable({ scenarios }: { scenarios: { name: string; weight: numbe
 }
 
 export default function SimulationPage() {
-  const projection = useApi(() => getSP500Projection(10000, 5));
-  const scenarios = useApi(getScenarios);
+  const projection = useQuery({
+    queryKey: queryKeys.simulation.sp500(10000, 5),
+    queryFn: () => getSP500Projection(10000, 5),
+    staleTime: staleTimes.simulation,
+  });
+  const scenarios = useQuery({
+    queryKey: queryKeys.simulation.scenarios,
+    queryFn: getScenarios,
+    staleTime: staleTimes.simulation,
+  });
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -100,7 +110,6 @@ export default function SimulationPage() {
 
       <DisclaimerBanner />
 
-      {/* Summary Stats */}
       {projection.data && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Card>
@@ -144,7 +153,6 @@ export default function SimulationPage() {
         </div>
       )}
 
-      {/* Main Chart */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
@@ -160,7 +168,7 @@ export default function SimulationPage() {
           )}
         </CardHeader>
         <CardContent>
-          {projection.loading ? (
+          {projection.isLoading ? (
             <Skeleton className="h-[400px] w-full" />
           ) : projection.data ? (
             <ProjectionChart data={projection.data} />
@@ -168,7 +176,6 @@ export default function SimulationPage() {
         </CardContent>
       </Card>
 
-      {/* Scenario Breakdown */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
@@ -177,7 +184,7 @@ export default function SimulationPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {scenarios.loading ? (
+          {scenarios.isLoading ? (
             <Skeleton className="h-64 w-full" />
           ) : scenarios.data?.scenarios ? (
             <ScenarioTable scenarios={scenarios.data.scenarios} />
@@ -187,7 +194,7 @@ export default function SimulationPage() {
 
       {(projection.error || scenarios.error) && (
         <ErrorCard
-          message={projection.error || scenarios.error || "Unknown error"}
+          message={(projection.error as Error)?.message || (scenarios.error as Error)?.message || "Unknown error"}
           onRetry={() => { projection.refetch(); scenarios.refetch(); }}
         />
       )}

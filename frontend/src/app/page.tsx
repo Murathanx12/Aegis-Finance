@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useApi } from "@/hooks/use-api";
+import { useQuery } from "@tanstack/react-query";
 import { getMarketStatus, getMacroIndicators, getSP500Projection, getSectors } from "@/lib/api";
+import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { MarketBanner } from "@/components/dashboard/market-banner";
 import { CrashGauge } from "@/components/dashboard/crash-gauge";
 import { SP500Chart } from "@/components/dashboard/sp500-chart";
@@ -15,7 +16,6 @@ import { InfoTooltip } from "@/components/info-tooltip";
 
 const REFRESH_INTERVAL = 300_000; // 5 minutes
 
-/** Human-readable "X ago" from a timestamp */
 function timeAgo(ts: number): string {
   const diff = Math.max(0, Math.floor((Date.now() - ts) / 1000));
   if (diff < 10) return "just now";
@@ -25,22 +25,39 @@ function timeAgo(ts: number): string {
 }
 
 export default function DashboardPage() {
-  const opts = { refreshInterval: REFRESH_INTERVAL };
-  const market = useApi(getMarketStatus, [], opts);
-  const macro = useApi(getMacroIndicators, [], opts);
-  const projection = useApi(() => getSP500Projection(10000, 5), [], opts);
-  const sectors = useApi(getSectors, [], opts);
+  const market = useQuery({
+    queryKey: queryKeys.market.status,
+    queryFn: getMarketStatus,
+    staleTime: staleTimes.market,
+    refetchInterval: REFRESH_INTERVAL,
+  });
+  const macro = useQuery({
+    queryKey: queryKeys.market.macro,
+    queryFn: getMacroIndicators,
+    staleTime: staleTimes.market,
+    refetchInterval: REFRESH_INTERVAL,
+  });
+  const projection = useQuery({
+    queryKey: queryKeys.simulation.sp500(10000, 5),
+    queryFn: () => getSP500Projection(10000, 5),
+    staleTime: staleTimes.simulation,
+    refetchInterval: REFRESH_INTERVAL,
+  });
+  const sectors = useQuery({
+    queryKey: queryKeys.sectors,
+    queryFn: getSectors,
+    staleTime: staleTimes.sectors,
+    refetchInterval: REFRESH_INTERVAL,
+  });
 
-  // Track last refresh time for the indicator
+  // Track last refresh time
   const [lastRefresh, setLastRefresh] = useState(Date.now());
   const [agoText, setAgoText] = useState("just now");
 
-  // Update lastRefresh whenever data arrives
   useEffect(() => {
     if (market.data) setLastRefresh(Date.now());
   }, [market.data]);
 
-  // Tick the "ago" display every 10s
   useEffect(() => {
     const id = setInterval(() => setAgoText(timeAgo(lastRefresh)), 10_000);
     return () => clearInterval(id);
@@ -50,7 +67,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 lg:pt-0 pt-2 animate-slide-up">
-      <HeroSection data={market.data} />
+      <HeroSection data={market.data ?? null} />
 
       {/* Auto-refresh indicator */}
       <div className="flex items-center justify-end -mt-3">
@@ -66,31 +83,35 @@ export default function DashboardPage() {
 
       <DisclaimerBanner />
 
-      {/* Market Status Banner */}
-      <MarketBanner data={market.data} />
+      <MarketBanner data={market.data ?? null} />
 
-      {/* Crash Gauge + SP500 Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <CrashGauge data={market.data} />
-        <SP500Chart data={projection.data} />
+        <CrashGauge data={market.data ?? null} />
+        <SP500Chart data={projection.data ?? null} />
       </div>
 
-      {/* Macro Indicators */}
       <div>
         <h2 className="text-sm font-medium text-muted-foreground mb-3">
           Macro Indicators
-          <InfoTooltip text="Key economic indicators from FRED. Changes shown are 1-month percentage changes. These feed into the 9-factor composite risk score." />
+          <InfoTooltip
+            text="Key economic indicators from FRED. Changes shown are 1-month percentage changes. These feed into the 9-factor composite risk score."
+            beginnerText="These are the vital signs of the economy — like checking a patient's blood pressure and heart rate. They help gauge whether the economy is healthy or stressed."
+          />
         </h2>
-        <MacroCards data={macro.data} />
+        <MacroCards data={macro.data ?? null} />
       </div>
 
-      {/* Sector Heatmap */}
-      <SectorHeatmap data={sectors.data} />
+      <SectorHeatmap data={sectors.data ?? null} />
 
-      {/* Error display */}
       {anyError && (
         <ErrorCard
-          message={market.error || projection.error || macro.error || sectors.error || "Unknown error"}
+          message={
+            (market.error as Error)?.message ||
+            (projection.error as Error)?.message ||
+            (macro.error as Error)?.message ||
+            (sectors.error as Error)?.message ||
+            "Unknown error"
+          }
           onRetry={() => {
             market.refetch();
             macro.refetch();

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useApi } from "@/hooks/use-api";
 import { getCrashPrediction, getTickerCrash } from "@/lib/api";
-import type { CrashPrediction, TickerCrash } from "@/lib/api";
+import type { TickerCrash } from "@/lib/api";
+import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,8 +18,6 @@ import {
   ResponsiveContainer, Cell, ReferenceLine,
 } from "recharts";
 
-import type { Metadata } from "next";
-
 function CrashGaugeLarge({ value, label }: { value: number; label: string }) {
   const pct = Math.min(value / 100, 1);
   const color =
@@ -28,7 +28,7 @@ function CrashGaugeLarge({ value, label }: { value: number; label: string }) {
 
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox="0 0 160 90" className="w-44 h-24">
+      <svg viewBox="0 0 160 90" className="w-44 h-24" role="img" aria-label={`${label} crash probability: ${value.toFixed(1)}%`}>
         <path d="M 10 80 A 70 70 0 0 1 150 80" fill="none" stroke="currentColor" strokeWidth="12" className="text-muted/20" />
         <path d="M 10 80 A 70 70 0 0 1 150 80" fill="none" stroke="currentColor" strokeWidth="12"
           strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className={color} />
@@ -91,7 +91,9 @@ function TickerCrashCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         <form onSubmit={(e) => { e.preventDefault(); setSubmitted(ticker.toUpperCase()); }} className="flex gap-2">
+          <label htmlFor="ticker-crash-input" className="sr-only">Stock ticker</label>
           <input
+            id="ticker-crash-input"
             type="text"
             value={ticker}
             onChange={(e) => setTicker(e.target.value)}
@@ -102,7 +104,7 @@ function TickerCrashCard() {
         </form>
 
         {loading && submitted && <Skeleton className="h-24 w-full" />}
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-red-400" role="alert">{error}</p>}
 
         {data && !loading && (
           <div className="space-y-3 animate-fade-in">
@@ -133,7 +135,11 @@ function TickerCrashCard() {
 }
 
 export default function CrashPage() {
-  const { data, loading, error, refetch } = useApi(() => getCrashPrediction("3m", true));
+  const { data, isLoading: loading, error, refetch } = useQuery({
+    queryKey: queryKeys.crash.prediction("3m", true),
+    queryFn: () => getCrashPrediction("3m", true),
+    staleTime: staleTimes.crash,
+  });
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -146,7 +152,6 @@ export default function CrashPage() {
 
       <DisclaimerBanner />
 
-      {/* Model status check */}
       {data?.status === "model_not_trained" && (
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardContent className="p-4 text-sm text-amber-400">
@@ -155,7 +160,6 @@ export default function CrashPage() {
         </Card>
       )}
 
-      {/* 3-Horizon Gauges */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
@@ -186,7 +190,6 @@ export default function CrashPage() {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* SHAP Feature Breakdown */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
@@ -207,13 +210,10 @@ export default function CrashPage() {
           </CardContent>
         </Card>
 
-        {/* Per-Ticker Lookup */}
         <TickerCrashCard />
       </div>
 
-      {/* External Validation + Regime Confirmation */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Consensus Agreement */}
         {data?.external_validation && (
           <Card>
             <CardHeader>
@@ -252,7 +252,7 @@ export default function CrashPage() {
               {data.external_validation.divergence_alerts.length > 0 && (
                 <div className="space-y-1 mt-2">
                   {data.external_validation.divergence_alerts.map((alert, i) => (
-                    <p key={i} className="text-xs text-amber-400 bg-amber-500/10 rounded px-2 py-1">
+                    <p key={i} className="text-xs text-amber-400 bg-amber-500/10 rounded px-2 py-1" role="alert">
                       {alert}
                     </p>
                   ))}
@@ -262,7 +262,6 @@ export default function CrashPage() {
           </Card>
         )}
 
-        {/* Regime Confirmation */}
         {data?.regime_validation && (
           <Card>
             <CardHeader>
@@ -310,7 +309,7 @@ export default function CrashPage() {
         )}
       </div>
 
-      {error && <ErrorCard message={error} onRetry={refetch} />}
+      {error && <ErrorCard message={(error as Error).message} onRetry={() => refetch()} />}
     </div>
   );
 }
