@@ -13,6 +13,7 @@ import {
   PieChart,
   Newspaper,
   Target,
+  Info,
   Menu,
   X,
 } from "lucide-react";
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/news", label: "News & Intel", icon: Newspaper },
   { href: "/retirement", label: "Retirement", icon: Target },
+  { href: "/about", label: "About", icon: Info },
 ];
 
 function NavLinks({ onClick }: { onClick?: () => void }) {
