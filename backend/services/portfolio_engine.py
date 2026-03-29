@@ -259,6 +259,11 @@ class PortfolioEngine:
                 paths[t] += monthly_add
 
         final = paths[-1]
+
+        # Total invested = initial + all monthly contributions
+        n_months = years * 12
+        total_invested = total_value + monthly_add * n_months
+
         # Sample quarterly snapshots
         quarterly = []
         for q in range(1, years * 4 + 1):
@@ -280,8 +285,8 @@ class PortfolioEngine:
             "expected_final": round(float(np.median(final)), 2),
             "p10_final": round(float(np.percentile(final, 10)), 2),
             "p90_final": round(float(np.percentile(final, 90)), 2),
-            "prob_gain": round(float(np.mean(final > total_value)) * 100, 1),
-            "expected_return_pct": round(float(np.median(final) / total_value - 1) * 100, 1),
+            "prob_gain": round(float(np.mean(final > total_invested)) * 100, 1),
+            "expected_return_pct": round(float(np.median(final) / total_invested - 1) * 100, 1),
             "quarterly": quarterly,
         }
 
