@@ -257,6 +257,9 @@ export interface StockAnalysis {
   holders: HoldersData | null;
   news: NewsItem[] | null;
   earnings: EarningsData | null;
+  price_history: { date: string; price: number }[] | null;
+  key_stats: Record<string, number | null> | null;
+  peers: string[] | null;
 }
 
 export interface AnalystTargets {

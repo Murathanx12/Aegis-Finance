@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InfoTooltip } from "@/components/info-tooltip";
 import type { MarketStatus } from "@/lib/api";
 
 function GaugeArc({ value, max = 100 }: { value: number; max?: number }) {
@@ -60,8 +61,9 @@ export function CrashGauge({ data }: { data: MarketStatus | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
           Crash Probability
+          <InfoTooltip text="Probability of a 20%+ drawdown from current levels over each time horizon. Produced by LightGBM + Logistic Regression ensemble. This is a risk indicator, not a prediction of when a crash will happen." />
         </CardTitle>
       </CardHeader>
       <CardContent>

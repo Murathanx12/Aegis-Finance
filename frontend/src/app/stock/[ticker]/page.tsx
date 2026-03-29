@@ -9,17 +9,23 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { InfoTooltip } from "@/components/info-tooltip";
+import { ErrorCard } from "@/components/error-card";
+import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, ReferenceLine,
-  AreaChart, Area,
+  AreaChart, Area, LineChart, Line,
 } from "recharts";
 import type { StockAnalysis } from "@/lib/api";
 
-function MetricCard({ label, value, suffix, color }: { label: string; value: string | number; suffix?: string; color?: string }) {
+function MetricCard({ label, value, suffix, color, tooltip }: { label: string; value: string | number; suffix?: string; color?: string; tooltip?: string }) {
   return (
     <div className="rounded-lg bg-muted/30 p-3">
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center">
+        {label}
+        {tooltip && <InfoTooltip text={tooltip} />}
+      </p>
       <p className={`text-lg font-bold tabular-nums ${color || ""}`}>
         {value}{suffix}
       </p>
@@ -27,21 +33,161 @@ function MetricCard({ label, value, suffix, color }: { label: string; value: str
   );
 }
 
-function ShapWaterfall({ features }: { features: { feature: string; shap_value: number; feature_value: number | null }[] }) {
-  const data = features.slice(0, 10).map((f) => ({
-    name: f.feature.replace(/_/g, " "),
-    value: f.shap_value,
-  }));
+function PriceHistoryChart({ data }: { data: { date: string; price: number }[] }) {
+  // Sample down for display if too many points
+  const step = data.length > 200 ? Math.floor(data.length / 200) : 1;
+  const chartData = data.filter((_, i) => i % step === 0 || i === data.length - 1);
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data} layout="vertical" margin={{ left: 110, right: 20 }}>
+      <AreaChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-        <XAxis type="number" tick={{ fill: "#888", fontSize: 11 }} />
-        <YAxis type="category" dataKey="name" tick={{ fill: "#aaa", fontSize: 11 }} width={100} />
+        <XAxis
+          dataKey="date"
+          tick={{ fill: "#888", fontSize: 10 }}
+          tickFormatter={(v) => v.slice(0, 7)}
+          minTickGap={60}
+        />
+        <YAxis
+          tick={{ fill: "#888", fontSize: 11 }}
+          tickFormatter={(v: number) => `$${v.toFixed(0)}`}
+          domain={["auto", "auto"]}
+        />
         <Tooltip
           contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
-          formatter={(v) => [Number(v).toFixed(4), "SHAP"]}
+          formatter={(v) => [`$${Number(v).toFixed(2)}`, "Price"]}
+          labelFormatter={(l) => l}
+        />
+        <Area type="monotone" dataKey="price" stroke="#63b4ff" fill="#63b4ff" fillOpacity={0.1} strokeWidth={1.5} />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+function KeyStatsGrid({ stats, currentPrice }: { stats: Record<string, number | null>; currentPrice: number }) {
+  const fmt = (v: number | null | undefined, type: "pct" | "dollar" | "ratio" | "bignum" = "ratio") => {
+    if (v == null) return "N/A";
+    if (type === "pct") return `${(v * 100).toFixed(1)}%`;
+    if (type === "dollar") return v >= 1e9 ? `$${(v / 1e9).toFixed(1)}B` : v >= 1e6 ? `$${(v / 1e6).toFixed(0)}M` : `$${v.toFixed(0)}`;
+    if (type === "bignum") return v >= 1e9 ? `${(v / 1e9).toFixed(1)}B` : v >= 1e6 ? `${(v / 1e6).toFixed(0)}M` : v.toFixed(0);
+    return v.toFixed(2);
+  };
+
+  const items = [
+    { label: "P/E (Trailing)", value: fmt(stats.pe_trailing), tooltip: "Price-to-Earnings ratio using trailing 12-month earnings" },
+    { label: "P/E (Forward)", value: fmt(stats.pe_forward), tooltip: "Price-to-Earnings ratio using forward estimated earnings" },
+    { label: "P/B Ratio", value: fmt(stats.price_to_book), tooltip: "Price-to-Book ratio. Below 1 may indicate undervaluation" },
+    { label: "P/S Ratio", value: fmt(stats.price_to_sales), tooltip: "Price-to-Sales ratio. Lower is generally better" },
+    { label: "EV/EBITDA", value: fmt(stats.ev_to_ebitda), tooltip: "Enterprise Value to EBITDA. Common valuation metric" },
+    { label: "Div Yield", value: stats.dividend_yield != null ? `${(stats.dividend_yield * 100).toFixed(2)}%` : "N/A", tooltip: "Annual dividend yield" },
+    { label: "ROE", value: stats.roe != null ? `${(stats.roe * 100).toFixed(1)}%` : "N/A", tooltip: "Return on Equity — how effectively the company uses shareholders' equity" },
+    { label: "Profit Margin", value: stats.profit_margin != null ? `${(stats.profit_margin * 100).toFixed(1)}%` : "N/A", tooltip: "Net profit margin" },
+    { label: "Revenue", value: fmt(stats.revenue, "dollar"), tooltip: "Total revenue (trailing 12 months)" },
+    { label: "Free Cash Flow", value: fmt(stats.free_cash_flow, "dollar"), tooltip: "Free cash flow (trailing 12 months)" },
+    { label: "D/E Ratio", value: stats.debt_to_equity != null ? `${stats.debt_to_equity.toFixed(0)}%` : "N/A", tooltip: "Debt-to-Equity ratio. Higher = more leveraged" },
+    { label: "52W Range", value: stats.low_52w != null && stats.high_52w != null ? `$${stats.low_52w.toFixed(0)} - $${stats.high_52w.toFixed(0)}` : "N/A", tooltip: "52-week price range (low - high)" },
+  ];
+
+  const returnItems = [
+    { label: "1M Return", value: stats.return_1m, tooltip: "Price return over the last month" },
+    { label: "3M Return", value: stats.return_3m, tooltip: "Price return over the last 3 months" },
+    { label: "6M Return", value: stats.return_6m, tooltip: "Price return over the last 6 months" },
+    { label: "1Y Return", value: stats.return_1y, tooltip: "Price return over the last year" },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {items.map((item) => (
+          <div key={item.label} className="rounded-lg bg-muted/30 p-2.5">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center">
+              {item.label}
+              {item.tooltip && <InfoTooltip text={item.tooltip} />}
+            </p>
+            <p className="text-sm font-semibold tabular-nums">{item.value}</p>
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-4 gap-3">
+        {returnItems.map((item) => (
+          <div key={item.label} className="rounded-lg bg-muted/30 p-2.5 text-center">
+            <p className="text-[10px] text-muted-foreground uppercase">{item.label}</p>
+            <p className={`text-sm font-bold tabular-nums ${item.value != null ? (item.value >= 0 ? "text-emerald-400" : "text-red-400") : ""}`}>
+              {item.value != null ? `${item.value >= 0 ? "+" : ""}${item.value.toFixed(1)}%` : "N/A"}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AnalystVsModelCard({ stock }: { stock: StockAnalysis }) {
+  const targets = stock.analyst_targets;
+  if (!targets || targets.mean == null) return null;
+
+  const analystReturn = ((targets.mean / stock.current_price) - 1) * 100;
+  const modelReturn = stock.median_return;
+  const diff = modelReturn - analystReturn;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+          Analyst vs Model Comparison
+          <InfoTooltip text="Compares Wall Street analyst consensus price target (12-month) with our Monte Carlo model's 5-year median projection. Different time horizons and methodologies." />
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="text-center space-y-2">
+            <p className="text-xs text-muted-foreground uppercase">Analyst Target (12M)</p>
+            <p className="text-2xl font-bold tabular-nums">${targets.mean.toFixed(0)}</p>
+            <p className={`text-sm font-medium tabular-nums ${analystReturn >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              {analystReturn >= 0 ? "+" : ""}{analystReturn.toFixed(1)}% upside
+            </p>
+            <div className="text-xs text-muted-foreground">
+              Range: ${targets.low?.toFixed(0) ?? "?"} — ${targets.high?.toFixed(0) ?? "?"}
+            </div>
+          </div>
+          <div className="text-center space-y-2">
+            <p className="text-xs text-muted-foreground uppercase">MC Model (5Y Median)</p>
+            <p className="text-2xl font-bold tabular-nums">{modelReturn >= 0 ? "+" : ""}{modelReturn.toFixed(1)}%</p>
+            <p className="text-sm text-muted-foreground">
+              ~{(modelReturn / 5).toFixed(1)}%/yr annualized
+            </p>
+            <div className="text-xs text-muted-foreground">
+              5th: ${stock.p05_price.toFixed(0)} — 95th: ${stock.p95_price.toFixed(0)}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ShapWaterfall({ features }: { features: { feature: string; shap_value: number; feature_value: number | null }[] }) {
+  const data = features.slice(0, 12).map((f) => ({
+    name: f.feature.replace(/_/g, " "),
+    value: f.shap_value,
+    raw: f.feature_value,
+  }));
+
+  return (
+    <ResponsiveContainer width="100%" height={Math.max(280, data.length * 28)}>
+      <BarChart data={data} layout="vertical" margin={{ left: 120, right: 20 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+        <XAxis type="number" tick={{ fill: "#888", fontSize: 11 }} />
+        <YAxis type="category" dataKey="name" tick={{ fill: "#aaa", fontSize: 11 }} width={110} />
+        <Tooltip
+          contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
+          formatter={(v, _name, props) => {
+            const raw = props.payload.raw;
+            return [
+              `SHAP: ${Number(v).toFixed(4)}${raw != null ? ` | Value: ${raw.toFixed(2)}` : ""}`,
+              "",
+            ];
+          }}
         />
         <ReferenceLine x={0} stroke="#555" />
         <Bar dataKey="value" radius={[0, 4, 4, 0]}>
@@ -63,7 +209,6 @@ function PriceExpectations({ stock }: { stock: StockAnalysis }) {
   const mean = targets.mean ?? targets.median ?? current;
   const high = targets.high;
 
-  // Build quarterly price bands
   const quarters = [
     { label: "Current", bull: current, base: current, bear: current },
     { label: "Q1", bull: current + (high - current) * 0.25, base: current + (mean - current) * 0.25, bear: current + (low - current) * 0.25 },
@@ -75,9 +220,10 @@ function PriceExpectations({ stock }: { stock: StockAnalysis }) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
             12-Month Price Expectations
+            <InfoTooltip text="Bull/Base/Bear cases derived from analyst price targets. Shows interpolated quarterly paths from current price to each target." />
           </CardTitle>
           <div className="flex gap-2">
             <Badge variant="outline" className="text-xs text-emerald-400 border-emerald-400/30">Bull: ${high.toFixed(0)}</Badge>
@@ -128,8 +274,9 @@ function AnalystConsensus({ recommendations }: { recommendations: { strongBuy: n
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
           Analyst Consensus ({total} analysts)
+          <InfoTooltip text="Distribution of analyst recommendations. Shows how many analysts rate this stock as Strong Buy, Buy, Hold, Sell, or Strong Sell." />
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -162,7 +309,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
   const shap = useApi(() => getStockShap(upperTicker), [upperTicker]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-up">
       <div className="flex items-center gap-3">
         <Link href="/stock">
           <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
@@ -178,6 +325,8 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         )}
       </div>
 
+      <DisclaimerBanner />
+
       {stock.loading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -189,19 +338,37 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           {/* Key Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <MetricCard label="Current Price" value={`$${stock.data.current_price.toFixed(2)}`} />
-            <MetricCard label="Expected Return (5Y)" value={`${stock.data.expected_return >= 0 ? "+" : ""}${stock.data.expected_return.toFixed(1)}`} suffix="%" color={stock.data.expected_return >= 0 ? "text-emerald-400" : "text-red-400"} />
-            <MetricCard label="Median Return" value={`${stock.data.median_return >= 0 ? "+" : ""}${stock.data.median_return.toFixed(1)}`} suffix="%" />
-            <MetricCard label="Volatility" value={stock.data.volatility.toFixed(1)} suffix="%" />
-            <MetricCard label="Beta" value={stock.data.beta.toFixed(2)} />
-            <MetricCard label="Sharpe Ratio" value={stock.data.sharpe.toFixed(2)} color={stock.data.sharpe > 0.5 ? "text-emerald-400" : stock.data.sharpe > 0 ? "text-amber-400" : "text-red-400"} />
-            <MetricCard label="P(Loss) 5Y" value={stock.data.prob_loss_5y.toFixed(1)} suffix="%" color={stock.data.prob_loss_5y > 30 ? "text-red-400" : "text-emerald-400"} />
-            <MetricCard label="Avg Max Drawdown" value={stock.data.avg_max_drawdown.toFixed(1)} suffix="%" color="text-red-400" />
+            <MetricCard label="Expected Return (5Y)" value={`${stock.data.expected_return >= 0 ? "+" : ""}${stock.data.expected_return.toFixed(1)}`} suffix="%" color={stock.data.expected_return >= 0 ? "text-emerald-400" : "text-red-400"} tooltip="Mean return across all Monte Carlo simulations over 5 years" />
+            <MetricCard label="Median Return" value={`${stock.data.median_return >= 0 ? "+" : ""}${stock.data.median_return.toFixed(1)}`} suffix="%" tooltip="50th percentile return. More robust to outliers than the mean" />
+            <MetricCard label="Volatility" value={stock.data.volatility.toFixed(1)} suffix="%" tooltip="Annualized historical volatility. Higher = more price swings" />
+            <MetricCard label="Beta" value={stock.data.beta.toFixed(2)} tooltip="Sensitivity to market moves. Beta > 1 = amplifies market swings" />
+            <MetricCard label="Sharpe Ratio" value={stock.data.sharpe.toFixed(2)} color={stock.data.sharpe > 0.5 ? "text-emerald-400" : stock.data.sharpe > 0 ? "text-amber-400" : "text-red-400"} tooltip="Risk-adjusted return. Above 0.5 = decent, above 1.0 = excellent" />
+            <MetricCard label="P(Loss) 5Y" value={stock.data.prob_loss_5y.toFixed(1)} suffix="%" color={stock.data.prob_loss_5y > 30 ? "text-red-400" : "text-emerald-400"} tooltip="Probability of negative total return over 5 years from Monte Carlo" />
+            <MetricCard label="Avg Max Drawdown" value={stock.data.avg_max_drawdown.toFixed(1)} suffix="%" color="text-red-400" tooltip="Average worst peak-to-trough decline across all simulations" />
           </div>
+
+          {/* Price History Chart */}
+          {stock.data.price_history && stock.data.price_history.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                  Price History (5Y)
+                  <InfoTooltip text="Historical closing prices over the last 5 years. This is the data used to calibrate the Monte Carlo simulation for this stock." />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PriceHistoryChart data={stock.data.price_history} />
+              </CardContent>
+            </Card>
+          )}
 
           {/* Price Range */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground">5-Year Price Range (Monte Carlo)</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                5-Year Price Range (Monte Carlo)
+                <InfoTooltip text="5th and 95th percentile prices from Monte Carlo simulation. The white dot shows the current price position within the range." />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
@@ -232,13 +399,27 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
               </div>
             </CardContent>
           </Card>
+
+          {/* Analyst vs Model Comparison */}
+          <AnalystVsModelCard stock={stock.data} />
+
+          {/* Key Statistics */}
+          {stock.data.key_stats && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                  Key Statistics
+                  <InfoTooltip text="Fundamental statistics from Yahoo Finance. Valuation ratios, profitability metrics, and recent returns." />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <KeyStatsGrid stats={stock.data.key_stats} currentPrice={stock.data.current_price} />
+              </CardContent>
+            </Card>
+          )}
         </>
       ) : stock.error ? (
-        <Card className="border-red-500/30">
-          <CardContent className="p-4 text-sm text-red-400">
-            Could not analyze {upperTicker}: {stock.error}
-          </CardContent>
-        </Card>
+        <ErrorCard title={`Could not analyze ${upperTicker}`} message={stock.error} onRetry={stock.refetch} />
       ) : null}
 
       {/* Price Expectations */}
@@ -246,18 +427,80 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         <PriceExpectations stock={stock.data} />
       )}
 
-      {/* Analyst Recommendations */}
-      {stock.data?.recommendations && (
-        <AnalystConsensus recommendations={stock.data.recommendations} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Analyst Recommendations */}
+        {stock.data?.recommendations && (
+          <AnalystConsensus recommendations={stock.data.recommendations} />
+        )}
+
+        {/* Earnings */}
+        {stock.data?.earnings && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                Earnings
+                <InfoTooltip text="Upcoming earnings date, EPS estimate, and recent earnings surprise history." />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {stock.data.earnings.next_date && (
+                  <div className="rounded-lg bg-muted/30 p-3">
+                    <p className="text-[10px] text-muted-foreground uppercase">Next Earnings</p>
+                    <p className="text-sm font-bold">{stock.data.earnings.next_date}</p>
+                  </div>
+                )}
+                {stock.data.earnings.estimate !== null && (
+                  <div className="rounded-lg bg-muted/30 p-3">
+                    <p className="text-[10px] text-muted-foreground uppercase">EPS Estimate</p>
+                    <p className="text-sm font-bold">${stock.data.earnings.estimate.toFixed(2)}</p>
+                  </div>
+                )}
+                {stock.data.earnings.surprise_history.length > 0 && (
+                  <div className="rounded-lg bg-muted/30 p-3">
+                    <p className="text-[10px] text-muted-foreground uppercase">Last Surprise</p>
+                    <p className={`text-sm font-bold ${stock.data.earnings.surprise_history[0] >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {stock.data.earnings.surprise_history[0] >= 0 ? "+" : ""}{stock.data.earnings.surprise_history[0].toFixed(1)}%
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Peer Comparison */}
+      {stock.data?.peers && stock.data.peers.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+              Sector Peers ({stock.data.sector})
+              <InfoTooltip text="Other stocks in the same sector. Click to analyze any peer." />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {stock.data.peers.map((peer) => (
+                <Link key={peer} href={`/stock/${peer}`}>
+                  <Button variant="outline" size="sm" className="text-xs">
+                    {peer}
+                  </Button>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Top Holders */}
       {stock.data?.holders?.top_holders && stock.data.holders.top_holders.length > 0 && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
                 Top Institutional Holders
+                <InfoTooltip text="Largest institutional shareholders. High institutional ownership often indicates confidence from professional investors." />
               </CardTitle>
               <div className="flex gap-2">
                 {stock.data.holders.insider_pct && (
@@ -281,7 +524,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                 </thead>
                 <tbody>
                   {stock.data.holders.top_holders.map((h, i) => (
-                    <tr key={i} className="border-b border-border/30">
+                    <tr key={i} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
                       <td className="py-2 pr-4 text-sm">{h.name}</td>
                       <td className="py-2 pr-4 text-right tabular-nums">{h.shares.toLocaleString()}</td>
                       <td className="py-2 text-right tabular-nums">{(h.pct * 100).toFixed(2)}%</td>
@@ -317,44 +560,12 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         </Card>
       )}
 
-      {/* Earnings */}
-      {stock.data?.earnings && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">Earnings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {stock.data.earnings.next_date && (
-                <div className="rounded-lg bg-muted/30 p-3">
-                  <p className="text-[10px] text-muted-foreground uppercase">Next Earnings</p>
-                  <p className="text-sm font-bold">{stock.data.earnings.next_date}</p>
-                </div>
-              )}
-              {stock.data.earnings.estimate !== null && (
-                <div className="rounded-lg bg-muted/30 p-3">
-                  <p className="text-[10px] text-muted-foreground uppercase">EPS Estimate</p>
-                  <p className="text-sm font-bold">${stock.data.earnings.estimate.toFixed(2)}</p>
-                </div>
-              )}
-              {stock.data.earnings.surprise_history.length > 0 && (
-                <div className="rounded-lg bg-muted/30 p-3">
-                  <p className="text-[10px] text-muted-foreground uppercase">Last Surprise</p>
-                  <p className={`text-sm font-bold ${stock.data.earnings.surprise_history[0] >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                    {stock.data.earnings.surprise_history[0] >= 0 ? "+" : ""}{stock.data.earnings.surprise_history[0].toFixed(1)}%
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* SHAP */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
             SHAP — Market Crash Risk Factors
+            <InfoTooltip text="SHAP values explain how each macro factor contributes to the crash probability. Red pushes probability up (more risk), green pushes it down (less risk). Feature values shown in tooltips." />
           </CardTitle>
         </CardHeader>
         <CardContent>

@@ -3,16 +3,17 @@
 import { useApi } from "@/hooks/use-api";
 import { getSP500Projection, getScenarios } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InfoTooltip } from "@/components/info-tooltip";
+import { ErrorCard } from "@/components/error-card";
+import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
-  BarChart, Bar, Cell,
 } from "recharts";
 
 function ProjectionChart({ data }: { data: ReturnType<typeof getSP500Projection> extends Promise<infer T> ? T : never }) {
-  const { percentile_paths, start_price, forecast_years } = data;
+  const { percentile_paths } = data;
   const p5 = percentile_paths.p5 || [];
   const p25 = percentile_paths.p25 || [];
   const p50 = percentile_paths.p50 || [];
@@ -60,19 +61,19 @@ function ScenarioTable({ scenarios }: { scenarios: { name: string; weight: numbe
             <th className="py-2 pr-4">Scenario</th>
             <th className="py-2 pr-4 text-right">Weight</th>
             <th className="py-2 pr-4 text-right">Median Return</th>
-            <th className="py-2 pr-4 text-right">Range (5-95th)</th>
+            <th className="py-2 pr-4 text-right hidden sm:table-cell">Range (5-95th)</th>
             <th className="py-2 text-right">P(Loss)</th>
           </tr>
         </thead>
         <tbody>
           {scenarios.map((sc) => (
-            <tr key={sc.name} className="border-b border-border/50">
+            <tr key={sc.name} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
               <td className="py-2.5 pr-4 font-medium">{sc.name}</td>
               <td className="py-2.5 pr-4 text-right tabular-nums">{(sc.weight * 100).toFixed(0)}%</td>
               <td className={`py-2.5 pr-4 text-right tabular-nums font-medium ${sc.median_return >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                 {sc.median_return >= 0 ? "+" : ""}{sc.median_return}%
               </td>
-              <td className="py-2.5 pr-4 text-right tabular-nums text-muted-foreground">
+              <td className="py-2.5 pr-4 text-right tabular-nums text-muted-foreground hidden sm:table-cell">
                 {sc.p05_return}% to {sc.p95_return >= 0 ? "+" : ""}{sc.p95_return}%
               </td>
               <td className="py-2.5 text-right tabular-nums">{sc.prob_loss}%</td>
@@ -89,20 +90,25 @@ export default function SimulationPage() {
   const scenarios = useApi(getScenarios);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-up">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Monte Carlo Simulation</h1>
         <p className="text-sm text-muted-foreground">
-          Jump-diffusion simulation with Merton compensator, 8 scenario-weighted paths
+          Jump-diffusion simulation with Merton compensator, 7 scenario-weighted paths
         </p>
       </div>
+
+      <DisclaimerBanner />
 
       {/* Summary Stats */}
       {projection.data && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Card>
             <CardContent className="p-3">
-              <p className="text-[10px] text-muted-foreground uppercase">Median 5Y Return</p>
+              <p className="text-[10px] text-muted-foreground uppercase flex items-center">
+                Median 5Y Return
+                <InfoTooltip text="The 50th percentile total return across all simulations. Half of simulated outcomes are above this, half below." />
+              </p>
               <p className={`text-xl font-bold tabular-nums ${projection.data.median_total_return >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                 {projection.data.median_total_return >= 0 ? "+" : ""}{projection.data.median_total_return}%
               </p>
@@ -110,19 +116,28 @@ export default function SimulationPage() {
           </Card>
           <Card>
             <CardContent className="p-3">
-              <p className="text-[10px] text-muted-foreground uppercase">Annual Return</p>
+              <p className="text-[10px] text-muted-foreground uppercase flex items-center">
+                Annual Return
+                <InfoTooltip text="Annualized median return (geometric CAGR). This is what you'd earn per year if returns were smooth." />
+              </p>
               <p className="text-xl font-bold tabular-nums">{projection.data.median_annual_return}%</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-3">
-              <p className="text-[10px] text-muted-foreground uppercase">P(Loss) 5Y</p>
+              <p className="text-[10px] text-muted-foreground uppercase flex items-center">
+                P(Loss) 5Y
+                <InfoTooltip text="Probability of negative total return over 5 years. Based on the fraction of simulations ending below the starting price." />
+              </p>
               <p className="text-xl font-bold tabular-nums text-amber-400">{projection.data.prob_loss}%</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-3">
-              <p className="text-[10px] text-muted-foreground uppercase">95th Percentile</p>
+              <p className="text-[10px] text-muted-foreground uppercase flex items-center">
+                95th Percentile
+                <InfoTooltip text="The optimistic tail — only 5% of simulations end higher than this price." />
+              </p>
               <p className="text-xl font-bold tabular-nums">${projection.data.p95_final?.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
             </CardContent>
           </Card>
@@ -132,8 +147,9 @@ export default function SimulationPage() {
       {/* Main Chart */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
             S&P 500 — 5-Year Projection (10,000 Simulations)
+            <InfoTooltip text="Fan chart showing percentile bands (5th-25th-50th-75th-95th) from Monte Carlo simulation with jump-diffusion dynamics, GJR-GARCH volatility, and HMM regime blending." />
           </CardTitle>
           {projection.data && (
             <p className="text-xs text-muted-foreground">
@@ -155,8 +171,9 @@ export default function SimulationPage() {
       {/* Scenario Breakdown */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
             Scenario Breakdown
+            <InfoTooltip text="Each scenario runs independent Monte Carlo simulations with different drift and volatility assumptions. Weights are dynamically adjusted based on current ML crash probability, VIX level, and yield curve." />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -169,10 +186,10 @@ export default function SimulationPage() {
       </Card>
 
       {(projection.error || scenarios.error) && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">
-          {projection.error && <p>Projection: {projection.error}</p>}
-          {scenarios.error && <p>Scenarios: {scenarios.error}</p>}
-        </div>
+        <ErrorCard
+          message={projection.error || scenarios.error || "Unknown error"}
+          onRetry={() => { projection.refetch(); scenarios.refetch(); }}
+        />
       )}
     </div>
   );

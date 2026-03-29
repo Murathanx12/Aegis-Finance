@@ -101,12 +101,16 @@ export default function RetirementPage() {
     : `$${n.toFixed(0)}`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-up">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Retirement Calculator</h1>
         <p className="text-sm text-muted-foreground">
           Project your savings growth with compound interest
         </p>
+      </div>
+
+      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 flex items-center gap-2 text-xs text-amber-400/80">
+        <span>Educational tool only. Projections assume constant returns and contributions. Actual results will vary significantly.</span>
       </div>
 
       <Card>

@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Plus, ArrowRight } from "lucide-react";
+import { Trash2, Plus, ArrowRight, AlertTriangle } from "lucide-react";
+import { InfoTooltip } from "@/components/info-tooltip";
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -115,10 +116,13 @@ function CorrelationMatrix({ data }: { data: { tickers: string[]; matrix: number
 
 // ── Metric Card ──────────────────────────────────
 
-function MetricCard({ label, value, suffix, color }: { label: string; value: string | number; suffix?: string; color?: string }) {
+function MetricCard({ label, value, suffix, color, tooltip }: { label: string; value: string | number; suffix?: string; color?: string; tooltip?: string }) {
   return (
     <div className="rounded-lg bg-muted/30 p-3">
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center">
+        {label}
+        {tooltip && <InfoTooltip text={tooltip} />}
+      </p>
       <p className={`text-lg font-bold tabular-nums ${color || ""}`}>
         {value}{suffix}
       </p>
@@ -300,43 +304,63 @@ function PortfolioAnalyzeSection() {
               value={analysis.annual_return?.toFixed(1) ?? "N/A"}
               suffix="%"
               color={analysis.annual_return && analysis.annual_return >= 0 ? "text-emerald-400" : "text-red-400"}
+              tooltip="Annualized portfolio return based on historical price data"
             />
             <MetricCard
               label="Annual Volatility"
               value={analysis.annual_volatility?.toFixed(1) ?? "N/A"}
               suffix="%"
+              tooltip="Annualized standard deviation of returns. Lower is more stable"
             />
             <MetricCard
               label="Sharpe Ratio"
               value={analysis.sharpe_ratio?.toFixed(2) ?? "N/A"}
               color={analysis.sharpe_ratio && analysis.sharpe_ratio > 0.5 ? "text-emerald-400" : "text-amber-400"}
+              tooltip="Return per unit of risk. Above 0.5 is decent, above 1.0 is excellent"
             />
             <MetricCard
               label="Daily VaR (95%)"
               value={analysis.var_95_daily?.toFixed(2) ?? "N/A"}
               suffix="%"
               color="text-red-400"
+              tooltip="Value at Risk: worst expected daily loss 95% of the time. A -2% VaR means on 95% of days, your loss will be less than 2%"
             />
             <MetricCard
               label="Daily CVaR (95%)"
               value={analysis.cvar_95_daily?.toFixed(2) ?? "N/A"}
               suffix="%"
               color="text-red-400"
+              tooltip="Conditional VaR (Expected Shortfall): average loss in the worst 5% of days. Always worse than VaR"
             />
             <MetricCard
               label="Max Drawdown"
               value={analysis.max_drawdown?.toFixed(1) ?? "N/A"}
               suffix="%"
               color="text-red-400"
+              tooltip="Largest peak-to-trough decline in portfolio value historically"
             />
           </div>
+
+          {/* Concentration Warning */}
+          {analysis.allocations.some(a => a.weight > 40) && (
+            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 flex items-start gap-2 text-xs text-amber-400/90">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Concentration Warning</p>
+                <p className="mt-0.5 text-amber-400/70">
+                  {analysis.allocations.filter(a => a.weight > 40).map(a => a.ticker).join(", ")} makes up more than 40% of your portfolio. Consider diversifying to reduce single-stock risk.
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Allocation Pie */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
                   Portfolio Allocation
+                  <InfoTooltip text="Weight of each holding as a percentage of total portfolio value." />
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -348,8 +372,9 @@ function PortfolioAnalyzeSection() {
             {analysis.correlation && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
                     Correlation Matrix
+                    <InfoTooltip text="Pairwise correlation between holdings. High correlation (red, >0.7) means stocks move together — less diversification benefit. Low/negative (blue) is better for diversification." />
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -612,12 +637,16 @@ export default function PortfolioPage() {
   const [tab, setTab] = useState<"analyze" | "build">("analyze");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-up">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Portfolio</h1>
         <p className="text-sm text-muted-foreground">
           Analyze your holdings or build a goal-based allocation
         </p>
+      </div>
+
+      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 flex items-center gap-2 text-xs text-amber-400/80">
+        <span>Educational tool only. Not financial advice. Portfolio suggestions are algorithmic and do not account for your full financial situation.</span>
       </div>
 
       {/* Tab switcher */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface UseApiResult<T> {
   data: T | null;
@@ -13,6 +13,7 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[] = []): UseA
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const retryCount = useRef(0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -20,8 +21,31 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[] = []): UseA
     try {
       const result = await fetcher();
       setData(result);
+      retryCount.current = 0;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
+      const message = e instanceof Error ? e.message : "Unknown error";
+
+      // Auto-retry once on network/timeout errors
+      if (retryCount.current < 1 && (message.includes("fetch") || message.includes("network") || message.includes("timeout"))) {
+        retryCount.current++;
+        setTimeout(() => load(), 2000);
+        return;
+      }
+
+      // Friendly error messages
+      if (message.includes("404")) {
+        setError("Not found. The ticker may be delisted or invalid.");
+      } else if (message.includes("422")) {
+        setError("Invalid input. Check the ticker format.");
+      } else if (message.includes("429")) {
+        setError("Rate limited. Please wait a moment and try again.");
+      } else if (message.includes("500")) {
+        setError("Server error. The backend may be processing — try again shortly.");
+      } else if (message.includes("fetch") || message.includes("Failed")) {
+        setError("Cannot reach the API. Make sure the backend is running on port 8000.");
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }

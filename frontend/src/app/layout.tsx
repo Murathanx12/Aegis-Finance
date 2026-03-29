@@ -15,8 +15,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aegis Finance",
-  description: "Free, open-source market intelligence platform",
+  title: {
+    default: "Aegis Finance — Market Intelligence Platform",
+    template: "%s | Aegis Finance",
+  },
+  description:
+    "Free, open-source market intelligence platform. ML crash prediction, Monte Carlo simulation, and macroeconomic analysis.",
+  openGraph: {
+    title: "Aegis Finance — Market Intelligence Platform",
+    description:
+      "Institutional-grade analysis accessible to everyone. ML crash prediction, Monte Carlo simulation, portfolio analytics.",
+    siteName: "Aegis Finance",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Aegis Finance",
+    description: "Free, open-source market intelligence platform",
+  },
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -33,7 +53,7 @@ export default function RootLayout({
         <TooltipProvider>
           <Sidebar />
           <main className="flex-1 overflow-auto">
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 animate-fade-in">
               {children}
             </div>
           </main>

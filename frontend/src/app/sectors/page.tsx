@@ -4,8 +4,10 @@ import { useApi } from "@/hooks/use-api";
 import { getSectors } from "@/lib/api";
 import type { SectorResult } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InfoTooltip } from "@/components/info-tooltip";
+import { ErrorCard } from "@/components/error-card";
+import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell,
@@ -39,17 +41,8 @@ function SectorChart({ sectors }: { sectors: SectorResult[] }) {
     <ResponsiveContainer width="100%" height={360}>
       <BarChart data={data} layout="vertical" margin={{ left: 110, right: 30 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-        <XAxis
-          type="number"
-          tick={{ fill: "#888", fontSize: 11 }}
-          tickFormatter={(v: number) => `${v}%`}
-        />
-        <YAxis
-          type="category"
-          dataKey="name"
-          tick={{ fill: "#aaa", fontSize: 12 }}
-          width={100}
-        />
+        <XAxis type="number" tick={{ fill: "#888", fontSize: 11 }} tickFormatter={(v: number) => `${v}%`} />
+        <YAxis type="category" dataKey="name" tick={{ fill: "#aaa", fontSize: 12 }} width={100} />
         <Tooltip
           contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
           formatter={(v) => [`${Number(v).toFixed(1)}%`, "Expected Return"]}
@@ -116,16 +109,18 @@ function SectorTable({ sectors }: { sectors: SectorResult[] }) {
 }
 
 export default function SectorsPage() {
-  const { data, loading, error } = useApi(getSectors);
+  const { data, loading, error, refetch } = useApi(getSectors);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-up">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Sector Analysis</h1>
         <p className="text-sm text-muted-foreground">
           11 S&P sectors ranked by risk-adjusted expected returns (factor model)
         </p>
       </div>
+
+      <DisclaimerBanner />
 
       {/* Summary cards */}
       {data?.sectors && (
@@ -158,7 +153,10 @@ export default function SectorsPage() {
           </Card>
           <Card>
             <CardContent className="p-3">
-              <p className="text-[10px] text-muted-foreground uppercase">Avg Crash Risk</p>
+              <p className="text-[10px] text-muted-foreground uppercase flex items-center">
+                Avg Crash Risk
+                <InfoTooltip text="Average crash probability across all 11 sectors. This reflects the market-wide crash model adjusted for each sector's beta." />
+              </p>
               <p className="text-xl font-bold tabular-nums">
                 {(data.sectors.reduce((acc, s) => acc + s.crash_prob, 0) / data.count).toFixed(0)}%
               </p>
@@ -170,8 +168,9 @@ export default function SectorsPage() {
       {/* Chart */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
             Expected 5-Year Total Return by Sector
+            <InfoTooltip text="Simulated 5-year total returns using sector-specific Monte Carlo with beta, momentum, and volatility factors. Green bars = positive expected returns, red = negative." />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -186,8 +185,9 @@ export default function SectorsPage() {
       {/* Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
             Sector Rankings
+            <InfoTooltip text="Sectors ranked by risk-adjusted expected return. Beta measures market sensitivity, momentum shows recent price trend, crash risk is beta-adjusted crash probability." />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -203,12 +203,7 @@ export default function SectorsPage() {
         </CardContent>
       </Card>
 
-      {error && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">
-          <p className="font-medium">API Error</p>
-          <p className="text-xs mt-1">{error}</p>
-        </div>
-      )}
+      {error && <ErrorCard message={error} onRetry={refetch} />}
     </div>
   );
 }
