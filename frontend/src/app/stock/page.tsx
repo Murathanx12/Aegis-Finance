@@ -14,7 +14,7 @@ export default function StockPage() {
   const go = (t: string) => router.push(`/stock/${t.toUpperCase()}`);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-up">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Stock Analysis</h1>
         <p className="text-sm text-muted-foreground">

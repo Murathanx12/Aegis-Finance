@@ -5,6 +5,8 @@ import { getMarketNews } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InfoTooltip } from "@/components/info-tooltip";
+import { ErrorCard } from "@/components/error-card";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
@@ -73,12 +75,16 @@ export default function NewsPage() {
   const news = useApi(() => getMarketNews(), []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-up">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">News & Intelligence</h1>
         <p className="text-sm text-muted-foreground">
           GDELT-powered market sentiment analysis with AI insights
         </p>
+      </div>
+
+      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 flex items-center gap-2 text-xs text-amber-400/80">
+        <span>Educational tool only. Not financial advice. Sentiment scores are algorithmic estimates, not recommendations.</span>
       </div>
 
       {news.loading ? (
@@ -88,19 +94,16 @@ export default function NewsPage() {
           ))}
         </div>
       ) : news.error ? (
-        <Card className="border-red-500/30">
-          <CardContent className="p-4 text-sm text-red-400">
-            Failed to load news data: {news.error}
-          </CardContent>
-        </Card>
+        <ErrorCard message={news.error} onRetry={news.refetch} />
       ) : news.data ? (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Event Score Gauge */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
                   Event Risk Score
+                  <InfoTooltip text="Composite score from GDELT data combining news tone, volume spikes, and geopolitical risk signals. 0% = calm, 100% = extreme event risk." />
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex justify-center">

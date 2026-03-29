@@ -6,6 +6,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from "recharts";
+import { InfoTooltip } from "@/components/info-tooltip";
 import type { SP500Projection } from "@/lib/api";
 
 export function SP500Chart({ data }: { data: SP500Projection | null }) {
@@ -40,8 +41,9 @@ export function SP500Chart({ data }: { data: SP500Projection | null }) {
   return (
     <Card className="col-span-2">
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
           S&P 500 — {forecast_years}Y Monte Carlo Projection
+          <InfoTooltip text="Fan chart showing 5th-95th percentile price paths from 10,000 jump-diffusion Monte Carlo simulations. The blue line is the median path. Width indicates uncertainty." />
         </CardTitle>
         <div className="flex gap-4 text-sm">
           <span>Median: <strong className="text-emerald-400">{data.median_total_return}%</strong></span>

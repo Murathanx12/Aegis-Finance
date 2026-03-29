@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InfoTooltip } from "@/components/info-tooltip";
 import type { MarketStatus } from "@/lib/api";
 
 const REGIME_COLORS: Record<string, string> = {
@@ -17,7 +18,7 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
   if (!data) {
     return (
       <Card>
-        <CardContent className="flex gap-6 p-4">
+        <CardContent className="flex flex-wrap gap-6 p-4">
           <Skeleton className="h-16 w-48" />
           <Skeleton className="h-16 w-32" />
           <Skeleton className="h-16 w-32" />
@@ -29,7 +30,7 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
 
   return (
     <Card>
-      <CardContent className="flex flex-wrap items-center gap-6 p-4">
+      <CardContent className="flex flex-wrap items-center gap-x-6 gap-y-4 p-4">
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-wide">S&P 500</p>
           <p className="text-2xl font-bold tabular-nums">{data.sp500.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
@@ -39,26 +40,38 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
         </div>
 
         <div>
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Regime</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center">
+            Regime
+            <InfoTooltip text="Market regime detected by analyzing price trends, volatility, and risk indicators. Bull = sustained uptrend, Bear = sustained downtrend, Volatile = high uncertainty." />
+          </p>
           <Badge variant="outline" className={REGIME_COLORS[data.regime] || REGIME_COLORS.Unknown}>
             {data.regime}
           </Badge>
         </div>
 
         <div>
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">VIX</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center">
+            VIX
+            <InfoTooltip text="CBOE Volatility Index — measures expected 30-day S&P 500 volatility. Below 16 = calm, 16-25 = normal, above 25 = elevated fear." />
+          </p>
           <p className="text-xl font-semibold tabular-nums">{data.vix?.toFixed(1) ?? "N/A"}</p>
         </div>
 
         <div>
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Risk Score</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center">
+            Risk Score
+            <InfoTooltip text="9-factor composite z-score combining VIX, yield curve, credit spreads, momentum, and more. Range: -4 (low risk) to +4 (extreme risk). Above 2.0 = elevated stress." />
+          </p>
           <p className={`text-xl font-semibold tabular-nums ${data.risk_score > 2 ? "text-red-400" : data.risk_score > 1 ? "text-amber-400" : "text-emerald-400"}`}>
             {data.risk_score.toFixed(2)}
           </p>
         </div>
 
         <div>
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Yield Curve</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center">
+            Yield Curve
+            <InfoTooltip text="10Y-3M Treasury spread. Negative (inverted) = historically a recession predictor. Positive = normal economic expansion signal." />
+          </p>
           <p className={`text-xl font-semibold tabular-nums ${(data.yield_curve ?? 0) < 0 ? "text-red-400" : "text-emerald-400"}`}>
             {data.yield_curve?.toFixed(2) ?? "N/A"}%
           </p>
@@ -66,7 +79,10 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
 
         {data.net_liquidity && data.net_liquidity.net_liquidity != null && (
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Net Liquidity</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center">
+              Net Liquidity
+              <InfoTooltip text="Fed balance sheet (WALCL) minus Treasury General Account minus Reverse Repo. Rising liquidity is generally bullish for equities." />
+            </p>
             <p className="text-xl font-semibold tabular-nums">
               ${data.net_liquidity.net_liquidity.toFixed(2)}T
             </p>

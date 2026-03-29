@@ -163,6 +163,9 @@ def analyze_stock(
         holders = _get_holders(stock)
         news = _get_news(stock)
         earnings = _get_earnings(stock)
+        price_history = _get_price_history(prices)
+        key_stats = _get_key_stats(info, returns, current_price)
+        peers = _get_sector_peers(sector, ticker)
 
         return {
             "ticker": ticker, "name": company_name, "sector": sector,
@@ -181,6 +184,9 @@ def analyze_stock(
             "holders": holders,
             "news": news,
             "earnings": earnings,
+            "price_history": price_history,
+            "key_stats": key_stats,
+            "peers": peers,
         }
 
     except Exception as e:
@@ -322,6 +328,74 @@ def _get_earnings(stock) -> Optional[dict]:
             "estimate": estimate,
             "surprise_history": surprises,
         }
+    except Exception:
+        return None
+
+
+def _get_price_history(prices, sample_every: int = 5) -> Optional[list]:
+    """Return sampled price history for charting (weekly resolution)."""
+    try:
+        if prices is None or len(prices) == 0:
+            return None
+        sampled = prices.iloc[::sample_every]
+        return [
+            {"date": str(d.date()) if hasattr(d, "date") else str(d), "price": round(float(v), 2)}
+            for d, v in sampled.items()
+        ]
+    except Exception:
+        return None
+
+
+def _get_key_stats(info: dict, returns, current_price: float) -> Optional[dict]:
+    """Extract key financial statistics from yfinance info dict."""
+    try:
+        stats = {}
+        fields = {
+            "trailingPE": "pe_trailing",
+            "forwardPE": "pe_forward",
+            "priceToBook": "price_to_book",
+            "priceToSalesTrailing12Months": "price_to_sales",
+            "enterpriseToEbitda": "ev_to_ebitda",
+            "dividendYield": "dividend_yield",
+            "payoutRatio": "payout_ratio",
+            "debtToEquity": "debt_to_equity",
+            "returnOnEquity": "roe",
+            "returnOnAssets": "roa",
+            "revenueGrowth": "revenue_growth",
+            "earningsGrowth": "earnings_growth",
+            "profitMargins": "profit_margin",
+            "operatingMargins": "operating_margin",
+            "freeCashflow": "free_cash_flow",
+            "totalRevenue": "revenue",
+            "totalDebt": "total_debt",
+            "totalCash": "total_cash",
+            "fiftyTwoWeekHigh": "high_52w",
+            "fiftyTwoWeekLow": "low_52w",
+            "fiftyDayAverage": "sma_50",
+            "twoHundredDayAverage": "sma_200",
+        }
+        for yf_key, our_key in fields.items():
+            val = info.get(yf_key)
+            if val is not None:
+                stats[our_key] = float(val) if isinstance(val, (int, float)) else val
+
+        # Add computed stats
+        if len(returns) > 0:
+            stats["return_1m"] = float(returns.iloc[-21:].sum()) * 100 if len(returns) >= 21 else None
+            stats["return_3m"] = float(returns.iloc[-63:].sum()) * 100 if len(returns) >= 63 else None
+            stats["return_6m"] = float(returns.iloc[-126:].sum()) * 100 if len(returns) >= 126 else None
+            stats["return_1y"] = float(returns.iloc[-252:].sum()) * 100 if len(returns) >= 252 else None
+
+        return stats if stats else None
+    except Exception:
+        return None
+
+
+def _get_sector_peers(sector: str, ticker: str) -> Optional[list]:
+    """Return peer tickers in the same sector."""
+    try:
+        peers = SECTOR_STOCK_MAP.get(sector, [])
+        return [p for p in peers if p != ticker][:6] or None
     except Exception:
         return None
 

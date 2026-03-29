@@ -8,10 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { InfoTooltip } from "@/components/info-tooltip";
+import { ErrorCard } from "@/components/error-card";
+import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, ReferenceLine,
 } from "recharts";
+
+import type { Metadata } from "next";
 
 function CrashGaugeLarge({ value, label }: { value: number; label: string }) {
   const pct = Math.min(value / 100, 1);
@@ -79,7 +84,10 @@ function TickerCrashCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">Per-Ticker Crash Risk</CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+          Per-Ticker Crash Risk
+          <InfoTooltip text="Beta-adjusted crash probability for individual stocks. Higher beta = higher crash risk relative to the market. Based on market crash model + stock-specific beta." />
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <form onSubmit={(e) => { e.preventDefault(); setSubmitted(ticker.toUpperCase()); }} className="flex gap-2">
@@ -97,7 +105,7 @@ function TickerCrashCard() {
         {error && <p className="text-sm text-red-400">{error}</p>}
 
         {data && !loading && (
-          <div className="space-y-3">
+          <div className="space-y-3 animate-fade-in">
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-semibold">{data.name}</p>
@@ -125,16 +133,18 @@ function TickerCrashCard() {
 }
 
 export default function CrashPage() {
-  const { data, loading, error } = useApi(() => getCrashPrediction("3m", true));
+  const { data, loading, error, refetch } = useApi(() => getCrashPrediction("3m", true));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-up">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Crash Prediction</h1>
         <p className="text-sm text-muted-foreground">
           Multi-horizon crash probability from LightGBM + Logistic Regression ensemble
         </p>
       </div>
+
+      <DisclaimerBanner />
 
       {/* Model status check */}
       {data?.status === "model_not_trained" && (
@@ -148,8 +158,9 @@ export default function CrashPage() {
       {/* 3-Horizon Gauges */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
             Market Crash Probability
+            <InfoTooltip text="Probability of the S&P 500 experiencing a 20%+ drawdown within each time horizon. The model uses 25-30 features including yield curve, VIX, credit spreads, and leading indicators." />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -178,8 +189,9 @@ export default function CrashPage() {
         {/* SHAP Feature Breakdown */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
               SHAP Feature Importance (3M Horizon)
+              <InfoTooltip text="SHAP values show how much each feature pushes the crash probability up (red) or down (green). Features are sorted by absolute impact." />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -205,8 +217,9 @@ export default function CrashPage() {
         {data?.external_validation && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
                 External Consensus
+                <InfoTooltip text="Cross-checks our crash model against independent economic indicators: Leading Economic Index (LEI), Senior Loan Officer Survey (SLOOS), Fed Funds rate trajectory, and Consumer Sentiment." />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -253,8 +266,9 @@ export default function CrashPage() {
         {data?.regime_validation && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
                 Regime Confirmation
+                <InfoTooltip text="Multi-check validation that confirms or challenges the detected market regime. Checks: 200-day SMA trend, market breadth, and institutional consensus alignment." />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -296,12 +310,7 @@ export default function CrashPage() {
         )}
       </div>
 
-      {error && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">
-          <p className="font-medium">API Error</p>
-          <p className="text-xs mt-1">{error}</p>
-        </div>
-      )}
+      {error && <ErrorCard message={error} onRetry={refetch} />}
     </div>
   );
 }

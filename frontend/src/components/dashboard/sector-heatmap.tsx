@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InfoTooltip } from "@/components/info-tooltip";
 import type { SectorsResponse } from "@/lib/api";
 
 function colorForReturn(pct: number): string {
@@ -25,8 +26,9 @@ export function SectorHeatmap({ data }: { data: SectorsResponse | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
           Sector Expected Returns (5Y)
+          <InfoTooltip text="5-year expected total returns for each S&P 500 sector, computed from Monte Carlo simulation with sector-specific beta, momentum, and volatility adjustments." />
         </CardTitle>
       </CardHeader>
       <CardContent>
