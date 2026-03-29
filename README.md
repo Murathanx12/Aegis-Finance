@@ -237,7 +237,7 @@ curl -X POST http://localhost:8000/api/savings/project \
 | GET | `/api/crash/prediction` | 3m/6m/12m crash probabilities + external validation + regime confirmation |
 | GET | `/api/crash/{ticker}` | Beta-adjusted ticker crash analysis |
 | GET | `/api/simulation/sp500` | 5Y Monte Carlo projection |
-| GET | `/api/simulation/scenarios` | 8-scenario breakdown |
+| GET | `/api/simulation/scenarios` | 7-scenario breakdown |
 | GET | `/api/stock/{ticker}` | Stock projection, risk metrics, analyst data, holders, earnings |
 | GET | `/api/stock/{ticker}/shap` | SHAP feature importance |
 | GET | `/api/sectors` | 11-sector ranking by risk-adjusted return |
