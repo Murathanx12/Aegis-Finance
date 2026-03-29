@@ -13,17 +13,20 @@ import re
 from fastapi import APIRouter, HTTPException
 
 from backend.cache import cache_get, cache_set
+from backend.config import config
 
 router = APIRouter(prefix="/api/news", tags=["news"])
 logger = logging.getLogger(__name__)
 
-_TICKER_RE = re.compile(r"^[A-Z0-9.]{1,10}$")
+_CACHE_TTL = config["cache"]
+
+_TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
 
 
 @router.get("/market")
 async def get_market_news():
     """GDELT macro news signals + event score + optional LLM summary."""
-    cached = cache_get("news_market", 900)  # 15-min cache
+    cached = cache_get("news_market", _CACHE_TTL["ttl_news"])
     if cached is not None:
         return cached
 
@@ -71,7 +74,7 @@ async def get_stock_news(ticker: str):
         raise HTTPException(status_code=422, detail="Invalid ticker format")
 
     cache_key = f"news_stock:{ticker}"
-    cached = cache_get(cache_key, 1800)  # 30-min cache
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_news"])
     if cached is not None:
         return cached
 

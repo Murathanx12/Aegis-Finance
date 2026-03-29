@@ -13,11 +13,14 @@ import re
 from fastapi import APIRouter, HTTPException
 
 from backend.cache import cache_get, cache_set
+from backend.config import config
 
 router = APIRouter(prefix="/api/stock", tags=["stock"])
 logger = logging.getLogger(__name__)
 
-_TICKER_RE = re.compile(r"^[A-Z0-9.]{1,10}$")
+_CACHE_TTL = config["cache"]
+
+_TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
 
 
 @router.get("/{ticker}")
@@ -27,7 +30,7 @@ async def get_stock_analysis(ticker: str):
     if not _TICKER_RE.match(ticker):
         raise HTTPException(status_code=422, detail="Invalid ticker format")
     cache_key = f"stock:{ticker}"
-    cached = cache_get(cache_key, 3600)
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
     if cached is not None:
         return cached
 
@@ -56,7 +59,7 @@ async def get_stock_shap(ticker: str):
     if not _TICKER_RE.match(ticker):
         raise HTTPException(status_code=422, detail="Invalid ticker format")
     cache_key = f"stock_shap:{ticker}"
-    cached = cache_get(cache_key, 3600)
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
     if cached is not None:
         return cached
 

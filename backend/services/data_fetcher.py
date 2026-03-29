@@ -23,7 +23,7 @@ import pandas as pd
 import yfinance as yf
 
 from backend.config import config, api_keys
-from backend.cache import cached
+from backend.cache import cached, retry_with_backoff
 
 logger = logging.getLogger(__name__)
 
@@ -40,24 +40,34 @@ def fetch_safe(
 ) -> Optional[pd.Series]:
     """
     Safely download a single ticker's closing prices from Yahoo Finance.
+    Retries up to 3 times with exponential backoff on transient failures.
 
     Returns:
         pd.Series of closing prices (forward-filled), or None if fetch fails.
     """
     try:
-        with _yf_lock:
-            df = yf.download(ticker, start=start, end=end, progress=False)
-        if df.empty:
-            logger.warning("No data for %s", name or ticker)
-            return None
-        if isinstance(df.columns, pd.MultiIndex):
-            series = df["Close"].iloc[:, 0]
-        else:
-            series = df["Close"]
-        return series.ffill()
+        series = _fetch_yahoo(ticker, start, end, name)
+        return series
     except Exception as e:
-        logger.warning("Failed to fetch %s: %s", name or ticker, e)
+        logger.warning("Failed to fetch %s after retries: %s", name or ticker, e)
         return None
+
+
+@retry_with_backoff(max_retries=3, base_delay=1.0, max_delay=15.0)
+def _fetch_yahoo(
+    ticker: str, start: str, end: str, name: str = ""
+) -> Optional[pd.Series]:
+    """Internal Yahoo fetch with retry."""
+    with _yf_lock:
+        df = yf.download(ticker, start=start, end=end, progress=False)
+    if df.empty:
+        logger.warning("No data for %s", name or ticker)
+        return None
+    if isinstance(df.columns, pd.MultiIndex):
+        series = df["Close"].iloc[:, 0]
+    else:
+        series = df["Close"]
+    return series.ffill()
 
 
 def _add_treasury(
