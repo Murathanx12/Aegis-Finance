@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
+interface UseApiOptions {
+  refreshInterval?: number; // ms — auto-refetch interval
+}
+
 interface UseApiResult<T> {
   data: T | null;
   loading: boolean;
@@ -9,7 +13,7 @@ interface UseApiResult<T> {
   refetch: () => void;
 }
 
-export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[] = []): UseApiResult<T> {
+export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[] = [], options?: UseApiOptions): UseApiResult<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +59,15 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[] = []): UseA
   useEffect(() => {
     load();
   }, [load]);
+
+  // Auto-refresh interval
+  useEffect(() => {
+    if (!options?.refreshInterval) return;
+    const id = setInterval(() => {
+      load();
+    }, options.refreshInterval);
+    return () => clearInterval(id);
+  }, [load, options?.refreshInterval]);
 
   return { data, loading, error, refetch: load };
 }
