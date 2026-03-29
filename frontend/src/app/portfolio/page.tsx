@@ -1,0 +1,650 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { Trash2, Plus, ArrowRight } from "lucide-react";
+import {
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+} from "recharts";
+import {
+  AreaChart, Area,
+} from "recharts";
+import {
+  analyzePortfolio, buildPortfolio, projectPortfolio,
+  type Holding, type PortfolioAnalysis, type PortfolioBuilt, type PortfolioProjection,
+} from "@/lib/api";
+
+const PIE_COLORS = [
+  "#63b4ff", "#22c55e", "#f59e0b", "#ef4444", "#a855f7",
+  "#ec4899", "#14b8a6", "#f97316", "#6366f1", "#84cc16",
+];
+
+// ── localStorage helpers ──────────────────────────────────
+
+function loadHoldings(): Holding[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("aegis_holdings");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHoldings(holdings: Holding[]) {
+  localStorage.setItem("aegis_holdings", JSON.stringify(holdings));
+}
+
+// ── Allocation Pie ──────────────────────────────────
+
+function AllocationPie({ data }: { data: { ticker: string; weight: number; value: number }[] }) {
+  const chartData = data.map((d) => ({ name: d.ticker, value: d.weight }));
+
+  return (
+    <ResponsiveContainer width="100%" height={260}>
+      <PieChart>
+        <Pie
+          data={chartData}
+          cx="50%"
+          cy="50%"
+          innerRadius={60}
+          outerRadius={100}
+          dataKey="value"
+          nameKey="name"
+          label={({ name, value }) => `${name} ${value.toFixed(0)}%`}
+          labelLine={false}
+        >
+          {chartData.map((_, i) => (
+            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip
+          contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
+          formatter={(v) => [`${Number(v).toFixed(1)}%`, "Weight"]}
+        />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── Correlation Matrix ──────────────────────────────────
+
+function CorrelationMatrix({ data }: { data: { tickers: string[]; matrix: number[][] } }) {
+  const { tickers, matrix } = data;
+
+  function corrColor(v: number): string {
+    if (v > 0.7) return "bg-red-500/60";
+    if (v > 0.4) return "bg-amber-500/40";
+    if (v > 0.0) return "bg-emerald-500/20";
+    if (v > -0.3) return "bg-blue-500/20";
+    return "bg-blue-500/50";
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="text-xs">
+        <thead>
+          <tr>
+            <th className="p-1" />
+            {tickers.map((t) => (
+              <th key={t} className="p-1 text-center text-muted-foreground font-medium">{t}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {tickers.map((row, i) => (
+            <tr key={row}>
+              <td className="p-1 text-muted-foreground font-medium">{row}</td>
+              {matrix[i].map((val, j) => (
+                <td key={j} className={`p-1 text-center tabular-nums rounded ${corrColor(val)}`}>
+                  {val.toFixed(2)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── Metric Card ──────────────────────────────────
+
+function MetricCard({ label, value, suffix, color }: { label: string; value: string | number; suffix?: string; color?: string }) {
+  return (
+    <div className="rounded-lg bg-muted/30 p-3">
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
+      <p className={`text-lg font-bold tabular-nums ${color || ""}`}>
+        {value}{suffix}
+      </p>
+    </div>
+  );
+}
+
+// ── Portfolio Analyze Tab ──────────────────────────────────
+
+function PortfolioAnalyzeSection() {
+  const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [newTicker, setNewTicker] = useState("");
+  const [newShares, setNewShares] = useState("");
+  const [newPrice, setNewPrice] = useState("");
+  const [analysis, setAnalysis] = useState<PortfolioAnalysis | null>(null);
+  const [projection, setProjection] = useState<PortfolioProjection | null>(null);
+  const [projLoading, setProjLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setHoldings(loadHoldings());
+  }, []);
+
+  const addHolding = () => {
+    const ticker = newTicker.trim().toUpperCase();
+    const shares = parseFloat(newShares);
+    const price = parseFloat(newPrice);
+    if (!ticker || isNaN(shares) || shares <= 0 || isNaN(price) || price <= 0) return;
+
+    const updated = [...holdings, { ticker, shares, current_price: price }];
+    setHoldings(updated);
+    saveHoldings(updated);
+    setNewTicker("");
+    setNewShares("");
+    setNewPrice("");
+  };
+
+  const removeHolding = (index: number) => {
+    const updated = holdings.filter((_, i) => i !== index);
+    setHoldings(updated);
+    saveHoldings(updated);
+    setAnalysis(null);
+  };
+
+  const analyze = async () => {
+    if (holdings.length === 0) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await analyzePortfolio(holdings);
+      setAnalysis(result);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Analysis failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalValue = holdings.reduce((acc, h) => acc + h.shares * h.current_price, 0);
+
+  return (
+    <div className="space-y-6">
+      {/* Add holding form */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            Your Holdings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <input
+              type="text"
+              value={newTicker}
+              onChange={(e) => setNewTicker(e.target.value)}
+              placeholder="Ticker"
+              className="w-24 rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <input
+              type="number"
+              value={newShares}
+              onChange={(e) => setNewShares(e.target.value)}
+              placeholder="Shares"
+              min="0"
+              step="any"
+              className="w-24 rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <input
+              type="number"
+              value={newPrice}
+              onChange={(e) => setNewPrice(e.target.value)}
+              placeholder="Price ($)"
+              min="0"
+              step="0.01"
+              className="w-28 rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <Button onClick={addHolding} size="sm" disabled={!newTicker.trim()}>
+              <Plus className="h-4 w-4 mr-1" /> Add
+            </Button>
+          </div>
+
+          {holdings.length > 0 && (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-muted-foreground">
+                      <th className="py-2 pr-4">Ticker</th>
+                      <th className="py-2 pr-4 text-right">Shares</th>
+                      <th className="py-2 pr-4 text-right">Price</th>
+                      <th className="py-2 pr-4 text-right">Value</th>
+                      <th className="py-2 w-10" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {holdings.map((h, i) => (
+                      <tr key={`${h.ticker}-${i}`} className="border-b border-border/50">
+                        <td className="py-2 pr-4 font-medium">{h.ticker}</td>
+                        <td className="py-2 pr-4 text-right tabular-nums">{h.shares}</td>
+                        <td className="py-2 pr-4 text-right tabular-nums">${h.current_price.toFixed(2)}</td>
+                        <td className="py-2 pr-4 text-right tabular-nums">
+                          ${(h.shares * h.current_price).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        </td>
+                        <td className="py-2">
+                          <button onClick={() => removeHolding(i)} className="text-muted-foreground hover:text-red-400 transition-colors">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t border-border">
+                      <td className="py-2 pr-4 font-medium" colSpan={3}>Total</td>
+                      <td className="py-2 pr-4 text-right tabular-nums font-bold">
+                        ${totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </td>
+                      <td />
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <Button onClick={analyze} disabled={loading}>
+                {loading ? "Analyzing..." : "Analyze Portfolio"}
+                {!loading && <ArrowRight className="h-4 w-4 ml-1" />}
+              </Button>
+            </>
+          )}
+
+          {holdings.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Add holdings above to analyze your portfolio. Data is saved in your browser.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Analysis Results */}
+      {loading && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-20" />
+          ))}
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">{error}</div>
+      )}
+
+      {analysis && !loading && (
+        <>
+          {/* Metrics */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <MetricCard
+              label="Annual Return"
+              value={analysis.annual_return?.toFixed(1) ?? "N/A"}
+              suffix="%"
+              color={analysis.annual_return && analysis.annual_return >= 0 ? "text-emerald-400" : "text-red-400"}
+            />
+            <MetricCard
+              label="Annual Volatility"
+              value={analysis.annual_volatility?.toFixed(1) ?? "N/A"}
+              suffix="%"
+            />
+            <MetricCard
+              label="Sharpe Ratio"
+              value={analysis.sharpe_ratio?.toFixed(2) ?? "N/A"}
+              color={analysis.sharpe_ratio && analysis.sharpe_ratio > 0.5 ? "text-emerald-400" : "text-amber-400"}
+            />
+            <MetricCard
+              label="Daily VaR (95%)"
+              value={analysis.var_95_daily?.toFixed(2) ?? "N/A"}
+              suffix="%"
+              color="text-red-400"
+            />
+            <MetricCard
+              label="Daily CVaR (95%)"
+              value={analysis.cvar_95_daily?.toFixed(2) ?? "N/A"}
+              suffix="%"
+              color="text-red-400"
+            />
+            <MetricCard
+              label="Max Drawdown"
+              value={analysis.max_drawdown?.toFixed(1) ?? "N/A"}
+              suffix="%"
+              color="text-red-400"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Allocation Pie */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Portfolio Allocation
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AllocationPie data={analysis.allocations} />
+              </CardContent>
+            </Card>
+
+            {/* Correlation Matrix */}
+            {analysis.correlation && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Correlation Matrix
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CorrelationMatrix data={analysis.correlation} />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* 1-Year Projection */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  1-Year Portfolio Projection
+                </CardTitle>
+                {!projection && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={projLoading}
+                    onClick={async () => {
+                      setProjLoading(true);
+                      try {
+                        const p = await projectPortfolio(holdings, 1, 0);
+                        setProjection(p);
+                      } catch {}
+                      setProjLoading(false);
+                    }}
+                  >
+                    {projLoading ? "Projecting..." : "Run Projection"}
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {projLoading && <Skeleton className="h-[250px] w-full" />}
+              {projection && !projLoading && !projection.error && (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                    <MetricCard label="Expected Value" value={`$${projection.expected_final.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
+                    <MetricCard label="Expected Return" value={`${projection.expected_return_pct >= 0 ? "+" : ""}${projection.expected_return_pct.toFixed(1)}`} suffix="%" color={projection.expected_return_pct >= 0 ? "text-emerald-400" : "text-red-400"} />
+                    <MetricCard label="P(Gain)" value={`${projection.prob_gain.toFixed(0)}`} suffix="%" color={projection.prob_gain > 50 ? "text-emerald-400" : "text-red-400"} />
+                    <MetricCard label="10th-90th Range" value={`$${(projection.p10_final / 1000).toFixed(0)}K - $${(projection.p90_final / 1000).toFixed(0)}K`} />
+                  </div>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <AreaChart data={projection.quarterly}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                      <XAxis dataKey="quarter" tick={{ fill: "#888", fontSize: 11 }} tickFormatter={(q) => `Q${q}`} />
+                      <YAxis tick={{ fill: "#888", fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
+                        formatter={(v) => [`$${Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, ""]}
+                        labelFormatter={(q) => `Quarter ${q}`}
+                      />
+                      <Area type="monotone" dataKey="p90" stroke="transparent" fill="#22c55e" fillOpacity={0.05} name="90th" />
+                      <Area type="monotone" dataKey="p75" stroke="transparent" fill="#22c55e" fillOpacity={0.08} name="75th" />
+                      <Area type="monotone" dataKey="median" stroke="#63b4ff" fill="#63b4ff" fillOpacity={0.15} strokeWidth={2} name="Median" />
+                      <Area type="monotone" dataKey="p25" stroke="transparent" fill="#ef4444" fillOpacity={0.08} name="25th" />
+                      <Area type="monotone" dataKey="p10" stroke="transparent" fill="#ef4444" fillOpacity={0.05} name="10th" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </>
+              )}
+              {projection?.error && (
+                <p className="text-sm text-red-400">{projection.error}</p>
+              )}
+              {!projection && !projLoading && (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Click &quot;Run Projection&quot; to simulate your portfolio&apos;s 1-year trajectory
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Portfolio Build Tab ──────────────────────────────────
+
+function PortfolioBuildSection() {
+  const [risk, setRisk] = useState("moderate");
+  const [amount, setAmount] = useState("10000");
+  const [horizon, setHorizon] = useState("5y");
+  const [result, setResult] = useState<PortfolioBuilt | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const build = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await buildPortfolio(risk, parseFloat(amount) || 10000, horizon);
+      setResult(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Build failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const riskOptions = [
+    { value: "conservative", label: "Conservative", desc: "Capital preservation" },
+    { value: "moderate", label: "Moderate", desc: "Balanced growth" },
+    { value: "aggressive", label: "Aggressive", desc: "Maximum growth" },
+  ];
+
+  const horizonOptions = ["1y", "3y", "5y", "10y"];
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            Investment Preferences
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Risk Tolerance */}
+          <div>
+            <p className="text-sm font-medium mb-3">Risk Tolerance</p>
+            <div className="grid grid-cols-3 gap-3">
+              {riskOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setRisk(opt.value)}
+                  className={`rounded-lg border p-3 text-left transition-colors ${
+                    risk === opt.value
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-muted-foreground/30"
+                  }`}
+                >
+                  <p className="text-sm font-medium">{opt.label}</p>
+                  <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Investment Amount */}
+          <div>
+            <p className="text-sm font-medium mb-2">Investment Amount ($)</p>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              min="100"
+              step="100"
+              className="w-full max-w-xs rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          {/* Time Horizon */}
+          <div>
+            <p className="text-sm font-medium mb-2">Time Horizon</p>
+            <div className="flex gap-2">
+              {horizonOptions.map((h) => (
+                <button
+                  key={h}
+                  onClick={() => setHorizon(h)}
+                  className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                    horizon === h
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted/50 hover:bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {h}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Button onClick={build} disabled={loading}>
+            {loading ? "Building..." : "Build Portfolio"}
+            {!loading && <ArrowRight className="h-4 w-4 ml-1" />}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {loading && (
+        <div className="space-y-3">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">{error}</div>
+      )}
+
+      {result && !loading && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Recommended Allocation
+              </CardTitle>
+              <Badge variant="outline">{result.risk_tolerance} · {result.time_horizon}</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">{result.description}</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Pie chart */}
+            <AllocationPie
+              data={result.holdings.map((h) => ({
+                ticker: h.ticker,
+                weight: h.weight,
+                value: h.dollar_amount,
+              }))}
+            />
+
+            {/* Holdings table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-muted-foreground">
+                    <th className="py-2 pr-4">Ticker</th>
+                    <th className="py-2 pr-4 text-right">Weight</th>
+                    <th className="py-2 pr-4 text-right">Amount</th>
+                    <th className="py-2 pr-4 text-right">Shares</th>
+                    <th className="py-2 text-right">Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.holdings.map((h) => (
+                    <tr key={h.ticker} className="border-b border-border/50">
+                      <td className="py-2.5 pr-4 font-medium">{h.ticker}</td>
+                      <td className="py-2.5 pr-4 text-right tabular-nums">{h.weight.toFixed(1)}%</td>
+                      <td className="py-2.5 pr-4 text-right tabular-nums">
+                        ${h.dollar_amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </td>
+                      <td className="py-2.5 pr-4 text-right tabular-nums">{h.shares}</td>
+                      <td className="py-2.5 text-right tabular-nums">${h.price.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t border-border">
+                    <td className="py-2 font-medium">Total</td>
+                    <td className="py-2 text-right tabular-nums font-bold">100%</td>
+                    <td className="py-2 text-right tabular-nums font-bold" colSpan={3}>
+                      ${result.investment_amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ── Main Page ──────────────────────────────────
+
+export default function PortfolioPage() {
+  const [tab, setTab] = useState<"analyze" | "build">("analyze");
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Portfolio</h1>
+        <p className="text-sm text-muted-foreground">
+          Analyze your holdings or build a goal-based allocation
+        </p>
+      </div>
+
+      {/* Tab switcher */}
+      <div className="flex gap-1 rounded-lg bg-muted/50 p-1 w-fit">
+        <button
+          onClick={() => setTab("analyze")}
+          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+            tab === "analyze"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Analyze Holdings
+        </button>
+        <button
+          onClick={() => setTab("build")}
+          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+            tab === "build"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Build Portfolio
+        </button>
+      </div>
+
+      {tab === "analyze" ? <PortfolioAnalyzeSection /> : <PortfolioBuildSection />}
+    </div>
+  );
+}
