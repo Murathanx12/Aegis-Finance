@@ -181,6 +181,12 @@ def analyze_sectors(
         )
 
         final = paths[-1]
+
+        # Cap MC returns to match expected_annual cap (50% annual → ~660% 5Y max)
+        max_mc_total = (1 + 0.50) ** years - 1
+        max_mc_price = current * (1 + max_mc_total)
+        final = np.minimum(final, max_mc_price)
+
         sim_total_return = float(final.mean()) / current - 1
 
         sim_peak = np.maximum.accumulate(paths, axis=0)

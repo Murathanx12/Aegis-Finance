@@ -3,15 +3,15 @@
 import { use } from "react";
 import Link from "next/link";
 import { useApi } from "@/hooks/use-api";
-import { getStockAnalysis, getStockShap } from "@/lib/api";
+import { getStockAnalysis, getStockShap, getStockSignal } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { InfoTooltip } from "@/components/info-tooltip";
+import type { StockSignal } from "@/lib/api";
 import { ErrorCard } from "@/components/error-card";
-import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, ReferenceLine,
@@ -22,7 +22,7 @@ import type { StockAnalysis } from "@/lib/api";
 function MetricCard({ label, value, suffix, color, tooltip }: { label: string; value: string | number; suffix?: string; color?: string; tooltip?: string }) {
   return (
     <div className="rounded-lg bg-muted/30 p-3">
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center">
+      <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center">
         {label}
         {tooltip && <InfoTooltip text={tooltip} />}
       </p>
@@ -41,20 +41,20 @@ function PriceHistoryChart({ data }: { data: { date: string; price: number }[] }
   return (
     <ResponsiveContainer width="100%" height={300}>
       <AreaChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
         <XAxis
           dataKey="date"
-          tick={{ fill: "#888", fontSize: 10 }}
+          tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
           tickFormatter={(v) => v.slice(0, 7)}
           minTickGap={60}
         />
         <YAxis
-          tick={{ fill: "#888", fontSize: 11 }}
+          tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
           tickFormatter={(v: number) => `$${v.toFixed(0)}`}
           domain={["auto", "auto"]}
         />
         <Tooltip
-          contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
+          contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
           formatter={(v) => [`$${Number(v).toFixed(2)}`, "Price"]}
           labelFormatter={(l) => l}
         />
@@ -100,7 +100,7 @@ function KeyStatsGrid({ stats, currentPrice }: { stats: Record<string, number | 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {items.map((item) => (
           <div key={item.label} className="rounded-lg bg-muted/30 p-2.5">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center">
               {item.label}
               {item.tooltip && <InfoTooltip text={item.tooltip} />}
             </p>
@@ -111,7 +111,7 @@ function KeyStatsGrid({ stats, currentPrice }: { stats: Record<string, number | 
       <div className="grid grid-cols-4 gap-3">
         {returnItems.map((item) => (
           <div key={item.label} className="rounded-lg bg-muted/30 p-2.5 text-center">
-            <p className="text-[10px] text-muted-foreground uppercase">{item.label}</p>
+            <p className="text-xs text-muted-foreground uppercase">{item.label}</p>
             <p className={`text-sm font-bold tabular-nums ${item.value != null ? (item.value >= 0 ? "text-emerald-400" : "text-red-400") : ""}`}>
               {item.value != null ? `${item.value >= 0 ? "+" : ""}${item.value.toFixed(1)}%` : "N/A"}
             </p>
@@ -126,38 +126,69 @@ function AnalystVsModelCard({ stock }: { stock: StockAnalysis }) {
   const targets = stock.analyst_targets;
   if (!targets || targets.mean == null) return null;
 
-  const analystReturn = ((targets.mean / stock.current_price) - 1) * 100;
-  const modelReturn = stock.median_return;
-  const diff = modelReturn - analystReturn;
+  const analystReturn12m = ((targets.mean / stock.current_price) - 1) * 100;
+  // Annualize 5Y model return to get 1Y estimate for fair comparison
+  const model5yReturn = stock.median_return;
+  const modelAnnualized = (Math.pow(1 + model5yReturn / 100, 1 / 5) - 1) * 100;
+  const analystCount = stock.recommendations
+    ? stock.recommendations.strongBuy + stock.recommendations.buy + stock.recommendations.hold + stock.recommendations.sell + stock.recommendations.strongSell
+    : 0;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-          Analyst vs Model Comparison
-          <InfoTooltip text="Compares Wall Street analyst consensus price target (12-month) with our Monte Carlo model's 5-year median projection. Different time horizons and methodologies." />
+        <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+          Model vs Analyst Comparison
+          <InfoTooltip text="Fair comparison: both columns show 12-month expected returns. Analyst target is Wall Street consensus; Model return is annualized from our 5-year Monte Carlo. The 5-year projection is shown separately below." />
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-6">
-          <div className="text-center space-y-2">
-            <p className="text-xs text-muted-foreground uppercase">Analyst Target (12M)</p>
-            <p className="text-2xl font-bold tabular-nums">${targets.mean.toFixed(0)}</p>
-            <p className={`text-sm font-medium tabular-nums ${analystReturn >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-              {analystReturn >= 0 ? "+" : ""}{analystReturn.toFixed(1)}% upside
-            </p>
-            <div className="text-xs text-muted-foreground">
-              Range: ${targets.low?.toFixed(0) ?? "?"} — ${targets.high?.toFixed(0) ?? "?"}
+      <CardContent className="space-y-6">
+        {/* 12-Month Fair Comparison */}
+        <div>
+          <p className="text-sm text-muted-foreground mb-3 uppercase tracking-wide">12-Month Outlook</p>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="text-center space-y-2 rounded-lg bg-muted/20 p-4">
+              <p className="text-sm text-muted-foreground uppercase">Analyst Target</p>
+              <p className="text-3xl font-bold tabular-nums">${targets.mean.toFixed(0)}</p>
+              <p className={`text-base font-semibold tabular-nums ${analystReturn12m >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {analystReturn12m >= 0 ? "+" : ""}{analystReturn12m.toFixed(1)}% upside
+              </p>
+              <div className="text-sm text-muted-foreground">
+                Range: ${targets.low?.toFixed(0) ?? "?"} — ${targets.high?.toFixed(0) ?? "?"}
+              </div>
+              {analystCount > 0 && (
+                <p className="text-xs text-muted-foreground">{analystCount} analysts</p>
+              )}
+            </div>
+            <div className="text-center space-y-2 rounded-lg bg-muted/20 p-4">
+              <p className="text-sm text-muted-foreground uppercase">Our Model (1Y est.)</p>
+              <p className="text-3xl font-bold tabular-nums">{modelAnnualized >= 0 ? "+" : ""}{modelAnnualized.toFixed(1)}%</p>
+              <p className={`text-base font-semibold tabular-nums ${modelAnnualized >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                annualized from 5Y MC
+              </p>
+              <div className="text-sm text-muted-foreground">
+                Based on jump-diffusion Monte Carlo
+              </div>
             </div>
           </div>
-          <div className="text-center space-y-2">
-            <p className="text-xs text-muted-foreground uppercase">MC Model (5Y Median)</p>
-            <p className="text-2xl font-bold tabular-nums">{modelReturn >= 0 ? "+" : ""}{modelReturn.toFixed(1)}%</p>
-            <p className="text-sm text-muted-foreground">
-              ~{(modelReturn / 5).toFixed(1)}%/yr annualized
-            </p>
-            <div className="text-xs text-muted-foreground">
-              5th: ${stock.p05_price.toFixed(0)} — 95th: ${stock.p95_price.toFixed(0)}
+        </div>
+
+        {/* 5-Year Monte Carlo Projection */}
+        <div>
+          <p className="text-sm text-muted-foreground mb-3 uppercase tracking-wide">5-Year Monte Carlo Projection</p>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="rounded-lg bg-muted/20 p-3 text-center">
+              <p className="text-xs text-muted-foreground uppercase">Bear (5th %ile)</p>
+              <p className="text-xl font-bold text-red-400 tabular-nums">${stock.p05_price.toFixed(0)}</p>
+            </div>
+            <div className="rounded-lg bg-muted/20 p-3 text-center">
+              <p className="text-xs text-muted-foreground uppercase">Median Return</p>
+              <p className="text-xl font-bold tabular-nums">{model5yReturn >= 0 ? "+" : ""}{model5yReturn.toFixed(1)}%</p>
+              <p className="text-xs text-muted-foreground">~{modelAnnualized.toFixed(1)}%/yr</p>
+            </div>
+            <div className="rounded-lg bg-muted/20 p-3 text-center">
+              <p className="text-xs text-muted-foreground uppercase">Bull (95th %ile)</p>
+              <p className="text-xl font-bold text-emerald-400 tabular-nums">${stock.p95_price.toFixed(0)}</p>
             </div>
           </div>
         </div>
@@ -176,11 +207,11 @@ function ShapWaterfall({ features }: { features: { feature: string; shap_value: 
   return (
     <ResponsiveContainer width="100%" height={Math.max(280, data.length * 28)}>
       <BarChart data={data} layout="vertical" margin={{ left: 120, right: 20 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-        <XAxis type="number" tick={{ fill: "#888", fontSize: 11 }} />
-        <YAxis type="category" dataKey="name" tick={{ fill: "#aaa", fontSize: 11 }} width={110} />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis type="number" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
+        <YAxis type="category" dataKey="name" tick={{ fill: "var(--foreground)", fontSize: 11 }} width={110} />
         <Tooltip
-          contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
+          contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
           formatter={(v, _name, props) => {
             const raw = props.payload.raw;
             return [
@@ -221,7 +252,7 @@ function PriceExpectations({ stock }: { stock: StockAnalysis }) {
     <Card>
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+          <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
             12-Month Price Expectations
             <InfoTooltip text="Bull/Base/Bear cases derived from analyst price targets. Shows interpolated quarterly paths from current price to each target." />
           </CardTitle>
@@ -235,11 +266,11 @@ function PriceExpectations({ stock }: { stock: StockAnalysis }) {
       <CardContent>
         <ResponsiveContainer width="100%" height={280}>
           <AreaChart data={quarters}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-            <XAxis dataKey="label" tick={{ fill: "#888", fontSize: 11 }} />
-            <YAxis tick={{ fill: "#888", fontSize: 11 }} tickFormatter={(v) => `$${v.toFixed(0)}`} domain={["auto", "auto"]} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis dataKey="label" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
+            <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickFormatter={(v) => `$${v.toFixed(0)}`} domain={["auto", "auto"]} />
             <Tooltip
-              contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
+              contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
               formatter={(v) => [`$${Number(v).toFixed(2)}`, ""]}
             />
             <ReferenceLine y={current} stroke="#666" strokeDasharray="3 3" />
@@ -274,7 +305,7 @@ function AnalystConsensus({ recommendations }: { recommendations: { strongBuy: n
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+        <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
           Analyst Consensus ({total} analysts)
           <InfoTooltip text="Distribution of analyst recommendations. Shows how many analysts rate this stock as Strong Buy, Buy, Hold, Sell, or Strong Sell." />
         </CardTitle>
@@ -282,11 +313,11 @@ function AnalystConsensus({ recommendations }: { recommendations: { strongBuy: n
       <CardContent>
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={data} layout="vertical" margin={{ left: 80 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-            <XAxis type="number" tick={{ fill: "#888", fontSize: 11 }} />
-            <YAxis type="category" dataKey="name" tick={{ fill: "#aaa", fontSize: 11 }} width={75} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis type="number" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
+            <YAxis type="category" dataKey="name" tick={{ fill: "var(--foreground)", fontSize: 11 }} width={75} />
             <Tooltip
-              contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
+              contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
               formatter={(v) => [v, "Analysts"]}
             />
             <Bar dataKey="value" radius={[0, 4, 4, 0]}>
@@ -307,6 +338,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
 
   const stock = useApi(() => getStockAnalysis(upperTicker), [upperTicker]);
   const shap = useApi(() => getStockShap(upperTicker), [upperTicker]);
+  const signal = useApi(() => getStockSignal(upperTicker), [upperTicker]);
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -325,7 +357,45 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         )}
       </div>
 
-      <DisclaimerBanner />
+      {/* Stock Signal */}
+      {signal.data && !signal.data.error && (
+        <Card className={`border-2 ${
+          signal.data.action.includes("Buy") ? "border-emerald-500/30" :
+          signal.data.action.includes("Sell") ? "border-red-500/30" : "border-amber-500/30"
+        }`}>
+          <CardContent className="p-4 flex flex-wrap items-center gap-4">
+            <div className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 font-bold text-xl ${
+              signal.data.action.includes("Buy") ? "bg-emerald-500/15 text-emerald-400" :
+              signal.data.action.includes("Sell") ? "bg-red-500/15 text-red-400" : "bg-amber-500/15 text-amber-400"
+            }`}>
+              {signal.data.action.includes("Buy") ? <TrendingUp className="h-5 w-5" /> :
+               signal.data.action.includes("Sell") ? <TrendingDown className="h-5 w-5" /> :
+               <Minus className="h-5 w-5" />}
+              {signal.data.action}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <span>Confidence: {signal.data.confidence}%</span>
+                <span>Score: {signal.data.composite_score > 0 ? "+" : ""}{signal.data.composite_score.toFixed(3)}</span>
+                <span>Market: {signal.data.market_action}</span>
+              </div>
+              {signal.data.reasons.length > 0 && (
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                  {signal.data.reasons.map((r, i) => (
+                    <span key={i} className="text-xs text-muted-foreground flex items-center gap-1">
+                      <span className={`h-1.5 w-1.5 rounded-full ${
+                        signal.data!.action.includes("Buy") ? "bg-emerald-400" :
+                        signal.data!.action.includes("Sell") ? "bg-red-400" : "bg-amber-400"
+                      }`} />
+                      {r}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {stock.loading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -351,7 +421,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           {stock.data.price_history && stock.data.price_history.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
                   Price History (5Y)
                   <InfoTooltip text="Historical closing prices over the last 5 years. This is the data used to calibrate the Monte Carlo simulation for this stock." />
                 </CardTitle>
@@ -365,7 +435,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           {/* Price Range */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+              <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
                 5-Year Price Range (Monte Carlo)
                 <InfoTooltip text="5th and 95th percentile prices from Monte Carlo simulation. The white dot shows the current price position within the range." />
               </CardTitle>
@@ -403,11 +473,21 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           {/* Analyst vs Model Comparison */}
           <AnalystVsModelCard stock={stock.data} />
 
+          {/* Analyst Consensus — right after analyst comparison */}
+          {stock.data.recommendations && (
+            <AnalystConsensus recommendations={stock.data.recommendations} />
+          )}
+
+          {/* Price Expectations */}
+          {stock.data.analyst_targets && (
+            <PriceExpectations stock={stock.data} />
+          )}
+
           {/* Key Statistics */}
           {stock.data.key_stats && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
                   Key Statistics
                   <InfoTooltip text="Fundamental statistics from Yahoo Finance. Valuation ratios, profitability metrics, and recent returns." />
                 </CardTitle>
@@ -422,22 +502,12 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         <ErrorCard title={`Could not analyze ${upperTicker}`} message={stock.error} onRetry={stock.refetch} />
       ) : null}
 
-      {/* Price Expectations */}
-      {stock.data?.analyst_targets && (
-        <PriceExpectations stock={stock.data} />
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Analyst Recommendations */}
-        {stock.data?.recommendations && (
-          <AnalystConsensus recommendations={stock.data.recommendations} />
-        )}
-
         {/* Earnings */}
         {stock.data?.earnings && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+              <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
                 Earnings
                 <InfoTooltip text="Upcoming earnings date, EPS estimate, and recent earnings surprise history." />
               </CardTitle>
@@ -446,19 +516,19 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {stock.data.earnings.next_date && (
                   <div className="rounded-lg bg-muted/30 p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase">Next Earnings</p>
+                    <p className="text-xs text-muted-foreground uppercase">Next Earnings</p>
                     <p className="text-sm font-bold">{stock.data.earnings.next_date}</p>
                   </div>
                 )}
                 {stock.data.earnings.estimate !== null && (
                   <div className="rounded-lg bg-muted/30 p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase">EPS Estimate</p>
+                    <p className="text-xs text-muted-foreground uppercase">EPS Estimate</p>
                     <p className="text-sm font-bold">${stock.data.earnings.estimate.toFixed(2)}</p>
                   </div>
                 )}
                 {stock.data.earnings.surprise_history.length > 0 && (
                   <div className="rounded-lg bg-muted/30 p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase">Last Surprise</p>
+                    <p className="text-xs text-muted-foreground uppercase">Last Surprise</p>
                     <p className={`text-sm font-bold ${stock.data.earnings.surprise_history[0] >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                       {stock.data.earnings.surprise_history[0] >= 0 ? "+" : ""}{stock.data.earnings.surprise_history[0].toFixed(1)}%
                     </p>
@@ -474,7 +544,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
       {stock.data?.peers && stock.data.peers.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+            <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
               Sector Peers ({stock.data.sector})
               <InfoTooltip text="Other stocks in the same sector. Click to analyze any peer." />
             </CardTitle>
@@ -498,7 +568,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         <Card>
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+              <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
                 Top Institutional Holders
                 <InfoTooltip text="Largest institutional shareholders. High institutional ownership often indicates confidence from professional investors." />
               </CardTitle>
@@ -541,7 +611,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
       {stock.data?.news && stock.data.news.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">Recent News</CardTitle>
+            <CardTitle className="text-base font-medium text-muted-foreground">Recent News</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {stock.data.news.map((item, i) => (
@@ -563,7 +633,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
       {/* SHAP */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+          <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
             SHAP — Market Crash Risk Factors
             <InfoTooltip text="SHAP values explain how each macro factor contributes to the crash probability. Red pushes probability up (more risk), green pushes it down (less risk). Feature values shown in tooltips." />
           </CardTitle>

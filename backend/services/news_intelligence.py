@@ -200,6 +200,8 @@ def compute_event_score(
     Returns:
         Dict with event_score, components, interpretation
     """
+    gdelt_available = gdelt_signals.get("success", True)
+
     # Tone score: negative tone = higher risk
     tone = gdelt_signals.get("avg_tone", 0)
     tone_score = float(np.clip(((-tone) + 5) / 10, 0, 1))  # Map [-5,5] -> [0,1]
@@ -213,13 +215,22 @@ def compute_event_score(
     if fred_gpr is not None:
         gpr_score = float(np.clip(fred_gpr / 300, 0, 1))  # GPR 0-300 range
 
-    # Weighted composite
-    weights = {"tone": 0.40, "volume": 0.30, "gpr": 0.30}
-    event_score = (
-        weights["tone"] * tone_score
-        + weights["volume"] * volume_score
-        + weights["gpr"] * gpr_score
-    )
+    # Weighted composite — exclude GDELT components if data unavailable
+    if gdelt_available:
+        weights = {"tone": 0.40, "volume": 0.30, "gpr": 0.30}
+    else:
+        # GDELT failed: rely only on GPR, don't let fake neutral drag score down
+        weights = {"tone": 0.0, "volume": 0.0, "gpr": 1.0}
+
+    total_w = sum(weights.values())
+    if total_w > 0:
+        event_score = (
+            weights["tone"] * tone_score
+            + weights["volume"] * volume_score
+            + weights["gpr"] * gpr_score
+        ) / total_w
+    else:
+        event_score = 0.3  # neutral fallback
 
     # Convergence bonus: +15% per elevated signal when 2+ fire
     elevated = sum(1 for s in [tone_score, volume_score, gpr_score] if s > 0.5)
@@ -247,7 +258,63 @@ def compute_event_score(
         },
         "interpretation": interpretation,
         "regime_override": "Crisis" if event_score > 0.75 else None,
+        "gdelt_available": gdelt_available,
     }
+
+
+_SECTOR_KEYWORDS = {
+    "Technology": ["tech", "software", "semiconductor", "chip", "AI", "artificial intelligence",
+                   "cloud", "apple", "google", "microsoft", "nvidia", "meta", "amazon web"],
+    "Healthcare": ["healthcare", "pharma", "biotech", "drug", "FDA", "hospital", "medical",
+                   "vaccine", "pfizer", "johnson", "moderna"],
+    "Financials": ["bank", "financial", "fed", "interest rate", "lending", "credit",
+                   "jpmorgan", "goldman", "morgan stanley", "insurance"],
+    "Energy": ["oil", "gas", "energy", "crude", "opec", "drilling", "petroleum",
+               "exxon", "chevron", "solar", "renewable"],
+    "Consumer Discretionary": ["retail", "consumer", "amazon", "tesla", "auto", "luxury",
+                                "spending", "housing", "home depot"],
+    "Consumer Staples": ["food", "grocery", "beverage", "procter", "coca-cola", "walmart",
+                         "costco", "consumer staples"],
+    "Industrials": ["manufacturing", "industrial", "aerospace", "defense", "infrastructure",
+                    "boeing", "caterpillar", "construction"],
+    "Materials": ["mining", "steel", "chemical", "commodity", "copper", "lithium", "gold price",
+                  "gold mining", "raw material"],
+    "Real Estate": ["real estate", "REIT", "housing market", "mortgage", "property",
+                    "commercial real estate"],
+    "Utilities": ["utility", "power", "electricity", "natural gas", "water", "grid"],
+    "Communication Services": ["telecom", "media", "streaming", "netflix", "disney",
+                                "communication", "advertising"],
+}
+
+
+def map_news_to_sectors(news_items: list[dict]) -> dict:
+    """Map news headlines to sectors by keyword matching.
+
+    Returns:
+        Dict of sector -> {relevance (0-1), sentiment_hint, headline_count}
+    """
+    sector_hits: dict[str, list[str]] = {s: [] for s in _SECTOR_KEYWORDS}
+
+    for item in news_items:
+        title = (item.get("title") or "").lower()
+        for sector, keywords in _SECTOR_KEYWORDS.items():
+            for kw in keywords:
+                if kw.lower() in title:
+                    sector_hits[sector].append(item.get("title", ""))
+                    break
+
+    total_articles = max(len(news_items), 1)
+    results = {}
+    for sector, headlines in sector_hits.items():
+        if headlines:
+            results[sector] = {
+                "relevance": round(len(headlines) / total_articles, 3),
+                "headline_count": len(headlines),
+                "sample_headlines": headlines[:3],
+            }
+
+    # Sort by relevance descending
+    return dict(sorted(results.items(), key=lambda x: x[1]["relevance"], reverse=True))
 
 
 def adjust_crash_probability(base_prob: float, event_score: float) -> float:

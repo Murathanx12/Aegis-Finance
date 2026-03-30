@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getMarketStatus, getMacroIndicators, getSP500Projection, getSectors } from "@/lib/api";
+import { getMarketStatus, getMacroIndicators, getSP500Projection, getSectors, getMarketSignal } from "@/lib/api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { MarketBanner } from "@/components/dashboard/market-banner";
 import { CrashGauge } from "@/components/dashboard/crash-gauge";
 import { SP500Chart } from "@/components/dashboard/sp500-chart";
 import { MacroCards } from "@/components/dashboard/macro-cards";
 import { SectorHeatmap } from "@/components/dashboard/sector-heatmap";
+import { SignalBadge } from "@/components/dashboard/signal-badge";
 import { HeroSection } from "@/components/dashboard/hero-section";
 import { ErrorCard } from "@/components/error-card";
 import { DisclaimerBanner } from "@/components/disclaimer-banner";
@@ -49,6 +50,12 @@ export default function DashboardPage() {
     staleTime: staleTimes.sectors,
     refetchInterval: REFRESH_INTERVAL,
   });
+  const signal = useQuery({
+    queryKey: queryKeys.market.signal,
+    queryFn: getMarketSignal,
+    staleTime: staleTimes.market,
+    refetchInterval: REFRESH_INTERVAL,
+  });
 
   // Track last refresh time
   const [lastRefresh, setLastRefresh] = useState(Date.now());
@@ -63,7 +70,7 @@ export default function DashboardPage() {
     return () => clearInterval(id);
   }, [lastRefresh]);
 
-  const anyError = market.error || macro.error || projection.error || sectors.error;
+  const anyError = market.error || macro.error || projection.error || sectors.error || signal.error;
 
   return (
     <div className="space-y-6 lg:pt-0 pt-2 animate-slide-up">
@@ -83,7 +90,12 @@ export default function DashboardPage() {
 
       <DisclaimerBanner />
 
-      <MarketBanner data={market.data ?? null} />
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <SignalBadge data={signal.data ?? null} />
+        <div className="lg:col-span-3">
+          <MarketBanner data={market.data ?? null} />
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <CrashGauge data={market.data ?? null} />
@@ -91,7 +103,7 @@ export default function DashboardPage() {
       </div>
 
       <div>
-        <h2 className="text-sm font-medium text-muted-foreground mb-3">
+        <h2 className="text-base font-medium text-muted-foreground mb-3">
           Macro Indicators
           <InfoTooltip
             text="Key economic indicators from FRED. Changes shown are 1-month percentage changes. These feed into the 9-factor composite risk score."
@@ -110,6 +122,7 @@ export default function DashboardPage() {
             (projection.error as Error)?.message ||
             (macro.error as Error)?.message ||
             (sectors.error as Error)?.message ||
+            (signal.error as Error)?.message ||
             "Unknown error"
           }
           onRetry={() => {
@@ -117,6 +130,7 @@ export default function DashboardPage() {
             macro.refetch();
             projection.refetch();
             sectors.refetch();
+            signal.refetch();
           }}
         />
       )}

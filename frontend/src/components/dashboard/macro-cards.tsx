@@ -53,10 +53,10 @@ export function MacroCards({ data }: { data: MacroResponse | null }) {
       {indicators.map((ind) => (
         <Card key={ind.key}>
           <CardContent className="p-3">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide truncate">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide truncate">
               {ind.label}
             </p>
-            <p className="text-lg font-semibold tabular-nums">{fmtValue(ind.value)}</p>
+            <p className="text-xl font-bold tabular-nums">{fmtValue(ind.value)}</p>
             <div className="flex items-end justify-between gap-2">
               {ind.change_1m_pct != null && (
                 <p className={`text-xs tabular-nums ${ind.change_1m_pct >= 0 ? "text-emerald-400" : "text-red-400"}`}>

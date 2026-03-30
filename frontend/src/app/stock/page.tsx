@@ -33,7 +33,7 @@ export default function StockPage() {
               value={ticker}
               onChange={(e) => setTicker(e.target.value)}
               placeholder="Enter ticker symbol (e.g. AAPL)"
-              className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="flex-1 rounded-md border border-border bg-background px-4 py-3 text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <Button type="submit" disabled={!ticker.trim()}>Analyze</Button>
           </form>

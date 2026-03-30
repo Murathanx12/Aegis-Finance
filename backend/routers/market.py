@@ -125,6 +125,96 @@ def _compute_market_status() -> dict:
     }
 
 
+@router.get("/signal")
+async def get_market_signal_endpoint():
+    """Composite market buy/sell signal."""
+    cached = cache_get("market_signal", _CACHE_TTL["ttl_market"])
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(_compute_market_signal)
+        cache_set("market_signal", result)
+        return result
+    except Exception as e:
+        logger.error("market signal failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _compute_market_signal() -> dict:
+    from backend.services.data_fetcher import DataFetcher
+    from backend.services.risk_scorer import build_risk_score
+    from backend.services.regime_detector import detect_regimes
+    from backend.services.signal_engine import get_market_signal
+
+    fetcher = DataFetcher()
+    data, _ = fetcher.fetch_market_data()
+    data["Risk_Score"] = build_risk_score(data)
+
+    _, regime = detect_regimes(data)
+    risk_score = float(data["Risk_Score"].iloc[-1])
+    sp500 = float(data["SP500"].iloc[-1])
+    vix = float(data["VIX"].iloc[-1]) if "VIX" in data.columns else 20.0
+    sp500_1m = float(data["SP500"].pct_change(21).iloc[-1]) * 100
+    sp500_3m = float(data["SP500"].pct_change(63).iloc[-1]) * 100
+
+    yield_curve = None
+    if "T10Y" in data.columns and "T3M" in data.columns:
+        yield_curve = float(data["T10Y"].iloc[-1] - data["T3M"].iloc[-1])
+
+    # Try to get crash probs
+    crash_3m = None
+    crash_12m = None
+    try:
+        from backend.services.crash_model import CrashPredictor
+        from backend.config import MODEL_DIR
+        model_path = MODEL_DIR / "crash_model.pkl"
+        if model_path.exists():
+            from engine.training.features import build_feature_matrix
+            predictor = CrashPredictor()
+            predictor.load_model(str(model_path))
+            fred_data = fetcher.fetch_fred_data()
+            features = build_feature_matrix(data, fred_data=fred_data)
+            available = [f for f in predictor.feature_names if f in features.columns]
+            latest = features[available].iloc[[-1]]
+            for h in predictor.lgb_models:
+                prob = float(predictor.predict_proba(latest, h)[0]) * 100
+                if h == "3m":
+                    crash_3m = prob
+                elif h == "12m":
+                    crash_12m = prob
+    except Exception:
+        pass
+
+    # External consensus
+    external = None
+    try:
+        from backend.services.external_validator import validate_external
+        fred_data = fetcher.fetch_fred_data()
+        ext = validate_external(data, fred_data)
+        external = ext.get("consensus_direction")
+    except Exception:
+        pass
+
+    signal = get_market_signal(
+        crash_prob_3m=crash_3m,
+        crash_prob_12m=crash_12m,
+        regime=regime,
+        risk_score=risk_score,
+        sp500_1m_return=sp500_1m,
+        sp500_3m_return=sp500_3m,
+        vix=vix,
+        yield_curve=yield_curve,
+        external_consensus=external,
+    )
+    signal["sp500"] = sp500
+    signal["regime"] = regime
+    signal["risk_score"] = round(risk_score, 2)
+    signal["vix"] = round(vix, 1)
+    signal["last_updated"] = str(data.index[-1].date())
+    return signal
+
+
 @router.get("/macro")
 async def get_macro_indicators():
     """FRED macro indicators with latest values."""

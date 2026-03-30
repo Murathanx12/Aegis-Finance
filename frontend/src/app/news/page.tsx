@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getMarketNews } from "@/lib/api";
+import { getMarketNews, getMarketSignal } from "@/lib/api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,7 @@ function EventScoreGauge({ score, interpretation }: { score: number; interpretat
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className={`text-2xl font-bold ${color}`}>{pct}%</span>
-          <span className="text-[10px] text-muted-foreground">Event Risk</span>
+          <span className="text-xs text-muted-foreground">Event Risk</span>
         </div>
       </div>
       <Badge variant="outline" className={`${bgColor}/20 border-current ${color}`}>
@@ -46,7 +46,7 @@ function ScoreCard({ label, value, description }: { label: string; value: number
   const pct = Math.round(value * 100);
   return (
     <div className="rounded-lg bg-muted/30 p-4">
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
+      <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
       <p className="text-2xl font-bold tabular-nums">{pct}%</p>
       <p className="text-xs text-muted-foreground mt-1">{description}</p>
     </div>
@@ -59,11 +59,11 @@ function ToneChart({ data }: { data: number[] }) {
   return (
     <ResponsiveContainer width="100%" height={200}>
       <AreaChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-        <XAxis dataKey="day" tick={{ fill: "#888", fontSize: 11 }} label={{ value: "Days Ago", position: "insideBottom", offset: -5, fill: "#888", fontSize: 11 }} />
-        <YAxis tick={{ fill: "#888", fontSize: 11 }} />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis dataKey="day" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} label={{ value: "Days Ago", position: "insideBottom", offset: -5, fill: "var(--muted-foreground)", fontSize: 11 }} />
+        <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
         <Tooltip
-          contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
+          contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
           formatter={(v) => [Number(v).toFixed(2), "Tone"]}
         />
         <Area type="monotone" dataKey="tone" stroke="#63b4ff" fill="#63b4ff" fillOpacity={0.15} />
@@ -77,6 +77,11 @@ export default function NewsPage() {
     queryKey: queryKeys.news.market,
     queryFn: getMarketNews,
     staleTime: staleTimes.news,
+  });
+  const signal = useQuery({
+    queryKey: queryKeys.market.signal,
+    queryFn: getMarketSignal,
+    staleTime: staleTimes.market,
   });
 
   return (
@@ -105,7 +110,7 @@ export default function NewsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
                   Event Risk Score
                   <InfoTooltip text="Composite score from GDELT data combining news tone, volume spikes, and geopolitical risk signals. 0% = calm, 100% = extreme event risk." />
                 </CardTitle>
@@ -120,7 +125,7 @@ export default function NewsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-base font-medium text-muted-foreground">
                   Risk Components
                 </CardTitle>
               </CardHeader>
@@ -133,32 +138,32 @@ export default function NewsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-base font-medium text-muted-foreground">
                   GDELT Signals
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-lg bg-muted/30 p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase">Avg Tone</p>
+                    <p className="text-xs text-muted-foreground uppercase">Avg Tone</p>
                     <p className={`text-lg font-bold ${data.gdelt.avg_tone < -1 ? "text-red-400" : data.gdelt.avg_tone > 1 ? "text-emerald-400" : ""}`}>
                       {data.gdelt.avg_tone.toFixed(2)}
                     </p>
                   </div>
                   <div className="rounded-lg bg-muted/30 p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase">Tone Trend</p>
+                    <p className="text-xs text-muted-foreground uppercase">Tone Trend</p>
                     <p className={`text-lg font-bold ${data.gdelt.tone_trend < -0.5 ? "text-red-400" : data.gdelt.tone_trend > 0.5 ? "text-emerald-400" : ""}`}>
                       {data.gdelt.tone_trend >= 0 ? "+" : ""}{data.gdelt.tone_trend.toFixed(2)}
                     </p>
                   </div>
                   <div className="rounded-lg bg-muted/30 p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase">Volume Z-Score</p>
+                    <p className="text-xs text-muted-foreground uppercase">Volume Z-Score</p>
                     <p className={`text-lg font-bold ${data.gdelt.volume_zscore > 2 ? "text-amber-400" : ""}`}>
                       {data.gdelt.volume_zscore.toFixed(1)}&sigma;
                     </p>
                   </div>
                   <div className="rounded-lg bg-muted/30 p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase">Conflict</p>
+                    <p className="text-xs text-muted-foreground uppercase">Conflict</p>
                     <p className={`text-lg font-bold ${data.gdelt.conflict_score > 0.5 ? "text-red-400" : ""}`}>
                       {(data.gdelt.conflict_score * 100).toFixed(0)}%
                     </p>
@@ -171,10 +176,40 @@ export default function NewsPage() {
             </Card>
           </div>
 
+          {/* Market Signal Context */}
+          {signal.data && (
+            <Card className={`border-2 ${
+              signal.data.action.includes("Buy") ? "border-emerald-500/30" :
+              signal.data.action.includes("Sell") ? "border-red-500/30" : "border-amber-500/30"
+            }`}>
+              <CardContent className="p-4 flex flex-wrap items-center gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Signal Engine Says</p>
+                  <span className={`inline-block text-lg font-bold px-3 py-1.5 rounded ${
+                    signal.data.action.includes("Buy") ? "bg-emerald-500/15 text-emerald-400" :
+                    signal.data.action.includes("Sell") ? "bg-red-500/15 text-red-400" : "bg-amber-500/15 text-amber-400"
+                  }`}>{signal.data.action}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">
+                    Composite: {signal.data.composite_score > 0 ? "+" : ""}{signal.data.composite_score.toFixed(3)} · Confidence: {signal.data.confidence}%
+                    {signal.data.regime && <> · Regime: {signal.data.regime}</>}
+                    {signal.data.vix != null && <> · VIX: {signal.data.vix}</>}
+                  </p>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                    {signal.data.reasons.map((r, i) => (
+                      <span key={i} className="text-xs text-muted-foreground">&bull; {r}</span>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {data.gdelt.raw_data.tone.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-base font-medium text-muted-foreground">
                   30-Day News Tone Trend
                 </CardTitle>
               </CardHeader>
@@ -184,11 +219,44 @@ export default function NewsPage() {
             </Card>
           )}
 
+          {/* Sector Impact */}
+          {data.sector_impact && Object.keys(data.sector_impact).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+                  Sector Impact
+                  <InfoTooltip text="Sectors mentioned in current market headlines, ranked by relevance. Higher relevance means more headlines are affecting that sector." />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {Object.entries(data.sector_impact).map(([sector, info]) => (
+                    <div key={sector} className="rounded-lg border border-border/50 p-3">
+                      <p className="text-sm font-medium truncate">{sector}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex-1 h-1.5 bg-muted rounded-full">
+                          <div
+                            className="h-full bg-blue-500 rounded-full"
+                            style={{ width: `${Math.min(info.relevance * 100 * 3, 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground tabular-nums">{info.headline_count}</span>
+                      </div>
+                      {info.sample_headlines[0] && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{info.sample_headlines[0]}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {data.llm_summary ? (
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-base font-medium text-muted-foreground">
                     AI Market Summary
                   </CardTitle>
                   <Badge variant="outline" className={
@@ -216,7 +284,7 @@ export default function NewsPage() {
           {data.news.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-base font-medium text-muted-foreground">
                   Recent Market Headlines
                 </CardTitle>
               </CardHeader>

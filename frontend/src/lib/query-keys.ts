@@ -8,6 +8,10 @@ export const queryKeys = {
     macro: ["market", "macro"] as const,
     netLiquidity: ["market", "net-liquidity"] as const,
     dataQuality: ["market", "data-quality"] as const,
+    signal: ["market", "signal"] as const,
+  },
+  signal: {
+    stock: (ticker: string) => ["signal", "stock", ticker] as const,
   },
   crash: {
     prediction: (horizon: string, explain: boolean) =>

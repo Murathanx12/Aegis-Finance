@@ -52,6 +52,71 @@ def _analyze_stock(ticker: str) -> dict:
     return analyze_stock(ticker)
 
 
+@router.get("/{ticker}/signal")
+async def get_stock_signal_endpoint(ticker: str):
+    """Per-stock buy/sell signal (market signal + stock-specific adjustments)."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"stock_signal:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(_stock_signal, ticker)
+        cache_set(cache_key, result)
+        return result
+    except Exception as e:
+        logger.error("stock signal failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _stock_signal(ticker: str) -> dict:
+    from backend.services.stock_analyzer import analyze_stock
+    from backend.services.signal_engine import get_market_signal, get_stock_signal
+
+    # Get market signal first
+    from backend.services.data_fetcher import DataFetcher
+    from backend.services.risk_scorer import build_risk_score
+    from backend.services.regime_detector import detect_regimes
+
+    fetcher = DataFetcher()
+    data, _ = fetcher.fetch_market_data()
+    data["Risk_Score"] = build_risk_score(data)
+    _, regime = detect_regimes(data)
+
+    vix = float(data["VIX"].iloc[-1]) if "VIX" in data.columns else 20.0
+    sp500_1m = float(data["SP500"].pct_change(21).iloc[-1]) * 100
+    sp500_3m = float(data["SP500"].pct_change(63).iloc[-1]) * 100
+
+    market_sig = get_market_signal(
+        regime=regime,
+        risk_score=float(data["Risk_Score"].iloc[-1]),
+        sp500_1m_return=sp500_1m,
+        sp500_3m_return=sp500_3m,
+        vix=vix,
+    )
+
+    # Get stock data
+    stock_data = analyze_stock(ticker)
+    if stock_data is None:
+        return {"ticker": ticker, "action": "Hold", "confidence": 0, "error": "Could not analyze stock"}
+
+    signal = get_stock_signal(
+        market_signal=market_sig,
+        beta=stock_data.get("beta", 1.0),
+        analyst_target=stock_data.get("analyst_target"),
+        current_price=stock_data.get("current_price", 0),
+        pe_ratio=stock_data.get("pe_ratio"),
+    )
+    signal["ticker"] = ticker
+    signal["name"] = stock_data.get("name", ticker)
+    signal["current_price"] = stock_data.get("current_price")
+    signal["market_action"] = market_sig["action"]
+    return signal
+
+
 @router.get("/{ticker}/shap")
 async def get_stock_shap(ticker: str):
     """SHAP explanation for how crash model views this ticker's risk."""

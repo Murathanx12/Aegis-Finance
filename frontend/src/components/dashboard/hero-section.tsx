@@ -21,9 +21,9 @@ const QUICK_LINKS = [
     icon: TrendingUp,
   },
   {
-    title: "Crash Prediction",
-    description: "LightGBM + Logistic Regression, 3/6/12-month horizons",
-    href: "/crash",
+    title: "Market Outlook",
+    description: "Crash probability, Monte Carlo simulations & scenario analysis",
+    href: "/outlook",
     icon: AlertTriangle,
   },
   {
@@ -33,9 +33,9 @@ const QUICK_LINKS = [
     icon: Briefcase,
   },
   {
-    title: "Simulation",
-    description: "Monte Carlo jump-diffusion with scenario analysis",
-    href: "/simulation",
+    title: "Sectors",
+    description: "11 S&P sectors ranked by risk-adjusted expected returns",
+    href: "/sectors",
     icon: BarChart3,
   },
 ];
@@ -52,7 +52,7 @@ function StatPill({
   return (
     <Badge
       variant="outline"
-      className={`px-3 py-1 text-xs font-medium gap-1.5 ${color ?? "text-zinc-300 border-zinc-700"}`}
+      className={`px-3 py-1.5 text-sm font-medium gap-1.5 ${color ?? "text-muted-foreground border-border"}`}
     >
       <span className="text-muted-foreground">{label}</span>
       <span className="font-semibold tabular-nums">{value}</span>
@@ -146,11 +146,11 @@ export function HeroSection({ data }: { data: MarketStatus | null }) {
                   <link.icon className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium flex items-center gap-1">
+                  <p className="text-base font-medium flex items-center gap-1">
                     {link.title}
-                    <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                    <ArrowRight className="h-3.5 w-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                  <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
                     {link.description}
                   </p>
                 </div>

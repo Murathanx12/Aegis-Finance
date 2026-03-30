@@ -168,6 +168,7 @@ config: dict = {
             "inflation_target": 0.025,
             "cape_long_run_average": 17.0,
             "cape_penalty_factor": 0.03,
+            "val_penalty_cap": 0.015,   # Max 1.5% annual drag from CAPE (Phase 1G)
         },
     },
 
@@ -198,6 +199,9 @@ config: dict = {
             "risk_stress_threshold": 1.5,
             "vix_calm_threshold": 16,
             "risk_calm_threshold": -0.5,
+            # Short-window drawdown overrides (Phase 1A)
+            "short_bear_1m": -0.05,     # 21d return < -5% → override Bull
+            "short_bear_3m": -0.08,     # 63d return < -8% → override Bull
         },
     },
 
