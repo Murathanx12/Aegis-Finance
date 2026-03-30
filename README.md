@@ -17,7 +17,8 @@ Most open-source finance tools solve one piece of the puzzle: OpenBB is a termin
 - **Macro Risk Dashboard** — 9-factor composite risk score with real-time regime classification
 - **Sector Analysis** — All 11 S&P 500 sectors ranked by risk-adjusted expected return
 - **Stock Analysis** — Per-ticker projections with 3-band price expectations, analyst consensus, holders, and earnings
-- **Portfolio Builder** — Goal-based allocation with Monte Carlo projection and correlation analysis
+- **Stock Screener** — Sortable watchlist of 30+ stocks with Buy/Hold/Sell signals, Sharpe ratios, and sector filtering
+- **Portfolio Builder** — Goal-based allocation with Black-Litterman, HRP, and template methods + Monte Carlo projection
 - **News Intelligence** — GDELT-powered event scoring with optional DeepSeek AI summaries
 - **Retirement Planner** — Compound growth projections with inflation adjustment and milestone tracking
 - **Net Liquidity Tracker** — Fed balance sheet (WALCL - TGA - RRP) as a leading market indicator
@@ -30,8 +31,8 @@ Most open-source finance tools solve one piece of the puzzle: OpenBB is a termin
 ```
 +---------------------------------------------------------+
 |  Frontend (Next.js 14 + shadcn/ui + Recharts)           |
-|  Pages: Dashboard, Crash, Simulation, Stocks,           |
-|         Sectors, Portfolio, News, Retirement             |
+|  Pages: Dashboard, Crash, Simulation, Stocks, Screener, |
+|         Sectors, Portfolio, News, Retirement, About      |
 +------------------------+--------------------------------+
                          | REST API
 +------------------------v--------------------------------+
@@ -244,6 +245,7 @@ curl -X POST http://localhost:8000/api/savings/project \
 | GET | `/api/simulation/scenarios` | 7-scenario breakdown |
 | GET | `/api/stock/{ticker}` | Stock projection, risk metrics, analyst data, holders, earnings |
 | GET | `/api/stock/{ticker}/shap` | SHAP feature importance |
+| GET | `/api/stock/screener` | Top stocks screener with signals |
 | GET | `/api/sectors` | 11-sector ranking by risk-adjusted return |
 | POST | `/api/portfolio/analyze` | Portfolio analytics (VaR, CVaR, correlation) |
 | POST | `/api/portfolio/build` | Goal-based allocation |
@@ -298,7 +300,7 @@ curl -X POST http://localhost:8000/api/savings/project \
 ```
 aegis-finance/
 ├── frontend/                    # Next.js 14 App
-│   ├── src/app/                 # App Router pages (8 pages)
+│   ├── src/app/                 # App Router pages (12 pages)
 │   ├── src/components/          # UI components (shadcn + charts)
 │   ├── src/lib/api.ts           # API client + TypeScript types
 │   └── src/hooks/               # Data fetching hooks
@@ -306,7 +308,7 @@ aegis-finance/
 │   ├── main.py                  # App entry + CORS + cache prewarming
 │   ├── config.py                # All parameters (scenarios, weights, tickers)
 │   ├── cache.py                 # In-memory TTL cache
-│   ├── routers/                 # 8 API routers
+│   ├── routers/                 # 9 API routers
 │   │   ├── market.py            # market-status, macro, net-liquidity, data-quality
 │   │   ├── crash.py             # crash prediction + external validation
 │   │   ├── simulation.py        # SP500 projection, scenarios
@@ -315,7 +317,7 @@ aegis-finance/
 │   │   ├── portfolio.py         # analyze, build, project
 │   │   ├── news.py              # GDELT + AI news
 │   │   └── savings.py           # retirement projection
-│   ├── services/                # 17 business logic modules
+│   ├── services/                # 21 business logic modules
 │   │   ├── data_fetcher.py      # Yahoo Finance + FRED
 │   │   ├── monte_carlo.py       # Jump-diffusion MC (Merton-corrected)
 │   │   ├── risk_scorer.py       # 9-factor composite z-score
@@ -332,12 +334,15 @@ aegis-finance/
 │   │   ├── net_liquidity.py     # Fed balance sheet tracker
 │   │   ├── return_model.py      # Quantile return predictor
 │   │   ├── external_validator.py# LEI/SLOOS/Fed cross-checks
-│   │   └── regime_validator.py  # Multi-check regime confirmation
+│   │   ├── regime_validator.py  # Multi-check regime confirmation
+│   │   ├── drift_detector.py    # PSI + KS feature drift detection
+│   │   └── signal_optimizer.py  # Buy/Hold/Sell signal computation
 │   ├── models/                  # GJR-GARCH, HMM, saved .pkl models
-│   └── tests/                   # 14 tests
+│   └── tests/                   # 27 tests
 ├── engine/                      # Offline ML training + validation
-│   ├── training/                # Feature builder, LASSO, model training
-│   └── validation/              # Walk-forward backtest, metrics (with conformal prediction)
+│   ├── training/                # Feature builder, LASSO, labeling, fracdiff, uniqueness
+│   ├── validation/              # Walk-forward backtest, purged CV, metrics
+│   └── autoresearch/            # Autonomous experiment loop (scaffolded)
 ├── docker-compose.yml           # Full stack containers
 ├── railway.json                 # Backend deployment config
 └── .env.example                 # Required API keys template
@@ -353,17 +358,23 @@ aegis-finance/
 | 4 | Autoresearch Loop | Automated experiment tracking, drift detection, retraining triggers |
 | 5 | Data & Distribution | SEC EDGAR, NLP sentiment, community channels |
 
-## Methodology Gaps & Transparency
+## Methodology Implementation Status
 
-Aegis v1 is functional but has known gaps vs. institutional practice. We document these openly:
-
-- **Cross-validation:** Currently uses basic temporal splits. Should use purged CV with embargo periods (Lopez de Prado) to prevent information leakage from overlapping labels.
-- **Crash labeling:** Uses fixed-threshold drawdown labels. Triple-barrier labeling would better capture path-dependent outcomes.
-- **Monte Carlo tails:** Jump-diffusion with GJR-GARCH captures some fat tails, but innovations assume Gaussian residuals. Student-t innovations would improve tail accuracy.
-- **Portfolio optimization:** Goal-based heuristic allocation. Mean-variance, Black-Litterman, and HRP would provide more rigorous construction.
-- **Feature stationarity:** Raw features are used where possible. Fractional differentiation would preserve memory while ensuring stationarity.
-
-These gaps are addressed in the [Roadmap](#roadmap) above.
+| Technique | Status | Details |
+|-----------|--------|---------|
+| Purged CV with embargo | Implemented | `engine/validation/purged_cv.py` — pre/post embargo, temporal purging |
+| Triple-barrier labeling | Implemented | `engine/training/labeling.py` — Lopez de Prado AFML Ch. 3 |
+| Fractional differentiation | Implemented | `engine/training/fracdiff.py` — FFD with ADF stationarity test |
+| Sample uniqueness weighting | Implemented | `engine/training/sample_uniqueness.py` — temporal decay |
+| Student-t MC innovations | Implemented | GARCH-estimated nu fed into jump-diffusion simulation |
+| Antithetic variates | Implemented | 50% variance reduction in Monte Carlo paths |
+| Black-Litterman portfolio | Implemented | `portfolio_engine.py` — AUM-weighted equilibrium returns + template blending |
+| HRP portfolio | Implemented | `portfolio_engine.py` — position caps + template blending |
+| Ledoit-Wolf shrinkage | Implemented | Replaces sample covariance in all portfolio computations |
+| Drift detection | Implemented | `drift_detector.py` — PSI + KS test |
+| DCC-GARCH | Not yet | Multi-asset dynamic correlation |
+| Autoresearch loop | Scaffolded | `engine/autoresearch/` — 3-file contract, needs MLflow |
+| NLP sentiment | Not yet | FinBERT integration planned |
 
 ## Key References
 

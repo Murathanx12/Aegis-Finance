@@ -9,7 +9,8 @@ Aegis Finance is a free, open-source market intelligence web platform combining 
 **What it does:**
 - Stock projections with Monte Carlo simulation (jump-diffusion, Merton-corrected)
 - Crash probability estimation (LightGBM + Logistic Regression, 3/6/12-month horizons)
-- Portfolio builder based on investor goals (risk tolerance, time horizon)
+- Portfolio builder with Black-Litterman, HRP, and template methods (risk tolerance, time horizon)
+- Stock screener with Buy/Hold/Sell signals across 30+ stocks
 - Sector analysis ranked by risk-adjusted expected returns (11 S&P sectors)
 - Macro risk dashboard (9-factor composite score, regime detection, FRED indicators)
 - SHAP explainability for every prediction (why the model thinks what it thinks)
@@ -50,16 +51,17 @@ aegis-finance/
 │   ├── main.py                  # App entry + CORS + cache prewarming
 │   ├── config.py                # All parameters (scenarios, weights, tickers)
 │   ├── cache.py                 # In-memory TTL cache
-│   ├── routers/                 # API endpoint definitions (8 routers)
+│   ├── routers/                 # API endpoint definitions (9 routers)
 │   │   ├── market.py            # /api/market-status, /api/macro, /api/net-liquidity, /api/data-quality
 │   │   ├── crash.py             # /api/crash/prediction (+ external validation), /api/crash/{ticker}
 │   │   ├── simulation.py        # /api/simulation/sp500, /api/simulation/scenarios
-│   │   ├── stock.py             # /api/stock/{ticker}, /api/stock/{ticker}/shap
+│   │   ├── stock.py             # /api/stock/{ticker}, /api/stock/{ticker}/shap, /api/stock/screener
 │   │   ├── sector.py            # /api/sectors
 │   │   ├── portfolio.py         # /api/portfolio/analyze, /api/portfolio/build, /api/portfolio/project
 │   │   ├── news.py              # /api/news/market, /api/news/{ticker}
-│   │   └── savings.py           # /api/savings/project
-│   ├── services/                # Business logic (17 modules)
+│   │   ├── savings.py           # /api/savings/project
+│   │   └── backtest.py          # /api/backtest/walk-forward
+│   ├── services/                # Business logic (21 modules)
 │   │   ├── data_fetcher.py      # Yahoo Finance + FRED unified
 │   │   ├── monte_carlo.py       # Jump-diffusion MC (Merton-corrected)
 │   │   ├── risk_scorer.py       # 9-factor composite z-score
@@ -76,7 +78,9 @@ aegis-finance/
 │   │   ├── net_liquidity.py     # Fed balance sheet tracker (WALCL - TGA - RRP)
 │   │   ├── return_model.py      # Quantile return predictor (10th/50th/90th)
 │   │   ├── external_validator.py# Cross-checks vs LEI, SLOOS, Fed, sentiment
-│   │   └── regime_validator.py  # Multi-check regime confirmation
+│   │   ├── regime_validator.py  # Multi-check regime confirmation
+│   │   ├── drift_detector.py    # PSI + KS feature drift detection
+│   │   └── signal_optimizer.py  # Buy/Hold/Sell signal engine
 │   └── models/                  # Statistical models + saved ML artifacts
 │       ├── garch.py             # GJR-GARCH(1,1)
 │       ├── hmm.py               # 3-state Hidden Markov Model
@@ -85,10 +89,18 @@ aegis-finance/
 │   ├── training/                # Model training scripts
 │   │   ├── features.py          # Full 80+ feature builder
 │   │   ├── feature_selection.py # LASSO: 208 → 25-30 features
-│   │   └── train_crash_model.py # Train + serialize to .pkl
-│   └── validation/              # Walk-forward backtesting
-│       ├── walk_forward.py      # Expanding window, zero data leakage
-│       └── metrics.py           # Brier, BSS, reliability diagrams
+│   │   ├── train_crash_model.py # Train + serialize to .pkl
+│   │   ├── labeling.py          # Triple-barrier labeling (AFML Ch. 3)
+│   │   ├── fracdiff.py          # Fixed-width fractional differentiation
+│   │   └── sample_uniqueness.py # Overlapping label weight computation
+│   ├── validation/              # Walk-forward backtesting
+│   │   ├── walk_forward.py      # Expanding window, zero data leakage
+│   │   ├── purged_cv.py         # Purged K-Fold CV with embargo (AFML Ch. 7)
+│   │   └── metrics.py           # Brier, BSS, reliability diagrams
+│   └── autoresearch/            # Autonomous experiment loop (scaffolded)
+│       ├── aegis_prepare.py     # Immutable data pipeline
+│       ├── aegis_train.py       # Mutable training config
+│       └── aegis_program.md     # Agent constraints
 ├── docs/                        # Documentation
 ├── .env.example                 # Required API keys template
 ├── docker-compose.yml           # Backend + frontend containers
