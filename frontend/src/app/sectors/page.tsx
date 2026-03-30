@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfoTooltip } from "@/components/info-tooltip";
 import { ErrorCard } from "@/components/error-card";
-import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell,
@@ -41,11 +40,11 @@ function SectorChart({ sectors }: { sectors: SectorResult[] }) {
   return (
     <ResponsiveContainer width="100%" height={360}>
       <BarChart data={data} layout="vertical" margin={{ left: 110, right: 30 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-        <XAxis type="number" tick={{ fill: "#888", fontSize: 11 }} tickFormatter={(v: number) => `${v}%`} />
-        <YAxis type="category" dataKey="name" tick={{ fill: "#aaa", fontSize: 12 }} width={100} />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+        <XAxis type="number" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickFormatter={(v: number) => `${v}%`} />
+        <YAxis type="category" dataKey="name" tick={{ fill: "var(--foreground)", fontSize: 12 }} width={100} />
         <Tooltip
-          contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
+          contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
           formatter={(v) => [`${Number(v).toFixed(1)}%`, "Expected Return"]}
         />
         <Bar dataKey="return" radius={[0, 4, 4, 0]}>
@@ -124,8 +123,6 @@ export default function SectorsPage() {
           11 S&P sectors ranked by risk-adjusted expected returns (factor model)
         </p>
       </div>
-
-      <DisclaimerBanner />
 
       {data?.sectors && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

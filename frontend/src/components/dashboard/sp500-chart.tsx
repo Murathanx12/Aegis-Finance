@@ -41,7 +41,7 @@ export function SP500Chart({ data }: { data: SP500Projection | null }) {
   return (
     <Card className="col-span-2">
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+        <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
           S&P 500 — {forecast_years}Y Monte Carlo Projection
           <InfoTooltip text="Fan chart showing 5th-95th percentile price paths from 10,000 jump-diffusion Monte Carlo simulations. The blue line is the median path. Width indicates uncertainty." />
         </CardTitle>
@@ -54,18 +54,18 @@ export function SP500Chart({ data }: { data: SP500Projection | null }) {
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis
               dataKey="year"
-              tick={{ fill: "#888", fontSize: 11 }}
-              label={{ value: "Years", position: "bottom", fill: "#888", fontSize: 11 }}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+              label={{ value: "Years", position: "bottom", fill: "var(--muted-foreground)", fontSize: 11 }}
             />
             <YAxis
-              tick={{ fill: "#888", fontSize: 11 }}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
               tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
             />
             <Tooltip
-              contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
+              contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
               labelFormatter={(v) => `Year ${v}`}
               formatter={(v) => [`$${Number(v).toLocaleString()}`, ""]}
             />

@@ -45,6 +45,71 @@ _ALLOCATION_TEMPLATES = {
 }
 
 
+def score_risk_profile(answers: dict) -> dict:
+    """Convert questionnaire answers into a risk score and allocation style.
+
+    Args:
+        answers: Dict with keys: horizon, risk_tolerance, loss_reaction,
+                 experience, income_stability, goal
+
+    Returns:
+        Dict with risk_score (1-10), allocation_style, description
+    """
+    score = 5  # baseline
+
+    # Time horizon: longer = more aggressive
+    horizon_scores = {"1y": -2, "3y": -1, "5y": 0, "10y": 1, "20y": 2}
+    score += horizon_scores.get(answers.get("horizon", "5y"), 0)
+
+    # Risk tolerance
+    risk_scores = {"conservative": -2, "moderate": 0, "aggressive": 2}
+    score += risk_scores.get(answers.get("risk_tolerance", "moderate"), 0)
+
+    # Loss reaction: how they react to a -20% drop
+    loss_scores = {"sell": -2, "hold": 0, "buy_more": 2}
+    score += loss_scores.get(answers.get("loss_reaction", "hold"), 0)
+
+    # Investment experience
+    exp_scores = {"none": -1, "beginner": 0, "intermediate": 1, "advanced": 1}
+    score += exp_scores.get(answers.get("experience", "beginner"), 0)
+
+    # Income stability
+    income_scores = {"unstable": -1, "stable": 0, "very_stable": 1}
+    score += income_scores.get(answers.get("income_stability", "stable"), 0)
+
+    # Goal
+    goal_scores = {"preservation": -2, "income": -1, "growth": 1, "aggressive_growth": 2}
+    score += goal_scores.get(answers.get("goal", "growth"), 0)
+
+    # Clamp to 1-10
+    score = max(1, min(10, score))
+
+    # Map score to allocation style
+    if score <= 3:
+        style = "conservative"
+        desc = "Capital preservation focus — heavy bonds and gold, limited equity exposure"
+    elif score <= 6:
+        style = "moderate"
+        desc = "Balanced growth — diversified mix of equity and fixed income"
+    else:
+        style = "aggressive"
+        desc = "Growth-oriented — mostly equities with sector tilts for maximum upside"
+
+    return {
+        "risk_score": score,
+        "allocation_style": style,
+        "description": desc,
+        "factors": {
+            "horizon": answers.get("horizon", "5y"),
+            "risk_tolerance": answers.get("risk_tolerance", "moderate"),
+            "loss_reaction": answers.get("loss_reaction", "hold"),
+            "experience": answers.get("experience", "beginner"),
+            "income_stability": answers.get("income_stability", "stable"),
+            "goal": answers.get("goal", "growth"),
+        },
+    }
+
+
 class PortfolioEngine:
     """Stateless portfolio analytics."""
 

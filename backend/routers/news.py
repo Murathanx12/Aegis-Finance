@@ -42,6 +42,7 @@ async def get_market_news():
 def _fetch_market_news() -> dict:
     from backend.services.news_intelligence import (
         fetch_gdelt_signals, compute_event_score, fetch_stock_news,
+        map_news_to_sectors,
     )
     from backend.services.llm_analyzer import summarize_market_news, is_available
 
@@ -57,10 +58,14 @@ def _fetch_market_news() -> dict:
     if is_available() and all_news:
         llm_summary = summarize_market_news(all_news)
 
+    # Map news to sectors
+    sector_impact = map_news_to_sectors(all_news)
+
     return {
         "gdelt": gdelt,
         "event_score": event,
         "news": all_news[:15],
+        "sector_impact": sector_impact,
         "llm_summary": llm_summary,
         "llm_available": is_available(),
     }

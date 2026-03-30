@@ -16,8 +16,8 @@ import {
   AreaChart, Area,
 } from "recharts";
 import {
-  analyzePortfolio, buildPortfolio, projectPortfolio,
-  type Holding, type PortfolioAnalysis, type PortfolioBuilt, type PortfolioProjection,
+  analyzePortfolio, buildPortfolio, projectPortfolio, getStockSignal,
+  type Holding, type PortfolioAnalysis, type PortfolioBuilt, type PortfolioProjection, type StockSignal,
 } from "@/lib/api";
 
 const PIE_COLORS = [
@@ -65,7 +65,7 @@ function AllocationPie({ data }: { data: { ticker: string; weight: number; value
           ))}
         </Pie>
         <Tooltip
-          contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
+          contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
           formatter={(v) => [`${Number(v).toFixed(1)}%`, "Weight"]}
         />
       </PieChart>
@@ -139,6 +139,7 @@ function PortfolioAnalyzeSection() {
   const [newPrice, setNewPrice] = useState("");
   const [analysis, setAnalysis] = useState<PortfolioAnalysis | null>(null);
   const [projection, setProjection] = useState<PortfolioProjection | null>(null);
+  const [holdingSignals, setHoldingSignals] = useState<Record<string, StockSignal>>({});
   const [projLoading, setProjLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -175,6 +176,16 @@ function PortfolioAnalyzeSection() {
     try {
       const result = await analyzePortfolio(holdings);
       setAnalysis(result);
+      // Fetch signals for each unique ticker in parallel
+      const uniqueTickers = [...new Set(holdings.map(h => h.ticker))];
+      const signalResults = await Promise.allSettled(
+        uniqueTickers.map(t => getStockSignal(t))
+      );
+      const signals: Record<string, StockSignal> = {};
+      signalResults.forEach((res, i) => {
+        if (res.status === "fulfilled") signals[uniqueTickers[i]] = res.value;
+      });
+      setHoldingSignals(signals);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Analysis failed");
     } finally {
@@ -200,7 +211,7 @@ function PortfolioAnalyzeSection() {
               value={newTicker}
               onChange={(e) => setNewTicker(e.target.value)}
               placeholder="Ticker"
-              className="w-24 rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-24 rounded-md border border-border bg-background px-4 py-3 text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <input
               type="number"
@@ -209,7 +220,7 @@ function PortfolioAnalyzeSection() {
               placeholder="Shares"
               min="0"
               step="any"
-              className="w-24 rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-24 rounded-md border border-border bg-background px-4 py-3 text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <input
               type="number"
@@ -218,7 +229,7 @@ function PortfolioAnalyzeSection() {
               placeholder="Price ($)"
               min="0"
               step="0.01"
-              className="w-28 rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-28 rounded-md border border-border bg-background px-4 py-3 text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <Button onClick={addHolding} size="sm" disabled={!newTicker.trim()}>
               <Plus className="h-4 w-4 mr-1" /> Add
@@ -354,6 +365,46 @@ function PortfolioAnalyzeSection() {
             </div>
           )}
 
+          {/* Per-Holding Signals */}
+          {Object.keys(holdingSignals).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                  Per-Holding Signals
+                  <InfoTooltip text="Buy/Hold/Sell signal for each holding, combining market conditions with stock-specific factors (beta, analyst targets, P/E ratio)." />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {holdings.map((h, i) => {
+                    const sig = holdingSignals[h.ticker];
+                    if (!sig || sig.error) return null;
+                    return (
+                      <div key={`${h.ticker}-${i}`} className={`rounded-lg border p-3 ${
+                        sig.action.includes("Buy") ? "border-emerald-200 bg-emerald-50/50" :
+                        sig.action.includes("Sell") ? "border-red-200 bg-red-50/50" : "border-amber-200 bg-amber-50/50"
+                      }`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-sm">{h.ticker}</span>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                            sig.action.includes("Buy") ? "bg-emerald-100 text-emerald-700" :
+                            sig.action.includes("Sell") ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
+                          }`}>{sig.action}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Confidence: {sig.confidence}% · Score: {sig.composite_score > 0 ? "+" : ""}{sig.composite_score.toFixed(3)}
+                        </div>
+                        {sig.reasons[0] && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{sig.reasons[0]}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Allocation Pie */}
             <Card>
@@ -422,11 +473,11 @@ function PortfolioAnalyzeSection() {
                   </div>
                   <ResponsiveContainer width="100%" height={250}>
                     <AreaChart data={projection.quarterly}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                      <XAxis dataKey="quarter" tick={{ fill: "#888", fontSize: 11 }} tickFormatter={(q) => `Q${q}`} />
-                      <YAxis tick={{ fill: "#888", fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="quarter" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickFormatter={(q) => `Q${q}`} />
+                      <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} />
                       <Tooltip
-                        contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
+                        contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
                         formatter={(v) => [`$${Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, ""]}
                         labelFormatter={(q) => `Quarter ${q}`}
                       />
@@ -479,78 +530,117 @@ function PortfolioBuildSection() {
   };
 
   const riskOptions = [
-    { value: "conservative", label: "Conservative", desc: "Capital preservation" },
-    { value: "moderate", label: "Moderate", desc: "Balanced growth" },
-    { value: "aggressive", label: "Aggressive", desc: "Maximum growth" },
+    { value: "conservative", label: "Conservative", desc: "Capital preservation, bonds & dividends", icon: "🛡️" },
+    { value: "moderate", label: "Moderate", desc: "Balanced growth with some protection", icon: "⚖️" },
+    { value: "aggressive", label: "Aggressive", desc: "Maximum growth, higher volatility", icon: "🚀" },
   ];
 
-  const horizonOptions = ["1y", "3y", "5y", "10y"];
+  const horizonOptions = [
+    { value: "1y", label: "1 Year", desc: "Short-term" },
+    { value: "3y", label: "3 Years", desc: "Medium" },
+    { value: "5y", label: "5 Years", desc: "Standard" },
+    { value: "10y", label: "10 Years", desc: "Long-term" },
+  ];
+
+  const lossScenarios = [
+    { risk: "conservative", text: "If my portfolio dropped 10%, I would sell immediately to prevent further losses." },
+    { risk: "moderate", text: "If my portfolio dropped 20%, I'd be uncomfortable but hold. I'd sell at -30%." },
+    { risk: "aggressive", text: "If my portfolio dropped 30%+, I'd see it as a buying opportunity and add more." },
+  ];
+
+  const matchingScenario = lossScenarios.find(s => s.risk === risk);
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Investment Preferences
+          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+            Investment Profile
+            <InfoTooltip text="Answer these questions to help us recommend an allocation that matches your risk tolerance, time horizon, and goals. The algorithm uses these inputs to weight equity vs fixed income vs alternatives." />
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           {/* Risk Tolerance */}
           <div>
-            <p className="text-sm font-medium mb-3">Risk Tolerance</p>
-            <div className="grid grid-cols-3 gap-3">
+            <p className="text-sm font-medium mb-1">1. What is your risk tolerance?</p>
+            <p className="text-xs text-muted-foreground mb-3">How much portfolio volatility can you handle emotionally and financially?</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {riskOptions.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => setRisk(opt.value)}
-                  className={`rounded-lg border p-3 text-left transition-colors ${
+                  className={`rounded-lg border p-4 text-left transition-all ${
                     risk === opt.value
-                      ? "border-primary bg-primary/10"
+                      ? "border-primary bg-primary/10 ring-1 ring-primary/30"
                       : "border-border hover:border-muted-foreground/30"
                   }`}
                 >
-                  <p className="text-sm font-medium">{opt.label}</p>
-                  <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                  <p className="text-base font-medium">{opt.label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
                 </button>
               ))}
             </div>
+            {matchingScenario && (
+              <p className="text-xs text-muted-foreground mt-2 italic bg-muted/30 rounded px-3 py-2">
+                Your profile: &quot;{matchingScenario.text}&quot;
+              </p>
+            )}
           </div>
 
           {/* Investment Amount */}
           <div>
-            <p className="text-sm font-medium mb-2">Investment Amount ($)</p>
+            <p className="text-sm font-medium mb-1">2. How much do you want to invest?</p>
+            <p className="text-xs text-muted-foreground mb-3">Initial lump sum. You can adjust this later.</p>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {["1000", "5000", "10000", "25000", "50000", "100000"].map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setAmount(v)}
+                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    amount === v ? "bg-primary text-primary-foreground" : "bg-muted/50 hover:bg-muted text-muted-foreground"
+                  }`}
+                >
+                  ${Number(v).toLocaleString()}
+                </button>
+              ))}
+            </div>
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               min="100"
               step="100"
-              className="w-full max-w-xs rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Custom amount"
+              className="w-full max-w-xs rounded-md border border-border bg-background px-4 py-3 text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           {/* Time Horizon */}
           <div>
-            <p className="text-sm font-medium mb-2">Time Horizon</p>
-            <div className="flex gap-2">
+            <p className="text-sm font-medium mb-1">3. When do you need this money?</p>
+            <p className="text-xs text-muted-foreground mb-3">Longer horizons allow more aggressive allocations since you can ride out downturns.</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {horizonOptions.map((h) => (
                 <button
-                  key={h}
-                  onClick={() => setHorizon(h)}
-                  className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                    horizon === h
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted/50 hover:bg-muted text-muted-foreground"
+                  key={h.value}
+                  onClick={() => setHorizon(h.value)}
+                  className={`rounded-lg border p-3 text-center transition-all ${
+                    horizon === h.value
+                      ? "border-primary bg-primary/10 ring-1 ring-primary/30"
+                      : "border-border hover:border-muted-foreground/30"
                   }`}
                 >
-                  {h}
+                  <p className="text-base font-bold">{h.label}</p>
+                  <p className="text-xs text-muted-foreground">{h.desc}</p>
                 </button>
               ))}
             </div>
           </div>
 
-          <Button onClick={build} disabled={loading}>
-            {loading ? "Building..." : "Build Portfolio"}
+          <Separator />
+
+          <Button onClick={build} disabled={loading} size="lg">
+            {loading ? "Building..." : "Build My Portfolio"}
             {!loading && <ArrowRight className="h-4 w-4 ml-1" />}
           </Button>
         </CardContent>

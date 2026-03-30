@@ -1,14 +1,12 @@
 """
-Aegis Finance — In-Memory TTL Cache + Retry
-=============================================
+Aegis Finance — Two-Layer Cache (Memory + Disk) + Retry
+=========================================================
 
-Simple in-memory cache with time-to-live expiration.
-Thread-safe for concurrent FastAPI requests.
-Includes retry with exponential backoff for external API calls.
-No external dependencies (no Redis, no database).
+Memory cache for hot data, disk cache (diskcache/SQLite) for persistence
+across restarts. Thread-safe for concurrent FastAPI requests.
 
 Usage:
-    from backend.cache import cached, cache_clear, retry_with_backoff
+    from backend.cache import cached, cache_clear, retry_with_backoff, cache_ready
 
     @cached(ttl=3600)
     def expensive_function(ticker: str) -> dict:
@@ -24,37 +22,117 @@ import logging
 import threading
 import random
 from functools import wraps
+from pathlib import Path
 from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
 _cache: dict[str, dict[str, Any]] = {}
 _lock = threading.Lock()
+_cache_ready = False
+
+# ── Disk Cache Layer ──────────────────────────────────────────────────────────
+
+_CACHE_DIR = Path(__file__).parent.parent / ".cache"
+_disk_cache = None
+
+
+def _get_disk_cache():
+    """Lazy-init disk cache (diskcache with SQLite backend)."""
+    global _disk_cache
+    if _disk_cache is not None:
+        return _disk_cache
+    try:
+        import diskcache
+        _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        _disk_cache = diskcache.Cache(str(_CACHE_DIR), size_limit=500 * 1024 * 1024)
+        logger.info("Disk cache initialized at %s", _CACHE_DIR)
+        return _disk_cache
+    except ImportError:
+        logger.warning("diskcache not installed — disk persistence disabled")
+        return None
+    except Exception as e:
+        logger.warning("Disk cache init failed: %s", e)
+        return None
+
+
+def _disk_get(key: str, ttl_seconds: int) -> Optional[Any]:
+    """Read from disk cache if within TTL."""
+    dc = _get_disk_cache()
+    if dc is None:
+        return None
+    try:
+        entry = dc.get(key)
+        if entry is None:
+            return None
+        ts, value = entry
+        if time.time() - ts > ttl_seconds:
+            dc.delete(key)
+            return None
+        return value
+    except Exception:
+        return None
+
+
+def _disk_set(key: str, value: Any) -> None:
+    """Write to disk cache."""
+    dc = _get_disk_cache()
+    if dc is None:
+        return
+    try:
+        dc.set(key, (time.time(), value))
+    except Exception as e:
+        logger.debug("Disk cache write failed for %s: %s", key, e)
+
+
+# ── Public API ────────────────────────────────────────────────────────────────
 
 
 def cache_get(key: str, ttl_seconds: int) -> Optional[Any]:
-    """Return cached value if within TTL, else None."""
+    """Return cached value if within TTL. Checks memory first, then disk."""
     with _lock:
         entry = _cache.get(key)
-        if entry is None:
-            return None
-        if time.time() - entry["timestamp"] > ttl_seconds:
-            del _cache[key]
-            return None
-        return entry["value"]
+        if entry is not None:
+            if time.time() - entry["timestamp"] > ttl_seconds:
+                del _cache[key]
+            else:
+                return entry["value"]
+
+    # Memory miss — check disk
+    disk_val = _disk_get(key, ttl_seconds)
+    if disk_val is not None:
+        # Promote to memory
+        with _lock:
+            _cache[key] = {"value": disk_val, "timestamp": time.time()}
+        logger.debug("Disk cache hit (promoted): %s", key)
+        return disk_val
+
+    return None
 
 
 def cache_set(key: str, value: Any) -> None:
-    """Store value with current timestamp."""
+    """Store value in both memory and disk."""
     with _lock:
         _cache[key] = {"value": value, "timestamp": time.time()}
+    _disk_set(key, value)
 
 
 def cache_clear() -> None:
-    """Clear entire cache."""
+    """Clear memory cache. Disk cache persists for next startup."""
     with _lock:
         _cache.clear()
-    logger.info("Cache cleared")
+    logger.info("Memory cache cleared")
+
+
+def set_cache_ready(ready: bool = True) -> None:
+    """Mark cache as prewarmed."""
+    global _cache_ready
+    _cache_ready = ready
+
+
+def cache_ready() -> bool:
+    """Check if cache prewarm is complete."""
+    return _cache_ready
 
 
 def cached(ttl: int = 3600, key_prefix: str = ""):

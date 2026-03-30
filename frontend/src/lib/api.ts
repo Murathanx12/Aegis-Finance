@@ -93,11 +93,28 @@ export function getStockNews(ticker: string) {
   return fetchAPI<StockNewsResponse>(`/api/news/${ticker}`);
 }
 
+// Signals
+export function getMarketSignal() {
+  return fetchAPI<MarketSignal>("/api/signal");
+}
+
+export function getStockSignal(ticker: string) {
+  return fetchAPI<StockSignal>(`/api/stock/${ticker}/signal`);
+}
+
 // Savings
 export function projectSavings(params: SavingsRequest) {
   return fetchAPI<SavingsProjection>("/api/savings/project", {
     method: "POST",
     body: JSON.stringify(params),
+  });
+}
+
+// Portfolio questionnaire
+export function submitQuestionnaire(answers: QuestionnaireAnswers) {
+  return fetchAPI<QuestionnaireResult>("/api/portfolio/questionnaire", {
+    method: "POST",
+    body: JSON.stringify(answers),
   });
 }
 
@@ -316,6 +333,7 @@ export interface MarketNewsResponse {
     regime_override: string | null;
   };
   news: NewsItem[];
+  sector_impact?: Record<string, { relevance: number; headline_count: number; sample_headlines: string[] }>;
   llm_summary: { summary: string; sentiment: string } | null;
   llm_available: boolean;
 }
@@ -391,6 +409,34 @@ export interface PortfolioProjection {
   error?: string;
 }
 
+export interface MarketSignal {
+  action: string;
+  confidence: number;
+  color: string;
+  composite_score: number;
+  reasons: string[];
+  components: Record<string, number>;
+  sp500?: number;
+  regime?: string;
+  risk_score?: number;
+  vix?: number;
+  last_updated?: string;
+}
+
+export interface StockSignal {
+  ticker: string;
+  name?: string;
+  action: string;
+  confidence: number;
+  color: string;
+  composite_score: number;
+  reasons: string[];
+  beta_adj?: number;
+  current_price?: number;
+  market_action?: string;
+  error?: string;
+}
+
 export interface ShapExplanation {
   ticker?: string;
   crash_prob: number;
@@ -449,4 +495,21 @@ export interface PortfolioBuilt {
     shares: number;
     price: number;
   }[];
+}
+
+export interface QuestionnaireAnswers {
+  horizon: string;
+  risk_tolerance: string;
+  loss_reaction: string;
+  experience: string;
+  income_stability: string;
+  goal: string;
+}
+
+export interface QuestionnaireResult {
+  risk_score: number;
+  allocation_style: string;
+  description: string;
+  factors: QuestionnaireAnswers;
+  recommended_portfolio: PortfolioBuilt;
 }

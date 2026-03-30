@@ -39,6 +39,10 @@ def detect_regimes(data: pd.DataFrame, window: int = 252) -> tuple[pd.Series, st
     has_vix = "VIX" in data.columns
     has_risk = "Risk_Score" in data.columns
 
+    # Short-window drawdown thresholds
+    short_bear_1m = thresholds.get("short_bear_1m", -0.05)
+    short_bear_3m = thresholds.get("short_bear_3m", -0.08)
+
     for i in range(window, len(returns)):
         date_window = returns.index[max(0, i - window):i]
         w = log_returns.loc[date_window].dropna()
@@ -74,14 +78,34 @@ def detect_regimes(data: pd.DataFrame, window: int = 252) -> tuple[pd.Series, st
             else None
         )
 
-        # Bull → Volatile if stress signals flashing
+        # Short-window drawdown override: Bull cannot persist during sharp drops
+        if base_regime == "Bull":
+            # Check 21-day (1-month) return
+            if i >= 21:
+                ret_21d = float(data["SP500"].iloc[i] / data["SP500"].iloc[i - 21] - 1)
+            else:
+                ret_21d = 0.0
+            # Check 63-day (3-month) return
+            if i >= 63:
+                ret_63d = float(data["SP500"].iloc[i] / data["SP500"].iloc[i - 63] - 1)
+            else:
+                ret_63d = 0.0
+
+            if ret_21d < short_bear_1m or ret_63d < short_bear_3m:
+                # Sharp drawdown → at least Neutral, maybe Bear
+                if ret_21d < short_bear_1m * 2 or ret_63d < short_bear_3m * 2:
+                    base_regime = "Bear"
+                else:
+                    base_regime = "Neutral"
+
+        # Bull → Volatile if ANY stress signal flashing (was: required 2)
         if base_regime == "Bull":
             stress_signals = 0
             if vix_now is not None and vix_now > thresholds["vix_stress_threshold"]:
                 stress_signals += 1
             if risk_now is not None and risk_now > thresholds["risk_stress_threshold"]:
                 stress_signals += 1
-            if stress_signals >= 2:
+            if stress_signals >= 1:
                 base_regime = "Volatile"
 
         # Bear → Neutral if stress very low (recovery)

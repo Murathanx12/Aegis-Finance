@@ -13,7 +13,7 @@ import re
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
-from backend.services.portfolio_engine import PortfolioEngine
+from backend.services.portfolio_engine import PortfolioEngine, score_risk_profile
 
 router = APIRouter(prefix="/api/portfolio", tags=["portfolio"])
 logger = logging.getLogger(__name__)
@@ -43,6 +43,33 @@ class BuildRequest(BaseModel):
     risk_tolerance: str = Field("moderate", pattern="^(conservative|moderate|aggressive)$")
     investment_amount: float = Field(10000, gt=0)
     time_horizon: str = Field("5y", pattern="^(1y|3y|5y|10y)$")
+
+
+class QuestionnaireRequest(BaseModel):
+    horizon: str = Field("5y", pattern="^(1y|3y|5y|10y|20y)$")
+    risk_tolerance: str = Field("moderate", pattern="^(conservative|moderate|aggressive)$")
+    loss_reaction: str = Field("hold", pattern="^(sell|hold|buy_more)$")
+    experience: str = Field("beginner", pattern="^(none|beginner|intermediate|advanced)$")
+    income_stability: str = Field("stable", pattern="^(unstable|stable|very_stable)$")
+    goal: str = Field("growth", pattern="^(preservation|income|growth|aggressive_growth)$")
+
+
+@router.post("/questionnaire")
+async def portfolio_questionnaire(request: QuestionnaireRequest):
+    """Score a risk profile from questionnaire answers and return recommended allocation."""
+    try:
+        profile = score_risk_profile(request.model_dump())
+        # Auto-build a portfolio from the profile
+        portfolio = await asyncio.to_thread(
+            PortfolioEngine.build_portfolio,
+            risk_tolerance=profile["allocation_style"],
+            investment_amount=10000,
+            time_horizon=request.horizon,
+        )
+        return {**profile, "recommended_portfolio": portfolio}
+    except Exception as e:
+        logger.error("portfolio questionnaire failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/analyze")

@@ -61,7 +61,7 @@ export function CrashGauge({ data }: { data: MarketStatus | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+        <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
           Crash Probability
           <InfoTooltip
             text="Probability of a 20%+ drawdown from current levels over each time horizon. Produced by LightGBM + Logistic Regression ensemble. This is a risk indicator, not a prediction of when a crash will happen."

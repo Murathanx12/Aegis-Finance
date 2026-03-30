@@ -287,14 +287,14 @@ export default function RetirementPage() {
             <CardContent>
               <ResponsiveContainer width="100%" height={350}>
                 <AreaChart data={result.projections}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                  <XAxis dataKey="age" tick={{ fill: "#888", fontSize: 11 }} label={{ value: "Age", position: "insideBottom", offset: -5, fill: "#888" }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="age" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} label={{ value: "Age", position: "insideBottom", offset: -5, fill: "var(--muted-foreground)" }} />
                   <YAxis
-                    tick={{ fill: "#888", fontSize: 11 }}
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
                     tickFormatter={(v) => v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${(v / 1000).toFixed(0)}K`}
                   />
                   <Tooltip
-                    contentStyle={{ backgroundColor: "#1e1e2e", border: "1px solid #333", borderRadius: 8 }}
+                    contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
                     formatter={(v) => [`$${Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, ""]}
                     labelFormatter={(l) => `Age ${l}`}
                   />

@@ -4,10 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useTheme } from "next-themes";
 import {
   LayoutDashboard,
   TrendingDown,
-  LineChart,
   BarChart3,
   Briefcase,
   PieChart,
@@ -15,7 +15,8 @@ import {
   Target,
   Info,
   Menu,
-  X,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -24,8 +25,7 @@ import { useBeginnerMode } from "@/hooks/use-beginner-mode";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/crash", label: "Crash Prediction", icon: TrendingDown },
-  { href: "/simulation", label: "Simulation", icon: LineChart },
+  { href: "/outlook", label: "Market Outlook", icon: TrendingDown },
   { href: "/stock", label: "Stock Analysis", icon: BarChart3 },
   { href: "/sectors", label: "Sectors", icon: PieChart },
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
@@ -47,13 +47,13 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
             href={item.href}
             onClick={onClick}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              "flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium transition-colors",
               active
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-accent hover:text-foreground"
             )}
           >
-            <item.icon className="h-4 w-4 shrink-0" />
+            <item.icon className="h-5 w-5 shrink-0" />
             {item.label}
           </Link>
         );
@@ -91,6 +91,22 @@ function BeginnerToggle() {
   );
 }
 
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark";
+
+  return (
+    <button
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      className="flex items-center gap-2 w-full rounded-lg px-3 py-2 text-xs font-medium transition-colors text-muted-foreground hover:bg-accent hover:text-foreground"
+      aria-label="Toggle theme"
+    >
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      {isDark ? "Light Mode" : "Dark Mode"}
+    </button>
+  );
+}
+
 function SidebarContent({ onClick }: { onClick?: () => void }) {
   return (
     <div className="flex h-full flex-col">
@@ -100,7 +116,8 @@ function SidebarContent({ onClick }: { onClick?: () => void }) {
       </div>
       <NavLinks onClick={onClick} />
       <div className="mt-auto px-6 py-4 space-y-3">
-        <div className="px-0">
+        <div className="px-0 space-y-1">
+          <ThemeToggle />
           <BeginnerToggle />
         </div>
         <p className="text-xs text-muted-foreground">

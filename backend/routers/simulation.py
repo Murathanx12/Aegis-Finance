@@ -67,6 +67,23 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
 
     crash_freq = config["simulation"]["jump_diffusion"]["annual_rate"]
 
+    # Compute valuation penalty from CAPE ratio (capped per Phase 1G)
+    val_cfg = config["simulation"]["valuation"]
+    val_penalty = 0.0
+    try:
+        cape_avg = val_cfg["cape_long_run_average"]
+        cape_factor = val_cfg["cape_penalty_factor"]
+        penalty_cap = val_cfg.get("val_penalty_cap", 0.015)
+        # Estimate current CAPE from P/E-like measure (forward PE as proxy)
+        # For now, use a simplified approach: if market is >20% above long-run CAPE,
+        # apply penalty proportional to overshoot, capped at penalty_cap
+        sp500_pe = 25.0  # approximate current S&P 500 PE
+        if sp500_pe > cape_avg:
+            raw_penalty = cape_factor * np.log(sp500_pe / cape_avg)
+            val_penalty = min(raw_penalty, penalty_cap)
+    except Exception:
+        pass
+
     results = run_monte_carlo(
         current_price=start_price,
         current_regime=current_regime,
@@ -74,7 +91,7 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
         crash_freq=crash_freq,
         current_vix=current_vix,
         yield_curve=yield_curve,
-        val_penalty=0.0,
+        val_penalty=val_penalty,
         n_sims_override=n_sims,
         forecast_days_override=forecast_days,
     )

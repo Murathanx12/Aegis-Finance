@@ -263,10 +263,12 @@ def _get_holders(stock) -> Optional[dict]:
         if inst is not None and hasattr(inst, "iterrows") and not inst.empty:
             top = []
             for _, row in inst.head(10).iterrows():
+                shares_raw = row.get("Shares")
+                pct_raw = row.get("% Out")
                 holder = {
                     "name": str(row.get("Holder", "")),
-                    "shares": int(row.get("Shares", 0)) if row.get("Shares") else 0,
-                    "pct": float(row.get("% Out", 0)) if row.get("% Out") else 0,
+                    "shares": int(shares_raw) if shares_raw is not None and not (isinstance(shares_raw, float) and np.isnan(shares_raw)) and shares_raw > 0 else None,
+                    "pct": float(pct_raw) if pct_raw is not None and not (isinstance(pct_raw, float) and np.isnan(pct_raw)) and pct_raw > 0 else None,
                 }
                 top.append(holder)
             result["top_holders"] = top

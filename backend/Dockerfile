@@ -10,13 +10,9 @@ RUN apt-get update && \
 # Upgrade pip for better retry handling
 RUN pip install --upgrade pip
 
-# Install heavy ML packages first (most likely to timeout)
-RUN pip install --no-cache-dir --timeout 300 \
-    numpy pandas scipy scikit-learn lightgbm shap
-
-# Install remaining deps
+# Install all deps in one layer with generous timeout
 COPY backend/requirements.txt backend/requirements.txt
-RUN pip install --no-cache-dir --timeout 120 -r backend/requirements.txt
+RUN pip install --no-cache-dir --prefer-binary --timeout 600 --retries 10 -r backend/requirements.txt
 
 # Copy application code
 COPY backend/ backend/
