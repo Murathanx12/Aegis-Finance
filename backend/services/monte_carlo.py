@@ -174,7 +174,8 @@ def simulate_paths(
     persistence = garch_persistence if garch_persistence is not None else 0.97
     long_run_vol = historical_sigma
     kappa_vol = max(0.5, (1 - persistence) * 252)
-    xi = 0.06  # Vol-of-vol noise coefficient
+    garch_params = sim_cfg.get("garch_derived_params", {})
+    xi = np.clip(0.06, garch_params.get("xi_min", 0.02), garch_params.get("xi_max", 0.15))
 
     # ══════════════════════════════════════════════════════════════
     # 3. JUMP PROCESS — from ML crash probability

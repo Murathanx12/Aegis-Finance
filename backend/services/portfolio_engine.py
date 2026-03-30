@@ -23,6 +23,8 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 
+from backend.config import config
+
 logger = logging.getLogger(__name__)
 
 # Goal-based allocation templates
@@ -268,7 +270,7 @@ class PortfolioEngine:
         max_dd = float(drawdown.min()) * 100
 
         # Sharpe ratio
-        rf_daily = 0.04 / 252
+        rf_daily = config.get("risk_free_rate", 0.04) / 252
         sharpe = float((np.mean(port_returns) - rf_daily) / np.std(port_returns) * np.sqrt(252))
 
         return {
@@ -426,6 +428,28 @@ class PortfolioEngine:
             total = sum(allocations.values())
             allocations = {k: v / total for k, v in allocations.items()}
 
+            # Blend with template to enforce risk tolerance.
+            # BL max_sharpe ignores risk profile, so we blend:
+            #   conservative: 70% template + 30% BL
+            #   moderate:     50% template + 50% BL
+            #   aggressive:   30% template + 70% BL
+            blend_ratios = {"conservative": 0.30, "moderate": 0.50, "aggressive": 0.70}
+            bl_weight = blend_ratios.get(risk_tolerance, 0.50)
+            template_alloc = dict(_ALLOCATION_TEMPLATES.get(
+                risk_tolerance, _ALLOCATION_TEMPLATES["moderate"]
+            )["allocations"])
+
+            all_tickers = set(list(allocations.keys()) + list(template_alloc.keys()))
+            blended = {}
+            for t in all_tickers:
+                bl_w = allocations.get(t, 0.0) * bl_weight
+                tmpl_w = template_alloc.get(t, 0.0) * (1 - bl_weight)
+                blended[t] = bl_w + tmpl_w
+
+            allocations = {t: w for t, w in blended.items() if w > 0.01}
+            total = sum(allocations.values())
+            allocations = {k: v / total for k, v in allocations.items()}
+
             # Get portfolio performance
             try:
                 perf = ef.portfolio_performance(risk_free_rate=0.04)
@@ -481,24 +505,22 @@ class PortfolioEngine:
             weights = hrp.optimize()
             weights = dict(weights)
 
-            # Adjust for risk tolerance: scale equity vs bond exposure
-            equity_etfs = {"VTI", "VXUS", "QQQ", "VGT", "XLE", "XLV"}
-            bond_etfs = {"BND", "VTIP"}
+            # Blend with template to enforce risk tolerance.
+            # HRP naturally over-weights low-vol assets (bonds), so blend
+            # with template to get the right equity/bond mix.
+            blend_ratios = {"conservative": 0.40, "moderate": 0.50, "aggressive": 0.60}
+            hrp_weight = blend_ratios.get(risk_tolerance, 0.50)
+            template_alloc = dict(_ALLOCATION_TEMPLATES.get(
+                risk_tolerance, _ALLOCATION_TEMPLATES["moderate"]
+            )["allocations"])
 
-            if risk_tolerance == "conservative":
-                # Boost bonds, reduce equity
-                for t in weights:
-                    if t in equity_etfs:
-                        weights[t] *= 0.7
-                    elif t in bond_etfs:
-                        weights[t] *= 1.5
-            elif risk_tolerance == "aggressive":
-                # Boost equity, reduce bonds
-                for t in weights:
-                    if t in equity_etfs:
-                        weights[t] *= 1.3
-                    elif t in bond_etfs:
-                        weights[t] *= 0.5
+            all_tickers = set(list(weights.keys()) + list(template_alloc.keys()))
+            blended = {}
+            for t in all_tickers:
+                h_w = weights.get(t, 0.0) * hrp_weight
+                tmpl_w = template_alloc.get(t, 0.0) * (1 - hrp_weight)
+                blended[t] = h_w + tmpl_w
+            weights = blended
 
             # Cap any single position at 30% to ensure diversification
             max_weight = 0.30

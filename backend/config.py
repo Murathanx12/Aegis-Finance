@@ -146,6 +146,9 @@ config: dict = {
         },
     },
 
+    # ── GLOBAL MARKET PARAMETERS ────────────────────────────────────────
+    "risk_free_rate": 0.04,  # Annual risk-free rate (10Y Treasury approx, updated 2026-03)
+
     # ── SIMULATION SETTINGS ──────────────────────────────────────────────
     "simulation": {
         "forecast_years": 5,
