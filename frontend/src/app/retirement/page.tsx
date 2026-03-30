@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, TrendingUp } from "lucide-react";
+import { InfoTooltip } from "@/components/info-tooltip";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
@@ -26,10 +27,13 @@ function saveSettings(settings: Record<string, string>) {
   localStorage.setItem("aegis_retirement", JSON.stringify(settings));
 }
 
-function MetricCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function MetricCard({ label, value, sub, tooltip }: { label: string; value: string; sub?: string; tooltip?: string }) {
   return (
     <div className="rounded-lg bg-muted/30 p-4">
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+        {label}
+        {tooltip && <InfoTooltip text={tooltip} />}
+      </p>
       <p className="text-lg font-bold tabular-nums">{value}</p>
       {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
     </div>
@@ -158,7 +162,10 @@ export default function RetirementPage() {
 
           {/* Risk tolerance */}
           <div>
-            <p className="text-sm font-medium mb-2">Risk Tolerance (Expected Return)</p>
+            <p className="text-sm font-medium mb-2">
+              Risk Tolerance (Expected Return)
+              <InfoTooltip text="Higher expected returns come with higher volatility. Conservative assumes bonds + some stocks (~5%), moderate is a balanced portfolio (~7%), aggressive is mostly stocks (~10%). Historical S&P 500 average is ~10% nominal." />
+            </p>
             <div className="grid grid-cols-3 gap-3">
               {riskOptions.map((opt) => (
                 <button
@@ -180,7 +187,10 @@ export default function RetirementPage() {
           {/* Advanced */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium mb-1 block">Inflation Rate (%)</label>
+              <label className="text-sm font-medium mb-1 block">
+                Inflation Rate (%)
+                <InfoTooltip text="Inflation erodes purchasing power over time. The Fed targets 2% annually. A $1M portfolio at retirement will buy less than $1M today — the 'real' value adjusts for this." />
+              </label>
               <input
                 type="number" value={inflation} onChange={(e) => setInflation(e.target.value)}
                 min="0" max="20" step="0.1"
@@ -223,11 +233,13 @@ export default function RetirementPage() {
               label="Final Balance (Nominal)"
               value={fmt(result.summary.final_nominal)}
               sub={`${(result.summary.nominal_rate * 100).toFixed(0)}% annual return`}
+              tooltip="The total dollar amount at retirement before adjusting for inflation. This is what you'd see in your account."
             />
             <MetricCard
               label="Final Balance (Real)"
               value={fmt(result.summary.final_real)}
               sub={`After ${(result.summary.inflation_rate * 100).toFixed(1)}% inflation`}
+              tooltip="Your balance in today's purchasing power. This is what your money will actually buy — the more honest number."
             />
             <MetricCard
               label="Total Contributed"

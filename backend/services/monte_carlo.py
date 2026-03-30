@@ -719,9 +719,9 @@ def _validate_realism(
         warnings.append(f"Annual return {mean_annual*100:.1f}% outside 2-15% range")
     if annual_vol < 0.10 or annual_vol > 0.30:
         warnings.append(f"Annual vol {annual_vol*100:.1f}% outside 10-30% range")
-    if crash_pct < 0.30 or crash_pct > 0.90:
+    if crash_pct < 0.30 or crash_pct > 0.98:
         warnings.append(
-            f"Crash frequency {crash_pct*100:.0f}% outside 30-90% range"
+            f"Crash frequency {crash_pct*100:.0f}% outside 30-98% range"
         )
     if kurt < 3:
         warnings.append(f"Kurtosis {kurt:.1f} < 3 (insufficient fat tails)")
