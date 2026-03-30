@@ -52,6 +52,10 @@ export function getScenarios() {
 }
 
 // Stock
+export function getStockScreener() {
+  return fetchAPI<ScreenerResponse>("/api/stock/screener");
+}
+
 export function getStockAnalysis(ticker: string) {
   return fetchAPI<StockAnalysis>(`/api/stock/${ticker}`);
 }
@@ -443,6 +447,26 @@ export interface ShapExplanation {
   horizon: string;
   top_features: { feature: string; shap_value: number; feature_value: number | null }[];
   status?: string;
+}
+
+export interface ScreenerStock {
+  ticker: string;
+  name: string;
+  sector: string;
+  current_price: number;
+  expected_return: number;
+  sharpe: number;
+  prob_loss: number;
+  volatility: number;
+  beta: number;
+  pe_ratio: number | null;
+  analyst_target: number | null;
+  market_cap: number | null;
+}
+
+export interface ScreenerResponse {
+  stocks: ScreenerStock[];
+  count: number;
 }
 
 export interface SectorsResponse {

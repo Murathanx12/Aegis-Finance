@@ -125,6 +125,25 @@ config: dict = {
             "6m": 140,
             "12m": 265,
         },
+        # Purged CV settings (Phase 1.1)
+        "purged_cv": {
+            "n_splits": 5,
+            "embargo_days": {"3m": 21, "6m": 63, "12m": 126},
+        },
+        # Walk-forward settings (Phase 1.2)
+        "walk_forward": {
+            "holdout_years": 2,
+            "step_days": 126,
+            "bootstrap_n": 1000,
+        },
+        # Sample uniqueness weighting (Phase 1.5)
+        "sample_uniqueness": True,
+        # Drift detection (Phase 4.4)
+        "drift": {
+            "psi_threshold": 0.2,
+            "ks_p_threshold": 0.01,
+            "n_bins": 10,
+        },
     },
 
     # ── SIMULATION SETTINGS ──────────────────────────────────────────────
@@ -137,8 +156,12 @@ config: dict = {
             "annual_rate": 0.07,          # ~7% annual prob of sudden jump (~1/14yr)
             "mean": -0.10,                # Average jump size (-10%)
             "std": 0.05,                  # Jump size volatility
-            "t_degrees_of_freedom": 8,    # Student-t df for tail thickness
+            "t_degrees_of_freedom": 8,    # Student-t df for tail thickness (fallback; prefer GARCH-estimated nu)
         },
+        # Antithetic variates (Phase 2.2)
+        "use_antithetic": True,
+        # Tail estimation (Phase 2.2)
+        "tail_mode_paths": 50000,
         # HMM regime blending
         "hmm_drift_blend": 0.15,
         "hmm_vol_blend": 0.15,
@@ -169,6 +192,7 @@ config: dict = {
             "cape_long_run_average": 17.0,
             "cape_penalty_factor": 0.03,
             "val_penalty_cap": 0.015,   # Max 1.5% annual drag from CAPE (Phase 1G)
+            "current_cape_fallback": 37.0,  # Shiller CAPE as of March 2026 (~36-39 range)
         },
     },
 

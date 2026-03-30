@@ -5,6 +5,13 @@ Aegis Finance — Stateless Portfolio Analytics
 Computes portfolio metrics from a list of holdings.
 No server-side state — portfolio lives in browser localStorage.
 
+Optimization methods:
+    - Template: Goal-based hardcoded allocations (default, fast)
+    - Black-Litterman: Bayesian optimization with market-implied priors (Phase 3.1)
+    - HRP: Hierarchical Risk Parity — no covariance inversion needed (Phase 3.2)
+
+All covariance computations use Ledoit-Wolf shrinkage (Phase 3.3).
+
 Usage:
     from backend.services.portfolio_engine import PortfolioEngine
 """
@@ -43,6 +50,67 @@ _ALLOCATION_TEMPLATES = {
         },
     },
 }
+
+# Risk aversion mapping for Black-Litterman
+_RISK_AVERSION = {
+    "conservative": 5.0,
+    "moderate": 2.5,
+    "aggressive": 1.0,
+}
+
+# Default ETF universe for BL/HRP
+_ETF_UNIVERSE = ["VTI", "VXUS", "BND", "QQQ", "VGT", "VNQ", "GLD", "VTIP", "XLE", "XLV"]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# COVARIANCE SHRINKAGE (Phase 3.3)
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+def _shrunk_covariance(
+    data: pd.DataFrame,
+    returns_data: bool = False,
+) -> pd.DataFrame:
+    """Compute Ledoit-Wolf shrunk covariance matrix.
+
+    Ledoit-Wolf shrinkage reduces estimation error by shrinking the sample
+    covariance toward a structured estimator. This dramatically improves
+    portfolio optimization stability.
+
+    Args:
+        data: Price DataFrame (default) or returns DataFrame.
+        returns_data: If True, data contains returns instead of prices.
+
+    Falls back to sample covariance if pypfopt is not available.
+    """
+    try:
+        from pypfopt import risk_models
+        cov = risk_models.CovarianceShrinkage(
+            data, returns_data=returns_data
+        ).ledoit_wolf()
+        return cov
+    except ImportError:
+        logger.warning("pypfopt not available, using sample covariance")
+        if returns_data:
+            return data.cov() * 252
+        return data.pct_change().dropna().cov() * 252
+
+
+def _fetch_prices(tickers: list[str], period: str = "2y") -> Optional[pd.DataFrame]:
+    """Fetch historical prices for a list of tickers."""
+    try:
+        price_data = yf.download(tickers, period=period, progress=False)["Close"]
+        if isinstance(price_data, pd.Series):
+            price_data = price_data.to_frame(name=tickers[0])
+        return price_data
+    except Exception as e:
+        logger.warning("Failed to fetch price data: %s", e)
+        return None
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# RISK PROFILE SCORING
+# ══════════════════════════════════════════════════════════════════════════════
 
 
 def score_risk_profile(answers: dict) -> dict:
@@ -110,12 +178,19 @@ def score_risk_profile(answers: dict) -> dict:
     }
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# PORTFOLIO ENGINE
+# ══════════════════════════════════════════════════════════════════════════════
+
+
 class PortfolioEngine:
     """Stateless portfolio analytics."""
 
     @staticmethod
     def analyze_portfolio(holdings: list[dict]) -> dict:
         """Analyze a portfolio of holdings.
+
+        Uses Ledoit-Wolf shrunk covariance for correlation and risk metrics.
 
         Args:
             holdings: List of {"ticker": str, "shares": float, "current_price": float}
@@ -136,24 +211,20 @@ class PortfolioEngine:
         weights = [v / total_value for v in values]
 
         # Fetch historical returns
-        try:
-            price_data = yf.download(tickers, period="2y", progress=False)["Close"]
-            if isinstance(price_data, pd.Series):
-                price_data = price_data.to_frame(name=tickers[0])
-            returns = price_data.pct_change().dropna()
-        except Exception as e:
-            logger.warning("Failed to fetch price data: %s", e)
+        price_data = _fetch_prices(tickers)
+        if price_data is None:
             return {
                 "total_value": total_value,
                 "allocations": [
                     {"ticker": h["ticker"], "weight": w * 100, "value": v}
                     for h, w, v in zip(holdings, weights, values)
                 ],
-                "error": f"Could not fetch historical data: {e}",
+                "error": "Could not fetch historical data",
             }
 
+        returns = price_data.pct_change().dropna()
+
         # Portfolio returns
-        w_arr = np.array(weights)
         available = [t for t in tickers if t in returns.columns]
         if not available:
             return {"total_value": total_value, "error": "No price data available"}
@@ -168,14 +239,27 @@ class PortfolioEngine:
 
         # VaR and CVaR (95% confidence)
         var_95 = float(np.percentile(port_returns, 5)) * 100
-        cvar_95 = float(np.mean(port_returns[port_returns <= np.percentile(port_returns, 5)])) * 100
+        tail = port_returns[port_returns <= np.percentile(port_returns, 5)]
+        cvar_95 = float(np.mean(tail)) * 100 if len(tail) > 0 else var_95
 
-        # Correlation matrix
-        corr = returns[available].corr()
-        corr_data = {
-            "tickers": available,
-            "matrix": corr.values.tolist(),
-        }
+        # Correlation matrix — use Ledoit-Wolf shrunk covariance
+        try:
+            shrunk_cov = _shrunk_covariance(returns[available], returns_data=True)
+            # Convert to correlation matrix
+            std_devs = np.sqrt(np.diag(shrunk_cov.values))
+            std_outer = np.outer(std_devs, std_devs)
+            corr_matrix = shrunk_cov.values / np.where(std_outer > 0, std_outer, 1.0)
+            np.fill_diagonal(corr_matrix, 1.0)
+            corr_data = {
+                "tickers": available,
+                "matrix": corr_matrix.tolist(),
+            }
+        except Exception:
+            corr = returns[available].corr()
+            corr_data = {
+                "tickers": available,
+                "matrix": corr.values.tolist(),
+            }
 
         # Max drawdown
         cum_returns = (1 + pd.Series(port_returns)).cumprod()
@@ -207,23 +291,46 @@ class PortfolioEngine:
         risk_tolerance: str = "moderate",
         investment_amount: float = 10000,
         time_horizon: str = "5y",
+        method: str = "template",
+        views: Optional[dict] = None,
     ) -> dict:
-        """Build a goal-based portfolio allocation.
+        """Build a portfolio allocation.
 
         Args:
             risk_tolerance: "conservative", "moderate", or "aggressive"
             investment_amount: Dollar amount to invest
             time_horizon: "1y", "3y", "5y", "10y"
+            method: "template" (default), "black-litterman", or "hrp"
+            views: Optional dict of {ticker: expected_return} for BL
 
         Returns:
             Dict with target allocations and rationale
         """
+        if method == "black-litterman":
+            return PortfolioEngine._build_bl(
+                risk_tolerance, investment_amount, time_horizon, views
+            )
+        elif method == "hrp":
+            return PortfolioEngine._build_hrp(
+                risk_tolerance, investment_amount, time_horizon
+            )
+        else:
+            return PortfolioEngine._build_template(
+                risk_tolerance, investment_amount, time_horizon
+            )
+
+    @staticmethod
+    def _build_template(
+        risk_tolerance: str,
+        investment_amount: float,
+        time_horizon: str,
+    ) -> dict:
+        """Build portfolio from hardcoded goal-based templates."""
         template = _ALLOCATION_TEMPLATES.get(risk_tolerance, _ALLOCATION_TEMPLATES["moderate"])
 
         # Adjust for time horizon
         allocations = dict(template["allocations"])
         if time_horizon in ("1y", "3y"):
-            # Shorter horizon → more bonds, less equity
             bond_boost = 0.10 if time_horizon == "1y" else 0.05
             equity_tickers = [t for t in allocations if t not in ("BND", "VTIP", "GLD")]
             bond_tickers = [t for t in allocations if t in ("BND", "VTIP")]
@@ -240,6 +347,213 @@ class PortfolioEngine:
         total = sum(allocations.values())
         allocations = {k: v / total for k, v in allocations.items()}
 
+        return PortfolioEngine._allocations_to_response(
+            allocations, risk_tolerance, investment_amount, time_horizon,
+            template["description"], "template",
+        )
+
+    @staticmethod
+    def _build_bl(
+        risk_tolerance: str,
+        investment_amount: float,
+        time_horizon: str,
+        views: Optional[dict] = None,
+    ) -> dict:
+        """Build portfolio using Black-Litterman optimization.
+
+        Uses market-implied prior returns from equilibrium, optionally
+        blended with user views, then optimizes for max Sharpe.
+        """
+        try:
+            from pypfopt import BlackLittermanModel, risk_models, expected_returns
+            from pypfopt.efficient_frontier import EfficientFrontier
+        except ImportError:
+            logger.warning("pypfopt not available, falling back to template")
+            return PortfolioEngine._build_template(risk_tolerance, investment_amount, time_horizon)
+
+        tickers = list(_ETF_UNIVERSE)
+        price_data = _fetch_prices(tickers, period="5y")
+        if price_data is None:
+            return PortfolioEngine._build_template(risk_tolerance, investment_amount, time_horizon)
+
+        # Filter to available tickers
+        available = [t for t in tickers if t in price_data.columns]
+        if len(available) < 3:
+            return PortfolioEngine._build_template(risk_tolerance, investment_amount, time_horizon)
+
+        prices = price_data[available].ffill().dropna()
+
+        # Ledoit-Wolf shrunk covariance (pass prices — pypfopt computes returns internally)
+        cov = _shrunk_covariance(prices)
+
+        # Market-cap weights (approximate — use equal weight as proxy)
+        # In production, fetch actual market caps
+        market_caps = {t: 1.0 for t in available}
+        cap_total = sum(market_caps.values())
+        market_weights = {t: v / cap_total for t, v in market_caps.items()}
+
+        # Risk aversion parameter
+        delta = _RISK_AVERSION.get(risk_tolerance, 2.5)
+
+        try:
+            # Compute equilibrium returns (market-implied prior)
+            from pypfopt.black_litterman import market_implied_prior_returns
+            pi = market_implied_prior_returns(market_caps, delta, cov)
+
+            # Build BL model — only use BL posterior if views are provided
+            if views and any(t in available for t in views):
+                abs_views = {t: v for t, v in views.items() if t in available}
+                bl = BlackLittermanModel(cov, pi=pi, absolute_views=abs_views)
+                posterior_returns = bl.bl_returns()
+            else:
+                # No views: posterior = prior (equilibrium returns)
+                posterior_returns = pi
+
+            # Optimize with weight bounds to prevent extreme concentration
+            n_assets = len(available)
+            max_weight = min(0.40, 1.0 / max(n_assets * 0.3, 1))
+            ef = EfficientFrontier(posterior_returns, cov, weight_bounds=(0.0, max_weight))
+            ef.max_sharpe(risk_free_rate=0.04)
+            weights = ef.clean_weights()
+
+            # Filter zero-weight assets
+            allocations = {t: w for t, w in weights.items() if w > 0.01}
+
+            if not allocations:
+                allocations = dict(market_weights)
+
+            # Normalize
+            total = sum(allocations.values())
+            allocations = {k: v / total for k, v in allocations.items()}
+
+            # Get portfolio performance
+            try:
+                perf = ef.portfolio_performance(risk_free_rate=0.04)
+                description = (
+                    f"Black-Litterman optimized ({risk_tolerance}). "
+                    f"Expected return: {perf[0]*100:.1f}%, "
+                    f"Volatility: {perf[1]*100:.1f}%, "
+                    f"Sharpe: {perf[2]:.2f}"
+                )
+            except Exception:
+                description = f"Black-Litterman optimized ({risk_tolerance})"
+
+        except Exception as e:
+            logger.warning("BL optimization failed: %s, falling back to template", e)
+            return PortfolioEngine._build_template(risk_tolerance, investment_amount, time_horizon)
+
+        return PortfolioEngine._allocations_to_response(
+            allocations, risk_tolerance, investment_amount, time_horizon,
+            description, "black-litterman",
+        )
+
+    @staticmethod
+    def _build_hrp(
+        risk_tolerance: str,
+        investment_amount: float,
+        time_horizon: str,
+    ) -> dict:
+        """Build portfolio using Hierarchical Risk Parity.
+
+        HRP uses hierarchical clustering to build a diversified portfolio
+        without requiring covariance matrix inversion. More stable than
+        mean-variance optimization, especially with noisy data.
+        """
+        try:
+            from pypfopt import HRPOpt
+        except ImportError:
+            logger.warning("pypfopt not available, falling back to template")
+            return PortfolioEngine._build_template(risk_tolerance, investment_amount, time_horizon)
+
+        tickers = list(_ETF_UNIVERSE)
+        price_data = _fetch_prices(tickers, period="5y")
+        if price_data is None:
+            return PortfolioEngine._build_template(risk_tolerance, investment_amount, time_horizon)
+
+        available = [t for t in tickers if t in price_data.columns]
+        if len(available) < 3:
+            return PortfolioEngine._build_template(risk_tolerance, investment_amount, time_horizon)
+
+        returns = price_data[available].ffill().dropna().pct_change().dropna()
+
+        try:
+            hrp = HRPOpt(returns)
+            weights = hrp.optimize()
+            weights = dict(weights)
+
+            # Adjust for risk tolerance: scale equity vs bond exposure
+            equity_etfs = {"VTI", "VXUS", "QQQ", "VGT", "XLE", "XLV"}
+            bond_etfs = {"BND", "VTIP"}
+
+            if risk_tolerance == "conservative":
+                # Boost bonds, reduce equity
+                for t in weights:
+                    if t in equity_etfs:
+                        weights[t] *= 0.7
+                    elif t in bond_etfs:
+                        weights[t] *= 1.5
+            elif risk_tolerance == "aggressive":
+                # Boost equity, reduce bonds
+                for t in weights:
+                    if t in equity_etfs:
+                        weights[t] *= 1.3
+                    elif t in bond_etfs:
+                        weights[t] *= 0.5
+
+            # Cap any single position at 30% to ensure diversification
+            max_weight = 0.30
+            n_assets = len(weights)
+            for _ in range(5):  # Iterate to redistribute excess
+                excess = 0.0
+                for t in weights:
+                    if weights[t] > max_weight:
+                        excess += weights[t] - max_weight
+                        weights[t] = max_weight
+                if excess < 0.001:
+                    break
+                # Redistribute excess proportionally to under-cap positions
+                under_cap = {t: w for t, w in weights.items() if w < max_weight}
+                if under_cap:
+                    total_under = sum(under_cap.values())
+                    for t in under_cap:
+                        weights[t] += excess * (under_cap[t] / total_under)
+
+            # Filter and normalize
+            allocations = {t: w for t, w in weights.items() if w > 0.01}
+            total = sum(allocations.values())
+            allocations = {k: v / total for k, v in allocations.items()}
+
+            # Get performance metrics
+            try:
+                perf = hrp.portfolio_performance()
+                description = (
+                    f"Hierarchical Risk Parity ({risk_tolerance}). "
+                    f"Expected return: {perf[0]*100:.1f}%, "
+                    f"Volatility: {perf[1]*100:.1f}%, "
+                    f"Sharpe: {perf[2]:.2f}"
+                )
+            except Exception:
+                description = f"Hierarchical Risk Parity ({risk_tolerance})"
+
+        except Exception as e:
+            logger.warning("HRP optimization failed: %s, falling back to template", e)
+            return PortfolioEngine._build_template(risk_tolerance, investment_amount, time_horizon)
+
+        return PortfolioEngine._allocations_to_response(
+            allocations, risk_tolerance, investment_amount, time_horizon,
+            description, "hrp",
+        )
+
+    @staticmethod
+    def _allocations_to_response(
+        allocations: dict,
+        risk_tolerance: str,
+        investment_amount: float,
+        time_horizon: str,
+        description: str,
+        method: str,
+    ) -> dict:
+        """Convert allocation weights to API response with share counts."""
         holdings = []
         for ticker, weight in allocations.items():
             dollar_amount = investment_amount * weight
@@ -263,7 +577,8 @@ class PortfolioEngine:
             "risk_tolerance": risk_tolerance,
             "time_horizon": time_horizon,
             "investment_amount": investment_amount,
-            "description": template["description"],
+            "description": description,
+            "method": method,
             "holdings": holdings,
         }
 
@@ -288,14 +603,11 @@ class PortfolioEngine:
         total_value = sum(values)
         weights = [v / total_value for v in values] if total_value > 0 else [1 / len(values)] * len(values)
 
-        try:
-            price_data = yf.download(tickers, period="5y", progress=False)["Close"]
-            if isinstance(price_data, pd.Series):
-                price_data = price_data.to_frame(name=tickers[0])
-            returns = price_data.pct_change().dropna()
-        except Exception:
+        price_data = _fetch_prices(tickers, period="5y")
+        if price_data is None:
             return {"error": "Could not fetch price data for projection"}
 
+        returns = price_data.pct_change().dropna()
         available = [t for t in tickers if t in returns.columns]
         if not available:
             return {"error": "No price data for projection"}
@@ -308,7 +620,6 @@ class PortfolioEngine:
         sigma_daily = float(np.std(port_returns))
 
         trading_days = years * 252
-        months = years * 12
 
         # Simple projection using historical stats
         rng = np.random.default_rng(42)

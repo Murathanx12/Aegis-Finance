@@ -24,6 +24,7 @@ export const queryKeys = {
     scenarios: ["simulation", "scenarios"] as const,
   },
   stock: {
+    screener: ["stock", "screener"] as const,
     analysis: (ticker: string) => ["stock", "analysis", ticker] as const,
     shap: (ticker: string) => ["stock", "shap", ticker] as const,
   },

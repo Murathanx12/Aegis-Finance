@@ -43,6 +43,7 @@ class BuildRequest(BaseModel):
     risk_tolerance: str = Field("moderate", pattern="^(conservative|moderate|aggressive)$")
     investment_amount: float = Field(10000, gt=0)
     time_horizon: str = Field("5y", pattern="^(1y|3y|5y|10y)$")
+    method: str = Field("template", pattern="^(template|black-litterman|hrp)$")
 
 
 class QuestionnaireRequest(BaseModel):
@@ -116,6 +117,7 @@ async def build_portfolio(request: BuildRequest):
             risk_tolerance=request.risk_tolerance,
             investment_amount=request.investment_amount,
             time_horizon=request.time_horizon,
+            method=request.method,
         )
         return result
     except Exception as e:

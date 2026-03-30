@@ -47,6 +47,7 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
     from backend.services.monte_carlo import run_monte_carlo
     from backend.services.risk_scorer import build_risk_score
     from backend.services.regime_detector import detect_regimes
+    from backend.models.garch import fit_garch
 
     fetcher = DataFetcher()
     data, _ = fetcher.fetch_market_data()
@@ -67,6 +68,16 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
 
     crash_freq = config["simulation"]["jump_diffusion"]["annual_rate"]
 
+    # Fit GARCH to get estimated Student-t degrees of freedom
+    garch_nu = None
+    try:
+        sp_returns = data["SP500"].pct_change().dropna()
+        garch_result = fit_garch(sp_returns)
+        if garch_result.success:
+            garch_nu = garch_result.nu
+    except Exception:
+        pass
+
     # Compute valuation penalty from CAPE ratio (capped per Phase 1G)
     val_cfg = config["simulation"]["valuation"]
     val_penalty = 0.0
@@ -74,13 +85,26 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
         cape_avg = val_cfg["cape_long_run_average"]
         cape_factor = val_cfg["cape_penalty_factor"]
         penalty_cap = val_cfg.get("val_penalty_cap", 0.015)
-        # Estimate current CAPE from P/E-like measure (forward PE as proxy)
-        # For now, use a simplified approach: if market is >20% above long-run CAPE,
-        # apply penalty proportional to overshoot, capped at penalty_cap
-        sp500_pe = 25.0  # approximate current S&P 500 PE
+
+        # Fetch current S&P 500 PE dynamically from yfinance
+        import yfinance as yf
+        sp500_pe = val_cfg.get("current_cape_fallback", 37.0)  # fallback
+        try:
+            spy = yf.Ticker("SPY")
+            pe = spy.info.get("trailingPE")
+            if pe is not None and 5 < pe < 100:
+                sp500_pe = float(pe)
+                logger.info("S&P 500 trailing PE: %.1f (live)", sp500_pe)
+            else:
+                logger.info("S&P 500 PE: %.1f (config fallback)", sp500_pe)
+        except Exception:
+            logger.info("S&P 500 PE: %.1f (config fallback)", sp500_pe)
+
         if sp500_pe > cape_avg:
             raw_penalty = cape_factor * np.log(sp500_pe / cape_avg)
             val_penalty = min(raw_penalty, penalty_cap)
+            logger.info("Valuation penalty: %.4f (PE=%.1f, avg=%.1f, cap=%.3f)",
+                        val_penalty, sp500_pe, cape_avg, penalty_cap)
     except Exception:
         pass
 
@@ -92,6 +116,7 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
         current_vix=current_vix,
         yield_curve=yield_curve,
         val_penalty=val_penalty,
+        garch_nu=garch_nu,
         n_sims_override=n_sims,
         forecast_days_override=forecast_days,
     )

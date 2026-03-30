@@ -6,13 +6,21 @@ Fetches data, builds features, runs LASSO feature selection,
 trains LightGBM + Logistic Regression, and serializes the model
 to backend/models/crash_model.pkl for fast inference by the API.
 
+Supports:
+    - Standard threshold labels (default)
+    - Triple-barrier labels (--labels triple-barrier)
+    - Fractionally differentiated features (--fracdiff)
+
 Usage:
     cd aegis-finance
     python -m engine.training.train_crash_model
+    python -m engine.training.train_crash_model --labels triple-barrier
+    python -m engine.training.train_crash_model --fracdiff
 """
 
 import sys
 import logging
+import argparse
 from pathlib import Path
 
 # Add project root to path
@@ -37,6 +45,15 @@ MODEL_OUTPUT = Path("backend/models/crash_model.pkl")
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Train crash prediction model")
+    parser.add_argument("--labels", choices=["standard", "triple-barrier"],
+                       default="standard", help="Labeling method")
+    parser.add_argument("--fracdiff", action="store_true",
+                       help="Add fractionally differentiated features")
+    parser.add_argument("--output", type=str, default=str(MODEL_OUTPUT),
+                       help="Output path for serialized model")
+    args = parser.parse_args()
+
     logger.info("=" * 60)
     logger.info("AEGIS FINANCE — Crash Model Training")
     logger.info("=" * 60)
@@ -57,13 +74,39 @@ def main():
     features = build_feature_matrix(data, fred_data=fred_data)
     logger.info("Built %d features", len(features.columns))
 
+    # Optional: add fractionally differentiated features (Phase 1.4)
+    if args.fracdiff:
+        try:
+            from engine.training.fracdiff import build_fracdiff_features
+            logger.info("Step 2b: Computing fractionally differentiated features...")
+            ffd_features = build_fracdiff_features(data)
+            # Drop the d-value columns (metadata, not features)
+            ffd_cols = [c for c in ffd_features.columns if not c.endswith("_d")]
+            if ffd_cols:
+                features = pd.concat([features, ffd_features[ffd_cols]], axis=1)
+                features = features.replace([np.inf, -np.inf], np.nan).ffill().fillna(0)
+                logger.info("Added %d fracdiff features", len(ffd_cols))
+        except ImportError:
+            logger.warning("fracdiff module not available, skipping")
+
     # ── Step 3: Build targets ───────────────────────────────────────
-    logger.info("Step 3: Building crash targets...")
+    logger.info("Step 3: Building crash targets (method: %s)...", args.labels)
     threshold = -config["risk"]["crash_threshold"]
-    crash_targets = build_target_crash_multi(data, threshold=threshold)
+
+    if args.labels == "triple-barrier":
+        try:
+            from engine.training.labeling import build_triple_barrier_multi
+            crash_targets = build_triple_barrier_multi(data["SP500"])
+            logger.info("Using triple-barrier labels")
+        except ImportError:
+            logger.warning("Triple-barrier labeling not available, falling back to standard")
+            crash_targets = build_target_crash_multi(data, threshold=threshold)
+    else:
+        crash_targets = build_target_crash_multi(data, threshold=threshold)
+
     for horizon, target in crash_targets.items():
         n_valid = target.notna().sum()
-        crash_rate = target.dropna().mean() * 100
+        crash_rate = target.dropna().mean() * 100 if target.dropna().any() else 0
         logger.info(
             "  %s: %d valid samples, %.1f%% crash rate",
             horizon, n_valid, crash_rate,
@@ -118,8 +161,9 @@ def main():
                 logger.warning("  %s: FAILED — %s", horizon, r.get("reason"))
 
     # ── Step 6: Save model ──────────────────────────────────────────
-    logger.info("Step 6: Saving model to %s", MODEL_OUTPUT)
-    predictor.save_model(str(MODEL_OUTPUT))
+    output_path = Path(args.output)
+    logger.info("Step 6: Saving model to %s", output_path)
+    predictor.save_model(str(output_path))
 
     # ── Step 7: Validation smoke test ───────────────────────────────
     logger.info("Step 7: Smoke test — predicting on latest data...")
@@ -134,7 +178,7 @@ def main():
         logger.info("  %-35s %.4f", feat, imp)
 
     logger.info("\n" + "=" * 60)
-    logger.info("Training complete. Model saved to %s", MODEL_OUTPUT)
+    logger.info("Training complete. Model saved to %s", output_path)
     logger.info("=" * 60)
 
 
