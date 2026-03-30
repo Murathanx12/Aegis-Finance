@@ -159,7 +159,8 @@ config: dict = {
             "annual_rate": 0.07,          # ~7% annual prob of sudden jump (~1/14yr)
             "mean": -0.10,                # Average jump size (-10%)
             "std": 0.05,                  # Jump size volatility
-            "t_degrees_of_freedom": 8,    # Student-t df for tail thickness (fallback; prefer GARCH-estimated nu)
+            "t_degrees_of_freedom": 8,    # Student-t df default (used when GARCH fit unavailable)
+            "min_t_degrees_of_freedom": 3, # Floor to prevent degenerate distributions
         },
         # Antithetic variates (Phase 2.2)
         "use_antithetic": True,

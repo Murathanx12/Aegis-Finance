@@ -2,8 +2,9 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { useApi } from "@/hooks/use-api";
+import { useQuery } from "@tanstack/react-query";
 import { getStockAnalysis, getStockShap, getStockSignal } from "@/lib/api";
+import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -336,9 +337,21 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
   const { ticker } = use(params);
   const upperTicker = ticker.toUpperCase();
 
-  const stock = useApi(() => getStockAnalysis(upperTicker), [upperTicker]);
-  const shap = useApi(() => getStockShap(upperTicker), [upperTicker]);
-  const signal = useApi(() => getStockSignal(upperTicker), [upperTicker]);
+  const { data: stockData, isLoading: stockLoading, error: stockError, refetch: stockRefetch } = useQuery({
+    queryKey: queryKeys.stock.analysis(upperTicker),
+    queryFn: () => getStockAnalysis(upperTicker),
+    staleTime: staleTimes.stock,
+  });
+  const { data: shapData, isLoading: shapLoading } = useQuery({
+    queryKey: queryKeys.stock.shap(upperTicker),
+    queryFn: () => getStockShap(upperTicker),
+    staleTime: staleTimes.stock,
+  });
+  const { data: signalData } = useQuery({
+    queryKey: queryKeys.stock.signal(upperTicker),
+    queryFn: () => getStockSignal(upperTicker),
+    staleTime: staleTimes.stock,
+  });
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -348,44 +361,44 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         </Link>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{upperTicker}</h1>
-          {stock.data && (
-            <p className="text-sm text-muted-foreground">{stock.data.name} | {stock.data.sector}</p>
+          {stockData && (
+            <p className="text-sm text-muted-foreground">{stockData.name} | {stockData.sector}</p>
           )}
         </div>
-        {stock.data && (
-          <Badge variant="outline" className="ml-auto text-xs">{stock.data.cap_tier} cap</Badge>
+        {stockData && (
+          <Badge variant="outline" className="ml-auto text-xs">{stockData.cap_tier} cap</Badge>
         )}
       </div>
 
       {/* Stock Signal */}
-      {signal.data && !signal.data.error && (
+      {signalData && !signalData.error && (
         <Card className={`border-2 ${
-          signal.data.action.includes("Buy") ? "border-emerald-500/30" :
-          signal.data.action.includes("Sell") ? "border-red-500/30" : "border-amber-500/30"
+          signalData.action.includes("Buy") ? "border-emerald-500/30" :
+          signalData.action.includes("Sell") ? "border-red-500/30" : "border-amber-500/30"
         }`}>
           <CardContent className="p-4 flex flex-wrap items-center gap-4">
             <div className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 font-bold text-xl ${
-              signal.data.action.includes("Buy") ? "bg-emerald-500/15 text-emerald-400" :
-              signal.data.action.includes("Sell") ? "bg-red-500/15 text-red-400" : "bg-amber-500/15 text-amber-400"
+              signalData.action.includes("Buy") ? "bg-emerald-500/15 text-emerald-400" :
+              signalData.action.includes("Sell") ? "bg-red-500/15 text-red-400" : "bg-amber-500/15 text-amber-400"
             }`}>
-              {signal.data.action.includes("Buy") ? <TrendingUp className="h-5 w-5" /> :
-               signal.data.action.includes("Sell") ? <TrendingDown className="h-5 w-5" /> :
+              {signalData.action.includes("Buy") ? <TrendingUp className="h-5 w-5" /> :
+               signalData.action.includes("Sell") ? <TrendingDown className="h-5 w-5" /> :
                <Minus className="h-5 w-5" />}
-              {signal.data.action}
+              {signalData.action}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <span>Confidence: {signal.data.confidence}%</span>
-                <span>Score: {signal.data.composite_score > 0 ? "+" : ""}{signal.data.composite_score.toFixed(3)}</span>
-                <span>Market: {signal.data.market_action}</span>
+                <span>Confidence: {signalData.confidence}%</span>
+                <span>Score: {signalData.composite_score > 0 ? "+" : ""}{signalData.composite_score.toFixed(3)}</span>
+                <span>Market: {signalData.market_action}</span>
               </div>
-              {signal.data.reasons.length > 0 && (
+              {signalData.reasons.length > 0 && (
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                  {signal.data.reasons.map((r, i) => (
+                  {signalData.reasons.map((r, i) => (
                     <span key={i} className="text-xs text-muted-foreground flex items-center gap-1">
                       <span className={`h-1.5 w-1.5 rounded-full ${
-                        signal.data!.action.includes("Buy") ? "bg-emerald-400" :
-                        signal.data!.action.includes("Sell") ? "bg-red-400" : "bg-amber-400"
+                        signalData!.action.includes("Buy") ? "bg-emerald-400" :
+                        signalData!.action.includes("Sell") ? "bg-red-400" : "bg-amber-400"
                       }`} />
                       {r}
                     </span>
@@ -397,28 +410,28 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         </Card>
       )}
 
-      {stock.loading ? (
+      {stockLoading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i}><CardContent className="p-3"><Skeleton className="h-14 w-full" /></CardContent></Card>
           ))}
         </div>
-      ) : stock.data ? (
+      ) : stockData ? (
         <>
           {/* Key Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <MetricCard label="Current Price" value={`$${stock.data.current_price.toFixed(2)}`} />
-            <MetricCard label="Expected Return (5Y)" value={`${stock.data.expected_return >= 0 ? "+" : ""}${stock.data.expected_return.toFixed(1)}`} suffix="%" color={stock.data.expected_return >= 0 ? "text-emerald-400" : "text-red-400"} tooltip="Mean return across all Monte Carlo simulations over 5 years" />
-            <MetricCard label="Median Return" value={`${stock.data.median_return >= 0 ? "+" : ""}${stock.data.median_return.toFixed(1)}`} suffix="%" tooltip="50th percentile return. More robust to outliers than the mean" />
-            <MetricCard label="Volatility" value={stock.data.volatility.toFixed(1)} suffix="%" tooltip="Annualized historical volatility. Higher = more price swings" />
-            <MetricCard label="Beta" value={stock.data.beta.toFixed(2)} tooltip="Sensitivity to market moves. Beta > 1 = amplifies market swings" />
-            <MetricCard label="Sharpe Ratio" value={stock.data.sharpe.toFixed(2)} color={stock.data.sharpe > 0.5 ? "text-emerald-400" : stock.data.sharpe > 0 ? "text-amber-400" : "text-red-400"} tooltip="Risk-adjusted return. Above 0.5 = decent, above 1.0 = excellent" />
-            <MetricCard label="P(Loss) 5Y" value={stock.data.prob_loss_5y.toFixed(1)} suffix="%" color={stock.data.prob_loss_5y > 30 ? "text-red-400" : "text-emerald-400"} tooltip="Probability of negative total return over 5 years from Monte Carlo" />
-            <MetricCard label="Avg Max Drawdown" value={stock.data.avg_max_drawdown.toFixed(1)} suffix="%" color="text-red-400" tooltip="Average worst peak-to-trough decline across all simulations" />
+            <MetricCard label="Current Price" value={`$${stockData.current_price.toFixed(2)}`} />
+            <MetricCard label="Expected Return (5Y)" value={`${stockData.expected_return >= 0 ? "+" : ""}${stockData.expected_return.toFixed(1)}`} suffix="%" color={stockData.expected_return >= 0 ? "text-emerald-400" : "text-red-400"} tooltip="Mean return across all Monte Carlo simulations over 5 years" />
+            <MetricCard label="Median Return" value={`${stockData.median_return >= 0 ? "+" : ""}${stockData.median_return.toFixed(1)}`} suffix="%" tooltip="50th percentile return. More robust to outliers than the mean" />
+            <MetricCard label="Volatility" value={stockData.volatility.toFixed(1)} suffix="%" tooltip="Annualized historical volatility. Higher = more price swings" />
+            <MetricCard label="Beta" value={stockData.beta.toFixed(2)} tooltip="Sensitivity to market moves. Beta > 1 = amplifies market swings" />
+            <MetricCard label="Sharpe Ratio" value={stockData.sharpe.toFixed(2)} color={stockData.sharpe > 0.5 ? "text-emerald-400" : stockData.sharpe > 0 ? "text-amber-400" : "text-red-400"} tooltip="Risk-adjusted return. Above 0.5 = decent, above 1.0 = excellent" />
+            <MetricCard label="P(Loss) 5Y" value={stockData.prob_loss_5y.toFixed(1)} suffix="%" color={stockData.prob_loss_5y > 30 ? "text-red-400" : "text-emerald-400"} tooltip="Probability of negative total return over 5 years from Monte Carlo" />
+            <MetricCard label="Avg Max Drawdown" value={stockData.avg_max_drawdown.toFixed(1)} suffix="%" color="text-red-400" tooltip="Average worst peak-to-trough decline across all simulations" />
           </div>
 
           {/* Price History Chart */}
-          {stock.data.price_history && stock.data.price_history.length > 0 && (
+          {stockData.price_history && stockData.price_history.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
@@ -427,7 +440,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <PriceHistoryChart data={stock.data.price_history} />
+                <PriceHistoryChart data={stockData.price_history} />
               </CardContent>
             </Card>
           )}
@@ -444,47 +457,47 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
               <div className="flex items-center gap-4">
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground">5th</p>
-                  <p className="text-lg font-bold text-red-400">${stock.data.p05_price.toFixed(0)}</p>
+                  <p className="text-lg font-bold text-red-400">${stockData.p05_price.toFixed(0)}</p>
                 </div>
                 <div className="flex-1 h-3 bg-gradient-to-r from-red-500/30 via-blue-500/30 to-emerald-500/30 rounded-full relative">
                   <div
                     className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full border-2 border-primary"
                     style={{
-                      left: `${Math.min(100, Math.max(0, ((stock.data.current_price - stock.data.p05_price) / (stock.data.p95_price - stock.data.p05_price)) * 100))}%`,
+                      left: `${Math.min(100, Math.max(0, ((stockData.current_price - stockData.p05_price) / (stockData.p95_price - stockData.p05_price)) * 100))}%`,
                     }}
                   />
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground">95th</p>
-                  <p className="text-lg font-bold text-emerald-400">${stock.data.p95_price.toFixed(0)}</p>
+                  <p className="text-lg font-bold text-emerald-400">${stockData.p95_price.toFixed(0)}</p>
                 </div>
               </div>
               <div className="flex justify-between mt-2">
                 <p className="text-xs text-muted-foreground">
-                  PE: {stock.data.pe_ratio?.toFixed(1) ?? "N/A"} | Analyst Target: ${stock.data.analyst_target?.toFixed(0) ?? "N/A"}
+                  PE: {stockData.pe_ratio?.toFixed(1) ?? "N/A"} | Analyst Target: ${stockData.analyst_target?.toFixed(0) ?? "N/A"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Drift: {stock.data.capped_drift.toFixed(1)}% (capped from {stock.data.hist_drift.toFixed(1)}%)
+                  Drift: {stockData.capped_drift.toFixed(1)}% (capped from {stockData.hist_drift.toFixed(1)}%)
                 </p>
               </div>
             </CardContent>
           </Card>
 
           {/* Analyst vs Model Comparison */}
-          <AnalystVsModelCard stock={stock.data} />
+          <AnalystVsModelCard stock={stockData} />
 
           {/* Analyst Consensus — right after analyst comparison */}
-          {stock.data.recommendations && (
-            <AnalystConsensus recommendations={stock.data.recommendations} />
+          {stockData.recommendations && (
+            <AnalystConsensus recommendations={stockData.recommendations} />
           )}
 
           {/* Price Expectations */}
-          {stock.data.analyst_targets && (
-            <PriceExpectations stock={stock.data} />
+          {stockData.analyst_targets && (
+            <PriceExpectations stock={stockData} />
           )}
 
           {/* Key Statistics */}
-          {stock.data.key_stats && (
+          {stockData.key_stats && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
@@ -493,18 +506,18 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <KeyStatsGrid stats={stock.data.key_stats} currentPrice={stock.data.current_price} />
+                <KeyStatsGrid stats={stockData.key_stats} currentPrice={stockData.current_price} />
               </CardContent>
             </Card>
           )}
         </>
-      ) : stock.error ? (
-        <ErrorCard title={`Could not analyze ${upperTicker}`} message={stock.error} onRetry={stock.refetch} />
+      ) : stockError ? (
+        <ErrorCard title={`Could not analyze ${upperTicker}`} message={(stockError as Error).message} onRetry={() => stockRefetch()} />
       ) : null}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Earnings */}
-        {stock.data?.earnings && (
+        {stockData?.earnings && (
           <Card>
             <CardHeader>
               <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
@@ -514,23 +527,23 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {stock.data.earnings.next_date && (
+                {stockData.earnings.next_date && (
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-xs text-muted-foreground uppercase">Next Earnings</p>
-                    <p className="text-sm font-bold">{stock.data.earnings.next_date}</p>
+                    <p className="text-sm font-bold">{stockData.earnings.next_date}</p>
                   </div>
                 )}
-                {stock.data.earnings.estimate !== null && (
+                {stockData.earnings.estimate !== null && (
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-xs text-muted-foreground uppercase">EPS Estimate</p>
-                    <p className="text-sm font-bold">${stock.data.earnings.estimate.toFixed(2)}</p>
+                    <p className="text-sm font-bold">${stockData.earnings.estimate.toFixed(2)}</p>
                   </div>
                 )}
-                {stock.data.earnings.surprise_history.length > 0 && (
+                {stockData.earnings.surprise_history.length > 0 && (
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-xs text-muted-foreground uppercase">Last Surprise</p>
-                    <p className={`text-sm font-bold ${stock.data.earnings.surprise_history[0] >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                      {stock.data.earnings.surprise_history[0] >= 0 ? "+" : ""}{stock.data.earnings.surprise_history[0].toFixed(1)}%
+                    <p className={`text-sm font-bold ${stockData.earnings.surprise_history[0] >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {stockData.earnings.surprise_history[0] >= 0 ? "+" : ""}{stockData.earnings.surprise_history[0].toFixed(1)}%
                     </p>
                   </div>
                 )}
@@ -541,17 +554,17 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
       </div>
 
       {/* Peer Comparison */}
-      {stock.data?.peers && stock.data.peers.length > 0 && (
+      {stockData?.peers && stockData.peers.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
-              Sector Peers ({stock.data.sector})
+              Sector Peers ({stockData.sector})
               <InfoTooltip text="Other stocks in the same sector. Click to analyze any peer." />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {stock.data.peers.map((peer) => (
+              {stockData.peers.map((peer) => (
                 <Link key={peer} href={`/stock/${peer}`}>
                   <Button variant="outline" size="sm" className="text-xs">
                     {peer}
@@ -564,7 +577,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
       )}
 
       {/* Top Holders */}
-      {stock.data?.holders?.top_holders && stock.data.holders.top_holders.length > 0 && (
+      {stockData?.holders?.top_holders && stockData.holders.top_holders.length > 0 && (
         <Card>
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -573,11 +586,11 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                 <InfoTooltip text="Largest institutional shareholders. High institutional ownership often indicates confidence from professional investors." />
               </CardTitle>
               <div className="flex gap-2">
-                {stock.data.holders.insider_pct && (
-                  <Badge variant="outline" className="text-xs">Insiders: {stock.data.holders.insider_pct}</Badge>
+                {stockData.holders.insider_pct && (
+                  <Badge variant="outline" className="text-xs">Insiders: {stockData.holders.insider_pct}</Badge>
                 )}
-                {stock.data.holders.institution_pct && (
-                  <Badge variant="outline" className="text-xs">Institutions: {stock.data.holders.institution_pct}</Badge>
+                {stockData.holders.institution_pct && (
+                  <Badge variant="outline" className="text-xs">Institutions: {stockData.holders.institution_pct}</Badge>
                 )}
               </div>
             </div>
@@ -593,7 +606,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                   </tr>
                 </thead>
                 <tbody>
-                  {stock.data.holders.top_holders.map((h, i) => (
+                  {stockData.holders.top_holders.map((h, i) => (
                     <tr key={i} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
                       <td className="py-2 pr-4 text-sm">{h.name}</td>
                       <td className="py-2 pr-4 text-right tabular-nums">{h.shares.toLocaleString()}</td>
@@ -608,13 +621,13 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
       )}
 
       {/* News */}
-      {stock.data?.news && stock.data.news.length > 0 && (
+      {stockData?.news && stockData.news.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base font-medium text-muted-foreground">Recent News</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {stock.data.news.map((item, i) => (
+            {stockData.news.map((item, i) => (
               <div key={i} className="py-2 border-b border-border/30 last:border-0">
                 {item.link ? (
                   <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-sm font-medium hover:text-primary transition-colors line-clamp-2">
@@ -639,18 +652,18 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {shap.loading ? (
+          {shapLoading ? (
             <Skeleton className="h-[300px] w-full" />
-          ) : shap.data?.top_features ? (
+          ) : shapData?.top_features ? (
             <>
               <p className="text-sm mb-3">
-                Market crash probability: <span className={`font-bold ${(shap.data.crash_prob ?? 0) > 0.3 ? "text-red-400" : "text-emerald-400"}`}>
-                  {((shap.data.crash_prob ?? 0) * 100).toFixed(1)}%
-                </span> ({shap.data.horizon})
+                Market crash probability: <span className={`font-bold ${(shapData.crash_prob ?? 0) > 0.3 ? "text-red-400" : "text-emerald-400"}`}>
+                  {((shapData.crash_prob ?? 0) * 100).toFixed(1)}%
+                </span> ({shapData.horizon})
               </p>
-              <ShapWaterfall features={shap.data.top_features} />
+              <ShapWaterfall features={shapData.top_features} />
             </>
-          ) : shap.data?.status === "model_not_trained" ? (
+          ) : shapData?.status === "model_not_trained" ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               Crash model not trained. SHAP unavailable.
             </p>

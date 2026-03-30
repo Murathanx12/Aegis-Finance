@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,9 +50,13 @@ export default function RetirementPage() {
   const [inflation, setInflation] = useState("2.5");
   const [targetAmount, setTargetAmount] = useState("1000000");
 
-  const [result, setResult] = useState<SavingsProjection | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const savingsMutation = useMutation({
+    mutationFn: (params: Parameters<typeof projectSavings>[0]) => projectSavings(params),
+  });
+
+  const result = savingsMutation.data ?? null;
+  const loading = savingsMutation.isPending;
+  const error = savingsMutation.error ? (savingsMutation.error as Error).message : null;
 
   // Load from localStorage
   useEffect(() => {
@@ -65,10 +70,7 @@ export default function RetirementPage() {
     if (s.targetAmount) setTargetAmount(s.targetAmount);
   }, []);
 
-  const calculate = async () => {
-    setLoading(true);
-    setError(null);
-
+  const calculate = () => {
     const params = {
       current_age: parseInt(currentAge) || 25,
       target_age: parseInt(targetAge) || 65,
@@ -82,14 +84,7 @@ export default function RetirementPage() {
     // Save to localStorage
     saveSettings({ currentAge, targetAge, monthly, savings, risk, inflation, targetAmount });
 
-    try {
-      const data = await projectSavings(params);
-      setResult(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Projection failed");
-    } finally {
-      setLoading(false);
-    }
+    savingsMutation.mutate(params);
   };
 
   const riskOptions = [

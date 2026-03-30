@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -137,12 +138,34 @@ function PortfolioAnalyzeSection() {
   const [newTicker, setNewTicker] = useState("");
   const [newShares, setNewShares] = useState("");
   const [newPrice, setNewPrice] = useState("");
-  const [analysis, setAnalysis] = useState<PortfolioAnalysis | null>(null);
-  const [projection, setProjection] = useState<PortfolioProjection | null>(null);
   const [holdingSignals, setHoldingSignals] = useState<Record<string, StockSignal>>({});
-  const [projLoading, setProjLoading] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const analyzeMutation = useMutation({
+    mutationFn: async (h: Holding[]) => {
+      const result = await analyzePortfolio(h);
+      // Fetch signals for each unique ticker in parallel
+      const uniqueTickers = [...new Set(h.map(x => x.ticker))];
+      const signalResults = await Promise.allSettled(
+        uniqueTickers.map(t => getStockSignal(t))
+      );
+      const signals: Record<string, StockSignal> = {};
+      signalResults.forEach((res, i) => {
+        if (res.status === "fulfilled") signals[uniqueTickers[i]] = res.value;
+      });
+      setHoldingSignals(signals);
+      return result;
+    },
+  });
+
+  const projectionMutation = useMutation({
+    mutationFn: (h: Holding[]) => projectPortfolio(h, 1, 0),
+  });
+
+  const analysis = analyzeMutation.data ?? null;
+  const projection = projectionMutation.data ?? null;
+  const loading = analyzeMutation.isPending;
+  const error = analyzeMutation.error ? (analyzeMutation.error as Error).message : null;
+  const projLoading = projectionMutation.isPending;
 
   useEffect(() => {
     setHoldings(loadHoldings());
@@ -166,31 +189,12 @@ function PortfolioAnalyzeSection() {
     const updated = holdings.filter((_, i) => i !== index);
     setHoldings(updated);
     saveHoldings(updated);
-    setAnalysis(null);
+    analyzeMutation.reset();
   };
 
-  const analyze = async () => {
+  const analyze = () => {
     if (holdings.length === 0) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await analyzePortfolio(holdings);
-      setAnalysis(result);
-      // Fetch signals for each unique ticker in parallel
-      const uniqueTickers = [...new Set(holdings.map(h => h.ticker))];
-      const signalResults = await Promise.allSettled(
-        uniqueTickers.map(t => getStockSignal(t))
-      );
-      const signals: Record<string, StockSignal> = {};
-      signalResults.forEach((res, i) => {
-        if (res.status === "fulfilled") signals[uniqueTickers[i]] = res.value;
-      });
-      setHoldingSignals(signals);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Analysis failed");
-    } finally {
-      setLoading(false);
-    }
+    analyzeMutation.mutate(holdings);
   };
 
   const totalValue = holdings.reduce((acc, h) => acc + h.shares * h.current_price, 0);
@@ -447,14 +451,7 @@ function PortfolioAnalyzeSection() {
                     size="sm"
                     variant="outline"
                     disabled={projLoading}
-                    onClick={async () => {
-                      setProjLoading(true);
-                      try {
-                        const p = await projectPortfolio(holdings, 1, 0);
-                        setProjection(p);
-                      } catch {}
-                      setProjLoading(false);
-                    }}
+                    onClick={() => projectionMutation.mutate(holdings)}
                   >
                     {projLoading ? "Projecting..." : "Run Projection"}
                   </Button>
@@ -512,22 +509,15 @@ function PortfolioBuildSection() {
   const [risk, setRisk] = useState("moderate");
   const [amount, setAmount] = useState("10000");
   const [horizon, setHorizon] = useState("5y");
-  const [result, setResult] = useState<PortfolioBuilt | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const buildMutation = useMutation({
+    mutationFn: () => buildPortfolio(risk, parseFloat(amount) || 10000, horizon),
+  });
 
-  const build = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await buildPortfolio(risk, parseFloat(amount) || 10000, horizon);
-      setResult(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Build failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const result = buildMutation.data ?? null;
+  const loading = buildMutation.isPending;
+  const error = buildMutation.error ? (buildMutation.error as Error).message : null;
+
+  const build = () => buildMutation.mutate();
 
   const riskOptions = [
     { value: "conservative", label: "Conservative", desc: "Capital preservation, bonds & dividends", icon: "🛡️" },
