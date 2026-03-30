@@ -65,7 +65,7 @@ def analyze_sectors(
         rf = float(data["T3M"].dropna().iloc[-1])
         rf = max(0.0, min(rf, 0.10))
     else:
-        rf = 0.04
+        rf = config.get("risk_free_rate", 0.04)
 
     sp_returns = data["SP500"].pct_change().dropna()
     sp_price = data["SP500"]

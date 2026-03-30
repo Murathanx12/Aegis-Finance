@@ -93,7 +93,7 @@ def select_stocks_from_sectors(sector_results: dict, n_stocks: int = 20) -> list
 def analyze_stock(
     ticker: str,
     forecast_days: int = 1260,
-    risk_free_rate: float = 0.04,
+    risk_free_rate: float = config.get("risk_free_rate", 0.04),
 ) -> Optional[dict]:
     """Analyze a single stock with fundamental-aware Monte Carlo."""
     max_5y_return = config["simulation"]["max_5y_return"]
@@ -405,7 +405,7 @@ def _get_sector_peers(sector: str, ticker: str) -> Optional[list]:
 def analyze_stocks(
     tickers: Optional[list[str]] = None,
     forecast_days: int = 1260,
-    risk_free_rate: float = 0.04,
+    risk_free_rate: float = config.get("risk_free_rate", 0.04),
 ) -> dict:
     """Analyze a portfolio of individual stocks."""
     if tickers is None:
