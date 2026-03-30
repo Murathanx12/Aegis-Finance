@@ -63,6 +63,13 @@ _RISK_AVERSION = {
 # Default ETF universe for BL/HRP
 _ETF_UNIVERSE = ["VTI", "VXUS", "BND", "QQQ", "VGT", "VNQ", "GLD", "VTIP", "XLE", "XLV"]
 
+# Approximate AUM-based market cap proxies (billions, as of 2026-03)
+# Used for BL equilibrium return estimation — order-of-magnitude matters more than precision
+_ETF_MARKET_CAPS = {
+    "VTI": 400, "VXUS": 75, "BND": 120, "QQQ": 280, "VGT": 80,
+    "VNQ": 35, "GLD": 70, "VTIP": 25, "XLE": 40, "XLV": 45,
+}
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # COVARIANCE SHRINKAGE (Phase 3.3)
@@ -388,9 +395,8 @@ class PortfolioEngine:
         # Ledoit-Wolf shrunk covariance (pass prices — pypfopt computes returns internally)
         cov = _shrunk_covariance(prices)
 
-        # Market-cap weights (approximate — use equal weight as proxy)
-        # In production, fetch actual market caps
-        market_caps = {t: 1.0 for t in available}
+        # Market-cap weights from AUM proxies
+        market_caps = {t: _ETF_MARKET_CAPS.get(t, 30.0) for t in available}
         cap_total = sum(market_caps.values())
         market_weights = {t: v / cap_total for t, v in market_caps.items()}
 
@@ -414,8 +420,15 @@ class PortfolioEngine:
             # Optimize with weight bounds to prevent extreme concentration
             n_assets = len(available)
             max_weight = min(0.40, 1.0 / max(n_assets * 0.3, 1))
+            rf = config.get("risk_free_rate", 0.04)
             ef = EfficientFrontier(posterior_returns, cov, weight_bounds=(0.0, max_weight))
-            ef.max_sharpe(risk_free_rate=0.04)
+            try:
+                ef.max_sharpe(risk_free_rate=rf)
+            except ValueError:
+                # max_sharpe fails when no asset exceeds risk-free rate;
+                # fall back to max quadratic utility which always works
+                ef = EfficientFrontier(posterior_returns, cov, weight_bounds=(0.0, max_weight))
+                ef.max_quadratic_utility(risk_aversion=delta)
             weights = ef.clean_weights()
 
             # Filter zero-weight assets
@@ -433,7 +446,7 @@ class PortfolioEngine:
             #   conservative: 70% template + 30% BL
             #   moderate:     50% template + 50% BL
             #   aggressive:   30% template + 70% BL
-            blend_ratios = {"conservative": 0.30, "moderate": 0.50, "aggressive": 0.70}
+            blend_ratios = {"conservative": 0.30, "moderate": 0.40, "aggressive": 0.65}
             bl_weight = blend_ratios.get(risk_tolerance, 0.50)
             template_alloc = dict(_ALLOCATION_TEMPLATES.get(
                 risk_tolerance, _ALLOCATION_TEMPLATES["moderate"]
@@ -452,7 +465,7 @@ class PortfolioEngine:
 
             # Get portfolio performance
             try:
-                perf = ef.portfolio_performance(risk_free_rate=0.04)
+                perf = ef.portfolio_performance(risk_free_rate=rf)
                 description = (
                     f"Black-Litterman optimized ({risk_tolerance}). "
                     f"Expected return: {perf[0]*100:.1f}%, "
@@ -508,7 +521,7 @@ class PortfolioEngine:
             # Blend with template to enforce risk tolerance.
             # HRP naturally over-weights low-vol assets (bonds), so blend
             # with template to get the right equity/bond mix.
-            blend_ratios = {"conservative": 0.40, "moderate": 0.50, "aggressive": 0.60}
+            blend_ratios = {"conservative": 0.50, "moderate": 0.45, "aggressive": 0.35}
             hrp_weight = blend_ratios.get(risk_tolerance, 0.50)
             template_alloc = dict(_ALLOCATION_TEMPLATES.get(
                 risk_tolerance, _ALLOCATION_TEMPLATES["moderate"]
