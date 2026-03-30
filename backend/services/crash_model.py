@@ -24,6 +24,8 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
+from backend.config import config
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -151,8 +153,28 @@ class CrashPredictor:
         if train_y.nunique() < 2:
             return {"success": False, "reason": "Single class in training set"}
 
-        # Temporal weights
-        temporal_weights = np.linspace(0.5, 1.5, len(train_X))
+        # Sample weights: uniqueness-based if enabled, else temporal decay
+        use_uniqueness = config["ml"].get("sample_uniqueness", False)
+        if use_uniqueness:
+            try:
+                from engine.training.sample_uniqueness import (
+                    compute_sample_weights,
+                    compute_horizon_end_dates,
+                )
+                horizon_days_map = {"3m": 63, "6m": 126, "12m": 252}
+                h_days = horizon_days_map.get(horizon, 63)
+                obs_dates = train_X.index
+                price_dates = X_h.index
+                end_dates = compute_horizon_end_dates(obs_dates, h_days, price_dates)
+                temporal_weights = compute_sample_weights(
+                    obs_dates, end_dates, price_dates, temporal_decay=True
+                )
+                logger.info("  %s: Using uniqueness-weighted samples", horizon)
+            except Exception as e:
+                logger.warning("  %s: Uniqueness weighting failed (%s), using temporal", horizon, e)
+                temporal_weights = np.linspace(0.5, 1.5, len(train_X))
+        else:
+            temporal_weights = np.linspace(0.5, 1.5, len(train_X))
 
         # ── LightGBM ──────────────────────────────────────────────────
         pos_rate = float(train_y.mean())

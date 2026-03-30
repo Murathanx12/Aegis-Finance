@@ -2,7 +2,9 @@
 
 ## Project Overview
 
-Aegis Finance is a free, open-source market intelligence web platform. It takes the ML crash prediction engine from V7 (standalone Python, PDF reports) and wraps it in a modern full-stack web app so anyone can access institutional-grade market analysis.
+Aegis Finance is a free, open-source market intelligence web platform combining ML crash prediction, Monte Carlo simulation, portfolio construction, and macroeconomic analysis into a single web dashboard.
+
+**Competitive position:** Aegis is the only open-source project that integrates ML crash prediction + jump-diffusion Monte Carlo + goal-based portfolio building + SHAP explainability in one self-hostable web app. OpenBB is a terminal (no ML predictions), QuantConnect is backtesting-only, WorldMonitor is display-only (no ML), and Riskfolio-Lib is a library (no UI).
 
 **What it does:**
 - Stock projections with Monte Carlo simulation (jump-diffusion, Merton-corrected)
@@ -136,45 +138,17 @@ docker compose up --build
 
 Copy `.env.example` to `.env` and fill in your keys.
 
-## Reference Codebases (READ-ONLY)
+## Reference Libraries (READ-ONLY)
 
-Code is being extracted and refactored from two legacy projects:
+| Repo | Path | What to use |
+|------|------|-------------|
+| PyPortfolioOpt | `C:\Users\mrthn\reference-codes\PyPortfolioOpt` | Black-Litterman, HRP, Ledoit-Wolf covariance shrinkage |
+| MLFinLab | `C:\Users\mrthn\reference-codes\mlfinlab` | Purged CV, triple-barrier labels, fractional differentiation, sequential bootstrap |
+| Autoresearch | `C:\Users\mrthn\reference-codes\autoresearch` | Autonomous experiment loop (3-file contract, ratchet pattern) |
+| WorldMonitor | `C:\Users\mrthn\reference-codes\worldmonitor` | Dashboard layout patterns, dark theme, card density |
 
-1. **V6 Full-Stack App** — `C:\Users\mrthn\market-engine-v5` ([GitHub](https://github.com/Murathanx12/market-engine))
-   - React + MUI + Recharts frontend, FastAPI + PostgreSQL backend
-   - Reference for: API patterns, CORS config, Docker setup, chart patterns
-
-2. **V7 ML Engine** — `C:\Users\mrthn\market-prediction-engine` ([GitHub](https://github.com/Murathanx12/Improved-Engine))
-   - 5-model ensemble, 80+ features, walk-forward backtest, jump-diffusion MC
-   - Reference for: Monte Carlo (with bug fixes), data pipeline, features, risk scoring, SHAP
-   - All bug fixes applied (Bugs 1-24): Merton compensator, scenario rebalancing, leading indicators
-
-**Extraction rule:** Copy fixed code from V7, adapt patterns from V6. Never commit back to legacy repos.
-
-## Engine Bug Fixes (Already Applied in V7)
-
-These fixes are already in the V7 source code. When copying to Aegis, the fixed versions come along:
-
-- **Bug 20:** Jump-diffusion drift compensator (Merton 1976) — `-λk` term in drift
-- **Bug 21:** Scenario weights rebalanced — 65% positive/neutral (was 87.5% bearish)
-- **Bug 22:** Institutional benchmarks updated to 2026 published values
-- **Bug 23:** Leading indicators added (ICSA initial claims, NFCI financial conditions)
-- **Bug 24:** Backtest hyperparameters aligned with defaults
-
-## ML Simplification (V7 → Aegis)
-
-| V7 (5 models) | Aegis (2 models) | Reason |
-|---------------|-----------------|--------|
-| LightGBM | Keep | Best single-model Brier score |
-| Logistic Regression | Keep | Better generalization with sparse crashes |
-| XGBoost | Drop | Correlated with LightGBM, minimal ensemble lift |
-| LSTM | Drop | Slow training, marginal improvement on tabular data |
-| TCN | Drop | Same as LSTM — temporal models don't justify cost |
-| Cox Survival | Drop | Redundant with LightGBM hazard estimation |
-| Meta-Stacker | Drop | Not needed with 2 models |
-
-Feature reduction: 208 → 25-30 via LASSO (run `engine/training/feature_selection.py`).
-Target: 3-month crash Brier score ≤ 0.05.
+**Installed libraries:** `pyportfolioopt` (use as library), `arch` (GARCH), `hmmlearn` (HMM)
+**Read-only repos:** OpenBB (too large to clone — read docs at docs.openbb.co), Riskfolio-Lib (pip install for CVaR optimization)
 
 ## Rules
 
@@ -186,6 +160,9 @@ Target: 3-month crash Brier score ≤ 0.05.
 - Return proper HTTP error codes from routers (404, 422, 500)
 - Add type hints to all function signatures
 - Keep services stateless — no mutable global state except cache
+- Use purged CV with embargo for all ML validation
+- Use walk-forward temporal splits (never random k-fold)
+- Target composite metric (AUC + Brier + Sharpe + MaxDD), not just Brier alone
 
 ### DO NOT
 - Use `fillna(0)` on feature matrices — LightGBM handles NaN natively
@@ -194,6 +171,9 @@ Target: 3-month crash Brier score ≤ 0.05.
 - Store portfolio state server-side — portfolio lives in browser localStorage
 - Skip the Merton jump compensator in Monte Carlo (Bug 20)
 - Add a database — this is a stateless API with in-memory cache
+- Use standard k-fold CV on time-series data
+- Report accuracy without walk-forward validation
+- Use basic GBM without fat-tailed innovations for tail risk estimation
 
 ## Commit Convention
 
@@ -208,19 +188,44 @@ chore: description             # Dependencies, config, CI
 
 ---
 
-## Implementation Sessions (ALL COMPLETE)
+## Methodology Roadmap
 
-| Session | Goal | Status |
-|---------|------|--------|
-| 1 | Engine Core — config, data_fetcher, monte_carlo, cache, main.py | DONE |
-| 2 | ML Pipeline — features, feature_selection, crash_model, training, walk_forward | DONE |
-| 3 | Backend API — all services (risk_scorer, regime_detector, garch, hmm, sector_analyzer, stock_analyzer, portfolio_engine, shap_explainer) + all routers | DONE |
-| 4 | Frontend Scaffold + Dashboard — Next.js 14, shadcn/ui, dark theme, sidebar, dashboard page | DONE |
-| 5 | Frontend — Stock, Crash, Simulation pages | DONE |
-| 6 | Frontend — Portfolio, Sectors, Polish + pre-session bug fixes (3 critical, 4 medium) | DONE |
-| 7 | Deployment — Dockerfiles, docker-compose, Railway/Vercel configs | DONE |
-| 8 | Feature Expansion — News intelligence (GDELT + DeepSeek), retirement planner, enhanced stock detail (analyst/holders/earnings), portfolio projection, 7 critical bug fixes (Merton sign, GARCH persistence, cache thread safety, etc.) | DONE |
-| 9 | V6/V7 Code Borrowing — data_quality, net_liquidity, return_model, external_validator, regime_validator; enriched metrics.py with conformal prediction + advanced validation; cache prewarming; frontend updates | DONE |
+### Phase 1 — ML Methodology (Critical)
+- Purged cross-validation with embargo periods (MLFinLab reference)
+- Walk-forward validation hardening (expanding window, no future leakage)
+- Triple-barrier labeling (Lopez de Prado) — replace fixed-threshold crash labels
+- Fractionally differentiated features — preserve memory while achieving stationarity
+- Sample uniqueness weighting — reduce overfit from overlapping labels
+
+### Phase 2 — Monte Carlo Upgrade
+- GARCH(1,1) with Student-t innovations (upgrade from Gaussian; `arch` library)
+- DCC-GARCH for multi-asset correlation dynamics
+- Minimum 10,000 paths (50,000 for tail estimation)
+- Variance reduction: antithetic variates
+
+### Phase 3 — Portfolio Construction
+- Black-Litterman (PyPortfolioOpt drop-in)
+- Hierarchical Risk Parity (HRP) — no covariance inversion needed
+- Ledoit-Wolf covariance shrinkage — replace sample covariance
+- Goal-based sub-portfolio wrapper
+
+### Phase 4 — Autoresearch Loop
+- Three-file contract: `aegis_prepare.py`, `aegis_train.py`, `aegis_program.md`
+- Composite metric: 0.40 x AUC + 0.25 x Brier + 0.20 x Sharpe + 0.15 x MaxDD penalty
+- MLflow tracking, drift detection (PSI), automated retraining triggers
+
+### Phase 5 — Data & Distribution
+- Additional data: Alpha Vantage, SEC EDGAR filings
+- NLP sentiment integration (FinBERT or similar)
+- Community: Reddit r/algotrading, Hacker News, GitHub Discussions
+- Free hosting: Vercel (frontend) + Railway/Render free tier (backend)
+
+## Key References
+
+- Lopez de Prado — *Advances in Financial Machine Learning* (purged CV, triple-barrier, fractional differentiation)
+- Gu, Kelly, Xiu (2020) — "Empirical Asset Pricing via Machine Learning" (ML in finance benchmark)
+- BIS Working Paper 1250 (2025) — Financial stress prediction with ML
+- MRS-MNTS-GARCH (JRFM, 2022) — Regime-switching MC blueprint
 
 ---
 
@@ -233,3 +238,5 @@ When the engine is working correctly:
 - **Sector returns:** Differentiated 20-80% range (not uniform)
 - **Brier Score (3m):** ≤ 0.05 (random = 0.25, climatology ~0.12)
 - **Risk score:** [-4, +4] range, >2.0 = elevated stress
+- **Walk-forward AUC-ROC:** ≥ 0.70 (random = 0.50)
+- **Feature importance:** Leading indicators (ICSA, NFCI, yield curve) should rank above lagging (unemployment)

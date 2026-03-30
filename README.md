@@ -6,6 +6,10 @@ Aegis Finance combines machine learning crash prediction, Monte Carlo simulation
 
 **This is an educational tool, not financial advice.**
 
+## Why Aegis Finance?
+
+Most open-source finance tools solve one piece of the puzzle: OpenBB is a terminal without ML predictions, QuantConnect focuses on backtesting strategies, Riskfolio-Lib optimizes portfolios but has no UI, and WorldMonitor displays data without analytics. Aegis is the first open-source project to combine **ML crash prediction + Monte Carlo simulation + goal-based portfolio building + macro risk scoring + SHAP explainability** in a single, self-hostable web app. Every prediction comes with an explanation of *why* — not just a number.
+
 ## Features
 
 - **Crash Probability** — ML-predicted probability of a 20%+ drawdown over 3, 6, and 12-month horizons
@@ -338,6 +342,52 @@ aegis-finance/
 ├── railway.json                 # Backend deployment config
 └── .env.example                 # Required API keys template
 ```
+
+## Roadmap
+
+| Phase | Focus | Key Changes |
+|-------|-------|-------------|
+| 1 | ML Methodology | Purged cross-validation, triple-barrier labeling, fractional differentiation |
+| 2 | Monte Carlo Upgrade | Student-t innovations, DCC-GARCH, 50k paths for tail estimation |
+| 3 | Portfolio Construction | Black-Litterman, Hierarchical Risk Parity, Ledoit-Wolf shrinkage |
+| 4 | Autoresearch Loop | Automated experiment tracking, drift detection, retraining triggers |
+| 5 | Data & Distribution | SEC EDGAR, NLP sentiment, community channels |
+
+## Methodology Gaps & Transparency
+
+Aegis v1 is functional but has known gaps vs. institutional practice. We document these openly:
+
+- **Cross-validation:** Currently uses basic temporal splits. Should use purged CV with embargo periods (Lopez de Prado) to prevent information leakage from overlapping labels.
+- **Crash labeling:** Uses fixed-threshold drawdown labels. Triple-barrier labeling would better capture path-dependent outcomes.
+- **Monte Carlo tails:** Jump-diffusion with GJR-GARCH captures some fat tails, but innovations assume Gaussian residuals. Student-t innovations would improve tail accuracy.
+- **Portfolio optimization:** Goal-based heuristic allocation. Mean-variance, Black-Litterman, and HRP would provide more rigorous construction.
+- **Feature stationarity:** Raw features are used where possible. Fractional differentiation would preserve memory while ensuring stationarity.
+
+These gaps are addressed in the [Roadmap](#roadmap) above.
+
+## Key References
+
+- Lopez de Prado — *Advances in Financial Machine Learning* (purged CV, triple-barrier, fractional differentiation)
+- Gu, Kelly, Xiu (2020) — "Empirical Asset Pricing via Machine Learning"
+- BIS Working Paper 1250 (2025) — Financial stress prediction with ML
+- MRS-MNTS-GARCH (JRFM, 2022) — Regime-switching Monte Carlo blueprint
+
+## Community & Distribution
+
+- **Issues & bugs:** [GitHub Issues](https://github.com/Murathanx12/Aegis-Finance/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/Murathanx12/Aegis-Finance/discussions)
+- **Share:** [r/algotrading](https://reddit.com/r/algotrading), [r/quantfinance](https://reddit.com/r/quantfinance), [Hacker News](https://news.ycombinator.com)
+- **Contribute:** See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Free Hosting Guide
+
+| Service | Tier | Use |
+|---------|------|-----|
+| [Vercel](https://vercel.com) | Free (hobby) | Frontend — auto-deploys from GitHub |
+| [Railway](https://railway.app) | Free trial / $5/mo | Backend — supports Docker, auto-deploy |
+| [Render](https://render.com) | Free tier | Backend alternative — spins down after inactivity |
+
+The backend runs on any machine with Python 3.12+. See [Deployment](#deployment) for config details.
 
 ## Contributing
 

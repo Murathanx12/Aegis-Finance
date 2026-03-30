@@ -113,6 +113,8 @@ def simulate_paths(
     hmm_state_vols: Optional[np.ndarray] = None,
     # ── BLOCK BOOTSTRAP ──────────────────────────────────────────
     historical_residuals: Optional[np.ndarray] = None,
+    # ── GARCH-ESTIMATED TAIL THICKNESS ────────────────────────────
+    garch_nu: Optional[float] = None,
     # ── REPRODUCIBILITY ──────────────────────────────────────────
     seed: Optional[int] = None,
 ) -> np.ndarray:
@@ -178,7 +180,12 @@ def simulate_paths(
     # 3. JUMP PROCESS — from ML crash probability
     # ══════════════════════════════════════════════════════════════
     jump_cfg = sim_cfg["jump_diffusion"]
-    t_df = jump_cfg["t_degrees_of_freedom"]
+    # Use GARCH-estimated degrees of freedom instead of hardcoded config value
+    # GARCH fits skewed Student-t and extracts nu (df) — more accurate tail thickness
+    if garch_nu is not None and 2.5 < garch_nu < 30:
+        t_df = garch_nu
+    else:
+        t_df = jump_cfg["t_degrees_of_freedom"]  # fallback default
 
     if ml_crash_prob is not None:
         base_jump_rate = crash_freq
@@ -228,11 +235,22 @@ def simulate_paths(
     # ══════════════════════════════════════════════════════════════
     # 6. RUN SIMULATION
     # ══════════════════════════════════════════════════════════════
-    prices = np.zeros((days + 1, n_sims))
+    use_antithetic = sim_cfg.get("use_antithetic", False)
+
+    if use_antithetic:
+        # Antithetic variates: simulate n_sims/2 paths, then mirror the
+        # random draws to get another n_sims/2 paths. This halves the
+        # variance of symmetric statistics (mean, percentiles) for free.
+        half = n_sims // 2
+        n_sims_gen = half
+    else:
+        n_sims_gen = n_sims
+
+    prices = np.zeros((days + 1, n_sims_gen))
     prices[0] = start_price
 
-    sigma_t = np.full(n_sims, float(base_vol))
-    fair_value = np.full(n_sims, float(start_price))
+    sigma_t = np.full(n_sims_gen, float(base_vol))
+    fair_value = np.full(n_sims_gen, float(start_price))
 
     # Pre-generate random numbers
     use_block_bootstrap = sim_cfg.get("use_block_bootstrap", False)
@@ -243,13 +261,13 @@ def simulate_paths(
         and len(historical_residuals) > block_size
     ):
         Z_price = _generate_block_bootstrap_residuals(
-            historical_residuals, days, n_sims, block_size, rng
+            historical_residuals, days, n_sims_gen, block_size, rng
         )
     else:
-        Z_price = rng.standard_t(df=t_df, size=(days, n_sims))
-    Z_vol_raw = rng.standard_normal(size=(days, n_sims))
-    Z_jump = rng.uniform(size=(days, n_sims))
-    Z_jump_size = rng.normal(jump_mean, jump_std, size=(days, n_sims))
+        Z_price = rng.standard_t(df=t_df, size=(days, n_sims_gen))
+    Z_vol_raw = rng.standard_normal(size=(days, n_sims_gen))
+    Z_jump = rng.uniform(size=(days, n_sims_gen))
+    Z_jump_size = rng.normal(jump_mean, jump_std, size=(days, n_sims_gen))
 
     # Leverage effect: correlate vol innovations with price shocks
     rho_leverage = -0.7
@@ -261,7 +279,7 @@ def simulate_paths(
 
         # Mean reversion force
         deviation = (prices[t] - fair_value) / fair_value
-        mr_force = np.zeros(n_sims)
+        mr_force = np.zeros(n_sims_gen)
         below = deviation < -mr_threshold_low
         above = deviation > mr_threshold_high
         mr_force[below] = mr_strength_up * (-deviation[below] - mr_threshold_low)
@@ -294,6 +312,43 @@ def simulate_paths(
         log_return = drift_daily + diffusion + jumps
         prices[t + 1] = prices[t] * np.exp(log_return)
 
+    # ══════════════════════════════════════════════════════════════
+    # ANTITHETIC VARIATES — mirror paths for variance reduction
+    # ══════════════════════════════════════════════════════════════
+    if use_antithetic:
+        # Re-run with negated random draws
+        prices_anti = np.zeros((days + 1, n_sims_gen))
+        prices_anti[0] = start_price
+        sigma_t_anti = np.full(n_sims_gen, float(base_vol))
+        fair_value_anti = np.full(n_sims_gen, float(start_price))
+
+        Z_vol_anti = rho_leverage * (-Z_price) + np.sqrt(1 - rho_leverage**2) * (-Z_vol_raw)
+
+        for t in range(days):
+            fair_value_anti *= np.exp(fv_growth)
+            deviation = (prices_anti[t] - fair_value_anti) / fair_value_anti
+            mr_force = np.zeros(n_sims_gen)
+            below = deviation < -mr_threshold_low
+            above = deviation > mr_threshold_high
+            mr_force[below] = mr_strength_up * (-deviation[below] - mr_threshold_low)
+            mr_force[above] = -mr_strength_down * (deviation[above] - mr_threshold_high)
+            mr_daily = mr_force * dt
+
+            d_sigma = kappa_vol * (long_run_vol - sigma_t_anti) * dt + xi * sigma_t_anti * np.sqrt(dt) * Z_vol_anti[t]
+            sigma_t_anti = np.clip(sigma_t_anti + d_sigma, 0.04, 1.0)
+
+            drift_daily = base_drift - jump_compensator + mr_daily
+            diffusion = sigma_t_anti * np.sqrt(dt) * (-Z_price[t])
+
+            # Jumps use same uniform draws (jumps are rare events, not symmetric)
+            jumps = np.where(Z_jump[t] < daily_jump_prob, Z_jump_size[t], 0.0)
+
+            log_return = drift_daily + diffusion + jumps
+            prices_anti[t + 1] = prices_anti[t] * np.exp(log_return)
+
+        # Concatenate original + antithetic paths
+        prices = np.hstack([prices, prices_anti])
+
     # Apply return cap
     max_return = sim_cfg.get("max_5y_return", 3.0)
     max_price = start_price * (1 + max_return)
@@ -325,9 +380,11 @@ def run_monte_carlo(
     hmm_state_means: Optional[np.ndarray] = None,
     hmm_regime_probs: Optional[np.ndarray] = None,
     hmm_state_vols: Optional[np.ndarray] = None,
+    garch_nu: Optional[float] = None,
     seed: Optional[int] = None,
     n_sims_override: Optional[int] = None,
     forecast_days_override: Optional[int] = None,
+    tail_mode: bool = False,
 ) -> dict:
     """
     Run full Monte Carlo simulation with scenario weighting.
@@ -340,7 +397,10 @@ def run_monte_carlo(
         dict with all simulation results and statistics
     """
     sim_cfg = config["simulation"]
-    n_sims = n_sims_override if n_sims_override is not None else sim_cfg["num_simulations"]
+    default_sims = sim_cfg["num_simulations"]
+    if tail_mode:
+        default_sims = sim_cfg.get("tail_mode_paths", 50000)
+    n_sims = n_sims_override if n_sims_override is not None else default_sims
     days = forecast_days_override if forecast_days_override is not None else (
         sim_cfg["forecast_years"] * sim_cfg["trading_days_per_year"]
     )
@@ -380,13 +440,25 @@ def run_monte_carlo(
     # Use sub-seeds for reproducibility across scenarios
     base_rng = np.random.default_rng(seed)
 
+    # Center drift adjustments so their probability-weighted sum is zero.
+    # Without this, bearish scenarios' large negative drift_adj outweighs
+    # bullish offsets, dragging the expected return ~2.8% below target.
+    raw_drift_adjs = {}
+    for name, scfg in scenarios.items():
+        scenario_return = scfg.get("return", inst_return)
+        raw_drift_adjs[name] = np.log(1 + scenario_return) - inst_mu
+
+    weighted_mean_adj = sum(
+        scenario_weights[name] * raw_drift_adjs[name]
+        for name in scenarios
+    )
+
     for i, (name, scfg) in enumerate(scenarios.items()):
         weight = scenario_weights[name]
         sims_for_scenario = max(1, int(n_sims * weight))
 
-        # Scenario-specific drift adjustment (relative to consensus)
-        scenario_return = scfg.get("return", inst_return)
-        drift_adj = np.log(1 + scenario_return) - inst_mu
+        # Scenario-specific drift adjustment, centered so weighted sum = 0
+        drift_adj = raw_drift_adjs[name] - weighted_mean_adj
 
         scenario_params = {
             "drift_adj": drift_adj,
@@ -418,6 +490,7 @@ def run_monte_carlo(
             hmm_state_means=hmm_state_means,
             hmm_regime_probs=hmm_regime_probs,
             hmm_state_vols=hmm_state_vols,
+            garch_nu=garch_nu,
             seed=scenario_seed,
         )
 
