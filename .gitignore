@@ -47,5 +47,16 @@ logs/
 # Docker
 docker-compose.override.yml
 
+# Internal docs (keep local only)
+docs/SESSION_LOG.md
+docs/IMPROVEMENT_LOG.md
+docs/GAP_ANALYSIS.md
+docs/GAP_ANALYSIS_ENGINE_FRONTEND.md
+docs/DEEP_RESEARCH_FINDINGS.md
+docs/DEEP_RESEARCH_FINDINGS_ACADEMIC.md
+docs/DEEP_RESEARCH_FINDINGS_INDUSTRY.md
+docs/STRESS_TEST_RESULTS.md
+docs/STRESS_TEST_PORTFOLIOS.md
+
 # Claude Code
 .claude/
