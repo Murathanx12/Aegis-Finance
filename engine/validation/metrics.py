@@ -322,16 +322,16 @@ def missed_crash_rate(
 
 
 def regime_conditional_bss(
-    y_pred: np.ndarray,
     y_true: np.ndarray,
+    y_pred: np.ndarray,
     regimes: np.ndarray,
 ) -> dict:
     """Compute BSS stratified by regime label."""
-    y_pred = np.asarray(y_pred, dtype=float)
     y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
     regimes = np.asarray(regimes)
 
-    result = {"overall_bss": brier_skill_score(y_pred, y_true)}
+    result = {"overall_bss": brier_skill_score(y_true, y_pred)}
 
     for regime in np.unique(regimes):
         mask = regimes == regime
@@ -340,7 +340,7 @@ def regime_conditional_bss(
             result[f"bss_{regime}"] = float("nan")
             result[f"n_{regime}"] = n
             continue
-        result[f"bss_{regime}"] = brier_skill_score(y_pred[mask], y_true[mask])
+        result[f"bss_{regime}"] = brier_skill_score(y_true[mask], y_pred[mask])
         result[f"n_{regime}"] = n
 
     return result

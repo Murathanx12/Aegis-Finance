@@ -33,6 +33,7 @@ try:
     from sklearn.isotonic import IsotonicRegression
     from sklearn.linear_model import LogisticRegression
     from sklearn.preprocessing import StandardScaler
+    from sklearn.impute import SimpleImputer
     from sklearn.metrics import brier_score_loss, roc_auc_score
     import joblib
 
@@ -65,6 +66,7 @@ class CrashPredictor:
         self.lr_models: dict = {}  # {horizon: logistic model}
         self.calibrators: dict = {}  # {horizon: IsotonicRegression}
         self.scalers: dict = {}  # {horizon: StandardScaler}
+        self.imputers: dict = {}  # {horizon: SimpleImputer (median)}
         self.feature_names: Optional[list[str]] = None
         self.is_trained: bool = False
         self._train_crash_rate: dict = {}
@@ -221,9 +223,12 @@ class CrashPredictor:
         self.lgb_models[horizon] = lgb_model
 
         # ── Logistic Regression ─────────────────────────────────────
+        imputer = SimpleImputer(strategy="median")
+        train_X_imputed = imputer.fit_transform(train_X)
+        val_X_imputed = imputer.transform(val_X)
         scaler = StandardScaler()
-        train_X_scaled = scaler.fit_transform(train_X.fillna(0))
-        val_X_scaled = scaler.transform(val_X.fillna(0))
+        train_X_scaled = scaler.fit_transform(train_X_imputed)
+        val_X_scaled = scaler.transform(val_X_imputed)
 
         lr_model = LogisticRegression(
             penalty="l2",
@@ -235,24 +240,36 @@ class CrashPredictor:
         lr_model.fit(train_X_scaled, train_y, sample_weight=temporal_weights)
         self.lr_models[horizon] = lr_model
         self.scalers[horizon] = scaler
+        self.imputers[horizon] = imputer
 
-        # ── Isotonic calibration on blended predictions ─────────────
+        # ── Isotonic calibration on first half of val, metrics on second ──
         lgb_raw = lgb_model.predict_proba(val_X)[:, 1]
         lr_raw = lr_model.predict_proba(val_X_scaled)[:, 1]
         blended_raw = self.lgb_weight * lgb_raw + (1 - self.lgb_weight) * lr_raw
 
+        # Split validation into calibration (first 60%) and test (last 40%)
+        cal_split = max(20, int(len(val_X) * 0.6))
+        cal_raw, test_raw = blended_raw[:cal_split], blended_raw[cal_split:]
+        cal_y_fit, test_y = val_y.values[:cal_split], val_y.values[cal_split:]
+
         calibrator = IsotonicRegression(
             y_min=0.01, y_max=0.99, out_of_bounds="clip"
         )
-        calibrator.fit(blended_raw, val_y.values)
+        calibrator.fit(cal_raw, cal_y_fit)
         self.calibrators[horizon] = calibrator
 
-        # ── Metrics ─────────────────────────────────────────────────
-        cal_probs = calibrator.predict(blended_raw)
-        val_brier = brier_score_loss(val_y, cal_probs)
+        # ── Metrics on held-out test portion ────────────────────────
+        if len(test_raw) >= 10:
+            cal_probs = calibrator.predict(test_raw)
+            val_brier = brier_score_loss(test_y, cal_probs)
+        else:
+            # Fallback: evaluate on full val if test portion too small
+            cal_probs = calibrator.predict(blended_raw)
+            val_brier = brier_score_loss(val_y, cal_probs)
 
         try:
-            val_auc = roc_auc_score(val_y, cal_probs)
+            eval_y = test_y if len(test_raw) >= 10 else val_y
+            val_auc = roc_auc_score(eval_y, cal_probs)
         except ValueError:
             val_auc = 0.5
 
@@ -296,9 +313,12 @@ class CrashPredictor:
         lgb_raw = self.lgb_models[horizon].predict_proba(X)[:, 1]
 
         if horizon in self.lr_models and horizon in self.scalers:
-            X_scaled = self.scalers[horizon].transform(
-                X.fillna(0) if isinstance(X, pd.DataFrame) else X
+            X_imputed = self.imputers[horizon].transform(
+                X if isinstance(X, pd.DataFrame) else X
+            ) if horizon in self.imputers else (
+                X.fillna(X.median()) if isinstance(X, pd.DataFrame) else X
             )
+            X_scaled = self.scalers[horizon].transform(X_imputed)
             lr_raw = self.lr_models[horizon].predict_proba(X_scaled)[:, 1]
             blended = self.lgb_weight * lgb_raw + (1 - self.lgb_weight) * lr_raw
         else:
@@ -312,11 +332,26 @@ class CrashPredictor:
         return np.clip(calibrated, 0.02, 0.98)
 
     def predict_all_horizons(self, features: pd.DataFrame) -> dict:
-        """Predict crash probability at all trained horizons."""
-        return {
+        """Predict crash probability at all trained horizons.
+
+        Enforces monotonicity: P(crash, 3m) ≤ P(crash, 6m) ≤ P(crash, 12m).
+        Longer horizons must have equal or higher crash probability.
+        """
+        raw = {
             horizon: self.predict_proba(features, horizon)
             for horizon in self.lgb_models
         }
+
+        # Enforce monotonicity across horizons
+        ordered = ["3m", "6m", "12m"]
+        available = [h for h in ordered if h in raw]
+        if len(available) >= 2:
+            for i in range(1, len(available)):
+                prev, curr = available[i - 1], available[i]
+                # Longer horizon must be >= shorter horizon
+                raw[curr] = np.maximum(raw[curr], raw[prev])
+
+        return raw
 
     def get_shap_values(
         self, features: pd.DataFrame, horizon: str = "3m"
@@ -369,6 +404,7 @@ class CrashPredictor:
             "lr_models": self.lr_models,
             "calibrators": self.calibrators,
             "scalers": self.scalers,
+            "imputers": self.imputers,
             "feature_names": self.feature_names,
             "train_crash_rate": self._train_crash_rate,
             "lgb_weight": self.lgb_weight,
@@ -386,6 +422,7 @@ class CrashPredictor:
         self.lr_models = state.get("lr_models", {})
         self.calibrators = state["calibrators"]
         self.scalers = state.get("scalers", state.get("scaler", {}))
+        self.imputers = state.get("imputers", {})
         self.feature_names = state["feature_names"]
         self._train_crash_rate = state.get("train_crash_rate", {})
         self.lgb_weight = state.get("lgb_weight", 0.70)

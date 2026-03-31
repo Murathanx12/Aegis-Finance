@@ -1,54 +1,60 @@
 # Aegis Finance
 
-> Free, open-source market intelligence platform. Institutional-grade analysis, accessible to everyone.
-
-Aegis Finance combines machine learning crash prediction, Monte Carlo simulation, and macroeconomic analysis into a modern web dashboard. Every prediction is explainable — SHAP values show exactly which factors drive the model's output.
+> Free, open-source market intelligence platform combining ML crash prediction, Monte Carlo simulation, and portfolio construction in a web dashboard.
 
 **This is an educational tool, not financial advice.**
 
-## Why Aegis Finance?
+## What It Does
 
-Most open-source finance tools solve one piece of the puzzle: OpenBB is a terminal without ML predictions, QuantConnect focuses on backtesting strategies, Riskfolio-Lib optimizes portfolios but has no UI, and WorldMonitor displays data without analytics. Aegis is the first open-source project to combine **ML crash prediction + Monte Carlo simulation + goal-based portfolio building + macro risk scoring + SHAP explainability** in a single, self-hostable web app. Every prediction comes with an explanation of *why* — not just a number.
+- **Crash Probability** — LightGBM + Logistic Regression blend predicting 20%+ drawdown probability over 3, 6, and 12-month horizons. Validated with purged cross-validation and walk-forward backtesting (3m Brier score: 0.046; see [Known Limitations](#known-limitations) for horizon accuracy details).
+- **Monte Carlo Projections** — Jump-diffusion simulation (Merton 1976) with GJR-GARCH volatility, Student-t innovations, and antithetic variates. 10,000 paths default. Validated against Goldman Sachs, JPMorgan, and Vanguard 10-year return assumptions ([docs/REALITY_CHECK.md](docs/REALITY_CHECK.md)).
+- **Portfolio Builder** — Black-Litterman, Hierarchical Risk Parity (HRP), and template methods with Ledoit-Wolf covariance shrinkage. 5 goal profiles (preservation, income, growth, aggressive growth, retirement). Uses sector ETFs, not individual stock selection.
+- **Macro Risk Dashboard** — 9-factor composite risk score from FRED data (yield curve, NFCI, initial claims, VIX, credit spreads, etc.) with regime classification (Bull/Bear/Volatile/Neutral).
+- **Stock Analysis** — Per-ticker Monte Carlo projections with beta-adjusted crash frequency, analyst target blending, and SHAP explainability showing which factors drive each prediction.
+- **Stock Screener** — 30+ stocks with Buy/Hold/Sell signals, Sharpe ratios, and sector filtering.
+- **Sector Analysis** — 11 S&P 500 sectors ranked by risk-adjusted expected return.
+- **News Intelligence** — GDELT event scoring with FinBERT sentiment analysis and optional DeepSeek AI summaries.
+- **Retirement Planner** — Compound growth projections with inflation adjustment.
+- **Net Liquidity Tracker** — Fed balance sheet (WALCL - TGA - RRP) as a market indicator.
+- **Data Quality Monitoring** — Automated staleness, range, and completeness checks.
+- **External Validation** — Cross-checks crash predictions against LEI, SLOOS, Fed Funds, and Consumer Sentiment.
 
-## Features
+## What It Is Not
 
-- **Crash Probability** — ML-predicted probability of a 20%+ drawdown over 3, 6, and 12-month horizons
-- **Monte Carlo Projections** — Jump-diffusion simulation with fat tails, regime-aware drift, and institutional consensus anchoring
-- **Macro Risk Dashboard** — 9-factor composite risk score with real-time regime classification
-- **Sector Analysis** — All 11 S&P 500 sectors ranked by risk-adjusted expected return
-- **Stock Analysis** — Per-ticker projections with 3-band price expectations, analyst consensus, holders, and earnings
-- **Stock Screener** — Sortable watchlist of 30+ stocks with Buy/Hold/Sell signals, Sharpe ratios, and sector filtering
-- **Portfolio Builder** — Goal-based allocation with Black-Litterman, HRP, and template methods + Monte Carlo projection
-- **News Intelligence** — GDELT-powered event scoring with optional DeepSeek AI summaries
-- **Retirement Planner** — Compound growth projections with inflation adjustment and milestone tracking
-- **Net Liquidity Tracker** — Fed balance sheet (WALCL - TGA - RRP) as a leading market indicator
-- **Data Quality Monitoring** — Automated staleness, range, and completeness checks on all market data
-- **External Validation** — Cross-checks crash predictions against LEI, SLOOS, Fed Funds, and Consumer Sentiment
-- **Regime Confirmation** — Multi-check validation (200d SMA, breadth, institutional consensus) prevents false bear signals
+- **Not financial advice** — educational tool with disclaimers on every page
+- **Not a trading bot** — no execution, no position sizing, no live orders
+- **Not real-time** — data refreshes hourly via Yahoo Finance and FRED, not tick-by-tick
 
-## Architecture
+## Comparison to Similar Projects
 
-```
-+---------------------------------------------------------+
-|  Frontend (Next.js 14 + shadcn/ui + Recharts)           |
-|  Pages: Dashboard, Crash, Simulation, Stocks, Screener, |
-|         Sectors, Portfolio, News, Retirement, About      |
-+------------------------+--------------------------------+
-                         | REST API
-+------------------------v--------------------------------+
-|  Backend (FastAPI)                                      |
-|  +----------+ +-----------+ +----------+ +----------+  |
-|  |Data      | |Monte Carlo| |Crash     | |Risk      |  |
-|  |Fetcher   | |Simulator  | |Model     | |Scorer    |  |
-|  |(yfinance | |(Merton    | |(LightGBM | |(9-factor |  |
-|  |+ FRED)   | | jump-diff)| |+ Logistic| | z-score) |  |
-|  +----------+ +-----------+ +----------+ +----------+  |
-|  +----------+ +-----------+ +----------+ +----------+  |
-|  |Net       | |External   | |Regime    | |Data      |  |
-|  |Liquidity | |Validator  | |Validator | |Quality   |  |
-|  +----------+ +-----------+ +----------+ +----------+  |
-+---------------------------------------------------------+
-```
+| Feature | Aegis Finance | OpenBB (60k stars) | WorldMonitor (43k stars) | PyPortfolioOpt (5.5k stars) | QuantConnect LEAN (18k stars) |
+|---------|--------------|-------|--------------|----------------|------------|
+| ML crash prediction | LightGBM with purged CV | No | No | No | No |
+| Monte Carlo simulation | Jump-diffusion + GARCH | No | No | No | Generic |
+| Portfolio optimization | BL + HRP + Ledoit-Wolf | No | No | BL + HRP + CLA + more | BL + MVO |
+| Web dashboard | Next.js 14 | Commercial product | Next.js | No (library) | Cloud IDE |
+| SHAP explainability | Per-stock + per-crash | No | No | No | No |
+| Walk-forward validation | Purged k-fold + embargo | N/A | N/A | N/A | Built-in |
+| Data sources | 2 (Yahoo Finance, FRED) | 40+ providers | 30+ sources | User-provided | 100+ providers |
+| Live trading | No | No | No | No | Yes |
+| Fundamental data | No (price + macro only) | Yes (SEC filings, etc.) | Yes | User-provided | Yes |
+| Tax optimization | No | No | No | No | No |
+| Stars | New project | 60,000 | 43,000 | 5,500 | 18,000 |
+
+Each project has a different focus. OpenBB has broad data coverage (40+ providers vs our 2). QuantConnect supports live trading and backtesting strategies. PyPortfolioOpt has more optimization methods (CLA, CVaR, semicovariance). WorldMonitor covers more data sources globally. Aegis focuses specifically on crash prediction explainability and Monte Carlo projections.
+
+## Known Limitations
+
+- **2 data sources only** (Yahoo Finance, FRED) — institutional platforms use dozens including Bloomberg, Refinitiv, SEC EDGAR
+- **No live trading** — display and analysis only, no order execution
+- **ML crash prediction is modest** — 3-month horizon Brier score of 0.046 (better than base rate of 0.12), but 12-month predictions show limited improvement over climatological base rates
+- **Sector ETF portfolios** — portfolio optimizer builds from ~15 sector/asset-class ETFs, not individual stock selection
+- **No fundamental data** — no earnings, balance sheets, or cash flow statements; relies on price and macro data only
+- **Single-asset Monte Carlo** — no cross-asset correlation modeling (DCC-GARCH not yet implemented)
+- **No tax-loss harvesting** or tax-aware optimization
+- **Test coverage ~25%** of backend code (60 fast + 92 slow tests across 9 files); 0% frontend test coverage
+- **No mobile optimization** — dashboard designed for desktop browsers
+- **GDELT news scoring is metadata-based** — FinBERT adds NLP sentiment but headline-level only, not full-article analysis
 
 ## Quick Start
 
@@ -108,19 +114,6 @@ docker compose up --build
 
 ## Commands Reference
 
-### Installation
-
-```bash
-# Install backend dependencies
-cd backend
-pip install -r requirements.txt
-cd ..
-
-# Install frontend dependencies
-cd frontend
-npm install
-```
-
 ### Development
 
 ```bash
@@ -132,19 +125,7 @@ cd frontend
 npm run dev
 ```
 
-### Building
-
-```bash
-# Build frontend for production (also catches TypeScript errors)
-cd frontend
-npm run build
-
-# Start frontend production server (after building)
-cd frontend
-npm start
-```
-
-### Testing & Linting
+### Testing
 
 ```bash
 # Run fast backend tests (~35s, no network needed)
@@ -153,9 +134,11 @@ python -m pytest backend/tests/ -v -m "not slow"
 # Run ALL backend tests including stress tests (~5 min, needs network)
 python -m pytest backend/tests/ -v
 
+# Build frontend (catches TypeScript errors)
+cd frontend && npx next build
+
 # Run frontend linter
-cd frontend
-npm run lint
+cd frontend && npm run lint
 ```
 
 ### ML Engine (Offline)
@@ -174,63 +157,10 @@ python -m engine.validation.walk_forward
 ### Docker
 
 ```bash
-# Build and start full stack (backend + frontend)
-docker compose up --build
-
-# Start in detached mode (runs in background)
-docker compose up --build -d
-
-# Stop all containers
-docker compose down
-
-# Rebuild a single service
-docker compose build backend
-docker compose build frontend
-
-# View logs
-docker compose logs -f           # all services
-docker compose logs -f backend   # backend only
-docker compose logs -f frontend  # frontend only
-```
-
-### API Testing (curl)
-
-```bash
-# Health check
-curl http://localhost:8000/api/health
-
-# Market overview
-curl http://localhost:8000/api/market-status
-curl http://localhost:8000/api/macro
-curl http://localhost:8000/api/net-liquidity
-curl http://localhost:8000/api/data-quality
-
-# Crash prediction
-curl http://localhost:8000/api/crash/prediction
-curl http://localhost:8000/api/crash/AAPL
-
-# Simulation
-curl http://localhost:8000/api/simulation/sp500
-curl http://localhost:8000/api/simulation/scenarios
-
-# Stock & sectors
-curl http://localhost:8000/api/stock/AAPL
-curl http://localhost:8000/api/stock/AAPL/shap
-curl http://localhost:8000/api/sectors
-
-# News
-curl http://localhost:8000/api/news/market
-curl http://localhost:8000/api/news/AAPL
-
-# Portfolio (POST)
-curl -X POST http://localhost:8000/api/portfolio/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"tickers":["AAPL","MSFT","GOOGL"],"weights":[0.4,0.3,0.3]}'
-
-# Retirement planner (POST)
-curl -X POST http://localhost:8000/api/savings/project \
-  -H "Content-Type: application/json" \
-  -d '{"monthly_contribution":500,"current_savings":0,"current_age":20,"target_age":65}'
+docker compose up --build          # Build and start full stack
+docker compose up --build -d       # Start in background
+docker compose down                # Stop all containers
+docker compose logs -f backend     # View backend logs
 ```
 
 ## API Endpoints
@@ -248,14 +178,28 @@ curl -X POST http://localhost:8000/api/savings/project \
 | GET | `/api/simulation/scenarios` | 7-scenario breakdown |
 | GET | `/api/stock/{ticker}` | Stock projection, risk metrics, analyst data, holders, earnings |
 | GET | `/api/stock/{ticker}/shap` | SHAP feature importance |
+| GET | `/api/stock/{ticker}/sentiment` | FinBERT sentiment analysis on recent news |
 | GET | `/api/stock/screener` | Top stocks screener with signals |
 | GET | `/api/sectors` | 11-sector ranking by risk-adjusted return |
 | POST | `/api/portfolio/analyze` | Portfolio analytics (VaR, CVaR, correlation) |
-| POST | `/api/portfolio/build` | Goal-based allocation |
+| POST | `/api/portfolio/build` | Goal-based allocation (preservation, income, growth, aggressive, retirement) |
 | POST | `/api/portfolio/project` | Monte Carlo portfolio projection |
 | GET | `/api/news/market` | Market news with GDELT event scoring + AI summary |
 | GET | `/api/news/{ticker}` | Ticker-specific news with AI outlook |
 | POST | `/api/savings/project` | Retirement savings projection |
+
+## API Testing (curl)
+
+```bash
+curl http://localhost:8000/api/health
+curl http://localhost:8000/api/market-status
+curl http://localhost:8000/api/crash/prediction
+curl http://localhost:8000/api/stock/AAPL
+curl http://localhost:8000/api/stock/AAPL/sentiment
+curl -X POST http://localhost:8000/api/portfolio/build \
+  -H "Content-Type: application/json" \
+  -d '{"risk_tolerance":"moderate","time_horizon":10,"investment_amount":10000}'
+```
 
 ## Data Sources
 
@@ -278,13 +222,39 @@ curl -X POST http://localhost:8000/api/savings/project \
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 14 (App Router), shadcn/ui, Tailwind CSS, Recharts, TanStack React Query (all pages) |
+| Frontend | Next.js 14 (App Router), shadcn/ui, Tailwind CSS, Recharts, TanStack React Query |
 | Backend | FastAPI, Python 3.12 |
 | ML | LightGBM, scikit-learn (Logistic Regression), SHAP |
 | Statistical | GJR-GARCH, HMM (3-state), Jump-diffusion Monte Carlo |
+| NLP | ProsusAI/FinBERT (sentiment), keyword fallback |
 | Data | Yahoo Finance (yfinance), FRED (fredapi), GDELT |
 | AI | DeepSeek (optional, for news summaries) |
 | Deploy | Vercel (frontend), Railway (backend), Docker |
+
+## Architecture
+
+```
++---------------------------------------------------------+
+|  Frontend (Next.js 14 + shadcn/ui + Recharts)           |
+|  Pages: Dashboard, Crash, Simulation, Stocks, Screener, |
+|         Sectors, Portfolio, News, Retirement, About      |
++------------------------+--------------------------------+
+                         | REST API
++------------------------v--------------------------------+
+|  Backend (FastAPI)                                      |
+|  +----------+ +-----------+ +----------+ +----------+  |
+|  |Data      | |Monte Carlo| |Crash     | |Risk      |  |
+|  |Fetcher   | |Simulator  | |Model     | |Scorer    |  |
+|  |(yfinance | |(Merton    | |(LightGBM | |(9-factor |  |
+|  |+ FRED)   | | jump-diff)| |+ Logistic| | z-score) |  |
+|  +----------+ +-----------+ +----------+ +----------+  |
+|  +----------+ +-----------+ +----------+ +----------+  |
+|  |Portfolio | |Sentiment  | |Regime    | |Signal    |  |
+|  |Engine    | |Analyzer   | |Validator | |Engine    |  |
+|  |(BL+HRP)  | |(FinBERT)  | |(multi)   | |(composite|  |
+|  +----------+ +-----------+ +----------+ +----------+  |
++---------------------------------------------------------+
+```
 
 ## Deployment
 
@@ -312,109 +282,55 @@ aegis-finance/
 │   ├── config.py                # All parameters (scenarios, weights, tickers)
 │   ├── cache.py                 # In-memory TTL cache
 │   ├── routers/                 # 9 API routers
-│   │   ├── market.py            # market-status, macro, net-liquidity, data-quality
-│   │   ├── crash.py             # crash prediction + external validation
-│   │   ├── simulation.py        # SP500 projection, scenarios
-│   │   ├── stock.py             # per-ticker analysis + SHAP
-│   │   ├── sector.py            # 11-sector ranking
-│   │   ├── portfolio.py         # analyze, build, project
-│   │   ├── news.py              # GDELT + AI news
-│   │   └── savings.py           # retirement projection
-│   ├── services/                # 21 business logic modules
-│   │   ├── data_fetcher.py      # Yahoo Finance + FRED
-│   │   ├── monte_carlo.py       # Jump-diffusion MC (Merton-corrected)
-│   │   ├── risk_scorer.py       # 9-factor composite z-score
-│   │   ├── regime_detector.py   # Bull/Bear/Volatile/Neutral
-│   │   ├── crash_model.py       # LightGBM + Logistic crash predictor
-│   │   ├── stock_analyzer.py    # Per-ticker projections
-│   │   ├── sector_analyzer.py   # 11-sector factor model
-│   │   ├── portfolio_engine.py  # Stateless portfolio analytics
-│   │   ├── shap_explainer.py    # Feature importance
-│   │   ├── news_intelligence.py # GDELT event scoring
-│   │   ├── llm_analyzer.py      # DeepSeek AI integration
-│   │   ├── savings_calculator.py# Compound growth projections
-│   │   ├── data_quality.py      # Staleness, range, completeness checks
-│   │   ├── net_liquidity.py     # Fed balance sheet tracker
-│   │   ├── return_model.py      # Quantile return predictor
-│   │   ├── external_validator.py# LEI/SLOOS/Fed cross-checks
-│   │   ├── regime_validator.py  # Multi-check regime confirmation
-│   │   ├── drift_detector.py    # PSI + KS feature drift detection
-│   │   └── signal_optimizer.py  # Buy/Hold/Sell signal computation
+│   ├── services/                # 22 business logic modules
 │   ├── models/                  # GJR-GARCH, HMM, saved .pkl models
-│   └── tests/                   # 130 tests (43 fast + 87 stress)
+│   └── tests/                   # 152 tests (60 fast + 92 slow)
 ├── engine/                      # Offline ML training + validation
 │   ├── training/                # Feature builder, LASSO, labeling, fracdiff, uniqueness
 │   ├── validation/              # Walk-forward backtest, purged CV, metrics
 │   └── autoresearch/            # Autonomous experiment loop (scaffolded)
+├── docs/                        # Research findings, gap analysis, stress tests
 ├── docker-compose.yml           # Full stack containers
-├── railway.json                 # Backend deployment config
 └── .env.example                 # Required API keys template
 ```
 
-## Roadmap
-
-| Phase | Focus | Key Changes |
-|-------|-------|-------------|
-| 1 | ML Methodology | Purged cross-validation, triple-barrier labeling, fractional differentiation |
-| 2 | Monte Carlo Upgrade | Student-t innovations, DCC-GARCH, 50k paths for tail estimation |
-| 3 | Portfolio Construction | Black-Litterman, Hierarchical Risk Parity, Ledoit-Wolf shrinkage |
-| 4 | Autoresearch Loop | Automated experiment tracking, drift detection, retraining triggers |
-| 5 | Data & Distribution | SEC EDGAR, NLP sentiment, community channels |
-
-## Methodology Implementation Status
+## Methodology Status
 
 | Technique | Status | Details |
 |-----------|--------|---------|
-| Purged CV with embargo | Implemented | `engine/validation/purged_cv.py` — pre/post embargo, temporal purging |
-| Triple-barrier labeling | Implemented | `engine/training/labeling.py` — Lopez de Prado AFML Ch. 3 |
-| Fractional differentiation | Implemented | `engine/training/fracdiff.py` — FFD with ADF stationarity test |
-| Sample uniqueness weighting | Implemented | `engine/training/sample_uniqueness.py` — temporal decay |
-| Student-t MC innovations | Implemented | GARCH-estimated nu fed into jump-diffusion simulation |
-| Antithetic variates | Implemented | 50% variance reduction in Monte Carlo paths |
-| Black-Litterman portfolio | Implemented | `portfolio_engine.py` — AUM-weighted equilibrium returns + template blending |
-| HRP portfolio | Implemented | `portfolio_engine.py` — position caps + template blending |
-| Ledoit-Wolf shrinkage | Implemented | Replaces sample covariance in all portfolio computations |
-| Drift detection | Implemented | `drift_detector.py` — PSI + KS test |
-| DCC-GARCH | Not yet | Multi-asset dynamic correlation |
-| Autoresearch loop | Scaffolded | `engine/autoresearch/` — 3-file contract, needs MLflow |
-| NLP sentiment | Not yet | FinBERT integration planned |
+| Purged CV with embargo | Done | `engine/validation/purged_cv.py` — pre/post embargo, temporal purging |
+| Triple-barrier labeling | Done | `engine/training/labeling.py` — Lopez de Prado AFML Ch. 3 |
+| Fractional differentiation | Done | `engine/training/fracdiff.py` — FFD with ADF stationarity test |
+| Sample uniqueness weighting | Done | `engine/training/sample_uniqueness.py` — temporal decay |
+| Student-t MC innovations | Done | GARCH-estimated degrees of freedom fed into jump-diffusion simulation |
+| Antithetic variates | Done | Variance reduction in Monte Carlo paths |
+| Black-Litterman portfolio | Done | AUM-weighted equilibrium returns + risk tolerance blending |
+| HRP portfolio | Done | Position caps + risk tolerance blending |
+| Ledoit-Wolf shrinkage | Done | Replaces sample covariance in portfolio computations |
+| Goal-based portfolios | Done | 5 profiles: preservation, income, growth, aggressive, retirement |
+| FinBERT sentiment | Done | `sentiment_analyzer.py` — ProsusAI/finbert with keyword fallback |
+| Drift detection | Done | `drift_detector.py` — PSI + KS test |
+| Crash monotonicity | Done | `crash_model.py` — enforced 3m ≤ 6m ≤ 12m in post-processing |
+| DCC-GARCH | Not done | Multi-asset dynamic correlation — single-asset MC only |
+| Autoresearch loop | Scaffolded | `engine/autoresearch/` — 3-file contract, needs MLflow integration |
+| Cross-asset correlation | Not done | Portfolio projection uses aggregate returns, not correlated paths |
+| Tax-loss harvesting | Not done | No tax-aware optimization |
 
-## Key References
+## Built With / References
 
-- Lopez de Prado — *Advances in Financial Machine Learning* (purged CV, triple-barrier, fractional differentiation)
-- Gu, Kelly, Xiu (2020) — "Empirical Asset Pricing via Machine Learning"
-- BIS Working Paper 1250 (2025) — Financial stress prediction with ML
-- MRS-MNTS-GARCH (JRFM, 2022) — Regime-switching Monte Carlo blueprint
+Projects and papers that informed the implementation:
 
-## Community & Distribution
-
-- **Issues & bugs:** [GitHub Issues](https://github.com/Murathanx12/Aegis-Finance/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/Murathanx12/Aegis-Finance/discussions)
-- **Share:** [r/algotrading](https://reddit.com/r/algotrading), [r/quantfinance](https://reddit.com/r/quantfinance), [Hacker News](https://news.ycombinator.com)
-- **Contribute:** See [CONTRIBUTING.md](CONTRIBUTING.md)
-
-## Free Hosting Guide
-
-| Service | Tier | Use |
-|---------|------|-----|
-| [Vercel](https://vercel.com) | Free (hobby) | Frontend — auto-deploys from GitHub |
-| [Railway](https://railway.app) | Free trial / $5/mo | Backend — supports Docker, auto-deploy |
-| [Render](https://render.com) | Free tier | Backend alternative — spins down after inactivity |
-
-The backend runs on any machine with Python 3.12+. See [Deployment](#deployment) for config details.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and guidelines.
-
-## Methodology
-
-See [ABSTRACT.md](ABSTRACT.md) for the project abstract and [docs/METHODOLOGY.md](docs/METHODOLOGY.md) for the full technical methodology (research paper foundation) covering:
-- Crash probability estimation (LightGBM + Logistic Regression, walk-forward validation)
-- Jump-diffusion Monte Carlo (Merton 1976 compensator, GJR-GARCH, HMM)
-- 9-factor composite risk scoring
-- Scenario framework with dynamic weight adjustment
-- External validation and regime confirmation
+| Resource | What We Used | Link |
+|----------|-------------|------|
+| PyPortfolioOpt | Black-Litterman API, HRP, Ledoit-Wolf covariance | [github.com/robertmartin8/PyPortfolioOpt](https://github.com/robertmartin8/PyPortfolioOpt) |
+| MLFinLab / Lopez de Prado | Purged CV methodology, triple-barrier labeling, fractional differentiation | [github.com/hudson-and-thames/mlfinlab](https://github.com/hudson-and-thames/mlfinlab) |
+| Karpathy's autoresearch | Autonomous experiment loop architecture (3-file contract, ratchet pattern) | [github.com/karpathy/autoresearch](https://github.com/karpathy/autoresearch) |
+| WorldMonitor | Dashboard design patterns, dark theme reference | [github.com/acatlin/worldmonitor](https://github.com/acatlin/worldmonitor) |
+| arch library | GJR-GARCH(1,1) volatility modeling | [github.com/bashtage/arch](https://github.com/bashtage/arch) |
+| ProsusAI/finbert | Financial sentiment analysis on news headlines | [github.com/ProsusAI/finBERT](https://github.com/ProsusAI/finBERT) |
+| Lopez de Prado (2018) | *Advances in Financial Machine Learning* — purged CV, triple-barrier, fracdiff | Book (Wiley) |
+| Gu, Kelly, Xiu (2020) | "Empirical Asset Pricing via Machine Learning" — ML in finance benchmark | [DOI: 10.1093/rfs/hhaa009](https://doi.org/10.1093/rfs/hhaa009) |
+| BIS Working Paper 1250 (2025) | Financial stress prediction with tree-based ML | [bis.org/publ/work1250.htm](https://www.bis.org/publ/work1250.htm) |
 
 ## Research & Analysis
 
@@ -422,18 +338,28 @@ Deep research conducted 2026-03-31 with findings in `docs/`:
 
 | Document | Contents |
 |----------|----------|
-| [DEEP_RESEARCH_FINDINGS](docs/DEEP_RESEARCH_FINDINGS.md) | Market snapshot, institutional forecasts (Goldman, JPM, Vanguard, BlackRock), Aegis calibration |
-| [DEEP_RESEARCH_FINDINGS_ACADEMIC](docs/DEEP_RESEARCH_FINDINGS_ACADEMIC.md) | 2024-2026 papers on LightGBM crash prediction, GARCH innovations, MC best practices |
-| [DEEP_RESEARCH_FINDINGS_INDUSTRY](docs/DEEP_RESEARCH_FINDINGS_INDUSTRY.md) | Wealthfront/Betterment methodology, FinBERT state of art, caching patterns |
+| [REALITY_CHECK](docs/REALITY_CHECK.md) | Engine output validated against Goldman Sachs, Wealthfront, Betterment, FRED, Yahoo |
 | [GAP_ANALYSIS](docs/GAP_ANALYSIS.md) | All 23 backend modules graded A-F vs institutional practice |
-| [GAP_ANALYSIS_ENGINE_FRONTEND](docs/GAP_ANALYSIS_ENGINE_FRONTEND.md) | Engine modules + frontend pages graded with specific fix suggestions |
 | [STRESS_TEST_RESULTS](docs/STRESS_TEST_RESULTS.md) | 30-stock analysis across 11 sectors |
-| [STRESS_TEST_PORTFOLIOS](docs/STRESS_TEST_PORTFOLIOS.md) | 5 portfolio profiles + edge case results |
-| [IMPROVEMENT_LOG](docs/IMPROVEMENT_LOG.md) | Iteration history with findings, fixes, and priorities |
+| [IMPROVEMENT_LOG](docs/IMPROVEMENT_LOG.md) | 4 improvement iterations with before/after numbers |
+| [DEEP_RESEARCH_FINDINGS](docs/DEEP_RESEARCH_FINDINGS.md) | Institutional forecasts (Goldman, JPM, Vanguard, BlackRock) |
+| [DEEP_RESEARCH_FINDINGS_ACADEMIC](docs/DEEP_RESEARCH_FINDINGS_ACADEMIC.md) | 2024-2026 papers on LightGBM crash prediction, GARCH, MC |
+
+## Free Hosting
+
+| Service | Tier | Use |
+|---------|------|-----|
+| [Vercel](https://vercel.com) | Free (hobby) | Frontend — auto-deploys from GitHub |
+| [Railway](https://railway.app) | Free trial / $5/mo | Backend — supports Docker, auto-deploy |
+| [Render](https://render.com) | Free tier | Backend alternative — spins down after inactivity |
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and guidelines.
 
 ## Disclaimer
 
-Aegis Finance is an **educational tool**. It is **not financial advice**. All predictions are probabilistic estimates with significant uncertainty. Past performance does not guarantee future results. Always consult a qualified financial advisor before making investment decisions.
+Aegis Finance is an **educational tool**. It is **not financial advice**. All predictions are probabilistic estimates with significant uncertainty. The ML crash model has modest predictive skill at short horizons only. Past performance does not guarantee future results. Always consult a qualified financial advisor before making investment decisions.
 
 ## License
 

@@ -138,10 +138,15 @@ def analyze_stock(
         final_mu = float(np.clip(blended_mu, min_cagr * 0.5, max_cagr))
         final_sigma = float(np.clip(hist_sigma, 0.15, 0.80))
 
+        # Beta-adjusted crash frequency: high-beta stocks crash more often
+        base_crash_freq = config["simulation"]["jump_diffusion"]["annual_rate"]
+        beta_adj_crash_freq = float(np.clip(base_crash_freq * beta, 0.02, 0.25))
+        num_sims = config["simulation"]["num_simulations"]
+
         base_scenario = {"drift_adj": 0, "vol_mult": 1.0, "crash_mult": 1.0}
         paths = simulate_paths(
             current_price, final_mu, final_sigma,
-            forecast_days, 3000, 0.07, 0.0, base_scenario,
+            forecast_days, num_sims, beta_adj_crash_freq, 0.0, base_scenario,
         )
 
         final_prices = np.minimum(paths[-1], current_price * (1 + max_5y_return))
@@ -383,10 +388,10 @@ def _get_key_stats(info: dict, returns, current_price: float) -> Optional[dict]:
 
         # Add computed stats
         if len(returns) > 0:
-            stats["return_1m"] = float(returns.iloc[-21:].sum()) * 100 if len(returns) >= 21 else None
-            stats["return_3m"] = float(returns.iloc[-63:].sum()) * 100 if len(returns) >= 63 else None
-            stats["return_6m"] = float(returns.iloc[-126:].sum()) * 100 if len(returns) >= 126 else None
-            stats["return_1y"] = float(returns.iloc[-252:].sum()) * 100 if len(returns) >= 252 else None
+            stats["return_1m"] = float(((1 + returns.iloc[-21:]).prod() - 1) * 100) if len(returns) >= 21 else None
+            stats["return_3m"] = float(((1 + returns.iloc[-63:]).prod() - 1) * 100) if len(returns) >= 63 else None
+            stats["return_6m"] = float(((1 + returns.iloc[-126:]).prod() - 1) * 100) if len(returns) >= 126 else None
+            stats["return_1y"] = float(((1 + returns.iloc[-252:]).prod() - 1) * 100) if len(returns) >= 252 else None
 
         return stats if stats else None
     except Exception:

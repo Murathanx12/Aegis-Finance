@@ -25,22 +25,25 @@ from backend.config import config
 
 logger = logging.getLogger(__name__)
 
-# Signal weights — all in config for tunability
-_DEFAULT_WEIGHTS = {
+# Signal weights — loaded from config.py for tunability
+_DEFAULT_WEIGHTS = config.get("signal_weights", {
     "crash_prob": 0.25,
     "regime": 0.20,
     "valuation": 0.15,
     "momentum": 0.15,
     "mean_reversion": 0.10,
     "external": 0.15,
-}
+})
 
-# Action thresholds (signal: -1 = very bearish, +1 = very bullish)
+# Action thresholds from config (signal: -1 = very bearish, +1 = very bullish)
+_sig_thresholds = config.get("signal_thresholds", {
+    "strong_buy": 0.45, "buy": 0.15, "sell": -0.15, "strong_sell": -0.45,
+})
 _ACTION_THRESHOLDS = [
-    (0.45, "Strong Buy"),
-    (0.15, "Buy"),
-    (-0.15, "Hold"),
-    (-0.45, "Sell"),
+    (_sig_thresholds["strong_buy"], "Strong Buy"),
+    (_sig_thresholds["buy"], "Buy"),
+    (_sig_thresholds["sell"], "Hold"),
+    (_sig_thresholds["strong_sell"], "Sell"),
     (-1.0, "Strong Sell"),
 ]
 

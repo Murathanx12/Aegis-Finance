@@ -53,6 +53,37 @@ _ALLOCATION_TEMPLATES = {
     },
 }
 
+# Goal-based allocation adjustments applied on top of risk tolerance templates.
+# Each goal shifts weights toward asset classes aligned with the goal's objective.
+_GOAL_ADJUSTMENTS = {
+    "preservation": {
+        # Maximize capital stability — overweight bonds, underweight equities
+        "bond_boost": 0.15,   # shift 15% from equities to bonds
+        "dividend_tickers": [],
+    },
+    "income": {
+        # Maximize dividend yield — overweight dividend/REIT ETFs
+        "bond_boost": 0.05,
+        "dividend_tickers": ["VNQ", "XLV"],  # boost these by 5% each
+    },
+    "growth": {
+        # Balanced growth — no adjustment (default behavior)
+        "bond_boost": 0.0,
+        "dividend_tickers": [],
+    },
+    "aggressive_growth": {
+        # Maximum equity exposure — underweight bonds, overweight tech
+        "bond_boost": -0.10,  # shift 10% from bonds to equities
+        "dividend_tickers": [],
+    },
+    "retirement": {
+        # Glide path — bond allocation increases with shorter horizon
+        # Bond boost is per-horizon: 1y=+20%, 3y=+15%, 5y=+10%, 10y=+5%
+        "bond_boost": 0.10,   # default (5y), overridden by horizon
+        "dividend_tickers": ["VNQ"],
+    },
+}
+
 # Risk aversion mapping for Black-Litterman
 _RISK_AVERSION = {
     "conservative": 5.0,
@@ -69,6 +100,48 @@ _ETF_MARKET_CAPS = {
     "VTI": 400, "VXUS": 75, "BND": 120, "QQQ": 280, "VGT": 80,
     "VNQ": 35, "GLD": 70, "VTIP": 25, "XLE": 40, "XLV": 45,
 }
+
+
+def _apply_goal_adjustment(
+    allocations: dict[str, float],
+    goal: str,
+    time_horizon: str,
+) -> dict[str, float]:
+    """Apply goal-based shifts to allocation weights.
+
+    Adjusts bond/equity balance and boosts specific tickers based on
+    the investor's goal (preservation, income, growth, aggressive_growth, retirement).
+    """
+    adj = _GOAL_ADJUSTMENTS.get(goal, _GOAL_ADJUSTMENTS["growth"])
+    bond_boost = adj["bond_boost"]
+
+    # Retirement glide path: more bonds for shorter horizons
+    if goal == "retirement":
+        glide = {"1y": 0.20, "3y": 0.15, "5y": 0.10, "10y": 0.05}
+        bond_boost = glide.get(time_horizon, 0.10)
+
+    bond_tickers = [t for t in allocations if t in ("BND", "VTIP")]
+    equity_tickers = [t for t in allocations if t not in ("BND", "VTIP", "GLD")]
+
+    if bond_boost != 0.0 and bond_tickers and equity_tickers:
+        shift_per_equity = bond_boost / len(equity_tickers)
+        shift_per_bond = bond_boost / len(bond_tickers)
+        for t in equity_tickers:
+            allocations[t] = max(0.02, allocations[t] - shift_per_equity)
+        for t in bond_tickers:
+            allocations[t] = max(0.02, allocations[t] + shift_per_bond)
+
+    # Boost dividend/income tickers for income-oriented goals
+    for t in adj.get("dividend_tickers", []):
+        if t in allocations:
+            allocations[t] = allocations[t] + 0.05
+
+    # Re-normalize
+    total = sum(allocations.values())
+    if total > 0:
+        allocations = {k: v / total for k, v in allocations.items()}
+
+    return allocations
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -302,6 +375,7 @@ class PortfolioEngine:
         time_horizon: str = "5y",
         method: str = "template",
         views: Optional[dict] = None,
+        goal: str = "growth",
     ) -> dict:
         """Build a portfolio allocation.
 
@@ -311,22 +385,39 @@ class PortfolioEngine:
             time_horizon: "1y", "3y", "5y", "10y"
             method: "template" (default), "black-litterman", or "hrp"
             views: Optional dict of {ticker: expected_return} for BL
+            goal: "preservation", "income", "growth", "aggressive_growth", or "retirement"
 
         Returns:
             Dict with target allocations and rationale
         """
         if method == "black-litterman":
-            return PortfolioEngine._build_bl(
+            result = PortfolioEngine._build_bl(
                 risk_tolerance, investment_amount, time_horizon, views
             )
         elif method == "hrp":
-            return PortfolioEngine._build_hrp(
+            result = PortfolioEngine._build_hrp(
                 risk_tolerance, investment_amount, time_horizon
             )
         else:
-            return PortfolioEngine._build_template(
+            result = PortfolioEngine._build_template(
                 risk_tolerance, investment_amount, time_horizon
             )
+
+        # Apply goal-based adjustment if goal is not default
+        if goal != "growth" and "holdings" in result:
+            raw_alloc = {h["ticker"]: h["weight"] / 100 for h in result["holdings"]}
+            adjusted = _apply_goal_adjustment(raw_alloc, goal, time_horizon)
+            result = PortfolioEngine._allocations_to_response(
+                adjusted, risk_tolerance, investment_amount, time_horizon,
+                result.get("description", "") + f" | Goal: {goal}",
+                result.get("method", method),
+            )
+            result["goal"] = goal
+
+        if "goal" not in result:
+            result["goal"] = goal
+
+        return result
 
     @staticmethod
     def _build_template(
@@ -406,7 +497,8 @@ class PortfolioEngine:
         try:
             # Compute equilibrium returns (market-implied prior)
             from pypfopt.black_litterman import market_implied_prior_returns
-            pi = market_implied_prior_returns(market_caps, delta, cov)
+            rf = config.get("risk_free_rate", 0.04)
+            pi = market_implied_prior_returns(market_caps, delta, cov, risk_free_rate=rf)
 
             # Build BL model — only use BL posterior if views are provided
             if views and any(t in available for t in views):
@@ -656,14 +748,35 @@ class PortfolioEngine:
 
         trading_days = years * 252
 
-        # Simple projection using historical stats
+        # Jump-diffusion projection (consistent with MC engine)
+        jd = config["simulation"]["jump_diffusion"]
+        jump_rate = jd["annual_rate"]
+        jump_mean = jd["mean"]
+        jump_std = jd["std"]
+        t_df = jd.get("t_degrees_of_freedom", 8)
+
         rng = np.random.default_rng(42)
-        n_sims = 2000
+        n_sims = config["simulation"]["num_simulations"]
         paths = np.zeros((trading_days + 1, n_sims))
         paths[0] = total_value
 
+        # Merton jump compensator: remove expected jump contribution from drift
+        jump_compensator = jump_rate * (np.exp(jump_mean + 0.5 * jump_std**2) - 1)
+        adj_mu_daily = mu_daily - jump_compensator / 252
+
         for t in range(1, trading_days + 1):
-            daily_r = mu_daily + sigma_daily * rng.standard_normal(n_sims)
+            # Student-t innovations for fat tails
+            z = rng.standard_t(df=t_df, size=n_sims)
+            z = z / np.sqrt(t_df / (t_df - 2))  # normalize to unit variance
+            daily_r = adj_mu_daily + sigma_daily * z
+
+            # Jump component (Poisson arrivals)
+            jump_mask = rng.poisson(jump_rate / 252, size=n_sims) > 0
+            n_jumps = jump_mask.sum()
+            if n_jumps > 0:
+                jump_sizes = rng.normal(jump_mean, jump_std, size=n_jumps)
+                daily_r[jump_mask] += jump_sizes
+
             paths[t] = paths[t - 1] * (1 + daily_r)
             # Add monthly contribution at end of each month (~21 trading days)
             if monthly_add > 0 and t % 21 == 0:
