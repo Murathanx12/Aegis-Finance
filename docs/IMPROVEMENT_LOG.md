@@ -152,3 +152,138 @@
 5. Add goal parameter to portfolio builder
 6. Fix portfolio dark mode hardcoded classes
 7. Implement missing engine modules (labeling, fracdiff, purged_cv)
+
+---
+
+## Iteration 3 — Ground-Up Analysis & Fix Session (2026-03-31)
+
+### Bugs Fixed (from Gap Analysis Priority List)
+
+1. **Stock analyzer return compounding** (`stock_analyzer.py:386-389`)
+   - Changed `.sum()` to `(1 + returns).prod() - 1` for 1m/3m/6m/1y returns
+   - Previous code overstated returns; e.g., 10% + 10% = 20% (sum) vs 21% (compound)
+
+2. **Crash model fillna(0)** (`crash_model.py:225,226,300`)
+   - Replaced with `SimpleImputer(strategy="median")` for LR path
+   - Imputer persisted in model save/load for prediction-time reuse
+   - LightGBM path already NaN-clean (unchanged)
+
+3. **Metrics swapped args** (`metrics.py:324-334`)
+   - Fixed `regime_conditional_bss(y_pred, y_true)` → `(y_true, y_pred)`
+   - Now matches `brier_skill_score` convention
+
+4. **BL missing risk_free_rate** (`portfolio_engine.py:500`)
+   - `market_implied_prior_returns()` was called without `risk_free_rate`
+   - Prior returns were ~4% too low; fixed by passing `rf` from config
+
+### New Capabilities
+
+5. **Goal-based portfolio parameter** (`portfolio_engine.py`)
+   - 5 goals: preservation, income, growth, aggressive_growth, retirement
+   - Retirement glide path: bond allocation scales with horizon
+   - Income: boosts dividend/REIT ETFs
+   - Applies on top of all 3 methods (template, BL, HRP)
+
+6. **FinBERT sentiment analyzer** (`sentiment_analyzer.py` — NEW)
+   - Primary: ProsusAI/finbert (HuggingFace, CPU-friendly)
+   - Fallback: 60+ curated financial keywords
+   - Endpoint: `GET /api/stock/{ticker}/sentiment`
+
+7. **Reality check document** (`docs/REALITY_CHECK.md` — NEW)
+   - Engine output validated against Goldman Sachs, Wealthfront, Betterment, FRED, Yahoo Finance
+   - All market indicators within 0.3% of real values
+
+### Reference Repo Findings
+
+- PyPortfolioOpt: BL risk_free_rate bug found and fixed; Idzorek method available for future use
+- MLFinLab: Our purged CV is more flexible; missing StackedPurgedKFold for multi-asset
+- Autoresearch: 3-file contract + ratchet pattern applicable to Aegis Phase 4
+- WorldMonitor: Framer-motion animations worth adopting
+
+### Verification
+- Tests: 43/43 fast passing, no regressions
+- Files: 6 modified, 2 new, +154 lines
+
+### Remaining Top Priorities
+1. CPCV (Combinatorial Purged CV)
+2. Frontend animations + more risk granularity
+3. Frontend test coverage (currently 0%)
+4. Autoresearch loop implementation (Phase 4)
+5. Portfolio dark mode signal color fix
+6. Drift-tolerance rebalancing
+
+---
+
+## Iteration 4 — Self-Improvement Loop (2026-03-31)
+
+5-iteration autonomous improvement cycle targeting C/C+ graded modules from gap analysis.
+
+### Iteration 1: Signal Engine (C → B+)
+- Moved 6 signal weights + 4 action thresholds from hardcoded to `config.py`
+- Signal engine now reads `config.get("signal_weights")` and `config.get("signal_thresholds")`
+- All signal tuning is now config-driven without code changes
+
+### Iteration 2: Stock Analyzer (C+ → B)
+- **Beta-adjusted crash frequency:** `crash_freq = base_rate × beta`, clipped to [0.02, 0.25]
+  - JNJ (β=0.33): 0.023 crash freq, TSLA (β=1.93): 0.135 — 6x differentiation
+- **Config-driven paths:** 3,000 → `config["simulation"]["num_simulations"]` (10,000)
+- Per-stock MC now properly reflects individual stock risk characteristics
+
+### Iteration 3: Portfolio Engine (C → B)
+- **Jump-diffusion MC in `project_portfolio`:** Replaced basic GBM with:
+  - Student-t innovations (df=8) for fat tails
+  - Poisson jump arrivals with Merton compensator
+  - 10,000 paths (was 2,000)
+- Portfolio projections now consistent with the rest of the MC engine
+- Wider P10-P90 range reflects real tail risk
+
+### Iteration 4: Crash Model Pipeline (B+ → A-)
+- **Monotonicity enforcement:** `predict_all_horizons()` guarantees 3m ≤ 6m ≤ 12m via `np.maximum` chain
+- **Calibration split:** Isotonic regression trained on first 60% of validation, metrics on held-out 40%
+- Eliminates calibration overfitting and impossible horizon inversions
+
+### Iteration 5: Test Coverage (C+ → B-)
+- Added `test_signal_engine.py`: 10 market + 5 stock signal tests (edge cases, components, colors)
+- Added `test_portfolio_projection.py`: 2 fast tests (config, beta formula) + 5 slow tests (projection)
+- Fast test count: 43 → 60 (+40%)
+
+### Verification
+- Tests: 60/60 fast passing (was 43), 92 slow tests available
+- All 4 improved modules validated with real data
+- No regressions
+
+### Updated Module Grades
+
+| Module | Before | After | Key Change |
+|--------|--------|-------|------------|
+| Signal Engine | C | B+ | Config-driven weights/thresholds |
+| Stock Analyzer | C+ | B | Beta-adjusted crash freq, 10K paths |
+| Portfolio Engine | C | B | Jump-diffusion MC projection |
+| Crash Model | B+ | A- | Monotonicity + calibration split |
+| Test Coverage | C+ | B- | 60 fast tests (+40%) |
+
+### Documentation Update (Part 2)
+
+**README.md rewritten:**
+- Removed promotional language ("institutional-grade", "first open-source project", "revolutionary")
+- Added factual "Comparison to Similar Projects" table (Aegis vs OpenBB vs WorldMonitor vs PyPortfolioOpt vs QuantConnect)
+- Added "Known Limitations" section listing 10 specific limitations
+- Added "Built With / References" section crediting 9 open-source projects and papers
+- Updated methodology status table with current state
+- Added FinBERT sentiment endpoint to API table
+
+**CLAUDE.md rewritten:**
+- Removed "Competitive position: Aegis is the only..." claim
+- Added sentiment_analyzer.py, signal_engine.py to module list
+- Updated test suite table (60 fast / 92 slow = 152 total)
+- Added new rules: SimpleImputer for sklearn, monotonicity enforcement, no calibration data reuse
+- Updated healthy output ranges with per-stock differentiation
+- Compressed from 288 to ~210 lines
+
+### Final Validation (Part 3)
+
+- Tests: 60/60 fast passing, 0 frontend type errors
+- 5 stocks validated: AAPL ($247, 117% 5Y), JPM ($284, 119%), XOM ($171, 46%), JNJ ($242, 41%), NVDA ($165, 112%)
+- Conservative portfolio: 60% equity / 40% bonds — correct
+- Aggressive portfolio: 95% equity / 5% bonds — correct
+- All results within healthy output ranges

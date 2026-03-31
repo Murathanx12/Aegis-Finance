@@ -4,22 +4,17 @@
 
 Aegis Finance is a free, open-source market intelligence web platform combining ML crash prediction, Monte Carlo simulation, portfolio construction, and macroeconomic analysis into a single web dashboard.
 
-**Competitive position:** Aegis is the only open-source project that integrates ML crash prediction + jump-diffusion Monte Carlo + goal-based portfolio building + SHAP explainability in one self-hostable web app. OpenBB is a terminal (no ML predictions), QuantConnect is backtesting-only, WorldMonitor is display-only (no ML), and Riskfolio-Lib is a library (no UI).
-
 **What it does:**
 - Stock projections with Monte Carlo simulation (jump-diffusion, Merton-corrected)
 - Crash probability estimation (LightGBM + Logistic Regression, 3/6/12-month horizons)
-- Portfolio builder with Black-Litterman, HRP, and template methods (risk tolerance, time horizon)
+- Portfolio builder with Black-Litterman, HRP, and template methods (risk tolerance, time horizon, goal)
 - Stock screener with Buy/Hold/Sell signals across 30+ stocks
 - Sector analysis ranked by risk-adjusted expected returns (11 S&P sectors)
 - Macro risk dashboard (9-factor composite score, regime detection, FRED indicators)
-- SHAP explainability for every prediction (why the model thinks what it thinks)
-- News intelligence with GDELT event scoring and optional DeepSeek AI summaries
+- SHAP explainability for every prediction
+- News intelligence with GDELT event scoring, FinBERT sentiment, and optional DeepSeek AI summaries
 - Retirement planner with compound growth projections
 - Net liquidity tracker (Fed balance sheet: WALCL - TGA - RRP)
-- Data quality monitoring (staleness, range, completeness checks)
-- External validation (LEI, SLOOS, Fed Funds, sentiment cross-checks)
-- Regime confirmation (200d SMA, breadth, institutional consensus multi-check)
 
 **What it is NOT:**
 - Financial advice — educational tool with disclaimers everywhere
@@ -34,7 +29,8 @@ Aegis Finance is a free, open-source market intelligence web platform combining 
 | Backend | FastAPI, Python 3.12 |
 | ML | LightGBM, scikit-learn (Logistic Regression), SHAP |
 | Statistical | GJR-GARCH, HMM (3-state), Jump-diffusion Monte Carlo |
-| Data | Yahoo Finance (yfinance), FRED (fredapi), GDELT, 22+ macro series |
+| NLP | ProsusAI/FinBERT (sentiment), keyword fallback |
+| Data | Yahoo Finance (yfinance), FRED (fredapi), GDELT |
 | AI | DeepSeek (optional, for news summaries) |
 | Deploy | Vercel (frontend), Railway (backend), Docker |
 
@@ -43,90 +39,59 @@ Aegis Finance is a free, open-source market intelligence web platform combining 
 ```
 aegis-finance/
 ├── frontend/                    # Next.js 14 App
-│   ├── src/app/                 # App Router pages
+│   ├── src/app/                 # App Router pages (12 pages)
 │   ├── src/components/          # UI components (shadcn + charts)
 │   ├── src/lib/                 # API client, utilities
 │   └── src/hooks/               # Data fetching hooks
 ├── backend/                     # FastAPI
 │   ├── main.py                  # App entry + CORS + cache prewarming
-│   ├── config.py                # All parameters (scenarios, weights, tickers)
+│   ├── config.py                # All parameters (scenarios, weights, tickers, thresholds)
 │   ├── cache.py                 # In-memory TTL cache
-│   ├── routers/                 # API endpoint definitions (9 routers)
-│   │   ├── market.py            # /api/market-status, /api/macro, /api/net-liquidity, /api/data-quality
-│   │   ├── crash.py             # /api/crash/prediction (+ external validation), /api/crash/{ticker}
-│   │   ├── simulation.py        # /api/simulation/sp500, /api/simulation/scenarios
-│   │   ├── stock.py             # /api/stock/{ticker}, /api/stock/{ticker}/shap, /api/stock/screener
-│   │   ├── sector.py            # /api/sectors
-│   │   ├── portfolio.py         # /api/portfolio/analyze, /api/portfolio/build, /api/portfolio/project
-│   │   ├── news.py              # /api/news/market, /api/news/{ticker}
-│   │   ├── savings.py           # /api/savings/project
-│   │   └── backtest.py          # /api/backtest/walk-forward
-│   ├── services/                # Business logic (21 modules)
+│   ├── routers/                 # 9 API routers
+│   ├── services/                # 22 business logic modules
 │   │   ├── data_fetcher.py      # Yahoo Finance + FRED unified
 │   │   ├── monte_carlo.py       # Jump-diffusion MC (Merton-corrected)
 │   │   ├── risk_scorer.py       # 9-factor composite z-score
 │   │   ├── regime_detector.py   # Bull/Bear/Volatile/Neutral detection
 │   │   ├── crash_model.py       # LightGBM + Logistic crash predictor
-│   │   ├── stock_analyzer.py    # Per-ticker projections
+│   │   ├── stock_analyzer.py    # Per-ticker projections (beta-adjusted crash freq)
 │   │   ├── sector_analyzer.py   # 11-sector factor model
-│   │   ├── portfolio_engine.py  # Stateless portfolio analytics
+│   │   ├── portfolio_engine.py  # BL + HRP + template + goal-based
+│   │   ├── signal_engine.py     # Composite buy/sell signal (config-driven weights)
+│   │   ├── sentiment_analyzer.py# FinBERT + keyword fallback sentiment
 │   │   ├── shap_explainer.py    # Feature importance computation
 │   │   ├── news_intelligence.py # GDELT event scoring
 │   │   ├── llm_analyzer.py      # DeepSeek AI integration
 │   │   ├── savings_calculator.py# Compound growth projections
 │   │   ├── data_quality.py      # Staleness, range, completeness checks
-│   │   ├── net_liquidity.py     # Fed balance sheet tracker (WALCL - TGA - RRP)
+│   │   ├── net_liquidity.py     # Fed balance sheet tracker
 │   │   ├── return_model.py      # Quantile return predictor (10th/50th/90th)
-│   │   ├── external_validator.py# Cross-checks vs LEI, SLOOS, Fed, sentiment
+│   │   ├── external_validator.py# LEI/SLOOS/Fed cross-checks
 │   │   ├── regime_validator.py  # Multi-check regime confirmation
 │   │   ├── drift_detector.py    # PSI + KS feature drift detection
-│   │   └── signal_optimizer.py  # Buy/Hold/Sell signal engine
-│   └── models/                  # Statistical models + saved ML artifacts
-│       ├── garch.py             # GJR-GARCH(1,1)
-│       ├── hmm.py               # 3-state Hidden Markov Model
-│       └── *.pkl                # Serialized trained models (gitignored)
+│   │   └── signal_optimizer.py  # Legacy signal computation
+│   └── models/                  # GJR-GARCH, HMM, saved .pkl models
 ├── engine/                      # Offline research (not served by API)
-│   ├── training/                # Model training scripts
-│   │   ├── features.py          # Full 80+ feature builder
-│   │   ├── feature_selection.py # LASSO: 208 → 25-30 features
-│   │   ├── train_crash_model.py # Train + serialize to .pkl
-│   │   ├── labeling.py          # Triple-barrier labeling (AFML Ch. 3)
-│   │   ├── fracdiff.py          # Fixed-width fractional differentiation
-│   │   └── sample_uniqueness.py # Overlapping label weight computation
-│   ├── validation/              # Walk-forward backtesting
-│   │   ├── walk_forward.py      # Expanding window, zero data leakage
-│   │   ├── purged_cv.py         # Purged K-Fold CV with embargo (AFML Ch. 7)
-│   │   └── metrics.py           # Brier, BSS, reliability diagrams
+│   ├── training/                # features.py, feature_selection.py, labeling.py, fracdiff.py, sample_uniqueness.py
+│   ├── validation/              # walk_forward.py, purged_cv.py, metrics.py
 │   └── autoresearch/            # Autonomous experiment loop (scaffolded)
-│       ├── aegis_prepare.py     # Immutable data pipeline
-│       ├── aegis_train.py       # Mutable training config
-│       └── aegis_program.md     # Agent constraints
-├── docs/                        # Documentation
-├── .env.example                 # Required API keys template
-├── docker-compose.yml           # Backend + frontend containers
-├── ABSTRACT.md                  # Project abstract + methodology
-├── CONTRIBUTING.md              # How to contribute
-└── README.md                    # Setup + usage guide
+└── docs/                        # Research findings, gap analysis, stress tests, improvement log
 ```
 
 ## Commands
 
 ```bash
 # Backend
-cd backend
-pip install -r requirements.txt
-cd ..
+cd backend && pip install -r requirements.txt && cd ..
 uvicorn backend.main:app --reload --port 8000
 
 # Frontend (separate terminal)
-cd frontend
-npm install
-npm run dev
+cd frontend && npm install && npm run dev
 
-# Run backend tests (fast only — skips network-dependent stress tests)
+# Run fast backend tests (~35s)
 python -m pytest backend/tests/ -v -m "not slow"
 
-# Run ALL backend tests including stress tests (~3-5 min, needs network)
+# Run ALL backend tests (~5 min, needs network)
 python -m pytest backend/tests/ -v
 
 # Build frontend (catches type errors)
@@ -134,9 +99,6 @@ cd frontend && npx next build
 
 # Train crash model (offline, ~5-10 min)
 python -m engine.training.train_crash_model
-
-# Run walk-forward backtest (offline, slow ~30min)
-python -m engine.validation.walk_forward
 
 # Docker (full stack)
 docker compose up --build
@@ -151,19 +113,15 @@ docker compose up --build
 | `FINNHUB_API_KEY` | No | https://finnhub.io/ (free tier) |
 | `FMP_API_KEY` | No | https://financialmodelingprep.com/ (free tier) |
 
-Copy `.env.example` to `.env` and fill in your keys.
-
 ## Reference Libraries (READ-ONLY)
 
 | Repo | Path | What to use |
 |------|------|-------------|
 | PyPortfolioOpt | `C:\Users\mrthn\reference-codes\PyPortfolioOpt` | Black-Litterman, HRP, Ledoit-Wolf covariance shrinkage |
-| MLFinLab | `C:\Users\mrthn\reference-codes\mlfinlab` | Purged CV, triple-barrier labels, fractional differentiation, sequential bootstrap |
+| MLFinLab | `C:\Users\mrthn\reference-codes\mlfinlab` | Purged CV, triple-barrier labels, fractional differentiation |
 | Autoresearch | `C:\Users\mrthn\reference-codes\autoresearch` | Autonomous experiment loop (3-file contract, ratchet pattern) |
-| WorldMonitor | `C:\Users\mrthn\reference-codes\worldmonitor` | Dashboard layout patterns, dark theme, card density |
 
-**Installed libraries:** `pyportfolioopt` (use as library), `arch` (GARCH), `hmmlearn` (HMM)
-**Read-only repos:** OpenBB (too large to clone — read docs at docs.openbb.co), Riskfolio-Lib (pip install for CVaR optimization)
+**Installed libraries:** `pyportfolioopt`, `arch` (GARCH), `hmmlearn` (HMM), `transformers` + `torch` (FinBERT)
 
 ## Rules
 
@@ -177,111 +135,57 @@ Copy `.env.example` to `.env` and fill in your keys.
 - Keep services stateless — no mutable global state except cache
 - Use purged CV with embargo for all ML validation
 - Use walk-forward temporal splits (never random k-fold)
-- Target composite metric (AUC + Brier + Sharpe + MaxDD), not just Brier alone
+- Use `SimpleImputer(strategy="median")` for sklearn pipelines that can't handle NaN
+- Enforce monotonicity on multi-horizon predictions (3m ≤ 6m ≤ 12m)
 
 ### DO NOT
-- Use `fillna(0)` on feature matrices — LightGBM handles NaN natively
+- Use `fillna(0)` on feature matrices — LightGBM handles NaN natively; sklearn paths use SimpleImputer
 - Use `np.random.seed()` (legacy API)
 - Hardcode file paths — use `Path(__file__).parent`
 - Store portfolio state server-side — portfolio lives in browser localStorage
-- Skip the Merton jump compensator in Monte Carlo (Bug 20)
+- Skip the Merton jump compensator in Monte Carlo
 - Add a database — this is a stateless API with in-memory cache
 - Use standard k-fold CV on time-series data
-- Report accuracy without walk-forward validation
 - Use basic GBM without fat-tailed innovations for tail risk estimation
-
-## Commit Convention
-
-```
-feat: description              # New feature or endpoint
-fix: description               # Bug fix
-refactor: description          # Code restructuring, no behavior change
-docs: description              # Documentation only
-test: description              # Test additions or fixes
-chore: description             # Dependencies, config, CI
-```
-
----
+- Evaluate calibration metrics on the same data used to fit the calibrator
 
 ## Test Suite
 
 | Category | File | Tests | Speed |
 |----------|------|-------|-------|
 | Monte Carlo | `test_monte_carlo.py` | 14 | Fast |
+| Signal Engine | `test_signal_engine.py` | 15 | Fast |
 | Regime Accuracy | `test_regime_accuracy.py` | 5 | Fast |
 | Risk Stress | `test_risk_stress.py` | 6 | Fast |
 | Risk Profile Scoring | `test_stress_portfolio.py` | 4 | Fast |
 | Edge Cases (MC params) | `test_edge_cases.py` | 12 | Fast |
+| Crash Calibration | `test_crash_calibration.py` | 2 | Fast |
+| Portfolio Projection | `test_portfolio_projection.py` | 2 | Fast |
 | Stock Stress (8 tickers) | `test_stress_stocks.py` | 64 | Slow (network) |
 | Portfolio Stress (3 profiles) | `test_stress_portfolio.py` | 10 | Slow (network) |
+| Portfolio Projection (MC) | `test_portfolio_projection.py` | 5 | Slow (network) |
 | Edge Cases (tickers) | `test_edge_cases.py` | 7 | Slow (network) |
-| **Total** | **7 files** | **130** | **43 fast / 87 slow** |
+| **Total** | **9 files** | **152** | **60 fast / 92 slow** |
 
 Run fast tests: `python -m pytest backend/tests/ -v -m "not slow"`
-Run all tests: `python -m pytest backend/tests/ -v`
-
-## Methodology Roadmap
-
-### Phase 1 — ML Methodology (Critical) — DONE
-- Purged cross-validation with embargo periods (MLFinLab reference)
-- Walk-forward validation hardening (expanding window, no future leakage)
-- Triple-barrier labeling (Lopez de Prado) — replace fixed-threshold crash labels
-- Fractionally differentiated features — preserve memory while achieving stationarity
-- Sample uniqueness weighting — reduce overfit from overlapping labels
-
-### Phase 2 — Monte Carlo Upgrade — DONE
-- GARCH(1,1) with Student-t innovations (upgrade from Gaussian; `arch` library)
-- DCC-GARCH for multi-asset correlation dynamics — NOT YET (single-asset only)
-- 10,000 paths default (50,000 for tail estimation mode)
-- Variance reduction: antithetic variates — DONE
-- GARCH-estimated nu passed to MC as Student-t df (with floor of 3)
-
-### Phase 3 — Portfolio Construction — DONE
-- Black-Litterman (PyPortfolioOpt drop-in) — DONE
-- Hierarchical Risk Parity (HRP) — DONE
-- Ledoit-Wolf covariance shrinkage — DONE (replaces sample covariance)
-- Goal-based sub-portfolio wrapper — partial (no `goal` parameter yet)
-
-### Phase 4 — Autoresearch Loop — SCAFFOLDED
-- Three-file contract: `aegis_prepare.py`, `aegis_train.py`, `aegis_program.md`
-- Composite metric: 0.40 x AUC + 0.25 x Brier + 0.20 x Sharpe + 0.15 x MaxDD penalty
-- MLflow tracking, drift detection (PSI), automated retraining triggers
-
-### Phase 5 — Data & Distribution
-- Additional data: Alpha Vantage, SEC EDGAR filings
-- NLP sentiment integration (FinBERT or similar)
-- Community: Reddit r/algotrading, Hacker News, GitHub Discussions
-- Free hosting: Vercel (frontend) + Railway/Render free tier (backend)
-
-## Deep Research Findings (2026-03-31)
-
-Comprehensive research docs are in `docs/`:
-- `DEEP_RESEARCH_FINDINGS.md` — Market snapshot, institutional forecasts, Aegis alignment
-- `DEEP_RESEARCH_FINDINGS_ACADEMIC.md` — Academic ML + MC best practices (2024-2026 papers)
-- `DEEP_RESEARCH_FINDINGS_INDUSTRY.md` — Robo-advisor methodology, FinBERT, caching patterns
-- `GAP_ANALYSIS.md` — All 23 backend modules graded A-F with specific fix suggestions
-- `GAP_ANALYSIS_ENGINE_FRONTEND.md` — Engine + frontend gap analysis
-- `STRESS_TEST_RESULTS.md` — 30-stock stress test results
-- `STRESS_TEST_PORTFOLIOS.md` — Portfolio profile + edge case results
-- `IMPROVEMENT_LOG.md` — Iteration 1 + 2 findings, fixes, and priorities
-
-## Key References
-
-- Lopez de Prado — *Advances in Financial Machine Learning* (purged CV, triple-barrier, fractional differentiation)
-- Gu, Kelly, Xiu (2020) — "Empirical Asset Pricing via Machine Learning" (ML in finance benchmark)
-- BIS Working Paper 1250 (2025) — Financial stress prediction with ML
-- MRS-MNTS-GARCH (JRFM, 2022) — Regime-switching MC blueprint
-
----
 
 ## Healthy Output Ranges (Validation)
 
 When the engine is working correctly:
 - **Crash probabilities:** 5%-55% range (not clustered at 20-25%)
-- **3m < 6m < 12m crash:** Monotonically increasing by horizon
-- **MC 5Y annualized return:** +2% to +8% (aligned with institutional consensus ~5.9%)
+- **3m ≤ 6m ≤ 12m crash:** Monotonically increasing by horizon (enforced in code)
+- **MC 5Y annualized return:** +2% to +8% (validated against institutional consensus ~5.9%)
+- **Per-stock 5Y returns:** 30%-120% range, differentiated by beta and sector
 - **Sector returns:** Differentiated 20-80% range (not uniform)
 - **Brier Score (3m):** ≤ 0.05 (random = 0.25, climatology ~0.12)
 - **Risk score:** [-4, +4] range, >2.0 = elevated stress
 - **Walk-forward AUC-ROC:** ≥ 0.70 (random = 0.50)
 - **Feature importance:** Leading indicators (ICSA, NFCI, yield curve) should rank above lagging (unemployment)
+- **Portfolio projection P10 < median < P90** for all horizons
+
+## Key References
+
+- Lopez de Prado — *Advances in Financial Machine Learning* (purged CV, triple-barrier, fractional differentiation)
+- Gu, Kelly, Xiu (2020) — "Empirical Asset Pricing via Machine Learning"
+- BIS Working Paper 1250 (2025) — Financial stress prediction with ML
+- MRS-MNTS-GARCH (JRFM, 2022) — Regime-switching MC blueprint

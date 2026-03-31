@@ -2,9 +2,10 @@
 Stock Analysis Router
 =======================
 
-GET /api/stock/screener       — Top stocks screener (batch analysis)
-GET /api/stock/{ticker}       — Per-ticker projection + risk metrics
-GET /api/stock/{ticker}/shap  — SHAP explanation for ticker
+GET /api/stock/screener            — Top stocks screener (batch analysis)
+GET /api/stock/{ticker}            — Per-ticker projection + risk metrics
+GET /api/stock/{ticker}/shap       — SHAP explanation for ticker
+GET /api/stock/{ticker}/sentiment  — FinBERT news sentiment analysis
 """
 
 import asyncio
@@ -224,3 +225,32 @@ def _stock_shap(ticker: str) -> dict:
     explanation["ticker"] = ticker
 
     return explanation
+
+
+@router.get("/{ticker}/sentiment")
+async def get_stock_sentiment(ticker: str):
+    """FinBERT-powered news sentiment analysis for a ticker."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"stock_sentiment:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(_stock_sentiment, ticker)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"No sentiment data for {ticker}")
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("stock sentiment failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _stock_sentiment(ticker: str) -> dict:
+    from backend.services.sentiment_analyzer import analyze_sentiment
+    return analyze_sentiment(ticker)

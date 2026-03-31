@@ -149,6 +149,25 @@ config: dict = {
     # ── GLOBAL MARKET PARAMETERS ────────────────────────────────────────
     "risk_free_rate": 0.04,  # Annual risk-free rate (10Y Treasury approx, updated 2026-03)
 
+    # ── SIGNAL ENGINE WEIGHTS ─────────────────────────────────────────────
+    # Composite buy/sell signal weights (must sum to 1.0).
+    # Derived from grid search over 2020-2025 S&P 500 data (signal_optimizer.py).
+    "signal_weights": {
+        "crash_prob": 0.25,       # ML crash probability (leading indicator)
+        "regime": 0.20,           # Bull/Bear/Volatile regime detection
+        "valuation": 0.15,        # VIX-based fear/opportunity proxy
+        "momentum": 0.15,         # 1M + 3M price momentum
+        "mean_reversion": 0.10,   # Oversold/overbought contrarian signal
+        "external": 0.15,         # External consensus (LEI, SLOOS, sentiment)
+    },
+    # Action thresholds: composite score ranges for each action
+    "signal_thresholds": {
+        "strong_buy": 0.45,
+        "buy": 0.15,
+        "sell": -0.15,
+        "strong_sell": -0.45,
+    },
+
     # ── SIMULATION SETTINGS ──────────────────────────────────────────────
     "simulation": {
         "forecast_years": 5,
