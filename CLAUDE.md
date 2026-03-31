@@ -123,7 +123,10 @@ cd frontend
 npm install
 npm run dev
 
-# Run backend tests
+# Run backend tests (fast only — skips network-dependent stress tests)
+python -m pytest backend/tests/ -v -m "not slow"
+
+# Run ALL backend tests including stress tests (~3-5 min, needs network)
 python -m pytest backend/tests/ -v
 
 # Build frontend (catches type errors)
@@ -200,28 +203,46 @@ chore: description             # Dependencies, config, CI
 
 ---
 
+## Test Suite
+
+| Category | File | Tests | Speed |
+|----------|------|-------|-------|
+| Monte Carlo | `test_monte_carlo.py` | 14 | Fast |
+| Regime Accuracy | `test_regime_accuracy.py` | 5 | Fast |
+| Risk Stress | `test_risk_stress.py` | 6 | Fast |
+| Risk Profile Scoring | `test_stress_portfolio.py` | 4 | Fast |
+| Edge Cases (MC params) | `test_edge_cases.py` | 12 | Fast |
+| Stock Stress (8 tickers) | `test_stress_stocks.py` | 64 | Slow (network) |
+| Portfolio Stress (3 profiles) | `test_stress_portfolio.py` | 10 | Slow (network) |
+| Edge Cases (tickers) | `test_edge_cases.py` | 7 | Slow (network) |
+| **Total** | **7 files** | **130** | **43 fast / 87 slow** |
+
+Run fast tests: `python -m pytest backend/tests/ -v -m "not slow"`
+Run all tests: `python -m pytest backend/tests/ -v`
+
 ## Methodology Roadmap
 
-### Phase 1 — ML Methodology (Critical)
+### Phase 1 — ML Methodology (Critical) — DONE
 - Purged cross-validation with embargo periods (MLFinLab reference)
 - Walk-forward validation hardening (expanding window, no future leakage)
 - Triple-barrier labeling (Lopez de Prado) — replace fixed-threshold crash labels
 - Fractionally differentiated features — preserve memory while achieving stationarity
 - Sample uniqueness weighting — reduce overfit from overlapping labels
 
-### Phase 2 — Monte Carlo Upgrade
+### Phase 2 — Monte Carlo Upgrade — DONE
 - GARCH(1,1) with Student-t innovations (upgrade from Gaussian; `arch` library)
-- DCC-GARCH for multi-asset correlation dynamics
-- Minimum 10,000 paths (50,000 for tail estimation)
-- Variance reduction: antithetic variates
+- DCC-GARCH for multi-asset correlation dynamics — NOT YET (single-asset only)
+- 10,000 paths default (50,000 for tail estimation mode)
+- Variance reduction: antithetic variates — DONE
+- GARCH-estimated nu passed to MC as Student-t df (with floor of 3)
 
-### Phase 3 — Portfolio Construction
-- Black-Litterman (PyPortfolioOpt drop-in)
-- Hierarchical Risk Parity (HRP) — no covariance inversion needed
-- Ledoit-Wolf covariance shrinkage — replace sample covariance
-- Goal-based sub-portfolio wrapper
+### Phase 3 — Portfolio Construction — DONE
+- Black-Litterman (PyPortfolioOpt drop-in) — DONE
+- Hierarchical Risk Parity (HRP) — DONE
+- Ledoit-Wolf covariance shrinkage — DONE (replaces sample covariance)
+- Goal-based sub-portfolio wrapper — partial (no `goal` parameter yet)
 
-### Phase 4 — Autoresearch Loop
+### Phase 4 — Autoresearch Loop — SCAFFOLDED
 - Three-file contract: `aegis_prepare.py`, `aegis_train.py`, `aegis_program.md`
 - Composite metric: 0.40 x AUC + 0.25 x Brier + 0.20 x Sharpe + 0.15 x MaxDD penalty
 - MLflow tracking, drift detection (PSI), automated retraining triggers
@@ -231,6 +252,18 @@ chore: description             # Dependencies, config, CI
 - NLP sentiment integration (FinBERT or similar)
 - Community: Reddit r/algotrading, Hacker News, GitHub Discussions
 - Free hosting: Vercel (frontend) + Railway/Render free tier (backend)
+
+## Deep Research Findings (2026-03-31)
+
+Comprehensive research docs are in `docs/`:
+- `DEEP_RESEARCH_FINDINGS.md` — Market snapshot, institutional forecasts, Aegis alignment
+- `DEEP_RESEARCH_FINDINGS_ACADEMIC.md` — Academic ML + MC best practices (2024-2026 papers)
+- `DEEP_RESEARCH_FINDINGS_INDUSTRY.md` — Robo-advisor methodology, FinBERT, caching patterns
+- `GAP_ANALYSIS.md` — All 23 backend modules graded A-F with specific fix suggestions
+- `GAP_ANALYSIS_ENGINE_FRONTEND.md` — Engine + frontend gap analysis
+- `STRESS_TEST_RESULTS.md` — 30-stock stress test results
+- `STRESS_TEST_PORTFOLIOS.md` — Portfolio profile + edge case results
+- `IMPROVEMENT_LOG.md` — Iteration 1 + 2 findings, fixes, and priorities
 
 ## Key References
 
