@@ -147,7 +147,10 @@ npm start
 ### Testing & Linting
 
 ```bash
-# Run backend tests
+# Run fast backend tests (~35s, no network needed)
+python -m pytest backend/tests/ -v -m "not slow"
+
+# Run ALL backend tests including stress tests (~5 min, needs network)
 python -m pytest backend/tests/ -v
 
 # Run frontend linter
@@ -275,7 +278,7 @@ curl -X POST http://localhost:8000/api/savings/project \
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 14 (App Router), shadcn/ui, Tailwind CSS, Recharts, TanStack React Query |
+| Frontend | Next.js 14 (App Router), shadcn/ui, Tailwind CSS, Recharts, TanStack React Query (all pages) |
 | Backend | FastAPI, Python 3.12 |
 | ML | LightGBM, scikit-learn (Logistic Regression), SHAP |
 | Statistical | GJR-GARCH, HMM (3-state), Jump-diffusion Monte Carlo |
@@ -338,7 +341,7 @@ aegis-finance/
 │   │   ├── drift_detector.py    # PSI + KS feature drift detection
 │   │   └── signal_optimizer.py  # Buy/Hold/Sell signal computation
 │   ├── models/                  # GJR-GARCH, HMM, saved .pkl models
-│   └── tests/                   # 27 tests
+│   └── tests/                   # 130 tests (43 fast + 87 stress)
 ├── engine/                      # Offline ML training + validation
 │   ├── training/                # Feature builder, LASSO, labeling, fracdiff, uniqueness
 │   ├── validation/              # Walk-forward backtest, purged CV, metrics
@@ -412,6 +415,21 @@ See [ABSTRACT.md](ABSTRACT.md) for the project abstract and [docs/METHODOLOGY.md
 - 9-factor composite risk scoring
 - Scenario framework with dynamic weight adjustment
 - External validation and regime confirmation
+
+## Research & Analysis
+
+Deep research conducted 2026-03-31 with findings in `docs/`:
+
+| Document | Contents |
+|----------|----------|
+| [DEEP_RESEARCH_FINDINGS](docs/DEEP_RESEARCH_FINDINGS.md) | Market snapshot, institutional forecasts (Goldman, JPM, Vanguard, BlackRock), Aegis calibration |
+| [DEEP_RESEARCH_FINDINGS_ACADEMIC](docs/DEEP_RESEARCH_FINDINGS_ACADEMIC.md) | 2024-2026 papers on LightGBM crash prediction, GARCH innovations, MC best practices |
+| [DEEP_RESEARCH_FINDINGS_INDUSTRY](docs/DEEP_RESEARCH_FINDINGS_INDUSTRY.md) | Wealthfront/Betterment methodology, FinBERT state of art, caching patterns |
+| [GAP_ANALYSIS](docs/GAP_ANALYSIS.md) | All 23 backend modules graded A-F vs institutional practice |
+| [GAP_ANALYSIS_ENGINE_FRONTEND](docs/GAP_ANALYSIS_ENGINE_FRONTEND.md) | Engine modules + frontend pages graded with specific fix suggestions |
+| [STRESS_TEST_RESULTS](docs/STRESS_TEST_RESULTS.md) | 30-stock analysis across 11 sectors |
+| [STRESS_TEST_PORTFOLIOS](docs/STRESS_TEST_PORTFOLIOS.md) | 5 portfolio profiles + edge case results |
+| [IMPROVEMENT_LOG](docs/IMPROVEMENT_LOG.md) | Iteration history with findings, fixes, and priorities |
 
 ## Disclaimer
 
