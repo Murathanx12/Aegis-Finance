@@ -332,18 +332,12 @@ Projects and papers that informed the implementation:
 | Gu, Kelly, Xiu (2020) | "Empirical Asset Pricing via Machine Learning" — ML in finance benchmark | [DOI: 10.1093/rfs/hhaa009](https://doi.org/10.1093/rfs/hhaa009) |
 | BIS Working Paper 1250 (2025) | Financial stress prediction with tree-based ML | [bis.org/publ/work1250.htm](https://www.bis.org/publ/work1250.htm) |
 
-## Research & Analysis
-
-Deep research conducted 2026-03-31 with findings in `docs/`:
+## Research & Validation
 
 | Document | Contents |
 |----------|----------|
-| [REALITY_CHECK](docs/REALITY_CHECK.md) | Engine output validated against Goldman Sachs, Wealthfront, Betterment, FRED, Yahoo |
-| [GAP_ANALYSIS](docs/GAP_ANALYSIS.md) | All 23 backend modules graded A-F vs institutional practice |
-| [STRESS_TEST_RESULTS](docs/STRESS_TEST_RESULTS.md) | 30-stock analysis across 11 sectors |
-| [IMPROVEMENT_LOG](docs/IMPROVEMENT_LOG.md) | 4 improvement iterations with before/after numbers |
-| [DEEP_RESEARCH_FINDINGS](docs/DEEP_RESEARCH_FINDINGS.md) | Institutional forecasts (Goldman, JPM, Vanguard, BlackRock) |
-| [DEEP_RESEARCH_FINDINGS_ACADEMIC](docs/DEEP_RESEARCH_FINDINGS_ACADEMIC.md) | 2024-2026 papers on LightGBM crash prediction, GARCH, MC |
+| [METHODOLOGY](docs/METHODOLOGY.md) | Full technical methodology — crash model, Monte Carlo, risk scoring, portfolio construction |
+| [REALITY_CHECK](docs/REALITY_CHECK.md) | Engine output validated against Goldman Sachs, Wealthfront, Betterment, FRED, Yahoo Finance |
 
 ## Free Hosting
 
