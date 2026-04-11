@@ -23,13 +23,15 @@ from backend.services.monte_carlo import simulate_paths
 
 logger = logging.getLogger(__name__)
 
-# CAGR caps by market cap tier
-STOCK_CAGR_CAPS = {
-    "mega":  (0.04, 0.15),
-    "large": (0.05, 0.20),
-    "mid":   (0.06, 0.25),
-    "small": (0.08, 0.30),
-}
+# CAGR caps by market cap tier — loaded from config.py
+STOCK_CAGR_CAPS = config.get("stocks", {}).get("cagr_caps", {
+    "mega":  (0.04, 0.30),
+    "large": (0.05, 0.35),
+    "mid":   (0.06, 0.40),
+    "small": (0.08, 0.45),
+})
+# Convert list values to tuples (JSON doesn't have tuples)
+STOCK_CAGR_CAPS = {k: tuple(v) for k, v in STOCK_CAGR_CAPS.items()}
 
 DEFAULT_WATCHLIST = [
     "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META",
@@ -126,7 +128,20 @@ def analyze_stock(
         hist_sigma = float(returns.std() * np.sqrt(252))
 
         min_cagr, max_cagr = STOCK_CAGR_CAPS[cap_tier]
-        capped_mu = np.clip(hist_mu, min_cagr, max_cagr)
+
+        # Bayesian shrinkage: blend historical drift toward long-run prior
+        # More data → trust history more; less data → shrink toward prior
+        shrinkage_cfg = config.get("stocks", {}).get("drift_shrinkage", {})
+        prior = shrinkage_cfg.get("prior_equity_premium", 0.07)
+        min_shrink = shrinkage_cfg.get("min_shrinkage", 0.25)
+        max_shrink = shrinkage_cfg.get("max_shrinkage", 0.60)
+        years_for_min = shrinkage_cfg.get("data_years_for_min", 5.0)
+
+        data_years = len(returns) / 252.0
+        # Linear interpolation: more years → less shrinkage
+        shrinkage_weight = max_shrink - (max_shrink - min_shrink) * min(data_years / years_for_min, 1.0)
+        shrunk_mu = shrinkage_weight * prior + (1.0 - shrinkage_weight) * hist_mu
+        capped_mu = float(np.clip(shrunk_mu, min_cagr, max_cagr))
 
         if analyst_target is not None and analyst_target > 0:
             analyst_1y_return = (analyst_target / current_price) - 1

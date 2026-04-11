@@ -1,0 +1,35 @@
+{
+    "cycle": 6,
+    "timestamp": "2026-04-11T21:50:00",
+    "what_i_noticed": "STOCK_CAGR_CAPS were hardcoded in stock_analyzer.py (violating the project rule to put parameters in config.py). More critically, the mega-cap upper bound of 15% severely underestimates drift for high-growth stocks: NVDA (63% historical) and AAPL (28% historical) both get clipped to 15%, destroying signal differentiation in the screener. Hard clipping also causes the analyst target blending to be ineffective since both historical and analyst components get clipped to the same ceiling.",
+    "hypothesis": "Replacing hard CAGR clips with Bayesian shrinkage toward a long-run equity prior, combined with wider caps, will produce more realistic and differentiated stock projections while still preventing overfit to recent momentum. The shrinkage weight adapts to data length: stocks with 5 years of history keep 75% of their historical drift, while stocks with only 1 year keep 40%.",
+    "what_i_did": "1. Moved STOCK_CAGR_CAPS from hardcoded dict in stock_analyzer.py to config.py under stocks.cagr_caps. 2. Widened upper bounds: mega 15%->30%, large 20%->35%, mid 25%->40%, small 30%->45%. 3. Added drift_shrinkage config parameters (prior_equity_premium=7%, min_shrinkage=25%, max_shrinkage=60%). 4. Replaced np.clip(hist_mu, min, max) with Bayesian shrinkage formula: shrinkage_weight * prior + (1-shrinkage_weight) * hist_mu, where shrinkage_weight decreases linearly from 60% (1yr data) to 25% (5yr data).",
+    "files_modified": [
+        "backend/config.py",
+        "backend/services/stock_analyzer.py"
+    ],
+    "results": {
+        "before": {
+            "NVDA_capped_drift": "15.0% (hard clipped from 63%)",
+            "AAPL_capped_drift": "15.0% (hard clipped from 28%)",
+            "JNJ_capped_drift": "8.0% (clipped from ~8%)",
+            "mega_cap_upper_bound": "15%",
+            "all_mega_caps_same_drift": "true (all clipped to 15%)",
+            "fast_tests_passing": "60/60"
+        },
+        "after": {
+            "NVDA_capped_drift": "30.0% (shrunk from 63%, hit widened cap)",
+            "AAPL_capped_drift": "22.8% (shrunk from 28%, no cap binding)",
+            "JNJ_capped_drift": "7.8% (shrunk toward 7% prior, barely changed)",
+            "mega_cap_upper_bound": "30%",
+            "all_mega_caps_same_drift": "false (differentiated by actual historical returns)",
+            "fast_tests_passing": "60/60"
+        },
+        "improved": true
+    },
+    "tests_fixed": [],
+    "analysis": "This is primarily a code quality fix (parameters now in config.py where they belong) combined with a statistical improvement (Bayesian shrinkage vs hard clipping). The key practical impact is that high-growth mega-caps now show differentiated projections instead of all being clipped to 15%. NVDA at 30% vs AAPL at 22.8% vs JNJ at 7.8% is much more informative for users than all mega-caps showing 15%. Defensive stocks like JNJ barely change (8%->7.8%) because their historical returns are close to the prior. The data_generator's mc_drift_errors are unaffected because it runs its own independent GBM, not the backend's stock_analyzer. The improvement is in the production stock projections and screener expected returns shown to users.",
+    "next_steps": "1. Wire sector_momentum into the screener's get_stock_signal call (currently defaulting to 0.0, leaving ~10% of score range unused). 2. Consider forward_pe-based drift adjustment: stocks with low forward PE relative to sector median should get less drift penalization. 3. The data_generator's cross-asset correlation NaN issue persists (timezone mismatch in per-ticker yfinance fetches causing 0 observations after dropna). 4. Consider a volatility-of-volatility term in the shrinkage: high-vol stocks should shrink more toward the prior since their historical drift estimates are noisier.",
+    "confidence": "high",
+    "should_keep": true
+}
