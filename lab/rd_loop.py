@@ -1,46 +1,48 @@
 """
-Aegis Finance - Autonomous R&D Loop v4
-Uses Claude Code SDK for proper multi-turn conversations.
+Aegis Finance - Autonomous R&D Loop v5
+Uses subprocess + stdin piping for multi-turn conversations.
+Proven reliable on Windows (no SDK dependency).
 
-Each cycle is a 4-phase conversation:
-  Phase A: EXPLORE — Deep codebase investigation (read-only tools)
-  Phase B: BUILD  — Implement highest-impact change (full tools)
-  Phase C: TEST   — Write tests, validate, harden (full tools)
-  Phase D: REVIEW — Self-critique, report, commit (full tools)
+Each cycle is a 4-phase CONVERSATION with the same session:
+  Phase A: EXPLORE — Deep codebase investigation
+  Phase B: BUILD  — Implement highest-impact change
+  Phase C: TEST   — Write tests, validate, harden
+  Phase D: REVIEW — Self-critique, report, commit
 
 Usage:
-  python lab/rd_loop.py                    # Run with defaults
-  python lab/rd_loop.py --cycles 10        # Run 10 cycles
-  python lab/rd_loop.py --model opus       # Use Opus for deeper reasoning
-  python lab/rd_loop.py --start-cycle 18   # Resume from cycle 18
+  python lab/rd_loop.py                         # Defaults (opus, 20 cycles)
+  python lab/rd_loop.py --cycles 5              # Quick run
+  python lab/rd_loop.py --model sonnet          # Cheaper model
+  python lab/rd_loop.py --start-cycle 19        # Resume
 """
 
 import argparse
-import asyncio
 import json
 import os
+import re
 import subprocess
 import sys
 import time
+import uuid
 from datetime import datetime
 from pathlib import Path
-
-from claude_code_sdk import ClaudeCodeOptions, ResultMessage, SystemMessage, query
 
 REPO_DIR = Path(__file__).parent.parent
 LAB_DIR = REPO_DIR / "lab"
 EXPERIMENTS_DIR = LAB_DIR / "experiments"
 LOGS_DIR = LAB_DIR / "logs"
 
+PHASE_TIMEOUT = 900  # 15 min per phase
+
 
 # ---------------------------------------------------------------------------
-# Prompt phases — these simulate the back-and-forth of a real conversation
+# Phase prompts
 # ---------------------------------------------------------------------------
 
 def build_phase_a_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
-    """Phase A: Explore. Read-heavy, no edits yet."""
+    """Phase A: Deep exploration."""
 
-    # Load data from data generator
+    # Load data
     data_dir = cycle_dir / "data"
     data_sections = []
     if data_dir.is_dir():
@@ -48,45 +50,40 @@ def build_phase_a_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) ->
             try:
                 content = json.loads(f.read_text(encoding="utf-8"))
                 data_str = json.dumps(content, indent=2, default=str)
-                if len(data_str) > 5000:
-                    data_str = data_str[:5000] + "\n... [truncated]"
+                if len(data_str) > 4000:
+                    data_str = data_str[:4000] + "\n... [truncated]"
                 data_sections.append(f"### {f.stem}\n```json\n{data_str}\n```")
             except:
                 pass
+    data_block = "\n\n".join(data_sections) if data_sections else "No data."
 
-    data_block = "\n\n".join(data_sections) if data_sections else "No data collected."
-
-    # Load past learnings (last 5 cycles)
+    # Past learnings (last 5)
     learnings = []
     for prev in range(max(1, cycle - 5), cycle):
-        report_path = EXPERIMENTS_DIR / f"cycle_{prev:03d}" / "experiment_report.json"
-        if report_path.exists():
+        rp = EXPERIMENTS_DIR / f"cycle_{prev:03d}" / "experiment_report.json"
+        if rp.exists():
             try:
-                r = json.loads(report_path.read_text(encoding="utf-8"))
-                improved = r.get("results", {}).get("improved", False)
+                r = json.loads(rp.read_text(encoding="utf-8"))
                 learnings.append(
-                    f"Cycle {prev} ({'OK' if improved else 'FAIL'}): "
-                    f"{r.get('hypothesis', '?')[:80]} — "
-                    f"Files: {', '.join(r.get('files_modified', []))}"
+                    f"Cycle {prev}: {r.get('hypothesis', '?')[:80]} "
+                    f"({'OK' if r.get('results', {}).get('improved') else 'FAIL'})"
                 )
             except:
                 pass
-
     past_block = "\n".join(learnings) if learnings else "No prior cycles."
 
-    # Cumulative file tracking
-    all_modified = set()
+    # Untouched files
+    modified = set()
     for prev in range(1, cycle):
-        report_path = EXPERIMENTS_DIR / f"cycle_{prev:03d}" / "experiment_report.json"
-        if report_path.exists():
+        rp = EXPERIMENTS_DIR / f"cycle_{prev:03d}" / "experiment_report.json"
+        if rp.exists():
             try:
-                r = json.loads(report_path.read_text(encoding="utf-8"))
-                for f in r.get("files_modified", []):
-                    all_modified.add(f)
+                r = json.loads(rp.read_text(encoding="utf-8"))
+                modified.update(r.get("files_modified", []))
             except:
                 pass
 
-    all_services = [
+    all_files = [
         "backend/services/monte_carlo.py", "backend/services/stock_analyzer.py",
         "backend/services/sector_analyzer.py", "backend/services/portfolio_engine.py",
         "backend/services/crash_model.py", "backend/services/signal_engine.py",
@@ -96,406 +93,288 @@ def build_phase_a_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) ->
         "backend/services/net_liquidity.py", "backend/services/return_model.py",
         "backend/services/external_validator.py", "backend/services/regime_validator.py",
         "backend/services/drift_detector.py", "backend/services/llm_analyzer.py",
-        "backend/services/savings_calculator.py",
-        "engine/training/features.py", "engine/training/feature_selection.py",
-        "engine/training/train_crash_model.py",
-        "engine/validation/walk_forward.py", "engine/validation/purged_cv.py",
+        "engine/training/features.py", "engine/training/train_crash_model.py",
+        "engine/validation/walk_forward.py", "engine/validation/metrics.py",
     ]
-    untouched = [f for f in all_services if f not in all_modified]
+    untouched = [f for f in all_files if f not in modified]
 
-    # Research track rotation (7 tracks)
+    # Research track rotation
     tracks = [
-        ("ML & Feature Engineering", "Improve crash model, add features, retrain, improve AUC"),
-        ("Statistical Engine & Monte Carlo", "Regime-switching MC, stochastic vol, copulas, backtesting"),
-        ("Test Suite & Code Quality", "Write tests for uncovered services, fix smells, add edge cases"),
-        ("New Features & Capabilities", "CVaR, factor exposure, drawdown signals, crypto support"),
-        ("Frontend & Visualization", "Fix TS errors, add loading states, charts, dark mode"),
-        ("Service Integration & Wiring", "Find dead code, wire disconnected services, verify endpoints"),
-        ("Performance & Reliability", "Caching, retries, timeouts, logging, graceful degradation"),
+        ("ML & Feature Engineering", "Improve crash model features, retrain, improve AUC-ROC"),
+        ("Statistical Engine & Monte Carlo", "Regime-switching MC, copulas, stochastic vol, backtesting"),
+        ("Test Suite & Code Quality", "Write tests for uncovered services, fix smells, 200+ test target"),
+        ("New Features & Capabilities", "CVaR, factor exposure, drawdown signals, new endpoints"),
+        ("Frontend & Visualization", "Fix TS errors, loading states, charts, SHAP visualizations"),
+        ("Service Integration & Wiring", "Find dead code, wire disconnected services, verify E2E"),
+        ("Performance & Reliability", "Caching, retries, timeouts, structured logging"),
     ]
     primary = tracks[(cycle - 1) % len(tracks)]
     secondary = tracks[cycle % len(tracks)]
 
     return f"""# Aegis Finance R&D Lab — Cycle {cycle}, Phase A: EXPLORE
 
-You are a senior quant engineer with full autonomy over this codebase.
-This is Phase A of 4. Right now: **explore deeply, don't implement yet.**
+You are a senior quant engineer and the DE FACTO OWNER of this codebase.
+You have FULL autonomy. You can:
+- Modify ANY file in backend/, frontend/, engine/
+- Install new packages (pip install, npm install)
+- Clone reference repos or download datasets
+- Access any public API (yfinance, FRED, etc.)
+- Create new services, endpoints, tests, components
+- Restructure code, refactor architectures
+- If an API key is needed and you think it's vital, note it in the report
 
-## Your Research Track
+This is YOUR sandbox. Build what the project needs.
+
+## Research Track
 
 **Primary: {primary[0]}** — {primary[1]}
 **Secondary: {secondary[0]}** — {secondary[1]}
 
-You may work on either track or something more urgent you discover.
-
-## Engine Output (from REAL backend services)
+## Engine Output (from real backend services)
 
 {data_block}
 
-## Past Cycles (last 5)
-
+## Past Cycles
 {past_block}
 
-## Files NEVER modified in any cycle (explore these!)
-
-{chr(10).join('- ' + f for f in untouched)}
+## Files never modified (explore these!)
+{chr(10).join('- ' + f for f in untouched[:15])}
 
 ## Pre-existing test failures
-
 ```
-{baseline_failures}
+{baseline_failures or "None"}
 ```
 
-## Your Job in This Phase
+## Phase A Instructions
 
-Spend this entire phase EXPLORING. Read at minimum:
-1. 5+ service files in backend/services/
-2. 2+ router files in backend/routers/
-3. backend/config.py
-4. At least 2 files from the "never touched" list above
-5. Run: python -m pytest backend/tests/ -v -m "not slow" --tb=short
+This is Phase 1 of 4. Right now: EXPLORE ONLY.
+1. Read 8+ source files across backend/services/, routers/, engine/
+2. Run tests: python -m pytest backend/tests/ -v -m "not slow" --tb=short
+3. Look at the engine output data above — what's broken or suboptimal?
+4. Check at least 3 files from the "never modified" list
+5. Report your top 3 findings with file paths and line numbers
 
-Then report:
-- What are the 3 biggest problems/opportunities you found?
-- For each: what's wrong, where exactly (file:line), and how would you fix it?
-- Which one has the highest impact if fixed?
-- Any services that are completely disconnected (exist but never called)?
-
-Be specific. File paths, line numbers, code snippets. I need enough detail
-to evaluate your findings before we move to implementation.
+Don't implement yet — explore thoroughly. The deeper you go now, the better Phase B will be.
 """
 
 
 PHASE_B_PROMPT = """Good exploration. Now BUILD.
 
-Pick the HIGHEST-IMPACT finding from your exploration and implement it fully.
+Pick your HIGHEST-IMPACT finding and implement it fully.
 
-Requirements:
-1. Modify 3+ files minimum — this should be a real change, not a one-liner
-2. If adding a feature: wire it service → router → endpoint (and frontend if applicable)
-3. If fixing a bug: fix it AND think about similar bugs elsewhere
-4. If improving ML: actually change the training pipeline or feature engineering
-5. Move any new parameters to backend/config.py
-6. Target 50-200 lines of meaningful code changes
+You have full autonomy:
+- Install packages if needed (pip install X)
+- Create new files, services, endpoints
+- Modify 3+ files minimum
+- Target 50-200 lines of meaningful changes
+- If you need external data or libraries, get them
 
-After implementing, run tests:
+After implementing, run:
   python -m pytest backend/tests/ -v -m "not slow" --tb=short
 
-If tests fail because of your changes, fix them. If you broke something, debug it.
+What are you implementing and why?
+"""
 
-What are you implementing and why? Show me the changes as you make them.
+PHASE_C_PROMPT = """Now harden what you built.
+
+1. Write NEW tests for every change (2-3 test cases per function minimum)
+2. Test edge cases: empty data, extreme values, None inputs
+3. Run full fast suite: python -m pytest backend/tests/ -v -m "not slow" --tb=short
+4. Fix any failures your changes caused
+5. Narrow broad except blocks, remove fillna(0), move hardcoded values to config.py
+
+Show me the tests and pytest output.
 """
 
 
-PHASE_C_PROMPT = """Now harden what you built. This phase is mandatory — don't skip it.
+def get_phase_d_prompt(cycle_id: str, cycle: int) -> str:
+    return f"""Final phase. Self-critique and documentation.
 
-1. **Write NEW tests** for every change you made:
-   - Add to existing test files in backend/tests/ or create new ones
-   - Each new function/feature needs 2-3 test cases minimum
-   - Test edge cases: empty data, extreme values, None inputs, single-element lists
-   - Test invariants: monotonicity, non-negative prices, score ranges
+1. Re-read every file you modified — is this actually better?
+2. Fix anything you find
+3. Final test: python -m pytest backend/tests/ -v -m "not slow" --tb=short
 
-2. **Run the full fast suite** and fix any failures:
-   python -m pytest backend/tests/ -v -m "not slow" --tb=short
+4. Write experiment report (REQUIRED):
+   Create: lab/experiments/{cycle_id}/experiment_report.json
 
-3. **Quality check** your own code:
-   - Narrow any broad `except:` blocks to specific exceptions
-   - Remove any `fillna(0)` (LightGBM handles NaN; use SimpleImputer for sklearn)
-   - Move hardcoded values to config.py
-   - Add type hints to new function signatures
-
-4. **Look for regressions**: did your changes break any service that was working before?
-
-Show me the tests you wrote and the full pytest output.
-"""
-
-
-PHASE_D_PROMPT = """Final phase. Self-critique and documentation.
-
-1. **Self-review**: Read every file you modified. Ask yourself:
-   - Is this actually better, or did I just move complexity around?
-   - Would this survive code review from a senior engineer?
-   - Did I introduce any edge cases I didn't test?
-   - Is there a simpler approach I missed?
-
-2. **Fix anything** you find in the review.
-
-3. **Final test run**:
-   python -m pytest backend/tests/ -v -m "not slow" --tb=short
-
-4. **Write the experiment report** (REQUIRED):
-   Create file: lab/experiments/cycle_XXX/experiment_report.json
-
-   ```json
-   {
-     "cycle": <number>,
-     "timestamp": "<ISO timestamp>",
-     "research_track": "<which track>",
-     "what_i_noticed": "<what caught your attention in exploration>",
-     "hypothesis": "<what you thought could improve>",
-     "what_i_did": "<detailed description of ALL changes>",
+   {{
+     "cycle": {cycle},
+     "timestamp": "{datetime.now().isoformat()}",
+     "research_track": "<track>",
+     "what_i_noticed": "<findings from exploration>",
+     "hypothesis": "<what you improved>",
+     "what_i_did": "<detailed changes>",
      "files_modified": ["<every file>"],
      "files_created": ["<new files>"],
-     "tests_added": ["<test function names>"],
-     "tests_fixed": ["<previously-failing tests fixed>"],
-     "lines_changed_approx": <number>,
-     "results": {
-       "before": {"<metric>": "<value>"},
-       "after": {"<metric>": "<value>"},
-       "improved": true/false
-     },
+     "tests_added": ["<test names>"],
+     "lines_changed_approx": 0,
+     "results": {{
+       "before": {{}},
+       "after": {{}},
+       "improved": true
+     }},
      "analysis": "<honest assessment>",
      "what_i_would_do_differently": "<self-critique>",
-     "next_steps": "<what next cycle should build on>",
-     "confidence": "<low/medium/high>",
-     "should_keep": true/false,
-     "depth_rating": "<TRIVIAL/LIGHT/MEDIUM/DEEP>"
-   }
-   ```
+     "next_steps": "<for next cycle>",
+     "confidence": "low/medium/high",
+     "depth_rating": "TRIVIAL/LIGHT/MEDIUM/DEEP"
+   }}
 
-5. **Commit**:
-   git add -A && git commit -m "Lab cycle_XXX: <what you built>"
+5. Commit: git add -A && git commit -m "Lab {cycle_id}: <summary>"
 
-Be brutally honest in the report. A failed experiment logged honestly
-is more valuable than a fake success.
+Be brutally honest. Failed experiments logged honestly > fake successes.
 """
 
 
 # ---------------------------------------------------------------------------
-# Core loop
+# Core: run one phase via subprocess
 # ---------------------------------------------------------------------------
 
-async def _run_phase_cli_fallback(prompt: str, session_id: str | None,
-                                  model: str, phase_name: str,
-                                  cycle_dir: Path, output_lines: list,
-                                  max_turns: int | None = None) -> str | None:
-    """Fallback: run via CLI subprocess when SDK hits parsing issues."""
-    import uuid
+def run_phase(prompt: str, session_id: str, model: str,
+              phase_name: str, cycle_dir: Path, is_first: bool) -> bool:
+    """Run one conversation phase. Returns True if successful."""
 
-    if session_id is None:
-        session_id = str(uuid.uuid4())
+    start = time.time()
 
-    cmd = ["claude", "--model", model, "--dangerously-skip-permissions"]
-
-    # First phase uses --session-id, subsequent use --resume
-    if not (cycle_dir / "phase_a_explore.txt").exists() or phase_name == "phase_a_explore":
-        cmd.extend(["--session-id", session_id])
+    # First phase: --session-id to create session
+    # Subsequent phases: --resume to continue same conversation
+    if is_first:
+        cmd = ["claude", "--model", model, "--session-id", session_id,
+               "--dangerously-skip-permissions"]
     else:
-        cmd.extend(["--resume", session_id])
-
-    result = subprocess.run(
-        cmd,
-        input=prompt,
-        cwd=str(REPO_DIR),
-        capture_output=True,
-        text=True,
-        timeout=900,  # 15 min per phase
-    )
-
-    output_lines.append(result.stdout)
-    if result.stderr:
-        output_lines.append(f"[stderr]: {result.stderr[:500]}")
-
-    return session_id
-
-
-async def run_phase(prompt: str, session_id: str | None, model: str,
-                    phase_name: str, cycle_dir: Path,
-                    allowed_tools: list[str] | None = None,
-                    max_turns: int | None = None) -> str | None:
-    """Run one phase of the conversation. Returns session_id for resume."""
-
-    options = ClaudeCodeOptions(
-        model=model,
-        permission_mode="bypassPermissions",
-        cwd=str(REPO_DIR),
-        max_turns=max_turns,
-    )
-
-    if allowed_tools:
-        options.allowed_tools = allowed_tools
-
-    if session_id:
-        options.resume = session_id
-
-    output_lines = []
-    result_text = ""
-    found_session_id = session_id
-
-    phase_start = time.time()
+        cmd = ["claude", "--model", model, "--resume", session_id,
+               "--dangerously-skip-permissions"]
 
     try:
-        async for message in query(prompt=prompt, options=options):
-            if isinstance(message, SystemMessage):
-                # Capture session ID from init message
-                if hasattr(message, 'session_id') and message.session_id:
-                    found_session_id = message.session_id
-            elif isinstance(message, ResultMessage):
-                result_text = message.result if hasattr(message, 'result') else str(message)
-                output_lines.append(result_text)
-            else:
-                # Capture any text output
-                text = str(message)
-                if text:
-                    output_lines.append(text)
+        result = subprocess.run(
+            cmd,
+            input=prompt,
+            cwd=str(REPO_DIR),
+            capture_output=True,
+            text=True,
+            timeout=PHASE_TIMEOUT,
+            encoding="utf-8",
+            errors="replace",
+        )
+
+        output = result.stdout or ""
+        stderr = result.stderr or ""
+
+        # Save output
+        output_path = cycle_dir / f"{phase_name}.txt"
+        output_path.write_text(output + "\n---STDERR---\n" + stderr, encoding="utf-8")
+
+        elapsed = int(time.time() - start)
+        lines = len(output.strip().split("\n")) if output.strip() else 0
+        print(f"    {phase_name}: {lines} lines, {len(output)} chars, {elapsed}s")
+
+        return result.returncode == 0
+
+    except subprocess.TimeoutExpired:
+        print(f"    {phase_name}: TIMEOUT after {PHASE_TIMEOUT}s")
+        (cycle_dir / f"{phase_name}.txt").write_text(
+            f"[TIMEOUT after {PHASE_TIMEOUT}s]", encoding="utf-8")
+        return False
 
     except Exception as e:
-        err_name = type(e).__name__
-        # SDK may not handle all CLI message types (e.g. rate_limit_event)
-        # Fall back to CLI subprocess if SDK fails
-        if "MessageParseError" in err_name or "Unknown message type" in str(e):
-            print(f"    [SDK FALLBACK] {e} — falling back to CLI subprocess")
-            found_session_id = await _run_phase_cli_fallback(
-                prompt, session_id, model, phase_name, cycle_dir, output_lines, max_turns
-            )
-        else:
-            output_lines.append(f"\n[ERROR in {phase_name}]: {err_name}: {e}")
-
-    phase_duration = time.time() - phase_start
-
-    # Save phase output
-    output_path = cycle_dir / f"{phase_name}.txt"
-    full_output = "\n".join(output_lines)
-    output_path.write_text(full_output, encoding="utf-8")
-
-    print(f"    {phase_name}: {len(output_lines)} messages, "
-          f"{len(full_output)} chars, {phase_duration:.0f}s")
-
-    return found_session_id
+        print(f"    {phase_name}: ERROR {e}")
+        (cycle_dir / f"{phase_name}.txt").write_text(
+            f"[ERROR: {e}]", encoding="utf-8")
+        return False
 
 
-async def run_cycle(cycle: int, model: str, baseline_failures: str):
-    """Run one complete 4-phase R&D cycle."""
+# ---------------------------------------------------------------------------
+# Run one cycle
+# ---------------------------------------------------------------------------
 
+def run_cycle(cycle: int, model: str, baseline_failures: str):
     cycle_id = f"cycle_{cycle:03d}"
     cycle_dir = EXPERIMENTS_DIR / cycle_id
     cycle_dir.mkdir(parents=True, exist_ok=True)
 
+    session_id = str(uuid.uuid4())
     cycle_start = time.time()
+
     print(f"\n{'='*60}")
-    print(f"  CYCLE {cycle} — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"  CYCLE {cycle} — {datetime.now().strftime('%H:%M:%S')} — session {session_id[:8]}")
     print(f"{'='*60}")
 
-    # --- Data generation ---
+    # Data generation
     print("\n  [0/4] Generating engine data...")
     subprocess.run(
         [sys.executable, str(LAB_DIR / "data_generator.py"),
-         "--output-dir", str(cycle_dir / "data"),
-         "--cycle", str(cycle)],
-        cwd=str(REPO_DIR),
-        timeout=300,
+         "--output-dir", str(cycle_dir / "data"), "--cycle", str(cycle)],
+        cwd=str(REPO_DIR), timeout=300,
     )
 
-    # --- Phase A: Explore ---
+    # Phase A: Explore
     print("\n  [1/4] Phase A: EXPLORE")
-    phase_a_prompt = build_phase_a_prompt(cycle, cycle_dir, baseline_failures)
-    (cycle_dir / "prompt_a.md").write_text(phase_a_prompt, encoding="utf-8")
+    prompt_a = build_phase_a_prompt(cycle, cycle_dir, baseline_failures)
+    (cycle_dir / "prompt_a.md").write_text(prompt_a, encoding="utf-8")
+    run_phase(prompt_a, session_id, model, "phase_a_explore", cycle_dir, is_first=True)
 
-    session_id = await run_phase(
-        prompt=phase_a_prompt,
-        session_id=None,
-        model=model,
-        phase_name="phase_a_explore",
-        cycle_dir=cycle_dir,
-        max_turns=30,
-    )
-
-    # --- Phase B: Build ---
+    # Phase B: Build
     print("\n  [2/4] Phase B: BUILD")
-    session_id = await run_phase(
-        prompt=PHASE_B_PROMPT,
-        session_id=session_id,
-        model=model,
-        phase_name="phase_b_build",
-        cycle_dir=cycle_dir,
-        max_turns=40,
-    )
+    run_phase(PHASE_B_PROMPT, session_id, model, "phase_b_build", cycle_dir, is_first=False)
 
-    # --- Phase C: Test ---
-    print("\n  [3/4] Phase C: TEST & HARDEN")
-    session_id = await run_phase(
-        prompt=PHASE_C_PROMPT,
-        session_id=session_id,
-        model=model,
-        phase_name="phase_c_test",
-        cycle_dir=cycle_dir,
-        max_turns=30,
-    )
+    # Phase C: Test
+    print("\n  [3/4] Phase C: TEST")
+    run_phase(PHASE_C_PROMPT, session_id, model, "phase_c_test", cycle_dir, is_first=False)
 
-    # --- Phase D: Review & Report ---
-    print("\n  [4/4] Phase D: REVIEW & REPORT")
-    phase_d = PHASE_D_PROMPT.replace("cycle_XXX", cycle_id)
-    session_id = await run_phase(
-        prompt=phase_d,
-        session_id=session_id,
-        model=model,
-        phase_name="phase_d_report",
-        cycle_dir=cycle_dir,
-        max_turns=20,
-    )
+    # Phase D: Review
+    print("\n  [4/4] Phase D: REVIEW")
+    run_phase(get_phase_d_prompt(cycle_id, cycle), session_id, model,
+              "phase_d_report", cycle_dir, is_first=False)
 
-    # --- External validation ---
-    print("\n  [POST] External validation...")
+    # External validation
+    print("\n  [POST] Validating...")
     test_result = subprocess.run(
         [sys.executable, "-m", "pytest", "backend/tests/", "-v",
          "-m", "not slow", "--tb=line"],
-        cwd=str(REPO_DIR),
-        capture_output=True, text=True, timeout=180,
+        cwd=str(REPO_DIR), capture_output=True, text=True, timeout=180,
     )
+    test_out = test_result.stdout + test_result.stderr
+    (cycle_dir / "test_results.txt").write_text(test_out, encoding="utf-8")
 
-    test_output = test_result.stdout + test_result.stderr
-    (cycle_dir / "test_results.txt").write_text(test_output, encoding="utf-8")
-
-    # Check for new failures
-    import re
-    passed_match = re.search(r"(\d+) passed", test_output)
-    failed_lines = [l for l in test_output.split("\n") if l.startswith("FAILED")]
-
-    tests_passed = int(passed_match.group(1)) if passed_match else 0
-    new_failures = []
+    passed_m = re.search(r"(\d+) passed", test_out)
+    tests_passed = int(passed_m.group(1)) if passed_m else 0
+    failed_lines = [l for l in test_out.split("\n") if l.startswith("FAILED")]
     baseline_set = set(baseline_failures.strip().split("\n")) if baseline_failures.strip() else set()
-    for fl in failed_lines:
-        if fl.strip() not in baseline_set:
-            new_failures.append(fl)
+    new_failures = [l for l in failed_lines if l.strip() not in baseline_set]
 
     if new_failures:
-        print(f"  [REVERT] {len(new_failures)} NEW test failures!")
-        for nf in new_failures:
+        print(f"  [REVERT] {len(new_failures)} NEW failures!")
+        for nf in new_failures[:5]:
             print(f"    {nf}")
         subprocess.run(["git", "checkout", "--", "backend/", "frontend/", "engine/"],
                        cwd=str(REPO_DIR))
     else:
-        print(f"  [OK] Tests: {tests_passed} passed, 0 new failures")
+        print(f"  [OK] {tests_passed} passed, 0 new failures")
 
-    # Post-cycle data generation + comparison
+    # Post-cycle comparison
     subprocess.run(
         [sys.executable, str(LAB_DIR / "data_generator.py"),
-         "--output-dir", str(cycle_dir / "data_after"),
-         "--cycle", str(cycle)],
-        cwd=str(REPO_DIR), timeout=300,
-        capture_output=True,
+         "--output-dir", str(cycle_dir / "data_after"), "--cycle", str(cycle)],
+        cwd=str(REPO_DIR), timeout=300, capture_output=True,
     )
-
     subprocess.run(
         [sys.executable, str(LAB_DIR / "compare_results.py"),
          "--before", str(cycle_dir / "data"),
          "--after", str(cycle_dir / "data_after"),
          "--output", str(cycle_dir / "comparison.json")],
-        cwd=str(REPO_DIR), timeout=60,
-        capture_output=True,
+        cwd=str(REPO_DIR), timeout=60, capture_output=True,
     )
 
-    # Commit if Claude didn't already
+    # Commit
+    duration = int((time.time() - cycle_start) / 60)
     subprocess.run(["git", "add", "-A"], cwd=str(REPO_DIR))
-    cycle_duration = int((time.time() - cycle_start) / 60)
     subprocess.run(
-        ["git", "commit", "-m", f"Lab {cycle_id} ({cycle_duration}min)",
-         "--allow-empty"],
+        ["git", "commit", "-m", f"Lab {cycle_id} ({duration}min)", "--allow-empty"],
         cwd=str(REPO_DIR), capture_output=True,
     )
 
-    # --- Summary ---
-    print(f"\n  Cycle {cycle} complete in {cycle_duration} min")
+    # Summary
+    print(f"\n  Cycle {cycle} done in {duration} min")
 
     report_path = cycle_dir / "experiment_report.json"
     if report_path.exists():
@@ -503,14 +382,13 @@ async def run_cycle(cycle: int, model: str, baseline_failures: str):
             r = json.loads(report_path.read_text(encoding="utf-8"))
             print(f"  Track: {r.get('research_track', '?')}")
             print(f"  Depth: {r.get('depth_rating', '?')}")
-            print(f"  Result: {'IMPROVED' if r.get('results', {}).get('improved') else 'no improvement'}")
+            print(f"  Result: {'OK' if r.get('results', {}).get('improved') else 'NO CHANGE'}")
             print(f"  Files: {len(r.get('files_modified', []))} modified")
             print(f"  Tests added: {len(r.get('tests_added', []))}")
-            print(f"  Lines: ~{r.get('lines_changed_approx', '?')}")
         except:
             pass
     else:
-        print("  [MISS] No experiment report written")
+        print("  [MISS] No experiment report")
 
     comp_path = cycle_dir / "comparison.json"
     if comp_path.exists():
@@ -521,71 +399,78 @@ async def run_cycle(cycle: int, model: str, baseline_failures: str):
         except:
             pass
 
+    # Phase output sizes
+    for pf in ["phase_a_explore", "phase_b_build", "phase_c_test", "phase_d_report"]:
+        fp = cycle_dir / f"{pf}.txt"
+        if fp.exists():
+            sz = fp.stat().st_size
+            print(f"  {pf}: {sz:,} bytes")
 
-async def main():
-    parser = argparse.ArgumentParser(description="Aegis Finance R&D Loop")
-    parser.add_argument("--cycles", type=int, default=20, help="Number of cycles")
-    parser.add_argument("--model", default="sonnet", help="Claude model (sonnet/opus)")
-    parser.add_argument("--start-cycle", type=int, default=None,
-                        help="Starting cycle number (auto-detects if omitted)")
-    parser.add_argument("--branch", default="lab/autonomous-rd",
-                        help="Git branch for research")
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main():
+    parser = argparse.ArgumentParser(description="Aegis Finance R&D Loop v5")
+    parser.add_argument("--cycles", type=int, default=20)
+    parser.add_argument("--model", default="opus")
+    parser.add_argument("--start-cycle", type=int, default=None)
+    parser.add_argument("--branch", default="lab/autonomous-rd")
     args = parser.parse_args()
 
     EXPERIMENTS_DIR.mkdir(parents=True, exist_ok=True)
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
     # Git setup
-    subprocess.run(["git", "stash"], cwd=str(REPO_DIR),
-                   capture_output=True)
     subprocess.run(["git", "checkout", args.branch], cwd=str(REPO_DIR),
                    capture_output=True)
 
-    # Baseline test failures
-    print("[BASELINE] Running test suite...")
-    baseline_result = subprocess.run(
+    # Baseline
+    print("[BASELINE] Running tests...")
+    bl = subprocess.run(
         [sys.executable, "-m", "pytest", "backend/tests/", "-v",
          "-m", "not slow", "--tb=line"],
         cwd=str(REPO_DIR), capture_output=True, text=True, timeout=180,
     )
     baseline_failures = "\n".join(
-        l for l in baseline_result.stdout.split("\n") if l.startswith("FAILED")
+        l for l in bl.stdout.split("\n") if l.startswith("FAILED")
     )
-    baseline_count = len(baseline_failures.strip().split("\n")) if baseline_failures.strip() else 0
-    print(f"  Baseline: {baseline_count} pre-existing failures")
+    bl_count = len(baseline_failures.strip().split("\n")) if baseline_failures.strip() else 0
+    print(f"  {bl_count} pre-existing failures")
 
-    # Auto-detect start cycle
-    if args.start_cycle is not None:
+    # Auto-detect start
+    if args.start_cycle:
         start = args.start_cycle
     else:
-        existing = list(EXPERIMENTS_DIR.glob("cycle_*"))
+        existing = sorted(EXPERIMENTS_DIR.glob("cycle_*"))
         start = len(existing) + 1
 
     print(f"\n{'='*60}")
-    print(f"  AEGIS R&D LAB v4 — Python SDK")
-    print(f"  Cycles: {start} to {args.cycles}")
-    print(f"  Model: {args.model}")
+    print(f"  AEGIS R&D LAB v5")
+    print(f"  Model: {args.model} | Cycles: {start}-{args.cycles}")
     print(f"  Branch: {args.branch}")
+    print(f"  Architecture: 4-phase multi-turn conversation")
+    print(f"  Autonomy: FULL (pip install, git clone, API access)")
     print(f"{'='*60}")
 
     for cycle in range(start, args.cycles + 1):
         try:
-            await run_cycle(cycle, args.model, baseline_failures)
+            run_cycle(cycle, args.model, baseline_failures)
         except Exception as e:
-            print(f"\n  [FATAL] Cycle {cycle} crashed: {type(e).__name__}: {e}")
+            print(f"\n  [FATAL] Cycle {cycle}: {type(e).__name__}: {e}")
             import traceback
             traceback.print_exc()
 
-        # Brief cooldown
         if cycle < args.cycles:
             print(f"\n  Cooldown 30s...")
-            await asyncio.sleep(30)
+            time.sleep(30)
 
     print(f"\n{'='*60}")
-    print(f"  R&D LAB COMPLETE — {args.cycles - start + 1} cycles")
-    print(f"  Review: git log --oneline {args.branch} -{args.cycles}")
+    print(f"  DONE — cycles {start}-{args.cycles}")
+    print(f"  git log --oneline {args.branch} -{args.cycles}")
     print(f"{'='*60}")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
