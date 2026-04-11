@@ -1,0 +1,22 @@
+## Cycle 10 Summary
+
+**What I found:** Two parameters in `get_market_signal()` were computed by all 3 router endpoints (stock screener, stock signal, market signal) but silently discarded in the function body:
+- `risk_score` — the 9-factor composite macro risk score (VIX, yield curve, credit spreads, etc.)
+- `crash_prob_12m` — the 12-month crash probability
+
+**What I did:**
+
+1. **Added `macro_risk` as a 7th signal component** (12% weight) in `signal_engine.py`:
+   - Maps risk_score [-4, +4] → signal [-1.0, +0.5] via linear transform
+   - High stress (risk_score=3.0) → -0.75 (strong bearish tilt)
+   - Neutral (0) → 0, low stress (-2) → +0.5
+
+2. **Blended `crash_prob_12m` into the crash component**: 70% weight on 3m (near-term), 30% on 12m (structural risk)
+
+3. **Rebalanced signal weights** in `config.py` to accommodate the new component while keeping sum=1.00
+
+**Results:**
+- Stressed market composite score drops from ~-0.27 to -0.365 (more appropriately bearish)
+- Normal market crash component refined from 0.50 (3m only) to 0.44 (blended with 12m=25%)
+- All 60 fast tests pass, no regressions
+- Only 1 dead parameter remains (`sp500_ytd_return`)
