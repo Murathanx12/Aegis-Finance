@@ -91,6 +91,65 @@ def fit_garch(returns: pd.Series, min_obs: int = 500) -> GARCHResult:
         return _fallback_result(returns)
 
 
+def get_standardized_residuals(garch: GARCHResult, returns: pd.Series) -> np.ndarray | None:
+    """Extract GARCH-standardized residuals from a fitted model.
+
+    Standardized residuals = returns / conditional_volatility are approximately
+    iid with unit variance and fat tails matching the fitted distribution.
+    These are superior to raw returns for block bootstrap because:
+      1. Variance is uniform across time (no vol-clustering contamination)
+      2. Fat tails come from genuine tail events, not high-vol periods
+      3. Block structure captures higher-order dependence (leverage, skew clustering)
+
+    Args:
+        garch: Fitted GARCHResult from fit_garch()
+        returns: The same daily return series used to fit the model
+
+    Returns:
+        np.ndarray of standardized residuals, or None if extraction fails
+    """
+    if not garch.success or garch.model_fit is None:
+        return None
+
+    try:
+        res = garch.model_fit
+        # Conditional volatility from the fitted model (in percentage scale)
+        cond_vol = res.conditional_volatility
+        if cond_vol is None or len(cond_vol) == 0:
+            return None
+
+        # Align returns with conditional volatility (GARCH drops initial obs)
+        clean_returns = returns.dropna()
+        # The model was fit on returns * 100, so cond_vol is in percentage scale
+        # Convert back: daily_vol_decimal = cond_vol / 100
+        cond_vol_decimal = cond_vol.values / 100.0
+
+        # Align lengths (GARCH may have fewer obs due to mean model)
+        n = min(len(clean_returns), len(cond_vol_decimal))
+        aligned_returns = clean_returns.iloc[-n:].values
+        aligned_vol = cond_vol_decimal[-n:]
+
+        # Avoid division by zero
+        valid = aligned_vol > 1e-8
+        if valid.sum() < 50:
+            return None
+
+        std_resid = np.zeros(n)
+        std_resid[valid] = aligned_returns[valid] / aligned_vol[valid]
+        std_resid[~valid] = 0.0  # Replace near-zero vol points
+
+        logger.info(
+            "GARCH residuals: n=%d, mean=%.3f, std=%.3f, kurtosis=%.1f",
+            len(std_resid), std_resid.mean(), std_resid.std(),
+            float(pd.Series(std_resid).kurtosis()),
+        )
+        return std_resid
+
+    except Exception as e:
+        logger.warning("Failed to extract GARCH residuals: %s", e)
+        return None
+
+
 def forecast_volatility(
     garch: GARCHResult,
     horizon: int = 252,

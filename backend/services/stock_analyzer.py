@@ -186,7 +186,20 @@ def analyze_stock(
             logger.debug("%s: GARCH fit skipped — %s", ticker, e)
 
         # Historical residuals for block bootstrap (preserves vol clustering)
-        hist_residuals = returns.values if len(returns) > 50 else None
+        # Prefer GARCH-standardized residuals: returns / conditional_vol are ~iid
+        # with uniform variance, so block bootstrap captures genuine tail events
+        # rather than mixing high-vol and low-vol period returns.
+        hist_residuals = None
+        if garch_vol is not None:
+            try:
+                from backend.models.garch import get_standardized_residuals
+                std_resid = get_standardized_residuals(garch_result, returns)
+                if std_resid is not None and len(std_resid) > 50:
+                    hist_residuals = std_resid
+            except Exception as e:
+                logger.debug("%s: GARCH residuals failed — %s", ticker, e)
+        if hist_residuals is None:
+            hist_residuals = returns.values if len(returns) > 50 else None
 
         base_scenario = {"drift_adj": 0, "vol_mult": 1.0, "crash_mult": 1.0}
         paths = simulate_paths(
