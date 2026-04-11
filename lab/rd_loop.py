@@ -34,6 +34,10 @@ LOGS_DIR = LAB_DIR / "logs"
 
 PHASE_TIMEOUT = 900  # 15 min per phase
 
+# On Windows, npm-installed CLIs need .cmd extension for subprocess
+import shutil
+CLAUDE_CMD = shutil.which("claude") or shutil.which("claude.cmd") or "claude"
+
 
 # ---------------------------------------------------------------------------
 # Phase prompts
@@ -239,10 +243,10 @@ def run_phase(prompt: str, session_id: str, model: str,
     # First phase: --session-id to create session
     # Subsequent phases: --resume to continue same conversation
     if is_first:
-        cmd = ["claude", "--model", model, "--session-id", session_id,
+        cmd = [CLAUDE_CMD, "--model", model, "--session-id", session_id,
                "--dangerously-skip-permissions"]
     else:
-        cmd = ["claude", "--model", model, "--resume", session_id,
+        cmd = [CLAUDE_CMD, "--model", model, "--resume", session_id,
                "--dangerously-skip-permissions"]
 
     try:
