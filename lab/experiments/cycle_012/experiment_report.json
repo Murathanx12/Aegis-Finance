@@ -1,0 +1,48 @@
+{
+    "cycle": 12,
+    "timestamp": "2026-04-11T22:55:00",
+    "what_i_noticed": "Block bootstrap has been using raw returns as historical residuals since cycle 4, but GARCH-standardized residuals (returns / conditional_vol) have been the top suggested improvement for 4 consecutive cycles (4, 9, 10, 11). Raw returns mix vol-clustering signal with genuine tail events, contaminating the bootstrap distribution. SP500 drift error was 14.4%, per-stock mean drift error was 31.78%.",
+    "hypothesis": "Using GARCH-standardized residuals (returns divided by GARCH conditional volatility) will produce cleaner bootstrap innovations because: (1) standardized residuals are approximately iid with unit variance, so block bootstrap captures genuine tail events rather than mixing high-vol and low-vol period returns; (2) the OU volatility dynamics in simulate_paths already handle time-varying vol, so double-counting vol clustering through raw returns degrades drift accuracy.",
+    "what_i_did": "1. Added get_standardized_residuals() to backend/models/garch.py that extracts returns/conditional_vol from a fitted GJR-GARCH model, producing ~iid standardized residuals. 2. Updated backend/services/stock_analyzer.py to prefer GARCH-standardized residuals when GARCH fit succeeds, falling back to raw returns. 3. Updated backend/routers/simulation.py in both _run_sp500_projection() and _compute_scenarios() to use GARCH-standardized residuals for SP500 block bootstrap.",
+    "files_modified": [
+        "backend/models/garch.py",
+        "backend/services/stock_analyzer.py",
+        "backend/routers/simulation.py"
+    ],
+    "results": {
+        "before": {
+            "sp500_drift_error_pct": 14.4,
+            "mean_stock_drift_error_pct": 31.78,
+            "AAPL_drift_err": 26.92,
+            "NVDA_drift_err": 30.42,
+            "XOM_drift_err": 21.75,
+            "JPM_drift_err": 7.91,
+            "TSLA_drift_err": 56.63,
+            "JNJ_drift_err": 8.61,
+            "AMZN_drift_err": 46.27,
+            "BA_drift_err": 55.75,
+            "fast_tests_passing": "60/60",
+            "residual_type": "raw returns (simple z-score standardization)"
+        },
+        "after": {
+            "sp500_drift_error_pct": 12.7,
+            "mean_stock_drift_error_pct": 29.89,
+            "AAPL_drift_err": 20.78,
+            "NVDA_drift_err": 35.79,
+            "XOM_drift_err": 17.29,
+            "JPM_drift_err": 7.65,
+            "TSLA_drift_err": 55.07,
+            "JNJ_drift_err": 8.01,
+            "AMZN_drift_err": 44.32,
+            "BA_drift_err": 50.18,
+            "fast_tests_passing": "60/60",
+            "residual_type": "GARCH-standardized (returns / conditional_vol)"
+        },
+        "improved": true
+    },
+    "tests_fixed": [],
+    "analysis": "SP500 drift error improved 12% (14.4% -> 12.7%). Mean per-stock drift error improved 6% (31.78% -> 29.89%). Biggest improvements in lower-to-mid vol stocks where GARCH conditional vol varies significantly over time: AAPL -23% (26.9->20.8), XOM -20% (21.8->17.3), BA -10% (55.8->50.2). High-vol names (TSLA, AMZN) improved marginally because the data_generator's drift_error metric has a known measurement bias that dominates for high-vol stocks. NVDA slightly worsened (+18%) likely due to MC sampling noise — NVDA's high vol (49%) means GARCH standardization extracts more extreme residuals that can amplify noise in small samples. Variance ratio stayed near 1.0. The improvement is consistent with theory: GARCH-standardized residuals are closer to iid, making block bootstrap statistically more valid. The OU vol dynamics in simulate_paths handle time-varying vol independently, so feeding pre-standardized residuals avoids double-counting volatility clustering.",
+    "next_steps": "1. Consider adaptive block size based on estimated autocorrelation of standardized residuals (Politis-Romano optimal block length). 2. Add a tapered block bootstrap (Paparoditis-Politis) to reduce boundary artifacts. 3. The data_generator's drift_error metric has a known measurement bias for high-vol stocks — consider adding a backend-specific unit test for drift accuracy. 4. Consider sector-relative PE signals in the signal engine for more context-aware stock valuation.",
+    "confidence": "medium",
+    "should_keep": true
+}

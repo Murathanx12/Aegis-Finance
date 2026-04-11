@@ -89,7 +89,19 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
         pass
 
     # Historical residuals for block bootstrap (preserves vol clustering)
-    hist_residuals = sp_returns.values if len(sp_returns) > 50 else None
+    # Prefer GARCH-standardized residuals: returns / conditional_vol are ~iid
+    # with uniform variance, producing cleaner bootstrap innovations.
+    hist_residuals = None
+    try:
+        from backend.models.garch import get_standardized_residuals
+        if garch_result.success:
+            std_resid = get_standardized_residuals(garch_result, sp_returns)
+            if std_resid is not None and len(std_resid) > 50:
+                hist_residuals = std_resid
+    except Exception:
+        pass
+    if hist_residuals is None:
+        hist_residuals = sp_returns.values if len(sp_returns) > 50 else None
 
     # Compute valuation penalty from CAPE ratio (capped per Phase 1G)
     val_cfg = config["simulation"]["valuation"]
@@ -225,7 +237,18 @@ def _compute_scenarios() -> dict:
         pass
 
     # Historical residuals for block bootstrap
-    hist_residuals = returns.values if len(returns) > 50 else None
+    # Prefer GARCH-standardized residuals when available
+    hist_residuals = None
+    try:
+        from backend.models.garch import get_standardized_residuals
+        if garch_result.success:
+            std_resid = get_standardized_residuals(garch_result, returns)
+            if std_resid is not None and len(std_resid) > 50:
+                hist_residuals = std_resid
+    except Exception:
+        pass
+    if hist_residuals is None:
+        hist_residuals = returns.values if len(returns) > 50 else None
 
     inst_return = get_institutional_return()
     inst_mu = np.log(1 + inst_return)
