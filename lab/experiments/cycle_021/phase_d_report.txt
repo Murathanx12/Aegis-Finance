@@ -1,0 +1,15 @@
+Done. Committed as `535fc86`.
+
+## Final Summary
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Tests | 142 | **170** (+28) |
+| Screener latency | ~90-240s (sequential) | **~15-40s** (parallel, 8 workers) |
+| GDELT latency | ~3-5s (sequential, no retry) | **~1-2s** (parallel + retry) |
+| Observability | None | **X-Process-Time header + slow request logs** |
+| Hardcoded perf values | 5 | **0** (all in config) |
+
+**Self-critique:** The 3-5x speedup is estimated, not measured end-to-end. I didn't profile under load or validate that yfinance handles concurrent Ticker calls gracefully at scale. The deeper perf issue — `_compute_market_signal()` being called redundantly across endpoints — is left for next cycle. Confidence: **medium** (code is correct, but real-world speedup unvalidated).
+
+---STDERR---
