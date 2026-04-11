@@ -373,6 +373,23 @@ config: dict = {
         "ttl_portfolio": 0,         # No cache — unique per request body
     },
 
+    # ── EXTERNAL VALIDATION THRESHOLDS ──────────────────────────────────
+    "external_validator": {
+        "lei_warning_months": 3,          # Consecutive declines for WARNING
+        "lei_recession_months": 6,        # Consecutive declines for RECESSION
+        "sloos_tightening_threshold": 20, # Net % tightening → TIGHTENING
+        "sloos_easing_threshold": -20,    # Net % easing → EASING
+        "fed_hawkish_bps": 0.25,          # YoY rate change > 25bps → HAWKISH
+        "fed_dovish_bps": -0.25,          # YoY rate change < -25bps → DOVISH
+        "fed_lookback_days": 252,         # ~1 year of trading days
+        "sentiment_extreme_fear": 60,     # UMich < 60 → EXTREME_FEAR
+        "sentiment_fear": 80,             # UMich < 80 → FEAR
+        "sentiment_greed": 100,           # UMich >= 100 → GREED
+        "bearish_consensus_min": 3,       # >= 3 bearish signals → BEARISH consensus
+        "bullish_consensus_max": 1,       # <= 1 bearish signal → BULLISH consensus
+        "crash_prob_bearish": 0.50,       # crash_prob > 50% → engine is bearish
+    },
+
     # ── DATA QUALITY ─────────────────────────────────────────────────────
     "data_quality": {
         "staleness_threshold_days": 3,

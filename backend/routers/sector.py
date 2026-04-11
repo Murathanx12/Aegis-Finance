@@ -52,19 +52,26 @@ def _analyze_sectors() -> dict:
         garch_result = fit_garch(sp_returns)
         if garch_result.success:
             garch_vol = garch_result.current_vol
-    except Exception:
-        pass
+    except (ImportError, ValueError, KeyError) as e:
+        logger.debug("GARCH fit unavailable for sectors: %s", e)
 
     # Get crash probability from the crash model
     ml_crash_prob = None
     try:
         from backend.services.crash_model import CrashPredictor
-        predictor = CrashPredictor()
-        crash_result = predictor.predict(data)
-        if crash_result and "probabilities" in crash_result:
-            ml_crash_prob = crash_result["probabilities"].get("3m")
-    except Exception:
-        pass
+        from backend.config import MODEL_DIR
+        model_path = MODEL_DIR / "crash_model.pkl"
+        if model_path.exists():
+            from engine.training.features import build_feature_matrix
+            predictor = CrashPredictor()
+            predictor.load_model(str(model_path))
+            fred_data = fetcher.fetch_fred_data()
+            features = build_feature_matrix(data, fred_data=fred_data)
+            available = [f for f in predictor.feature_names if f in features.columns]
+            latest = features[available].iloc[[-1]]
+            ml_crash_prob = float(predictor.predict_proba(latest, "3m")[0])
+    except (ImportError, FileNotFoundError, ValueError, KeyError) as e:
+        logger.debug("Crash model unavailable for sectors: %s", e)
 
     results = analyze_sectors(
         data=data,

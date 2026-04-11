@@ -1,1 +1,56 @@
-[ERROR: [WinError 2] The system cannot find the file specified]
+Confirmed. Here's my Phase A exploration report:
+
+---
+
+## Phase A Report — Cycle 19
+
+**Tests:** All 60 fast tests pass (40.67s). No pre-existing failures.
+
+---
+
+### Top 3 Findings
+
+#### 1. `external_validator.py` called with WRONG ARGUMENTS at 3 locations (RUNTIME BUG)
+
+The function signature is:
+```python
+validate_external(fred_data: dict, ml_crash_prob: Optional[float], current_regime: str) -> ExternalValidation
+```
+
+But it's called incorrectly at:
+- **`backend/routers/market.py:207`** — `validate_external(data, fred_data)` passes `(data, fred_data)` instead of `(fred_data, crash_prob, regime)`. Then line 208 calls `.get()` on the returned `ExternalValidation` dataclass (not a dict), which will `AttributeError`.
+- **`backend/routers/stock.py:205`** — Same broken pattern.
+- **`backend/routers/stock.py:365`** — Same broken pattern.
+
+All 3 are inside `try/except Exception: pass`, so they silently fail and `external` is always `None`. This means the signal engine never gets external consensus data — it's dead wiring.
+
+#### 2. `backend/routers/sector.py:63` — Calls non-existent `predictor.predict(data)`
+
+`CrashPredictor` only exposes `predict_proba(features, horizon)` and `predict_all_horizons(features)`. The call at line 63:
+```python
+crash_result = predictor.predict(data)
+```
+will raise `AttributeError`, caught by the broad `except Exception: pass` on line 66. Result: `ml_crash_prob` is always `None` in sector analysis — the crash model is never actually feeding into sector returns.
+
+#### 3. Two complete services are DEAD CODE — never wired to any endpoint
+
+- **`backend/services/drift_detector.py`** (~200 lines) — PSI + KS drift detection. Zero imports in any router.
+- **`backend/services/return_model.py`** (~280 lines) — LightGBM quantile return predictor. Zero imports in any router.
+
+Both show "ok" in health checks (they exist and import fine) but provide zero value since nothing calls them.
+
+---
+
+### Secondary Findings
+
+- **Frontend:** Very clean. Only minor issue: `portfolio/page.tsx:388-389` uses light-mode Tailwind classes (`bg-emerald-50/50`, `bg-red-50/50`) in what's otherwise a dark-mode app.
+- **`shap_explainer.py`** has orphaned `run_counterfactual()` function (lines 62-99) — never called from any router.
+- **Code smells confirmed:** `stock_analyzer.py` (8 broad excepts) and `portfolio_engine.py` (5 broad excepts) hide failures like the ones above.
+
+---
+
+### Recommended Phase B Focus
+
+**Fix the 3 broken `validate_external` calls** — highest impact since it unblocks external consensus in signal generation. Then **fix `sector.py:63`** to use `predict_all_horizons()`. These 4 one-line fixes will light up features that are currently silently dead.
+
+---STDERR---

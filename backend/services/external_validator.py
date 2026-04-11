@@ -18,10 +18,8 @@ Usage:
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import Optional
 
-import numpy as np
 import pandas as pd
 
 from backend.config import config
@@ -40,6 +38,9 @@ class ExternalValidation:
     divergence_alerts: list = field(default_factory=list)
 
 
+_EV_CFG = config["external_validator"]
+
+
 def validate_external(
     fred_data: dict,
     ml_crash_prob: Optional[float],
@@ -56,8 +57,9 @@ def validate_external(
         ExternalValidation with per-source signals and agreement score
     """
     result = ExternalValidation()
+    crash_thresh = _EV_CFG["crash_prob_bearish"]
     is_engine_bearish = current_regime in ("Bear", "Crisis", "Volatile") or (
-        ml_crash_prob is not None and ml_crash_prob > 0.50
+        ml_crash_prob is not None and ml_crash_prob > crash_thresh
     )
 
     signals_agree = 0
@@ -126,9 +128,9 @@ def validate_external(
         result.sentiment_signal in ("NEUTRAL", "GREED"),
     ] if s)
 
-    if bearish_count >= 3:
+    if bearish_count >= _EV_CFG["bearish_consensus_min"]:
         result.consensus_direction = "BEARISH"
-    elif bearish_count <= 1:
+    elif bearish_count <= _EV_CFG["bullish_consensus_max"]:
         result.consensus_direction = "BULLISH"
     else:
         result.consensus_direction = "NEUTRAL"
@@ -152,9 +154,11 @@ def _assess_lei(lei_series: pd.Series) -> str:
         else:
             break
 
-    if consecutive_declines >= 6:
+    recession_months = _EV_CFG["lei_recession_months"]
+    warning_months = _EV_CFG["lei_warning_months"]
+    if consecutive_declines >= recession_months:
         return "RECESSION"
-    elif consecutive_declines >= 3:
+    elif consecutive_declines >= warning_months:
         return "WARNING"
     else:
         return "EXPANSION"
@@ -166,9 +170,9 @@ def _assess_sloos(sloos_series: pd.Series) -> str:
         return "UNKNOWN"
 
     latest = float(s.iloc[-1])
-    if latest > 20:
+    if latest > _EV_CFG["sloos_tightening_threshold"]:
         return "TIGHTENING"
-    elif latest < -20:
+    elif latest < _EV_CFG["sloos_easing_threshold"]:
         return "EASING"
     else:
         return "NEUTRAL"
@@ -176,16 +180,17 @@ def _assess_sloos(sloos_series: pd.Series) -> str:
 
 def _assess_fed(fed_funds_series: pd.Series) -> str:
     s = pd.Series(fed_funds_series).dropna()
-    if len(s) < 252:
+    lookback = _EV_CFG["fed_lookback_days"]
+    if len(s) < lookback:
         return "UNKNOWN"
 
     current = float(s.iloc[-1])
-    year_ago = float(s.iloc[-252])
+    year_ago = float(s.iloc[-lookback])
 
     change = current - year_ago
-    if change > 0.25:
+    if change > _EV_CFG["fed_hawkish_bps"]:
         return "HAWKISH"
-    elif change < -0.25:
+    elif change < _EV_CFG["fed_dovish_bps"]:
         return "DOVISH"
     else:
         return "NEUTRAL"
@@ -197,11 +202,11 @@ def _assess_sentiment(sentiment_series: pd.Series) -> str:
         return "UNKNOWN"
 
     latest = float(s.iloc[-1])
-    if latest < 60:
+    if latest < _EV_CFG["sentiment_extreme_fear"]:
         return "EXTREME_FEAR"
-    elif latest < 80:
+    elif latest < _EV_CFG["sentiment_fear"]:
         return "FEAR"
-    elif latest < 100:
+    elif latest < _EV_CFG["sentiment_greed"]:
         return "NEUTRAL"
     else:
         return "GREED"

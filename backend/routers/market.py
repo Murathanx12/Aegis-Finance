@@ -196,18 +196,18 @@ def _compute_market_signal() -> dict:
                     crash_3m = prob
                 elif h == "12m":
                     crash_12m = prob
-    except Exception:
-        pass
+    except (ImportError, FileNotFoundError, ValueError, KeyError) as e:
+        logger.debug("Crash model unavailable in signal: %s", e)
 
     # External consensus
     external = None
     try:
         from backend.services.external_validator import validate_external
-        fred_data = fetcher.fetch_fred_data()
-        ext = validate_external(data, fred_data)
-        external = ext.get("consensus_direction")
-    except Exception:
-        pass
+        fred_data_ext = fetcher.fetch_fred_data()
+        ext = validate_external(fred_data_ext, crash_12m / 100 if crash_12m else None, regime)
+        external = ext.consensus_direction
+    except (ImportError, KeyError, TypeError, ValueError) as e:
+        logger.debug("External validation unavailable: %s", e)
 
     signal = get_market_signal(
         crash_prob_3m=crash_3m,
