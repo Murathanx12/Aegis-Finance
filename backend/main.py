@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.cache import cache_clear, set_cache_ready, cache_ready
+from backend.middleware import add_timing_middleware
 from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest
 
 logging.basicConfig(
@@ -86,6 +87,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Request timing (must be added after CORS so it wraps the actual handler)
+add_timing_middleware(app)
 
 
 # ── Register routers ──────────────────────────────────────────

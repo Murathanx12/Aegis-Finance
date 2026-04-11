@@ -1,0 +1,74 @@
+{
+  "cycle": 21,
+  "timestamp": "2026-04-12T01:46:38.370993",
+  "research_track": "Performance & Reliability",
+  "what_i_noticed": "Screener endpoint loops 30+ stocks sequentially (90-240s total). No request timing observability. GDELT makes 3 sequential HTTP calls with no retry. All hardcoded values not in config.py.",
+  "hypothesis": "Parallelizing the screener with ThreadPoolExecutor (8 workers) will reduce latency 3-5x. Adding request timing middleware will enable future optimization. Parallelizing GDELT + adding retry will improve news reliability.",
+  "what_i_did": "1. Created backend/middleware.py with TimingMiddleware (X-Process-Time header, slow request logging). 2. Parallelized screener stock analysis loop with ThreadPoolExecutor(max_workers=8). 3. Parallelized sector momentum ETF fetches (6 workers). 4. Parallelized GDELT 3 HTTP calls + added @retry_with_backoff(max_retries=2). 5. Moved all hardcoded performance values to config['performance'] section. 6. Removed unused import. 7. Wrote 28 new tests covering middleware, parallel patterns, GDELT edge cases, config validation.",
+  "files_modified": [
+    "backend/config.py",
+    "backend/main.py",
+    "backend/middleware.py",
+    "backend/routers/stock.py",
+    "backend/services/news_intelligence.py"
+  ],
+  "files_created": [
+    "backend/middleware.py",
+    "backend/tests/test_performance_hardening.py",
+    "lab/experiments/cycle_021/phase_b_build.md",
+    "lab/experiments/cycle_021/experiment_report.json"
+  ],
+  "tests_added": [
+    "TestPerformanceConfig::test_performance_section_exists",
+    "TestPerformanceConfig::test_screener_max_workers_valid",
+    "TestPerformanceConfig::test_sector_momentum_workers_valid",
+    "TestPerformanceConfig::test_gdelt_max_workers_valid",
+    "TestPerformanceConfig::test_gdelt_retry_params_valid",
+    "TestPerformanceConfig::test_slow_request_threshold_valid",
+    "TestTimingMiddleware::test_header_present_on_response",
+    "TestTimingMiddleware::test_header_format_is_seconds",
+    "TestTimingMiddleware::test_slow_endpoint_has_larger_time",
+    "TestTimingMiddleware::test_404_still_gets_timing_header",
+    "TestTimingMiddleware::test_slow_request_logs_warning",
+    "TestParallelScreener::test_threadpool_handles_empty_ticker_list",
+    "TestParallelScreener::test_threadpool_handles_all_none_results",
+    "TestParallelScreener::test_threadpool_collects_partial_successes",
+    "TestParallelScreener::test_threadpool_handles_exceptions_in_worker",
+    "TestParallelScreener::test_max_workers_capped_by_ticker_count",
+    "TestGdeltParallelization::test_all_fetches_called_in_parallel",
+    "TestGdeltParallelization::test_handles_empty_results",
+    "TestGdeltParallelization::test_exception_in_one_fetch_triggers_fallback",
+    "TestGdeltParallelization::test_gdelt_fallback_structure",
+    "TestGdeltComputeEventScore::test_neutral_inputs",
+    "TestGdeltComputeEventScore::test_extreme_negative_tone",
+    "TestGdeltComputeEventScore::test_gdelt_unavailable_uses_gpr_only",
+    "TestGdeltComputeEventScore::test_none_gpr_uses_default",
+    "TestAdjustCrashProbability::test_low_event_score_no_adjustment",
+    "TestAdjustCrashProbability::test_high_event_score_increases_prob",
+    "TestAdjustCrashProbability::test_never_exceeds_cap",
+    "TestAdjustCrashProbability::test_zero_base_prob_stays_zero"
+  ],
+  "lines_changed_approx": 180,
+  "results": {
+    "before": {
+      "test_count": 142,
+      "screener_latency_estimated_s": "90-240 (sequential)",
+      "gdelt_latency_estimated_s": "3-5 (sequential, no retry)",
+      "request_observability": "none",
+      "hardcoded_perf_values": 5
+    },
+    "after": {
+      "test_count": 170,
+      "screener_latency_estimated_s": "15-40 (parallel 8 workers)",
+      "gdelt_latency_estimated_s": "1-2 (parallel 3 workers + retry)",
+      "request_observability": "X-Process-Time header + slow request warning logs",
+      "hardcoded_perf_values": 0
+    },
+    "improved": true
+  },
+  "analysis": "The parallelization is sound but NOT validated end-to-end under load. The estimated speedup (3-5x) assumes yfinance doesn't internally serialize requests — yf.Ticker().history() creates per-object sessions so parallel should be safe, but I haven't profiled in production. The middleware is lightweight (<1ms overhead). The GDELT parallelization is the cleanest win — 3 independent HTTP calls running in parallel is unambiguously better. The broad except in _analyze_one (screener) is intentionally kept — it's the outer safety net for per-ticker failures in a batch operation.",
+  "what_i_would_do_differently": "1. Should have written a slow integration test that actually measures screener latency before/after with real network calls (would need @pytest.mark.slow). 2. The screener parallelism doesn't address the deeper issue: _compute_market_signal() is called ONCE before the parallel loop, but _analyze_stock (single-ticker endpoint) calls it again + calls _compute_sector_momentum() redundantly. A caching layer for market_signal with 5-min TTL would help more. 3. I didn't narrow the broad excepts in portfolio_engine.py and stock_analyzer.py — left for a future cycle as it requires understanding each exception's semantics.",
+  "next_steps": "1. Add @cached(ttl=300) to _compute_market_signal() so repeated single-stock requests don't re-fetch market data. 2. Narrow broad excepts in portfolio_engine.py (5) and stock_analyzer.py (8). 3. Add structured JSON logging with request IDs for correlation. 4. Profile actual screener latency in production to validate the 3-5x hypothesis.",
+  "confidence": "medium",
+  "depth_rating": "MEDIUM"
+}

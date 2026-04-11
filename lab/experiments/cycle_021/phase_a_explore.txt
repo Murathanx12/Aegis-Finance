@@ -1,0 +1,59 @@
+## Cycle 21 — Phase A: Exploration Report
+
+All 142 fast tests pass (36s). All 19 services healthy. Here are my top 3 findings:
+
+---
+
+### Finding 1: Screener is Sequential — O(n) Stock Analysis Loop (Critical Perf)
+
+**File:** `backend/routers/stock.py:65`
+
+The screener endpoint loops through **30+ tickers sequentially**:
+```python
+for ticker in sorted(all_tickers):  # ~30 tickers
+    r = analyze_stock(ticker, ...)  # each: yfinance fetch + GARCH + 2000-path MC
+```
+
+Each `analyze_stock()` call takes 3-8 seconds (yfinance download + GARCH fit + Monte Carlo). Total screener latency: **90-240 seconds**. This is the single biggest performance bottleneck in the app.
+
+Additionally, `_compute_sector_momentum()` at line 130 fetches 11 sector ETFs one-by-one sequentially.
+
+Note: `stock_analyzer.py:106-108` calls `yf.Ticker(ticker).history()` directly — these are NOT serialized through `_yf_lock` from `data_fetcher.py`, so they're already effectively parallel-safe (yf.Ticker is per-object). ThreadPoolExecutor parallelism is viable here.
+
+---
+
+### Finding 2: No Request Timing or Performance Observability
+
+**File:** `backend/main.py` — no middleware for request duration tracking
+
+There are 141 log calls across the backend, but:
+- No request timing middleware — when endpoints are slow, there's no way to know which request took how long
+- No per-step timing within heavy endpoints (screener, simulation, portfolio)
+- No slow-request warnings
+- Response headers don't include processing time
+
+For a performance & reliability track, this is foundational — you can't optimize what you can't measure.
+
+---
+
+### Finding 3: GDELT Calls Are Sequential With No Retry
+
+**File:** `backend/services/news_intelligence.py:92-146`
+
+`fetch_gdelt_signals()` makes **3 independent HTTP calls sequentially**:
+1. `_fetch_tone_timeline()` (line 43)
+2. `_fetch_volume_timeline()` (line 44)  
+3. `_fetch_conflict_timeline()` (line 45)
+
+Each has a 15s timeout but **no retry** — a single transient failure kills the entire GDELT pipeline. Meanwhile, `data_fetcher.py` already has `retry_with_backoff` and `ThreadPoolExecutor` patterns that should be applied here. The 3 calls are fully independent and can run in parallel, cutting GDELT latency by ~3x.
+
+---
+
+### Bonus observations:
+- `drift_detector.py:199` uses `np.random.uniform` (legacy API) — violates the `np.random.default_rng(seed)` rule
+- `portfolio_engine.py` has 8 broad excepts, `stock_analyzer.py` has 11 — most are semi-justified (non-critical enrichment), but the ones in portfolio_engine's optimization paths (lines 569, 664, 693) can hide real bugs
+- `risk_scorer.py` VIX floor logic at lines 121-123 is buggy: uses `.where(condition, value)` which replaces values WHERE condition is True, opposite of intended behavior
+
+Ready for Phase B when you are.
+
+---STDERR---

@@ -400,6 +400,16 @@ config: dict = {
         "yield_range": [-1.0, 20.0],
     },
 
+    # ── PERFORMANCE ──────────────────────────────────────────────────────
+    "performance": {
+        "screener_max_workers": 8,       # ThreadPoolExecutor workers for screener
+        "sector_momentum_workers": 6,    # Workers for parallel sector ETF fetches
+        "gdelt_max_workers": 3,          # Workers for parallel GDELT API calls
+        "gdelt_max_retries": 2,          # Retry attempts per GDELT endpoint
+        "gdelt_retry_base_delay": 1.0,   # Base delay for GDELT retry backoff (seconds)
+        "slow_request_threshold_s": 10.0,# Requests slower than this get a warning log
+    },
+
     # ── SENTIMENT ANALYSIS ───────────────────────────────────────────────
     "sentiment": {
         "bullish_threshold": 0.15,          # avg_numeric > 0.15 → bullish

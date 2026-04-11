@@ -15,9 +15,13 @@ Usage:
 """
 
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 
 import numpy as np
+
+from backend.cache import retry_with_backoff
+from backend.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +44,16 @@ def fetch_gdelt_signals(query: str = "market OR economy OR financial", days: int
         return _gdelt_fallback("requests library not available")
 
     try:
-        tone_data = _fetch_tone_timeline(query, days)
-        volume_data = _fetch_volume_timeline(query, days)
-        conflict_data = _fetch_conflict_timeline(days)
+        # Parallel GDELT fetches — 3 independent API calls
+        gdelt_workers = config["performance"]["gdelt_max_workers"]
+        with ThreadPoolExecutor(max_workers=gdelt_workers) as executor:
+            tone_future = executor.submit(_fetch_tone_timeline, query, days)
+            volume_future = executor.submit(_fetch_volume_timeline, query, days)
+            conflict_future = executor.submit(_fetch_conflict_timeline, days)
+
+        tone_data = tone_future.result()
+        volume_data = volume_future.result()
+        conflict_data = conflict_future.result()
 
         # Compute summary stats
         avg_tone = 0.0
@@ -89,6 +100,13 @@ def fetch_gdelt_signals(query: str = "market OR economy OR financial", days: int
         return _gdelt_fallback(str(e))
 
 
+_GDELT_RETRIES = config["performance"]["gdelt_max_retries"]
+_GDELT_BASE_DELAY = config["performance"]["gdelt_retry_base_delay"]
+_GDELT_RETRY_EXC = (requests.RequestException,) if _HAS_REQUESTS else (Exception,)
+
+
+@retry_with_backoff(max_retries=_GDELT_RETRIES, base_delay=_GDELT_BASE_DELAY, max_delay=8.0,
+                    retryable_exceptions=_GDELT_RETRY_EXC)
 def _fetch_tone_timeline(query: str, days: int) -> list:
     """Fetch daily news tone from GDELT DOC API."""
     params = {
@@ -108,6 +126,8 @@ def _fetch_tone_timeline(query: str, days: int) -> list:
     return []
 
 
+@retry_with_backoff(max_retries=_GDELT_RETRIES, base_delay=_GDELT_BASE_DELAY, max_delay=8.0,
+                    retryable_exceptions=_GDELT_RETRY_EXC)
 def _fetch_volume_timeline(query: str, days: int) -> list:
     """Fetch daily article volume from GDELT DOC API."""
     params = {
@@ -127,6 +147,8 @@ def _fetch_volume_timeline(query: str, days: int) -> list:
     return []
 
 
+@retry_with_backoff(max_retries=_GDELT_RETRIES, base_delay=_GDELT_BASE_DELAY, max_delay=8.0,
+                    retryable_exceptions=_GDELT_RETRY_EXC)
 def _fetch_conflict_timeline(days: int) -> list:
     """Fetch geopolitical conflict article volume."""
     params = {
