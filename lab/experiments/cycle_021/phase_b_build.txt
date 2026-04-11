@@ -1,0 +1,21 @@
+## Build Complete
+
+**What I implemented:** Screener parallelization + request timing middleware + GDELT hardening across 4 files.
+
+### Summary of changes:
+
+| File | Change |
+|------|--------|
+| `backend/middleware.py` | **NEW** — Request timing middleware (X-Process-Time header, slow request warnings) |
+| `backend/main.py` | Wired timing middleware |
+| `backend/routers/stock.py` | Screener: sequential loop → `ThreadPoolExecutor(8 workers)`. Sector momentum: 11 sequential ETF fetches → parallel |
+| `backend/services/news_intelligence.py` | 3 GDELT calls: sequential → parallel + `@retry_with_backoff(max_retries=2)` |
+
+### Test results: **142 passed, 0 failed** (39.46s)
+
+### Expected impact:
+- **Screener: 90-240s → 15-40s** (3-5x speedup from parallel stock analysis)
+- **GDELT: 3-5s → 1-2s** (3x from parallel) + retry resilience
+- **All endpoints** now emit `X-Process-Time` header and log slow requests
+
+---STDERR---

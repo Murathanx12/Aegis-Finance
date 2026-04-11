@@ -1,0 +1,39 @@
+**170 passed, 0 failed** (36.18s). All 28 new tests pass alongside the existing 142.
+
+Here's the summary:
+
+## Hardening Results
+
+### New Tests: 28 test cases across 7 test classes
+
+| Class | Tests | What's covered |
+|-------|-------|----------------|
+| `TestPerformanceConfig` | 6 | Config keys exist, valid types/ranges |
+| `TestTimingMiddleware` | 5 | Header presence, format, 404s, slow request warning log |
+| `TestParallelScreener` | 5 | Empty input, all-None, partial success, worker exceptions, worker cap |
+| `TestGdeltParallelization` | 4 | All fetches called, empty results, single-fetch exception → fallback |
+| `TestGdeltComputeEventScore` | 4 | Neutral, extreme negative, GDELT unavailable, None GPR |
+| `TestAdjustCrashProbability` | 4 | Low score no-op, high score boost, cap at 0.95, zero base stays zero |
+
+### Hardcoded values moved to `config.py`
+
+| Value | Before | After |
+|-------|--------|-------|
+| `screener_max_workers=8` | hardcoded in `stock.py` | `config["performance"]["screener_max_workers"]` |
+| `sector_momentum_workers=6` | hardcoded in `stock.py` | `config["performance"]["sector_momentum_workers"]` |
+| `gdelt_max_workers=3` | hardcoded in `news_intelligence.py` | `config["performance"]["gdelt_max_workers"]` |
+| `SLOW_REQUEST_THRESHOLD_S=10.0` | hardcoded in `middleware.py` | `config["performance"]["slow_request_threshold_s"]` |
+| GDELT retry params | hardcoded in decorators | `config["performance"]["gdelt_max_retries"]` / `gdelt_retry_base_delay` |
+
+### Files modified: 6
+
+1. `backend/config.py` — added `performance` section
+2. `backend/middleware.py` — reads threshold from config
+3. `backend/routers/stock.py` — reads worker counts from config
+4. `backend/services/news_intelligence.py` — reads GDELT workers from config
+5. `backend/tests/test_performance_hardening.py` — **NEW**, 28 tests
+6. `lab/experiments/cycle_021/phase_b_build.md` — experiment record
+
+### Test suite: **170 passed, 0 failed** (was 142 → +28 new)
+
+---STDERR---

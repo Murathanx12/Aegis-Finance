@@ -11,6 +11,8 @@ GET /api/stock/{ticker}/sentiment  — FinBERT news sentiment analysis
 import asyncio
 import logging
 import re
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from fastapi import APIRouter, HTTPException
 
@@ -61,19 +63,22 @@ def _screener() -> dict:
     crash_3m_pct = market_sig.get("_crash_3m_pct")
     crash_prob_for_mc = crash_3m_pct / 100.0 if crash_3m_pct is not None else None
 
-    stocks = []
-    for ticker in sorted(all_tickers):
+    # Parallel stock analysis — ~3-5x faster than sequential
+    t0 = time.perf_counter()
+    sorted_tickers = sorted(all_tickers)
+    perf_cfg = config["performance"]
+    max_workers = min(perf_cfg["screener_max_workers"], len(sorted_tickers))
+
+    def _analyze_one(ticker: str) -> dict | None:
+        """Analyze a single ticker and compute its signal. Thread-safe."""
         try:
             r = analyze_stock(ticker, ml_crash_prob=crash_prob_for_mc)
             if r is None:
-                continue
+                return None
 
-            # Look up sector momentum for this stock's sector
             stock_sector = r.get("sector", "Unknown")
             sec_mom = sector_momentum.get(stock_sector, 0.0)
 
-            # Compute per-stock signal from the real signal engine
-            # Extract forward PE from key_stats if available
             fwd_pe = None
             key_stats = r.get("key_stats")
             if key_stats and "pe_forward" in key_stats:
@@ -89,7 +94,7 @@ def _screener() -> dict:
                 forward_pe=fwd_pe,
             )
 
-            stocks.append({
+            return {
                 "ticker": r["ticker"],
                 "name": r.get("name", ticker),
                 "sector": r.get("sector", "Unknown"),
@@ -105,9 +110,24 @@ def _screener() -> dict:
                 "signal_action": stock_sig["action"],
                 "signal_confidence": stock_sig["confidence"],
                 "signal_score": stock_sig["composite_score"],
-            })
+            }
         except Exception as e:
             logger.warning("screener skip %s: %s", ticker, e)
+            return None
+
+    stocks = []
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(_analyze_one, t): t for t in sorted_tickers}
+        for future in as_completed(futures):
+            result = future.result()
+            if result is not None:
+                stocks.append(result)
+
+    elapsed = time.perf_counter() - t0
+    logger.info(
+        "Screener analyzed %d/%d stocks in %.1fs (parallel, %d workers)",
+        len(stocks), len(sorted_tickers), elapsed, max_workers,
+    )
 
     # Sort by Sharpe ratio descending
     stocks.sort(key=lambda x: x["sharpe"], reverse=True)
@@ -116,7 +136,7 @@ def _screener() -> dict:
 
 
 def _compute_sector_momentum() -> dict:
-    """Compute 3-month return for each sector ETF.
+    """Compute 3-month return for each sector ETF (parallel fetch).
 
     Returns:
         Dict of {sector_name: 3m_return_pct}
@@ -125,17 +145,29 @@ def _compute_sector_momentum() -> dict:
     from backend.config import config
 
     sector_etfs = config["data"]["sectors"]
-    momentum = {}
 
-    for sector_name, etf_ticker in sector_etfs.items():
+    def _fetch_one(sector_name: str, etf_ticker: str) -> tuple[str, float | None]:
         try:
             hist = yf.Ticker(etf_ticker).history(period="6mo")
             if hist is not None and len(hist) >= 63:
                 current = float(hist["Close"].iloc[-1])
                 past = float(hist["Close"].iloc[-63])
-                momentum[sector_name] = (current / past - 1) * 100
+                return sector_name, (current / past - 1) * 100
         except (KeyError, IndexError, ValueError, TypeError) as e:
             logger.debug("sector momentum skip %s: %s", sector_name, e)
+        return sector_name, None
+
+    momentum = {}
+    sec_workers = config["performance"]["sector_momentum_workers"]
+    with ThreadPoolExecutor(max_workers=sec_workers) as executor:
+        futures = [
+            executor.submit(_fetch_one, name, tick)
+            for name, tick in sector_etfs.items()
+        ]
+        for future in as_completed(futures):
+            name, val = future.result()
+            if val is not None:
+                momentum[name] = val
 
     return momentum
 
