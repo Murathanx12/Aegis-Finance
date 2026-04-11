@@ -157,6 +157,9 @@ def analyze_stock(
         except Exception as e:
             logger.debug("%s: GARCH fit skipped — %s", ticker, e)
 
+        # Historical residuals for block bootstrap (preserves vol clustering)
+        hist_residuals = returns.values if len(returns) > 50 else None
+
         base_scenario = {"drift_adj": 0, "vol_mult": 1.0, "crash_mult": 1.0}
         paths = simulate_paths(
             current_price, final_mu, final_sigma,
@@ -164,6 +167,7 @@ def analyze_stock(
             garch_vol=garch_vol,
             garch_nu=garch_nu,
             garch_persistence=garch_persistence,
+            historical_residuals=hist_residuals,
         )
 
         final_prices = np.minimum(paths[-1], current_price * (1 + max_5y_return))

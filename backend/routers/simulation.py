@@ -68,15 +68,20 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
 
     crash_freq = config["simulation"]["jump_diffusion"]["annual_rate"]
 
+    # Compute historical returns for GARCH and block bootstrap
+    sp_returns = data["SP500"].pct_change().dropna()
+
     # Fit GARCH to get estimated Student-t degrees of freedom
     garch_nu = None
     try:
-        sp_returns = data["SP500"].pct_change().dropna()
         garch_result = fit_garch(sp_returns)
         if garch_result.success:
             garch_nu = garch_result.nu
     except Exception:
         pass
+
+    # Historical residuals for block bootstrap (preserves vol clustering)
+    hist_residuals = sp_returns.values if len(sp_returns) > 50 else None
 
     # Compute valuation penalty from CAPE ratio (capped per Phase 1G)
     val_cfg = config["simulation"]["valuation"]
@@ -117,6 +122,7 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
         yield_curve=yield_curve,
         val_penalty=val_penalty,
         garch_nu=garch_nu,
+        historical_residuals=hist_residuals,
         n_sims_override=n_sims,
         forecast_days_override=forecast_days,
     )
@@ -200,6 +206,9 @@ def _compute_scenarios() -> dict:
     except Exception:
         pass
 
+    # Historical residuals for block bootstrap
+    hist_residuals = returns.values if len(returns) > 50 else None
+
     inst_return = get_institutional_return()
     inst_mu = np.log(1 + inst_return)
 
@@ -223,6 +232,7 @@ def _compute_scenarios() -> dict:
             start_price, hist_mu, hist_sigma,
             forecast_days, n_sims, crash_freq, risk_score, scenario_dict,
             garch_nu=garch_nu,
+            historical_residuals=hist_residuals,
         )
 
         final = paths[-1]
