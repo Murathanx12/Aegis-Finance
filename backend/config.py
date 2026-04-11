@@ -341,6 +341,22 @@ config: dict = {
         "screener_count": 20,
         "max_cagr_cap": 0.50,
         "min_history_days": 252,
+        # CAGR caps by market-cap tier: (min, max) annualized log return
+        # Wider than original hard caps to allow high-growth stocks realistic drift
+        "cagr_caps": {
+            "mega":  (0.04, 0.30),    # >$200B — was 0.15, widened for growth mega-caps
+            "large": (0.05, 0.35),    # $10-200B — was 0.20
+            "mid":   (0.06, 0.40),    # $2-10B — was 0.25
+            "small": (0.08, 0.45),    # <$2B — was 0.30
+        },
+        # Bayesian shrinkage: blend historical drift toward long-run equity prior
+        # More data = less shrinkage (trust history more); less data = shrink to prior
+        "drift_shrinkage": {
+            "prior_equity_premium": 0.07,   # Long-run real equity return (~7%)
+            "min_shrinkage": 0.25,          # Even with 5yr data, keep 25% weight on prior
+            "max_shrinkage": 0.60,          # With 1yr data, 60% weight on prior
+            "data_years_for_min": 5.0,      # Years of data to reach min_shrinkage
+        },
     },
 
     # ── CACHE TTLs (seconds) ──────────────────────────────────────────────
