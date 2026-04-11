@@ -170,7 +170,10 @@ def _compute_scenarios() -> dict:
     from backend.config import get_scenario_configs, get_institutional_return
     from backend.services.data_fetcher import DataFetcher
     from backend.services.monte_carlo import simulate_paths
+    from backend.services.risk_scorer import build_risk_score
+    from backend.models.garch import fit_garch
 
+    sim_cfg = config["simulation"]
     fetcher = DataFetcher()
     data, _ = fetcher.fetch_market_data()
     start_price = float(data["SP500"].iloc[-1])
@@ -178,6 +181,24 @@ def _compute_scenarios() -> dict:
     returns = data["SP500"].pct_change().dropna()
     hist_mu = float(np.log(1 + returns).mean() * 252)
     hist_sigma = float(returns.std() * np.sqrt(252))
+
+    # Use config values instead of hardcoded parameters
+    crash_freq = sim_cfg["jump_diffusion"]["annual_rate"]
+    n_sims = sim_cfg["num_simulations"]
+    forecast_days = sim_cfg["forecast_years"] * sim_cfg["trading_days_per_year"]
+
+    # Compute risk score for scenario conditioning
+    data["Risk_Score"] = build_risk_score(data)
+    risk_score = float(data["Risk_Score"].iloc[-1])
+
+    # Fit GARCH for Student-t degrees of freedom
+    garch_nu = None
+    try:
+        garch_result = fit_garch(returns)
+        if garch_result.success:
+            garch_nu = garch_result.nu
+    except Exception:
+        pass
 
     inst_return = get_institutional_return()
     inst_mu = np.log(1 + inst_return)
@@ -200,7 +221,8 @@ def _compute_scenarios() -> dict:
 
         paths = simulate_paths(
             start_price, hist_mu, hist_sigma,
-            1260, 3000, 1.0 / 9.0, 0.0, scenario_dict,
+            forecast_days, n_sims, crash_freq, risk_score, scenario_dict,
+            garch_nu=garch_nu,
         )
 
         final = paths[-1]
