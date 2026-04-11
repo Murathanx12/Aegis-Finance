@@ -1,0 +1,12 @@
+## Cycle 003 Complete
+
+**What I found:**
+1. **Stock signal endpoint was 40% dead** — `_stock_signal()` in `stock.py` called `get_market_signal()` without crash probabilities (25% weight), yield curve, or external consensus (15% weight). The market signal endpoint had all these wired up correctly, but the stock signal endpoint was missing them.
+
+2. **Stock MC used generic defaults** — `analyze_stock()` called `simulate_paths` without GARCH parameters, meaning every stock used historical vol and a hardcoded Student-t df=8 instead of per-stock GARCH-fitted conditional volatility, tail thickness, and persistence.
+
+**What I fixed:**
+- **`backend/routers/stock.py`**: Added crash model predictions, yield curve computation, and external consensus to `_stock_signal()`, matching the full input set from `_compute_market_signal()` in `market.py`
+- **`backend/services/stock_analyzer.py`**: Added `fit_garch()` call in `analyze_stock()` to pass `garch_vol`, `garch_nu`, and `garch_persistence` to `simulate_paths`
+
+**Results:** 60/60 fast tests pass. Both fixes activate previously dead code paths — the stock signal now uses its highest-weighted component (crash probability), and per-stock MC now uses forward-looking GARCH parameters instead of generic fallbacks.
