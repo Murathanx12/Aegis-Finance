@@ -124,13 +124,19 @@ def analyze_stock(
 
         returns = prices.pct_change().dropna()
         log_returns = np.log(1 + returns)
-        hist_mu = float(log_returns.mean() * 252)
+        hist_log_drift = float(log_returns.mean() * 252)  # log drift ≈ μ - 0.5σ²
         hist_sigma = float(returns.std() * np.sqrt(252))
+
+        # Convert log drift to arithmetic expected return for consistent blending.
+        # All blend components (prior, analyst targets) are arithmetic returns;
+        # hist_log_drift is a log drift. Mixing them causes systematic drift bias.
+        hist_arithmetic = float(np.exp(hist_log_drift + 0.5 * hist_sigma**2) - 1)
 
         min_cagr, max_cagr = STOCK_CAGR_CAPS[cap_tier]
 
         # Bayesian shrinkage: blend historical drift toward long-run prior
         # More data → trust history more; less data → shrink toward prior
+        # All values are now in arithmetic return space.
         shrinkage_cfg = config.get("stocks", {}).get("drift_shrinkage", {})
         prior = shrinkage_cfg.get("prior_equity_premium", 0.07)
         min_shrink = shrinkage_cfg.get("min_shrinkage", 0.25)
@@ -140,18 +146,25 @@ def analyze_stock(
         data_years = len(returns) / 252.0
         # Linear interpolation: more years → less shrinkage
         shrinkage_weight = max_shrink - (max_shrink - min_shrink) * min(data_years / years_for_min, 1.0)
-        shrunk_mu = shrinkage_weight * prior + (1.0 - shrinkage_weight) * hist_mu
-        capped_mu = float(np.clip(shrunk_mu, min_cagr, max_cagr))
+        shrunk_arithmetic = shrinkage_weight * prior + (1.0 - shrinkage_weight) * hist_arithmetic
+        capped_arithmetic = float(np.clip(shrunk_arithmetic, min_cagr, max_cagr))
 
         if analyst_target is not None and analyst_target > 0:
             analyst_1y_return = (analyst_target / current_price) - 1
             analyst_annual = np.clip(analyst_1y_return, -0.30, max_cagr)
-            blended_mu = 0.60 * capped_mu + 0.40 * analyst_annual
+            blended_arithmetic = 0.60 * capped_arithmetic + 0.40 * analyst_annual
         else:
-            blended_mu = capped_mu
+            blended_arithmetic = capped_arithmetic
 
-        final_mu = float(np.clip(blended_mu, min_cagr * 0.5, max_cagr))
+        final_arithmetic = float(np.clip(blended_arithmetic, min_cagr * 0.5, max_cagr))
         final_sigma = float(np.clip(hist_sigma, 0.15, 0.80))
+
+        # Ito correction: convert arithmetic return to log drift for simulate_paths.
+        # simulate_paths uses log_return = drift*dt + sigma*dW, so the drift must be
+        # the log drift = ln(1+r) - 0.5*sigma^2 to produce correct E[S(T)].
+        # Without this, high-vol stocks are biased upward by ~0.5*sigma^2/yr
+        # (e.g., NVDA at 49% vol → 12% excess annual drift).
+        final_mu = float(np.log(1 + final_arithmetic) - 0.5 * final_sigma**2)
 
         # Beta-adjusted crash frequency: high-beta stocks crash more often
         base_crash_freq = config["simulation"]["jump_diffusion"]["annual_rate"]
@@ -196,7 +209,7 @@ def analyze_stock(
         drawdowns = (paths - running_peak) / running_peak
         avg_max_dd = float(np.mean(drawdowns.min(axis=0))) * 100
 
-        sharpe = (final_mu - risk_free_rate) / final_sigma if final_sigma > 0 else 0
+        sharpe = (final_arithmetic - risk_free_rate) / final_sigma if final_sigma > 0 else 0
 
         # Enriched data from yfinance
         analyst_targets = _get_analyst_targets(stock)
@@ -214,7 +227,7 @@ def analyze_stock(
             "market_cap": market_cap, "cap_tier": cap_tier,
             "beta": beta, "pe_ratio": pe_ratio,
             "analyst_target": analyst_target,
-            "hist_drift": hist_mu * 100, "capped_drift": final_mu * 100,
+            "hist_drift": hist_arithmetic * 100, "capped_drift": final_arithmetic * 100,
             "volatility": final_sigma * 100,
             "expected_return": exp_return, "median_return": med_return,
             "p05_price": p05, "p95_price": p95,

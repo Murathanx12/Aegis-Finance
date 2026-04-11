@@ -1,0 +1,321 @@
+[
+  {
+    "id": "portfolio_1",
+    "risk_profile": "moderate",
+    "total_value_approx": 323102.45,
+    "n_holdings": 7,
+    "holdings": [
+      {
+        "ticker": "CAT",
+        "name": "Caterpillar",
+        "sector": "Industrials",
+        "shares": 647,
+        "weight": 0.1446,
+        "cost_basis": 72.21,
+        "purchase_date": "2024-09-26"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon",
+        "sector": "Technology",
+        "shares": 200,
+        "weight": 0.0755,
+        "cost_basis": 121.87,
+        "purchase_date": "2025-10-26"
+      },
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet",
+        "sector": "Technology",
+        "shares": 761,
+        "weight": 0.2595,
+        "cost_basis": 110.1,
+        "purchase_date": "2025-12-24"
+      },
+      {
+        "ticker": "UNH",
+        "name": "UnitedHealth",
+        "sector": "Healthcare",
+        "shares": 325,
+        "weight": 0.1496,
+        "cost_basis": 148.33,
+        "purchase_date": "2024-10-29"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft",
+        "sector": "Technology",
+        "shares": 247,
+        "weight": 0.0697,
+        "cost_basis": 91.14,
+        "purchase_date": "2024-08-12"
+      },
+      {
+        "ticker": "BA",
+        "name": "Boeing",
+        "sector": "Industrials",
+        "shares": 183,
+        "weight": 0.0539,
+        "cost_basis": 94.95,
+        "purchase_date": "2024-06-24"
+      },
+      {
+        "ticker": "CVX",
+        "name": "Chevron",
+        "sector": "Energy",
+        "shares": 1545,
+        "weight": 0.2472,
+        "cost_basis": 51.67,
+        "purchase_date": "2025-12-06"
+      }
+    ]
+  },
+  {
+    "id": "portfolio_2",
+    "risk_profile": "moderate",
+    "total_value_approx": 25042.55,
+    "n_holdings": 6,
+    "holdings": [
+      {
+        "ticker": "META",
+        "name": "Meta",
+        "sector": "Technology",
+        "shares": 17,
+        "weight": 0.0799,
+        "cost_basis": 112.92,
+        "purchase_date": "2024-08-25"
+      },
+      {
+        "ticker": "AAPL",
+        "name": "Apple",
+        "sector": "Technology",
+        "shares": 9,
+        "weight": 0.0398,
+        "cost_basis": 99.64,
+        "purchase_date": "2025-09-29"
+      },
+      {
+        "ticker": "JNJ",
+        "name": "J&J",
+        "sector": "Healthcare",
+        "shares": 50,
+        "weight": 0.2133,
+        "cost_basis": 106.73,
+        "purchase_date": "2025-06-23"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft",
+        "sector": "Technology",
+        "shares": 31,
+        "weight": 0.1124,
+        "cost_basis": 88.76,
+        "purchase_date": "2024-09-19"
+      },
+      {
+        "ticker": "CAT",
+        "name": "Caterpillar",
+        "sector": "Industrials",
+        "shares": 13,
+        "weight": 0.0768,
+        "cost_basis": 138.33,
+        "purchase_date": "2025-12-27"
+      },
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA",
+        "sector": "Technology",
+        "shares": 139,
+        "weight": 0.4778,
+        "cost_basis": 85.66,
+        "purchase_date": "2024-11-24"
+      }
+    ]
+  },
+  {
+    "id": "portfolio_3",
+    "risk_profile": "growth",
+    "total_value_approx": 90252.66,
+    "n_holdings": 5,
+    "holdings": [
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft",
+        "sector": "Technology",
+        "shares": 144,
+        "weight": 0.1874,
+        "cost_basis": 116.64,
+        "purchase_date": "2025-01-29"
+      },
+      {
+        "ticker": "TSLA",
+        "name": "Tesla",
+        "sector": "Consumer Discretionary",
+        "shares": 204,
+        "weight": 0.2338,
+        "cost_basis": 103.05,
+        "purchase_date": "2025-03-10"
+      },
+      {
+        "ticker": "JNJ",
+        "name": "J&J",
+        "sector": "Healthcare",
+        "shares": 146,
+        "weight": 0.1041,
+        "cost_basis": 64.22,
+        "purchase_date": "2025-02-19"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon",
+        "sector": "Technology",
+        "shares": 255,
+        "weight": 0.1731,
+        "cost_basis": 61.23,
+        "purchase_date": "2025-03-03"
+      },
+      {
+        "ticker": "BAC",
+        "name": "Bank of America",
+        "sector": "Financials",
+        "shares": 482,
+        "weight": 0.3016,
+        "cost_basis": 56.42,
+        "purchase_date": "2025-05-21"
+      }
+    ]
+  },
+  {
+    "id": "portfolio_4",
+    "risk_profile": "growth",
+    "total_value_approx": 238627.23,
+    "n_holdings": 5,
+    "holdings": [
+      {
+        "ticker": "CVX",
+        "name": "Chevron",
+        "sector": "Energy",
+        "shares": 124,
+        "weight": 0.0512,
+        "cost_basis": 97.99,
+        "purchase_date": "2024-11-24"
+      },
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA",
+        "sector": "Technology",
+        "shares": 186,
+        "weight": 0.0943,
+        "cost_basis": 120.66,
+        "purchase_date": "2025-11-01"
+      },
+      {
+        "ticker": "META",
+        "name": "Meta",
+        "sector": "Technology",
+        "shares": 24,
+        "weight": 0.0085,
+        "cost_basis": 81.71,
+        "purchase_date": "2025-03-18"
+      },
+      {
+        "ticker": "TSLA",
+        "name": "Tesla",
+        "sector": "Consumer Discretionary",
+        "shares": 71,
+        "weight": 0.0304,
+        "cost_basis": 100.81,
+        "purchase_date": "2025-12-06"
+      },
+      {
+        "ticker": "BAC",
+        "name": "Bank of America",
+        "sector": "Financials",
+        "shares": 1851,
+        "weight": 0.8156,
+        "cost_basis": 105.14,
+        "purchase_date": "2025-02-06"
+      }
+    ]
+  },
+  {
+    "id": "portfolio_5",
+    "risk_profile": "conservative",
+    "total_value_approx": 12388.35,
+    "n_holdings": 8,
+    "holdings": [
+      {
+        "ticker": "AAPL",
+        "name": "Apple",
+        "sector": "Technology",
+        "shares": 11,
+        "weight": 0.0816,
+        "cost_basis": 87.32,
+        "purchase_date": "2025-04-07"
+      },
+      {
+        "ticker": "CVX",
+        "name": "Chevron",
+        "sector": "Energy",
+        "shares": 4,
+        "weight": 0.0497,
+        "cost_basis": 149.02,
+        "purchase_date": "2025-08-16"
+      },
+      {
+        "ticker": "XOM",
+        "name": "ExxonMobil",
+        "sector": "Energy",
+        "shares": 24,
+        "weight": 0.1503,
+        "cost_basis": 77.08,
+        "purchase_date": "2026-02-13"
+      },
+      {
+        "ticker": "BA",
+        "name": "Boeing",
+        "sector": "Industrials",
+        "shares": 34,
+        "weight": 0.1905,
+        "cost_basis": 68.65,
+        "purchase_date": "2025-09-14"
+      },
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet",
+        "sector": "Technology",
+        "shares": 70,
+        "weight": 0.3646,
+        "cost_basis": 64.4,
+        "purchase_date": "2025-04-24"
+      },
+      {
+        "ticker": "BAC",
+        "name": "Bank of America",
+        "sector": "Financials",
+        "shares": 1,
+        "weight": 0.0187,
+        "cost_basis": 138.83,
+        "purchase_date": "2025-09-02"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon",
+        "sector": "Technology",
+        "shares": 9,
+        "weight": 0.0519,
+        "cost_basis": 71.17,
+        "purchase_date": "2024-12-26"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft",
+        "sector": "Technology",
+        "shares": 16,
+        "weight": 0.0927,
+        "cost_basis": 71.39,
+        "purchase_date": "2025-03-14"
+      }
+    ]
+  }
+]
