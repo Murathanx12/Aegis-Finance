@@ -1,0 +1,17 @@
+Committed successfully. Here's the cycle 9 summary:
+
+## Cycle 9 Results
+
+### Two correctness fixes to the production backend:
+
+**Fix 1: Adaptive Ito Correction** (`monte_carlo.py`)
+- **Problem**: The Ito variance drag term (`-0.5*sigma^2`) was baked into `base_drift` using the initial `base_vol`, but `sigma_t` evolves via Ornstein-Uhlenbeck dynamics throughout the simulation. When sigma_t diverges from base_vol, expected returns are biased by `0.5*(base_vol^2 - sigma_t^2)` per year.
+- **Fix**: Each timestep now computes `ito_adj = 0.5*(base_vol^2 - sigma_t^2)*dt` and adds it to drift. Applied to both primary and antithetic loops.
+- **Impact**: Preserves `E[S(T)] = S(0)*exp(mu*T)` regardless of volatility path dynamics. Most impactful for stocks where GARCH vol differs from historical vol.
+
+**Fix 2: Yield Curve Signal** (`signal_engine.py`)
+- **Problem**: `yield_curve` was accepted as a parameter by `get_market_signal()` but **completely ignored** in the function body — a dead parameter. All 3 routers (market, stock, simulation) were computing and passing it for nothing.
+- **Fix**: Yield curve now modifies the valuation signal: deeply inverted (<-0.5%) → -0.3, slightly inverted → -0.15, steep positive (>1.5%) → +0.1 bullish tilt.
+- **Impact**: Buy/sell signals now incorporate macro recession risk from the term structure.
+
+**Tests**: 60/60 fast tests passing (no regressions).
