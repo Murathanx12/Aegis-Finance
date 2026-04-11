@@ -1,0 +1,74 @@
+**stock_analyzer.py**: Down from 11 broad excepts to 3 (the legitimate ones: yfinance data fetch at L112, GARCH fit at L182/L196 — these are external calls where any exception type is possible).
+
+**portfolio_engine.py**: Down from 5+ broad excepts to 1 (the `_fetch_prices` network call at L190 — the only legitimate one).
+
+Here's the full summary of everything changed:
+
+---
+
+## Changes Made
+
+### 1. Narrowed except blocks (3 files modified)
+
+**`backend/services/stock_analyzer.py`** — 8 bare `except Exception` -> specific types:
+- `_get_analyst_targets`: `except (AttributeError, KeyError, TypeError, ValueError)` + debug log
+- `_get_recommendations`: `except (AttributeError, KeyError, TypeError, ValueError, IndexError)` + debug log
+- `_get_holders`: `except (AttributeError, KeyError, TypeError, ValueError)` + debug log
+- `_get_news`: `except (AttributeError, KeyError, TypeError)` + debug log
+- `_get_earnings`: `except (AttributeError, KeyError, TypeError, ValueError, IndexError)` + debug log
+- `_get_price_history`: `except (AttributeError, TypeError, ValueError)` + debug log
+- `_get_key_stats`: `except (AttributeError, KeyError, TypeError, ValueError)` + debug log
+- `_get_sector_peers`: Removed try/except entirely (pure dict lookup, can't fail)
+
+**`backend/services/portfolio_engine.py`** — 5 broad excepts -> specific types:
+- Shrunk covariance fallback: `except (ImportError, ValueError, np.linalg.LinAlgError)`
+- BL `portfolio_performance`: `except (ValueError, AttributeError)`
+- BL outer: `except (ImportError, ValueError, np.linalg.LinAlgError, KeyError)`
+- HRP `portfolio_performance`: `except (ValueError, AttributeError)`
+- HRP outer: `except (ImportError, ValueError, np.linalg.LinAlgError, KeyError)`
+- `_allocations_to_response` price fetch: `except (KeyError, AttributeError, TypeError, ValueError)`
+- `stress_test` beta fetch: `except (KeyError, AttributeError, TypeError, ValueError)`
+
+### 2. Moved hardcoded threshold to config (2 files modified)
+
+**`backend/config.py`** — Added `regime_validation` section:
+```python
+"regime_validation": {
+    "consensus_bull_threshold": 0.03,
+    "min_declining_sectors": 6,
+}
+```
+
+**`backend/services/regime_validator.py`** — Now reads threshold from config:
+- `_check_consensus`: Uses `config["regime_validation"]["consensus_bull_threshold"]`
+- `_check_breadth`: Uses `config["regime_validation"]["min_declining_sectors"]`
+
+### 3. Hardening tests (1 file modified)
+
+**`backend/tests/test_untested_services.py`** — Added 55 new test functions across 12 classes:
+
+| Test Class | Tests | What it validates |
+|-----------|-------|-------------------|
+| `TestStockAnalyzerHelpers` | 19 | All 8 helpers with None/empty/valid inputs, cap tier boundaries |
+| `TestStockAnalyzerSelectStocks` | 3 | Empty sectors, uniqueness, n_stocks limit |
+| `TestRegimeValidatorConfigDriven` | 3 | Config section exists, threshold is float, source code uses config |
+| `TestPortfolioEngineExceptNarrowing` | 2 | Remaining broad excepts ≤ thresholds |
+| `TestSavingsHardening` | 4 | Large contribution, negative age gap, zero inflation, custom target |
+| `TestDataQualityHardening` | 4 | All-NaN column, single row, no SP500, healthy status |
+| `TestRegimeValidatorHardening` | 5 | Crisis/Volatile/Neutral regimes, empty DataFrame, notes populated |
+| `TestShapHardening` | 3 | Missing feature column, nonexistent override, multi-row features |
+| `TestReturnModelHardening` | 3 | Quantiles before train, multi-horizon, prediction clipping |
+| `TestNetLiquidityHardening` | 3 | All current keys, ISO timestamp, cache hit |
+| `TestLlmHardening` | 6 | Mixed/neutral sentiment, negative/invalid score, None news, earnings-only |
+
+### Final count
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Fast tests passing | 319 | **374** |
+| Broad excepts (stock_analyzer helpers) | 8 | **0** |
+| Broad excepts (portfolio_engine) | 5 | **1** (network call) |
+| Hardcoded thresholds in regime_validator | 2 | **0** |
+| Config-driven params added | 0 | **2** |
+
+---STDERR---

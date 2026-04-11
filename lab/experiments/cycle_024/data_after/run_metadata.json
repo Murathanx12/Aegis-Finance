@@ -1,0 +1,27 @@
+{
+  "cycle": 24,
+  "timestamp": "2026-04-12T03:10:48.008511",
+  "data_sources": [
+    "market_snapshot",
+    "stock_analysis",
+    "sp500_mc",
+    "crash_calibration",
+    "signal_quality",
+    "regime_risk",
+    "sector_analysis",
+    "portfolio_test",
+    "api_health",
+    "validation_metrics",
+    "code_metrics"
+  ],
+  "errors": [
+    "AAPL: ImportError: `Import lxml` failed.  Use pip or conda to install the lxml package.",
+    "NVDA: ImportError: `Import lxml` failed.  Use pip or conda to install the lxml package.",
+    "XOM: ImportError: `Import lxml` failed.  Use pip or conda to install the lxml package.",
+    "JPM: ImportError: `Import lxml` failed.  Use pip or conda to install the lxml package.",
+    "TSLA: ImportError: `Import lxml` failed.  Use pip or conda to install the lxml package.",
+    "JNJ: ImportError: `Import lxml` failed.  Use pip or conda to install the lxml package.",
+    "AMZN: ImportError: `Import lxml` failed.  Use pip or conda to install the lxml package.",
+    "BA: ImportError: `Import lxml` failed.  Use pip or conda to install the lxml package."
+  ]
+}

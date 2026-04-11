@@ -1,0 +1,21 @@
+**319 passed, 0 failed.** Up from 252 to 319 fast tests (+67).
+
+## Cycle 24 Build Summary
+
+**What**: Added 67 tests covering 7 previously-untested backend services in `backend/tests/test_untested_services.py`
+
+**Coverage added**:
+
+| Service | Tests | What's tested |
+|---------|-------|---------------|
+| `savings_calculator` | 18 | Compound growth math, target detection, milestones, edge cases (zero inputs, unknown risk level) |
+| `data_quality` | 9 | Staleness, range violations (VIX/yields), NaN completeness, SP500 jumps, summary status |
+| `regime_validator` | 9 | Price vs 200d SMA, market breadth, confidence levels, insufficient data, dataclass output |
+| `shap_explainer` | 8 | explain_prediction output shape, feature values, counterfactual deltas, DEFAULT_SCENARIOS |
+| `net_liquidity` | 4 | Default response structure, full FRED pipeline (mocked), no-API-key fallback |
+| `return_model` | 7 | Real LightGBM training (1500 samples), predict/quantiles, pre-train raises, top features, insufficient data |
+| `llm_analyzer` | 12 | Availability checks, sentiment parsing (bullish/bearish), structured response parsing, score clamping, catalyst extraction |
+
+**Result**: 252 -> **319 fast tests** (+26%), 0 regressions, 55s runtime.
+
+---STDERR---
