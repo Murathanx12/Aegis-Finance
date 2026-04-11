@@ -338,7 +338,8 @@ class PortfolioEngine:
                 "tickers": available,
                 "matrix": corr_matrix.tolist(),
             }
-        except Exception:
+        except (ImportError, ValueError, np.linalg.LinAlgError) as e:
+            logger.debug("Shrunk covariance failed, using sample: %s", e)
             corr = returns[available].corr()
             corr_data = {
                 "tickers": available,
@@ -566,10 +567,11 @@ class PortfolioEngine:
                     f"Volatility: {perf[1]*100:.1f}%, "
                     f"Sharpe: {perf[2]:.2f}"
                 )
-            except Exception:
+            except (ValueError, AttributeError) as e:
+                logger.debug("BL portfolio_performance failed: %s", e)
                 description = f"Black-Litterman optimized ({risk_tolerance})"
 
-        except Exception as e:
+        except (ImportError, ValueError, np.linalg.LinAlgError, KeyError) as e:
             logger.warning("BL optimization failed: %s, falling back to template", e)
             return PortfolioEngine._build_template(risk_tolerance, investment_amount, time_horizon)
 
@@ -661,10 +663,11 @@ class PortfolioEngine:
                     f"Volatility: {perf[1]*100:.1f}%, "
                     f"Sharpe: {perf[2]:.2f}"
                 )
-            except Exception:
+            except (ValueError, AttributeError) as e:
+                logger.debug("HRP portfolio_performance failed: %s", e)
                 description = f"Hierarchical Risk Parity ({risk_tolerance})"
 
-        except Exception as e:
+        except (ImportError, ValueError, np.linalg.LinAlgError, KeyError) as e:
             logger.warning("HRP optimization failed: %s, falling back to template", e)
             return PortfolioEngine._build_template(risk_tolerance, investment_amount, time_horizon)
 
@@ -690,7 +693,8 @@ class PortfolioEngine:
                 stock = yf.Ticker(ticker)
                 price = stock.info.get("regularMarketPrice") or stock.info.get("previousClose", 100)
                 shares = dollar_amount / price if price > 0 else 0
-            except Exception:
+            except (KeyError, AttributeError, TypeError, ValueError) as e:
+                logger.debug("Price fetch for %s failed, using $100 fallback: %s", ticker, e)
                 price = 100
                 shares = dollar_amount / price
 
@@ -930,7 +934,8 @@ class PortfolioEngine:
             weight = (h["shares"] * h["current_price"]) / total_value if total_value > 0 else 0
             try:
                 beta = yf.Ticker(h["ticker"]).info.get("beta", 1.0) or 1.0
-            except Exception:
+            except (KeyError, AttributeError, TypeError, ValueError) as e:
+                logger.debug("Beta fetch for %s failed, using 1.0: %s", h["ticker"], e)
                 beta = 1.0
 
             ticker_dd = sc["sp500_dd"] * beta
