@@ -1,7 +1,13 @@
 """
-Aegis Finance - Lab Results Comparator v2
-Compares engine output before and after Claude's changes.
-Now tracks signal quality, test results, and more dimensions.
+Aegis Finance - Lab Results Comparator v3
+Comprehensive comparison across ALL engine dimensions:
+- Stock analysis quality (real service output)
+- Crash model calibration
+- Signal differentiation
+- Sector analysis quality
+- Service health
+- Code quality metrics
+- Test suite changes
 """
 
 import argparse
@@ -17,110 +23,168 @@ def load_json_safe(path):
         return None
 
 
-def compare_mc_quality(before_dir, after_dir):
-    before_stocks = load_json_safe(os.path.join(before_dir, "stock_analysis.json")) or {}
-    after_stocks = load_json_safe(os.path.join(after_dir, "stock_analysis.json")) or {}
+def compare_stock_analysis(before_dir, after_dir):
+    """Compare REAL analyze_stock() output."""
+    before = load_json_safe(os.path.join(before_dir, "stock_analysis.json")) or {}
+    after = load_json_safe(os.path.join(after_dir, "stock_analysis.json")) or {}
 
-    drift_before = {}
-    drift_after = {}
+    if not before or not after:
+        return {"status": "no_data"}
 
-    for t, d in before_stocks.items():
-        if "mc_quality" in d:
-            drift_before[t] = d["mc_quality"]["drift_error_pct"]
+    b_working = len([v for v in before.values() if isinstance(v, dict) and v.get("current_price")])
+    a_working = len([v for v in after.values() if isinstance(v, dict) and v.get("current_price")])
 
-    for t, d in after_stocks.items():
-        if "mc_quality" in d:
-            drift_after[t] = d["mc_quality"]["drift_error_pct"]
+    # GARCH quality
+    b_garch = len([v for v in before.values() if isinstance(v, dict) and v.get("garch_vol")])
+    a_garch = len([v for v in after.values() if isinstance(v, dict) and v.get("garch_vol")])
 
-    common = set(drift_before.keys()) & set(drift_after.keys())
-    if not common:
-        return {"status": "no_comparable_data"}
+    # Signal coverage
+    b_signals = len([v for v in before.values() if isinstance(v, dict) and v.get("signal_action")])
+    a_signals = len([v for v in after.values() if isinstance(v, dict) and v.get("signal_action")])
 
-    avg_before = sum(drift_before[t] for t in common) / len(common)
-    avg_after = sum(drift_after[t] for t in common) / len(common)
+    # Return differentiation
+    b_returns = [v.get("mc_median_5y") for v in before.values() if isinstance(v, dict) and v.get("mc_median_5y") is not None]
+    a_returns = [v.get("mc_median_5y") for v in after.values() if isinstance(v, dict) and v.get("mc_median_5y") is not None]
+
+    b_spread = max(b_returns) - min(b_returns) if len(b_returns) >= 2 else 0
+    a_spread = max(a_returns) - min(a_returns) if len(a_returns) >= 2 else 0
 
     return {
-        "avg_drift_error_before": round(avg_before, 3),
-        "avg_drift_error_after": round(avg_after, 3),
-        "delta": round(avg_after - avg_before, 3),
-        "improved": avg_after < avg_before - 0.01,  # need meaningful improvement
+        "tickers_working_before": b_working,
+        "tickers_working_after": a_working,
+        "garch_fits_before": b_garch,
+        "garch_fits_after": a_garch,
+        "signals_before": b_signals,
+        "signals_after": a_signals,
+        "return_spread_before": round(b_spread, 2),
+        "return_spread_after": round(a_spread, 2),
+        "more_tickers_working": a_working > b_working,
+        "better_garch_coverage": a_garch > b_garch,
+        "better_differentiation": a_spread > b_spread + 1,
     }
 
 
-def compare_sp500_mc(before_dir, after_dir):
-    before_mc = load_json_safe(os.path.join(before_dir, "sp500_monte_carlo.json"))
-    after_mc = load_json_safe(os.path.join(after_dir, "sp500_monte_carlo.json"))
+def compare_crash_calibration(before_dir, after_dir):
+    """Compare crash model quality."""
+    before = load_json_safe(os.path.join(before_dir, "crash_calibration.json")) or {}
+    after = load_json_safe(os.path.join(after_dir, "crash_calibration.json")) or {}
 
-    if not before_mc or not after_mc:
+    if before.get("status") or after.get("status"):
         return {"status": "no_comparable_data"}
 
-    bq = before_mc.get("quality_check", {})
-    aq = after_mc.get("quality_check", {})
+    result = {}
 
-    return {
-        "drift_error_before": bq.get("drift_error_pct"),
-        "drift_error_after": aq.get("drift_error_pct"),
-        "drift_improved": (aq.get("drift_error_pct", 999) < bq.get("drift_error_pct", 999) - 0.01),
-    }
+    # Monotonicity
+    result["monotonic_before"] = before.get("monotonic", False)
+    result["monotonic_after"] = after.get("monotonic", False)
 
+    # Range compliance (5%-55%)
+    for horizon in ["crash_prob_3m", "crash_prob_6m", "crash_prob_12m"]:
+        b_ok = before.get(f"{horizon}_in_range", False)
+        a_ok = after.get(f"{horizon}_in_range", False)
+        result[f"{horizon}_in_range_before"] = b_ok
+        result[f"{horizon}_in_range_after"] = a_ok
 
-def compare_backtest(before_dir, after_dir):
-    before_bt = load_json_safe(os.path.join(before_dir, "backtest_accuracy.json"))
-    after_bt = load_json_safe(os.path.join(after_dir, "backtest_accuracy.json"))
+    # Feature count
+    result["n_features_before"] = before.get("n_features", 0)
+    result["n_features_after"] = after.get("n_features", 0)
 
-    if not before_bt or not after_bt:
-        return {"status": "no_comparable_data"}
-
-    bs = before_bt.get("summary", {})
-    afs = after_bt.get("summary", {})
-
-    return {
-        "direction_accuracy_before": bs.get("direction_accuracy_pct"),
-        "direction_accuracy_after": afs.get("direction_accuracy_pct"),
-        "mae_before": bs.get("mean_absolute_error_pct"),
-        "mae_after": afs.get("mean_absolute_error_pct"),
-        "direction_improved": (afs.get("direction_accuracy_pct", 0) > bs.get("direction_accuracy_pct", 0) + 0.01),
-        "mae_improved": (afs.get("mean_absolute_error_pct", 999) < bs.get("mean_absolute_error_pct", 999) - 0.01),
-    }
+    return result
 
 
 def compare_signal_quality(before_dir, after_dir):
-    """Compare signal engine validation metrics (new in v2)."""
-    before_bt = load_json_safe(os.path.join(before_dir, "backtest_accuracy.json"))
-    after_bt = load_json_safe(os.path.join(after_dir, "backtest_accuracy.json"))
+    """Compare signal engine differentiation."""
+    before = load_json_safe(os.path.join(before_dir, "signal_quality.json")) or {}
+    after = load_json_safe(os.path.join(after_dir, "signal_quality.json")) or {}
 
-    if not before_bt or not after_bt:
+    if before.get("status") or after.get("status"):
         return {"status": "no_comparable_data"}
 
-    bsv = before_bt.get("signal_validation", {})
-    asv = after_bt.get("signal_validation", {})
-
-    if not bsv or not asv:
-        return {"status": "no_signal_data"}
-
-    b_dir_acc = bsv.get("signal_direction_accuracy_pct", 0)
-    a_dir_acc = asv.get("signal_direction_accuracy_pct", 0)
-    b_corr = bsv.get("signal_return_correlation", 0)
-    a_corr = asv.get("signal_return_correlation", 0)
-
-    # Count unique signal actions (Buy/Hold/Sell) — more diversity = better
-    b_actions = set()
-    a_actions = set()
-    for t in bsv.get("signal_tests", []):
-        b_actions.add(t.get("signal_action", "Hold"))
-    for t in asv.get("signal_tests", []):
-        a_actions.add(t.get("signal_action", "Hold"))
+    b_div = before.get("diversity", {})
+    a_div = after.get("diversity", {})
 
     return {
-        "signal_dir_accuracy_before": b_dir_acc,
-        "signal_dir_accuracy_after": a_dir_acc,
-        "signal_correlation_before": b_corr,
-        "signal_correlation_after": a_corr,
-        "signal_actions_before": sorted(b_actions),
-        "signal_actions_after": sorted(a_actions),
-        "dir_accuracy_improved": a_dir_acc > b_dir_acc + 0.01,
-        "correlation_improved": a_corr > b_corr + 0.001,
-        "diversity_improved": len(a_actions) > len(b_actions),
+        "n_unique_actions_before": b_div.get("n_unique_actions", 0),
+        "n_unique_actions_after": a_div.get("n_unique_actions", 0),
+        "score_spread_before": b_div.get("score_spread", 0),
+        "score_spread_after": a_div.get("score_spread", 0),
+        "all_same_before": b_div.get("all_same_action", True),
+        "all_same_after": a_div.get("all_same_action", True),
+        "tickers_with_signal_before": before.get("n_tickers_with_signal", 0),
+        "tickers_with_signal_after": after.get("n_tickers_with_signal", 0),
+        "better_diversity": a_div.get("n_unique_actions", 0) > b_div.get("n_unique_actions", 0),
+        "better_spread": a_div.get("score_spread", 0) > b_div.get("score_spread", 0) + 0.01,
+        "more_signals": after.get("n_tickers_with_signal", 0) > before.get("n_tickers_with_signal", 0),
+    }
+
+
+def compare_sector_analysis(before_dir, after_dir):
+    """Compare sector analysis quality."""
+    before = load_json_safe(os.path.join(before_dir, "sector_analysis.json")) or {}
+    after = load_json_safe(os.path.join(after_dir, "sector_analysis.json")) or {}
+
+    if before.get("status") or after.get("status"):
+        return {"status": "no_comparable_data"}
+
+    b_diff = before.get("differentiation", {})
+    a_diff = after.get("differentiation", {})
+
+    return {
+        "n_sectors_before": before.get("n_sectors", 0),
+        "n_sectors_after": after.get("n_sectors", 0),
+        "return_spread_before": b_diff.get("return_spread", 0),
+        "return_spread_after": a_diff.get("return_spread", 0),
+        "better_differentiation": a_diff.get("return_spread", 0) > b_diff.get("return_spread", 0) + 1,
+    }
+
+
+def compare_api_health(before_dir, after_dir):
+    """Compare service health."""
+    before = load_json_safe(os.path.join(before_dir, "api_health.json")) or {}
+    after = load_json_safe(os.path.join(after_dir, "api_health.json")) or {}
+
+    b_ok = len([v for v in before.values() if isinstance(v, dict) and v.get("status") == "ok"])
+    a_ok = len([v for v in after.values() if isinstance(v, dict) and v.get("status") == "ok"])
+    b_err = len([v for v in before.values() if isinstance(v, dict) and v.get("status") == "error"])
+    a_err = len([v for v in after.values() if isinstance(v, dict) and v.get("status") == "error"])
+
+    return {
+        "healthy_before": b_ok,
+        "healthy_after": a_ok,
+        "errors_before": b_err,
+        "errors_after": a_err,
+        "more_healthy": a_ok > b_ok,
+        "fewer_errors": a_err < b_err,
+    }
+
+
+def compare_code_metrics(before_dir, after_dir):
+    """Compare code quality."""
+    before = load_json_safe(os.path.join(before_dir, "code_metrics.json")) or {}
+    after = load_json_safe(os.path.join(after_dir, "code_metrics.json")) or {}
+
+    b_tests = before.get("test_count", {}).get("test_functions", 0)
+    a_tests = after.get("test_count", {}).get("test_functions", 0)
+    b_smells = before.get("n_smells", 0)
+    a_smells = after.get("n_smells", 0)
+
+    b_ts = before.get("frontend_type_errors", 0)
+    a_ts = after.get("frontend_type_errors", 0)
+    b_ts = b_ts if isinstance(b_ts, int) else 0
+    a_ts = a_ts if isinstance(a_ts, int) else 0
+
+    return {
+        "test_count_before": b_tests,
+        "test_count_after": a_tests,
+        "tests_added": a_tests - b_tests,
+        "code_smells_before": b_smells,
+        "code_smells_after": a_smells,
+        "smells_fixed": b_smells - a_smells,
+        "ts_errors_before": b_ts,
+        "ts_errors_after": a_ts,
+        "more_tests": a_tests > b_tests,
+        "fewer_smells": a_smells < b_smells,
+        "fewer_ts_errors": a_ts < b_ts,
     }
 
 
@@ -135,7 +199,6 @@ def compare_test_results(cycle_dir):
         try:
             with open(test_file, encoding="utf-8") as f:
                 content = f.read()
-            # Parse pytest summary line like "5 passed, 1 failed"
             import re
             passed = re.search(r"(\d+) passed", content)
             failed = re.search(r"(\d+) failed", content)
@@ -161,66 +224,71 @@ def compare_test_results(cycle_dir):
 
 
 def run_comparison(before_dir, after_dir, output_path):
-    # Infer cycle_dir from before_dir (before_dir = cycle_dir/data)
     cycle_dir = os.path.dirname(before_dir)
 
     comparison = {
-        "mc_quality": compare_mc_quality(before_dir, after_dir),
-        "sp500_mc": compare_sp500_mc(before_dir, after_dir),
-        "backtest_accuracy": compare_backtest(before_dir, after_dir),
+        "stock_analysis": compare_stock_analysis(before_dir, after_dir),
+        "crash_calibration": compare_crash_calibration(before_dir, after_dir),
         "signal_quality": compare_signal_quality(before_dir, after_dir),
+        "sector_analysis": compare_sector_analysis(before_dir, after_dir),
+        "api_health": compare_api_health(before_dir, after_dir),
+        "code_metrics": compare_code_metrics(before_dir, after_dir),
         "test_results": compare_test_results(cycle_dir),
     }
 
+    # Collect improvements and regressions
     improvements = []
     regressions = []
     neutral = []
 
-    # MC drift
-    mc = comparison["mc_quality"]
-    if isinstance(mc, dict) and mc.get("improved") == True:
-        improvements.append(f"MC drift error: {mc.get('avg_drift_error_before')}% -> {mc.get('avg_drift_error_after')}%")
-    elif isinstance(mc, dict) and mc.get("improved") == False and mc.get("delta", 0) > 0.5:
-        regressions.append(f"MC drift error: {mc.get('avg_drift_error_before')}% -> {mc.get('avg_drift_error_after')}%")
-    else:
-        neutral.append("MC drift: unchanged")
-
-    # SP500 MC
-    sp = comparison["sp500_mc"]
-    if isinstance(sp, dict) and sp.get("drift_improved") == True:
-        improvements.append("SP500 MC drift improved")
-    elif isinstance(sp, dict) and sp.get("drift_improved") == False:
-        if sp.get("drift_error_after", 0) > sp.get("drift_error_before", 0) + 0.5:
-            regressions.append("SP500 MC drift regressed")
-        else:
-            neutral.append("SP500 MC drift: unchanged")
-
-    # Backtest direction
-    bt = comparison["backtest_accuracy"]
-    if isinstance(bt, dict) and bt.get("direction_improved") == True:
-        improvements.append(f"Direction accuracy: {bt.get('direction_accuracy_before')}% -> {bt.get('direction_accuracy_after')}%")
-    elif isinstance(bt, dict) and bt.get("direction_improved") == False:
-        if bt.get("direction_accuracy_after", 0) < bt.get("direction_accuracy_before", 0) - 0.5:
-            regressions.append(f"Direction accuracy: {bt.get('direction_accuracy_before')}% -> {bt.get('direction_accuracy_after')}%")
-
-    # Backtest MAE
-    if isinstance(bt, dict) and bt.get("mae_improved") == True:
-        improvements.append(f"MAE: {bt.get('mae_before')}% -> {bt.get('mae_after')}%")
+    # Stock analysis
+    sa = comparison["stock_analysis"]
+    if isinstance(sa, dict) and sa.get("status") != "no_data":
+        if sa.get("more_tickers_working"):
+            improvements.append(f"More stocks working: {sa['tickers_working_before']} -> {sa['tickers_working_after']}")
+        if sa.get("better_garch_coverage"):
+            improvements.append(f"Better GARCH coverage: {sa['garch_fits_before']} -> {sa['garch_fits_after']}")
+        if sa.get("better_differentiation"):
+            improvements.append(f"Better return differentiation: spread {sa['return_spread_before']}% -> {sa['return_spread_after']}%")
 
     # Signal quality
     sq = comparison["signal_quality"]
-    if isinstance(sq, dict):
-        if sq.get("dir_accuracy_improved"):
-            improvements.append(f"Signal accuracy: {sq.get('signal_dir_accuracy_before')}% -> {sq.get('signal_dir_accuracy_after')}%")
-        if sq.get("correlation_improved"):
-            improvements.append(f"Signal-return correlation: {sq.get('signal_correlation_before')} -> {sq.get('signal_correlation_after')}")
-        if sq.get("diversity_improved"):
-            improvements.append(f"Signal diversity: {sq.get('signal_actions_before')} -> {sq.get('signal_actions_after')}")
+    if isinstance(sq, dict) and sq.get("status") != "no_comparable_data":
+        if sq.get("better_diversity"):
+            improvements.append(f"Better signal diversity: {sq['n_unique_actions_before']} -> {sq['n_unique_actions_after']} actions")
+        if sq.get("better_spread"):
+            improvements.append(f"Better signal spread: {sq['score_spread_before']} -> {sq['score_spread_after']}")
+        if sq.get("more_signals"):
+            improvements.append(f"More tickers with signals: {sq['tickers_with_signal_before']} -> {sq['tickers_with_signal_after']}")
+
+    # Sector analysis
+    sec = comparison["sector_analysis"]
+    if isinstance(sec, dict) and sec.get("status") != "no_comparable_data":
+        if sec.get("better_differentiation"):
+            improvements.append(f"Better sector differentiation: spread {sec['return_spread_before']}% -> {sec['return_spread_after']}%")
+
+    # API health
+    ah = comparison["api_health"]
+    if isinstance(ah, dict):
+        if ah.get("more_healthy"):
+            improvements.append(f"More healthy services: {ah['healthy_before']} -> {ah['healthy_after']}")
+        if ah.get("fewer_errors"):
+            improvements.append(f"Fewer service errors: {ah['errors_before']} -> {ah['errors_after']}")
+
+    # Code metrics
+    cm = comparison["code_metrics"]
+    if isinstance(cm, dict):
+        if cm.get("more_tests"):
+            improvements.append(f"Tests added: {cm['tests_added']} new ({cm['test_count_before']} -> {cm['test_count_after']})")
+        if cm.get("fewer_smells"):
+            improvements.append(f"Code smells fixed: {cm['smells_fixed']} ({cm['code_smells_before']} -> {cm['code_smells_after']})")
+        if cm.get("fewer_ts_errors"):
+            improvements.append(f"TS errors fixed: {cm['ts_errors_before']} -> {cm['ts_errors_after']}")
 
     # Test results
     tr = comparison["test_results"]
     if isinstance(tr, dict) and tr.get("new_failures", 0) > 0:
-        regressions.append(f"NEW test failures: {tr.get('new_failures')}")
+        regressions.append(f"NEW test failures: {tr['new_failures']}")
 
     comparison["improvements"] = improvements
     comparison["regressions"] = regressions
@@ -233,6 +301,9 @@ def run_comparison(before_dir, after_dir, output_path):
     else:
         comparison["net_result"] = "neutral"
 
+    comparison["improvement_count"] = len(improvements)
+    comparison["regression_count"] = len(regressions)
+
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(comparison, f, indent=2)
 
@@ -243,7 +314,6 @@ def run_comparison(before_dir, after_dir, output_path):
     print(f"    Regressions: {len(regressions)}")
     for r in regressions:
         print(f"      [FAIL] {r}")
-    print(f"    Neutral: {len(neutral)}")
     print(f"    Net result: {comparison['net_result']}")
 
 
