@@ -36,6 +36,7 @@ class DriftDetector:
         n_bins: Optional[int] = None,
         psi_threshold: Optional[float] = None,
         ks_p_threshold: Optional[float] = None,
+        seed: int = 42,
     ):
         """Initialize with training (reference) distribution.
 
@@ -44,11 +45,13 @@ class DriftDetector:
             n_bins: Number of bins for PSI (default from config)
             psi_threshold: PSI threshold for drift (default 0.2)
             ks_p_threshold: KS test p-value threshold (default 0.01)
+            seed: Random seed for reproducible KS tests
         """
         drift_cfg = config["ml"].get("drift", {})
         self.n_bins = n_bins or drift_cfg.get("n_bins", 10)
         self.psi_threshold = psi_threshold or drift_cfg.get("psi_threshold", 0.2)
         self.ks_p_threshold = ks_p_threshold or drift_cfg.get("ks_p_threshold", 0.01)
+        self._rng = np.random.default_rng(seed)
 
         # Store reference quantile edges for each feature
         self._reference_edges: dict[str, np.ndarray] = {}
@@ -196,7 +199,7 @@ class DriftDetector:
             ref_samples = []
             for i, prop in enumerate(ref_proportions):
                 n_in_bin = max(1, int(prop * n_synthetic))
-                bin_samples = np.random.uniform(edges[i], edges[i + 1], size=n_in_bin)
+                bin_samples = self._rng.uniform(edges[i], edges[i + 1], size=n_in_bin)
                 ref_samples.append(bin_samples)
             ref_samples = np.concatenate(ref_samples)
 

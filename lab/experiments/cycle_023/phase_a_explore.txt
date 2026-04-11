@@ -1,0 +1,64 @@
+Good. I've now read 12+ source files and run the test suite. Let me compile my findings.
+
+---
+
+## Cycle 23 — Phase A: EXPLORE Report
+
+**All 215 fast tests pass (35.9s). 0 failures.**
+
+### Top 3 Findings
+
+#### Finding 1: `drift_detector.py:199` — Legacy `np.random` violates reproducibility rule (BUG)
+
+**File:** `backend/services/drift_detector.py:199`  
+**Severity:** Medium — correctness + rule violation
+
+The `_ks_test` method uses `np.random.uniform()` (legacy global RNG) to generate synthetic reference samples for the KS test. This violates the project rule "Use `np.random.default_rng(seed)` for reproducibility" and means:
+- KS test results are **non-reproducible** across runs
+- Results depend on global RNG state, creating hidden coupling between test calls
+- Each call to `check_drift()` produces different p-values for the same data
+
+**Fix:** Accept `rng` in `__init__`, store it, and use `self._rng.uniform()` in `_ks_test`. Alternatively, store the actual reference values (not just bin edges) to avoid synthetic sampling entirely — this is both simpler and eliminates the approximation error from reconstructing the distribution.
+
+---
+
+#### Finding 2: `regime_detector.py` — Pure rule-based, no HMM despite infrastructure existing (ARCHITECTURE GAP)
+
+**File:** `backend/services/regime_detector.py:46-123`  
+**Severity:** High — this is the single biggest model quality gap
+
+The regime detector is entirely rule-based (rolling returns + vol thresholds + VIX/risk overlays). The Monte Carlo engine (`monte_carlo.py:111-113,146-148`) already accepts `hmm_state_means`, `hmm_regime_probs`, and `hmm_state_vols` — but **nothing ever provides them**. The `hmmlearn` library is listed as installed in CLAUDE.md but never imported anywhere in the codebase.
+
+This matters because:
+- The rule-based detector uses a **252-day rolling window** — it's severely lagging. The 2025 tariff selloff override (lines 82-99) is a bandaid for this structural lag.
+- HMM would provide **probabilistic regime assignments** (soft transitions) instead of hard thresholds, directly feeding the MC engine's existing blend parameters.
+- The `hmm_drift_blend` (0.15) and `hmm_vol_blend` (0.15) in config are dead parameters — they never activate.
+
+**Fix:** Fit a 3-state Gaussian HMM on rolling returns + vol features in `regime_detector.py`, extract state means/vols/transition matrix, and wire the posterior probabilities into the MC engine. The MC infrastructure is already there.
+
+---
+
+#### Finding 3: `portfolio_engine.py` — Portfolio projection MC ignores GARCH vol and uses raw returns instead of standardized residuals (QUALITY GAP)
+
+**File:** `backend/services/portfolio_engine.py` — the `project_portfolio` method (not fully visible but referenced in routers)  
+**Severity:** Medium-High — inconsistency with stock-level MC quality
+
+Looking at the `portfolio_engine.py` imports (line 28: `from backend.models.garch import fit_garch, get_standardized_residuals`) and the `_generate_block_bootstrap_residuals` import, the portfolio engine has access to GARCH and block bootstrap. However, `stock_analyzer.py` already does full GARCH fitting + standardized residuals + block bootstrap per stock (lines 169-196), while the portfolio engine's MC projection likely doesn't leverage per-asset GARCH vols for the portfolio-level simulation. The portfolio builds allocations but when projecting forward, it should use the same calibrated vol dynamics as the stock-level MC.
+
+Additionally, the `portfolio_engine.py` has **5 broad `except Exception` blocks** (lines 341, 569, 664, 693, 933) that silently swallow errors in BL optimization, HRP optimization, and performance calculation. These hide real bugs — if BL fails due to a singular covariance matrix, the user gets a silent fallback to template with no indication that their optimization method was ignored.
+
+---
+
+### Bonus Observations
+
+- **Signal diversity is weak:** Engine output shows 10 Buy / 6 Hold / 0 Sell across 16 stocks. In a Bull regime with VIX at 19.2, this is expected but suggests the signal engine may lack sufficient contrarian/valuation penalization. All composite scores are positive (0.046–0.274), none negative.
+- **`crash_prob_3m` is null for all stocks** in the `stock_analysis` output — this is because the data generator's `analyze_stock()` calls don't pass crash model predictions into the MC. The router does this (`stock.py:75`), but the batch screener path may not.
+- **`regime_validator.py:160-184`** — The consensus check always compares against static `institutional_benchmarks` config. Since those benchmarks have `annual > 0.03`, the consensus check always confirms Bull regimes and always contradicts Bear regimes. This makes the consensus check a constant, adding no information.
+
+### Recommendation for Phase B
+
+**Primary implementation: Fit HMM in regime_detector and wire to Monte Carlo.** This has the highest impact — it activates dead MC infrastructure, replaces the lagging rule-based detector with probabilistic regime assignments, and improves every simulation that flows through the system (S&P500, per-stock, sector, portfolio).
+
+**Secondary: Fix drift_detector reproducibility bug + tighten portfolio_engine broad excepts.** Quick wins that improve code quality toward the 200+ test target.
+
+---STDERR---

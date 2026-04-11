@@ -17,7 +17,11 @@ from typing import NamedTuple
 import numpy as np
 import pandas as pd
 
+from backend.config import config
+
 logger = logging.getLogger(__name__)
+
+_hmm_cfg = config["simulation"].get("hmm", {})
 
 
 class HMMResult(NamedTuple):
@@ -49,19 +53,24 @@ def fit_hmm_regimes(
         logger.warning("hmmlearn not available, using fallback")
         return _fallback_result(data)
 
+    smoothing_window = _hmm_cfg.get("smoothing_window", 5)
+    vol_window = _hmm_cfg.get("vol_window", 20)
+    min_data_rows = _hmm_cfg.get("min_data_rows", 500)
+    n_iter = _hmm_cfg.get("n_iter", 200)
+
     returns = data["SP500"].pct_change().dropna()
     log_ret = np.log(1 + returns)
 
-    ret_smooth = log_ret.rolling(5).mean() * 252
-    real_vol = returns.rolling(20).std() * np.sqrt(252)
+    ret_smooth = log_ret.rolling(smoothing_window).mean() * 252
+    real_vol = returns.rolling(vol_window).std() * np.sqrt(252)
 
     features_list = [ret_smooth, real_vol]
     if "VIX" in data.columns:
         features_list.append(data["VIX"].reindex(returns.index))
 
     features = pd.concat(features_list, axis=1).dropna()
-    if len(features) < 500:
-        logger.warning("Not enough data for HMM (%d rows)", len(features))
+    if len(features) < min_data_rows:
+        logger.warning("Not enough data for HMM (%d rows, need %d)", len(features), min_data_rows)
         return _fallback_result(data)
 
     X = features.values
@@ -78,7 +87,7 @@ def fit_hmm_regimes(
             model = GaussianHMM(
                 n_components=n_states,
                 covariance_type="full",
-                n_iter=200,
+                n_iter=n_iter,
                 random_state=seed,
                 tol=1e-4,
             )
@@ -87,7 +96,8 @@ def fit_hmm_regimes(
             if score > best_score:
                 best_score = score
                 best_model = model
-        except Exception:
+        except (ValueError, np.linalg.LinAlgError, FloatingPointError) as e:
+            logger.debug("HMM fit seed=%d failed: %s", seed, e)
             continue
 
     if best_model is None:
@@ -107,7 +117,7 @@ def fit_hmm_regimes(
             state_mean_vols.append(float(X[mask, 1].mean()))
         else:
             state_mean_returns.append(0)
-            state_mean_vols.append(0.2)
+            state_mean_vols.append(_hmm_cfg.get("fallback_state_vols", [0.15, 0.20, 0.35])[1])
 
     sorted_indices = np.argsort(state_mean_returns)
     label_map = {
@@ -153,7 +163,8 @@ def fit_hmm_regimes(
 def get_regime_probs(hmm_result: HMMResult) -> dict:
     """Convert HMM regime probabilities to scenario weight adjustments."""
     if not hmm_result.success:
-        return {"bull_prob": 0.50, "bear_prob": 0.30, "crisis_prob": 0.20}
+        fb = _hmm_cfg.get("fallback_regime_probs", [0.50, 0.30, 0.20])
+        return {"bull_prob": fb[0], "bear_prob": fb[1], "crisis_prob": fb[2]}
 
     probs = hmm_result.regime_probs
     total = probs.sum()
@@ -168,14 +179,17 @@ def get_regime_probs(hmm_result: HMMResult) -> dict:
 
 
 def _fallback_result(data: pd.DataFrame) -> HMMResult:
+    fb_probs = _hmm_cfg.get("fallback_regime_probs", [0.50, 0.30, 0.20])
+    fb_means = _hmm_cfg.get("fallback_state_means", [0.10, -0.05, -0.30])
+    fb_vols = _hmm_cfg.get("fallback_state_vols", [0.15, 0.20, 0.35])
     regimes = pd.Series("Bull", index=data.index)
     return HMMResult(
         model=None,
         regime_labels=regimes,
-        regime_probs=np.array([0.5, 0.3, 0.2]),
+        regime_probs=np.array(fb_probs),
         current_regime="Bull",
         transition_matrix=np.eye(3),
-        state_means=np.array([0.10, -0.05, -0.30]),
-        state_vols=np.array([0.15, 0.20, 0.35]),
+        state_means=np.array(fb_means),
+        state_vols=np.array(fb_vols),
         success=False,
     )

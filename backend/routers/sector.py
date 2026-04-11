@@ -40,6 +40,7 @@ def _analyze_sectors() -> dict:
     from backend.config import get_forecast_days
     from backend.services.data_fetcher import DataFetcher
     from backend.services.sector_analyzer import analyze_sectors
+    from backend.services.regime_detector import fit_hmm_for_mc
 
     fetcher = DataFetcher()
     data, sector_data = fetcher.fetch_market_data()
@@ -73,12 +74,18 @@ def _analyze_sectors() -> dict:
     except (ImportError, FileNotFoundError, ValueError, KeyError) as e:
         logger.debug("Crash model unavailable for sectors: %s", e)
 
+    # Fit HMM for regime-conditioned sector MC simulations
+    hmm_data = fit_hmm_for_mc(data)
+
     results = analyze_sectors(
         data=data,
         sector_data=sector_data,
         forecast_days=get_forecast_days(),
         ml_crash_prob=ml_crash_prob,
         garch_vol=garch_vol,
+        hmm_state_means=hmm_data["state_means"],
+        hmm_regime_probs=hmm_data["regime_probs"],
+        hmm_state_vols=hmm_data["state_vols"],
     )
 
     # Sort by expected return

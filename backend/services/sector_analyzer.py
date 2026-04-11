@@ -46,6 +46,9 @@ def analyze_sectors(
     ml_predicted_return: Optional[float] = None,
     ml_crash_prob: Optional[float] = None,
     garch_vol: Optional[float] = None,
+    hmm_state_means: Optional[np.ndarray] = None,
+    hmm_regime_probs: Optional[np.ndarray] = None,
+    hmm_state_vols: Optional[np.ndarray] = None,
 ) -> dict:
     """Sector-level projections with factor-based differentiation.
 
@@ -244,6 +247,9 @@ def analyze_sectors(
             garch_persistence=sec_persistence,
             garch_nu=sec_nu,
             historical_residuals=sec_residuals,
+            hmm_state_means=hmm_state_means,
+            hmm_regime_probs=hmm_regime_probs,
+            hmm_state_vols=hmm_state_vols,
         )
 
         final = paths[-1]

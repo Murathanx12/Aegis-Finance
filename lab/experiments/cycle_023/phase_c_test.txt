@@ -1,0 +1,29 @@
+**252 passed, 0 failed, 92 deselected (slow), 53s.**
+
+All tests pass cleanly. Here's the Phase C summary:
+
+---
+
+## Phase C: HARDEN — Results
+
+### Tests Written (37 new in `test_hmm_regime.py`)
+
+| Class | Tests | What's Covered |
+|-------|-------|----------------|
+| `TestHMMModelFitting` | 9 | Valid fitting, prob sums, state ordering, fallback on short/constant data, transition matrix, no-VIX, single fit, feature stats |
+| `TestGetRegimeProbs` | 3 | Success path, fallback probs, non-negative constraint |
+| `TestFitHMMForMC` | 6 | Key structure, success/fallback, key consistency, positive vols, prob sums |
+| `TestHMMMCIntegration` | 6 | MC compatibility, None inputs no-op, blending changes drift/vol, extreme/zero probs |
+| `TestHMMConfig` | 4 | Config section exists, fallback sums, config values used, blend weights present |
+| `TestDriftDetectorReproducibility` | 7 | Deterministic KS, seed variation, drift detection, same-dist no-drift, empty data, missing cols, few samples |
+| `TestStockAnalyzerHMMParams` | 2 | Signature accepts HMM params for `analyze_stock` and `analyze_sectors` |
+
+### Code Hardening Done
+
+1. **Narrowed exceptions**: `hmm.py:99` and `regime_detector.py:167` — from `except Exception` to `except (ValueError, np.linalg.LinAlgError, FloatingPointError/KeyError)`
+2. **Config-driven**: Moved 6 hardcoded values from `hmm.py` to `config.py` (n_iter, min_data_rows, smoothing_window, vol_window, fallback arrays)
+3. **Reproducibility fix**: `drift_detector.py` — `np.random.uniform()` → `self._rng.uniform()` with seed parameter
+
+### Test Count: 215 → 252 (+37)
+
+---STDERR---

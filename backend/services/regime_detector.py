@@ -2,15 +2,20 @@
 Aegis Finance — Market Regime Detection
 ==========================================
 
-Classifies each trading day into Bull/Neutral/Bear/Volatile using
-rolling returns + volatility with leading indicator overlays
-(VIX, risk score) for early transition detection.
+Classifies each trading day into Bull/Neutral/Bear/Volatile using:
+  1. Rule-based: rolling returns + volatility with leading indicator overlays
+  2. HMM-based: 3-state Gaussian HMM for probabilistic regime assignment
+
+The HMM outputs (state_means, state_vols, regime_probs) feed directly
+into the Monte Carlo engine's drift/vol blending, activating the
+hmm_drift_blend and hmm_vol_blend parameters.
 
 Usage:
-    from backend.services.regime_detector import detect_regimes
+    from backend.services.regime_detector import detect_regimes, fit_hmm_for_mc
 """
 
 import logging
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -121,3 +126,80 @@ def detect_regimes(data: pd.DataFrame, window: int = 252) -> tuple[pd.Series, st
     current = regimes.iloc[-1] if regimes.iloc[-1] else "Unknown"
     logger.info("Current regime: %s", current)
     return regimes, current
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# HMM REGIME FITTING — outputs MC-ready arrays
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+def fit_hmm_for_mc(
+    data: pd.DataFrame,
+) -> dict:
+    """Fit 3-state HMM and return arrays ready for simulate_paths().
+
+    This bridges the gap between backend/models/hmm.py (fitting) and
+    backend/services/monte_carlo.py (consumption). The MC engine accepts
+    hmm_state_means, hmm_state_vols, and hmm_regime_probs — this function
+    produces exactly those.
+
+    Args:
+        data: DataFrame with 'SP500' column (and optionally 'VIX')
+
+    Returns:
+        Dict with keys: state_means, state_vols, regime_probs, current_regime,
+        success. All arrays are annualized and in return/vol space.
+        Returns fallback values if HMM fitting fails.
+    """
+    try:
+        from backend.models.hmm import fit_hmm_regimes
+    except ImportError:
+        logger.warning("HMM model not available")
+        return _hmm_fallback()
+
+    hmm_cfg = config["simulation"].get("hmm", {})
+    try:
+        hmm_result = fit_hmm_regimes(
+            data,
+            n_states=hmm_cfg.get("n_states", 3),
+            n_fits=hmm_cfg.get("n_fits", 10),
+        )
+    except (ValueError, np.linalg.LinAlgError, KeyError) as e:
+        logger.warning("HMM fitting failed: %s", e)
+        return _hmm_fallback()
+
+    if not hmm_result.success:
+        return _hmm_fallback()
+
+    # state_means from HMM are annualized log returns (feature 0 = smoothed ret * 252)
+    # state_vols are annualized realized vol (feature 1 = rolling std * sqrt(252))
+    # regime_probs are ordered [Bull, Bear, Crisis] — see hmm.py label ordering
+    logger.info(
+        "HMM fit: regime=%s, probs=[%.2f, %.2f, %.2f], "
+        "means=[%.3f, %.3f, %.3f], vols=[%.3f, %.3f, %.3f]",
+        hmm_result.current_regime,
+        *hmm_result.regime_probs,
+        *hmm_result.state_means,
+        *hmm_result.state_vols,
+    )
+
+    return {
+        "state_means": hmm_result.state_means,
+        "state_vols": hmm_result.state_vols,
+        "regime_probs": hmm_result.regime_probs,
+        "current_regime": hmm_result.current_regime,
+        "transition_matrix": hmm_result.transition_matrix,
+        "success": True,
+    }
+
+
+def _hmm_fallback() -> dict:
+    """Return neutral fallback when HMM is unavailable."""
+    return {
+        "state_means": None,
+        "state_vols": None,
+        "regime_probs": None,
+        "current_regime": None,
+        "transition_matrix": None,
+        "success": False,
+    }

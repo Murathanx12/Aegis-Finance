@@ -97,6 +97,9 @@ def analyze_stock(
     forecast_days: int = 1260,
     risk_free_rate: float = config.get("risk_free_rate", 0.04),
     ml_crash_prob: float | None = None,
+    hmm_state_means: Optional[np.ndarray] = None,
+    hmm_regime_probs: Optional[np.ndarray] = None,
+    hmm_state_vols: Optional[np.ndarray] = None,
 ) -> Optional[dict]:
     """Analyze a single stock with fundamental-aware Monte Carlo."""
     max_5y_return = config["simulation"]["max_5y_return"]
@@ -219,6 +222,9 @@ def analyze_stock(
         garch_nu=garch_nu,
         garch_persistence=garch_persistence,
         historical_residuals=hist_residuals,
+        hmm_state_means=hmm_state_means,
+        hmm_regime_probs=hmm_regime_probs,
+        hmm_state_vols=hmm_state_vols,
     )
 
     final_prices = np.minimum(paths[-1], current_price * (1 + max_5y_return))

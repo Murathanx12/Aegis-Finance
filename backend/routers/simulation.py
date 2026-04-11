@@ -46,7 +46,7 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
     from backend.services.data_fetcher import DataFetcher
     from backend.services.monte_carlo import run_monte_carlo
     from backend.services.risk_scorer import build_risk_score
-    from backend.services.regime_detector import detect_regimes
+    from backend.services.regime_detector import detect_regimes, fit_hmm_for_mc
     from backend.models.garch import fit_garch
 
     fetcher = DataFetcher()
@@ -103,6 +103,12 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
     if hist_residuals is None:
         hist_residuals = sp_returns.values if len(sp_returns) > 50 else None
 
+    # Fit HMM for probabilistic regime inputs to MC engine
+    hmm_data = fit_hmm_for_mc(data)
+    hmm_state_means = hmm_data["state_means"]
+    hmm_regime_probs = hmm_data["regime_probs"]
+    hmm_state_vols = hmm_data["state_vols"]
+
     # Compute valuation penalty from CAPE ratio (capped per Phase 1G)
     val_cfg = config["simulation"]["valuation"]
     val_penalty = 0.0
@@ -145,6 +151,9 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
         garch_persistence=garch_persistence,
         garch_nu=garch_nu,
         historical_residuals=hist_residuals,
+        hmm_state_means=hmm_state_means,
+        hmm_regime_probs=hmm_regime_probs,
+        hmm_state_vols=hmm_state_vols,
         n_sims_override=n_sims,
         forecast_days_override=forecast_days,
     )
@@ -199,6 +208,7 @@ def _compute_scenarios() -> dict:
     from backend.services.data_fetcher import DataFetcher
     from backend.services.monte_carlo import simulate_paths
     from backend.services.risk_scorer import build_risk_score
+    from backend.services.regime_detector import fit_hmm_for_mc
     from backend.models.garch import fit_garch
 
     sim_cfg = config["simulation"]
@@ -250,6 +260,9 @@ def _compute_scenarios() -> dict:
     if hist_residuals is None:
         hist_residuals = returns.values if len(returns) > 50 else None
 
+    # Fit HMM for regime-conditioned scenario simulations
+    hmm_data = fit_hmm_for_mc(data)
+
     inst_return = get_institutional_return()
     inst_mu = np.log(1 + inst_return)
 
@@ -276,6 +289,9 @@ def _compute_scenarios() -> dict:
             garch_persistence=garch_persistence,
             garch_nu=garch_nu,
             historical_residuals=hist_residuals,
+            hmm_state_means=hmm_data["state_means"],
+            hmm_regime_probs=hmm_data["regime_probs"],
+            hmm_state_vols=hmm_data["state_vols"],
         )
 
         final = paths[-1]
