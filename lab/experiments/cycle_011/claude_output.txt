@@ -1,0 +1,21 @@
+Cycle 011 complete. Here's the summary:
+
+## Cycle 011 Results
+
+**What I found:** Two signal quality gaps:
+1. `sp500_ytd_return` — the last dead parameter, accepted by `get_market_signal` but never computed or passed by any router
+2. Forward PE earnings growth — completely ignored. Stocks like NVDA (PE=38.5, fwd PE=17) got zero valuation signal despite 56% forward PE compression
+
+**What I did:**
+- Computed and wired `sp500_ytd_return` in all 3 router endpoints (market, screener, stock signal)
+- Added YTD as a third momentum timeframe: 45% 1M + 35% 3M + 20% YTD
+- Added `forward_pe` parameter to `get_stock_signal` with an earnings growth signal based on forward/trailing PE ratio → maps to [-0.15, +0.15] adjustment
+- Wired forward PE from `stock_analyzer`'s key_stats through both screener and stock signal endpoints
+
+**Results:**
+- Zero dead parameters remaining (was 1)
+- NVDA now gets +0.15 signal boost from strong earnings growth
+- All 60 fast tests passing, no regressions
+- Backtest MAE: 7.0% (stable)
+
+**Files modified:** `backend/services/signal_engine.py`, `backend/routers/stock.py`, `backend/routers/market.py`
