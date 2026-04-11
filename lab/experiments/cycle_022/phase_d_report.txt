@@ -1,0 +1,18 @@
+Done. Here's the honest summary:
+
+## Cycle 22 Final Report
+
+**What worked:**
+- Signal differentiation fix is mathematically provable and well-tested. Max analyst contribution dropped from 0.15 to 0.06, breaking the "wall of Buy" pattern.
+- 215/215 tests pass, 45 new tests covering edge cases (None, zero, extreme, empty data).
+- All hardcoded values moved to config. Features.py NaN fix aligns with CLAUDE.md rules.
+
+**What I'm NOT confident about:**
+- **No live validation.** I proved the math with synthetic scenarios, not the actual screener against real yfinance data. The 62.5% Buy figure is from 8 hand-picked stocks, not the full 30+ watchlist.
+- **Features NaN change is untested on saved model.** The crash model .pkl was trained on `fillna(0)` features. Predictions may shift until retrained. I didn't measure the Brier score impact.
+- **Didn't fix the root cause.** The market signal still has 6/7 components at 0.0 when the crash model isn't loaded. My fix improves stock-level spread but the base signal is still anemic.
+- **Skipped the deeper bug.** `walk_forward.py:265-271` has a likely-broken success check that may block all backtests — potentially more impactful than what I built.
+
+**Confidence: medium.** The signal math is correct, the tests are comprehensive, but the real-world impact is unverified.
+
+---STDERR---
