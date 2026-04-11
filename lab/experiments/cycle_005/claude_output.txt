@@ -1,0 +1,23 @@
+## Cycle 5 Complete
+
+### What I did
+
+**Three correctness/feature improvements across 4 files:**
+
+1. **Wired GARCH vol + persistence into SP500 projection** (`backend/routers/simulation.py`): `_run_sp500_projection` was computing GARCH but only extracting `garch_nu` — discarding `garch_vol` and `garch_persistence`. This meant `run_monte_carlo` fell back to hardcoded `0.16` vol and `0.97` persistence instead of using forward-looking GARCH estimates.
+
+2. **Same fix for scenarios endpoint**: `_compute_scenarios` had the identical gap — now passes `garch_vol` and `garch_persistence` to `simulate_paths`.
+
+3. **Wired real signal engine into screener**: The `/api/stock/screener` endpoint returned no signal data. The frontend computed a naive Buy/Hold/Sell from just `sharpe + return + probLoss`, completely ignoring the 6-component signal engine (crash_prob 25%, regime 20%, valuation 15%, momentum 15%, mean_reversion 10%, external 15%). Now the backend computes real signals with crash model, regime detection, yield curve, and external consensus, and the frontend uses them.
+
+### Results
+
+| Metric | Before | After |
+|--------|--------|-------|
+| SP500 drift error | 15.55% | 14.33% |
+| SP500 variance ratio | 1.015 | 0.979 |
+| GARCH vol passed to SP500 | No | Yes |
+| GARCH persistence passed | No | Yes |
+| Screener signal source | Naive heuristic | 6-component signal engine |
+| Tests passing | 60/60 | 60/60 |
+| Frontend build | Clean | Clean |
