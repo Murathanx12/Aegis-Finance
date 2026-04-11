@@ -6,8 +6,8 @@
     "garch_fits_after": 8,
     "signals_before": 0,
     "signals_after": 0,
-    "return_spread_before": 79.2,
-    "return_spread_after": 78.21,
+    "return_spread_before": 81.67,
+    "return_spread_after": 79.8,
     "more_tickers_working": false,
     "better_garch_coverage": false,
     "better_differentiation": false
@@ -66,7 +66,7 @@
     "fewer_ts_errors": false
   },
   "test_results": {
-    "passed": 60,
+    "passed": 113,
     "failed": 0,
     "new_failures": 0
   },
