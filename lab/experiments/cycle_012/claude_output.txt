@@ -1,0 +1,21 @@
+## Cycle 12 Summary
+
+**What I did:** Implemented GARCH-standardized residuals for block bootstrap — the top suggested improvement from cycles 4, 9, 10, and 11.
+
+**The problem:** Block bootstrap was using raw returns, which mix volatility-clustering signal with genuine tail events. Since `simulate_paths` already has OU volatility dynamics, feeding raw returns double-counts vol clustering.
+
+**The fix:** Added `get_standardized_residuals()` to `backend/models/garch.py` that extracts returns/conditional_vol from a fitted GJR-GARCH model. Wired it into `stock_analyzer.py` and `simulation.py` (both SP500 and scenarios endpoints), with fallback to raw returns when GARCH fit fails.
+
+**Files modified:**
+- `backend/models/garch.py` — new `get_standardized_residuals()` function
+- `backend/services/stock_analyzer.py` — prefer GARCH residuals for per-stock MC
+- `backend/routers/simulation.py` — prefer GARCH residuals for SP500 + scenarios
+
+**Results:**
+| Metric | Before | After | Change |
+|--------|--------|-------|--------|
+| SP500 drift error | 14.4% | 12.7% | -12% |
+| Mean stock drift error | 31.78% | 29.89% | -6% |
+| AAPL drift error | 26.92% | 20.78% | -23% |
+| XOM drift error | 21.75% | 17.29% | -20% |
+| Fast tests | 60/60 | 60/60 | no regression |
