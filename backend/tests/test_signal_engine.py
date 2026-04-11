@@ -1,8 +1,12 @@
 """Tests for the composite signal engine."""
 
+import numpy as np
+import pandas as pd
 import pytest
 
-from backend.services.signal_engine import get_market_signal, get_stock_signal
+from backend.services.signal_engine import (
+    get_market_signal, get_stock_signal, compute_drawdown_pct,
+)
 
 
 class TestMarketSignal:
@@ -53,9 +57,9 @@ class TestMarketSignal:
         assert len(result["reasons"]) <= 3
 
     def test_components_all_present(self):
-        result = get_market_signal(crash_prob_3m=20.0, external_consensus="BULLISH")
+        result = get_market_signal(crash_prob_3m=20.0, external_consensus="BULLISH", drawdown_pct=-5.0)
         components = result["components"]
-        for key in ["crash_prob", "regime", "valuation", "momentum", "mean_reversion", "external"]:
+        for key in ["crash_prob", "regime", "valuation", "momentum", "mean_reversion", "external", "drawdown"]:
             assert key in components
 
     def test_color_matches_action(self):
@@ -140,3 +144,274 @@ class TestStockSignal:
         normal_pe = get_stock_signal(market, pe_ratio=20.0)
         low_pe = get_stock_signal(market, pe_ratio=8.0)
         assert low_pe["composite_score"] >= normal_pe["composite_score"]
+
+
+class TestDrawdownSignal:
+    """Test drawdown signal component in market signal."""
+
+    def test_drawdown_component_present_when_provided(self):
+        result = get_market_signal(drawdown_pct=-10.0)
+        assert "drawdown" in result["components"]
+
+    def test_drawdown_component_zeroed_when_none(self):
+        result = get_market_signal(drawdown_pct=None)
+        assert result["components"]["drawdown"] == 0.0
+
+    def test_near_highs_is_bullish(self):
+        """At or near 52-week highs, drawdown should be a bullish signal."""
+        result = get_market_signal(drawdown_pct=-0.5)
+        assert result["components"]["drawdown"] > 0
+
+    def test_small_pullback_is_neutral(self):
+        """A 3% pullback is normal market noise — neutral signal."""
+        result = get_market_signal(drawdown_pct=-3.0)
+        assert result["components"]["drawdown"] == 0.0
+
+    def test_correction_is_bearish(self):
+        """A 10% correction should produce a bearish drawdown signal."""
+        result = get_market_signal(drawdown_pct=-10.0)
+        assert result["components"]["drawdown"] < -0.2
+
+    def test_bear_market_is_strongly_bearish(self):
+        """A 20%+ drawdown (bear market) should produce a strong bearish signal."""
+        result = get_market_signal(drawdown_pct=-22.0)
+        assert result["components"]["drawdown"] <= -0.7
+
+    def test_crisis_drawdown_is_extreme(self):
+        """A 30%+ crash should produce near-maximum bearish signal."""
+        result = get_market_signal(drawdown_pct=-35.0)
+        assert result["components"]["drawdown"] <= -0.85
+
+    def test_drawdown_monotonically_bearish(self):
+        """Deeper drawdowns should produce more bearish signals."""
+        levels = [0.0, -3.0, -7.0, -12.0, -25.0]
+        signals = [
+            get_market_signal(drawdown_pct=dd)["components"]["drawdown"]
+            for dd in levels
+        ]
+        for i in range(1, len(signals)):
+            assert signals[i] <= signals[i - 1], (
+                f"Drawdown signal not monotonic: {levels[i]}% ({signals[i]}) "
+                f"> {levels[i-1]}% ({signals[i-1]})"
+            )
+
+    def test_drawdown_reason_in_correction(self):
+        """A correction-level drawdown should produce an explanatory reason."""
+        result = get_market_signal(drawdown_pct=-12.0)
+        reasons_text = " ".join(result["reasons"])
+        assert "correction" in reasons_text.lower() or "52" in reasons_text
+
+    def test_drawdown_reason_in_crisis(self):
+        """A crisis-level drawdown should flag it."""
+        result = get_market_signal(drawdown_pct=-25.0)
+        reasons_text = " ".join(result["reasons"])
+        assert "crisis" in reasons_text.lower() or "drawdown" in reasons_text.lower()
+
+    def test_drawdown_reason_near_highs(self):
+        """Near ATH should produce a confirmation reason."""
+        result = get_market_signal(drawdown_pct=-1.0)
+        reasons_text = " ".join(result["reasons"])
+        assert "52-week" in reasons_text.lower() or "high" in reasons_text.lower()
+
+    def test_deep_drawdown_shifts_composite_bearish(self):
+        """A deep drawdown should meaningfully shift the overall composite score."""
+        baseline = get_market_signal(drawdown_pct=None)
+        crisis = get_market_signal(drawdown_pct=-25.0)
+        assert crisis["composite_score"] < baseline["composite_score"] - 0.05
+
+    def test_drawdown_affects_action_in_marginal_case(self):
+        """In a marginal Buy scenario, a deep drawdown should downgrade to Hold."""
+        # Mild bullish conditions: regime=Bull, low crash, but deep drawdown
+        no_dd = get_market_signal(
+            crash_prob_3m=15.0, regime="Bull", vix=19.0,
+            sp500_1m_return=2.0, sp500_3m_return=5.0,
+            drawdown_pct=-1.0,
+        )
+        with_dd = get_market_signal(
+            crash_prob_3m=15.0, regime="Bull", vix=19.0,
+            sp500_1m_return=2.0, sp500_3m_return=5.0,
+            drawdown_pct=-15.0,
+        )
+        assert with_dd["composite_score"] < no_dd["composite_score"]
+
+
+class TestDrawdownEdgeCases:
+    """Edge case and hardening tests for drawdown signal."""
+
+    def test_positive_drawdown_clamped_to_zero(self):
+        """A positive drawdown (data error) should be clamped to 0% (near-high)."""
+        result = get_market_signal(drawdown_pct=5.0)
+        # Positive drawdown is impossible; engine should treat as near-high
+        assert result["components"]["drawdown"] >= 0
+
+    def test_exactly_zero_drawdown(self):
+        """Exactly at the 52-week high (0% drawdown)."""
+        result = get_market_signal(drawdown_pct=0.0)
+        assert result["components"]["drawdown"] > 0  # near-high → bullish
+
+    def test_extreme_drawdown_minus_100(self):
+        """A -100% drawdown (total loss) shouldn't crash."""
+        result = get_market_signal(drawdown_pct=-100.0)
+        assert result["components"]["drawdown"] <= -0.85
+        assert -1.0 <= result["composite_score"] <= 1.0
+
+    def test_tiny_drawdown_minus_0_01(self):
+        """A -0.01% drawdown is effectively at highs."""
+        result = get_market_signal(drawdown_pct=-0.01)
+        assert result["components"]["drawdown"] > 0
+
+    def test_boundary_at_minus_2(self):
+        """Exactly at the -2% threshold (boundary between near-high and pullback)."""
+        result = get_market_signal(drawdown_pct=-2.0)
+        # -2.0 is NOT > -2, so should be in pullback territory
+        assert result["components"]["drawdown"] == 0.0
+
+    def test_boundary_at_minus_5(self):
+        """Exactly at -5% (boundary between pullback and correction)."""
+        result = get_market_signal(drawdown_pct=-5.0)
+        # -5.0 is NOT > -5, so should be in correction territory
+        assert result["components"]["drawdown"] < 0
+
+    def test_boundary_at_minus_10(self):
+        """Exactly at -10% (boundary between correction and bear)."""
+        result = get_market_signal(drawdown_pct=-10.0)
+        assert result["components"]["drawdown"] <= -0.3
+
+    def test_boundary_at_minus_20(self):
+        """Exactly at -20% (boundary between bear and crisis)."""
+        result = get_market_signal(drawdown_pct=-20.0)
+        # -20.0 is NOT > -20, so should be in crisis territory
+        assert result["components"]["drawdown"] <= -0.85
+
+    def test_drawdown_none_excludes_weight(self):
+        """When drawdown is None, its weight should be excluded from composite denominator.
+        This means None drawdown should NOT shift the composite vs having 0 drawdown."""
+        with_none = get_market_signal(drawdown_pct=None)
+        # The drawdown component should be zero but also have zero weight
+        assert with_none["components"]["drawdown"] == 0.0
+
+    def test_all_components_present_without_drawdown(self):
+        """Even without drawdown, all other components should still be present."""
+        result = get_market_signal(
+            crash_prob_3m=20.0, regime="Bull", vix=18.0,
+            drawdown_pct=None,
+        )
+        assert "crash_prob" in result["components"]
+        assert "regime" in result["components"]
+        assert "valuation" in result["components"]
+        assert "momentum" in result["components"]
+        assert "drawdown" in result["components"]
+
+    def test_drawdown_does_not_exceed_3_reasons(self):
+        """Total reasons should never exceed 3 even with drawdown adding one."""
+        result = get_market_signal(
+            crash_prob_3m=50.0, regime="Bear", vix=35.0,
+            sp500_1m_return=-8.0, drawdown_pct=-25.0,
+        )
+        assert len(result["reasons"]) <= 3
+
+
+class TestComputeDrawdownPct:
+    """Tests for the compute_drawdown_pct utility function."""
+
+    def test_at_high(self):
+        """When current price equals the high, drawdown is 0%."""
+        prices = pd.Series([100, 110, 120, 130, 140, 150],
+                           index=pd.date_range("2025-01-01", periods=6))
+        dd = compute_drawdown_pct(prices)
+        assert dd == 0.0
+
+    def test_below_high(self):
+        """When current price is below the high, drawdown is negative."""
+        prices = pd.Series([100, 150, 120],
+                           index=pd.date_range("2025-01-01", periods=3))
+        dd = compute_drawdown_pct(prices)
+        assert dd == pytest.approx(-20.0, abs=0.1)
+
+    def test_with_nans(self):
+        """NaN values in the series should be dropped before computation."""
+        prices = pd.Series([100, float("nan"), 150, float("nan"), 120],
+                           index=pd.date_range("2025-01-01", periods=5))
+        dd = compute_drawdown_pct(prices)
+        assert dd is not None
+        assert dd == pytest.approx(-20.0, abs=0.1)
+
+    def test_all_nans_returns_none(self):
+        """All-NaN series should return None."""
+        prices = pd.Series([float("nan"), float("nan")],
+                           index=pd.date_range("2025-01-01", periods=2))
+        dd = compute_drawdown_pct(prices)
+        assert dd is None
+
+    def test_empty_series_returns_none(self):
+        """Empty series should return None."""
+        prices = pd.Series([], dtype=float)
+        dd = compute_drawdown_pct(prices)
+        assert dd is None
+
+    def test_single_value_returns_none(self):
+        """Single data point can't compute a meaningful drawdown."""
+        prices = pd.Series([100.0], index=pd.date_range("2025-01-01", periods=1))
+        dd = compute_drawdown_pct(prices)
+        assert dd is None
+
+    def test_lookback_window(self):
+        """Lookback window should limit how far back we look for the high."""
+        # Price peaked at 200 long ago, recent high is 150
+        old = pd.Series([200] + [100] * 300 + [150, 140],
+                        index=pd.date_range("2023-01-01", periods=303))
+        dd_short = compute_drawdown_pct(old, lookback=10)
+        dd_full = compute_drawdown_pct(old, lookback=500)
+        # Short lookback: high is 150, current 140 → ~-6.7%
+        assert dd_short == pytest.approx(-6.67, abs=0.5)
+        # Full lookback: high is 200, current 140 → -30%
+        assert dd_full == pytest.approx(-30.0, abs=0.5)
+
+    def test_result_always_non_positive(self):
+        """Result should never be positive regardless of input."""
+        # Monotonically rising — should be exactly 0.0
+        prices = pd.Series(range(1, 100),
+                           index=pd.date_range("2025-01-01", periods=99))
+        dd = compute_drawdown_pct(prices)
+        assert dd is not None
+        assert dd <= 0.0
+
+    def test_zero_price_returns_none(self):
+        """If the high is zero (impossible but defensive), return None."""
+        prices = pd.Series([0.0, 0.0, 0.0],
+                           index=pd.date_range("2025-01-01", periods=3))
+        dd = compute_drawdown_pct(prices)
+        assert dd is None
+
+
+class TestDrawdownConfigDriven:
+    """Verify drawdown thresholds are loaded from config."""
+
+    def test_config_has_drawdown_thresholds(self):
+        from backend.config import config
+        assert "drawdown_thresholds" in config
+        dt = config["drawdown_thresholds"]
+        assert "near_high" in dt
+        assert "correction" in dt
+        assert "bear" in dt
+
+    def test_config_has_drawdown_signals(self):
+        from backend.config import config
+        assert "drawdown_signals" in config
+        ds = config["drawdown_signals"]
+        assert "near_high" in ds
+        assert "crisis" in ds
+        # Signals should be monotonically decreasing
+        assert ds["near_high"] > ds["pullback"] >= ds["correction"] > ds["bear"] > ds["crisis"]
+
+    def test_drawdown_weight_in_signal_weights(self):
+        from backend.config import config
+        sw = config["signal_weights"]
+        assert "drawdown" in sw
+        assert 0 < sw["drawdown"] <= 0.20  # reasonable range
+
+    def test_signal_weights_sum_to_one(self):
+        from backend.config import config
+        sw = config["signal_weights"]
+        total = sum(sw.values())
+        assert total == pytest.approx(1.0, abs=0.01)

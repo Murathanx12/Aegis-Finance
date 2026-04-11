@@ -1,0 +1,114 @@
+{
+  "market_signal": {
+    "action": "Hold",
+    "confidence": 4,
+    "color": "amber",
+    "composite_score": 0.046,
+    "reasons": [
+      "Mixed signals \u2014 no strong conviction"
+    ],
+    "components": {
+      "crash_prob": 0.0,
+      "regime": 0.0,
+      "valuation": 0.3,
+      "momentum": 0.0,
+      "mean_reversion": 0.0,
+      "external": 0.0,
+      "macro_risk": -0.0
+    }
+  },
+  "stock_signals": {
+    "AAPL": {
+      "action": "Hold",
+      "composite_score": 0.148,
+      "confidence": 14
+    },
+    "NVDA": {
+      "action": "Buy",
+      "composite_score": 0.274,
+      "confidence": 27
+    },
+    "XOM": {
+      "action": "Buy",
+      "composite_score": 0.159,
+      "confidence": 15
+    },
+    "JPM": {
+      "action": "Hold",
+      "composite_score": 0.12,
+      "confidence": 12
+    },
+    "TSLA": {
+      "action": "Buy",
+      "composite_score": 0.169,
+      "confidence": 16
+    },
+    "JNJ": {
+      "action": "Hold",
+      "composite_score": 0.079,
+      "confidence": 7
+    },
+    "AMZN": {
+      "action": "Buy",
+      "composite_score": 0.182,
+      "confidence": 18
+    },
+    "BA": {
+      "action": "Hold",
+      "composite_score": 0.146,
+      "confidence": 14
+    },
+    "MSFT": {
+      "action": "Buy",
+      "composite_score": 0.153,
+      "confidence": 15
+    },
+    "GOOGL": {
+      "action": "Buy",
+      "composite_score": 0.166,
+      "confidence": 16
+    },
+    "META": {
+      "action": "Buy",
+      "composite_score": 0.213,
+      "confidence": 21
+    },
+    "BAC": {
+      "action": "Buy",
+      "composite_score": 0.179,
+      "confidence": 17
+    },
+    "CVX": {
+      "action": "Buy",
+      "composite_score": 0.183,
+      "confidence": 18
+    },
+    "UNH": {
+      "action": "Buy",
+      "composite_score": 0.201,
+      "confidence": 20
+    },
+    "WMT": {
+      "action": "Hold",
+      "composite_score": 0.121,
+      "confidence": 12
+    },
+    "CAT": {
+      "action": "Hold",
+      "composite_score": 0.127,
+      "confidence": 12
+    }
+  },
+  "diversity": {
+    "action_distribution": {
+      "Hold": 6,
+      "Buy": 10
+    },
+    "n_unique_actions": 2,
+    "score_spread": 0.195,
+    "score_std": 0.043,
+    "all_same_action": false
+  },
+  "n_tickers_with_signal": 16,
+  "n_tickers_failed": 0
+}
