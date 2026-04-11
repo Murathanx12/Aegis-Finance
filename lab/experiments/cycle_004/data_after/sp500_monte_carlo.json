@@ -1,0 +1,36 @@
+{
+  "start_price": 6816.89,
+  "1y": {
+    "median_price": 7411.06,
+    "mean_price": 7528.25,
+    "p5": 5623.4,
+    "p95": 9771.24,
+    "prob_positive": 69.0,
+    "prob_20pct_crash": 3.6,
+    "expected_annual_return_pct": 10.44
+  },
+  "3y": {
+    "median_price": 8788.84,
+    "mean_price": 9216.58,
+    "p5": 5447.8,
+    "p95": 14300.99,
+    "prob_positive": 81.7,
+    "prob_20pct_crash": 5.1,
+    "expected_annual_return_pct": 10.58
+  },
+  "5y": {
+    "median_price": 10458.63,
+    "mean_price": 11190.0,
+    "p5": 5532.86,
+    "p95": 19383.23,
+    "prob_positive": 86.6,
+    "prob_20pct_crash": 4.6,
+    "expected_annual_return_pct": 10.42
+  },
+  "quality_check": {
+    "theoretical_1y_drift": 0.10072,
+    "actual_1y_mean_log_return": 0.08581,
+    "drift_error_pct": 14.81,
+    "variance_ratio": 0.979
+  }
+}
