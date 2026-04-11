@@ -143,10 +143,27 @@ def analyze_stock(
         beta_adj_crash_freq = float(np.clip(base_crash_freq * beta, 0.02, 0.25))
         num_sims = config["simulation"]["num_simulations"]
 
+        # Fit GARCH for better vol estimate and tail thickness
+        garch_vol = None
+        garch_nu = None
+        garch_persistence = None
+        try:
+            from backend.models.garch import fit_garch
+            garch_result = fit_garch(returns)
+            if garch_result.success:
+                garch_vol = garch_result.current_vol
+                garch_nu = garch_result.nu
+                garch_persistence = garch_result.alpha + garch_result.gamma * np.sqrt(2 / np.pi) + garch_result.beta
+        except Exception as e:
+            logger.debug("%s: GARCH fit skipped — %s", ticker, e)
+
         base_scenario = {"drift_adj": 0, "vol_mult": 1.0, "crash_mult": 1.0}
         paths = simulate_paths(
             current_price, final_mu, final_sigma,
             forecast_days, num_sims, beta_adj_crash_freq, 0.0, base_scenario,
+            garch_vol=garch_vol,
+            garch_nu=garch_nu,
+            garch_persistence=garch_persistence,
         )
 
         final_prices = np.minimum(paths[-1], current_price * (1 + max_5y_return))
