@@ -69,6 +69,12 @@ def _screener() -> dict:
             sec_mom = sector_momentum.get(stock_sector, 0.0)
 
             # Compute per-stock signal from the real signal engine
+            # Extract forward PE from key_stats if available
+            fwd_pe = None
+            key_stats = r.get("key_stats")
+            if key_stats and "pe_forward" in key_stats:
+                fwd_pe = key_stats["pe_forward"]
+
             stock_sig = get_stock_signal(
                 market_signal=market_sig,
                 beta=r.get("beta", 1.0),
@@ -76,6 +82,7 @@ def _screener() -> dict:
                 current_price=r.get("current_price", 0),
                 sector_momentum=sec_mom,
                 pe_ratio=r.get("pe_ratio"),
+                forward_pe=fwd_pe,
             )
 
             stocks.append({
@@ -145,6 +152,19 @@ def _compute_market_signal() -> dict:
     sp500_1m = float(data["SP500"].pct_change(21).iloc[-1]) * 100
     sp500_3m = float(data["SP500"].pct_change(63).iloc[-1]) * 100
 
+    # YTD return: compare current price to last trading day of previous year
+    sp500_ytd = 0.0
+    try:
+        import pandas as pd
+        sp500_series = data["SP500"].dropna()
+        now = sp500_series.index[-1]
+        year_start = pd.Timestamp(year=now.year, month=1, day=1)
+        prev_year_prices = sp500_series[sp500_series.index < year_start]
+        if len(prev_year_prices) > 0:
+            sp500_ytd = float((sp500_series.iloc[-1] / prev_year_prices.iloc[-1] - 1) * 100)
+    except Exception:
+        pass
+
     yield_curve = None
     if "T10Y" in data.columns and "T3M" in data.columns:
         yield_curve = float(data["T10Y"].iloc[-1] - data["T3M"].iloc[-1])
@@ -190,6 +210,7 @@ def _compute_market_signal() -> dict:
         risk_score=float(data["Risk_Score"].iloc[-1]),
         sp500_1m_return=sp500_1m,
         sp500_3m_return=sp500_3m,
+        sp500_ytd_return=sp500_ytd,
         vix=vix,
         yield_curve=yield_curve,
         external_consensus=external,
@@ -263,6 +284,19 @@ def _stock_signal(ticker: str) -> dict:
     sp500_1m = float(data["SP500"].pct_change(21).iloc[-1]) * 100
     sp500_3m = float(data["SP500"].pct_change(63).iloc[-1]) * 100
 
+    # YTD return
+    sp500_ytd = 0.0
+    try:
+        import pandas as pd
+        sp500_series = data["SP500"].dropna()
+        now = sp500_series.index[-1]
+        year_start = pd.Timestamp(year=now.year, month=1, day=1)
+        prev_year_prices = sp500_series[sp500_series.index < year_start]
+        if len(prev_year_prices) > 0:
+            sp500_ytd = float((sp500_series.iloc[-1] / prev_year_prices.iloc[-1] - 1) * 100)
+    except Exception:
+        pass
+
     yield_curve = None
     if "T10Y" in data.columns and "T3M" in data.columns:
         yield_curve = float(data["T10Y"].iloc[-1] - data["T3M"].iloc[-1])
@@ -308,6 +342,7 @@ def _stock_signal(ticker: str) -> dict:
         risk_score=float(data["Risk_Score"].iloc[-1]),
         sp500_1m_return=sp500_1m,
         sp500_3m_return=sp500_3m,
+        sp500_ytd_return=sp500_ytd,
         vix=vix,
         yield_curve=yield_curve,
         external_consensus=external,
@@ -322,6 +357,12 @@ def _stock_signal(ticker: str) -> dict:
     stock_sector = stock_data.get("sector", "Unknown")
     sec_mom = _compute_sector_momentum().get(stock_sector, 0.0)
 
+    # Extract forward PE from key_stats
+    fwd_pe = None
+    key_stats = stock_data.get("key_stats")
+    if key_stats and "pe_forward" in key_stats:
+        fwd_pe = key_stats["pe_forward"]
+
     signal = get_stock_signal(
         market_signal=market_sig,
         beta=stock_data.get("beta", 1.0),
@@ -329,6 +370,7 @@ def _stock_signal(ticker: str) -> dict:
         current_price=stock_data.get("current_price", 0),
         sector_momentum=sec_mom,
         pe_ratio=stock_data.get("pe_ratio"),
+        forward_pe=fwd_pe,
     )
     signal["ticker"] = ticker
     signal["name"] = stock_data.get("name", ticker)

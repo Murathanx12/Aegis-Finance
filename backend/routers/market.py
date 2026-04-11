@@ -158,6 +158,19 @@ def _compute_market_signal() -> dict:
     sp500_1m = float(data["SP500"].pct_change(21).iloc[-1]) * 100
     sp500_3m = float(data["SP500"].pct_change(63).iloc[-1]) * 100
 
+    # YTD return
+    sp500_ytd = 0.0
+    try:
+        import pandas as pd
+        sp500_series = data["SP500"].dropna()
+        now = sp500_series.index[-1]
+        year_start = pd.Timestamp(year=now.year, month=1, day=1)
+        prev_year_prices = sp500_series[sp500_series.index < year_start]
+        if len(prev_year_prices) > 0:
+            sp500_ytd = float((sp500_series.iloc[-1] / prev_year_prices.iloc[-1] - 1) * 100)
+    except Exception:
+        pass
+
     yield_curve = None
     if "T10Y" in data.columns and "T3M" in data.columns:
         yield_curve = float(data["T10Y"].iloc[-1] - data["T3M"].iloc[-1])
@@ -203,6 +216,7 @@ def _compute_market_signal() -> dict:
         risk_score=risk_score,
         sp500_1m_return=sp500_1m,
         sp500_3m_return=sp500_3m,
+        sp500_ytd_return=sp500_ytd,
         vix=vix,
         yield_curve=yield_curve,
         external_consensus=external,

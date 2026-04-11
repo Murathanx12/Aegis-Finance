@@ -143,10 +143,12 @@ def get_market_signal(
         reasons.append(f"Elevated VIX ({vix:.0f}) — fear in market")
 
     # 4. Momentum signal
-    # Combine 1M and 3M momentum
+    # Combine 1M, 3M, and YTD momentum for multi-timeframe view.
+    # YTD captures the longer trend that 1M/3M can miss in choppy markets.
     mom_1m = np.clip(sp500_1m_return / 10, -1, 1)  # ±10% → ±1
     mom_3m = np.clip(sp500_3m_return / 15, -1, 1)  # ±15% → ±1
-    mom_sig = 0.6 * mom_1m + 0.4 * mom_3m
+    mom_ytd = np.clip(sp500_ytd_return / 20, -1, 1)  # ±20% → ±1
+    mom_sig = 0.45 * mom_1m + 0.35 * mom_3m + 0.20 * mom_ytd
     components["momentum"] = float(mom_sig)
 
     if sp500_1m_return < -7:
@@ -225,6 +227,7 @@ def get_stock_signal(
     current_price: float = 0.0,
     sector_momentum: float = 0.0,
     pe_ratio: Optional[float] = None,
+    forward_pe: Optional[float] = None,
 ) -> dict:
     """Generate a per-stock signal adjusted by beta and fundamentals.
 
@@ -235,6 +238,7 @@ def get_stock_signal(
         current_price: Current stock price
         sector_momentum: Sector relative strength (pct)
         pe_ratio: Trailing P/E ratio
+        forward_pe: Forward P/E ratio (consensus estimates)
 
     Returns:
         Dict with action, confidence, color, reasons
@@ -266,14 +270,34 @@ def get_stock_signal(
         elif sector_momentum < -10:
             reasons.append(f"Weak sector ({sector_momentum:.0f}%)")
 
-    # PE ratio — flag extremes
-    if pe_ratio is not None:
+    # PE ratio — graduated valuation signal
+    if pe_ratio is not None and pe_ratio > 0:
         if pe_ratio > 50:
             stock_score -= 0.1
             reasons.append(f"High P/E ({pe_ratio:.0f}x) — premium valuation")
-        elif pe_ratio < 10 and pe_ratio > 0:
+        elif pe_ratio < 10:
             stock_score += 0.1
             reasons.append(f"Low P/E ({pe_ratio:.0f}x) — value opportunity")
+
+    # Forward PE earnings growth signal: when forward_pe << trailing_pe,
+    # earnings are expected to grow significantly (bullish). When forward_pe >>
+    # trailing_pe, earnings are expected to decline (bearish).
+    # Example: NVDA PE=38.5, fwd_PE=17 → ratio=0.44 → strong growth signal +0.15
+    #          JNJ  PE=22.8, fwd_PE=15.5 → ratio=0.68 → moderate growth +0.05
+    if (
+        forward_pe is not None
+        and pe_ratio is not None
+        and forward_pe > 0
+        and pe_ratio > 0
+    ):
+        pe_compression = forward_pe / pe_ratio  # <1 = earnings growing, >1 = declining
+        # Map: ratio 0.5 → +0.15, ratio 0.75 → +0.05, ratio 1.0 → 0, ratio 1.25 → -0.05
+        earnings_growth_sig = float(np.clip((1.0 - pe_compression) * 0.3, -0.15, 0.15))
+        stock_score += earnings_growth_sig
+        if pe_compression < 0.6:
+            reasons.append(f"Strong earnings growth expected (fwd P/E {forward_pe:.0f}x vs {pe_ratio:.0f}x trailing)")
+        elif pe_compression > 1.15:
+            reasons.append(f"Earnings decline expected (fwd P/E {forward_pe:.0f}x vs {pe_ratio:.0f}x trailing)")
 
     stock_score = float(np.clip(stock_score, -1, 1))
 
