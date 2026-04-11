@@ -399,6 +399,14 @@ config: dict = {
         "vix_range": [5, 90],
         "yield_range": [-1.0, 20.0],
     },
+
+    # ── SENTIMENT ANALYSIS ───────────────────────────────────────────────
+    "sentiment": {
+        "bullish_threshold": 0.15,          # avg_numeric > 0.15 → bullish
+        "slightly_bullish_threshold": 0.05, # avg_numeric > 0.05 → slightly_bullish
+        "bearish_threshold": -0.15,         # avg_numeric < -0.15 → bearish
+        "slightly_bearish_threshold": -0.05,# avg_numeric < -0.05 → slightly_bearish
+    },
 }
 
 

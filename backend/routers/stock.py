@@ -134,8 +134,8 @@ def _compute_sector_momentum() -> dict:
                 current = float(hist["Close"].iloc[-1])
                 past = float(hist["Close"].iloc[-63])
                 momentum[sector_name] = (current / past - 1) * 100
-        except Exception:
-            pass
+        except (KeyError, IndexError, ValueError, TypeError) as e:
+            logger.debug("sector momentum skip %s: %s", sector_name, e)
 
     return momentum
 
@@ -166,8 +166,8 @@ def _compute_market_signal() -> dict:
         prev_year_prices = sp500_series[sp500_series.index < year_start]
         if len(prev_year_prices) > 0:
             sp500_ytd = float((sp500_series.iloc[-1] / prev_year_prices.iloc[-1] - 1) * 100)
-    except Exception:
-        pass
+    except (KeyError, IndexError, ValueError, TypeError) as e:
+        logger.debug("YTD return calculation failed: %s", e)
 
     yield_curve = None
     if "T10Y" in data.columns and "T3M" in data.columns:
@@ -250,32 +250,51 @@ async def get_stock_analysis(ticker: str):
 
 def _analyze_stock(ticker: str) -> dict:
     from backend.services.stock_analyzer import analyze_stock
+    from backend.services.signal_engine import get_stock_signal
 
-    # Compute market-level crash probability so MC simulation can
-    # modulate jump frequency based on current market stress.
-    crash_prob = None
-    try:
-        from backend.config import MODEL_DIR
-        from backend.services.crash_model import CrashPredictor
-        from backend.services.data_fetcher import DataFetcher
-        from engine.training.features import build_feature_matrix
+    # Compute market-level signal (includes crash probability)
+    market_sig = _compute_market_signal()
 
-        model_path = MODEL_DIR / "crash_model.pkl"
-        if model_path.exists():
-            predictor = CrashPredictor()
-            predictor.load_model(str(model_path))
-            fetcher = DataFetcher()
-            data, _ = fetcher.fetch_market_data()
-            fred_data = fetcher.fetch_fred_data()
-            features = build_feature_matrix(data, fred_data=fred_data)
-            available = [f for f in predictor.feature_names if f in features.columns]
-            latest = features[available].iloc[[-1]]
-            if "3m" in predictor.lgb_models:
-                crash_prob = float(predictor.predict_proba(latest, "3m")[0])
-    except (ImportError, FileNotFoundError, ValueError, KeyError) as e:
-        logger.debug("Crash model unavailable for stock detail: %s", e)
+    # Extract crash probability for MC jump rate modulation
+    crash_3m_pct = market_sig.get("_crash_3m_pct")
+    crash_prob_for_mc = crash_3m_pct / 100.0 if crash_3m_pct is not None else None
 
-    return analyze_stock(ticker, ml_crash_prob=crash_prob)
+    # Run MC simulation with crash-aware jump frequency
+    result = analyze_stock(ticker, ml_crash_prob=crash_prob_for_mc)
+    if result is None:
+        return None
+
+    # Compute sector momentum for this stock
+    stock_sector = result.get("sector", "Unknown")
+    sec_mom = _compute_sector_momentum().get(stock_sector, 0.0)
+
+    # Extract forward PE from key_stats if available
+    fwd_pe = None
+    key_stats = result.get("key_stats")
+    if key_stats and "pe_forward" in key_stats:
+        fwd_pe = key_stats["pe_forward"]
+
+    # Compute per-stock signal (same logic as screener)
+    stock_sig = get_stock_signal(
+        market_signal=market_sig,
+        beta=result.get("beta", 1.0),
+        analyst_target=result.get("analyst_target"),
+        current_price=result.get("current_price", 0),
+        sector_momentum=sec_mom,
+        pe_ratio=result.get("pe_ratio"),
+        forward_pe=fwd_pe,
+    )
+
+    # Attach signal and crash fields to the result
+    result["signal_action"] = stock_sig["action"]
+    result["signal_confidence"] = stock_sig["confidence"]
+    result["signal_score"] = stock_sig["composite_score"]
+    result["signal_components"] = stock_sig.get("components", {})
+    result["signal_reasons"] = stock_sig.get("reasons", [])
+    result["crash_prob_3m"] = crash_3m_pct
+    result["market_signal"] = market_sig["action"]
+
+    return result
 
 
 @router.get("/{ticker}/signal")
@@ -300,88 +319,14 @@ async def get_stock_signal_endpoint(ticker: str):
 
 def _stock_signal(ticker: str) -> dict:
     from backend.services.stock_analyzer import analyze_stock
-    from backend.services.signal_engine import get_market_signal, get_stock_signal
+    from backend.services.signal_engine import get_stock_signal
 
-    # Get market signal first
-    from backend.services.data_fetcher import DataFetcher
-    from backend.services.risk_scorer import build_risk_score
-    from backend.services.regime_detector import detect_regimes
-
-    fetcher = DataFetcher()
-    data, _ = fetcher.fetch_market_data()
-    data["Risk_Score"] = build_risk_score(data)
-    _, regime = detect_regimes(data)
-
-    vix = float(data["VIX"].iloc[-1]) if "VIX" in data.columns else 20.0
-    sp500_1m = float(data["SP500"].pct_change(21).iloc[-1]) * 100
-    sp500_3m = float(data["SP500"].pct_change(63).iloc[-1]) * 100
-
-    # YTD return
-    sp500_ytd = 0.0
-    try:
-        import pandas as pd
-        sp500_series = data["SP500"].dropna()
-        now = sp500_series.index[-1]
-        year_start = pd.Timestamp(year=now.year, month=1, day=1)
-        prev_year_prices = sp500_series[sp500_series.index < year_start]
-        if len(prev_year_prices) > 0:
-            sp500_ytd = float((sp500_series.iloc[-1] / prev_year_prices.iloc[-1] - 1) * 100)
-    except Exception:
-        pass
-
-    yield_curve = None
-    if "T10Y" in data.columns and "T3M" in data.columns:
-        yield_curve = float(data["T10Y"].iloc[-1] - data["T3M"].iloc[-1])
-
-    # Crash model predictions (highest-weighted signal component at 25%)
-    crash_3m = None
-    crash_12m = None
-    try:
-        from backend.services.crash_model import CrashPredictor
-        from backend.config import MODEL_DIR
-        model_path = MODEL_DIR / "crash_model.pkl"
-        if model_path.exists():
-            from engine.training.features import build_feature_matrix
-            predictor = CrashPredictor()
-            predictor.load_model(str(model_path))
-            fred_data = fetcher.fetch_fred_data()
-            features = build_feature_matrix(data, fred_data=fred_data)
-            available = [f for f in predictor.feature_names if f in features.columns]
-            latest = features[available].iloc[[-1]]
-            for h in predictor.lgb_models:
-                prob = float(predictor.predict_proba(latest, h)[0]) * 100
-                if h == "3m":
-                    crash_3m = prob
-                elif h == "12m":
-                    crash_12m = prob
-    except (ImportError, FileNotFoundError, ValueError, KeyError) as e:
-        logger.debug("Crash model unavailable in stock signal: %s", e)
-
-    # External consensus
-    external = None
-    try:
-        from backend.services.external_validator import validate_external
-        fred_data_ext = fetcher.fetch_fred_data()
-        ext = validate_external(fred_data_ext, crash_12m / 100 if crash_12m else None, regime)
-        external = ext.consensus_direction
-    except (ImportError, KeyError, TypeError, ValueError) as e:
-        logger.debug("External validation unavailable: %s", e)
-
-    market_sig = get_market_signal(
-        crash_prob_3m=crash_3m,
-        crash_prob_12m=crash_12m,
-        regime=regime,
-        risk_score=float(data["Risk_Score"].iloc[-1]),
-        sp500_1m_return=sp500_1m,
-        sp500_3m_return=sp500_3m,
-        sp500_ytd_return=sp500_ytd,
-        vix=vix,
-        yield_curve=yield_curve,
-        external_consensus=external,
-    )
+    # Reuse the shared market signal computation
+    market_sig = _compute_market_signal()
 
     # Get stock data — pass crash probability so MC can modulate jump frequency
-    crash_prob_for_mc = crash_3m / 100.0 if crash_3m is not None else None
+    crash_3m_pct = market_sig.get("_crash_3m_pct")
+    crash_prob_for_mc = crash_3m_pct / 100.0 if crash_3m_pct is not None else None
     stock_data = analyze_stock(ticker, ml_crash_prob=crash_prob_for_mc)
     if stock_data is None:
         return {"ticker": ticker, "action": "Hold", "confidence": 0, "error": "Could not analyze stock"}

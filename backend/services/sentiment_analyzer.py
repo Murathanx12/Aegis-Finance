@@ -15,7 +15,6 @@ Usage:
 
 import logging
 from datetime import datetime, timezone
-from typing import Optional
 
 from backend.config import config
 
@@ -74,7 +73,7 @@ def _score_with_finbert(headlines: list[str]) -> list[dict]:
                 numeric = 0.0
             scored.append({"label": label, "score": score, "numeric": numeric})
         return scored
-    except Exception as e:
+    except (RuntimeError, ValueError, IndexError, TypeError) as e:
         logger.warning("FinBERT scoring failed: %s", e)
         return []
 
@@ -129,14 +128,14 @@ def _score_with_keywords(headlines: list[str]) -> list[dict]:
 # ══════════════════════════════════════════════════════════════════════════════
 
 
-def analyze_sentiment(ticker: str, max_headlines: int = 20) -> Optional[dict]:
+def analyze_sentiment(ticker: str, max_headlines: int = 20) -> dict:
     """Analyze news sentiment for a stock ticker.
 
     Fetches recent headlines from yfinance, scores them with FinBERT
     (or keyword fallback), and returns aggregate sentiment.
 
     Returns:
-        Dict with sentiment analysis or None if no news available.
+        Dict with sentiment analysis (always returns a dict, never None).
     """
     from backend.services.news_intelligence import fetch_stock_news
 
@@ -156,7 +155,17 @@ def analyze_sentiment(ticker: str, max_headlines: int = 20) -> Optional[dict]:
 
     headlines = [item["title"] for item in news if item.get("title")]
     if not headlines:
-        return None
+        return {
+            "ticker": ticker,
+            "sentiment": "neutral",
+            "score": 0.0,
+            "confidence": 0.0,
+            "headline_count": 0,
+            "method": "none",
+            "breakdown": {"positive": 0, "negative": 0, "neutral": 0},
+            "headlines": [],
+            "summary": f"No usable headlines found for {ticker}.",
+        }
 
     # Try FinBERT first, fall back to keywords
     scores = _score_with_finbert(headlines)
@@ -175,14 +184,20 @@ def analyze_sentiment(ticker: str, max_headlines: int = 20) -> Optional[dict]:
     neg_count = sum(1 for s in scores if s["label"] == "negative")
     neu_count = sum(1 for s in scores if s["label"] == "neutral")
 
-    # Map aggregate score to sentiment label
-    if avg_numeric > 0.15:
+    # Map aggregate score to sentiment label (thresholds from config)
+    sent_cfg = config.get("sentiment", {})
+    bullish_t = sent_cfg.get("bullish_threshold", 0.15)
+    sl_bullish_t = sent_cfg.get("slightly_bullish_threshold", 0.05)
+    bearish_t = sent_cfg.get("bearish_threshold", -0.15)
+    sl_bearish_t = sent_cfg.get("slightly_bearish_threshold", -0.05)
+
+    if avg_numeric > bullish_t:
         sentiment = "bullish"
-    elif avg_numeric > 0.05:
+    elif avg_numeric > sl_bullish_t:
         sentiment = "slightly_bullish"
-    elif avg_numeric < -0.15:
+    elif avg_numeric < bearish_t:
         sentiment = "bearish"
-    elif avg_numeric < -0.05:
+    elif avg_numeric < sl_bearish_t:
         sentiment = "slightly_bearish"
     else:
         sentiment = "neutral"
