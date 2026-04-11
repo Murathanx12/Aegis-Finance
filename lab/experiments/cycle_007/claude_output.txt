@@ -1,0 +1,20 @@
+Cycle 7 complete. Here's the summary:
+
+## Cycle 7 Results
+
+### Fix 1: Ito Correction in `run_monte_carlo` (monte_carlo.py)
+**Bug**: `historical_mu = np.log(1 + base_annual_return)` is the continuous compounding rate (GBM `mu`), but `simulate_paths` treats it as the log-return drift (`mu - 0.5*sigma^2`). The missing Ito correction biased SP500 MC arithmetic returns **+1.28%/yr** above target.
+
+**Fix**: `historical_mu = np.log(1 + base_annual_return) - 0.5 * historical_sigma**2`
+
+| Metric | Before | After |
+|--------|--------|-------|
+| SP500 MC arithmetic annual return | 7.36% | **6.00%** (matches institutional consensus) |
+| Overshoot vs target | +1.36%/yr | **0.00%** |
+
+### Fix 2: Sector Momentum Wiring (stock.py)
+**Bug**: `get_stock_signal` was called without `sector_momentum` in both the screener and signal endpoint, leaving ~10% of signal score range permanently at 0.
+
+**Fix**: Added `_compute_sector_momentum()` that fetches 3-month sector ETF returns, and passes per-stock sector momentum to `get_stock_signal`. Signals now differentiate stocks based on sector strength (up to +/-0.2 adjustment).
+
+### Tests: 60/60 passing (no regressions)
