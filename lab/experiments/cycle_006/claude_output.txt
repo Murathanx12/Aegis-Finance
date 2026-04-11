@@ -1,0 +1,22 @@
+Done. Here's a summary of **Cycle 006**:
+
+## What I changed
+
+**Problem:** `STOCK_CAGR_CAPS` were hardcoded in `stock_analyzer.py` (violating project rules) with overly aggressive caps — mega-cap stocks were limited to 15% annual drift, meaning NVDA (63% historical), AAPL (28%), and all other mega-caps showed identical 15% projections. This destroyed signal differentiation in the screener.
+
+**Fix: Bayesian drift shrinkage** (2 files changed)
+
+1. **`backend/config.py`** — Added `stocks.cagr_caps` (widened: mega 15%→30%, large 20%→35%) and `stocks.drift_shrinkage` parameters (prior=7% equity premium, shrinkage adapts to data length)
+
+2. **`backend/services/stock_analyzer.py`** — Replaced hard `np.clip()` with shrinkage formula: `weight * prior + (1-weight) * hist_mu`, where weight decreases from 60% (1yr data) to 25% (5yr data)
+
+## Results
+
+| Stock | Before | After | 
+|-------|--------|-------|
+| NVDA (mega, 63% hist) | 15.0% | **30.0%** |
+| AAPL (mega, 28% hist) | 15.0% | **22.8%** |
+| JNJ (mega, 8% hist) | 8.0% | **7.8%** |
+| Hot IPO (1yr, 80% hist) | 15.0% | **35.0%** (heavy shrinkage) |
+
+All 60 fast tests passing. No regressions.
