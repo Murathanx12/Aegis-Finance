@@ -1,0 +1,33 @@
+{
+  "tests": [
+    {
+      "test_start": "2025-04-09",
+      "horizon_days": 63,
+      "actual_return_pct": 14.71,
+      "mc_median_return_pct": -1.04,
+      "direction_correct": false,
+      "absolute_error_pct": 15.75
+    },
+    {
+      "test_start": "2025-07-11",
+      "horizon_days": 63,
+      "actual_return_pct": 7.59,
+      "mc_median_return_pct": 3.06,
+      "direction_correct": true,
+      "absolute_error_pct": 4.53
+    },
+    {
+      "test_start": "2025-10-09",
+      "horizon_days": 63,
+      "actual_return_pct": 3.43,
+      "mc_median_return_pct": 4.06,
+      "direction_correct": true,
+      "absolute_error_pct": 0.62
+    }
+  ],
+  "summary": {
+    "n_tests": 3,
+    "direction_accuracy_pct": 66.7,
+    "mean_absolute_error_pct": 6.97
+  }
+}
