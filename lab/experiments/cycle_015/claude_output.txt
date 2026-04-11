@@ -1,0 +1,15 @@
+Done. Here's what cycle 15 accomplished:
+
+## Cycle 15 Summary
+
+**What I found:** Two Ito correction mismatches in the drift calibration chain:
+
+1. **`simulate_paths` (sector path)** — When `ml_predicted_return` is set (used by all 11 sectors), the drift was `ln(1+r)` instead of `ln(1+r) - 0.5*base_vol^2`. This caused **all sector projections to have ~2-4.5% excess annual drift** because the Ito variance drag was never applied.
+
+2. **`stock_analyzer`** — The Ito correction used `final_sigma` (clipped historical vol) but `simulate_paths` used `garch_vol` as `base_vol`. When they differ, drift is biased by `0.5*(garch_vol^2 - final_sigma^2)/year`.
+
+**Fix:** Restructured `simulate_paths` to determine `base_vol` BEFORE drift computation, so the Ito correction uses the correct vol. Fixed `stock_analyzer` to use `garch_vol` for Ito when available.
+
+**Tests:** All 60 fast tests pass. The data_generator's `mc_drift_errors` metric cannot measure this because it runs its own independent GBM — the improvement is in the production `/api/sectors`, `/api/stock/{ticker}`, and any endpoint passing `ml_predicted_return` to `simulate_paths`.
+
+**Confidence:** High — mathematically rigorous, no test regressions.
