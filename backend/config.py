@@ -168,6 +168,13 @@ config: dict = {
         "sell": -0.15,
         "strong_sell": -0.45,
     },
+    # Per-stock signal adjustment weights (additive on top of market signal)
+    "stock_signal_weights": {
+        "analyst_target": 0.12,    # was 0.30 (convex combo) — now additive
+        "sector_momentum": 0.012,  # per 1% sector return (was /20 = 0.05 per 1%)
+        "pe_bonus": 0.10,          # bonus/penalty for extreme P/E
+        "earnings_growth": 0.30,   # scale factor for fwd/trailing PE compression
+    },
 
     # ── SIMULATION SETTINGS ──────────────────────────────────────────────
     "simulation": {
@@ -237,6 +244,8 @@ config: dict = {
             "market_breadth": 1.0,
             "small_cap_divergence": 1.1,
         },
+        # Momentum exhaustion threshold (z-score above which exhaustion signal activates)
+        "momentum_exhaustion_threshold": 1.5,
         # Regime detection thresholds
         "regimes": {
             "high_vol_threshold": 0.30,

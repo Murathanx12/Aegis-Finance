@@ -314,7 +314,10 @@ def build_feature_matrix(
     # ══════════════════════════════════════════════════════════════════
     # 10. FINAL CLEANUP
     # ══════════════════════════════════════════════════════════════════
-    df = df.replace([np.inf, -np.inf], np.nan).ffill().fillna(0)
+    # Replace inf with NaN but preserve NaN for LightGBM (handles natively).
+    # Only forward-fill to propagate last valid observation; do NOT fillna(0)
+    # because 0 has meaning for ratio/z-score features and hides upstream bugs.
+    df = df.replace([np.inf, -np.inf], np.nan).ffill()
     return df
 
 
