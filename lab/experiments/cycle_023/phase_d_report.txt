@@ -1,0 +1,22 @@
+Done. Committed as `9096c94`.
+
+## Cycle 23 Final Summary
+
+**What changed:** Wired the existing 3-state Gaussian HMM into all Monte Carlo call sites (SP500, per-stock, sector). The MC engine's `hmm_drift_blend=0.15` and `hmm_vol_blend=0.15` were dead code — now active.
+
+**9 files modified, 1 new test file, ~280 lines changed**
+
+| Change | Impact |
+|--------|--------|
+| `fit_hmm_for_mc()` bridge in regime_detector.py | Connects HMM fitting to MC consumption |
+| HMM wiring in simulation.py, stock.py, sector.py | All 3 MC call sites now regime-conditioned |
+| HMM params to stock_analyzer.py, sector_analyzer.py | Signatures accept + forward HMM arrays |
+| Config extraction in hmm.py + config.py | 6 hardcoded values → config-driven |
+| drift_detector.py `self._rng.uniform()` | Fixed non-deterministic KS tests |
+| Narrowed except blocks | 2 broad `except Exception` → specific types |
+
+**Tests:** 215 → 252 (+37 new), all passing, 0 failures
+
+**Honest assessment:** High-impact wiring change with near-zero regression risk (graceful fallback). The HMM model was fully implemented but orphaned — this cycle connected the dots. What I *didn't* do: validate that 15% blend weight is optimal, cache HMM fits, or use the transition matrix for forward-looking dynamics. Those are cycle 24+ work.
+
+---STDERR---
