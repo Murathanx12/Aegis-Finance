@@ -24,6 +24,8 @@ import pandas as pd
 import yfinance as yf
 
 from backend.config import config
+from backend.models.garch import fit_garch, get_standardized_residuals
+from backend.services.monte_carlo import _generate_block_bootstrap_residuals
 
 logger = logging.getLogger(__name__)
 
@@ -715,7 +717,14 @@ class PortfolioEngine:
         years: int = 1,
         monthly_add: float = 0,
     ) -> dict:
-        """Project portfolio value forward using historical returns.
+        """Project portfolio value forward using GARCH-enhanced jump-diffusion MC.
+
+        Uses the same quality MC engine as SP500/stock simulations:
+        - GARCH conditional volatility and tail thickness (nu)
+        - GARCH-standardized residuals for block bootstrap
+        - Log-space simulation (prevents negative prices)
+        - Ito correction for correct expected returns
+        - OU volatility dynamics
 
         Args:
             holdings: List of {"ticker": str, "shares": float, "current_price": float}
@@ -742,45 +751,123 @@ class PortfolioEngine:
         w_arr = np.array([weights[tickers.index(t)] for t in available])
         w_arr = w_arr / w_arr.sum()
 
-        port_returns = returns[available].values @ w_arr
-        mu_daily = float(np.mean(port_returns))
-        sigma_daily = float(np.std(port_returns))
+        port_returns_arr = returns[available].values @ w_arr
+        port_returns_series = pd.Series(port_returns_arr, index=returns.index)
+
+        mu_daily = float(np.mean(port_returns_arr))
+        sigma_daily = float(np.std(port_returns_arr))
+        sigma_annual = sigma_daily * np.sqrt(252)
 
         trading_days = years * 252
 
-        # Jump-diffusion projection (consistent with MC engine)
-        jd = config["simulation"]["jump_diffusion"]
+        # ── GARCH fit on portfolio returns ───────────────────────────
+        garch_result = fit_garch(port_returns_series)
+        if garch_result.success:
+            garch_vol = garch_result.current_vol  # annualized
+            garch_nu = garch_result.nu
+            garch_persistence = (
+                garch_result.alpha
+                + garch_result.gamma * np.sqrt(2 / np.pi)
+                + garch_result.beta
+            )
+            # GARCH-standardized residuals for block bootstrap
+            std_residuals = get_standardized_residuals(garch_result, port_returns_series)
+        else:
+            garch_vol = sigma_annual
+            garch_nu = 8.0
+            garch_persistence = 0.97
+            std_residuals = None
+
+        # ── Simulation parameters ────────────────────────────────────
+        sim_cfg = config["simulation"]
+        dt = 1.0 / sim_cfg["trading_days_per_year"]
+        jd = sim_cfg["jump_diffusion"]
         jump_rate = jd["annual_rate"]
         jump_mean = jd["mean"]
         jump_std = jd["std"]
-        t_df = jd.get("t_degrees_of_freedom", 8)
+        t_df = garch_nu if 2.5 < garch_nu < 30 else jd.get("t_degrees_of_freedom", 8)
 
         rng = np.random.default_rng(42)
-        n_sims = config["simulation"]["num_simulations"]
+        n_sims = sim_cfg["num_simulations"]
+
+        # ── Drift with Ito correction ────────────────────────────────
+        # Convert arithmetic daily mean to annualized arithmetic return
+        annual_arith_return = mu_daily * 252
+        # Ito correction: log drift = log(1+r) - 0.5*sigma^2
+        base_drift = (np.log(1 + annual_arith_return) - 0.5 * garch_vol**2) * dt
+
+        # Merton jump compensator (daily)
+        daily_jump_prob = jump_rate * dt
+        jump_k = np.exp(jump_mean + 0.5 * jump_std**2) - 1
+        jump_compensator = daily_jump_prob * jump_k
+
+        # ── OU volatility parameters ─────────────────────────────────
+        kappa_vol = max(0.5, (1 - garch_persistence) * 252)
+        long_run_vol = sigma_annual
+        garch_params = sim_cfg.get("garch_derived_params", {})
+        xi = np.clip(0.06, garch_params.get("xi_min", 0.02), garch_params.get("xi_max", 0.15))
+
+        # ── Pre-generate random numbers ──────────────────────────────
+        use_bootstrap = (
+            sim_cfg.get("use_block_bootstrap", False)
+            and std_residuals is not None
+            and len(std_residuals) > sim_cfg.get("block_bootstrap_size", 21)
+        )
+        block_size = sim_cfg.get("block_bootstrap_size", 21)
+
+        if use_bootstrap:
+            Z_price = _generate_block_bootstrap_residuals(
+                std_residuals, trading_days, n_sims, block_size, rng
+            )
+        else:
+            Z_price = rng.standard_t(df=t_df, size=(trading_days, n_sims))
+            if t_df > 2:
+                Z_price /= np.sqrt(t_df / (t_df - 2))
+
+        Z_vol_raw = rng.standard_normal(size=(trading_days, n_sims))
+        Z_jump = rng.uniform(size=(trading_days, n_sims))
+        Z_jump_size = rng.normal(jump_mean, jump_std, size=(trading_days, n_sims))
+
+        # Leverage effect
+        rho_leverage = -0.7
+        Z_vol = rho_leverage * Z_price + np.sqrt(1 - rho_leverage**2) * Z_vol_raw
+
+        # ── Run log-space simulation ─────────────────────────────────
         paths = np.zeros((trading_days + 1, n_sims))
         paths[0] = total_value
+        sigma_t = np.full(n_sims, float(garch_vol))
+        base_vol_sq = float(garch_vol) ** 2
 
-        # Merton jump compensator: remove expected jump contribution from drift
-        jump_compensator = jump_rate * (np.exp(jump_mean + 0.5 * jump_std**2) - 1)
-        adj_mu_daily = mu_daily - jump_compensator / 252
+        for t in range(trading_days):
+            # OU volatility dynamics
+            d_sigma = (
+                kappa_vol * (long_run_vol - sigma_t) * dt
+                + xi * sigma_t * np.sqrt(dt) * Z_vol[t]
+            )
+            sigma_t = np.clip(sigma_t + d_sigma, 0.04, 1.0)
 
-        for t in range(1, trading_days + 1):
-            # Student-t innovations for fat tails
-            z = rng.standard_t(df=t_df, size=n_sims)
-            z = z / np.sqrt(t_df / (t_df - 2))  # normalize to unit variance
-            daily_r = adj_mu_daily + sigma_daily * z
+            # Adaptive Ito correction for OU vol dynamics
+            ito_adj = 0.5 * (base_vol_sq - sigma_t**2) * dt
+            drift_daily = base_drift + ito_adj - jump_compensator
 
-            # Jump component (Poisson arrivals)
-            jump_mask = rng.poisson(jump_rate / 252, size=n_sims) > 0
-            n_jumps = jump_mask.sum()
-            if n_jumps > 0:
-                jump_sizes = rng.normal(jump_mean, jump_std, size=n_jumps)
-                daily_r[jump_mask] += jump_sizes
+            # Diffusion
+            diffusion = sigma_t * np.sqrt(dt) * Z_price[t]
 
-            paths[t] = paths[t - 1] * (1 + daily_r)
+            # Jump component
+            jumps = np.where(Z_jump[t] < daily_jump_prob, Z_jump_size[t], 0.0)
+
+            # Log-price step (prevents negative prices)
+            log_return = drift_daily + diffusion + jumps
+            paths[t + 1] = paths[t] * np.exp(log_return)
+
             # Add monthly contribution at end of each month (~21 trading days)
-            if monthly_add > 0 and t % 21 == 0:
-                paths[t] += monthly_add
+            if monthly_add > 0 and (t + 1) % 21 == 0:
+                paths[t + 1] += monthly_add
+
+        # Apply return cap
+        max_return = sim_cfg.get("max_5y_return", 3.0)
+        max_price = total_value * (1 + max_return)
+        paths = np.clip(paths, 0.01, max_price)
 
         final = paths[-1]
 
