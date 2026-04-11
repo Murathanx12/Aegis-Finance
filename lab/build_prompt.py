@@ -1,6 +1,7 @@
 """
-Aegis Finance - Lab Prompt Builder
+Aegis Finance - Lab Prompt Builder v2
 Gives Claude raw data + past learnings + full creative freedom.
+Steers toward backend/frontend improvements, not lab tool fixes.
 """
 
 import argparse
@@ -59,7 +60,21 @@ Regressions: {', '.join(regressions) if regressions else 'None'}"""
     return "\n\n".join(learnings)
 
 
-def build_prompt(cycle_dir, experiments_dir, cycle, output_path):
+def load_baseline_failures(path):
+    """Load pre-existing test failures so Claude knows what's already broken."""
+    if not path or not os.path.exists(path):
+        return "No baseline failure data available."
+    try:
+        with open(path, encoding="utf-8") as f:
+            failures = f.read().strip()
+        if not failures:
+            return "All tests passing (no pre-existing failures)."
+        return failures
+    except:
+        return "Could not read baseline failures."
+
+
+def build_prompt(cycle_dir, experiments_dir, cycle, output_path, baseline_failures_path=None):
     data_dir = os.path.join(cycle_dir, "data")
 
     all_data = {}
@@ -81,6 +96,8 @@ def build_prompt(cycle_dir, experiments_dir, cycle, output_path):
 
     past_learnings = collect_past_learnings(experiments_dir, cycle)
 
+    baseline_failures = load_baseline_failures(baseline_failures_path)
+
     prompt = f"""# Aegis Finance - Autonomous R&D Lab - Cycle {cycle}
 Time: {datetime.now().isoformat()}
 
@@ -89,19 +106,61 @@ Time: {datetime.now().isoformat()}
 ## WHO YOU ARE
 
 You are an autonomous quant engineer with full access to the Aegis Finance codebase.
-Your job: make this engine BETTER. Measurably better.
+Your job: make the PRODUCTION ENGINE better. Measurably better.
 
 You are NOT following a checklist. You are a researcher who:
 1. Looks at real engine output (below)
 2. Reads the actual source code (use bash and file tools)
-3. Finds problems, bugs, inefficiencies
+3. Finds problems, bugs, inefficiencies in the BACKEND or FRONTEND
 4. Designs an experiment to fix something
 5. Implements it
 6. Measures if it helped
 7. Logs everything honestly
 
 You have FULL creative control. You decide what to work on.
-Only rules: dont break API contracts, dont delete tests.
+
+---
+
+## CRITICAL RULES
+
+1. **ONLY modify files in `backend/`, `frontend/`, or `engine/`.**
+   - NEVER modify files in `lab/` (data_generator.py, build_prompt.py, compare_results.py, run_lab.sh).
+   - The lab tools are READ-ONLY measurement instruments. If the data looks wrong, the fix belongs in the backend service code, not the measurement tool.
+
+2. **Do NOT break existing tests.**
+   - Run: `python -m pytest backend/tests/ -v -m "not slow" --tb=short`
+   - If your changes cause NEW test failures, they will be auto-reverted.
+   - You MAY fix pre-existing test failures (see below) — that counts as an improvement.
+
+3. **Do NOT delete tests or weaken assertions.**
+
+4. **Put parameters in `backend/config.py`**, not hardcoded in services.
+
+5. **Commit your changes** at the end:
+   `git add -A && git commit -m "Lab cycle_{cycle:03d}: <summary>"`
+
+---
+
+## PRE-EXISTING TEST FAILURES
+
+These tests were already failing BEFORE your cycle started.
+Fixing any of these is a valid and valuable improvement.
+
+```
+{baseline_failures}
+```
+
+---
+
+## WHAT TO LOOK FOR
+
+Priority order:
+1. **Fix failing tests** — broken tests are the highest-value target
+2. **Accuracy bugs** — wrong formulas, missing corrections, bad defaults in backend services
+3. **Missing connections** — services that exist but aren't wired into endpoints
+4. **Signal quality** — buy/sell signals that are always the same, crash probs that don't differentiate
+5. **Statistical issues** — wrong distributions, look-ahead bias, overfitting
+6. **Code quality** — hardcoded values that belong in config.py, missing edge cases
 
 ---
 
@@ -110,28 +169,22 @@ Only rules: dont break API contracts, dont delete tests.
 ### Step 1: Understand the current state
 - Read the engine output data below carefully
 - Read past experiment logs below
-- Explore the codebase yourself:
-  - List files: find backend/ -name "*.py" | head -30
-  - Read key files: cat backend/services/monte_carlo.py | head -100
-  - Read config: cat backend/config.py
-  - Run python yourself if needed
+- Explore the BACKEND codebase yourself:
+  - `cat backend/services/monte_carlo.py | head -100`
+  - `cat backend/config.py`
+  - `cat backend/services/signal_engine.py`
+  - `python -m pytest backend/tests/ -v -m "not slow" --tb=short`
 
 ### Step 2: Find something worth improving
-Look for ANY of these (or anything else):
-- Numbers that look wrong (MC drift errors >5%, bad crash probs)
-- Code that could be better (hardcoded values, missing edge cases)
-- Missing connections (services that exist but arent wired together)
-- Accuracy gaps (backtest shows poor prediction, signals dont correlate)
-- Statistical issues (wrong distributions, look-ahead bias, overfitting)
-- Performance (slow code, unnecessary API calls)
-- Anything else you notice
+Focus on backend/services/, backend/routers/, backend/config.py, or engine/.
+Do NOT modify lab/ files.
 
 ### Step 3: Implement and test
-- Make your changes to the actual codebase files
-- Run: python -m pytest backend/tests/ -x -q
-- If tests break, fix them or revert
+- Make your changes to backend/ or frontend/ or engine/ files
+- Run: `python -m pytest backend/tests/ -v -m "not slow" --tb=short`
+- If tests break due to your changes, fix them or revert
 - Re-run the data generator to see if output improved:
-  python lab/data_generator.py --output-dir lab/experiments/cycle_{cycle:03d}/data_test --cycle {cycle}
+  `python lab/data_generator.py --output-dir lab/experiments/cycle_{cycle:03d}/data_test --cycle {cycle}`
 
 ### Step 4: Write the experiment report
 
@@ -145,12 +198,13 @@ Contents:
     "what_i_noticed": "<what caught your attention in the data>",
     "hypothesis": "<what you think the problem is>",
     "what_i_did": "<what code you changed and why>",
-    "files_modified": ["<list every file you touched>"],
+    "files_modified": ["<list every file you touched — should be in backend/ or engine/>"],
     "results": {{
         "before": {{"<metric>": "<value>"}},
         "after": {{"<metric>": "<value>"}},
         "improved": true or false
     }},
+    "tests_fixed": ["<list any previously-failing tests you fixed>"],
     "analysis": "<honest assessment - did it work?>",
     "next_steps": "<what should the next cycle focus on>",
     "confidence": "<low/medium/high>",
@@ -161,7 +215,7 @@ Failed experiments are fine. Log them honestly so the next cycle learns.
 
 ### Step 5: Commit
 git add -A
-git commit -m "Lab cycle {cycle}: <summary>"
+git commit -m "Lab cycle_{cycle:03d}: <summary>"
 
 ---
 
@@ -182,10 +236,10 @@ git commit -m "Lab cycle {cycle}: <summary>"
 Key directories (explore yourself, dont just trust this list):
 
 backend/
-  services/       # Core engine (monte_carlo.py, crash_model.py, etc.)
+  services/       # Core engine — THIS IS WHERE IMPROVEMENTS GO
   routers/        # API endpoints
   config.py       # All thresholds, weights, parameters
-  tests/          # Test suite
+  tests/          # Test suite — fix failures here
 engine/
   training/       # ML model training
   validation/     # Backtesting
@@ -193,18 +247,18 @@ frontend/
   src/app/        # Next.js pages
   src/components/ # React components
   src/lib/        # API client, utilities
-lab/
-  experiments/    # Your experiment data and reports
-  data_generator.py
-
-Start by reading code. Dont assume - verify.
+lab/              # READ-ONLY — do NOT modify these files
+  data_generator.py   # Measurement tool (hands off)
+  build_prompt.py     # Prompt builder (hands off)
+  compare_results.py  # Comparator (hands off)
 
 ---
 
 ## GO
 
-Read the data. Explore the code. Find something to improve. Make it better.
-Write the experiment report. Commit.
+Read the data. Explore the backend code. Find something to improve.
+Make it better. Run tests. Write the experiment report. Commit.
+Remember: only modify backend/, frontend/, or engine/ files.
 """
 
     with open(output_path, "w", encoding="utf-8") as f:
@@ -219,6 +273,9 @@ if __name__ == "__main__":
     parser.add_argument("--experiments-dir", required=True)
     parser.add_argument("--cycle", type=int, required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--baseline-failures", default=None,
+                        help="Path to file with pre-existing test failure lines")
     args = parser.parse_args()
 
-    build_prompt(args.cycle_dir, args.experiments_dir, args.cycle, args.output)
+    build_prompt(args.cycle_dir, args.experiments_dir, args.cycle, args.output,
+                 baseline_failures_path=args.baseline_failures)
