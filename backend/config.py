@@ -359,6 +359,15 @@ config: dict = {
         "horizon_adjustment": 1.05,
     },
 
+    # ── REGIME VALIDATION ────────────────────────────────────────────────
+    "regime_validation": {
+        # Consensus annual return threshold for bull/bear classification.
+        # If consensus return >= this, aligns with bull; below, aligns with bear.
+        "consensus_bull_threshold": 0.03,
+        # Minimum declining sectors for bear breadth confirmation
+        "min_declining_sectors": 6,
+    },
+
     # ── STOCK ANALYSIS ───────────────────────────────────────────────────
     "stocks": {
         "screener_count": 20,

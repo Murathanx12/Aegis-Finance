@@ -1,0 +1,86 @@
+{
+  "cycle": 24,
+  "timestamp": "2026-04-12T03:06:09.592896",
+  "research_track": "Test Suite & Code Quality",
+  "what_i_noticed": "7 backend services had zero unit tests (data_quality, savings_calculator, regime_validator, shap_explainer, net_liquidity, return_model, llm_analyzer). stock_analyzer.py had 8 bare 'except Exception' blocks and portfolio_engine.py had 5 more. regime_validator._check_consensus used a hardcoded 0.03 threshold violating the project rule that all parameters live in config.py. All 252 existing fast tests passed clean.",
+  "hypothesis": "Writing comprehensive tests for all 7 untested services, narrowing broad except blocks to specific types, and moving hardcoded thresholds to config.py will significantly improve code quality and catch regressions early. The narrowed excepts will surface real bugs that were previously swallowed silently.",
+  "what_i_did": "Phase B: Created 67 tests across 7 services in test_untested_services.py covering pure math (savings), pure logic (data_quality, regime_validator), mock-based (shap, net_liquidity, llm_analyzer), and real LightGBM (return_model). Phase C: Narrowed 13 broad except blocks (8 in stock_analyzer, 5 in portfolio_engine) to specific exception types (AttributeError, KeyError, TypeError, ValueError, IndexError, LinAlgError). Removed try/except entirely from _get_sector_peers (pure dict lookup). Moved consensus_bull_threshold and min_declining_sectors from hardcoded values to config.py regime_validation section. Added 55 hardening tests covering edge cases (None inputs, empty DataFrames, extreme values) and verifying the narrowed excepts still catch expected failures.",
+  "files_modified": [
+    "backend/services/stock_analyzer.py",
+    "backend/services/portfolio_engine.py",
+    "backend/services/regime_validator.py",
+    "backend/config.py",
+    "backend/tests/test_untested_services.py"
+  ],
+  "files_created": [
+    "backend/tests/test_untested_services.py",
+    "lab/experiments/cycle_024/experiment_report.json"
+  ],
+  "tests_added": [
+    "TestSavingsBasic (7 tests): returns_required_keys, projection_count_matches_years, nominal_grows_monotonically, real_less_than_nominal, conservative_grows_slower_than_aggressive, total_contributed_correct, growth_equals_nominal_minus_contributed",
+    "TestSavingsTarget (4 tests): target_met_flag, target_not_met_provides_required_monthly, required_monthly_zero_rate, already_exceeded_target",
+    "TestSavingsMilestones (3 tests): milestones_increasing, no_milestones_below_current_savings, same_age_produces_one_year",
+    "TestSavingsEdgeCases (4 tests): zero_contribution, zero_savings_zero_contribution, unknown_risk_level_defaults_moderate, summary_rates",
+    "TestDataQualityValidate (3 tests): healthy_data_no_warnings, summary_returns_required_keys, empty_dataframe",
+    "TestDataQualityStaleness (1 test): stale_column_detected",
+    "TestDataQualityRange (2 tests): vix_out_of_range_detected, yield_out_of_range_detected",
+    "TestDataQualityCompleteness (1 test): high_nan_pct_flagged",
+    "TestDataQualityConsistency (2 tests): huge_sp500_jump_flagged, summary_degraded_on_error",
+    "TestRegimeValidatorPrice (3 tests): bull_confirmed_when_above_sma, bear_not_confirmed_when_above_sma, insufficient_data_returns_false",
+    "TestRegimeValidatorBreadth (3 tests): bull_breadth_confirmed_with_advancing_sectors, bear_breadth_with_declining_sectors, no_sectors_returns_false",
+    "TestRegimeValidatorConfidence (3 tests): bull_with_all_checks_is_high, bear_needs_two_checks, result_is_dataclass",
+    "TestShapExplain (4 tests): returns_required_keys, crash_prob_from_predictor, top_features_limited_by_top_n, feature_values_populated",
+    "TestShapCounterfactual (4 tests): returns_base_prob_and_scenarios, delta_computed, empty_scenarios, default_scenarios_exist",
+    "TestNetLiquidity (4 tests): default_response_structure, default_response_no_error, fetch_and_calculate_success, no_fred_key_returns_default",
+    "TestReturnModelReal (7 tests): train_succeeds, predict_after_train, predict_quantiles_after_train, predict_before_train_raises, get_top_features_empty_before_train, get_top_features_after_train, insufficient_data_fails",
+    "TestLlmAvailability (3 tests): not_available_without_key, get_client_returns_none_without_key, call_llm_returns_none_without_sdk",
+    "TestLlmNewsSummarization (4 tests): empty_news_returns_none, bullish_sentiment_detected, bearish_sentiment_detected, llm_failure_returns_none",
+    "TestLlmStockOutlook (3 tests): parses_structured_response, score_clamped_to_range, unparseable_response_fallback",
+    "TestLlmExpectations (2 tests): no_data_returns_none, catalysts_extracted",
+    "TestStockAnalyzerHelpers (19 tests): analyst_targets_none, analyst_targets_dict, type_error, key_error, recommendations_none, recommendations_empty_df, recommendations_valid, news_empty, news_none, news_valid, price_history_none, price_history_empty, price_history_valid, key_stats_empty, key_stats_with_pe, sector_peers_known, sector_peers_unknown, sector_peers_self_excluded, cap_tier_boundaries",
+    "TestStockAnalyzerSelectStocks (3 tests): empty_sectors_returns_default, returns_unique_tickers, respects_n_stocks_limit",
+    "TestRegimeValidatorConfigDriven (3 tests): config_has_section, threshold_is_float, source_uses_config",
+    "TestPortfolioEngineExceptNarrowing (2 tests): no_bare_except_portfolio_engine, no_bare_except_stock_analyzer",
+    "TestSavingsHardening (4 tests): very_large_contribution, negative_age_gap, zero_inflation, custom_target_amount",
+    "TestDataQualityHardening (4 tests): all_nan_column, single_row_dataframe, no_sp500_column, summary_healthy_status",
+    "TestRegimeValidatorHardening (5 tests): crisis_regime, volatile_regime, neutral_regime, empty_dataframe, notes_populated",
+    "TestShapHardening (3 tests): missing_feature_column, nonexistent_override, multiple_rows",
+    "TestReturnModelHardening (3 tests): quantiles_before_train_raises, multi_horizon_training, predictions_clipped",
+    "TestNetLiquidityHardening (3 tests): all_current_keys, last_updated_format, cached_result_returned",
+    "TestLlmHardening (6 tests): mixed_sentiment, neutral_sentiment, negative_score_clamped, invalid_score_defaults_zero, none_news, earnings_only"
+  ],
+  "lines_changed_approx": 680,
+  "results": {
+    "before": {
+      "fast_tests_passing": 252,
+      "fast_test_files": 14,
+      "services_with_zero_tests": 7,
+      "broad_except_blocks_stock_analyzer": 8,
+      "broad_except_blocks_portfolio_engine": 5,
+      "hardcoded_thresholds_regime_validator": 2,
+      "code_smells_reported": 2
+    },
+    "after": {
+      "fast_tests_passing": 374,
+      "fast_test_files": 15,
+      "services_with_zero_tests": 0,
+      "broad_except_blocks_stock_analyzer": 3,
+      "broad_except_blocks_portfolio_engine": 1,
+      "hardcoded_thresholds_regime_validator": 0,
+      "code_smells_reported": 0,
+      "test_runtime_seconds": 60
+    },
+    "improved": true
+  },
+  "analysis": "The test count increase from 252 to 374 (+48%) is meaningful because the 122 new tests cover 7 services that previously had zero coverage. The except narrowing is a genuine improvement: a future yfinance API change that raises ConnectionError (instead of AttributeError/KeyError) will now propagate up and be visible rather than silently returning None. The _get_sector_peers function had its try/except removed entirely since it's a pure dict lookup that cannot fail. The regime_validator config change is small but correct: the 0.03 threshold was the only parameter in that service not read from config.py. However, the consensus check is still structurally weak: with institutional benchmarks at ~5.7% annual return, _check_consensus always returns True for bull and False for bear, making it a rubber stamp. Fixing that requires rethinking the check itself, not just moving the threshold.",
+  "what_i_would_do_differently": "1. The _check_consensus rubber stamp problem is the real issue in regime_validator, but I only fixed the symptom (hardcoded threshold) not the disease (stale benchmarks always agree with bull). Should have either made the threshold dynamic (e.g., based on risk_free_rate + equity premium) or flagged the consensus check as 'always agrees with bull given current benchmarks' in the notes. 2. The breadth_period=21 in _check_breadth is still hardcoded at line 125 — missed that while I was already in the file. 3. Some of the stock_analyzer helper tests use MagicMock which can mask real behavior differences. Integration-level tests with actual yfinance Ticker objects (marked slow) would be more valuable for catching API shape changes. 4. The ReturnPredictor tests train with random data, not financial features. A more realistic test would use synthetic features with known structure to verify the model learns something meaningful.",
+  "next_steps": [
+    "Fix the _check_consensus rubber stamp: consider making threshold dynamic or adding a staleness check on institutional benchmarks",
+    "Move breadth_period=21 to config (missed this cycle)",
+    "Add integration tests for stock_analyzer helpers with real yfinance data (slow tests)",
+    "Address the engine output showing null crash_prob_3m and null signal_action for all tickers in standalone analyze_stock()",
+    "Consider adding CVaR, factor exposure, or drawdown signal features (secondary research track)"
+  ],
+  "confidence": "high",
+  "depth_rating": "MEDIUM"
+}

@@ -309,7 +309,8 @@ def _get_analyst_targets(stock) -> Optional[dict]:
             "median": t.get("median"),
             "high": t.get("high"),
         }
-    except Exception:
+    except (AttributeError, KeyError, TypeError, ValueError) as e:
+        logger.debug("%s: analyst targets extraction failed — %s", getattr(stock, 'ticker', '?'), e)
         return None
 
 
@@ -332,7 +333,8 @@ def _get_recommendations(stock) -> Optional[dict]:
                 "strongSell": int(latest.get("strongSell", 0)),
             }
         return None
-    except Exception:
+    except (AttributeError, KeyError, TypeError, ValueError, IndexError) as e:
+        logger.debug("Recommendations extraction failed — %s", e)
         return None
 
 
@@ -369,7 +371,8 @@ def _get_holders(stock) -> Optional[dict]:
             result["top_holders"] = top
 
         return result if result else None
-    except Exception:
+    except (AttributeError, KeyError, TypeError, ValueError) as e:
+        logger.debug("Holders extraction failed — %s", e)
         return None
 
 
@@ -389,7 +392,8 @@ def _get_news(stock, max_items: int = 8) -> Optional[list]:
                 "date": content.get("pubDate", item.get("providerPublishTime", "")),
             })
         return items if items else None
-    except Exception:
+    except (AttributeError, KeyError, TypeError) as e:
+        logger.debug("News extraction failed — %s", e)
         return None
 
 
@@ -425,7 +429,8 @@ def _get_earnings(stock) -> Optional[dict]:
             "estimate": estimate,
             "surprise_history": surprises,
         }
-    except Exception:
+    except (AttributeError, KeyError, TypeError, ValueError, IndexError) as e:
+        logger.debug("Earnings extraction failed — %s", e)
         return None
 
 
@@ -439,7 +444,8 @@ def _get_price_history(prices, sample_every: int = 5) -> Optional[list]:
             {"date": str(d.date()) if hasattr(d, "date") else str(d), "price": round(float(v), 2)}
             for d, v in sampled.items()
         ]
-    except Exception:
+    except (AttributeError, TypeError, ValueError) as e:
+        logger.debug("Price history extraction failed — %s", e)
         return None
 
 
@@ -484,17 +490,15 @@ def _get_key_stats(info: dict, returns, current_price: float) -> Optional[dict]:
             stats["return_1y"] = float(((1 + returns.iloc[-252:]).prod() - 1) * 100) if len(returns) >= 252 else None
 
         return stats if stats else None
-    except Exception:
+    except (AttributeError, KeyError, TypeError, ValueError) as e:
+        logger.debug("Key stats extraction failed — %s", e)
         return None
 
 
 def _get_sector_peers(sector: str, ticker: str) -> Optional[list]:
     """Return peer tickers in the same sector."""
-    try:
-        peers = SECTOR_STOCK_MAP.get(sector, [])
-        return [p for p in peers if p != ticker][:6] or None
-    except Exception:
-        return None
+    peers = SECTOR_STOCK_MAP.get(sector, [])
+    return [p for p in peers if p != ticker][:6] or None
 
 
 def analyze_stocks(

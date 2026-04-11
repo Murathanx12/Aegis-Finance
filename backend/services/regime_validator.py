@@ -123,7 +123,8 @@ def _check_breadth(
     notes: list,
 ) -> bool:
     breadth_period = 21
-    min_declining = 6
+    rv_cfg = config.get("regime_validation", {})
+    min_declining = rv_cfg.get("min_declining_sectors", 6)
 
     sector_cols = [c for c in data.columns if c.startswith("Sector_")]
     if len(sector_cols) < 3:
@@ -175,10 +176,12 @@ def _check_consensus(current_regime: str, notes: list) -> bool:
     consensus_return = np.mean(returns)
     is_bearish = current_regime in ("Bear", "Crisis", "Volatile")
 
+    rv_cfg = config.get("regime_validation", {})
+    threshold = rv_cfg.get("consensus_bull_threshold", 0.03)
     if is_bearish:
-        confirmed = consensus_return < 0.03
+        confirmed = consensus_return < threshold
     else:
-        confirmed = consensus_return >= 0.03
+        confirmed = consensus_return >= threshold
 
     notes.append(f"Consensus annual return {consensus_return*100:.1f}%")
     return confirmed
