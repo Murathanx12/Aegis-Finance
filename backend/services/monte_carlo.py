@@ -266,6 +266,12 @@ def simulate_paths(
         )
     else:
         Z_price = rng.standard_t(df=t_df, size=(days, n_sims_gen))
+        # Normalize Student-t innovations to unit variance.
+        # Raw Student-t(df) has Var = df/(df-2) > 1, which adds unintended
+        # excess diffusion variance and biases the drift. Normalizing preserves
+        # the fat-tail shape (kurtosis) while matching the variance assumption.
+        if t_df > 2:
+            Z_price /= np.sqrt(t_df / (t_df - 2))
     Z_vol_raw = rng.standard_normal(size=(days, n_sims_gen))
     Z_jump = rng.uniform(size=(days, n_sims_gen))
     Z_jump_size = rng.normal(jump_mean, jump_std, size=(days, n_sims_gen))

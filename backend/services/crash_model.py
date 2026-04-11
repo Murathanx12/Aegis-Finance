@@ -313,14 +313,18 @@ class CrashPredictor:
         lgb_raw = self.lgb_models[horizon].predict_proba(X)[:, 1]
 
         if horizon in self.lr_models and horizon in self.scalers:
-            X_imputed = self.imputers[horizon].transform(
-                X if isinstance(X, pd.DataFrame) else X
-            ) if horizon in self.imputers else (
-                X.fillna(X.median()) if isinstance(X, pd.DataFrame) else X
-            )
-            X_scaled = self.scalers[horizon].transform(X_imputed)
-            lr_raw = self.lr_models[horizon].predict_proba(X_scaled)[:, 1]
-            blended = self.lgb_weight * lgb_raw + (1 - self.lgb_weight) * lr_raw
+            try:
+                X_imputed = self.imputers[horizon].transform(
+                    X if isinstance(X, pd.DataFrame) else X
+                ) if horizon in self.imputers else (
+                    X.fillna(X.median()) if isinstance(X, pd.DataFrame) else X
+                )
+                X_scaled = self.scalers[horizon].transform(X_imputed)
+                lr_raw = self.lr_models[horizon].predict_proba(X_scaled)[:, 1]
+                blended = self.lgb_weight * lgb_raw + (1 - self.lgb_weight) * lr_raw
+            except (AttributeError, ValueError) as e:
+                logger.warning("LR predict_proba failed for %s (%s), using LGB only", horizon, e)
+                blended = lgb_raw
         else:
             blended = lgb_raw
 
@@ -427,6 +431,14 @@ class CrashPredictor:
         self._train_crash_rate = state.get("train_crash_rate", {})
         self.lgb_weight = state.get("lgb_weight", 0.70)
         self.is_trained = True
+
+        # Patch LogisticRegression models for sklearn version compatibility.
+        # Models trained with sklearn>=1.6 drop the `multi_class` attribute,
+        # but sklearn<1.6 predict_proba requires it.
+        for horizon, lr_model in self.lr_models.items():
+            if isinstance(lr_model, LogisticRegression) and not hasattr(lr_model, "multi_class"):
+                lr_model.multi_class = "auto"
+
         logger.info(
             "Model loaded from %s (horizons: %s)",
             path,
