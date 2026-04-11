@@ -1,0 +1,17 @@
+Done. Here's a summary of Cycle 13:
+
+## Cycle 13 Summary
+
+**Problem found:** The `sector_analyzer.py` had the same hardcoded crash frequency bug (`1/9 = 0.111` instead of config's `0.07`) that was fixed in `simulation.py` back in Cycle 2. It also had:
+- Hardcoded `n_sims = 2000` instead of config's `10000`
+- No GARCH parameters (persistence, nu) passed to `simulate_paths`
+- No historical residuals for block bootstrap
+- No beta-adjusted crash frequency per sector
+
+**What I fixed:**
+1. **`backend/services/sector_analyzer.py`** — Replaced hardcoded crash freq with config value + beta adjustment per sector, used config n_sims (10000), fitted GARCH on SP500 returns to get persistence/nu/standardized residuals, and passed all parameters to `simulate_paths`
+2. **`backend/routers/sector.py`** — Enriched router to compute and pass `garch_vol` and `ml_crash_prob` to the sector analyzer
+
+**Impact:** The 59% crash frequency overestimate was making all sector projections systematically too pessimistic. High-beta sectors (Technology, Energy) now correctly get higher crash rates while defensive sectors (Utilities, Staples) get lower rates. Block bootstrap and GARCH bring sector MC quality to parity with the SP500 and per-stock paths.
+
+**Tests:** 60/60 fast tests pass, no regressions.
