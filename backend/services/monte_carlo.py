@@ -331,6 +331,13 @@ def simulate_paths(
 
         Z_vol_anti = rho_leverage * (-Z_price) + np.sqrt(1 - rho_leverage**2) * (-Z_vol_raw)
 
+        # Antithetic uniform draws for jump occurrence: when the original
+        # path triggers a jump (U < p), the antithetic path does not
+        # (1-U >= p for small p), and vice versa.  This extends the
+        # variance-reduction property of antithetic variates to the
+        # jump component, improving crash probability estimates.
+        Z_jump_anti = 1.0 - Z_jump
+
         for t in range(days):
             fair_value_anti *= np.exp(fv_growth)
             deviation = (prices_anti[t] - fair_value_anti) / fair_value_anti
@@ -347,8 +354,8 @@ def simulate_paths(
             drift_daily = base_drift - jump_compensator + mr_daily
             diffusion = sigma_t_anti * np.sqrt(dt) * (-Z_price[t])
 
-            # Jumps use same uniform draws (jumps are rare events, not symmetric)
-            jumps = np.where(Z_jump[t] < daily_jump_prob, Z_jump_size[t], 0.0)
+            # Antithetic jump occurrence: use 1-U so jumps are anti-correlated
+            jumps = np.where(Z_jump_anti[t] < daily_jump_prob, Z_jump_size[t], 0.0)
 
             log_return = drift_daily + diffusion + jumps
             prices_anti[t + 1] = prices_anti[t] * np.exp(log_return)

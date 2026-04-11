@@ -1,0 +1,34 @@
+{
+  "cycle": 2,
+  "timestamp": "2026-04-11T21:08:44.040358",
+  "data_sources": [
+    "market_snapshot",
+    "stock_analysis",
+    "sp500_monte_carlo",
+    "random_portfolios",
+    "cross_asset_correlations",
+    "backtest_accuracy"
+  ],
+  "errors": [],
+  "engine_services_available": [
+    "crash_model",
+    "regime_detector",
+    "risk_scorer",
+    "signal_engine"
+  ],
+  "quality_metrics": {
+    "mc_drift_errors": {
+      "AAPL": 19.28,
+      "NVDA": 36.73,
+      "XOM": 13.33,
+      "JPM": 9.73,
+      "TSLA": 54.77,
+      "JNJ": 4.08,
+      "AMZN": 58.78,
+      "BA": 59.17
+    },
+    "data_completeness": 6,
+    "errors_count": 0,
+    "engine_services_active": 4
+  }
+}
