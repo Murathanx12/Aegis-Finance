@@ -70,6 +70,7 @@ class CrashPredictor:
         self.feature_names: Optional[list[str]] = None
         self.is_trained: bool = False
         self._train_crash_rate: dict = {}
+        self._calibrator_input_range: dict = {}  # {horizon: (min, max)} of fitted blended scores
 
     def train(
         self,
@@ -252,11 +253,18 @@ class CrashPredictor:
         cal_raw, test_raw = blended_raw[:cal_split], blended_raw[cal_split:]
         cal_y_fit, test_y = val_y.values[:cal_split], val_y.values[cal_split:]
 
+        cal_cfg = config["ml"].get("calibration", {})
         calibrator = IsotonicRegression(
-            y_min=0.01, y_max=0.99, out_of_bounds="clip"
+            y_min=cal_cfg.get("isotonic_y_min", 0.01),
+            y_max=cal_cfg.get("isotonic_y_max", 0.99),
+            out_of_bounds="clip",
         )
         calibrator.fit(cal_raw, cal_y_fit)
         self.calibrators[horizon] = calibrator
+        self._calibrator_input_range[horizon] = (
+            float(np.min(cal_raw)),
+            float(np.max(cal_raw)),
+        )
 
         # ── Metrics on held-out test portion ────────────────────────
         if len(test_raw) >= 10:
@@ -295,16 +303,14 @@ class CrashPredictor:
             "pred_std": float(cal_probs.std()),
         }
 
-    def predict_proba(
-        self, features: pd.DataFrame, horizon: str = "3m"
-    ) -> np.ndarray:
-        """Predict calibrated crash probability.
+    def _blend_scores(
+        self, features: pd.DataFrame, horizon: str
+    ) -> tuple[np.ndarray, str]:
+        """Compute blended LGB+LR scores for a given horizon.
 
-        Pipeline: features -> LightGBM + Logistic blend -> isotonic calibration
+        Returns (blended_scores, resolved_horizon) where resolved_horizon
+        is the actual horizon used (may differ if requested horizon was missing).
         """
-        if not self.is_trained:
-            raise RuntimeError("Model not trained — call train() or load_model() first")
-
         X = features[self.feature_names] if isinstance(features, pd.DataFrame) else features
 
         if horizon not in self.lgb_models:
@@ -328,12 +334,69 @@ class CrashPredictor:
         else:
             blended = lgb_raw
 
+        return blended, horizon
+
+    def predict_proba(
+        self, features: pd.DataFrame, horizon: str = "3m"
+    ) -> np.ndarray:
+        """Predict calibrated crash probability.
+
+        Pipeline: features -> LightGBM + Logistic blend -> isotonic calibration
+        """
+        if not self.is_trained:
+            raise RuntimeError("Model not trained — call train() or load_model() first")
+
+        cal_cfg = config["ml"].get("calibration", {})
+        prob_floor = cal_cfg.get("prob_floor", 0.001)
+        prob_ceil = cal_cfg.get("prob_ceil", 0.999)
+        floor_warn_pct = cal_cfg.get("floor_warn_pct", 0.50)
+        use_base_rate_fallback = cal_cfg.get("fallback_to_base_rate", True)
+
+        blended, horizon = self._blend_scores(features, horizon)
+
         if horizon in self.calibrators:
+            # Check for out-of-distribution blended scores
+            cal_range = self._calibrator_input_range.get(horizon)
+            if cal_range is not None:
+                oob_low = int(np.sum(blended < cal_range[0]))
+                oob_high = int(np.sum(blended > cal_range[1]))
+                if oob_low + oob_high > 0:
+                    logger.info(
+                        "Crash model %s: %d/%d blended scores outside calibrator "
+                        "training range [%.3f, %.3f] (low=%d, high=%d)",
+                        horizon, oob_low + oob_high, len(blended),
+                        cal_range[0], cal_range[1], oob_low, oob_high,
+                    )
             calibrated = self.calibrators[horizon].predict(blended)
         else:
             calibrated = blended
 
-        return np.clip(calibrated, 0.02, 0.98)
+        clipped = np.clip(calibrated, prob_floor, prob_ceil)
+
+        # Detect degenerate calibrator output: when most predictions are
+        # pinned to the floor, the calibrator is likely out-of-distribution
+        # (e.g. from feature drift). Fall back to the training base rate so
+        # downstream consumers get a meaningful (if conservative) estimate.
+        n_at_floor = int(np.sum(calibrated <= prob_floor + 1e-6))
+        n_total = len(calibrated)
+        if n_total > 0 and n_at_floor / n_total > floor_warn_pct:
+            base_rate = self._train_crash_rate.get(horizon)
+            logger.warning(
+                "Crash model %s: %.0f%% of predictions pinned at floor (%.4f). "
+                "Calibrator may be out-of-distribution — possible feature drift.",
+                horizon,
+                n_at_floor / n_total * 100,
+                prob_floor,
+            )
+            if use_base_rate_fallback and base_rate is not None:
+                logger.warning(
+                    "Falling back to training base rate %.2f%% for %s",
+                    base_rate * 100,
+                    horizon,
+                )
+                clipped = np.full_like(clipped, base_rate)
+
+        return clipped
 
     def predict_all_horizons(self, features: pd.DataFrame) -> dict:
         """Predict crash probability at all trained horizons.
@@ -356,6 +419,57 @@ class CrashPredictor:
                 raw[curr] = np.maximum(raw[curr], raw[prev])
 
         return raw
+
+    def diagnostics(self, features: pd.DataFrame) -> dict:
+        """Run diagnostic checks on crash model predictions.
+
+        Returns dict with per-horizon health info: whether predictions are
+        degenerate, calibrator out-of-bounds stats, and base rate fallback status.
+        Checks raw calibrator output (before fallback) to detect floor-pinning.
+        """
+        cal_cfg = config["ml"].get("calibration", {})
+        prob_floor = cal_cfg.get("prob_floor", 0.001)
+        floor_warn_pct = cal_cfg.get("floor_warn_pct", 0.50)
+        fallback_enabled = cal_cfg.get("fallback_to_base_rate", True)
+
+        result = {}
+        for horizon in self.lgb_models:
+            # Get raw calibrator output (bypass fallback) to detect floor-pinning
+            raw_probs = self._raw_calibrated(features, horizon)
+            clipped = np.clip(raw_probs, prob_floor, 1.0)
+            n_at_floor = int(np.sum(clipped <= prob_floor + 1e-6))
+            n_total = len(clipped)
+            floor_pct = n_at_floor / n_total if n_total > 0 else 0
+            is_degenerate = floor_pct > floor_warn_pct
+
+            base_rate = self._train_crash_rate.get(horizon)
+            cal_range = self._calibrator_input_range.get(horizon)
+            actually_falling_back = (
+                is_degenerate and fallback_enabled and base_rate is not None
+            )
+
+            # Final predictions (with fallback applied)
+            final_probs = self.predict_proba(features, horizon)
+
+            result[horizon] = {
+                "n_predictions": n_total,
+                "n_at_floor": n_at_floor,
+                "floor_pct": round(floor_pct * 100, 1),
+                "degenerate": is_degenerate,
+                "using_base_rate_fallback": actually_falling_back,
+                "base_rate": round(base_rate * 100, 2) if base_rate else None,
+                "calibrator_range": cal_range,
+                "pred_mean": round(float(np.mean(final_probs)) * 100, 2),
+                "pred_std": round(float(np.std(final_probs)) * 100, 4),
+            }
+        return result
+
+    def _raw_calibrated(self, features: pd.DataFrame, horizon: str) -> np.ndarray:
+        """Get raw calibrator output without floor/fallback logic."""
+        blended, horizon = self._blend_scores(features, horizon)
+        if horizon in self.calibrators:
+            return self.calibrators[horizon].predict(blended)
+        return blended
 
     def get_shap_values(
         self, features: pd.DataFrame, horizon: str = "3m"
@@ -411,6 +525,7 @@ class CrashPredictor:
             "imputers": self.imputers,
             "feature_names": self.feature_names,
             "train_crash_rate": self._train_crash_rate,
+            "calibrator_input_range": self._calibrator_input_range,
             "lgb_weight": self.lgb_weight,
         }
         Path(path).parent.mkdir(parents=True, exist_ok=True)
@@ -429,6 +544,7 @@ class CrashPredictor:
         self.imputers = state.get("imputers", {})
         self.feature_names = state["feature_names"]
         self._train_crash_rate = state.get("train_crash_rate", {})
+        self._calibrator_input_range = state.get("calibrator_input_range", {})
         self.lgb_weight = state.get("lgb_weight", 0.70)
         self.is_trained = True
 

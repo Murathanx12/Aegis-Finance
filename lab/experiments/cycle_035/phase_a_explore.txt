@@ -1,0 +1,22 @@
+## Cycle 35 — Phase A: EXPLORE Complete
+
+**All 633 fast tests pass.** Here are the top 3 findings:
+
+### Finding #1: Crash Model Predictions Pinned to 2.0% Floor (CRITICAL)
+- `crash_model.py:336` — `np.clip(calibrated, 0.02, 0.98)` hard-floors every prediction
+- Combined with 98.8% feature drift, the IsotonicRegression calibrator (`out_of_bounds="clip"` at L255-257) collapses all out-of-distribution inputs to its minimum, which then hits the 0.02 floor
+- **Result**: Every stock shows exactly 2.0% crash probability — the model is effectively dead
+
+### Finding #2: `walk_forward.py` Purged CV is a No-Op (CORRECTNESS BUG)
+- `walk_forward.py:192-193` logs "Using purged CV with N-day embargo" but the training loop at L253-263 does standard `iloc[:train_end]` with **zero purge/embargo**
+- Backtest metrics are inflated by information leakage
+- Violates CLAUDE.md rule: "Use purged CV with embargo for all ML validation"
+
+### Finding #3: `return_model.py` Index Alignment Bug
+- `return_model.py:82-84` — Per-horizon loop re-slices target with `train_end_idx` then filters against original `X` (not `X_clean`), creating potential row count misalignment
+- All LightGBM hyperparameters hardcoded (L144-158) instead of in config
+- Fallback `ReturnPredictor` (L265-286) silently returns fake "success" with 0.0 MAE
+
+**Recommended Phase B priorities**: Fix crash model floor + add diagnostics (#1), implement actual purge/embargo (#2), fix return_model alignment (#3).
+
+---STDERR---

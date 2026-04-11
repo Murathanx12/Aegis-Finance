@@ -1,0 +1,27 @@
+## Phase C: TEST & HARDEN — Complete
+
+### Full pytest output: **673 passed, 0 failed** (was 633 → +40 new tests)
+
+### Code hardening (3 files):
+| Fix | File | What |
+|-----|------|------|
+| Eliminated duplication | `crash_model.py` | Extracted `_blend_scores()` — shared LGB+LR logic for `predict_proba` and `_raw_calibrated` |
+| Moved hardcoded values | `crash_model.py` + `config.py` | IsotonicRegression `y_min=0.01, y_max=0.99` → `config["ml"]["calibration"]["isotonic_y_min/max"]` |
+| Narrowed except block | `routers/crash.py` | `except Exception` → `(FileNotFoundError, OSError)` + `(ValueError, KeyError, RuntimeError)` |
+
+### 40 tests across 10 classes:
+
+| Class | # | Edge cases covered |
+|-------|---|---|
+| TestConfigurableFloor | 5 | Custom floor/ceil, missing config section, hardcoded removal |
+| TestDegenerateDetection | 6 | Fallback on/off, missing base rate, warning logs, batch uniformity |
+| TestDiagnostics | 6 | Healthy/degenerate/multi-horizon/missing-range/batch |
+| TestCalibratorRangePersistence | 3 | Save/load, old model compat, type validation |
+| TestPredictProbaEdgeCases | 8 | Untrained, unknown horizon, NaN, all-NaN, ±1e6, no calibrator, no LR |
+| TestBlendScores | 3 | Return type, horizon resolution, bounds |
+| TestPredictAllHorizons | 2 | Monotonicity with degenerate 3m |
+| TestOOBLogging | 2 | OOB detection with/without range |
+| TestIsotonicConfig | 2 | Config bounds exist, training uses them |
+| TestDiagnosticsRouter | 3 | Endpoint routing, JSON contract, model-not-trained |
+
+---STDERR---
