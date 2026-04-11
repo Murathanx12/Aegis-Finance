@@ -130,6 +130,55 @@ def _predict_crash(horizon: str, explain: bool) -> dict:
     return result
 
 
+@router.get("/diagnostics")
+async def get_crash_diagnostics():
+    """Crash model health diagnostics: calibrator status, floor-pinning, drift."""
+    try:
+        result = await asyncio.to_thread(_crash_diagnostics)
+        return result
+    except (FileNotFoundError, OSError) as e:
+        logger.error("crash diagnostics I/O error: %s", e)
+        raise HTTPException(status_code=500, detail=f"Model file error: {e}")
+    except (ValueError, KeyError, TypeError, RuntimeError, ImportError) as e:
+        logger.error("crash diagnostics computation failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _crash_diagnostics() -> dict:
+    from backend.config import MODEL_DIR
+    from backend.services.crash_model import CrashPredictor
+    from backend.services.data_fetcher import DataFetcher
+    from engine.training.features import build_feature_matrix
+
+    model_path = MODEL_DIR / "crash_model.pkl"
+    if not model_path.exists():
+        return {"status": "model_not_trained"}
+
+    predictor = CrashPredictor()
+    predictor.load_model(str(model_path))
+
+    fetcher = DataFetcher()
+    data, _ = fetcher.fetch_market_data()
+    fred_data = fetcher.fetch_fred_data()
+
+    features = build_feature_matrix(data, fred_data=fred_data)
+    available = [f for f in predictor.feature_names if f in features.columns]
+    latest = features[available].iloc[[-1]]
+
+    diag = predictor.diagnostics(latest)
+    any_degenerate = any(h["degenerate"] for h in diag.values())
+
+    return {
+        "status": "degraded" if any_degenerate else "healthy",
+        "horizons": diag,
+        "recommendation": (
+            "Model predictions are degenerate — retrain with recent data "
+            "(python -m engine.training.train_crash_model)"
+            if any_degenerate else "Model operating normally"
+        ),
+    }
+
+
 @router.get("/{ticker}")
 async def get_ticker_crash(ticker: str = "SPY"):
     """Per-ticker crash risk assessment using beta-adjusted market crash probability."""

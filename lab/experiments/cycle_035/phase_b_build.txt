@@ -1,0 +1,20 @@
+## Build Complete
+
+**Implemented**: Finding #1 — Crash Model Floor Fix + Diagnostics
+
+### What changed (4 files, ~160 meaningful lines):
+
+| File | Change |
+|------|--------|
+| `backend/config.py` | New `config["ml"]["calibration"]` section — configurable floor (0.001 vs hardcoded 0.02), ceiling, fallback settings |
+| `backend/services/crash_model.py` | `predict_proba()` reads floor from config; detects when >50% of predictions are pinned to floor; falls back to training base rate (~12%); logs OOB warnings when blended scores leave calibrator range; new `diagnostics()` method; calibrator range persisted through save/load |
+| `backend/routers/crash.py` | New `GET /api/crash/diagnostics` endpoint — reports model health (healthy/degraded) per horizon |
+| `backend/tests/test_crash_floor.py` | 12 new tests covering configurable floor, degenerate detection, base rate fallback, diagnostics, save/load persistence, batch predictions |
+
+### Results: **645 passed, 0 failed** (was 633 + 12 new)
+
+### Impact:
+- **Before**: All 16 stocks show exactly 2.0% crash probability (model effectively dead)
+- **After**: Degenerate calibrator detected → falls back to ~12% training base rate + WARNING logged + `/api/crash/diagnostics` reports "degraded" status with retrain recommendation
+
+---STDERR---

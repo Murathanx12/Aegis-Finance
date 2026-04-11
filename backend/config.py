@@ -144,6 +144,15 @@ config: dict = {
             "ks_p_threshold": 0.01,
             "n_bins": 10,
         },
+        # Calibration output bounds (Phase 5.1)
+        "calibration": {
+            "prob_floor": 0.001,       # min crash probability (was 0.02 — too aggressive)
+            "prob_ceil": 0.999,        # max crash probability
+            "floor_warn_pct": 0.50,    # warn when >50% of predictions hit the floor
+            "fallback_to_base_rate": True,  # use training base rate when calibrator is degenerate
+            "isotonic_y_min": 0.01,    # IsotonicRegression lower bound
+            "isotonic_y_max": 0.99,    # IsotonicRegression upper bound
+        },
     },
 
     # ── GLOBAL MARKET PARAMETERS ────────────────────────────────────────
