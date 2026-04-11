@@ -1,0 +1,77 @@
+---
+
+## Phase A: Exploration Report — Cycle 22
+
+**170/170 fast tests pass** (37.6s). All 19 services healthy. No pre-existing failures.
+
+### Top 3 Findings
+
+---
+
+### Finding 1: Signal Engine produces near-zero diversity (14 Buy / 2 Hold / 0 Sell)
+
+**Files:** `backend/services/signal_engine.py:246-257`, `backend/config.py:165-170`
+
+**Problem:** The market-level signal is 0.046 (barely Hold), but `get_stock_signal()` blends 30% analyst-target signal into the base score. Since most analysts set targets ~15-25% above current price, the analyst component alone (`0.3 * clip(upside/30, -.5, .5)`) contributes ~0.10-0.15, pushing nearly every stock past the Buy threshold of 0.15.
+
+**Math proof** (line 257): If market_score=0.046 and analyst_upside=20%, then:
+- `analyst_sig = clip(20/30) = 0.667 → capped at 0.5`
+- `stock_score = 0.7 * 0.046 + 0.3 * 0.5 = 0.032 + 0.15 = 0.182` → **Buy** (threshold 0.15)
+
+Even a 10% analyst upside yields: `0.7 * 0.046 + 0.3 * 0.333 = 0.132` — still close to Buy. Forward PE compression (lines 287-300) adds another +0.05 to +0.15 on top.
+
+**Impact:** Screener is useless for differentiation. Users see 87.5% Buy signals, making the signal engine a rubber stamp.
+
+**Fix direction:** Either reduce analyst weight from 30% to ~15%, or make analyst signal additive (not replacing base), or raise the Buy threshold.
+
+---
+
+### Finding 2: `features.py` line 317 — inf values silently replaced with 0
+
+**File:** `engine/training/features.py:317`
+
+```python
+df = df.replace([np.inf, -np.inf], np.nan).ffill().fillna(0)
+```
+
+**Problem:** Infinite values come from division-by-zero bugs upstream (e.g., `vol_ratio_1m_3m`, Bollinger bands, correlation features). Replacing them with `ffill().fillna(0)` hides the root cause. Early rows where no rolling window has filled yet get `NaN → 0`, making them indistinguishable from genuine zero-value features. LightGBM handles NaN natively — these should stay NaN, not become 0.
+
+**Impact:** Model sees corrupted training features at early timestamps. The `fillna(0)` particularly harms ratio features (a ratio of 0 has meaning). This degrades crash model calibration silently.
+
+**Fix direction:** Replace `fillna(0)` with leaving NaN for LightGBM. For sklearn paths, use `SimpleImputer(strategy="median")` as CLAUDE.md specifies.
+
+---
+
+### Finding 3: Risk scorer momentum threshold hardcoded + 6/7 signal components at zero
+
+**Files:** `backend/services/risk_scorer.py:82`, `backend/services/signal_engine.py:80-101`
+
+**Problem A (risk_scorer.py:82):** Momentum exhaustion uses `max(0, abs(x) - 1.5)` with the 1.5 threshold hardcoded instead of in `config.py`. Comment says "lowered from 2.0 to 1.5" — this is configuration drift waiting to happen.
+
+**Problem B:** In the current engine output, 6 of 7 market signal components are exactly 0.0:
+- `crash_prob: 0.0` — crash model unavailable (model file missing or `crash_prob_3m=None`)
+- `regime: 0.0` — regime is Bull but mapped to 0.7... wait, actually 0.0 means it's not being set. Let me recheck...
+
+Actually looking at the data: `regime.current = "Bull"` and signal components show `regime: 0.0`. Wait — the engine output `signal_quality.market_signal.components` shows `crash_prob: 0.0, regime: 0.0, momentum: 0.0, mean_reversion: 0.0, external: 0.0, macro_risk: -0.0`. But regime is Bull, so it should be 0.7. The `0.0` for regime means the data_generator's signal computation is passing `regime="Neutral"` (default), not the actual detected regime.
+
+**Impact:** The market signal is computed with almost no information (only `valuation=0.3` contributes), making it structurally uninformative. The per-stock signals then inherit this empty base and get entirely dominated by analyst targets (Finding 1).
+
+---
+
+### Honorable Mentions
+- `walk_forward.py:265-271` — possible training loop bug where success check is never True (needs verification with actual training run)
+- `shap_explainer.py:103-109` — hardcoded counterfactual feature names that may not exist in feature matrix
+- `drift_detector.py:195` — synthetic KS reference sample has arbitrary size (1000), rounding errors in bin counts
+
+### Recommended Cycle 22 Focus
+
+**Primary target: Fix signal differentiation** (Finding 1 + Finding 3B). The screener is the most user-visible feature and it's currently a wall of "Buy" signals. This requires:
+1. Rebalancing analyst-target weight in `get_stock_signal()`
+2. Ensuring all 7 signal components actually contribute (especially crash_prob and regime)
+3. Potentially widening Buy/Sell thresholds
+
+**Secondary target: Fix features.py `fillna(0)`** (Finding 2) — straightforward change that improves ML model input quality.
+
+Ready for Phase B when you are.
+
+---STDERR---

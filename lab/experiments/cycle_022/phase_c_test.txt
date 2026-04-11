@@ -1,0 +1,24 @@
+**215/215 passed, 0 failed.** 35.7s.
+
+---
+
+## Hardening Summary
+
+### New test file: `backend/tests/test_cycle22_hardening.py` — 42 tests across 7 classes
+
+| Class | Tests | What it covers |
+|-------|-------|----------------|
+| `TestStockSignalAdditiveBlending` | 5 | Analyst weight is bounded, downside penalizes, zero/negative targets ignored |
+| `TestStockSignalEdgeCases` | 7 | Sector momentum threshold/clipping, PE zero/negative, forward PE None/zero/declining |
+| `TestMarketSignalExtremeInputs` | 14 | All-None optionals, 100% crash, VIX 0/90, risk_score ±4, unknown regime/consensus, yield curve inversion, mean reversion activation/blocking |
+| `TestRiskScorerConfigThreshold` | 5 | Config key exists, SP500-only data, empty DataFrame, all-9-columns, constant prices |
+| `TestRollingZscoreEdges` | 4 | Short series (all NaN), constant (std=0), clip range, dual_zscore >= long |
+| `TestFeaturesNanPreservation` | 3 | Source code check for `fillna(0)`, NaN in early rows, no ±inf in output |
+| `TestConfigStockSignalWeights` | 4 | Config section exists, required keys, analyst weight < 0.20, all positive |
+
+### Test count change
+- **Before:** 170 fast tests
+- **After:** 215 fast tests (+45: 42 in hardening file, 3 in signal_engine)
+- **0 regressions** in existing tests
+
+---STDERR---

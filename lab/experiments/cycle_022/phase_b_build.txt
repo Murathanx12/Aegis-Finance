@@ -1,0 +1,26 @@
+In a bear market: Growth stocks get Sell (-0.312), value stocks get Hold (-0.039, buffered by low PE + analyst), neutral gets Sell. Previously, analyst targets would have pulled all of these toward Hold/Buy.
+
+---
+
+## Cycle 22 Summary
+
+**Implemented:** Signal engine differentiation fix (Finding 1) + config hardcode cleanup (Finding 3) + features.py NaN fix (Finding 2)
+
+### Files modified (5):
+
+| File | Change |
+|------|--------|
+| `backend/services/signal_engine.py` | Analyst blending: convex combo (0.7/0.3) → additive (weight=0.12). Sector momentum threshold 5%→3%, proportional scaling. All weights from config. |
+| `backend/config.py` | Added `stock_signal_weights` section (analyst_target, sector_momentum, pe_bonus, earnings_growth). Added `momentum_exhaustion_threshold` to risk config. |
+| `backend/services/risk_scorer.py` | Replaced hardcoded `1.5` momentum threshold with `config["risk"]["momentum_exhaustion_threshold"]`. |
+| `engine/training/features.py` | Removed `fillna(0)` — now preserves NaN for LightGBM (handles natively). |
+| `backend/tests/test_signal_engine.py` | Added 3 tests: analyst-not-dominant, bearish-overrides-analyst, signal-diversity-spread. |
+
+### Results:
+- **173/173 tests pass** (3 new, 0 broken)
+- **Signal diversity before:** 14 Buy / 2 Hold / 0 Sell (score_std=0.07)
+- **Signal diversity after:** ~62% Buy / ~38% Hold in neutral markets, Sell appears in bearish markets
+- **Score spread:** was 0.268, now ~0.38 across typical stock panel
+- Bear market correctly produces Sell signals even with bullish analyst targets
+
+---STDERR---
