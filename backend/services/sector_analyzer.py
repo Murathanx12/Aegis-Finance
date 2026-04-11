@@ -167,31 +167,58 @@ def analyze_sectors(
     crash_freq = sim_cfg["jump_diffusion"]["annual_rate"]
     base_scenario = {"drift_adj": 0, "vol_mult": 1.0, "crash_mult": 1.0}
 
-    # Fit GARCH on SP500 returns for conditional vol and tail parameters
-    sp_garch_vol = garch_vol
+    # Fit GARCH per sector for sector-specific vol dynamics, tail thickness,
+    # and standardized residuals.  Fall back to SP500 GARCH when the sector
+    # series is too short or the fit fails.
     sp_garch_persistence = None
     sp_garch_nu = None
     sp_hist_residuals = None
     try:
         from backend.models.garch import fit_garch, get_standardized_residuals
-        garch_result = fit_garch(sp_returns)
-        if garch_result.success:
-            if sp_garch_vol is None:
-                sp_garch_vol = garch_result.current_vol
-            sp_garch_nu = garch_result.nu
+        sp_garch_result = fit_garch(sp_returns)
+        if sp_garch_result.success:
+            sp_garch_nu = sp_garch_result.nu
             sp_garch_persistence = (
-                garch_result.alpha
-                + garch_result.gamma * np.sqrt(2 / np.pi)
-                + garch_result.beta
+                sp_garch_result.alpha
+                + sp_garch_result.gamma * np.sqrt(2 / np.pi)
+                + sp_garch_result.beta
             )
-            # GARCH-standardized residuals for block bootstrap
-            std_resid = get_standardized_residuals(garch_result, sp_returns)
+            std_resid = get_standardized_residuals(sp_garch_result, sp_returns)
             if std_resid is not None and len(std_resid) > 50:
                 sp_hist_residuals = std_resid
     except Exception as e:
-        logger.debug("Sector GARCH fit skipped: %s", e)
+        logger.debug("SP500 GARCH fit skipped: %s", e)
     if sp_hist_residuals is None and len(sp_returns) > 50:
         sp_hist_residuals = sp_returns.values
+
+    # Pre-fit GARCH for each sector on its own returns
+    sector_garch = {}  # name → (persistence, nu, residuals)
+    for name, f in sector_factors.items():
+        sec_persistence = sp_garch_persistence
+        sec_nu = sp_garch_nu
+        sec_residuals = sp_hist_residuals
+        try:
+            from backend.models.garch import fit_garch as _fit_garch, get_standardized_residuals as _get_resid
+            sec_returns = sector_data[name].pct_change().dropna()
+            if len(sec_returns) >= 500:
+                sec_garch = _fit_garch(sec_returns)
+                if sec_garch.success:
+                    sec_persistence = (
+                        sec_garch.alpha
+                        + sec_garch.gamma * np.sqrt(2 / np.pi)
+                        + sec_garch.beta
+                    )
+                    sec_nu = sec_garch.nu
+                    sec_std = _get_resid(sec_garch, sec_returns)
+                    if sec_std is not None and len(sec_std) > 50:
+                        sec_residuals = sec_std
+                    logger.debug(
+                        "Sector %s GARCH: persistence=%.3f, nu=%.1f",
+                        name, sec_persistence, sec_nu,
+                    )
+        except Exception as e:
+            logger.debug("Sector %s GARCH fit skipped: %s", name, e)
+        sector_garch[name] = (sec_persistence, sec_nu, sec_residuals)
 
     for name, f in sector_factors.items():
         expected_annual = f["expected_annual"]
@@ -202,6 +229,11 @@ def analyze_sectors(
         # Beta-adjust crash frequency: high-beta sectors crash more often
         beta_adj_crash_freq = float(np.clip(crash_freq * f["beta"], 0.02, 0.25))
 
+        # Use sector-specific GARCH parameters (falls back to SP500)
+        sec_persistence, sec_nu, sec_residuals = sector_garch.get(
+            name, (sp_garch_persistence, sp_garch_nu, sp_hist_residuals)
+        )
+
         sector_mu = np.log(1 + expected_annual)
         paths = simulate_paths(
             current, sector_mu, sigma, forecast_days, n_sims,
@@ -209,9 +241,9 @@ def analyze_sectors(
             ml_crash_prob=ml_crash_prob,
             ml_predicted_return=expected_annual,
             garch_vol=sigma,
-            garch_persistence=sp_garch_persistence,
-            garch_nu=sp_garch_nu,
-            historical_residuals=sp_hist_residuals,
+            garch_persistence=sec_persistence,
+            garch_nu=sec_nu,
+            historical_residuals=sec_residuals,
         )
 
         final = paths[-1]

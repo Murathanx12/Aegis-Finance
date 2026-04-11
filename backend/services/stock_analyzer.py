@@ -100,169 +100,169 @@ def analyze_stock(
     """Analyze a single stock with fundamental-aware Monte Carlo."""
     max_5y_return = config["simulation"]["max_5y_return"]
 
+    # ── Data fetch (expected to fail for bad tickers / network issues) ──
     try:
         stock = yf.Ticker(ticker)
         info = stock.info or {}
-
         hist = stock.history(period="5y")
-        if hist.empty or len(hist) < 252:
-            logger.warning("%s: Insufficient price history", ticker)
-            return None
-
-        prices = hist["Close"]
-        current_price = float(prices.iloc[-1])
-
-        market_cap = info.get("marketCap", None)
-        cap_tier = _get_cap_tier(market_cap)
-        beta = info.get("beta", 1.0)
-        if beta is None or beta <= 0:
-            beta = 1.0
-        analyst_target = info.get("targetMeanPrice", None)
-        company_name = info.get("shortName", ticker)
-        sector = info.get("sector", "Unknown")
-        pe_ratio = info.get("trailingPE", None)
-
-        returns = prices.pct_change().dropna()
-        log_returns = np.log(1 + returns)
-        hist_log_drift = float(log_returns.mean() * 252)  # log drift ≈ μ - 0.5σ²
-        hist_sigma = float(returns.std() * np.sqrt(252))
-
-        # Convert log drift to arithmetic expected return for consistent blending.
-        # All blend components (prior, analyst targets) are arithmetic returns;
-        # hist_log_drift is a log drift. Mixing them causes systematic drift bias.
-        hist_arithmetic = float(np.exp(hist_log_drift + 0.5 * hist_sigma**2) - 1)
-
-        min_cagr, max_cagr = STOCK_CAGR_CAPS[cap_tier]
-
-        # Bayesian shrinkage: blend historical drift toward long-run prior
-        # More data → trust history more; less data → shrink toward prior
-        # All values are now in arithmetic return space.
-        shrinkage_cfg = config.get("stocks", {}).get("drift_shrinkage", {})
-        prior = shrinkage_cfg.get("prior_equity_premium", 0.07)
-        min_shrink = shrinkage_cfg.get("min_shrinkage", 0.25)
-        max_shrink = shrinkage_cfg.get("max_shrinkage", 0.60)
-        years_for_min = shrinkage_cfg.get("data_years_for_min", 5.0)
-
-        data_years = len(returns) / 252.0
-        # Linear interpolation: more years → less shrinkage
-        shrinkage_weight = max_shrink - (max_shrink - min_shrink) * min(data_years / years_for_min, 1.0)
-        shrunk_arithmetic = shrinkage_weight * prior + (1.0 - shrinkage_weight) * hist_arithmetic
-        capped_arithmetic = float(np.clip(shrunk_arithmetic, min_cagr, max_cagr))
-
-        if analyst_target is not None and analyst_target > 0:
-            analyst_1y_return = (analyst_target / current_price) - 1
-            analyst_annual = np.clip(analyst_1y_return, -0.30, max_cagr)
-            blended_arithmetic = 0.60 * capped_arithmetic + 0.40 * analyst_annual
-        else:
-            blended_arithmetic = capped_arithmetic
-
-        final_arithmetic = float(np.clip(blended_arithmetic, min_cagr * 0.5, max_cagr))
-        final_sigma = float(np.clip(hist_sigma, 0.15, 0.80))
-
-        # Fit GARCH for better vol estimate and tail thickness
-        # NOTE: must be computed BEFORE Ito correction so garch_vol is available
-        garch_vol = None
-        garch_nu = None
-        garch_persistence = None
-        try:
-            from backend.models.garch import fit_garch
-            garch_result = fit_garch(returns)
-            if garch_result.success:
-                garch_vol = garch_result.current_vol
-                garch_nu = garch_result.nu
-                garch_persistence = garch_result.alpha + garch_result.gamma * np.sqrt(2 / np.pi) + garch_result.beta
-        except Exception as e:
-            logger.debug("%s: GARCH fit skipped — %s", ticker, e)
-
-        # Historical residuals for block bootstrap (preserves vol clustering)
-        # Prefer GARCH-standardized residuals: returns / conditional_vol are ~iid
-        # with uniform variance, so block bootstrap captures genuine tail events
-        # rather than mixing high-vol and low-vol period returns.
-        hist_residuals = None
-        if garch_vol is not None:
-            try:
-                from backend.models.garch import get_standardized_residuals
-                std_resid = get_standardized_residuals(garch_result, returns)
-                if std_resid is not None and len(std_resid) > 50:
-                    hist_residuals = std_resid
-            except Exception as e:
-                logger.debug("%s: GARCH residuals failed — %s", ticker, e)
-        if hist_residuals is None:
-            hist_residuals = returns.values if len(returns) > 50 else None
-
-        # Ito correction: convert arithmetic return to log drift for simulate_paths.
-        # simulate_paths uses log_return = drift*dt + sigma*dW, so the drift must be
-        # the log drift = ln(1+r) - 0.5*sigma^2 to produce correct E[S(T)].
-        # CRITICAL: use the vol that simulate_paths will actually use as base_vol
-        # (garch_vol if available, otherwise final_sigma). When garch_vol differs
-        # from final_sigma, using final_sigma creates drift bias of
-        # 0.5*(garch_vol^2 - final_sigma^2) per year — e.g., ~5.9% for NVDA.
-        ito_sigma = garch_vol if garch_vol is not None else final_sigma
-        final_mu = float(np.log(1 + final_arithmetic) - 0.5 * ito_sigma**2)
-
-        # Beta-adjusted crash frequency: high-beta stocks crash more often
-        base_crash_freq = config["simulation"]["jump_diffusion"]["annual_rate"]
-        beta_adj_crash_freq = float(np.clip(base_crash_freq * beta, 0.02, 0.25))
-        num_sims = config["simulation"]["num_simulations"]
-
-        base_scenario = {"drift_adj": 0, "vol_mult": 1.0, "crash_mult": 1.0}
-        paths = simulate_paths(
-            current_price, final_mu, final_sigma,
-            forecast_days, num_sims, beta_adj_crash_freq, 0.0, base_scenario,
-            garch_vol=garch_vol,
-            garch_nu=garch_nu,
-            garch_persistence=garch_persistence,
-            historical_residuals=hist_residuals,
-        )
-
-        final_prices = np.minimum(paths[-1], current_price * (1 + max_5y_return))
-        exp_return = float(np.mean(final_prices) / current_price - 1) * 100
-        med_return = float(np.median(final_prices) / current_price - 1) * 100
-        p05 = float(np.percentile(final_prices, 5))
-        p95 = float(np.percentile(final_prices, 95))
-        prob_loss = float(np.mean(final_prices < current_price)) * 100
-
-        running_peak = np.maximum.accumulate(paths, axis=0)
-        drawdowns = (paths - running_peak) / running_peak
-        avg_max_dd = float(np.mean(drawdowns.min(axis=0))) * 100
-
-        sharpe = (final_arithmetic - risk_free_rate) / final_sigma if final_sigma > 0 else 0
-
-        # Enriched data from yfinance
-        analyst_targets = _get_analyst_targets(stock)
-        recommendations = _get_recommendations(stock)
-        holders = _get_holders(stock)
-        news = _get_news(stock)
-        earnings = _get_earnings(stock)
-        price_history = _get_price_history(prices)
-        key_stats = _get_key_stats(info, returns, current_price)
-        peers = _get_sector_peers(sector, ticker)
-
-        return {
-            "ticker": ticker, "name": company_name, "sector": sector,
-            "current_price": current_price,
-            "market_cap": market_cap, "cap_tier": cap_tier,
-            "beta": beta, "pe_ratio": pe_ratio,
-            "analyst_target": analyst_target,
-            "hist_drift": hist_arithmetic * 100, "capped_drift": final_arithmetic * 100,
-            "volatility": final_sigma * 100,
-            "expected_return": exp_return, "median_return": med_return,
-            "p05_price": p05, "p95_price": p95,
-            "prob_loss_5y": prob_loss, "avg_max_drawdown": avg_max_dd,
-            "sharpe": sharpe,
-            "analyst_targets": analyst_targets,
-            "recommendations": recommendations,
-            "holders": holders,
-            "news": news,
-            "earnings": earnings,
-            "price_history": price_history,
-            "key_stats": key_stats,
-            "peers": peers,
-        }
-
     except Exception as e:
-        logger.warning("%s: Analysis failed — %s", ticker, e)
+        logger.warning("%s: Data fetch failed — %s", ticker, e)
         return None
+
+    if hist.empty or len(hist) < 252:
+        logger.warning("%s: Insufficient price history", ticker)
+        return None
+
+    prices = hist["Close"]
+    current_price = float(prices.iloc[-1])
+
+    market_cap = info.get("marketCap", None)
+    cap_tier = _get_cap_tier(market_cap)
+    beta = info.get("beta", 1.0)
+    if beta is None or beta <= 0:
+        beta = 1.0
+    analyst_target = info.get("targetMeanPrice", None)
+    company_name = info.get("shortName", ticker)
+    sector = info.get("sector", "Unknown")
+    pe_ratio = info.get("trailingPE", None)
+
+    returns = prices.pct_change().dropna()
+    log_returns = np.log(1 + returns)
+    hist_log_drift = float(log_returns.mean() * 252)  # log drift ≈ μ - 0.5σ²
+    hist_sigma = float(returns.std() * np.sqrt(252))
+
+    # Convert log drift to arithmetic expected return for consistent blending.
+    # All blend components (prior, analyst targets) are arithmetic returns;
+    # hist_log_drift is a log drift. Mixing them causes systematic drift bias.
+    hist_arithmetic = float(np.exp(hist_log_drift + 0.5 * hist_sigma**2) - 1)
+
+    min_cagr, max_cagr = STOCK_CAGR_CAPS[cap_tier]
+
+    # Bayesian shrinkage: blend historical drift toward long-run prior
+    # More data → trust history more; less data → shrink toward prior
+    # All values are now in arithmetic return space.
+    shrinkage_cfg = config.get("stocks", {}).get("drift_shrinkage", {})
+    prior = shrinkage_cfg.get("prior_equity_premium", 0.07)
+    min_shrink = shrinkage_cfg.get("min_shrinkage", 0.25)
+    max_shrink = shrinkage_cfg.get("max_shrinkage", 0.60)
+    years_for_min = shrinkage_cfg.get("data_years_for_min", 5.0)
+
+    data_years = len(returns) / 252.0
+    # Linear interpolation: more years → less shrinkage
+    shrinkage_weight = max_shrink - (max_shrink - min_shrink) * min(data_years / years_for_min, 1.0)
+    shrunk_arithmetic = shrinkage_weight * prior + (1.0 - shrinkage_weight) * hist_arithmetic
+    capped_arithmetic = float(np.clip(shrunk_arithmetic, min_cagr, max_cagr))
+
+    if analyst_target is not None and analyst_target > 0:
+        analyst_1y_return = (analyst_target / current_price) - 1
+        analyst_annual = np.clip(analyst_1y_return, -0.30, max_cagr)
+        blended_arithmetic = 0.60 * capped_arithmetic + 0.40 * analyst_annual
+    else:
+        blended_arithmetic = capped_arithmetic
+
+    final_arithmetic = float(np.clip(blended_arithmetic, min_cagr * 0.5, max_cagr))
+    final_sigma = float(np.clip(hist_sigma, 0.15, 0.80))
+
+    # Fit GARCH for better vol estimate and tail thickness
+    # NOTE: must be computed BEFORE Ito correction so garch_vol is available
+    garch_vol = None
+    garch_nu = None
+    garch_persistence = None
+    try:
+        from backend.models.garch import fit_garch
+        garch_result = fit_garch(returns)
+        if garch_result.success:
+            garch_vol = garch_result.current_vol
+            garch_nu = garch_result.nu
+            garch_persistence = garch_result.alpha + garch_result.gamma * np.sqrt(2 / np.pi) + garch_result.beta
+    except Exception as e:
+        logger.debug("%s: GARCH fit skipped — %s", ticker, e)
+
+    # Historical residuals for block bootstrap (preserves vol clustering)
+    # Prefer GARCH-standardized residuals: returns / conditional_vol are ~iid
+    # with uniform variance, so block bootstrap captures genuine tail events
+    # rather than mixing high-vol and low-vol period returns.
+    hist_residuals = None
+    if garch_vol is not None:
+        try:
+            from backend.models.garch import get_standardized_residuals
+            std_resid = get_standardized_residuals(garch_result, returns)
+            if std_resid is not None and len(std_resid) > 50:
+                hist_residuals = std_resid
+        except Exception as e:
+            logger.debug("%s: GARCH residuals failed — %s", ticker, e)
+    if hist_residuals is None:
+        hist_residuals = returns.values if len(returns) > 50 else None
+
+    # Ito correction: convert arithmetic return to log drift for simulate_paths.
+    # simulate_paths uses log_return = drift*dt + sigma*dW, so the drift must be
+    # the log drift = ln(1+r) - 0.5*sigma^2 to produce correct E[S(T)].
+    # CRITICAL: use the vol that simulate_paths will actually use as base_vol
+    # (garch_vol if available, otherwise final_sigma). When garch_vol differs
+    # from final_sigma, using final_sigma creates drift bias of
+    # 0.5*(garch_vol^2 - final_sigma^2) per year — e.g., ~5.9% for NVDA.
+    ito_sigma = garch_vol if garch_vol is not None else final_sigma
+    final_mu = float(np.log(1 + final_arithmetic) - 0.5 * ito_sigma**2)
+
+    # Beta-adjusted crash frequency: high-beta stocks crash more often
+    base_crash_freq = config["simulation"]["jump_diffusion"]["annual_rate"]
+    beta_adj_crash_freq = float(np.clip(base_crash_freq * beta, 0.02, 0.25))
+    num_sims = config["simulation"]["num_simulations"]
+
+    base_scenario = {"drift_adj": 0, "vol_mult": 1.0, "crash_mult": 1.0}
+    paths = simulate_paths(
+        current_price, final_mu, final_sigma,
+        forecast_days, num_sims, beta_adj_crash_freq, 0.0, base_scenario,
+        garch_vol=garch_vol,
+        garch_nu=garch_nu,
+        garch_persistence=garch_persistence,
+        historical_residuals=hist_residuals,
+    )
+
+    final_prices = np.minimum(paths[-1], current_price * (1 + max_5y_return))
+    exp_return = float(np.mean(final_prices) / current_price - 1) * 100
+    med_return = float(np.median(final_prices) / current_price - 1) * 100
+    p05 = float(np.percentile(final_prices, 5))
+    p95 = float(np.percentile(final_prices, 95))
+    prob_loss = float(np.mean(final_prices < current_price)) * 100
+
+    running_peak = np.maximum.accumulate(paths, axis=0)
+    drawdowns = (paths - running_peak) / running_peak
+    avg_max_dd = float(np.mean(drawdowns.min(axis=0))) * 100
+
+    sharpe = (final_arithmetic - risk_free_rate) / final_sigma if final_sigma > 0 else 0
+
+    # Enriched data from yfinance (non-critical — failures return None per field)
+    analyst_targets = _get_analyst_targets(stock)
+    recommendations = _get_recommendations(stock)
+    holders = _get_holders(stock)
+    news = _get_news(stock)
+    earnings = _get_earnings(stock)
+    price_history = _get_price_history(prices)
+    key_stats = _get_key_stats(info, returns, current_price)
+    peers = _get_sector_peers(sector, ticker)
+
+    return {
+        "ticker": ticker, "name": company_name, "sector": sector,
+        "current_price": current_price,
+        "market_cap": market_cap, "cap_tier": cap_tier,
+        "beta": beta, "pe_ratio": pe_ratio,
+        "analyst_target": analyst_target,
+        "hist_drift": hist_arithmetic * 100, "capped_drift": final_arithmetic * 100,
+        "volatility": final_sigma * 100,
+        "expected_return": exp_return, "median_return": med_return,
+        "p05_price": p05, "p95_price": p95,
+        "prob_loss_5y": prob_loss, "avg_max_drawdown": avg_max_dd,
+        "sharpe": sharpe,
+        "analyst_targets": analyst_targets,
+        "recommendations": recommendations,
+        "holders": holders,
+        "news": news,
+        "earnings": earnings,
+        "price_history": price_history,
+        "key_stats": key_stats,
+        "peers": peers,
+    }
 
 
 def _get_analyst_targets(stock) -> Optional[dict]:
