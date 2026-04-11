@@ -78,10 +78,10 @@ def _generate_block_bootstrap_residuals(
         row_start = b * block_size
         row_end = min(row_start + block_size, days)
         actual_len = row_end - row_start
-        for sim in range(n_sims):
-            residuals[row_start:row_end, sim] = standardized[
-                starts[b, sim] : starts[b, sim] + actual_len
-            ]
+        # Vectorized: build index array for all sims at once
+        offsets = np.arange(actual_len)[:, None]  # (actual_len, 1)
+        idx = starts[b][None, :] + offsets         # (actual_len, n_sims)
+        residuals[row_start:row_end, :] = standardized[idx]
 
     return residuals
 
@@ -395,6 +395,7 @@ def run_monte_carlo(
     hmm_regime_probs: Optional[np.ndarray] = None,
     hmm_state_vols: Optional[np.ndarray] = None,
     garch_nu: Optional[float] = None,
+    historical_residuals: Optional[np.ndarray] = None,
     seed: Optional[int] = None,
     n_sims_override: Optional[int] = None,
     forecast_days_override: Optional[int] = None,
@@ -505,6 +506,7 @@ def run_monte_carlo(
             hmm_regime_probs=hmm_regime_probs,
             hmm_state_vols=hmm_state_vols,
             garch_nu=garch_nu,
+            historical_residuals=historical_residuals,
             seed=scenario_seed,
         )
 
