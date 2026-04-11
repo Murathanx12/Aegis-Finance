@@ -1,0 +1,57 @@
+All tests pass (374/374). Here are my top 3 findings:
+
+---
+
+## Cycle 25 — Phase A: Exploration Report
+
+### Finding 1: Sector Analyzer Missing Ito Correction (Drift Bias Bug)
+
+**File:** `backend/services/sector_analyzer.py:240`
+
+The sector analyzer computes `sector_mu = np.log(1 + expected_annual)` but does **not** subtract the `0.5 * sigma^2` Ito correction term. Compare with the stock analyzer (`stock_analyzer.py:209`), which correctly computes:
+
+```python
+final_mu = float(np.log(1 + final_arithmetic) - 0.5 * ito_sigma**2)
+```
+
+The sector path uses `garch_vol=sigma` (line 247), meaning `simulate_paths` will use `sigma` as its base vol. The missing Ito correction causes **systematic upward drift bias** of `0.5 * sigma^2` per year. For a high-vol sector like Energy (sigma ~25%), this means `0.5 * 0.25^2 = +3.1%` annual drift bias. For Technology (~22%), it's +2.4%. This inflates `sim_total_return` and makes sector MC projections overoptimistic relative to their factor-model `expected_annual`.
+
+**Impact:** All 11 sector MC simulations run hotter than intended. The `expected_total` (factor model) and `sim_total_return` (MC) should track each other but don't due to this drift mismatch.
+
+---
+
+### Finding 2: `lxml` Not Installed — `stock.major_holders` / `institutional_holders` Silently Fail
+
+**File:** `backend/services/stock_analyzer.py:341-376`, engine output `run_metadata.errors`
+
+The engine output shows `ImportError: Import lxml failed` for all 8 tested tickers. yfinance's `.major_holders` and `.institutional_holders` properties use `pd.read_html()` internally, which requires `lxml`. Since `lxml` is not installed (`pip show lxml` → not found), the `_get_holders()` function always fails silently and returns `None` for every stock.
+
+This means the holders data section (insider %, institutional %, top holders) is **always empty** on the stock detail page. The `stock_analysis` engine output returning `{}` is also likely caused by these lxml errors cascading during data generation.
+
+**Fix:** `pip install lxml` and add it to `requirements.txt`.
+
+---
+
+### Finding 3: Portfolio Engine Has No CVaR/Drawdown in Build Response — Only in Analyze
+
+**Files:** `backend/services/portfolio_engine.py:359-372` vs `portfolio_engine.py:374-423`
+
+The `analyze_portfolio` method returns rich risk metrics: `var_95_daily`, `cvar_95_daily`, `max_drawdown`, `sharpe_ratio`, `annual_volatility`. But the `build_portfolio` method (and its sub-methods `_build_template`, `_build_bl`, `_build_hrp`) returns **no risk metrics at all** — just allocations, holdings, and descriptions.
+
+When a user builds a new portfolio, they get zero risk context about what they're buying into. They have to save the portfolio, then separately call `/api/portfolio/analyze` to see any risk numbers. This is a significant UX gap — the build response should include at least expected volatility, VaR/CVaR, and max drawdown computed from the same allocation it just generated.
+
+The research track mentions "CVaR, factor exposure, drawdown signals" as primary targets, and this is exactly the right place to add them.
+
+---
+
+### Bonus Observations
+
+- **No Sell signals anywhere** — signal_quality shows 10 Buy + 6 Hold, 0 Sell. The market composite score is +0.046 (Bull regime, low VIX at 19.2), so per-stock scores start positive and analyst-target upside further pushes them above the Buy threshold (0.15). The signal engine may need recalibration so the "Sell" action isn't unreachable in normal bull markets.
+
+- **`shap_explainer.py`** is clean but thin — `explain_prediction` and `run_counterfactual` are solid. The counterfactual scenarios (`DEFAULT_SCENARIOS`) are hardcoded rather than config-driven (minor, but inconsistent with the project rule).
+
+- **`data_quality.py`** and **`net_liquidity.py`** are well-written and idiomatic — no bugs found, no changes needed.
+
+Ready for Phase B when you are.
+
+---STDERR---
