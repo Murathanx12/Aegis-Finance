@@ -1,1 +1,27 @@
-[ERROR: [WinError 2] The system cannot find the file specified]
+All 68 tests pass (60 original + 8 new).
+
+---
+
+## What I built and why
+
+**4 bug fixes across 3 router files + 1 new test file = 4 files modified, ~80 lines changed**
+
+### Fixes applied:
+
+| File | Line | Bug | Fix |
+|------|------|-----|-----|
+| `backend/routers/market.py:207` | Wrong args + `.get()` on dataclass | `validate_external(fred_data_ext, crash_12m/100, regime)` + `.consensus_direction` |
+| `backend/routers/stock.py:205` | Same | Same fix |
+| `backend/routers/stock.py:365` | Same | Same fix |
+| `backend/routers/sector.py:59-67` | Calls non-existent `predictor.predict()` | Full crash model loading pattern matching other routers — loads model, builds features, calls `predict_proba(latest, "3m")` |
+
+### What this unblocks:
+
+1. **Signal engine now receives external consensus** — the `external_consensus` parameter in `get_market_signal()` was always `None` before. Now LEI, SLOOS, Fed funds, and consumer sentiment data actually flow through and influence Buy/Hold/Sell signals.
+
+2. **Sector analysis now uses crash probability** — `ml_crash_prob` was always `None` in `analyze_sectors()`. Now the crash model's 3-month probability feeds into sector return estimates, making them crash-aware.
+
+### New test file:
+`backend/tests/test_external_validator.py` — 8 tests validating the function contract (return type, attribute access pattern, argument combinations) and signal logic (bearish consensus, bullish consensus, divergence alerts). These tests ensure the wiring can't silently break again.
+
+---STDERR---

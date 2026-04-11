@@ -205,7 +205,7 @@ This is YOUR sandbox. Build what the project needs.
 ```json
 {
   "cycle": 19,
-  "timestamp": "2026-04-12T00:46:34.251446",
+  "timestamp": "2026-04-12T00:54:05.674734",
   "data_sources": [
     "market_snapshot",
     "stock_analysis",
@@ -398,21 +398,21 @@ This is YOUR sandbox. Build what the project needs.
     "realism_check"
   ],
   "current_price": 6816.89013671875,
-  "final_mean": 9565.518114626899,
-  "final_median": 8713.598829253122,
-  "final_p05": 3834.2381785957546,
-  "final_p10": 4653.347223834305,
-  "final_p25": 6358.100832794762,
-  "final_p75": 11836.074550577709,
-  "final_p90": 15516.359031734659,
-  "final_p95": 18456.50271801082,
-  "total_return_pct": 40.32084899099131,
-  "annual_return_pct": 7.010018892730274,
-  "crash_prob_1y": 25.25,
-  "crash_prob_5y": 81.86,
-  "cvar_95_pct": -53.89644542231955,
-  "max_dd_pct": -30.759638553683587,
-  "max_drawdown_pct": 30.759638553683587
+  "final_mean": 9577.314742960287,
+  "final_median": 8697.321758340811,
+  "final_p05": 3812.295509194208,
+  "final_p10": 4644.295703236174,
+  "final_p25": 6321.873249385087,
+  "final_p75": 11858.811746239297,
+  "final_p90": 15670.26595424634,
+  "final_p95": 18376.284737161113,
+  "total_return_pct": 40.493898990284194,
+  "annual_return_pct": 7.036399798555704,
+  "crash_prob_1y": 25.019999999999996,
+  "crash_prob_5y": 82.04,
+  "cvar_95_pct": -54.83395625554661,
+  "max_dd_pct": -30.863213215370095,
+  "max_drawdown_pct": 30.863213215370095
 }
 ```
 
@@ -422,10 +422,10 @@ This is YOUR sandbox. Build what the project needs.
   "AAPL": {
     "ticker": "AAPL",
     "current_price": 260.4800109863281,
-    "mc_median_5y": 67.20335035859677,
-    "mc_p10_5y": -21.193761541487877,
-    "mc_p90_5y": 235.80429799036676,
-    "garch_vol": 23.90772670036577,
+    "mc_median_5y": 66.39766623629934,
+    "mc_p10_5y": -20.45888796830778,
+    "mc_p90_5y": 229.79835171289324,
+    "garch_vol": 23.9077641696099,
     "garch_nu": 8.0,
     "crash_prob_3m": null,
     "signal_action": null,
@@ -472,10 +472,10 @@ This is YOUR sandbox. Build what the project needs.
   "NVDA": {
     "ticker": "NVDA",
     "current_price": 188.6300048828125,
-    "mc_median_5y": 96.67993783099243,
-    "mc_p10_5y": -51.47540696260799,
+    "mc_median_5y": 97.75736907725714,
+    "mc_p10_5y": -52.42598496382199,
     "mc_p90_5y": 300.0,
-    "garch_vol": 39.931857728936144,
+    "garch_vol": 39.93263867863392,
     "garch_nu": 8.0,
     "crash_prob_3m": null,
     "signal_action": null,
@@ -522,10 +522,10 @@ This is YOUR sandbox. Build what the project needs.
   "XOM": {
     "ticker": "XOM",
     "current_price": 152.50999450683594,
-    "mc_median_5y": 82.4470949935842,
-    "mc_p10_5y": -6.299667884049409,
-    "mc_p90_5y": 249.74752221538458,
-    "garch_vol": 30.592922421361134,
+    "mc_median_5y": 82.16198229683289,
+    "mc_p10_5y": -6.473661243373252,
+    "mc_p90_5y": 248.94691240412325,
+    "garch_vol": 30.592868065454446,
     "garch_nu": 8.0,
     "crash_prob_3m": null,
     "signal_action": null,
@@ -572,10 +572,10 @@ This is YOUR sandbox. Build what the project needs.
   "JPM": {
     "ticker": "JPM",
     "current_price": 309.8699951171875,
-    "mc_median_5y": 56.062835866198554,
-    "mc_p10_5y": -15.623500576361293,
-    "mc_p90_5y": 191.66554229853426,
-    "garch_vol": 20.75694522048977,
+    "mc_median_5y": 55.7257576782902,
+    "mc_p10_5y": -17.667221158680924,
+    "mc_p90_5y": 195.99642583289545,
+    "garch_vol": 20.75693778944826,
     "garch_nu": 8.0,
     "crash_prob_3m": null,
     "signal_action": null,
@@ -598,7 +598,7 @@ This is YOUR sandbox. Build what the project needs.
       "expected_return",
       "median_return",
       "p05_price",
-      "p95
+      "p95_pri
 ... [truncated]
 ```
 

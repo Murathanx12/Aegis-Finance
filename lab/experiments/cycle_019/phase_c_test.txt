@@ -1,1 +1,43 @@
-[ERROR: [WinError 2] The system cannot find the file specified]
+**113 passed, 0 failed.** (60 original + 53 new)
+
+---
+
+## Summary of hardening changes
+
+### Files modified: 5
+
+| File | What changed |
+|------|-------------|
+| `backend/config.py` | Added `external_validator` config section with 13 named thresholds |
+| `backend/services/external_validator.py` | Replaced all 8 hardcoded magic numbers with `config["external_validator"]` lookups |
+| `backend/routers/market.py` | Narrowed 2 `except Exception: pass` → specific `(ImportError, FileNotFoundError, ValueError, KeyError)` with `logger.debug()` |
+| `backend/routers/stock.py` | Narrowed 4 `except Exception: pass` → specific exceptions with `logger.debug()` |
+| `backend/routers/sector.py` | Narrowed 2 `except Exception: pass` → specific exceptions with `logger.debug()` |
+
+### Test file: `backend/tests/test_external_validator.py` — 53 tests across 8 classes
+
+| Class | Tests | Coverage |
+|-------|-------|----------|
+| `TestExternalValidatorContract` | 8 | Return type, attribute access, None/empty inputs |
+| `TestAssessLEI` | 6 | Rising, declining, recession, empty, NaN-heavy |
+| `TestAssessSLOOS` | 7 | Tightening, easing, neutral, exact boundaries (20, -20), extreme |
+| `TestAssessFed` | 6 | Hawkish, dovish, neutral, too short, exact boundary (0.25) |
+| `TestAssessSentiment` | 8 | All 4 bands, exact boundaries (60, 80, 100), empty |
+| `TestConsensusLogic` | 6 | Full bearish, full bullish, mixed/neutral, divergence alerts, agreement=1.0 |
+| `TestEdgeCases` | 9 | NaN-only series, crash_prob=0/1, unknown regime, partial data, extreme values |
+| `TestConfigIntegration` | 3 | Config section exists, all 13 keys present, threshold ordering sanity |
+
+### What the narrow excepts catch vs what they let through
+
+**Caught** (graceful degradation — feature unavailable, fallback to `None`):
+- `ImportError` — crash model or features module not installed
+- `FileNotFoundError` — model .pkl not trained yet
+- `ValueError` / `KeyError` — data shape mismatch, missing columns
+- `TypeError` — wrong argument types in validator
+
+**No longer caught** (will surface as 500 errors to diagnose real bugs):
+- `AttributeError` — calling wrong method names (the old sector.py bug)
+- `IndexError` — empty DataFrames slipping through
+- `RuntimeError` — model corruption
+
+---STDERR---
