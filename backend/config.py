@@ -153,12 +153,13 @@ config: dict = {
     # Composite buy/sell signal weights (must sum to 1.0).
     # Derived from grid search over 2020-2025 S&P 500 data (signal_optimizer.py).
     "signal_weights": {
-        "crash_prob": 0.25,       # ML crash probability (leading indicator)
-        "regime": 0.20,           # Bull/Bear/Volatile regime detection
-        "valuation": 0.15,        # VIX-based fear/opportunity proxy
-        "momentum": 0.15,         # 1M + 3M price momentum
+        "crash_prob": 0.22,       # ML crash probability (leading indicator)
+        "regime": 0.18,           # Bull/Bear/Volatile regime detection
+        "valuation": 0.12,        # VIX-based fear/opportunity proxy
+        "momentum": 0.13,         # 1M + 3M price momentum
         "mean_reversion": 0.10,   # Oversold/overbought contrarian signal
-        "external": 0.15,         # External consensus (LEI, SLOOS, sentiment)
+        "external": 0.13,         # External consensus (LEI, SLOOS, sentiment)
+        "macro_risk": 0.12,       # 9-factor composite risk score (risk_scorer)
     },
     # Action thresholds: composite score ranges for each action
     "signal_thresholds": {

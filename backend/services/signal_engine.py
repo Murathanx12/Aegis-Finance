@@ -78,15 +78,24 @@ def get_market_signal(
     reasons = []
 
     # 1. Crash probability signal (-1 to +1)
+    #    Blend 3M (immediate risk) with 12M (structural risk) when both available
     if crash_prob_3m is not None:
         # Lower crash prob = more bullish
         # 5% → +0.8, 20% → 0, 50% → -0.8
-        crash_sig = np.clip(0.8 - (crash_prob_3m / 100) * 2.0, -1, 1)
-        components["crash_prob"] = crash_sig
+        crash_sig_3m = np.clip(0.8 - (crash_prob_3m / 100) * 2.0, -1, 1)
+        if crash_prob_12m is not None:
+            crash_sig_12m = np.clip(0.8 - (crash_prob_12m / 100) * 2.0, -1, 1)
+            # 70% weight on near-term, 30% on structural
+            crash_sig = 0.7 * crash_sig_3m + 0.3 * crash_sig_12m
+        else:
+            crash_sig = crash_sig_3m
+        components["crash_prob"] = float(crash_sig)
         if crash_prob_3m > 40:
             reasons.append(f"High 3M crash probability ({crash_prob_3m:.0f}%)")
         elif crash_prob_3m < 15:
             reasons.append(f"Low crash risk ({crash_prob_3m:.0f}% 3M)")
+        if crash_prob_12m is not None and crash_prob_12m > 50:
+            reasons.append(f"Elevated 12M crash risk ({crash_prob_12m:.0f}%)")
     else:
         components["crash_prob"] = 0.0
         weights["crash_prob"] = 0  # exclude if unavailable
@@ -163,6 +172,17 @@ def get_market_signal(
     components["external"] = ext_sig
     if external_consensus and external_consensus != "MIXED":
         reasons.append(f"External consensus: {external_consensus}")
+
+    # 7. Macro risk score — 9-factor composite (risk_scorer output)
+    #    risk_score is [-4, +4] z-score; >2.0 = elevated stress
+    #    Map to signal: low risk → bullish, high risk → bearish
+    # Linear map: risk_score 0 → 0, +2 → -0.6, +4 → -1.0, -2 → +0.4
+    macro_sig = float(np.clip(-risk_score * 0.25, -1.0, 0.5))
+    components["macro_risk"] = macro_sig
+    if risk_score > 2.0:
+        reasons.append(f"Macro stress elevated (risk score {risk_score:.1f})")
+    elif risk_score < -1.0:
+        reasons.append(f"Low macro stress (risk score {risk_score:.1f})")
 
     # Composite signal
     total_w = sum(weights[k] for k in components if k in weights)
