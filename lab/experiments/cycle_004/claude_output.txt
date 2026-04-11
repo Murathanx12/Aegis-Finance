@@ -1,0 +1,20 @@
+Committed successfully. Here's the cycle 4 summary:
+
+## Cycle 004 Results
+
+**What I found:** Block bootstrap was fully implemented in `monte_carlo.py` and enabled in config, but `historical_residuals` was **never passed** to `simulate_paths` from any caller. The feature was dead code.
+
+**What I did:**
+1. Wired `historical_residuals` into `run_monte_carlo()` (SP500 projection)
+2. Wired it into `_compute_scenarios()` (scenarios endpoint)
+3. Wired it into `stock_analyzer.py` (per-stock MC)
+4. Vectorized the bootstrap inner loop (replaced Python for-loop with numpy advanced indexing)
+
+**Results:**
+| Metric | Before | After |
+|--------|--------|-------|
+| SP500 drift error | 13.68% | 9.16% |
+| Variance ratio | 0.973 | 0.985 |
+| Tests passing | 60/60 | 60/60 |
+
+The block bootstrap now preserves real volatility clustering from historical returns instead of using parametric Student-t draws, producing more realistic MC path dynamics.
