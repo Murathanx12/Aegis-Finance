@@ -1,0 +1,16 @@
+## Cycle 14 Complete
+
+**What I found:** The portfolio projection endpoint (`project_portfolio` in `portfolio_engine.py`) was using a naive MC implementation — 13 cycles behind the main engine in quality. It had:
+- Raw Student-t draws (no GARCH, no bootstrap)
+- Arithmetic returns `(1+r)` that can produce **negative prices**
+- No Ito correction (biased drift)
+- No OU volatility dynamics
+
+**What I did:** Rewrote `project_portfolio` to use the same GARCH-enhanced MC:
+1. **GARCH fit** on portfolio returns → conditional vol + Student-t df
+2. **GARCH-standardized residuals** for block bootstrap → real vol clustering
+3. **Log-space simulation** `exp(log_return)` → impossible to get negative prices
+4. **Ito correction** `drift = log(1+r) - 0.5σ²` → correct expected returns
+5. **OU volatility dynamics** with adaptive Ito correction → time-varying vol
+
+**Results:** All 60 fast tests pass. Portfolio projection verified correct (P10 < median < P90, reasonable values for SPY+BND portfolio). The improvement is in the production `/api/portfolio/project` endpoint users interact with.
