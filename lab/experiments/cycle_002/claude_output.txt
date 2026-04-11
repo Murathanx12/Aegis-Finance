@@ -1,0 +1,20 @@
+## Cycle 002 Summary
+
+### What I found and fixed
+
+**Fix 1: Hardcoded parameters in `_compute_scenarios`** (`backend/routers/simulation.py`)
+- `crash_freq` was hardcoded to `1/9` (11.1%) instead of the config value `0.07` (7%) — a **59% overestimate** of crash frequency, making all scenario projections too pessimistic
+- `n_sims` was hardcoded to `3000` instead of the config's `10000`, reducing statistical convergence
+- `risk_score` was hardcoded to `0.0` and GARCH `nu` was not passed, losing risk-conditioned jump rates and tail estimation
+- Now matches the approach used in `_run_sp500_projection`
+
+**Fix 2: Antithetic variate jump handling** (`backend/services/monte_carlo.py`)
+- Antithetic paths reused identical jump uniform draws (`Z_jump`), so both paths experienced crashes simultaneously — defeating variance reduction for crash statistics
+- Now uses antithetic uniforms (`1 - Z_jump`) so jump occurrences are anti-correlated between path pairs
+
+**Diagnosed (read-only):** Cross-asset correlations show all NaN because yfinance returns different timezones (`America/New_York` vs `America/Chicago`) for individual ticker fetches. The data_generator combines these without timezone normalization, resulting in 0 aligned rows after `dropna()`.
+
+### Results
+- All **60/60 fast tests pass** (no regressions)
+- Both fixes improve production backend accuracy
+- Committed as `c3e8930`
