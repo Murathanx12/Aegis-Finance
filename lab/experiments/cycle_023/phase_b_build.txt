@@ -1,0 +1,26 @@
+## Summary
+
+**Implemented: HMM regime detection wired into all Monte Carlo simulations + drift detector bug fix.**
+
+### What changed (8 files, ~150 lines of meaningful changes):
+
+1. **`regime_detector.py`** — Added `fit_hmm_for_mc()` bridge function that calls the existing `fit_hmm_regimes()` model and returns MC-ready arrays (state_means, state_vols, regime_probs)
+
+2. **`simulation.py`** (router) — SP500 projection and scenario endpoints now fit HMM and pass probabilistic regime data to `run_monte_carlo()` and `simulate_paths()`
+
+3. **`stock.py`** (router) — Screener fits HMM once, passes to all per-stock MC simulations via `analyze_stock()`
+
+4. **`stock_analyzer.py`** — `analyze_stock()` now accepts and forwards HMM params to `simulate_paths()`
+
+5. **`sector.py` + `sector_analyzer.py`** — All 11 sector simulations receive HMM regime conditioning
+
+6. **`drift_detector.py`** — Fixed `np.random.uniform()` → `self._rng.uniform()` for reproducible KS tests
+
+7. **`test_hmm_regime.py`** — 12 new tests covering HMM fitting, MC integration, fallbacks, and drift detector reproducibility
+
+### Results: **227 passed, 0 failed** (up from 215)
+
+### Why this matters:
+The MC engine already had `hmm_drift_blend=0.15` and `hmm_vol_blend=0.15` in config, plus full HMM blending code in `simulate_paths()` — but nothing ever called the HMM model. Now every simulation gets probabilistic regime conditioning, producing drift/vol that adapts to the current market state rather than relying solely on rule-based thresholds.
+
+---STDERR---

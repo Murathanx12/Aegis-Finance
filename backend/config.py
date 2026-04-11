@@ -196,6 +196,19 @@ config: dict = {
         # HMM regime blending
         "hmm_drift_blend": 0.15,
         "hmm_vol_blend": 0.15,
+        # HMM fitting parameters
+        "hmm": {
+            "n_states": 3,
+            "n_fits": 10,                    # Random restarts to avoid local optima
+            "n_iter": 200,                   # EM iterations per fit
+            "min_data_rows": 500,            # Minimum rows for HMM fitting
+            "smoothing_window": 5,           # Return smoothing window (days)
+            "vol_window": 20,                # Realized vol window (days)
+            # Fallback values when HMM fitting fails
+            "fallback_state_means": [0.10, -0.05, -0.30],
+            "fallback_state_vols": [0.15, 0.20, 0.35],
+            "fallback_regime_probs": [0.50, 0.30, 0.20],
+        },
         # Block bootstrap
         "use_block_bootstrap": True,
         "block_bootstrap_size": 21,       # ~1 trading month

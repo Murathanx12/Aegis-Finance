@@ -63,6 +63,11 @@ def _screener() -> dict:
     crash_3m_pct = market_sig.get("_crash_3m_pct")
     crash_prob_for_mc = crash_3m_pct / 100.0 if crash_3m_pct is not None else None
 
+    # Extract HMM regime data for per-stock MC simulations
+    hmm_means = market_sig.get("_hmm_state_means")
+    hmm_probs = market_sig.get("_hmm_regime_probs")
+    hmm_vols = market_sig.get("_hmm_state_vols")
+
     # Parallel stock analysis — ~3-5x faster than sequential
     t0 = time.perf_counter()
     sorted_tickers = sorted(all_tickers)
@@ -72,7 +77,11 @@ def _screener() -> dict:
     def _analyze_one(ticker: str) -> dict | None:
         """Analyze a single ticker and compute its signal. Thread-safe."""
         try:
-            r = analyze_stock(ticker, ml_crash_prob=crash_prob_for_mc)
+            r = analyze_stock(
+                ticker, ml_crash_prob=crash_prob_for_mc,
+                hmm_state_means=hmm_means, hmm_regime_probs=hmm_probs,
+                hmm_state_vols=hmm_vols,
+            )
             if r is None:
                 return None
 
@@ -177,7 +186,7 @@ def _compute_market_signal() -> dict:
     from backend.services.signal_engine import get_market_signal
     from backend.services.data_fetcher import DataFetcher
     from backend.services.risk_scorer import build_risk_score
-    from backend.services.regime_detector import detect_regimes
+    from backend.services.regime_detector import detect_regimes, fit_hmm_for_mc
 
     fetcher = DataFetcher()
     data, _ = fetcher.fetch_market_data()
@@ -253,6 +262,13 @@ def _compute_market_signal() -> dict:
     )
     # Attach raw crash_3m so callers can pass it to MC simulation
     sig["_crash_3m_pct"] = crash_3m
+
+    # Fit HMM once — callers pass these to per-stock MC simulations
+    hmm_data = fit_hmm_for_mc(data)
+    sig["_hmm_state_means"] = hmm_data["state_means"]
+    sig["_hmm_regime_probs"] = hmm_data["regime_probs"]
+    sig["_hmm_state_vols"] = hmm_data["state_vols"]
+
     return sig
 
 
@@ -291,8 +307,13 @@ def _analyze_stock(ticker: str) -> dict:
     crash_3m_pct = market_sig.get("_crash_3m_pct")
     crash_prob_for_mc = crash_3m_pct / 100.0 if crash_3m_pct is not None else None
 
-    # Run MC simulation with crash-aware jump frequency
-    result = analyze_stock(ticker, ml_crash_prob=crash_prob_for_mc)
+    # Run MC simulation with crash-aware jump frequency + HMM regime conditioning
+    result = analyze_stock(
+        ticker, ml_crash_prob=crash_prob_for_mc,
+        hmm_state_means=market_sig.get("_hmm_state_means"),
+        hmm_regime_probs=market_sig.get("_hmm_regime_probs"),
+        hmm_state_vols=market_sig.get("_hmm_state_vols"),
+    )
     if result is None:
         return None
 
@@ -356,10 +377,15 @@ def _stock_signal(ticker: str) -> dict:
     # Reuse the shared market signal computation
     market_sig = _compute_market_signal()
 
-    # Get stock data — pass crash probability so MC can modulate jump frequency
+    # Get stock data — pass crash probability + HMM regime data so MC can modulate
     crash_3m_pct = market_sig.get("_crash_3m_pct")
     crash_prob_for_mc = crash_3m_pct / 100.0 if crash_3m_pct is not None else None
-    stock_data = analyze_stock(ticker, ml_crash_prob=crash_prob_for_mc)
+    stock_data = analyze_stock(
+        ticker, ml_crash_prob=crash_prob_for_mc,
+        hmm_state_means=market_sig.get("_hmm_state_means"),
+        hmm_regime_probs=market_sig.get("_hmm_regime_probs"),
+        hmm_state_vols=market_sig.get("_hmm_state_vols"),
+    )
     if stock_data is None:
         return {"ticker": ticker, "action": "Hold", "confidence": 0, "error": "Could not analyze stock"}
 
