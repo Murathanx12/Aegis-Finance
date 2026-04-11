@@ -36,7 +36,24 @@ function formatCap(cap: number | null): string {
   return `$${(cap / 1e6).toFixed(0)}M`;
 }
 
-function signalLabel(ret: number, sharpe: number, probLoss: number): { text: string; color: string } {
+const SIGNAL_COLORS: Record<string, string> = {
+  "Strong Buy": "text-emerald-400",
+  "Buy": "text-emerald-400",
+  "Hold": "text-amber-400",
+  "Sell": "text-red-400",
+  "Strong Sell": "text-red-400",
+};
+
+function signalLabel(stock: ScreenerStock): { text: string; color: string } {
+  // Use real signal engine data if available
+  if (stock.signal_action) {
+    return {
+      text: stock.signal_action,
+      color: SIGNAL_COLORS[stock.signal_action] ?? "text-amber-400",
+    };
+  }
+  // Fallback heuristic
+  const { expected_return: ret, sharpe, prob_loss: probLoss } = stock;
   if (sharpe >= 0.35 && ret >= 10 && probLoss < 25) return { text: "Buy", color: "text-emerald-400" };
   if (sharpe >= 0.15 && ret >= 5) return { text: "Hold", color: "text-amber-400" };
   if (sharpe < 0.05 || ret < 0 || probLoss > 50) return { text: "Sell", color: "text-red-400" };
@@ -143,7 +160,7 @@ export default function ScreenerPage() {
             <CardContent className="p-3">
               <p className="text-[10px] text-muted-foreground uppercase">Buy Signals</p>
               <p className="text-xl font-bold tabular-nums text-emerald-400">
-                {summaryStocks.filter((s) => signalLabel(s.expected_return, s.sharpe, s.prob_loss).text === "Buy").length}
+                {summaryStocks.filter((s) => signalLabel(s).text === "Buy").length}
               </p>
             </CardContent>
           </Card>
@@ -224,7 +241,7 @@ export default function ScreenerPage() {
                 </thead>
                 <tbody>
                   {filtered.map((s) => {
-                    const signal = signalLabel(s.expected_return, s.sharpe, s.prob_loss);
+                    const signal = signalLabel(s);
                     return (
                       <tr
                         key={s.ticker}

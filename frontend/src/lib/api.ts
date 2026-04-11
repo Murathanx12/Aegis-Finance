@@ -462,11 +462,20 @@ export interface ScreenerStock {
   pe_ratio: number | null;
   analyst_target: number | null;
   market_cap: number | null;
+  signal_action?: string;
+  signal_confidence?: number;
+  signal_score?: number;
 }
 
 export interface ScreenerResponse {
   stocks: ScreenerStock[];
   count: number;
+  market_signal?: {
+    action: string;
+    confidence: number;
+    composite_score: number;
+    reasons: string[];
+  };
 }
 
 export interface SectorsResponse {
