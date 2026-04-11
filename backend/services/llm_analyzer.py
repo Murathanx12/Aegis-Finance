@@ -21,13 +21,15 @@ import os
 from typing import Optional
 
 from backend.cache import cached
+from backend.config import config as _cfg
 
 logger = logging.getLogger(__name__)
 
+_llm_cfg = _cfg.get("llm", {})
 _DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
-_DEEPSEEK_BASE_URL = "https://api.deepseek.com"
-_MODEL = "deepseek-chat"
-_MAX_TOKENS = 500
+_DEEPSEEK_BASE_URL = _llm_cfg.get("base_url", "https://api.deepseek.com")
+_MODEL = _llm_cfg.get("model", "deepseek-chat")
+_MAX_TOKENS = _llm_cfg.get("max_tokens", 500)
 
 _client = None
 
@@ -70,7 +72,7 @@ def _call_llm(system_prompt: str, user_prompt: str) -> Optional[str]:
                 {"role": "user", "content": user_prompt},
             ],
             max_tokens=_MAX_TOKENS,
-            temperature=0.3,
+            temperature=_llm_cfg.get("temperature", 0.3),
         )
         return response.choices[0].message.content.strip()
     except Exception as e:

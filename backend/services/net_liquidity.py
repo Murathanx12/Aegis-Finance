@@ -21,10 +21,9 @@ Usage:
 import logging
 from datetime import datetime, timedelta
 
-import numpy as np
 import pandas as pd
 
-from backend.config import api_keys
+from backend.config import api_keys, config
 from backend.cache import cache_get, cache_set
 
 logger = logging.getLogger(__name__)
@@ -44,8 +43,11 @@ def get_net_liquidity() -> dict:
         result = _fetch_and_calculate()
         cache_set("net_liquidity", result)
         return result
-    except Exception as e:
-        logger.error("Net liquidity fetch failed: %s", e)
+    except (ValueError, KeyError, TypeError, AttributeError) as e:
+        logger.error("Net liquidity calculation failed: %s", e)
+        return _default_response(str(e))
+    except OSError as e:
+        logger.error("Net liquidity network/IO failed: %s", e)
         return _default_response(str(e))
 
 
@@ -71,7 +73,7 @@ def _fetch_and_calculate() -> dict:
     df = pd.DataFrame({
         "walcl": walcl,
         "tga": tga,
-        "rrp": rrp * 1000,  # Convert billions to millions
+        "rrp": rrp,  # RRPONTSYD already in millions (same unit as WALCL, WTREGEN)
     }).dropna(how="all").resample("W").last().dropna()
 
     if len(df) < 4:
@@ -92,9 +94,13 @@ def _fetch_and_calculate() -> dict:
     if pd.isna(wow_change):
         wow_change = 0.0
 
-    if wow_change > 0.05:
+    nl_cfg = config.get("net_liquidity", {})
+    bullish_thresh = nl_cfg.get("wow_bullish_threshold", 0.05)
+    bearish_thresh = nl_cfg.get("wow_bearish_threshold", -0.05)
+
+    if wow_change > bullish_thresh:
         signal = "BULLISH"
-    elif wow_change < -0.05:
+    elif wow_change < bearish_thresh:
         signal = "BEARISH"
     else:
         signal = "NEUTRAL"
