@@ -1,0 +1,68 @@
+Confirmed. All 598 tests pass. Now let me write the Phase A report.
+
+---
+
+## Cycle 34, Phase A: EXPLORE Report
+
+### Files Read (12 files)
+- `backend/services/stock_analyzer.py` — per-stock MC projections
+- `backend/services/signal_engine.py` — composite buy/sell signal
+- `backend/services/shap_explainer.py` — SHAP wrapper (never modified)
+- `backend/services/return_model.py` — quantile return predictor (never modified)
+- `backend/services/drift_detector.py` — PSI + KS drift detection
+- `backend/routers/stock.py` — stock endpoints (screener, detail, signal, SHAP, sentiment)
+- `backend/main.py` — app entry, router registration
+- `engine/training/train_crash_model.py` — offline training script (never modified)
+- `engine/validation/walk_forward.py` — walk-forward backtest (never modified)
+- `engine/validation/metrics.py` — evaluation metrics (never modified)
+- `lab/data_generator.py` — lab cycle data collection
+
+### Test Results
+**598 passed, 92 deselected, 8 warnings** — all clean.
+
+---
+
+### Finding 1: data_generator calls `get_market_signal()` with ZERO market context
+**File:** `lab/data_generator.py:247`
+**Severity:** High (observability blind spot)
+
+The data_generator calls `get_market_signal()` with no arguments at all. Every parameter defaults:
+- `crash_prob_3m=None` → component zeroed + weight excluded
+- `regime="Neutral"` → 0.0 (actual regime is "Bull" → should be 0.7)
+- `risk_score=0.0` → macro_risk = 0.0 (actual is 1.14)
+- `sp500_1m_return=0.0`, `sp500_3m_return=0.0` → momentum/mean_reversion = 0.0
+- `drawdown_pct=None` → zeroed + weight excluded
+
+This is why the engine output shows 6 of 8 signal components at 0.0. The only non-zero component (valuation=0.3) is from the default VIX=20.0 hitting the "moderate fear" bracket. **Every cycle's signal_quality measurement is essentially meaningless** — it tests the signal engine's defaults, not real market conditions.
+
+Compare with `routers/stock.py:184-279` (`_compute_market_signal`) which correctly wires all inputs from DataFetcher, risk_scorer, regime_detector, crash model, external_validator, and drawdown computation.
+
+### Finding 2: `stock_analyzer.py` returns keys that `data_generator.py` can't find
+**File:** `lab/data_generator.py:99-101` vs `backend/services/stock_analyzer.py:259-289`
+
+The data_generator reads:
+- `data.get("crash_prob_3m")` → but stock_analyzer returns `"ml_crash_prob"` (line 280). **Key mismatch** → always null.
+- `data.get("signal", {}).get("action")` → stock_analyzer returns NO `signal` dict at all. Signals are computed at the router level (`routers/stock.py:338-356`), not in the service. **Structural gap** → always null.
+
+This means the `crash_prob_3m: null` and `signal_action: null` in every cycle's stock_analysis output are caused by the data_generator looking for fields that don't exist in the service output.
+
+### Finding 3: `return_model.py` and `drift_detector.py` are fully implemented but dead code
+**Files:** `backend/services/return_model.py`, `backend/services/drift_detector.py`
+
+Both services are complete, well-tested, and registered in the health check — but **zero routers import them**:
+
+- **ReturnPredictor** (return_model.py): LightGBM quantile regression producing P10/P50/P90 return distributions. Could directly enhance `/api/stock/{ticker}` with ML return forecasts alongside the MC projections. Currently only touched by `test_untested_services.py`.
+
+- **DriftDetector** (drift_detector.py): PSI + KS drift detection ready to flag when inference features have shifted from training distribution. Could be wired into `/api/health` or a new `/api/model-health` endpoint. Currently imported by nothing outside health check registration.
+
+---
+
+### Recommendation for Phase B
+
+**Fix the data_generator wiring** — this is the highest-impact change because it fixes the lab's own observability loop. Without accurate signal_quality measurements, we can't trust cycle-over-cycle regressions. The fix involves:
+
+1. Port the market signal computation from `routers/stock.py:_compute_market_signal()` into the data_generator so it passes real market context to `get_market_signal()`
+2. Fix the key mismatch (`crash_prob_3m` → `ml_crash_prob`) and add signal computation post-`analyze_stock()` using `get_stock_signal()`
+3. Optionally wire drift_detector into the data_generator as a new collection step for model health tracking
+
+---STDERR---

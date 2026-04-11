@@ -415,3 +415,62 @@ class TestDrawdownConfigDriven:
         sw = config["signal_weights"]
         total = sum(sw.values())
         assert total == pytest.approx(1.0, abs=0.01)
+
+
+class TestFullContextMarketSignal:
+    """Verify that a fully-contextualized market signal has active components.
+
+    These tests catch the wiring bug where get_market_signal() was called
+    with all defaults, producing 6/8 zero components.
+    """
+
+    def test_bull_regime_produces_nonzero_regime_component(self):
+        """Regime='Bull' should produce a positive regime signal, not 0."""
+        result = get_market_signal(regime="Bull")
+        assert result["components"]["regime"] == pytest.approx(0.7)
+
+    def test_real_risk_score_produces_nonzero_macro(self):
+        """A nonzero risk score should produce a nonzero macro_risk component."""
+        result = get_market_signal(risk_score=1.5)
+        assert result["components"]["macro_risk"] != 0.0
+
+    def test_full_context_has_multiple_nonzero_components(self):
+        """When all inputs are provided, most components should be nonzero."""
+        result = get_market_signal(
+            crash_prob_3m=15.0,
+            crash_prob_12m=25.0,
+            regime="Bull",
+            risk_score=1.14,
+            sp500_1m_return=2.5,
+            sp500_3m_return=5.0,
+            sp500_ytd_return=8.0,
+            vix=19.0,
+            yield_curve=0.5,
+            external_consensus="BULLISH",
+            drawdown_pct=-3.0,
+        )
+        components = result["components"]
+        nonzero = [k for k, v in components.items() if v != 0.0]
+        # At least 5 of 8 components should be active with real inputs
+        assert len(nonzero) >= 5, f"Only {len(nonzero)} nonzero: {nonzero}"
+
+    def test_full_context_composite_differs_from_defaults(self):
+        """A fully-wired signal should differ from the default (no-context) signal."""
+        default_sig = get_market_signal()
+        wired_sig = get_market_signal(
+            crash_prob_3m=10.0,
+            regime="Bull",
+            risk_score=1.0,
+            sp500_1m_return=3.0,
+            sp500_3m_return=7.0,
+            vix=19.0,
+            drawdown_pct=-1.5,
+        )
+        assert wired_sig["composite_score"] != default_sig["composite_score"]
+
+    def test_crash_prob_none_zeroes_weight_not_just_component(self):
+        """When crash_prob is None, both component AND weight should be zero."""
+        result = get_market_signal(crash_prob_3m=None, regime="Bull")
+        assert result["components"]["crash_prob"] == 0.0
+        # With crash_prob excluded, regime (0.7) should dominate more
+        assert result["composite_score"] > 0

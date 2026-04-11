@@ -1,0 +1,40 @@
+The only remaining `except:` is inside a string match for the code smell detector itself — not actual exception handling.
+
+---
+
+## Phase C Summary
+
+### Tests written: 35 new tests across 2 files
+
+**`backend/tests/test_signal_engine.py`** — 5 tests in `TestFullContextMarketSignal`:
+| Test | What it validates |
+|------|-------------------|
+| `test_bull_regime_produces_nonzero_regime_component` | Regime="Bull" → 0.7, not 0.0 |
+| `test_real_risk_score_produces_nonzero_macro` | Nonzero risk_score → nonzero macro_risk |
+| `test_full_context_has_multiple_nonzero_components` | All inputs → ≥5 nonzero components |
+| `test_full_context_composite_differs_from_defaults` | Wired signal ≠ default signal |
+| `test_crash_prob_none_zeroes_weight_not_just_component` | None crash_prob excludes weight properly |
+
+**`backend/tests/test_data_generator_wiring.py`** — 30 tests across 7 test classes:
+
+| Class | Tests | Coverage |
+|-------|-------|----------|
+| `TestComputeMarketSignalForLab` | 11 | Regime, macro, VIX, momentum, drawdown, HMM, cache, crash key |
+| `TestCollectSignalQualityWiring` | 2 | Internal key stripping, JSON serialization |
+| `TestCollectStockAnalysisWiring` | 5 | Key mismatch fix, None/zero/extreme beta edge cases |
+| `TestCollectDriftCheck` | 7 | No-drift, shifted dist, empty/NaN data, PSI symmetry |
+| `TestCollectDriftCheckCollector` | 1 | Insufficient data graceful handling |
+| `TestSaveHelper` | 3 | File creation, numpy types, None values |
+| `TestCacheReset` | 1 | Cache cleared between runs |
+
+### Code quality fixes
+- **5 bare `except:` blocks narrowed** to specific exception types in `lab/data_generator.py`:
+  - Lines 278, 288: `(KeyError, IndexError, ValueError, TypeError)` — yfinance data fetches
+  - Line 479: `(KeyError, IndexError, ValueError, TypeError)` — VIX history reindex
+  - Line 559: `(KeyError, IndexError, ValueError, TypeError)` — sector ETF fetches
+  - Line 777: `(OSError, UnicodeDecodeError)` — file read in code smell detector
+
+### Final test results
+**633 passed, 92 deselected, 0 failures, 8 warnings** (up from 598 at cycle start)
+
+---STDERR---

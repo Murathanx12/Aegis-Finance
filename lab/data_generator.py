@@ -32,6 +32,119 @@ def _get_sp500_data(period="5y"):
     return sp.history(period=period)
 
 
+# Cache the market signal within a single run (used by both stock_analysis
+# and signal_quality collectors to avoid redundant data fetches).
+_cached_market_signal = None
+
+
+def _compute_market_signal_for_lab() -> dict:
+    """Compute market signal with REAL context — mirrors routers/stock.py logic.
+
+    Wires: regime, risk score, crash model, momentum, drawdown, VIX,
+    yield curve, external consensus, and HMM data for MC conditioning.
+    """
+    global _cached_market_signal
+    if _cached_market_signal is not None:
+        return _cached_market_signal
+
+    import logging
+    from backend.services.signal_engine import get_market_signal, compute_drawdown_pct
+    from backend.services.data_fetcher import DataFetcher
+    from backend.services.risk_scorer import build_risk_score
+    from backend.services.regime_detector import detect_regimes, fit_hmm_for_mc
+
+    logger = logging.getLogger(__name__)
+
+    fetcher = DataFetcher()
+    data, _ = fetcher.fetch_market_data()
+    data["Risk_Score"] = build_risk_score(data)
+    _, regime = detect_regimes(data)
+
+    vix = float(data["VIX"].iloc[-1]) if "VIX" in data.columns else 20.0
+    sp500_1m = float(data["SP500"].pct_change(21).iloc[-1]) * 100
+    sp500_3m = float(data["SP500"].pct_change(63).iloc[-1]) * 100
+
+    # YTD return
+    sp500_ytd = 0.0
+    try:
+        sp500_series = data["SP500"].dropna()
+        now = sp500_series.index[-1]
+        year_start = pd.Timestamp(year=now.year, month=1, day=1)
+        prev_year_prices = sp500_series[sp500_series.index < year_start]
+        if len(prev_year_prices) > 0:
+            sp500_ytd = float((sp500_series.iloc[-1] / prev_year_prices.iloc[-1] - 1) * 100)
+    except (KeyError, IndexError, ValueError, TypeError):
+        pass
+
+    yield_curve = None
+    if "T10Y" in data.columns and "T3M" in data.columns:
+        yield_curve = float(data["T10Y"].iloc[-1] - data["T3M"].iloc[-1])
+
+    # Drawdown from 52-week high
+    sp500_drawdown = None
+    if "SP500" in data.columns:
+        sp500_drawdown = compute_drawdown_pct(data["SP500"])
+
+    # Crash model predictions
+    crash_3m = None
+    crash_12m = None
+    try:
+        from backend.services.crash_model import CrashPredictor
+        from backend.config import MODEL_DIR
+        model_path = MODEL_DIR / "crash_model.pkl"
+        if model_path.exists():
+            from engine.training.features import build_feature_matrix
+            predictor = CrashPredictor()
+            predictor.load_model(str(model_path))
+            fred_data = fetcher.fetch_fred_data()
+            features = build_feature_matrix(data, fred_data=fred_data)
+            available = [f for f in predictor.feature_names if f in features.columns]
+            latest = features[available].iloc[[-1]]
+            for h in predictor.lgb_models:
+                prob = float(predictor.predict_proba(latest, h)[0]) * 100
+                if h == "3m":
+                    crash_3m = prob
+                elif h == "12m":
+                    crash_12m = prob
+    except (ImportError, FileNotFoundError, ValueError, KeyError) as e:
+        logger.debug("Crash model unavailable in lab signal: %s", e)
+
+    # External consensus
+    external = None
+    try:
+        from backend.services.external_validator import validate_external
+        fred_data_ext = fetcher.fetch_fred_data()
+        ext = validate_external(fred_data_ext, crash_12m / 100 if crash_12m else None, regime)
+        external = ext.consensus_direction
+    except (ImportError, KeyError, TypeError, ValueError) as e:
+        logger.debug("External validation unavailable in lab: %s", e)
+
+    sig = get_market_signal(
+        crash_prob_3m=crash_3m,
+        crash_prob_12m=crash_12m,
+        regime=regime,
+        risk_score=float(data["Risk_Score"].iloc[-1]),
+        sp500_1m_return=sp500_1m,
+        sp500_3m_return=sp500_3m,
+        sp500_ytd_return=sp500_ytd,
+        vix=vix,
+        yield_curve=yield_curve,
+        external_consensus=external,
+        drawdown_pct=sp500_drawdown,
+    )
+    # Attach raw values for downstream use by stock analysis / MC
+    sig["_crash_3m_pct"] = crash_3m
+
+    # Fit HMM for per-stock MC conditioning
+    hmm_data = fit_hmm_for_mc(data)
+    sig["_hmm_state_means"] = hmm_data["state_means"]
+    sig["_hmm_regime_probs"] = hmm_data["regime_probs"]
+    sig["_hmm_state_vols"] = hmm_data["state_vols"]
+
+    _cached_market_signal = sig
+    return sig
+
+
 # ---------------------------------------------------------------------------
 # 1. Market snapshot
 # ---------------------------------------------------------------------------
@@ -67,7 +180,7 @@ def collect_market_snapshot(output_dir):
 
 
 # ---------------------------------------------------------------------------
-# 2. Stock analysis — calls REAL analyze_stock(ticker)
+# 2. Stock analysis — calls REAL analyze_stock(ticker) + signal wiring
 # ---------------------------------------------------------------------------
 def collect_stock_analysis(output_dir):
     TICKERS = ["AAPL", "NVDA", "XOM", "JPM", "TSLA", "JNJ", "AMZN", "BA"]
@@ -76,17 +189,46 @@ def collect_stock_analysis(output_dir):
 
     try:
         from backend.services.stock_analyzer import analyze_stock
+        from backend.services.signal_engine import get_stock_signal
     except ImportError as e:
         print(f"    [FAIL] Cannot import analyze_stock: {e}")
         return {}, [str(e)]
 
+    # Compute market signal once (shared across all stock signals)
+    market_sig = _compute_market_signal_for_lab()
+
+    # Extract crash prob for MC modulation
+    crash_3m_pct = market_sig.get("_crash_3m_pct")
+    crash_prob_for_mc = crash_3m_pct / 100.0 if crash_3m_pct is not None else None
+
     for ticker in TICKERS:
         try:
-            data = analyze_stock(ticker)
+            data = analyze_stock(
+                ticker,
+                ml_crash_prob=crash_prob_for_mc,
+                hmm_state_means=market_sig.get("_hmm_state_means"),
+                hmm_regime_probs=market_sig.get("_hmm_regime_probs"),
+                hmm_state_vols=market_sig.get("_hmm_state_vols"),
+            )
             if data is None:
                 errors.append(f"{ticker}: returned None")
                 print(f"    [FAIL] {ticker}: returned None")
                 continue
+
+            # Compute per-stock signal (mirrors routers/stock.py logic)
+            fwd_pe = None
+            key_stats = data.get("key_stats")
+            if key_stats and "pe_forward" in key_stats:
+                fwd_pe = key_stats["pe_forward"]
+
+            stock_sig = get_stock_signal(
+                market_signal=market_sig,
+                beta=data.get("beta", 1.0),
+                analyst_target=data.get("analyst_target"),
+                current_price=data.get("current_price", 0),
+                pe_ratio=data.get("pe_ratio"),
+                forward_pe=fwd_pe,
+            )
 
             results[ticker] = {
                 "ticker": ticker,
@@ -96,15 +238,16 @@ def collect_stock_analysis(output_dir):
                 "mc_p90_5y": data.get("mc_p90_5y_return"),
                 "garch_vol": data.get("garch_annual_vol"),
                 "garch_nu": data.get("garch_nu"),
-                "crash_prob_3m": data.get("crash_prob_3m"),
-                "signal_action": data.get("signal", {}).get("action") if isinstance(data.get("signal"), dict) else None,
-                "signal_score": data.get("signal", {}).get("composite_score") if isinstance(data.get("signal"), dict) else None,
+                "crash_prob_3m": crash_3m_pct,
+                "signal_action": stock_sig["action"],
+                "signal_score": stock_sig["composite_score"],
                 "beta": data.get("beta"),
                 "sector": data.get("sector"),
                 "all_keys": list(data.keys()),
             }
             print(f"    [OK] {ticker}: ${data.get('current_price', '?')}, "
-                  f"median_5y={data.get('mc_median_5y_return', '?')}%")
+                  f"median_5y={data.get('mc_median_5y_return', '?')}%, "
+                  f"signal={stock_sig['action']}")
 
         except Exception as e:
             errors.append(f"{ticker}: {type(e).__name__}: {e}")
@@ -132,7 +275,7 @@ def collect_sp500_mc(output_dir):
             vix = yf.Ticker("^VIX").history(period="5d")
             if len(vix) > 0:
                 vix_val = float(vix["Close"].iloc[-1])
-        except:
+        except (KeyError, IndexError, ValueError, TypeError):
             pass
 
         # Get yield curve (10Y-3M spread)
@@ -142,7 +285,7 @@ def collect_sp500_mc(output_dir):
             irx = yf.Ticker("^IRX").history(period="5d")
             if len(tnx) > 0 and len(irx) > 0:
                 yield_curve = float(tnx["Close"].iloc[-1]) - float(irx["Close"].iloc[-1])
-        except:
+        except (KeyError, IndexError, ValueError, TypeError):
             pass
 
         result = run_monte_carlo(
@@ -236,15 +379,15 @@ def collect_crash_calibration(output_dir):
 
 
 # ---------------------------------------------------------------------------
-# 5. Signal engine — get_market_signal() then get_stock_signal(market_signal, ...)
+# 5. Signal engine — full market context, then per-stock signals
 # ---------------------------------------------------------------------------
 def collect_signal_quality(output_dir):
     try:
-        from backend.services.signal_engine import get_market_signal, get_stock_signal
+        from backend.services.signal_engine import get_stock_signal
         import yfinance as yf
 
-        # Market-level signal (all params optional with defaults)
-        market_signal = get_market_signal()
+        # Market-level signal with REAL market context (not defaults)
+        market_signal = _compute_market_signal_for_lab()
 
         # Per-stock signals need market_signal + stock-specific params
         TICKERS = ["AAPL", "NVDA", "XOM", "JPM", "TSLA", "JNJ", "AMZN", "BA",
@@ -259,8 +402,6 @@ def collect_signal_quality(output_dir):
                 info = t.info or {}
                 hist = t.history(period="1y")
 
-                # Compute beta vs SP500
-                beta = 1.0
                 current_price = float(hist["Close"].iloc[-1]) if len(hist) > 0 else 0
 
                 sig = get_stock_signal(
@@ -289,8 +430,14 @@ def collect_signal_quality(output_dir):
 
         score_spread = max(scores) - min(scores) if len(scores) >= 2 else 0
 
+        # Strip internal keys before saving (not serializable / not useful)
+        saveable_signal = {
+            k: v for k, v in market_signal.items()
+            if not k.startswith("_")
+        }
+
         result = {
-            "market_signal": market_signal,
+            "market_signal": saveable_signal,
             "stock_signals": stock_signals,
             "diversity": {
                 "action_distribution": action_counts,
@@ -329,7 +476,7 @@ def collect_regime_risk(output_dir):
             import yfinance as yf
             vix_hist = yf.Ticker("^VIX").history(period="5y")
             sp_df["VIX"] = vix_hist["Close"].reindex(sp_df.index, method="ffill")
-        except:
+        except (KeyError, IndexError, ValueError, TypeError):
             pass
     except Exception as e:
         print(f"    [FAIL] Cannot fetch SP500 data: {e}")
@@ -409,7 +556,7 @@ def collect_sector_analysis(output_dir):
                 h = yf.Ticker(etf_ticker).history(period="5y")
                 if len(h) > 100:
                     sector_data[sector_name] = h["Close"]
-            except:
+            except (KeyError, IndexError, ValueError, TypeError):
                 pass
 
         sectors = analyze_sectors(
@@ -551,7 +698,53 @@ def collect_validation_metrics(output_dir):
 
 
 # ---------------------------------------------------------------------------
-# 11. Code quality metrics
+# 11. Drift detection — checks feature distribution shift since training
+# ---------------------------------------------------------------------------
+def collect_drift_check(output_dir):
+    try:
+        from backend.services.drift_detector import DriftDetector
+        from backend.services.data_fetcher import DataFetcher
+        from engine.training.features import build_feature_matrix
+
+        fetcher = DataFetcher()
+        data, _ = fetcher.fetch_market_data()
+        fred_data = fetcher.fetch_fred_data()
+        features = build_feature_matrix(data, fred_data=fred_data)
+
+        if features is None or len(features) < 504:
+            print("    [SKIP] Not enough data for drift check")
+            return {"status": "insufficient_data"}
+
+        # Use first 80% as reference (training proxy), last 20% as inference
+        split = int(len(features) * 0.8)
+        reference = features.iloc[:split]
+        inference = features.iloc[split:]
+
+        detector = DriftDetector(reference)
+        report = detector.check_drift(inference)
+
+        result = {
+            "drift_detected": report["drift_detected"],
+            "n_features_checked": report["n_features_checked"],
+            "n_drifted": report["n_drifted"],
+            "drift_pct": report["drift_pct"],
+            "drifted_features": report["drifted_features"][:10],
+        }
+
+        _save(output_dir, "drift_check.json", result)
+        status = "DRIFT" if report["drift_detected"] else "OK"
+        print(f"    [{status}] {report['n_drifted']}/{report['n_features_checked']} "
+              f"features drifted ({report['drift_pct']:.0f}%)")
+        return result
+
+    except Exception as e:
+        print(f"    [FAIL] Drift check: {e}")
+        traceback.print_exc()
+        return {"status": "error", "error": str(e)}
+
+
+# ---------------------------------------------------------------------------
+# 12. Code quality metrics
 # ---------------------------------------------------------------------------
 def collect_code_metrics(output_dir):
     import subprocess as sp
@@ -581,7 +774,7 @@ def collect_code_metrics(output_dir):
             n_seed = sum(1 for l in lines if "np.random.seed" in l)
             if n_seed > 0:
                 smells.append(f"{py_file.name}: {n_seed} legacy np.random.seed()")
-        except:
+        except (OSError, UnicodeDecodeError):
             pass
 
     result["code_smells"] = smells
@@ -597,6 +790,9 @@ def collect_code_metrics(output_dir):
 # Main
 # ---------------------------------------------------------------------------
 def run_engine_data_collection(output_dir, cycle):
+    global _cached_market_signal
+    _cached_market_signal = None  # Fresh signal each cycle
+
     results = {
         "cycle": cycle,
         "timestamp": datetime.now().isoformat(),
@@ -616,6 +812,7 @@ def run_engine_data_collection(output_dir, cycle):
         ("portfolio_test", "Testing portfolio engine", collect_portfolio_test),
         ("api_health", "Checking service health", collect_api_health),
         ("validation_metrics", "Collecting model metadata", collect_validation_metrics),
+        ("drift_check", "Checking feature drift", collect_drift_check),
         ("code_metrics", "Measuring code quality", collect_code_metrics),
     ]
 

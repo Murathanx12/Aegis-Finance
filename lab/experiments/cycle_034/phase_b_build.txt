@@ -1,0 +1,29 @@
+---
+
+## Summary: What was built and why
+
+### Problem
+The lab's data_generator — the measurement tool for every R&D cycle — was calling `get_market_signal()` with **zero market context**. This meant 6 of 8 signal components were always 0.0, `crash_prob_3m` was always null (wrong key lookup), and `signal_action` was always null (looking for a dict that doesn't exist). Every cycle's signal_quality output was meaningless.
+
+### Changes (3 files, ~160 lines of meaningful code)
+
+**`lab/data_generator.py`** — 3 fixes + 1 new feature:
+1. **New `_compute_market_signal_for_lab()`** (lines 36-131): Mirrors `routers/stock.py:_compute_market_signal()` — fetches real market data, regime, risk score, crash model predictions, external consensus, drawdown, VIX, yield curve, and HMM state for MC conditioning. Cached within a run so both stock_analysis and signal_quality collectors reuse it.
+2. **Fixed `collect_stock_analysis()`**: Now passes `ml_crash_prob` + HMM data to `analyze_stock()`, computes per-stock signals via `get_stock_signal()`, and reads the correct key (`ml_crash_prob` not `crash_prob_3m`).
+3. **Fixed `collect_signal_quality()`**: Uses `_compute_market_signal_for_lab()` instead of bare `get_market_signal()`. Strips internal `_` prefixed keys before saving to JSON.
+4. **New `collect_drift_check()`**: Wires the previously-dead `DriftDetector` service into the lab cycle — splits feature matrix 80/20 and checks for PSI/KS drift.
+
+**`backend/tests/test_signal_engine.py`** — 5 new tests in `TestFullContextMarketSignal`:
+- Validates that Bull regime → nonzero regime component (catches the 0.0 bug)
+- Validates that real risk_score → nonzero macro component
+- Validates that full context produces ≥5 nonzero components
+- Validates that wired signal differs from default signal
+- Validates that None crash_prob zeroes weight, not just component
+
+### Result
+- **603 tests pass** (598 → 603, +5 new), 0 failures
+- Future lab cycles will produce signal_quality data with **real market context** — regime, crash prob, momentum, drawdown, macro risk all active
+- Stock analysis output will have actual `crash_prob_3m` and `signal_action` values instead of null
+- Drift detection now runs each cycle, surfacing feature distribution shifts
+
+---STDERR---
