@@ -1,0 +1,11 @@
+{
+  "test_count": {
+    "files": 14,
+    "functions": 271
+  },
+  "code_smells": [
+    "portfolio_engine.py: 5 broad excepts",
+    "stock_analyzer.py: 8 broad excepts"
+  ],
+  "n_smells": 2
+}

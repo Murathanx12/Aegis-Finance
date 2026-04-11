@@ -1,0 +1,17 @@
+{
+  "return_type": "dict",
+  "n_sectors": 11,
+  "keys": [
+    "Technology",
+    "Healthcare",
+    "Financials",
+    "Energy",
+    "Consumer Disc.",
+    "Consumer Staples",
+    "Industrials",
+    "Utilities",
+    "Real Estate",
+    "Materials",
+    "Communications"
+  ]
+}

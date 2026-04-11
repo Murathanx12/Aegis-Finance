@@ -1,0 +1,56 @@
+## Cycle 24, Phase A: Exploration Report
+
+**252 fast tests pass, 0 failures.** Now here are my top 3 findings:
+
+---
+
+### Finding 1: 7 backend services have ZERO unit tests (biggest gap to 200+ target)
+
+These services are fully testable with mocks/pure-logic but have no test coverage:
+
+| Service | File | Testability |
+|---------|------|-------------|
+| `DataQualityChecker` | `backend/services/data_quality.py` | Pure logic — feed it DataFrames, assert warnings |
+| `savings_calculator` | `backend/services/savings_calculator.py` | Pure math — zero dependencies |
+| `regime_validator` | `backend/services/regime_validator.py` | Pure logic with DataFrame input |
+| `shap_explainer` | `backend/services/shap_explainer.py` | Mock predictor, assert output shape |
+| `net_liquidity` | `backend/services/net_liquidity.py` | Mock FRED API, test calculation logic |
+| `return_model` | `backend/services/return_model.py` | Fallback class + mock LightGBM |
+| `llm_analyzer` | `backend/services/llm_analyzer.py` | Mock OpenAI client, test parsing |
+
+Current: 271 test functions across 14 files. Adding ~60 tests for these 7 services gets us to **330+**, well past the 200 target and significantly improving coverage of untested code paths.
+
+---
+
+### Finding 2: 13 broad `except` blocks silently swallow bugs (code smell)
+
+**`stock_analyzer.py`** — 8 bare `except Exception: return None` blocks at lines 312, 335, 372, 392, 428, 442, 487, 496. Every helper (`_get_analyst_targets`, `_get_recommendations`, `_get_holders`, `_get_news`, `_get_earnings`, `_get_key_stats`, `_get_sector_peers`) catches ALL exceptions and returns `None`. A `TypeError` from a yfinance API change would be invisible.
+
+**`portfolio_engine.py`** — 5 broad excepts at lines 341, 569, 572, 664, 667. The BL and HRP optimization paths (`_build_bl`, `_build_hrp`) have nested try/except that swallow optimization failures silently, then fall back to template without logging what actually failed.
+
+**Fix**: Narrow these to expected exception types (`ValueError`, `KeyError`, `AttributeError` for yfinance parsing; `np.linalg.LinAlgError` for optimization), and log the swallowed exceptions at `logger.debug` level.
+
+---
+
+### Finding 3: `regime_validator._check_consensus` uses hardcoded 3% threshold against stale config
+
+**File**: `backend/services/regime_validator.py:160-184`
+
+The consensus check reads `config["institutional_benchmarks"]` and compares the mean annual return against a hardcoded 3% threshold (line 179). Two issues:
+
+1. **Threshold not in config** — The 3% bear/bull cutoff is hardcoded, violating the project rule "Put all parameters in `backend/config.py`"
+2. **Stale benchmarks** — If institutional benchmarks in config haven't been updated, this check gives false consensus alignment. With current benchmarks likely showing ~5.9% annual return (from CLAUDE.md), `_check_consensus` will ALWAYS return `True` for bull and `False` for bear, making it a rubber stamp rather than a real check.
+
+This means the regime validator's "3 independent checks" are really just 2 — the consensus check provides no signal.
+
+---
+
+### Recommended Phase B plan (priority order):
+
+1. **Write tests for the 7 untested services** (~60 new tests, biggest bang for effort)
+2. **Narrow broad excepts** in stock_analyzer.py and portfolio_engine.py
+3. **Move consensus threshold to config** and consider making it dynamic (e.g., based on risk-free rate)
+
+Ready for Phase B when you are.
+
+---STDERR---
