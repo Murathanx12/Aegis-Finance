@@ -1,6 +1,6 @@
 {
   "cycle": 2,
-  "timestamp": "2026-04-11T21:08:44.040358",
+  "timestamp": "2026-04-11T21:12:54.016003",
   "data_sources": [
     "market_snapshot",
     "stock_analysis",
@@ -18,14 +18,14 @@
   ],
   "quality_metrics": {
     "mc_drift_errors": {
-      "AAPL": 19.28,
-      "NVDA": 36.73,
-      "XOM": 13.33,
-      "JPM": 9.73,
-      "TSLA": 54.77,
-      "JNJ": 4.08,
-      "AMZN": 58.78,
-      "BA": 59.17
+      "AAPL": 17.31,
+      "NVDA": 33.42,
+      "XOM": 23.67,
+      "JPM": 14.97,
+      "TSLA": 57.13,
+      "JNJ": 3.54,
+      "AMZN": 42.71,
+      "BA": 41.8
     },
     "data_completeness": 6,
     "errors_count": 0,
