@@ -159,22 +159,8 @@ def analyze_stock(
         final_arithmetic = float(np.clip(blended_arithmetic, min_cagr * 0.5, max_cagr))
         final_sigma = float(np.clip(hist_sigma, 0.15, 0.80))
 
-        # Ito correction: convert arithmetic return to log drift for simulate_paths.
-        # simulate_paths uses log_return = drift*dt + sigma*dW, so the drift must be
-        # the log drift = ln(1+r) - 0.5*sigma^2 to produce correct E[S(T)].
-        # CRITICAL: use the vol that simulate_paths will actually use as base_vol
-        # (garch_vol if available, otherwise final_sigma). When garch_vol differs
-        # from final_sigma, using final_sigma creates drift bias of
-        # 0.5*(garch_vol^2 - final_sigma^2) per year — e.g., ~5.9% for NVDA.
-        ito_sigma = garch_vol if garch_vol is not None else final_sigma
-        final_mu = float(np.log(1 + final_arithmetic) - 0.5 * ito_sigma**2)
-
-        # Beta-adjusted crash frequency: high-beta stocks crash more often
-        base_crash_freq = config["simulation"]["jump_diffusion"]["annual_rate"]
-        beta_adj_crash_freq = float(np.clip(base_crash_freq * beta, 0.02, 0.25))
-        num_sims = config["simulation"]["num_simulations"]
-
         # Fit GARCH for better vol estimate and tail thickness
+        # NOTE: must be computed BEFORE Ito correction so garch_vol is available
         garch_vol = None
         garch_nu = None
         garch_persistence = None
@@ -203,6 +189,21 @@ def analyze_stock(
                 logger.debug("%s: GARCH residuals failed — %s", ticker, e)
         if hist_residuals is None:
             hist_residuals = returns.values if len(returns) > 50 else None
+
+        # Ito correction: convert arithmetic return to log drift for simulate_paths.
+        # simulate_paths uses log_return = drift*dt + sigma*dW, so the drift must be
+        # the log drift = ln(1+r) - 0.5*sigma^2 to produce correct E[S(T)].
+        # CRITICAL: use the vol that simulate_paths will actually use as base_vol
+        # (garch_vol if available, otherwise final_sigma). When garch_vol differs
+        # from final_sigma, using final_sigma creates drift bias of
+        # 0.5*(garch_vol^2 - final_sigma^2) per year — e.g., ~5.9% for NVDA.
+        ito_sigma = garch_vol if garch_vol is not None else final_sigma
+        final_mu = float(np.log(1 + final_arithmetic) - 0.5 * ito_sigma**2)
+
+        # Beta-adjusted crash frequency: high-beta stocks crash more often
+        base_crash_freq = config["simulation"]["jump_diffusion"]["annual_rate"]
+        beta_adj_crash_freq = float(np.clip(base_crash_freq * beta, 0.02, 0.25))
+        num_sims = config["simulation"]["num_simulations"]
 
         base_scenario = {"drift_adj": 0, "vol_mult": 1.0, "crash_mult": 1.0}
         paths = simulate_paths(

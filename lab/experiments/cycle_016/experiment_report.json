@@ -1,0 +1,30 @@
+{
+    "cycle": 16,
+    "timestamp": "2026-04-11T23:45:00",
+    "what_i_noticed": "In stock_analyzer.py, the Ito correction at line 169 references garch_vol BEFORE it is assigned at line 178 (garch_vol = None). Because Python treats garch_vol as local (due to the later assignment), this raises UnboundLocalError at runtime, which is silently caught by the broad try/except at line 262. This means analyze_stock() returns None for EVERY stock, completely breaking /api/stock/{ticker} and /api/stock/screener endpoints.",
+    "hypothesis": "Moving the GARCH fitting block (lines 178-205) before the Ito correction (lines 162-170) will fix the UnboundLocalError, making analyze_stock() functional again. This restores all per-stock MC projections with GARCH vol, block bootstrap, and correct Ito correction.",
+    "what_i_did": "Reordered stock_analyzer.py: moved GARCH fitting and historical residual computation BEFORE the Ito correction block. This ensures garch_vol is computed (or set to None) before it's referenced in the Ito sigma selection. No logic changes, pure ordering fix.",
+    "files_modified": ["backend/services/stock_analyzer.py"],
+    "results": {
+        "before": {
+            "analyze_stock_returns": "None for ALL stocks (UnboundLocalError silently caught)",
+            "stock_endpoint_working": false,
+            "screener_endpoint_working": false,
+            "garch_vol_used_in_ito": false,
+            "fast_tests_passing": "60/60"
+        },
+        "after": {
+            "analyze_stock_returns": "Full analysis dict for all stocks",
+            "stock_endpoint_working": true,
+            "screener_endpoint_working": true,
+            "garch_vol_used_in_ito": true,
+            "fast_tests_passing": "60/60"
+        },
+        "improved": true
+    },
+    "tests_fixed": [],
+    "analysis": "This is a critical production bug fix. The Ito correction added in cycle 15 introduced a variable ordering error: garch_vol was referenced at line 169 but assigned at line 178. Python's scoping rules make garch_vol local to the function (because of the assignment at 178), so line 169 raises UnboundLocalError every time. The broad try/except at line 262 silently catches this, causing analyze_stock() to return None for every stock. This means: (1) /api/stock/{ticker} returns HTTP 500 or empty, (2) /api/stock/screener returns an empty list, (3) all GARCH, block bootstrap, and Ito correction improvements from cycles 3-15 were not actually being applied to stock analysis. The data_generator's drift metrics were unaffected because it runs its own independent simple GBM (not the backend's analyze_stock). The fix is trivial but high-impact: reorder the code so GARCH fitting happens before the Ito correction.",
+    "next_steps": "1. Add a fast unit test that calls analyze_stock with a mock ticker to catch ordering/scoping bugs. 2. Consider narrowing the broad try/except in analyze_stock to not silently swallow all errors. 3. Wire return_model predictions into stock_analyzer (ml_predicted_return parameter). 4. Per-sector GARCH fits on sector ETF returns.",
+    "confidence": "high",
+    "should_keep": true
+}
