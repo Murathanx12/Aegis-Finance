@@ -421,6 +421,7 @@ config: dict = {
         "ttl_macro": 300,           # 5 min for macro indicators
         "ttl_simulation": 3600,     # 1 hr for Monte Carlo sims
         "ttl_portfolio": 0,         # No cache — unique per request body
+        "ttl_backtest": 86400,      # 24 hr for backtest results
     },
 
     # ── EXTERNAL VALIDATION THRESHOLDS ──────────────────────────────────
