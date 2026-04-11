@@ -1,0 +1,31 @@
+{
+    "cycle": 15,
+    "timestamp": "2026-04-11T23:30:00",
+    "what_i_noticed": "Two Ito correction mismatches in the drift calibration chain: (1) simulate_paths does not apply Ito correction when ml_predicted_return is set — the sector analyzer passes ml_predicted_return=expected_annual, so sector MC drift is biased upward by 0.5*sigma^2/year (~2-4.5% for typical sector vol). (2) stock_analyzer computes Ito correction using final_sigma (clipped historical vol) but passes garch_vol to simulate_paths as base_vol — when they differ, drift is biased by 0.5*(garch_vol^2 - final_sigma^2)/year.",
+    "hypothesis": "Applying Ito correction consistently — using the actual base_vol that simulate_paths will use for diffusion — will produce correct E[S(T)] = S(0)*exp(mu*T) for both stock and sector paths. The sector fix is the larger impact: all 11 sector projections currently have 0.5*sigma^2 excess annual drift. The stock fix is per-stock: impact depends on |garch_vol - hist_sigma|.",
+    "what_i_did": "Two changes: (1) Restructured simulate_paths to determine base_vol BEFORE drift computation. When ml_predicted_return is set, the drift is now computed as ln(1+r) - 0.5*base_vol^2 (correct Ito correction with the vol that actually drives diffusion). Previously it was ln(1+r) (missing Ito). (2) In stock_analyzer, the Ito correction now uses garch_vol when available instead of final_sigma, so the drift calibration matches what simulate_paths will actually use.",
+    "files_modified": [
+        "backend/services/monte_carlo.py",
+        "backend/services/stock_analyzer.py"
+    ],
+    "results": {
+        "before": {
+            "sector_ito_correction": "missing (0.5*sigma^2/yr excess drift per sector, ~2-4.5%)",
+            "stock_ito_sigma_source": "final_sigma (clipped historical, mismatches garch_vol)",
+            "fast_tests_passing": "60/60",
+            "data_generator_drift_errors": "unaffected (data_generator runs its own independent GBM)"
+        },
+        "after": {
+            "sector_ito_correction": "applied with base_vol (correct E[S(T)])",
+            "stock_ito_sigma_source": "garch_vol when available (matches simulate_paths base_vol)",
+            "fast_tests_passing": "60/60",
+            "data_generator_drift_errors": "unaffected (data_generator runs its own independent GBM)"
+        },
+        "improved": true
+    },
+    "tests_fixed": [],
+    "analysis": "This is a mathematically rigorous correctness fix. The data_generator's mc_drift_errors metric CANNOT measure this improvement because it runs its own independent GBM (lines 178-209 of data_generator.py) with its own known measurement bias (theoretical_drift = mu*T vs actual (mu-0.5*sigma^2)*T). The improvement is in the PRODUCTION endpoints: /api/sectors (all 11 sectors had excess drift), /api/stock/{ticker} (stocks where garch_vol != hist_sigma had drift bias), and any caller that passes ml_predicted_return to simulate_paths. The SP500 path in run_monte_carlo was already correct (it applies Ito with garch_vol before calling simulate_paths and doesn't set ml_predicted_return). Portfolio projection was also already correct (uses garch_vol for Ito). All 60 fast tests pass with no regressions.",
+    "next_steps": "1. Consider per-sector GARCH fits (on sector ETF returns) instead of using SP500 GARCH for all sectors. 2. Wire return_model (quantile LightGBM predictor) into stock/sector endpoints — ml_predicted_return, ml_return_p10, ml_return_p90 are accepted by simulate_paths but never populated. 3. Add a backend-specific unit test that verifies MC drift accuracy (mean log return ≈ calibrated drift) to measure improvements independent of data_generator. 4. Consider adaptive block size (Politis-Romano optimal block length) for block bootstrap.",
+    "confidence": "high",
+    "should_keep": true
+}
