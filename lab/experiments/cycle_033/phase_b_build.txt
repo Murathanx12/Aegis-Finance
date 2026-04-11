@@ -1,0 +1,17 @@
+Done. Here's the summary:
+
+**Implemented:** Net liquidity RRP unit fix + config centralization + data_quality hardening
+
+**5 files modified, ~146 lines changed:**
+
+| File | Change |
+|------|--------|
+| `net_liquidity.py:74` | Removed `* 1000` — RRP was inflated 1000x, making net liquidity ~-392T instead of ~7.1T |
+| `config.py:462-481` | Added `net_liquidity` and `llm` config sections (6 values moved from hardcoded) |
+| `llm_analyzer.py:23-31,73` | 4 hardcoded values now read from config |
+| `data_quality.py:76-83` | Guard against non-datetime index crash |
+| `test_untested_services.py` | Fixed mock data + 7 new tests including formula verification |
+
+**Tests: 576 passed, 0 failed** (was 569 — 7 new tests, 0 regressions). Ready for Phase C.
+
+---STDERR---

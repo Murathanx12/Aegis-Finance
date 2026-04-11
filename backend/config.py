@@ -459,6 +459,20 @@ config: dict = {
         "crash_prob_bearish": 0.50,       # crash_prob > 50% → engine is bearish
     },
 
+    # ── NET LIQUIDITY ────────────────────────────────────────────────────
+    "net_liquidity": {
+        "wow_bullish_threshold": 0.05,   # WoW change (trillions) above this → BULLISH
+        "wow_bearish_threshold": -0.05,  # WoW change (trillions) below this → BEARISH
+    },
+
+    # ── LLM / DEEPSEEK ──────────────────────────────────────────────────
+    "llm": {
+        "base_url": "https://api.deepseek.com",
+        "model": "deepseek-chat",
+        "max_tokens": 500,
+        "temperature": 0.3,
+    },
+
     # ── DATA QUALITY ─────────────────────────────────────────────────────
     "data_quality": {
         "staleness_threshold_days": 3,

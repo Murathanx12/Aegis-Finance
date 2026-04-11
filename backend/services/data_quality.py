@@ -74,11 +74,16 @@ class DataQualityChecker:
         if len(data) == 0:
             return warnings
         end_date = data.index[-1]
+        if not hasattr(end_date, "day"):
+            return warnings  # Non-datetime index — skip staleness check
         for col in data.columns:
             last_valid = data[col].last_valid_index()
             if last_valid is None:
                 continue
-            gap = (end_date - last_valid).days
+            try:
+                gap = (end_date - last_valid).days
+            except (TypeError, AttributeError):
+                continue
             if gap > self.staleness_days:
                 warnings.append({
                     "check": "staleness",

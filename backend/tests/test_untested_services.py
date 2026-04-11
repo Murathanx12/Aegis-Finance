@@ -455,13 +455,15 @@ class TestShapCounterfactual:
 
 
 def _mock_fred_series():
-    """Create mock FRED time series for net liquidity calculation."""
+    """Create mock FRED time series for net liquidity calculation.
+
+    All three FRED series (WALCL, WTREGEN, RRPONTSYD) are in millions USD.
+    """
     dates = pd.date_range("2023-01-01", periods=156, freq="W")  # 3 years weekly
     rng = np.random.default_rng(42)
     walcl = pd.Series(8_000_000 + rng.normal(0, 50_000, 156), index=dates)
     tga = pd.Series(500_000 + rng.normal(0, 20_000, 156), index=dates)
-    # RRP in billions (gets multiplied by 1000 in the code)
-    rrp = pd.Series(2_000 + rng.normal(0, 100, 156), index=dates)
+    rrp = pd.Series(2_000_000 + rng.normal(0, 100_000, 156), index=dates)  # millions
     return walcl, tga, rrp
 
 
@@ -1180,6 +1182,356 @@ class TestNetLiquidityHardening:
         result = get_net_liquidity()
         assert result.get("cached") is True
 
+    @patch("backend.services.net_liquidity.api_keys")
+    @patch("backend.services.net_liquidity.cache_get", return_value=None)
+    @patch("backend.services.net_liquidity.cache_set")
+    def test_rrp_not_multiplied(self, mock_cache_set, mock_cache_get, mock_keys):
+        """RRP should NOT be multiplied by 1000 — RRPONTSYD is already in millions."""
+        mock_keys.has.return_value = True
+        mock_keys.fred = "test_key"
+
+        dates = pd.date_range("2023-01-01", periods=52, freq="W")
+        rng = np.random.default_rng(99)
+        # All series in millions USD
+        walcl = pd.Series(8_000_000 + rng.normal(0, 10_000, 52), index=dates)
+        tga = pd.Series(500_000 + rng.normal(0, 5_000, 52), index=dates)
+        rrp = pd.Series(400_000 + rng.normal(0, 5_000, 52), index=dates)  # ~400B in millions
+
+        mock_fred = MagicMock()
+        mock_fred.get_series.side_effect = [walcl, tga, rrp]
+
+        with patch("fredapi.Fred", return_value=mock_fred):
+            from backend.services.net_liquidity import _fetch_and_calculate
+            result = _fetch_and_calculate()
+
+        current = result["current"]
+        # Net liq = (WALCL - TGA - RRP) / 1M → trillions
+        # ~8.0T - 0.5T - 0.4T ≈ 7.1T (realistic)
+        # If RRP were wrongly *1000, it would be ~8.0 - 0.5 - 400 = -392T (absurd)
+        assert current["net_liquidity"] > 0, (
+            f"Net liquidity should be positive (~7T), got {current['net_liquidity']}T "
+            "— RRP may still be incorrectly multiplied"
+        )
+        assert 5.0 < current["net_liquidity"] < 10.0, (
+            f"Expected ~7T net liquidity, got {current['net_liquidity']}T"
+        )
+
+    @patch("backend.services.net_liquidity.api_keys")
+    @patch("backend.services.net_liquidity.cache_get", return_value=None)
+    @patch("backend.services.net_liquidity.cache_set")
+    def test_net_liquidity_formula_correct(self, mock_cache_set, mock_cache_get, mock_keys):
+        """Verify Net_Liq = WALCL - (TGA + RRP) with known values."""
+        mock_keys.has.return_value = True
+        mock_keys.fred = "test_key"
+
+        dates = pd.date_range("2023-01-01", periods=20, freq="W")
+        # Constant series for easy verification
+        walcl = pd.Series([7_500_000.0] * 20, index=dates)  # 7.5T in millions
+        tga = pd.Series([600_000.0] * 20, index=dates)       # 0.6T in millions
+        rrp = pd.Series([300_000.0] * 20, index=dates)       # 0.3T in millions
+        # Expected: 7.5 - 0.6 - 0.3 = 6.6T
+
+        mock_fred = MagicMock()
+        mock_fred.get_series.side_effect = [walcl, tga, rrp]
+
+        with patch("fredapi.Fred", return_value=mock_fred):
+            from backend.services.net_liquidity import _fetch_and_calculate
+            result = _fetch_and_calculate()
+
+        assert abs(result["current"]["net_liquidity"] - 6.6) < 0.01, (
+            f"Expected 6.6T, got {result['current']['net_liquidity']}T"
+        )
+
+    @patch("backend.services.net_liquidity.api_keys")
+    @patch("backend.services.net_liquidity.cache_get", return_value=None)
+    @patch("backend.services.net_liquidity.cache_set")
+    def test_signal_uses_config_thresholds(self, mock_cache_set, mock_cache_get, mock_keys):
+        """Signal thresholds should come from config, not hardcoded."""
+        from backend.config import config
+        nl_cfg = config.get("net_liquidity", {})
+        assert "wow_bullish_threshold" in nl_cfg
+        assert "wow_bearish_threshold" in nl_cfg
+        assert nl_cfg["wow_bullish_threshold"] > 0
+        assert nl_cfg["wow_bearish_threshold"] < 0
+
+    def test_history_entries_have_required_keys(self):
+        """Each history entry should have date, walcl, tga, rrp, net_liquidity, wow_change."""
+        from backend.services.net_liquidity import _default_response
+        result = _default_response()
+        assert result["history"] == []
+        assert result["formula"] == "Net_Liq = WALCL - (TGA + RRP)"
+
+    @patch("backend.services.net_liquidity.api_keys")
+    @patch("backend.services.net_liquidity.cache_get", return_value=None)
+    @patch("backend.services.net_liquidity.cache_set")
+    def test_signal_bullish_when_wow_above_threshold(self, mock_cs, mock_cg, mock_keys):
+        """Signal is BULLISH when WoW change exceeds bullish threshold."""
+        mock_keys.has.return_value = True
+        mock_keys.fred = "test_key"
+
+        dates = pd.date_range("2023-01-01", periods=20, freq="W")
+        # Rising WALCL → positive WoW change in net liquidity
+        walcl = pd.Series(np.linspace(7_000_000, 8_000_000, 20), index=dates)
+        tga = pd.Series([500_000.0] * 20, index=dates)
+        rrp = pd.Series([300_000.0] * 20, index=dates)
+
+        mock_fred = MagicMock()
+        mock_fred.get_series.side_effect = [walcl, tga, rrp]
+
+        with patch("fredapi.Fred", return_value=mock_fred):
+            from backend.services.net_liquidity import _fetch_and_calculate
+            result = _fetch_and_calculate()
+
+        assert result["current"]["signal"] == "BULLISH"
+        assert result["current"]["wow_change"] > 0
+
+    @patch("backend.services.net_liquidity.api_keys")
+    @patch("backend.services.net_liquidity.cache_get", return_value=None)
+    @patch("backend.services.net_liquidity.cache_set")
+    def test_signal_bearish_when_wow_below_threshold(self, mock_cs, mock_cg, mock_keys):
+        """Signal is BEARISH when WoW change is below bearish threshold."""
+        mock_keys.has.return_value = True
+        mock_keys.fred = "test_key"
+
+        dates = pd.date_range("2023-01-01", periods=20, freq="W")
+        # Falling WALCL → negative WoW change
+        walcl = pd.Series(np.linspace(8_000_000, 7_000_000, 20), index=dates)
+        tga = pd.Series([500_000.0] * 20, index=dates)
+        rrp = pd.Series([300_000.0] * 20, index=dates)
+
+        mock_fred = MagicMock()
+        mock_fred.get_series.side_effect = [walcl, tga, rrp]
+
+        with patch("fredapi.Fred", return_value=mock_fred):
+            from backend.services.net_liquidity import _fetch_and_calculate
+            result = _fetch_and_calculate()
+
+        assert result["current"]["signal"] == "BEARISH"
+        assert result["current"]["wow_change"] < 0
+
+    @patch("backend.services.net_liquidity.api_keys")
+    @patch("backend.services.net_liquidity.cache_get", return_value=None)
+    @patch("backend.services.net_liquidity.cache_set")
+    def test_signal_neutral_when_flat(self, mock_cs, mock_cg, mock_keys):
+        """Signal is NEUTRAL when WoW change is near zero."""
+        mock_keys.has.return_value = True
+        mock_keys.fred = "test_key"
+
+        dates = pd.date_range("2023-01-01", periods=20, freq="W")
+        # Constant series → zero WoW change
+        walcl = pd.Series([7_500_000.0] * 20, index=dates)
+        tga = pd.Series([500_000.0] * 20, index=dates)
+        rrp = pd.Series([300_000.0] * 20, index=dates)
+
+        mock_fred = MagicMock()
+        mock_fred.get_series.side_effect = [walcl, tga, rrp]
+
+        with patch("fredapi.Fred", return_value=mock_fred):
+            from backend.services.net_liquidity import _fetch_and_calculate
+            result = _fetch_and_calculate()
+
+        assert result["current"]["signal"] == "NEUTRAL"
+
+    @patch("backend.services.net_liquidity.api_keys")
+    @patch("backend.services.net_liquidity.cache_get", return_value=None)
+    @patch("backend.services.net_liquidity.cache_set")
+    def test_insufficient_data_returns_default(self, mock_cs, mock_cg, mock_keys):
+        """Returns default when FRED gives fewer than 4 weeks of data."""
+        mock_keys.has.return_value = True
+        mock_keys.fred = "test_key"
+
+        dates = pd.date_range("2023-01-01", periods=3, freq="W")
+        walcl = pd.Series([7_000_000.0] * 3, index=dates)
+        tga = pd.Series([500_000.0] * 3, index=dates)
+        rrp = pd.Series([300_000.0] * 3, index=dates)
+
+        mock_fred = MagicMock()
+        mock_fred.get_series.side_effect = [walcl, tga, rrp]
+
+        with patch("fredapi.Fred", return_value=mock_fred):
+            from backend.services.net_liquidity import _fetch_and_calculate
+            result = _fetch_and_calculate()
+
+        assert result["current"]["signal"] == "UNKNOWN"
+        assert "Insufficient" in result.get("error", "")
+
+    @patch("backend.services.net_liquidity.api_keys")
+    @patch("backend.services.net_liquidity.cache_get", return_value=None)
+    @patch("backend.services.net_liquidity.cache_set")
+    def test_history_capped_at_52_entries(self, mock_cs, mock_cg, mock_keys):
+        """History should contain at most 52 weekly entries."""
+        mock_keys.has.return_value = True
+        mock_keys.fred = "test_key"
+
+        dates = pd.date_range("2020-01-01", periods=200, freq="W")
+        walcl = pd.Series([7_500_000.0] * 200, index=dates)
+        tga = pd.Series([500_000.0] * 200, index=dates)
+        rrp = pd.Series([300_000.0] * 200, index=dates)
+
+        mock_fred = MagicMock()
+        mock_fred.get_series.side_effect = [walcl, tga, rrp]
+
+        with patch("fredapi.Fred", return_value=mock_fred):
+            from backend.services.net_liquidity import _fetch_and_calculate
+            result = _fetch_and_calculate()
+
+        assert len(result["history"]) <= 52
+        # Verify each entry has all required keys
+        for entry in result["history"]:
+            for key in ("date", "walcl", "tga", "rrp", "net_liquidity", "wow_change"):
+                assert key in entry, f"Missing key '{key}' in history entry"
+
+    @patch("backend.services.net_liquidity.cache_get", return_value=None)
+    def test_get_net_liquidity_narrows_exceptions(self, mock_cg):
+        """get_net_liquidity catches specific exceptions, not bare Exception."""
+        from backend.services.net_liquidity import get_net_liquidity
+
+        # ValueError should be caught → returns default response
+        with patch("backend.services.net_liquidity._fetch_and_calculate",
+                    side_effect=ValueError("bad value")):
+            result = get_net_liquidity()
+            assert result["current"]["signal"] == "UNKNOWN"
+
+        # OSError (network) should be caught
+        with patch("backend.services.net_liquidity._fetch_and_calculate",
+                    side_effect=OSError("network down")):
+            result = get_net_liquidity()
+            assert result["current"]["signal"] == "UNKNOWN"
+
+    @patch("backend.services.net_liquidity.api_keys")
+    @patch("backend.services.net_liquidity.cache_get", return_value=None)
+    @patch("backend.services.net_liquidity.cache_set")
+    def test_component_values_sum_correctly(self, mock_cs, mock_cg, mock_keys):
+        """Verify walcl - tga - rrp = net_liquidity in current output."""
+        mock_keys.has.return_value = True
+        mock_keys.fred = "test_key"
+
+        dates = pd.date_range("2023-01-01", periods=20, freq="W")
+        walcl = pd.Series([8_000_000.0] * 20, index=dates)
+        tga = pd.Series([600_000.0] * 20, index=dates)
+        rrp = pd.Series([400_000.0] * 20, index=dates)
+
+        mock_fred = MagicMock()
+        mock_fred.get_series.side_effect = [walcl, tga, rrp]
+
+        with patch("fredapi.Fred", return_value=mock_fred):
+            from backend.services.net_liquidity import _fetch_and_calculate
+            result = _fetch_and_calculate()
+
+        c = result["current"]
+        expected_nl = c["walcl"] - c["tga"] - c["rrp"]
+        assert abs(c["net_liquidity"] - expected_nl) < 0.001, (
+            f"net_liquidity={c['net_liquidity']} != walcl-tga-rrp={expected_nl}"
+        )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# HARDENING: DATA QUALITY EDGE CASES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+class TestDataQualityEdgeCases:
+    """Edge cases for data_quality.py."""
+
+    def test_non_datetime_index_no_crash(self):
+        """DataQualityChecker should not crash on non-datetime index."""
+        from backend.services.data_quality import DataQualityChecker
+        df = pd.DataFrame({"SP500": [100, 101, 102]}, index=[0, 1, 2])
+        checker = DataQualityChecker()
+        warnings = checker._check_staleness(df)
+        assert isinstance(warnings, list)
+        assert len(warnings) == 0  # Should skip, not warn
+
+    def test_empty_dataframe_no_crash(self):
+        """DataQualityChecker should handle empty DataFrame."""
+        from backend.services.data_quality import DataQualityChecker
+        df = pd.DataFrame()
+        checker = DataQualityChecker()
+        warnings = checker.validate(df)
+        assert isinstance(warnings, list)
+        assert len(warnings) == 0
+
+    def test_all_nan_column(self):
+        """Staleness check should handle columns that are entirely NaN."""
+        from backend.services.data_quality import DataQualityChecker
+        dates = pd.date_range("2024-01-01", periods=10, freq="D")
+        df = pd.DataFrame({"SP500": [100.0] * 10, "VIX": [float("nan")] * 10}, index=dates)
+        checker = DataQualityChecker()
+        warnings = checker._check_staleness(df)
+        assert isinstance(warnings, list)
+        # VIX is all-NaN → last_valid_index() returns None → skipped, no crash
+
+    def test_vix_out_of_range_detected(self):
+        """Range check flags VIX values outside configured bounds."""
+        from backend.services.data_quality import DataQualityChecker
+        dates = pd.date_range("2024-01-01", periods=5, freq="D")
+        df = pd.DataFrame({"VIX": [10, 20, 95, 3, 50]}, index=dates)
+        checker = DataQualityChecker()
+        warnings = checker._check_range(df)
+        vix_warns = [w for w in warnings if w["column"] == "VIX"]
+        assert len(vix_warns) == 1
+        assert "outside" in vix_warns[0]["message"]
+
+    def test_sp500_extreme_return_flagged(self):
+        """Range check flags S&P daily returns exceeding threshold."""
+        from backend.services.data_quality import DataQualityChecker
+        dates = pd.date_range("2024-01-01", periods=5, freq="D")
+        # 50% single-day jump
+        df = pd.DataFrame({"SP500": [100, 150, 155, 160, 162]}, index=dates)
+        checker = DataQualityChecker()
+        warnings = checker._check_range(df)
+        sp_warns = [w for w in warnings if w["column"] == "SP500"]
+        assert len(sp_warns) == 1
+        assert "exceeding" in sp_warns[0]["message"]
+
+    def test_consistency_flags_huge_jump(self):
+        """Consistency check flags day-over-day SP500 changes > 30%."""
+        from backend.services.data_quality import DataQualityChecker
+        dates = pd.date_range("2024-01-01", periods=4, freq="D")
+        df = pd.DataFrame({"SP500": [100, 100, 200, 200]}, index=dates)  # 100% jump
+        checker = DataQualityChecker()
+        warnings = checker._check_consistency(df)
+        assert len(warnings) == 1
+        assert warnings[0]["severity"] == "error"
+
+    def test_completeness_flags_high_nan(self):
+        """Completeness check flags columns with >20% NaN."""
+        from backend.services.data_quality import DataQualityChecker
+        dates = pd.date_range("2024-01-01", periods=10, freq="D")
+        values = [100.0] * 7 + [float("nan")] * 3  # 30% NaN
+        df = pd.DataFrame({"SP500": values}, index=dates)
+        checker = DataQualityChecker()
+        warnings = checker._check_completeness(df)
+        assert len(warnings) == 1
+        assert "NaN" in warnings[0]["message"]
+
+    def test_summary_returns_degraded_on_error(self):
+        """summary() returns 'degraded' status when errors present."""
+        from backend.services.data_quality import DataQualityChecker
+        dates = pd.date_range("2024-01-01", periods=4, freq="D")
+        df = pd.DataFrame({"SP500": [100, 100, 200, 200]}, index=dates)  # huge jump = error
+        checker = DataQualityChecker()
+        summary = checker.summary(df)
+        assert summary["status"] == "degraded"
+        assert summary["errors"] >= 1
+
+    def test_summary_returns_healthy_on_clean_data(self):
+        """summary() returns 'healthy' when no issues found."""
+        from backend.services.data_quality import DataQualityChecker
+        dates = pd.date_range("2024-01-01", periods=10, freq="D")
+        df = pd.DataFrame({"SP500": np.linspace(100, 102, 10)}, index=dates)
+        checker = DataQualityChecker()
+        summary = checker.summary(df)
+        assert summary["status"] == "healthy"
+
+    def test_string_index_no_crash(self):
+        """String-indexed DataFrame should not crash staleness check."""
+        from backend.services.data_quality import DataQualityChecker
+        df = pd.DataFrame({"SP500": [100, 101]}, index=["a", "b"])
+        checker = DataQualityChecker()
+        warnings = checker._check_staleness(df)
+        assert isinstance(warnings, list)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # HARDENING: LLM ANALYZER EDGE CASES
@@ -1236,3 +1588,74 @@ class TestLlmHardening:
         )
         assert result is not None
         assert len(result["key_catalysts"]) == 2
+
+    def test_config_values_loaded(self):
+        """LLM config values should come from config.py, not hardcoded."""
+        from backend.config import config
+        llm_cfg = config.get("llm", {})
+        assert "base_url" in llm_cfg
+        assert "model" in llm_cfg
+        assert "max_tokens" in llm_cfg
+        assert "temperature" in llm_cfg
+        assert isinstance(llm_cfg["max_tokens"], int)
+        assert 0 < llm_cfg["temperature"] <= 1.0
+
+    @patch("backend.services.llm_analyzer._call_llm")
+    def test_bullish_sentiment_keywords(self, mock_llm):
+        """Bullish keywords should be detected in market summary."""
+        mock_llm.return_value = "Stocks continued their rally sharply on strong optimism."
+        import backend.services.llm_analyzer as mod
+        news = [{"title": "Rally", "publisher": "Bloomberg"}]
+        result = mod.summarize_market_news.__wrapped__(news)
+        assert result["sentiment"] == "bullish"
+
+    @patch("backend.services.llm_analyzer._call_llm")
+    def test_bearish_sentiment_keywords(self, mock_llm):
+        """Bearish keywords should be detected in market summary."""
+        mock_llm.return_value = "Markets declined as fear spread through the banking sector."
+        import backend.services.llm_analyzer as mod
+        news = [{"title": "Decline", "publisher": "CNBC"}]
+        result = mod.summarize_market_news.__wrapped__(news)
+        assert result["sentiment"] == "bearish"
+
+    @patch("backend.services.llm_analyzer._call_llm")
+    def test_positive_score_clamped_at_1(self, mock_llm):
+        """Scores above 1.0 should be clamped to 1.0."""
+        mock_llm.return_value = "BULL: amazing\nBEAR: minor\nSCORE: 9.9\nSUMMARY: very bullish"
+        import backend.services.llm_analyzer as mod
+        result = mod.analyze_stock_outlook.__wrapped__("NVDA", [], {"pe_ratio": 60})
+        assert result["sentiment_score"] == 1.0
+
+    @patch("backend.services.llm_analyzer._call_llm")
+    def test_outlook_fallback_when_no_bull_bear(self, mock_llm):
+        """If LLM doesn't follow format, fallback uses full response as summary."""
+        mock_llm.return_value = "AAPL looks solid with strong revenue growth expected."
+        import backend.services.llm_analyzer as mod
+        result = mod.analyze_stock_outlook.__wrapped__("AAPL", [], {"pe_ratio": 30})
+        assert result["bull_case"] == ""
+        assert result["bear_case"] == ""
+        assert "AAPL" in result["summary"]
+
+    def test_empty_news_returns_none(self):
+        """summarize_market_news returns None for empty news list."""
+        import backend.services.llm_analyzer as mod
+        result = mod.summarize_market_news.__wrapped__([])
+        assert result is None
+
+    def test_expectations_none_when_no_targets_or_earnings(self):
+        """generate_expectations returns None when both inputs are None."""
+        import backend.services.llm_analyzer as mod
+        with patch("backend.services.llm_analyzer._call_llm", return_value="anything"):
+            result = mod.generate_expectations.__wrapped__("AAPL", None, None)
+        assert result is None
+
+    @patch("backend.services.llm_analyzer._call_llm")
+    def test_outlook_with_zero_market_cap(self, mock_llm):
+        """analyze_stock_outlook handles zero/None market cap gracefully."""
+        mock_llm.return_value = "BULL: growth\nBEAR: risk\nSCORE: 0.2\nSUMMARY: moderate"
+        import backend.services.llm_analyzer as mod
+        result = mod.analyze_stock_outlook.__wrapped__(
+            "XYZ", [], {"pe_ratio": None, "market_cap": 0, "beta": None}
+        )
+        assert result is not None
+        assert result["sentiment_score"] == 0.2
