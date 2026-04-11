@@ -1,0 +1,18 @@
+Done. Here's a summary of Cycle 8:
+
+**Problem found:** `stock_analyzer.py` had two related bugs:
+1. **Unit inconsistency** — `hist_mu` (log drift) was blended with `prior` (0.07 arithmetic) and analyst targets (arithmetic) without converting to consistent units
+2. **Missing Ito correction** — the blended result was passed directly to `simulate_paths` as a log drift without applying `-0.5*sigma^2`, which `run_monte_carlo` correctly does (fixed in cycle 7)
+
+**Impact:** High-vol stocks had systematically inflated MC projections by ~0.5*sigma^2/year (NVDA: +12%, TSLA: +10%, AAPL: +4%)
+
+**Fix:** Convert all drift components to arithmetic return space before blending, then apply `log(1+r) - 0.5*sigma^2` to get the proper log drift for `simulate_paths`.
+
+**Results:**
+| Metric | Before | After |
+|--------|--------|-------|
+| Mean drift error | 31.1% | 27.1% (-13%) |
+| Backtest MAE | 6.98% | 6.81% |
+| Tests passing | 60/60 | 60/60 |
+
+Biggest improvements in lower-vol stocks: AAPL -26%, XOM -37%, JPM -20%, JNJ -29%.
