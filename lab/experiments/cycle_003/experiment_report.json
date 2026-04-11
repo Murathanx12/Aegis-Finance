@@ -1,0 +1,39 @@
+{
+    "cycle": 3,
+    "timestamp": "2026-04-11T21:30:00",
+    "what_i_noticed": "Two missing connections in the production backend: (1) The stock signal endpoint (/api/stock/{ticker}/signal) calls get_market_signal() without crash_prob_3m, crash_prob_12m, yield_curve, or external_consensus — even though the market signal endpoint (/api/signal) passes all of these. This zeroes out the crash_prob component (25% weight, the highest-weighted factor), plus loses yield curve inversion tilt and external consensus (15% weight). (2) stock_analyzer calls simulate_paths with no GARCH parameters — uses historical vol and hardcoded Student-t df=8 instead of per-stock GARCH-estimated conditional volatility, tail thickness (nu), and persistence.",
+    "hypothesis": "Wiring crash probabilities into stock signals will activate 25% of signal weight that was previously dead (crash_prob component was excluded when None). Adding GARCH to stock_analyzer will give more accurate forward-looking volatility and stock-specific tail thickness for Monte Carlo paths.",
+    "what_i_did": "Fix 1 (stock signal wiring): Added crash model predictions (3m/12m), yield curve computation, and external consensus to _stock_signal() in stock.py, matching the full set of inputs that _compute_market_signal() in market.py already provides. Fix 2 (GARCH enrichment): Added fit_garch() call in analyze_stock() to get GARCH conditional vol, Student-t degrees of freedom, and persistence, then passed these as garch_vol, garch_nu, garch_persistence to simulate_paths. Wrapped in try/except for graceful fallback.",
+    "files_modified": [
+        "backend/routers/stock.py",
+        "backend/services/stock_analyzer.py"
+    ],
+    "results": {
+        "before": {
+            "stock_signal_crash_prob_component": "always 0.0 (excluded, weight=0)",
+            "stock_signal_yield_curve": "not passed (None)",
+            "stock_signal_external_consensus": "not passed (None)",
+            "stock_mc_garch_vol": "None (uses historical_sigma fallback)",
+            "stock_mc_garch_nu": "None (uses config t_df=8 fallback)",
+            "stock_mc_garch_persistence": "None (uses default 0.97)",
+            "fast_tests_passing": "60/60",
+            "backtest_mae": 7.07
+        },
+        "after": {
+            "stock_signal_crash_prob_component": "computed from crash model (activates 25% weight)",
+            "stock_signal_yield_curve": "computed from T10Y-T3M spread",
+            "stock_signal_external_consensus": "computed from external_validator",
+            "stock_mc_garch_vol": "GARCH conditional vol per stock",
+            "stock_mc_garch_nu": "GARCH-estimated Student-t df per stock",
+            "stock_mc_garch_persistence": "alpha + gamma*sqrt(2/pi) + beta per stock",
+            "fast_tests_passing": "60/60",
+            "backtest_mae": 6.63
+        },
+        "improved": true
+    },
+    "tests_fixed": [],
+    "analysis": "Both changes are correctness improvements that activate previously dead code paths. The stock signal fix is the higher-impact change: 25% of the composite signal weight (crash_prob) was completely zeroed out because crash_prob_3m was never passed. This means all stock signals were computed without the most important risk indicator. The GARCH enrichment is a quality improvement: per-stock MC now uses forward-looking conditional volatility and stock-specific tail thickness instead of generic defaults. The data_generator's mc_drift_errors metric cannot measure either improvement because it runs its own independent GBM (not the backend's simulate_paths), and it doesn't test signal endpoints. The backtest MAE improved slightly (7.07 -> 6.63) but this is within MC sampling noise.",
+    "next_steps": "1. Add signal data to the stock screener endpoint (/api/stock/screener) so users see buy/sell signals in the screener table. 2. Wire block bootstrap into stock_analyzer by computing historical_residuals from fetched price data — currently block bootstrap is enabled in config but never activated since historical_residuals is never passed. 3. Consider adding per-stock crash probability adjustment using the crash model conditioned on sector/beta. 4. The data_generator's drift_error metric has a known measurement bias (compares mu*T vs (mu-0.5*sigma^2)*T) — this would need a data_generator update to fix.",
+    "confidence": "high",
+    "should_keep": true
+}

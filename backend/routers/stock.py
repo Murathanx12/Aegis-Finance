@@ -146,12 +146,54 @@ def _stock_signal(ticker: str) -> dict:
     sp500_1m = float(data["SP500"].pct_change(21).iloc[-1]) * 100
     sp500_3m = float(data["SP500"].pct_change(63).iloc[-1]) * 100
 
+    yield_curve = None
+    if "T10Y" in data.columns and "T3M" in data.columns:
+        yield_curve = float(data["T10Y"].iloc[-1] - data["T3M"].iloc[-1])
+
+    # Crash model predictions (highest-weighted signal component at 25%)
+    crash_3m = None
+    crash_12m = None
+    try:
+        from backend.services.crash_model import CrashPredictor
+        from backend.config import MODEL_DIR
+        model_path = MODEL_DIR / "crash_model.pkl"
+        if model_path.exists():
+            from engine.training.features import build_feature_matrix
+            predictor = CrashPredictor()
+            predictor.load_model(str(model_path))
+            fred_data = fetcher.fetch_fred_data()
+            features = build_feature_matrix(data, fred_data=fred_data)
+            available = [f for f in predictor.feature_names if f in features.columns]
+            latest = features[available].iloc[[-1]]
+            for h in predictor.lgb_models:
+                prob = float(predictor.predict_proba(latest, h)[0]) * 100
+                if h == "3m":
+                    crash_3m = prob
+                elif h == "12m":
+                    crash_12m = prob
+    except Exception:
+        pass
+
+    # External consensus
+    external = None
+    try:
+        from backend.services.external_validator import validate_external
+        fred_data_ext = fetcher.fetch_fred_data()
+        ext = validate_external(data, fred_data_ext)
+        external = ext.get("consensus_direction")
+    except Exception:
+        pass
+
     market_sig = get_market_signal(
+        crash_prob_3m=crash_3m,
+        crash_prob_12m=crash_12m,
         regime=regime,
         risk_score=float(data["Risk_Score"].iloc[-1]),
         sp500_1m_return=sp500_1m,
         sp500_3m_return=sp500_3m,
         vix=vix,
+        yield_curve=yield_curve,
+        external_consensus=external,
     )
 
     # Get stock data
