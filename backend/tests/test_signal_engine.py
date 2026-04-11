@@ -96,6 +96,39 @@ class TestStockSignal:
         )
         assert with_upside["composite_score"] >= no_analyst["composite_score"]
 
+    def test_analyst_upside_additive_not_dominant(self):
+        """Analyst target should adjust, not dominate — a neutral market with
+        moderate analyst upside should NOT flip to Buy on its own."""
+        market = get_market_signal()  # defaults → Hold, score ~0.04
+        assert market["action"] == "Hold"
+        # 20% analyst upside alone should not push a Hold market to Buy
+        result = get_stock_signal(market, analyst_target=120.0, current_price=100.0)
+        # Score should increase but stay below Strong Buy
+        assert result["composite_score"] < 0.45
+
+    def test_bearish_market_produces_sell_despite_analyst(self):
+        """Even with bullish analyst targets, a bearish market should produce Sell."""
+        market = get_market_signal(crash_prob_3m=55.0, regime="Bear", vix=34.0,
+                                   sp500_1m_return=-8.0, sp500_3m_return=-12.0)
+        assert market["composite_score"] < -0.15
+        # Analyst target +30% should not override a strongly bearish market
+        result = get_stock_signal(market, analyst_target=130.0, current_price=100.0,
+                                  beta=1.0)
+        assert result["composite_score"] < 0, "Bearish market should not be fully offset by analyst target"
+
+    def test_signal_diversity_across_stocks(self):
+        """Different stock fundamentals should produce differentiated signals,
+        not a wall of identical Buy signals."""
+        market = get_market_signal()  # neutral Hold
+        # Stock A: high beta, expensive, no analyst target
+        a = get_stock_signal(market, beta=1.8, pe_ratio=70.0, current_price=100.0)
+        # Stock B: low beta, cheap, strong analyst upside, strong earnings growth
+        b = get_stock_signal(market, beta=0.6, pe_ratio=8.0,
+                             analyst_target=140.0, current_price=100.0,
+                             forward_pe=6.0, sector_momentum=12.0)
+        spread = b["composite_score"] - a["composite_score"]
+        assert spread > 0.15, f"Signal spread {spread:.3f} too narrow between opposing fundamentals"
+
     def test_high_pe_penalizes(self):
         market = get_market_signal()
         normal_pe = get_stock_signal(market, pe_ratio=20.0)

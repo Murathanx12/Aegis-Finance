@@ -243,6 +243,12 @@ def get_stock_signal(
     Returns:
         Dict with action, confidence, color, reasons
     """
+    _sw = config.get("stock_signal_weights", {})
+    analyst_w = _sw.get("analyst_target", 0.12)
+    sector_w = _sw.get("sector_momentum", 0.012)
+    pe_bonus = _sw.get("pe_bonus", 0.10)
+    eg_scale = _sw.get("earnings_growth", 0.30)
+
     base_score = market_signal["composite_score"]
     reasons = list(market_signal["reasons"])
 
@@ -250,20 +256,22 @@ def get_stock_signal(
     beta_adj = 1.0 + (beta - 1.0) * 0.3  # Dampen extreme betas
     stock_score = base_score * beta_adj
 
-    # Analyst target signal
+    # Analyst target signal — ADDITIVE (not convex combination)
+    # Old: stock_score = 0.7*base + 0.3*analyst (analyst dominated the base)
+    # New: stock_score += analyst_w * analyst_sig (analyst adjusts, doesn't replace)
     if analyst_target is not None and analyst_target > 0 and current_price > 0:
         upside = (analyst_target / current_price - 1) * 100
         analyst_sig = np.clip(upside / 30, -0.5, 0.5)  # ±30% → ±0.5
-        stock_score = 0.7 * stock_score + 0.3 * analyst_sig
+        stock_score += analyst_w * analyst_sig
 
         if upside > 15:
             reasons.insert(0, f"Analyst target implies +{upside:.0f}% upside")
         elif upside < -10:
             reasons.insert(0, f"Below analyst target by {abs(upside):.0f}%")
 
-    # Sector momentum
-    if abs(sector_momentum) > 5:
-        sector_adj = np.clip(sector_momentum / 20, -0.2, 0.2)
+    # Sector momentum — graduated, proportional to magnitude
+    if abs(sector_momentum) > 3:
+        sector_adj = float(np.clip(sector_momentum * sector_w, -0.15, 0.15))
         stock_score += sector_adj
         if sector_momentum > 10:
             reasons.append(f"Strong sector momentum (+{sector_momentum:.0f}%)")
@@ -273,10 +281,10 @@ def get_stock_signal(
     # PE ratio — graduated valuation signal
     if pe_ratio is not None and pe_ratio > 0:
         if pe_ratio > 50:
-            stock_score -= 0.1
+            stock_score -= pe_bonus
             reasons.append(f"High P/E ({pe_ratio:.0f}x) — premium valuation")
         elif pe_ratio < 10:
-            stock_score += 0.1
+            stock_score += pe_bonus
             reasons.append(f"Low P/E ({pe_ratio:.0f}x) — value opportunity")
 
     # Forward PE earnings growth signal: when forward_pe << trailing_pe,
@@ -292,7 +300,7 @@ def get_stock_signal(
     ):
         pe_compression = forward_pe / pe_ratio  # <1 = earnings growing, >1 = declining
         # Map: ratio 0.5 → +0.15, ratio 0.75 → +0.05, ratio 1.0 → 0, ratio 1.25 → -0.05
-        earnings_growth_sig = float(np.clip((1.0 - pe_compression) * 0.3, -0.15, 0.15))
+        earnings_growth_sig = float(np.clip((1.0 - pe_compression) * eg_scale, -0.15, 0.15))
         stock_score += earnings_growth_sig
         if pe_compression < 0.6:
             reasons.append(f"Strong earnings growth expected (fwd P/E {forward_pe:.0f}x vs {pe_ratio:.0f}x trailing)")

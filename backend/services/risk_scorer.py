@@ -76,10 +76,11 @@ def build_risk_score(data: pd.DataFrame) -> pd.Series:
         signals.append(rolling_zscore(yld_chg, 252).abs())
         weights.append(weights_cfg["long_yield_vol"])
 
-    # 5. Momentum exhaustion (lowered threshold from 2.0 to 1.5)
+    # 5. Momentum exhaustion — threshold from config (was hardcoded at 1.5)
+    mom_exhaust_thresh = config["risk"].get("momentum_exhaustion_threshold", 1.5)
     ret_60d = data["SP500"].pct_change(60)
     mom_z = rolling_zscore(ret_60d, 252)
-    signals.append(mom_z.apply(lambda x: max(0, abs(x) - 1.5)))
+    signals.append(mom_z.apply(lambda x: max(0, abs(x) - mom_exhaust_thresh)))
     weights.append(weights_cfg["momentum_exhaustion"])
 
     # 6. Short-term vol regime (20d rolling vol) — use dual z-score
