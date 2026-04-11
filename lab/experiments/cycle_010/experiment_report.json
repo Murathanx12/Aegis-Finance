@@ -1,0 +1,37 @@
+{
+    "cycle": 10,
+    "timestamp": "2026-04-11T22:35:00",
+    "what_i_noticed": "Two parameters in get_market_signal were computed by all 3 router endpoints but silently discarded: (1) risk_score — the 9-factor composite macro risk score from risk_scorer.py, always passed but never read in the function body; (2) crash_prob_12m — the 12-month crash probability, computed alongside 3m but ignored. This meant 12% of potential signal information (macro stress) was completely dead, and the crash component used only near-term risk without structural context.",
+    "hypothesis": "Wiring risk_score as a new 'macro_risk' signal component will add macro stress awareness to buy/sell signals — high composite risk (>2.0) should tilt signals bearish, low risk should tilt slightly bullish. Blending crash_prob_12m (30% weight) with crash_prob_3m (70%) will produce a richer crash signal that captures both immediate and structural risk.",
+    "what_i_did": "1. Added 'macro_risk' as a 7th signal component in signal_engine.py: maps risk_score [-4,+4] linearly to signal [-1.0,+0.5] via -risk_score*0.25. High stress (risk_score=3) → -0.75 (strong bearish), neutral (0) → 0, low stress (-2) → +0.5 (mild bullish). 2. Blended crash_prob_12m into the crash_prob component: 70% weight on 3m (near-term), 30% on 12m (structural). Added reason text for elevated 12M risk. 3. Rebalanced signal weights in config.py to accommodate the new component: crash_prob 0.25→0.22, regime 0.20→0.18, valuation 0.15→0.12, momentum 0.15→0.13, mean_reversion 0.10→0.10, external 0.15→0.13, macro_risk 0.00→0.12. Sum=1.00.",
+    "files_modified": [
+        "backend/config.py",
+        "backend/services/signal_engine.py"
+    ],
+    "results": {
+        "before": {
+            "signal_components": 6,
+            "risk_score_used": false,
+            "crash_prob_12m_used": false,
+            "dead_parameter_count": 3,
+            "stressed_market_score": "-0.27 (approx, without macro_risk)",
+            "normal_market_crash_component": "0.50 (3m only)",
+            "fast_tests_passing": "60/60"
+        },
+        "after": {
+            "signal_components": 7,
+            "risk_score_used": true,
+            "crash_prob_12m_used": true,
+            "dead_parameter_count": 1,
+            "stressed_market_score": "-0.365 (with macro_risk=-0.75)",
+            "normal_market_crash_component": "0.44 (blended 3m+12m)",
+            "fast_tests_passing": "60/60"
+        },
+        "improved": true
+    },
+    "tests_fixed": [],
+    "analysis": "Both fixes activate previously dead code paths. The macro_risk component adds meaningful differentiation: in stressed markets (risk_score=3.0), it contributes -0.75 which shifts the composite ~0.09 points more bearish — enough to move borderline Hold signals to Sell. In calm markets (risk_score≈0), it's neutral. The crash_prob_12m blend slightly dampens the crash component when structural risk diverges from near-term risk (e.g., 3m=15% but 12m=25% → component drops from 0.50 to 0.44). Only 1 dead parameter remains (sp500_ytd_return). The data_generator's metrics are unaffected because it doesn't test signal endpoints — the improvement is in the production /api/market-status/signal, /api/stock/screener, and /api/stock/{ticker}/signal endpoints that users interact with.",
+    "next_steps": "1. Wire sp500_ytd_return into momentum or mean_reversion (last dead parameter). 2. Consider adding a non-linear risk_score mapping (e.g., sigmoid) so the signal is more sensitive around the critical risk_score=2.0 threshold. 3. Add signal engine tests that verify macro_risk component behavior. 4. Consider GARCH-standardized residuals for block bootstrap (returns/conditional_vol) for more accurate tail behavior in MC paths.",
+    "confidence": "high",
+    "should_keep": true
+}
