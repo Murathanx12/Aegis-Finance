@@ -1,0 +1,16 @@
+Done. Here's the summary:
+
+## Cycle 16: Critical Production Bug Fix
+
+**Bug found**: `analyze_stock()` in `backend/services/stock_analyzer.py` has been **silently failing for every stock** since cycle 15.
+
+**Root cause**: The Ito correction at line 169 references `garch_vol` before it's assigned at line 178. Python's scoping rules treat `garch_vol` as local (because of the later `garch_vol = None` assignment), causing `UnboundLocalError` on every call. The broad `try/except` at line 262 silently catches it, returning `None`.
+
+**Impact**: 
+- `/api/stock/{ticker}` — broken (returns error/empty)
+- `/api/stock/screener` — broken (returns empty list)
+- All GARCH, block bootstrap, and Ito improvements from cycles 3-15 were **not being applied** to stock analysis in production
+
+**Fix**: Reordered code so GARCH fitting happens before the Ito correction block. No logic changes, pure ordering fix. All 60 fast tests pass.
+
+**Why data_generator didn't catch it**: The data_generator runs its own independent simple GBM (lines 177-205 of data_generator.py) and never calls `analyze_stock()`, so its metrics were unaffected.
