@@ -1,0 +1,109 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\mrthn\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\mrthn\aegis-finance
+plugins: anyio-4.12.1
+collecting ... collected 152 items / 92 deselected / 60 selected
+
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_calibration_table PASSED [  1%]
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_monotonic_horizons PASSED [  3%]
+backend/tests/test_edge_cases.py::TestInvalidTickers::test_invalid_ticker_returns_none[ZZZZZZ] PASSED [  5%]
+backend/tests/test_edge_cases.py::TestInvalidTickers::test_invalid_ticker_returns_none[INVALID123] PASSED [  6%]
+backend/tests/test_edge_cases.py::TestInvalidTickers::test_invalid_ticker_returns_none[!@#$%] PASSED [  8%]
+backend/tests/test_edge_cases.py::TestInvalidTickers::test_invalid_ticker_returns_none[] PASSED [ 10%]
+backend/tests/test_edge_cases.py::TestMonteCarloExtremeParams::test_very_high_volatility PASSED [ 11%]
+backend/tests/test_edge_cases.py::TestMonteCarloExtremeParams::test_very_low_volatility PASSED [ 13%]
+backend/tests/test_edge_cases.py::TestMonteCarloExtremeParams::test_zero_crash_frequency PASSED [ 15%]
+backend/tests/test_edge_cases.py::TestMonteCarloExtremeParams::test_high_crash_frequency PASSED [ 16%]
+backend/tests/test_edge_cases.py::TestMonteCarloExtremeParams::test_negative_drift PASSED [ 18%]
+backend/tests/test_edge_cases.py::TestMonteCarloExtremeParams::test_very_long_horizon PASSED [ 20%]
+backend/tests/test_edge_cases.py::TestMonteCarloExtremeParams::test_small_simulation PASSED [ 21%]
+backend/tests/test_edge_cases.py::TestMonteCarloExtremeParams::test_scenario_with_vol_multiplier PASSED [ 23%]
+backend/tests/test_monte_carlo.py::TestSimulatePathsShape::test_output_shape PASSED [ 25%]
+backend/tests/test_monte_carlo.py::TestSimulatePathsShape::test_starts_at_correct_price PASSED [ 26%]
+backend/tests/test_monte_carlo.py::TestSimulatePathsShape::test_prices_positive PASSED [ 28%]
+backend/tests/test_monte_carlo.py::TestMertonCompensator::test_median_return_near_drift PASSED [ 30%]
+backend/tests/test_monte_carlo.py::TestMertonCompensator::test_mean_terminal_price_near_expected PASSED [ 31%]
+backend/tests/test_monte_carlo.py::TestRealismBounds::test_annual_return_in_range PASSED [ 33%]
+backend/tests/test_monte_carlo.py::TestRealismBounds::test_annual_vol_in_range PASSED [ 35%]
+backend/tests/test_monte_carlo.py::TestRealismBounds::test_crash_frequency_in_range PASSED [ 36%]
+backend/tests/test_monte_carlo.py::TestScenarioWeights::test_base_weights_sum_to_one PASSED [ 38%]
+backend/tests/test_monte_carlo.py::TestScenarioWeights::test_adjusted_weights_sum_to_one PASSED [ 40%]
+backend/tests/test_monte_carlo.py::TestScenarioWeights::test_high_vix_shifts_bearish PASSED [ 41%]
+backend/tests/test_monte_carlo.py::TestScenarioWeights::test_institutional_return_reasonable PASSED [ 43%]
+backend/tests/test_monte_carlo.py::TestReproducibility::test_same_seed_same_output PASSED [ 45%]
+backend/tests/test_monte_carlo.py::TestReproducibility::test_different_seed_different_output PASSED [ 46%]
+backend/tests/test_portfolio_projection.py::TestStockAnalyzerBetaCrashFreq::test_config_driven_paths PASSED [ 48%]
+backend/tests/test_portfolio_projection.py::TestStockAnalyzerBetaCrashFreq::test_crash_freq_adjustment_logic PASSED [ 50%]
+backend/tests/test_regime_accuracy.py::TestRegimeDetection::test_covid_crash_march_2020 PASSED [ 51%]
+backend/tests/test_regime_accuracy.py::TestRegimeDetection::test_vaccine_rally_2021 PASSED [ 53%]
+backend/tests/test_regime_accuracy.py::TestRegimeDetection::test_rate_hike_bear_2022 PASSED [ 55%]
+backend/tests/test_regime_accuracy.py::TestRegimeDetection::test_recovery_2023 PASSED [ 56%]
+backend/tests/test_regime_accuracy.py::TestRegimeDetection::test_tariff_selloff_2025 PASSED [ 58%]
+backend/tests/test_risk_stress.py::TestRiskScoreStress::test_covid_peak_stress_march_2020 PASSED [ 60%]
+backend/tests/test_risk_stress.py::TestRiskScoreStress::test_svb_collapse_march_2023 PASSED [ 61%]
+backend/tests/test_risk_stress.py::TestRiskScoreStress::test_japan_carry_trade_aug_2024 PASSED [ 63%]
+backend/tests/test_risk_stress.py::TestRiskScoreStress::test_tariff_april_2025 PASSED [ 65%]
+backend/tests/test_risk_stress.py::TestRiskScoreStress::test_calm_july_2021 PASSED [ 66%]
+backend/tests/test_risk_stress.py::TestRiskScoreStress::test_calm_december_2023 PASSED [ 68%]
+backend/tests/test_signal_engine.py::TestMarketSignal::test_returns_required_keys PASSED [ 70%]
+backend/tests/test_signal_engine.py::TestMarketSignal::test_action_is_valid PASSED [ 71%]
+backend/tests/test_signal_engine.py::TestMarketSignal::test_confidence_range PASSED [ 73%]
+backend/tests/test_signal_engine.py::TestMarketSignal::test_composite_score_range PASSED [ 75%]
+backend/tests/test_signal_engine.py::TestMarketSignal::test_high_crash_prob_bearish PASSED [ 76%]
+backend/tests/test_signal_engine.py::TestMarketSignal::test_low_crash_prob_bullish PASSED [ 78%]
+backend/tests/test_signal_engine.py::TestMarketSignal::test_neutral_defaults PASSED [ 80%]
+backend/tests/test_signal_engine.py::TestMarketSignal::test_reasons_populated PASSED [ 81%]
+backend/tests/test_signal_engine.py::TestMarketSignal::test_components_all_present PASSED [ 83%]
+backend/tests/test_signal_engine.py::TestMarketSignal::test_color_matches_action PASSED [ 85%]
+backend/tests/test_signal_engine.py::TestStockSignal::test_returns_required_keys PASSED [ 86%]
+backend/tests/test_signal_engine.py::TestStockSignal::test_high_beta_amplifies PASSED [ 88%]
+backend/tests/test_signal_engine.py::TestStockSignal::test_analyst_upside_boosts PASSED [ 90%]
+backend/tests/test_signal_engine.py::TestStockSignal::test_high_pe_penalizes PASSED [ 91%]
+backend/tests/test_signal_engine.py::TestStockSignal::test_low_pe_rewards PASSED [ 93%]
+backend/tests/test_stress_portfolio.py::TestRiskProfileScoring::test_conservative_answers PASSED [ 95%]
+backend/tests/test_stress_portfolio.py::TestRiskProfileScoring::test_aggressive_answers PASSED [ 96%]
+backend/tests/test_stress_portfolio.py::TestRiskProfileScoring::test_moderate_answers PASSED [ 98%]
+backend/tests/test_stress_portfolio.py::TestRiskProfileScoring::test_risk_score_clamped PASSED [100%]
+
+============================== warnings summary ===============================
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_calibration_table
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_monotonic_horizons
+  C:\Users\mrthn\AppData\Local\Programs\Python\Python312\Lib\site-packages\sklearn\base.py:376: InconsistentVersionWarning: Trying to unpickle estimator LabelEncoder from version 1.8.0 when using version 1.4.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_calibration_table
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_monotonic_horizons
+  C:\Users\mrthn\AppData\Local\Programs\Python\Python312\Lib\site-packages\sklearn\base.py:376: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegression from version 1.8.0 when using version 1.4.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_calibration_table
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_monotonic_horizons
+  C:\Users\mrthn\AppData\Local\Programs\Python\Python312\Lib\site-packages\sklearn\base.py:376: InconsistentVersionWarning: Trying to unpickle estimator IsotonicRegression from version 1.8.0 when using version 1.4.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_calibration_table
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_monotonic_horizons
+  C:\Users\mrthn\AppData\Local\Programs\Python\Python312\Lib\site-packages\sklearn\base.py:376: InconsistentVersionWarning: Trying to unpickle estimator StandardScaler from version 1.8.0 when using version 1.4.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_calibration_table
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_calibration_table
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_monotonic_horizons
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_monotonic_horizons
+  C:\Users\mrthn\aegis-finance\engine\training\features.py:289: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+    fred_cols[f"{col}_chg_3m"] = s.pct_change(63)
+
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_calibration_table
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_calibration_table
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_monotonic_horizons
+backend/tests/test_crash_calibration.py::TestCrashCalibration::test_monotonic_horizons
+  C:\Users\mrthn\aegis-finance\engine\training\features.py:290: FutureWarning: The default fill_method='pad' in Series.pct_change is deprecated and will be removed in a future version. Either fill in any non-leading NA values prior to calling pct_change or specify 'fill_method=None' to not fill NA values.
+    fred_cols[f"{col}_chg_12m"] = s.pct_change(252)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============== 60 passed, 92 deselected, 16 warnings in 59.15s ===============

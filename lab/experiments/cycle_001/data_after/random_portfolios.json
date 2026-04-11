@@ -1,0 +1,339 @@
+[
+  {
+    "id": "portfolio_1",
+    "risk_profile": "growth",
+    "total_value_approx": 174737.74,
+    "n_holdings": 8,
+    "holdings": [
+      {
+        "ticker": "AMZN",
+        "name": "Amazon",
+        "sector": "Technology",
+        "shares": 206,
+        "weight": 0.1636,
+        "cost_basis": 138.34,
+        "purchase_date": "2026-01-10"
+      },
+      {
+        "ticker": "META",
+        "name": "Meta",
+        "sector": "Technology",
+        "shares": 12,
+        "weight": 0.0101,
+        "cost_basis": 138.43,
+        "purchase_date": "2025-01-03"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft",
+        "sector": "Technology",
+        "shares": 657,
+        "weight": 0.3445,
+        "cost_basis": 91.51,
+        "purchase_date": "2024-07-20"
+      },
+      {
+        "ticker": "UNH",
+        "name": "UnitedHealth",
+        "sector": "Healthcare",
+        "shares": 57,
+        "weight": 0.0377,
+        "cost_basis": 113.65,
+        "purchase_date": "2026-02-03"
+      },
+      {
+        "ticker": "BAC",
+        "name": "Bank of America",
+        "sector": "Financials",
+        "shares": 372,
+        "weight": 0.1836,
+        "cost_basis": 86.16,
+        "purchase_date": "2024-10-31"
+      },
+      {
+        "ticker": "JPM",
+        "name": "JPMorgan",
+        "sector": "Financials",
+        "shares": 1,
+        "weight": 0.0002,
+        "cost_basis": 80.75,
+        "purchase_date": "2026-03-04"
+      },
+      {
+        "ticker": "WMT",
+        "name": "Walmart",
+        "sector": "Consumer Staples",
+        "shares": 679,
+        "weight": 0.2541,
+        "cost_basis": 65.3,
+        "purchase_date": "2024-05-13"
+      },
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet",
+        "sector": "Technology",
+        "shares": 15,
+        "weight": 0.0063,
+        "cost_basis": 70.51,
+        "purchase_date": "2024-04-25"
+      }
+    ]
+  },
+  {
+    "id": "portfolio_2",
+    "risk_profile": "moderate",
+    "total_value_approx": 323301.34,
+    "n_holdings": 8,
+    "holdings": [
+      {
+        "ticker": "JNJ",
+        "name": "J&J",
+        "sector": "Healthcare",
+        "shares": 306,
+        "weight": 0.1092,
+        "cost_basis": 115.28,
+        "purchase_date": "2025-03-16"
+      },
+      {
+        "ticker": "UNH",
+        "name": "UnitedHealth",
+        "sector": "Healthcare",
+        "shares": 53,
+        "weight": 0.0207,
+        "cost_basis": 125.3,
+        "purchase_date": "2026-03-12"
+      },
+      {
+        "ticker": "BAC",
+        "name": "Bank of America",
+        "sector": "Financials",
+        "shares": 86,
+        "weight": 0.032,
+        "cost_basis": 119.87,
+        "purchase_date": "2024-09-16"
+      },
+      {
+        "ticker": "JPM",
+        "name": "JPMorgan",
+        "sector": "Financials",
+        "shares": 13,
+        "weight": 0.0051,
+        "cost_basis": 125.36,
+        "purchase_date": "2024-07-19"
+      },
+      {
+        "ticker": "WMT",
+        "name": "Walmart",
+        "sector": "Consumer Staples",
+        "shares": 839,
+        "weight": 0.1885,
+        "cost_basis": 72.55,
+        "purchase_date": "2024-09-24"
+      },
+      {
+        "ticker": "CAT",
+        "name": "Caterpillar",
+        "sector": "Industrials",
+        "shares": 1508,
+        "weight": 0.4664,
+        "cost_basis": 99.96,
+        "purchase_date": "2025-10-03"
+      },
+      {
+        "ticker": "XOM",
+        "name": "ExxonMobil",
+        "sector": "Energy",
+        "shares": 521,
+        "weight": 0.0893,
+        "cost_basis": 55.38,
+        "purchase_date": "2024-10-02"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon",
+        "sector": "Technology",
+        "shares": 384,
+        "weight": 0.0888,
+        "cost_basis": 74.67,
+        "purchase_date": "2025-06-16"
+      }
+    ]
+  },
+  {
+    "id": "portfolio_3",
+    "risk_profile": "aggressive",
+    "total_value_approx": 379465.43,
+    "n_holdings": 6,
+    "holdings": [
+      {
+        "ticker": "TSLA",
+        "name": "Tesla",
+        "sector": "Consumer Discretionary",
+        "shares": 970,
+        "weight": 0.2996,
+        "cost_basis": 117.11,
+        "purchase_date": "2025-02-27"
+      },
+      {
+        "ticker": "CVX",
+        "name": "Chevron",
+        "sector": "Energy",
+        "shares": 63,
+        "weight": 0.025,
+        "cost_basis": 149.25,
+        "purchase_date": "2026-01-20"
+      },
+      {
+        "ticker": "JPM",
+        "name": "JPMorgan",
+        "sector": "Financials",
+        "shares": 1587,
+        "weight": 0.3954,
+        "cost_basis": 94.5,
+        "purchase_date": "2025-10-28"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft",
+        "sector": "Technology",
+        "shares": 209,
+        "weight": 0.0417,
+        "cost_basis": 75.35,
+        "purchase_date": "2024-04-12"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon",
+        "sector": "Technology",
+        "shares": 699,
+        "weight": 0.2148,
+        "cost_basis": 116.56,
+        "purchase_date": "2025-04-24"
+      },
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet",
+        "sector": "Technology",
+        "shares": 113,
+        "weight": 0.0234,
+        "cost_basis": 78.36,
+        "purchase_date": "2025-09-26"
+      }
+    ]
+  },
+  {
+    "id": "portfolio_4",
+    "risk_profile": "aggressive",
+    "total_value_approx": 406520.52,
+    "n_holdings": 3,
+    "holdings": [
+      {
+        "ticker": "AMZN",
+        "name": "Amazon",
+        "sector": "Technology",
+        "shares": 286,
+        "weight": 0.1027,
+        "cost_basis": 145.87,
+        "purchase_date": "2026-01-08"
+      },
+      {
+        "ticker": "WMT",
+        "name": "Walmart",
+        "sector": "Consumer Staples",
+        "shares": 3388,
+        "weight": 0.766,
+        "cost_basis": 91.88,
+        "purchase_date": "2024-10-28"
+      },
+      {
+        "ticker": "TSLA",
+        "name": "Tesla",
+        "sector": "Consumer Discretionary",
+        "shares": 441,
+        "weight": 0.1313,
+        "cost_basis": 120.98,
+        "purchase_date": "2024-06-15"
+      }
+    ]
+  },
+  {
+    "id": "portfolio_5",
+    "risk_profile": "conservative",
+    "total_value_approx": 91913.76,
+    "n_holdings": 8,
+    "holdings": [
+      {
+        "ticker": "AAPL",
+        "name": "Apple",
+        "sector": "Technology",
+        "shares": 165,
+        "weight": 0.1484,
+        "cost_basis": 82.2,
+        "purchase_date": "2026-01-30"
+      },
+      {
+        "ticker": "TSLA",
+        "name": "Tesla",
+        "sector": "Consumer Discretionary",
+        "shares": 170,
+        "weight": 0.2316,
+        "cost_basis": 125.09,
+        "purchase_date": "2024-07-07"
+      },
+      {
+        "ticker": "JNJ",
+        "name": "J&J",
+        "sector": "Healthcare",
+        "shares": 14,
+        "weight": 0.0179,
+        "cost_basis": 115.78,
+        "purchase_date": "2025-07-25"
+      },
+      {
+        "ticker": "UNH",
+        "name": "UnitedHealth",
+        "sector": "Healthcare",
+        "shares": 41,
+        "weight": 0.0368,
+        "cost_basis": 81.83,
+        "purchase_date": "2025-08-28"
+      },
+      {
+        "ticker": "WMT",
+        "name": "Walmart",
+        "sector": "Consumer Staples",
+        "shares": 471,
+        "weight": 0.3345,
+        "cost_basis": 65.19,
+        "purchase_date": "2025-12-14"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft",
+        "sector": "Technology",
+        "shares": 146,
+        "weight": 0.1786,
+        "cost_basis": 112.24,
+        "purchase_date": "2024-06-04"
+      },
+      {
+        "ticker": "CAT",
+        "name": "Caterpillar",
+        "sector": "Industrials",
+        "shares": 4,
+        "weight": 0.0054,
+        "cost_basis": 101.76,
+        "purchase_date": "2025-12-14"
+      },
+      {
+        "ticker": "META",
+        "name": "Meta",
+        "sector": "Technology",
+        "shares": 29,
+        "weight": 0.0468,
+        "cost_basis": 145.23,
+        "purchase_date": "2025-01-26"
+      }
+    ]
+  }
+]
