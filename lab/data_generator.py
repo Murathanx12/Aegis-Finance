@@ -358,7 +358,6 @@ def collect_portfolio_test(output_dir):
         from backend.services.portfolio_engine import PortfolioEngine
         engine = PortfolioEngine()
 
-        # Test portfolio build
         test_holdings = [
             {"ticker": "AAPL", "shares": 50},
             {"ticker": "NVDA", "shares": 30},
@@ -367,34 +366,59 @@ def collect_portfolio_test(output_dir):
             {"ticker": "JNJ", "shares": 35},
         ]
 
-        profiles = ["conservative", "moderate", "aggressive"]
         results = {}
 
-        for profile in profiles:
+        # Test build with different risk tolerances
+        for profile in ["conservative", "moderate", "aggressive"]:
             try:
-                build_result = engine.build_portfolio(
-                    holdings=test_holdings,
-                    risk_profile=profile,
-                )
-                projection = engine.project_portfolio(
-                    holdings=test_holdings,
-                    horizon_years=5,
-                )
-
-                results[profile] = {
-                    "build_success": build_result is not None,
-                    "build_keys": list(build_result.keys()) if build_result else [],
-                    "projection_success": projection is not None,
-                    "projection_keys": list(projection.keys()) if projection else [],
-                    "p10": projection.get("p10") if projection else None,
-                    "median": projection.get("median") if projection else None,
-                    "p90": projection.get("p90") if projection else None,
+                build_result = engine.build_portfolio(risk_tolerance=profile)
+                results[f"build_{profile}"] = {
+                    "success": build_result is not None,
+                    "keys": list(build_result.keys()) if isinstance(build_result, dict) else [],
                 }
-                print(f"    [OK] Portfolio {profile}: build={'OK' if build_result else 'FAIL'}, "
-                      f"project={'OK' if projection else 'FAIL'}")
+                print(f"    [OK] Build {profile}: {'OK' if build_result else 'FAIL'}")
             except Exception as e:
-                results[profile] = {"error": str(e)}
-                print(f"    [FAIL] Portfolio {profile}: {e}")
+                results[f"build_{profile}"] = {"error": str(e)}
+                print(f"    [FAIL] Build {profile}: {e}")
+
+        # Test analyze
+        try:
+            analysis = engine.analyze_portfolio(holdings=test_holdings)
+            results["analyze"] = {
+                "success": analysis is not None,
+                "keys": list(analysis.keys()) if isinstance(analysis, dict) else [],
+            }
+            print(f"    [OK] Analyze: {'OK' if analysis else 'FAIL'}")
+        except Exception as e:
+            results["analyze"] = {"error": str(e)}
+            print(f"    [FAIL] Analyze: {e}")
+
+        # Test projection
+        try:
+            projection = engine.project_portfolio(holdings=test_holdings, years=5)
+            results["projection"] = {
+                "success": projection is not None,
+                "keys": list(projection.keys()) if isinstance(projection, dict) else [],
+                "p10": projection.get("p10") if isinstance(projection, dict) else None,
+                "median": projection.get("median") if isinstance(projection, dict) else None,
+                "p90": projection.get("p90") if isinstance(projection, dict) else None,
+            }
+            print(f"    [OK] Projection: {'OK' if projection else 'FAIL'}")
+        except Exception as e:
+            results["projection"] = {"error": str(e)}
+            print(f"    [FAIL] Projection: {e}")
+
+        # Test stress test
+        try:
+            stress = engine.stress_test(holdings=test_holdings, scenario="2008")
+            results["stress_test"] = {
+                "success": stress is not None,
+                "keys": list(stress.keys()) if isinstance(stress, dict) else [],
+            }
+            print(f"    [OK] Stress test: {'OK' if stress else 'FAIL'}")
+        except Exception as e:
+            results["stress_test"] = {"error": str(e)}
+            print(f"    [FAIL] Stress test: {e}")
 
         _save(output_dir, "portfolio_test.json", results)
         return results
