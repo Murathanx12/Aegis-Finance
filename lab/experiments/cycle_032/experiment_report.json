@@ -1,0 +1,89 @@
+{
+  "cycle": 32,
+  "timestamp": "2026-04-12T04:59:59.262816",
+  "research_track": "New Features & Capabilities",
+  "what_i_noticed": "The signal engine composites 7 factors (crash_prob, regime, valuation, momentum, mean_reversion, external, macro_risk) but has zero drawdown awareness. It only sees 1M/3M/YTD returns, which measure direction but not distance from peak. A market that rallied +20% then dropped -10% shows +10% 3M return (bullish momentum signal) but is in a -10% drawdown (correction territory). The engine would call this 'Buy' when caution is warranted. Additionally, portfolio CVaR is daily-only (misleadingly small), and the R&D data generator gets null crash/signal fields because it bypasses the router layer.",
+  "hypothesis": "Adding drawdown from 52-week high as an 8th signal component would improve signal quality by distinguishing between healthy trends and markets in correction/bear territory, especially in scenarios where returns mask underlying peak-to-trough pain.",
+  "what_i_did": "1. Added drawdown_pct parameter to get_market_signal() in signal_engine.py. 2. Implemented stepped signal mapping: near-highs (+0.2), pullback (0.0), correction (-0.3), bear (-0.7), crisis (-0.9). 3. Moved thresholds and signal values to config.py for tunability. 4. Extracted compute_drawdown_pct() utility function to eliminate code duplication between stock.py and market.py routers. 5. Updated both routers to compute S&P 500 drawdown and pass it to the signal engine. 6. Exposed drawdown_pct in market signal API response. 7. Rebalanced all 8 signal weights to sum to 1.0 (each reduced ~10% proportionally). 8. Wrote 37 tests covering signal behavior, edge cases, utility function, boundary conditions, and config validation.",
+  "files_modified": [
+    "backend/config.py",
+    "backend/services/signal_engine.py",
+    "backend/routers/stock.py",
+    "backend/routers/market.py",
+    "backend/tests/test_signal_engine.py"
+  ],
+  "files_created": [
+    "lab/experiments/cycle_032/phase_a_explore.txt",
+    "lab/experiments/cycle_032/phase_b_build.txt",
+    "lab/experiments/cycle_032/phase_c_test.txt",
+    "lab/experiments/cycle_032/experiment_report.json"
+  ],
+  "tests_added": [
+    "TestDrawdownSignal::test_drawdown_component_present_when_provided",
+    "TestDrawdownSignal::test_drawdown_component_zeroed_when_none",
+    "TestDrawdownSignal::test_near_highs_is_bullish",
+    "TestDrawdownSignal::test_small_pullback_is_neutral",
+    "TestDrawdownSignal::test_correction_is_bearish",
+    "TestDrawdownSignal::test_bear_market_is_strongly_bearish",
+    "TestDrawdownSignal::test_crisis_drawdown_is_extreme",
+    "TestDrawdownSignal::test_drawdown_monotonically_bearish",
+    "TestDrawdownSignal::test_drawdown_reason_in_correction",
+    "TestDrawdownSignal::test_drawdown_reason_in_crisis",
+    "TestDrawdownSignal::test_drawdown_reason_near_highs",
+    "TestDrawdownSignal::test_deep_drawdown_shifts_composite_bearish",
+    "TestDrawdownSignal::test_drawdown_affects_action_in_marginal_case",
+    "TestDrawdownEdgeCases::test_positive_drawdown_clamped_to_zero",
+    "TestDrawdownEdgeCases::test_exactly_zero_drawdown",
+    "TestDrawdownEdgeCases::test_extreme_drawdown_minus_100",
+    "TestDrawdownEdgeCases::test_tiny_drawdown_minus_0_01",
+    "TestDrawdownEdgeCases::test_boundary_at_minus_2",
+    "TestDrawdownEdgeCases::test_boundary_at_minus_5",
+    "TestDrawdownEdgeCases::test_boundary_at_minus_10",
+    "TestDrawdownEdgeCases::test_boundary_at_minus_20",
+    "TestDrawdownEdgeCases::test_drawdown_none_excludes_weight",
+    "TestDrawdownEdgeCases::test_all_components_present_without_drawdown",
+    "TestDrawdownEdgeCases::test_drawdown_does_not_exceed_3_reasons",
+    "TestComputeDrawdownPct::test_at_high",
+    "TestComputeDrawdownPct::test_below_high",
+    "TestComputeDrawdownPct::test_with_nans",
+    "TestComputeDrawdownPct::test_all_nans_returns_none",
+    "TestComputeDrawdownPct::test_empty_series_returns_none",
+    "TestComputeDrawdownPct::test_single_value_returns_none",
+    "TestComputeDrawdownPct::test_lookback_window",
+    "TestComputeDrawdownPct::test_result_always_non_positive",
+    "TestComputeDrawdownPct::test_zero_price_returns_none",
+    "TestDrawdownConfigDriven::test_config_has_drawdown_thresholds",
+    "TestDrawdownConfigDriven::test_config_has_drawdown_signals",
+    "TestDrawdownConfigDriven::test_drawdown_weight_in_signal_weights",
+    "TestDrawdownConfigDriven::test_signal_weights_sum_to_one"
+  ],
+  "lines_changed_approx": 180,
+  "results": {
+    "before": {
+      "tests_passing": 532,
+      "signal_components": 7,
+      "drawdown_awareness": false,
+      "signal_actions_distribution": "10 Buy, 6 Hold, 0 Sell (16 stocks)"
+    },
+    "after": {
+      "tests_passing": 569,
+      "signal_components": 8,
+      "drawdown_awareness": true,
+      "drawdown_exposed_in_api": true,
+      "config_driven_thresholds": true,
+      "no_code_duplication": true
+    },
+    "improved": true
+  },
+  "analysis": "The implementation is solid technically: 37 tests pass including all boundary conditions and edge cases, config is the single source of truth, and the utility function eliminates duplication. However, I must be honest about what this DOESN'T prove: I haven't validated that adding drawdown actually improves signal quality on historical data. The stepped thresholds (-2/-5/-10/-20) are based on conventional market taxonomy (pullback/correction/bear), not backtested. The 10% weight allocation is a judgment call, not optimized. In the current Bull regime with S&P near highs, this change has minimal impact on live signals (drawdown component will be +0.2, slightly boosting Buy signals). The real value shows up during corrections — and we can't test that without a walk-forward backtest through 2020/2022 drawdown periods. The feature is production-ready but unvalidated against historical outcomes.",
+  "what_i_would_do_differently": "1. Should have run a quick backtest through COVID (Mar 2020, -34% drawdown) and 2022 bear market (-25%) to validate the drawdown signal actually improved signal timing at those inflection points. 2. The stepped mapping is crude — a continuous function like np.clip(dd * 0.045, -0.9, 0.2) would be smoother and have fewer arbitrary thresholds, though less interpretable. 3. Could have also added per-stock drawdown (each stock's distance from its own 52W high) to get_stock_signal(), not just market-level. That would differentiate stocks more in sector rotations. 4. The 10% weight was chosen by feel (reduce each existing weight ~10%). A principled approach would use information ratio or out-of-sample signal contribution analysis.",
+  "next_steps": [
+    "Backtest drawdown signal through 2020 COVID crash and 2022 bear market using walk_forward.py",
+    "Add per-stock drawdown to get_stock_signal() (stock's own 52W high, not market)",
+    "Implement Finding 1: annualized CVaR for portfolio analysis",
+    "Consider continuous drawdown mapping instead of stepped thresholds",
+    "Add drawdown visualization to frontend dashboard (drawdown from peak chart)"
+  ],
+  "confidence": "medium",
+  "depth_rating": "MEDIUM"
+}

@@ -3,36 +3,66 @@ Aegis Finance — Composite Buy/Sell Signal Engine
 ===================================================
 
 Generates market-level and per-stock buy/sell signals by compositing:
-  - Crash probability (25%)
-  - Market regime (20%)
-  - Valuation / CAPE (15%)
-  - Momentum (15%)
-  - Mean reversion (10%)
-  - External consensus (15%)
+  - Crash probability (20%)
+  - Market regime (16%)
+  - Valuation / CAPE (11%)
+  - Momentum (12%)
+  - Mean reversion (9%)
+  - External consensus (12%)
+  - Macro risk (10%)
+  - Drawdown from 52W high (10%)
 
 Output: action, confidence, top 3 reasons.
 
 Usage:
     from backend.services.signal_engine import get_market_signal, get_stock_signal
+    from backend.services.signal_engine import compute_drawdown_pct
 """
 
 import logging
 from typing import Optional
 
 import numpy as np
+import pandas as pd
 
 from backend.config import config
 
 logger = logging.getLogger(__name__)
 
+
+def compute_drawdown_pct(sp500_series: pd.Series, lookback: int = 252) -> Optional[float]:
+    """Compute current S&P 500 drawdown from its high over the lookback window.
+
+    Args:
+        sp500_series: S&P 500 price series (DatetimeIndex, no NaNs expected)
+        lookback: Number of trading days for the high window (default 252 = ~1 year)
+
+    Returns:
+        Drawdown as a negative percentage (e.g., -12.5 means 12.5% below peak),
+        or None if the series is too short to compute.
+    """
+    clean = sp500_series.dropna()
+    if len(clean) < 2:
+        return None
+    window = min(lookback, len(clean))
+    high = float(clean.iloc[-window:].max())
+    current = float(clean.iloc[-1])
+    if high <= 0 or np.isnan(high) or np.isnan(current):
+        return None
+    dd = (current / high - 1) * 100
+    return min(dd, 0.0)  # clamp: positive would be a data error
+
+
 # Signal weights — loaded from config.py for tunability
 _DEFAULT_WEIGHTS = config.get("signal_weights", {
-    "crash_prob": 0.25,
-    "regime": 0.20,
-    "valuation": 0.15,
-    "momentum": 0.15,
-    "mean_reversion": 0.10,
-    "external": 0.15,
+    "crash_prob": 0.20,
+    "regime": 0.16,
+    "valuation": 0.11,
+    "momentum": 0.12,
+    "mean_reversion": 0.09,
+    "external": 0.12,
+    "macro_risk": 0.10,
+    "drawdown": 0.10,
 })
 
 # Action thresholds from config (signal: -1 = very bearish, +1 = very bullish)
@@ -67,6 +97,7 @@ def get_market_signal(
     vix: float = 20.0,
     yield_curve: Optional[float] = None,
     external_consensus: Optional[str] = None,
+    drawdown_pct: Optional[float] = None,
 ) -> dict:
     """Generate a composite market-level buy/sell signal.
 
@@ -185,6 +216,38 @@ def get_market_signal(
         reasons.append(f"Macro stress elevated (risk score {risk_score:.1f})")
     elif risk_score < -1.0:
         reasons.append(f"Low macro stress (risk score {risk_score:.1f})")
+
+    # 8. Drawdown signal — current distance from 52-week high
+    #    Drawdowns and returns convey different information:
+    #      - Return: "where did we end up?" (direction)
+    #      - Drawdown: "how far have we fallen from the top?" (pain)
+    #    A market up 20% then down 10% shows +10% 3M return (bullish momentum)
+    #    but is in a -10% drawdown (caution warranted).
+    _dd_thresh = config.get("drawdown_thresholds", {})
+    _dd_sigs = config.get("drawdown_signals", {})
+    if drawdown_pct is not None:
+        dd = min(drawdown_pct, 0.0)  # clamp: positive drawdown is a data error
+        if dd > _dd_thresh.get("near_high", -2):
+            dd_sig = _dd_sigs.get("near_high", 0.2)
+        elif dd > _dd_thresh.get("pullback", -5):
+            dd_sig = _dd_sigs.get("pullback", 0.0)
+        elif dd > _dd_thresh.get("correction", -10):
+            dd_sig = _dd_sigs.get("correction", -0.3)
+        elif dd > _dd_thresh.get("bear", -20):
+            dd_sig = _dd_sigs.get("bear", -0.7)
+        else:
+            dd_sig = _dd_sigs.get("crisis", -0.9)
+        components["drawdown"] = float(dd_sig)
+
+        if dd < _dd_thresh.get("bear", -20):
+            reasons.append(f"Deep drawdown ({dd:.1f}%) from 52W high — crisis risk")
+        elif dd < _dd_thresh.get("correction", -10):
+            reasons.append(f"In correction ({dd:.1f}%) from 52W high")
+        elif dd > _dd_thresh.get("near_high", -2):
+            reasons.append("Near 52-week highs — trend confirmation")
+    else:
+        components["drawdown"] = 0.0
+        weights["drawdown"] = 0  # exclude if unavailable
 
     # Composite signal
     total_w = sum(weights[k] for k in components if k in weights)

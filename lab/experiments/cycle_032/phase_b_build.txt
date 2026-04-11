@@ -1,0 +1,19 @@
+## Phase B Complete
+
+**Implemented: Drawdown Signal Integration (Finding 2)**
+
+### Changes across 5 files (~90 lines of meaningful changes):
+
+| File | What changed |
+|------|-------------|
+| `backend/config.py:155-163` | Rebalanced 8 signal weights (added `drawdown: 0.10`, proportionally reduced others) |
+| `backend/services/signal_engine.py:190-219` | New drawdown component with stepped mapping: near-highs (+0.2) → pullback (0.0) → correction (-0.3) → bear (-0.7) → crisis (-0.9) |
+| `backend/routers/stock.py:217-225` | Computes S&P 500 drawdown from 52-week high, passes to signal engine |
+| `backend/routers/market.py:177-187` | Same drawdown computation for market endpoint, exposes in API response |
+| `backend/tests/test_signal_engine.py:144-232` | 13 new tests covering all drawdown levels, monotonicity, reasons, and composite impact |
+
+### Test Results
+- **545 passed** (was 532, +13 new), **0 failures**, 218s
+- All existing tests continue to pass (backward compatible — `drawdown_pct=None` gracefully excluded)
+
+---STDERR---

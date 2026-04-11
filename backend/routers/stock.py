@@ -214,6 +214,12 @@ def _compute_market_signal() -> dict:
     if "T10Y" in data.columns and "T3M" in data.columns:
         yield_curve = float(data["T10Y"].iloc[-1] - data["T3M"].iloc[-1])
 
+    # Drawdown from 52-week high
+    sp500_drawdown = None
+    if "SP500" in data.columns:
+        from backend.services.signal_engine import compute_drawdown_pct
+        sp500_drawdown = compute_drawdown_pct(data["SP500"])
+
     # Crash model predictions
     crash_3m = None
     crash_12m = None
@@ -259,6 +265,7 @@ def _compute_market_signal() -> dict:
         vix=vix,
         yield_curve=yield_curve,
         external_consensus=external,
+        drawdown_pct=sp500_drawdown,
     )
     # Attach raw crash_3m so callers can pass it to MC simulation
     sig["_crash_3m_pct"] = crash_3m

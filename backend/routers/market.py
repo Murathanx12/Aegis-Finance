@@ -175,6 +175,12 @@ def _compute_market_signal() -> dict:
     if "T10Y" in data.columns and "T3M" in data.columns:
         yield_curve = float(data["T10Y"].iloc[-1] - data["T3M"].iloc[-1])
 
+    # Drawdown from 52-week high
+    sp500_drawdown = None
+    if "SP500" in data.columns:
+        from backend.services.signal_engine import compute_drawdown_pct
+        sp500_drawdown = compute_drawdown_pct(data["SP500"])
+
     # Try to get crash probs
     crash_3m = None
     crash_12m = None
@@ -220,11 +226,13 @@ def _compute_market_signal() -> dict:
         vix=vix,
         yield_curve=yield_curve,
         external_consensus=external,
+        drawdown_pct=sp500_drawdown,
     )
     signal["sp500"] = sp500
     signal["regime"] = regime
     signal["risk_score"] = round(risk_score, 2)
     signal["vix"] = round(vix, 1)
+    signal["drawdown_pct"] = round(sp500_drawdown, 2) if sp500_drawdown is not None else None
     signal["last_updated"] = str(data.index[-1].date())
     return signal
 

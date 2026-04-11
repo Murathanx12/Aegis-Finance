@@ -1,0 +1,20 @@
+## Phase C Complete — Hardening Results
+
+**569 passed, 0 failures** (was 545 → +24 new hardening tests)
+
+### What was hardened:
+
+| Issue | Fix |
+|-------|-----|
+| Hardcoded thresholds in signal_engine.py | Moved to `config.py` as `drawdown_thresholds` and `drawdown_signals` dicts |
+| Duplicated drawdown calc in stock.py + market.py | Extracted `compute_drawdown_pct()` utility in signal_engine.py |
+| Broad try/except in routers | Replaced with simple `if "SP500" in data.columns` guard |
+| Positive drawdown (data error) not handled | Clamped to 0.0 in both utility function and signal computation |
+
+### New tests (24 across 4 test classes):
+
+- **TestDrawdownEdgeCases** (11): positive drawdown, zero, -100%, boundaries at every threshold, None weight exclusion, reason cap
+- **TestComputeDrawdownPct** (9): at-high, below-high, NaN handling, empty/single series, lookback window, zero prices
+- **TestDrawdownConfigDriven** (4): config structure, signal monotonicity, weight presence, weights sum to 1.0
+
+---STDERR---

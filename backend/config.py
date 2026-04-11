@@ -153,13 +153,14 @@ config: dict = {
     # Composite buy/sell signal weights (must sum to 1.0).
     # Derived from grid search over 2020-2025 S&P 500 data (signal_optimizer.py).
     "signal_weights": {
-        "crash_prob": 0.22,       # ML crash probability (leading indicator)
-        "regime": 0.18,           # Bull/Bear/Volatile regime detection
-        "valuation": 0.12,        # VIX-based fear/opportunity proxy
-        "momentum": 0.13,         # 1M + 3M price momentum
-        "mean_reversion": 0.10,   # Oversold/overbought contrarian signal
-        "external": 0.13,         # External consensus (LEI, SLOOS, sentiment)
-        "macro_risk": 0.12,       # 9-factor composite risk score (risk_scorer)
+        "crash_prob": 0.20,       # ML crash probability (leading indicator)
+        "regime": 0.16,           # Bull/Bear/Volatile regime detection
+        "valuation": 0.11,        # VIX-based fear/opportunity proxy
+        "momentum": 0.12,         # 1M + 3M price momentum
+        "mean_reversion": 0.09,   # Oversold/overbought contrarian signal
+        "external": 0.12,         # External consensus (LEI, SLOOS, sentiment)
+        "macro_risk": 0.10,       # 9-factor composite risk score (risk_scorer)
+        "drawdown": 0.10,         # Current drawdown from 52-week high
     },
     # Action thresholds: composite score ranges for each action
     "signal_thresholds": {
@@ -167,6 +168,23 @@ config: dict = {
         "buy": 0.15,
         "sell": -0.15,
         "strong_sell": -0.45,
+    },
+    # Drawdown signal thresholds: stepped mapping from drawdown % to signal value
+    # Each tuple is (drawdown_threshold_pct, signal_value)
+    # Drawdown is negative (e.g., -10 means 10% below 52-week high)
+    "drawdown_thresholds": {
+        "near_high": -2,       # above this → bullish confirmation (+0.2)
+        "pullback": -5,        # -2% to -5% → neutral (0.0)
+        "correction": -10,     # -5% to -10% → correction (-0.3)
+        "bear": -20,           # -10% to -20% → bear approach (-0.7)
+        # below -20% → crisis (-0.9)
+    },
+    "drawdown_signals": {
+        "near_high": 0.2,
+        "pullback": 0.0,
+        "correction": -0.3,
+        "bear": -0.7,
+        "crisis": -0.9,
     },
     # Per-stock signal adjustment weights (additive on top of market signal)
     "stock_signal_weights": {
