@@ -48,6 +48,9 @@ def _screener() -> dict:
     # Compute market-level signal once (shared across all stocks)
     market_sig = _compute_market_signal()
 
+    # Compute sector 3-month momentum for each sector ETF
+    sector_momentum = _compute_sector_momentum()
+
     # Build full list: DEFAULT_WATCHLIST + top picks from each sector
     all_tickers = set(DEFAULT_WATCHLIST)
     for sector_tickers in SECTOR_STOCK_MAP.values():
@@ -61,12 +64,17 @@ def _screener() -> dict:
             if r is None:
                 continue
 
+            # Look up sector momentum for this stock's sector
+            stock_sector = r.get("sector", "Unknown")
+            sec_mom = sector_momentum.get(stock_sector, 0.0)
+
             # Compute per-stock signal from the real signal engine
             stock_sig = get_stock_signal(
                 market_signal=market_sig,
                 beta=r.get("beta", 1.0),
                 analyst_target=r.get("analyst_target"),
                 current_price=r.get("current_price", 0),
+                sector_momentum=sec_mom,
                 pe_ratio=r.get("pe_ratio"),
             )
 
@@ -94,6 +102,31 @@ def _screener() -> dict:
     stocks.sort(key=lambda x: x["sharpe"], reverse=True)
 
     return {"stocks": stocks, "count": len(stocks), "market_signal": market_sig}
+
+
+def _compute_sector_momentum() -> dict:
+    """Compute 3-month return for each sector ETF.
+
+    Returns:
+        Dict of {sector_name: 3m_return_pct}
+    """
+    import yfinance as yf
+    from backend.config import config
+
+    sector_etfs = config["data"]["sectors"]
+    momentum = {}
+
+    for sector_name, etf_ticker in sector_etfs.items():
+        try:
+            hist = yf.Ticker(etf_ticker).history(period="6mo")
+            if hist is not None and len(hist) >= 63:
+                current = float(hist["Close"].iloc[-1])
+                past = float(hist["Close"].iloc[-63])
+                momentum[sector_name] = (current / past - 1) * 100
+        except Exception:
+            pass
+
+    return momentum
 
 
 def _compute_market_signal() -> dict:
@@ -285,11 +318,16 @@ def _stock_signal(ticker: str) -> dict:
     if stock_data is None:
         return {"ticker": ticker, "action": "Hold", "confidence": 0, "error": "Could not analyze stock"}
 
+    # Compute sector momentum for this stock
+    stock_sector = stock_data.get("sector", "Unknown")
+    sec_mom = _compute_sector_momentum().get(stock_sector, 0.0)
+
     signal = get_stock_signal(
         market_signal=market_sig,
         beta=stock_data.get("beta", 1.0),
         analyst_target=stock_data.get("analyst_target"),
         current_price=stock_data.get("current_price", 0),
+        sector_momentum=sec_mom,
         pe_ratio=stock_data.get("pe_ratio"),
     )
     signal["ticker"] = ticker

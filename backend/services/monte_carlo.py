@@ -442,8 +442,13 @@ def run_monte_carlo(
 
     base_annual_return -= val_penalty
 
-    historical_mu = np.log(1 + base_annual_return)
     historical_sigma = garch_vol if garch_vol else 0.16
+    # Ito correction: convert arithmetic return to log-return drift.
+    # np.log(1+r) is the continuous compounding rate (GBM mu parameter).
+    # simulate_paths expects the log-return drift = mu - 0.5*sigma^2,
+    # because the log-price step is: dln(S) = drift*dt + sigma*dW.
+    # Without this correction, expected returns are biased upward by 0.5*sigma^2.
+    historical_mu = np.log(1 + base_annual_return) - 0.5 * historical_sigma ** 2
 
     inst_return = get_institutional_return()
     inst_mu = np.log(1 + inst_return)
