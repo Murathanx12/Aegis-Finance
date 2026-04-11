@@ -505,9 +505,24 @@ Create: `lab/experiments/cycle_{cycle:03d}/experiment_report.json`
 
 ---
 
-## GO
+## IMPORTANT: THIS IS PHASE 1 OF 4
 
-Explore deeply. Think ambitiously. Build something real. Test it. Log it.
+This is the EXPLORATION phase. You will get 3 more prompts after this:
+- Phase B: BUILD (implement your highest-impact finding)
+- Phase C: TEST (write tests, validate, harden)
+- Phase D: REVIEW (self-critique, report, commit)
+
+Right now, focus on DEEP EXPLORATION:
+1. Read 10+ source files across backend/services/, backend/routers/, engine/
+2. Run the test suite to see what passes/fails
+3. Look at the engine output data above — what's broken?
+4. Identify the 2-3 HIGHEST-IMPACT improvements you could make
+5. For each, explain: what's wrong, why it matters, how you'd fix it
+
+Don't implement yet — explore thoroughly and report your findings.
+The more problems you find now, the better Phase B will be.
+
+Go deep. Read code. Find real problems.
 """
 
     with open(output_path, "w", encoding="utf-8") as f:
