@@ -368,6 +368,25 @@ config: dict = {
         "min_declining_sectors": 6,
     },
 
+    # ── SECTOR FACTOR MODEL ──────────────────────────────────────────────
+    "sector_model": {
+        "min_history_days": 504,          # ~2 years required for factor estimation
+        "beta_lookback_long": 504,        # 2-year rolling beta window
+        "beta_lookback_short": 252,       # 1-year fallback beta window
+        "beta_clip": (0.3, 2.5),          # Beta bounds
+        "momentum_6m_weight": 0.4,        # Weight on 6M relative strength
+        "momentum_12m_weight": 0.2,       # Weight on 12M relative strength
+        "mean_reversion_coeff": -0.15,    # Mean-reversion factor loading
+        "mean_reversion_lookback": 1260,  # 5-year lookback for MR
+        "vol_lookback_long": 504,         # 2-year vol estimation window
+        "vol_lookback_short": 63,         # 63-day short-term vol window
+        "vol_ratio_threshold": 1.3,       # Vol ratio above which vol_adj activates
+        "vol_adj_coeff": -0.02,           # Annualized drag per unit vol ratio excess
+        "sigma_cap": 0.80,               # Maximum annualized vol
+        "sigma_default": 0.20,           # Fallback when insufficient data
+        "expected_return_clip": (-0.30, 0.50),  # Annualized return bounds
+    },
+
     # ── STOCK ANALYSIS ───────────────────────────────────────────────────
     "stocks": {
         "screener_count": 20,

@@ -1,0 +1,36 @@
+**388 passed, 0 failed, 0 regressions.** (Up from 374 → +14 new tests.)
+
+---
+
+## Summary
+
+### What I built
+
+**Fix: Sector Analyzer Ito Correction** — a math bug causing all 11 sector MC simulations to run +2-3% annual drift too hot.
+
+### Files modified (4 files, ~100 lines of meaningful changes)
+
+| File | Change |
+|------|--------|
+| `backend/services/sector_analyzer.py` | Added Ito drift correction (`-0.5*σ²`), stored GARCH `current_vol` in sector tuple, passed `ito_sigma` as `garch_vol` to `simulate_paths` |
+| `backend/requirements.txt` | Added `lxml>=5.0.0` (fixes holders data for all stocks) |
+| `backend/tests/test_sector_ito.py` | **14 new tests**: math correctness (4 parametrized), drift neutrality MC (2 + 1 bias proof), tuple format (3), integration (2) |
+
+### What changed numerically
+
+Before the fix, `sector_mu = ln(1+r)` was missing the `- 0.5σ²` Ito term. The bias per sector:
+
+| Sector (approx σ) | Annual drift bias |
+|---|---|
+| Energy (25%) | +3.1% |
+| Technology (22%) | +2.4% |
+| Financials (20%) | +2.0% |
+| Consumer Staples (14%) | +1.0% |
+
+Over 5 years, that compounds to **+10-17% inflated returns** for high-vol sectors. The fix makes `sim_total_return` (MC) track `expected_total` (factor model) as intended.
+
+### Bonus: lxml install
+
+`pip install lxml` + added to requirements.txt. This unblocks `stock.major_holders` and `stock.institutional_holders` in yfinance, meaning the stock detail page will now show insider/institutional ownership data instead of always returning `null`.
+
+---STDERR---
