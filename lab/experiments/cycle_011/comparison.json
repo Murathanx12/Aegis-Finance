@@ -1,0 +1,37 @@
+{
+  "mc_quality": {
+    "avg_drift_error_before": 31.579,
+    "avg_drift_error_after": 31.501,
+    "delta": -0.078,
+    "improved": true
+  },
+  "sp500_mc": {
+    "drift_error_before": 17.87,
+    "drift_error_after": 15.01,
+    "drift_improved": true
+  },
+  "backtest_accuracy": {
+    "direction_accuracy_before": 66.7,
+    "direction_accuracy_after": 66.7,
+    "mae_before": 7.11,
+    "mae_after": 7.0,
+    "direction_improved": false,
+    "mae_improved": true
+  },
+  "signal_quality": {
+    "status": "no_signal_data"
+  },
+  "test_results": {
+    "passed": 60,
+    "failed": 0,
+    "new_failures": 0
+  },
+  "improvements": [
+    "MC drift error: 31.579% -> 31.501%",
+    "SP500 MC drift improved",
+    "MAE: 7.11% -> 7.0%"
+  ],
+  "regressions": [],
+  "neutral": [],
+  "net_result": "improved"
+}
