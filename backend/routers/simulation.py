@@ -71,12 +71,20 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
     # Compute historical returns for GARCH and block bootstrap
     sp_returns = data["SP500"].pct_change().dropna()
 
-    # Fit GARCH to get estimated Student-t degrees of freedom
+    # Fit GARCH for conditional vol, persistence, and tail thickness
+    garch_vol = None
+    garch_persistence = None
     garch_nu = None
     try:
         garch_result = fit_garch(sp_returns)
         if garch_result.success:
+            garch_vol = garch_result.current_vol
             garch_nu = garch_result.nu
+            garch_persistence = (
+                garch_result.alpha
+                + garch_result.gamma * np.sqrt(2 / np.pi)
+                + garch_result.beta
+            )
     except Exception:
         pass
 
@@ -121,6 +129,8 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
         current_vix=current_vix,
         yield_curve=yield_curve,
         val_penalty=val_penalty,
+        garch_vol=garch_vol,
+        garch_persistence=garch_persistence,
         garch_nu=garch_nu,
         historical_residuals=hist_residuals,
         n_sims_override=n_sims,
@@ -197,12 +207,20 @@ def _compute_scenarios() -> dict:
     data["Risk_Score"] = build_risk_score(data)
     risk_score = float(data["Risk_Score"].iloc[-1])
 
-    # Fit GARCH for Student-t degrees of freedom
+    # Fit GARCH for conditional vol, persistence, and tail thickness
+    garch_vol = None
+    garch_persistence = None
     garch_nu = None
     try:
         garch_result = fit_garch(returns)
         if garch_result.success:
+            garch_vol = garch_result.current_vol
             garch_nu = garch_result.nu
+            garch_persistence = (
+                garch_result.alpha
+                + garch_result.gamma * np.sqrt(2 / np.pi)
+                + garch_result.beta
+            )
     except Exception:
         pass
 
@@ -231,6 +249,8 @@ def _compute_scenarios() -> dict:
         paths = simulate_paths(
             start_price, hist_mu, hist_sigma,
             forecast_days, n_sims, crash_freq, risk_score, scenario_dict,
+            garch_vol=garch_vol,
+            garch_persistence=garch_persistence,
             garch_nu=garch_nu,
             historical_residuals=hist_residuals,
         )
