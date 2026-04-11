@@ -1,0 +1,37 @@
+{
+    "cycle": 13,
+    "timestamp": "2026-04-11T23:15:00",
+    "what_i_noticed": "The sector_analyzer.py had the same hardcoded crash frequency bug (1/9=0.111) that was fixed in simulation.py in cycle 2. It also used hardcoded n_sims=2000 instead of config's 10000, and didn't pass GARCH parameters (persistence, nu) or historical residuals for block bootstrap — all improvements that were wired into the SP500 and per-stock paths in cycles 2-12 but never applied to sectors.",
+    "hypothesis": "The hardcoded crash frequency of 0.111 (vs config's 0.07) inflates jump frequency by 59% in all sector MC simulations, making sector projections systematically too pessimistic. Combined with fewer simulations (2000 vs 10000) and missing GARCH/bootstrap, sector MC quality is significantly worse than the SP500 and per-stock paths.",
+    "what_i_did": "1. Replaced hardcoded crash_freq 1.0/9.0 with config['simulation']['jump_diffusion']['annual_rate'] (0.07). 2. Replaced hardcoded n_sims=2000 with config['simulation']['num_simulations'] (10000). 3. Added beta-adjusted crash frequency per sector (same pattern as stock_analyzer). 4. Fitted GARCH on SP500 returns within sector_analyzer to get garch_persistence and garch_nu. 5. Computed GARCH-standardized residuals for block bootstrap. 6. Passed all new parameters to simulate_paths. 7. Enriched sector router to pass garch_vol and ml_crash_prob from the crash model.",
+    "files_modified": [
+        "backend/services/sector_analyzer.py",
+        "backend/routers/sector.py"
+    ],
+    "results": {
+        "before": {
+            "sector_crash_freq": "0.111 (hardcoded 1/9)",
+            "sector_n_sims": "2000 (hardcoded)",
+            "sector_garch_persistence": "0.97 (default fallback)",
+            "sector_garch_nu": "8.0 (default fallback)",
+            "sector_block_bootstrap": "disabled (no residuals passed)",
+            "sector_beta_adj_crash": "not applied (same crash_freq for all sectors)",
+            "fast_tests_passing": "60/60"
+        },
+        "after": {
+            "sector_crash_freq": "0.07 (from config, beta-adjusted per sector)",
+            "sector_n_sims": "10000 (from config)",
+            "sector_garch_persistence": "GARCH-estimated from SP500",
+            "sector_garch_nu": "GARCH-estimated Student-t df",
+            "sector_block_bootstrap": "enabled (GARCH-standardized residuals)",
+            "sector_beta_adj_crash": "crash_freq * sector_beta, clipped [0.02, 0.25]",
+            "fast_tests_passing": "60/60"
+        },
+        "improved": true
+    },
+    "tests_fixed": [],
+    "analysis": "This is a clear correctness fix. The sector analyzer was using the same hardcoded crash frequency (0.111) that was identified and fixed in the SP500 simulation path in cycle 2. The 59% crash frequency overestimate causes all sector projections to be too pessimistic, with more frequent crash jumps dragging down expected returns. Using config's 0.07 with beta adjustment means high-beta sectors (Technology, Energy) correctly get higher crash rates while defensive sectors (Utilities, Consumer Staples) get lower rates. The GARCH/bootstrap improvements bring sector MC quality to parity with the SP500 and per-stock paths. The data_generator's metrics are unaffected because it doesn't test the sector endpoint — the improvement is in the production /api/sectors endpoint users interact with.",
+    "next_steps": "1. Consider fitting per-sector GARCH (on sector ETF returns) instead of using SP500 GARCH for all sectors. 2. Add sector-relative PE signals in the signal engine. 3. Consider adaptive block size based on estimated autocorrelation (Politis-Romano optimal block length). 4. The data_generator could be extended to test sector endpoint output for measuring sector-specific improvements.",
+    "confidence": "high",
+    "should_keep": true
+}
