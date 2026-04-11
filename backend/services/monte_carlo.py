@@ -132,30 +132,11 @@ def simulate_paths(
     rng = np.random.default_rng(seed)
 
     # ══════════════════════════════════════════════════════════════
-    # 1. DRIFT — from ML prediction (or historical fallback)
+    # 1. VOLATILITY — determine base_vol first (needed for Ito correction)
     # ══════════════════════════════════════════════════════════════
-    if ml_predicted_return is not None:
-        annual_drift = np.log(1 + ml_predicted_return)
-    else:
-        annual_drift = historical_mu
-
-    # HMM regime tilt
     hmm_drift_blend = sim_cfg.get("hmm_drift_blend", 0.15)
     hmm_vol_blend = sim_cfg.get("hmm_vol_blend", 0.15)
-    if hmm_state_means is not None and hmm_regime_probs is not None:
-        hmm_expected = float(np.dot(hmm_regime_probs, hmm_state_means))
-        hmm_tilt = hmm_drift_blend * (hmm_expected - annual_drift)
-        annual_drift += hmm_tilt
 
-    # Scenario adjustment (additive)
-    annual_drift += scenario.get("drift_adj", 0.0)
-
-    # Daily drift
-    base_drift = annual_drift * dt
-
-    # ══════════════════════════════════════════════════════════════
-    # 2. VOLATILITY — from GARCH (or historical fallback)
-    # ══════════════════════════════════════════════════════════════
     if garch_vol is not None:
         base_vol = garch_vol
     else:
@@ -176,6 +157,32 @@ def simulate_paths(
     kappa_vol = max(0.5, (1 - persistence) * 252)
     garch_params = sim_cfg.get("garch_derived_params", {})
     xi = np.clip(0.06, garch_params.get("xi_min", 0.02), garch_params.get("xi_max", 0.15))
+
+    # ══════════════════════════════════════════════════════════════
+    # 2. DRIFT — from ML prediction (or historical fallback)
+    # ══════════════════════════════════════════════════════════════
+    if ml_predicted_return is not None:
+        # ml_predicted_return is an arithmetic annual return.
+        # Convert to log drift with Ito correction using base_vol (the vol
+        # that will actually drive diffusion).  Without -0.5*base_vol^2,
+        # E[S(T)] overshoots by exp(0.5*sigma^2*T) — ~2-4.5% per year
+        # for typical sector/stock volatilities.
+        annual_drift = np.log(1 + ml_predicted_return) - 0.5 * base_vol ** 2
+    else:
+        # historical_mu is already a log drift (caller applied Ito correction).
+        annual_drift = historical_mu
+
+    # HMM regime tilt
+    if hmm_state_means is not None and hmm_regime_probs is not None:
+        hmm_expected = float(np.dot(hmm_regime_probs, hmm_state_means))
+        hmm_tilt = hmm_drift_blend * (hmm_expected - annual_drift)
+        annual_drift += hmm_tilt
+
+    # Scenario adjustment (additive)
+    annual_drift += scenario.get("drift_adj", 0.0)
+
+    # Daily drift
+    base_drift = annual_drift * dt
 
     # ══════════════════════════════════════════════════════════════
     # 3. JUMP PROCESS — from ML crash probability

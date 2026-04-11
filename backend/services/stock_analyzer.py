@@ -162,9 +162,12 @@ def analyze_stock(
         # Ito correction: convert arithmetic return to log drift for simulate_paths.
         # simulate_paths uses log_return = drift*dt + sigma*dW, so the drift must be
         # the log drift = ln(1+r) - 0.5*sigma^2 to produce correct E[S(T)].
-        # Without this, high-vol stocks are biased upward by ~0.5*sigma^2/yr
-        # (e.g., NVDA at 49% vol → 12% excess annual drift).
-        final_mu = float(np.log(1 + final_arithmetic) - 0.5 * final_sigma**2)
+        # CRITICAL: use the vol that simulate_paths will actually use as base_vol
+        # (garch_vol if available, otherwise final_sigma). When garch_vol differs
+        # from final_sigma, using final_sigma creates drift bias of
+        # 0.5*(garch_vol^2 - final_sigma^2) per year — e.g., ~5.9% for NVDA.
+        ito_sigma = garch_vol if garch_vol is not None else final_sigma
+        final_mu = float(np.log(1 + final_arithmetic) - 0.5 * ito_sigma**2)
 
         # Beta-adjusted crash frequency: high-beta stocks crash more often
         base_crash_freq = config["simulation"]["jump_diffusion"]["annual_rate"]
