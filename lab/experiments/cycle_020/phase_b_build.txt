@@ -1,0 +1,34 @@
+**119 passed, 0 failed.** All 113 original tests + 6 new tests pass. No regressions.
+
+---
+
+## Cycle 20 — Phase B Implementation Summary
+
+### What I built and why
+
+**Problem:** Every `GET /api/stock/{ticker}` call returned `crash_prob_3m: null`, `signal_action: null`, `signal_score: null` — the stock detail page had no buy/sell signal or crash probability. The screener endpoint computed these correctly but the single-stock endpoint skipped them entirely.
+
+### Changes (3 files, ~100 lines meaningful changes)
+
+**1. `backend/routers/stock.py` — Rewired `_analyze_stock()` (primary fix)**
+- Replaced the ad-hoc crash-only computation with a call to `_compute_market_signal()` (reusing existing infrastructure)
+- Added `get_stock_signal()` call after `analyze_stock()` — same pattern as the screener
+- Attached 7 new fields to the result: `signal_action`, `signal_confidence`, `signal_score`, `signal_components`, `signal_reasons`, `crash_prob_3m`, `market_signal`
+- **Bonus:** Refactored `_stock_signal()` to also reuse `_compute_market_signal()`, eliminating ~50 lines of duplicated market signal computation
+
+**2. `backend/services/sentiment_analyzer.py` — Fixed None return bug**
+- Line 158-159: When news items exist but have no `title` field, was returning `None` instead of a neutral dict
+- Now returns consistent dict matching the no-news case — prevents downstream `TypeError` crashes
+
+**3. `backend/tests/test_stock_signal_wiring.py` — 6 new tests**
+- `test_signal_fields_attached` — verifies all signal + crash fields present and typed correctly
+- `test_none_crash_prob_handled` — crash model unavailable gracefully handled
+- `test_analyze_stock_returns_none` — None passthrough for invalid tickers
+- `test_signal_components_included` — transparency fields (components, reasons) present
+- `test_no_titles_returns_dict` — sentiment analyzer never returns None
+- `test_no_news_returns_dict` — sentiment analyzer handles empty news
+
+### Test results
+- **119 passed** (113 existing + 6 new), 0 failed, 92 slow-skipped
+
+---STDERR---

@@ -1,0 +1,46 @@
+Good — they've been flagged as unwired for cycles 15-19. Time to actually wire them. Here's my exploration report:
+
+---
+
+## Cycle 20 — Phase A Exploration Report
+
+### Tests: All 113 fast tests pass (43s). No failures.
+
+### Top 3 Findings
+
+---
+
+**Finding #1: Single-stock endpoint (`GET /api/stock/{ticker}`) returns null for crash_prob_3m and signal fields**
+- **Files:** `backend/routers/stock.py:251-278`, `backend/services/stock_analyzer.py:253-283`
+- **Problem:** `_analyze_stock()` computes crash probability (line 256-274) and passes it to `analyze_stock()` for MC simulation, but **never calls `get_stock_signal()`** to compute per-stock buy/sell signals. The screener endpoint (lines 44-115) does this correctly — it calls `get_stock_signal()` at line 82 and attaches `signal_action`, `signal_confidence`, `signal_score` at lines 105-107. The single-stock endpoint skips this entirely.
+- **Impact:** Every stock detail page shows null signals. The engine output confirms: `crash_prob_3m: null`, `signal_action: null`, `signal_score: null` for ALL stocks.
+- **Fix:** After `analyze_stock()` returns at line 278, compute market signal, call `get_stock_signal()`, and merge signal + crash fields into the result dict.
+
+---
+
+**Finding #2: `drift_detector.py` and `return_model.py` are completely dead — zero imports anywhere in backend/**
+- **Files:** `backend/services/drift_detector.py` (207 lines), `backend/services/return_model.py` (287 lines)
+- **Problem:** Both services report "ok" in health checks but are never imported by any router or service. `return_model.py` implements a quantile return predictor (10th/50th/90th percentile) that `monte_carlo.py:simulate_paths()` already accepts via `ml_predicted_return`, `ml_return_p10`, `ml_return_p90` parameters — but they're never populated. `drift_detector.py` implements PSI + KS drift detection but is never called.
+- **Impact:** MC simulations run without ML-informed return estimates. Drift is never monitored. Both have been flagged as unwired since cycle 15 (5 cycles ago).
+- **Fix:** Wire `return_model.py` into `stock_analyzer.py` to populate ML return estimates. Wire `drift_detector.py` into `/api/data-quality` or as a crash model pre-check.
+
+---
+
+**Finding #3: `sentiment_analyzer.py` has inconsistent return types — returns `None` vs dict**
+- **File:** `backend/services/sentiment_analyzer.py:144-159`
+- **Problem:** When `news` is empty (line 144), returns a full dict with neutral sentiment. When `headlines` is empty after filtering (line 158-159), returns `None`. Any caller doing `result["sentiment"]` will crash on the `None` path.
+- **Impact:** Intermittent 500 errors when news articles exist but have no "title" field (e.g., GDELT returns items without titles).
+- **Fix:** Line 159 should return the same neutral dict as line 145, not `None`.
+
+---
+
+### Honorable Mentions
+- `shap_explainer.py:103-109` — `DEFAULT_SCENARIOS` and `run_counterfactual()` defined but never wired to any endpoint
+- `stock_analyzer.py` and `portfolio_engine.py` have 13 combined broad `except` blocks (code_metrics confirms)
+- `data_quality.py:95` stores `sp500_max_daily_return` from config but uses hardcoded `0.10` in the check logic
+
+### Recommendation for Phase B
+
+**Primary target:** Wire stock signals into the single-stock endpoint (Finding #1) — highest user-facing impact, clear pattern to follow from the screener. Secondary: fix the sentiment `None` return (Finding #3) since it's a one-line fix. Finding #2 (return_model wiring) is the most ambitious but has been deferred 5 cycles — worth tackling.
+
+---STDERR---

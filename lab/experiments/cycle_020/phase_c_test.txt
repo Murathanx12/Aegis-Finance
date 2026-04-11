@@ -1,0 +1,33 @@
+**142 passed, 0 failed.** All 113 original + 29 new tests pass. Zero regressions.
+
+---
+
+## Hardening Summary
+
+### Changes across 4 files
+
+**1. `backend/config.py`** — New `sentiment` config section
+- Moved 4 hardcoded sentiment thresholds (0.15, 0.05, -0.05, -0.15) into `config["sentiment"]`
+- Now tunable without touching service code
+
+**2. `backend/services/sentiment_analyzer.py`** — 2 fixes
+- **Line 189-198:** Replaced hardcoded thresholds with `config["sentiment"]` lookups
+- **Line 77-79:** Narrowed `except Exception` → `except (RuntimeError, ValueError, IndexError, TypeError)` in FinBERT scoring
+
+**3. `backend/routers/stock.py`** — 2 narrowed except blocks
+- **Line 137:** `_compute_sector_momentum` — `except Exception: pass` → `except (KeyError, IndexError, ValueError, TypeError)` with debug logging
+- **Line 169:** YTD return calculation — same narrowing with debug logging
+
+**4. `backend/tests/test_stock_signal_wiring.py`** — Expanded from 6 → 29 tests
+
+| Test Class | Tests | What it covers |
+|---|---|---|
+| `TestAnalyzeStockSignalFields` | 4 | Core wiring: fields present, types correct, None passthrough |
+| `TestAnalyzeStockEdgeCases` | 8 | beta=0, beta=10, negative PE, zero price, missing key_stats, unknown sector, crash prob → MC flow |
+| `TestStockSignalEndpoint` | 3 | Refactored `_stock_signal`: required keys, None fallback, bearish propagation |
+| `TestSentimentAnalyzerConsistency` | 3 | Never returns None: empty news, no titles, None news |
+| `TestSentimentKeywordScoring` | 5 | Keyword fallback: bullish, bearish, neutral, empty, mixed |
+| `TestSentimentConfigThresholds` | 3 | Config exists, ordering correct, labels use config |
+| `TestScreenerSignalConsistency` | 3 | Signal engine contract: required keys, extreme bullish/bearish |
+
+---STDERR---
