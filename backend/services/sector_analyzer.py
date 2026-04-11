@@ -162,8 +162,36 @@ def analyze_sectors(
 
     # Run Monte Carlo per sector
     years = forecast_days / 252
-    n_sims = 2000
+    sim_cfg = config["simulation"]
+    n_sims = sim_cfg["num_simulations"]
+    crash_freq = sim_cfg["jump_diffusion"]["annual_rate"]
     base_scenario = {"drift_adj": 0, "vol_mult": 1.0, "crash_mult": 1.0}
+
+    # Fit GARCH on SP500 returns for conditional vol and tail parameters
+    sp_garch_vol = garch_vol
+    sp_garch_persistence = None
+    sp_garch_nu = None
+    sp_hist_residuals = None
+    try:
+        from backend.models.garch import fit_garch, get_standardized_residuals
+        garch_result = fit_garch(sp_returns)
+        if garch_result.success:
+            if sp_garch_vol is None:
+                sp_garch_vol = garch_result.current_vol
+            sp_garch_nu = garch_result.nu
+            sp_garch_persistence = (
+                garch_result.alpha
+                + garch_result.gamma * np.sqrt(2 / np.pi)
+                + garch_result.beta
+            )
+            # GARCH-standardized residuals for block bootstrap
+            std_resid = get_standardized_residuals(garch_result, sp_returns)
+            if std_resid is not None and len(std_resid) > 50:
+                sp_hist_residuals = std_resid
+    except Exception as e:
+        logger.debug("Sector GARCH fit skipped: %s", e)
+    if sp_hist_residuals is None and len(sp_returns) > 50:
+        sp_hist_residuals = sp_returns.values
 
     for name, f in sector_factors.items():
         expected_annual = f["expected_annual"]
@@ -171,13 +199,19 @@ def analyze_sectors(
         current = f["current_price"]
         expected_total = (1 + expected_annual) ** years - 1
 
+        # Beta-adjust crash frequency: high-beta sectors crash more often
+        beta_adj_crash_freq = float(np.clip(crash_freq * f["beta"], 0.02, 0.25))
+
         sector_mu = np.log(1 + expected_annual)
         paths = simulate_paths(
             current, sector_mu, sigma, forecast_days, n_sims,
-            1.0 / 9.0, 0.0, base_scenario,
+            beta_adj_crash_freq, 0.0, base_scenario,
             ml_crash_prob=ml_crash_prob,
             ml_predicted_return=expected_annual,
             garch_vol=sigma,
+            garch_persistence=sp_garch_persistence,
+            garch_nu=sp_garch_nu,
+            historical_residuals=sp_hist_residuals,
         )
 
         final = paths[-1]
