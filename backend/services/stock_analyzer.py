@@ -96,6 +96,7 @@ def analyze_stock(
     ticker: str,
     forecast_days: int = 1260,
     risk_free_rate: float = config.get("risk_free_rate", 0.04),
+    ml_crash_prob: float | None = None,
 ) -> Optional[dict]:
     """Analyze a single stock with fundamental-aware Monte Carlo."""
     max_5y_return = config["simulation"]["max_5y_return"]
@@ -213,6 +214,7 @@ def analyze_stock(
     paths = simulate_paths(
         current_price, final_mu, final_sigma,
         forecast_days, num_sims, beta_adj_crash_freq, 0.0, base_scenario,
+        ml_crash_prob=ml_crash_prob,
         garch_vol=garch_vol,
         garch_nu=garch_nu,
         garch_persistence=garch_persistence,
@@ -242,6 +244,12 @@ def analyze_stock(
     key_stats = _get_key_stats(info, returns, current_price)
     peers = _get_sector_peers(sector, ticker)
 
+    # Compute p10/p90 returns for data quality visibility
+    p10_price = float(np.percentile(final_prices, 10))
+    p90_price = float(np.percentile(final_prices, 90))
+    p10_return = float(p10_price / current_price - 1) * 100
+    p90_return = float(p90_price / current_price - 1) * 100
+
     return {
         "ticker": ticker, "name": company_name, "sector": sector,
         "current_price": current_price,
@@ -254,6 +262,16 @@ def analyze_stock(
         "p05_price": p05, "p95_price": p95,
         "prob_loss_5y": prob_loss, "avg_max_drawdown": avg_max_dd,
         "sharpe": sharpe,
+        # Fields expected by data_generator for MC quality measurement
+        "mc_median_5y_return": med_return,
+        "mc_p10_5y_return": p10_return,
+        "mc_p90_5y_return": p90_return,
+        # GARCH params for observability
+        "garch_annual_vol": float(garch_vol * 100) if garch_vol is not None else None,
+        "garch_nu": float(garch_nu) if garch_nu is not None else None,
+        "garch_persistence": float(garch_persistence) if garch_persistence is not None else None,
+        # ML crash prob used in this MC run (None if not provided)
+        "ml_crash_prob": ml_crash_prob,
         "analyst_targets": analyst_targets,
         "recommendations": recommendations,
         "holders": holders,

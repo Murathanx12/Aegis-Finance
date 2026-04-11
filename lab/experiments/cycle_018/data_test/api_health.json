@@ -1,0 +1,52 @@
+{
+  "crash_model": {
+    "status": "error",
+    "error": "AttributeError: module 'backend.services.crash_model' has no attribute 'CrashModel'"
+  },
+  "regime_detector": {
+    "status": "error",
+    "error": "AttributeError: module 'backend.services.regime_detector' has no attribute 'RegimeDetector'"
+  },
+  "risk_scorer": {
+    "status": "error",
+    "error": "AttributeError: module 'backend.services.risk_scorer' has no attribute 'RiskScorer'"
+  },
+  "signal_engine": {
+    "status": "error",
+    "error": "AttributeError: module 'backend.services.signal_engine' has no attribute 'SignalEngine'"
+  },
+  "data_quality": {
+    "status": "error",
+    "error": "AttributeError: 'DataQualityChecker' object has no attribute 'check'"
+  },
+  "import_monte_carlo": {
+    "status": "ok"
+  },
+  "import_stock_analyzer": {
+    "status": "ok"
+  },
+  "import_sector_analyzer": {
+    "status": "ok"
+  },
+  "import_portfolio_engine": {
+    "status": "ok"
+  },
+  "import_shap_explainer": {
+    "status": "ok"
+  },
+  "import_news_intelligence": {
+    "status": "ok"
+  },
+  "import_savings_calculator": {
+    "status": "ok"
+  },
+  "import_net_liquidity": {
+    "status": "ok"
+  },
+  "import_return_model": {
+    "status": "ok"
+  },
+  "import_sentiment_analyzer": {
+    "status": "ok"
+  }
+}

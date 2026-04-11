@@ -1,0 +1,11 @@
+{
+  "conservative": {
+    "error": "PortfolioEngine.build_portfolio() got an unexpected keyword argument 'holdings'"
+  },
+  "moderate": {
+    "error": "PortfolioEngine.build_portfolio() got an unexpected keyword argument 'holdings'"
+  },
+  "aggressive": {
+    "error": "PortfolioEngine.build_portfolio() got an unexpected keyword argument 'holdings'"
+  }
+}

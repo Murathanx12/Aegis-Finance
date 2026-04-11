@@ -57,10 +57,14 @@ def _screener() -> dict:
         for t in sector_tickers[:3]:  # top 3 per sector
             all_tickers.add(t)
 
+    # Extract crash probability for MC jump rate modulation
+    crash_3m_pct = market_sig.get("_crash_3m_pct")
+    crash_prob_for_mc = crash_3m_pct / 100.0 if crash_3m_pct is not None else None
+
     stocks = []
     for ticker in sorted(all_tickers):
         try:
-            r = analyze_stock(ticker)
+            r = analyze_stock(ticker, ml_crash_prob=crash_prob_for_mc)
             if r is None:
                 continue
 
@@ -203,7 +207,7 @@ def _compute_market_signal() -> dict:
     except Exception:
         pass
 
-    return get_market_signal(
+    sig = get_market_signal(
         crash_prob_3m=crash_3m,
         crash_prob_12m=crash_12m,
         regime=regime,
@@ -215,6 +219,9 @@ def _compute_market_signal() -> dict:
         yield_curve=yield_curve,
         external_consensus=external,
     )
+    # Attach raw crash_3m so callers can pass it to MC simulation
+    sig["_crash_3m_pct"] = crash_3m
+    return sig
 
 
 @router.get("/{ticker}")
@@ -243,7 +250,32 @@ async def get_stock_analysis(ticker: str):
 
 def _analyze_stock(ticker: str) -> dict:
     from backend.services.stock_analyzer import analyze_stock
-    return analyze_stock(ticker)
+
+    # Compute market-level crash probability so MC simulation can
+    # modulate jump frequency based on current market stress.
+    crash_prob = None
+    try:
+        from backend.config import MODEL_DIR
+        from backend.services.crash_model import CrashPredictor
+        from backend.services.data_fetcher import DataFetcher
+        from engine.training.features import build_feature_matrix
+
+        model_path = MODEL_DIR / "crash_model.pkl"
+        if model_path.exists():
+            predictor = CrashPredictor()
+            predictor.load_model(str(model_path))
+            fetcher = DataFetcher()
+            data, _ = fetcher.fetch_market_data()
+            fred_data = fetcher.fetch_fred_data()
+            features = build_feature_matrix(data, fred_data=fred_data)
+            available = [f for f in predictor.feature_names if f in features.columns]
+            latest = features[available].iloc[[-1]]
+            if "3m" in predictor.lgb_models:
+                crash_prob = float(predictor.predict_proba(latest, "3m")[0])
+    except Exception:
+        pass
+
+    return analyze_stock(ticker, ml_crash_prob=crash_prob)
 
 
 @router.get("/{ticker}/signal")
@@ -348,8 +380,9 @@ def _stock_signal(ticker: str) -> dict:
         external_consensus=external,
     )
 
-    # Get stock data
-    stock_data = analyze_stock(ticker)
+    # Get stock data — pass crash probability so MC can modulate jump frequency
+    crash_prob_for_mc = crash_3m / 100.0 if crash_3m is not None else None
+    stock_data = analyze_stock(ticker, ml_crash_prob=crash_prob_for_mc)
     if stock_data is None:
         return {"ticker": ticker, "action": "Hold", "confidence": 0, "error": "Could not analyze stock"}
 
