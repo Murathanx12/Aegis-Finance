@@ -114,6 +114,20 @@ def get_market_signal(
         val_sig = -0.3  # extreme fear = risk
     components["valuation"] = val_sig
 
+    # Yield curve enhancement: inverted curve is a strong recession predictor
+    if yield_curve is not None:
+        if yield_curve < -0.5:
+            val_sig -= 0.3
+            reasons.append(f"Yield curve deeply inverted ({yield_curve:+.2f}%) — recession risk")
+        elif yield_curve < 0:
+            val_sig -= 0.15
+            reasons.append(f"Yield curve inverted ({yield_curve:+.2f}%)")
+        elif yield_curve > 1.5:
+            val_sig += 0.1  # Steep positive curve = expansionary
+
+    val_sig = float(np.clip(val_sig, -1, 1))
+    components["valuation"] = val_sig
+
     if vix > 30:
         reasons.append(f"VIX at {vix:.0f} — extreme volatility")
     elif vix > 25:

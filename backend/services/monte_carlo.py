@@ -251,6 +251,12 @@ def simulate_paths(
     prices[0] = start_price
 
     sigma_t = np.full(n_sims_gen, float(base_vol))
+    # Cache initial vol squared for adaptive Ito correction.
+    # base_drift already includes -0.5*base_vol^2 (the Ito term for the initial vol).
+    # When OU dynamics push sigma_t away from base_vol, the effective Ito term
+    # should be -0.5*sigma_t^2, not -0.5*base_vol^2. The correction adds
+    # 0.5*(base_vol^2 - sigma_t^2)*dt each step to maintain E[S(T)] = S(0)*exp(mu*T).
+    base_vol_sq = float(base_vol) ** 2
     fair_value = np.full(n_sims_gen, float(start_price))
 
     # Pre-generate random numbers
@@ -302,13 +308,12 @@ def simulate_paths(
         sigma_t = np.clip(sigma_t + d_sigma, 0.04, 1.0)
 
         # Price dynamics (GBM with jumps + Merton compensator)
-        # base_drift is already geometric (log) return, so NO extra -0.5*sigma^2
-        # (that would double-count the Ito correction — FIX 1: Variance Drag)
-        # Merton compensator: -lambda*k offsets expected jump loss
-        # Since jump_k < 0 for crash jumps, -jump_compensator > 0, restoring drift
-        # (FIX 2: Jump Compensator sign correction)
+        # base_drift includes Ito correction for initial vol: mu*dt - 0.5*base_vol^2*dt
+        # When OU dynamics change sigma_t, we need adaptive Ito correction:
+        # add 0.5*(base_vol^2 - sigma_t^2)*dt to keep E[S(T)] correct.
+        ito_adj = 0.5 * (base_vol_sq - sigma_t ** 2) * dt
         drift_daily = (
-            base_drift - jump_compensator + mr_daily
+            base_drift + ito_adj - jump_compensator + mr_daily
         )
         diffusion = sigma_t * np.sqrt(dt) * Z_price[t]
 
@@ -351,7 +356,8 @@ def simulate_paths(
             d_sigma = kappa_vol * (long_run_vol - sigma_t_anti) * dt + xi * sigma_t_anti * np.sqrt(dt) * Z_vol_anti[t]
             sigma_t_anti = np.clip(sigma_t_anti + d_sigma, 0.04, 1.0)
 
-            drift_daily = base_drift - jump_compensator + mr_daily
+            ito_adj = 0.5 * (base_vol_sq - sigma_t_anti ** 2) * dt
+            drift_daily = base_drift + ito_adj - jump_compensator + mr_daily
             diffusion = sigma_t_anti * np.sqrt(dt) * (-Z_price[t])
 
             # Antithetic jump occurrence: use 1-U so jumps are anti-correlated

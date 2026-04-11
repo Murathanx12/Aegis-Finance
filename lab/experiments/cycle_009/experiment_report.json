@@ -1,0 +1,33 @@
+{
+    "cycle": 9,
+    "timestamp": "2026-04-11T22:30:00",
+    "what_i_noticed": "Two issues: (1) In simulate_paths, the Ito correction (-0.5*sigma^2) is baked into base_drift using the INITIAL base_vol, but sigma_t evolves via Ornstein-Uhlenbeck dynamics throughout the simulation. When sigma_t diverges from base_vol, the effective Ito term is wrong, biasing expected returns by 0.5*(base_vol^2 - sigma_t^2) per year. For a stock where GARCH vol is 30% but historical is 20%, this is a 2.5% annual drift bias. (2) The yield_curve parameter is accepted by get_market_signal() but NEVER used in the function body — a dead parameter. The yield curve spread (T10Y3M) is one of the strongest recession predictors (Estrella & Mishkin 1998), yet it contributes 0% to the composite buy/sell signal.",
+    "hypothesis": "Adding adaptive Ito correction (adjusting drift each timestep for current sigma_t vs initial sigma) will improve MC drift accuracy, especially for stocks where GARCH vol differs from historical vol. Wiring yield curve into the valuation signal will produce more fundamentally-grounded signals that incorporate macro recession risk.",
+    "what_i_did": "Fix 1 (monte_carlo.py): Added sigma_t-adaptive Ito correction in both the primary and antithetic simulation loops. Each timestep now computes ito_adj = 0.5*(base_vol^2 - sigma_t^2)*dt and adds it to drift_daily. When sigma_t = base_vol (no OU drift), correction is zero (no behavior change). When sigma_t > base_vol, drift decreases (correct: higher vol = more variance drag). When sigma_t < base_vol, drift increases. This preserves E[S(T)] = S(0)*exp(mu*T) regardless of sigma_t dynamics. Fix 2 (signal_engine.py): Added yield curve processing to the valuation signal. Deeply inverted curve (<-0.5%) reduces val_sig by 0.3 with a recession risk reason. Slightly inverted (0 to -0.5%) reduces by 0.15. Steep positive (>1.5%) adds 0.1 bullish tilt. The yield_curve parameter was already being passed from all 3 routers (market.py, stock.py, simulation.py) — now it actually does something.",
+    "files_modified": [
+        "backend/services/monte_carlo.py",
+        "backend/services/signal_engine.py"
+    ],
+    "results": {
+        "before": {
+            "ito_correction": "static (uses initial base_vol only)",
+            "sigma_t_drift_bias": "up to 0.5*(sigma_garch^2 - sigma_hist^2) per year (~2.5% for 30% vs 20% vol)",
+            "yield_curve_used_in_signal": false,
+            "signal_valuation_source": "VIX only",
+            "fast_tests_passing": "60/60"
+        },
+        "after": {
+            "ito_correction": "adaptive (adjusts per timestep for current sigma_t)",
+            "sigma_t_drift_bias": "zero (corrected each step)",
+            "yield_curve_used_in_signal": true,
+            "signal_valuation_source": "VIX + yield curve spread",
+            "fast_tests_passing": "60/60"
+        },
+        "improved": true
+    },
+    "tests_fixed": [],
+    "analysis": "Both fixes are correctness improvements to the production backend. The Ito correction fix is mathematically rigorous: when sigma_t evolves via OU dynamics, the variance drag term must track the current vol, not the initial vol. The impact is largest for stocks where GARCH conditional vol differs significantly from historical vol — which is most stocks during regime transitions. The yield curve fix activates a dead parameter that was already being computed and passed by all 3 router endpoints. The data_generator's metrics (drift errors, backtest MAE) are unaffected because it runs its own independent GBM, not the backend's simulate_paths. The improvements are in the production endpoints users actually interact with: /api/simulation/sp500, /api/stock/{ticker}, /api/market-status (signal).",
+    "next_steps": "1. The data_generator's drift_error metric has a known measurement bias (compares mu*T vs (mu-0.5*sigma^2)*T) making it unreliable for measuring backend improvements — consider adding a backend-specific drift accuracy test. 2. Consider adding risk_score to the signal engine (currently accepted but unused, similar to the yield_curve fix). 3. The cross-asset correlation NaN issue persists (timezone mismatch in per-ticker yfinance fetches in data_generator). 4. Consider computing GARCH-standardized residuals for bootstrap (returns/conditional_vol) for even more accurate block bootstrap.",
+    "confidence": "high",
+    "should_keep": true
+}
