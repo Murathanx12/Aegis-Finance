@@ -1,0 +1,17 @@
+Cycle 1 complete. Here's the summary:
+
+## Cycle 1 Results
+
+### Fixed: `test_monotonic_horizons` (previously failing)
+- **Root cause**: sklearn version mismatch — crash model trained with sklearn 1.8.0 (which dropped `multi_class` from LogisticRegression), but env has sklearn 1.4.0 which requires it in `predict_proba`
+- **Fix**: Patched `load_model()` to add `multi_class="auto"` on any LR model missing the attribute, plus added try/except fallback in `predict_proba` to gracefully degrade to LGB-only
+
+### Improved: Monte Carlo Student-t variance normalization
+- **Issue**: Raw Student-t(df=8) innovations have Var=8/6=1.333, adding ~33% excess diffusion variance to simulated price paths
+- **Fix**: Normalized by `sqrt(df/(df-2))` after generation, preserving fat-tail kurtosis while ensuring unit variance
+- **Impact**: Removes ~0.5-4% annual price drift bias (scales with stock volatility)
+
+### Test results: 60/60 fast tests passing (was 59/60)
+
+### Key observation for next cycle
+The data_generator's MC drift error metrics are measured on its own separate GBM simulation (not the backend's), and its quality check formula has a bias (compares arithmetic vs geometric drift). The block bootstrap config is enabled but never activated since `run_monte_carlo` never passes `historical_residuals` to `simulate_paths`.
