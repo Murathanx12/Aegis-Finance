@@ -161,6 +161,18 @@ config: dict = {
         "min_observations": 60,     # minimum daily returns needed for valid metrics
     },
 
+    # ── CROSS-ASSET TAIL DEPENDENCE ──────────────────────────────────────
+    "tail_dependence": {
+        "lookback_days": 756,         # 3 years of trading days
+        "quantile_lo": 0.02,          # lower bound for tail quantile grid
+        "quantile_hi": 0.10,          # upper bound for tail quantile grid
+        "n_quantile_steps": 9,        # grid resolution for averaging λ_L
+        "rolling_window": 126,        # 6-month rolling window
+        "min_observations": 120,      # minimum returns for valid estimate
+        "contagion_threshold": 0.15,  # contagion score above this = elevated
+        "cluster_threshold": 0.20,    # tail dep threshold for cluster membership
+    },
+
     # ── GLOBAL MARKET PARAMETERS ────────────────────────────────────────
     "risk_free_rate": 0.04,  # Annual risk-free rate (10Y Treasury approx, updated 2026-03)
 
