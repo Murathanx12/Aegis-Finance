@@ -216,12 +216,41 @@ def analyze_stock(
     beta_adj_crash_freq = float(np.clip(base_crash_freq * beta, 0.02, 0.25))
     num_sims = config["simulation"]["num_simulations"]
 
+    # Options-implied calibration: blend forward-looking options data into MC params
+    # This is non-blocking — if options data is unavailable, MC runs unchanged
+    mc_vol_override = garch_vol
+    mc_crash_freq = beta_adj_crash_freq
+    options_calibration = None
+    try:
+        from backend.services.options_calibrator import calibrate_mc_from_options, apply_calibration_to_mc_params
+        from backend.services.options_intelligence import get_options_summary
+        opts = get_options_summary(ticker)
+        if opts and "error" not in opts:
+            calibration = calibrate_mc_from_options(opts, garch_vol=garch_vol, ticker=ticker)
+            if calibration.get("confidence", 0) > 0.2:
+                applied = apply_calibration_to_mc_params(
+                    calibration,
+                    garch_vol=garch_vol,
+                    base_crash_freq=beta_adj_crash_freq,
+                )
+                mc_vol_override = applied["garch_vol"]
+                mc_crash_freq = applied["crash_freq"]
+                options_calibration = calibration
+                logger.info(
+                    "%s: Options calibration applied (confidence=%.2f, vol=%.3f→%.3f, freq=%.3f→%.3f)",
+                    ticker, calibration["confidence"],
+                    garch_vol or 0, mc_vol_override or 0,
+                    beta_adj_crash_freq, mc_crash_freq,
+                )
+    except (ImportError, KeyError, TypeError, ValueError, AttributeError) as e:
+        logger.debug("%s: Options calibration skipped — %s", ticker, e)
+
     base_scenario = {"drift_adj": 0, "vol_mult": 1.0, "crash_mult": 1.0}
     paths = simulate_paths(
         current_price, final_mu, final_sigma,
-        forecast_days, num_sims, beta_adj_crash_freq, 0.0, base_scenario,
+        forecast_days, num_sims, mc_crash_freq, 0.0, base_scenario,
         ml_crash_prob=ml_crash_prob,
-        garch_vol=garch_vol,
+        garch_vol=mc_vol_override,
         garch_nu=garch_nu,
         garch_persistence=garch_persistence,
         historical_residuals=hist_residuals,
@@ -309,6 +338,13 @@ def analyze_stock(
         "price_history": price_history,
         "key_stats": key_stats,
         "peers": peers,
+        # Options-implied calibration (None if unavailable or low confidence)
+        "options_calibration": {
+            "confidence": options_calibration["confidence"],
+            "implied_vol": options_calibration.get("implied_vol"),
+            "jump_freq_mult": options_calibration.get("jump_freq_mult"),
+            "jump_mag_adj": options_calibration.get("jump_mag_adj"),
+        } if options_calibration else None,
     }
 
 
