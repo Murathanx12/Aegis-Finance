@@ -361,6 +361,18 @@ config: dict = {
         },
     },
 
+    # ── OPTIONS CALIBRATION ──────────────────────────────────────────────
+    # Parameters for options-implied Monte Carlo calibration
+    "options_calibration": {
+        "iv_blend_weight": 0.35,        # How much to trust IV vs GARCH (0=GARCH, 1=IV)
+        "skew_neutral": 1.1,            # Normal skew level (puts always slightly premium)
+        "skew_elevated": 1.4,           # High fear level
+        "pc_ratio_neutral": 0.9,        # Below = bullish positioning
+        "pc_ratio_elevated": 1.5,       # Above = heavy put buying
+        "iv_rank_low": 25.0,            # Below = complacent (low vol regime)
+        "iv_rank_high": 75.0,           # Above = elevated fear
+    },
+
     # ── RISK SETTINGS ────────────────────────────────────────────────────
     "risk": {
         "crash_threshold": 0.20,          # 20% drawdown = crash
