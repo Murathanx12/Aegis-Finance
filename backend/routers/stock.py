@@ -128,6 +128,26 @@ def _screener() -> dict:
                     stock_dd if stock_dd is not None else 0.0,
                 )
 
+            # Options-implied signal (forward-looking: IV skew, P/C ratio)
+            options_score = None
+            try:
+                from backend.services.options_intelligence import get_iv_signal
+                iv_sig = get_iv_signal(ticker)
+                if iv_sig.get("available"):
+                    options_score = iv_sig.get("score")
+            except Exception as e:
+                logger.debug("options signal skip %s: %s", ticker, e)
+
+            # Earnings quality signal (beat rate, surprise trend, growth)
+            earnings_score = None
+            try:
+                from backend.services.earnings_intelligence import get_earnings_summary
+                earn = get_earnings_summary(ticker)
+                if earn and "signal" in earn:
+                    earnings_score = earn["signal"].get("score")
+            except Exception as e:
+                logger.debug("earnings signal skip %s: %s", ticker, e)
+
             stock_sig = get_stock_signal(
                 market_signal=market_sig,
                 beta=r.get("beta", 1.0),
@@ -140,6 +160,8 @@ def _screener() -> dict:
                 drawdown_from_peak=stock_dd,
                 stock_momentum_1m=stock_mom_1m,
                 stock_momentum_3m=stock_mom_3m,
+                options_signal_score=options_score,
+                earnings_signal_score=earnings_score,
             )
 
             return {
@@ -420,6 +442,26 @@ def _analyze_stock(ticker: str) -> dict:
         )
         result["crash_prob_3m"] = round(stock_crash_prob * 100, 2)
 
+    # Options-implied signal (forward-looking: IV skew, P/C ratio)
+    options_score = None
+    try:
+        from backend.services.options_intelligence import get_iv_signal
+        iv_sig = get_iv_signal(ticker)
+        if iv_sig.get("available"):
+            options_score = iv_sig.get("score")
+    except Exception as e:
+        logger.debug("options signal skip %s: %s", ticker, e)
+
+    # Earnings quality signal (beat rate, surprise trend, growth)
+    earnings_score = None
+    try:
+        from backend.services.earnings_intelligence import get_earnings_summary
+        earn = get_earnings_summary(ticker)
+        if earn and "signal" in earn:
+            earnings_score = earn["signal"].get("score")
+    except Exception as e:
+        logger.debug("earnings signal skip %s: %s", ticker, e)
+
     # Compute per-stock signal (same logic as screener)
     stock_sig = get_stock_signal(
         market_signal=market_sig,
@@ -433,6 +475,8 @@ def _analyze_stock(ticker: str) -> dict:
         drawdown_from_peak=stock_dd,
         stock_momentum_1m=stock_mom_1m,
         stock_momentum_3m=stock_mom_3m,
+        options_signal_score=options_score,
+        earnings_signal_score=earnings_score,
     )
 
     # Attach signal and crash fields to the result
@@ -513,6 +557,26 @@ def _stock_signal(ticker: str) -> dict:
         if len(prices_arr) >= 64 and prices_arr[-64] > 0:
             stock_mom_3m = (current / prices_arr[-64] - 1) * 100
 
+    # Options-implied signal
+    options_score = None
+    try:
+        from backend.services.options_intelligence import get_iv_signal
+        iv_sig = get_iv_signal(ticker)
+        if iv_sig.get("available"):
+            options_score = iv_sig.get("score")
+    except Exception as e:
+        logger.debug("options signal skip %s: %s", ticker, e)
+
+    # Earnings quality signal
+    earnings_score = None
+    try:
+        from backend.services.earnings_intelligence import get_earnings_summary
+        earn = get_earnings_summary(ticker)
+        if earn and "signal" in earn:
+            earnings_score = earn["signal"].get("score")
+    except Exception as e:
+        logger.debug("earnings signal skip %s: %s", ticker, e)
+
     signal = get_stock_signal(
         market_signal=market_sig,
         beta=stock_data.get("beta", 1.0),
@@ -525,6 +589,8 @@ def _stock_signal(ticker: str) -> dict:
         drawdown_from_peak=stock_dd,
         stock_momentum_1m=stock_mom_1m,
         stock_momentum_3m=stock_mom_3m,
+        options_signal_score=options_score,
+        earnings_signal_score=earnings_score,
     )
     signal["ticker"] = ticker
     signal["name"] = stock_data.get("name", ticker)
