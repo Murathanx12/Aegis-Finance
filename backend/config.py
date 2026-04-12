@@ -138,11 +138,28 @@ config: dict = {
         },
         # Sample uniqueness weighting (Phase 1.5)
         "sample_uniqueness": True,
-        # Drift detection (Phase 4.4)
+        # Drift detection (Phase 4.4 + 4.5)
         "drift": {
             "psi_threshold": 0.2,
             "ks_p_threshold": 0.01,
             "n_bins": 10,
+            # Drift-aware confidence discounting (Phase 4.5)
+            # Maps drift severity to a confidence multiplier for crash predictions.
+            "confidence_multiplier": {
+                "none": 1.0,
+                "low": 0.95,
+                "moderate": 0.80,
+                "high": 0.60,
+                "critical": 0.40,
+            },
+            # Multiplier applied to crash_prob signal weight under drift
+            "signal_weight_multiplier": {
+                "none": 1.0,
+                "low": 1.0,
+                "moderate": 0.7,
+                "high": 0.4,
+                "critical": 0.2,
+            },
         },
         # Calibration output bounds (Phase 5.1)
         "calibration": {
@@ -227,6 +244,8 @@ config: dict = {
         "stock_crash_risk": 0.15,  # weight for per-stock crash risk adjustment
         "stock_drawdown": 0.25,    # weight for stock-specific drawdown signal
         "stock_momentum": 0.20,    # weight for stock-specific momentum signal
+        "options_iv": 0.12,        # weight for options-implied signal (IV skew, P/C ratio)
+        "earnings_quality": 0.10,  # weight for earnings surprise/growth signal
     },
     # Per-stock crash probability adjustment parameters.
     # Market-level crash prob is scaled by stock-specific risk factors (beta,

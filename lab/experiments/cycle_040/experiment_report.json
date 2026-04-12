@@ -1,0 +1,113 @@
+{
+  "cycle": 40,
+  "timestamp": "2026-04-12T13:30:00Z",
+  "title": "Drift-aware prediction pipeline (Phase 4.5)",
+  "duration_minutes": 25,
+
+  "observation": {
+    "what_i_noticed": "89.2% of crash model features (141/158) show critical drift, but drift detection was completely isolated from predictions. The crash model, signal engine, and all API endpoints operated as if features were in-distribution. This is the single biggest reliability gap: the system detects the problem but takes no action.",
+    "severity": "critical",
+    "root_cause": "DriftDetector was built as an observability tool (Phase 4.4) but never wired into the prediction pipeline. The crash model has a reactive floor-pinning detector, but no proactive drift awareness."
+  },
+
+  "what_i_did": {
+    "summary": "Built a drift-aware prediction pipeline that closes the loop: detect drift -> discount crash predictions -> reduce signal weight -> inform API consumers.",
+    "changes": [
+      "Added config-driven drift confidence multipliers and signal weight multipliers to config.py",
+      "Created GET /api/drift/check endpoint (new drift router) with severity, confidence discount, and recommendations",
+      "Integrated drift detection into crash diagnostics endpoint (crash router) — status now reflects both calibrator health AND drift severity",
+      "Added drift metadata (severity + confidence_multiplier) to crash prediction response",
+      "Made signal engine drift-aware: crash_prob weight is reduced by a configurable multiplier based on drift severity (critical=0.2x, high=0.4x, moderate=0.7x)",
+      "Wired drift detection into market router, stock router, and lab data_generator — all share the feature matrix (no extra computation)",
+      "Drift severity surfaced in signal output when > 'none' (drift_severity, drift_crash_weight_mult fields)",
+      "Drift reason appears in signal reasons list when weight is discounted"
+    ]
+  },
+
+  "files_modified": [
+    "backend/config.py",
+    "backend/main.py",
+    "backend/routers/crash.py",
+    "backend/routers/market.py",
+    "backend/routers/stock.py",
+    "backend/services/signal_engine.py",
+    "lab/data_generator.py"
+  ],
+
+  "files_created": [
+    "backend/routers/drift.py",
+    "backend/tests/test_drift_awareness.py"
+  ],
+
+  "tests": {
+    "new_tests": 17,
+    "test_file": "backend/tests/test_drift_awareness.py",
+    "test_classes": [
+      "TestDriftAwareSignalWeighting (6 tests): weight reduction, monotonic effect, backward compat",
+      "TestDriftMetadataInSignal (4 tests): metadata presence, multiplier values, reasons",
+      "TestDriftConfidenceConfig (4 tests): config structure, severity ordering",
+      "TestBackwardCompatibility (3 tests): no-param, None, unknown severity"
+    ],
+    "all_new_tests_pass": true,
+    "existing_tests_pass": true,
+    "tests_verified": [
+      "test_drift_awareness.py: 17/17 passed",
+      "test_signal_engine.py: 79/79 passed",
+      "test_crash_calibration.py + test_crash_floor.py: 44/44 passed",
+      "test_data_generator_wiring.py: 35/35 passed"
+    ]
+  },
+
+  "results": {
+    "before": {
+      "drift_detection": "isolated — only saved to JSON in lab data generator",
+      "crash_predictions": "no drift awareness, no confidence discount",
+      "signal_engine": "crash_prob weight always 0.20 regardless of drift",
+      "api_consumers": "no way to know predictions are unreliable",
+      "diagnostics": "only checks calibrator floor-pinning, not feature drift"
+    },
+    "after": {
+      "drift_detection": "integrated into crash predictions, signals, and diagnostics",
+      "crash_predictions": "include drift severity and confidence_multiplier in response",
+      "signal_engine": "crash_prob weight reduced to 0.04 (0.20 * 0.2) under critical drift",
+      "api_consumers": "GET /api/drift/check for drift status; drift metadata in all crash/signal responses",
+      "diagnostics": "checks both calibrator health AND feature drift, returns combined status"
+    },
+    "impact_example": "With 89.2% critical drift: crash_prob signal weight drops from 20% to 4% of composite signal. Other components (regime, momentum, drawdown, macro) that don't depend on the drifted model take proportionally more weight. This is correct: when you can't trust the ML model, lean on market observables."
+  },
+
+  "design_decisions": {
+    "config_driven": "All multipliers in config.py — no hardcoded thresholds in service code. Easy to tune without code changes.",
+    "backward_compatible": "drift_severity param defaults to None; all existing callers work unchanged. New field only appears in signal output when drift > 'none'.",
+    "feature_matrix_reuse": "Drift detection reuses the feature matrix already built for crash predictions — no extra data fetching or feature computation.",
+    "graduated_response": "Five severity levels (none/low/moderate/high/critical) with proportional weight discounts, not a binary on/off.",
+    "transparent": "Drift reason appears in signal reasons list so users see WHY the signal changed, not just that it changed."
+  },
+
+  "self_critique": {
+    "good": [
+      "Addressed the single highest-impact reliability gap in the codebase",
+      "17 focused tests covering weighting, metadata, config, and backward compatibility",
+      "Zero existing test breakage across 175 verified tests",
+      "Clean separation: detection (DriftDetector) -> config (multipliers) -> integration (signal_engine) -> exposure (API)"
+    ],
+    "limitations": [
+      "Drift detection in market/stock routers adds ~2-5s latency for the DriftDetector.from_rolling_window() call. Should consider caching drift severity with a TTL.",
+      "The confidence_multiplier in crash prediction response is informational — the frontend doesn't consume it yet. Need frontend integration.",
+      "Did not address the root cause: the crash model needs retraining on recent data. This is a mitigation, not a fix.",
+      "Backtest service still calls get_market_signal without drift_severity — acceptable since backtests use historical data where drift wasn't an issue."
+    ]
+  },
+
+  "next_steps": [
+    "Cache drift severity with 1hr TTL to avoid recomputing on every signal request",
+    "Frontend: show drift warning banner on crash prediction and signal pages",
+    "Retrain crash model with adaptive reference window to reduce drift",
+    "Add drift severity to lab data_generator output for experiment tracking",
+    "Consider auto-retraining trigger when drift exceeds 'high' for N consecutive checks"
+  ],
+
+  "confidence": 0.92,
+  "depth_rating": "high",
+  "tags": ["drift", "reliability", "signal-engine", "crash-model", "api", "config"]
+}
