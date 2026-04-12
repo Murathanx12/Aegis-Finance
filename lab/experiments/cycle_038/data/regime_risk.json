@@ -1,0 +1,12 @@
+{
+  "regime": {
+    "current": "Bull",
+    "type": "tuple(Series, str)"
+  },
+  "risk_score": {
+    "current": 1.14,
+    "mean": 0.369,
+    "max": 4.0,
+    "type": "Series"
+  }
+}

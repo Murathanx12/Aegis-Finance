@@ -1,0 +1,94 @@
+{
+  "cycle": 38,
+  "timestamp": "2026-04-12T12:30:00Z",
+  "title": "Cross-Asset Tail Dependence & Contagion Analysis",
+  "category": "risk_analytics",
+
+  "observation": {
+    "what_i_noticed": [
+      "Cycle 37 added single-asset tail risk metrics (Sortino, Omega, Calmar) but there was zero cross-asset dependence analysis",
+      "Portfolio engine uses Ledoit-Wolf covariance (Pearson correlation) which assumes elliptical dependence — this completely misses tail dependence",
+      "Under Gaussian copula (implicit in Pearson correlation), tail dependence is exactly 0 for any correlation < 1. Real equity markets have substantial lower tail dependence (co-crashes)",
+      "Bloomberg has CORR screens but systematic empirical copula-based tail dependence with contagion scoring is institutional-grade analytics that most retail platforms lack",
+      "All 12 stock signals returned 'Buy' with identical crash probs — a separate issue, but tail dependence helps expose hidden portfolio concentration risk that the signal engine misses"
+    ],
+    "gap_identified": "No measurement of how assets co-crash. A portfolio could show 'good diversification' by Pearson correlation while having severe tail risk concentration (e.g., SPY-QQQ: ρ=0.88, λ_L=0.63)"
+  },
+
+  "implementation": {
+    "what_i_built": "Full cross-asset tail dependence engine using empirical copula methods",
+    "files_changed": [
+      "backend/services/tail_dependence.py (NEW — 290 lines)",
+      "backend/routers/correlation.py (NEW — API endpoint)",
+      "backend/config.py (added tail_dependence config block)",
+      "backend/main.py (registered correlation router)",
+      "backend/tests/test_tail_dependence.py (NEW — 23 tests)"
+    ],
+    "key_features": [
+      "Empirical lower tail dependence λ_L via Frahm-Junker-Schmidt (2005) estimator, averaged over quantile grid [0.02, 0.10] for robustness",
+      "Upper tail dependence λ_U for asymmetry detection (equities typically have λ_L > λ_U)",
+      "Contagion score: excess tail dependence beyond what Pearson correlation predicts (under Gaussian copula, λ=0 for ρ<1, so any positive λ is 'hidden' risk)",
+      "Cluster detection via BFS on high-tail-dep adjacency graph — identifies groups of assets that co-crash",
+      "Rolling tail dependence time series for regime shift detection (e.g., tail dep spikes before crises)",
+      "Portfolio-level diversification quality rating (excellent/good/fair/poor) based on aggregate tail dep",
+      "Full API endpoint: GET /api/correlation/tail-dependence?tickers=SPY,QQQ,TLT,GLD"
+    ],
+    "theory": {
+      "tail_dependence": "λ_L = lim(u→0) P(U₁ ≤ u | U₂ ≤ u) where U_i are probability integral transforms",
+      "empirical_estimator": "λ̂_L(q) = P(U₁ ≤ q, U₂ ≤ q) / q, averaged over q ∈ [0.02, 0.10]",
+      "why_not_parametric": "No parametric copula assumption (Clayton, Gumbel) — empirical approach is more robust and makes no distributional assumption",
+      "references": [
+        "Frahm, Junker & Schmidt (2005) 'Estimating the tail-dependence coefficient'",
+        "Embrechts, McNeil & Straumann (2002) 'Correlation and dependence in risk management'",
+        "Ang & Chen (2002) 'Asymmetric correlations of equity portfolios' (JFE)"
+      ]
+    },
+    "config_params": {
+      "lookback_days": 756,
+      "quantile_lo": 0.02,
+      "quantile_hi": 0.10,
+      "n_quantile_steps": 9,
+      "rolling_window": 126,
+      "min_observations": 120,
+      "contagion_threshold": 0.15,
+      "cluster_threshold": 0.20
+    }
+  },
+
+  "validation": {
+    "tests": {
+      "total": 23,
+      "fast": 20,
+      "slow_network": 3,
+      "all_passing": true,
+      "runtime_fast": "2.1s"
+    },
+    "smoke_test_results": {
+      "SPY_QQQ": {"tail_dep": 0.627, "pearson": 0.876, "contagion": 0.364, "interpretation": "Very high co-crash risk — diversification fails in tail events"},
+      "SPY_TLT": {"tail_dep": 0.000, "pearson": -0.728, "contagion": 0.000, "interpretation": "Genuine diversifier — no tail dependence"},
+      "SPY_GLD": {"tail_dep": 0.069, "pearson": -0.044, "contagion": 0.069, "interpretation": "Near-independent — gold provides tail diversification"},
+      "portfolio_rating": "good"
+    },
+    "regression": "110 existing tests pass (monte_carlo, signal_engine, tail_risk)"
+  },
+
+  "assessment": {
+    "verdict": "improved",
+    "confidence": "high",
+    "why": "Fills a genuine gap — no existing cross-asset dependence analysis. The engine now measures something that Pearson correlation fundamentally cannot: how much diversification benefit disappears in crashes. This is what prop desks and institutional risk teams monitor but retail platforms never show.",
+    "limitations": [
+      "Empirical estimator needs ~500+ observations for stable estimates at q=0.02",
+      "No parametric copula fitting (could add Clayton/Gumbel for extrapolation below observed quantiles)",
+      "No integration yet with portfolio optimizer (could penalize high-tail-dep allocations)",
+      "Frontend component not built yet — results only available via API"
+    ]
+  },
+
+  "next_steps": [
+    "Build frontend component to visualize tail dependence heatmap and contagion clusters",
+    "Integrate tail dependence into portfolio optimizer (penalize concentrated tail risk)",
+    "Add parametric copula fitting (Clayton for lower tail, Gumbel for upper) for comparison",
+    "Wire tail dependence warnings into signal engine (flag portfolios with high hidden contagion)",
+    "Add stress-conditional tail dependence (compute λ_L only during VIX > 25 periods)"
+  ]
+}
