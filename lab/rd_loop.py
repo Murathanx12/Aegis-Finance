@@ -350,7 +350,7 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
     test_result = subprocess.run(
         [sys.executable, "-m", "pytest", "backend/tests/", "-v",
          "-m", "not slow", "--tb=line"],
-        cwd=str(REPO_DIR), capture_output=True, text=True, timeout=600,
+        cwd=str(REPO_DIR), capture_output=True, text=True, timeout=900,
     )
     test_out = test_result.stdout + test_result.stderr
     (cycle_dir / "test_results.txt").write_text(test_out, encoding="utf-8")
@@ -450,7 +450,7 @@ def main():
     bl = subprocess.run(
         [sys.executable, "-m", "pytest", "backend/tests/", "-v",
          "-m", "not slow", "--tb=line"],
-        cwd=str(REPO_DIR), capture_output=True, text=True, timeout=600,
+        cwd=str(REPO_DIR), capture_output=True, text=True, timeout=900,
     )
     baseline_failures = "\n".join(
         l for l in bl.stdout.split("\n") if l.startswith("FAILED")
