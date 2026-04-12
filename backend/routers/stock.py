@@ -283,11 +283,21 @@ def _compute_market_signal() -> dict:
                     crash_3m = prob
                 elif h == "12m":
                     crash_12m = prob
-            # Drift detection (reuses feature matrix)
+            # Drift detection (importance-weighted, reuses feature matrix)
             try:
                 from backend.services.drift_detector import DriftDetector
-                _drift_report = DriftDetector.from_rolling_window(_feature_matrix)
-                _drift_severity = _drift_report.get("severity")
+                _feat_imp = None
+                if hasattr(predictor, "get_top_features"):
+                    try:
+                        top = predictor.get_top_features(n=200)
+                        _feat_imp = dict(top) if top else None
+                    except Exception:
+                        pass
+                _drift_report = DriftDetector.from_rolling_window(
+                    _feature_matrix, feature_importances=_feat_imp,
+                )
+                _drift_severity = _drift_report.get("effective_severity",
+                                                     _drift_report.get("severity"))
             except Exception as e:
                 logger.debug("Drift detection unavailable in screener: %s", e)
     except (ImportError, FileNotFoundError, ValueError, KeyError) as e:

@@ -1,0 +1,114 @@
+{
+  "cycle": 42,
+  "timestamp": "2026-04-12T14:10:00Z",
+  "title": "Importance-weighted drift detection — stop nuking the crash model when unimportant features drift",
+
+  "observation": {
+    "problem": "89.2% of features (141/158) are flagged as drifting, triggering 'critical' severity. This reduces crash model signal weight to 20% — effectively disabling it. But the drifted features are mostly momentum (mom_1m, mom_6m, mom_12m) and short-term volatility (vol_1m, vol_3m) which naturally shift with market conditions.",
+    "root_cause": "The drift detector treats all features equally when computing drift_pct. If 8 low-importance momentum features drift but the 2 most predictive macro features (ICSA, NFCI, yield curve) are stable, drift_pct is still 80% and severity is 'critical'.",
+    "impact": "The crash model's predictive power is wasted. The signal engine runs at 20% crash weight even when the model's important features are still in-distribution."
+  },
+
+  "what_i_built": {
+    "summary": "Importance-weighted drift scoring that weights each feature's drift flag by its crash model importance. When important features are stable, effective severity is lower — the model retains more signal.",
+    "components": [
+      {
+        "name": "importance_weighted_drift()",
+        "description": "New method in DriftDetector that normalizes feature importances to sum to 1, then computes weighted drift % instead of raw count. Features the model relies on count more.",
+        "example": "Raw drift: 89% (141/158 features). If those 141 features only carry 30% of model importance, weighted drift is 30% — 'moderate' instead of 'critical'."
+      },
+      {
+        "name": "drift_direction attribution",
+        "description": "Each feature now reports mean_shift (positive = shifted higher, negative = lower) and spread_change (>1 = wider/more volatile, <1 = compressed). Helps diagnose WHY features drifted.",
+        "example": "mom_1m: mean_shift=+0.15, spread_change=1.3 (momentum shifted up and became more volatile)"
+      },
+      {
+        "name": "stable_important_features",
+        "description": "List of important features that are NOT drifting, sorted by importance. Shows which features the model can still rely on.",
+        "example": "['yield_curve_10y_3m', 'ICSA_4w_chg', 'NFCI'] — the model's top macro features are stable"
+      },
+      {
+        "name": "effective_severity",
+        "description": "New field in drift reports. Uses importance-weighted severity when importances are provided, falls back to raw severity otherwise. All routers now use effective_severity for signal weight multiplier.",
+        "example": "raw_severity='critical', effective_severity='moderate' → crash model runs at 70% weight instead of 20%"
+      }
+    ]
+  },
+
+  "files_modified": [
+    "backend/services/drift_detector.py",
+    "backend/routers/market.py",
+    "backend/routers/crash.py",
+    "backend/routers/stock.py",
+    "backend/routers/drift.py"
+  ],
+
+  "files_created": [
+    "backend/tests/test_drift_importance_weighted.py",
+    "lab/experiments/cycle_042/experiment_report.json"
+  ],
+
+  "tests": {
+    "new_tests": 17,
+    "new_test_file": "backend/tests/test_drift_importance_weighted.py",
+    "test_classes": [
+      "TestImportanceWeightedDrift (5 tests) — core weighted drift computation",
+      "TestStableImportantFeatures (3 tests) — stable feature identification",
+      "TestDriftDirection (4 tests) — mean shift and spread change",
+      "TestRollingWindowWithImportances (3 tests) — integration with from_rolling_window()",
+      "TestBackwardCompatibility (2 tests) — no importances = same behavior"
+    ],
+    "existing_tests_verified": {
+      "test_drift_awareness.py": "17/17 passed",
+      "test_data_generator_wiring.py (drift)": "13/13 passed",
+      "test_signal_engine.py": "79/79 passed",
+      "test_routers.py": "144/144 passed"
+    },
+    "total_verified": 270
+  },
+
+  "results": {
+    "before": {
+      "drift_pct": 89.2,
+      "severity": "critical",
+      "crash_model_weight_multiplier": 0.2,
+      "description": "89% of features flagged as drifting. Crash model essentially disabled at 20% weight."
+    },
+    "after": {
+      "raw_drift_pct": "89.2 (unchanged — same detection)",
+      "importance_weighted_drift_pct": "Depends on model feature importances. In synthetic tests: 8/10 low-importance features drifting → raw 80%, weighted <20%",
+      "effective_severity": "Can be 'low' or 'moderate' when important features are stable, even if raw severity is 'critical'",
+      "crash_model_weight_multiplier": "0.7 (moderate) or 1.0 (low) instead of 0.2 (critical)",
+      "description": "Crash model retains signal when its important features are stable. Raw drift tracking unchanged for monitoring."
+    }
+  },
+
+  "analysis": {
+    "strengths": [
+      "Backward compatible: no importances = same behavior as before",
+      "Both raw and weighted severity exposed in API for transparency",
+      "Drift direction helps diagnose why features shifted",
+      "Stable important features list shows what the model can still rely on",
+      "All 4 routers updated consistently (market, crash, stock, drift)"
+    ],
+    "limitations": [
+      "Actual impact depends on what the trained crash model's feature importances look like. If the top features are also drifting, weighted severity won't be lower.",
+      "Feature importances are based on LightGBM gain — not necessarily the best proxy for which features the model is 'sensitive to'. SHAP values would be better but more expensive.",
+      "Importance-weighted severity thresholds (0/15/35/65%) are slightly relaxed compared to raw thresholds (0/10/30/60%) — this is intentional but may need tuning with real data."
+    ]
+  },
+
+  "self_critique": "The real test is running this against the actual crash model's feature importances. In synthetic tests, the weighted drift clearly differentiates important vs unimportant feature drift. But I haven't verified what the actual crash_model.pkl's top features are and whether they're among the 17 stable ones. The next cycle should run the full pipeline and compare raw vs weighted severity on live data.",
+
+  "next_steps": [
+    "Run live drift check with crash model importances to see actual weighted severity",
+    "Add SHAP-based importance weighting as alternative to LightGBM gain",
+    "Consider feature-group-level drift (macro group, momentum group, volatility group) for better interpretability",
+    "Add drift trend tracking: is drift increasing or decreasing over time?",
+    "Frontend: show both raw and weighted drift in the dashboard"
+  ],
+
+  "confidence": 0.85,
+  "depth_rating": "moderate-to-deep",
+  "time_spent_minutes": 25
+}

@@ -208,11 +208,24 @@ def _compute_market_signal() -> dict:
         logger.debug("Crash model unavailable in signal: %s", e)
 
     # Drift severity (reuses feature matrix from crash model block)
+    # Pass crash model feature importances so drift detector can compute
+    # importance-weighted severity — prevents low-importance features from
+    # inflating drift and unnecessarily disabling the crash model.
     if _feature_matrix is not None:
         try:
             from backend.services.drift_detector import DriftDetector
-            _drift_report = DriftDetector.from_rolling_window(_feature_matrix)
-            _drift_severity = _drift_report.get("severity")
+            _feat_imp = None
+            if "predictor" in dir() and hasattr(predictor, "get_top_features"):
+                try:
+                    top = predictor.get_top_features(n=200)
+                    _feat_imp = dict(top) if top else None
+                except Exception:
+                    pass
+            _drift_report = DriftDetector.from_rolling_window(
+                _feature_matrix, feature_importances=_feat_imp,
+            )
+            _drift_severity = _drift_report.get("effective_severity",
+                                                 _drift_report.get("severity"))
         except Exception as e:
             logger.debug("Drift detection unavailable in signal: %s", e)
 
