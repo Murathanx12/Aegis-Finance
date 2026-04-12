@@ -1,0 +1,99 @@
+{
+  "market_signal": {
+    "action": "Buy",
+    "confidence": 19,
+    "color": "green",
+    "composite_score": 0.194,
+    "reasons": [
+      "Crash model drift (critical) \u2014 ML signal weight reduced to 20%",
+      "Low crash risk (3% 3M)",
+      "Bullish market regime"
+    ],
+    "components": {
+      "crash_prob": 0.015,
+      "regime": 0.7,
+      "valuation": 0.1,
+      "momentum": -0.012,
+      "mean_reversion": 0.0,
+      "external": 0.4,
+      "macro_risk": -0.074,
+      "drawdown": 0.0
+    },
+    "drift_severity": "critical",
+    "drift_crash_weight_mult": 0.2
+  },
+  "stock_signals": {
+    "GOOGL": {
+      "action": "Buy",
+      "composite_score": 0.324,
+      "confidence": 32
+    },
+    "AAPL": {
+      "action": "Buy",
+      "composite_score": 0.215,
+      "confidence": 21
+    },
+    "JPM": {
+      "action": "Buy",
+      "composite_score": 0.292,
+      "confidence": 29
+    },
+    "ABBV": {
+      "action": "Hold",
+      "composite_score": 0.034,
+      "confidence": 3
+    },
+    "PG": {
+      "action": "Hold",
+      "composite_score": 0.089,
+      "confidence": 8
+    },
+    "NVDA": {
+      "action": "Buy",
+      "composite_score": 0.414,
+      "confidence": 41
+    },
+    "CCL": {
+      "action": "Buy",
+      "composite_score": 0.189,
+      "confidence": 18
+    },
+    "DASH": {
+      "action": "Hold",
+      "composite_score": -0.079,
+      "confidence": 7
+    },
+    "TDOC": {
+      "action": "Hold",
+      "composite_score": -0.098,
+      "confidence": 9
+    },
+    "GOLD": {
+      "action": "Hold",
+      "composite_score": -0.106,
+      "confidence": 10
+    },
+    "UPST": {
+      "action": "Hold",
+      "composite_score": -0.003,
+      "confidence": 0
+    },
+    "ABNB": {
+      "action": "Buy",
+      "composite_score": 0.189,
+      "confidence": 18
+    }
+  },
+  "diversity": {
+    "action_distribution": {
+      "Buy": 6,
+      "Hold": 6
+    },
+    "n_unique_actions": 2,
+    "score_spread": 0.52,
+    "score_std": 0.168,
+    "all_same_action": false
+  },
+  "n_tickers_with_signal": 12,
+  "n_tickers_failed": 0
+}
