@@ -13,6 +13,11 @@ Aegis Finance is a free, open-source market intelligence web platform combining 
 - Macro risk dashboard (9-factor composite score, regime detection, FRED indicators)
 - SHAP explainability for every prediction
 - News intelligence with GDELT event scoring, FinBERT sentiment, and optional DeepSeek AI summaries
+- Options-implied intelligence (IV skew, put/call ratio, VIX term structure, max pain)
+- Earnings intelligence (surprise history, beat rate, growth metrics, estimate revisions)
+- Drift-aware predictions (auto-discounts crash model when features drift out-of-distribution)
+- Cross-asset tail dependence and contagion analysis
+- Signal backtesting harness (walk-forward hit rates, Sharpe comparison)
 - Retirement planner with compound growth projections
 - Net liquidity tracker (Fed balance sheet: WALCL - TGA - RRP)
 
@@ -47,8 +52,8 @@ aegis-finance/
 │   ├── main.py                  # App entry + CORS + cache prewarming
 │   ├── config.py                # All parameters (scenarios, weights, tickers, thresholds)
 │   ├── cache.py                 # In-memory TTL cache
-│   ├── routers/                 # 9 API routers
-│   ├── services/                # 22 business logic modules
+│   ├── routers/                 # 12 API routers
+│   ├── services/                # 25 business logic modules
 │   │   ├── data_fetcher.py      # Yahoo Finance + FRED unified
 │   │   ├── monte_carlo.py       # Jump-diffusion MC (Merton-corrected)
 │   │   ├── risk_scorer.py       # 9-factor composite z-score
@@ -62,6 +67,11 @@ aegis-finance/
 │   │   ├── shap_explainer.py    # Feature importance computation
 │   │   ├── news_intelligence.py # GDELT event scoring
 │   │   ├── llm_analyzer.py      # DeepSeek AI integration
+│   │   ├── options_intelligence.py # IV skew, P/C ratio, VIX term structure, max pain
+│   │   ├── earnings_intelligence.py # Earnings surprises, growth, analyst estimates
+│   │   ├── tail_risk.py         # CVaR, Sortino, Calmar, tail concentration
+│   │   ├── tail_dependence.py   # Cross-asset tail dependence (copula)
+│   │   ├── backtest.py          # Walk-forward signal backtesting
 │   │   ├── savings_calculator.py# Compound growth projections
 │   │   ├── data_quality.py      # Staleness, range, completeness checks
 │   │   ├── net_liquidity.py     # Fed balance sheet tracker
@@ -88,11 +98,14 @@ uvicorn backend.main:app --reload --port 8000
 # Frontend (separate terminal)
 cd frontend && npm install && npm run dev
 
-# Run fast backend tests (~35s)
+# Run fast backend tests (~4 min, 765 tests)
 python -m pytest backend/tests/ -v -m "not slow"
 
-# Run ALL backend tests (~5 min, needs network)
+# Run ALL backend tests (~8 min, needs network)
 python -m pytest backend/tests/ -v
+
+# Run autonomous R&D lab (overnight, opus model)
+python lab/rd_loop.py --cycles 60 --model opus
 
 # Build frontend (catches type errors)
 cd frontend && npx next build
@@ -154,18 +167,22 @@ docker compose up --build
 | Category | File | Tests | Speed |
 |----------|------|-------|-------|
 | Monte Carlo | `test_monte_carlo.py` | 14 | Fast |
-| Signal Engine | `test_signal_engine.py` | 15 | Fast |
+| Signal Engine | `test_signal_engine.py` | 79 | Fast |
+| Options Intelligence | `test_options_intelligence.py` | 10 | Fast |
+| Earnings Intelligence | `test_earnings_intelligence.py` | 7 | Fast |
+| Drift Awareness | `test_drift_awareness.py` | 17 | Fast |
 | Regime Accuracy | `test_regime_accuracy.py` | 5 | Fast |
 | Risk Stress | `test_risk_stress.py` | 6 | Fast |
-| Risk Profile Scoring | `test_stress_portfolio.py` | 4 | Fast |
-| Edge Cases (MC params) | `test_edge_cases.py` | 12 | Fast |
 | Crash Calibration | `test_crash_calibration.py` | 2 | Fast |
-| Portfolio Projection | `test_portfolio_projection.py` | 2 | Fast |
+| Tail Risk | `test_tail_risk.py` | varies | Fast |
+| Tail Dependence | `test_tail_dependence.py` | varies | Fast |
+| Routers | `test_routers.py` | varies | Fast |
+| Edge Cases (MC params) | `test_edge_cases.py` | 12 | Fast |
 | Stock Stress (8 tickers) | `test_stress_stocks.py` | 64 | Slow (network) |
 | Portfolio Stress (3 profiles) | `test_stress_portfolio.py` | 10 | Slow (network) |
 | Portfolio Projection (MC) | `test_portfolio_projection.py` | 5 | Slow (network) |
 | Edge Cases (tickers) | `test_edge_cases.py` | 7 | Slow (network) |
-| **Total** | **9 files** | **152** | **60 fast / 92 slow** |
+| **Total** | **20+ files** | **765+** | **~670 fast / ~95 slow** |
 
 Run fast tests: `python -m pytest backend/tests/ -v -m "not slow"`
 
@@ -189,3 +206,21 @@ When the engine is working correctly:
 - Gu, Kelly, Xiu (2020) — "Empirical Asset Pricing via Machine Learning"
 - BIS Working Paper 1250 (2025) — Financial stress prediction with ML
 - MRS-MNTS-GARCH (JRFM, 2022) — Regime-switching MC blueprint
+- Merton (1976) — Jump-diffusion option pricing (jump compensator)
+- Ang et al. (2006) — Downside Risk (beta, volatility, drawdown as stock-level risk factors)
+- Fama-French (1993, 2015) — Multi-factor models for return attribution
+
+## Autonomous R&D Lab
+
+The `lab/` directory contains an autonomous research loop that runs Claude Code sessions
+to improve the engine overnight. See `lab/README.md` for details.
+
+```bash
+# Run overnight (45 min per cycle, auto-commits to lab/autonomous-rd branch)
+python lab/rd_loop.py --cycles 60 --model opus
+
+# Cheaper/faster cycles
+python lab/rd_loop.py --cycles 60 --model sonnet
+```
+
+Each cycle: generates engine data → builds prompt → Claude session (45 min) → targeted tests → before/after comparison → auto-commit. Results in `lab/experiments/cycle_NNN/`.
