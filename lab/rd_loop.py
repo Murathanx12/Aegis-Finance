@@ -32,7 +32,7 @@ LAB_DIR = REPO_DIR / "lab"
 EXPERIMENTS_DIR = LAB_DIR / "experiments"
 LOGS_DIR = LAB_DIR / "logs"
 
-PHASE_TIMEOUT = 900  # 15 min per phase
+PHASE_TIMEOUT = 1200  # 20 min per phase
 
 # On Windows, npm-installed CLIs need .cmd extension for subprocess
 import shutil
@@ -264,6 +264,14 @@ def run_phase(prompt: str, session_id: str, model: str,
         output = result.stdout or ""
         stderr = result.stderr or ""
 
+        # Detect rate limit
+        if "hit your limit" in output.lower() or "hit your limit" in stderr.lower():
+            print(f"    {phase_name}: RATE LIMITED — waiting 10 min")
+            (cycle_dir / f"{phase_name}.txt").write_text(
+                "[RATE LIMITED]", encoding="utf-8")
+            time.sleep(600)  # Wait 10 min before continuing
+            return False
+
         # Save output
         output_path = cycle_dir / f"{phase_name}.txt"
         output_path.write_text(output + "\n---STDERR---\n" + stderr, encoding="utf-8")
@@ -315,7 +323,14 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
     print("\n  [1/4] Phase A: EXPLORE")
     prompt_a = build_phase_a_prompt(cycle, cycle_dir, baseline_failures)
     (cycle_dir / "prompt_a.md").write_text(prompt_a, encoding="utf-8")
-    run_phase(prompt_a, session_id, model, "phase_a_explore", cycle_dir, is_first=True)
+    phase_a_ok = run_phase(prompt_a, session_id, model, "phase_a_explore", cycle_dir, is_first=True)
+
+    if not phase_a_ok:
+        # Check if rate limited — skip remaining phases
+        phase_a_out = (cycle_dir / "phase_a_explore.txt").read_text(encoding="utf-8", errors="replace")
+        if "RATE LIMITED" in phase_a_out:
+            print("  [SKIP] Rate limited — skipping remaining phases")
+            return
 
     # Phase B: Build
     print("\n  [2/4] Phase B: BUILD")
@@ -335,7 +350,7 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
     test_result = subprocess.run(
         [sys.executable, "-m", "pytest", "backend/tests/", "-v",
          "-m", "not slow", "--tb=line"],
-        cwd=str(REPO_DIR), capture_output=True, text=True, timeout=180,
+        cwd=str(REPO_DIR), capture_output=True, text=True, timeout=600,
     )
     test_out = test_result.stdout + test_result.stderr
     (cycle_dir / "test_results.txt").write_text(test_out, encoding="utf-8")
@@ -435,7 +450,7 @@ def main():
     bl = subprocess.run(
         [sys.executable, "-m", "pytest", "backend/tests/", "-v",
          "-m", "not slow", "--tb=line"],
-        cwd=str(REPO_DIR), capture_output=True, text=True, timeout=180,
+        cwd=str(REPO_DIR), capture_output=True, text=True, timeout=600,
     )
     baseline_failures = "\n".join(
         l for l in bl.stdout.split("\n") if l.startswith("FAILED")
