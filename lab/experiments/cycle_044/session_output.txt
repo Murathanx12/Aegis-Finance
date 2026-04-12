@@ -1,0 +1,20 @@
+Done. Here's what cycle 044 accomplished:
+
+## Cycle 044: Options-Implied Monte Carlo Calibration
+
+**Problem**: The MC engine used only GARCH (backward-looking) for volatility and ML crash probability for jumps, ignoring the forward-looking information already computed by the options intelligence service (IV skew, P/C ratio, IV rank, term structure).
+
+**Solution**: New `options_calibrator.py` service that bridges options data → MC parameters:
+
+| Options Signal | MC Parameter | Example (bearish SPY) |
+|---|---|---|
+| ATM IV | Blended vol (35% IV + 65% GARCH) | 0.25 → 0.29 |
+| P/C ratio + IV rank | Jump frequency multiplier | 1.0 → 1.45 |
+| IV skew steepness | Jump magnitude adjustment | -0.10 → -0.13 |
+| Term structure slope | Vol mean-reversion speed | 1.0 → 1.35 |
+
+**Key design**: All adjustments are confidence-gated (need >0.2 to engage), bounded to prevent extreme distortion, and non-blocking (if options fetch fails, MC runs unchanged).
+
+**Tests**: 30 new tests, all passing. Zero existing test regressions (93 MC + 42 edge/drift/options tests verified).
+
+---STDERR---
