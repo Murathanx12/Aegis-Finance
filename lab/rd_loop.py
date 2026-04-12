@@ -1,9 +1,13 @@
 """
-Aegis Finance - Autonomous R&D Loop v6
-Single deep session per cycle. Claude decides its own workflow.
+Aegis Finance - Autonomous R&D Loop v7
+Audit → Research → Fix → Build → Test methodology per cycle.
 
-No rigid phases. No prescriptive steps. Claude is the owner.
-It decides what to explore, what to build, what to test, and how.
+Each cycle follows the pattern that produced the best results:
+1. Read and audit code for bugs / quality issues
+2. Research competitors and state-of-the-art approaches
+3. Fix bugs found in audit
+4. Add new features / improvements
+5. Write tests and run full regression suite
 
 Usage:
   python lab/rd_loop.py                    # opus, auto-detect cycle
@@ -106,7 +110,14 @@ def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
         "backend/services/drift_detector.py", "backend/services/llm_analyzer.py",
         "backend/services/options_intelligence.py", "backend/services/earnings_intelligence.py",
         "backend/services/tail_risk.py", "backend/services/tail_dependence.py",
-        "backend/services/backtest.py",
+        "backend/services/backtest.py", "backend/services/systemic_risk.py",
+        "backend/services/bubble_detector.py", "backend/services/fundamentals.py",
+        "backend/services/options_calibrator.py", "backend/services/prediction_confidence.py",
+        "backend/services/signal_analytics.py",
+        "backend/routers/market.py", "backend/routers/stock.py",
+        "backend/routers/crash.py", "backend/routers/simulation.py",
+        "backend/routers/portfolio.py", "backend/routers/sector.py",
+        "backend/config.py",
         "engine/training/features.py", "engine/training/train_crash_model.py",
         "engine/validation/walk_forward.py", "engine/validation/metrics.py",
         "frontend/src/app/", "frontend/src/components/", "frontend/src/lib/",

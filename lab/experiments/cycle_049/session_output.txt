@@ -1,0 +1,31 @@
+Done. Here's a summary of what Cycle 49 accomplished:
+
+## Cycle 49 Summary
+
+### 6 Bug Fixes
+
+1. **MC vol-of-vol (xi) parameter** — `np.clip(0.06, min, max)` always returned 0.06, ignoring the config value. Now reads `garch_derived_params.xi` from config.
+
+2. **Risk scorer VIX floor** — Cascading `pd.where` calls overwrote each other (VIX>30 → 0.8 was replaced by VIX>25 → 0.5). Fixed with `np.select` for correct first-match graduated tiers.
+
+3. **Signal conviction dominant driver** — `market_base` (the inherited market signal) could appear as the "dominant driver" of a stock-specific signal. Now excludes `market_base` and reports the actual stock-level driver.
+
+4. **Stock analyzer Ito correction** — When options calibration changed the vol, `final_mu` was still computed with the old vol, causing drift bias of `0.5*(old_vol² - new_vol²)/year`.
+
+5. **Screener momentum accuracy** — Was computing momentum from weekly-sampled `price_history` but indexing as if daily (22 weekly samples = 110 trading days, not 22). Now uses daily-resolution momentum from `stock_analyzer`.
+
+6. **Screener risk_reward was dead** — `compute_risk_reward` in signal_analytics requires `mc_p10_5y_return`, `mc_p90_5y_return`, etc., but the screener never passed these fields. Always returned `{available: False}`. Fixed by adding MC return fields to screener output.
+
+### 1 New Feature
+
+**Opportunity Score** — Composite ranking metric that replaces Sharpe-only sorting:
+- Signal direction/strength (35%) — is it Buy or Sell?
+- Sharpe ratio (25%) — is the return worth the risk?
+- Risk-reward asymmetry (25%) — more upside than downside?
+- Prediction confidence (15%) — how much should we trust the forecast?
+
+Key property: a Sell signal with high Sharpe no longer ranks above a Buy signal with moderate Sharpe.
+
+### Tests: 14 new, 0 broken (197 targeted tests verified passing)
+
+---STDERR---
