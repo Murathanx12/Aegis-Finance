@@ -1,32 +1,23 @@
 # Aegis Finance — R&D Cycle 38
 
-You OWN this codebase. This is your sandbox. Improve the engine.
+You are the owner of this codebase. This is your sandbox.
 
-## Your powers — use them
+You have 40 minutes. You have COMPLETE freedom:
+- Read, write, create, delete any file in backend/, frontend/, engine/
+- Install any package (pip install, npm install)
+- Clone any open-source repo for reference
+- Access any public API (yfinance, FRED, Alpha Vantage, etc.)
+- Download datasets, models, or tools
+- Restructure code, refactor architecture, add new services
+- If you need an API key that costs money, note it in your report — don't block on it
 
-- Modify ANY file: backend/, frontend/, engine/, AND lab/ (yes, you can improve the lab tools too)
-- Install packages: `pip install X`, `npm install X`
-- Clone repos: `git clone https://github.com/...` into a temp directory for reference
-- Web search: search for state-of-the-art approaches, open-source quant engines, papers
-- Access APIs: yfinance, FRED, Alpha Vantage, Finnhub, any public finance API
-- Download anything: datasets, pre-trained models, reference implementations
-- If an API key is needed and it's vital, note it in your report
+You decide:
+- What to work on (no assigned track — find the highest-impact thing)
+- How to work (your own workflow — explore, build, test in whatever order makes sense)
+- What to test (run targeted tests, not the full 675-test suite — be smart about it)
+- When you're done
 
-## Your goal
-
-Make this engine compete with institutional-grade tools. Think about what
-Bloomberg Terminal, QuantConnect, OpenBB, or a prop trading desk would have
-that we don't. Then build it.
-
-Don't do what past cycles did. Find something NEW:
-- A technique from a paper you can implement
-- A data source nobody's wired in yet
-- A risk metric that's missing (CVaR? Omega ratio? Tail dependence?)
-- A smarter way to combine signals
-- A feature the frontend is missing
-- Something from the reference repos at C:\Users\mrthn\reference-codes\
-
-## Current engine state (randomized tickers each cycle)
+## Current engine state (from real backend services)
 
 ### api_health
 ```json
@@ -95,8 +86,8 @@ Don't do what past cycles did. Find something NEW:
 ```json
 {
   "test_count": {
-    "files": 20,
-    "functions": 702
+    "files": 21,
+    "functions": 725
   },
   "code_smells": [],
   "n_smells": 0
@@ -236,7 +227,7 @@ Don't do what past cycles did. Find something NEW:
 ```json
 {
   "cycle": 38,
-  "timestamp": "2026-04-12T12:17:37.045097",
+  "timestamp": "2026-04-12T12:29:50.579467",
   "data_sources": [
     "market_snapshot",
     "stock_analysis",
@@ -412,21 +403,21 @@ Don't do what past cycles did. Find something NEW:
     "realism_check"
   ],
   "current_price": 6816.89013671875,
-  "final_mean": 9580.023305074477,
-  "final_median": 8720.706279172698,
-  "final_p05": 3819.4494090260805,
-  "final_p10": 4622.477576959855,
-  "final_p25": 6315.039955042569,
-  "final_p75": 11849.010330043373,
-  "final_p90": 15638.609703871844,
-  "final_p95": 18407.158532261128,
-  "total_return_pct": 40.53363209526122,
-  "annual_return_pct": 7.042453310512697,
-  "crash_prob_1y": 25.369999999999997,
-  "crash_prob_5y": 82.24000000000001,
-  "cvar_95_pct": -54.38502913930415,
-  "max_dd_pct": -30.741185406820605,
-  "max_drawdown_pct": 30.741185406820605
+  "final_mean": 9581.957721527086,
+  "final_median": 8729.453567671604,
+  "final_p05": 3822.596509611028,
+  "final_p10": 4641.92281681097,
+  "final_p25": 6288.675091267131,
+  "final_p75": 11879.014528802367,
+  "final_p90": 15782.514172920082,
+  "final_p95": 18552.776400657003,
+  "total_return_pct": 40.56200891245809,
+  "annual_return_pct": 7.046775804391614,
+  "crash_prob_1y": 25.77,
+  "crash_prob_5y": 81.67999999999999,
+  "cvar_95_pct": -53.734468429622574,
+  "max_dd_pct": -30.815656823904252,
+  "max_drawdown_pct": 30.815656823904252
 }
 ```
 
@@ -436,10 +427,10 @@ Don't do what past cycles did. Find something NEW:
   "MA": {
     "ticker": "MA",
     "current_price": 498.6600036621094,
-    "mc_median_5y": 76.17298246087311,
-    "mc_p10_5y": -1.3110673156129682,
-    "mc_p90_5y": 206.8819947930465,
-    "garch_vol": 25.141456600620366,
+    "mc_median_5y": 76.81191264165426,
+    "mc_p10_5y": -1.235055973158783,
+    "mc_p90_5y": 207.0954616928324,
+    "garch_vol": 25.141471081183457,
     "garch_nu": 8.0,
     "crash_prob_3m": 3.1978972730259554,
     "signal_action": "Buy",
@@ -487,10 +478,10 @@ Don't do what past cycles did. Find something NEW:
   "ABBV": {
     "ticker": "ABBV",
     "current_price": 207.94000244140625,
-    "mc_median_5y": 85.44271229212994,
-    "mc_p10_5y": 0.48626425873921075,
-    "mc_p90_5y": 243.39180542123296,
-    "garch_vol": 23.836858676927232,
+    "mc_median_5y": 85.56726850501082,
+    "mc_p10_5y": 1.220603270175391,
+    "mc_p90_5y": 239.65173160553047,
+    "garch_vol": 23.836876527960346,
     "garch_nu": 8.0,
     "crash_prob_3m": 3.1978972730259554,
     "signal_action": "Buy",
@@ -538,10 +529,10 @@ Don't do what past cycles did. Find something NEW:
   "GOOGL": {
     "ticker": "GOOGL",
     "current_price": 317.239990234375,
-    "mc_median_5y": 88.12048671965856,
-    "mc_p10_5y": -12.674511876508788,
-    "mc_p90_5y": 293.46472408009373,
-    "garch_vol": 29.760853027527386,
+    "mc_median_5y": 88.25578216905951,
+    "mc_p10_5y": -12.343996721108208,
+    "mc_p90_5y": 288.1919448628252,
+    "garch_vol": 29.760864344128983,
     "garch_nu": 8.0,
     "crash_prob_3m": 3.1978972730259554,
     "signal_action": "Buy",
@@ -589,10 +580,10 @@ Don't do what past cycles did. Find something NEW:
   "MSFT": {
     "ticker": "MSFT",
     "current_price": 370.8699951171875,
-    "mc_median_5y": 76.7940760296706,
-    "mc_p10_5y": -13.547549328823184,
-    "mc_p90_5y": 245.2391745480372,
-    "garch_vol": 30.147757455120022,
+    "mc_median_5y": 76.24737338333665,
+    "mc_p10_5y": -13.238394336453553,
+    "mc_p90_5y": 242.81674302596036,
+    "garch_vol": 30.14780866079728,
     "garch_nu": 8.0,
     "crash_prob_3m": 3.1978972730259554,
     "signal_action": "Buy",
@@ -608,17 +599,17 @@ Don't do what past cycles did. Find something NEW:
       "cap_tier",
       "beta",
       "pe_ratio",
-      "analy
+      "analyst_
 ... [truncated]
 ```
 
-## Recent cycles (don't repeat these — do something different)
+## Recent cycles (for context, not to constrain you)
 
 Cycle 35: 1. Moved crash probability clip bounds from hardcoded values to config['ml']['calibration']. 2. Added degenerate calibra (improved)
 Cycle 36: ? (neutral)
 Cycle 37: ? (neutral)
 
-## Unexplored areas
+## Files that have NEVER been modified by the lab
 
 - backend/services/shap_explainer.py
 - backend/services/return_model.py
@@ -629,17 +620,28 @@ Cycle 37: ? (neutral)
 - frontend/src/components/
 - frontend/src/lib/
 
-## Testing — be smart, not exhaustive
+## Pre-existing test failures
 
-There are 675+ tests. DON'T run them all (takes 9 min).
-Run only what's relevant: `python -m pytest backend/tests/test_<service>.py -v --tb=short`
-You decide what to test. You can also write new tests.
+```
+None — all tests passing
+```
 
-## When done
+## One rule
 
-1. Experiment report: lab/experiments/cycle_038/experiment_report.json
-   (what you noticed, what you built, honest assessment, self-critique, next steps)
+Don't break existing tests. Run `python -m pytest backend/tests/<relevant_file> -v --tb=short`
+on the specific tests related to your changes — NOT the full suite (it has 675 tests and
+takes 9 minutes). Only run the full suite if you're unsure what you might have affected.
 
-2. Commit: `git add -A && git commit -m "Lab cycle_038: <summary>"`
+## When you're done
 
-Think like a quant researcher with unlimited access. What would YOU build?
+1. Write your experiment report:
+   lab/experiments/cycle_038/experiment_report.json
+
+   Include: what you noticed, what you did, files modified, files created,
+   tests added, results (before/after), honest analysis, self-critique,
+   next steps, confidence, depth rating.
+
+2. Commit: git add -A && git commit -m "Lab cycle_038: <summary>"
+
+Think fresh. Don't follow patterns from past cycles just because they worked.
+Find what this codebase actually needs right now and build it.

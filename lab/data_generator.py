@@ -247,6 +247,25 @@ def collect_stock_analysis(output_dir, cycle=1):
             if key_stats and "pe_forward" in key_stats:
                 fwd_pe = key_stats["pe_forward"]
 
+            # Per-stock risk factors for crash prob adjustment and signal
+            stock_vol = data.get("volatility", 20.0) / 100.0
+            stock_dd = None
+            price_hist = data.get("price_history")
+            if price_hist and len(price_hist) > 10:
+                prices_arr = [p["price"] for p in price_hist]
+                peak = max(prices_arr)
+                current = prices_arr[-1]
+                stock_dd = (current / peak - 1) * 100 if peak > 0 else 0.0
+
+            # Per-stock crash probability
+            from backend.services.signal_engine import adjust_crash_prob_for_stock
+            stock_crash_prob = None
+            if crash_prob_for_mc is not None:
+                stock_crash_prob = adjust_crash_prob_for_stock(
+                    crash_prob_for_mc, data.get("beta", 1.0), stock_vol,
+                    stock_dd if stock_dd is not None else 0.0,
+                )
+
             stock_sig = get_stock_signal(
                 market_signal=market_sig,
                 beta=data.get("beta", 1.0),
@@ -254,6 +273,8 @@ def collect_stock_analysis(output_dir, cycle=1):
                 current_price=data.get("current_price", 0),
                 pe_ratio=data.get("pe_ratio"),
                 forward_pe=fwd_pe,
+                stock_vol=stock_vol,
+                drawdown_from_peak=stock_dd,
             )
 
             results[ticker] = {
@@ -264,7 +285,7 @@ def collect_stock_analysis(output_dir, cycle=1):
                 "mc_p90_5y": data.get("mc_p90_5y_return"),
                 "garch_vol": data.get("garch_annual_vol"),
                 "garch_nu": data.get("garch_nu"),
-                "crash_prob_3m": crash_3m_pct,
+                "crash_prob_3m": round(stock_crash_prob * 100, 2) if stock_crash_prob else crash_3m_pct,
                 "signal_action": stock_sig["action"],
                 "signal_score": stock_sig["composite_score"],
                 "beta": data.get("beta"),

@@ -224,6 +224,18 @@ config: dict = {
         "sector_momentum": 0.012,  # per 1% sector return (was /20 = 0.05 per 1%)
         "pe_bonus": 0.10,          # bonus/penalty for extreme P/E
         "earnings_growth": 0.30,   # scale factor for fwd/trailing PE compression
+        "stock_crash_risk": 0.15,  # weight for per-stock crash risk adjustment
+    },
+    # Per-stock crash probability adjustment parameters.
+    # Market-level crash prob is scaled by stock-specific risk factors (beta,
+    # volatility, drawdown) so high-beta/high-vol stocks get higher crash risk.
+    "stock_crash_adjustment": {
+        "beta_sensitivity": 0.6,       # how much beta scales crash prob (0=ignore, 1=linear)
+        "vol_sensitivity": 0.4,        # how much excess vol scales crash prob
+        "drawdown_sensitivity": 0.3,   # how much drawdown from peak increases crash prob
+        "vol_baseline": 0.20,          # annualized vol considered "neutral" (20%)
+        "min_multiplier": 0.4,         # floor: defensive stocks get at least 40% of market crash
+        "max_multiplier": 2.5,         # ceiling: no stock gets more than 2.5x market crash
     },
 
     # ── SIMULATION SETTINGS ──────────────────────────────────────────────

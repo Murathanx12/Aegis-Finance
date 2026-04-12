@@ -289,6 +289,53 @@ def get_market_signal(
     }
 
 
+def adjust_crash_prob_for_stock(
+    market_crash_prob: float,
+    beta: float = 1.0,
+    stock_vol: float = 0.20,
+    drawdown_from_peak: float = 0.0,
+) -> float:
+    """Scale market-level crash probability by stock-specific risk factors.
+
+    High-beta, high-volatility stocks in drawdown get higher crash probability;
+    defensive low-beta stocks get lower. This creates meaningful differentiation
+    across the stock universe instead of assigning every stock the same crash risk.
+
+    Args:
+        market_crash_prob: Market-level crash probability (0-1 scale)
+        beta: Stock beta (1.0 = market, >1 = aggressive, <1 = defensive)
+        stock_vol: Annualized volatility (decimal, e.g. 0.30 = 30%)
+        drawdown_from_peak: Current drawdown as negative pct (e.g. -15.0 = 15% below peak)
+
+    Returns:
+        Adjusted crash probability for this stock (0-1 scale, clipped)
+    """
+    adj_cfg = config.get("stock_crash_adjustment", {})
+    beta_sens = adj_cfg.get("beta_sensitivity", 0.6)
+    vol_sens = adj_cfg.get("vol_sensitivity", 0.4)
+    dd_sens = adj_cfg.get("drawdown_sensitivity", 0.3)
+    vol_baseline = adj_cfg.get("vol_baseline", 0.20)
+    min_mult = adj_cfg.get("min_multiplier", 0.4)
+    max_mult = adj_cfg.get("max_multiplier", 2.5)
+
+    # Beta factor: beta=1 → 1.0, beta=1.5 → 1.3, beta=0.5 → 0.7
+    beta_factor = 1.0 + (beta - 1.0) * beta_sens
+
+    # Vol factor: excess vol above baseline increases crash risk
+    # stock_vol=0.30, baseline=0.20 → excess=0.10 → factor=1.04
+    vol_excess = max(stock_vol - vol_baseline, 0.0)
+    vol_factor = 1.0 + vol_excess * vol_sens / vol_baseline
+
+    # Drawdown factor: stocks already in drawdown are more vulnerable
+    # drawdown=-15% → factor=1.045, drawdown=0% → factor=1.0
+    dd_factor = 1.0 + abs(min(drawdown_from_peak, 0.0)) / 100.0 * dd_sens
+
+    multiplier = float(np.clip(beta_factor * vol_factor * dd_factor, min_mult, max_mult))
+    adjusted = market_crash_prob * multiplier
+
+    return float(np.clip(adjusted, 0.001, 0.95))
+
+
 def get_stock_signal(
     market_signal: dict,
     beta: float = 1.0,
@@ -297,6 +344,8 @@ def get_stock_signal(
     sector_momentum: float = 0.0,
     pe_ratio: Optional[float] = None,
     forward_pe: Optional[float] = None,
+    stock_vol: Optional[float] = None,
+    drawdown_from_peak: Optional[float] = None,
 ) -> dict:
     """Generate a per-stock signal adjusted by beta and fundamentals.
 
@@ -308,6 +357,8 @@ def get_stock_signal(
         sector_momentum: Sector relative strength (pct)
         pe_ratio: Trailing P/E ratio
         forward_pe: Forward P/E ratio (consensus estimates)
+        stock_vol: Annualized stock volatility (decimal, e.g. 0.30)
+        drawdown_from_peak: Stock drawdown from 52w high (negative pct, e.g. -15.0)
 
     Returns:
         Dict with action, confidence, color, reasons
@@ -317,6 +368,7 @@ def get_stock_signal(
     sector_w = _sw.get("sector_momentum", 0.012)
     pe_bonus = _sw.get("pe_bonus", 0.10)
     eg_scale = _sw.get("earnings_growth", 0.30)
+    crash_risk_w = _sw.get("stock_crash_risk", 0.15)
 
     base_score = market_signal["composite_score"]
     reasons = list(market_signal["reasons"])
@@ -375,6 +427,29 @@ def get_stock_signal(
             reasons.append(f"Strong earnings growth expected (fwd P/E {forward_pe:.0f}x vs {pe_ratio:.0f}x trailing)")
         elif pe_compression > 1.15:
             reasons.append(f"Earnings decline expected (fwd P/E {forward_pe:.0f}x vs {pe_ratio:.0f}x trailing)")
+
+    # Per-stock crash risk adjustment: differentiate crash exposure by stock
+    # characteristics. Market crash component is shared; this adds stock-specific
+    # risk that the market signal misses (e.g., NVDA beta=1.7 vs JNJ beta=0.5).
+    market_crash_3m_pct = market_signal.get("_crash_3m_pct")
+    if market_crash_3m_pct is not None and stock_vol is not None:
+        market_prob = market_crash_3m_pct / 100.0
+        stock_prob = adjust_crash_prob_for_stock(
+            market_prob, beta, stock_vol,
+            drawdown_from_peak if drawdown_from_peak is not None else 0.0,
+        )
+        # Signal: deviation from market crash prob → stock-specific risk adjustment
+        # Positive delta = stock is riskier than market → bearish adjustment
+        # Negative delta = stock is safer than market → bullish adjustment
+        crash_delta = stock_prob - market_prob
+        base_rate = config.get("crash_base_rate_pct", 12.0) / 100.0
+        crash_risk_sig = float(np.clip(-crash_delta / base_rate, -0.5, 0.5))
+        stock_score += crash_risk_w * crash_risk_sig
+
+        if stock_prob > market_prob * 1.5:
+            reasons.append(f"Elevated stock-specific crash risk ({stock_prob*100:.0f}% vs {market_prob*100:.0f}% market)")
+        elif stock_prob < market_prob * 0.7:
+            reasons.append(f"Below-market crash risk ({stock_prob*100:.0f}% vs {market_prob*100:.0f}% market)")
 
     stock_score = float(np.clip(stock_score, -1, 1))
 
