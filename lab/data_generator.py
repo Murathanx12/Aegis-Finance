@@ -111,9 +111,10 @@ def _compute_market_signal_for_lab() -> dict:
     if "SP500" in data.columns:
         sp500_drawdown = compute_drawdown_pct(data["SP500"])
 
-    # Crash model predictions
+    # Crash model predictions + drift severity (share feature matrix)
     crash_3m = None
     crash_12m = None
+    _drift_severity = None
     try:
         from backend.services.crash_model import CrashPredictor
         from backend.config import MODEL_DIR
@@ -123,15 +124,22 @@ def _compute_market_signal_for_lab() -> dict:
             predictor = CrashPredictor()
             predictor.load_model(str(model_path))
             fred_data = fetcher.fetch_fred_data()
-            features = build_feature_matrix(data, fred_data=fred_data)
-            available = [f for f in predictor.feature_names if f in features.columns]
-            latest = features[available].iloc[[-1]]
+            _feature_matrix = build_feature_matrix(data, fred_data=fred_data)
+            available = [f for f in predictor.feature_names if f in _feature_matrix.columns]
+            latest = _feature_matrix[available].iloc[[-1]]
             for h in predictor.lgb_models:
                 prob = float(predictor.predict_proba(latest, h)[0]) * 100
                 if h == "3m":
                     crash_3m = prob
                 elif h == "12m":
                     crash_12m = prob
+            # Drift detection (reuses feature matrix)
+            try:
+                from backend.services.drift_detector import DriftDetector
+                _drift_report = DriftDetector.from_rolling_window(_feature_matrix)
+                _drift_severity = _drift_report.get("severity")
+            except Exception as e:
+                logger.debug("Drift detection unavailable in lab: %s", e)
     except (ImportError, FileNotFoundError, ValueError, KeyError) as e:
         logger.debug("Crash model unavailable in lab signal: %s", e)
 
@@ -157,6 +165,7 @@ def _compute_market_signal_for_lab() -> dict:
         yield_curve=yield_curve,
         external_consensus=external,
         drawdown_pct=sp500_drawdown,
+        drift_severity=_drift_severity,
     )
     # Attach raw values for downstream use by stock analysis / MC
     sig["_crash_3m_pct"] = crash_3m
@@ -818,7 +827,54 @@ def collect_drift_check(output_dir):
 
 
 # ---------------------------------------------------------------------------
-# 12. Code quality metrics
+# 12. Options intelligence snapshot
+# ---------------------------------------------------------------------------
+def collect_options_intelligence(output_dir, cycle):
+    """Collect options-implied signals for a few tickers to benchmark the new service."""
+    try:
+        from backend.services.options_intelligence import get_vix_term_structure
+
+        result = {}
+
+        # VIX term structure
+        vix_ts = get_vix_term_structure()
+        result["vix_term_structure"] = vix_ts
+        if "error" not in vix_ts:
+            print(f"    [OK] VIX term: {vix_ts.get('structure', '?')}")
+        else:
+            print(f"    [WARN] VIX term: {vix_ts.get('error')}")
+
+        # Options summary for a couple of tickers (lightweight)
+        tickers_to_check = ["SPY", "AAPL"]
+        from backend.services.options_intelligence import get_options_summary
+        for ticker in tickers_to_check:
+            try:
+                summary = get_options_summary(ticker)
+                sig = summary.get("signal", {})
+                result[f"options_{ticker}"] = {
+                    "iv_skew": summary.get("iv_skew"),
+                    "put_call_ratio": summary.get("put_call_volume_ratio"),
+                    "iv_rank": summary.get("iv_rank"),
+                    "signal_score": sig.get("score"),
+                    "signal_sentiment": sig.get("sentiment"),
+                }
+                print(f"    [OK] {ticker} options: skew={summary.get('iv_skew', '?')}, "
+                      f"P/C={summary.get('put_call_volume_ratio', '?')}, "
+                      f"signal={sig.get('sentiment', '?')}")
+            except Exception as e:
+                result[f"options_{ticker}"] = {"error": str(e)}
+                print(f"    [WARN] {ticker} options: {e}")
+
+        _save(output_dir, "options_intelligence.json", result)
+        return result
+
+    except Exception as e:
+        print(f"    [FAIL] Options intelligence: {e}")
+        return {"status": "error", "error": str(e)}
+
+
+# ---------------------------------------------------------------------------
+# 13. Code quality metrics
 # ---------------------------------------------------------------------------
 def collect_code_metrics(output_dir):
     import subprocess as sp
@@ -887,6 +943,7 @@ def run_engine_data_collection(output_dir, cycle):
         ("api_health", "Checking service health", lambda d: collect_api_health(d)),
         ("validation_metrics", "Collecting model metadata", lambda d: collect_validation_metrics(d)),
         ("drift_check", "Checking feature drift", lambda d: collect_drift_check(d)),
+        ("options_intelligence", "Checking options signals", lambda d: collect_options_intelligence(d, cycle)),
         ("code_metrics", "Measuring code quality", lambda d: collect_code_metrics(d)),
     ]
 

@@ -47,6 +47,7 @@ def _predict_crash(horizon: str, explain: bool) -> dict:
     from backend.config import MODEL_DIR
     from backend.services.data_fetcher import DataFetcher
     from backend.services.crash_model import CrashPredictor
+    from backend.services.drift_detector import DriftDetector
     from engine.training.features import build_feature_matrix
     from engine.training.feature_selection import SELECTED_FEATURES
 
@@ -74,11 +75,27 @@ def _predict_crash(horizon: str, explain: bool) -> dict:
         prob = float(predictor.predict_proba(latest, h)[0])
         probabilities[h] = round(prob * 100, 1)
 
+    # Drift-aware confidence
+    drift_cfg = config["ml"].get("drift", {})
+    confidence_map = drift_cfg.get("confidence_multiplier", {})
+    try:
+        drift_report = DriftDetector.from_rolling_window(features)
+        drift_severity = drift_report.get("severity", "none")
+        confidence_multiplier = confidence_map.get(drift_severity, 1.0)
+    except Exception as e:
+        logger.warning("Drift check failed in crash prediction: %s", e)
+        drift_severity = "none"
+        confidence_multiplier = 1.0
+
     result = {
         "probabilities": probabilities,
         "primary_horizon": horizon,
         "primary_prob": probabilities.get(horizon, None),
         "last_updated": str(data.index[-1].date()),
+        "drift": {
+            "severity": drift_severity,
+            "confidence_multiplier": confidence_multiplier,
+        },
     }
 
     # SHAP explanation
@@ -148,6 +165,7 @@ def _crash_diagnostics() -> dict:
     from backend.config import MODEL_DIR
     from backend.services.crash_model import CrashPredictor
     from backend.services.data_fetcher import DataFetcher
+    from backend.services.drift_detector import DriftDetector
     from engine.training.features import build_feature_matrix
 
     model_path = MODEL_DIR / "crash_model.pkl"
@@ -168,14 +186,51 @@ def _crash_diagnostics() -> dict:
     diag = predictor.diagnostics(latest)
     any_degenerate = any(h["degenerate"] for h in diag.values())
 
-    return {
-        "status": "degraded" if any_degenerate else "healthy",
-        "horizons": diag,
-        "recommendation": (
+    # Feature drift check
+    drift_cfg = config["ml"].get("drift", {})
+    confidence_map = drift_cfg.get("confidence_multiplier", {})
+    try:
+        drift_report = DriftDetector.from_rolling_window(features)
+        drift_severity = drift_report.get("severity", "none")
+        drift_pct = drift_report.get("drift_pct", 0)
+        confidence_multiplier = confidence_map.get(drift_severity, 1.0)
+    except Exception as e:
+        logger.warning("Drift check failed in diagnostics: %s", e)
+        drift_severity = "unknown"
+        drift_pct = 0
+        confidence_multiplier = 1.0
+
+    # Overall status considers both calibrator health and drift
+    if any_degenerate or drift_severity == "critical":
+        status = "degraded"
+    elif drift_severity == "high":
+        status = "warning"
+    else:
+        status = "healthy"
+
+    recommendation_parts = []
+    if any_degenerate:
+        recommendation_parts.append(
             "Model predictions are degenerate — retrain with recent data "
             "(python -m engine.training.train_crash_model)"
-            if any_degenerate else "Model operating normally"
-        ),
+        )
+    if drift_severity in ("critical", "high"):
+        recommendation_parts.append(
+            f"Feature drift is {drift_severity} ({drift_pct:.0f}% drifted) — "
+            f"predictions discounted to {confidence_multiplier:.0%} confidence"
+        )
+    if not recommendation_parts:
+        recommendation_parts.append("Model operating normally")
+
+    return {
+        "status": status,
+        "horizons": diag,
+        "drift": {
+            "severity": drift_severity,
+            "drift_pct": drift_pct,
+            "confidence_multiplier": confidence_multiplier,
+        },
+        "recommendation": "; ".join(recommendation_parts),
     }
 
 

@@ -181,9 +181,11 @@ def _compute_market_signal() -> dict:
         from backend.services.signal_engine import compute_drawdown_pct
         sp500_drawdown = compute_drawdown_pct(data["SP500"])
 
-    # Try to get crash probs
+    # Try to get crash probs + drift severity (share feature matrix)
     crash_3m = None
     crash_12m = None
+    _drift_severity = None
+    _feature_matrix = None
     try:
         from backend.services.crash_model import CrashPredictor
         from backend.config import MODEL_DIR
@@ -193,9 +195,9 @@ def _compute_market_signal() -> dict:
             predictor = CrashPredictor()
             predictor.load_model(str(model_path))
             fred_data = fetcher.fetch_fred_data()
-            features = build_feature_matrix(data, fred_data=fred_data)
-            available = [f for f in predictor.feature_names if f in features.columns]
-            latest = features[available].iloc[[-1]]
+            _feature_matrix = build_feature_matrix(data, fred_data=fred_data)
+            available = [f for f in predictor.feature_names if _feature_matrix is not None and f in _feature_matrix.columns]
+            latest = _feature_matrix[available].iloc[[-1]]
             for h in predictor.lgb_models:
                 prob = float(predictor.predict_proba(latest, h)[0]) * 100
                 if h == "3m":
@@ -204,6 +206,15 @@ def _compute_market_signal() -> dict:
                     crash_12m = prob
     except (ImportError, FileNotFoundError, ValueError, KeyError) as e:
         logger.debug("Crash model unavailable in signal: %s", e)
+
+    # Drift severity (reuses feature matrix from crash model block)
+    if _feature_matrix is not None:
+        try:
+            from backend.services.drift_detector import DriftDetector
+            _drift_report = DriftDetector.from_rolling_window(_feature_matrix)
+            _drift_severity = _drift_report.get("severity")
+        except Exception as e:
+            logger.debug("Drift detection unavailable in signal: %s", e)
 
     # External consensus
     external = None
@@ -227,6 +238,7 @@ def _compute_market_signal() -> dict:
         yield_curve=yield_curve,
         external_consensus=external,
         drawdown_pct=sp500_drawdown,
+        drift_severity=_drift_severity,
     )
     signal["sp500"] = sp500
     signal["regime"] = regime

@@ -98,8 +98,15 @@ def get_market_signal(
     yield_curve: Optional[float] = None,
     external_consensus: Optional[str] = None,
     drawdown_pct: Optional[float] = None,
+    drift_severity: Optional[str] = None,
 ) -> dict:
     """Generate a composite market-level buy/sell signal.
+
+    Args:
+        drift_severity: Feature drift severity from DriftDetector
+            ("none", "low", "moderate", "high", "critical").
+            When drift is significant, crash_prob weight is reduced because
+            the crash model is operating on out-of-distribution data.
 
     Returns:
         Dict with action, confidence, color, reasons, components
@@ -107,6 +114,23 @@ def get_market_signal(
     weights = _DEFAULT_WEIGHTS.copy()
     components = {}
     reasons = []
+
+    # Drift-aware weight adjustment: reduce crash_prob weight when features
+    # have drifted significantly from the training distribution.
+    drift_cfg = config.get("ml", {}).get("drift", {})
+    signal_mult_map = drift_cfg.get("signal_weight_multiplier", {})
+    drift_sev = drift_severity or "none"
+    drift_mult = signal_mult_map.get(drift_sev, 1.0)
+    if drift_mult < 1.0:
+        original_crash_w = weights.get("crash_prob", 0.20)
+        weights["crash_prob"] = original_crash_w * drift_mult
+        logger.info(
+            "Drift-aware signal: crash_prob weight %.2f -> %.2f (severity=%s)",
+            original_crash_w, weights["crash_prob"], drift_sev,
+        )
+        reasons.append(
+            f"Crash model drift ({drift_sev}) — ML signal weight reduced to {drift_mult:.0%}"
+        )
 
     # 1. Crash probability signal (-1 to +1)
     #    Centered on the historical base rate so that "normal" crash risk → neutral (0).
@@ -279,7 +303,7 @@ def get_market_signal(
     if not reasons:
         reasons = ["Mixed signals — no strong conviction"]
 
-    return {
+    result = {
         "action": action,
         "confidence": confidence,
         "color": _ACTION_COLORS.get(action, "amber"),
@@ -287,6 +311,10 @@ def get_market_signal(
         "reasons": reasons,
         "components": {k: round(v, 3) for k, v in components.items()},
     }
+    if drift_sev != "none":
+        result["drift_severity"] = drift_sev
+        result["drift_crash_weight_mult"] = drift_mult
+    return result
 
 
 def adjust_crash_prob_for_stock(
@@ -348,6 +376,8 @@ def get_stock_signal(
     drawdown_from_peak: Optional[float] = None,
     stock_momentum_1m: Optional[float] = None,
     stock_momentum_3m: Optional[float] = None,
+    options_signal_score: Optional[float] = None,
+    earnings_signal_score: Optional[float] = None,
 ) -> dict:
     """Generate a per-stock signal adjusted by beta and fundamentals.
 
@@ -491,6 +521,27 @@ def get_stock_signal(
             reasons.append(f"Weak stock momentum ({stock_momentum_3m:.0f}% 3M)")
         elif (stock_momentum_3m or 0.0) > 15:
             reasons.append(f"Strong stock momentum (+{stock_momentum_3m:.0f}% 3M)")
+
+    # Options-implied signal: forward-looking intelligence from IV skew,
+    # put/call ratios, and IV rank. This is the only truly forward-looking
+    # component — everything else uses historical data.
+    options_w = _sw.get("options_iv", 0.12)
+    if options_signal_score is not None:
+        stock_score += options_w * float(np.clip(options_signal_score, -1, 1))
+        if options_signal_score < -0.3:
+            reasons.append("Options market bearish (heavy put buying / high IV skew)")
+        elif options_signal_score > 0.3:
+            reasons.append("Options market bullish (call-heavy flow / low IV)")
+
+    # Earnings quality signal: surprise track record, revenue growth,
+    # estimate revision momentum. Strong beats are bullish; misses are bearish.
+    earnings_w = _sw.get("earnings_quality", 0.10)
+    if earnings_signal_score is not None:
+        stock_score += earnings_w * float(np.clip(earnings_signal_score, -1, 1))
+        if earnings_signal_score > 0.3:
+            reasons.append("Strong earnings quality (beats + growth)")
+        elif earnings_signal_score < -0.3:
+            reasons.append("Weak earnings quality (misses / declining)")
 
     stock_score = float(np.clip(stock_score, -1, 1))
 
