@@ -70,6 +70,20 @@ def _make_ceiling_calibrator():
     return cal
 
 
+def _make_healthy_calibrator():
+    """Create a calibrator that maps scores to varied, realistic probabilities.
+
+    Outputs span [0.02, 0.50] — well above the isotonic floor — so the
+    degenerate detector does NOT trigger.
+    """
+    cal = IsotonicRegression(y_min=0.01, y_max=0.99, out_of_bounds="clip")
+    cal.fit(
+        [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+        [0.02, 0.05, 0.10, 0.20, 0.35, 0.50],
+    )
+    return cal
+
+
 @pytest.fixture
 def trained_predictor():
     """Train a fresh CrashPredictor on synthetic data."""
@@ -202,7 +216,7 @@ class TestDegenerateDetection:
 
         # Should stay at floor since no base rate to fall back to
         assert probs[0] <= 0.002, f"Expected floor, got {probs[0]}"
-        assert any("pinned at floor" in r.message for r in caplog.records)
+        assert any("pinned at" in r.message for r in caplog.records)
 
     def test_warning_logged_on_degenerate(self, trained_predictor, caplog):
         predictor, X = trained_predictor
@@ -212,19 +226,20 @@ class TestDegenerateDetection:
         with caplog.at_level(logging.WARNING):
             predictor.predict_proba(latest, "3m")
 
-        assert any("pinned at floor" in r.message for r in caplog.records), (
-            "Expected 'pinned at floor' warning in logs"
+        assert any("pinned at" in r.message for r in caplog.records), (
+            "Expected 'pinned at' warning in logs"
         )
 
     def test_no_warning_when_predictions_healthy(self, trained_predictor, caplog):
-        """A healthy model should not trigger the floor warning."""
+        """A healthy calibrator producing varied outputs should not trigger the warning."""
         predictor, X = trained_predictor
-        latest = X.iloc[[-1]]
+        predictor.calibrators["3m"] = _make_healthy_calibrator()
+        batch = X.iloc[-50:]
 
         with caplog.at_level(logging.WARNING):
-            predictor.predict_proba(latest, "3m")
+            predictor.predict_proba(batch, "3m")
 
-        floor_warnings = [r for r in caplog.records if "pinned at floor" in r.message]
+        floor_warnings = [r for r in caplog.records if "pinned at" in r.message]
         assert len(floor_warnings) == 0, "Healthy model should not trigger floor warning"
 
     def test_fallback_applies_uniformly_to_batch(self, trained_predictor):
@@ -262,8 +277,9 @@ class TestDiagnostics:
 
     def test_diagnostics_healthy_model(self, trained_predictor):
         predictor, X = trained_predictor
-        latest = X.iloc[[-1]]
-        diag = predictor.diagnostics(latest)
+        predictor.calibrators["3m"] = _make_healthy_calibrator()
+        batch = X.iloc[-50:]
+        diag = predictor.diagnostics(batch)
 
         assert not diag["3m"]["degenerate"]
         assert not diag["3m"]["using_base_rate_fallback"]

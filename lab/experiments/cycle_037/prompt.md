@@ -1,32 +1,23 @@
 # Aegis Finance — R&D Cycle 37
 
-You OWN this codebase. This is your sandbox. Improve the engine.
+You are the owner of this codebase. This is your sandbox.
 
-## Your powers — use them
+You have 40 minutes. You have COMPLETE freedom:
+- Read, write, create, delete any file in backend/, frontend/, engine/
+- Install any package (pip install, npm install)
+- Clone any open-source repo for reference
+- Access any public API (yfinance, FRED, Alpha Vantage, etc.)
+- Download datasets, models, or tools
+- Restructure code, refactor architecture, add new services
+- If you need an API key that costs money, note it in your report — don't block on it
 
-- Modify ANY file: backend/, frontend/, engine/, AND lab/ (yes, you can improve the lab tools too)
-- Install packages: `pip install X`, `npm install X`
-- Clone repos: `git clone https://github.com/...` into a temp directory for reference
-- Web search: search for state-of-the-art approaches, open-source quant engines, papers
-- Access APIs: yfinance, FRED, Alpha Vantage, Finnhub, any public finance API
-- Download anything: datasets, pre-trained models, reference implementations
-- If an API key is needed and it's vital, note it in your report
+You decide:
+- What to work on (no assigned track — find the highest-impact thing)
+- How to work (your own workflow — explore, build, test in whatever order makes sense)
+- What to test (run targeted tests, not the full 675-test suite — be smart about it)
+- When you're done
 
-## Your goal
-
-Make this engine compete with institutional-grade tools. Think about what
-Bloomberg Terminal, QuantConnect, OpenBB, or a prop trading desk would have
-that we don't. Then build it.
-
-Don't do what past cycles did. Find something NEW:
-- A technique from a paper you can implement
-- A data source nobody's wired in yet
-- A risk metric that's missing (CVaR? Omega ratio? Tail dependence?)
-- A smarter way to combine signals
-- A feature the frontend is missing
-- Something from the reference repos at C:\Users\mrthn\reference-codes\
-
-## Current engine state (randomized tickers each cycle)
+## Current engine state (from real backend services)
 
 ### api_health
 ```json
@@ -95,8 +86,8 @@ Don't do what past cycles did. Find something NEW:
 ```json
 {
   "test_count": {
-    "files": 19,
-    "functions": 673
+    "files": 20,
+    "functions": 702
   },
   "code_smells": [],
   "n_smells": 0
@@ -236,7 +227,7 @@ Don't do what past cycles did. Find something NEW:
 ```json
 {
   "cycle": 37,
-  "timestamp": "2026-04-12T12:00:03.521755",
+  "timestamp": "2026-04-12T12:06:10.754182",
   "data_sources": [
     "market_snapshot",
     "stock_analysis",
@@ -414,21 +405,21 @@ Don't do what past cycles did. Find something NEW:
     "realism_check"
   ],
   "current_price": 6816.89013671875,
-  "final_mean": 9588.075259500862,
-  "final_median": 8729.562010681497,
-  "final_p05": 3812.7589382255146,
-  "final_p10": 4659.684076388647,
-  "final_p25": 6307.845615720307,
-  "final_p75": 11862.56706078455,
-  "final_p90": 15641.303349276985,
-  "final_p95": 18457.723602470636,
-  "total_return_pct": 40.651749803848205,
-  "annual_return_pct": 7.06044097724865,
-  "crash_prob_1y": 24.73,
-  "crash_prob_5y": 81.63,
-  "cvar_95_pct": -54.56538294520148,
-  "max_dd_pct": -30.72466709547998,
-  "max_drawdown_pct": 30.72466709547998
+  "final_mean": 9561.689605560932,
+  "final_median": 8684.338267065472,
+  "final_p05": 3846.3810001193237,
+  "final_p10": 4676.3283257696285,
+  "final_p25": 6347.642766104241,
+  "final_p75": 11778.064429889026,
+  "final_p90": 15601.764292622116,
+  "final_p95": 18398.252282912574,
+  "total_return_pct": 40.26468688496963,
+  "annual_return_pct": 7.001451569393002,
+  "crash_prob_1y": 25.75,
+  "crash_prob_5y": 82.78,
+  "cvar_95_pct": -53.773434281002494,
+  "max_dd_pct": -30.855047868658104,
+  "max_drawdown_pct": 30.855047868658104
 }
 ```
 
@@ -438,10 +429,10 @@ Don't do what past cycles did. Find something NEW:
   "NVDA": {
     "ticker": "NVDA",
     "current_price": 188.6300048828125,
-    "mc_median_5y": 75.82268095225658,
-    "mc_p10_5y": -57.9515144946251,
+    "mc_median_5y": 76.21365020855208,
+    "mc_p10_5y": -56.5175861303965,
     "mc_p90_5y": 300.0,
-    "garch_vol": 39.932659138534966,
+    "garch_vol": 39.93342014699437,
     "garch_nu": 8.0,
     "crash_prob_3m": 1.0,
     "signal_action": "Strong Buy",
@@ -475,6 +466,7 @@ Don't do what past cycles did. Find something NEW:
       "garch_nu",
       "garch_persistence",
       "ml_crash_prob",
+      "tail_risk",
       "analyst_targets",
       "recommendations",
       "holders",
@@ -488,10 +480,10 @@ Don't do what past cycles did. Find something NEW:
   "COST": {
     "ticker": "COST",
     "current_price": 998.469970703125,
-    "mc_median_5y": 68.87194483471623,
-    "mc_p10_5y": -11.817630425195635,
-    "mc_p90_5y": 223.2915952893343,
-    "garch_vol": 18.82890431724533,
+    "mc_median_5y": 69.67182569951287,
+    "mc_p10_5y": -10.40066113863799,
+    "mc_p90_5y": 221.22657373107893,
+    "garch_vol": 18.82890603193157,
     "garch_nu": 8.0,
     "crash_prob_3m": 1.0,
     "signal_action": "Hold",
@@ -525,6 +517,7 @@ Don't do what past cycles did. Find something NEW:
       "garch_nu",
       "garch_persistence",
       "ml_crash_prob",
+      "tail_risk",
       "analyst_targets",
       "recommendations",
       "holders",
@@ -538,10 +531,10 @@ Don't do what past cycles did. Find something NEW:
   "MSFT": {
     "ticker": "MSFT",
     "current_price": 370.8699951171875,
-    "mc_median_5y": 76.64520704176543,
-    "mc_p10_5y": -11.398060138499455,
-    "mc_p90_5y": 240.62616337334083,
-    "garch_vol": 30.147804240143213,
+    "mc_median_5y": 76.58756192562322,
+    "mc_p10_5y": -14.540940085174602,
+    "mc_p90_5y": 247.70453516920279,
+    "garch_vol": 30.147805253235415,
     "garch_nu": 8.0,
     "crash_prob_3m": 1.0,
     "signal_action": "Buy",
@@ -575,6 +568,7 @@ Don't do what past cycles did. Find something NEW:
       "garch_nu",
       "garch_persistence",
       "ml_crash_prob",
+      "tail_risk",
       "analyst_targets",
       "recommendations",
       "holders",
@@ -588,10 +582,10 @@ Don't do what past cycles did. Find something NEW:
   "UNH": {
     "ticker": "UNH",
     "current_price": 304.3299865722656,
-    "mc_median_5y": 15.601889680860626,
-    "mc_p10_5y": -50.363247550049714,
-    "mc_p90_5y": 159.02958807318396,
-    "garch_vol": 37.39070841632694,
+    "mc_median_5y": 15.453674132379568,
+    "mc_p10_5y": -50.18020187714147,
+    "mc_p90_5y": 157.4715791698024,
+    "garch_vol": 37.39073427997776,
     "garch_nu": 8.0,
     "crash_prob_3m": 1.0,
     "signal_action": "Buy",
@@ -611,18 +605,17 @@ Don't do what past cycles did. Find something NEW:
       "hist_drift",
       "capped_drift",
       "volatility",
-      "expected_return",
-      "median_return",
-      "p05_pr
+      "
 ... [truncated]
 ```
 
-## Recent cycles (don't repeat these — do something different)
+## Recent cycles (for context, not to constrain you)
 
 Cycle 34: 1. Created _compute_market_signal_for_lab() — a 95-line function that fetches real market data via DataFetcher and wires (improved)
 Cycle 35: 1. Moved crash probability clip bounds from hardcoded values to config['ml']['calibration']. 2. Added degenerate calibra (improved)
+Cycle 36: ? (neutral)
 
-## Unexplored areas
+## Files that have NEVER been modified by the lab
 
 - backend/services/shap_explainer.py
 - backend/services/return_model.py
@@ -633,17 +626,28 @@ Cycle 35: 1. Moved crash probability clip bounds from hardcoded values to config
 - frontend/src/components/
 - frontend/src/lib/
 
-## Testing — be smart, not exhaustive
+## Pre-existing test failures
 
-There are 675+ tests. DON'T run them all (takes 9 min).
-Run only what's relevant: `python -m pytest backend/tests/test_<service>.py -v --tb=short`
-You decide what to test. You can also write new tests.
+```
+None — all tests passing
+```
 
-## When done
+## One rule
 
-1. Experiment report: lab/experiments/cycle_037/experiment_report.json
-   (what you noticed, what you built, honest assessment, self-critique, next steps)
+Don't break existing tests. Run `python -m pytest backend/tests/<relevant_file> -v --tb=short`
+on the specific tests related to your changes — NOT the full suite (it has 675 tests and
+takes 9 minutes). Only run the full suite if you're unsure what you might have affected.
 
-2. Commit: `git add -A && git commit -m "Lab cycle_037: <summary>"`
+## When you're done
 
-Think like a quant researcher with unlimited access. What would YOU build?
+1. Write your experiment report:
+   lab/experiments/cycle_037/experiment_report.json
+
+   Include: what you noticed, what you did, files modified, files created,
+   tests added, results (before/after), honest analysis, self-critique,
+   next steps, confidence, depth rating.
+
+2. Commit: git add -A && git commit -m "Lab cycle_037: <summary>"
+
+Think fresh. Don't follow patterns from past cycles just because they worked.
+Find what this codebase actually needs right now and build it.

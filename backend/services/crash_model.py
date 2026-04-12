@@ -351,6 +351,7 @@ class CrashPredictor:
         prob_ceil = cal_cfg.get("prob_ceil", 0.999)
         floor_warn_pct = cal_cfg.get("floor_warn_pct", 0.50)
         use_base_rate_fallback = cal_cfg.get("fallback_to_base_rate", True)
+        isotonic_y_min = cal_cfg.get("isotonic_y_min", 0.01)
 
         blended, horizon = self._blend_scores(features, horizon)
 
@@ -374,19 +375,23 @@ class CrashPredictor:
         clipped = np.clip(calibrated, prob_floor, prob_ceil)
 
         # Detect degenerate calibrator output: when most predictions are
-        # pinned to the floor, the calibrator is likely out-of-distribution
-        # (e.g. from feature drift). Fall back to the training base rate so
-        # downstream consumers get a meaningful (if conservative) estimate.
-        n_at_floor = int(np.sum(calibrated <= prob_floor + 1e-6))
+        # pinned at or near the calibrator floor (isotonic_y_min), the model
+        # is likely out-of-distribution (e.g. from feature drift). The check
+        # uses isotonic_y_min (not prob_floor) because IsotonicRegression
+        # clips output to [y_min, y_max] before our np.clip, so predictions
+        # pile up at y_min rather than prob_floor.
+        degenerate_threshold = max(prob_floor, isotonic_y_min) + 1e-6
+        n_at_floor = int(np.sum(calibrated <= degenerate_threshold))
         n_total = len(calibrated)
         if n_total > 0 and n_at_floor / n_total > floor_warn_pct:
             base_rate = self._train_crash_rate.get(horizon)
             logger.warning(
-                "Crash model %s: %.0f%% of predictions pinned at floor (%.4f). "
-                "Calibrator may be out-of-distribution — possible feature drift.",
+                "Crash model %s: %.0f%% of predictions pinned at/below %.4f "
+                "(isotonic_y_min=%.4f). Calibrator likely out-of-distribution.",
                 horizon,
                 n_at_floor / n_total * 100,
-                prob_floor,
+                degenerate_threshold,
+                isotonic_y_min,
             )
             if use_base_rate_fallback and base_rate is not None:
                 logger.warning(
@@ -429,15 +434,17 @@ class CrashPredictor:
         """
         cal_cfg = config["ml"].get("calibration", {})
         prob_floor = cal_cfg.get("prob_floor", 0.001)
+        isotonic_y_min = cal_cfg.get("isotonic_y_min", 0.01)
         floor_warn_pct = cal_cfg.get("floor_warn_pct", 0.50)
         fallback_enabled = cal_cfg.get("fallback_to_base_rate", True)
+        degenerate_threshold = max(prob_floor, isotonic_y_min) + 1e-6
 
         result = {}
         for horizon in self.lgb_models:
             # Get raw calibrator output (bypass fallback) to detect floor-pinning
             raw_probs = self._raw_calibrated(features, horizon)
             clipped = np.clip(raw_probs, prob_floor, 1.0)
-            n_at_floor = int(np.sum(clipped <= prob_floor + 1e-6))
+            n_at_floor = int(np.sum(clipped <= degenerate_threshold))
             n_total = len(clipped)
             floor_pct = n_at_floor / n_total if n_total > 0 else 0
             is_degenerate = floor_pct > floor_warn_pct
