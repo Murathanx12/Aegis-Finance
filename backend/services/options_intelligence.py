@@ -223,8 +223,9 @@ def _analyze_chain(
             )
 
     # Put/Call Ratio (volume)
-    total_call_vol = int(calls["volume"].fillna(0).sum())
-    total_put_vol = int(puts["volume"].fillna(0).sum())
+    # NaN volume = no recorded activity → drop before summing (LightGBM-safe)
+    total_call_vol = int(calls["volume"].dropna().sum())
+    total_put_vol = int(puts["volume"].dropna().sum())
     if total_call_vol > 0:
         pc_vol_ratio = total_put_vol / total_call_vol
         result["put_call_volume_ratio"] = round(pc_vol_ratio, 3)
@@ -232,8 +233,9 @@ def _analyze_chain(
         result["total_put_volume"] = total_put_vol
 
     # Put/Call Ratio (open interest)
-    total_call_oi = int(calls["openInterest"].fillna(0).sum())
-    total_put_oi = int(puts["openInterest"].fillna(0).sum())
+    # NaN OI = no recorded interest → drop before summing (LightGBM-safe)
+    total_call_oi = int(calls["openInterest"].dropna().sum())
+    total_put_oi = int(puts["openInterest"].dropna().sum())
     if total_call_oi > 0:
         pc_oi_ratio = total_put_oi / total_call_oi
         result["put_call_oi_ratio"] = round(pc_oi_ratio, 3)
