@@ -1,3 +1,29 @@
-Both research agents confirm the same conclusion — the cycle 038 work directly fills the biggest identified gap. The second agent also flagged **cross-asset correlation in Monte Carlo** (Cholesky-correlated shocks) as a natural follow-up, which would pair well with the tail dependence engine for a future cycle.
+## Cycle 38 Complete
+
+### What I found
+Every stock had **identical crash probability (3.198%)** and **all 12 signals were "Buy"** — zero differentiation. The crash model produces a single market-level prediction from macro features, and this was passed unchanged to every stock.
+
+### What I built
+**Per-stock crash probability adjustment** that scales market crash risk by stock-specific factors:
+
+| Stock Profile | Beta | Vol | Crash Prob (before) | Crash Prob (after) |
+|---|---|---|---|---|
+| KO (defensive) | 0.35 | 15% | 3.20% | **1.96%** |
+| JNJ (healthcare) | 0.50 | 18% | 3.20% | **2.26%** |
+| MSFT (large cap) | 1.10 | 30% | 3.20% | **4.17%** |
+| NVDA (high beta) | 1.70 | 45% | 3.20% | **7.12%** |
+| TSLA (extreme) | 2.00 | 55% | 3.20% | **8.00%** |
+
+### Files changed
+- `backend/services/signal_engine.py` — new `adjust_crash_prob_for_stock()` + crash risk signal component
+- `backend/config.py` — configurable adjustment params (beta/vol/drawdown sensitivity, multiplier bounds)
+- `backend/routers/stock.py` — wired into screener, individual stock, and signal endpoints
+- `backend/tests/test_signal_engine.py` — 12 new tests (79 total, all passing)
+- `lab/data_generator.py` — updated to compute per-stock crash probs
+
+### Results
+- **748 fast tests passing** (0 failures)
+- Crash prob spread: 0% → **4x** between defensive and aggressive stocks
+- All changes backwards compatible (new params default to None)
 
 ---STDERR---
