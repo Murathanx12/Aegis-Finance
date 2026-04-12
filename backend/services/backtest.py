@@ -16,7 +16,51 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
+from backend.config import config
+
 logger = logging.getLogger(__name__)
+
+# Execution cost config
+EXEC_CFG = config.get("execution_costs", {})
+SLIPPAGE_BPS = EXEC_CFG.get("slippage_bps", 5)     # 5 bps one-way slippage
+COMMISSION_BPS = EXEC_CFG.get("commission_bps", 1)  # 1 bp commission
+MARKET_IMPACT_FACTOR = EXEC_CFG.get("market_impact_factor", 0.1)  # Square-root model coefficient
+
+
+def estimate_execution_cost(
+    trade_value: float = 100000.0,
+    avg_daily_volume_usd: float = 1e9,
+    is_round_trip: bool = True,
+) -> dict:
+    """Estimate execution cost for a trade using the square-root market impact model.
+
+    Components:
+    1. Fixed slippage (bid-ask spread proxy)
+    2. Commission
+    3. Market impact: η * σ * sqrt(Q/V) where Q=trade size, V=ADV
+
+    Args:
+        trade_value: Dollar amount of the trade.
+        avg_daily_volume_usd: Average daily dollar volume of the asset.
+        is_round_trip: If True, double the cost (entry + exit).
+
+    Returns:
+        dict with slippage_bps, commission_bps, market_impact_bps, total_bps, total_pct.
+    """
+    # Market impact via square-root model (Almgren-Chriss simplified)
+    participation_rate = trade_value / max(avg_daily_volume_usd, 1e6)
+    impact_bps = MARKET_IMPACT_FACTOR * np.sqrt(participation_rate) * 10000
+
+    one_way_bps = SLIPPAGE_BPS + COMMISSION_BPS + impact_bps
+    total_bps = one_way_bps * (2 if is_round_trip else 1)
+
+    return {
+        "slippage_bps": SLIPPAGE_BPS * (2 if is_round_trip else 1),
+        "commission_bps": COMMISSION_BPS * (2 if is_round_trip else 1),
+        "market_impact_bps": round(impact_bps * (2 if is_round_trip else 1), 2),
+        "total_bps": round(total_bps, 2),
+        "total_pct": round(total_bps / 100, 4),
+    }
 
 
 def backtest_signal_engine(
@@ -174,25 +218,48 @@ def evaluate_backtest(df: pd.DataFrame) -> dict:
 
     # Signal-following strategy vs buy-and-hold
     # Strategy: invest when Buy/Strong Buy, cash when Sell/Strong Sell, 50% when Hold
-    strategy_returns = []
+    # Track with and without execution costs
+    strategy_returns_gross = []
+    strategy_returns_net = []
     bh_returns = []
+    prev_action = None
+    round_trip_cost = estimate_execution_cost()
+    cost_per_trade = round_trip_cost["total_pct"] / 100  # as a fraction
+    total_trades = 0
+
     for _, row in df.iterrows():
         fwd = row["forward_3m_return"] / 100
-        if row["signal_action"] in ("Strong Buy", "Buy"):
-            strategy_returns.append(fwd)
-        elif row["signal_action"] in ("Strong Sell", "Sell"):
-            strategy_returns.append(0.0)  # cash
-        else:
-            strategy_returns.append(fwd * 0.5)  # half exposure
-        bh_returns.append(fwd)
+        action = row["signal_action"]
 
-    strategy_arr = np.array(strategy_returns)
+        # Detect position change (trade)
+        traded = prev_action is not None and action != prev_action
+        trade_cost = cost_per_trade if traded else 0.0
+        if traded:
+            total_trades += 1
+
+        if action in ("Strong Buy", "Buy"):
+            strategy_returns_gross.append(fwd)
+            strategy_returns_net.append(fwd - trade_cost)
+        elif action in ("Strong Sell", "Sell"):
+            strategy_returns_gross.append(0.0)
+            strategy_returns_net.append(-trade_cost if traded else 0.0)
+        else:
+            strategy_returns_gross.append(fwd * 0.5)
+            strategy_returns_net.append(fwd * 0.5 - trade_cost)
+
+        bh_returns.append(fwd)
+        prev_action = action
+
+    strategy_arr_gross = np.array(strategy_returns_gross)
+    strategy_arr_net = np.array(strategy_returns_net)
     bh_arr = np.array(bh_returns)
 
-    strategy_sharpe = float(np.mean(strategy_arr) / max(np.std(strategy_arr), 1e-8) * np.sqrt(4))
+    strategy_sharpe_gross = float(np.mean(strategy_arr_gross) / max(np.std(strategy_arr_gross), 1e-8) * np.sqrt(4))
+    strategy_sharpe_net = float(np.mean(strategy_arr_net) / max(np.std(strategy_arr_net), 1e-8) * np.sqrt(4))
     bh_sharpe = float(np.mean(bh_arr) / max(np.std(bh_arr), 1e-8) * np.sqrt(4))
 
-    strategy_total = float((1 + strategy_arr).prod() - 1) * 100
+    strategy_total_gross = float((1 + strategy_arr_gross).prod() - 1) * 100
+    strategy_total_net = float((1 + strategy_arr_net).prod() - 1) * 100
     bh_total = float((1 + bh_arr).prod() - 1) * 100
 
     # Period analysis — identify which periods failed
@@ -224,10 +291,21 @@ def evaluate_backtest(df: pd.DataFrame) -> dict:
         "avg_return_on_sell_3m": round(sell_avg_3m, 2) if sell_avg_3m is not None else None,
         "avg_return_on_hold_3m": round(hold_avg_3m, 2) if hold_avg_3m is not None else None,
         "overall_avg_3m": round(overall_avg_3m, 2),
-        "strategy_total_return": round(strategy_total, 2),
+        # Gross returns (before execution costs)
+        "strategy_total_return_gross": round(strategy_total_gross, 2),
+        # Net returns (after slippage + commission + market impact)
+        "strategy_total_return": round(strategy_total_net, 2),
         "buy_hold_total_return": round(bh_total, 2),
-        "strategy_sharpe": round(strategy_sharpe, 3),
+        "strategy_sharpe_gross": round(strategy_sharpe_gross, 3),
+        "strategy_sharpe": round(strategy_sharpe_net, 3),
         "buy_hold_sharpe": round(bh_sharpe, 3),
+        # Execution cost summary
+        "execution_costs": {
+            "total_trades": total_trades,
+            "cost_per_trade_bps": round_trip_cost["total_bps"],
+            "total_cost_drag_pct": round(total_trades * cost_per_trade * 100, 2),
+            "gross_minus_net_pct": round(strategy_total_gross - strategy_total_net, 2),
+        },
         "missed_calls": period_analysis[:10],
         "signals_by_action": {
             action: len(df[df["signal_action"] == action])

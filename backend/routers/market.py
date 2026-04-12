@@ -110,6 +110,22 @@ def _compute_market_status() -> dict:
     except Exception as e:
         logger.warning("Net liquidity fetch failed: %s", e)
 
+    # Systemic risk (turbulence index + absorption ratio)
+    systemic = None
+    try:
+        from backend.services.systemic_risk import compute_systemic_risk
+        systemic = compute_systemic_risk(data)
+    except Exception as e:
+        logger.warning("Systemic risk computation failed: %s", e)
+
+    # LPPL bubble detection
+    bubble = None
+    try:
+        from backend.services.bubble_detector import get_bubble_status
+        bubble = get_bubble_status(data["SP500"], ticker="SP500")
+    except Exception as e:
+        logger.warning("Bubble detection failed: %s", e)
+
     return {
         "sp500": sp500,
         "sp500_change_1m": round(sp500_change_1m, 2),
@@ -121,6 +137,8 @@ def _compute_market_status() -> dict:
         "crash_probabilities": crash_probs,
         "data_quality": data_quality,
         "net_liquidity": net_liq,
+        "systemic_risk": systemic,
+        "bubble_indicator": bubble,
         "last_updated": str(data.index[-1].date()),
     }
 

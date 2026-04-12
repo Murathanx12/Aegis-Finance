@@ -452,6 +452,29 @@ config: dict = {
         },
     },
 
+    # ── EXECUTION COST MODEL ────────────────────────────────────────────
+    "execution_costs": {
+        "slippage_bps": 5,              # Bid-ask spread proxy (one-way)
+        "commission_bps": 1,            # Broker commission (one-way)
+        "market_impact_factor": 0.1,    # Square-root model coefficient (η)
+    },
+
+    # ── LPPL BUBBLE DETECTION ──────────────────────────────────────────
+    "bubble_detection": {
+        "confidence_threshold": 0.5,     # Fraction of valid LPPL fits to flag bubble
+        "min_window_days": 120,          # Minimum fitting window
+        "max_window_days": 750,          # Maximum fitting window
+        "n_fits": 25,                    # Number of nested fits per evaluation
+    },
+
+    # ── SYSTEMIC RISK (Turbulence Index + Absorption Ratio) ────────────
+    "systemic_risk": {
+        "turbulence_window": 252,          # Rolling covariance lookback (days)
+        "absorption_n_components": 5,      # Top PCA components for absorption ratio
+        "absorption_window": 252,          # Rolling PCA lookback (days)
+        "turbulence_threshold_pctl": 90,   # Percentile above which turbulence = stress
+    },
+
     # ── SCENARIO DEFINITIONS ─────────────────────────────────────────────
     # ~70% positive/neutral, ~30% bearish (matches historical base rates)
     "scenarios": {
