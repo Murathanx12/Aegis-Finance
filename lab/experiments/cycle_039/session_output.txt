@@ -1,0 +1,24 @@
+## Cycle 039 Complete
+
+**Problem:** All 12 stocks in the screener showed "Buy" — zero signal diversity. Score spread was only 0.165 with std 0.051.
+
+**Root cause:** `get_stock_signal()` used the market composite as ~90% of the signal. Stock-specific adjustments were tiny (~0.01-0.05) and systematically positive in a bull market.
+
+**Fix:** Added two new stock-specific signal components:
+1. **Stock drawdown signal** (weight 0.25) — graduated penalty for stocks far from their 52-week high
+2. **Stock momentum signal** (weight 0.20) — the stock's own 1m/3m returns, independent of market
+
+**Results:**
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Unique actions | 1 (all Buy) | 2-4 (Buy/Hold/Sell/Strong Sell) |
+| Score spread | 0.165 | 0.700-0.770 |
+| Score range | [0.23, 0.39] | [-0.56, +0.38] |
+
+**Files changed:** `signal_engine.py`, `config.py`, `stock.py` (router), `data_generator.py`
+**Tests:** 143/143 pass (0 regressions)
+
+**Remaining:** The 89% feature drift problem still needs addressing via model retraining — that's a separate, larger effort.
+
+---STDERR---
