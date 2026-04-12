@@ -26,6 +26,7 @@ import yfinance as yf
 from backend.config import config
 from backend.models.garch import fit_garch, get_standardized_residuals
 from backend.services.monte_carlo import _generate_block_bootstrap_residuals
+from backend.services.tail_risk import compute_tail_risk_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -356,6 +357,9 @@ class PortfolioEngine:
         rf_daily = config.get("risk_free_rate", 0.04) / 252
         sharpe = float((np.mean(port_returns) - rf_daily) / np.std(port_returns) * np.sqrt(252))
 
+        # Tail risk analytics (Sortino, Omega, Calmar, etc.)
+        tail_metrics = compute_tail_risk_metrics(port_returns)
+
         return {
             "total_value": total_value,
             "annual_return": port_annual_return,
@@ -364,6 +368,7 @@ class PortfolioEngine:
             "var_95_daily": var_95,
             "cvar_95_daily": cvar_95,
             "max_drawdown": max_dd,
+            "tail_risk": tail_metrics,
             "allocations": [
                 {"ticker": h["ticker"], "weight": w * 100, "value": v}
                 for h, w, v in zip(holdings, weights, values)

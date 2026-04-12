@@ -497,6 +497,12 @@ config: dict = {
         "yield_range": [-1.0, 20.0],
     },
 
+    # ── TAIL RISK ANALYTICS ───────────────────────────────────────────────
+    "tail_risk": {
+        "tail_percentile": 5,          # Worst N% of days for tail concentration
+        "min_observations": 60,        # Minimum trading days for reliable metrics
+    },
+
     # ── PERFORMANCE ──────────────────────────────────────────────────────
     "performance": {
         "screener_max_workers": 8,       # ThreadPoolExecutor workers for screener

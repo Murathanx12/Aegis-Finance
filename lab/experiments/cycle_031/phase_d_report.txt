@@ -1,0 +1,26 @@
+Done. Here's the honest assessment:
+
+## Cycle 031 Final Report
+
+### What shipped
+- **144 router tests** across 14 test classes, covering 8/9 routers
+- **Backtest router hardened**: date regex validation, start<end guard, config TTL, narrowed exceptions
+- **532 tests passing**, up from 388 (+144)
+
+### What went well
+- Closed a genuine coverage gap (0 router tests -> 144)
+- Found and fixed a real injection vector (backtest accepted arbitrary strings as dates)
+- Moved hardcoded TTL to config where it belongs
+
+### Honest self-critique
+- **Phase A Finding #1 was wrong.** I claimed `macro_risk` had zero weight but the config already had it at 0.12. I was reading the fallback dict, not the runtime config. Wasted exploration time on a non-bug.
+- **Many tests are shallow.** Pydantic validation tests (`"yolo"` rejected as risk level) test FastAPI's framework behavior, not our code. Higher-value tests would mock `DataFetcher` and assert full response shapes from real service logic.
+- **The numpy warning** from `BRK.B` portfolio test reveals a real edge case in `portfolio_engine` with tickers that have no yfinance return history — that's an actual bug I didn't fix.
+- **Depth rating: MEDIUM.** The backtest hardening is real code improvement. The test suite is useful but leans toward testing framework guarantees rather than business logic.
+
+### Next cycle priorities
+1. Investigate the numpy empty-slice warning in portfolio_engine (real bug)
+2. Mocked integration tests for `/api/market-status`, `/api/sectors` (test our logic, not Pydantic)
+3. Investigate stock_analysis null fields (crash_prob_3m, signal_action)
+
+---STDERR---

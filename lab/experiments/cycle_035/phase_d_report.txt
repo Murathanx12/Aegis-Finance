@@ -1,0 +1,23 @@
+## Cycle 035 — Complete
+
+### Final results: **675 passed, 0 failed** (633 original + 42 new)
+
+### Self-critique (honest assessment):
+
+**What worked well:**
+- Found a real, user-visible bug (every crash prob stuck at 2.0%) and fixed it with a graceful degradation pattern
+- The `_blend_scores` refactoring eliminated 28 lines of duplicated logic
+- 42 tests with good edge case coverage (NaN, extreme values, missing components, backward compat)
+- Diagnostics endpoint gives operators visibility into model health
+
+**What's still a band-aid:**
+- Base rate fallback (~12% for all stocks) is better than 2% but still not differentiated per ticker
+- The **real fix** is retraining the crash model — 98.8% feature drift means the model is stale
+- OOB info logging on every `predict_proba` call could be noisy under load; should rate-limit
+
+**What I'd prioritize next (Cycle 36):**
+1. **walk_forward.py purged CV no-op** — backtest claims purged CV but never applies it (Finding #2, correctness bug)
+2. **Retrain the crash model** — only way to actually reduce drift from 98.8%
+3. **return_model.py index alignment** — silent X/y misalignment during training (Finding #3)
+
+---STDERR---

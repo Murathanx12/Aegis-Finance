@@ -1,0 +1,58 @@
+Good. I now have a comprehensive picture. Let me analyze the engine output and compile my findings.
+
+---
+
+## Cycle 31 — Phase A: Exploration Report
+
+### Test Suite Status
+**388 passed, 0 failed** (fast tests, 64s). Test count at 403 functions across 16 files. Zero code smells detected.
+
+### Engine Output Analysis
+
+Looking at the engine data, I spotted several issues:
+
+**1. Stock analysis `crash_prob_3m` and `signal_action` are all `null`**
+
+In the engine output, every stock (`AAPL`, `NVDA`, `XOM`, `JPM`) returns `crash_prob_3m: null`, `signal_action: null`, `signal_score: null`. This means the stock detail pages show no crash probability or signal — major functionality gap. The signal engine is clearly working at market level (Hold, confidence 4) and per-stock level (signal_quality shows Buy/Hold for 16 tickers), but the stock_analyzer response doesn't wire those values into its output dict.
+
+**File:** `backend/services/stock_analyzer.py` — the fields `crash_prob_3m`, `signal_action`, `signal_score` are returned as `None` instead of being populated from the signal engine and crash model.
+
+**2. No router-level tests exist (0 of 9 routers tested)**
+
+The entire test suite tests services directly. Zero tests exist for any of the 9 API routers (`crash.py`, `simulation.py`, `stock.py`, `portfolio.py`, `news.py`, `sector.py`, `market.py`, `savings.py`, `backtest.py`). This means:
+- HTTP status codes (404, 422, 500) are never validated
+- Query parameter validation is untested  
+- Cache key generation logic is untested
+- Input sanitization (e.g., ticker regex `_TICKER_RE` in `crash.py:23`) is untested
+
+**Files:** All `backend/routers/*.py` — 9 routers, 0 test coverage.
+
+**3. `signal_engine.py` `macro_risk` component has no weight in `_DEFAULT_WEIGHTS`**
+
+At `signal_engine.py:182`, a `macro_risk` component is computed from the risk score and added to `components`, but `_DEFAULT_WEIGHTS` (line 29-36) only has 6 keys: `crash_prob`, `regime`, `valuation`, `momentum`, `mean_reversion`, `external`. There's no `macro_risk` weight. When the composite is computed at line 191:
+
+```python
+total_w = sum(weights[k] for k in components if k in weights)
+composite = sum(components[k] * weights.get(k, 0) for k in components) / total_w
+```
+
+The `macro_risk` component gets `weights.get("macro_risk", 0)` = **0 weight**, so it contributes nothing to the signal. The macro risk score is computed but silently discarded. This means the 9-factor risk scorer's output doesn't influence buy/sell signals at all — only crash probability (which is a different thing) carries risk information.
+
+**File:** `backend/services/signal_engine.py:29-36` (missing weight) and `:182-183` (component computed but unused).
+
+### Top 3 Findings (Ranked by Impact)
+
+| # | Finding | Location | Impact |
+|---|---------|----------|--------|
+| **1** | `macro_risk` signal component computed but has **zero weight** — risk scorer output never influences buy/sell signals | `signal_engine.py:29-36, :182` | **High** — 9-factor risk model is wired up but functionally disconnected from signal generation |
+| **2** | Stock analysis returns `null` for crash_prob, signal_action, signal_score — per-stock detail pages missing key data | `stock_analyzer.py` output keys | **High** — frontend stock pages show empty crash/signal sections |
+| **3** | Zero router-level tests across all 9 API routers — HTTP layer entirely untested | `backend/routers/*.py` | **Medium** — no validation of status codes, query params, cache logic, or input sanitization |
+
+### Bonus Observations
+- `sentiment_analyzer.py:49` uses narrowed exception `(RuntimeError, ValueError, IndexError, TypeError)` — good pattern, but the FinBERT lazy-load at `:49` still uses broad `except Exception`.
+- `drift_detector.py:202` reconstructs synthetic reference data from bin proportions for KS test rather than storing the actual reference samples — technically valid but lossy.
+- `engine/validation/walk_forward.py` and `engine/validation/metrics.py` are mature with bootstrap CI, conformal prediction, regime-conditional BSS — no issues found.
+
+Ready for Phase B.
+
+---STDERR---
