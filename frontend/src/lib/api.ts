@@ -106,6 +106,26 @@ export function getStockSignal(ticker: string) {
   return fetchAPI<StockSignal>(`/api/stock/${ticker}/signal`);
 }
 
+// Options & Earnings Intelligence
+export function getOptionsAnalysis(ticker: string) {
+  return fetchAPI<OptionsAnalysis>(`/api/options/${ticker}`);
+}
+
+export function getVixTermStructure() {
+  return fetchAPI<VixTermStructure>("/api/options/vix-term");
+}
+
+export function getEarningsAnalysis(ticker: string) {
+  return fetchAPI<EarningsAnalysis>(`/api/earnings/${ticker}`);
+}
+
+// Tail Dependence / Correlation
+export function getTailDependence(tickers: string[]) {
+  return fetchAPI<TailDependenceResponse>(
+    `/api/correlation/tail-dependence?tickers=${tickers.join(",")}`
+  );
+}
+
 // Savings
 export function projectSavings(params: SavingsRequest) {
   return fetchAPI<SavingsProjection>("/api/savings/project", {
@@ -545,4 +565,107 @@ export interface QuestionnaireResult {
   description: string;
   factors: QuestionnaireAnswers;
   recommended_portfolio: PortfolioBuilt;
+}
+
+// Options Intelligence
+export interface OptionsAnalysis {
+  ticker: string;
+  expiration: string;
+  current_price: number;
+  atm_iv_call?: number;
+  atm_iv_put?: number;
+  iv_skew?: number;
+  iv_skew_interpretation?: string;
+  put_call_volume_ratio?: number;
+  put_call_oi_ratio?: number;
+  total_call_volume?: number;
+  total_put_volume?: number;
+  max_pain?: number;
+  max_pain_distance_pct?: number;
+  iv_rank?: number;
+  iv_percentile?: number;
+  realized_vol_1y?: number;
+  iv_vs_rv?: number;
+  iv_term_structure?: {
+    near_iv: number;
+    mid_iv: number;
+    slope: number;
+    contango: boolean;
+    interpretation: string;
+  };
+  mid_term?: {
+    expiration: string;
+    atm_iv_call?: number;
+    atm_iv_put?: number;
+    put_call_volume_ratio?: number;
+    iv_skew?: number;
+  };
+  signal: {
+    score: number;
+    sentiment: string;
+    confidence: number;
+    n_signals: number;
+    reasons: string[];
+  };
+  error?: string;
+}
+
+export interface VixTermStructure {
+  values: Record<string, number>;
+  vix_vix3m_ratio?: number;
+  contango?: boolean;
+  backwardation?: boolean;
+  structure?: string;
+  signal?: string;
+  interpretation?: string;
+  vix_level?: string;
+  error?: string;
+}
+
+export interface EarningsAnalysis {
+  ticker: string;
+  next_earnings_date?: string;
+  days_until_earnings?: number;
+  earnings_imminent?: boolean;
+  beat_rate?: number;
+  avg_surprise_pct?: number;
+  surprise_trend?: string;
+  earnings_surprises?: {
+    quarter: string;
+    eps_actual: number;
+    eps_estimate: number;
+    surprise_pct: number;
+    beat: boolean;
+  }[];
+  revenue_yoy_growth?: number;
+  revenue_qoq_growth?: number;
+  earnings_yoy_growth?: number;
+  fundamentals?: Record<string, number>;
+  analyst_targets?: Record<string, number | null>;
+  recent_recommendations?: Record<string, number>;
+  signal: {
+    score: number;
+    sentiment: string;
+    confidence: number;
+    n_signals: number;
+    reasons: string[];
+  };
+  error?: string;
+}
+
+export interface TailDependenceResponse {
+  pairs: {
+    ticker_a: string;
+    ticker_b: string;
+    tail_dep: number;
+    upper_tail: number;
+    lower_tail: number;
+  }[];
+  clusters: string[][];
+  portfolio_summary: {
+    avg_tail_dep: number;
+    max_tail_dep: number;
+    diversification_quality: string;
+  };
+  error?: string;
 }
