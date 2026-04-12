@@ -325,6 +325,67 @@ def get_market_signal(
     return result
 
 
+def _compute_conviction_quality(components: dict) -> dict:
+    """Measure cross-component agreement for signal conviction quality.
+
+    A composite score of +0.3 could mean:
+      (a) All 8 components at +0.04 each → strong consensus, high conviction
+      (b) 4 components at +0.15, 4 at -0.075 → tug-of-war, low conviction
+
+    Returns dict with:
+      - quality: "high" / "moderate" / "low"
+      - agreement_pct: percentage of components agreeing with the final direction
+      - dominant_driver: the single component contributing most
+      - n_contributing: how many components had non-zero contribution
+    """
+    # Exclude market_base from stock-specific agreement analysis since it's
+    # inherited, not a stock-level factor
+    stock_components = {
+        k: v for k, v in components.items()
+        if k != "market_base" and abs(v) > 0.001
+    }
+
+    if not stock_components:
+        return {
+            "quality": "low",
+            "agreement_pct": 0,
+            "dominant_driver": "market_base",
+            "n_contributing": 0,
+        }
+
+    # Determine net direction from total stock-level adjustments
+    net_stock_adj = sum(stock_components.values())
+    n_contributing = len(stock_components)
+
+    # Count components agreeing with net direction
+    if abs(net_stock_adj) < 0.001:
+        # Net zero — no clear direction
+        agreeing = 0
+    else:
+        direction = 1 if net_stock_adj > 0 else -1
+        agreeing = sum(1 for v in stock_components.values() if v * direction > 0)
+
+    agreement_pct = int(agreeing / n_contributing * 100) if n_contributing > 0 else 0
+
+    # Find dominant driver (largest absolute contribution)
+    dominant = max(components.items(), key=lambda x: abs(x[1]))
+
+    # Quality classification
+    if agreement_pct >= 75 and n_contributing >= 3:
+        quality = "high"
+    elif agreement_pct >= 50:
+        quality = "moderate"
+    else:
+        quality = "low"
+
+    return {
+        "quality": quality,
+        "agreement_pct": agreement_pct,
+        "dominant_driver": dominant[0],
+        "n_contributing": n_contributing,
+    }
+
+
 def adjust_crash_prob_for_stock(
     market_crash_prob: float,
     beta: float = 1.0,
@@ -415,64 +476,70 @@ def get_stock_signal(
     base_score = market_signal["composite_score"]
     reasons = list(market_signal["reasons"])
 
+    # Component decomposition: track each adjustment's contribution
+    components = {}
+    components["market_base"] = round(base_score, 4)
+
     # Beta adjustment: amplify market signal
     beta_adj = 1.0 + (beta - 1.0) * 0.3  # Dampen extreme betas
     stock_score = base_score * beta_adj
+    components["beta_adjustment"] = round(stock_score - base_score, 4)
 
     # Analyst target signal — ADDITIVE (not convex combination)
-    # Old: stock_score = 0.7*base + 0.3*analyst (analyst dominated the base)
-    # New: stock_score += analyst_w * analyst_sig (analyst adjusts, doesn't replace)
+    analyst_contribution = 0.0
     if analyst_target is not None and analyst_target > 0 and current_price > 0:
         upside = (analyst_target / current_price - 1) * 100
         analyst_sig = np.clip(upside / 30, -0.5, 0.5)  # ±30% → ±0.5
-        stock_score += analyst_w * analyst_sig
+        analyst_contribution = float(analyst_w * analyst_sig)
+        stock_score += analyst_contribution
 
         if upside > 15:
             reasons.insert(0, f"Analyst target implies +{upside:.0f}% upside")
         elif upside < -10:
             reasons.insert(0, f"Below analyst target by {abs(upside):.0f}%")
+    components["analyst_target"] = round(analyst_contribution, 4)
 
     # Sector momentum — graduated, proportional to magnitude
+    sector_contribution = 0.0
     if abs(sector_momentum) > 3:
-        sector_adj = float(np.clip(sector_momentum * sector_w, -0.15, 0.15))
-        stock_score += sector_adj
+        sector_contribution = float(np.clip(sector_momentum * sector_w, -0.15, 0.15))
+        stock_score += sector_contribution
         if sector_momentum > 10:
             reasons.append(f"Strong sector momentum (+{sector_momentum:.0f}%)")
         elif sector_momentum < -10:
             reasons.append(f"Weak sector ({sector_momentum:.0f}%)")
+    components["sector_momentum"] = round(sector_contribution, 4)
 
     # PE ratio — graduated valuation signal
+    pe_contribution = 0.0
     if pe_ratio is not None and pe_ratio > 0:
         if pe_ratio > 50:
-            stock_score -= pe_bonus
+            pe_contribution = -pe_bonus
             reasons.append(f"High P/E ({pe_ratio:.0f}x) — premium valuation")
         elif pe_ratio < 10:
-            stock_score += pe_bonus
+            pe_contribution = pe_bonus
             reasons.append(f"Low P/E ({pe_ratio:.0f}x) — value opportunity")
+    stock_score += pe_contribution
 
-    # Forward PE earnings growth signal: when forward_pe << trailing_pe,
-    # earnings are expected to grow significantly (bullish). When forward_pe >>
-    # trailing_pe, earnings are expected to decline (bearish).
-    # Example: NVDA PE=38.5, fwd_PE=17 → ratio=0.44 → strong growth signal +0.15
-    #          JNJ  PE=22.8, fwd_PE=15.5 → ratio=0.68 → moderate growth +0.05
+    # Forward PE earnings growth signal
+    eg_contribution = 0.0
     if (
         forward_pe is not None
         and pe_ratio is not None
         and forward_pe > 0
         and pe_ratio > 0
     ):
-        pe_compression = forward_pe / pe_ratio  # <1 = earnings growing, >1 = declining
-        # Map: ratio 0.5 → +0.15, ratio 0.75 → +0.05, ratio 1.0 → 0, ratio 1.25 → -0.05
-        earnings_growth_sig = float(np.clip((1.0 - pe_compression) * eg_scale, -0.15, 0.15))
-        stock_score += earnings_growth_sig
+        pe_compression = forward_pe / pe_ratio
+        eg_contribution = float(np.clip((1.0 - pe_compression) * eg_scale, -0.15, 0.15))
         if pe_compression < 0.6:
             reasons.append(f"Strong earnings growth expected (fwd P/E {forward_pe:.0f}x vs {pe_ratio:.0f}x trailing)")
         elif pe_compression > 1.15:
             reasons.append(f"Earnings decline expected (fwd P/E {forward_pe:.0f}x vs {pe_ratio:.0f}x trailing)")
+    stock_score += eg_contribution
+    components["valuation"] = round(pe_contribution + eg_contribution, 4)
 
-    # Per-stock crash risk adjustment: differentiate crash exposure by stock
-    # characteristics. Market crash component is shared; this adds stock-specific
-    # risk that the market signal misses (e.g., NVDA beta=1.7 vs JNJ beta=0.5).
+    # Per-stock crash risk adjustment
+    crash_contribution = 0.0
     market_crash_3m_pct = market_signal.get("_crash_3m_pct")
     if market_crash_3m_pct is not None and stock_vol is not None:
         market_prob = market_crash_3m_pct / 100.0
@@ -480,76 +547,79 @@ def get_stock_signal(
             market_prob, beta, stock_vol,
             drawdown_from_peak if drawdown_from_peak is not None else 0.0,
         )
-        # Signal: deviation from market crash prob → stock-specific risk adjustment
-        # Positive delta = stock is riskier than market → bearish adjustment
-        # Negative delta = stock is safer than market → bullish adjustment
         crash_delta = stock_prob - market_prob
         base_rate = config.get("crash_base_rate_pct", 12.0) / 100.0
         crash_risk_sig = float(np.clip(-crash_delta / base_rate, -0.5, 0.5))
-        stock_score += crash_risk_w * crash_risk_sig
+        crash_contribution = crash_risk_w * crash_risk_sig
+        stock_score += crash_contribution
 
         if stock_prob > market_prob * 1.5:
             reasons.append(f"Elevated stock-specific crash risk ({stock_prob*100:.0f}% vs {market_prob*100:.0f}% market)")
         elif stock_prob < market_prob * 0.7:
             reasons.append(f"Below-market crash risk ({stock_prob*100:.0f}% vs {market_prob*100:.0f}% market)")
+    components["crash_risk"] = round(crash_contribution, 4)
 
-    # Stock-specific drawdown signal: penalizes stocks far from their peak,
-    # rewards stocks near highs. This is independent of the market-level drawdown
-    # component — a stock can be in a -30% drawdown while the market is near ATH.
+    # Stock-specific drawdown signal
+    dd_contribution = 0.0
     dd_w = _sw.get("stock_drawdown", 0.25)
     if drawdown_from_peak is not None:
         dd = min(drawdown_from_peak, 0.0)
-        # Graduated: near peak (+0.1), -5% (0), -15% (-0.4), -30% (-0.8), -50%+ (-1.0)
         if dd > -3:
             stock_dd_sig = 0.1
         elif dd > -8:
             stock_dd_sig = 0.0
         elif dd > -20:
-            stock_dd_sig = dd / 25.0  # -8% → -0.32, -20% → -0.80
+            stock_dd_sig = dd / 25.0
         else:
             stock_dd_sig = float(np.clip(dd / 30.0, -1.0, -0.6))
-        stock_score += dd_w * stock_dd_sig
+        dd_contribution = dd_w * stock_dd_sig
+        stock_score += dd_contribution
 
         if dd < -20:
             reasons.append(f"Stock in deep drawdown ({dd:.0f}% from peak)")
         elif dd < -10:
             reasons.append(f"Stock in correction ({dd:.0f}% from peak)")
+    components["drawdown"] = round(dd_contribution, 4)
 
-    # Stock-specific momentum signal: the stock's own recent returns.
-    # A stock down 15% in 3 months during a bull market is a red flag;
-    # a stock up 20% shows individual strength beyond the market move.
+    # Stock-specific momentum signal
+    mom_contribution = 0.0
     mom_w = _sw.get("stock_momentum", 0.20)
     if stock_momentum_1m is not None or stock_momentum_3m is not None:
-        s_mom_1m = float(np.clip((stock_momentum_1m or 0.0) / 12, -1, 1))  # ±12% → ±1
-        s_mom_3m = float(np.clip((stock_momentum_3m or 0.0) / 20, -1, 1))  # ±20% → ±1
+        s_mom_1m = float(np.clip((stock_momentum_1m or 0.0) / 12, -1, 1))
+        s_mom_3m = float(np.clip((stock_momentum_3m or 0.0) / 20, -1, 1))
         stock_mom_sig = 0.4 * s_mom_1m + 0.6 * s_mom_3m
-        stock_score += mom_w * stock_mom_sig
+        mom_contribution = mom_w * stock_mom_sig
+        stock_score += mom_contribution
 
         if (stock_momentum_3m or 0.0) < -15:
             reasons.append(f"Weak stock momentum ({stock_momentum_3m:.0f}% 3M)")
         elif (stock_momentum_3m or 0.0) > 15:
             reasons.append(f"Strong stock momentum (+{stock_momentum_3m:.0f}% 3M)")
+    components["momentum"] = round(mom_contribution, 4)
 
-    # Options-implied signal: forward-looking intelligence from IV skew,
-    # put/call ratios, and IV rank. This is the only truly forward-looking
-    # component — everything else uses historical data.
+    # Options-implied signal
+    options_contribution = 0.0
     options_w = _sw.get("options_iv", 0.12)
     if options_signal_score is not None:
-        stock_score += options_w * float(np.clip(options_signal_score, -1, 1))
+        options_contribution = options_w * float(np.clip(options_signal_score, -1, 1))
+        stock_score += options_contribution
         if options_signal_score < -0.3:
             reasons.append("Options market bearish (heavy put buying / high IV skew)")
         elif options_signal_score > 0.3:
             reasons.append("Options market bullish (call-heavy flow / low IV)")
+    components["options"] = round(options_contribution, 4)
 
-    # Earnings quality signal: surprise track record, revenue growth,
-    # estimate revision momentum. Strong beats are bullish; misses are bearish.
+    # Earnings quality signal
+    earnings_contribution = 0.0
     earnings_w = _sw.get("earnings_quality", 0.10)
     if earnings_signal_score is not None:
-        stock_score += earnings_w * float(np.clip(earnings_signal_score, -1, 1))
+        earnings_contribution = earnings_w * float(np.clip(earnings_signal_score, -1, 1))
+        stock_score += earnings_contribution
         if earnings_signal_score > 0.3:
             reasons.append("Strong earnings quality (beats + growth)")
         elif earnings_signal_score < -0.3:
             reasons.append("Weak earnings quality (misses / declining)")
+    components["earnings"] = round(earnings_contribution, 4)
 
     stock_score = float(np.clip(stock_score, -1, 1))
 
@@ -562,6 +632,13 @@ def get_stock_signal(
 
     confidence = int(min(abs(stock_score) * 100, 100))
 
+    # Conviction quality: measure cross-component agreement.
+    # When all contributing components point in the same direction, conviction
+    # is high. When components disagree (some bullish, some bearish), conviction
+    # is low even if the net score is the same. This separates "strong consensus"
+    # from "mixed tug-of-war that happened to net positive."
+    conviction = _compute_conviction_quality(components)
+
     return {
         "action": action,
         "confidence": confidence,
@@ -569,4 +646,6 @@ def get_stock_signal(
         "composite_score": round(stock_score, 3),
         "reasons": reasons[:3],
         "beta_adj": round(beta_adj, 2),
+        "components": {k: round(v, 3) for k, v in components.items()},
+        "conviction": conviction,
     }
