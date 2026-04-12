@@ -111,7 +111,13 @@ def get_market_signal(
     Returns:
         Dict with action, confidence, color, reasons, components
     """
-    weights = _DEFAULT_WEIGHTS.copy()
+    # Regime-adaptive weights: select weight profile based on current regime.
+    # Bull → momentum-heavy, Bear → crash/mean-reversion-heavy, etc.
+    regime_weights_map = config.get("regime_signal_weights", {})
+    if regime in regime_weights_map:
+        weights = regime_weights_map[regime].copy()
+    else:
+        weights = _DEFAULT_WEIGHTS.copy()
     components = {}
     reasons = []
 
@@ -314,6 +320,8 @@ def get_market_signal(
     if drift_sev != "none":
         result["drift_severity"] = drift_sev
         result["drift_crash_weight_mult"] = drift_mult
+    if regime in regime_weights_map:
+        result["regime_weight_profile"] = regime
     return result
 
 

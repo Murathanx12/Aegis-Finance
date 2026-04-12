@@ -1,0 +1,68 @@
+{
+  "cycle": 45,
+  "timestamp": "2026-04-12T14:45:00Z",
+  "title": "Regime-adaptive signal weights",
+  "track": "signal_engine",
+  "hypothesis": "Signal weights should vary by market regime — momentum dominates in bull markets (Jegadeesh & Titman), mean reversion and crash risk dominate in bear/volatile markets (DeBondt & Thaler, Ang et al. 2006). Fixed weights underweight the most predictive factor in each regime.",
+  "what_i_noticed": [
+    "Signal engine uses fixed weights regardless of market regime (Bull/Bear/Volatile/Neutral)",
+    "89% feature drift is handled by reducing crash_prob weight, but weight reduction applies to default profile — not regime-aware",
+    "In bull market (current regime), momentum weight is only 0.12 despite momentum being the strongest factor in trends",
+    "In bear markets, mean_reversion weight is only 0.09 despite contrarian strategies being most profitable after large drops",
+    "8/12 stocks are Hold with low confidence — suggests signal differentiation could improve"
+  ],
+  "what_i_did": [
+    "Added regime_signal_weights to config.py with 3 regime-specific weight profiles (Bull, Bear, Volatile)",
+    "Bull profile: momentum 0.20 (up from 0.12), drawdown 0.15 (confirm trend), crash_prob 0.14 (less relevant in trends)",
+    "Bear profile: crash_prob 0.24 (critical), mean_reversion 0.16 (contrarian opportunities), momentum 0.06 (breaks down in bears)",
+    "Volatile profile: valuation 0.16 (VIX signals matter most), mean_reversion 0.14, momentum 0.08 (unreliable in whipsaws)",
+    "Neutral/Unknown fall through to default weights (backward compatible)",
+    "Modified signal_engine.py get_market_signal() to select weight profile based on regime parameter",
+    "Drift adjustment applies ON TOP of regime-selected weights (layered, not conflicting)",
+    "Added regime_weight_profile key to result dict for transparency",
+    "Wrote 15 tests covering: profile selection, behavioral effects, drift interaction, config validation, backward compatibility"
+  ],
+  "files_modified": [
+    "backend/config.py",
+    "backend/services/signal_engine.py",
+    "backend/tests/test_signal_engine.py"
+  ],
+  "files_created": [
+    "lab/experiments/cycle_045/experiment_report.json"
+  ],
+  "tests_added": 15,
+  "tests_total_after": 94,
+  "results": {
+    "before": {
+      "signal_weights": "Fixed: crash_prob=0.20, regime=0.16, valuation=0.11, momentum=0.12, mean_reversion=0.09, external=0.12, macro_risk=0.10, drawdown=0.10",
+      "regime_awareness": "None — same weights in Bull, Bear, Volatile, Neutral",
+      "tests_passing": "79/79"
+    },
+    "after": {
+      "signal_weights": "Regime-adaptive: Bull emphasizes momentum (0.20), Bear emphasizes crash_prob (0.24) + mean_reversion (0.16), Volatile emphasizes valuation (0.16) + mean_reversion (0.14)",
+      "regime_awareness": "Full — weight profile selected by regime, drift layered on top",
+      "tests_passing": "94/94 (79 existing + 15 new, all pass)"
+    }
+  },
+  "honest_analysis": "This is a principled improvement grounded in factor investing research. The weight profiles are sensible but not empirically optimized — they're based on qualitative understanding of factor premia across regimes, not backtested weight optimization. The real test is whether these regime-adaptive weights improve signal accuracy on out-of-sample data. The implementation is minimal (3 lines of logic change) with full backward compatibility.",
+  "self_critique": [
+    "Weight profiles are hand-tuned, not optimized via backtest — a future cycle could use walk-forward optimization",
+    "Only market-level weights are regime-adaptive; stock-level weights (analyst_target, options_iv, etc.) remain fixed",
+    "No empirical validation that these specific weight values improve Sharpe or hit rate",
+    "Could have also made the action thresholds regime-adaptive (e.g., higher threshold for Buy in bear markets)"
+  ],
+  "next_steps": [
+    "Walk-forward backtest to validate regime-adaptive weights vs fixed weights on historical data",
+    "Extend regime-adaptive concept to stock-level signal weights",
+    "Consider regime-adaptive action thresholds (harder to trigger Buy in bear markets)",
+    "Optimize weight profiles via grid search or Bayesian optimization within walk-forward framework"
+  ],
+  "confidence": 0.80,
+  "depth": "moderate",
+  "references": [
+    "Jegadeesh & Titman (1993) — Momentum factor strongest in trending markets",
+    "DeBondt & Thaler (1985) — Mean reversion strongest after extreme moves",
+    "Ang et al. (2006) — Downside risk and volatility regime dependence",
+    "Asness, Moskowitz, Pedersen (2013) — Value and momentum everywhere (regime dependency)"
+  ]
+}

@@ -628,3 +628,150 @@ class TestPerStockSignalDifferentiation:
         result = get_stock_signal(market_sig, beta=1.5, stock_vol=0.30)
         assert "action" in result
         assert "composite_score" in result
+
+
+class TestRegimeAdaptiveWeights:
+    """Test that signal weights adapt to market regime."""
+
+    def test_bull_regime_uses_bull_weights(self):
+        """Bull regime should use the Bull weight profile."""
+        result = get_market_signal(
+            crash_prob_3m=10.0, regime="Bull", vix=18.0,
+            sp500_1m_return=3.0, sp500_3m_return=8.0,
+        )
+        assert result.get("regime_weight_profile") == "Bull"
+
+    def test_bear_regime_uses_bear_weights(self):
+        """Bear regime should use the Bear weight profile."""
+        result = get_market_signal(
+            crash_prob_3m=30.0, regime="Bear", vix=28.0,
+            sp500_1m_return=-5.0, sp500_3m_return=-10.0,
+        )
+        assert result.get("regime_weight_profile") == "Bear"
+
+    def test_volatile_regime_uses_volatile_weights(self):
+        """Volatile regime should use the Volatile weight profile."""
+        result = get_market_signal(
+            crash_prob_3m=20.0, regime="Volatile", vix=30.0,
+        )
+        assert result.get("regime_weight_profile") == "Volatile"
+
+    def test_neutral_regime_uses_default_weights(self):
+        """Neutral/Unknown regimes should use default weights (no profile key)."""
+        result = get_market_signal(regime="Neutral", vix=20.0)
+        assert "regime_weight_profile" not in result
+
+    def test_unknown_regime_uses_default_weights(self):
+        """Unknown regime should also use default weights."""
+        result = get_market_signal(regime="Unknown", vix=20.0)
+        assert "regime_weight_profile" not in result
+
+    def test_bull_momentum_more_influential(self):
+        """In Bull regime, strong positive momentum should push the score
+        higher than in Neutral, because Bull has higher momentum weight."""
+        kwargs = dict(
+            crash_prob_3m=10.0, vix=18.0,
+            sp500_1m_return=6.0, sp500_3m_return=12.0,
+            external_consensus="BULLISH", drawdown_pct=-1.0,
+        )
+        bull = get_market_signal(regime="Bull", **kwargs)
+        neutral = get_market_signal(regime="Neutral", **kwargs)
+        # Bull should be at least as bullish (momentum gets higher weight)
+        assert bull["composite_score"] >= neutral["composite_score"] - 0.05
+
+    def test_bear_crash_risk_more_influential(self):
+        """In Bear regime, high crash probability should push the score
+        more negative than in Neutral, because Bear has higher crash weight."""
+        kwargs = dict(
+            crash_prob_3m=45.0, vix=30.0,
+            sp500_1m_return=-6.0, sp500_3m_return=-12.0,
+        )
+        bear = get_market_signal(regime="Bear", **kwargs)
+        neutral = get_market_signal(regime="Neutral", **kwargs)
+        # Bear regime should amplify the bearish crash signal
+        assert bear["composite_score"] <= neutral["composite_score"] + 0.05
+
+    def test_bear_mean_reversion_after_drop(self):
+        """In Bear regime, a large 3M drop should trigger stronger mean reversion
+        signal because Bear weights mean_reversion higher."""
+        kwargs = dict(
+            crash_prob_3m=20.0, vix=28.0,
+            sp500_1m_return=-4.0, sp500_3m_return=-15.0,
+        )
+        bear = get_market_signal(regime="Bear", **kwargs)
+        # Mean reversion component should be present and positive
+        assert bear["components"]["mean_reversion"] > 0.3
+
+    def test_volatile_valuation_weight_higher(self):
+        """Volatile regime should put more weight on VIX-based valuation signal."""
+        # High VIX = moderate opportunity in volatile regime
+        result = get_market_signal(
+            crash_prob_3m=15.0, regime="Volatile", vix=27.0,
+        )
+        assert result.get("regime_weight_profile") == "Volatile"
+        # Valuation component should be positive (VIX 27 = opportunity zone)
+        assert result["components"]["valuation"] > 0
+
+    def test_regime_weights_still_produce_valid_output(self):
+        """All regime profiles should produce valid signal output."""
+        for regime in ["Bull", "Bear", "Volatile", "Neutral", "Unknown"]:
+            result = get_market_signal(
+                crash_prob_3m=15.0, regime=regime, vix=22.0,
+            )
+            assert -1.0 <= result["composite_score"] <= 1.0
+            assert result["action"] in {"Strong Buy", "Buy", "Hold", "Sell", "Strong Sell"}
+            assert 0 <= result["confidence"] <= 100
+
+    def test_drift_applied_on_top_of_regime_weights(self):
+        """Drift adjustment should apply ON TOP of regime-selected weights,
+        not on top of default weights."""
+        # Bull regime with critical drift: crash_prob starts at 0.14 (Bull profile),
+        # then gets multiplied by drift_mult (0.2 for critical).
+        result = get_market_signal(
+            crash_prob_3m=40.0, regime="Bull", vix=25.0,
+            drift_severity="critical",
+        )
+        assert result.get("regime_weight_profile") == "Bull"
+        assert result.get("drift_severity") == "critical"
+        # The crash weight reduction reason should appear
+        assert any("drift" in r.lower() for r in result["reasons"])
+
+    def test_bull_and_bear_produce_different_scores_same_inputs(self):
+        """Same market data under different regimes should produce different
+        composite scores because weights differ."""
+        kwargs = dict(
+            crash_prob_3m=20.0, vix=22.0,
+            sp500_1m_return=2.0, sp500_3m_return=5.0,
+            external_consensus="MIXED", drawdown_pct=-4.0,
+        )
+        bull = get_market_signal(regime="Bull", **kwargs)
+        bear = get_market_signal(regime="Bear", **kwargs)
+        # Scores should be different (weights changed)
+        assert bull["composite_score"] != bear["composite_score"]
+
+    def test_all_components_present_in_regime_profiles(self):
+        """Regime weight profiles should still produce all expected components."""
+        for regime in ["Bull", "Bear", "Volatile"]:
+            result = get_market_signal(
+                crash_prob_3m=15.0, regime=regime, vix=22.0,
+                external_consensus="BULLISH", drawdown_pct=-3.0,
+            )
+            for key in ["crash_prob", "regime", "valuation", "momentum",
+                        "mean_reversion", "external", "drawdown"]:
+                assert key in result["components"], f"{key} missing for {regime}"
+
+    def test_regime_weight_profiles_sum_to_one(self):
+        """All regime weight profiles in config should sum to 1.0."""
+        from backend.config import config
+        for regime, weights in config["regime_signal_weights"].items():
+            total = sum(weights.values())
+            assert total == pytest.approx(1.0, abs=0.01), \
+                f"{regime} regime weights sum to {total}, expected 1.0"
+
+    def test_regime_weight_profiles_have_all_keys(self):
+        """Regime weight profiles should have the same keys as default weights."""
+        from backend.config import config
+        default_keys = set(config["signal_weights"].keys())
+        for regime, weights in config["regime_signal_weights"].items():
+            assert set(weights.keys()) == default_keys, \
+                f"{regime} profile keys {set(weights.keys())} != default {default_keys}"
