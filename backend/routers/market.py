@@ -239,7 +239,7 @@ def _compute_market_signal() -> dict:
                     _feat_imp = dict(top) if top else None
                 except Exception:
                     pass
-            _drift_report = DriftDetector.from_rolling_window(
+            _drift_report = DriftDetector.from_multi_scale(
                 _feature_matrix, feature_importances=_feat_imp,
             )
             _drift_severity = _drift_report.get("effective_severity",

@@ -136,7 +136,7 @@ def _compute_market_signal_for_lab() -> dict:
             # Drift detection (reuses feature matrix)
             try:
                 from backend.services.drift_detector import DriftDetector
-                _drift_report = DriftDetector.from_rolling_window(_feature_matrix)
+                _drift_report = DriftDetector.from_multi_scale(_feature_matrix)
                 _drift_severity = _drift_report.get("severity")
             except Exception as e:
                 logger.debug("Drift detection unavailable in lab: %s", e)
@@ -798,20 +798,22 @@ def collect_drift_check(output_dir):
         # Rolling window: compare last 252 days against prior 504 days.
         # This detects *recent* distribution shifts, not "2000 vs 2020" drift
         # which is guaranteed on financial time series.
-        report = DriftDetector.from_rolling_window(
-            features, reference_days=504, inference_days=252,
-        )
+        report = DriftDetector.from_multi_scale(features)
 
         result = {
             "drift_detected": report["drift_detected"],
             "n_features_checked": report["n_features_checked"],
             "n_drifted": report["n_drifted"],
             "drift_pct": report["drift_pct"],
-            "severity": report.get("severity", "unknown"),
+            "severity": report.get("effective_severity", report.get("severity", "unknown")),
             "reference_window": report.get("reference_window"),
             "inference_window": report.get("inference_window"),
             "drifted_features": report["drifted_features"][:10],
+            "recent_stability": report.get("recent_stability"),
+            "scale_used": report.get("scale_used"),
         }
+        if "multi_scale" in report:
+            result["multi_scale"] = report["multi_scale"]
 
         _save(output_dir, "drift_check.json", result)
         severity = report.get("severity", "unknown")
@@ -876,6 +878,27 @@ def collect_options_intelligence(output_dir, cycle):
 # ---------------------------------------------------------------------------
 # 13. Code quality metrics
 # ---------------------------------------------------------------------------
+def collect_systemic_risk(output_dir):
+    """Collect turbulence index and absorption ratio."""
+    try:
+        from backend.services.data_fetcher import DataFetcher
+        from backend.services.systemic_risk import compute_systemic_risk
+
+        fetcher = DataFetcher()
+        data, _ = fetcher.fetch_market_data()
+        result = compute_systemic_risk(data)
+        _save(output_dir, "systemic_risk.json", result)
+        turb = result.get("turbulence_current")
+        ar = result.get("absorption_ratio_current")
+        stress = result.get("systemic_stress")
+        print(f"    [OK] turbulence={turb}, AR={ar}, stress={stress}")
+        return result
+    except Exception as e:
+        _save(output_dir, "systemic_risk.json", {"error": str(e)})
+        print(f"    [ERR] {e}")
+        return {"error": str(e)}
+
+
 def collect_code_metrics(output_dir):
     import subprocess as sp
     result = {}
@@ -944,6 +967,7 @@ def run_engine_data_collection(output_dir, cycle):
         ("validation_metrics", "Collecting model metadata", lambda d: collect_validation_metrics(d)),
         ("drift_check", "Checking feature drift", lambda d: collect_drift_check(d)),
         ("options_intelligence", "Checking options signals", lambda d: collect_options_intelligence(d, cycle)),
+        ("systemic_risk", "Computing systemic risk indicators", lambda d: collect_systemic_risk(d)),
         ("code_metrics", "Measuring code quality", lambda d: collect_code_metrics(d)),
     ]
 

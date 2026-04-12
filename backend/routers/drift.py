@@ -52,7 +52,7 @@ def _drift_check() -> dict:
     except Exception as e:
         logger.debug("Could not load crash model for drift weighting: %s", e)
 
-    report = DriftDetector.from_rolling_window(
+    report = DriftDetector.from_multi_scale(
         features, feature_importances=feat_imp,
     )
 
@@ -88,6 +88,14 @@ def _drift_check() -> dict:
         result["group_drift"] = report["group_drift"]
     if "drift_narrative" in report:
         result["drift_narrative"] = report["drift_narrative"]
+
+    # Add multi-scale drift analysis when available
+    if "multi_scale" in report:
+        result["multi_scale"] = report["multi_scale"]
+        result["scale_used"] = report.get("scale_used")
+        result["recent_stability"] = report.get("recent_stability")
+    if "multi_scale_summary" in report:
+        result["multi_scale_summary"] = report["multi_scale_summary"]
 
     return result
 

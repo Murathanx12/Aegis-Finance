@@ -1,0 +1,87 @@
+{
+  "cycle": 50,
+  "timestamp": "2026-04-12T16:30:00Z",
+  "title": "Multi-scale drift detection — reduce false-critical severity from regime changes",
+  "hypothesis": "The drift detector reports 89.2% critical drift because it uses a single 504/252 day window, which compares data across regime changes. By checking drift at multiple time scales (long/medium/short), we can detect whether the model is tracking recent patterns well even if long-term distributions shifted — reducing false severity and improving signal confidence.",
+  "what_i_noticed": [
+    "89.2% of features flagged as drifted at critical severity",
+    "This single assessment tanks crash model weight to 20% and signal confidence to 17%",
+    "The crash model may actually be fine if recent data is stable — a regime change 1-2 years ago doesn't mean the model is broken NOW",
+    "The drift detector only checks one time scale (504 ref / 252 inf), which compares data from potentially different market regimes",
+    "KS test with synthetic reference reconstruction produces false positives at small sample sizes (< 126 inference samples)"
+  ],
+  "what_i_did": [
+    "Added from_multi_scale() method to DriftDetector — checks drift at 3 time horizons (long: 504/252, medium: 252/126, short: 126/63)",
+    "Implements 'shortest stable scale' logic: if any non-primary scale shows drift ≤ moderate, uses that as effective severity",
+    "Added recent_stability classification: stable / degrading / unstable based on best non-primary scale",
+    "Added multi_scale_summary narrative for human-readable reports",
+    "Optimized: caches full reports to avoid recomputing primary scale twice",
+    "Used best non-primary scale (not just shortest) for recent_stability to handle KS false positives at small sample sizes",
+    "Wired from_multi_scale into ALL 5 call sites: drift router, crash router (2x), market router, stock router",
+    "Added multi_scale_windows config to config.py for tunability",
+    "Updated lab data_generator.py to capture multi-scale fields in experiment data",
+    "Wrote 20 comprehensive tests covering: structure, severity override, importance weighting, custom scales, edge cases"
+  ],
+  "files_modified": [
+    "backend/services/drift_detector.py",
+    "backend/routers/drift.py",
+    "backend/routers/crash.py",
+    "backend/routers/market.py",
+    "backend/routers/stock.py",
+    "backend/config.py",
+    "lab/data_generator.py"
+  ],
+  "files_created": [
+    "backend/tests/test_drift_multi_scale.py",
+    "lab/experiments/cycle_050/experiment_report.json"
+  ],
+  "tests_added": 20,
+  "tests_before": 1049,
+  "tests_after": 1069,
+  "test_results": {
+    "new_tests": "20/20 passed",
+    "existing_drift_tests": "55/55 passed (awareness + importance-weighted + group decomposition)",
+    "signal_engine_tests": "79/79 passed",
+    "data_generator_wiring_tests": "50/50 passed",
+    "prediction_confidence_tests": "27/27 passed",
+    "full_fast_suite": "1069/1069 passed (0 failed)"
+  },
+  "results": {
+    "before": {
+      "drift_severity": "critical",
+      "drift_pct": 89.2,
+      "crash_weight_multiplier": 0.2,
+      "signal_confidence": 17,
+      "single_scale_only": true
+    },
+    "after": {
+      "multi_scale_detection": true,
+      "scales": ["long (504/252)", "medium (252/126)", "short (126/63)"],
+      "shortest_stable_scale_override": true,
+      "recent_stability_classification": true,
+      "expected_improvement": "If medium or short scale shows stable data, effective severity drops from critical → low/moderate, crash weight rises from 0.2 → 0.7-1.0, signal confidence increases proportionally"
+    }
+  },
+  "key_findings": [
+    "The KS test produces false positives at small sample sizes (63 inference samples) because it reconstructs reference distributions from bin proportions — a lossy approximation that KS then flags as 'different'",
+    "The medium scale (252/126) is the most reliable short-term indicator — large enough for accurate KS tests, recent enough to capture current regime",
+    "For the synthetic gradual-drift test: long scale shows 100% drift (critical), medium shows 5% (low), confirming multi-scale correctly identifies recent stability",
+    "This directly addresses the #1 system issue — 89.2% critical drift tanking all signal confidence across the platform"
+  ],
+  "self_critique": [
+    "Did not actually run against live market data to verify the improvement on real features — the test uses synthetic data only",
+    "The KS test false-positive issue at small windows is a deeper problem that should be fixed (increase bin count, use stored raw reference data, or use a permutation test instead of synthetic reconstruction)",
+    "Could have added a frontend component to display multi-scale drift info — stayed backend-only",
+    "The from_multi_scale runs from_rolling_window 3 times (once per scale), each of which creates a new DriftDetector — could be optimized to share reference data between overlapping windows"
+  ],
+  "next_steps": [
+    "Fix KS test synthetic reconstruction to reduce false positives at small windows (store raw reference data or use permutation test)",
+    "Add frontend display for multi-scale drift info in the dashboard",
+    "Run live validation: call /api/drift/check with real market data and verify effective_severity is more realistic",
+    "Consider adaptive PSI thresholds: financial features like momentum/vol have naturally higher PSI than macro indicators",
+    "Profile the 3x from_rolling_window calls for performance — may need to optimize for the API hot path"
+  ],
+  "confidence": 0.85,
+  "depth": "moderate",
+  "impact": "high — directly addresses the #1 platform issue (critical drift → low signal confidence)"
+}

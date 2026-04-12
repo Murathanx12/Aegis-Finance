@@ -517,6 +517,197 @@ class DriftDetector:
         narrative += f" — effective severity: {effective_severity}"
         return narrative
 
+    @staticmethod
+    def from_multi_scale(
+        features: pd.DataFrame,
+        feature_importances: Optional[dict[str, float]] = None,
+        scales: Optional[list[dict]] = None,
+        **kwargs,
+    ) -> dict:
+        """Multi-scale drift detection: checks drift at multiple time horizons.
+
+        Financial features are non-stationary by nature. A 2-year vs 1-year
+        comparison (the default single-scale approach) will almost always show
+        high drift after a regime change — even when the model is tracking
+        recent patterns well.
+
+        Multi-scale detection fixes this by checking at three horizons:
+          - Long:  504 ref / 252 inf  (2yr vs 1yr — structural shifts)
+          - Medium: 252 ref / 126 inf (1yr vs 6mo — recent trend changes)
+          - Short:  126 ref / 63 inf  (6mo vs 1Q — immediate stability)
+
+        Decision logic:
+          - If short-scale drift is low/moderate, the model is tracking well
+            regardless of long-term drift → effective severity from short scale
+          - If ALL scales show high/critical drift, the model is genuinely
+            degraded → effective severity stays critical
+          - Importance weighting still applies at each scale
+
+        Args:
+            features: Full feature matrix (DatetimeIndex, chronologically sorted)
+            feature_importances: Optional importance weights from crash model
+            scales: Override the default scales. List of dicts with
+                    {name, reference_days, inference_days} entries.
+            **kwargs: Passed to DriftDetector.__init__
+
+        Returns:
+            dict with:
+              - All fields from from_rolling_window() (backward compatible)
+              - multi_scale: per-scale drift reports
+              - scale_used: which scale determined effective_severity
+              - recent_stability: "stable" / "degrading" / "unstable"
+        """
+        drift_cfg = config["ml"].get("drift", {})
+        if scales is None:
+            scales = drift_cfg.get("multi_scale_windows", [
+                {"name": "long", "reference_days": 504, "inference_days": 252},
+                {"name": "medium", "reference_days": 252, "inference_days": 126},
+                {"name": "short", "reference_days": 126, "inference_days": 63},
+            ])
+
+        n = len(features)
+        scale_reports = {}
+        severities = {}
+        full_reports = {}  # cache full reports to avoid recomputation
+
+        for scale in scales:
+            name = scale["name"]
+            ref_days = scale["reference_days"]
+            inf_days = scale["inference_days"]
+            total = ref_days + inf_days
+
+            if n < total:
+                # Not enough data for this scale — skip
+                continue
+
+            report = DriftDetector.from_rolling_window(
+                features,
+                reference_days=ref_days,
+                inference_days=inf_days,
+                feature_importances=feature_importances,
+                **kwargs,
+            )
+            full_reports[name] = report
+
+            scale_reports[name] = {
+                "severity": report.get("severity", "none"),
+                "effective_severity": report.get("effective_severity", "none"),
+                "drift_pct": report.get("drift_pct", 0),
+                "n_drifted": report.get("n_drifted", 0),
+                "n_features_checked": report.get("n_features_checked", 0),
+                "reference_window": ref_days,
+                "inference_window": inf_days,
+            }
+            if "importance_weighted_drift_pct" in report:
+                scale_reports[name]["importance_weighted_drift_pct"] = report[
+                    "importance_weighted_drift_pct"
+                ]
+            severities[name] = report.get("effective_severity", "none")
+
+        if not scale_reports:
+            # Fallback to single-scale
+            return DriftDetector.from_rolling_window(
+                features,
+                feature_importances=feature_importances,
+                **kwargs,
+            )
+
+        # Determine effective severity using shortest stable scale.
+        # Severity ordering for comparison
+        sev_order = {"none": 0, "low": 1, "moderate": 2, "high": 3, "critical": 4}
+
+        # Use the primary (long) scale as the base report (reuse cached)
+        primary_name = scales[0]["name"]
+        if primary_name in full_reports:
+            primary_report = full_reports[primary_name]
+        else:
+            # Primary scale was skipped (insufficient data) — use first available
+            primary_name = next(iter(scale_reports))
+            primary_report = full_reports[primary_name]
+
+        # Find the shortest scale with acceptable drift
+        scale_used = primary_name
+        best_severity = severities.get(primary_name, "critical")
+
+        for scale in reversed(scales):  # shortest first
+            name = scale["name"]
+            if name not in severities:
+                continue
+            sev = severities[name]
+            if sev_order.get(sev, 4) <= sev_order["moderate"]:
+                # This shorter scale shows acceptable drift
+                best_severity = sev
+                scale_used = name
+                break
+
+        # Classify recent stability using the best non-primary scale.
+        # Use the minimum severity among all non-primary scales because
+        # the KS test can produce false positives at very small windows
+        # (e.g., 63 inference samples), so the most reliable short-term
+        # signal is the best one across medium and short scales.
+        non_primary = [s["name"] for s in scales[1:] if s["name"] in severities]
+        if non_primary:
+            best_recent_ord = min(
+                sev_order.get(severities[n], 4) for n in non_primary
+            )
+        else:
+            best_recent_ord = sev_order.get(
+                severities.get(scales[0]["name"], "none"), 0
+            )
+
+        if best_recent_ord <= sev_order["low"]:
+            recent_stability = "stable"
+        elif best_recent_ord <= sev_order["moderate"]:
+            recent_stability = "degrading"
+        else:
+            recent_stability = "unstable"
+
+        # Override effective severity based on multi-scale analysis
+        primary_report["effective_severity"] = best_severity
+        primary_report["multi_scale"] = scale_reports
+        primary_report["scale_used"] = scale_used
+        primary_report["recent_stability"] = recent_stability
+
+        # Rebuild narrative if group_drift is available
+        if "group_drift" in primary_report:
+            primary_report["drift_narrative"] = DriftDetector._build_narrative(
+                primary_report["group_drift"],
+                best_severity,
+            )
+
+        # Add a human-readable multi-scale summary
+        primary_report["multi_scale_summary"] = (
+            DriftDetector._build_multi_scale_summary(
+                scale_reports, best_severity, scale_used, recent_stability,
+            )
+        )
+
+        return primary_report
+
+    @staticmethod
+    def _build_multi_scale_summary(
+        scale_reports: dict,
+        effective_severity: str,
+        scale_used: str,
+        recent_stability: str,
+    ) -> str:
+        """Build human-readable multi-scale summary."""
+        parts = []
+        for name, info in scale_reports.items():
+            sev = info["effective_severity"]
+            pct = info["drift_pct"]
+            parts.append(f"{name}: {sev} ({pct:.0f}%)")
+
+        summary = "Drift by scale: " + ", ".join(parts)
+        if recent_stability == "stable":
+            summary += f". Recent data is stable — effective severity: {effective_severity}"
+        elif recent_stability == "degrading":
+            summary += f". Recent data showing moderate drift — effective severity: {effective_severity}"
+        else:
+            summary += f". Drift across all scales — effective severity: {effective_severity}"
+
+        return summary
+
     def _ks_test(self, col: str, values: np.ndarray) -> tuple[float, float]:
         """Two-sample Kolmogorov-Smirnov test against reference distribution.
 

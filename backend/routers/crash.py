@@ -80,7 +80,7 @@ def _predict_crash(horizon: str, explain: bool) -> dict:
     confidence_map = drift_cfg.get("confidence_multiplier", {})
     try:
         feat_imp = dict(predictor.get_top_features(n=200)) if predictor.get_top_features() else None
-        drift_report = DriftDetector.from_rolling_window(
+        drift_report = DriftDetector.from_multi_scale(
             features, feature_importances=feat_imp,
         )
         drift_severity = drift_report.get("effective_severity",
@@ -195,7 +195,7 @@ def _crash_diagnostics() -> dict:
     confidence_map = drift_cfg.get("confidence_multiplier", {})
     try:
         feat_imp = dict(predictor.get_top_features(n=200)) if predictor.get_top_features() else None
-        drift_report = DriftDetector.from_rolling_window(
+        drift_report = DriftDetector.from_multi_scale(
             features, feature_importances=feat_imp,
         )
         drift_severity = drift_report.get("effective_severity",
