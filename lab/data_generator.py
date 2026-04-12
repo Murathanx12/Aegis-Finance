@@ -250,12 +250,18 @@ def collect_stock_analysis(output_dir, cycle=1):
             # Per-stock risk factors for crash prob adjustment and signal
             stock_vol = data.get("volatility", 20.0) / 100.0
             stock_dd = None
+            stock_mom_1m = None
+            stock_mom_3m = None
             price_hist = data.get("price_history")
             if price_hist and len(price_hist) > 10:
                 prices_arr = [p["price"] for p in price_hist]
                 peak = max(prices_arr)
                 current = prices_arr[-1]
                 stock_dd = (current / peak - 1) * 100 if peak > 0 else 0.0
+                if len(prices_arr) >= 22 and prices_arr[-22] > 0:
+                    stock_mom_1m = (current / prices_arr[-22] - 1) * 100
+                if len(prices_arr) >= 64 and prices_arr[-64] > 0:
+                    stock_mom_3m = (current / prices_arr[-64] - 1) * 100
 
             # Per-stock crash probability
             from backend.services.signal_engine import adjust_crash_prob_for_stock
@@ -275,6 +281,8 @@ def collect_stock_analysis(output_dir, cycle=1):
                 forward_pe=fwd_pe,
                 stock_vol=stock_vol,
                 drawdown_from_peak=stock_dd,
+                stock_momentum_1m=stock_mom_1m,
+                stock_momentum_3m=stock_mom_3m,
             )
 
             results[ticker] = {
@@ -450,6 +458,20 @@ def collect_signal_quality(output_dir, cycle=1):
 
                 current_price = float(hist["Close"].iloc[-1]) if len(hist) > 0 else 0
 
+                # Compute stock-level technical signals from price history
+                _stock_dd = None
+                _stock_mom_1m = None
+                _stock_mom_3m = None
+                if len(hist) > 10:
+                    closes = hist["Close"].values
+                    _peak = float(closes.max())
+                    _curr = float(closes[-1])
+                    _stock_dd = (_curr / _peak - 1) * 100 if _peak > 0 else 0.0
+                    if len(closes) >= 22 and closes[-22] > 0:
+                        _stock_mom_1m = (_curr / float(closes[-22]) - 1) * 100
+                    if len(closes) >= 64 and closes[-64] > 0:
+                        _stock_mom_3m = (_curr / float(closes[-64]) - 1) * 100
+
                 sig = get_stock_signal(
                     market_signal=market_signal,
                     beta=float(info.get("beta", 1.0) or 1.0),
@@ -457,6 +479,9 @@ def collect_signal_quality(output_dir, cycle=1):
                     current_price=current_price,
                     pe_ratio=info.get("trailingPE"),
                     forward_pe=info.get("forwardPE"),
+                    drawdown_from_peak=_stock_dd,
+                    stock_momentum_1m=_stock_mom_1m,
+                    stock_momentum_3m=_stock_mom_3m,
                 )
                 if sig:
                     stock_signals[ticker_str] = {

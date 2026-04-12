@@ -1,0 +1,91 @@
+{
+  "cycle": 39,
+  "timestamp": "2026-04-12T13:00:00Z",
+  "title": "Stock signal diversity: per-stock momentum & drawdown differentiation",
+  "duration_minutes": 18,
+
+  "observation": {
+    "what_i_noticed": "All 12 stocks in the screener showed 'Buy' with zero signal diversity. Composite scores ranged 0.229-0.394 (spread=0.165, std=0.051). The signal engine was dominated by the market-level composite score (~0.165), with stock-specific adjustments too small to push any stock below the Buy threshold (0.15). In a bull market, every adjustment was systematically positive: analyst targets show upside, low-beta stocks get 'safer' crash bonus, high-beta amplifies the positive base.",
+    "root_cause": "get_stock_signal() used market composite as ~90% of the signal with tiny additive adjustments (~0.01-0.05 each). No stock-specific technical signals (drawdown, momentum) existed to differentiate stocks that are individually weak from those that are individually strong."
+  },
+
+  "what_i_did": {
+    "approach": "Added two new stock-specific signal components to get_stock_signal: (1) stock drawdown signal — graduated mapping from stock's distance from its 52-week high to a -1.0 to +0.1 signal, weighted at 0.25; (2) stock momentum signal — the stock's own 1m and 3m returns mapped to a signal, weighted at 0.20. Updated all three call sites (screener, single stock endpoint, stock signal endpoint) plus the lab data generator to compute and pass stock 1m/3m returns from price_history.",
+    "key_design_decisions": [
+      "Drawdown signal: near peak (+0.1), -3-8% (0), -8-20% (graduated linear to -0.8), below -20% (capped -0.6 to -1.0)",
+      "Momentum signal: 1m scaled by /12 (+-12% = +-1), 3m scaled by /20 (+-20% = +-1), blended 40/60",
+      "Weights: stock_drawdown=0.25, stock_momentum=0.20 — large enough to shift signals across Buy/Hold/Sell thresholds",
+      "New parameters are backward-compatible — default None values mean existing callers work unchanged"
+    ]
+  },
+
+  "files_modified": [
+    "backend/services/signal_engine.py",
+    "backend/config.py",
+    "backend/routers/stock.py",
+    "lab/data_generator.py"
+  ],
+  "files_created": [
+    "lab/experiments/cycle_039/experiment_report.json"
+  ],
+
+  "tests": {
+    "added": 0,
+    "existing_passed": 143,
+    "existing_failed": 0,
+    "test_files_run": [
+      "backend/tests/test_signal_engine.py (79 passed)",
+      "backend/tests/test_stock_signal_wiring.py (29 passed)",
+      "backend/tests/test_data_generator_wiring.py (35 passed)"
+    ]
+  },
+
+  "results": {
+    "before": {
+      "unique_actions": 1,
+      "action_distribution": {"Buy": 12},
+      "score_range": [0.229, 0.394],
+      "score_spread": 0.165,
+      "score_std": 0.051
+    },
+    "after": {
+      "simulated_bull_market": {
+        "unique_actions": 2,
+        "actions_seen": ["Buy", "Sell"],
+        "score_range": [-0.320, 0.380],
+        "score_spread": 0.700,
+        "note": "Struggling stock (deep drawdown + weak momentum) gets Sell even in bull market"
+      },
+      "simulated_neutral_market": {
+        "unique_actions": 4,
+        "actions_seen": ["Buy", "Hold", "Sell", "Strong Sell"],
+        "score_range": [-0.555, 0.215],
+        "score_spread": 0.770,
+        "note": "Full signal spectrum in neutral conditions"
+      }
+    },
+    "improvement_factor": {
+      "score_spread": "4.2x wider (0.165 -> 0.700 in bull, 0.770 in neutral)",
+      "action_diversity": "1 unique action -> 2-4 unique actions"
+    }
+  },
+
+  "analysis": {
+    "what_worked": "Adding stock-specific drawdown and momentum as independent signal components with meaningful weights (0.25 and 0.20) creates real differentiation. A stock down 30% from its peak with -25% 3m return now gets Sell regardless of market direction. This is the correct behavior — the screener should distinguish winners from losers.",
+    "honest_limitations": [
+      "Haven't tested with live screener data yet (requires network calls to Yahoo Finance) — simulation uses realistic but synthetic profiles",
+      "The new signals are additive, so in an extremely bullish market (composite > 0.35), even moderate drawdowns may not push to Sell. This is arguably correct — a bull market should have a bullish bias.",
+      "The drawdown signal and stock-specific crash risk signal overlap conceptually (both penalize stocks far from peak). However they measure different things: crash risk is about future probability, drawdown is about current technical position."
+    ],
+    "self_critique": "Could have also considered relative strength (stock vs market returns) as a standalone signal instead of just absolute momentum. However, the current approach (stock's own momentum) is simpler and more intuitive to users."
+  },
+
+  "next_steps": [
+    "Run live screener to validate signal diversity with real market data",
+    "Consider adding relative strength index (RSI) or other mean-reversion signals for stocks in extreme positions",
+    "The 89% feature drift problem remains unaddressed — that requires model retraining, not signal engineering"
+  ],
+
+  "confidence": "high",
+  "depth_rating": "targeted fix — narrow scope, high impact on user-visible screener quality"
+}

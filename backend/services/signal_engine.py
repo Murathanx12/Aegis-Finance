@@ -346,6 +346,8 @@ def get_stock_signal(
     forward_pe: Optional[float] = None,
     stock_vol: Optional[float] = None,
     drawdown_from_peak: Optional[float] = None,
+    stock_momentum_1m: Optional[float] = None,
+    stock_momentum_3m: Optional[float] = None,
 ) -> dict:
     """Generate a per-stock signal adjusted by beta and fundamentals.
 
@@ -359,6 +361,8 @@ def get_stock_signal(
         forward_pe: Forward P/E ratio (consensus estimates)
         stock_vol: Annualized stock volatility (decimal, e.g. 0.30)
         drawdown_from_peak: Stock drawdown from 52w high (negative pct, e.g. -15.0)
+        stock_momentum_1m: Stock's own 1-month return (pct, e.g. -5.0)
+        stock_momentum_3m: Stock's own 3-month return (pct, e.g. 12.0)
 
     Returns:
         Dict with action, confidence, color, reasons
@@ -450,6 +454,43 @@ def get_stock_signal(
             reasons.append(f"Elevated stock-specific crash risk ({stock_prob*100:.0f}% vs {market_prob*100:.0f}% market)")
         elif stock_prob < market_prob * 0.7:
             reasons.append(f"Below-market crash risk ({stock_prob*100:.0f}% vs {market_prob*100:.0f}% market)")
+
+    # Stock-specific drawdown signal: penalizes stocks far from their peak,
+    # rewards stocks near highs. This is independent of the market-level drawdown
+    # component — a stock can be in a -30% drawdown while the market is near ATH.
+    dd_w = _sw.get("stock_drawdown", 0.25)
+    if drawdown_from_peak is not None:
+        dd = min(drawdown_from_peak, 0.0)
+        # Graduated: near peak (+0.1), -5% (0), -15% (-0.4), -30% (-0.8), -50%+ (-1.0)
+        if dd > -3:
+            stock_dd_sig = 0.1
+        elif dd > -8:
+            stock_dd_sig = 0.0
+        elif dd > -20:
+            stock_dd_sig = dd / 25.0  # -8% → -0.32, -20% → -0.80
+        else:
+            stock_dd_sig = float(np.clip(dd / 30.0, -1.0, -0.6))
+        stock_score += dd_w * stock_dd_sig
+
+        if dd < -20:
+            reasons.append(f"Stock in deep drawdown ({dd:.0f}% from peak)")
+        elif dd < -10:
+            reasons.append(f"Stock in correction ({dd:.0f}% from peak)")
+
+    # Stock-specific momentum signal: the stock's own recent returns.
+    # A stock down 15% in 3 months during a bull market is a red flag;
+    # a stock up 20% shows individual strength beyond the market move.
+    mom_w = _sw.get("stock_momentum", 0.20)
+    if stock_momentum_1m is not None or stock_momentum_3m is not None:
+        s_mom_1m = float(np.clip((stock_momentum_1m or 0.0) / 12, -1, 1))  # ±12% → ±1
+        s_mom_3m = float(np.clip((stock_momentum_3m or 0.0) / 20, -1, 1))  # ±20% → ±1
+        stock_mom_sig = 0.4 * s_mom_1m + 0.6 * s_mom_3m
+        stock_score += mom_w * stock_mom_sig
+
+        if (stock_momentum_3m or 0.0) < -15:
+            reasons.append(f"Weak stock momentum ({stock_momentum_3m:.0f}% 3M)")
+        elif (stock_momentum_3m or 0.0) > 15:
+            reasons.append(f"Strong stock momentum (+{stock_momentum_3m:.0f}% 3M)")
 
     stock_score = float(np.clip(stock_score, -1, 1))
 

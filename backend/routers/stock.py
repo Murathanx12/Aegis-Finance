@@ -105,12 +105,19 @@ def _screener() -> dict:
             # Extract stock-level risk factors for signal differentiation
             stock_vol = r.get("volatility", 20.0) / 100.0  # stored as pct
             stock_dd = None
+            stock_mom_1m = None
+            stock_mom_3m = None
             price_hist = r.get("price_history")
             if price_hist and len(price_hist) > 10:
                 prices_arr = [p["price"] for p in price_hist]
                 peak = max(prices_arr)
                 current = prices_arr[-1]
                 stock_dd = (current / peak - 1) * 100 if peak > 0 else 0.0
+                # Compute stock-specific momentum (1m ~ 21 days, 3m ~ 63 days)
+                if len(prices_arr) >= 22 and prices_arr[-22] > 0:
+                    stock_mom_1m = (current / prices_arr[-22] - 1) * 100
+                if len(prices_arr) >= 64 and prices_arr[-64] > 0:
+                    stock_mom_3m = (current / prices_arr[-64] - 1) * 100
 
             # Compute per-stock adjusted crash prob for the result
             stock_crash_prob = None
@@ -130,6 +137,8 @@ def _screener() -> dict:
                 forward_pe=fwd_pe,
                 stock_vol=stock_vol,
                 drawdown_from_peak=stock_dd,
+                stock_momentum_1m=stock_mom_1m,
+                stock_momentum_3m=stock_mom_3m,
             )
 
             return {
@@ -367,12 +376,18 @@ def _analyze_stock(ticker: str) -> dict:
     # Extract stock-level risk factors for per-stock crash prob and signal
     stock_vol = result.get("volatility", 20.0) / 100.0
     stock_dd = None
+    stock_mom_1m = None
+    stock_mom_3m = None
     price_hist = result.get("price_history")
     if price_hist and len(price_hist) > 10:
         prices_arr = [p["price"] for p in price_hist]
         peak = max(prices_arr)
         current = prices_arr[-1]
         stock_dd = (current / peak - 1) * 100 if peak > 0 else 0.0
+        if len(prices_arr) >= 22 and prices_arr[-22] > 0:
+            stock_mom_1m = (current / prices_arr[-22] - 1) * 100
+        if len(prices_arr) >= 64 and prices_arr[-64] > 0:
+            stock_mom_3m = (current / prices_arr[-64] - 1) * 100
 
     # Per-stock crash probability
     if crash_prob_for_mc is not None:
@@ -393,6 +408,8 @@ def _analyze_stock(ticker: str) -> dict:
         forward_pe=fwd_pe,
         stock_vol=stock_vol,
         drawdown_from_peak=stock_dd,
+        stock_momentum_1m=stock_mom_1m,
+        stock_momentum_3m=stock_mom_3m,
     )
 
     # Attach signal and crash fields to the result
@@ -459,12 +476,18 @@ def _stock_signal(ticker: str) -> dict:
     # Extract stock-level risk factors
     stock_vol = stock_data.get("volatility", 20.0) / 100.0
     stock_dd = None
+    stock_mom_1m = None
+    stock_mom_3m = None
     price_hist = stock_data.get("price_history")
     if price_hist and len(price_hist) > 10:
         prices_arr = [p["price"] for p in price_hist]
         peak = max(prices_arr)
         current = prices_arr[-1]
         stock_dd = (current / peak - 1) * 100 if peak > 0 else 0.0
+        if len(prices_arr) >= 22 and prices_arr[-22] > 0:
+            stock_mom_1m = (current / prices_arr[-22] - 1) * 100
+        if len(prices_arr) >= 64 and prices_arr[-64] > 0:
+            stock_mom_3m = (current / prices_arr[-64] - 1) * 100
 
     signal = get_stock_signal(
         market_signal=market_sig,
@@ -476,6 +499,8 @@ def _stock_signal(ticker: str) -> dict:
         forward_pe=fwd_pe,
         stock_vol=stock_vol,
         drawdown_from_peak=stock_dd,
+        stock_momentum_1m=stock_mom_1m,
+        stock_momentum_3m=stock_mom_3m,
     )
     signal["ticker"] = ticker
     signal["name"] = stock_data.get("name", ticker)
