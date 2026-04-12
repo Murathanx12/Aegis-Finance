@@ -1,0 +1,20 @@
+Done. Here's the cycle 43 summary:
+
+## Cycle 43: Feature-Group Drift Decomposition
+
+**Problem:** The drift detector reports 89.2% of features as "critical" drift — but this is noise. In a prolonged bull market, momentum/vol features naturally shift. The flat "critical" label is not actionable.
+
+**Solution:** Added feature-group decomposition that classifies 158 features into 10 semantic groups and reports per-group drift metrics.
+
+**What changed:**
+- `backend/config.py` — Added `feature_groups` config mapping 10 groups (interaction, momentum, volatility, tail_risk, price_distance, technical, vix, credit_yields, cross_asset, macro) with prefix patterns
+- `backend/services/drift_detector.py` — Added `_classify_feature()`, `_group_drift_summary()`, and `_build_narrative()` methods. Group drift is included in both `check_drift()` and `from_rolling_window()` reports
+- `backend/routers/drift.py` — Exposes `group_drift` and `drift_narrative` in the `/api/drift/check` response
+- `backend/tests/test_drift_group_decomposition.py` — 21 new tests covering classification, group summary structure, rolling window integration, and narrative generation
+
+**Test results:** 21 new tests pass, 161 existing drift/signal/confidence tests all pass (0 broken).
+
+**Before:** "141/158 features drifted, severity=critical"
+**After:** Per-group breakdown (e.g., momentum: 100% drifted, macro: 10% drifted) + narrative: "momentum, volatility features are drifting significantly; credit_yields, macro remain stable — effective severity: moderate"
+
+---STDERR---
