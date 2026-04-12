@@ -1,0 +1,20 @@
+Done. Here's what Cycle 48 accomplished:
+
+**Problem identified:** The market signal already had full component decomposition, but `get_stock_signal()` returned only a final composite score — users couldn't see *why* a stock was rated Buy vs Hold, or what drove the rating.
+
+**What was built:**
+
+1. **Component decomposition** — `get_stock_signal()` now returns a `components` dict with 10 named factors, each showing its individual score contribution:
+   - `market_base`, `beta_adjustment`, `analyst_target`, `sector_momentum`, `valuation`, `crash_risk`, `drawdown`, `momentum`, `options`, `earnings`
+
+2. **Conviction quality metric** — new `_compute_conviction_quality()` function that measures whether components agree or conflict:
+   - `quality`: "high" (≥75% agreement, ≥3 factors) / "moderate" (≥50%) / "low"
+   - `agreement_pct`: percentage of stock-level factors pointing same direction
+   - `dominant_driver`: largest single contributor
+   - `n_contributing`: how many factors had non-zero input
+
+3. **Router wiring** — Both the screener endpoint and single-stock endpoint now pass through `signal_components` and `signal_conviction`
+
+**Test results:** 194 tests passing (94 existing signal engine + 69 signal analytics/wiring + 31 new), 0 broken. All 144 router tests pass too.
+
+---STDERR---
