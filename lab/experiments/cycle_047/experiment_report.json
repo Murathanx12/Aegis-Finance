@@ -1,0 +1,50 @@
+{
+  "cycle": 47,
+  "timestamp": "2026-04-12T15:30:00Z",
+  "title": "Signal analytics — consensus scoring, conviction decomposition, ranking, risk-reward",
+  "hypothesis": "The screener shows Buy/Hold/Sell but gives no insight into WHY signals differ or how confident the components are. Adding consensus scoring, conviction decomposition, risk-reward ratios, relative ranking, and sector concentration warnings makes the screener output actionable rather than just informative.",
+  "observation": "Signal quality data shows only 2 unique actions (Buy/Hold) across 12 stocks with confidence 0-38%. The composite score tells you the answer but not the reasoning. A +0.20 from unanimous mild bullishness is very different from +0.20 where momentum says +0.8 and crash risk says -0.6. Users have no way to distinguish these cases. Additionally, there's no relative ranking (is this the best Buy or the worst?), no risk-reward profile, and no warning when top picks are all in the same sector.",
+  "approach": "Built a new signal_analytics.py service as a post-processing layer that enriches screener output without modifying the signal engine itself. Five capabilities: (1) signal consensus — measures component agreement ratio and dispersion, (2) conviction decomposition — breaks composite into per-component contributions sorted by impact, (3) risk-reward ratio — uses MC p10/p90 returns to compute upside/downside asymmetry, (4) relative ranking — percentile and tier within screener universe, (5) sector concentration detection — warns when top picks cluster in one sector.",
+  "files_modified": [
+    "backend/config.py",
+    "backend/routers/stock.py"
+  ],
+  "files_created": [
+    "backend/services/signal_analytics.py",
+    "backend/tests/test_signal_analytics.py"
+  ],
+  "changes": [
+    "Created backend/services/signal_analytics.py with 5 functions: compute_signal_consensus, compute_conviction_decomposition, compute_risk_reward, rank_screener_signals, detect_sector_concentration, enrich_screener_signals",
+    "Signal consensus measures agreement_ratio (0-1), dispersion, n_bullish/n_bearish/n_neutral, and labels: strong/moderate/weak/conflicted",
+    "Conviction decomposition shows per-component contribution_pct sorted by impact — enables 'this is a Buy because 40% regime, 25% external, 20% crash_prob'",
+    "Risk-reward ratio uses MC p10/p90 5Y returns to compute upside/downside asymmetry with labels: highly_favorable to highly_unfavorable",
+    "Relative ranking adds signal_rank, signal_percentile (0-100), signal_tier (top_quartile to bottom_quartile)",
+    "Sector concentration checks top N picks and warns if >60% are in one sector",
+    "Added signal_analytics config section to config.py with concentration_warning_pct and top_n thresholds",
+    "Wired enrich_screener_signals into screener endpoint — enrichment is wrapped in try/except so screener still works if analytics fail",
+    "Wrote 40 unit tests covering all functions, edge cases, and integration"
+  ],
+  "tests": {
+    "new_tests": 40,
+    "new_test_file": "backend/tests/test_signal_analytics.py",
+    "all_new_passing": true,
+    "existing_signal_engine_tests": "94 passing",
+    "existing_router_tests": "18 passing (stock-related)",
+    "regressions": 0
+  },
+  "results": {
+    "before": "Screener returned flat list of stocks with signal_action/signal_score — no ranking, no explanation of why, no risk-reward, no concentration awareness",
+    "after": "Screener now returns signal_analytics block with: market consensus (agreement ratio + decomposition), per-stock ranking (percentile + tier), per-stock risk-reward (MC upside/downside ratio), sector concentration warning"
+  },
+  "analysis": "This is a pure additive feature — it enriches existing output without changing any signal computation. The consensus scoring adds genuine value: it distinguishes 'everyone mildly agrees' from 'half strongly bullish, half strongly bearish' which is a fundamentally different market view even at the same composite score. The risk-reward ratio connects MC simulation output to signal context, which was previously siloed. The concentration warning is important because without it, the screener could recommend 5 tech stocks in a tech bubble.",
+  "self_critique": "This cycle is infrastructure/UX rather than ML improvement. It doesn't change signal accuracy or add new data sources. The conviction decomposition is only available for market-level signals (from market_signal components), not per-stock signals (which are computed as additive adjustments without tracking components separately). Future work should track stock-level component contributions too. The risk-reward depends on MC data being available in the screener output, which it currently isn't for the standard screener format (only in full stock analysis) — so risk_reward will show available:false for screener stocks until MC fields are added to screener output.",
+  "next_steps": [
+    "Add per-stock signal component tracking to get_stock_signal() so conviction decomposition works at stock level",
+    "Include MC return fields (mc_p10_5y, mc_p90_5y) in screener output to enable risk-reward ratios",
+    "Build stock-level backtesting to validate per-stock signals (currently only market-level is backtested)",
+    "Wire return_model.py into signal engine as an ML-predicted return component (completely orphaned today)",
+    "Add correlation-based diversification score across top picks (beyond just sector concentration)"
+  ],
+  "confidence": "high",
+  "depth_rating": "moderate — new service with 5 functions, 40 tests, config, and router integration, but no ML changes"
+}

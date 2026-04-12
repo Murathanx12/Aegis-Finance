@@ -335,6 +335,12 @@ config: dict = {
         "max_multiplier": 2.5,         # ceiling: no stock gets more than 2.5x market crash
     },
 
+    # ── SIGNAL ANALYTICS ────────────────────────────────────────────────
+    "signal_analytics": {
+        "concentration_warning_pct": 60,  # warn if top N picks are >60% in one sector
+        "top_n_for_concentration": 5,     # check top 5 stocks for sector concentration
+    },
+
     # ── SIMULATION SETTINGS ──────────────────────────────────────────────
     "simulation": {
         "forecast_years": 5,
