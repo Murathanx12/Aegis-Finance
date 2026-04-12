@@ -181,6 +181,8 @@ def _screener() -> dict:
                 "signal_action": stock_sig["action"],
                 "signal_confidence": stock_sig["confidence"],
                 "signal_score": stock_sig["composite_score"],
+                "signal_components": stock_sig.get("components"),
+                "signal_conviction": stock_sig.get("conviction"),
                 "prediction_confidence": r.get("prediction_confidence", {}).get("grade"),
             }
         except Exception as e:
@@ -497,6 +499,7 @@ def _analyze_stock(ticker: str) -> dict:
     result["signal_confidence"] = stock_sig["confidence"]
     result["signal_score"] = stock_sig["composite_score"]
     result["signal_components"] = stock_sig.get("components", {})
+    result["signal_conviction"] = stock_sig.get("conviction", {})
     result["signal_reasons"] = stock_sig.get("reasons", [])
     result["crash_prob_3m"] = crash_3m_pct
     result["market_signal"] = market_sig["action"]
