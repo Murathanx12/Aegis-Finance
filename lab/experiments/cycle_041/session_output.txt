@@ -1,0 +1,24 @@
+Done. Here's the summary:
+
+## Cycle 041 Complete
+
+**What I built:** A prediction confidence scoring system that quantifies uncertainty in stock analysis predictions.
+
+**The problem:** The system detects 89.2% critical feature drift, but stock analysis returns point estimates with zero uncertainty metadata. Users see precise-looking numbers with no indication of reliability.
+
+**The solution:**
+- **`prediction_confidence.py`** — 5-component confidence scorer:
+  - **Drift severity** (35% weight) — the dominant uncertainty source right now
+  - **MC spread** (20%) — how wide P10-P90 is relative to median  
+  - **GARCH tail quality** (15%) — fat tails = harder to predict
+  - **Data sufficiency** (15%) — more history = better calibration
+  - **Beta stability** (15%) — extreme betas are harder to project
+
+- Outputs: **Grade A-F**, numeric score 0-1, drift-adjusted P10/P90 intervals
+- Under critical drift, intervals **widen 60%** (e.g., P10 drops further, P90 rises further)
+
+**Files changed:** 5 files (2 new, 3 modified)  
+**Tests:** 27 new, all passing. 106 existing related tests verified green.  
+**Code smells:** 1 → 0 (fillna(0) was already fixed in prior commit)
+
+---STDERR---
