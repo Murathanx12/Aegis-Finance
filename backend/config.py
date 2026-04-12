@@ -160,6 +160,13 @@ config: dict = {
                 "high": 0.4,
                 "critical": 0.2,
             },
+            # Multi-scale drift windows: check drift at multiple time horizons.
+            # Short-scale stability can override long-scale severity.
+            "multi_scale_windows": [
+                {"name": "long", "reference_days": 504, "inference_days": 252},
+                {"name": "medium", "reference_days": 252, "inference_days": 126},
+                {"name": "short", "reference_days": 126, "inference_days": 63},
+            ],
             # Feature group classification for drift decomposition.
             # Maps regex patterns to group names. Order matters — first match wins.
             # Groups allow per-category drift reporting so users can distinguish
