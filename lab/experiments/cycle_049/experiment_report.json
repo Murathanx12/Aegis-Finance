@@ -1,0 +1,96 @@
+{
+  "cycle": 49,
+  "title": "Bug fixes + opportunity score ranking for stock screener",
+  "duration_minutes": 25,
+  "timestamp": "2026-04-12T15:50:00Z",
+
+  "observations": [
+    "Screener's _analyze_one output dict was missing MC return fields (mc_p10_5y_return, mc_p90_5y_return, mc_median_5y_return), so compute_risk_reward in signal_analytics ALWAYS returned {available: False} in production — dead feature",
+    "Monte Carlo xi (vol-of-vol) parameter was hardcoded at 0.06 instead of reading from config — np.clip(0.06, min, max) ignores the config value",
+    "Risk scorer VIX floor used cascading pd.where calls that overwrite each other — VIX>30 tier was being replaced by VIX>25 tier",
+    "Signal conviction quality was using market_base as dominant driver when it should only look at stock-specific components",
+    "Stock router computed momentum from weekly-sampled price_history (sample_every=5) but used indices as if they were daily — 22 weekly samples = 110 trading days, not 22",
+    "Stock analyzer didn't recompute Ito correction when options calibration changed the vol — causing drift bias of 0.5*(old_vol^2 - new_vol^2)/year",
+    "Screener sorted by Sharpe only, ignoring signal direction — a Sell signal stock with high Sharpe ranked above a Buy signal stock"
+  ],
+
+  "what_i_did": [
+    "Fixed MC xi parameter: now reads garch_derived_params.xi from config instead of hardcoded 0.06",
+    "Fixed risk scorer VIX floor: replaced cascading pd.where with np.select for correct graduated thresholds",
+    "Fixed signal conviction dominant_driver: excludes market_base, uses only stock-specific components",
+    "Fixed stock_analyzer: recomputes Ito correction when options calibration changes vol",
+    "Added daily-resolution momentum fields to stock_analyzer output (momentum_1m, momentum_3m)",
+    "Updated stock router to use daily momentum from analyzer instead of computing from weekly-sampled data",
+    "Fixed screener to pass MC return fields to signal_analytics — risk_reward now actually works",
+    "Added prediction_confidence_score to screener output for opportunity scoring",
+    "Built compute_opportunity_score() — composite ranking metric combining signal score, Sharpe ratio, risk-reward ratio, and prediction confidence",
+    "Replaced Sharpe-only screener sort with opportunity_score sort",
+    "Added opportunity_score aggregate stats to signal analytics output",
+    "Wrote 14 new tests for opportunity score (differentiation, edge cases, monotonicity, clamping)"
+  ],
+
+  "files_modified": [
+    "backend/services/monte_carlo.py",
+    "backend/services/risk_scorer.py",
+    "backend/services/signal_engine.py",
+    "backend/services/stock_analyzer.py",
+    "backend/services/signal_analytics.py",
+    "backend/routers/stock.py",
+    "backend/tests/test_signal_analytics.py"
+  ],
+
+  "files_created": [
+    "lab/experiments/cycle_049/experiment_report.json"
+  ],
+
+  "tests": {
+    "added": 14,
+    "existing_passing": 54,
+    "total_passing": "54 (signal_analytics) + 94 (signal_engine) + 14 (monte_carlo) + 23 (risk+drift) + 12 (edge_cases) = 197 targeted tests all passing",
+    "broken": 0
+  },
+
+  "results": {
+    "before": {
+      "xi_parameter": "Hardcoded 0.06, config value ignored",
+      "vix_floor": "Cascading pd.where overwrites — VIX>30 shows as 0.5 instead of 0.8",
+      "conviction_dominant_driver": "market_base could be dominant even for stock-specific signals",
+      "screener_risk_reward": "Always {available: False} — dead feature",
+      "screener_sort": "Sharpe only — Sell signal stocks could rank #1",
+      "momentum_accuracy": "Off by ~5x (22 weekly samples = 110 days treated as 22 days)",
+      "options_ito_correction": "Drift bias when options calibration changes vol"
+    },
+    "after": {
+      "xi_parameter": "Reads from config, clipped to [0.02, 0.15]",
+      "vix_floor": "np.select: VIX>30→0.8, VIX>25→0.5, VIX>22→0.3 (correct graduated tiers)",
+      "conviction_dominant_driver": "Excludes market_base, finds true stock-level driver",
+      "screener_risk_reward": "Uses MC p10/p90 returns — available for all analyzed stocks",
+      "screener_sort": "Opportunity score: signal(35%) + Sharpe(25%) + risk-reward(25%) + confidence(15%)",
+      "momentum_accuracy": "Uses daily-resolution prices directly from stock_analyzer",
+      "options_ito_correction": "Recomputed when vol changes — no drift bias"
+    }
+  },
+
+  "analysis": {
+    "impact": "High — 6 bug fixes (4 calculation accuracy, 1 dead feature, 1 momentum accuracy) plus a new composite ranking metric that makes the screener meaningfully smarter about stock selection",
+    "risk": "Low — all changes are additive or fix correctness. No architectural changes. 197 targeted tests passing.",
+    "key_insight": "The risk_reward feature was fully implemented but never worked because the screener didn't pass the MC return data through. This is a common integration gap: unit tests pass because they use mock data, but the real data flow is broken.",
+    "second_insight": "The VIX floor bug (pd.where cascading) is subtle: pd.where(condition, value) replaces values where condition is FALSE, so cascading calls with progressively tighter conditions overwrite the previous tier's value. np.select evaluates conditions top-down with first-match semantics, which is the correct graduated behavior."
+  },
+
+  "self_critique": [
+    "The opportunity score weights (35/25/25/15) are reasonable defaults but not empirically calibrated — ideally these would be backtested against forward returns",
+    "The risk-reward log transform in opportunity_score is a design choice that could be tuned (currently log base 10)",
+    "Didn't add opportunity_score_weights to config.py — it falls back to hardcoded defaults via config.get with defaults, which is fine but could be more configurable"
+  ],
+
+  "next_steps": [
+    "Backtest opportunity score against forward 3M/6M/12M returns to validate ranking quality",
+    "Add opportunity_score_weights to config.py for full tunability",
+    "Consider adding a confidence-weighted signal that adjusts composite_score by prediction_confidence",
+    "The return_model (quantile predictor) is still not integrated into the signal engine — its p10/p50/p90 forecasts could improve signal quality"
+  ],
+
+  "confidence": 0.92,
+  "depth_rating": "moderate-to-high"
+}

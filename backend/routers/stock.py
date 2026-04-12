@@ -106,19 +106,16 @@ def _screener() -> dict:
             # Extract stock-level risk factors for signal differentiation
             stock_vol = r.get("volatility", 20.0) / 100.0  # stored as pct
             stock_dd = None
-            stock_mom_1m = None
-            stock_mom_3m = None
             price_hist = r.get("price_history")
             if price_hist and len(price_hist) > 10:
                 prices_arr = [p["price"] for p in price_hist]
                 peak = max(prices_arr)
                 current = prices_arr[-1]
                 stock_dd = (current / peak - 1) * 100 if peak > 0 else 0.0
-                # Compute stock-specific momentum (1m ~ 21 days, 3m ~ 63 days)
-                if len(prices_arr) >= 22 and prices_arr[-22] > 0:
-                    stock_mom_1m = (current / prices_arr[-22] - 1) * 100
-                if len(prices_arr) >= 64 and prices_arr[-64] > 0:
-                    stock_mom_3m = (current / prices_arr[-64] - 1) * 100
+
+            # Use daily-resolution momentum from stock_analyzer (not weekly-sampled)
+            stock_mom_1m = r.get("momentum_1m")
+            stock_mom_3m = r.get("momentum_3m")
 
             # Compute per-stock adjusted crash prob for the result
             stock_crash_prob = None
@@ -178,12 +175,17 @@ def _screener() -> dict:
                 "analyst_target": r.get("analyst_targets", {}).get("mean") if r.get("analyst_targets") else None,
                 "market_cap": r.get("market_cap"),
                 "crash_prob_3m": round(stock_crash_prob * 100, 2) if stock_crash_prob else None,
+                # MC return fields — needed by signal_analytics for risk_reward computation
+                "mc_median_5y_return": r.get("mc_median_5y_return"),
+                "mc_p10_5y_return": r.get("mc_p10_5y_return"),
+                "mc_p90_5y_return": r.get("mc_p90_5y_return"),
                 "signal_action": stock_sig["action"],
                 "signal_confidence": stock_sig["confidence"],
                 "signal_score": stock_sig["composite_score"],
                 "signal_components": stock_sig.get("components"),
                 "signal_conviction": stock_sig.get("conviction"),
                 "prediction_confidence": r.get("prediction_confidence", {}).get("grade"),
+                "prediction_confidence_score": r.get("prediction_confidence", {}).get("score"),
             }
         except Exception as e:
             logger.warning("screener skip %s: %s", ticker, e)
@@ -203,10 +205,7 @@ def _screener() -> dict:
         len(stocks), len(sorted_tickers), elapsed, max_workers,
     )
 
-    # Sort by Sharpe ratio descending
-    stocks.sort(key=lambda x: x["sharpe"], reverse=True)
-
-    # Enrich with signal analytics (ranking, consensus, concentration)
+    # Enrich with signal analytics (ranking, risk-reward, opportunity score, concentration)
     try:
         from backend.services.signal_analytics import enrich_screener_signals
         enriched = enrich_screener_signals(stocks, market_sig)
@@ -215,6 +214,10 @@ def _screener() -> dict:
     except Exception as e:
         logger.warning("signal analytics enrichment failed: %s", e)
         signal_analytics = None
+
+    # Sort by opportunity_score (composite of signal, Sharpe, risk-reward, confidence)
+    # Falls back to Sharpe if opportunity_score is not available
+    stocks.sort(key=lambda x: x.get("opportunity_score", x.get("sharpe", 0)), reverse=True)
 
     result = {"stocks": stocks, "count": len(stocks), "market_signal": market_sig}
     if signal_analytics:
@@ -436,18 +439,16 @@ def _analyze_stock(ticker: str) -> dict:
     # Extract stock-level risk factors for per-stock crash prob and signal
     stock_vol = result.get("volatility", 20.0) / 100.0
     stock_dd = None
-    stock_mom_1m = None
-    stock_mom_3m = None
     price_hist = result.get("price_history")
     if price_hist and len(price_hist) > 10:
         prices_arr = [p["price"] for p in price_hist]
         peak = max(prices_arr)
         current = prices_arr[-1]
         stock_dd = (current / peak - 1) * 100 if peak > 0 else 0.0
-        if len(prices_arr) >= 22 and prices_arr[-22] > 0:
-            stock_mom_1m = (current / prices_arr[-22] - 1) * 100
-        if len(prices_arr) >= 64 and prices_arr[-64] > 0:
-            stock_mom_3m = (current / prices_arr[-64] - 1) * 100
+
+    # Use daily-resolution momentum from stock_analyzer (not weekly-sampled)
+    stock_mom_1m = result.get("momentum_1m")
+    stock_mom_3m = result.get("momentum_3m")
 
     # Per-stock crash probability
     if crash_prob_for_mc is not None:
@@ -560,18 +561,16 @@ def _stock_signal(ticker: str) -> dict:
     # Extract stock-level risk factors
     stock_vol = stock_data.get("volatility", 20.0) / 100.0
     stock_dd = None
-    stock_mom_1m = None
-    stock_mom_3m = None
     price_hist = stock_data.get("price_history")
     if price_hist and len(price_hist) > 10:
         prices_arr = [p["price"] for p in price_hist]
         peak = max(prices_arr)
         current = prices_arr[-1]
         stock_dd = (current / peak - 1) * 100 if peak > 0 else 0.0
-        if len(prices_arr) >= 22 and prices_arr[-22] > 0:
-            stock_mom_1m = (current / prices_arr[-22] - 1) * 100
-        if len(prices_arr) >= 64 and prices_arr[-64] > 0:
-            stock_mom_3m = (current / prices_arr[-64] - 1) * 100
+
+    # Use daily-resolution momentum from stock_analyzer (not weekly-sampled)
+    stock_mom_1m = stock_data.get("momentum_1m")
+    stock_mom_3m = stock_data.get("momentum_3m")
 
     # Options-implied signal
     options_score = None
@@ -696,3 +695,32 @@ async def get_stock_sentiment(ticker: str):
 def _stock_sentiment(ticker: str) -> dict:
     from backend.services.sentiment_analyzer import analyze_sentiment
     return analyze_sentiment(ticker)
+
+
+@router.get("/{ticker}/fundamentals")
+async def get_stock_fundamentals(ticker: str):
+    """SEC EDGAR fundamentals (10-K financials, Piotroski F-Score)."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"stock_fundamentals:{ticker}"
+    cached = cache_get(cache_key, 86400)  # 24hr — filings rarely change
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(_stock_fundamentals, ticker)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"No EDGAR data for {ticker}")
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("fundamentals failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _stock_fundamentals(ticker: str) -> dict:
+    from backend.services.fundamentals import get_fundamentals
+    return get_fundamentals(ticker)
