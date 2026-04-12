@@ -204,7 +204,20 @@ def _screener() -> dict:
     # Sort by Sharpe ratio descending
     stocks.sort(key=lambda x: x["sharpe"], reverse=True)
 
-    return {"stocks": stocks, "count": len(stocks), "market_signal": market_sig}
+    # Enrich with signal analytics (ranking, consensus, concentration)
+    try:
+        from backend.services.signal_analytics import enrich_screener_signals
+        enriched = enrich_screener_signals(stocks, market_sig)
+        stocks = enriched["stocks"]
+        signal_analytics = enriched["analytics"]
+    except Exception as e:
+        logger.warning("signal analytics enrichment failed: %s", e)
+        signal_analytics = None
+
+    result = {"stocks": stocks, "count": len(stocks), "market_signal": market_sig}
+    if signal_analytics:
+        result["signal_analytics"] = signal_analytics
+    return result
 
 
 def _compute_sector_momentum() -> dict:
