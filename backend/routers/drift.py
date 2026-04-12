@@ -38,23 +38,52 @@ def _drift_check() -> dict:
 
     features = build_feature_matrix(data, fred_data=fred_data)
 
-    report = DriftDetector.from_rolling_window(features)
+    # Try to get crash model feature importances for weighted drift
+    feat_imp = None
+    try:
+        from backend.services.crash_model import CrashPredictor
+        from backend.config import MODEL_DIR
+        model_path = MODEL_DIR / "crash_model.pkl"
+        if model_path.exists():
+            predictor = CrashPredictor()
+            predictor.load_model(str(model_path))
+            top = predictor.get_top_features(n=200)
+            feat_imp = dict(top) if top else None
+    except Exception as e:
+        logger.debug("Could not load crash model for drift weighting: %s", e)
+
+    report = DriftDetector.from_rolling_window(
+        features, feature_importances=feat_imp,
+    )
 
     drift_cfg = config["ml"].get("drift", {})
     confidence_map = drift_cfg.get("confidence_multiplier", {})
-    severity = report.get("severity", "none")
-    confidence_multiplier = confidence_map.get(severity, 1.0)
+    effective_severity = report.get("effective_severity",
+                                    report.get("severity", "none"))
+    raw_severity = report.get("severity", "none")
+    confidence_multiplier = confidence_map.get(effective_severity, 1.0)
 
-    return {
+    result = {
         "drift_detected": report["drift_detected"],
-        "severity": severity,
+        "severity": effective_severity,
+        "raw_severity": raw_severity,
         "drift_pct": report["drift_pct"],
         "n_features_checked": report["n_features_checked"],
         "n_drifted": report["n_drifted"],
         "confidence_multiplier": confidence_multiplier,
         "drifted_features": report["drifted_features"][:10],
-        "recommendation": _recommendation(severity),
+        "recommendation": _recommendation(effective_severity),
+        "reference_window": report.get("reference_window"),
+        "inference_window": report.get("inference_window"),
     }
+
+    # Add importance-weighted metrics when available
+    if "importance_weighted_drift_pct" in report:
+        result["importance_weighted_drift_pct"] = report["importance_weighted_drift_pct"]
+        result["importance_weighted_severity"] = report.get("importance_weighted_severity")
+        result["stable_important_features"] = report.get("stable_important_features", [])
+
+    return result
 
 
 def _recommendation(severity: str) -> str:

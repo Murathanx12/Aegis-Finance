@@ -75,12 +75,16 @@ def _predict_crash(horizon: str, explain: bool) -> dict:
         prob = float(predictor.predict_proba(latest, h)[0])
         probabilities[h] = round(prob * 100, 1)
 
-    # Drift-aware confidence
+    # Drift-aware confidence (importance-weighted when model importances available)
     drift_cfg = config["ml"].get("drift", {})
     confidence_map = drift_cfg.get("confidence_multiplier", {})
     try:
-        drift_report = DriftDetector.from_rolling_window(features)
-        drift_severity = drift_report.get("severity", "none")
+        feat_imp = dict(predictor.get_top_features(n=200)) if predictor.get_top_features() else None
+        drift_report = DriftDetector.from_rolling_window(
+            features, feature_importances=feat_imp,
+        )
+        drift_severity = drift_report.get("effective_severity",
+                                          drift_report.get("severity", "none"))
         confidence_multiplier = confidence_map.get(drift_severity, 1.0)
     except Exception as e:
         logger.warning("Drift check failed in crash prediction: %s", e)
@@ -186,13 +190,18 @@ def _crash_diagnostics() -> dict:
     diag = predictor.diagnostics(latest)
     any_degenerate = any(h["degenerate"] for h in diag.values())
 
-    # Feature drift check
+    # Feature drift check (importance-weighted)
     drift_cfg = config["ml"].get("drift", {})
     confidence_map = drift_cfg.get("confidence_multiplier", {})
     try:
-        drift_report = DriftDetector.from_rolling_window(features)
-        drift_severity = drift_report.get("severity", "none")
-        drift_pct = drift_report.get("drift_pct", 0)
+        feat_imp = dict(predictor.get_top_features(n=200)) if predictor.get_top_features() else None
+        drift_report = DriftDetector.from_rolling_window(
+            features, feature_importances=feat_imp,
+        )
+        drift_severity = drift_report.get("effective_severity",
+                                          drift_report.get("severity", "none"))
+        drift_pct = drift_report.get("importance_weighted_drift_pct",
+                                     drift_report.get("drift_pct", 0))
         confidence_multiplier = confidence_map.get(drift_severity, 1.0)
     except Exception as e:
         logger.warning("Drift check failed in diagnostics: %s", e)
