@@ -1,0 +1,21 @@
+{
+  "drift_detected": true,
+  "n_features_checked": 158,
+  "n_drifted": 141,
+  "drift_pct": 89.2,
+  "severity": "critical",
+  "reference_window": 504,
+  "inference_window": 252,
+  "drifted_features": [
+    "mom_1m",
+    "mom_6m",
+    "mom_12m",
+    "dist_52w_high",
+    "dist_52w_low",
+    "drawdown_from_peak",
+    "vol_1m",
+    "vol_3m",
+    "vol_6m",
+    "vol_12m"
+  ]
+}
