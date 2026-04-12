@@ -182,6 +182,67 @@ class DriftDetector:
             "feature_details": results,
         }
 
+    @staticmethod
+    def from_rolling_window(
+        features: pd.DataFrame,
+        reference_days: int = 504,
+        inference_days: int = 252,
+        **kwargs,
+    ) -> "DriftDetector":
+        """Create a DriftDetector using a rolling window split.
+
+        Instead of the static 80/20 split that compares 2000-2020 vs 2020-2026
+        (guaranteed to show drift on financial time series), this compares
+        the *recent* inference window against the *prior* reference window.
+
+        Example with defaults (504/252):
+            reference = features[-756:-252]  (2 years before the inference window)
+            inference = features[-252:]       (last 1 year)
+
+        This detects *recent* distribution shifts, not historical regime changes.
+
+        Args:
+            features: Full feature matrix (DatetimeIndex, chronologically sorted)
+            reference_days: Number of trading days for the reference window
+            inference_days: Number of trading days for the inference window
+            **kwargs: Passed to DriftDetector.__init__
+
+        Returns:
+            Tuple of (DriftDetector fitted on reference, inference DataFrame)
+        """
+        n = len(features)
+        total_needed = reference_days + inference_days
+        if n < total_needed:
+            # Fall back to proportional split if not enough data
+            split = int(n * 0.6)
+            reference = features.iloc[:split]
+            inference = features.iloc[split:]
+        else:
+            inference = features.iloc[-inference_days:]
+            reference = features.iloc[-(reference_days + inference_days):-inference_days]
+
+        detector = DriftDetector(reference, **kwargs)
+        report = detector.check_drift(inference)
+
+        # Add severity classification
+        drift_pct = report["drift_pct"]
+        if drift_pct == 0:
+            severity = "none"
+        elif drift_pct < 10:
+            severity = "low"
+        elif drift_pct < 30:
+            severity = "moderate"
+        elif drift_pct < 60:
+            severity = "high"
+        else:
+            severity = "critical"
+
+        report["severity"] = severity
+        report["reference_window"] = reference_days
+        report["inference_window"] = inference_days
+
+        return report
+
     def _ks_test(self, col: str, values: np.ndarray) -> tuple[float, float]:
         """Two-sample Kolmogorov-Smirnov test against reference distribution.
 

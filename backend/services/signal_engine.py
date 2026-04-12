@@ -109,13 +109,19 @@ def get_market_signal(
     reasons = []
 
     # 1. Crash probability signal (-1 to +1)
-    #    Blend 3M (immediate risk) with 12M (structural risk) when both available
+    #    Centered on the historical base rate so that "normal" crash risk → neutral (0).
+    #    Below base rate → bullish, above base rate → bearish.
+    #    Base rate ~12%: 1% → +0.46, 12% → 0.0, 25% → -0.54, 50% → -1.0
     if crash_prob_3m is not None:
-        # Lower crash prob = more bullish
-        # 5% → +0.8, 20% → 0, 50% → -0.8
-        crash_sig_3m = np.clip(0.8 - (crash_prob_3m / 100) * 2.0, -1, 1)
+        base_rate = config.get("crash_base_rate_pct", 12.0) / 100.0
+        scale = 1.0 / max(base_rate, 0.01)  # steepness of the mapping
+
+        def _crash_to_signal(prob_pct: float) -> float:
+            return float(np.clip((base_rate - prob_pct / 100.0) * scale * 0.5, -1, 0.6))
+
+        crash_sig_3m = _crash_to_signal(crash_prob_3m)
         if crash_prob_12m is not None:
-            crash_sig_12m = np.clip(0.8 - (crash_prob_12m / 100) * 2.0, -1, 1)
+            crash_sig_12m = _crash_to_signal(crash_prob_12m)
             # 70% weight on near-term, 30% on structural
             crash_sig = 0.7 * crash_sig_3m + 0.3 * crash_sig_12m
         else:

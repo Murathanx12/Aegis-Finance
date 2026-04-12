@@ -474,3 +474,58 @@ class TestFullContextMarketSignal:
         assert result["components"]["crash_prob"] == 0.0
         # With crash_prob excluded, regime (0.7) should dominate more
         assert result["composite_score"] > 0
+
+
+class TestCrashSignalBaseRateCentering:
+    """Test that crash probability signal is centered on the historical base rate."""
+
+    def test_base_rate_is_neutral(self):
+        """At the base rate (~12%), crash signal component should be near zero."""
+        result = get_market_signal(crash_prob_3m=12.0)
+        # At base rate, crash component should be approximately 0
+        assert abs(result["components"]["crash_prob"]) < 0.1
+
+    def test_below_base_rate_is_bullish(self):
+        """Crash probability well below base rate should produce bullish signal."""
+        result = get_market_signal(crash_prob_3m=2.0)
+        assert result["components"]["crash_prob"] > 0.3
+
+    def test_above_base_rate_is_bearish(self):
+        """Crash probability above base rate should produce bearish signal."""
+        result = get_market_signal(crash_prob_3m=30.0)
+        assert result["components"]["crash_prob"] < -0.5
+
+    def test_extreme_crash_prob_is_very_bearish(self):
+        """Very high crash probability should hit the floor."""
+        result = get_market_signal(crash_prob_3m=60.0)
+        assert result["components"]["crash_prob"] == -1.0
+
+    def test_zero_crash_prob_capped(self):
+        """Zero crash prob should produce bullish but capped signal."""
+        result = get_market_signal(crash_prob_3m=0.0)
+        assert result["components"]["crash_prob"] <= 0.6
+
+    def test_normal_market_not_strong_buy(self):
+        """Normal bull market conditions should produce Buy, not Strong Buy.
+
+        With base-rate centering, a typical bull market (low crash risk, Bull regime,
+        normal VIX) should produce a more moderate signal than before.
+        """
+        result = get_market_signal(
+            crash_prob_3m=5.0,   # low but not extreme
+            regime="Bull",
+            vix=19.0,
+            risk_score=0.5,
+            sp500_1m_return=1.0,
+            sp500_3m_return=3.0,
+        )
+        # Should be Buy but composite should be moderate, not extreme
+        assert result["composite_score"] < 0.45  # below Strong Buy threshold
+
+    def test_blend_3m_12m_with_base_rate(self):
+        """Blending 3M and 12M crash probs should work with base-rate centering."""
+        result = get_market_signal(crash_prob_3m=5.0, crash_prob_12m=25.0)
+        crash_sig = result["components"]["crash_prob"]
+        # 3M is bullish (5% < 12%), 12M is bearish (25% > 12%)
+        # Blend: 0.7 * bullish + 0.3 * bearish → mildly bullish
+        assert -0.5 < crash_sig < 0.5
