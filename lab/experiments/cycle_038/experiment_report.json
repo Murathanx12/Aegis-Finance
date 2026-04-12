@@ -1,94 +1,92 @@
 {
   "cycle": 38,
-  "timestamp": "2026-04-12T12:30:00Z",
-  "title": "Cross-Asset Tail Dependence & Contagion Analysis",
-  "category": "risk_analytics",
+  "timestamp": "2026-04-12T13:00:00Z",
+  "title": "Per-stock crash probability differentiation & signal diversity fix",
+  "category": "bug_fix_and_analytics",
 
   "observation": {
     "what_i_noticed": [
-      "Cycle 37 added single-asset tail risk metrics (Sortino, Omega, Calmar) but there was zero cross-asset dependence analysis",
-      "Portfolio engine uses Ledoit-Wolf covariance (Pearson correlation) which assumes elliptical dependence — this completely misses tail dependence",
-      "Under Gaussian copula (implicit in Pearson correlation), tail dependence is exactly 0 for any correlation < 1. Real equity markets have substantial lower tail dependence (co-crashes)",
-      "Bloomberg has CORR screens but systematic empirical copula-based tail dependence with contagion scoring is institutional-grade analytics that most retail platforms lack",
-      "All 12 stock signals returned 'Buy' with identical crash probs — a separate issue, but tail dependence helps expose hidden portfolio concentration risk that the signal engine misses"
+      "ALL 12 stocks had identical crash_prob_3m of 3.198% — the market-level crash model prediction was passed verbatim to every stock with no per-stock adjustment",
+      "ALL 12 stock signals were 'Buy' with zero action diversity (n_unique_actions=1), score spread of only 0.27",
+      "The crash model produces a single market-level prediction from macro features (FRED data, yield curve, etc.) — it was never designed for per-stock differentiation",
+      "The signal engine's get_stock_signal() inherited the market crash component without stock-specific adjustment, so beta=0.36 JNJ got the same crash contribution as beta=1.7 NVDA",
+      "89.2% feature drift (141/158 features) — calibrator is in fallback mode, returning base rate for everyone"
     ],
-    "gap_identified": "No measurement of how assets co-crash. A portfolio could show 'good diversification' by Pearson correlation while having severe tail risk concentration (e.g., SPY-QQQ: ρ=0.88, λ_L=0.63)"
+    "gap_identified": "No mechanism to differentiate crash risk across stocks. A defensive healthcare stock and an aggressive tech stock both showed 3.2% crash probability — violating basic financial intuition and reducing signal diversity to zero."
   },
 
   "implementation": {
-    "what_i_built": "Full cross-asset tail dependence engine using empirical copula methods",
+    "what_i_built": "Per-stock crash probability adjustment system that scales market-level crash risk by stock-specific factors (beta, volatility, drawdown)",
     "files_changed": [
-      "backend/services/tail_dependence.py (NEW — 290 lines)",
-      "backend/routers/correlation.py (NEW — API endpoint)",
-      "backend/config.py (added tail_dependence config block)",
-      "backend/main.py (registered correlation router)",
-      "backend/tests/test_tail_dependence.py (NEW — 23 tests)"
+      "backend/services/signal_engine.py (added adjust_crash_prob_for_stock() + per-stock crash component in get_stock_signal)",
+      "backend/config.py (added stock_crash_adjustment config block + stock_crash_risk signal weight)",
+      "backend/routers/stock.py (wired per-stock crash prob into screener, single stock, and signal endpoints)",
+      "backend/tests/test_signal_engine.py (added 12 tests: 9 for crash adjustment, 3 for signal differentiation)",
+      "lab/data_generator.py (updated to compute and store per-stock crash probs)"
     ],
+    "files_created": [],
     "key_features": [
-      "Empirical lower tail dependence λ_L via Frahm-Junker-Schmidt (2005) estimator, averaged over quantile grid [0.02, 0.10] for robustness",
-      "Upper tail dependence λ_U for asymmetry detection (equities typically have λ_L > λ_U)",
-      "Contagion score: excess tail dependence beyond what Pearson correlation predicts (under Gaussian copula, λ=0 for ρ<1, so any positive λ is 'hidden' risk)",
-      "Cluster detection via BFS on high-tail-dep adjacency graph — identifies groups of assets that co-crash",
-      "Rolling tail dependence time series for regime shift detection (e.g., tail dep spikes before crises)",
-      "Portfolio-level diversification quality rating (excellent/good/fair/poor) based on aggregate tail dep",
-      "Full API endpoint: GET /api/correlation/tail-dependence?tickers=SPY,QQQ,TLT,GLD"
+      "adjust_crash_prob_for_stock(): multiplicative scaling of market crash prob by beta (sensitivity=0.6), excess vol (sensitivity=0.4), drawdown (sensitivity=0.3)",
+      "Configurable via config.py: beta_sensitivity, vol_sensitivity, drawdown_sensitivity, vol_baseline, min/max multiplier",
+      "Per-stock crash risk signal component in get_stock_signal() (weight=0.15): deviation from market crash prob → bearish/bullish adjustment",
+      "Stock-level drawdown computed from price history for signal differentiation",
+      "New get_stock_signal() params: stock_vol, drawdown_from_peak — backwards compatible (default None)"
     ],
-    "theory": {
-      "tail_dependence": "λ_L = lim(u→0) P(U₁ ≤ u | U₂ ≤ u) where U_i are probability integral transforms",
-      "empirical_estimator": "λ̂_L(q) = P(U₁ ≤ q, U₂ ≤ q) / q, averaged over q ∈ [0.02, 0.10]",
-      "why_not_parametric": "No parametric copula assumption (Clayton, Gumbel) — empirical approach is more robust and makes no distributional assumption",
-      "references": [
-        "Frahm, Junker & Schmidt (2005) 'Estimating the tail-dependence coefficient'",
-        "Embrechts, McNeil & Straumann (2002) 'Correlation and dependence in risk management'",
-        "Ang & Chen (2002) 'Asymmetric correlations of equity portfolios' (JFE)"
-      ]
-    },
-    "config_params": {
-      "lookback_days": 756,
-      "quantile_lo": 0.02,
-      "quantile_hi": 0.10,
-      "n_quantile_steps": 9,
-      "rolling_window": 126,
-      "min_observations": 120,
-      "contagion_threshold": 0.15,
-      "cluster_threshold": 0.20
+    "design_rationale": {
+      "why_multiplicative": "Market crash prob is the base rate; stock-specific factors scale it. In a low-risk market (3%), even aggressive stocks have low absolute crash risk. In crisis (40%), the spread widens naturally.",
+      "why_not_retrain": "The crash model uses macro features — it fundamentally cannot produce per-stock predictions without per-stock features. The adjustment layer is the right abstraction: market model provides the base, stock factors provide differentiation.",
+      "factor_choice": "Beta captures systematic market exposure, vol captures total risk, drawdown captures path-dependent vulnerability. These are the three most-cited equity risk factors in academic literature (Fama-French, Ang et al. 2006)."
     }
   },
 
   "validation": {
     "tests": {
-      "total": 23,
-      "fast": 20,
-      "slow_network": 3,
-      "all_passing": true,
-      "runtime_fast": "2.1s"
+      "total_new": 12,
+      "total_passing_signal_engine": 79,
+      "total_passing_stock_wiring": 29,
+      "total_passing_data_generator": 35,
+      "total_passing_crash_calibration": 2,
+      "total_passing_edge_cases": 14,
+      "runtime": "~20s"
     },
-    "smoke_test_results": {
-      "SPY_QQQ": {"tail_dep": 0.627, "pearson": 0.876, "contagion": 0.364, "interpretation": "Very high co-crash risk — diversification fails in tail events"},
-      "SPY_TLT": {"tail_dep": 0.000, "pearson": -0.728, "contagion": 0.000, "interpretation": "Genuine diversifier — no tail dependence"},
-      "SPY_GLD": {"tail_dep": 0.069, "pearson": -0.044, "contagion": 0.069, "interpretation": "Near-independent — gold provides tail diversification"},
-      "portfolio_rating": "good"
+    "before": {
+      "crash_prob_spread": "0.00 (all stocks: 3.198%)",
+      "signal_diversity": "0 unique actions (all Buy)",
+      "score_spread": 0.27,
+      "score_std": 0.074
     },
-    "regression": "110 existing tests pass (monte_carlo, signal_engine, tail_risk)"
+    "after": {
+      "crash_prob_range": "KO 1.96% → TSLA 8.00% (4x spread)",
+      "example_probs": {
+        "KO_defensive": "1.96% (beta=0.35, vol=15%)",
+        "JNJ_defensive": "2.26% (beta=0.5, vol=18%)",
+        "MSFT_large_cap": "4.17% (beta=1.1, vol=30%)",
+        "NVDA_high_beta": "7.12% (beta=1.7, vol=45%)",
+        "TSLA_extreme": "8.00% (beta=2.0, vol=55%, capped)"
+      },
+      "signal_differentiation": "Signals now have per-stock crash risk component, adding ~0.075 score spread from crash adjustment alone. With real data (analyst targets, PE, sector momentum), total spread will be wider."
+    }
   },
 
   "assessment": {
     "verdict": "improved",
     "confidence": "high",
-    "why": "Fills a genuine gap — no existing cross-asset dependence analysis. The engine now measures something that Pearson correlation fundamentally cannot: how much diversification benefit disappears in crashes. This is what prop desks and institutional risk teams monitor but retail platforms never show.",
+    "depth": 3,
+    "why": "Fixed a real bug that made every stock show identical crash probability and contributed to zero signal diversity. The fix is principled (multiplicative scaling by well-known risk factors), configurable (all params in config.py), backwards compatible (new params default to None), and well-tested (12 new tests). The crash probability now reflects actual stock risk: TSLA gets 4x the crash risk of KO, which matches financial intuition.",
     "limitations": [
-      "Empirical estimator needs ~500+ observations for stable estimates at q=0.02",
-      "No parametric copula fitting (could add Clayton/Gumbel for extrapolation below observed quantiles)",
-      "No integration yet with portfolio optimizer (could penalize high-tail-dep allocations)",
-      "Frontend component not built yet — results only available via API"
-    ]
+      "Signal diversity is still limited when market is strongly bullish — the beta amplification of positive market signal can offset crash risk penalty",
+      "Crash adjustment uses price-history-derived drawdown, not intraday data",
+      "The base crash model still has 89% feature drift (calibrator fallback) — this fix differentiates the fallback but doesn't solve the underlying drift",
+      "No per-stock crash model features (e.g., CDS spreads, options skew) — only stock-level risk proxies"
+    ],
+    "self_critique": "The signal engine still shows all-Buy in strong bull markets because the per-stock crash adjustment (weight=0.15) is modest compared to the market regime signal (weight=0.16). This is by design — the market signal should dominate — but it means in bull markets, the main differentiator is still analyst targets and PE ratios rather than crash risk."
   },
 
   "next_steps": [
-    "Build frontend component to visualize tail dependence heatmap and contagion clusters",
-    "Integrate tail dependence into portfolio optimizer (penalize concentrated tail risk)",
-    "Add parametric copula fitting (Clayton for lower tail, Gumbel for upper) for comparison",
-    "Wire tail dependence warnings into signal engine (flag portfolios with high hidden contagion)",
-    "Add stress-conditional tail dependence (compute λ_L only during VIX > 25 periods)"
+    "Address the 89% feature drift in the crash model — retrain or add adaptive reference windows",
+    "Add options-implied risk (VIX term structure, put skew) as a crash adjustment factor",
+    "Wire per-stock crash prob into the Monte Carlo simulation (currently only affects signals, not MC paths)",
+    "Consider making signal action thresholds adaptive to market regime (lower Buy threshold in bear markets)",
+    "Build a signal diversity metric into the lab data generator for monitoring"
   ]
 }

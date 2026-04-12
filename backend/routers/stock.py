@@ -77,6 +77,15 @@ def _screener() -> dict:
     def _analyze_one(ticker: str) -> dict | None:
         """Analyze a single ticker and compute its signal. Thread-safe."""
         try:
+            from backend.services.signal_engine import adjust_crash_prob_for_stock
+
+            # Per-stock crash prob: adjust market-level by stock risk factors
+            # We need beta/vol before calling analyze_stock, but analyze_stock
+            # computes them internally. To avoid double-fetching, we pass the
+            # market-level crash prob to MC, then use the returned beta/vol
+            # for signal differentiation. The MC uses market crash prob for
+            # jump rate modulation; the signal engine uses adjusted crash prob
+            # for signal differentiation — these are complementary.
             r = analyze_stock(
                 ticker, ml_crash_prob=crash_prob_for_mc,
                 hmm_state_means=hmm_means, hmm_regime_probs=hmm_probs,
@@ -93,6 +102,24 @@ def _screener() -> dict:
             if key_stats and "pe_forward" in key_stats:
                 fwd_pe = key_stats["pe_forward"]
 
+            # Extract stock-level risk factors for signal differentiation
+            stock_vol = r.get("volatility", 20.0) / 100.0  # stored as pct
+            stock_dd = None
+            price_hist = r.get("price_history")
+            if price_hist and len(price_hist) > 10:
+                prices_arr = [p["price"] for p in price_hist]
+                peak = max(prices_arr)
+                current = prices_arr[-1]
+                stock_dd = (current / peak - 1) * 100 if peak > 0 else 0.0
+
+            # Compute per-stock adjusted crash prob for the result
+            stock_crash_prob = None
+            if crash_prob_for_mc is not None:
+                stock_crash_prob = adjust_crash_prob_for_stock(
+                    crash_prob_for_mc, r.get("beta", 1.0), stock_vol,
+                    stock_dd if stock_dd is not None else 0.0,
+                )
+
             stock_sig = get_stock_signal(
                 market_signal=market_sig,
                 beta=r.get("beta", 1.0),
@@ -101,6 +128,8 @@ def _screener() -> dict:
                 sector_momentum=sec_mom,
                 pe_ratio=r.get("pe_ratio"),
                 forward_pe=fwd_pe,
+                stock_vol=stock_vol,
+                drawdown_from_peak=stock_dd,
             )
 
             return {
@@ -116,6 +145,7 @@ def _screener() -> dict:
                 "pe_ratio": r.get("pe_ratio"),
                 "analyst_target": r.get("analyst_targets", {}).get("mean") if r.get("analyst_targets") else None,
                 "market_cap": r.get("market_cap"),
+                "crash_prob_3m": round(stock_crash_prob * 100, 2) if stock_crash_prob else None,
                 "signal_action": stock_sig["action"],
                 "signal_confidence": stock_sig["confidence"],
                 "signal_score": stock_sig["composite_score"],
@@ -305,7 +335,7 @@ async def get_stock_analysis(ticker: str):
 
 def _analyze_stock(ticker: str) -> dict:
     from backend.services.stock_analyzer import analyze_stock
-    from backend.services.signal_engine import get_stock_signal
+    from backend.services.signal_engine import get_stock_signal, adjust_crash_prob_for_stock
 
     # Compute market-level signal (includes crash probability)
     market_sig = _compute_market_signal()
@@ -334,6 +364,24 @@ def _analyze_stock(ticker: str) -> dict:
     if key_stats and "pe_forward" in key_stats:
         fwd_pe = key_stats["pe_forward"]
 
+    # Extract stock-level risk factors for per-stock crash prob and signal
+    stock_vol = result.get("volatility", 20.0) / 100.0
+    stock_dd = None
+    price_hist = result.get("price_history")
+    if price_hist and len(price_hist) > 10:
+        prices_arr = [p["price"] for p in price_hist]
+        peak = max(prices_arr)
+        current = prices_arr[-1]
+        stock_dd = (current / peak - 1) * 100 if peak > 0 else 0.0
+
+    # Per-stock crash probability
+    if crash_prob_for_mc is not None:
+        stock_crash_prob = adjust_crash_prob_for_stock(
+            crash_prob_for_mc, result.get("beta", 1.0), stock_vol,
+            stock_dd if stock_dd is not None else 0.0,
+        )
+        result["crash_prob_3m"] = round(stock_crash_prob * 100, 2)
+
     # Compute per-stock signal (same logic as screener)
     stock_sig = get_stock_signal(
         market_signal=market_sig,
@@ -343,6 +391,8 @@ def _analyze_stock(ticker: str) -> dict:
         sector_momentum=sec_mom,
         pe_ratio=result.get("pe_ratio"),
         forward_pe=fwd_pe,
+        stock_vol=stock_vol,
+        drawdown_from_peak=stock_dd,
     )
 
     # Attach signal and crash fields to the result
@@ -406,6 +456,16 @@ def _stock_signal(ticker: str) -> dict:
     if key_stats and "pe_forward" in key_stats:
         fwd_pe = key_stats["pe_forward"]
 
+    # Extract stock-level risk factors
+    stock_vol = stock_data.get("volatility", 20.0) / 100.0
+    stock_dd = None
+    price_hist = stock_data.get("price_history")
+    if price_hist and len(price_hist) > 10:
+        prices_arr = [p["price"] for p in price_hist]
+        peak = max(prices_arr)
+        current = prices_arr[-1]
+        stock_dd = (current / peak - 1) * 100 if peak > 0 else 0.0
+
     signal = get_stock_signal(
         market_signal=market_sig,
         beta=stock_data.get("beta", 1.0),
@@ -414,6 +474,8 @@ def _stock_signal(ticker: str) -> dict:
         sector_momentum=sec_mom,
         pe_ratio=stock_data.get("pe_ratio"),
         forward_pe=fwd_pe,
+        stock_vol=stock_vol,
+        drawdown_from_peak=stock_dd,
     )
     signal["ticker"] = ticker
     signal["name"] = stock_data.get("name", ticker)
