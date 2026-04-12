@@ -53,7 +53,7 @@ aegis-finance/
 │   ├── config.py                # All parameters (scenarios, weights, tickers, thresholds)
 │   ├── cache.py                 # In-memory TTL cache
 │   ├── routers/                 # 12 API routers
-│   ├── services/                # 25 business logic modules
+│   ├── services/                # 28 business logic modules
 │   │   ├── data_fetcher.py      # Yahoo Finance + FRED unified
 │   │   ├── monte_carlo.py       # Jump-diffusion MC (Merton-corrected)
 │   │   ├── risk_scorer.py       # 9-factor composite z-score
@@ -79,7 +79,10 @@ aegis-finance/
 │   │   ├── external_validator.py# LEI/SLOOS/Fed cross-checks
 │   │   ├── regime_validator.py  # Multi-check regime confirmation
 │   │   ├── drift_detector.py    # PSI + KS feature drift detection
-│   │   └── signal_optimizer.py  # Legacy signal computation
+│   │   ├── signal_optimizer.py  # Legacy signal computation
+│   │   ├── systemic_risk.py     # Turbulence index + absorption ratio (Kritzman)
+│   │   ├── bubble_detector.py   # LPPL bubble detection (Sornette)
+│   │   └── fundamentals.py      # SEC EDGAR 10-K/10-Q financials + Piotroski F-Score
 │   └── models/                  # GJR-GARCH, HMM, saved .pkl models
 ├── engine/                      # Offline research (not served by API)
 │   ├── training/                # features.py, feature_selection.py, labeling.py, fracdiff.py, sample_uniqueness.py

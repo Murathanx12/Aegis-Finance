@@ -1,0 +1,20 @@
+Done. Here's a summary of what Cycle 50 accomplished:
+
+## Cycle 50: Multi-Scale Drift Detection
+
+**Problem:** The drift detector reported 89.2% critical drift (141/158 features), which reduced crash model weight to 20% and tanked signal confidence to 17%. This happened because the single-scale check (504/252 days) compares data across regime changes — in a bull market, features from 2 years ago naturally look different.
+
+**Solution:** Added `DriftDetector.from_multi_scale()` that checks drift at 3 time horizons:
+- **Long** (504 ref / 252 inf): structural shifts
+- **Medium** (252 ref / 126 inf): recent trend changes
+- **Short** (126 ref / 63 inf): immediate stability
+
+**Key logic:** If any non-primary scale shows drift ≤ "moderate", that becomes the effective severity — meaning the model is tracking recent patterns well even if long-term distributions shifted.
+
+**Files changed:** 7 modified (drift_detector, 4 routers, config, data_generator) + 2 created (test file, report)
+
+**Tests:** 20 new tests, 1069 total, all passing.
+
+**Key finding:** The KS test produces false positives at small sample sizes (63 inference samples) because synthetic reference reconstruction is lossy. The medium scale (252/126) is the most reliable short-term indicator.
+
+---STDERR---
