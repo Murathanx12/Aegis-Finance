@@ -27,7 +27,7 @@ LAB_DIR = REPO_DIR / "lab"
 EXPERIMENTS_DIR = LAB_DIR / "experiments"
 LOGS_DIR = LAB_DIR / "logs"
 
-SESSION_TIMEOUT = 2400  # 40 min max per session
+SESSION_TIMEOUT = 2700  # 45 min max per session
 
 import shutil
 CLAUDE_CMD = shutil.which("claude") or shutil.which("claude.cmd") or "claude"
@@ -98,60 +98,58 @@ def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
 
     return f"""# Aegis Finance — R&D Cycle {cycle}
 
-You are the owner of this codebase. This is your sandbox.
+You OWN this codebase. This is your sandbox. Improve the engine.
 
-You have 40 minutes. You have COMPLETE freedom:
-- Read, write, create, delete any file in backend/, frontend/, engine/
-- Install any package (pip install, npm install)
-- Clone any open-source repo for reference
-- Access any public API (yfinance, FRED, Alpha Vantage, etc.)
-- Download datasets, models, or tools
-- Restructure code, refactor architecture, add new services
-- If you need an API key that costs money, note it in your report — don't block on it
+## Your powers — use them
 
-You decide:
-- What to work on (no assigned track — find the highest-impact thing)
-- How to work (your own workflow — explore, build, test in whatever order makes sense)
-- What to test (run targeted tests, not the full 675-test suite — be smart about it)
-- When you're done
+- Modify ANY file: backend/, frontend/, engine/, AND lab/ (yes, you can improve the lab tools too)
+- Install packages: `pip install X`, `npm install X`
+- Clone repos: `git clone https://github.com/...` into a temp directory for reference
+- Web search: search for state-of-the-art approaches, open-source quant engines, papers
+- Access APIs: yfinance, FRED, Alpha Vantage, Finnhub, any public finance API
+- Download anything: datasets, pre-trained models, reference implementations
+- If an API key is needed and it's vital, note it in your report
 
-## Current engine state (from real backend services)
+## Your goal
+
+Make this engine compete with institutional-grade tools. Think about what
+Bloomberg Terminal, QuantConnect, OpenBB, or a prop trading desk would have
+that we don't. Then build it.
+
+Don't do what past cycles did. Find something NEW:
+- A technique from a paper you can implement
+- A data source nobody's wired in yet
+- A risk metric that's missing (CVaR? Omega ratio? Tail dependence?)
+- A smarter way to combine signals
+- A feature the frontend is missing
+- Something from the reference repos at C:\\Users\\mrthn\\reference-codes\\
+
+## Current engine state (randomized tickers each cycle)
 
 {data_block}
 
-## Recent cycles (for context, not to constrain you)
+## Recent cycles (don't repeat these — do something different)
 
 {past_block}
 
-## Files that have NEVER been modified by the lab
+## Unexplored areas
 
 {chr(10).join('- ' + f for f in untouched[:15])}
 
-## Pre-existing test failures
+## Testing — be smart, not exhaustive
 
-```
-{baseline_failures or "None — all tests passing"}
-```
+There are 675+ tests. DON'T run them all (takes 9 min).
+Run only what's relevant: `python -m pytest backend/tests/test_<service>.py -v --tb=short`
+You decide what to test. You can also write new tests.
 
-## One rule
+## When done
 
-Don't break existing tests. Run `python -m pytest backend/tests/<relevant_file> -v --tb=short`
-on the specific tests related to your changes — NOT the full suite (it has 675 tests and
-takes 9 minutes). Only run the full suite if you're unsure what you might have affected.
+1. Experiment report: lab/experiments/cycle_{cycle:03d}/experiment_report.json
+   (what you noticed, what you built, honest assessment, self-critique, next steps)
 
-## When you're done
+2. Commit: `git add -A && git commit -m "Lab cycle_{cycle:03d}: <summary>"`
 
-1. Write your experiment report:
-   lab/experiments/cycle_{cycle:03d}/experiment_report.json
-
-   Include: what you noticed, what you did, files modified, files created,
-   tests added, results (before/after), honest analysis, self-critique,
-   next steps, confidence, depth rating.
-
-2. Commit: git add -A && git commit -m "Lab cycle_{cycle:03d}: <summary>"
-
-Think fresh. Don't follow patterns from past cycles just because they worked.
-Find what this codebase actually needs right now and build it.
+Think like a quant researcher with unlimited access. What would YOU build?
 """
 
 

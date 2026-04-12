@@ -25,6 +25,32 @@ def _save(output_dir, filename, data):
         json.dump(data, f, indent=2, default=str)
 
 
+def _random_tickers(n_mega=4, n_mid=4, seed=None):
+    """Pick a mix of mega-cap + mid/small-cap tickers each run."""
+    import random
+    rng = random.Random(seed)
+
+    mega = ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "TSLA", "BRK-B",
+            "JPM", "V", "UNH", "JNJ", "XOM", "MA", "PG", "HD", "COST", "ABBV"]
+    mid_small = [
+        "CRWD", "DDOG", "NET", "SNOW", "PLTR", "ABNB", "DASH", "COIN",
+        "RBLX", "U", "SOFI", "HOOD", "RIVN", "LCID", "MARA", "RIOT",
+        "ENPH", "SEDG", "FSLR", "RUN",  # Energy
+        "DKNG", "PENN", "MGM", "LVS",  # Gaming
+        "ROKU", "TTD", "ZS", "OKTA",  # Tech mid
+        "SMCI", "ARM", "MRVL", "ON",  # Semis
+        "SQ", "AFRM", "UPST", "NU",  # Fintech
+        "CELH", "MNST", "ELF", "BIRK",  # Consumer
+        "HIMS", "OSCR", "DOCS", "TDOC",  # Health
+        "UAL", "DAL", "LUV", "CCL",  # Travel
+        "CLF", "FCX", "NEM", "GOLD",  # Materials/Mining
+    ]
+
+    picked_mega = rng.sample(mega, min(n_mega, len(mega)))
+    picked_mid = rng.sample(mid_small, min(n_mid, len(mid_small)))
+    return picked_mega + picked_mid
+
+
 def _get_sp500_data(period="5y"):
     """Shared helper: fetch SP500 history (cached within a run)."""
     import yfinance as yf
@@ -182,8 +208,8 @@ def collect_market_snapshot(output_dir):
 # ---------------------------------------------------------------------------
 # 2. Stock analysis — calls REAL analyze_stock(ticker) + signal wiring
 # ---------------------------------------------------------------------------
-def collect_stock_analysis(output_dir):
-    TICKERS = ["AAPL", "NVDA", "XOM", "JPM", "TSLA", "JNJ", "AMZN", "BA"]
+def collect_stock_analysis(output_dir, cycle=1):
+    TICKERS = _random_tickers(n_mega=4, n_mid=4, seed=cycle)
     results = {}
     errors = []
 
@@ -381,7 +407,7 @@ def collect_crash_calibration(output_dir):
 # ---------------------------------------------------------------------------
 # 5. Signal engine — full market context, then per-stock signals
 # ---------------------------------------------------------------------------
-def collect_signal_quality(output_dir):
+def collect_signal_quality(output_dir, cycle=1):
     try:
         from backend.services.signal_engine import get_stock_signal
         import yfinance as yf
@@ -390,8 +416,7 @@ def collect_signal_quality(output_dir):
         market_signal = _compute_market_signal_for_lab()
 
         # Per-stock signals need market_signal + stock-specific params
-        TICKERS = ["AAPL", "NVDA", "XOM", "JPM", "TSLA", "JNJ", "AMZN", "BA",
-                    "MSFT", "GOOGL", "META", "BAC", "CVX", "UNH", "WMT", "CAT"]
+        TICKERS = _random_tickers(n_mega=6, n_mid=6, seed=cycle if 'cycle' in dir() else 1)
         stock_signals = {}
         actions = []
         scores = []
@@ -715,26 +740,29 @@ def collect_drift_check(output_dir):
             print("    [SKIP] Not enough data for drift check")
             return {"status": "insufficient_data"}
 
-        # Use first 80% as reference (training proxy), last 20% as inference
-        split = int(len(features) * 0.8)
-        reference = features.iloc[:split]
-        inference = features.iloc[split:]
-
-        detector = DriftDetector(reference)
-        report = detector.check_drift(inference)
+        # Rolling window: compare last 252 days against prior 504 days.
+        # This detects *recent* distribution shifts, not "2000 vs 2020" drift
+        # which is guaranteed on financial time series.
+        report = DriftDetector.from_rolling_window(
+            features, reference_days=504, inference_days=252,
+        )
 
         result = {
             "drift_detected": report["drift_detected"],
             "n_features_checked": report["n_features_checked"],
             "n_drifted": report["n_drifted"],
             "drift_pct": report["drift_pct"],
+            "severity": report.get("severity", "unknown"),
+            "reference_window": report.get("reference_window"),
+            "inference_window": report.get("inference_window"),
             "drifted_features": report["drifted_features"][:10],
         }
 
         _save(output_dir, "drift_check.json", result)
-        status = "DRIFT" if report["drift_detected"] else "OK"
+        severity = report.get("severity", "unknown")
+        status = severity.upper() if report["drift_detected"] else "OK"
         print(f"    [{status}] {report['n_drifted']}/{report['n_features_checked']} "
-              f"features drifted ({report['drift_pct']:.0f}%)")
+              f"features drifted ({report['drift_pct']:.0f}%) — severity: {severity}")
         return result
 
     except Exception as e:
@@ -802,18 +830,18 @@ def run_engine_data_collection(output_dir, cycle):
     os.makedirs(output_dir, exist_ok=True)
 
     collectors = [
-        ("market_snapshot", "Fetching market data", collect_market_snapshot),
-        ("stock_analysis", "Running REAL stock analysis", collect_stock_analysis),
-        ("sp500_mc", "Running REAL SP500 Monte Carlo", collect_sp500_mc),
-        ("crash_calibration", "Measuring crash model calibration", collect_crash_calibration),
-        ("signal_quality", "Measuring signal differentiation", collect_signal_quality),
-        ("regime_risk", "Checking regime + risk score", collect_regime_risk),
-        ("sector_analysis", "Running REAL sector analysis", collect_sector_analysis),
-        ("portfolio_test", "Testing portfolio engine", collect_portfolio_test),
-        ("api_health", "Checking service health", collect_api_health),
-        ("validation_metrics", "Collecting model metadata", collect_validation_metrics),
-        ("drift_check", "Checking feature drift", collect_drift_check),
-        ("code_metrics", "Measuring code quality", collect_code_metrics),
+        ("market_snapshot", "Fetching market data", lambda d: collect_market_snapshot(d)),
+        ("stock_analysis", "Running REAL stock analysis", lambda d: collect_stock_analysis(d, cycle)),
+        ("sp500_mc", "Running REAL SP500 Monte Carlo", lambda d: collect_sp500_mc(d)),
+        ("crash_calibration", "Measuring crash model calibration", lambda d: collect_crash_calibration(d)),
+        ("signal_quality", "Measuring signal differentiation", lambda d: collect_signal_quality(d, cycle)),
+        ("regime_risk", "Checking regime + risk score", lambda d: collect_regime_risk(d)),
+        ("sector_analysis", "Running REAL sector analysis", lambda d: collect_sector_analysis(d)),
+        ("portfolio_test", "Testing portfolio engine", lambda d: collect_portfolio_test(d)),
+        ("api_health", "Checking service health", lambda d: collect_api_health(d)),
+        ("validation_metrics", "Collecting model metadata", lambda d: collect_validation_metrics(d)),
+        ("drift_check", "Checking feature drift", lambda d: collect_drift_check(d)),
+        ("code_metrics", "Measuring code quality", lambda d: collect_code_metrics(d)),
     ]
 
     for i, (name, label, collector) in enumerate(collectors, 1):
