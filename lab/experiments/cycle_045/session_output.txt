@@ -1,0 +1,26 @@
+## Cycle 45 Complete: Regime-Adaptive Signal Weights
+
+### What I built
+The signal engine now adapts its component weights based on the detected market regime:
+
+| Component | Default | Bull | Bear | Volatile |
+|-----------|---------|------|------|----------|
+| **momentum** | 0.12 | **0.20** | 0.06 | 0.08 |
+| **crash_prob** | 0.20 | 0.14 | **0.24** | 0.18 |
+| **mean_reversion** | 0.09 | 0.05 | **0.16** | **0.14** |
+| **valuation** | 0.11 | 0.08 | 0.12 | **0.16** |
+| **drawdown** | 0.10 | **0.15** | 0.06 | 0.08 |
+
+### Why it matters
+- **Bull markets**: Momentum is the strongest factor (Jegadeesh & Titman). Drawdown confirms trend proximity to highs.
+- **Bear markets**: Crash risk and mean reversion dominate. Momentum breaks down in downtrends.
+- **Volatile markets**: VIX-based valuation signals are most informative. Momentum is unreliable in whipsaws.
+- Drift adjustment layers on top of regime weights (not conflicting).
+
+### Results
+- **94/94 tests pass** (79 existing + 15 new)
+- All 17 drift awareness tests still pass
+- 3-line logic change in signal_engine.py, full backward compatibility (Neutral/Unknown use default weights)
+- Weight profiles are principled but hand-tuned — future cycle should validate via walk-forward backtest
+
+---STDERR---
