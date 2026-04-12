@@ -20,6 +20,7 @@ import yfinance as yf
 
 from backend.config import config
 from backend.services.monte_carlo import simulate_paths
+from backend.services.tail_risk import compute_tail_risk_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -256,6 +257,9 @@ def analyze_stock(
     p10_return = float(p10_price / current_price - 1) * 100
     p90_return = float(p90_price / current_price - 1) * 100
 
+    # Tail risk analytics from historical returns
+    tail_metrics = compute_tail_risk_metrics(returns.values, risk_free_rate)
+
     return {
         "ticker": ticker, "name": company_name, "sector": sector,
         "current_price": current_price,
@@ -278,6 +282,8 @@ def analyze_stock(
         "garch_persistence": float(garch_persistence) if garch_persistence is not None else None,
         # ML crash prob used in this MC run (None if not provided)
         "ml_crash_prob": ml_crash_prob,
+        # Tail risk analytics (Sortino, Omega, Calmar, etc.)
+        "tail_risk": tail_metrics,
         "analyst_targets": analyst_targets,
         "recommendations": recommendations,
         "holders": holders,
