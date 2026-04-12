@@ -225,6 +225,8 @@ config: dict = {
         "pe_bonus": 0.10,          # bonus/penalty for extreme P/E
         "earnings_growth": 0.30,   # scale factor for fwd/trailing PE compression
         "stock_crash_risk": 0.15,  # weight for per-stock crash risk adjustment
+        "stock_drawdown": 0.25,    # weight for stock-specific drawdown signal
+        "stock_momentum": 0.20,    # weight for stock-specific momentum signal
     },
     # Per-stock crash probability adjustment parameters.
     # Market-level crash prob is scaled by stock-specific risk factors (beta,
