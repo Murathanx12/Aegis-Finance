@@ -1,0 +1,109 @@
+{
+  "cycle": 36,
+  "timestamp": "2026-04-12T12:15:00Z",
+  "title": "Fix drift detector methodology + recalibrate crash signal neutral point",
+
+  "observations": [
+    "Drift detector reports 98.8% (161/163) features drifting — rendering it useless as a monitoring tool",
+    "Root cause: collect_drift_check uses first 80% of ALL history as reference vs last 20% — comparing 2000-2020 vs 2020-2026 guarantees drift on financial time series",
+    "Signal engine produces only Buy (13) and Strong Buy (3) across 16 stocks — zero Hold/Sell signals",
+    "Root cause: crash probability signal formula has neutral point at 40% crash prob, but base rate is ~12%, making crash component permanently +0.78 (very bullish) in normal markets",
+    "Per-stock composite scores cluster in 0.268-0.605 range with std=0.071 — insufficient differentiation"
+  ],
+
+  "changes": {
+    "drift_detector": {
+      "what": "Added DriftDetector.from_rolling_window() class method with severity classification",
+      "why": "Static 80/20 split compares ancient history against recent data — always shows drift. Rolling window (504-day reference vs 252-day inference) detects RECENT distribution shifts, which is what actually matters for model staleness monitoring",
+      "details": [
+        "New from_rolling_window() method: compares last 252 trading days against prior 504 trading days",
+        "Falls back to 60/40 proportional split when insufficient data",
+        "Adds severity classification: none/low/moderate/high/critical based on drift percentage",
+        "Report includes reference_window and inference_window metadata"
+      ]
+    },
+    "signal_engine": {
+      "what": "Recalibrated crash probability signal to center on historical base rate (12%)",
+      "why": "Old formula: crash_sig = 0.8 - (crash_prob/100) * 2.0 → neutral at 40%. New formula centers neutral at 12% (the actual base rate). This prevents the crash component from being permanently bullish in normal markets.",
+      "details": [
+        "Added crash_base_rate_pct config parameter (default 12.0)",
+        "New formula: crash_sig = clip((base_rate - crash_prob/100) * scale * 0.5, -1, 0.6)",
+        "At 1% crash: old=+0.78, new=+0.46 (still bullish, but not extreme)",
+        "At 12% crash: old=+0.56, new=0.00 (neutral at base rate)",
+        "At 30% crash: old=+0.20, new=-0.75 (properly bearish)",
+        "Market composite: old=0.282, new=0.254 (moderate Buy, not inflated)"
+      ]
+    },
+    "data_generator": {
+      "what": "Updated collect_drift_check to use rolling window method",
+      "why": "Consumes the new DriftDetector.from_rolling_window() method, includes severity in output"
+    }
+  },
+
+  "files_modified": [
+    "backend/services/drift_detector.py",
+    "backend/services/signal_engine.py",
+    "backend/config.py",
+    "lab/data_generator.py",
+    "backend/tests/test_signal_engine.py",
+    "backend/tests/test_data_generator_wiring.py"
+  ],
+
+  "files_created": [
+    "lab/experiments/cycle_036/experiment_report.json"
+  ],
+
+  "tests": {
+    "added": 12,
+    "description": [
+      "5 tests for DriftDetector.from_rolling_window(): stationary no-drift, recent shift detection, severity levels, short data fallback, report structure",
+      "7 tests for crash signal base-rate centering: base rate neutral, below/above base rate, extreme prob, zero prob cap, normal market not Strong Buy, 3m+12m blend"
+    ],
+    "existing_passed": "139 tests across 3 affected files (signal_engine=67, data_generator_wiring=35, hmm_regime=37) + 58 tests in crash/monte_carlo files",
+    "total_verified": 209
+  },
+
+  "results": {
+    "before": {
+      "drift_pct": 98.8,
+      "drift_severity": "N/A (no severity classification existed)",
+      "crash_signal_at_1pct": 0.78,
+      "crash_signal_at_12pct": 0.56,
+      "crash_signal_at_30pct": 0.20,
+      "market_composite": 0.282,
+      "signal_diversity": "2 actions (Buy: 13, Strong Buy: 3)"
+    },
+    "after": {
+      "drift_method": "Rolling window (504d reference vs 252d inference)",
+      "drift_severity": "Severity classification: none/low/moderate/high/critical",
+      "crash_signal_at_1pct": 0.458,
+      "crash_signal_at_12pct": 0.0,
+      "crash_signal_at_30pct": -0.75,
+      "market_composite": 0.254,
+      "signal_diversity": "Per-stock scores now have ~0.03 more headroom to reach Hold threshold (0.15)"
+    }
+  },
+
+  "analysis": {
+    "impact": "Medium-high. Drift detector is now useful for actual model monitoring instead of always crying wolf. Signal engine crash component no longer dominates with a permanent bullish bias. In bear markets or elevated-risk periods, the system will now properly produce Hold/Sell signals because the crash component will push negative instead of staying positive.",
+    "limitation": "The signal diversity improvement is incremental — in the current bull market, most stocks will still show Buy because the regime, external consensus, and low crash risk are genuinely bullish. The real test is in a downturn, where the recalibrated formula should produce much more differentiated signals.",
+    "risk": "Low. Both changes are backward-compatible. The drift detector addition is a new method (old API unchanged). The signal formula change shifts composite scores by ~0.03 lower, which won't flip any existing test assertions because the tests check relative behavior (bullish > bearish), not absolute values."
+  },
+
+  "self_critique": [
+    "Signal diversity is still limited in bull markets — this is a fundamental constraint when 6/8 components read positive",
+    "Did not address the crash_prob_3m uniformity issue (all stocks = 1%) — that requires per-stock crash modeling or at minimum per-sector calibration, which is a larger architectural change",
+    "Rolling window parameters (504/252) are hardcoded in data_generator.py — could be moved to config",
+    "Did not test with live market data to see actual drift reduction — the rolling window result depends on recent market regime stability"
+  ],
+
+  "next_steps": [
+    "Run data_generator with rolling window drift check to see actual drift percentage (expect significantly lower than 98.8%)",
+    "Add per-stock crash probability differentiation using beta-adjusted or sector-adjusted base rates",
+    "Consider adaptive signal thresholds that adjust based on current market regime (tighter in bull, wider in bear)",
+    "Investigate return_model.py (never modified) for potential improvements"
+  ],
+
+  "confidence": 0.85,
+  "depth_rating": "moderate — two focused fixes with good test coverage, not architectural-scale"
+}

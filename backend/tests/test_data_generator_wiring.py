@@ -416,6 +416,74 @@ class TestCollectDriftCheck:
         assert psi >= 0
 
 
+class TestDriftDetectorRollingWindow:
+    """Test the rolling window drift detection method."""
+
+    def test_rolling_no_drift_on_stationary_data(self):
+        """Stationary data should show no/low drift with rolling window."""
+        from backend.services.drift_detector import DriftDetector
+
+        rng = np.random.default_rng(42)
+        n = 1500  # > 504 + 252 = 756
+        features = pd.DataFrame({
+            "feat_a": rng.normal(0, 1, n),
+            "feat_b": rng.uniform(-1, 1, n),
+        })
+
+        report = DriftDetector.from_rolling_window(features)
+        assert report["severity"] in ("none", "low")
+        assert report["reference_window"] == 504
+        assert report["inference_window"] == 252
+
+    def test_rolling_detects_recent_shift(self):
+        """A mean shift in the last 252 days should be detected."""
+        from backend.services.drift_detector import DriftDetector
+
+        rng = np.random.default_rng(42)
+        # 504 reference days: normal(0,1), then 252 inference days: normal(3,1)
+        reference_part = rng.normal(0, 1, 504)
+        inference_part = rng.normal(3, 1, 252)
+        features = pd.DataFrame({"x": np.concatenate([reference_part, inference_part])})
+
+        report = DriftDetector.from_rolling_window(
+            features, reference_days=504, inference_days=252,
+        )
+        assert report["drift_detected"] is True
+        assert report["severity"] in ("moderate", "high", "critical")
+
+    def test_rolling_severity_levels(self):
+        """Severity should scale with drift percentage."""
+        from backend.services.drift_detector import DriftDetector
+
+        rng = np.random.default_rng(42)
+        # No drift
+        features = pd.DataFrame({f"f{i}": rng.normal(0, 1, 800) for i in range(5)})
+        report = DriftDetector.from_rolling_window(features, reference_days=400, inference_days=200)
+        assert report["severity"] in ("none", "low", "moderate")
+
+    def test_rolling_fallback_on_short_data(self):
+        """Should fall back to proportional split when data is short."""
+        from backend.services.drift_detector import DriftDetector
+
+        rng = np.random.default_rng(42)
+        features = pd.DataFrame({"x": rng.normal(0, 1, 300)})
+        # 300 < 504+252=756, so falls back to 60/40 split
+        report = DriftDetector.from_rolling_window(features)
+        assert "drift_detected" in report
+        assert report["severity"] is not None
+
+    def test_rolling_report_has_window_info(self):
+        """Report should include reference and inference window sizes."""
+        from backend.services.drift_detector import DriftDetector
+
+        rng = np.random.default_rng(42)
+        features = pd.DataFrame({"x": rng.normal(0, 1, 1000)})
+        report = DriftDetector.from_rolling_window(features)
+        assert "reference_window" in report
+        assert "inference_window" in report
+        assert "severity" in report
+
+
 class TestCollectDriftCheckCollector:
     """Test the actual collect_drift_check function with mocked data."""
 

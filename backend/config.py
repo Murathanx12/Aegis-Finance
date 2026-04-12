@@ -171,6 +171,11 @@ config: dict = {
         "macro_risk": 0.10,       # 9-factor composite risk score (risk_scorer)
         "drawdown": 0.10,         # Current drawdown from 52-week high
     },
+    # Crash probability base rate — the neutral point for the crash signal.
+    # When crash_prob equals this, the crash component = 0 (neither bullish nor bearish).
+    # Historical 3M crash frequency is ~12%.  Old formula used 40% as neutral,
+    # which made the crash component permanently bullish in normal markets.
+    "crash_base_rate_pct": 12.0,
     # Action thresholds: composite score ranges for each action
     "signal_thresholds": {
         "strong_buy": 0.45,
