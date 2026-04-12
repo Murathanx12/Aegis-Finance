@@ -128,60 +128,83 @@ def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
 
 You OWN this codebase. This is your sandbox. Improve the engine.
 
+## Methodology — follow this workflow (it produces the best results)
+
+### Phase 1: AUDIT (15 min)
+Read service files thoroughly. Look for:
+- Bugs (wrong calculations, off-by-one, type errors, logic flaws)
+- Stale code (unused variables, dead branches)
+- Missing edge case handling
+- Inconsistencies between config values and actual usage
+- Performance bottlenecks (redundant computations, missing caching)
+
+### Phase 2: RESEARCH (5 min)
+Search the web for state-of-the-art approaches relevant to what you found.
+Look at OpenBB, Riskfolio-Lib, skfolio, QuantLib, recent papers.
+`pip install` any useful packages you find.
+
+### Phase 3: FIX (10 min)
+Fix every bug you found in Phase 1. Each fix should be surgical — don't
+refactor surrounding code unless the bug requires it.
+
+### Phase 4: BUILD (10 min)
+Add ONE substantial new feature or improvement. Pick from the priority list
+below, or from what your audit/research revealed. Quality over quantity.
+
+### Phase 5: TEST (5 min)
+- Write tests for your bug fixes (regression tests)
+- Write tests for your new feature
+- Run ONLY the affected test files: `python -m pytest backend/tests/test_<service>.py -v --tb=short`
+- Run 3 core smoke tests: `python -m pytest backend/tests/test_monte_carlo.py backend/tests/test_signal_engine.py backend/tests/test_crash_calibration.py -v --tb=short`
+
 ## Your powers — use them
 
-- Modify ANY file: backend/, frontend/, engine/, AND lab/ (yes, you can improve the lab tools too)
+- Modify ANY file: backend/, frontend/, engine/, AND lab/
 - Install packages: `pip install X`, `npm install X`
-- Clone repos: `git clone https://github.com/...` into a temp directory for reference
-- Web search: search for state-of-the-art approaches, open-source quant engines, papers
-- Access APIs: yfinance, FRED, Alpha Vantage, Finnhub, any public finance API
-- Download anything: datasets, pre-trained models, reference implementations
-- If an API key is needed and it's vital, note it in your report
+- Web search for state-of-the-art approaches and libraries
+- Access APIs: yfinance, FRED, Finnhub, GDELT, SEC EDGAR, any public finance API
+- Download reference implementations for study
 
-## Your goal
+## Priority areas (don't repeat what past cycles did)
 
-Make this engine compete with institutional-grade tools. Think about what
-Bloomberg Terminal, QuantConnect, OpenBB, or a prop trading desk would have
-that we don't. Then build it.
-
-Don't do what past cycles did. Find something NEW. Here are high-priority areas:
-
-### Quantitative improvements
-- Copula-based tail risk (Clayton, Gumbel) instead of empirical tail dependence
-- Factor model decomposition (Fama-French 5-factor, PCA risk factors)
-- Portfolio optimization improvements (risk budgeting, mean-CVaR optimization)
-- Dynamic scenario weights driven by regime detection
+### Quantitative
+- Copula-based tail risk (Clayton, Gumbel) — replace empirical tail dependence
+- Factor model decomposition (Fama-French 5-factor from Kenneth French data library)
+- Risk budgeting and mean-CVaR portfolio optimization (riskfolio-lib)
 - Conformal prediction intervals for crash probabilities
-- Better HMM: regime-switching GARCH or MSVAR instead of simple HMM
-- Walk-forward signal backtesting with proper transaction costs
+- Regime-switching GARCH or MSVAR (statsmodels.tsa.regime_switching)
+- Volatility surface interpolation for options intelligence
+- Stress testing framework (historical scenario replay)
+- Cross-sectional momentum (relative strength across stocks)
+- Liquidity risk metrics (Amihud illiquidity, bid-ask spread modeling)
 
-### Data & intelligence
-- Wire options_intelligence.py signals into the stock screener (it's built but not wired)
-- Wire earnings_intelligence.py into stock analysis pages
-- Integrate VIX term structure into regime detection
-- Add sector rotation signals (relative strength + breadth)
-- Fund flow data (ETF flows as sentiment proxy)
-- Insider trading signal aggregation
+### Data & integration
+- SEC EDGAR quarterly financials pipeline (edgartools is installed)
+- VIX term structure → regime detection integration
+- Sector rotation signals (relative strength + breadth)
+- Insider trading signal from Finnhub
+- Short interest data aggregation
+- Economic surprise index (actual vs consensus)
 
 ### Frontend / UX
-- Build an "Outlook" page showing market regime dashboard
-- Add options data display on stock detail pages
-- Add earnings calendar/surprise display on stock pages
+- Systemic risk dashboard (turbulence index, absorption ratio charts)
+- LPPL bubble indicator visualization
+- SEC EDGAR fundamentals display on stock pages
+- Execution cost transparency in backtest results
 - Interactive correlation matrix heatmap
-- Backtesting UI with equity curve chart
-- Dark mode improvements, mobile responsiveness
+- Portfolio stress test UI (what-if scenarios)
 
-### Engine reliability
-- Crash model retraining pipeline (adaptive features, rolling window)
-- Drift detection integration into data quality checks
-- Better error handling in data_fetcher.py retry logic
-- Service health monitoring endpoint
+### Reliability
+- Options calibrator edge cases (no options data, illiquid chains)
+- Data fetcher retry with exponential backoff
+- Cache warming strategy optimization
+- API response time monitoring
 
-## Current engine state (randomized tickers each cycle)
+## Current engine state
 
 {data_block}
 
-## Recent cycles (don't repeat these — do something different)
+## Recent cycles (don't repeat these)
 
 {past_block}
 
@@ -189,35 +212,29 @@ Don't do what past cycles did. Find something NEW. Here are high-priority areas:
 
 {chr(10).join('- ' + f for f in untouched[:20])}
 
-## Testing — be smart, not exhaustive
-
-There are 760+ tests. DON'T run them all (takes 5 min).
-Run only what's relevant: `python -m pytest backend/tests/test_<service>.py -v --tb=short`
-You decide what to test. You can also write new tests.
-
 ## When done
 
 1. Experiment report: lab/experiments/cycle_{cycle:03d}/experiment_report.json
-   Use this format:
    {{
      "cycle": {cycle},
      "timestamp": "<ISO timestamp>",
      "title": "<one-line summary>",
      "category": "<quantitative|data|frontend|reliability>",
      "observation": {{
-       "what_i_noticed": ["<list of observations>"],
+       "bugs_found": ["<list of bugs found in audit>"],
        "gap_identified": "<the gap you're fixing>"
      }},
      "implementation": {{
-       "what_i_built": "<description>",
+       "bugs_fixed": ["<list of bug descriptions>"],
+       "feature_built": "<what you added>",
        "files_changed": ["<list>"],
        "files_created": ["<list>"],
-       "key_features": ["<list>"]
+       "packages_installed": ["<list>"]
      }},
      "validation": {{
-       "tests": {{"total_new": 0, "total_passing": 0}},
-       "before": {{}},
-       "after": {{}}
+       "tests_written": 0,
+       "tests_passing": 0,
+       "regressions": 0
      }},
      "assessment": {{
        "verdict": "improved|neutral|regressed",
@@ -231,7 +248,8 @@ You decide what to test. You can also write new tests.
 
 2. Commit: `git add -A && git commit -m "Lab cycle_{cycle:03d}: <summary>"`
 
-Think like a quant researcher with unlimited access. What would YOU build?
+Think like a quant researcher who reads code carefully before writing it.
+Audit first, then fix, then build. Quality over quantity.
 """
 
 
@@ -269,7 +287,7 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
     try:
         result = subprocess.run(
             [CLAUDE_CMD, "--model", model, "--session-id", session_id,
-             "--dangerously-skip-permissions"],
+             "--dangerously-skip-permissions", "--max-turns", "200"],
             input=prompt,
             cwd=str(REPO_DIR),
             capture_output=True,
@@ -437,7 +455,7 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="Aegis Finance R&D Loop v6")
+    parser = argparse.ArgumentParser(description="Aegis Finance R&D Loop v7")
     parser.add_argument("--cycles", type=int, default=50)
     parser.add_argument("--model", default="opus")
     parser.add_argument("--start-cycle", type=int, default=None)
@@ -475,10 +493,10 @@ def main():
         start = len(existing) + 1
 
     print(f"\n{'='*60}")
-    print(f"  AEGIS R&D LAB v6 — Sandbox Mode")
+    print(f"  AEGIS R&D LAB v7 — Audit→Research→Fix→Build→Test")
     print(f"  Model: {args.model} | Cycles: {start}-{args.cycles}")
     print(f"  Session: {SESSION_TIMEOUT // 60} min | Branch: {args.branch}")
-    print(f"  Claude decides its own workflow")
+    print(f"  Methodology: read code, find bugs, fix, then build")
     print(f"{'='*60}")
 
     for cycle in range(start, args.cycles + 1):

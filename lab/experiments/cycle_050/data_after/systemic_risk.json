@@ -1,0 +1,17 @@
+{
+  "turbulence_current": 9.3335,
+  "turbulence_percentile": 84.7,
+  "turbulence_threshold_pctl": 90,
+  "absorption_ratio_current": 0.9984,
+  "absorption_ratio_change_1m": 0.0,
+  "systemic_stress": true,
+  "n_assets_used": 6,
+  "assets_used": [
+    "SP500",
+    "NASDAQ",
+    "Russell",
+    "Gold",
+    "HYG",
+    "LQD"
+  ]
+}
