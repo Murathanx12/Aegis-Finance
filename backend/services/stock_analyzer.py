@@ -21,6 +21,7 @@ import yfinance as yf
 from backend.config import config
 from backend.services.monte_carlo import simulate_paths
 from backend.services.tail_risk import compute_tail_risk_metrics
+from backend.services.prediction_confidence import score_prediction_confidence
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +102,7 @@ def analyze_stock(
     hmm_state_means: Optional[np.ndarray] = None,
     hmm_regime_probs: Optional[np.ndarray] = None,
     hmm_state_vols: Optional[np.ndarray] = None,
+    drift_severity: Optional[str] = None,
 ) -> Optional[dict]:
     """Analyze a single stock with fundamental-aware Monte Carlo."""
     max_5y_return = config["simulation"]["max_5y_return"]
@@ -260,6 +262,19 @@ def analyze_stock(
     # Tail risk analytics from historical returns
     tail_metrics = compute_tail_risk_metrics(returns.values, risk_free_rate)
 
+    # Prediction confidence scoring (drift-aware uncertainty quantification)
+    data_years = len(returns) / 252.0
+    confidence = score_prediction_confidence(
+        mc_p10_return=p10_return,
+        mc_p90_return=p90_return,
+        mc_median_return=med_return,
+        garch_nu=garch_nu,
+        garch_persistence=garch_persistence,
+        data_years=data_years,
+        drift_severity=drift_severity,
+        beta=beta,
+    )
+
     return {
         "ticker": ticker, "name": company_name, "sector": sector,
         "current_price": current_price,
@@ -284,6 +299,8 @@ def analyze_stock(
         "ml_crash_prob": ml_crash_prob,
         # Tail risk analytics (Sortino, Omega, Calmar, etc.)
         "tail_risk": tail_metrics,
+        # Prediction confidence (drift-aware uncertainty quantification)
+        "prediction_confidence": confidence,
         "analyst_targets": analyst_targets,
         "recommendations": recommendations,
         "holders": holders,

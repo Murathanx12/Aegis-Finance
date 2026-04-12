@@ -67,6 +67,7 @@ def _screener() -> dict:
     hmm_means = market_sig.get("_hmm_state_means")
     hmm_probs = market_sig.get("_hmm_regime_probs")
     hmm_vols = market_sig.get("_hmm_state_vols")
+    _drift_sev = market_sig.get("_drift_severity")
 
     # Parallel stock analysis — ~3-5x faster than sequential
     t0 = time.perf_counter()
@@ -89,7 +90,7 @@ def _screener() -> dict:
             r = analyze_stock(
                 ticker, ml_crash_prob=crash_prob_for_mc,
                 hmm_state_means=hmm_means, hmm_regime_probs=hmm_probs,
-                hmm_state_vols=hmm_vols,
+                hmm_state_vols=hmm_vols, drift_severity=_drift_sev,
             )
             if r is None:
                 return None
@@ -158,6 +159,7 @@ def _screener() -> dict:
                 "signal_action": stock_sig["action"],
                 "signal_confidence": stock_sig["confidence"],
                 "signal_score": stock_sig["composite_score"],
+                "prediction_confidence": r.get("prediction_confidence", {}).get("grade"),
             }
         except Exception as e:
             logger.warning("screener skip %s: %s", ticker, e)
@@ -317,6 +319,7 @@ def _compute_market_signal() -> dict:
     )
     # Attach raw crash_3m so callers can pass it to MC simulation
     sig["_crash_3m_pct"] = crash_3m
+    sig["_drift_severity"] = _drift_severity
 
     # Fit HMM once — callers pass these to per-stock MC simulations
     hmm_data = fit_hmm_for_mc(data)
@@ -368,6 +371,7 @@ def _analyze_stock(ticker: str) -> dict:
         hmm_state_means=market_sig.get("_hmm_state_means"),
         hmm_regime_probs=market_sig.get("_hmm_regime_probs"),
         hmm_state_vols=market_sig.get("_hmm_state_vols"),
+        drift_severity=market_sig.get("_drift_severity"),
     )
     if result is None:
         return None
@@ -468,6 +472,7 @@ def _stock_signal(ticker: str) -> dict:
         hmm_state_means=market_sig.get("_hmm_state_means"),
         hmm_regime_probs=market_sig.get("_hmm_regime_probs"),
         hmm_state_vols=market_sig.get("_hmm_state_vols"),
+        drift_severity=market_sig.get("_drift_severity"),
     )
     if stock_data is None:
         return {"ticker": ticker, "action": "Hold", "confidence": 0, "error": "Could not analyze stock"}
