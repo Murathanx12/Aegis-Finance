@@ -1,0 +1,21 @@
+Done. Here's what Cycle 47 accomplished:
+
+## Cycle 47: Signal Analytics
+
+**Problem:** The screener shows Buy/Hold/Sell but gives no insight into *why*, *how strongly* components agree, or *how* stocks rank relative to each other. All 12 stocks show only Buy or Hold with 0-38% confidence — users can't distinguish informed conviction from noise.
+
+**Solution:** New `signal_analytics.py` service (5 functions, 260 lines) that enriches screener output:
+
+| Feature | What it does |
+|---------|-------------|
+| **Signal consensus** | Measures component agreement ratio (0-1) + dispersion. Labels: strong/moderate/weak/conflicted |
+| **Conviction decomposition** | Per-component contribution breakdown — "40% from regime, 25% from external, 20% from crash prob" |
+| **Risk-reward ratio** | MC p10/p90 upside/downside asymmetry per stock (highly_favorable to highly_unfavorable) |
+| **Relative ranking** | Percentile (0-100) + tier (top_quartile to bottom_quartile) within screener universe |
+| **Sector concentration** | Warns when top picks are >60% in one sector |
+
+**Files:** 2 created, 2 modified, 40 new tests, 0 regressions.
+
+**Self-critique:** This is UX/infrastructure, not ML improvement. Stock-level conviction decomposition isn't yet possible because `get_stock_signal()` doesn't track per-component contributions. MC fields aren't in screener output format so risk-reward shows `available: false` for screener stocks. Both are good next-cycle targets.
+
+---STDERR---
