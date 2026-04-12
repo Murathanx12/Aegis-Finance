@@ -160,6 +160,44 @@ config: dict = {
                 "high": 0.4,
                 "critical": 0.2,
             },
+            # Feature group classification for drift decomposition.
+            # Maps regex patterns to group names. Order matters — first match wins.
+            # Groups allow per-category drift reporting so users can distinguish
+            # expected drift (momentum in a bull run) from concerning drift (macro shifts).
+            "feature_groups": {
+                "interaction": [
+                    "_x_",
+                ],
+                "momentum": ["mom_", "trend_strength"],
+                "volatility": ["vol_", "vol_of_vol", "vol_zscore", "vol_ratio_"],
+                "tail_risk": [
+                    "max_daily_loss", "max_drawdown", "lower_partial",
+                    "cvar_", "neg_day_ratio", "down_streak",
+                    "skew_index", "skew_zscore", "skew_elevated",
+                    "realized_skew", "realized_kurt",
+                ],
+                "price_distance": [
+                    "dist_52w", "drawdown_from_peak", "daily_ret", "log_ret",
+                ],
+                "technical": [
+                    "sma_", "golden_cross", "macd_", "rsi_",
+                    "bollinger_",
+                ],
+                "vix": [
+                    "vix",
+                ],
+                "credit_yields": [
+                    "credit_spread", "yield_", "term_spread",
+                    "long_short_spread",
+                ],
+                "cross_asset": [
+                    "gold_equity", "sp_nasdaq", "small_large",
+                    "sector_dispersion", "bond_equity",
+                ],
+                "macro": [
+                    "fred_",
+                ],
+            },
         },
         # Calibration output bounds (Phase 5.1)
         "calibration": {

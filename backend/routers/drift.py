@@ -83,6 +83,12 @@ def _drift_check() -> dict:
         result["importance_weighted_severity"] = report.get("importance_weighted_severity")
         result["stable_important_features"] = report.get("stable_important_features", [])
 
+    # Add per-group drift decomposition when available
+    if "group_drift" in report:
+        result["group_drift"] = report["group_drift"]
+    if "drift_narrative" in report:
+        result["drift_narrative"] = report["drift_narrative"]
+
     return result
 
 

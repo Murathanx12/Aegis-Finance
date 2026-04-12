@@ -216,6 +216,14 @@ class DriftDetector:
             report["importance_weighted_drift_pct"] = round(iw_drift_pct, 1)
             report["stable_important_features"] = stable_important
 
+        # Feature-group decomposition: breaks the flat drift list into
+        # interpretable categories so users can see WHAT is drifting
+        group_patterns = config["ml"].get("drift", {}).get("feature_groups")
+        if group_patterns and results:
+            report["group_drift"] = self._group_drift_summary(
+                results, group_patterns, feature_importances,
+            )
+
         return report
 
     def _drift_direction(self, col: str, inference_values: np.ndarray) -> dict:
@@ -249,6 +257,80 @@ class DriftDetector:
             "mean_shift": round(inf_mean - ref_mean, 6),
             "spread_change": round(spread_ratio, 3),
         }
+
+    @staticmethod
+    def _classify_feature(feature_name: str, group_patterns: dict[str, list[str]]) -> str:
+        """Classify a feature into a group based on config patterns.
+
+        Args:
+            feature_name: Feature column name
+            group_patterns: {group_name: [prefix_patterns]} from config
+
+        Returns:
+            Group name, or "other" if no pattern matches.
+        """
+        for group, patterns in group_patterns.items():
+            for pat in patterns:
+                if pat in feature_name:
+                    return group
+        return "other"
+
+    @staticmethod
+    def _group_drift_summary(
+        feature_details: dict,
+        group_patterns: dict[str, list[str]],
+        feature_importances: Optional[dict[str, float]] = None,
+    ) -> dict[str, dict]:
+        """Compute per-group drift summary.
+
+        Returns:
+            {group_name: {
+                n_features, n_drifted, drift_pct, mean_psi,
+                importance_weight (if importances given),
+                top_drifted: [feature names with highest PSI]
+            }}
+        """
+        groups: dict[str, list[tuple[str, dict]]] = {}
+        for feat, detail in feature_details.items():
+            group = DriftDetector._classify_feature(feat, group_patterns)
+            groups.setdefault(group, []).append((feat, detail))
+
+        # Normalize importances if available
+        imp_sum = 0.0
+        if feature_importances:
+            imp_sum = sum(
+                feature_importances.get(f, 0.0) for f in feature_details
+            )
+
+        summary = {}
+        for group, members in sorted(groups.items()):
+            n = len(members)
+            drifted = [(f, d) for f, d in members if d["drift"]]
+            n_drifted = len(drifted)
+            psi_values = [d["psi"] for _, d in members]
+            mean_psi = float(np.mean(psi_values)) if psi_values else 0.0
+
+            entry: dict = {
+                "n_features": n,
+                "n_drifted": n_drifted,
+                "drift_pct": round(n_drifted / n * 100, 1) if n > 0 else 0.0,
+                "mean_psi": round(mean_psi, 4),
+            }
+
+            # Top drifted features by PSI (max 3)
+            drifted_by_psi = sorted(drifted, key=lambda x: x[1]["psi"], reverse=True)
+            entry["top_drifted"] = [f for f, _ in drifted_by_psi[:3]]
+
+            # Importance weight of this group (what fraction of model importance it carries)
+            if feature_importances and imp_sum > 0:
+                group_imp = sum(
+                    feature_importances.get(f, 0.0) for f, _ in members
+                )
+                entry["importance_weight"] = round(group_imp / imp_sum, 4)
+
+            summary[group] = entry
+
+        return summary
 
     @staticmethod
     def _importance_weighted_drift(
@@ -387,7 +469,53 @@ class DriftDetector:
         else:
             report["effective_severity"] = severity
 
+        # Generate human-readable narrative from group drift
+        if "group_drift" in report:
+            report["drift_narrative"] = DriftDetector._build_narrative(
+                report["group_drift"],
+                report["effective_severity"],
+            )
+
         return report
+
+    @staticmethod
+    def _build_narrative(
+        group_drift: dict[str, dict],
+        effective_severity: str,
+    ) -> str:
+        """Build a one-sentence human-readable drift summary.
+
+        Examples:
+            "Momentum and volatility features are drifting (expected in trending markets),
+             but macro indicators remain stable — model reliability is moderate."
+        """
+        high_drift = []  # groups with >60% drift
+        moderate_drift = []  # 20-60%
+        stable = []  # <20%
+
+        for group, info in group_drift.items():
+            pct = info["drift_pct"]
+            if pct >= 60:
+                high_drift.append(group)
+            elif pct >= 20:
+                moderate_drift.append(group)
+            else:
+                stable.append(group)
+
+        parts = []
+        if high_drift:
+            names = ", ".join(sorted(high_drift))
+            parts.append(f"{names} features are drifting significantly")
+        if stable:
+            names = ", ".join(sorted(stable))
+            parts.append(f"{names} remain stable")
+
+        if not parts:
+            return f"Drift severity: {effective_severity}"
+
+        narrative = "; ".join(parts)
+        narrative += f" — effective severity: {effective_severity}"
+        return narrative
 
     def _ks_test(self, col: str, values: np.ndarray) -> tuple[float, float]:
         """Two-sample Kolmogorov-Smirnov test against reference distribution.
