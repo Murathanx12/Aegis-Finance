@@ -1,0 +1,64 @@
+{
+  "cycle": 37,
+  "timestamp": "2026-04-12T12:13:28.848884",
+  "title": "Tail Risk Analytics Module: Institutional-Grade Downside Risk Metrics",
+  "hypothesis": "The Aegis engine computes only Sharpe, VaR/CVaR, and max drawdown \u2014 standard metrics that miss critical dimensions of tail risk used by institutional investors. Adding Sortino, Omega, Calmar ratios plus drawdown duration, tail concentration, and ulcer index will provide a significantly more complete risk picture.",
+  "what_was_built": {
+    "new_service": "backend/services/tail_risk.py \u2014 14 tail risk metrics computed from daily returns",
+    "metrics_added": [
+      "Sortino Ratio (risk-adjusted return using only downside deviation)",
+      "Omega Ratio (probability-weighted gain/loss, Keating & Shadwick 2002)",
+      "Calmar Ratio (annualized return / max drawdown, standard at hedge funds)",
+      "Downside Deviation (annualized volatility of negative returns only)",
+      "Maximum Drawdown Duration (longest recovery period in trading days)",
+      "Tail Concentration Index (% of losses in worst 5% of days \u2014 fat tail detector)",
+      "Gain/Pain Ratio (total gains / total losses)",
+      "Ulcer Index (RMS of drawdown %, Peter Martin 1987)",
+      "Win Rate, Average Win/Loss, Profit Factor"
+    ],
+    "integration_points": [
+      "portfolio_engine.py analyze_portfolio() \u2014 returns tail_risk dict with all metrics",
+      "stock_analyzer.py analyze_stock() \u2014 returns tail_risk dict per ticker"
+    ],
+    "config": "config.py tail_risk section (tail_percentile, min_observations)",
+    "tests": "29 new tests in test_tail_risk.py covering all metrics, edge cases, mathematical consistency"
+  },
+  "results": {
+    "tests_added": 29,
+    "tests_passed": 29,
+    "existing_tests_broken": 0,
+    "test_runtime": "0.20s"
+  },
+  "why_this_matters": [
+    "Sharpe ratio treats upside and downside volatility equally \u2014 Sortino does not",
+    "Max drawdown alone misses HOW LONG recovery takes \u2014 drawdown duration captures this",
+    "Omega ratio captures the full return distribution, not just mean/variance",
+    "Tail concentration reveals whether risk is distributed (Gaussian) or concentrated (fat-tailed)",
+    "Calmar ratio is the standard hedge fund performance metric \u2014 was completely absent",
+    "Ulcer index penalizes both depth AND duration of drawdowns unlike simple max DD"
+  ],
+  "what_it_does_NOT_do": [
+    "No copula / cross-asset tail dependence (would need multivariate analysis)",
+    "No dynamic risk budgeting based on these metrics",
+    "No frontend visualization yet (ready for frontend integration)",
+    "No historical comparison of tail metrics across regimes"
+  ],
+  "self_critique": [
+    "The metrics are computed from historical daily returns \u2014 they are backward-looking by nature",
+    "Tail concentration uses a simple percentile cutoff rather than EVT (Extreme Value Theory)",
+    "Could add conditional tail metrics stratified by market regime (bull/bear/volatile)",
+    "Frontend needs charts to visualize these \u2014 raw numbers in JSON are useful but not user-friendly"
+  ],
+  "next_steps": [
+    "Frontend: add tail risk panel to stock detail and portfolio analysis pages",
+    "Regime-conditional tail metrics: compute Sortino/Omega separately for bull vs bear periods",
+    "EVT-based tail modeling (GPD fit to extreme losses) for more rigorous tail quantification",
+    "Cross-asset tail dependence using Student-t copulas for portfolio-level tail risk",
+    "Dynamic signal adjustment: use tail metrics to modulate signal weights (high Ulcer \u2192 more cautious)"
+  ],
+  "references": [
+    "Keating & Shadwick (2002) \u2014 \"A Universal Performance Measure\" (Omega ratio)",
+    "Sortino & Price (1994) \u2014 \"Performance Measurement in a Downside Risk Framework\"",
+    "Peter Martin (1987) \u2014 Ulcer Index, \"The Investors Guide to Fidelity Funds\""
+  ]
+}

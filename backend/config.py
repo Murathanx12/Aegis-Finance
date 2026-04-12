@@ -155,6 +155,12 @@ config: dict = {
         },
     },
 
+    # ── TAIL RISK ANALYTICS ────────────────────────────────────────────
+    "tail_risk": {
+        "tail_percentile": 5,       # worst N% of loss days for tail concentration
+        "min_observations": 60,     # minimum daily returns needed for valid metrics
+    },
+
     # ── GLOBAL MARKET PARAMETERS ────────────────────────────────────────
     "risk_free_rate": 0.04,  # Annual risk-free rate (10Y Treasury approx, updated 2026-03)
 
