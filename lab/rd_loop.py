@@ -54,18 +54,27 @@ def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
                 pass
     data_block = "\n\n".join(data_sections) if data_sections else "No data."
 
-    # Last 3 cycle summaries (brief — don't anchor Claude to old approaches)
+    # Last 5 cycle summaries (brief — don't anchor Claude to old approaches)
     learnings = []
-    for prev in range(max(1, cycle - 3), cycle):
+    for prev in range(max(1, cycle - 5), cycle):
         rp = EXPERIMENTS_DIR / f"cycle_{prev:03d}" / "experiment_report.json"
         if rp.exists():
             try:
                 r = json.loads(rp.read_text(encoding="utf-8"))
-                learnings.append(
-                    f"Cycle {prev}: {r.get('what_i_did', '?')[:120]} "
-                    f"({'improved' if r.get('results', {}).get('improved') else 'neutral'})"
+                # Handle both old format (what_i_did, results.improved) and
+                # new format (title, assessment.verdict)
+                title = (
+                    r.get("title")
+                    or r.get("what_i_did")
+                    or r.get("observation", {}).get("gap_identified")
+                    or "?"
+                )[:120]
+                verdict = (
+                    r.get("assessment", {}).get("verdict")
+                    or ("improved" if r.get("results", {}).get("improved") else "neutral")
                 )
-            except:
+                learnings.append(f"Cycle {prev}: {title} ({verdict})")
+            except Exception:
                 pass
     past_block = "\n".join(learnings) if learnings else "No recent history."
 
@@ -76,8 +85,13 @@ def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
         if rp.exists():
             try:
                 r = json.loads(rp.read_text(encoding="utf-8"))
-                modified.update(r.get("files_modified", []))
-            except:
+                # Support both formats
+                files = (
+                    r.get("files_modified", [])
+                    or r.get("implementation", {}).get("files_changed", [])
+                )
+                modified.update(files)
+            except Exception:
                 pass
 
     all_files = [
@@ -90,6 +104,9 @@ def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
         "backend/services/net_liquidity.py", "backend/services/return_model.py",
         "backend/services/external_validator.py", "backend/services/regime_validator.py",
         "backend/services/drift_detector.py", "backend/services/llm_analyzer.py",
+        "backend/services/options_intelligence.py", "backend/services/earnings_intelligence.py",
+        "backend/services/tail_risk.py", "backend/services/tail_dependence.py",
+        "backend/services/backtest.py",
         "engine/training/features.py", "engine/training/train_crash_model.py",
         "engine/validation/walk_forward.py", "engine/validation/metrics.py",
         "frontend/src/app/", "frontend/src/components/", "frontend/src/lib/",
@@ -116,13 +133,38 @@ Make this engine compete with institutional-grade tools. Think about what
 Bloomberg Terminal, QuantConnect, OpenBB, or a prop trading desk would have
 that we don't. Then build it.
 
-Don't do what past cycles did. Find something NEW:
-- A technique from a paper you can implement
-- A data source nobody's wired in yet
-- A risk metric that's missing (CVaR? Omega ratio? Tail dependence?)
-- A smarter way to combine signals
-- A feature the frontend is missing
-- Something from the reference repos at C:\\Users\\mrthn\\reference-codes\\
+Don't do what past cycles did. Find something NEW. Here are high-priority areas:
+
+### Quantitative improvements
+- Copula-based tail risk (Clayton, Gumbel) instead of empirical tail dependence
+- Factor model decomposition (Fama-French 5-factor, PCA risk factors)
+- Portfolio optimization improvements (risk budgeting, mean-CVaR optimization)
+- Dynamic scenario weights driven by regime detection
+- Conformal prediction intervals for crash probabilities
+- Better HMM: regime-switching GARCH or MSVAR instead of simple HMM
+- Walk-forward signal backtesting with proper transaction costs
+
+### Data & intelligence
+- Wire options_intelligence.py signals into the stock screener (it's built but not wired)
+- Wire earnings_intelligence.py into stock analysis pages
+- Integrate VIX term structure into regime detection
+- Add sector rotation signals (relative strength + breadth)
+- Fund flow data (ETF flows as sentiment proxy)
+- Insider trading signal aggregation
+
+### Frontend / UX
+- Build an "Outlook" page showing market regime dashboard
+- Add options data display on stock detail pages
+- Add earnings calendar/surprise display on stock pages
+- Interactive correlation matrix heatmap
+- Backtesting UI with equity curve chart
+- Dark mode improvements, mobile responsiveness
+
+### Engine reliability
+- Crash model retraining pipeline (adaptive features, rolling window)
+- Drift detection integration into data quality checks
+- Better error handling in data_fetcher.py retry logic
+- Service health monitoring endpoint
 
 ## Current engine state (randomized tickers each cycle)
 
@@ -134,18 +176,47 @@ Don't do what past cycles did. Find something NEW:
 
 ## Unexplored areas
 
-{chr(10).join('- ' + f for f in untouched[:15])}
+{chr(10).join('- ' + f for f in untouched[:20])}
 
 ## Testing — be smart, not exhaustive
 
-There are 675+ tests. DON'T run them all (takes 9 min).
+There are 760+ tests. DON'T run them all (takes 5 min).
 Run only what's relevant: `python -m pytest backend/tests/test_<service>.py -v --tb=short`
 You decide what to test. You can also write new tests.
 
 ## When done
 
 1. Experiment report: lab/experiments/cycle_{cycle:03d}/experiment_report.json
-   (what you noticed, what you built, honest assessment, self-critique, next steps)
+   Use this format:
+   {{
+     "cycle": {cycle},
+     "timestamp": "<ISO timestamp>",
+     "title": "<one-line summary>",
+     "category": "<quantitative|data|frontend|reliability>",
+     "observation": {{
+       "what_i_noticed": ["<list of observations>"],
+       "gap_identified": "<the gap you're fixing>"
+     }},
+     "implementation": {{
+       "what_i_built": "<description>",
+       "files_changed": ["<list>"],
+       "files_created": ["<list>"],
+       "key_features": ["<list>"]
+     }},
+     "validation": {{
+       "tests": {{"total_new": 0, "total_passing": 0}},
+       "before": {{}},
+       "after": {{}}
+     }},
+     "assessment": {{
+       "verdict": "improved|neutral|regressed",
+       "confidence": "low|medium|high",
+       "depth": 1-5,
+       "limitations": ["<honest list>"],
+       "self_critique": "<what you'd do differently>"
+     }},
+     "next_steps": ["<actionable items for next cycle>"]
+   }}
 
 2. Commit: `git add -A && git commit -m "Lab cycle_{cycle:03d}: <summary>"`
 
@@ -323,13 +394,24 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
     if report_path.exists():
         try:
             r = json.loads(report_path.read_text(encoding="utf-8"))
-            print(f"  What: {r.get('what_i_did', '?')[:120]}")
-            print(f"  Depth: {r.get('depth_rating', '?')}")
-            print(f"  Result: {'improved' if r.get('results', {}).get('improved') else 'neutral'}")
-            print(f"  Files: {len(r.get('files_modified', []))} modified, "
-                  f"{len(r.get('files_created', []))} created")
-            print(f"  Tests: +{len(r.get('tests_added', []))}")
-        except:
+            # Support both old format (what_i_did) and new format (title)
+            title = r.get("title") or r.get("what_i_did", "?")
+            print(f"  What: {title[:120]}")
+            # Support both old (depth_rating) and new (assessment.depth)
+            depth = r.get("depth_rating") or r.get("assessment", {}).get("depth", "?")
+            print(f"  Depth: {depth}")
+            # Support both old (results.improved) and new (assessment.verdict)
+            verdict = r.get("assessment", {}).get("verdict")
+            if verdict:
+                print(f"  Result: {verdict}")
+            else:
+                improved = r.get("results", {}).get("improved")
+                print(f"  Result: {'improved' if improved else 'neutral'}")
+            # Support both old (files_modified) and new (implementation.files_changed)
+            files_changed = r.get("files_modified") or r.get("implementation", {}).get("files_changed", [])
+            files_created = r.get("files_created") or r.get("implementation", {}).get("files_created", [])
+            print(f"  Files: {len(files_changed)} changed, {len(files_created)} created")
+        except Exception:
             pass
     else:
         print("  [MISS] No experiment report")

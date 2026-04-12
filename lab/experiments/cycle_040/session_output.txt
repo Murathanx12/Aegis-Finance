@@ -1,0 +1,31 @@
+## Cycle 040 Complete
+
+**Problem**: 89.2% of crash model features had critical drift — detected but completely ignored by the prediction pipeline.
+
+**Solution**: Drift-aware prediction pipeline (Phase 4.5)
+
+### What changed
+
+| File | Change |
+|------|--------|
+| `backend/config.py` | Added `confidence_multiplier` and `signal_weight_multiplier` maps by drift severity |
+| `backend/routers/drift.py` | **New** — `GET /api/drift/check` endpoint |
+| `backend/routers/crash.py` | Crash predictions + diagnostics now include drift severity and confidence multiplier |
+| `backend/routers/market.py` | Passes `drift_severity` to signal engine (reuses feature matrix) |
+| `backend/routers/stock.py` | Same drift integration for stock screener signals |
+| `backend/services/signal_engine.py` | `crash_prob` weight reduced by severity: critical=0.2x, high=0.4x, moderate=0.7x |
+| `lab/data_generator.py` | Lab signals now drift-aware too |
+| `backend/tests/test_drift_awareness.py` | **New** — 17 tests across 4 test classes |
+
+### Key design choice
+
+Under critical drift (89.2%), the crash_prob signal weight drops from **20% to 4%** of the composite. The other components (regime, momentum, drawdown, macro risk) — which use market observables, not the drifted ML model — take proportionally more weight. This is the correct response: when you can't trust the ML, lean on what you can observe directly.
+
+### Test results
+- 17/17 new drift-awareness tests pass
+- 79/79 existing signal engine tests pass
+- 44/44 crash calibration/floor tests pass
+- 35/35 data generator wiring tests pass
+- **Zero breakage**
+
+---STDERR---

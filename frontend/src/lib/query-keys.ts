@@ -42,6 +42,16 @@ export const queryKeys = {
     market: ["news", "market"] as const,
     ticker: (ticker: string) => ["news", "ticker", ticker] as const,
   },
+  options: {
+    ticker: (ticker: string) => ["options", "ticker", ticker] as const,
+    vixTerm: ["options", "vix-term"] as const,
+  },
+  earnings: {
+    ticker: (ticker: string) => ["earnings", "ticker", ticker] as const,
+  },
+  correlation: {
+    tailDependence: (tickers: string[]) => ["correlation", "tail-dep", ...tickers] as const,
+  },
 } as const;
 
 /** Stale times by endpoint category (ms) */
