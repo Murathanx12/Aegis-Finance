@@ -1,0 +1,16 @@
+## Cycle 31 Phase B Complete
+
+**Built:** `backend/tests/test_routers.py` — 54 new router-level tests covering 6 API routers.
+
+**Why router tests:** This was the only genuine gap from Phase A. The macro_risk finding turned out to be a false positive (config already has the weight; I was reading the fallback dict). The router layer had zero test coverage — no validation of HTTP status codes, Pydantic model enforcement, ticker sanitization, or query parameter bounds.
+
+**What's covered now:**
+- Input validation: bad horizons (422), out-of-range n_sims/years (422), malicious tickers (422)
+- Security: SQL injection, XSS, and overflow patterns correctly rejected
+- Pydantic: all POST body constraints (portfolio holdings, savings params) enforced
+- Response structure: savings endpoint returns expected keys
+- Enum coverage: all valid risk_tolerance, method, goal, time_horizon values accepted
+
+**Results:** 388 → **442 tests**, all passing. 83s runtime.
+
+---STDERR---

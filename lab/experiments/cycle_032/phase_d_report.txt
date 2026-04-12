@@ -1,0 +1,15 @@
+## Cycle 032 Complete
+
+**Commit:** `4d9fa02` — Drawdown signal integration into signal engine
+
+### Honest self-assessment (from the report):
+
+**What works:** Technically solid — 37 new tests, config-driven thresholds, no code duplication, graceful degradation when drawdown is unavailable. All 569 tests pass.
+
+**What I didn't prove:** I haven't validated that adding drawdown actually *improves* signal quality on historical data. The stepped thresholds are based on conventional market taxonomy (pullback/correction/bear), not backtested through actual crashes. The 10% weight is a judgment call, not optimized. In the current Bull regime near highs, this change barely affects live signals.
+
+**What I'd do differently:** Run a walk-forward backtest through COVID (-34%) and 2022 bear (-25%) to prove the signal helped at inflection points. Consider per-stock drawdown (each stock's own 52W high) for better stock-level differentiation.
+
+**Confidence:** Medium | **Depth:** MEDIUM
+
+---STDERR---

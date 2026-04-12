@@ -1,0 +1,23 @@
+Done. Here's what Cycle 036 accomplished:
+
+## Cycle 036 Summary
+
+### Two focused fixes addressing systemic issues:
+
+**1. Drift Detector — Rolling Window Reference** (`drift_detector.py`)
+- **Problem**: Static 80/20 split compared 2000-2020 vs 2020-2026 data, guaranteeing 98.8% drift on any financial time series. The drift detector was always crying wolf.
+- **Fix**: New `DriftDetector.from_rolling_window()` compares last 252 trading days against the prior 504 days. Detects *recent* distribution shifts, not historical regime changes.
+- **Added**: Severity classification (none/low/moderate/high/critical) based on drift percentage.
+
+**2. Signal Engine — Crash Signal Base-Rate Centering** (`signal_engine.py`)
+- **Problem**: Crash signal formula `0.8 - (crash_prob/100) * 2.0` had neutral point at 40% crash probability. Since the actual base rate is ~12%, the crash component was permanently +0.78 (very bullish) in normal markets, inflating the composite and preventing any Hold/Sell signals.
+- **Fix**: New formula centered on `crash_base_rate_pct` (12%) from config. At base rate → 0.0 (neutral). Below → bullish, above → bearish.
+- **Impact**: Market composite dropped from 0.282 → 0.254, giving per-stock adjustments more room to differentiate. In downturns, the crash component will now properly go negative.
+
+### Stats
+- **Files changed**: 6 (3 source + 1 config + 2 test)
+- **Lines**: +309, -5
+- **Tests added**: 12 new
+- **Tests verified**: 209 passing across all affected files
+
+---STDERR---

@@ -1,0 +1,20 @@
+Committed. Final summary:
+
+## Cycle 034 Complete
+
+**Track:** Service Integration & Wiring
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Tests passing | 598 | 633 (+35) |
+| Signal components active | 1/8 | 5-8/8 |
+| `crash_prob_3m` in stock output | always null | populated from crash model |
+| `signal_action` in stock output | always null | computed via `get_stock_signal()` |
+| Drift detection in lab cycle | not wired | active (`collect_drift_check`) |
+| Bare `except:` in data_generator | 5 | 0 |
+
+**Files changed:** `lab/data_generator.py` (+235/-19), `backend/tests/test_signal_engine.py` (+59), `backend/tests/test_data_generator_wiring.py` (new, 485 lines)
+
+**Self-critique:** The `_compute_market_signal_for_lab()` duplicates ~80% of `routers/stock.py:_compute_market_signal()`. A shared helper would be cleaner but would require touching router code (production risk). Also, `collect_sp500_mc` still uses hardcoded `regime="Neutral"` — same bug class, left for next cycle.
+
+---STDERR---
