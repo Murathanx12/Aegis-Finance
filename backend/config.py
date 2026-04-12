@@ -244,6 +244,44 @@ config: dict = {
         "macro_risk": 0.10,       # 9-factor composite risk score (risk_scorer)
         "drawdown": 0.10,         # Current drawdown from 52-week high
     },
+    # Regime-adaptive signal weights — override defaults per market regime.
+    # Research: momentum dominates bull markets (Jegadeesh & Titman), mean
+    # reversion and crash risk dominate bear/volatile markets (DeBondt & Thaler),
+    # VIX-based signals matter more in volatile regimes (Ang et al. 2006).
+    # Weights are re-normalized at runtime so they sum to 1.0.
+    "regime_signal_weights": {
+        "Bull": {
+            "crash_prob": 0.14,       # less relevant when trending up
+            "regime": 0.14,
+            "valuation": 0.08,
+            "momentum": 0.20,         # momentum is strongest in trends
+            "mean_reversion": 0.05,   # rarely triggers in bull
+            "external": 0.14,
+            "macro_risk": 0.10,
+            "drawdown": 0.15,         # confirm trend via proximity to highs
+        },
+        "Bear": {
+            "crash_prob": 0.24,       # crash risk is critical
+            "regime": 0.14,
+            "valuation": 0.12,
+            "momentum": 0.06,         # momentum breaks down in bears
+            "mean_reversion": 0.16,   # contrarian opportunities
+            "external": 0.10,
+            "macro_risk": 0.12,
+            "drawdown": 0.06,         # everything is in drawdown, less informative
+        },
+        "Volatile": {
+            "crash_prob": 0.18,
+            "regime": 0.12,
+            "valuation": 0.16,        # VIX signals matter most
+            "momentum": 0.08,         # unreliable in whipsaws
+            "mean_reversion": 0.14,   # mean reversion opportunities
+            "external": 0.12,
+            "macro_risk": 0.12,
+            "drawdown": 0.08,
+        },
+        # "Neutral" and "Unknown" fall through to default signal_weights
+    },
     # Crash probability base rate — the neutral point for the crash signal.
     # When crash_prob equals this, the crash component = 0 (neither bullish nor bearish).
     # Historical 3M crash frequency is ~12%.  Old formula used 40% as neutral,
