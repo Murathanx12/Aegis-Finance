@@ -89,4 +89,4 @@ backend/tests/test_signal_engine.py::TestCrashSignalBaseRateCentering::test_zero
 backend/tests/test_signal_engine.py::TestCrashSignalBaseRateCentering::test_normal_market_not_strong_buy PASSED [ 98%]
 backend/tests/test_signal_engine.py::TestCrashSignalBaseRateCentering::test_blend_3m_12m_with_base_rate PASSED [100%]
 
-============================= 83 passed in 7.56s ==============================
+============================= 83 passed in 6.13s ==============================
