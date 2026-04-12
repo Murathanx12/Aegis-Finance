@@ -1,0 +1,20 @@
+Done. Here's the summary:
+
+## Cycle 42: Importance-Weighted Drift Detection
+
+**Problem**: 89.2% of features (141/158) were flagged as drifting, triggering "critical" severity and reducing the crash model to 20% weight — effectively disabling it. But the drifted features were mostly low-importance ones (momentum, short-term volatility) that naturally shift with market conditions.
+
+**Solution**: Weight each feature's drift flag by its crash model importance. If the model's top features (macro indicators, yield curve) are stable while low-importance features drift, the **effective severity** is much lower, and the crash model retains signal.
+
+**What was built**:
+1. **`importance_weighted_drift()`** — normalizes feature importances, computes weighted drift %
+2. **Drift direction attribution** — per-feature `mean_shift` and `spread_change` 
+3. **`stable_important_features`** — ranked list of important features that aren't drifting
+4. **`effective_severity`** — uses weighted severity when importances available, raw otherwise
+5. **All 4 routers** (market, crash, stock, drift) updated to pass crash model importances
+
+**Tests**: 17 new tests, 270 existing tests verified passing (drift, signal engine, routers).
+
+**Impact**: In the example where 8/10 low-importance features drift: raw severity = "critical" (80%), weighted severity = "low" (<20%). Crash model weight goes from 0.2 to 1.0 — 5x more signal retained.
+
+---STDERR---
