@@ -1,0 +1,3 @@
+Both research agents confirm the same conclusion — the cycle 038 work directly fills the biggest identified gap. The second agent also flagged **cross-asset correlation in Monte Carlo** (Cholesky-correlated shocks) as a natural follow-up, which would pair well with the tail dependence engine for a future cycle.
+
+---STDERR---
