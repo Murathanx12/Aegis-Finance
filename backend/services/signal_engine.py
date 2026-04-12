@@ -367,8 +367,8 @@ def _compute_conviction_quality(components: dict) -> dict:
 
     agreement_pct = int(agreeing / n_contributing * 100) if n_contributing > 0 else 0
 
-    # Find dominant driver (largest absolute contribution)
-    dominant = max(components.items(), key=lambda x: abs(x[1]))
+    # Find dominant driver (largest absolute contribution, excluding market_base)
+    dominant = max(stock_components.items(), key=lambda x: abs(x[1])) if stock_components else ("market_base", components.get("market_base", 0))
 
     # Quality classification
     if agreement_pct >= 75 and n_contributing >= 3:

@@ -287,14 +287,77 @@ def detect_sector_concentration(stocks: list[dict], top_n: int = 5) -> dict:
     return result
 
 
+def compute_opportunity_score(stock: dict) -> float:
+    """Compute a composite opportunity score combining multiple quality metrics.
+
+    The opportunity score answers: "Which stock is the best risk-adjusted
+    opportunity right now?" It combines:
+      - Signal direction and strength (is it a Buy or Sell?)
+      - Sharpe ratio (is the return worth the risk?)
+      - Risk-reward asymmetry (more upside potential than downside?)
+      - Prediction confidence (how much should we trust the forecast?)
+
+    This replaces the Sharpe-only sort in the screener, which ignores signal
+    direction entirely (a stock with high Sharpe but a Sell signal shouldn't
+    rank first).
+
+    Args:
+        stock: Stock dict from screener with signal, Sharpe, risk_reward, etc.
+
+    Returns:
+        Composite opportunity score (higher = better opportunity). Not bounded.
+    """
+    opp_cfg = config.get("opportunity_score_weights", {})
+    signal_w = opp_cfg.get("signal", 0.35)
+    sharpe_w = opp_cfg.get("sharpe", 0.25)
+    risk_reward_w = opp_cfg.get("risk_reward", 0.25)
+    confidence_w = opp_cfg.get("confidence", 0.15)
+
+    # 1. Signal component: composite_score normalized to [-1, 1]
+    signal_score = float(np.clip(stock.get("signal_score", 0), -1, 1))
+
+    # 2. Sharpe component: normalize to [-1, 1] range
+    #    Typical Sharpe range for stocks is -0.5 to 1.5
+    raw_sharpe = stock.get("sharpe", 0)
+    sharpe_score = float(np.clip(raw_sharpe / 1.5, -1, 1))
+
+    # 3. Risk-reward component: ratio mapped to [-1, 1]
+    #    ratio < 0.5 = bad (-0.5), ratio = 1.0 = neutral (0), ratio > 3.0 = great (+1)
+    rr = stock.get("risk_reward", {})
+    if rr.get("available"):
+        ratio = rr.get("risk_reward_ratio", 1.0)
+        # Log transform for diminishing returns: ratio 3 → ~0.5, ratio 10 → ~1.0
+        rr_score = float(np.clip(np.log(max(ratio, 0.1)) / np.log(10), -1, 1))
+    else:
+        rr_score = 0.0  # neutral when unavailable
+
+    # 4. Confidence component: prediction confidence score (0-1)
+    #    High confidence → trust the signal more → boost opportunity
+    #    Low confidence → discount the signal → reduce opportunity
+    conf_score_raw = stock.get("prediction_confidence_score", 0.5)
+    if conf_score_raw is None:
+        conf_score_raw = 0.5
+    # Map to [-0.5, 0.5] centered at 0.5 confidence
+    conf_score = float(np.clip((conf_score_raw - 0.5) * 2, -1, 1))
+
+    composite = (
+        signal_w * signal_score
+        + sharpe_w * sharpe_score
+        + risk_reward_w * rr_score
+        + confidence_w * conf_score
+    )
+
+    return round(composite, 4)
+
+
 def enrich_screener_signals(
     stocks: list[dict],
     market_signal: Optional[dict] = None,
 ) -> dict:
     """Main entry point: enrich screener output with analytics.
 
-    Adds ranking, consensus, risk-reward, and concentration analysis
-    to the raw screener stock list.
+    Adds ranking, consensus, risk-reward, opportunity score, and concentration
+    analysis to the raw screener stock list.
 
     Args:
         stocks: List of stock dicts from screener.
@@ -306,15 +369,19 @@ def enrich_screener_signals(
     if not stocks:
         return {"stocks": [], "analytics": {"n_stocks": 0}}
 
-    # 1. Add relative ranking
+    # 1. Add relative ranking (by signal_score)
     stocks = rank_screener_signals(stocks)
 
-    # 2. Add risk-reward for each stock
+    # 2. Add risk-reward for each stock (uses MC p10/p90 return fields)
     for stock in stocks:
         rr = compute_risk_reward(stock)
         stock["risk_reward"] = rr
 
-    # 3. Market signal consensus
+    # 3. Compute composite opportunity score per stock
+    for stock in stocks:
+        stock["opportunity_score"] = compute_opportunity_score(stock)
+
+    # 4. Market signal consensus
     market_consensus = None
     market_decomposition = None
     if market_signal and "components" in market_signal:
@@ -323,13 +390,15 @@ def enrich_screener_signals(
             market_signal["components"]
         )
 
-    # 4. Sector concentration
+    # 5. Sector concentration
     concentration = detect_sector_concentration(stocks)
 
-    # 5. Aggregate signal diversity metrics
+    # 6. Aggregate signal diversity metrics
     scores = [s.get("signal_score", 0) for s in stocks]
     actions = [s.get("signal_action", "Hold") for s in stocks]
     action_dist = dict(Counter(actions))
+
+    opp_scores = [s.get("opportunity_score", 0) for s in stocks]
 
     analytics = {
         "n_stocks": len(stocks),
@@ -337,6 +406,8 @@ def enrich_screener_signals(
         "score_std": round(float(np.std(scores)), 3),
         "score_min": round(float(np.min(scores)), 3),
         "score_max": round(float(np.max(scores)), 3),
+        "opportunity_score_mean": round(float(np.mean(opp_scores)), 3),
+        "opportunity_score_std": round(float(np.std(opp_scores)), 3),
         "action_distribution": action_dist,
         "n_unique_actions": len(action_dist),
         "concentration": concentration,

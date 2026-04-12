@@ -118,10 +118,15 @@ def build_risk_score(data: pd.DataFrame) -> pd.Series:
     if "VIX" in data.columns:
         vix_10d_avg = data["VIX"].rolling(10).mean()
         # Graduated floor: +0.3 if VIX>22, +0.5 if VIX>25, +0.8 if VIX>30
-        vix_floor = pd.Series(0.0, index=data.index)
-        vix_floor = vix_floor.where(vix_10d_avg <= 22, 0.3)
-        vix_floor = vix_floor.where(vix_10d_avg <= 25, 0.5)
-        vix_floor = vix_floor.where(vix_10d_avg <= 30, 0.8)
+        # Use np.select for correct graduated thresholds (pd.where replaces
+        # where condition is False, so cascading calls overwrite earlier tiers)
+        conditions = [
+            vix_10d_avg > 30,
+            vix_10d_avg > 25,
+            vix_10d_avg > 22,
+        ]
+        choices = [0.8, 0.5, 0.3]
+        vix_floor = pd.Series(np.select(conditions, choices, default=0.0), index=data.index)
         composite = composite + vix_floor
 
     score = composite.clip(-4, 4)

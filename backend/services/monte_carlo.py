@@ -156,7 +156,9 @@ def simulate_paths(
     long_run_vol = historical_sigma
     kappa_vol = max(0.5, (1 - persistence) * 252)
     garch_params = sim_cfg.get("garch_derived_params", {})
-    xi = np.clip(0.06, garch_params.get("xi_min", 0.02), garch_params.get("xi_max", 0.15))
+    # xi = vol-of-vol from GARCH fit (default 0.06 if not provided)
+    xi_raw = garch_params.get("xi", 0.06)
+    xi = np.clip(xi_raw, garch_params.get("xi_min", 0.02), garch_params.get("xi_max", 0.15))
 
     # ══════════════════════════════════════════════════════════════
     # 2. DRIFT — from ML prediction (or historical fallback)

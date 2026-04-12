@@ -9,6 +9,7 @@ from backend.services.signal_analytics import (
     compute_signal_consensus,
     compute_conviction_decomposition,
     compute_risk_reward,
+    compute_opportunity_score,
     rank_screener_signals,
     detect_sector_concentration,
     enrich_screener_signals,
@@ -455,3 +456,187 @@ class TestEnrichScreenerSignals:
         assert abs(analytics["score_std"] - float(np.std(scores))) < 0.01
         assert analytics["score_min"] == round(min(scores), 3)
         assert analytics["score_max"] == round(max(scores), 3)
+
+    def test_enrichment_adds_opportunity_score(self):
+        """All stocks get an opportunity_score after enrichment."""
+        stocks = self._make_stocks(5)
+        result = enrich_screener_signals(stocks)
+        for s in result["stocks"]:
+            assert "opportunity_score" in s
+            assert isinstance(s["opportunity_score"], float)
+
+    def test_enrichment_opportunity_score_in_analytics(self):
+        """Analytics includes opportunity score aggregate stats."""
+        stocks = self._make_stocks(8)
+        result = enrich_screener_signals(stocks)
+        assert "opportunity_score_mean" in result["analytics"]
+        assert "opportunity_score_std" in result["analytics"]
+
+    def test_risk_reward_available_with_mc_data(self):
+        """Stocks with MC return fields get available risk_reward."""
+        stocks = self._make_stocks(3)
+        # _make_stocks includes mc_p90_5y, mc_p10_5y, mc_median_5y
+        result = enrich_screener_signals(stocks)
+        for s in result["stocks"]:
+            assert s["risk_reward"]["available"] is True
+            assert s["risk_reward"]["risk_reward_ratio"] > 0
+
+
+# ── compute_opportunity_score ──────────────────────────────────────────────
+
+
+class TestOpportunityScore:
+    """Test composite opportunity score computation."""
+
+    def test_strong_buy_high_sharpe_scores_high(self):
+        """Buy signal + high Sharpe + favorable risk-reward → high score."""
+        stock = {
+            "signal_score": 0.6,
+            "sharpe": 1.2,
+            "risk_reward": {"available": True, "risk_reward_ratio": 5.0},
+            "prediction_confidence_score": 0.75,
+        }
+        score = compute_opportunity_score(stock)
+        assert score > 0.3
+
+    def test_sell_signal_low_sharpe_scores_low(self):
+        """Sell signal + low Sharpe + bad risk-reward → low score."""
+        stock = {
+            "signal_score": -0.5,
+            "sharpe": -0.3,
+            "risk_reward": {"available": True, "risk_reward_ratio": 0.3},
+            "prediction_confidence_score": 0.3,
+        }
+        score = compute_opportunity_score(stock)
+        assert score < -0.2
+
+    def test_buy_beats_hold(self):
+        """Buy signal stock should score higher than Hold with same Sharpe."""
+        buy = {
+            "signal_score": 0.4,
+            "sharpe": 0.8,
+            "risk_reward": {"available": False},
+            "prediction_confidence_score": 0.6,
+        }
+        hold = {
+            "signal_score": 0.0,
+            "sharpe": 0.8,
+            "risk_reward": {"available": False},
+            "prediction_confidence_score": 0.6,
+        }
+        assert compute_opportunity_score(buy) > compute_opportunity_score(hold)
+
+    def test_high_confidence_boosts_score(self):
+        """Higher prediction confidence should increase opportunity score."""
+        high_conf = {
+            "signal_score": 0.3,
+            "sharpe": 0.5,
+            "risk_reward": {"available": False},
+            "prediction_confidence_score": 0.9,
+        }
+        low_conf = {
+            "signal_score": 0.3,
+            "sharpe": 0.5,
+            "risk_reward": {"available": False},
+            "prediction_confidence_score": 0.2,
+        }
+        assert compute_opportunity_score(high_conf) > compute_opportunity_score(low_conf)
+
+    def test_risk_reward_matters(self):
+        """Favorable risk-reward should boost score vs unfavorable."""
+        favorable = {
+            "signal_score": 0.2,
+            "sharpe": 0.5,
+            "risk_reward": {"available": True, "risk_reward_ratio": 5.0},
+            "prediction_confidence_score": 0.5,
+        }
+        unfavorable = {
+            "signal_score": 0.2,
+            "sharpe": 0.5,
+            "risk_reward": {"available": True, "risk_reward_ratio": 0.3},
+            "prediction_confidence_score": 0.5,
+        }
+        assert compute_opportunity_score(favorable) > compute_opportunity_score(unfavorable)
+
+    def test_missing_fields_returns_neutral(self):
+        """Stock with no data returns near-zero score."""
+        score = compute_opportunity_score({})
+        assert -0.15 <= score <= 0.15
+
+    def test_missing_risk_reward_is_neutral(self):
+        """Missing risk_reward contributes zero (not crash)."""
+        stock = {
+            "signal_score": 0.3,
+            "sharpe": 0.5,
+            "prediction_confidence_score": 0.6,
+        }
+        score = compute_opportunity_score(stock)
+        assert isinstance(score, float)
+
+    def test_missing_confidence_defaults_neutral(self):
+        """Missing prediction_confidence_score treated as 0.5 (neutral)."""
+        with_conf = {
+            "signal_score": 0.3,
+            "sharpe": 0.5,
+            "risk_reward": {"available": False},
+            "prediction_confidence_score": 0.5,
+        }
+        without_conf = {
+            "signal_score": 0.3,
+            "sharpe": 0.5,
+            "risk_reward": {"available": False},
+        }
+        # Both should score the same since missing defaults to 0.5
+        assert abs(compute_opportunity_score(with_conf) - compute_opportunity_score(without_conf)) < 0.01
+
+    def test_extreme_sharpe_clamped(self):
+        """Extreme Sharpe values are clamped, not amplified."""
+        extreme = {
+            "signal_score": 0.3,
+            "sharpe": 5.0,  # unrealistically high
+            "risk_reward": {"available": False},
+        }
+        normal = {
+            "signal_score": 0.3,
+            "sharpe": 1.5,
+            "risk_reward": {"available": False},
+        }
+        # Both should get max Sharpe contribution (clamped at 1.0)
+        assert abs(compute_opportunity_score(extreme) - compute_opportunity_score(normal)) < 0.01
+
+    def test_sell_with_good_sharpe_ranks_lower_than_buy(self):
+        """A Sell signal shouldn't rank above a Buy just because of high Sharpe.
+        This is the key improvement over Sharpe-only sorting."""
+        sell_high_sharpe = {
+            "signal_score": -0.3,
+            "sharpe": 1.5,
+            "risk_reward": {"available": False},
+            "prediction_confidence_score": 0.6,
+        }
+        buy_moderate_sharpe = {
+            "signal_score": 0.3,
+            "sharpe": 0.6,
+            "risk_reward": {"available": False},
+            "prediction_confidence_score": 0.6,
+        }
+        assert compute_opportunity_score(buy_moderate_sharpe) > compute_opportunity_score(sell_high_sharpe)
+
+    def test_differentiation_across_stocks(self):
+        """Different quality stocks should produce meaningfully different scores."""
+        great = {"signal_score": 0.6, "sharpe": 1.2,
+                 "risk_reward": {"available": True, "risk_reward_ratio": 4.0},
+                 "prediction_confidence_score": 0.8}
+        average = {"signal_score": 0.1, "sharpe": 0.5,
+                   "risk_reward": {"available": True, "risk_reward_ratio": 1.0},
+                   "prediction_confidence_score": 0.5}
+        poor = {"signal_score": -0.4, "sharpe": -0.2,
+                "risk_reward": {"available": True, "risk_reward_ratio": 0.3},
+                "prediction_confidence_score": 0.3}
+
+        g_score = compute_opportunity_score(great)
+        a_score = compute_opportunity_score(average)
+        p_score = compute_opportunity_score(poor)
+
+        assert g_score > a_score > p_score
+        # Spread should be meaningful (> 0.3)
+        assert g_score - p_score > 0.3

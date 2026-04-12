@@ -245,6 +245,16 @@ def analyze_stock(
     except (ImportError, KeyError, TypeError, ValueError, AttributeError) as e:
         logger.debug("%s: Options calibration skipped — %s", ticker, e)
 
+    # Recompute Ito correction if options calibration changed the vol.
+    # Without this, final_mu was computed with garch_vol but simulate_paths
+    # receives mc_vol_override — causing drift bias of 0.5*(old² - new²)/yr.
+    if mc_vol_override is not None and mc_vol_override != ito_sigma:
+        final_mu = float(np.log(1 + final_arithmetic) - 0.5 * mc_vol_override**2)
+        logger.debug(
+            "%s: Ito correction recomputed for options-calibrated vol (%.3f→%.3f)",
+            ticker, ito_sigma, mc_vol_override,
+        )
+
     base_scenario = {"drift_adj": 0, "vol_mult": 1.0, "crash_mult": 1.0}
     paths = simulate_paths(
         current_price, final_mu, final_sigma,
@@ -336,6 +346,10 @@ def analyze_stock(
         "news": news,
         "earnings": earnings,
         "price_history": price_history,
+        # Daily-resolution momentum (avoids bug where weekly-sampled price_history
+        # indices were treated as daily offsets — 22 weekly samples = 110 days)
+        "momentum_1m": float((current_price / prices.iloc[-22] - 1) * 100) if len(prices) >= 22 else None,
+        "momentum_3m": float((current_price / prices.iloc[-64] - 1) * 100) if len(prices) >= 64 else None,
         "key_stats": key_stats,
         "peers": peers,
         # Options-implied calibration (None if unavailable or low confidence)
