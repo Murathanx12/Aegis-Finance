@@ -198,11 +198,9 @@ def denoise_covariance(
         denoised_evals[n_signal:] *= 0.1
 
     # Detone: remove market mode (optional)
-    start_idx = 0
     if detone and n_signal >= 2:
         # Zero out the largest eigenvalue (market factor)
         denoised_evals[0] = 0
-        start_idx = 1
 
     # Reconstruct
     denoised_corr = eigenvectors @ np.diag(denoised_evals) @ eigenvectors.T
@@ -276,7 +274,10 @@ def covariance_diagnostics(
     evals_raw = np.sort(np.linalg.eigvalsh(cov_raw.values))[::-1]
     evals_dn = np.sort(np.linalg.eigvalsh(cov_dn.values))[::-1]
 
-    lambda_max = marchenko_pastur_bound(T, N)
+    # Fit noise variance from raw eigenvalues (same method as denoise_covariance)
+    # so the MP bound is consistent with what was actually used for denoising
+    var_noise = _fit_mp_variance(evals_raw, q)
+    lambda_max = marchenko_pastur_bound(T, N, var_noise)
 
     # Condition number: ratio of largest to smallest eigenvalue
     # Lower = more stable for optimization

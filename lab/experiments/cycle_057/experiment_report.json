@@ -1,0 +1,61 @@
+{
+  "cycle": 57,
+  "timestamp": "2026-04-15T04:15:00Z",
+  "title": "Bug fixes (4) + liquidity-adjusted position sizing in portfolio optimizer",
+  "category": "quantitative",
+  "observation": {
+    "bugs_found": [
+      "covariance.py:279 — covariance_diagnostics uses marchenko_pastur_bound with default var=1.0 instead of fitted noise variance, giving inconsistent MP bound vs what denoise_covariance actually computes",
+      "tail_dependence.py:287 — BFS cluster detection uses list.pop(0) which is O(n) per pop, making the BFS O(n²) instead of O(n)",
+      "covariance.py:201 — dead variable start_idx assigned after detoning but never used in reconstruction",
+      "return_model.py:82 — targets are sliced to [:train_end_idx] on line 65, then redundantly re-sliced on line 82, creating unnecessary copy"
+    ],
+    "gap_identified": "Portfolio optimizer produces weights without considering liquidity constraints. Illiquid positions can cause slippage, exit risk, and unreliable marking. No mechanism to penalize or cap illiquid allocations."
+  },
+  "implementation": {
+    "bugs_fixed": [
+      "covariance.py diagnostics now uses _fit_mp_variance to compute noise variance, consistent with denoise_covariance",
+      "tail_dependence.py BFS now uses collections.deque with popleft() for O(1) per pop",
+      "covariance.py removed dead start_idx variable",
+      "return_model.py removed redundant double-slice of targets in _train_single loop"
+    ],
+    "feature_built": "Liquidity-adjusted position sizing: adjust_weights_for_liquidity() function that post-processes optimizer weights by (1) hard-flooring positions below min dollar volume threshold, (2) penalizing stocks with liquidity score below threshold using configurable exponent, (3) redistributing freed weight pro-rata to liquid positions, (4) renormalizing. Integrated into compare_methods() so all optimizer comparisons include liquidity-adjusted alternatives.",
+    "files_changed": [
+      "backend/services/covariance.py",
+      "backend/services/tail_dependence.py",
+      "backend/services/return_model.py",
+      "backend/services/portfolio_optimizer.py",
+      "backend/config.py",
+      "backend/tests/test_portfolio_optimizer.py",
+      "backend/tests/test_covariance.py"
+    ],
+    "files_created": [
+      "lab/experiments/cycle_057/experiment_report.json"
+    ],
+    "packages_installed": []
+  },
+  "validation": {
+    "tests_written": 7,
+    "tests_passing": 158,
+    "regressions": 0
+  },
+  "assessment": {
+    "verdict": "improved",
+    "confidence": "high",
+    "depth": 3,
+    "limitations": [
+      "Liquidity scores require live yfinance data when not pre-provided — adds latency to compare_methods",
+      "Liquidity penalty exponent and threshold are heuristic, not calibrated to empirical slippage data",
+      "BFS fix is minor — the cluster graph is always small (≤20 nodes)",
+      "Did not add API endpoint for standalone liquidity-adjusted sizing"
+    ],
+    "self_critique": "Could have added a router endpoint exposing adjust_weights_for_liquidity directly. Could have integrated liquidity sizing into the main portfolio_engine.py build flow, not just compare_methods. The liquidity penalty curve (exponent=0.5) is a reasonable default but would benefit from backtesting against actual execution costs."
+  },
+  "next_steps": [
+    "Integrate liquidity-adjusted sizing into portfolio_engine.py build flow (not just compare_methods)",
+    "Add API endpoint for standalone liquidity adjustment",
+    "Wire liquidity score into stock analysis page frontend",
+    "Backtest liquidity penalty exponent against realized slippage",
+    "Add conformal prediction intervals for crash probabilities"
+  ]
+}

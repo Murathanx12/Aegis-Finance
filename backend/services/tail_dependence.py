@@ -255,7 +255,7 @@ def _cluster_analysis(pairs: list[dict], tickers: list[str]) -> list[dict]:
 
     Returns list of clusters, each with member tickers and avg tail dep.
     """
-    from collections import defaultdict
+    from collections import defaultdict, deque
 
     threshold = _TD_CFG.get("cluster_threshold", 0.20)
 
@@ -274,11 +274,11 @@ def _cluster_analysis(pairs: list[dict], tickers: list[str]) -> list[dict]:
         if ticker in visited or ticker not in adj:
             continue
 
-        # BFS
+        # BFS using deque for O(1) popleft (list.pop(0) is O(n))
         cluster = set()
-        queue = [ticker]
+        queue = deque([ticker])
         while queue:
-            node = queue.pop(0)
+            node = queue.popleft()
             if node in visited:
                 continue
             visited.add(node)
