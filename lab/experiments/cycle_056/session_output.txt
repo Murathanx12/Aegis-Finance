@@ -1,0 +1,21 @@
+R&D Cycle 56 complete. Here's the summary:
+
+## Cycle 56 Results
+
+### Bugs Fixed (3)
+1. **fundamentals.py** — Piotroski F-Score `max_score` was 9 but only 7 criteria are implemented. Fixed to `max_score=7` and adjusted "strong" threshold from >=7 to >=6.
+2. **survival_model.py** — `purge_gap` was computed from config but never used; hardcoded `252` was used instead. Now uses the config-driven value.
+3. **liquidity_risk.py** — Index misalignment between `returns` (via `.dropna()`) and `volume.iloc[1:]`/`close.iloc[1:]`. Fixed to use `.loc[returns.index]`.
+
+### Feature Built: Google Trends Fear/Greed Integration
+- **2 new API endpoints**: `GET /api/analytics/trends-sentiment` (full fear/greed breakdown) and `GET /api/analytics/trends-sentiment/{ticker}` (stock-specific attention)
+- **Market status**: `trends_sentiment` field added to `/api/market-status` response
+- **Signal engine**: New `trends_fear_greed` contrarian component feeds into composite market signal
+- **Frontend**: `TrendsSentiment`, `TickerAttention` types + `getTrendsSentiment()`, `getTickerAttention()` API functions
+
+### Tests
+- 17 new tests (8 trends signal engine + 2 Piotroski regression + 7 trends service)
+- 153 total passing across affected files, 0 regressions
+- Core smoke tests (Monte Carlo + crash calibration): all 16 passing
+
+---STDERR---

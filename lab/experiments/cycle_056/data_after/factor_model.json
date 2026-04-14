@@ -1,0 +1,11 @@
+{
+  "AAPL": {
+    "error": "'charmap' codec can't encode character '\\u03b2' in position 24: character maps to <undefined>"
+  },
+  "JPM": {
+    "error": "'charmap' codec can't encode character '\\u03b2' in position 23: character maps to <undefined>"
+  },
+  "XOM": {
+    "error": "'charmap' codec can't encode character '\\u03b2' in position 23: character maps to <undefined>"
+  }
+}
