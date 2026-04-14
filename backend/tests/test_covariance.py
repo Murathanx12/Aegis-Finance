@@ -133,3 +133,18 @@ class TestDiagnostics:
         assert diag["dimensions"]["N"] == 20
         assert diag["signal_eigenvalues"] > 0
         assert diag["condition_number"]["improvement"] >= 1.0
+
+    def test_diagnostics_mp_bound_uses_fitted_variance(self, random_returns):
+        """Regression: diagnostics MP bound must use fitted noise variance,
+        not default var=1.0, to be consistent with denoise_covariance."""
+        from backend.services.covariance import _fit_mp_variance
+        diag = covariance_diagnostics(random_returns)
+        T, N = random_returns.shape
+        q = T / N
+        # The MP bound in diagnostics should NOT equal the default var=1.0 bound
+        default_bound = marchenko_pastur_bound(T, N, var=1.0)
+        # The diagnostics bound should use the fitted variance
+        actual_bound = diag["marchenko_pastur_bound"]
+        # They should differ (fitted variance != 1.0 for our synthetic data)
+        # Our synthetic data has noise variance << 1.0 (factors are large, noise is small)
+        assert actual_bound != pytest.approx(default_bound, rel=0.01)

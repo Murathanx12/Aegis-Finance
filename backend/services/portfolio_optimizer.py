@@ -356,11 +356,16 @@ def optimize_hrp(
 def compare_methods(
     tickers: list[str],
     lookback_days: int = 504,
+    apply_liquidity_adjustment: bool = True,
 ) -> dict:
     """Run all optimization methods and compare results.
 
     Returns a comparison table showing how different risk models
     produce different allocations — the kind of analysis Bloomberg PORT provides.
+
+    Args:
+        apply_liquidity_adjustment: If True, also shows liquidity-adjusted
+            weights alongside raw optimizer output.
     """
     results = {}
 
@@ -378,12 +383,33 @@ def compare_methods(
         except Exception as e:
             logger.warning("Method %s failed: %s", name, e)
 
-    return {
+    # Apply liquidity adjustment to all methods
+    liquidity_summary = None
+    if apply_liquidity_adjustment and results:
+        # Fetch liquidity once, reuse for all methods
+        all_tickers = set()
+        for r in results.values():
+            all_tickers.update(r.get("weights", {}).keys())
+        liq_scores = _fetch_liquidity_scores(list(all_tickers))
+
+        if liq_scores:
+            for name, r in results.items():
+                adj = adjust_weights_for_liquidity(r.get("weights", {}), liq_scores)
+                r["liquidity_adjusted"] = adj
+            liquidity_summary = {
+                "scores_available": len(liq_scores),
+                "tickers_checked": list(liq_scores.keys()),
+            }
+
+    result = {
         "methods": results,
         "n_methods": len(results),
         "tickers": tickers,
         "recommendation": _recommend_method(results),
     }
+    if liquidity_summary:
+        result["liquidity_summary"] = liquidity_summary
+    return result
 
 
 def _recommend_method(results: dict) -> str:
@@ -405,6 +431,157 @@ def _recommend_method(results: dict) -> str:
         "mean_cvar for tail-risk awareness, "
         "max_diversification for concentrated portfolios."
     )
+
+
+def adjust_weights_for_liquidity(
+    weights: dict[str, float],
+    liquidity_scores: Optional[dict[str, dict]] = None,
+) -> dict:
+    """Adjust portfolio weights based on liquidity constraints.
+
+    Institutional portfolios penalize illiquid positions to avoid:
+    - Slippage: large orders move price against you
+    - Exit risk: can't sell quickly in a crash
+    - Marking risk: illiquid positions have unreliable prices
+
+    Algorithm:
+    1. Compute a liquidity penalty factor for each asset (0 to max_reduction)
+    2. Reduce illiquid weights by their penalty factor
+    3. Redistribute freed weight pro-rata to liquid assets
+    4. Hard-floor: zero out positions below minimum dollar volume
+
+    Args:
+        weights: Optimized {ticker: weight} dict
+        liquidity_scores: {ticker: {"composite": 0-100, "tier": str,
+                          "avg_dollar_volume_mm": float}} from liquidity_risk.
+                          If None, fetches live from liquidity_risk service.
+
+    Returns:
+        Dict with adjusted weights, adjustments made, and liquidity summary.
+    """
+    _liq_cfg = config.get("liquidity_risk", {}).get("position_sizing", {})
+    if not _liq_cfg.get("enabled", True):
+        return {
+            "weights": weights,
+            "adjustments": {},
+            "liquidity_adjusted": False,
+        }
+
+    # Fetch liquidity scores if not provided
+    if liquidity_scores is None:
+        liquidity_scores = _fetch_liquidity_scores(list(weights.keys()))
+
+    if not liquidity_scores:
+        return {
+            "weights": weights,
+            "adjustments": {},
+            "liquidity_adjusted": False,
+            "reason": "No liquidity data available",
+        }
+
+    min_dv = _liq_cfg.get("min_dollar_volume_mm", 1.0)
+    penalty_exp = _liq_cfg.get("penalty_exponent", 0.5)
+    max_reduction = _liq_cfg.get("max_weight_reduction", 0.50)
+    score_threshold = _liq_cfg.get("score_threshold", 40)
+
+    adjusted = {}
+    adjustments = {}
+    freed_weight = 0.0
+
+    for ticker, w in weights.items():
+        liq = liquidity_scores.get(ticker)
+        if liq is None:
+            # No liquidity data — keep original weight
+            adjusted[ticker] = w
+            continue
+
+        score = liq.get("composite", 50)
+        avg_dv = liq.get("avg_dollar_volume_mm", 100)
+
+        # Hard floor: zero out below minimum dollar volume
+        if avg_dv < min_dv:
+            adjustments[ticker] = {
+                "original_weight": round(w, 4),
+                "adjusted_weight": 0.0,
+                "reason": f"Below ${min_dv}M daily volume (${avg_dv:.1f}M)",
+                "liquidity_score": score,
+            }
+            freed_weight += w
+            adjusted[ticker] = 0.0
+            continue
+
+        # Penalty for scores below threshold
+        if score < score_threshold:
+            # Penalty scales with distance below threshold
+            # score=40,threshold=40 → penalty=0
+            # score=20,threshold=40 → penalty = (20/40)^0.5 * max_reduction
+            shortfall = (score_threshold - score) / score_threshold
+            penalty = min(shortfall ** penalty_exp * max_reduction, max_reduction)
+            new_w = w * (1 - penalty)
+            freed = w - new_w
+            freed_weight += freed
+            adjusted[ticker] = new_w
+            adjustments[ticker] = {
+                "original_weight": round(w, 4),
+                "adjusted_weight": round(new_w, 4),
+                "penalty_pct": round(penalty * 100, 1),
+                "reason": f"Low liquidity score ({score:.0f}/100)",
+                "liquidity_score": score,
+            }
+        else:
+            adjusted[ticker] = w
+
+    # Redistribute freed weight pro-rata to liquid positions (score >= threshold)
+    liquid_tickers = [
+        t for t, w in adjusted.items()
+        if w > 0 and t not in adjustments
+    ]
+    liquid_total = sum(adjusted[t] for t in liquid_tickers)
+
+    if freed_weight > 0.001 and liquid_total > 0:
+        for t in liquid_tickers:
+            share = adjusted[t] / liquid_total
+            boost = freed_weight * share
+            adjusted[t] += boost
+
+    # Remove zero-weight positions
+    adjusted = {t: round(w, 4) for t, w in adjusted.items() if w > 0.001}
+
+    # Renormalize to sum to 1
+    total = sum(adjusted.values())
+    if total > 0 and abs(total - 1.0) > 0.001:
+        adjusted = {t: round(w / total, 4) for t, w in adjusted.items()}
+
+    return {
+        "weights": adjusted,
+        "adjustments": adjustments,
+        "liquidity_adjusted": len(adjustments) > 0,
+        "freed_weight_pct": round(freed_weight * 100, 2),
+        "n_penalized": len(adjustments),
+        "n_removed": sum(1 for a in adjustments.values() if a.get("adjusted_weight", 1) == 0),
+    }
+
+
+def _fetch_liquidity_scores(tickers: list[str]) -> dict[str, dict]:
+    """Fetch liquidity scores for a list of tickers (uses cached service)."""
+    try:
+        from backend.services.liquidity_risk import compute_liquidity_metrics
+    except ImportError:
+        return {}
+
+    scores = {}
+    for ticker in tickers:
+        try:
+            result = compute_liquidity_metrics(ticker)
+            if result and "score" in result:
+                scores[ticker] = {
+                    "composite": result["score"]["composite"],
+                    "tier": result["score"]["tier"],
+                    "avg_dollar_volume_mm": result["metrics"]["avg_dollar_volume_mm"],
+                }
+        except Exception:
+            pass
+    return scores
 
 
 def _equal_weight_fallback(tickers: list[str]) -> dict:

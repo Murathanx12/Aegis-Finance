@@ -858,6 +858,14 @@ config: dict = {
         "min_observations": 60,          # Minimum days for valid analysis
         "amihud_window": 21,             # Rolling window for Amihud illiquidity
         "roll_window": 21,               # Rolling window for Roll spread
+        # Liquidity-adjusted position sizing parameters
+        "position_sizing": {
+            "enabled": True,             # Apply liquidity adjustment by default
+            "min_dollar_volume_mm": 1.0, # Hard floor: skip stocks < $1M avg daily volume
+            "penalty_exponent": 0.5,     # How aggressively to penalize illiquidity (0=off, 1=linear)
+            "max_weight_reduction": 0.50,# Never reduce a position by more than 50%
+            "score_threshold": 40,       # Liquidity score below which penalty kicks in
+        },
     },
 
     # ── COPULA TAIL DEPENDENCE ──────────────────────────────────────────

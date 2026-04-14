@@ -100,3 +100,81 @@ class TestHRP:
         assert result is not None
         assert result["method"] == "hrp"
         assert len(result["weights"]) >= 2
+
+
+class TestLiquidityAdjustedPositionSizing:
+    """Tests for adjust_weights_for_liquidity()."""
+
+    def test_no_adjustment_for_liquid_stocks(self):
+        from backend.services.portfolio_optimizer import adjust_weights_for_liquidity
+        weights = {"AAPL": 0.4, "MSFT": 0.3, "GOOGL": 0.3}
+        liq_scores = {
+            "AAPL": {"composite": 90, "tier": "highly_liquid", "avg_dollar_volume_mm": 5000},
+            "MSFT": {"composite": 85, "tier": "highly_liquid", "avg_dollar_volume_mm": 4000},
+            "GOOGL": {"composite": 80, "tier": "highly_liquid", "avg_dollar_volume_mm": 3000},
+        }
+        result = adjust_weights_for_liquidity(weights, liq_scores)
+        assert not result["liquidity_adjusted"]
+        assert abs(sum(result["weights"].values()) - 1.0) < 0.02
+
+    def test_penalizes_illiquid_stock(self):
+        from backend.services.portfolio_optimizer import adjust_weights_for_liquidity
+        weights = {"AAPL": 0.5, "MSFT": 0.3, "ILLIQ": 0.2}
+        liq_scores = {
+            "AAPL": {"composite": 90, "tier": "highly_liquid", "avg_dollar_volume_mm": 5000},
+            "MSFT": {"composite": 85, "tier": "highly_liquid", "avg_dollar_volume_mm": 4000},
+            "ILLIQ": {"composite": 20, "tier": "illiquid", "avg_dollar_volume_mm": 5.0},
+        }
+        result = adjust_weights_for_liquidity(weights, liq_scores)
+        assert result["liquidity_adjusted"]
+        assert result["n_penalized"] == 1
+        # Illiquid stock should have lower weight
+        assert result["weights"]["ILLIQ"] < 0.2
+        # Weights should still sum to ~1
+        assert abs(sum(result["weights"].values()) - 1.0) < 0.02
+
+    def test_removes_very_illiquid_stock(self):
+        from backend.services.portfolio_optimizer import adjust_weights_for_liquidity
+        weights = {"AAPL": 0.5, "MSFT": 0.3, "MICRO": 0.2}
+        liq_scores = {
+            "AAPL": {"composite": 90, "tier": "highly_liquid", "avg_dollar_volume_mm": 5000},
+            "MSFT": {"composite": 85, "tier": "highly_liquid", "avg_dollar_volume_mm": 4000},
+            "MICRO": {"composite": 10, "tier": "highly_illiquid", "avg_dollar_volume_mm": 0.3},
+        }
+        result = adjust_weights_for_liquidity(weights, liq_scores)
+        assert result["n_removed"] == 1
+        assert "MICRO" not in result["weights"]
+        assert abs(sum(result["weights"].values()) - 1.0) < 0.02
+
+    def test_preserves_weights_when_no_liq_data(self):
+        from backend.services.portfolio_optimizer import adjust_weights_for_liquidity
+        weights = {"AAPL": 0.5, "MSFT": 0.5}
+        result = adjust_weights_for_liquidity(weights, {})
+        assert not result["liquidity_adjusted"]
+        assert result["weights"] == weights
+
+    def test_redistribution_is_proportional(self):
+        from backend.services.portfolio_optimizer import adjust_weights_for_liquidity
+        weights = {"A": 0.4, "B": 0.2, "C": 0.4}
+        liq_scores = {
+            "A": {"composite": 90, "tier": "highly_liquid", "avg_dollar_volume_mm": 5000},
+            "B": {"composite": 15, "tier": "illiquid", "avg_dollar_volume_mm": 2.0},
+            "C": {"composite": 85, "tier": "highly_liquid", "avg_dollar_volume_mm": 3000},
+        }
+        result = adjust_weights_for_liquidity(weights, liq_scores)
+        # A and C should get the freed weight proportionally (50/50 since they were equal)
+        assert result["weights"]["A"] > 0.4
+        assert result["weights"]["C"] > 0.4
+        assert result["freed_weight_pct"] > 0
+
+    def test_all_liquid_no_change(self):
+        from backend.services.portfolio_optimizer import adjust_weights_for_liquidity
+        weights = {"AAPL": 0.5, "MSFT": 0.5}
+        liq_scores = {
+            "AAPL": {"composite": 95, "tier": "highly_liquid", "avg_dollar_volume_mm": 10000},
+            "MSFT": {"composite": 92, "tier": "highly_liquid", "avg_dollar_volume_mm": 8000},
+        }
+        result = adjust_weights_for_liquidity(weights, liq_scores)
+        assert not result["liquidity_adjusted"]
+        assert abs(result["weights"]["AAPL"] - 0.5) < 0.01
+        assert abs(result["weights"]["MSFT"] - 0.5) < 0.01
