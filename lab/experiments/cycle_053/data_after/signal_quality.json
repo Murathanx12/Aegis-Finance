@@ -1,0 +1,102 @@
+{
+  "market_signal": {
+    "action": "Buy",
+    "confidence": 20,
+    "color": "green",
+    "composite_score": 0.204,
+    "reasons": [
+      "Crash model drift (critical) \u2014 ML signal weight reduced to 20%",
+      "Low crash risk (3% 3M)",
+      "Bullish market regime"
+    ],
+    "components": {
+      "crash_prob": 0.015,
+      "regime": 0.7,
+      "valuation": 0.1,
+      "momentum": 0.236,
+      "mean_reversion": 0.0,
+      "external": 0.4,
+      "macro_risk": -0.082,
+      "drawdown": 0.2,
+      "systemic_risk": -0.3
+    },
+    "drift_severity": "critical",
+    "drift_crash_weight_mult": 0.2,
+    "regime_weight_profile": "Bull"
+  },
+  "stock_signals": {
+    "TSLA": {
+      "action": "Hold",
+      "composite_score": -0.006,
+      "confidence": 0
+    },
+    "PG": {
+      "action": "Hold",
+      "composite_score": 0.091,
+      "confidence": 9
+    },
+    "HD": {
+      "action": "Hold",
+      "composite_score": 0.082,
+      "confidence": 8
+    },
+    "COST": {
+      "action": "Buy",
+      "composite_score": 0.184,
+      "confidence": 18
+    },
+    "JNJ": {
+      "action": "Buy",
+      "composite_score": 0.292,
+      "confidence": 29
+    },
+    "JPM": {
+      "action": "Buy",
+      "composite_score": 0.329,
+      "confidence": 32
+    },
+    "LVS": {
+      "action": "Buy",
+      "composite_score": 0.173,
+      "confidence": 17
+    },
+    "LUV": {
+      "action": "Hold",
+      "composite_score": 0.107,
+      "confidence": 10
+    },
+    "ARM": {
+      "action": "Strong Buy",
+      "composite_score": 0.514,
+      "confidence": 51
+    },
+    "NEM": {
+      "action": "Buy",
+      "composite_score": 0.353,
+      "confidence": 35
+    },
+    "DDOG": {
+      "action": "Hold",
+      "composite_score": -0.079,
+      "confidence": 7
+    },
+    "NET": {
+      "action": "Hold",
+      "composite_score": -0.028,
+      "confidence": 2
+    }
+  },
+  "diversity": {
+    "action_distribution": {
+      "Hold": 6,
+      "Buy": 5,
+      "Strong Buy": 1
+    },
+    "n_unique_actions": 3,
+    "score_spread": 0.593,
+    "score_std": 0.169,
+    "all_same_action": false
+  },
+  "n_tickers_with_signal": 12,
+  "n_tickers_failed": 0
+}

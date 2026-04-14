@@ -1,0 +1,23 @@
+Cycle 53 complete. Here's the summary:
+
+## Cycle 53 Results
+
+### Bug Fixes (4)
+1. **Student-t copula AIC** (`copula_tail.py`): Log-likelihood was computing bivariate-t joint density instead of copula density. Missing marginal t-density subtraction made AIC incomparable across families, systematically biasing model selection toward Student-t. Fixed by subtracting `marginal_loglik` from `joint_loglik`.
+
+2. **Empirical marginal transform** (`copula_tail.py`): Floor-based integer indexing lost precision in distribution tails — exactly where VaR/CVaR is computed. Replaced with linear interpolation between adjacent sorted returns.
+
+3. **Gumbel dead code** (`copula_tail.py`): Removed 8 lines of `log_c` computation that was never used.
+
+4. **Oil shock asymmetry** (`stress_testing.py`): `oil_pct > 0.1` condition silently ignored negative oil shocks for non-energy sectors. A -30% oil drop had zero impact on tech stocks. Fixed to `abs(oil_pct) > 0.1` with proper sign propagation.
+
+### New Feature
+**Copula VaR integration into portfolio analysis**: New `compute_copula_risk_from_returns()` function takes pre-fetched returns (no double yfinance fetch) and computes t-copula MC VaR/CVaR alongside Gaussian VaR. Wired into `PortfolioEngine.analyze_portfolio()` — response now includes `copula_risk` with tail risk underestimate percentage.
+
+### Validation
+- 9 new tests written (5 copula, 4 stress testing)
+- 35 total tests in affected files: **all passing**
+- 110 core smoke tests: **all passing**
+- 0 regressions
+
+---STDERR---
