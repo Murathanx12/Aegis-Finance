@@ -380,7 +380,18 @@ class PortfolioEngine:
         # Tail risk analytics (Sortino, Omega, Calmar, etc.)
         tail_metrics = compute_tail_risk_metrics(port_returns)
 
-        return {
+        # Copula-based tail risk (captures joint crash dependence)
+        copula_risk = None
+        if len(available) >= 2:
+            try:
+                from backend.services.copula_tail import compute_copula_risk_from_returns
+                copula_risk = compute_copula_risk_from_returns(
+                    returns[available], w_available
+                )
+            except Exception as e:
+                logger.debug("Copula risk computation skipped: %s", e)
+
+        result = {
             "total_value": total_value,
             "annual_return": port_annual_return,
             "annual_volatility": port_annual_vol,
@@ -395,6 +406,9 @@ class PortfolioEngine:
             ],
             "correlation": corr_data,
         }
+        if copula_risk is not None:
+            result["copula_risk"] = copula_risk
+        return result
 
     @staticmethod
     def build_portfolio(

@@ -376,7 +376,8 @@ def hypothetical_stress_test(
             if sector == "Energy":
                 oil_impact = oil_pct * _FACTOR_SENSITIVITIES["oil_energy_sensitivity"]
             else:
-                oil_impact = abs(oil_pct) * _FACTOR_SENSITIVITIES["oil_other_sensitivity"] if oil_pct > 0.1 else 0
+                # Rising oil hurts non-energy (negative); falling oil mildly helps
+                oil_impact = oil_pct * _FACTOR_SENSITIVITIES["oil_other_sensitivity"] if abs(oil_pct) > 0.1 else 0
             total_impact += oil_impact
 
         # Credit spread widening
