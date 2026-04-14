@@ -1,0 +1,21 @@
+## Cycle 52 Complete
+
+### Bugs Fixed (3)
+
+1. **`backtest.py` — Overlapping return compounding**: Monthly evaluation with 3-month forward returns produced overlapping observations. `(1+arr).prod()` was compounding ~36 overlapping 3M returns as if sequential, inflating total returns by ~3x. Fixed by sampling every 3rd observation for compounding and Sharpe.
+
+2. **`factor_model.py` — Shared cache timestamp**: A single `_FACTOR_CACHE_TS` float was shared by both `ff5_daily` and `mom_daily` cache entries. Loading momentum would reset the ff5 expiry timestamp, causing stale factor data. Fixed with per-key dict.
+
+3. **`tail_risk.py` — Dead code**: Removed unused `downside` variable.
+
+### Feature Built
+
+**Factor exposure integration in stock analysis**: The Fama-French 5-factor decomposition (alpha, factor loadings, style classification, R², residual vol) is now included directly in the stock analysis response. It reuses the already-fetched price series to avoid redundant yfinance calls. The frontend can now show factor decomposition on stock pages without a second API call.
+
+### Validation
+
+- **12 new tests** written (8 backtest, 4 factor integration)
+- **163 tests** passing across affected files (backtest, factor_model, signal_engine, crash_calibration, tail_risk)
+- **0 regressions**
+
+---STDERR---
