@@ -18,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.cache import cache_clear, set_cache_ready, cache_ready
 from backend.middleware import add_timing_middleware
-from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift
+from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics
 
 logging.basicConfig(
     level=logging.INFO,
@@ -105,6 +105,7 @@ app.include_router(backtest.router)
 app.include_router(correlation.router)
 app.include_router(options.router)
 app.include_router(drift.router)
+app.include_router(analytics.router)
 
 
 @app.get("/")
@@ -128,6 +129,16 @@ async def root():
             "/api/options/vix-term",
             "/api/earnings/{ticker}",
             "/api/correlation/tail-dependence",
+            "/api/analytics/factors/{ticker}",
+            "/api/analytics/stress-test/{ticker}",
+            "/api/analytics/momentum",
+            "/api/analytics/economic-surprise",
+            "/api/analytics/scenarios",
+            "/api/analytics/liquidity/{ticker}",
+            "/api/analytics/copula/{ticker_a}/{ticker_b}",
+            "/api/analytics/covariance-diagnostics",
+            "/api/analytics/crash-timeline",
+            "/api/analytics/changepoint",
         ],
     }
 

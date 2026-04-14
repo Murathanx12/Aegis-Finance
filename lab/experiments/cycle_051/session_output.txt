@@ -1,0 +1,18 @@
+## Cycle 051 Complete
+
+### Bugs Fixed (3)
+1. **crash_timeline.py** (CRITICAL) — VIX sigma was multiplied by `sqrt(252)`, overstating volatility **15.87x**. VIX=20 produced sigma=3.17 instead of 0.20, making crash probabilities wildly inflated. Fix: `vix / 100.0` (VIX is already annualized).
+
+2. **anomaly_detector.py** — `fillna(0)` replaced with `ffill().bfill()`. The banned `fillna(0)` was biasing BOCPD changepoint probabilities toward zero at series boundaries.
+
+3. **systemic_risk.py** — Absorption ratio `n_components=5` on 6 assets gave AR≈0.998 by construction (capturing 5/6 eigenvalues). Capped at `max(1, n_assets//3)` so 6 assets → 2 components, producing meaningful AR values.
+
+### Feature Built
+**Systemic risk signal engine integration** — Added `get_systemic_risk_signal()` that converts Kritzman turbulence percentile + PCA absorption ratio + AR momentum into a `[-1, +1]` score. Wired as the **11th signal engine component** with regime-adaptive weights:
+- Default: 10%, Bull: 9%, Bear: 14%, Volatile: 16%
+
+### Validation
+- 13 new tests written, all passing
+- 135 total smoke tests passing (signal engine + MC + crash calibration + systemic risk), 0 regressions
+
+---STDERR---

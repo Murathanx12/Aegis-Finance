@@ -591,29 +591,24 @@ class TestLlmAvailability:
     """is_available() and client initialization."""
 
     @patch("backend.services.llm_analyzer._DEEPSEEK_API_KEY", "")
+    @patch("backend.services.llm_analyzer._ANTHROPIC_API_KEY", "")
     def test_not_available_without_key(self):
         from backend.services.llm_analyzer import is_available
         assert is_available() is False
 
     @patch("backend.services.llm_analyzer._DEEPSEEK_API_KEY", "")
-    def test_get_client_returns_none_without_key(self):
-        from backend.services.llm_analyzer import _get_client
-        # Reset cached client
-        import backend.services.llm_analyzer as mod
-        mod._client = None
-        assert _get_client() is None
+    @patch("backend.services.llm_analyzer._ANTHROPIC_API_KEY", "")
+    def test_get_provider_returns_none_without_key(self):
+        from backend.services.llm_analyzer import _get_provider
+        assert _get_provider() == "none"
 
-    @patch("backend.services.llm_analyzer._DEEPSEEK_API_KEY", "test-key")
-    @patch("backend.services.llm_analyzer._client", None)
-    def test_call_llm_returns_none_without_sdk(self):
-        """If openai SDK not importable, _call_llm returns None."""
+    @patch("backend.services.llm_analyzer._DEEPSEEK_API_KEY", "")
+    @patch("backend.services.llm_analyzer._ANTHROPIC_API_KEY", "")
+    def test_call_llm_returns_none_without_keys(self):
+        """Without any API keys, _call_llm returns None."""
         from backend.services.llm_analyzer import _call_llm
-        # _get_client will try to import openai; if it fails, returns None
-        # If openai IS installed, this still works because we mock the client
         result = _call_llm("system", "user")
-        # Result is either None (no SDK) or a string (SDK available + mock)
-        # We just verify it doesn't crash
-        assert result is None or isinstance(result, str)
+        assert result is None
 
 
 class TestLlmNewsSummarization:

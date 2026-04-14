@@ -8,6 +8,7 @@ pandas>=2.2.0
 numpy>=1.26.0
 yfinance>=0.2.36
 fredapi>=0.5.1
+pandas-datareader>=0.10.0
 lxml>=5.0.0
 
 # ML
@@ -15,6 +16,7 @@ lightgbm>=4.0.0
 scikit-learn>=1.4.0
 shap>=0.43.0
 joblib>=1.3.0
+lifelines>=0.30.0
 
 # Statistical models
 scipy>=1.12.0
@@ -22,7 +24,8 @@ arch>=6.0.0
 hmmlearn>=0.3.2
 statsmodels>=0.14.0
 
-# LLM (DeepSeek via OpenAI-compatible API)
+# LLM (Claude preferred, DeepSeek fallback)
+anthropic>=0.40.0
 openai>=1.0.0
 
 # Bubble detection
@@ -30,6 +33,15 @@ lppls>=0.6.23
 
 # SEC EDGAR fundamentals
 edgartools>=5.28.0
+
+# Advanced portfolio optimization
+riskfolio-lib>=7.0.0
+
+# Copula modeling & alternative data
+copulas>=0.12.0
+ruptures>=1.1.0
+ta>=0.11.0
+pytrends>=4.9.0
 
 # Utilities
 requests>=2.31.0

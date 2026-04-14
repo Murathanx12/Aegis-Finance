@@ -1,5 +1,5 @@
 """
-Aegis Finance - Autonomous R&D Loop v7
+Aegis Finance - Autonomous R&D Loop v8
 Audit → Research → Fix → Build → Test methodology per cycle.
 
 Each cycle follows the pattern that produced the best results:
@@ -99,6 +99,7 @@ def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
                 pass
 
     all_files = [
+        # Core services
         "backend/services/monte_carlo.py", "backend/services/stock_analyzer.py",
         "backend/services/sector_analyzer.py", "backend/services/portfolio_engine.py",
         "backend/services/crash_model.py", "backend/services/signal_engine.py",
@@ -114,12 +115,27 @@ def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
         "backend/services/bubble_detector.py", "backend/services/fundamentals.py",
         "backend/services/options_calibrator.py", "backend/services/prediction_confidence.py",
         "backend/services/signal_analytics.py",
+        # v8 services
+        "backend/services/factor_model.py", "backend/services/stress_testing.py",
+        "backend/services/cross_sectional_momentum.py", "backend/services/economic_surprise.py",
+        "backend/services/survival_model.py", "backend/services/anomaly_detector.py",
+        "backend/services/crash_timeline.py",
+        # v9 services (institutional-grade)
+        "backend/services/liquidity_risk.py", "backend/services/copula_tail.py",
+        "backend/services/covariance.py", "backend/services/portfolio_optimizer.py",
+        "backend/services/insider_trading.py", "backend/services/trends_sentiment.py",
+        "backend/services/attribution.py",
+        # Routers
         "backend/routers/market.py", "backend/routers/stock.py",
         "backend/routers/crash.py", "backend/routers/simulation.py",
         "backend/routers/portfolio.py", "backend/routers/sector.py",
+        "backend/routers/analytics.py",
+        # Config
         "backend/config.py",
+        # Engine
         "engine/training/features.py", "engine/training/train_crash_model.py",
         "engine/validation/walk_forward.py", "engine/validation/metrics.py",
+        # Frontend
         "frontend/src/app/", "frontend/src/components/", "frontend/src/lib/",
     ]
     untouched = [f for f in all_files if f not in modified]
@@ -167,38 +183,69 @@ below, or from what your audit/research revealed. Quality over quantity.
 
 ## Priority areas (don't repeat what past cycles did)
 
-### Quantitative
-- Copula-based tail risk (Clayton, Gumbel) — replace empirical tail dependence
-- Factor model decomposition (Fama-French 5-factor from Kenneth French data library)
-- Risk budgeting and mean-CVaR portfolio optimization (riskfolio-lib)
+### Already built and integrated (v9) — now improve quality
+- Signal engine now includes: economic surprise + momentum breadth signals (v9.1)
+- Stock analysis now shows: insider signal, liquidity score, momentum rank (v9.1)
+- Portfolio engine now uses denoised covariance (RMT) by default (v9.1)
+- Frontend API client has 20+ new endpoint functions (v9.1)
+
+### Still needs deeper integration
+- Copula tail dependence: integrate copula VaR into portfolio analysis response
+- Liquidity risk: add liquidity-adjusted position sizing in portfolio optimizer
+- Insider trading: integrate as additional stock signal factor (additive weight)
+- Google Trends: integrate fear/greed into macro risk dashboard endpoint
+- Factor model (FF6): show factor exposures on stock analysis page
+- Attribution: wire into portfolio analyze endpoint (auto-compute vs SPY)
+
+### Quantitative (highest remaining impact)
 - Conformal prediction intervals for crash probabilities
 - Regime-switching GARCH or MSVAR (statsmodels.tsa.regime_switching)
 - Volatility surface interpolation for options intelligence
-- Stress testing framework (historical scenario replay)
-- Cross-sectional momentum (relative strength across stocks)
-- Liquidity risk metrics (Amihud illiquidity, bid-ask spread modeling)
+- Augmented Black-Litterman with entropy pooling (riskfolio has augmented_black_litterman)
+- Walk-forward signal optimization (temporal parameter tuning)
+- Factor-tilted portfolio construction (overweight quality/value factors)
+- Turnover-constrained optimization (max rebalancing cost)
+- Cross-sectional momentum → signal engine integration
+- Economic surprise → signal engine integration
+- Multi-period optimization (dynamic programming approach)
 
 ### Data & integration
-- SEC EDGAR quarterly financials pipeline (edgartools is installed)
+- SEC EDGAR quarterly financials pipeline improvements (edgartools)
 - VIX term structure → regime detection integration
-- Sector rotation signals (relative strength + breadth)
-- Insider trading signal from Finnhub
-- Short interest data aggregation
-- Economic surprise index (actual vs consensus)
+- Short interest data aggregation (Finnhub short interest endpoint)
+- Alpha Vantage integration for technical indicators (free tier)
+- Congressional trading data (Capitol Trades / Quiver Quant)
+- BLS employment data integration (payrolls, claims detail)
+- Treasury auction data (bid-to-cover ratios, indirect bidding)
+- Sector rotation signals (relative strength + breadth + RSI)
 
-### Frontend / UX
-- Systemic risk dashboard (turbulence index, absorption ratio charts)
-- LPPL bubble indicator visualization
-- SEC EDGAR fundamentals display on stock pages
-- Execution cost transparency in backtest results
-- Interactive correlation matrix heatmap
-- Portfolio stress test UI (what-if scenarios)
+### Frontend / UX (high user impact)
+- Liquidity risk display on stock pages
+- Copula tail dependence heatmap
+- Portfolio optimizer comparison table (Bloomberg PORT style)
+- Factor decomposition visualization (bar chart + style box)
+- Insider trading timeline display
+- Stress test scenario comparison waterfall chart
+- Economic surprise dashboard
+- Momentum heatmap (sector × stock grid)
+- Covariance diagnostics display (eigenvalue spectrum)
+- Export functionality (CSV/PDF reports)
+- Mobile responsive improvements
 
-### Reliability
+### Reliability & performance
 - Options calibrator edge cases (no options data, illiquid chains)
-- Data fetcher retry with exponential backoff
-- Cache warming strategy optimization
-- API response time monitoring
+- Screener performance with expanded 80+ ticker universe
+- Cache warming strategy for new v9 endpoints
+- Rate limiting for external API calls
+- Parallel data fetching for liquidity/copula analysis
+- Error recovery in portfolio optimizer (fallback to simpler method)
+
+### Competitive gaps to close (vs OpenBB, Koyfin, TradingView)
+- Alerts/notifications system (threshold-based email or webhook)
+- Custom watchlist management (frontend)
+- Chart pattern recognition (TA library is installed: `import ta`)
+- Multi-asset coverage (ETFs, crypto, commodities via yfinance)
+- Backtesting portfolio optimizer decisions (did CVaR outperform?)
 
 ## Current engine state
 
@@ -455,7 +502,7 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="Aegis Finance R&D Loop v7")
+    parser = argparse.ArgumentParser(description="Aegis Finance R&D Loop v8")
     parser.add_argument("--cycles", type=int, default=50)
     parser.add_argument("--model", default="opus")
     parser.add_argument("--start-cycle", type=int, default=None)
@@ -493,7 +540,7 @@ def main():
         start = len(existing) + 1
 
     print(f"\n{'='*60}")
-    print(f"  AEGIS R&D LAB v7 — Audit→Research→Fix→Build→Test")
+    print(f"  AEGIS R&D LAB v8 — Audit→Research→Fix→Build→Test")
     print(f"  Model: {args.model} | Cycles: {start}-{args.cycles}")
     print(f"  Session: {SESSION_TIMEOUT // 60} min | Branch: {args.branch}")
     print(f"  Methodology: read code, find bugs, fix, then build")
