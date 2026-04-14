@@ -119,3 +119,46 @@ class TestBubbleSignalScore:
         score = get_bubble_signal_score(prices)
         if score is not None:
             assert -1.0 <= score <= 0.0
+
+    def test_signal_continuity_at_threshold(self):
+        """Signal score must be continuous at CONFIDENCE_THRESHOLD (no jump)."""
+        from backend.services.bubble_detector import CONFIDENCE_THRESHOLD
+        from unittest.mock import patch
+
+        # Test just below threshold
+        below_result = {"confidence": CONFIDENCE_THRESHOLD - 0.001, "is_bubble": False}
+        with patch("backend.services.bubble_detector.get_bubble_status", return_value=below_result):
+            score_below = get_bubble_signal_score(_make_normal_prices(200))
+
+        # Test just above threshold
+        above_result = {"confidence": CONFIDENCE_THRESHOLD + 0.001, "is_bubble": True}
+        with patch("backend.services.bubble_detector.get_bubble_status", return_value=above_result):
+            score_above = get_bubble_signal_score(_make_normal_prices(200))
+
+        # Both should be close to -0.5 (the boundary value)
+        if score_below is not None and score_above is not None:
+            assert abs(score_below - score_above) < 0.05, (
+                f"Discontinuity at threshold: below={score_below:.3f}, above={score_above:.3f}"
+            )
+
+    def test_signal_at_exact_threshold(self):
+        """At exactly the confidence threshold, score should be -0.5."""
+        from backend.services.bubble_detector import CONFIDENCE_THRESHOLD
+        from unittest.mock import patch
+
+        result = {"confidence": CONFIDENCE_THRESHOLD, "is_bubble": True}
+        with patch("backend.services.bubble_detector.get_bubble_status", return_value=result):
+            score = get_bubble_signal_score(_make_normal_prices(200))
+        if score is not None:
+            assert abs(score - (-0.5)) < 0.01, f"Expected -0.5 at threshold, got {score}"
+
+    def test_signal_at_half_threshold(self):
+        """At half the confidence threshold, score should be 0 (entry to partial zone)."""
+        from backend.services.bubble_detector import CONFIDENCE_THRESHOLD
+        from unittest.mock import patch
+
+        result = {"confidence": CONFIDENCE_THRESHOLD * 0.5, "is_bubble": False}
+        with patch("backend.services.bubble_detector.get_bubble_status", return_value=result):
+            score = get_bubble_signal_score(_make_normal_prices(200))
+        if score is not None:
+            assert abs(score) < 0.01, f"Expected 0 at half-threshold, got {score}"

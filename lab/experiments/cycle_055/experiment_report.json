@@ -1,0 +1,57 @@
+{
+  "cycle": 55,
+  "timestamp": "2026-04-15T03:45:00Z",
+  "title": "Bug fixes (3) + portfolio attribution auto-integration",
+  "category": "quantitative",
+  "observation": {
+    "bugs_found": [
+      "signal_engine: economic_surprise and momentum_breadth signals computed but had zero weight in composite (missing from config signal_weights and regime_signal_weights) — v9.1 integration was effectively broken",
+      "bubble_detector: get_bubble_signal_score had a discontinuity at CONFIDENCE_THRESHOLD — partial zone maxed at -0.25 but main zone started at -0.5, creating a jump",
+      "portfolio_engine: analyze_portfolio missing performance attribution vs SPY and MCTR risk contributions despite services being available"
+    ],
+    "gap_identified": "Portfolio analysis endpoint returned basic metrics but lacked Bloomberg PORT-style attribution (Brinson-Fachler) and risk budgeting (MCTR) that the attribution service already supported"
+  },
+  "implementation": {
+    "bugs_fixed": [
+      "Added economic_surprise (0.05) and momentum_breadth (0.06) weights to signal_weights config and all 3 regime weight profiles (Bull/Bear/Volatile), rebalancing existing weights proportionally",
+      "Fixed bubble signal score continuity: partial zone now ramps to -0.5 at threshold (was -0.25), ensuring continuous mapping",
+      "Wired Brinson-Fachler attribution + MCTR into analyze_portfolio for automatic Bloomberg PORT-style analytics"
+    ],
+    "feature_built": "Auto-compute Brinson-Fachler performance attribution vs SPY and Marginal Contribution to Risk (MCTR) in portfolio analyze endpoint — users now get allocation/selection/interaction effects and per-asset risk budgets automatically",
+    "files_changed": [
+      "backend/config.py",
+      "backend/services/bubble_detector.py",
+      "backend/services/portfolio_engine.py",
+      "backend/tests/test_signal_engine.py",
+      "backend/tests/test_bubble_detector.py",
+      "backend/tests/test_attribution.py"
+    ],
+    "files_created": [
+      "lab/experiments/cycle_055/experiment_report.json"
+    ],
+    "packages_installed": []
+  },
+  "validation": {
+    "tests_written": 14,
+    "tests_passing": 14,
+    "regressions": 0
+  },
+  "assessment": {
+    "verdict": "improved",
+    "confidence": "high",
+    "depth": 3,
+    "limitations": [
+      "Portfolio attribution depends on yfinance data fetch for SPY benchmark — if fetch fails, attribution is silently skipped",
+      "MCTR uses sample covariance from already-fetched data rather than denoised covariance",
+      "Attribution uses 1-month period only; could extend to 3mo/1y for richer analysis"
+    ],
+    "self_critique": "Should have also added economic_surprise and momentum_breadth to the stock-level signal (get_stock_signal), but market-level was the priority since those are macro signals. The attribution integration reuses already-fetched price data efficiently but could benefit from using the denoised covariance matrix for MCTR."
+  },
+  "next_steps": [
+    "Add denoised covariance (RMT) to MCTR computation in analyze_portfolio",
+    "Wire attribution auto-compute for multiple periods (1mo, 3mo, YTD)",
+    "Add liquidity-adjusted position sizing to portfolio optimizer",
+    "Integrate Google Trends fear/greed into macro risk dashboard endpoint",
+    "Frontend: display attribution waterfall chart and MCTR bar chart on portfolio page"
+  ]
+}
