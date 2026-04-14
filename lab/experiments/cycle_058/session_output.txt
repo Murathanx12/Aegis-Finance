@@ -1,0 +1,15 @@
+## Cycle 58 Complete
+
+### Summary
+
+**3 bugs fixed:**
+1. **economic_surprise.py** — Replaced hardcoded `observation_start="2020-01-01"` with dynamic date computed from `_LOOKBACK_YEARS`, preventing trend window dilution over time
+2. **stress_testing.py** — Added scenario-specific sector multipliers for all 6 crisis scenarios (e.g., GFC Financials 1.8x, Dot-Com Tech 2.0x, COVID Tech 0.6x) instead of using identical multipliers that produced systematically wrong estimates
+3. **attribution.py** — Replaced trivial `{SPY: 1.0}` benchmark with proper sector-level weights approximating S&P 500 composition, making Brinson-Fachler allocation effects meaningful
+
+**1 feature built:**
+- **Conformal prediction intervals** for crash probabilities (Vovk et al. 2005) — adds calibrated uncertainty bands to point estimates with finite-sample coverage guarantees. Integrated into crash API endpoint, model training pipeline, and new `/api/analytics/conformal-interval` endpoint.
+
+**Validation:** 20 new tests written, all passing. 131 core smoke tests passing. 16 existing stress tests passing. 0 regressions.
+
+---STDERR---
