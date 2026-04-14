@@ -1,0 +1,22 @@
+Cycle 055 complete. Here's the summary:
+
+## R&D Cycle 055 Results
+
+### Bugs Fixed (3)
+1. **Signal engine weights** — `economic_surprise` and `momentum_breadth` signals were computed and stored in components but had **zero weight** in the composite (missing from `config.signal_weights` and all regime weight profiles). The v9.1 integration was effectively broken — these signals were decoration, not functional. Added proper weights (0.05 and 0.06) and rebalanced all 4 weight profiles.
+
+2. **Bubble detector discontinuity** — `get_bubble_signal_score` jumped from -0.25 to -0.5 at the confidence threshold. The partial warning zone now ramps continuously to -0.5.
+
+3. **Portfolio analysis gap** — `analyze_portfolio` returned basic metrics but lacked the Bloomberg PORT-style analytics that the attribution service already supported.
+
+### Feature Built
+**Auto-compute Brinson-Fachler attribution + MCTR** in `analyze_portfolio`. When users submit their portfolio for analysis, they now automatically get:
+- Performance attribution vs SPY (allocation, selection, interaction effects)
+- Per-asset Marginal Contribution to Risk (weight, MCTR, risk contribution %, risk/weight ratio)
+
+### Validation
+- 14 new tests written (signal weight regression, bubble continuity, attribution integration)
+- 131 affected tests passing, 0 regressions
+- Core smoke tests (MC + crash calibration) all green
+
+---STDERR---
