@@ -283,6 +283,16 @@ def _compute_market_signal() -> dict:
     except Exception as e:
         logger.debug("Google Trends unavailable for signal: %s", e)
 
+    # VIX term structure signal (backwardation = stress)
+    _vts_signal = None
+    try:
+        from backend.services.regime_detector import get_vix_term_structure_state
+        vts = get_vix_term_structure_state(data)
+        if vts.get("available"):
+            _vts_signal = vts.get("signal")
+    except Exception as e:
+        logger.debug("VIX term structure unavailable: %s", e)
+
     signal = get_market_signal(
         crash_prob_3m=crash_3m,
         crash_prob_12m=crash_12m,
@@ -297,6 +307,7 @@ def _compute_market_signal() -> dict:
         drawdown_pct=sp500_drawdown,
         drift_severity=_drift_severity,
         trends_fear_greed=_trends_signal,
+        vix_term_structure_signal=_vts_signal,
     )
     signal["sp500"] = sp500
     signal["regime"] = regime

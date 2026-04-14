@@ -103,6 +103,7 @@ def get_market_signal(
     momentum_breadth: Optional[float] = None,
     systemic_risk_score: Optional[float] = None,
     trends_fear_greed: Optional[float] = None,
+    vix_term_structure_signal: Optional[float] = None,
 ) -> dict:
     """Generate a composite market-level buy/sell signal.
 
@@ -334,6 +335,17 @@ def get_market_signal(
             reasons.append("Google Trends: extreme fear — contrarian buy signal")
         elif trends_fear_greed < -0.3:
             reasons.append("Google Trends: extreme greed/FOMO — contrarian caution")
+
+    # 13. VIX term structure — backwardation = near-term stress from options market
+    #     Signal from regime_detector.get_vix_term_structure_state():
+    #     -0.5 (severe backwardation) to +0.1 (normal contango)
+    if vix_term_structure_signal is not None:
+        vts_sig = float(np.clip(vix_term_structure_signal, -0.5, 0.2))
+        components["vix_term_structure"] = vts_sig
+        if vix_term_structure_signal < -0.4:
+            reasons.append("VIX term structure: severe backwardation — acute near-term stress")
+        elif vix_term_structure_signal < -0.2:
+            reasons.append("VIX term structure: backwardation — near-term fear elevated")
 
     # Composite signal
     total_w = sum(weights[k] for k in components if k in weights)

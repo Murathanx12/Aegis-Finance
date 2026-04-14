@@ -52,6 +52,9 @@ _PC_ELEVATED = _OPT_CAL_CFG.get("pc_ratio_elevated", 1.5)
 _IVRANK_LOW = _OPT_CAL_CFG.get("iv_rank_low", 25.0)
 _IVRANK_HIGH = _OPT_CAL_CFG.get("iv_rank_high", 75.0)
 
+# IV skew floor: below this = flat/inverted skew (complacent about tails)
+_SKEW_FLOOR = _OPT_CAL_CFG.get("skew_floor", 0.9)
+
 
 def calibrate_mc_from_options(
     options_data: dict,
@@ -171,7 +174,7 @@ def calibrate_mc_from_options(
         elif iv_skew > _SKEW_NEUTRAL:
             # Moderately elevated skew
             jump_mag_adj = -0.01 * (iv_skew - _SKEW_NEUTRAL) / (_SKEW_ELEVATED - _SKEW_NEUTRAL)
-        elif iv_skew < 0.9:
+        elif iv_skew < _SKEW_FLOOR:
             # Flat/inverted skew (rare) — market unusually complacent about tails
             jump_mag_adj = 0.01
 

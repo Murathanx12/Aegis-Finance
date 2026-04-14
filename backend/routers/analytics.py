@@ -380,6 +380,31 @@ async def get_changepoint_detection():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── VIX Term Structure ────────────────────────────────────────────
+
+
+@router.get("/vix-term-structure")
+async def get_vix_term_structure():
+    """VIX term structure analysis (contango/backwardation regime signal)."""
+    cached = cache_get("vix_term_structure", _CACHE_TTL.get("ttl_market", 300))
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.regime_detector import get_vix_term_structure_state
+        from backend.services.data_fetcher import DataFetcher
+
+        fetcher = DataFetcher()
+        data, _ = await asyncio.to_thread(fetcher.fetch_market_data)
+
+        result = get_vix_term_structure_state(data)
+        cache_set("vix_term_structure", result)
+        return result
+    except Exception as e:
+        logger.error("VIX term structure failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ── Liquidity Risk ──────────────────────────────────────────────────
 
 

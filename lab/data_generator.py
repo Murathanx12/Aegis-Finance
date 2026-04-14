@@ -161,6 +161,16 @@ def _compute_market_signal_for_lab() -> dict:
     except Exception as e:
         logger.debug("Systemic risk signal unavailable in lab: %s", e)
 
+    # VIX term structure signal
+    _vts_signal = None
+    try:
+        from backend.services.regime_detector import get_vix_term_structure_state
+        vts = get_vix_term_structure_state(data)
+        if vts.get("available"):
+            _vts_signal = vts.get("signal")
+    except Exception as e:
+        logger.debug("VIX term structure unavailable in lab: %s", e)
+
     sig = get_market_signal(
         crash_prob_3m=crash_3m,
         crash_prob_12m=crash_12m,
@@ -175,6 +185,7 @@ def _compute_market_signal_for_lab() -> dict:
         drawdown_pct=sp500_drawdown,
         drift_severity=_drift_severity,
         systemic_risk_score=_systemic_score,
+        vix_term_structure_signal=_vts_signal,
     )
     # Attach raw values for downstream use by stock analysis / MC
     sig["_crash_3m_pct"] = crash_3m
