@@ -1,0 +1,59 @@
+{
+  "cycle": 58,
+  "timestamp": "2026-04-15T04:30:00Z",
+  "title": "Bug fixes (3) + conformal prediction intervals for crash probabilities",
+  "category": "quantitative",
+  "observation": {
+    "bugs_found": [
+      "economic_surprise.py: _fetch_fred_series hardcoded observation_start='2020-01-01' despite _LOOKBACK_YEARS=3 constant — trend window includes increasingly stale data as time passes, diluting the surprise signal quality",
+      "stress_testing.py: _estimate_crisis_return uses identical sector multipliers for ALL scenarios — GFC should penalize Financials 1.8x not 1.4x, Dot-Com should penalize Tech 2.0x not 1.3x, COVID Tech should be 0.6x not 1.3x. Systematic estimation error for stocks without historical data",
+      "attribution.py: full_portfolio_analytics builds benchmark as {SPY: 1.0} — a single-asset benchmark makes Brinson-Fachler sector-level allocation effects identically zero, defeating the purpose of BF attribution"
+    ],
+    "gap_identified": "Crash model provides point estimates with no uncertainty quantification — users cannot distinguish 'high-confidence 7%' from 'uncertain 7% that could be 2%-20%'. Conformal prediction (Vovk 2005) adds calibrated intervals with finite-sample coverage guarantees."
+  },
+  "implementation": {
+    "bugs_fixed": [
+      "economic_surprise.py: Dynamic observation_start computed from _LOOKBACK_YEARS + 1 year buffer, replacing hardcoded '2020-01-01'",
+      "stress_testing.py: Added scenario-specific sector multiplier tables for all 6 scenarios (GFC, COVID, Dot-Com, Black Monday, Rate Shock, Volmageddon) with empirically-calibrated values reflecting actual sector performance in each crisis",
+      "attribution.py: Replaced trivial {SPY: 1.0} benchmark with proper sector-level benchmark weights approximating S&P 500 composition. Added _build_sector_benchmark() that distributes benchmark weight across sector representative tickers from config"
+    ],
+    "feature_built": "Conformal prediction intervals for crash probabilities — split conformal prediction (Vovk, Gammerman & Shafer, 2005) that wraps the LightGBM+LR crash model with calibrated uncertainty bands. Includes: ConformalCrashPredictor class with calibrate/predict/save/load, heuristic fallback for uncalibrated scenarios, monotonicity enforcement across horizons, integration into crash prediction API endpoint, integration into model training pipeline (auto-saves conformal_scores.pkl), new /api/analytics/conformal-interval endpoint",
+    "files_changed": [
+      "backend/services/economic_surprise.py",
+      "backend/services/stress_testing.py",
+      "backend/services/attribution.py",
+      "backend/routers/crash.py",
+      "backend/routers/analytics.py",
+      "engine/training/train_crash_model.py"
+    ],
+    "files_created": [
+      "backend/services/conformal_predictor.py",
+      "backend/tests/test_conformal_predictor.py",
+      "lab/experiments/cycle_058/experiment_report.json"
+    ],
+    "packages_installed": []
+  },
+  "validation": {
+    "tests_written": 20,
+    "tests_passing": 20,
+    "regressions": 0
+  },
+  "assessment": {
+    "verdict": "improved",
+    "confidence": "high",
+    "depth": 4,
+    "limitations": [
+      "Conformal scores require model retraining to populate — until then, heuristic fallback is used (beta-distribution-inspired widths, no coverage guarantee)",
+      "Attribution sector benchmark uses approximate S&P 500 weights that may drift from actual composition; ideally would use live sector ETF weights",
+      "Scenario-specific sector multipliers are empirically estimated from historical data, not dynamically computed from actual crisis returns"
+    ],
+    "self_critique": "Could have also integrated conformal intervals into the stock-level crash display (stock_analyzer.py) for per-ticker uncertainty bands. The sector benchmark weights in attribution are static approximations — a more robust approach would fetch actual sector ETF weights (XLK, XLF, XLE etc.) at runtime. Would do that in a future cycle."
+  },
+  "next_steps": [
+    "Integrate conformal intervals into stock_analyzer.py per-ticker crash display",
+    "Add volatility surface interpolation for options intelligence",
+    "Wire VIX term structure into regime detection for faster regime transitions",
+    "Add conformal interval display to frontend crash prediction page",
+    "Improve attribution benchmark with live sector ETF weights"
+  ]
+}

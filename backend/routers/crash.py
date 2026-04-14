@@ -91,8 +91,26 @@ def _predict_crash(horizon: str, explain: bool) -> dict:
         drift_severity = "none"
         confidence_multiplier = 1.0
 
+    # Conformal prediction intervals — calibrated uncertainty bands
+    try:
+        from backend.services.conformal_predictor import conformal_crash_interval
+        prediction_intervals = {}
+        for h, prob_pct in probabilities.items():
+            interval = conformal_crash_interval(prob_pct / 100.0, horizon=h, alpha=0.10)
+            prediction_intervals[h] = {
+                "lower_pct": round(interval["lower"] * 100, 1),
+                "upper_pct": round(interval["upper"] * 100, 1),
+                "width_pct": round(interval["width"] * 100, 1),
+                "coverage": interval["coverage_target"],
+                "method": interval["method"],
+            }
+    except Exception as e:
+        logger.debug("Conformal intervals unavailable: %s", e)
+        prediction_intervals = None
+
     result = {
         "probabilities": probabilities,
+        "prediction_intervals": prediction_intervals,
         "primary_horizon": horizon,
         "primary_prob": probabilities.get(horizon, None),
         "last_updated": str(data.index[-1].date()),

@@ -577,3 +577,49 @@ async def get_ticker_trends(ticker: str):
     except Exception as e:
         logger.error("ticker trends failed for %s: %s", ticker, e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Conformal Prediction Intervals ────────────────────────────────
+
+
+@router.get("/conformal-interval")
+async def get_conformal_interval(
+    crash_prob: float = 0.10,
+    horizon: str = "3m",
+    alpha: float = 0.10,
+):
+    """Conformal prediction interval for a crash probability.
+
+    Returns calibrated uncertainty band with finite-sample coverage guarantee.
+    If conformal scores are not pre-computed, returns a heuristic interval.
+
+    Args:
+        crash_prob: Crash probability as decimal (0.10 = 10%)
+        horizon: Prediction horizon (3m, 6m, 12m)
+        alpha: Miscoverage rate (0.10 = 90% coverage)
+    """
+    if not 0 <= crash_prob <= 1:
+        raise HTTPException(status_code=422, detail="crash_prob must be between 0 and 1")
+    if horizon not in ("3m", "6m", "12m"):
+        raise HTTPException(status_code=422, detail="horizon must be 3m, 6m, or 12m")
+    if not 0.01 <= alpha <= 0.50:
+        raise HTTPException(status_code=422, detail="alpha must be between 0.01 and 0.50")
+
+    try:
+        from backend.services.conformal_predictor import conformal_crash_interval
+        result = conformal_crash_interval(crash_prob, horizon=horizon, alpha=alpha)
+        return {
+            "crash_prob_pct": round(crash_prob * 100, 1),
+            "interval": {
+                "lower_pct": round(result["lower"] * 100, 1),
+                "upper_pct": round(result["upper"] * 100, 1),
+                "width_pct": round(result["width"] * 100, 1),
+            },
+            "coverage": result["coverage_target"],
+            "method": result["method"],
+            "n_calibration": result["n_calibration"],
+            "horizon": horizon,
+        }
+    except Exception as e:
+        logger.error("conformal interval failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))

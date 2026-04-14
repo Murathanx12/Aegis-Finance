@@ -111,25 +111,105 @@ def _estimate_crisis_return(
 ) -> float:
     """Estimate a stock's return during a crisis when actual data is unavailable.
 
-    Uses sector mapping and beta to approximate. Stocks with higher beta
-    and in cyclical sectors get larger drawdowns.
+    Uses scenario-specific sector multipliers and beta to approximate.
+    Different crises hit different sectors: GFC destroyed Financials,
+    Dot-Com destroyed Tech, COVID destroyed Energy/Travel while Tech
+    was resilient. Using the same multipliers for all scenarios produced
+    systematically wrong estimates.
     """
-    # Sector sensitivity multipliers (cyclical > defensive)
-    sector_multipliers = {
-        "Technology": 1.3,
-        "Financials": 1.4,
-        "Energy": 1.2,
-        "Consumer Disc.": 1.2,
-        "Communications": 1.1,
-        "Industrials": 1.1,
-        "Materials": 1.0,
-        "Real Estate": 1.1,
-        "Healthcare": 0.8,
-        "Consumer Staples": 0.7,
-        "Utilities": 0.6,
+    # Scenario-specific sector sensitivity multipliers.
+    # These reflect actual sector drawdowns relative to S&P 500 in each crisis.
+    _SCENARIO_SECTOR_MULTS = {
+        "2008_GFC": {
+            "Technology": 1.1,
+            "Financials": 1.8,         # Epicenter — banks lost 70-90%
+            "Energy": 1.3,
+            "Consumer Disc.": 1.4,
+            "Communications": 1.0,
+            "Industrials": 1.3,
+            "Materials": 1.2,
+            "Real Estate": 1.6,        # Mortgage crisis hit RE hard
+            "Healthcare": 0.7,
+            "Consumer Staples": 0.5,   # Defensive — outperformed significantly
+            "Utilities": 0.5,
+        },
+        "2020_COVID": {
+            "Technology": 0.6,         # Tech was resilient, quick recovery
+            "Financials": 1.2,
+            "Energy": 2.0,             # Oil crash + demand destruction
+            "Consumer Disc.": 1.5,     # Travel/hospitality devastated
+            "Communications": 0.7,
+            "Industrials": 1.3,
+            "Materials": 1.1,
+            "Real Estate": 1.4,
+            "Healthcare": 0.8,
+            "Consumer Staples": 0.6,
+            "Utilities": 0.8,
+        },
+        "2000_DOTCOM": {
+            "Technology": 2.0,         # Epicenter — Nasdaq lost ~78%
+            "Financials": 0.7,
+            "Energy": 0.6,
+            "Consumer Disc.": 1.2,
+            "Communications": 1.8,     # Telecom bust (WorldCom)
+            "Industrials": 0.9,
+            "Materials": 0.8,
+            "Real Estate": 0.5,
+            "Healthcare": 0.7,
+            "Consumer Staples": 0.4,
+            "Utilities": 0.5,
+        },
+        "1987_BLACK_MONDAY": {
+            "Technology": 1.2,
+            "Financials": 1.3,
+            "Energy": 0.9,
+            "Consumer Disc.": 1.1,
+            "Communications": 1.0,
+            "Industrials": 1.1,
+            "Materials": 1.0,
+            "Real Estate": 1.0,
+            "Healthcare": 0.8,
+            "Consumer Staples": 0.7,
+            "Utilities": 0.6,
+        },
+        "2022_RATE_SHOCK": {
+            "Technology": 1.5,         # Growth-to-value rotation hit tech hard
+            "Financials": 0.8,         # Banks benefit from higher rates
+            "Energy": 0.3,             # Energy rallied (oil spike)
+            "Consumer Disc.": 1.4,
+            "Communications": 1.6,     # META, GOOGL hit hard
+            "Industrials": 0.9,
+            "Materials": 0.8,
+            "Real Estate": 1.3,        # Rate-sensitive
+            "Healthcare": 0.7,
+            "Consumer Staples": 0.6,
+            "Utilities": 0.7,
+        },
+        "2018_VOLMAGEDDON": {
+            "Technology": 1.2,
+            "Financials": 1.1,
+            "Energy": 1.5,             # Oil crash Q4 2018
+            "Consumer Disc.": 1.2,
+            "Communications": 1.1,
+            "Industrials": 1.2,
+            "Materials": 1.1,
+            "Real Estate": 0.9,
+            "Healthcare": 0.8,
+            "Consumer Staples": 0.6,
+            "Utilities": 0.5,
+        },
     }
 
-    sector_mult = sector_multipliers.get(sector, 1.0)
+    # Default fallback if scenario not in the map
+    _DEFAULT_SECTOR_MULTS = {
+        "Technology": 1.3, "Financials": 1.4, "Energy": 1.2,
+        "Consumer Disc.": 1.2, "Communications": 1.1, "Industrials": 1.1,
+        "Materials": 1.0, "Real Estate": 1.1, "Healthcare": 0.8,
+        "Consumer Staples": 0.7, "Utilities": 0.6,
+    }
+
+    scenario_mults = _SCENARIO_SECTOR_MULTS.get(scenario_id, _DEFAULT_SECTOR_MULTS)
+    sector_mult = scenario_mults.get(sector, 1.0)
     beta_adj = beta if beta and beta > 0 else 1.0
 
     # Estimated drawdown = SP500 drawdown × beta × sector sensitivity
