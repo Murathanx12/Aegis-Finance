@@ -1,0 +1,20 @@
+## Cycle 60 Complete
+
+### Bug fixes (5):
+1. **insider_trading.py**: Empty Finnhub return had inconsistent dict structure — missing `source`, `lookback_days`, `n_buys`, `n_sells` keys that downstream `compute_insider_signal` expects
+2. **insider_trading.py**: Extracted total buy/sell value computation for clarity
+3. **trends_sentiment.py**: Z-score denominator `max(std, 1)` suppressed z-scores when std < 1 — changed to `max(std, 0.01)`
+4. **trends_sentiment.py**: One-sided data (only fear OR greed available) produced misleading ratios — now returns neutral with explanation
+5. **portfolio router**: `RiskContribRequest` allowed mismatched tickers/weights lengths and negative weights — added `field_validator`
+
+### Feature built:
+- **POST /api/portfolio/factor-exposures** — Fama-French 5-factor decomposition for portfolios (alpha, factor loadings, style interpretation, risk attribution)
+- **POST /api/portfolio/copula-risk** — Copula-based tail risk analysis (joint crash probability, VaR/CVaR)
+- Frontend TypeScript API client updated with typed functions + interfaces for both endpoints
+
+### Validation:
+- 21 targeted tests pass (9 insider, 8 trends, 4 portfolio validation)
+- 131 core smoke tests pass (Monte Carlo, signal engine, crash calibration)
+- 0 regressions
+
+---STDERR---
