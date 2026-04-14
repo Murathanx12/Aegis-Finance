@@ -130,9 +130,9 @@ class CrashSurvivalModel:
         if len(self._available_features) < 3:
             return {"success": False, "reason": f"Only {len(self._available_features)} features available"}
 
-        # Purge gap to prevent label leakage
+        # Purge gap to prevent label leakage (survival labels look forward up to max_horizon days)
         purge_gap = config.get("ml", {}).get("purge_gaps", {}).get("12m", 265)
-        train_end = train_end_idx - 252
+        train_end = train_end_idx - purge_gap
         if train_end < min_train_samples:
             train_end = int(train_end_idx * 0.7)
 

@@ -1,0 +1,61 @@
+{
+  "cycle": 56,
+  "timestamp": "2026-04-15T03:45:00.000000",
+  "title": "Bug fixes (3) + Google Trends fear/greed sentiment integration",
+  "category": "data",
+  "observation": {
+    "bugs_found": [
+      "fundamentals.py: Piotroski F-Score max_score=9 but implementation only covers 7 criteria (missing ROA trend, leverage trend, share dilution) — 'strong' threshold was nearly unreachable",
+      "survival_model.py: purge_gap computed from config on line 134 but never used — line 135 hardcodes 252 instead of using the config value",
+      "liquidity_risk.py: compute_liquidity_metrics passes volume.iloc[1:] and close.iloc[1:] to compute_amihud_illiquidity, but returns uses .dropna() which may drop additional rows — index misalignment risk"
+    ],
+    "gap_identified": "Google Trends fear/greed sentiment service (trends_sentiment.py) exists but has no API endpoint and is not wired into market-status or signal engine"
+  },
+  "implementation": {
+    "bugs_fixed": [
+      "Fixed Piotroski max_score from 9 to 7 and adjusted 'strong' threshold from >=7 to >=6 to match actual implementation",
+      "Fixed survival_model.py to use config-driven purge_gap instead of hardcoded 252",
+      "Fixed liquidity_risk.py to use .loc[returns.index] for guaranteed index alignment"
+    ],
+    "feature_built": "Full Google Trends fear/greed integration: (1) New analytics endpoints GET /api/analytics/trends-sentiment and GET /api/analytics/trends-sentiment/{ticker}, (2) Trends sentiment added to market-status endpoint response, (3) trends_fear_greed parameter added to signal engine get_market_signal() as contrarian sentiment component, (4) Wired into market signal computation in market router, (5) Frontend API types and functions added (TrendsSentiment, TrendsSentimentFull, TickerAttention, getTrendsSentiment, getTickerAttention)",
+    "files_changed": [
+      "backend/services/fundamentals.py",
+      "backend/services/survival_model.py",
+      "backend/services/liquidity_risk.py",
+      "backend/services/signal_engine.py",
+      "backend/routers/market.py",
+      "backend/routers/analytics.py",
+      "backend/tests/test_fundamentals.py",
+      "backend/tests/test_signal_engine.py",
+      "frontend/src/lib/api.ts"
+    ],
+    "files_created": [
+      "backend/tests/test_trends_sentiment.py",
+      "lab/experiments/cycle_056/experiment_report.json"
+    ],
+    "packages_installed": []
+  },
+  "validation": {
+    "tests_written": 17,
+    "tests_passing": 153,
+    "regressions": 0
+  },
+  "assessment": {
+    "verdict": "improved",
+    "confidence": "high",
+    "depth": 3,
+    "limitations": [
+      "Google Trends integration depends on pytrends which can be rate-limited by Google",
+      "trends_sentiment signal has no config weight in regime_signal_weights — uses additive contribution without weight normalization, so its impact on composite signal is secondary",
+      "The signal interpretation in trends_sentiment.py has a semantic inconsistency: extreme fear produces a negative signal value but the docstring describes it as a 'contrarian buy' — the signal engine correctly treats positive values as bullish"
+    ],
+    "self_critique": "Could have also fixed the signal interpretation inconsistency in trends_sentiment.py where the sign convention of the 'signal' field contradicts the contrarian interpretation. The market router integration passes the raw signal value which means high fear (positive fg_ratio) becomes negative signal, then positive in the signal engine via the contrarian clamp — the double negation works but is confusing."
+  },
+  "next_steps": [
+    "Add trends_sentiment weight to signal_weights and regime_signal_weights configs for proper normalization",
+    "Fix signal sign convention in trends_sentiment.py to match contrarian intent directly",
+    "Add VIX term structure integration into regime detection",
+    "Wire liquidity risk into portfolio optimizer for liquidity-adjusted position sizing",
+    "Add factor decomposition display to frontend stock pages"
+  ]
+}

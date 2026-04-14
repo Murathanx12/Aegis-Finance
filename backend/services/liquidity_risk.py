@@ -231,8 +231,8 @@ def compute_liquidity_metrics(
         logger.warning("Failed to fetch %s for liquidity analysis: %s", ticker, e)
         return None
 
-    # Compute metrics
-    amihud = compute_amihud_illiquidity(returns, volume.iloc[1:], close.iloc[1:])
+    # Compute metrics — align volume and close to returns index to prevent misalignment
+    amihud = compute_amihud_illiquidity(returns, volume.loc[returns.index], close.loc[returns.index])
     roll_spread = compute_roll_spread(returns)
 
     # Current values (latest non-NaN)

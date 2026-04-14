@@ -17,6 +17,8 @@ GET /api/analytics/liquidity             — Liquidity universe analysis
 GET /api/analytics/copula/{ticker_a}/{ticker_b} — Copula tail dependence
 POST /api/analytics/copula/portfolio     — Copula portfolio risk
 GET /api/analytics/covariance-diagnostics — Denoised covariance diagnostics
+GET /api/analytics/trends-sentiment       — Google Trends fear/greed index
+GET /api/analytics/trends-sentiment/{ticker} — Ticker-specific search attention
 """
 
 import asyncio
@@ -514,4 +516,64 @@ async def get_covariance_diagnostics():
         return result
     except Exception as e:
         logger.error("covariance diagnostics failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Google Trends Sentiment ────────────────────────────────────────
+
+
+@router.get("/trends-sentiment")
+async def get_trends_sentiment():
+    """Google Trends fear/greed sentiment index.
+
+    Uses search volume for fear terms (crash, recession, bear market)
+    vs greed terms (buy stocks, bull market) as a contrarian indicator.
+    """
+    cached = cache_get("trends_sentiment", _CACHE_TTL.get("ttl_macro", 300))
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.trends_sentiment import compute_fear_greed_trends
+        result = await asyncio.to_thread(compute_fear_greed_trends)
+        if result is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Google Trends data unavailable (pytrends not installed or rate-limited)",
+            )
+        cache_set("trends_sentiment", result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("trends sentiment failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/trends-sentiment/{ticker}")
+async def get_ticker_trends(ticker: str):
+    """Search attention for a specific stock ticker (Google Trends)."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail=f"Invalid ticker: {ticker}")
+
+    cache_key = f"trends_{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL.get("ttl_stock", 900))
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.trends_sentiment import get_ticker_attention
+        result = await asyncio.to_thread(get_ticker_attention, ticker)
+        if result is None:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Google Trends data unavailable for {ticker}",
+            )
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("ticker trends failed for %s: %s", ticker, e)
         raise HTTPException(status_code=500, detail=str(e))

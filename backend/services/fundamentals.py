@@ -283,11 +283,11 @@ def _compute_piotroski(income: dict, balance: dict, cashflow: dict) -> Optional[
         if gm > 0:
             score += 1
 
-    strength = "strong" if score >= 7 else "moderate" if score >= 4 else "weak"
+    strength = "strong" if score >= 6 else "moderate" if score >= 4 else "weak"
 
     return {
         "score": score,
-        "max_score": 9,
+        "max_score": 7,
         "strength": strength,
         "details": details,
     }

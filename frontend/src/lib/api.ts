@@ -181,6 +181,15 @@ export function getEconomicSurprise() {
   return fetchAPI<EconomicSurprise>("/api/analytics/economic-surprise");
 }
 
+// Google Trends Sentiment
+export function getTrendsSentiment() {
+  return fetchAPI<TrendsSentimentFull>("/api/analytics/trends-sentiment");
+}
+
+export function getTickerAttention(ticker: string) {
+  return fetchAPI<TickerAttention>(`/api/analytics/trends-sentiment/${ticker}`);
+}
+
 // Stress Testing
 export function getStressScenarios() {
   return fetchAPI<StressScenarios>("/api/analytics/scenarios");
@@ -279,6 +288,7 @@ export interface MarketStatus {
   crash_probabilities: Record<string, number>;
   data_quality: DataQuality | null;
   net_liquidity: NetLiquidityCurrent | null;
+  trends_sentiment: TrendsSentiment | null;
   last_updated: string;
 }
 
@@ -825,6 +835,27 @@ export interface FactorDecomposition {
   factors: Record<string, { loading: number; t_stat: number | null; significant: boolean }>;
   style: Record<string, string>;
   residual_vol: number | null;
+}
+
+export interface TrendsSentiment {
+  sentiment: "extreme_fear" | "fear" | "neutral" | "greed" | "extreme_greed";
+  signal: number;
+  fear_greed_ratio: number;
+  interpretation: string;
+}
+
+export interface TrendsSentimentFull extends TrendsSentiment {
+  avg_fear_zscore: number;
+  avg_greed_zscore: number;
+  fear_terms: Record<string, { current: number; mean: number; max: number; zscore: number }>;
+  greed_terms: Record<string, { current: number; mean: number; max: number; zscore: number }>;
+}
+
+export interface TickerAttention {
+  ticker: string;
+  attention_level: "extreme" | "elevated" | "normal" | "low";
+  attention_zscore: number;
+  interpretation: string;
 }
 
 export interface MomentumRankings {

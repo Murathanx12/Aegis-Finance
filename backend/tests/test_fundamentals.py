@@ -108,15 +108,27 @@ class TestPiotroski:
         assert result["score"] == 0
         assert result["strength"] == "weak"
 
-    def test_max_score_is_9(self):
+    def test_max_score_is_7(self):
+        """Implementation covers 7 binary checks (not full 9-criteria Piotroski)."""
         result = _compute_piotroski(
             {"revenue": 1e6, "net_income": 2e5, "gross_profit": 5e5},
             {"total_assets": 1e6, "stockholders_equity": 8e5, "total_debt": 0,
              "short_term_debt": 0, "current_assets": 5e5, "current_liabilities": 1e5},
             {"operating_cash_flow": 3e5},
         )
-        assert result["max_score"] == 9
-        assert 0 <= result["score"] <= 9
+        assert result["max_score"] == 7
+        assert 0 <= result["score"] <= 7
+
+    def test_perfect_score_achievable(self):
+        """All 7 checks should pass for an ideal company."""
+        result = _compute_piotroski(
+            {"revenue": 1e6, "net_income": 2e5, "gross_profit": 5e5},
+            {"total_assets": 1e6, "stockholders_equity": 8e5, "total_debt": 0,
+             "short_term_debt": 0, "current_assets": 5e5, "current_liabilities": 1e5},
+            {"operating_cash_flow": 3e5},
+        )
+        assert result["score"] == 7
+        assert result["strength"] == "strong"
 
 
 class TestGetFundamentals:

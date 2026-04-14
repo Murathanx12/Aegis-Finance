@@ -900,3 +900,54 @@ class TestEconomicSurpriseWeight:
         for regime, weights in config.get("regime_signal_weights", {}).items():
             assert "economic_surprise" in weights, f"{regime} missing economic_surprise"
             assert "momentum_breadth" in weights, f"{regime} missing momentum_breadth"
+
+
+class TestTrendsFearGreedSignal:
+    """Test Google Trends fear/greed integration into market signal."""
+
+    def test_trends_component_absent_when_none(self):
+        """No trends_sentiment component when not provided."""
+        result = get_market_signal(trends_fear_greed=None)
+        assert "trends_sentiment" not in result["components"]
+
+    def test_trends_component_present_when_provided(self):
+        """trends_sentiment component should appear when provided."""
+        result = get_market_signal(trends_fear_greed=0.3)
+        assert "trends_sentiment" in result["components"]
+
+    def test_extreme_fear_is_bullish(self):
+        """Extreme fear signal (positive) should boost composite score (contrarian)."""
+        base = get_market_signal(trends_fear_greed=None)
+        with_fear = get_market_signal(trends_fear_greed=0.5)
+        assert with_fear["composite_score"] >= base["composite_score"]
+
+    def test_extreme_greed_is_bearish(self):
+        """Extreme greed signal (negative) should reduce composite score (contrarian)."""
+        base = get_market_signal(trends_fear_greed=None)
+        with_greed = get_market_signal(trends_fear_greed=-0.5)
+        assert with_greed["composite_score"] <= base["composite_score"]
+
+    def test_trends_signal_clamped(self):
+        """Very extreme values should be clamped to [-0.5, 0.5]."""
+        result = get_market_signal(trends_fear_greed=2.0)
+        assert result["components"]["trends_sentiment"] == 0.5
+        result_neg = get_market_signal(trends_fear_greed=-2.0)
+        assert result_neg["components"]["trends_sentiment"] == -0.5
+
+    def test_trends_reason_for_extreme_fear(self):
+        """Extreme fear should add a reason about contrarian buy."""
+        result = get_market_signal(trends_fear_greed=0.5)
+        reasons_text = " ".join(result["reasons"])
+        assert "trend" in reasons_text.lower() or "fear" in reasons_text.lower()
+
+    def test_trends_reason_for_extreme_greed(self):
+        """Extreme greed should add a reason about caution."""
+        result = get_market_signal(trends_fear_greed=-0.5)
+        reasons_text = " ".join(result["reasons"])
+        assert "trend" in reasons_text.lower() or "greed" in reasons_text.lower()
+
+    def test_neutral_trends_no_reason(self):
+        """Neutral trends signal should not add a reason."""
+        result = get_market_signal(trends_fear_greed=0.1)
+        reasons_text = " ".join(result["reasons"])
+        assert "trend" not in reasons_text.lower()
