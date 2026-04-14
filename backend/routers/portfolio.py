@@ -2,10 +2,12 @@
 Portfolio Analytics Router
 ============================
 
-POST /api/portfolio/analyze      — Analyze existing portfolio
-POST /api/portfolio/build        — Build goal-based portfolio
-POST /api/portfolio/optimize     — Advanced optimization (CVaR, risk parity, etc.)
-POST /api/portfolio/compare      — Compare all optimization methods
+POST /api/portfolio/analyze           — Analyze existing portfolio
+POST /api/portfolio/build             — Build goal-based portfolio
+POST /api/portfolio/optimize          — Advanced optimization (CVaR, risk parity, etc.)
+POST /api/portfolio/compare           — Compare all optimization methods
+POST /api/portfolio/factor-exposures  — Fama-French 5-factor decomposition
+POST /api/portfolio/copula-risk       — Copula-based tail risk (joint crash probability)
 """
 
 import asyncio
@@ -210,6 +212,18 @@ class RiskContribRequest(BaseModel):
     tickers: list[str] = Field(..., min_length=2, max_length=50)
     weights: list[float] = Field(..., min_length=2, max_length=50)
 
+    @field_validator("weights")
+    @classmethod
+    def validate_weights(cls, v: list[float], info) -> list[float]:
+        tickers = info.data.get("tickers")
+        if tickers is not None and len(v) != len(tickers):
+            raise ValueError(
+                f"weights length ({len(v)}) must match tickers length ({len(tickers)})"
+            )
+        if any(w < 0 for w in v):
+            raise ValueError("weights must be non-negative")
+        return v
+
 
 @router.post("/risk-contributions")
 async def risk_contributions(request: RiskContribRequest):
@@ -260,6 +274,101 @@ async def portfolio_commentary(request: AnalyzeRequest):
         raise
     except Exception as e:
         logger.error("portfolio commentary failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class FactorExposureRequest(BaseModel):
+    holdings: list[Holding] = Field(..., min_length=1, max_length=50)
+    lookback_days: int = Field(756, ge=126, le=1260)
+
+
+@router.post("/factor-exposures")
+async def portfolio_factor_exposures(request: FactorExposureRequest):
+    """Fama-French 5-factor decomposition for a portfolio.
+
+    Shows factor loadings (market beta, size, value, profitability, investment),
+    alpha, R², and style interpretation for each holding and the portfolio overall.
+    """
+    from backend.services.factor_model import decompose_portfolio
+
+    # Convert holdings to weights dict
+    total_value = sum(h.shares * h.current_price for h in request.holdings)
+    if total_value <= 0:
+        raise HTTPException(status_code=400, detail="Portfolio has no value")
+
+    weights = {
+        h.ticker: (h.shares * h.current_price) / total_value
+        for h in request.holdings
+    }
+
+    try:
+        result = await asyncio.to_thread(
+            decompose_portfolio, weights, request.lookback_days
+        )
+        if result is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Insufficient data for factor decomposition",
+            )
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("portfolio factor exposure failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class CopulaRiskRequest(BaseModel):
+    holdings: list[Holding] = Field(..., min_length=2, max_length=50)
+    lookback_days: int = Field(504, ge=126, le=1260)
+
+
+@router.post("/copula-risk")
+async def portfolio_copula_risk(request: CopulaRiskRequest):
+    """Copula-based tail risk analysis for a portfolio.
+
+    Measures joint crash risk using Clayton/Gumbel/Frank/Student-t copulas.
+    Returns tail dependence coefficients and copula-based VaR/CVaR.
+    """
+    from backend.services.copula_tail import compute_copula_risk_from_returns
+    import numpy as np
+    import yfinance as yf
+
+    tickers = [h.ticker for h in request.holdings]
+    total_value = sum(h.shares * h.current_price for h in request.holdings)
+    if total_value <= 0:
+        raise HTTPException(status_code=400, detail="Portfolio has no value")
+
+    weights_arr = np.array([
+        (h.shares * h.current_price) / total_value for h in request.holdings
+    ])
+
+    try:
+        import pandas as pd
+        # Fetch aligned price data for all tickers
+        data = yf.download(tickers, period=f"{max(request.lookback_days // 252, 2)}y", progress=False)
+        prices = data["Close"] if "Close" in data.columns or len(tickers) > 1 else pd.DataFrame(data["Close"])
+        if prices.empty or len(prices) < 60:
+            raise HTTPException(
+                status_code=404,
+                detail="Insufficient price data for copula analysis",
+            )
+
+        returns = prices.pct_change().dropna()
+
+        result = await asyncio.to_thread(
+            compute_copula_risk_from_returns, returns, weights_arr
+        )
+        if result is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Copula fitting failed — need at least 2 assets with sufficient history",
+            )
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("portfolio copula risk failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 

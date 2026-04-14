@@ -1,0 +1,62 @@
+{
+  "cycle": 60,
+  "timestamp": "2026-04-15T05:00:00Z",
+  "title": "Bug fixes (5) + portfolio factor exposures & copula risk endpoints",
+  "category": "quantitative",
+  "observation": {
+    "bugs_found": [
+      "insider_trading.py: empty Finnhub return had inconsistent dict structure (missing source, lookback_days, n_buys, n_sells keys), causing downstream KeyError or silent fallback",
+      "trends_sentiment.py: z-score denominator used max(std, 1) which suppresses z-scores when std is between 0 and 1; changed to max(std, 0.01)",
+      "trends_sentiment.py: when only fear OR greed data available (not both), the function computed a misleading one-sided ratio, falsely signaling extreme fear or greed",
+      "portfolio router: RiskContribRequest accepted mismatched tickers/weights list lengths, causing IndexError deep in attribution service",
+      "portfolio router: RiskContribRequest accepted negative weights, producing garbage MCTR results"
+    ],
+    "gap_identified": "Portfolio router missing two key endpoints despite services being ready: Fama-French factor exposures (decompose_portfolio) and copula-based tail risk (compute_copula_risk_from_returns). Frontend API client also lacked typed functions for these."
+  },
+  "implementation": {
+    "bugs_fixed": [
+      "insider_trading.py: empty Finnhub return now returns consistent structure with all expected keys",
+      "insider_trading.py: extracted total_buy/sell_value computation for clarity",
+      "trends_sentiment.py: z-score denominator changed from max(std, 1) to max(std, 0.01)",
+      "trends_sentiment.py: one-sided data now returns neutral result with explanation instead of misleading ratio",
+      "portfolio router: added field_validator to RiskContribRequest ensuring len(weights)==len(tickers) and all weights >= 0"
+    ],
+    "feature_built": "Two new portfolio endpoints: POST /api/portfolio/factor-exposures (Fama-French 5-factor decomposition with style interpretation) and POST /api/portfolio/copula-risk (copula-based tail risk with VaR/CVaR). Frontend TypeScript API client updated with typed functions and interfaces.",
+    "files_changed": [
+      "backend/services/insider_trading.py",
+      "backend/services/trends_sentiment.py",
+      "backend/routers/portfolio.py",
+      "frontend/src/lib/api.ts",
+      "backend/tests/test_insider_trading.py",
+      "backend/tests/test_trends_sentiment.py"
+    ],
+    "files_created": [
+      "backend/tests/test_portfolio_router_validation.py",
+      "lab/experiments/cycle_060/experiment_report.json"
+    ],
+    "packages_installed": []
+  },
+  "validation": {
+    "tests_written": 8,
+    "tests_passing": 152,
+    "regressions": 0
+  },
+  "assessment": {
+    "verdict": "improved",
+    "confidence": "high",
+    "depth": 3,
+    "limitations": [
+      "Copula risk endpoint uses yf.download directly instead of data_fetcher abstraction; works but bypasses caching",
+      "Factor exposure endpoint is slow (~10-20s for 5+ holdings) because each stock decomposition fetches individually",
+      "Frontend pages not yet built to consume the two new endpoints"
+    ],
+    "self_critique": "Would have liked to add frontend components for the new endpoints, but focused on getting the backend wiring correct first. The copula endpoint needs integration testing with live data."
+  },
+  "next_steps": [
+    "Build frontend factor exposure visualization (bar chart + style box) for portfolio page",
+    "Build frontend copula tail risk heatmap display",
+    "Add caching to the new endpoints (factor data is slow to fetch repeatedly)",
+    "Integrate copula VaR into the main portfolio analyze response",
+    "Add sector information to portfolio commentary endpoint (currently hardcoded empty)"
+  ]
+}
