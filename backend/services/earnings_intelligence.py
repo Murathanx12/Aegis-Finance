@@ -54,13 +54,15 @@ def get_earnings_summary(ticker: str) -> dict:
                         next_date = earnings_date[0]
                         if hasattr(next_date, 'strftime'):
                             result["next_earnings_date"] = next_date.strftime("%Y-%m-%d")
-                            days_until = (next_date - datetime.now()).days
+                            now = datetime.now(tz=getattr(next_date, 'tzinfo', None))
+                            days_until = (next_date - now).days
                             result["days_until_earnings"] = max(0, days_until)
                             if 0 <= days_until <= 14:
                                 result["earnings_imminent"] = True
                     elif isinstance(earnings_date, (datetime, pd.Timestamp)):
                         result["next_earnings_date"] = earnings_date.strftime("%Y-%m-%d")
-                        days_until = (earnings_date - datetime.now()).days
+                        now = datetime.now(tz=getattr(earnings_date, 'tzinfo', None))
+                        days_until = (earnings_date - now).days
                         result["days_until_earnings"] = max(0, days_until)
                         if 0 <= days_until <= 14:
                             result["earnings_imminent"] = True

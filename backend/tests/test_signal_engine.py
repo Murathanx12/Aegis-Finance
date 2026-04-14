@@ -775,3 +775,69 @@ class TestRegimeAdaptiveWeights:
         for regime, weights in config["regime_signal_weights"].items():
             assert set(weights.keys()) == default_keys, \
                 f"{regime} profile keys {set(weights.keys())} != default {default_keys}"
+
+
+class TestInsiderSignalIntegration:
+    """Test insider trading signal integration into stock signal engine."""
+
+    def _make_market_signal(self, crash_3m=10.0):
+        sig = get_market_signal(crash_prob_3m=crash_3m, regime="Neutral", vix=20.0)
+        sig["_crash_3m_pct"] = crash_3m
+        return sig
+
+    def test_insider_score_accepted(self):
+        """get_stock_signal should accept insider_signal_score parameter."""
+        market_sig = self._make_market_signal()
+        result = get_stock_signal(
+            market_sig, beta=1.0, insider_signal_score=0.5,
+        )
+        assert "action" in result
+        assert "insider" in result["components"]
+
+    def test_insider_none_has_zero_contribution(self):
+        """When insider_signal_score is None, insider component should be 0."""
+        market_sig = self._make_market_signal()
+        result = get_stock_signal(market_sig, beta=1.0, insider_signal_score=None)
+        assert result["components"]["insider"] == 0.0
+
+    def test_insider_bullish_increases_score(self):
+        """Positive insider signal (buying) should increase composite score."""
+        market_sig = self._make_market_signal()
+        no_insider = get_stock_signal(market_sig, beta=1.0, insider_signal_score=None)
+        with_insider = get_stock_signal(market_sig, beta=1.0, insider_signal_score=0.8)
+        assert with_insider["composite_score"] > no_insider["composite_score"]
+        assert with_insider["components"]["insider"] > 0
+
+    def test_insider_bearish_decreases_score(self):
+        """Negative insider signal (selling) should decrease composite score."""
+        market_sig = self._make_market_signal()
+        no_insider = get_stock_signal(market_sig, beta=1.0, insider_signal_score=None)
+        with_insider = get_stock_signal(market_sig, beta=1.0, insider_signal_score=-0.6)
+        assert with_insider["composite_score"] < no_insider["composite_score"]
+        assert with_insider["components"]["insider"] < 0
+
+    def test_insider_cluster_buy_reason(self):
+        """Strong insider buying should produce a reason mentioning insiders."""
+        market_sig = self._make_market_signal()
+        result = get_stock_signal(market_sig, beta=1.0, insider_signal_score=0.6)
+        insider_reasons = [r for r in result["reasons"] if "insider" in r.lower()]
+        assert len(insider_reasons) > 0
+
+    def test_insider_signal_clipped(self):
+        """Extreme insider signal values should be clipped to [-1, 1]."""
+        market_sig = self._make_market_signal()
+        result_pos = get_stock_signal(market_sig, beta=1.0, insider_signal_score=5.0)
+        result_neg = get_stock_signal(market_sig, beta=1.0, insider_signal_score=-5.0)
+        # Component should be bounded by weight * 1.0
+        from backend.config import config
+        insider_w = config["stock_signal_weights"]["insider_trading"]
+        assert abs(result_pos["components"]["insider"]) <= insider_w + 0.001
+        assert abs(result_neg["components"]["insider"]) <= insider_w + 0.001
+
+    def test_insider_conviction_quality(self):
+        """Insider signal should be included in conviction quality assessment."""
+        market_sig = self._make_market_signal()
+        result = get_stock_signal(market_sig, beta=1.0, insider_signal_score=0.5)
+        assert "conviction" in result
+        # insider component should count in n_contributing
+        assert result["conviction"]["n_contributing"] >= 1

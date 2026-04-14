@@ -136,3 +136,55 @@ class TestGetMomentumScore:
         with patch("backend.services.cross_sectional_momentum.compute_momentum_rankings", return_value=None):
             result = get_momentum_score("AAPL")
             assert result is None
+
+
+class TestPercentileQuintileDistribution:
+    """Regression tests for percentile/quintile calculation (cycle_054 fix)."""
+
+    @patch("yfinance.download")
+    def test_top_stock_percentile_is_100(self, mock_yf):
+        """Top-ranked stock should have percentile = 100."""
+        tickers = ["A", "B", "C", "D", "E"]
+        mock_yf.return_value = _make_mock_download(tickers, n_days=280)
+        result = compute_momentum_rankings(tickers=tickers, include_sector_relative=False)
+        if result and len(result["rankings"]) >= 2:
+            assert result["rankings"][0]["percentile"] == 100.0
+
+    @patch("yfinance.download")
+    def test_bottom_stock_percentile_is_0(self, mock_yf):
+        """Bottom-ranked stock should have percentile = 0."""
+        tickers = ["A", "B", "C", "D", "E"]
+        mock_yf.return_value = _make_mock_download(tickers, n_days=280)
+        result = compute_momentum_rankings(tickers=tickers, include_sector_relative=False)
+        if result and len(result["rankings"]) >= 2:
+            assert result["rankings"][-1]["percentile"] == 0.0
+
+    @patch("yfinance.download")
+    def test_quintile_distribution_even(self, mock_yf):
+        """Quintiles should distribute roughly evenly across 1-5."""
+        tickers = [f"T{i:02d}" for i in range(20)]
+        mock_yf.return_value = _make_mock_download(tickers, n_days=280)
+        result = compute_momentum_rankings(tickers=tickers, include_sector_relative=False)
+        if result:
+            quintiles = [r["quintile"] for r in result["rankings"]]
+            # Each quintile should have at least 1 stock with 20 stocks total
+            for q in range(1, 6):
+                assert q in quintiles, f"Quintile {q} missing from distribution"
+
+    @patch("yfinance.download")
+    def test_quintile_5_is_best(self, mock_yf):
+        """Top-ranked stock should be in quintile 5."""
+        tickers = ["A", "B", "C", "D", "E"]
+        mock_yf.return_value = _make_mock_download(tickers, n_days=280)
+        result = compute_momentum_rankings(tickers=tickers, include_sector_relative=False)
+        if result and result["rankings"]:
+            assert result["rankings"][0]["quintile"] == 5
+
+    @patch("yfinance.download")
+    def test_quintile_1_is_worst(self, mock_yf):
+        """Bottom-ranked stock should be in quintile 1."""
+        tickers = ["A", "B", "C", "D", "E"]
+        mock_yf.return_value = _make_mock_download(tickers, n_days=280)
+        result = compute_momentum_rankings(tickers=tickers, include_sector_relative=False)
+        if result and result["rankings"]:
+            assert result["rankings"][-1]["quintile"] == 1
