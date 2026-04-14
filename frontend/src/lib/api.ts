@@ -257,6 +257,22 @@ export function comparePortfolioMethods(tickers: string[]) {
   });
 }
 
+// Portfolio Factor Exposures (Fama-French 5-factor)
+export function getPortfolioFactorExposures(holdings: Holding[], lookbackDays = 756) {
+  return fetchAPI<FactorExposureResult>("/api/portfolio/factor-exposures", {
+    method: "POST",
+    body: JSON.stringify({ holdings, lookback_days: lookbackDays }),
+  });
+}
+
+// Portfolio Copula Tail Risk
+export function getPortfolioCopulaRisk(holdings: Holding[], lookbackDays = 504) {
+  return fetchAPI<CopulaRiskResult>("/api/portfolio/copula-risk", {
+    method: "POST",
+    body: JSON.stringify({ holdings, lookback_days: lookbackDays }),
+  });
+}
+
 // AI Portfolio Commentary
 export function getPortfolioCommentary(holdings: Holding[]) {
   return fetchAPI<PortfolioCommentary>("/api/portfolio/commentary", {
@@ -983,6 +999,26 @@ export interface PortfolioCommentary {
   key_points: string[];
   risk_alerts: string[];
   provider: string;
+}
+
+export interface FactorExposureResult {
+  portfolio_alpha_annual: number;
+  portfolio_factors: Record<string, number>;
+  portfolio_style: Record<string, string>;
+  risk_attribution: Record<string, number>;
+  stocks_analyzed: number;
+  stocks_failed: number;
+  stock_details: Record<string, { weight: number; decomposition: Record<string, unknown> }>;
+}
+
+export interface CopulaRiskResult {
+  gaussian_var_95: number;
+  gaussian_cvar_95: number;
+  copula_var_95: number;
+  copula_cvar_95: number;
+  tail_dependence: number;
+  copula_type: string;
+  n_assets: number;
 }
 
 export interface StockSentiment {

@@ -84,7 +84,17 @@ def _fetch_finnhub_insiders(ticker: str, lookback_days: int) -> Optional[dict]:
 
         transactions = data["data"]
         if not transactions:
-            return {"ticker": ticker, "transactions": [], "n_transactions": 0}
+            return {
+                "ticker": ticker,
+                "source": "finnhub",
+                "lookback_days": lookback_days,
+                "buys": [],
+                "sells": [],
+                "n_buys": 0,
+                "n_sells": 0,
+                "total_buy_value": 0,
+                "total_sell_value": 0,
+            }
 
         buys = []
         sells = []
@@ -106,16 +116,19 @@ def _fetch_finnhub_insiders(ticker: str, lookback_days: int) -> Optional[dict]:
             elif tx_type in ("S - Sale", "S - Sale+OE", "S") or change < 0:
                 sells.append(entry)
 
+        total_buy_value = sum(b["value"] for b in buys)
+        total_sell_value = sum(s["value"] for s in sells)
+
         return {
             "ticker": ticker,
             "source": "finnhub",
             "lookback_days": lookback_days,
             "buys": buys[:20],  # Limit for API response size
             "sells": sells[:20],
-            "n_buys": len(buys),
+            "n_buys": len(buys),  # Count BEFORE truncation
             "n_sells": len(sells),
-            "total_buy_value": sum(b["value"] for b in buys),
-            "total_sell_value": sum(s["value"] for s in sells),
+            "total_buy_value": total_buy_value,
+            "total_sell_value": total_sell_value,
         }
 
     except Exception as e:

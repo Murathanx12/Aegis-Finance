@@ -78,7 +78,10 @@ def _fetch_trends(keywords: list[str], timeframe: str = "today 3-m") -> Optional
                         "mean": round(float(vals.mean()), 1),
                         "max": int(vals.max()),
                         "zscore": round(
-                            float((vals.iloc[-1] - vals.mean()) / max(vals.std(), 1)),
+                            float(
+                                (vals.iloc[-1] - vals.mean())
+                                / max(vals.std(), 0.01)
+                            ),
                             2,
                         ),
                     }
@@ -105,6 +108,20 @@ def compute_fear_greed_trends(timeframe: str = "today 3-m") -> Optional[dict]:
 
     if not fear_data and not greed_data:
         return None
+
+    # Need both sides for a meaningful ratio; one-sided data is unreliable
+    if not fear_data or not greed_data:
+        available = fear_data or greed_data
+        return {
+            "sentiment": "neutral",
+            "signal": 0.0,
+            "fear_greed_ratio": 0.0,
+            "avg_fear_zscore": 0.0,
+            "avg_greed_zscore": 0.0,
+            "fear_terms": fear_data or {},
+            "greed_terms": greed_data or {},
+            "interpretation": "Incomplete data (only fear or greed terms available). Cannot compute ratio.",
+        }
 
     # Compute aggregate scores
     fear_score = 0.0

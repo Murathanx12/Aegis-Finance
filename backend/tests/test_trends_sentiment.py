@@ -21,16 +21,21 @@ class TestComputeFearGreedTrends:
             assert result is None
 
     def test_returns_dict_with_required_keys(self):
-        """When data is available, result should have all required fields."""
-        mock_data = {
+        """When both fear and greed data are available, result should have all required fields."""
+        fear_mock = {
             "stock market crash": {"current": 50, "mean": 30, "max": 100, "zscore": 1.5},
             "recession": {"current": 40, "mean": 25, "max": 80, "zscore": 1.0},
         }
+        greed_mock = {
+            "buy stocks": {"current": 30, "mean": 20, "max": 60, "zscore": 0.5},
+        }
 
+        call_count = [0]
         def side_effect(keywords, timeframe="today 3-m"):
-            if keywords == FEAR_TERMS:
-                return mock_data
-            return None  # no greed data
+            call_count[0] += 1
+            if call_count[0] == 1:
+                return fear_mock
+            return greed_mock
 
         with patch("backend.services.trends_sentiment._fetch_trends", side_effect=side_effect):
             result = compute_fear_greed_trends()
@@ -87,16 +92,39 @@ class TestComputeFearGreedTrends:
         fear_data = {
             "stock market crash": {"current": 100, "mean": 10, "max": 100, "zscore": 5.0},
         }
+        greed_data = {
+            "buy stocks": {"current": 5, "mean": 30, "max": 60, "zscore": -2.0},
+        }
 
+        call_count = [0]
         def side_effect(keywords, timeframe="today 3-m"):
-            if keywords == FEAR_TERMS:
+            call_count[0] += 1
+            if call_count[0] == 1:
                 return fear_data
-            return None
+            return greed_data
 
         with patch("backend.services.trends_sentiment._fetch_trends", side_effect=side_effect):
             result = compute_fear_greed_trends()
             assert result is not None
             assert -1 <= result["signal"] <= 1
+
+    def test_one_sided_data_returns_neutral(self):
+        """Regression: when only fear OR greed data is available, return neutral."""
+        fear_data = {
+            "stock market crash": {"current": 80, "mean": 30, "max": 100, "zscore": 2.0},
+        }
+
+        def side_effect(keywords, timeframe="today 3-m"):
+            if keywords == FEAR_TERMS:
+                return fear_data
+            return None  # no greed data
+
+        with patch("backend.services.trends_sentiment._fetch_trends", side_effect=side_effect):
+            result = compute_fear_greed_trends()
+            assert result is not None
+            assert result["sentiment"] == "neutral"
+            assert result["signal"] == 0.0
+            assert "Incomplete" in result["interpretation"]
 
 
 class TestGetTickerAttention:
