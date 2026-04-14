@@ -199,12 +199,13 @@ def get_bubble_signal_score(prices: pd.Series, ticker: str = "SP500") -> Optiona
     if confidence < CONFIDENCE_THRESHOLD * 0.5:
         return 0.0  # No signal
 
-    # Scale: -0.5 at threshold, -1.0 at confidence=1.0
+    # Continuous scale: 0 at half-threshold, -0.5 at threshold, -1.0 at confidence=1.0
     if confidence >= CONFIDENCE_THRESHOLD:
         return -0.5 - 0.5 * min(1.0, (confidence - CONFIDENCE_THRESHOLD) / (1 - CONFIDENCE_THRESHOLD + 1e-9))
     else:
-        # Partial warning zone (half threshold to threshold)
-        return -0.25 * (confidence - CONFIDENCE_THRESHOLD * 0.5) / (CONFIDENCE_THRESHOLD * 0.5 + 1e-9)
+        # Partial warning zone (half threshold to threshold) — ramps linearly to -0.5
+        # to ensure continuity at CONFIDENCE_THRESHOLD
+        return -0.5 * (confidence - CONFIDENCE_THRESHOLD * 0.5) / (CONFIDENCE_THRESHOLD * 0.5 + 1e-9)
 
 
 def _empty_result(reason: str) -> dict:

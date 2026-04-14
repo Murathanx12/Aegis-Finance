@@ -391,6 +391,78 @@ class PortfolioEngine:
             except Exception as e:
                 logger.debug("Copula risk computation skipped: %s", e)
 
+        # Brinson-Fachler performance attribution vs SPY (auto-compute)
+        attribution = None
+        risk_contributions = None
+        try:
+            from backend.services.attribution import (
+                brinson_fachler_attribution, compute_risk_contributions,
+                _build_sector_map,
+            )
+            # Fetch benchmark (SPY) returns over same period
+            benchmark_ticker = "SPY"
+            if benchmark_ticker in returns.columns:
+                bench_returns_series = returns[benchmark_ticker]
+            else:
+                try:
+                    bench_prices = yf.download(
+                        benchmark_ticker, period="2y", progress=False, auto_adjust=True
+                    )
+                    if not bench_prices.empty:
+                        if isinstance(bench_prices.columns, pd.MultiIndex):
+                            bench_close = bench_prices["Close"]
+                        else:
+                            bench_close = bench_prices
+                        bench_returns_series = bench_close.pct_change().dropna().iloc[:, 0] if isinstance(bench_close, pd.DataFrame) else bench_close.pct_change().dropna()
+                    else:
+                        bench_returns_series = None
+                except Exception:
+                    bench_returns_series = None
+
+            if bench_returns_series is not None and len(bench_returns_series) > 21:
+                # 1-month period returns for attribution
+                sector_map = _build_sector_map()
+                port_weights_dict = {t: w_available[i] for i, t in enumerate(available)}
+                bench_weights_dict = {benchmark_ticker: 1.0}
+
+                # Compute 1-month returns for each holding and benchmark
+                port_1m_returns = {}
+                for t in available:
+                    r = returns[t].iloc[-21:]
+                    port_1m_returns[t] = float((1 + r).prod() - 1) if len(r) >= 21 else 0.0
+
+                bench_1m = float((1 + bench_returns_series.iloc[-21:]).prod() - 1) if len(bench_returns_series) >= 21 else 0.0
+                bench_returns_dict = {benchmark_ticker: bench_1m}
+
+                attribution = brinson_fachler_attribution(
+                    portfolio_weights=port_weights_dict,
+                    benchmark_weights=bench_weights_dict,
+                    portfolio_returns=port_1m_returns,
+                    benchmark_returns=bench_returns_dict,
+                    sector_map=sector_map,
+                )
+
+            # MCTR (Marginal Contribution to Risk) from already-fetched data
+            cov_annual = returns[available].cov().values * 252
+            w_arr = np.array(w_available)
+            port_var = w_arr @ cov_annual @ w_arr
+            port_vol = np.sqrt(port_var) if port_var > 0 else 1e-10
+            sigma_w = cov_annual @ w_arr
+            mctr = w_arr * sigma_w / port_vol
+            total_mctr = mctr.sum()
+            pct_contrib = mctr / total_mctr if total_mctr > 0 else mctr
+
+            risk_contributions = {}
+            for i, t in enumerate(available):
+                risk_contributions[t] = {
+                    "weight_pct": round(float(w_arr[i]) * 100, 2),
+                    "mctr": round(float(mctr[i]) * 100, 3),
+                    "risk_contribution_pct": round(float(pct_contrib[i]) * 100, 2),
+                    "risk_weight_ratio": round(float(pct_contrib[i]) / max(w_arr[i], 1e-10), 2),
+                }
+        except Exception as e:
+            logger.debug("Attribution/MCTR computation skipped: %s", e)
+
         result = {
             "total_value": total_value,
             "annual_return": port_annual_return,
@@ -408,6 +480,13 @@ class PortfolioEngine:
         }
         if copula_risk is not None:
             result["copula_risk"] = copula_risk
+        if attribution is not None:
+            result["attribution"] = attribution
+        if risk_contributions is not None:
+            result["risk_contributions"] = {
+                "portfolio_volatility_annual": round(float(port_vol) * 100, 2) if port_vol else None,
+                "contributions": risk_contributions,
+            }
         return result
 
     @staticmethod

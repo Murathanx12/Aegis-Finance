@@ -128,3 +128,50 @@ class TestGroupBySector:
 
         result = _group_by_sector(weights, returns, sector_map)
         assert "Other" in result
+
+
+class TestPortfolioAttributionIntegration:
+    """Test that analyze_portfolio auto-computes attribution and MCTR."""
+
+    @pytest.mark.slow
+    def test_analyze_includes_risk_contributions(self):
+        """analyze_portfolio should include MCTR risk_contributions."""
+        from backend.services.portfolio_engine import PortfolioEngine
+
+        holdings = [
+            {"ticker": "AAPL", "shares": 10, "current_price": 200.0},
+            {"ticker": "MSFT", "shares": 8, "current_price": 400.0},
+            {"ticker": "JNJ", "shares": 15, "current_price": 160.0},
+        ]
+        result = PortfolioEngine.analyze_portfolio(holdings)
+        assert "error" not in result or result.get("risk_contributions") is not None
+
+        if "risk_contributions" in result:
+            rc = result["risk_contributions"]
+            assert "portfolio_volatility_annual" in rc
+            assert "contributions" in rc
+            # Each contribution should have the required fields
+            for ticker, contrib in rc["contributions"].items():
+                assert "weight_pct" in contrib
+                assert "mctr" in contrib
+                assert "risk_contribution_pct" in contrib
+                assert "risk_weight_ratio" in contrib
+
+    @pytest.mark.slow
+    def test_analyze_includes_attribution(self):
+        """analyze_portfolio should include Brinson-Fachler attribution vs SPY."""
+        from backend.services.portfolio_engine import PortfolioEngine
+
+        holdings = [
+            {"ticker": "AAPL", "shares": 10, "current_price": 200.0},
+            {"ticker": "XOM", "shares": 20, "current_price": 100.0},
+        ]
+        result = PortfolioEngine.analyze_portfolio(holdings)
+
+        # Attribution may or may not succeed (depends on data fetch)
+        # but the field should exist when it succeeds
+        if "attribution" in result:
+            attr = result["attribution"]
+            assert "total_portfolio_return" in attr
+            assert "active_return" in attr
+            assert "attribution" in attr

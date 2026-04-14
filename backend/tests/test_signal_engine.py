@@ -841,3 +841,62 @@ class TestInsiderSignalIntegration:
         assert "conviction" in result
         # insider component should count in n_contributing
         assert result["conviction"]["n_contributing"] >= 1
+
+
+class TestEconomicSurpriseWeight:
+    """Regression tests: economic_surprise and momentum_breadth must have non-zero weight."""
+
+    def test_economic_surprise_affects_composite(self):
+        """Economic surprise signal must actually influence the composite score."""
+        base = get_market_signal(crash_prob_3m=10.0, regime="Bull", vix=18.0)
+        with_surprise = get_market_signal(
+            crash_prob_3m=10.0, regime="Bull", vix=18.0, economic_surprise=0.8,
+        )
+        # A strong positive economic surprise should change the composite
+        assert with_surprise["composite_score"] != base["composite_score"]
+        assert "economic_surprise" in with_surprise["components"]
+        # Positive surprise → should push composite higher
+        assert with_surprise["composite_score"] > base["composite_score"]
+
+    def test_negative_economic_surprise_bearish(self):
+        """Negative economic surprise should push composite lower."""
+        base = get_market_signal(crash_prob_3m=10.0, regime="Neutral", vix=20.0)
+        with_neg_surprise = get_market_signal(
+            crash_prob_3m=10.0, regime="Neutral", vix=20.0, economic_surprise=-0.8,
+        )
+        assert with_neg_surprise["composite_score"] < base["composite_score"]
+
+    def test_momentum_breadth_affects_composite(self):
+        """Momentum breadth signal must actually influence the composite score."""
+        base = get_market_signal(crash_prob_3m=10.0, regime="Bull", vix=18.0)
+        with_breadth = get_market_signal(
+            crash_prob_3m=10.0, regime="Bull", vix=18.0, momentum_breadth=0.80,
+        )
+        assert with_breadth["composite_score"] != base["composite_score"]
+        assert "momentum_breadth" in with_breadth["components"]
+        # High breadth → bullish → higher composite
+        assert with_breadth["composite_score"] > base["composite_score"]
+
+    def test_low_breadth_bearish(self):
+        """Low momentum breadth should push composite lower."""
+        base = get_market_signal(crash_prob_3m=10.0, regime="Neutral", vix=20.0)
+        with_low_breadth = get_market_signal(
+            crash_prob_3m=10.0, regime="Neutral", vix=20.0, momentum_breadth=0.20,
+        )
+        assert with_low_breadth["composite_score"] < base["composite_score"]
+
+    def test_weights_in_config(self):
+        """economic_surprise and momentum_breadth must be in signal_weights config."""
+        from backend.config import config
+        weights = config["signal_weights"]
+        assert "economic_surprise" in weights, "economic_surprise missing from signal_weights"
+        assert "momentum_breadth" in weights, "momentum_breadth missing from signal_weights"
+        assert weights["economic_surprise"] > 0
+        assert weights["momentum_breadth"] > 0
+
+    def test_regime_weights_include_new_signals(self):
+        """All regime weight profiles must include economic_surprise + momentum_breadth."""
+        from backend.config import config
+        for regime, weights in config.get("regime_signal_weights", {}).items():
+            assert "economic_surprise" in weights, f"{regime} missing economic_surprise"
+            assert "momentum_breadth" in weights, f"{regime} missing momentum_breadth"

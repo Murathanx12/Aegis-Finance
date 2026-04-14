@@ -246,15 +246,17 @@ config: dict = {
     # Composite buy/sell signal weights (must sum to 1.0).
     # Derived from grid search over 2020-2025 S&P 500 data (signal_optimizer.py).
     "signal_weights": {
-        "crash_prob": 0.18,       # ML crash probability (leading indicator)
-        "regime": 0.15,           # Bull/Bear/Volatile regime detection
-        "valuation": 0.10,        # VIX-based fear/opportunity proxy
-        "momentum": 0.11,         # 1M + 3M price momentum
-        "mean_reversion": 0.08,   # Oversold/overbought contrarian signal
-        "external": 0.10,         # External consensus (LEI, SLOOS, sentiment)
-        "macro_risk": 0.09,       # 9-factor composite risk score (risk_scorer)
-        "drawdown": 0.09,         # Current drawdown from 52-week high
-        "systemic_risk": 0.10,    # Turbulence + absorption ratio (Kritzman)
+        "crash_prob": 0.16,       # ML crash probability (leading indicator)
+        "regime": 0.13,           # Bull/Bear/Volatile regime detection
+        "valuation": 0.09,        # VIX-based fear/opportunity proxy
+        "momentum": 0.10,         # 1M + 3M price momentum
+        "mean_reversion": 0.07,   # Oversold/overbought contrarian signal
+        "external": 0.09,         # External consensus (LEI, SLOOS, sentiment)
+        "macro_risk": 0.08,       # 9-factor composite risk score (risk_scorer)
+        "drawdown": 0.08,         # Current drawdown from 52-week high
+        "systemic_risk": 0.09,    # Turbulence + absorption ratio (Kritzman)
+        "economic_surprise": 0.05, # Economic data surprise index (FRED actual vs trend)
+        "momentum_breadth": 0.06, # Market breadth (% stocks with positive momentum)
     },
     # Regime-adaptive signal weights — override defaults per market regime.
     # Research: momentum dominates bull markets (Jegadeesh & Titman), mean
@@ -263,37 +265,43 @@ config: dict = {
     # Weights are re-normalized at runtime so they sum to 1.0.
     "regime_signal_weights": {
         "Bull": {
-            "crash_prob": 0.12,       # less relevant when trending up
-            "regime": 0.13,
-            "valuation": 0.07,
-            "momentum": 0.19,         # momentum is strongest in trends
-            "mean_reversion": 0.05,   # rarely triggers in bull
-            "external": 0.12,
-            "macro_risk": 0.09,
-            "drawdown": 0.14,         # confirm trend via proximity to highs
-            "systemic_risk": 0.09,    # less critical in calm trends
+            "crash_prob": 0.10,       # less relevant when trending up
+            "regime": 0.11,
+            "valuation": 0.06,
+            "momentum": 0.17,         # momentum is strongest in trends
+            "mean_reversion": 0.04,   # rarely triggers in bull
+            "external": 0.10,
+            "macro_risk": 0.08,
+            "drawdown": 0.12,         # confirm trend via proximity to highs
+            "systemic_risk": 0.08,    # less critical in calm trends
+            "economic_surprise": 0.06, # macro confirmation of bull trend
+            "momentum_breadth": 0.08, # breadth confirms broad rally vs narrow
         },
         "Bear": {
-            "crash_prob": 0.20,       # crash risk is critical
-            "regime": 0.12,
-            "valuation": 0.10,
-            "momentum": 0.05,         # momentum breaks down in bears
-            "mean_reversion": 0.14,   # contrarian opportunities
-            "external": 0.09,
-            "macro_risk": 0.10,
-            "drawdown": 0.06,         # everything is in drawdown, less informative
-            "systemic_risk": 0.14,    # contagion risk matters most in bears
+            "crash_prob": 0.18,       # crash risk is critical
+            "regime": 0.10,
+            "valuation": 0.09,
+            "momentum": 0.04,         # momentum breaks down in bears
+            "mean_reversion": 0.12,   # contrarian opportunities
+            "external": 0.08,
+            "macro_risk": 0.09,
+            "drawdown": 0.05,         # everything is in drawdown, less informative
+            "systemic_risk": 0.12,    # contagion risk matters most in bears
+            "economic_surprise": 0.07, # macro deterioration confirms bear
+            "momentum_breadth": 0.06, # breadth collapse = widespread selling
         },
         "Volatile": {
-            "crash_prob": 0.14,
-            "regime": 0.10,
-            "valuation": 0.14,        # VIX signals matter most
-            "momentum": 0.06,         # unreliable in whipsaws
-            "mean_reversion": 0.12,   # mean reversion opportunities
-            "external": 0.10,
-            "macro_risk": 0.10,
-            "drawdown": 0.08,
-            "systemic_risk": 0.16,    # coupling/contagion risk critical in volatile regimes
+            "crash_prob": 0.12,
+            "regime": 0.09,
+            "valuation": 0.12,        # VIX signals matter most
+            "momentum": 0.05,         # unreliable in whipsaws
+            "mean_reversion": 0.10,   # mean reversion opportunities
+            "external": 0.09,
+            "macro_risk": 0.09,
+            "drawdown": 0.07,
+            "systemic_risk": 0.14,    # coupling/contagion risk critical in volatile regimes
+            "economic_surprise": 0.06, # macro data can confirm or deny panic
+            "momentum_breadth": 0.07, # breadth divergence = selective damage vs broad
         },
         # "Neutral" and "Unknown" fall through to default signal_weights
     },
