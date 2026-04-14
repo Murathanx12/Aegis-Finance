@@ -1,0 +1,18 @@
+## Cycle 059 Complete
+
+### Bug fixes (4):
+1. **anomaly_detector.py** — `score()` was computing NaN fill medians from inference data (single-row scoring filled NaN with 0.0 instead of training median ~50). Now stores training medians during `fit()` and reuses them.
+2. **shap_explainer.py** — Removed unused `Optional` import; fixed docstring claiming `base_value` was returned.
+3. **options_calibrator.py** — Moved hardcoded IV skew floor `0.9` to configurable `_SKEW_FLOOR`.
+4. **crash_timeline.py** — Added unit guard: `crash_prob_3m > 1.0` auto-converts from percentage to decimal, preventing 100x jump rate inflation.
+
+### New feature: VIX Term Structure Regime Integration
+- **`get_vix_term_structure_state()`** — Classifies VIX/VIX3M ratio into 4 states (severe_backwardation, backwardation, normal_contango, deep_contango) with signal score and interpretation.
+- **Regime detector** — VIX backwardation now acts as a stress signal: overrides Bull → Volatile, blocks Bear → Neutral recovery during backwardation.
+- **Signal engine** — Component 13: `vix_term_structure_signal`, bearish in backwardation.
+- **New endpoint** — `GET /api/analytics/vix-term-structure`
+- **Wired into** market router, stock router, lab data generator.
+
+### Validation: 20 new tests, 131 core passing, 0 regressions.
+
+---STDERR---
