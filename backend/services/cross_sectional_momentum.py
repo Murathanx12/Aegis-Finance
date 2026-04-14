@@ -133,10 +133,12 @@ def compute_momentum_rankings(
     n = len(results)
     for i, r in enumerate(results):
         rank = i + 1
-        percentile = round((1 - rank / n) * 100, 1)
+        # Percentile: top stock = 100, bottom stock = 0
+        percentile = round((n - rank) / max(n - 1, 1) * 100, 1) if n > 1 else 50.0
         r["rank"] = rank
         r["percentile"] = percentile
-        r["quintile"] = min(5, max(1, int((1 - i / n) * 5) + 1)) if n > 0 else 3
+        # Quintile: evenly distributed 5=best, 1=worst
+        r["quintile"] = max(1, min(5, 5 - int(i * 5 / n))) if n > 0 else 3
 
     # Sector-relative momentum
     if include_sector_relative:

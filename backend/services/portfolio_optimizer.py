@@ -74,7 +74,15 @@ def _fetch_returns(
 
         # Drop columns with too many NaNs
         valid = [c for c in returns.columns if returns[c].notna().sum() > 126]
-        return returns[valid].dropna() if valid else None
+        if not valid:
+            return None
+        returns = returns[valid]
+        # Forward-fill small gaps then drop only rows where ALL columns are NaN
+        # (plain .dropna() loses data when tickers have different start dates)
+        returns = returns.ffill(limit=5).dropna(how="all")
+        # Drop remaining rows that still have any NaN (incomplete after ffill)
+        returns = returns.dropna()
+        return returns if not returns.empty else None
 
     except Exception as e:
         logger.warning("Failed to fetch returns: %s", e)

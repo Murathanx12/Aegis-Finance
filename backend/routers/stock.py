@@ -153,6 +153,16 @@ def _screener() -> dict:
             except Exception as e:
                 logger.debug("earnings signal skip %s: %s", ticker, e)
 
+            # Insider trading signal (cluster buy detection)
+            insider_score = None
+            try:
+                from backend.services.insider_trading import get_insider_transactions, compute_insider_signal
+                insider_data = get_insider_transactions(ticker, lookback_days=90)
+                insider_sig = compute_insider_signal(insider_data)
+                insider_score = insider_sig.get("signal")
+            except Exception as e:
+                logger.debug("insider signal skip %s: %s", ticker, e)
+
             stock_sig = get_stock_signal(
                 market_signal=market_sig,
                 beta=r.get("beta", 1.0),
@@ -167,6 +177,7 @@ def _screener() -> dict:
                 stock_momentum_3m=stock_mom_3m,
                 options_signal_score=options_score,
                 earnings_signal_score=earnings_score,
+                insider_signal_score=insider_score,
             )
 
             return {
@@ -519,6 +530,17 @@ def _analyze_stock(ticker: str) -> dict:
     except Exception as e:
         logger.debug("earnings signal skip %s: %s", ticker, e)
 
+    # Insider trading signal — compute BEFORE get_stock_signal so it's a signal input
+    insider_score = None
+    insider_sig_data = None
+    try:
+        from backend.services.insider_trading import get_insider_transactions, compute_insider_signal
+        insider_data = get_insider_transactions(ticker, lookback_days=90)
+        insider_sig_data = compute_insider_signal(insider_data)
+        insider_score = insider_sig_data.get("signal")
+    except Exception as e:
+        logger.debug("insider signal skip %s: %s", ticker, e)
+
     # Compute per-stock signal (same logic as screener)
     stock_sig = get_stock_signal(
         market_signal=market_sig,
@@ -534,6 +556,7 @@ def _analyze_stock(ticker: str) -> dict:
         stock_momentum_3m=stock_mom_3m,
         options_signal_score=options_score,
         earnings_signal_score=earnings_score,
+        insider_signal_score=insider_score,
     )
 
     # Attach signal and crash fields to the result
@@ -546,16 +569,9 @@ def _analyze_stock(ticker: str) -> dict:
     result["crash_prob_3m"] = crash_3m_pct
     result["market_signal"] = market_sig["action"]
 
-    # ── v9 enrichments (non-blocking — each wrapped in try/except) ──
-
-    # Insider trading signal
-    try:
-        from backend.services.insider_trading import get_insider_transactions, compute_insider_signal
-        insider_data = get_insider_transactions(ticker, lookback_days=90)
-        insider_sig = compute_insider_signal(insider_data)
-        result["insider_signal"] = insider_sig
-    except Exception as e:
-        logger.debug("insider signal skip %s: %s", ticker, e)
+    # Attach insider signal data for display
+    if insider_sig_data:
+        result["insider_signal"] = insider_sig_data
 
     # Liquidity score
     try:
@@ -671,6 +687,16 @@ def _stock_signal(ticker: str) -> dict:
     except Exception as e:
         logger.debug("earnings signal skip %s: %s", ticker, e)
 
+    # Insider trading signal
+    insider_score = None
+    try:
+        from backend.services.insider_trading import get_insider_transactions, compute_insider_signal
+        insider_data = get_insider_transactions(ticker, lookback_days=90)
+        insider_sig = compute_insider_signal(insider_data)
+        insider_score = insider_sig.get("signal")
+    except Exception as e:
+        logger.debug("insider signal skip %s: %s", ticker, e)
+
     signal = get_stock_signal(
         market_signal=market_sig,
         beta=stock_data.get("beta", 1.0),
@@ -685,6 +711,7 @@ def _stock_signal(ticker: str) -> dict:
         stock_momentum_3m=stock_mom_3m,
         options_signal_score=options_score,
         earnings_signal_score=earnings_score,
+        insider_signal_score=insider_score,
     )
     signal["ticker"] = ticker
     signal["name"] = stock_data.get("name", ticker)

@@ -484,6 +484,7 @@ def get_stock_signal(
     stock_momentum_3m: Optional[float] = None,
     options_signal_score: Optional[float] = None,
     earnings_signal_score: Optional[float] = None,
+    insider_signal_score: Optional[float] = None,
 ) -> dict:
     """Generate a per-stock signal adjusted by beta and fundamentals.
 
@@ -657,6 +658,21 @@ def get_stock_signal(
         elif earnings_signal_score < -0.3:
             reasons.append("Weak earnings quality (misses / declining)")
     components["earnings"] = round(earnings_contribution, 4)
+
+    # Insider trading signal — cluster buying is a well-documented bullish signal
+    # (Lakonishok & Lee, 2001). Selling is less informative (many benign reasons).
+    insider_contribution = 0.0
+    insider_w = _sw.get("insider_trading", 0.10)
+    if insider_signal_score is not None:
+        insider_contribution = insider_w * float(np.clip(insider_signal_score, -1, 1))
+        stock_score += insider_contribution
+        if insider_signal_score > 0.4:
+            reasons.append("Insider cluster buying detected — bullish")
+        elif insider_signal_score > 0.2:
+            reasons.append("Net insider buying — moderately bullish")
+        elif insider_signal_score < -0.3:
+            reasons.append("Heavy insider selling")
+    components["insider"] = round(insider_contribution, 4)
 
     stock_score = float(np.clip(stock_score, -1, 1))
 
