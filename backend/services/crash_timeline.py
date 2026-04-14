@@ -64,9 +64,12 @@ def estimate_crash_timeline(
     # Use ML crash prob to modulate jump rate if available
     crash_freq = config["simulation"]["jump_diffusion"]["annual_rate"]
     if crash_prob_3m is not None:
-        # Scale jump rate by how elevated crash probability is
+        # Scale jump rate by how elevated crash probability is vs base rate.
+        # crash_prob_3m is in decimal (0-1 scale), base_rate is also decimal.
         base_rate = config.get("crash_base_rate_pct", 12.0) / 100.0
-        crash_freq *= max(0.5, min(3.0, crash_prob_3m / base_rate))
+        # Guard: if caller passes percentage (>1), convert to decimal
+        prob = crash_prob_3m if crash_prob_3m <= 1.0 else crash_prob_3m / 100.0
+        crash_freq *= max(0.5, min(3.0, prob / base_rate))
 
     paths = simulate_paths(
         start_price=current_level,

@@ -42,11 +42,17 @@ def detect_regimes(data: pd.DataFrame, window: int = 252) -> tuple[pd.Series, st
     regimes = pd.Series(index=data.index, dtype=str, data="")
 
     has_vix = "VIX" in data.columns
+    has_vix3m = "VIX3M" in data.columns
     has_risk = "Risk_Score" in data.columns
 
     # Short-window drawdown thresholds
     short_bear_1m = thresholds.get("short_bear_1m", -0.05)
     short_bear_3m = thresholds.get("short_bear_3m", -0.08)
+
+    # VIX term structure thresholds (backwardation = stress signal)
+    backwardation_thresh = thresholds.get("vix_backwardation_threshold", 1.05)
+    severe_backwardation = thresholds.get("vix_severe_backwardation", 1.15)
+    deep_contango = thresholds.get("vix_deep_contango", 0.80)
 
     for i in range(window, len(returns)):
         date_window = returns.index[max(0, i - window):i]
@@ -103,6 +109,16 @@ def detect_regimes(data: pd.DataFrame, window: int = 252) -> tuple[pd.Series, st
                 else:
                     base_regime = "Neutral"
 
+        # VIX term structure signal: backwardation = near-term fear spike
+        # VIX/VIX3M > 1.05 = mild backwardation, > 1.15 = severe stress
+        vix_ratio = None
+        if (has_vix and has_vix3m
+                and vix_now is not None
+                and pd.notna(data["VIX3M"].iloc[i])):
+            vix3m_now = float(data["VIX3M"].iloc[i])
+            if vix3m_now > 1.0:  # sanity check
+                vix_ratio = vix_now / vix3m_now
+
         # Bull → Volatile if ANY stress signal flashing (was: required 2)
         if base_regime == "Bull":
             stress_signals = 0
@@ -110,22 +126,118 @@ def detect_regimes(data: pd.DataFrame, window: int = 252) -> tuple[pd.Series, st
                 stress_signals += 1
             if risk_now is not None and risk_now > thresholds["risk_stress_threshold"]:
                 stress_signals += 1
+            # VIX backwardation is a real-time stress signal from options market
+            if vix_ratio is not None and vix_ratio > backwardation_thresh:
+                stress_signals += 1
             if stress_signals >= 1:
+                base_regime = "Volatile"
+
+        # Severe backwardation: override Bull/Neutral → Volatile
+        # This is a strong real-time signal — options market is pricing
+        # near-term tail risk significantly above longer-term vol
+        if vix_ratio is not None and vix_ratio > severe_backwardation:
+            if base_regime in ("Bull", "Neutral"):
                 base_regime = "Volatile"
 
         # Bear → Neutral if stress very low (recovery)
         elif base_regime == "Bear":
-            if (vix_now is not None and vix_now < thresholds["vix_calm_threshold"]
-                    and risk_now is not None
-                    and risk_now < thresholds["risk_calm_threshold"]):
-                if ann_vol < 0.20:
-                    base_regime = "Neutral"
+            calm_conditions = (
+                vix_now is not None and vix_now < thresholds["vix_calm_threshold"]
+                and risk_now is not None
+                and risk_now < thresholds["risk_calm_threshold"]
+            )
+            # Also require VIX term structure is NOT in backwardation for recovery
+            if vix_ratio is not None:
+                calm_conditions = calm_conditions and vix_ratio < backwardation_thresh
+            if calm_conditions and ann_vol < 0.20:
+                base_regime = "Neutral"
 
         regimes.iloc[i] = base_regime
 
     current = regimes.iloc[-1] if regimes.iloc[-1] else "Unknown"
     logger.info("Current regime: %s", current)
     return regimes, current
+
+
+def get_vix_term_structure_state(data: pd.DataFrame) -> dict:
+    """Compute current VIX term structure state from market data.
+
+    Uses VIX/VIX3M ratio to classify term structure:
+      - severe_backwardation: VIX >> VIX3M (crisis-level near-term fear)
+      - backwardation: VIX > VIX3M (stress, near-term fear elevated)
+      - normal_contango: VIX < VIX3M (calm, normal markets)
+      - deep_contango: VIX << VIX3M (complacency, potential vol spike ahead)
+
+    Returns:
+        Dict with ratio, structure classification, and signal score.
+    """
+    thresholds = config["risk"]["regimes"]
+    backwardation_thresh = thresholds.get("vix_backwardation_threshold", 1.05)
+    severe_thresh = thresholds.get("vix_severe_backwardation", 1.15)
+    deep_contango_thresh = thresholds.get("vix_deep_contango", 0.80)
+
+    if "VIX" not in data.columns or "VIX3M" not in data.columns:
+        return {"available": False, "ratio": None, "structure": "unknown", "signal": 0.0}
+
+    vix = data["VIX"].dropna()
+    vix3m = data["VIX3M"].dropna()
+    if len(vix) == 0 or len(vix3m) == 0:
+        return {"available": False, "ratio": None, "structure": "unknown", "signal": 0.0}
+
+    vix_now = float(vix.iloc[-1])
+    vix3m_now = float(vix3m.iloc[-1])
+
+    if vix3m_now <= 1.0:  # invalid data
+        return {"available": False, "ratio": None, "structure": "unknown", "signal": 0.0}
+
+    ratio = vix_now / vix3m_now
+
+    # Classify term structure
+    if ratio > severe_thresh:
+        structure = "severe_backwardation"
+        signal = -0.5  # strong bearish
+    elif ratio > backwardation_thresh:
+        structure = "backwardation"
+        signal = -0.3  # moderately bearish
+    elif ratio < deep_contango_thresh:
+        structure = "deep_contango"
+        signal = -0.1  # mild concern (complacency)
+    else:
+        structure = "normal_contango"
+        signal = 0.1  # normal/slightly positive
+
+    return {
+        "available": True,
+        "ratio": round(ratio, 3),
+        "vix": round(vix_now, 2),
+        "vix3m": round(vix3m_now, 2),
+        "structure": structure,
+        "signal": signal,
+        "interpretation": _term_structure_interpretation(structure, vix_now, vix3m_now, ratio),
+    }
+
+
+def _term_structure_interpretation(structure: str, vix: float, vix3m: float, ratio: float) -> str:
+    """Human-readable interpretation of VIX term structure state."""
+    if structure == "severe_backwardation":
+        return (
+            f"Severe backwardation: VIX ({vix:.1f}) >> VIX3M ({vix3m:.1f}), "
+            f"ratio {ratio:.2f}. Options market pricing acute near-term stress."
+        )
+    elif structure == "backwardation":
+        return (
+            f"Backwardation: VIX ({vix:.1f}) > VIX3M ({vix3m:.1f}), "
+            f"ratio {ratio:.2f}. Near-term fear elevated above longer-term expectations."
+        )
+    elif structure == "deep_contango":
+        return (
+            f"Deep contango: VIX ({vix:.1f}) << VIX3M ({vix3m:.1f}), "
+            f"ratio {ratio:.2f}. Unusual complacency — potential vol spike risk."
+        )
+    return (
+        f"Normal contango: VIX ({vix:.1f}) < VIX3M ({vix3m:.1f}), "
+        f"ratio {ratio:.2f}. Calm, well-functioning vol term structure."
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════════════

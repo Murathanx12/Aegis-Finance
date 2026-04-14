@@ -473,6 +473,11 @@ config: dict = {
             # Short-window drawdown overrides (Phase 1A)
             "short_bear_1m": -0.05,     # 21d return < -5% → override Bull
             "short_bear_3m": -0.08,     # 63d return < -8% → override Bull
+            # VIX term structure thresholds (contango/backwardation)
+            # VIX/VIX3M ratio: >1 = backwardation (stress), <1 = contango (normal)
+            "vix_backwardation_threshold": 1.05,  # Mild backwardation
+            "vix_severe_backwardation": 1.15,     # Severe stress (VIX 15%+ above VIX3M)
+            "vix_deep_contango": 0.80,            # Deep contango = complacency risk
         },
     },
 

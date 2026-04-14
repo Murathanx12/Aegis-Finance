@@ -41,6 +41,7 @@ class AnomalyDetector:
         self.scaler = None
         self.is_fitted = False
         self._feature_names: list[str] = []
+        self._train_medians: np.ndarray | None = None
 
     def fit(self, features: pd.DataFrame) -> dict:
         """Fit on historical feature data."""
@@ -53,6 +54,8 @@ class AnomalyDetector:
         col_medians = np.where(np.isnan(col_medians), 0.0, col_medians)
         nan_mask = np.isnan(X)
         X = np.where(nan_mask, col_medians[np.newaxis, :], X)
+
+        self._train_medians = col_medians
 
         self.scaler = StandardScaler()
         X_scaled = self.scaler.fit_transform(X)
@@ -81,9 +84,10 @@ class AnomalyDetector:
         X = features[self._feature_names].values if isinstance(features, pd.DataFrame) else features
         X = X.astype(np.float64)
         X = np.where(np.isinf(X), np.nan, X)
-        col_medians = np.nanmedian(X, axis=0)
-        col_medians = np.where(np.isnan(col_medians), 0.0, col_medians)
-        X = np.where(np.isnan(X), col_medians[np.newaxis, :], X)
+        # Use training medians for NaN imputation (not inference-time medians,
+        # which would be the sample itself for single-row scoring)
+        fill = self._train_medians if self._train_medians is not None else np.zeros(X.shape[1])
+        X = np.where(np.isnan(X), fill[np.newaxis, :], X)
         return self.model.decision_function(self.scaler.transform(X))
 
     def is_anomalous(self, features: pd.DataFrame) -> np.ndarray:

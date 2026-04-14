@@ -10,7 +10,6 @@ Usage:
 """
 
 import logging
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -33,7 +32,7 @@ def explain_prediction(
         top_n: Number of top features to return
 
     Returns:
-        Dict with crash_prob, top_features, base_value
+        Dict with crash_prob, horizon, top_features
     """
     prob = float(predictor.predict_proba(features, horizon)[-1])
 
