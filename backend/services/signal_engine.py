@@ -99,6 +99,9 @@ def get_market_signal(
     external_consensus: Optional[str] = None,
     drawdown_pct: Optional[float] = None,
     drift_severity: Optional[str] = None,
+    economic_surprise: Optional[float] = None,
+    momentum_breadth: Optional[float] = None,
+    systemic_risk_score: Optional[float] = None,
 ) -> dict:
     """Generate a composite market-level buy/sell signal.
 
@@ -178,13 +181,14 @@ def get_market_signal(
 
     # 3. Valuation signal (VIX as proxy for fear/opportunity)
     # High VIX = potential opportunity (contrarian), very high = danger
-    if vix < 15:
+    _vix_t = config.get("signal_thresholds_vix", {"low": 15, "moderate": 20, "elevated": 25, "high": 30})
+    if vix < _vix_t["low"]:
         val_sig = -0.2  # complacency
-    elif vix < 20:
+    elif vix < _vix_t["moderate"]:
         val_sig = 0.1
-    elif vix < 25:
+    elif vix < _vix_t["elevated"]:
         val_sig = 0.3  # moderate fear = opportunity
-    elif vix < 30:
+    elif vix < _vix_t["high"]:
         val_sig = 0.15  # high fear, mixed
     else:
         val_sig = -0.3  # extreme fear = risk
@@ -284,6 +288,39 @@ def get_market_signal(
     else:
         components["drawdown"] = 0.0
         weights["drawdown"] = 0  # exclude if unavailable
+
+    # 9. Economic Surprise — when economic data beats expectations, bullish
+    #    Score from economic_surprise service: negative = miss, positive = beat
+    if economic_surprise is not None:
+        eco_sig = float(np.clip(economic_surprise * 0.5, -0.5, 0.5))
+        components["economic_surprise"] = eco_sig
+        # Use small weight (additive, not in main weighted composite)
+        # to avoid overfitting — this is a secondary confirmation signal
+        if abs(economic_surprise) > 0.3:
+            if economic_surprise > 0:
+                reasons.append(f"Economic data beating expectations (surprise={economic_surprise:.2f})")
+            else:
+                reasons.append(f"Economic data missing expectations (surprise={economic_surprise:.2f})")
+
+    # 10. Momentum Breadth — what fraction of stocks have positive momentum
+    #     >60% bullish, <40% bearish (confirms or contradicts market signal)
+    if momentum_breadth is not None:
+        breadth_sig = float(np.clip((momentum_breadth - 0.5) * 2, -0.6, 0.6))
+        components["momentum_breadth"] = breadth_sig
+        if momentum_breadth > 0.65:
+            reasons.append(f"Broad market strength ({momentum_breadth:.0%} stocks with positive momentum)")
+        elif momentum_breadth < 0.35:
+            reasons.append(f"Narrow market ({momentum_breadth:.0%} stocks with positive momentum)")
+
+    # 11. Systemic risk — turbulence + absorption ratio from cross-asset analysis
+    #     Kritzman turbulence index + PCA absorption ratio detect herding/contagion
+    if systemic_risk_score is not None:
+        sys_sig = float(np.clip(systemic_risk_score, -1.0, 1.0))
+        components["systemic_risk"] = sys_sig
+        if systemic_risk_score < -0.4:
+            reasons.append(f"Systemic stress elevated (turbulence + coupling, score={systemic_risk_score:.2f})")
+        elif systemic_risk_score > 0.2:
+            reasons.append("Low systemic risk — markets decoupled and calm")
 
     # Composite signal
     total_w = sum(weights[k] for k in components if k in weights)

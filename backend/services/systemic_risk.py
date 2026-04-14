@@ -107,8 +107,8 @@ def compute_absorption_ratio(
         pd.Series of absorption ratios in [0, 1].
     """
     n_assets = returns.shape[1]
-    if n_assets < n_components:
-        n_components = max(1, n_assets // 2)
+    # Cap at n_assets // 3 so the ratio is meaningful (not ~1.0 by construction)
+    n_components = min(n_components, max(1, n_assets // 3))
 
     ar = pd.Series(np.nan, index=returns.index, name="absorption_ratio")
 
@@ -200,6 +200,51 @@ def compute_systemic_risk(data: pd.DataFrame) -> dict:
     )
 
     return result
+
+
+def get_systemic_risk_signal(data: pd.DataFrame) -> Optional[float]:
+    """Compute a signal score in [-1, +1] from systemic risk indicators.
+
+    Combines turbulence percentile and absorption ratio into a single
+    score suitable for the signal engine. Negative = elevated systemic risk.
+
+    Returns None if data is insufficient.
+    """
+    result = compute_systemic_risk(data)
+    if result.get("turbulence_current") is None:
+        return None
+
+    score = 0.0
+
+    # Turbulence: percentile > 80 = warning, > 90 = danger
+    turb_pctl = result.get("turbulence_percentile")
+    if turb_pctl is not None:
+        if turb_pctl > 90:
+            score -= 0.5
+        elif turb_pctl > 80:
+            score -= 0.25
+        elif turb_pctl < 30:
+            score += 0.15  # calm markets
+
+    # Absorption ratio: high = tightly coupled = fragile
+    ar = result.get("absorption_ratio_current")
+    if ar is not None:
+        if ar > 0.85:
+            score -= 0.3
+        elif ar > 0.75:
+            score -= 0.1
+        elif ar < 0.50:
+            score += 0.1  # diversified, healthy
+
+    # Rising AR is a leading indicator of stress
+    ar_change = result.get("absorption_ratio_change_1m")
+    if ar_change is not None:
+        if ar_change > 0.03:
+            score -= 0.2  # rapid coupling increase
+        elif ar_change < -0.03:
+            score += 0.1  # decoupling, stress easing
+
+    return float(np.clip(score, -1.0, 1.0))
 
 
 def _empty_result() -> dict:

@@ -153,6 +153,14 @@ def _compute_market_signal_for_lab() -> dict:
     except (ImportError, KeyError, TypeError, ValueError) as e:
         logger.debug("External validation unavailable in lab: %s", e)
 
+    # Systemic risk signal (turbulence + absorption ratio)
+    _systemic_score = None
+    try:
+        from backend.services.systemic_risk import get_systemic_risk_signal
+        _systemic_score = get_systemic_risk_signal(data)
+    except Exception as e:
+        logger.debug("Systemic risk signal unavailable in lab: %s", e)
+
     sig = get_market_signal(
         crash_prob_3m=crash_3m,
         crash_prob_12m=crash_12m,
@@ -166,6 +174,7 @@ def _compute_market_signal_for_lab() -> dict:
         external_consensus=external,
         drawdown_pct=sp500_drawdown,
         drift_severity=_drift_severity,
+        systemic_risk_score=_systemic_score,
     )
     # Attach raw values for downstream use by stock analysis / MC
     sig["_crash_3m_pct"] = crash_3m
@@ -728,6 +737,21 @@ def collect_api_health(output_dir):
         "backend.services.drift_detector",
         "backend.services.llm_analyzer",
         "backend.services.savings_calculator",
+        "backend.services.factor_model",
+        "backend.services.stress_testing",
+        "backend.services.cross_sectional_momentum",
+        "backend.services.economic_surprise",
+        # v9 services
+        "backend.services.liquidity_risk",
+        "backend.services.copula_tail",
+        "backend.services.covariance",
+        "backend.services.portfolio_optimizer",
+        "backend.services.insider_trading",
+        "backend.services.trends_sentiment",
+        "backend.services.survival_model",
+        "backend.services.anomaly_detector",
+        "backend.services.crash_timeline",
+        "backend.services.attribution",
     ]
 
     for mod_path in imports:
@@ -899,6 +923,124 @@ def collect_systemic_risk(output_dir):
         return {"error": str(e)}
 
 
+# ---------------------------------------------------------------------------
+# 14. Factor model snapshot
+# ---------------------------------------------------------------------------
+def collect_factor_model(output_dir):
+    """Collect factor decomposition for a few key tickers."""
+    try:
+        from backend.services.factor_model import decompose_stock
+        results = {}
+        for ticker in ["AAPL", "JPM", "XOM"]:
+            try:
+                decomp = decompose_stock(ticker, lookback_days=504)
+                if decomp:
+                    results[ticker] = {
+                        "r_squared": decomp["r_squared"],
+                        "alpha_annual": decomp["alpha_annual"],
+                        "market_beta": decomp["factors"]["Mkt-RF"]["loading"],
+                        "style": decomp["style"],
+                    }
+                    print(f"    [OK] {ticker}: R²={decomp['r_squared']:.2f}, "
+                          f"β={decomp['factors']['Mkt-RF']['loading']:.2f}, "
+                          f"α={decomp['alpha_annual']:.1%}")
+                else:
+                    results[ticker] = {"status": "no_data"}
+            except Exception as e:
+                results[ticker] = {"error": str(e)}
+                print(f"    [WARN] {ticker} factors: {e}")
+
+        _save(output_dir, "factor_model.json", results)
+        return results
+    except Exception as e:
+        print(f"    [FAIL] Factor model: {e}")
+        return {"status": "error", "error": str(e)}
+
+
+# ---------------------------------------------------------------------------
+# 15. Economic surprise index
+# ---------------------------------------------------------------------------
+def collect_economic_surprise(output_dir):
+    """Collect economic surprise index."""
+    try:
+        from backend.services.economic_surprise import compute_surprise_index
+        result = compute_surprise_index()
+        if result:
+            _save(output_dir, "economic_surprise.json", result)
+            print(f"    [OK] Eco surprise: {result['composite_score']:.3f} ({result['signal']}), "
+                  f"trend={result['trend']}")
+            return result
+        else:
+            print("    [SKIP] Economic surprise returned None")
+            return {"status": "no_data"}
+    except Exception as e:
+        print(f"    [FAIL] Economic surprise: {e}")
+        return {"status": "error", "error": str(e)}
+
+
+# ---------------------------------------------------------------------------
+# 16. Liquidity risk snapshot
+# ---------------------------------------------------------------------------
+def collect_liquidity_snapshot(output_dir):
+    """Collect liquidity metrics for a few key tickers."""
+    try:
+        from backend.services.liquidity_risk import compute_liquidity_metrics
+        results = {}
+        for ticker in ["AAPL", "NVDA", "COIN"]:
+            try:
+                metrics = compute_liquidity_metrics(ticker)
+                if metrics:
+                    results[ticker] = {
+                        "score": metrics["score"]["composite"],
+                        "tier": metrics["score"]["tier"],
+                        "amihud": metrics["metrics"]["amihud_illiquidity"],
+                        "avg_dv_mm": metrics["metrics"]["avg_dollar_volume_mm"],
+                    }
+                    print(f"    [OK] {ticker}: score={metrics['score']['composite']:.0f} "
+                          f"({metrics['score']['tier']})")
+            except Exception as e:
+                results[ticker] = {"error": str(e)}
+                print(f"    [WARN] {ticker}: {e}")
+
+        _save(output_dir, "liquidity_snapshot.json", results)
+        return results
+    except Exception as e:
+        print(f"    [FAIL] Liquidity: {e}")
+        return {"status": "error", "error": str(e)}
+
+
+# ---------------------------------------------------------------------------
+# 17. Copula tail dependence
+# ---------------------------------------------------------------------------
+def collect_copula_snapshot(output_dir):
+    """Fit copulas to key asset pairs."""
+    try:
+        from backend.services.copula_tail import analyze_pair_copula
+        pairs = [("AAPL", "MSFT"), ("SPY", "GLD")]
+        results = {}
+        for a, b in pairs:
+            try:
+                result = analyze_pair_copula(a, b, lookback_days=504)
+                if result:
+                    td = result.get("tail_dependence", {})
+                    results[f"{a}_{b}"] = {
+                        "best_copula": result["copula"]["selection"],
+                        "tail_lower": td.get("lower"),
+                        "pearson": result["correlation"]["pearson"],
+                    }
+                    print(f"    [OK] {a}/{b}: {result['copula']['selection']}, "
+                          f"tail_L={td.get('lower', '?'):.3f}")
+            except Exception as e:
+                results[f"{a}_{b}"] = {"error": str(e)}
+                print(f"    [WARN] {a}/{b}: {e}")
+
+        _save(output_dir, "copula_snapshot.json", results)
+        return results
+    except Exception as e:
+        print(f"    [FAIL] Copula: {e}")
+        return {"status": "error", "error": str(e)}
+
+
 def collect_code_metrics(output_dir):
     import subprocess as sp
     result = {}
@@ -968,6 +1110,10 @@ def run_engine_data_collection(output_dir, cycle):
         ("drift_check", "Checking feature drift", lambda d: collect_drift_check(d)),
         ("options_intelligence", "Checking options signals", lambda d: collect_options_intelligence(d, cycle)),
         ("systemic_risk", "Computing systemic risk indicators", lambda d: collect_systemic_risk(d)),
+        ("factor_model", "Running factor decomposition", lambda d: collect_factor_model(d)),
+        ("economic_surprise", "Computing economic surprise index", lambda d: collect_economic_surprise(d)),
+        ("liquidity_snapshot", "Measuring liquidity risk", lambda d: collect_liquidity_snapshot(d)),
+        ("copula_snapshot", "Fitting copula tail models", lambda d: collect_copula_snapshot(d)),
         ("code_metrics", "Measuring code quality", lambda d: collect_code_metrics(d)),
     ]
 

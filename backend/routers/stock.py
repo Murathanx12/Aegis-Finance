@@ -2,10 +2,12 @@
 Stock Analysis Router
 =======================
 
-GET /api/stock/screener            — Top stocks screener (batch analysis)
-GET /api/stock/{ticker}            — Per-ticker projection + risk metrics
-GET /api/stock/{ticker}/shap       — SHAP explanation for ticker
-GET /api/stock/{ticker}/sentiment  — FinBERT news sentiment analysis
+GET /api/stock/screener             — Top stocks screener (batch analysis)
+GET /api/stock/{ticker}             — Per-ticker projection + risk metrics
+GET /api/stock/{ticker}/shap        — SHAP explanation for ticker
+GET /api/stock/{ticker}/sentiment   — FinBERT news sentiment analysis
+GET /api/stock/{ticker}/insiders    — Insider trading signal
+GET /api/stock/{ticker}/fundamentals — SEC EDGAR fundamentals
 """
 
 import asyncio
@@ -54,10 +56,16 @@ def _screener() -> dict:
     sector_momentum = _compute_sector_momentum()
 
     # Build full list: DEFAULT_WATCHLIST + top picks from each sector
+    universe_cfg = config.get("stock_universe", {})
+    per_sector = universe_cfg.get("screener_per_sector", 5)
+    max_tickers = universe_cfg.get("screener_max_tickers", 80)
     all_tickers = set(DEFAULT_WATCHLIST)
     for sector_tickers in SECTOR_STOCK_MAP.values():
-        for t in sector_tickers[:3]:  # top 3 per sector
+        for t in sector_tickers[:per_sector]:
             all_tickers.add(t)
+    # Performance guard: cap total tickers
+    if len(all_tickers) > max_tickers:
+        all_tickers = set(sorted(all_tickers)[:max_tickers])
 
     # Extract crash probability for MC jump rate modulation
     crash_3m_pct = market_sig.get("_crash_3m_pct")
@@ -353,6 +361,36 @@ def _compute_market_signal() -> dict:
     except (ImportError, KeyError, TypeError, ValueError) as e:
         logger.debug("External validation unavailable: %s", e)
 
+    # Economic surprise signal (from FRED actual vs trend)
+    _eco_surprise = None
+    try:
+        from backend.services.economic_surprise import compute_surprise_index
+        eco = compute_surprise_index()
+        if eco:
+            _eco_surprise = eco.get("composite_score")
+    except Exception as e:
+        logger.debug("Economic surprise unavailable: %s", e)
+
+    # Systemic risk signal (turbulence + absorption ratio → single score)
+    _systemic_score = None
+    try:
+        from backend.services.systemic_risk import get_systemic_risk_signal
+        _systemic_score = get_systemic_risk_signal(data)
+    except Exception as e:
+        logger.debug("Systemic risk signal unavailable: %s", e)
+
+    # Momentum breadth (fraction of stocks with positive 3M momentum)
+    _mom_breadth = None
+    try:
+        from backend.cache import cache_get as _cg
+        cached_mom = _cg("momentum_rankings", 900)
+        if cached_mom and "rankings" in cached_mom:
+            rankings = cached_mom["rankings"]
+            n_positive = sum(1 for r in rankings if r.get("composite_score", 0) > 0)
+            _mom_breadth = n_positive / len(rankings) if rankings else None
+    except Exception as e:
+        logger.debug("Momentum breadth unavailable: %s", e)
+
     sig = get_market_signal(
         crash_prob_3m=crash_3m,
         crash_prob_12m=crash_12m,
@@ -366,6 +404,9 @@ def _compute_market_signal() -> dict:
         external_consensus=external,
         drawdown_pct=sp500_drawdown,
         drift_severity=_drift_severity,
+        economic_surprise=_eco_surprise,
+        momentum_breadth=_mom_breadth,
+        systemic_risk_score=_systemic_score,
     )
     # Attach raw crash_3m so callers can pass it to MC simulation
     sig["_crash_3m_pct"] = crash_3m
@@ -504,6 +545,44 @@ def _analyze_stock(ticker: str) -> dict:
     result["signal_reasons"] = stock_sig.get("reasons", [])
     result["crash_prob_3m"] = crash_3m_pct
     result["market_signal"] = market_sig["action"]
+
+    # ── v9 enrichments (non-blocking — each wrapped in try/except) ──
+
+    # Insider trading signal
+    try:
+        from backend.services.insider_trading import get_insider_transactions, compute_insider_signal
+        insider_data = get_insider_transactions(ticker, lookback_days=90)
+        insider_sig = compute_insider_signal(insider_data)
+        result["insider_signal"] = insider_sig
+    except Exception as e:
+        logger.debug("insider signal skip %s: %s", ticker, e)
+
+    # Liquidity score
+    try:
+        from backend.services.liquidity_risk import compute_liquidity_metrics
+        liq = compute_liquidity_metrics(ticker, lookback_days=252)
+        if liq:
+            result["liquidity"] = {
+                "score": liq["score"]["composite"],
+                "tier": liq["score"]["tier"],
+                "amihud": liq["metrics"]["amihud_illiquidity"],
+                "avg_dollar_volume_mm": liq["metrics"]["avg_dollar_volume_mm"],
+                "lvar_95": liq["risk"]["lvar_95"],
+            }
+    except Exception as e:
+        logger.debug("liquidity skip %s: %s", ticker, e)
+
+    # Cross-sectional momentum rank
+    try:
+        from backend.services.cross_sectional_momentum import get_momentum_score
+        from backend.cache import cache_get as _cg
+        cached_rankings = _cg("momentum_rankings", 900)
+        if cached_rankings:
+            mom_score = get_momentum_score(ticker, cached_rankings)
+            if mom_score:
+                result["momentum_rank"] = mom_score
+    except Exception as e:
+        logger.debug("momentum rank skip %s: %s", ticker, e)
 
     return result
 
@@ -724,3 +803,30 @@ async def get_stock_fundamentals(ticker: str):
 def _stock_fundamentals(ticker: str) -> dict:
     from backend.services.fundamentals import get_fundamentals
     return get_fundamentals(ticker)
+
+
+@router.get("/{ticker}/insiders")
+async def get_insider_trading(ticker: str):
+    """Insider trading transactions and signal for a stock."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"insiders:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.insider_trading import get_insider_transactions, compute_insider_signal
+        transactions = await asyncio.to_thread(get_insider_transactions, ticker)
+        signal = compute_insider_signal(transactions)
+        result = {
+            "ticker": ticker,
+            **signal,
+            "transactions": transactions,
+        }
+        cache_set(cache_key, result)
+        return result
+    except Exception as e:
+        logger.error("insider trading failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
