@@ -23,6 +23,7 @@ from backend.services.stress_testing import (
     stress_test_portfolio,
     get_scenario_list,
     _estimate_crisis_return,
+    hypothetical_stress_test,
 )
 
 
@@ -159,3 +160,51 @@ class TestStressTestPortfolio:
         for sid, scenario in result["scenarios"].items():
             if scenario["relative_to_market"] is not None:
                 assert scenario["relative_to_market"] < 1.5
+
+
+class TestHypotheticalOilShock:
+    """Regression tests for oil shock asymmetry fix."""
+
+    def test_negative_oil_shock_affects_non_energy(self):
+        """Negative oil shocks should benefit non-energy sectors (mild positive)."""
+        result = hypothetical_stress_test(
+            weights={"AAPL": 0.5, "MSFT": 0.5},
+            shocks={"oil": -0.30},  # Oil drops 30%
+            beta_map={"AAPL": 1.2, "MSFT": 1.1},
+        )
+        # Falling oil should mildly benefit non-energy (positive impact)
+        assert result["portfolio_estimated_return"] > 0, (
+            f"Negative oil shock should benefit non-energy, got {result['portfolio_estimated_return']}%"
+        )
+
+    def test_positive_oil_shock_hurts_non_energy(self):
+        """Rising oil should hurt non-energy sectors."""
+        result = hypothetical_stress_test(
+            weights={"AAPL": 0.5, "MSFT": 0.5},
+            shocks={"oil": 0.30},  # Oil rises 30%
+            beta_map={"AAPL": 1.2, "MSFT": 1.1},
+        )
+        assert result["portfolio_estimated_return"] < 0
+
+    def test_small_oil_shock_no_effect(self):
+        """Oil shocks under 10% threshold should have zero impact."""
+        result = hypothetical_stress_test(
+            weights={"AAPL": 1.0},
+            shocks={"oil": 0.05},
+        )
+        assert result["portfolio_estimated_return"] == 0.0
+
+    def test_energy_sector_tracks_oil(self):
+        """Energy stocks should track oil direction regardless of sign."""
+        result_up = hypothetical_stress_test(
+            weights={"XOM": 1.0},
+            shocks={"oil": 0.20},
+            beta_map={"XOM": 0.9},
+        )
+        result_down = hypothetical_stress_test(
+            weights={"XOM": 1.0},
+            shocks={"oil": -0.20},
+            beta_map={"XOM": 0.9},
+        )
+        assert result_up["portfolio_estimated_return"] > 0
+        assert result_down["portfolio_estimated_return"] < 0

@@ -139,17 +139,7 @@ def _gumbel_loglik(theta: float, u: np.ndarray, v: np.ndarray) -> float:
     C = np.exp(-A_inv)
     C = np.clip(C, 1e-300, None)
 
-    # Log-density (bivariate)
-    log_c = (
-        np.log(C)
-        + (theta - 1) * (np.log(lu) + np.log(lv))
-        + np.log(A_inv + theta - 1)
-        - np.log(u * v)
-        + (1.0 / theta - 2) * np.log(A)
-        - A_inv
-    )
-
-    # Re-add the exp(-A_inv) that we already accounted for
+    # Gumbel copula log-density
     loglik = np.sum(
         np.log(C + 1e-300)
         + np.log(np.clip(A_inv + theta - 1, 1e-10, None))
@@ -276,15 +266,26 @@ def _fit_student_t(u: np.ndarray, v: np.ndarray) -> dict:
             + n * (nu / 2) * np.log(nu)
         )
 
-        # Use scipy for proper log-likelihood
+        # Use scipy for proper copula log-likelihood
+        # Must subtract marginal t densities to get copula density:
+        # log c(u,v) = log f_2(x,y) - log f_1(x) - log f_1(y)
         try:
             from scipy.special import gammaln
-            loglik = (
+            # Bivariate t joint log-density
+            joint_loglik = (
                 n * gammaln((nu + 2) / 2)
                 - n * gammaln(nu / 2)
                 - n * np.log(nu * np.pi * np.sqrt(det))
                 - ((nu + 2) / 2) * np.sum(np.log(1 + Q / nu))
             )
+            # Marginal t log-densities (subtract to get copula density)
+            marginal_loglik = (
+                2 * n * gammaln((nu + 1) / 2)
+                - n * np.log(nu * np.pi)
+                - 2 * n * gammaln(nu / 2)
+                - ((nu + 1) / 2) * np.sum(np.log(1 + x ** 2 / nu) + np.log(1 + y ** 2 / nu))
+            )
+            loglik = joint_loglik - marginal_loglik
         except Exception:
             continue
 
@@ -483,6 +484,71 @@ def _interpret_copula(best: dict, pearson: float) -> str:
     return " ".join(parts)
 
 
+def compute_copula_risk_from_returns(
+    returns: pd.DataFrame,
+    weights: np.ndarray,
+    n_sims: int = _N_SIMS,
+) -> Optional[dict]:
+    """Compute copula VaR/CVaR from pre-fetched returns (no data re-fetch).
+
+    This is the internal API for portfolio_engine integration.
+    Returns dict with gaussian and copula-t VaR/CVaR, or None on failure.
+    """
+    if returns.empty or len(returns) < _MIN_OBS or len(returns.columns) < 2:
+        return None
+
+    n_assets = len(returns.columns)
+    w = np.asarray(weights)
+
+    U = _to_pseudo_observations(returns.values)
+    X_norm = stats.norm.ppf(np.clip(U, 0.001, 0.999))
+    corr_matrix = np.corrcoef(X_norm.T)
+
+    port_returns = returns.values @ w
+    var_gaussian = float(np.percentile(port_returns, _CONF_LEVEL * 100))
+    cvar_gaussian = float(port_returns[port_returns <= var_gaussian].mean()) if np.any(port_returns <= var_gaussian) else var_gaussian
+
+    rng = np.random.default_rng(42)
+    try:
+        L = np.linalg.cholesky(corr_matrix)
+        Z = rng.standard_normal((n_sims, n_assets))
+        corr_Z = Z @ L.T
+
+        nu = 5
+        chi2 = rng.chisquare(nu, size=n_sims) / nu
+        T = corr_Z / np.sqrt(chi2[:, np.newaxis])
+        U_sim = stats.t.cdf(T, df=nu)
+
+        sim_returns = np.zeros_like(U_sim)
+        for j in range(n_assets):
+            marginal = np.sort(returns.iloc[:, j].values)
+            n_m = len(marginal)
+            positions = U_sim[:, j] * (n_m - 1)
+            lo = np.clip(np.floor(positions).astype(int), 0, n_m - 1)
+            hi = np.clip(lo + 1, 0, n_m - 1)
+            frac = positions - lo
+            sim_returns[:, j] = marginal[lo] * (1 - frac) + marginal[hi] * frac
+
+        port_sim = sim_returns @ w
+        var_copula = float(np.percentile(port_sim, _CONF_LEVEL * 100))
+        cvar_copula = float(port_sim[port_sim <= var_copula].mean()) if np.any(port_sim <= var_copula) else var_copula
+
+    except np.linalg.LinAlgError:
+        logger.debug("Cholesky failed in copula risk — returning gaussian only")
+        return None
+
+    underestimate = round((var_copula / var_gaussian - 1) * 100 if var_gaussian != 0 else 0, 1)
+
+    return {
+        "gaussian_var_95": round(var_gaussian * 100, 2),
+        "gaussian_cvar_95": round(cvar_gaussian * 100, 2),
+        "copula_var_95": round(var_copula * 100, 2),
+        "copula_cvar_95": round(cvar_copula * 100, 2),
+        "tail_risk_underestimate_pct": underestimate,
+        "copula_df": nu,
+    }
+
+
 def compute_copula_portfolio_risk(
     tickers: list[str],
     weights: Optional[list[float]] = None,
@@ -557,13 +623,17 @@ def compute_copula_portfolio_risk(
         # Transform to uniform via t-CDF
         U_sim = stats.t.cdf(T, df=nu)
 
-        # Transform back to returns using empirical marginals
+        # Transform back to returns using empirical marginals (linear interpolation)
         sim_returns = np.zeros_like(U_sim)
         for j in range(n_assets):
             marginal = np.sort(returns.iloc[:, j].values)
-            indices = (U_sim[:, j] * len(marginal)).astype(int)
-            indices = np.clip(indices, 0, len(marginal) - 1)
-            sim_returns[:, j] = marginal[indices]
+            n_m = len(marginal)
+            # Use linear interpolation instead of floor indexing for tail precision
+            positions = U_sim[:, j] * (n_m - 1)
+            lo = np.clip(np.floor(positions).astype(int), 0, n_m - 1)
+            hi = np.clip(lo + 1, 0, n_m - 1)
+            frac = positions - lo
+            sim_returns[:, j] = marginal[lo] * (1 - frac) + marginal[hi] * frac
 
         # Portfolio returns
         port_sim = sim_returns @ weights

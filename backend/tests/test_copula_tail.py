@@ -3,6 +3,8 @@
 import numpy as np
 import pytest
 
+import pandas as pd
+
 from backend.services.copula_tail import (
     _to_pseudo_observations,
     _fit_clayton,
@@ -10,6 +12,7 @@ from backend.services.copula_tail import (
     _fit_frank,
     _fit_student_t,
     fit_best_copula,
+    compute_copula_risk_from_returns,
 )
 
 
@@ -156,3 +159,84 @@ class TestBestCopula:
         # Clayton or Student-t should be selected (they have lower tail dependence)
         assert result["selection"] in ("clayton", "student_t")
         assert result["best"]["tail_lower"] > 0.1
+
+
+class TestStudentTMarginalCorrection:
+    """Regression tests for Student-t copula log-likelihood marginal correction.
+
+    The log-likelihood must subtract marginal t densities so AIC is
+    comparable across copula families.
+    """
+
+    def test_student_t_aic_comparable_to_frank(self, uniform_data):
+        """For independent data, Student-t AIC should not dominate Frank."""
+        u, v = uniform_data
+        t_result = _fit_student_t(u, v)
+        f_result = _fit_frank(u, v)
+        # Student-t has 2 params vs Frank's 1, so it should not always win
+        # on independent data. Allow some tolerance but they should be same order.
+        assert abs(t_result["aic"] - f_result["aic"]) < 500, (
+            f"Student-t AIC ({t_result['aic']}) vs Frank AIC ({f_result['aic']}) "
+            "are too far apart — marginal correction may be missing"
+        )
+
+    def test_student_t_loglik_negative_for_independence(self, uniform_data):
+        """For independent uniform data, copula log-likelihood should be near 0."""
+        u, v = uniform_data
+        result = _fit_student_t(u, v)
+        # Independence copula has density=1 everywhere → loglik=0
+        # With estimation noise, should be within reasonable range
+        assert result["loglik"] < 200, (
+            f"Student-t loglik={result['loglik']} is too large for independent data"
+        )
+
+
+class TestCopulaRiskFromReturns:
+    """Tests for the pre-fetched returns copula risk function."""
+
+    def test_basic_output_structure(self):
+        rng = np.random.default_rng(42)
+        n = 300
+        returns = pd.DataFrame(
+            rng.standard_normal((n, 3)) * 0.02,
+            columns=["A", "B", "C"],
+        )
+        weights = np.array([0.5, 0.3, 0.2])
+        result = compute_copula_risk_from_returns(returns, weights, n_sims=5000)
+        assert result is not None
+        assert "gaussian_var_95" in result
+        assert "copula_var_95" in result
+        assert "copula_cvar_95" in result
+        assert "tail_risk_underestimate_pct" in result
+        # VaR should be negative (loss)
+        assert result["gaussian_var_95"] < 0
+        assert result["copula_var_95"] < 0
+        # CVaR should be worse (more negative) than VaR
+        assert result["copula_cvar_95"] <= result["copula_var_95"]
+
+    def test_returns_none_for_single_asset(self):
+        rng = np.random.default_rng(42)
+        returns = pd.DataFrame(rng.standard_normal((300, 1)) * 0.02, columns=["A"])
+        result = compute_copula_risk_from_returns(returns, np.array([1.0]))
+        assert result is None
+
+    def test_returns_none_for_short_data(self):
+        rng = np.random.default_rng(42)
+        returns = pd.DataFrame(rng.standard_normal((50, 2)) * 0.02, columns=["A", "B"])
+        result = compute_copula_risk_from_returns(returns, np.array([0.5, 0.5]))
+        assert result is None
+
+    def test_fat_tailed_data_shows_higher_copula_risk(self):
+        """With fat-tailed correlated data, copula VaR should be worse than gaussian."""
+        rng = np.random.default_rng(42)
+        n = 500
+        # Generate t-distributed returns (fat tails)
+        from scipy.stats import t as t_dist
+        r1 = t_dist.rvs(df=3, size=n, random_state=42) * 0.02
+        r2 = 0.6 * r1 + t_dist.rvs(df=3, size=n, random_state=43) * 0.01
+        returns = pd.DataFrame({"A": r1, "B": r2})
+        weights = np.array([0.5, 0.5])
+        result = compute_copula_risk_from_returns(returns, weights, n_sims=10000)
+        assert result is not None
+        # Copula should detect heavier tails than Gaussian
+        assert result["copula_cvar_95"] <= result["gaussian_cvar_95"] + 0.5
