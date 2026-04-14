@@ -126,6 +126,21 @@ def _compute_market_status() -> dict:
     except Exception as e:
         logger.warning("Bubble detection failed: %s", e)
 
+    # Google Trends fear/greed sentiment
+    trends_sentiment = None
+    try:
+        from backend.services.trends_sentiment import compute_fear_greed_trends
+        trends_result = compute_fear_greed_trends()
+        if trends_result is not None:
+            trends_sentiment = {
+                "sentiment": trends_result["sentiment"],
+                "signal": trends_result["signal"],
+                "fear_greed_ratio": trends_result["fear_greed_ratio"],
+                "interpretation": trends_result["interpretation"],
+            }
+    except Exception as e:
+        logger.warning("Google Trends sentiment failed: %s", e)
+
     return {
         "sp500": sp500,
         "sp500_change_1m": round(sp500_change_1m, 2),
@@ -139,6 +154,7 @@ def _compute_market_status() -> dict:
         "net_liquidity": net_liq,
         "systemic_risk": systemic,
         "bubble_indicator": bubble,
+        "trends_sentiment": trends_sentiment,
         "last_updated": str(data.index[-1].date()),
     }
 
@@ -257,6 +273,16 @@ def _compute_market_signal() -> dict:
     except (ImportError, KeyError, TypeError, ValueError) as e:
         logger.debug("External validation unavailable: %s", e)
 
+    # Google Trends fear/greed (contrarian signal)
+    _trends_signal = None
+    try:
+        from backend.services.trends_sentiment import compute_fear_greed_trends
+        trends_result = compute_fear_greed_trends()
+        if trends_result is not None:
+            _trends_signal = trends_result.get("signal")
+    except Exception as e:
+        logger.debug("Google Trends unavailable for signal: %s", e)
+
     signal = get_market_signal(
         crash_prob_3m=crash_3m,
         crash_prob_12m=crash_12m,
@@ -270,6 +296,7 @@ def _compute_market_signal() -> dict:
         external_consensus=external,
         drawdown_pct=sp500_drawdown,
         drift_severity=_drift_severity,
+        trends_fear_greed=_trends_signal,
     )
     signal["sp500"] = sp500
     signal["regime"] = regime

@@ -102,6 +102,7 @@ def get_market_signal(
     economic_surprise: Optional[float] = None,
     momentum_breadth: Optional[float] = None,
     systemic_risk_score: Optional[float] = None,
+    trends_fear_greed: Optional[float] = None,
 ) -> dict:
     """Generate a composite market-level buy/sell signal.
 
@@ -321,6 +322,18 @@ def get_market_signal(
             reasons.append(f"Systemic stress elevated (turbulence + coupling, score={systemic_risk_score:.2f})")
         elif systemic_risk_score > 0.2:
             reasons.append("Low systemic risk — markets decoupled and calm")
+
+    # 12. Google Trends fear/greed — contrarian sentiment signal
+    #     Extreme fear in search trends historically = buying opportunity
+    #     Extreme greed/FOMO historically = market overextension
+    #     Signal from trends_sentiment service: -1 (contrarian sell) to +1 (contrarian buy)
+    if trends_fear_greed is not None:
+        trends_sig = float(np.clip(trends_fear_greed, -0.5, 0.5))
+        components["trends_sentiment"] = trends_sig
+        if trends_fear_greed > 0.3:
+            reasons.append("Google Trends: extreme fear — contrarian buy signal")
+        elif trends_fear_greed < -0.3:
+            reasons.append("Google Trends: extreme greed/FOMO — contrarian caution")
 
     # Composite signal
     total_w = sum(weights[k] for k in components if k in weights)
