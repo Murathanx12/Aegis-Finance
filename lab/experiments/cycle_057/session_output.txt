@@ -1,0 +1,25 @@
+## Cycle 057 Complete
+
+### Bug fixes (4):
+1. **covariance.py diagnostics MP bound** — `covariance_diagnostics` was computing the Marchenko-Pastur bound with default `var=1.0` instead of the fitted noise variance, giving inconsistent results vs what `denoise_covariance` actually uses. Now uses `_fit_mp_variance` for consistency.
+
+2. **tail_dependence.py BFS performance** — Cluster detection used `list.pop(0)` (O(n) per pop) instead of `deque.popleft()` (O(1)). Fixed to use `collections.deque`.
+
+3. **covariance.py dead code** — Removed unused `start_idx` variable after detoning block.
+
+4. **return_model.py redundant slice** — Targets were sliced to `[:train_end_idx]` in the outer loop, then needlessly re-sliced in `_train_single`. Removed the redundant slice.
+
+### New feature: Liquidity-adjusted position sizing
+- `adjust_weights_for_liquidity()` in `portfolio_optimizer.py` — post-processes optimizer weights to:
+  - Hard-floor positions below minimum dollar volume ($1M default)
+  - Penalize stocks with liquidity score below threshold (40/100) using configurable exponent
+  - Redistribute freed weight pro-rata to liquid positions
+  - Renormalize to sum to 1.0
+- Integrated into `compare_methods()` so all optimizer comparisons include liquidity-adjusted alternatives
+- Config-driven parameters in `liquidity_risk.position_sizing`
+
+### Test results: 158 passing, 0 regressions
+- 7 new tests (6 for liquidity sizing, 1 regression test for MP bound fix)
+- All 131 core smoke tests pass
+
+---STDERR---
