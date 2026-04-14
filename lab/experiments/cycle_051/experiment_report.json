@@ -1,0 +1,59 @@
+{
+  "cycle": 51,
+  "timestamp": "2026-04-15T02:45:00Z",
+  "title": "Bug fixes (3) + systemic risk signal engine integration",
+  "category": "quantitative",
+  "observation": {
+    "bugs_found": [
+      "crash_timeline.py: VIX sigma multiplied by sqrt(252) — VIX is already annualized, so sigma was 15.87x overstated (VIX=20 → sigma=3.17 instead of 0.20), producing wildly inflated crash probabilities",
+      "anomaly_detector.py:195: fillna(0) banned per CLAUDE.md — Bayesian changepoint detection was filling NaN with 0 instead of forward-filling, biasing changepoint probability toward zero at series boundaries",
+      "systemic_risk.py: absorption_ratio n_components=5 with 6 assets gave AR≈0.998 by construction (5/6 eigenvalues = 83%+ variance), making the indicator permanently flagged as 'systemic stress'"
+    ],
+    "gap_identified": "Systemic risk indicators (Kritzman turbulence index + absorption ratio) were computed but not wired into the signal engine — they existed as standalone metrics with no influence on buy/sell signals"
+  },
+  "implementation": {
+    "bugs_fixed": [
+      "crash_timeline.py: Removed erroneous sqrt(252) multiplier from VIX→sigma conversion. VIX is already annualized implied vol, so correct conversion is simply VIX/100",
+      "anomaly_detector.py: Replaced fillna(0) with ffill().bfill() for BOCPD result reindexing — preserves temporal continuity of changepoint probabilities",
+      "systemic_risk.py: Capped n_components at max(1, n_assets//3) instead of n_assets//2, so AR is meaningful (2 components on 6 assets instead of 5 on 6)"
+    ],
+    "feature_built": "Integrated systemic risk (turbulence + absorption ratio) as 11th signal engine component. Added get_systemic_risk_signal() function that converts turbulence percentile, AR level, and AR 1-month change into a [-1, +1] score. Wired into signal engine with regime-adaptive weights: 10% default, 9% Bull, 14% Bear, 16% Volatile. Connected data flow through stock router and lab data_generator.",
+    "files_changed": [
+      "backend/services/crash_timeline.py",
+      "backend/services/anomaly_detector.py",
+      "backend/services/systemic_risk.py",
+      "backend/services/signal_engine.py",
+      "backend/config.py",
+      "backend/routers/stock.py",
+      "lab/data_generator.py"
+    ],
+    "files_created": [
+      "backend/tests/test_cycle051.py",
+      "lab/experiments/cycle_051/experiment_report.json"
+    ],
+    "packages_installed": []
+  },
+  "validation": {
+    "tests_written": 13,
+    "tests_passing": 13,
+    "regressions": 0
+  },
+  "assessment": {
+    "verdict": "improved",
+    "confidence": "high",
+    "depth": 4,
+    "limitations": [
+      "Systemic risk signal is computed from only 6 assets (SP500, NASDAQ, Russell, Gold, HYG, LQD) — broader asset coverage would improve sensitivity",
+      "VIX sigma bug fix will change crash_timeline output significantly — downstream consumers should verify new (correct) probability ranges",
+      "AR threshold levels (0.50, 0.75, 0.85) and turbulence percentile cutoffs (30, 80, 90) are heuristic, not empirically calibrated"
+    ],
+    "self_critique": "Could have added a backtest comparison showing crash_timeline before/after the VIX fix. The systemic risk signal thresholds deserve empirical calibration against historical crisis periods rather than using round numbers."
+  },
+  "next_steps": [
+    "Calibrate systemic risk signal thresholds against GFC/COVID/2022 periods",
+    "Expand systemic risk to include more assets (DXY, crude, Treasury ETFs)",
+    "Add crash_timeline output validation test with known VIX/sigma pairs",
+    "Wire copula VaR into portfolio analysis response",
+    "Integrate factor model exposures into stock analysis page"
+  ]
+}

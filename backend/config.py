@@ -34,6 +34,8 @@ class APIKeys:
     fred: str = ""
     finnhub: str = ""
     fmp: str = ""
+    alpha_vantage: str = ""
+    polygon: str = ""
 
     @classmethod
     def from_env(cls) -> "APIKeys":
@@ -41,6 +43,8 @@ class APIKeys:
             fred=os.getenv("FRED_API_KEY", ""),
             finnhub=os.getenv("FINNHUB_API_KEY", ""),
             fmp=os.getenv("FMP_API_KEY", ""),
+            alpha_vantage=os.getenv("ALPHA_VANTAGE_API_KEY", ""),
+            polygon=os.getenv("POLYGON_API_KEY", ""),
         )
 
     def has(self, key: str) -> bool:
@@ -242,14 +246,15 @@ config: dict = {
     # Composite buy/sell signal weights (must sum to 1.0).
     # Derived from grid search over 2020-2025 S&P 500 data (signal_optimizer.py).
     "signal_weights": {
-        "crash_prob": 0.20,       # ML crash probability (leading indicator)
-        "regime": 0.16,           # Bull/Bear/Volatile regime detection
-        "valuation": 0.11,        # VIX-based fear/opportunity proxy
-        "momentum": 0.12,         # 1M + 3M price momentum
-        "mean_reversion": 0.09,   # Oversold/overbought contrarian signal
-        "external": 0.12,         # External consensus (LEI, SLOOS, sentiment)
-        "macro_risk": 0.10,       # 9-factor composite risk score (risk_scorer)
-        "drawdown": 0.10,         # Current drawdown from 52-week high
+        "crash_prob": 0.18,       # ML crash probability (leading indicator)
+        "regime": 0.15,           # Bull/Bear/Volatile regime detection
+        "valuation": 0.10,        # VIX-based fear/opportunity proxy
+        "momentum": 0.11,         # 1M + 3M price momentum
+        "mean_reversion": 0.08,   # Oversold/overbought contrarian signal
+        "external": 0.10,         # External consensus (LEI, SLOOS, sentiment)
+        "macro_risk": 0.09,       # 9-factor composite risk score (risk_scorer)
+        "drawdown": 0.09,         # Current drawdown from 52-week high
+        "systemic_risk": 0.10,    # Turbulence + absorption ratio (Kritzman)
     },
     # Regime-adaptive signal weights — override defaults per market regime.
     # Research: momentum dominates bull markets (Jegadeesh & Titman), mean
@@ -258,34 +263,37 @@ config: dict = {
     # Weights are re-normalized at runtime so they sum to 1.0.
     "regime_signal_weights": {
         "Bull": {
-            "crash_prob": 0.14,       # less relevant when trending up
-            "regime": 0.14,
-            "valuation": 0.08,
-            "momentum": 0.20,         # momentum is strongest in trends
+            "crash_prob": 0.12,       # less relevant when trending up
+            "regime": 0.13,
+            "valuation": 0.07,
+            "momentum": 0.19,         # momentum is strongest in trends
             "mean_reversion": 0.05,   # rarely triggers in bull
-            "external": 0.14,
-            "macro_risk": 0.10,
-            "drawdown": 0.15,         # confirm trend via proximity to highs
+            "external": 0.12,
+            "macro_risk": 0.09,
+            "drawdown": 0.14,         # confirm trend via proximity to highs
+            "systemic_risk": 0.09,    # less critical in calm trends
         },
         "Bear": {
-            "crash_prob": 0.24,       # crash risk is critical
-            "regime": 0.14,
-            "valuation": 0.12,
-            "momentum": 0.06,         # momentum breaks down in bears
-            "mean_reversion": 0.16,   # contrarian opportunities
-            "external": 0.10,
-            "macro_risk": 0.12,
+            "crash_prob": 0.20,       # crash risk is critical
+            "regime": 0.12,
+            "valuation": 0.10,
+            "momentum": 0.05,         # momentum breaks down in bears
+            "mean_reversion": 0.14,   # contrarian opportunities
+            "external": 0.09,
+            "macro_risk": 0.10,
             "drawdown": 0.06,         # everything is in drawdown, less informative
+            "systemic_risk": 0.14,    # contagion risk matters most in bears
         },
         "Volatile": {
-            "crash_prob": 0.18,
-            "regime": 0.12,
-            "valuation": 0.16,        # VIX signals matter most
-            "momentum": 0.08,         # unreliable in whipsaws
-            "mean_reversion": 0.14,   # mean reversion opportunities
-            "external": 0.12,
-            "macro_risk": 0.12,
+            "crash_prob": 0.14,
+            "regime": 0.10,
+            "valuation": 0.14,        # VIX signals matter most
+            "momentum": 0.06,         # unreliable in whipsaws
+            "mean_reversion": 0.12,   # mean reversion opportunities
+            "external": 0.10,
+            "macro_risk": 0.10,
             "drawdown": 0.08,
+            "systemic_risk": 0.16,    # coupling/contagion risk critical in volatile regimes
         },
         # "Neutral" and "Unknown" fall through to default signal_weights
     },
@@ -654,10 +662,15 @@ config: dict = {
         "wow_bearish_threshold": -0.05,  # WoW change (trillions) below this → BEARISH
     },
 
-    # ── LLM / DEEPSEEK ──────────────────────────────────────────────────
+    # ── LLM (Claude preferred, DeepSeek fallback) ──────────────────────
     "llm": {
+        # Claude (if ANTHROPIC_API_KEY is set)
+        "claude_model_fast": "claude-haiku-4-5-20251001",
+        "claude_model_quality": "claude-sonnet-4-6",
+        # DeepSeek (if DEEPSEEK_API_KEY is set, Claude not available)
         "base_url": "https://api.deepseek.com",
         "model": "deepseek-chat",
+        # Shared settings
         "max_tokens": 500,
         "temperature": 0.3,
     },
@@ -694,6 +707,169 @@ config: dict = {
         "slightly_bullish_threshold": 0.05, # avg_numeric > 0.05 → slightly_bullish
         "bearish_threshold": -0.15,         # avg_numeric < -0.15 → bearish
         "slightly_bearish_threshold": -0.05,# avg_numeric < -0.05 → slightly_bearish
+    },
+
+    # ── STOCK UNIVERSE ───────────────────────────────────────────────────
+    # Expanded universe: S&P 100 constituents + popular growth/value names
+    # Organized by GICS sector for screener and factor analysis
+    "stock_universe": {
+        "default_watchlist": [
+            "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META",
+            "TSLA", "JPM", "JNJ", "V", "UNH", "XOM",
+            "BRK-B", "LLY", "AVGO", "MA", "COST", "HD",
+        ],
+        "sector_stocks": {
+            "Technology": [
+                "AAPL", "MSFT", "NVDA", "AVGO", "CRM", "AMD", "ADBE", "ACN",
+                "CSCO", "ORCL", "INTC", "NOW", "PLTR", "INTU", "TXN", "QCOM",
+                "AMAT", "MU", "PANW", "SNPS", "CDNS", "FTNT", "CRWD",
+            ],
+            "Healthcare": [
+                "UNH", "LLY", "JNJ", "ABBV", "MRK", "PFE", "TMO", "ABT",
+                "ISRG", "VRTX", "DXCM", "GEHC", "MDT", "SYK", "BMY",
+                "AMGN", "GILD", "CI", "ELV", "HCA", "ZTS",
+            ],
+            "Financials": [
+                "JPM", "V", "MA", "BAC", "WFC", "GS", "MS", "BLK",
+                "SPGI", "C", "AXP", "SCHW", "CB", "MMC", "ICE",
+                "PGR", "CME", "AON", "COIN", "SQ",
+            ],
+            "Energy": [
+                "XOM", "CVX", "COP", "SLB", "EOG", "PXD", "MPC", "OKE",
+                "PSX", "VLO", "WMB", "KMI", "FSLR", "ENPH", "HAL",
+            ],
+            "Consumer Disc.": [
+                "AMZN", "TSLA", "HD", "MCD", "NKE", "BKNG", "LOW", "TJX",
+                "SBUX", "ABNB", "CMG", "ORLY", "ROST", "DHI", "GM",
+                "F", "LULU", "YUM", "DKNG",
+            ],
+            "Industrials": [
+                "CAT", "GE", "RTX", "HON", "UPS", "BA", "DE", "LMT",
+                "UBER", "AXON", "TT", "ETN", "WM", "GD", "NOC",
+                "FDX", "CSX", "NSC", "EMR",
+            ],
+            "Communications": [
+                "META", "GOOGL", "NFLX", "DIS", "CMCSA", "TMUS", "VZ", "T",
+                "RBLX", "SPOT", "EA", "TTWO", "WBD", "CHTR",
+            ],
+            "Consumer Staples": [
+                "COST", "PG", "KO", "WMT", "PEP", "PM", "MO", "CL",
+                "MDLZ", "GIS", "KHC", "STZ", "MNST", "KR", "SYY",
+            ],
+            "Materials": [
+                "LIN", "APD", "SHW", "FCX", "NEM", "ECL", "DD", "VMC",
+                "NUE", "DOW", "PPG", "MLM",
+            ],
+            "Utilities": [
+                "NEE", "SO", "DUK", "AEP", "D", "SRE", "EXC", "XEL",
+                "VST", "CEG", "PCG", "WEC",
+            ],
+            "Real Estate": [
+                "PLD", "AMT", "EQIX", "CCI", "O", "SPG", "PSA", "WELL",
+                "DLR", "AVB", "VICI",
+            ],
+        },
+        # How many stocks per sector to include in screener (top N by market cap)
+        "screener_per_sector": 5,
+        # Maximum total tickers in screener (performance guard)
+        "screener_max_tickers": 80,
+    },
+
+    # ── SIGNAL ENGINE THRESHOLDS ─────────────────────────────────────────
+    # Centralized from signal_engine.py and risk_scorer.py hardcoded values
+    "signal_thresholds_vix": {
+        "low": 15,        # VIX below → complacent / bullish
+        "moderate": 20,   # VIX 15-20 → normal
+        "elevated": 25,   # VIX 20-25 → cautious
+        "high": 30,       # VIX above → fear / bearish
+    },
+
+    # ── STRESS TESTING ───────────────────────────────────────────────────
+    # Historical crisis scenarios for portfolio stress testing
+    "stress_testing": {
+        "scenarios": {
+            "2008_GFC": {
+                "name": "2008 Global Financial Crisis",
+                "start": "2007-10-09",
+                "end": "2009-03-09",
+                "sp500_drawdown": -0.568,
+                "description": "Subprime mortgage crisis, Lehman collapse, global contagion",
+            },
+            "2020_COVID": {
+                "name": "2020 COVID Crash",
+                "start": "2020-02-19",
+                "end": "2020-03-23",
+                "sp500_drawdown": -0.339,
+                "description": "Pandemic lockdowns, fastest 30% decline in history",
+            },
+            "2000_DOTCOM": {
+                "name": "2000-02 Dot-Com Bust",
+                "start": "2000-03-24",
+                "end": "2002-10-09",
+                "sp500_drawdown": -0.491,
+                "description": "Tech bubble burst, corporate fraud (Enron, WorldCom)",
+            },
+            "1987_BLACK_MONDAY": {
+                "name": "1987 Black Monday",
+                "start": "1987-08-25",
+                "end": "1987-12-04",
+                "sp500_drawdown": -0.336,
+                "description": "Program trading cascade, 22.6% single-day drop",
+            },
+            "2022_RATE_SHOCK": {
+                "name": "2022 Rate Shock",
+                "start": "2022-01-03",
+                "end": "2022-10-12",
+                "sp500_drawdown": -0.254,
+                "description": "Aggressive Fed tightening, inflation spike, growth-to-value rotation",
+            },
+            "2018_VOLMAGEDDON": {
+                "name": "2018 Volmageddon + Q4 Selloff",
+                "start": "2018-01-26",
+                "end": "2018-12-24",
+                "sp500_drawdown": -0.199,
+                "description": "VIX spike, trade war fears, Fed tightening",
+            },
+        },
+    },
+
+    # ── FACTOR MODEL ─────────────────────────────────────────────────────
+    # Fama-French 5-factor model configuration
+    "factor_model": {
+        "lookback_days": 756,          # 3 years of daily returns for factor regression
+        "min_observations": 126,       # Minimum trading days for valid regression
+        "significance_level": 0.05,    # p-value threshold for significant factor exposure
+        "french_data_url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/",
+        "factors": ["Mkt-RF", "SMB", "HML", "RMW", "CMA"],
+    },
+
+    # ── LIQUIDITY RISK ──────────────────────────────────────────────────
+    "liquidity_risk": {
+        "lookback_days": 252,            # 1 year of trading days
+        "min_observations": 60,          # Minimum days for valid analysis
+        "amihud_window": 21,             # Rolling window for Amihud illiquidity
+        "roll_window": 21,               # Rolling window for Roll spread
+    },
+
+    # ── COPULA TAIL DEPENDENCE ──────────────────────────────────────────
+    # Parametric copula models (Clayton, Gumbel, Frank, Student-t) for
+    # proper tail dependence estimation — replaces pure empirical approach.
+    "copula_config": {
+        "lookback_days": 756,            # 3 years of daily returns
+        "min_observations": 252,         # Minimum for reliable copula fit
+        "copula_families": ["clayton", "gumbel", "frank", "student_t"],
+        "confidence_level": 0.05,        # VaR/CVaR quantile
+        "n_simulations": 10000,          # MC simulations for copula VaR
+        "aic_selection": True,           # Select best copula by AIC
+    },
+
+    # ── DENOISED COVARIANCE ─────────────────────────────────────────────
+    # Marchenko-Pastur denoising + Ledoit-Wolf shrinkage for covariance
+    "covariance_config": {
+        "method": "denoised",            # "denoised" | "ledoit_wolf" | "empirical"
+        "lookback_days": 504,            # 2 years for covariance estimation
+        "detone": True,                  # Remove market mode (1st eigenvector)
+        "target_explained": 0.95,        # Target cumulative variance for signal cutoff
     },
 }
 
