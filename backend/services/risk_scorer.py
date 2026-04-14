@@ -115,15 +115,15 @@ def build_risk_score(data: pd.DataFrame) -> pd.Series:
 
     # VIX floor: if recent VIX is elevated, add minimum boost to composite
     # Uses 10-day average to react quickly to spikes (63d was too slow)
+    # Thresholds from config.py for consistency with signal engine
+    _vix_t = config.get("signal_thresholds_vix", {"low": 15, "moderate": 20, "elevated": 25, "high": 30})
     if "VIX" in data.columns:
         vix_10d_avg = data["VIX"].rolling(10).mean()
-        # Graduated floor: +0.3 if VIX>22, +0.5 if VIX>25, +0.8 if VIX>30
-        # Use np.select for correct graduated thresholds (pd.where replaces
-        # where condition is False, so cascading calls overwrite earlier tiers)
+        # Graduated floor: +0.3 if VIX>moderate+2, +0.5 if VIX>elevated, +0.8 if VIX>high
         conditions = [
-            vix_10d_avg > 30,
-            vix_10d_avg > 25,
-            vix_10d_avg > 22,
+            vix_10d_avg > _vix_t["high"],
+            vix_10d_avg > _vix_t["elevated"],
+            vix_10d_avg > _vix_t["moderate"] + 2,
         ]
         choices = [0.8, 0.5, 0.3]
         vix_floor = pd.Series(np.select(conditions, choices, default=0.0), index=data.index)

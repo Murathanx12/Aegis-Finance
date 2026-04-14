@@ -20,6 +20,24 @@ Aegis Finance is a free, open-source market intelligence web platform combining 
 - Signal backtesting harness (walk-forward hit rates, Sharpe comparison)
 - Retirement planner with compound growth projections
 - Net liquidity tracker (Fed balance sheet: WALCL - TGA - RRP)
+- Fama-French 5-factor decomposition (institutional-grade factor analysis)
+- Historical stress testing (GFC, COVID, dot-com, Black Monday, rate shock scenarios)
+- Cross-sectional momentum ranking (relative strength across 150+ stocks)
+- Economic surprise index (FRED actual vs trend consensus)
+- Cox Proportional Hazards survival model for crash timing
+- Bayesian changepoint detection (Adams & MacKay 2007 BOCPD)
+- Isolation Forest anomaly detection for model confidence
+- Monthly crash timeline (60-month forward probability curve)
+- Copula-based tail dependence (Clayton, Gumbel, Frank, Student-t with AIC selection)
+- Liquidity risk analytics (Amihud illiquidity, Roll spread, Kyle's Lambda, LVaR)
+- Denoised covariance matrix (Marchenko-Pastur Random Matrix Theory)
+- Advanced portfolio optimization (Mean-CVaR, Risk Parity, Max Diversification via riskfolio-lib)
+- Brinson-Fachler performance attribution (allocation, selection, interaction effects)
+- Marginal Contribution to Risk (MCTR) for risk budgeting
+- FF5 + Momentum (6-factor) model with PCA residual analysis (Axioma hybrid)
+- Insider trading signal (Finnhub + SEC Form 4, cluster buy detection)
+- Hypothetical stress scenarios (user-defined macro shocks)
+- AI portfolio commentary (Claude/DeepSeek — Bloomberg PORT style)
 
 **What it is NOT:**
 - Financial advice — educational tool with disclaimers everywhere
@@ -32,10 +50,11 @@ Aegis Finance is a free, open-source market intelligence web platform combining 
 |-------|-----------|
 | Frontend | Next.js 14 (App Router), shadcn/ui, Tailwind CSS, Recharts |
 | Backend | FastAPI, Python 3.12 |
-| ML | LightGBM, scikit-learn (Logistic Regression), SHAP |
-| Statistical | GJR-GARCH, HMM (3-state), Jump-diffusion Monte Carlo |
+| ML | LightGBM, scikit-learn (Logistic Regression), SHAP, Isolation Forest |
+| Statistical | GJR-GARCH, HMM (3-state), Jump-diffusion Monte Carlo, Copula models |
+| Portfolio | riskfolio-lib (CVaR, Risk Parity, HRP, Max Div), PyPortfolioOpt |
 | NLP | ProsusAI/FinBERT (sentiment), keyword fallback |
-| Data | Yahoo Finance (yfinance), FRED (fredapi), GDELT |
+| Data | Yahoo Finance (yfinance), FRED (fredapi), GDELT, Kenneth French Data Library |
 | AI | DeepSeek (optional, for news summaries) |
 | Deploy | Vercel (frontend), Railway (backend), Docker |
 
@@ -52,8 +71,8 @@ aegis-finance/
 │   ├── main.py                  # App entry + CORS + cache prewarming
 │   ├── config.py                # All parameters (scenarios, weights, tickers, thresholds)
 │   ├── cache.py                 # In-memory TTL cache
-│   ├── routers/                 # 12 API routers
-│   ├── services/                # 28 business logic modules
+│   ├── routers/                 # 13 API routers (30+ endpoints)
+│   ├── services/                # 44 business logic modules
 │   │   ├── data_fetcher.py      # Yahoo Finance + FRED unified
 │   │   ├── monte_carlo.py       # Jump-diffusion MC (Merton-corrected)
 │   │   ├── risk_scorer.py       # 9-factor composite z-score
@@ -82,7 +101,21 @@ aegis-finance/
 │   │   ├── signal_optimizer.py  # Legacy signal computation
 │   │   ├── systemic_risk.py     # Turbulence index + absorption ratio (Kritzman)
 │   │   ├── bubble_detector.py   # LPPL bubble detection (Sornette)
-│   │   └── fundamentals.py      # SEC EDGAR 10-K/10-Q financials + Piotroski F-Score
+│   │   ├── fundamentals.py      # SEC EDGAR 10-K/10-Q financials + Piotroski F-Score
+│   │   ├── factor_model.py     # Fama-French 5-factor decomposition (Kenneth French Data Library)
+│   │   ├── stress_testing.py   # Historical crisis scenario replay (6 scenarios: GFC, COVID, etc.)
+│   │   ├── cross_sectional_momentum.py  # Relative strength ranking across stock universe
+│   │   ├── economic_surprise.py  # Economic data surprise index (actual vs trend from FRED)
+│   │   ├── survival_model.py   # Cox Proportional Hazards crash timing (lifelines)
+│   │   ├── anomaly_detector.py # Isolation Forest + Bayesian changepoint detection (BOCPD)
+│   │   ├── crash_timeline.py   # Monthly crash probability out 60 months (MC-based)
+│   │   ├── liquidity_risk.py  # Amihud illiquidity, Roll spread, Kyle's Lambda, LVaR
+│   │   ├── copula_tail.py     # Clayton/Gumbel/Frank/t-copula tail dependence (AIC selection)
+│   │   ├── covariance.py      # Marchenko-Pastur denoised covariance (Random Matrix Theory)
+│   │   ├── portfolio_optimizer.py # Mean-CVaR, Risk Parity, Max Diversification, HRP (riskfolio-lib)
+│   │   ├── insider_trading.py  # Insider buy/sell signal (Finnhub + SEC Form 4)
+│   │   ├── trends_sentiment.py # Google Trends fear/greed proxy (pytrends)
+│   │   └── attribution.py     # Brinson-Fachler attribution + MCTR risk decomposition
 │   └── models/                  # GJR-GARCH, HMM, saved .pkl models
 ├── engine/                      # Offline research (not served by API)
 │   ├── training/                # features.py, feature_selection.py, labeling.py, fracdiff.py, sample_uniqueness.py
@@ -101,7 +134,7 @@ uvicorn backend.main:app --reload --port 8000
 # Frontend (separate terminal)
 cd frontend && npm install && npm run dev
 
-# Run fast backend tests (~4 min, 765 tests)
+# Run fast backend tests (~4 min, 1110 tests)
 python -m pytest backend/tests/ -v -m "not slow"
 
 # Run ALL backend tests (~8 min, needs network)
@@ -185,7 +218,7 @@ docker compose up --build
 | Portfolio Stress (3 profiles) | `test_stress_portfolio.py` | 10 | Slow (network) |
 | Portfolio Projection (MC) | `test_portfolio_projection.py` | 5 | Slow (network) |
 | Edge Cases (tickers) | `test_edge_cases.py` | 7 | Slow (network) |
-| **Total** | **20+ files** | **765+** | **~670 fast / ~95 slow** |
+| **Total** | **28+ files** | **1177+** | **~780 fast / ~95 slow** |
 
 Run fast tests: `python -m pytest backend/tests/ -v -m "not slow"`
 
@@ -226,4 +259,4 @@ python lab/rd_loop.py --cycles 60 --model opus
 python lab/rd_loop.py --cycles 60 --model sonnet
 ```
 
-Each cycle: generates engine data → builds prompt → Claude session (45 min) → targeted tests → before/after comparison → auto-commit. Results in `lab/experiments/cycle_NNN/`.
+Each cycle: generates engine data (16 collectors including factor model + economic surprise) → builds prompt with competitive intelligence → Claude session (45 min) → targeted tests → before/after comparison → auto-commit. Results in `lab/experiments/cycle_NNN/`.

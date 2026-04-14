@@ -35,24 +35,25 @@ STOCK_CAGR_CAPS = config.get("stocks", {}).get("cagr_caps", {
 # Convert list values to tuples (JSON doesn't have tuples)
 STOCK_CAGR_CAPS = {k: tuple(v) for k, v in STOCK_CAGR_CAPS.items()}
 
-DEFAULT_WATCHLIST = [
+# Stock universe — loaded from config.py (centralized)
+_universe = config.get("stock_universe", {})
+DEFAULT_WATCHLIST = _universe.get("default_watchlist", [
     "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META",
     "TSLA", "JPM", "JNJ", "V", "UNH", "XOM",
-]
-
-SECTOR_STOCK_MAP = {
-    "Technology":       ["AAPL", "MSFT", "NVDA", "AVGO", "CRM", "PLTR", "NOW", "AMD"],
-    "Healthcare":       ["UNH", "LLY", "JNJ", "ISRG", "VRTX", "DXCM", "GEHC"],
-    "Financials":       ["JPM", "V", "MA", "GS", "BLK", "COIN", "SQ"],
-    "Energy":           ["XOM", "CVX", "SLB", "OKE", "FSLR", "ENPH"],
-    "Consumer Disc.":   ["AMZN", "TSLA", "HD", "NKE", "BKNG", "ABNB"],
-    "Industrials":      ["CAT", "GE", "RTX", "UBER", "AXON", "TT"],
-    "Communications":   ["META", "GOOGL", "NFLX", "DIS", "RBLX", "SPOT"],
+])
+SECTOR_STOCK_MAP = _universe.get("sector_stocks", {
+    "Technology":       ["AAPL", "MSFT", "NVDA", "AVGO", "CRM"],
+    "Healthcare":       ["UNH", "LLY", "JNJ", "ISRG", "VRTX"],
+    "Financials":       ["JPM", "V", "MA", "GS", "BLK"],
+    "Energy":           ["XOM", "CVX", "SLB", "OKE", "FSLR"],
+    "Consumer Disc.":   ["AMZN", "TSLA", "HD", "NKE", "BKNG"],
+    "Industrials":      ["CAT", "GE", "RTX", "UBER", "AXON"],
+    "Communications":   ["META", "GOOGL", "NFLX", "DIS", "RBLX"],
     "Consumer Staples": ["COST", "PG", "KO", "WMT", "MNST"],
     "Materials":        ["LIN", "FCX", "NEM", "VMC"],
     "Utilities":        ["NEE", "VST", "CEG", "SO"],
     "Real Estate":      ["PLD", "AMT", "EQIX", "O"],
-}
+})
 
 
 def _get_cap_tier(market_cap) -> str:

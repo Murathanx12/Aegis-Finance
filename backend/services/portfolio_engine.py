@@ -155,19 +155,41 @@ def _apply_goal_adjustment(
 def _shrunk_covariance(
     data: pd.DataFrame,
     returns_data: bool = False,
+    use_denoised: bool = True,
 ) -> pd.DataFrame:
-    """Compute Ledoit-Wolf shrunk covariance matrix.
+    """Compute covariance matrix using the best available method.
 
-    Ledoit-Wolf shrinkage reduces estimation error by shrinking the sample
-    covariance toward a structured estimator. This dramatically improves
-    portfolio optimization stability.
+    Priority:
+    1. Marchenko-Pastur RMT denoising (covariance.py) — best for portfolio optimization
+    2. Ledoit-Wolf shrinkage (pypfopt) — good fallback
+    3. Sample covariance (annualized) — last resort
+
+    Denoised covariance removes noise eigenvalues from the correlation matrix
+    using Random Matrix Theory, producing more stable portfolio weights than
+    even Ledoit-Wolf for typical T/N ratios (252 days / 10-50 assets).
 
     Args:
         data: Price DataFrame (default) or returns DataFrame.
         returns_data: If True, data contains returns instead of prices.
+        use_denoised: If True, try RMT denoising first.
 
-    Falls back to sample covariance if pypfopt is not available.
+    Falls back to Ledoit-Wolf, then sample covariance.
     """
+    returns = data if returns_data else data.pct_change().dropna()
+
+    # Try denoised covariance (Marchenko-Pastur RMT)
+    if use_denoised and len(returns) > 60 and len(returns.columns) >= 3:
+        try:
+            from backend.services.covariance import denoise_covariance
+            cov = denoise_covariance(returns, detone=False)
+            # Annualize
+            cov = cov * 252
+            logger.debug("Using denoised (RMT) covariance matrix")
+            return cov
+        except Exception as e:
+            logger.debug("Denoised covariance failed, falling back: %s", e)
+
+    # Ledoit-Wolf shrinkage
     try:
         from pypfopt import risk_models
         cov = risk_models.CovarianceShrinkage(
@@ -176,9 +198,7 @@ def _shrunk_covariance(
         return cov
     except ImportError:
         logger.warning("pypfopt not available, using sample covariance")
-        if returns_data:
-            return data.cov() * 252
-        return data.pct_change().dropna().cov() * 252
+        return returns.cov() * 252
 
 
 def _fetch_prices(tickers: list[str], period: str = "2y") -> Optional[pd.DataFrame]:

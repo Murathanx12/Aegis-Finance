@@ -1,11 +1,17 @@
 """
-Aegis Finance — DeepSeek LLM Analysis Service
-================================================
+Aegis Finance — LLM Analysis Service (Claude + DeepSeek)
+==========================================================
 
-Uses DeepSeek API (OpenAI-compatible) for:
+Uses Claude API (preferred) or DeepSeek API (fallback) for:
   - Market news summarization
   - Stock outlook analysis (bull/bear thesis)
   - Expectations generation
+  - Portfolio commentary (v9)
+
+Provider priority:
+  1. ANTHROPIC_API_KEY → Claude (Haiku for speed, Sonnet for quality)
+  2. DEEPSEEK_API_KEY → DeepSeek (OpenAI-compatible)
+  3. No key → graceful fallback (returns None)
 
 Graceful fallback: returns None if no API key or rate limited.
 1-hour TTL caching on LLM responses.
@@ -13,6 +19,7 @@ Graceful fallback: returns None if no API key or rate limited.
 Usage:
     from backend.services.llm_analyzer import (
         summarize_market_news, analyze_stock_outlook, generate_expectations,
+        generate_portfolio_commentary, is_available,
     )
 """
 
@@ -26,58 +33,132 @@ from backend.config import config as _cfg
 logger = logging.getLogger(__name__)
 
 _llm_cfg = _cfg.get("llm", {})
+
+# ── Provider Detection ──────────────────────────────────────────────────────
+
+_ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 _DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+
+# Claude models (fast → quality)
+_CLAUDE_MODEL_FAST = _llm_cfg.get("claude_model_fast", "claude-haiku-4-5-20251001")
+_CLAUDE_MODEL_QUALITY = _llm_cfg.get("claude_model_quality", "claude-sonnet-4-6")
+
+# DeepSeek settings
 _DEEPSEEK_BASE_URL = _llm_cfg.get("base_url", "https://api.deepseek.com")
-_MODEL = _llm_cfg.get("model", "deepseek-chat")
+_DEEPSEEK_MODEL = _llm_cfg.get("model", "deepseek-chat")
+
 _MAX_TOKENS = _llm_cfg.get("max_tokens", 500)
 
-_client = None
+_anthropic_client = None
+_openai_client = None
 
 
-def _get_client():
-    """Lazy-init OpenAI client for DeepSeek."""
-    global _client
-    if _client is not None:
-        return _client
+def _get_provider() -> str:
+    """Detect which LLM provider is available."""
+    if _ANTHROPIC_API_KEY:
+        return "claude"
+    elif _DEEPSEEK_API_KEY:
+        return "deepseek"
+    return "none"
 
-    if not _DEEPSEEK_API_KEY:
+
+def _get_anthropic_client():
+    """Lazy-init Anthropic client."""
+    global _anthropic_client
+    if _anthropic_client is not None:
+        return _anthropic_client
+    if not _ANTHROPIC_API_KEY:
+        return None
+    try:
+        import anthropic
+        _anthropic_client = anthropic.Anthropic(api_key=_ANTHROPIC_API_KEY)
+        return _anthropic_client
+    except ImportError:
+        logger.warning("anthropic SDK not installed — Claude unavailable")
+        return None
+    except Exception as e:
+        logger.warning("Failed to init Anthropic client: %s", e)
         return None
 
+
+def _get_openai_client():
+    """Lazy-init OpenAI client for DeepSeek."""
+    global _openai_client
+    if _openai_client is not None:
+        return _openai_client
+    if not _DEEPSEEK_API_KEY:
+        return None
     try:
         from openai import OpenAI
-        _client = OpenAI(
+        _openai_client = OpenAI(
             api_key=_DEEPSEEK_API_KEY,
             base_url=_DEEPSEEK_BASE_URL,
         )
-        return _client
+        return _openai_client
     except ImportError:
-        logger.warning("openai SDK not installed — LLM analysis unavailable")
+        logger.warning("openai SDK not installed — DeepSeek unavailable")
         return None
     except Exception as e:
         logger.warning("Failed to init DeepSeek client: %s", e)
         return None
 
 
-def _call_llm(system_prompt: str, user_prompt: str) -> Optional[str]:
-    """Make a single LLM call. Returns None on failure."""
-    client = _get_client()
-    if client is None:
-        return None
+def _call_llm(
+    system_prompt: str,
+    user_prompt: str,
+    quality: bool = False,
+) -> Optional[str]:
+    """Make a single LLM call. Tries Claude first, then DeepSeek.
 
-    try:
-        response = client.chat.completions.create(
-            model=_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            max_tokens=_MAX_TOKENS,
-            temperature=_llm_cfg.get("temperature", 0.3),
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        logger.warning("DeepSeek API call failed: %s", e)
-        return None
+    Args:
+        system_prompt: System instructions
+        user_prompt: User message
+        quality: If True, use higher-quality model (Sonnet vs Haiku)
+
+    Returns:
+        LLM response text or None on failure.
+    """
+    provider = _get_provider()
+
+    # Try Claude first
+    if provider == "claude":
+        client = _get_anthropic_client()
+        if client:
+            try:
+                model = _CLAUDE_MODEL_QUALITY if quality else _CLAUDE_MODEL_FAST
+                response = client.messages.create(
+                    model=model,
+                    max_tokens=_MAX_TOKENS,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": user_prompt}],
+                )
+                return response.content[0].text.strip()
+            except Exception as e:
+                logger.warning("Claude API call failed: %s", e)
+                # Fall through to DeepSeek
+
+    # Try DeepSeek
+    if _DEEPSEEK_API_KEY:
+        client = _get_openai_client()
+        if client:
+            try:
+                response = client.chat.completions.create(
+                    model=_DEEPSEEK_MODEL,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    max_tokens=_MAX_TOKENS,
+                    temperature=_llm_cfg.get("temperature", 0.3),
+                )
+                return response.choices[0].message.content.strip()
+            except Exception as e:
+                logger.warning("DeepSeek API call failed: %s", e)
+
+    return None
+
+
+# ── Public API ──────────────────────────────────────────────────────────────
 
 
 @cached(ttl=3600, key_prefix="llm_market_summary")
@@ -88,7 +169,7 @@ def summarize_market_news(news_items: list[dict]) -> Optional[dict]:
         news_items: List of {title, publisher, published}
 
     Returns:
-        {summary: str, sentiment: str} or None
+        {summary: str, sentiment: str, provider: str} or None
     """
     if not news_items:
         return None
@@ -120,7 +201,7 @@ def summarize_market_news(news_items: list[dict]) -> Optional[dict]:
     else:
         sentiment = "neutral"
 
-    return {"summary": result, "sentiment": sentiment}
+    return {"summary": result, "sentiment": sentiment, "provider": _get_provider()}
 
 
 @cached(ttl=3600, key_prefix="llm_stock_outlook")
@@ -188,7 +269,6 @@ def analyze_stock_outlook(
             summary = line[8:].strip()
 
     if not bull_case and not bear_case:
-        # Fallback: treat entire response as summary
         return {"summary": result, "bull_case": "", "bear_case": "", "sentiment_score": 0.0}
 
     return {
@@ -196,6 +276,7 @@ def analyze_stock_outlook(
         "bear_case": bear_case,
         "sentiment_score": max(-1.0, min(1.0, score)),
         "summary": summary or result.split("\n")[0],
+        "provider": _get_provider(),
     }
 
 
@@ -237,7 +318,6 @@ def generate_expectations(
     if result is None:
         return None
 
-    # Extract bullet points as catalysts
     catalysts = []
     for line in result.split("\n"):
         line = line.strip()
@@ -250,6 +330,102 @@ def generate_expectations(
     }
 
 
+@cached(ttl=3600, key_prefix="llm_portfolio_commentary")
+def generate_portfolio_commentary(
+    holdings: list[dict],
+    metrics: dict,
+    factor_exposures: Optional[dict] = None,
+    risk_contributions: Optional[dict] = None,
+) -> Optional[dict]:
+    """Generate AI portfolio commentary — Bloomberg PORT Enterprise style.
+
+    Takes portfolio holdings, performance metrics, factor exposures, and risk
+    contributions and produces plain-English analysis a client could read.
+
+    Args:
+        holdings: List of {ticker, weight, return_1m, sector}
+        metrics: {total_return, sharpe, volatility, max_drawdown, ...}
+        factor_exposures: Optional Fama-French factor loadings
+        risk_contributions: Optional per-holding MCTR data
+
+    Returns:
+        {commentary: str, key_points: list[str], risk_alerts: list[str]}
+    """
+    # Build context
+    holdings_str = "\n".join(
+        f"  {h.get('ticker', '?')}: {h.get('weight', 0)*100:.1f}% weight, "
+        f"{h.get('return_1m', 0):.1f}% 1M return, sector={h.get('sector', '?')}"
+        for h in (holdings or [])[:20]
+    )
+
+    metrics_str = ""
+    if metrics:
+        metrics_str = (
+            f"Portfolio Return (1M): {metrics.get('return_1m', 'N/A')}%\n"
+            f"Annualized Volatility: {metrics.get('volatility', 'N/A')}%\n"
+            f"Sharpe Ratio: {metrics.get('sharpe', 'N/A')}\n"
+            f"Max Drawdown: {metrics.get('max_drawdown', 'N/A')}%\n"
+            f"VaR (95%): {metrics.get('var_95', 'N/A')}%\n"
+        )
+
+    factor_str = ""
+    if factor_exposures:
+        factor_str = "Factor Exposures:\n" + "\n".join(
+            f"  {k}: {v:.3f}" for k, v in factor_exposures.items()
+        )
+
+    risk_str = ""
+    if risk_contributions:
+        top_risk = sorted(risk_contributions.items(), key=lambda x: abs(x[1]), reverse=True)[:5]
+        risk_str = "Top Risk Contributors:\n" + "\n".join(
+            f"  {k}: {v*100:.1f}% of portfolio risk" for k, v in top_risk
+        )
+
+    system = (
+        "You are a portfolio analyst writing a monthly client report. "
+        "Write a 3-4 paragraph portfolio commentary covering: "
+        "1) Performance summary and key drivers, "
+        "2) Risk assessment and concentration concerns, "
+        "3) Factor tilts and style observations, "
+        "4) Recommendations or areas to monitor. "
+        "Be professional, specific, and actionable. No disclaimers. "
+        "End with 3 bullet-point key takeaways."
+    )
+    user = (
+        f"Portfolio Holdings:\n{holdings_str}\n\n"
+        f"Performance Metrics:\n{metrics_str}\n"
+        f"{factor_str}\n{risk_str}"
+    )
+
+    result = _call_llm(system, user, quality=True)
+    if result is None:
+        return None
+
+    # Extract key points (bullet points at the end)
+    key_points = []
+    risk_alerts = []
+    for line in result.split("\n"):
+        line = line.strip()
+        if line.startswith(("-", "*", "•")) and len(line) > 10:
+            point = line.lstrip("-*• ")
+            if any(w in point.lower() for w in ["risk", "concern", "warning", "alert", "concentration"]):
+                risk_alerts.append(point)
+            else:
+                key_points.append(point)
+
+    return {
+        "commentary": result,
+        "key_points": key_points[:5],
+        "risk_alerts": risk_alerts[:3],
+        "provider": _get_provider(),
+    }
+
+
 def is_available() -> bool:
-    """Check if LLM analysis is available (API key configured + SDK installed)."""
-    return bool(_DEEPSEEK_API_KEY) and _get_client() is not None
+    """Check if LLM analysis is available (any API key configured + SDK installed)."""
+    provider = _get_provider()
+    if provider == "claude":
+        return _get_anthropic_client() is not None
+    elif provider == "deepseek":
+        return _get_openai_client() is not None
+    return False

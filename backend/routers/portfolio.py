@@ -2,8 +2,10 @@
 Portfolio Analytics Router
 ============================
 
-POST /api/portfolio/analyze  — Analyze existing portfolio
-POST /api/portfolio/build    — Build goal-based portfolio
+POST /api/portfolio/analyze      — Analyze existing portfolio
+POST /api/portfolio/build        — Build goal-based portfolio
+POST /api/portfolio/optimize     — Advanced optimization (CVaR, risk parity, etc.)
+POST /api/portfolio/compare      — Compare all optimization methods
 """
 
 import asyncio
@@ -124,4 +126,157 @@ async def build_portfolio(request: BuildRequest):
         return result
     except Exception as e:
         logger.error("portfolio build failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Advanced Optimization ──────────────────────────────────────────
+
+
+class OptimizeRequest(BaseModel):
+    tickers: list[str] = Field(..., min_length=2, max_length=50)
+    method: str = Field("mean_cvar", pattern="^(mean_cvar|risk_parity|max_diversification|hrp)$")
+    lookback_days: int = Field(504, ge=126, le=1260)
+
+
+@router.post("/optimize")
+async def optimize_portfolio(request: OptimizeRequest):
+    """Advanced portfolio optimization with institutional methods.
+
+    Methods:
+    - mean_cvar: Minimize Conditional VaR (tail risk)
+    - risk_parity: Equal risk contribution
+    - max_diversification: Maximize diversification ratio
+    - hrp: Hierarchical Risk Parity
+    """
+    from backend.services.portfolio_optimizer import (
+        optimize_mean_cvar, optimize_risk_parity,
+        optimize_max_diversification, optimize_hrp,
+    )
+
+    tickers = [t.upper() for t in request.tickers]
+    method_map = {
+        "mean_cvar": optimize_mean_cvar,
+        "risk_parity": optimize_risk_parity,
+        "max_diversification": optimize_max_diversification,
+        "hrp": optimize_hrp,
+    }
+
+    fn = method_map.get(request.method)
+    if not fn:
+        raise HTTPException(status_code=422, detail=f"Unknown method: {request.method}")
+
+    try:
+        result = await asyncio.to_thread(fn, tickers, request.lookback_days)
+        if result is None:
+            raise HTTPException(status_code=404, detail="Insufficient data for optimization")
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("portfolio optimization failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class AttributionRequest(BaseModel):
+    holdings: list[Holding] = Field(..., min_length=1, max_length=50)
+    benchmark: str = Field("SPY", min_length=1, max_length=10)
+    period: str = Field("1mo", pattern="^(1mo|3mo|1y|ytd)$")
+
+
+@router.post("/attribution")
+async def portfolio_attribution(request: AttributionRequest):
+    """Brinson-Fachler performance attribution vs benchmark (Bloomberg PORT style).
+
+    Decomposes active return into: allocation effect, selection effect, interaction effect.
+    """
+    from backend.services.attribution import full_portfolio_analytics
+
+    holdings_data = [h.model_dump() for h in request.holdings]
+    try:
+        result = await asyncio.to_thread(
+            full_portfolio_analytics, holdings_data, request.benchmark, request.period
+        )
+        if result is None:
+            raise HTTPException(status_code=404, detail="Insufficient data for attribution")
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("portfolio attribution failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class RiskContribRequest(BaseModel):
+    tickers: list[str] = Field(..., min_length=2, max_length=50)
+    weights: list[float] = Field(..., min_length=2, max_length=50)
+
+
+@router.post("/risk-contributions")
+async def risk_contributions(request: RiskContribRequest):
+    """Marginal Contribution to Risk (MCTR) — which holdings drive portfolio risk."""
+    from backend.services.attribution import compute_risk_contributions
+
+    tickers = [t.upper() for t in request.tickers]
+    try:
+        result = await asyncio.to_thread(
+            compute_risk_contributions, tickers, request.weights
+        )
+        if result is None:
+            raise HTTPException(status_code=404, detail="Insufficient data for risk contribution")
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("risk contribution failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/commentary")
+async def portfolio_commentary(request: AnalyzeRequest):
+    """AI-generated portfolio commentary (Bloomberg PORT Enterprise style)."""
+    from backend.services.llm_analyzer import generate_portfolio_commentary, is_available
+
+    if not is_available():
+        raise HTTPException(status_code=503, detail="No LLM provider configured (set ANTHROPIC_API_KEY or DEEPSEEK_API_KEY)")
+
+    holdings_data = [
+        {"ticker": h.ticker, "weight": h.shares * h.current_price, "sector": ""}
+        for h in request.holdings
+    ]
+    # Normalize weights
+    total = sum(h["weight"] for h in holdings_data)
+    if total > 0:
+        for h in holdings_data:
+            h["weight"] /= total
+
+    try:
+        result = await asyncio.to_thread(
+            generate_portfolio_commentary, holdings_data, {}, None, None
+        )
+        if result is None:
+            raise HTTPException(status_code=500, detail="LLM analysis failed")
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("portfolio commentary failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class CompareRequest(BaseModel):
+    tickers: list[str] = Field(..., min_length=2, max_length=50)
+    lookback_days: int = Field(504, ge=126, le=1260)
+
+
+@router.post("/compare")
+async def compare_portfolios(request: CompareRequest):
+    """Compare all optimization methods side-by-side (Bloomberg PORT style)."""
+    from backend.services.portfolio_optimizer import compare_methods
+
+    tickers = [t.upper() for t in request.tickers]
+    try:
+        result = await asyncio.to_thread(compare_methods, tickers, request.lookback_days)
+        return result
+    except Exception as e:
+        logger.error("portfolio comparison failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))

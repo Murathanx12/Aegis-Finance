@@ -150,6 +150,122 @@ export function projectPortfolio(holdings: Holding[], years = 1, monthlyAdd = 0)
   });
 }
 
+// ── v9 Advanced Analytics ────────────────────────────────────
+
+// Liquidity Risk
+export function getLiquidity(ticker: string) {
+  return fetchAPI<LiquidityMetrics>(`/api/analytics/liquidity/${ticker}`);
+}
+
+// Copula Tail Dependence
+export function getCopulaPair(tickerA: string, tickerB: string) {
+  return fetchAPI<CopulaPairResult>(`/api/analytics/copula/${tickerA}/${tickerB}`);
+}
+
+// Factor Model (FF6 = FF5 + Momentum)
+export function getFactorDecomposition(ticker: string) {
+  return fetchAPI<FactorDecomposition>(`/api/analytics/factors-ff6/${ticker}`);
+}
+
+export function getFactorDecompositionFF5(ticker: string) {
+  return fetchAPI<FactorDecomposition>(`/api/analytics/factors/${ticker}`);
+}
+
+// Momentum Rankings
+export function getMomentumRankings() {
+  return fetchAPI<MomentumRankings>("/api/analytics/momentum");
+}
+
+// Economic Surprise
+export function getEconomicSurprise() {
+  return fetchAPI<EconomicSurprise>("/api/analytics/economic-surprise");
+}
+
+// Stress Testing
+export function getStressScenarios() {
+  return fetchAPI<StressScenarios>("/api/analytics/scenarios");
+}
+
+export function stressTestStock(ticker: string) {
+  return fetchAPI<StressTestResult>(`/api/analytics/stress-test/${ticker}`);
+}
+
+export function hypotheticalStress(weights: Record<string, number>, shocks: Record<string, number>) {
+  return fetchAPI<HypotheticalStressResult>("/api/analytics/stress-test/hypothetical", {
+    method: "POST",
+    body: JSON.stringify({ weights, shocks }),
+  });
+}
+
+// Crash Timeline
+export function getCrashTimeline() {
+  return fetchAPI<CrashTimeline>("/api/analytics/crash-timeline");
+}
+
+// Changepoint Detection
+export function getChangepoint() {
+  return fetchAPI<ChangepointResult>("/api/analytics/changepoint");
+}
+
+// Covariance Diagnostics
+export function getCovarianceDiagnostics() {
+  return fetchAPI<CovarianceDiagnostics>("/api/analytics/covariance-diagnostics");
+}
+
+// Insider Trading
+export function getInsiderTrading(ticker: string) {
+  return fetchAPI<InsiderTradingResult>(`/api/stock/${ticker}/insiders`);
+}
+
+// Portfolio Attribution (Brinson-Fachler)
+export function getPortfolioAttribution(holdings: Holding[], benchmark = "SPY", period = "1mo") {
+  return fetchAPI<AttributionResult>("/api/portfolio/attribution", {
+    method: "POST",
+    body: JSON.stringify({ holdings, benchmark, period }),
+  });
+}
+
+// Risk Contributions (MCTR)
+export function getRiskContributions(tickers: string[], weights: number[]) {
+  return fetchAPI<RiskContributions>("/api/portfolio/risk-contributions", {
+    method: "POST",
+    body: JSON.stringify({ tickers, weights }),
+  });
+}
+
+// Advanced Portfolio Optimization
+export function optimizePortfolio(tickers: string[], method = "mean_cvar") {
+  return fetchAPI<OptimizationResult>("/api/portfolio/optimize", {
+    method: "POST",
+    body: JSON.stringify({ tickers, method }),
+  });
+}
+
+export function comparePortfolioMethods(tickers: string[]) {
+  return fetchAPI<ComparisonResult>("/api/portfolio/compare", {
+    method: "POST",
+    body: JSON.stringify({ tickers }),
+  });
+}
+
+// AI Portfolio Commentary
+export function getPortfolioCommentary(holdings: Holding[]) {
+  return fetchAPI<PortfolioCommentary>("/api/portfolio/commentary", {
+    method: "POST",
+    body: JSON.stringify({ holdings }),
+  });
+}
+
+// Stock Sentiment
+export function getStockSentiment(ticker: string) {
+  return fetchAPI<StockSentiment>(`/api/stock/${ticker}/sentiment`);
+}
+
+// Stock Fundamentals (SEC EDGAR)
+export function getStockFundamentals(ticker: string) {
+  return fetchAPI<StockFundamentals>(`/api/stock/${ticker}/fundamentals`);
+}
+
 // ── Types ──────────────────────────────────────────────────
 
 export interface MarketStatus {
@@ -668,4 +784,185 @@ export interface TailDependenceResponse {
     diversification_quality: string;
   };
   error?: string;
+}
+
+// ── v9 Types ──────────────────────────────────────────────────
+
+export interface LiquidityMetrics {
+  ticker: string;
+  metrics: {
+    amihud_illiquidity: number | null;
+    roll_spread_bps: number | null;
+    avg_dollar_volume_mm: number;
+    daily_turnover_pct: number | null;
+  };
+  risk: {
+    var_95: number | null;
+    lvar_95: number | null;
+    liquidity_cost_bps: number | null;
+  };
+  score: { composite: number; tier: string };
+  interpretation: string;
+}
+
+export interface CopulaPairResult {
+  pair: string;
+  correlation: { pearson: number; kendall_tau: number };
+  copula: {
+    best: { family: string; tail_lower: number; tail_upper: number };
+    selection: string;
+  };
+  tail_dependence: { lower: number; upper: number };
+  interpretation: string;
+}
+
+export interface FactorDecomposition {
+  ticker: string;
+  model: string;
+  r_squared: number;
+  alpha_annual: number;
+  alpha_significant: boolean;
+  factors: Record<string, { loading: number; t_stat: number | null; significant: boolean }>;
+  style: Record<string, string>;
+  residual_vol: number | null;
+}
+
+export interface MomentumRankings {
+  rankings: {
+    ticker: string;
+    composite_score: number;
+    rank: number;
+    sector: string;
+    return_1m: number;
+    return_3m: number;
+    return_6m: number;
+    return_12m: number;
+  }[];
+  summary: { n_stocks: number; avg_score: number; pct_positive: number };
+}
+
+export interface EconomicSurprise {
+  composite_score: number;
+  signal: string;
+  trend: string;
+  indicators: Record<string, { surprise: number; direction: string }>;
+}
+
+export interface StressScenarios {
+  scenarios: {
+    id: string;
+    name: string;
+    start: string;
+    end: string;
+    sp500_drawdown: number;
+    description: string;
+  }[];
+}
+
+export interface StressTestResult {
+  ticker: string;
+  scenarios: Record<string, { name: string; projected_drawdown: number }>;
+}
+
+export interface HypotheticalStressResult {
+  shocks_applied: Record<string, number>;
+  portfolio_estimated_return: number;
+  stock_impacts: Record<string, {
+    weight_pct: number;
+    estimated_return: number;
+    sector: string;
+  }>;
+  interpretation: string;
+}
+
+export interface CrashTimeline {
+  months: { month: number; date: string; crash_prob: number }[];
+  methodology: string;
+}
+
+export interface ChangepointResult {
+  changepoint_detected: boolean;
+  days_since_changepoint: number;
+  max_changepoint_prob: number;
+  interpretation: string;
+}
+
+export interface CovarianceDiagnostics {
+  dimensions: { T: number; N: number; q: number };
+  signal_eigenvalues: number;
+  noise_eigenvalues: number;
+  condition_number: { raw: number; denoised: number; improvement: number };
+}
+
+export interface InsiderTradingResult {
+  ticker: string;
+  signal: number;
+  cluster_buy: boolean;
+  interpretation: string;
+  n_buys: number;
+  n_sells: number;
+}
+
+export interface AttributionResult {
+  attribution: {
+    allocation: number;
+    selection: number;
+    interaction: number;
+    total: number;
+  };
+  sector_detail: Record<string, {
+    portfolio_weight: number;
+    benchmark_weight: number;
+    allocation_effect: number;
+    selection_effect: number;
+    total_effect: number;
+  }>;
+  interpretation: string;
+}
+
+export interface RiskContributions {
+  portfolio_volatility_annual: number;
+  contributions: Record<string, {
+    weight_pct: number;
+    mctr: number;
+    risk_contribution_pct: number;
+    risk_weight_ratio: number;
+  }>;
+  concentration: { top_5_risk_pct: number; concentrated: boolean };
+}
+
+export interface OptimizationResult {
+  method: string;
+  weights: Record<string, number>;
+  n_assets: number;
+  metrics: {
+    expected_return: number | null;
+    volatility: number | null;
+    sharpe_ratio: number | null;
+  };
+}
+
+export interface ComparisonResult {
+  methods: Record<string, OptimizationResult>;
+  recommendation: string;
+}
+
+export interface PortfolioCommentary {
+  commentary: string;
+  key_points: string[];
+  risk_alerts: string[];
+  provider: string;
+}
+
+export interface StockSentiment {
+  ticker: string;
+  overall: string;
+  avg_score: number;
+  headlines: { title: string; sentiment: string; score: number }[];
+}
+
+export interface StockFundamentals {
+  ticker: string;
+  piotroski_f_score: number;
+  financials: Record<string, number | null>;
 }

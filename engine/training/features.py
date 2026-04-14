@@ -286,8 +286,8 @@ def build_feature_matrix(
                 s = s.reindex(df.index).ffill()
                 col = f"fred_{k}"
                 fred_cols[col] = s
-                fred_cols[f"{col}_chg_3m"] = s.pct_change(63)
-                fred_cols[f"{col}_chg_12m"] = s.pct_change(252)
+                fred_cols[f"{col}_chg_3m"] = s.pct_change(63, fill_method=None)
+                fred_cols[f"{col}_chg_12m"] = s.pct_change(252, fill_method=None)
                 col_mean = s.rolling(252).mean()
                 col_std = s.rolling(252).std()
                 fred_cols[f"{col}_zscore"] = (s - col_mean) / col_std.replace(
