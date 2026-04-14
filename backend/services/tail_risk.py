@@ -66,7 +66,6 @@ def compute_tail_risk_metrics(
     excess = returns - rf_daily
 
     # ── Downside Deviation (Sortino & Price, 1994) ──────────────────────
-    downside = returns[returns < threshold]
     downside_dev_daily = float(np.sqrt(np.mean(np.minimum(returns - threshold, 0) ** 2)))
     downside_dev_annual = downside_dev_daily * np.sqrt(252)
 

@@ -203,3 +203,79 @@ class TestGetFactorData:
             assert isinstance(df, pd.DataFrame)
             assert "Mkt-RF" in df.columns
             assert "RF" in df.columns
+
+
+# ── Cache timestamp isolation ─────────────────────────────────────
+
+
+class TestCacheTimestampIsolation:
+    """Regression test: _FACTOR_CACHE_TS must be per-key, not shared."""
+
+    def test_cache_ts_is_dict(self):
+        """Cache timestamp storage must be a dict (per-key), not a single float."""
+        from backend.services.factor_model import _FACTOR_CACHE_TS
+        assert isinstance(_FACTOR_CACHE_TS, dict), (
+            "_FACTOR_CACHE_TS should be a dict for per-key timestamps, "
+            f"got {type(_FACTOR_CACHE_TS)}"
+        )
+
+
+# ── Factor exposure in stock analysis ────────────────────────────
+
+
+class TestFactorExposureIntegration:
+    """Test that _get_factor_exposure returns compact factor summary."""
+
+    @patch("backend.services.factor_model.decompose_stock")
+    def test_returns_compact_summary(self, mock_decompose):
+        from backend.services.stock_analyzer import _get_factor_exposure
+
+        mock_decompose.return_value = {
+            "ticker": "TEST",
+            "observations": 300,
+            "r_squared": 0.45,
+            "adjusted_r_squared": 0.44,
+            "alpha_daily": 0.0002,
+            "alpha_annual": 0.05,
+            "alpha_significant": True,
+            "factors": {
+                "Mkt-RF": {"loading": 1.2, "t_stat": 12.0, "p_value": 0.001, "significant": True},
+                "SMB": {"loading": -0.1, "t_stat": -1.0, "p_value": 0.3, "significant": False},
+                "HML": {"loading": 0.3, "t_stat": 3.0, "p_value": 0.003, "significant": True},
+                "RMW": {"loading": 0.2, "t_stat": 2.0, "p_value": 0.05, "significant": True},
+                "CMA": {"loading": 0.0, "t_stat": 0.1, "p_value": 0.9, "significant": False},
+            },
+            "style": {"market": "aggressive", "value": "value", "size": "neutral",
+                       "profitability": "quality", "investment": "neutral"},
+            "residual_vol": 0.18,
+        }
+
+        prices = _make_mock_price_series(300)
+        result = _get_factor_exposure("TEST", prices)
+
+        assert result is not None
+        assert result["alpha_annual"] == 0.05
+        assert result["r_squared"] == 0.45
+        assert result["alpha_significant"] is True
+        assert "loadings" in result
+        assert result["loadings"]["Mkt-RF"] == 1.2
+        assert "style" in result
+        assert result["style"]["market"] == "aggressive"
+        # Loadings should be flat floats, not nested dicts with t_stat/p_value
+        assert isinstance(result["loadings"]["Mkt-RF"], float)
+
+    @patch("backend.services.factor_model.decompose_stock")
+    def test_returns_none_on_failure(self, mock_decompose):
+        from backend.services.stock_analyzer import _get_factor_exposure
+
+        mock_decompose.return_value = None
+        result = _get_factor_exposure("FAIL", _make_mock_price_series(100))
+        assert result is None
+
+    @patch("backend.services.factor_model.decompose_stock")
+    def test_returns_none_on_exception(self, mock_decompose):
+        from backend.services.stock_analyzer import _get_factor_exposure
+
+        mock_decompose.side_effect = Exception("network error")
+        result = _get_factor_exposure("ERR", _make_mock_price_series(100))
+        assert result is None
