@@ -1,0 +1,56 @@
+{
+  "cycle": 52,
+  "timestamp": "2026-04-15T03:15:00.000000",
+  "title": "Bug fixes (3) + factor exposure integration into stock analysis",
+  "category": "quantitative",
+  "observation": {
+    "bugs_found": [
+      "backtest.py: overlapping 3M return compounding — monthly eval with 3M forward returns produces overlapping observations, compounded as prod() inflating total returns by 3x",
+      "factor_model.py: shared _FACTOR_CACHE_TS timestamp for both ff5_daily and mom_daily cache keys — loading momentum resets ff5 validity, causing stale data to be served",
+      "tail_risk.py: dead code — 'downside = returns[returns < threshold]' computed but never used"
+    ],
+    "gap_identified": "Factor model exposures exist as separate API endpoint but are NOT included in the stock analysis response — requires a second API call to show factor decomposition on stock pages"
+  },
+  "implementation": {
+    "bugs_fixed": [
+      "backtest.py: use non-overlapping quarterly sampling (every 3rd observation) for total return compounding and Sharpe ratio, preserving all monthly observations for hit-rate statistics",
+      "factor_model.py: changed _FACTOR_CACHE_TS from a single float to a per-key dict so ff5 and momentum cache entries have independent expiry timestamps",
+      "tail_risk.py: removed unused 'downside' variable"
+    ],
+    "feature_built": "Integrated Fama-French factor exposure into stock analysis response — reuses already-fetched price data to avoid redundant yfinance calls. Returns compact summary: alpha, factor loadings, style classification, R-squared, residual vol. Stock page can now show factor decomposition without a second API call.",
+    "files_changed": [
+      "backend/services/backtest.py",
+      "backend/services/factor_model.py",
+      "backend/services/tail_risk.py",
+      "backend/services/stock_analyzer.py",
+      "backend/tests/test_factor_model.py"
+    ],
+    "files_created": [
+      "backend/tests/test_backtest.py",
+      "lab/experiments/cycle_052/experiment_report.json"
+    ],
+    "packages_installed": []
+  },
+  "validation": {
+    "tests_written": 12,
+    "tests_passing": 12,
+    "regressions": 0
+  },
+  "assessment": {
+    "verdict": "improved",
+    "confidence": "high",
+    "depth": 3,
+    "limitations": [
+      "Backtest fix uses simple every-3rd-row sampling; a more sophisticated approach would use date-aligned quarterly windows",
+      "Factor exposure adds latency to stock analysis from Kenneth French data download (cached for 24h)",
+      "Factor exposure returns None for stocks with <126 days of overlapping data with factor data"
+    ],
+    "self_critique": "Could have also integrated factor exposure into the screener/signal_engine as a quality signal (high-alpha stocks get a boost). That would be a natural next step."
+  },
+  "next_steps": [
+    "Integrate factor alpha as a signal component in stock signals (quality alpha -> bullish tilt)",
+    "Add factor exposure display on frontend stock analysis page",
+    "Wire copula tail dependence into portfolio analysis response",
+    "Add liquidity-adjusted position sizing in portfolio optimizer"
+  ]
+}

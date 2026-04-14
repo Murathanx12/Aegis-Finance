@@ -315,6 +315,10 @@ def analyze_stock(
         beta=beta,
     )
 
+    # Fama-French factor decomposition — reuse already-fetched prices to avoid
+    # redundant yfinance call.  Non-blocking: failure returns None.
+    factor_exposure = _get_factor_exposure(ticker, prices)
+
     return {
         "ticker": ticker, "name": company_name, "sector": sector,
         "current_price": current_price,
@@ -360,6 +364,8 @@ def analyze_stock(
             "jump_freq_mult": options_calibration.get("jump_freq_mult"),
             "jump_mag_adj": options_calibration.get("jump_mag_adj"),
         } if options_calibration else None,
+        # Fama-French factor exposure (alpha, betas, style classification)
+        "factor_exposure": factor_exposure,
     }
 
 
@@ -566,6 +572,34 @@ def _get_key_stats(info: dict, returns, current_price: float) -> Optional[dict]:
         return stats if stats else None
     except (AttributeError, KeyError, TypeError, ValueError) as e:
         logger.debug("Key stats extraction failed — %s", e)
+        return None
+
+
+def _get_factor_exposure(ticker: str, prices) -> Optional[dict]:
+    """Compute Fama-French factor decomposition reusing already-fetched prices.
+
+    Returns a compact summary: alpha, factor loadings, style, R².
+    Returns None on failure (non-blocking).
+    """
+    try:
+        from backend.services.factor_model import decompose_stock
+        result = decompose_stock(ticker, price_series=prices)
+        if result is None:
+            return None
+        # Return compact version (drop per-factor p-values/t-stats for brevity)
+        loadings = {}
+        for name, detail in result.get("factors", {}).items():
+            loadings[name] = detail["loading"]
+        return {
+            "alpha_annual": result["alpha_annual"],
+            "alpha_significant": result.get("alpha_significant", False),
+            "r_squared": result["r_squared"],
+            "loadings": loadings,
+            "style": result.get("style", {}),
+            "residual_vol": result.get("residual_vol"),
+        }
+    except Exception as e:
+        logger.debug("%s: factor exposure failed — %s", ticker, e)
         return None
 
 

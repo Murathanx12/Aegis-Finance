@@ -219,6 +219,11 @@ def evaluate_backtest(df: pd.DataFrame) -> dict:
     # Signal-following strategy vs buy-and-hold
     # Strategy: invest when Buy/Strong Buy, cash when Sell/Strong Sell, 50% when Hold
     # Track with and without execution costs
+    #
+    # IMPORTANT: Forward returns are 3-month windows evaluated monthly, so they
+    # overlap. We collect ALL monthly observations for hit-rate / avg-return stats,
+    # but use only non-overlapping quarterly observations (every 3rd row) for
+    # total-return compounding and Sharpe ratios to avoid double-counting.
     strategy_returns_gross = []
     strategy_returns_net = []
     bh_returns = []
@@ -227,7 +232,7 @@ def evaluate_backtest(df: pd.DataFrame) -> dict:
     cost_per_trade = round_trip_cost["total_pct"] / 100  # as a fraction
     total_trades = 0
 
-    for _, row in df.iterrows():
+    for idx, (_, row) in enumerate(df.iterrows()):
         fwd = row["forward_3m_return"] / 100
         action = row["signal_action"]
 
@@ -254,13 +259,20 @@ def evaluate_backtest(df: pd.DataFrame) -> dict:
     strategy_arr_net = np.array(strategy_returns_net)
     bh_arr = np.array(bh_returns)
 
-    strategy_sharpe_gross = float(np.mean(strategy_arr_gross) / max(np.std(strategy_arr_gross), 1e-8) * np.sqrt(4))
-    strategy_sharpe_net = float(np.mean(strategy_arr_net) / max(np.std(strategy_arr_net), 1e-8) * np.sqrt(4))
-    bh_sharpe = float(np.mean(bh_arr) / max(np.std(bh_arr), 1e-8) * np.sqrt(4))
+    # Use non-overlapping quarterly observations (every 3rd) for compounding
+    # and Sharpe to avoid inflating returns from overlapping 3M windows.
+    q_idx = np.arange(0, len(strategy_arr_gross), 3)
+    strategy_q_gross = strategy_arr_gross[q_idx]
+    strategy_q_net = strategy_arr_net[q_idx]
+    bh_q = bh_arr[q_idx]
 
-    strategy_total_gross = float((1 + strategy_arr_gross).prod() - 1) * 100
-    strategy_total_net = float((1 + strategy_arr_net).prod() - 1) * 100
-    bh_total = float((1 + bh_arr).prod() - 1) * 100
+    strategy_sharpe_gross = float(np.mean(strategy_q_gross) / max(np.std(strategy_q_gross), 1e-8) * np.sqrt(4))
+    strategy_sharpe_net = float(np.mean(strategy_q_net) / max(np.std(strategy_q_net), 1e-8) * np.sqrt(4))
+    bh_sharpe = float(np.mean(bh_q) / max(np.std(bh_q), 1e-8) * np.sqrt(4))
+
+    strategy_total_gross = float((1 + strategy_q_gross).prod() - 1) * 100
+    strategy_total_net = float((1 + strategy_q_net).prod() - 1) * 100
+    bh_total = float((1 + bh_q).prod() - 1) * 100
 
     # Period analysis — identify which periods failed
     period_analysis = []

@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 # Kenneth French data library — standard academic source
 _FACTOR_CACHE: dict = {}
-_FACTOR_CACHE_TS: float = 0.0
+_FACTOR_CACHE_TS: dict[str, float] = {}  # per-key timestamps
 _CACHE_TTL = 86400  # 24 hours
 
 
@@ -47,7 +47,7 @@ def get_factor_data(lookback_days: Optional[int] = None) -> Optional[pd.DataFram
 
     now = time.time()
     cache_key = "ff5_daily"
-    if cache_key in _FACTOR_CACHE and (now - _FACTOR_CACHE_TS) < _CACHE_TTL:
+    if cache_key in _FACTOR_CACHE and (now - _FACTOR_CACHE_TS.get(cache_key, 0)) < _CACHE_TTL:
         df = _FACTOR_CACHE[cache_key]
         if lookback_days and len(df) > lookback_days:
             return df.iloc[-lookback_days:]
@@ -70,7 +70,7 @@ def get_factor_data(lookback_days: Optional[int] = None) -> Optional[pd.DataFram
         df = df.sort_index()
 
         _FACTOR_CACHE[cache_key] = df
-        _FACTOR_CACHE_TS = now
+        _FACTOR_CACHE_TS[cache_key] = now
 
         logger.info("Loaded %d days of Fama-French 5-factor data", len(df))
 
@@ -276,7 +276,7 @@ def get_momentum_factor(lookback_days: Optional[int] = None) -> Optional[pd.Data
 
     now = time.time()
     cache_key = "mom_daily"
-    if cache_key in _FACTOR_CACHE and (now - _FACTOR_CACHE_TS) < _CACHE_TTL:
+    if cache_key in _FACTOR_CACHE and (now - _FACTOR_CACHE_TS.get(cache_key, 0)) < _CACHE_TTL:
         df = _FACTOR_CACHE[cache_key]
         if lookback_days and len(df) > lookback_days:
             return df.iloc[-lookback_days:]
@@ -294,7 +294,7 @@ def get_momentum_factor(lookback_days: Optional[int] = None) -> Optional[pd.Data
         df = df.sort_index()
 
         _FACTOR_CACHE[cache_key] = df
-        _FACTOR_CACHE_TS = now
+        _FACTOR_CACHE_TS[cache_key] = now
 
         logger.info("Loaded %d days of Momentum factor data", len(df))
 
