@@ -165,6 +165,35 @@ def main():
     logger.info("Step 6: Saving model to %s", output_path)
     predictor.save_model(str(output_path))
 
+    # ── Step 6b: Calibrate conformal prediction intervals ───────────
+    logger.info("Step 6b: Calibrating conformal prediction intervals...")
+    try:
+        from backend.services.conformal_predictor import ConformalCrashPredictor
+
+        # Use last 20% of data as conformal calibration set
+        # (separate from the model's own calibration split)
+        n_total = len(features_selected)
+        cal_start = int(n_total * 0.8)
+        cal_features = features_selected.iloc[cal_start:]
+        cal_targets = {
+            h: t.iloc[cal_start:]
+            for h, t in crash_targets.items()
+        }
+
+        conformal = ConformalCrashPredictor()
+        cal_results = conformal.calibrate(predictor, cal_features, cal_targets)
+        for h, r in cal_results.items():
+            logger.info(
+                "  Conformal %s: n=%d, median_score=%.4f, p90=%.4f",
+                h, r["n_calibration"], r["score_median"], r["score_p90"],
+            )
+
+        conformal_path = output_path.parent / "conformal_scores.pkl"
+        conformal.save(str(conformal_path))
+        logger.info("  Conformal scores saved to %s", conformal_path)
+    except Exception as e:
+        logger.warning("Conformal calibration failed (non-fatal): %s", e)
+
     # ── Step 7: Validation smoke test ───────────────────────────────
     logger.info("Step 7: Smoke test — predicting on latest data...")
     latest_features = features_selected.iloc[[-1]]

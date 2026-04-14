@@ -57,7 +57,10 @@ def _fetch_fred_series(series_id: str) -> Optional[pd.Series]:
         if not fred_key:
             return None
         fred = Fred(api_key=fred_key)
-        data = fred.get_series(series_id, observation_start="2020-01-01")
+        # Dynamic start date based on lookback config (was hardcoded to "2020-01-01",
+        # which caused the trend window to include increasingly stale data over time)
+        start_date = (pd.Timestamp.now() - pd.DateOffset(years=_LOOKBACK_YEARS + 1)).strftime("%Y-%m-%d")
+        data = fred.get_series(series_id, observation_start=start_date)
         if data is not None and not data.empty:
             return data.dropna()
         return None

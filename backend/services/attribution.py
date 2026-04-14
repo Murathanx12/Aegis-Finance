@@ -196,6 +196,94 @@ def _build_sector_map() -> dict[str, str]:
     return mapping
 
 
+def _build_sector_benchmark(
+    portfolio_tickers: list[str],
+    returns: dict[str, float],
+    sector_map: dict[str, str],
+    benchmark_ticker: str,
+) -> tuple[dict[str, float], dict[str, float]]:
+    """Build sector-level benchmark weights for Brinson-Fachler attribution.
+
+    Approximates the benchmark (e.g., SPY) by distributing its total return
+    across the sectors represented in the portfolio, using approximate S&P 500
+    sector weights. This makes allocation effects meaningful.
+
+    Returns:
+        (benchmark_weights, benchmark_returns) dicts keyed by representative ticker.
+    """
+    # Approximate S&P 500 sector weights (updated periodically, ~2024-2025 averages)
+    _SP500_SECTOR_WEIGHTS = {
+        "Technology": 0.30,
+        "Healthcare": 0.12,
+        "Financials": 0.13,
+        "Consumer Disc.": 0.10,
+        "Communications": 0.09,
+        "Industrials": 0.08,
+        "Consumer Staples": 0.06,
+        "Energy": 0.04,
+        "Utilities": 0.03,
+        "Real Estate": 0.02,
+        "Materials": 0.03,
+    }
+
+    # Find which sectors the portfolio touches
+    portfolio_sectors = set()
+    for t in portfolio_tickers:
+        sec = sector_map.get(t)
+        if sec:
+            portfolio_sectors.add(sec)
+
+    if not portfolio_sectors:
+        # Fallback: can't determine sectors, use SPY as single benchmark
+        return (
+            {benchmark_ticker: 1.0},
+            {benchmark_ticker: returns.get(benchmark_ticker, 0.0)},
+        )
+
+    # For each portfolio sector, pick a representative benchmark ticker from config.
+    # Use the first ticker in each sector's stock list as representative.
+    sector_stocks = config.get("stock_universe", {}).get("sector_stocks", {})
+    bench_weights = {}
+    bench_returns = {}
+
+    # Only include sectors present in both portfolio and benchmark definition
+    included_sectors = [s for s in portfolio_sectors if s in _SP500_SECTOR_WEIGHTS]
+    if not included_sectors:
+        return (
+            {benchmark_ticker: 1.0},
+            {benchmark_ticker: returns.get(benchmark_ticker, 0.0)},
+        )
+
+    # Normalize weights to sum to 1.0 for included sectors
+    total_w = sum(_SP500_SECTOR_WEIGHTS.get(s, 0) for s in included_sectors)
+    if total_w <= 0:
+        total_w = 1.0
+
+    for sector in included_sectors:
+        # Use first available ticker from the sector with return data as proxy
+        sector_tickers = sector_stocks.get(sector, [])
+        representative = None
+        for st in sector_tickers:
+            if st in returns:
+                representative = st
+                break
+
+        if representative is None:
+            continue
+
+        norm_w = _SP500_SECTOR_WEIGHTS.get(sector, 0) / total_w
+        bench_weights[representative] = norm_w
+        bench_returns[representative] = returns.get(representative, 0.0)
+
+    if not bench_weights:
+        return (
+            {benchmark_ticker: 1.0},
+            {benchmark_ticker: returns.get(benchmark_ticker, 0.0)},
+        )
+
+    return bench_weights, bench_returns
+
+
 def _interpret_attribution(
     allocation: float,
     selection: float,
@@ -468,11 +556,21 @@ def full_portfolio_analytics(
             for h in holdings
         }
 
-    # Fetch returns for portfolio + benchmark
+    # Fetch returns for portfolio + benchmark + sector representative tickers
+    # We need sector representatives for proper Brinson-Fachler attribution.
     period_map = {"1mo": "1mo", "3mo": "3mo", "1y": "1y", "ytd": "ytd"}
     yf_period = period_map.get(period, "1mo")
 
-    all_tickers = list(set(tickers + [benchmark_ticker]))
+    sector_map = _build_sector_map()
+    portfolio_sectors = set(sector_map.get(t) for t in tickers if sector_map.get(t))
+    sector_stocks_cfg = config.get("stock_universe", {}).get("sector_stocks", {})
+    sector_reps = []
+    for sec in portfolio_sectors:
+        reps = sector_stocks_cfg.get(sec, [])
+        if reps:
+            sector_reps.append(reps[0])  # first ticker per sector as proxy
+
+    all_tickers = list(set(tickers + [benchmark_ticker] + sector_reps))
 
     try:
         data = yf.download(all_tickers, period=yf_period, progress=False, auto_adjust=True)
@@ -495,13 +593,10 @@ def full_portfolio_analytics(
         logger.warning("Data fetch failed for portfolio analytics: %s", e)
         return None
 
-    # Build benchmark weights (equal weight for simplicity, or SPY as a single holding)
-    benchmark_weights = {benchmark_ticker: 1.0}
-    benchmark_returns = {benchmark_ticker: returns.get(benchmark_ticker, 0.0)}
-
-    # For proper Brinson, we need sector-level benchmark weights
-    # Use equal-weight across portfolio sectors as simple benchmark proxy
-    sector_map = _build_sector_map()
+    # Build proper sector-level benchmark weights for meaningful Brinson-Fachler.
+    benchmark_weights, benchmark_returns = _build_sector_benchmark(
+        tickers, returns, sector_map, benchmark_ticker,
+    )
     portfolio_returns = {t: returns.get(t, 0.0) for t in tickers}
 
     # Brinson-Fachler attribution
