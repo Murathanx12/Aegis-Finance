@@ -108,6 +108,26 @@ def _classify_momentum_direction(r1m: float | None, r3m: float | None) -> str:
     return "stable"
 
 
+_WEIGHTS_TF = {"1w": 0.05, "1m": 0.15, "3m": 0.30, "6m": 0.30, "12m": 0.20}
+
+
+def _compute_composite_score(returns: dict[str, float | None]) -> float:
+    """Compute weighted composite score from multi-timeframe returns.
+
+    Renormalizes weights when some timeframes are missing so that sectors
+    with shorter history are not unfairly penalized.
+    """
+    weighted_sum = 0.0
+    used_weight = 0.0
+    for tf, w in _WEIGHTS_TF.items():
+        if returns.get(tf) is not None:
+            weighted_sum += returns[tf] * w
+            used_weight += w
+    if used_weight <= 0:
+        return 0.0
+    return weighted_sum / used_weight
+
+
 def compute_sector_rotation(lookback_days: int = 504) -> dict:
     """Compute sector rotation analysis across multiple timeframes.
 
@@ -175,12 +195,7 @@ def compute_sector_rotation(lookback_days: int = 504) -> dict:
                     rel_strength[label] = round((sector_ret - spy_ret) * 100, 2)
 
         # Composite score (weighted average of timeframe returns)
-        score_components = []
-        weights_tf = {"1w": 0.05, "1m": 0.15, "3m": 0.30, "6m": 0.30, "12m": 0.20}
-        for tf, w in weights_tf.items():
-            if returns.get(tf) is not None:
-                score_components.append(returns[tf] * w)
-        composite = sum(score_components) if score_components else 0.0
+        composite = _compute_composite_score(returns)
 
         # Momentum direction (improving/declining/stable)
         direction = _classify_momentum_direction(returns.get("1m"), returns.get("3m"))
