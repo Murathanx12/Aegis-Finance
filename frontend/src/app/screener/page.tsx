@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorCard } from "@/components/error-card";
 import { InfoTooltip } from "@/components/info-tooltip";
 
-type SortKey = "ticker" | "current_price" | "expected_return" | "sharpe" | "prob_loss" | "volatility" | "beta" | "crash_prob_3m" | "signal_confidence";
+type SortKey = "ticker" | "current_price" | "expected_return" | "sharpe" | "prob_loss" | "volatility" | "beta" | "crash_prob_3m" | "signal_confidence" | "rsi_14" | "momentum_percentile";
 type SortDir = "asc" | "desc";
 
 const SECTORS = [
@@ -244,6 +244,26 @@ export default function ScreenerPage() {
                       className="text-right hidden lg:table-cell"
                       tooltip="Stock-adjusted 3-month crash probability from ML model"
                     />
+                    <SortHeader
+                      label="RSI"
+                      sortKey="rsi_14"
+                      currentSort={sortKey}
+                      currentDir={sortDir}
+                      onSort={handleSort}
+                      className="text-right hidden xl:table-cell"
+                      tooltip="14-day RSI: <30 oversold, >70 overbought"
+                    />
+                    <th className="py-2 pr-4 text-center hidden xl:table-cell" scope="col">Trend</th>
+                    <SortHeader
+                      label="Mom%"
+                      sortKey="momentum_percentile"
+                      currentSort={sortKey}
+                      currentDir={sortDir}
+                      onSort={handleSort}
+                      className="text-right hidden xl:table-cell"
+                      tooltip="Cross-sectional momentum percentile (vs 150+ stocks)"
+                    />
+                    <th className="py-2 pr-4 text-center hidden xl:table-cell" scope="col">Liquidity</th>
                     <th className="py-2 pr-4 text-right hidden sm:table-cell" scope="col">Mkt Cap</th>
                     <SortHeader
                       label="Conf"
@@ -291,6 +311,26 @@ export default function ScreenerPage() {
                           (s.crash_prob_3m ?? 0) > 15 ? "text-red-400" : (s.crash_prob_3m ?? 0) > 8 ? "text-amber-400" : "text-emerald-400"
                         }`}>
                           {s.crash_prob_3m != null ? `${s.crash_prob_3m.toFixed(1)}%` : "--"}
+                        </td>
+                        <td className={`py-2.5 pr-4 text-right tabular-nums hidden xl:table-cell ${
+                          (s.rsi_14 ?? 50) > 70 ? "text-red-400" : (s.rsi_14 ?? 50) < 30 ? "text-emerald-400" : "text-muted-foreground"
+                        }`}>
+                          {s.rsi_14 != null ? s.rsi_14.toFixed(0) : "--"}
+                        </td>
+                        <td className={`py-2.5 pr-4 text-center hidden xl:table-cell text-xs font-medium ${
+                          s.trend_direction === "bullish" ? "text-emerald-400" : s.trend_direction === "bearish" ? "text-red-400" : "text-muted-foreground"
+                        }`}>
+                          {s.trend_direction === "bullish" ? "↑" : s.trend_direction === "bearish" ? "↓" : "—"}
+                        </td>
+                        <td className={`py-2.5 pr-4 text-right tabular-nums hidden xl:table-cell text-xs ${
+                          (s.momentum_percentile ?? 50) > 75 ? "text-emerald-400" : (s.momentum_percentile ?? 50) < 25 ? "text-red-400" : "text-muted-foreground"
+                        }`}>
+                          {s.momentum_percentile != null ? `${s.momentum_percentile.toFixed(0)}` : "--"}
+                        </td>
+                        <td className={`py-2.5 pr-4 text-center hidden xl:table-cell text-xs ${
+                          s.liquidity_tier === "highly_liquid" ? "text-emerald-400" : s.liquidity_tier === "liquid" ? "text-blue-400" : s.liquidity_tier === "moderate" ? "text-amber-400" : "text-muted-foreground"
+                        }`}>
+                          {s.liquidity_tier ? s.liquidity_tier.replace("_", " ") : "--"}
                         </td>
                         <td className="py-2.5 pr-4 text-right tabular-nums text-muted-foreground hidden sm:table-cell text-xs">
                           {formatCap(s.market_cap)}

@@ -189,6 +189,27 @@ def _compute_market_status() -> dict:
     except Exception as e:
         logger.warning("Sector rotation failed: %s", e)
 
+    # Bayesian changepoint detection (regime shift early warning)
+    changepoint = None
+    try:
+        from backend.services.anomaly_detector import BayesianChangepoint
+        sp500_returns = data["SP500"].pct_change().dropna()
+        cp = BayesianChangepoint()
+        recent = cp.recent_changepoint(sp500_returns, 60)
+        if recent:
+            changepoint = {
+                "detected": recent.get("detected", False),
+                "days_since": recent.get("days_ago"),
+                "max_prob": round(recent.get("max_prob", 0), 3),
+                "interpretation": (
+                    f"Regime shift detected {recent['days_ago']} days ago (prob={recent['max_prob']:.2f})"
+                    if recent.get("detected")
+                    else "No recent regime shift detected"
+                ),
+            }
+    except Exception as e:
+        logger.warning("Changepoint detection failed: %s", e)
+
     return {
         "sp500": sp500,
         "sp500_change_1m": round(sp500_change_1m, 2),
@@ -206,6 +227,7 @@ def _compute_market_status() -> dict:
         "vix_term_structure": vix_term_structure,
         "economic_surprise": economic_surprise,
         "sector_rotation": sector_rotation,
+        "changepoint": changepoint,
         "last_updated": str(data.index[-1].date()),
     }
 

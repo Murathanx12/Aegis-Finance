@@ -453,6 +453,91 @@ function PortfolioAnalyzeSection() {
             </div>
           )}
 
+          {/* Stress Test + Drawdown Analysis */}
+          {(analysis.stress_test || analysis.portfolio_drawdowns) && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {analysis.stress_test && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                      Historical Stress Test
+                      <InfoTooltip text="How your portfolio would have performed during past market crises" />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {Object.entries(analysis.stress_test.scenarios).map(([name, s]) => (
+                      <div key={name} className="flex justify-between items-center text-sm">
+                        <span className="text-muted-foreground truncate mr-2">{name}</span>
+                        <span className={`font-mono tabular-nums font-medium ${
+                          s.portfolio_drawdown_pct < -30 ? "text-red-400" : s.portfolio_drawdown_pct < -15 ? "text-amber-400" : "text-emerald-400"
+                        }`}>
+                          {s.portfolio_drawdown_pct.toFixed(1)}%
+                        </span>
+                      </div>
+                    ))}
+                    {analysis.stress_test.worst_scenario && (
+                      <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border/50">
+                        Worst case: <span className="text-red-400 font-medium">{analysis.stress_test.worst_scenario}</span> ({analysis.stress_test.worst_drawdown_pct?.toFixed(1)}%)
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {analysis.portfolio_drawdowns && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                      Drawdown Analysis
+                      <InfoTooltip text="Historical drawdowns and recovery statistics for your portfolio" />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Max Drawdown</p>
+                        <p className="text-lg font-bold tabular-nums text-red-400">
+                          {analysis.portfolio_drawdowns.max_drawdown_pct != null
+                            ? `${analysis.portfolio_drawdowns.max_drawdown_pct.toFixed(1)}%`
+                            : "--"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Current DD</p>
+                        <p className={`text-lg font-bold tabular-nums ${
+                          (analysis.portfolio_drawdowns.current_drawdown_pct ?? 0) < -10 ? "text-red-400" : "text-emerald-400"
+                        }`}>
+                          {analysis.portfolio_drawdowns.current_drawdown_pct != null
+                            ? `${analysis.portfolio_drawdowns.current_drawdown_pct.toFixed(1)}%`
+                            : "0.0%"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Total Drawdowns</p>
+                        <p className="text-lg font-bold tabular-nums">{analysis.portfolio_drawdowns.total_drawdowns}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Avg Recovery</p>
+                        <p className="text-lg font-bold tabular-nums">
+                          {analysis.portfolio_drawdowns.avg_recovery_days != null
+                            ? `${Math.round(analysis.portfolio_drawdowns.avg_recovery_days)}d`
+                            : "--"}
+                        </p>
+                      </div>
+                    </div>
+                    {analysis.portfolio_drawdowns.rolling_return_1y != null && (
+                      <p className="text-xs text-muted-foreground mt-3 pt-2 border-t border-border/50">
+                        Rolling 1Y return: <span className={`font-medium ${analysis.portfolio_drawdowns.rolling_return_1y > 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {analysis.portfolio_drawdowns.rolling_return_1y > 0 ? "+" : ""}{analysis.portfolio_drawdowns.rolling_return_1y.toFixed(1)}%
+                        </span>
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
           {/* Concentration Warning */}
           {analysis.allocations.some(a => a.weight > 40) && (
             <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 flex items-start gap-2 text-xs text-amber-400/90">

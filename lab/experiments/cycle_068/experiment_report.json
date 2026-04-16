@@ -1,0 +1,52 @@
+{
+  "cycle": 68,
+  "cycle_type": "INTEGRATE",
+  "timestamp": "2026-04-17T04:15:00Z",
+  "title": "Deep integration: 6 services wired into user-facing endpoints + frontend display",
+  "category": "integration",
+  "observation": {
+    "bugs_found": [],
+    "gap_identified": "Multiple backend services existed as standalone endpoints but were not integrated into the main user-facing responses (screener, portfolio/analyze, market-status). Frontend had no display for economic surprise, sector rotation, changepoint, or per-stock analytics in the screener table."
+  },
+  "implementation": {
+    "bugs_fixed": [],
+    "feature_built": "Wired 6+ standalone services into main endpoints: (1) Screener now returns per-stock liquidity tier/score, momentum rank/percentile, RSI, trend direction, max drawdown, current drawdown. (2) Portfolio /analyze now returns stress test summary (6 historical crisis scenarios with drawdown %) and portfolio-level drawdown analysis (rolling returns, recovery stats). (3) Market-status now returns Bayesian changepoint detection (regime shift alert). (4) Frontend screener table shows 4 new columns: RSI, Trend, Momentum%, Liquidity. (5) Frontend portfolio page shows stress test + drawdown analysis cards. (6) Market banner shows economic surprise, changepoint, and cycle phase indicators. (7) Added pair analysis API functions to frontend. (8) Updated PortfolioAnalysis type with tail_risk, attribution, risk_contributions, copula_risk, stress_test, portfolio_drawdowns.",
+    "files_changed": [
+      "backend/routers/stock.py",
+      "backend/routers/portfolio.py",
+      "backend/routers/market.py",
+      "frontend/src/lib/api.ts",
+      "frontend/src/app/screener/page.tsx",
+      "frontend/src/app/portfolio/page.tsx",
+      "frontend/src/components/dashboard/market-banner.tsx"
+    ],
+    "files_created": [
+      "lab/experiments/cycle_068/experiment_report.json"
+    ],
+    "packages_installed": []
+  },
+  "validation": {
+    "tests_written": 0,
+    "tests_passing": 1436,
+    "regressions": 0
+  },
+  "assessment": {
+    "verdict": "improved",
+    "confidence": "high",
+    "depth": 4,
+    "limitations": [
+      "Screener per-stock liquidity/drawdown adds latency since each stock fetches extra data in parallel workers",
+      "Survival model not integrated (requires pre-training, not a simple function call)",
+      "Portfolio stress test adds yfinance calls which may slow /analyze for large portfolios",
+      "No new tests written for the integration wiring (existing tests cover the underlying services)"
+    ],
+    "self_critique": "Could have added a simple toggle or lazy-loading for the heavier screener enrichments to keep the fast path fast. The screener enrichments (liquidity, drawdown per stock) may add 10-20s to an already slow endpoint. Should consider caching these per-stock analytics separately."
+  },
+  "next_steps": [
+    "Add caching layer for per-stock liquidity/drawdown in screener to reduce latency",
+    "Display VIX term structure state in the market banner",
+    "Wire survival model into crash timeline page (requires training pipeline)",
+    "Add frontend display for copula tail risk and attribution in portfolio page",
+    "Consider lazy-loading heavy screener columns via a separate enrichment endpoint"
+  ]
+}

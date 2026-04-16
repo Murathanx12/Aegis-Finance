@@ -148,6 +148,64 @@ def _analyze_with_risk_number(holdings: list[dict]) -> dict:
     except Exception as e:
         logger.warning("Factor exposure computation failed: %s", e)
 
+    # Stress test summary (historical scenario impacts on this portfolio)
+    try:
+        from backend.services.stress_testing import stress_test_portfolio
+        stress = stress_test_portfolio(weights)
+        if stress and "scenarios" in stress:
+            scenario_summaries = {}
+            for sid, s in stress["scenarios"].items():
+                scenario_summaries[s["name"]] = {
+                    "portfolio_drawdown_pct": round(s.get("portfolio_drawdown", 0) * 100, 2),
+                    "sp500_drawdown_pct": round(s.get("sp500_drawdown", 0) * 100, 2),
+                    "relative_to_market": s.get("relative_to_market"),
+                }
+            worst = stress.get("worst_case", {})
+            result["stress_test"] = {
+                "scenarios": scenario_summaries,
+                "worst_scenario": worst.get("name"),
+                "worst_drawdown_pct": round(worst.get("drawdown", 0) * 100, 2) if worst.get("drawdown") is not None else None,
+            }
+    except Exception as e:
+        logger.warning("Stress test computation failed: %s", e)
+
+    # Portfolio-level drawdown analysis (rolling returns + max drawdown history)
+    try:
+        import yfinance as yf
+        import pandas as pd
+        import numpy as np
+        from backend.services.drawdown_analyzer import analyze_drawdowns, compute_rolling_returns
+
+        # Build portfolio return series from holdings
+        _ptickers = [h["ticker"] for h in holdings]
+        _pdata = yf.download(_ptickers, period="5y", progress=False)
+        if _pdata is not None and len(_pdata) > 60:
+            if len(_ptickers) == 1:
+                _pclose = _pdata["Close"].to_frame(_ptickers[0])
+            else:
+                _pclose = _pdata["Close"]
+            _preturns = _pclose.pct_change().dropna()
+
+            # Weighted portfolio returns
+            _pw = np.array([weights.get(t, 0) for t in _preturns.columns])
+            if _pw.sum() > 0:
+                _pw = _pw / _pw.sum()
+                _port_returns = (_preturns * _pw).sum(axis=1)
+                _port_prices = (1 + _port_returns).cumprod() * 100  # Normalize to 100
+
+                dd_result = analyze_drawdowns(_port_prices)
+                rolling = compute_rolling_returns(_port_prices, windows=[252])
+
+                result["portfolio_drawdowns"] = {
+                    "total_drawdowns": dd_result["summary"].get("n_drawdowns", 0),
+                    "max_drawdown_pct": dd_result["summary"].get("max_depth_pct"),
+                    "avg_recovery_days": dd_result["summary"].get("avg_recovery_days"),
+                    "current_drawdown_pct": dd_result["current"]["depth_pct"] if dd_result.get("current") else 0.0,
+                    "rolling_return_1y": rolling.get(252, {}).get("current"),
+                }
+    except Exception as e:
+        logger.warning("Portfolio drawdown analysis failed: %s", e)
+
     return result
 
 
