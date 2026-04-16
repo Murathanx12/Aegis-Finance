@@ -5,9 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useApi } from "@/hooks/use-api";
 import {
   getCrashPrediction, getTickerCrash,
-  getSP500Projection, getScenarios,
+  getSP500Projection, getScenarios, getMarketValuation,
 } from "@/lib/api";
-import type { TickerCrash, SP500Projection } from "@/lib/api";
+import type { TickerCrash, SP500Projection, MarketValuation } from "@/lib/api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -245,9 +245,15 @@ export default function OutlookPage() {
     queryFn: getScenarios,
     staleTime: staleTimes.simulation,
   });
+  const valQuery = useQuery({
+    queryKey: ["analytics", "valuation"],
+    queryFn: getMarketValuation,
+    staleTime: staleTimes.market,
+  });
 
   const crash = crashQuery.data;
   const proj = projQuery.data;
+  const val = valQuery.data;
 
   return (
     <div className="space-y-8 animate-slide-up">
@@ -394,7 +400,95 @@ export default function OutlookPage() {
         </Card>
       </div>
 
-      {/* ── Row 4: Per-Ticker + Validation ────────────────────── */}
+      {/* ── Row 4: Market Valuation ────────────────────────────── */}
+      {val && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+              Market Valuation Dashboard
+              <InfoTooltip text="Key valuation metrics for the S&P 500: CAPE ratio, forward P/E, equity risk premium, Buffett indicator, and dividend yield. Helps assess whether the market is cheap or expensive relative to historical norms." />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              {/* CAPE */}
+              <div className="rounded-lg bg-muted/30 p-3">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">CAPE (Shiller P/E)</p>
+                <p className={`text-xl font-bold tabular-nums ${val.cape.premium_pct > 30 ? "text-red-400" : val.cape.premium_pct > 10 ? "text-amber-400" : "text-emerald-400"}`}>
+                  {val.cape.current.toFixed(1)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Avg: {val.cape.long_run_average.toFixed(1)} ({val.cape.premium_pct > 0 ? "+" : ""}{val.cape.premium_pct.toFixed(0)}%)
+                </p>
+                <p className="text-xs text-muted-foreground">{val.cape.interpretation}</p>
+              </div>
+
+              {/* Forward P/E */}
+              <div className="rounded-lg bg-muted/30 p-3">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Forward P/E</p>
+                <p className="text-xl font-bold tabular-nums">
+                  {val.pe.forward != null ? val.pe.forward.toFixed(1) : "--"}
+                </p>
+                {val.pe.trailing != null && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Trailing: {val.pe.trailing.toFixed(1)}
+                  </p>
+                )}
+                {val.pe.forward_vs_trailing != null && (
+                  <p className="text-xs text-muted-foreground">
+                    {val.pe.forward_vs_trailing > 0 ? "Earnings growth expected" : "Earnings contraction"}
+                  </p>
+                )}
+              </div>
+
+              {/* Equity Risk Premium */}
+              <div className="rounded-lg bg-muted/30 p-3">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Equity Risk Premium</p>
+                <p className={`text-xl font-bold tabular-nums ${(val.equity_risk_premium.erp_pct ?? 0) > 3 ? "text-emerald-400" : (val.equity_risk_premium.erp_pct ?? 0) > 1 ? "text-amber-400" : "text-red-400"}`}>
+                  {val.equity_risk_premium.erp_pct != null ? `${val.equity_risk_premium.erp_pct.toFixed(1)}%` : "--"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">{val.equity_risk_premium.interpretation}</p>
+              </div>
+
+              {/* Buffett Indicator */}
+              <div className="rounded-lg bg-muted/30 p-3">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Buffett Indicator</p>
+                <p className={`text-xl font-bold tabular-nums ${(val.buffett_indicator.ratio_pct ?? 0) > 150 ? "text-red-400" : (val.buffett_indicator.ratio_pct ?? 0) > 100 ? "text-amber-400" : "text-emerald-400"}`}>
+                  {val.buffett_indicator.ratio_pct != null ? `${val.buffett_indicator.ratio_pct.toFixed(0)}%` : "--"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">{val.buffett_indicator.interpretation}</p>
+              </div>
+
+              {/* Composite Score */}
+              <div className="rounded-lg bg-muted/30 p-3">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Valuation Score</p>
+                <p className={`text-xl font-bold tabular-nums ${
+                  val.composite_valuation_score.level === "expensive" || val.composite_valuation_score.level === "very_expensive" ? "text-red-400" :
+                  val.composite_valuation_score.level === "fair" ? "text-amber-400" : "text-emerald-400"
+                }`}>
+                  {val.composite_valuation_score.score.toFixed(1)}
+                </p>
+                <Badge variant="outline" className={`mt-1 text-[10px] ${
+                  val.composite_valuation_score.level.includes("expensive") ? "border-red-500/30 text-red-400" :
+                  val.composite_valuation_score.level === "fair" ? "border-amber-500/30 text-amber-400" :
+                  "border-emerald-500/30 text-emerald-400"
+                }`}>
+                  {val.composite_valuation_score.level.replace(/_/g, " ")}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Dividend yield */}
+            {val.dividend_yield.current_pct != null && (
+              <p className="text-xs text-muted-foreground mt-3 pt-2 border-t border-border/50">
+                S&P 500 Dividend Yield: <span className="font-medium">{val.dividend_yield.current_pct.toFixed(2)}%</span> (historical avg: {val.dividend_yield.historical_avg.toFixed(2)}%) — {val.dividend_yield.interpretation}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Row 5: Per-Ticker + Validation ────────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <TickerCrashCard />
 
@@ -491,10 +585,10 @@ export default function OutlookPage() {
         )}
       </div>
 
-      {(crashQuery.error || projQuery.error || scenQuery.error) && (
+      {(crashQuery.error || projQuery.error || scenQuery.error || valQuery.error) && (
         <ErrorCard
-          message={(crashQuery.error as Error)?.message || (projQuery.error as Error)?.message || (scenQuery.error as Error)?.message || "Unknown error"}
-          onRetry={() => { crashQuery.refetch(); projQuery.refetch(); scenQuery.refetch(); }}
+          message={(crashQuery.error as Error)?.message || (projQuery.error as Error)?.message || (scenQuery.error as Error)?.message || (valQuery.error as Error)?.message || "Unknown error"}
+          onRetry={() => { crashQuery.refetch(); projQuery.refetch(); scenQuery.refetch(); valQuery.refetch(); }}
         />
       )}
     </div>
