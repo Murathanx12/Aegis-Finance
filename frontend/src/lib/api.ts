@@ -412,6 +412,11 @@ export function getDriftCheck() {
   return fetchAPI<Record<string, unknown>>("/api/drift/check");
 }
 
+// Relative Valuation (Koyfin-style peer comparison)
+export function getStockValuation(ticker: string) {
+  return fetchAPI<RelativeValuation>(`/api/stock/${ticker}/valuation`);
+}
+
 // ── Types ──────────────────────────────────────────────────
 
 export interface MarketStatus {
@@ -1470,4 +1475,59 @@ export interface MarketValuation {
     score: number;
     level: string;
   };
+}
+
+export interface RelativeValuationMetric {
+  value: number | null;
+  percentile: number | null;
+  valuation_percentile: number | null;
+  peer_avg: number | null;
+  peer_count: number;
+  vs_peers: string;
+}
+
+export interface RelativeValuationVerdict {
+  label: string;
+  color: string;
+  description: string;
+  composite_score: number;
+  historical_note?: string;
+}
+
+export interface RelativeValuationPeer {
+  ticker: string;
+  name: string;
+  is_target: boolean;
+  pe_trailing: number | null;
+  pe_forward: number | null;
+  ev_ebitda: number | null;
+  price_to_sales: number | null;
+  price_to_book: number | null;
+  dividend_yield: number | null;
+  revenue_growth: number | null;
+  profit_margin: number | null;
+  market_cap: number | null;
+}
+
+export interface RelativeValuation {
+  ticker: string;
+  sector: string;
+  peer_count: number;
+  rankings: Record<string, RelativeValuationMetric>;
+  composite_score: number;
+  score_components: Record<string, { percentile: number; weight: number; contribution: number }>;
+  verdict: RelativeValuationVerdict;
+  historical: {
+    pe_current: number;
+    pe_5y_avg: number;
+    pe_5y_min: number;
+    pe_5y_max: number;
+    pe_5y_median: number;
+    pe_percentile_vs_history: number;
+    ps_current?: number;
+    ps_5y_avg?: number;
+    pb_current?: number;
+    pb_5y_avg?: number;
+  } | null;
+  peer_table: RelativeValuationPeer[];
 }

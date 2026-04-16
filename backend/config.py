@@ -790,6 +790,32 @@ config: dict = {
         "screener_max_tickers": 80,
     },
 
+    # ── RELATIVE VALUATION ──────────────────────────────────────────────
+    # Koyfin-style peer comparison: rank a stock vs sector peers on valuation metrics
+    "relative_valuation": {
+        "peer_fetch_workers": 6,         # Parallel yfinance fetches for peer metrics
+        "history_years": 5,              # Years of historical data for valuation ranges
+        "composite_weights": {
+            "pe_trailing": 0.15,         # Trailing P/E
+            "pe_forward": 0.15,          # Forward P/E
+            "peg_ratio": 0.12,           # PEG ratio (growth-adjusted P/E)
+            "ev_ebitda": 0.15,           # Enterprise Value / EBITDA
+            "price_to_sales": 0.10,      # Price-to-Sales
+            "price_to_book": 0.08,       # Price-to-Book
+            "dividend_yield": 0.05,      # Dividend Yield (higher = better)
+            "revenue_growth": 0.08,      # Revenue Growth (higher = better)
+            "earnings_growth": 0.07,     # Earnings Growth (higher = better)
+            "profit_margin": 0.05,       # Profit Margin (higher = better)
+        },
+        "verdict_thresholds": {
+            "deep_value": 75,            # Composite score ≥ 75 → Deep Value
+            "undervalued": 60,           # Composite score ≥ 60 → Undervalued
+            "fair_value_upper": 55,      # 45-55 → Fair Value
+            "fair_value_lower": 45,
+            "overvalued": 35,            # 35-45 → Overvalued
+        },
+    },
+
     # ── SIGNAL ENGINE THRESHOLDS ─────────────────────────────────────────
     # Centralized from signal_engine.py and risk_scorer.py hardcoded values
     "signal_thresholds_vix": {
