@@ -8,6 +8,7 @@ POST /api/portfolio/optimize          — Advanced optimization (CVaR, risk pari
 POST /api/portfolio/compare           — Compare all optimization methods
 POST /api/portfolio/factor-exposures  — Fama-French 5-factor decomposition
 POST /api/portfolio/copula-risk       — Copula-based tail risk (joint crash probability)
+POST /api/portfolio/benchmark         — Benchmark analytics (tracking error, IR, active share, capture)
 """
 
 import asyncio
@@ -204,6 +205,27 @@ def _analyze_with_risk_number(holdings: list[dict]) -> dict:
                 }
     except Exception as e:
         logger.warning("Inline attribution/MCTR failed: %s", e)
+
+    # Benchmark analytics (tracking error, information ratio, active share, capture ratios)
+    try:
+        from backend.services.benchmark_analytics import compute_benchmark_analytics
+        bench_result = compute_benchmark_analytics(weights, benchmark="SPY")
+        if bench_result:
+            result["benchmark_analytics"] = {
+                "tracking_error_pct": bench_result["tracking_error_pct"],
+                "information_ratio": bench_result["information_ratio"],
+                "active_return_annual_pct": bench_result["active_return_annual_pct"],
+                "active_share": bench_result.get("active_share", {}).get("active_share_pct") if bench_result.get("active_share") else None,
+                "active_share_label": bench_result.get("active_share", {}).get("label") if bench_result.get("active_share") else None,
+                "up_capture": bench_result["capture_ratios"].get("up_capture"),
+                "down_capture": bench_result["capture_ratios"].get("down_capture"),
+                "beta_vs_benchmark": bench_result["regression"].get("beta") if bench_result["regression"].get("available") else None,
+                "r_squared": bench_result["regression"].get("r_squared") if bench_result["regression"].get("available") else None,
+                "management_style": bench_result["interpretation"].get("management_style"),
+                "insights": bench_result["interpretation"].get("insights", []),
+            }
+    except Exception as e:
+        logger.warning("Benchmark analytics failed: %s", e)
 
     # Portfolio-level drawdown analysis (rolling returns + max drawdown history)
     try:
@@ -524,6 +546,51 @@ async def portfolio_copula_risk(request: CopulaRiskRequest):
         raise
     except Exception as e:
         logger.error("portfolio copula risk failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class BenchmarkRequest(BaseModel):
+    holdings: list[Holding] = Field(..., min_length=1, max_length=50)
+    benchmark: str = Field("SPY", min_length=1, max_length=10)
+    lookback_days: int = Field(504, ge=63, le=1260)
+
+
+@router.post("/benchmark")
+async def portfolio_benchmark_analytics(request: BenchmarkRequest):
+    """Bloomberg PORT-style benchmark-relative analytics.
+
+    Tracking error, information ratio, active share (Cremers & Petajisto),
+    up/down capture ratios, rolling tracking error, regression stats,
+    and period return comparison vs benchmark.
+    """
+    from backend.services.benchmark_analytics import compute_benchmark_analytics
+
+    total_value = sum(h.shares * h.current_price for h in request.holdings)
+    if total_value <= 0:
+        raise HTTPException(status_code=400, detail="Portfolio has no value")
+
+    weights = {
+        h.ticker: (h.shares * h.current_price) / total_value
+        for h in request.holdings
+    }
+
+    try:
+        result = await asyncio.to_thread(
+            compute_benchmark_analytics,
+            weights,
+            request.benchmark.upper(),
+            request.lookback_days,
+        )
+        if result is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Insufficient data for benchmark analytics",
+            )
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("benchmark analytics failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 

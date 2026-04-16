@@ -816,6 +816,17 @@ config: dict = {
         },
     },
 
+    # ── BENCHMARK ANALYTICS ──────────────────────────────────────────────
+    # Bloomberg PORT-style benchmark-relative analytics
+    "benchmark_analytics": {
+        "default_benchmark": "SPY",          # Default benchmark ticker
+        "default_lookback_days": 504,        # 2 years of trading days
+        "rolling_te_window": 63,             # 3-month rolling window for tracking error
+        "annualization_factor": 252,         # Trading days per year
+        "risk_free_rate": 0.045,             # For Sharpe/Sortino calculation (4.5% in 2026)
+        "sp500_approximate_mcap": 50_000_000_000_000,  # ~$50T for active share approximation
+    },
+
     # ── CHART PATTERN RECOGNITION ──────────────────────────────────────
     # TradingView-style automatic chart pattern detection
     "pattern_recognition": {

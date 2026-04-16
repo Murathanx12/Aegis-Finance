@@ -273,6 +273,14 @@ export function getPortfolioCopulaRisk(holdings: Holding[], lookbackDays = 504) 
   });
 }
 
+// Portfolio Benchmark Analytics (tracking error, IR, active share, capture ratios)
+export function getPortfolioBenchmark(holdings: Holding[], benchmark = "SPY", lookbackDays = 504) {
+  return fetchAPI<BenchmarkAnalyticsResult>("/api/portfolio/benchmark", {
+    method: "POST",
+    body: JSON.stringify({ holdings, benchmark, lookback_days: lookbackDays }),
+  });
+}
+
 // AI Portfolio Commentary
 export function getPortfolioCommentary(holdings: Holding[]) {
   return fetchAPI<PortfolioCommentary>("/api/portfolio/commentary", {
@@ -1310,6 +1318,52 @@ export interface FactorExposureResult {
   stocks_analyzed: number;
   stocks_failed: number;
   stock_details: Record<string, { weight: number; decomposition: Record<string, unknown> }>;
+}
+
+export interface BenchmarkAnalyticsResult {
+  benchmark: string;
+  lookback_days: number;
+  tracking_error: number;
+  tracking_error_pct: number;
+  information_ratio: number;
+  active_return_annual_pct: number;
+  active_share: {
+    active_share_pct: number;
+    label: string;
+    description: string;
+    top_active_positions: { ticker: string; portfolio_weight: number; benchmark_weight: number; active_weight: number }[];
+  } | null;
+  capture_ratios: {
+    up_capture: number | null;
+    down_capture: number | null;
+    capture_ratio: number | null;
+    interpretation: string | null;
+  };
+  rolling_tracking_error: {
+    available: boolean;
+    current_pct?: number;
+    average_pct?: number;
+    trend?: string;
+    time_series?: { date: string; tracking_error_pct: number }[];
+  };
+  regression: {
+    available: boolean;
+    beta?: number;
+    alpha_annual_pct?: number;
+    r_squared?: number;
+    residual_vol_pct?: number;
+  };
+  period_returns: Record<string, { portfolio_pct: number; benchmark_pct: number; active_return_pct: number; outperformed: boolean }>;
+  risk_comparison: {
+    portfolio: { annual_return_pct: number; volatility_pct: number; sharpe: number; sortino: number; max_drawdown_pct: number };
+    benchmark: { annual_return_pct: number; volatility_pct: number; sharpe: number; sortino: number; max_drawdown_pct: number };
+  };
+  interpretation: {
+    tracking_error_label: string;
+    information_ratio_label: string;
+    management_style: string | null;
+    insights: string[];
+  };
 }
 
 export interface CopulaRiskResult {
