@@ -148,3 +148,31 @@ class TestDiagnostics:
         # They should differ (fitted variance != 1.0 for our synthetic data)
         # Our synthetic data has noise variance << 1.0 (factors are large, noise is small)
         assert actual_bound != pytest.approx(default_bound, rel=0.01)
+
+    def test_diagnostics_uses_correlation_eigenvalues(self, random_returns):
+        """Regression (cycle 72): diagnostics must analyze eigenvalues of the
+        correlation matrix, not the covariance matrix. Marchenko-Pastur theory
+        applies to standardized (correlation) matrices with trace=N.
+
+        Using covariance eigenvalues produces wrong signal/noise classification
+        because the eigenvalue scale depends on asset volatilities."""
+        diag = covariance_diagnostics(random_returns)
+        T, N = random_returns.shape
+
+        # Our synthetic data has 3 factors. The diagnostics should find at least
+        # 2 signal eigenvalues using correlation eigenvalues. With covariance
+        # eigenvalues, only 1 is found because the scale is wrong.
+        assert diag["signal_eigenvalues"] >= 2, (
+            f"Only {diag['signal_eigenvalues']} signal eigenvalue(s) found — "
+            f"the synthetic data has 3 factors, so the diagnostics is likely "
+            f"analyzing covariance eigenvalues instead of correlation eigenvalues"
+        )
+
+        # The top eigenvalues should sum to approximately N (=20) for a
+        # correlation matrix, not to the trace of the covariance matrix.
+        top_5 = diag["top_5_eigenvalues"]["raw"]
+        assert top_5[0] > 3.0, (
+            f"Largest eigenvalue {top_5[0]} is too small — suggests covariance "
+            f"eigenvalues (scale ~0.01-3.5) instead of correlation eigenvalues "
+            f"(scale ~4-10)"
+        )

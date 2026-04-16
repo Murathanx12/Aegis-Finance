@@ -185,14 +185,20 @@ def compute_sector_rotation(lookback_days: int = 504) -> dict:
             else:
                 returns[label] = None
 
-        # Relative strength vs SPY
+        # Relative strength vs SPY — must use date-aligned indexing, not
+        # positional (iloc), because sector ETFs and SPY may have different
+        # numbers of data points from separate yfinance calls.
         rel_strength = {}
         if spy_close is not None and len(spy_close) > 0:
-            for label, days in [("1m", 21), ("3m", 63), ("6m", 126)]:
-                if len(prices) > days and len(spy_close) > days:
-                    sector_ret = float(prices.iloc[-1] / prices.iloc[-days] - 1)
-                    spy_ret = float(spy_close.iloc[-1] / spy_close.iloc[-days] - 1)
-                    rel_strength[label] = round((sector_ret - spy_ret) * 100, 2)
+            common_idx = prices.index.intersection(spy_close.index)
+            if len(common_idx) > 0:
+                prices_aligned = prices.loc[common_idx]
+                spy_aligned = spy_close.loc[common_idx]
+                for label, days in [("1m", 21), ("3m", 63), ("6m", 126)]:
+                    if len(prices_aligned) > days:
+                        sector_ret = float(prices_aligned.iloc[-1] / prices_aligned.iloc[-days] - 1)
+                        spy_ret = float(spy_aligned.iloc[-1] / spy_aligned.iloc[-days] - 1)
+                        rel_strength[label] = round((sector_ret - spy_ret) * 100, 2)
 
         # Composite score (weighted average of timeframe returns)
         composite = _compute_composite_score(returns)

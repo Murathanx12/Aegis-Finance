@@ -74,9 +74,13 @@ def analyze_drawdowns(
         if dd < -min_drawdown_pct and not in_drawdown:
             # Start of a new drawdown
             in_drawdown = True
-            # Find the peak date (last date when price was at running max)
+            # Find the peak date (last date AT OR BEFORE current index when
+            # price equaled the running max). Must restrict to past dates only;
+            # searching the full series would pick future dates if the same
+            # price appears after recovery.
             peak_val = float(peak.iloc[i])
-            peak_dates = prices[prices == peak_val].index
+            past_prices = prices.iloc[:i + 1]
+            peak_dates = past_prices[past_prices == peak_val].index
             dd_start = peak_dates[-1] if len(peak_dates) > 0 else prices.index[max(0, i-1)]
             dd_peak_price = peak_val
             dd_trough = dd

@@ -84,6 +84,41 @@ class TestAnalyzeDrawdowns:
         result = analyze_drawdowns(prices, min_drawdown_pct=5.0)
         assert len(result["drawdowns"]) == 0
 
+    def test_peak_date_not_from_future(self):
+        """Regression (cycle 72): peak date search must not pick future dates.
+
+        When the same price appears both before and after a drawdown (e.g., the
+        price recovers to the pre-drawdown peak), searching the full series
+        for the peak value picks the FUTURE occurrence, causing negative
+        peak_to_trough_days durations.
+
+        Scenario: 100 → 110 → 80 (drawdown) → 110 (recovery)
+        Bug: peak_dates[-1] picks the second 110 (future), not the first (past).
+        """
+        dates = pd.bdate_range("2024-01-01", periods=100)
+        # Build a price series: ramp up to 110, crash to 80, recover to 110+
+        prices_data = np.concatenate([
+            np.linspace(100, 110, 20),        # ramp up to 110
+            np.linspace(110, 80, 15),          # crash to 80 (-27%)
+            np.linspace(80, 110, 30),           # recover to 110
+            np.linspace(110, 115, 35),          # continue up
+        ])
+        prices = pd.Series(prices_data, index=dates)
+
+        result = analyze_drawdowns(prices, min_drawdown_pct=10.0)
+
+        # Should detect the drawdown
+        assert len(result["drawdowns"]) >= 1
+
+        for dd in result["drawdowns"]:
+            # Peak date must be BEFORE trough date (not a future date)
+            assert dd["peak_to_trough_days"] > 0, (
+                f"peak_to_trough_days={dd['peak_to_trough_days']} is non-positive — "
+                f"peak_date={dd['peak_date']} is after trough_date={dd['trough_date']}"
+            )
+            # Total duration must be positive
+            assert dd["total_days"] > 0
+
 
 class TestRollingReturns:
     def test_basic_output(self, trending_up):
