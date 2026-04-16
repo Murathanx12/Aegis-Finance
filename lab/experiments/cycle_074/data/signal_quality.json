@@ -1,0 +1,104 @@
+{
+  "market_signal": {
+    "action": "Buy",
+    "confidence": 22,
+    "color": "green",
+    "composite_score": 0.224,
+    "reasons": [
+      "Crash model drift (critical) \u2014 ML signal weight reduced to 20%",
+      "Low crash risk (3% 3M)",
+      "Bullish market regime"
+    ],
+    "components": {
+      "crash_prob": 0.015,
+      "regime": 0.7,
+      "valuation": 0.1,
+      "momentum": 0.285,
+      "mean_reversion": 0.0,
+      "external": 0.4,
+      "macro_risk": 0.037,
+      "drawdown": 0.2,
+      "systemic_risk": -0.3,
+      "vix_term_structure": 0.1
+    },
+    "drift_severity": "critical",
+    "drift_crash_weight_mult": 0.2,
+    "regime_weight_profile": "Bull"
+  },
+  "stock_signals": {
+    "COST": {
+      "action": "Buy",
+      "composite_score": 0.217,
+      "confidence": 21
+    },
+    "GOOGL": {
+      "action": "Buy",
+      "composite_score": 0.418,
+      "confidence": 41
+    },
+    "UNH": {
+      "action": "Hold",
+      "composite_score": 0.145,
+      "confidence": 14
+    },
+    "MSFT": {
+      "action": "Hold",
+      "composite_score": 0.138,
+      "confidence": 13
+    },
+    "XOM": {
+      "action": "Buy",
+      "composite_score": 0.269,
+      "confidence": 26
+    },
+    "AMZN": {
+      "action": "Strong Buy",
+      "composite_score": 0.509,
+      "confidence": 50
+    },
+    "HOOD": {
+      "action": "Buy",
+      "composite_score": 0.164,
+      "confidence": 16
+    },
+    "LCID": {
+      "action": "Sell",
+      "composite_score": -0.155,
+      "confidence": 15
+    },
+    "MGM": {
+      "action": "Buy",
+      "composite_score": 0.44,
+      "confidence": 44
+    },
+    "COIN": {
+      "action": "Hold",
+      "composite_score": 0.105,
+      "confidence": 10
+    },
+    "SMCI": {
+      "action": "Buy",
+      "composite_score": 0.163,
+      "confidence": 16
+    },
+    "ARM": {
+      "action": "Strong Buy",
+      "composite_score": 0.553,
+      "confidence": 55
+    }
+  },
+  "diversity": {
+    "action_distribution": {
+      "Buy": 6,
+      "Hold": 3,
+      "Strong Buy": 2,
+      "Sell": 1
+    },
+    "n_unique_actions": 4,
+    "score_spread": 0.708,
+    "score_std": 0.193,
+    "all_same_action": false
+  },
+  "n_tickers_with_signal": 12,
+  "n_tickers_failed": 0
+}

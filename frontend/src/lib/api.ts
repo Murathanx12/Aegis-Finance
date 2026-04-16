@@ -440,6 +440,16 @@ export function scanPairs(tickers?: string[]) {
   return fetchAPI<PairScanResult>(`/api/analytics/pairs/scan${params}`);
 }
 
+// Tail Risk (institutional-grade: Sortino, Omega, Calmar, etc.)
+export function getTailRisk(ticker: string, period = "5y") {
+  return fetchAPI<TailRiskResult>(`/api/analytics/tail-risk/${ticker}?period=${period}`);
+}
+
+// Survival Model (Cox PH crash timing)
+export function getSurvivalModel() {
+  return fetchAPI<SurvivalModelResult>("/api/analytics/survival-model");
+}
+
 // ── Types ──────────────────────────────────────────────────
 
 export interface MarketStatus {
@@ -479,6 +489,13 @@ export interface MarketStatus {
     days_since: number | null;
     max_prob: number;
     interpretation: string;
+  } | null;
+  survival_crash_timing: {
+    probabilities: Record<string, number>;
+    method: string;
+    top_risk_factors: { feature: string; coefficient: number }[];
+    n_train: number;
+    n_events: number;
   } | null;
   last_updated: string;
 }
@@ -1803,4 +1820,35 @@ export interface PairScanResult {
   }[];
   n_pairs_tested: number;
   n_cointegrated: number;
+}
+
+export interface TailRiskResult {
+  ticker: string;
+  period: string;
+  annual_return_pct: number;
+  annual_volatility_pct: number;
+  sharpe_ratio: number | null;
+  sortino_ratio: number | null;
+  omega_ratio: number | null;
+  calmar_ratio: number | null;
+  downside_deviation_annual: number | null;
+  max_drawdown_pct: number | null;
+  max_drawdown_duration_days: number | null;
+  tail_concentration_pct: number | null;
+  gain_pain_ratio: number | null;
+  ulcer_index: number | null;
+  win_rate_pct: number | null;
+  avg_win_pct: number | null;
+  avg_loss_pct: number | null;
+  profit_factor: number | null;
+  n_observations: number;
+}
+
+export interface SurvivalModelResult {
+  method: string;
+  probabilities: Record<string, number>;
+  top_risk_factors: { feature: string; coefficient: number; direction: string }[];
+  training: { n_train: number; n_events: number; features_used: number };
+  interpretation: string;
+  last_updated: string;
 }
