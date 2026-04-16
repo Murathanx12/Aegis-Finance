@@ -26,6 +26,8 @@ GET /api/analytics/fixed-income           — Yield curve + credit spreads + rea
 GET /api/analytics/valuation              — Market valuation metrics (CAPE, ERP, Buffett)
 GET /api/analytics/pairs/{ticker_a}/{ticker_b} — Pair cointegration analysis
 GET /api/analytics/pairs/scan             — Scan universe for cointegrated pairs
+GET /api/analytics/tail-risk/{ticker}     — Tail risk metrics (Sortino, Omega, Calmar, etc.)
+GET /api/analytics/survival-model         — Cox PH crash timing (market-level hazard rates)
 """
 
 import asyncio
@@ -821,3 +823,144 @@ async def scan_pairs_endpoint(
     except Exception as e:
         logger.error("pair scan failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Tail Risk Analytics ──────────────────────────────────────────
+
+
+@router.get("/tail-risk/{ticker}")
+async def get_tail_risk(ticker: str, period: str = "5y"):
+    """Institutional-grade tail risk metrics for a stock.
+
+    Returns Sortino, Omega, Calmar ratios, downside deviation, max drawdown
+    duration, tail concentration index, Ulcer Index, win rate, and profit factor.
+    """
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail=f"Invalid ticker: {ticker}")
+    if period not in ("1y", "2y", "5y", "10y", "max"):
+        raise HTTPException(status_code=422, detail="period must be 1y/2y/5y/10y/max")
+
+    cache_key = f"tail_risk_{ticker}_{period}"
+    cached = cache_get(cache_key, _CACHE_TTL.get("ttl_stock", 900))
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(_compute_tail_risk, ticker, period)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"Insufficient data for {ticker}")
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("tail risk failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _compute_tail_risk(ticker: str, period: str) -> dict | None:
+    import numpy as np
+    import yfinance as yf
+    from backend.services.tail_risk import compute_tail_risk_metrics
+
+    period_map = {"1y": "1y", "2y": "2y", "5y": "5y", "10y": "10y", "max": "max"}
+    t = yf.Ticker(ticker)
+    hist = t.history(period=period_map[period], auto_adjust=True)
+    if hist is None or len(hist) < 60:
+        return None
+
+    daily_returns = hist["Close"].pct_change().dropna().values
+    metrics = compute_tail_risk_metrics(daily_returns)
+
+    # Add context
+    ann_return = float(np.mean(daily_returns) * 252 * 100)
+    ann_vol = float(np.std(daily_returns) * np.sqrt(252) * 100)
+    sharpe = float((ann_return / 100 - 0.04) / (ann_vol / 100)) if ann_vol > 0.1 else None
+
+    return {
+        "ticker": ticker,
+        "period": period,
+        "annual_return_pct": round(ann_return, 2),
+        "annual_volatility_pct": round(ann_vol, 2),
+        "sharpe_ratio": round(sharpe, 4) if sharpe else None,
+        **metrics,
+    }
+
+
+# ── Survival Model (Cox PH Crash Timing) ─────────────────────────
+
+
+@router.get("/survival-model")
+async def get_survival_model():
+    """Cox Proportional Hazards crash timing model.
+
+    Returns market-level crash probabilities at 3m/6m/12m horizons,
+    top risk factors by Cox coefficient magnitude, and training diagnostics.
+    """
+    cached = cache_get("survival_model", _CACHE_TTL.get("ttl_crash", 1800))
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(_compute_survival_model)
+        if result is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Survival model unavailable (lifelines not installed or insufficient data)",
+            )
+        cache_set("survival_model", result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("survival model failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _compute_survival_model() -> dict | None:
+    from backend.services.data_fetcher import DataFetcher
+    from backend.services.survival_model import CrashSurvivalModel
+
+    try:
+        from engine.training.features import build_feature_matrix
+    except ImportError:
+        return None
+
+    fetcher = DataFetcher()
+    data, _ = fetcher.fetch_market_data()
+    fred_data = fetcher.fetch_fred_data()
+    features = build_feature_matrix(data, fred_data=fred_data)
+
+    cox = CrashSurvivalModel()
+    train_end = int(len(features) * 0.8)
+    train_result = cox.train(features, data, train_end)
+
+    if not train_result.get("success"):
+        return None
+
+    probabilities = {}
+    for h in ["3m", "6m", "12m"]:
+        cox_prob = float(cox.predict_proba(features.iloc[[-1]], h)[0])
+        probabilities[h] = round(cox_prob * 100, 1)
+
+    top_features = cox.get_top_features(n=7)
+
+    return {
+        "method": "Cox Proportional Hazards (semi-parametric)",
+        "probabilities": probabilities,
+        "top_risk_factors": [
+            {"feature": name, "coefficient": round(coef, 4), "direction": "increases risk" if coef > 0 else "decreases risk"}
+            for name, coef in top_features
+        ],
+        "training": {
+            "n_train": train_result.get("n_train"),
+            "n_events": train_result.get("n_events"),
+            "features_used": len(cox._available_features),
+        },
+        "interpretation": (
+            f"Cox model estimates {probabilities.get('3m', '?')}% crash risk in 3 months, "
+            f"{probabilities.get('12m', '?')}% in 12 months"
+        ),
+        "last_updated": str(data.index[-1].date()),
+    }

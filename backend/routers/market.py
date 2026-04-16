@@ -189,6 +189,37 @@ def _compute_market_status() -> dict:
     except Exception as e:
         logger.warning("Sector rotation failed: %s", e)
 
+    # Survival model crash timing (Cox PH hazard rates)
+    survival_crash_timing = None
+    try:
+        from backend.services.survival_model import CrashSurvivalModel
+        from engine.training.features import build_feature_matrix
+
+        fred_data = fetcher.fetch_fred_data()
+        features = build_feature_matrix(data, fred_data=fred_data)
+
+        cox = CrashSurvivalModel()
+        train_end = int(len(features) * 0.8)
+        train_result = cox.train(features, data, train_end)
+        if train_result.get("success"):
+            cox_probs = {}
+            for h in ["3m", "6m", "12m"]:
+                cox_prob = float(cox.predict_proba(features.iloc[[-1]], h)[0])
+                cox_probs[h] = round(cox_prob * 100, 1)
+            top_factors = cox.get_top_features(n=3)
+            survival_crash_timing = {
+                "probabilities": cox_probs,
+                "method": "Cox Proportional Hazards",
+                "top_risk_factors": [
+                    {"feature": name, "coefficient": round(coef, 4)}
+                    for name, coef in top_factors
+                ],
+                "n_train": train_result.get("n_train"),
+                "n_events": train_result.get("n_events"),
+            }
+    except Exception as e:
+        logger.warning("Survival model failed: %s", e)
+
     # Bayesian changepoint detection (regime shift early warning)
     changepoint = None
     try:
@@ -228,6 +259,7 @@ def _compute_market_status() -> dict:
         "economic_surprise": economic_surprise,
         "sector_rotation": sector_rotation,
         "changepoint": changepoint,
+        "survival_crash_timing": survival_crash_timing,
         "last_updated": str(data.index[-1].date()),
     }
 

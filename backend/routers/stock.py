@@ -808,6 +808,40 @@ def _analyze_stock(ticker: str) -> dict:
     except Exception as e:
         logger.debug("bubble detection skip %s: %s", ticker, e)
 
+    # Survival model crash timing (Cox PH — beta-adjusted per stock)
+    try:
+        from backend.services.survival_model import CrashSurvivalModel
+        from engine.training.features import build_feature_matrix as _bfm_surv
+        from backend.services.data_fetcher import DataFetcher as _DF_surv
+
+        _cache_key_surv = "survival_stock_probs"
+        _cached_surv = cache_get(_cache_key_surv, 1800)
+        if _cached_surv is not None:
+            surv_probs = _cached_surv
+        else:
+            _f_surv = _DF_surv()
+            _d_surv, _ = _f_surv.fetch_market_data()
+            _fred_surv = _f_surv.fetch_fred_data()
+            _feats_surv = _bfm_surv(_d_surv, fred_data=_fred_surv)
+            cox = CrashSurvivalModel()
+            train_end = int(len(_feats_surv) * 0.8)
+            if cox.train(_feats_surv, _d_surv, train_end).get("success"):
+                surv_probs = {}
+                for h in ["3m", "6m", "12m"]:
+                    surv_probs[h] = float(cox.predict_proba(_feats_surv.iloc[[-1]], h)[0])
+                cache_set(_cache_key_surv, surv_probs)
+            else:
+                surv_probs = None
+
+        if surv_probs:
+            stock_beta = result.get("beta", 1.0)
+            result["survival_crash_timing"] = {
+                h: round(min(p * stock_beta, 0.95) * 100, 1)
+                for h, p in surv_probs.items()
+            }
+    except Exception as e:
+        logger.debug("survival model skip %s: %s", ticker, e)
+
     # Conformal prediction interval for crash probability
     stock_crash = result.get("crash_prob_3m")
     if stock_crash is not None:
