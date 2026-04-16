@@ -1,0 +1,20 @@
+{
+  "AAPL": {
+    "score": 76.0,
+    "tier": "liquid",
+    "amihud": 0.0,
+    "avg_dv_mm": 10602.3
+  },
+  "NVDA": {
+    "score": 100.0,
+    "tier": "highly_liquid",
+    "amihud": 0.0,
+    "avg_dv_mm": 29066.6
+  },
+  "COIN": {
+    "score": 100.0,
+    "tier": "highly_liquid",
+    "amihud": 0.0,
+    "avg_dv_mm": 1938.3
+  }
+}

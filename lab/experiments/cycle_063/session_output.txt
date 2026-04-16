@@ -1,0 +1,14 @@
+## Cycle 063 — Deep Audit Summary
+
+**4 bugs found and fixed across 2 service files:**
+
+| # | Severity | File | Bug | Impact |
+|---|----------|------|-----|--------|
+| 1 | **CRITICAL** | `retirement_mc.py:244` | Inflation formula `(1.025/12)^m` → 0 after month 1 | SWR reported 10% instead of ~2.6% — users told they could withdraw 4x too much |
+| 2 | MATH | `drawdown_analyzer.py:248` | Sortino used `std()` instead of `sqrt(mean(min²))`, missed rf subtraction | Sortino ratios understated for skewed returns |
+| 3 | OFF-BY-ONE | `drawdown_analyzer.py:260` | Rolling MDD excluded current day (`i` vs `i+1`) | Crashes on the boundary day invisible |
+| 4 | REPRO | `retirement_mc.py:236` | Binary search shared mutable RNG | SWR results path-dependent across iterations |
+
+**Validation:** 7 regression tests written, 1390 total tests passing, 0 regressions.
+
+---STDERR---
