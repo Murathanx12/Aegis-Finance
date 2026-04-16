@@ -154,6 +154,8 @@ async def root():
             "/api/analytics/changepoint",
             "/api/analytics/drawdowns/{ticker}",
             "/api/analytics/conformal-interval",
+            "/api/analytics/pairs/{ticker_a}/{ticker_b}",
+            "/api/analytics/pairs/scan",
             "/api/savings/project",
             "/api/savings/simulate",
             "/api/savings/safe-rate",

@@ -24,6 +24,8 @@ GET /api/analytics/sector-rotation        — Sector rotation model + business c
 GET /api/analytics/technicals/{ticker}    — Technical analysis (RSI, MACD, BB, ADX)
 GET /api/analytics/fixed-income           — Yield curve + credit spreads + real yields
 GET /api/analytics/valuation              — Market valuation metrics (CAPE, ERP, Buffett)
+GET /api/analytics/pairs/{ticker_a}/{ticker_b} — Pair cointegration analysis
+GET /api/analytics/pairs/scan             — Scan universe for cointegrated pairs
 """
 
 import asyncio
@@ -750,4 +752,72 @@ async def get_market_valuation():
         return result
     except Exception as e:
         logger.error("market valuation failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Pair Trading & Cointegration ──────────────────────────────
+
+
+@router.get("/pairs/{ticker_a}/{ticker_b}")
+async def get_pair_analysis(ticker_a: str, ticker_b: str):
+    """Cointegration analysis for a specific pair.
+
+    Returns hedge ratio, cointegration test results (Engle-Granger + Johansen),
+    Ornstein-Uhlenbeck half-life, Hurst exponent, z-score, and trading signal.
+    """
+    ticker_a = ticker_a.upper()
+    ticker_b = ticker_b.upper()
+    if not _TICKER_RE.match(ticker_a) or not _TICKER_RE.match(ticker_b):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    if ticker_a == ticker_b:
+        raise HTTPException(status_code=422, detail="Tickers must be different")
+
+    cache_key = f"pair_{ticker_a}_{ticker_b}"
+    cached = cache_get(cache_key, _CACHE_TTL.get("ttl_stock", 900))
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.pair_trading import get_pair_signal
+        result = await asyncio.to_thread(get_pair_signal, ticker_a, ticker_b)
+        if "error" not in result:
+            cache_set(cache_key, result)
+        return result
+    except Exception as e:
+        logger.error("pair analysis %s/%s failed: %s", ticker_a, ticker_b, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/pairs/scan")
+async def scan_pairs_endpoint(
+    sector: str = None,
+    top_n: int = 20,
+):
+    """Scan the stock universe for cointegrated pairs.
+
+    Optionally filter by sector. Returns top N pairs ranked by quality score.
+    """
+    if top_n < 1 or top_n > 50:
+        top_n = 20
+
+    cache_key = f"pair_scan_{sector or 'all'}_{top_n}"
+    cached = cache_get(cache_key, 3600)  # 1hr cache (expensive scan)
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.pair_trading import scan_pairs
+        tickers = config.get("pair_trading", {}).get("scan_tickers", [])
+        if not tickers:
+            # Fallback to default watchlist
+            tickers = config.get("stock_universe", {}).get("default_watchlist", [])
+
+        result = await asyncio.to_thread(
+            scan_pairs, tickers, top_n=top_n, sector_filter=sector
+        )
+        if "error" not in result:
+            cache_set(cache_key, result)
+        return result
+    except Exception as e:
+        logger.error("pair scan failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
