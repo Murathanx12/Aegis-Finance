@@ -1,0 +1,21 @@
+## Cycle 068 Complete
+
+**What was done — 6 standalone services integrated into user-facing endpoints:**
+
+### Backend Integration
+1. **Screener (`/api/stock/screener`)** — Added 8 new per-stock fields: `liquidity_score`, `liquidity_tier`, `momentum_rank`, `momentum_percentile`, `rsi_14`, `trend_direction`, `max_drawdown_pct`, `current_drawdown_pct`
+2. **Portfolio (`/api/portfolio/analyze`)** — Added stress test summary (6 historical crisis scenarios with portfolio drawdown %) and portfolio-level drawdown analysis (max drawdown, current drawdown, recovery stats, rolling 1Y return)
+3. **Market Status (`/api/market-status`)** — Added Bayesian changepoint detection (regime shift early warning with probability and days since shift)
+
+### Frontend Display
+4. **Screener table** — 4 new columns: RSI (color-coded oversold/overbought), Trend direction (arrow), Momentum percentile, Liquidity tier
+5. **Portfolio page** — 2 new cards: Historical Stress Test (crisis scenario drawdowns) and Drawdown Analysis (max DD, current DD, recovery stats)
+6. **Market banner** — 3 new indicators: Economic Surprise score/trend, Changepoint detection (regime shift alert), Business Cycle Phase
+
+### Frontend API
+7. Added `getPairAnalysis()` and `scanPairs()` functions for cointegration analysis
+8. Updated `PortfolioAnalysis` type with `tail_risk`, `attribution`, `risk_contributions`, `copula_risk`, `stress_test`, `portfolio_drawdowns`
+
+**Validation:** 1436 tests passing, 0 regressions, frontend builds clean.
+
+---STDERR---
