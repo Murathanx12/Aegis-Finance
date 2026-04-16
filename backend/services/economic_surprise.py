@@ -38,10 +38,15 @@ _INDICATORS = {
     "UNRATE": {"name": "Unemployment Rate", "inverted": True, "weight": 1.0},
     "INDPRO": {"name": "Industrial Production", "inverted": False, "weight": 1.2},
     "MANEMP": {"name": "Manufacturing Employment", "inverted": False, "weight": 0.8},
-    "CPIAUCSL": {"name": "Consumer Price Index", "inverted": True, "weight": 0.8},
+    # CPI is a monotonically increasing price level. Using the raw level causes
+    # a systematic bearish bias (latest always > trailing median). Instead, we
+    # compute surprise on month-over-month % change (inflation rate).
+    "CPIAUCSL": {"name": "Consumer Price Index", "inverted": True, "weight": 0.8, "use_change": True},
     "NFCI": {"name": "Chicago Fed NFCI", "inverted": True, "weight": 1.3},
     "BAMLH0A0HYM2": {"name": "High Yield Spread", "inverted": True, "weight": 1.2},
     "UMCSENT": {"name": "Consumer Sentiment", "inverted": False, "weight": 1.0},
+    # Industrial Production is also a level index, but changes slowly enough
+    # that the rolling median tracks it well. Add use_change if bias appears.
 }
 
 # Rolling window for trend estimation (consensus proxy)
@@ -86,11 +91,20 @@ def compute_surprise_index() -> Optional[dict]:
         if data is None or len(data) < _TREND_WINDOW + 2:
             continue
 
+        # For level-based series (e.g. CPI), convert to period-over-period
+        # % change first. This removes the upward trend that would otherwise
+        # cause a systematic positive surprise (latest always > trailing median).
+        analysis_data = data
+        if meta.get("use_change"):
+            analysis_data = data.pct_change().dropna() * 100  # as percentage
+            if len(analysis_data) < _TREND_WINDOW + 2:
+                continue
+
         # Compute trend (rolling median as consensus proxy)
-        trend = data.rolling(_TREND_WINDOW, min_periods=max(3, _TREND_WINDOW // 2)).median()
+        trend = analysis_data.rolling(_TREND_WINDOW, min_periods=max(3, _TREND_WINDOW // 2)).median()
 
         # Latest value vs trend
-        latest = float(data.iloc[-1])
+        latest = float(analysis_data.iloc[-1])
         trend_val = float(trend.iloc[-1]) if not np.isnan(trend.iloc[-1]) else float(trend.dropna().iloc[-1])
 
         if trend_val == 0:
@@ -106,11 +120,11 @@ def compute_surprise_index() -> Optional[dict]:
         surprise_normalized = float(np.clip(surprise_pct / 10.0, -1.0, 1.0))
 
         # 3-month surprise trend (are surprises getting better or worse?)
-        if len(data) >= _TREND_WINDOW + 6:
+        if len(analysis_data) >= _TREND_WINDOW + 6:
             recent_surprises = []
             for i in range(-6, 0):
-                if i + len(data) >= _TREND_WINDOW:
-                    val = float(data.iloc[i])
+                if i + len(analysis_data) >= _TREND_WINDOW:
+                    val = float(analysis_data.iloc[i])
                     tr = float(trend.iloc[i]) if not np.isnan(trend.iloc[i]) else np.nan
                     if not np.isnan(tr) and tr != 0:
                         s = (val - tr) / abs(tr) * 100
@@ -121,11 +135,15 @@ def compute_surprise_index() -> Optional[dict]:
         else:
             surprise_trend = 0.0
 
+        # Report the original level for display, but surprise is on the change
+        display_latest = float(data.iloc[-1])
+        display_trend = round(trend_val, 2) if not meta.get("use_change") else round(float(data.rolling(_TREND_WINDOW).median().iloc[-1]), 2)
+
         indicator_surprises.append({
             "series_id": series_id,
             "name": meta["name"],
-            "latest_value": round(latest, 2),
-            "trend_value": round(trend_val, 2),
+            "latest_value": round(display_latest, 2),
+            "trend_value": display_trend,
             "surprise_pct": round(surprise_pct, 2),
             "surprise_normalized": round(surprise_normalized, 3),
             "weight": meta["weight"],

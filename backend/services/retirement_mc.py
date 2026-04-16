@@ -86,7 +86,12 @@ def simulate_retirement(
     annual_sigma = params["sigma"]
 
     # Daily parameters
-    daily_mu = annual_mu / 252
+    # annual_mu is the TARGET geometric return. To achieve this after compounding
+    # with volatility, we need a higher arithmetic drift to offset the volatility
+    # drag (Jensen's inequality): E[geometric] ≈ E[arithmetic] - σ²/2.
+    # So: arithmetic_mu = geometric_mu + σ²/2
+    annual_arith_mu = annual_mu + 0.5 * annual_sigma ** 2
+    daily_mu = annual_arith_mu / 252
     daily_sigma = annual_sigma / np.sqrt(252)
     monthly_inflation = inflation_rate / 12
 
@@ -228,7 +233,9 @@ def compute_safe_withdrawal_rate(
     rng = np.random.default_rng(seed)
 
     params = _ASSET_RETURNS.get(risk_level, _ASSET_RETURNS["moderate"])
-    daily_mu = params["mu"] / 252
+    # Apply same arithmetic drift correction as simulate_retirement
+    annual_arith_mu = params["mu"] + 0.5 * params["sigma"] ** 2
+    daily_mu = annual_arith_mu / 252
     daily_sigma = params["sigma"] / np.sqrt(252)
 
     total_months = retirement_years * 12
