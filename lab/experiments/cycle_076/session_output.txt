@@ -1,0 +1,26 @@
+Cycle 076 complete. Here's what was built:
+
+## Volatility Analytics — Bloomberg-style Vol Surface
+
+**New service:** `backend/services/volatility_analytics.py` with 8 analytical components:
+
+| Component | What it does |
+|-----------|-------------|
+| **Vol Cone** | Percentile bands (P5/P25/P50/P75/P95) at 10d/30d/60d/90d/180d/252d — shows where current vol sits vs history |
+| **Term Structure** | Realized vol at each horizon — the vol "yield curve" |
+| **Vol Regime** | High/normal/low classification based on 30d vol percentile |
+| **Vol Risk Premium** | IV vs RV spread — are options cheap or expensive? |
+| **Vol Clustering** | ARCH effect detection via Ljung-Box on squared returns |
+| **Vol-of-Vol** | Second-order metric — how stable is the stock's risk profile? |
+| **Parkinson/GK** | OHLC-based efficient vol estimators (more info than close-to-close) |
+| **GARCH Forward Curve** | Model-based vol forecast out 1/5/10/30/60/90 days |
+
+**Wiring:**
+- `GET /api/stock/{ticker}/volatility` — full analytics endpoint
+- Lightweight summary embedded in every stock analysis response (`volatility_analytics` field)
+- Frontend API: `getStockVolatility(ticker)` with full TypeScript types
+- Config in `backend/config.py` under `volatility_analytics`
+
+**Validation:** 31 new tests all passing, 1517 existing tests pass with 0 regressions.
+
+---STDERR---
