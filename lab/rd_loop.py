@@ -279,7 +279,7 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
     cycle_type = _get_cycle_type(cycle)
 
     print(f"\n{'='*60}")
-    print(f"  CYCLE {cycle} ({cycle_type}) — {datetime.now().strftime('%H:%M:%S')}")
+    print(f"  CYCLE {cycle} ({cycle_type}) - {datetime.now().strftime('%H:%M:%S')}")
     print(f"{'='*60}")
 
     # Data generation
@@ -500,10 +500,10 @@ def main():
         start = len(existing) + 1
 
     print(f"\n{'='*60}")
-    print(f"  AEGIS R&D LAB v10 — Sandbox Mode")
+    print(f"  AEGIS R&D LAB v10 - Sandbox Mode")
     print(f"  Model: {args.model} | Cycles: {start}-{args.cycles}")
     print(f"  Session: {SESSION_TIMEOUT // 60} min | Branch: {args.branch}")
-    print(f"  Rotation: DEEP_AUDIT → BUILD → INTEGRATE")
+    print(f"  Rotation: DEEP_AUDIT -> BUILD -> INTEGRATE")
     print(f"  Next cycle type: {_get_cycle_type(start)}")
     print(f"{'='*60}")
 
@@ -520,7 +520,7 @@ def main():
             time.sleep(30)
 
     print(f"\n{'='*60}")
-    print(f"  DONE — cycles {start}-{args.cycles}")
+    print(f"  DONE - cycles {start}-{args.cycles}")
     print(f"  git log --oneline {args.branch} -{args.cycles}")
     print(f"{'='*60}")
 
