@@ -45,6 +45,69 @@ _CYCLE_LEADERS = {
 }
 
 
+def _classify_momentum_direction(r1m: float | None, r3m: float | None) -> str:
+    """Classify sector momentum direction from 1m and 3m returns.
+
+    Compares the magnitude of recent 1-month move to the average monthly move
+    over 3 months. Uses absolute values to handle negative returns correctly:
+    a moderating decline (smaller recent loss) is "improving", not "decelerating".
+
+    Args:
+        r1m: 1-month return in percent
+        r3m: 3-month return in percent
+
+    Returns:
+        One of: "accelerating", "improving", "stable", "declining", "decelerating"
+    """
+    if r1m is None or r3m is None:
+        return "stable"
+
+    avg_monthly_3m = r3m / 3
+    if abs(avg_monthly_3m) < 0.1:  # near-zero 3m return → stable
+        return "stable"
+
+    # Compare magnitudes: is the recent move bigger or smaller than the trend?
+    # Use absolute values so the ratio works correctly for negative returns.
+    ratio = abs(r1m) / abs(avg_monthly_3m)
+
+    # Determine if direction is consistent (same sign) or reversing
+    same_direction = (r1m >= 0) == (avg_monthly_3m >= 0)
+
+    if not same_direction:
+        # Sign reversal: if 3m was negative but 1m is positive, that's improving
+        if r1m > 0:
+            return "improving"
+        else:
+            return "declining"
+
+    # Same direction — compare magnitude
+    # For positive trends: ratio > 1 = strengthening, ratio < 1 = weakening
+    # For negative trends: ratio > 1 = deepening decline, ratio < 1 = moderating decline
+    # So for negative trends, the interpretation flips.
+    positive_trend = avg_monthly_3m > 0
+
+    if positive_trend:
+        if ratio > 1.3:
+            return "accelerating"
+        elif ratio > 1.05:
+            return "improving"
+        elif ratio < 0.7:
+            return "decelerating"
+        elif ratio < 0.95:
+            return "declining"
+    else:
+        # Negative trend: smaller magnitude = moderating (improving)
+        if ratio > 1.3:
+            return "decelerating"   # decline deepening
+        elif ratio > 1.05:
+            return "declining"      # decline slightly deepening
+        elif ratio < 0.7:
+            return "accelerating"   # decline moderating rapidly → recovery
+        elif ratio < 0.95:
+            return "improving"      # decline moderating
+    return "stable"
+
+
 def compute_sector_rotation(lookback_days: int = 504) -> dict:
     """Compute sector rotation analysis across multiple timeframes.
 
@@ -120,22 +183,7 @@ def compute_sector_rotation(lookback_days: int = 504) -> dict:
         composite = sum(score_components) if score_components else 0.0
 
         # Momentum direction (improving/declining/stable)
-        direction = "stable"
-        r1m = returns.get("1m")
-        r3m = returns.get("3m")
-        if r1m is not None and r3m is not None:
-            if r3m != 0:
-                ratio = r1m / (r3m / 3) if r3m != 0 else 1.0
-            else:
-                ratio = 1.0
-            if ratio > 1.3:
-                direction = "accelerating"
-            elif ratio > 1.05:
-                direction = "improving"
-            elif ratio < 0.7:
-                direction = "decelerating"
-            elif ratio < 0.95:
-                direction = "declining"
+        direction = _classify_momentum_direction(returns.get("1m"), returns.get("3m"))
 
         # 20-day volatility
         daily_returns = prices.pct_change().dropna()

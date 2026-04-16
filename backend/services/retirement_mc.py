@@ -95,11 +95,14 @@ def simulate_retirement(
     accum_months = max(retirement_age - current_age, 0) * 12
 
     # Simulate monthly returns (21 trading days per month, aggregated)
-    # Use Student-t for fat tails
+    # Use Student-t for fat tails, normalized so Var(noise) = sigma^2
+    # Raw standard_t(df) has variance df/(df-2), so we scale by sqrt((df-2)/df)
+    df_t = 8
+    t_scale = np.sqrt((df_t - 2) / df_t)  # ≈ 0.866, corrects variance to 1.0
     monthly_returns = np.zeros((total_months, n_sims))
     for m in range(total_months):
         # 21 daily returns → 1 monthly return (compound)
-        daily = daily_mu + daily_sigma * rng.standard_t(df=8, size=(21, n_sims))
+        daily = daily_mu + daily_sigma * t_scale * rng.standard_t(df=df_t, size=(21, n_sims))
         monthly_returns[m, :] = np.exp(np.sum(np.log(1 + daily), axis=0)) - 1
 
     # Simulate portfolio paths
@@ -231,13 +234,16 @@ def compute_safe_withdrawal_rate(
     total_months = retirement_years * 12
     max_ruin_rate = (100 - target_success_rate) / 100
 
+    df_t = 8
+    t_scale = np.sqrt((df_t - 2) / df_t)
+
     def _ruin_rate(monthly_wd: float) -> float:
         """Compute ruin probability for a given withdrawal."""
         # Fresh RNG per call so binary search is deterministic (same seed → same paths)
         inner_rng = np.random.default_rng(seed)
         monthly_returns = np.zeros((total_months, n_sims))
         for m in range(total_months):
-            daily = daily_mu + daily_sigma * inner_rng.standard_t(df=8, size=(21, n_sims))
+            daily = daily_mu + daily_sigma * t_scale * inner_rng.standard_t(df=df_t, size=(21, n_sims))
             monthly_returns[m, :] = np.exp(np.sum(np.log(1 + daily), axis=0)) - 1
 
         balances = np.zeros((total_months + 1, n_sims))

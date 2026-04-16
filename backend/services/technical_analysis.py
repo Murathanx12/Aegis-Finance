@@ -92,7 +92,9 @@ def _compute_trend(close: pd.Series, high: pd.Series, low: pd.Series) -> dict:
     # Simple Moving Averages
     sma_20 = SMAIndicator(close, window=20).sma_indicator()
     sma_50 = SMAIndicator(close, window=50).sma_indicator()
-    sma_200 = SMAIndicator(close, window=min(200, len(close) - 1)).sma_indicator()
+    # Only compute SMA 200 when we have enough data — using a shorter window
+    # would produce a different indicator masquerading as SMA 200
+    sma_200 = SMAIndicator(close, window=200).sma_indicator() if len(close) >= 200 else pd.Series(dtype=float)
 
     # EMAs for MACD
     ema_12 = EMAIndicator(close, window=12).ema_indicator()
