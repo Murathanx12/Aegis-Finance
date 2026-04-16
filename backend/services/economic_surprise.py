@@ -116,8 +116,15 @@ def compute_surprise_index() -> Optional[dict]:
         if meta["inverted"]:
             surprise_pct = -surprise_pct
 
-        # Normalize to [-1, 1] range (±10% surprise maps to ±1)
-        surprise_normalized = float(np.clip(surprise_pct / 10.0, -1.0, 1.0))
+        # Normalize to [-1, 1] range.
+        # For use_change indicators (e.g. CPI), surprise_pct is relative to
+        # very small base values (MoM % changes like 0.1-0.5%), so even tiny
+        # absolute differences produce huge percentages (>100%).  Using the
+        # same ±10% scale as level indicators causes permanent saturation at
+        # ±1.0, losing all granularity.  Fix: use a wider normalization
+        # denominator (±100%) for rate-of-change series.
+        norm_denom = 100.0 if meta.get("use_change") else 10.0
+        surprise_normalized = float(np.clip(surprise_pct / norm_denom, -1.0, 1.0))
 
         # 3-month surprise trend (are surprises getting better or worse?)
         if len(analysis_data) >= _TREND_WINDOW + 6:

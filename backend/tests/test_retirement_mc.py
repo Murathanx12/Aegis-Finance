@@ -149,3 +149,24 @@ class TestSafeWithdrawalRate:
         # Both should produce reasonable rates
         assert conservative["safe_withdrawal_rate_pct"] > 0
         assert aggressive["safe_withdrawal_rate_pct"] > 0
+
+    def test_no_dead_code_rng(self):
+        """Regression (cycle 75): compute_safe_withdrawal_rate had an unused rng variable.
+
+        The function created `rng = np.random.default_rng(seed)` but never used it,
+        because each binary search iteration creates its own `inner_rng`.
+        Verify the function still works correctly after removing the dead variable.
+        """
+        import inspect
+        source = inspect.getsource(compute_safe_withdrawal_rate)
+        # The function body should not contain an unused top-level rng assignment
+        # (inner_rng inside _ruin_rate is fine)
+        lines = source.split("\n")
+        top_level_rng = [
+            l for l in lines
+            if "rng = np.random.default_rng" in l and "inner_rng" not in l
+            and "def _ruin_rate" not in l
+        ]
+        assert len(top_level_rng) == 0, (
+            f"Found unused top-level rng variable: {top_level_rng}"
+        )

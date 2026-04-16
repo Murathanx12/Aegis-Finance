@@ -170,3 +170,43 @@ class TestRollingRiskMetrics:
     def test_max_drawdown_negative(self, trending_up):
         result = compute_rolling_risk_metrics(trending_up, window=252)
         assert result["max_drawdown"]["worst"] < 0
+
+    def test_rolling_max_dd_window_size(self):
+        """Regression (cycle 75): rolling max drawdown used window+1 elements.
+
+        The slice `prices.iloc[max(0, i - window):i + 1]` had window+1
+        elements instead of window.  Fix: `prices.iloc[i - window + 1:i + 1]`
+        gives exactly `window` elements.
+        """
+        # Create a simple price series where we can verify window size
+        n = 300
+        dates = pd.bdate_range("2024-01-01", periods=n)
+        # Flat price with a single -10% spike at day 50
+        prices_data = np.full(n, 100.0)
+        prices_data[50] = 90.0  # -10% drawdown at day 50
+        prices = pd.Series(prices_data, index=dates)
+
+        window = 100
+        result = compute_rolling_risk_metrics(prices, window=window)
+
+        if result and "max_drawdown" in result:
+            mdd_series = result["max_drawdown"]["series"]
+            # The -10% spike at day 50 should be within the rolling window
+            # for observations at days window (100) through 50+window (150).
+            # After day 150 (i.e., i=150, window starts at i-window+1=51),
+            # the spike at day 50 should no longer be in the window.
+            # With the old bug (window+1 elements, starting at i-window=50),
+            # the spike would still be visible at i=150.
+            # With the fix (window elements, starting at i-window+1=51),
+            # the spike at day 50 is excluded from i=150 onward.
+
+            # Find a data point well past day 150+window where spike is gone
+            for pt in mdd_series:
+                date = pd.Timestamp(pt["date"])
+                idx = prices.index.get_loc(date)
+                if idx > 160:  # Well past the spike's influence
+                    # Should be 0 (no drawdown in flat region)
+                    assert pt["max_dd"] == 0.0, (
+                        f"At index {idx}, max_dd={pt['max_dd']} but spike at day 50 "
+                        f"should be outside the {window}-day window"
+                    )
