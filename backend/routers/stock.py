@@ -787,6 +787,27 @@ def _analyze_stock(ticker: str) -> dict:
     except Exception as e:
         logger.debug("pattern recognition skip %s: %s", ticker, e)
 
+    # LPPL Bubble detection (Sornette) — per-stock bubble thermometer
+    try:
+        import pandas as pd
+        from backend.services.bubble_detector import get_bubble_status
+        price_hist = result.get("price_history", {}).get("prices")
+        if price_hist and len(price_hist) > 120:
+            bubble_prices = pd.Series(
+                [p["close"] for p in price_hist],
+                index=pd.to_datetime([p["date"] for p in price_hist]),
+            )
+            bubble = get_bubble_status(bubble_prices, ticker=ticker)
+            if bubble:
+                result["bubble_indicator"] = {
+                    "confidence": bubble.get("confidence"),
+                    "is_bubble": bubble.get("is_bubble"),
+                    "status": bubble.get("status"),
+                    "tc_date": bubble.get("tc_date"),
+                }
+    except Exception as e:
+        logger.debug("bubble detection skip %s: %s", ticker, e)
+
     # Conformal prediction interval for crash probability
     stock_crash = result.get("crash_prob_3m")
     if stock_crash is not None:
