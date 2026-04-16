@@ -233,15 +233,18 @@ def compute_safe_withdrawal_rate(
 
     def _ruin_rate(monthly_wd: float) -> float:
         """Compute ruin probability for a given withdrawal."""
+        # Fresh RNG per call so binary search is deterministic (same seed → same paths)
+        inner_rng = np.random.default_rng(seed)
         monthly_returns = np.zeros((total_months, n_sims))
         for m in range(total_months):
-            daily = daily_mu + daily_sigma * rng.standard_t(df=8, size=(21, n_sims))
+            daily = daily_mu + daily_sigma * inner_rng.standard_t(df=8, size=(21, n_sims))
             monthly_returns[m, :] = np.exp(np.sum(np.log(1 + daily), axis=0)) - 1
 
         balances = np.zeros((total_months + 1, n_sims))
         balances[0, :] = savings
+        monthly_inflation = 0.025 / 12
         for m in range(total_months):
-            inflation = (1.025 / 12) ** m  # 2.5% annual inflation
+            inflation = (1 + monthly_inflation) ** m
             balances[m + 1, :] = np.maximum(0, balances[m, :] * (1 + monthly_returns[m, :]) - monthly_wd * inflation)
 
         return float(np.mean(np.any(balances <= 0, axis=0)))
