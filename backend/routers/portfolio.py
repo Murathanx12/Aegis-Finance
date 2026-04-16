@@ -95,17 +95,17 @@ def _analyze_with_risk_number(holdings: list[dict]) -> dict:
     result = PortfolioEngine.analyze_portfolio(holdings)
 
     # Compute risk number
+    tickers = [h["ticker"] for h in holdings]
+    total_value = sum(h["shares"] * h["current_price"] for h in holdings)
+    weights = {}
+    for h in holdings:
+        w = (h["shares"] * h["current_price"]) / total_value if total_value > 0 else 0
+        weights[h["ticker"]] = w
+
     try:
         import yfinance as yf
         import pandas as pd
         from backend.services.risk_number import compute_risk_number
-
-        tickers = [h["ticker"] for h in holdings]
-        total_value = sum(h["shares"] * h["current_price"] for h in holdings)
-        weights = {}
-        for h in holdings:
-            w = (h["shares"] * h["current_price"]) / total_value if total_value > 0 else 0
-            weights[h["ticker"]] = w
 
         # Fetch returns for all tickers
         data = yf.download(tickers, period="2y", progress=False)
@@ -126,6 +126,27 @@ def _analyze_with_risk_number(holdings: list[dict]) -> dict:
             result["risk_number"] = risk
     except Exception as e:
         logger.warning("Risk number computation failed: %s", e)
+
+    # Factor exposures (FF5 decomposition at portfolio level)
+    try:
+        from backend.services.factor_model import decompose_portfolio
+        factor_result = decompose_portfolio(weights)
+        if factor_result:
+            result["factor_exposures"] = {
+                "r_squared": factor_result.get("portfolio", {}).get("r_squared"),
+                "alpha_annual": factor_result.get("portfolio", {}).get("alpha_annual"),
+                "market_beta": factor_result.get("portfolio", {}).get("market_beta"),
+                "style": factor_result.get("portfolio", {}).get("style"),
+                "stocks": {
+                    t: {
+                        "market_beta": s.get("market_beta"),
+                        "style": s.get("style"),
+                    }
+                    for t, s in factor_result.get("stocks", {}).items()
+                },
+            }
+    except Exception as e:
+        logger.warning("Factor exposure computation failed: %s", e)
 
     return result
 

@@ -1,0 +1,10 @@
+{
+  "test_count": {
+    "files": 60,
+    "functions": 1367
+  },
+  "code_smells": [
+    "technical_analysis.py: 5 broad excepts"
+  ],
+  "n_smells": 1
+}

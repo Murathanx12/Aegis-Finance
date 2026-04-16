@@ -510,6 +510,7 @@ def get_stock_signal(
     options_signal_score: Optional[float] = None,
     earnings_signal_score: Optional[float] = None,
     insider_signal_score: Optional[float] = None,
+    ta_signal_score: Optional[float] = None,
 ) -> dict:
     """Generate a per-stock signal adjusted by beta and fundamentals.
 
@@ -698,6 +699,20 @@ def get_stock_signal(
         elif insider_signal_score < -0.3:
             reasons.append("Heavy insider selling")
     components["insider"] = round(insider_contribution, 4)
+
+    # Technical analysis signal (RSI, MACD, Bollinger, ADX composite)
+    # TA provides a complementary short-term timing signal to the fundamental
+    # and macro signals above. Score from get_ta_signal(): -1 (bearish) to +1 (bullish).
+    ta_contribution = 0.0
+    ta_w = _sw.get("technical_analysis", 0.08)
+    if ta_signal_score is not None:
+        ta_contribution = ta_w * float(np.clip(ta_signal_score, -1, 1))
+        stock_score += ta_contribution
+        if ta_signal_score > 0.4:
+            reasons.append("Technical indicators bullish (trend + momentum aligned)")
+        elif ta_signal_score < -0.4:
+            reasons.append("Technical indicators bearish (trend breakdown)")
+    components["technical"] = round(ta_contribution, 4)
 
     stock_score = float(np.clip(stock_score, -1, 1))
 

@@ -142,6 +142,53 @@ def _compute_market_status() -> dict:
     except Exception as e:
         logger.warning("Google Trends sentiment failed: %s", e)
 
+    # VIX term structure (contango/backwardation regime)
+    vix_term_structure = None
+    try:
+        from backend.services.regime_detector import get_vix_term_structure_state
+        vts = get_vix_term_structure_state(data)
+        if vts.get("available"):
+            vix_term_structure = {
+                "structure": vts.get("structure"),
+                "signal": vts.get("signal"),
+                "vix_level": vts.get("vix_level"),
+                "interpretation": vts.get("interpretation"),
+            }
+    except Exception as e:
+        logger.warning("VIX term structure failed: %s", e)
+
+    # Economic surprise index (FRED actual vs trend)
+    economic_surprise = None
+    try:
+        from backend.services.economic_surprise import compute_surprise_index
+        eco = compute_surprise_index()
+        if eco:
+            economic_surprise = {
+                "composite_score": eco.get("composite_score"),
+                "signal": eco.get("signal"),
+                "trend": eco.get("trend"),
+                "positive_surprises": eco.get("positive_surprises"),
+                "negative_surprises": eco.get("negative_surprises"),
+                "breadth": eco.get("breadth"),
+            }
+    except Exception as e:
+        logger.warning("Economic surprise index failed: %s", e)
+
+    # Sector rotation (relative strength + business cycle phase)
+    sector_rotation = None
+    try:
+        from backend.services.sector_rotation import compute_sector_rotation
+        sr = compute_sector_rotation()
+        if sr:
+            sector_rotation = {
+                "cycle_phase": sr.get("cycle_phase"),
+                "breadth": sr.get("breadth"),
+                "leaders": [s.get("sector") for s in sr.get("rankings", [])[:3]],
+                "laggards": [s.get("sector") for s in sr.get("rankings", [])[-3:]],
+            }
+    except Exception as e:
+        logger.warning("Sector rotation failed: %s", e)
+
     return {
         "sp500": sp500,
         "sp500_change_1m": round(sp500_change_1m, 2),
@@ -156,6 +203,9 @@ def _compute_market_status() -> dict:
         "systemic_risk": systemic,
         "bubble_indicator": bubble,
         "trends_sentiment": trends_sentiment,
+        "vix_term_structure": vix_term_structure,
+        "economic_surprise": economic_surprise,
+        "sector_rotation": sector_rotation,
         "last_updated": str(data.index[-1].date()),
     }
 
