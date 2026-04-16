@@ -827,6 +827,18 @@ config: dict = {
         "sp500_approximate_mcap": 50_000_000_000_000,  # ~$50T for active share approximation
     },
 
+    # ── VOLATILITY ANALYTICS ────────────────────────────────────────────
+    # Bloomberg-style vol cone, term structure, regime, risk premium, GARCH forecast
+    "volatility_analytics": {
+        "cone_windows": [10, 30, 60, 90, 180, 252],  # Lookback windows (trading days)
+        "vovol_window": 60,              # Rolling window for vol-of-vol
+        "history_years": 5,              # Years of price history for percentile computation
+        "annualization_factor": 252,     # Trading days per year
+        "regime_low_pctl": 25,           # Below this percentile → low vol regime
+        "regime_high_pctl": 75,          # Above this percentile → high vol regime
+        "arch_test_lags": 10,            # Lags for Ljung-Box test on squared returns
+    },
+
     # ── CHART PATTERN RECOGNITION ──────────────────────────────────────
     # TradingView-style automatic chart pattern detection
     "pattern_recognition": {
