@@ -346,6 +346,7 @@ config: dict = {
         "options_iv": 0.12,        # weight for options-implied signal (IV skew, P/C ratio)
         "earnings_quality": 0.10,  # weight for earnings surprise/growth signal
         "insider_trading": 0.10,   # weight for insider buy/sell signal (cluster buy = strong)
+        "technical_analysis": 0.08,  # weight for TA composite (RSI, MACD, Bollinger, ADX)
     },
     # Per-stock crash probability adjustment parameters.
     # Market-level crash prob is scaled by stock-specific risk factors (beta,

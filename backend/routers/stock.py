@@ -164,6 +164,22 @@ def _screener() -> dict:
             except Exception as e:
                 logger.debug("insider signal skip %s: %s", ticker, e)
 
+            # Technical analysis signal (RSI, MACD, Bollinger, ADX composite)
+            _ta_score = None
+            try:
+                import yfinance as yf
+                from backend.services.technical_analysis import get_ta_signal, compute_technical_indicators
+                _t = yf.Ticker(ticker)
+                _hist = _t.history(period="1y")
+                if _hist is not None and len(_hist) >= 50:
+                    _ta_ind = compute_technical_indicators(
+                        _hist["Close"], _hist.get("Volume"), _hist["High"], _hist["Low"],
+                    )
+                    _ta_sig = get_ta_signal(_ta_ind)
+                    _ta_score = _ta_sig.get("score")
+            except Exception as e:
+                logger.debug("ta signal skip %s: %s", ticker, e)
+
             stock_sig = get_stock_signal(
                 market_signal=market_sig,
                 beta=r.get("beta", 1.0),
@@ -179,6 +195,7 @@ def _screener() -> dict:
                 options_signal_score=options_score,
                 earnings_signal_score=earnings_score,
                 insider_signal_score=insider_score,
+                ta_signal_score=_ta_score,
             )
 
             return {
@@ -553,6 +570,24 @@ def _analyze_stock(ticker: str) -> dict:
     except Exception as e:
         logger.debug("insider signal skip %s: %s", ticker, e)
 
+    # Technical analysis — compute once, use for both signal composite and display
+    ta_score = None
+    _ta_sig_result = None
+    _ta_ind_result = None
+    try:
+        import yfinance as yf
+        from backend.services.technical_analysis import get_ta_signal, compute_technical_indicators
+        t = yf.Ticker(ticker)
+        hist = t.history(period="1y")
+        if hist is not None and len(hist) >= 50:
+            _ta_ind_result = compute_technical_indicators(
+                hist["Close"], hist.get("Volume"), hist["High"], hist["Low"],
+            )
+            _ta_sig_result = get_ta_signal(_ta_ind_result)
+            ta_score = _ta_sig_result.get("score")
+    except Exception as e:
+        logger.debug("ta signal for composite skip %s: %s", ticker, e)
+
     # Compute per-stock signal (same logic as screener)
     stock_sig = get_stock_signal(
         market_signal=market_sig,
@@ -569,6 +604,7 @@ def _analyze_stock(ticker: str) -> dict:
         options_signal_score=options_score,
         earnings_signal_score=earnings_score,
         insider_signal_score=insider_score,
+        ta_signal_score=ta_score,
     )
 
     # Attach signal and crash fields to the result
@@ -612,23 +648,59 @@ def _analyze_stock(ticker: str) -> dict:
     except Exception as e:
         logger.debug("momentum rank skip %s: %s", ticker, e)
 
-    # Technical analysis signal (RSI, MACD, Bollinger, patterns)
+    # Technical analysis signal (reuse precomputed TA from above)
+    if _ta_sig_result is not None:
+        result["technical_signal"] = _ta_sig_result
+        if _ta_ind_result is not None:
+            result["rsi_14"] = _ta_ind_result.get("momentum", {}).get("rsi_14")
+            result["trend_direction"] = _ta_ind_result.get("trend", {}).get("trend_direction")
+
+    # Google Trends attention for this ticker
     try:
-        import yfinance as yf
-        from backend.services.technical_analysis import get_ta_signal, compute_technical_indicators
-        t = yf.Ticker(ticker)
-        hist = t.history(period="1y")
-        if hist is not None and len(hist) >= 50:
-            ta_ind = compute_technical_indicators(
-                hist["Close"], hist.get("Volume"), hist["High"], hist["Low"],
-            )
-            ta_sig = get_ta_signal(ta_ind)
-            result["technical_signal"] = ta_sig
-            # Key TA values for quick display
-            result["rsi_14"] = ta_ind.get("momentum", {}).get("rsi_14")
-            result["trend_direction"] = ta_ind.get("trend", {}).get("trend_direction")
+        from backend.services.trends_sentiment import get_ticker_attention
+        attention = get_ticker_attention(ticker, company_name=result.get("name"))
+        if attention:
+            result["trends_attention"] = {
+                "attention_level": attention.get("attention_level"),
+                "attention_zscore": attention.get("attention_zscore"),
+                "interpretation": attention.get("interpretation"),
+            }
     except Exception as e:
-        logger.debug("technical analysis skip %s: %s", ticker, e)
+        logger.debug("trends attention skip %s: %s", ticker, e)
+
+    # Drawdown analysis (historical drawdown recovery stats)
+    try:
+        from backend.services.drawdown_analyzer import full_drawdown_analysis
+        dd_analysis = full_drawdown_analysis(ticker, period="5y")
+        if dd_analysis:
+            dd_summary = dd_analysis.get("drawdown_summary", {})
+            rolling = dd_analysis.get("rolling_risk", {})
+            result["drawdown_analysis"] = {
+                "total_drawdowns": dd_summary.get("total_drawdowns"),
+                "max_drawdown_pct": dd_summary.get("max_drawdown_pct"),
+                "avg_recovery_days": dd_summary.get("avg_recovery_days"),
+                "current_drawdown_pct": dd_summary.get("current_drawdown_pct"),
+                "rolling_sharpe_1y": rolling.get("rolling_sharpe_1y"),
+                "rolling_sortino_1y": rolling.get("rolling_sortino_1y"),
+            }
+    except Exception as e:
+        logger.debug("drawdown analysis skip %s: %s", ticker, e)
+
+    # Conformal prediction interval for crash probability
+    stock_crash = result.get("crash_prob_3m")
+    if stock_crash is not None:
+        try:
+            from backend.services.conformal_predictor import conformal_crash_interval
+            interval = conformal_crash_interval(stock_crash / 100.0, horizon="3m")
+            if interval:
+                result["crash_prob_interval"] = {
+                    "lower": round(interval["lower"] * 100, 2),
+                    "upper": round(interval["upper"] * 100, 2),
+                    "width": round(interval["width"] * 100, 2),
+                    "coverage_target": interval.get("coverage_target"),
+                }
+        except Exception as e:
+            logger.debug("conformal interval skip %s: %s", ticker, e)
 
     return result
 
@@ -727,6 +799,22 @@ def _stock_signal(ticker: str) -> dict:
     except Exception as e:
         logger.debug("insider signal skip %s: %s", ticker, e)
 
+    # Technical analysis signal
+    ta_score = None
+    try:
+        import yfinance as yf
+        from backend.services.technical_analysis import get_ta_signal, compute_technical_indicators
+        _t = yf.Ticker(ticker)
+        _hist = _t.history(period="1y")
+        if _hist is not None and len(_hist) >= 50:
+            _ta_ind = compute_technical_indicators(
+                _hist["Close"], _hist.get("Volume"), _hist["High"], _hist["Low"],
+            )
+            _ta_sig = get_ta_signal(_ta_ind)
+            ta_score = _ta_sig.get("score")
+    except Exception as e:
+        logger.debug("ta signal skip %s: %s", ticker, e)
+
     signal = get_stock_signal(
         market_signal=market_sig,
         beta=stock_data.get("beta", 1.0),
@@ -742,6 +830,7 @@ def _stock_signal(ticker: str) -> dict:
         options_signal_score=options_score,
         earnings_signal_score=earnings_score,
         insider_signal_score=insider_score,
+        ta_signal_score=ta_score,
     )
     signal["ticker"] = ticker
     signal["name"] = stock_data.get("name", ticker)

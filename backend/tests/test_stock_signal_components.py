@@ -60,7 +60,7 @@ class TestStockSignalComponents(unittest.TestCase):
             "market_base", "beta_adjustment", "analyst_target",
             "sector_momentum", "valuation", "crash_risk",
             "drawdown", "momentum", "options", "earnings",
-            "insider",
+            "insider", "technical",
         }
         self.assertEqual(set(result["components"].keys()), expected_keys)
 

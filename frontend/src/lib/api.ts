@@ -356,6 +356,62 @@ export function getMarketValuation() {
   return fetchAPI<MarketValuation>("/api/analytics/valuation");
 }
 
+// Missing endpoints — wired in cycle 062
+export function getPcaResiduals(tickers: string[]) {
+  return fetchAPI<Record<string, unknown>>("/api/analytics/factors/pca-residuals", {
+    method: "POST",
+    body: JSON.stringify({ tickers }),
+  });
+}
+
+export function getPortfolioFactorsFF5(weights: Record<string, number>) {
+  return fetchAPI<Record<string, unknown>>("/api/analytics/factors/portfolio", {
+    method: "POST",
+    body: JSON.stringify(weights),
+  });
+}
+
+export function stressTestPortfolio(weights: Record<string, number>) {
+  return fetchAPI<Record<string, unknown>>("/api/analytics/stress-test", {
+    method: "POST",
+    body: JSON.stringify({ weights }),
+  });
+}
+
+export function getMomentumScore(ticker: string) {
+  return fetchAPI<Record<string, unknown>>(`/api/analytics/momentum/${ticker}`);
+}
+
+export function getLiquidityUniverse() {
+  return fetchAPI<Record<string, unknown>>("/api/analytics/liquidity");
+}
+
+export function getCopulaPortfolio(tickers: string[], weights: number[]) {
+  return fetchAPI<Record<string, unknown>>("/api/analytics/copula/portfolio", {
+    method: "POST",
+    body: JSON.stringify({ tickers, weights }),
+  });
+}
+
+export function getVixTermStructureAnalytics() {
+  return fetchAPI<Record<string, unknown>>("/api/analytics/vix-term-structure");
+}
+
+export function getCrashDiagnostics() {
+  return fetchAPI<Record<string, unknown>>("/api/crash/diagnostics");
+}
+
+export function getSignalBacktest(ticker?: string, lookback?: number) {
+  const params = new URLSearchParams();
+  if (ticker) params.set("ticker", ticker);
+  if (lookback) params.set("lookback_days", String(lookback));
+  return fetchAPI<Record<string, unknown>>(`/api/backtest/signal?${params}`);
+}
+
+export function getDriftCheck() {
+  return fetchAPI<Record<string, unknown>>("/api/drift/check");
+}
+
 // ── Types ──────────────────────────────────────────────────
 
 export interface MarketStatus {
@@ -370,6 +426,26 @@ export interface MarketStatus {
   data_quality: DataQuality | null;
   net_liquidity: NetLiquidityCurrent | null;
   trends_sentiment: TrendsSentiment | null;
+  vix_term_structure: {
+    structure: string;
+    signal: string;
+    vix_level: string;
+    interpretation: string;
+  } | null;
+  economic_surprise: {
+    composite_score: number;
+    signal: string;
+    trend: string;
+    positive_surprises: number;
+    negative_surprises: number;
+    breadth: number;
+  } | null;
+  sector_rotation: {
+    cycle_phase: string;
+    breadth: string;
+    leaders: string[];
+    laggards: string[];
+  } | null;
   last_updated: string;
 }
 
