@@ -912,6 +912,31 @@ config: dict = {
         "aic_selection": True,           # Select best copula by AIC
     },
 
+    # ── PAIR TRADING & COINTEGRATION ───────────────────────────────────
+    # Statistical arbitrage pair detection (Engle-Granger + Johansen)
+    "pair_trading": {
+        "lookback_days": 504,            # 2 years of daily prices
+        "min_observations": 126,         # Minimum for reliable cointegration test
+        "cointegration_pvalue": 0.05,    # ADF p-value threshold for cointegration
+        "entry_z": 2.0,                  # Z-score to enter a pair trade
+        "exit_z": 0.5,                   # Z-score to close (mean reversion done)
+        "stop_z": 4.0,                   # Z-score stop-loss (spread blowout)
+        "max_half_life_days": 126,       # Max acceptable half-life (6 months)
+        "min_half_life_days": 5,         # Min half-life (filter out noise)
+        "z_score_window": 63,            # Rolling window for z-score (3 months)
+        "hedge_ratio_window": 63,        # Rolling OLS hedge ratio window
+        "scan_workers": 6,               # Parallel workers for universe scan
+        "top_pairs": 20,                 # Return top N pairs from scanner
+        "scan_tickers": [                # Default tickers for pair scanning
+            "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META",
+            "JPM", "BAC", "GS", "MS", "V", "MA",
+            "XOM", "CVX", "COP", "SLB",
+            "UNH", "JNJ", "LLY", "ABBV", "PFE", "MRK",
+            "HD", "LOW", "COST", "WMT",
+            "CAT", "DE", "HON", "GE",
+        ],
+    },
+
     # ── DENOISED COVARIANCE ─────────────────────────────────────────────
     # Marchenko-Pastur denoising + Ledoit-Wolf shrinkage for covariance
     "covariance_config": {

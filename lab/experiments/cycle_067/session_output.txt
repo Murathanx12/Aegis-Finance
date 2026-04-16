@@ -1,0 +1,3 @@
+API Error: 500 {"type":"error","error":{"type":"api_error","message":"Internal server error"},"request_id":"req_011Ca81s3Bf9cWg5x2Ft3DRe"}
+
+---STDERR---
