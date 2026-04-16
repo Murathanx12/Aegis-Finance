@@ -17,6 +17,7 @@ export const queryKeys = {
     prediction: (horizon: string, explain: boolean) =>
       ["crash", "prediction", horizon, explain] as const,
     ticker: (ticker: string) => ["crash", "ticker", ticker] as const,
+    timeline: ["crash", "timeline"] as const,
   },
   simulation: {
     sp500: (nSims: number, years: number) =>

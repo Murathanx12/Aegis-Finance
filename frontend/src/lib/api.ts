@@ -989,6 +989,38 @@ export interface PortfolioAnalysis {
     tail_dependence: number;
     copula_type: string;
   } | null;
+  // Inline attribution + MCTR from /analyze endpoint
+  attribution_summary?: {
+    period: string | null;
+    total_allocation_effect: number | null;
+    total_selection_effect: number | null;
+    total_interaction_effect: number | null;
+    total_active_return: number | null;
+    portfolio_return: number | null;
+    benchmark_return: number | null;
+  } | null;
+  mctr_summary?: {
+    portfolio_vol: number | null;
+    top_risk_contributors: {
+      ticker: string;
+      weight_pct: number;
+      risk_contrib_pct: number;
+      mctr: number;
+    }[];
+  } | null;
+  benchmark_analytics?: {
+    tracking_error_pct: number | null;
+    information_ratio: number | null;
+    active_return_annual_pct: number | null;
+    active_share: number | null;
+    active_share_label: string | null;
+    up_capture: number | null;
+    down_capture: number | null;
+    beta_vs_benchmark: number | null;
+    r_squared: number | null;
+    management_style: string | null;
+    insights: string[];
+  } | null;
   // Cycle_068 integrations
   stress_test?: {
     scenarios: Record<string, {
@@ -1254,8 +1286,20 @@ export interface HypotheticalStressResult {
 }
 
 export interface CrashTimeline {
-  months: { month: number; date: string; crash_prob: number }[];
-  methodology: string;
+  months_ahead: number;
+  total_simulations: number;
+  crash_threshold_pct: number;
+  monthly_probabilities: { month: number; date: string; probability: number; cumulative: number }[];
+  peak_risk_month: number;
+  peak_risk_probability: number;
+  total_crash_probability_1y: number;
+  total_crash_probability_5y: number;
+  contributing_factors: { factor: string; severity: string; detail: string }[];
+  regime: string;
+  risk_score: number;
+  // Legacy compat
+  months?: { month: number; date: string; crash_prob: number }[];
+  methodology?: string;
 }
 
 export interface ChangepointResult {

@@ -538,6 +538,184 @@ function PortfolioAnalyzeSection() {
             </div>
           )}
 
+          {/* Attribution + MCTR + Benchmark Analytics */}
+          {(analysis.attribution_summary || analysis.mctr_summary || analysis.benchmark_analytics) && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Brinson-Fachler Attribution */}
+              {analysis.attribution_summary && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                      Performance Attribution
+                      <InfoTooltip text="Brinson-Fachler decomposition: how much of your active return came from allocation (sector bets), selection (stock picking), and interaction effects vs SPY benchmark." />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Portfolio</span>
+                      <span className={`font-bold tabular-nums ${(analysis.attribution_summary.portfolio_return ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {analysis.attribution_summary.portfolio_return != null ? `${(analysis.attribution_summary.portfolio_return * 100).toFixed(2)}%` : "--"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Benchmark (SPY)</span>
+                      <span className="font-bold tabular-nums">
+                        {analysis.attribution_summary.benchmark_return != null ? `${(analysis.attribution_summary.benchmark_return * 100).toFixed(2)}%` : "--"}
+                      </span>
+                    </div>
+                    <Separator />
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Allocation effect</span>
+                        <span className={`font-medium tabular-nums ${(analysis.attribution_summary.total_allocation_effect ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {analysis.attribution_summary.total_allocation_effect != null ? `${(analysis.attribution_summary.total_allocation_effect * 100).toFixed(2)}%` : "--"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Selection effect</span>
+                        <span className={`font-medium tabular-nums ${(analysis.attribution_summary.total_selection_effect ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {analysis.attribution_summary.total_selection_effect != null ? `${(analysis.attribution_summary.total_selection_effect * 100).toFixed(2)}%` : "--"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Interaction</span>
+                        <span className={`font-medium tabular-nums ${(analysis.attribution_summary.total_interaction_effect ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {analysis.attribution_summary.total_interaction_effect != null ? `${(analysis.attribution_summary.total_interaction_effect * 100).toFixed(2)}%` : "--"}
+                        </span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between font-bold">
+                        <span>Active Return</span>
+                        <span className={`tabular-nums ${(analysis.attribution_summary.total_active_return ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {analysis.attribution_summary.total_active_return != null ? `${(analysis.attribution_summary.total_active_return * 100).toFixed(2)}%` : "--"}
+                        </span>
+                      </div>
+                    </div>
+                    {analysis.attribution_summary.period && (
+                      <p className="text-xs text-muted-foreground">Period: {analysis.attribution_summary.period}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* MCTR Risk Contributors */}
+              {analysis.mctr_summary && analysis.mctr_summary.top_risk_contributors?.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                      Risk Contributors (MCTR)
+                      <InfoTooltip text="Marginal Contribution to Risk: which holdings contribute most to portfolio volatility. A holding with high risk contribution relative to its weight is a concentration risk." />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {analysis.mctr_summary.portfolio_vol != null && (
+                      <p className="text-sm text-muted-foreground">
+                        Portfolio Vol: <span className="font-bold text-foreground">{(analysis.mctr_summary.portfolio_vol * 100).toFixed(1)}%</span>
+                      </p>
+                    )}
+                    <div className="space-y-2">
+                      {analysis.mctr_summary.top_risk_contributors.map((c) => (
+                        <div key={c.ticker} className="flex items-center gap-2">
+                          <span className="text-sm font-medium w-12">{c.ticker}</span>
+                          <div className="flex-1 h-2 bg-muted/30 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${
+                                c.risk_contrib_pct > c.weight_pct * 1.5 ? "bg-red-400" :
+                                c.risk_contrib_pct > c.weight_pct ? "bg-amber-400" : "bg-emerald-400"
+                              }`}
+                              style={{ width: `${Math.min(Math.abs(c.risk_contrib_pct), 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs tabular-nums text-muted-foreground w-24 text-right">
+                            {c.risk_contrib_pct.toFixed(1)}% risk / {c.weight_pct.toFixed(1)}% wt
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground pt-1 border-t border-border/50">
+                      Red = risk contribution &gt; 1.5x weight (concentrated risk)
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Benchmark Analytics */}
+              {analysis.benchmark_analytics && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                      Benchmark Analytics
+                      <InfoTooltip text="How your portfolio compares to SPY. Tracking error measures deviation, information ratio measures skill, active share measures how different your holdings are." />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {analysis.benchmark_analytics.management_style && (
+                      <Badge variant="outline" className="text-xs">
+                        {analysis.benchmark_analytics.management_style}
+                      </Badge>
+                    )}
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      {analysis.benchmark_analytics.tracking_error_pct != null && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Tracking Error</p>
+                          <p className="font-bold tabular-nums">{analysis.benchmark_analytics.tracking_error_pct.toFixed(2)}%</p>
+                        </div>
+                      )}
+                      {analysis.benchmark_analytics.information_ratio != null && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Information Ratio</p>
+                          <p className={`font-bold tabular-nums ${analysis.benchmark_analytics.information_ratio > 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            {analysis.benchmark_analytics.information_ratio.toFixed(2)}
+                          </p>
+                        </div>
+                      )}
+                      {analysis.benchmark_analytics.active_share != null && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Active Share</p>
+                          <p className="font-bold tabular-nums">
+                            {analysis.benchmark_analytics.active_share.toFixed(1)}%
+                            {analysis.benchmark_analytics.active_share_label && (
+                              <span className="text-xs text-muted-foreground ml-1">({analysis.benchmark_analytics.active_share_label})</span>
+                            )}
+                          </p>
+                        </div>
+                      )}
+                      {analysis.benchmark_analytics.beta_vs_benchmark != null && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Beta vs SPY</p>
+                          <p className="font-bold tabular-nums">{analysis.benchmark_analytics.beta_vs_benchmark.toFixed(2)}</p>
+                        </div>
+                      )}
+                      {analysis.benchmark_analytics.up_capture != null && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Up Capture</p>
+                          <p className={`font-bold tabular-nums ${analysis.benchmark_analytics.up_capture > 100 ? "text-emerald-400" : "text-muted-foreground"}`}>
+                            {analysis.benchmark_analytics.up_capture.toFixed(0)}%
+                          </p>
+                        </div>
+                      )}
+                      {analysis.benchmark_analytics.down_capture != null && (
+                        <div>
+                          <p className="text-xs text-muted-foreground">Down Capture</p>
+                          <p className={`font-bold tabular-nums ${analysis.benchmark_analytics.down_capture < 100 ? "text-emerald-400" : "text-red-400"}`}>
+                            {analysis.benchmark_analytics.down_capture.toFixed(0)}%
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    {analysis.benchmark_analytics.insights && analysis.benchmark_analytics.insights.length > 0 && (
+                      <div className="pt-2 border-t border-border/50">
+                        {analysis.benchmark_analytics.insights.slice(0, 2).map((insight, i) => (
+                          <p key={i} className="text-xs text-muted-foreground mt-1">{insight}</p>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
           {/* Concentration Warning */}
           {analysis.allocations.some(a => a.weight > 40) && (
             <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 flex items-start gap-2 text-xs text-amber-400/90">

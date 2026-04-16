@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useApi } from "@/hooks/use-api";
 import {
-  getCrashPrediction, getTickerCrash,
+  getCrashPrediction, getTickerCrash, getCrashTimeline,
 } from "@/lib/api";
-import type { TickerCrash } from "@/lib/api";
+import type { TickerCrash, CrashTimeline } from "@/lib/api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import { ErrorCard } from "@/components/error-card";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, ReferenceLine,
+  AreaChart, Area, LineChart, Line, ComposedChart,
 } from "recharts";
 
 /* ── Crash Gauge ─────────────────────────────────────────────── */
@@ -160,6 +161,140 @@ function TickerCrashCard() {
                   <p className={`text-lg font-bold tabular-nums ${prob > 30 ? "text-red-500" : prob > 20 ? "text-amber-500" : "text-emerald-500"}`}>
                     {prob}%
                   </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ── Crash Timeline (60-month forward curve) ─────────────────── */
+
+function CrashTimelineSection() {
+  const timelineQuery = useQuery({
+    queryKey: queryKeys.crash.timeline,
+    queryFn: getCrashTimeline,
+    staleTime: staleTimes.crash,
+  });
+
+  const tl = timelineQuery.data as CrashTimeline | undefined;
+
+  if (timelineQuery.isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-medium text-muted-foreground">Crash Timeline</CardTitle>
+        </CardHeader>
+        <CardContent><Skeleton className="h-[300px] w-full" /></CardContent>
+      </Card>
+    );
+  }
+
+  if (!tl?.monthly_probabilities || tl.monthly_probabilities.length === 0) return null;
+
+  const chartData = tl.monthly_probabilities.map((m) => ({
+    date: m.date,
+    month: m.month,
+    probability: m.probability,
+    cumulative: m.cumulative,
+  }));
+
+  const severityColor: Record<string, string> = {
+    HIGH: "bg-red-500/15 text-red-400 border-red-500/30",
+    MEDIUM: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+    LOW: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+          60-Month Crash Probability Curve
+          <InfoTooltip text="Monte Carlo simulation of when a 20%+ drawdown is most likely to occur. The bar shows monthly new-crash probability; the line shows cumulative probability. Based on 5,000 simulated paths with current market conditions." />
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Summary metrics */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="rounded-lg bg-muted/30 p-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">1Y Crash Prob</p>
+            <p className={`text-lg font-bold tabular-nums ${tl.total_crash_probability_1y > 30 ? "text-red-400" : tl.total_crash_probability_1y > 15 ? "text-amber-400" : "text-emerald-400"}`}>
+              {tl.total_crash_probability_1y}%
+            </p>
+          </div>
+          <div className="rounded-lg bg-muted/30 p-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">5Y Crash Prob</p>
+            <p className={`text-lg font-bold tabular-nums ${tl.total_crash_probability_5y > 70 ? "text-red-400" : "text-amber-400"}`}>
+              {tl.total_crash_probability_5y}%
+            </p>
+          </div>
+          <div className="rounded-lg bg-muted/30 p-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Peak Risk Month</p>
+            <p className="text-lg font-bold tabular-nums">
+              Month {tl.peak_risk_month}
+            </p>
+          </div>
+          <div className="rounded-lg bg-muted/30 p-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Peak Probability</p>
+            <p className="text-lg font-bold tabular-nums text-red-400">
+              {tl.peak_risk_probability}%
+            </p>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <ResponsiveContainer width="100%" height={300}>
+          <ComposedChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis
+              dataKey="date"
+              tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
+              interval={5}
+            />
+            <YAxis
+              yAxisId="left"
+              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+              tickFormatter={(v) => `${v}%`}
+              label={{ value: "Monthly %", angle: -90, position: "insideLeft", style: { fill: "var(--muted-foreground)", fontSize: 10 } }}
+            />
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+              tickFormatter={(v) => `${v}%`}
+              domain={[0, 100]}
+              label={{ value: "Cumulative %", angle: 90, position: "insideRight", style: { fill: "var(--muted-foreground)", fontSize: 10 } }}
+            />
+            <Tooltip
+              contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
+              formatter={(v, name) => [
+                `${Number(v).toFixed(1)}%`,
+                name === "probability" ? "Monthly New Crash" : "Cumulative",
+              ]}
+              labelFormatter={(d) => `${d}`}
+            />
+            <Bar yAxisId="left" dataKey="probability" fill="#ef4444" fillOpacity={0.6} radius={[2, 2, 0, 0]} name="probability" />
+            <Line yAxisId="right" type="monotone" dataKey="cumulative" stroke="#f59e0b" strokeWidth={2} dot={false} name="cumulative" />
+          </ComposedChart>
+        </ResponsiveContainer>
+
+        {/* Contributing factors */}
+        {tl.contributing_factors && tl.contributing_factors.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Contributing Risk Factors</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {tl.contributing_factors.map((f, i) => (
+                <div key={i} className="flex items-start gap-2 rounded-lg bg-muted/20 p-2">
+                  <Badge variant="outline" className={`text-[10px] shrink-0 ${severityColor[f.severity] || ""}`}>
+                    {f.severity}
+                  </Badge>
+                  <div>
+                    <p className="text-xs font-medium">{f.factor}</p>
+                    <p className="text-xs text-muted-foreground">{f.detail}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -368,7 +503,10 @@ export default function CrashPage() {
         </div>
       </div>
 
-      {/* ── Row 3: Per-Ticker Crash ──────────────────────────── */}
+      {/* ── Row 3: Crash Timeline (60-month forward curve) ───── */}
+      <CrashTimelineSection />
+
+      {/* ── Row 4: Per-Ticker Crash ──────────────────────────── */}
       <TickerCrashCard />
 
       {crashQuery.error && (

@@ -1,0 +1,50 @@
+{
+  "cycle": 77,
+  "cycle_type": "INTEGRATE",
+  "timestamp": "2026-04-17T08:15:00Z",
+  "title": "Frontend integration: portfolio attribution/MCTR/benchmark, crash timeline, market valuation dashboard",
+  "category": "integration",
+  "observation": {
+    "bugs_found": [],
+    "gap_identified": "Backend returns rich analytics (attribution, MCTR, benchmark analytics, crash timeline, market valuation) via API endpoints, but frontend never renders them — users can't see 5+ major analytics that are already computed"
+  },
+  "implementation": {
+    "bugs_fixed": [],
+    "feature_built": "Wired 5 standalone backend analytics into user-facing frontend pages: (1) Brinson-Fachler performance attribution on portfolio page showing allocation/selection/interaction effects, (2) MCTR risk contributor visualization with bar chart on portfolio page, (3) Benchmark analytics panel (tracking error, IR, active share, capture ratios) on portfolio page, (4) 60-month crash probability timeline with ComposedChart (bar + line) and contributing risk factors on crash page, (5) Market valuation dashboard (CAPE, forward P/E, ERP, Buffett indicator, composite score) on outlook page",
+    "files_changed": [
+      "frontend/src/lib/api.ts",
+      "frontend/src/lib/query-keys.ts",
+      "frontend/src/app/portfolio/page.tsx",
+      "frontend/src/app/crash/page.tsx",
+      "frontend/src/app/outlook/page.tsx"
+    ],
+    "files_created": [
+      "lab/experiments/cycle_077/experiment_report.json"
+    ],
+    "packages_installed": []
+  },
+  "validation": {
+    "tests_written": 0,
+    "tests_passing": 1548,
+    "regressions": 0
+  },
+  "assessment": {
+    "verdict": "improved",
+    "confidence": "high",
+    "depth": 3,
+    "limitations": [
+      "No new backend tests added (pure frontend integration)",
+      "Did not add frontend unit tests for new components",
+      "Portfolio attribution/MCTR depend on having 2+ holdings to show meaningful data",
+      "Crash timeline and valuation fetch on page load which may slow initial render"
+    ],
+    "self_critique": "Could have also integrated options intelligence, stock fundamentals (Piotroski), or pair analysis into frontend pages. Focused on the highest-impact integrations first. The portfolio page now has a lot of content — might benefit from collapsible sections in a future UI cycle."
+  },
+  "next_steps": [
+    "Add options intelligence panel to stock detail page (IV skew, P/C ratio, max pain visualization)",
+    "Add stock fundamentals (Piotroski F-Score) to stock detail page",
+    "Add pair analysis / spread trading dashboard as new page",
+    "Add collapsible/tab sections to portfolio page to manage content density",
+    "Consider lazy-loading crash timeline and valuation to avoid blocking initial render"
+  ]
+}
