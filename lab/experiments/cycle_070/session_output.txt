@@ -1,0 +1,27 @@
+## Cycle 070 Complete — Chart Pattern Recognition
+
+**What was built:** A TradingView-style chart pattern recognition engine — their signature premium feature, now in Aegis for free.
+
+### New service: `backend/services/pattern_recognition.py`
+Detects 8 classic chart patterns from OHLC data:
+- **Double Top / Double Bottom** — bearish/bullish reversals with neckline and measured move targets
+- **Head & Shoulders / Inverse H&S** — three-peak reversal patterns with shoulder symmetry scoring
+- **Ascending / Descending / Symmetrical Triangles** — trendline convergence with breakout detection
+- **Rising / Falling Wedges** — converging channels with directional bias
+- **Support & Resistance Levels** — pivot-based clustering with touch counts and strength scores
+
+Each pattern includes: type, direction (bullish/bearish), confidence (0-1), status (confirmed/forming), neckline, measured move target price, pattern height %, and date labels.
+
+### Integration points:
+- `GET /api/stock/{ticker}/patterns` — dedicated endpoint with full pattern analysis
+- Stock detail response (`/api/stock/{ticker}`) — `chart_patterns` field with bias, patterns, S/R levels
+- Screener — `pattern_bias` and `pattern_count` columns
+- Frontend — `getStockPatterns()` API function + full TypeScript types
+- Config — 7 tunable parameters in `config["pattern_recognition"]`
+
+### Validation:
+- **37 new tests** — pivots, clustering, S/R, double top/bottom, H&S, triangles, wedges, edge cases
+- **1479 total tests passing**, 0 regressions
+- Frontend builds clean
+
+---STDERR---
