@@ -1,0 +1,28 @@
+Done. Here's the summary of Cycle 062 (INTEGRATE):
+
+## What was integrated
+
+**Market Status** (`/api/market-status`) — 3 new fields:
+- VIX term structure (contango/backwardation regime detection)
+- Economic surprise index (FRED actual vs trend, breadth)
+- Sector rotation (business cycle phase, leaders/laggards)
+
+**Stock Analysis** (`/api/stock/{ticker}`) — 3 new fields:
+- Google Trends attention per ticker (attention level, z-score)
+- Drawdown analysis (max drawdown, recovery days, rolling Sharpe/Sortino)
+- Conformal prediction intervals for crash probability (lower/upper bounds)
+
+**Portfolio Analyze** (`/api/portfolio/analyze`) — 1 new field:
+- FF5 factor exposures (market beta, style classification, alpha)
+
+**Signal Engine** — 1 new component:
+- Technical analysis (RSI/MACD/BB/ADX composite) as 13th stock signal component at 8% weight
+
+**Frontend** — 10 new API functions + updated MarketStatus type
+
+## Results
+- **1376 tests passing**, 0 regressions
+- Frontend builds clean
+- 9 previously standalone-only services now surface in user-facing endpoints
+
+---STDERR---
