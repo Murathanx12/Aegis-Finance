@@ -1,0 +1,19 @@
+## Cycle 72 Complete — Deep Audit Summary
+
+**4 bugs found and fixed** across 10 files audited:
+
+### Bug 1: Covariance diagnostics — wrong matrix type for eigenvalue analysis
+`covariance.py:274` — `covariance_diagnostics()` was analyzing eigenvalues of the **covariance** matrix for Marchenko-Pastur signal/noise classification. MP theory applies to **correlation** matrices (trace=N). This caused 2 of 3 signal eigenvalues to be misclassified as noise in testing.
+
+### Bug 2: Drawdown analyzer — future dates in peak detection  
+`drawdown_analyzer.py:79` — `analyze_drawdowns()` searched the **entire** price series for peak dates. When a price reappeared after recovery (e.g., 100→110→80→110), it picked the **future** occurrence, producing negative `peak_to_trough_days` (e.g., -45 days).
+
+### Bug 3: Sector rotation — misaligned date comparison
+`sector_rotation.py:191` — Relative strength used `iloc[-days]` on SPY and sector ETF series fetched via **separate** yfinance calls. When the series had different row counts, returns were computed over different calendar dates. Fixed with index intersection.
+
+### Bug 4: Technical analysis — silent error swallowing
+`technical_analysis.py` — 5 bare `except Exception: pass` blocks silently swallowed all errors from TA indicators. Replaced with specific `(ValueError, ZeroDivisionError)` catches + debug logging.
+
+**Validation:** 3 regression tests added, **1482 tests passing, 0 regressions**.
+
+---STDERR---
