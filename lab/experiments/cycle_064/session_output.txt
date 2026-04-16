@@ -1,0 +1,27 @@
+Cycle 064 complete. Here's what was built:
+
+## Relative Valuation & Peer Comparison (Koyfin-style)
+
+**New service:** `backend/services/relative_valuation.py`
+
+Ranks any stock against its sector peers on **13 valuation metrics**:
+- P/E (trailing & forward), PEG ratio, EV/EBITDA
+- P/S, P/B, dividend yield, FCF yield
+- Revenue growth, earnings growth, profit margin, ROE, D/E
+
+**What users see:**
+- **Percentile rankings** within sector (e.g., "AAPL's P/E is at the 35th percentile in Technology")
+- **Composite valuation score** (0-100, weighted across all metrics)
+- **Verdict labels**: Deep Value / Undervalued / Fair Value / Overvalued / Significantly Overvalued
+- **Historical P/E context**: current vs 5-year range (e.g., "P/E near 5-year lows")
+- **Peer comparison table** with all metrics side-by-side
+- **Human-readable interpretations** ("significantly cheaper", "premium", "in line")
+
+**Integration points:**
+- `GET /api/stock/{ticker}/valuation` — full peer comparison view
+- `GET /api/stock/{ticker}` — now includes `relative_valuation` summary in response
+- Frontend: `getStockValuation()` + full TypeScript types
+
+**Validation:** 44 new tests, 1427 total passing, 0 regressions, frontend builds clean.
+
+---STDERR---
