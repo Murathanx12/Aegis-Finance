@@ -816,6 +816,18 @@ config: dict = {
         },
     },
 
+    # ── CHART PATTERN RECOGNITION ──────────────────────────────────────
+    # TradingView-style automatic chart pattern detection
+    "pattern_recognition": {
+        "pivot_window": 5,             # Bars on each side to confirm a pivot
+        "sr_cluster_pct": 0.015,       # 1.5% tolerance for S/R level clustering
+        "min_pattern_bars": 10,        # Minimum bars between pattern points
+        "max_pattern_bars": 120,       # Maximum bars for pattern span
+        "breakout_threshold": 0.005,   # 0.5% beyond level = confirmed breakout
+        "double_tolerance": 0.03,      # 3% tolerance for double top/bottom peak matching
+        "hs_shoulder_tolerance": 0.05, # 5% tolerance for H&S shoulder symmetry
+    },
+
     # ── SIGNAL ENGINE THRESHOLDS ─────────────────────────────────────────
     # Centralized from signal_engine.py and risk_scorer.py hardcoded values
     "signal_thresholds_vix": {

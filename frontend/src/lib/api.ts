@@ -336,6 +336,11 @@ export function getStockTechnicals(ticker: string) {
   return fetchAPI<TechnicalAnalysis>(`/api/stock/${ticker}/technicals`);
 }
 
+// Chart Pattern Recognition
+export function getStockPatterns(ticker: string) {
+  return fetchAPI<ChartPatternAnalysis>(`/api/stock/${ticker}/patterns`);
+}
+
 // Polygon.io Real-Time Snapshot
 export function getRealtimeSnapshot(ticker: string) {
   return fetchAPI<RealtimeSnapshot>(`/api/realtime/${ticker}`);
@@ -1497,6 +1502,45 @@ export interface TechnicalAnalysis {
     confidence: number;
     n_signals: number;
     reasons: string[];
+  };
+}
+
+export interface ChartPattern {
+  type: string;
+  direction: "bullish" | "bearish" | "neutral";
+  confidence: number;
+  status: "confirmed" | "forming";
+  target_price?: number;
+  neckline?: number;
+  pattern_height_pct?: number;
+  start_index: number;
+  end_index: number;
+  start_date?: string;
+  end_date?: string;
+  breakout_date?: string;
+  [key: string]: unknown;
+}
+
+export interface SupportResistanceLevel {
+  price: number;
+  touches: number;
+  strength: number;
+}
+
+export interface ChartPatternAnalysis {
+  ticker: string;
+  period: string;
+  bars_analyzed: number;
+  patterns: ChartPattern[];
+  pattern_count: number;
+  bullish_patterns: number;
+  bearish_patterns: number;
+  bias: "bullish" | "bearish" | "neutral";
+  strongest_pattern: ChartPattern | null;
+  support_resistance: {
+    support: SupportResistanceLevel[];
+    resistance: SupportResistanceLevel[];
+    current_price: number;
   };
 }
 
