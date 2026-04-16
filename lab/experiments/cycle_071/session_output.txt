@@ -1,0 +1,26 @@
+Done. Here's what cycle 071 accomplished:
+
+## Cycle 071 — INTEGRATE: 4 standalone services wired into user-facing endpoints
+
+### What was integrated:
+
+1. **Survival Model (Cox PH) → Crash Prediction** (`crash.py`)
+   - `/api/crash/prediction` now returns Cox PH probabilities alongside LightGBM, plus an ensemble average
+   - `/api/crash/{ticker}` also gets survival model probs (beta-adjusted) with ensemble
+   - Top Cox risk factors exposed in response
+
+2. **Isolation Forest Anomaly Detection → Crash Prediction** (`crash.py`)
+   - `/api/crash/prediction` now includes `anomaly_assessment` with confidence factor
+   - Tells users when current market conditions are unlike historical patterns (predictions less reliable)
+
+3. **Brinson-Fachler Attribution + MCTR → Portfolio Analyze** (`portfolio.py`)
+   - `/api/portfolio/analyze` now embeds `attribution_summary` (allocation/selection/interaction effects) and `mctr_summary` (top 5 risk contributors) inline
+   - Previously required 2 separate API calls
+
+4. **LPPL Bubble Detection → Per-Stock Analysis** (`stock.py`)
+   - `/api/stock/{ticker}` now includes `bubble_indicator` (confidence, is_bubble, status, tc_date)
+   - Previously only available at market level in `/api/market-status`
+
+### Validation: 1479 tests passing, 0 regressions
+
+---STDERR---
