@@ -38,6 +38,15 @@ Aegis Finance is a free, open-source market intelligence web platform combining 
 - Insider trading signal (Finnhub + SEC Form 4, cluster buy detection)
 - Hypothetical stress scenarios (user-defined macro shocks)
 - AI portfolio commentary (Claude/DeepSeek — Bloomberg PORT style)
+- Drawdown recovery analysis (depth, duration, recovery time for every drawdown)
+- Rolling returns analysis (1Y/3Y/5Y annualized, with rolling Sharpe/Sortino)
+- Monte Carlo retirement simulation (contributions, withdrawals, Social Security)
+- Safe withdrawal rate calculator (Bengen 4% rule comparison with MC)
+- Technical analysis (RSI, MACD, Bollinger Bands, ADX, OBV, Stochastic via `ta` library)
+- Portfolio risk number (1-100, Bloomberg PORT-style composite risk score)
+- Sector rotation model (multi-timeframe relative strength + business cycle mapping)
+- Real-time price snapshots via Polygon.io API
+- Conformal prediction intervals for crash probabilities
 
 **What it is NOT:**
 - Financial advice — educational tool with disclaimers everywhere
@@ -54,7 +63,8 @@ Aegis Finance is a free, open-source market intelligence web platform combining 
 | Statistical | GJR-GARCH, HMM (3-state), Jump-diffusion Monte Carlo, Copula models |
 | Portfolio | riskfolio-lib (CVaR, Risk Parity, HRP, Max Div), PyPortfolioOpt |
 | NLP | ProsusAI/FinBERT (sentiment), keyword fallback |
-| Data | Yahoo Finance (yfinance), FRED (fredapi), GDELT, Kenneth French Data Library |
+| Technical | `ta` library (RSI, MACD, Bollinger, ADX, OBV, Stochastic, ATR) |
+| Data | Yahoo Finance (yfinance), FRED (fredapi), GDELT, Kenneth French, Polygon.io |
 | AI | DeepSeek (optional, for news summaries) |
 | Deploy | Vercel (frontend), Railway (backend), Docker |
 
@@ -115,7 +125,13 @@ aegis-finance/
 │   │   ├── portfolio_optimizer.py # Mean-CVaR, Risk Parity, Max Diversification, HRP (riskfolio-lib)
 │   │   ├── insider_trading.py  # Insider buy/sell signal (Finnhub + SEC Form 4)
 │   │   ├── trends_sentiment.py # Google Trends fear/greed proxy (pytrends)
-│   │   └── attribution.py     # Brinson-Fachler attribution + MCTR risk decomposition
+│   │   ├── attribution.py     # Brinson-Fachler attribution + MCTR risk decomposition
+│   │   ├── technical_analysis.py # RSI, MACD, BB, ADX, OBV, patterns (ta lib)
+│   │   ├── polygon_client.py  # Polygon.io real-time quotes, intraday bars
+│   │   ├── risk_number.py     # Bloomberg PORT-style portfolio risk number (1-100)
+│   │   ├── sector_rotation.py # Multi-timeframe relative strength + business cycle
+│   │   ├── drawdown_analyzer.py # Drawdown recovery analysis + rolling returns
+│   │   └── retirement_mc.py   # Monte Carlo retirement sim + safe withdrawal rate
 │   └── models/                  # GJR-GARCH, HMM, saved .pkl models
 ├── engine/                      # Offline research (not served by API)
 │   ├── training/                # features.py, feature_selection.py, labeling.py, fracdiff.py, sample_uniqueness.py

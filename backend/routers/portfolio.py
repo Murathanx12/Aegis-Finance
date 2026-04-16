@@ -80,14 +80,54 @@ async def portfolio_questionnaire(request: QuestionnaireRequest):
 
 @router.post("/analyze")
 async def analyze_portfolio(request: AnalyzeRequest):
-    """Analyze a portfolio: allocations, correlations, VaR/CVaR, Sharpe."""
+    """Analyze a portfolio: allocations, correlations, VaR/CVaR, Sharpe, risk number."""
     try:
         holdings = [h.model_dump() for h in request.holdings]
-        result = await asyncio.to_thread(PortfolioEngine.analyze_portfolio, holdings)
+        result = await asyncio.to_thread(_analyze_with_risk_number, holdings)
         return result
     except Exception as e:
         logger.error("portfolio analyze failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+def _analyze_with_risk_number(holdings: list[dict]) -> dict:
+    """Run portfolio analysis and attach risk number (1-100)."""
+    result = PortfolioEngine.analyze_portfolio(holdings)
+
+    # Compute risk number
+    try:
+        import yfinance as yf
+        import pandas as pd
+        from backend.services.risk_number import compute_risk_number
+
+        tickers = [h["ticker"] for h in holdings]
+        total_value = sum(h["shares"] * h["current_price"] for h in holdings)
+        weights = {}
+        for h in holdings:
+            w = (h["shares"] * h["current_price"]) / total_value if total_value > 0 else 0
+            weights[h["ticker"]] = w
+
+        # Fetch returns for all tickers
+        data = yf.download(tickers, period="2y", progress=False)
+        if data is not None and "Close" in data.columns.get_level_values(0) if hasattr(data.columns, 'get_level_values') else "Close" in data.columns:
+            if len(tickers) == 1:
+                close = data["Close"].to_frame(tickers[0])
+            else:
+                close = data["Close"]
+            returns = close.pct_change().dropna()
+
+            # Also get S&P 500 for beta calculation
+            bench = yf.download("SPY", period="2y", progress=False)
+            bench_returns = None
+            if bench is not None and len(bench) > 30:
+                bench_returns = bench["Close"].pct_change().dropna()
+
+            risk = compute_risk_number(returns, weights, benchmark_returns=bench_returns)
+            result["risk_number"] = risk
+    except Exception as e:
+        logger.warning("Risk number computation failed: %s", e)
+
+    return result
 
 
 class ProjectRequest(BaseModel):

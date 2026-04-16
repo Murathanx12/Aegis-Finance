@@ -4,6 +4,7 @@ Market Status & Macro Indicators Router
 
 GET /api/market-status  — Unified market state (regime, risk score, VIX, etc.)
 GET /api/macro          — FRED macro indicators
+GET /api/realtime/{ticker} — Polygon.io real-time snapshot
 """
 
 import asyncio
@@ -420,3 +421,28 @@ def _compute_data_quality() -> dict:
     data, _ = fetcher.fetch_market_data()
     checker = DataQualityChecker()
     return checker.summary(data)
+
+
+@router.get("/realtime/{ticker}")
+async def get_realtime_snapshot(ticker: str):
+    """Real-time price snapshot from Polygon.io (near-zero delay)."""
+    ticker = ticker.upper()
+    try:
+        result = await asyncio.to_thread(_realtime_snapshot, ticker)
+        if result is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Polygon.io not available (missing API key or library)",
+            )
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("realtime snapshot failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _realtime_snapshot(ticker: str) -> dict | None:
+    from backend.services.polygon_client import PolygonClient
+    client = PolygonClient()
+    return client.get_snapshot(ticker)

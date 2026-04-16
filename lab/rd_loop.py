@@ -1,13 +1,13 @@
 """
-Aegis Finance - Autonomous R&D Loop v8
-Audit → Research → Fix → Build → Test methodology per cycle.
+Aegis Finance - Autonomous R&D Loop v10
+=========================================
+Sandbox methodology — each cycle has full freedom to audit, research,
+build, fix, and integrate. No micro-managed phases.
 
-Each cycle follows the pattern that produced the best results:
-1. Read and audit code for bugs / quality issues
-2. Research competitors and state-of-the-art approaches
-3. Fix bugs found in audit
-4. Add new features / improvements
-5. Write tests and run full regression suite
+Three cycle types rotate to prevent tunnel vision:
+  - DEEP_AUDIT: Read code, find bugs, fix them, write regression tests
+  - BUILD: Research competitors, install packages, build new features
+  - INTEGRATE: Wire existing services together, update frontend, close gaps
 
 Usage:
   python lab/rd_loop.py                    # opus, auto-detect cycle
@@ -36,12 +36,22 @@ SESSION_TIMEOUT = 2700  # 45 min max per session
 import shutil
 CLAUDE_CMD = shutil.which("claude") or shutil.which("claude.cmd") or "claude"
 
+# Cycle type rotation — prevents the lab from always doing the same thing
+CYCLE_TYPES = ["DEEP_AUDIT", "BUILD", "INTEGRATE"]
+
+
+def _get_cycle_type(cycle: int) -> str:
+    """Rotate cycle types: audit → build → integrate → audit → ..."""
+    return CYCLE_TYPES[cycle % 3]
+
 
 # ---------------------------------------------------------------------------
-# Build the prompt — one shot, full context, full freedom
+# Build the prompt — sandbox mentality, full freedom
 # ---------------------------------------------------------------------------
 
 def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
+
+    cycle_type = _get_cycle_type(cycle)
 
     # Load engine data
     data_dir = cycle_dir / "data"
@@ -58,15 +68,13 @@ def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
                 pass
     data_block = "\n\n".join(data_sections) if data_sections else "No data."
 
-    # Last 5 cycle summaries (brief — don't anchor Claude to old approaches)
+    # Last 5 cycle summaries
     learnings = []
     for prev in range(max(1, cycle - 5), cycle):
         rp = EXPERIMENTS_DIR / f"cycle_{prev:03d}" / "experiment_report.json"
         if rp.exists():
             try:
                 r = json.loads(rp.read_text(encoding="utf-8"))
-                # Handle both old format (what_i_did, results.improved) and
-                # new format (title, assessment.verdict)
                 title = (
                     r.get("title")
                     or r.get("what_i_did")
@@ -82,201 +90,159 @@ def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
                 pass
     past_block = "\n".join(learnings) if learnings else "No recent history."
 
-    # Untouched files
-    modified = set()
-    for prev in range(1, cycle):
-        rp = EXPERIMENTS_DIR / f"cycle_{prev:03d}" / "experiment_report.json"
-        if rp.exists():
-            try:
-                r = json.loads(rp.read_text(encoding="utf-8"))
-                # Support both formats
-                files = (
-                    r.get("files_modified", [])
-                    or r.get("implementation", {}).get("files_changed", [])
-                )
-                modified.update(files)
-            except Exception:
-                pass
+    # Type-specific instructions
+    if cycle_type == "DEEP_AUDIT":
+        type_instructions = """
+## This is a DEEP AUDIT cycle
 
-    all_files = [
-        # Core services
-        "backend/services/monte_carlo.py", "backend/services/stock_analyzer.py",
-        "backend/services/sector_analyzer.py", "backend/services/portfolio_engine.py",
-        "backend/services/crash_model.py", "backend/services/signal_engine.py",
-        "backend/services/regime_detector.py", "backend/services/risk_scorer.py",
-        "backend/services/shap_explainer.py", "backend/services/news_intelligence.py",
-        "backend/services/sentiment_analyzer.py", "backend/services/data_quality.py",
-        "backend/services/net_liquidity.py", "backend/services/return_model.py",
-        "backend/services/external_validator.py", "backend/services/regime_validator.py",
-        "backend/services/drift_detector.py", "backend/services/llm_analyzer.py",
-        "backend/services/options_intelligence.py", "backend/services/earnings_intelligence.py",
-        "backend/services/tail_risk.py", "backend/services/tail_dependence.py",
-        "backend/services/backtest.py", "backend/services/systemic_risk.py",
-        "backend/services/bubble_detector.py", "backend/services/fundamentals.py",
-        "backend/services/options_calibrator.py", "backend/services/prediction_confidence.py",
-        "backend/services/signal_analytics.py",
-        # v8 services
-        "backend/services/factor_model.py", "backend/services/stress_testing.py",
-        "backend/services/cross_sectional_momentum.py", "backend/services/economic_surprise.py",
-        "backend/services/survival_model.py", "backend/services/anomaly_detector.py",
-        "backend/services/crash_timeline.py",
-        # v9 services (institutional-grade)
-        "backend/services/liquidity_risk.py", "backend/services/copula_tail.py",
-        "backend/services/covariance.py", "backend/services/portfolio_optimizer.py",
-        "backend/services/insider_trading.py", "backend/services/trends_sentiment.py",
-        "backend/services/attribution.py",
-        # Routers
-        "backend/routers/market.py", "backend/routers/stock.py",
-        "backend/routers/crash.py", "backend/routers/simulation.py",
-        "backend/routers/portfolio.py", "backend/routers/sector.py",
-        "backend/routers/analytics.py",
-        # Config
-        "backend/config.py",
-        # Engine
-        "engine/training/features.py", "engine/training/train_crash_model.py",
-        "engine/validation/walk_forward.py", "engine/validation/metrics.py",
-        # Frontend
-        "frontend/src/app/", "frontend/src/components/", "frontend/src/lib/",
-    ]
-    untouched = [f for f in all_files if f not in modified]
+Your primary goal: find and fix bugs. Read code carefully before writing any.
 
-    return f"""# Aegis Finance — R&D Cycle {cycle}
+1. Pick 3-5 service files and READ THEM LINE BY LINE
+2. For each bug you find, write a regression test FIRST, then fix the bug
+3. Look for: wrong math, off-by-one errors, NaN handling, stale code,
+   inconsistencies between config values and actual usage, broad except blocks
+4. Run the full fast test suite at the end: `python -m pytest backend/tests/ -v -m "not slow" --tb=line -q`
+5. Fix any failures you caused
 
-You OWN this codebase. This is your sandbox. Improve the engine.
+Quality bar: Find at least 3 real bugs (not style issues). Each fix should
+have a test that would have caught it.
+"""
+    elif cycle_type == "BUILD":
+        type_instructions = """
+## This is a BUILD cycle
 
-## Methodology — follow this workflow (it produces the best results)
+Your primary goal: add a substantial new capability. Think like a quant at a hedge fund.
 
-### Phase 1: AUDIT (15 min)
-Read service files thoroughly. Look for:
-- Bugs (wrong calculations, off-by-one, type errors, logic flaws)
-- Stale code (unused variables, dead branches)
-- Missing edge case handling
-- Inconsistencies between config values and actual usage
-- Performance bottlenecks (redundant computations, missing caching)
+1. Search the web for what Bloomberg, OpenBB, Koyfin, or QuantConnect offer
+   that Aegis doesn't. Pick the highest-impact gap.
+2. `pip install` any packages that would help (riskfolio-lib, ta, arch, etc.)
+3. Build the feature properly — full service file, config entries, API endpoint,
+   tests, and frontend API client function.
+4. Wire it into existing endpoints where it makes sense (don't just create
+   isolated endpoints nobody calls).
 
-### Phase 2: RESEARCH (5 min)
-Search the web for state-of-the-art approaches relevant to what you found.
-Look at OpenBB, Riskfolio-Lib, skfolio, QuantLib, recent papers.
-`pip install` any useful packages you find.
+Quality bar: The feature should be something a user would actually notice.
+Not internal plumbing — visible analytics that show up in API responses.
 
-### Phase 3: FIX (10 min)
-Fix every bug you found in Phase 1. Each fix should be surgical — don't
-refactor surrounding code unless the bug requires it.
+Competitive targets (what we're missing that they have):
+- Bloomberg PORT: risk budgeting, tracking error analysis, fixed income analytics
+- Koyfin: 500+ screening metrics, custom screening filters, relative valuation tools
+- TradingView: chart pattern recognition (head/shoulders, triangles, flags), alerts system
+- OpenBB: broad data source coverage (we have ~10 sources, they have 100+), crypto/forex
+- QuantConnect: walk-forward strategy backtesting with transaction costs
+- Morningstar: style box analysis, fund overlap detection, income projections
 
-### Phase 4: BUILD (10 min)
-Add ONE substantial new feature or improvement. Pick from the priority list
-below, or from what your audit/research revealed. Quality over quantity.
+ALREADY DONE (don't rebuild): technical analysis (ta lib), risk number (1-100),
+sector rotation, drawdown recovery, rolling Sharpe/Sortino, retirement MC,
+safe withdrawal rate, Polygon.io real-time data, copula tail risk, factor models
+"""
+    else:  # INTEGRATE
+        type_instructions = """
+## This is an INTEGRATE cycle
 
-### Phase 5: TEST (5 min)
-- Write tests for your bug fixes (regression tests)
-- Write tests for your new feature
-- Run ONLY the affected test files: `python -m pytest backend/tests/test_<service>.py -v --tb=short`
-- Run 3 core smoke tests: `python -m pytest backend/tests/test_monte_carlo.py backend/tests/test_signal_engine.py backend/tests/test_crash_calibration.py -v --tb=short`
+Your primary goal: wire existing services into the main user-facing endpoints.
+A service that exists but doesn't show up in API responses is wasted code.
 
-## Your powers — use them
+Check these integration points:
+1. Stock analysis (`/api/stock/{ticker}`) — does it show: factor exposure,
+   liquidity score, insider signal, momentum rank, TA signal, trend attention?
+2. Portfolio analysis (`/api/portfolio/analyze`) — does it include: attribution,
+   MCTR, copula VaR, factor exposures, risk number (1-100)?
+3. Market status (`/api/market-status`) — does it include: trends sentiment,
+   VIX term structure state, changepoint detection, sector rotation?
+4. Screener (`/api/stock/screener`) — do the stock signals use all 12 components?
+   Does it include TA signal per stock?
+5. Frontend (`frontend/src/lib/api.ts`) — are ALL backend endpoints callable?
+6. Sector rotation (`/api/analytics/sector-rotation`) — is it wired into
+   market status or sectors page?
+7. Real-time data (`/api/realtime/{ticker}`) — is Polygon used for fresher
+   prices in stock analysis when available?
 
-- Modify ANY file: backend/, frontend/, engine/, AND lab/
-- Install packages: `pip install X`, `npm install X`
-- Web search for state-of-the-art approaches and libraries
-- Access APIs: yfinance, FRED, Finnhub, GDELT, SEC EDGAR, any public finance API
-- Download reference implementations for study
+Also:
+- Build/improve frontend components that display new analytics
+- Add caching to slow endpoints
+- Wire new data into the signal engine (every new signal source should
+  eventually feed the composite score)
 
-## Priority areas (don't repeat what past cycles did)
+Quality bar: At least 2 services that were standalone-only are now
+integrated into a user-facing endpoint.
+"""
 
-### Already built and integrated (v9) — now improve quality
-- Signal engine now includes: economic surprise + momentum breadth signals (v9.1)
-- Stock analysis now shows: insider signal, liquidity score, momentum rank (v9.1)
-- Portfolio engine now uses denoised covariance (RMT) by default (v9.1)
-- Frontend API client has 20+ new endpoint functions (v9.1)
+    return f"""# Aegis Finance — R&D Cycle {cycle} ({cycle_type})
 
-### Still needs deeper integration
-- Copula tail dependence: integrate copula VaR into portfolio analysis response
-- Liquidity risk: add liquidity-adjusted position sizing in portfolio optimizer
-- Insider trading: integrate as additional stock signal factor (additive weight)
-- Google Trends: integrate fear/greed into macro risk dashboard endpoint
-- Factor model (FF6): show factor exposures on stock analysis page
-- Attribution: wire into portfolio analyze endpoint (auto-compute vs SPY)
+This project is YOUR SANDBOX. You have complete freedom. You are a senior quant
+and fintech expert building an engine to compete with Bloomberg — but more
+user-friendly and open-source.
 
-### Quantitative (highest remaining impact)
-- Conformal prediction intervals for crash probabilities
-- Regime-switching GARCH or MSVAR (statsmodels.tsa.regime_switching)
-- Volatility surface interpolation for options intelligence
-- Augmented Black-Litterman with entropy pooling (riskfolio has augmented_black_litterman)
-- Walk-forward signal optimization (temporal parameter tuning)
-- Factor-tilted portfolio construction (overweight quality/value factors)
-- Turnover-constrained optimization (max rebalancing cost)
-- Cross-sectional momentum → signal engine integration
-- Economic surprise → signal engine integration
-- Multi-period optimization (dynamic programming approach)
+{type_instructions}
 
-### Data & integration
-- SEC EDGAR quarterly financials pipeline improvements (edgartools)
-- VIX term structure → regime detection integration
-- Short interest data aggregation (Finnhub short interest endpoint)
-- Alpha Vantage integration for technical indicators (free tier)
-- Congressional trading data (Capitol Trades / Quiver Quant)
-- BLS employment data integration (payrolls, claims detail)
-- Treasury auction data (bid-to-cover ratios, indirect bidding)
-- Sector rotation signals (relative strength + breadth + RSI)
+## Your powers — USE THEM (the lab has historically underused these)
 
-### Frontend / UX (high user impact)
-- Liquidity risk display on stock pages
-- Copula tail dependence heatmap
-- Portfolio optimizer comparison table (Bloomberg PORT style)
-- Factor decomposition visualization (bar chart + style box)
-- Insider trading timeline display
-- Stress test scenario comparison waterfall chart
-- Economic surprise dashboard
-- Momentum heatmap (sector × stock grid)
-- Covariance diagnostics display (eigenvalue spectrum)
-- Export functionality (CSV/PDF reports)
-- Mobile responsive improvements
+- **Install packages**: `pip install X` — do this! Past 54 cycles installed 0 packages.
+  Useful: `ta` (technical analysis), `arch` (GARCH), `ruptures` (changepoint),
+  `plotly` (charts), `pytrends` (Google Trends), `fredapi`, etc.
+- **Web search**: Search for state-of-the-art approaches, competitor features,
+  recent papers, new free data APIs. The lab has never done web research.
+- **Download and study code**: Look at OpenBB, riskfolio-lib, skfolio source code
+  for implementation patterns.
+- **Access APIs**: yfinance, FRED, Finnhub, SEC EDGAR, Treasury.gov, BLS, GDELT
+- **Modify ANY file**: backend/, frontend/, engine/, lab/, config, requirements.txt
+- **Create new services**: Build entire new .py files with tests and endpoints
 
-### Reliability & performance
-- Options calibrator edge cases (no options data, illiquid chains)
-- Screener performance with expanded 80+ ticker universe
-- Cache warming strategy for new v9 endpoints
-- Rate limiting for external API calls
-- Parallel data fetching for liquidity/copula analysis
-- Error recovery in portfolio optimizer (fallback to simpler method)
+## Current engine (53 services, 45+ endpoints, 1350+ tests)
 
-### Competitive gaps to close (vs OpenBB, Koyfin, TradingView)
-- Alerts/notifications system (threshold-based email or webhook)
-- Custom watchlist management (frontend)
-- Chart pattern recognition (TA library is installed: `import ta`)
-- Multi-asset coverage (ETFs, crypto, commodities via yfinance)
-- Backtesting portfolio optimizer decisions (did CVaR outperform?)
+Backend services: monte_carlo, stock_analyzer, sector_analyzer, portfolio_engine,
+crash_model, signal_engine (12 components), regime_detector, risk_scorer, shap_explainer,
+news_intelligence, llm_analyzer (Claude+DeepSeek), sentiment_analyzer, data_fetcher,
+data_quality, net_liquidity, return_model, external_validator, regime_validator,
+drift_detector, tail_risk, tail_dependence, backtest, signal_optimizer,
+options_intelligence, earnings_intelligence, systemic_risk, bubble_detector,
+fundamentals, options_calibrator, prediction_confidence, signal_analytics,
+factor_model (FF6+PCA), stress_testing (+hypothetical), cross_sectional_momentum,
+economic_surprise, survival_model, anomaly_detector, crash_timeline,
+liquidity_risk, copula_tail, covariance (RMT), portfolio_optimizer (CVaR/RP/MaxDiv/HRP),
+insider_trading, trends_sentiment, attribution (Brinson+MCTR), conformal_predictor,
+**technical_analysis** (RSI/MACD/BB/ADX/OBV via `ta` lib),
+**polygon_client** (real-time quotes, intraday bars),
+**risk_number** (Bloomberg PORT-style 1-100 risk score),
+**sector_rotation** (multi-timeframe relative strength + business cycle),
+**drawdown_analyzer** (drawdown recovery analysis + rolling returns/Sharpe),
+**retirement_mc** (Monte Carlo retirement sim + safe withdrawal rate)
 
-## Current engine state
+API keys available: FRED, Finnhub, FMP, DeepSeek, Alpha Vantage, Polygon.io, ANTHROPIC
+Installed packages: ta, polygon-api-client, riskfolio-lib, copulas, ruptures, pytrends
+
+Signal engine components: crash_prob, regime, valuation, momentum, mean_reversion,
+external, macro_risk, drawdown, economic_surprise, momentum_breadth, insider_trading,
+vix_term_structure
+
+## Engine data snapshot
 
 {data_block}
 
-## Recent cycles (don't repeat these)
+## Recent cycles (don't repeat)
 
 {past_block}
 
-## Unexplored areas
-
-{chr(10).join('- ' + f for f in untouched[:20])}
-
 ## When done
 
-1. Experiment report: lab/experiments/cycle_{cycle:03d}/experiment_report.json
+1. Write experiment report to: lab/experiments/cycle_{cycle:03d}/experiment_report.json
    {{
      "cycle": {cycle},
+     "cycle_type": "{cycle_type}",
      "timestamp": "<ISO timestamp>",
-     "title": "<one-line summary>",
-     "category": "<quantitative|data|frontend|reliability>",
+     "title": "<one-line summary of what you did>",
+     "category": "<quantitative|data|frontend|reliability|integration>",
      "observation": {{
-       "bugs_found": ["<list of bugs found in audit>"],
-       "gap_identified": "<the gap you're fixing>"
+       "bugs_found": ["<list of bugs found>"],
+       "gap_identified": "<the main gap you addressed>"
      }},
      "implementation": {{
-       "bugs_fixed": ["<list of bug descriptions>"],
+       "bugs_fixed": ["<description of each fix>"],
        "feature_built": "<what you added>",
        "files_changed": ["<list>"],
        "files_created": ["<list>"],
-       "packages_installed": ["<list>"]
+       "packages_installed": ["<list of pip packages installed>"]
      }},
      "validation": {{
        "tests_written": 0,
@@ -295,13 +261,12 @@ below, or from what your audit/research revealed. Quality over quantity.
 
 2. Commit: `git add -A && git commit -m "Lab cycle_{cycle:03d}: <summary>"`
 
-Think like a quant researcher who reads code carefully before writing it.
-Audit first, then fix, then build. Quality over quantity.
+You own this. Make it better. Don't hold back.
 """
 
 
 # ---------------------------------------------------------------------------
-# Run one cycle — single deep session
+# Run one cycle
 # ---------------------------------------------------------------------------
 
 def run_cycle(cycle: int, model: str, baseline_failures: str):
@@ -311,9 +276,10 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
 
     session_id = str(uuid.uuid4())
     cycle_start = time.time()
+    cycle_type = _get_cycle_type(cycle)
 
     print(f"\n{'='*60}")
-    print(f"  CYCLE {cycle} — {datetime.now().strftime('%H:%M:%S')}")
+    print(f"  CYCLE {cycle} ({cycle_type}) — {datetime.now().strftime('%H:%M:%S')}")
     print(f"{'='*60}")
 
     # Data generation
@@ -328,7 +294,7 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
     prompt = build_prompt(cycle, cycle_dir, baseline_failures)
     (cycle_dir / "prompt.md").write_text(prompt, encoding="utf-8")
 
-    # Single deep session — Claude owns its workflow
+    # Single deep session
     print(f"\n  Claude session starting (up to {SESSION_TIMEOUT // 60} min, model={model})...")
 
     try:
@@ -370,17 +336,15 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
         print(f"  Session ERROR: {e}")
         (cycle_dir / "session_output.txt").write_text(f"[ERROR: {e}]", encoding="utf-8")
 
-    # Light validation — only run changed test files, not full suite
+    # Targeted validation
     print("\n  Validating (targeted)...")
     try:
-        # Find which test files might be affected
         diff_result = subprocess.run(
             ["git", "diff", "--name-only", "HEAD"],
             cwd=str(REPO_DIR), capture_output=True, text=True, timeout=10,
         )
         changed_files = diff_result.stdout.strip().split("\n") if diff_result.stdout.strip() else []
 
-        # Map changed service files to their test files
         test_files_to_run = set()
         for f in changed_files:
             if f.startswith("backend/tests/"):
@@ -395,7 +359,7 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
                 if test_path.exists():
                     test_files_to_run.add(str(test_path))
 
-        # Always include core tests as smoke check
+        # Always include core smoke tests
         for core in ["test_monte_carlo.py", "test_signal_engine.py", "test_crash_calibration.py"]:
             core_path = REPO_DIR / "backend" / "tests" / core
             if core_path.exists():
@@ -403,7 +367,7 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
 
         if test_files_to_run:
             test_cmd = [sys.executable, "-m", "pytest"] + list(test_files_to_run) + [
-                "-v", "--tb=line", "-x"  # stop on first failure
+                "-v", "--tb=line", "-x"
             ]
             test_result = subprocess.run(
                 test_cmd, cwd=str(REPO_DIR),
@@ -411,7 +375,6 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
             )
             test_out = test_result.stdout + test_result.stderr
         else:
-            # No test files identified — run core smoke tests only
             test_result = subprocess.run(
                 [sys.executable, "-m", "pytest", "backend/tests/test_monte_carlo.py",
                  "backend/tests/test_signal_engine.py", "-v", "--tb=line"],
@@ -428,8 +391,6 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
 
         if tests_failed > 0:
             print(f"  [WARN] {tests_failed} test failures in targeted run")
-            # Don't auto-revert — Claude may have intentionally changed test expectations
-            # Just log it
         else:
             print(f"  [OK] {tests_passed} targeted tests passed")
 
@@ -464,29 +425,28 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
     )
 
     # Summary
-    print(f"\n  Cycle {cycle} done in {duration} min")
+    print(f"\n  Cycle {cycle} ({cycle_type}) done in {duration} min")
 
     report_path = cycle_dir / "experiment_report.json"
     if report_path.exists():
         try:
             r = json.loads(report_path.read_text(encoding="utf-8"))
-            # Support both old format (what_i_did) and new format (title)
             title = r.get("title") or r.get("what_i_did", "?")
             print(f"  What: {title[:120]}")
-            # Support both old (depth_rating) and new (assessment.depth)
             depth = r.get("depth_rating") or r.get("assessment", {}).get("depth", "?")
             print(f"  Depth: {depth}")
-            # Support both old (results.improved) and new (assessment.verdict)
             verdict = r.get("assessment", {}).get("verdict")
             if verdict:
                 print(f"  Result: {verdict}")
             else:
                 improved = r.get("results", {}).get("improved")
                 print(f"  Result: {'improved' if improved else 'neutral'}")
-            # Support both old (files_modified) and new (implementation.files_changed)
             files_changed = r.get("files_modified") or r.get("implementation", {}).get("files_changed", [])
             files_created = r.get("files_created") or r.get("implementation", {}).get("files_created", [])
+            pkgs = r.get("implementation", {}).get("packages_installed", [])
             print(f"  Files: {len(files_changed)} changed, {len(files_created)} created")
+            if pkgs:
+                print(f"  Packages: {', '.join(pkgs)}")
         except Exception:
             pass
     else:
@@ -502,7 +462,7 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="Aegis Finance R&D Loop v8")
+    parser = argparse.ArgumentParser(description="Aegis Finance R&D Loop v10")
     parser.add_argument("--cycles", type=int, default=50)
     parser.add_argument("--model", default="opus")
     parser.add_argument("--start-cycle", type=int, default=None)
@@ -540,10 +500,11 @@ def main():
         start = len(existing) + 1
 
     print(f"\n{'='*60}")
-    print(f"  AEGIS R&D LAB v8 — Audit→Research→Fix→Build→Test")
+    print(f"  AEGIS R&D LAB v10 — Sandbox Mode")
     print(f"  Model: {args.model} | Cycles: {start}-{args.cycles}")
     print(f"  Session: {SESSION_TIMEOUT // 60} min | Branch: {args.branch}")
-    print(f"  Methodology: read code, find bugs, fix, then build")
+    print(f"  Rotation: DEEP_AUDIT → BUILD → INTEGRATE")
+    print(f"  Next cycle type: {_get_cycle_type(start)}")
     print(f"{'='*60}")
 
     for cycle in range(start, args.cycles + 1):

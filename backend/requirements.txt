@@ -43,6 +43,9 @@ ruptures>=1.1.0
 ta>=0.11.0
 pytrends>=4.9.0
 
+# Market data APIs
+polygon-api-client>=1.14.0
+
 # Utilities
 requests>=2.31.0
 python-dotenv>=1.0.0
