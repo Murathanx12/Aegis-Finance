@@ -169,6 +169,42 @@ def _analyze_with_risk_number(holdings: list[dict]) -> dict:
     except Exception as e:
         logger.warning("Stress test computation failed: %s", e)
 
+    # Inline attribution + MCTR (Brinson-Fachler performance decomposition)
+    try:
+        from backend.services.attribution import full_portfolio_analytics
+        attr_result = full_portfolio_analytics(holdings, benchmark_ticker="SPY", period="1mo")
+        if attr_result:
+            attribution = attr_result.get("attribution", {})
+            result["attribution_summary"] = {
+                "period": attr_result.get("period"),
+                "total_allocation_effect": attribution.get("total_allocation_effect"),
+                "total_selection_effect": attribution.get("total_selection_effect"),
+                "total_interaction_effect": attribution.get("total_interaction_effect"),
+                "total_active_return": attribution.get("total_active_return"),
+                "portfolio_return": attribution.get("portfolio_return"),
+                "benchmark_return": attribution.get("benchmark_return"),
+            }
+            risk_contrib = attr_result.get("risk_contributions")
+            if risk_contrib and "contributions" in risk_contrib:
+                result["mctr_summary"] = {
+                    "portfolio_vol": risk_contrib.get("portfolio_volatility"),
+                    "top_risk_contributors": [
+                        {
+                            "ticker": c.get("ticker"),
+                            "weight_pct": c.get("weight_pct"),
+                            "risk_contrib_pct": c.get("risk_contribution_pct"),
+                            "mctr": c.get("mctr"),
+                        }
+                        for c in sorted(
+                            risk_contrib["contributions"],
+                            key=lambda x: abs(x.get("risk_contribution_pct", 0)),
+                            reverse=True,
+                        )[:5]
+                    ],
+                }
+    except Exception as e:
+        logger.warning("Inline attribution/MCTR failed: %s", e)
+
     # Portfolio-level drawdown analysis (rolling returns + max drawdown history)
     try:
         import yfinance as yf

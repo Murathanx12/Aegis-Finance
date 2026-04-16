@@ -108,6 +108,33 @@ def _predict_crash(horizon: str, explain: bool) -> dict:
         logger.debug("Conformal intervals unavailable: %s", e)
         prediction_intervals = None
 
+    # Cox Proportional Hazards survival model — ensemble crash timing estimate
+    survival_probs = None
+    try:
+        from backend.services.survival_model import CrashSurvivalModel
+        cox = CrashSurvivalModel()
+        train_end = int(len(features) * 0.8)
+        train_result = cox.train(features, data, train_end)
+        if train_result.get("success"):
+            survival_probs = {}
+            for h in ["3m", "6m", "12m"]:
+                cox_prob = float(cox.predict_proba(features.iloc[[-1]], h)[0])
+                survival_probs[h] = round(cox_prob * 100, 1)
+            # Top risk factors from Cox model
+            cox_top_features = cox.get_top_features(n=5)
+    except Exception as e:
+        logger.debug("Survival model unavailable: %s", e)
+
+    # Isolation Forest anomaly detection — confidence assessment
+    anomaly_assessment = None
+    try:
+        from backend.services.anomaly_detector import AnomalyDetector
+        anom = AnomalyDetector(contamination=0.05)
+        anom.fit(features.iloc[:int(len(features) * 0.8)])
+        anomaly_assessment = anom.anomaly_report(features.iloc[[-1]])
+    except Exception as e:
+        logger.debug("Anomaly detection unavailable: %s", e)
+
     result = {
         "probabilities": probabilities,
         "prediction_intervals": prediction_intervals,
@@ -119,6 +146,30 @@ def _predict_crash(horizon: str, explain: bool) -> dict:
             "confidence_multiplier": confidence_multiplier,
         },
     }
+
+    # Survival model ensemble (Cox PH)
+    if survival_probs:
+        result["survival_model"] = {
+            "probabilities": survival_probs,
+            "method": "Cox Proportional Hazards",
+            "top_risk_factors": [
+                {"feature": name, "coefficient": round(coef, 4)}
+                for name, coef in (cox_top_features if 'cox_top_features' in dir() else [])
+            ],
+        }
+        # Ensemble: average LightGBM + Cox PH for more robust estimate
+        ensemble_probs = {}
+        for h in probabilities:
+            if h in survival_probs:
+                ensemble_probs[h] = round(
+                    (probabilities[h] + survival_probs[h]) / 2, 1
+                )
+        if ensemble_probs:
+            result["ensemble_probabilities"] = ensemble_probs
+
+    # Anomaly assessment (Isolation Forest)
+    if anomaly_assessment:
+        result["anomaly_assessment"] = anomaly_assessment
 
     # SHAP explanation
     if explain:
@@ -331,7 +382,30 @@ def _ticker_crash(ticker: str) -> dict:
         adjusted = min(market_p * beta, 0.95)
         ticker_probs[h] = round(adjusted * 100, 1)
 
-    return {
+    # Cox PH survival model — independent crash timing estimate
+    survival_probs = None
+    try:
+        from backend.services.survival_model import CrashSurvivalModel
+        from backend.services.data_fetcher import DataFetcher as _DF2
+        from engine.training.features import build_feature_matrix as _bfm2
+
+        _f2 = _DF2()
+        _d2, _ = _f2.fetch_market_data()
+        _fred2 = _f2.fetch_fred_data()
+        _feats2 = _bfm2(_d2, fred_data=_fred2)
+
+        cox = CrashSurvivalModel()
+        train_end = int(len(_feats2) * 0.8)
+        if cox.train(_feats2, _d2, train_end).get("success"):
+            survival_probs = {}
+            for h in ["3m", "6m", "12m"]:
+                cox_p = float(cox.predict_proba(_feats2.iloc[[-1]], h)[0])
+                # Beta-adjust survival model probs too
+                survival_probs[h] = round(min(cox_p * beta, 0.95) * 100, 1)
+    except Exception as e:
+        logger.debug("Survival model unavailable for %s: %s", ticker, e)
+
+    result = {
         "ticker": ticker,
         "name": company_name,
         "current_price": current_price,
@@ -341,3 +415,15 @@ def _ticker_crash(ticker: str) -> dict:
         "risk_level": "high" if any(p > 30 for p in ticker_probs.values()) else
                       "elevated" if any(p > 20 for p in ticker_probs.values()) else "normal",
     }
+
+    if survival_probs:
+        result["survival_crash_probs"] = survival_probs
+        # Ensemble: average LightGBM-based + Cox PH for more robust per-ticker estimate
+        ensemble = {}
+        for h in ticker_probs:
+            if h in survival_probs:
+                ensemble[h] = round((ticker_probs[h] + survival_probs[h]) / 2, 1)
+        if ensemble:
+            result["ensemble_crash_probs"] = ensemble
+
+    return result
