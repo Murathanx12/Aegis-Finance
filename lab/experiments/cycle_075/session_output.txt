@@ -1,0 +1,29 @@
+Cycle 75 complete. Here's the summary:
+
+## Deep Audit Results — 4 Bugs Fixed
+
+### Bug 1 (HIGH impact): CPI surprise normalization saturated at ±1.0
+**File:** `backend/services/economic_surprise.py:119-125`
+**Problem:** The `use_change` flag converts CPI from levels to MoM % changes (~0.2-0.5%). But the normalization divides by 10.0, same as level indicators. Since MoM changes are tiny, even small deviations produce 100%+ relative surprise, always clipping to ±1.0. CPI always contributed maximum weight to the composite index.
+**Fix:** Use `norm_denom=100.0` for `use_change` indicators vs `10.0` for level indicators.
+
+### Bug 2 (MEDIUM impact): Truthiness checks treat 0.0 as None
+**File:** `backend/services/liquidity_risk.py:279-283`
+**Problem:** `if current_amihud` is `False` when amihud is `0.0` (valid for mega-cap stocks), causing display of `None` instead of the correct `0.0`. Same pattern for `roll_spread_bps`, `daily_turnover_pct`, and `shares_outstanding_mm`.
+**Fix:** Changed to `if x is not None` / `if shares_out > 0`.
+
+### Bug 3 (MEDIUM impact): Rolling max drawdown off-by-one
+**File:** `backend/services/drawdown_analyzer.py:266`
+**Problem:** Slice `prices.iloc[max(0, i - window):i + 1]` produces `window + 1` elements instead of `window`.
+**Fix:** Changed to `prices.iloc[i - window + 1:i + 1]`.
+
+### Bug 4 (LOW impact): Dead variable
+**File:** `backend/services/retirement_mc.py:233`
+**Problem:** `rng = np.random.default_rng(seed)` was created but never used.
+**Fix:** Removed.
+
+### Validation
+- 6 regression tests written
+- **1517 tests passing, 0 failures, 0 regressions**
+
+---STDERR---
