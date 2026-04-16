@@ -952,9 +952,9 @@ def collect_factor_model(output_dir):
                         "market_beta": decomp["factors"]["Mkt-RF"]["loading"],
                         "style": decomp["style"],
                     }
-                    print(f"    [OK] {ticker}: R²={decomp['r_squared']:.2f}, "
-                          f"β={decomp['factors']['Mkt-RF']['loading']:.2f}, "
-                          f"α={decomp['alpha_annual']:.1%}")
+                    print(f"    [OK] {ticker}: R2={decomp['r_squared']:.2f}, "
+                          f"beta={decomp['factors']['Mkt-RF']['loading']:.2f}, "
+                          f"alpha={decomp['alpha_annual']:.1%}")
                 else:
                     results[ticker] = {"status": "no_data"}
             except Exception as e:
