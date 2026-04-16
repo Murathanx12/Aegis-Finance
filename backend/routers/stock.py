@@ -10,6 +10,7 @@ GET /api/stock/{ticker}/insiders    — Insider trading signal
 GET /api/stock/{ticker}/fundamentals — SEC EDGAR fundamentals
 GET /api/stock/{ticker}/technicals  — Technical analysis (RSI, MACD, Bollinger, ADX)
 GET /api/stock/{ticker}/valuation   — Relative valuation vs sector peers (Koyfin-style)
+GET /api/stock/{ticker}/patterns    — Chart pattern recognition (TradingView-style)
 """
 
 import asyncio
@@ -251,6 +252,18 @@ def _screener() -> dict:
                 except Exception:
                     pass
 
+            # Chart pattern bias (lightweight summary for screener)
+            _pattern_bias = None
+            _pattern_count = None
+            try:
+                from backend.services.pattern_recognition import get_ticker_patterns
+                _pat = get_ticker_patterns(ticker)
+                if _pat:
+                    _pattern_bias = _pat.get("bias")
+                    _pattern_count = _pat.get("pattern_count", 0)
+            except Exception as e:
+                logger.debug("screener pattern skip %s: %s", ticker, e)
+
             return {
                 "ticker": r["ticker"],
                 "name": r.get("name", ticker),
@@ -285,6 +298,8 @@ def _screener() -> dict:
                 "trend_direction": _trend,
                 "max_drawdown_pct": _max_dd,
                 "current_drawdown_pct": _current_dd,
+                "pattern_bias": _pattern_bias,
+                "pattern_count": _pattern_count,
             }
         except Exception as e:
             logger.warning("screener skip %s: %s", ticker, e)
@@ -757,6 +772,21 @@ def _analyze_stock(ticker: str) -> dict:
     except Exception as e:
         logger.debug("relative valuation skip %s: %s", ticker, e)
 
+    # Chart pattern recognition (TradingView-style)
+    try:
+        from backend.services.pattern_recognition import get_ticker_patterns
+        pat = get_ticker_patterns(ticker)
+        if pat:
+            result["chart_patterns"] = {
+                "patterns": pat.get("patterns", []),
+                "pattern_count": pat.get("pattern_count", 0),
+                "bias": pat.get("bias", "neutral"),
+                "strongest_pattern": pat.get("strongest_pattern"),
+                "support_resistance": pat.get("support_resistance"),
+            }
+    except Exception as e:
+        logger.debug("pattern recognition skip %s: %s", ticker, e)
+
     # Conformal prediction interval for crash probability
     stock_crash = result.get("crash_prob_3m")
     if stock_crash is not None:
@@ -1121,3 +1151,39 @@ async def get_stock_valuation(ticker: str):
 def _stock_valuation(ticker: str) -> dict:
     from backend.services.relative_valuation import get_relative_valuation
     return get_relative_valuation(ticker)
+
+
+@router.get("/{ticker}/patterns")
+async def get_stock_patterns(ticker: str):
+    """Chart pattern recognition — TradingView-style automatic detection.
+
+    Detects double top/bottom, head & shoulders, triangles, wedges,
+    plus support/resistance levels with touch counts.
+    """
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"stock_patterns:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(_stock_patterns, ticker)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"No price data for {ticker}")
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("pattern recognition failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _stock_patterns(ticker: str) -> dict:
+    from backend.services.pattern_recognition import get_ticker_patterns
+    result = get_ticker_patterns(ticker)
+    if result is None:
+        return None
+    return result
