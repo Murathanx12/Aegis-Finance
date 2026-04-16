@@ -1,0 +1,42 @@
+{
+  "sp500": {
+    "symbol": "^GSPC",
+    "price": 7032.9,
+    "change_1d_pct": 0.142
+  },
+  "nasdaq": {
+    "symbol": "^IXIC",
+    "price": 24065.25,
+    "change_1d_pct": 0.205
+  },
+  "dow": {
+    "symbol": "^DJI",
+    "price": 48549.39,
+    "change_1d_pct": 0.177
+  },
+  "vix": {
+    "symbol": "^VIX",
+    "price": 18.17,
+    "change_1d_pct": 0.0
+  },
+  "treasury_10y": {
+    "symbol": "^TNX",
+    "price": 4.31,
+    "change_1d_pct": 0.631
+  },
+  "gold": {
+    "symbol": "GC=F",
+    "price": 4810.0,
+    "change_1d_pct": 0.208
+  },
+  "oil": {
+    "symbol": "CL=F",
+    "price": 90.56,
+    "change_1d_pct": -0.8
+  },
+  "usd_index": {
+    "symbol": "DX-Y.NYB",
+    "price": 98.22,
+    "change_1d_pct": 0.162
+  }
+}
