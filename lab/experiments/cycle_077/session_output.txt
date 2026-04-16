@@ -1,0 +1,21 @@
+Cycle 077 complete. Here's what was done:
+
+## Cycle 077: INTEGRATE — Frontend Integration
+
+**Gap identified:** The backend computed and returned rich analytics (attribution, MCTR, benchmark analytics, crash timeline, market valuation) via API endpoints, but the frontend never rendered them. Users couldn't see 5+ major analytics that were already computed.
+
+**5 integrations shipped:**
+
+| # | What | Where | Data Source |
+|---|------|-------|-------------|
+| 1 | **Brinson-Fachler Attribution** | Portfolio page | `attribution_summary` from `/analyze` |
+| 2 | **MCTR Risk Contributors** | Portfolio page | `mctr_summary` from `/analyze` |
+| 3 | **Benchmark Analytics** | Portfolio page | `benchmark_analytics` from `/analyze` |
+| 4 | **60-Month Crash Timeline** | Crash page | `/api/analytics/crash-timeline` |
+| 5 | **Market Valuation Dashboard** | Outlook page | `/api/analytics/valuation` |
+
+**Files changed:** 5 frontend files (api.ts types, query-keys, portfolio/crash/outlook pages)
+
+**Validation:** 1548 backend tests passing, 0 regressions, frontend builds clean.
+
+---STDERR---
