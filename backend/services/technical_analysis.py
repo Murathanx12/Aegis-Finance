@@ -113,8 +113,8 @@ def _compute_trend(close: pd.Series, high: pd.Series, low: pd.Series) -> dict:
             adx_obj = ADXIndicator(high, low, close, window=14)
             adx_series = adx_obj.adx()
             adx_val = _safe_last(adx_series)
-        except Exception:
-            pass
+        except (ValueError, ZeroDivisionError) as e:
+            logger.debug("ADX computation failed: %s", e)
 
     # Trend direction summary
     sma20_val = _safe_last(sma_20)
@@ -186,8 +186,8 @@ def _compute_momentum(close: pd.Series, high: pd.Series, low: pd.Series) -> dict
             stoch_obj = StochasticOscillator(high, low, close, window=14, smooth_window=3)
             stoch_k = _safe_last(stoch_obj.stoch())
             stoch_d = _safe_last(stoch_obj.stoch_signal())
-        except Exception:
-            pass
+        except (ValueError, ZeroDivisionError) as e:
+            logger.debug("Stochastic computation failed: %s", e)
 
     # Williams %R
     williams_r = None
@@ -195,8 +195,8 @@ def _compute_momentum(close: pd.Series, high: pd.Series, low: pd.Series) -> dict
         try:
             wr = WilliamsRIndicator(high, low, close, lbp=14)
             williams_r = _safe_last(wr.williams_r())
-        except Exception:
-            pass
+        except (ValueError, ZeroDivisionError) as e:
+            logger.debug("Williams %%R computation failed: %s", e)
 
     # Rate of Change (10-day)
     roc_val = None
@@ -204,8 +204,8 @@ def _compute_momentum(close: pd.Series, high: pd.Series, low: pd.Series) -> dict
         try:
             roc = ROCIndicator(close, window=10)
             roc_val = _safe_last(roc.roc())
-        except Exception:
-            pass
+        except (ValueError, ZeroDivisionError) as e:
+            logger.debug("ROC computation failed: %s", e)
 
     return {
         "rsi_14": rsi_val,
@@ -245,8 +245,8 @@ def _compute_volatility(close: pd.Series, high: pd.Series, low: pd.Series) -> di
             atr_val = _safe_last(atr_obj.average_true_range())
             if atr_val and current > 0:
                 atr_pct = round(atr_val / current * 100, 2)
-        except Exception:
-            pass
+        except (ValueError, ZeroDivisionError) as e:
+            logger.debug("ATR computation failed: %s", e)
 
     return {
         "bollinger_upper": bb_upper,

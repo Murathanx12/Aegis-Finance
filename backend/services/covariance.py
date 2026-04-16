@@ -270,12 +270,27 @@ def covariance_diagnostics(
     cov_lw = _ledoit_wolf_cov(returns)
     cov_dn = denoise_covariance(returns, detone=False)
 
-    # Eigenvalue analysis
-    evals_raw = np.sort(np.linalg.eigvalsh(cov_raw.values))[::-1]
-    evals_dn = np.sort(np.linalg.eigvalsh(cov_dn.values))[::-1]
+    # Eigenvalue analysis — use CORRELATION matrix eigenvalues for MP analysis.
+    # Marchenko-Pastur theory applies to correlation matrices (trace = N),
+    # not covariance matrices whose eigenvalue scale depends on asset volatilities.
+    std_raw = np.sqrt(np.diag(cov_raw.values))
+    std_raw[std_raw == 0] = 1e-10
+    corr_raw = cov_raw.values / np.outer(std_raw, std_raw)
+    corr_raw = (corr_raw + corr_raw.T) / 2
+    np.fill_diagonal(corr_raw, 1.0)
 
-    # Fit noise variance from raw eigenvalues (same method as denoise_covariance)
-    # so the MP bound is consistent with what was actually used for denoising
+    evals_raw = np.sort(np.linalg.eigvalsh(corr_raw))[::-1]
+
+    # Denoised eigenvalues from the denoised correlation matrix
+    std_dn = np.sqrt(np.diag(cov_dn.values))
+    std_dn[std_dn == 0] = 1e-10
+    corr_dn = cov_dn.values / np.outer(std_dn, std_dn)
+    corr_dn = (corr_dn + corr_dn.T) / 2
+    np.fill_diagonal(corr_dn, 1.0)
+
+    evals_dn = np.sort(np.linalg.eigvalsh(corr_dn))[::-1]
+
+    # Fit noise variance from correlation eigenvalues (consistent with denoise_covariance)
     var_noise = _fit_mp_variance(evals_raw, q)
     lambda_max = marchenko_pastur_bound(T, N, var_noise)
 
