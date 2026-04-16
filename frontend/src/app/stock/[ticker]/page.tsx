@@ -510,6 +510,287 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
               </CardContent>
             </Card>
           )}
+
+          {/* ── Intelligence Dashboard ── */}
+          {(stockData.technical_signal || stockData.insider_signal || stockData.liquidity || stockData.momentum_rank || stockData.drawdown_analysis || stockData.factor_exposure || stockData.trends_attention || stockData.crash_prob_3m != null) && (
+            <>
+              {/* Technical Analysis + Crash Risk Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Technical Analysis */}
+                {stockData.technical_signal && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+                        Technical Analysis
+                        <InfoTooltip text="Composite technical signal from RSI, MACD, Bollinger Bands, and ADX. Score ranges from -1 (bearish) to +1 (bullish)." />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <span className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-bold ${
+                          stockData.technical_signal.signal === "bullish" ? "bg-emerald-500/15 text-emerald-400" :
+                          stockData.technical_signal.signal === "bearish" ? "bg-red-500/15 text-red-400" :
+                          "bg-amber-500/15 text-amber-400"
+                        }`}>
+                          {stockData.technical_signal.signal.charAt(0).toUpperCase() + stockData.technical_signal.signal.slice(1)}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          Score: {stockData.technical_signal.score > 0 ? "+" : ""}{stockData.technical_signal.score.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {stockData.rsi_14 != null && (
+                          <div className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">RSI (14)</p>
+                            <p className={`text-sm font-bold tabular-nums ${stockData.rsi_14 > 70 ? "text-red-400" : stockData.rsi_14 < 30 ? "text-emerald-400" : ""}`}>
+                              {stockData.rsi_14.toFixed(1)}
+                              <span className="text-xs text-muted-foreground ml-1">
+                                {stockData.rsi_14 > 70 ? "overbought" : stockData.rsi_14 < 30 ? "oversold" : "neutral"}
+                              </span>
+                            </p>
+                          </div>
+                        )}
+                        {stockData.trend_direction && (
+                          <div className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">Trend</p>
+                            <p className={`text-sm font-bold ${
+                              stockData.trend_direction === "uptrend" ? "text-emerald-400" :
+                              stockData.trend_direction === "downtrend" ? "text-red-400" : ""
+                            }`}>
+                              {stockData.trend_direction.charAt(0).toUpperCase() + stockData.trend_direction.slice(1)}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      {stockData.technical_signal.components && Object.keys(stockData.technical_signal.components).length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(stockData.technical_signal.components).map(([key, val]) => (
+                            <span key={key} className={`text-xs px-2 py-1 rounded-md ${
+                              val > 0 ? "bg-emerald-500/10 text-emerald-400" :
+                              val < 0 ? "bg-red-500/10 text-red-400" :
+                              "bg-muted/50 text-muted-foreground"
+                            }`}>
+                              {key}: {val > 0 ? "+" : ""}{val.toFixed(2)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Crash Risk Card */}
+                {stockData.crash_prob_3m != null && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+                        Crash Risk Assessment
+                        <InfoTooltip text="ML-based crash probability adjusted for this stock's beta, volatility, and drawdown. Conformal interval shows prediction uncertainty." />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-4">
+                        <div className="text-center">
+                          <p className={`text-3xl font-bold tabular-nums ${stockData.crash_prob_3m > 20 ? "text-red-400" : stockData.crash_prob_3m > 10 ? "text-amber-400" : "text-emerald-400"}`}>
+                            {stockData.crash_prob_3m.toFixed(1)}%
+                          </p>
+                          <p className="text-xs text-muted-foreground">3-Month Crash Prob</p>
+                        </div>
+                        {stockData.crash_prob_interval && (
+                          <div className="flex-1 text-sm text-muted-foreground">
+                            <p>Conformal interval: {stockData.crash_prob_interval.lower.toFixed(1)}% — {stockData.crash_prob_interval.upper.toFixed(1)}%</p>
+                            <p className="text-xs">Width: {stockData.crash_prob_interval.width.toFixed(1)}pp</p>
+                          </div>
+                        )}
+                      </div>
+                      {/* Risk bar */}
+                      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${stockData.crash_prob_3m > 20 ? "bg-red-500" : stockData.crash_prob_3m > 10 ? "bg-amber-500" : "bg-emerald-500"}`}
+                          style={{ width: `${Math.min(100, stockData.crash_prob_3m * 2)}%` }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Quick Intelligence Cards Row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {stockData.liquidity && (
+                  <div className="rounded-lg bg-muted/30 p-3">
+                    <p className="text-xs text-muted-foreground uppercase flex items-center">
+                      Liquidity
+                      <InfoTooltip text={`Amihud illiquidity: ${stockData.liquidity.amihud.toFixed(4)} | Avg daily volume: $${stockData.liquidity.avg_dollar_volume_mm.toFixed(0)}M | LVaR 95%: ${stockData.liquidity.lvar_95.toFixed(2)}%`} />
+                    </p>
+                    <p className="text-lg font-bold tabular-nums">{stockData.liquidity.score.toFixed(0)}<span className="text-xs text-muted-foreground">/100</span></p>
+                    <p className={`text-xs ${stockData.liquidity.tier === "highly_liquid" ? "text-emerald-400" : stockData.liquidity.tier === "liquid" ? "text-blue-400" : "text-amber-400"}`}>
+                      {stockData.liquidity.tier.replace("_", " ")}
+                    </p>
+                  </div>
+                )}
+                {stockData.momentum_rank && (
+                  <div className="rounded-lg bg-muted/30 p-3">
+                    <p className="text-xs text-muted-foreground uppercase flex items-center">
+                      Momentum Rank
+                      <InfoTooltip text={`Cross-sectional momentum: ranked #${stockData.momentum_rank.rank} of ${stockData.momentum_rank.total} stocks`} />
+                    </p>
+                    <p className={`text-lg font-bold tabular-nums ${stockData.momentum_rank.percentile > 70 ? "text-emerald-400" : stockData.momentum_rank.percentile < 30 ? "text-red-400" : ""}`}>
+                      P{stockData.momentum_rank.percentile.toFixed(0)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">#{stockData.momentum_rank.rank}/{stockData.momentum_rank.total}</p>
+                  </div>
+                )}
+                {stockData.insider_signal && (
+                  <div className="rounded-lg bg-muted/30 p-3">
+                    <p className="text-xs text-muted-foreground uppercase flex items-center">
+                      Insider Signal
+                      <InfoTooltip text={`Buys: ${stockData.insider_signal.buy_count} | Sells: ${stockData.insider_signal.sell_count} | Cluster buy: ${stockData.insider_signal.cluster_buy ? "Yes" : "No"}`} />
+                    </p>
+                    <p className={`text-lg font-bold ${
+                      stockData.insider_signal.sentiment === "bullish" ? "text-emerald-400" :
+                      stockData.insider_signal.sentiment === "bearish" ? "text-red-400" : "text-muted-foreground"
+                    }`}>
+                      {stockData.insider_signal.sentiment.charAt(0).toUpperCase() + stockData.insider_signal.sentiment.slice(1)}
+                    </p>
+                    {stockData.insider_signal.cluster_buy && (
+                      <p className="text-xs text-emerald-400">Cluster buy detected</p>
+                    )}
+                  </div>
+                )}
+                {stockData.trends_attention && (
+                  <div className="rounded-lg bg-muted/30 p-3">
+                    <p className="text-xs text-muted-foreground uppercase flex items-center">
+                      Search Attention
+                      <InfoTooltip text={stockData.trends_attention.interpretation} />
+                    </p>
+                    <p className={`text-lg font-bold ${
+                      stockData.trends_attention.attention_level === "high" ? "text-amber-400" :
+                      stockData.trends_attention.attention_level === "elevated" ? "text-amber-400" :
+                      "text-muted-foreground"
+                    }`}>
+                      {stockData.trends_attention.attention_level.charAt(0).toUpperCase() + stockData.trends_attention.attention_level.slice(1)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">z-score: {stockData.trends_attention.attention_zscore.toFixed(2)}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Drawdown + Factor Exposure Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {stockData.drawdown_analysis && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+                        Drawdown Analysis
+                        <InfoTooltip text="Historical drawdown recovery statistics and rolling risk metrics over the past 5 years." />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="rounded-lg bg-muted/30 p-2.5 text-center">
+                          <p className="text-xs text-muted-foreground uppercase">Max Drawdown</p>
+                          <p className="text-sm font-bold text-red-400 tabular-nums">{stockData.drawdown_analysis.max_drawdown_pct.toFixed(1)}%</p>
+                        </div>
+                        <div className="rounded-lg bg-muted/30 p-2.5 text-center">
+                          <p className="text-xs text-muted-foreground uppercase">Avg Recovery</p>
+                          <p className="text-sm font-bold tabular-nums">{stockData.drawdown_analysis.avg_recovery_days.toFixed(0)}d</p>
+                        </div>
+                        <div className="rounded-lg bg-muted/30 p-2.5 text-center">
+                          <p className="text-xs text-muted-foreground uppercase">Current DD</p>
+                          <p className={`text-sm font-bold tabular-nums ${stockData.drawdown_analysis.current_drawdown_pct < -5 ? "text-red-400" : "text-emerald-400"}`}>
+                            {stockData.drawdown_analysis.current_drawdown_pct.toFixed(1)}%
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-muted/30 p-2.5 text-center">
+                          <p className="text-xs text-muted-foreground uppercase">Total DDs</p>
+                          <p className="text-sm font-bold tabular-nums">{stockData.drawdown_analysis.total_drawdowns}</p>
+                        </div>
+                        <div className="rounded-lg bg-muted/30 p-2.5 text-center">
+                          <p className="text-xs text-muted-foreground uppercase">Rolling Sharpe</p>
+                          <p className={`text-sm font-bold tabular-nums ${stockData.drawdown_analysis.rolling_sharpe_1y > 0.5 ? "text-emerald-400" : stockData.drawdown_analysis.rolling_sharpe_1y < 0 ? "text-red-400" : ""}`}>
+                            {stockData.drawdown_analysis.rolling_sharpe_1y.toFixed(2)}
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-muted/30 p-2.5 text-center">
+                          <p className="text-xs text-muted-foreground uppercase">Rolling Sortino</p>
+                          <p className={`text-sm font-bold tabular-nums ${stockData.drawdown_analysis.rolling_sortino_1y > 1 ? "text-emerald-400" : stockData.drawdown_analysis.rolling_sortino_1y < 0 ? "text-red-400" : ""}`}>
+                            {stockData.drawdown_analysis.rolling_sortino_1y.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {stockData.factor_exposure && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+                        Factor Exposure (FF5)
+                        <InfoTooltip text={`Fama-French 5-factor decomposition. R-squared: ${(stockData.factor_exposure.r_squared * 100).toFixed(1)}% of returns explained by factors. Alpha is the unexplained excess return.`} />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-4 text-sm">
+                        <span className="text-muted-foreground">Alpha: <span className={`font-bold ${stockData.factor_exposure.alpha_annual > 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {stockData.factor_exposure.alpha_annual > 0 ? "+" : ""}{(stockData.factor_exposure.alpha_annual * 100).toFixed(1)}%
+                        </span></span>
+                        <span className="text-muted-foreground">R²: <span className="font-bold">{(stockData.factor_exposure.r_squared * 100).toFixed(1)}%</span></span>
+                        <span className="text-muted-foreground">Market β: <span className="font-bold">{stockData.factor_exposure.market_beta.toFixed(2)}</span></span>
+                      </div>
+                      {stockData.factor_exposure.style && (
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(stockData.factor_exposure.style).map(([factor, style]) => (
+                            <span key={factor} className="text-xs px-2 py-1 rounded-md bg-muted/50">
+                              <span className="text-muted-foreground">{factor}:</span> <span className="font-medium">{style}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Relative Valuation */}
+              {stockData.relative_valuation && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+                      Relative Valuation vs Peers
+                      <InfoTooltip text="How this stock's valuation multiples compare to sector peers. Score ranges from -1 (expensive) to +1 (cheap)." />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-bold ${
+                        stockData.relative_valuation.verdict === "undervalued" ? "bg-emerald-500/15 text-emerald-400" :
+                        stockData.relative_valuation.verdict === "overvalued" ? "bg-red-500/15 text-red-400" :
+                        "bg-amber-500/15 text-amber-400"
+                      }`}>
+                        {stockData.relative_valuation.verdict.charAt(0).toUpperCase() + stockData.relative_valuation.verdict.slice(1)}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        Composite: {stockData.relative_valuation.score > 0 ? "+" : ""}{stockData.relative_valuation.score.toFixed(2)}
+                      </span>
+                    </div>
+                    {stockData.relative_valuation.metrics && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {Object.entries(stockData.relative_valuation.metrics).map(([metric, data]) => (
+                          <div key={metric} className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">{metric.replace(/_/g, " ")}</p>
+                            <p className="text-sm font-bold tabular-nums">{data.stock?.toFixed(1) ?? "N/A"}</p>
+                            <p className="text-xs text-muted-foreground">Peer median: {data.peer_median?.toFixed(1) ?? "N/A"} | P{data.percentile?.toFixed(0) ?? "??"}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
         </>
       ) : stockError ? (
         <ErrorCard title={`Could not analyze ${upperTicker}`} message={(stockError as Error).message} onRetry={() => stockRefetch()} />

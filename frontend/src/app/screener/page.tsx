@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorCard } from "@/components/error-card";
 import { InfoTooltip } from "@/components/info-tooltip";
 
-type SortKey = "ticker" | "current_price" | "expected_return" | "sharpe" | "prob_loss" | "volatility" | "beta";
+type SortKey = "ticker" | "current_price" | "expected_return" | "sharpe" | "prob_loss" | "volatility" | "beta" | "crash_prob_3m" | "signal_confidence";
 type SortDir = "asc" | "desc";
 
 const SECTORS = [
@@ -235,7 +235,25 @@ export default function ScreenerPage() {
                     />
                     <SortHeader label="Vol" sortKey="volatility" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="text-right hidden lg:table-cell" />
                     <SortHeader label="Beta" sortKey="beta" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="text-right hidden lg:table-cell" />
+                    <SortHeader
+                      label="Crash 3M"
+                      sortKey="crash_prob_3m"
+                      currentSort={sortKey}
+                      currentDir={sortDir}
+                      onSort={handleSort}
+                      className="text-right hidden lg:table-cell"
+                      tooltip="Stock-adjusted 3-month crash probability from ML model"
+                    />
                     <th className="py-2 pr-4 text-right hidden sm:table-cell" scope="col">Mkt Cap</th>
+                    <SortHeader
+                      label="Conf"
+                      sortKey="signal_confidence"
+                      currentSort={sortKey}
+                      currentDir={sortDir}
+                      onSort={handleSort}
+                      className="text-right hidden sm:table-cell"
+                      tooltip="Signal confidence: higher = stronger conviction"
+                    />
                     <th className="py-2 text-right" scope="col">Signal</th>
                   </tr>
                 </thead>
@@ -269,8 +287,18 @@ export default function ScreenerPage() {
                         <td className="py-2.5 pr-4 text-right tabular-nums hidden lg:table-cell">
                           {s.beta.toFixed(2)}
                         </td>
+                        <td className={`py-2.5 pr-4 text-right tabular-nums hidden lg:table-cell ${
+                          (s.crash_prob_3m ?? 0) > 15 ? "text-red-400" : (s.crash_prob_3m ?? 0) > 8 ? "text-amber-400" : "text-emerald-400"
+                        }`}>
+                          {s.crash_prob_3m != null ? `${s.crash_prob_3m.toFixed(1)}%` : "--"}
+                        </td>
                         <td className="py-2.5 pr-4 text-right tabular-nums text-muted-foreground hidden sm:table-cell text-xs">
                           {formatCap(s.market_cap)}
+                        </td>
+                        <td className={`py-2.5 pr-4 text-right tabular-nums hidden sm:table-cell text-xs ${
+                          (s.signal_confidence ?? 0) > 40 ? "text-emerald-400" : (s.signal_confidence ?? 0) > 20 ? "text-amber-400" : "text-muted-foreground"
+                        }`}>
+                          {s.signal_confidence != null ? `${s.signal_confidence}%` : "--"}
                         </td>
                         <td className={`py-2.5 text-right font-semibold ${signal.color}`}>
                           {signal.text}

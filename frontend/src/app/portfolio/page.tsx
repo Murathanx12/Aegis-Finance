@@ -356,6 +356,103 @@ function PortfolioAnalyzeSection() {
             />
           </div>
 
+          {/* Risk Number + Factor Exposures */}
+          {(analysis.risk_number || analysis.factor_exposures) && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {analysis.risk_number && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                      Portfolio Risk Number
+                      <InfoTooltip text="Bloomberg PORT-style composite risk score from 1 (safest) to 100 (riskiest). Based on volatility, beta, max drawdown, VaR, and concentration." />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-4">
+                      <div className={`text-4xl font-bold tabular-nums ${
+                        analysis.risk_number.risk_number > 70 ? "text-red-400" :
+                        analysis.risk_number.risk_number > 40 ? "text-amber-400" : "text-emerald-400"
+                      }`}>
+                        {analysis.risk_number.risk_number}
+                      </div>
+                      <div>
+                        <Badge variant="outline" className={`text-xs ${
+                          analysis.risk_number.category === "aggressive" ? "border-red-500/30 text-red-400" :
+                          analysis.risk_number.category === "moderate" ? "border-amber-500/30 text-amber-400" :
+                          "border-emerald-500/30 text-emerald-400"
+                        }`}>
+                          {analysis.risk_number.category}
+                        </Badge>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Vol: {analysis.risk_number.portfolio_vol.toFixed(1)}% | Beta: {analysis.risk_number.portfolio_beta.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                    {/* Risk bar */}
+                    <div className="w-full h-2.5 bg-gradient-to-r from-emerald-500/30 via-amber-500/30 to-red-500/30 rounded-full relative">
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white rounded-full border-2 border-primary shadow"
+                        style={{ left: `${analysis.risk_number.risk_number}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Conservative</span>
+                      <span>Moderate</span>
+                      <span>Aggressive</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {analysis.factor_exposures && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+                      Factor Exposures (FF5)
+                      <InfoTooltip text="Fama-French 5-factor decomposition of your portfolio. Shows how much of your returns come from market, size, value, profitability, and investment factors." />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-4 text-sm">
+                      {analysis.factor_exposures.alpha_annual != null && (
+                        <span className="text-muted-foreground">Alpha: <span className={`font-bold ${analysis.factor_exposures.alpha_annual > 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {analysis.factor_exposures.alpha_annual > 0 ? "+" : ""}{(analysis.factor_exposures.alpha_annual * 100).toFixed(1)}%
+                        </span></span>
+                      )}
+                      {analysis.factor_exposures.r_squared != null && (
+                        <span className="text-muted-foreground">R²: <span className="font-bold">{(analysis.factor_exposures.r_squared * 100).toFixed(1)}%</span></span>
+                      )}
+                      {analysis.factor_exposures.market_beta != null && (
+                        <span className="text-muted-foreground">Market β: <span className="font-bold">{analysis.factor_exposures.market_beta.toFixed(2)}</span></span>
+                      )}
+                    </div>
+                    {analysis.factor_exposures.style && (
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(analysis.factor_exposures.style).map(([factor, style]) => (
+                          <span key={factor} className="text-xs px-2 py-1 rounded-md bg-muted/50">
+                            <span className="text-muted-foreground">{factor}:</span> <span className="font-medium">{style}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {analysis.factor_exposures.stocks && Object.keys(analysis.factor_exposures.stocks).length > 0 && (
+                      <div className="text-xs text-muted-foreground">
+                        <p className="mb-1">Per-holding betas:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(analysis.factor_exposures.stocks).map(([ticker, data]) => (
+                            <span key={ticker} className="px-2 py-0.5 rounded bg-muted/30">
+                              {ticker}: β={data.market_beta.toFixed(2)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
           {/* Concentration Warning */}
           {analysis.allocations.some(a => a.weight > 40) && (
             <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 flex items-start gap-2 text-xs text-amber-400/90">

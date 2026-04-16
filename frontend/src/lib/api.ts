@@ -589,6 +589,67 @@ export interface StockAnalysis {
   price_history: { date: string; price: number }[] | null;
   key_stats: Record<string, number | null> | null;
   peers: string[] | null;
+  // Enriched fields from backend router
+  insider_signal?: {
+    sentiment: string;
+    score: number;
+    buy_count: number;
+    sell_count: number;
+    net_shares: number;
+    cluster_buy: boolean;
+    signal: number;
+  } | null;
+  liquidity?: {
+    score: number;
+    tier: string;
+    amihud: number;
+    avg_dollar_volume_mm: number;
+    lvar_95: number;
+  } | null;
+  momentum_rank?: {
+    percentile: number;
+    score: number;
+    rank: number;
+    total: number;
+  } | null;
+  technical_signal?: {
+    signal: string;
+    score: number;
+    components: Record<string, number>;
+  } | null;
+  rsi_14?: number | null;
+  trend_direction?: string | null;
+  trends_attention?: {
+    attention_level: string;
+    attention_zscore: number;
+    interpretation: string;
+  } | null;
+  drawdown_analysis?: {
+    total_drawdowns: number;
+    max_drawdown_pct: number;
+    avg_recovery_days: number;
+    current_drawdown_pct: number;
+    rolling_sharpe_1y: number;
+    rolling_sortino_1y: number;
+  } | null;
+  factor_exposure?: {
+    r_squared: number;
+    alpha_annual: number;
+    market_beta: number;
+    factors: Record<string, number>;
+    style: Record<string, string>;
+  } | null;
+  relative_valuation?: {
+    verdict: string;
+    score: number;
+    metrics: Record<string, { stock: number; peer_median: number; percentile: number }>;
+  } | null;
+  crash_prob_3m?: number | null;
+  crash_prob_interval?: {
+    lower: number;
+    upper: number;
+    width: number;
+  } | null;
 }
 
 export interface AnalystTargets {
@@ -773,6 +834,8 @@ export interface ScreenerStock {
   signal_action?: string;
   signal_confidence?: number;
   signal_score?: number;
+  crash_prob_3m?: number | null;
+  prediction_confidence?: string | null;
 }
 
 export interface ScreenerResponse {
@@ -821,6 +884,21 @@ export interface PortfolioAnalysis {
   max_drawdown?: number;
   allocations: { ticker: string; weight: number; value: number }[];
   correlation?: { tickers: string[]; matrix: number[][] };
+  risk_number?: {
+    risk_number: number;
+    category: string;
+    portfolio_vol: number;
+    portfolio_beta: number;
+    max_drawdown_pct: number;
+    components: Record<string, number>;
+  } | null;
+  factor_exposures?: {
+    r_squared: number | null;
+    alpha_annual: number | null;
+    market_beta: number | null;
+    style: Record<string, string> | null;
+    stocks: Record<string, { market_beta: number; style: Record<string, string> }>;
+  } | null;
   error?: string;
 }
 
