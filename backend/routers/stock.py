@@ -11,6 +11,7 @@ GET /api/stock/{ticker}/fundamentals — SEC EDGAR fundamentals
 GET /api/stock/{ticker}/technicals  — Technical analysis (RSI, MACD, Bollinger, ADX)
 GET /api/stock/{ticker}/valuation   — Relative valuation vs sector peers (Koyfin-style)
 GET /api/stock/{ticker}/patterns    — Chart pattern recognition (TradingView-style)
+GET /api/stock/{ticker}/volatility  — Volatility analytics (Bloomberg-style vol cone, GARCH)
 """
 
 import asyncio
@@ -772,6 +773,15 @@ def _analyze_stock(ticker: str) -> dict:
     except Exception as e:
         logger.debug("relative valuation skip %s: %s", ticker, e)
 
+    # Volatility analytics (Bloomberg-style vol summary)
+    try:
+        from backend.services.volatility_analytics import get_vol_summary
+        vol_data = get_vol_summary(ticker)
+        if vol_data:
+            result["volatility_analytics"] = vol_data
+    except Exception as e:
+        logger.debug("vol analytics skip %s: %s", ticker, e)
+
     # Chart pattern recognition (TradingView-style)
     try:
         from backend.services.pattern_recognition import get_ticker_patterns
@@ -1242,3 +1252,38 @@ def _stock_patterns(ticker: str) -> dict:
     if result is None:
         return None
     return result
+
+
+@router.get("/{ticker}/volatility")
+async def get_stock_volatility(ticker: str):
+    """Volatility analytics — Bloomberg-style vol cone, term structure, GARCH forecast.
+
+    Returns vol cone (percentile bands at 10d-252d), realized vol term structure,
+    vol regime (high/normal/low), vol risk premium (IV vs RV), clustering,
+    vol-of-vol, Parkinson/Garman-Klass estimators, and GARCH forward curve.
+    """
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"stock_vol:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(_stock_volatility, ticker)
+        if result is None or "error" in result:
+            detail = result.get("error", f"No vol data for {ticker}") if result else f"No vol data for {ticker}"
+            raise HTTPException(status_code=404, detail=detail)
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("volatility analytics failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _stock_volatility(ticker: str) -> dict:
+    from backend.services.volatility_analytics import get_volatility_analytics
+    return get_volatility_analytics(ticker)

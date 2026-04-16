@@ -349,6 +349,11 @@ export function getStockPatterns(ticker: string) {
   return fetchAPI<ChartPatternAnalysis>(`/api/stock/${ticker}/patterns`);
 }
 
+// Volatility Analytics (Bloomberg-style vol cone, GARCH forecast)
+export function getStockVolatility(ticker: string) {
+  return fetchAPI<VolatilityAnalytics>(`/api/stock/${ticker}/volatility`);
+}
+
 // Polygon.io Real-Time Snapshot
 export function getRealtimeSnapshot(ticker: string) {
   return fetchAPI<RealtimeSnapshot>(`/api/realtime/${ticker}`);
@@ -1612,6 +1617,81 @@ export interface ChartPatternAnalysis {
     support: SupportResistanceLevel[];
     resistance: SupportResistanceLevel[];
     current_price: number;
+  };
+}
+
+export interface VolConeBand {
+  window_days: number;
+  current: number;
+  p5: number;
+  p25: number;
+  median: number;
+  p75: number;
+  p95: number;
+  percentile: number;
+}
+
+export interface VolTermEntry {
+  horizon_days: number;
+  realized_vol_pct: number;
+}
+
+export interface GarchCurveEntry {
+  horizon_days: number;
+  forecast_vol_pct: number;
+}
+
+export interface VolatilityAnalytics {
+  ticker: string;
+  vol_cone: Record<string, VolConeBand>;
+  term_structure: VolTermEntry[];
+  regime: {
+    regime: "high" | "normal" | "low" | "unknown";
+    percentile: number | null;
+    current_30d_vol_pct: number | null;
+    interpretation: string;
+  };
+  estimators?: {
+    close_to_close_pct: number;
+    parkinson_pct: number;
+    garman_klass_pct: number;
+    interpretation: string;
+  };
+  risk_premium?: {
+    implied_vol_pct?: number;
+    realized_vol_pct: number;
+    spread_pct?: number;
+    iv_rv_ratio?: number;
+    iv_rank?: number;
+    interpretation: string;
+  };
+  clustering: {
+    arch_effect: boolean;
+    ljung_box_pvalue?: number;
+    squared_return_acf1?: number;
+    interpretation: string;
+  };
+  vol_of_vol?: {
+    vol_of_vol_pct: number;
+    mean_vol_pct: number;
+    coefficient_of_variation: number;
+    vol_trend: "rising" | "falling" | "stable";
+    interpretation: string;
+  };
+  garch_forecast?: {
+    model: string;
+    persistence?: number;
+    long_run_vol_pct: number;
+    current_vol_pct: number;
+    curve: GarchCurveEntry[];
+    interpretation?: string;
+  };
+  summary: {
+    regime: string;
+    current_30d_vol_pct: number | null;
+    percentile_vs_history: number | null;
+    arch_effect: boolean;
+    vol_trend: string | null;
   };
 }
 

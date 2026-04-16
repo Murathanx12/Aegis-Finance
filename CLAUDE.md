@@ -131,7 +131,8 @@ aegis-finance/
 │   │   ├── risk_number.py     # Bloomberg PORT-style portfolio risk number (1-100)
 │   │   ├── sector_rotation.py # Multi-timeframe relative strength + business cycle
 │   │   ├── drawdown_analyzer.py # Drawdown recovery analysis + rolling returns
-│   │   └── retirement_mc.py   # Monte Carlo retirement sim + safe withdrawal rate
+│   │   ├── retirement_mc.py   # Monte Carlo retirement sim + safe withdrawal rate
+│   │   └── volatility_analytics.py # Bloomberg-style vol cone, GARCH forecast, regime
 │   └── models/                  # GJR-GARCH, HMM, saved .pkl models
 ├── engine/                      # Offline research (not served by API)
 │   ├── training/                # features.py, feature_selection.py, labeling.py, fracdiff.py, sample_uniqueness.py
