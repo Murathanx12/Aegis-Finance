@@ -99,6 +99,66 @@ class TestComputeSurpriseIndex:
             assert result["positive_surprises"] + result["negative_surprises"] <= result["indicators_tracked"]
 
 
+class TestCPINormalizationGranularity:
+    """Regression (cycle 75): CPI surprise normalization was always saturated at ±1.0.
+
+    The use_change conversion makes surprise_pct enormous because monthly %
+    changes are tiny (~0.2%), so even small deviations produce 100%+ relative
+    surprise, always clipping to ±1.0.  This means CPI always contributes
+    maximum weight, losing all granularity.  Fix: use wider normalization
+    denominator (±100%) for rate-of-change indicators.
+    """
+
+    @patch("backend.services.economic_surprise._fetch_fred_series")
+    def test_cpi_not_always_saturated(self, mock_fetch):
+        """CPI surprise_normalized should NOT always be ±1.0."""
+        # Create a CPI-like monotonically increasing level series
+        # with small, steady MoM growth (~0.3%) and a slight recent bump
+        n = 60
+        dates = pd.date_range(end="2026-03-31", periods=n, freq="MS")
+        base = 300 + np.arange(n) * 0.9  # CPI-like level, ~0.3% MoM
+        # Slight bump in last value (not extreme)
+        base[-1] += 0.5  # ~0.17% extra — should be a MODERATE surprise, not max
+        mock_fetch.return_value = pd.Series(base, index=dates)
+
+        result = compute_surprise_index()
+        assert result is not None
+
+        # Find CPI indicator
+        cpi_ind = None
+        for ind in result["indicators"]:
+            if ind["series_id"] == "CPIAUCSL":
+                cpi_ind = ind
+                break
+
+        if cpi_ind is not None:
+            # The key assertion: CPI should NOT be at the ±1.0 clip limit
+            assert abs(cpi_ind["surprise_normalized"]) < 1.0, (
+                f"CPI surprise_normalized={cpi_ind['surprise_normalized']} is saturated at ±1.0 — "
+                f"normalization scale is too narrow for rate-of-change indicators"
+            )
+
+    @patch("backend.services.economic_surprise._fetch_fred_series")
+    def test_use_change_moderate_surprise_has_granularity(self, mock_fetch):
+        """A moderate CPI move should produce a surprise between 0 and 1, not at the limit."""
+        n = 60
+        dates = pd.date_range(end="2026-03-31", periods=n, freq="MS")
+        # Steady 0.3% MoM growth
+        levels = 300 * np.cumprod(np.ones(n) + 0.003)
+        # Last month: 0.5% MoM instead of 0.3% — moderate deviation
+        levels[-1] = levels[-2] * 1.005
+        mock_fetch.return_value = pd.Series(levels, index=dates)
+
+        result = compute_surprise_index()
+        if result:
+            for ind in result["indicators"]:
+                if ind["series_id"] == "CPIAUCSL":
+                    # Should have meaningful intermediate value, not ±1.0
+                    assert 0 < abs(ind["surprise_normalized"]) < 1.0, (
+                        f"Expected intermediate CPI surprise, got {ind['surprise_normalized']}"
+                    )
+
+
 class TestGetIndicatorSurprises:
     @patch("backend.services.economic_surprise.compute_surprise_index")
     def test_returns_list(self, mock_compute):

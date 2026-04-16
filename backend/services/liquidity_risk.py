@@ -236,8 +236,10 @@ def compute_liquidity_metrics(
     roll_spread = compute_roll_spread(returns)
 
     # Current values (latest non-NaN)
-    current_amihud = float(amihud.dropna().iloc[-1]) if len(amihud.dropna()) > 0 else None
-    current_roll = float(roll_spread.dropna().iloc[-1]) if len(roll_spread.dropna()) > 0 else None
+    amihud_clean = amihud.dropna()
+    current_amihud = float(amihud_clean.iloc[-1]) if len(amihud_clean) > 0 else None
+    roll_clean = roll_spread.dropna()
+    current_roll = float(roll_clean.iloc[-1]) if len(roll_clean) > 0 else None
 
     # Turnover
     turnover = None
@@ -260,7 +262,7 @@ def compute_liquidity_metrics(
     )
 
     # Amihud trend (is liquidity improving or deteriorating?)
-    amihud_clean = amihud.dropna()
+    # (amihud_clean already computed above)
     if len(amihud_clean) >= 63:
         recent_amihud = float(amihud_clean.tail(21).mean())
         older_amihud = float(amihud_clean.iloc[-63:-21].mean())
@@ -275,11 +277,11 @@ def compute_liquidity_metrics(
         "ticker": ticker,
         "lookback_days": len(hist),
         "metrics": {
-            "amihud_illiquidity": round(current_amihud, 4) if current_amihud else None,
-            "roll_spread_bps": round(current_roll * 10000, 1) if current_roll else None,
+            "amihud_illiquidity": round(current_amihud, 4) if current_amihud is not None else None,
+            "roll_spread_bps": round(current_roll * 10000, 1) if current_roll is not None else None,
             "avg_dollar_volume_mm": round(avg_dollar_vol, 1),
-            "daily_turnover_pct": round(turnover, 3) if turnover else None,
-            "shares_outstanding_mm": round(shares_out / 1e6, 1) if shares_out else None,
+            "daily_turnover_pct": round(turnover, 3) if turnover is not None else None,
+            "shares_outstanding_mm": round(shares_out / 1e6, 1) if shares_out > 0 else None,
         },
         "risk": {
             **lvar_result,

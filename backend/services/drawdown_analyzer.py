@@ -263,7 +263,7 @@ def compute_rolling_risk_metrics(
         return float(dd.min()) * 100
 
     rolling_mdd = pd.Series(
-        [_rolling_max_dd(prices.iloc[max(0, i - window):i + 1]) for i in range(window, len(prices))],
+        [_rolling_max_dd(prices.iloc[i - window + 1:i + 1]) for i in range(window, len(prices))],
         index=prices.index[window:],
     )
 

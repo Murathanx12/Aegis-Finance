@@ -230,8 +230,6 @@ def compute_safe_withdrawal_rate(
     Returns:
         Dict with safe withdrawal rate and comparison to 4% rule.
     """
-    rng = np.random.default_rng(seed)
-
     params = _ASSET_RETURNS.get(risk_level, _ASSET_RETURNS["moderate"])
     # Apply same arithmetic drift correction as simulate_retirement
     annual_arith_mu = params["mu"] + 0.5 * params["sigma"] ** 2
