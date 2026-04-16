@@ -1,0 +1,24 @@
+Done. Here's the summary of **Lab Cycle 073**:
+
+## Built: Bloomberg PORT-style Benchmark Analytics
+
+**New service**: `backend/services/benchmark_analytics.py` — 9 institutional-grade analytics:
+
+1. **Tracking Error** — annualized std dev of active returns vs benchmark
+2. **Information Ratio** — active return / tracking error (Grinold & Kahn skill measure)
+3. **Active Share** — Cremers & Petajisto (2009) classification of how different portfolio is from benchmark
+4. **Up/Down Capture Ratios** — performance in rising vs falling markets (monthly geometric)
+5. **Rolling Tracking Error** — time-varying TE with trend detection
+6. **OLS Regression** — beta, alpha, R-squared, residual vol vs benchmark
+7. **Period Return Comparison** — 1m/3m/6m/1y/YTD portfolio vs benchmark
+8. **Risk Comparison** — side-by-side Sharpe, Sortino, max drawdown
+9. **Management Style Classification** — Stock Picker / Factor Bet / Closet Indexer / Diversified picker
+
+**Integration**:
+- Wired into existing `POST /api/portfolio/analyze` (summary view)
+- New standalone `POST /api/portfolio/benchmark` (full detail)
+- Frontend TypeScript types + `getPortfolioBenchmark()` API client
+
+**Validation**: 29 new tests, all passing. 1511 total tests, 0 regressions. Frontend builds clean.
+
+---STDERR---
