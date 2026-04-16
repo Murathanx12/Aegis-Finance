@@ -244,10 +244,12 @@ def compute_rolling_risk_metrics(
     rolling_std = returns.rolling(window).std()
     rolling_sharpe = ((rolling_mean - daily_rf) / rolling_std * np.sqrt(252)).dropna()
 
-    # Rolling Sortino
-    downside = returns.copy()
+    # Rolling Sortino (correct: downside deviation = sqrt(mean(min(r-rf, 0)^2)))
+    excess = returns - daily_rf
+    downside = excess.copy()
     downside[downside > 0] = 0
-    rolling_downside_std = downside.rolling(window).std()
+    rolling_downside_var = (downside ** 2).rolling(window, min_periods=window).mean()
+    rolling_downside_std = np.sqrt(rolling_downside_var)
     rolling_sortino = ((rolling_mean - daily_rf) / rolling_downside_std * np.sqrt(252)).dropna()
 
     # Rolling max drawdown
@@ -257,7 +259,7 @@ def compute_rolling_risk_metrics(
         return float(dd.min()) * 100
 
     rolling_mdd = pd.Series(
-        [_rolling_max_dd(prices.iloc[max(0, i - window):i]) for i in range(window, len(prices))],
+        [_rolling_max_dd(prices.iloc[max(0, i - window):i + 1]) for i in range(window, len(prices))],
         index=prices.index[window:],
     )
 
