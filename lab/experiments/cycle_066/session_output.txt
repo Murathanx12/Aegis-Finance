@@ -1,0 +1,22 @@
+Done. Here's the summary:
+
+## Cycle 066 — Deep Audit Results
+
+**3 bugs found and fixed** across 8 services audited line-by-line:
+
+### Bug 1: `retirement_mc.py` — t-distribution variance inflation (HIGH impact)
+- **Root cause**: `standard_t(df=8)` has variance 8/6 ≈ 1.33, not 1.0. Using it raw inflates simulation volatility by ~15.5%.
+- **Impact**: Over 30-year horizons, median wealth was ~7-14% lower than intended (depending on risk level). Safe withdrawal rates were too conservative.
+- **Fix**: Scale by `sqrt((df-2)/df)` so the noise term has unit variance.
+
+### Bug 2: `sector_rotation.py` — inverted momentum direction for negative returns (MEDIUM impact)
+- **Root cause**: The ratio `r1m / (r3m/3)` produces inverted labels when both returns are negative. A moderating decline (smaller loss) was labeled "decelerating" and a deepening decline was labeled "accelerating".
+- **Fix**: Compare absolute magnitudes and flip interpretation for negative trends. Extracted `_classify_momentum_direction()` as a testable unit.
+
+### Bug 3: `technical_analysis.py` — fake SMA 200 with insufficient data (LOW impact)
+- **Root cause**: `min(200, len(close)-1)` produced a shorter-period SMA passed off as SMA 200. With 100 days of data, an SMA(99) was used for trend signals.
+- **Fix**: Only compute SMA 200 when `len(close) >= 200`, return None otherwise.
+
+**Validation**: 9 new regression tests, **1436 total tests passing, 0 regressions**.
+
+---STDERR---

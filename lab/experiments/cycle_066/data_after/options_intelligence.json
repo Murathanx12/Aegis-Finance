@@ -1,0 +1,31 @@
+{
+  "vix_term_structure": {
+    "values": {
+      "VIX": 18.030000686645508,
+      "VIX3M": 20.75,
+      "VIX9D": 15.899999618530273
+    },
+    "vix_vix3m_ratio": 0.869,
+    "contango": true,
+    "backwardation": false,
+    "structure": "normal_contango",
+    "signal": "neutral",
+    "interpretation": "Normal term structure: VIX (18.0) < VIX3M (20.8)",
+    "vix_level": "normal",
+    "vix9d_vix_ratio": 0.882
+  },
+  "options_SPY": {
+    "iv_skew": 1.416,
+    "put_call_ratio": 1.793,
+    "iv_rank": 53.2,
+    "signal_score": -0.1,
+    "signal_sentiment": "slightly_bearish"
+  },
+  "options_AAPL": {
+    "iv_skew": 2.227,
+    "put_call_ratio": 0.418,
+    "iv_rank": 59.4,
+    "signal_score": -0.35,
+    "signal_sentiment": "bearish"
+  }
+}
