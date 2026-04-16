@@ -417,6 +417,16 @@ export function getStockValuation(ticker: string) {
   return fetchAPI<RelativeValuation>(`/api/stock/${ticker}/valuation`);
 }
 
+// Pair Analysis (cointegration)
+export function getPairAnalysis(tickerA: string, tickerB: string) {
+  return fetchAPI<PairAnalysisResult>(`/api/analytics/pairs/${tickerA}/${tickerB}`);
+}
+
+export function scanPairs(tickers?: string[]) {
+  const params = tickers ? `?tickers=${tickers.join(",")}` : "";
+  return fetchAPI<PairScanResult>(`/api/analytics/pairs/scan${params}`);
+}
+
 // ── Types ──────────────────────────────────────────────────
 
 export interface MarketStatus {
@@ -450,6 +460,12 @@ export interface MarketStatus {
     breadth: string;
     leaders: string[];
     laggards: string[];
+  } | null;
+  changepoint: {
+    detected: boolean;
+    days_since: number | null;
+    max_prob: number;
+    interpretation: string;
   } | null;
   last_updated: string;
 }
@@ -836,6 +852,15 @@ export interface ScreenerStock {
   signal_score?: number;
   crash_prob_3m?: number | null;
   prediction_confidence?: string | null;
+  // Per-stock analytics (cycle_068)
+  liquidity_score?: number | null;
+  liquidity_tier?: string | null;
+  momentum_rank?: number | null;
+  momentum_percentile?: number | null;
+  rsi_14?: number | null;
+  trend_direction?: string | null;
+  max_drawdown_pct?: number | null;
+  current_drawdown_pct?: number | null;
 }
 
 export interface ScreenerResponse {
@@ -898,6 +923,53 @@ export interface PortfolioAnalysis {
     market_beta: number | null;
     style: Record<string, string> | null;
     stocks: Record<string, { market_beta: number; style: Record<string, string> }>;
+  } | null;
+  // From portfolio_engine.analyze_portfolio
+  tail_risk?: {
+    sortino_ratio: number;
+    omega_ratio: number;
+    calmar_ratio: number;
+    cvar_95: number;
+    tail_ratio: number;
+  } | null;
+  attribution?: {
+    total_portfolio_return: number;
+    total_benchmark_return: number;
+    active_return: number;
+    attribution: { allocation: number; selection: number; interaction: number };
+    interpretation: string;
+  } | null;
+  risk_contributions?: {
+    portfolio_volatility_annual: number;
+    contributions: Record<string, {
+      weight_pct: number;
+      mctr: number;
+      risk_contribution_pct: number;
+      risk_weight_ratio: number;
+    }>;
+  } | null;
+  copula_risk?: {
+    copula_var_95: number;
+    copula_cvar_95: number;
+    tail_dependence: number;
+    copula_type: string;
+  } | null;
+  // Cycle_068 integrations
+  stress_test?: {
+    scenarios: Record<string, {
+      portfolio_drawdown_pct: number;
+      sp500_drawdown_pct: number;
+      relative_to_market: number | null;
+    }>;
+    worst_scenario: string | null;
+    worst_drawdown_pct: number | null;
+  } | null;
+  portfolio_drawdowns?: {
+    total_drawdowns: number;
+    max_drawdown_pct: number | null;
+    avg_recovery_days: number | null;
+    current_drawdown_pct: number;
+    rolling_return_1y: number | null;
   } | null;
   error?: string;
 }
@@ -1608,4 +1680,29 @@ export interface RelativeValuation {
     pb_5y_avg?: number;
   } | null;
   peer_table: RelativeValuationPeer[];
+}
+
+// Pair Analysis
+export interface PairAnalysisResult {
+  ticker_a: string;
+  ticker_b: string;
+  cointegrated: boolean;
+  p_value: number;
+  half_life: number | null;
+  current_zscore: number | null;
+  spread_mean: number | null;
+  signal: string;
+  interpretation: string;
+}
+
+export interface PairScanResult {
+  pairs: {
+    ticker_a: string;
+    ticker_b: string;
+    p_value: number;
+    cointegrated: boolean;
+    half_life: number | null;
+  }[];
+  n_pairs_tested: number;
+  n_cointegrated: number;
 }

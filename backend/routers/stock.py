@@ -167,16 +167,17 @@ def _screener() -> dict:
 
             # Technical analysis signal (RSI, MACD, Bollinger, ADX composite)
             _ta_score = None
+            _ta_ind_result = None
             try:
                 import yfinance as yf
                 from backend.services.technical_analysis import get_ta_signal, compute_technical_indicators
                 _t = yf.Ticker(ticker)
                 _hist = _t.history(period="1y")
                 if _hist is not None and len(_hist) >= 50:
-                    _ta_ind = compute_technical_indicators(
+                    _ta_ind_result = compute_technical_indicators(
                         _hist["Close"], _hist.get("Volume"), _hist["High"], _hist["Low"],
                     )
-                    _ta_sig = get_ta_signal(_ta_ind)
+                    _ta_sig = get_ta_signal(_ta_ind_result)
                     _ta_score = _ta_sig.get("score")
             except Exception as e:
                 logger.debug("ta signal skip %s: %s", ticker, e)
@@ -198,6 +199,57 @@ def _screener() -> dict:
                 insider_signal_score=insider_score,
                 ta_signal_score=_ta_score,
             )
+
+            # Liquidity score (lightweight — uses cached price data from analyze_stock)
+            _liq_score = None
+            _liq_tier = None
+            try:
+                from backend.services.liquidity_risk import compute_liquidity_metrics
+                _liq = compute_liquidity_metrics(ticker, lookback_days=252)
+                if _liq:
+                    _liq_score = _liq["score"]["composite"]
+                    _liq_tier = _liq["score"]["tier"]
+            except Exception as e:
+                logger.debug("screener liquidity skip %s: %s", ticker, e)
+
+            # Momentum rank from cached rankings
+            _mom_rank = None
+            _mom_percentile = None
+            try:
+                from backend.services.cross_sectional_momentum import get_momentum_score
+                from backend.cache import cache_get as _cg2
+                _cached_mom = _cg2("momentum_rankings", 900)
+                if _cached_mom:
+                    _ms = get_momentum_score(ticker, _cached_mom)
+                    if _ms:
+                        _mom_rank = _ms.get("rank")
+                        _mom_percentile = _ms.get("percentile")
+            except Exception as e:
+                logger.debug("screener momentum skip %s: %s", ticker, e)
+
+            # Drawdown stats (reuse price history already fetched)
+            _max_dd = None
+            _current_dd = None
+            try:
+                from backend.services.drawdown_analyzer import full_drawdown_analysis
+                _dd = full_drawdown_analysis(ticker, period="5y")
+                if _dd:
+                    _dds = _dd.get("drawdown_summary", {})
+                    _max_dd = _dds.get("max_drawdown_pct")
+                    _current_dd = _dds.get("current_drawdown_pct")
+            except Exception as e:
+                logger.debug("screener drawdown skip %s: %s", ticker, e)
+
+            # TA details for display (reuse _ta_sig_result computed above)
+            _rsi = None
+            _trend = None
+            if _ta_score is not None:
+                try:
+                    if _ta_ind_result is not None:
+                        _rsi = _ta_ind_result.get("momentum", {}).get("rsi_14")
+                        _trend = _ta_ind_result.get("trend", {}).get("trend_direction")
+                except Exception:
+                    pass
 
             return {
                 "ticker": r["ticker"],
@@ -224,6 +276,15 @@ def _screener() -> dict:
                 "signal_conviction": stock_sig.get("conviction"),
                 "prediction_confidence": r.get("prediction_confidence", {}).get("grade"),
                 "prediction_confidence_score": r.get("prediction_confidence", {}).get("score"),
+                # Per-stock analytics (cycle_068 integration)
+                "liquidity_score": _liq_score,
+                "liquidity_tier": _liq_tier,
+                "momentum_rank": _mom_rank,
+                "momentum_percentile": _mom_percentile,
+                "rsi_14": _rsi,
+                "trend_direction": _trend,
+                "max_drawdown_pct": _max_dd,
+                "current_drawdown_pct": _current_dd,
             }
         except Exception as e:
             logger.warning("screener skip %s: %s", ticker, e)

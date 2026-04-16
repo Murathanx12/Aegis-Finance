@@ -143,6 +143,58 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
           </div>
         )}
 
+        {data.economic_surprise && (
+          <div>
+            <p className="text-sm text-muted-foreground uppercase tracking-wide flex items-center">
+              Econ Surprise
+              <InfoTooltip text="Economic surprise index: positive when data beats trend, negative when it misses. Based on 8 FRED indicators." />
+            </p>
+            <p className={`text-2xl font-bold tabular-nums ${
+              data.economic_surprise.composite_score > 0.5 ? "text-emerald-400" :
+              data.economic_surprise.composite_score < -0.5 ? "text-red-400" : "text-zinc-400"
+            }`}>
+              {data.economic_surprise.composite_score.toFixed(2)}
+            </p>
+            <p className={`text-xs font-medium ${
+              data.economic_surprise.trend === "improving" ? "text-emerald-400" :
+              data.economic_surprise.trend === "deteriorating" ? "text-red-400" : "text-zinc-400"
+            }`}>
+              {data.economic_surprise.signal} / {data.economic_surprise.trend}
+            </p>
+          </div>
+        )}
+
+        {data.changepoint && (
+          <div>
+            <p className="text-sm text-muted-foreground uppercase tracking-wide flex items-center">
+              Regime Shift
+              <InfoTooltip text="Bayesian changepoint detection: identifies when the statistical properties of returns shift, signaling a potential regime change." />
+            </p>
+            <Badge variant="outline" className={data.changepoint.detected
+              ? "bg-red-500/15 text-red-400 border-red-500/30"
+              : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+            }>
+              {data.changepoint.detected ? `Shift ${data.changepoint.days_since}d ago` : "Stable"}
+            </Badge>
+          </div>
+        )}
+
+        {data.sector_rotation && (
+          <div>
+            <p className="text-sm text-muted-foreground uppercase tracking-wide flex items-center">
+              Cycle Phase
+              <InfoTooltip text="Business cycle phase detected from sector rotation patterns: early/mid/late cycle or recession, based on relative sector strength." />
+            </p>
+            <Badge variant="outline" className={
+              data.sector_rotation.cycle_phase === "early_cycle" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" :
+              data.sector_rotation.cycle_phase === "recession" ? "bg-red-500/15 text-red-400 border-red-500/30" :
+              "bg-blue-500/15 text-blue-400 border-blue-500/30"
+            }>
+              {data.sector_rotation.cycle_phase.replace("_", " ")}
+            </Badge>
+          </div>
+        )}
+
         <div className="ml-auto text-right">
           {data.data_quality && (
             <Badge
