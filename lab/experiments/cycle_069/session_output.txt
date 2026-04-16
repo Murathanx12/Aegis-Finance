@@ -1,0 +1,27 @@
+## Cycle 069 Deep Audit — Complete
+
+### 3 bugs found and fixed:
+
+**Bug 1: `retirement_mc.py` — Geometric/arithmetic drift mismatch (HIGH impact)**
+- The MC simulation used the target geometric return directly as daily arithmetic drift
+- Jensen's inequality means realized geometric return ≈ arithmetic - σ²/2
+- For all_equity (σ=20%): simulated 7.3% instead of target 9.0% — a 1.7% annual shortfall
+- Over 30-year retirement, this understates terminal wealth by ~20%
+- **Fix:** `arithmetic_mu = geometric_mu + 0.5 * sigma²`
+
+**Bug 2: `sector_rotation.py` — Composite score weight renormalization (MEDIUM impact)**
+- When a timeframe (e.g., 12m) had no data, its weight was dropped without renormalizing
+- A sector with 4/5 timeframes got only 80% of its fair score
+- **Fix:** Extracted `_compute_composite_score()` that divides by sum of used weights
+
+**Bug 3: `economic_surprise.py` — CPI level trend bias (MEDIUM impact)**
+- CPI (CPIAUCSL) is a monotonically increasing price level
+- Latest value always exceeds trailing 12-period median → permanent bearish surprise
+- Measured bias: -0.11 normalized surprise even with perfectly steady inflation
+- **Fix:** Added `use_change` flag — computes surprise on MoM % change instead of raw level
+
+### Validation:
+- 6 regression tests written (all failing before fix, all passing after)
+- 1442 total fast tests passing, 0 regressions
+
+---STDERR---
