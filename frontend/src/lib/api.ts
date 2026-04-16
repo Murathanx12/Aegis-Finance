@@ -291,6 +291,71 @@ export function getStockFundamentals(ticker: string) {
   return fetchAPI<StockFundamentals>(`/api/stock/${ticker}/fundamentals`);
 }
 
+// Monte Carlo Retirement Simulation
+export function simulateRetirement(params: RetirementMCRequest) {
+  return fetchAPI<RetirementMCResult>("/api/savings/simulate", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
+
+// Safe Withdrawal Rate Calculator
+export function computeSafeWithdrawalRate(
+  savings: number,
+  retirementYears = 30,
+  riskLevel = "moderate",
+  targetSuccessRate = 95,
+) {
+  return fetchAPI<SafeWithdrawalResult>("/api/savings/safe-rate", {
+    method: "POST",
+    body: JSON.stringify({
+      savings,
+      retirement_years: retirementYears,
+      risk_level: riskLevel,
+      target_success_rate: targetSuccessRate,
+    }),
+  });
+}
+
+// Drawdown & Rolling Return Analysis
+export function getDrawdownAnalysis(ticker: string, period = "10y") {
+  return fetchAPI<DrawdownAnalysis>(`/api/analytics/drawdowns/${ticker}?period=${period}`);
+}
+
+// Conformal Prediction Interval
+export function getConformalInterval(crashProb: number, horizon = "3m", alpha = 0.10) {
+  return fetchAPI<ConformalInterval>(
+    `/api/analytics/conformal-interval?crash_prob=${crashProb}&horizon=${horizon}&alpha=${alpha}`
+  );
+}
+
+// ── v10 New Analytics ──────────────────────────────��───────
+
+// Technical Analysis (RSI, MACD, Bollinger Bands, ADX, patterns)
+export function getStockTechnicals(ticker: string) {
+  return fetchAPI<TechnicalAnalysis>(`/api/stock/${ticker}/technicals`);
+}
+
+// Polygon.io Real-Time Snapshot
+export function getRealtimeSnapshot(ticker: string) {
+  return fetchAPI<RealtimeSnapshot>(`/api/realtime/${ticker}`);
+}
+
+// Sector Rotation Model
+export function getSectorRotation() {
+  return fetchAPI<SectorRotation>("/api/analytics/sector-rotation");
+}
+
+// Fixed Income Dashboard
+export function getFixedIncome() {
+  return fetchAPI<FixedIncomeDashboard>("/api/analytics/fixed-income");
+}
+
+// Market Valuation Metrics
+export function getMarketValuation() {
+  return fetchAPI<MarketValuation>("/api/analytics/valuation");
+}
+
 // ── Types ──────────────────────────────────────────────────
 
 export interface MarketStatus {
@@ -1032,4 +1097,301 @@ export interface StockFundamentals {
   ticker: string;
   piotroski_f_score: number;
   financials: Record<string, number | null>;
+}
+
+export interface DrawdownAnalysis {
+  ticker: string;
+  period: string;
+  n_trading_days: number;
+  drawdowns: {
+    drawdowns: {
+      peak_date: string;
+      trough_date: string;
+      recovery_date?: string;
+      depth_pct: number;
+      peak_to_trough_days: number;
+      trough_to_recovery_days?: number;
+      total_days?: number;
+      recovered: boolean;
+    }[];
+    current: {
+      peak_date: string;
+      trough_date: string;
+      depth_pct: number;
+      days_since_peak: number;
+      recovered: boolean;
+    } | null;
+    summary: {
+      n_drawdowns: number;
+      avg_depth_pct?: number;
+      max_depth_pct?: number;
+      avg_recovery_days?: number;
+      max_recovery_days?: number;
+    };
+  };
+  rolling_returns: Record<string, {
+    current: number | null;
+    mean: number;
+    median: number;
+    min: number;
+    max: number;
+    pct_positive: number;
+    series: { date: string; return_pct: number }[];
+  }>;
+  rolling_risk: {
+    sharpe: { current: number | null; mean: number; series: { date: string; sharpe: number }[] };
+    sortino: { current: number | null; mean: number; series: { date: string; sortino: number }[] };
+    max_drawdown: { current: number | null; worst: number; series: { date: string; max_dd: number }[] };
+  };
+}
+
+export interface ConformalInterval {
+  crash_prob_pct: number;
+  interval: { lower_pct: number; upper_pct: number; width_pct: number };
+  coverage: number;
+  method: string;
+  horizon: string;
+}
+
+export interface RetirementMCRequest {
+  current_savings: number;
+  monthly_contribution: number;
+  monthly_withdrawal: number;
+  current_age: number;
+  retirement_age: number;
+  end_age: number;
+  risk_level: string;
+  inflation_rate?: number;
+  social_security_monthly?: number;
+  social_security_start_age?: number;
+  n_sims?: number;
+}
+
+export interface RetirementMCResult {
+  parameters: RetirementMCRequest & { expected_return: number; expected_volatility: number };
+  at_retirement: { age: number; median: number; p10: number; p90: number };
+  at_end: { age: number; median: number; p10: number; p90: number; mean: number };
+  success_rate: number;
+  ruin_probability: number;
+  yearly_projections: {
+    age: number;
+    year: number;
+    phase: "accumulation" | "distribution";
+    median: number;
+    p10: number;
+    p25: number;
+    p75: number;
+    p90: number;
+    pct_depleted: number;
+  }[];
+  interpretation: string;
+}
+
+export interface SafeWithdrawalResult {
+  safe_monthly_withdrawal: number;
+  safe_annual_withdrawal: number;
+  safe_withdrawal_rate_pct: number;
+  four_pct_rule_monthly: number;
+  four_pct_rule_annual: number;
+  vs_four_pct: number;
+  target_success_rate: number;
+  retirement_years: number;
+  interpretation: string;
+}
+
+// ── v10 Types ──────────────────────────────────────────────
+
+export interface TechnicalAnalysis {
+  ticker: string;
+  indicators: {
+    trend: {
+      sma_20: number | null;
+      sma_50: number | null;
+      sma_200: number | null;
+      ema_12: number | null;
+      ema_26: number | null;
+      price_vs_sma20_pct: number | null;
+      price_vs_sma50_pct: number | null;
+      price_vs_sma200_pct: number | null;
+      macd: number | null;
+      macd_signal: number | null;
+      macd_histogram: number | null;
+      macd_bullish: boolean;
+      adx: number | null;
+      adx_interpretation: string | null;
+      trend_direction: string;
+    };
+    momentum: {
+      rsi_14: number | null;
+      rsi_interpretation: string;
+      stochastic_k: number | null;
+      stochastic_d: number | null;
+      stochastic_signal: string;
+      williams_r: number | null;
+      roc_10: number | null;
+    };
+    volatility: {
+      bollinger_upper: number | null;
+      bollinger_lower: number | null;
+      bollinger_mid: number | null;
+      bollinger_width: number | null;
+      bollinger_position: number | null;
+      bollinger_signal: string;
+      atr_14: number | null;
+      atr_pct: number | null;
+    };
+    volume: {
+      obv: number | null;
+      obv_trend: string | null;
+      acc_dist: number | null;
+      force_index_13: number | null;
+      avg_volume_20d: number | null;
+      latest_volume: number | null;
+      volume_ratio: number | null;
+      volume_signal: string;
+    };
+    patterns: {
+      golden_death_cross: string | null;
+      support_20d: number;
+      resistance_20d: number;
+      high_52w: number;
+      low_52w: number;
+      pct_from_52w_high: number | null;
+      pct_from_52w_low: number | null;
+    };
+  };
+  signal: {
+    score: number;
+    sentiment: string;
+    confidence: number;
+    n_signals: number;
+    reasons: string[];
+  };
+}
+
+export interface RealtimeSnapshot {
+  ticker: string;
+  price: number | null;
+  change: number | null;
+  change_pct: number | null;
+  updated_ts: number | null;
+  day?: {
+    open: number | null;
+    high: number | null;
+    low: number | null;
+    close: number | null;
+    volume: number | null;
+    vwap: number | null;
+  };
+  prev_day?: {
+    open: number | null;
+    high: number | null;
+    low: number | null;
+    close: number | null;
+    volume: number | null;
+    vwap: number | null;
+  };
+}
+
+export interface SectorRotation {
+  sectors: {
+    sector: string;
+    etf: string;
+    returns: Record<string, number | null>;
+    relative_strength: Record<string, number>;
+    composite_score: number;
+    direction: string;
+    rank: number;
+    volatility_20d: number | null;
+  }[];
+  leaders: string[];
+  laggards: string[];
+  breadth: {
+    status: string;
+    description: string;
+    positive_sectors: number;
+    total_sectors: number;
+    pct_positive: number;
+  };
+  cycle_phase: {
+    phase: string;
+    confidence: number;
+    description: string;
+  };
+  rotation_signal: {
+    signal: string;
+    description: string;
+    accelerating: number;
+    decelerating: number;
+    stable: number;
+  };
+  n_sectors: number;
+}
+
+export interface RiskNumber {
+  risk_number: number;
+  level: string;
+  description: string;
+  components: Record<string, {
+    value: number;
+    unit: string;
+    score: number;
+    weight: number;
+  }>;
+}
+
+export interface FixedIncomeDashboard {
+  yield_curve: {
+    yields: Record<string, number>;
+    spreads: Record<string, number | null>;
+    curvature: number | null;
+    shape: string;
+    inversions: string[];
+    interpretation: string;
+  };
+  credit: {
+    spreads: Record<string, {
+      current: number;
+      mean_1y: number | null;
+      zscore?: number;
+    }>;
+    real_yield_10y: number | null;
+    breakeven_inflation_10y: number | null;
+    stress: { level: string; signals: string[] };
+  };
+  error?: string;
+}
+
+export interface MarketValuation {
+  cape: {
+    current: number;
+    long_run_average: number;
+    premium_pct: number;
+    percentile: number | null;
+    interpretation: string;
+  };
+  pe: {
+    trailing: number | null;
+    forward: number | null;
+    forward_vs_trailing: number | null;
+  };
+  equity_risk_premium: {
+    erp_pct: number | null;
+    earnings_yield: number | null;
+    real_yield_10y: number | null;
+    interpretation: string;
+  };
+  dividend_yield: {
+    current_pct: number | null;
+    historical_avg: number;
+    interpretation: string;
+  };
+  buffett_indicator: {
+    ratio_pct: number | null;
+    interpretation: string;
+  };
+  composite_valuation_score: {
+    score: number;
+    level: string;
+  };
 }

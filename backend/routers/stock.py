@@ -8,6 +8,7 @@ GET /api/stock/{ticker}/shap        — SHAP explanation for ticker
 GET /api/stock/{ticker}/sentiment   — FinBERT news sentiment analysis
 GET /api/stock/{ticker}/insiders    — Insider trading signal
 GET /api/stock/{ticker}/fundamentals — SEC EDGAR fundamentals
+GET /api/stock/{ticker}/technicals  — Technical analysis (RSI, MACD, Bollinger, ADX)
 """
 
 import asyncio
@@ -611,6 +612,24 @@ def _analyze_stock(ticker: str) -> dict:
     except Exception as e:
         logger.debug("momentum rank skip %s: %s", ticker, e)
 
+    # Technical analysis signal (RSI, MACD, Bollinger, patterns)
+    try:
+        import yfinance as yf
+        from backend.services.technical_analysis import get_ta_signal, compute_technical_indicators
+        t = yf.Ticker(ticker)
+        hist = t.history(period="1y")
+        if hist is not None and len(hist) >= 50:
+            ta_ind = compute_technical_indicators(
+                hist["Close"], hist.get("Volume"), hist["High"], hist["Low"],
+            )
+            ta_sig = get_ta_signal(ta_ind)
+            result["technical_signal"] = ta_sig
+            # Key TA values for quick display
+            result["rsi_14"] = ta_ind.get("momentum", {}).get("rsi_14")
+            result["trend_direction"] = ta_ind.get("trend", {}).get("trend_direction")
+    except Exception as e:
+        logger.debug("technical analysis skip %s: %s", ticker, e)
+
     return result
 
 
@@ -841,6 +860,51 @@ async def get_stock_fundamentals(ticker: str):
 def _stock_fundamentals(ticker: str) -> dict:
     from backend.services.fundamentals import get_fundamentals
     return get_fundamentals(ticker)
+
+
+@router.get("/{ticker}/technicals")
+async def get_stock_technicals(ticker: str):
+    """Technical analysis: RSI, MACD, Bollinger Bands, ADX, patterns, volume."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"stock_technicals:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(_stock_technicals, ticker)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"No price data for {ticker}")
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("technicals failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _stock_technicals(ticker: str) -> dict:
+    import yfinance as yf
+    from backend.services.technical_analysis import get_ta_summary
+
+    t = yf.Ticker(ticker)
+    hist = t.history(period="2y")
+    if hist is None or len(hist) < 50:
+        return None
+
+    close = hist["Close"]
+    high = hist["High"]
+    low = hist["Low"]
+    volume = hist["Volume"] if "Volume" in hist.columns else None
+
+    summary = get_ta_summary(close, volume, high, low)
+    return {
+        "ticker": ticker,
+        **summary,
+    }
 
 
 @router.get("/{ticker}/insiders")

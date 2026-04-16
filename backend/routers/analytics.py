@@ -19,6 +19,11 @@ POST /api/analytics/copula/portfolio     — Copula portfolio risk
 GET /api/analytics/covariance-diagnostics — Denoised covariance diagnostics
 GET /api/analytics/trends-sentiment       — Google Trends fear/greed index
 GET /api/analytics/trends-sentiment/{ticker} — Ticker-specific search attention
+GET /api/analytics/drawdowns/{ticker}     — Drawdown history + rolling returns
+GET /api/analytics/sector-rotation        — Sector rotation model + business cycle
+GET /api/analytics/technicals/{ticker}    — Technical analysis (RSI, MACD, BB, ADX)
+GET /api/analytics/fixed-income           — Yield curve + credit spreads + real yields
+GET /api/analytics/valuation              — Market valuation metrics (CAPE, ERP, Buffett)
 """
 
 import asyncio
@@ -604,6 +609,41 @@ async def get_ticker_trends(ticker: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── Drawdown & Rolling Return Analysis ────────────────────────────
+
+
+@router.get("/drawdowns/{ticker}")
+async def get_drawdown_analysis(ticker: str, period: str = "10y"):
+    """Full drawdown history, rolling returns, and rolling risk metrics.
+
+    Portfolio Visualizer-style analysis: every drawdown with depth, duration,
+    and recovery time, plus rolling 1Y/3Y/5Y returns and Sharpe/Sortino.
+    """
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail=f"Invalid ticker: {ticker}")
+    if period not in ("1y", "2y", "5y", "10y", "20y", "max"):
+        raise HTTPException(status_code=422, detail="period must be 1y/2y/5y/10y/20y/max")
+
+    cache_key = f"drawdowns_{ticker}_{period}"
+    cached = cache_get(cache_key, _CACHE_TTL.get("ttl_stock", 900))
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.drawdown_analyzer import full_drawdown_analysis
+        result = await asyncio.to_thread(full_drawdown_analysis, ticker, period)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"Insufficient data for {ticker}")
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("drawdown analysis failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ── Conformal Prediction Intervals ────────────────────────────────
 
 
@@ -647,4 +687,67 @@ async def get_conformal_interval(
         }
     except Exception as e:
         logger.error("conformal interval failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Sector Rotation ──────────────────────────────────────────────
+
+
+@router.get("/sector-rotation")
+async def get_sector_rotation():
+    """Sector rotation analysis: multi-timeframe relative strength, business cycle phase."""
+    cached = cache_get("sector_rotation", 3600)  # 1hr cache
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.sector_rotation import compute_sector_rotation
+        result = await asyncio.to_thread(compute_sector_rotation)
+        if "error" not in result:
+            cache_set("sector_rotation", result)
+        return result
+    except Exception as e:
+        logger.error("sector rotation failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Fixed Income ──────────────────────────────────────────────
+
+
+@router.get("/fixed-income")
+async def get_fixed_income():
+    """Yield curve analysis, credit spreads, real yields, and stress detection."""
+    cached = cache_get("fixed_income", 1800)  # 30 min cache
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.fixed_income import get_fixed_income_dashboard
+        result = await asyncio.to_thread(get_fixed_income_dashboard)
+        if "error" not in result:
+            cache_set("fixed_income", result)
+        return result
+    except Exception as e:
+        logger.error("fixed income failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Market Valuation ──────────────────────────────────────────
+
+
+@router.get("/valuation")
+async def get_market_valuation():
+    """Market valuation metrics: CAPE, equity risk premium, Buffett Indicator."""
+    cached = cache_get("market_valuation", 3600)  # 1hr cache
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.valuation import compute_market_valuation
+        result = await asyncio.to_thread(compute_market_valuation)
+        if "error" not in result:
+            cache_set("market_valuation", result)
+        return result
+    except Exception as e:
+        logger.error("market valuation failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
