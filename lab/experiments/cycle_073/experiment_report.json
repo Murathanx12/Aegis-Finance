@@ -1,0 +1,48 @@
+{
+  "cycle": 73,
+  "cycle_type": "BUILD",
+  "timestamp": "2026-04-17T06:15:00Z",
+  "title": "Portfolio Benchmark Analytics — Bloomberg PORT-style tracking error, IR, active share, capture ratios",
+  "category": "quantitative",
+  "observation": {
+    "bugs_found": [],
+    "gap_identified": "Bloomberg PORT's core benchmark-relative analytics (tracking error, information ratio, active share, up/down capture ratios) were completely missing. These are the #1 institutional portfolio analytics that separate professional tools from amateur ones."
+  },
+  "implementation": {
+    "bugs_fixed": [],
+    "feature_built": "Full benchmark analytics service with 9 analytics: (1) Annualized tracking error, (2) Information ratio (Grinold & Kahn), (3) Active share with Cremers & Petajisto 2009 classification, (4) Up/down capture ratios (monthly geometric), (5) Rolling tracking error with trend detection, (6) OLS regression (beta, alpha, R², residual vol) vs benchmark, (7) Multi-period return comparison (1m/3m/6m/1y/YTD), (8) Side-by-side risk comparison (Sharpe/Sortino/max DD), (9) Interpretation engine with management style classification (Stock Picker / Factor Bet / Closet Indexer). Wired into existing POST /api/portfolio/analyze (summary) + new standalone POST /api/portfolio/benchmark (full detail). Frontend TypeScript types and API client function added.",
+    "files_changed": [
+      "backend/config.py",
+      "backend/routers/portfolio.py",
+      "frontend/src/lib/api.ts"
+    ],
+    "files_created": [
+      "backend/services/benchmark_analytics.py",
+      "backend/tests/test_benchmark_analytics.py",
+      "lab/experiments/cycle_073/experiment_report.json"
+    ],
+    "packages_installed": []
+  },
+  "validation": {
+    "tests_written": 29,
+    "tests_passing": 29,
+    "regressions": 0
+  },
+  "assessment": {
+    "verdict": "improved",
+    "confidence": "high",
+    "depth": 4,
+    "limitations": [
+      "Active share uses approximate market-cap-weighted benchmark weights (exact SPY constituent weights require premium data feed)",
+      "No network integration tests — all 29 tests use synthetic data to avoid flaky yfinance calls",
+      "Rolling tracking error time series only covers last 52 weeks"
+    ],
+    "self_critique": "Could have added a Morningstar-style style box classification (3x3 value/blend/growth x small/mid/large) as a companion feature. The active share approximation is rough but serviceable for a free tool — would be much better with real index constituent weights from a data provider."
+  },
+  "next_steps": [
+    "Add Morningstar-style style box analysis using factor model data we already have",
+    "Wire benchmark_analytics into AI portfolio commentary (LLM can reference tracking error, IR, management style)",
+    "Add income/dividend projection for portfolio (Morningstar feature gap)",
+    "Consider adding custom benchmark support (user picks any ETF as benchmark)"
+  ]
+}
