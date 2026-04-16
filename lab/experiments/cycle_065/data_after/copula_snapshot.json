@@ -1,0 +1,12 @@
+{
+  "AAPL_MSFT": {
+    "best_copula": "student_t",
+    "tail_lower": 0.0752,
+    "pearson": 0.4225
+  },
+  "SPY_GLD": {
+    "best_copula": "student_t",
+    "tail_lower": 0.1464,
+    "pearson": 0.1199
+  }
+}
