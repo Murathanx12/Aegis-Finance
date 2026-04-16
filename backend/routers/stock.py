@@ -9,6 +9,7 @@ GET /api/stock/{ticker}/sentiment   — FinBERT news sentiment analysis
 GET /api/stock/{ticker}/insiders    — Insider trading signal
 GET /api/stock/{ticker}/fundamentals — SEC EDGAR fundamentals
 GET /api/stock/{ticker}/technicals  — Technical analysis (RSI, MACD, Bollinger, ADX)
+GET /api/stock/{ticker}/valuation   — Relative valuation vs sector peers (Koyfin-style)
 """
 
 import asyncio
@@ -686,6 +687,15 @@ def _analyze_stock(ticker: str) -> dict:
     except Exception as e:
         logger.debug("drawdown analysis skip %s: %s", ticker, e)
 
+    # Relative valuation (peer comparison summary)
+    try:
+        from backend.services.relative_valuation import get_valuation_summary
+        val_summary = get_valuation_summary(ticker)
+        if val_summary:
+            result["relative_valuation"] = val_summary
+    except Exception as e:
+        logger.debug("relative valuation skip %s: %s", ticker, e)
+
     # Conformal prediction interval for crash probability
     stock_crash = result.get("crash_prob_3m")
     if stock_crash is not None:
@@ -1021,3 +1031,32 @@ async def get_insider_trading(ticker: str):
     except Exception as e:
         logger.error("insider trading failed for %s: %s", ticker, e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{ticker}/valuation")
+async def get_stock_valuation(ticker: str):
+    """Relative valuation — Koyfin-style peer comparison with percentile rankings."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"stock_valuation:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(_stock_valuation, ticker)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"No valuation data for {ticker}")
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("relative valuation failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _stock_valuation(ticker: str) -> dict:
+    from backend.services.relative_valuation import get_relative_valuation
+    return get_relative_valuation(ticker)
