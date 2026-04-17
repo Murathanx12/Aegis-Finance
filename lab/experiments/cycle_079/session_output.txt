@@ -1,0 +1,31 @@
+## Cycle 079 Complete
+
+**Built: Dividend Intelligence** — Morningstar-style dividend analytics, filling a clear competitive gap.
+
+### What was added
+
+**New service** (`backend/services/dividend_intelligence.py`):
+- Trailing & forward dividend yield
+- Growth rates: 1Y, 3Y, 5Y, 10Y CAGR
+- Payout ratios (earnings-based, EPS-based, FCF-based)
+- Composite safety score (0-100) with grades (Very Safe → Very Unsafe)
+  - Weighted: payout ratio (30%), FCF coverage (25%), earnings stability (25%), debt/equity (20%)
+- Consecutive growth year tracking → Aristocrat / Contender / Challenger classification
+- Gordon Growth DDM intrinsic value with upside/downside %
+- Forward income projection per $10k invested
+- Payment frequency detection (monthly/quarterly/semi-annual/annual)
+- Ex-dividend date, 20-payment history
+
+**Integrations**:
+- `GET /api/stock/{ticker}/dividends` — dedicated endpoint
+- Stock analysis enrichment — `dividend_intelligence` block in per-ticker response
+- Screener — `dividend_yield` and `dividend_safety` columns
+- Frontend — typed `getStockDividends()` API function with `DividendIntelligence` interface
+- Config — all parameters centralized in `config["dividend_intelligence"]`
+
+### Validation
+- **54 new tests** (51 fast + 3 slow/network)
+- **1606 total passing, 0 regressions**
+- Frontend builds clean
+
+---STDERR---
