@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 _cache: dict[str, dict[str, Any]] = {}
 _lock = threading.Lock()
 _cache_ready = False
+_cache_state: dict[str, Any] = {"status": "pending", "error": None, "ts": None}
 
 # ── Disk Cache Layer ──────────────────────────────────────────────────────────
 
@@ -125,14 +126,36 @@ def cache_clear() -> None:
 
 
 def set_cache_ready(ready: bool = True) -> None:
-    """Mark cache as prewarmed."""
+    """Mark cache as prewarmed (legacy API — prefer set_cache_status)."""
     global _cache_ready
     _cache_ready = ready
+    if ready and _cache_state["status"] == "pending":
+        _cache_state["status"] = "ready"
+        _cache_state["ts"] = time.time()
 
 
 def cache_ready() -> bool:
     """Check if cache prewarm is complete."""
     return _cache_ready
+
+
+def set_cache_status(status: str, error: Optional[str] = None) -> None:
+    """Record prewarm lifecycle: 'pending' | 'ready' | 'failed'.
+
+    Why: health endpoint reporting 'ready' when prewarm actually failed hides
+    a real operational condition. Callers should transition pending → ready
+    on success and pending → failed on exception.
+    """
+    global _cache_ready
+    _cache_state["status"] = status
+    _cache_state["error"] = error
+    _cache_state["ts"] = time.time()
+    _cache_ready = status == "ready"
+
+
+def cache_status() -> dict:
+    """Return current prewarm lifecycle state."""
+    return dict(_cache_state)
 
 
 def cached(ttl: int = 3600, key_prefix: str = ""):

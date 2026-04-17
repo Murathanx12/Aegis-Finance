@@ -16,7 +16,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.cache import cache_clear, set_cache_ready, cache_ready
+from backend.cache import cache_clear, set_cache_status, cache_ready, cache_status
 from backend.middleware import add_timing_middleware
 from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics
 
@@ -30,26 +30,30 @@ logger = logging.getLogger(__name__)
 async def _prewarm_cache():
     """Pre-compute expensive data on startup so first requests are fast.
 
-    With disk cache, this may return almost instantly if data is still valid.
+    Records real lifecycle state ('ready' vs 'failed') so /api/health can
+    honestly report degraded mode. Endpoints still work without prewarm —
+    they just pay the first-call latency instead.
     """
     import asyncio
+    set_cache_status("pending")
     try:
         from backend.services.data_fetcher import DataFetcher
         fetcher = DataFetcher()
 
-        # Prewarm market data (used by most endpoints)
-        await asyncio.to_thread(fetcher.fetch_market_data)
+        await asyncio.wait_for(asyncio.to_thread(fetcher.fetch_market_data), timeout=60)
         logger.info("Prewarmed: market data")
 
-        # Prewarm FRED data
-        await asyncio.to_thread(fetcher.fetch_fred_data)
+        await asyncio.wait_for(asyncio.to_thread(fetcher.fetch_fred_data), timeout=60)
         logger.info("Prewarmed: FRED data")
 
-        set_cache_ready(True)
+        set_cache_status("ready")
         logger.info("Cache prewarm complete — ready to serve")
+    except asyncio.TimeoutError:
+        logger.warning("Cache prewarm timeout — running in degraded mode")
+        set_cache_status("failed", "timeout")
     except Exception as e:
         logger.warning("Cache prewarm failed (non-fatal): %s", e)
-        set_cache_ready(True)  # Still mark ready so health check passes
+        set_cache_status("failed", str(e))
 
 
 @asynccontextmanager
@@ -165,8 +169,11 @@ async def root():
 
 @app.get("/api/health")
 async def health():
+    cs = cache_status()
     return {
         "status": "ok",
         "version": "0.2.0",
         "cache_ready": cache_ready(),
+        "cache_status": cs["status"],
+        "cache_error": cs.get("error"),
     }
