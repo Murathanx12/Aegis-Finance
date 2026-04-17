@@ -460,6 +460,15 @@ export function getSurvivalModel() {
   return fetchAPI<SurvivalModelResult>("/api/analytics/survival-model");
 }
 
+// Cross-Asset Macro Regime Monitor (Bloomberg MAC3-style)
+export function getCrossAssetDashboard() {
+  return fetchAPI<CrossAssetDashboard>("/api/analytics/cross-asset");
+}
+
+export function getMacroRegime() {
+  return fetchAPI<MacroRegime>("/api/analytics/macro-regime");
+}
+
 // ── Types ──────────────────────────────────────────────────
 
 export interface MarketStatus {
@@ -526,6 +535,15 @@ export interface MarketStatus {
     total_drawdowns: number;
     avg_recovery_days: number | null;
     rolling_sharpe_1y: number | null;
+  } | null;
+  cross_asset_regime: {
+    quadrant: string;
+    growth_score: number;
+    inflation_score: number;
+    growth_interpretation: string;
+    inflation_interpretation: string;
+    regime_stable: boolean | null;
+    description: string;
   } | null;
   last_updated: string;
 }
@@ -2057,4 +2075,85 @@ export interface SurvivalModelResult {
   training: { n_train: number; n_events: number; features_used: number };
   interpretation: string;
   last_updated: string;
+}
+
+// Cross-Asset Macro Regime Monitor types
+export interface MacroRegime {
+  quadrant: string;
+  description: string;
+  favored_assets: string[];
+  avoid_assets: string[];
+  growth_score: number;
+  inflation_score: number;
+  regime_stable: boolean | null;
+  previous_quadrant: string | null;
+  growth_interpretation: string;
+  inflation_interpretation: string;
+}
+
+export interface CrossAssetDashboard {
+  macro_regime: MacroRegime;
+  risk_on_off: {
+    score: number;
+    z_score: number;
+    regime: string;
+    interpretation: string;
+    signals: Record<string, {
+      value: number;
+      z_score: number;
+      signal: string;
+    }>;
+    n_signals: number;
+  };
+  momentum_table: {
+    ticker: string;
+    name: string;
+    asset_class: string;
+    subclass: string;
+    price: number;
+    return_1w: number | null;
+    return_1m: number | null;
+    return_3m: number | null;
+    return_6m: number | null;
+    return_1y: number | null;
+    sma200_ratio: number | null;
+    above_sma200: boolean | null;
+    vol_30d_ann_pct: number | null;
+  }[];
+  correlations: {
+    available: boolean;
+    window_days: number;
+    matrix: Record<string, Record<string, number>>;
+    key_relationships: Record<string, { correlation: number; historical: number }>;
+    divergences: {
+      pair: string;
+      current_corr: number;
+      historical_corr: number;
+      divergence: number;
+      interpretation: string;
+    }[];
+    n_assets: number;
+  };
+  intermarket_divergences: {
+    type: string;
+    severity: string;
+    message: string;
+  }[];
+  breadth: {
+    breadth_score: number;
+    uptrend_count: number;
+    total_assets: number;
+    interpretation: string;
+    by_class: Record<string, { uptrend_pct: number; detail: { ticker: string; uptrend: boolean }[] }>;
+  };
+  macro_weather: {
+    condition: string;
+    summary: string;
+    quadrant: string;
+    risk_regime: string;
+    roro_score: number;
+    n_divergence_alerts: number;
+  };
+  n_assets_tracked: number;
+  asset_classes: string[];
 }

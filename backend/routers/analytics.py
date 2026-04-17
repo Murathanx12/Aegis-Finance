@@ -28,6 +28,8 @@ GET /api/analytics/pairs/{ticker_a}/{ticker_b} — Pair cointegration analysis
 GET /api/analytics/pairs/scan             — Scan universe for cointegrated pairs
 GET /api/analytics/tail-risk/{ticker}     — Tail risk metrics (Sortino, Omega, Calmar, etc.)
 GET /api/analytics/survival-model         — Cox PH crash timing (market-level hazard rates)
+GET /api/analytics/cross-asset            — Cross-asset macro intelligence dashboard
+GET /api/analytics/macro-regime           — Growth × inflation quadrant classification
 """
 
 import asyncio
@@ -964,3 +966,57 @@ def _compute_survival_model() -> dict | None:
         ),
         "last_updated": str(data.index[-1].date()),
     }
+
+
+# ── Cross-Asset Macro Regime Monitor ────────────────────────────────
+
+
+@router.get("/cross-asset")
+async def get_cross_asset_dashboard():
+    """Full cross-asset macro intelligence dashboard.
+
+    Returns growth×inflation quadrant, risk-on/off score,
+    cross-asset momentum table, correlation matrix, and
+    intermarket divergence alerts.
+    """
+    cached = cache_get("cross_asset_dashboard", _CACHE_TTL["ttl_market"])
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(_compute_cross_asset_dashboard)
+        cache_set("cross_asset_dashboard", result)
+        return result
+    except Exception as e:
+        logger.error("cross-asset dashboard failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _compute_cross_asset_dashboard() -> dict:
+    from backend.services.cross_asset_monitor import compute_cross_asset_dashboard
+    return compute_cross_asset_dashboard()
+
+
+@router.get("/macro-regime")
+async def get_macro_regime():
+    """Current macro regime (growth × inflation quadrant only).
+
+    Lighter-weight endpoint — returns just the regime classification
+    without the full momentum table and correlation matrix.
+    """
+    cached = cache_get("macro_regime", _CACHE_TTL["ttl_market"])
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(_compute_macro_regime)
+        cache_set("macro_regime", result)
+        return result
+    except Exception as e:
+        logger.error("macro-regime failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _compute_macro_regime() -> dict:
+    from backend.services.cross_asset_monitor import compute_macro_regime
+    return compute_macro_regime()

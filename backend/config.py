@@ -993,6 +993,21 @@ config: dict = {
         "detone": True,                  # Remove market mode (1st eigenvector)
         "target_explained": 0.95,        # Target cumulative variance for signal cutoff
     },
+
+    # ── CROSS-ASSET MACRO REGIME MONITOR ────────────────────────────────
+    # Bloomberg MAC3-style cross-asset intelligence
+    "cross_asset": {
+        "correlation_window": 63,        # Rolling correlation window (3 months)
+        "lookback_years": 3,             # Price history for all computations
+        "momentum_windows": {            # Multi-timeframe momentum
+            "1w": 5, "1m": 21, "3m": 63, "6m": 126, "1y": 252,
+        },
+        "roro_thresholds": {             # Risk-On/Risk-Off classification
+            "risk_on": 65,               # Score above → Risk-On
+            "risk_off": 35,              # Score below → Risk-Off
+        },
+        "divergence_threshold": 0.25,    # Correlation divergence alert threshold
+    },
 }
 
 

@@ -1,0 +1,53 @@
+{
+  "cycle": 82,
+  "cycle_type": "BUILD",
+  "timestamp": "2026-04-17T09:45:00.000000",
+  "title": "Cross-Asset Macro Regime Monitor — Bloomberg MAC3-style growth×inflation quadrant, risk-on/off score, cross-asset correlations",
+  "category": "quantitative",
+  "observation": {
+    "bugs_found": [],
+    "gap_identified": "No cross-asset macro intelligence — regime_detector only uses equity returns (HMM on S&P 500), no growth/inflation decomposition, no risk-on/risk-off scoring across asset classes, no cross-asset correlation monitoring or intermarket divergence detection. Bloomberg MAC3 and Koyfin both offer comprehensive cross-asset analytics."
+  },
+  "implementation": {
+    "bugs_fixed": [],
+    "feature_built": "Cross-Asset Macro Regime Monitor service with 6 major components: (1) Growth×Inflation quadrant classification (Goldilocks/Reflation/Stagflation/Deflation) using market-based proxies (HYG/LQD credit ratio, IWM/SPY size ratio, EEM/EFA EM ratio for growth; TIP/IEF breakeven, gold momentum, oil momentum for inflation), (2) Risk-On/Risk-Off composite score (0-100) aggregating 6 cross-asset z-scored signals mapped via CDF, (3) Multi-timeframe momentum table for 15 assets across 5 asset classes (equity/fixed income/commodity/currency/crypto), (4) Rolling correlation matrix with divergence detection vs historical norms, (5) Intermarket divergence alerts (stock-bond correlation flip, gold/USD co-movement, credit-equity divergence, small-cap underperformance, EM-DM divergence), (6) Asset class breadth scoring with SMA50/SMA200 golden cross trend detection. Includes 'macro weather' summary combining all signals into plain-English interpretation.",
+    "files_changed": [
+      "backend/config.py",
+      "backend/routers/analytics.py",
+      "backend/routers/market.py",
+      "frontend/src/lib/api.ts"
+    ],
+    "files_created": [
+      "backend/services/cross_asset_monitor.py",
+      "backend/tests/test_cross_asset_monitor.py",
+      "lab/experiments/cycle_082/experiment_report.json"
+    ],
+    "packages_installed": []
+  },
+  "validation": {
+    "tests_written": 52,
+    "tests_passing": 52,
+    "regressions": 0
+  },
+  "assessment": {
+    "verdict": "improved",
+    "confidence": "high",
+    "depth": 4,
+    "limitations": [
+      "Growth/inflation scores use market-based proxies rather than direct economic data (FRED PMI/CPI surprise) — could be enhanced with FRED integration",
+      "RORO score uses scipy.stats.norm.cdf which adds a dependency (already installed)",
+      "BTC-USD and UUP may have shorter history than other ETFs, affecting some computations",
+      "No historical regime transition analysis (e.g., how often does Reflation lead to Stagflation)",
+      "Correlation divergence threshold (0.25) is a heuristic, not calibrated to any statistical test"
+    ],
+    "self_critique": "Could have added a FRED-based growth/inflation layer as a cross-check against market-based proxies. Could also have implemented regime transition probabilities (Markov chain on quadrant history). The intermarket divergence thresholds are somewhat arbitrary — could calibrate against historical crisis periods."
+  },
+  "next_steps": [
+    "Add FRED-based growth/inflation confirmation (ISM, retail sales, CPI surprise from economic_surprise service)",
+    "Implement regime transition Markov chain (historical quadrant transition probabilities)",
+    "Add cross-asset risk parity allocation suggestion based on current regime",
+    "Build frontend visualization — quadrant scatter plot with growth×inflation axes",
+    "Wire RORO score into signal engine as a new component",
+    "Add historical regime backtest (how did each quadrant perform historically)"
+  ]
+}
