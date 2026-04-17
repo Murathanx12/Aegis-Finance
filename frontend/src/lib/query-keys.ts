@@ -53,6 +53,10 @@ export const queryKeys = {
   correlation: {
     tailDependence: (tickers: string[]) => ["correlation", "tail-dep", ...tickers] as const,
   },
+  analytics: {
+    crossAsset: ["analytics", "cross-asset"] as const,
+    macroRegime: ["analytics", "macro-regime"] as const,
+  },
 } as const;
 
 /** Stale times by endpoint category (ms) */

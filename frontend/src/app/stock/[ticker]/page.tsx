@@ -789,6 +789,250 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                   </CardContent>
                 </Card>
               )}
+
+              {/* Volatility Analytics + Dividend Intelligence Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Volatility Analytics (Bloomberg-style) */}
+                {stockData.volatility_analytics && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+                        Volatility Analytics
+                        <InfoTooltip text="Bloomberg-style volatility analysis: GARCH forecast, vol regime, historical vol, and implied-realized spread." />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <span className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-bold ${
+                          stockData.volatility_analytics.vol_regime === "high" ? "bg-red-500/15 text-red-400" :
+                          stockData.volatility_analytics.vol_regime === "elevated" ? "bg-amber-500/15 text-amber-400" :
+                          "bg-emerald-500/15 text-emerald-400"
+                        }`}>
+                          {stockData.volatility_analytics.vol_regime ? stockData.volatility_analytics.vol_regime.charAt(0).toUpperCase() + stockData.volatility_analytics.vol_regime.slice(1) : "N/A"} Vol
+                        </span>
+                        {stockData.volatility_analytics.vol_percentile != null && (
+                          <span className="text-sm text-muted-foreground">
+                            Percentile: P{stockData.volatility_analytics.vol_percentile.toFixed(0)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {stockData.volatility_analytics.garch_forecast != null && (
+                          <div className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">GARCH Forecast</p>
+                            <p className="text-sm font-bold tabular-nums">{stockData.volatility_analytics.garch_forecast.toFixed(1)}%</p>
+                          </div>
+                        )}
+                        {stockData.volatility_analytics.hv_20d != null && (
+                          <div className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">HV 20D</p>
+                            <p className="text-sm font-bold tabular-nums">{stockData.volatility_analytics.hv_20d.toFixed(1)}%</p>
+                          </div>
+                        )}
+                        {stockData.volatility_analytics.hv_60d != null && (
+                          <div className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">HV 60D</p>
+                            <p className="text-sm font-bold tabular-nums">{stockData.volatility_analytics.hv_60d.toFixed(1)}%</p>
+                          </div>
+                        )}
+                        {stockData.volatility_analytics.iv_hv_spread != null && (
+                          <div className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">IV-HV Spread</p>
+                            <p className={`text-sm font-bold tabular-nums ${stockData.volatility_analytics.iv_hv_spread > 0 ? "text-amber-400" : "text-emerald-400"}`}>
+                              {stockData.volatility_analytics.iv_hv_spread > 0 ? "+" : ""}{stockData.volatility_analytics.iv_hv_spread.toFixed(1)}%
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Dividend Intelligence (Morningstar-style) */}
+                {stockData.dividend_intelligence && stockData.dividend_intelligence.yield_pct != null && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+                        Dividend Intelligence
+                        <InfoTooltip text="Morningstar-style dividend analysis: yield, growth, payout ratio, and safety assessment." />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl font-bold tabular-nums text-emerald-400">
+                          {stockData.dividend_intelligence.yield_pct.toFixed(2)}%
+                        </span>
+                        <span className="text-sm text-muted-foreground">yield</span>
+                        {stockData.dividend_intelligence.safety_label && (
+                          <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-bold ${
+                            stockData.dividend_intelligence.safety_label === "safe" || stockData.dividend_intelligence.safety_label === "very_safe" ? "bg-emerald-500/15 text-emerald-400" :
+                            stockData.dividend_intelligence.safety_label === "risky" || stockData.dividend_intelligence.safety_label === "unsafe" ? "bg-red-500/15 text-red-400" :
+                            "bg-amber-500/15 text-amber-400"
+                          }`}>
+                            {stockData.dividend_intelligence.safety_label.replace(/_/g, " ")}
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {stockData.dividend_intelligence.annual_dividend != null && (
+                          <div className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">Annual Div</p>
+                            <p className="text-sm font-bold tabular-nums">${stockData.dividend_intelligence.annual_dividend.toFixed(2)}</p>
+                          </div>
+                        )}
+                        {stockData.dividend_intelligence.payout_ratio != null && (
+                          <div className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">Payout Ratio</p>
+                            <p className={`text-sm font-bold tabular-nums ${stockData.dividend_intelligence.payout_ratio > 80 ? "text-red-400" : stockData.dividend_intelligence.payout_ratio > 60 ? "text-amber-400" : ""}`}>
+                              {stockData.dividend_intelligence.payout_ratio.toFixed(0)}%
+                            </p>
+                          </div>
+                        )}
+                        {stockData.dividend_intelligence.growth_5y != null && (
+                          <div className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">5Y Growth</p>
+                            <p className={`text-sm font-bold tabular-nums ${stockData.dividend_intelligence.growth_5y >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                              {stockData.dividend_intelligence.growth_5y >= 0 ? "+" : ""}{stockData.dividend_intelligence.growth_5y.toFixed(1)}%
+                            </p>
+                          </div>
+                        )}
+                        {stockData.dividend_intelligence.years_of_growth != null && (
+                          <div className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">Growth Streak</p>
+                            <p className="text-sm font-bold tabular-nums">{stockData.dividend_intelligence.years_of_growth}yr</p>
+                          </div>
+                        )}
+                        {stockData.dividend_intelligence.safety_score != null && (
+                          <div className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">Safety Score</p>
+                            <p className="text-sm font-bold tabular-nums">{stockData.dividend_intelligence.safety_score.toFixed(0)}<span className="text-xs text-muted-foreground">/100</span></p>
+                          </div>
+                        )}
+                        {stockData.dividend_intelligence.ex_date && (
+                          <div className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">Next Ex-Date</p>
+                            <p className="text-sm font-bold">{stockData.dividend_intelligence.ex_date}</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Survival Crash Timing + Bubble Indicator Row */}
+              {(stockData.survival_crash_timing || stockData.bubble_indicator) && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Survival Model (Cox PH crash timing) */}
+                  {stockData.survival_crash_timing && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+                          Crash Timing (Cox Proportional Hazards)
+                          <InfoTooltip text="Cox PH survival model estimates the probability of a major crash at different horizons. Adjusted for this stock's beta — higher-beta stocks have amplified probabilities." />
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-3 gap-3">
+                          {Object.entries(stockData.survival_crash_timing).map(([horizon, prob]) => (
+                            <div key={horizon} className="rounded-lg bg-muted/30 p-3 text-center">
+                              <p className="text-xs text-muted-foreground uppercase">{horizon}</p>
+                              <p className={`text-xl font-bold tabular-nums ${prob > 30 ? "text-red-400" : prob > 15 ? "text-amber-400" : "text-emerald-400"}`}>
+                                {prob.toFixed(1)}%
+                              </p>
+                              <div className="w-full h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${prob > 30 ? "bg-red-500" : prob > 15 ? "bg-amber-500" : "bg-emerald-500"}`}
+                                  style={{ width: `${Math.min(100, prob)}%` }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Bubble Indicator (LPPL Sornette) */}
+                  {stockData.bubble_indicator && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+                          Bubble Indicator (Sornette LPPL)
+                          <InfoTooltip text="Log-Periodic Power Law model detects speculative bubbles by fitting super-exponential growth patterns. High confidence means the price dynamics match classic bubble signatures." />
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <span className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-bold ${
+                            stockData.bubble_indicator.is_bubble ? "bg-red-500/15 text-red-400" : "bg-emerald-500/15 text-emerald-400"
+                          }`}>
+                            {stockData.bubble_indicator.status ?? (stockData.bubble_indicator.is_bubble ? "Bubble Detected" : "No Bubble")}
+                          </span>
+                          {stockData.bubble_indicator.confidence != null && (
+                            <span className="text-sm text-muted-foreground">
+                              Confidence: {(stockData.bubble_indicator.confidence * 100).toFixed(0)}%
+                            </span>
+                          )}
+                        </div>
+                        {stockData.bubble_indicator.tc_date && (
+                          <p className="text-sm text-muted-foreground">
+                            Est. critical time: <span className="font-medium text-foreground">{stockData.bubble_indicator.tc_date}</span>
+                          </p>
+                        )}
+                        {stockData.bubble_indicator.confidence != null && (
+                          <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${stockData.bubble_indicator.is_bubble ? "bg-red-500" : "bg-emerald-500"}`}
+                              style={{ width: `${Math.min(100, stockData.bubble_indicator.confidence * 100)}%` }}
+                            />
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+
+              {/* Chart Patterns */}
+              {stockData.chart_patterns && stockData.chart_patterns.pattern_count > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+                      Chart Patterns
+                      <InfoTooltip text="Detected chart patterns with their bias and confidence. Patterns like head-and-shoulders, double tops/bottoms, and triangles." />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-bold ${
+                        stockData.chart_patterns.bias === "bullish" ? "bg-emerald-500/15 text-emerald-400" :
+                        stockData.chart_patterns.bias === "bearish" ? "bg-red-500/15 text-red-400" :
+                        "bg-muted/50 text-muted-foreground"
+                      }`}>
+                        Bias: {stockData.chart_patterns.bias}
+                      </span>
+                      <span className="text-sm text-muted-foreground">{stockData.chart_patterns.pattern_count} pattern{stockData.chart_patterns.pattern_count !== 1 ? "s" : ""} detected</span>
+                      {stockData.chart_patterns.support_resistance && (
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          S: ${stockData.chart_patterns.support_resistance.support.toFixed(0)} | R: ${stockData.chart_patterns.support_resistance.resistance.toFixed(0)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {stockData.chart_patterns.patterns.map((p, i) => (
+                        <span key={i} className={`text-xs px-2 py-1 rounded-md ${
+                          p.type === "bullish" ? "bg-emerald-500/10 text-emerald-400" :
+                          p.type === "bearish" ? "bg-red-500/10 text-red-400" :
+                          "bg-muted/50 text-muted-foreground"
+                        }`}>
+                          {p.name} ({(p.confidence * 100).toFixed(0)}%)
+                        </span>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </>
           )}
         </>
