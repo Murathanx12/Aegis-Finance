@@ -614,6 +614,141 @@ async def compare_portfolios(request: CompareRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class MPCRequest(BaseModel):
+    tickers: list[str] = Field(..., min_length=2, max_length=30)
+    current_weights: dict[str, float] | None = None
+    benchmark_weights: dict[str, float] | None = None
+    sector_map: dict[str, str] | None = None
+    sector_caps: dict[str, float] | None = None
+    gamma: float = Field(3.0, gt=0, le=100)
+    transaction_cost_bps: float = Field(5.0, ge=0, le=500)
+    holding_penalty: float = Field(0.0, ge=0, le=10)
+    max_weight: float = Field(0.35, gt=0, le=1.0)
+    min_weight: float = Field(0.0, ge=-0.5, le=0.5)
+    tracking_error_limit: float | None = Field(None, ge=0.001, le=1.0)
+    allow_shorts: bool = False
+    horizon: int = Field(1, ge=1, le=12)
+    return_decay: float = Field(0.0, ge=0, le=0.95)
+    lookback_days: int = Field(504, ge=126, le=1260)
+
+    @field_validator("tickers")
+    @classmethod
+    def upper_tickers(cls, v: list[str]) -> list[str]:
+        out = [t.upper() for t in v]
+        for t in out:
+            if not _TICKER_RE.match(t):
+                raise ValueError(f"Invalid ticker: {t}")
+        return out
+
+
+@router.post("/optimize-mpc")
+async def optimize_mpc(request: MPCRequest):
+    """Convex single-/multi-period portfolio optimizer.
+
+    Solves mean-variance with explicit transaction costs, tracking error
+    constraint, sector caps, and optional short-sale permission. When
+    horizon > 1, re-solves each step (rolling MPC) with optional
+    alpha-decay across steps.
+    """
+    import yfinance as yf
+    import pandas as pd
+    import numpy as np
+    from backend.services.mpc_optimizer import (
+        optimize_single_period,
+        optimize_multi_period,
+    )
+
+    tickers = request.tickers
+    try:
+        # Fetch price history once, compute returns + Sigma + mu
+        period_days = request.lookback_days
+        start = (pd.Timestamp.today() - pd.Timedelta(days=int(period_days * 1.6))).strftime(
+            "%Y-%m-%d"
+        )
+        end = pd.Timestamp.today().strftime("%Y-%m-%d")
+        frame = await asyncio.to_thread(
+            yf.download, tickers, start=start, end=end, progress=False, group_by="ticker"
+        )
+        if frame is None or frame.empty:
+            raise HTTPException(status_code=422, detail="Could not fetch price data")
+
+        closes: dict[str, pd.Series] = {}
+        if len(tickers) == 1:
+            # Single-ticker shape is different
+            if "Close" in frame.columns:
+                closes[tickers[0]] = frame["Close"].dropna()
+        else:
+            for t in tickers:
+                try:
+                    if t in frame.columns.get_level_values(0):
+                        closes[t] = frame[t]["Close"].dropna()
+                except Exception:
+                    continue
+
+        available = [t for t in tickers if t in closes and len(closes[t]) > 30]
+        if len(available) < 2:
+            raise HTTPException(
+                status_code=422,
+                detail="Need ≥2 tickers with sufficient history",
+            )
+
+        price_df = pd.DataFrame({t: closes[t] for t in available}).dropna()
+        if len(price_df) < 30:
+            raise HTTPException(status_code=422, detail="Not enough overlapping history")
+
+        rets = price_df.pct_change().dropna()
+        mu = rets.mean() * 252  # annualised
+        sigma = rets.cov() * 252
+
+        # Restrict weight dictionaries to available tickers
+        cw = {k: v for k, v in (request.current_weights or {}).items() if k in available}
+        bw = {k: v for k, v in (request.benchmark_weights or {}).items() if k in available}
+        sm = {k: v for k, v in (request.sector_map or {}).items() if k in available}
+
+        kwargs = dict(
+            gamma=request.gamma,
+            transaction_cost_bps=request.transaction_cost_bps,
+            holding_penalty=request.holding_penalty,
+            max_weight=request.max_weight,
+            min_weight=request.min_weight,
+            tracking_error_limit=request.tracking_error_limit,
+            benchmark_weights=bw if bw else None,
+            sector_map=sm if sm else None,
+            sector_caps=request.sector_caps,
+            allow_shorts=request.allow_shorts,
+        )
+
+        if request.horizon == 1:
+            result = await asyncio.to_thread(
+                optimize_single_period,
+                expected_returns=mu,
+                cov_matrix=sigma,
+                current_weights=cw if cw else None,
+                **kwargs,
+            )
+        else:
+            result = await asyncio.to_thread(
+                optimize_multi_period,
+                expected_returns=mu,
+                cov_matrix=sigma,
+                current_weights=cw if cw else None,
+                horizon=request.horizon,
+                return_decay=request.return_decay,
+                **kwargs,
+            )
+
+        result["tickers"] = available
+        result["lookback_days"] = request.lookback_days
+        result["mu_annualised"] = {t: float(mu[t]) for t in available}
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("optimize-mpc failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 class TearsheetRequest(BaseModel):
     holdings: list[Holding] = Field(..., min_length=1, max_length=50)
     title: str = Field("Portfolio Tearsheet", max_length=80)
