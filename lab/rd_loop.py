@@ -1,18 +1,28 @@
 """
-Aegis Finance - Autonomous R&D Loop v10
+Aegis Finance - Autonomous R&D Loop v11
 =========================================
-Sandbox methodology — each cycle has full freedom to audit, research,
-build, fix, and integrate. No micro-managed phases.
+Sandbox methodology with a quality gate and auto-rollback.
 
 Three cycle types rotate to prevent tunnel vision:
   - DEEP_AUDIT: Read code, find bugs, fix them, write regression tests
   - BUILD: Research competitors, install packages, build new features
   - INTEGRATE: Wire existing services together, update frontend, close gaps
 
+v11 additions (over v10):
+  1. Pre-cycle data-source health probe — abort when yfinance is down
+  2. Full fast-test suite after the session (not just 3 smoke tests)
+  3. Quality scorecard: weighted composite over test pass rate,
+     service-import health, code smells, frontend build, warning drift
+  4. Auto-rollback when the cycle regresses beyond a threshold
+  5. Rolling 60-cycle ledger so the loop is aware of multi-cycle trends
+  6. Trend-aware prompt injection (shows Claude the recent trajectory)
+
 Usage:
-  python lab/rd_loop.py                    # opus, auto-detect cycle
-  python lab/rd_loop.py --cycles 50        # run up to cycle 50
-  python lab/rd_loop.py --model sonnet     # cheaper
+  python lab/rd_loop.py                      # opus, auto-detect cycle
+  python lab/rd_loop.py --cycles 50          # run up to cycle 50
+  python lab/rd_loop.py --model sonnet       # cheaper
+  python lab/rd_loop.py --no-rollback        # keep commits even on regression
+  python lab/rd_loop.py --skip-full-tests    # skip the full fast suite (faster)
 """
 
 import argparse
@@ -30,6 +40,17 @@ REPO_DIR = Path(__file__).parent.parent
 LAB_DIR = REPO_DIR / "lab"
 EXPERIMENTS_DIR = LAB_DIR / "experiments"
 LOGS_DIR = LAB_DIR / "logs"
+HISTORY_PATH = LAB_DIR / "quality_history.json"
+
+# Make sibling modules importable without a package layout
+if str(LAB_DIR) not in sys.path:
+    sys.path.insert(0, str(LAB_DIR))
+from quality import (  # noqa: E402
+    collect_metrics, score_cycle, write_scorecard,
+    read_history, append_history, trend_summary,
+    ROLLBACK_THRESHOLD, PASS_THRESHOLD,
+)
+from health_probe import probe_all  # noqa: E402
 
 SESSION_TIMEOUT = 2700  # 45 min max per session
 
@@ -49,7 +70,8 @@ def _get_cycle_type(cycle: int) -> str:
 # Build the prompt — sandbox mentality, full freedom
 # ---------------------------------------------------------------------------
 
-def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
+def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str,
+                 trend: dict | None = None) -> str:
 
     cycle_type = _get_cycle_type(cycle)
 
@@ -89,6 +111,24 @@ def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str) -> str:
             except Exception:
                 pass
     past_block = "\n".join(learnings) if learnings else "No recent history."
+
+    # Trend block from the quality ledger — makes Claude aware if the loop is
+    # drifting downhill across multiple cycles
+    trend_lines: list[str] = []
+    if trend and trend.get("available"):
+        trend_lines.append(
+            f"Rolling quality avg: {trend['avg_score']:.3f}  "
+            f"(last 3 cycles: {trend['recent_avg']:.3f})"
+        )
+        if trend.get("declining_trend"):
+            trend_lines.append(
+                "WARNING: the loop's composite score has been declining for "
+                "3+ cycles. Prioritize quality over novelty this cycle."
+            )
+        last = trend.get("last_verdicts") or []
+        if last:
+            trend_lines.append("Last verdicts: " + " → ".join(last))
+    trend_block = "\n".join(trend_lines) if trend_lines else "No ledger yet."
 
     # Type-specific instructions
     if cycle_type == "DEEP_AUDIT":
@@ -224,6 +264,10 @@ vix_term_structure
 
 {past_block}
 
+## Quality trend (rolling ledger)
+
+{trend_block}
+
 ## When done
 
 1. Write experiment report to: lab/experiments/cycle_{cycle:03d}/experiment_report.json
@@ -269,7 +313,9 @@ You own this. Make it better. Don't hold back.
 # Run one cycle
 # ---------------------------------------------------------------------------
 
-def run_cycle(cycle: int, model: str, baseline_failures: str):
+def run_cycle(cycle: int, model: str, baseline_failures: str, *,
+              rollback_on_regression: bool = True,
+              skip_full_tests: bool = False) -> dict:
     cycle_id = f"cycle_{cycle:03d}"
     cycle_dir = EXPERIMENTS_DIR / cycle_id
     cycle_dir.mkdir(parents=True, exist_ok=True)
@@ -282,6 +328,34 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
     print(f"  CYCLE {cycle} ({cycle_type}) - {datetime.now().strftime('%H:%M:%S')}")
     print(f"{'='*60}")
 
+    # 1. Health probe — abort if critical data sources are down
+    print("\n  Probing data sources...")
+    health = probe_all()
+    (cycle_dir / "health_probe.json").write_text(
+        json.dumps(health, indent=2, default=str), encoding="utf-8"
+    )
+    if not health["healthy"]:
+        yf_err = health["results"].get("yfinance", {}).get("error", "unknown")
+        print(f"  [ABORT] yfinance is down ({yf_err}) — skipping cycle")
+        return {"status": "aborted_unhealthy", "health": health}
+    print(f"  Data sources: {health['live_sources']}/{health['total_sources']} live")
+
+    # 2. Capture the pre-session commit so we can roll back if needed
+    pre_commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=str(REPO_DIR),
+        capture_output=True, text=True,
+    ).stdout.strip()
+
+    # 3. Baseline metric snapshot — skip tests/frontend here to save time
+    #    (we run the full suite post-session; pre-session only needs smells
+    #    and import health so we can compute a delta)
+    print("  Snapshotting baseline metrics...")
+    before = collect_metrics(REPO_DIR, skip_tests=True, skip_frontend=True)
+    # Carry over the baseline fast-suite counts that main() computed
+    if baseline_failures is not None:
+        failed_m = re.search(r"(\d+) failed", baseline_failures)
+        before.tests_failed = int(failed_m.group(1)) if failed_m else 0
+
     # Data generation
     print("\n  Generating engine data...")
     subprocess.run(
@@ -290,8 +364,9 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
         cwd=str(REPO_DIR), timeout=300,
     )
 
-    # Build prompt
-    prompt = build_prompt(cycle, cycle_dir, baseline_failures)
+    # Build prompt (with trend-awareness from the rolling ledger)
+    trend = trend_summary(read_history(HISTORY_PATH, last_n=10))
+    prompt = build_prompt(cycle, cycle_dir, baseline_failures, trend=trend)
     (cycle_dir / "prompt.md").write_text(prompt, encoding="utf-8")
 
     # Single deep session
@@ -416,13 +491,71 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
     except:
         pass
 
-    # Commit if Claude didn't already
+    # Commit if Claude didn't already (session may have committed mid-run; this
+    # is the safety net for anything left unstaged)
     duration = int((time.time() - cycle_start) / 60)
     subprocess.run(["git", "add", "-A"], cwd=str(REPO_DIR))
-    subprocess.run(
-        ["git", "commit", "-m", f"Lab {cycle_id} ({duration}min)", "--allow-empty"],
-        cwd=str(REPO_DIR), capture_output=True,
+    commit_res = subprocess.run(
+        ["git", "commit", "-m", f"Lab {cycle_id} ({duration}min)"],
+        cwd=str(REPO_DIR), capture_output=True, text=True,
     )
+    # If that failed because nothing was staged, still create the empty marker
+    if commit_res.returncode != 0:
+        subprocess.run(
+            ["git", "commit", "-m", f"Lab {cycle_id} ({duration}min)", "--allow-empty"],
+            cwd=str(REPO_DIR), capture_output=True,
+        )
+    post_commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=str(REPO_DIR),
+        capture_output=True, text=True,
+    ).stdout.strip()
+
+    # Quality scorecard + rollback decision
+    changed = subprocess.run(
+        ["git", "diff", "--name-only", f"{pre_commit}..{post_commit}"],
+        cwd=str(REPO_DIR), capture_output=True, text=True,
+    ).stdout
+    frontend_touched = "frontend/" in changed
+    print("\n  Collecting post-cycle metrics...")
+    after = collect_metrics(
+        REPO_DIR,
+        skip_tests=skip_full_tests,
+        skip_frontend=not frontend_touched,
+    )
+    scorecard = score_cycle(before, after)
+    scorecard["cycle"] = cycle
+    scorecard["cycle_type"] = cycle_type
+    scorecard["duration_min"] = duration
+    scorecard["pre_commit"] = pre_commit
+    scorecard["post_commit"] = post_commit
+    write_scorecard(cycle_dir / "scorecard.json", scorecard)
+
+    score = scorecard["composite_score"]
+    verdict = scorecard["verdict"]
+    print(f"  Quality score: {score:.3f}  →  verdict={verdict}")
+    if scorecard["flags"]:
+        for flag in scorecard["flags"]:
+            print(f"    · {flag}")
+
+    if verdict == "rollback" and rollback_on_regression and post_commit != pre_commit:
+        print(f"  [ROLLBACK] Score below {ROLLBACK_THRESHOLD:.2f}. Reverting to {pre_commit[:8]}.")
+        subprocess.run(
+            ["git", "reset", "--hard", pre_commit],
+            cwd=str(REPO_DIR), capture_output=True,
+        )
+        scorecard["rolled_back"] = True
+    else:
+        scorecard["rolled_back"] = False
+
+    append_history(HISTORY_PATH, {
+        "cycle": cycle,
+        "cycle_type": cycle_type,
+        "composite_score": score,
+        "verdict": verdict,
+        "flags": scorecard["flags"],
+        "rolled_back": scorecard["rolled_back"],
+        "timestamp": datetime.utcnow().isoformat(),
+    })
 
     # Summary
     print(f"\n  Cycle {cycle} ({cycle_type}) done in {duration} min")
@@ -456,17 +589,23 @@ def run_cycle(cycle: int, model: str, baseline_failures: str):
     if session_path.exists():
         print(f"  Session: {session_path.stat().st_size:,} bytes")
 
+    return {"status": "ok", "scorecard": scorecard}
+
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="Aegis Finance R&D Loop v10")
+    parser = argparse.ArgumentParser(description="Aegis Finance R&D Loop v11")
     parser.add_argument("--cycles", type=int, default=50)
     parser.add_argument("--model", default="opus")
     parser.add_argument("--start-cycle", type=int, default=None)
     parser.add_argument("--branch", default="lab/autonomous-rd")
+    parser.add_argument("--no-rollback", action="store_true",
+                        help="Keep every commit even if the cycle regresses")
+    parser.add_argument("--skip-full-tests", action="store_true",
+                        help="Skip the post-cycle full fast-test suite (faster)")
     args = parser.parse_args()
 
     EXPERIMENTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -500,16 +639,30 @@ def main():
         start = len(existing) + 1
 
     print(f"\n{'='*60}")
-    print(f"  AEGIS R&D LAB v10 - Sandbox Mode")
+    print(f"  AEGIS R&D LAB v11 - Quality-gated sandbox")
     print(f"  Model: {args.model} | Cycles: {start}-{args.cycles}")
     print(f"  Session: {SESSION_TIMEOUT // 60} min | Branch: {args.branch}")
     print(f"  Rotation: DEEP_AUDIT -> BUILD -> INTEGRATE")
     print(f"  Next cycle type: {_get_cycle_type(start)}")
+    print(f"  Rollback: {'disabled' if args.no_rollback else f'auto < {ROLLBACK_THRESHOLD:.2f}'} "
+          f"(pass >= {PASS_THRESHOLD:.2f})")
     print(f"{'='*60}")
 
+    summary_counts = {"ok": 0, "rollback": 0, "warn": 0, "aborted_unhealthy": 0}
     for cycle in range(start, args.cycles + 1):
         try:
-            run_cycle(cycle, args.model, baseline_failures)
+            result = run_cycle(
+                cycle, args.model, baseline_failures,
+                rollback_on_regression=not args.no_rollback,
+                skip_full_tests=args.skip_full_tests,
+            )
+            if isinstance(result, dict):
+                status = result.get("status")
+                if status == "aborted_unhealthy":
+                    summary_counts["aborted_unhealthy"] += 1
+                else:
+                    v = (result.get("scorecard") or {}).get("verdict", "warn")
+                    summary_counts[v] = summary_counts.get(v, 0) + 1
         except Exception as e:
             print(f"\n  [FATAL] Cycle {cycle}: {type(e).__name__}: {e}")
             import traceback
@@ -521,6 +674,10 @@ def main():
 
     print(f"\n{'='*60}")
     print(f"  DONE - cycles {start}-{args.cycles}")
+    print(f"  Verdicts: pass={summary_counts.get('pass', 0)}  "
+          f"warn={summary_counts.get('warn', 0)}  "
+          f"rollback={summary_counts.get('rollback', 0)}  "
+          f"aborted={summary_counts.get('aborted_unhealthy', 0)}")
     print(f"  git log --oneline {args.branch} -{args.cycles}")
     print(f"{'='*60}")
 
