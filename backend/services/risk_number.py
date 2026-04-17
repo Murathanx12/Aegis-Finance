@@ -108,7 +108,10 @@ def compute_risk_number(
     # Build portfolio return series
     w = np.array([weights[t] for t in available])
     w = w / w.sum()  # re-normalize
-    port_returns = (returns[available].iloc[-lookback_days:] * w).sum(axis=1).dropna()
+    # Drop rows where any ticker has NaN before computing weighted sum,
+    # otherwise sum(axis=1) silently skips NaN and deflates returns
+    trimmed = returns[available].iloc[-lookback_days:].dropna()
+    port_returns = (trimmed * w).sum(axis=1)
 
     if len(port_returns) < 30:
         return _fallback_result("Insufficient return history")

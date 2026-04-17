@@ -71,6 +71,14 @@ def estimate_crash_timeline(
         prob = crash_prob_3m if crash_prob_3m <= 1.0 else crash_prob_3m / 100.0
         crash_freq *= max(0.5, min(3.0, prob / base_rate))
 
+    # Build a neutral scenario dict for the simulation
+    scenario = config.get("scenarios", {}).get("base", {
+        "drift_adj": 0.0,
+        "vol_mult": 1.0,
+        "crash_mult": 1.0,
+        "label": "Base",
+    })
+
     paths = simulate_paths(
         start_price=current_level,
         historical_mu=inst_return,
@@ -78,6 +86,8 @@ def estimate_crash_timeline(
         days=forecast_days,
         n_sims=n_sims,
         crash_freq=crash_freq,
+        risk_score=risk_score,
+        scenario=scenario,
         seed=42,
     )
 

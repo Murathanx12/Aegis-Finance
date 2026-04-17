@@ -1,0 +1,93 @@
+{
+  "cycle": 78,
+  "type": "deep_audit",
+  "duration_minutes": 21,
+  "date": "2026-04-17",
+  "summary": "Deep audit of 12+ service files. Found and fixed 3 real bugs: crash_timeline TypeError from missing simulate_paths args, volatility_analytics mislabeled GARCH model, risk_number silent NaN skipping in portfolio returns.",
+  "bugs_found": [
+    {
+      "id": "BUG-078-1",
+      "severity": "critical",
+      "file": "backend/services/crash_timeline.py",
+      "line": 74,
+      "title": "crash_timeline calls simulate_paths without required risk_score and scenario args",
+      "description": "estimate_crash_timeline() calls simulate_paths() without passing the required risk_score and scenario positional parameters, causing a TypeError at runtime. The API health check shows 'ok' because it only checks import, not execution.",
+      "root_cause": "simulate_paths signature requires risk_score: float and scenario: dict as positional params with no defaults. crash_timeline was ported from an older version where these params didn't exist.",
+      "fix": "Added risk_score=risk_score and scenario=<base scenario from config> to the simulate_paths call.",
+      "tests_added": [
+        "TestCrashTimelineMissingArgs::test_simulate_paths_receives_required_args",
+        "TestCrashTimelineMissingArgs::test_estimate_crash_timeline_does_not_raise"
+      ]
+    },
+    {
+      "id": "BUG-078-2",
+      "severity": "moderate",
+      "file": "backend/services/volatility_analytics.py",
+      "line": 365,
+      "title": "GARCH forward curve reports 'GJR-GARCH(1,1) Student-t' but fits standard GARCH(1,1)",
+      "description": "The _garch_forward_curve function uses arch_model(vol='Garch', p=1, q=1, dist='t') which is standard GARCH(1,1), but the output metadata says 'GJR-GARCH(1,1) Student-t'. GJR-GARCH requires vol='GARCH' with o=1 parameter to capture leverage effects. This produces factually incorrect metadata in all API responses that include volatility analytics.",
+      "root_cause": "Model label was aspirational (GJR was intended) but the actual arch_model call was never updated to include the o=1 parameter for the asymmetric term.",
+      "fix": "Changed model label from 'GJR-GARCH(1,1) Student-t' to 'GARCH(1,1) Student-t' to match the actual model being fit.",
+      "tests_added": [
+        "TestGarchModelLabel::test_garch_model_label_matches_specification",
+        "TestGarchModelLabel::test_garch_label_not_misleading"
+      ]
+    },
+    {
+      "id": "BUG-078-3",
+      "severity": "moderate",
+      "file": "backend/services/risk_number.py",
+      "line": 111,
+      "title": "Portfolio returns silently skip NaN via sum(axis=1), deflating returns",
+      "description": "When computing portfolio returns as (returns * weights).sum(axis=1), pandas sum() with default skipna=True silently skips NaN values. For a 50/50 portfolio where ticker B has NaN, the portfolio return becomes 0.5 * r_A instead of r_A (the correct return when only A has data). This deflates portfolio returns on partial-NaN days, artificially inflating measured volatility and max drawdown, producing an overstated risk number.",
+      "root_cause": "Default pandas behavior: Series.sum(skipna=True) drops NaN instead of propagating it. The code assumed all tickers would have complete data over the lookback window.",
+      "fix": "Changed to dropna() on the returns DataFrame BEFORE computing weighted sum, so only rows where all tickers have data are included. This gives correct portfolio returns rather than partially-weighted ones.",
+      "tests_added": [
+        "TestRiskNumberNaNHandling::test_partial_nan_does_not_deflate_returns",
+        "TestRiskNumberNaNHandling::test_all_nan_ticker_excluded",
+        "TestRiskNumberNaNHandling::test_consistent_returns_with_and_without_nan"
+      ]
+    }
+  ],
+  "files_audited": [
+    "backend/services/crash_timeline.py",
+    "backend/services/monte_carlo.py",
+    "backend/services/risk_number.py",
+    "backend/services/volatility_analytics.py",
+    "backend/services/drawdown_analyzer.py",
+    "backend/services/survival_model.py",
+    "backend/services/copula_tail.py",
+    "backend/services/attribution.py",
+    "backend/services/anomaly_detector.py",
+    "backend/services/economic_surprise.py",
+    "backend/services/retirement_mc.py",
+    "backend/services/sector_rotation.py",
+    "backend/services/technical_analysis.py",
+    "backend/services/liquidity_risk.py",
+    "backend/services/systemic_risk.py",
+    "backend/services/signal_engine.py"
+  ],
+  "files_modified": [
+    "backend/services/crash_timeline.py",
+    "backend/services/volatility_analytics.py",
+    "backend/services/risk_number.py",
+    "backend/tests/test_cycle078_bugs.py"
+  ],
+  "test_results": {
+    "before": {"passed": 1548, "failed": 0},
+    "after": {"passed": 1555, "failed": 0},
+    "new_tests": 7
+  },
+  "false_alarms": [
+    {
+      "file": "backend/services/drawdown_analyzer.py",
+      "suspected_bug": "Off-by-one in rolling_mdd: range(window, ...) vs range(window-1, ...)",
+      "why_not_a_bug": "Returns have one fewer element than prices due to pct_change().dropna(), so rolling(window).mean() on returns starts at prices.index[window], which aligns with range(window, ...) on prices. No off-by-one."
+    }
+  ],
+  "observations": [
+    "systemic_risk.py absorption ratio threshold (0.85) is almost always triggered because 3 of 6 default assets are highly correlated US equity indices — methodology concern but not a code bug",
+    "copula_tail.py has dead code at lines 261-267 (broken stats.gamma.args usage) but it's overwritten by the except block — cosmetic, not a runtime bug",
+    "retirement_mc.py drift correction (annual_arith_mu = geometric_mu + 0.5*sigma^2) is mathematically correct despite initially appearing suspicious"
+  ]
+}
