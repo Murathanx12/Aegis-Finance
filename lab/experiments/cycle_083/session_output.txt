@@ -1,0 +1,26 @@
+Cycle 083 complete. Here's what was done:
+
+## Cycle 083 Summary: Frontend Integration
+
+**Problem:** The backend sends rich analytics per stock (volatility, dividends, survival model, bubble detection, chart patterns) and has a full cross-asset macro dashboard endpoint, but the frontend didn't render any of it. The screener showed only composite signal scores without component breakdown.
+
+**What was integrated:**
+
+### Stock Detail Page (+5 new cards)
+- **Volatility Analytics** — GARCH forecast, HV 20/60D, IV-HV spread, vol regime badge
+- **Dividend Intelligence** — yield, payout ratio, 5Y growth, safety score, ex-date
+- **Survival Crash Timing** — Cox PH probabilities at 3m/6m/12m with progress bars
+- **Bubble Indicator** — Sornette LPPL detection status, confidence, critical time
+- **Chart Patterns** — detected patterns with bias, confidence, support/resistance
+
+### Dashboard (+1 new section)
+- **Cross-Asset Macro Regime** — Growth×Inflation quadrant, Risk-On/Off score with bar, Market Weather summary, breadth stats, intermarket divergence alerts, cross-asset momentum table (12 assets)
+
+### Screener (expanded rows)
+- **Click-to-expand** signal component breakdown per stock (12+ components sorted by magnitude)
+- Shows factor style, alpha, dividend yield, pattern bias in detail row
+- Double-click navigates to full analysis
+
+**Validation:** Frontend builds clean. 1673 backend tests pass, 0 regressions.
+
+---STDERR---
