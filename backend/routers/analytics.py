@@ -1020,3 +1020,30 @@ async def get_macro_regime():
 def _compute_macro_regime() -> dict:
     from backend.services.cross_asset_monitor import compute_macro_regime
     return compute_macro_regime()
+
+
+@router.get("/treemap")
+async def get_market_treemap(window: str = "1d"):
+    """Finviz-style sector → ticker treemap (size=market cap, color=return).
+
+    Query params:
+      - window: one of 1d | 1w | 1m | ytd
+    """
+    if window not in {"1d", "1w", "1m", "ytd"}:
+        raise HTTPException(status_code=422, detail=f"window must be one of 1d,1w,1m,ytd (got {window!r})")
+
+    cache_key = f"market_treemap:{window}"
+    cached = cache_get(cache_key, _CACHE_TTL.get("ttl_stock", 900))
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.market_treemap import build_treemap
+        result = await asyncio.to_thread(build_treemap, window)
+        cache_set(cache_key, result)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error("market treemap failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1364,3 +1364,61 @@ async def get_stock_dividends(ticker: str):
 def _stock_dividends(ticker: str) -> dict:
     from backend.services.dividend_intelligence import get_dividend_intelligence
     return get_dividend_intelligence(ticker)
+
+
+@router.get("/{ticker}/style-box")
+async def get_stock_style_box(ticker: str):
+    """Morningstar-style 3x3 style box (Small/Mid/Large × Value/Blend/Growth).
+
+    Size from market cap; style from peer-relative z-scores on value vs growth
+    metrics. Returns the live cell plus the full 9-cell grid for rendering.
+    """
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"stock_stylebox:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.style_box import classify_style_box
+        result = await asyncio.to_thread(classify_style_box, ticker)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"No style box data for {ticker}")
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("style box failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{ticker}/grades")
+async def get_stock_grades(ticker: str):
+    """Seeking Alpha-style A–F factor report card.
+
+    Grades across Value, Growth, Profitability, Momentum, and Revisions.
+    Each factor maps to a sector-relative percentile and letter band.
+    """
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"stock_grades:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.factor_grades import get_factor_report_card
+        result = await asyncio.to_thread(get_factor_report_card, ticker)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"No grades available for {ticker}")
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("factor grades failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
