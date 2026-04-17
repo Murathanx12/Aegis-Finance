@@ -354,6 +354,11 @@ export function getStockVolatility(ticker: string) {
   return fetchAPI<VolatilityAnalytics>(`/api/stock/${ticker}/volatility`);
 }
 
+// Dividend Intelligence (Morningstar-style analytics)
+export function getStockDividends(ticker: string) {
+  return fetchAPI<DividendIntelligence>(`/api/stock/${ticker}/dividends`);
+}
+
 // Polygon.io Real-Time Snapshot
 export function getRealtimeSnapshot(ticker: string) {
   return fetchAPI<RealtimeSnapshot>(`/api/realtime/${ticker}`);
@@ -1737,6 +1742,52 @@ export interface VolatilityAnalytics {
     arch_effect: boolean;
     vol_trend: string | null;
   };
+}
+
+export interface DividendIntelligence {
+  ticker: string;
+  pays_dividend: boolean;
+  message?: string;
+  current_price?: number | null;
+  trailing_yield?: number | null;
+  forward_yield?: number | null;
+  annual_dividend?: number | null;
+  frequency?: string;
+  ex_dividend_date?: string | null;
+  growth_rates?: {
+    cagr_1y?: number;
+    cagr_3y?: number;
+    cagr_5y?: number;
+    cagr_10y?: number;
+  };
+  payout?: {
+    earnings_payout_pct?: number;
+    eps_payout_pct?: number;
+    fcf_payout_pct?: number;
+  };
+  consecutive_growth_years?: number;
+  classification?: string;
+  safety?: {
+    score: number | null;
+    grade: string;
+    components: Record<string, number>;
+  };
+  ddm?: {
+    intrinsic_value: number | null;
+    upside_pct: number | null;
+    growth_rate_used?: number;
+    discount_rate?: number;
+    model?: string;
+  };
+  income_projection?: {
+    investment_amount: number;
+    shares: number;
+    annual_income: number;
+    monthly_income: number;
+    yield_on_cost: number;
+  };
+  history?: Array<{ date: string; amount: number }>;
+  years_of_data?: number | null;
 }
 
 export interface RealtimeSnapshot {

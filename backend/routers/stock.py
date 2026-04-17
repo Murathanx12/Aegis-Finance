@@ -12,6 +12,7 @@ GET /api/stock/{ticker}/technicals  — Technical analysis (RSI, MACD, Bollinger
 GET /api/stock/{ticker}/valuation   — Relative valuation vs sector peers (Koyfin-style)
 GET /api/stock/{ticker}/patterns    — Chart pattern recognition (TradingView-style)
 GET /api/stock/{ticker}/volatility  — Volatility analytics (Bloomberg-style vol cone, GARCH)
+GET /api/stock/{ticker}/dividends   — Dividend intelligence (Morningstar-style)
 """
 
 import asyncio
@@ -265,6 +266,18 @@ def _screener() -> dict:
             except Exception as e:
                 logger.debug("screener pattern skip %s: %s", ticker, e)
 
+            # Dividend yield for screener
+            _div_yield = None
+            _div_safety = None
+            try:
+                from backend.services.dividend_intelligence import get_dividend_summary
+                _div = get_dividend_summary(ticker)
+                if _div:
+                    _div_yield = _div.get("trailing_yield")
+                    _div_safety = _div.get("safety_grade")
+            except Exception as e:
+                logger.debug("screener dividend skip %s: %s", ticker, e)
+
             return {
                 "ticker": r["ticker"],
                 "name": r.get("name", ticker),
@@ -301,6 +314,8 @@ def _screener() -> dict:
                 "current_drawdown_pct": _current_dd,
                 "pattern_bias": _pattern_bias,
                 "pattern_count": _pattern_count,
+                "dividend_yield": _div_yield,
+                "dividend_safety": _div_safety,
             }
         except Exception as e:
             logger.warning("screener skip %s: %s", ticker, e)
@@ -772,6 +787,15 @@ def _analyze_stock(ticker: str) -> dict:
             result["relative_valuation"] = val_summary
     except Exception as e:
         logger.debug("relative valuation skip %s: %s", ticker, e)
+
+    # Dividend intelligence (Morningstar-style summary)
+    try:
+        from backend.services.dividend_intelligence import get_dividend_summary
+        div_data = get_dividend_summary(ticker)
+        if div_data:
+            result["dividend_intelligence"] = div_data
+    except Exception as e:
+        logger.debug("dividend intelligence skip %s: %s", ticker, e)
 
     # Volatility analytics (Bloomberg-style vol summary)
     try:
@@ -1287,3 +1311,37 @@ async def get_stock_volatility(ticker: str):
 def _stock_volatility(ticker: str) -> dict:
     from backend.services.volatility_analytics import get_volatility_analytics
     return get_volatility_analytics(ticker)
+
+
+@router.get("/{ticker}/dividends")
+async def get_stock_dividends(ticker: str):
+    """Dividend intelligence — Morningstar-style analytics.
+
+    Returns yield, growth rates (1Y/3Y/5Y/10Y CAGR), payout ratios,
+    safety score (0-100), aristocrat/champion classification,
+    Gordon Growth DDM fair value, income projection, and payment history.
+    """
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"stock_dividends:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(_stock_dividends, ticker)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"No dividend data for {ticker}")
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("dividend intelligence failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _stock_dividends(ticker: str) -> dict:
+    from backend.services.dividend_intelligence import get_dividend_intelligence
+    return get_dividend_intelligence(ticker)
