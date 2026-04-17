@@ -1022,6 +1022,63 @@ def _compute_macro_regime() -> dict:
     return compute_macro_regime()
 
 
+@router.get("/allocation-strategies")
+async def list_allocation_strategies():
+    """List the pre-defined asset-allocation strategies the backtester knows about."""
+    from backend.services.allocation_backtester import NAMED_STRATEGIES
+    return {"strategies": [{"name": n, "weights": w} for n, w in NAMED_STRATEGIES.items()]}
+
+
+@router.get("/allocation-backtest/{name}")
+async def backtest_named_allocation(name: str, start: str = "2005-01-01",
+                                     rebalance: str = "quarterly"):
+    """Backtest a named allocation (60_40, 3_fund, permanent_portfolio, all_weather, ...)."""
+    cache_key = f"aa_backtest_named:{name}:{start}:{rebalance}"
+    cached = cache_get(cache_key, _CACHE_TTL.get("ttl_market", 3600))
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.allocation_backtester import backtest_named
+        result = await asyncio.to_thread(backtest_named, name, start=start, rebalance_freq=rebalance)
+        if "error" in result:
+            raise HTTPException(status_code=422, detail=result["error"])
+        cache_set(cache_key, result)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("allocation backtest (named=%s) failed: %s", name, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/allocation-backtest")
+async def backtest_custom_allocation(payload: dict = Body(...)):
+    """Backtest a user-defined allocation. JSON body: {weights: {TICKER: weight}, start, rebalance}."""
+    weights = payload.get("weights") or {}
+    start = payload.get("start", "2005-01-01")
+    rebalance = payload.get("rebalance_freq", "quarterly")
+    if not weights:
+        raise HTTPException(status_code=422, detail="weights dict is required")
+
+    try:
+        from backend.services.allocation_backtester import backtest_allocation
+        result = await asyncio.to_thread(backtest_allocation, weights=weights,
+                                          start=start, rebalance_freq=rebalance)
+        if "error" in result:
+            raise HTTPException(status_code=422, detail=result["error"])
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("custom allocation backtest failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/treemap")
 async def get_market_treemap(window: str = "1d"):
     """Finviz-style sector → ticker treemap (size=market cap, color=return).
