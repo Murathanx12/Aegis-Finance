@@ -4,14 +4,24 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { validateTicker } from "@/lib/validation";
 
 const POPULAR = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA", "JPM", "JNJ", "V", "UNH", "XOM"];
 
 export default function StockPage() {
   const [ticker, setTicker] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const go = (t: string) => router.push(`/stock/${t.toUpperCase()}`);
+  const go = (t: string) => {
+    const result = validateTicker(t);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setError(null);
+    router.push(`/stock/${result.ticker}`);
+  };
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -27,16 +37,34 @@ export default function StockPage() {
           <CardTitle className="text-sm font-medium text-muted-foreground">Search Ticker</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <form onSubmit={(e) => { e.preventDefault(); if (ticker.trim()) go(ticker); }} className="flex gap-2">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              go(ticker);
+            }}
+            className="flex gap-2"
+            aria-describedby={error ? "ticker-error" : undefined}
+          >
             <input
               type="text"
               value={ticker}
-              onChange={(e) => setTicker(e.target.value)}
+              onChange={(e) => {
+                setTicker(e.target.value);
+                if (error) setError(null);
+              }}
               placeholder="Enter ticker symbol (e.g. AAPL)"
               className="flex-1 rounded-md border border-border bg-background px-4 py-3 text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              aria-label="Ticker symbol"
+              aria-invalid={error ? "true" : "false"}
+              maxLength={10}
             />
             <Button type="submit" disabled={!ticker.trim()}>Analyze</Button>
           </form>
+          {error ? (
+            <p id="ticker-error" className="text-xs text-red-500" role="alert">
+              {error}
+            </p>
+          ) : null}
 
           <div>
             <p className="text-xs text-muted-foreground mb-2">Popular tickers</p>

@@ -445,6 +445,170 @@ export function getStockValuation(ticker: string) {
   return fetchAPI<RelativeValuation>(`/api/stock/${ticker}/valuation`);
 }
 
+// Style Box (Morningstar 3x3)
+export type StyleBox = {
+  ticker: string;
+  sector: string;
+  name?: string;
+  market_cap?: number;
+  size: "Small" | "Mid" | "Large" | "Unknown";
+  style: "Value" | "Blend" | "Growth";
+  cell: string;
+  cells: { size: string; style: string; key: string; active: boolean }[];
+  net_style_score: number | null;
+  value_score: number | null;
+  growth_score: number | null;
+  components: {
+    value: Record<string, number | null>;
+    growth: Record<string, number | null>;
+  };
+  peer_count: number;
+};
+export function getStyleBox(ticker: string) {
+  return fetchAPI<StyleBox>(`/api/stock/${ticker}/style-box`);
+}
+
+// Factor Grades (Seeking Alpha-style A..F)
+export type FactorGradeComponent = {
+  grade: string | null;
+  percentile: number | null;
+  color: string;
+  details: Record<string, { value?: number; peer_percentile?: number; grade?: string }>;
+};
+export type FactorGrades = {
+  ticker: string;
+  sector?: string;
+  overall_grade: string | null;
+  overall_percentile: number | null;
+  overall_color: string;
+  components: {
+    value: FactorGradeComponent;
+    growth: FactorGradeComponent;
+    profitability: FactorGradeComponent;
+    momentum: FactorGradeComponent;
+    revisions: FactorGradeComponent;
+  };
+  peer_count?: number;
+};
+export function getFactorGrades(ticker: string) {
+  return fetchAPI<FactorGrades>(`/api/stock/${ticker}/grades`);
+}
+
+// Short Interest / Squeeze Score
+export type ShortInterest = {
+  ticker: string;
+  name?: string;
+  shares_short?: number;
+  short_percent_float?: number;
+  days_to_cover?: number;
+  float_shares?: number;
+  avg_daily_volume_10d?: number;
+  month_over_month_change_pct?: number;
+  momentum_3m?: number;
+  squeeze_score_0_100?: number;
+  regime: "low" | "moderate" | "high" | "extreme" | "unknown";
+  source?: string;
+};
+export function getShortInterest(ticker: string) {
+  return fetchAPI<ShortInterest>(`/api/stock/${ticker}/short-interest`);
+}
+
+// Estimate Revisions
+export type RevisionsWindow = { up: number; down: number; hold: number; total: number };
+export type RevisionsTrend = {
+  ticker: string;
+  consensus_label: string;
+  windows: Record<string, RevisionsWindow>;
+  price_targets: {
+    mean?: number;
+    median?: number;
+    high?: number;
+    low?: number;
+    number_of_analysts?: number;
+    current_price?: number;
+    implied_upside_pct?: number;
+  } | null;
+};
+export function getRevisionsTrend(ticker: string) {
+  return fetchAPI<RevisionsTrend>(`/api/stock/${ticker}/revisions`);
+}
+
+// Market Treemap (Finviz-style)
+export type TreemapTicker = { ticker: string; market_cap: number; return_pct: number; size: number; value: number };
+export type TreemapSector = { name: string; size: number; value: number; children: TreemapTicker[] };
+export type MarketTreemap = {
+  window: string;
+  children: TreemapSector[];
+  total_market_cap: number;
+  ticker_count?: number;
+  missing?: string[];
+};
+export function getMarketTreemap(window: "1d" | "1w" | "1m" | "ytd" = "1d") {
+  return fetchAPI<MarketTreemap>(`/api/analytics/treemap?window=${window}`);
+}
+
+// Allocation Backtester (Portfolio Visualizer-style)
+export type AllocationMetrics = {
+  cagr: number;
+  volatility_annualized: number;
+  sharpe_ratio: number | null;
+  max_drawdown: number;
+  max_drawdown_peak_date?: string;
+  max_drawdown_trough_date?: string;
+  best_calendar_year?: number | null;
+  worst_calendar_year?: number | null;
+  final_value: number;
+  n_years: number;
+};
+export type AllocationBacktest = {
+  weights: Record<string, number>;
+  start: string;
+  rebalance_freq: string;
+  initial_value: number;
+  metrics: AllocationMetrics;
+  equity_curve: { date: string; value: number }[];
+  n_observations: number;
+};
+export function listAllocationStrategies() {
+  return fetchAPI<{ strategies: { name: string; weights: Record<string, number> }[] }>(
+    "/api/analytics/allocation-strategies",
+  );
+}
+export function backtestNamedAllocation(name: string, start = "2010-01-01", rebalance = "quarterly") {
+  return fetchAPI<AllocationBacktest>(
+    `/api/analytics/allocation-backtest/${name}?start=${start}&rebalance=${rebalance}`,
+  );
+}
+export function backtestCustomAllocation(weights: Record<string, number>, start = "2010-01-01", rebalance = "quarterly") {
+  return fetchAPI<AllocationBacktest>("/api/analytics/allocation-backtest", {
+    method: "POST",
+    body: JSON.stringify({ weights, start, rebalance_freq: rebalance }),
+  });
+}
+
+// AI Copilot — natural-language queries over the engine
+export type CopilotMessage = { role: "user" | "assistant"; content: string };
+export type CopilotResponse = {
+  answer: string;
+  tool_calls: { name: string; args: unknown; result_preview: string }[];
+  provider: "claude" | "deepseek";
+  note?: string;
+};
+export function copilotStatus() {
+  return fetchAPI<{ available: boolean; tool_count: number }>("/api/copilot/status");
+}
+export function copilotTools() {
+  return fetchAPI<{ tools: { name: string; description: string; parameters: unknown }[] }>(
+    "/api/copilot/tools",
+  );
+}
+export function copilotChat(messages: CopilotMessage[], prefer?: "claude" | "deepseek") {
+  return fetchAPI<CopilotResponse>("/api/copilot/chat", {
+    method: "POST",
+    body: JSON.stringify({ messages, prefer }),
+  });
+}
+
 // Pair Analysis (cointegration)
 export function getPairAnalysis(tickerA: string, tickerB: string) {
   return fetchAPI<PairAnalysisResult>(`/api/analytics/pairs/${tickerA}/${tickerB}`);
