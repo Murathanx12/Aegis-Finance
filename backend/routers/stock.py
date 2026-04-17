@@ -1395,6 +1395,56 @@ async def get_stock_style_box(ticker: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/{ticker}/short-interest")
+async def get_stock_short_interest(ticker: str):
+    """Fintel-style short interest + squeeze diagnostics."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"stock_short:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.short_interest import get_short_interest
+        result = await asyncio.to_thread(get_short_interest, ticker)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"No short interest data for {ticker}")
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("short interest failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{ticker}/revisions")
+async def get_stock_revisions(ticker: str):
+    """Analyst estimate revisions trend (7d/30d/90d upgrades vs downgrades + price target)."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"stock_revisions:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.estimate_revisions import get_revisions_trend
+        result = await asyncio.to_thread(get_revisions_trend, ticker)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"No revisions data for {ticker}")
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("revisions trend failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{ticker}/grades")
 async def get_stock_grades(ticker: str):
     """Seeking Alpha-style A–F factor report card.
