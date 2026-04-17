@@ -151,6 +151,14 @@ export const COMMANDS: CommandDef[] = [
     keywords: ["workspace", "tiles", "layout"],
   },
   {
+    code: "WATCH",
+    label: "Watchlist",
+    description: "Your personal watchlist — tickers with live quotes",
+    href: "/watchlist",
+    aliases: ["WL", "LIST", "FAVES"],
+    keywords: ["watchlist", "favorites", "tracking"],
+  },
+  {
     code: "HELP",
     label: "Keyboard Shortcuts",
     description: "Show the keyboard shortcut cheatsheet",

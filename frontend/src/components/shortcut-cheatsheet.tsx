@@ -16,6 +16,7 @@ const SHORTCUTS = [
   { keys: ["g", "k"], desc: "Go to Copilot" },
   { keys: ["g", "r"], desc: "Go to Retirement" },
   { keys: ["g", "w"], desc: "Go to Workspace" },
+  { keys: ["g", "l"], desc: "Go to Watchlist" },
   { keys: ["Esc"], desc: "Close open dialog" },
 ];
 

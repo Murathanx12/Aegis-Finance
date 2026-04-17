@@ -45,6 +45,7 @@ export function ShortcutManager() {
         { combo: "g k", handler: () => router.push("/copilot") },
         { combo: "g r", handler: () => router.push("/retirement") },
         { combo: "g w", handler: () => router.push("/workspace") },
+        { combo: "g l", handler: () => router.push("/watchlist") },
         { combo: "g e", handler: () => router.push("/screener") },
       ],
       [router],

@@ -405,7 +405,7 @@ function PortfolioAnalyzeSection() {
               )}
 
               {analysis.factor_exposures && (
-                <Card>
+                <Card data-advanced>
                   <CardHeader>
                     <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
                       Factor Exposures (FF5)
