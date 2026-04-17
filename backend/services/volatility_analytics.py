@@ -362,7 +362,7 @@ def _garch_forward_curve(returns: pd.Series) -> Optional[dict]:
             })
 
         return {
-            "model": "GJR-GARCH(1,1) Student-t",
+            "model": "GARCH(1,1) Student-t",
             "persistence": round(persistence, 4),
             "long_run_vol_pct": round(np.sqrt(uncond_var / 10000 * _ANNUALIZE) * 100, 2),
             "current_vol_pct": round(np.sqrt(current_var / 10000 * _ANNUALIZE) * 100, 2),
