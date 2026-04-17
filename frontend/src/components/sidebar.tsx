@@ -19,6 +19,8 @@ import {
   Sun,
   Moon,
   Sparkles,
+  LayoutGrid,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -26,16 +28,17 @@ import { Button } from "@/components/ui/button";
 import { useBeginnerMode } from "@/hooks/use-beginner-mode";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/copilot", label: "Copilot", icon: Sparkles },
-  { href: "/outlook", label: "Market Outlook", icon: TrendingDown },
-  { href: "/stock", label: "Stock Analysis", icon: BarChart3 },
-  { href: "/screener", label: "Stock Screener", icon: ListFilter },
-  { href: "/sectors", label: "Sectors", icon: PieChart },
-  { href: "/portfolio", label: "Portfolio", icon: Briefcase },
-  { href: "/news", label: "News & Intel", icon: Newspaper },
-  { href: "/retirement", label: "Retirement", icon: Target },
-  { href: "/about", label: "About", icon: Info },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard, code: "DASH" },
+  { href: "/workspace", label: "Workspace", icon: LayoutGrid, code: "WORK" },
+  { href: "/copilot", label: "Copilot", icon: Sparkles, code: "AI" },
+  { href: "/outlook", label: "Market Outlook", icon: TrendingDown, code: "ECO" },
+  { href: "/stock", label: "Stock Analysis", icon: BarChart3, code: "GP" },
+  { href: "/screener", label: "Stock Screener", icon: ListFilter, code: "EQS" },
+  { href: "/sectors", label: "Sectors", icon: PieChart, code: "SECT" },
+  { href: "/portfolio", label: "Portfolio", icon: Briefcase, code: "PORT" },
+  { href: "/news", label: "News & Intel", icon: Newspaper, code: "NI" },
+  { href: "/retirement", label: "Retirement", icon: Target, code: "RETIRE" },
+  { href: "/about", label: "About", icon: Info, code: "ABOUT" },
 ];
 
 function NavLinks({ onClick }: { onClick?: () => void }) {
@@ -51,14 +54,23 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
             href={item.href}
             onClick={onClick}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium transition-colors",
+              "flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium transition-colors group",
               active
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-accent hover:text-foreground"
             )}
           >
             <item.icon className="h-5 w-5 shrink-0" />
-            {item.label}
+            <span className="flex-1">{item.label}</span>
+            <span
+              className={cn(
+                "font-mono text-[9px] tracking-wider uppercase opacity-0 group-hover:opacity-60 transition-opacity",
+                active && "opacity-60",
+              )}
+              aria-hidden
+            >
+              {item.code}
+            </span>
           </Link>
         );
       })}
@@ -111,12 +123,37 @@ function ThemeToggle() {
   );
 }
 
+function CommandHint() {
+  const onClick = () => {
+    // Dispatch a synthetic Ctrl+K so the mounted ShortcutManager picks it up.
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
+    );
+  };
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2 w-full rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+      aria-label="Open command palette"
+    >
+      <Search className="h-3.5 w-3.5" />
+      <span className="flex-1 text-left">Search · functions · tickers</span>
+      <kbd className="rounded border border-border bg-background/60 px-1.5 py-0.5 font-mono text-[10px]">
+        Ctrl K
+      </kbd>
+    </button>
+  );
+}
+
 function SidebarContent({ onClick }: { onClick?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-6 py-5">
         <Image src="/logo.png" alt="Aegis Finance" width={32} height={32} />
         <span className="text-lg font-bold tracking-tight">Aegis Finance</span>
+      </div>
+      <div className="px-3 mb-3">
+        <CommandHint />
       </div>
       <NavLinks onClick={onClick} />
       <div className="mt-auto px-6 py-4 space-y-3">
@@ -125,7 +162,10 @@ function SidebarContent({ onClick }: { onClick?: () => void }) {
           <BeginnerToggle />
         </div>
         <p className="text-xs text-muted-foreground">
-          Educational tool only. Not financial advice.
+          Educational tool only. Not financial advice.{" "}
+          <span className="block mt-1">
+            Press <kbd className="rounded border border-border bg-muted/40 px-1 font-mono text-[10px]">?</kbd> for shortcuts.
+          </span>
         </p>
       </div>
     </div>
