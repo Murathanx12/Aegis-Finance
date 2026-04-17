@@ -1496,6 +1496,37 @@ async def get_stock_revisions(ticker: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/{ticker}/esg")
+async def get_stock_esg(ticker: str):
+    """Blended ESG score (Finnhub + FMP) with controversies flag.
+
+    Returns environmental / social / governance subscores normalised to a
+    0..100 'higher is better' scale plus a letter grade and the worst
+    controversy level reported by any of the available providers.
+    """
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+
+    cache_key = f"stock_esg:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.esg import compute_esg_score
+        result = await asyncio.to_thread(compute_esg_score, ticker)
+        if "error" in result and not result.get("sources"):
+            raise HTTPException(status_code=404, detail=result["error"])
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("ESG score failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{ticker}/grades")
 async def get_stock_grades(ticker: str):
     """Seeking Alpha-style A–F factor report card.
