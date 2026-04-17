@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ThemeProvider } from "next-themes";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BeginnerModeContext, useBeginnerModeState } from "@/hooks/use-beginner-mode";
+import { ShortcutManager } from "@/components/shortcut-manager";
 
 const STALE_TIME_DEFAULT = 5 * 60 * 1000; // 5 min
 const RETRY_COUNT = 2;
@@ -29,7 +30,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
         <BeginnerModeContext.Provider value={beginnerMode}>
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            {children}
+            <ShortcutManager />
+          </TooltipProvider>
         </BeginnerModeContext.Provider>
       </QueryClientProvider>
     </ThemeProvider>
