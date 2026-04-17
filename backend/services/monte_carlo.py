@@ -572,7 +572,11 @@ def run_monte_carlo(
     max_dd = float(per_path_max_dd.mean()) * 100
 
     total_return = float(final.mean()) / current_price - 1
-    annual_return = (1 + total_return) ** (1 / sim_cfg["forecast_years"]) - 1
+    # Use actual simulation days for annualization, not config forecast_years.
+    # When forecast_days_override is provided, the simulation period differs
+    # from config — using config would produce wrong annualized returns.
+    actual_years = days / sim_cfg["trading_days_per_year"]
+    annual_return = (1 + total_return) ** (1 / max(actual_years, 0.1)) - 1
 
     # Path percentile bands
     mean_path = all_paths.mean(axis=1)

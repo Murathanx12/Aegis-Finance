@@ -262,9 +262,12 @@ def compute_rolling_risk_metrics(
         dd = (prices_window / peak - 1)
         return float(dd.min()) * 100
 
+    # Start at window-1 so the first window covers prices[0:window] (includes index 0).
+    # Previous code started at range(window, ...) which produced prices[1:window+1],
+    # skipping the first data point and misaligning with rolling Sharpe/Sortino.
     rolling_mdd = pd.Series(
-        [_rolling_max_dd(prices.iloc[i - window + 1:i + 1]) for i in range(window, len(prices))],
-        index=prices.index[window:],
+        [_rolling_max_dd(prices.iloc[max(0, i - window + 1):i + 1]) for i in range(window - 1, len(prices))],
+        index=prices.index[window - 1:],
     )
 
     # Downsample for charting

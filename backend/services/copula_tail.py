@@ -251,43 +251,32 @@ def _fit_student_t(u: np.ndarray, v: np.ndarray) -> dict:
         rho = np.corrcoef(x, y)[0, 1]
         rho = np.clip(rho, -0.99, 0.99)
 
-        # Bivariate t log-likelihood
+        # Copula log-likelihood = joint bivariate t log-density minus marginal t log-densities.
+        # log c(u,v) = log f_2(x,y) - log f_1(x) - log f_1(y)
+        from scipy.special import gammaln
+
         n = len(x)
         det = 1 - rho ** 2
         if det <= 0:
             continue
 
         Q = (x ** 2 - 2 * rho * x * y + y ** 2) / det
-        loglik = (
-            n * np.log(stats.gamma((nu + 2) / 2).args[0] if hasattr(stats.gamma, 'args') else 1)
-            - n * np.log(stats.gamma(nu / 2).args[0] if hasattr(stats.gamma, 'args') else 1)
+
+        # Bivariate t joint log-density
+        joint_loglik = (
+            n * gammaln((nu + 2) / 2)
+            - n * gammaln(nu / 2)
             - n * np.log(nu * np.pi * np.sqrt(det))
             - ((nu + 2) / 2) * np.sum(np.log(1 + Q / nu))
-            + n * (nu / 2) * np.log(nu)
         )
-
-        # Use scipy for proper copula log-likelihood
-        # Must subtract marginal t densities to get copula density:
-        # log c(u,v) = log f_2(x,y) - log f_1(x) - log f_1(y)
-        try:
-            from scipy.special import gammaln
-            # Bivariate t joint log-density
-            joint_loglik = (
-                n * gammaln((nu + 2) / 2)
-                - n * gammaln(nu / 2)
-                - n * np.log(nu * np.pi * np.sqrt(det))
-                - ((nu + 2) / 2) * np.sum(np.log(1 + Q / nu))
-            )
-            # Marginal t log-densities (subtract to get copula density)
-            marginal_loglik = (
-                2 * n * gammaln((nu + 1) / 2)
-                - n * np.log(nu * np.pi)
-                - 2 * n * gammaln(nu / 2)
-                - ((nu + 1) / 2) * np.sum(np.log(1 + x ** 2 / nu) + np.log(1 + y ** 2 / nu))
-            )
-            loglik = joint_loglik - marginal_loglik
-        except Exception:
-            continue
+        # Marginal t log-densities (subtract to get copula density)
+        marginal_loglik = (
+            2 * n * gammaln((nu + 1) / 2)
+            - n * np.log(nu * np.pi)
+            - 2 * n * gammaln(nu / 2)
+            - ((nu + 1) / 2) * np.sum(np.log(1 + x ** 2 / nu) + np.log(1 + y ** 2 / nu))
+        )
+        loglik = joint_loglik - marginal_loglik
 
         if np.isfinite(loglik) and loglik > best_loglik:
             best_loglik = loglik
