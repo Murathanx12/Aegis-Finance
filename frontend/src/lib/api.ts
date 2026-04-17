@@ -802,6 +802,23 @@ export function getAnalystConsensus(ticker: string) {
   );
 }
 
+// Tearsheet exports — return blobs for the browser to download / open.
+export async function downloadPortfolioTearsheet(
+  holdings: Holding[],
+  format: "html" | "xlsx",
+  title = "Portfolio Tearsheet",
+): Promise<Blob> {
+  const res = await fetch(`${API_BASE}/api/portfolio/tearsheet.${format}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ holdings, title }),
+  });
+  if (!res.ok) {
+    throw new Error(`Tearsheet export failed: ${res.status}`);
+  }
+  return res.blob();
+}
+
 // ── Types ──────────────────────────────────────────────────
 
 export interface MarketDashboard {

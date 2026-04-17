@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Plus, ArrowRight, AlertTriangle } from "lucide-react";
+import { Trash2, Plus, ArrowRight, AlertTriangle, FileDown, FileSpreadsheet } from "lucide-react";
 import { InfoTooltip } from "@/components/info-tooltip";
+import { downloadPortfolioTearsheet } from "@/lib/api";
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -312,6 +313,7 @@ function PortfolioAnalyzeSection() {
 
       {analysis && !loading && (
         <>
+          <TearsheetExport holdings={holdings} />
           {/* Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <MetricCard
@@ -1114,6 +1116,64 @@ export default function PortfolioPage() {
       </div>
 
       {tab === "analyze" ? <PortfolioAnalyzeSection /> : <PortfolioBuildSection />}
+    </div>
+  );
+}
+
+function TearsheetExport({ holdings }: { holdings: Holding[] }) {
+  const [busy, setBusy] = useState<"html" | "xlsx" | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const doExport = async (format: "html" | "xlsx") => {
+    if (holdings.length === 0) return;
+    setBusy(format);
+    setErr(null);
+    try {
+      const blob = await downloadPortfolioTearsheet(holdings, format);
+      const url = URL.createObjectURL(blob);
+      if (format === "html") {
+        window.open(url, "_blank", "noopener");
+        // Revoke shortly so the new tab has time to load it
+        setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      } else {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `aegis-tearsheet-${new Date().toISOString().slice(0, 10)}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      }
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Export failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-end gap-2">
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={() => doExport("html")}
+        disabled={busy !== null || holdings.length === 0}
+        title="Open a one-page tearsheet — use browser File → Print → Save as PDF"
+      >
+        <FileDown className="h-4 w-4 mr-1.5" />
+        {busy === "html" ? "Building…" : "Export HTML"}
+      </Button>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={() => doExport("xlsx")}
+        disabled={busy !== null || holdings.length === 0}
+        title="Download an Excel workbook with Summary / Holdings / Risk / Factors / Stress sheets"
+      >
+        <FileSpreadsheet className="h-4 w-4 mr-1.5" />
+        {busy === "xlsx" ? "Building…" : "Export Excel"}
+      </Button>
+      {err && <span className="text-xs text-destructive">{err}</span>}
     </div>
   );
 }

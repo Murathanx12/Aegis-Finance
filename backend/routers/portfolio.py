@@ -16,6 +16,7 @@ import logging
 import re
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel, Field, field_validator
 
 from backend.services.portfolio_engine import PortfolioEngine, score_risk_profile
@@ -610,4 +611,48 @@ async def compare_portfolios(request: CompareRequest):
         return result
     except Exception as e:
         logger.error("portfolio comparison failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class TearsheetRequest(BaseModel):
+    holdings: list[Holding] = Field(..., min_length=1, max_length=50)
+    title: str = Field("Portfolio Tearsheet", max_length=80)
+
+
+@router.post("/tearsheet.html", response_class=HTMLResponse)
+async def portfolio_tearsheet_html(request: TearsheetRequest):
+    """Return a self-contained HTML tearsheet (print-to-PDF from the browser)."""
+    try:
+        holdings = [h.model_dump() for h in request.holdings]
+        from backend.routers.portfolio import _analyze_with_risk_number
+        from backend.services.tearsheet import render_portfolio_tearsheet_html
+
+        analysis = await asyncio.to_thread(_analyze_with_risk_number, holdings)
+        html_doc = render_portfolio_tearsheet_html(analysis, title=request.title)
+        return HTMLResponse(content=html_doc)
+    except Exception as e:
+        logger.error("tearsheet HTML failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/tearsheet.xlsx")
+async def portfolio_tearsheet_xlsx(request: TearsheetRequest):
+    """Return a multi-sheet .xlsx workbook with tearsheet data."""
+    try:
+        holdings = [h.model_dump() for h in request.holdings]
+        from backend.routers.portfolio import _analyze_with_risk_number
+        from backend.services.tearsheet import render_portfolio_tearsheet_xlsx
+
+        analysis = await asyncio.to_thread(_analyze_with_risk_number, holdings)
+        blob = await asyncio.to_thread(render_portfolio_tearsheet_xlsx, analysis)
+        filename = f"aegis-tearsheet-{request.title.replace(' ', '_')[:40]}.xlsx"
+        return Response(
+            content=blob,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("tearsheet xlsx failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
