@@ -3,6 +3,7 @@ Market Status & Macro Indicators Router
 ==========================================
 
 GET /api/market-status  — Unified market state (regime, risk score, VIX, etc.)
+GET /api/dashboard      — Bloomberg-style unified dashboard (everything in one call)
 GET /api/macro          — FRED macro indicators
 GET /api/realtime/{ticker} — Polygon.io real-time snapshot
 """
@@ -343,6 +344,30 @@ def _compute_market_status() -> dict:
         "cross_asset_regime": cross_asset_regime,
         "last_updated": str(data.index[-1].date()),
     }
+
+
+@router.get("/dashboard")
+async def get_market_dashboard():
+    """Bloomberg-style unified dashboard: everything in one call.
+
+    Returns market snapshot, regime, crash probs, sector rotation,
+    fixed income, valuation, vol regime, economic surprise, breadth,
+    crypto, sentiment, net liquidity — all in a single response.
+
+    Each section degrades gracefully (returns null if that data source fails).
+    """
+    cached = cache_get("market_dashboard", 120)  # 2 min cache
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.market_dashboard import build_market_dashboard
+        result = await asyncio.to_thread(build_market_dashboard)
+        cache_set("market_dashboard", result)
+        return result
+    except Exception as e:
+        logger.error("dashboard failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/signal")

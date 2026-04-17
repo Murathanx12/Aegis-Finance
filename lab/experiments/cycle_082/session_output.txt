@@ -1,0 +1,34 @@
+Cycle 082 is complete. Here's what was built:
+
+## Cross-Asset Macro Regime Monitor
+
+A Bloomberg MAC3-style cross-asset intelligence service with 6 components:
+
+**1. Growth × Inflation Quadrant** — Classifies the macro environment into 4 regimes:
+- **Goldilocks** (growth up, inflation down) — risk assets favored
+- **Reflation** (both up) — commodities and cyclicals outperform
+- **Stagflation** (growth down, inflation up) — worst for portfolios
+- **Deflation** (both down) — treasuries rally, risk-off
+
+Growth proxy: HYG/LQD credit ratio + IWM/SPY size ratio + EEM/EFA EM ratio
+Inflation proxy: TIP/IEF breakeven + gold momentum + oil momentum
+
+**2. Risk-On/Risk-Off Score** (0-100) from 6 z-scored cross-asset signals (equity momentum, credit appetite, safe haven demand, USD strength, volatility, EM appetite)
+
+**3. Multi-timeframe Momentum Table** — 15 assets across equities, bonds, commodities, currencies, and crypto with 1w/1m/3m/6m/1y returns + SMA200 trend
+
+**4. Rolling Correlation Matrix** with divergence detection vs historical norms
+
+**5. Intermarket Divergence Alerts** — 5 signal types (stock-bond correlation flip, gold/USD co-movement, credit-equity divergence, small-cap underperformance, EM-DM divergence)
+
+**6. Macro Weather Summary** — Plain-English one-liner combining all signals
+
+### Delivery
+- **Service**: `backend/services/cross_asset_monitor.py` (520 lines)
+- **Tests**: 52 tests, all passing
+- **Endpoints**: `GET /api/analytics/cross-asset` (full dashboard), `GET /api/analytics/macro-regime` (lightweight)
+- **Integration**: Wired into `/api/market-status` as `cross_asset_regime`
+- **Frontend**: TypeScript types + API client functions in `api.ts`
+- **Regressions**: 0 (144 router tests still pass, frontend builds clean)
+
+---STDERR---
