@@ -31,6 +31,8 @@ GET /api/analytics/survival-model         — Cox PH crash timing (market-level 
 GET /api/analytics/cross-asset            — Cross-asset macro intelligence dashboard
 GET /api/analytics/macro-regime           — Growth × inflation quadrant classification
 GET /api/analytics/prediction-confidence  — Confidence grade + drift-adjusted MC interval
+GET /api/analytics/earnings-calendar      — Upcoming earnings (Finnhub, per ticker or all)
+GET /api/analytics/analyst-consensus/{ticker} — Unified analyst targets + rating breakdown
 """
 
 import asyncio
@@ -694,6 +696,95 @@ async def get_conformal_interval(
         }
     except Exception as e:
         logger.error("conformal interval failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Earnings Calendar (Finnhub provider) ──────────────────────────
+
+
+@router.get("/earnings-calendar")
+async def get_earnings_calendar(
+    ticker: str | None = None,
+    days_ahead: int = 30,
+):
+    """Upcoming earnings releases. Optional ticker filter; defaults to all.
+
+    Provider: Finnhub (single-provider capability — returns [] when unkeyed).
+    """
+    if days_ahead < 1 or days_ahead > 180:
+        raise HTTPException(status_code=422, detail="days_ahead must be 1..180")
+
+    cache_key = f"earnings_cal:{ticker or 'all'}:{days_ahead}"
+    cached = cache_get(cache_key, 1800)  # 30min cache
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.providers import registry
+
+        events = await asyncio.to_thread(
+            registry.get_earnings_calendar, ticker, days_ahead
+        )
+        result = {
+            "days_ahead": days_ahead,
+            "ticker": ticker.upper() if ticker else None,
+            "count": len(events),
+            "events": [
+                {
+                    "ticker": e.ticker,
+                    "date": e.date,
+                    "eps_estimate": e.eps_estimate,
+                    "eps_actual": e.eps_actual,
+                    "revenue_estimate": e.revenue_estimate,
+                    "revenue_actual": e.revenue_actual,
+                    "time": e.time,
+                    "source": e.source,
+                }
+                for e in events
+            ],
+        }
+        cache_set(cache_key, result)
+        return result
+    except Exception as e:
+        logger.error("earnings calendar failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Analyst Consensus (multi-provider with fallback) ──────────────
+
+
+@router.get("/analyst-consensus/{ticker}")
+async def get_analyst_consensus(ticker: str):
+    """Unified analyst target + rating breakdown.
+
+    Prefers Finnhub for freshness, falls back to FMP, then yfinance. Response
+    includes source provenance so callers can tell which vendor served it.
+    """
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail=f"Invalid ticker: {ticker}")
+
+    cache_key = f"analyst_consensus:{ticker}"
+    cached = cache_get(cache_key, 3600)
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.providers import registry
+
+        est = await asyncio.to_thread(registry.get_analyst_estimates, ticker)
+        if est is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No analyst data for {ticker}",
+            )
+        result = est.to_dict()
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("analyst consensus failed for %s: %s", ticker, e)
         raise HTTPException(status_code=500, detail=str(e))
 
 
