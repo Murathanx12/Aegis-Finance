@@ -638,6 +638,92 @@ export function getMacroRegime() {
   return fetchAPI<MacroRegime>("/api/analytics/macro-regime");
 }
 
+// World Markets (WEI) + Economic Calendar
+export interface WorldMarketRow {
+  ticker: string;
+  name: string;
+  region: string;
+  category: "index" | "fx" | "commodity" | "yield";
+  price: number;
+  change: number | null;
+  change_pct: number | null;
+  prev_close: number | null;
+  source: string;
+}
+
+export interface WorldMarketsResponse {
+  counts: {
+    indices: number;
+    fx: number;
+    commodities: number;
+    yields: number;
+    total_attempted: number;
+    total_fetched: number;
+  };
+  indices: WorldMarketRow[];
+  fx: WorldMarketRow[];
+  commodities: WorldMarketRow[];
+  yields: WorldMarketRow[];
+  top_gainers: WorldMarketRow[];
+  top_losers: WorldMarketRow[];
+}
+
+export function getWorldMarkets() {
+  return fetchAPI<WorldMarketsResponse>("/api/world-markets");
+}
+
+export interface EconomicEvent {
+  date: string;
+  time: string;
+  country: string | null;
+  event: string | null;
+  actual: number | null;
+  estimate: number | null;
+  prior: number | null;
+  impact: string | null;
+  unit: string | null;
+}
+
+export interface EconomicCalendarResponse {
+  days_ahead: number;
+  count: number;
+  events: EconomicEvent[];
+  note?: string;
+  error?: string;
+}
+
+export function getEconomicCalendar(days = 14) {
+  return fetchAPI<EconomicCalendarResponse>(`/api/economic-calendar?days_ahead=${days}`);
+}
+
+export interface EarningsEvent {
+  ticker: string;
+  date: string;
+  eps_estimate: number | null;
+  eps_actual: number | null;
+  revenue_estimate: number | null;
+  revenue_actual: number | null;
+  time: string | null;
+  source: string;
+}
+
+export interface EarningsCalendarResponse {
+  days_ahead: number;
+  ticker: string | null;
+  count: number;
+  events: EarningsEvent[];
+}
+
+export function getEarningsCalendar(opts: { ticker?: string; days?: number } = {}) {
+  const p = new URLSearchParams();
+  if (opts.ticker) p.set("ticker", opts.ticker);
+  if (opts.days) p.set("days_ahead", String(opts.days));
+  const qs = p.toString();
+  return fetchAPI<EarningsCalendarResponse>(
+    `/api/analytics/earnings-calendar${qs ? `?${qs}` : ""}`,
+  );
+}
+
 // ── Types ──────────────────────────────────────────────────
 
 export interface MarketDashboard {

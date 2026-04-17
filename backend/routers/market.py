@@ -586,6 +586,45 @@ def _compute_macro() -> dict:
     return {"indicators": indicators, "count": len(indicators)}
 
 
+@router.get("/world-markets")
+async def get_world_markets():
+    """WEI-style snapshot: ~50 global indices, FX, commodities, yields."""
+    cached = cache_get("world_markets", 300)
+    if cached is not None:
+        return cached
+    try:
+        from backend.services.world_markets import get_world_markets_snapshot
+        result = await asyncio.to_thread(get_world_markets_snapshot)
+        cache_set("world_markets", result)
+        return result
+    except Exception as e:
+        logger.error("world-markets failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/economic-calendar")
+async def get_economic_calendar(days_ahead: int = 14):
+    """Upcoming economic data releases (Finnhub).
+
+    Returns scheduled FRED-vintage releases + consensus + prior values when
+    provided by the vendor. Empty list when Finnhub is unkeyed.
+    """
+    if days_ahead < 1 or days_ahead > 90:
+        raise HTTPException(status_code=422, detail="days_ahead must be 1..90")
+    cache_key = f"econ_cal:{days_ahead}"
+    cached = cache_get(cache_key, 1800)
+    if cached is not None:
+        return cached
+    try:
+        from backend.services.world_markets import get_economic_calendar as _fetch
+        result = await asyncio.to_thread(_fetch, days_ahead)
+        cache_set(cache_key, result)
+        return result
+    except Exception as e:
+        logger.error("economic-calendar failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/net-liquidity")
 async def get_net_liquidity_endpoint():
     """Fed Net Liquidity: WALCL - (TGA + RRP). Weekly data, 24hr cache."""
