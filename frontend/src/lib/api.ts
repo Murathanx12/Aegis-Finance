@@ -724,6 +724,84 @@ export function getEarningsCalendar(opts: { ticker?: string; days?: number } = {
   );
 }
 
+// Institutional ownership + ETF look-through
+export interface OwnershipHolder {
+  holder: string | null;
+  shares: number | null;
+  value: number | null;
+  pct_held: number | null;
+  pct_change: number | null;
+  date_reported: string | null;
+}
+
+export interface OwnershipResponse {
+  ticker: string;
+  holders: OwnershipHolder[];
+  summary: Record<string, number | null>;
+  crowding: {
+    level: "low" | "moderate" | "high" | "very_high";
+    top10_pct_held: number;
+    note: string;
+  };
+  recent_activity: {
+    buyers_top10: number;
+    sellers_top10: number;
+    net_signal: "accumulating" | "distributing" | "neutral";
+  };
+  source: string;
+}
+
+export function getStockOwnership(ticker: string) {
+  return fetchAPI<OwnershipResponse>(`/api/stock/${encodeURIComponent(ticker)}/ownership`);
+}
+
+export interface EtfHolding {
+  symbol: string;
+  name: string | null;
+  weight: number | null;
+}
+
+export interface EtfLookthroughResponse {
+  ticker: string;
+  top_holdings: EtfHolding[];
+  sector_weights: Record<string, number | null>;
+  concentration: {
+    top5_pct: number;
+    top10_pct: number;
+    level: "low" | "moderate" | "high" | "very_high";
+  };
+  source: string;
+}
+
+export function getEtfLookthrough(ticker: string) {
+  return fetchAPI<EtfLookthroughResponse>(
+    `/api/stock/${encodeURIComponent(ticker)}/etf-lookthrough`,
+  );
+}
+
+// Unified analyst consensus (multi-provider fallback)
+export interface AnalystConsensusResponse {
+  ticker: string;
+  target_mean?: number;
+  target_high?: number;
+  target_low?: number;
+  target_median?: number;
+  num_analysts?: number;
+  strong_buy?: number;
+  buy?: number;
+  hold?: number;
+  sell?: number;
+  strong_sell?: number;
+  source: string;
+  as_of?: string;
+}
+
+export function getAnalystConsensus(ticker: string) {
+  return fetchAPI<AnalystConsensusResponse>(
+    `/api/analytics/analyst-consensus/${encodeURIComponent(ticker)}`,
+  );
+}
+
 // ── Types ──────────────────────────────────────────────────
 
 export interface MarketDashboard {
