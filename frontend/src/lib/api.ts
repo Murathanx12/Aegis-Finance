@@ -33,6 +33,11 @@ export function getDataQuality() {
   return fetchAPI<DataQuality>("/api/data-quality");
 }
 
+// Unified Dashboard (Bloomberg-style: everything in one call)
+export function getMarketDashboard() {
+  return fetchAPI<MarketDashboard>("/api/dashboard");
+}
+
 // Crash
 export function getCrashPrediction(horizon = "3m", explain = false) {
   return fetchAPI<CrashPrediction>(`/api/crash/prediction?horizon=${horizon}&explain=${explain}`);
@@ -470,6 +475,85 @@ export function getMacroRegime() {
 }
 
 // ── Types ──────────────────────────────────────────────────
+
+export interface MarketDashboard {
+  market: {
+    sp500: number;
+    sp500_1d_pct: number;
+    sp500_1m_pct: number;
+    sp500_3m_pct: number;
+    sp500_ytd_pct: number;
+    vix: number | null;
+    yield_10y: number | null;
+    yield_3m: number | null;
+    yield_spread: number | null;
+    date: string;
+  } | null;
+  regime: {
+    regime: string;
+    risk_score: number;
+    vix_term_structure: string | null;
+    vts_signal: string | null;
+  } | null;
+  crash: {
+    available: boolean;
+    probabilities?: Record<string, number>;
+    drift_severity?: string | null;
+  } | null;
+  risk: Record<string, unknown> | null;
+  fixed_income: {
+    curve_shape: string;
+    curve_interpretation: string;
+    inversions: string[];
+    spread_10y_2y: number | null;
+    hy_spread: number | null;
+    credit_stress: string | null;
+    breakeven_inflation: number | null;
+  } | null;
+  valuation: {
+    cape: number | null;
+    cape_percentile: number | null;
+    cape_interpretation: string | null;
+    forward_pe: number | null;
+    erp_pct: number | null;
+    valuation_score: number | null;
+    valuation_level: string | null;
+  } | null;
+  volatility: {
+    regime: string;
+    vol_30d_pct: number | null;
+    vol_percentile: number | null;
+  } | null;
+  economic: {
+    composite_score: number;
+    signal: string;
+    trend: string;
+  } | null;
+  sentiment: {
+    sentiment: string;
+    signal: number;
+    fear_greed_ratio: number;
+  } | null;
+  liquidity: {
+    net_liquidity_t: number | null;
+    wow_change_t: number | null;
+    signal: string;
+  } | null;
+  crypto: {
+    btc_price: number;
+    btc_1d_pct: number;
+    btc_1m_pct: number | null;
+    btc_3m_pct: number | null;
+    btc_sp500_corr_30d: number | null;
+    interpretation: string;
+  } | null;
+  breadth: {
+    stocks_positive_pct: number;
+    stocks_positive: number;
+    stocks_total: number;
+    interpretation: string;
+  } | null;
+}
 
 export interface MarketStatus {
   sp500: number;
