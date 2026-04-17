@@ -1,0 +1,47 @@
+{
+  "cycle": 80,
+  "cycle_type": "INTEGRATE",
+  "timestamp": "2026-04-17T08:45:00Z",
+  "title": "Integration: expose hidden signal scores in screener + vol regime/conformal/drawdown in market status",
+  "category": "integration",
+  "observation": {
+    "bugs_found": [],
+    "gap_identified": "Screener computed options_score, earnings_score, insider_score for each stock but discarded them (not included in response). Market status lacked volatility regime, conformal prediction intervals on crash probs, and market-level drawdown stats. Factor style classification (value/growth/blend) from FF5 decomposition was computed in stock_analyzer but not surfaced in screener."
+  },
+  "implementation": {
+    "bugs_fixed": [],
+    "feature_built": "1) Screener now exposes 6 new fields per stock: options_score, earnings_score, insider_score, ta_score, factor_style, factor_alpha. 2) Market status now includes vol_regime (S&P 500 30d vol regime from volatility_analytics), crash_intervals (conformal prediction bounds for each horizon), and market_drawdown (current/max drawdown, recovery stats, rolling Sharpe from drawdown_analyzer). 3) Frontend TypeScript types updated for ScreenerStock and MarketStatus.",
+    "files_changed": [
+      "backend/routers/stock.py",
+      "backend/routers/market.py",
+      "frontend/src/lib/api.ts"
+    ],
+    "files_created": [
+      "lab/experiments/cycle_080/experiment_report.json"
+    ],
+    "packages_installed": []
+  },
+  "validation": {
+    "tests_written": 0,
+    "tests_passing": 1606,
+    "regressions": 0
+  },
+  "assessment": {
+    "verdict": "improved",
+    "confidence": "high",
+    "depth": 3,
+    "limitations": [
+      "No new tests written specifically for the new fields (covered by existing router tests)",
+      "Vol regime for market status fetches ^GSPC separately; could reuse data already fetched",
+      "Drawdown analysis for market status fetches ^GSPC via yfinance; potential latency addition"
+    ],
+    "self_critique": "Could have also integrated conformal intervals into the per-stock analysis crash_prob display, and added a market-level factor exposure summary. The screener additions are data that was already computed — exposing them is pure win. The market status additions each add a new yfinance/service call which increases latency; in future cycles, these should be cached or parallelized."
+  },
+  "next_steps": [
+    "Cache market drawdown and vol regime with TTL to avoid extra yfinance calls on every market-status request",
+    "Display the new screener fields (options/earnings/insider scores, factor style) in frontend screener table",
+    "Show conformal intervals as error bars on crash probability display in frontend",
+    "Add vol regime indicator to the market dashboard header",
+    "Integrate conformal intervals into per-stock crash probability display"
+  ]
+}

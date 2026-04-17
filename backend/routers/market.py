@@ -241,6 +241,65 @@ def _compute_market_status() -> dict:
     except Exception as e:
         logger.warning("Changepoint detection failed: %s", e)
 
+    # Market volatility regime (Bloomberg-style vol analytics for S&P 500)
+    vol_regime = None
+    try:
+        from backend.services.volatility_analytics import get_vol_summary
+        vol_data = get_vol_summary("^GSPC")
+        if vol_data:
+            _regime = vol_data.get("vol_regime", "unknown")
+            vol_regime = {
+                "regime": _regime,
+                "current_30d_vol_pct": vol_data.get("vol_30d_pct"),
+                "percentile": vol_data.get("vol_percentile"),
+                "interpretation": (
+                    f"S&P 500 30d vol at {_regime} regime "
+                    f"({vol_data.get('vol_30d_pct', '?')}%, "
+                    f"{vol_data.get('vol_percentile', '?')}th percentile vs 2Y)"
+                ),
+            }
+    except Exception as e:
+        logger.warning("Vol regime for market status failed: %s", e)
+
+    # Conformal prediction intervals for crash probabilities
+    crash_intervals = None
+    if crash_probs:
+        try:
+            from backend.services.conformal_predictor import conformal_crash_interval
+            crash_intervals = {}
+            for horizon, prob_pct in crash_probs.items():
+                interval = conformal_crash_interval(prob_pct / 100.0, horizon=horizon)
+                if interval:
+                    crash_intervals[horizon] = {
+                        "point_estimate": prob_pct,
+                        "lower": round(interval["lower"] * 100, 1),
+                        "upper": round(interval["upper"] * 100, 1),
+                        "width": round(interval["width"] * 100, 1),
+                    }
+        except Exception as e:
+            logger.warning("Conformal intervals failed: %s", e)
+
+    # Market-level drawdown analysis (S&P 500 drawdown stats)
+    market_drawdown = None
+    try:
+        from backend.services.drawdown_analyzer import full_drawdown_analysis
+        dd = full_drawdown_analysis("^GSPC", period="5y")
+        if dd:
+            dd_data = dd.get("drawdowns", {})
+            dd_summary = dd_data.get("summary", {})
+            dd_current = dd_data.get("current")
+            rolling = dd.get("rolling_risk", {})
+            _sharpe = rolling.get("sharpe", {})
+            market_drawdown = {
+                "current_drawdown_pct": dd_current.get("depth_pct") if dd_current else 0.0,
+                "max_drawdown_pct": dd_summary.get("max_depth_pct"),
+                "total_drawdowns": dd_summary.get("n_drawdowns", 0),
+                "avg_recovery_days": dd_summary.get("avg_recovery_days"),
+                "rolling_sharpe_1y": _sharpe.get("current"),
+            }
+    except Exception as e:
+        logger.warning("Market drawdown analysis failed: %s", e)
+
     return {
         "sp500": sp500,
         "sp500_change_1m": round(sp500_change_1m, 2),
@@ -260,6 +319,9 @@ def _compute_market_status() -> dict:
         "sector_rotation": sector_rotation,
         "changepoint": changepoint,
         "survival_crash_timing": survival_crash_timing,
+        "vol_regime": vol_regime,
+        "crash_intervals": crash_intervals,
+        "market_drawdown": market_drawdown,
         "last_updated": str(data.index[-1].date()),
     }
 
