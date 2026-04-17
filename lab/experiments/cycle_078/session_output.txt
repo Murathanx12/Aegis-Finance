@@ -1,0 +1,13 @@
+Cycle 078 complete. Committed as `dcb0bd6`.
+
+**3 bugs found and fixed:**
+
+| # | Severity | File | Bug | Fix |
+|---|----------|------|-----|-----|
+| 1 | **Critical** | `crash_timeline.py:74` | `simulate_paths()` called without required `risk_score` and `scenario` args → TypeError at runtime | Added both params to the call |
+| 2 | Moderate | `volatility_analytics.py:365` | Reports "GJR-GARCH(1,1)" but fits standard GARCH(1,1) — wrong metadata | Changed label to "GARCH(1,1) Student-t" |
+| 3 | Moderate | `risk_number.py:111` | `sum(axis=1)` silently skips NaN, deflating portfolio returns on partial-data days | `dropna()` before weighted sum so only complete rows are used |
+
+**Audited 16 service files**, added 7 regression tests. **1555 tests passing, 0 failures.**
+
+---STDERR---
