@@ -25,6 +25,8 @@ import yfinance as yf
 
 from backend.config import config, api_keys
 from backend.cache import cached, retry_with_backoff
+from backend.services.providers import registry as provider_registry
+from backend.services.providers.base import EquitySnapshot
 
 logger = logging.getLogger(__name__)
 
@@ -358,8 +360,11 @@ class DataFetcher:
         return features
 
     def get_sp500_price(self) -> Optional[float]:
-        """Get the latest S&P 500 closing price."""
+        """Get the latest S&P 500 closing price (tries real-time providers first)."""
         ticker = config["data"]["tickers"]["index"]
+        snap = get_snapshot(ticker)
+        if snap is not None and snap.price is not None:
+            return float(snap.price)
         end = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
         start = (datetime.today() - timedelta(days=10)).strftime("%Y-%m-%d")
         series = fetch_safe(ticker, start, end, "S&P 500")
@@ -368,13 +373,29 @@ class DataFetcher:
         return None
 
     def get_vix(self) -> Optional[float]:
-        """Get the latest VIX value."""
+        """Get the latest VIX value (tries real-time providers first)."""
         ticker = config["data"]["tickers"]["vix"]
+        snap = get_snapshot(ticker)
+        if snap is not None and snap.price is not None:
+            return float(snap.price)
         end = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
         start = (datetime.today() - timedelta(days=10)).strftime("%Y-%m-%d")
         series = fetch_safe(ticker, start, end, "VIX")
         if series is not None and len(series) > 0:
             return float(series.iloc[-1])
+        return None
+
+
+def get_snapshot(ticker: str) -> Optional[EquitySnapshot]:
+    """Fetch a live equity snapshot from the best available provider.
+
+    Order: Finnhub (real-time) → Polygon (real-time) → yfinance (15-min) → FMP.
+    Returns None if no provider can serve the ticker.
+    """
+    try:
+        return provider_registry.get_equity_snapshot(ticker)
+    except Exception as e:
+        logger.debug("Snapshot fetch failed for %s: %s", ticker, e)
         return None
 
 

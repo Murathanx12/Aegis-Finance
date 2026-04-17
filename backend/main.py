@@ -178,3 +178,28 @@ async def health():
         "cache_status": cs["status"],
         "cache_error": cs.get("error"),
     }
+
+
+@app.get("/api/providers")
+async def providers():
+    """Data provider inventory + current availability.
+
+    Reports which upstream sources (yfinance/FRED/Polygon/FMP/Finnhub/AV)
+    the engine can reach right now. Clients use this to surface a 'data
+    source' badge or fall back to degraded views when a provider is down.
+    """
+    from backend.services.providers import registry
+
+    healths = registry.health()
+    return {
+        "providers": [
+            {
+                "name": h.name,
+                "available": h.available,
+                "reason": h.reason,
+                "capabilities": h.capabilities,
+            }
+            for h in healths
+        ],
+        "priority": registry._priority,
+    }
