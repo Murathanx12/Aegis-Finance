@@ -30,6 +30,7 @@ GET /api/analytics/tail-risk/{ticker}     — Tail risk metrics (Sortino, Omega,
 GET /api/analytics/survival-model         — Cox PH crash timing (market-level hazard rates)
 GET /api/analytics/cross-asset            — Cross-asset macro intelligence dashboard
 GET /api/analytics/macro-regime           — Growth × inflation quadrant classification
+GET /api/analytics/prediction-confidence  — Confidence grade + drift-adjusted MC interval
 """
 
 import asyncio
@@ -693,6 +694,62 @@ async def get_conformal_interval(
         }
     except Exception as e:
         logger.error("conformal interval failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Prediction Confidence ──────────────────────────────────────────
+
+
+@router.get("/prediction-confidence")
+async def get_prediction_confidence(
+    mc_p10: float,
+    mc_median: float,
+    mc_p90: float,
+    garch_nu: float | None = None,
+    garch_persistence: float | None = None,
+    data_years: float = 5.0,
+    drift_severity: str | None = None,
+    beta: float = 1.0,
+):
+    """Score the confidence of a Monte Carlo forecast and widen its bands.
+
+    Combines drift severity, MC spread tightness, GARCH tail quality, data
+    sufficiency, and beta stability into a single A-F grade plus drift-
+    adjusted P10/P90. Useful when an external workflow produced MC outputs
+    and wants Aegis's uncertainty view on them.
+    """
+    from backend.services.prediction_confidence import score_prediction_confidence
+
+    if mc_p10 > mc_median or mc_median > mc_p90:
+        raise HTTPException(
+            status_code=422,
+            detail="Must satisfy mc_p10 <= mc_median <= mc_p90",
+        )
+    if drift_severity and drift_severity not in (
+        "none",
+        "low",
+        "moderate",
+        "high",
+        "critical",
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="drift_severity must be one of none/low/moderate/high/critical",
+        )
+
+    try:
+        return score_prediction_confidence(
+            mc_p10_return=mc_p10,
+            mc_p90_return=mc_p90,
+            mc_median_return=mc_median,
+            garch_nu=garch_nu,
+            garch_persistence=garch_persistence,
+            data_years=data_years,
+            drift_severity=drift_severity,
+            beta=beta,
+        )
+    except Exception as e:
+        logger.error("prediction confidence failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 

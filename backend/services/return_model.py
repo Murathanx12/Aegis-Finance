@@ -1,11 +1,14 @@
 """
-Aegis Finance — Quantile Return Predictor
-===========================================
+Aegis Finance — Quantile Return Predictor (OFFLINE TRAINING TOOL)
+====================================================================
 
 Multi-horizon return predictor using LightGBM quantile regression.
 Outputs 10th/50th/90th percentile return distributions.
 
-Adapted from V7 ml/return_model.py.
+Intentionally NOT exposed via the API — model training is a heavy offline
+job (minutes per horizon). The engine itself uses MC projections for return
+distributions at inference time. This module is kept for the lab loop to
+train challenger models and for hand-run research.
 
 Usage:
     from backend.services.return_model import ReturnPredictor

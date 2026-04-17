@@ -1,12 +1,17 @@
 """
-Aegis Finance — Signal Engine Weight Optimization
-====================================================
+Aegis Finance — Signal Engine Weight Optimization (OFFLINE RESEARCH TOOL)
+============================================================================
 
 Grid search over signal engine weights using backtest results.
 Finds the weight combination that maximizes Sharpe ratio and hit rate.
 
+Intentionally NOT exposed via the API — this is a heavy offline tool meant
+to be run from a notebook / script to tune weights in config.py. Results
+feed the hardcoded signal weights. See test_signal_optimizer.py for usage.
+
 Usage:
     from backend.services.signal_optimizer import optimize_weights
+    winners = optimize_weights("2020-01-01", "2025-06-01")
 """
 
 import logging
