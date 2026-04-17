@@ -279,6 +279,24 @@ def _compute_market_status() -> dict:
         except Exception as e:
             logger.warning("Conformal intervals failed: %s", e)
 
+    # Cross-asset macro regime (growth × inflation quadrant + RORO score)
+    cross_asset_regime = None
+    try:
+        from backend.services.cross_asset_monitor import compute_macro_regime
+        regime_result = compute_macro_regime()
+        if regime_result and "error" not in regime_result:
+            cross_asset_regime = {
+                "quadrant": regime_result.get("quadrant"),
+                "growth_score": regime_result.get("growth_score"),
+                "inflation_score": regime_result.get("inflation_score"),
+                "growth_interpretation": regime_result.get("growth_interpretation"),
+                "inflation_interpretation": regime_result.get("inflation_interpretation"),
+                "regime_stable": regime_result.get("regime_stable"),
+                "description": regime_result.get("description"),
+            }
+    except Exception as e:
+        logger.warning("Cross-asset regime failed: %s", e)
+
     # Market-level drawdown analysis (S&P 500 drawdown stats)
     market_drawdown = None
     try:
@@ -322,6 +340,7 @@ def _compute_market_status() -> dict:
         "vol_regime": vol_regime,
         "crash_intervals": crash_intervals,
         "market_drawdown": market_drawdown,
+        "cross_asset_regime": cross_asset_regime,
         "last_updated": str(data.index[-1].date()),
     }
 
