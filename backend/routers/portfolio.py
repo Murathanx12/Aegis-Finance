@@ -770,6 +770,42 @@ async def portfolio_tearsheet_html(request: TearsheetRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/currency-exposure")
+async def portfolio_currency_exposure(request: dict):
+    """Multi-currency portfolio breakdown + recent FX attribution.
+
+    Body:
+        positions: list of {ticker, shares, current_price, [currency], [return_local_pct]}
+        base: target reporting currency (default USD)
+
+    Returns currency exposure (with HHI), recent 30d return decomposition
+    into local vs FX components, and an interpretation string. Bloomberg
+    PORT / FactSet style: foreign holdings should never silently roll FX
+    P&L into 'stock return'.
+    """
+    positions = request.get("positions") or request.get("holdings") or []
+    base = (request.get("base") or "USD").upper()
+
+    if not positions:
+        raise HTTPException(status_code=422, detail="positions list required")
+    if len(positions) > 100:
+        raise HTTPException(status_code=422, detail="max 100 positions")
+
+    try:
+        from backend.services.portfolio_currency import portfolio_currency_report
+        result = await asyncio.to_thread(
+            portfolio_currency_report, positions, base
+        )
+        if "error" in result:
+            raise HTTPException(status_code=422, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("portfolio currency exposure failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/tearsheet.xlsx")
 async def portfolio_tearsheet_xlsx(request: TearsheetRequest):
     """Return a multi-sheet .xlsx workbook with tearsheet data."""
