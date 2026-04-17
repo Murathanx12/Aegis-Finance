@@ -828,6 +828,46 @@ export interface StockAnalysis {
     upper: number;
     width: number;
   } | null;
+  // Volatility analytics (Bloomberg-style vol summary)
+  volatility_analytics?: {
+    current_iv?: number | null;
+    garch_forecast?: number;
+    vol_regime?: string;
+    vol_percentile?: number;
+    vol_cone?: Record<string, { current: number; p25: number; p50: number; p75: number }>;
+    hv_20d?: number;
+    hv_60d?: number;
+    iv_hv_spread?: number | null;
+  } | null;
+  // Dividend intelligence (Morningstar-style)
+  dividend_intelligence?: {
+    yield_pct?: number | null;
+    annual_dividend?: number | null;
+    payout_ratio?: number | null;
+    growth_5y?: number | null;
+    years_of_growth?: number | null;
+    safety_score?: number | null;
+    safety_label?: string | null;
+    ex_date?: string | null;
+    frequency?: string | null;
+  } | null;
+  // Survival model crash timing (Cox PH)
+  survival_crash_timing?: Record<string, number> | null;
+  // Bubble indicator (LPPL Sornette)
+  bubble_indicator?: {
+    confidence?: number | null;
+    is_bubble?: boolean;
+    status?: string;
+    tc_date?: string | null;
+  } | null;
+  // Chart pattern recognition
+  chart_patterns?: {
+    patterns: { name: string; type: string; confidence: number }[];
+    pattern_count: number;
+    bias: string;
+    strongest_pattern?: string | null;
+    support_resistance?: { support: number; resistance: number } | null;
+  } | null;
 }
 
 export interface AnalystTargets {
@@ -1034,6 +1074,8 @@ export interface ScreenerStock {
   pattern_count?: number | null;
   dividend_yield?: number | null;
   dividend_safety?: string | null;
+  // Full signal component breakdown
+  signal_components?: Record<string, number> | null;
 }
 
 export interface ScreenerResponse {

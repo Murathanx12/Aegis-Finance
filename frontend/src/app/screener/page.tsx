@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getStockScreener } from "@/lib/api";
@@ -93,11 +93,37 @@ function SortHeader({
   );
 }
 
+const COMPONENT_LABELS: Record<string, string> = {
+  crash_prob: "Crash Risk",
+  regime: "Regime",
+  valuation: "Valuation",
+  momentum: "Momentum",
+  mean_reversion: "Mean Rev.",
+  external: "External",
+  macro_risk: "Macro Risk",
+  drawdown: "Drawdown",
+  economic_surprise: "Econ Surprise",
+  momentum_breadth: "Mom. Breadth",
+  insider_trading: "Insider",
+  vix_term_structure: "VIX Term",
+  systemic_risk: "Systemic",
+  market_base: "Mkt Base",
+  beta_adjustment: "Beta Adj.",
+  analyst_target: "Analyst",
+  sector_momentum: "Sector Mom.",
+  crash_risk: "Crash Risk",
+  options: "Options",
+  earnings: "Earnings",
+  technical: "Technical",
+  insider: "Insider",
+};
+
 export default function ScreenerPage() {
   const router = useRouter();
   const [sectorFilter, setSectorFilter] = useState("All");
   const [sortKey, setSortKey] = useState<SortKey>("sharpe");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [expandedTicker, setExpandedTicker] = useState<string | null>(null);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.stock.screener,
@@ -280,70 +306,145 @@ export default function ScreenerPage() {
                 <tbody>
                   {filtered.map((s) => {
                     const signal = signalLabel(s);
+                    const isExpanded = expandedTicker === s.ticker;
+                    const colCount = 16; // total columns
                     return (
-                      <tr
-                        key={s.ticker}
-                        onClick={() => router.push(`/stock/${s.ticker}`)}
-                        className="border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer"
-                      >
-                        <td className="py-2.5 pr-4">
-                          <span className="font-semibold">{s.ticker}</span>
-                          <span className="text-xs text-muted-foreground ml-2 hidden xl:inline">{s.name}</span>
-                        </td>
-                        <td className="py-2.5 pr-4 text-muted-foreground hidden md:table-cell text-xs">{s.sector}</td>
-                        <td className="py-2.5 pr-4 text-right tabular-nums">${s.current_price.toFixed(2)}</td>
-                        <td className={`py-2.5 pr-4 text-right tabular-nums font-medium ${s.expected_return >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                          {s.expected_return >= 0 ? "+" : ""}{s.expected_return.toFixed(1)}%
-                        </td>
-                        <td className={`py-2.5 pr-4 text-right tabular-nums font-medium ${s.sharpe >= 0.35 ? "text-emerald-400" : s.sharpe >= 0.15 ? "text-amber-400" : "text-red-400"}`}>
-                          {s.sharpe.toFixed(2)}
-                        </td>
-                        <td className={`py-2.5 pr-4 text-right tabular-nums ${s.prob_loss > 40 ? "text-red-400" : s.prob_loss > 25 ? "text-amber-400" : "text-emerald-400"}`}>
-                          {s.prob_loss.toFixed(1)}%
-                        </td>
-                        <td className="py-2.5 pr-4 text-right tabular-nums text-muted-foreground hidden lg:table-cell">
-                          {s.volatility.toFixed(1)}%
-                        </td>
-                        <td className="py-2.5 pr-4 text-right tabular-nums hidden lg:table-cell">
-                          {s.beta.toFixed(2)}
-                        </td>
-                        <td className={`py-2.5 pr-4 text-right tabular-nums hidden lg:table-cell ${
-                          (s.crash_prob_3m ?? 0) > 15 ? "text-red-400" : (s.crash_prob_3m ?? 0) > 8 ? "text-amber-400" : "text-emerald-400"
-                        }`}>
-                          {s.crash_prob_3m != null ? `${s.crash_prob_3m.toFixed(1)}%` : "--"}
-                        </td>
-                        <td className={`py-2.5 pr-4 text-right tabular-nums hidden xl:table-cell ${
-                          (s.rsi_14 ?? 50) > 70 ? "text-red-400" : (s.rsi_14 ?? 50) < 30 ? "text-emerald-400" : "text-muted-foreground"
-                        }`}>
-                          {s.rsi_14 != null ? s.rsi_14.toFixed(0) : "--"}
-                        </td>
-                        <td className={`py-2.5 pr-4 text-center hidden xl:table-cell text-xs font-medium ${
-                          s.trend_direction === "bullish" ? "text-emerald-400" : s.trend_direction === "bearish" ? "text-red-400" : "text-muted-foreground"
-                        }`}>
-                          {s.trend_direction === "bullish" ? "↑" : s.trend_direction === "bearish" ? "↓" : "—"}
-                        </td>
-                        <td className={`py-2.5 pr-4 text-right tabular-nums hidden xl:table-cell text-xs ${
-                          (s.momentum_percentile ?? 50) > 75 ? "text-emerald-400" : (s.momentum_percentile ?? 50) < 25 ? "text-red-400" : "text-muted-foreground"
-                        }`}>
-                          {s.momentum_percentile != null ? `${s.momentum_percentile.toFixed(0)}` : "--"}
-                        </td>
-                        <td className={`py-2.5 pr-4 text-center hidden xl:table-cell text-xs ${
-                          s.liquidity_tier === "highly_liquid" ? "text-emerald-400" : s.liquidity_tier === "liquid" ? "text-blue-400" : s.liquidity_tier === "moderate" ? "text-amber-400" : "text-muted-foreground"
-                        }`}>
-                          {s.liquidity_tier ? s.liquidity_tier.replace("_", " ") : "--"}
-                        </td>
-                        <td className="py-2.5 pr-4 text-right tabular-nums text-muted-foreground hidden sm:table-cell text-xs">
-                          {formatCap(s.market_cap)}
-                        </td>
-                        <td className={`py-2.5 pr-4 text-right tabular-nums hidden sm:table-cell text-xs ${
-                          (s.signal_confidence ?? 0) > 40 ? "text-emerald-400" : (s.signal_confidence ?? 0) > 20 ? "text-amber-400" : "text-muted-foreground"
-                        }`}>
-                          {s.signal_confidence != null ? `${s.signal_confidence}%` : "--"}
-                        </td>
-                        <td className={`py-2.5 text-right font-semibold ${signal.color}`}>
-                          {signal.text}
-                        </td>
-                      </tr>
+                      <React.Fragment key={s.ticker}>
+                        <tr
+                          onClick={(e) => {
+                            if (e.detail === 2) {
+                              router.push(`/stock/${s.ticker}`);
+                            } else {
+                              setExpandedTicker(isExpanded ? null : s.ticker);
+                            }
+                          }}
+                          className={`border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer ${isExpanded ? "bg-muted/10" : ""}`}
+                        >
+                          <td className="py-2.5 pr-4">
+                            <span className="font-semibold">{s.ticker}</span>
+                            <span className="text-xs text-muted-foreground ml-2 hidden xl:inline">{s.name}</span>
+                            <span className="text-[10px] text-muted-foreground ml-1">{isExpanded ? "▾" : "▸"}</span>
+                          </td>
+                          <td className="py-2.5 pr-4 text-muted-foreground hidden md:table-cell text-xs">{s.sector}</td>
+                          <td className="py-2.5 pr-4 text-right tabular-nums">${s.current_price.toFixed(2)}</td>
+                          <td className={`py-2.5 pr-4 text-right tabular-nums font-medium ${s.expected_return >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            {s.expected_return >= 0 ? "+" : ""}{s.expected_return.toFixed(1)}%
+                          </td>
+                          <td className={`py-2.5 pr-4 text-right tabular-nums font-medium ${s.sharpe >= 0.35 ? "text-emerald-400" : s.sharpe >= 0.15 ? "text-amber-400" : "text-red-400"}`}>
+                            {s.sharpe.toFixed(2)}
+                          </td>
+                          <td className={`py-2.5 pr-4 text-right tabular-nums ${s.prob_loss > 40 ? "text-red-400" : s.prob_loss > 25 ? "text-amber-400" : "text-emerald-400"}`}>
+                            {s.prob_loss.toFixed(1)}%
+                          </td>
+                          <td className="py-2.5 pr-4 text-right tabular-nums text-muted-foreground hidden lg:table-cell">
+                            {s.volatility.toFixed(1)}%
+                          </td>
+                          <td className="py-2.5 pr-4 text-right tabular-nums hidden lg:table-cell">
+                            {s.beta.toFixed(2)}
+                          </td>
+                          <td className={`py-2.5 pr-4 text-right tabular-nums hidden lg:table-cell ${
+                            (s.crash_prob_3m ?? 0) > 15 ? "text-red-400" : (s.crash_prob_3m ?? 0) > 8 ? "text-amber-400" : "text-emerald-400"
+                          }`}>
+                            {s.crash_prob_3m != null ? `${s.crash_prob_3m.toFixed(1)}%` : "--"}
+                          </td>
+                          <td className={`py-2.5 pr-4 text-right tabular-nums hidden xl:table-cell ${
+                            (s.rsi_14 ?? 50) > 70 ? "text-red-400" : (s.rsi_14 ?? 50) < 30 ? "text-emerald-400" : "text-muted-foreground"
+                          }`}>
+                            {s.rsi_14 != null ? s.rsi_14.toFixed(0) : "--"}
+                          </td>
+                          <td className={`py-2.5 pr-4 text-center hidden xl:table-cell text-xs font-medium ${
+                            s.trend_direction === "bullish" ? "text-emerald-400" : s.trend_direction === "bearish" ? "text-red-400" : "text-muted-foreground"
+                          }`}>
+                            {s.trend_direction === "bullish" ? "↑" : s.trend_direction === "bearish" ? "↓" : "—"}
+                          </td>
+                          <td className={`py-2.5 pr-4 text-right tabular-nums hidden xl:table-cell text-xs ${
+                            (s.momentum_percentile ?? 50) > 75 ? "text-emerald-400" : (s.momentum_percentile ?? 50) < 25 ? "text-red-400" : "text-muted-foreground"
+                          }`}>
+                            {s.momentum_percentile != null ? `${s.momentum_percentile.toFixed(0)}` : "--"}
+                          </td>
+                          <td className={`py-2.5 pr-4 text-center hidden xl:table-cell text-xs ${
+                            s.liquidity_tier === "highly_liquid" ? "text-emerald-400" : s.liquidity_tier === "liquid" ? "text-blue-400" : s.liquidity_tier === "moderate" ? "text-amber-400" : "text-muted-foreground"
+                          }`}>
+                            {s.liquidity_tier ? s.liquidity_tier.replace("_", " ") : "--"}
+                          </td>
+                          <td className="py-2.5 pr-4 text-right tabular-nums text-muted-foreground hidden sm:table-cell text-xs">
+                            {formatCap(s.market_cap)}
+                          </td>
+                          <td className={`py-2.5 pr-4 text-right tabular-nums hidden sm:table-cell text-xs ${
+                            (s.signal_confidence ?? 0) > 40 ? "text-emerald-400" : (s.signal_confidence ?? 0) > 20 ? "text-amber-400" : "text-muted-foreground"
+                          }`}>
+                            {s.signal_confidence != null ? `${s.signal_confidence}%` : "--"}
+                          </td>
+                          <td className={`py-2.5 text-right font-semibold ${signal.color}`}>
+                            {signal.text}
+                          </td>
+                        </tr>
+                        {/* Expandable Signal Component Breakdown */}
+                        {isExpanded && (
+                          <tr className="bg-muted/5 border-b border-border/30">
+                            <td colSpan={colCount} className="px-4 py-3">
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Signal Component Breakdown</p>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); router.push(`/stock/${s.ticker}`); }}
+                                    className="text-xs text-primary hover:underline"
+                                  >
+                                    Full Analysis →
+                                  </button>
+                                </div>
+                                {s.signal_components && Object.keys(s.signal_components).length > 0 ? (
+                                  <div className="flex flex-wrap gap-2">
+                                    {Object.entries(s.signal_components)
+                                      .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
+                                      .map(([key, val]) => (
+                                        <div key={key} className={`rounded-md px-2.5 py-1.5 text-xs ${
+                                          val > 0.1 ? "bg-emerald-500/10 text-emerald-400" :
+                                          val < -0.1 ? "bg-red-500/10 text-red-400" :
+                                          "bg-muted/30 text-muted-foreground"
+                                        }`}>
+                                          <span className="text-muted-foreground">{COMPONENT_LABELS[key] ?? key}: </span>
+                                          <span className="font-bold tabular-nums">{val > 0 ? "+" : ""}{val.toFixed(2)}</span>
+                                        </div>
+                                      ))}
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-wrap gap-2">
+                                    {s.ta_score != null && (
+                                      <div className={`rounded-md px-2.5 py-1.5 text-xs ${s.ta_score > 0 ? "bg-emerald-500/10 text-emerald-400" : s.ta_score < 0 ? "bg-red-500/10 text-red-400" : "bg-muted/30 text-muted-foreground"}`}>
+                                        <span className="text-muted-foreground">TA: </span><span className="font-bold tabular-nums">{s.ta_score > 0 ? "+" : ""}{s.ta_score.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    {s.options_score != null && (
+                                      <div className={`rounded-md px-2.5 py-1.5 text-xs ${s.options_score > 0 ? "bg-emerald-500/10 text-emerald-400" : s.options_score < 0 ? "bg-red-500/10 text-red-400" : "bg-muted/30 text-muted-foreground"}`}>
+                                        <span className="text-muted-foreground">Options: </span><span className="font-bold tabular-nums">{s.options_score > 0 ? "+" : ""}{s.options_score.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    {s.earnings_score != null && (
+                                      <div className={`rounded-md px-2.5 py-1.5 text-xs ${s.earnings_score > 0 ? "bg-emerald-500/10 text-emerald-400" : s.earnings_score < 0 ? "bg-red-500/10 text-red-400" : "bg-muted/30 text-muted-foreground"}`}>
+                                        <span className="text-muted-foreground">Earnings: </span><span className="font-bold tabular-nums">{s.earnings_score > 0 ? "+" : ""}{s.earnings_score.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    {s.insider_score != null && (
+                                      <div className={`rounded-md px-2.5 py-1.5 text-xs ${s.insider_score > 0 ? "bg-emerald-500/10 text-emerald-400" : s.insider_score < 0 ? "bg-red-500/10 text-red-400" : "bg-muted/30 text-muted-foreground"}`}>
+                                        <span className="text-muted-foreground">Insider: </span><span className="font-bold tabular-nums">{s.insider_score > 0 ? "+" : ""}{s.insider_score.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {/* Extra quick stats row */}
+                                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-1">
+                                  {s.factor_style && <span>Factor: <span className="text-foreground">{s.factor_style}</span></span>}
+                                  {s.factor_alpha != null && <span>Alpha: <span className={s.factor_alpha > 0 ? "text-emerald-400" : "text-red-400"}>{s.factor_alpha > 0 ? "+" : ""}{s.factor_alpha.toFixed(1)}%</span></span>}
+                                  {s.dividend_yield != null && s.dividend_yield > 0 && <span>Div: <span className="text-foreground">{s.dividend_yield.toFixed(2)}%</span></span>}
+                                  {s.pattern_bias && s.pattern_bias !== "neutral" && <span>Patterns: <span className={s.pattern_bias === "bullish" ? "text-emerald-400" : "text-red-400"}>{s.pattern_bias} ({s.pattern_count})</span></span>}
+                                  {s.current_drawdown_pct != null && s.current_drawdown_pct < -5 && <span>Drawdown: <span className="text-red-400">{s.current_drawdown_pct.toFixed(1)}%</span></span>}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
@@ -360,7 +461,7 @@ export default function ScreenerPage() {
       {error && <ErrorCard message={(error as Error).message} onRetry={() => refetch()} />}
 
       <p className="text-xs text-muted-foreground text-center">
-        Signal is derived from expected return, Sharpe ratio, and loss probability.
+        Click a row to expand signal breakdown. Double-click to view full analysis.
         Not financial advice — for educational purposes only.
       </p>
     </div>
