@@ -1232,6 +1232,57 @@ async def get_insider_trading(ticker: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/{ticker}/ownership")
+async def get_stock_ownership(ticker: str):
+    """Institutional ownership — top 10 holders with QoQ change and crowding."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"ownership_endpoint:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+    try:
+        from backend.services.ownership import get_institutional_ownership
+        result = await asyncio.to_thread(get_institutional_ownership, ticker)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"No ownership data for {ticker}")
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("ownership failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{ticker}/etf-lookthrough")
+async def get_stock_etf_lookthrough(ticker: str):
+    """ETF look-through — top holdings + sector weights (returns 404 for non-ETFs)."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"etf_lookthrough_endpoint:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+    try:
+        from backend.services.ownership import get_etf_lookthrough
+        result = await asyncio.to_thread(get_etf_lookthrough, ticker)
+        if result is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"{ticker} is not an ETF or has no holdings data",
+            )
+        cache_set(cache_key, result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("etf-lookthrough failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{ticker}/valuation")
 async def get_stock_valuation(ticker: str):
     """Relative valuation — Koyfin-style peer comparison with percentile rankings."""
