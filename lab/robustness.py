@@ -37,6 +37,7 @@ def _probe_flat_vol_mc() -> tuple[str, bool, str]:
             days=60,
             n_sims=200,
             crash_freq=0.0,
+            risk_score=0.0,
             scenario=scenario,
             seed=42,
         )
@@ -130,12 +131,116 @@ def _probe_empty_portfolio_analyze() -> tuple[str, bool, str]:
         return ("empty_portfolio_analyze", False, f"{type(e).__name__}: {e}")
 
 
+# ── v13 probes ────────────────────────────────────────────────────────────
+
+
+def _probe_bond_par_ytm() -> tuple[str, bool, str]:
+    """A par bond must have YTM ≈ coupon rate (regression guard for solver)."""
+    try:
+        from backend.services.bond_analytics import Bond, solve_ytm
+        bond = Bond(face=100, coupon_rate=0.05, maturity_years=10, freq=2)
+        y = solve_ytm(bond.cashflows(), 100.0)
+        if y is None:
+            return ("bond_par_ytm", False, "solver returned None")
+        ok = abs(y - 0.05) < 1e-4
+        return ("bond_par_ytm", ok, f"y={y:.6f}")
+    except Exception as e:
+        return ("bond_par_ytm", False, f"{type(e).__name__}: {e}")
+
+
+def _probe_bond_duration_predicts_shock() -> tuple[str, bool, str]:
+    """Mod duration + convexity ≈ actual price change for a 25bp shock."""
+    try:
+        from backend.services.bond_analytics import (
+            Bond, solve_ytm, present_value, modified_duration, convexity,
+            estimate_price_change,
+        )
+        bond = Bond(face=100, coupon_rate=0.045, maturity_years=10, freq=2)
+        cfs = bond.cashflows()
+        y0 = solve_ytm(cfs, 100.0)
+        pv0 = present_value(cfs, y0)
+        dur = modified_duration(cfs, y0)
+        conv = convexity(cfs, y0)
+        actual = (present_value(cfs, y0 + 0.0025) - pv0) / pv0
+        est = estimate_price_change(dur, conv, +25)
+        ok = abs(actual - est) < 5e-4
+        return ("bond_duration_shock", ok, f"err={(actual-est)*1e4:.2f}bp")
+    except Exception as e:
+        return ("bond_duration_shock", False, f"{type(e).__name__}: {e}")
+
+
+def _probe_fx_cip_arbitrage() -> tuple[str, bool, str]:
+    """CIP forward must satisfy F = S*(1 + r_q*t) / (1 + r_b*t) (no-arb identity)."""
+    try:
+        from backend.services.fx_curves import cip_forward
+        spot = 1.10
+        r_b, r_q = 0.02, 0.05
+        days = 180
+        fwd = cip_forward(spot, r_b, r_q, days)
+        expected = spot * (1 + r_q * days / 360.0) / (1 + r_b * days / 360.0)
+        ok = abs(fwd - expected) < 1e-9
+        return ("fx_cip_identity", ok, f"|fwd-exp|={abs(fwd-expected):.2e}")
+    except Exception as e:
+        return ("fx_cip_identity", False, f"{type(e).__name__}: {e}")
+
+
+def _probe_commodity_slope_classifier() -> tuple[str, bool, str]:
+    """Synthetic contango / backwardation curves must land in the right bucket."""
+    try:
+        from backend.services.commodity_curves import slope_diagnostics
+        cont = slope_diagnostics(
+            [{"tenor_months": 0, "price": 80}, {"tenor_months": 6, "price": 90}]
+        )
+        back = slope_diagnostics(
+            [{"tenor_months": 0, "price": 100}, {"tenor_months": 6, "price": 90}]
+        )
+        ok = cont["shape"] == "contango" and back["shape"] == "backwardation"
+        return ("commodity_slope", ok, f"{cont['shape']}/{back['shape']}")
+    except Exception as e:
+        return ("commodity_slope", False, f"{type(e).__name__}: {e}")
+
+
+def _probe_currency_inference() -> tuple[str, bool, str]:
+    """Yfinance suffix → currency mapper must handle 4 common venues."""
+    try:
+        from backend.services.portfolio_currency import infer_listing_currency
+        cases = [("AAPL", "USD"), ("ASML.AS", "EUR"), ("7203.T", "JPY"), ("0700.HK", "HKD")]
+        misses = [t for t, c in cases if infer_listing_currency(t) != c]
+        return ("currency_inference", not misses, "misses=" + ",".join(misses) if misses else "ok")
+    except Exception as e:
+        return ("currency_inference", False, f"{type(e).__name__}: {e}")
+
+
+def _probe_edgar_taxonomy_complete() -> tuple[str, bool, str]:
+    """The 8-K item taxonomy must classify high-impact codes (1.03, 2.02, 5.02)."""
+    try:
+        from backend.services.edgar_events import classify_items
+        types_eps, mat_eps = classify_items(["2.02"])
+        types_bk, mat_bk = classify_items(["1.03"])
+        types_mc, mat_mc = classify_items(["5.02"])
+        ok = (
+            "earnings" in types_eps and mat_eps >= 0.8
+            and "bankruptcy" in types_bk and mat_bk >= 0.9
+            and "management_change" in types_mc and mat_mc >= 0.6
+        )
+        return ("edgar_taxonomy", ok, "ok" if ok else "missing classification")
+    except Exception as e:
+        return ("edgar_taxonomy", False, f"{type(e).__name__}: {e}")
+
+
 PROBES: list[Callable[[], tuple[str, bool, str]]] = [
     _probe_flat_vol_mc,
     _probe_extreme_drawdown,
     _probe_single_asset_optimizer,
     _probe_crash_timeline_monotone,
     _probe_empty_portfolio_analyze,
+    # v13 additions
+    _probe_bond_par_ytm,
+    _probe_bond_duration_predicts_shock,
+    _probe_fx_cip_arbitrage,
+    _probe_commodity_slope_classifier,
+    _probe_currency_inference,
+    _probe_edgar_taxonomy_complete,
 ]
 
 

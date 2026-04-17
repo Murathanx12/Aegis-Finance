@@ -1,8 +1,21 @@
 """
-Aegis Finance - Autonomous R&D Loop v12
+Aegis Finance - Autonomous R&D Loop v13
 =========================================
 Sandbox methodology with a quality gate, hypothesis memory, theme-driven
 cycle selection, and post-cycle robustness probes.
+
+v13 additions (over v12):
+  1. Multi-asset surface — bond_analytics, fx_curves, commodity_curves,
+     crypto_market, defi_metrics, edgar_events, esg, portfolio_currency
+     are all wired into data_generator.py as new collectors so each
+     cycle's prompt sees the real engine output of those services
+  2. Six new robustness probes covering bond YTM regression, duration
+     shock prediction, CIP arbitrage identity, futures-curve slope
+     classifier, currency-suffix mapper, EDGAR taxonomy completeness
+  3. build-theme prompt now lists v13 services as "extend, don't rewrite"
+     and points to adjacent capabilities (TIPS, COT, FinBERT-on-8K,
+     hedged backtest, on-chain factor) to stop Claude duplicating them
+  4. Pre-existing flat-vol MC probe fixed (signature drift in monte_carlo)
 
 v12 additions (over v11):
   1. Theme-driven cycle selection — picks the theme that addresses the
@@ -232,7 +245,9 @@ Competitive targets (what we're missing that they have):
 
 ALREADY DONE (don't rebuild): technical analysis (ta lib), risk number (1-100),
 sector rotation, drawdown recovery, rolling Sharpe/Sortino, retirement MC,
-safe withdrawal rate, Polygon.io real-time data, copula tail risk, factor models
+safe withdrawal rate, Polygon.io real-time data, copula tail risk, factor models,
+v13 (bond_analytics, edgar_events, esg, fx_curves, commodity_curves,
+crypto_market, defi_metrics, portfolio_currency) — extend, don't rewrite.
 """
     else:  # INTEGRATE
         type_instructions = """
@@ -287,25 +302,26 @@ user-friendly and open-source.
 - **Modify ANY file**: backend/, frontend/, engine/, lab/, config, requirements.txt
 - **Create new services**: Build entire new .py files with tests and endpoints
 
-## Current engine (53 services, 45+ endpoints, 1350+ tests)
+## Current engine (90+ services, 140+ endpoints, 1700+ tests) — v13
 
-Backend services: monte_carlo, stock_analyzer, sector_analyzer, portfolio_engine,
-crash_model, signal_engine (12 components), regime_detector, risk_scorer, shap_explainer,
-news_intelligence, llm_analyzer (Claude+DeepSeek), sentiment_analyzer, data_fetcher,
-data_quality, net_liquidity, return_model, external_validator, regime_validator,
-drift_detector, tail_risk, tail_dependence, backtest, signal_optimizer,
-options_intelligence, earnings_intelligence, systemic_risk, bubble_detector,
-fundamentals, options_calibrator, prediction_confidence, signal_analytics,
-factor_model (FF6+PCA), stress_testing (+hypothetical), cross_sectional_momentum,
-economic_surprise, survival_model, anomaly_detector, crash_timeline,
-liquidity_risk, copula_tail, covariance (RMT), portfolio_optimizer (CVaR/RP/MaxDiv/HRP),
-insider_trading, trends_sentiment, attribution (Brinson+MCTR), conformal_predictor,
-**technical_analysis** (RSI/MACD/BB/ADX/OBV via `ta` lib),
-**polygon_client** (real-time quotes, intraday bars),
-**risk_number** (Bloomberg PORT-style 1-100 risk score),
-**sector_rotation** (multi-timeframe relative strength + business cycle),
-**drawdown_analyzer** (drawdown recovery analysis + rolling returns/Sharpe),
-**retirement_mc** (Monte Carlo retirement sim + safe withdrawal rate)
+Backend services (highlights — see backend/services/ for the full set):
+crash_model, signal_engine (12 components), regime_detector, risk_scorer,
+factor_model (FF6+PCA), stress_testing (+hypothetical), copula_tail,
+covariance (RMT), liquidity_risk, attribution (Brinson+MCTR),
+cross_sectional_momentum, conformal_predictor, mpc_optimizer,
+portfolio_optimizer (CVaR/RP/MaxDiv/HRP), tearsheet (HTML+xlsx),
+allocation_backtester, providers (yf/fmp/finnhub/polygon/av/fred),
+ownership, world_markets, factor_grades, market_treemap, copilot.
+
+**v13 NEW (Bloomberg-gap closers — extend or surface in frontend/SDK):**
+  - bond_analytics — YTM/dur/conv/key-rate/ladder + Treasury curve
+  - edgar_events  — SEC 8-K item classifier + materiality stream
+  - esg           — Finnhub+FMP ESG blend per ticker
+  - fx_curves     — G10 spot + CIP-implied forward curve + carry
+  - commodity_curves — futures curves + contango/backwardation + roll yield
+  - crypto_market — CoinGecko top-cap snapshots + history
+  - defi_metrics  — DefiLlama TVL by chain / protocol
+  - portfolio_currency — multi-currency accounting + hedged/unhedged decomp
 
 API keys available: FRED, Finnhub, FMP, DeepSeek, Alpha Vantage, Polygon.io, ANTHROPIC
 Installed packages: ta, polygon-api-client, riskfolio-lib, copulas, ruptures, pytrends
@@ -754,7 +770,7 @@ def main():
         start = len(existing) + 1
 
     print(f"\n{'='*60}")
-    print(f"  AEGIS R&D LAB v12 - Hypothesis-aware sandbox")
+    print(f"  AEGIS R&D LAB v13 - Hypothesis-aware sandbox + multi-asset surface")
     print(f"  Model: {args.model} | Cycles: {start}-{args.cycles}")
     print(f"  Session: {SESSION_TIMEOUT // 60} min | Branch: {args.branch}")
     print(f"  Themes: {', '.join(themes.THEMES)}")
