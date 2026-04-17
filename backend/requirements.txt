@@ -50,3 +50,6 @@ polygon-api-client>=1.14.0
 requests>=2.31.0
 python-dotenv>=1.0.0
 diskcache>=5.6.0
+
+# Exports (Excel tearsheets)
+openpyxl>=3.1.0
