@@ -1,0 +1,24 @@
+Done. Here's the cycle 080 summary:
+
+## Cycle 080: INTEGRATE — Results
+
+### What was wired in
+
+**Screener (`/api/stock/screener`)** — 6 new fields per stock:
+- `options_score`, `earnings_score`, `insider_score`, `ta_score` — signal sub-scores that were already computed for the composite signal but never exposed in the API response
+- `factor_style` — value/growth/blend classification from FF5 decomposition
+- `factor_alpha` — annualized alpha (%) from Fama-French factor model
+
+**Market Status (`/api/market-status`)** — 3 new sections:
+- `vol_regime` — S&P 500 volatility regime (high/normal/low) with 30d vol and percentile, sourced from `volatility_analytics` service
+- `crash_intervals` — conformal prediction intervals (lower/upper bounds) for each crash probability horizon, from `conformal_predictor` service
+- `market_drawdown` — current/max drawdown, total drawdowns, avg recovery days, and rolling 1Y Sharpe for S&P 500, from `drawdown_analyzer` service
+
+**Frontend** — TypeScript types updated for `ScreenerStock` and `MarketStatus` interfaces.
+
+### Validation
+- **1606 tests passing**, 0 regressions
+- Frontend builds clean
+- All router imports verified
+
+---STDERR---
