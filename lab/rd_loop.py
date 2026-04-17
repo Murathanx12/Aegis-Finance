@@ -1,21 +1,28 @@
 """
-Aegis Finance - Autonomous R&D Loop v11
+Aegis Finance - Autonomous R&D Loop v12
 =========================================
-Sandbox methodology with a quality gate and auto-rollback.
+Sandbox methodology with a quality gate, hypothesis memory, theme-driven
+cycle selection, and post-cycle robustness probes.
 
-Three cycle types rotate to prevent tunnel vision:
-  - DEEP_AUDIT: Read code, find bugs, fix them, write regression tests
-  - BUILD: Research competitors, install packages, build new features
-  - INTEGRATE: Wire existing services together, update frontend, close gaps
+v12 additions (over v11):
+  1. Theme-driven cycle selection — picks the theme that addresses the
+     weakest quality component (stabilise / quality / integrate / build
+     / audit / robustness / performance) instead of rigid 3-way rotation
+  2. Hypothesis registry (`lab/hypotheses.json`) — every cycle logs its
+     hypothesis + verdict + why, and past successes/failures are
+     injected into the next prompt so Claude stops repeating dead ends
+  3. Robustness probes — 5 edge-case probes run after each cycle
+     (flat-vol MC, extreme drawdown anomaly flag, single-asset optimizer,
+     monotone crash timeline, tiny-portfolio analyze) contribute to the
+     composite score
+  4. Scorecard extensions — cycles carry a robustness sub-score so the
+     loop sees more than just tests/smells/health
 
-v11 additions (over v10):
+v11 behaviour (preserved):
   1. Pre-cycle data-source health probe — abort when yfinance is down
   2. Full fast-test suite after the session (not just 3 smoke tests)
-  3. Quality scorecard: weighted composite over test pass rate,
-     service-import health, code smells, frontend build, warning drift
-  4. Auto-rollback when the cycle regresses beyond a threshold
-  5. Rolling 60-cycle ledger so the loop is aware of multi-cycle trends
-  6. Trend-aware prompt injection (shows Claude the recent trajectory)
+  3. Quality scorecard + auto-rollback
+  4. Rolling 60-cycle ledger + trend-aware prompt injection
 
 Usage:
   python lab/rd_loop.py                      # opus, auto-detect cycle
@@ -51,19 +58,57 @@ from quality import (  # noqa: E402
     ROLLBACK_THRESHOLD, PASS_THRESHOLD,
 )
 from health_probe import probe_all  # noqa: E402
+import hypotheses  # noqa: E402
+import themes  # noqa: E402
+import robustness  # noqa: E402
+
+HYPOTHESES_PATH = LAB_DIR / "hypotheses.json"
 
 SESSION_TIMEOUT = 2700  # 45 min max per session
 
 import shutil
 CLAUDE_CMD = shutil.which("claude") or shutil.which("claude.cmd") or "claude"
 
-# Cycle type rotation — prevents the lab from always doing the same thing
+# v12: cycle theme is chosen by themes.select_theme() based on current
+# scorecard + trend. The rotation constants are kept for legacy callers
+# only; new code paths read themes.THEMES.
 CYCLE_TYPES = ["DEEP_AUDIT", "BUILD", "INTEGRATE"]
 
 
 def _get_cycle_type(cycle: int) -> str:
-    """Rotate cycle types: audit → build → integrate → audit → ..."""
+    """Legacy shim — prefer `_choose_theme(...)` for v12 behaviour."""
     return CYCLE_TYPES[cycle % 3]
+
+
+def _choose_theme(cycle: int) -> themes.ThemeDecision:
+    """Pick this cycle's theme from the rolling ledger + last scorecard."""
+    history = read_history(HISTORY_PATH, last_n=10)
+    trend = trend_summary(history)
+    last_scorecard = None
+    if history:
+        # History entries are the thinned summary; we don't keep the full
+        # scorecard there, so reconstruct a minimal shape from trend data
+        # and the most recent entry's flags.
+        latest = history[-1]
+        last_scorecard = {
+            "components": {
+                "tests": 1.0 if latest.get("verdict") != "rollback" else 0.5,
+                "health": 1.0,
+                "smells": 1.0,
+            },
+            "after": {
+                "frontend_build_ok": "frontend build broke" not in (latest.get("flags") or []),
+                "tests_failed": sum(
+                    1 for f in latest.get("flags") or []
+                    if "test failure" in f.lower()
+                ),
+            },
+            "flags": latest.get("flags") or [],
+        }
+    last_themes = [h.get("cycle_type") for h in history if h.get("cycle_type")]
+    return themes.select_theme(
+        cycle=cycle, scorecard=last_scorecard, trend=trend, last_themes=last_themes,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -71,9 +116,12 @@ def _get_cycle_type(cycle: int) -> str:
 # ---------------------------------------------------------------------------
 
 def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str,
-                 trend: dict | None = None) -> str:
+                 trend: dict | None = None,
+                 theme_decision: themes.ThemeDecision | None = None,
+                 hypothesis_block: str | None = None) -> str:
 
-    cycle_type = _get_cycle_type(cycle)
+    # Legacy: when called without a theme_decision, fall back to rotation
+    cycle_type = theme_decision.theme.upper() if theme_decision else _get_cycle_type(cycle)
 
     # Load engine data
     data_dir = cycle_dir / "data"
@@ -130,8 +178,18 @@ def build_prompt(cycle: int, cycle_dir: Path, baseline_failures: str,
             trend_lines.append("Last verdicts: " + " → ".join(last))
     trend_block = "\n".join(trend_lines) if trend_lines else "No ledger yet."
 
-    # Type-specific instructions
-    if cycle_type == "DEEP_AUDIT":
+    # Theme-driven instructions (v12). Fall back to the legacy 3-way
+    # instructions when no theme was selected.
+    type_instructions = ""
+    theme_reason = ""
+    if theme_decision is not None:
+        type_instructions = themes.instructions_for(theme_decision.theme)
+        theme_reason = theme_decision.reason
+
+    # Legacy block — retained for compatibility when no theme is provided
+    if type_instructions:
+        pass
+    elif cycle_type == "DEEP_AUDIT":
         type_instructions = """
 ## This is a DEEP AUDIT cycle
 
@@ -268,6 +326,14 @@ vix_term_structure
 
 {trend_block}
 
+## Theme selection (v12)
+
+{theme_reason if theme_reason else "Theme selected by rotation (legacy mode)."}
+
+## Hypothesis memory
+
+{hypothesis_block or "No hypothesis ledger available yet."}
+
 ## When done
 
 1. Write experiment report to: lab/experiments/cycle_{cycle:03d}/experiment_report.json
@@ -322,10 +388,14 @@ def run_cycle(cycle: int, model: str, baseline_failures: str, *,
 
     session_id = str(uuid.uuid4())
     cycle_start = time.time()
-    cycle_type = _get_cycle_type(cycle)
+
+    # v12: theme-driven cycle selection replaces rotation
+    theme_decision = _choose_theme(cycle)
+    cycle_type = theme_decision.theme.upper()
 
     print(f"\n{'='*60}")
     print(f"  CYCLE {cycle} ({cycle_type}) - {datetime.now().strftime('%H:%M:%S')}")
+    print(f"  Theme chosen: {theme_decision.theme}  ({theme_decision.reason})")
     print(f"{'='*60}")
 
     # 1. Health probe — abort if critical data sources are down
@@ -364,9 +434,15 @@ def run_cycle(cycle: int, model: str, baseline_failures: str, *,
         cwd=str(REPO_DIR), timeout=300,
     )
 
-    # Build prompt (with trend-awareness from the rolling ledger)
+    # Build prompt (with trend-awareness + hypothesis memory)
     trend = trend_summary(read_history(HISTORY_PATH, last_n=10))
-    prompt = build_prompt(cycle, cycle_dir, baseline_failures, trend=trend)
+    hypothesis_block = hypotheses.summarise_for_prompt(HYPOTHESES_PATH)
+    prompt = build_prompt(
+        cycle, cycle_dir, baseline_failures,
+        trend=trend,
+        theme_decision=theme_decision,
+        hypothesis_block=hypothesis_block,
+    )
     (cycle_dir / "prompt.md").write_text(prompt, encoding="utf-8")
 
     # Single deep session
@@ -525,9 +601,21 @@ def run_cycle(cycle: int, model: str, baseline_failures: str, *,
     scorecard = score_cycle(before, after)
     scorecard["cycle"] = cycle
     scorecard["cycle_type"] = cycle_type
+    scorecard["theme"] = theme_decision.theme
+    scorecard["theme_reason"] = theme_decision.reason
     scorecard["duration_min"] = duration
     scorecard["pre_commit"] = pre_commit
     scorecard["post_commit"] = post_commit
+
+    # v12: robustness probes — edge-case sanity after every cycle
+    try:
+        probe_report = robustness.run_all()
+        scorecard["robustness"] = probe_report
+        print(f"  {robustness.summary_line(probe_report)}")
+    except Exception as e:
+        scorecard["robustness"] = {"error": str(e)}
+        print(f"  [WARN] robustness probes failed: {e}")
+
     write_scorecard(cycle_dir / "scorecard.json", scorecard)
 
     score = scorecard["composite_score"]
@@ -550,12 +638,39 @@ def run_cycle(cycle: int, model: str, baseline_failures: str, *,
     append_history(HISTORY_PATH, {
         "cycle": cycle,
         "cycle_type": cycle_type,
+        "theme": theme_decision.theme,
         "composite_score": score,
         "verdict": verdict,
         "flags": scorecard["flags"],
         "rolled_back": scorecard["rolled_back"],
+        "robustness_score": (scorecard.get("robustness") or {}).get("score"),
         "timestamp": datetime.utcnow().isoformat(),
     })
+
+    # v12: distill this cycle into a hypothesis memo for the next cycle
+    try:
+        report_path = cycle_dir / "experiment_report.json"
+        report_data = None
+        if report_path.exists():
+            try:
+                report_data = json.loads(report_path.read_text(encoding="utf-8"))
+            except Exception:
+                report_data = None
+        # baseline for score-delta: use previous ledger entry
+        prev_entries = read_history(HISTORY_PATH, last_n=2)
+        baseline_score = None
+        if len(prev_entries) >= 2:
+            baseline_score = prev_entries[-2].get("composite_score")
+        hypotheses.record_from_report(
+            HYPOTHESES_PATH,
+            cycle=cycle,
+            theme=theme_decision.theme,
+            report=report_data,
+            scorecard=scorecard,
+            baseline_score=baseline_score,
+        )
+    except Exception as e:
+        print(f"  [WARN] could not record hypothesis: {e}")
 
     # Summary
     print(f"\n  Cycle {cycle} ({cycle_type}) done in {duration} min")
@@ -639,13 +754,15 @@ def main():
         start = len(existing) + 1
 
     print(f"\n{'='*60}")
-    print(f"  AEGIS R&D LAB v11 - Quality-gated sandbox")
+    print(f"  AEGIS R&D LAB v12 - Hypothesis-aware sandbox")
     print(f"  Model: {args.model} | Cycles: {start}-{args.cycles}")
     print(f"  Session: {SESSION_TIMEOUT // 60} min | Branch: {args.branch}")
-    print(f"  Rotation: DEEP_AUDIT -> BUILD -> INTEGRATE")
-    print(f"  Next cycle type: {_get_cycle_type(start)}")
+    print(f"  Themes: {', '.join(themes.THEMES)}")
+    next_theme = _choose_theme(start).theme
+    print(f"  Next cycle theme: {next_theme}")
     print(f"  Rollback: {'disabled' if args.no_rollback else f'auto < {ROLLBACK_THRESHOLD:.2f}'} "
           f"(pass >= {PASS_THRESHOLD:.2f})")
+    print(f"  Hypotheses logged: {len(hypotheses.load(HYPOTHESES_PATH))}")
     print(f"{'='*60}")
 
     summary_counts = {"ok": 0, "rollback": 0, "warn": 0, "aborted_unhealthy": 0}
