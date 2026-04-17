@@ -1093,6 +1093,154 @@ def collect_code_metrics(output_dir):
 
 
 # ---------------------------------------------------------------------------
+# v13 collectors — bond / events / esg / fx / commodities / crypto / portfolio_currency
+# ---------------------------------------------------------------------------
+
+
+def collect_bond_lab(output_dir):
+    """Snapshot: Treasury par curve + a 10Y benchmark bond + 3-rung ladder."""
+    result = {"timestamp": datetime.now().isoformat()}
+    try:
+        from backend.services.bond_analytics import (
+            Bond, bond_analytics, key_rate_durations, ladder_analytics, treasury_curve,
+        )
+        # Treasury curve from FRED (best-effort)
+        try:
+            curve = treasury_curve()
+            result["treasury_curve"] = curve
+        except Exception as e:
+            result["treasury_curve_error"] = str(e)
+
+        # 10y benchmark @ par
+        bench = Bond(face=100, coupon_rate=0.045, maturity_years=10, freq=2)
+        result["benchmark_10y_4_5"] = bond_analytics(bench, 100.0)
+        result["benchmark_10y_4_5_krd"] = key_rate_durations(bench, 100.0)
+
+        # Three-rung ladder (2y/5y/10y, equal weight)
+        positions = [
+            {"maturity_years": 2, "coupon_rate": 0.04},
+            {"maturity_years": 5, "coupon_rate": 0.04},
+            {"maturity_years": 10, "coupon_rate": 0.04},
+        ]
+        result["ladder_2_5_10"] = ladder_analytics(positions)
+    except Exception as e:
+        result["error"] = f"{type(e).__name__}: {e}"
+    _save(output_dir, "bond_lab.json", result)
+    print(f"    [OK] bond_lab snapshot")
+    return result
+
+
+def collect_edgar_events(output_dir, cycle=1):
+    """Pull last 30 days of high-materiality 8-Ks for a small ticker probe set."""
+    result = {"timestamp": datetime.now().isoformat()}
+    try:
+        from backend.services.edgar_events import (
+            fetch_events_for_ticker, event_summary,
+        )
+        # Keep this very light to stay under SEC's 10 req/s rate ceiling
+        probes = ["AAPL", "MSFT", "JPM"]
+        all_events = []
+        per_ticker = {}
+        for t in probes:
+            try:
+                evts = fetch_events_for_ticker(t, days_back=60, high_materiality_only=True)
+                per_ticker[t] = len(evts)
+                all_events.extend(evts)
+            except Exception as e:
+                per_ticker[t] = f"error: {e}"
+        result["per_ticker_count"] = per_ticker
+        result["summary"] = event_summary(all_events)
+        result["sample_event"] = all_events[0].to_dict() if all_events else None
+    except Exception as e:
+        result["error"] = f"{type(e).__name__}: {e}"
+    _save(output_dir, "edgar_events.json", result)
+    print(f"    [OK] edgar_events snapshot")
+    return result
+
+
+def collect_esg(output_dir):
+    """Sample ESG scores for 3 representative tickers (best-effort, may be empty without keys)."""
+    result = {"timestamp": datetime.now().isoformat(), "scores": {}}
+    try:
+        from backend.services.esg import compute_esg_score
+        for t in ("AAPL", "MSFT", "TSLA"):
+            try:
+                result["scores"][t] = compute_esg_score(t)
+            except Exception as e:
+                result["scores"][t] = {"error": f"{type(e).__name__}: {e}"}
+    except Exception as e:
+        result["error"] = f"{type(e).__name__}: {e}"
+    _save(output_dir, "esg.json", result)
+    print(f"    [OK] esg snapshot")
+    return result
+
+
+def collect_fx_dashboard(output_dir):
+    result = {"timestamp": datetime.now().isoformat()}
+    try:
+        from backend.services.fx_curves import fx_dashboard
+        # Limit to 6 pairs to keep yfinance + FRED fan-out modest
+        from backend.services.fx_curves import DEFAULT_PAIRS
+        result["fx"] = fx_dashboard(pairs=DEFAULT_PAIRS[:6])
+    except Exception as e:
+        result["error"] = f"{type(e).__name__}: {e}"
+    _save(output_dir, "fx_dashboard.json", result)
+    print(f"    [OK] fx_dashboard snapshot")
+    return result
+
+
+def collect_commodities_dashboard(output_dir):
+    result = {"timestamp": datetime.now().isoformat()}
+    try:
+        from backend.services.commodity_curves import commodity_dashboard
+        # Pull 6 markets only to stay snappy in the lab
+        result["commodities"] = commodity_dashboard(
+            symbols=["WTI", "BRENT", "NATGAS", "GOLD", "COPPER", "CORN"], n_months=6
+        )
+    except Exception as e:
+        result["error"] = f"{type(e).__name__}: {e}"
+    _save(output_dir, "commodities_dashboard.json", result)
+    print(f"    [OK] commodities_dashboard snapshot")
+    return result
+
+
+def collect_crypto_defi(output_dir):
+    result = {"timestamp": datetime.now().isoformat()}
+    try:
+        from backend.services.crypto_market import crypto_dashboard
+        result["crypto"] = crypto_dashboard(top_n=10)
+    except Exception as e:
+        result["crypto_error"] = f"{type(e).__name__}: {e}"
+    try:
+        from backend.services.defi_metrics import defi_dashboard
+        result["defi"] = defi_dashboard()
+    except Exception as e:
+        result["defi_error"] = f"{type(e).__name__}: {e}"
+    _save(output_dir, "crypto_defi.json", result)
+    print(f"    [OK] crypto_defi snapshot")
+    return result
+
+
+def collect_portfolio_currency(output_dir):
+    """Mixed-currency probe portfolio — exercises FX translation logic."""
+    result = {"timestamp": datetime.now().isoformat()}
+    try:
+        from backend.services.portfolio_currency import portfolio_currency_report
+        positions = [
+            {"ticker": "AAPL", "shares": 50, "current_price": 200.0},     # USD
+            {"ticker": "ASML.AS", "shares": 4, "current_price": 800.0},   # EUR
+            {"ticker": "7203.T", "shares": 100, "current_price": 2500.0}, # JPY
+            {"ticker": "RIO.L", "shares": 30, "current_price": 50.0},     # GBP
+        ]
+        result["report"] = portfolio_currency_report(positions, base="USD")
+    except Exception as e:
+        result["error"] = f"{type(e).__name__}: {e}"
+    _save(output_dir, "portfolio_currency.json", result)
+    print(f"    [OK] portfolio_currency snapshot")
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def run_engine_data_collection(output_dir, cycle):
@@ -1125,6 +1273,14 @@ def run_engine_data_collection(output_dir, cycle):
         ("economic_surprise", "Computing economic surprise index", lambda d: collect_economic_surprise(d)),
         ("liquidity_snapshot", "Measuring liquidity risk", lambda d: collect_liquidity_snapshot(d)),
         ("copula_snapshot", "Fitting copula tail models", lambda d: collect_copula_snapshot(d)),
+        # ── v13 ──
+        ("bond_lab", "Sampling bond analytics + Treasury curve", lambda d: collect_bond_lab(d)),
+        ("edgar_events", "Pulling SEC 8-K materiality stream", lambda d: collect_edgar_events(d, cycle)),
+        ("esg", "Probing ESG provider blends", lambda d: collect_esg(d)),
+        ("fx_dashboard", "Sampling G10 FX forwards", lambda d: collect_fx_dashboard(d)),
+        ("commodities_dashboard", "Sampling commodity curves", lambda d: collect_commodities_dashboard(d)),
+        ("crypto_defi", "Snapping crypto + DeFi TVL", lambda d: collect_crypto_defi(d)),
+        ("portfolio_currency", "Probing multi-currency portfolio", lambda d: collect_portfolio_currency(d)),
         ("code_metrics", "Measuring code quality", lambda d: collect_code_metrics(d)),
     ]
 

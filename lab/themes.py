@@ -167,6 +167,26 @@ Add a substantial new institutional capability. Check the hypothesis
 ledger below first — do not re-attempt something that failed unless the
 approach is materially different. Full service + tests + endpoint +
 frontend client entry.
+
+v13 expansion areas (these are NEW — wire frontend/SDK around them, or
+extend them with adjacent capabilities):
+  - Bond Lab (services/bond_analytics.py): per-bond YTM/duration/convexity/
+    KRD + Treasury curve. Adjacent: TIPS analytics, bond-ETF pass-through
+    duration, OAS via FRED option-adjusted spreads, ladder backtester.
+  - SEC EDGAR 8-K stream (services/edgar_events.py): item-level event
+    classifier. Adjacent: FinBERT on exhibit text for sentiment, per-
+    ticker event-driven backtester, alerting on materiality > X.
+  - ESG card (services/esg.py): blended Finnhub+FMP. Adjacent: ESG-
+    factor decomposition vs returns, controversies-flag screen.
+  - Multi-asset markets (services/{fx_curves,commodity_curves}.py):
+    G10 FX, futures curves. Adjacent: COT positioning, FX vol surface,
+    commodity carry strategy, gold-vs-real-yields chart.
+  - Crypto/DeFi (services/{crypto_market,defi_metrics}.py): CoinGecko +
+    DefiLlama. Adjacent: BTC-vs-SPY copula tail dependence using existing
+    copula module, on-chain factor (MVRV) crash-model overlay.
+  - Multi-currency portfolio (services/portfolio_currency.py): FX-aware
+    accounting. Adjacent: hedged-vs-unhedged backtest, IRP forward
+    pricing per holding, currency-risk overlay in tearsheet.
 """,
     "audit": """
 ## Theme: AUDIT
