@@ -1,0 +1,18 @@
+Done. Here's a summary of the deep audit:
+
+## Cycle 081 — Deep Audit Results
+
+### 3 Real Bugs Found & Fixed
+
+**Bug 1 (HIGH IMPACT):** `monte_carlo.py:575` — `annual_return_pct` used `sim_cfg["forecast_years"]=5` instead of actual `days/252` when `forecast_days_override` was provided. A 1-year simulation reported **1.24%** annual return instead of the correct **6.37%** (5x understatement).
+
+**Bug 2 (MEDIUM IMPACT):** `drawdown_analyzer.py:266` — Rolling max drawdown loop started at `range(window, ...)` which produced slice `prices[1:window+1]`, **skipping index 0**. The first window never included the first data point, missing any drawdown that started at the beginning of the series. Test confirmed: reported 0.0% MDD when actual was -20%.
+
+**Bug 3 (LOW IMPACT):** `copula_tail.py:262-267` — Dead code used `stats.gamma(x).args[0]` (creates a gamma distribution, returns its shape parameter) instead of the gamma function. The correct `gammaln` computation was in a try/except fallback. Cleaned up to make the correct code the primary path.
+
+### Validation
+- **8 regression tests** written (test-first methodology)
+- **1614 → 1622 tests** all passing
+- **0 regressions**
+
+---STDERR---
