@@ -150,3 +150,15 @@
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Beginner Mode — documentElement gets data-beginner="true" via Providers.
+ * Elements marked data-advanced are hidden in beginner mode.
+ * Elements marked data-beginner-only are only visible in beginner mode.
+ * Existing components opt in without needing React wrappers.
+ */
+html[data-beginner="true"] [data-advanced] {
+  display: none !important;
+}
+html:not([data-beginner]) [data-beginner-only] {
+  display: none !important;
+}
