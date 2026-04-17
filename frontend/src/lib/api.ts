@@ -507,6 +507,26 @@ export interface MarketStatus {
     n_train: number;
     n_events: number;
   } | null;
+  // Cycle_080 integrations
+  vol_regime: {
+    regime: string;
+    current_30d_vol_pct: number | null;
+    percentile: number | null;
+    interpretation: string;
+  } | null;
+  crash_intervals: Record<string, {
+    point_estimate: number;
+    lower: number;
+    upper: number;
+    width: number;
+  }> | null;
+  market_drawdown: {
+    current_drawdown_pct: number;
+    max_drawdown_pct: number | null;
+    total_drawdowns: number;
+    avg_recovery_days: number | null;
+    rolling_sharpe_1y: number | null;
+  } | null;
   last_updated: string;
 }
 
@@ -901,6 +921,17 @@ export interface ScreenerStock {
   trend_direction?: string | null;
   max_drawdown_pct?: number | null;
   current_drawdown_pct?: number | null;
+  // Signal sub-scores + factor style (cycle_080)
+  options_score?: number | null;
+  earnings_score?: number | null;
+  insider_score?: number | null;
+  ta_score?: number | null;
+  factor_style?: string | null;
+  factor_alpha?: number | null;
+  pattern_bias?: string | null;
+  pattern_count?: number | null;
+  dividend_yield?: number | null;
+  dividend_safety?: string | null;
 }
 
 export interface ScreenerResponse {

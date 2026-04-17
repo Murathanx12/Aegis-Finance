@@ -278,6 +278,17 @@ def _screener() -> dict:
             except Exception as e:
                 logger.debug("screener dividend skip %s: %s", ticker, e)
 
+            # Factor style classification (value/growth/blend) — lightweight
+            _factor_style = None
+            _factor_alpha = None
+            try:
+                fe = r.get("factor_exposure")
+                if fe:
+                    _factor_style = fe.get("style", {}).get("value")
+                    _factor_alpha = fe.get("alpha_annual")
+            except Exception:
+                pass
+
             return {
                 "ticker": r["ticker"],
                 "name": r.get("name", ticker),
@@ -316,6 +327,14 @@ def _screener() -> dict:
                 "pattern_count": _pattern_count,
                 "dividend_yield": _div_yield,
                 "dividend_safety": _div_safety,
+                # Signal sub-scores (cycle_080 integration — previously computed but not exposed)
+                "options_score": options_score,
+                "earnings_score": earnings_score,
+                "insider_score": insider_score,
+                "ta_score": _ta_score,
+                # Factor style (value/growth/blend from FF5 decomposition)
+                "factor_style": _factor_style,
+                "factor_alpha": round(_factor_alpha * 100, 2) if _factor_alpha is not None else None,
             }
         except Exception as e:
             logger.warning("screener skip %s: %s", ticker, e)
