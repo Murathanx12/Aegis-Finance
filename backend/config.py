@@ -640,6 +640,19 @@ config: dict = {
         },
     },
 
+    # ── DIVIDEND INTELLIGENCE ────────────────────────────────────────────
+    "dividend_intelligence": {
+        "safety_weights": {
+            "payout_ratio": 0.30,
+            "fcf_coverage": 0.25,
+            "earnings_stability": 0.25,
+            "debt_equity": 0.20,
+        },
+        "ddm_discount_rate": 0.10,       # Gordon Growth Model cost of equity
+        "ddm_terminal_growth": 0.03,     # Long-run dividend growth assumption
+        "income_projection_amount": 10000,  # Default investment for income calc
+    },
+
     # ── CACHE TTLs (seconds) ──────────────────────────────────────────────
     "cache": {
         "ttl_hours": 1,
