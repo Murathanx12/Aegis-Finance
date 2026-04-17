@@ -18,6 +18,7 @@ import {
   Menu,
   Sun,
   Moon,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -26,6 +27,7 @@ import { useBeginnerMode } from "@/hooks/use-beginner-mode";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/copilot", label: "Copilot", icon: Sparkles },
   { href: "/outlook", label: "Market Outlook", icon: TrendingDown },
   { href: "/stock", label: "Stock Analysis", icon: BarChart3 },
   { href: "/screener", label: "Stock Screener", icon: ListFilter },
