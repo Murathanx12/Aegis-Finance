@@ -1051,3 +1051,27 @@ def get_scenario_configs() -> dict:
         s["probability"] = s.pop("base_probability")
         scenarios[name] = s
     return scenarios
+
+
+# ── Paper Portfolio Configuration ────────────────────────────────────────────
+
+
+def load_paper_portfolios() -> dict:
+    """Load paper portfolio definitions from YAML.
+
+    Returns raw dict — validated by Pydantic schemas at use site.
+    Read-only at process start; never modified at runtime.
+    """
+    yaml_path = BACKEND_DIR / "data" / "paper_portfolios.yaml"
+    if not yaml_path.exists():
+        return {}
+    try:
+        import yaml
+        with open(yaml_path, "r") as f:
+            return yaml.safe_load(f) or {}
+    except ImportError:
+        import json as _json
+        raise ImportError("PyYAML required for paper portfolio config: pip install pyyaml")
+
+
+paper_portfolios: dict = load_paper_portfolios()

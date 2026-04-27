@@ -1,0 +1,211 @@
+# Aegis Finance — Paper Portfolio Configuration
+# ==============================================
+#
+# Single source of truth for all reference portfolio rules.
+# All numbers here; never hardcoded in service files.
+# Tuning happens via config edits + replay backtest, never by silent code changes.
+#
+# Config is read-only at process start. Versioned via SHA-256 hash
+# stored in PaperPortfolio.config_version.
+
+# ── Ticker Universe ──────────────────────────────────────────────────────────
+# Frozen quarterly. New names enter only at quarterly review.
+# This prevents survivorship-bias drift in backtesting.
+
+universe:
+  frozen_until: "2026-07-01"  # next quarterly review date
+
+  # 11 S&P sector ETFs
+  sector_etfs:
+    - XLK   # Technology
+    - XLV   # Health Care
+    - XLF   # Financials
+    - XLE   # Energy
+    - XLY   # Consumer Discretionary
+    - XLP   # Consumer Staples
+    - XLI   # Industrials
+    - XLU   # Utilities
+    - XLRE  # Real Estate
+    - XLB   # Materials
+    - XLC   # Communication Services
+
+  # 6 broad equity ETFs
+  broad_equity:
+    - SPY   # S&P 500
+    - QQQ   # Nasdaq 100
+    - IWM   # Russell 2000
+    - VTI   # Total US Stock Market
+    - VEA   # Developed International
+    - VWO   # Emerging Markets
+
+  # 7 bond ETFs
+  bond_etfs:
+    - AGG   # US Aggregate Bond
+    - TLT   # 20+ Year Treasury
+    - IEF   # 7-10 Year Treasury
+    - SHY   # 1-3 Year Treasury
+    - LQD   # Investment Grade Corporate
+    - HYG   # High Yield Corporate
+    - TIP   # Treasury Inflation-Protected
+
+  # 4 alternatives (commodity / real asset)
+  alternatives:
+    - GLD   # Gold
+    - IAU   # Gold (iShares)
+    - USO   # Crude Oil
+    - VNQ   # Real Estate (REIT)
+
+  # ~52 representative individual stocks across sectors
+  individual_stocks:
+    technology:
+      - AAPL  # Apple
+      - MSFT  # Microsoft
+      - GOOGL # Alphabet
+      - META  # Meta Platforms
+      - NVDA  # NVIDIA
+      - AMD   # Advanced Micro Devices
+      - AVGO  # Broadcom
+      - CRM   # Salesforce
+      - ADBE  # Adobe
+      - ORCL  # Oracle
+      - TSM   # Taiwan Semi
+
+    semiconductors:
+      - MRVL  # Marvell
+      - MU    # Micron
+      - INTC  # Intel
+
+    consumer_internet:
+      - AMZN  # Amazon
+      - NFLX  # Netflix
+      - DKNG  # DraftKings
+      - TTWO  # Take-Two Interactive
+
+    healthcare_biotech:
+      - LLY   # Eli Lilly
+      - JNJ   # Johnson & Johnson
+      - UNH   # UnitedHealth
+      - ABBV  # AbbVie
+      - PFE   # Pfizer
+      - DHR   # Danaher
+
+    financials:
+      - JPM   # JPMorgan Chase
+      - GS    # Goldman Sachs
+      - V     # Visa
+      - MA    # Mastercard
+
+    energy_materials:
+      - XOM   # ExxonMobil
+      - CVX   # Chevron
+      - FSLR  # First Solar
+      - NEE   # NextEra Energy
+
+    industrials_defense:
+      - CAT   # Caterpillar
+      - HON   # Honeywell
+      - LMT   # Lockheed Martin
+      - BA    # Boeing
+      - GE    # GE Aerospace
+
+    consumer_staples:
+      - PG    # Procter & Gamble
+      - KO    # Coca-Cola
+      - WMT   # Walmart
+      - COST  # Costco
+
+    emerging_tech:
+      - PLTR  # Palantir
+      - MSTR  # MicroStrategy (Bitcoin proxy)
+      - COIN  # Coinbase
+      - RKLB  # Rocket Lab
+
+    quantum_cleantech:
+      - RGTI  # Rigetti Computing
+      - IONQ  # IonQ
+      - SLDP  # Solid Power
+
+# ── Lane Definitions ─────────────────────────────────────────────────────────
+# Three rules-based reference portfolios + one personal conviction tracker.
+# Differ on risk tolerance, not predictions.
+
+conservative:
+  # Capital preservation — lowest equity, highest bonds
+  target_equity_pct: 0.40      # 40% equities
+  target_bond_pct: 0.50        # 50% bonds
+  target_alt_pct: 0.10         # 10% alternatives (gold, REIT)
+  optimizer: hrp                # HRP on bonds, equal-weight on equity sleeve
+  max_single_name: 0.03        # no single position > 3%
+  max_sector: 0.25             # no sector > 25%
+  rebalance_trigger_drift: 0.05  # rebalance when any weight drifts > 5%
+  rebalance_frequency: monthly   # also check monthly regardless of drift
+  crash_overlay:
+    crash_prob_threshold: 0.25   # arm crash overlay when 3m prob > 25%
+    equity_cut_pct: 0.20         # cut equity allocation by 20% (e.g., 40% → 32%)
+  transaction_cost_bps: 5       # 5 basis points per trade
+  slippage_bps: 1               # 1 basis point slippage estimate
+
+balanced:
+  # Balanced growth + income — Black-Litterman with macro views
+  target_equity_pct: 0.70
+  target_bond_pct: 0.25
+  target_alt_pct: 0.05
+  optimizer: black-litterman
+  max_single_name: 0.05
+  max_sector: 0.30
+  rebalance_trigger_drift: 0.05
+  rebalance_frequency: monthly
+  crash_overlay:
+    crash_prob_threshold: 0.30
+    equity_cut_pct: 0.15
+  transaction_cost_bps: 5
+  slippage_bps: 1
+
+aggressive:
+  # Maximum growth — full equity universe via HRP
+  target_equity_pct: 0.95
+  target_bond_pct: 0.05
+  target_alt_pct: 0.00
+  optimizer: hrp
+  max_single_name: 0.08
+  max_sector: 0.40
+  rebalance_trigger_drift: 0.07
+  rebalance_frequency: weekly
+  crash_overlay:
+    crash_prob_threshold: 0.40
+    equity_cut_pct: 0.10
+  transaction_cost_bps: 5
+  slippage_bps: 1
+
+# ── Personal Conviction Lane ─────────────────────────────────────────────────
+# Author's real portfolio tracked for honest skill measurement.
+# NOT a recommendation engine. Measures whether conviction adds value.
+
+personal:
+  test_fixture_tickers:
+    - TVTX
+    - DKNG
+    - ALMS
+    - MSTR
+    - APLT
+    - FSLR
+    - AMZN
+    - TTWO
+    - SLDP
+    - MRVL
+    - RGTI
+    - APMX
+    - NTLA
+  benchmark: SPY
+  skill_min_months: 24          # don't claim skill until 24 months of tracked decisions
+  skill_min_t_stat: 2.0         # require t-stat > 2 for skill significance
+  rationale_min_chars: 50       # every decision needs >= 50 chars of written reasoning
+
+# ── Inception Parameters ─────────────────────────────────────────────────────
+
+inception:
+  notional_usd: 100000.0       # each reference portfolio starts with $100k
+  benchmarks:
+    - SPY                       # S&P 500 equity benchmark
+    - AGG                       # US aggregate bond benchmark
+    - 60-40                     # classic 60% SPY / 40% AGG blend
