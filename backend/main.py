@@ -18,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.cache import cache_clear, set_cache_status, cache_ready, cache_status
 from backend.middleware import add_timing_middleware
-from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, markets, crypto
+from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, markets, crypto, portfolio_intelligence
 
 logging.basicConfig(
     level=logging.INFO,
@@ -65,7 +65,28 @@ async def lifespan(app: FastAPI):
     # Fire-and-forget: prewarm cache in background so the server starts
     # accepting requests (including health checks) immediately.
     asyncio.create_task(_prewarm_cache())
+
+    # Initialize Portfolio Intelligence DB + scheduler
+    try:
+        from backend.db import init_db
+        init_db()
+        logger.info("Portfolio Intelligence DB initialized")
+    except Exception as e:
+        logger.warning("PI DB init failed (non-fatal): %s", e)
+
+    try:
+        from backend.services.portfolio_intelligence.scheduler import setup_scheduler
+        setup_scheduler()
+    except Exception as e:
+        logger.warning("PI scheduler setup failed (non-fatal): %s", e)
+
     yield
+
+    try:
+        from backend.services.portfolio_intelligence.scheduler import shutdown_scheduler
+        shutdown_scheduler()
+    except Exception:
+        pass
     cache_clear()
     logger.info("Aegis Finance API shutdown")
 
@@ -115,6 +136,7 @@ app.include_router(bond.router)
 app.include_router(events.router)
 app.include_router(markets.router)
 app.include_router(crypto.router)
+app.include_router(portfolio_intelligence.router)
 
 
 @app.get("/")

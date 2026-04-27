@@ -35,6 +35,11 @@ out/
 .DS_Store
 Thumbs.db
 
+# Portfolio Intelligence SQLite DB (runtime-created, not checked in)
+backend/data/aegis_pi.db
+backend/data/aegis_pi.db-wal
+backend/data/aegis_pi.db-shm
+
 # Cache
 data_cache/
 *.parquet

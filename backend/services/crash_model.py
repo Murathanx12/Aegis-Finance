@@ -304,14 +304,22 @@ class CrashPredictor:
         }
 
     def _blend_scores(
-        self, features: pd.DataFrame, horizon: str
+        self, features: pd.DataFrame, horizon: str,
+        external_features: pd.DataFrame | None = None,
     ) -> tuple[np.ndarray, str]:
         """Compute blended LGB+LR scores for a given horizon.
 
         Returns (blended_scores, resolved_horizon) where resolved_horizon
         is the actual horizon used (may differ if requested horizon was missing).
+
+        If external_features is provided, uses those directly instead of
+        selecting from the features DataFrame. Used by replay engine to
+        pass pre-sliced features without look-ahead leakage.
         """
-        X = features[self.feature_names] if isinstance(features, pd.DataFrame) else features
+        if external_features is not None:
+            X = external_features
+        else:
+            X = features[self.feature_names] if isinstance(features, pd.DataFrame) else features
 
         if horizon not in self.lgb_models:
             horizon = list(self.lgb_models.keys())[0]
@@ -337,11 +345,18 @@ class CrashPredictor:
         return blended, horizon
 
     def predict_proba(
-        self, features: pd.DataFrame, horizon: str = "3m"
+        self, features: pd.DataFrame, horizon: str = "3m",
+        external_features: pd.DataFrame | None = None,
     ) -> np.ndarray:
         """Predict calibrated crash probability.
 
         Pipeline: features -> LightGBM + Logistic blend -> isotonic calibration
+
+        Args:
+            features: DataFrame with market features (standard path)
+            horizon: "3m", "6m", or "12m"
+            external_features: Pre-computed features for replay without look-ahead.
+                If provided, bypasses internal feature selection from `features`.
         """
         if not self.is_trained:
             raise RuntimeError("Model not trained — call train() or load_model() first")
@@ -353,7 +368,7 @@ class CrashPredictor:
         use_base_rate_fallback = cal_cfg.get("fallback_to_base_rate", True)
         isotonic_y_min = cal_cfg.get("isotonic_y_min", 0.01)
 
-        blended, horizon = self._blend_scores(features, horizon)
+        blended, horizon = self._blend_scores(features, horizon, external_features=external_features)
 
         if horizon in self.calibrators:
             # Check for out-of-distribution blended scores
