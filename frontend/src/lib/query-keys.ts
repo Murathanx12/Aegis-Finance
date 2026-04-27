@@ -57,6 +57,13 @@ export const queryKeys = {
     crossAsset: ["analytics", "cross-asset"] as const,
     macroRegime: ["analytics", "macro-regime"] as const,
   },
+  pi: {
+    referenceState: (lane: string) => ["pi", "reference", lane, "state"] as const,
+    referenceHistory: (lane: string) => ["pi", "reference", lane, "history"] as const,
+    referenceExplain: (lane: string) => ["pi", "reference", lane, "explain"] as const,
+    compare: ["pi", "compare"] as const,
+    replay: (lane: string) => ["pi", "replay", lane] as const,
+  },
 } as const;
 
 /** Stale times by endpoint category (ms) */
@@ -67,4 +74,5 @@ export const staleTimes = {
   crash: 30 * 60 * 1000,      // 30 min
   simulation: 60 * 60 * 1000, // 1 hr
   news: 15 * 60 * 1000,       // 15 min
+  pi: 30 * 60 * 1000,         // 30 min
 } as const;

@@ -2628,3 +2628,119 @@ export interface CrossAssetDashboard {
   n_assets_tracked: number;
   asset_classes: string[];
 }
+
+// ── Portfolio Intelligence ──────────────────────────────────
+
+export interface PIMetricPack {
+  total_return: number;
+  annualized_return: number;
+  annualized_volatility: number;
+  sharpe_ratio: number | null;
+  sortino_ratio: number | null;
+  max_drawdown: number;
+  max_drawdown_duration_days: number | null;
+}
+
+export interface PIRiskFlag {
+  flag_type: string;
+  severity: "info" | "warning" | "critical";
+  message: string;
+  details: Record<string, unknown>;
+}
+
+export interface PISnapshotResponse {
+  portfolio_id: string;
+  date: string;
+  weights: Record<string, number>;
+  metrics: PIMetricPack | null;
+  flags: PIRiskFlag[];
+  sector_exposure: Record<string, number>;
+  factor_exposure: Record<string, number>;
+}
+
+export interface PIRebalanceEvent {
+  date: string;
+  reason: string;
+  turnover: number;
+  cost: number;
+  crash_prob: number | null;
+  overlay_armed: boolean;
+  n_trades: number;
+  portfolio_value: number;
+}
+
+export interface PIEquityCurvePoint {
+  date: string;
+  value: number;
+}
+
+export interface PIReplayResult {
+  lane: string;
+  start_date: string;
+  end_date: string;
+  equity_curve: PIEquityCurvePoint[];
+  metrics: PIMetricPack | null;
+  rebalance_log: PIRebalanceEvent[];
+  crash_guard_activations: number;
+  total_rebalances: number;
+  total_turnover: number;
+  total_cost_bps: number;
+}
+
+export interface PICompareResponse {
+  lanes: Record<string, PIMetricPack | null>;
+  benchmarks: Record<string, PIMetricPack | null>;
+}
+
+export interface PIHistoryResponse {
+  portfolio_id: string;
+  equity_curve: PIEquityCurvePoint[];
+  rebalance_log: PIRebalanceEvent[];
+}
+
+export interface PIExplainResponse {
+  portfolio_id: string;
+  explanation: string;
+  last_rebalance_date: string | null;
+}
+
+// PI: Real portfolio analyze
+export function piAnalyzePortfolio(holdings: Holding[]) {
+  return fetchAPI<PISnapshotResponse>("/api/pi/real-portfolio/analyze", {
+    method: "POST",
+    body: JSON.stringify({ holdings }),
+  });
+}
+
+// PI: Reference lane state
+export function piGetReferenceState(laneId: string) {
+  return fetchAPI<PISnapshotResponse>(`/api/pi/reference/${laneId}/state`);
+}
+
+// PI: Reference lane history
+export function piGetReferenceHistory(laneId: string) {
+  return fetchAPI<PIHistoryResponse>(`/api/pi/reference/${laneId}/history`);
+}
+
+// PI: Reference lane explanation
+export function piGetReferenceExplain(laneId: string) {
+  return fetchAPI<PIExplainResponse>(`/api/pi/reference/${laneId}/explain`);
+}
+
+// PI: Compare all lanes
+export function piGetCompare() {
+  return fetchAPI<PICompareResponse>("/api/pi/compare");
+}
+
+// PI: Replay backtest
+export function piGetReplay(laneId: string) {
+  return fetchAPI<PIReplayResult>(`/api/pi/replay/${laneId}`);
+}
+
+// PI: Manual trigger
+export function piTriggerCheck(laneId?: string) {
+  const params = laneId ? `?lane=${laneId}` : "";
+  return fetchAPI<Record<string, unknown>>(`/api/pi/trigger-check${params}`, {
+    method: "POST",
+  });
+}
