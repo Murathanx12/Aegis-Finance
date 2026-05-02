@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import {
   LayoutDashboard,
@@ -112,9 +112,27 @@ function BeginnerToggle() {
 }
 
 function ThemeToggle() {
+  // Avoid SSR/client hydration mismatch — useTheme() returns undefined on the
+  // server and the actual theme on the client. Render a stable placeholder
+  // until mounted, then switch to the real toggle.
   const { theme, setTheme } = useTheme();
-  const isDark = theme === "dark";
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
+  if (!mounted) {
+    return (
+      <button
+        className="flex items-center gap-2 w-full rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground"
+        aria-label="Toggle theme"
+        suppressHydrationWarning
+      >
+        <Moon className="h-4 w-4" />
+        Theme
+      </button>
+    );
+  }
+
+  const isDark = theme === "dark";
   return (
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}

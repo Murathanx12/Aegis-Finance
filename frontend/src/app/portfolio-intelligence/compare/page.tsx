@@ -180,7 +180,21 @@ export default function ComparePage() {
       )}
 
       {compareQ.isLoading && (
-        <Skeleton className="h-48" />
+        <Card className="border-blue-500/30 bg-blue-500/5">
+          <CardContent className="py-4 space-y-3">
+            <p className="text-sm text-blue-400 font-medium">
+              Computing performance metrics for 3 lanes + SPY/AGG/60-40 over {period}…
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Cold first call runs 3 walk-forward replays plus 3 benchmark fetches.
+              Typical cold time: 2-5 minutes. Result is cached for 30 minutes thereafter.
+              The equity-curve overlay below will appear separately as each lane finishes.
+            </p>
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-5/6" />
+          </CardContent>
+        </Card>
       )}
 
       {compareData && (
@@ -232,6 +246,23 @@ export default function ComparePage() {
       )}
 
       {/* Equity Curves (5-year replay overlay — period selector does not apply) */}
+      {replayLoading && (
+        <Card>
+          <CardHeader><CardTitle className="text-sm">Equity Curves (5-year backtested replay)</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Loading replay data for{" "}
+              {[
+                conservativeQ.isLoading ? "Conservative" : null,
+                balancedQ.isLoading ? "Balanced" : null,
+                aggressiveQ.isLoading ? "Aggressive" : null,
+              ].filter(Boolean).join(", ")}
+              …
+            </p>
+            <Skeleton className="h-64 w-full" />
+          </CardContent>
+        </Card>
+      )}
       {!replayLoading && mergedCurve.length > 0 && (
         <Card>
           <CardHeader>
