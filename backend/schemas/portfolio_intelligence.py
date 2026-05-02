@@ -198,10 +198,51 @@ class SellGuardResponse(BaseModel):
 
 
 class ComparisonResponse(BaseModel):
-    """Side-by-side comparison of multiple lanes and benchmarks."""
-    lanes: dict[str, MetricPack]
-    benchmarks: dict[str, MetricPack]
+    """Side-by-side comparison of multiple lanes and benchmarks.
+
+    Phase 5b: lanes/benchmarks values may be None if computation failed
+    (e.g. data fetch error) rather than raising — this lets the frontend
+    render partial results gracefully. start_date/end_date are returned
+    by the router compare endpoint but optional so older callers
+    (compute_comparison service) don't break.
+    """
+    lanes: dict[str, Optional[MetricPack]]
+    benchmarks: dict[str, Optional[MetricPack]]
     period: str
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
+
+class HistoryEquityPoint(BaseModel):
+    """A single point on a portfolio equity curve."""
+    date: str
+    value: float
+
+
+class HistoryRebalanceEntry(BaseModel):
+    """A single rebalance event for the history response."""
+    date: str
+    reason: str
+    crash_prob: Optional[float] = None
+    overlay_armed: bool = False
+    explanation: str
+
+
+class HistoryResponse(BaseModel):
+    """Reference lane history — equity curve + rebalance log."""
+    portfolio_id: str
+    period: str
+    equity_curve: list[HistoryEquityPoint] = Field(default_factory=list)
+    rebalance_log: list[HistoryRebalanceEntry] = Field(default_factory=list)
+    has_rebalance_events: bool = False
+
+
+class ExplainResponse(BaseModel):
+    """Most-recent rebalance explanation. Shape is consistent whether or not events exist."""
+    portfolio_id: str
+    explanation: str
+    last_rebalance_date: Optional[str] = None
+    has_rebalance_events: bool = False
 
 
 class ReplayResult(BaseModel):

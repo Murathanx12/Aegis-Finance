@@ -160,7 +160,12 @@ class TestShouldRebalance:
     def test_exact_threshold_no_trigger(self):
         current = {"A": 0.75, "B": 0.25}
         target = {"A": 0.50, "B": 0.50}  # drift = 0.25 exactly (power-of-2, no FP error)
-        trigger, reason = should_rebalance(current, target, 0.25, "monthly", date(2026, 4, 1))
+        # Pin as_of_date to 1 day after last_rebalance so monthly schedule
+        # cannot fire — we're isolating the drift-threshold rule here.
+        trigger, reason = should_rebalance(
+            current, target, 0.25, "monthly",
+            date(2026, 4, 1), as_of_date=date(2026, 4, 2),
+        )
         assert trigger is False  # > not >=
 
     def test_monthly_schedule_triggers(self):

@@ -107,6 +107,15 @@ function ReferencePageContent() {
 
       {isLoading && (
         <div className="space-y-4">
+          <Card className="border-blue-500/30 bg-blue-500/5">
+            <CardContent className="py-3">
+              <p className="text-xs text-blue-400/80">
+                Running 5-year walk-forward replay on real Yahoo Finance data. First call
+                fetches ~80 tickers and runs ~260 weekly rebalances — typically 30-60 seconds.
+                Result is cached for 30 minutes.
+              </p>
+            </CardContent>
+          </Card>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20" />)}
           </div>

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ArrowLeft, Shield, TrendingUp, Zap,
+  ArrowLeft,
 } from "lucide-react";
 import { InfoTooltip } from "@/components/info-tooltip";
 import Link from "next/link";
@@ -16,23 +16,34 @@ import {
 } from "recharts";
 import {
   piGetReplay,
+  piGetCompare,
   type PIReplayResult,
+  type PIMetricPack,
 } from "@/lib/api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
 
 const LANES = ["conservative", "balanced", "aggressive"] as const;
+const BENCHMARKS = ["SPY", "AGG", "60-40"] as const;
 const LANE_COLORS: Record<string, string> = {
   conservative: "#3b82f6",
   balanced: "#f59e0b",
   aggressive: "#ef4444",
+  SPY: "#94a3b8",
+  AGG: "#64748b",
+  "60-40": "#475569",
 };
 const LANE_LABELS: Record<string, string> = {
   conservative: "Conservative",
   balanced: "Balanced",
   aggressive: "Aggressive",
+  SPY: "SPY",
+  AGG: "AGG",
+  "60-40": "60/40",
 };
+const PERIODS = ["1M", "3M", "6M", "YTD", "1Y", "3Y", "5Y", "ALL"] as const;
+type Period = typeof PERIODS[number];
 
-function MetricCell({ value, format, positive }: { value: number | null; format: "pct" | "num"; positive?: boolean }) {
+function MetricCell({ value, format, positive }: { value: number | null | undefined; format: "pct" | "num"; positive?: boolean }) {
   if (value == null) return <td className="py-2 px-3 text-right text-muted-foreground">—</td>;
 
   let display: string;
@@ -51,24 +62,42 @@ function MetricCell({ value, format, positive }: { value: number | null; format:
 }
 
 export default function ComparePage() {
-  const [selected, setSelected] = useState<Set<string>>(new Set(LANES));
-
-  const queries = Object.fromEntries(
-    LANES.map((lane) => [
-      lane,
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      useQuery({
-        queryKey: queryKeys.pi.replay(lane),
-        queryFn: () => piGetReplay(lane),
-        staleTime: staleTimes.pi,
-      }),
-    ])
+  const [period, setPeriod] = useState<Period>("3Y");
+  const [selected, setSelected] = useState<Set<string>>(
+    new Set([...LANES, ...BENCHMARKS])
   );
 
-  const isLoading = LANES.some((l) => queries[l].isLoading);
-  const results: Record<string, PIReplayResult | null> = Object.fromEntries(
-    LANES.map((l) => [l, queries[l].data ?? null])
-  );
+  // Compare endpoint — gives us lane MetricPacks + benchmark MetricPacks for the table
+  const compareQ = useQuery({
+    queryKey: [...queryKeys.pi.compare, period],
+    queryFn: () => piGetCompare([...LANES], period),
+    staleTime: staleTimes.pi,
+  });
+
+  // Replay endpoints — used for the equity-curve overlay (always 5y replay).
+  // Calling each useQuery explicitly to avoid Rules of Hooks violation.
+  const conservativeQ = useQuery({
+    queryKey: queryKeys.pi.replay("conservative"),
+    queryFn: () => piGetReplay("conservative"),
+    staleTime: staleTimes.pi,
+  });
+  const balancedQ = useQuery({
+    queryKey: queryKeys.pi.replay("balanced"),
+    queryFn: () => piGetReplay("balanced"),
+    staleTime: staleTimes.pi,
+  });
+  const aggressiveQ = useQuery({
+    queryKey: queryKeys.pi.replay("aggressive"),
+    queryFn: () => piGetReplay("aggressive"),
+    staleTime: staleTimes.pi,
+  });
+
+  const replayResults: Record<string, PIReplayResult | null> = {
+    conservative: conservativeQ.data ?? null,
+    balanced: balancedQ.data ?? null,
+    aggressive: aggressiveQ.data ?? null,
+  };
+  const replayLoading = conservativeQ.isLoading || balancedQ.isLoading || aggressiveQ.isLoading;
 
   const toggleLane = (lane: string) => {
     setSelected((prev) => {
@@ -79,8 +108,13 @@ export default function ComparePage() {
     });
   };
 
-  // Merge equity curves for overlay chart
-  const mergedCurve = mergeCurves(results, selected);
+  const mergedCurve = mergeCurves(replayResults, selected);
+
+  const compareData = compareQ.data;
+  const compareLanes = compareData?.lanes ?? {};
+  const compareBenchmarks = compareData?.benchmarks ?? {};
+
+  const compareError = compareQ.error ? (compareQ.error as Error).message : null;
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -91,22 +125,37 @@ export default function ComparePage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Compare Portfolios</h1>
           <p className="text-sm text-muted-foreground">
-            Side-by-side comparison of all reference lanes
+            Side-by-side comparison of reference lanes vs SPY, AGG, and 60/40
           </p>
         </div>
       </div>
 
-      {/* Lane Toggle */}
-      <div className="flex gap-2 flex-wrap">
-        {LANES.map((lane) => (
+      {/* Period Selector */}
+      <div className="flex gap-2 flex-wrap items-center">
+        <span className="text-xs text-muted-foreground mr-1">Period:</span>
+        {PERIODS.map((p) => (
           <Button
-            key={lane}
-            variant={selected.has(lane) ? "default" : "outline"}
+            key={p}
+            variant={period === p ? "default" : "outline"}
             size="sm"
-            onClick={() => toggleLane(lane)}
-            style={selected.has(lane) ? { backgroundColor: LANE_COLORS[lane] } : {}}
+            onClick={() => setPeriod(p)}
           >
-            {LANE_LABELS[lane]}
+            {p}
+          </Button>
+        ))}
+      </div>
+
+      {/* Toggle */}
+      <div className="flex gap-2 flex-wrap">
+        {[...LANES, ...BENCHMARKS].map((id) => (
+          <Button
+            key={id}
+            variant={selected.has(id) ? "default" : "outline"}
+            size="sm"
+            onClick={() => toggleLane(id)}
+            style={selected.has(id) ? { backgroundColor: LANE_COLORS[id] } : {}}
+          >
+            {LANE_LABELS[id] ?? id}
           </Button>
         ))}
       </div>
@@ -122,152 +171,180 @@ export default function ComparePage() {
         </CardContent>
       </Card>
 
-      {isLoading && (
-        <div className="space-y-4">
-          <Skeleton className="h-80" />
-          <Skeleton className="h-48" />
-        </div>
+      {compareError && (
+        <Card className="border-red-500/30">
+          <CardContent className="py-4 text-sm text-red-400">
+            Compare failed: {compareError}
+          </CardContent>
+        </Card>
       )}
 
-      {!isLoading && (
-        <>
-          {/* Metrics Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Performance Metrics (5-Year Replay)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-muted-foreground text-xs border-b border-border/40">
-                      <th className="text-left py-2 px-3">Lane</th>
-                      <th className="text-right py-2 px-3">Total Return</th>
-                      <th className="text-right py-2 px-3">Ann. Return</th>
-                      <th className="text-right py-2 px-3">Ann. Vol</th>
-                      <th className="text-right py-2 px-3">
-                        Sharpe
-                        <InfoTooltip text="Risk-adjusted return (Rf = 4%)" />
-                      </th>
-                      <th className="text-right py-2 px-3">Max DD</th>
-                      <th className="text-right py-2 px-3">Rebalances</th>
-                      <th className="text-right py-2 px-3">Turnover</th>
-                      <th className="text-right py-2 px-3">Cost</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {LANES.filter((l) => selected.has(l)).map((lane) => {
-                      const r = results[lane];
-                      const m = r?.metrics;
-                      return (
-                        <tr key={lane} className="border-b border-border/20 hover:bg-muted/20">
-                          <td className="py-2 px-3">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: LANE_COLORS[lane] }} />
-                              <span className="font-medium">{LANE_LABELS[lane]}</span>
-                            </div>
-                          </td>
-                          <MetricCell value={m?.total_return ?? null} format="pct" positive />
-                          <MetricCell value={m?.annualized_return ?? null} format="pct" positive />
-                          <MetricCell value={m?.annualized_volatility ?? null} format="pct" />
-                          <MetricCell value={m?.sharpe_ratio ?? null} format="num" positive />
-                          <MetricCell value={m?.max_drawdown ?? null} format="pct" />
-                          <td className="py-2 px-3 text-right tabular-nums">{r?.total_rebalances ?? "—"}</td>
-                          <MetricCell value={r?.total_turnover ?? null} format="pct" />
-                          <td className="py-2 px-3 text-right tabular-nums text-muted-foreground">
-                            {r?.total_cost_bps != null ? `${r.total_cost_bps.toFixed(1)} bps` : "—"}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+      {compareQ.isLoading && (
+        <Skeleton className="h-48" />
+      )}
 
-          {/* Overlaid Equity Curves */}
-          {mergedCurve.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Equity Curves (Overlaid)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <AreaChart data={mergedCurve}>
-                    <defs>
-                      {LANES.filter((l) => selected.has(l)).map((lane) => (
-                        <linearGradient key={lane} id={`grad-${lane}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={LANE_COLORS[lane]} stopOpacity={0.15} />
-                          <stop offset="95%" stopColor={LANE_COLORS[lane]} stopOpacity={0} />
-                        </linearGradient>
-                      ))}
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
-                      tickFormatter={(d) => d.slice(0, 7)}
-                      interval="preserveStartEnd"
+      {compareData && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">
+              Performance Metrics ({compareData.start_date} to {compareData.end_date})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-muted-foreground text-xs border-b border-border/40">
+                    <th className="text-left py-2 px-3">Portfolio</th>
+                    <th className="text-right py-2 px-3">Total Return</th>
+                    <th className="text-right py-2 px-3">Ann. Return</th>
+                    <th className="text-right py-2 px-3">Ann. Vol</th>
+                    <th className="text-right py-2 px-3">
+                      Sharpe
+                      <InfoTooltip text="Risk-adjusted return (Rf = 4%)" />
+                    </th>
+                    <th className="text-right py-2 px-3">Max DD</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {LANES.filter((l) => selected.has(l)).map((lane) => (
+                    <MetricRow
+                      key={lane}
+                      label={LANE_LABELS[lane]}
+                      colorDot={LANE_COLORS[lane]}
+                      metrics={compareLanes[lane] ?? null}
                     />
-                    <YAxis
-                      tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
-                      tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+                  ))}
+                  {BENCHMARKS.filter((b) => selected.has(b)).map((bench) => (
+                    <MetricRow
+                      key={bench}
+                      label={LANE_LABELS[bench] ?? bench}
+                      colorDot={LANE_COLORS[bench]}
+                      metrics={compareBenchmarks[bench] ?? null}
+                      muted
                     />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
-                      labelFormatter={(d) => d}
-                      formatter={(v, name) => [
-                        `$${Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
-                        LANE_LABELS[String(name)] || String(name),
-                      ]}
-                    />
-                    <Legend
-                      formatter={(value) => LANE_LABELS[value] || value}
-                    />
-                    {LANES.filter((l) => selected.has(l)).map((lane) => (
-                      <Area
-                        key={lane}
-                        type="monotone"
-                        dataKey={lane}
-                        stroke={LANE_COLORS[lane]}
-                        fill={`url(#grad-${lane})`}
-                        strokeWidth={2}
-                      />
-                    ))}
-                  </AreaChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-          {/* Crash Guard Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Crash Guard Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 md:grid-cols-3">
-                {LANES.filter((l) => selected.has(l)).map((lane) => {
-                  const r = results[lane];
-                  return (
-                    <div key={lane} className="flex items-center justify-between rounded-lg bg-muted/30 p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: LANE_COLORS[lane] }} />
-                        <span className="text-sm font-medium">{LANE_LABELS[lane]}</span>
-                      </div>
-                      <Badge variant={r?.crash_guard_activations ? "destructive" : "secondary"}>
-                        {r?.crash_guard_activations ?? 0} activations
-                      </Badge>
+      {/* Equity Curves (5-year replay overlay — period selector does not apply) */}
+      {!replayLoading && mergedCurve.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Equity Curves (5-year backtested replay)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <AreaChart data={mergedCurve}>
+                <defs>
+                  {LANES.filter((l) => selected.has(l)).map((lane) => (
+                    <linearGradient key={lane} id={`grad-${lane}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={LANE_COLORS[lane]} stopOpacity={0.15} />
+                      <stop offset="95%" stopColor={LANE_COLORS[lane]} stopOpacity={0} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
+                  tickFormatter={(d) => (typeof d === "string" ? d.slice(0, 7) : "")}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
+                  tickFormatter={(v) => `$${(Number(v) / 1000).toFixed(0)}k`}
+                />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--foreground)" }}
+                  labelFormatter={(d) => String(d ?? "")}
+                  formatter={(v, name) => {
+                    const safeName = name == null ? "" : String(name);
+                    const num = v == null ? 0 : Number(v);
+                    return [
+                      `$${num.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+                      LANE_LABELS[safeName] ?? safeName,
+                    ];
+                  }}
+                />
+                <Legend
+                  formatter={(value) => {
+                    const safe = value == null ? "" : String(value);
+                    return LANE_LABELS[safe] ?? safe;
+                  }}
+                />
+                {LANES.filter((l) => selected.has(l)).map((lane) => (
+                  <Area
+                    key={lane}
+                    type="monotone"
+                    dataKey={lane}
+                    stroke={LANE_COLORS[lane]}
+                    fill={`url(#grad-${lane})`}
+                    strokeWidth={2}
+                  />
+                ))}
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Crash Guard Summary */}
+      {!replayLoading && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Crash Guard Summary (5-year replay)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-3">
+              {LANES.filter((l) => selected.has(l)).map((lane) => {
+                const r = replayResults[lane];
+                return (
+                  <div key={lane} className="flex items-center justify-between rounded-lg bg-muted/30 p-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: LANE_COLORS[lane] }} />
+                      <span className="text-sm font-medium">{LANE_LABELS[lane]}</span>
                     </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </>
+                    <Badge variant={r?.crash_guard_activations ? "destructive" : "secondary"}>
+                      {r?.crash_guard_activations ?? 0} activations
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
+  );
+}
+
+function MetricRow({
+  label, colorDot, metrics, muted = false,
+}: {
+  label: string;
+  colorDot: string;
+  metrics: PIMetricPack | null;
+  muted?: boolean;
+}) {
+  return (
+    <tr className={`border-b border-border/20 hover:bg-muted/20 ${muted ? "text-muted-foreground" : ""}`}>
+      <td className="py-2 px-3">
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colorDot }} />
+          <span className="font-medium">{label}</span>
+        </div>
+      </td>
+      <MetricCell value={metrics?.total_return ?? null} format="pct" positive />
+      <MetricCell value={metrics?.annualized_return ?? null} format="pct" positive />
+      <MetricCell value={metrics?.annualized_volatility ?? null} format="pct" />
+      <MetricCell value={metrics?.sharpe_ratio ?? null} format="num" positive />
+      <MetricCell value={metrics?.max_drawdown ?? null} format="pct" />
+    </tr>
   );
 }
 
@@ -290,6 +367,6 @@ function mergeCurves(
   }
 
   return Array.from(dateMap.values()).sort((a, b) =>
-    (a.date as string).localeCompare(b.date as string)
+    String(a.date).localeCompare(String(b.date))
   );
 }
