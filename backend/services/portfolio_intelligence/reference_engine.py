@@ -129,6 +129,27 @@ def _get_regime() -> str | None:
     return None
 
 
+def _ensure_lane_initialized(lane_id: str, db_path=None) -> None:
+    """Ensure the parent paper_portfolios row exists. Idempotent.
+
+    Without this, run_reference_check fails with FOREIGN KEY constraint failed
+    on a fresh DB because rebalance_events references paper_portfolios(id).
+    """
+    conn = get_connection(db_path)
+    try:
+        row = conn.execute(
+            "SELECT id FROM paper_portfolios WHERE id = ?", (lane_id,)
+        ).fetchone()
+        if row is None:
+            conn.close()
+            initialize_lane(lane_id, db_path=db_path)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
 def run_reference_check(
     lane_id: str,
     db_path=None,
@@ -158,6 +179,10 @@ def run_reference_check(
             date=as_of_date.isoformat(),
             weights={},
         )
+
+    # Auto-initialize parent row if missing — prevents FK constraint failure
+    # when run_reference_check is the first call after a fresh DB.
+    _ensure_lane_initialized(lane_id, db_path)
 
     conn = get_connection(db_path)
     try:

@@ -146,6 +146,7 @@ export default function MyPortfolioPage() {
       </div>
 
       {/* Holdings Input */}
+      {/* TODO(phase-5.5): add separate cost-basis input, render de-emphasized per SPEC §9 */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Holdings</CardTitle>
@@ -170,11 +171,11 @@ export default function MyPortfolioPage() {
             />
             <input
               type="number"
-              placeholder="Price"
+              placeholder="Current Price"
               value={newPrice}
               onChange={(e) => setNewPrice(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addHolding()}
-              className="w-24 rounded-md border border-border bg-background px-3 py-2 text-sm"
+              className="w-32 rounded-md border border-border bg-background px-3 py-2 text-sm"
             />
             <Button size="sm" onClick={addHolding} disabled={!newTicker.trim()}>
               <Plus className="h-4 w-4 mr-1" /> Add
@@ -245,18 +246,20 @@ export default function MyPortfolioPage() {
 }
 
 function AnalysisResults({ data }: { data: PISnapshotResponse }) {
-  const { metrics, flags, weights, sector_exposure, factor_exposure } = data;
+  const { metrics, flags, weights } = data;
+  const sectorExposure = metrics?.sector_exposure ?? {};
+  const factorExposure = metrics?.factor_exposure ?? {};
 
   const weightData = Object.entries(weights)
     .filter(([, w]) => w > 0.001)
     .sort(([, a], [, b]) => b - a)
     .map(([ticker, w]) => ({ name: ticker, value: w * 100 }));
 
-  const sectorData = Object.entries(sector_exposure || {})
+  const sectorData = Object.entries(sectorExposure)
     .filter(([, w]) => w > 0)
     .sort(([, a], [, b]) => b - a);
 
-  const factorData = Object.entries(factor_exposure || {}).map(([name, val]) => ({
+  const factorData = Object.entries(factorExposure).map(([name, val]) => ({
     factor: name,
     value: val,
   }));

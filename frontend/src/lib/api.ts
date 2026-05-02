@@ -2639,6 +2639,11 @@ export interface PIMetricPack {
   sortino_ratio: number | null;
   max_drawdown: number;
   max_drawdown_duration_days: number | null;
+  beta_vs_spy?: number | null;
+  tracking_error_vs_spy?: number | null;
+  information_ratio_vs_spy?: number | null;
+  sector_exposure?: Record<string, number>;
+  factor_exposure?: Record<string, number>;
 }
 
 export interface PIRiskFlag {
@@ -2648,14 +2653,25 @@ export interface PIRiskFlag {
   details: Record<string, unknown>;
 }
 
+export interface PIRebalanceEventLatest {
+  id: number;
+  portfolio_id: string;
+  triggered_at: string;
+  trigger_reason: string;
+  pre_weights: Record<string, number>;
+  post_weights: Record<string, number>;
+  crash_prob_3m: number | null;
+  regime: string | null;
+  explanation: string;
+}
+
 export interface PISnapshotResponse {
   portfolio_id: string;
   date: string;
   weights: Record<string, number>;
   metrics: PIMetricPack | null;
   flags: PIRiskFlag[];
-  sector_exposure: Record<string, number>;
-  factor_exposure: Record<string, number>;
+  latest_rebalance: PIRebalanceEventLatest | null;
 }
 
 export interface PIRebalanceEvent {
@@ -2690,18 +2706,32 @@ export interface PIReplayResult {
 export interface PICompareResponse {
   lanes: Record<string, PIMetricPack | null>;
   benchmarks: Record<string, PIMetricPack | null>;
+  period: string;
+  start_date: string | null;
+  end_date: string | null;
+}
+
+export interface PIHistoryRebalanceEntry {
+  date: string;
+  reason: string;
+  crash_prob: number | null;
+  overlay_armed: boolean;
+  explanation: string;
 }
 
 export interface PIHistoryResponse {
   portfolio_id: string;
+  period: string;
   equity_curve: PIEquityCurvePoint[];
-  rebalance_log: PIRebalanceEvent[];
+  rebalance_log: PIHistoryRebalanceEntry[];
+  has_rebalance_events: boolean;
 }
 
 export interface PIExplainResponse {
   portfolio_id: string;
   explanation: string;
   last_rebalance_date: string | null;
+  has_rebalance_events: boolean;
 }
 
 // PI: Real portfolio analyze
@@ -2718,8 +2748,10 @@ export function piGetReferenceState(laneId: string) {
 }
 
 // PI: Reference lane history
-export function piGetReferenceHistory(laneId: string) {
-  return fetchAPI<PIHistoryResponse>(`/api/pi/reference/${laneId}/history`);
+export function piGetReferenceHistory(laneId: string, period: string = "1Y") {
+  return fetchAPI<PIHistoryResponse>(
+    `/api/pi/reference/${laneId}/history?period=${encodeURIComponent(period)}`,
+  );
 }
 
 // PI: Reference lane explanation
@@ -2728,8 +2760,14 @@ export function piGetReferenceExplain(laneId: string) {
 }
 
 // PI: Compare all lanes
-export function piGetCompare() {
-  return fetchAPI<PICompareResponse>("/api/pi/compare");
+export function piGetCompare(
+  ids: string[] = ["conservative", "balanced", "aggressive"],
+  period: string = "1Y",
+) {
+  const idsParam = encodeURIComponent(ids.join(","));
+  return fetchAPI<PICompareResponse>(
+    `/api/pi/compare?ids=${idsParam}&period=${encodeURIComponent(period)}`,
+  );
 }
 
 // PI: Replay backtest
