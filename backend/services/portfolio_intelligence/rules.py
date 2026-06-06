@@ -78,11 +78,13 @@ def compute_target_weights(
 ) -> dict[str, float]:
     """Compute target portfolio weights for a lane.
 
-    For HRP lanes (conservative, aggressive): attempts HRP optimization,
-    falls back to equal-weight within each sleeve.
-
-    For Black-Litterman (balanced): attempts BL optimization,
-    falls back to equal-weight.
+    HONEST STATUS: lanes currently run EQUAL-WEIGHT within each sleeve. Real
+    HRP / Black-Litterman optimization is dormant — it only activates when
+    `lane_config["optimizer"]` is "hrp"/"black-litterman" AND `price_data` is
+    supplied, and today the config sets optimizer="equal_weight" (intent kept in
+    `planned_optimizer`). Optimization lands later as a SHA-versioned, guard-
+    gated config change (Step #2), at which point it must be wired through an
+    as-of price path to avoid look-ahead. Until then this returns equal-weight.
 
     Args:
         lane_config: Lane configuration dict from paper_portfolios.yaml

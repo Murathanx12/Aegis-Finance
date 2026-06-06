@@ -134,7 +134,11 @@ conservative:
   target_equity_pct: 0.40      # 40% equities
   target_bond_pct: 0.50        # 50% bonds
   target_alt_pct: 0.10         # 10% alternatives (gold, REIT)
-  optimizer: hrp                # HRP on bonds, equal-weight on equity sleeve
+  # HONEST: lanes are equal-weight within each sleeve TODAY. Real HRP/BL
+  # optimization is not wired yet — it lands later as a SHA-versioned,
+  # guard-gated config change (Step #2). planned_optimizer records the intent.
+  optimizer: equal_weight
+  planned_optimizer: hrp
   max_single_name: 0.03        # no single position > 3%
   max_sector: 0.25             # no sector > 25%
   rebalance_trigger_drift: 0.05  # rebalance when any weight drifts > 5%
@@ -146,11 +150,12 @@ conservative:
   slippage_bps: 1               # 1 basis point slippage estimate
 
 balanced:
-  # Balanced growth + income — Black-Litterman with macro views
+  # Balanced growth + income — equal-weight today; Black-Litterman planned (Step #2)
   target_equity_pct: 0.70
   target_bond_pct: 0.25
   target_alt_pct: 0.05
-  optimizer: black-litterman
+  optimizer: equal_weight
+  planned_optimizer: black-litterman
   max_single_name: 0.05
   max_sector: 0.30
   rebalance_trigger_drift: 0.05
@@ -162,11 +167,12 @@ balanced:
   slippage_bps: 1
 
 aggressive:
-  # Maximum growth — full equity universe via HRP
+  # Maximum growth — full equity universe, equal-weight today; HRP planned (Step #2)
   target_equity_pct: 0.95
   target_bond_pct: 0.05
   target_alt_pct: 0.00
-  optimizer: hrp
+  optimizer: equal_weight
+  planned_optimizer: hrp
   max_single_name: 0.08
   max_sector: 0.40
   rebalance_trigger_drift: 0.07
