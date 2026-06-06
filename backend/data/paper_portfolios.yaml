@@ -198,7 +198,11 @@ personal:
     - NTLA
   benchmark: SPY
   skill_min_months: 24          # don't claim skill until 24 months of tracked decisions
-  skill_min_t_stat: 2.0         # require t-stat > 2 for skill significance
+  # Deliberately 2.0, NOT the 3.0 multiple-testing hurdle from the overfitting
+  # guards (METHODOLOGY.md §1.5). This lane tracks ONE pre-registered strategy
+  # (the author's real decisions), not a grid search over many — so there is no
+  # selection bias to deflate, and the classic single-test 2.0 threshold applies.
+  skill_min_t_stat: 2.0         # require t-stat > 2 for skill significance (single strategy)
   rationale_min_chars: 50       # every decision needs >= 50 chars of written reasoning
 
 # ── Inception Parameters ─────────────────────────────────────────────────────

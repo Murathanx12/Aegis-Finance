@@ -222,12 +222,13 @@ class ReplayEngine:
 
         from backend.services.data_fetcher import DataFetcher
 
-        lookback_start = start - timedelta(days=730)
-
+        # NOTE: fetch_market_data() takes no date args — it returns its own
+        # default historical range (which spans well before any replay start),
+        # and the MarketDataAtTimestamp wrapper slices it as-of each check date.
+        # Earlier code computed lookback_start/fetcher_start/fetcher_end and
+        # never used them (fetch_market_data has no parameters); removed to
+        # avoid implying a lookback window that isn't actually honored here.
         fetcher = DataFetcher()
-        fetcher_start = lookback_start.strftime("%Y-%m-%d")
-        fetcher_end = end.strftime("%Y-%m-%d")
-
         data, _ = fetcher.fetch_market_data()
         fred_data = fetcher.fetch_fred_data()
 
