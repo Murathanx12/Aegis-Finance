@@ -250,7 +250,9 @@ def _cached_replay(lane_id: str, start_iso: str, end_iso: str) -> ReplayResult:
     if cached_json:
         return ReplayResult.model_validate(json.loads(cached_json))
 
-    result = ReplayEngine().run(lane_id, start_iso, end_iso)
+    # Cash sleeve earns the live short rate (FRED DGS3MO) — don't leave rf at 0.
+    from backend.services.portfolio_intelligence.nav import get_rf_daily
+    result = ReplayEngine().run(lane_id, start_iso, end_iso, rf_daily=get_rf_daily())
     save_cached_replay(
         lane_id, universe_hash, rules_hash, today,
         result.model_dump_json(),

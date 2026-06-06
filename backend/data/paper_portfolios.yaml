@@ -134,6 +134,7 @@ conservative:
   target_equity_pct: 0.40      # 40% equities
   target_bond_pct: 0.50        # 50% bonds
   target_alt_pct: 0.10         # 10% alternatives (gold, REIT)
+  target_cash_pct: 0.0         # explicit cash/T-bill sleeve (earns rf); crash overlay rotates equity here
   # HONEST: lanes are equal-weight within each sleeve TODAY. Real HRP/BL
   # optimization is not wired yet — it lands later as a SHA-versioned,
   # guard-gated config change (Step #2). planned_optimizer records the intent.
@@ -154,6 +155,7 @@ balanced:
   target_equity_pct: 0.70
   target_bond_pct: 0.25
   target_alt_pct: 0.05
+  target_cash_pct: 0.0         # explicit cash/T-bill sleeve (earns rf); crash overlay rotates equity here
   optimizer: equal_weight
   planned_optimizer: black-litterman
   max_single_name: 0.05
@@ -171,6 +173,7 @@ aggressive:
   target_equity_pct: 0.95
   target_bond_pct: 0.05
   target_alt_pct: 0.00
+  target_cash_pct: 0.0         # explicit cash/T-bill sleeve (earns rf); crash overlay rotates equity here
   optimizer: equal_weight
   planned_optimizer: hrp
   max_single_name: 0.08

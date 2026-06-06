@@ -24,6 +24,7 @@ from datetime import date, timedelta
 from typing import Optional
 
 from backend.config import paper_portfolios
+from backend.services.portfolio_intelligence.nav import CASH_TICKER
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,9 @@ def lane_sector_map(universe_cfg: dict | None = None) -> dict[str, str]:
 
 
 def classify_asset(ticker: str) -> str:
-    """Classify a ticker as equity, bond, or alternative."""
+    """Classify a ticker as cash, equity, bond, or alternative."""
+    if ticker == CASH_TICKER:
+        return "cash"
     if ticker in _BOND_ETFS:
         return "bond"
     if ticker in _ALTERNATIVES:
@@ -181,6 +184,12 @@ def compute_target_weights(
     weights.update(_equal_weight(sleeves["bond"], target_bond))
     weights.update(_equal_weight(sleeves["alternative"], target_alt))
 
+    # Explicit cash/T-bill sleeve (earns rf; zero duration). Held as a $-balance
+    # under CASH_TICKER, not as shares.
+    target_cash = lane_config.get("target_cash_pct", 0.0)
+    if target_cash and target_cash > 0:
+        weights[CASH_TICKER] = weights.get(CASH_TICKER, 0.0) + target_cash
+
     # Normalize to exactly 1.0
     total = sum(weights.values())
     if total > 0:
@@ -255,29 +264,20 @@ def apply_crash_overlay(
 
     adjusted = {}
     equity_removed = 0.0
-    bond_tickers = []
 
     for t, w in target_weights.items():
-        asset_class = classify_asset(t)
-        if asset_class == "equity":
+        if classify_asset(t) == "equity":
             cut = w * equity_cut
             adjusted[t] = w - cut
             equity_removed += cut
         else:
             adjusted[t] = w
-            if asset_class == "bond":
-                bond_tickers.append(t)
 
-    # Redistribute cut equity to bonds pro-rata
-    if bond_tickers and equity_removed > 0:
-        bond_total = sum(adjusted[t] for t in bond_tickers)
-        if bond_total > 0:
-            for t in bond_tickers:
-                adjusted[t] += equity_removed * (adjusted[t] / bond_total)
-        else:
-            per_bond = equity_removed / len(bond_tickers)
-            for t in bond_tickers:
-                adjusted[t] += per_bond
+    # Rotate the cut equity into CASH — zero-duration and earning the short
+    # rate, so it is genuinely defensive even in a rates-driven selloff where
+    # long bonds (TLT/IEF) also fall. ("To cash, not just bonds.")
+    if equity_removed > 0:
+        adjusted[CASH_TICKER] = adjusted.get(CASH_TICKER, 0.0) + equity_removed
 
     # Normalize
     total = sum(adjusted.values())

@@ -38,6 +38,9 @@ def mark_to_market(
     """
     equity = 0.0
     for ticker, n in shares.items():
+        if ticker == CASH_TICKER:
+            equity += n  # cash sleeve held as a $-balance (price ≡ 1.0)
+            continue
         price = prices.get(ticker)
         if price is not None and price > 0:
             equity += n * price
@@ -73,6 +76,33 @@ def weights_to_shares(
     # Any unpriceable weight is parked in cash so total value == notional.
     cash += max(0.0, notional - invested)
     return shares, cash
+
+
+_RF_CACHE: dict[str, float] = {}
+
+
+def get_rf_daily(annual_fallback: float = 0.04) -> float:
+    """Daily risk-free rate from FRED's 3-month T-bill (DGS3MO), cached.
+
+    This is the `rf_daily` the cash sleeve earns. Converts the latest annual
+    yield (percent) to a daily compounding rate. Falls back to `annual_fallback`
+    if FRED is unavailable, so callers never get a hard dependency on the API.
+    """
+    if "v" in _RF_CACHE:
+        return _RF_CACHE["v"]
+    annual = annual_fallback
+    try:
+        from backend.services.data_fetcher import api_keys
+        if api_keys.has("fred"):
+            from fredapi import Fred
+            series = Fred(api_key=api_keys.fred).get_series("DGS3MO").dropna()
+            if len(series):
+                annual = float(series.iloc[-1]) / 100.0
+    except Exception:
+        annual = annual_fallback
+    rf = (1.0 + annual) ** (1.0 / 252.0) - 1.0
+    _RF_CACHE["v"] = rf
+    return rf
 
 
 def nav_series(

@@ -312,7 +312,10 @@ class TestYAMLConfig:
     def test_yaml_validates_against_schema(self):
         cfg = PaperPortfoliosConfig(**paper_portfolios)
         assert cfg.conservative.target_equity_pct == 0.40
-        assert cfg.balanced.optimizer == "black-litterman"
+        # Active optimizer is honestly equal_weight today; intent is recorded
+        # in planned_optimizer (real BL lands as a versioned config change).
+        assert cfg.balanced.optimizer == "equal_weight"
+        assert cfg.balanced.planned_optimizer == "black-litterman"
         assert cfg.aggressive.max_single_name == 0.08
 
     def test_conservative_allocations_sum_to_one(self):

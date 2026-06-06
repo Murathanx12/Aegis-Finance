@@ -253,14 +253,16 @@ class TestCrashOverlay:
         _, triggered = apply_crash_overlay(weights, 0.35, self._AGGRESSIVE_CFG)
         assert triggered is False  # 0.35 < 0.40
 
-    def test_equity_cut_redistributed_to_bonds(self):
+    def test_equity_cut_redistributed_to_cash(self):
+        from backend.services.portfolio_intelligence.nav import CASH_TICKER
+
         weights = {"SPY": 0.40, "AGG": 0.50, "GLD": 0.10}
         adjusted, _ = apply_crash_overlay(weights, 0.30, self._CONSERVATIVE_CFG)
-        # Conservative cuts equity by 20%: SPY goes from 0.40 to 0.32
-        # The 0.08 should go to bonds
-        bond_before = 0.50
+        # Conservative cuts equity 20%: the cut rotates to CASH (zero-duration,
+        # earns rf), NOT into bonds — genuinely defensive in a rates selloff.
+        assert adjusted.get(CASH_TICKER, 0.0) > 0.0
         bond_after = sum(w for t, w in adjusted.items() if classify_asset(t) == "bond")
-        assert bond_after > bond_before
+        assert bond_after == pytest.approx(0.50, abs=1e-6)  # bonds untouched
 
     def test_weights_sum_to_one_after_overlay(self):
         for lane_name, cfg in [
