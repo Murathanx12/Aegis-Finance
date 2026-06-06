@@ -45,25 +45,34 @@ def _get_lane_config(lane_id: str) -> dict | None:
     return paper_portfolios.get(lane_id)
 
 
-def _get_current_weights(conn, portfolio_id: str) -> dict[str, float]:
-    """Get current portfolio weights from DB."""
+def _get_current_weights(conn, portfolio_id: str, prices: dict | None = None) -> dict[str, float]:
+    """Get current portfolio weights from DB, marked to market.
+
+    Each position is valued at shares × current price. When a live price is
+    unavailable (or `prices` is None), it falls back to the position's
+    cost_basis — so weights still reconstruct, but the drift trigger only
+    'sees' real market moves when current prices are supplied. The live path
+    (run_reference_check) passes fetched prices; the simplest tests pass none.
+    """
     rows = conn.execute(
-        "SELECT ticker, shares FROM paper_positions WHERE portfolio_id = ? AND closed_at IS NULL",
+        "SELECT ticker, shares, cost_basis FROM paper_positions "
+        "WHERE portfolio_id = ? AND closed_at IS NULL",
         (portfolio_id,),
     ).fetchall()
 
     if not rows:
         return {}
 
-    # Get current prices for weight computation
+    prices = prices or {}
     total_value = 0.0
     positions = []
     for row in rows:
         ticker = row["ticker"]
         shares = row["shares"]
-        # Use cost_basis as price proxy when we don't have live prices
         cost = row["cost_basis"] if "cost_basis" in row.keys() else 1.0
-        value = shares * cost
+        px = prices.get(ticker)
+        mark = px if (px is not None and px > 0) else cost
+        value = shares * mark
         positions.append((ticker, value))
         total_value += value
 
@@ -191,7 +200,14 @@ def run_reference_check(
 
     conn = get_connection(db_path)
     try:
-        current_weights = _get_current_weights(conn, lane_id)
+        # Fetch current prices once (whole universe) so current weights mark to
+        # market and the drift trigger sees real moves; reused for trade pricing.
+        from backend.services.portfolio_intelligence.rules import _get_sleeve_tickers
+        _sleeves = _get_sleeve_tickers(paper_portfolios.get("universe", {}))
+        _universe_tickers = _sleeves["equity"] + _sleeves["bond"] + _sleeves["alternative"]
+        prices = _get_current_prices(_universe_tickers)
+
+        current_weights = _get_current_weights(conn, lane_id, prices)
         last_rebalance = _get_last_rebalance_date(conn, lane_id)
         notional = _get_portfolio_notional(conn, lane_id)
 
@@ -254,8 +270,7 @@ def run_reference_check(
                 weights={t: round(w, 6) for t, w in current_weights.items()},
             )
 
-        # Compute trades
-        prices = _get_current_prices(list(target_weights.keys()))
+        # Compute trades (reuse the prices fetched above — superset of targets)
         trades, total_cost = compute_trades(
             current_weights,
             target_weights,
@@ -340,14 +355,85 @@ def run_all_lanes(db_path=None) -> dict[str, SnapshotResponse]:
     return results
 
 
+def mark_lane_to_market(
+    lane_id: str,
+    prices: dict | None = None,
+    as_of_date: date | None = None,
+    db_path=None,
+) -> float | None:
+    """Mark a lane's open positions to current prices and persist daily NAV.
+
+    Reuses the shared nav.py engine (NOT a second valuation path): NAV is
+    shares × current price, summed. A position with no current price falls
+    back to its cost_basis so NAV is never silently understated. The NAV row
+    is stamped with the current config_version so a versioned rule/optimization
+    change starts a clean track-record segment.
+
+    Returns the NAV, or None if the lane has no open positions.
+    """
+    from backend.db import get_config_hash, insert_nav
+    from backend.services.portfolio_intelligence.nav import mark_to_market
+
+    if as_of_date is None:
+        as_of_date = date.today()
+
+    _ensure_lane_initialized(lane_id, db_path)
+    conn = get_connection(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT ticker, shares, cost_basis FROM paper_positions "
+            "WHERE portfolio_id = ? AND closed_at IS NULL",
+            (lane_id,),
+        ).fetchall()
+        if not rows:
+            return None
+
+        tickers = [r["ticker"] for r in rows]
+        if prices is None:
+            prices = _get_current_prices(tickers)
+
+        shares = {r["ticker"]: r["shares"] for r in rows}
+        # Fill any missing live price with the position's cost_basis (last known).
+        marks = {}
+        for r in rows:
+            px = prices.get(r["ticker"])
+            marks[r["ticker"]] = px if (px is not None and px > 0) else r["cost_basis"]
+
+        nav_value = mark_to_market(shares, marks, cash=0.0)
+
+        insert_nav(
+            conn, lane_id, as_of_date.isoformat(), float(nav_value),
+            get_config_hash(), datetime.now().isoformat(),
+        )
+        return float(nav_value)
+    finally:
+        conn.close()
+
+
+def mark_all_lanes(db_path=None) -> dict[str, float | None]:
+    """Mark all three reference lanes to market and persist daily NAV."""
+    out: dict[str, float | None] = {}
+    for lane_id in ["conservative", "balanced", "aggressive"]:
+        try:
+            out[lane_id] = mark_lane_to_market(lane_id, db_path=db_path)
+        except Exception as e:
+            logger.error("MTM failed for %s: %s", lane_id, e, exc_info=True)
+            out[lane_id] = None
+    return out
+
+
 def initialize_lane(
     lane_id: str,
     notional: float = 100_000.0,
     db_path=None,
+    prices: dict | None = None,
 ) -> None:
     """Create inception snapshot for a new lane.
 
-    Computes initial target weights and stores them as the first positions.
+    Computes initial target weights and stores them as the first positions at
+    REAL entry prices (shares = weight·notional / price), so the book holds
+    genuine share counts that mark to market. Falls back to a $100 placeholder
+    only for tickers whose price can't be fetched.
     """
     from backend.db import init_db, get_config_hash
 
@@ -383,13 +469,20 @@ def initialize_lane(
             _get_sector_map(),
         )
 
-        # Insert positions
+        # Real entry prices so positions hold genuine share counts that MTM.
+        if prices is None:
+            prices = _get_current_prices(list(target_weights.keys()))
+
+        # Insert positions at real entry prices ($100 placeholder only if a
+        # ticker can't be priced, so the lane still initializes offline).
         for ticker, weight in target_weights.items():
-            shares = (weight * notional) / 100.0  # placeholder price
+            px = prices.get(ticker)
+            entry = px if (px is not None and px > 0) else 100.0
+            shares = (weight * notional) / entry
             conn.execute(
                 """INSERT INTO paper_positions (portfolio_id, ticker, shares, cost_basis, opened_at)
                    VALUES (?, ?, ?, ?, ?)""",
-                (lane_id, ticker, shares, 100.0, today),
+                (lane_id, ticker, shares, entry, today),
             )
 
         conn.commit()

@@ -160,8 +160,9 @@ class TestGetLastRebalanceDate:
 
 
 class TestInitializeLane:
+    @patch("backend.services.portfolio_intelligence.reference_engine._get_current_prices", return_value={})
     @patch("backend.services.portfolio_intelligence.reference_engine._get_sector_map", return_value={})
-    def test_creates_portfolio_and_positions(self, mock_sector, tmp_path):
+    def test_creates_portfolio_and_positions(self, mock_sector, mock_prices, tmp_path):
         db_path = _make_test_db(tmp_path)
         initialize_lane("conservative", notional=100_000.0, db_path=db_path)
 
@@ -183,8 +184,9 @@ class TestInitializeLane:
         assert events[0]["trigger_reason"] == "initialization"
         conn.close()
 
+    @patch("backend.services.portfolio_intelligence.reference_engine._get_current_prices", return_value={})
     @patch("backend.services.portfolio_intelligence.reference_engine._get_sector_map", return_value={})
-    def test_idempotent(self, mock_sector, tmp_path):
+    def test_idempotent(self, mock_sector, mock_prices, tmp_path):
         db_path = _make_test_db(tmp_path)
         initialize_lane("balanced", db_path=db_path)
         initialize_lane("balanced", db_path=db_path)  # second call should be no-op
@@ -200,10 +202,11 @@ class TestInitializeLane:
 
 
 class TestRunReferenceCheck:
+    @patch("backend.services.portfolio_intelligence.reference_engine._get_current_prices", return_value={})
     @patch("backend.services.portfolio_intelligence.reference_engine._get_sector_map", return_value={})
     @patch("backend.services.portfolio_intelligence.reference_engine._get_crash_prob", return_value=0.10)
     @patch("backend.services.portfolio_intelligence.reference_engine._get_regime", return_value="bull")
-    def test_no_rebalance_when_no_drift(self, mock_regime, mock_crash, mock_sector, tmp_path):
+    def test_no_rebalance_when_no_drift(self, mock_regime, mock_crash, mock_sector, mock_prices, tmp_path):
         """Fresh portfolio with no drift should not trigger (already at target)."""
         db_path = _make_test_db(tmp_path)
 
