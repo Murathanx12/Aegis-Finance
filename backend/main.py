@@ -98,13 +98,28 @@ async def lifespan(app: FastAPI):
     # accepting requests (including health checks) immediately.
     asyncio.create_task(_prewarm_cache())
 
-    # Initialize Portfolio Intelligence DB + scheduler
+    # Initialize Portfolio Intelligence DB (runs v2→v3 migration on existing
+    # volumes, creating paper_nav + rule_experiments) + reference lanes.
     try:
         from backend.db import init_db
         init_db()
         logger.info("Portfolio Intelligence DB initialized")
     except Exception as e:
         logger.warning("PI DB init failed (non-fatal): %s", e)
+
+    # Idempotently initialize the 3 reference lanes ($100k each, anchored to
+    # inception date + config hash). A redeploy must NOT reset or double-init:
+    # initialize_lane is a no-op when the lane row already exists. Run in a
+    # thread so startup (and health checks) aren't blocked by price fetches.
+    async def _init_lanes():
+        import asyncio
+        from backend.services.portfolio_intelligence.reference_engine import initialize_lane
+        for lane in ("conservative", "balanced", "aggressive"):
+            try:
+                await asyncio.to_thread(initialize_lane, lane)
+            except Exception as e:
+                logger.warning("Lane init failed for %s (non-fatal): %s", lane, e)
+    asyncio.create_task(_init_lanes())
 
     try:
         from backend.services.portfolio_intelligence.scheduler import setup_scheduler
@@ -236,6 +251,22 @@ async def health():
         "cache_status": cs["status"],
         "cache_error": cs.get("error"),
     }
+
+
+@app.get("/health/scheduler")
+async def health_scheduler():
+    """Canary for the Portfolio Intelligence scheduler (point UptimeRobot here).
+
+    Returns HTTP 503 when the scheduler is not running or its jobs are missing
+    — a silently-dead scheduler flat-lines the track record, so the canary must
+    fail loudly rather than return 200 with running=false.
+    """
+    from fastapi.responses import JSONResponse
+    from backend.services.portfolio_intelligence.scheduler import scheduler_health
+
+    h = scheduler_health()
+    healthy = h.get("running") and h.get("n_jobs", 0) >= 3 and h.get("persistent")
+    return JSONResponse(status_code=200 if healthy else 503, content=h)
 
 
 @app.get("/api/providers")

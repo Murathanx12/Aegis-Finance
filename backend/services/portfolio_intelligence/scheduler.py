@@ -95,6 +95,33 @@ def setup_scheduler():
     return _scheduler
 
 
+def scheduler_health() -> dict:
+    """Health snapshot for the /health/scheduler canary.
+
+    A silently-dead scheduler means a flat-line track record (no MTM, no
+    rebalances) — the #1 deploy risk. This exposes enough for an external
+    uptime check to alarm on: running flag, job count/ids, persistent job
+    store type, and the last successful mark-to-market timestamp.
+    """
+    if _scheduler is None:
+        return {"running": False, "n_jobs": 0, "jobstore": None,
+                "job_ids": [], "last_mtm": None,
+                "reason": "scheduler not started (APScheduler missing or setup failed)"}
+    try:
+        jobs = _scheduler.get_jobs()
+        store = _scheduler._jobstores.get("default")
+        return {
+            "running": bool(getattr(_scheduler, "running", False)),
+            "n_jobs": len(jobs),
+            "job_ids": sorted(j.id for j in jobs),
+            "jobstore": type(store).__name__ if store else None,
+            "persistent": bool(store and "SQLAlchemy" in type(store).__name__),
+            "last_mtm": _last_mtm_timestamp.isoformat() if _last_mtm_timestamp else None,
+        }
+    except Exception as e:
+        return {"running": False, "error": str(e)}
+
+
 def shutdown_scheduler():
     """Gracefully shut down the scheduler."""
     global _scheduler
