@@ -133,11 +133,13 @@ async def _hourly_mtm():
         pass  # If cache check fails, proceed with MTM
 
     import asyncio
-    from backend.services.portfolio_intelligence.reference_engine import run_all_lanes
+    from backend.services.portfolio_intelligence.reference_engine import mark_all_lanes
 
     logger.info("Running hourly MTM at %s", now.isoformat())
     try:
-        await asyncio.to_thread(run_all_lanes)
+        # Hourly job MARKS TO MARKET (persists daily NAV) — it does not rebalance.
+        # Rebalance decisions happen in the daily check.
+        await asyncio.to_thread(mark_all_lanes)
         _last_mtm_timestamp = now
     except Exception as e:
         logger.error("Hourly MTM failed: %s", e, exc_info=True)
