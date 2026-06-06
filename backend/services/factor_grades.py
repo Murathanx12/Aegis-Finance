@@ -151,6 +151,9 @@ def _momentum_grade(ticker: str) -> tuple[Optional[str], Optional[float], dict]:
         "momentum_6m": result.get("return_6m") or result.get("mom_6m"),
         "momentum_12m": result.get("return_12m") or result.get("mom_12m"),
         "peer_percentile": pct,
+        "note": "Descriptive relative-strength (3M/6M/12M, 1M excluded for "
+                "reversal). Weak/insignificant forward IC on this universe — "
+                "not validated alpha. See docs/FACTOR_VALIDATION.md.",
     }
 
 
