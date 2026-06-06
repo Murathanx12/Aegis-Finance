@@ -56,7 +56,45 @@ Both models output calibrated probabilities via Platt scaling. The final predict
 - Brier Skill Score (BSS) vs climatology: measures improvement over always-predict-base-rate
 - Reliability diagram: calibration of predicted probabilities
 
-### 1.5 Explainability
+### 1.5 Overfitting Guards (Multiple-Testing Correction)
+
+Any process that searches many configurations and reports the best one — a
+weight grid search, a hyperparameter sweep, an overnight R&D loop — inflates the
+winner's apparent performance through selection bias alone. We therefore deflate
+every "best-of-N" result before acting on it. Implemented in
+`engine/validation/overfitting.py`:
+
+- **Probabilistic Sharpe Ratio (PSR)** — Bailey & López de Prado (2012). The
+  probability that the true Sharpe exceeds a benchmark, given the track-record
+  length and the return distribution's skew/kurtosis.
+- **Deflated Sharpe Ratio (DSR)** — Bailey & López de Prado (2014). PSR measured
+  against the *expected maximum* Sharpe under *N* independent trials. A winning
+  Sharpe selected from hundreds of trials can show a high PSR yet a low DSR —
+  the DSR is what exposes it as luck. Ship bar: **DSR ≥ 0.95**.
+- **Probability of Backtest Overfitting (PBO)** — Bailey, Borwein, López de Prado
+  & Zhu (2017), via Combinatorially-Symmetric Cross-Validation. The fraction of
+  combinatorial splits where the in-sample-best configuration lands below the
+  out-of-sample median. PBO < 0.25 = robust; ≥ 0.5 = the selection is noise.
+- **Combinatorial Purged CV (CPCV)** — yields a *distribution* of backtest paths
+  (C(N, k) splits with purge + embargo) rather than a single point estimate,
+  complementing the single-path walk-forward in §1.4.
+- **Multiple-testing hurdle** — Harvey, Liu & Zhu (2016): new factors must clear
+  a t-statistic of **3.0**, not the conventional 2.0, given how many strategies
+  have already been mined.
+
+**Where it is enforced.** The offline signal-weight optimizer
+(`signal_optimizer.py`) now attaches an `overfitting_guard` to its output and
+**refuses to recommend a weight change unless the winner survives deflation**
+(DSR ≥ 0.95 and PBO < 0.5) — even when the in-sample hit-rate improvement looks
+large. The autonomous R&D loop carries a robustness probe that fails the cycle if
+the guard ever stops discriminating a robust strategy from pure noise.
+
+**Caveat.** When applied to overlapping forward returns (e.g. a quarterly crash
+horizon), PSR/DSR are approximate because observations are autocorrelated; the
+*direction* of the deflation remains informative even where the absolute
+probability is not exact.
+
+### 1.6 Explainability
 
 SHAP (SHapley Additive exPlanations) TreeExplainer computes per-feature contributions for every prediction. The top 10 features by absolute SHAP value are displayed, showing whether each feature pushes crash probability up (red) or down (green).
 
