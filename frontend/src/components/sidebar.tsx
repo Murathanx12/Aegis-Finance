@@ -22,7 +22,6 @@ import {
   LayoutGrid,
   Search,
   Star,
-  Scale,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -38,7 +37,6 @@ const NAV_ITEMS = [
   { href: "/screener", label: "Stock Screener", icon: ListFilter, code: "EQS" },
   { href: "/sectors", label: "Sectors", icon: PieChart, code: "SECT" },
   { href: "/portfolio", label: "Portfolio", icon: Briefcase, code: "PORT" },
-  { href: "/portfolio-intelligence", label: "Portfolio Intel", icon: Scale, code: "PI" },
   { href: "/watchlist", label: "Watchlist", icon: Star, code: "WATCH" },
   { href: "/news", label: "News & Intel", icon: Newspaper, code: "NI" },
   { href: "/retirement", label: "Retirement", icon: Target, code: "RETIRE" },

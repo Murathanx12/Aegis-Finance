@@ -5,8 +5,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { InfoTooltip } from "@/components/info-tooltip";
 import type { MarketStatus } from "@/lib/api";
 
-function GaugeArc({ value, max = 100 }: { value: number; max?: number }) {
-  const pct = Math.min(value / max, 1);
+function GaugeArc({ value, max = 100 }: { value: number | null | undefined; max?: number }) {
+  const v = value != null && Number.isFinite(value) ? value : 0;
+  const pct = Math.min(v / max, 1);
   const color =
     pct > 0.5 ? "text-red-500" : pct > 0.3 ? "text-amber-500" : "text-emerald-500";
 
@@ -37,7 +38,7 @@ function GaugeArc({ value, max = 100 }: { value: number; max?: number }) {
         />
       </svg>
       <p className={`-mt-2 text-3xl font-bold tabular-nums ${color}`}>
-        {value.toFixed(1)}%
+        {value != null && Number.isFinite(value) ? `${value.toFixed(1)}%` : "—"}
       </p>
     </div>
   );

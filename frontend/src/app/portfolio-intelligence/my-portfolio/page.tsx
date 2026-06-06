@@ -132,9 +132,9 @@ export default function MyPortfolioPage() {
   };
 
   return (
-    <div className="space-y-6 animate-slide-up">
-      <div className="flex items-center gap-3">
-        <Link href="/portfolio-intelligence">
+    <div className="space-y-6 animate-slide-up" suppressHydrationWarning>
+      <div className="flex items-center gap-3" suppressHydrationWarning>
+        <Link href="/portfolio">
           <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
         </Link>
         <div>
@@ -271,22 +271,22 @@ function AnalysisResults({ data }: { data: PISnapshotResponse }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <MetricCard
             label="Total Return"
-            value={`${(metrics.total_return * 100).toFixed(1)}%`}
-            color={metrics.total_return >= 0 ? "text-emerald-400" : "text-red-400"}
+            value={metrics.total_return != null ? `${(metrics.total_return * 100).toFixed(1)}%` : "N/A"}
+            color={(metrics.total_return ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}
           />
           <MetricCard
             label="Ann. Volatility"
-            value={`${(metrics.annualized_volatility * 100).toFixed(1)}%`}
+            value={metrics.annualized_volatility != null ? `${(metrics.annualized_volatility * 100).toFixed(1)}%` : "N/A"}
           />
           <MetricCard
             label="Sharpe"
-            value={metrics.sharpe_ratio?.toFixed(2) ?? "N/A"}
+            value={metrics.sharpe_ratio != null ? metrics.sharpe_ratio.toFixed(2) : "N/A"}
             tooltip="Risk-adjusted return (Rf = 4%)"
-            color={metrics.sharpe_ratio && metrics.sharpe_ratio > 0.5 ? "text-emerald-400" : ""}
+            color={metrics.sharpe_ratio != null && metrics.sharpe_ratio > 0.5 ? "text-emerald-400" : ""}
           />
           <MetricCard
             label="Max Drawdown"
-            value={`${(metrics.max_drawdown * 100).toFixed(1)}%`}
+            value={metrics.max_drawdown != null ? `${(metrics.max_drawdown * 100).toFixed(1)}%` : "N/A"}
             color="text-red-400"
           />
         </div>

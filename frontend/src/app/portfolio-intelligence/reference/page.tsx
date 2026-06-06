@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft, Shield, TrendingUp, Zap, AlertTriangle, CheckCircle2,
+  RefreshCw, Clock,
 } from "lucide-react";
 import { InfoTooltip } from "@/components/info-tooltip";
 import Link from "next/link";
@@ -18,10 +19,11 @@ import {
   PieChart, Pie, Cell,
 } from "recharts";
 import {
-  piGetReplay,
+  piGetReplaySnapshot, piRefreshReplay,
   type PIReplayResult, type PIRebalanceEvent,
 } from "@/lib/api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
+import { fmtMoney, fmtPct } from "@/lib/format";
 
 const PIE_COLORS = [
   "#63b4ff", "#22c55e", "#f59e0b", "#ef4444", "#a855f7",
@@ -54,29 +56,48 @@ function ReferencePageContent() {
   const searchParams = useSearchParams();
   const initialLane = searchParams.get("lane") || "conservative";
   const [activeLane, setActiveLane] = useState(initialLane);
+  const queryClient = useQueryClient();
 
-  const { data: replay, isLoading, error } = useQuery({
-    queryKey: queryKeys.pi.replay(activeLane),
-    queryFn: () => piGetReplay(activeLane),
+  const { data: snapshot, isLoading, error } = useQuery({
+    queryKey: queryKeys.pi.replaySnapshot(activeLane),
+    queryFn: () => piGetReplaySnapshot(activeLane),
     staleTime: staleTimes.pi,
+  });
+
+  const refreshMutation = useMutation({
+    mutationFn: () => piRefreshReplay(activeLane),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.pi.replaySnapshot(activeLane) });
+    },
   });
 
   const meta = LANE_META[activeLane] || LANE_META.conservative;
   const LaneIcon = meta.icon;
+  const replay = snapshot?.result ?? null;
+  const isRefreshing = refreshMutation.isPending;
 
   return (
-    <div className="space-y-6 animate-slide-up">
-      <div className="flex items-center gap-3">
-        <Link href="/portfolio-intelligence">
+    <div className="space-y-6 animate-slide-up" suppressHydrationWarning>
+      <div className="flex items-center gap-3" suppressHydrationWarning>
+        <Link href="/portfolio">
           <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
         </Link>
-        <div className="flex-1">
+        <div className="flex-1" suppressHydrationWarning>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <LaneIcon className={`h-6 w-6 ${meta.color}`} />
             {meta.label} Reference Portfolio
           </h1>
           <p className="text-sm text-muted-foreground">{meta.alloc}</p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refreshMutation.mutate()}
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={`h-4 w-4 mr-1.5 ${isRefreshing ? "animate-spin" : ""}`} />
+          {isRefreshing ? "Re-running…" : "Re-run backtest"}
+        </Button>
       </div>
 
       {/* Lane Tabs */}
@@ -87,6 +108,7 @@ function ReferencePageContent() {
             variant={activeLane === id ? "default" : "outline"}
             size="sm"
             onClick={() => setActiveLane(id)}
+            disabled={isRefreshing}
           >
             <m.icon className="h-4 w-4 mr-1" />
             {m.label}
@@ -105,17 +127,36 @@ function ReferencePageContent() {
         </CardContent>
       </Card>
 
+      {/* Cache status badge */}
+      {snapshot && snapshot.status === "stale" && snapshot.cached_at && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="py-3 flex items-center gap-2 text-xs text-amber-400/80">
+            <Clock className="h-3.5 w-3.5" />
+            <span>
+              Showing cached result from {snapshot.cached_at.slice(0, 10)}. Click
+              &ldquo;Re-run backtest&rdquo; for fresh numbers.
+            </span>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Refresh-in-progress banner */}
+      {isRefreshing && (
+        <Card className="border-blue-500/30 bg-blue-500/5">
+          <CardContent className="py-3 flex items-center gap-2 text-xs text-blue-400/80">
+            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            <span>
+              Re-running 5-year walk-forward replay (~80 tickers × ~260 rebalances).
+              This takes several minutes — feel free to navigate away; the result will
+              be cached for 24 hours when complete.
+            </span>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Loading state — only on first snapshot read (sub-second) */}
       {isLoading && (
         <div className="space-y-4">
-          <Card className="border-blue-500/30 bg-blue-500/5">
-            <CardContent className="py-3">
-              <p className="text-xs text-blue-400/80">
-                Running 5-year walk-forward replay on real Yahoo Finance data. First call
-                fetches ~80 tickers and runs ~260 weekly rebalances — typically 30-60 seconds.
-                Result is cached for 30 minutes.
-              </p>
-            </CardContent>
-          </Card>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20" />)}
           </div>
@@ -123,10 +164,25 @@ function ReferencePageContent() {
         </div>
       )}
 
-      {error && (
+      {/* Missing-cache prompt */}
+      {!isLoading && !isRefreshing && snapshot?.status === "missing" && (
+        <Card className="border-blue-500/30 bg-blue-500/5">
+          <CardContent className="py-6 text-center space-y-3">
+            <p className="text-sm">
+              No backtest results cached yet for this lane.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Click &ldquo;Re-run backtest&rdquo; above to compute the walk-forward replay.
+              Takes several minutes; subsequent loads are instant for 24 hours.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {(error || refreshMutation.error) && (
         <Card className="border-red-500/30">
           <CardContent className="py-4 text-sm text-red-400">
-            Failed to load replay data: {(error as Error).message}
+            Failed to load replay data: {((error || refreshMutation.error) as Error).message}
           </CardContent>
         </Card>
       )}
@@ -154,40 +210,40 @@ function ReplayResults({ data }: { data: PIReplayResult }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <MetricCard
             label="Total Return"
-            value={`${(metrics.total_return * 100).toFixed(1)}%`}
-            color={metrics.total_return >= 0 ? "text-emerald-400" : "text-red-400"}
+            value={metrics.total_return != null ? `${(metrics.total_return * 100).toFixed(1)}%` : "N/A"}
+            color={(metrics.total_return ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}
           />
           <MetricCard
             label="Ann. Return"
-            value={`${(metrics.annualized_return * 100).toFixed(1)}%`}
+            value={metrics.annualized_return != null ? `${(metrics.annualized_return * 100).toFixed(1)}%` : "N/A"}
           />
           <MetricCard
             label="Ann. Volatility"
-            value={`${(metrics.annualized_volatility * 100).toFixed(1)}%`}
+            value={metrics.annualized_volatility != null ? `${(metrics.annualized_volatility * 100).toFixed(1)}%` : "N/A"}
           />
           <MetricCard
             label="Sharpe"
-            value={metrics.sharpe_ratio?.toFixed(2) ?? "N/A"}
+            value={metrics.sharpe_ratio != null ? metrics.sharpe_ratio.toFixed(2) : "N/A"}
             tooltip="Risk-adjusted return (Rf = 4%)"
-            color={metrics.sharpe_ratio && metrics.sharpe_ratio > 0.5 ? "text-emerald-400" : ""}
+            color={metrics.sharpe_ratio != null && metrics.sharpe_ratio > 0.5 ? "text-emerald-400" : ""}
           />
           <MetricCard
             label="Sortino"
-            value={metrics.sortino_ratio?.toFixed(2) ?? "N/A"}
+            value={metrics.sortino_ratio != null ? metrics.sortino_ratio.toFixed(2) : "N/A"}
             tooltip="Downside risk-adjusted return"
           />
           <MetricCard
             label="Max Drawdown"
-            value={`${(metrics.max_drawdown * 100).toFixed(1)}%`}
+            value={metrics.max_drawdown != null ? `${(metrics.max_drawdown * 100).toFixed(1)}%` : "N/A"}
             color="text-red-400"
           />
           <MetricCard
             label="Rebalances"
-            value={total_rebalances}
+            value={total_rebalances ?? 0}
           />
           <MetricCard
             label="Total Turnover"
-            value={`${(total_turnover * 100).toFixed(0)}%`}
+            value={total_turnover != null ? `${(total_turnover * 100).toFixed(0)}%` : "N/A"}
           />
         </div>
       )}
@@ -205,7 +261,7 @@ function ReplayResults({ data }: { data: PIReplayResult }) {
           </span>
         </div>
         <div className="text-muted-foreground">
-          Transaction costs: <span className="font-medium tabular-nums">{total_cost_bps.toFixed(1)} bps</span>
+          Transaction costs: <span className="font-medium tabular-nums">{total_cost_bps != null ? total_cost_bps.toFixed(1) : "0.0"} bps</span>
         </div>
         <div className="text-muted-foreground">
           Period: {data.start_date} to {data.end_date}
@@ -302,8 +358,8 @@ function RebalanceRow({ event }: { event: PIRebalanceEvent }) {
       <td className="py-1.5 px-2">
         <Badge variant="outline" className="text-[10px]">{event.reason}</Badge>
       </td>
-      <td className="py-1.5 px-2 text-right tabular-nums">{(event.turnover * 100).toFixed(1)}%</td>
-      <td className="py-1.5 px-2 text-right tabular-nums">${event.cost.toFixed(2)}</td>
+      <td className="py-1.5 px-2 text-right tabular-nums">{fmtPct(event.turnover != null ? event.turnover * 100 : null, 1)}</td>
+      <td className="py-1.5 px-2 text-right tabular-nums">{event.cost != null ? `$${event.cost.toFixed(2)}` : "—"}</td>
       <td className="py-1.5 px-2 text-right tabular-nums">
         {event.crash_prob != null ? `${(event.crash_prob * 100).toFixed(0)}%` : "—"}
       </td>
@@ -315,7 +371,7 @@ function RebalanceRow({ event }: { event: PIRebalanceEvent }) {
         )}
       </td>
       <td className="py-1.5 px-2 text-right tabular-nums font-medium">
-        ${event.portfolio_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+        {fmtMoney(event.portfolio_value, 0)}
       </td>
     </tr>
   );

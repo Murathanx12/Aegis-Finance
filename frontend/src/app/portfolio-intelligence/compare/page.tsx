@@ -117,9 +117,9 @@ export default function ComparePage() {
   const compareError = compareQ.error ? (compareQ.error as Error).message : null;
 
   return (
-    <div className="space-y-6 animate-slide-up">
-      <div className="flex items-center gap-3">
-        <Link href="/portfolio-intelligence">
+    <div className="space-y-6 animate-slide-up" suppressHydrationWarning>
+      <div className="flex items-center gap-3" suppressHydrationWarning>
+        <Link href="/portfolio">
           <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
         </Link>
         <div>

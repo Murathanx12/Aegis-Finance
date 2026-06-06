@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfoTooltip } from "@/components/info-tooltip";
 import type { MarketStatus } from "@/lib/api";
+import { fmtNum, fmtInt, fmtSignedPct } from "@/lib/format";
 
 type Mood = "Extreme Fear" | "Fear" | "Caution" | "Neutral" | "Optimism" | "Greed";
 
@@ -19,9 +20,9 @@ interface MoodInfo {
  * Risk score range: -4 (low risk) to +4 (extreme risk).
  * Higher composite = more fear.
  */
-function computeMood(riskScore: number, regime: string, vix: number | null): MoodInfo {
+function computeMood(riskScore: number | null | undefined, regime: string | null | undefined, vix: number | null): MoodInfo {
   // Composite: risk_score is primary, VIX and regime add bias
-  let composite = riskScore;
+  let composite = riskScore ?? 0;
 
   // VIX contribution: 16 is baseline, scale above/below
   if (vix != null) {
@@ -68,9 +69,9 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
       <CardContent className="flex flex-wrap items-center gap-x-6 gap-y-4 p-4">
         <div>
           <p className="text-sm text-muted-foreground uppercase tracking-wide">S&P 500</p>
-          <p className="text-3xl font-bold tabular-nums">{data.sp500.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-          <p className={`text-sm font-medium ${data.sp500_change_1m >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-            {data.sp500_change_1m >= 0 ? "+" : ""}{data.sp500_change_1m}% (1M)
+          <p className="text-3xl font-bold tabular-nums">{fmtInt(data.sp500)}</p>
+          <p className={`text-sm font-medium ${(data.sp500_change_1m ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {fmtSignedPct(data.sp500_change_1m, 1)} (1M)
           </p>
         </div>
 
@@ -79,8 +80,8 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
             Regime
             <InfoTooltip text="Market regime detected by analyzing price trends, volatility, and risk indicators. Bull = sustained uptrend, Bear = sustained downtrend, Volatile = high uncertainty." />
           </p>
-          <Badge variant="outline" className={REGIME_COLORS[data.regime] || REGIME_COLORS.Unknown}>
-            {data.regime}
+          <Badge variant="outline" className={REGIME_COLORS[data.regime ?? ""] || REGIME_COLORS.Unknown}>
+            {data.regime ?? "—"}
           </Badge>
         </div>
 
@@ -89,7 +90,7 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
             VIX
             <InfoTooltip text="CBOE Volatility Index — measures expected 30-day S&P 500 volatility. Below 16 = calm, 16-25 = normal, above 25 = elevated fear." />
           </p>
-          <p className="text-2xl font-bold tabular-nums">{data.vix?.toFixed(1) ?? "N/A"}</p>
+          <p className="text-2xl font-bold tabular-nums">{fmtNum(data.vix, 1)}</p>
         </div>
 
         <div>
@@ -97,8 +98,8 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
             Risk Score
             <InfoTooltip text="9-factor composite z-score combining VIX, yield curve, credit spreads, momentum, and more. Range: -4 (low risk) to +4 (extreme risk). Above 2.0 = elevated stress." />
           </p>
-          <p className={`text-2xl font-bold tabular-nums ${data.risk_score > 2 ? "text-red-400" : data.risk_score > 1 ? "text-amber-400" : "text-emerald-400"}`}>
-            {data.risk_score.toFixed(2)}
+          <p className={`text-2xl font-bold tabular-nums ${(data.risk_score ?? 0) > 2 ? "text-red-400" : (data.risk_score ?? 0) > 1 ? "text-amber-400" : "text-emerald-400"}`}>
+            {fmtNum(data.risk_score, 2)}
           </p>
         </div>
 
@@ -108,7 +109,7 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
             <InfoTooltip text="10Y-3M Treasury spread. Negative (inverted) = historically a recession predictor. Positive = normal economic expansion signal." />
           </p>
           <p className={`text-2xl font-bold tabular-nums ${(data.yield_curve ?? 0) < 0 ? "text-red-400" : "text-emerald-400"}`}>
-            {data.yield_curve?.toFixed(2) ?? "N/A"}%
+            {data.yield_curve != null ? `${data.yield_curve.toFixed(2)}%` : "—"}
           </p>
         </div>
 
@@ -135,7 +136,7 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
               <InfoTooltip text="Fed balance sheet (WALCL) minus Treasury General Account minus Reverse Repo. Rising liquidity is generally bullish for equities." />
             </p>
             <p className="text-2xl font-bold tabular-nums">
-              ${data.net_liquidity.net_liquidity.toFixed(2)}T
+              ${fmtNum(data.net_liquidity.net_liquidity, 2)}T
             </p>
             <p className={`text-xs font-medium ${data.net_liquidity.signal === "BULLISH" ? "text-emerald-400" : data.net_liquidity.signal === "BEARISH" ? "text-red-400" : "text-zinc-400"}`}>
               {data.net_liquidity.signal}
@@ -150,10 +151,10 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
               <InfoTooltip text="Economic surprise index: positive when data beats trend, negative when it misses. Based on 8 FRED indicators." />
             </p>
             <p className={`text-2xl font-bold tabular-nums ${
-              data.economic_surprise.composite_score > 0.5 ? "text-emerald-400" :
-              data.economic_surprise.composite_score < -0.5 ? "text-red-400" : "text-zinc-400"
+              (data.economic_surprise.composite_score ?? 0) > 0.5 ? "text-emerald-400" :
+              (data.economic_surprise.composite_score ?? 0) < -0.5 ? "text-red-400" : "text-zinc-400"
             }`}>
-              {data.economic_surprise.composite_score.toFixed(2)}
+              {fmtNum(data.economic_surprise.composite_score, 2)}
             </p>
             <p className={`text-xs font-medium ${
               data.economic_surprise.trend === "improving" ? "text-emerald-400" :
@@ -179,18 +180,18 @@ export function MarketBanner({ data }: { data: MarketStatus | null }) {
           </div>
         )}
 
-        {data.sector_rotation && (
+        {data.sector_rotation?.cycle_phase?.phase && (
           <div>
             <p className="text-sm text-muted-foreground uppercase tracking-wide flex items-center">
               Cycle Phase
-              <InfoTooltip text="Business cycle phase detected from sector rotation patterns: early/mid/late cycle or recession, based on relative sector strength." />
+              <InfoTooltip text={data.sector_rotation.cycle_phase.description || "Business cycle phase detected from sector rotation patterns."} />
             </p>
             <Badge variant="outline" className={
-              data.sector_rotation.cycle_phase === "early_cycle" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" :
-              data.sector_rotation.cycle_phase === "recession" ? "bg-red-500/15 text-red-400 border-red-500/30" :
+              data.sector_rotation.cycle_phase.phase === "early_recovery" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" :
+              data.sector_rotation.cycle_phase.phase === "recession" ? "bg-red-500/15 text-red-400 border-red-500/30" :
               "bg-blue-500/15 text-blue-400 border-blue-500/30"
             }>
-              {data.sector_rotation.cycle_phase.replace("_", " ")}
+              {data.sector_rotation.cycle_phase.phase.replace(/_/g, " ")}
             </Badge>
           </div>
         )}

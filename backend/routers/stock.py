@@ -785,15 +785,17 @@ def _analyze_stock(ticker: str) -> dict:
         from backend.services.drawdown_analyzer import full_drawdown_analysis
         dd_analysis = full_drawdown_analysis(ticker, period="5y")
         if dd_analysis:
-            dd_summary = dd_analysis.get("drawdown_summary", {})
-            rolling = dd_analysis.get("rolling_risk", {})
+            dd_block = dd_analysis.get("drawdowns") or {}
+            dd_summary = dd_block.get("summary") or {}
+            current_dd = dd_block.get("current") or {}
+            rolling = dd_analysis.get("rolling_risk") or {}
             result["drawdown_analysis"] = {
-                "total_drawdowns": dd_summary.get("total_drawdowns"),
-                "max_drawdown_pct": dd_summary.get("max_drawdown_pct"),
+                "total_drawdowns": dd_summary.get("n_drawdowns"),
+                "max_drawdown_pct": dd_summary.get("max_depth_pct"),
                 "avg_recovery_days": dd_summary.get("avg_recovery_days"),
-                "current_drawdown_pct": dd_summary.get("current_drawdown_pct"),
-                "rolling_sharpe_1y": rolling.get("rolling_sharpe_1y"),
-                "rolling_sortino_1y": rolling.get("rolling_sortino_1y"),
+                "current_drawdown_pct": current_dd.get("depth_pct", 0.0),
+                "rolling_sharpe_1y": (rolling.get("sharpe") or {}).get("current"),
+                "rolling_sortino_1y": (rolling.get("sortino") or {}).get("current"),
             }
     except Exception as e:
         logger.debug("drawdown analysis skip %s: %s", ticker, e)

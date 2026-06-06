@@ -139,6 +139,9 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
     except Exception:
         pass
 
+    # TODO(phase-5.5): accept seed via the API request body so the same inputs
+    # produce identical outputs (Phase 5b complaint: "values changing between
+    # runs"). Today seed=None which means each call gets a fresh RNG.
     results = run_monte_carlo(
         current_price=start_price,
         current_regime=current_regime,

@@ -56,6 +56,11 @@ def _generate_block_bootstrap_residuals(
         np.ndarray of shape (days, n_sims) with block-bootstrapped residuals
     """
     if rng is None:
+        # TODO(phase-5.5): plumb a deterministic seed from the API request so
+        # repeated identical analyze calls return identical numbers (per Phase 5b
+        # bug report: "Values changing between runs"). Today every call seeds
+        # afresh, so MC paths differ run-to-run. Reproducibility belongs at the
+        # request boundary, not buried inside the bootstrap helper.
         rng = np.random.default_rng()
 
     n_hist = len(historical_returns)
@@ -537,11 +542,11 @@ def run_monte_carlo(
         }
 
         logger.info(
-            "  %s (%.0f%%): %d sims -> $%,.0f",
+            "  %s (%.0f%%): %d sims -> $%s",
             name,
             weight * 100,
             sims_for_scenario,
-            paths[-1].mean(),
+            f"{paths[-1].mean():,.0f}",
         )
 
         all_paths = paths if all_paths is None else np.hstack([all_paths, paths])

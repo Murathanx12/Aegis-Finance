@@ -85,3 +85,30 @@ the same data store.
 Already covered in `docs/phase2_decisions.md` — both deferred to a
 later frontend pass once the reference lane MetricPacks are stable
 enough to compare against. Not blockers for V1.
+
+## Replay Cache Improvements
+
+Two known issues with the V1 SQLite replay cache shipped in Phase 5b.
+Both are low-risk, post-Phase-7 work.
+
+### Calendar-day TTL → time-based TTL
+
+**Current:** cache key includes `date.today().isoformat()` in server
+local timezone, invalidating at local midnight regardless of when the
+entry was written. A 23:59 write becomes a miss at 00:00.
+
+**Fix:** store `cached_at` timestamp, compare against
+`datetime.utcnow() - timedelta(hours=24)`. Standardize on UTC
+throughout. ~30 min implementation.
+
+### Calendar-day market data key → last-bar-date key
+
+**Current:** `market_data_date = date.today().isoformat()` —
+invalidates daily even on weekends and holidays when no new market
+data exists. Causes unnecessary recomputes that produce identical
+results.
+
+**Fix:** `market_data_date = data_fetcher.fetch_safe("SPY",
+...).index[-1].date().isoformat()`, cached for ~5 minutes via the
+existing cache layer. Use that as the cache key component. ~45 min
+implementation.

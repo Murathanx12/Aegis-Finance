@@ -259,6 +259,19 @@ class ReplayResult(BaseModel):
     total_cost_bps: float = 0.0
 
 
+class ReplaySnapshotResponse(BaseModel):
+    """Cached-or-missing wrapper around ReplayResult.
+
+    status: "cached" = computed today, "stale" = older than 24h, "missing" = no cache.
+    Frontend uses status to decide whether to show a "stale" badge or prompt for refresh.
+    """
+    lane_id: str
+    status: str
+    cached_at: Optional[str] = None
+    fresh: bool = False
+    result: Optional[ReplayResult] = None
+
+
 class LaneConfigResponse(BaseModel):
     """Public-facing configuration for a portfolio lane."""
     lane_id: str

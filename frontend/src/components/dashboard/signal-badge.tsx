@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { InfoTooltip } from "@/components/info-tooltip";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import type { MarketSignal } from "@/lib/api";
+import { fmtSigned } from "@/lib/format";
 
 const ACTION_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   "Strong Buy": { bg: "bg-emerald-500/15", text: "text-emerald-400", border: "border-emerald-500/30" },
@@ -34,7 +35,9 @@ export function SignalBadge({ data }: { data: MarketSignal | null }) {
     );
   }
 
-  const style = ACTION_STYLES[data.action] ?? ACTION_STYLES.Hold;
+  const action = data.action ?? "Hold";
+  const style = ACTION_STYLES[action] ?? ACTION_STYLES.Hold;
+  const confidence = data.confidence ?? 0;
 
   return (
     <Card className={`${style.border} border-2`}>
@@ -48,37 +51,37 @@ export function SignalBadge({ data }: { data: MarketSignal | null }) {
             />
           </h3>
           <span className="text-xs text-muted-foreground tabular-nums">
-            Score: {data.composite_score > 0 ? "+" : ""}{data.composite_score.toFixed(3)}
+            Score: {fmtSigned(data.composite_score, 3)}
           </span>
         </div>
 
         <div className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 ${style.bg} ${style.text} font-bold text-2xl`}>
-          <ActionIcon action={data.action} />
-          {data.action}
+          <ActionIcon action={action} />
+          {action}
         </div>
 
         <div className="mt-1 mb-3">
           <span className="text-xs text-muted-foreground">
-            Confidence: {data.confidence}%
+            Confidence: {confidence}%
           </span>
           <div className="w-full h-1.5 bg-muted rounded-full mt-1">
             <div
               className={`h-full rounded-full transition-all ${
-                data.action.includes("Buy") ? "bg-emerald-500" :
-                data.action.includes("Sell") ? "bg-red-500" : "bg-amber-500"
+                action.includes("Buy") ? "bg-emerald-500" :
+                action.includes("Sell") ? "bg-red-500" : "bg-amber-500"
               }`}
-              style={{ width: `${Math.min(data.confidence, 100)}%` }}
+              style={{ width: `${Math.min(confidence, 100)}%` }}
             />
           </div>
         </div>
 
-        {data.reasons.length > 0 && (
+        {Array.isArray(data.reasons) && data.reasons.length > 0 && (
           <ul className="space-y-1">
             {data.reasons.map((reason, i) => (
               <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
                 <span className={`mt-0.5 h-1.5 w-1.5 rounded-full shrink-0 ${
-                  data.action.includes("Buy") ? "bg-emerald-400" :
-                  data.action.includes("Sell") ? "bg-red-400" : "bg-amber-400"
+                  action.includes("Buy") ? "bg-emerald-400" :
+                  action.includes("Sell") ? "bg-red-400" : "bg-amber-400"
                 }`} />
                 {reason}
               </li>

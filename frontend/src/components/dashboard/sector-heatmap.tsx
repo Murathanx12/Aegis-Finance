@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfoTooltip } from "@/components/info-tooltip";
 import type { SectorsResponse } from "@/lib/api";
+import { fmtNum, fmtSignedPct } from "@/lib/format";
 
-function colorForReturn(pct: number): string {
+function colorForReturn(pct: number | null | undefined): string {
+  if (pct == null) return "bg-muted/40 text-muted-foreground";
   if (pct > 40) return "bg-emerald-600/80 text-white";
   if (pct > 20) return "bg-emerald-500/60 text-white";
   if (pct > 0) return "bg-emerald-500/30 text-emerald-200";
@@ -38,12 +40,12 @@ export function SectorHeatmap({ data }: { data: SectorsResponse | null }) {
               key={sector.name}
               className={`rounded-lg p-3 transition-colors ${colorForReturn(sector.sim_total_return)}`}
             >
-              <p className="text-xs font-medium truncate">{sector.name}</p>
+              <p className="text-xs font-medium truncate">{sector.name ?? "—"}</p>
               <p className="text-lg font-bold tabular-nums">
-                {sector.sim_total_return >= 0 ? "+" : ""}{sector.sim_total_return.toFixed(1)}%
+                {fmtSignedPct(sector.sim_total_return, 1)}
               </p>
               <p className="text-[10px] opacity-70">
-                Beta {sector.beta.toFixed(2)} | Vol {sector.sigma.toFixed(0)}%
+                Beta {fmtNum(sector.beta, 2)} | Vol {fmtNum(sector.sigma, 0)}%
               </p>
             </div>
           ))}
