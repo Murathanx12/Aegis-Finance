@@ -300,7 +300,13 @@ class LaneConfig(BaseModel):
     target_equity_pct: float = Field(..., ge=0, le=1)
     target_bond_pct: float = Field(..., ge=0, le=1)
     target_alt_pct: float = Field(..., ge=0, le=1)
-    optimizer: str = Field(..., pattern="^(hrp|black-litterman)$")
+    target_cash_pct: float = Field(0.0, ge=0, le=1)  # explicit cash/T-bill sleeve
+    # Active optimizer the engine actually runs. 'equal_weight' is honest today;
+    # real HRP/BL land as versioned config changes (intent in planned_optimizer).
+    optimizer: str = Field(..., pattern="^(equal_weight|hrp|black-litterman)$")
+    planned_optimizer: str = Field(
+        "equal_weight", pattern="^(equal_weight|hrp|black-litterman)$"
+    )
     max_single_name: float = Field(..., ge=0.01, le=1)
     max_sector: float = Field(..., ge=0.05, le=1)
     rebalance_trigger_drift: float = Field(..., ge=0.01, le=0.5)
