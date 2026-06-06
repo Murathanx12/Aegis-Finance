@@ -34,6 +34,45 @@ _SECTOR_ETFS = set(_universe.get("sector_etfs", []))
 _BROAD_EQUITY = set(_universe.get("broad_equity", []))
 
 
+# Sector ETF → GICS sector (so a sector ETF counts toward its sector's cap).
+_SECTOR_ETF_GICS = {
+    "XLK": "Technology", "XLV": "Healthcare", "XLF": "Financials",
+    "XLE": "Energy", "XLY": "Consumer Disc.", "XLP": "Consumer Staples",
+    "XLI": "Industrials", "XLU": "Utilities", "XLRE": "Real Estate",
+    "XLB": "Materials", "XLC": "Communication Services",
+}
+
+# individual_stocks category → GICS sector (mirrors real_analyzer labels).
+_PI_CATEGORY_GICS = {
+    "technology": "Technology", "semiconductors": "Technology",
+    "consumer_internet": "Consumer Disc.", "healthcare_biotech": "Healthcare",
+    "financials": "Financials", "energy_materials": "Energy",
+    "industrials_defense": "Industrials", "consumer_staples": "Consumer Staples",
+    "emerging_tech": "Technology", "quantum_cleantech": "Technology",
+}
+
+
+def lane_sector_map(universe_cfg: dict | None = None) -> dict[str, str]:
+    """Equity-sector map for the reference lanes.
+
+    The 11 sector ETFs and the individual stocks map to GICS sectors and ARE
+    subject to the per-sector cap. Broad-equity ETFs (SPY/QQQ/VTI/…), bond,
+    alternative and cash sleeves are deliberately OMITTED — a ticker absent
+    from this map is EXEMPT from the sector cap (a diversified SPY, or a 50%
+    bond sleeve, must NOT be clipped as if it were a single equity sector).
+    """
+    if universe_cfg is None:
+        universe_cfg = _universe
+    m = dict(_SECTOR_ETF_GICS)
+    individual = universe_cfg.get("individual_stocks", {}) or {}
+    for category, tickers in individual.items():
+        gics = _PI_CATEGORY_GICS.get(category)
+        if gics:
+            for t in tickers:
+                m.setdefault(t, gics)
+    return m
+
+
 def classify_asset(ticker: str) -> str:
     """Classify a ticker as equity, bond, or alternative."""
     if ticker in _BOND_ETFS:
@@ -296,15 +335,26 @@ def enforce_position_limits(
             for t in unfrozen:
                 result[t] += per
 
-    # Pass 2: sector waterfill
+    # Pass 2: sector waterfill — ONLY genuine equity sectors are capped.
+    # A ticker absent from sector_map (or mapped to a falsy value) is EXEMPT:
+    # broad-equity ETFs and the bond/alt/cash sleeves are never clipped as if
+    # they were a single equity sector. Trimmed weight is redistributed to
+    # UNFROZEN equity names only, so it stays in the equity sleeve rather than
+    # leaking into bonds/cash.
+    def _sector_of(ticker: str):
+        s = sector_map.get(ticker)
+        return s if s else None  # None / "" → exempt from the sector cap
+
+    capped = [t for t in result if _sector_of(t) is not None]
     frozen_sectors: set[str] = set()
-    for _ in range(len(set(sector_map.values())) + 2):
+    n_sectors = len({_sector_of(t) for t in capped})
+    for _ in range(n_sectors + 2):
         sector_weights: dict[str, float] = {}
         sector_tickers: dict[str, list[str]] = {}
-        for t, w in result.items():
-            sector = sector_map.get(t, "Other")
-            sector_weights[sector] = sector_weights.get(sector, 0.0) + w
-            sector_tickers.setdefault(sector, []).append(t)
+        for t in capped:
+            s = _sector_of(t)
+            sector_weights[s] = sector_weights.get(s, 0.0) + result[t]
+            sector_tickers.setdefault(s, []).append(t)
 
         excess = 0.0
         newly_frozen_s = []
@@ -312,29 +362,26 @@ def enforce_position_limits(
             if sector in frozen_sectors:
                 continue
             if sw > max_sector + 1e-10:
-                sector_excess = sw - max_sector
-                excess += sector_excess
+                excess += sw - max_sector
                 for t in sector_tickers[sector]:
                     result[t] *= (max_sector / sw)
                 newly_frozen_s.append(sector)
 
         if excess <= 1e-10:
             break
-
         frozen_sectors.update(newly_frozen_s)
-        unfrozen_tickers = []
-        for sector, tickers in sector_tickers.items():
-            if sector not in frozen_sectors:
-                unfrozen_tickers.extend(tickers)
 
-        unfrozen_total = sum(result[t] for t in unfrozen_tickers)
+        unfrozen = [t for t in capped if _sector_of(t) not in frozen_sectors]
+        unfrozen_total = sum(result[t] for t in unfrozen)
         if unfrozen_total > 0:
-            for t in unfrozen_tickers:
+            for t in unfrozen:
                 result[t] += excess * (result[t] / unfrozen_total)
-        elif unfrozen_tickers:
-            per = excess / len(unfrozen_tickers)
-            for t in unfrozen_tickers:
+        elif unfrozen:
+            per = excess / len(unfrozen)
+            for t in unfrozen:
                 result[t] += per
+        else:
+            break  # all equity sectors capped — nowhere to redistribute
 
     # Final normalize
     total = sum(result.values())
