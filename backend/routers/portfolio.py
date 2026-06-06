@@ -202,6 +202,35 @@ async def analyze_portfolio(request: AnalyzeRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def _analyze_with_risk_number(holdings: list[dict]) -> dict:
+    """Synchronous full portfolio analysis for tearsheet rendering.
+
+    Composes the same sub-analyses as the async analyze_portfolio endpoint,
+    run sequentially (tearsheets are not latency-sensitive). Returns the merged
+    analysis dict (metrics, holdings, risk_number, factor_exposures, stress_test)
+    consumed by render_portfolio_tearsheet_html / _xlsx.
+    """
+    tickers = [h["ticker"] for h in holdings]
+    total_value = sum(h["shares"] * h["current_price"] for h in holdings)
+    weights = {
+        h["ticker"]: (h["shares"] * h["current_price"]) / total_value if total_value > 0 else 0
+        for h in holdings
+    }
+
+    close_5y = _prefetch_close_5y(tickers)
+
+    result: dict = {}
+    for part in (
+        _engine_analyze_cached(holdings, weights),
+        _compute_factor_exposures(weights),
+        _compute_stress_test(weights),
+        _compute_risk_number(holdings, weights, close_5y),
+    ):
+        if part:
+            result.update(part)
+    return result
+
+
 def _compute_risk_number(holdings: list[dict], weights: dict, close_5y=None) -> dict:
     """Risk number (1-100) — uses prefetched 5y close (slices last ~2y)."""
     try:
