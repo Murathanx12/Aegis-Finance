@@ -77,9 +77,16 @@ def compute_momentum_rankings(
             for t in stickers:
                 sector_map[t] = sector
 
-    # Compute returns over different lookback windows
+    # Compute returns over different lookback windows.
+    # NOTE: 1M is computed for display but EXCLUDED from the composite weights.
+    # The 1-month horizon exhibits short-term *reversal*, not continuation
+    # (Jegadeesh-Titman); including it diluted forward IC ~6x in our validation
+    # (docs/FACTOR_VALIDATION.md). Composite now uses 3M/6M/12M only, moving it
+    # toward the textbook 12-1 definition. Momentum here is a DESCRIPTIVE
+    # relative-strength rank with weak/insignificant forward IC on this universe
+    # — not validated alpha.
     trading_days = {"1M": 21, "3M": 63, "6M": 126, "12M": 252}
-    weights = {"1M": 0.10, "3M": 0.25, "6M": 0.35, "12M": 0.30}
+    weights = {"3M": 0.28, "6M": 0.39, "12M": 0.33}
 
     results = []
     for ticker in tickers:
