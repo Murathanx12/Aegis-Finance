@@ -228,6 +228,40 @@ def _probe_edgar_taxonomy_complete() -> tuple[str, bool, str]:
         return ("edgar_taxonomy", False, f"{type(e).__name__}: {e}")
 
 
+def _probe_overfitting_guard() -> tuple[str, bool, str]:
+    """The overfitting guard must discriminate a robust strategy from noise.
+
+    A matrix where one strategy genuinely dominates every period should score
+    a far lower PBO than a matrix of pure-noise strategies, and the deflated
+    Sharpe of a many-trial winner must not exceed its (undeflated) PSR.
+    """
+    try:
+        from engine.validation.overfitting import (
+            deflated_sharpe_from_returns,
+            probability_of_backtest_overfitting,
+        )
+
+        rng = np.random.default_rng(13)
+        noise = rng.normal(0.0, 0.01, (96, 30))
+        dominant = noise.copy()
+        dominant[:, 0] += 0.02  # one persistent winner
+
+        pbo_noise = probability_of_backtest_overfitting(noise, n_partitions=8)["pbo"]
+        pbo_dom = probability_of_backtest_overfitting(dominant, n_partitions=8)["pbo"]
+
+        # Many-trial winner: DSR must deflate below PSR.
+        sharpes = noise.mean(0) / noise.std(0, ddof=1)
+        best = noise[:, int(np.argmax(sharpes))]
+        d = deflated_sharpe_from_returns(best, n_trials=30,
+                                         sr_variance=float(sharpes.var(ddof=1)))
+
+        ok = pbo_dom < pbo_noise and d["dsr"] <= d["psr"] + 1e-9
+        return ("overfitting_guard", ok,
+                f"pbo dom={pbo_dom} < noise={pbo_noise}; dsr={d['dsr']}<=psr={d['psr']}")
+    except Exception as e:
+        return ("overfitting_guard", False, f"{type(e).__name__}: {e}")
+
+
 PROBES: list[Callable[[], tuple[str, bool, str]]] = [
     _probe_flat_vol_mc,
     _probe_extreme_drawdown,
@@ -241,6 +275,8 @@ PROBES: list[Callable[[], tuple[str, bool, str]]] = [
     _probe_commodity_slope_classifier,
     _probe_currency_inference,
     _probe_edgar_taxonomy_complete,
+    # Chunk 1: overfitting guards
+    _probe_overfitting_guard,
 ]
 
 

@@ -148,7 +148,8 @@ def optimize_weights(
             continue
 
         arr = np.array(strategy_returns)
-        sharpe = float(np.mean(arr) / max(np.std(arr), 1e-8) * np.sqrt(4))
+        per_obs_sharpe = float(np.mean(arr) / max(np.std(arr), 1e-8))
+        sharpe = float(per_obs_sharpe * np.sqrt(4))  # annualized (quarterly obs)
         hit_rate = buy_correct / buy_total * 100
 
         results.append({
@@ -157,6 +158,9 @@ def optimize_weights(
             "hit_rate": round(hit_rate, 1),
             "total_return": round(float((1 + arr).prod() - 1) * 100, 1),
             "buy_signals": buy_total,
+            # Internal (stripped before return) — used for the overfitting guard.
+            "_per_obs_sharpe": per_obs_sharpe,
+            "_returns": arr.tolist(),
         })
 
     if not results:
@@ -172,12 +176,66 @@ def optimize_weights(
             current_result = r
             break
 
+    # Overfitting guard: the winner was selected as best-of-N, so its Sharpe
+    # is inflated by the search itself. Deflate it (DSR) and measure how often
+    # the in-sample winner survives out-of-sample (PBO) before recommending.
+    guard = _overfitting_guard(results)
+
+    def _strip(r: dict | None) -> dict | None:
+        if r is None:
+            return None
+        return {k: v for k, v in r.items() if not k.startswith("_")}
+
     return {
-        "top_3": results[:3],
+        "top_3": [_strip(r) for r in results[:3]],
         "current_weights": dict(_DEFAULT_WEIGHTS),
-        "current_performance": current_result,
+        "current_performance": _strip(current_result),
         "total_combos_tested": len(results),
-        "recommendation": _make_recommendation(results[:3], current_result),
+        "overfitting_guard": guard,
+        "recommendation": _make_recommendation(results[:3], current_result, guard),
+    }
+
+
+def _overfitting_guard(results: list[dict]) -> dict:
+    """Deflated Sharpe + PBO for the grid-search winner.
+
+    `results` must still carry the internal `_returns` / `_per_obs_sharpe`
+    fields (this is called before they are stripped).
+    """
+    from engine.validation.overfitting import (
+        deflated_sharpe_from_returns,
+        probability_of_backtest_overfitting,
+    )
+
+    n_trials = len(results)
+    if n_trials < 2:
+        return {"available": False, "reason": "need ≥2 weight combinations"}
+
+    per_obs = np.array([r["_per_obs_sharpe"] for r in results], dtype=float)
+    sr_variance = float(per_obs.var(ddof=1)) if n_trials > 1 else 0.0
+
+    best_returns = np.array(results[0]["_returns"], dtype=float)
+    dsr = deflated_sharpe_from_returns(best_returns, n_trials=n_trials,
+                                       sr_variance=sr_variance)
+
+    # (T observations × N configs) matrix for the combinatorial PBO test.
+    matrix = np.column_stack([r["_returns"] for r in results])
+    pbo = probability_of_backtest_overfitting(matrix, n_partitions=8)
+
+    survives = dsr["dsr"] >= 0.95 and (pbo.get("pbo") is None or pbo["pbo"] < 0.5)
+    return {
+        "available": True,
+        "n_trials": n_trials,
+        "winner_psr": dsr["psr"],
+        "winner_dsr": dsr["dsr"],
+        "expected_max_sharpe_h0": dsr["expected_max_sharpe_h0"],
+        "pbo": pbo.get("pbo"),
+        "pbo_interpretation": pbo.get("interpretation"),
+        "survives_deflation": bool(survives),
+        "note": (
+            "Forward returns overlap (quarterly horizon), so PSR/DSR are "
+            "approximate; the deflation direction is still informative."
+        ),
     }
 
 
@@ -242,12 +300,30 @@ def _compute_signal_with_weights(inputs: dict, weights: dict) -> dict:
     return {"action": action, "composite_score": composite}
 
 
-def _make_recommendation(top3: list, current: dict | None) -> str:
-    """Generate recommendation based on optimization results."""
+def _make_recommendation(top3: list, current: dict | None,
+                         guard: dict | None = None) -> str:
+    """Generate recommendation, gated on the overfitting guard.
+
+    Even a big in-sample improvement is NOT recommended unless the winner
+    survives deflation (DSR ≥ 0.95) and the in-sample winner generally holds
+    up out-of-sample (PBO < 0.5). This is what stops the grid search from
+    banking a lucky configuration.
+    """
     if not top3:
         return "Insufficient data for recommendation"
 
     best = top3[0]
+
+    # Hard gate: a winner that doesn't survive deflation is treated as luck.
+    if guard and guard.get("available") and not guard.get("survives_deflation"):
+        return (
+            f"NO CHANGE (likely overfit): best combo's edge does not survive "
+            f"deflation: DSR={guard['winner_dsr']:.2f} (need >=0.95), "
+            f"PBO={guard['pbo']} across {guard['n_trials']} trials. "
+            f"Keep current weights; the apparent improvement is consistent "
+            f"with selection bias."
+        )
+
     if current is None:
         return f"Best combo: Sharpe={best['sharpe']}, hit rate={best['hit_rate']}%"
 
@@ -255,9 +331,13 @@ def _make_recommendation(top3: list, current: dict | None) -> str:
     hit_diff = best["hit_rate"] - current["hit_rate"]
 
     if hit_diff > 5:
+        deflation = ""
+        if guard and guard.get("available"):
+            deflation = (f" Survives deflation (DSR={guard['winner_dsr']:.2f}, "
+                         f"PBO={guard['pbo']}).")
         return (
             f"RECOMMENDED CHANGE: New weights improve hit rate by {hit_diff:.1f}% "
-            f"(Sharpe: {current['sharpe']:.3f} -> {best['sharpe']:.3f}). "
+            f"(Sharpe: {current['sharpe']:.3f} -> {best['sharpe']:.3f}).{deflation} "
             f"New weights: {best['weights']}"
         )
     else:

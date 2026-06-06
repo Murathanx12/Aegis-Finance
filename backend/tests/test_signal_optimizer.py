@@ -40,4 +40,7 @@ def test_optimize_weights_small_range():
     result = signal_optimizer.optimize_weights(start_date="2024-01-01", end_date="2024-03-01")
     assert isinstance(result, dict)
     # Either produced results or returned an error — never raise
-    assert "error" in result or "top_combinations" in result or "best" in result
+    assert "error" in result or "top_3" in result
+    # When results exist, the overfitting guard must be attached.
+    if "top_3" in result:
+        assert "overfitting_guard" in result
