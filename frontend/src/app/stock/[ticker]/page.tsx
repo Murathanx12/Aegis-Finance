@@ -19,6 +19,15 @@ import {
   AreaChart, Area, LineChart, Line,
 } from "recharts";
 import type { StockAnalysis } from "@/lib/api";
+import { fmtPct, fmtNum, fmtMoney, fmtSigned, fmtSignedPct } from "@/lib/format";
+
+// Safe number formatter — coerces strings, returns "N/A" for null/undefined/NaN/non-numeric.
+function nf(v: unknown, digits = 1, suffix = ""): string {
+  if (v == null) return "N/A";
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return "N/A";
+  return `${n.toFixed(digits)}${suffix}`;
+}
 
 function MetricCard({ label, value, suffix, color, tooltip }: { label: string; value: string | number; suffix?: string; color?: string; tooltip?: string }) {
   return (
@@ -389,7 +398,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <span>Confidence: {signalData.confidence}%</span>
-                <span>Score: {signalData.composite_score > 0 ? "+" : ""}{signalData.composite_score.toFixed(3)}</span>
+                <span>Score: {fmtSigned(signalData.composite_score, 3)}</span>
                 <span>Market: {signalData.market_action}</span>
               </div>
               {signalData.reasons.length > 0 && (
@@ -420,14 +429,14 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
         <>
           {/* Key Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <MetricCard label="Current Price" value={`$${stockData.current_price.toFixed(2)}`} />
-            <MetricCard label="Expected Return (5Y)" value={`${stockData.expected_return >= 0 ? "+" : ""}${stockData.expected_return.toFixed(1)}`} suffix="%" color={stockData.expected_return >= 0 ? "text-emerald-400" : "text-red-400"} tooltip="Mean return across all Monte Carlo simulations over 5 years" />
-            <MetricCard label="Median Return" value={`${stockData.median_return >= 0 ? "+" : ""}${stockData.median_return.toFixed(1)}`} suffix="%" tooltip="50th percentile return. More robust to outliers than the mean" />
-            <MetricCard label="Volatility" value={stockData.volatility.toFixed(1)} suffix="%" tooltip="Annualized historical volatility. Higher = more price swings" />
-            <MetricCard label="Beta" value={stockData.beta.toFixed(2)} tooltip="Sensitivity to market moves. Beta > 1 = amplifies market swings" />
-            <MetricCard label="Sharpe Ratio" value={stockData.sharpe.toFixed(2)} color={stockData.sharpe > 0.5 ? "text-emerald-400" : stockData.sharpe > 0 ? "text-amber-400" : "text-red-400"} tooltip="Risk-adjusted return. Above 0.5 = decent, above 1.0 = excellent" />
-            <MetricCard label="P(Loss) 5Y" value={stockData.prob_loss_5y.toFixed(1)} suffix="%" color={stockData.prob_loss_5y > 30 ? "text-red-400" : "text-emerald-400"} tooltip="Probability of negative total return over 5 years from Monte Carlo" />
-            <MetricCard label="Avg Max Drawdown" value={stockData.avg_max_drawdown.toFixed(1)} suffix="%" color="text-red-400" tooltip="Average worst peak-to-trough decline across all simulations" />
+            <MetricCard label="Current Price" value={fmtMoney(stockData.current_price, 2)} />
+            <MetricCard label="Expected Return (5Y)" value={fmtSigned(stockData.expected_return, 1)} suffix="%" color={(stockData.expected_return ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"} tooltip="Mean return across all Monte Carlo simulations over 5 years" />
+            <MetricCard label="Median Return" value={fmtSigned(stockData.median_return, 1)} suffix="%" tooltip="50th percentile return. More robust to outliers than the mean" />
+            <MetricCard label="Volatility" value={fmtNum(stockData.volatility, 1)} suffix="%" tooltip="Annualized historical volatility. Higher = more price swings" />
+            <MetricCard label="Beta" value={fmtNum(stockData.beta, 2)} tooltip="Sensitivity to market moves. Beta > 1 = amplifies market swings" />
+            <MetricCard label="Sharpe Ratio" value={fmtNum(stockData.sharpe, 2)} color={(stockData.sharpe ?? 0) > 0.5 ? "text-emerald-400" : (stockData.sharpe ?? 0) > 0 ? "text-amber-400" : "text-red-400"} tooltip="Risk-adjusted return. Above 0.5 = decent, above 1.0 = excellent" />
+            <MetricCard label="P(Loss) 5Y" value={fmtNum(stockData.prob_loss_5y, 1)} suffix="%" color={(stockData.prob_loss_5y ?? 0) > 30 ? "text-red-400" : "text-emerald-400"} tooltip="Probability of negative total return over 5 years from Monte Carlo" />
+            <MetricCard label="Avg Max Drawdown" value={fmtNum(stockData.avg_max_drawdown, 1)} suffix="%" color="text-red-400" tooltip="Average worst peak-to-trough decline across all simulations" />
           </div>
 
           {/* Price History Chart */}
@@ -457,7 +466,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
               <div className="flex items-center gap-4">
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground">5th</p>
-                  <p className="text-lg font-bold text-red-400">${stockData.p05_price.toFixed(0)}</p>
+                  <p className="text-lg font-bold text-red-400">{fmtMoney(stockData.p05_price, 0)}</p>
                 </div>
                 <div className="flex-1 h-3 bg-gradient-to-r from-red-500/30 via-blue-500/30 to-emerald-500/30 rounded-full relative">
                   <div
@@ -469,7 +478,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground">95th</p>
-                  <p className="text-lg font-bold text-emerald-400">${stockData.p95_price.toFixed(0)}</p>
+                  <p className="text-lg font-bold text-emerald-400">{fmtMoney(stockData.p95_price, 0)}</p>
                 </div>
               </div>
               <div className="flex justify-between mt-2">
@@ -477,7 +486,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                   PE: {stockData.pe_ratio?.toFixed(1) ?? "N/A"} | Analyst Target: ${stockData.analyst_target?.toFixed(0) ?? "N/A"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Drift: {stockData.capped_drift.toFixed(1)}% (capped from {stockData.hist_drift.toFixed(1)}%)
+                  Drift: {fmtPct(stockData.capped_drift, 1)} (capped from {fmtPct(stockData.hist_drift, 1)})
                 </p>
               </div>
             </CardContent>
@@ -527,15 +536,17 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="flex items-center gap-3">
-                        <span className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-bold ${
-                          stockData.technical_signal.signal === "bullish" ? "bg-emerald-500/15 text-emerald-400" :
-                          stockData.technical_signal.signal === "bearish" ? "bg-red-500/15 text-red-400" :
-                          "bg-amber-500/15 text-amber-400"
-                        }`}>
-                          {stockData.technical_signal.signal.charAt(0).toUpperCase() + stockData.technical_signal.signal.slice(1)}
-                        </span>
+                        {stockData.technical_signal.sentiment && (
+                          <span className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-bold ${
+                            stockData.technical_signal.sentiment.startsWith("bullish") || stockData.technical_signal.sentiment === "slightly_bullish" ? "bg-emerald-500/15 text-emerald-400" :
+                            stockData.technical_signal.sentiment.startsWith("bearish") || stockData.technical_signal.sentiment === "slightly_bearish" ? "bg-red-500/15 text-red-400" :
+                            "bg-amber-500/15 text-amber-400"
+                          }`}>
+                            {stockData.technical_signal.sentiment.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                          </span>
+                        )}
                         <span className="text-sm text-muted-foreground">
-                          Score: {stockData.technical_signal.score > 0 ? "+" : ""}{stockData.technical_signal.score.toFixed(2)}
+                          Score: {(stockData.technical_signal.score ?? 0) > 0 ? "+" : ""}{(stockData.technical_signal.score ?? 0).toFixed(2)}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -562,15 +573,11 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                           </div>
                         )}
                       </div>
-                      {stockData.technical_signal.components && Object.keys(stockData.technical_signal.components).length > 0 && (
+                      {Array.isArray(stockData.technical_signal.reasons) && stockData.technical_signal.reasons.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {Object.entries(stockData.technical_signal.components).map(([key, val]) => (
-                            <span key={key} className={`text-xs px-2 py-1 rounded-md ${
-                              val > 0 ? "bg-emerald-500/10 text-emerald-400" :
-                              val < 0 ? "bg-red-500/10 text-red-400" :
-                              "bg-muted/50 text-muted-foreground"
-                            }`}>
-                              {key}: {val > 0 ? "+" : ""}{val.toFixed(2)}
+                          {stockData.technical_signal.reasons.map((reason: string, idx: number) => (
+                            <span key={idx} className="text-xs px-2 py-1 rounded-md bg-muted/50 text-muted-foreground">
+                              {reason}
                             </span>
                           ))}
                         </div>
@@ -598,8 +605,8 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                         </div>
                         {stockData.crash_prob_interval && (
                           <div className="flex-1 text-sm text-muted-foreground">
-                            <p>Conformal interval: {stockData.crash_prob_interval.lower.toFixed(1)}% — {stockData.crash_prob_interval.upper.toFixed(1)}%</p>
-                            <p className="text-xs">Width: {stockData.crash_prob_interval.width.toFixed(1)}pp</p>
+                            <p>Conformal interval: {fmtPct(stockData.crash_prob_interval.lower, 1)} — {fmtPct(stockData.crash_prob_interval.upper, 1)}</p>
+                            <p className="text-xs">Width: {fmtNum(stockData.crash_prob_interval.width, 1)}pp</p>
                           </div>
                         )}
                       </div>
@@ -621,11 +628,11 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-xs text-muted-foreground uppercase flex items-center">
                       Liquidity
-                      <InfoTooltip text={`Amihud illiquidity: ${stockData.liquidity.amihud.toFixed(4)} | Avg daily volume: $${stockData.liquidity.avg_dollar_volume_mm.toFixed(0)}M | LVaR 95%: ${stockData.liquidity.lvar_95.toFixed(2)}%`} />
+                      <InfoTooltip text={`Amihud illiquidity: ${nf(stockData.liquidity.amihud, 4)} | Avg daily volume: $${nf(stockData.liquidity.avg_dollar_volume_mm, 0, "M")} | LVaR 95%: ${nf(stockData.liquidity.lvar_95, 2, "%")}`} />
                     </p>
-                    <p className="text-lg font-bold tabular-nums">{stockData.liquidity.score.toFixed(0)}<span className="text-xs text-muted-foreground">/100</span></p>
+                    <p className="text-lg font-bold tabular-nums">{nf(stockData.liquidity.score, 0)}<span className="text-xs text-muted-foreground">/100</span></p>
                     <p className={`text-xs ${stockData.liquidity.tier === "highly_liquid" ? "text-emerald-400" : stockData.liquidity.tier === "liquid" ? "text-blue-400" : "text-amber-400"}`}>
-                      {stockData.liquidity.tier.replace("_", " ")}
+                      {stockData.liquidity.tier ? stockData.liquidity.tier.replace("_", " ") : "—"}
                     </p>
                   </div>
                 )}
@@ -633,124 +640,139 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-xs text-muted-foreground uppercase flex items-center">
                       Momentum Rank
-                      <InfoTooltip text={`Cross-sectional momentum: ranked #${stockData.momentum_rank.rank} of ${stockData.momentum_rank.total} stocks`} />
+                      <InfoTooltip text={`Cross-sectional momentum: ranked #${stockData.momentum_rank.rank ?? "?"} of ${stockData.momentum_rank.total ?? "?"} stocks`} />
                     </p>
-                    <p className={`text-lg font-bold tabular-nums ${stockData.momentum_rank.percentile > 70 ? "text-emerald-400" : stockData.momentum_rank.percentile < 30 ? "text-red-400" : ""}`}>
-                      P{stockData.momentum_rank.percentile.toFixed(0)}
+                    <p className={`text-lg font-bold tabular-nums ${(stockData.momentum_rank.percentile ?? 0) > 70 ? "text-emerald-400" : (stockData.momentum_rank.percentile ?? 0) < 30 ? "text-red-400" : ""}`}>
+                      P{nf(stockData.momentum_rank.percentile, 0)}
                     </p>
-                    <p className="text-xs text-muted-foreground">#{stockData.momentum_rank.rank}/{stockData.momentum_rank.total}</p>
+                    <p className="text-xs text-muted-foreground">#{stockData.momentum_rank.rank ?? "?"}/{stockData.momentum_rank.total ?? "?"}</p>
                   </div>
                 )}
-                {stockData.insider_signal && (
-                  <div className="rounded-lg bg-muted/30 p-3">
-                    <p className="text-xs text-muted-foreground uppercase flex items-center">
-                      Insider Signal
-                      <InfoTooltip text={`Buys: ${stockData.insider_signal.buy_count} | Sells: ${stockData.insider_signal.sell_count} | Cluster buy: ${stockData.insider_signal.cluster_buy ? "Yes" : "No"}`} />
-                    </p>
-                    <p className={`text-lg font-bold ${
-                      stockData.insider_signal.sentiment === "bullish" ? "text-emerald-400" :
-                      stockData.insider_signal.sentiment === "bearish" ? "text-red-400" : "text-muted-foreground"
-                    }`}>
-                      {stockData.insider_signal.sentiment.charAt(0).toUpperCase() + stockData.insider_signal.sentiment.slice(1)}
-                    </p>
-                    {stockData.insider_signal.cluster_buy && (
-                      <p className="text-xs text-emerald-400">Cluster buy detected</p>
-                    )}
-                  </div>
-                )}
-                {stockData.trends_attention && (
-                  <div className="rounded-lg bg-muted/30 p-3">
-                    <p className="text-xs text-muted-foreground uppercase flex items-center">
-                      Search Attention
-                      <InfoTooltip text={stockData.trends_attention.interpretation} />
-                    </p>
-                    <p className={`text-lg font-bold ${
-                      stockData.trends_attention.attention_level === "high" ? "text-amber-400" :
-                      stockData.trends_attention.attention_level === "elevated" ? "text-amber-400" :
-                      "text-muted-foreground"
-                    }`}>
-                      {stockData.trends_attention.attention_level.charAt(0).toUpperCase() + stockData.trends_attention.attention_level.slice(1)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">z-score: {stockData.trends_attention.attention_zscore.toFixed(2)}</p>
-                  </div>
-                )}
+                {stockData.insider_signal && (() => {
+                  const insiderScore = stockData.insider_signal.signal ?? 0;
+                  const insiderLabel = insiderScore > 0.3 ? "Bullish" : insiderScore < -0.3 ? "Bearish" : "Neutral";
+                  const insiderTone = insiderScore > 0.3 ? "text-emerald-400" : insiderScore < -0.3 ? "text-red-400" : "text-muted-foreground";
+                  return (
+                    <div className="rounded-lg bg-muted/30 p-3">
+                      <p className="text-xs text-muted-foreground uppercase flex items-center">
+                        Insider Signal
+                        <InfoTooltip text={`Buys: ${stockData.insider_signal.n_buys ?? 0} | Sells: ${stockData.insider_signal.n_sells ?? 0} | Cluster buy: ${stockData.insider_signal.cluster_buy ? "Yes" : "No"}`} />
+                      </p>
+                      <p className={`text-lg font-bold ${insiderTone}`}>{insiderLabel}</p>
+                      {stockData.insider_signal.cluster_buy && (
+                        <p className="text-xs text-emerald-400">Cluster buy detected</p>
+                      )}
+                    </div>
+                  );
+                })()}
+                {stockData.trends_attention && (() => {
+                  const ta = stockData.trends_attention;
+                  const lvl = ta.attention_level ?? "";
+                  const lvlLabel = lvl ? lvl.charAt(0).toUpperCase() + lvl.slice(1) : "N/A";
+                  return (
+                    <div className="rounded-lg bg-muted/30 p-3">
+                      <p className="text-xs text-muted-foreground uppercase flex items-center">
+                        Search Attention
+                        <InfoTooltip text={ta.interpretation ?? "Google Trends-derived attention level for this ticker."} />
+                      </p>
+                      <p className={`text-lg font-bold ${
+                        lvl === "high" ? "text-amber-400" :
+                        lvl === "elevated" ? "text-amber-400" :
+                        "text-muted-foreground"
+                      }`}>
+                        {lvlLabel}
+                      </p>
+                      <p className="text-xs text-muted-foreground">z-score: {nf(ta.attention_zscore, 2)}</p>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Drawdown + Factor Exposure Row */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {stockData.drawdown_analysis && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
-                        Drawdown Analysis
-                        <InfoTooltip text="Historical drawdown recovery statistics and rolling risk metrics over the past 5 years." />
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="rounded-lg bg-muted/30 p-2.5 text-center">
-                          <p className="text-xs text-muted-foreground uppercase">Max Drawdown</p>
-                          <p className="text-sm font-bold text-red-400 tabular-nums">{stockData.drawdown_analysis.max_drawdown_pct.toFixed(1)}%</p>
+                {stockData.drawdown_analysis && (() => {
+                  const dd = stockData.drawdown_analysis;
+                  const sharpe = dd.rolling_sharpe_1y;
+                  const sortino = dd.rolling_sortino_1y;
+                  return (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+                          Drawdown Analysis
+                          <InfoTooltip text="Historical drawdown recovery statistics and rolling risk metrics over the past 5 years." />
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="rounded-lg bg-muted/30 p-2.5 text-center">
+                            <p className="text-xs text-muted-foreground uppercase">Max Drawdown</p>
+                            <p className="text-sm font-bold text-red-400 tabular-nums">{nf(dd.max_drawdown_pct, 1, "%")}</p>
+                          </div>
+                          <div className="rounded-lg bg-muted/30 p-2.5 text-center">
+                            <p className="text-xs text-muted-foreground uppercase">Avg Recovery</p>
+                            <p className="text-sm font-bold tabular-nums">{nf(dd.avg_recovery_days, 0, "d")}</p>
+                          </div>
+                          <div className="rounded-lg bg-muted/30 p-2.5 text-center">
+                            <p className="text-xs text-muted-foreground uppercase">Current DD</p>
+                            <p className={`text-sm font-bold tabular-nums ${dd.current_drawdown_pct != null && dd.current_drawdown_pct < -5 ? "text-red-400" : "text-emerald-400"}`}>
+                              {nf(dd.current_drawdown_pct, 1, "%")}
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-muted/30 p-2.5 text-center">
+                            <p className="text-xs text-muted-foreground uppercase">Total DDs</p>
+                            <p className="text-sm font-bold tabular-nums">{dd.total_drawdowns ?? "N/A"}</p>
+                          </div>
+                          <div className="rounded-lg bg-muted/30 p-2.5 text-center">
+                            <p className="text-xs text-muted-foreground uppercase">Rolling Sharpe</p>
+                            <p className={`text-sm font-bold tabular-nums ${sharpe != null && sharpe > 0.5 ? "text-emerald-400" : sharpe != null && sharpe < 0 ? "text-red-400" : ""}`}>
+                              {nf(sharpe, 2)}
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-muted/30 p-2.5 text-center">
+                            <p className="text-xs text-muted-foreground uppercase">Rolling Sortino</p>
+                            <p className={`text-sm font-bold tabular-nums ${sortino != null && sortino > 1 ? "text-emerald-400" : sortino != null && sortino < 0 ? "text-red-400" : ""}`}>
+                              {nf(sortino, 2)}
+                            </p>
+                          </div>
                         </div>
-                        <div className="rounded-lg bg-muted/30 p-2.5 text-center">
-                          <p className="text-xs text-muted-foreground uppercase">Avg Recovery</p>
-                          <p className="text-sm font-bold tabular-nums">{stockData.drawdown_analysis.avg_recovery_days.toFixed(0)}d</p>
-                        </div>
-                        <div className="rounded-lg bg-muted/30 p-2.5 text-center">
-                          <p className="text-xs text-muted-foreground uppercase">Current DD</p>
-                          <p className={`text-sm font-bold tabular-nums ${stockData.drawdown_analysis.current_drawdown_pct < -5 ? "text-red-400" : "text-emerald-400"}`}>
-                            {stockData.drawdown_analysis.current_drawdown_pct.toFixed(1)}%
-                          </p>
-                        </div>
-                        <div className="rounded-lg bg-muted/30 p-2.5 text-center">
-                          <p className="text-xs text-muted-foreground uppercase">Total DDs</p>
-                          <p className="text-sm font-bold tabular-nums">{stockData.drawdown_analysis.total_drawdowns}</p>
-                        </div>
-                        <div className="rounded-lg bg-muted/30 p-2.5 text-center">
-                          <p className="text-xs text-muted-foreground uppercase">Rolling Sharpe</p>
-                          <p className={`text-sm font-bold tabular-nums ${stockData.drawdown_analysis.rolling_sharpe_1y > 0.5 ? "text-emerald-400" : stockData.drawdown_analysis.rolling_sharpe_1y < 0 ? "text-red-400" : ""}`}>
-                            {stockData.drawdown_analysis.rolling_sharpe_1y.toFixed(2)}
-                          </p>
-                        </div>
-                        <div className="rounded-lg bg-muted/30 p-2.5 text-center">
-                          <p className="text-xs text-muted-foreground uppercase">Rolling Sortino</p>
-                          <p className={`text-sm font-bold tabular-nums ${stockData.drawdown_analysis.rolling_sortino_1y > 1 ? "text-emerald-400" : stockData.drawdown_analysis.rolling_sortino_1y < 0 ? "text-red-400" : ""}`}>
-                            {stockData.drawdown_analysis.rolling_sortino_1y.toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
 
-                {stockData.factor_exposure && (
+                {stockData.factor_exposure && (() => {
+                  const fe = stockData.factor_exposure;
+                  const r2pct = fe.r_squared != null ? fe.r_squared * 100 : null;
+                  const alphaPct = fe.alpha_annual != null ? fe.alpha_annual * 100 : null;
+                  return (
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
                         Factor Exposure (FF5)
-                        <InfoTooltip text={`Fama-French 5-factor decomposition. R-squared: ${(stockData.factor_exposure.r_squared * 100).toFixed(1)}% of returns explained by factors. Alpha is the unexplained excess return.`} />
+                        <InfoTooltip text={`Fama-French 5-factor decomposition. R-squared: ${nf(r2pct, 1, "%")} of returns explained by factors. Alpha is the unexplained excess return.`} />
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="flex items-center gap-4 text-sm">
-                        <span className="text-muted-foreground">Alpha: <span className={`font-bold ${stockData.factor_exposure.alpha_annual > 0 ? "text-emerald-400" : "text-red-400"}`}>
-                          {stockData.factor_exposure.alpha_annual > 0 ? "+" : ""}{(stockData.factor_exposure.alpha_annual * 100).toFixed(1)}%
+                        <span className="text-muted-foreground">Alpha: <span className={`font-bold ${(alphaPct ?? 0) > 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {alphaPct != null && alphaPct > 0 ? "+" : ""}{nf(alphaPct, 1, "%")}
                         </span></span>
-                        <span className="text-muted-foreground">R²: <span className="font-bold">{(stockData.factor_exposure.r_squared * 100).toFixed(1)}%</span></span>
-                        <span className="text-muted-foreground">Market β: <span className="font-bold">{stockData.factor_exposure.market_beta.toFixed(2)}</span></span>
+                        <span className="text-muted-foreground">R²: <span className="font-bold">{nf(r2pct, 1, "%")}</span></span>
+                        <span className="text-muted-foreground">Market β: <span className="font-bold">{nf(fe.market_beta, 2)}</span></span>
                       </div>
-                      {stockData.factor_exposure.style && (
+                      {fe.style && typeof fe.style === "object" && (
                         <div className="flex flex-wrap gap-2">
-                          {Object.entries(stockData.factor_exposure.style).map(([factor, style]) => (
+                          {Object.entries(fe.style).map(([factor, style]) => (
                             <span key={factor} className="text-xs px-2 py-1 rounded-md bg-muted/50">
-                              <span className="text-muted-foreground">{factor}:</span> <span className="font-medium">{style}</span>
+                              <span className="text-muted-foreground">{factor}:</span> <span className="font-medium">{String(style)}</span>
                             </span>
                           ))}
                         </div>
                       )}
                     </CardContent>
                   </Card>
-                )}
+                  );
+                })()}
               </div>
 
               {/* Relative Valuation */}
@@ -764,24 +786,29 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-3 mb-3">
-                      <span className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-bold ${
-                        stockData.relative_valuation.verdict === "undervalued" ? "bg-emerald-500/15 text-emerald-400" :
-                        stockData.relative_valuation.verdict === "overvalued" ? "bg-red-500/15 text-red-400" :
-                        "bg-amber-500/15 text-amber-400"
-                      }`}>
-                        {stockData.relative_valuation.verdict.charAt(0).toUpperCase() + stockData.relative_valuation.verdict.slice(1)}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        Composite: {stockData.relative_valuation.score > 0 ? "+" : ""}{stockData.relative_valuation.score.toFixed(2)}
-                      </span>
+                      {stockData.relative_valuation.verdict && (
+                        <span className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-bold ${
+                          stockData.relative_valuation.verdict_color === "green" ? "bg-emerald-500/15 text-emerald-400" :
+                          stockData.relative_valuation.verdict_color === "red" ? "bg-red-500/15 text-red-400" :
+                          stockData.relative_valuation.verdict_color === "orange" ? "bg-orange-500/15 text-orange-400" :
+                          "bg-amber-500/15 text-amber-400"
+                        }`}>
+                          {stockData.relative_valuation.verdict}
+                        </span>
+                      )}
+                      {stockData.relative_valuation.composite_score != null && (
+                        <span className="text-sm text-muted-foreground">
+                          Score: {nf(stockData.relative_valuation.composite_score, 1)}/100
+                        </span>
+                      )}
                     </div>
-                    {stockData.relative_valuation.metrics && (
+                    {Array.isArray(stockData.relative_valuation.notable_metrics) && stockData.relative_valuation.notable_metrics.length > 0 && (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {Object.entries(stockData.relative_valuation.metrics).map(([metric, data]) => (
-                          <div key={metric} className="rounded-lg bg-muted/30 p-2.5">
-                            <p className="text-xs text-muted-foreground uppercase">{metric.replace(/_/g, " ")}</p>
-                            <p className="text-sm font-bold tabular-nums">{data.stock?.toFixed(1) ?? "N/A"}</p>
-                            <p className="text-xs text-muted-foreground">Peer median: {data.peer_median?.toFixed(1) ?? "N/A"} | P{data.percentile?.toFixed(0) ?? "??"}</p>
+                        {stockData.relative_valuation.notable_metrics.map((m: { metric: string; value: number | null; peer_avg: number | null; vs_peers: string; percentile: number | null }) => (
+                          <div key={m.metric} className="rounded-lg bg-muted/30 p-2.5">
+                            <p className="text-xs text-muted-foreground uppercase">{m.metric ? m.metric.replace(/_/g, " ") : "—"}</p>
+                            <p className="text-sm font-bold tabular-nums">{nf(m.value, 1)}</p>
+                            <p className="text-xs text-muted-foreground">Peer avg: {nf(m.peer_avg, 1)} | P{nf(m.percentile, 0)}</p>
                           </div>
                         ))}
                       </div>
@@ -934,20 +961,23 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                       </CardHeader>
                       <CardContent>
                         <div className="grid grid-cols-3 gap-3">
-                          {Object.entries(stockData.survival_crash_timing).map(([horizon, prob]) => (
-                            <div key={horizon} className="rounded-lg bg-muted/30 p-3 text-center">
-                              <p className="text-xs text-muted-foreground uppercase">{horizon}</p>
-                              <p className={`text-xl font-bold tabular-nums ${prob > 30 ? "text-red-400" : prob > 15 ? "text-amber-400" : "text-emerald-400"}`}>
-                                {prob.toFixed(1)}%
-                              </p>
-                              <div className="w-full h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full ${prob > 30 ? "bg-red-500" : prob > 15 ? "bg-amber-500" : "bg-emerald-500"}`}
-                                  style={{ width: `${Math.min(100, prob)}%` }}
-                                />
+                          {Object.entries(stockData.survival_crash_timing).map(([horizon, prob]) => {
+                            const p = prob ?? 0;
+                            return (
+                              <div key={horizon} className="rounded-lg bg-muted/30 p-3 text-center">
+                                <p className="text-xs text-muted-foreground uppercase">{horizon}</p>
+                                <p className={`text-xl font-bold tabular-nums ${p > 30 ? "text-red-400" : p > 15 ? "text-amber-400" : "text-emerald-400"}`}>
+                                  {fmtPct(prob, 1)}
+                                </p>
+                                <div className="w-full h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${p > 30 ? "bg-red-500" : p > 15 ? "bg-amber-500" : "bg-emerald-500"}`}
+                                    style={{ width: `${Math.min(100, p)}%` }}
+                                  />
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </CardContent>
                     </Card>
@@ -1013,11 +1043,17 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                         Bias: {stockData.chart_patterns.bias}
                       </span>
                       <span className="text-sm text-muted-foreground">{stockData.chart_patterns.pattern_count} pattern{stockData.chart_patterns.pattern_count !== 1 ? "s" : ""} detected</span>
-                      {stockData.chart_patterns.support_resistance && (
-                        <span className="text-xs text-muted-foreground ml-auto">
-                          S: ${stockData.chart_patterns.support_resistance.support.toFixed(0)} | R: ${stockData.chart_patterns.support_resistance.resistance.toFixed(0)}
-                        </span>
-                      )}
+                      {(() => {
+                        const sr = stockData.chart_patterns?.support_resistance;
+                        const sup = Array.isArray(sr?.support) ? sr?.support[0]?.price : null;
+                        const res = Array.isArray(sr?.resistance) ? sr?.resistance[0]?.price : null;
+                        if (sup == null && res == null) return null;
+                        return (
+                          <span className="text-xs text-muted-foreground ml-auto">
+                            S: ${nf(sup, 0)} | R: ${nf(res, 0)}
+                          </span>
+                        );
+                      })()}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {stockData.chart_patterns.patterns.map((p, i) => (
@@ -1026,7 +1062,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                           p.type === "bearish" ? "bg-red-500/10 text-red-400" :
                           "bg-muted/50 text-muted-foreground"
                         }`}>
-                          {p.name} ({(p.confidence * 100).toFixed(0)}%)
+                          {p.name ?? "—"} ({nf(p.confidence != null ? p.confidence * 100 : null, 0, "%")})
                         </span>
                       ))}
                     </div>
@@ -1058,17 +1094,17 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                     <p className="text-sm font-bold">{stockData.earnings.next_date}</p>
                   </div>
                 )}
-                {stockData.earnings.estimate !== null && (
+                {stockData.earnings.estimate != null && (
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-xs text-muted-foreground uppercase">EPS Estimate</p>
-                    <p className="text-sm font-bold">${stockData.earnings.estimate.toFixed(2)}</p>
+                    <p className="text-sm font-bold">${nf(stockData.earnings.estimate, 2)}</p>
                   </div>
                 )}
-                {stockData.earnings.surprise_history.length > 0 && (
+                {Array.isArray(stockData.earnings.surprise_history) && stockData.earnings.surprise_history.length > 0 && stockData.earnings.surprise_history[0] != null && (
                   <div className="rounded-lg bg-muted/30 p-3">
                     <p className="text-xs text-muted-foreground uppercase">Last Surprise</p>
                     <p className={`text-sm font-bold ${stockData.earnings.surprise_history[0] >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                      {stockData.earnings.surprise_history[0] >= 0 ? "+" : ""}{stockData.earnings.surprise_history[0].toFixed(1)}%
+                      {stockData.earnings.surprise_history[0] >= 0 ? "+" : ""}{nf(stockData.earnings.surprise_history[0], 1, "%")}
                     </p>
                   </div>
                 )}
@@ -1133,9 +1169,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                 <tbody>
                   {stockData.holders.top_holders.map((h, i) => (
                     <tr key={i} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
-                      <td className="py-2 pr-4 text-sm">{h.name}</td>
-                      <td className="py-2 pr-4 text-right tabular-nums">{h.shares.toLocaleString()}</td>
-                      <td className="py-2 text-right tabular-nums">{(h.pct * 100).toFixed(2)}%</td>
+                      <td className="py-2 pr-4 text-sm">{h.name ?? "—"}</td>
+                      <td className="py-2 pr-4 text-right tabular-nums">{h.shares != null ? h.shares.toLocaleString() : "—"}</td>
+                      <td className="py-2 text-right tabular-nums">{h.pct != null ? `${(h.pct * 100).toFixed(2)}%` : "—"}</td>
                     </tr>
                   ))}
                 </tbody>

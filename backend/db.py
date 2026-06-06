@@ -27,7 +27,7 @@ DB_PATH = BACKEND_DIR / "data" / "aegis_pi.db"
 
 _write_lock = threading.Lock()
 
-CURRENT_SCHEMA_VERSION = 1
+CURRENT_SCHEMA_VERSION = 2
 
 _SCHEMA_V1 = """
 CREATE TABLE IF NOT EXISTS _schema_version (
@@ -156,15 +156,24 @@ def _run_migrations(conn: sqlite3.Connection, from_version: int, to_version: int
     Each migration is a function that takes a connection and applies
     ALTER TABLE / CREATE TABLE / CREATE INDEX statements.
     New migrations go at the bottom with the next version number.
-
-    Example for Phase 5.5 (version 2):
-        if from_version < 2:
-            conn.executescript('''
-                ALTER TABLE personal_decisions ADD COLUMN new_col TEXT;
-                CREATE TABLE IF NOT EXISTS new_table (...);
-            ''')
     """
-    pass  # Version 1 is the initial schema — no migrations needed yet
+    if from_version < 2:
+        # v2: persistent walk-forward replay cache. Hashes of universe + rules
+        # let us auto-invalidate when paper_portfolios.yaml changes;
+        # market_data_date gives us natural daily rollover.
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS replay_cache (
+                lane_id TEXT NOT NULL,
+                universe_hash TEXT NOT NULL,
+                rules_hash TEXT NOT NULL,
+                market_data_date TEXT NOT NULL,
+                computed_at TEXT NOT NULL,
+                result_json TEXT NOT NULL,
+                PRIMARY KEY (lane_id, universe_hash, rules_hash, market_data_date)
+            );
+            CREATE INDEX IF NOT EXISTS idx_replay_cache_lane
+                ON replay_cache (lane_id, computed_at DESC);
+        """)
 
 
 def init_db(db_path: Path | None = None) -> None:
@@ -268,6 +277,118 @@ def insert_audit_log(
         )
         conn.commit()
         return cursor.lastrowid
+
+
+def _hash_dict(d: dict | list | None) -> str:
+    """Stable SHA-256 of a JSON-serializable structure (sorted keys)."""
+    if not d:
+        return "empty"
+    return hashlib.sha256(
+        json.dumps(d, sort_keys=True, default=str).encode()
+    ).hexdigest()[:16]
+
+
+def compute_universe_hash() -> str:
+    """Hash of paper_portfolios.universe (changes when ticker universe changes)."""
+    from backend.config import paper_portfolios
+    return _hash_dict(paper_portfolios.get("universe"))
+
+
+def compute_rules_hash(lane_id: str) -> str:
+    """Hash of a single lane's rule config (changes when thresholds/weights change).
+
+    paper_portfolios.yaml stores each lane as a top-level key alongside 'universe'.
+    """
+    from backend.config import paper_portfolios
+    lane_cfg = paper_portfolios.get(lane_id)
+    return _hash_dict(lane_cfg)
+
+
+def get_cached_replay(
+    lane_id: str,
+    universe_hash: str,
+    rules_hash: str,
+    market_data_date: str,
+) -> str | None:
+    """Return cached result_json string or None on miss."""
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            """SELECT result_json FROM replay_cache
+               WHERE lane_id = ? AND universe_hash = ? AND rules_hash = ?
+                 AND market_data_date = ?""",
+            (lane_id, universe_hash, rules_hash, market_data_date),
+        ).fetchone()
+        return row["result_json"] if row else None
+    finally:
+        conn.close()
+
+
+def save_cached_replay(
+    lane_id: str,
+    universe_hash: str,
+    rules_hash: str,
+    market_data_date: str,
+    result_json: str,
+) -> None:
+    """Upsert a cache entry. Last writer wins for the same key."""
+    from datetime import datetime as _dt
+    with _write_lock:
+        conn = get_connection()
+        try:
+            conn.execute(
+                """INSERT OR REPLACE INTO replay_cache
+                   (lane_id, universe_hash, rules_hash, market_data_date,
+                    computed_at, result_json)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (
+                    lane_id,
+                    universe_hash,
+                    rules_hash,
+                    market_data_date,
+                    _dt.utcnow().isoformat(),
+                    result_json,
+                ),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+
+def invalidate_replay_cache(lane_id: str | None = None) -> int:
+    """Drop cache rows. lane_id=None clears everything. Returns rows deleted."""
+    with _write_lock:
+        conn = get_connection()
+        try:
+            if lane_id is None:
+                cursor = conn.execute("DELETE FROM replay_cache")
+            else:
+                cursor = conn.execute(
+                    "DELETE FROM replay_cache WHERE lane_id = ?", (lane_id,)
+                )
+            conn.commit()
+            return cursor.rowcount
+        finally:
+            conn.close()
+
+
+def get_latest_cached_replay(lane_id: str) -> tuple[str, str] | None:
+    """Most recent cache row for a lane regardless of hash (for stale-fallback).
+
+    Returns (result_json, computed_at) or None.
+    """
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            """SELECT result_json, computed_at FROM replay_cache
+               WHERE lane_id = ? ORDER BY computed_at DESC LIMIT 1""",
+            (lane_id,),
+        ).fetchone()
+        if not row:
+            return None
+        return (row["result_json"], row["computed_at"])
+    finally:
+        conn.close()
 
 
 def insert_personal_decision(

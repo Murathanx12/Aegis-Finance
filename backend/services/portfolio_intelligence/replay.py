@@ -45,6 +45,32 @@ logger = logging.getLogger(__name__)
 
 _TRADING_DAYS_PER_YEAR = 252
 
+_shared_predictor = None
+_shared_predictor_loaded = False
+
+
+def _get_shared_predictor():
+    """Lazy-load the crash model once per process, not per check date."""
+    global _shared_predictor, _shared_predictor_loaded
+    if _shared_predictor_loaded:
+        return _shared_predictor
+    _shared_predictor_loaded = True
+    try:
+        from backend.config import MODEL_DIR
+        from backend.services.crash_model import CrashPredictor
+        p = CrashPredictor()
+        model_path = MODEL_DIR / "crash_model.pkl"
+        if model_path.exists():
+            try:
+                p.load_model(str(model_path))
+            except Exception as e:
+                logger.warning("Crash model load failed: %s", e)
+        _shared_predictor = p
+    except Exception as e:
+        logger.warning("Crash predictor init failed: %s", e)
+        _shared_predictor = None
+    return _shared_predictor
+
 
 def _generate_check_dates(
     start: date,
@@ -212,14 +238,20 @@ class ReplayEngine:
         wrapper: MarketDataAtTimestamp,
         dt: date,
     ) -> float | None:
-        """Get crash probability using only data available as-of dt."""
+        """Get crash probability using only data available as-of dt.
+
+        Short-circuits when the crash model is untrained; otherwise we'd burn
+        ~200ms per check date on a doomed CrashPredictor() + raise cycle.
+        """
+        predictor = _get_shared_predictor()
+        if predictor is None or not getattr(predictor, "is_trained", False):
+            return None
+
         features = wrapper.crash_features_as_of(dt)
         if features is None:
             return None
 
         try:
-            from backend.services.crash_model import CrashPredictor
-            predictor = CrashPredictor()
             prob = predictor.predict_proba(
                 features, horizon="3m", external_features=features,
             )

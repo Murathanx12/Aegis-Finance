@@ -55,6 +55,38 @@ async def _prewarm_cache():
         logger.warning("Cache prewarm failed (non-fatal): %s", e)
         set_cache_status("failed", str(e))
 
+    # Background warm of PI fast-lane metrics so /compare is instant.
+    # Heavy walk-forward replays are NOT prewarmed — they run on-demand from
+    # the dedicated /replay page (where users explicitly opt in to the wait).
+    asyncio.create_task(_prewarm_pi_fast_lanes())
+
+
+async def _prewarm_pi_fast_lanes():
+    """Warm the static-weight lane metric cache for the periods /compare uses.
+
+    Each call is ~3 yfinance fetches (SPY/AGG/GLD) that the cache then dedupes.
+    Total cost is well under 30s and lets /compare return cached on first hit.
+    """
+    import asyncio
+    from datetime import date, timedelta
+    try:
+        from backend.routers.portfolio_intelligence import _compute_lane_metrics_fast
+        end_d = date.today()
+        # Cover the most-clicked periods. ALL/3Y/5Y warm on first user request.
+        period_days = {"1M": 30, "3M": 90, "6M": 180, "1Y": 365}
+
+        jobs = []
+        for days in period_days.values():
+            start_d = end_d - timedelta(days=days)
+            for lane in ("conservative", "balanced", "aggressive"):
+                jobs.append(asyncio.to_thread(_compute_lane_metrics_fast, lane, start_d, end_d))
+
+        results = await asyncio.gather(*jobs, return_exceptions=True)
+        ok = sum(1 for r in results if not isinstance(r, Exception) and r is not None)
+        logger.info("PI fast-lane prewarm: %d/%d succeeded", ok, len(jobs))
+    except Exception as e:
+        logger.warning("PI fast-lane prewarm failed (non-fatal): %s", e)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

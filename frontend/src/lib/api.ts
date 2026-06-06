@@ -927,8 +927,12 @@ export interface MarketStatus {
     breadth: number;
   } | null;
   sector_rotation: {
-    cycle_phase: string;
-    breadth: string;
+    cycle_phase: {
+      phase: string;
+      confidence: number;
+      description: string;
+    } | null;
+    breadth: string | { positive_sectors?: number; total_sectors?: number; pct_positive?: number } | null;
     leaders: string[];
     laggards: string[];
   } | null;
@@ -1114,13 +1118,13 @@ export interface StockAnalysis {
   peers: string[] | null;
   // Enriched fields from backend router
   insider_signal?: {
-    sentiment: string;
-    score: number;
-    buy_count: number;
-    sell_count: number;
-    net_shares: number;
-    cluster_buy: boolean;
     signal: number;
+    cluster_buy: boolean;
+    interpretation?: string;
+    n_buys?: number;
+    n_sells?: number;
+    buy_value?: number;
+    sell_value?: number;
   } | null;
   liquidity?: {
     score: number;
@@ -1136,9 +1140,10 @@ export interface StockAnalysis {
     total: number;
   } | null;
   technical_signal?: {
-    signal: string;
+    sentiment: string;
     score: number;
-    components: Record<string, number>;
+    confidence?: number;
+    reasons?: string[];
   } | null;
   rsi_14?: number | null;
   trend_direction?: string | null;
@@ -1163,9 +1168,13 @@ export interface StockAnalysis {
     style: Record<string, string>;
   } | null;
   relative_valuation?: {
-    verdict: string;
-    score: number;
-    metrics: Record<string, { stock: number; peer_median: number; percentile: number }>;
+    verdict?: string;
+    verdict_color?: string;
+    composite_score?: number;
+    peer_count?: number;
+    sector?: string;
+    historical_pe_pctile?: number | null;
+    notable_metrics?: { metric: string; value: number | null; peer_avg: number | null; vs_peers: string; percentile: number | null }[];
   } | null;
   crash_prob_3m?: number | null;
   crash_prob_interval?: {
@@ -1211,7 +1220,11 @@ export interface StockAnalysis {
     pattern_count: number;
     bias: string;
     strongest_pattern?: string | null;
-    support_resistance?: { support: number; resistance: number } | null;
+    support_resistance?: {
+      support: { price: number; touches: number; strength: number }[];
+      resistance: { price: number; touches: number; strength: number }[];
+      current_price?: number;
+    } | null;
   } | null;
 }
 
@@ -2770,9 +2783,29 @@ export function piGetCompare(
   );
 }
 
-// PI: Replay backtest
+// PI: Replay backtest (forces compute on cache miss — slow)
 export function piGetReplay(laneId: string) {
   return fetchAPI<PIReplayResult>(`/api/pi/replay/${laneId}`);
+}
+
+// PI: Replay snapshot (fast read of SQLite cache, never recomputes)
+export interface PIReplaySnapshot {
+  lane_id: string;
+  status: "cached" | "stale" | "missing";
+  cached_at: string | null;
+  fresh: boolean;
+  result: PIReplayResult | null;
+}
+
+export function piGetReplaySnapshot(laneId: string) {
+  return fetchAPI<PIReplaySnapshot>(`/api/pi/reference/${laneId}/snapshot`);
+}
+
+// PI: Force a fresh walk-forward replay (slow, invalidates cache)
+export function piRefreshReplay(laneId: string) {
+  return fetchAPI<PIReplayResult>(`/api/pi/replay/${laneId}/refresh`, {
+    method: "POST",
+  });
 }
 
 // PI: Manual trigger

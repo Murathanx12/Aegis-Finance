@@ -12,6 +12,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import type { MarketStatus } from "@/lib/api";
+import { fmtNum, fmtInt } from "@/lib/format";
 
 const QUICK_LINKS = [
   {
@@ -80,18 +81,16 @@ export function HeroSection({ data }: { data: MarketStatus | null }) {
             <>
               <StatPill
                 label="S&P 500"
-                value={data.sp500.toLocaleString(undefined, {
-                  maximumFractionDigits: 0,
-                })}
+                value={fmtInt(data.sp500)}
                 color={
-                  data.sp500_change_1m >= 0
+                  (data.sp500_change_1m ?? 0) >= 0
                     ? "text-emerald-400 border-emerald-500/30"
                     : "text-red-400 border-red-500/30"
                 }
               />
               <StatPill
                 label="VIX"
-                value={data.vix?.toFixed(1) ?? "N/A"}
+                value={fmtNum(data.vix, 1)}
                 color={
                   (data.vix ?? 0) > 25
                     ? "text-red-400 border-red-500/30"
@@ -102,18 +101,18 @@ export function HeroSection({ data }: { data: MarketStatus | null }) {
               />
               <StatPill
                 label="Risk"
-                value={data.risk_score.toFixed(2)}
+                value={fmtNum(data.risk_score, 2)}
                 color={
-                  data.risk_score > 2
+                  (data.risk_score ?? 0) > 2
                     ? "text-red-400 border-red-500/30"
-                    : data.risk_score > 1
+                    : (data.risk_score ?? 0) > 1
                       ? "text-amber-400 border-amber-500/30"
                       : "text-emerald-400 border-emerald-500/30"
                 }
               />
               <StatPill
                 label="Regime"
-                value={data.regime}
+                value={data.regime ?? "—"}
                 color={
                   data.regime === "Bull"
                     ? "text-emerald-400 border-emerald-500/30"

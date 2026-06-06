@@ -28,6 +28,7 @@ from backend.schemas.portfolio_intelligence import (
     HistoryResponse,
     MetricPack,
     ReplayResult,
+    ReplaySnapshotResponse,
     SnapshotResponse,
 )
 from backend.services.portfolio_intelligence.real_analyzer import analyze_portfolio
@@ -211,6 +212,111 @@ async def get_reference_explain(lane_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+_COMPARE_CACHE_TTL = 600  # 10 min — replays don't change intra-session
+_REPLAY_CACHE_TTL = 1800  # 30 min — backtest is deterministic per (lane, dates)
+_LANE_FAST_CACHE_TTL = 600  # 10 min — fast static-weight lane metrics
+
+# Static target allocations (from data/paper_portfolios.yaml). Compare uses these
+# for a fast buy-and-hold equivalent (no walk-forward, no rebalance) so the page
+# loads in seconds rather than the 5+ min the full replay needs. The dedicated
+# /replay/{lane_id} page still runs the real walk-forward backtest.
+_LANE_ALLOCATIONS: dict[str, dict[str, float]] = {
+    "conservative": {"SPY": 0.40, "AGG": 0.50, "GLD": 0.10},
+    "balanced":     {"SPY": 0.70, "AGG": 0.25, "GLD": 0.05},
+    "aggressive":   {"SPY": 0.95, "AGG": 0.05},
+}
+
+
+def _cached_replay(lane_id: str, start_iso: str, end_iso: str) -> ReplayResult:
+    """Run replay with persistent SQLite cache.
+
+    Cache key: (lane_id, universe_hash, rules_hash, market_data_date=today).
+    Hashes auto-invalidate when paper_portfolios.yaml changes; the date
+    component gives natural daily rollover (24h TTL).
+    """
+    from backend.db import (
+        compute_rules_hash,
+        compute_universe_hash,
+        get_cached_replay,
+        save_cached_replay,
+    )
+    from backend.services.portfolio_intelligence.replay import ReplayEngine
+
+    universe_hash = compute_universe_hash()
+    rules_hash = compute_rules_hash(lane_id)
+    today = date.today().isoformat()
+
+    cached_json = get_cached_replay(lane_id, universe_hash, rules_hash, today)
+    if cached_json:
+        return ReplayResult.model_validate(json.loads(cached_json))
+
+    result = ReplayEngine().run(lane_id, start_iso, end_iso)
+    save_cached_replay(
+        lane_id, universe_hash, rules_hash, today,
+        result.model_dump_json(),
+    )
+    return result
+
+
+def _compute_lane_metrics_fast(lane_id: str, start_d: date, end_d: date) -> Optional[MetricPack]:
+    """Buy-and-hold MetricPack for a lane using its target allocation on representative ETFs.
+
+    This is the FAST path used by /compare (sub-second). The dedicated /replay
+    endpoint still runs the full walk-forward with rebalances + crash overlay.
+    """
+    import numpy as np
+    import pandas as pd
+    from backend.cache import cache_get, cache_set
+    from backend.services.data_fetcher import fetch_safe
+
+    weights = _LANE_ALLOCATIONS.get(lane_id)
+    if not weights:
+        return None
+
+    start_s = start_d.isoformat()
+    end_s = end_d.isoformat()
+    cache_key = f"pi_lane_fast:{lane_id}:{start_s}:{end_s}"
+    cached = cache_get(cache_key, _LANE_FAST_CACHE_TTL)
+    if cached is not None:
+        return cached
+
+    series_map: dict[str, pd.Series] = {}
+    for tkr in weights:
+        s = fetch_safe(tkr, start_s, end_s, name=tkr)
+        if s is None or len(s) < 20:
+            return None
+        series_map[tkr] = s
+
+    df = pd.DataFrame(series_map).dropna()
+    if len(df) < 20:
+        return None
+    rets = df.pct_change().dropna()
+    if rets.empty:
+        return None
+
+    port_rets = sum(rets[tkr] * w for tkr, w in weights.items())
+
+    total_return = float((1 + port_rets).prod() - 1)
+    n_years = len(port_rets) / 252.0
+    ann_return = float((1 + total_return) ** (1 / n_years) - 1) if n_years > 0 else 0.0
+    ann_vol = float(port_rets.std() * np.sqrt(252))
+    sharpe = float((ann_return - 0.04) / ann_vol) if ann_vol > 1e-10 else None
+
+    cum = (1 + port_rets).cumprod()
+    peak = cum.cummax()
+    max_dd = float((cum / peak - 1).min())
+
+    pack = MetricPack(
+        total_return=round(total_return, 6),
+        annualized_return=round(ann_return, 6),
+        annualized_volatility=round(ann_vol, 6),
+        sharpe_ratio=round(sharpe, 4) if sharpe is not None else None,
+        max_drawdown=round(max_dd, 6),
+    )
+    cache_set(cache_key, pack)
+    return pack
+
+
 @router.get("/compare", response_model=ComparisonResponse)
 async def compare_lanes(
     ids: str = Query(default="conservative,balanced,aggressive"),
@@ -221,53 +327,73 @@ async def compare_lanes(
     Lane MetricPacks come from the replay endpoint (backtested numbers).
     Benchmark MetricPacks (SPY, AGG, 60-40) are computed inline from price data
     over the same period for honest comparison.
+
+    Performance: cached 10 min; lane replays + benchmarks run in parallel.
     """
+    from backend.cache import cache_get, cache_set
+
     requested_ids = [s.strip() for s in ids.split(",") if s.strip()]
     lane_ids = [i for i in requested_ids if i in _VALID_LANES]
     if not lane_ids:
         lane_ids = list(_VALID_LANES)
 
-    cutoff_days = _period_to_days(period)
+    period_u = period.upper()
+    cache_key = f"pi_compare:{','.join(sorted(lane_ids))}:{period_u}"
+    cached = cache_get(cache_key, _COMPARE_CACHE_TTL)
+    if cached is not None:
+        return cached
+
+    cutoff_days = _period_to_days(period_u)
     end_d = date.today()
     if cutoff_days is None:
         start_d = date(2021, 1, 4)
     else:
         start_d = end_d - timedelta(days=cutoff_days)
 
-    from backend.services.portfolio_intelligence.replay import ReplayEngine
+    # Fast static-weight buy-and-hold per lane (no walk-forward) + benchmarks,
+    # all concurrent. /replay/{lane_id} still has the full walk-forward.
+    lane_tasks = [
+        asyncio.create_task(asyncio.to_thread(
+            _compute_lane_metrics_fast, lid, start_d, end_d,
+        ))
+        for lid in lane_ids
+    ]
+    bench_names = ("SPY", "AGG", "60-40")
+    bench_tasks = [
+        asyncio.create_task(asyncio.to_thread(
+            _compute_benchmark_metrics, b, start_d, end_d,
+        ))
+        for b in bench_names
+    ]
 
-    engine = ReplayEngine()
+    lane_results = await asyncio.gather(*lane_tasks, return_exceptions=True)
+    bench_results = await asyncio.gather(*bench_tasks, return_exceptions=True)
+
     lanes_metrics: dict[str, Optional[MetricPack]] = {}
+    for lid, res in zip(lane_ids, lane_results):
+        if isinstance(res, Exception):
+            logger.warning("Compare: lane %s failed: %s", lid, res)
+            lanes_metrics[lid] = None
+        else:
+            lanes_metrics[lid] = res
 
-    for lane_id in lane_ids:
-        try:
-            result = await asyncio.to_thread(
-                engine.run, lane_id, start_d.isoformat(), end_d.isoformat(),
-            )
-            lanes_metrics[lane_id] = result.metrics
-        except Exception as e:
-            logger.warning("Compare: replay failed for %s: %s", lane_id, e)
-            lanes_metrics[lane_id] = None
-
-    # Benchmarks
     benchmarks_metrics: dict[str, Optional[MetricPack]] = {}
-    for bench in ("SPY", "AGG", "60-40"):
-        try:
-            metrics = await asyncio.to_thread(
-                _compute_benchmark_metrics, bench, start_d, end_d,
-            )
-            benchmarks_metrics[bench] = metrics
-        except Exception as e:
-            logger.warning("Compare: benchmark %s failed: %s", bench, e)
-            benchmarks_metrics[bench] = None
+    for bname, res in zip(bench_names, bench_results):
+        if isinstance(res, Exception):
+            logger.warning("Compare: benchmark %s failed: %s", bname, res)
+            benchmarks_metrics[bname] = None
+        else:
+            benchmarks_metrics[bname] = res
 
-    return ComparisonResponse(
+    response = ComparisonResponse(
         lanes=lanes_metrics,
         benchmarks=benchmarks_metrics,
-        period=period.upper(),
+        period=period_u,
         start_date=start_d.isoformat(),
         end_date=end_d.isoformat(),
     )
+    cache_set(cache_key, response)
+    return response
 
 
 def _compute_benchmark_metrics(name: str, start_d: date, end_d: date) -> Optional[MetricPack]:
@@ -343,21 +469,110 @@ async def get_replay(
     """Run walk-forward replay backtest for a reference lane.
 
     WARNING: This is computationally expensive (fetches years of data).
-    Cache the result client-side.
+    Result is persisted to SQLite for 24h. Prefer /reference/{lane}/snapshot
+    for fast reads — this endpoint forces a recompute on cache miss.
     """
     if lane_id not in _VALID_LANES:
         raise HTTPException(status_code=404, detail=f"Unknown lane: {lane_id}")
 
-    from backend.services.portfolio_intelligence.replay import ReplayEngine
+    end_iso = end_date or date.today().isoformat()
 
     try:
-        engine = ReplayEngine()
         result = await asyncio.to_thread(
-            engine.run, lane_id, start_date, end_date,
+            _cached_replay, lane_id, start_date, end_iso,
         )
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error("Replay failed for %s: %s", lane_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/reference/{lane_id}/snapshot", response_model=ReplaySnapshotResponse)
+async def get_replay_snapshot(lane_id: str):
+    """Fast read of the cached walk-forward replay (<100ms when warm).
+
+    Never triggers a recompute. Returns:
+      - status="cached", fresh=True   → today's result
+      - status="stale", fresh=False   → previous result (frontend should offer refresh)
+      - status="missing", result=None → never computed (frontend prompts refresh)
+    """
+    if lane_id not in _VALID_LANES:
+        raise HTTPException(status_code=404, detail=f"Unknown lane: {lane_id}")
+
+    from backend.db import (
+        compute_rules_hash,
+        compute_universe_hash,
+        get_cached_replay,
+        get_latest_cached_replay,
+    )
+
+    try:
+        universe_hash = compute_universe_hash()
+        rules_hash = compute_rules_hash(lane_id)
+        today = date.today().isoformat()
+
+        fresh_json = await asyncio.to_thread(
+            get_cached_replay, lane_id, universe_hash, rules_hash, today,
+        )
+        if fresh_json:
+            return ReplaySnapshotResponse(
+                lane_id=lane_id,
+                status="cached",
+                cached_at=today,
+                fresh=True,
+                result=ReplayResult.model_validate(json.loads(fresh_json)),
+            )
+
+        latest = await asyncio.to_thread(get_latest_cached_replay, lane_id)
+        if latest:
+            stale_json, computed_at = latest
+            return ReplaySnapshotResponse(
+                lane_id=lane_id,
+                status="stale",
+                cached_at=computed_at,
+                fresh=False,
+                result=ReplayResult.model_validate(json.loads(stale_json)),
+            )
+
+        return ReplaySnapshotResponse(
+            lane_id=lane_id,
+            status="missing",
+            cached_at=None,
+            fresh=False,
+            result=None,
+        )
+    except Exception as e:
+        logger.error("Snapshot read failed for %s: %s", lane_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/replay/{lane_id}/refresh", response_model=ReplayResult)
+async def refresh_replay(
+    lane_id: str,
+    start_date: str = Query(default="2021-01-01"),
+    end_date: Optional[str] = Query(default=None),
+):
+    """Invalidate cache and recompute the walk-forward replay.
+
+    Slow (10+ minutes) — frontend should show a progress indicator.
+    """
+    if lane_id not in _VALID_LANES:
+        raise HTTPException(status_code=404, detail=f"Unknown lane: {lane_id}")
+
+    from backend.db import invalidate_replay_cache
+
+    end_iso = end_date or date.today().isoformat()
+
+    try:
+        await asyncio.to_thread(invalidate_replay_cache, lane_id)
+        result = await asyncio.to_thread(
+            _cached_replay, lane_id, start_date, end_iso,
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error("Refresh failed for %s: %s", lane_id, e, exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Plus, ArrowRight, AlertTriangle, FileDown, FileSpreadsheet } from "lucide-react";
+import { Trash2, Plus, ArrowRight, ArrowLeft, AlertTriangle, FileDown, FileSpreadsheet, Shield, TrendingUp, Zap, BarChart3 } from "lucide-react";
 import { InfoTooltip } from "@/components/info-tooltip";
 import { downloadPortfolioTearsheet } from "@/lib/api";
 import {
@@ -21,6 +22,7 @@ import {
   analyzePortfolio, buildPortfolio, projectPortfolio, getStockSignal,
   type Holding, type PortfolioAnalysis, type PortfolioBuilt, type PortfolioProjection, type StockSignal,
 } from "@/lib/api";
+import { fmtPct, fmtNum, fmtMoney, fmtSigned, fmtSignedPct } from "@/lib/format";
 
 const PIE_COLORS = [
   "#63b4ff", "#22c55e", "#f59e0b", "#ef4444", "#a855f7",
@@ -386,7 +388,7 @@ function PortfolioAnalyzeSection() {
                           {analysis.risk_number.category}
                         </Badge>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Vol: {analysis.risk_number.portfolio_vol.toFixed(1)}% | Beta: {analysis.risk_number.portfolio_beta.toFixed(2)}
+                          Vol: {fmtPct(analysis.risk_number.portfolio_vol, 1)} | Beta: {fmtNum(analysis.risk_number.portfolio_beta, 2)}
                         </p>
                       </div>
                     </div>
@@ -443,7 +445,7 @@ function PortfolioAnalyzeSection() {
                         <div className="flex flex-wrap gap-2">
                           {Object.entries(analysis.factor_exposures.stocks).map(([ticker, data]) => (
                             <span key={ticker} className="px-2 py-0.5 rounded bg-muted/30">
-                              {ticker}: β={data.market_beta.toFixed(2)}
+                              {ticker}: β={fmtNum(data.market_beta, 2)}
                             </span>
                           ))}
                         </div>
@@ -467,19 +469,22 @@ function PortfolioAnalyzeSection() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {Object.entries(analysis.stress_test.scenarios).map(([name, s]) => (
-                      <div key={name} className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground truncate mr-2">{name}</span>
-                        <span className={`font-mono tabular-nums font-medium ${
-                          s.portfolio_drawdown_pct < -30 ? "text-red-400" : s.portfolio_drawdown_pct < -15 ? "text-amber-400" : "text-emerald-400"
-                        }`}>
-                          {s.portfolio_drawdown_pct.toFixed(1)}%
-                        </span>
-                      </div>
-                    ))}
+                    {Object.entries(analysis.stress_test.scenarios).map(([name, s]) => {
+                      const dd = s.portfolio_drawdown_pct;
+                      return (
+                        <div key={name} className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground truncate mr-2">{name}</span>
+                          <span className={`font-mono tabular-nums font-medium ${
+                            dd != null && dd < -30 ? "text-red-400" : dd != null && dd < -15 ? "text-amber-400" : "text-emerald-400"
+                          }`}>
+                            {fmtPct(dd, 1)}
+                          </span>
+                        </div>
+                      );
+                    })}
                     {analysis.stress_test.worst_scenario && (
                       <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border/50">
-                        Worst case: <span className="text-red-400 font-medium">{analysis.stress_test.worst_scenario}</span> ({analysis.stress_test.worst_drawdown_pct?.toFixed(1)}%)
+                        Worst case: <span className="text-red-400 font-medium">{analysis.stress_test.worst_scenario}</span> ({fmtPct(analysis.stress_test.worst_drawdown_pct, 1)})
                       </p>
                     )}
                   </CardContent>
@@ -616,23 +621,26 @@ function PortfolioAnalyzeSection() {
                       </p>
                     )}
                     <div className="space-y-2">
-                      {analysis.mctr_summary.top_risk_contributors.map((c) => (
-                        <div key={c.ticker} className="flex items-center gap-2">
-                          <span className="text-sm font-medium w-12">{c.ticker}</span>
-                          <div className="flex-1 h-2 bg-muted/30 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${
-                                c.risk_contrib_pct > c.weight_pct * 1.5 ? "bg-red-400" :
-                                c.risk_contrib_pct > c.weight_pct ? "bg-amber-400" : "bg-emerald-400"
-                              }`}
-                              style={{ width: `${Math.min(Math.abs(c.risk_contrib_pct), 100)}%` }}
-                            />
+                      {analysis.mctr_summary.top_risk_contributors.map((c) => {
+                        const risk = c.risk_contrib_pct ?? 0;
+                        const wt = c.weight_pct ?? 0;
+                        return (
+                          <div key={c.ticker} className="flex items-center gap-2">
+                            <span className="text-sm font-medium w-12">{c.ticker}</span>
+                            <div className="flex-1 h-2 bg-muted/30 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${
+                                  risk > wt * 1.5 ? "bg-red-400" : risk > wt ? "bg-amber-400" : "bg-emerald-400"
+                                }`}
+                                style={{ width: `${Math.min(Math.abs(risk), 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-xs tabular-nums text-muted-foreground w-24 text-right">
+                              {fmtPct(c.risk_contrib_pct, 1)} risk / {fmtPct(c.weight_pct, 1)} wt
+                            </span>
                           </div>
-                          <span className="text-xs tabular-nums text-muted-foreground w-24 text-right">
-                            {c.risk_contrib_pct.toFixed(1)}% risk / {c.weight_pct.toFixed(1)}% wt
-                          </span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                     <p className="text-xs text-muted-foreground pt-1 border-t border-border/50">
                       Red = risk contribution &gt; 1.5x weight (concentrated risk)
@@ -758,7 +766,7 @@ function PortfolioAnalyzeSection() {
                           }`}>{sig.action}</span>
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          Confidence: {sig.confidence}% · Score: {sig.composite_score > 0 ? "+" : ""}{sig.composite_score.toFixed(3)}
+                          Confidence: {sig.confidence ?? "—"}% · Score: {fmtSigned(sig.composite_score, 3)}
                         </div>
                         {sig.reasons[0] && (
                           <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{sig.reasons[0]}</p>
@@ -825,10 +833,10 @@ function PortfolioAnalyzeSection() {
               {projection && !projLoading && !projection.error && (
                 <>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                    <MetricCard label="Expected Value" value={`$${projection.expected_final.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
-                    <MetricCard label="Expected Return" value={`${projection.expected_return_pct >= 0 ? "+" : ""}${projection.expected_return_pct.toFixed(1)}`} suffix="%" color={projection.expected_return_pct >= 0 ? "text-emerald-400" : "text-red-400"} />
-                    <MetricCard label="P(Gain)" value={`${projection.prob_gain.toFixed(0)}`} suffix="%" color={projection.prob_gain > 50 ? "text-emerald-400" : "text-red-400"} />
-                    <MetricCard label="10th-90th Range" value={`$${(projection.p10_final / 1000).toFixed(0)}K - $${(projection.p90_final / 1000).toFixed(0)}K`} />
+                    <MetricCard label="Expected Value" value={fmtMoney(projection.expected_final, 0)} />
+                    <MetricCard label="Expected Return" value={fmtSigned(projection.expected_return_pct, 1)} suffix="%" color={(projection.expected_return_pct ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"} />
+                    <MetricCard label="P(Gain)" value={fmtNum(projection.prob_gain, 0)} suffix="%" color={(projection.prob_gain ?? 0) > 50 ? "text-emerald-400" : "text-red-400"} />
+                    <MetricCard label="10th-90th Range" value={projection.p10_final != null && projection.p90_final != null ? `$${(projection.p10_final / 1000).toFixed(0)}K - $${(projection.p90_final / 1000).toFixed(0)}K` : "—"} />
                   </div>
                   <ResponsiveContainer width="100%" height={250}>
                     <AreaChart data={projection.quarterly}>
@@ -1046,12 +1054,12 @@ function PortfolioBuildSection() {
                   {result.holdings.map((h) => (
                     <tr key={h.ticker} className="border-b border-border/50">
                       <td className="py-2.5 pr-4 font-medium">{h.ticker}</td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums">{h.weight.toFixed(1)}%</td>
+                      <td className="py-2.5 pr-4 text-right tabular-nums">{fmtPct(h.weight, 1)}</td>
                       <td className="py-2.5 pr-4 text-right tabular-nums">
-                        ${h.dollar_amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        {fmtMoney(h.dollar_amount, 0)}
                       </td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums">{h.shares}</td>
-                      <td className="py-2.5 text-right tabular-nums">${h.price.toFixed(2)}</td>
+                      <td className="py-2.5 pr-4 text-right tabular-nums">{h.shares ?? "—"}</td>
+                      <td className="py-2.5 text-right tabular-nums">{fmtMoney(h.price, 2)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1060,7 +1068,7 @@ function PortfolioBuildSection() {
                     <td className="py-2 font-medium">Total</td>
                     <td className="py-2 text-right tabular-nums font-bold">100%</td>
                     <td className="py-2 text-right tabular-nums font-bold" colSpan={3}>
-                      ${result.investment_amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      {fmtMoney(result.investment_amount, 0)}
                     </td>
                   </tr>
                 </tfoot>
@@ -1083,13 +1091,15 @@ export default function PortfolioPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Portfolio</h1>
         <p className="text-sm text-muted-foreground">
-          Analyze your holdings or build a goal-based allocation
+          Reference lanes, your holdings, and goal-based construction — all in one place.
         </p>
       </div>
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 flex items-center gap-2 text-xs text-amber-400/80">
         <span>Educational tool only. Not financial advice. Portfolio suggestions are algorithmic and do not account for your full financial situation.</span>
       </div>
+
+      <ReferenceLanesPanel />
 
       {/* Tab switcher */}
       <div className="flex gap-1 rounded-lg bg-muted/50 p-1 w-fit">
@@ -1116,6 +1126,84 @@ export default function PortfolioPage() {
       </div>
 
       {tab === "analyze" ? <PortfolioAnalyzeSection /> : <PortfolioBuildSection />}
+    </div>
+  );
+}
+
+const REFERENCE_LANES = [
+  {
+    id: "conservative",
+    label: "Conservative",
+    icon: Shield,
+    allocation: "40 / 50 / 10",
+    desc: "Capital preservation — lowest equity, highest bonds",
+    color: "text-blue-400",
+    bg: "bg-blue-500/10",
+  },
+  {
+    id: "balanced",
+    label: "Balanced",
+    icon: TrendingUp,
+    allocation: "70 / 25 / 5",
+    desc: "Balanced growth + income with macro views",
+    color: "text-amber-400",
+    bg: "bg-amber-500/10",
+  },
+  {
+    id: "aggressive",
+    label: "Aggressive",
+    icon: Zap,
+    allocation: "95 / 5 / 0",
+    desc: "Maximum growth — full equity universe",
+    color: "text-red-400",
+    bg: "bg-red-500/10",
+  },
+] as const;
+
+function ReferenceLanesPanel() {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold tracking-tight">Reference Portfolios</h2>
+          <p className="text-xs text-muted-foreground">
+            Rules-based baselines to benchmark conviction against
+          </p>
+        </div>
+        <Link href="/portfolio-intelligence/compare">
+          <Button variant="outline" size="sm">
+            <BarChart3 className="h-3.5 w-3.5 mr-1.5" />
+            Compare All
+          </Button>
+        </Link>
+      </div>
+      <div className="grid gap-3 md:grid-cols-3">
+        {REFERENCE_LANES.map((lane) => (
+          <Link key={lane.id} href={`/portfolio-intelligence/reference?lane=${lane.id}`}>
+            <Card className="hover:border-primary/40 transition-colors cursor-pointer h-full">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-3">
+                  <div className={`rounded-lg p-2 ${lane.bg}`}>
+                    <lane.icon className={`h-4 w-4 ${lane.color}`} />
+                  </div>
+                  <div>
+                    <CardTitle className="text-sm">{lane.label}</CardTitle>
+                    <p className="text-[11px] text-muted-foreground">
+                      Eq/Bd/Alt: {lane.allocation}
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-xs text-muted-foreground">{lane.desc}</p>
+                <div className="flex items-center gap-1 mt-2 text-[11px] text-primary">
+                  Open <ArrowRight className="h-3 w-3" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

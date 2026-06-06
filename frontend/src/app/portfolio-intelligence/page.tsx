@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Shield, TrendingUp, Zap, BarChart3, ArrowRight,
+  Shield, TrendingUp, Zap, BarChart3, ArrowRight, Wrench,
 } from "lucide-react";
 
 const LANES = [
@@ -76,9 +76,9 @@ export default function PortfolioIntelligencePage() {
         ))}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <Link href="/portfolio-intelligence/my-portfolio">
-          <Card className="hover:border-primary/40 transition-colors cursor-pointer">
+          <Card className="hover:border-primary/40 transition-colors cursor-pointer h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <BarChart3 className="h-5 w-5 text-primary" />
@@ -94,8 +94,25 @@ export default function PortfolioIntelligencePage() {
           </Card>
         </Link>
 
+        <Link href="/portfolio">
+          <Card className="hover:border-primary/40 transition-colors cursor-pointer h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Wrench className="h-5 w-5 text-primary" />
+                Build a Portfolio
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Construct a new portfolio from scratch using risk tolerance, time horizon, and
+                goal — Black-Litterman, HRP, or template methods.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
         <Link href="/portfolio-intelligence/compare">
-          <Card className="hover:border-primary/40 transition-colors cursor-pointer">
+          <Card className="hover:border-primary/40 transition-colors cursor-pointer h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Badge variant="outline" className="text-xs">Side-by-side</Badge>

@@ -63,6 +63,7 @@ export const queryKeys = {
     referenceExplain: (lane: string) => ["pi", "reference", lane, "explain"] as const,
     compare: ["pi", "compare"] as const,
     replay: (lane: string) => ["pi", "replay", lane] as const,
+    replaySnapshot: (lane: string) => ["pi", "replay-snapshot", lane] as const,
   },
 } as const;
 

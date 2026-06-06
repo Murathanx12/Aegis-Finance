@@ -134,7 +134,12 @@ def _ensure_lane_initialized(lane_id: str, db_path=None) -> None:
 
     Without this, run_reference_check fails with FOREIGN KEY constraint failed
     on a fresh DB because rebalance_events references paper_portfolios(id).
+    Also creates the schema on a cold DB so the SELECT below doesn't fail
+    with "no such table: paper_portfolios".
     """
+    from backend.db import init_db
+    init_db(db_path)
+
     conn = get_connection(db_path)
     try:
         row = conn.execute(
