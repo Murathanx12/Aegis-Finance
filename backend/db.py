@@ -27,7 +27,7 @@ DB_PATH = BACKEND_DIR / "data" / "aegis_pi.db"
 
 _write_lock = threading.Lock()
 
-CURRENT_SCHEMA_VERSION = 2
+CURRENT_SCHEMA_VERSION = 3
 
 _SCHEMA_V1 = """
 CREATE TABLE IF NOT EXISTS _schema_version (
@@ -173,6 +173,47 @@ def _run_migrations(conn: sqlite3.Connection, from_version: int, to_version: int
             );
             CREATE INDEX IF NOT EXISTS idx_replay_cache_lane
                 ON replay_cache (lane_id, computed_at DESC);
+        """)
+
+    if from_version < 3:
+        # v3: (a) paper_nav — daily mark-to-market NAV for the live forward track
+        # record, segmented by config_version so optimization/rule changes that
+        # land as versioned config edits don't contaminate the prior segment.
+        # (b) rule_experiments — the Aegis-OWNED trial registry for the guarded
+        # rule-evolution loop. DSR/PBO must deflate against the CUMULATIVE trial
+        # count across ALL runs (read from this table), not per-batch, or the
+        # loop slowly overfits. Optimus may ingest this as corpus; it never owns it.
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS paper_nav (
+                portfolio_id TEXT NOT NULL REFERENCES paper_portfolios(id),
+                date TEXT NOT NULL,              -- ISO date of the NAV mark
+                nav REAL NOT NULL,               -- mark-to-market portfolio value
+                config_version TEXT NOT NULL,    -- SHA of config producing this NAV
+                computed_at TEXT NOT NULL,
+                PRIMARY KEY (portfolio_id, date)
+            );
+            CREATE INDEX IF NOT EXISTS idx_paper_nav_lane
+                ON paper_nav (portfolio_id, date);
+
+            CREATE TABLE IF NOT EXISTS rule_experiments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TEXT NOT NULL,
+                config_version TEXT NOT NULL,
+                lane_id TEXT,
+                param TEXT NOT NULL,             -- rule param tested (e.g. drift threshold)
+                old_value TEXT,                  -- JSON
+                new_value TEXT,                  -- JSON
+                observed_sharpe REAL,
+                n_obs INTEGER,
+                batch_trials INTEGER NOT NULL,   -- candidates in this batch
+                cumulative_trials INTEGER NOT NULL,  -- total trials AT this point
+                dsr REAL,                        -- deflated against cumulative_trials
+                pbo REAL,
+                verdict TEXT NOT NULL,           -- 'adopted' | 'rejected'
+                notes TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_rule_experiments_created
+                ON rule_experiments (created_at DESC);
         """)
 
 
@@ -389,6 +430,101 @@ def get_latest_cached_replay(lane_id: str) -> tuple[str, str] | None:
         return (row["result_json"], row["computed_at"])
     finally:
         conn.close()
+
+
+def insert_nav(
+    conn: sqlite3.Connection,
+    portfolio_id: str,
+    nav_date: str,
+    nav: float,
+    config_version: str,
+    computed_at: str,
+) -> None:
+    """Upsert a daily mark-to-market NAV point (last writer wins per date)."""
+    with _write_lock:
+        conn.execute(
+            """INSERT OR REPLACE INTO paper_nav
+               (portfolio_id, date, nav, config_version, computed_at)
+               VALUES (?, ?, ?, ?, ?)""",
+            (portfolio_id, nav_date, nav, config_version, computed_at),
+        )
+        conn.commit()
+
+
+def get_nav_series(
+    conn: sqlite3.Connection,
+    portfolio_id: str,
+    config_version: str | None = None,
+) -> list[dict]:
+    """Return [{date, nav, config_version}] ordered by date.
+
+    Pass config_version to fetch only one track-record segment (so a versioned
+    rule/optimization change starts a clean segment instead of contaminating
+    the prior one).
+    """
+    if config_version is None:
+        rows = conn.execute(
+            "SELECT date, nav, config_version FROM paper_nav "
+            "WHERE portfolio_id = ? ORDER BY date",
+            (portfolio_id,),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT date, nav, config_version FROM paper_nav "
+            "WHERE portfolio_id = ? AND config_version = ? ORDER BY date",
+            (portfolio_id, config_version),
+        ).fetchall()
+    return [{"date": r["date"], "nav": r["nav"],
+             "config_version": r["config_version"]} for r in rows]
+
+
+def count_cumulative_trials(conn: sqlite3.Connection) -> int:
+    """Total rule-evolution trials EVER recorded.
+
+    This is the multiple-testing count the DSR/PBO guards must deflate against —
+    cumulative across all loop runs, not per-batch. See record_trial /
+    experiment_registry for the guarded acceptance logic.
+    """
+    row = conn.execute("SELECT COUNT(*) AS n FROM rule_experiments").fetchone()
+    return int(row["n"]) if row else 0
+
+
+def insert_experiment(
+    conn: sqlite3.Connection,
+    created_at: str,
+    config_version: str,
+    param: str,
+    batch_trials: int,
+    cumulative_trials: int,
+    verdict: str,
+    *,
+    lane_id: str | None = None,
+    old_value=None,
+    new_value=None,
+    observed_sharpe: float | None = None,
+    n_obs: int | None = None,
+    dsr: float | None = None,
+    pbo: float | None = None,
+    notes: str | None = None,
+) -> int:
+    """Record one rule-evolution trial in the registry. Returns the row id."""
+    with _write_lock:
+        cursor = conn.execute(
+            """INSERT INTO rule_experiments
+               (created_at, config_version, lane_id, param, old_value, new_value,
+                observed_sharpe, n_obs, batch_trials, cumulative_trials,
+                dsr, pbo, verdict, notes)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                created_at, config_version, lane_id, param,
+                json.dumps(old_value) if old_value is not None else None,
+                json.dumps(new_value) if new_value is not None else None,
+                observed_sharpe, n_obs, batch_trials, cumulative_trials,
+                dsr, pbo, verdict, notes,
+            ),
+        )
+        conn.commit()
+        return cursor.lastrowid
 
 
 def insert_personal_decision(
