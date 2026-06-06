@@ -19,7 +19,11 @@ get an as-of NAV; nothing reaches forward in time.
 
 from __future__ import annotations
 
+import logging
+
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 # Risk-free ticker proxy for the cash sleeve (1-3y T-bills). Cash held as this
 # sleeve earns the short rate; modeled via rf_daily when no live yield is given.
@@ -91,6 +95,7 @@ def get_rf_daily(annual_fallback: float = 0.04) -> float:
     if "v" in _RF_CACHE:
         return _RF_CACHE["v"]
     annual = annual_fallback
+    source = "fallback"
     try:
         from backend.services.data_fetcher import api_keys
         if api_keys.has("fred"):
@@ -98,8 +103,12 @@ def get_rf_daily(annual_fallback: float = 0.04) -> float:
             series = Fred(api_key=api_keys.fred).get_series("DGS3MO").dropna()
             if len(series):
                 annual = float(series.iloc[-1]) / 100.0
-    except Exception:
+                source = "FRED:DGS3MO"
+    except Exception as e:
+        logger.warning("get_rf_daily: FRED fetch failed (%s); using fallback", e)
         annual = annual_fallback
+    # Log which source is active — a silent fallback to 4% would distort cash returns.
+    logger.info("get_rf_daily: rf=%.3f%% annual (source=%s)", annual * 100, source)
     rf = (1.0 + annual) ** (1.0 / 252.0) - 1.0
     _RF_CACHE["v"] = rf
     return rf
