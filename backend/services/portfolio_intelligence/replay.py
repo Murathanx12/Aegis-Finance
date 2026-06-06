@@ -33,11 +33,17 @@ import pandas as pd
 from backend.config import paper_portfolios
 from backend.schemas.portfolio_intelligence import ReplayResult, MetricPack
 from backend.services.portfolio_intelligence.market_data_wrapper import MarketDataAtTimestamp
+from backend.services.portfolio_intelligence.nav import (
+    mark_to_market,
+    nav_series,
+    weights_to_shares,
+)
 from backend.services.portfolio_intelligence.rebalancer import compute_trades, estimate_turnover
 from backend.services.portfolio_intelligence.rules import (
     apply_crash_overlay,
     compute_target_weights,
     enforce_position_limits,
+    lane_sector_map,
     should_rebalance,
 )
 
@@ -161,6 +167,29 @@ def _drift_weights(
         drifted = {t: v / total for t, v in drifted.items()}
 
     return drifted
+
+
+def _prices_as_of(price_df: pd.DataFrame, as_of: date) -> dict[str, float]:
+    """Last available price per ticker at or before `as_of` (no look-ahead)."""
+    if price_df.empty:
+        return {}
+    ts = pd.Timestamp(as_of)
+    out: dict[str, float] = {}
+    for t in price_df.columns:
+        s = price_df[t].loc[:ts].dropna()
+        if not s.empty:
+            out[t] = float(s.iloc[-1])
+    return out
+
+
+def _shares_to_weights(shares: dict[str, float], prices: dict[str, float],
+                       cash: float = 0.0) -> dict[str, float]:
+    """Mark a share book to weights at the given prices (for the drift trigger)."""
+    vals = {t: shares[t] * prices.get(t, 0.0) for t in shares}
+    total = sum(vals.values()) + cash
+    if total <= 0:
+        return {}
+    return {t: v / total for t, v in vals.items() if v > 0}
 
 
 def _compute_replay_metrics(equity_curve: pd.Series) -> MetricPack | None:
@@ -303,6 +332,7 @@ class ReplayEngine:
         end_date: str | None = None,
         initial_notional: float = 100_000.0,
         crash_prob_override: float | None = None,
+        rf_daily: float = 0.0,
     ) -> ReplayResult:
         """Run walk-forward replay for a single lane.
 
@@ -323,6 +353,7 @@ class ReplayEngine:
         universe_cfg = paper_portfolios.get("universe", {})
         frequency = lane_config["rebalance_frequency"]
         drift_threshold = lane_config["rebalance_trigger_drift"]
+        sector_map = lane_sector_map(universe_cfg)
 
         logger.info("Replay %s: %s to %s, $%,.0f notional", lane_id, start, end, initial_notional)
 
@@ -335,8 +366,12 @@ class ReplayEngine:
         # Generate check dates
         check_dates = _generate_check_dates(start, end, frequency)
 
-        # State
-        current_weights: dict[str, float] = {}
+        # State: we hold a SHARE BOOK (+ cash sleeve), not weights — the value
+        # path is shares × real price via the shared nav.py engine, identical to
+        # the live mark-to-market. current_weights is derived (marked) only for
+        # the drift trigger.
+        current_shares: dict[str, float] = {}
+        current_cash: float = 0.0
         last_rebalance: date | None = None
         portfolio_value = initial_notional
         equity_curve_points: list[dict] = []
@@ -350,23 +385,33 @@ class ReplayEngine:
         daily_dates = [pd.Timestamp(start)]
 
         for i, check_date in enumerate(check_dates):
-            # Compute daily returns since last check (or start)
+            # Value the held book over (prev_date, check_date] via nav_series —
+            # the SAME engine the live path uses (one engine, two modes).
             prev_date = check_dates[i - 1] if i > 0 else start
-            if current_weights and not ticker_prices.empty:
-                period_returns = _compute_daily_returns(
-                    current_weights, ticker_prices, prev_date, check_date,
-                )
-                for ret_date, ret_val in period_returns.items():
-                    portfolio_value *= (1 + ret_val)
-                    daily_values.append(portfolio_value)
-                    daily_dates.append(ret_date)
+            if current_shares and not ticker_prices.empty:
+                seg = ticker_prices.loc[
+                    pd.Timestamp(prev_date):pd.Timestamp(check_date)
+                ]
+                # Drop the segment's first row if it's the prev check date we
+                # already recorded, to avoid duplicate points.
+                if len(seg) > 1 and i > 0 and seg.index[0] == pd.Timestamp(prev_date):
+                    seg = seg.iloc[1:]
+                if not seg.empty:
+                    seg_nav = nav_series(
+                        current_shares, seg, cash=current_cash, rf_daily=rf_daily,
+                    )
+                    for dt, v in seg_nav.items():
+                        daily_values.append(float(v))
+                        daily_dates.append(dt)
+                    portfolio_value = float(seg_nav.iloc[-1])
 
-                # Drift current_weights based on individual ticker returns
-                current_weights = _drift_weights(
-                    current_weights, ticker_prices, prev_date, check_date,
-                )
+            # Mark the held book to weights at current prices (for the trigger).
+            prices_at_date = _prices_as_of(ticker_prices, check_date)
+            current_weights = _shares_to_weights(
+                current_shares, prices_at_date, current_cash,
+            )
 
-            # Compute target weights (equal-weight fallback, no optimizer)
+            # Compute target weights (equal-weight within sleeves today)
             target_weights = compute_target_weights(lane_config, universe_cfg)
 
             # Get crash probability
@@ -389,6 +434,7 @@ class ReplayEngine:
                 target_weights,
                 lane_config["max_single_name"],
                 lane_config["max_sector"],
+                sector_map,
             )
 
             # Check rebalance trigger
@@ -402,16 +448,6 @@ class ReplayEngine:
             )
 
             if trigger:
-                # Compute trades
-                prices_at_date = {}
-                if not ticker_prices.empty:
-                    ts = pd.Timestamp(check_date)
-                    for ticker in target_weights:
-                        if ticker in ticker_prices.columns:
-                            series = ticker_prices[ticker].loc[:ts].dropna()
-                            if not series.empty:
-                                prices_at_date[ticker] = float(series.iloc[-1])
-
                 trades, trade_cost = compute_trades(
                     current_weights, target_weights, prices_at_date,
                     portfolio_value,
@@ -422,6 +458,13 @@ class ReplayEngine:
                 turnover = estimate_turnover(current_weights, target_weights)
                 total_turnover += turnover
                 total_cost += trade_cost
+
+                # Transaction cost is paid out of the book, then the new target
+                # is converted to a fresh share book via the shared nav engine.
+                portfolio_value = max(0.0, portfolio_value - trade_cost)
+                current_shares, current_cash = weights_to_shares(
+                    target_weights, prices_at_date, portfolio_value,
+                )
 
                 rebalance_log.append({
                     "date": check_date.isoformat(),
@@ -434,7 +477,6 @@ class ReplayEngine:
                     "portfolio_value": round(portfolio_value, 2),
                 })
 
-                current_weights = dict(target_weights)
                 last_rebalance = check_date
                 total_rebalances += 1
 

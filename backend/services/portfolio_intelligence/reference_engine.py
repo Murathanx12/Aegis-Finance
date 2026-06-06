@@ -108,9 +108,14 @@ def _get_portfolio_notional(conn, portfolio_id: str) -> float:
 
 
 def _get_sector_map() -> dict[str, str]:
-    """Get sector map for position limit enforcement."""
-    from backend.services.portfolio_intelligence.real_analyzer import _get_sector_map
-    return _get_sector_map()
+    """Sector map for the reference lanes' position-limit enforcement.
+
+    Uses the universe-aware lane map: sector ETFs + individual stocks map to
+    GICS sectors (capped); broad-equity, bond, alt and cash sleeves are EXEMPT
+    (absent from the map) so they are not wrongly clipped by the equity cap.
+    """
+    from backend.services.portfolio_intelligence.rules import lane_sector_map
+    return lane_sector_map()
 
 
 def _get_crash_prob() -> float | None:
