@@ -7,7 +7,10 @@ Deployment-gate checks (separate from code correctness).
   - the scheduler health snapshot exposes the fields the canary needs.
 """
 
+import os
+import subprocess
 import sqlite3
+import sys
 from datetime import date
 
 from backend.config import paper_portfolios
@@ -112,3 +115,46 @@ def test_scheduler_health_exposes_canary_fields():
     h = scheduler_health()
     for key in ("running", "n_jobs", "job_ids", "last_mtm"):
         assert key in h
+
+
+def test_data_dir_honors_env_var_without_shadowing_config(tmp_path):
+    """The Railway volume-shadow contract.
+
+    A persistent volume must hold ONLY mutable state (aegis_pi.db, the
+    APScheduler job store). The immutable paper_portfolios.yaml that the PI
+    subsystem reads at boot MUST stay baked in the image — otherwise mounting
+    the volume over backend/data shadows the YAML and lanes can't initialize.
+
+    DATA_DIR is resolved at import time from AEGIS_DATA_DIR, so this asserts the
+    contract in a fresh interpreter: both DBs relocate to the volume; the config
+    YAML path does NOT.
+    """
+    vol = tmp_path / "volume"
+    probe = (
+        "from backend.config import DATA_DIR, BACKEND_DIR;"
+        "from backend.db import DB_PATH;"
+        "from backend.services.portfolio_intelligence.scheduler import _DB_DIR;"
+        "vol = DATA_DIR;"
+        # mutable state follows the volume
+        "assert str(DB_PATH).startswith(str(vol)), DB_PATH;"
+        "assert str(_DB_DIR).startswith(str(vol)), _DB_DIR;"
+        # immutable config stays in the image, NEVER under the volume
+        "yaml = BACKEND_DIR / 'data' / 'paper_portfolios.yaml';"
+        "assert not str(yaml).startswith(str(vol)), yaml;"
+        "print('OK')"
+    )
+    env = {**os.environ, "AEGIS_DATA_DIR": str(vol)}
+    r = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, env=env)
+    assert r.returncode == 0, f"shadow-trap contract broken:\n{r.stdout}\n{r.stderr}"
+
+
+def test_data_dir_defaults_to_backend_data_locally():
+    """With no AEGIS_DATA_DIR set, paths default to backend/data (local dev)."""
+    probe = (
+        "from backend.config import DATA_DIR, BACKEND_DIR;"
+        "assert DATA_DIR == BACKEND_DIR / 'data', DATA_DIR;"
+        "print('OK')"
+    )
+    env = {k: v for k, v in os.environ.items() if k != "AEGIS_DATA_DIR"}
+    r = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, env=env)
+    assert r.returncode == 0, f"local default broken:\n{r.stdout}\n{r.stderr}"

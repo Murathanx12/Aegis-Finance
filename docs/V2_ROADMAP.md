@@ -25,6 +25,7 @@ If a session is tempted to "add one more model," the answer is no until the audi
 - Paper accounts: equal-weight + crash-overlay-to-**cash** + sector caps + cash sleeve earning rf + **live MTM** + replay unified on `nav.py` + Aegis-owned experiment registry with cumulative-trials guard.
 - Honest config (no overclaiming; `optimizer: equal_weight`, intent in `planned_optimizer`).
 - Deploy gate cleared in code (migration, scheduler `/health/scheduler` canary, idempotent inception, FRED rf logging).
+- **Volume-shadow trap fixed (`AEGIS_DATA_DIR`).** Mutable state (`aegis_pi.db`, APScheduler job store) resolves from `AEGIS_DATA_DIR`; the immutable `paper_portfolios.yaml` + `MODEL_DIR` stay baked in the image. On Railway: set `AEGIS_DATA_DIR=/data` and mount the volume at **`/data`** — NOT at `backend/data` (that would shadow the config YAML and break lane init on first boot). Contract pinned by `test_deploy_gate.py`.
 - **Deploy → forward track record begins.** This is the line in the sand. Track-record anchor: `config_version = 82be14cb6039bfae`, inception_date = first Railway boot.
 
 **V1's honest limitations (documented, not hidden):**

@@ -18,14 +18,17 @@ Usage:
 
 import logging
 from datetime import datetime, timedelta
-from pathlib import Path
+
+from backend.config import DATA_DIR
 
 logger = logging.getLogger(__name__)
 
 _scheduler = None
 _last_mtm_timestamp: datetime | None = None
 
-_DB_DIR = Path(__file__).parent.parent.parent / "data"
+# Env-configurable (AEGIS_DATA_DIR) so the job store persists on the same Railway
+# volume as aegis_pi.db. See config.DATA_DIR for the volume-mount contract.
+_DB_DIR = DATA_DIR
 
 
 def setup_scheduler():
