@@ -21,6 +21,16 @@ from dotenv import load_dotenv
 PROJECT_ROOT = Path(__file__).parent.parent
 BACKEND_DIR = Path(__file__).parent
 MODEL_DIR = BACKEND_DIR / "models"
+
+# Mutable runtime state (the PI SQLite DB + APScheduler job store) lives here.
+# On Railway this MUST point at a persistent volume mounted at a path that does
+# NOT shadow the image: set AEGIS_DATA_DIR=/data and mount the volume at /data.
+# Locally it defaults to backend/data, alongside the immutable config YAML.
+# IMPORTANT: paper_portfolios.yaml and MODEL_DIR are immutable, version-controlled,
+# and baked into the image — they are deliberately NOT under DATA_DIR, so a volume
+# mounted for persistence can never shadow them on first boot.
+DATA_DIR = Path(os.getenv("AEGIS_DATA_DIR", str(BACKEND_DIR / "data")))
+
 load_dotenv(PROJECT_ROOT / ".env")
 
 

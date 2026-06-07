@@ -19,11 +19,14 @@ import sqlite3
 import threading
 from pathlib import Path
 
-from backend.config import BACKEND_DIR
+from backend.config import BACKEND_DIR, DATA_DIR
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = BACKEND_DIR / "data" / "aegis_pi.db"
+# DATA_DIR is env-configurable (AEGIS_DATA_DIR) so Railway can persist the DB on
+# a volume WITHOUT shadowing the baked-in paper_portfolios.yaml, which stays under
+# BACKEND_DIR/data (immutable). See config.DATA_DIR for the volume-mount contract.
+DB_PATH = DATA_DIR / "aegis_pi.db"
 
 _write_lock = threading.Lock()
 

@@ -261,7 +261,15 @@ curl -X POST http://localhost:8000/api/portfolio/build \
 **Backend (Railway):**
 1. Create Railway account, connect GitHub repo
 2. Set env vars: `FRED_API_KEY`, `PORT=8000`, `ALLOWED_ORIGINS=https://your-frontend.vercel.app`
-3. Deploys automatically via `railway.json`
+3. **Paper accounts (persistence):** add a volume and set `AEGIS_DATA_DIR` to its mount path.
+   - Mount the volume at **`/data`** and set `AEGIS_DATA_DIR=/data`.
+   - This keeps the paper-portfolio DB + scheduler job store on the volume so the
+     track record survives redeploys. ⚠️ Do **not** mount the volume at `backend/data` —
+     that path holds the baked-in `paper_portfolios.yaml` config and a volume would
+     shadow it, breaking lane init on first boot.
+   - Point an uptime check (e.g. UptimeRobot) at `/health/scheduler` (returns 503 if the
+     scheduler is silently dead — which would flat-line the track record).
+4. Deploys automatically via `railway.json`
 
 **Frontend (Vercel):**
 1. Create Vercel account, import repo, set root to `frontend/`
