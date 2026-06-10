@@ -62,3 +62,32 @@ enforced contract.
 
 **Measured:** suite 2339 passed/1 failed → fix applied; affected-module
 targeted runs green (51 + 3 + 2). New tests: +3 (degradation logging).
+
+### Cycle 2 — A2 coverage on highest-risk math (invariant + property tests)
+
+**Selected:** portfolio_optimizer.py was the weakest high-risk module
+(58% vs covariance 92%, crash_model 81%). Added
+`test_optimizer_invariants.py`: long-only/fully-invested/subset invariants
+for all four optimizers (offline, `_fetch_returns` patched with synthetic
+correlated returns), hypothesis property tests for
+`adjust_weights_for_liquidity` (never invents weight, conserves sum when a
+liquid asset survives, hard-floors thin names), and a 200-example property
+test that `predict_all_horizons` orders ANY raw per-horizon outputs.
+
+**Bug found by the new tests (then fixed):** `_recommend_method` raised
+`TypeError: '>' not supported between NoneType and int` — equal_weight
+fallback always carries `sharpe_ratio: None`, and `compare_methods` always
+includes equal_weight, so **every** `compare_methods` call (router:
+`portfolio.py:778`, the optimizer-comparison endpoint) died at the
+recommendation step. `.get(key, -999)` does not protect against an explicit
+None value. Lesson: invariant tests on fallback paths find bugs the happy-path
+tests never touch; also nothing was testing the endpoint's service function
+end-to-end offline.
+
+**Measured:** portfolio_optimizer 58% → 72% (Miss 102 → 69); target-set
+total 75% → 80%. +12 tests (82 in the affected set, all green).
+pytest-cov installed (dev-dep; license MIT, standard tooling).
+
+**Deferred:** crash_model 81% — remaining misses are training/IO paths;
+diminishing returns vs the optimizer gap. `_fetch_returns` (54-89) is
+network-only by design — left uncovered deliberately.
