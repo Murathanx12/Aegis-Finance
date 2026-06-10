@@ -4,7 +4,59 @@
 
 ## SESSION SUMMARY
 
-(placeholder — filled at session end)
+**5 cycles, 5 commits pushed to `lab/autonomous-rd`:**
+1. `5dff6af` — silent degradation made loud (real_analyzer beta loop
+   isolation, sector-map + replay-universe + shutdown logging); flaky
+   `test_monotonic_horizons` rewritten against the enforced contract.
+2. `6b0d4b6` — optimizer invariant/property tests (+12); found & fixed
+   `compare_methods` TypeError that killed the optimizer-comparison
+   endpoint on every call.
+3. `9b4c83a` — ruff ratchet 217 → 36; duplicate `tail_risk` config key
+   (F601) removed; F821 annotation fix; `ruff.toml` pins the rule set.
+4. `5323758` — `docs/TRACK_RECORD_POLICY.md` + shared `MethodologyBanner`;
+   replay/compare pages relabeled methodology, "Performance Metrics" →
+   "Backtested Metrics".
+5. (this commit) — `docs/PROPOSALS.md` (5 entries) + session summary.
+
+**Measured deltas:**
+- Tests: 2339 → 2356 collected (+15 new, 2 rewritten); full fast suite
+  **2344 passed / 0 failed** (mid-session gate; final gate in this commit's
+  log line below).
+- Ruff errors: **217 → 36** (config pinned; floor recorded).
+- Coverage (high-risk math set): portfolio_optimizer **58% → 72%**,
+  target-set 75% → 80%.
+- Bugs: **6 fixed** (beta-loop abort, 3 silent swallows, compare_methods
+  crash, duplicate config key), **4 documented-not-built** (replay-cache
+  UTC TTL, np.bool_ leak, cov_lw gap, deep_contango gap — see
+  PROPOSALS.md), **~25 sweep candidates rejected** with reasons (cycle-1
+  log) so they aren't re-litigated.
+
+**Abandoned/dead-ends:** none hit the 3-attempt thrash guard. One
+self-inflicted break (E712 → `is True` on np.bool_) caught by targeted
+rerun within the same cycle.
+
+**PROPOSALS.md added (titles):** replay-cache UTC TTL fix; np.bool_
+dataclass leak; documented-intent gaps (cov_lw / vix_deep_contango); mypy
+adoption (PI-scoped); F841 dead-code sweep.
+
+**Top 3 next actions for Murat (priority order):**
+1. **Trigger the Railway redeploy** (dashboard or `railway up`) — commits
+   `6ed841a..5323758` are waiting; until then the history endpoint stub is
+   what's live and `paper_nav` rows remain unverifiable. Ideally enable
+   auto-deploy from `lab/autonomous-rd`.
+2. After redeploy: verify `/health/scheduler` shows `nav.all_fresh: true`
+   and `/api/pi/reference/balanced/history?period=ALL` returns real NAV
+   rows since 2026-06-08 — closes the "are rows landing?" question.
+3. Approve/kill the 5 PROPOSALS.md entries (each <2 min) and write the
+   missing `docs/V2_GOALS.md` "Murat's additions" section that go.md
+   expects.
+
+**Needs Murat specifically:** the redeploy (item 1); V2_GOALS.md; proposal
+verdicts. No write-path patches were needed this session — the track
+record was never touched.
+
+**Final gate: full fast suite 2356 passed / 0 failed (15:01).** Tree green,
+pushed, clean.
 
 ---
 
