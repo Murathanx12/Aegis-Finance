@@ -13,6 +13,7 @@ import {
   RefreshCw, Clock,
 } from "lucide-react";
 import { InfoTooltip } from "@/components/info-tooltip";
+import { MethodologyBanner } from "@/components/methodology-banner";
 import Link from "next/link";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip,
@@ -85,9 +86,11 @@ function ReferencePageContent() {
         <div className="flex-1" suppressHydrationWarning>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <LaneIcon className={`h-6 w-6 ${meta.color}`} />
-            {meta.label} Reference Portfolio
+            {meta.label} Reference Portfolio — Methodology Backtest
           </h1>
-          <p className="text-sm text-muted-foreground">{meta.alloc}</p>
+          <p className="text-sm text-muted-foreground">
+            {meta.alloc} · simulated 2021&ndash;2025, not the live track record
+          </p>
         </div>
         <Button
           variant="outline"
@@ -116,16 +119,8 @@ function ReferencePageContent() {
         ))}
       </div>
 
-      {/* Survivorship Disclaimer */}
-      <Card className="border-amber-500/30 bg-amber-500/5">
-        <CardContent className="py-3">
-          <p className="text-xs text-amber-400/80">
-            Historical replay performance reflects backtested rebalancing over 2021-2025 using a
-            fixed universe. Results may be inflated by survivorship bias if the universe was
-            selected from current index constituents. See docs/replay_diagnostics_v1.md for details.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Methodology label — copy governed by docs/TRACK_RECORD_POLICY.md */}
+      <MethodologyBanner />
 
       {/* Cache status badge */}
       {snapshot && snapshot.status === "stale" && snapshot.cached_at && (
