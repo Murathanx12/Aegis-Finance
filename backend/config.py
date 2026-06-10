@@ -130,7 +130,12 @@ config: dict = {
             "vix_fred": "VIXCLS",                # VIX (FRED version, longer history)
             "hy_oas": "BAMLH0A0HYM2",           # High Yield OAS spread
             "ig_oas": "BAMLC0A0CM",             # Investment Grade OAS spread
-            "gpr_world": "GPRH",                 # Geopolitical Risk Index
+            # "gpr_world" removed 2026-06-10: GPRH/GPRD/GPR do not exist on
+            # FRED (Caldara-Iacoviello GPR is not FRED-hosted) — the fetch
+            # failed on every run, so no feature ever existed and removal is
+            # behavior-identical. FRED-hosted uncertainty proxies exist
+            # (USEPUINDXD daily, GEPUCURRENT monthly); adding one is a NEW
+            # feature → registered evolution-loop candidate, not a hand-edit.
             "consumer_credit": "TOTALSL",        # Total consumer credit outstanding
             "tips_10y": "DFII10",                # 10Y TIPS real yield
             "margin_credit": "BOGZ1FL663067003Q",  # Security credit (margin debt proxy)
