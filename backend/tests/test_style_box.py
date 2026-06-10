@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-import pytest
 
 from backend.services import style_box as sb
 

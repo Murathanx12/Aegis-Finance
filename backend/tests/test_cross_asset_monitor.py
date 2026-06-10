@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from backend.services.cross_asset_monitor import (
     _classify_quadrant,

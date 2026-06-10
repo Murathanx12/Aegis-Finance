@@ -7,8 +7,6 @@ schema versioning, and the pre_state + trades == post_state invariant.
 
 import json
 import sqlite3
-import tempfile
-from pathlib import Path
 
 import pytest
 

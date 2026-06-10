@@ -1,0 +1,16 @@
+# Ruff ratchet — grind session 2026-06-10.
+# Baseline at adoption: 217 errors → 36 after fixes (32 F841, 4 E741).
+# Rule: the count NEVER rises. Fix F841/E741 site-by-site (some unused
+# variables signal documented-intent gaps — see docs/postmortems/
+# 2026-06-10-grind-session.md before "fixing" them blindly).
+
+target-version = "py312"
+line-length = 100
+
+# Lint only the backend + lab + engine Python; frontend is TS.
+include = ["backend/**/*.py", "engine/**/*.py", "lab/**/*.py"]
+
+[lint]
+# Default rule set (E4, E7, E9, F) — what the baseline was measured with.
+# Expand deliberately (B, UP, SIM) in a future cycle, never casually.
+select = ["E4", "E7", "E9", "F"]

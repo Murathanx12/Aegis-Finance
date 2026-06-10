@@ -2,7 +2,6 @@
 Tests for signal_analytics.py — consensus, decomposition, risk-reward, ranking, concentration.
 """
 
-import pytest
 import numpy as np
 
 from backend.services.signal_analytics import (

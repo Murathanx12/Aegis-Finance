@@ -2,10 +2,8 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from backend.services.benchmark_analytics import (
-    compute_benchmark_analytics,
     _build_portfolio_returns,
     _compute_capture_ratios,
     _compute_regression_stats,

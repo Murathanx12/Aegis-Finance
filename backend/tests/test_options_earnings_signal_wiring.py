@@ -13,8 +13,6 @@ Validates that:
   8. Router wiring calls the intelligence services
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
 
 from backend.services.signal_engine import get_stock_signal
 

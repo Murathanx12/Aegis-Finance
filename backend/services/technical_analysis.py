@@ -26,12 +26,12 @@ import numpy as np
 import pandas as pd
 
 try:
-    import ta
+    import ta  # noqa: F401 — availability probe
     from ta.trend import SMAIndicator, EMAIndicator, MACD, ADXIndicator
     from ta.momentum import (
         RSIIndicator, StochasticOscillator, WilliamsRIndicator, ROCIndicator,
     )
-    from ta.volatility import BollingerBands, AverageTrueRange, KeltnerChannel
+    from ta.volatility import BollingerBands, AverageTrueRange, KeltnerChannel  # noqa: F401 — KeltnerChannel probe
     from ta.volume import (
         OnBalanceVolumeIndicator, AccDistIndexIndicator, ForceIndexIndicator,
     )
@@ -39,7 +39,6 @@ try:
 except ImportError:
     HAS_TA = False
 
-from backend.config import config
 
 logger = logging.getLogger(__name__)
 

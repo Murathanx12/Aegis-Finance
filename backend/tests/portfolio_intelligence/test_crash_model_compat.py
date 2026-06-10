@@ -8,11 +8,10 @@ The V7 model is frozen per CONTEXT. This test verifies:
   3. No model weights, calibrators, or imputers were changed
 """
 
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd
-import pytest
 
 
 class TestCrashModelBackwardCompat:

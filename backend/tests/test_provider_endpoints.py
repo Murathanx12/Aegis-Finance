@@ -14,7 +14,6 @@ from fastapi.testclient import TestClient
 from backend.services.providers import (
     AnalystEstimates,
     EarningsEvent,
-    ProviderHealth,
 )
 
 

@@ -2,7 +2,6 @@
 
 import math
 
-import pytest
 
 from backend.services.bond_analytics import (
     Bond,

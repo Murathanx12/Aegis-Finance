@@ -11,14 +11,12 @@ Usage:
     )
 """
 
-import json
 import logging
 from datetime import date, datetime
 
 from backend.config import paper_portfolios
 from backend.db import get_connection, insert_rebalance_event, insert_audit_log
 from backend.schemas.portfolio_intelligence import (
-    MetricPack,
     RebalanceEventResponse,
     SnapshotResponse,
 )

@@ -12,8 +12,6 @@ Validates:
   8. Edge cases (extreme values, partial data)
 """
 
-import pytest
-import numpy as np
 
 from backend.services.options_calibrator import (
     calibrate_mc_from_options,

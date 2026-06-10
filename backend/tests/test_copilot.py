@@ -11,7 +11,6 @@ Network calls to the LLM provider are mocked. We verify:
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from backend.services import copilot as cp
 

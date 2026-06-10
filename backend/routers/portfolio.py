@@ -14,7 +14,10 @@ POST /api/portfolio/benchmark         — Benchmark analytics (tracking error, I
 import asyncio
 import logging
 import re
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:  # annotation-only; pandas is imported lazily at runtime
+    import pandas as pd
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse, Response
@@ -53,7 +56,7 @@ def _engine_analyze_cached(holdings: list[dict], weights: dict) -> dict:
     return result
 
 
-def _prefetch_close_5y(tickers: list[str]) -> Optional["pandas.DataFrame"]:
+def _prefetch_close_5y(tickers: list[str]) -> Optional["pd.DataFrame"]:
     """Download 5y daily Close for tickers+SPY once, cache for 10min.
 
     Returns wide DataFrame indexed by date with one column per ticker (incl. SPY).
@@ -824,7 +827,6 @@ async def optimize_mpc(request: MPCRequest):
     """
     import yfinance as yf
     import pandas as pd
-    import numpy as np
     from backend.services.mpc_optimizer import (
         optimize_single_period,
         optimize_multi_period,

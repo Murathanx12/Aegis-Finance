@@ -9,7 +9,6 @@ Verifies:
   4. Backward compatibility: no drift_severity → no change
 """
 
-import pytest
 from backend.services.signal_engine import get_market_signal
 from backend.config import config
 

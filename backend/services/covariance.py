@@ -95,7 +95,6 @@ def _fit_mp_variance(eigenvalues: np.ndarray, q: float) -> float:
     Uses the KS statistic to find the variance parameter that best fits
     the empirical eigenvalue distribution below the upper bound.
     """
-    from scipy.stats import kstest
 
     def _neg_fit(var):
         """Negative quality of fit (to minimize)."""

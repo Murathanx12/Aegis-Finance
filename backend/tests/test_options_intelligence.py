@@ -6,9 +6,7 @@ Tests the options-derived signal computation, IV skew analysis,
 put/call ratio interpretation, and VIX term structure analysis.
 """
 
-import numpy as np
 import pandas as pd
-import pytest
 
 
 class TestOptionsSignalGeneration:

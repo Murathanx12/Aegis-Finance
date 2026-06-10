@@ -2,7 +2,6 @@
 Pytest configuration for backend tests.
 """
 
-import pytest
 
 
 def pytest_configure(config):

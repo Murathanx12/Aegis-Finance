@@ -35,7 +35,7 @@ def optimize_weights(
         Dict with top 3 combinations and comparison to current weights.
     """
     import yfinance as yf
-    from backend.services.signal_engine import get_market_signal, _DEFAULT_WEIGHTS
+    from backend.services.signal_engine import _DEFAULT_WEIGHTS
 
     # Download all data once
     buffer_end = (pd.Timestamp(end_date) + pd.DateOffset(months=14)).strftime("%Y-%m-%d")

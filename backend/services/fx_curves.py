@@ -29,7 +29,6 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-import pandas as pd
 
 from backend.cache import cache_get, cache_set
 

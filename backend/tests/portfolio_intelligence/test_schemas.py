@@ -10,25 +10,15 @@ import pytest
 from backend.config import paper_portfolios
 from backend.schemas.portfolio_intelligence import (
     AnalyzePortfolioRequest,
-    CompareRequest,
-    CrashOverlayConfig,
     DecisionAction,
     HoldingInput,
-    LaneConfig,
-    LaneConfigResponse,
     MetricPack,
     PaperPortfoliosConfig,
     PersonalDecisionRequest,
-    PersonalDecisionResponse,
-    PersonalLaneConfig,
     PortfolioLane,
-    RebalanceEventResponse,
     RiskFlag,
-    SellGuardResponse,
     SkillMeasurement,
-    SnapshotResponse,
     TriggerReason,
-    UniverseConfig,
 )
 
 

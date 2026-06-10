@@ -27,7 +27,6 @@ import numpy as np
 
 from backend.config import config
 from backend.services.relative_valuation import (
-    SECTOR_STOCK_MAP,
     _fetch_ticker_metrics,
     _find_sector_peers,
 )

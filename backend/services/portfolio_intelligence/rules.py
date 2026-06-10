@@ -20,8 +20,7 @@ Usage:
 """
 
 import logging
-from datetime import date, timedelta
-from typing import Optional
+from datetime import date
 
 from backend.config import paper_portfolios
 from backend.services.portfolio_intelligence.nav import CASH_TICKER

@@ -2,7 +2,6 @@
 Tests for prediction_confidence.py — drift-aware uncertainty scoring.
 """
 
-import pytest
 from backend.services.prediction_confidence import score_prediction_confidence
 
 

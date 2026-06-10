@@ -1,6 +1,5 @@
 """Tests for the composite signal engine."""
 
-import numpy as np
 import pandas as pd
 import pytest
 

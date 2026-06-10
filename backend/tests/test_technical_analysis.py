@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from backend.services.technical_analysis import (
     compute_technical_indicators,

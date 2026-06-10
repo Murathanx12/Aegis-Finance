@@ -1,6 +1,5 @@
 """Tests for unified market dashboard service."""
 
-import pytest
 
 
 class TestDashboardSections:
@@ -46,7 +45,6 @@ class TestDashboardSections:
     def test_crypto_section_returns_none_on_failure(self):
         """Crypto section should return None, not crash."""
         import pandas as pd
-        import numpy as np
         from backend.services.market_dashboard import _build_crypto_section
 
         # Empty dataframe — no SP500 column

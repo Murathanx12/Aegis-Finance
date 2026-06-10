@@ -91,3 +91,39 @@ pytest-cov installed (dev-dep; license MIT, standard tooling).
 **Deferred:** crash_model 81% — remaining misses are training/IO paths;
 diminishing returns vs the optimizer gap. `_fetch_returns` (54-89) is
 network-only by design — left uncovered deliberately.
+
+### Cycle 3 — A3 static hygiene ratchet (ruff)
+
+**Baseline 217 errors → 36** (32 F841 unused-variable, 4 E741 ambiguous
+names; the remainder needs per-site judgment, not autofix). `ruff.toml`
+added pinning the rule set; the count never rises.
+
+**Real bugs found by lint:**
+- `config.py` had a duplicate `"tail_risk"` key (F601) — first block
+  silently dead. Both blocks were byte-identical, so deleting one is
+  provably behavior-identical. (If they had differed, the fix would have
+  been to delete the LATER one to preserve runtime behavior — last key wins.)
+- `routers/portfolio.py` annotation referenced undefined `pandas` (F821) —
+  string annotation so dormant, fixed with TYPE_CHECKING import.
+- 173 unused imports auto-fixed after diff review; the 4 ruff would NOT
+  autofix were availability probes (`pypfopt`, `ta`) — annotated
+  `# noqa: F401` instead. Verified via full pytest collection (2356 tests,
+  zero import errors) + backend.main import smoke.
+
+**Self-inflicted + caught:** "fixed" two E712 test asserts to `is True` —
+broke them, because `validate_regime(...).confirmed` is `np.bool_`, and
+`np.True_ is True` is False. Correct form is truthiness. **Side-find:**
+`RegimeValidation.confirmed` leaks `np.bool_` into a dataclass (JSON
+serialization hazard with non-pydantic encoders) — logged, not fixed
+(descriptive service, low stakes, engine frozen).
+
+**Documented-intent gaps surfaced by F841 (logged, NOT built — frozen
+engine):**
+- `covariance.covariance_diagnostics` computes Ledoit-Wolf cov (`cov_lw`)
+  and never uses it, while the docstring promises an LW comparison.
+- `regime_detector` reads `vix_deep_contango` threshold from config and
+  never applies it — a configured rule that does not exist in the logic.
+Both are evolution-loop candidates (Step #3), not hand-edits.
+
+**Measured:** ruff 217 → 36; targeted tests 178 + 520 green; collection
+2356 tests clean. mypy deferred to a future cycle (out of budget).

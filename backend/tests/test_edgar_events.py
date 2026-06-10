@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
 
 from backend.services import edgar_events as ee
 

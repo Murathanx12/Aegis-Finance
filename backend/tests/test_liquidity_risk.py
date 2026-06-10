@@ -180,7 +180,6 @@ class TestZeroValueDisplay:
 
     def test_zero_amihud_displayed_as_zero(self):
         """Amihud illiquidity of 0.0 should display as 0.0, not None."""
-        from backend.services.liquidity_risk import compute_liquidity_metrics
 
         # We can't easily test the full compute_liquidity_metrics (needs yfinance),
         # but we can test the display logic directly

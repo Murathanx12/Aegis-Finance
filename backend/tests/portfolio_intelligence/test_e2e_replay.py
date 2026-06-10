@@ -17,11 +17,10 @@ Expected ranges (from plan):
 Run with: python -m pytest backend/tests/portfolio_intelligence/test_e2e_replay.py -v -m slow
 """
 
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pytest
 
 REPORT_PATH = Path(__file__).parent.parent.parent.parent / "docs" / "replay_report_v1.md"
@@ -68,12 +67,12 @@ def _write_report(lane_results: dict, spy_metrics: dict, start: str, end: str):
         "",
         f"**Period:** {start} to {end}",
         f"**Generated:** {date.today().isoformat()}",
-        f"**Engine:** Equal-weight fallback (no optimizer), crash overlay active",
+        "**Engine:** Equal-weight fallback (no optimizer), crash overlay active",
         "",
         "## SPY Benchmark",
         "",
-        f"| Metric | Value |",
-        f"|--------|-------|",
+        "| Metric | Value |",
+        "|--------|-------|",
         f"| Total Return | {spy_metrics.get('total_return', 'N/A'):.1%} |" if spy_metrics.get('total_return') is not None else "| Total Return | N/A |",
         f"| Ann. Return | {spy_metrics.get('ann_return', 'N/A'):.1%} |" if spy_metrics.get('ann_return') is not None else "| Ann. Return | N/A |",
         f"| Ann. Volatility | {spy_metrics.get('ann_vol', 'N/A'):.1%} |" if spy_metrics.get('ann_vol') is not None else "| Ann. Volatility | N/A |",
@@ -194,7 +193,7 @@ class TestE2EReplay:
 
         # With crash_prob=0.15 (below all thresholds), crash guard should not fire
         assert con.crash_guard_activations == 0, (
-            f"Conservative crash guard fired at prob=0.15 (threshold=0.25)"
+            "Conservative crash guard fired at prob=0.15 (threshold=0.25)"
         )
 
         # Aggressive (weekly) should have more rebalances than conservative (monthly)

@@ -9,7 +9,6 @@ All functions are pure — no DB, no network. Tests verify:
   - Sleeve percentage computation
 """
 
-import pytest
 
 from backend.services.portfolio_intelligence.audit import (
     format_trade_summary,

@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from backend.services.systemic_risk import (
     compute_turbulence_index,

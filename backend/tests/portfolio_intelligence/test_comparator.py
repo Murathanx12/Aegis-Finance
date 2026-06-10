@@ -10,7 +10,6 @@ from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from backend.services.portfolio_intelligence.comparator import (
     _resolve_period,

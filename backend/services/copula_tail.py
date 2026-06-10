@@ -36,7 +36,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from scipy import stats
-from scipy.optimize import minimize_scalar, minimize
+from scipy.optimize import minimize_scalar
 
 from backend.config import config
 

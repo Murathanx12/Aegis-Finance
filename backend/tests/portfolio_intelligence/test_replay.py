@@ -10,8 +10,8 @@ Verifies:
   - Metrics computed correctly
 """
 
-from datetime import date, timedelta
-from unittest.mock import patch, MagicMock
+from datetime import date
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd

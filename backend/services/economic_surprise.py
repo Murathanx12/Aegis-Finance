@@ -27,7 +27,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from backend.config import config, api_keys
+from backend.config import api_keys
 
 logger = logging.getLogger(__name__)
 

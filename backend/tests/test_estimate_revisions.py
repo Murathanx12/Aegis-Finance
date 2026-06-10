@@ -4,7 +4,6 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 import pandas as pd
-import pytest
 
 from backend.services import estimate_revisions as er
 
