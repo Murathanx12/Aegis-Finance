@@ -21,7 +21,7 @@ from pathlib import Path
 # Add project root to path so backend imports work
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from backend.config import config, get_scenario_configs, get_institutional_return
+from backend.config import get_scenario_configs, get_institutional_return
 from backend.services.monte_carlo import simulate_paths, _adjust_scenario_weights
 
 

@@ -1,6 +1,5 @@
 """Tests for market valuation metrics (unit tests)."""
 
-import pytest
 
 from backend.services.valuation import _percentile_rank, _CAPE_HISTORY
 

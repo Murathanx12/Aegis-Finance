@@ -25,10 +25,8 @@ Usage:
 """
 
 import logging
-from typing import Optional
 
 import numpy as np
-import pandas as pd
 import yfinance as yf
 
 from backend.config import config

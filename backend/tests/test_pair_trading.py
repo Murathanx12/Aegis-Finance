@@ -1,7 +1,6 @@
 """Tests for pair_trading — cointegration, mean-reversion metrics, signals."""
 
 import numpy as np
-import pytest
 
 from backend.services.pair_trading import (
     compute_half_life,

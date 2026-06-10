@@ -396,8 +396,7 @@ class PortfolioEngine:
         risk_contributions = None
         try:
             from backend.services.attribution import (
-                brinson_fachler_attribution, compute_risk_contributions,
-                _build_sector_map,
+                brinson_fachler_attribution, _build_sector_map,
             )
             # Fetch benchmark (SPY) returns over same period
             benchmark_ticker = "SPY"
@@ -586,7 +585,7 @@ class PortfolioEngine:
         blended with user views, then optimizes for max Sharpe.
         """
         try:
-            from pypfopt import BlackLittermanModel, risk_models, expected_returns
+            from pypfopt import BlackLittermanModel, risk_models, expected_returns  # noqa: F401 — availability probe
             from pypfopt.efficient_frontier import EfficientFrontier
         except ImportError:
             logger.warning("pypfopt not available, falling back to template")

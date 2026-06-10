@@ -13,7 +13,6 @@ import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock
 
-import pytest
 
 from backend.services.portfolio_intelligence.scheduler import (
     manual_trigger,

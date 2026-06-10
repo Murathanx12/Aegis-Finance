@@ -526,7 +526,7 @@ def scan_pairs(
     # ── Fetch prices ──
     logger.info("Pair scanner: fetching %d tickers", len(tickers))
     try:
-        from backend.services.data_fetcher import _yf_lock, _safe_download_single
+        from backend.services.data_fetcher import _yf_lock
         end = pd.Timestamp.now()
         start = end - pd.Timedelta(days=int(lookback_days * 1.5))
 

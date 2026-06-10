@@ -1,6 +1,5 @@
 """Tests for Brinson-Fachler attribution and risk contributions."""
 
-import numpy as np
 import pytest
 
 from backend.services.attribution import (

@@ -36,7 +36,6 @@ async def get_sectors():
 
 
 def _analyze_sectors() -> dict:
-    import numpy as np
     from backend.config import get_forecast_days
     from backend.services.data_fetcher import DataFetcher
     from backend.services.sector_analyzer import analyze_sectors

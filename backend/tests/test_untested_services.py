@@ -11,9 +11,7 @@ Tests for 7 previously-untested backend services:
 All tests are fast (no network). Marked "not slow" by default.
 """
 
-import math
 from unittest.mock import MagicMock, patch
-from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -346,14 +344,14 @@ class TestRegimeValidatorConfidence:
         from backend.services.regime_validator import validate_regime
         df = _make_regime_df("up", n_days=250, n_sectors=8)
         result = validate_regime(df, "Bull")
-        assert result.confirmed == True
+        assert result.confirmed  # np.bool_ — truthiness, not `is True`
 
     def test_bear_needs_two_checks(self):
         from backend.services.regime_validator import validate_regime
         # Bear with uptrending data — price won't confirm, breadth won't confirm
         df = _make_regime_df("up", n_days=250, n_sectors=8)
         result = validate_regime(df, "Bear")
-        assert result.confirmed == False
+        assert not result.confirmed  # np.bool_ — truthiness, not `is False`
         assert result.confidence == "LOW"
 
     def test_result_is_dataclass(self):
@@ -624,7 +622,6 @@ class TestLlmNewsSummarization:
     def test_bullish_sentiment_detected(self, mock_llm):
         mock_llm.return_value = "Markets rallied strongly on optimistic earnings reports."
         # Need to bypass cache
-        from backend.services.llm_analyzer import summarize_market_news
         import backend.services.llm_analyzer as mod
         # Call the underlying logic directly
         news = [{"title": "Markets surge", "publisher": "Reuters"}]
@@ -634,7 +631,6 @@ class TestLlmNewsSummarization:
     @patch("backend.services.llm_analyzer._call_llm")
     def test_bearish_sentiment_detected(self, mock_llm):
         mock_llm.return_value = "Markets declined sharply amid crash fears and pessimism."
-        from backend.services.llm_analyzer import summarize_market_news
         import backend.services.llm_analyzer as mod
         news = [{"title": "Markets crash", "publisher": "Reuters"}]
         result = mod.summarize_market_news.__wrapped__(news)

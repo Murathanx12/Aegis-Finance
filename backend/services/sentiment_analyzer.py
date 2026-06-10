@@ -14,7 +14,6 @@ Usage:
 """
 
 import logging
-from datetime import datetime, timezone
 
 from backend.config import config
 

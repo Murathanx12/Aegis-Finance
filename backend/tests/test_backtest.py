@@ -13,7 +13,6 @@ Run with:
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from backend.services.backtest import evaluate_backtest, estimate_execution_cost
 

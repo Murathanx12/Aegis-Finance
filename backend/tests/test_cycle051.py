@@ -8,7 +8,6 @@ Cycle 051 regression tests:
 
 import numpy as np
 import pandas as pd
-import pytest
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

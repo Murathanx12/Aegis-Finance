@@ -34,7 +34,6 @@ from backend.config import paper_portfolios
 from backend.schemas.portfolio_intelligence import ReplayResult, MetricPack
 from backend.services.portfolio_intelligence.market_data_wrapper import MarketDataAtTimestamp
 from backend.services.portfolio_intelligence.nav import (
-    mark_to_market,
     nav_series,
     weights_to_shares,
 )
@@ -307,7 +306,6 @@ class ReplayEngine:
         all_tickers = sleeves["equity"] + sleeves["bond"] + sleeves["alternative"]
 
         from backend.services.data_fetcher import fetch_safe
-        from datetime import datetime
 
         start_str = (start - timedelta(days=30)).strftime("%Y-%m-%d")
         end_str = end.strftime("%Y-%m-%d")

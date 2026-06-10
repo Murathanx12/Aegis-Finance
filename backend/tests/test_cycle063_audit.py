@@ -5,7 +5,6 @@ Each test is designed to FAIL before the fix and PASS after.
 
 import numpy as np
 import pandas as pd
-import pytest
 
 
 class TestBug1_RetirementInflationFormula:

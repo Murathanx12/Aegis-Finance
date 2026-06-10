@@ -9,7 +9,6 @@ Bug 5: VIX floor used pd.where cascading (overwrites earlier tiers)
 
 import numpy as np
 import pandas as pd
-import pytest
 
 
 class TestBug1MomentumSampling:
@@ -20,7 +19,6 @@ class TestBug1MomentumSampling:
         """stock_analyzer should return momentum_1m and momentum_3m fields."""
         # These fields are computed from raw daily prices, not sampled
         from unittest.mock import patch, MagicMock
-        import yfinance as yf
 
         # Create mock stock data
         dates = pd.bdate_range("2023-01-01", periods=300)

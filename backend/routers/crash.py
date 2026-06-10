@@ -49,7 +49,6 @@ def _predict_crash(horizon: str, explain: bool) -> dict:
     from backend.services.crash_model import CrashPredictor
     from backend.services.drift_detector import DriftDetector
     from engine.training.features import build_feature_matrix
-    from engine.training.feature_selection import SELECTED_FEATURES
 
     model_path = MODEL_DIR / "crash_model.pkl"
     if not model_path.exists():

@@ -6,11 +6,10 @@ Verifies the full rebalance pipeline end-to-end.
 """
 
 import sqlite3
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-import pytest
 
 from backend.services.portfolio_intelligence.reference_engine import (
     run_reference_check,

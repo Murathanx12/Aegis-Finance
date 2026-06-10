@@ -1,6 +1,5 @@
 """Tests for execution cost modeling in backtest."""
 
-import pytest
 from backend.services.backtest import estimate_execution_cost
 
 

@@ -52,7 +52,7 @@ async def get_stock_screener():
 
 def _screener() -> dict:
     from backend.services.stock_analyzer import analyze_stock, DEFAULT_WATCHLIST, SECTOR_STOCK_MAP
-    from backend.services.signal_engine import get_market_signal, get_stock_signal
+    from backend.services.signal_engine import get_stock_signal
 
     # Compute market-level signal once (shared across all stocks)
     market_sig = _compute_market_signal()

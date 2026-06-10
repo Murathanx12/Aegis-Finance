@@ -10,7 +10,6 @@ All functions are pure — no DB, no network. Tests verify:
   - hypothesis property tests for pre+trades==post invariant
 """
 
-import pytest
 from hypothesis import given, settings, strategies as st
 
 from backend.services.portfolio_intelligence.rebalancer import (

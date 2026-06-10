@@ -15,7 +15,6 @@ Bug 3: technical_analysis.py — SMA "200" computed with min(200, len-1) window.
 
 import numpy as np
 import pandas as pd
-import pytest
 
 
 # ═══════════════════════════════════════════════════════════════════════════

@@ -5,14 +5,13 @@ Uses synthetic price data — no network calls. Covers metric computation,
 concentration flags, correlation clusters, and edge cases.
 """
 
-from datetime import datetime, timedelta
-from unittest.mock import patch, MagicMock
+from datetime import datetime
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
-import pytest
 
-from backend.schemas.portfolio_intelligence import HoldingInput, RiskFlag
+from backend.schemas.portfolio_intelligence import HoldingInput
 from backend.services.portfolio_intelligence.real_analyzer import (
     _compute_weights,
     _compute_portfolio_returns,

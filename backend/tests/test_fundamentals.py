@@ -1,6 +1,5 @@
 """Tests for SEC EDGAR fundamentals service."""
 
-import pytest
 from backend.services.fundamentals import (
     get_fundamentals,
     _compute_metrics,
@@ -21,7 +20,6 @@ class TestSafeFloat:
         assert _safe_float(None) is None
 
     def test_nan(self):
-        import math
         assert _safe_float(float("nan")) is None
 
     def test_inf(self):

@@ -65,3 +65,7 @@ docs/STRESS_TEST_PORTFOLIOS.md
 
 # Claude Code
 .claude/
+
+# Coverage artifacts
+.coverage
+htmlcov/

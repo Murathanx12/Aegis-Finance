@@ -2,12 +2,10 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from backend.services.sector_rotation import (
     _estimate_cycle_phase,
     _compute_rotation_signal,
-    _classify_momentum_direction,
 )
 
 

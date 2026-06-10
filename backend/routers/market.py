@@ -77,7 +77,6 @@ def _compute_market_status() -> dict:
         model_path = MODEL_DIR / "crash_model.pkl"
         if model_path.exists():
             from engine.training.features import build_feature_matrix
-            from engine.training.feature_selection import SELECTED_FEATURES
 
             predictor = CrashPredictor()
             predictor.load_model(str(model_path))

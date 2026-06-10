@@ -4,7 +4,6 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 
 LAB = Path(__file__).parent.parent.parent / "lab"
 if str(LAB) not in sys.path:

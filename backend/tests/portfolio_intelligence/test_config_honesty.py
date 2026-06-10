@@ -11,7 +11,6 @@ This test fails if someone reintroduces 'hrp'/'black-litterman' as the active
 optimizer without actually wiring (and leakage-testing) it.
 """
 
-import pytest
 
 from backend.config import paper_portfolios
 from backend.services.portfolio_intelligence.rules import (

@@ -1,13 +1,11 @@
 """Tests for Google Trends sentiment service."""
 
-from unittest.mock import patch, MagicMock
-import pytest
+from unittest.mock import patch
 
 from backend.services.trends_sentiment import (
     compute_fear_greed_trends,
     get_ticker_attention,
     FEAR_TERMS,
-    GREED_TERMS,
 )
 
 

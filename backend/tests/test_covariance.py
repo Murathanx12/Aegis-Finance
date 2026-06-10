@@ -137,7 +137,6 @@ class TestDiagnostics:
     def test_diagnostics_mp_bound_uses_fitted_variance(self, random_returns):
         """Regression: diagnostics MP bound must use fitted noise variance,
         not default var=1.0, to be consistent with denoise_covariance."""
-        from backend.services.covariance import _fit_mp_variance
         diag = covariance_diagnostics(random_returns)
         T, N = random_returns.shape
         q = T / N

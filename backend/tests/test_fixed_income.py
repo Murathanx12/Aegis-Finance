@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from backend.services.fixed_income import (
     compute_yield_curve_analysis,

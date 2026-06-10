@@ -1,6 +1,5 @@
 """Tests for Monte Carlo retirement simulator."""
 
-import pytest
 from backend.services.retirement_mc import simulate_retirement, compute_safe_withdrawal_rate
 
 

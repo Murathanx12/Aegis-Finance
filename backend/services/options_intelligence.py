@@ -23,13 +23,11 @@ Usage:
 """
 
 import logging
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
 
-from backend.config import config
 
 logger = logging.getLogger(__name__)
 

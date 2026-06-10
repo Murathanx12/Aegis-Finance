@@ -33,7 +33,6 @@ class TestCrashCalibration:
         """Run model on historical data and compute calibration buckets."""
         model_path = _check_model_exists()
 
-        import yfinance as yf
         from backend.services.crash_model import CrashPredictor
         from backend.services.data_fetcher import DataFetcher
         from engine.training.features import build_feature_matrix

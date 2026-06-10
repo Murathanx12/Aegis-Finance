@@ -8,10 +8,9 @@ Tests cover:
 """
 
 import asyncio
-import time
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 from fastapi import FastAPI

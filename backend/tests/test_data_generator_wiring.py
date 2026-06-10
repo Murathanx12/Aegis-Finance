@@ -142,7 +142,6 @@ class TestCollectSignalQualityWiring:
 
     def test_internal_keys_stripped_from_saved_signal(self):
         """Keys starting with _ should not appear in the saved JSON."""
-        import lab.data_generator as dg
 
         # Build a fake market signal with internal keys
         fake_signal = {

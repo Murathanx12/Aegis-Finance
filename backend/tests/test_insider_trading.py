@@ -1,6 +1,5 @@
 """Tests for insider trading signal computation."""
 
-import pytest
 
 from backend.services.insider_trading import compute_insider_signal
 
@@ -75,7 +74,6 @@ class TestInsiderSignal:
 
     def test_empty_finnhub_return_has_expected_keys(self):
         """Regression: empty Finnhub return must have same keys as non-empty."""
-        from backend.services.insider_trading import _fetch_finnhub_insiders
 
         # We can't easily call _fetch_finnhub_insiders without API key,
         # but we test the structure consistency by verifying compute_insider_signal

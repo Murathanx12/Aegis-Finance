@@ -7,7 +7,6 @@ Tests pivot detection, support/resistance levels, and all chart patterns
 """
 
 import numpy as np
-import pytest
 
 from backend.services.pattern_recognition import (
     _find_pivots,
@@ -19,7 +18,6 @@ from backend.services.pattern_recognition import (
     _detect_double_top,
     _detect_double_bottom,
     _detect_head_shoulders,
-    _detect_inverse_head_shoulders,
     _detect_triangles,
     _detect_wedges,
 )

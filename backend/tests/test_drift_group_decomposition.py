@@ -15,7 +15,6 @@ Verifies:
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from backend.services.drift_detector import DriftDetector
 

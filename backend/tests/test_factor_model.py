@@ -10,11 +10,10 @@ Run with:
 
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
-import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 

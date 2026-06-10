@@ -5,8 +5,6 @@ Tests for Earnings Intelligence Service
 Tests the earnings signal computation, surprise tracking, and growth metrics.
 """
 
-import numpy as np
-import pytest
 
 
 class TestEarningsSignalGeneration:

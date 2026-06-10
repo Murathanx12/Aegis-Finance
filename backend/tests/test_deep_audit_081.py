@@ -12,7 +12,6 @@ Bug 4: retirement_mc.compute_safe_withdrawal_rate doesn't guard against savings=
 
 import numpy as np
 import pandas as pd
-import pytest
 
 
 # ═══════════════════════════════════════════════════════════════════════════
