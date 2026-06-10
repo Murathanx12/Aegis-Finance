@@ -333,19 +333,27 @@ def run_reference_check(
 
 
 def _get_current_prices(tickers: list[str]) -> dict[str, float]:
-    """Get current prices for trade computation."""
-    prices = {}
+    """Get current prices for trade computation.
+
+    Degrades gracefully: one ticker's fetch failure never aborts the rest —
+    callers fall back to cost_basis for any ticker missing from the result.
+    """
+    prices: dict[str, float] = {}
     try:
         from backend.services.data_fetcher import fetch_safe
         from datetime import timedelta
         end = datetime.now().strftime("%Y-%m-%d")
         start = (datetime.now() - timedelta(days=10)).strftime("%Y-%m-%d")
-        for ticker in tickers:
+    except Exception as e:
+        logger.warning("Price fetch unavailable: %s", e)
+        return prices
+    for ticker in tickers:
+        try:
             series = fetch_safe(ticker, start, end, name=ticker)
             if series is not None and len(series) > 0:
                 prices[ticker] = float(series.iloc[-1])
-    except Exception as e:
-        logger.warning("Failed to fetch prices: %s", e)
+        except Exception as e:
+            logger.warning("Price fetch failed for %s: %s", ticker, e)
     return prices
 
 
@@ -374,7 +382,9 @@ def mark_lane_to_market(
     is stamped with the current config_version so a versioned rule/optimization
     change starts a clean track-record segment.
 
-    Returns the NAV, or None if the lane has no open positions.
+    Returns the NAV, or None if the lane has no open positions or no live
+    price could be fetched for ANY position (a flat all-cost-basis NAV row
+    would be indistinguishable from real data — fail loudly instead).
     """
     from backend.db import get_config_hash, insert_nav
     from backend.services.portfolio_intelligence.nav import mark_to_market
@@ -396,6 +406,16 @@ def mark_lane_to_market(
         tickers = [r["ticker"] for r in rows]
         if prices is None:
             prices = _get_current_prices(tickers)
+
+        # Total price failure must NOT persist a NAV row: marking every position
+        # at cost_basis would write a flat line indistinguishable from real data.
+        # Partial failures still degrade per-ticker to cost_basis below.
+        if not any(prices.get(t) for t in tickers):
+            logger.error(
+                "MTM %s: no live price for any of %d tickers — NAV row NOT persisted",
+                lane_id, len(tickers),
+            )
+            return None
 
         shares = {r["ticker"]: r["shares"] for r in rows}
         # Fill any missing live price with the position's cost_basis (last known).
@@ -506,8 +526,8 @@ def initialize_lane(
             "config_hash": config_hash,
         })
 
-        logger.info("Initialized %s lane: %d positions, $%,.0f notional",
-                     lane_id, len(target_weights), notional)
+        logger.info("Initialized %s lane: %d positions, $%s notional",
+                     lane_id, len(target_weights), f"{notional:,.0f}")
 
     finally:
         conn.close()

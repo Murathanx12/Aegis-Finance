@@ -355,7 +355,7 @@ class ReplayEngine:
         drift_threshold = lane_config["rebalance_trigger_drift"]
         sector_map = lane_sector_map(universe_cfg)
 
-        logger.info("Replay %s: %s to %s, $%,.0f notional", lane_id, start, end, initial_notional)
+        logger.info("Replay %s: %s to %s, $%s notional", lane_id, start, end, f"{initial_notional:,.0f}")
 
         # Fetch data
         wrapper = self._fetch_data(start, end)

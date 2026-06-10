@@ -1,0 +1,34 @@
+# Aegis Finance — V2 Planning Session Transcript (2026-06-10)
+
+## Context
+V1 deployed to Railway 2026-06-08 (config `82be14cb6039bfae`), 3 paper lanes @ $100k. 48h check confirmed: deploy stable, scheduler alive, MTM firing — but no endpoint exposes live `paper_nav` (history endpoint is a Phase-6 stub), the canary can read green while writing zero rows, and the /compare vs /replay curves contradict each other (Sharpe 0.65 vs 0.95).
+
+## What was decided
+
+### Deliverable
+Created `.claude/commands/go.md` — a Claude Code session-bootstrap command. Every session: Phase 0 verify live deploy state (freshness, not liveness) → Phase 1 enforce hard guardrails → Phase 2 pick topmost unblocked task from the V2 goal stack → Phase 3 plan with a measured done-when number, wait for approval, build, end with a post-mortem written for Optimus ingestion. Can be renamed to `goal.md` — name is cosmetic.
+
+### V2 priority stack (embedded in the command)
+- **P0 Observability:** wire history endpoint to `paper_nav`; live equity-curve UI (all lanes vs SPY/AGG/60-40); canary upgraded to freshness assertions; reconcile the three equity curves (live forward NAV = the public track record, demote compare/replay to methodology pages).
+- **P0 Optimization:** leakage-safe HRP/Black-Litterman replacing equal-weight, as a SHA-versioned config change with clean v1→v2 segment boundary.
+- **P1 Lanes & brain:** lane framework + registry (every lane = registered trial with hypothesis + purpose tag); portfolio-mirror lane (Aegis manages Murat's real holdings by its rules) + conviction lane (Murat's real decisions, logged) — attribution answers "did Aegis beat Murat on Murat's own book"; universe expansion only behind a data-budget gate (yfinance fragility on Railway); LLM conviction lane (forward-only); Optimus MCP integration.
+- **P1 Self-improvement:** guarded rule-evolution loop (propose → walk-forward/CPCV → DSR/PBO deflated against cumulative trial count, lanes included → record adopted AND rejected).
+- **P2:** event alerts gated against no-news Brier baseline; capability audit of ~85 services → CAPABILITY_MATRIX.md; point-in-time fundamentals → 5-factor IC; portfolio import/guidance UI (ships only on top of P0 observability).
+
+### Murat's asks, translated into guarded form
+1. **"Brain learns from mistakes / LLM decides using brain"** → Optimus learns *process* (rationales, post-mortems, rejected experiments), never weights from P&L. LLM lane is a measured conviction lane; rule changes only via the guarded loop. Hard firewall: LLM lane is forward-only — backtest "experience" is hindsight-contaminated for an LLM that knows history.
+2. **"More paper accounts to experiment"** → every lane registers in the cumulative trial count or DSR deflation is theater. Lane budget with purpose taxonomy.
+3. **"Budget JP Morgan / cover most stocks via analyst targets"** → tiered coverage: Tier 2 broad (analyst consensus, implied upside, ratings — descriptive, near-zero compute, daily cache via yfinance/Finnhub/FMP); Tier 1 deep (MC + SHAP, ~50–100 tickers, promoted on demand). Analyst targets are systematically optimistic (own portfolio evidence: APLT target $3.20, price 0.80→0.09) — ship as labeled descriptive column now, run analyst-implied-upside as a registered Alphalens IC factor trial; promote only if it measures skill. A published negative result is itself a differentiator.
+4. **"Run on laptop instead of Railway"** → rejected for the track record. Laptop sleeps/travels/reboots; gaps corrupt the one asset that requires unbroken elapsed time. Split: Railway = always-on notarized record (scheduler, MTM, paper_nav); laptop = heavy offline compute (training, backtests, evolution loop). If costs grow, a cheap always-on mini-PC, not the laptop.
+5. **"Open source but afraid of theft"** → repo is already MIT; code was never the moat. Moat = forward track record (uncopyable, takes elapsed time) + private Optimus brain + experiment registry. Don't relicense.
+
+### Competitive read (mid-2026)
+Market is crowded: AI stock pickers (Kavout etc., 9k+ stocks scored), free AI portfolio trackers with broker import, Vanguard embedding free AI portfolio analysis. None publish a live auditable forward track record with honest attribution and a registry of rejected trials. Everyone claims; nobody proves. Aegis's wedge = the receipts. P0 protects exactly this.
+
+### Standing constraints (unchanged)
+No skill claims before 24 months. Nothing ships without an out-of-sample number. No RL on P&L. No real-money execution. No Bloomberg-parity push. Surface area shrinks or holds flat. OpenBB (AGPL) never enters the MIT repo. Frozen V1 engine; changes land as versioned config. Mirror-vs-Murat comparison meaningless before ~24 months given a 14-position small-cap biotech-heavy book.
+
+## Open items
+- Fold tiered coverage, the analyst-target IC trial, and explicit conviction/mirror lane naming into `go.md` (offered, not yet done).
+- Murat to fill the "Murat's additions" section of V2_GOALS.md before first `/go` run — Claude Code treats that file as canon.
+- Settle whether `paper_nav` rows are actually landing (Railway logs check) — determines if P0 item 1 is "wire up" or "fix."

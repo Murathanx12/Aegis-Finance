@@ -207,6 +207,70 @@ class TestExplainEndpointShape:
             assert f in body, f"missing field: {f}"
         assert body["portfolio_id"] == "conservative"
         assert isinstance(body["explanation"], str) and len(body["explanation"]) > 0
+
+
+class TestHistoryNavWiring:
+    """V2 P0 #1: equity curve must come from paper_nav, not synthetic seeding.
+
+    The old stub seeded inception_value at each rebalance date — a fake flat
+    line indistinguishable from real data. Now: real NAV rows with per-point
+    config_version, and an explicit has_nav_data=false empty state.
+    """
+
+    def _seed(self, tmp_path, monkeypatch, nav_rows):
+        from backend import db as db_module
+        from backend.config import paper_portfolios
+        from backend.services.portfolio_intelligence.reference_engine import initialize_lane
+        from backend.services.portfolio_intelligence.rules import _get_sleeve_tickers
+
+        fresh_db = tmp_path / "nav.db"
+        monkeypatch.setattr(db_module, "DB_PATH", fresh_db)
+        db_module.init_db(fresh_db)
+
+        sleeves = _get_sleeve_tickers(paper_portfolios["universe"])
+        prices = {t: 100.0 for t in
+                  sleeves["equity"] + sleeves["bond"] + sleeves["alternative"]}
+        initialize_lane("balanced", db_path=fresh_db, prices=prices)
+
+        conn = db_module.get_connection(fresh_db)
+        try:
+            for d, nav in nav_rows:
+                db_module.insert_nav(conn, "balanced", d, nav, "cfgv1", d + "T21:00:00")
+        finally:
+            conn.close()
+
+    def test_curve_returns_real_nav_rows(self, tmp_path, monkeypatch):
+        self._seed(tmp_path, monkeypatch,
+                   [("2026-06-08", 100_000.0), ("2026-06-09", 100_750.5)])
+        response = client.get("/api/pi/reference/balanced/history?period=ALL")
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["has_nav_data"] is True
+        assert [(p["date"], p["value"]) for p in body["equity_curve"]] == [
+            ("2026-06-08", 100_000.0), ("2026-06-09", 100_750.5),
+        ]
+        assert all(p["config_version"] == "cfgv1" for p in body["equity_curve"])
+        assert body["inception_value"] == 100_000.0
+        assert body["inception_date"] is not None
+
+    def test_empty_lane_is_explicit_no_data(self, tmp_path, monkeypatch):
+        self._seed(tmp_path, monkeypatch, [])
+        response = client.get("/api/pi/reference/balanced/history?period=ALL")
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["equity_curve"] == [], "no synthetic points allowed"
+        assert body["has_nav_data"] is False
+
+    def test_period_filter_excludes_old_rows(self, tmp_path, monkeypatch):
+        from datetime import date, timedelta
+
+        recent = (date.today() - timedelta(days=2)).isoformat()
+        self._seed(tmp_path, monkeypatch,
+                   [("2020-01-01", 90_000.0), (recent, 101_000.0)])
+        response = client.get("/api/pi/reference/balanced/history?period=1M")
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert [p["date"] for p in body["equity_curve"]] == [recent]
         assert isinstance(body["has_rebalance_events"], bool)
         # last_rebalance_date is Optional[str] — may be None or string
 
