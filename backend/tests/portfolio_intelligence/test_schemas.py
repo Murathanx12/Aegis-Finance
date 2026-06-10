@@ -302,9 +302,9 @@ class TestYAMLConfig:
     def test_yaml_validates_against_schema(self):
         cfg = PaperPortfoliosConfig(**paper_portfolios)
         assert cfg.conservative.target_equity_pct == 0.40
-        # Active optimizer is honestly equal_weight today; intent is recorded
-        # in planned_optimizer (real BL lands as a versioned config change).
-        assert cfg.balanced.optimizer == "equal_weight"
+        # Config v2: lanes genuinely run leakage-safe HRP (gate-tested in
+        # test_step2_optimizer); BL intent stays recorded for a future version.
+        assert cfg.balanced.optimizer == "hrp"
         assert cfg.balanced.planned_optimizer == "black-litterman"
         assert cfg.aggressive.max_single_name == 0.08
 

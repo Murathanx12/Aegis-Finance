@@ -28,6 +28,14 @@ from backend.services.portfolio_intelligence.nav import CASH_TICKER
 logger = logging.getLogger(__name__)
 
 _universe = paper_portfolios.get("universe", {})
+
+# The complete set of reference lanes, derived from the versioned YAML —
+# any dict with a target_equity_pct is a lane. Single source of truth for
+# scheduler / engine / routers / health (was 7 hardcoded triples).
+REFERENCE_LANES: tuple[str, ...] = tuple(
+    k for k, v in paper_portfolios.items()
+    if isinstance(v, dict) and "target_equity_pct" in v
+)
 _BOND_ETFS = set(_universe.get("bond_etfs", []))
 _ALTERNATIVES = set(_universe.get("alternatives", []))
 _SECTOR_ETFS = set(_universe.get("sector_etfs", []))
@@ -112,54 +120,133 @@ def _equal_weight(tickers: list[str], target_pct: float) -> dict[str, float]:
     return {t: w for t in tickers}
 
 
+def _hrp_equity_weights(
+    eq_tickers: list[str],
+    price_data,
+    target_eq: float,
+    meta: dict,
+) -> dict[str, float] | None:
+    """Leakage-safe HRP for the equity sleeve.
+
+    price_data is a wide close-price DataFrame whose LAST ROW IS <= THE AS-OF
+    DATE — the caller owns that bound (live: latest bar; replay: truncated at
+    the simulated date). Nothing here fetches data.
+
+    Returns sleeve weights summing to target_eq, or None (with meta noting
+    why) so the caller falls back to equal-weight. The gate: enough history,
+    finite non-negative weights, and no degenerate collapse to a handful of
+    names. A failed gate is a loud fallback, never garbage targets.
+    """
+    opt_cfg = paper_portfolios.get("optimizer_params", {}) or {}
+    lookback = int(opt_cfg.get("lookback_days", 504))
+    min_obs = int(opt_cfg.get("min_observations", 252))
+    min_nonzero_frac = float(opt_cfg.get("min_nonzero_fraction", 0.5))
+
+    available = [t for t in eq_tickers if t in getattr(price_data, "columns", [])]
+    if len(available) < 2:
+        meta["optimizer_fallback"] = f"only {len(available)} equity tickers have prices"
+        return None
+
+    panel = price_data[available].dropna(how="all")
+    returns = panel.pct_change().dropna(how="all").iloc[-lookback:]
+    returns = returns.dropna(axis=1, thresh=min_obs).dropna()
+    if len(returns) < min_obs or returns.shape[1] < 2:
+        meta["optimizer_fallback"] = (
+            f"insufficient as-of history ({len(returns)} obs, "
+            f"{returns.shape[1]} tickers; need {min_obs}+)"
+        )
+        return None
+
+    try:
+        from backend.services.portfolio_optimizer import optimize_hrp
+        result = optimize_hrp(list(returns.columns), returns=returns)
+    except Exception as e:
+        meta["optimizer_fallback"] = f"optimizer raised: {e}"
+        return None
+
+    raw = (result or {}).get("weights") or {}
+    if not raw:
+        meta["optimizer_fallback"] = "optimizer returned no weights"
+        return None
+    vals = list(raw.values())
+    if any((w is None) or (w != w) or (w < 0) for w in vals):  # NaN/None/short
+        meta["optimizer_fallback"] = "optimizer output contains NaN/negative weights"
+        return None
+    raw_total = sum(vals)
+    if raw_total <= 0:
+        meta["optimizer_fallback"] = "optimizer weights sum to zero"
+        return None
+    nonzero = sum(1 for w in vals if w > 1e-6)
+    if nonzero < max(2, int(min_nonzero_frac * len(returns.columns))):
+        meta["optimizer_fallback"] = (
+            f"degenerate concentration: {nonzero}/{len(returns.columns)} names"
+        )
+        return None
+
+    meta["optimizer_used"] = "hrp"
+    meta["optimizer_n_obs"] = len(returns)
+    meta["optimizer_as_of"] = str(returns.index[-1])[:10]
+    return {t: (w / raw_total) * target_eq for t, w in raw.items()}
+
+
 def compute_target_weights(
     lane_config: dict,
     universe_cfg: dict | None = None,
     price_data=None,
+    meta: dict | None = None,
 ) -> dict[str, float]:
     """Compute target portfolio weights for a lane.
 
-    HONEST STATUS: lanes currently run EQUAL-WEIGHT within each sleeve. Real
-    HRP / Black-Litterman optimization is dormant — it only activates when
-    `lane_config["optimizer"]` is "hrp"/"black-litterman" AND `price_data` is
-    supplied, and today the config sets optimizer="equal_weight" (intent kept in
-    `planned_optimizer`). Optimization lands later as a SHA-versioned, guard-
-    gated config change (Step #2), at which point it must be wired through an
-    as-of price path to avoid look-ahead. Until then this returns equal-weight.
+    Since config v2 (2026-06-11) lanes with `optimizer: hrp` run leakage-safe
+    HRP on the EQUITY SLEEVE ONLY: sleeve-level allocations stay the lane
+    mandate, bond/alt sleeves stay equal-weight, and the crash overlay +
+    position limits apply downstream unchanged. The as-of bound on price_data
+    belongs to the caller (live: latest bar; replay: simulated date).
+
+    HARD GATE: if the optimizer can't produce valid weights for ANY reason
+    (no panel, short history, NaN/negative/degenerate output, exception), the
+    equity sleeve falls back to equal-weight and `meta["optimizer_fallback"]`
+    carries the reason — the engine logs it, audits it, and names it in the
+    rebalance explanation. Garbage weights cannot reach the track record.
 
     Args:
         lane_config: Lane configuration dict from paper_portfolios.yaml
         universe_cfg: Universe configuration dict. Uses global if None.
-        price_data: Optional price DataFrame for optimizer input (unused in equal-weight fallback)
+        price_data: As-of wide close-price DataFrame for the optimizer.
+        meta: Optional dict the function annotates (fallback reason, as-of
+            date, observation count) for audit/explanation use.
 
     Returns:
         {ticker: weight} dict summing to ~1.0
     """
     if universe_cfg is None:
         universe_cfg = _universe
+    if meta is None:
+        meta = {}
 
     sleeves = _get_sleeve_tickers(universe_cfg)
     target_eq = lane_config["target_equity_pct"]
     target_bond = lane_config["target_bond_pct"]
     target_alt = lane_config["target_alt_pct"]
-    optimizer = lane_config.get("optimizer", "hrp")
+    optimizer = lane_config.get("optimizer", "equal_weight")
 
     weights: dict[str, float] = {}
 
-    if optimizer == "hrp" and price_data is not None:
-        try:
-            from backend.services.portfolio_optimizer import optimize_hrp
-            eq_tickers = sleeves["equity"]
-            if eq_tickers:
-                hrp_result = optimize_hrp(eq_tickers)
-                if hrp_result and hrp_result.get("weights"):
-                    raw = hrp_result["weights"]
-                    raw_total = sum(raw.values())
-                    if raw_total > 0:
-                        for t, w in raw.items():
-                            weights[t] = (w / raw_total) * target_eq
-        except Exception as e:
-            logger.warning("HRP optimization failed, falling back to equal-weight: %s", e)
+    if optimizer == "hrp":
+        if price_data is None:
+            meta["optimizer_fallback"] = "no as-of price panel supplied"
+            logger.error(
+                "HRP requested but no as-of price panel — equal-weight fallback"
+            )
+        elif sleeves["equity"]:
+            hrp = _hrp_equity_weights(sleeves["equity"], price_data, target_eq, meta)
+            if hrp:
+                weights.update(hrp)
+            else:
+                logger.error(
+                    "HRP fallback to equal-weight: %s",
+                    meta.get("optimizer_fallback", "unknown"),
+                )
 
     if not any(classify_asset(t) == "equity" for t in weights):
         weights.update(_equal_weight(sleeves["equity"], target_eq))

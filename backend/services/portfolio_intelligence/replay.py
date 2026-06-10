@@ -412,8 +412,18 @@ class ReplayEngine:
                 current_shares, prices_at_date, current_cash,
             )
 
-            # Compute target weights (equal-weight within sleeves today)
-            target_weights = compute_target_weights(lane_config, universe_cfg)
+            # Compute target weights through the SAME as-of discipline as the
+            # live path: the optimizer sees ONLY prices <= check_date. The
+            # leakage regression test pins that .loc[:T] slicing here is
+            # equivalent to physically truncating the data at T.
+            opt_meta: dict = {}
+            as_of_panel = None
+            if lane_config.get("optimizer") == "hrp" and not ticker_prices.empty:
+                as_of_panel = ticker_prices.loc[:pd.Timestamp(check_date)]
+            target_weights = compute_target_weights(
+                lane_config, universe_cfg,
+                price_data=as_of_panel, meta=opt_meta,
+            )
 
             # Get crash probability
             if crash_prob_override is not None:

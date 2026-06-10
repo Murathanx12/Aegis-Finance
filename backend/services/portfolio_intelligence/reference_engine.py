@@ -12,7 +12,7 @@ Usage:
 """
 
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from backend.config import paper_portfolios
 from backend.db import get_connection, insert_rebalance_event, insert_audit_log
@@ -24,11 +24,13 @@ from backend.services.portfolio_intelligence.audit import (
     create_rebalance_explanation,
     create_no_rebalance_explanation,
 )
+from backend.services.portfolio_intelligence.nav import CASH_TICKER
 from backend.services.portfolio_intelligence.rebalancer import (
     compute_trades,
     estimate_turnover,
 )
 from backend.services.portfolio_intelligence.rules import (
+    REFERENCE_LANES,
     apply_crash_overlay,
     compute_target_weights,
     enforce_position_limits,
@@ -172,16 +174,21 @@ def run_reference_check(
     db_path=None,
     as_of_date: date | None = None,
     crash_prob_override: float | None = None,
+    force_reason: str | None = None,
 ) -> SnapshotResponse:
     """Run a single reference lane check: evaluate triggers, rebalance if needed.
 
     This is the main entry point called by the scheduler or manual trigger.
 
     Args:
-        lane_id: 'conservative', 'balanced', or 'aggressive'
+        lane_id: A lane id from REFERENCE_LANES
         db_path: Optional DB path override (for testing)
         as_of_date: Date to evaluate as-of (default: today)
         crash_prob_override: Override crash prob (for testing/replay)
+        force_reason: When set, skip the drift/frequency trigger and rebalance
+            unconditionally with this reason — used for explicit config-change
+            boundaries (v1→v2) so the segment break and the allocation change
+            coincide exactly.
 
     Returns:
         SnapshotResponse with current state and any rebalance that occurred.
@@ -214,8 +221,22 @@ def run_reference_check(
         last_rebalance = _get_last_rebalance_date(conn, lane_id)
         notional = _get_portfolio_notional(conn, lane_id)
 
-        # Compute target weights
-        target_weights = compute_target_weights(lane_config, paper_portfolios.get("universe"))
+        # Compute target weights. Lanes with optimizer=hrp get an AS-OF price
+        # panel (live: ends at the latest bar) — the optimizer never fetches
+        # its own data, which is what makes the replay path leakage-safe too.
+        opt_meta: dict = {}
+        price_panel = None
+        if lane_config.get("optimizer") == "hrp":
+            price_panel = _get_price_panel(_sleeves["equity"])
+        target_weights = compute_target_weights(
+            lane_config, paper_portfolios.get("universe"),
+            price_data=price_panel, meta=opt_meta,
+        )
+        if opt_meta.get("optimizer_fallback"):
+            # The gate fired: equal-weight fallback. Loud + audited, never silent.
+            insert_audit_log(conn, datetime.now().isoformat(), lane_id,
+                             "optimizer_fallback",
+                             {"reason": opt_meta["optimizer_fallback"]})
 
         # Check crash probability
         crash_prob = crash_prob_override if crash_prob_override is not None else _get_crash_prob()
@@ -236,15 +257,18 @@ def run_reference_check(
             sector_map,
         )
 
-        # Check rebalance trigger
-        trigger, reason = should_rebalance(
-            current_weights,
-            target_weights,
-            lane_config["rebalance_trigger_drift"],
-            lane_config["rebalance_frequency"],
-            last_rebalance,
-            as_of_date,
-        )
+        # Check rebalance trigger (or honor an explicit config-change force)
+        if force_reason is not None:
+            trigger, reason = True, force_reason
+        else:
+            trigger, reason = should_rebalance(
+                current_weights,
+                target_weights,
+                lane_config["rebalance_trigger_drift"],
+                lane_config["rebalance_frequency"],
+                last_rebalance,
+                as_of_date,
+            )
 
         timestamp = datetime.now().isoformat()
 
@@ -289,12 +313,33 @@ def run_reference_check(
             lane_id, reason, current_weights, target_weights,
             trades, crash_prob, regime, lane_config, total_cost,
         )
+        if opt_meta.get("optimizer_used"):
+            explanation += (
+                f" [optimizer: hrp, as-of {opt_meta.get('optimizer_as_of')}, "
+                f"{opt_meta.get('optimizer_n_obs')} obs]"
+            )
+        elif lane_config.get("optimizer") == "hrp":
+            explanation += (
+                f" [optimizer: equal-weight FALLBACK — "
+                f"{opt_meta.get('optimizer_fallback', 'unknown')}]"
+            )
 
-        # Write rebalance event
+        # Write rebalance event (stamped with the producing config version)
+        from backend.db import get_config_hash
         event_id = insert_rebalance_event(
             conn, lane_id, timestamp, reason,
             current_weights, target_weights,
             crash_prob, regime, explanation,
+            config_version=get_config_hash(),
+        )
+
+        # Apply the trades to the book: close open positions, open the target
+        # book at current prices. Without this the event is paper-only and the
+        # NAV keeps tracking the OLD holdings (latent divergence bug found in
+        # the Step #2 session — events never traded before this).
+        _apply_rebalance_positions(
+            conn, lane_id, target_weights, prices, notional,
+            total_cost, timestamp,
         )
 
         # Log to audit
@@ -355,15 +400,194 @@ def _get_current_prices(tickers: list[str]) -> dict[str, float]:
     return prices
 
 
+def _get_price_panel(tickers: list[str], lookback_days: int = 504):
+    """As-of wide close-price panel for the optimizer (live path: ends at the
+    latest bar). Batch-fetched, cached for the day — the optimizer itself
+    never fetches data, so replay can hand it a truncated panel instead.
+    """
+    from backend.cache import cache_get, cache_set
+
+    key = f"pi:price-panel:{lookback_days}:{date.today().isoformat()}"
+    hit = cache_get(key, 3600)
+    if hit is not None:
+        return hit
+    try:
+        import pandas as pd
+        from backend.services.data_fetcher import _fetch_batch_yahoo
+
+        start = (date.today() - timedelta(days=int(lookback_days * 1.6))).isoformat()
+        end = (date.today() + timedelta(days=1)).isoformat()
+        batch = _fetch_batch_yahoo(tickers, start, end)
+        if not batch:
+            return None
+        panel = pd.DataFrame(batch)
+        cache_set(key, panel)
+        return panel
+    except Exception as e:
+        logger.error("Price panel fetch failed (optimizer will fall back): %s", e)
+        return None
+
+
+def _apply_rebalance_positions(
+    conn,
+    lane_id: str,
+    target_weights: dict[str, float],
+    prices: dict[str, float],
+    notional: float,
+    total_cost: float,
+    timestamp: str,
+) -> None:
+    """Re-book the lane at the target weights: close all open positions and
+    open the target book at current prices (CASH at 1.0). Net notional after
+    transaction costs. This is what makes a rebalance event REAL — before
+    this existed, events were recorded but the book never traded.
+    """
+    from backend.db import _write_lock
+
+    net_notional = max(notional - (total_cost or 0.0), 0.0)
+    with _write_lock:
+        conn.execute(
+            "UPDATE paper_positions SET closed_at = ? "
+            "WHERE portfolio_id = ? AND closed_at IS NULL",
+            (timestamp, lane_id),
+        )
+        for ticker, weight in target_weights.items():
+            if weight <= 0:
+                continue
+            if ticker == CASH_TICKER:
+                px = 1.0
+            else:
+                px = prices.get(ticker)
+                if px is None or px <= 0:
+                    # No live price: book at a $100 placeholder like
+                    # initialize_lane does — MTM falls back to cost_basis so
+                    # the position stays valued at its booked weight.
+                    px = 100.0
+            shares = (weight * net_notional) / px
+            conn.execute(
+                "INSERT INTO paper_positions "
+                "(portfolio_id, ticker, shares, cost_basis, opened_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (lane_id, ticker, shares, px, timestamp),
+            )
+        conn.commit()
+
+
 def run_all_lanes(db_path=None) -> dict[str, SnapshotResponse]:
-    """Run rebalance checks for all three reference lanes (not personal)."""
+    """Run rebalance checks for all reference lanes (not personal)."""
     results = {}
-    for lane_id in ["conservative", "balanced", "aggressive"]:
+    for lane_id in REFERENCE_LANES:
         try:
             results[lane_id] = run_reference_check(lane_id, db_path=db_path)
         except Exception as e:
             logger.error("Failed to run %s lane: %s", lane_id, e, exc_info=True)
     return results
+
+
+def apply_config_change_rebalances(db_path=None) -> dict[str, str]:
+    """Idempotent startup migration for SHA-versioned config changes.
+
+    For each lane: if it doesn't exist yet → initialize it (new lanes, e.g.
+    the balanced-ew-control trial) and register it in the experiment registry;
+    if its stored config_version differs from the current YAML hash → force an
+    explicit rebalance (sharp segment boundary: the event, the allocation
+    change, and the version flip coincide) and update the stored version.
+
+    Idempotency: once config_version matches, nothing fires. If the process
+    dies between the forced rebalance and the version update, the next boot
+    fires a second forced event with near-zero trades — visible and harmless,
+    never corrupting.
+    """
+    from backend.db import get_config_hash, init_db
+
+    init_db(db_path)
+    current = get_config_hash()
+    out: dict[str, str] = {}
+
+    for lane_id in REFERENCE_LANES:
+        try:
+            conn = get_connection(db_path)
+            try:
+                row = conn.execute(
+                    "SELECT config_version FROM paper_portfolios WHERE id = ?",
+                    (lane_id,),
+                ).fetchone()
+            finally:
+                conn.close()
+
+            if row is None:
+                initialize_lane(lane_id, db_path=db_path)
+                _register_lane_trial(lane_id, current, db_path=db_path)
+                out[lane_id] = "initialized"
+                continue
+
+            if row["config_version"] == current:
+                out[lane_id] = "current"
+                continue
+
+            old = row["config_version"]
+            reason = f"config_change {old[:8]}->{current[:8]}"
+            logger.warning("Lane %s: %s — forcing explicit boundary rebalance",
+                           lane_id, reason)
+            run_reference_check(lane_id, db_path=db_path, force_reason=reason)
+
+            conn = get_connection(db_path)
+            try:
+                conn.execute(
+                    "UPDATE paper_portfolios SET config_version = ? WHERE id = ?",
+                    (current, lane_id),
+                )
+                conn.commit()
+            finally:
+                conn.close()
+            out[lane_id] = "rebalanced"
+        except Exception as e:
+            logger.error("Config-change migration failed for %s: %s",
+                         lane_id, e, exc_info=True)
+            out[lane_id] = f"error: {e}"
+    return out
+
+
+def _register_lane_trial(lane_id: str, config_version: str, db_path=None) -> None:
+    """Every paper lane is a registered trial (guardrail): it enters the
+    cumulative trial count that deflates future DSR/PBO. The registry schema
+    has no hypothesis/purpose columns yet (P1 #6 generalizes it) — they ride
+    in structured notes JSON.
+    """
+    import json as _json
+
+    hypotheses = {
+        "balanced-ew-control": {
+            "hypothesis": "HRP adds value over equal-weight on forward data "
+                          "(control: balanced mandate frozen at equal-weight)",
+            "purpose": "optimizer-variant",
+        },
+    }
+    meta = hypotheses.get(lane_id, {
+        "hypothesis": f"lane {lane_id} forward trial",
+        "purpose": "benchmark",
+    })
+
+    conn = get_connection(db_path)
+    try:
+        from backend.db import count_cumulative_trials
+        cumulative = count_cumulative_trials(conn) + 1
+        conn.execute(
+            "INSERT INTO rule_experiments "
+            "(created_at, config_version, lane_id, param, old_value, new_value, "
+            " batch_trials, cumulative_trials, verdict, notes) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                datetime.now().isoformat(), config_version, lane_id,
+                f"lane:{lane_id}", None, "registered",
+                1, cumulative, "adopted", _json.dumps(meta),
+            ),
+        )
+        conn.commit()
+        logger.info("Registered lane trial %s (cumulative trials now %d)",
+                    lane_id, cumulative)
+    finally:
+        conn.close()
 
 
 def mark_lane_to_market(
@@ -434,9 +658,9 @@ def mark_lane_to_market(
 
 
 def mark_all_lanes(db_path=None) -> dict[str, float | None]:
-    """Mark all three reference lanes to market and persist daily NAV."""
+    """Mark all reference lanes to market and persist daily NAV."""
     out: dict[str, float | None] = {}
-    for lane_id in ["conservative", "balanced", "aggressive"]:
+    for lane_id in REFERENCE_LANES:
         try:
             out[lane_id] = mark_lane_to_market(lane_id, db_path=db_path)
         except Exception as e:

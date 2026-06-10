@@ -271,12 +271,14 @@ class TestRunReferenceCheck:
 
 class TestRunAllLanes:
     @patch("backend.services.portfolio_intelligence.reference_engine.run_reference_check")
-    def test_runs_three_lanes(self, mock_check):
+    def test_runs_all_reference_lanes(self, mock_check):
+        from backend.services.portfolio_intelligence.rules import REFERENCE_LANES
         mock_check.return_value = MagicMock(portfolio_id="test")
         results = run_all_lanes()
-        assert mock_check.call_count == 3
+        assert mock_check.call_count == len(REFERENCE_LANES)
         called_lanes = {call.args[0] for call in mock_check.call_args_list}
-        assert called_lanes == {"conservative", "balanced", "aggressive"}
+        assert called_lanes == set(REFERENCE_LANES)
+        assert "balanced-ew-control" in called_lanes
 
     @patch("backend.services.portfolio_intelligence.reference_engine.run_reference_check")
     def test_handles_single_lane_failure(self, mock_check):
