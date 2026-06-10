@@ -49,6 +49,28 @@ export default function PortfolioIntelligencePage() {
         </p>
       </div>
 
+      <Link href="/portfolio-intelligence/track-record">
+        <Card className="hover:border-primary/40 transition-colors cursor-pointer border-primary/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <TrendingUp className="h-5 w-5 text-emerald-400" />
+              Live Track Record
+              <Badge variant="outline" className="text-[10px]">canonical</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              The forward paper-portfolio NAV of all three lanes vs SPY, AGG,
+              and 60/40 — real marks since inception, labeled segments, no
+              backtests. This is the record everything else is judged against.
+            </p>
+            <div className="flex items-center gap-1 mt-3 text-xs text-primary">
+              View the record <ArrowRight className="h-3 w-3" />
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+
       <div className="grid gap-4 md:grid-cols-3">
         {LANES.map((lane) => (
           <Link key={lane.id} href={`/portfolio-intelligence/reference?lane=${lane.id}`}>

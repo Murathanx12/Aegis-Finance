@@ -30,6 +30,8 @@ from backend.schemas.portfolio_intelligence import (
     ReplayResult,
     ReplaySnapshotResponse,
     SnapshotResponse,
+    TrackRecordPoint,
+    TrackRecordResponse,
 )
 from backend.services.portfolio_intelligence.real_analyzer import analyze_portfolio
 
@@ -169,6 +171,111 @@ async def get_reference_history(
         )
     except Exception as e:
         logger.error("History fetch failed for %s: %s", lane_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _benchmark_track(inception: str, notional: float = 100_000.0) -> dict:
+    """SPY / AGG / 60-40 overlays normalized to the lanes' inception notional.
+
+    60/40 is a daily-rebalanced blend of SPY/AGG daily returns. Cached 30min —
+    benchmark closes only change once per trading day.
+    """
+    from backend.cache import cache_get, cache_set
+
+    cache_key = f"pi:track-record:benchmarks:{inception}"
+    hit = cache_get(cache_key, 1800)
+    if hit is not None:
+        return hit
+
+    import pandas as pd
+    from backend.services.data_fetcher import fetch_safe
+
+    start = (date.fromisoformat(inception) - timedelta(days=10)).isoformat()
+    end = (date.today() + timedelta(days=1)).isoformat()
+    spy = fetch_safe("SPY", start, end, name="SPY")
+    agg = fetch_safe("AGG", start, end, name="AGG")
+    if spy is None or agg is None or len(spy) == 0 or len(agg) == 0:
+        logger.warning("track-record: benchmark fetch failed (SPY=%s, AGG=%s)",
+                       spy is not None, agg is not None)
+        return {}
+
+    df = pd.DataFrame({"SPY": spy, "AGG": agg}).dropna()
+    df = df[df.index >= pd.Timestamp(inception)]
+    if df.empty:
+        return {}
+
+    norm = df / df.iloc[0] * notional
+    rets = df.pct_change().fillna(0.0)
+    blend = (1 + 0.6 * rets["SPY"] + 0.4 * rets["AGG"]).cumprod() * notional
+
+    def _points(series) -> list[TrackRecordPoint]:
+        return [
+            TrackRecordPoint(date=str(idx)[:10], value=round(float(v), 2))
+            for idx, v in series.items()
+        ]
+
+    out = {"SPY": _points(norm["SPY"]), "AGG": _points(norm["AGG"]),
+           "60_40": _points(blend)}
+    cache_set(cache_key, out)
+    return out
+
+
+@router.get("/track-record", response_model=TrackRecordResponse)
+async def get_track_record():
+    """The canonical live forward track record (see TRACK_RECORD_POLICY.md).
+
+    Real paper_nav rows for all three lanes (per-point config_version for
+    segment boundaries) + SPY/AGG/60-40 overlays normalized at inception.
+    Read-only. intraday_date flags a latest row that still re-marks hourly.
+    """
+    from zoneinfo import ZoneInfo
+
+    from backend.db import get_connection, get_nav_series
+    from backend.services.portfolio_intelligence.scheduler import nav_freshness
+
+    def _build() -> TrackRecordResponse:
+        conn = get_connection()
+        try:
+            lanes: dict[str, list[TrackRecordPoint]] = {}
+            for lane_id in _VALID_LANES:
+                rows = get_nav_series(conn, lane_id)
+                lanes[lane_id] = [
+                    TrackRecordPoint(
+                        date=r["date"], value=round(r["nav"], 2),
+                        config_version=r["config_version"],
+                    )
+                    for r in rows
+                ]
+            inc = conn.execute(
+                "SELECT MIN(inception_date) AS d FROM paper_portfolios "
+                "WHERE id IN (?, ?, ?)", _VALID_LANES,
+            ).fetchone()
+        finally:
+            conn.close()
+
+        inception = inc["d"] if inc and inc["d"] else None
+        fresh = nav_freshness()
+
+        now_et = datetime.now(ZoneInfo("US/Eastern"))
+        today_et = now_et.date().isoformat()
+        latest = max((p[-1].date for p in lanes.values() if p), default=None)
+        intraday = today_et if (latest == today_et and now_et.hour < 17) else None
+
+        return TrackRecordResponse(
+            inception_date=inception,
+            age_days=(date.today() - date.fromisoformat(inception)).days
+            if inception else None,
+            expected_nav_date=fresh.get("expected_nav_date"),
+            all_fresh=bool(fresh.get("all_fresh")),
+            intraday_date=intraday,
+            lanes=lanes,
+            benchmarks=_benchmark_track(inception) if inception else {},
+        )
+
+    try:
+        return await asyncio.to_thread(_build)
+    except Exception as e:
+        logger.error("track-record failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

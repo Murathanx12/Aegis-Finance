@@ -63,11 +63,12 @@ docs/DEEP_RESEARCH_FINDINGS_INDUSTRY.md
 docs/STRESS_TEST_RESULTS.md
 docs/STRESS_TEST_PORTFOLIOS.md
 
-# Claude Code
-.claude/
+# Claude Code — ignore contents (`.claude/*`, not `.claude/`: git never
+# descends into a fully-excluded dir, which made the re-include dead) but
+# track the session commands.
+.claude/*
+!.claude/commands/
 
 # Coverage artifacts
 .coverage
 htmlcov/
-
-!.claude/commands/

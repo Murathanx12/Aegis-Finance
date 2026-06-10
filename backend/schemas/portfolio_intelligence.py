@@ -250,6 +250,34 @@ class HistoryResponse(BaseModel):
     inception_value: Optional[float] = None
 
 
+class TrackRecordPoint(BaseModel):
+    """One point on the live forward track record (or a benchmark overlay)."""
+    date: str
+    value: float
+    config_version: Optional[str] = None
+
+
+class TrackRecordResponse(BaseModel):
+    """The canonical live forward track record — all lanes + benchmarks.
+
+    Per TRACK_RECORD_POLICY.md this is the only surface allowed to be
+    presented as the track record. Benchmarks are normalized to the lanes'
+    inception notional on the inception date. intraday_date is set when the
+    latest NAV row is today's (still re-marked hourly until the close).
+    """
+    inception_date: Optional[str] = None
+    age_days: Optional[int] = None
+    expected_nav_date: Optional[str] = None
+    all_fresh: bool = False
+    intraday_date: Optional[str] = None
+    lanes: dict[str, list[TrackRecordPoint]] = Field(default_factory=dict)
+    benchmarks: dict[str, list[TrackRecordPoint]] = Field(default_factory=dict)
+    benchmark_note: str = (
+        "Benchmarks are normalized to $100k at lane inception; 60/40 is a "
+        "daily-rebalanced 60% SPY / 40% AGG blend."
+    )
+
+
 class ExplainResponse(BaseModel):
     """Most-recent rebalance explanation. Shape is consistent whether or not events exist."""
     portfolio_id: str
