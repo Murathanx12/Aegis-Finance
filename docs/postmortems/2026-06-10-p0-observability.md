@@ -69,9 +69,15 @@ First `/go` session. Track record age at session start: 2 days (inception 2026-0
 ## State for next session
 
 - Tests: 337 PI tests green (14 new: 11 canary freshness, 3 history wiring).
-- **Next:** deploy this commit → hit `/api/pi/reference/*/history` and
-  `/health/scheduler` → confirm real NAV rows + `all_fresh: true`. That
-  closes the transcript's open item ("are rows landing?") with a measured
-  answer. Then P0 #2 (equity-curve UI) is unblocked, then P0 #4 (reconcile
-  the three curves).
+- **BLOCKED ON DEPLOY:** commit `6ed841a` was pushed to
+  `origin/lab/autonomous-rd`, but Railway did NOT redeploy (old response
+  shapes still live 20+ min later) — auto-deploy is not wired to this branch;
+  the 06-08 deploy was evidently manual. **Murat must trigger a Railway
+  redeploy** (dashboard or `railway up`), ideally also enabling auto-deploy
+  from `lab/autonomous-rd` so future sessions can ship.
+- **First action after redeploy:** hit `/api/pi/reference/*/history` and
+  `/health/scheduler` → confirm real NAV rows since 2026-06-08 inception +
+  `nav.all_fresh: true`. That closes the transcript's open item ("are rows
+  landing?") with a measured answer. Then P0 #2 (equity-curve UI), then
+  P0 #4 (reconcile the three curves).
 - Registry: 0 trials adopted, 0 rejected (loop not built — Step #3 pending).
