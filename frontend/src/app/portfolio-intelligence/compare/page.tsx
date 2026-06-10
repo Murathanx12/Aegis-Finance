@@ -10,6 +10,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { InfoTooltip } from "@/components/info-tooltip";
+import { MethodologyBanner } from "@/components/methodology-banner";
 import Link from "next/link";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend,
@@ -123,9 +124,11 @@ export default function ComparePage() {
           <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Compare Portfolios</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Compare Portfolios — Methodology (Backtested)
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Side-by-side comparison of reference lanes vs SPY, AGG, and 60/40
+            Simulated comparison of reference lanes vs SPY, AGG, and 60/40 &mdash; not the live track record
           </p>
         </div>
       </div>
@@ -160,16 +163,8 @@ export default function ComparePage() {
         ))}
       </div>
 
-      {/* Survivorship Disclaimer */}
-      <Card className="border-amber-500/30 bg-amber-500/5">
-        <CardContent className="py-3">
-          <p className="text-xs text-amber-400/80">
-            Historical replay performance reflects backtested rebalancing over 2021-2025 using a
-            fixed universe. Results may be inflated by survivorship bias if the universe was
-            selected from current index constituents. See docs/replay_diagnostics_v1.md for details.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Methodology label — copy governed by docs/TRACK_RECORD_POLICY.md */}
+      <MethodologyBanner />
 
       {compareError && (
         <Card className="border-red-500/30">
@@ -201,7 +196,7 @@ export default function ComparePage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">
-              Performance Metrics ({compareData.start_date} to {compareData.end_date})
+              Backtested Metrics ({compareData.start_date} to {compareData.end_date})
             </CardTitle>
           </CardHeader>
           <CardContent>

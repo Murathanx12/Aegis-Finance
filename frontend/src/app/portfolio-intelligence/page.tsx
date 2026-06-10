@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Shield, TrendingUp, Zap, BarChart3, ArrowRight, Wrench,
 } from "lucide-react";
+import { MethodologyBanner } from "@/components/methodology-banner";
 
 const LANES = [
   {
@@ -129,16 +130,8 @@ export default function PortfolioIntelligencePage() {
         </Link>
       </div>
 
-      <Card className="border-amber-500/30 bg-amber-500/5">
-        <CardContent className="py-4">
-          <p className="text-xs text-amber-400/80">
-            Historical replay performance reflects backtested rebalancing over 2021-2025 using a
-            fixed universe. Results may be inflated by survivorship bias if the universe was
-            selected from current index constituents. See docs/replay_diagnostics_v1.md for details.
-            This is an educational research tool, not financial advice.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Methodology label — copy governed by docs/TRACK_RECORD_POLICY.md */}
+      <MethodologyBanner />
     </div>
   );
 }

@@ -127,3 +127,30 @@ Both are evolution-loop candidates (Step #3), not hand-edits.
 
 **Measured:** ruff 217 → 36; targeted tests 178 + 520 green; collection
 2356 tests clean. mypy deferred to a future cycle (out of budget).
+
+**Cycle-2 VERIFY suite landed mid-cycle-4: 2344 passed, 0 failed** —
+tree confirmed green including the cycle-1 flaky-test fix.
+
+### Cycle 4 — B4: track-record policy + methodology relabeling (P0 #4 prep)
+
+**Shipped `docs/TRACK_RECORD_POLICY.md`:** live forward NAV (`paper_nav`,
+inception 2026-06-08) is the ONLY thing allowed to be called "track
+record"; replay/compare pages are methodology simulations and must carry
+the shared banner; exact copy lives in the policy doc; rules for future
+pages (backtest numbers never use "performance" unqualified; unmeasured
+signals labeled descriptive).
+
+**Frontend:** new shared `MethodologyBanner` component replaces three
+copy-pasted survivorship disclaimers (PI landing, /reference, /compare).
+Retitled: reference page → "… — Methodology Backtest" with "not the live
+track record" subtitle; compare page → "Compare Portfolios — Methodology
+(Backtested)"; "Performance Metrics" table → "Backtested Metrics".
+
+**Why labels-only:** the live equity-curve page (P0 #2) is blocked on the
+un-deployed history endpoint (Railway redeploy needed — Murat). Labeling
+the methodology pages NOW means that when the live curve ships, no page
+contradicts it.
+
+**Measured:** `npx next build` green, all 20+ routes compile. The
+"no two pages tell different performance stories" done-when is satisfiable
+only after P0 #2 ships; this cycle removes the contradicting *claims*.
