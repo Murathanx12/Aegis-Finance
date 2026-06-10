@@ -166,6 +166,67 @@ class TestBoundaryMigration:
         assert row["cumulative_trials"] >= 1
 
 
+class TestPreRegisteredDecisionRule:
+    def test_rule_embedded_once_and_never_overwritten(self, seeded_db):
+        import json
+
+        engine.apply_config_change_rebalances(db_path=seeded_db)
+
+        def _notes():
+            conn = get_connection(seeded_db)
+            try:
+                return json.loads(conn.execute(
+                    "SELECT notes FROM rule_experiments "
+                    "WHERE lane_id = 'balanced-ew-control'"
+                ).fetchone()["notes"])
+            finally:
+                conn.close()
+
+        notes = _notes()
+        rule = notes.get("decision_rule")
+        assert rule, "pre-registered decision rule missing from the registry"
+        assert rule["trial"] == "TRIAL-001"
+        assert ">= 0.30" in rule["revert_threshold"]
+        assert rule["min_window_months"] == 12
+        assert "crash_event_override" in rule
+
+        # Tamper-resistance: a second pass must NOT modify an existing rule.
+        conn = get_connection(seeded_db)
+        try:
+            tampered = dict(notes)
+            tampered["decision_rule"] = {"trial": "TAMPERED"}
+            conn.execute(
+                "UPDATE rule_experiments SET notes = ? "
+                "WHERE lane_id = 'balanced-ew-control'",
+                (json.dumps(tampered),),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        assert engine.ensure_trial_decision_rules(db_path=seeded_db) == 0
+        assert _notes()["decision_rule"]["trial"] == "TAMPERED", (
+            "existing rules must never be rewritten by code — "
+            "changing a rule after data accrues is a registry event, not a deploy"
+        )
+
+
+class TestRegistryEndpoint:
+    def test_registry_readable_with_decision_rule(self, seeded_db, monkeypatch):
+        from fastapi.testclient import TestClient
+        from backend import db as db_module
+        from backend.main import app
+
+        engine.apply_config_change_rebalances(db_path=seeded_db)
+        monkeypatch.setattr(db_module, "DB_PATH", seeded_db)
+
+        body = TestClient(app).get("/api/pi/registry").json()
+        assert body["cumulative_trials"] == 1
+        assert body["verdict_counts"] == {"adopted": 1}
+        trial = body["trials"][0]
+        assert trial["lane_id"] == "balanced-ew-control"
+        assert trial["notes"]["decision_rule"]["trial"] == "TRIAL-001"
+
+
 class TestSchemaV4:
     def test_fresh_db_has_event_config_version(self, tmp_path):
         db = tmp_path / "v4.db"

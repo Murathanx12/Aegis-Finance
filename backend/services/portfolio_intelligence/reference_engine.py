@@ -545,7 +545,74 @@ def apply_config_change_rebalances(db_path=None) -> dict[str, str]:
             logger.error("Config-change migration failed for %s: %s",
                          lane_id, e, exc_info=True)
             out[lane_id] = f"error: {e}"
+
+    try:
+        ensure_trial_decision_rules(db_path=db_path)
+    except Exception as e:
+        logger.error("Decision-rule embedding failed: %s", e, exc_info=True)
     return out
+
+
+_TRIAL_DECISION_RULES = {
+    "balanced-ew-control": {
+        "trial": "TRIAL-001",
+        "primary_metric": "full-window net Sharpe from daily paper_nav returns, inception 2026-06-10",
+        "min_window_months": 12,
+        "earliest_decision": "2027-06-10",
+        "evaluation_cadence": "quarterly after month 12",
+        "revert_threshold": "HRP trails control net Sharpe by >= 0.30 -> revert as config v3 via guarded loop",
+        "adopt_threshold": "HRP leads by >= 0.30 -> recorded adopted-confirmed",
+        "secondary_metrics_reported_not_deciding": [
+            "max_drawdown", "annualized_volatility", "calmar",
+            "turnover", "transaction_costs", "tracking_error",
+        ],
+        "crash_event_override": "SPY drawdown >= 20% in-window -> no decision until >= 6 months past trough",
+        "canonical_doc": "docs/TRIALS/TRIAL-001-hrp-vs-ew.md",
+        "pre_registered": "2026-06-11",
+    },
+}
+
+
+def ensure_trial_decision_rules(db_path=None) -> int:
+    """Idempotently embed pre-registered decision rules into registry notes.
+
+    Pre-registration must live IN the registry (not only in git) so the rule
+    travels with the trial row Optimus ingests. Only ever ADDS a missing
+    decision_rule key — a rule already present is never modified (changing a
+    rule after data accrues invalidates the trial; do that in a new trial).
+    Returns the number of rows updated.
+    """
+    import json as _json
+
+    updated = 0
+    conn = get_connection(db_path)
+    try:
+        for lane_id, rule in _TRIAL_DECISION_RULES.items():
+            row = conn.execute(
+                "SELECT id, notes FROM rule_experiments "
+                "WHERE lane_id = ? ORDER BY id LIMIT 1",
+                (lane_id,),
+            ).fetchone()
+            if row is None:
+                continue
+            try:
+                notes = _json.loads(row["notes"]) if row["notes"] else {}
+            except Exception:
+                notes = {"raw_notes": row["notes"]}
+            if "decision_rule" in notes:
+                continue  # never touch an existing pre-registration
+            notes["decision_rule"] = rule
+            conn.execute(
+                "UPDATE rule_experiments SET notes = ? WHERE id = ?",
+                (_json.dumps(notes), row["id"]),
+            )
+            conn.commit()
+            updated += 1
+            logger.info("Pre-registered decision rule embedded for trial lane %s",
+                        lane_id)
+    finally:
+        conn.close()
+    return updated
 
 
 def _register_lane_trial(lane_id: str, config_version: str, db_path=None) -> None:
