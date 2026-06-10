@@ -132,8 +132,8 @@ async def lifespan(app: FastAPI):
     try:
         from backend.services.portfolio_intelligence.scheduler import shutdown_scheduler
         shutdown_scheduler()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("PI scheduler shutdown failed: %s", e)
     cache_clear()
     logger.info("Aegis Finance API shutdown")
 

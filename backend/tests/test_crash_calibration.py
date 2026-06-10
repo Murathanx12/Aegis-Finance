@@ -148,7 +148,15 @@ class TestCrashCalibration:
                 )
 
     def test_monotonic_horizons(self):
-        """3m crash prob should be <= 6m <= 12m (monotonically increasing)."""
+        """Served crash probs must satisfy 3m <= 6m <= 12m on live data.
+
+        Tests predict_all_horizons — the production path that ENFORCES
+        monotonicity — not raw per-horizon predict_proba. The per-horizon
+        models are independent, so raw outputs can legitimately cross by a
+        few points depending on the day's data; asserting on them made this
+        test flaky (failed in full-suite runs, passed in isolation). The
+        engine contract is the post-processed output.
+        """
         model_path = _check_model_exists()
 
         from backend.services.crash_model import CrashPredictor
@@ -170,16 +178,18 @@ class TestCrashCalibration:
         available = [f for f in predictor.feature_names if f in features.columns]
         latest = features[available].iloc[[-1]]
 
-        probs = {}
-        for horizon in predictor.lgb_models:
-            probs[horizon] = float(predictor.predict_proba(latest, horizon)[0])
+        probs = {h: float(p[0]) for h, p in
+                 predictor.predict_all_horizons(latest).items()}
 
-        logger.info("Current crash probabilities: %s", probs)
+        logger.info("Current crash probabilities (served): %s", probs)
+
+        for h, p in probs.items():
+            assert 0.0 <= p <= 1.0, f"{h} prob out of range: {p}"
 
         if "3m" in probs and "6m" in probs:
-            assert probs["3m"] <= probs["6m"] + 0.05, \
-                f"3m prob ({probs['3m']:.3f}) should be <= 6m ({probs['6m']:.3f})"
+            assert probs["3m"] <= probs["6m"], \
+                f"3m prob ({probs['3m']:.3f}) must be <= 6m ({probs['6m']:.3f})"
 
         if "6m" in probs and "12m" in probs:
-            assert probs["6m"] <= probs["12m"] + 0.05, \
-                f"6m prob ({probs['6m']:.3f}) should be <= 12m ({probs['12m']:.3f})"
+            assert probs["6m"] <= probs["12m"], \
+                f"6m prob ({probs['6m']:.3f}) must be <= 12m ({probs['12m']:.3f})"
