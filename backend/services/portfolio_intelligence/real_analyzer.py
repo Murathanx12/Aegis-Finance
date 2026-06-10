@@ -80,8 +80,12 @@ def _get_sector_map() -> dict[str, str]:
             for ticker in tickers:
                 if ticker not in _SECTOR_MAP:
                     _SECTOR_MAP[ticker] = label
-    except Exception:
-        pass
+    except Exception as e:
+        # Degraded, not fatal: PI-universe tickers fall through to "Other"/
+        # fixture labels. But say so — a silently blank sector breakdown
+        # reads as "no exposure" to the user, which is wrong data.
+        logger.warning("PI universe sector labels unavailable (%s) — "
+                       "sector breakdown may be incomplete", e)
 
     for ticker, sector in _FIXTURE_SECTORS.items():
         if ticker not in _SECTOR_MAP:
@@ -236,6 +240,39 @@ def _compute_beta_tracking(
         result["information_ratio_vs_spy"] = round(ann_active / te, 4)
 
     return result
+
+
+def _compute_beta_map(
+    available_tickers: list[str],
+    prices,
+    factor_exposure: dict,
+) -> dict[str, float]:
+    """Per-ticker market beta for concentration flags.
+
+    Each ticker is isolated: one failed decomposition is logged and skipped
+    instead of silently aborting every remaining ticker (the old behavior left
+    beta_map partial with no signal, so concentration flags were computed on
+    wrong data presented as right).
+    """
+    beta_map: dict[str, float] = {}
+    if factor_exposure.get("Mkt-RF") is None:
+        return beta_map
+    try:
+        from backend.services.factor_model import decompose_stock
+    except Exception as e:
+        logger.warning("Factor model unavailable — beta-based flags skipped: %s", e)
+        return beta_map
+    for t in available_tickers:
+        if t not in prices.columns:
+            continue
+        try:
+            result = decompose_stock(t, price_series=prices[t])
+            if result:
+                beta_map[t] = result["factors"]["Mkt-RF"]["loading"]
+        except Exception as e:
+            logger.warning("Beta decomposition failed for %s — "
+                           "concentration flags will exclude it: %s", t, e)
+    return beta_map
 
 
 def compute_concentration_flags(
@@ -450,17 +487,7 @@ def analyze_portfolio(
     )
 
     # Risk flags
-    beta_map = {}
-    if factor_exposure.get("Mkt-RF") is not None:
-        try:
-            from backend.services.factor_model import decompose_stock
-            for t in available_tickers:
-                if t in prices.columns:
-                    result = decompose_stock(t, price_series=prices[t])
-                    if result:
-                        beta_map[t] = result["factors"]["Mkt-RF"]["loading"]
-        except Exception:
-            pass
+    beta_map = _compute_beta_map(available_tickers, prices, factor_exposure)
 
     flags = compute_concentration_flags(weights, sector_map, beta_map)
 

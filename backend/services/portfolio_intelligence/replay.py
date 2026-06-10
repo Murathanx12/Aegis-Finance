@@ -318,8 +318,11 @@ class ReplayEngine:
                 series = fetch_safe(ticker, start_str, end_str, name=ticker)
                 if series is not None and len(series) > 0:
                     price_dict[ticker] = series
-            except Exception:
-                pass
+            except Exception as e:
+                # A silently shrunken universe makes the replay look valid
+                # while computed from partial data — log every drop.
+                logger.warning("Replay universe: dropping %s (fetch failed: %s)",
+                               ticker, e)
 
         if price_dict:
             return pd.DataFrame(price_dict)
