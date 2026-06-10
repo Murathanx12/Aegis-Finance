@@ -55,9 +55,18 @@ first evolution-loop candidates (recorded in V2_GOALS Goal 2).
   methodology page's data; mixing it into the canonical record would
   recreate the two-stories problem P0 #4 just fixed.
 
+## Live verification (post-deploy, 2026-06-10)
+
+Deployed at `277b238`. `GET /api/pi/track-record` on prod: `all_fresh: true`;
+balanced lane 100,000 → 100,618.85 → 100,070.90 (06-08/09/10, all stamped
+config `82be14cb…`); SPY overlay normalized correctly (100,000 → 99,706.45
+on 06-09). Day-2 curiosity, NOT a claim: lanes are slightly up while SPY is
+slightly down — meaningless at this sample size, which is exactly what the
+page's 24-month footnote says.
+
 ## State for next session
 
-- Ship: merged to main → auto-deploy; live verification recorded below.
+- Ship: merged to main → auto-deploy; live verification above.
 - Next on stack: **Step #2 leakage-safe optimization** (P0 #5) — first
   versioned config change; the segment-boundary rendering shipped here will
   visualize it. Grind queue: UTC TTL, PI mypy, F841 sweep.
