@@ -98,17 +98,76 @@ def setup_scheduler():
     return _scheduler
 
 
+def _expected_nav_date(now_et: datetime | None = None) -> str:
+    """Most recent trading day whose paper_nav row should exist by now.
+
+    Today's row only becomes "due" after the close-of-day MTM window (post
+    16:30 ET); before that, the freshest complete row is the prior session's.
+    Weekends and NYSE holidays (config.US_MARKET_HOLIDAYS) are skipped.
+    """
+    from zoneinfo import ZoneInfo
+    from backend.config import US_MARKET_HOLIDAYS
+
+    if now_et is None:
+        now_et = datetime.now(ZoneInfo("US/Eastern"))
+    d = now_et.date()
+    if now_et.hour < 17:
+        d -= timedelta(days=1)
+    while d.weekday() >= 5 or d.isoformat() in US_MARKET_HOLIDAYS:
+        d -= timedelta(days=1)
+    return d.isoformat()
+
+
+def nav_freshness() -> dict:
+    """Per-lane paper_nav freshness vs the expected last trading day.
+
+    This is the check liveness can't do: last_mtm proves the job RAN, this
+    proves rows LANDED. A lane is fresh iff MAX(date) >= expected trading day.
+    """
+    lane_ids = ("conservative", "balanced", "aggressive")
+    try:
+        from backend.db import get_connection
+
+        expected = _expected_nav_date()
+        conn = get_connection()
+        try:
+            rows = conn.execute(
+                "SELECT portfolio_id, MAX(date) AS last_date "
+                "FROM paper_nav GROUP BY portfolio_id"
+            ).fetchall()
+        finally:
+            conn.close()
+        last_dates = {r["portfolio_id"]: r["last_date"] for r in rows}
+        lanes = {
+            lane_id: {
+                "last_nav_date": last_dates.get(lane_id),
+                "fresh": bool(last_dates.get(lane_id)
+                              and last_dates[lane_id] >= expected),
+            }
+            for lane_id in lane_ids
+        }
+        return {
+            "expected_nav_date": expected,
+            "lanes": lanes,
+            "all_fresh": all(v["fresh"] for v in lanes.values()),
+        }
+    except Exception as e:
+        return {"error": str(e), "all_fresh": False}
+
+
 def scheduler_health() -> dict:
     """Health snapshot for the /health/scheduler canary.
 
     A silently-dead scheduler means a flat-line track record (no MTM, no
-    rebalances) — the #1 deploy risk. This exposes enough for an external
-    uptime check to alarm on: running flag, job count/ids, persistent job
-    store type, and the last successful mark-to-market timestamp.
+    rebalances) — the #1 deploy risk. Exposes liveness (running flag, jobs,
+    last MTM timestamp) AND freshness (per-lane paper_nav MAX(date) vs the
+    expected last trading day) — a green liveness over zero persisted rows
+    is exactly the failure this canary must catch.
     """
     if _scheduler is None:
         return {"running": False, "n_jobs": 0, "jobstore": None,
                 "job_ids": [], "last_mtm": None,
+                "nav": nav_freshness(),
                 "reason": "scheduler not started (APScheduler missing or setup failed)"}
     try:
         jobs = _scheduler.get_jobs()
@@ -120,6 +179,7 @@ def scheduler_health() -> dict:
             "jobstore": type(store).__name__ if store else None,
             "persistent": bool(store and "SQLAlchemy" in type(store).__name__),
             "last_mtm": _last_mtm_timestamp.isoformat() if _last_mtm_timestamp else None,
+            "nav": nav_freshness(),
         }
     except Exception as e:
         return {"running": False, "error": str(e)}
@@ -169,8 +229,17 @@ async def _hourly_mtm():
     try:
         # Hourly job MARKS TO MARKET (persists daily NAV) — it does not rebalance.
         # Rebalance decisions happen in the daily check.
-        await asyncio.to_thread(mark_all_lanes)
-        _last_mtm_timestamp = now
+        results = await asyncio.to_thread(mark_all_lanes)
+        if any(v is not None for v in results.values()):
+            _last_mtm_timestamp = now
+        else:
+            # Stamping here would turn the canary green over zero persisted
+            # rows — the silent-flat-line failure mode. Leave it stale so the
+            # freshness check pages within one cycle.
+            logger.error(
+                "Hourly MTM: every lane failed to mark (%s) — last_mtm NOT stamped",
+                results,
+            )
     except Exception as e:
         logger.error("Hourly MTM failed: %s", e, exc_info=True)
 

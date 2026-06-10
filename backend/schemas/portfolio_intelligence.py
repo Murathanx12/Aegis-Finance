@@ -214,9 +214,14 @@ class ComparisonResponse(BaseModel):
 
 
 class HistoryEquityPoint(BaseModel):
-    """A single point on a portfolio equity curve."""
+    """A single point on a portfolio equity curve.
+
+    config_version marks the track-record segment the point belongs to, so a
+    versioned rule/optimization change renders as a clean segment boundary.
+    """
     date: str
     value: float
+    config_version: Optional[str] = None
 
 
 class HistoryRebalanceEntry(BaseModel):
@@ -229,12 +234,20 @@ class HistoryRebalanceEntry(BaseModel):
 
 
 class HistoryResponse(BaseModel):
-    """Reference lane history — equity curve + rebalance log."""
+    """Reference lane history — live forward equity curve + rebalance log.
+
+    The equity curve comes from paper_nav (real mark-to-market rows). An empty
+    curve with has_nav_data=false means "no data yet" — any rendered line is
+    always real NAV, never a synthetic placeholder.
+    """
     portfolio_id: str
     period: str
     equity_curve: list[HistoryEquityPoint] = Field(default_factory=list)
     rebalance_log: list[HistoryRebalanceEntry] = Field(default_factory=list)
     has_rebalance_events: bool = False
+    has_nav_data: bool = False
+    inception_date: Optional[str] = None
+    inception_value: Optional[float] = None
 
 
 class ExplainResponse(BaseModel):

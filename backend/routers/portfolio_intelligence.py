@@ -84,16 +84,18 @@ async def get_reference_history(
     lane_id: str,
     period: str = Query(default="1Y", pattern="^(1M|3M|6M|YTD|1Y|3Y|5Y|ALL)$"),
 ):
-    """Equity curve + rebalance log for a reference lane.
+    """Live forward equity curve + rebalance log for a reference lane.
 
-    Equity curve is derived from rebalance event timestamps + portfolio values.
-    For lanes without rebalance history yet, returns empty arrays plus
-    has_rebalance_events=false so the frontend can show an empty state.
+    The equity curve is the real mark-to-market NAV series from paper_nav
+    (persisted by the hourly MTM job), with per-point config_version so
+    versioned rule changes render as clean track-record segment boundaries.
+    An empty curve ships with has_nav_data=false — "no data" is structurally
+    distinct from a flat line of real NAV.
     """
     if lane_id not in _VALID_LANES:
         raise HTTPException(status_code=404, detail=f"Unknown lane: {lane_id}")
 
-    from backend.db import get_connection
+    from backend.db import get_connection, get_nav_series
     from backend.services.portfolio_intelligence.reference_engine import (
         _ensure_lane_initialized,
     )
@@ -126,36 +128,34 @@ async def get_reference_history(
                 ).fetchall()
 
             inception = conn.execute(
-                "SELECT inception_value FROM paper_portfolios WHERE id = ?",
+                "SELECT inception_date, inception_value FROM paper_portfolios WHERE id = ?",
                 (lane_id,),
             ).fetchone()
-            inception_value = inception["inception_value"] if inception else 100_000.0
+            nav_rows = get_nav_series(conn, lane_id)
         finally:
             conn.close()
 
         rebalance_log: list[HistoryRebalanceEntry] = []
-        equity_curve: list[HistoryEquityPoint] = []
-
         for row in rows:
-            event_date = row["triggered_at"][:10]
             reason = row["trigger_reason"]
-            crash_prob = row["crash_prob_3m"]
-            overlay_armed = (reason == "crash_overlay")
             rebalance_log.append(HistoryRebalanceEntry(
-                date=event_date,
+                date=row["triggered_at"][:10],
                 reason=reason,
-                crash_prob=crash_prob,
-                overlay_armed=overlay_armed,
+                crash_prob=row["crash_prob_3m"],
+                overlay_armed=(reason == "crash_overlay"),
                 explanation=row["explanation"],
             ))
-            # Live equity curve isn't computed yet (Phase 7 will mark-to-market hourly).
-            # For now seed the curve with inception value at each rebalance date so
-            # the frontend has a non-empty series to render. Replay endpoint exposes
-            # the backtested curve.
-            equity_curve.append(HistoryEquityPoint(
-                date=event_date,
-                value=inception_value,
-            ))
+
+        cutoff_date = cutoff_iso[:10] if cutoff_iso else None
+        equity_curve = [
+            HistoryEquityPoint(
+                date=r["date"],
+                value=r["nav"],
+                config_version=r["config_version"],
+            )
+            for r in nav_rows
+            if cutoff_date is None or r["date"] >= cutoff_date
+        ]
 
         return HistoryResponse(
             portfolio_id=lane_id,
@@ -163,6 +163,9 @@ async def get_reference_history(
             equity_curve=equity_curve,
             rebalance_log=rebalance_log,
             has_rebalance_events=len(rebalance_log) > 0,
+            has_nav_data=len(equity_curve) > 0,
+            inception_date=inception["inception_date"] if inception else None,
+            inception_value=inception["inception_value"] if inception else None,
         )
     except Exception as e:
         logger.error("History fetch failed for %s: %s", lane_id, e, exc_info=True)
