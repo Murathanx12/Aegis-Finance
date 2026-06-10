@@ -72,3 +72,6 @@ docs/STRESS_TEST_PORTFOLIOS.md
 # Coverage artifacts
 .coverage
 htmlcov/
+
+# Machine-specific MCP wiring (absolute paths)
+.mcp.json
