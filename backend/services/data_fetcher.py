@@ -114,6 +114,7 @@ def _fetch_batch_yahoo(
                     logger.debug("Batch extract failed for %s: %s", tick, e)
 
         logger.info("Batch fetched %d/%d tickers", len(results), len(tickers))
+        _record_batch_outcome(len(results), len(tickers))
         return results
 
     except Exception as e:
@@ -124,7 +125,17 @@ def _fetch_batch_yahoo(
             s = fetch_safe(tick, start, end, tick)
             if s is not None:
                 results[tick] = s
+        _record_batch_outcome(len(results), len(tickers))
         return results
+
+
+def _record_batch_outcome(fetched: int, requested: int) -> None:
+    """Feed the /api/health/full source-health counters (never raises)."""
+    try:
+        from backend.observability import record_yfinance_batch
+        record_yfinance_batch(fetched, requested)
+    except Exception:
+        pass
 
 
 def _add_treasury(
@@ -296,6 +307,12 @@ class DataFetcher:
         logger.info(
             "Loaded %d/%d FRED series", len(results), len(series_ids)
         )
+        try:
+            from backend.observability import record_fred_fetch
+            failed = [n for n in series_ids if n not in results]
+            record_fred_fetch(list(results.keys()), failed)
+        except Exception:
+            pass
         return results
 
     def get_recession_probability(self, fred_data: dict) -> float:

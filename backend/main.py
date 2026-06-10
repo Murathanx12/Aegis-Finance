@@ -12,12 +12,14 @@ Usage:
 import logging
 import os
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.cache import cache_clear, set_cache_status, cache_ready, cache_status
 from backend.middleware import add_timing_middleware
+from backend.observability import install_log_buffer
 from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, markets, crypto, portfolio_intelligence
 
 logging.basicConfig(
@@ -25,6 +27,14 @@ logging.basicConfig(
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# Recent WARNING+ records exposed at /api/health/full — install before any
+# router/service code runs so early warnings are captured too.
+install_log_buffer()
+
+_PROCESS_START = datetime.now(timezone.utc)
+# Railway injects the deployed commit; locally falls back to "unknown".
+_DEPLOY_COMMIT = os.getenv("RAILWAY_GIT_COMMIT_SHA", "unknown")
 
 
 async def _prewarm_cache():
@@ -250,6 +260,77 @@ async def health():
         "cache_ready": cache_ready(),
         "cache_status": cs["status"],
         "cache_error": cs.get("error"),
+    }
+
+
+@app.get("/api/health/full")
+async def health_full():
+    """One-call session status: everything /go Phase 0 needs.
+
+    Aggregates deploy identity (commit, uptime), scheduler + per-lane NAV
+    freshness, track-record state (per-lane latest NAV + since-inception
+    delta), data-source health (yfinance batch rate, FRED series by name),
+    and the last ≤50 WARNING+ log records. Strictly read-only.
+    """
+    from backend.db import get_connection
+    from backend.observability import recent_warnings, source_health
+    from backend.services.portfolio_intelligence.scheduler import scheduler_health
+
+    sched = scheduler_health()
+
+    track_record: dict = {"lanes": {}, "inception_date": None, "age_days": None}
+    try:
+        conn = get_connection()
+        try:
+            rows = conn.execute(
+                "SELECT p.id, p.inception_date, p.inception_value, "
+                "       n.date AS last_date, n.nav AS last_nav "
+                "FROM paper_portfolios p "
+                "LEFT JOIN paper_nav n ON n.portfolio_id = p.id "
+                "AND n.date = (SELECT MAX(date) FROM paper_nav "
+                "              WHERE portfolio_id = p.id) "
+                "WHERE p.id IN ('conservative','balanced','aggressive')"
+            ).fetchall()
+        finally:
+            conn.close()
+        for r in rows:
+            nav = r["last_nav"]
+            inception_value = r["inception_value"]
+            track_record["lanes"][r["id"]] = {
+                "last_date": r["last_date"],
+                "nav": round(nav, 2) if nav is not None else None,
+                "since_inception_pct": (
+                    round((nav / inception_value - 1) * 100, 3)
+                    if nav is not None and inception_value else None
+                ),
+            }
+        inceptions = [r["inception_date"] for r in rows if r["inception_date"]]
+        if inceptions:
+            inception = min(inceptions)
+            track_record["inception_date"] = inception
+            track_record["age_days"] = (
+                datetime.now(timezone.utc).date()
+                - datetime.fromisoformat(inception).date()
+            ).days
+    except Exception as e:
+        track_record["error"] = str(e)
+
+    cs = cache_status()
+    return {
+        "status": "ok",
+        "deploy": {
+            "commit": _DEPLOY_COMMIT,
+            "version": "0.2.0",
+            "started_at": _PROCESS_START.isoformat(timespec="seconds"),
+            "uptime_seconds": int(
+                (datetime.now(timezone.utc) - _PROCESS_START).total_seconds()
+            ),
+            "cache_status": cs["status"],
+        },
+        "scheduler": sched,
+        "track_record": track_record,
+        "data_sources": source_health(),
+        "recent_warnings": recent_warnings(),
     }
 
 
