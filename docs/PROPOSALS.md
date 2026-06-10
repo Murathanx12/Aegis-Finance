@@ -4,6 +4,14 @@
 > Format: What / Why now / Evidence / Cost / Risk to guardrails /
 > Recommendation. Each should be decidable in under two minutes.
 
+**Verdicts 2026-06-10 (Murat):**
+- #1 replay-cache UTC TTL — **APPROVED**, queued for next grind session.
+- #2 np.bool_ leak — **APPROVED**, ✅ landed 2026-06-10 (track-record-ui session).
+- #3 intent gaps — **routed to the evolution loop** as its first candidates
+  (recorded in V2_GOALS.md Goal 2); not hand-edits.
+- #4 PI-scoped mypy — **APPROVED**, queued for next grind session.
+- #5 F841 sweep — **APPROVED**, queued for next grind session.
+
 ---
 
 ## 1. Replay-cache UTC TTL fix (V1.x roadmap item, now evidence-backed)

@@ -73,12 +73,15 @@ def validate_regime(
         confirmed = checks_passed >= 1
         confidence = "HIGH" if checks_passed >= 2 else "MEDIUM" if checks_passed == 1 else "LOW"
 
+    # Cast at the dataclass boundary: the check helpers return numpy bools
+    # (comparisons on numpy scalars), which break `is True` checks and
+    # non-pydantic JSON encoders downstream.
     return RegimeValidation(
         regime=current_regime,
-        confirmed=confirmed,
-        price_confirmed=price_confirmed,
-        breadth_confirmed=breadth_confirmed,
-        consensus_aligned=consensus_aligned,
+        confirmed=bool(confirmed),
+        price_confirmed=bool(price_confirmed),
+        breadth_confirmed=bool(breadth_confirmed),
+        consensus_aligned=bool(consensus_aligned),
         confidence=confidence,
         notes=notes,
     )

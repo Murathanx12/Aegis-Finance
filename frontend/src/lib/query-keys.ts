@@ -64,6 +64,7 @@ export const queryKeys = {
     compare: ["pi", "compare"] as const,
     replay: (lane: string) => ["pi", "replay", lane] as const,
     replaySnapshot: (lane: string) => ["pi", "replay-snapshot", lane] as const,
+    trackRecord: ["pi", "track-record"] as const,
   },
 } as const;
 

@@ -2783,6 +2783,28 @@ export function piGetCompare(
   );
 }
 
+// PI: Live forward track record (the canonical performance record)
+export interface PITrackRecordPoint {
+  date: string;
+  value: number;
+  config_version: string | null;
+}
+
+export interface PITrackRecordResponse {
+  inception_date: string | null;
+  age_days: number | null;
+  expected_nav_date: string | null;
+  all_fresh: boolean;
+  intraday_date: string | null;
+  lanes: Record<string, PITrackRecordPoint[]>;
+  benchmarks: Record<string, PITrackRecordPoint[]>;
+  benchmark_note: string;
+}
+
+export function piGetTrackRecord() {
+  return fetchAPI<PITrackRecordResponse>("/api/pi/track-record");
+}
+
 // PI: Replay backtest (forces compute on cache miss — slow)
 export function piGetReplay(laneId: string) {
   return fetchAPI<PIReplayResult>(`/api/pi/replay/${laneId}`);
