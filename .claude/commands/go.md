@@ -10,6 +10,15 @@ You are resuming work on Aegis Finance V2. Execute the phases below **in order**
 
 ## Phase 0 — Load verified state (always, every session)
 
+**Preferred path — Optimus MCP (if the `optimus` MCP server is connected):**
+load context through its tools instead of re-reading files: `aegis_verified_state`
+(= /api/health/full), `aegis_canon` (V2_GOALS / TRACK_RECORD_POLICY / TRIAL
+decision rules / anti-goals), `aegis_postmortems` (recent session learnings —
+read the latest one), `aegis_registry` (trials adopted/rejected + cumulative
+count), `brain_query` (Optimus corpus). Then do step 4 (git) and emit the
+report. Fall back to the manual path below if the server is absent.
+
+**Manual path:**
 1. Read `CLAUDE.md`, `docs/V2_GOALS.md`, and `docs/V2_ROADMAP.md` if present.
 2. **One call:** `GET https://aegis-finance-production.up.railway.app/api/health/full` —
    it carries deploy identity (commit, uptime), scheduler state, per-lane NAV
