@@ -222,6 +222,56 @@ def _benchmark_track(inception: str, notional: float = 100_000.0) -> dict:
     return out
 
 
+@router.get("/registry")
+async def get_experiment_registry(limit: int = Query(default=100, le=500)):
+    """Read-only view of the experiment registry (rule_experiments).
+
+    The registry LIVES in Aegis (guardrail: Optimus reads it, never owns it).
+    This is the endpoint Optimus MCP and auditors consume: every trial ever
+    recorded — adopted AND rejected — with the cumulative count the DSR/PBO
+    guards deflate against, and pre-registered decision rules in notes.
+    """
+    import json as _json
+
+    from backend.db import count_cumulative_trials, get_connection
+
+    def _read():
+        conn = get_connection()
+        try:
+            rows = conn.execute(
+                "SELECT id, created_at, config_version, lane_id, param, "
+                "       old_value, new_value, observed_sharpe, n_obs, "
+                "       batch_trials, cumulative_trials, dsr, pbo, verdict, notes "
+                "FROM rule_experiments ORDER BY id DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+            total = count_cumulative_trials(conn)
+        finally:
+            conn.close()
+        trials = []
+        for r in rows:
+            d = dict(r)
+            try:
+                d["notes"] = _json.loads(d["notes"]) if d["notes"] else None
+            except Exception:
+                pass  # keep raw string notes
+            trials.append(d)
+        verdicts = {}
+        for t in trials:
+            verdicts[t["verdict"]] = verdicts.get(t["verdict"], 0) + 1
+        return {
+            "cumulative_trials": total,
+            "verdict_counts": verdicts,
+            "trials": trials,
+        }
+
+    try:
+        return await asyncio.to_thread(_read)
+    except Exception as e:
+        logger.error("Registry read failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/track-record", response_model=TrackRecordResponse)
 async def get_track_record():
     """The canonical live forward track record (see TRACK_RECORD_POLICY.md).
