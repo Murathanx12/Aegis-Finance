@@ -30,7 +30,7 @@ DB_PATH = DATA_DIR / "aegis_pi.db"
 
 _write_lock = threading.Lock()
 
-CURRENT_SCHEMA_VERSION = 3
+CURRENT_SCHEMA_VERSION = 4
 
 _SCHEMA_V1 = """
 CREATE TABLE IF NOT EXISTS _schema_version (
@@ -219,6 +219,15 @@ def _run_migrations(conn: sqlite3.Connection, from_version: int, to_version: int
                 ON rule_experiments (created_at DESC);
         """)
 
+    if from_version < 4:
+        # v4: rebalance_events carries the config_version that produced it, so
+        # a versioned config change (Step #2 v1→v2) stamps its segment boundary
+        # on the event itself, not only on subsequent paper_nav rows.
+        # Additive column only — historical rows keep NULL (pre-v4 events).
+        conn.executescript("""
+            ALTER TABLE rebalance_events ADD COLUMN config_version TEXT;
+        """)
+
 
 def init_db(db_path: Path | None = None) -> None:
     """Create tables and run forward-only migrations.
@@ -282,14 +291,20 @@ def insert_rebalance_event(
     crash_prob_3m: float | None,
     regime: str | None,
     explanation: str,
+    config_version: str | None = None,
 ) -> int:
-    """Insert a rebalance event. Returns the row id."""
+    """Insert a rebalance event. Returns the row id.
+
+    config_version stamps which config produced the event (v4+); pass
+    get_config_hash() from live paths so segment boundaries are auditable
+    on the event itself.
+    """
     with _write_lock:
         cursor = conn.execute(
             """INSERT INTO rebalance_events
                (portfolio_id, triggered_at, trigger_reason, pre_weights, post_weights,
-                crash_prob_3m, regime, explanation)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                crash_prob_3m, regime, explanation, config_version)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 portfolio_id,
                 triggered_at,
@@ -299,6 +314,7 @@ def insert_rebalance_event(
                 crash_prob_3m,
                 regime,
                 explanation,
+                config_version,
             ),
         )
         conn.commit()

@@ -18,6 +18,9 @@ const LANE_STYLE: Record<string, { label: string; color: string }> = {
   conservative: { label: "Conservative", color: "#3b82f6" },
   balanced: { label: "Balanced", color: "#f59e0b" },
   aggressive: { label: "Aggressive", color: "#ef4444" },
+  // Frozen equal-weight control trial (config v2): same mandate as Balanced,
+  // optimizer is the only difference — the forward delta isolates HRP.
+  "balanced-ew-control": { label: "EW Control", color: "#2dd4bf" },
 };
 const BENCH_STYLE: Record<string, { label: string; color: string }> = {
   SPY: { label: "SPY", color: "#94a3b8" },

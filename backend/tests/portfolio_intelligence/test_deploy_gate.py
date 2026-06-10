@@ -67,7 +67,8 @@ def test_v2_to_v3_migration_creates_new_tables(tmp_path):
         ver = conn.execute("SELECT MAX(version) FROM _schema_version").fetchone()[0]
     finally:
         conn.close()
-    assert ver == 3
+    from backend.db import CURRENT_SCHEMA_VERSION
+    assert ver == CURRENT_SCHEMA_VERSION
 
 
 def test_inception_idempotent_across_redeploy(tmp_path):

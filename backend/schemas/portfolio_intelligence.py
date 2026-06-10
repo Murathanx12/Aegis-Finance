@@ -31,6 +31,7 @@ class PortfolioLane(str, Enum):
     CONSERVATIVE = "conservative"
     BALANCED = "balanced"
     AGGRESSIVE = "aggressive"
+    BALANCED_EW_CONTROL = "balanced-ew-control"  # frozen equal-weight trial (config v2)
     PERSONAL = "personal"
 
 

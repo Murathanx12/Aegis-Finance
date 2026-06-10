@@ -38,7 +38,9 @@ from backend.services.portfolio_intelligence.real_analyzer import analyze_portfo
 router = APIRouter(prefix="/api/pi", tags=["portfolio-intelligence"])
 logger = logging.getLogger(__name__)
 
-_VALID_LANES = ("conservative", "balanced", "aggressive")
+from backend.services.portfolio_intelligence.rules import REFERENCE_LANES
+
+_VALID_LANES = REFERENCE_LANES
 _VALID_PERIODS = ("1M", "3M", "6M", "YTD", "1Y", "3Y", "5Y", "ALL")
 
 
@@ -246,9 +248,10 @@ async def get_track_record():
                     )
                     for r in rows
                 ]
+            _ph = ",".join("?" for _ in _VALID_LANES)
             inc = conn.execute(
                 "SELECT MIN(inception_date) AS d FROM paper_portfolios "
-                "WHERE id IN (?, ?, ?)", _VALID_LANES,
+                f"WHERE id IN ({_ph})", _VALID_LANES,
             ).fetchone()
         finally:
             conn.close()

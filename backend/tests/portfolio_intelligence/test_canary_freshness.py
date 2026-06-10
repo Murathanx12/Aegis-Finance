@@ -137,7 +137,8 @@ class TestNavFreshness:
         out = sched.scheduler_health()
         assert "nav" in out, "freshness block missing from canary payload"
         assert "all_fresh" in out["nav"]
-        assert set(out["nav"]["lanes"]) == {"conservative", "balanced", "aggressive"}
+        from backend.services.portfolio_intelligence.rules import REFERENCE_LANES
+        assert set(out["nav"]["lanes"]) == set(REFERENCE_LANES)
 
 
 class TestNoLivePricesGuard:

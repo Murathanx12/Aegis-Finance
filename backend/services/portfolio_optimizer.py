@@ -295,19 +295,29 @@ def optimize_hrp(
     tickers: list[str],
     lookback_days: int = 504,
     use_denoised_cov: bool = True,
+    returns: Optional[pd.DataFrame] = None,
 ) -> Optional[dict]:
     """Hierarchical Risk Parity portfolio.
 
     Uses clustering on correlation structure. No matrix inversion needed,
     so it's more robust than MVO for large asset universes.
+
+    Args:
+        returns: Optional pre-built daily-returns DataFrame. When supplied,
+            NO data is fetched — the caller owns the as-of bound. This is the
+            leakage-safe entry point used by the PI lanes: live passes a panel
+            ending at the latest bar, replay passes one truncated at the
+            simulated date. When None, fetches the latest lookback_days
+            (legitimate only for ad-hoc/spot use, never for backtests).
     """
     try:
         import riskfolio as rp
     except ImportError:
         return _equal_weight_fallback(tickers)
 
-    returns = _fetch_returns(tickers, lookback_days)
     if returns is None:
+        returns = _fetch_returns(tickers, lookback_days)
+    if returns is None or len(returns) == 0:
         return None
 
     available = [t for t in tickers if t in returns.columns]

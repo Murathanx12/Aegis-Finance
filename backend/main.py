@@ -85,10 +85,11 @@ async def _prewarm_pi_fast_lanes():
         # Cover the most-clicked periods. ALL/3Y/5Y warm on first user request.
         period_days = {"1M": 30, "3M": 90, "6M": 180, "1Y": 365}
 
+        from backend.services.portfolio_intelligence.rules import REFERENCE_LANES
         jobs = []
         for days in period_days.values():
             start_d = end_d - timedelta(days=days)
-            for lane in ("conservative", "balanced", "aggressive"):
+            for lane in REFERENCE_LANES:
                 jobs.append(asyncio.to_thread(_compute_lane_metrics_fast, lane, start_d, end_d))
 
         results = await asyncio.gather(*jobs, return_exceptions=True)
@@ -117,18 +118,23 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning("PI DB init failed (non-fatal): %s", e)
 
-    # Idempotently initialize the 3 reference lanes ($100k each, anchored to
-    # inception date + config hash). A redeploy must NOT reset or double-init:
-    # initialize_lane is a no-op when the lane row already exists. Run in a
-    # thread so startup (and health checks) aren't blocked by price fetches.
+    # Idempotently initialize reference lanes ($100k each, anchored to
+    # inception date + config hash), then apply any SHA-versioned config
+    # change: new lanes get initialized + registered as trials; existing lanes
+    # whose stored config_version differs from the current YAML hash get ONE
+    # explicit boundary rebalance (sharp v1→v2 segment break). All idempotent —
+    # a redeploy with an unchanged config does nothing. Run in a thread so
+    # startup (and health checks) aren't blocked by price fetches.
     async def _init_lanes():
         import asyncio
-        from backend.services.portfolio_intelligence.reference_engine import initialize_lane
-        for lane in ("conservative", "balanced", "aggressive"):
-            try:
-                await asyncio.to_thread(initialize_lane, lane)
-            except Exception as e:
-                logger.warning("Lane init failed for %s (non-fatal): %s", lane, e)
+        from backend.services.portfolio_intelligence.reference_engine import (
+            apply_config_change_rebalances,
+        )
+        try:
+            results = await asyncio.to_thread(apply_config_change_rebalances)
+            logger.info("Config-change migration: %s", results)
+        except Exception as e:
+            logger.warning("Lane init/config migration failed (non-fatal): %s", e)
     asyncio.create_task(_init_lanes())
 
     try:
@@ -280,6 +286,8 @@ async def health_full():
 
     track_record: dict = {"lanes": {}, "inception_date": None, "age_days": None}
     try:
+        from backend.services.portfolio_intelligence.rules import REFERENCE_LANES
+        placeholders = ",".join("?" for _ in REFERENCE_LANES)
         conn = get_connection()
         try:
             rows = conn.execute(
@@ -289,7 +297,8 @@ async def health_full():
                 "LEFT JOIN paper_nav n ON n.portfolio_id = p.id "
                 "AND n.date = (SELECT MAX(date) FROM paper_nav "
                 "              WHERE portfolio_id = p.id) "
-                "WHERE p.id IN ('conservative','balanced','aggressive')"
+                f"WHERE p.id IN ({placeholders})",
+                REFERENCE_LANES,
             ).fetchall()
         finally:
             conn.close()

@@ -135,11 +135,11 @@ conservative:
   target_bond_pct: 0.50        # 50% bonds
   target_alt_pct: 0.10         # 10% alternatives (gold, REIT)
   target_cash_pct: 0.0         # explicit cash/T-bill sleeve (earns rf); crash overlay rotates equity here
-  # HONEST: lanes are equal-weight within each sleeve TODAY. Real HRP/BL
-  # optimization is not wired yet — it lands later as a SHA-versioned,
-  # guard-gated config change (Step #2). planned_optimizer records the intent.
-  optimizer: equal_weight
-  planned_optimizer: hrp
+  # Config v2 (Step #2, 2026-06-11): leakage-safe HRP on the EQUITY SLEEVE
+  # only, through an as-of price panel; sleeve allocations stay the mandate;
+  # hard gate falls back to equal-weight (loud + audited) on any invalid
+  # optimizer output. balanced-ew-control is the frozen equal-weight control.
+  optimizer: hrp
   max_single_name: 0.03        # no single position > 3%
   max_sector: 0.25             # no sector > 25%
   rebalance_trigger_drift: 0.05  # rebalance when any weight drifts > 5%
@@ -151,12 +151,15 @@ conservative:
   slippage_bps: 1               # 1 basis point slippage estimate
 
 balanced:
-  # Balanced growth + income — equal-weight today; Black-Litterman planned (Step #2)
+  # Balanced growth + income — HRP since config v2. Black-Litterman remains
+  # the eventual intent (planned_optimizer) but BL without a views source
+  # collapses to its prior — it lands as its own config version when the
+  # views infrastructure (LLM lane / evolution loop) exists.
   target_equity_pct: 0.70
   target_bond_pct: 0.25
   target_alt_pct: 0.05
   target_cash_pct: 0.0         # explicit cash/T-bill sleeve (earns rf); crash overlay rotates equity here
-  optimizer: equal_weight
+  optimizer: hrp
   planned_optimizer: black-litterman
   max_single_name: 0.05
   max_sector: 0.30
@@ -169,13 +172,12 @@ balanced:
   slippage_bps: 1
 
 aggressive:
-  # Maximum growth — full equity universe, equal-weight today; HRP planned (Step #2)
+  # Maximum growth — full equity universe, HRP since config v2
   target_equity_pct: 0.95
   target_bond_pct: 0.05
   target_alt_pct: 0.00
   target_cash_pct: 0.0         # explicit cash/T-bill sleeve (earns rf); crash overlay rotates equity here
-  optimizer: equal_weight
-  planned_optimizer: hrp
+  optimizer: hrp
   max_single_name: 0.08
   max_sector: 0.40
   rebalance_trigger_drift: 0.07
@@ -185,6 +187,35 @@ aggressive:
     equity_cut_pct: 0.10
   transaction_cost_bps: 5
   slippage_bps: 1
+
+balanced-ew-control:
+  # SHADOW CONTROL LANE (registered trial, inception = config-v2 switch date).
+  # Hypothesis: HRP adds value over equal-weight on forward data. This lane is
+  # the balanced mandate FROZEN at equal-weight — the only difference vs
+  # `balanced` is the optimizer, so the forward NAV delta isolates it.
+  target_equity_pct: 0.70
+  target_bond_pct: 0.25
+  target_alt_pct: 0.05
+  target_cash_pct: 0.0
+  optimizer: equal_weight      # frozen — this lane never optimizes
+  max_single_name: 0.05
+  max_sector: 0.30
+  rebalance_trigger_drift: 0.05
+  rebalance_frequency: monthly
+  crash_overlay:
+    crash_prob_threshold: 0.30
+    equity_cut_pct: 0.15
+  transaction_cost_bps: 5
+  slippage_bps: 1
+
+# ── Optimizer parameters (config v2) ────────────────────────────────────────
+# Inside this file deliberately: changing any of these changes the config
+# hash and starts a new track-record segment.
+
+optimizer_params:
+  lookback_days: 504           # ~2y of daily returns feeding HRP
+  min_observations: 252        # gate: fall back to equal-weight below ~1y
+  min_nonzero_fraction: 0.5    # gate: HRP collapsing to <50% of names = degenerate
 
 # ── Personal Conviction Lane ─────────────────────────────────────────────────
 # Author's real portfolio tracked for honest skill measurement.

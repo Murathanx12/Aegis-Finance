@@ -124,7 +124,8 @@ def nav_freshness() -> dict:
     This is the check liveness can't do: last_mtm proves the job RAN, this
     proves rows LANDED. A lane is fresh iff MAX(date) >= expected trading day.
     """
-    lane_ids = ("conservative", "balanced", "aggressive")
+    from backend.services.portfolio_intelligence.rules import REFERENCE_LANES
+    lane_ids = REFERENCE_LANES
     try:
         from backend.db import get_connection
 
