@@ -69,3 +69,5 @@ docs/STRESS_TEST_PORTFOLIOS.md
 # Coverage artifacts
 .coverage
 htmlcov/
+
+!.claude/commands/
