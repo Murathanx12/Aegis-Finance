@@ -417,13 +417,19 @@ def _recommend_method(results: dict) -> str:
     if not results:
         return "Insufficient data for optimization."
 
-    best_sharpe = -999
+    # sharpe_ratio can be explicitly None (equal_weight fallback) — a plain
+    # `.get(..., -999)` does not protect against that and raised TypeError
+    # for every compare_methods call.
+    best_sharpe = None
     best_method = "equal_weight"
     for name, r in results.items():
-        sharpe = r.get("metrics", {}).get("sharpe_ratio", -999)
-        if sharpe > best_sharpe:
+        sharpe = (r.get("metrics") or {}).get("sharpe_ratio")
+        if sharpe is not None and (best_sharpe is None or sharpe > best_sharpe):
             best_sharpe = sharpe
             best_method = name
+
+    if best_sharpe is None:
+        return "Insufficient data for optimization."
 
     return (
         f"Best risk-adjusted: {best_method} (Sharpe={best_sharpe:.2f}). "
