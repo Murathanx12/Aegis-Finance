@@ -280,9 +280,13 @@ async def health_full():
     """
     from backend.db import get_connection
     from backend.observability import recent_warnings, source_health
-    from backend.services.portfolio_intelligence.scheduler import scheduler_health
+    from backend.services.portfolio_intelligence.scheduler import (
+        overlay_status,
+        scheduler_health,
+    )
 
     sched = scheduler_health()
+    overlay = overlay_status()
 
     track_record: dict = {"lanes": {}, "inception_date": None, "age_days": None}
     try:
@@ -338,6 +342,7 @@ async def health_full():
         },
         "scheduler": sched,
         "track_record": track_record,
+        "overlay": overlay,
         "data_sources": source_health(),
         "recent_warnings": recent_warnings(),
     }

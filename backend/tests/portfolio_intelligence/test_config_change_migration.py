@@ -50,7 +50,7 @@ def seeded_db(tmp_path, monkeypatch):
         conn.close()
     # Keep the migration offline + deterministic.
     monkeypatch.setattr(engine, "_get_current_prices", lambda tickers: _universe_prices())
-    monkeypatch.setattr(engine, "_get_crash_prob", lambda: None)
+    monkeypatch.setattr(engine, "_evaluate_crash_overlay", lambda: (None, "model_not_deployed"))
     return db
 
 

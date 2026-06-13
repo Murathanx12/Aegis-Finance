@@ -50,3 +50,42 @@ No metric substitution after the fact, no window cherry-picking, no
 "adjusting for regime" in the primary metric, no early revert on drawdown
 panic (that's what the crash override and the secondary metrics are for —
 reporting, not deciding).
+
+## Annotation 2026-06-14 — crash overlay was DARK on both arms (trial valid)
+
+> Added after data accrued. This annotation does NOT change the hypothesis,
+> the primary metric, the threshold, or the window — it records a property of
+> the engine both arms ran on, so the conclusion is not misread later. Under
+> the rule above, that is permitted (it is documentation, not a rule change).
+
+**Finding.** The crash overlay has never been operational in production. Two
+independent causes, both present since before this trial's 2026-06-10
+inception:
+
+1. `reference_engine._get_crash_prob()` called `CrashPredictor.predict_proba()`
+   with no arguments (wrong signature; raised every daily check, swallowed by
+   a try/except) — present since the first PI commit `116d1e5`.
+2. `crash_model.pkl` is gitignored (`*.pkl`) and was never baked into the
+   Railway image. Confirmed live: `GET /api/crash/prediction` returns
+   `status: model_not_trained`. So even with cause #1 fixed, prod has no model
+   to evaluate.
+
+**Why the trial remains valid.** Both `balanced` (HRP) and
+`balanced-ew-control` ran with the overlay equally dark. The overlay is a
+*shared* risk control applied identically to both arms (same `crash_overlay`
+block shape); its absence subtracts the same component from both NAVs. The
+comparison isolates **HRP vs equal-weight on the equity sleeve**, which is
+untouched by the overlay. Therefore the primary metric (relative net Sharpe)
+is unbiased by the dark overlay. No window extension is triggered: this is not
+a per-lane data/accounting defect under the contamination clause — it is an
+engine-wide dormant feature affecting both arms symmetrically.
+
+**What changed 2026-06-14 (and what did NOT).** The call site was fixed and a
+loud per-lane overlay status was added to `/api/health/full` (so a dark
+overlay can never again hide). The overlay was **deliberately NOT armed** on
+these lanes: arming a risk control mid-trial would change the strategy of an
+in-flight pre-registered comparison and would require shipping an
+unprovenanced binary into the forward record. If the overlay is ever armed, it
+will be on **new** pre-registered lanes with a version-controlled,
+provenance-documented model — never retrofitted here. See
+`docs/postmortems/2026-06-14-crash-overlay-dark.md`.

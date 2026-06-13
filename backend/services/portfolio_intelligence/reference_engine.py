@@ -118,17 +118,84 @@ def _get_sector_map() -> dict[str, str]:
     return lane_sector_map()
 
 
-def _get_crash_prob() -> float | None:
-    """Get current 3-month crash probability from the crash model."""
+# Overlay statuses that are operational (the overlay actually evaluated) vs
+# dark (the overlay engine could not run). `model_not_deployed` is the
+# expected steady state in prod today — the crash model .pkl is gitignored
+# (*.pkl) and not baked into the image, so no model loads on Railway. That
+# state is surfaced LOUDLY in /api/health/full (overlay block) and logged
+# ONCE per process here instead of spamming a WARNING per lane per cycle.
+_OVERLAY_OPERATIONAL = {"evaluated", "override"}
+_logged_overlay_statuses: set[str] = set()
+
+
+def _log_overlay_status_once(status: str, detail: str = "") -> None:
+    """Log a dark-overlay status without per-lane-per-cycle spam.
+
+    Operational statuses are silent. `model_not_deployed` (expected) is logged
+    once per process at INFO (it is always visible in the health overlay block
+    regardless). A genuine error with a model PRESENT is a real anomaly and is
+    logged at WARNING every time.
+    """
+    if status in _OVERLAY_OPERATIONAL:
+        return
+    if status == "model_not_deployed":
+        if status not in _logged_overlay_statuses:
+            _logged_overlay_statuses.add(status)
+            logger.info(
+                "Crash overlay DARK: no trained model deployed — overlay skipped "
+                "on all reference lanes (expected in prod; *.pkl not in image). "
+                "Status is exposed per-lane in /api/health/full overlay block. "
+                "This message is logged once per process.")
+        return
+    # Model present but evaluation failed — a real anomaly, never suppressed.
+    logger.warning("Crash overlay evaluation failed (%s): %s", status, detail)
+
+
+def _evaluate_crash_overlay() -> tuple[float | None, str]:
+    """Current 3-month crash probability for the overlay, with a status code.
+
+    Mirrors the live dashboard path (market_dashboard._build_crash_section):
+    load the shared predictor, build CURRENT features, call the model with the
+    correct signature `predict_proba(features, "3m")`. The previous call site
+    invoked `predict_proba()` with no args (raising every cycle) and expected a
+    dict it never returned — see TRIAL-001 contamination note.
+
+    Returns (crash_prob_3m | None, status) where status is one of:
+      evaluated          — model ran, prob is the result
+      model_not_deployed — no trained model present (expected in prod today)
+      feature_unavailable— feature pipeline produced nothing
+      predict_error      — model present but prediction raised
+    """
+    # Shared, process-cached predictor (loads the .pkl once if present).
+    from backend.services.portfolio_intelligence.replay import _get_shared_predictor
+
+    predictor = _get_shared_predictor()
+    if predictor is None or not getattr(predictor, "is_trained", False):
+        return None, "model_not_deployed"
+
     try:
-        from backend.services.crash_model import CrashPredictor
-        predictor = CrashPredictor()
-        result = predictor.predict_proba()
-        if result and "crash_3m" in result:
-            return result["crash_3m"]
-    except Exception as e:
-        logger.warning("Failed to get crash probability: %s", e)
-    return None
+        from backend.services.data_fetcher import DataFetcher
+        from engine.training.features import build_feature_matrix
+    except ImportError as e:
+        logger.warning("Crash overlay feature pipeline unavailable: %s", e)
+        return None, "feature_unavailable"
+
+    try:
+        fetcher = DataFetcher()
+        data, _ = fetcher.fetch_market_data()
+        fred_data = fetcher.fetch_fred_data()
+        features = build_feature_matrix(data, fred_data=fred_data)
+        if features is None or features.empty:
+            return None, "feature_unavailable"
+        available = [f for f in predictor.feature_names if f in features.columns]
+        latest = features[available].iloc[[-1]] if available else features.iloc[[-1]]
+        prob = predictor.predict_proba(latest, "3m")
+        if prob is not None and len(prob) > 0:
+            return float(prob[0]), "evaluated"
+        return None, "predict_error"
+    except Exception as e:  # model present but evaluation failed — keep loud
+        logger.warning("Crash overlay prediction failed: %s", e)
+        return None, "predict_error"
 
 
 def _get_regime() -> str | None:
@@ -238,8 +305,11 @@ def run_reference_check(
                              "optimizer_fallback",
                              {"reason": opt_meta["optimizer_fallback"]})
 
-        # Check crash probability
-        crash_prob = crash_prob_override if crash_prob_override is not None else _get_crash_prob()
+        # Check crash probability (with a status so a dark overlay is visible)
+        if crash_prob_override is not None:
+            crash_prob, overlay_status = crash_prob_override, "override"
+        else:
+            crash_prob, overlay_status = _evaluate_crash_overlay()
 
         # Apply crash overlay
         overlay_triggered = False
@@ -247,6 +317,19 @@ def run_reference_check(
             target_weights, overlay_triggered = apply_crash_overlay(
                 target_weights, crash_prob, lane_config,
             )
+
+        # Persist the overlay evaluation so a structurally-dark overlay can
+        # never again run unseen for days: /api/health/full reads the latest
+        # crash_overlay_eval row per lane (see scheduler.overlay_status()).
+        insert_audit_log(conn, datetime.now().isoformat(), lane_id,
+                         "crash_overlay_eval", {
+                             "status": overlay_status,
+                             "crash_prob_3m": crash_prob,
+                             "armed": overlay_triggered,
+                             "threshold": lane_config.get(
+                                 "crash_overlay", {}).get("crash_prob_threshold"),
+                         })
+        _log_overlay_status_once(overlay_status)
 
         # Enforce position limits
         sector_map = _get_sector_map()

@@ -203,7 +203,7 @@ class TestInitializeLane:
 class TestRunReferenceCheck:
     @patch("backend.services.portfolio_intelligence.reference_engine._get_current_prices", return_value={})
     @patch("backend.services.portfolio_intelligence.reference_engine._get_sector_map", return_value={})
-    @patch("backend.services.portfolio_intelligence.reference_engine._get_crash_prob", return_value=0.10)
+    @patch("backend.services.portfolio_intelligence.reference_engine._evaluate_crash_overlay", return_value=(0.10, "evaluated"))
     @patch("backend.services.portfolio_intelligence.reference_engine._get_regime", return_value="bull")
     def test_no_rebalance_when_no_drift(self, mock_regime, mock_crash, mock_sector, mock_prices, tmp_path):
         """Fresh portfolio with no drift should not trigger (already at target)."""
@@ -225,7 +225,7 @@ class TestRunReferenceCheck:
         assert result.weights == {}
 
     @patch("backend.services.portfolio_intelligence.reference_engine._get_sector_map", return_value={})
-    @patch("backend.services.portfolio_intelligence.reference_engine._get_crash_prob", return_value=0.10)
+    @patch("backend.services.portfolio_intelligence.reference_engine._evaluate_crash_overlay", return_value=(0.10, "evaluated"))
     @patch("backend.services.portfolio_intelligence.reference_engine._get_regime", return_value=None)
     @patch("backend.services.portfolio_intelligence.reference_engine._get_current_prices")
     def test_initialization_trigger_on_empty_portfolio(
@@ -245,7 +245,7 @@ class TestRunReferenceCheck:
             assert result.latest_rebalance.trigger_reason == "initialization"
 
     @patch("backend.services.portfolio_intelligence.reference_engine._get_sector_map", return_value={})
-    @patch("backend.services.portfolio_intelligence.reference_engine._get_crash_prob", return_value=0.50)
+    @patch("backend.services.portfolio_intelligence.reference_engine._evaluate_crash_overlay", return_value=(0.50, "evaluated"))
     @patch("backend.services.portfolio_intelligence.reference_engine._get_regime", return_value="volatile")
     @patch("backend.services.portfolio_intelligence.reference_engine._get_current_prices")
     def test_crash_overlay_fires_at_high_prob(
