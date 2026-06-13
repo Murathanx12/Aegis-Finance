@@ -26,9 +26,14 @@ MODEL_DIR = BACKEND_DIR / "models"
 # On Railway this MUST point at a persistent volume mounted at a path that does
 # NOT shadow the image: set AEGIS_DATA_DIR=/data and mount the volume at /data.
 # Locally it defaults to backend/data, alongside the immutable config YAML.
-# IMPORTANT: paper_portfolios.yaml and MODEL_DIR are immutable, version-controlled,
-# and baked into the image — they are deliberately NOT under DATA_DIR, so a volume
-# mounted for persistence can never shadow them on first boot.
+# IMPORTANT: paper_portfolios.yaml is immutable, version-controlled, and baked
+# into the image — deliberately NOT under DATA_DIR, so a persistence volume can
+# never shadow it on first boot. MODEL_DIR is on the image too, BUT its trained
+# artifacts (crash_model.pkl etc.) are GITIGNORED (*.pkl) and therefore NOT
+# shipped — production has no trained crash model, so the crash overlay is dark
+# (surfaced in /api/health/full "overlay"). Arming the overlay requires shipping
+# a provenance-documented, version-controlled model on NEW pre-registered lanes
+# (do not retrofit the live track record). See docs/TRIALS/TRIAL-001 note.
 DATA_DIR = Path(os.getenv("AEGIS_DATA_DIR", str(BACKEND_DIR / "data")))
 
 load_dotenv(PROJECT_ROOT / ".env")

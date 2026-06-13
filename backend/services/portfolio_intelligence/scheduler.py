@@ -156,6 +156,64 @@ def nav_freshness() -> dict:
         return {"error": str(e), "all_fresh": False}
 
 
+def overlay_status() -> dict:
+    """Per-lane crash-overlay operational status (the canary for a dark overlay).
+
+    Reads the latest `crash_overlay_eval` audit row per lane. `operational`
+    means the overlay actually evaluated (a model ran or an override was given);
+    a lane that is `model_not_deployed`, errored, or never evaluated is NOT
+    operational. `all_operational` is the one-glance canary — when false, the
+    overlay engine is dark and lanes are running with no crash protection even
+    though their mandate assumes one (the bug that hid for days under a
+    swallowed per-cycle WARNING). `armed` reflects whether the overlay actually
+    cut equity on the last evaluation (false in a calm tape is normal).
+    """
+    import json
+
+    from backend.services.portfolio_intelligence.rules import REFERENCE_LANES
+
+    out: dict = {"lanes": {}, "all_operational": True}
+    try:
+        from backend.db import get_connection
+
+        conn = get_connection()
+        try:
+            for lane_id in REFERENCE_LANES:
+                row = conn.execute(
+                    "SELECT timestamp, payload FROM audit_log "
+                    "WHERE portfolio_id = ? AND event_type = 'crash_overlay_eval' "
+                    "ORDER BY id DESC LIMIT 1",
+                    (lane_id,),
+                ).fetchone()
+                if row is None:
+                    out["lanes"][lane_id] = {
+                        "status": "never_evaluated", "operational": False,
+                    }
+                    out["all_operational"] = False
+                    continue
+                try:
+                    p = json.loads(row["payload"])
+                except Exception:
+                    p = {}
+                status = p.get("status", "unknown")
+                operational = status in ("evaluated", "override")
+                if not operational:
+                    out["all_operational"] = False
+                out["lanes"][lane_id] = {
+                    "status": status,
+                    "operational": operational,
+                    "armed": p.get("armed"),
+                    "crash_prob_3m": p.get("crash_prob_3m"),
+                    "threshold": p.get("threshold"),
+                    "last_evaluated": row["timestamp"],
+                }
+        finally:
+            conn.close()
+        return out
+    except Exception as e:
+        return {"error": str(e), "all_operational": False, "lanes": {}}
+
+
 def scheduler_health() -> dict:
     """Health snapshot for the /health/scheduler canary.
 
