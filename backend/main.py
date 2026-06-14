@@ -136,10 +136,14 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning("Lane init/config migration failed (non-fatal): %s", e)
         try:
-            from backend.services.portfolio_intelligence.fragility import ensure_lppls_trial
+            from backend.services.portfolio_intelligence.fragility import (
+                ensure_crash_trial,
+                ensure_lppls_trial,
+            )
             await asyncio.to_thread(ensure_lppls_trial)
+            await asyncio.to_thread(ensure_crash_trial)
         except Exception as e:
-            logger.warning("TRIAL-LPPLS pre-registration failed (non-fatal): %s", e)
+            logger.warning("Fragility trial pre-registration failed (non-fatal): %s", e)
     asyncio.create_task(_init_lanes())
 
     try:
