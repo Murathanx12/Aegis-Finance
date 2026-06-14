@@ -30,6 +30,7 @@ from backend.services.portfolio_intelligence.rebalancer import (
     estimate_turnover,
 )
 from backend.services.portfolio_intelligence.rules import (
+    BOOK_LANES,
     REFERENCE_LANES,
     apply_crash_overlay,
     compute_target_weights,
@@ -712,6 +713,23 @@ def _register_lane_trial(lane_id: str, config_version: str, db_path=None) -> Non
                           "(control: balanced mandate frozen at equal-weight)",
             "purpose": "optimizer-variant",
         },
+        "mirror": {
+            "hypothesis": "Aegis managing Murat's actual book by its own rules "
+                          "(HRP, balanced cadence) beats Murat's conviction "
+                          "management of the same book, and the rules baselines, "
+                          "on forward data — from a shared today-dated inception",
+            "purpose": "portfolio-mirror",
+            "canonical_doc": "docs/TRIALS/TRIAL-002-mirror-vs-rules.md",
+            "pre_registered": "2026-06-14",
+        },
+        "conviction": {
+            "hypothesis": "Murat's logged conviction decisions add value over the "
+                          "rules baselines on forward data (single pre-registered "
+                          "strategy; inception today, prior return excluded)",
+            "purpose": "conviction",
+            "canonical_doc": "docs/TRIALS/TRIAL-003-conviction-vs-rules.md",
+            "pre_registered": "2026-06-14",
+        },
     }
     meta = hypotheses.get(lane_id, {
         "hypothesis": f"lane {lane_id} forward trial",
@@ -819,6 +837,50 @@ def mark_all_lanes(db_path=None) -> dict[str, float | None]:
     return out
 
 
+def mark_all_book_lanes(db_path=None) -> dict[str, float | None]:
+    """Mark SEEDED book lanes (P1 #6) to market and persist daily NAV.
+
+    Only marks book lanes that already have a paper_portfolios row — an unseeded
+    book lane is skipped, so MTM never auto-creates one (seeding is the explicit,
+    attended write-path; auto-init here would write a junk inception). Reuses
+    mark_lane_to_market, which already degrades per-ticker to cost_basis on a
+    single bad symbol and refuses to persist a NAV row if EVERY price fails.
+    """
+    out: dict[str, float | None] = {}
+    for lane_id in BOOK_LANES:
+        try:
+            conn = get_connection(db_path)
+            try:
+                seeded = conn.execute(
+                    "SELECT 1 FROM paper_portfolios WHERE id = ?", (lane_id,)
+                ).fetchone()
+            finally:
+                conn.close()
+            if not seeded:
+                out[lane_id] = None  # not yet seeded — skip, never auto-create
+                continue
+            out[lane_id] = mark_lane_to_market(lane_id, db_path=db_path)
+        except Exception as e:
+            logger.error("Book MTM failed for %s: %s", lane_id, e, exc_info=True)
+            out[lane_id] = None
+    return out
+
+
+def seed_all_book_lanes(db_path=None, prices: dict | None = None) -> dict:
+    """Seed every book lane (idempotent) then immediately mark to market, so the
+    freshness canary is green from the first health check after seeding.
+
+    ATTENDED WRITE-PATH — invoked only by the env-gated startup hook
+    (AEGIS_SEED_BOOK_LANES=1) or scripts/seed_p1_6_lanes.py, never on a normal
+    boot. Idempotent: already-seeded lanes are skipped.
+    """
+    out: dict = {"seeded": {}, "mtm": {}}
+    for lane_id in BOOK_LANES:
+        out["seeded"][lane_id] = seed_book_lane(lane_id, db_path=db_path, prices=prices)
+    out["mtm"] = mark_all_book_lanes(db_path=db_path)
+    return out
+
+
 def initialize_lane(
     lane_id: str,
     notional: float = 100_000.0,
@@ -903,3 +965,91 @@ def initialize_lane(
 
     finally:
         conn.close()
+
+
+def seed_book_lane(lane_id: str, db_path=None, prices: dict | None = None) -> dict:
+    """Seed a P1 #6 book lane (mirror/conviction) at TODAY's market value.
+
+    Inception = today, at CURRENT prices, current-market-value weights from the
+    confirmed share-count book, normalized to the $100k notional. NO historical
+    buy prices, NO reconstructed past inception (look-ahead). Idempotent: if the
+    lane already has a paper_portfolios row it is left untouched (re-running never
+    double-seeds).
+
+    Fail-loud garbage gate: unlike initialize_lane (which books an unpriceable ETF
+    at a $100 placeholder for offline init), a REAL book must be fully priced —
+    compute_book_mv_weights raises BEFORE any write if a name is unpriceable, so a
+    junk inception is never persisted. Stamped with get_book_config_hash() (the
+    book-lane file hash — independent of the reference lanes' versioning).
+
+    Returns {lane_id, seeded, notional, weights, n_positions} (seeded=False if it
+    already existed).
+    """
+    from backend.config import book_lanes as _book_lanes
+    from backend.db import get_book_config_hash, init_db
+    from backend.services.portfolio_intelligence.rules import compute_book_mv_weights
+
+    lane_cfg = _book_lanes.get(lane_id)
+    if not lane_cfg or "purpose" not in lane_cfg:
+        raise ValueError(f"Unknown book lane: {lane_id}")
+
+    holdings = _book_lanes.get("holdings") or {}
+    notional = float((_book_lanes.get("inception") or {}).get("notional_usd", 100_000.0))
+
+    init_db(db_path)
+    conn = get_connection(db_path)
+    try:
+        if conn.execute(
+            "SELECT id FROM paper_portfolios WHERE id = ?", (lane_id,)
+        ).fetchone():
+            logger.info("Book lane %s already seeded — skipping (idempotent)", lane_id)
+            return {"lane_id": lane_id, "seeded": False, "reason": "already_exists"}
+
+        tickers = list(holdings.keys())
+        if prices is None:
+            prices = _get_current_prices(tickers)
+        # Fail loud on any unpriceable name — raises before any DB write.
+        weights = compute_book_mv_weights(holdings, prices)
+
+        today = date.today().isoformat()
+        config_hash = get_book_config_hash()
+        timestamp = datetime.now().isoformat()
+
+        conn.execute(
+            "INSERT INTO paper_portfolios (id, inception_date, inception_value, "
+            "config_version) VALUES (?, ?, ?, ?)",
+            (lane_id, today, notional, config_hash),
+        )
+        for ticker, weight in weights.items():
+            px = float(prices[ticker])  # present + positive (guaranteed by the gate)
+            shares = (weight * notional) / px
+            conn.execute(
+                "INSERT INTO paper_positions (portfolio_id, ticker, shares, "
+                "cost_basis, opened_at) VALUES (?, ?, ?, ?, ?)",
+                (lane_id, ticker, shares, px, today),
+            )
+        conn.commit()
+
+        insert_rebalance_event(
+            conn, lane_id, timestamp, "initialization", {}, weights, None, None,
+            f"Book-lane inception of {lane_id} at ${notional:,.0f} notional, "
+            f"current-market-value weights ({len(weights)} names). Inception today; "
+            "prior personal performance is NOT part of this record.",
+            config_version=config_hash,
+        )
+        insert_audit_log(conn, timestamp, lane_id, "book_lane_seeded", {
+            "notional": notional, "n_positions": len(weights),
+            "config_hash": config_hash, "purpose": lane_cfg["purpose"],
+        })
+        logger.info("Seeded book lane %s: %d positions, $%s notional (purpose=%s)",
+                    lane_id, len(weights), f"{notional:,.0f}", lane_cfg["purpose"])
+        result = {"lane_id": lane_id, "seeded": True, "notional": notional,
+                  "weights": weights, "n_positions": len(weights)}
+    finally:
+        conn.close()
+
+    # Register the lane as a trial AFTER the seed connection is closed (avoids
+    # nested write connections). Every paper lane is a registered trial — it
+    # enters the cumulative count that deflates future DSR/PBO.
+    _register_lane_trial(lane_id, config_hash, db_path=db_path)
+    return result

@@ -56,6 +56,40 @@ the track-record page; `/api/pi/registry` shows 5 trials; a conviction decision 
 loggable from the terminal in <10s (already true); per-ticker MTM handles a bad
 ticker gracefully (tested). Then it deploys (Murat's merge to main) and accrues forward.
 
+## Implementation note (2026-06-14 — built, Option A; seed gated)
+
+**The landmine that changed step 1:** `apply_config_change_rebalances()` compares
+each lane's stored `config_version` to `get_config_hash()` — the hash of the
+**whole** `paper_portfolios.yaml`. Adding mirror/conviction *to that file* would
+change the whole-file hash → fire a spurious boundary rebalance on all 4 lanes →
+**corrupt TRIAL-001**. So "generalize REFERENCE_LANES in-place" is unsafe.
+
+**Option A (chosen):** book lanes live in a SEPARATE `backend/data/book_lanes.yaml`
+with their own `get_book_config_hash()`. `paper_portfolios.yaml` is byte-untouched
+(4 lanes' hash frozen). A parallel `rules.BOOK_LANES` is unioned in at the call
+sites (MTM, freshness, track-record, N_eff) — never merged into `REFERENCE_LANES`.
+
+**Built + tested (28 tests, all green), uncommitted:**
+- `book_lanes.yaml` (12-name book + mirror/conviction); `config.load_book_lanes`;
+  `db.get_book_config_hash`; `rules.BOOK_LANES` + `compute_book_mv_weights`.
+- `reference_engine.seed_book_lane` (live-price, **fail-loud** garbage gate — no
+  $100 placeholder, no junk inception; idempotent), `mark_all_book_lanes` (skips
+  unseeded; per-ticker cost-basis fallback already existed), `seed_all_book_lanes`.
+- TRIAL-002/003 registered at seed (cumulative 3→5); `effective_independent_trials`
+  unions book lanes → correlated pair N_eff≈1.0 verified; raw count stays the gate floor.
+- Surfaces unioned: `nav_freshness` (seeded-only guard — unseeded never drags
+  all_fresh false), `_hourly_mtm`, `/api/health/full` track_record.
+- **Seeding is gated:** a normal deploy does NOT seed. The env-gated startup hook
+  (`AEGIS_SEED_BOOK_LANES=1`, one boot, in-container) runs `seed_all_book_lanes`;
+  `scripts/seed_p1_6_lanes.py --dry-run` shows live weights locally.
+
+**The final go (attended):** deploy the code (no seed), then set
+`AEGIS_SEED_BOOK_LANES=1` on Railway for one boot → confirm `/api/health/full`
+(both lanes in nav block, all_fresh true) + `/api/pi/registry` (cumulative 5) →
+unset the flag. Deferred (own pass, before the first monthly trigger): active
+mirror-HRP rebalance over the book + conviction decision-application (both lanes
+currently HOLD at seed weights, which is correct for inception).
+
 ## Risk / discipline
 - Seeding writes `paper_nav` — do it once, idempotently (re-running must not double-seed),
   with the Step #2 migration pattern (`apply_config_change_rebalances`-style startup hook).

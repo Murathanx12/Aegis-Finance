@@ -22,7 +22,7 @@ Usage:
 import logging
 from datetime import date
 
-from backend.config import paper_portfolios
+from backend.config import book_lanes, paper_portfolios
 from backend.services.portfolio_intelligence.nav import CASH_TICKER
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,40 @@ REFERENCE_LANES: tuple[str, ...] = tuple(
     k for k, v in paper_portfolios.items()
     if isinstance(v, dict) and "target_equity_pct" in v
 )
+
+# Book lanes (P1 #6) — individual-stock share-count books, from book_lanes.yaml,
+# kept SEPARATE from REFERENCE_LANES so the 4 reference lanes' whole-file hash is
+# never perturbed (TRIAL-001 protection). Identified by a `purpose` tag.
+BOOK_LANES: tuple[str, ...] = tuple(
+    k for k, v in book_lanes.items()
+    if isinstance(v, dict) and "purpose" in v
+)
+
+
+def compute_book_mv_weights(
+    holdings: dict[str, float], prices: dict[str, float]
+) -> dict[str, float]:
+    """Current-market-value weights for a share-count book. Pure.
+
+    weight_i = (shares_i · price_i) / Σ(shares · price). Raises ValueError if any
+    held ticker has no positive price, or the total market value is non-positive
+    — a book lane must NEVER be seeded from a partially-priced (junk) book.
+    """
+    if not holdings:
+        raise ValueError("empty holdings book")
+    mv: dict[str, float] = {}
+    for ticker, shares in holdings.items():
+        px = prices.get(ticker)
+        if px is None or px <= 0 or shares is None or shares <= 0:
+            raise ValueError(
+                f"book lane: missing/invalid price or shares for {ticker} "
+                f"(price={px}, shares={shares}) — refusing to seed a junk book"
+            )
+        mv[ticker] = float(shares) * float(px)
+    total = sum(mv.values())
+    if not (total > 0) or total != total:  # non-positive or NaN
+        raise ValueError(f"book lane: non-positive/NaN total market value ({total})")
+    return {t: v / total for t, v in mv.items()}
 _BOND_ETFS = set(_universe.get("bond_etfs", []))
 _ALTERNATIVES = set(_universe.get("alternatives", []))
 _SECTOR_ETFS = set(_universe.get("sector_etfs", []))

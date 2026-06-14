@@ -144,6 +144,20 @@ async def lifespan(app: FastAPI):
             await asyncio.to_thread(ensure_crash_trial)
         except Exception as e:
             logger.warning("Fragility trial pre-registration failed (non-fatal): %s", e)
+        # P1 #6 book-lane seeding — ATTENDED, env-gated. A normal deploy does NOT
+        # seed (flag unset). Set AEGIS_SEED_BOOK_LANES=1 on Railway for ONE boot to
+        # seed mirror+conviction at live prices (idempotent), confirm via
+        # /api/health/full, then unset the flag.
+        import os
+        if os.environ.get("AEGIS_SEED_BOOK_LANES") == "1":
+            try:
+                from backend.services.portfolio_intelligence.reference_engine import (
+                    seed_all_book_lanes,
+                )
+                res = await asyncio.to_thread(seed_all_book_lanes)
+                logger.warning("BOOK-LANE SEEDING (AEGIS_SEED_BOOK_LANES=1): %s", res)
+            except Exception as e:
+                logger.error("Book-lane seeding failed: %s", e, exc_info=True)
     asyncio.create_task(_init_lanes())
 
     try:
@@ -301,8 +315,14 @@ async def health_full():
 
     track_record: dict = {"lanes": {}, "inception_date": None, "age_days": None}
     try:
-        from backend.services.portfolio_intelligence.rules import REFERENCE_LANES
-        placeholders = ",".join("?" for _ in REFERENCE_LANES)
+        from backend.services.portfolio_intelligence.rules import (
+            BOOK_LANES,
+            REFERENCE_LANES,
+        )
+        # Book lanes (P1 #6) appear once seeded: the FROM is paper_portfolios, so
+        # an unseeded book lane has no row and is simply absent — no special-case.
+        lane_ids = (*REFERENCE_LANES, *BOOK_LANES)
+        placeholders = ",".join("?" for _ in lane_ids)
         conn = get_connection()
         try:
             rows = conn.execute(
@@ -313,7 +333,7 @@ async def health_full():
                 "AND n.date = (SELECT MAX(date) FROM paper_nav "
                 "              WHERE portfolio_id = p.id) "
                 f"WHERE p.id IN ({placeholders})",
-                REFERENCE_LANES,
+                lane_ids,
             ).fetchall()
         finally:
             conn.close()

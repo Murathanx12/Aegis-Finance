@@ -345,6 +345,14 @@ def get_config_hash() -> str:
     return _compute_config_hash(BACKEND_DIR / "data" / "paper_portfolios.yaml")
 
 
+def get_book_config_hash() -> str:
+    """Hash of book_lanes.yaml (P1 #6 mirror/conviction lanes).
+
+    Independent of get_config_hash() so the reference lanes' versioning is never
+    perturbed by book-lane config edits (and vice versa)."""
+    return _compute_config_hash(BACKEND_DIR / "data" / "book_lanes.yaml")
+
+
 # ── Point-in-time (as-of) data store — v7 (docs/V3_DATA_LAYER_DESIGN.md) ──────
 
 

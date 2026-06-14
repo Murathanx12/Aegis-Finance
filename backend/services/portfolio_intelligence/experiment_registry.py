@@ -78,13 +78,20 @@ def effective_independent_trials(db_path=None, min_obs: int = 30) -> dict:
     _NOTE = ("reported only — the adoption gate deflates against the raw "
              "cumulative trial count (a strictness floor)")
     from backend.db import get_nav_series
-    from backend.services.portfolio_intelligence.rules import REFERENCE_LANES
+    from backend.services.portfolio_intelligence.rules import (
+        BOOK_LANES,
+        REFERENCE_LANES,
+    )
 
     init_db(db_path)
     conn = get_connection(db_path)
     try:
         series = {}
-        for lane_id in REFERENCE_LANES:
+        # Reference lanes + book lanes (P1 #6). Book lanes (mirror/conviction)
+        # share the same holdings → highly correlated → N_eff treats them as ~1
+        # independent stream, which is exactly why N_eff is reported and the raw
+        # cumulative count stays the gate floor.
+        for lane_id in (*REFERENCE_LANES, *BOOK_LANES):
             rows = get_nav_series(conn, lane_id)
             if rows:
                 series[lane_id] = {r["date"]: r["nav"] for r in rows}

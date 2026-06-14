@@ -124,8 +124,10 @@ def nav_freshness() -> dict:
     This is the check liveness can't do: last_mtm proves the job RAN, this
     proves rows LANDED. A lane is fresh iff MAX(date) >= expected trading day.
     """
-    from backend.services.portfolio_intelligence.rules import REFERENCE_LANES
-    lane_ids = REFERENCE_LANES
+    from backend.services.portfolio_intelligence.rules import (
+        BOOK_LANES,
+        REFERENCE_LANES,
+    )
     try:
         from backend.db import get_connection
 
@@ -136,8 +138,15 @@ def nav_freshness() -> dict:
                 "SELECT portfolio_id, MAX(date) AS last_date "
                 "FROM paper_nav GROUP BY portfolio_id"
             ).fetchall()
+            # Book lanes (P1 #6) count toward freshness ONLY once seeded — an
+            # unseeded book lane has no paper_portfolios row and must not drag
+            # all_fresh false before the attended seed runs.
+            seeded = {r[0] for r in conn.execute(
+                "SELECT id FROM paper_portfolios"
+            ).fetchall()}
         finally:
             conn.close()
+        lane_ids = (*REFERENCE_LANES, *[l for l in BOOK_LANES if l in seeded])
         last_dates = {r["portfolio_id"]: r["last_date"] for r in rows}
         lanes = {
             lane_id: {
@@ -330,13 +339,19 @@ async def _hourly_mtm():
         pass  # If cache check fails, proceed with MTM
 
     import asyncio
-    from backend.services.portfolio_intelligence.reference_engine import mark_all_lanes
+    from backend.services.portfolio_intelligence.reference_engine import (
+        mark_all_book_lanes,
+        mark_all_lanes,
+    )
 
     logger.info("Running hourly MTM at %s", now.isoformat())
     try:
         # Hourly job MARKS TO MARKET (persists daily NAV) — it does not rebalance.
-        # Rebalance decisions happen in the daily check.
+        # Rebalance decisions happen in the daily check. Book lanes (P1 #6) mark
+        # alongside the reference lanes; unseeded book lanes are skipped.
         results = await asyncio.to_thread(mark_all_lanes)
+        book_results = await asyncio.to_thread(mark_all_book_lanes)
+        results.update(book_results)
         if any(v is not None for v in results.values()):
             _last_mtm_timestamp = now
         else:

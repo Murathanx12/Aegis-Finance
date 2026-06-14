@@ -1104,3 +1104,25 @@ def load_paper_portfolios() -> dict:
 
 
 paper_portfolios: dict = load_paper_portfolios()
+
+
+def load_book_lanes() -> dict:
+    """Load book-lane definitions (P1 #6 mirror/conviction) from a SEPARATE YAML.
+
+    Kept apart from paper_portfolios.yaml on purpose: that file's whole-file hash
+    versions the 4 reference lanes, so adding book lanes there would fire a
+    spurious config-change rebalance and corrupt TRIAL-001. See book_lanes.yaml.
+    Read-only at process start.
+    """
+    yaml_path = BACKEND_DIR / "data" / "book_lanes.yaml"
+    if not yaml_path.exists():
+        return {}
+    try:
+        import yaml
+        with open(yaml_path, "r") as f:
+            return yaml.safe_load(f) or {}
+    except ImportError:
+        raise ImportError("PyYAML required for book-lane config: pip install pyyaml")
+
+
+book_lanes: dict = load_book_lanes()
