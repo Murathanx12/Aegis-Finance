@@ -58,6 +58,16 @@ measured additions (a descriptive fragility flag, an honest recession flag, a ti
 overfitting guard) and a literature-grounded firewall. **None of it ships as "it works"
 until a forward out-of-sample number says so; no skill claims before 24 months.**
 
+### Fix-later backlog (small, non-blocking)
+- **`docs/replay_report_v1.md` generator staleness.** The replay harness regenerates this
+  file on test runs using the *current* config (now v2/HRP), but it is named and framed as
+  the **v1** (equal-weight) report — so a test run silently overwrites the v1 numbers
+  (Sharpe ~0.93–0.97) with v2/HRP numbers (Sharpe ~0.65–0.73) under the v1 title. The file
+  is now gitignored (2026-06-14) so it stops getting swept into commits, but the generator
+  should be fixed to either (a) write a version-stamped filename (`replay_report_<cfghash>.md`)
+  or (b) refuse to overwrite a different-config report. Low priority; not a track-record
+  correctness issue (the live forward NAV is unaffected).
+
 ---
 
 ## 0. The single most important call: freeze the engine set
