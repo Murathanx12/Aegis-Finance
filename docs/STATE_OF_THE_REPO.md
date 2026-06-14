@@ -1,73 +1,58 @@
-# State of the Repo — Verified Inventory (2026-06-06)
+# State of the Repo — Verified Inventory (2026-06-15)
 
-Snapshot taken at re-entry after a ~1-month pause, from a full code-level audit
-(not docs). Purpose: stop future sessions from re-discovering what already exists
-and from rebuilding things that are already done.
+Snapshot from live verified state (Optimus `aegis_verified_state` + registry) and
+the working tree. Purpose: stop a fresh session from re-discovering what exists or
+rebuilding what's done. **Supersedes the 2026-06-06 version, whose "gaps" are all
+now shipped.**
 
-## Branch state (reconciled 2026-06-06)
+## Deploy + track record (live)
+- **Deploy:** `main` auto-deploys to Railway. Live commit `1c91fa0` (v0.2.0).
+- **Forward track record:** live `paper_nav` since **2026-06-08** — 4 reference
+  lanes (conservative / balanced(HRP) / aggressive / balanced-ew-control), marked
+  daily, `nav.all_fresh` true. **~5 trading days old — no skill claims before
+  24 months (canon).** This is the only real performance record; replay/compare
+  are methodology backtests, not the track record (`TRACK_RECORD_POLICY.md`).
+- **Registry:** 3 trials (TRIAL-001 HRP-vs-EW, TRIAL-LPPLS, TRIAL-CRASH), 0 rejected.
 
-- **Canonical branch: `main`.** As of this date `main == lab/autonomous-rd == origin/main == origin/lab/autonomous-rd` (all at `4792d90`).
-- `main` was a strict *ancestor* of `lab/autonomous-rd` (not a diverged fork). All the v12 / v13 / Portfolio-Intelligence work was on `lab`; `main` was fast-forwarded to it and pushed. Nothing was lost.
-- **Deploy target: `main`.** The autonomous R&D loop (`lab/rd_loop.py`) auto-commits to `lab/autonomous-rd`; reset that branch to `main` before overnight runs so they share a base.
+## What is REAL and built — do NOT rebuild
+- **Overfitting guards (was the #1 gap — now DONE):** PSR/DSR, PBO via CSCV,
+  Harvey-Liu t≥3.0, **effective-N** (participation ratio, reported-not-gating) —
+  wired into the adoption gate; candidate that passes → human review, not
+  auto-adopt. `engine/validation/overfitting.py`, registry `evaluate_candidate`.
+- **Portfolio Intelligence — DEPLOYED + forward.** Reference lanes, walk-forward
+  replay (look-ahead-safe), comparator vs SPY/AGG/60-40, real-portfolio FF5
+  analyzer, decision journal, guarded evolution loop. `services/portfolio_intelligence/`.
+- **Optimus MCP — BUILT + in use** (`C:\Users\mrthn\optimus`): `aegis_verified_state`,
+  `aegis_canon`, `aegis_registry`, `aegis_postmortems`, `brain_query`. `/go` Phase 0
+  loads from it. **Caveat: the brain corpus is STALE — frozen at git `9c2a0e5`,
+  18 pages; recent postmortems not ingested (Plan 4 re-ingest pending).**
+- **Fragility composite (descriptive):** LPPLS + SOS + Sahm + turbulence +
+  absorption + net-liquidity + HY/IG OAS, equal-weight, lead/lag-labelled, never
+  arms a lane. TRIAL-CRASH pre-registered. `fragility.py`.
+- **Crash-Brier honesty:** `brier_with_ci` block-bootstrap CI + event count.
+- **PIT data layer (V3 foundation):** `pit_observations` (schema v7), leak-free
+  reads; EDGAR 13F collector (built, **not scheduled**); `data/book_lanes.yaml`.
+- **Book lanes (P1 #6):** mirror + conviction built; seeding **env-gated**
+  (`AEGIS_SEED_BOOK_LANES=1`); active management (`book_management.py`) built but
+  **dormant** (not scheduler-wired). See `P1-6-LANE-FRAMEWORK-PLAN.md`.
+- Plus the long tail (fundamentals/EDGAR, factor grades+model, insider, earnings,
+  valuation, screener, provider registry, options/IV, technicals, etc. — see
+  `CAPABILITY_MATRIX.md` for validated-vs-descriptive).
 
-## What is REAL and built (verified)
+## Real OPEN items (the actual work)
+1. **🔴 crash_model.pkl is BROKEN** — feature mismatch (pipeline now builds 67
+   features, model trained on 30) → `predict` raises; this is why the overlay is
+   `model_not_deployed` and the replay falls back to a crash-prob stub. Needs
+   **retrain + metadata sidecar** (BACKLOG M3). Confirmed live 2026-06-15.
+2. **Book-lane seeding** not run (Murat flips the env flag) + **Plan-3 activation**
+   (wire `run_all_book_management` into the daily check — the final go).
+3. **Optimus brain re-ingest** (Plan 4a) — corpus stale at `9c2a0e5`.
+4. **Factor grades** not Alphalens-validated (`FACTOR_VALIDATION.md` partial).
+5. **Per-stock news-as-measured-flag** (Goal 5) — not built.
+6. **except-Exception swallower audit** (~70 sites, BACKLOG H5); dep lockfile (H2);
+   13F-collector scheduling; secondary-market + non-EDGAR PIT collectors.
 
-Aegis is a production-grade quant platform, **not** a prototype. The following are
-real, tested, and router-wired — do **not** rebuild them:
-
-| Capability | File | Notes |
-|---|---|---|
-| Fundamentals | `services/fundamentals.py` | SEC EDGAR 10-K XBRL + Piotroski F-Score + ratios → `/api/stock/{t}/fundamentals` |
-| A–F factor grades | `services/factor_grades.py` | Value/Growth/Profitability/Momentum/Revisions, sector-relative (Seeking-Alpha-Quant style) |
-| Insider signal | `services/insider_trading.py` | Finnhub Form 4, 3+ insider cluster-buy, routine-vs-opportunistic filter |
-| Fama-French | `services/factor_model.py` | FF5 + momentum, OLS t-stats, style labels |
-| Earnings intel | `services/earnings_intelligence.py` | Beat rate, surprise trend, next-earnings countdown |
-| Valuation | `services/valuation.py` | CAPE, ERP, Buffett indicator, composite 1–100 |
-| Style box / peers | `services/style_box.py`, `relative_valuation.py` | Morningstar 3×3, peer percentiles |
-| Screener | `routers/stock.py` | Ranks ~80 stocks on 40+ inputs (incl. fundamentals/insider/technicals/factor style), not just MC return |
-| Provider registry | `services/providers/registry.py` | 6 providers (yfinance, Finnhub, FMP, Polygon, Alpha Vantage, FRED) with fallback chains |
-| Portfolio Intelligence | `services/portfolio_intelligence/`, `routers/portfolio_intelligence.py` | 3 reference lanes ($100K each), walk-forward replay w/ look-ahead protection, comparator vs SPY/AGG/60-40, real-portfolio FF5 analyzer, SQLite, decision journal |
-
-Validation that exists (`engine/validation/`): walk-forward expanding window,
-5-fold purged CV with embargo (21/63/126d), conformal prediction, bootstrap CI,
-Brier/BSS/AUC, lead-time & false-alarm metrics.
-
-Tests: ~2,232 test functions across 113 files.
-
-## Verified GAPS (the real work)
-
-1. **Overfitting guards — ABSENT.** No PBO (Probability of Backtest Overfitting),
-   no Deflated/Probabilistic Sharpe, no CPCV, no Harvey/Liu t-stat 3.0 hurdle.
-   The autonomous R&D loop's quality gate checks only *code health*
-   (tests/smells/imports/build, ratchet 0.55/0.70) — it has **no model-overfitting
-   guard**, so it can surface overfit configs silently. Top priority given the
-   "honest measurement" thesis. → Chunk 1.
-2. **Factor grades not yet validated for predictive skill** (no Alphalens pass). → Chunk 2.
-3. **PI not deployed** — reference lanes aren't running forward yet (no live track record). → Chunk 3.
-4. **No per-stock LLM news layer** — DeepSeek is wired (`llm_analyzer.py`) and GDELT
-   news exists, but the per-stock news→movement *flag* layer (measured against an
-   OOS Brier baseline) is not built. → Chunk 4.
-
-## On the old "Competitive Position & Build Plan" research brief
-
-It is **outdated**. ~80% of its build plan (fundamentals, A–F grade, insider
-detection, factor model, fundamentals-aware screener, provider integration) is
-**already done**. Use it only for competitive *framing* (vs Seeking Alpha /
-Simply Wall St / TipRanks; "transparency is the wedge"). Its one accurate gap was
-the overfitting guards (its Phase 6).
-
-## Optimus (separate repo, `C:\Users\mrthn\optimus`)
-
-~40% complete. ingest/query/deprecate/audit are real + tested; already ingested
-Aegis as a corpus. **MCP server not built** (empty `/mcp/`), so it cannot yet feed
-context to Claude Code. Keep Aegis and Optimus **separate products** (Railway vs
-laptop, public vs personal); Optimus reads Aegis, never fuses with it.
-
-## Roadmap (chunked)
-
-0. ✅ Reconcile + push + this doc.
-1. Overfitting guards (PBO/DSR/CPCV) wired into the R&D acceptance gate.
-2. Alphalens-validate existing `factor_grades`.
-3. Deploy PI to Railway; start forward track record; survivorship-bias diagnostic.
-4. DeepSeek per-stock news as a surprise *flag* (gate: improves OOS Brier?).
-5. Optimus MCP server.
+## Anti-goals (unchanged)
+No real-money execution · no RL on P&L · no backtest "experience" feeding the
+accounts · no skill claims before 24 months · no Bloomberg-parity push · OpenBB
+(AGPL) never enters this MIT repo.

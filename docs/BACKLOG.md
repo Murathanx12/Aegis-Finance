@@ -66,9 +66,19 @@
 - **Research update 2026-06-14:** CPCV with purge/embargo is the best-documented overfitting defense (lower PBO, higher DSR than Walk-Forward — Arian/Norouzi/Seco 2024). Block-bootstrap CI ships first; CPCV is the stronger second pass. Caveat: off-by-one purging silently leaks — implement carefully; Walk-Forward stays better for *live-sim* realism.
 - **🔵 Shipped 2026-06-14:** `brier_with_ci` (`engine/validation/metrics.py`) — block bootstrap (not i.i.d., because overlapping-horizon crash labels autocorrelate) + positive-event count + `low_event_warning` (<10 events); wired into `walk_forward.run_backtest` and its logs/summary; METHODOLOGY + NEGATIVE_RESULTS updated; 12 tests. **Remaining:** (a) re-run the walk-forward to regenerate the README headline 0.046 *with* its CI (slow), (b) optional CPCV second pass.
 
-### M3 ⏸ Crash-model reproducibility sidecar (low urgency)
-- **Real?** Yes — no sidecar; trained 1.4.0 / served 1.8.0.
-- **Why parked:** the model is `model_not_deployed` in prod (overlay deliberately dark per TRIAL-001 annotation). It corrupts nothing while dark.
+### M3 🔴 Crash-model is BROKEN + reproducibility sidecar (escalated 2026-06-15)
+- **Confirmed broken live (2026-06-15):** feature mismatch — the pipeline now
+  builds **67 features, the model was trained on 30** → `predict` raises
+  `LightGBM Fatal: number of features (67) != (30)`. Surfaced loudly during the
+  2020→date replay (every check date). This is *why* the overlay is
+  `model_not_deployed` and the replay falls back to a crash-prob stub.
+- **Fix:** retrain `crash_model.pkl` on the current feature set + pinned sklearn,
+  ship a metadata sidecar (train date, sklearn version, **feature count + hash**,
+  sha256), assert it at load (fail loud on mismatch). The feature-hash check would
+  have caught this. Precondition for *ever* arming an overlay.
+- **Was parked as "low urgency"** (model dark so it corrupts nothing) — still true
+  it corrupts no track record, but it's now a confirmed broken capability, not a
+  latent risk. Bump when the crash/fragility work resumes.
 - **Chosen approach (when armed):** write a `crash_model.meta.json` sidecar (train date, sklearn version, feature hash, file sha256) next to the `.pkl`; assert it at load; fail **loud** on mismatch; retrain on the pinned sklearn. This is a precondition of *ever* arming an overlay (must be on new pre-registered lanes with a provenanced binary — per TRIAL-001).
 - **Alternatives:** (a) do it now — fine but no payoff while dark. (b) ONNX/skops instead of pickle — heavier; revisit if cross-version drift recurs.
 
