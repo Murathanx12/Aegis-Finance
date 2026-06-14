@@ -283,6 +283,40 @@ async def get_experiment_registry(limit: int = Query(default=100, le=500)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/fragility")
+async def get_fragility():
+    """Descriptive LPPLS bubble-structure flag + its forward-Brier measurement.
+
+    READ-ONLY and DESCRIPTIVE. The LPPLS predictive skill for crash timing was
+    adversarially refuted twice (see DEEP_RESEARCH_2026-06-14_DECISION.md §1.1);
+    this surface ships the flag as a *bubble-structure* reading only — it never
+    arms a lane, never sizes a position, and emits no buy/sell language. Its
+    skill is measured FORWARD against climatology (TRIAL-LPPLS); until enough
+    matured observations exist the Brier reports `insufficient_forward_data`.
+    """
+    def _read():
+        from backend.services.portfolio_intelligence.fragility import (
+            LPPLS_DECISION_RULE, forward_brier_status,
+        )
+        from backend.services.portfolio_intelligence.scheduler import lppls_status
+        return {
+            "latest_reading": lppls_status(),
+            "forward_brier": forward_brier_status(),
+            "trial": LPPLS_DECISION_RULE,
+            "disclaimer": (
+                "Descriptive bubble-structure flag, NOT a crash forecast. LPPLS "
+                "predictive skill was refuted; this never arms a lane and makes "
+                "no skill claim until a pre-registered forward Brier beats climatology."
+            ),
+        }
+
+    try:
+        return await asyncio.to_thread(_read)
+    except Exception as e:
+        logger.error("Fragility read failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/track-record", response_model=TrackRecordResponse)
 async def get_track_record():
     """The canonical live forward track record (see TRACK_RECORD_POLICY.md).

@@ -135,6 +135,11 @@ async def lifespan(app: FastAPI):
             logger.info("Config-change migration: %s", results)
         except Exception as e:
             logger.warning("Lane init/config migration failed (non-fatal): %s", e)
+        try:
+            from backend.services.portfolio_intelligence.fragility import ensure_lppls_trial
+            await asyncio.to_thread(ensure_lppls_trial)
+        except Exception as e:
+            logger.warning("TRIAL-LPPLS pre-registration failed (non-fatal): %s", e)
     asyncio.create_task(_init_lanes())
 
     try:
@@ -281,12 +286,14 @@ async def health_full():
     from backend.db import get_connection
     from backend.observability import recent_warnings, source_health
     from backend.services.portfolio_intelligence.scheduler import (
+        lppls_status,
         overlay_status,
         scheduler_health,
     )
 
     sched = scheduler_health()
     overlay = overlay_status()
+    lppls = lppls_status()
 
     track_record: dict = {"lanes": {}, "inception_date": None, "age_days": None}
     try:
@@ -343,6 +350,7 @@ async def health_full():
         "scheduler": sched,
         "track_record": track_record,
         "overlay": overlay,
+        "lppls": lppls,
         "data_sources": source_health(),
         "recent_warnings": recent_warnings(),
     }

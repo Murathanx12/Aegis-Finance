@@ -214,6 +214,54 @@ def overlay_status() -> dict:
         return {"error": str(e), "all_operational": False, "lanes": {}}
 
 
+def lppls_status() -> dict:
+    """LPPLS descriptive-fragility flag status (canary for a dark/stale flag).
+
+    Reads the latest market-level `lppls_eval` audit row. `operational` means
+    the flag actually evaluated last cycle (status == 'evaluated'); a missing
+    model, data outage, or never-evaluated state is NOT operational. Mirrors
+    overlay_status() so a dark fragility flag can't run unseen for days. This is
+    DESCRIPTIVE only — it never arms a lane (see services/.../fragility.py).
+    """
+    import json
+
+    from backend.services.portfolio_intelligence.fragility import LPPLS_LABEL, MARKET_ID
+
+    try:
+        from backend.db import get_connection
+
+        conn = get_connection()
+        try:
+            row = conn.execute(
+                "SELECT timestamp, payload FROM audit_log "
+                "WHERE portfolio_id = ? AND event_type = 'lppls_eval' "
+                "ORDER BY id DESC LIMIT 1",
+                (MARKET_ID,),
+            ).fetchone()
+        finally:
+            conn.close()
+        if row is None:
+            return {"status": "never_evaluated", "operational": False,
+                    "armed": False, "label": LPPLS_LABEL}
+        try:
+            p = json.loads(row["payload"])
+        except Exception:
+            p = {}
+        status = p.get("status", "unknown")
+        return {
+            "status": status,
+            "operational": status == "evaluated",
+            "armed": False,  # HARD invariant: this flag never arms a lane
+            "confidence": p.get("confidence"),
+            "is_bubble": p.get("is_bubble"),
+            "tc_date": p.get("tc_date"),
+            "last_evaluated": row["timestamp"],
+            "label": LPPLS_LABEL,
+        }
+    except Exception as e:
+        return {"error": str(e), "operational": False, "armed": False}
+
+
 def scheduler_health() -> dict:
     """Health snapshot for the /health/scheduler canary.
 
@@ -318,6 +366,16 @@ async def _daily_check():
                 logger.info("Lane %s: no rebalance needed", lane_id)
     except Exception as e:
         logger.error("Daily PI check failed: %s", e, exc_info=True)
+
+    # Descriptive LPPLS fragility flag (T1) — market-level, persisted each cycle
+    # for the forward-Brier measurement. Descriptive only; never arms a lane.
+    try:
+        from backend.services.portfolio_intelligence.fragility import run_lppls_eval
+        reading = await asyncio.to_thread(run_lppls_eval)
+        logger.info("LPPLS fragility: status=%s confidence=%s (descriptive)",
+                    reading.get("status"), reading.get("confidence"))
+    except Exception as e:
+        logger.error("LPPLS fragility eval failed: %s", e, exc_info=True)
 
 
 async def _weekly_aggressive_check():
