@@ -62,16 +62,24 @@ def _backtest_candidate(
     start_date: str,
     end_date: Optional[str],
     engine: Optional[ReplayEngine] = None,
+    crash_prob_override: Optional[float] = 0.0,
 ) -> pd.Series:
     """Leakage-safe backtest of one candidate config → per-period return series.
 
     Returns the check-date NAV path's returns (the same NAV the live path marks).
     Reuses an injected engine so a grid shares one data fetch. Isolated here so
     tests can monkeypatch it deterministically (no network).
+
+    `crash_prob_override=0.0` by default: the crash overlay is `model_not_deployed`
+    in prod (dark), so backtesting with it OFF matches live reality AND skips the
+    expensive per-check-date feature build — making a grid tractable. Phase-A
+    params (drift/sleeve/optimizer) don't touch the overlay; evolving the overlay
+    threshold itself (Phase B) would pass crash_prob_override=None.
     """
     eng = engine or ReplayEngine()
     res = eng.run(lane_id, start_date=start_date, end_date=end_date,
-                  lane_config_override=override)
+                  lane_config_override=override,
+                  crash_prob_override=crash_prob_override)
     pts = res.equity_curve or []
     if len(pts) < 3:
         return pd.Series(dtype=float)
@@ -165,6 +173,19 @@ def evolve_param(
                   "n_obs": g["n_obs"]} for g in grid_results],
         "window": {"start": start_date, "end": end_date},
     }
+
+    # Degenerate / null candidate: the grid produced no spread (param doesn't
+    # bind for this lane — e.g. rebalance_trigger_drift on a monthly-cadence lane)
+    # or the "winner" is the status quo. Not a discovery; never surface it as a
+    # proposal even though a zero-variance batch trivially clears the deflation
+    # bar (the False Strategy Theorem has nothing to deflate). Honest null.
+    if sr_variance == 0.0 or best["value"] == old_value:
+        summary["action"] = "no_effect"
+        summary["note"] = ("null candidate — grid produced no Sharpe spread "
+                           f"(sr_variance={sr_variance:g}) or best==current "
+                           f"({best['value']}=={old_value}); the param does not "
+                           "bind here. Not a proposal.")
+        return summary
 
     if ev["survives"]:
         # HARD STOP — never auto-adopt. Surface for a human; do not record adopted.
