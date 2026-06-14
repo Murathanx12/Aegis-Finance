@@ -177,6 +177,12 @@ def _hrp_equity_weights(
     min_nonzero_frac = float(opt_cfg.get("min_nonzero_fraction", 0.5))
 
     available = [t for t in eq_tickers if t in getattr(price_data, "columns", [])]
+    # Visibility (P1 #6): record which names are dropped and why — no as-of price,
+    # or thin as-of history — so the rebalance audit shows when HRP is actually
+    # biting vs quietly excluding names (and never a silent equal-weight). Purely
+    # additive (meta only); the returned weights are unchanged.
+    dropped = {t: "no as-of price" for t in eq_tickers if t not in available}
+    meta["optimizer_dropped"] = dropped
     if len(available) < 2:
         meta["optimizer_fallback"] = f"only {len(available)} equity tickers have prices"
         return None
@@ -184,6 +190,9 @@ def _hrp_equity_weights(
     panel = price_data[available].dropna(how="all")
     returns = panel.pct_change().dropna(how="all").iloc[-lookback:]
     returns = returns.dropna(axis=1, thresh=min_obs).dropna()
+    for t in available:
+        if t not in returns.columns:
+            dropped[t] = f"thin as-of history (<{min_obs} obs)"
     if len(returns) < min_obs or returns.shape[1] < 2:
         meta["optimizer_fallback"] = (
             f"insufficient as-of history ({len(returns)} obs, "
