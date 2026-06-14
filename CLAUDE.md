@@ -151,10 +151,13 @@ uvicorn backend.main:app --reload --port 8000
 # Frontend (separate terminal)
 cd frontend && npm install && npm run dev
 
-# Run fast backend tests (~4 min, 1110 tests)
+# Run fast backend tests (~14 min, ~2460 tests; OFFLINE + un-hangable)
+# The fast suite is network-BLOCKED (backend/tests/conftest.py) and has a hard
+# per-test timeout (pytest.ini) — a non-slow test can never hit the live network
+# or hang the suite. Any network call in a unit test is a bug → mark it `slow` or mock it.
 python -m pytest backend/tests/ -v -m "not slow"
 
-# Run ALL backend tests (~8 min, needs network)
+# Run ALL backend tests (~25 min, slow tests need network)
 python -m pytest backend/tests/ -v
 
 # Run autonomous R&D lab (overnight, opus model)

@@ -59,3 +59,7 @@ pyyaml>=6.0
 hypothesis>=6.0
 apscheduler>=3.10.0
 sqlalchemy>=2.0      # required by APScheduler's SQLAlchemyJobStore (persistent jobs)
+
+# Test infra (hard per-test timeout backstop — a non-slow test can never hang the
+# suite again; the fast suite is also network-blocked offline, see backend/tests/conftest.py)
+pytest-timeout>=2.1.0
