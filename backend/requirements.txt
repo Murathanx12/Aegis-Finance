@@ -12,7 +12,11 @@ pandas-datareader>=0.10.0
 lxml>=5.0.0
 
 # ML
-lightgbm>=4.0.0
+# Security floor: CVE-2024-43598 (heap overflow in distributed-training socket
+# init) was fixed in 4.6.0. Aegis trains single-node so the vuln surface is not
+# exercised, but the floor is free — keep it. Run `pip-audit` in CI (see
+# .github/workflows/ci.yml) to catch the rest of this class going forward.
+lightgbm>=4.6.0
 scikit-learn>=1.4.0
 shap>=0.43.0
 joblib>=1.3.0

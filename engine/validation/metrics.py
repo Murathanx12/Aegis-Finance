@@ -127,6 +127,77 @@ def brier_skill_score(
     return float(1.0 - bs_model / bs_baseline)
 
 
+def _block_indices(rng: np.random.Generator, n: int, block_size: int) -> np.ndarray:
+    """Circular block-bootstrap index array of length n. Resampling contiguous
+    blocks (not single points) preserves local autocorrelation — the right choice
+    for crash labels over overlapping horizons, where i.i.d. resampling would
+    understate the confidence interval."""
+    n_blocks = int(np.ceil(n / block_size))
+    starts = rng.integers(0, n, size=n_blocks)
+    idx = np.concatenate([(np.arange(s, s + block_size) % n) for s in starts])
+    return idx[:n]
+
+
+def brier_with_ci(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    *,
+    n_boot: int = 2000,
+    block_size: Optional[int] = None,
+    ci: float = 0.95,
+    seed: int = 42,
+) -> dict:
+    """Brier score with a block-bootstrap confidence interval and the positive-
+    event count — the honest way to report a Brier on a rare-event sample.
+
+    Why block, not i.i.d.: crash labels over overlapping 3/6/12-month horizons are
+    autocorrelated; i.i.d. resampling treats them as independent and reports a CI
+    that is too narrow. ``block_size=None`` auto-selects ``max(1, round(n**(1/3)))``.
+
+    Why ``low_event_warning``: the headline 3-month Brier is computed on ~7 crash
+    events. A point estimate with no error bar on so few events overstates
+    certainty — this flags when fewer than 10 positives back the number.
+
+    Returns {point/brier, lower, upper, ci, n_samples, n_positive, n_bootstrap,
+    block_size, low_event_warning} (``lower``/``upper`` match the existing
+    walk-forward consumers).
+    """
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+    mask = ~(np.isnan(y_true) | np.isnan(y_pred))
+    y_true, y_pred = y_true[mask], y_pred[mask]
+    n = len(y_true)
+    if n < 5:
+        return {"error": "Too few samples", "n_samples": n,
+                "n_positive": int(y_true.sum()) if n else 0}
+
+    if block_size is None:
+        block_size = max(1, int(round(n ** (1.0 / 3.0))))
+
+    point = float(brier_score_loss(y_true, y_pred))
+    rng = np.random.default_rng(seed)
+    boots = []
+    for _ in range(n_boot):
+        idx = (_block_indices(rng, n, block_size) if block_size > 1
+               else rng.integers(0, n, size=n))
+        boots.append(float(np.mean((y_pred[idx] - y_true[idx]) ** 2)))
+
+    alpha = (1 - ci) / 2
+    n_pos = int(y_true.sum())
+    return {
+        "point": point,
+        "brier": point,
+        "lower": float(np.percentile(boots, alpha * 100)),
+        "upper": float(np.percentile(boots, (1 - alpha) * 100)),
+        "ci": ci,
+        "n_samples": n,
+        "n_positive": n_pos,
+        "n_bootstrap": len(boots),
+        "block_size": block_size,
+        "low_event_warning": n_pos < 10,
+    }
+
+
 def reliability_diagram(
     y_pred: np.ndarray,
     y_true: np.ndarray,

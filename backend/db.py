@@ -17,6 +17,7 @@ import json
 import logging
 import sqlite3
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 
 from backend.config import BACKEND_DIR, DATA_DIR
@@ -30,7 +31,7 @@ DB_PATH = DATA_DIR / "aegis_pi.db"
 
 _write_lock = threading.Lock()
 
-CURRENT_SCHEMA_VERSION = 6
+CURRENT_SCHEMA_VERSION = 7
 
 _SCHEMA_V1 = """
 CREATE TABLE IF NOT EXISTS _schema_version (
@@ -265,6 +266,32 @@ def _run_migrations(conn: sqlite3.Connection, from_version: int, to_version: int
                     "ALTER TABLE personal_decisions ADD COLUMN late_entry INTEGER DEFAULT 0"
                 )
 
+    if from_version < 7:
+        # v7: pit_observations — the point-in-time / as-of data store (V3 linchpin,
+        # see docs/V3_DATA_LAYER_DESIGN.md). Every external datum is recorded with
+        # BOTH the date it refers to (as_of) AND the date WE first saw it
+        # (observed_at). Reads filter observed_at <= decision_ts, so a revised
+        # series can never leak the future into a backtest or lane feedback. Never
+        # overwrite: a changed value is a new row (revision+1). Fully independent of
+        # paper_nav — nothing here touches the track-record write-path.
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS pit_observations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                key TEXT NOT NULL,              -- e.g. 'fred:CPIAUCSL', '13f:BRK:AAPL', 'ipo:count:weekly'
+                as_of TEXT NOT NULL,            -- ISO date the value refers to
+                observed_at TEXT NOT NULL,      -- ISO ts we recorded it (server clock; anti-leak)
+                value REAL,                     -- numeric payload (NULL if structured-only)
+                payload TEXT,                   -- optional JSON for non-scalar values
+                source TEXT NOT NULL,           -- 'fred' | 'edgar' | 'scrape:fearandgreed' | ...
+                revision INTEGER NOT NULL DEFAULT 0,
+                UNIQUE(key, as_of, observed_at)
+            );
+            CREATE INDEX IF NOT EXISTS idx_pit_key_asof
+                ON pit_observations (key, as_of);
+            CREATE INDEX IF NOT EXISTS idx_pit_key_observed
+                ON pit_observations (key, observed_at);
+        """)
+
 
 def init_db(db_path: Path | None = None) -> None:
     """Create tables and run forward-only migrations.
@@ -316,6 +343,124 @@ def get_connection(db_path: Path | None = None) -> sqlite3.Connection:
 def get_config_hash() -> str:
     """Hash of the current paper_portfolios.yaml."""
     return _compute_config_hash(BACKEND_DIR / "data" / "paper_portfolios.yaml")
+
+
+# ── Point-in-time (as-of) data store — v7 (docs/V3_DATA_LAYER_DESIGN.md) ──────
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _pit_row_to_dict(row) -> dict | None:
+    """Map a pit_observations row (positional, row_factory-agnostic) to a dict,
+    decoding the JSON payload. Returns None for a None row."""
+    if row is None:
+        return None
+    return {
+        "key": row[0],
+        "as_of": row[1],
+        "observed_at": row[2],
+        "value": row[3],
+        "payload": json.loads(row[4]) if row[4] else None,
+        "source": row[5],
+        "revision": row[6],
+    }
+
+
+def snapshot(
+    conn: sqlite3.Connection,
+    key: str,
+    as_of: str,
+    value: float | None = None,
+    *,
+    source: str,
+    payload: dict | None = None,
+    observed_at: str | None = None,
+) -> int | None:
+    """Record a point-in-time observation. Returns the new row id, or None if the
+    value+payload are unchanged from the latest known revision for (key, as_of).
+
+    - ``as_of``: the date the value refers to (e.g. a CPI print's reference month).
+    - ``observed_at``: when WE recorded it (defaults to UTC now). The anti-leak
+      field — leak-free reads filter ``observed_at <= decision_ts``.
+    - Never overwrites: a changed value inserts a new row with ``revision + 1``.
+      An unchanged value is a no-op (so collectors can run every tick cheaply).
+    """
+    observed = observed_at or _utc_now_iso()
+    payload_json = json.dumps(payload, sort_keys=True) if payload is not None else None
+    with _write_lock:
+        latest = conn.execute(
+            """SELECT value, payload, revision FROM pit_observations
+               WHERE key = ? AND as_of = ?
+               ORDER BY revision DESC, observed_at DESC LIMIT 1""",
+            (key, as_of),
+        ).fetchone()
+        if latest is not None:
+            prev_value, prev_payload, prev_rev = latest[0], latest[1], latest[2]
+            if prev_value == value and prev_payload == payload_json:
+                return None  # unchanged — don't store a duplicate
+            revision = prev_rev + 1
+        else:
+            revision = 0
+        cursor = conn.execute(
+            """INSERT INTO pit_observations
+               (key, as_of, observed_at, value, payload, source, revision)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (key, as_of, observed, value, payload_json, source, revision),
+        )
+        conn.commit()
+        return cursor.lastrowid
+
+
+def get_latest_observable(
+    conn: sqlite3.Connection, key: str, as_of_ts: str | None = None
+) -> dict | None:
+    """The single value we WOULD have known for ``key`` at ``as_of_ts`` (leak-free):
+    the greatest ``as_of`` among rows whose ``observed_at <= as_of_ts``
+    (tie-break latest observed_at). ``as_of_ts=None`` → the latest live value."""
+    cutoff = as_of_ts or _utc_now_iso()
+    row = conn.execute(
+        """SELECT key, as_of, observed_at, value, payload, source, revision
+           FROM pit_observations
+           WHERE key = ? AND observed_at <= ?
+           ORDER BY as_of DESC, observed_at DESC, revision DESC
+           LIMIT 1""",
+        (key, cutoff),
+    ).fetchone()
+    return _pit_row_to_dict(row)
+
+
+def get_series_observable(
+    conn: sqlite3.Connection, key: str, as_of_ts: str | None = None
+) -> list[dict]:
+    """The full series for ``key`` as it was knowable at ``as_of_ts``: one row per
+    ``as_of``, each the latest revision with ``observed_at <= as_of_ts``, ordered
+    by ``as_of`` ascending. The leak-free input for computing indicators."""
+    cutoff = as_of_ts or _utc_now_iso()
+    rows = conn.execute(
+        """SELECT key, as_of, observed_at, value, payload, source, revision
+           FROM pit_observations p
+           WHERE key = ? AND observed_at <= ?
+             AND observed_at = (
+                 SELECT MAX(observed_at) FROM pit_observations
+                 WHERE key = p.key AND as_of = p.as_of AND observed_at <= ?
+             )
+           ORDER BY as_of ASC""",
+        (key, cutoff, cutoff),
+    ).fetchall()
+    return [_pit_row_to_dict(r) for r in rows]
+
+
+def get_revisions(conn: sqlite3.Connection, key: str, as_of: str) -> list[dict]:
+    """All recorded revisions for a specific (key, as_of), oldest first (audit)."""
+    rows = conn.execute(
+        """SELECT key, as_of, observed_at, value, payload, source, revision
+           FROM pit_observations WHERE key = ? AND as_of = ?
+           ORDER BY revision ASC, observed_at ASC""",
+        (key, as_of),
+    ).fetchall()
+    return [_pit_row_to_dict(r) for r in rows]
 
 
 def insert_rebalance_event(
