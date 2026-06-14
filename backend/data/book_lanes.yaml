@@ -1,0 +1,64 @@
+# Aegis Finance — Book-Lane Configuration (P1 #6)
+# ================================================
+#
+# Individual-stock "book" lanes — Murat's real holdings, tracked as paper lanes.
+#
+# WHY A SEPARATE FILE (deliberate, load-bearing): paper_portfolios.yaml's
+# WHOLE-FILE hash versions the 4 reference lanes and is consumed by
+# apply_config_change_rebalances() — adding anything to that file changes the
+# hash and would fire a spurious boundary rebalance on all 4 lanes, corrupting
+# TRIAL-001's clean HRP-vs-equal-weight segment. Book lanes therefore live here
+# with their OWN independent hash (db.get_book_config_hash) and their own seeding
+# path; paper_portfolios.yaml stays byte-stable.
+#
+# SEEDING DISCIPLINE (non-negotiable): inception = seed day, at CURRENT market
+# prices, current-market-value weights, normalized to $100k. NO historical buy
+# prices, NO reconstructed past inception (look-ahead). Murat's prior personal
+# return NEVER enters the record. The comparison is statistically meaningless for
+# ~24 months (a ~12-name concentrated small/mid-cap book diverges wildly).
+
+# The confirmed book — share counts are GROUND TRUTH, used ONLY to derive
+# current-market-value weights at seed time. They are NOT the seeded share
+# counts (the lane is normalized to $100k, so seeded shares = $100k·weight/price).
+holdings:
+  SOC: 700
+  DKNG: 150
+  NTLA: 250
+  AARD: 1000
+  BHVN: 300
+  HUBS: 10
+  KYTX: 250
+  PRCH: 200
+  QUBT: 200
+  AMSC: 50
+  ABSI: 600
+  SLDP: 600
+
+inception:
+  notional_usd: 100000.0
+  benchmark: SPY
+
+# ── Mirror lane ───────────────────────────────────────────────────────────────
+# Aegis manages the book by its own config-v2 rules (HRP over the book's names,
+# balanced cadence) from the shared inception. Answers: did Aegis beat Murat on
+# Murat's own book?
+mirror:
+  purpose: portfolio-mirror
+  optimizer: hrp
+  rebalance_frequency: monthly
+  rebalance_trigger_drift: 0.05
+  max_single_name: 0.25        # concentrated book — looser than the sleeve lanes
+  max_sector: 0.60
+  transaction_cost_bps: 5
+  slippage_bps: 1
+
+# ── Conviction lane ───────────────────────────────────────────────────────────
+# Identical seed; positions change ONLY via logged personal_decisions (the
+# immutable decision log). No optimizer, no auto-rebalance — it reflects Murat's
+# real moves and measures whether conviction adds value vs the rules baselines.
+conviction:
+  purpose: conviction
+  optimizer: none
+  rebalance_frequency: never
+  transaction_cost_bps: 5
+  slippage_bps: 1
