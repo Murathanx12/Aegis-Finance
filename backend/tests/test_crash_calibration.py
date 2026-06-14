@@ -16,6 +16,14 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+# These are live-data INTEGRATION tests: they need a trained crash_model.pkl AND
+# live market/FRED data (served production path). They skip cleanly when the model
+# is absent, but on a machine WHERE the model exists they hit the network — so they
+# belong in the slow suite, not the offline fast gate. (Surfaced by the 2026-06-14
+# integrity audit: the fast-suite network block exposed this once the disk cache
+# went cold; CLAUDE.md had mislabeled the file "Fast".)
+pytestmark = pytest.mark.slow
+
 
 def _check_model_exists():
     """Check if crash model is trained."""
