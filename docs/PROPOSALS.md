@@ -77,3 +77,29 @@ have side effects, two are item-3's intent gaps).
 **Cost:** 1 cycle.
 **Risk:** Low; behavior-identical deletions only, tests prove.
 **Recommendation:** Approve as a low-priority filler cycle.
+
+---
+
+## P-grind-2026-06-14a — Evolution loop Chunk 2: batch orchestrator over *binding* Phase-A params
+**What:** Wrap `rule_evolution.evolve_param` in a batch runner over the survivorship-safe Phase-A param space, each proposal auto-deflated against the cumulative (effective-N) trial count, each recorded adopted/rejected — passing candidates STOP at PROPOSALS (never auto-adopt).
+**Why now:** Chunk 1 landed clean (the guard provably bites). Chunk 2 is the next plan step.
+**Evidence (this session):** The real-data run showed `rebalance_trigger_drift` does NOT bind for a *monthly-cadence* lane (all grid values → identical Sharpe 0.2703, sr_variance=0 → `no_effect`). **So Chunk 2 must pick params that actually bind:** `optimizer_params.lookback_days`/`min_observations`, sleeve %, or drift **only on a weekly-cadence lane**. Drift on monthly lanes is a dead param — skip it. Nested params (e.g. `optimizer_params.*`, `crash_overlay.*`) need a deep-merge in the override hook (currently top-level only).
+**Cost:** 1–2 cycles. Real-data grids are ~10 min each (25-yr fetch + HRP); fine overnight, slow interactively — restrict to broad-ETF + macro universe (survivorship-safe + faster).
+**Risk to guardrails:** Low if the never-auto-adopt + no-paper_nav rails hold (they're enforced in code). Phase-A scope only; individual-stock/smart-money lanes need the as-of-constituents + SEC layer (Phase B).
+**Recommendation:** Approve as the next evolution cycle; pick a binding param first.
+
+## P-grind-2026-06-14b — rules.py pct_change deprecation needs a config-versioned migration (NOT a silent fix)
+**What:** `rules.py:151` uses `panel.pct_change()` with the deprecated default `fill_method='pad'`. Pandas will remove it; the naive fix (`fill_method=None`) changes NA handling → changes HRP input returns → **changes live weights**.
+**Why now:** It's a future hard breakage, and it sits on the lane decision path (frozen-engine-adjacent).
+**Evidence:** 30 FutureWarnings per replay run this session.
+**Cost:** Small code, but it is a behavior change — must land as a SHA-versioned config change with a clean v2→v3 segment boundary (same discipline as Step #2), NOT a drive-by edit.
+**Risk to guardrails:** Changing it silently would corrupt the track record's segment continuity. **Do NOT auto-fix.**
+**Recommendation:** Murat schedules it as a deliberate config-version bump; until then it's a harmless warning.
+
+## P-grind-2026-06-14c — Mark network-bound tests `slow` so the "fast" suite is actually fast
+**What:** Several tests not marked `@pytest.mark.slow` hit yfinance/FRED/Kenneth-French (e.g. factor_model, real_analyzer, replay) — so `pytest -m "not slow"` runs 30+ min, not CLAUDE.md's "~4 min".
+**Why now:** A multi-cycle grind/CI needs a genuinely fast precondition gate; the current one is impractical per-cycle.
+**Evidence:** This session's `-m "not slow"` run exceeded 30 min and was abandoned as a gate; targeted PI runs (~5 min) were used instead.
+**Cost:** 1 cycle to audit markers; pure test-metadata, no runtime code change.
+**Risk to guardrails:** None (test-only).
+**Recommendation:** Approve; restores a trustworthy fast gate. CLAUDE.md's test-timing note should be corrected too.
