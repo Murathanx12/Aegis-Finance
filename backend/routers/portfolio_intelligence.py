@@ -234,6 +234,9 @@ async def get_experiment_registry(limit: int = Query(default=100, le=500)):
     import json as _json
 
     from backend.db import count_cumulative_trials, get_connection
+    from backend.services.portfolio_intelligence.experiment_registry import (
+        effective_independent_trials,
+    )
 
     def _read():
         conn = get_connection()
@@ -241,7 +244,8 @@ async def get_experiment_registry(limit: int = Query(default=100, le=500)):
             rows = conn.execute(
                 "SELECT id, created_at, config_version, lane_id, param, "
                 "       old_value, new_value, observed_sharpe, n_obs, "
-                "       batch_trials, cumulative_trials, dsr, pbo, verdict, notes "
+                "       batch_trials, cumulative_trials, dsr, pbo, "
+                "       effective_trials, verdict, notes "
                 "FROM rule_experiments ORDER BY id DESC LIMIT ?",
                 (limit,),
             ).fetchall()
@@ -260,7 +264,14 @@ async def get_experiment_registry(limit: int = Query(default=100, le=500)):
         for t in trials:
             verdicts[t["verdict"]] = verdicts.get(t["verdict"], 0) + 1
         return {
+            # The GATE count: every trial ever recorded (lanes + rule tweaks).
+            # The DSR/PBO guards deflate against THIS — a strictness floor.
             "cumulative_trials": total,
+            # REPORTED, NOT gating: the participation-ratio estimate of how many
+            # *independent* lanes the correlated return streams really represent.
+            # Surfaced for audit; never loosens the adoption bar. See
+            # experiment_registry.effective_independent_trials.
+            "effective_independent_trials": effective_independent_trials(),
             "verdict_counts": verdicts,
             "trials": trials,
         }

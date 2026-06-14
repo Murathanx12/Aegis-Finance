@@ -115,6 +115,74 @@ def expected_max_sharpe(n_trials: int, sr_variance: float) -> float:
     return float(sqrt_v * (term1 + term2))
 
 
+def effective_number_of_trials(returns_matrix, min_obs: int = 30) -> dict:
+    """Effective number of *independent* trials among correlated return streams.
+
+    When candidate strategies / paper lanes share holdings their return series
+    are correlated, so a raw count of N streams overstates how many independent
+    bets were actually taken. The participation ratio of the eigenvalues of the
+    N×N return-correlation matrix estimates the effective count:
+
+        N_eff = (Σ λ_i)² / Σ λ_i²        (λ_i = eigenvalues of the corr matrix)
+
+    Since the trace of a correlation matrix is N, Σλ_i = N, so N_eff = N²/Σλ_i².
+    N_eff = N for mutually orthogonal streams and collapses toward 1 as the
+    streams become collinear (a near-duplicate stream adds ≈0).
+
+    **Reported, never gating.** This is estimated from a noisy, small-sample
+    correlation matrix; per the TRIAL-001 design review it is surfaced as the
+    "estimated independent-trials" view but must NEVER loosen the DSR adoption
+    bar below the raw cumulative-trial count. On any non-ok status `n_eff`
+    falls back to ``float(n_streams)`` so that even a caller that ignored this
+    rule could not be made *more lenient* by a degenerate estimate.
+
+    Args:
+        returns_matrix: (T observations × N streams) array of per-period returns.
+        min_obs: minimum aligned (NaN-free) observations for a stable estimate.
+
+    Returns:
+        ``{n_eff, n_streams, n_obs, status}`` with status ∈
+        {ok, single_stream, insufficient_history, degenerate}.
+    """
+    M = np.asarray(returns_matrix, dtype=float)
+    if M.ndim != 2:
+        raise ValueError("returns_matrix must be 2-D (T observations × N streams)")
+    n_streams = int(M.shape[1])
+
+    if n_streams < 2:
+        return {"n_eff": float(n_streams), "n_streams": n_streams,
+                "n_obs": int(M.shape[0]), "status": "single_stream"}
+
+    # Keep only rows where every stream has an observation (aligned history).
+    aligned = M[~np.isnan(M).any(axis=1)]
+    n_obs = int(aligned.shape[0])
+    if n_obs < min_obs:
+        return {"n_eff": float(n_streams), "n_streams": n_streams,
+                "n_obs": n_obs, "status": "insufficient_history"}
+
+    # Zero-variance streams make the correlation matrix undefined.
+    if np.any(aligned.std(axis=0, ddof=1) < 1e-12):
+        return {"n_eff": float(n_streams), "n_streams": n_streams,
+                "n_obs": n_obs, "status": "degenerate"}
+
+    corr = np.corrcoef(aligned, rowvar=False)
+    if not np.all(np.isfinite(corr)):
+        return {"n_eff": float(n_streams), "n_streams": n_streams,
+                "n_obs": n_obs, "status": "degenerate"}
+
+    eig = np.linalg.eigvalsh(corr)
+    eig = np.clip(eig, 0.0, None)  # numerical: tiny negatives → 0
+    sum_sq = float(np.sum(eig ** 2))
+    if sum_sq <= 1e-12:
+        return {"n_eff": float(n_streams), "n_streams": n_streams,
+                "n_obs": n_obs, "status": "degenerate"}
+
+    n_eff = float(np.sum(eig)) ** 2 / sum_sq
+    n_eff = float(min(max(n_eff, 1.0), n_streams))  # clamp to [1, N]
+    return {"n_eff": round(n_eff, 4), "n_streams": n_streams,
+            "n_obs": n_obs, "status": "ok"}
+
+
 def deflated_sharpe_ratio(
     observed_sr: float,
     n_obs: int,

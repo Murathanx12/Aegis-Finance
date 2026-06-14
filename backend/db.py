@@ -30,7 +30,7 @@ DB_PATH = DATA_DIR / "aegis_pi.db"
 
 _write_lock = threading.Lock()
 
-CURRENT_SCHEMA_VERSION = 4
+CURRENT_SCHEMA_VERSION = 5
 
 _SCHEMA_V1 = """
 CREATE TABLE IF NOT EXISTS _schema_version (
@@ -227,6 +227,26 @@ def _run_migrations(conn: sqlite3.Connection, from_version: int, to_version: int
         conn.executescript("""
             ALTER TABLE rebalance_events ADD COLUMN config_version TEXT;
         """)
+
+    if from_version < 5:
+        # v5: rule_experiments carries the participation-ratio effective trial
+        # count (N_eff) alongside the raw cumulative count. REPORTED, NOT gating
+        # — the adoption guard still deflates against the raw count (a strictness
+        # floor); N_eff is the "estimated independent-trials" view for audit.
+        # Additive column only — historical rows keep NULL. Guarded: rule_experiments
+        # was created in the <3 block, so skip cleanly if a db never had it, and
+        # stay idempotent if the column is already present.
+        has_table = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='rule_experiments'"
+        ).fetchone()
+        if has_table:
+            cols = [r[1] for r in conn.execute(
+                "PRAGMA table_info(rule_experiments)"
+            ).fetchall()]
+            if "effective_trials" not in cols:
+                conn.execute(
+                    "ALTER TABLE rule_experiments ADD COLUMN effective_trials REAL"
+                )
 
 
 def init_db(db_path: Path | None = None) -> None:
@@ -524,6 +544,7 @@ def insert_experiment(
     n_obs: int | None = None,
     dsr: float | None = None,
     pbo: float | None = None,
+    effective_trials: float | None = None,
     notes: str | None = None,
 ) -> int:
     """Record one rule-evolution trial in the registry. Returns the row id."""
@@ -532,14 +553,14 @@ def insert_experiment(
             """INSERT INTO rule_experiments
                (created_at, config_version, lane_id, param, old_value, new_value,
                 observed_sharpe, n_obs, batch_trials, cumulative_trials,
-                dsr, pbo, verdict, notes)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                dsr, pbo, effective_trials, verdict, notes)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 created_at, config_version, lane_id, param,
                 json.dumps(old_value) if old_value is not None else None,
                 json.dumps(new_value) if new_value is not None else None,
                 observed_sharpe, n_obs, batch_trials, cumulative_trials,
-                dsr, pbo, verdict, notes,
+                dsr, pbo, effective_trials, verdict, notes,
             ),
         )
         conn.commit()

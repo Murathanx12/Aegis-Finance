@@ -225,6 +225,11 @@ class TestRegistryEndpoint:
         trial = body["trials"][0]
         assert trial["lane_id"] == "balanced-ew-control"
         assert trial["notes"]["decision_rule"]["trial"] == "TRIAL-001"
+        # v5: the reported (non-gating) effective-N view is present and labelled.
+        assert "effective_trials" in trial  # per-row column (may be NULL)
+        eff = body["effective_independent_trials"]
+        assert {"n_eff", "n_lanes", "status", "note"} <= set(eff)
+        assert "reported only" in eff["note"]  # never the gate
 
 
 class TestSchemaV4:
@@ -260,6 +265,52 @@ class TestSchemaV4:
         finally:
             conn.close()
         assert "config_version" in cols, "v3→v4 migration did not add the column"
+
+
+class TestSchemaV5:
+    def test_fresh_db_has_effective_trials(self, tmp_path):
+        db = tmp_path / "v5.db"
+        init_db(db)
+        conn = get_connection(db)
+        try:
+            cols = [r["name"] for r in conn.execute(
+                "PRAGMA table_info(rule_experiments)"
+            ).fetchall()]
+        finally:
+            conn.close()
+        assert "effective_trials" in cols
+
+    def test_v4_db_migrates_to_v5(self, tmp_path):
+        import sqlite3
+        from backend.db import _SCHEMA_V1
+
+        db = tmp_path / "old.db"
+        raw = sqlite3.connect(str(db))
+        raw.executescript(_SCHEMA_V1)
+        # A real v4 db has rule_experiments (created at 2→3) WITHOUT the v5 column.
+        raw.executescript(
+            """CREATE TABLE IF NOT EXISTS rule_experiments (
+                   id INTEGER PRIMARY KEY AUTOINCREMENT,
+                   created_at TEXT NOT NULL, config_version TEXT NOT NULL,
+                   lane_id TEXT, param TEXT NOT NULL, old_value TEXT, new_value TEXT,
+                   observed_sharpe REAL, n_obs INTEGER, batch_trials INTEGER NOT NULL,
+                   cumulative_trials INTEGER NOT NULL, dsr REAL, pbo REAL,
+                   verdict TEXT NOT NULL, notes TEXT
+               );"""
+        )
+        raw.execute("INSERT INTO _schema_version (version) VALUES (4)")
+        raw.commit()
+        raw.close()
+
+        init_db(db)  # runs 4→5
+        conn = get_connection(db)
+        try:
+            cols = [r["name"] for r in conn.execute(
+                "PRAGMA table_info(rule_experiments)"
+            ).fetchall()]
+        finally:
+            conn.close()
+        assert "effective_trials" in cols, "v4→v5 migration did not add the column"
 
 
 def test_reference_lanes_includes_control():
