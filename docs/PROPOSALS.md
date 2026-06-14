@@ -4,6 +4,21 @@
 > Format: What / Why now / Evidence / Cost / Risk to guardrails /
 > Recommendation. Each should be decidable in under two minutes.
 
+**Verdicts 2026-06-14 (Murat, /go consolidation+ship session):**
+- **P-grind-2026-06-14a** (evolution-loop Chunk 2 batch orchestrator) —
+  **APPROVED for a LATER session, not now.** Pick a *binding* param first (not
+  monthly-cadence drift).
+- **P-grind-2026-06-14b** (`rules.py` pct_change deprecation) — **FLAG-ONLY,
+  PARKED.** Stays a harmless warning until it gets its **own config-versioned
+  session** (v2→v3 segment boundary); never a silent/drive-by fix.
+- **P-grind-2026-06-14c** (fast-suite gate) + **pytest-xdist** — **APPROVED**
+  as the true fast-suite gate (parallel execution + the network-test `slow`
+  marker audit; correct CLAUDE.md timing note).
+- **Lockfile** (BACKLOG H2) — **logged as a deploy-env task**, to be generated
+  with `pip freeze` on Railway when Murat next touches the deploy directly (a
+  local freeze would mismatch prod). `lightgbm>=4.6.0` floor + CI `pip-audit`
+  cover the CVE class meanwhile.
+
 **Verdicts 2026-06-10 (Murat):**
 - #1 replay-cache UTC TTL — **APPROVED**, queued for next grind session.
 - #2 np.bool_ leak — **APPROVED**, ✅ landed 2026-06-10 (track-record-ui session).
