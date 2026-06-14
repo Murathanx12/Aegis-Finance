@@ -30,7 +30,7 @@ DB_PATH = DATA_DIR / "aegis_pi.db"
 
 _write_lock = threading.Lock()
 
-CURRENT_SCHEMA_VERSION = 5
+CURRENT_SCHEMA_VERSION = 6
 
 _SCHEMA_V1 = """
 CREATE TABLE IF NOT EXISTS _schema_version (
@@ -246,6 +246,23 @@ def _run_migrations(conn: sqlite3.Connection, from_version: int, to_version: int
             if "effective_trials" not in cols:
                 conn.execute(
                     "ALTER TABLE rule_experiments ADD COLUMN effective_trials REAL"
+                )
+
+    if from_version < 6:
+        # v6: personal_decisions.late_entry — a decision logged after the fact
+        # (the action already happened). timestamp stays server-now (never
+        # backdated); late_entry just flags it for honest attribution. Additive
+        # nullable column; ALTER ADD COLUMN does not fire the immutability triggers.
+        has_pd = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='personal_decisions'"
+        ).fetchone()
+        if has_pd:
+            pcols = [r[1] for r in conn.execute(
+                "PRAGMA table_info(personal_decisions)"
+            ).fetchall()]
+            if "late_entry" not in pcols:
+                conn.execute(
+                    "ALTER TABLE personal_decisions ADD COLUMN late_entry INTEGER DEFAULT 0"
                 )
 
 
@@ -583,6 +600,7 @@ def insert_personal_decision(
     planned_exit_trigger: str | None = None,
     catalyst_dates: list[str] | None = None,
     amends_id: int | None = None,
+    late_entry: bool = False,
 ) -> int:
     """Insert a personal decision. Immutable — edits create new rows via amends_id.
 
@@ -600,8 +618,9 @@ def insert_personal_decision(
             """INSERT INTO personal_decisions
                (timestamp, ticker, action, shares_delta, price, rationale,
                 thesis_tags, conviction, target_price, stop_price,
-                planned_exit_trigger, catalyst_dates, portfolio_snapshot, amends_id)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                planned_exit_trigger, catalyst_dates, portfolio_snapshot, amends_id,
+                late_entry)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 timestamp,
                 ticker,
@@ -617,7 +636,30 @@ def insert_personal_decision(
                 json.dumps(catalyst_dates or []),
                 json.dumps(portfolio_snapshot),
                 amends_id,
+                1 if late_entry else 0,
             ),
         )
         conn.commit()
         return cursor.lastrowid
+
+
+def list_personal_decisions(conn: sqlite3.Connection, limit: int = 100) -> list[dict]:
+    """Read personal/conviction decisions (newest first). Read-only."""
+    rows = conn.execute(
+        "SELECT id, timestamp, ticker, action, shares_delta, price, rationale, "
+        "       thesis_tags, conviction, target_price, stop_price, "
+        "       planned_exit_trigger, catalyst_dates, amends_id, late_entry "
+        "FROM personal_decisions ORDER BY id DESC LIMIT ?",
+        (limit,),
+    ).fetchall()
+    out = []
+    for r in rows:
+        d = dict(r)
+        for k in ("thesis_tags", "catalyst_dates"):
+            try:
+                d[k] = json.loads(d[k]) if d[k] else []
+            except Exception:
+                pass
+        d["late_entry"] = bool(d.get("late_entry"))
+        out.append(d)
+    return out
