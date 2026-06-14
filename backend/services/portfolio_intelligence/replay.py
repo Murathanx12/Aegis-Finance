@@ -334,6 +334,7 @@ class ReplayEngine:
         initial_notional: float = 100_000.0,
         crash_prob_override: float | None = None,
         rf_daily: float = 0.0,
+        lane_config_override: dict | None = None,
     ) -> ReplayResult:
         """Run walk-forward replay for a single lane.
 
@@ -343,13 +344,22 @@ class ReplayEngine:
             end_date: Replay end (default: today)
             initial_notional: Starting portfolio value
             crash_prob_override: Fixed crash prob for all dates (testing)
+            lane_config_override: rule-evolution candidate — a dict of lane params
+                to override on top of the YAML lane config (shallow-merge). Used
+                to backtest a proposed rule change WITHOUT mutating the YAML.
+                Read-only; never persisted. Top-level lane keys only.
         """
         start = date.fromisoformat(start_date)
         end = date.fromisoformat(end_date) if end_date else date.today()
 
-        lane_config = paper_portfolios.get(lane_id)
-        if lane_config is None:
+        base_config = paper_portfolios.get(lane_id)
+        if base_config is None:
             raise ValueError(f"Unknown lane: {lane_id}")
+        # Candidate-override hook (rule-evolution loop): a candidate config is the
+        # YAML lane with one or more params overridden. Shallow-merge so a
+        # proposal changes only the params it names. Never mutates the YAML.
+        lane_config = ({**base_config, **lane_config_override}
+                       if lane_config_override else base_config)
 
         universe_cfg = paper_portfolios.get("universe", {})
         frequency = lane_config["rebalance_frequency"]
