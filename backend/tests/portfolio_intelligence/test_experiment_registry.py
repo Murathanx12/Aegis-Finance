@@ -11,9 +11,14 @@ overfitting machine over time.
 import numpy as np
 import pytest
 
+from datetime import date, timedelta
+
+from backend import db as db_module
 from backend.db import get_connection, init_db
+from engine.validation.overfitting import deflated_sharpe_from_returns
 from backend.services.portfolio_intelligence.experiment_registry import (
     cumulative_trial_count,
+    effective_independent_trials,
     evaluate_candidate,
     record_trial,
 )
@@ -95,3 +100,142 @@ def test_record_trial_persists_and_increments_count(tmp_db):
                        config_version="abc123", db_path=tmp_db)
     assert rid > 0
     assert cumulative_trial_count(tmp_db) == 1
+
+
+# ── Effective-N: reported, NEVER gating (TRIAL-001 design review, option 2) ──
+
+
+def _seed_correlated_lanes(db_path, lanes, n_days=60, rho=0.6, seed=5):
+    """Seed paper_portfolios + paper_nav for `lanes` with correlated returns."""
+    rng = np.random.default_rng(seed)
+    conn = get_connection(db_path)
+    try:
+        for lane in lanes:
+            conn.execute(
+                "INSERT OR IGNORE INTO paper_portfolios "
+                "(id, inception_date, inception_value, config_version) "
+                "VALUES (?, '2026-06-08', 100000.0, 'cfg')", (lane,))
+        common = rng.normal(0.0005, 0.01, n_days)  # shared market factor
+        d0 = date(2026, 6, 8)
+        for i, lane in enumerate(lanes):
+            idio = rng.normal(0.0, 0.01, n_days)
+            r = rho * common + (1.0 - rho) * idio
+            nav = 100000.0 * np.cumprod(1.0 + r)
+            for j in range(n_days):
+                dt = (d0 + timedelta(days=j)).isoformat()
+                db_module.insert_nav(conn, lane, dt, float(nav[j]), "cfg",
+                                     dt + "T21:00:00")
+    finally:
+        conn.close()
+
+
+def test_effective_independent_trials_no_data(tmp_db):
+    eff = effective_independent_trials(tmp_db)
+    assert eff["status"] == "no_data"
+    assert eff["n_eff"] is None
+    assert "reported only" in eff["note"]
+
+
+def test_effective_independent_trials_insufficient_history(tmp_db):
+    _seed_correlated_lanes(tmp_db, ["conservative", "balanced"], n_days=5)
+    eff = effective_independent_trials(tmp_db, min_obs=30)
+    assert eff["status"] == "insufficient_history"
+    assert eff["n_eff"] is None
+
+
+def test_effective_independent_trials_below_raw_for_correlated_lanes(tmp_db):
+    lanes = ["conservative", "balanced", "aggressive"]
+    _seed_correlated_lanes(tmp_db, lanes, n_days=80, rho=0.6)
+    eff = effective_independent_trials(tmp_db, min_obs=30)
+    assert eff["status"] == "ok"
+    assert eff["n_lanes"] == 3
+    # correlated → effective count strictly below the raw lane count
+    assert 1.0 <= eff["n_eff"] < 3.0
+
+
+def test_gate_is_unchanged_by_effective_n(tmp_db):
+    """The load-bearing invariant: N_eff is reported but NEVER moves the gate.
+
+    The adoption decision must be byte-identical to a raw-cumulative-count DSR,
+    whether or not correlated lane streams exist to compute N_eff from.
+    """
+    returns = _candidate_returns()
+    # No lanes seeded yet.
+    bare = evaluate_candidate(returns, 0.02, batch_trials=1, db_path=tmp_db)
+    # Now seed correlated lanes so N_eff becomes computable...
+    _seed_correlated_lanes(tmp_db, ["conservative", "balanced", "aggressive"],
+                           n_days=80)
+    withlanes = evaluate_candidate(returns, 0.02, batch_trials=1, db_path=tmp_db)
+
+    # Gate outputs identical regardless of the effective-N view.
+    for k in ("n_trials", "dsr", "survives", "expected_max_sharpe_h0", "verdict"):
+        assert bare[k] == withlanes[k]
+
+    # And the gate equals the pure raw-count DSR (no effective-N leakage).
+    raw = deflated_sharpe_from_returns(returns, n_trials=1, sr_variance=0.02)
+    assert withlanes["dsr"] == raw["dsr"]
+
+    # The reported view IS populated once lanes exist, and is labelled non-gating.
+    assert bare["effective_independent_trials"]["status"] == "no_data"
+    assert withlanes["effective_independent_trials"]["status"] == "ok"
+    assert withlanes["effective_independent_trials"]["n_eff"] is not None
+
+
+def test_near_duplicate_lane_raises_raw_count_but_not_neff(tmp_db):
+    """Pinning test: a near-duplicate lane bumps raw N by 1 yet barely moves N_eff.
+
+    Uses the real 4th reference lane (balanced-ew-control) as a ρ≈0.99 clone of
+    balanced — the helper only counts streams from REFERENCE_LANES.
+    """
+    _seed_correlated_lanes(tmp_db, ["conservative", "balanced", "aggressive"],
+                           n_days=120, rho=0.5, seed=2)
+    before = effective_independent_trials(tmp_db, min_obs=30)
+    raw_before = cumulative_trial_count(tmp_db)
+
+    # Add balanced-ew-control as a near-duplicate of balanced (jittered → ρ≈0.99).
+    conn = get_connection(tmp_db)
+    try:
+        conn.execute(
+            "INSERT OR IGNORE INTO paper_portfolios "
+            "(id, inception_date, inception_value, config_version) "
+            "VALUES ('balanced-ew-control', '2026-06-08', 100000.0, 'cfg')")
+        rng = np.random.default_rng(99)
+        rows = conn.execute(
+            "SELECT date, nav FROM paper_nav WHERE portfolio_id='balanced' ORDER BY date"
+        ).fetchall()
+        for r in rows:
+            jittered = float(r["nav"]) * (1.0 + rng.normal(0.0, 1e-4))
+            db_module.insert_nav(conn, "balanced-ew-control", r["date"], jittered,
+                                 "cfg", r["date"] + "T21:00:00")
+    finally:
+        conn.close()
+    # Registering the lane is itself a trial row in the registry (raw count +1).
+    record_trial(
+        evaluate_candidate(_candidate_returns(), 0.02, batch_trials=1, db_path=tmp_db),
+        param="lane:balanced-ew-control", new_value="registered",
+        config_version="cfg", lane_id="balanced-ew-control", db_path=tmp_db)
+
+    after = effective_independent_trials(tmp_db, min_obs=30)
+
+    assert cumulative_trial_count(tmp_db) == raw_before + 1   # raw N jumped by 1
+    assert after["n_lanes"] == before["n_lanes"] + 1          # a stream was added
+    assert after["n_eff"] - before["n_eff"] < 0.2            # N_eff barely moved
+
+
+def test_record_trial_persists_effective_trials(tmp_db):
+    _seed_correlated_lanes(tmp_db, ["conservative", "balanced", "aggressive"],
+                           n_days=80)
+    ev = evaluate_candidate(_candidate_returns(), 0.02, batch_trials=1, db_path=tmp_db)
+    assert ev["effective_independent_trials"]["status"] == "ok"
+    record_trial(ev, param="drift", new_value=0.06, config_version="cfg",
+                 db_path=tmp_db)
+    conn = get_connection(tmp_db)
+    try:
+        row = conn.execute(
+            "SELECT effective_trials FROM rule_experiments ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+    finally:
+        conn.close()
+    assert row["effective_trials"] is not None
+    assert row["effective_trials"] == pytest.approx(
+        ev["effective_independent_trials"]["n_eff"])

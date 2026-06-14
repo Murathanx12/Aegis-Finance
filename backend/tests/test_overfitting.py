@@ -20,6 +20,7 @@ from engine.validation.overfitting import (
     CombinatorialPurgedCV,
     deflated_sharpe_from_returns,
     deflated_sharpe_ratio,
+    effective_number_of_trials,
     expected_max_sharpe,
     min_track_record_length,
     passes_multiple_testing_hurdle,
@@ -218,3 +219,69 @@ def test_cpcv_embargo_shrinks_train():
 def test_cpcv_rejects_bad_config():
     with pytest.raises(ValueError):
         CombinatorialPurgedCV(n_groups=3, n_test_groups=3)
+
+
+# ── Effective number of trials (participation ratio) ────────────────────────
+
+
+def _indep_returns(n_streams: int, n_obs: int = 250, seed: int = 7) -> np.ndarray:
+    rng = np.random.default_rng(seed)
+    return rng.normal(0.0, 0.01, size=(n_obs, n_streams))
+
+
+def test_eff_n_orthogonal_streams_approaches_full_count():
+    """Independent streams → N_eff ≈ N (no redundancy)."""
+    info = effective_number_of_trials(_indep_returns(4))
+    assert info["status"] == "ok"
+    assert info["n_streams"] == 4
+    assert info["n_eff"] > 3.0  # close to 4 for independent noise
+
+
+def test_eff_n_identical_streams_collapses_to_one():
+    """Perfectly collinear streams → N_eff = 1 (one effective bet)."""
+    base = _indep_returns(1, n_obs=200)
+    M = np.repeat(base, 4, axis=1)  # 4 identical columns
+    info = effective_number_of_trials(M)
+    assert info["status"] == "ok"
+    assert info["n_eff"] == pytest.approx(1.0, abs=1e-6)
+
+
+def test_eff_n_near_duplicate_barely_moves_while_raw_count_jumps():
+    """The pinning test: adding a ρ≈0.99 stream adds <~0.1 to N_eff."""
+    rng = np.random.default_rng(11)
+    base = _indep_returns(3, n_obs=400, seed=3)  # 3 roughly-independent lanes
+    before = effective_number_of_trials(base)["n_eff"]
+
+    # A near-duplicate of column 0 (correlation ≈ 0.99).
+    dup = base[:, [0]] + rng.normal(0.0, 0.0014, size=(base.shape[0], 1))
+    after_info = effective_number_of_trials(np.hstack([base, dup]))
+
+    assert after_info["n_streams"] == 4          # raw count went 3 -> 4
+    assert after_info["n_eff"] - before < 0.1    # N_eff barely budged
+
+
+def test_eff_n_insufficient_history_falls_back_to_raw_count():
+    """Too few aligned obs → status flagged, N_eff cannot loosen anything."""
+    info = effective_number_of_trials(_indep_returns(4, n_obs=10), min_obs=30)
+    assert info["status"] == "insufficient_history"
+    assert info["n_eff"] == 4.0  # == n_streams: never a looser (smaller) value
+
+
+def test_eff_n_single_stream():
+    info = effective_number_of_trials(_indep_returns(1))
+    assert info["status"] == "single_stream"
+    assert info["n_eff"] == 1.0
+
+
+def test_eff_n_degenerate_zero_variance_stream():
+    M = _indep_returns(3, n_obs=100)
+    M[:, 1] = 0.0  # a flat stream → correlation undefined
+    info = effective_number_of_trials(M)
+    assert info["status"] == "degenerate"
+    assert info["n_eff"] == 3.0
+
+
+def test_eff_n_bounded_between_one_and_n():
+    for seed in range(5):
+        info = effective_number_of_trials(_indep_returns(5, seed=seed))
+        assert 1.0 <= info["n_eff"] <= 5.0
