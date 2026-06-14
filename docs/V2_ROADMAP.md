@@ -4,6 +4,62 @@
 
 ---
 
+## 2026-06-14 — Research-driven addenda (supersedes where it conflicts below)
+
+> Folds in two adversarially-verified research runs (see
+> **`DEEP_RESEARCH_2026-06-14_DECISION.md`** for the cited findings) plus the current
+> deployed reality. **§1–§7 below were written pre-deploy and read "ship V1" — V1 has
+> been live since 2026-06-08; treat them as the standing engine plan, this section as the
+> current head.** The discipline is unchanged and now literature-backed: *descriptive
+> until measured, loud not silent, no claim ahead of the out-of-sample number.*
+
+### Where we are now (verified)
+Live forward track record, day 6, 4 lanes (conservative/balanced/aggressive +
+balanced-ew-control), config v2 (`628456e4`, leakage-safe HRP) with a clean v1→v2 segment
+boundary. Experiment registry live with TRIAL-001 (HRP-vs-EW) pre-registered; cumulative
+trial count = 1. Optimus MCP server wired (Goal 6 closed). Crash overlay deliberately
+**off** and now loudly observable (`ecb1be3`). DSR/PBO guards exist (`overfitting.py`).
+
+### What the research changed (net-new, beyond §1–§7)
+1. **A bubble/fragility lane is justified — but only as a descriptive flag.** LPPLS's
+   predictive skill was **adversarially refuted**; it measures bubble *structure*, not
+   timing. It enters as a measured trial, never an armed signal.
+2. **The macro lane has a better recession flag than Sahm:** the Richmond Fed **SOS**
+   indicator (free FRED `IURSA`), 7/7 recessions since 1971, zero false positives, leads
+   Sahm — but still **coincident-to-lagging**, framed by lag-to-onset.
+3. **The effective-N gap in DSR is real and load-bearing:** the False Strategy Theorem
+   assumes independent trials; correlated lanes make raw-N DSR too lenient. Must be fixed
+   **before** §P1 lane expansion adds correlated lanes.
+4. **The hindsight firewall is now empirically grounded** (profit-mirage / ~37% leakage /
+   p=0.033) — reinforces the Optimus boundary (§5) and the no-RL-on-P&L anti-goal.
+5. **Smart-money signals have a durable-vs-noise split:** insider *opportunistic* trades
+   (~82 bps/mo) and *long-horizon* 13F cloning carry edge; *routine* insider trades and
+   *45-day-lagged high-turnover* 13F cloning do not. Any future Goal-5/smart-money work
+   filters on this, gated against a baseline.
+
+### The three queued tickets (PLANNED — not started; await Murat's go)
+
+| # | Ticket | Pre-registered OOS done-when | Sequence |
+|---|---|---|---|
+| **T1** | **LPPLS as a measured regime flag** (existing `bubble_detector.py` → scheduled eval, `lppls_eval` audit row + `/api/health/full` canary mirroring the overlay template, pre-registered TRIAL-LPPLS, forward Brier harness vs climatology baseline, PI card labeled "descriptive, not a timing tool"). **HARD: never arms a lane.** | Flag computes on schedule; forward Brier+calibration by horizon (30/60/90d) accumulating vs base-rate baseline; UI implies no prediction; zero lane wiring. *Skill claim only after a pre-registered forward window.* | After deploy unsticks; **open decision:** keep existing nested-MC fitter vs rewrite to quantile regression (per source). Largest ticket. |
+| **T2** | **Effective-N correction for registry DSR** (participation-ratio `N_eff=(Σλ)²/Σλ²` over lane-return correlation; feed N_eff to DSR not raw count; expose both at `/api/pi/registry`; graceful raw-N fallback under short history). | `/api/pi/registry` returns raw N **and** effective-N; DSR uses effective-N; pinning test: a near-duplicate lane (ρ≈0.99) moves N_eff <~0.1 while raw N +1. | **Must land before §P1 #6** (mirror/conviction lanes are correlated). Fully test-verifiable offline. |
+| **T3** | **SOS recession indicator** (add FRED `IURSA`; new `macro_indicators.py::compute_sos_signal`; display alongside Sahm in `/api/macro` with lag-to-onset framing). | SOS computes from FRED; shows next to Sahm with honest lag framing; **no prediction claim** (string-assert no leading-indicator language). | Independent, small, offline-verifiable. |
+
+### Open decisions blocking the build (carry forward)
+- **D1 — LPPLS calibration:** existing `lppls`-library nested-MC fitter (faster; predictive skill was refuted anyway, so the *measurement harness* matters more than fit precision) **vs** quantile-regression rewrite (matches the verified source letter). Unresolved.
+- **D2 — Deploy gap:** `ecb1be3` (last session's overlay observability fix) is pushed to `origin/main` but **Railway is still serving `e759bf7`**. T1's schedule/canary can't be live-verified until this unsticks; recommend resolving before/with T1.
+
+### Recommended sequence
+**T2 → T3 this session-class (offline-verifiable, T2 unblocks P1 #6), T1 next** (largest, gated on D1 + D2). Then the existing §P1 #6 lane framework. Follow-up research pass owed on the **unverified** items (Section 4 data-ToS, Section 5 real-time signals, CSCV/slippage mechanics) before any of those ship as asserted.
+
+### Where we should become (honest, anti-goal-respecting)
+Same north star as the one-paragraph version at the bottom of this doc — now with three
+measured additions (a descriptive fragility flag, an honest recession flag, a tighter
+overfitting guard) and a literature-grounded firewall. **None of it ships as "it works"
+until a forward out-of-sample number says so; no skill claims before 24 months.**
+
+---
+
 ## 0. The single most important call: freeze the engine set
 
 The codebase has ~85 service modules and ~2,300 tests. The risk for this project is **not** too few features — it's too many unaudited ones diluting the one thing that makes Aegis defensible: *honest measurement*. A tool that says "here are 85 signals" but can't tell you which ones actually predict is no better than the opaque competitors.
