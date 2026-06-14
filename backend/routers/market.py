@@ -582,7 +582,16 @@ def _compute_macro() -> dict:
                 "last_date": str(series.dropna().index[-1].date()),
             }
 
-    return {"indicators": indicators, "count": len(indicators)}
+    # Recession-confirmation flags (Sahm + Richmond Fed SOS) — descriptive,
+    # coincident-to-lagging, framed by lag-to-onset. NOT a prediction (T3).
+    from backend.services.macro_indicators import recession_indicators
+    recession = recession_indicators(fred_data)
+
+    return {
+        "indicators": indicators,
+        "count": len(indicators),
+        "recession_indicators": recession,
+    }
 
 
 @router.get("/world-markets")

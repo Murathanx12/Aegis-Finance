@@ -123,10 +123,11 @@ config: dict = {
             "Materials": "XLB",
             "Communications": "XLC",
         },
-        # FRED series IDs (22 series including leading indicators ICSA, NFCI)
+        # FRED series IDs (23 series including leading indicators ICSA, NFCI)
         "fred_series": {
             "yield_spread": "T10Y3M",           # 10Y-3M Treasury spread (recession predictor)
             "sahm_rule": "SAHMREALTIME",         # Sahm Rule recession indicator
+            "insured_unemployment_rate": "IURSA",  # Insured unemployment rate (weekly) — Richmond Fed SOS input
             "recession_prob": "RECPROUSM156N",   # Chauvet-Piger smoothed recession probability
             "unemployment": "UNRATE",            # Unemployment rate
             "cpi": "CPIAUCSL",                   # Consumer Price Index
