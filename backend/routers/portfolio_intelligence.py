@@ -296,17 +296,25 @@ async def get_fragility():
     """
     def _read():
         from backend.services.portfolio_intelligence.fragility import (
-            LPPLS_DECISION_RULE, forward_brier_status,
+            CRASH_DECISION_RULE, LPPLS_DECISION_RULE,
+            compute_fragility_index, forward_brier_status,
+            forward_brier_status_composite,
         )
         from backend.services.portfolio_intelligence.scheduler import lppls_status
         return {
             "latest_reading": lppls_status(),
             "forward_brier": forward_brier_status(),
             "trial": LPPLS_DECISION_RULE,
+            # Descriptive structural-fragility composite (TRIAL-CRASH).
+            "composite": compute_fragility_index(),
+            "composite_forward_brier": forward_brier_status_composite(),
+            "composite_trial": CRASH_DECISION_RULE,
             "disclaimer": (
-                "Descriptive bubble-structure flag, NOT a crash forecast. LPPLS "
-                "predictive skill was refuted; this never arms a lane and makes "
-                "no skill claim until a pre-registered forward Brier beats climatology."
+                "Descriptive bubble-structure flag + structural-fragility composite, "
+                "NOT a crash forecast or timing call. LPPLS predictive skill was "
+                "refuted; neither this flag nor the composite arms a lane, sizes a "
+                "position, or implies a crash is imminent. No skill claim until a "
+                "pre-registered forward Brier beats climatology."
             ),
         }
 

@@ -377,6 +377,16 @@ async def _daily_check():
     except Exception as e:
         logger.error("LPPLS fragility eval failed: %s", e, exc_info=True)
 
+    # Descriptive fragility COMPOSITE (TRIAL-CRASH) — persisted each cycle for
+    # forward Brier. Descriptive only; never arms a lane.
+    try:
+        from backend.services.portfolio_intelligence.fragility import run_fragility_eval
+        comp = await asyncio.to_thread(run_fragility_eval)
+        logger.info("Fragility composite: status=%s score=%s n_inputs=%s (descriptive)",
+                    comp.get("status"), comp.get("composite"), comp.get("n_inputs"))
+    except Exception as e:
+        logger.error("Fragility composite eval failed: %s", e, exc_info=True)
+
 
 async def _weekly_aggressive_check():
     """Additional weekly check for aggressive lane."""

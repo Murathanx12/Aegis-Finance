@@ -221,9 +221,12 @@ def brier_skill(forecasts, outcomes) -> dict:
     }
 
 
-def _realized_drawdown_within(prices: pd.Series, start, horizon_days: int) -> Optional[int]:
-    """1 if SPY drew down >= CRASH_DRAWDOWN_THRESHOLD within `horizon_days` of
-    `start`, 0 if it did not, None if the window hasn't fully matured yet."""
+def _realized_drawdown_within(
+    prices: pd.Series, start, horizon_days: int,
+    threshold: float = CRASH_DRAWDOWN_THRESHOLD,
+) -> Optional[int]:
+    """1 if SPY drew down >= `threshold` within `horizon_days` of `start`, 0 if
+    it did not, None if the window hasn't fully matured yet."""
     start = pd.Timestamp(start)
     window_end = start + timedelta(days=horizon_days)
     if prices.index[-1] < window_end:
@@ -233,7 +236,7 @@ def _realized_drawdown_within(prices: pd.Series, start, horizon_days: int) -> Op
         return None
     peak = window.iloc[0]
     trough = window.min()
-    return int((trough / peak - 1.0) <= -CRASH_DRAWDOWN_THRESHOLD)
+    return int((trough / peak - 1.0) <= -threshold)
 
 
 def forward_brier_status(db_path=None, horizons=BRIER_HORIZONS_DAYS) -> dict:
@@ -291,6 +294,323 @@ def forward_brier_status(db_path=None, horizons=BRIER_HORIZONS_DAYS) -> dict:
             y = _realized_drawdown_within(spy, rec["date"], h)
             if y is not None:
                 fc.append(rec["confidence"])
+                yo.append(y)
+        out["horizons"][str(h)] = (
+            brier_skill(fc, yo) if len(yo) >= 30
+            else {"status": "insufficient_forward_data", "matured": len(yo)}
+        )
+    return out
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Fragility composite (descriptive index) + TRIAL-CRASH
+# ─────────────────────────────────────────────────────────────────────────
+
+# Equal-weighted by design: we do NOT fit weights, because fitting them to past
+# crashes is exactly the hindsight overfitting this project refuses. Each input
+# is normalized to a documented [0,1] fragility scale (1 = most fragile).
+FRAGILITY_LABEL = (
+    "descriptive structural-fragility index — NOT a crash forecast or timing call"
+)
+CRASH_TRIAL_DRAWDOWN = 0.20  # TRIAL-CRASH outcome: SPY drawdown >=20% within horizon
+CRASH_TRIAL_PARAM = "fragility-composite"
+
+# Candidate inputs the research flagged but NOT yet wired as active inputs. They
+# are logged here (not asserted) so the composite is honest about what it omits.
+FRAGILITY_CANDIDATE_INPUTS = [
+    {"name": "vix_term_structure", "reason": "backwardation = near-term stress; "
+     "needs the VIX futures curve (flaky/extra fetch)"},
+    {"name": "options_put_skew", "reason": "put/call IV skew = hedging demand; "
+     "yfinance options chain (network-flaky)"},
+    {"name": "ipo_issuance", "reason": "Murat's post-IPO-glut hypothesis feature — "
+     "enters as a TESTED candidate once a cheap free source is wired, never asserted"},
+]
+
+
+def _clip01(x: float) -> float:
+    return float(min(max(x, 0.0), 1.0))
+
+
+def _pct_rank(series: pd.Series, value: float) -> Optional[float]:
+    """Percentile rank of `value` within `series` history, in [0,1]."""
+    s = series.dropna()
+    if len(s) < 30:
+        return None
+    return float((s <= value).mean())
+
+
+def compute_fragility_index(data=None, fred_data=None) -> dict:
+    """Equal-weighted descriptive structural-fragility index in [0,1].
+
+    Aggregates already-fetched structural signals, each normalized to a [0,1]
+    fragility scale (1 = most fragile), and returns their equal-weighted mean
+    over the inputs that are available this cycle. DESCRIPTIVE ONLY — no code
+    path from here arms a lane, sizes a position, or emits buy/sell language.
+
+    Returns {status, composite, level, n_inputs, dispersion, components,
+    candidate_inputs, label, as_of}. `composite` is None if no input resolved.
+    """
+    components: dict = {}
+
+    def _add(name: str, normalized: Optional[float], raw=None):
+        components[name] = {
+            "raw": raw,
+            "normalized": None if normalized is None else round(_clip01(normalized), 4),
+            "available": normalized is not None,
+        }
+
+    # Fetch the shared inputs once.
+    if data is None or fred_data is None:
+        try:
+            from backend.services.data_fetcher import DataFetcher
+            f = DataFetcher()
+            if data is None:
+                data, _ = f.fetch_market_data()
+            if fred_data is None:
+                fred_data = f.fetch_fred_data()
+        except Exception as e:  # pragma: no cover - network/IO
+            logger.warning("fragility composite: data unavailable: %s", e)
+            return {"status": "data_unavailable", "composite": None,
+                    "label": FRAGILITY_LABEL, "candidate_inputs": FRAGILITY_CANDIDATE_INPUTS}
+
+    as_of = None
+    try:
+        as_of = str(data["SP500"].dropna().index[-1].date())
+    except Exception:
+        pass
+
+    # 1. LPPLS confidence (already [0,1]).
+    try:
+        lp = evaluate_lppls(data["SP500"])
+        _add("lppls_confidence",
+             lp.get("confidence") if lp.get("status") == "evaluated" else None,
+             raw=lp.get("confidence"))
+    except Exception:
+        _add("lppls_confidence", None)
+
+    # 2/3. SOS + Sahm (recession-confirmation; normalized vs their triggers).
+    try:
+        from backend.services.macro_indicators import recession_indicators
+        ri = recession_indicators(fred_data)
+        sos = ri["sos"]
+        _add("sos", sos["value"] / 0.5 if sos.get("status") == "ok" and sos.get("value") is not None else None,
+             raw=sos.get("value"))
+        sahm = ri["sahm"]
+        _add("sahm", sahm["value"] / 1.0 if sahm.get("status") == "ok" and sahm.get("value") is not None else None,
+             raw=sahm.get("value"))
+    except Exception:
+        _add("sos", None); _add("sahm", None)
+
+    # 4/5. Systemic risk: turbulence percentile + absorption ratio.
+    try:
+        from backend.services.systemic_risk import compute_systemic_risk
+        sr = compute_systemic_risk(data)
+        tp = sr.get("turbulence_percentile")
+        _add("turbulence", tp / 100.0 if tp is not None else None, raw=tp)
+        ar = sr.get("absorption_ratio_current")
+        _add("absorption_ratio", ar if ar is not None else None, raw=ar)
+    except Exception:
+        _add("turbulence", None); _add("absorption_ratio", None)
+
+    # 6. Net liquidity: draining vs its own 52wk history = higher fragility.
+    try:
+        from backend.services.net_liquidity import get_net_liquidity
+        nl = get_net_liquidity()
+        hist = nl.get("history") or []
+        if len(hist) >= 8:
+            vals = pd.Series([h["net_liquidity"] for h in hist])
+            chg4 = vals.diff(4).dropna()  # 4-week changes
+            latest_chg = float(chg4.iloc[-1])
+            rank = _pct_rank(chg4, latest_chg)  # low rank = draining fast
+            _add("net_liquidity", None if rank is None else (1.0 - rank),
+                 raw=round(latest_chg, 4))
+        else:
+            _add("net_liquidity", None)
+    except Exception:
+        _add("net_liquidity", None)
+
+    # 7/8. Credit spreads: HY + IG OAS percentile vs own history (widening = stress).
+    for key in ("hy_oas", "ig_oas"):
+        try:
+            s = fred_data.get(key)
+            if s is not None and len(s.dropna()) >= 30:
+                cur = float(s.dropna().iloc[-1])
+                _add(key, _pct_rank(s, cur), raw=round(cur, 3))
+            else:
+                _add(key, None)
+        except Exception:
+            _add(key, None)
+
+    norms = [c["normalized"] for c in components.values() if c["available"]]
+    if not norms:
+        return {"status": "no_inputs", "composite": None, "components": components,
+                "label": FRAGILITY_LABEL, "candidate_inputs": FRAGILITY_CANDIDATE_INPUTS}
+
+    composite = float(np.mean(norms))
+    dispersion = float(np.std(norms))  # signals' disagreement = honest uncertainty
+    # Neutral descriptive bands — deliberately NOT "crash imminent" language.
+    level = ("low" if composite < 0.30 else "moderate" if composite < 0.55
+             else "elevated" if composite < 0.75 else "high")
+    return {
+        "status": "ok",
+        "composite": round(composite, 4),
+        "level": f"{level} structural fragility (descriptive)",
+        "n_inputs": len(norms),
+        "dispersion": round(dispersion, 4),
+        "components": components,
+        "candidate_inputs": FRAGILITY_CANDIDATE_INPUTS,
+        "as_of": as_of,
+        "label": FRAGILITY_LABEL,
+        "arms_lane": False,
+        "descriptive_only": True,
+    }
+
+
+def persist_fragility_eval(result: dict, db_path=None) -> None:
+    """Append one market-level `fragility_eval` audit row (the forward record)."""
+    from backend.db import get_connection, insert_audit_log
+
+    # Store a compact row (score + per-input normalized) — enough to score forward.
+    row = {"status": result.get("status"), "composite": result.get("composite"),
+           "level": result.get("level"), "n_inputs": result.get("n_inputs"),
+           "as_of": result.get("as_of"), "arms_lane": False,
+           "components": {k: v.get("normalized") for k, v in
+                          (result.get("components") or {}).items()}}
+    conn = get_connection(db_path)
+    try:
+        insert_audit_log(conn, datetime.now().isoformat(), MARKET_ID,
+                         "fragility_eval", row)
+    finally:
+        conn.close()
+
+
+def run_fragility_eval(data=None, fred_data=None, db_path=None) -> dict:
+    """Compute + persist the descriptive fragility composite (scheduler hook)."""
+    result = compute_fragility_index(data=data, fred_data=fred_data)
+    try:
+        persist_fragility_eval(result, db_path=db_path)
+    except Exception as e:  # pragma: no cover
+        logger.error("Fragility persist failed: %s", e, exc_info=True)
+    return result
+
+
+CRASH_DECISION_RULE = {
+    "trial": "TRIAL-CRASH",
+    "hypothesis": (
+        "An equal-weighted descriptive structural-fragility composite has forward "
+        "skill at flagging large S&P 500 drawdowns over 30/60/90-day horizons"
+    ),
+    "purpose": "experimental",
+    "primary_metric": "forward Brier + calibration curve by horizon vs climatology",
+    "horizons_days": list(BRIER_HORIZONS_DAYS),
+    "crash_outcome": f"SPY drawdown >= {CRASH_TRIAL_DRAWDOWN:.0%} within horizon",
+    "baseline": "climatology (predict the in-sample base rate every period)",
+    "adopt_threshold": "skill_score > 0 on a pre-registered forward window, all horizons",
+    "rarity_caveat": (
+        f"a >= {CRASH_TRIAL_DRAWDOWN:.0%} drawdown within 90d is rare, so the "
+        "base rate is low and a meaningful forward Brier needs a long window; "
+        "calibration at this rarity is weak — reported honestly, not glossed"
+    ),
+    "candidate_inputs": [c["name"] for c in FRAGILITY_CANDIDATE_INPUTS],
+    "hard_constraint": "descriptive-only; NEVER arms a lane / no buy-sell language / "
+                       "no 'crash imminent' framing",
+    "pre_registered": "2026-06-14",
+    "canonical_doc": "docs/TRIALS/TRIAL-CRASH-fragility-composite.md",
+}
+
+
+def ensure_crash_trial(db_path=None) -> int:
+    """Idempotently pre-register TRIAL-CRASH (the composite skill test).
+
+    Non-lane trial: it increments the RAW cumulative trial count (the DSR
+    strictness floor) but carries no return stream, so the effective-N (N_eff)
+    computation — which runs over REFERENCE_LANES only — is unaffected. verdict
+    'adopted' = we adopt SHIPPING the descriptive composite; any future *signal*
+    claim is a separate trial gated on the forward Brier.
+    """
+    import json as _json
+
+    from backend.db import count_cumulative_trials, get_connection, init_db
+
+    init_db(db_path)
+    conn = get_connection(db_path)
+    try:
+        existing = conn.execute(
+            "SELECT id FROM rule_experiments WHERE param = ? ORDER BY id LIMIT 1",
+            (CRASH_TRIAL_PARAM,),
+        ).fetchone()
+        if existing is not None:
+            return int(existing["id"])
+        cumulative = count_cumulative_trials(conn) + 1
+        notes = {"hypothesis": CRASH_DECISION_RULE["hypothesis"],
+                 "purpose": "experimental", "decision_rule": CRASH_DECISION_RULE}
+        cur = conn.execute(
+            "INSERT INTO rule_experiments "
+            "(created_at, config_version, lane_id, param, old_value, new_value, "
+            " batch_trials, cumulative_trials, verdict, notes) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (datetime.now().isoformat(), "descriptive", None, CRASH_TRIAL_PARAM,
+             None, "registered", 1, cumulative, "adopted", _json.dumps(notes)),
+        )
+        conn.commit()
+        logger.info("Pre-registered TRIAL-CRASH (cumulative trials now %d)", cumulative)
+        return int(cur.lastrowid)
+    finally:
+        conn.close()
+
+
+def forward_brier_status_composite(db_path=None, horizons=BRIER_HORIZONS_DAYS) -> dict:
+    """Forward-Brier state for TRIAL-CRASH (composite vs 20% drawdown climatology).
+
+    Joins persisted `fragility_eval` readings with realized forward SPY 20%
+    drawdowns for matured readings; reports `insufficient_forward_data` (with the
+    count accumulated) until enough matured observations exist per horizon.
+    """
+    import json
+
+    from backend.db import get_connection
+
+    conn = get_connection(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT timestamp, payload FROM audit_log "
+            "WHERE event_type = 'fragility_eval' ORDER BY id",
+        ).fetchall()
+    finally:
+        conn.close()
+
+    readings = []
+    for r in rows:
+        try:
+            p = json.loads(r["payload"])
+        except Exception:
+            continue
+        if p.get("status") == "ok" and p.get("composite") is not None:
+            readings.append({"date": p.get("as_of") or r["timestamp"][:10],
+                             "composite": float(p["composite"])})
+
+    base = {"trial": "TRIAL-CRASH", "readings_accumulated": len(readings),
+            "crash_threshold": CRASH_TRIAL_DRAWDOWN, "label": FRAGILITY_LABEL,
+            "note": "descriptive composite measured forward; never arms a lane"}
+
+    if len(readings) < 30:
+        return {**base, "status": "insufficient_forward_data",
+                "horizons": {str(h): {"status": "insufficient_forward_data"} for h in horizons}}
+
+    try:
+        from backend.services.data_fetcher import DataFetcher
+        data, _ = DataFetcher().fetch_market_data()
+        spy = data["SP500"].dropna()
+    except Exception:
+        return {**base, "status": "data_unavailable"}
+
+    out = {**base, "status": "ok", "horizons": {}}
+    for h in horizons:
+        fc, yo = [], []
+        for rec in readings:
+            y = _realized_drawdown_within(spy, rec["date"], h, threshold=CRASH_TRIAL_DRAWDOWN)
+            if y is not None:
+                fc.append(rec["composite"])
                 yo.append(y)
         out["horizons"][str(h)] = (
             brier_skill(fc, yo) if len(yo) >= 30

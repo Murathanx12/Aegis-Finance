@@ -197,4 +197,4 @@ def test_fragility_endpoint(tmp_db):
     assert body["latest_reading"]["armed"] is False
     assert body["forward_brier"]["status"] == "insufficient_forward_data"
     assert body["trial"]["trial"] == "TRIAL-LPPLS"
-    assert "never arms" in body["disclaimer"].lower()
+    assert "arms a lane" in body["disclaimer"].lower()
