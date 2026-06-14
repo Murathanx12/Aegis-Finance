@@ -43,6 +43,8 @@ from __future__ import annotations
 
 import logging
 import re
+import threading
+import time
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -65,6 +67,29 @@ _CIK_CACHE_TTL_HOURS = 24
 
 _SUBMISSION_CACHE: dict[str, tuple[datetime, dict]] = {}
 _SUBMISSION_TTL_MIN = 10
+
+
+class _RateLimiter:
+    """SEC EDGAR enforces a hard 10 requests/second cap — exceeding it triggers a
+    ~10-minute IP block, and SEC actively 403s default fetcher user-agents
+    (verified 2026-06-14, docs/FRAGILITY_RESEARCH_2026-06-14.md). This is a
+    process-wide limiter with headroom; ALL EDGAR HTTP must go through it."""
+
+    def __init__(self, max_per_sec: float = 8.0) -> None:
+        self._min_interval = 1.0 / max_per_sec
+        self._lock = threading.Lock()
+        self._last = 0.0
+
+    def wait(self) -> None:
+        with self._lock:
+            delta = time.monotonic() - self._last
+            if delta < self._min_interval:
+                time.sleep(self._min_interval - delta)
+            self._last = time.monotonic()
+
+
+# Shared across CIK-lookup + submissions fetches (8/s stays under SEC's 10/s).
+_RATE_LIMITER = _RateLimiter(max_per_sec=8.0)
 
 
 # ── 8-K Item taxonomy ──────────────────────────────────────────────────────
@@ -132,6 +157,7 @@ def _refresh_cik_lookup() -> None:
     """Pull SEC's master ticker→CIK file."""
     global _CIK_CACHE, _CIK_CACHE_TS
     try:
+        _RATE_LIMITER.wait()
         resp = requests.get(
             _CIK_LOOKUP_URL,
             headers={"User-Agent": _USER_AGENT, "Accept": "application/json"},
@@ -183,6 +209,7 @@ def _fetch_submissions(cik: int) -> Optional[dict]:
         return cached[1]
 
     try:
+        _RATE_LIMITER.wait()
         resp = requests.get(
             _SUBMISSIONS_URL.format(cik=int(cik)),
             headers={"User-Agent": _USER_AGENT, "Accept": "application/json"},

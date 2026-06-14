@@ -78,6 +78,21 @@ docs/STRESS_TEST_PORTFOLIOS.md
 .claude/*
 !.claude/commands/
 
+# Lab autonomous-R&D scratch output — the overnight loop commits per-cycle data
+# dumps (data/, data_after/, data_test/). ~2,587 files / ~7.7MB already tracked;
+# this stops NEW cycles from adding more. To untrack the existing ones (working
+# tree preserved, no history rewrite):
+#   git rm -r --cached lab/experiments
+# See docs/BACKLOG.md item H1.
+lab/experiments/*/data/
+lab/experiments/*/data_after/
+lab/experiments/*/data_test/
+lab/experiments/**/*.json
+
+# Raw session transcript committed by mistake (space in filename, no extension).
+# Untrack with: git rm --cached "docs/v2 session transcript"
+docs/v2 session transcript
+
 # Coverage artifacts
 .coverage
 htmlcov/

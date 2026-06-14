@@ -1,0 +1,59 @@
+# Negative Results — what Aegis measured and it didn't work
+
+> This file exists on purpose, at the top level, where a skeptic finds it first.
+> A project that runs anti-overfitting discipline *and* tells the truth about its
+> negative results is rarer — and more trustworthy — than one that hides them.
+> Surfacing this is consistent with [`docs/TRACK_RECORD_POLICY.md`](./docs/TRACK_RECORD_POLICY.md)
+> and the fragility-not-timing reframe in `docs/V2_GOALS.md` (A5).
+
+## 1. The timing strategy underperforms buy-and-hold
+
+Source: [`backend/BACKTEST_RESULTS.md`](./backend/BACKTEST_RESULTS.md), signal
+engine over 2020-01 → 2025-06 (66 monthly signals).
+
+| Metric | Strategy | Buy-and-hold |
+|---|---|---|
+| Total return | **+250.9%** | **+740.0%** |
+| Sharpe | **0.675** | **0.921** |
+| Sell-signal 3M hit-rate | **28.6%** | (target was >55%) |
+
+**Plainly: as a market-*timing* tool, the signal engine loses to doing nothing —
+on both absolute and risk-adjusted return.** It is not buried, spun, or framed
+away. It is the finding.
+
+### Why this happens (and why it's not a bug)
+The sell signals fire during high-VIX, sharp-drawdown periods — which in
+2020–2025 were the *best* buying opportunities (mean reversion). All 7 sell
+signals landed at VIX > 25; forward-3M returns after them were
+`{+2.6, +26.1, +15.4, −0.04, −3.8, +2.8…+7.1}%` — wide and mostly positive. The
+engine is **correct about current risk and wrong about forward return**. That is
+the well-known, hard truth of short-horizon equity timing, not a defect unique to
+this code.
+
+### What we concluded
+1. **Aegis is a risk-awareness tool, not a timing tool.** It tells you how exposed
+   you are and why (SHAP), not when to jump out.
+2. This is exactly why the **crash overlay is deliberately disabled** and why the
+   north-star was reframed from *time the crash* to *measure fragility and scale
+   exposure as systemic stress rises* (V2_GOALS A5). The research backs it: short-
+   horizon crash timing has ≈0 information coefficient.
+3. The honest test of whether *acting on Aegis* beats *ignoring it* is not this
+   backtest — it is the **forward, leak-free, event-driven paper lane** (BACKLOG
+   V4), whose NAV accrues only with elapsed time and cannot be cherry-picked.
+
+## 2. 12-month crash prediction has no skill
+The crash model's 3-month Brier (0.046) beats the base rate, but the **12-month
+horizon ≈ climatological base rate** — no edge. Lagging indicators dominate its
+SHAP at long horizons. The headline 3M number is also computed on a single
+walk-forward path over only ~7 stress events. It is **now reported with a
+block-bootstrap 95% CI + the positive-event count and a low-event warning**
+(`engine.validation.metrics.brier_with_ci`, shipped 2026-06-14) — regenerating
+the headline figure *with* its interval is a (slow) walk-forward re-run.
+
+## 3. LPPLS (log-periodic bubble) predictive skill: refuted
+Adversarially tested twice in the 2026-06-14 research phase; predictive skill was
+refuted both times. LPPLS therefore ships as a **descriptive bubble-structure
+flag only** — it never arms a lane and never emits a timing call.
+
+---
+*These are not reasons to distrust the project. They are the reason to trust it.*

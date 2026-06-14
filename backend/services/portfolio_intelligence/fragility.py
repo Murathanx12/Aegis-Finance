@@ -327,6 +327,27 @@ FRAGILITY_CANDIDATE_INPUTS = [
 ]
 
 
+# Temporal classification of each input relative to a drawdown. Research-graded
+# where the 2026-06-14 deep research spoke (turbulence COINCIDENT, absorption
+# LEADING, LPPL refuted — docs/FRAGILITY_RESEARCH_2026-06-14.md); by-construction
+# reasoning otherwise. This is a TRANSPARENCY label only — it does NOT re-weight
+# the composite (equal-weight stays, per the no-fit-weights canon). It does drive
+# a secondary, equal-weighted `leading_composite` view for forward reads.
+FRAGILITY_LEAD_LAG = {
+    "lppls_confidence": ("leading", "bubble structure precedes — but LPPL predictive "
+                         "skill is refuted twice; descriptive only"),
+    "sos": ("lagging", "recession confirmation; coincident-to-lagging by construction"),
+    "sahm": ("lagging", "recession-onset rule; triggers after the downturn begins"),
+    "turbulence": ("coincident", "research-graded: peaks DURING crises, not before "
+                   "(Salisu 2022; ORCA 2026) — use persistence, not as a leading trigger"),
+    "absorption_ratio": ("leading", "research-graded: rises before major drawdowns; "
+                         "'strongest classical baseline' (Kritzman 2011)"),
+    "net_liquidity": ("leading", "financial-conditions input; liquidity drains ahead of stress"),
+    "hy_oas": ("coincident", "high-yield credit spread; widens as risk reprices"),
+    "ig_oas": ("coincident", "investment-grade credit spread; widens as risk reprices"),
+}
+
+
 def _clip01(x: float) -> float:
     return float(min(max(x, 0.0), 1.0))
 
@@ -353,10 +374,13 @@ def compute_fragility_index(data=None, fred_data=None) -> dict:
     components: dict = {}
 
     def _add(name: str, normalized: Optional[float], raw=None):
+        cls, note = FRAGILITY_LEAD_LAG.get(name, ("unclassified", ""))
         components[name] = {
             "raw": raw,
             "normalized": None if normalized is None else round(_clip01(normalized), 4),
             "available": normalized is not None,
+            "lead_lag": cls,
+            "lead_lag_note": note,
         }
 
     # Fetch the shared inputs once.
@@ -451,12 +475,32 @@ def compute_fragility_index(data=None, fred_data=None) -> dict:
     # Neutral descriptive bands — deliberately NOT "crash imminent" language.
     level = ("low" if composite < 0.30 else "moderate" if composite < 0.55
              else "elevated" if composite < 0.75 else "high")
+    # Secondary view: equal-weighted mean over only the LEADING inputs. Not a
+    # re-weighting of the composite (which stays the TRIAL-CRASH metric) — a
+    # separate descriptive read for "where is fragility heading", since coincident
+    # inputs (turbulence, OAS) peak DURING stress and lagging ones (Sahm/SOS)
+    # confirm after onset. Same equal-weight discipline, just a subset.
+    leading_norms = [
+        c["normalized"] for c in components.values()
+        if c["available"] and c["lead_lag"] == "leading"
+    ]
+    leading_composite = (
+        round(float(np.mean(leading_norms)), 4) if leading_norms else None
+    )
     return {
         "status": "ok",
         "composite": round(composite, 4),
         "level": f"{level} structural fragility (descriptive)",
         "n_inputs": len(norms),
         "dispersion": round(dispersion, 4),
+        "leading_composite": leading_composite,
+        "leading_inputs": len(leading_norms),
+        "lead_lag_note": (
+            "composite is equal-weighted over ALL available inputs (unchanged, "
+            "the TRIAL-CRASH metric). leading_composite is the equal-weighted "
+            "subset of leading inputs — coincident inputs (turbulence, OAS) peak "
+            "during stress, lagging inputs (Sahm/SOS) confirm after onset."
+        ),
         "components": components,
         "candidate_inputs": FRAGILITY_CANDIDATE_INPUTS,
         "as_of": as_of,

@@ -46,7 +46,7 @@ from engine.training.features import (
     build_feature_matrix,
     build_target_crash_multi,
 )
-from engine.validation.metrics import compute_metrics, brier_skill_score
+from engine.validation.metrics import compute_metrics, brier_skill_score, brier_with_ci
 
 logger = logging.getLogger(__name__)
 
@@ -326,9 +326,12 @@ def run_backtest(
         # Core metrics
         m = compute_metrics(y_true, y_pred)
 
-        # Bootstrap confidence intervals (Phase 1.2)
-        from sklearn.metrics import brier_score_loss, roc_auc_score
-        brier_ci = bootstrap_ci(y_true, y_pred, brier_score_loss)
+        # Bootstrap confidence intervals (Phase 1.2). Brier uses a BLOCK bootstrap
+        # + reports the positive-event count, because crash labels over overlapping
+        # horizons are autocorrelated and rare (~7 events) — i.i.d. resampling would
+        # understate the CI. See engine/validation/metrics.brier_with_ci.
+        from sklearn.metrics import roc_auc_score
+        brier_ci = brier_with_ci(y_true, y_pred)
         m["brier_ci"] = brier_ci
 
         try:
@@ -339,9 +342,11 @@ def run_backtest(
 
         metrics[horizon] = m
         logger.info(
-            "  %s: Brier=%.4f [%.4f, %.4f], AUC=%.3f [%.3f, %.3f], n=%d",
+            "  %s: Brier=%.4f [%.4f, %.4f] (events=%d/%d%s), AUC=%.3f [%.3f, %.3f], n=%d",
             horizon,
             m["brier"], brier_ci["lower"], brier_ci["upper"],
+            brier_ci["n_positive"], brier_ci["n_samples"],
+            " — LOW EVENT COUNT" if brier_ci.get("low_event_warning") else "",
             m["auc"], m["auc_ci"]["lower"], m["auc_ci"]["upper"],
             m["n_samples"],
         )
@@ -428,9 +433,11 @@ if __name__ == "__main__":
         for horizon, m in metrics.items():
             brier_ci = m.get("brier_ci", {})
             auc_ci = m.get("auc_ci", {})
+            events = (f"{brier_ci.get('n_positive', '?')}/{brier_ci.get('n_samples', '?')} events"
+                      + (" — LOW" if brier_ci.get("low_event_warning") else ""))
             print(
                 f"  {horizon}: Brier={m['brier']:.4f} "
-                f"[{brier_ci.get('lower', 0):.4f}, {brier_ci.get('upper', 0):.4f}], "
+                f"[{brier_ci.get('lower', 0):.4f}, {brier_ci.get('upper', 0):.4f}] ({events}), "
                 f"AUC={m['auc']:.3f} "
                 f"[{auc_ci.get('lower', 0):.3f}, {auc_ci.get('upper', 0):.3f}], "
                 f"n={m['n_samples']}"

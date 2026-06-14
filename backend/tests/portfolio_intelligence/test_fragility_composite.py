@@ -226,3 +226,62 @@ def test_fragility_endpoint_exposes_composite(tmp_db, monkeypatch):
     assert body["composite_forward_brier"]["status"] == "insufficient_forward_data"
     assert body["composite_trial"]["trial"] == "TRIAL-CRASH"
     assert "imminent" in body["disclaimer"].lower()  # explicitly disclaims it
+
+
+# ── lead/lag transparency labels (Chunk 3, research 2026-06-14) ───────────────
+
+
+def test_research_graded_lead_lag_labels(monkeypatch):
+    _patch_subsignals(monkeypatch)
+    data, fred = _synthetic_inputs()
+    out = frag.compute_fragility_index(data=data, fred_data=fred)
+    comp = out["components"]
+    # The two the deep research graded explicitly.
+    assert comp["turbulence"]["lead_lag"] == "coincident"
+    assert comp["absorption_ratio"]["lead_lag"] == "leading"
+    # By-construction calls.
+    assert comp["sahm"]["lead_lag"] == "lagging"
+    assert comp["sos"]["lead_lag"] == "lagging"
+    assert comp["lppls_confidence"]["lead_lag"] == "leading"
+    # Every available component carries a class + a note.
+    for c in comp.values():
+        if c["available"]:
+            assert c["lead_lag"] in {"leading", "coincident", "lagging", "unclassified"}
+            assert isinstance(c["lead_lag_note"], str) and c["lead_lag_note"]
+    assert "equal-weighted over ALL" in out["lead_lag_note"]
+
+
+def test_leading_composite_is_equal_weight_subset(monkeypatch):
+    _patch_subsignals(monkeypatch)
+    data, fred = _synthetic_inputs()
+    out = frag.compute_fragility_index(data=data, fred_data=fred)
+    comp = out["components"]
+
+    leading = [c["normalized"] for c in comp.values()
+               if c["available"] and c["lead_lag"] == "leading"]
+    assert out["leading_inputs"] == len(leading)
+    assert out["leading_composite"] == pytest.approx(round(float(np.mean(leading)), 4))
+
+    # The MAIN composite is untouched: still equal-weight over ALL inputs (this is
+    # the TRIAL-CRASH metric — labels must not re-weight it).
+    alln = [c["normalized"] for c in comp.values() if c["available"]]
+    assert out["composite"] == pytest.approx(round(float(np.mean(alln)), 4))
+
+
+def test_leading_composite_none_when_no_leading_input(monkeypatch):
+    # Only Sahm (lagging) resolves → no leading input → leading_composite None.
+    monkeypatch.setattr(frag, "evaluate_lppls", lambda prices: {"status": "eval_error"})
+    monkeypatch.setattr("backend.services.macro_indicators.recession_indicators",
+                        lambda fred: {"sos": {"status": "no_data"},
+                                      "sahm": {"status": "ok", "value": 0.3}})
+    monkeypatch.setattr("backend.services.systemic_risk.compute_systemic_risk",
+                        lambda data: {"turbulence_percentile": None,
+                                      "absorption_ratio_current": None})
+    monkeypatch.setattr("backend.services.net_liquidity.get_net_liquidity",
+                        lambda: {"history": []})
+    idx = pd.date_range(end="2026-06-12", periods=300, freq="D")
+    data = pd.DataFrame({"SP500": np.linspace(100, 130, 300)}, index=idx)
+    out = frag.compute_fragility_index(data=data, fred_data={})
+    assert out["status"] == "ok" and out["n_inputs"] == 1
+    assert out["leading_inputs"] == 0
+    assert out["leading_composite"] is None

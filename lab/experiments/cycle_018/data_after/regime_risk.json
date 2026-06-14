@@ -1,8 +1,0 @@
-{
-  "regime": {
-    "error": "cannot import name 'RegimeDetector' from 'backend.services.regime_detector' (C:\\Users\\mrthn\\aegis-finance\\backend\\services\\regime_detector.py)"
-  },
-  "risk_score": {
-    "error": "cannot import name 'RiskScorer' from 'backend.services.risk_scorer' (C:\\Users\\mrthn\\aegis-finance\\backend\\services\\risk_scorer.py)"
-  }
-}

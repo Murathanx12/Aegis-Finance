@@ -52,7 +52,13 @@ Both models output calibrated probabilities via Platt scaling. The final predict
 - Re-train every 252 days starting from 2000
 
 **Metrics:**
-- Brier Score (lower is better): target ≤ 0.05 for 3-month horizon
+- Brier Score (lower is better): target ≤ 0.05 for 3-month horizon. **Always
+  reported with a block-bootstrap 95% CI and the positive-event count**
+  (`engine.validation.metrics.brier_with_ci`). The headline 3-month Brier is
+  computed on only ~7 crash events, so the point estimate alone overstates
+  certainty — a block (not i.i.d.) bootstrap is used because crash labels over
+  overlapping horizons are autocorrelated, and the reading carries a
+  `low_event_warning` whenever fewer than 10 positives back it.
 - Brier Skill Score (BSS) vs climatology: measures improvement over always-predict-base-rate
 - Reliability diagram: calibration of predicted probabilities
 

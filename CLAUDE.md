@@ -81,8 +81,8 @@ aegis-finance/
 │   ├── main.py                  # App entry + CORS + cache prewarming
 │   ├── config.py                # All parameters (scenarios, weights, tickers, thresholds)
 │   ├── cache.py                 # In-memory TTL cache
-│   ├── routers/                 # 13 API routers (30+ endpoints)
-│   ├── services/                # 44 business logic modules
+│   ├── routers/                 # 19 API routers (130+ endpoints)
+│   ├── services/                # 100+ business logic modules
 │   │   ├── data_fetcher.py      # Yahoo Finance + FRED unified
 │   │   ├── monte_carlo.py       # Jump-diffusion MC (Merton-corrected)
 │   │   ├── risk_scorer.py       # 9-factor composite z-score
@@ -238,7 +238,7 @@ docker compose up --build
 | Portfolio Stress (3 profiles) | `test_stress_portfolio.py` | 10 | Slow (network) |
 | Portfolio Projection (MC) | `test_portfolio_projection.py` | 5 | Slow (network) |
 | Edge Cases (tickers) | `test_edge_cases.py` | 7 | Slow (network) |
-| **Total** | **28+ files** | **1177+** | **~780 fast / ~95 slow** |
+| **Total** | **40+ files** | **2460+** | **~2467 fast / ~95 slow** |
 
 Run fast tests: `python -m pytest backend/tests/ -v -m "not slow"`
 
