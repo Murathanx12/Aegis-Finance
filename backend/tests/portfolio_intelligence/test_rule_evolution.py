@@ -88,7 +88,8 @@ def test_passing_candidate_is_full_stop_not_adopted(tmp_db, monkeypatch):
     monkeypatch.setattr(rev, "_backtest_candidate", _strong_backtest)
     before = cumulative_trial_count(tmp_db)  # 0, fresh db
 
-    out = rev.evolve_param("balanced", "rebalance_trigger_drift", [0.05, 0.06],
+    # Grid avoids old_value (0.05) so the winner is a real change, not the status quo.
+    out = rev.evolve_param("balanced", "rebalance_trigger_drift", [0.06, 0.07],
                            dry_run=False, db_path=tmp_db)
 
     assert out["survives"] is True
@@ -113,6 +114,24 @@ def test_dry_run_records_nothing(tmp_db, monkeypatch):
 
 
 # ── guard rails: unknown param, no valid candidates ───────────────────────────
+
+
+def test_null_candidate_no_effect_not_a_proposal(tmp_db, monkeypatch):
+    """A non-binding param (all grid values → identical returns, sr_variance=0)
+    must NOT be surfaced as a STOP_PROPOSE discovery even though a zero-variance
+    batch trivially clears the deflation bar. This is the real-data finding:
+    rebalance_trigger_drift doesn't bind for a monthly-cadence lane."""
+    monkeypatch.setattr(
+        rev, "_backtest_candidate",
+        lambda lane_id, override, s, e, engine=None: pd.Series(
+            np.random.default_rng(0).normal(0.002, 0.01, 250)),  # identical regardless of value
+    )
+    out = rev.evolve_param("balanced", "rebalance_trigger_drift", [0.06, 0.07, 0.08],
+                           dry_run=False, db_path=tmp_db)
+    assert out["sr_variance"] == 0.0
+    assert out["action"] == "no_effect"
+    assert "recorded_trial_id" not in out
+    assert cumulative_trial_count(tmp_db) == 0  # nothing recorded
 
 
 def test_unknown_param_is_skipped(tmp_db):

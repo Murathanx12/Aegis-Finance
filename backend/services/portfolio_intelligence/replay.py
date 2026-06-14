@@ -260,7 +260,13 @@ class ReplayEngine:
         data, _ = fetcher.fetch_market_data()
         fred_data = fetcher.fetch_fred_data()
 
-        return MarketDataAtTimestamp(data, fred_data)
+        # Cache the wrapper so repeated run() calls on the same engine (e.g. a
+        # rule-evolution grid) reuse one fetch — the `if self._wrapper is not
+        # None` guard above intended this but the assignment was missing.
+        # Behavior-identical: fetch_market_data() ignores date args (returns its
+        # full range) so the wrapper is range-independent.
+        self._wrapper = MarketDataAtTimestamp(data, fred_data)
+        return self._wrapper
 
     def _get_crash_prob_as_of(
         self,
