@@ -18,6 +18,7 @@ from datetime import date, datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel as _BaseModel, Field as _PydField
 
 from backend.schemas.portfolio_intelligence import (
     AnalyzePortfolioRequest,
@@ -322,6 +323,81 @@ async def get_fragility():
         return await asyncio.to_thread(_read)
     except Exception as e:
         logger.error("Fragility read failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Conviction lane: decision capture (P1 #6 groundwork) ──────────────────────
+# Writes to the immutable `personal_decisions` LOG (separate from paper_nav — NOT
+# the track-record write path). Decisions are forward-only: timestamp is always
+# server-now (never backdated); a past action is flagged late_entry; corrections
+# append via amends_id (the table's triggers forbid update/delete). The conviction
+# *lane* (positions driven by these decisions) is the attended seeding session.
+
+class ConvictionDecisionRequest(_BaseModel):
+    ticker: str
+    action: str                      # enter | add | trim | exit
+    shares_delta: float
+    price: float
+    rationale: str                   # >= 50 chars (honest-record discipline)
+    conviction: int                  # 1-5
+    thesis_tags: list[str] = _PydField(default_factory=list)
+    target_price: Optional[float] = None
+    stop_price: Optional[float] = None
+    planned_exit_trigger: Optional[str] = None
+    catalyst_dates: list[str] = _PydField(default_factory=list)
+    amends_id: Optional[int] = None  # correction → appends a new row referencing the original
+    late_entry: bool = False         # the action already happened; logged after the fact
+    portfolio_snapshot: dict = _PydField(default_factory=dict)
+
+
+@router.post("/conviction/decision")
+async def log_conviction_decision(body: ConvictionDecisionRequest):
+    """Log a conviction-lane decision (immutable, forward-only). Returns the row id."""
+    def _write():
+        from backend.db import get_connection, init_db, insert_personal_decision
+        init_db()
+        conn = get_connection()
+        try:
+            ts = datetime.now().isoformat()  # server-now; never client-supplied/backdated
+            rid = insert_personal_decision(
+                conn, timestamp=ts, ticker=body.ticker.upper().strip(),
+                action=body.action, shares_delta=body.shares_delta, price=body.price,
+                rationale=body.rationale, thesis_tags=body.thesis_tags,
+                conviction=body.conviction, portfolio_snapshot=body.portfolio_snapshot,
+                target_price=body.target_price, stop_price=body.stop_price,
+                planned_exit_trigger=body.planned_exit_trigger,
+                catalyst_dates=body.catalyst_dates, amends_id=body.amends_id,
+                late_entry=body.late_entry,
+            )
+            return {"id": rid, "timestamp": ts, "late_entry": body.late_entry}
+        finally:
+            conn.close()
+
+    try:
+        return await asyncio.to_thread(_write)
+    except ValueError as e:  # rationale<50 / conviction range / bad action
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error("Conviction decision write failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/conviction/decisions")
+async def get_conviction_decisions(limit: int = Query(default=100, le=500)):
+    """Read the conviction decision log (newest first). Read-only."""
+    def _read():
+        from backend.db import get_connection, init_db, list_personal_decisions
+        init_db()
+        conn = get_connection()
+        try:
+            return {"decisions": list_personal_decisions(conn, limit=limit)}
+        finally:
+            conn.close()
+
+    try:
+        return await asyncio.to_thread(_read)
+    except Exception as e:
+        logger.error("Conviction decisions read failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
