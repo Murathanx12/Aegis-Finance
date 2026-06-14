@@ -39,7 +39,7 @@ def main() -> None:
     print("Book current-market-value weights (live prices):")
     for t, w in sorted(weights.items(), key=lambda kv: -kv[1]):
         print(f"  {t:6s} {w * 100:6.2f}%   @ ${prices[t]:,.2f}")
-    print(f"  ({len(weights)} names → $100,000 notional)")
+    print(f"  ({len(weights)} names -> $100,000 notional)")
 
     if args.dry_run:
         print("\n--dry-run: nothing written.")
