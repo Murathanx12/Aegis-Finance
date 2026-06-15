@@ -1,0 +1,54 @@
+{
+  "window_obs": 2515,
+  "comparison_table": {
+    "SPY_buyhold": {
+      "cagr": 0.1275,
+      "sharpe": 0.7472,
+      "vol": 0.1831,
+      "max_dd": -0.3372,
+      "matched_vol_cagr": 0.1275
+    },
+    "momentum_unmanaged": {
+      "cagr": 0.3497,
+      "sharpe": 1.1686,
+      "vol": 0.2941,
+      "max_dd": -0.4126,
+      "matched_vol_cagr": 0.2178
+    },
+    "vol_managed_best": {
+      "cagr": 0.125,
+      "sharpe": 1.1745,
+      "vol": 0.105,
+      "max_dd": -0.1352,
+      "matched_vol_cagr": 0.2192,
+      "config": {
+        "target_vol": 0.1,
+        "lookback": 63
+      }
+    }
+  },
+  "pbo": {
+    "pbo": 0.373,
+    "n_splits": 252,
+    "n_partitions": 10,
+    "median_logit": 0.2877,
+    "interpretation": "fragile"
+  },
+  "dsr": {
+    "observed_sharpe": 0.074,
+    "n_obs": 2515,
+    "skew": -0.5291,
+    "kurtosis": 5.3877,
+    "n_trials": 24,
+    "expected_max_sharpe_h0": 0.0048,
+    "psr": 0.9999,
+    "dsr": 0.9997
+  },
+  "n_trials_deflated_against": 24,
+  "gate": {
+    "dsr_pass": true,
+    "pbo_pass": true,
+    "beats_spy_sharpe": true
+  },
+  "verdict": "PASS \u2014 register forward lane"
+}

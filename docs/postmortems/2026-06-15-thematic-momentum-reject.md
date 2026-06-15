@@ -62,3 +62,17 @@ thesis under the overfitting guards. Plan-first, chunked, nothing live touched.
 - The secular-theme instinct → **forward conviction lane** (book seeded today at
   MV weights; decisions logged forward, leak-free). Backtest closed; do not tune.
 - Do NOT add thematic-momentum selection to any live lane — it has no edge.
+
+## Addendum — vol-managed momentum (TRIAL-VMM, same session)
+
+Ran Barroso–Santa-Clara vol-scaling on broad momentum (3a). Two lessons:
+1. **ADOPT: vol-management is clean, leakage-safe risk control** — held Sharpe
+   constant (1.17) while cutting maxDD from −41% to −13%. Universe-independent;
+   worth running forward as an overlay (like the ATR exit, smoother).
+2. **The gate MISSED a survivorship trap.** The 1.17 Sharpe is inflated because
+   the momentum universe = `config.stock_universe` = *today's* large-caps (known
+   winners). DSR=1.000 saturated *because* of the biased Sharpe; **DSR/PBO guards
+   multiple-testing, NOT a biased universe.** Same artifact as EW-themes — it
+   just printed "PASS" this time. **A point-in-time / delisted-inclusive universe
+   is mandatory before ANY absolute alpha claim. Forward NAV is the only fully
+   honest test.** See `research/VOL_MANAGED_MOMENTUM_2026-06-15.md`.
