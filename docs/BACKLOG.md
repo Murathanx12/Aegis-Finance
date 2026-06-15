@@ -13,6 +13,29 @@
 
 ---
 
+## SECTION T — Thematic-Momentum & Exit Discipline (V3 workstream, 2026-06-15)
+
+> Origin: Murat's "we lag SPY, we play too safe, buy the next big thing early
+> and stop selling winners too soon — prove me wrong with real values." Full
+> plan + thesis reconciliation + pre-registered trial:
+> [`research/THEMATIC_MOMENTUM_2026-06-15.md`](./research/THEMATIC_MOMENTUM_2026-06-15.md).
+> Key reframe: the testable thesis is *early cross-sectional momentum + exit
+> discipline on individual names* (supported by Odean/JT/AMP), NOT theme-ETFs
+> at peak (the Ben-David trap). The LLM/brain layer is forward-only (profit-
+> mirage firewall); the mechanical layer is backtested under DSR/PBO.
+
+| ID | Item | Status |
+|---|---|---|
+| ✅ T0 | Reconciliation doc + chunk plan + TRIAL-THEME pre-registration | done 2026-06-15 |
+| ✅ T2 | Exit engine: ATR Chandelier trailing stop, vol-target sizing, fractional Kelly (`services/exit_engine.py`, 19 tests ✅). The research-identified #1 gap — engine previously had NO way to "let a winner run." Descriptive-only. | done 2026-06-15 |
+| ✅ T1 | Secular theme baskets, point-in-time membership (`data/theme_baskets.yaml` + `services/theme_baskets.py`, 13 tests) | done 2026-06-15 |
+| ✅ T3 | `thematic_momentum.py` — 12-1 momentum entry within as-of baskets + vol-target sizing | done 2026-06-15 |
+| ✅ T4 | **Decisive backtest** 2015→2025 vs SPY (`engine/research/thematic_backtest.py`). **Result: leaning REJECT.** Neutral cfg LOSES to SPY (+11.2% vs +12.8% CAGR, 0.64 vs 0.75 Sharpe); only best-of-15 beats it, PBO=0.37 fragile, edge is bull-beta not selection alpha, survivorship-inflated. One real lesson: exits cut maxDD −25.6% vs −33.7%. See research doc §7. | done 2026-06-15 |
+| ⬜ T4b | Rebuild: add delisted names (de-bias survivorship), equal-weight + SP500-momentum controls, beta-neutral/matched-vol compare, vol-managed momentum. The real test of *selection* skill. | next |
+| ⬜ T5 | Forward conviction/thematic paper lane (LLM forward-only) — **gated on T4b** | open |
+
+---
+
 ## DONE THIS SESSION (2026-06-14)
 
 | ID | Item | What was done |

@@ -1,0 +1,88 @@
+# Secular-demand theme baskets — POINT-IN-TIME membership
+# =========================================================
+# Each ticker carries `available_from`: the earliest date it could HONESTLY
+# have been considered a member without hindsight (listing date, or the
+# backtest floor 2015-01-01 for names already public and relevant then).
+# The backtester MUST NOT include a ticker before its available_from — that is
+# the anti-hindsight guard. A reviewer should be able to check every date.
+#
+# SURVIVORSHIP NOTE: this is a curated, mostly-survivor universe sourced via
+# yfinance. Acquired/delisted names (e.g. PXD→XOM 2024, LTHM→Arcadium 2024) may
+# have truncated histories; the backtest handles gaps but the basket tilts
+# toward survivors. This is a documented caveat of v1, not a hidden one.
+# Data-driven, survivorship-safe membership (13F accumulation / PIT sector-
+# growth) is the deferred Chunk 1b — see docs/research/THEMATIC_MOMENTUM_2026-06-15.md.
+#
+# floor = 2015-01-01 (backtest start). IPO dates are the real first-trade dates.
+
+themes:
+  ai_compute:
+    label: "AI compute & semiconductors"
+    thesis: "AI demand -> compute -> chips, foundry, EDA, networking."
+    members:
+      - {ticker: NVDA, available_from: 2015-01-01}
+      - {ticker: AVGO, available_from: 2015-01-01}
+      - {ticker: AMD,  available_from: 2015-01-01}
+      - {ticker: MU,   available_from: 2015-01-01}
+      - {ticker: MRVL, available_from: 2015-01-01}
+      - {ticker: QCOM, available_from: 2015-01-01}
+      - {ticker: TSM,  available_from: 2015-01-01}
+      - {ticker: ASML, available_from: 2015-01-01}
+      - {ticker: AMAT, available_from: 2015-01-01}
+      - {ticker: LRCX, available_from: 2015-01-01}
+      - {ticker: SMCI, available_from: 2015-01-01}
+      - {ticker: SNPS, available_from: 2015-01-01}
+      - {ticker: CDNS, available_from: 2015-01-01}
+      - {ticker: PLTR, available_from: 2020-09-30}   # direct listing
+      - {ticker: ARM,  available_from: 2023-09-14}   # IPO
+
+  energy_oil:
+    label: "Energy / oil"
+    thesis: "Geopolitical supply shock + depletion; structural underinvestment."
+    members:
+      - {ticker: XOM, available_from: 2015-01-01}
+      - {ticker: CVX, available_from: 2015-01-01}
+      - {ticker: COP, available_from: 2015-01-01}
+      - {ticker: SLB, available_from: 2015-01-01}
+      - {ticker: EOG, available_from: 2015-01-01}
+      - {ticker: OXY, available_from: 2015-01-01}
+      - {ticker: MPC, available_from: 2015-01-01}
+      - {ticker: PSX, available_from: 2015-01-01}
+      - {ticker: VLO, available_from: 2015-01-01}
+      - {ticker: HAL, available_from: 2015-01-01}
+
+  batteries_minerals:
+    label: "Batteries & critical minerals"
+    thesis: "EV/grid storage adoption -> lithium, copper, rare earths."
+    members:
+      - {ticker: ALB,  available_from: 2015-01-01}   # lithium
+      - {ticker: SQM,  available_from: 2015-01-01}   # lithium
+      - {ticker: FCX,  available_from: 2015-01-01}   # copper
+      - {ticker: MP,   available_from: 2020-11-18}   # rare earths (SPAC)
+      - {ticker: LAC,  available_from: 2015-01-01}   # Lithium Americas
+      - {ticker: ALV,  available_from: 2015-01-01}   # battery safety / auto supply
+      - {ticker: TSLA, available_from: 2015-01-01}   # EV demand pull-through
+
+  quantum:
+    label: "Quantum computing (high-failure stress test)"
+    thesis: "First-mover in fault-tolerant QC is a discontinuity; pure-plays are tiny and mostly post-2021."
+    members:
+      - {ticker: IBM,  available_from: 2015-01-01}   # closest liquid QC effort pre-2021
+      - {ticker: IONQ, available_from: 2021-10-01}   # SPAC
+      - {ticker: RGTI, available_from: 2022-03-02}   # SPAC
+      - {ticker: QBTS, available_from: 2022-08-08}   # SPAC
+
+  pharma_biotech:
+    label: "Pharma & biotech"
+    thesis: "Aging demand + pipeline catalysts (obesity, oncology, gene therapy)."
+    members:
+      - {ticker: LLY,  available_from: 2015-01-01}
+      - {ticker: VRTX, available_from: 2015-01-01}
+      - {ticker: REGN, available_from: 2015-01-01}
+      - {ticker: AMGN, available_from: 2015-01-01}
+      - {ticker: GILD, available_from: 2015-01-01}
+      - {ticker: BIIB, available_from: 2015-01-01}
+      - {ticker: MRK,  available_from: 2015-01-01}
+      - {ticker: PFE,  available_from: 2015-01-01}
+      - {ticker: BMY,  available_from: 2015-01-01}
+      - {ticker: MRNA, available_from: 2018-12-07}   # IPO

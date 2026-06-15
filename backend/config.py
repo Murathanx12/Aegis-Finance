@@ -833,6 +833,26 @@ config: dict = {
         "screener_max_tickers": 80,
     },
 
+    # ── EXIT ENGINE & POSITION SIZING ────────────────────────────────────
+    # The research-backed fix for the disposition effect ("sold NVDA too
+    # early" — Odean 1998): mechanical ATR trailing stops that let winners
+    # run, plus volatility-targeted / fractional-Kelly sizing. Pure,
+    # stateless helpers in services/exit_engine.py. DESCRIPTIVE until a
+    # pre-registered backtest (TRIAL-THEME, see docs/research/) clears the
+    # DSR/PBO gate — NO live lane uses these yet. Grid params feed the sweep
+    # so every variant is counted against the cumulative trial count.
+    "exit_engine": {
+        "atr_period": 14,              # Wilder ATR lookback (trading days)
+        "atr_stop_multiple": 3.0,      # Chandelier exit: stop = peak_close - k*ATR
+        "atr_multiple_grid": [2.0, 2.5, 3.0, 3.5, 4.0],  # registered sweep variants
+        "vol_target_annual": 0.20,     # target per-position annualized vol
+        "vol_lookback_days": 63,       # realized-vol window for sizing
+        "max_position_weight": 0.25,   # hard cap per name (concentration guard)
+        "kelly_fraction": 0.25,        # fractional Kelly multiplier (quarter-Kelly)
+        "kelly_cap": 0.25,             # never size above this from Kelly alone
+        "trading_days_year": 252,
+    },
+
     # ── RELATIVE VALUATION ──────────────────────────────────────────────
     # Koyfin-style peer comparison: rank a stock vs sector peers on valuation metrics
     "relative_valuation": {
