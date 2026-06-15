@@ -32,7 +32,10 @@
 | ✅ T3 | `thematic_momentum.py` — 12-1 momentum entry within as-of baskets + vol-target sizing | done 2026-06-15 |
 | ✅ T4 | **Decisive backtest** 2015→2025 vs SPY (`engine/research/thematic_backtest.py`). **Result: leaning REJECT.** Neutral cfg LOSES to SPY (+11.2% vs +12.8% CAGR, 0.64 vs 0.75 Sharpe); only best-of-15 beats it, PBO=0.37 fragile, edge is bull-beta not selection alpha, survivorship-inflated. One real lesson: exits cut maxDD −25.6% vs −33.7%. See research doc §7. | done 2026-06-15 |
 | ✅ T4b | Controls close-out. **TRIAL-THEME = REJECT.** Theme-momentum selection edge = −0.08 Sharpe vs controls (worse than generic broad momentum AND than equal-weighting the themes); PBO=0.66 overfit → gate FAILS. EW-themes beat SPY (+21.2%) but that's hindsight theme-pick + survivorship (I chose 2026's winners), not prospective skill. Exits = drawdown control (−30.6% vs −33.7%). Mechanical sub-question ENDED. See research doc §8. | done 2026-06-15 |
+| ✅ T6 | Vol-managed momentum (3a, Barroso–Santa-Clara). **ADOPT as risk overlay** (Sharpe constant 1.17, maxDD −41%→−13%, leakage-safe). **But absolute Sharpe survivorship-inflated** (universe = today's large-caps); gate "PASS" is false-positive — DSR/PBO ≠ survivorship guard. Alpha claim needs point-in-time universe. See `research/VOL_MANAGED_MOMENTUM_2026-06-15.md`. | done 2026-06-15 |
+| ⬜ T7 | Point-in-time / delisted-inclusive universe — prerequisite for ANY momentum-alpha forward claim (survivorship killer the gate can't catch). | next research |
 | ⬜ T5 | Forward conviction lane — the ONLY honest test of "pick winning themes early" (backtest can't; it's hindsight). = **Priority 3**. | open |
+| ⬜ T8 | Multi-factor score (momentum+value+quality via factor_grades) — strategy-improvement 3b. | open |
 
 ---
 
