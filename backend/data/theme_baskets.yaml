@@ -62,6 +62,14 @@ themes:
       - {ticker: LAC,  available_from: 2015-01-01}   # Lithium Americas
       - {ticker: ALV,  available_from: 2015-01-01}   # battery safety / auto supply
       - {ticker: TSLA, available_from: 2015-01-01}   # EV demand pull-through
+      # --- survivorship correction (Chunk 4b): the "obvious future" names that
+      #     DIED. Just as logically compelling as NVDA at the time; including
+      #     them is what makes the thematic backtest honest about hindsight.
+      - {ticker: QS,   available_from: 2020-11-27}   # QuantumScape (solid-state, SPAC) — collapsed
+      - {ticker: NKLA, available_from: 2020-06-04}   # Nikola (EV/hydrogen, SPAC) — near-zero
+      - {ticker: PLUG, available_from: 2015-01-01}   # Plug Power (hydrogen) — boom/bust
+      - {ticker: FCEL, available_from: 2015-01-01}   # FuelCell Energy — boom/bust
+      - {ticker: CHPT, available_from: 2021-03-01}   # ChargePoint (EV charging, SPAC) — collapsed
 
   quantum:
     label: "Quantum computing (high-failure stress test)"

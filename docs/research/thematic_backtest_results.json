@@ -1,147 +1,69 @@
 {
-  "spy": {
-    "cagr": 0.1276,
-    "sharpe": 0.7481,
-    "vol": 0.183,
-    "max_dd": -0.3372
-  },
-  "headline_config": {
-    "atr_multiple": 3.0,
-    "lookback_months": 12,
-    "cagr": 0.1115,
-    "sharpe": 0.6411,
-    "vol": 0.1945,
-    "max_dd": -0.2559
-  },
-  "best_config": {
-    "atr_multiple": 4.0,
-    "lookback_months": 6,
-    "cagr": 0.1886,
-    "sharpe": 0.8922,
-    "vol": 0.2212,
-    "max_dd": -0.3301
-  },
-  "all_configs": {
-    "atr2.0_lb6": {
-      "cagr": 0.0722,
-      "sharpe": 0.5169,
-      "vol": 0.1595,
-      "max_dd": -0.2889
-    },
-    "atr2.0_lb9": {
-      "cagr": 0.0644,
-      "sharpe": 0.4707,
-      "vol": 0.1597,
-      "max_dd": -0.4157
-    },
-    "atr2.0_lb12": {
-      "cagr": 0.0562,
-      "sharpe": 0.4262,
-      "vol": 0.1574,
-      "max_dd": -0.3008
-    },
-    "atr2.5_lb6": {
-      "cagr": 0.1119,
-      "sharpe": 0.6872,
-      "vol": 0.1772,
-      "max_dd": -0.2851
-    },
-    "atr2.5_lb9": {
-      "cagr": 0.0805,
-      "sharpe": 0.5239,
-      "vol": 0.1782,
-      "max_dd": -0.3604
-    },
-    "atr2.5_lb12": {
-      "cagr": 0.0852,
-      "sharpe": 0.5508,
-      "vol": 0.1769,
-      "max_dd": -0.2973
-    },
-    "atr3.0_lb6": {
-      "cagr": 0.1528,
-      "sharpe": 0.8228,
-      "vol": 0.1963,
-      "max_dd": -0.2385
-    },
-    "atr3.0_lb9": {
-      "cagr": 0.1079,
-      "sharpe": 0.6221,
-      "vol": 0.1956,
-      "max_dd": -0.3214
-    },
-    "atr3.0_lb12": {
-      "cagr": 0.1115,
-      "sharpe": 0.6411,
-      "vol": 0.1945,
-      "max_dd": -0.2559
-    },
-    "atr3.5_lb6": {
-      "cagr": 0.1629,
-      "sharpe": 0.8248,
-      "vol": 0.2097,
-      "max_dd": -0.3226
-    },
-    "atr3.5_lb9": {
-      "cagr": 0.1204,
-      "sharpe": 0.6521,
-      "vol": 0.2075,
-      "max_dd": -0.3441
-    },
-    "atr3.5_lb12": {
-      "cagr": 0.1185,
-      "sharpe": 0.642,
-      "vol": 0.2083,
-      "max_dd": -0.2699
-    },
-    "atr4.0_lb6": {
-      "cagr": 0.1886,
-      "sharpe": 0.8922,
-      "vol": 0.2212,
-      "max_dd": -0.3301
-    },
-    "atr4.0_lb9": {
-      "cagr": 0.1414,
-      "sharpe": 0.7144,
-      "vol": 0.2187,
-      "max_dd": -0.3433
-    },
-    "atr4.0_lb12": {
-      "cagr": 0.1454,
-      "sharpe": 0.7297,
-      "vol": 0.2189,
-      "max_dd": -0.284
-    }
-  },
-  "pbo": {
-    "pbo": 0.369,
-    "n_splits": 252,
-    "n_partitions": 10,
-    "median_logit": 0.5108,
-    "interpretation": "fragile"
-  },
-  "dsr": {
-    "observed_sharpe": 0.0562,
-    "n_obs": 2515,
-    "skew": -0.0336,
-    "kurtosis": 8.8329,
-    "n_trials": 18,
-    "expected_max_sharpe_h0": 0.0158,
-    "psr": 0.9975,
-    "dsr": 0.9781
-  },
-  "n_trials_deflated_against": 18,
-  "cost_rate_bps": 10.0,
   "window": {
     "trade_start": "2015-06-01",
     "end": "2025-06-01"
   },
-  "n_obs": 2515,
-  "verdict_gate": {
-    "dsr_ship_threshold": 0.95,
-    "pbo_reject_threshold": 0.5,
-    "dsr_pass": true,
-    "pbo_pass": true
+  "cost_bps": 10.0,
+  "headline_config": {
+    "atr_multiple": 3.0,
+    "lookback_months": 12
   },
-  "verdict": "PASS"
+  "best_config": {
+    "atr_multiple": 4.0,
+    "lookback_months": 12,
+    "cagr": 0.1941,
+    "sharpe": 0.8692,
+    "vol": 0.2362,
+    "max_dd": -0.3151
+  },
+  "comparison_table": {
+    "SPY_buyhold": {
+      "cagr": 0.1276,
+      "sharpe": 0.7481,
+      "vol": 0.183,
+      "max_dd": -0.3372,
+      "matched_vol_cagr": 0.1276
+    },
+    "thematic_momentum": {
+      "cagr": 0.1565,
+      "sharpe": 0.793,
+      "vol": 0.2116,
+      "max_dd": -0.3055,
+      "matched_vol_cagr": 0.137
+    },
+    "equal_weight_themes": {
+      "cagr": 0.2122,
+      "sharpe": 0.8697,
+      "vol": 0.2604,
+      "max_dd": -0.3807,
+      "matched_vol_cagr": 0.153
+    },
+    "broad_momentum": {
+      "cagr": 0.1514,
+      "sharpe": 0.8607,
+      "vol": 0.1834,
+      "max_dd": -0.3352,
+      "matched_vol_cagr": 0.1511
+    }
+  },
+  "pbo": {
+    "pbo": 0.6587,
+    "n_splits": 252,
+    "n_partitions": 10,
+    "median_logit": -0.2513,
+    "interpretation": "overfit"
+  },
+  "dsr": {
+    "observed_sharpe": 0.0548,
+    "n_obs": 2515,
+    "skew": 0.1673,
+    "kurtosis": 9.7796,
+    "n_trials": 18,
+    "expected_max_sharpe_h0": 0.0123,
+    "psr": 0.997,
+    "dsr": 0.9835
+  },
+  "n_trials_deflated_against": 18,
+  "selection_edge_sharpe_vs_best_control": -0.0767,
+  "verdict": "REJECT (\u2248 momentum/beta)"
 }

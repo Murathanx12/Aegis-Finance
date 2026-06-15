@@ -249,6 +249,57 @@ result is publishable as-is.
 
 ---
 
+## 8. Chunk 4b — the controls close-out (TRIAL-THEME VERDICT: REJECT)
+
+Survivorship-corrected baskets (dead "next big thing" names added: QS, PLUG,
+FCEL, CHPT; NKLA failed to download — delisted — so EW is *still* mildly
+survivorship-optimistic). Three controls isolate selection skill from beta.
+
+| Strategy | CAGR | Sharpe | Max DD | CAGR @ SPY-vol |
+|---|---|---|---|---|
+| SPY buy & hold | +12.8% | 0.75 | −33.7% | +12.8% |
+| **Thematic momentum** (atr3, lb12) | +15.7% | 0.79 | −30.6% | +13.7% |
+| Equal-weight themes (*thematic beta*) | +21.2% | 0.87 | −38.1% | +15.3% |
+| Broad-universe momentum (*generic momentum*) | +15.1% | 0.86 | −33.5% | +15.1% |
+
+**Selection edge = thematic Sharpe (0.79) − best control (0.87) = −0.08.**
+**PBO = 0.66 ("overfit").** The registry gate (DSR≥0.95 **AND** PBO<0.5) now
+correctly **FAILS** on PBO.
+
+### The verdict, split honestly
+
+**Part B of the thesis — "momentum-select + let winners run *within* themes" — is REJECTED.**
+It is *worse* than both controls: worse than generic broad-universe momentum
+(0.79 vs 0.86 Sharpe) and worse than just equal-weighting the same themes
+(0.79 vs 0.87). The clever selection layer **subtracts** value. Momentum does
+not need themes, and theme-momentum-picking is not a skill here.
+
+**Part A — "pick the right secular themes" — *did* beat SPY, but it's hindsight, not a claimable edge.**
+Equal-weighting just these 5 themes returned +21.2% (vs SPY +12.8%; +15.3% vs
++12.8% at matched vol) — a real ~2.5pp/yr beta edge, *but with a deeper −38%
+drawdown*. The fatal caveat: **I chose AI/energy/batteries/pharma/quantum in
+2026, knowing they won.** A 2015 investor had no such list. The survivorship
+correction dented this but couldn't kill it (the NVDA/AVGO/LLY/oil-2022 winners
+are too large, and NKLA even failed to load). So **EW-themes-beats-SPI is the
+hindsight-survivorship artifact the whole exercise was built to expose** — it is
+*not* prospective skill.
+
+**Exits, again, = drawdown control.** Thematic momentum's −30.6% maxDD beat both
+SPY (−33.7%) and EW-themes (−38.1%) — consistent with every prior run: the ATR
+stop is a risk tool, not an alpha tool.
+
+### What this proves (and why it points straight at Priority 3)
+
+A backtest **cannot** validate "pick winning themes early," because anyone (me,
+an LLM, a 2026 rule) choosing the themes already knows the outcome — that is the
+profit mirage in basket form. **The only honest test of Murat's core instinct is
+forward, leak-free: the conviction lane.** TRIAL-THEME closes as **REJECT** for
+mechanical theme-selection alpha; the secular-conviction thesis moves to the
+forward paper lane where hindsight can't contaminate it. Mechanical
+sub-question: **ENDED. Do not keep tuning.**
+
+---
+
 ## 6. Status ledger
 
 | Chunk | State | Artifact |
