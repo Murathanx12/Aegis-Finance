@@ -432,6 +432,19 @@ async def _daily_check():
     except Exception as e:
         logger.error("Insider-IC collection failed: %s", e, exc_info=True)
 
+    # TRIAL-REVISIONS-IC (T10) — snapshot the analyst revision-momentum score
+    # (net Raises/Lowers + up/downgrades over 90d, NOT implied upside) per book
+    # name. Weekly-throttled, descriptive, forward-only. Starts that IC clock.
+    try:
+        from backend.services.portfolio_intelligence.revisions_collector import (
+            collect_revision_scores,
+        )
+        rev = await asyncio.to_thread(collect_revision_scores)
+        logger.info("Revisions-IC collect: status=%s n=%s nonzero=%s (descriptive)",
+                    rev.get("status"), rev.get("n"), rev.get("nonzero"))
+    except Exception as e:
+        logger.error("Revisions-IC collection failed: %s", e, exc_info=True)
+
 
 async def _weekly_aggressive_check():
     """Additional weekly check for aggressive lane."""
