@@ -76,6 +76,31 @@ class TestHourlyMTM:
         sched._last_mtm_timestamp = None
 
 
+class TestDailyCheckWiresBookLanes:
+    def test_daily_check_invokes_book_management(self):
+        """Plan 3: the daily check must drive book-lane management (mirror cadence
+        + conviction decisions), isolated so a book failure can't break the
+        reference-lane check."""
+        import backend.services.portfolio_intelligence.scheduler as sched
+
+        with patch(
+            "backend.services.portfolio_intelligence.reference_engine.run_all_lanes",
+            return_value={},
+        ), patch(
+            "backend.services.portfolio_intelligence.book_management.run_all_book_management",
+            return_value={"mirror": {"status": "not_seeded"},
+                          "conviction": {"status": "not_seeded"}},
+        ) as mock_book, patch(
+            "backend.services.portfolio_intelligence.fragility.run_lppls_eval",
+            return_value={},
+        ), patch(
+            "backend.services.portfolio_intelligence.fragility.run_fragility_eval",
+            return_value={},
+        ):
+            asyncio.run(sched._daily_check())
+            mock_book.assert_called_once()
+
+
 class TestManualTrigger:
     def test_single_lane(self):
         mock_snapshot = MagicMock()

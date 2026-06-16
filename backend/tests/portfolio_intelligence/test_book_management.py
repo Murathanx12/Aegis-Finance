@@ -201,3 +201,22 @@ class TestConviction:
                 "ABSI": 600, "SLDP": 600,
             }.items()
         )
+
+
+# ── Plan 3 wiring (active mirror management on the daily cadence) ────
+
+
+class TestPlan3Wiring:
+    """run_all_book_management() is wired into the daily scheduler check. The
+    safety property that makes wiring-before-seed correct: on an unseeded DB it
+    is a COMPLETE no-op (both lanes not_seeded, zero writes to either lane)."""
+
+    def test_no_op_until_seeded(self, db_path):
+        res = bm.run_all_book_management(db_path=db_path)
+        assert res["mirror"]["status"] == "not_seeded"
+        assert res["conviction"]["status"] == "not_seeded"
+        # and it must not have written a rebalance event on EITHER lane
+        assert _events(db_path, "mirror") == []
+        assert _events(db_path, "conviction") == []
+        assert _open_tickers(db_path, "mirror") == set()
+        assert _open_tickers(db_path, "conviction") == set()
