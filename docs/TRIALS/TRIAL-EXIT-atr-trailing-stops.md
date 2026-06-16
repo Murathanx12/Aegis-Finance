@@ -65,10 +65,21 @@ ATR multiple to the forward data; no early adoption on a calm-market Sharpe bump
 
 ## Implementation checklist (before this goes live — attended)
 
-1. Wire `exit_engine` into `reference_engine` daily check for lanes flagged
-   `exit_overlay: atr` (apply trailing-stop sells + vol-target cap). Tested.
-2. Add `conservative-atr` to a config path that does **not** perturb
-   `paper_portfolios.yaml`'s hash (mirror the book-lane separation pattern) so
-   TRIAL-001's segment stays clean.
-3. Attended seed (new inception) + register TRIAL-EXIT in `rule_experiments`.
-4. Confirm `/api/health/full` shows both lanes fresh.
+1. ✅ **DONE 2026-06-17.** Exit-overlay decision core built + tested:
+   `services/portfolio_intelligence/exit_overlay.py` — `evaluate_exit_overlay`
+   (per-position ATR Chandelier hold/exit, reusing `exit_engine.simulate_trailing_exit`)
+   + `vol_capped_weights` (vol-target sizing cap, renormalised). Pure, arms
+   nothing. Tests: `test_exit_overlay.py` (6 — monotonic winner held, rollover
+   stopped near peak, entry-date alignment, vol cap trims the violent name).
+2. ⬜ **Attended.** Add `conservative-atr` to a separate config file
+   (`conservative_atr_lanes.yaml`) with its OWN hash (mirror `book_lanes.yaml`) so
+   `paper_portfolios.yaml`'s hash — and TRIAL-001's segment — stay untouched.
+   Mandate identical to `conservative` (target_equity_pct 60, same universe/
+   cadence/cost) + `exit_overlay: atr`.
+3. ⬜ **Attended.** Wire a `run_exit_overlay_check` into `_daily_check` (no-op
+   until seeded, mirroring Plan 3): re-use the conservative allocation, then apply
+   `evaluate_exit_overlay` → sell stopped names to cash; `vol_capped_weights` at
+   rebalance. Then env-gated seed (`AEGIS_SEED_CONSERVATIVE_ATR=1`, new inception)
+   + register TRIAL-EXIT in `rule_experiments` (cumulative count → 6).
+4. ⬜ Confirm `/api/health/full` AND `/api/pi/track-record` show both lanes fresh
+   (track-record now surfaces seeded non-reference lanes — fixed 2026-06-16).
