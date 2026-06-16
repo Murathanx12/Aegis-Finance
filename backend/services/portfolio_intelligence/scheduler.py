@@ -445,6 +445,19 @@ async def _daily_check():
     except Exception as e:
         logger.error("Revisions-IC collection failed: %s", e, exc_info=True)
 
+    # TRIAL-MULTIFACTOR-IC (T8) — combine momentum + insider + revisions into a
+    # cross-sectional composite and snapshot it. Runs AFTER the two collectors
+    # above so it reads their fresh PIT values. Descriptive, forward-only.
+    try:
+        from backend.services.portfolio_intelligence.multifactor import (
+            collect_multifactor_scores,
+        )
+        mf = await asyncio.to_thread(collect_multifactor_scores)
+        logger.info("Multifactor collect: status=%s n=%s (descriptive)",
+                    mf.get("status"), mf.get("n"))
+    except Exception as e:
+        logger.error("Multifactor collection failed: %s", e, exc_info=True)
+
 
 async def _weekly_aggressive_check():
     """Additional weekly check for aggressive lane."""
