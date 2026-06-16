@@ -19,7 +19,7 @@ When FMP_API_KEY is set we cross-check against FMP estimates for stability.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
 import pandas as pd
@@ -189,3 +189,100 @@ def get_revisions_trend(ticker: str) -> Optional[dict]:
         "price_targets": target_block,
         "source": "yfinance",
     }
+
+
+# ── Revision-momentum signal (TRIAL-REVISIONS-IC) ────────────────────────────
+#
+# The roadmap "flip": rank by the FLOW of analyst revisions/upgrades — dated,
+# directional actions — NOT by raw implied upside (target/price-1), which is a
+# level, not a change, and is the metric we are explicitly moving away from.
+# Sources (both real, verified): yfinance `.upgrades_downgrades` (a dated log of
+# Raises/Lowers + up/down grade actions) and `.recommendations` (0m vs -2m rating
+# drift). Leak-safe: only actions with date <= as_of count.
+
+
+def fetch_revision_actions(ticker: str) -> dict:
+    """Normalised analyst-action data for one ticker, from yfinance. Degrades to
+    an empty result on any error (never raises). Network → inject in tests."""
+    out: dict = {"ticker": ticker, "actions": [], "rec_counts": []}
+    try:
+        import yfinance as yf
+    except ImportError:
+        return out
+    try:
+        tk = yf.Ticker(ticker)
+        ud = getattr(tk, "upgrades_downgrades", None)
+        if ud is not None and not ud.empty:
+            for idx, row in ud.iterrows():
+                try:
+                    d = pd.to_datetime(idx).date().isoformat()
+                except Exception:
+                    continue
+                out["actions"].append({
+                    "date": d,
+                    "action": str(row.get("Action", "")),
+                    "target": str(row.get("priceTargetAction", "")),
+                })
+        rec = getattr(tk, "recommendations", None)
+        if rec is not None and not rec.empty:
+            for _, row in rec.iterrows():
+                out["rec_counts"].append({
+                    "period": str(row.get("period", "")),
+                    **{k: int(row.get(k, 0) or 0)
+                       for k in ("strongBuy", "buy", "hold", "sell", "strongSell")},
+                })
+    except Exception as e:  # pragma: no cover - network
+        logger.warning("revision actions fetch failed for %s: %s", ticker, e)
+    return out
+
+
+def _consensus(c: dict) -> float:
+    tot = c["strongBuy"] + c["buy"] + c["hold"] + c["sell"] + c["strongSell"]
+    return (2 * c["strongBuy"] + c["buy"] - c["sell"] - 2 * c["strongSell"]) / tot if tot else 0.0
+
+
+def _rating_drift(rec_counts: list[dict]) -> float:
+    """Consensus rating change, current (0m) vs two months ago (-2m), in
+    [-2, +2] per analyst. Secondary/descriptive — not folded into the score."""
+    by = {r.get("period"): r for r in rec_counts}
+    if "0m" in by and "-2m" in by:
+        return _consensus(by["0m"]) - _consensus(by["-2m"])
+    return 0.0
+
+
+def compute_revision_momentum_score(data: Optional[dict], as_of: Optional[str] = None,
+                                    window_days: int = 90) -> dict:
+    """Net analyst revision FLOW over the trailing ``window_days`` (leak-safe):
+
+        revisions_score = (raises - lowers) + (upgrades - downgrades)
+
+    counting only dated actions with ``cutoff < date <= as_of``. Rating drift
+    (0m vs -2m) is exposed in the payload but NOT folded into the headline score
+    (it keeps the signal a clean, interpretable count). This is the pre-registered
+    estimator for TRIAL-REVISIONS-IC."""
+    empty = {"revisions_score": 0.0, "n_actions": 0, "raises": 0, "lowers": 0,
+             "upgrades": 0, "downgrades": 0, "rating_drift": 0.0}
+    if not data:
+        return empty
+    as_of = as_of or date.today().isoformat()
+    cutoff = (date.fromisoformat(as_of) - timedelta(days=window_days)).isoformat()
+    raises = lowers = ups = downs = n = 0
+    for a in data.get("actions", []):
+        d = a.get("date", "")
+        if not d or d > as_of or d <= cutoff:  # leak-safe + window
+            continue
+        n += 1
+        ta = str(a.get("target", "")).lower()
+        ac = str(a.get("action", "")).lower()
+        if ta == "raises":
+            raises += 1
+        elif ta == "lowers":
+            lowers += 1
+        if ac == "up":
+            ups += 1
+        elif ac == "down":
+            downs += 1
+    net = (raises - lowers) + (ups - downs)
+    return {"revisions_score": float(net), "n_actions": n, "raises": raises,
+            "lowers": lowers, "upgrades": ups, "downgrades": downs,
+            "rating_drift": round(_rating_drift(data.get("rec_counts", [])), 3)}
