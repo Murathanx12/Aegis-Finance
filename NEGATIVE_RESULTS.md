@@ -55,5 +55,26 @@ Adversarially tested twice in the 2026-06-14 research phase; predictive skill wa
 refuted both times. LPPLS therefore ships as a **descriptive bubble-structure
 flag only** — it never arms a lane and never emits a timing call.
 
+## 4. A survivorship-free backtest universe is not buildable on free data
+Source: [`engine/research/survivorship_audit.py`](./engine/research/survivorship_audit.py)
+→ `docs/research/SURVIVORSHIP_AUDIT_2026-06-16.md` (run: `python -m engine.research.survivorship_audit`).
+
+Every selection backtest draws its universe from `config.stock_universe` =
+*today's* large-caps — survivors only. To de-bias it we'd need the delisted names
+back in. We tested whether the free data layer (yfinance) can supply them: of 20
+real S&P 500 names that later went bankrupt / were acquired / failed, **15 return
+nothing, 4 return a *different* company on the recycled symbol, and only 1 is
+genuinely usable (5%).** Controls (AAPL/MSFT/XOM) all clean; stooq was unreachable.
+
+**Plainly: no backtested absolute-alpha number on our data is trustworthy** — it
+is inflated by survivorship by an uncorrectable amount, and the DSR/PBO gate
+cannot see it (it guards multiple-testing, not a biased universe — this is exactly
+how vol-managed momentum printed a false "PASS"). The consequence is not despair:
+the **PIT store accrues forward-only with an anti-leak `observed_at` field**, so
+selection signals (insider buys, estimate revisions, 13F, multi-factor rank) are
+validated by **forward information coefficient + paper-lane NAV**, never by a
+historical backtest. Risk overlays (vol-management, ATR exits) are
+universe-independent and unaffected.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
