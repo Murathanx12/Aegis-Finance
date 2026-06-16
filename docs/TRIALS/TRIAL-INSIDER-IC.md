@@ -81,7 +81,14 @@ lane seed, so the insider IC and the lane NAV accrue against the same calendar.
 ## Status
 
 - ✅ Signal (`compute_opportunistic_buy_score`) + data source (`insider_form4.py`)
-  built and unit-tested offline (`test_insider_form4.py`, 12 tests). Descriptive
-  utility, wired to nothing.
-- ⬜ Forward collector wiring + IC accrual — pending (starts the forward clock;
-  wire with/after the book-lane seed). BACKLOG T9.
+  built and unit-tested offline (`test_insider_form4.py`, 12 tests).
+- ✅ **Forward collector WIRED 2026-06-16** (`insider_collector.py` →
+  `scheduler._daily_check`). Snapshots `insider_opp:{ticker}` for the 12 book names
+  into the PIT store, weekly-throttled, descriptive, wrapped. **The forward IC clock
+  starts on the next deploy's daily check.** Tests: `test_insider_collector.py`
+  (6) — PIT write, UTC leak-safe stamp, idempotence, throttle, per-ticker failure
+  isolation. (UTC stamp matters: a local HK-time stamp would sit past the UTC read
+  cutoff and be invisible — caught by `test_value_lands_in_pit_store_leak_safe`.)
+- ⬜ IC accrual + measurement — runs forward; compute rank-IC @ 21/63/126d once a
+  forward window exists. v1 cross-section = 12 names (small-N, reported not hidden);
+  widening to a small-cap watchlist is the next step.

@@ -417,6 +417,21 @@ async def _daily_check():
     except Exception as e:
         logger.error("Fragility composite eval failed: %s", e, exc_info=True)
 
+    # TRIAL-INSIDER-IC (T9) — snapshot the opportunistic open-market buy score per
+    # book name into the PIT store, starting the forward information-coefficient
+    # clock. Internally throttled to ~weekly, so running it every daily check is
+    # cheap. Descriptive only; never arms a lane. Wrapped so a SEC outage can't
+    # break lane processing.
+    try:
+        from backend.services.portfolio_intelligence.insider_collector import (
+            collect_insider_opp_scores,
+        )
+        ins = await asyncio.to_thread(collect_insider_opp_scores)
+        logger.info("Insider-IC collect: status=%s n=%s nonzero=%s (descriptive)",
+                    ins.get("status"), ins.get("n"), ins.get("nonzero"))
+    except Exception as e:
+        logger.error("Insider-IC collection failed: %s", e, exc_info=True)
+
 
 async def _weekly_aggressive_check():
     """Additional weekly check for aggressive lane."""
