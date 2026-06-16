@@ -38,6 +38,7 @@
 | ⬜ T8 | Multi-factor score (momentum+value+quality via factor_grades) — strategy-improvement 3b. **Reframed by T7:** run as a FORWARD IC trial on PIT data, not a survivor-universe backtest (any backtest = direction-check only, stamped contaminated). | open |
 | ⬜ T9 | Insider opportunistic-buy signal (item 3) as a registered FORWARD IC trial — open-market buys only, opportunistic-not-routine, cluster-weighted, small/mid-cap (`insider_trading.py` + EDGAR/PIT). | open |
 | ⬜ T10 | Flip the analyst factor: rank by estimate revisions/upgrades (in `factor_grades`), NOT raw implied upside; verify the flip with a forward IC trial (item 4). | open |
+| ✅ P3 | **Plan 3 — active mirror management WIRED** (item 2). `run_all_book_management` now runs in `scheduler.py:_daily_check` (mirror monthly/drift cadence + conviction decisions), isolated by book config hash, **no-op until `AEGIS_SEED_BOOK_LANES=1`** seeds the lanes. Tests: `test_book_management.py::TestPlan3Wiring` (no-op-pre-seed) + `test_scheduler.py::TestDailyCheckWiresBookLanes`. This is the forward selection-edge instrument T7's reject made the only honest one. Remaining: Murat flips the seed flag. | done 2026-06-16 |
 
 ---
 

@@ -367,7 +367,7 @@ async def _hourly_mtm():
 
 
 async def _daily_check():
-    """Run daily rebalance check for all lanes."""
+    """Run daily rebalance check for all lanes (reference + book)."""
     import asyncio
     from backend.services.portfolio_intelligence.reference_engine import run_all_lanes
 
@@ -381,6 +381,21 @@ async def _daily_check():
                 logger.info("Lane %s: no rebalance needed", lane_id)
     except Exception as e:
         logger.error("Daily PI check failed: %s", e, exc_info=True)
+
+    # Plan-3 (active mirror management): book lanes run on the SAME daily cadence.
+    # Mirror checks its monthly/drift trigger; conviction applies any new logged
+    # decisions. Both no-op (status=not_seeded) until AEGIS_SEED_BOOK_LANES seeds
+    # them, so wiring this is safe pre-seed. Stamped with the BOOK config hash —
+    # fully isolated from the 4 reference lanes' track record (separate
+    # config_version → cannot perturb their NAV). Wrapped so a book-lane failure
+    # never breaks the reference-lane check above.
+    try:
+        from backend.services.portfolio_intelligence.book_management import run_all_book_management
+        book = await asyncio.to_thread(run_all_book_management)
+        for lane_id, res in book.items():
+            logger.info("Book lane %s: %s", lane_id, res.get("status"))
+    except Exception as e:
+        logger.error("Book-lane management failed: %s", e, exc_info=True)
 
     # Descriptive LPPLS fragility flag (T1) — market-level, persisted each cycle
     # for the forward-Brier measurement. Descriptive only; never arms a lane.

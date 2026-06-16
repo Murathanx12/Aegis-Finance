@@ -44,8 +44,12 @@ now shipped.**
    features, model trained on 30) → `predict` raises; this is why the overlay is
    `model_not_deployed` and the replay falls back to a crash-prob stub. Needs
    **retrain + metadata sidecar** (BACKLOG M3). Confirmed live 2026-06-15.
-2. **Book-lane seeding** not run (Murat flips the env flag) + **Plan-3 activation**
-   (wire `run_all_book_management` into the daily check — the final go).
+2. **Book-lane seeding** not run (Murat flips `AEGIS_SEED_BOOK_LANES=1`). ✅
+   **Plan-3 activation DONE 2026-06-16** — `run_all_book_management` is wired into
+   the daily check (`scheduler.py:_daily_check`), no-op (`not_seeded`) until the
+   seed flips, isolated by book config hash. So the *only* remaining step is the
+   env flag: the moment it's flipped, mirror cadence + conviction decisions run
+   live on the book.
 3. **Optimus brain re-ingest** (Plan 4a) — corpus stale at `9c2a0e5`.
 4. **Factor grades** not Alphalens-validated (`FACTOR_VALIDATION.md` partial).
 5. **Per-stock news-as-measured-flag** (Goal 5) — not built.
