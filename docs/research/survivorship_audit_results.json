@@ -1,0 +1,196 @@
+{
+  "rows": [
+    {
+      "ticker": "LEH",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2008,
+      "note": "Lehman Brothers \u2014 bankrupt"
+    },
+    {
+      "ticker": "BSC",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2008,
+      "note": "Bear Stearns \u2014 fire-sale to JPM"
+    },
+    {
+      "ticker": "CFC",
+      "verdict": "REUSED",
+      "days": 3495,
+      "first": "2005-01-07",
+      "last": "2019-11-27",
+      "exit_year": 2008,
+      "note": "Countrywide \u2014 acquired by BofA"
+    },
+    {
+      "ticker": "JAVA",
+      "verdict": "REUSED",
+      "days": 1167,
+      "first": "2021-10-05",
+      "last": "2026-05-29",
+      "exit_year": 2010,
+      "note": "Sun Microsystems \u2014 acquired by Oracle"
+    },
+    {
+      "ticker": "EMC",
+      "verdict": "REUSED",
+      "days": 763,
+      "first": "2023-05-15",
+      "last": "2026-05-29",
+      "exit_year": 2016,
+      "note": "EMC \u2014 acquired by Dell"
+    },
+    {
+      "ticker": "YHOO",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2017,
+      "note": "Yahoo \u2014 acquired by Verizon"
+    },
+    {
+      "ticker": "MON",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2018,
+      "note": "Monsanto \u2014 acquired by Bayer"
+    },
+    {
+      "ticker": "TWX",
+      "verdict": "OK",
+      "days": 3386,
+      "first": "2005-01-03",
+      "last": "2018-06-15",
+      "exit_year": 2018,
+      "note": "Time Warner \u2014 acquired by AT&T"
+    },
+    {
+      "ticker": "CELG",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2019,
+      "note": "Celgene \u2014 acquired by BMY"
+    },
+    {
+      "ticker": "AGN",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2020,
+      "note": "Allergan \u2014 acquired by AbbVie"
+    },
+    {
+      "ticker": "XLNX",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2022,
+      "note": "Xilinx \u2014 acquired by AMD"
+    },
+    {
+      "ticker": "ATVI",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2023,
+      "note": "Activision \u2014 acquired by Microsoft"
+    },
+    {
+      "ticker": "TWTR",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2022,
+      "note": "Twitter \u2014 taken private by Musk"
+    },
+    {
+      "ticker": "FRC",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2023,
+      "note": "First Republic \u2014 bank failure"
+    },
+    {
+      "ticker": "SIVB",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2023,
+      "note": "Silicon Valley Bank \u2014 bank failure"
+    },
+    {
+      "ticker": "SBNY",
+      "verdict": "REUSED",
+      "days": 448,
+      "first": "2024-08-15",
+      "last": "2026-05-29",
+      "exit_year": 2023,
+      "note": "Signature Bank \u2014 bank failure"
+    },
+    {
+      "ticker": "PXD",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2024,
+      "note": "Pioneer Natural \u2014 acquired by Exxon"
+    },
+    {
+      "ticker": "SGEN",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2023,
+      "note": "Seagen \u2014 acquired by Pfizer"
+    },
+    {
+      "ticker": "ABMD",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2022,
+      "note": "Abiomed \u2014 acquired by J&J"
+    },
+    {
+      "ticker": "RE",
+      "verdict": "GONE",
+      "days": 0,
+      "first": "\u2014",
+      "last": "\u2014",
+      "exit_year": 2023,
+      "note": "Everest Re \u2014 symbol change to EG"
+    }
+  ],
+  "summary": {
+    "delisted_tested": 20,
+    "verdict_counts": {
+      "OK": 1,
+      "REUSED": 4,
+      "GONE": 15
+    },
+    "usable_clean_history": 1,
+    "usable_pct": 5.0,
+    "controls_ok": true,
+    "conclusion": "Free data (yfinance) CANNOT supply a survivorship-free universe: 15/20 delisted names return nothing and 4/20 return a DIFFERENT company on a recycled symbol. Only 1/20 are genuinely usable. Therefore no backtested absolute-alpha claim on free data is trustworthy; selection signals must be validated FORWARD (leak-free PIT/NAV)."
+  }
+}
