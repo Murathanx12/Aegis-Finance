@@ -278,6 +278,63 @@ class TestHistoryNavWiring:
         assert response.status_code == 404
 
 
+class TestTrackRecordIncludesBookLanes:
+    """Regression: a SEEDED book lane (mirror/conviction) must appear on the
+    canonical /api/pi/track-record surface — not just the registry + health.
+    The failure mode this guards: a lane that is marked-to-market and fresh yet
+    invisible on the public track record (silent fragility)."""
+
+    def _seed_ref_and_book(self, tmp_path, monkeypatch, *, seed_mirror: bool):
+        from backend import db as db_module
+        from backend.config import book_lanes, paper_portfolios
+        from backend.services.portfolio_intelligence.reference_engine import (
+            initialize_lane, seed_book_lane,
+        )
+        from backend.services.portfolio_intelligence.rules import _get_sleeve_tickers
+
+        fresh_db = tmp_path / "tr.db"
+        monkeypatch.setattr(db_module, "DB_PATH", fresh_db)
+        db_module.init_db(fresh_db)
+
+        sleeves = _get_sleeve_tickers(paper_portfolios["universe"])
+        ref_prices = {t: 100.0 for t in
+                      sleeves["equity"] + sleeves["bond"] + sleeves["alternative"]}
+        initialize_lane("balanced", db_path=fresh_db, prices=ref_prices)
+        conn = db_module.get_connection(fresh_db)
+        try:
+            db_module.insert_nav(conn, "balanced", "2026-06-08", 100_000.0, "refv1",
+                                 "2026-06-08T21:00:00")
+        finally:
+            conn.close()
+
+        if seed_mirror:
+            book_prices = {t: 50.0 for t in (book_lanes.get("holdings") or {})}
+            seed_book_lane("mirror", db_path=fresh_db, prices=book_prices)
+            conn = db_module.get_connection(fresh_db)
+            try:
+                db_module.insert_nav(conn, "mirror", "2026-06-16", 100_000.0, "bookv1",
+                                     "2026-06-16T21:00:00")
+            finally:
+                conn.close()
+        return fresh_db
+
+    def test_seeded_book_lane_appears(self, tmp_path, monkeypatch):
+        self._seed_ref_and_book(tmp_path, monkeypatch, seed_mirror=True)
+        body = client.get("/api/pi/track-record").json()
+        assert "mirror" in body["lanes"], "seeded book lane invisible on track record"
+        assert [(p["date"], p["value"]) for p in body["lanes"]["mirror"]] == [
+            ("2026-06-16", 100_000.0)]
+        assert "balanced" in body["lanes"]           # reference lane still present
+        assert "conviction" not in body["lanes"]      # unseeded book lane absent
+
+    def test_unseeded_book_lanes_absent(self, tmp_path, monkeypatch):
+        self._seed_ref_and_book(tmp_path, monkeypatch, seed_mirror=False)
+        body = client.get("/api/pi/track-record").json()
+        assert "mirror" not in body["lanes"]
+        assert "conviction" not in body["lanes"]
+        assert "balanced" in body["lanes"]
+
+
 class TestCompareEndpointShape:
     """Phase 5b regression: compare must return {lanes, benchmarks, period, start_date, end_date}."""
 

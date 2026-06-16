@@ -412,14 +412,23 @@ async def get_track_record():
     from zoneinfo import ZoneInfo
 
     from backend.db import get_connection, get_nav_series
+    from backend.services.portfolio_intelligence.rules import BOOK_LANES
     from backend.services.portfolio_intelligence.scheduler import nav_freshness
 
     def _build() -> TrackRecordResponse:
         conn = get_connection()
         try:
             lanes: dict[str, list[TrackRecordPoint]] = {}
-            for lane_id in _VALID_LANES:
+            # Reference lanes (always seeded) + book lanes (mirror/conviction) once
+            # seeded. A book lane with no NAV rows yet (unseeded) is simply skipped.
+            # Surfacing book lanes here is safe: reading their NAV series never
+            # touches the reference lanes' config hash (TRIAL-001 isolation is a
+            # write-path concern, not a read one). Without this they were marked-to-
+            # market and fresh yet INVISIBLE on the canonical track record.
+            for lane_id in (*REFERENCE_LANES, *BOOK_LANES):
                 rows = get_nav_series(conn, lane_id)
+                if not rows and lane_id in BOOK_LANES:
+                    continue  # unseeded book lane — not on the record yet
                 lanes[lane_id] = [
                     TrackRecordPoint(
                         date=r["date"], value=round(r["nav"], 2),
@@ -427,10 +436,13 @@ async def get_track_record():
                     )
                     for r in rows
                 ]
-            _ph = ",".join("?" for _ in _VALID_LANES)
+            # Canonical inception/benchmark anchor = the REFERENCE lanes' earliest.
+            # Book lanes legitimately start later (seeded at their own inception);
+            # they should not pull the benchmark normalization date earlier.
+            _ph = ",".join("?" for _ in REFERENCE_LANES)
             inc = conn.execute(
                 "SELECT MIN(inception_date) AS d FROM paper_portfolios "
-                f"WHERE id IN ({_ph})", _VALID_LANES,
+                f"WHERE id IN ({_ph})", REFERENCE_LANES,
             ).fetchone()
         finally:
             conn.close()
