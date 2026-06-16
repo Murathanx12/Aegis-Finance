@@ -185,6 +185,72 @@ def _fetch_yfinance_insiders(ticker: str, lookback_days: int) -> Optional[dict]:
         return None
 
 
+# Open-market purchase transaction codes (SEC Form 4 / Finnhub). Code "P" is an
+# open-market or private PURCHASE — the only insider transaction the literature
+# finds informative (Lakonishok-Lee 2001; Cohen-Malloy-Pomorski 2012). Awards
+# ("A"), option exercises ("M"), gifts ("G"), tax withholding ("F") and planned
+# sales are excluded — they are routine and carry no view on value.
+_OPEN_MARKET_BUY_CODES = ("P", "P - Purchase", "P-Purchase")
+
+# Pre-registered constants for the opportunistic-buy score (TRIAL-INSIDER-IC).
+CLUSTER_FULL_BUYERS = 3      # 3+ distinct buyers = full cluster signal (Lakonishok-Lee)
+VALUE_SCALE_USD = 1_000_000  # $1M of open-market buying saturates the value bonus
+
+
+def compute_opportunistic_buy_score(insider_data: Optional[dict]) -> dict:
+    """Evidence-backed OPPORTUNISTIC OPEN-MARKET BUY score for one ticker.
+
+    Distinct from ``compute_insider_signal`` (raw buy-vs-sell sentiment, which lumps
+    in awards, option exercises and planned sales). This isolates the one signal the
+    literature finds informative: open-market PURCHASES (code "P"), weighted by the
+    number of DISTINCT insiders buying (cluster strength) plus a saturating dollar
+    bonus. Selling is deliberately ignored (noisy — diversification/estate/options).
+
+    Pre-registered functional form (TRIAL-INSIDER-IC):
+        score = n_distinct_open_market_buyers + tanh(buy_value / $1M)
+    Range ≈ [0, n+1], monotonic in the documented signal, rank-friendly for IC.
+
+    Known v1 limitation: true routine-vs-opportunistic classification (Cohen-Malloy-
+    Pomorski) needs per-insider multi-year history we don't store; the "P-code only"
+    filter is the opportunistic proxy. Documented in the trial doc.
+    """
+    empty = {"opp_score": 0.0, "n_distinct_buyers": 0, "buy_value": 0.0,
+             "cluster_buy": False, "interpretation": "No open-market insider purchases"}
+    if not insider_data:
+        return empty
+    buys = insider_data.get("buys", []) or []
+    open_market = [
+        b for b in buys
+        if str(b.get("type", "")).strip() in _OPEN_MARKET_BUY_CODES
+        and (b.get("shares", 0) or 0) > 0
+    ]
+    if not open_market:
+        return empty
+
+    distinct_buyers = len({str(b.get("name", "")).strip().lower() for b in open_market})
+    buy_value = float(sum((b.get("value", 0) or 0) for b in open_market))
+    value_bonus = float(np.tanh(buy_value / VALUE_SCALE_USD))
+    score = float(distinct_buyers + value_bonus)
+    cluster_buy = distinct_buyers >= CLUSTER_FULL_BUYERS
+
+    if cluster_buy:
+        interp = (f"Cluster open-market buying: {distinct_buyers} distinct insiders "
+                  f"purchased (${buy_value:,.0f}). Strongest insider signal.")
+    elif distinct_buyers >= 1:
+        interp = (f"{distinct_buyers} insider(s) bought open-market (${buy_value:,.0f}). "
+                  "Single-name buy — weaker than a cluster.")
+    else:
+        interp = empty["interpretation"]
+
+    return {
+        "opp_score": round(score, 4),
+        "n_distinct_buyers": distinct_buyers,
+        "buy_value": round(buy_value, 0),
+        "cluster_buy": cluster_buy,
+        "interpretation": interp,
+    }
+
+
 def compute_insider_signal(insider_data: Optional[dict]) -> dict:
     """Compute insider trading signal from transaction data.
 
