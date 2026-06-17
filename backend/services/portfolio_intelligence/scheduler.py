@@ -126,6 +126,7 @@ def nav_freshness() -> dict:
     """
     from backend.services.portfolio_intelligence.rules import (
         BOOK_LANES,
+        CONSERVATIVE_ATR_LANES,
         REFERENCE_LANES,
     )
     try:
@@ -146,7 +147,11 @@ def nav_freshness() -> dict:
             ).fetchall()}
         finally:
             conn.close()
-        lane_ids = (*REFERENCE_LANES, *[l for l in BOOK_LANES if l in seeded])
+        # Book + conservative-ATR lanes count toward freshness ONLY once seeded —
+        # an unseeded attended lane has no paper_portfolios row and must not drag
+        # all_fresh false before its attended seed runs.
+        _optional = (*BOOK_LANES, *CONSERVATIVE_ATR_LANES)
+        lane_ids = (*REFERENCE_LANES, *[l for l in _optional if l in seeded])
         last_dates = {r["portfolio_id"]: r["last_date"] for r in rows}
         lanes = {
             lane_id: {
@@ -352,6 +357,14 @@ async def _hourly_mtm():
         results = await asyncio.to_thread(mark_all_lanes)
         book_results = await asyncio.to_thread(mark_all_book_lanes)
         results.update(book_results)
+        # Conservative-ATR lane (TRIAL-EXIT) marks alongside; skipped until seeded.
+        try:
+            from backend.services.portfolio_intelligence.exit_lane import (
+                mark_all_conservative_atr_lanes,
+            )
+            results.update(await asyncio.to_thread(mark_all_conservative_atr_lanes))
+        except Exception as e:
+            logger.error("Conservative-ATR MTM failed: %s", e, exc_info=True)
         if any(v is not None for v in results.values()):
             _last_mtm_timestamp = now
         else:
@@ -396,6 +409,20 @@ async def _daily_check():
             logger.info("Book lane %s: %s", lane_id, res.get("status"))
     except Exception as e:
         logger.error("Book-lane management failed: %s", e, exc_info=True)
+
+    # TRIAL-EXIT (conservative-ATR): apply the ATR exit overlay + vol cap on the
+    # mandate cadence. NO-OP (status=not_seeded) until AEGIS_SEED_CONSERVATIVE_ATR
+    # seeds it, so wiring this pre-seed is safe. Stamped with the ISOLATED
+    # conservative-ATR config hash — cannot perturb the reference lanes' NAV or
+    # the frozen `conservative` control's segment. Wrapped so a failure here never
+    # breaks the reference/book checks above.
+    try:
+        from backend.services.portfolio_intelligence.exit_lane import run_exit_overlay_check
+        atr = await asyncio.to_thread(run_exit_overlay_check)
+        logger.info("Conservative-ATR lane: status=%s reason=%s n_stopped=%s",
+                    atr.get("status"), atr.get("reason"), atr.get("n_stopped"))
+    except Exception as e:
+        logger.error("Conservative-ATR exit-overlay check failed: %s", e, exc_info=True)
 
     # Descriptive LPPLS fragility flag (T1) — market-level, persisted each cycle
     # for the forward-Brier measurement. Descriptive only; never arms a lane.

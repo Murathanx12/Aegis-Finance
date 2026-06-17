@@ -22,7 +22,7 @@ Usage:
 import logging
 from datetime import date
 
-from backend.config import book_lanes, paper_portfolios
+from backend.config import book_lanes, conservative_atr_lanes, paper_portfolios
 from backend.services.portfolio_intelligence.nav import CASH_TICKER
 
 logger = logging.getLogger(__name__)
@@ -42,6 +42,15 @@ REFERENCE_LANES: tuple[str, ...] = tuple(
 # never perturbed (TRIAL-001 protection). Identified by a `purpose` tag.
 BOOK_LANES: tuple[str, ...] = tuple(
     k for k, v in book_lanes.items()
+    if isinstance(v, dict) and "purpose" in v
+)
+
+# Conservative-ATR lane (TRIAL-EXIT) — the conservative mandate + ATR exit
+# overlay, from conservative_atr_lanes.yaml with its OWN hash. Like BOOK_LANES,
+# kept SEPARATE from REFERENCE_LANES so the reference lanes' hash (and the frozen
+# `conservative` control's segment) is never perturbed. Identified by `purpose`.
+CONSERVATIVE_ATR_LANES: tuple[str, ...] = tuple(
+    k for k, v in conservative_atr_lanes.items()
     if isinstance(v, dict) and "purpose" in v
 )
 

@@ -412,7 +412,10 @@ async def get_track_record():
     from zoneinfo import ZoneInfo
 
     from backend.db import get_connection, get_nav_series
-    from backend.services.portfolio_intelligence.rules import BOOK_LANES
+    from backend.services.portfolio_intelligence.rules import (
+        BOOK_LANES,
+        CONSERVATIVE_ATR_LANES,
+    )
     from backend.services.portfolio_intelligence.scheduler import nav_freshness
 
     def _build() -> TrackRecordResponse:
@@ -425,10 +428,11 @@ async def get_track_record():
             # touches the reference lanes' config hash (TRIAL-001 isolation is a
             # write-path concern, not a read one). Without this they were marked-to-
             # market and fresh yet INVISIBLE on the canonical track record.
-            for lane_id in (*REFERENCE_LANES, *BOOK_LANES):
+            _optional = (*BOOK_LANES, *CONSERVATIVE_ATR_LANES)
+            for lane_id in (*REFERENCE_LANES, *_optional):
                 rows = get_nav_series(conn, lane_id)
-                if not rows and lane_id in BOOK_LANES:
-                    continue  # unseeded book lane — not on the record yet
+                if not rows and lane_id in _optional:
+                    continue  # unseeded attended lane — not on the record yet
                 lanes[lane_id] = [
                     TrackRecordPoint(
                         date=r["date"], value=round(r["nav"], 2),

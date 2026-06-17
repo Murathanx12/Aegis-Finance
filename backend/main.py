@@ -158,6 +158,19 @@ async def lifespan(app: FastAPI):
                 logger.warning("BOOK-LANE SEEDING (AEGIS_SEED_BOOK_LANES=1): %s", res)
             except Exception as e:
                 logger.error("Book-lane seeding failed: %s", e, exc_info=True)
+        # TRIAL-EXIT conservative-ATR seeding — ATTENDED, env-gated, same pattern.
+        # Set AEGIS_SEED_CONSERVATIVE_ATR=1 on Railway for ONE boot to seed the
+        # lane at today's mandate weights (idempotent), confirm via /api/pi/registry
+        # (TRIAL-EXIT registered) + /api/health/full, then unset the flag.
+        if os.environ.get("AEGIS_SEED_CONSERVATIVE_ATR") == "1":
+            try:
+                from backend.services.portfolio_intelligence.exit_lane import (
+                    seed_conservative_atr_lane,
+                )
+                res = await asyncio.to_thread(seed_conservative_atr_lane)
+                logger.warning("CONSERVATIVE-ATR SEEDING (AEGIS_SEED_CONSERVATIVE_ATR=1): %s", res)
+            except Exception as e:
+                logger.error("Conservative-ATR seeding failed: %s", e, exc_info=True)
     asyncio.create_task(_init_lanes())
 
     try:

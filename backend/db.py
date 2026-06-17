@@ -353,6 +353,16 @@ def get_book_config_hash() -> str:
     return _compute_config_hash(BACKEND_DIR / "data" / "book_lanes.yaml")
 
 
+def get_conservative_atr_config_hash() -> str:
+    """Hash of conservative_atr_lanes.yaml (TRIAL-EXIT exit-overlay lane).
+
+    Independent of get_config_hash() AND get_book_config_hash() so the
+    conservative-atr lane is fully isolated: editing it can never perturb the 4
+    reference lanes' versioning (TRIAL-001 / the frozen conservative control) or
+    the book lanes' versioning."""
+    return _compute_config_hash(BACKEND_DIR / "data" / "conservative_atr_lanes.yaml")
+
+
 # ── Point-in-time (as-of) data store — v7 (docs/V3_DATA_LAYER_DESIGN.md) ──────
 
 

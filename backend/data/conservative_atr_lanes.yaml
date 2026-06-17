@@ -1,0 +1,57 @@
+# Aegis Finance — Conservative-ATR Lane Configuration (TRIAL-EXIT)
+# ================================================================
+#
+# A SINGLE new lane `conservative-atr`: the conservative mandate, identical in
+# every respect, PLUS the ATR-Chandelier trailing-stop + volatility-target exit
+# overlay. Pre-registered in docs/TRIALS/TRIAL-EXIT-atr-trailing-stops.md.
+#
+# WHY A SEPARATE FILE (deliberate, load-bearing — identical reasoning to
+# book_lanes.yaml): paper_portfolios.yaml's WHOLE-FILE hash versions the 4
+# reference lanes and is consumed by apply_config_change_rebalances(). Adding
+# this lane there would change that hash and fire a spurious boundary rebalance
+# on all 4 reference lanes — corrupting TRIAL-001's clean HRP-vs-EW segment and
+# altering the frozen `conservative` CONTROL mid-stream. So this lane lives here
+# with its OWN independent hash (db.get_conservative_atr_config_hash) and its own
+# env-gated seeding path; paper_portfolios.yaml stays byte-stable.
+#
+# THE COMPARISON: conservative-atr (managed) vs the existing `conservative` lane
+# (frozen, unmanaged CONTROL). The ONLY treatment difference is the exit overlay
+# — same target_equity_pct / universe / cadence / cost model — so the forward NAV
+# delta isolates the overlay's effect. Honest prior (from the 2026-06-15
+# backtest): the mechanism is DRAWDOWN REDUCTION at a small return cost, NOT a
+# Sharpe increase. Adoption reflects that (shallower maxDD, ~flat Sharpe).
+#
+# SEEDING DISCIPLINE (non-negotiable, mirrors the book lanes): inception = seed
+# day, at CURRENT prices, normalized to $100k. NO reconstructed past inception
+# (look-ahead). Attended + env-gated (AEGIS_SEED_CONSERVATIVE_ATR=1) — a normal
+# deploy does NOT seed. No decision before month 12 (see the trial doc).
+#
+# EXIT PARAMS ARE FROZEN AT CONFIG DEFAULTS — deliberately NOT duplicated here.
+# The overlay reads atr_period / atr_stop_multiple / vol_target_annual /
+# max_position_weight from config["exit_engine"], so there is no per-lane knob to
+# tune (tuning the ATR multiple to the forward data is exactly the overfitting
+# the backtest flagged at PBO 0.66). `exit_overlay: atr` is the only switch.
+
+conservative-atr:
+  purpose: exit-overlay-trial
+  # ── Mandate: byte-identical to `conservative` in paper_portfolios.yaml ──
+  target_equity_pct: 0.40      # 40% equities
+  target_bond_pct: 0.50        # 50% bonds
+  target_alt_pct: 0.10         # 10% alternatives
+  target_cash_pct: 0.0         # stopped names rotate to cash here
+  optimizer: hrp               # same leakage-safe HRP on the equity sleeve
+  max_single_name: 0.03
+  max_sector: 0.25
+  rebalance_trigger_drift: 0.05
+  rebalance_frequency: monthly
+  crash_overlay:               # same crash overlay (inert: model_not_deployed)
+    crash_prob_threshold: 0.25
+    equity_cut_pct: 0.20
+  transaction_cost_bps: 5
+  slippage_bps: 1
+  # ── The treatment ──
+  exit_overlay: atr            # the ONLY difference vs the frozen control
+
+inception:
+  notional_usd: 100000.0
+  benchmark: SPY
