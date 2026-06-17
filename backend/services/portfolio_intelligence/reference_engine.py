@@ -730,6 +730,26 @@ def _register_lane_trial(lane_id: str, config_version: str, db_path=None) -> Non
             "canonical_doc": "docs/TRIALS/TRIAL-003-conviction-vs-rules.md",
             "pre_registered": "2026-06-14",
         },
+        "conservative-atr": {
+            "hypothesis": "Adding an ATR Chandelier trailing stop + vol-target cap "
+                          "to the conservative mandate improves risk-adjusted return "
+                          "vs the frozen unmanaged `conservative` control, primarily "
+                          "by reducing drawdown — honest prior: shallower maxDD at "
+                          "~flat-to-slightly-lower Sharpe, NOT a Sharpe increase",
+            "purpose": "exit-overlay-trial",
+            "canonical_doc": "docs/TRIALS/TRIAL-EXIT-atr-trailing-stops.md",
+            "pre_registered": "2026-06-15",
+            "decision_rule": {
+                "trial": "TRIAL-EXIT",
+                "primary_metric": "full-window net Sharpe vs conservative control",
+                "co_primary": "max drawdown (must be shallower — the overlay's claim)",
+                "min_window_months": 12,
+                "adopt_threshold": "net Sharpe within -0.10 AND maxDD shallower by >=3 pts",
+                "reject_threshold": "net Sharpe trails by >=0.20 OR maxDD not shallower",
+                "params_frozen": "atr_stop_multiple/vol_target at config defaults (no tuning)",
+                "crash_event_override": "SPY drawdown >=20% defers decisions until >=6mo past trough",
+            },
+        },
     }
     meta = hypotheses.get(lane_id, {
         "hypothesis": f"lane {lane_id} forward trial",

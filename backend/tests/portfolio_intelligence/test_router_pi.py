@@ -335,6 +335,55 @@ class TestTrackRecordIncludesBookLanes:
         assert "balanced" in body["lanes"]
 
 
+class TestTrackRecordIncludesConservativeAtr:
+    """Same regression guard for the TRIAL-EXIT conservative-ATR lane: invisible
+    until seeded, then present on /api/pi/track-record."""
+
+    def _seed(self, tmp_path, monkeypatch, *, seed_atr: bool):
+        from backend import db as db_module
+        from backend.config import paper_portfolios
+        from backend.services.portfolio_intelligence.exit_lane import (
+            seed_conservative_atr_lane,
+        )
+        from backend.services.portfolio_intelligence.reference_engine import initialize_lane
+        from backend.services.portfolio_intelligence.rules import _get_sleeve_tickers
+
+        fresh_db = tmp_path / "tr_atr.db"
+        monkeypatch.setattr(db_module, "DB_PATH", fresh_db)
+        db_module.init_db(fresh_db)
+        sleeves = _get_sleeve_tickers(paper_portfolios["universe"])
+        prices = {t: 100.0 for t in
+                  sleeves["equity"] + sleeves["bond"] + sleeves["alternative"]}
+        initialize_lane("balanced", db_path=fresh_db, prices=prices)
+        conn = db_module.get_connection(fresh_db)
+        try:
+            db_module.insert_nav(conn, "balanced", "2026-06-08", 100_000.0, "refv1",
+                                 "2026-06-08T21:00:00")
+        finally:
+            conn.close()
+        if seed_atr:
+            seed_conservative_atr_lane(db_path=fresh_db, prices=prices, panel=None)
+            conn = db_module.get_connection(fresh_db)
+            try:
+                db_module.insert_nav(conn, "conservative-atr", "2026-06-17",
+                                     100_000.0, "atrv1", "2026-06-17T21:00:00")
+            finally:
+                conn.close()
+        return fresh_db
+
+    def test_seeded_atr_lane_appears(self, tmp_path, monkeypatch):
+        self._seed(tmp_path, monkeypatch, seed_atr=True)
+        body = client.get("/api/pi/track-record").json()
+        assert "conservative-atr" in body["lanes"]
+        assert "balanced" in body["lanes"]
+
+    def test_unseeded_atr_lane_absent(self, tmp_path, monkeypatch):
+        self._seed(tmp_path, monkeypatch, seed_atr=False)
+        body = client.get("/api/pi/track-record").json()
+        assert "conservative-atr" not in body["lanes"]
+        assert "balanced" in body["lanes"]
+
+
 class TestCompareEndpointShape:
     """Phase 5b regression: compare must return {lanes, benchmarks, period, start_date, end_date}."""
 

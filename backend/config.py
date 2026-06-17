@@ -1146,3 +1146,26 @@ def load_book_lanes() -> dict:
 
 
 book_lanes: dict = load_book_lanes()
+
+
+def load_conservative_atr_lanes() -> dict:
+    """Load the conservative-ATR lane definition (TRIAL-EXIT) from a SEPARATE YAML.
+
+    Kept apart from paper_portfolios.yaml for the same load-bearing reason as the
+    book lanes: that file's whole-file hash versions the 4 reference lanes, so
+    adding this lane there would fire a spurious config-change rebalance and
+    corrupt TRIAL-001 / alter the frozen conservative control. See
+    conservative_atr_lanes.yaml. Read-only at process start.
+    """
+    yaml_path = BACKEND_DIR / "data" / "conservative_atr_lanes.yaml"
+    if not yaml_path.exists():
+        return {}
+    try:
+        import yaml
+        with open(yaml_path, "r") as f:
+            return yaml.safe_load(f) or {}
+    except ImportError:
+        raise ImportError("PyYAML required for conservative-ATR config: pip install pyyaml")
+
+
+conservative_atr_lanes: dict = load_conservative_atr_lanes()

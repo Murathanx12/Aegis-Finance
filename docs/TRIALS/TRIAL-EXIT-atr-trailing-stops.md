@@ -71,15 +71,28 @@ ATR multiple to the forward data; no early adoption on a calm-market Sharpe bump
    + `vol_capped_weights` (vol-target sizing cap, renormalised). Pure, arms
    nothing. Tests: `test_exit_overlay.py` (6 — monotonic winner held, rollover
    stopped near peak, entry-date alignment, vol cap trims the violent name).
-2. ⬜ **Attended.** Add `conservative-atr` to a separate config file
-   (`conservative_atr_lanes.yaml`) with its OWN hash (mirror `book_lanes.yaml`) so
-   `paper_portfolios.yaml`'s hash — and TRIAL-001's segment — stay untouched.
-   Mandate identical to `conservative` (target_equity_pct 60, same universe/
-   cadence/cost) + `exit_overlay: atr`.
-3. ⬜ **Attended.** Wire a `run_exit_overlay_check` into `_daily_check` (no-op
-   until seeded, mirroring Plan 3): re-use the conservative allocation, then apply
-   `evaluate_exit_overlay` → sell stopped names to cash; `vol_capped_weights` at
-   rebalance. Then env-gated seed (`AEGIS_SEED_CONSERVATIVE_ATR=1`, new inception)
-   + register TRIAL-EXIT in `rule_experiments` (cumulative count → 6).
-4. ⬜ Confirm `/api/health/full` AND `/api/pi/track-record` show both lanes fresh
-   (track-record now surfaces seeded non-reference lanes — fixed 2026-06-16).
+2. ✅ **DONE 2026-06-17.** `backend/data/conservative_atr_lanes.yaml` — single
+   `conservative-atr` lane with its OWN hash (`db.get_conservative_atr_config_hash`,
+   verified distinct from the reference AND book hashes), mandate **byte-identical
+   to `conservative`** (target_equity_pct 0.40 — the prior "60" in this doc was a
+   typo; the actual conservative mandate is 40/50/10) + `exit_overlay: atr`. Exit
+   params deliberately NOT duplicated — frozen at `config["exit_engine"]` defaults
+   so there is no per-lane knob to tune. `paper_portfolios.yaml` untouched.
+3. ✅ **DONE 2026-06-17.** `services/portfolio_intelligence/exit_lane.py`:
+   `seed_conservative_atr_lane` (mandate weights, ATR-hash stamp, registry-on-seed,
+   idempotent, fail-loud) + `run_exit_overlay_check` wired into `_daily_check`
+   (NO-OP `not_seeded` until the flag seeds it, mirroring Plan 3): recompute the
+   mandate target → `evaluate_exit_overlay` rotates stopped names to cash →
+   `vol_capped_weights` on the equity sleeve → rebalance on cadence/drift OR
+   immediately on a stop. Also wired: hourly MTM (`mark_all_conservative_atr_lanes`),
+   `nav_freshness`, `/api/pi/track-record`, and the registry N_eff enumeration —
+   each skips the lane until seeded. `main.py` env-gated seed hook reads
+   `AEGIS_SEED_CONSERVATIVE_ATR=1`. Tests: `test_exit_lane.py` (9) — hash
+   isolation, no-op-until-seeded, idempotent seed, registry-on-seed with the ATR
+   hash, frozen `conservative` control never created/touched, and the exit overlay
+   firing end-to-end (a rolled-over name is stopped → rotated to cash).
+4. ⬜ **Attended (Murat).** Set `AEGIS_SEED_CONSERVATIVE_ATR=1` → deploy → confirm
+   `/api/pi/registry` shows TRIAL-EXIT registered + the lane appears, and
+   `/api/health/full` + `/api/pi/track-record` show it fresh → unset the flag →
+   deploy. (The earlier 2026-06-17 seed attempt was a no-op because items 2–3 above
+   were not yet built — the flag had nothing to trigger; now it does.)
