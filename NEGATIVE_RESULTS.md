@@ -76,5 +76,30 @@ validated by **forward information coefficient + paper-lane NAV**, never by a
 historical backtest. Risk overlays (vol-management, ATR exits) are
 universe-independent and unaffected.
 
+## 5. The insider collector "ran" but fetched nothing in prod (silent-fragility catch)
+Not a strategy result — a process result, and the most important kind. The T9
+insider forward-IC collector passed all 12 offline tests and worked on the dev
+machine, so the wrap-up reported it live. A **live prod check** (the discipline,
+not the tests) found it failing **100% of its SEC fetches** — 50 warnings, every
+one a 403 on `www.sec.gov/Archives/`. The IC clock looked alive and was accruing
+nothing but fetch failures.
+
+Root cause: `insider_form4` issued **raw, unpaced** `requests.get` calls instead of
+routing through the process-wide SEC rate limiter that `edgar_events` enforces
+(its own comment: *"ALL EDGAR HTTP must go through it"*). One collector run fires
+~360–1000 fetches at `www.sec.gov`; on Railway's fast egress that trips SEC's
+10 req/s threshold instantly, and SEC answers with **403, not 429**. Local dev's
+handful of calls never tripped it — the classic "tested ≠ works in prod" gap.
+
+The tell that pinpointed it: prod warned **only** on the high-volume Archives host,
+never on the low-volume `data.sec.gov` submissions call — same User-Agent, so it
+wasn't a UA/IP block; the only difference was request *count*. Fix (2026-06-17):
+every SEC call now goes through one `_sec_get` choke-point — shared limiter pacing
+(≤8/s), declared UA (env-overridable `SEC_USER_AGENT`), one 403-retry with backoff.
+Verified live end-to-end. **The lesson: a collector that runs but fetches nothing
+reads as "covered" on every green dashboard — only a live prod check sees the
+silence.** T10 (revisions) and T8 (multi-factor) were audited the same way and are
+healthy (yfinance paths, no SEC dependency).
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*

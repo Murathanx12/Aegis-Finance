@@ -31,7 +31,9 @@ result — never raises, never blocks.
 from __future__ import annotations
 
 import logging
+import os
 import re
+import time
 import xml.etree.ElementTree as ET
 from datetime import date, datetime, timedelta
 from functools import lru_cache
@@ -39,20 +41,52 @@ from typing import Optional
 
 import requests
 
+# Reuse the ONE process-wide SEC rate limiter. edgar_events' own comment is
+# explicit: SEC enforces a hard 10 req/s cap and 403s offenders for ~10 min, so
+# "ALL EDGAR HTTP must go through it." This module previously bypassed it with
+# raw requests.get calls and fired ~360–1000 unpaced fetches per collector run
+# at www.sec.gov → SEC returned 403 on every Archives fetch in prod (Railway's
+# fast egress trips the threshold instantly; local dev's few calls never did).
+# Routing through the shared limiter is the fix. See FRAGILITY_RESEARCH_2026-06-14.
+from backend.services.edgar_events import _RATE_LIMITER
+
 logger = logging.getLogger(__name__)
 
-_UA = "Aegis Finance Research mrthnabdullaev@gmail.com"
-_HEADERS = {"User-Agent": _UA}
+# SEC mandates a declared User-Agent with contact; env-overridable so prod
+# (Railway) can set a compliant identifier without a code change. Defaults to the
+# project contact, which is safe to commit.
+_UA = os.environ.get("SEC_USER_AGENT", "Aegis Finance Research mrthnabdullaev@gmail.com")
+_HEADERS = {"User-Agent": _UA, "Accept-Encoding": "gzip, deflate"}
 _TIMEOUT = 10  # hard per-request ceiling — the anti-hang guard
+_RETRY_403 = 1            # one retry on a 403 (transient rate-limit block)
+_RETRY_BACKOFF_S = 1.0    # brief pause before the retry (limiter handles steady pacing)
+
+
+def _sec_get(url: str) -> requests.Response:
+    """Single choke-point for every SEC HTTP call in this module: pace through the
+    shared process-wide limiter (≤8/s, under SEC's 10/s cap), send the mandatory
+    UA, and retry once on a 403 (SEC returns 403 — not 429 — when the rate
+    threshold trips). Raises on a persistent non-2xx so callers degrade to empty."""
+    last: Optional[requests.Response] = None
+    for attempt in range(_RETRY_403 + 1):
+        _RATE_LIMITER.wait()
+        last = requests.get(url, headers=_HEADERS, timeout=_TIMEOUT)
+        if last.status_code != 403:
+            break
+        if attempt < _RETRY_403:
+            logger.warning("SEC 403 (rate threshold?) on %s — backing off %.1fs and retrying",
+                           url, _RETRY_BACKOFF_S)
+            time.sleep(_RETRY_BACKOFF_S)
+    assert last is not None
+    last.raise_for_status()
+    return last
 
 
 @lru_cache(maxsize=1)
 def _ticker_cik_map() -> dict[str, str]:
     """Ticker → zero-padded 10-digit CIK, from SEC's master list (cached once)."""
     try:
-        r = requests.get("https://www.sec.gov/files/company_tickers.json",
-                         headers=_HEADERS, timeout=_TIMEOUT)
-        r.raise_for_status()
+        r = _sec_get("https://www.sec.gov/files/company_tickers.json")
         return {v["ticker"].upper(): str(v["cik_str"]).zfill(10) for v in r.json().values()}
     except Exception as e:  # network/parse — degrade to empty
         logger.warning("SEC ticker→CIK map fetch failed: %s", e)
@@ -102,17 +136,16 @@ def _filing_xml(cik_int: int, accession_nodash: str, primary_doc: str) -> Option
     the primary document is an xslt-rendered HTM rather than the raw XML."""
     base = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{accession_nodash}/"
     try:
-        r = requests.get(base + primary_doc, headers=_HEADERS, timeout=_TIMEOUT)
-        r.raise_for_status()
+        r = _sec_get(base + primary_doc)
         if r.text.lstrip().startswith("<?xml") or "<ownershipDocument" in r.text:
             return r.text
         # primary doc was an xslt view → find the real .xml in the directory
-        idx = requests.get(base, headers=_HEADERS, timeout=_TIMEOUT).text
+        idx = _sec_get(base).text
         xmls = re.findall(r'href="([^"]+\.xml)"', idx)
         if not xmls:
             return None
         name = xmls[0].split("/")[-1]
-        return requests.get(base + name, headers=_HEADERS, timeout=_TIMEOUT).text
+        return _sec_get(base + name).text
     except Exception as e:
         logger.warning("Form 4 XML fetch failed (%s%s): %s", base, primary_doc, e)
         return None
@@ -133,8 +166,7 @@ def fetch_open_market_buys(ticker: str, lookback_days: int = 180,
     if not cik:
         return empty
     try:
-        sub = requests.get(f"https://data.sec.gov/submissions/CIK{cik}.json",
-                          headers=_HEADERS, timeout=_TIMEOUT).json()
+        sub = _sec_get(f"https://data.sec.gov/submissions/CIK{cik}.json").json()
         rec = sub["filings"]["recent"]
     except Exception as e:
         logger.warning("SEC submissions fetch failed for %s: %s", ticker, e)
