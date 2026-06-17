@@ -89,6 +89,21 @@ lane seed, so the insider IC and the lane NAV accrue against the same calendar.
   (6) — PIT write, UTC leak-safe stamp, idempotence, throttle, per-ticker failure
   isolation. (UTC stamp matters: a local HK-time stamp would sit past the UTC read
   cutoff and be invisible — caught by `test_value_lands_in_pit_store_leak_safe`.)
+- ✅ **PROD-403 BUG CAUGHT + FIXED 2026-06-17.** Live check found the collector
+  failing **100% of SEC fetches in prod** (50 warnings, all 403 on
+  `www.sec.gov/Archives/`) — the exact silent-fragility pattern this project hunts:
+  green offline tests, dead in prod. Root cause: `insider_form4` made **raw,
+  unpaced** `requests.get` calls, bypassing the process-wide SEC rate limiter that
+  `edgar_events` already enforces ("ALL EDGAR HTTP must go through it"). A collector
+  run fires ~360–1000 fetches at `www.sec.gov`; on Railway's fast egress that trips
+  SEC's 10 req/s threshold instantly → 403 (SEC returns 403, not 429). Local dev's
+  few calls never tripped it, so it passed there. Fix: every SEC call now routes
+  through one `_sec_get` choke-point — shared `_RATE_LIMITER` pacing (≤8/s), a
+  declared UA (env-overridable via `SEC_USER_AGENT`), and one 403-retry with
+  backoff. Verified live end-to-end (AAPL fetch: paced, no 403, no hang). The
+  asymmetry that pinpointed it: prod warned only on the high-volume Archives host,
+  never on the low-volume `data.sec.gov` submissions call — same UA, different
+  request count. Logged in `NEGATIVE_RESULTS.md` §5.
 - ⬜ IC accrual + measurement — runs forward; compute rank-IC @ 21/63/126d once a
   forward window exists. v1 cross-section = 12 names (small-N, reported not hidden);
   widening to a small-cap watchlist is the next step.
