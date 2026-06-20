@@ -10,6 +10,7 @@ from backend.services.data_integrity import (
     DataGrade,
     DataIntegrityError,
     KNOWN_DELISTED,
+    SOURCE_GUARANTEES,
     SurvivorshipReport,
     assert_survivorship_safe,
     data_grade,
@@ -57,6 +58,43 @@ class TestRequireSizingGrade:
     def test_error_message_names_the_context(self):
         with pytest.raises(DataIntegrityError, match="my-candidate"):
             require_sizing_grade("yfinance", context="my-candidate")
+
+
+class TestSizingGradeBypassAttempts:
+    """Adversarial: prove require_sizing_grade fails loud on EVERY directional
+    path, and that the registry can't quietly mislabel a source."""
+
+    @pytest.mark.parametrize("source", sorted(SOURCE_GUARANTEES))
+    def test_every_registered_source_gate_matches_grade(self, source):
+        if SOURCE_GUARANTEES[source].grade is DataGrade.SIZING:
+            require_sizing_grade(source)  # must NOT raise
+        else:
+            with pytest.raises(DataIntegrityError):
+                require_sizing_grade(source)
+
+    @pytest.mark.parametrize("source", ["yfinance", "fmp", "alpha_vantage",
+                                        "polygon", "finnhub", "unknown_feed", "YFINANCE"])
+    def test_directional_paths_all_raise(self, source):
+        with pytest.raises(DataIntegrityError):
+            require_sizing_grade(source)
+
+    def test_only_sizing_sources_pass(self):
+        passing = [s for s in SOURCE_GUARANTEES if not _raises(s)]
+        assert passing == ["sharadar"]  # the ONLY sizing-grade source today
+
+    def test_registry_has_no_accidental_sizing_source(self):
+        # A source is sizing ONLY if it declares BOTH guarantees.
+        for name, g in SOURCE_GUARANTEES.items():
+            if g.grade is DataGrade.SIZING:
+                assert g.survivorship_free and g.point_in_time_fundamentals
+
+
+def _raises(source: str) -> bool:
+    try:
+        require_sizing_grade(source)
+        return False
+    except DataIntegrityError:
+        return True
 
 
 class TestSurvivorshipProbe:
