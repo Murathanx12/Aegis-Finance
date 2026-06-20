@@ -10,10 +10,13 @@ build/
 venv/
 env/
 
-# ML models
+# ML models (artifacts are local/train-on-deploy, not committed)
 *.pkl
 *.joblib
 *.h5
+# crash-model provenance sidecar is paired with its (ignored) .pkl — don't commit
+# one without the other, or prod gets a sidecar pointing at an absent binary.
+backend/models/crash_model.meta.json
 
 # Node
 node_modules/

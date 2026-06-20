@@ -398,6 +398,66 @@ class TestCalibratorRangePersistence:
             probs = loaded.predict_proba(latest, "3m")
             assert 0 < probs[0] < 1
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 5. PROVENANCE SIDECAR (BACKLOG M3 — the 67-vs-30 guard)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestProvenanceSidecar:
+    """save_model writes crash_model.meta.json; load_model fails loud on a
+    feature-hash mismatch (the exact failure mode that left the overlay broken)."""
+
+    def test_sidecar_written_with_feature_contract(self, trained_predictor):
+        import json
+        from backend.services.crash_model import _feature_hash, _meta_path
+
+        predictor, _ = trained_predictor
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = str(Path(tmpdir) / "test_model.pkl")
+            predictor.save_model(path)
+
+            meta_path = _meta_path(path)
+            assert meta_path.exists(), "sidecar not written"
+            meta = json.loads(meta_path.read_text())
+            assert meta["n_features"] == len(predictor.feature_names)
+            assert meta["feature_hash"] == _feature_hash(predictor.feature_names)
+            assert "sklearn_version" in meta and "model_sha256" in meta
+
+    def test_feature_hash_mismatch_fails_loud(self, trained_predictor):
+        """A .pkl whose feature_names disagree with the sidecar must NOT load as
+        trained — this is what stops a 67-vs-30 model from silently shipping."""
+        import joblib
+
+        predictor, _ = trained_predictor
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = str(Path(tmpdir) / "test_model.pkl")
+            predictor.save_model(path)  # writes matching sidecar
+
+            # Corrupt the contract: drop a feature name in the .pkl only.
+            state = joblib.load(path)
+            state["feature_names"] = state["feature_names"][:-1]
+            joblib.dump(state, path)
+
+            loaded = CrashPredictor()
+            with pytest.raises(ValueError, match="feature-hash mismatch"):
+                loaded.load_model(path)
+            assert loaded.is_trained is False
+
+    def test_legacy_model_without_sidecar_still_loads(self, trained_predictor):
+        """No sidecar (legacy artifact) → loads with a warning, stays usable."""
+        from backend.services.crash_model import _meta_path
+
+        predictor, X = trained_predictor
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = str(Path(tmpdir) / "test_model.pkl")
+            predictor.save_model(path)
+            _meta_path(path).unlink()  # simulate a pre-sidecar model
+
+            loaded = CrashPredictor()
+            loaded.load_model(path)
+            assert loaded.is_trained is True
+            assert 0 < loaded.predict_proba(X.iloc[[-1]], "3m")[0] < 1
+
     def test_range_is_tuple_of_floats(self, trained_predictor):
         """Calibrator range should be (min_float, max_float)."""
         predictor, _ = trained_predictor
