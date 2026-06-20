@@ -5,10 +5,14 @@ arm a live lane."""
 
 import pytest
 
+import numpy as np
+import pandas as pd
+
 from backend.services.portfolio_intelligence.fragility import (
     EXPOSURE_FLOOR,
     FRAGILITY_HIGH,
     FRAGILITY_NEUTRAL,
+    compute_fragility_index,
     exposure_multiplier,
 )
 
@@ -68,3 +72,29 @@ class TestExposureMultiplier:
         out = exposure_multiplier(0.8)
         assert out["arms_lane"] is False
         assert "NOT armed" in out["label"]
+
+
+class TestHYOASWiredIntoExposure:
+    """Named check (Track 5): the strongest free leading credit signal — FRED
+    high-yield OAS — must flow into the crisis exposure multiplier via the
+    fragility composite (hy_oas -> compute_fragility_index -> exposure_multiplier)."""
+
+    def _inputs(self):
+        idx = pd.bdate_range("2020-01-01", periods=200)
+        data = pd.DataFrame({"SP500": np.linspace(3000.0, 4000.0, 200)}, index=idx)
+        fred = {"hy_oas": pd.Series(np.linspace(3.0, 9.0, 200), index=idx)}
+        return data, fred
+
+    def test_hy_oas_is_a_resolved_component(self):
+        data, fred = self._inputs()
+        res = compute_fragility_index(data=data, fred_data=fred)
+        assert "hy_oas" in res["components"]
+        assert res["components"]["hy_oas"]["available"] is True
+        assert res["status"] == "ok"
+
+    def test_hy_oas_flows_to_exposure_multiplier(self):
+        data, fred = self._inputs()
+        res = compute_fragility_index(data=data, fred_data=fred)
+        em = exposure_multiplier(res["composite"])
+        assert em["status"] == "ok"
+        assert EXPOSURE_FLOOR <= em["multiplier"] <= 1.0
