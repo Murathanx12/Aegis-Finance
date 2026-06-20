@@ -5,6 +5,8 @@ Fast tests mock the EDGAR HTTP layer (the fast suite is network-blocked). One
 slow test hits live EDGAR to verify the real path + tracked CIKs.
 """
 
+import json
+import pathlib
 import time
 
 import pytest
@@ -12,6 +14,13 @@ import pytest
 from backend.db import get_connection, get_latest_observable, get_revisions, init_db
 from backend.services import edgar_events, pit_collectors
 from backend.services.edgar_events import _RateLimiter
+
+# Recorded REAL (trimmed) EDGAR submissions for Berkshire (CIK 1067983), so the
+# 13F collector has fast-suite coverage against real-shaped data — not just the
+# synthetic _subs mocks. Refresh with: a one-off fetch of
+# https://data.sec.gov/submissions/CIK0001067983.json (compliant User-Agent),
+# trimmed to filings.recent[form/accession/filingDate/reportDate/primaryDocument].
+_FIXTURE = pathlib.Path(__file__).parent / "fixtures" / "edgar_brk_submissions.json"
 
 
 @pytest.fixture
@@ -152,6 +161,35 @@ class TestRateLimiter:
         t0 = time.monotonic()
         rl.wait()
         assert time.monotonic() - t0 < 0.5  # first call returns immediately
+
+
+# ── Recorded real EDGAR (offline fast coverage of the 13F path) ──────────────
+
+
+class TestRecordedBerkshire13F:
+    """Fast, offline coverage of the 13F collector against REAL-shaped EDGAR data
+    via a recorded fixture — complements the synthetic mocks and the slow live
+    test, so the real parsing path runs in the network-blocked fast suite."""
+
+    def _subs(self):
+        return json.loads(_FIXTURE.read_text())
+
+    def test_recorded_submissions_yield_13f_with_lag(self, conn, monkeypatch):
+        subs = self._subs()
+        monkeypatch.setattr(edgar_events, "_fetch_submissions", lambda cik: subs)
+        rid = pit_collectors.collect_institution_13f(conn, "Berkshire Hathaway", 1067983)
+        assert rid is not None
+        row = get_latest_observable(conn, "13f:1067983:filing")
+        assert row is not None
+        assert row["as_of"] <= row["observed_at"]   # report period precedes filing
+        assert row["source"] == "edgar"
+
+    def test_recorded_latest_13f_fields(self, monkeypatch):
+        subs = self._subs()
+        monkeypatch.setattr(edgar_events, "_fetch_submissions", lambda cik: subs)
+        f = pit_collectors.latest_13f_filing(1067983)
+        assert f is not None and f["form"] == "13F-HR"
+        assert f["report_date"] <= f["filing_date"]
 
 
 # ── Live integration (verifies real EDGAR path + CIKs) ───────────────────────
