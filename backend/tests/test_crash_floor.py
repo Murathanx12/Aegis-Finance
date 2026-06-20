@@ -443,6 +443,29 @@ class TestProvenanceSidecar:
                 loaded.load_model(path)
             assert loaded.is_trained is False
 
+    def test_sidecar_deletion_bypasses_guard_known_gap(self, trained_predictor):
+        """ADVERSARIAL / KNOWN GAP (FINDINGS F3): the feature-hash guard only
+        protects when the sidecar EXISTS. Delete it and a model with a tampered
+        feature contract loads as trained via the legacy back-compat path. This
+        test pins the current behavior; hardening (a strict no-sidecar-refuses
+        mode) is a proposal in IMPROVEMENT_BACKLOG, not a fix (it would change the
+        documented legacy path)."""
+        import joblib
+        from backend.services.crash_model import _meta_path
+
+        predictor, _ = trained_predictor
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = str(Path(tmpdir) / "test_model.pkl")
+            predictor.save_model(path)
+            _meta_path(path).unlink()              # remove provenance
+            state = joblib.load(path)
+            state["feature_names"] = state["feature_names"][:-1]  # tamper
+            joblib.dump(state, path)
+
+            loaded = CrashPredictor()
+            loaded.load_model(path)                # no raise — the bypass
+            assert loaded.is_trained is True       # documents the gap
+
     def test_legacy_model_without_sidecar_still_loads(self, trained_predictor):
         """No sidecar (legacy artifact) → loads with a warning, stays usable."""
         from backend.services.crash_model import _meta_path
