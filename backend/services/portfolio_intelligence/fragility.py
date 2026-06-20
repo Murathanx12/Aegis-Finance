@@ -360,13 +360,17 @@ def _pct_rank(series: pd.Series, value: float) -> Optional[float]:
     return float((s <= value).mean())
 
 
-def compute_fragility_index(data=None, fred_data=None) -> dict:
+def compute_fragility_index(data=None, fred_data=None, as_of_ts=None) -> dict:
     """Equal-weighted descriptive structural-fragility index in [0,1].
 
     Aggregates already-fetched structural signals, each normalized to a [0,1]
     fragility scale (1 = most fragile), and returns their equal-weighted mean
     over the inputs that are available this cycle. DESCRIPTIVE ONLY — no code
     path from here arms a lane, sizes a position, or emits buy/sell language.
+
+    ``as_of_ts`` (optional): slice every input series to ``<= as_of_ts`` so all
+    values and percentile ranks use only data knowable at that date — correct-by-
+    construction and leak-proof when backtested. ``None`` (live) is a no-op.
 
     Returns {status, composite, level, n_inputs, dispersion, components,
     candidate_inputs, label, as_of}. `composite` is None if no input resolved.
@@ -396,6 +400,23 @@ def compute_fragility_index(data=None, fred_data=None) -> dict:
             logger.warning("fragility composite: data unavailable: %s", e)
             return {"status": "data_unavailable", "composite": None,
                     "label": FRAGILITY_LABEL, "candidate_inputs": FRAGILITY_CANDIDATE_INPUTS}
+
+    # As-of bound: slice every input series to <= as_of_ts so EVERY downstream
+    # value and percentile rank uses only data knowable at as_of — correct-by-
+    # construction, leak-proof even when backtested. At the live edge
+    # (as_of_ts=None) this is a no-op, so live behavior is unchanged.
+    # (net_liquidity below fetches its own live series and is not as-of bound —
+    # it is network-gated and absent in offline backtests; noted in the docstring.)
+    if as_of_ts is not None:
+        cutoff = pd.Timestamp(as_of_ts)
+        try:
+            data = data.loc[data.index <= cutoff]
+        except Exception:
+            pass
+        fred_data = {
+            k: (v.loc[v.index <= cutoff] if hasattr(v, "loc") else v)
+            for k, v in (fred_data or {}).items()
+        }
 
     as_of = None
     try:
