@@ -443,13 +443,10 @@ class TestProvenanceSidecar:
                 loaded.load_model(path)
             assert loaded.is_trained is False
 
-    def test_sidecar_deletion_bypasses_guard_known_gap(self, trained_predictor):
-        """ADVERSARIAL / KNOWN GAP (FINDINGS F3): the feature-hash guard only
-        protects when the sidecar EXISTS. Delete it and a model with a tampered
-        feature contract loads as trained via the legacy back-compat path. This
-        test pins the current behavior; hardening (a strict no-sidecar-refuses
-        mode) is a proposal in IMPROVEMENT_BACKLOG, not a fix (it would change the
-        documented legacy path)."""
+    def test_sidecar_deletion_refuses_to_train(self, trained_predictor):
+        """F3 CLOSED: the sidecar-deletion bypass is gone. Delete the sidecar and
+        tamper the feature contract — load must now REFUSE (no unverified model
+        marks itself trained), not fall through the legacy path."""
         import joblib
         from backend.services.crash_model import _meta_path
 
@@ -463,23 +460,48 @@ class TestProvenanceSidecar:
             joblib.dump(state, path)
 
             loaded = CrashPredictor()
-            loaded.load_model(path)                # no raise — the bypass
-            assert loaded.is_trained is True       # documents the gap
+            with pytest.raises(ValueError, match="no provenance sidecar"):
+                loaded.load_model(path)
+            assert loaded.is_trained is False      # the bypass is closed
 
-    def test_legacy_model_without_sidecar_still_loads(self, trained_predictor):
-        """No sidecar (legacy artifact) → loads with a warning, stays usable."""
+    def test_missing_sidecar_refuses_to_train(self, trained_predictor):
+        """F3: a missing sidecar (even on an untampered model) refuses to load —
+        provenance is now a hard precondition. Re-saving (which writes a sidecar)
+        restores loadability."""
         from backend.services.crash_model import _meta_path
 
         predictor, X = trained_predictor
         with tempfile.TemporaryDirectory() as tmpdir:
             path = str(Path(tmpdir) / "test_model.pkl")
             predictor.save_model(path)
-            _meta_path(path).unlink()  # simulate a pre-sidecar model
+            _meta_path(path).unlink()              # simulate a pre-sidecar model
 
             loaded = CrashPredictor()
-            loaded.load_model(path)
-            assert loaded.is_trained is True
-            assert 0 < loaded.predict_proba(X.iloc[[-1]], "3m")[0] < 1
+            with pytest.raises(ValueError, match="no provenance sidecar"):
+                loaded.load_model(path)
+            assert loaded.is_trained is False
+
+            # Re-saving regenerates the sidecar -> loads again.
+            predictor.save_model(path)
+            recovered = CrashPredictor()
+            recovered.load_model(path)
+            assert recovered.is_trained is True
+            assert 0 < recovered.predict_proba(X.iloc[[-1]], "3m")[0] < 1
+
+    def test_unreadable_sidecar_refuses_to_train(self, trained_predictor):
+        """A corrupt/unreadable sidecar is treated like a missing one — refuse."""
+        from backend.services.crash_model import _meta_path
+
+        predictor, _ = trained_predictor
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = str(Path(tmpdir) / "test_model.pkl")
+            predictor.save_model(path)
+            _meta_path(path).write_text("{ not valid json ]")
+
+            loaded = CrashPredictor()
+            with pytest.raises(ValueError, match="sidecar"):
+                loaded.load_model(path)
+            assert loaded.is_trained is False
 
     def test_range_is_tuple_of_floats(self, trained_predictor):
         """Calibrator range should be (min_float, max_float)."""

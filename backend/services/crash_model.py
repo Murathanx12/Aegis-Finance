@@ -646,43 +646,51 @@ class CrashPredictor:
         # _get_shared_predictor() catches this and leaves the overlay
         # `model_not_deployed` rather than serving a broken model. Library
         # version drift is a loud WARNING, not fatal.
+        # Provenance is now a HARD precondition (F3 closed): a missing or
+        # unreadable sidecar refuses to load, so no unverified model can mark
+        # itself trained via a legacy fall-through. _get_shared_predictor()
+        # catches this and leaves the overlay model_not_deployed. Regenerate a
+        # sidecar by re-saving: python -m engine.training.train_crash_model.
         meta_path = _meta_path(path)
-        if meta_path.exists():
-            try:
-                meta = json.loads(meta_path.read_text())
-            except Exception as e:
-                logger.warning("Crash model sidecar unreadable (%s): %s", meta_path.name, e)
-                meta = None
-            if meta is not None:
-                actual_feat_hash = _feature_hash(self.feature_names)
-                if meta.get("feature_hash") and meta["feature_hash"] != actual_feat_hash:
-                    self.is_trained = False
-                    raise ValueError(
-                        f"Crash model feature-hash mismatch: sidecar="
-                        f"{meta['feature_hash'][:12]} model={actual_feat_hash[:12]} "
-                        f"(sidecar n={meta.get('n_features')}, model n={len(self.feature_names)}). "
-                        f"Retrain: python -m engine.training.train_crash_model"
-                    )
-                if meta.get("model_sha256") and meta["model_sha256"] != _file_sha256(path):
-                    # The .pkl bytes differ from what the sidecar recorded. This
-                    # can be benign (re-dump, joblib version drift) so it WARNS;
-                    # the feature-hash above is the contract that fails loud.
-                    logger.warning(
-                        "Crash model sha256 differs from sidecar for %s — artifact "
-                        "modified after training (benign if intentional; retrain to refresh).",
-                        Path(path).name,
-                    )
-                if meta.get("sklearn_version") and meta["sklearn_version"] != sklearn.__version__:
-                    logger.warning(
-                        "Crash model sklearn drift: trained on %s, runtime %s — "
-                        "predictions may differ; consider retraining.",
-                        meta["sklearn_version"], sklearn.__version__,
-                    )
-        else:
+        if not meta_path.exists():
+            self.is_trained = False
+            raise ValueError(
+                f"Crash model {Path(path).name} has no provenance sidecar "
+                f"({meta_path.name}) — refusing to load an unverified model. "
+                f"Retrain to generate one: python -m engine.training.train_crash_model"
+            )
+        try:
+            meta = json.loads(meta_path.read_text())
+        except Exception as e:
+            self.is_trained = False
+            raise ValueError(
+                f"Crash model sidecar unreadable ({meta_path.name}): {e} — "
+                f"refusing to load an unverified model."
+            ) from e
+
+        actual_feat_hash = _feature_hash(self.feature_names)
+        if meta.get("feature_hash") and meta["feature_hash"] != actual_feat_hash:
+            self.is_trained = False
+            raise ValueError(
+                f"Crash model feature-hash mismatch: sidecar="
+                f"{meta['feature_hash'][:12]} model={actual_feat_hash[:12]} "
+                f"(sidecar n={meta.get('n_features')}, model n={len(self.feature_names)}). "
+                f"Retrain: python -m engine.training.train_crash_model"
+            )
+        if meta.get("model_sha256") and meta["model_sha256"] != _file_sha256(path):
+            # The .pkl bytes differ from what the sidecar recorded. This can be
+            # benign (re-dump, joblib version drift) so it WARNS; the feature-hash
+            # above is the contract that fails loud.
             logger.warning(
-                "Crash model %s has no provenance sidecar (%s) — legacy artifact. "
-                "Retrain to add feature-hash + version provenance (BACKLOG M3).",
-                Path(path).name, meta_path.name,
+                "Crash model sha256 differs from sidecar for %s — artifact "
+                "modified after training (benign if intentional; retrain to refresh).",
+                Path(path).name,
+            )
+        if meta.get("sklearn_version") and meta["sklearn_version"] != sklearn.__version__:
+            logger.warning(
+                "Crash model sklearn drift: trained on %s, runtime %s — "
+                "predictions may differ; consider retraining.",
+                meta["sklearn_version"], sklearn.__version__,
             )
 
         logger.info(
