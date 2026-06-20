@@ -20,6 +20,14 @@ class TestExposureMultiplier:
         assert out["multiplier"] is None
         assert out["arms_lane"] is False
 
+    def test_nan_composite_unavailable(self):
+        # A NaN composite (e.g. an upstream input that normalized to NaN) must NOT
+        # silently produce a NaN multiplier reported as status="ok".
+        import math
+        out = exposure_multiplier(float("nan"))
+        assert out["status"] == "unavailable"
+        assert out["multiplier"] is None
+
     def test_low_fragility_full_exposure(self):
         out = exposure_multiplier(FRAGILITY_NEUTRAL - 0.1)
         assert out["multiplier"] == 1.0

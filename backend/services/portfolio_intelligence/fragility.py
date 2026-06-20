@@ -546,7 +546,9 @@ def exposure_multiplier(
     DESCRIPTIVE ONLY — returns the multiplier a future pre-registered defensive
     lane COULD apply; no code path from here arms or scales a live lane.
     """
-    if composite is None:
+    if composite is None or (isinstance(composite, float) and np.isnan(composite)):
+        # A NaN composite (e.g. an upstream input that normalized to NaN) is
+        # treated like "no reading" — never a NaN multiplier reported as ok.
         return {"status": "unavailable", "multiplier": None,
                 "label": EXPOSURE_LABEL, "arms_lane": False}
     c = _clip01(composite)
