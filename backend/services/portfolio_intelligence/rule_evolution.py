@@ -169,6 +169,7 @@ def evolve_param(
         "dsr": ev["dsr"],
         "pbo": ev["pbo"],
         "survives": ev["survives"],
+        "data_grade": ev["data_grade"],  # directional on free data — never un-stamped (B2)
         "grid": [{"value": g["value"], "sharpe": round(g["sharpe"], 4),
                   "n_obs": g["n_obs"]} for g in grid_results],
         "window": {"start": start_date, "end": end_date},

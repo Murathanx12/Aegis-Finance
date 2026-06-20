@@ -132,6 +132,7 @@ def evaluate_candidate(
     *,
     pbo_matrix=None,
     dsr_ship: float = DSR_SHIP_THRESHOLD,
+    data_grade: str | None = None,
     db_path=None,
 ) -> dict:
     """Evaluate a candidate rule change, deflating against CUMULATIVE trials.
@@ -149,6 +150,14 @@ def evaluate_candidate(
     """
     existing = cumulative_trial_count(db_path)
     n_trials = existing + max(batch_trials, 1)
+
+    # Stamp the data grade of the backtest that produced these returns. Default
+    # to the grade of the live price source (yfinance -> directional), so no
+    # verdict that decides graduation is ever un-stamped (B2). A sizing-grade
+    # source flips this once one is wired.
+    if data_grade is None:
+        from backend.services import data_integrity as _di
+        data_grade = _di.data_grade(_di.DEFAULT_PRICE_SOURCE).value
 
     dsr_info = deflated_sharpe_from_returns(
         np.asarray(returns, dtype=float),
@@ -170,6 +179,7 @@ def evaluate_candidate(
         "pbo": pbo,
         "survives": survives,
         "verdict": "adopted" if survives else "rejected",
+        "data_grade": data_grade,
         **dsr_info,
     }
 

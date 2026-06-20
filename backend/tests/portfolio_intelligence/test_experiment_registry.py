@@ -239,3 +239,25 @@ def test_record_trial_persists_effective_trials(tmp_db):
     assert row["effective_trials"] is not None
     assert row["effective_trials"] == pytest.approx(
         ev["effective_independent_trials"]["n_eff"])
+
+
+# ── data_grade stamp on the verdict (B2) ─────────────────────────────────────
+
+
+def test_verdict_carries_data_grade_default_directional(tmp_db):
+    ev = evaluate_candidate(_candidate_returns(), 0.02, batch_trials=1, db_path=tmp_db)
+    assert ev["data_grade"] == "directional"
+
+
+def test_verdict_data_grade_propagates(tmp_db):
+    ev = evaluate_candidate(_candidate_returns(), 0.02, batch_trials=1,
+                            db_path=tmp_db, data_grade="sizing")
+    assert ev["data_grade"] == "sizing"
+
+
+def test_no_verdict_path_is_unstamped(tmp_db):
+    # Every verdict dict that decides graduation must carry data_grade, whatever
+    # the inputs (survives or rejected). Nothing un-stamped reaches a lane.
+    for bt in (1, 5):
+        ev = evaluate_candidate(_candidate_returns(), 0.02, batch_trials=bt, db_path=tmp_db)
+        assert ev.get("data_grade"), f"un-stamped verdict for batch_trials={bt}"
