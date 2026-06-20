@@ -31,6 +31,7 @@ import numpy as np
 import pandas as pd
 
 from backend.config import paper_portfolios
+from backend.services import data_integrity as di
 from backend.schemas.portfolio_intelligence import ReplayResult, MetricPack
 from backend.services.portfolio_intelligence.market_data_wrapper import MarketDataAtTimestamp
 from backend.services.portfolio_intelligence.nav import (
@@ -552,4 +553,8 @@ class ReplayEngine:
             total_rebalances=total_rebalances,
             total_turnover=round(total_turnover, 4),
             total_cost_bps=round(cost_bps, 2),
+            # Replay prices come from yfinance (DataFetcher) — directional-grade.
+            # The stamp travels with every backtest so no result is mistaken for
+            # sizing-grade; flips automatically if a sizing source is wired.
+            data_grade=di.data_grade(di.DEFAULT_PRICE_SOURCE).value,
         )
