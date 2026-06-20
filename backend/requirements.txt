@@ -41,6 +41,14 @@ edgartools>=5.28.0
 # Advanced portfolio optimization
 riskfolio-lib>=7.0.0
 
+# Signal validation & performance reporting (V3)
+# alphalens-reloaded: information-coefficient bench — every candidate signal's
+#   forward predictive content is scored here BEFORE it earns a paper lane.
+# quantstats: equity-curve/Sharpe/drawdown tearsheets for the lanes.
+# Both import as `alphalens` / `quantstats` (the maintained Quantopian forks).
+alphalens-reloaded>=0.4.5
+quantstats>=0.0.79
+
 # Copula modeling & alternative data
 copulas>=0.12.0
 ruptures>=1.1.0

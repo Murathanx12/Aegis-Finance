@@ -40,10 +40,22 @@ now shipped.**
   `CAPABILITY_MATRIX.md` for validated-vs-descriptive).
 
 ## Real OPEN items (the actual work)
-1. **🔴 crash_model.pkl is BROKEN** — feature mismatch (pipeline now builds 67
-   features, model trained on 30) → `predict` raises; this is why the overlay is
-   `model_not_deployed` and the replay falls back to a crash-prob stub. Needs
-   **retrain + metadata sidecar** (BACKLOG M3). Confirmed live 2026-06-15.
+1. **🟢 crash_model.pkl ARTIFACT FIXED 2026-06-20** (BACKLOG M3) — root cause was
+   two bugs: (a) `replay.py` passed the full 67-col as-of matrix as
+   `external_features` into a 30-feature model → "67 != 30"; (b) the loader
+   swallowed load failures with no provenance (the prod `model_not_deployed`).
+   Fixes: retrained on the current pipeline (selects 20 features), added
+   `crash_model.meta.json` provenance sidecar (train date, sklearn/lgb/numpy/joblib
+   versions, feature count + **ordered feature-hash** + file sha256), load-time
+   verification that **fails loud on feature-hash mismatch** (refuses to mark
+   trained → overlay stays safely dark), a clear width-error in `_blend_scores`,
+   and the replay pre-selects `feature_names`. Live overlay path now returns
+   `status=evaluated` (was `model_not_deployed`); both consumers run end-to-end.
+   ⚠️ **CAVEAT — model still DARK, do NOT arm:** trained on sparse crash events →
+   val AUC=nan and the calibrator is degenerate (outputs ~0.066 across 2008/2022/2024
+   alike — no regime discrimination). The artifact is now a sound *precondition* for
+   arming, NOT an armable signal. Arming needs a discriminating model on a
+   pre-registered lane (TRIAL-001). See follow-up: crash-model discrimination.
 2. ✅ **Book lanes SEEDED 2026-06-16** — registry 3→5, mirror+conviction at today's
    live MV weights under book hash `d0d0eaf…`; the 4 reference lanes intact (config
    `628456e…`, inceptions 06-08/06-10, no spurious segment — TRIAL-001 held);

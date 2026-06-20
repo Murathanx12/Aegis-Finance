@@ -96,7 +96,28 @@
 - **Research update 2026-06-14:** CPCV with purge/embargo is the best-documented overfitting defense (lower PBO, higher DSR than Walk-Forward — Arian/Norouzi/Seco 2024). Block-bootstrap CI ships first; CPCV is the stronger second pass. Caveat: off-by-one purging silently leaks — implement carefully; Walk-Forward stays better for *live-sim* realism.
 - **🔵 Shipped 2026-06-14:** `brier_with_ci` (`engine/validation/metrics.py`) — block bootstrap (not i.i.d., because overlapping-horizon crash labels autocorrelate) + positive-event count + `low_event_warning` (<10 events); wired into `walk_forward.run_backtest` and its logs/summary; METHODOLOGY + NEGATIVE_RESULTS updated; 12 tests. **Remaining:** (a) re-run the walk-forward to regenerate the README headline 0.046 *with* its CI (slow), (b) optional CPCV second pass.
 
-### M3 🔴 Crash-model is BROKEN + reproducibility sidecar (escalated 2026-06-15)
+### M3 🟢 Crash-model artifact FIXED + reproducibility sidecar (DONE 2026-06-20)
+- **✅ Shipped 2026-06-20:** retrained on the current pipeline (LASSO selects 20
+  features); added `backend/models/crash_model.meta.json` sidecar (train date,
+  sklearn 1.8.0 / lgb 4.6.0 / numpy / joblib versions, `n_features`, ordered
+  `feature_hash`, `model_sha256`); `load_model` verifies it — **feature-hash
+  mismatch is FATAL** (sets `is_trained=False` so `_get_shared_predictor` leaves
+  the overlay `model_not_deployed` rather than serving a broken model), sha256
+  drift + version drift are loud WARNINGs. Added a clear feature-width `ValueError`
+  in `_blend_scores` (replaces LightGBM's cryptic fatal). **Fixed the actual
+  "67 != 30" bug** in `replay.py:_get_crash_prob_as_of` — it passed the full 67-col
+  as-of matrix as `external_features`; now pre-selects `predictor.feature_names`
+  (no look-ahead; as-of slicing already done). Live overlay path verified end-to-end
+  → `status=evaluated` (prob 6.6%); replay runs across 2008/2022/2024 with no raise.
+- **⚠️ REMAINING (separate task, NOT M3): crash-model discrimination.** The retrained
+  model has val AUC=nan (sparse crash events) and a degenerate calibrator → it outputs
+  ~0.066 in every regime (2008-09-01 ≈ 2024-01-02). The artifact is sound and
+  provenanced — a *precondition* for arming — but it is NOT an armable signal until it
+  discriminates. Keep the overlay DARK. Improving discrimination (richer labels /
+  walk-forward AUC≥0.70 / feature work) is its own chunk, gated to a pre-registered
+  lane per TRIAL-001.
+
+<details><summary>Original M3 entry (escalated 2026-06-15)</summary>
 - **Confirmed broken live (2026-06-15):** feature mismatch — the pipeline now
   builds **67 features, the model was trained on 30** → `predict` raises
   `LightGBM Fatal: number of features (67) != (30)`. Surfaced loudly during the
@@ -111,6 +132,7 @@
   latent risk. Bump when the crash/fragility work resumes.
 - **Chosen approach (when armed):** write a `crash_model.meta.json` sidecar (train date, sklearn version, feature hash, file sha256) next to the `.pkl`; assert it at load; fail **loud** on mismatch; retrain on the pinned sklearn. This is a precondition of *ever* arming an overlay (must be on new pre-registered lanes with a provenanced binary — per TRIAL-001).
 - **Alternatives:** (a) do it now — fine but no payoff while dark. (b) ONNX/skops instead of pickle — heavier; revisit if cross-version drift recurs.
+</details>
 
 ### M4 ⬜ README repositioning (lead with the honesty infrastructure)
 - **Real?** Strategic, not a bug. Both Claude passes + GPT converge: lead with the wedge (per-prediction SHAP, forward-only uncopyable track record, deflation guards, pre-registered trials), demote the breadth to an appendix, link `NEGATIVE_RESULTS.md`.

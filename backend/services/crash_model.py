@@ -17,7 +17,11 @@ Usage:
     probs = predictor.predict_proba(features, horizon="3m")
 """
 
+import hashlib
+import json
 import logging
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -30,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import lightgbm as lgb
+    import sklearn
     from sklearn.isotonic import IsotonicRegression
     from sklearn.linear_model import LogisticRegression
     from sklearn.preprocessing import StandardScaler
@@ -40,6 +45,31 @@ try:
     _HAS_ML = True
 except ImportError:
     _HAS_ML = False
+
+
+def _feature_hash(feature_names: list[str]) -> str:
+    """Stable hash of the ORDERED feature contract.
+
+    Order matters — LightGBM consumes columns positionally, so a reordering is
+    as breaking as a rename. This is the check that would have caught the
+    67-vs-30 mismatch (BACKLOG M3).
+    """
+    joined = "\n".join(str(f) for f in feature_names)
+    return hashlib.sha256(joined.encode("utf-8")).hexdigest()
+
+
+def _file_sha256(path: str) -> str:
+    """SHA-256 of a file's bytes (detects a .pkl swapped out from under the sidecar)."""
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _meta_path(model_path: str) -> Path:
+    """Sidecar path next to the .pkl: crash_model.pkl -> crash_model.meta.json."""
+    return Path(model_path).with_suffix(".meta.json")
 
 
 class CrashPredictor:
@@ -324,6 +354,19 @@ class CrashPredictor:
         if horizon not in self.lgb_models:
             horizon = list(self.lgb_models.keys())[0]
 
+        # Fail with a CLEAR message on the 67-vs-30 class of bug instead of
+        # LightGBM's cryptic "number of features" fatal. Callers passing
+        # external_features must pre-select to predictor.feature_names.
+        expected = getattr(self.lgb_models[horizon], "n_features_in_", None)
+        n_cols = X.shape[1] if hasattr(X, "shape") and len(getattr(X, "shape", ())) == 2 else None
+        if isinstance(expected, (int, np.integer)) and n_cols is not None and n_cols != expected:
+            raise ValueError(
+                f"Crash model feature-width mismatch: got {n_cols} columns, "
+                f"horizon '{horizon}' expects {expected} "
+                f"(model.feature_names has {len(self.feature_names)}). "
+                f"external_features must be pre-selected to predictor.feature_names."
+            )
+
         lgb_raw = self.lgb_models[horizon].predict_proba(X)[:, 1]
 
         if horizon in self.lr_models and horizon in self.scalers:
@@ -552,7 +595,27 @@ class CrashPredictor:
         }
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(state, path)
-        logger.info("Model saved to %s", path)
+
+        # Provenance sidecar — train date, library versions, and the feature
+        # contract (count + ordered hash) + file sha256. load_model() asserts
+        # this and fails loud on a feature-hash/sha mismatch. This is the check
+        # that would have caught the 67-vs-30 break (BACKLOG M3).
+        meta = {
+            "train_date": datetime.now(timezone.utc).isoformat(),
+            "python_version": ".".join(map(str, sys.version_info[:3])),
+            "sklearn_version": sklearn.__version__,
+            "lightgbm_version": lgb.__version__,
+            "numpy_version": np.__version__,
+            "joblib_version": joblib.__version__,
+            "n_features": len(self.feature_names),
+            "feature_names": list(self.feature_names),
+            "feature_hash": _feature_hash(self.feature_names),
+            "horizons": list(self.lgb_models.keys()),
+            "model_sha256": _file_sha256(path),
+        }
+        meta_path = _meta_path(path)
+        meta_path.write_text(json.dumps(meta, indent=2))
+        logger.info("Model saved to %s (sidecar %s)", path, meta_path.name)
 
     def load_model(self, path: str) -> None:
         """Load serialized models from disk."""
@@ -576,6 +639,51 @@ class CrashPredictor:
         for horizon, lr_model in self.lr_models.items():
             if isinstance(lr_model, LogisticRegression) and not hasattr(lr_model, "multi_class"):
                 lr_model.multi_class = "auto"
+
+        # Verify the provenance sidecar. A feature-hash or sha256 mismatch is
+        # FATAL — it means the .pkl and its declared contract disagree (the
+        # 67-vs-30 failure mode), so we refuse to mark the model trained.
+        # _get_shared_predictor() catches this and leaves the overlay
+        # `model_not_deployed` rather than serving a broken model. Library
+        # version drift is a loud WARNING, not fatal.
+        meta_path = _meta_path(path)
+        if meta_path.exists():
+            try:
+                meta = json.loads(meta_path.read_text())
+            except Exception as e:
+                logger.warning("Crash model sidecar unreadable (%s): %s", meta_path.name, e)
+                meta = None
+            if meta is not None:
+                actual_feat_hash = _feature_hash(self.feature_names)
+                if meta.get("feature_hash") and meta["feature_hash"] != actual_feat_hash:
+                    self.is_trained = False
+                    raise ValueError(
+                        f"Crash model feature-hash mismatch: sidecar="
+                        f"{meta['feature_hash'][:12]} model={actual_feat_hash[:12]} "
+                        f"(sidecar n={meta.get('n_features')}, model n={len(self.feature_names)}). "
+                        f"Retrain: python -m engine.training.train_crash_model"
+                    )
+                if meta.get("model_sha256") and meta["model_sha256"] != _file_sha256(path):
+                    # The .pkl bytes differ from what the sidecar recorded. This
+                    # can be benign (re-dump, joblib version drift) so it WARNS;
+                    # the feature-hash above is the contract that fails loud.
+                    logger.warning(
+                        "Crash model sha256 differs from sidecar for %s — artifact "
+                        "modified after training (benign if intentional; retrain to refresh).",
+                        Path(path).name,
+                    )
+                if meta.get("sklearn_version") and meta["sklearn_version"] != sklearn.__version__:
+                    logger.warning(
+                        "Crash model sklearn drift: trained on %s, runtime %s — "
+                        "predictions may differ; consider retraining.",
+                        meta["sklearn_version"], sklearn.__version__,
+                    )
+        else:
+            logger.warning(
+                "Crash model %s has no provenance sidecar (%s) — legacy artifact. "
+                "Retrain to add feature-hash + version provenance (BACKLOG M3).",
+                Path(path).name, meta_path.name,
+            )
 
         logger.info(
             "Model loaded from %s (horizons: %s)",

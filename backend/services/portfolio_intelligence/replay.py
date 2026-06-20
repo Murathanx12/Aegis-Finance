@@ -283,13 +283,26 @@ class ReplayEngine:
             return None
 
         features = wrapper.crash_features_as_of(dt)
-        if features is None:
+        if features is None or features.empty:
             return None
 
-        try:
-            prob = predictor.predict_proba(
-                features, horizon="3m", external_features=features,
+        # crash_features_as_of returns the FULL as-of feature matrix (~67 cols);
+        # the model consumes only its trained feature_names. Pre-select to the
+        # model's contract before passing as external_features — passing the full
+        # matrix was the 67-vs-30 break (BACKLOG M3). Column selection adds no
+        # look-ahead; the as-of slicing already happened in the wrapper.
+        cols = [c for c in predictor.feature_names if c in features.columns]
+        if len(cols) != len(predictor.feature_names):
+            logger.warning(
+                "Crash replay %s: only %d/%d model features present in as-of "
+                "matrix; skipping crash prob for this date.",
+                dt, len(cols), len(predictor.feature_names),
             )
+            return None
+        X = features[cols]
+
+        try:
+            prob = predictor.predict_proba(X, horizon="3m", external_features=X)
             if prob is not None and len(prob) > 0:
                 return float(prob[0])
         except Exception as e:
