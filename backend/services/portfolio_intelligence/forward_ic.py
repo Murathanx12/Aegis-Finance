@@ -109,8 +109,13 @@ def score_forward_ic(
     """Pure: grade a [date, asset, factor, fwd_return] panel via ``factor_ic``,
     stamped with the data grade of the forward-return source. Reports
     ``insufficient_history`` rather than a misleading number on a thin panel."""
-    n_rows = 0 if panel is None else len(panel)
-    n_dates = 0 if panel is None or panel.empty else int(panel["date"].nunique())
+    # Drop rows with a NaN factor or forward return BEFORE the sufficiency gate,
+    # so a big-but-degenerate panel (e.g. all-NaN forward returns) reports
+    # insufficient_history rather than status="scored" with an empty IC.
+    if panel is not None and not panel.empty and factor_col in panel and fwd_col in panel:
+        panel = panel.dropna(subset=[factor_col, fwd_col])
+    n_rows = 0 if (panel is None or panel.empty) else len(panel)
+    n_dates = 0 if (panel is None or panel.empty) else int(panel["date"].nunique())
     grade = data_grade(source).value
     if panel is None or n_rows < MIN_PANEL_ROWS or n_dates < MIN_DATES:
         return {
