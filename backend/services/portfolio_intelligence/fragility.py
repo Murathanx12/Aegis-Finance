@@ -510,6 +510,66 @@ def compute_fragility_index(data=None, fred_data=None) -> dict:
     }
 
 
+# ─────────────────────────────────────────────────────────────────────────
+# Continuous exposure multiplier (descriptive bridge — NOT armed)
+# ─────────────────────────────────────────────────────────────────────────
+
+# The research's specific ask: a crisis engine must output a CONTINUOUS exposure
+# multiplier, NEVER a binary "risk-off" call — there are only ~2 endogenous
+# modern US crashes (2000, 2008; 2020 exogenous), far too few to validate a
+# trigger. This maps the descriptive fragility composite to the exposure a future
+# PRE-REGISTERED defensive lane COULD apply. It is NOT wired to any live lane
+# here (canon: no strategy change to an in-flight tracked lane) — it mirrors how
+# `exit_overlay.evaluate_exit_overlay` was built before the conservative-atr lane
+# was seeded. A real defensive lane would consume this on a NEW inception.
+EXPOSURE_FLOOR = 0.50      # never de-risk below 50% on a descriptive signal
+FRAGILITY_NEUTRAL = 0.30   # at/below this composite, full exposure (1.0)
+FRAGILITY_HIGH = 0.90      # at/above this composite, the exposure floor
+
+EXPOSURE_LABEL = (
+    "descriptive exposure multiplier — NOT armed; continuous (never a binary "
+    "risk-off call); for a future pre-registered defensive lane only"
+)
+
+
+def exposure_multiplier(
+    composite: Optional[float],
+    *,
+    floor: float = EXPOSURE_FLOOR,
+    neutral: float = FRAGILITY_NEUTRAL,
+    high: float = FRAGILITY_HIGH,
+) -> dict:
+    """Map a descriptive fragility composite in [0,1] to a CONTINUOUS exposure
+    multiplier in [floor, 1.0]: 1.0 at/below ``neutral``, linearly down to
+    ``floor`` at/above ``high``. Monotonic non-increasing in fragility.
+
+    DESCRIPTIVE ONLY — returns the multiplier a future pre-registered defensive
+    lane COULD apply; no code path from here arms or scales a live lane.
+    """
+    if composite is None:
+        return {"status": "unavailable", "multiplier": None,
+                "label": EXPOSURE_LABEL, "arms_lane": False}
+    c = _clip01(composite)
+    if c <= neutral:
+        mult = 1.0
+    elif c >= high:
+        mult = floor
+    else:
+        frac = (c - neutral) / (high - neutral)
+        mult = 1.0 - frac * (1.0 - floor)
+    return {
+        "status": "ok",
+        "multiplier": round(float(mult), 4),
+        "composite": round(c, 4),
+        "floor": floor,
+        "neutral": neutral,
+        "high": high,
+        "label": EXPOSURE_LABEL,
+        "arms_lane": False,
+        "descriptive_only": True,
+    }
+
+
 def persist_fragility_eval(result: dict, db_path=None) -> None:
     """Append one market-level `fragility_eval` audit row (the forward record)."""
     from backend.db import get_connection, insert_audit_log
