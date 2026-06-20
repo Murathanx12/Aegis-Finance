@@ -39,6 +39,16 @@ class TestScoreForwardIC:
         assert out["status"] == "insufficient_history"
         assert out["data_grade"] == "directional"  # yfinance default
 
+    def test_all_nan_forward_returns_insufficient(self):
+        # A panel that looks big but whose factor/fwd are all NaN must report
+        # insufficient_history, NOT status="scored" with an empty IC.
+        rows = [{"date": d, "asset": f"A{a}", "factor": float(a),
+                 "fwd_return": float("nan")}
+                for d in ["2026-01-05", "2026-01-12", "2026-01-20", "2026-01-27"]
+                for a in range(6)]
+        out = score_forward_ic(pd.DataFrame(rows))
+        assert out["status"] == "insufficient_history"
+
     def test_predictive_factor_scores_usable(self):
         # Noisy-but-predictive factor across 12 dates x 10 assets: IC varies
         # date-to-date (non-zero std -> real t-stat), mean IC strongly positive.
