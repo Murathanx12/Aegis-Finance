@@ -5,8 +5,15 @@ interface change), NOT a fix — per the AFK rule, changes are proposed, not imp
 by leverage × safety. Sources: adversarial review (FINDINGS.md), lookahead audit
 (LOOKAHEAD_AUDIT.md), and the research deliverables (SOURCES_USED / DATA_OPTIONS / FACTOR_MENU).
 
-Nothing here was implemented this session. The two fixes that WERE made (F1, F2) and the
+Nothing here was implemented in the AUDIT session. The two fixes made then (F1, F2) and the
 allowed test additions are in the git log, not here.
+
+**UPDATE — 2026-06-20 integrity-fix session (sign-off granted on 3 items):**
+- ✅ **F3 DONE** — sidecar-deletion bypass closed (missing/unreadable sidecar refuses to load).
+- ✅ **B2 DONE** — `data_grade` now stamped on the `evaluate_candidate` verdict + evolve summary.
+- ✅ **B5 DONE** — fragility composite is as-of bound (`as_of_ts`), leak-proof when backtested.
+Remaining items below are proposals; **B3 is HELD** (real upgrade, but polishes a dormant
+deferred lane). Implement nothing else without sign-off. See INTEGRITY_STATUS.md for live state.
 
 ---
 
@@ -18,7 +25,7 @@ If any input normalizes to NaN, `np.mean(norms)` returns NaN because `_clip01(Na
 *producer* should drop NaN norms (or treat them as unavailable) so the composite is never NaN.
 Small, high-value. **Why a change not a fix:** `compute_fragility_index` predates Chunks 1–6.
 
-### B2 — Propagate `data_grade` into the candidate verdict
+### B2 — Propagate `data_grade` into the candidate verdict  ✅ DONE 2026-06-20
 `evaluate_candidate` / `rule_evolution` DSR/PBO verdicts carry no `data_grade`, so a verdict from
 a directional (free-data) backtest reads as gradeless (FINDINGS F8 / LOOKAHEAD §4). Add the stamp
 to the verdict dict and surface it wherever verdicts are displayed/recorded, so no DSR/PBO number
@@ -39,7 +46,9 @@ drawdown. **Cost:** needs a covariance estimate (denoised covariance.py exists) 
 correlation-sensitive to the lookback. Inverse-vol stays the dependency-light default until ERC
 is shown better forward. **Why a change:** new method + dependency surface on the rotator.
 
-### B4 — Crash-model strict provenance mode (FINDINGS F3)
+### B4 — Crash-model strict provenance mode (FINDINGS F3)  ✅ SUPERSEDED by F3 2026-06-20
+Implemented stronger than proposed: refuse-on-missing/unreadable sidecar is now the DEFAULT
+(not an opt-in flag). Original proposal retained below for history.
 The feature-hash guard is bypassed if the sidecar is deleted (legacy back-compat loads an
 unverified model). Add an opt-in `strict=True` (or an env flag) that REFUSES to load without a
 valid sidecar — required before EVER arming an overlay (a precondition that composes with the
@@ -47,7 +56,7 @@ TRIAL discipline). Keep the permissive default for back-compat. Behavior change 
 
 ## MEDIUM leverage
 
-### B5 — As-of slice the fragility composite before any backtest use
+### B5 — As-of slice the fragility composite before any backtest use  ✅ DONE 2026-06-20
 `compute_fragility_index` ranks the current value against the **full series**
 (`_pct_rank`). Fine for the live descriptive reading; a **lookahead if the composite is ever
 backtested** at a past `as_of` (LOOKAHEAD §2). Before any TRIAL-CRASH-style backtest of the
