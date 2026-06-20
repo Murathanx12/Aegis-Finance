@@ -299,6 +299,10 @@ class ReplayResult(BaseModel):
     total_rebalances: int = 0
     total_turnover: float = 0.0
     total_cost_bps: float = 0.0
+    # "directional" (survivorship-biased / restated source) or "sizing"
+    # (delisted-inclusive + PIT). A single-stock backtest is directional-only
+    # on free data — see backend/services/data_integrity.py.
+    data_grade: str = "directional"
 
 
 class ReplaySnapshotResponse(BaseModel):
