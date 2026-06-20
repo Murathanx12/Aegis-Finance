@@ -1,5 +1,21 @@
 # State of the Repo — Verified Inventory (2026-06-15)
 
+> **V3 build sprint 2026-06-20 (commits `069bec6`..`1e92ef9`, on `main`, NOT pushed):**
+> Chunk 1 foundation (alphalens+quantstats installed/pinned). Chunk 2 crash-model
+> artifact FIXED (M3): provenance sidecar + fail-loud feature-hash guard + replay
+> 67-vs-30 fix; model loadable but DARK (no discrimination — follow-up). Chunk 3
+> `services/data_integrity.py` (directional vs sizing grade; survivorship probe;
+> proven vs live yfinance 0/5 delisted). Chunk 4 `portfolio_intelligence/forward_ic.py`
+> (reads T8/T9/T10 PIT snapshots back, grades via factor_ic; ReplayResult now stamped
+> `data_grade`). Chunk 5 `fragility.exposure_multiplier` (continuous, descriptive, never
+> arms). Chunk 6 `portfolio_intelligence/cross_asset_rotation.py` (pure rotator core,
+> inverse-vol + fragility tilt, no hindsight; NEW lane seed DEFERRED/attended).
+> Decisions: data source stays FREE (directional-only); ranker is a forward-IC slice
+> NOT a backtest-to-adopt (postmortem 2026-06-15 survivorship trap). Targeted tests
+> green (forward_ic 7, data_integrity 13, exposure 10, rotation 10, crash provenance 3).
+> See docs/V3_RESEARCH_SYNTHESIS_2026_06_20.md + docs/DATA_INTEGRITY.md.
+
+
 Snapshot from live verified state (Optimus `aegis_verified_state` + registry) and
 the working tree. Purpose: stop a fresh session from re-discovering what exists or
 rebuilding what's done. **Supersedes the 2026-06-06 version, whose "gaps" are all
