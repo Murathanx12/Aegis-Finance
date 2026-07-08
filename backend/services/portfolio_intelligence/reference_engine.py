@@ -202,10 +202,11 @@ def _evaluate_crash_overlay() -> tuple[float | None, str]:
 def _get_regime() -> str | None:
     """Get current market regime from regime detector."""
     try:
-        from backend.services.regime_detector import detect_regime
-        result = detect_regime()
-        if result:
-            return result.get("regime", result.get("state"))
+        from backend.services.data_fetcher import DataFetcher
+        from backend.services.regime_detector import detect_regimes
+        data, _ = DataFetcher().fetch_market_data()
+        _, regime = detect_regimes(data)
+        return regime
     except Exception as e:
         logger.warning("Failed to get regime: %s", e)
     return None

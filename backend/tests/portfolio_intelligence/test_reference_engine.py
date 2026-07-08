@@ -292,3 +292,47 @@ class TestRunAllLanes:
         assert "conservative" in results
         assert "aggressive" in results
         assert "balanced" not in results
+
+
+# ── _get_regime (regression: prod import bug 2026-07-01) ──────────────────
+
+
+class TestGetRegime:
+    """Pins the regime-detector API contract.
+
+    Prod logged `cannot import name 'detect_regime'` daily from 2026-07-01:
+    _get_regime imported a function that never existed and the except swallowed
+    it into a permanent None. These tests fail if the import path or signature
+    drifts again.
+    """
+
+    def _synthetic_market(self):
+        import numpy as np
+        import pandas as pd
+        rng = np.random.default_rng(42)
+        idx = pd.bdate_range("2023-01-02", periods=400)
+        prices = 4000 * np.cumprod(1 + rng.normal(0.0006, 0.008, len(idx)))
+        return pd.DataFrame({"SP500": prices}, index=idx)
+
+    @patch("backend.services.data_fetcher.DataFetcher.fetch_market_data")
+    def test_returns_valid_regime_on_good_data(self, mock_fetch):
+        from backend.services.portfolio_intelligence.reference_engine import _get_regime
+        mock_fetch.return_value = (self._synthetic_market(), {})
+        regime = _get_regime()
+        assert regime in {"Bull", "Bear", "Neutral", "Volatile"}
+
+    @patch("backend.services.data_fetcher.DataFetcher.fetch_market_data")
+    def test_no_swallowed_import_error(self, mock_fetch, caplog):
+        """The 2026-07-01 failure mode: warning logged, None returned forever."""
+        import logging
+        from backend.services.portfolio_intelligence.reference_engine import _get_regime
+        mock_fetch.return_value = (self._synthetic_market(), {})
+        with caplog.at_level(logging.WARNING):
+            _get_regime()
+        assert not [r for r in caplog.records if "Failed to get regime" in r.message]
+
+    @patch("backend.services.data_fetcher.DataFetcher.fetch_market_data")
+    def test_degrades_to_none_on_fetch_failure(self, mock_fetch):
+        from backend.services.portfolio_intelligence.reference_engine import _get_regime
+        mock_fetch.side_effect = RuntimeError("network down")
+        assert _get_regime() is None
