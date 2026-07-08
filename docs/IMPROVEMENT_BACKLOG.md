@@ -12,6 +12,13 @@ allowed test additions are in the git log, not here.
 - ✅ **F3 DONE** — sidecar-deletion bypass closed (missing/unreadable sidecar refuses to load).
 - ✅ **B2 DONE** — `data_grade` now stamped on the `evaluate_candidate` verdict + evolve summary.
 - ✅ **B5 DONE** — fragility composite is as-of bound (`as_of_ts`), leak-proof when backtested.
+
+**UPDATE — 2026-07-08 Phase-0 session (blanket sign-off from Murat for the hour):**
+- ✅ **B1 DONE** — composite producer treats NaN/inf normalizations as unavailable
+  (one NaN input can no longer make the composite NaN; all-NaN → `no_inputs`).
+- ✅ **B6 DONE** — non-string source → `DataIntegrityError` (was AttributeError);
+  two-gate contract documented on `require_sizing_grade` itself.
+- ✅ **B10 DONE** — `survivorship_probe` treats a malformed fetch return as missing.
 Remaining items below are proposals; **B3 is HELD** (real upgrade, but polishes a dormant
 deferred lane). Implement nothing else without sign-off. See INTEGRITY_STATUS.md for live state.
 
