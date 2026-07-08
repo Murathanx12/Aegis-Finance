@@ -378,6 +378,11 @@ def compute_fragility_index(data=None, fred_data=None, as_of_ts=None) -> dict:
     components: dict = {}
 
     def _add(name: str, normalized: Optional[float], raw=None):
+        # B1 guard: a NaN/inf normalization is an unresolved signal, not a value.
+        # Without this, _clip01(NaN)=NaN counts as "available" and poisons the
+        # composite mean (root cause of FINDINGS F1/F7).
+        if normalized is not None and not np.isfinite(normalized):
+            normalized = None
         cls, note = FRAGILITY_LEAD_LAG.get(name, ("unclassified", ""))
         components[name] = {
             "raw": raw,
