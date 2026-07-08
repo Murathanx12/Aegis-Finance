@@ -323,7 +323,14 @@ FRAGILITY_CANDIDATE_INPUTS = [
     {"name": "options_put_skew", "reason": "put/call IV skew = hedging demand; "
      "yfinance options chain (network-flaky)"},
     {"name": "ipo_issuance", "reason": "Murat's post-IPO-glut hypothesis feature — "
-     "enters as a TESTED candidate once a cheap free source is wired, never asserted"},
+     "COLLECTING forward since 2026-07-08 (EDGAR S-1/424B4 counts via the "
+     "candidate collector); still not in the composite"},
+    {"name": "mega_cap_concentration", "reason": "trillion-dollar-club narrowness — "
+     "COLLECTING forward since 2026-07-08 (SPY/RSP relative-return spread); "
+     "complements absorption ratio; not in the composite"},
+    {"name": "crash_narrative", "reason": "crash talk in the news (GDELT volume "
+     "z-score) — COLLECTING forward since 2026-07-08; reflexive/noisy by "
+     "construction; not in the composite"},
 ]
 
 
