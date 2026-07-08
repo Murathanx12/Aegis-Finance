@@ -402,6 +402,23 @@ async def get_alerts(limit: int = Query(default=50, le=200)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/conviction/calibration")
+async def get_conviction_calibration():
+    """Reliability curve of logged conviction decisions (matured horizons only).
+    Descriptive process-memory — never a training signal."""
+    def _read():
+        from backend.services.portfolio_intelligence.conviction_calibration import (
+            calibration_scorecard,
+        )
+        return calibration_scorecard()
+
+    try:
+        return await asyncio.to_thread(_read)
+    except Exception as e:
+        logger.error("Conviction calibration failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/conviction/decisions")
 async def get_conviction_decisions(limit: int = Query(default=100, le=500)):
     """Read the conviction decision log (newest first). Read-only."""
