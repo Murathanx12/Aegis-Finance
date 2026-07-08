@@ -87,7 +87,16 @@ def test_training_is_deterministic_given_fixed_input(tmp_path):
 
     h1 = _file_sha256(str(tmp_path / "m1.pkl"))
     h2 = _file_sha256(str(tmp_path / "m2.pkl"))
-    assert h1 == h2, "training pipeline must be byte-deterministic on fixed input"
+    if h1 != h2:  # show WHERE the bytes diverge, not just that they do
+        b1 = (tmp_path / "m1.pkl").read_bytes()
+        b2 = (tmp_path / "m2.pkl").read_bytes()
+        i = next((k for k, (a, b) in enumerate(zip(b1, b2)) if a != b),
+                 min(len(b1), len(b2)))
+        raise AssertionError(
+            f"byte-nondeterministic at offset {i} (sizes {len(b1)} vs {len(b2)}):\n"
+            f"  m1: {b1[max(0, i - 60):i + 80]!r}\n"
+            f"  m2: {b2[max(0, i - 60):i + 80]!r}"
+        )
 
 
 def test_sidecar_sha_matches_its_own_pkl(tmp_path):

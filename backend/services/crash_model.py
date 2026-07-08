@@ -587,6 +587,15 @@ class CrashPredictor:
         """Serialize all models to disk."""
         if not _HAS_ML:
             raise RuntimeError("joblib not available")
+        # Eval-metric bookkeeping (evals_result_/best_score_) is computed with
+        # threaded reductions and can differ in the last ULP between identical
+        # trainings — it is unused at predict time, and stripping it is what
+        # makes the artifact byte-deterministic (so model_sha256 is meaningful).
+        for m in self.lgb_models.values():
+            if hasattr(m, "_evals_result"):
+                m._evals_result = {}
+            if hasattr(m, "_best_score"):
+                m._best_score = {}
         state = {
             "lgb_models": self.lgb_models,
             "lr_models": self.lr_models,
