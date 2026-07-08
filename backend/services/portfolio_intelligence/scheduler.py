@@ -498,6 +498,19 @@ async def _daily_check():
     except Exception as e:
         logger.error("Fragility-candidate collection failed: %s", e, exc_info=True)
 
+    # 13F institutional-filing activity (V3 data layer, built 2026-06-14, wired
+    # 2026-07-08). ~12 paced data.sec.gov calls via the shared EDGAR limiter;
+    # snapshot() dedups unchanged filings so daily runs are cheap. Descriptive
+    # positioning context on the legal ~45-day lag — never a timing signal.
+    try:
+        from backend.services.pit_collectors import collect_all_13f
+        t13f = await asyncio.to_thread(collect_all_13f)
+        logger.info("13F collect: recorded=%d unchanged=%d errors=%d (descriptive)",
+                    len(t13f.get("recorded", [])), len(t13f.get("unchanged", [])),
+                    len(t13f.get("errors", [])))
+    except Exception as e:
+        logger.error("13F collection failed: %s", e, exc_info=True)
+
 
 async def _weekly_aggressive_check():
     """Additional weekly check for aggressive lane."""

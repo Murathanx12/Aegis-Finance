@@ -87,7 +87,12 @@ leak-free. We already have `pit_observations`; borrowing Qlib's schema ideas (vi
 field-level revisions) would harden the data layer ahead of any fundamentals work. Reference-only
 adoption.
 
-### B9 — Extra free leading FRED series as TESTED fragility candidates (DATA_OPTIONS)
+### B9 — Extra free leading FRED series as TESTED fragility candidates (DATA_OPTIONS)  ✅ DONE 2026-07-08
+Wired as fragility-candidate collectors (stress-oriented percentile vs own history,
+PIT-snapshotted weekly, isolated from the crash feature matrix — fetched via fredapi
+directly, NOT config fred_series, so the model's feature contract is untouched).
+Forward record accrues; entering the composite still requires the trial bench.
+Original proposal below.
 Add (as forward-IC candidates, never asserted): BBB OAS `BAMLC0A4CBBB`, CCC OAS, EM OAS
 `BAMLEMCBPIOAS`, `T10Y2Y`, breakevens `T10YIE`/`T5YIFR`, financial-conditions `ANFCI`/`STLFSI4`,
 and `USEPUINDXD` (FRED-hosted EPU, replacing the removed `gpr_world`). Each must clear the

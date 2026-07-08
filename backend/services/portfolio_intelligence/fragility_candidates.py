@@ -117,12 +117,67 @@ def compute_crash_narrative() -> tuple[float, dict]:
     }
 
 
+# ── Candidates 4-12: extra FRED credit/stress series (IMPROVEMENT_BACKLOG B9) ─
+#
+# Fetched HERE via fredapi, deliberately NOT via config["data"]["fred_series"]:
+# the crash-feature matrix iterates every configured FRED series, so adding
+# these globally would silently change the model's feature contract (the
+# 2026-06-10 gpr_world lesson). Candidates stay isolated until a trial admits
+# them anywhere.
+
+_B9_FRED_SERIES = {
+    # name: (series_id, invert, note)   value = stress-oriented percentile [0,1]
+    "bbb_oas": ("BAMLC0A4CBBB", False, "BBB corporate OAS — the IG/junk boundary"),
+    "ccc_oas": ("BAMLH0A3HYC", False, "CCC & lower OAS — deepest credit tail"),
+    "em_oas": ("BAMLEMCBPIOAS", False, "EM corporate OAS — external stress"),
+    "yield_curve_10y2y": ("T10Y2Y", True, "10Y-2Y spread; inversion = stress (inverted)"),
+    "breakeven_10y": ("T10YIE", False, "10Y breakeven — RAW percentile; both tails "
+                      "matter (deflation scare vs inflation shock), no stress "
+                      "orientation claimed"),
+    "breakeven_5y5y": ("T5YIFR", False, "5y5y forward inflation — RAW percentile; "
+                       "both tails matter, no stress orientation claimed"),
+    "adj_financial_conditions": ("ANFCI", False, "Chicago Fed adjusted NFCI"),
+    "stl_fin_stress": ("STLFSI4", False, "St. Louis Fed financial stress index"),
+    "policy_uncertainty": ("USEPUINDXD", False, "Economic Policy Uncertainty (the "
+                           "FRED-hosted GPR replacement)"),
+}
+
+
+def _fred_stress_percentile(series_id: str, invert: bool) -> tuple[float, dict]:
+    """Percentile rank of the latest value within the series' full history,
+    oriented so higher = more stress when ``invert`` (e.g. yield curve)."""
+    import os
+    from fredapi import Fred
+    key = os.environ.get("FRED_API_KEY")
+    if not key:
+        raise ValueError("FRED_API_KEY not set")
+    s = Fred(api_key=key).get_series(series_id).dropna()
+    if len(s) < 30:
+        raise ValueError(f"{series_id}: only {len(s)} observations")
+    latest = float(s.iloc[-1])
+    pct = float((s <= latest).mean())
+    value = 1.0 - pct if invert else pct
+    return value, {
+        "series_id": series_id, "latest_raw": round(latest, 4),
+        "percentile_raw": round(pct, 4), "inverted": invert,
+        "n_obs": int(len(s)),
+        "source_detail": "FRED latest-vintage (revision caveat: IMPROVEMENT_BACKLOG B14)",
+        "label": CANDIDATE_LABEL,
+    }
+
+
+def _make_fred_candidate(series_id: str, invert: bool):
+    return lambda: _fred_stress_percentile(series_id, invert)
+
+
 # ── Collector + reader ────────────────────────────────────────────────────────
 
 _CANDIDATES = {
     "ipo_issuance": lambda: compute_ipo_issuance(),
     "mega_cap_concentration": compute_mega_cap_concentration,
     "crash_narrative": compute_crash_narrative,
+    **{name: _make_fred_candidate(sid, inv)
+       for name, (sid, inv, _note) in _B9_FRED_SERIES.items()},
 }
 
 

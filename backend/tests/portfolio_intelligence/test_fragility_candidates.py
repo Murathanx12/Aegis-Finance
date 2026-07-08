@@ -31,6 +31,9 @@ def _patch_all(monkeypatch, ipo=42.0, conc=0.05, narr=1.3):
                         lambda: (conc, {"spy_return": 0.12, "rsp_return": 0.07}))
     monkeypatch.setitem(fc._CANDIDATES, "crash_narrative",
                         lambda: (narr, {"avg_tone": -2.1}))
+    for name in fc._B9_FRED_SERIES:
+        monkeypatch.setitem(fc._CANDIDATES, name,
+                            (lambda: (0.5, {"series_id": "stub"})))
 
 
 class TestCollector:
@@ -38,7 +41,7 @@ class TestCollector:
         _patch_all(monkeypatch)
         out = fc.collect_fragility_candidates(db_path=db, as_of="2026-07-08")
         assert out["status"] == "collected"
-        assert out["n"] == 3 and out["written"] == 3
+        assert out["n"] == 12 and out["written"] == 12  # 3 originals + 9 B9
         conn = get_connection(db)
         try:
             rows = conn.execute(
@@ -127,3 +130,48 @@ def test_composite_decision_path_never_imports_candidates():
             f"{fname} references fragility_candidates — candidates must not "
             f"reach the composite or any decision path without a registered trial"
         )
+
+
+class TestB9FredCandidates:
+    def _series(self, values):
+        import pandas as pd
+        return pd.Series(values, index=pd.date_range("2020-01-01", periods=len(values)))
+
+    def test_percentile_orientation_normal(self, monkeypatch):
+        import numpy as np
+        s = self._series(np.linspace(1.0, 5.0, 100))  # latest = max
+        with patch("fredapi.Fred") as MockFred:
+            MockFred.return_value.get_series.return_value = s
+            monkeypatch.setenv("FRED_API_KEY", "test")
+            v, payload = fc._fred_stress_percentile("BAMLC0A4CBBB", invert=False)
+        assert v == pytest.approx(1.0)
+        assert payload["inverted"] is False
+
+    def test_percentile_orientation_inverted(self, monkeypatch):
+        import numpy as np
+        s = self._series(np.linspace(3.0, -0.5, 100))  # latest = min (inversion)
+        with patch("fredapi.Fred") as MockFred:
+            MockFred.return_value.get_series.return_value = s
+            monkeypatch.setenv("FRED_API_KEY", "test")
+            v, payload = fc._fred_stress_percentile("T10Y2Y", invert=True)
+        # latest is the minimum -> raw pct = 1/100 -> inverted stress ~0.99
+        assert v == pytest.approx(1.0 - 0.01)
+        assert payload["inverted"] is True
+
+    def test_short_history_raises(self, monkeypatch):
+        s = self._series([1.0] * 10)
+        with patch("fredapi.Fred") as MockFred:
+            MockFred.return_value.get_series.return_value = s
+            monkeypatch.setenv("FRED_API_KEY", "test")
+            with pytest.raises(ValueError, match="only 10 observations"):
+                fc._fred_stress_percentile("STLFSI4", invert=False)
+
+    def test_missing_key_raises(self, monkeypatch):
+        monkeypatch.delenv("FRED_API_KEY", raising=False)
+        with pytest.raises(ValueError, match="FRED_API_KEY"):
+            fc._fred_stress_percentile("ANFCI", invert=False)
+
+    def test_all_b9_series_registered_as_candidates(self):
+        for name in fc._B9_FRED_SERIES:
+            assert name in fc._CANDIDATES
+        assert len(fc._CANDIDATES) == 12  # 3 originals + 9 B9 series
