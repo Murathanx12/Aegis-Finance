@@ -591,11 +591,18 @@ class CrashPredictor:
         # threaded reductions and can differ in the last ULP between identical
         # trainings — it is unused at predict time, and stripping it is what
         # makes the artifact byte-deterministic (so model_sha256 is meaningful).
+        import collections
         for m in self.lgb_models.values():
             if hasattr(m, "_evals_result"):
                 m._evals_result = {}
             if hasattr(m, "_best_score"):
                 m._best_score = {}
+            # The Booster keeps its OWN copy of the eval scores (pickled via
+            # Booster.__getstate__, invisible to model_to_string) — same ULP
+            # wobble one level deeper. CI's byte-offset dump caught it.
+            booster = getattr(m, "_Booster", None)
+            if booster is not None and hasattr(booster, "best_score"):
+                booster.best_score = collections.defaultdict(collections.OrderedDict)
         state = {
             "lgb_models": self.lgb_models,
             "lr_models": self.lr_models,
