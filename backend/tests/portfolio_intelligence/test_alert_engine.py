@@ -147,3 +147,17 @@ class TestRunner:
         assert out["emitted"]  # alert still emitted via log
         rows = ae.recent_alerts(db_path=db)
         assert rows[0]["delivered"] == ["log"]
+
+
+class TestRiskWatchSurface:
+    def test_latest_persisted_composite_reads_without_network(self, db):
+        from backend.services.portfolio_intelligence.fragility import (
+            latest_persisted_composite,
+        )
+        assert latest_persisted_composite(db_path=db)["status"] == "no_reading"
+        _seed_fragility(db, 0.31, "moderate")
+        out = latest_persisted_composite(db_path=db)
+        assert out["composite"] == 0.31
+        assert out["level"] == "moderate"
+        assert out["evaluated_at"]
+        assert "descriptive" in out["label"]

@@ -632,6 +632,34 @@ def persist_fragility_eval(result: dict, db_path=None) -> None:
         conn.close()
 
 
+def latest_persisted_composite(db_path=None) -> dict:
+    """The most recent persisted `fragility_eval` row (fast, no network) —
+    what the daily check last computed, with its timestamp. For read surfaces
+    that must not trigger a live recompute."""
+    import json as _json
+
+    from backend.db import get_connection
+
+    conn = get_connection(db_path)
+    try:
+        row = conn.execute(
+            "SELECT timestamp, payload FROM audit_log "
+            "WHERE event_type = 'fragility_eval' ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+    finally:
+        conn.close()
+    if row is None:
+        return {"status": "no_reading", "label": FRAGILITY_LABEL}
+    try:
+        p = _json.loads(row["payload"]) or {}
+    except Exception:
+        logger.warning("skipping malformed latest fragility_eval row (H5)")
+        return {"status": "no_reading", "label": FRAGILITY_LABEL}
+    p["evaluated_at"] = row["timestamp"]
+    p["label"] = FRAGILITY_LABEL
+    return p
+
+
 def run_fragility_eval(data=None, fred_data=None, db_path=None) -> dict:
     """Compute + persist the descriptive fragility composite (scheduler hook)."""
     result = compute_fragility_index(data=data, fred_data=fred_data)

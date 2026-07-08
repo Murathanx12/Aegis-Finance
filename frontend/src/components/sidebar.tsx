@@ -23,6 +23,7 @@ import {
   Search,
   Star,
   NotebookPen,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -39,6 +40,7 @@ const NAV_ITEMS = [
   { href: "/sectors", label: "Sectors", icon: PieChart, code: "SECT" },
   { href: "/portfolio", label: "Portfolio", icon: Briefcase, code: "PORT" },
   { href: "/portfolio-intelligence/conviction", label: "Conviction", icon: NotebookPen, code: "CONV" },
+  { href: "/portfolio-intelligence/risk-watch", label: "Risk Watch", icon: Activity, code: "RISK" },
   { href: "/watchlist", label: "Watchlist", icon: Star, code: "WATCH" },
   { href: "/news", label: "News & Intel", icon: Newspaper, code: "NI" },
   { href: "/retirement", label: "Retirement", icon: Target, code: "RETIRE" },
