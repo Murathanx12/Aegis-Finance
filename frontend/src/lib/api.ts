@@ -2837,3 +2837,49 @@ export function piTriggerCheck(laneId?: string) {
     method: "POST",
   });
 }
+
+// PI: Conviction lane — decision capture (immutable, forward-only log)
+export interface ConvictionDecisionRequest {
+  ticker: string;
+  action: "enter" | "add" | "trim" | "exit";
+  shares_delta: number;
+  price: number;
+  rationale: string; // >= 50 chars (honest-record discipline)
+  conviction: number; // 1-5
+  thesis_tags?: string[];
+  target_price?: number | null;
+  stop_price?: number | null;
+  planned_exit_trigger?: string | null;
+  catalyst_dates?: string[];
+  late_entry?: boolean;
+}
+
+export interface ConvictionDecisionRow {
+  id: number;
+  timestamp: string;
+  ticker: string;
+  action: string;
+  shares_delta: number;
+  price: number;
+  rationale: string;
+  thesis_tags: string[] | null;
+  conviction: number;
+  target_price: number | null;
+  stop_price: number | null;
+  planned_exit_trigger: string | null;
+  late_entry: number | boolean;
+  amends_id: number | null;
+}
+
+export function piLogConvictionDecision(body: ConvictionDecisionRequest) {
+  return fetchAPI<{ id: number; timestamp: string; late_entry: boolean }>(
+    "/api/pi/conviction/decision",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export function piGetConvictionDecisions(limit = 100) {
+  return fetchAPI<{ decisions: ConvictionDecisionRow[] }>(
+    `/api/pi/conviction/decisions?limit=${limit}`,
+  );
+}
