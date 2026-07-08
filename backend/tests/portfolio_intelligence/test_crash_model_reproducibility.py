@@ -51,8 +51,42 @@ def _train_and_hash(X, tgt, path):
 
 def test_training_is_deterministic_given_fixed_input(tmp_path):
     X, tgt = _fixed_input()
-    h1 = _train_and_hash(X, tgt, str(tmp_path / "m1.pkl"))
-    h2 = _train_and_hash(X, tgt, str(tmp_path / "m2.pkl"))
+
+    def _train(path):
+        p = CrashPredictor(n_estimators=40, random_state=42)
+        p.train(X, tgt, min_train_samples=252 * 3)
+        p.save_model(path)
+        return p
+
+    p1 = _train(str(tmp_path / "m1.pkl"))
+    p2 = _train(str(tmp_path / "m2.pkl"))
+
+    # Component-wise, so a determinism regression names its culprit instead of
+    # failing on one opaque file sha (this flaked on CI's newer lib stack).
+    import pickle
+
+    def _sha(obj) -> str:
+        import hashlib
+        return hashlib.sha256(pickle.dumps(obj)).hexdigest()
+
+    for h in p1.lgb_models:
+        s1 = p1.lgb_models[h].booster_.model_to_string()
+        s2 = p2.lgb_models[h].booster_.model_to_string()
+        assert s1 == s2, f"LightGBM booster nondeterministic for horizon {h}"
+    for h in p1.lr_models:
+        assert np.array_equal(p1.lr_models[h].coef_, p2.lr_models[h].coef_), \
+            f"LogisticRegression coefficients nondeterministic for horizon {h}"
+        assert _sha(p1.lr_models[h]) == _sha(p2.lr_models[h]), \
+            f"LogisticRegression pickle nondeterministic for horizon {h}"
+    for name in ("calibrators", "scalers", "imputers"):
+        d1, d2 = getattr(p1, name), getattr(p2, name)
+        for h in d1:
+            assert _sha(d1[h]) == _sha(d2[h]), \
+                f"{name}[{h}] pickle nondeterministic"
+    assert p1.feature_names == p2.feature_names
+
+    h1 = _file_sha256(str(tmp_path / "m1.pkl"))
+    h2 = _file_sha256(str(tmp_path / "m2.pkl"))
     assert h1 == h2, "training pipeline must be byte-deterministic on fixed input"
 
 
