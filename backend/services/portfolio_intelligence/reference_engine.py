@@ -93,6 +93,10 @@ def _get_last_rebalance_date(conn, portfolio_id: str) -> date | None:
         try:
             return date.fromisoformat(row["triggered_at"][:10])
         except (ValueError, TypeError):
+            # H5: a malformed timestamp makes cadence look "never rebalanced"
+            # → an early rebalance could fire. Loud, not silent.
+            logger.warning("malformed triggered_at %r for %s — treating as no "
+                           "prior rebalance", row["triggered_at"], portfolio_id)
             return None
     return None
 
