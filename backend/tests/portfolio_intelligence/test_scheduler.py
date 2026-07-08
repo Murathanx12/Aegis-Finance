@@ -100,6 +100,35 @@ class TestDailyCheckWiresBookLanes:
             asyncio.run(sched._daily_check())
             mock_book.assert_called_once()
 
+    def test_daily_check_invokes_new_collectors(self):
+        """The fragility-candidate and 13F collectors must run on the daily
+        check (wired 2026-07-08), each isolated so a failure can't break lane
+        processing."""
+        import backend.services.portfolio_intelligence.scheduler as sched
+
+        with patch(
+            "backend.services.portfolio_intelligence.reference_engine.run_all_lanes",
+            return_value={},
+        ), patch(
+            "backend.services.portfolio_intelligence.book_management.run_all_book_management",
+            return_value={},
+        ), patch(
+            "backend.services.portfolio_intelligence.fragility.run_lppls_eval",
+            return_value={},
+        ), patch(
+            "backend.services.portfolio_intelligence.fragility.run_fragility_eval",
+            return_value={},
+        ), patch(
+            "backend.services.portfolio_intelligence.fragility_candidates.collect_fragility_candidates",
+            return_value={"status": "collected", "n": 3, "nonzero": 3},
+        ) as mock_frag, patch(
+            "backend.services.pit_collectors.collect_all_13f",
+            return_value={"recorded": [], "unchanged": [], "errors": []},
+        ) as mock_13f:
+            asyncio.run(sched._daily_check())
+            mock_frag.assert_called_once()
+            mock_13f.assert_called_once()
+
 
 class TestManualTrigger:
     def test_single_lane(self):
