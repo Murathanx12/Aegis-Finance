@@ -49,9 +49,12 @@ A Claude memory system. **Take:** ideas to compare against Optimus (retrieval,
 distillation cadence). Optimus is the private moat — compare, don't replace.
 
 ### obra/superpowers · vercel-labs/skills (find-skills)
-Claude Code skill/workflow pattern libraries. **Take:** skill-authoring
-patterns to refine `/go` and `/grind`; the find-skills discovery pattern if we
-grow the skill set.
+Claude Code skill/workflow pattern libraries. **Taken (2026-07-08):** the
+SKILL.md authoring pattern (frontmatter + imperative procedural body) was
+studied and re-implemented as five Aegis-specific discipline skills in
+`.claude/skills/` — verify-prod-after-deploy, lane-integrity-check,
+seed-a-lane, pre-register-trial, silent-fragility-audit. Our skills codify
+Aegis's own paid-for lessons; no external framework vendored.
 
 ### farion1231/cc-switch
 Model/provider switcher for Claude Code. Tooling convenience only; nothing

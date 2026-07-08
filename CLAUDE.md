@@ -192,6 +192,19 @@ docker compose up --build
 
 **Installed libraries:** `pyportfolioopt`, `arch` (GARCH), `hmmlearn` (HMM), `transformers` + `torch` (FinBERT)
 
+## Discipline Skills (.claude/skills/)
+
+Five project skills codify the disciplines that keep getting skipped — invoke
+them at their trigger points, don't re-derive the procedure:
+
+| Skill | Trigger |
+|---|---|
+| `verify-prod-after-deploy` | after every push that deploys (CI gate → commit flip → exercise the changed surface live) |
+| `lane-integrity-check` | before/after any change near lanes, lane YAMLs, rebalance, or NAV tables |
+| `seed-a-lane` | any new paper lane (attended, env-gated; human flips flags) |
+| `pre-register-trial` | before any new signal/strategy/hypothesis accrues or is evaluated on data |
+| `silent-fragility-audit` | after adding collectors/fetchers/loaders/try-except; "audit X" requests |
+
 ## Rules
 
 ### DO
