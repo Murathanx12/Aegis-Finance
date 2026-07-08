@@ -444,6 +444,21 @@ async def _daily_check():
     except Exception as e:
         logger.error("Fragility composite eval failed: %s", e, exc_info=True)
 
+    # V4 alert engine — evaluates change rules against the fragility eval just
+    # persisted (+ regime when cheaply available), 48h cooldown, log/Telegram
+    # delivery. Risk-awareness framing only; the event-driven lane that would
+    # ACT on alerts is a separate attended pre-registered seed.
+    try:
+        from backend.services.portfolio_intelligence.alert_engine import run_alert_check
+        from backend.services.portfolio_intelligence.reference_engine import _get_regime
+        regime = await asyncio.to_thread(_get_regime)  # cached market data → cheap
+        al = await asyncio.to_thread(run_alert_check, regime)
+        logger.info("Alert check: emitted=%d suppressed=%d readings=%s",
+                    len(al.get("emitted", [])), al.get("suppressed_by_cooldown", 0),
+                    al.get("readings"))
+    except Exception as e:
+        logger.error("Alert check failed: %s", e, exc_info=True)
+
     # TRIAL-INSIDER-IC (T9) — snapshot the opportunistic open-market buy score per
     # book name into the PIT store, starting the forward information-coefficient
     # clock. Internally throttled to ~weekly, so running it every daily check is

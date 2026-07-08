@@ -387,6 +387,21 @@ async def log_conviction_decision(body: ConvictionDecisionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/alerts")
+async def get_alerts(limit: int = Query(default=50, le=200)):
+    """Recent engine alerts (newest first). Risk-awareness context, never orders."""
+    def _read():
+        from backend.services.portfolio_intelligence.alert_engine import recent_alerts
+        return {"alerts": recent_alerts(limit=limit),
+                "disclaimer": "Risk-awareness context, not advice or orders."}
+
+    try:
+        return await asyncio.to_thread(_read)
+    except Exception as e:
+        logger.error("Alert read failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/conviction/decisions")
 async def get_conviction_decisions(limit: int = Query(default=100, le=500)):
     """Read the conviction decision log (newest first). Read-only."""
