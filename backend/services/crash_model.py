@@ -230,6 +230,11 @@ class CrashPredictor:
             "random_state": self.random_state,
             "verbose": -1,
             "n_jobs": -1,
+            # Byte-determinism of the trained model is what makes the provenance
+            # sidecar's model_sha256 meaningful: multithreaded histogram builds
+            # are otherwise run-to-run nondeterministic (flaked on CI).
+            "deterministic": True,
+            "force_row_wise": True,
         }
 
         lgb_model = lgb.LGBMClassifier(**lgb_params)
