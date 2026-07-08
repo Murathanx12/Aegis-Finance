@@ -199,8 +199,11 @@ def apply_conviction_decisions(db_path=None, as_of_date=None, prices=None) -> di
         ).fetchall():
             try:
                 applied_ids.add(json.loads(r["payload"]).get("decision_id"))
-            except Exception:
-                pass
+            except Exception as e:
+                # H5: losing an applied-id here means the decision could be
+                # RE-APPLIED next run (double execution in the conviction lane).
+                logger.error("malformed conviction_applied payload (%s) — a "
+                             "decision may re-apply; inspect audit_log", e)
 
         all_rows = conn.execute(
             "SELECT id, ticker, action, shares_delta FROM personal_decisions "

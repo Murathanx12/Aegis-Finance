@@ -61,3 +61,13 @@ class TestFragilityAsOf:
         a = compute_fragility_index(data=data, fred_data=fred)
         b = compute_fragility_index(data=data, fred_data=fred, as_of_ts=None)
         assert a["components"]["hy_oas"]["normalized"] == b["components"]["hy_oas"]["normalized"]
+
+
+def test_asof_slice_failure_refuses_unsliced_compute():
+    """H5: if the as-of slice raises, the composite must refuse to compute
+    (a leaked reading is worse than a missing one) — never proceed unsliced."""
+    import pandas as pd
+    data = pd.DataFrame({"SP500": [1.0, 2.0]}, index=["not", "dates"])
+    out = compute_fragility_index(data=data, fred_data={}, as_of_ts="2024-01-01")
+    assert out["status"] == "asof_slice_failed"
+    assert out["composite"] is None

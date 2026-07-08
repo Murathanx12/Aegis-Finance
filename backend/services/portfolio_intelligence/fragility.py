@@ -266,6 +266,8 @@ def forward_brier_status(db_path=None, horizons=BRIER_HORIZONS_DAYS) -> dict:
         try:
             p = json.loads(r["payload"])
         except Exception:
+            logger.warning("skipping malformed persisted reading row (H5): %s",
+                           dict(r).get("timestamp", "?"))
             continue
         if p.get("status") == "evaluated" and p.get("confidence") is not None:
             readings.append({"date": p.get("as_of") or r["timestamp"][:10],
@@ -423,8 +425,15 @@ def compute_fragility_index(data=None, fred_data=None, as_of_ts=None) -> dict:
         cutoff = pd.Timestamp(as_of_ts)
         try:
             data = data.loc[data.index <= cutoff]
-        except Exception:
-            pass
+        except Exception as e:
+            # H5: proceeding UNSLICED would silently leak the future into a
+            # backtested composite (defeats B5). A missing reading is honest;
+            # a leaked one is not.
+            logger.warning("fragility composite: as-of slice failed (%s) — "
+                           "refusing to compute unsliced at as_of=%s", e, as_of_ts)
+            return {"status": "asof_slice_failed", "composite": None,
+                    "label": FRAGILITY_LABEL,
+                    "candidate_inputs": FRAGILITY_CANDIDATE_INPUTS}
         fred_data = {
             k: (v.loc[v.index <= cutoff] if hasattr(v, "loc") else v)
             for k, v in (fred_data or {}).items()
@@ -723,6 +732,8 @@ def forward_brier_status_composite(db_path=None, horizons=BRIER_HORIZONS_DAYS) -
         try:
             p = json.loads(r["payload"])
         except Exception:
+            logger.warning("skipping malformed persisted reading row (H5): %s",
+                           dict(r).get("timestamp", "?"))
             continue
         if p.get("status") == "ok" and p.get("composite") is not None:
             readings.append({"date": p.get("as_of") or r["timestamp"][:10],
