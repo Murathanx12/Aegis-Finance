@@ -31,7 +31,7 @@ DB_PATH = DATA_DIR / "aegis_pi.db"
 
 _write_lock = threading.Lock()
 
-CURRENT_SCHEMA_VERSION = 7
+CURRENT_SCHEMA_VERSION = 8
 
 _SCHEMA_V1 = """
 CREATE TABLE IF NOT EXISTS _schema_version (
@@ -290,6 +290,25 @@ def _run_migrations(conn: sqlite3.Connection, from_version: int, to_version: int
                 ON pit_observations (key, as_of);
             CREATE INDEX IF NOT EXISTS idx_pit_key_observed
                 ON pit_observations (key, observed_at);
+        """)
+
+    if from_version < 8:
+        # v8: alerts — the V4 alert engine's emitted-alert log. Append-only
+        # operational record (dedupe/cooldown reads it); framed as
+        # risk-awareness, never orders. Independent of paper_nav.
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS alerts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TEXT NOT NULL,       -- ISO ts (server clock)
+                rule TEXT NOT NULL,             -- e.g. 'regime_change'
+                subject TEXT NOT NULL,          -- what it is about ('market', ticker, lane)
+                state TEXT NOT NULL,            -- the new state that fired it
+                message TEXT NOT NULL,          -- human-readable, risk-awareness framing
+                payload TEXT,                   -- JSON context
+                delivered TEXT                  -- delivery channels that accepted it (JSON list)
+            );
+            CREATE INDEX IF NOT EXISTS idx_alerts_rule_subject
+                ON alerts (rule, subject, created_at);
         """)
 
 
