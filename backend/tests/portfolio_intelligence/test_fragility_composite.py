@@ -285,3 +285,43 @@ def test_leading_composite_none_when_no_leading_input(monkeypatch):
     assert out["status"] == "ok" and out["n_inputs"] == 1
     assert out["leading_inputs"] == 0
     assert out["leading_composite"] is None
+
+
+# ── B1: NaN inputs can never poison the composite (FINDINGS F7) ──────────────
+
+
+def test_nan_input_treated_as_unavailable(monkeypatch):
+    """A NaN normalization is an unresolved signal — composite stays finite."""
+    _patch_subsignals(monkeypatch, lppls=float("nan"))
+    data, fred = _synthetic_inputs()
+    out = frag.compute_fragility_index(data=data, fred_data=fred)
+
+    assert out["status"] == "ok"
+    comp = out["components"]
+    assert comp["lppls_confidence"]["available"] is False
+    assert comp["lppls_confidence"]["normalized"] is None
+    assert out["n_inputs"] == 7  # the other 7 still count
+    assert np.isfinite(out["composite"])
+
+
+def test_all_nan_inputs_yield_no_inputs_not_nan_composite(monkeypatch):
+    """Every input NaN → no_inputs/None, never status=ok with composite=NaN."""
+    nan = float("nan")
+    monkeypatch.setattr(frag, "evaluate_lppls",
+                        lambda prices: {"status": "evaluated", "confidence": nan})
+    monkeypatch.setattr(
+        "backend.services.macro_indicators.recession_indicators",
+        lambda fred: {"sos": {"status": "ok", "value": nan},
+                      "sahm": {"status": "ok", "value": nan}},
+    )
+    monkeypatch.setattr(
+        "backend.services.systemic_risk.compute_systemic_risk",
+        lambda data: {"turbulence_percentile": nan, "absorption_ratio_current": nan},
+    )
+    monkeypatch.setattr("backend.services.net_liquidity.get_net_liquidity",
+                        lambda: {"history": []})
+    idx = pd.date_range(end="2026-06-12", periods=300, freq="D")
+    data = pd.DataFrame({"SP500": np.linspace(100, 130, 300)}, index=idx)
+    out = frag.compute_fragility_index(data=data, fred_data={})
+    assert out["status"] == "no_inputs"
+    assert out["composite"] is None
