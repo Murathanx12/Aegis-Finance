@@ -302,6 +302,9 @@ async def get_fragility():
             forward_brier_status_composite,
         )
         from backend.services.portfolio_intelligence.scheduler import lppls_status
+        from backend.services.portfolio_intelligence.fragility_candidates import (
+            latest_candidate_readings,
+        )
         return {
             "latest_reading": lppls_status(),
             "forward_brier": forward_brier_status(),
@@ -310,6 +313,8 @@ async def get_fragility():
             "composite": compute_fragility_index(),
             "composite_forward_brier": forward_brier_status_composite(),
             "composite_trial": CRASH_DECISION_RULE,
+            # Candidate inputs collected forward (PIT) — NOT in the composite.
+            "candidate_readings": latest_candidate_readings(),
             "disclaimer": (
                 "Descriptive bubble-structure flag + structural-fragility composite, "
                 "NOT a crash forecast or timing call. LPPLS predictive skill was "

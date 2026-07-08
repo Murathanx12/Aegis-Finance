@@ -485,6 +485,19 @@ async def _daily_check():
     except Exception as e:
         logger.error("Multifactor collection failed: %s", e, exc_info=True)
 
+    # Fragility CANDIDATE inputs (Branch 1 item 3) — IPO issuance, mega-cap
+    # concentration, crash-narrative. Snapshot-only (PIT store); weekly-throttled;
+    # NEVER touches the composite (TRIAL-CRASH metric unchanged). Descriptive.
+    try:
+        from backend.services.portfolio_intelligence.fragility_candidates import (
+            collect_fragility_candidates,
+        )
+        fc = await asyncio.to_thread(collect_fragility_candidates)
+        logger.info("Fragility-candidate collect: status=%s n=%s nonzero=%s (descriptive)",
+                    fc.get("status"), fc.get("n"), fc.get("nonzero"))
+    except Exception as e:
+        logger.error("Fragility-candidate collection failed: %s", e, exc_info=True)
+
 
 async def _weekly_aggressive_check():
     """Additional weekly check for aggressive lane."""
