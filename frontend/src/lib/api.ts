@@ -2883,3 +2883,33 @@ export function piGetConvictionDecisions(limit = 100) {
     `/api/pi/conviction/decisions?limit=${limit}`,
   );
 }
+
+// PI: Risk Watch — persisted fragility + candidates + alerts in one fast read
+export interface RiskWatchResponse {
+  fragility: {
+    status?: string;
+    composite?: number | null;
+    level?: string;
+    n_inputs?: number;
+    evaluated_at?: string;
+    components?: Record<string, number | null>;
+    label?: string;
+  };
+  candidate_readings: Record<
+    string,
+    { status: string; value: number | null; as_of?: string; label: string }
+  >;
+  alerts: {
+    id: number;
+    created_at: string;
+    rule: string;
+    subject: string;
+    state: string;
+    message: string;
+  }[];
+  disclaimer: string;
+}
+
+export function piGetRiskWatch() {
+  return fetchAPI<RiskWatchResponse>("/api/pi/risk-watch");
+}

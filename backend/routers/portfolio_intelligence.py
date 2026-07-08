@@ -387,6 +387,34 @@ async def log_conviction_decision(body: ConvictionDecisionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/risk-watch")
+async def get_risk_watch():
+    """One fast read for the Risk Watch surface: the last PERSISTED fragility
+    reading (never recomputes), the candidate readings (PIT), and recent
+    alerts. All descriptive — risk-awareness, never orders."""
+    def _read():
+        from backend.services.portfolio_intelligence.alert_engine import recent_alerts
+        from backend.services.portfolio_intelligence.fragility import (
+            latest_persisted_composite,
+        )
+        from backend.services.portfolio_intelligence.fragility_candidates import (
+            latest_candidate_readings,
+        )
+        return {
+            "fragility": latest_persisted_composite(),
+            "candidate_readings": latest_candidate_readings(),
+            "alerts": recent_alerts(limit=30),
+            "disclaimer": ("Descriptive risk-awareness context — measures "
+                           "fragility, never predicts crashes, never orders."),
+        }
+
+    try:
+        return await asyncio.to_thread(_read)
+    except Exception as e:
+        logger.error("Risk-watch read failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/alerts")
 async def get_alerts(limit: int = Query(default=50, le=200)):
     """Recent engine alerts (newest first). Risk-awareness context, never orders."""
