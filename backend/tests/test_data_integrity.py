@@ -147,3 +147,31 @@ class TestSurvivorshipProbe:
         report = survivorship_probe(fetch_raises, source="yfinance")
         assert report.survivorship_biased is True
         assert report.n_returned == 0
+
+
+class TestB6B10Hardening:
+    """B6: non-string sources fail the gate as DataIntegrityError, never
+    AttributeError (FINDINGS F4). B10: malformed fetcher returns count as
+    missing, never TypeError (FINDINGS F6)."""
+
+    @pytest.mark.parametrize("bad_source", [None, 42, 3.14, ["yfinance"], object()])
+    def test_non_string_source_raises_integrity_error(self, bad_source):
+        with pytest.raises(DataIntegrityError):
+            require_sizing_grade(bad_source)
+
+    def test_non_string_source_is_directional(self):
+        from backend.services.data_integrity import get_guarantees
+        g = get_guarantees(None)
+        assert g.survivorship_free is False
+        assert g.point_in_time_fundamentals is False
+
+    def test_probe_scalar_return_counts_as_missing(self):
+        report = survivorship_probe(lambda _t: 42.0, source="yfinance")
+        assert report.n_returned == 0
+        assert report.survivorship_biased is True
+
+    def test_probe_generator_return_counts_as_missing(self):
+        report = survivorship_probe(lambda _t: (x for x in range(300)),
+                                    source="yfinance")
+        assert report.n_returned == 0
+        assert report.survivorship_biased is True

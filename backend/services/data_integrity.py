@@ -110,7 +110,16 @@ DEFAULT_PRICE_SOURCE = "yfinance"
 
 
 def get_guarantees(source: str) -> SourceGuarantees:
-    """Guarantees for a source. Unknown sources are assumed DIRECTIONAL (worst case)."""
+    """Guarantees for a source. Unknown sources are assumed DIRECTIONAL (worst case).
+
+    A non-string source (None, enum, typo'd object) is treated as unknown, so it
+    fails the sizing gate as DataIntegrityError — never as AttributeError (B6).
+    """
+    if not isinstance(source, str):
+        return SourceGuarantees(
+            str(source), survivorship_free=False, point_in_time_fundamentals=False,
+            notes="Non-string source — assumed directional.",
+        )
     g = SOURCE_GUARANTEES.get(source.lower())
     if g is None:
         return SourceGuarantees(
@@ -131,7 +140,12 @@ def is_sizing_grade(source: str) -> bool:
 def require_sizing_grade(source: str, context: str = "") -> None:
     """Gate for any backtest claiming sizing-grade results. Fails LOUD on a
     directional source — so a single-stock number can never silently pass as
-    position-sizing grade."""
+    position-sizing grade.
+
+    TWO-GATE CONTRACT (F5): this registry gate asserts what the source *claims*,
+    not that it is wired and serving data. Any sizing-grade claim must ALSO run
+    `survivorship_probe` + `assert_survivorship_safe` against the live adapter —
+    e.g. 'sharadar' passes here today even though no Sharadar adapter exists."""
     if not is_sizing_grade(source):
         g = get_guarantees(source)
         where = f" for {context}" if context else ""
@@ -187,6 +201,10 @@ def survivorship_probe(
         try:
             s = fetch_history(t)
         except Exception:
+            s = None
+        # B10: a malformed fetcher return (scalar, generator) counts as
+        # "missing", not a TypeError from len().
+        if s is not None and not hasattr(s, "__len__"):
             s = None
         if s is not None and len(s) >= min_points:
             returned += 1
