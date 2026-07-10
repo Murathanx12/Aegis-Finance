@@ -175,3 +175,28 @@ class TestB9FredCandidates:
         for name in fc._B9_FRED_SERIES:
             assert name in fc._CANDIDATES
         assert len(fc._CANDIDATES) == 12  # 3 originals + 9 B9 series
+
+
+class TestIpoFalseZeroGuard:
+    """Prod regression 2026-07-09: hits.total.value read at the wrong JSON
+    depth produced a plausible-looking 0 that passed the error guard."""
+
+    def test_reads_hits_total_value(self, monkeypatch):
+        monkeypatch.setattr(fc, "_edgar_form_count",
+                            lambda form, s, e: {"S-1": 3708, "424B4": 142}[form])
+        v, payload = fc.compute_ipo_issuance(as_of="2026-07-09")
+        assert v == 3850.0
+
+    def test_double_zero_raises_as_implausible(self, monkeypatch):
+        monkeypatch.setattr(fc, "_edgar_form_count", lambda form, s, e: 0)
+        with pytest.raises(ValueError, match="implausible"):
+            fc.compute_ipo_issuance(as_of="2026-07-09")
+
+    def test_missing_json_path_raises(self, monkeypatch):
+        class _R:
+            def json(self):
+                return {"took": 5}  # no hits.total.value
+        monkeypatch.setattr("backend.services.insider_form4._sec_get",
+                            lambda url: _R())
+        with pytest.raises(ValueError, match="hits.total.value"):
+            fc._edgar_form_count("S-1", "2026-04-01", "2026-07-01")
