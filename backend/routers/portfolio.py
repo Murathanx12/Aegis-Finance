@@ -140,6 +140,32 @@ async def portfolio_questionnaire(request: QuestionnaireRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class GuidanceHolding(BaseModel):
+    ticker: str = Field(..., min_length=1, max_length=10)
+    shares: float = Field(..., gt=0)
+    cost_basis: float | None = Field(None, gt=0)
+
+
+class GuidanceRequest(BaseModel):
+    holdings: list[GuidanceHolding] = Field(..., min_length=1, max_length=50)
+
+
+@router.post("/guidance")
+async def get_portfolio_guidance(request: GuidanceRequest):
+    """Per-position guidance: P&L, move unusualness, Chandelier trailing-stop
+    level + distance, forward-collected signal readings, and behavioral nudges
+    (disposition effect). Descriptive levels and context — never orders."""
+    def _worker():
+        from backend.services.portfolio_guidance import portfolio_guidance
+        return portfolio_guidance([h.model_dump() for h in request.holdings])
+
+    try:
+        return await asyncio.to_thread(_worker)
+    except Exception as e:
+        logger.error("portfolio guidance failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/analyze")
 async def analyze_portfolio(request: AnalyzeRequest):
     """Analyze a portfolio: allocations, correlations, VaR/CVaR, Sharpe, risk number.
