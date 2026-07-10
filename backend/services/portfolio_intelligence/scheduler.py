@@ -501,6 +501,19 @@ async def _daily_check():
     except Exception as e:
         logger.error("PEAD-IC collection failed: %s", e, exc_info=True)
 
+    # TRIAL-QUALITY-IC — snapshot gross profitability (GP/A, Novy-Marx) per
+    # book name via the hang-safe yfinance path (edgartools stays rejected).
+    # Weekly-throttled, descriptive, forward-only. The T8 deferred quality slot.
+    try:
+        from backend.services.portfolio_intelligence.quality_collector import (
+            collect_quality_scores,
+        )
+        q = await asyncio.to_thread(collect_quality_scores)
+        logger.info("Quality-IC collect: status=%s n=%s nonzero=%s (descriptive)",
+                    q.get("status"), q.get("n"), q.get("nonzero"))
+    except Exception as e:
+        logger.error("Quality-IC collection failed: %s", e, exc_info=True)
+
     # TRIAL-MULTIFACTOR-IC (T8) — combine momentum + insider + revisions into a
     # cross-sectional composite and snapshot it. Runs AFTER the two collectors
     # above so it reads their fresh PIT values. Descriptive, forward-only.
