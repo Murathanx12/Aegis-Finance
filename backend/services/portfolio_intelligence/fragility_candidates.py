@@ -53,11 +53,21 @@ _NARRATIVE_QUERY = '"stock market crash" OR "market crash" OR "recession fears"'
 def _edgar_form_count(form: str, start: str, end: str) -> int:
     """Count of EDGAR filings of ``form`` filed in [start, end], via the free
     full-text search API. Routed through the ONE process-wide SEC limiter +
-    mandatory UA (the T9 prod-403 lesson: ALL SEC HTTP goes through _sec_get)."""
+    mandatory UA (the T9 prod-403 lesson: ALL SEC HTTP goes through _sec_get).
+
+    The count lives at hits.total.value — reading the wrong depth produced a
+    FALSE-PLAUSIBLE ZERO in prod on 2026-07-09 (0 S-1s in 90 days is
+    impossible; ~3700 is normal), so a missing path now raises instead of
+    defaulting."""
     from backend.services.insider_form4 import _sec_get
     url = f"{_EDGAR_FTS}?q=%22offering%22&forms={form}&startdt={start}&enddt={end}"
     r = _sec_get(url)
-    return int(r.json().get("total", {}).get("value", 0))
+    data = r.json()
+    try:
+        return int(data["hits"]["total"]["value"])
+    except (KeyError, TypeError) as e:
+        raise ValueError(f"EDGAR FTS response missing hits.total.value "
+                         f"for {form}: {e}")
 
 
 def compute_ipo_issuance(as_of: str | None = None) -> tuple[float, dict]:
@@ -68,6 +78,11 @@ def compute_ipo_issuance(as_of: str | None = None) -> tuple[float, dict]:
     s1 = _edgar_form_count("S-1", start.isoformat(), end.isoformat())
     b4 = _edgar_form_count("424B4", start.isoformat(), end.isoformat())
     total = s1 + b4
+    if total == 0:
+        # Hundreds of S-1s file every quarter — a zero here is a broken query
+        # or parser, never a real reading (the false-plausible-zero class).
+        raise ValueError("EDGAR FTS returned 0 filings for both forms over "
+                         f"{_IPO_WINDOW_DAYS}d — implausible; treating as error")
     return float(total), {
         "s1_count": s1, "424b4_count": b4,
         "window_days": _IPO_WINDOW_DAYS,
