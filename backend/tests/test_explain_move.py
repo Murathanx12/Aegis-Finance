@@ -135,3 +135,23 @@ class TestNarration:
         out = em.explain_move("SOC", sources=_happy_sources())
         assert out["method"] == "template"
         assert out["narration"]
+
+
+class TestSerialization:
+    def test_numpy_laden_sources_serialize(self, monkeypatch):
+        """Prod regression: live services return np.bool_/np.float64 — the
+        response must be plain-JSON serializable."""
+        import json as _json
+        monkeypatch.setattr("backend.services.llm_analyzer.is_available",
+                            lambda: False)
+        src = _happy_sources()
+        src["insider"] = lambda t: {"opp_score": np.float64(2.1),
+                                    "cluster_buy": np.bool_(True),
+                                    "n_distinct_buyers": np.int64(2)}
+        src["options"] = lambda t: {"available": np.bool_(True),
+                                    "sentiment": "bullish",
+                                    "put_call_ratio": np.float64(0.6),
+                                    "ts": pd.Timestamp("2026-07-08")}
+        out = em.explain_move("SOC", sources=src)
+        _json.dumps(out)  # raises before the fix
+        assert out["evidence"]["insider"]["data"]["cluster_buy"] is True

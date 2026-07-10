@@ -198,7 +198,24 @@ def narrate(dossier: dict) -> dict:
             "label": EXPLAIN_LABEL}
 
 
+def _to_native(obj):
+    """Recursively coerce numpy/pandas scalars to JSON-safe natives — live
+    service payloads carry np.bool_/np.float64 that the ASGI encoder rejects
+    (found live on prod, invisible with pure-python test fixtures)."""
+    if isinstance(obj, dict):
+        return {str(k): _to_native(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_to_native(v) for v in obj]
+    if isinstance(obj, np.generic):
+        return obj.item()
+    if isinstance(obj, pd.Timestamp):
+        return obj.isoformat()
+    if isinstance(obj, (pd.Series, pd.DataFrame, np.ndarray)):
+        return None  # bulk data never belongs in the dossier
+    return obj
+
+
 def explain_move(ticker: str, sources: Optional[dict] = None) -> dict:
     """The full feature: dossier + narration. Never raises."""
-    dossier = assemble_move_evidence(ticker, sources=sources)
+    dossier = _to_native(assemble_move_evidence(ticker, sources=sources))
     return {**dossier, **narrate(dossier)}
