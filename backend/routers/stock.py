@@ -1498,6 +1498,29 @@ async def get_stock_revisions(ticker: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/{ticker}/explain-move")
+async def get_stock_explain_move(ticker: str):
+    """Explain a price move: quantified unusualness + evidence dossier
+    (earnings/filings/news/insider/options) + narration (LLM when a key is
+    configured, deterministic template otherwise). Context, never advice."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    cache_key = f"stock_explain_move:{ticker}"
+    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.explain_move import explain_move
+        result = await asyncio.to_thread(explain_move, ticker)
+        cache_set(cache_key, result)
+        return result
+    except Exception as e:
+        logger.error("explain-move failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{ticker}/esg")
 async def get_stock_esg(ticker: str):
     """Blended ESG score (Finnhub + FMP) with controversies flag.
