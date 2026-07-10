@@ -487,6 +487,20 @@ async def _daily_check():
     except Exception as e:
         logger.error("Revisions-IC collection failed: %s", e, exc_info=True)
 
+    # TRIAL-PEAD-IC — snapshot the post-earnings-announcement-drift score
+    # (analyst surprise + announcement-window excess return, two-way) per book
+    # name. Weekly-throttled, descriptive, forward-only. Honest prior: decayed
+    # anomaly, disputed net-of-cost in large caps (ENGINE_GAPS_2026_07_09).
+    try:
+        from backend.services.portfolio_intelligence.pead_collector import (
+            collect_pead_scores,
+        )
+        pd_ = await asyncio.to_thread(collect_pead_scores)
+        logger.info("PEAD-IC collect: status=%s n=%s nonzero=%s (descriptive)",
+                    pd_.get("status"), pd_.get("n"), pd_.get("nonzero"))
+    except Exception as e:
+        logger.error("PEAD-IC collection failed: %s", e, exc_info=True)
+
     # TRIAL-MULTIFACTOR-IC (T8) — combine momentum + insider + revisions into a
     # cross-sectional composite and snapshot it. Runs AFTER the two collectors
     # above so it reads their fresh PIT values. Descriptive, forward-only.
