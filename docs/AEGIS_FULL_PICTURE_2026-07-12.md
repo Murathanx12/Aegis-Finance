@@ -97,6 +97,33 @@ your volatile small-caps mechanically (−12.2%) — and your conviction calls
 are +2.6%. If that spread persists for quarters, not weeks, the engine will
 say so with receipts; that is precisely the experiment you wanted.
 
+## 3b. What the competition taught us (fresh research, 2026-07-12)
+
+We surveyed every notable "max ROI" bot and copy-trading engine
+(`docs/research/ROI_ENGINES_2026-07-12.md`, fully cited). The blunt version:
+
+- **Nobody publishes an honest live record.** Not ai-hedge-fund, not
+  TradingAgents, not FinRL, not QuantConnect's marketplace (whose own
+  postmortem admits "strong overfitting"). Academic live benchmarks show LLM
+  trading agents *degrade* when they go live. Our forward-lane spine remains
+  the thing nobody else has.
+- **Copy-trading mostly doesn't work.** eToro-style copying shows no alpha;
+  ARK-followers destroyed ~$14B; the congressional edge died with the 2012
+  STOCK Act — which is exactly the skeptical prior we pre-registered on our
+  own congress/ARK trials. The ONE follower strategy with real published
+  support: **low-turnover 13F "best ideas" cloning** (e.g. a Berkshire clone
+  earned ~+10.75%/yr post-disclosure in the study period). That's proposal B
+  in the research doc — our 13F collector already exists.
+- **Realistic expectations:** published anomalies decay ~58% after
+  publication; live factor funds deliver −1 to +1.5%/yr net. A 10-20 name
+  engine on free data should target **+0 to +3%/yr over SPY with brutal
+  multi-year droughts** — anyone promising more is selling. Your great 2026
+  is consistent with high-beta exposure plus tracking error; the conviction
+  lane is the instrument that will distinguish skill from that, with receipts.
+- **Borrow-worthy patterns:** Composer's creation-date-stamped out-of-sample
+  accounting (a UI idea for our track-record page) and freqtrade's
+  warnings-at-the-point-of-temptation.
+
 ## 4. What's still missing (the honest list)
 
 1. **Users: still ~one.** The apparatus measures you alone. Going public
