@@ -582,6 +582,20 @@ async def _daily_check():
     except Exception as e:
         logger.error("13F collection failed: %s", e, exc_info=True)
 
+    # TRIAL-SMARTGROWTH — weekly top-10 basket from the frozen blend of the
+    # PIT signal streams. Runs LAST so it reads the values every collector
+    # above just wrote. Descriptive, forward-only; renders as measured
+    # candidates, never advice.
+    try:
+        from backend.services.portfolio_intelligence.smartgrowth import (
+            collect_smartgrowth_picks,
+        )
+        sg = await asyncio.to_thread(collect_smartgrowth_picks)
+        logger.info("Smartgrowth collect: status=%s n=%s (descriptive)",
+                    sg.get("status"), sg.get("n"))
+    except Exception as e:
+        logger.error("Smartgrowth collection failed: %s", e, exc_info=True)
+
 
 async def _weekly_aggressive_check():
     """Additional weekly check for aggressive lane."""
