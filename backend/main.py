@@ -215,6 +215,13 @@ async def lifespan(app: FastAPI):
             await asyncio.to_thread(ensure_congress_trial)
         except Exception as e:
             logger.warning("Congress trial pre-registration failed (non-fatal): %s", e)
+        try:
+            from backend.services.portfolio_intelligence.ark_collector import (
+                ensure_ark_trial,
+            )
+            await asyncio.to_thread(ensure_ark_trial)
+        except Exception as e:
+            logger.warning("ARK trial pre-registration failed (non-fatal): %s", e)
         # P1 #6 book-lane seeding — ATTENDED, env-gated. A normal deploy does NOT
         # seed (flag unset). Set AEGIS_SEED_BOOK_LANES=1 on Railway for ONE boot to
         # seed mirror+conviction at live prices (idempotent), confirm via
@@ -401,11 +408,12 @@ async def health_full():
     try:
         from backend.services.portfolio_intelligence.rules import (
             BOOK_LANES,
+            CONSERVATIVE_ATR_LANES,
             REFERENCE_LANES,
         )
         # Book lanes (P1 #6) appear once seeded: the FROM is paper_portfolios, so
         # an unseeded book lane has no row and is simply absent — no special-case.
-        lane_ids = (*REFERENCE_LANES, *BOOK_LANES)
+        lane_ids = (*REFERENCE_LANES, *BOOK_LANES, *CONSERVATIVE_ATR_LANES)
         placeholders = ",".join("?" for _ in lane_ids)
         conn = get_connection()
         try:
@@ -443,6 +451,12 @@ async def health_full():
     except Exception as e:
         track_record["error"] = str(e)
 
+    try:
+        from backend.services.llm_analyzer import llm_usage
+        llm = llm_usage()
+    except Exception as e:
+        llm = {"error": str(e)}
+
     cs = cache_status()
     return {
         "status": "ok",
@@ -459,6 +473,7 @@ async def health_full():
         "track_record": track_record,
         "overlay": overlay,
         "lppls": lppls,
+        "llm": llm,
         "data_sources": source_health(),
         "recent_warnings": recent_warnings(),
     }

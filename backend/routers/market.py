@@ -359,6 +359,21 @@ async def get_market_dashboard():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/brain/digest")
+async def get_brain_digest():
+    """Daily market-context digest in brain-ingestible markdown.
+
+    Assembled from already-cached readings (news, market state, signal,
+    fragility) — descriptive context for the Optimus memory layer, never
+    advice. Cached an hour; served stale-while-revalidate like the rest."""
+    try:
+        from backend.services.market_digest import build_market_digest
+        return await cache_swr("brain_digest", 3600, build_market_digest)
+    except Exception as e:
+        logger.error("brain digest failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/signal")
 async def get_market_signal_endpoint():
     """Composite market buy/sell signal."""

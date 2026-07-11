@@ -7,60 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, AlertTriangle, Clock3 } from "lucide-react";
 import Link from "next/link";
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
-  Tooltip, Legend, ReferenceLine,
-} from "recharts";
-import { piGetTrackRecord, type PITrackRecordResponse } from "@/lib/api";
+import { piGetTrackRecord } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
-
-const LANE_STYLE: Record<string, { label: string; color: string }> = {
-  conservative: { label: "Conservative", color: "#3b82f6" },
-  balanced: { label: "Balanced", color: "#f59e0b" },
-  aggressive: { label: "Aggressive", color: "#ef4444" },
-  // Frozen equal-weight control trial (config v2): same mandate as Balanced,
-  // optimizer is the only difference — the forward delta isolates HRP.
-  "balanced-ew-control": { label: "EW Control", color: "#2dd4bf" },
-};
-const BENCH_STYLE: Record<string, { label: string; color: string }> = {
-  SPY: { label: "SPY", color: "#94a3b8" },
-  AGG: { label: "AGG", color: "#64748b" },
-  "60_40": { label: "60/40", color: "#475569" },
-};
-
-/** Merge lane + benchmark series into one recharts row per date. */
-function mergeSeries(data: PITrackRecordResponse) {
-  const byDate = new Map<string, Record<string, number | string>>();
-  const add = (key: string, points: { date: string; value: number }[]) => {
-    for (const p of points) {
-      const row = byDate.get(p.date) ?? { date: p.date };
-      row[key] = p.value;
-      byDate.set(p.date, row);
-    }
-  };
-  Object.entries(data.lanes).forEach(([k, pts]) => add(k, pts));
-  Object.entries(data.benchmarks).forEach(([k, pts]) => add(k, pts));
-  return Array.from(byDate.values()).sort((a, b) =>
-    String(a.date).localeCompare(String(b.date)),
-  );
-}
-
-/** Dates where any lane's config_version changes vs its previous point. */
-function segmentBoundaries(data: PITrackRecordResponse): string[] {
-  const dates = new Set<string>();
-  for (const pts of Object.values(data.lanes)) {
-    for (let i = 1; i < pts.length; i++) {
-      if (
-        pts[i].config_version &&
-        pts[i - 1].config_version &&
-        pts[i].config_version !== pts[i - 1].config_version
-      ) {
-        dates.add(pts[i].date);
-      }
-    }
-  }
-  return Array.from(dates);
-}
+import { LANE_STYLE, LaneEquityChart } from "@/components/pi/lane-equity-chart";
 
 export default function TrackRecordPage() {
   const { data, isLoading, error } = useQuery({
@@ -70,9 +19,7 @@ export default function TrackRecordPage() {
     refetchInterval: 10 * 60 * 1000,
   });
 
-  const rows = data ? mergeSeries(data) : [];
-  const boundaries = data ? segmentBoundaries(data) : [];
-  const hasData = rows.length > 0 && Object.values(data?.lanes ?? {}).some((l) => l.length > 0);
+  const hasData = Object.values(data?.lanes ?? {}).some((l) => l.length > 0);
 
   return (
     <div className="space-y-6 animate-slide-up" suppressHydrationWarning>
@@ -151,86 +98,7 @@ export default function TrackRecordPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={420}>
-              <LineChart data={rows}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
-                  interval="preserveStartEnd"
-                />
-                <YAxis
-                  domain={["auto", "auto"]}
-                  tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
-                  tickFormatter={(v) => `$${(Number(v) / 1000).toFixed(1)}k`}
-                  width={70}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 8,
-                    color: "var(--foreground)",
-                  }}
-                  formatter={(v, name) => [
-                    `$${Number(v ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
-                    LANE_STYLE[String(name)]?.label ?? BENCH_STYLE[String(name)]?.label ?? String(name),
-                  ]}
-                />
-                <Legend
-                  formatter={(value) =>
-                    LANE_STYLE[value]?.label ?? BENCH_STYLE[value]?.label ?? value
-                  }
-                />
-
-                {/* Inception marker */}
-                {data.inception_date && (
-                  <ReferenceLine
-                    x={data.inception_date}
-                    stroke="var(--muted-foreground)"
-                    strokeDasharray="2 4"
-                    label={{ value: "inception", fontSize: 10, fill: "var(--muted-foreground)" }}
-                  />
-                )}
-
-                {/* Config-version segment boundaries */}
-                {boundaries.map((d) => (
-                  <ReferenceLine
-                    key={d}
-                    x={d}
-                    stroke="#a855f7"
-                    strokeDasharray="4 4"
-                    label={{ value: "config change", fontSize: 10, fill: "#a855f7" }}
-                  />
-                ))}
-
-                {/* Benchmarks first: muted + dashed, underneath the lanes */}
-                {Object.entries(BENCH_STYLE).map(([key, s]) => (
-                  <Line
-                    key={key}
-                    type="monotone"
-                    dataKey={key}
-                    stroke={s.color}
-                    strokeWidth={1.25}
-                    strokeDasharray="5 4"
-                    dot={false}
-                    connectNulls
-                  />
-                ))}
-                {/* Lanes: solid, prominent, dot on the (possibly intraday) last point */}
-                {Object.entries(LANE_STYLE).map(([key, s]) => (
-                  <Line
-                    key={key}
-                    type="monotone"
-                    dataKey={key}
-                    stroke={s.color}
-                    strokeWidth={2}
-                    dot={{ r: 2.5 }}
-                    connectNulls
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
+            <LaneEquityChart data={data} />
             <p className="text-[11px] text-muted-foreground mt-2">
               {data.benchmark_note} Per-point config versions mark track-record
               segments; rule changes always start a new labeled segment.

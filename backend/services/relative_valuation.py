@@ -103,6 +103,14 @@ def _fetch_ticker_metrics(ticker: str) -> Optional[dict]:
         metrics["name"] = info.get("shortName", ticker)
         metrics["sector"] = info.get("sector", "Unknown")
 
+        # Inputs for the comps-based fair value (analyst method)
+        metrics["price"] = float(info["regularMarketPrice"])
+        for k, yk in (("forward_eps", "forwardEps"),
+                      ("trailing_eps", "trailingEps"),
+                      ("revenue_per_share", "revenuePerShare")):
+            v = info.get(yk)
+            metrics[k] = float(v) if isinstance(v, (int, float)) and np.isfinite(v) else None
+
         return metrics
     except Exception as e:
         logger.debug("relative_valuation fetch failed for %s: %s", ticker, e)
@@ -288,6 +296,10 @@ def get_relative_valuation(ticker: str) -> Optional[dict]:
     # Valuation verdict
     verdict = _compute_verdict(composite_score, historical)
 
+    # Comps-based fair value — the sell-side method (peer-median multiple ×
+    # the company's own per-share figure), NOT a prediction like the MC.
+    fair_value = _compute_implied_fair_value(target, all_metrics)
+
     return {
         "ticker": ticker,
         "sector": sector,
@@ -298,6 +310,51 @@ def get_relative_valuation(ticker: str) -> Optional[dict]:
         "verdict": verdict,
         "historical": historical,
         "peer_table": peer_table,
+        "implied_fair_value": fair_value,
+    }
+
+
+def _compute_implied_fair_value(target: dict, all_metrics: list[dict]) -> Optional[dict]:
+    """Comps-based fair value: peer-MEDIAN multiple × the target's own
+    per-share figure — the standard analyst comparables method. Estimates
+    are only produced where the input is meaningful (positive EPS/revenue);
+    the blended value is the mean of the available estimates."""
+    peers = [m for m in all_metrics if m["ticker"] != target["ticker"]]
+    price = target.get("price")
+    if not price or price <= 0:
+        return None
+
+    def _peer_median(metric: str) -> Optional[float]:
+        vals = [m[metric] for m in peers
+                if m.get(metric) is not None and m[metric] > 0]
+        return float(np.median(vals)) if len(vals) >= 3 else None
+
+    estimates = {}
+    fwd_eps = target.get("forward_eps")
+    med_fwd_pe = _peer_median("pe_forward")
+    if fwd_eps and fwd_eps > 0 and med_fwd_pe:
+        estimates["forward_pe"] = round(fwd_eps * med_fwd_pe, 2)
+    ttm_eps = target.get("trailing_eps")
+    med_ttm_pe = _peer_median("pe_trailing")
+    if ttm_eps and ttm_eps > 0 and med_ttm_pe:
+        estimates["trailing_pe"] = round(ttm_eps * med_ttm_pe, 2)
+    rps = target.get("revenue_per_share")
+    med_ps = _peer_median("price_to_sales")
+    if rps and rps > 0 and med_ps:
+        estimates["price_to_sales"] = round(rps * med_ps, 2)
+
+    if not estimates:
+        return None
+    blended = float(np.mean(list(estimates.values())))
+    return {
+        "blended": round(blended, 2),
+        "upside_pct": round((blended / price - 1) * 100, 1),
+        "estimates": estimates,
+        "peer_medians": {"pe_forward": med_fwd_pe, "pe_trailing": med_ttm_pe,
+                         "price_to_sales": med_ps},
+        "method": ("peer-median multiples × own per-share figures (comps) — "
+                   "what the stock would trade at if priced like its sector "
+                   "median; not a forecast"),
     }
 
 
@@ -451,4 +508,5 @@ def get_valuation_summary(ticker: str) -> Optional[dict]:
         "sector": full["sector"],
         "notable_metrics": notable[:4],
         "historical_pe_pctile": full.get("historical", {}).get("pe_percentile_vs_history") if full.get("historical") else None,
+        "implied_fair_value": full.get("implied_fair_value"),
     }

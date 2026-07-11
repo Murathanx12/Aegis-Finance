@@ -693,7 +693,11 @@ config: dict = {
     "cache": {
         "ttl_hours": 1,
         "ttl_stock": 900,           # 15 min for per-ticker data
-        "ttl_market": 300,          # 5 min for market-level endpoints
+        # 15 min: users always get an instant SWR hit; the warm loop recomputes
+        # on expiry, so this TTL is the compute-cost dial (300s had the two
+        # market endpoints recomputing 6x/hr on Railway for a product that
+        # refreshes hourly anyway).
+        "ttl_market": 900,
         "ttl_sectors": 3600,        # 1 hr for sector analysis
         "ttl_crash": 1800,          # 30 min for crash predictions
         "ttl_news": 900,            # 15 min for news
