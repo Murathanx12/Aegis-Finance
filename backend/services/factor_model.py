@@ -65,8 +65,12 @@ def get_factor_data(lookback_days: Optional[int] = None) -> Optional[pd.DataFram
         # Convert from percentage to decimal
         df = df / 100.0
 
-        # Ensure datetime index
-        df.index = pd.to_datetime(df.index)
+        # Ensure datetime index — pandas_datareader returns a PeriodIndex,
+        # and pd.to_datetime(PeriodIndex) raises on pandas >= 2.x
+        if isinstance(df.index, pd.PeriodIndex):
+            df.index = df.index.to_timestamp()
+        else:
+            df.index = pd.to_datetime(df.index)
         df = df.sort_index()
 
         _FACTOR_CACHE[cache_key] = df
@@ -290,7 +294,10 @@ def get_momentum_factor(lookback_days: Optional[int] = None) -> Optional[pd.Data
         )
         df = mom[0] / 100.0  # Convert percentage to decimal
         df.columns = ["Mom"]
-        df.index = pd.to_datetime(df.index)
+        if isinstance(df.index, pd.PeriodIndex):
+            df.index = df.index.to_timestamp()
+        else:
+            df.index = pd.to_datetime(df.index)
         df = df.sort_index()
 
         _FACTOR_CACHE[cache_key] = df

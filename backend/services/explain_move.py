@@ -181,17 +181,27 @@ def _template_narration(dossier: dict) -> str:
 def narrate(dossier: dict) -> dict:
     """Narrate the dossier: LLM when a provider key exists, template otherwise."""
     try:
+        from backend.cache import cache_get, cache_set
         from backend.services.llm_analyzer import _call_llm, is_available
         if is_available():
+            # One paid narration per ticker per hour — the dossier barely
+            # changes intraday and the DeepSeek balance is small.
+            key = f"explain_narration:{dossier.get('ticker', '?')}"
+            hit = cache_get(key, 3600)
+            if hit is not None:
+                return hit
             system = ("You explain stock price moves from supplied evidence for a "
-                      "retail investor. Three sentences max: what moved, what the "
-                      "evidence shows, what remains uncertain. NEVER give advice, "
-                      "predictions, or buy/sell language. If evidence is thin, say "
-                      "the move is unexplained by the available data.")
+                      "retail investor. Always answer in English. Three sentences "
+                      "max: what moved, what the evidence shows, what remains "
+                      "uncertain. NEVER give advice, predictions, or buy/sell "
+                      "language. If evidence is thin, say the move is unexplained "
+                      "by the available data.")
             text = _call_llm(system, str(dossier))
             if text:
-                return {"narration": text.strip(), "method": "llm",
-                        "label": EXPLAIN_LABEL}
+                out = {"narration": text.strip(), "method": "llm",
+                       "label": EXPLAIN_LABEL}
+                cache_set(key, out)
+                return out
     except Exception as e:
         logger.warning("explain-move LLM narration failed: %s", e)
     return {"narration": _template_narration(dossier), "method": "template",

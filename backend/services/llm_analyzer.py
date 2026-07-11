@@ -25,6 +25,9 @@ Usage:
 
 import logging
 import os
+import threading
+import time
+from datetime import datetime, timezone
 from typing import Optional
 
 from backend.cache import cached
@@ -51,6 +54,71 @@ _MAX_TOKENS = _llm_cfg.get("max_tokens", 500)
 
 _anthropic_client = None
 _openai_client = None
+
+# ── Spend Guards ────────────────────────────────────────────────────────────
+# The DeepSeek balance is small and prepaid; two guards keep it alive:
+#  1. Daily call cap — beyond it every helper falls back to its template path.
+#  2. Billing breaker — a 401/402 (dead/empty key) trips a cooldown so we
+#     don't burn a request per cache expiry against a key that cannot pay.
+
+_DAILY_CAP = int(_llm_cfg.get("daily_call_cap", 150))
+_BREAKER_COOLDOWN_S = float(_llm_cfg.get("billing_breaker_cooldown_s", 6 * 3600))
+
+_spend_lock = threading.Lock()
+_spend_state: dict = {"date": None, "count": 0, "breaker_until": 0.0,
+                      "breaker_reason": None, "cap_logged": False}
+
+
+def _is_billing_error(exc: Exception) -> bool:
+    status = getattr(exc, "status_code", None)
+    if status in (401, 402):
+        return True
+    msg = str(exc).lower()
+    return "insufficient balance" in msg or "invalid api key" in msg
+
+
+def _trip_breaker(exc: Exception) -> None:
+    with _spend_lock:
+        _spend_state["breaker_until"] = time.time() + _BREAKER_COOLDOWN_S
+        _spend_state["breaker_reason"] = str(exc)[:200]
+    logger.error(
+        "LLM billing error — provider disabled for %.0f min: %s",
+        _BREAKER_COOLDOWN_S / 60, exc,
+    )
+
+
+def _acquire_call_budget() -> bool:
+    """True if one LLM call may proceed (counts it); False → use fallbacks."""
+    with _spend_lock:
+        if time.time() < _spend_state["breaker_until"]:
+            return False
+        today = datetime.now(timezone.utc).date().isoformat()
+        if _spend_state["date"] != today:
+            _spend_state["date"] = today
+            _spend_state["count"] = 0
+            _spend_state["cap_logged"] = False
+        if _spend_state["count"] >= _DAILY_CAP:
+            if not _spend_state["cap_logged"]:
+                _spend_state["cap_logged"] = True
+                logger.warning(
+                    "LLM daily call cap reached (%d) — template fallbacks "
+                    "until UTC midnight", _DAILY_CAP,
+                )
+            return False
+        _spend_state["count"] += 1
+        return True
+
+
+def llm_usage() -> dict:
+    """Current spend-guard state (for health/diagnostics)."""
+    with _spend_lock:
+        return {
+            "provider": _get_provider(),
+            "calls_today": _spend_state["count"],
+            "daily_cap": _DAILY_CAP,
+            "breaker_active": time.time() < _spend_state["breaker_until"],
+            "breaker_reason": _spend_state["breaker_reason"],
+        }
 
 
 def _get_provider() -> str:
@@ -119,6 +187,8 @@ def _call_llm(
         LLM response text or None on failure.
     """
     provider = _get_provider()
+    if provider == "none" or not _acquire_call_budget():
+        return None
 
     # Try Claude first
     if provider == "claude":
@@ -135,6 +205,9 @@ def _call_llm(
                 return response.content[0].text.strip()
             except Exception as e:
                 logger.warning("Claude API call failed: %s", e)
+                if _is_billing_error(e):
+                    _trip_breaker(e)
+                    return None
                 # Fall through to DeepSeek
 
     # Try DeepSeek
@@ -154,6 +227,8 @@ def _call_llm(
                 return response.choices[0].message.content.strip()
             except Exception as e:
                 logger.warning("DeepSeek API call failed: %s", e)
+                if _is_billing_error(e):
+                    _trip_breaker(e)
 
     return None
 

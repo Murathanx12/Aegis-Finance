@@ -527,6 +527,21 @@ async def _daily_check():
     except Exception as e:
         logger.error("Multifactor collection failed: %s", e, exc_info=True)
 
+    # TRIAL-CONGRESS-IC — snapshot the congressional (STOCK Act) net
+    # distinct-member purchase score over 90d of DISCLOSURES (FMP, both
+    # chambers). Dynamic ~150-name universe (first non-book cross-section).
+    # Weekly-throttled, descriptive, forward-only. A source failure raises
+    # BEFORE any PIT write — no false-zero cross-sections.
+    try:
+        from backend.services.portfolio_intelligence.congress_collector import (
+            collect_congress_scores,
+        )
+        cg = await asyncio.to_thread(collect_congress_scores)
+        logger.info("Congress-IC collect: status=%s n=%s nonzero=%s (descriptive)",
+                    cg.get("status"), cg.get("n"), cg.get("nonzero"))
+    except Exception as e:
+        logger.error("Congress-IC collection failed: %s", e, exc_info=True)
+
     # Fragility CANDIDATE inputs (Branch 1 item 3) — IPO issuance, mega-cap
     # concentration, crash-narrative. Snapshot-only (PIT store); weekly-throttled;
     # NEVER touches the composite (TRIAL-CRASH metric unchanged). Descriptive.
