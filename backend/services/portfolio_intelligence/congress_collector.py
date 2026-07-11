@@ -16,7 +16,7 @@ loudly) — a broken feed must never write a cross-section of false zeros.
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime
+from datetime import date
 
 from backend.services.congress_trades import (
     WINDOW_DAYS, active_universe, compute_congress_scores,
@@ -55,24 +55,12 @@ def collect_congress_scores(db_path=None, tickers=None, *, fetch=None,
 
 
 def ensure_congress_trial(db_path=None) -> int:
-    """Idempotently pre-register TRIAL-CONGRESS-IC in the experiment registry
-    (pattern: ensure_lppls_trial). Entering the cumulative count makes the
-    DSR/PBO guards stricter — the conservative direction."""
-    import json as _json
+    """Idempotently pre-register TRIAL-CONGRESS-IC in the experiment registry."""
+    from backend.services.portfolio_intelligence.trial_registry import (
+        ensure_trial_registered,
+    )
 
-    from backend.db import count_cumulative_trials, get_connection, init_db
-
-    init_db(db_path)
-    conn = get_connection(db_path)
-    try:
-        existing = conn.execute(
-            "SELECT id FROM rule_experiments WHERE param = ? ORDER BY id LIMIT 1",
-            (TRIAL_PARAM,),
-        ).fetchone()
-        if existing is not None:
-            return int(existing["id"])
-        cumulative = count_cumulative_trials(conn) + 1
-        notes = {
+    notes = {
             "hypothesis": (
                 "Per-ticker net distinct-member congressional purchase score "
                 "(90d of STOCK Act disclosures, by disclosureDate) has positive "
@@ -101,18 +89,5 @@ def ensure_congress_trial(db_path=None) -> int:
                                    "buy-sell framing; not in multifactor until "
                                    "adopted",
             },
-        }
-        cur = conn.execute(
-            "INSERT INTO rule_experiments "
-            "(created_at, config_version, lane_id, param, old_value, new_value, "
-            " batch_trials, cumulative_trials, verdict, notes) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (datetime.now().isoformat(), "descriptive", None, TRIAL_PARAM,
-             None, "registered", 1, cumulative, "adopted", _json.dumps(notes)),
-        )
-        conn.commit()
-        logger.info("Pre-registered TRIAL-CONGRESS-IC (cumulative trials now %d)",
-                    cumulative)
-        return int(cur.lastrowid)
-    finally:
-        conn.close()
+    }
+    return ensure_trial_registered(TRIAL_PARAM, notes, db_path=db_path)

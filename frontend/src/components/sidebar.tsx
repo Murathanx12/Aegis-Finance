@@ -44,6 +44,7 @@ const NAV_ITEMS = [
   { href: "/watchlist", label: "Watchlist", icon: Star, code: "WATCH" },
   { href: "/news", label: "News & Intel", icon: Newspaper, code: "NI" },
   { href: "/retirement", label: "Retirement", icon: Target, code: "RETIRE" },
+  { href: "/dev", label: "Dev", icon: LayoutGrid, code: "DEV" },
   { href: "/about", label: "About", icon: Info, code: "ABOUT" },
 ];
 

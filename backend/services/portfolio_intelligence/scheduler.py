@@ -555,6 +555,20 @@ async def _daily_check():
     except Exception as e:
         logger.error("Fragility-candidate collection failed: %s", e, exc_info=True)
 
+    # TRIAL-ARK-IC — snapshot ARK's daily fund holdings (raw shares per fund,
+    # as_of = the CSV's own file date); the 21-session flow score self-arms
+    # once the baseline accrues. ALL-funds-failed raises loudly; a single
+    # fund failing is isolated + logged. Descriptive, forward-only.
+    try:
+        from backend.services.portfolio_intelligence.ark_collector import (
+            collect_ark_holdings,
+        )
+        ark = await asyncio.to_thread(collect_ark_holdings)
+        logger.info("ARK collect: status=%s rows=%s score_status=%s (descriptive)",
+                    ark.get("status"), ark.get("rows"), ark.get("score_status"))
+    except Exception as e:
+        logger.error("ARK collection failed: %s", e, exc_info=True)
+
     # 13F institutional-filing activity (V3 data layer, built 2026-06-14, wired
     # 2026-07-08). ~12 paced data.sec.gov calls via the shared EDGAR limiter;
     # snapshot() dedups unchanged filings so daily runs are cheap. Descriptive

@@ -806,6 +806,20 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                         </span>
                       )}
                     </div>
+                    {stockData.relative_valuation.implied_fair_value?.blended != null && (
+                      <div className="rounded-lg bg-muted/30 p-3 mb-3 flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase flex items-center">
+                            Comps Fair Value (analyst method)
+                            <InfoTooltip text="The standard sell-side comparables method: the sector's MEDIAN multiples (forward P/E, trailing P/E, P/S) applied to this company's own per-share numbers. It says what the stock would trade at if priced like its peers — a valuation anchor, not a forecast. Analysts blend this with DCF and their own estimates." />
+                          </p>
+                          <p className="text-2xl font-bold tabular-nums">${nf(stockData.relative_valuation.implied_fair_value.blended, 2)}</p>
+                        </div>
+                        <span className={`text-base font-semibold tabular-nums ${stockData.relative_valuation.implied_fair_value.upside_pct >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {stockData.relative_valuation.implied_fair_value.upside_pct >= 0 ? "+" : ""}{nf(stockData.relative_valuation.implied_fair_value.upside_pct, 1)}% vs price
+                        </span>
+                      </div>
+                    )}
                     {Array.isArray(stockData.relative_valuation.notable_metrics) && stockData.relative_valuation.notable_metrics.length > 0 && (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {stockData.relative_valuation.notable_metrics.map((m: { metric: string; value: number | null; peer_avg: number | null; vs_peers: string; percentile: number | null }) => (

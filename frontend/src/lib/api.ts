@@ -1181,6 +1181,12 @@ export interface StockAnalysis {
     sector?: string;
     historical_pe_pctile?: number | null;
     notable_metrics?: { metric: string; value: number | null; peer_avg: number | null; vs_peers: string; percentile: number | null }[];
+    implied_fair_value?: {
+      blended: number;
+      upside_pct: number;
+      estimates: Record<string, number>;
+      method: string;
+    } | null;
   } | null;
   crash_prob_3m?: number | null;
   crash_prob_interval?: {
@@ -2809,6 +2815,61 @@ export interface PITrackRecordResponse {
 
 export function piGetTrackRecord() {
   return fetchAPI<PITrackRecordResponse>("/api/pi/track-record");
+}
+
+// PI: Experiment registry (every trial ever recorded, adopted AND rejected)
+export interface PIRegistryTrial {
+  id: number;
+  created_at: string;
+  config_version: string | null;
+  lane_id: string | null;
+  param: string;
+  verdict: string;
+  cumulative_trials: number;
+  notes: Record<string, unknown> | string | null;
+}
+
+export interface PIRegistryResponse {
+  cumulative_trials: number;
+  verdict_counts: Record<string, number>;
+  trials: PIRegistryTrial[];
+}
+
+export function piGetRegistry() {
+  return fetchAPI<PIRegistryResponse>("/api/pi/registry");
+}
+
+// Dev: full health snapshot (deploy, scheduler, NAV freshness, warnings, LLM)
+export interface HealthFullResponse {
+  status: string;
+  deploy: {
+    commit: string;
+    version: string;
+    started_at: string;
+    uptime_seconds: number;
+    cache_status: string;
+  };
+  scheduler: {
+    running: boolean;
+    n_jobs: number;
+    nav?: { all_fresh: boolean; expected_nav_date?: string };
+  };
+  track_record: {
+    inception_date: string | null;
+    age_days: number | null;
+    lanes: Record<string, { last_date: string | null; nav: number | null; since_inception_pct: number | null }>;
+  };
+  llm?: {
+    provider: string;
+    calls_today: number;
+    daily_cap: number;
+    breaker_active: boolean;
+  };
+  recent_warnings: { ts: string; level: string; logger: string; message: string }[];
+}
+
+export function getHealthFull() {
+  return fetchAPI<HealthFullResponse>("/api/health/full");
 }
 
 // PI: Replay backtest (forces compute on cache miss — slow)

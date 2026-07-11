@@ -101,5 +101,27 @@ reads as "covered" on every green dashboard — only a live prod check sees the
 silence.** T10 (revisions) and T8 (multi-factor) were audited the same way and are
 healthy (yfinance paths, no SEC dependency).
 
+## 6. The crash-model retrain "works" and still proves nothing (label sparsity)
+
+The M3 retrain (2026-07-11) rebuilt `crash_model.pkl` end-to-end on the exact
+live feature path (86 built → 20 selected; only **5 features survived LASSO**),
+loads cleanly through the sidecar contract, predicts on live features without
+raising, and passes 214 tests — and it is still **not deployable as a
+prediction source**. Walk-forward AUC is *unmeasurable* (the purged validation
+window contains zero ≥20%-drawdown events at every horizon), the outputs are
+near-constant (the 6m head emits literally one value; trailing-2y std 0.00pp),
+and the 12m headline (43%) is ~3× the unconditional base rate with no
+demonstrated discrimination. Root cause is the **label**: daily crash-label
+rates of 3.2/7.8/15.7% collapse to a handful of independent crash episodes —
+a binary ≥20%-drawdown target cannot support learning on one market's history.
+Decision: **hold the deploy** (an honest `model_not_deployed` beats a
+skill-less number lighting up the overlay), keep TRIAL-CRASH's fragility
+composite as the crisis read, and redesign the target per
+`docs/research/CRASH_AND_OSS_RESEARCH_2026-07-11.md` (forward max-drawdown
+severity via quantile trees, read out as multi-threshold exceedance
+probabilities; benchmarked against STLFSI4-as-predictor before any promotion).
+The CLAUDE.md "walk-forward AUC ≥ 0.70" health gate is unmeasurable for this
+label and moves to PR-AUC/event-window metrics in the redesign.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
