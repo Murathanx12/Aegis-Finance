@@ -13,10 +13,17 @@ import logging
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
+from backend.cache import cache_get, cache_set
 from backend.services.savings_calculator import project_savings
 
 router = APIRouter(prefix="/api/savings", tags=["savings"])
 logger = logging.getLogger(__name__)
+
+_MC_TTL = 6 * 3600  # retirement MC is a pure function of its params
+
+
+def _param_key(prefix: str, request: BaseModel) -> str:
+    return f"{prefix}:{hash(frozenset(request.model_dump().items()))}"
 
 
 class SavingsRequest(BaseModel):
@@ -73,6 +80,10 @@ async def simulate_retirement_endpoint(request: RetirementMCRequest):
         return {"error": "End age must be greater than retirement age"}
 
     from backend.services.retirement_mc import simulate_retirement
+    cache_key = _param_key("retirement_mc", request)
+    cached = cache_get(cache_key, _MC_TTL)
+    if cached is not None:
+        return cached
     try:
         result = await asyncio.to_thread(
             simulate_retirement,
@@ -88,6 +99,8 @@ async def simulate_retirement_endpoint(request: RetirementMCRequest):
             social_security_start_age=request.social_security_start_age,
             n_sims=request.n_sims,
         )
+        if "error" not in result:
+            cache_set(cache_key, result)
         return result
     except Exception as e:
         logger.error("retirement simulation failed: %s", e)
@@ -109,6 +122,10 @@ async def safe_withdrawal_rate(request: SafeRateRequest):
     Compares result to the classic 4% rule (Bengen 1994).
     """
     from backend.services.retirement_mc import compute_safe_withdrawal_rate
+    cache_key = _param_key("safe_rate", request)
+    cached = cache_get(cache_key, _MC_TTL)
+    if cached is not None:
+        return cached
     try:
         result = await asyncio.to_thread(
             compute_safe_withdrawal_rate,
@@ -117,6 +134,8 @@ async def safe_withdrawal_rate(request: SafeRateRequest):
             risk_level=request.risk_level,
             target_success_rate=request.target_success_rate,
         )
+        if "error" not in result:
+            cache_set(cache_key, result)
         return result
     except Exception as e:
         logger.error("safe withdrawal rate failed: %s", e)

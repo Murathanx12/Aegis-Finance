@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getMarketNews, getMarketSignal } from "@/lib/api";
+import { getMarketNews } from "@/lib/api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -77,11 +77,6 @@ export default function NewsPage() {
     queryKey: queryKeys.news.market,
     queryFn: getMarketNews,
     staleTime: staleTimes.news,
-  });
-  const signal = useQuery({
-    queryKey: queryKeys.market.signal,
-    queryFn: getMarketSignal,
-    staleTime: staleTimes.market,
   });
 
   return (
@@ -176,36 +171,8 @@ export default function NewsPage() {
             </Card>
           </div>
 
-          {/* Market Signal Context */}
-          {signal.data && (
-            <Card className={`border-2 ${
-              signal.data.action.includes("Buy") ? "border-emerald-500/30" :
-              signal.data.action.includes("Sell") ? "border-red-500/30" : "border-amber-500/30"
-            }`}>
-              <CardContent className="p-4 flex flex-wrap items-center gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Signal Engine Says</p>
-                  <span className={`inline-block text-lg font-bold px-3 py-1.5 rounded ${
-                    signal.data.action.includes("Buy") ? "bg-emerald-500/15 text-emerald-400" :
-                    signal.data.action.includes("Sell") ? "bg-red-500/15 text-red-400" : "bg-amber-500/15 text-amber-400"
-                  }`}>{signal.data.action}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground">
-                    Composite: {signal.data.composite_score > 0 ? "+" : ""}{signal.data.composite_score.toFixed(3)} · Confidence: {signal.data.confidence}%
-                    {signal.data.regime && <> · Regime: {signal.data.regime}</>}
-                    {signal.data.vix != null && <> · VIX: {signal.data.vix}</>}
-                  </p>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-                    {signal.data.reasons.map((r, i) => (
-                      <span key={i} className="text-xs text-muted-foreground">&bull; {r}</span>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
+          {/* Market signal card removed — it duplicated the Dashboard's
+              SignalBadge verbatim; the signal lives on / and /outlook. */}
           {data.gdelt.raw_data.tone.length > 0 && (
             <Card>
               <CardHeader>

@@ -3,12 +3,19 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 // Backend serves stale-while-revalidate, so a healthy response is fast; a
 // request stuck this long means a cold recompute and should fail visibly
 // (React Query retries once) instead of hanging the page for minutes.
+// Known-heavy endpoints (first-ever ticker analysis, large portfolio analyze)
+// pass a larger budget instead of failing at 45s.
 const FETCH_TIMEOUT_MS = 45_000;
+export const HEAVY_TIMEOUT_MS = 120_000;
 
-async function fetchAPI<T>(path: string, options?: RequestInit): Promise<T> {
+async function fetchAPI<T>(
+  path: string,
+  options?: RequestInit,
+  timeoutMs: number = FETCH_TIMEOUT_MS,
+): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
-    signal: options?.signal ?? AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    signal: options?.signal ?? AbortSignal.timeout(timeoutMs),
     headers: {
       "Content-Type": "application/json",
       ...options?.headers,
@@ -68,7 +75,7 @@ export function getStockScreener() {
 }
 
 export function getStockAnalysis(ticker: string) {
-  return fetchAPI<StockAnalysis>(`/api/stock/${ticker}`);
+  return fetchAPI<StockAnalysis>(`/api/stock/${ticker}`, undefined, HEAVY_TIMEOUT_MS);
 }
 
 export function getStockShap(ticker: string) {
@@ -85,7 +92,7 @@ export function analyzePortfolio(holdings: Holding[]) {
   return fetchAPI<PortfolioAnalysis>("/api/portfolio/analyze", {
     method: "POST",
     body: JSON.stringify({ holdings }),
-  });
+  }, HEAVY_TIMEOUT_MS);
 }
 
 export function buildPortfolio(risk: string, amount: number, horizon: string) {
@@ -114,7 +121,7 @@ export function getMarketSignal() {
 }
 
 export function getStockSignal(ticker: string) {
-  return fetchAPI<StockSignal>(`/api/stock/${ticker}/signal`);
+  return fetchAPI<StockSignal>(`/api/stock/${ticker}/signal`, undefined, HEAVY_TIMEOUT_MS);
 }
 
 // Options & Earnings Intelligence

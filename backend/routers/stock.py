@@ -18,6 +18,7 @@ GET /api/stock/{ticker}/dividends   — Dividend intelligence (Morningstar-style
 import asyncio
 import logging
 import re
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -409,8 +410,32 @@ def _compute_sector_momentum() -> dict:
     return momentum
 
 
+_market_signal_lock = threading.Lock()
+
+
 def _compute_market_signal() -> dict:
-    """Compute the market-level signal once for the screener."""
+    """Shared market-level signal, cached + single-flight.
+
+    This 15-30s computation (crash model + drift + HMM + FRED) is consumed by
+    EVERY stock endpoint and every screener ticker. Uncached, the stock page's
+    three parallel queries each recomputed it — most of the page's latency.
+    """
+    from backend.cache import cache_get, cache_set
+
+    hit = cache_get("stock_market_signal", _CACHE_TTL["ttl_market"])
+    if hit is not None:
+        return hit
+    with _market_signal_lock:
+        hit = cache_get("stock_market_signal", _CACHE_TTL["ttl_market"])
+        if hit is not None:
+            return hit
+        sig = _compute_market_signal_uncached()
+        cache_set("stock_market_signal", sig)
+        return sig
+
+
+def _compute_market_signal_uncached() -> dict:
+    """Compute the market-level signal (see _compute_market_signal)."""
     from backend.services.signal_engine import get_market_signal
     from backend.services.data_fetcher import DataFetcher
     from backend.services.risk_scorer import build_risk_score
@@ -934,16 +959,22 @@ def _stock_signal(ticker: str) -> dict:
     # Reuse the shared market signal computation
     market_sig = _compute_market_signal()
 
-    # Get stock data — pass crash probability + HMM regime data so MC can modulate
-    crash_3m_pct = market_sig.get("_crash_3m_pct")
-    crash_prob_for_mc = crash_3m_pct / 100.0 if crash_3m_pct is not None else None
-    stock_data = analyze_stock(
-        ticker, ml_crash_prob=crash_prob_for_mc,
-        hmm_state_means=market_sig.get("_hmm_state_means"),
-        hmm_regime_probs=market_sig.get("_hmm_regime_probs"),
-        hmm_state_vols=market_sig.get("_hmm_state_vols"),
-        drift_severity=market_sig.get("_drift_severity"),
-    )
+    # Reuse the full analysis if /api/stock/{ticker} already computed it —
+    # the signal only reads summary fields, and re-running the 10k-path MC
+    # just to extract them doubled the stock page's compute.
+    from backend.cache import cache_peek
+    stock_data, _age = cache_peek(f"stock:{ticker}", _CACHE_TTL["ttl_stock"])
+    if stock_data is None:
+        # Get stock data — pass crash probability + HMM regime data so MC can modulate
+        crash_3m_pct = market_sig.get("_crash_3m_pct")
+        crash_prob_for_mc = crash_3m_pct / 100.0 if crash_3m_pct is not None else None
+        stock_data = analyze_stock(
+            ticker, ml_crash_prob=crash_prob_for_mc,
+            hmm_state_means=market_sig.get("_hmm_state_means"),
+            hmm_regime_probs=market_sig.get("_hmm_regime_probs"),
+            hmm_state_vols=market_sig.get("_hmm_state_vols"),
+            drift_severity=market_sig.get("_drift_severity"),
+        )
     if stock_data is None:
         return {"ticker": ticker, "action": "Hold", "confidence": 0, "error": "Could not analyze stock"}
 
