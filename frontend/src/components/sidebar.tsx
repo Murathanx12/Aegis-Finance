@@ -30,55 +30,101 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { Button } from "@/components/ui/button";
 import { useBeginnerMode } from "@/hooks/use-beginner-mode";
 
-const NAV_ITEMS = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard, code: "DASH" },
-  { href: "/workspace", label: "Workspace", icon: LayoutGrid, code: "WORK" },
-  { href: "/copilot", label: "Copilot", icon: Sparkles, code: "AI" },
-  { href: "/outlook", label: "Market Outlook", icon: TrendingDown, code: "ECO" },
-  { href: "/stock", label: "Stock Analysis", icon: BarChart3, code: "GP" },
-  { href: "/screener", label: "Stock Screener", icon: ListFilter, code: "EQS" },
-  { href: "/sectors", label: "Sectors", icon: PieChart, code: "SECT" },
-  { href: "/portfolio", label: "Portfolio", icon: Briefcase, code: "PORT" },
-  { href: "/portfolio-intelligence/conviction", label: "Conviction", icon: NotebookPen, code: "CONV" },
-  { href: "/portfolio-intelligence/risk-watch", label: "Risk Watch", icon: Activity, code: "RISK" },
-  { href: "/watchlist", label: "Watchlist", icon: Star, code: "WATCH" },
-  { href: "/news", label: "News & Intel", icon: Newspaper, code: "NI" },
-  { href: "/retirement", label: "Retirement", icon: Target, code: "RETIRE" },
-  { href: "/dev", label: "Dev", icon: LayoutGrid, code: "DEV" },
-  { href: "/about", label: "About", icon: Info, code: "ABOUT" },
+type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; code: string };
+type NavGroup = { title: string | null; items: NavItem[]; hideForBeginner?: boolean };
+
+// Grouped navigation: 5 sections instead of a flat 15-item list, with the
+// previously unreachable pages (Track Record, World Markets) surfaced.
+const NAV_GROUPS: NavGroup[] = [
+  {
+    title: null,
+    items: [
+      { href: "/", label: "Dashboard", icon: LayoutDashboard, code: "DASH" },
+    ],
+  },
+  {
+    title: "Markets",
+    items: [
+      { href: "/outlook", label: "Market Outlook", icon: TrendingDown, code: "ECO" },
+      { href: "/sectors", label: "Sectors", icon: PieChart, code: "SECT" },
+      { href: "/world", label: "World Markets", icon: LayoutGrid, code: "WM" },
+      { href: "/news", label: "News & Intel", icon: Newspaper, code: "NI" },
+    ],
+  },
+  {
+    title: "Stocks",
+    items: [
+      { href: "/stock", label: "Stock Analysis", icon: BarChart3, code: "GP" },
+      { href: "/screener", label: "Screener", icon: ListFilter, code: "EQS" },
+      { href: "/watchlist", label: "Watchlist", icon: Star, code: "WATCH" },
+    ],
+  },
+  {
+    title: "Portfolio",
+    items: [
+      { href: "/portfolio", label: "Builder & Analysis", icon: Briefcase, code: "PORT" },
+      { href: "/portfolio-intelligence/track-record", label: "Track Record", icon: Activity, code: "NAV" },
+      { href: "/portfolio-intelligence/conviction", label: "Conviction", icon: NotebookPen, code: "CONV" },
+      { href: "/portfolio-intelligence/risk-watch", label: "Risk Watch", icon: Activity, code: "RISK" },
+      { href: "/retirement", label: "Retirement", icon: Target, code: "RETIRE" },
+    ],
+  },
+  {
+    title: "Tools",
+    hideForBeginner: true,
+    items: [
+      { href: "/copilot", label: "Copilot", icon: Sparkles, code: "AI" },
+      { href: "/workspace", label: "Workspace", icon: LayoutGrid, code: "WORK" },
+      { href: "/dev", label: "Dev", icon: LayoutGrid, code: "DEV" },
+      { href: "/about", label: "About", icon: Info, code: "ABOUT" },
+    ],
+  },
 ];
 
 function NavLinks({ onClick }: { onClick?: () => void }) {
   const pathname = usePathname();
+  const { beginner } = useBeginnerMode();
 
   return (
     <nav className="flex flex-col gap-1 px-3">
-      {NAV_ITEMS.map((item) => {
-        const active = pathname === item.href;
+      {NAV_GROUPS.map((group) => {
+        if (group.hideForBeginner && beginner) return null;
         return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onClick}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium transition-colors group",
-              active
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+          <div key={group.title ?? "top"} className="flex flex-col gap-0.5">
+            {group.title && (
+              <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                {group.title}
+              </p>
             )}
-          >
-            <item.icon className="h-5 w-5 shrink-0" />
-            <span className="flex-1">{item.label}</span>
-            <span
-              className={cn(
-                "font-mono text-[9px] tracking-wider uppercase opacity-0 group-hover:opacity-60 transition-opacity",
-                active && "opacity-60",
-              )}
-              aria-hidden
-            >
-              {item.code}
-            </span>
-          </Link>
+            {group.items.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClick}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium transition-colors group",
+                    active
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  )}
+                >
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  <span className="flex-1">{item.label}</span>
+                  <span
+                    className={cn(
+                      "font-mono text-[9px] tracking-wider uppercase opacity-0 group-hover:opacity-60 transition-opacity",
+                      active && "opacity-60",
+                    )}
+                    aria-hidden
+                  >
+                    {item.code}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         );
       })}
     </nav>

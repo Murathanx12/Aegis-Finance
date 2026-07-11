@@ -30,7 +30,14 @@ from backend.services.tail_risk import compute_tail_risk_metrics
 
 logger = logging.getLogger(__name__)
 
-# Goal-based allocation templates
+# Goal-based allocation templates.
+# 2026-07-11 revision (direction-checked in the allocation backtester, 3y AND
+# 2015→ windows): ARKK removed from aggressive (its negative expectation is
+# our own pre-registered TRIAL-ARK-IC prior), a momentum-factor sleeve (MTUM)
+# added — the strongest documented cross-sectional premium and the direction
+# T6 adopted — and international trimmed. Caveat that ships with the tilts:
+# they lean on US growth/momentum leadership continuing; in a value/intl
+# rotation they lag. Backtests are direction-checks, not alpha proof (T7).
 _ALLOCATION_TEMPLATES = {
     "conservative": {
         "description": "Capital preservation, low volatility",
@@ -47,11 +54,18 @@ _ALLOCATION_TEMPLATES = {
         },
     },
     "aggressive": {
-        "description": "Maximum growth, higher volatility",
+        "description": "Growth with a momentum tilt, higher volatility",
         "allocations": {
-            "VTI": 0.35, "QQQ": 0.25, "VXUS": 0.15,
-            "VGT": 0.10, "ARKK": 0.05, "BND": 0.05,
-            "GLD": 0.05,
+            "VTI": 0.35, "QQQ": 0.25, "MTUM": 0.15,
+            "VGT": 0.10, "VXUS": 0.10, "GLD": 0.05,
+        },
+    },
+    "max_growth": {
+        "description": ("Highest expected return: 100% equity, growth + "
+                        "momentum tilted, no ballast — expect the deepest "
+                        "drawdowns and regime dependence"),
+        "allocations": {
+            "VTI": 0.30, "QQQ": 0.35, "MTUM": 0.20, "VGT": 0.15,
         },
     },
 }
@@ -92,6 +106,7 @@ _RISK_AVERSION = {
     "conservative": 5.0,
     "moderate": 2.5,
     "aggressive": 1.0,
+    "max_growth": 0.7,
 }
 
 # Default ETF universe for BL/HRP
@@ -658,7 +673,8 @@ class PortfolioEngine:
             #   conservative: 70% template + 30% BL
             #   moderate:     50% template + 50% BL
             #   aggressive:   30% template + 70% BL
-            blend_ratios = {"conservative": 0.30, "moderate": 0.40, "aggressive": 0.65}
+            blend_ratios = {"conservative": 0.30, "moderate": 0.40,
+                            "aggressive": 0.65, "max_growth": 0.75}
             bl_weight = blend_ratios.get(risk_tolerance, 0.50)
             template_alloc = dict(_ALLOCATION_TEMPLATES.get(
                 risk_tolerance, _ALLOCATION_TEMPLATES["moderate"]
@@ -734,7 +750,8 @@ class PortfolioEngine:
             # Blend with template to enforce risk tolerance.
             # HRP naturally over-weights low-vol assets (bonds), so blend
             # with template to get the right equity/bond mix.
-            blend_ratios = {"conservative": 0.50, "moderate": 0.45, "aggressive": 0.35}
+            blend_ratios = {"conservative": 0.50, "moderate": 0.45,
+                            "aggressive": 0.35, "max_growth": 0.25}
             hrp_weight = blend_ratios.get(risk_tolerance, 0.50)
             template_alloc = dict(_ALLOCATION_TEMPLATES.get(
                 risk_tolerance, _ALLOCATION_TEMPLATES["moderate"]

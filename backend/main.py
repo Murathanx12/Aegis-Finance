@@ -89,6 +89,7 @@ def _endpoint_warm_targets() -> list[tuple[str, int, object]]:
     from backend.routers.news import _fetch_market_news
     from backend.routers.sector import _analyze_sectors
     from backend.routers.simulation import _compute_scenarios, _run_sp500_projection
+    from backend.routers.stock import _screener
 
     ttl = config["cache"]
     return [
@@ -99,6 +100,10 @@ def _endpoint_warm_targets() -> list[tuple[str, int, object]]:
         ("sp500_projection:10000:5", ttl["ttl_simulation"],
          partial(_run_sp500_projection, 10000, 5)),
         ("scenario_results", ttl["ttl_simulation"], _compute_scenarios),
+        # 80-ticker screener — the worst cold path (~2 min). Warming it also
+        # primes the shared stock market signal + momentum rankings that the
+        # stock pages and the portfolio signal fan-out consume.
+        ("stock_screener", ttl["ttl_stock"], _screener),
     ]
 
 

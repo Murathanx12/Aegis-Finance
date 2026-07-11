@@ -145,18 +145,20 @@ function PortfolioAnalyzeSection() {
 
   const analyzeMutation = useMutation({
     mutationFn: async (h: Holding[]) => {
-      const result = await analyzePortfolio(h);
-      // Fetch signals for each unique ticker in parallel
+      // Fire the per-holding signals CONCURRENTLY with the analysis — they
+      // don't depend on it, and serializing them behind analyze doubled the
+      // wait. The card renders as signals trickle in (fire-and-forget).
       const uniqueTickers = [...new Set(h.map(x => x.ticker))];
-      const signalResults = await Promise.allSettled(
-        uniqueTickers.map(t => getStockSignal(t))
+      Promise.allSettled(uniqueTickers.map(t => getStockSignal(t))).then(
+        (signalResults) => {
+          const signals: Record<string, StockSignal> = {};
+          signalResults.forEach((res, i) => {
+            if (res.status === "fulfilled") signals[uniqueTickers[i]] = res.value;
+          });
+          setHoldingSignals(signals);
+        },
       );
-      const signals: Record<string, StockSignal> = {};
-      signalResults.forEach((res, i) => {
-        if (res.status === "fulfilled") signals[uniqueTickers[i]] = res.value;
-      });
-      setHoldingSignals(signals);
-      return result;
+      return analyzePortfolio(h);
     },
   });
 
@@ -892,7 +894,8 @@ function PortfolioBuildSection() {
   const riskOptions = [
     { value: "conservative", label: "Conservative", desc: "Capital preservation, bonds & dividends", icon: "🛡️" },
     { value: "moderate", label: "Moderate", desc: "Balanced growth with some protection", icon: "⚖️" },
-    { value: "aggressive", label: "Aggressive", desc: "Maximum growth, higher volatility", icon: "🚀" },
+    { value: "aggressive", label: "Aggressive", desc: "Growth with a momentum tilt, higher volatility", icon: "🚀" },
+    { value: "max_growth", label: "Max Growth", desc: "Highest expected return — 100% equity, deepest drawdowns", icon: "🔥" },
   ];
 
   const horizonOptions = [
@@ -906,6 +909,7 @@ function PortfolioBuildSection() {
     { risk: "conservative", text: "If my portfolio dropped 10%, I would sell immediately to prevent further losses." },
     { risk: "moderate", text: "If my portfolio dropped 20%, I'd be uncomfortable but hold. I'd sell at -30%." },
     { risk: "aggressive", text: "If my portfolio dropped 30%+, I'd see it as a buying opportunity and add more." },
+    { risk: "max_growth", text: "I accept 35%+ drawdowns without selling — maximum long-run growth is the only goal." },
   ];
 
   const matchingScenario = lossScenarios.find(s => s.risk === risk);

@@ -1,14 +1,14 @@
-"""
+﻿"""
 Portfolio Analytics Router
 ============================
 
-POST /api/portfolio/analyze           — Analyze existing portfolio
-POST /api/portfolio/build             — Build goal-based portfolio
-POST /api/portfolio/optimize          — Advanced optimization (CVaR, risk parity, etc.)
-POST /api/portfolio/compare           — Compare all optimization methods
-POST /api/portfolio/factor-exposures  — Fama-French 5-factor decomposition
-POST /api/portfolio/copula-risk       — Copula-based tail risk (joint crash probability)
-POST /api/portfolio/benchmark         — Benchmark analytics (tracking error, IR, active share, capture)
+POST /api/portfolio/analyze           â€” Analyze existing portfolio
+POST /api/portfolio/build             â€” Build goal-based portfolio
+POST /api/portfolio/optimize          â€” Advanced optimization (CVaR, risk parity, etc.)
+POST /api/portfolio/compare           â€” Compare all optimization methods
+POST /api/portfolio/factor-exposures  â€” Fama-French 5-factor decomposition
+POST /api/portfolio/copula-risk       â€” Copula-based tail risk (joint crash probability)
+POST /api/portfolio/benchmark         â€” Benchmark analytics (tracking error, IR, active share, capture)
 """
 
 import asyncio
@@ -30,7 +30,7 @@ router = APIRouter(prefix="/api/portfolio", tags=["portfolio"])
 logger = logging.getLogger(__name__)
 
 _TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
-_PRICE_CACHE_TTL = 600  # 10 min — yfinance is slow + analyze is hot path
+_PRICE_CACHE_TTL = 600  # 10 min â€” yfinance is slow + analyze is hot path
 
 
 def _weights_key(weights: dict) -> str:
@@ -43,12 +43,12 @@ def _engine_analyze_cached(holdings: list[dict], weights: dict) -> dict:
     """Cached wrapper around PortfolioEngine.analyze_portfolio.
 
     The engine output is deterministic in (tickers, weights) given current prices.
-    Cache by weights — total_value is recomputed by caller for current prices.
+    Cache by weights â€” total_value is recomputed by caller for current prices.
     """
     cache_key = f"portfolio:analyze:engine:{_weights_key(weights)}"
     cached = cache_get(cache_key, _PRICE_CACHE_TTL)
     if cached is not None:
-        # total_value depends on current prices — recompute fresh
+        # total_value depends on current prices â€” recompute fresh
         total_value = sum(h["shares"] * h["current_price"] for h in holdings)
         return {**cached, "total_value": total_value}
     result = PortfolioEngine.analyze_portfolio(holdings)
@@ -106,7 +106,7 @@ class AnalyzeRequest(BaseModel):
 
 
 class BuildRequest(BaseModel):
-    risk_tolerance: str = Field("moderate", pattern="^(conservative|moderate|aggressive)$")
+    risk_tolerance: str = Field("moderate", pattern="^(conservative|moderate|aggressive|max_growth)$")
     investment_amount: float = Field(10000, gt=0)
     time_horizon: str = Field("5y", pattern="^(1y|3y|5y|10y)$")
     method: str = Field("template", pattern="^(template|black-litterman|hrp)$")
@@ -115,7 +115,7 @@ class BuildRequest(BaseModel):
 
 class QuestionnaireRequest(BaseModel):
     horizon: str = Field("5y", pattern="^(1y|3y|5y|10y|20y)$")
-    risk_tolerance: str = Field("moderate", pattern="^(conservative|moderate|aggressive)$")
+    risk_tolerance: str = Field("moderate", pattern="^(conservative|moderate|aggressive|max_growth)$")
     loss_reaction: str = Field("hold", pattern="^(sell|hold|buy_more)$")
     experience: str = Field("beginner", pattern="^(none|beginner|intermediate|advanced)$")
     income_stability: str = Field("stable", pattern="^(unstable|stable|very_stable)$")
@@ -154,7 +154,7 @@ class GuidanceRequest(BaseModel):
 async def get_portfolio_guidance(request: GuidanceRequest):
     """Per-position guidance: P&L, move unusualness, Chandelier trailing-stop
     level + distance, forward-collected signal readings, and behavioral nudges
-    (disposition effect). Descriptive levels and context — never orders."""
+    (disposition effect). Descriptive levels and context â€” never orders."""
     def _worker():
         from backend.services.portfolio_guidance import portfolio_guidance
         return portfolio_guidance([h.model_dump() for h in request.holdings])
@@ -171,7 +171,7 @@ async def analyze_portfolio(request: AnalyzeRequest):
     """Analyze a portfolio: allocations, correlations, VaR/CVaR, Sharpe, risk number.
 
     The 6 sub-analyses (risk number, factor exposures, stress test, attribution/MCTR,
-    benchmark analytics, drawdowns) run concurrently in the thread pool — yfinance
+    benchmark analytics, drawdowns) run concurrently in the thread pool â€” yfinance
     downloads dominate wall time, so parallel I/O cuts latency by ~5-6x.
     """
     import time
@@ -261,7 +261,7 @@ def _analyze_with_risk_number(holdings: list[dict]) -> dict:
 
 
 def _compute_risk_number(holdings: list[dict], weights: dict, close_5y=None) -> dict:
-    """Risk number (1-100) — uses prefetched 5y close (slices last ~2y)."""
+    """Risk number (1-100) â€” uses prefetched 5y close (slices last ~2y)."""
     try:
         from backend.services.risk_number import compute_risk_number
 
@@ -295,7 +295,7 @@ def _compute_factor_exposures(weights: dict) -> dict:
         from backend.services.factor_model import decompose_portfolio
         factor_result = decompose_portfolio(weights)
         if not factor_result:
-            cache_set(cache_key, {})  # cache empties too — avoids re-failing
+            cache_set(cache_key, {})  # cache empties too â€” avoids re-failing
             return {}
         out = {
             "factor_exposures": {
@@ -510,7 +510,7 @@ async def build_portfolio(request: BuildRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ── Advanced Optimization ──────────────────────────────────────────
+# â”€â”€ Advanced Optimization â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 
 class OptimizeRequest(BaseModel):
@@ -606,7 +606,7 @@ class RiskContribRequest(BaseModel):
 
 @router.post("/risk-contributions")
 async def risk_contributions(request: RiskContribRequest):
-    """Marginal Contribution to Risk (MCTR) — which holdings drive portfolio risk."""
+    """Marginal Contribution to Risk (MCTR) â€” which holdings drive portfolio risk."""
     from backend.services.attribution import compute_risk_contributions
 
     tickers = [t.upper() for t in request.tickers]
@@ -666,7 +666,7 @@ async def portfolio_factor_exposures(request: FactorExposureRequest):
     """Fama-French 5-factor decomposition for a portfolio.
 
     Shows factor loadings (market beta, size, value, profitability, investment),
-    alpha, R², and style interpretation for each holding and the portfolio overall.
+    alpha, RÂ², and style interpretation for each holding and the portfolio overall.
     """
     from backend.services.factor_model import decompose_portfolio
 
@@ -741,7 +741,7 @@ async def portfolio_copula_risk(request: CopulaRiskRequest):
         if result is None:
             raise HTTPException(
                 status_code=404,
-                detail="Copula fitting failed — need at least 2 assets with sufficient history",
+                detail="Copula fitting failed â€” need at least 2 assets with sufficient history",
             )
         return result
     except HTTPException:
@@ -889,7 +889,7 @@ async def optimize_mpc(request: MPCRequest):
         if len(available) < 2:
             raise HTTPException(
                 status_code=422,
-                detail="Need ≥2 tickers with sufficient history",
+                detail="Need â‰¥2 tickers with sufficient history",
             )
 
         price_df = pd.DataFrame({t: closes[t] for t in available}).dropna()
