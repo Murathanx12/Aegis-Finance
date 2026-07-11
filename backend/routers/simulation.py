@@ -12,7 +12,9 @@ import logging
 import numpy as np
 from fastapi import APIRouter, HTTPException, Query
 
-from backend.cache import cache_get, cache_set
+from functools import partial
+
+from backend.cache import cache_get, cache_set, cache_swr
 from backend.config import config
 
 router = APIRouter(prefix="/api/simulation", tags=["simulation"])
@@ -28,14 +30,11 @@ async def get_sp500_projection(
 ):
     """S&P 500 scenario-weighted Monte Carlo projection."""
     cache_key = f"sp500_projection:{n_sims}:{years}"
-    cached = cache_get(cache_key, _CACHE_TTL["ttl_simulation"])
-    if cached is not None:
-        return cached
-
     try:
-        result = await asyncio.to_thread(_run_sp500_projection, n_sims, years)
-        cache_set(cache_key, result)
-        return result
+        return await cache_swr(
+            cache_key, _CACHE_TTL["ttl_simulation"],
+            partial(_run_sp500_projection, n_sims, years),
+        )
     except Exception as e:
         logger.error("sp500 projection failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -193,14 +192,10 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
 @router.get("/scenarios")
 async def get_scenario_results():
     """Individual scenario breakdown with metrics."""
-    cached = cache_get("scenario_results", _CACHE_TTL["ttl_simulation"])
-    if cached is not None:
-        return cached
-
     try:
-        result = await asyncio.to_thread(_compute_scenarios)
-        cache_set("scenario_results", result)
-        return result
+        return await cache_swr(
+            "scenario_results", _CACHE_TTL["ttl_simulation"], _compute_scenarios
+        )
     except Exception as e:
         logger.error("scenarios failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))

@@ -1,8 +1,14 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// Backend serves stale-while-revalidate, so a healthy response is fast; a
+// request stuck this long means a cold recompute and should fail visibly
+// (React Query retries once) instead of hanging the page for minutes.
+const FETCH_TIMEOUT_MS = 45_000;
+
 async function fetchAPI<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
+    signal: options?.signal ?? AbortSignal.timeout(FETCH_TIMEOUT_MS),
     headers: {
       "Content-Type": "application/json",
       ...options?.headers,

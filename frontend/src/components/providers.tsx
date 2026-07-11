@@ -8,7 +8,9 @@ import { BeginnerModeContext, useBeginnerModeState } from "@/hooks/use-beginner-
 import { ShortcutManager } from "@/components/shortcut-manager";
 
 const STALE_TIME_DEFAULT = 5 * 60 * 1000; // 5 min
-const RETRY_COUNT = 2;
+// One retry: the heavy endpoints recompute for minutes when cold, so a
+// third identical attempt only amplified backend load exactly when slow.
+const RETRY_COUNT = 1;
 
 function BeginnerModeBodyClass() {
   const beginner = useContext(BeginnerModeContext).beginner;

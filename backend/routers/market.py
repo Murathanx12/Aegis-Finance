@@ -13,7 +13,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
-from backend.cache import cache_get, cache_set
+from backend.cache import cache_get, cache_set, cache_swr
 from backend.config import config
 
 router = APIRouter(prefix="/api", tags=["market"])
@@ -25,14 +25,10 @@ _CACHE_TTL = config["cache"]
 @router.get("/market-status")
 async def get_market_status():
     """Unified market state: regime, risk score, VIX, yield curve, crash prob."""
-    cached = cache_get("market_status", _CACHE_TTL["ttl_market"])
-    if cached is not None:
-        return cached
-
     try:
-        result = await asyncio.to_thread(_compute_market_status)
-        cache_set("market_status", result)
-        return result
+        return await cache_swr(
+            "market_status", _CACHE_TTL["ttl_market"], _compute_market_status
+        )
     except Exception as e:
         logger.error("market-status failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -355,15 +351,9 @@ async def get_market_dashboard():
 
     Each section degrades gracefully (returns null if that data source fails).
     """
-    cached = cache_get("market_dashboard", 120)  # 2 min cache
-    if cached is not None:
-        return cached
-
     try:
         from backend.services.market_dashboard import build_market_dashboard
-        result = await asyncio.to_thread(build_market_dashboard)
-        cache_set("market_dashboard", result)
-        return result
+        return await cache_swr("market_dashboard", 120, build_market_dashboard)
     except Exception as e:
         logger.error("dashboard failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -372,14 +362,10 @@ async def get_market_dashboard():
 @router.get("/signal")
 async def get_market_signal_endpoint():
     """Composite market buy/sell signal."""
-    cached = cache_get("market_signal", _CACHE_TTL["ttl_market"])
-    if cached is not None:
-        return cached
-
     try:
-        result = await asyncio.to_thread(_compute_market_signal)
-        cache_set("market_signal", result)
-        return result
+        return await cache_swr(
+            "market_signal", _CACHE_TTL["ttl_market"], _compute_market_signal
+        )
     except Exception as e:
         logger.error("market signal failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))

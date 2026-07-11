@@ -23,7 +23,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from fastapi import APIRouter, HTTPException
 
-from backend.cache import cache_get, cache_set
+from functools import partial
+
+from backend.cache import cache_get, cache_set, cache_swr
 from backend.config import config
 
 router = APIRouter(prefix="/api/stock", tags=["stock"])
@@ -37,14 +39,10 @@ _TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
 @router.get("/screener")
 async def get_stock_screener():
     """Top stocks screener — batch analysis of watchlist stocks."""
-    cached = cache_get("stock_screener", _CACHE_TTL["ttl_stock"])
-    if cached is not None:
-        return cached
-
     try:
-        result = await asyncio.to_thread(_screener)
-        cache_set("stock_screener", result)
-        return result
+        return await cache_swr(
+            "stock_screener", _CACHE_TTL["ttl_stock"], _screener
+        )
     except Exception as e:
         logger.error("stock screener failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -580,15 +578,12 @@ async def get_stock_analysis(ticker: str):
     if not _TICKER_RE.match(ticker):
         raise HTTPException(status_code=422, detail="Invalid ticker format")
     cache_key = f"stock:{ticker}"
-    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
-    if cached is not None:
-        return cached
-
     try:
-        result = await asyncio.to_thread(_analyze_stock, ticker)
+        result = await cache_swr(
+            cache_key, _CACHE_TTL["ttl_stock"], partial(_analyze_stock, ticker)
+        )
         if result is None:
             raise HTTPException(status_code=404, detail=f"Could not analyze {ticker}")
-        cache_set(cache_key, result)
         return result
     except HTTPException:
         raise
@@ -923,14 +918,10 @@ async def get_stock_signal_endpoint(ticker: str):
     if not _TICKER_RE.match(ticker):
         raise HTTPException(status_code=422, detail="Invalid ticker format")
     cache_key = f"stock_signal:{ticker}"
-    cached = cache_get(cache_key, _CACHE_TTL["ttl_stock"])
-    if cached is not None:
-        return cached
-
     try:
-        result = await asyncio.to_thread(_stock_signal, ticker)
-        cache_set(cache_key, result)
-        return result
+        return await cache_swr(
+            cache_key, _CACHE_TTL["ttl_stock"], partial(_stock_signal, ticker)
+        )
     except Exception as e:
         logger.error("stock signal failed for %s: %s", ticker, e)
         raise HTTPException(status_code=500, detail=str(e))

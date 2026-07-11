@@ -118,6 +118,79 @@ def cache_set(key: str, value: Any) -> None:
     _disk_set(key, value)
 
 
+def cache_peek(key: str, max_stale: int) -> tuple[Optional[Any], Optional[float]]:
+    """Return (value, age_seconds) if any entry exists within max_stale seconds,
+    WITHOUT deleting expired entries. Memory first, then disk."""
+    now = time.time()
+    with _lock:
+        entry = _cache.get(key)
+        if entry is not None and now - entry["timestamp"] <= max_stale:
+            return entry["value"], now - entry["timestamp"]
+
+    dc = _get_disk_cache()
+    if dc is not None:
+        try:
+            entry = dc.get(key)
+            if entry is not None:
+                ts, value = entry
+                age = now - ts
+                if age <= max_stale:
+                    return value, age
+        except Exception:
+            pass
+    return None, None
+
+
+_swr_inflight: set[str] = set()
+_swr_lock = threading.Lock()
+
+
+def _refresh_in_background(key: str, compute_sync) -> None:
+    """Recompute key in a daemon thread; one in-flight refresh per key."""
+    with _swr_lock:
+        if key in _swr_inflight:
+            return
+        _swr_inflight.add(key)
+
+    def _run():
+        try:
+            result = compute_sync()
+            if result is not None:
+                cache_set(key, result)
+                logger.info("SWR background refresh completed: %s", key)
+        except Exception as e:
+            logger.warning("SWR background refresh failed for %s: %s", key, e)
+        finally:
+            with _swr_lock:
+                _swr_inflight.discard(key)
+
+    threading.Thread(target=_run, name=f"swr-{key[:40]}", daemon=True).start()
+
+
+async def cache_swr(key: str, ttl: int, compute_sync, max_stale: int = 86400):
+    """Stale-while-revalidate read: fresh hit → return; stale-but-usable →
+    return the stale value immediately and refresh in the background; nothing
+    cached within max_stale → compute synchronously (first-ever request).
+
+    Why: the heavy endpoints (sector MC, S&P projection) take minutes to
+    compute; blocking a user request on recompute after every TTL expiry is
+    what made deployed pages hang. Serving a stale reading of an hourly
+    model is strictly better than a spinner."""
+    import asyncio
+
+    value, age = cache_peek(key, max_stale)
+    if value is not None and age is not None and age <= ttl:
+        return value
+    if value is not None:
+        _refresh_in_background(key, compute_sync)
+        return value
+
+    result = await asyncio.to_thread(compute_sync)
+    if result is not None:
+        cache_set(key, result)
+    return result
+
+
 def cache_clear() -> None:
     """Clear memory cache. Disk cache persists for next startup."""
     with _lock:
@@ -166,11 +239,22 @@ def cached(ttl: int = 3600, key_prefix: str = ""):
         key_prefix: Optional prefix for cache key (defaults to function name)
     """
     def decorator(fn):
+        # Only skip the first positional arg when it really is self/cls —
+        # skipping it unconditionally made every single-arg function share
+        # one cache entry (e.g. all portfolios got the same LLM commentary).
+        import inspect
+        try:
+            _params = list(inspect.signature(fn).parameters)
+            _skip_first = bool(_params) and _params[0] in ("self", "cls")
+        except (TypeError, ValueError):
+            _skip_first = False
+
         @wraps(fn)
         def wrapper(*args, **kwargs):
             # Build cache key from function name + arguments
             prefix = key_prefix or fn.__qualname__
-            arg_key = str(args[1:]) + str(sorted(kwargs.items()))  # skip 'self'
+            key_args = args[1:] if _skip_first else args
+            arg_key = str(key_args) + str(sorted(kwargs.items()))
             cache_key = f"{prefix}:{arg_key}"
 
             result = cache_get(cache_key, ttl)

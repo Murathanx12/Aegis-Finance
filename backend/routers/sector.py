@@ -10,7 +10,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
-from backend.cache import cache_get, cache_set
+from backend.cache import cache_swr
 from backend.config import config
 
 router = APIRouter(prefix="/api", tags=["sectors"])
@@ -22,14 +22,10 @@ _CACHE_TTL = config["cache"]
 @router.get("/sectors")
 async def get_sectors():
     """11-sector factor model with expected returns, momentum, risk."""
-    cached = cache_get("sector_analysis", _CACHE_TTL["ttl_sectors"])
-    if cached is not None:
-        return cached
-
     try:
-        result = await asyncio.to_thread(_analyze_sectors)
-        cache_set("sector_analysis", result)
-        return result
+        return await cache_swr(
+            "sector_analysis", _CACHE_TTL["ttl_sectors"], _analyze_sectors
+        )
     except Exception as e:
         logger.error("sector analysis failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))

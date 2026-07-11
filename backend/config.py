@@ -737,6 +737,11 @@ config: dict = {
         # Shared settings
         "max_tokens": 500,
         "temperature": 0.3,
+        # Spend guards: hard daily cap on LLM calls (all providers combined);
+        # billing errors (401/402) trip a cooldown breaker so a dead key
+        # doesn't get retried on every cache expiry.
+        "daily_call_cap": 150,
+        "billing_breaker_cooldown_s": 6 * 3600,
     },
 
     # ── DATA QUALITY ─────────────────────────────────────────────────────

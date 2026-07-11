@@ -18,6 +18,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.cache import cache_clear, set_cache_status, cache_ready, cache_status
+from backend.config import config
 from backend.middleware import add_timing_middleware
 from backend.observability import install_log_buffer
 from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, markets, crypto, portfolio_intelligence
@@ -69,6 +70,63 @@ async def _prewarm_cache():
     # Heavy walk-forward replays are NOT prewarmed — they run on-demand from
     # the dedicated /replay page (where users explicitly opt in to the wait).
     asyncio.create_task(_prewarm_pi_fast_lanes())
+
+    # Keep the heavy endpoint computes warm — starts after the data layer is
+    # hot so the first pass doesn't double-pay the yfinance/FRED fetches.
+    asyncio.create_task(_warm_endpoint_caches_loop())
+
+
+_ENDPOINT_WARM_INTERVAL_S = 600  # check every 10 min; recompute only when expired
+
+
+def _endpoint_warm_targets() -> list[tuple[str, int, object]]:
+    """The endpoints whose synchronous compute takes minutes (MC, GARCH, HMM,
+    crash inference). Everything here is also served stale-while-revalidate,
+    so this loop is what makes user requests near-always cache hits."""
+    from functools import partial
+
+    from backend.routers.market import _compute_market_signal, _compute_market_status
+    from backend.routers.news import _fetch_market_news
+    from backend.routers.sector import _analyze_sectors
+    from backend.routers.simulation import _compute_scenarios, _run_sp500_projection
+
+    ttl = config["cache"]
+    return [
+        ("market_status", ttl["ttl_market"], _compute_market_status),
+        ("market_signal", ttl["ttl_market"], _compute_market_signal),
+        ("news_market", ttl["ttl_news"], _fetch_market_news),
+        ("sector_analysis", ttl["ttl_sectors"], _analyze_sectors),
+        ("sp500_projection:10000:5", ttl["ttl_simulation"],
+         partial(_run_sp500_projection, 10000, 5)),
+        ("scenario_results", ttl["ttl_simulation"], _compute_scenarios),
+    ]
+
+
+async def _warm_endpoint_caches_loop():
+    """Proactively refresh the expensive endpoint caches, forever.
+
+    Why: the caches were lazy — after every TTL expiry (and every deploy,
+    since Railway's disk is ephemeral) the next USER request paid a
+    multi-minute Monte Carlo recompute in-request. Now the server pays it
+    here, off the request path, sequentially to bound CPU pressure.
+    """
+    import asyncio
+
+    from backend.cache import cache_peek, cache_set
+
+    while True:
+        for key, ttl_s, compute in _endpoint_warm_targets():
+            try:
+                _, age = cache_peek(key, max_stale=10 ** 9)
+                if age is not None and age <= ttl_s:
+                    continue  # still fresh
+                result = await asyncio.to_thread(compute)
+                if result is not None:
+                    cache_set(key, result)
+                    logger.info("Endpoint warm: %s refreshed", key)
+            except Exception as e:
+                logger.warning("Endpoint warm failed for %s: %s", key, e)
+        await asyncio.sleep(_ENDPOINT_WARM_INTERVAL_S)
 
 
 async def _prewarm_pi_fast_lanes():
@@ -144,6 +202,13 @@ async def lifespan(app: FastAPI):
             await asyncio.to_thread(ensure_crash_trial)
         except Exception as e:
             logger.warning("Fragility trial pre-registration failed (non-fatal): %s", e)
+        try:
+            from backend.services.portfolio_intelligence.congress_collector import (
+                ensure_congress_trial,
+            )
+            await asyncio.to_thread(ensure_congress_trial)
+        except Exception as e:
+            logger.warning("Congress trial pre-registration failed (non-fatal): %s", e)
         # P1 #6 book-lane seeding — ATTENDED, env-gated. A normal deploy does NOT
         # seed (flag unset). Set AEGIS_SEED_BOOK_LANES=1 on Railway for ONE boot to
         # seed mirror+conviction at live prices (idempotent), confirm via

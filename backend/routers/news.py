@@ -12,7 +12,7 @@ import re
 
 from fastapi import APIRouter, HTTPException
 
-from backend.cache import cache_get, cache_set
+from backend.cache import cache_get, cache_set, cache_swr
 from backend.config import config
 
 router = APIRouter(prefix="/api/news", tags=["news"])
@@ -26,14 +26,10 @@ _TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
 @router.get("/market")
 async def get_market_news():
     """GDELT macro news signals + event score + optional LLM summary."""
-    cached = cache_get("news_market", _CACHE_TTL["ttl_news"])
-    if cached is not None:
-        return cached
-
     try:
-        result = await asyncio.to_thread(_fetch_market_news)
-        cache_set("news_market", result)
-        return result
+        return await cache_swr(
+            "news_market", _CACHE_TTL["ttl_news"], _fetch_market_news
+        )
     except Exception as e:
         logger.error("market news failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))

@@ -137,9 +137,13 @@ function AnalystVsModelCard({ stock }: { stock: StockAnalysis }) {
   if (!targets || targets.mean == null) return null;
 
   const analystReturn12m = ((targets.mean / stock.current_price) - 1) * 100;
-  // Annualize 5Y model return to get 1Y estimate for fair comparison
-  const model5yReturn = stock.median_return;
-  const modelAnnualized = (Math.pow(1 + model5yReturn / 100, 1 / 5) - 1) * 100;
+  // The analyst target is a consensus MEAN, so compare it to the model's
+  // MEAN return; the lognormal median sits ~0.5σ² per year lower and made
+  // the model look artificially bearish. Median stays in the 5Y block below.
+  const model5yMedian = stock.median_return;
+  const model5yMean = stock.expected_return;
+  const modelAnnualized = (Math.pow(1 + model5yMean / 100, 1 / 5) - 1) * 100;
+  const medianAnnualized = (Math.pow(1 + model5yMedian / 100, 1 / 5) - 1) * 100;
   const analystCount = stock.recommendations
     ? stock.recommendations.strongBuy + stock.recommendations.buy + stock.recommendations.hold + stock.recommendations.sell + stock.recommendations.strongSell
     : 0;
@@ -149,7 +153,7 @@ function AnalystVsModelCard({ stock }: { stock: StockAnalysis }) {
       <CardHeader>
         <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
           Model vs Analyst Comparison
-          <InfoTooltip text="Fair comparison: both columns show 12-month expected returns. Analyst target is Wall Street consensus; Model return is annualized from our 5-year Monte Carlo. The 5-year projection is shown separately below." />
+          <InfoTooltip text="Fair comparison: both columns show 12-month MEAN expected returns. Analyst target is Wall Street consensus (historically optimistic); Model return is the mean annualized from our 5-year Monte Carlo, which bakes in crash risk. The risk-adjusted median projection is shown separately below." />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -193,8 +197,8 @@ function AnalystVsModelCard({ stock }: { stock: StockAnalysis }) {
             </div>
             <div className="rounded-lg bg-muted/20 p-3 text-center">
               <p className="text-xs text-muted-foreground uppercase">Median Return</p>
-              <p className="text-xl font-bold tabular-nums">{model5yReturn >= 0 ? "+" : ""}{model5yReturn.toFixed(1)}%</p>
-              <p className="text-xs text-muted-foreground">~{modelAnnualized.toFixed(1)}%/yr</p>
+              <p className="text-xl font-bold tabular-nums">{model5yMedian >= 0 ? "+" : ""}{model5yMedian.toFixed(1)}%</p>
+              <p className="text-xs text-muted-foreground">~{medianAnnualized.toFixed(1)}%/yr</p>
             </div>
             <div className="rounded-lg bg-muted/20 p-3 text-center">
               <p className="text-xs text-muted-foreground uppercase">Bull (95th %ile)</p>
