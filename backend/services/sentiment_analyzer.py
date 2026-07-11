@@ -28,10 +28,23 @@ _finbert_available = None
 
 
 def _get_finbert():
-    """Lazy-load FinBERT pipeline (first call takes ~5s, subsequent calls instant)."""
+    """Lazy-load FinBERT pipeline (first call takes ~5s, subsequent calls instant).
+
+    AEGIS_DISABLE_FINBERT=1 forces the keyword fallback WITHOUT loading
+    torch/transformers — the model keeps ~1-2 GB resident, which is most of
+    the Railway memory bill. Sentiment quality drops from transformer to
+    keyword-lexicon; every response already reports its `method`, so the
+    degradation is visible, never silent.
+    """
     global _finbert_pipeline, _finbert_available
     if _finbert_available is not None:
         return _finbert_pipeline
+
+    import os
+    if os.getenv("AEGIS_DISABLE_FINBERT") == "1":
+        logger.info("FinBERT disabled via AEGIS_DISABLE_FINBERT=1 — keyword fallback")
+        _finbert_available = False
+        return None
 
     try:
         from transformers import pipeline

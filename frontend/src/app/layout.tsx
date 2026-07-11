@@ -55,7 +55,7 @@ export default function RootLayout({
         <Providers>
           <Sidebar />
           <main className="flex-1 overflow-auto">
-            <div className="mx-auto max-w-[1440px] px-6 py-8 lg:px-10 animate-fade-in">
+            <div className="mx-auto max-w-[1440px] px-3 py-5 sm:px-6 sm:py-8 lg:px-10 animate-fade-in">
               {children}
             </div>
           </main>
