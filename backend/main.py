@@ -115,7 +115,13 @@ async def _warm_endpoint_caches_loop():
     from backend.cache import cache_peek, cache_set
 
     while True:
-        for key, ttl_s, compute in _endpoint_warm_targets():
+        try:
+            targets = _endpoint_warm_targets()
+        except Exception as e:
+            # An import failure here must not kill the loop forever-silently.
+            logger.error("Endpoint warm: target resolution failed: %s", e)
+            targets = []
+        for key, ttl_s, compute in targets:
             try:
                 _, age = cache_peek(key, max_stale=10 ** 9)
                 if age is not None and age <= ttl_s:

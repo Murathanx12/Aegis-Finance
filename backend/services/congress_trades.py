@@ -106,7 +106,17 @@ def fetch_congress_trades(
             if page_exhausted:
                 break
 
-    logger.info("congress trades: %d disclosures in window (%s → %s)",
+    # Contract-drift guard: Congress ALWAYS has disclosures in a 90d window
+    # (both chambers, thousands per quarter). Pages came back non-empty but
+    # nothing parsed → a field rename (disclosureDate/symbol) is silently
+    # dropping every row, and that must be loud, not a quiet-week lookalike.
+    if not trades:
+        raise ValueError(
+            "FMP congress pages returned rows but zero parsed into the "
+            f"{window_days}d window — payload contract drift?"
+        )
+
+    logger.info("congress trades: %d disclosures in window (%s -> %s)",
                 len(trades), cutoff.isoformat(), aso.isoformat())
     return trades
 

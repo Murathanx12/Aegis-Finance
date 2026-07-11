@@ -136,6 +136,24 @@ class TestCongressCollector:
         assert rows["n"] == 0
 
 
+class TestFetchContractGuards:
+    def test_rows_present_but_none_parse_raises(self, monkeypatch):
+        # field rename (disclosureDate gone) must be LOUD, not a quiet week
+        from backend.services import congress_trades as ct
+        monkeypatch.setattr(ct, "_fmp_get",
+                            lambda ep, page, limit:
+                            [{"symbol": "AAA", "type": "Purchase"}]
+                            if page == 0 else [])
+        with pytest.raises(ValueError, match="contract drift"):
+            ct.fetch_congress_trades(as_of=AS_OF)
+
+    def test_page0_empty_raises(self, monkeypatch):
+        from backend.services import congress_trades as ct
+        monkeypatch.setattr(ct, "_fmp_get", lambda ep, page, limit: [])
+        with pytest.raises(ValueError, match="page 0 empty"):
+            ct.fetch_congress_trades(as_of=AS_OF)
+
+
 class TestTrialRegistration:
     def test_ensure_congress_trial_idempotent(self, db_path):
         id1 = ensure_congress_trial(db_path=db_path)
