@@ -24,7 +24,7 @@ import pandas as pd
 import yfinance as yf
 
 from backend.config import config, api_keys
-from backend.cache import cached, retry_with_backoff
+from backend.cache import cached, retry_with_backoff, cache_get, cache_set, cache_peek
 from backend.services.providers import registry as provider_registry
 from backend.services.providers.base import EquitySnapshot
 
@@ -33,6 +33,119 @@ logger = logging.getLogger(__name__)
 # yfinance is NOT thread-safe — concurrent downloads corrupt DataFrames.
 # Serialize all yfinance calls through a lock.
 _yf_lock = threading.Lock()
+
+
+# ── Shared per-ticker fetch (rate-limit aware) ───────────────────────────────
+#
+# The stock page fans out to many services (analyzer, liquidity, drawdown,
+# options IV-rank, news) that each used to make their OWN yf.Ticker() call for
+# the SAME symbol — 5-6 uncached history fetches per page view, which is what
+# tripped Yahoo's per-IP limiter in prod (429 storms → spurious 404s).
+# All per-ticker history/info reads now go through ONE canonical fetch:
+# a single 10y history per ticker per 15 min, sliced to the requested period.
+
+
+class RateLimited(Exception):
+    """Yahoo Finance is throttling this process — NOT an invalid ticker.
+
+    Callers must never translate this into "ticker not found"; routers
+    should surface it as 503 + Retry-After, not 404.
+    """
+
+
+_HIST_TTL = 900          # one real history fetch per ticker per 15 min
+_INFO_TTL = 3600
+_STALE_OK = 24 * 3600    # prefer a stale copy over failing while throttled
+_RL_BREAKER_KEY = "yf:rate_limit_breaker"
+_RL_COOLDOWN = 90        # after a 429, stop hitting Yahoo entirely for this long
+
+# Requested period → trading-day row count sliced off the canonical 10y frame.
+_PERIOD_ROWS = {
+    "1d": 1, "5d": 5, "1mo": 22, "3mo": 66, "6mo": 126,
+    "1y": 252, "2y": 504, "5y": 1260, "10y": None, "max": None,
+}
+
+
+def _is_rate_limit(exc: Exception) -> bool:
+    text = f"{type(exc).__name__} {exc}".lower()
+    return "too many requests" in text or "rate limit" in text or "429" in text
+
+
+def _rl_breaker_active() -> bool:
+    return cache_get(_RL_BREAKER_KEY, _RL_COOLDOWN) is not None
+
+
+def _trip_rl_breaker() -> None:
+    cache_set(_RL_BREAKER_KEY, True)
+    logger.warning("Yahoo rate limit hit — pausing all yfinance calls for %ds",
+                   _RL_COOLDOWN)
+
+
+def fetch_ticker_history(ticker: str, period: str = "5y"):
+    """Shared OHLCV history for one ticker, sliced to `period`.
+
+    Returns a DataFrame copy, or None when the symbol has no data (unknown /
+    delisted). Raises RateLimited when Yahoo is throttling AND no cached copy
+    (fresh or stale) exists — so callers can distinguish "bad ticker" from
+    "provider throttled".
+    """
+    ticker = ticker.upper()
+    key = f"tkr:hist10y:{ticker}"
+    full = cache_get(key, _HIST_TTL)
+
+    if full is None:
+        stale, _age = cache_peek(key, _STALE_OK)
+        if _rl_breaker_active():
+            if stale is None:
+                raise RateLimited("Yahoo Finance throttling (cooldown active)")
+            full = stale
+        else:
+            try:
+                with _yf_lock:
+                    full = yf.Ticker(ticker).history(period="10y")
+            except Exception as e:
+                if _is_rate_limit(e):
+                    _trip_rl_breaker()
+                    if stale is not None:
+                        logger.warning("%s: serving stale history (Yahoo throttling)", ticker)
+                        full = stale
+                    else:
+                        raise RateLimited(str(e)) from e
+                else:
+                    logger.warning("%s: history fetch failed — %s", ticker, e)
+                    return None
+            if full is None or full.empty:
+                return None
+            cache_set(key, full)
+
+    rows = _PERIOD_ROWS.get(period)
+    return (full if rows is None else full.iloc[-rows:]).copy()
+
+
+def fetch_ticker_info(ticker: str) -> dict:
+    """Shared yf .info for one ticker. Never raises — info is enrichment,
+    every caller has defaults. Returns {} on any failure."""
+    ticker = ticker.upper()
+    key = f"tkr:info:{ticker}"
+    hit = cache_get(key, _INFO_TTL)
+    if hit is not None:
+        return hit
+
+    stale, _age = cache_peek(key, _STALE_OK)
+    if _rl_breaker_active():
+        return stale or {}
+    try:
+        with _yf_lock:
+            info = yf.Ticker(ticker).info or {}
+    except Exception as e:
+        if _is_rate_limit(e):
+            _trip_rl_breaker()
+        else:
+            logger.warning("%s: info fetch failed — %s", ticker, e)
+        return stale or {}
+    if info:
+        cache_set(key, info)
+    return info
 
 
 # ── Safe Ticker Fetch ────────────────────────────────────────────────────────

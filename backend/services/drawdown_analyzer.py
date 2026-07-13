@@ -314,10 +314,13 @@ def full_drawdown_analysis(
         Full analysis dict or None if insufficient data.
     """
     try:
-        import yfinance as yf
-        tk = yf.Ticker(ticker)
-        hist = tk.history(period=period)
-        if hist.empty or len(hist) < 252:
+        from backend.services.data_fetcher import RateLimited, fetch_ticker_history
+        try:
+            hist = fetch_ticker_history(ticker, period=period)
+        except RateLimited:
+            logger.warning("%s: drawdown analysis skipped — Yahoo throttling", ticker)
+            return None
+        if hist is None or hist.empty or len(hist) < 252:
             return None
 
         prices = hist["Close"]

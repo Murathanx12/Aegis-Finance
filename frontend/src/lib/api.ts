@@ -23,7 +23,16 @@ async function fetchAPI<T>(
   });
 
   if (!res.ok) {
-    throw new Error(`API error: ${res.status} ${res.statusText}`);
+    // Surface the backend's `detail` (e.g. "Did you mean MRVL?") — the bare
+    // status line made every failure look identical to the user.
+    let detail = "";
+    try {
+      const body = await res.json();
+      if (typeof body?.detail === "string") detail = ` — ${body.detail}`;
+    } catch {
+      // non-JSON error body; keep the status line
+    }
+    throw new Error(`API error: ${res.status} ${res.statusText}${detail}`);
   }
 
   return res.json();
@@ -104,6 +113,48 @@ export function buildPortfolio(risk: string, amount: number, horizon: string) {
       time_horizon: horizon,
     }),
   });
+}
+
+// Ticker resolution ("marvell" → MRVL)
+export interface TickerResolveResponse {
+  query: string;
+  resolved: boolean;
+  match: { ticker: string; name: string; source: string } | null;
+}
+export function resolveTicker(q: string) {
+  return fetchAPI<TickerResolveResponse>(`/api/stock/resolve?q=${encodeURIComponent(q)}`);
+}
+
+// Daily brief — "what happened today and how it affects your stocks"
+export interface DailyBriefResponse {
+  date: string;
+  horizon: string;
+  market: { label: string; ticker: string; change_1d_pct: number | null; change_5d_pct: number | null }[];
+  geopolitical: {
+    conflict_score: number | null;
+    event_score: number | null;
+    event_label: string | null;
+    note: string | null;
+  };
+  regime: { regime: string | null; risk_score: number | null };
+  your_tickers: {
+    ticker: string;
+    change_1d_pct: number | null;
+    change_5d_pct: number | null;
+    headlines: { title: string; publisher?: string; link?: string }[];
+  }[];
+  summary: {
+    what_happened: string;
+    impact_on_holdings: string;
+    risks_to_watch: string;
+    source: "llm" | "template";
+    sentiment?: string;
+  } | null;
+  disclaimer: string;
+}
+export function getDailyBrief(tickers: string[]) {
+  const param = tickers.length ? `?tickers=${encodeURIComponent(tickers.join(","))}` : "";
+  return fetchAPI<DailyBriefResponse>(`/api/news/brief${param}`, undefined, HEAVY_TIMEOUT_MS);
 }
 
 // News

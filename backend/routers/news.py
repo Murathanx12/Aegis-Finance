@@ -67,6 +67,32 @@ def _fetch_market_news() -> dict:
     }
 
 
+@router.get("/brief")
+async def get_daily_brief(tickers: str = ""):
+    """Personalized daily brief: today's tape + geopolitical read + the
+    user's tickers with moves and headlines. Registered BEFORE /{ticker}."""
+    from functools import partial
+    from backend.services.daily_brief import build_daily_brief
+
+    symbols = []
+    for raw in tickers.split(","):
+        t = raw.strip().upper()
+        if t and _TICKER_RE.match(t) and t not in symbols:
+            symbols.append(t)
+    symbols = symbols[:15]
+
+    from datetime import datetime, timezone
+    today = datetime.now(timezone.utc).date().isoformat()
+    cache_key = f"daily_brief:{today}:{','.join(sorted(symbols))}"
+    try:
+        return await cache_swr(
+            cache_key, 1800, partial(build_daily_brief, symbols)
+        )
+    except Exception as e:
+        logger.error("daily brief failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{ticker}")
 async def get_stock_news(ticker: str):
     """Stock-specific news + optional LLM analysis."""

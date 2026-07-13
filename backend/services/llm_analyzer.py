@@ -279,6 +279,54 @@ def summarize_market_news(news_items: list[dict]) -> Optional[dict]:
     return {"summary": result, "sentiment": sentiment, "provider": _get_provider()}
 
 
+@cached(ttl=1800, key_prefix="llm_daily_brief")
+def summarize_daily_brief(payload_json: str) -> Optional[dict]:
+    """Personalized daily brief summary — FinGPT-Forecaster-style contract.
+
+    Takes a compact JSON payload (market moves, geopolitical read, the user's
+    tickers with moves + headlines) and returns three structured sections.
+    Cached by payload content so identical watchlists share one call.
+    """
+    system = (
+        "You are a market-brief writer for a retail investor. Given today's "
+        "market data as JSON, write EXACTLY this JSON (no markdown fences): "
+        '{"what_happened": "...", "impact_on_holdings": "...", '
+        '"risks_to_watch": "...", "sentiment": "bullish|bearish|mixed|neutral"}. '
+        "what_happened: 2-3 sentences on today's tape (indices, oil/gold/rates, "
+        "geopolitical drivers if the data shows them). impact_on_holdings: 2-3 "
+        "sentences connecting those moves to the user's specific tickers, using "
+        "their actual 1-day/5-day moves and headlines. risks_to_watch: 1-2 "
+        "sentences on what could change the picture. Be factual and specific — "
+        "cite the numbers given. Describe, never advise: no buy/sell/should "
+        "language. If geopolitical conflict is elevated, explain the typical "
+        "sector pattern (energy/defense vs travel/rate-sensitives) as a "
+        "historical tendency, not a forecast."
+    )
+    result = _call_llm(system, payload_json)
+    if result is None:
+        return None
+    try:
+        import json as _json
+        text = result.strip()
+        if text.startswith("```"):
+            text = text.strip("`")
+            text = text[text.find("{"):text.rfind("}") + 1]
+        parsed = _json.loads(text)
+        out = {
+            "what_happened": str(parsed.get("what_happened", "")).strip(),
+            "impact_on_holdings": str(parsed.get("impact_on_holdings", "")).strip(),
+            "risks_to_watch": str(parsed.get("risks_to_watch", "")).strip(),
+            "sentiment": str(parsed.get("sentiment", "neutral")).strip().lower(),
+            "source": "llm",
+        }
+        if not out["what_happened"]:
+            return None
+        return out
+    except Exception as e:
+        logger.warning("daily brief LLM output unparseable: %s", e)
+        return None
+
+
 @cached(ttl=3600, key_prefix="llm_stock_outlook")
 def analyze_stock_outlook(
     ticker: str,
