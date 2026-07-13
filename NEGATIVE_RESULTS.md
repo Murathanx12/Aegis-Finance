@@ -123,5 +123,26 @@ probabilities; benchmarked against STLFSI4-as-predictor before any promotion).
 The CLAUDE.md "walk-forward AUC ≥ 0.70" health gate is unmeasurable for this
 label and moves to PR-AUC/event-window metrics in the redesign.
 
+## 7. The severity-model successor ALSO fails its pre-registered gate (TRIAL-CRASH-2)
+
+The §6 redesign was executed 2026-07-14 under a protocol frozen BEFORE the
+first fit (TRIAL-CRASH-2, commit `fe6edf3`): per-cell LightGBM exceedance on
+forward SPY max-drawdown, {5,10,15,20}% × {30,60,90d}, expanding walk-forward
+5 folds over 2016-2026 (purge 63td + embargo 21td), gate = positive held-out
+Brier skill vs BOTH climatology and an STLFSI4-only logistic on all six dense
+cells. **Verdict: REJECT — 0/6 dense cells passed.** Every dense cell shows
+*negative* skill vs climatology (5% cells as bad as −0.32 to −0.54; the model
+confidently over-predicts drawdowns out-of-distribution), and STLFSI4 itself
+barely beats climatology. The honest nuance: the 10%-threshold cells show
+real *ranking* signal (PR-AUC 0.13-0.16 vs prevalence 0.04-0.12 — up to ~3.6×
+lift at 30d), but calibration is bad enough that the probabilities are
+worthless as probabilities. A hypothetical TRIAL-CRASH-3 could test
+train-fold-fitted calibration on top of the ranker — that is a NEW
+registration, not a rerun. Third consecutive confirmation of canon A5
+(short-horizon crash-timing skill ≈ 0 on free market/macro features); the
+fragility composite remains the crisis read; the overlay stays
+`model_not_deployed`. Full metrics:
+`engine/training/output/crash2_eval_2026-07-14.json`.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*

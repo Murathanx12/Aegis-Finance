@@ -1,6 +1,16 @@
 # TRIAL-CRASH-2 — Drawdown-severity (exceedance) model
 
-**Pre-registered:** 2026-07-14 · **Purpose:** experimental · **Status:** registered, first fit NOT yet run
+**Pre-registered:** 2026-07-14 (commit `fe6edf3`) · **Purpose:** experimental · **Status:** ⛔ **CONCLUDED — REJECT (2026-07-14)**
+
+> **Result (single evaluation run, protocol unmodified):** 0/6 dense cells
+> passed the gate. All dense cells show negative Brier skill vs climatology
+> (5% cells −0.32 to −0.54 — systematic over-prediction out-of-distribution);
+> STLFSI4 itself barely beats climatology. Reported-not-deciding: the 10%
+> cells show ranking signal (PR-AUC up to ~3.6× prevalence at 30d) with
+> unusable calibration. The model stays dark; overlay stays
+> `model_not_deployed`. Published as NEGATIVE_RESULTS §7. Any
+> calibration-on-top-of-ranker attempt = a NEW trial (TRIAL-CRASH-3), not a
+> rerun. Full metrics: `engine/training/output/crash2_eval_2026-07-14.json`.
 **Canonical decision rule:** mirrored in the experiment registry notes (param `crash2-severity-model`) and `backend/services/portfolio_intelligence/fragility.py::CRASH2_DECISION_RULE`.
 **Successor to:** the held M3 binary crash model (NEGATIVE_RESULTS §6 — binary ≥20%-drawdown label unlearnable: AUC unmeasurable, near-constant outputs). Design per `docs/research/CRASH_AND_OSS_RESEARCH_2026-07-11.md` P2 (BIS WP 1250 target design).
 
