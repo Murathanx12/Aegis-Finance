@@ -1,0 +1,163 @@
+{
+  "trial": "TRIAL-CRASH-2",
+  "protocol_doc": "docs/TRIALS/TRIAL-CRASH-2-severity-model.md",
+  "run_date": "2026-07-14",
+  "n_folds_run": 5,
+  "cells": {
+    "(0.05, '30d')": {
+      "n": 2515,
+      "n_pos": 397,
+      "prevalence": 0.1579,
+      "brier_model": 0.176898,
+      "brier_climatology": 0.133582,
+      "brier_stlfsi4": 0.138375,
+      "skill_vs_climatology": -0.3243,
+      "skill_vs_stlfsi4": -0.2784,
+      "pr_auc_model": 0.1516,
+      "pr_auc_stlfsi4": 0.1466
+    },
+    "(0.1, '30d')": {
+      "n": 2515,
+      "n_pos": 88,
+      "prevalence": 0.035,
+      "brier_model": 0.034046,
+      "brier_climatology": 0.033875,
+      "brier_stlfsi4": 0.03484,
+      "skill_vs_climatology": -0.005,
+      "skill_vs_stlfsi4": 0.0228,
+      "pr_auc_model": 0.1269,
+      "pr_auc_stlfsi4": 0.0486
+    },
+    "(0.15, '30d')": {
+      "n": 2515,
+      "n_pos": 26,
+      "prevalence": 0.0103,
+      "brier_model": 0.010339,
+      "brier_climatology": 0.010258,
+      "brier_stlfsi4": 0.010449,
+      "skill_vs_climatology": -0.0078,
+      "skill_vs_stlfsi4": 0.0106,
+      "pr_auc_model": 0.0085,
+      "pr_auc_stlfsi4": 0.0151
+    },
+    "(0.2, '30d')": {
+      "n": 2515,
+      "n_pos": 19,
+      "prevalence": 0.0076,
+      "brier_model": 0.007555,
+      "brier_climatology": 0.007516,
+      "brier_stlfsi4": 0.007549,
+      "skill_vs_climatology": -0.0052,
+      "skill_vs_stlfsi4": -0.0008,
+      "pr_auc_model": 0.0194,
+      "pr_auc_stlfsi4": 0.006
+    },
+    "(0.05, '60d')": {
+      "n": 2515,
+      "n_pos": 593,
+      "prevalence": 0.2358,
+      "brier_model": 0.258437,
+      "brier_climatology": 0.18252,
+      "brier_stlfsi4": 0.191227,
+      "skill_vs_climatology": -0.4159,
+      "skill_vs_stlfsi4": -0.3515,
+      "pr_auc_model": 0.2108,
+      "pr_auc_stlfsi4": 0.1964
+    },
+    "(0.1, '60d')": {
+      "n": 2515,
+      "n_pos": 214,
+      "prevalence": 0.0851,
+      "brier_model": 0.082119,
+      "brier_climatology": 0.078086,
+      "brier_stlfsi4": 0.082307,
+      "skill_vs_climatology": -0.0516,
+      "skill_vs_stlfsi4": 0.0023,
+      "pr_auc_model": 0.144,
+      "pr_auc_stlfsi4": 0.0804
+    },
+    "(0.15, '60d')": {
+      "n": 2515,
+      "n_pos": 80,
+      "prevalence": 0.0318,
+      "brier_model": 0.032323,
+      "brier_climatology": 0.030867,
+      "brier_stlfsi4": 0.032219,
+      "skill_vs_climatology": -0.0472,
+      "skill_vs_stlfsi4": -0.0032,
+      "pr_auc_model": 0.0295,
+      "pr_auc_stlfsi4": 0.0281
+    },
+    "(0.2, '60d')": {
+      "n": 2515,
+      "n_pos": 40,
+      "prevalence": 0.0159,
+      "brier_model": 0.015905,
+      "brier_climatology": 0.015692,
+      "brier_stlfsi4": 0.015926,
+      "skill_vs_climatology": -0.0136,
+      "skill_vs_stlfsi4": 0.0013,
+      "pr_auc_model": 0.0103,
+      "pr_auc_stlfsi4": 0.0119
+    },
+    "(0.05, '90d')": {
+      "n": 2515,
+      "n_pos": 736,
+      "prevalence": 0.2926,
+      "brier_model": 0.323612,
+      "brier_climatology": 0.209993,
+      "brier_stlfsi4": 0.221854,
+      "skill_vs_climatology": -0.5411,
+      "skill_vs_stlfsi4": -0.4587,
+      "pr_auc_model": 0.2412,
+      "pr_auc_stlfsi4": 0.2428
+    },
+    "(0.1, '90d')": {
+      "n": 2515,
+      "n_pos": 308,
+      "prevalence": 0.1225,
+      "brier_model": 0.122317,
+      "brier_climatology": 0.108262,
+      "brier_stlfsi4": 0.116908,
+      "skill_vs_climatology": -0.1298,
+      "skill_vs_stlfsi4": -0.0463,
+      "pr_auc_model": 0.1575,
+      "pr_auc_stlfsi4": 0.1055
+    },
+    "(0.15, '90d')": {
+      "n": 2515,
+      "n_pos": 149,
+      "prevalence": 0.0592,
+      "brier_model": 0.060345,
+      "brier_climatology": 0.055883,
+      "brier_stlfsi4": 0.059773,
+      "skill_vs_climatology": -0.0798,
+      "skill_vs_stlfsi4": -0.0096,
+      "pr_auc_model": 0.0389,
+      "pr_auc_stlfsi4": 0.0453
+    },
+    "(0.2, '90d')": {
+      "n": 2515,
+      "n_pos": 63,
+      "prevalence": 0.025,
+      "brier_model": 0.025063,
+      "brier_climatology": 0.024519,
+      "brier_stlfsi4": 0.025471,
+      "skill_vs_climatology": -0.0222,
+      "skill_vs_stlfsi4": 0.016,
+      "pr_auc_model": 0.0143,
+      "pr_auc_stlfsi4": 0.0186
+    }
+  },
+  "dense_gate": {
+    "(0.05, '30d')": false,
+    "(0.05, '60d')": false,
+    "(0.05, '90d')": false,
+    "(0.1, '30d')": false,
+    "(0.1, '60d')": false,
+    "(0.1, '90d')": false
+  },
+  "insufficient_cells": [],
+  "verdict": "REJECT",
+  "verdict_meaning": "ADOPT = earns a descriptive UI surface + forward clock only; REJECT = stays dark, published in NEGATIVE_RESULTS. Never arms a lane either way."
+}
