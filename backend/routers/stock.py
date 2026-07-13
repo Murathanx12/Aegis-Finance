@@ -596,9 +596,29 @@ def _compute_market_signal_uncached() -> dict:
     return sig
 
 
+@router.get("/resolve")
+async def resolve_ticker_endpoint(q: str):
+    """Free-text → ticker resolution ("marvell" → MRVL). Alias map first,
+    Yahoo search fallback (cached 24h). Registered BEFORE /{ticker}."""
+    import asyncio
+    from backend.services.ticker_resolver import resolve_ticker
+
+    q = (q or "").strip()
+    if not q or len(q) > 60:
+        raise HTTPException(status_code=422, detail="Query must be 1-60 characters")
+    try:
+        match = await asyncio.to_thread(resolve_ticker, q)
+        return {"query": q, "resolved": match is not None, "match": match}
+    except Exception as e:
+        logger.warning("resolve failed for %r: %s", q, e)
+        return {"query": q, "resolved": False, "match": None}
+
+
 @router.get("/{ticker}")
 async def get_stock_analysis(ticker: str):
     """Per-ticker projection using fundamental-aware Monte Carlo."""
+    from backend.services.data_fetcher import RateLimited
+
     ticker = ticker.upper()
     if not _TICKER_RE.match(ticker):
         raise HTTPException(status_code=422, detail="Invalid ticker format")
@@ -608,10 +628,30 @@ async def get_stock_analysis(ticker: str):
             cache_key, _CACHE_TTL["ttl_stock"], partial(_analyze_stock, ticker)
         )
         if result is None:
-            raise HTTPException(status_code=404, detail=f"Could not analyze {ticker}")
+            # Genuinely no data for the symbol — offer a name→ticker suggestion
+            # ("MARVELL" → MRVL) so a typed company name isn't a dead end.
+            detail = f"Could not analyze {ticker}"
+            try:
+                from backend.services.ticker_resolver import resolve_ticker
+                match = resolve_ticker(ticker, allow_network=False)
+                if match and match["ticker"] != ticker:
+                    detail = (f"Could not analyze {ticker}. "
+                              f"Did you mean {match['ticker']} ({match['name']})?")
+            except Exception as e:
+                # Suggestion is enrichment only — the plain 404 detail is the
+                # explicit degraded output.
+                logger.debug("resolver suggestion failed for %s: %s", ticker, e)
+            raise HTTPException(status_code=404, detail=detail)
         return result
     except HTTPException:
         raise
+    except RateLimited:
+        raise HTTPException(
+            status_code=503,
+            detail=("Market-data provider is rate-limiting the server. "
+                    "Cached results return automatically — try again in about a minute."),
+            headers={"Retry-After": "60"},
+        )
     except Exception as e:
         logger.error("stock analysis failed for %s: %s", ticker, e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -948,6 +988,13 @@ async def get_stock_signal_endpoint(ticker: str):
             cache_key, _CACHE_TTL["ttl_stock"], partial(_stock_signal, ticker)
         )
     except Exception as e:
+        from backend.services.data_fetcher import RateLimited
+        if isinstance(e, RateLimited):
+            raise HTTPException(
+                status_code=503,
+                detail="Market-data provider is rate-limiting the server — try again shortly.",
+                headers={"Retry-After": "60"},
+            )
         logger.error("stock signal failed for %s: %s", ticker, e)
         raise HTTPException(status_code=500, detail=str(e))
 

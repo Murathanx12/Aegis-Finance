@@ -21,12 +21,19 @@ export function ErrorCard({
           <p className="text-sm font-medium text-red-400">{title}</p>
           <p className="text-xs text-red-400/80 mt-1">{message}</p>
           {message.includes("fetch") && (
-            <p className="text-xs text-muted-foreground mt-2">
-              Make sure the backend is running:{" "}
-              <code className="bg-red-500/10 px-1 rounded text-red-400/70">
-                uvicorn backend.main:app --port 8000
-              </code>
-            </p>
+            process.env.NODE_ENV === "development" ? (
+              <p className="text-xs text-muted-foreground mt-2">
+                Make sure the backend is running:{" "}
+                <code className="bg-red-500/10 px-1 rounded text-red-400/70">
+                  uvicorn backend.main:app --port 8000
+                </code>
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-2">
+                The API is unreachable — it may be waking up or briefly restarting.
+                It usually recovers within a minute; use retry.
+              </p>
+            )
           )}
         </div>
         {onRetry && (

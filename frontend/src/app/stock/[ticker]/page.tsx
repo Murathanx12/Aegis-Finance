@@ -1,9 +1,10 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { getStockAnalysis, getStockShap, getStockSignal } from "@/lib/api";
+import { getStockAnalysis, getStockShap, getStockSignal, resolveTicker } from "@/lib/api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -348,13 +349,29 @@ function AnalystConsensus({ recommendations }: { recommendations: { strongBuy: n
 
 export default function StockDetailPage({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker } = use(params);
-  const upperTicker = ticker.toUpperCase();
+  const upperTicker = decodeURIComponent(ticker).toUpperCase();
+  const router = useRouter();
 
   const { data: stockData, isLoading: stockLoading, error: stockError, refetch: stockRefetch } = useQuery({
     queryKey: queryKeys.stock.analysis(upperTicker),
     queryFn: () => getStockAnalysis(upperTicker),
     staleTime: staleTimes.stock,
   });
+
+  // A 404 usually means the user typed a company NAME ("MARVELL") — resolve
+  // it to the symbol (MRVL) and redirect instead of dead-ending.
+  const analysisNotFound = !!stockError && (stockError as Error).message.includes("404");
+  const { data: resolveData } = useQuery({
+    queryKey: ["resolve", upperTicker],
+    queryFn: () => resolveTicker(upperTicker),
+    enabled: analysisNotFound,
+    staleTime: Infinity,
+  });
+  const suggested = resolveData?.match && resolveData.match.ticker !== upperTicker
+    ? resolveData.match : null;
+  useEffect(() => {
+    if (suggested) router.replace(`/stock/${encodeURIComponent(suggested.ticker)}`);
+  }, [suggested, router]);
   const { data: shapData, isLoading: shapLoading } = useQuery({
     queryKey: queryKeys.stock.shap(upperTicker),
     queryFn: () => getStockShap(upperTicker),
@@ -1091,7 +1108,21 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           )}
         </>
       ) : stockError ? (
-        <ErrorCard title={`Could not analyze ${upperTicker}`} message={(stockError as Error).message} onRetry={() => stockRefetch()} />
+        suggested ? (
+          <Card className="animate-fade-in">
+            <CardContent className="p-4 text-sm">
+              <span className="text-muted-foreground">
+                “{upperTicker}” looks like a company name — taking you to{" "}
+              </span>
+              <Link href={`/stock/${encodeURIComponent(suggested.ticker)}`} className="font-semibold underline">
+                {suggested.ticker} ({suggested.name})
+              </Link>
+              …
+            </CardContent>
+          </Card>
+        ) : (
+          <ErrorCard title={`Could not analyze ${upperTicker}`} message={(stockError as Error).message} onRetry={() => stockRefetch()} />
+        )
       ) : null}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1243,9 +1274,22 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
               <ShapWaterfall features={shapData.top_features} />
             </>
           ) : shapData?.status === "model_not_trained" ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              Crash model not trained. SHAP unavailable.
-            </p>
+            <div className="text-sm text-muted-foreground py-6 space-y-2">
+              <p>
+                The ML crash model is deliberately offline: its last retrain could not
+                demonstrate real discrimination (too few historical crash events to
+                validate against), so we hold it rather than show numbers we can&apos;t
+                stand behind.
+              </p>
+              <p>
+                For the market&apos;s current crash read, use the{" "}
+                <Link href="/crash" className="underline">
+                  fragility composite
+                </Link>{" "}
+                — a descriptive index built from bubble structure (LPPLS), systemic
+                stress, liquidity, and options skew.
+              </p>
+            </div>
           ) : null}
         </CardContent>
       </Card>

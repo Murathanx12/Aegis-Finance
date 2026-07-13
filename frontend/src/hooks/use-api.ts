@@ -41,8 +41,8 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[] = [], optio
         setError("Not found. The ticker may be delisted or invalid.");
       } else if (message.includes("422")) {
         setError("Invalid input. Check the ticker format.");
-      } else if (message.includes("429")) {
-        setError("Rate limited. Please wait a moment and try again.");
+      } else if (message.includes("429") || message.includes("503")) {
+        setError("Our data provider is rate-limiting us. Cached data returns automatically — try again in about a minute.");
       } else if (message.includes("500")) {
         setError("Server error. The backend may be processing — try again shortly.");
       } else if (message.includes("fetch") || message.includes("Failed")) {

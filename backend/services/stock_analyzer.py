@@ -109,15 +109,19 @@ def analyze_stock(
     max_5y_return = config["simulation"]["max_5y_return"]
 
     # ── Data fetch (expected to fail for bad tickers / network issues) ──
+    from backend.services.data_fetcher import (
+        RateLimited, fetch_ticker_history, fetch_ticker_info,
+    )
     try:
-        stock = yf.Ticker(ticker)
-        info = stock.info or {}
-        hist = stock.history(period="5y")
+        hist = fetch_ticker_history(ticker, period="5y")
+        info = fetch_ticker_info(ticker)
+    except RateLimited:
+        raise  # provider throttling — callers must not read this as a bad ticker
     except Exception as e:
         logger.warning("%s: Data fetch failed — %s", ticker, e)
         return None
 
-    if hist.empty or len(hist) < 252:
+    if hist is None or hist.empty or len(hist) < 252:
         logger.warning("%s: Insufficient price history", ticker)
         return None
 

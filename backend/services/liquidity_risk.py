@@ -206,11 +206,16 @@ def compute_liquidity_metrics(
         Dictionary with all liquidity metrics, or None if insufficient data.
     """
     try:
-        import yfinance as yf
-        tk = yf.Ticker(ticker)
-        hist = tk.history(period="2y")
+        from backend.services.data_fetcher import (
+            RateLimited, fetch_ticker_history, fetch_ticker_info,
+        )
+        try:
+            hist = fetch_ticker_history(ticker, period="2y")
+        except RateLimited:
+            logger.warning("%s: liquidity analysis skipped — Yahoo throttling", ticker)
+            return None
 
-        if hist.empty or len(hist) < _MIN_OBS:
+        if hist is None or hist.empty or len(hist) < _MIN_OBS:
             logger.warning("%s: insufficient history for liquidity analysis (%d days)",
                            ticker, len(hist) if not hist.empty else 0)
             return None
@@ -224,7 +229,7 @@ def compute_liquidity_metrics(
         returns = close.pct_change().dropna()
 
         # Get shares outstanding for turnover
-        info = tk.info or {}
+        info = fetch_ticker_info(ticker)
         shares_out = info.get("sharesOutstanding", 0) or 0
 
     except Exception as e:

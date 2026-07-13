@@ -12,6 +12,7 @@ import { MacroCards } from "@/components/dashboard/macro-cards";
 import { SectorHeatmap } from "@/components/dashboard/sector-heatmap";
 import { SignalBadge } from "@/components/dashboard/signal-badge";
 import { HeroSection } from "@/components/dashboard/hero-section";
+import { DailyBriefCard } from "@/components/dashboard/daily-brief-card";
 import { ErrorCard } from "@/components/error-card";
 import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import { InfoTooltip } from "@/components/info-tooltip";
@@ -98,6 +99,8 @@ export default function DashboardPage() {
       </div>
 
       <DisclaimerBanner />
+
+      <DailyBriefCard />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <SignalBadge data={signal.data ?? null} />

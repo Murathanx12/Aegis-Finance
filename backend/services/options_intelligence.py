@@ -80,13 +80,19 @@ def get_options_summary(ticker: str) -> dict:
         if mid_exp_str is None and len(future_exps) > 1:
             mid_exp_str = future_exps[min(1, len(future_exps) - 1)][1]
 
-        # Get current price
-        info = stock.info
+        # Get current price (shared cached fetch — avoids duplicate yf calls)
+        from backend.services.data_fetcher import fetch_ticker_history, fetch_ticker_info
+        info = fetch_ticker_info(ticker)
         current_price = info.get("currentPrice") or info.get("regularMarketPrice", 0)
-        if current_price <= 0:
-            hist = stock.history(period="1d")
-            if not hist.empty:
+        if not current_price or current_price <= 0:
+            try:
+                hist = fetch_ticker_history(ticker, period="1d")
+            except Exception:
+                hist = None
+            if hist is not None and not hist.empty:
                 current_price = float(hist["Close"].iloc[-1])
+            else:
+                current_price = 0
 
         if current_price <= 0:
             return {"error": "Could not determine current price", "ticker": ticker}
@@ -134,8 +140,8 @@ def get_options_summary(ticker: str) -> dict:
 
         # Compute IV rank using historical volatility as proxy
         try:
-            hist_data = stock.history(period="1y")
-            if len(hist_data) > 20:
+            hist_data = fetch_ticker_history(ticker, period="1y")
+            if hist_data is not None and len(hist_data) > 20:
                 daily_rets = hist_data["Close"].pct_change().dropna()
                 realized_vol = float(daily_rets.std() * np.sqrt(252))
                 # Rolling 20-day realized vol over the year
