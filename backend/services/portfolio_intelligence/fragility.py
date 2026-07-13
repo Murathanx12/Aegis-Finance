@@ -71,6 +71,50 @@ LPPLS_DECISION_RULE = {
 }
 
 
+CRASH2_TRIAL_PARAM = "crash2-severity-model"
+
+CRASH2_DECISION_RULE = {
+    "trial": "TRIAL-CRASH-2",
+    "hypothesis": (
+        "A LightGBM forward max-drawdown severity model (exceedance readout) "
+        "beats climatology AND an STLFSI4-only baseline on held-out "
+        "walk-forward folds at the dense cells (5%/10% x 30/60/90d)"
+    ),
+    "purpose": "experimental",
+    "primary_metric": "held-out Brier skill per cell vs BOTH baselines",
+    "cells": "thresholds {5,10,15,20}% x horizons {30,60,90}d forward maxDD on SPY",
+    "protocol": ("frozen: per-cell LightGBM (fixed hyperparams, seed 42), "
+                 "expanding walk-forward 5 folds, purge 63td + embargo 21td, "
+                 "monotonicity enforced across thresholds and horizons"),
+    "adopt_threshold": ("skill > 0 vs climatology AND STLFSI4-logistic on ALL "
+                        "six dense cells; else stays dark, published negative"),
+    "reported_never_deciding": "PR-AUC, event-window hit/false-alarm, sparse cells",
+    "prior": ("dense cells plausibly learnable (BIS WP 1250); sparse 15/20% "
+              "cells expected unresolvable; canon A5 (timing skill ~ 0) not challenged"),
+    "hard_constraint": ("descriptive-only; NEVER arms a lane / no buy-sell "
+                        "language; offline pass earns a forward clock only"),
+    "pre_registered": "2026-07-14",
+    "canonical_doc": "docs/TRIALS/TRIAL-CRASH-2-severity-model.md",
+}
+
+
+def ensure_crash2_trial(db_path=None) -> int:
+    """Idempotently pre-register TRIAL-CRASH-2 (severity/exceedance model).
+
+    Registered BEFORE the successor model's first fit — the offline verdict is
+    decided by the frozen protocol in the decision rule, and the registration
+    enters the cumulative trial count the DSR/PBO guards deflate against.
+    """
+    from backend.services.portfolio_intelligence.trial_registry import (
+        ensure_trial_registered,
+    )
+
+    notes = {"hypothesis": CRASH2_DECISION_RULE["hypothesis"],
+             "purpose": "experimental",
+             "decision_rule": CRASH2_DECISION_RULE}
+    return ensure_trial_registered(CRASH2_TRIAL_PARAM, notes, db_path=db_path)
+
+
 def ensure_lppls_trial(db_path=None) -> int:
     """Idempotently pre-register TRIAL-LPPLS in the experiment registry.
 
