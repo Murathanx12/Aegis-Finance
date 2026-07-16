@@ -502,6 +502,19 @@ async def _daily_check():
     except Exception as e:
         logger.error("Revisions-IC collection failed: %s", e, exc_info=True)
 
+    # Alpaca paper mirror — third-party NAV verification for the mirror lane.
+    # No-op until keys are configured; trades only when the internal lane's
+    # position set changed; always records Alpaca's own equity + divergence.
+    try:
+        from backend.services.portfolio_intelligence.alpaca_mirror import (
+            sync_alpaca_mirror,
+        )
+        am = await asyncio.to_thread(sync_alpaca_mirror)
+        logger.info("Alpaca mirror: status=%s equity=%s divergence=%s",
+                    am.get("status"), am.get("equity"), am.get("divergence_pct"))
+    except Exception as e:
+        logger.error("Alpaca mirror sync failed: %s", e, exc_info=True)
+
     # TRIAL-FORECAST-LEDGER — pair the MC-implied 1y forecast with the street
     # target-implied forecast from the SAME cached screener snapshot. Weekly-
     # throttled, measurement-only (never a signal), matures from 2027-07.
