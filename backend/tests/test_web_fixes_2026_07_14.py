@@ -225,3 +225,43 @@ class TestDailyBrief:
         assert resp.status_code == 200
         # invalid ticker dropped, duplicates deduped, order-insensitive key
         assert "MRVL,NVDA" in resp.json()["key"]
+
+
+# ── 5. Screener NameError regression (2026-07-16) ───────────────────────────
+
+
+class _RaisingTicker:
+    """Stub yf.Ticker whose every attribute read fails — each _get_* enrichment
+    helper must degrade to None on its own, and analyze_stock must still
+    return a full result dict."""
+
+    def __init__(self, ticker="FAKE", *a, **k):
+        # real yf.Ticker always exposes .ticker without network I/O
+        object.__setattr__(self, "ticker", ticker)
+
+    def __getattr__(self, name):
+        raise RuntimeError("offline stub: no network in unit tests")
+
+
+class TestAnalyzeStockCompletes:
+    def test_analyze_stock_survives_enrichment_failures(self):
+        """Regression: 70d8ed6 removed `stock = yf.Ticker(...)` but the
+        enrichment block still referenced it → NameError on EVERY ticker,
+        swallowed as 'screener skip'. analyze_stock must complete offline."""
+        from backend.services import stock_analyzer as sa
+        hist = _fake_hist(1300)
+        info = {"marketCap": 2e12, "beta": 1.2, "targetMeanPrice": 120.0,
+                "shortName": "Fake Corp", "sector": "Technology",
+                "trailingPE": 25.0}
+        with patch("backend.services.data_fetcher.fetch_ticker_history",
+                   return_value=hist), \
+             patch("backend.services.data_fetcher.fetch_ticker_info",
+                   return_value=info), \
+             patch.object(sa.yf, "Ticker", _RaisingTicker):
+            r = sa.analyze_stock("FAKE", forecast_days=60)
+        assert r is not None, "analyze_stock returned None on healthy inputs"
+        assert r["ticker"] == "FAKE"
+        assert r["current_price"] > 0
+        # enrichment fields degrade to None, never crash the analysis
+        assert r.get("analyst_targets") is None
+        assert r.get("recommendations") is None

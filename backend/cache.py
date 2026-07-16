@@ -118,6 +118,26 @@ def cache_set(key: str, value: Any) -> None:
     _disk_set(key, value)
 
 
+def cache_sweep(max_age_seconds: int = 24 * 3600) -> int:
+    """Purge memory-cache entries older than max_age_seconds.
+
+    The memory layer only evicts an expired entry when that exact key is
+    read again — keys that stop being read (old screener runs, one-off
+    ticker lookups, MC results) leak forever and are a steady RAM drag on
+    Railway. The disk layer is untouched: it is size-bounded (500 MB) and
+    is what stale-serving reads from. Returns the number of purged entries.
+    """
+    cutoff = time.time() - max_age_seconds
+    with _lock:
+        stale = [k for k, e in _cache.items() if e["timestamp"] < cutoff]
+        for k in stale:
+            del _cache[k]
+    if stale:
+        logger.info("Cache sweep: purged %d entries older than %.1fh",
+                    len(stale), max_age_seconds / 3600)
+    return len(stale)
+
+
 def cache_peek(key: str, max_stale: int) -> tuple[Optional[Any], Optional[float]]:
     """Return (value, age_seconds) if any entry exists within max_stale seconds,
     WITHOUT deleting expired entries. Memory first, then disk."""

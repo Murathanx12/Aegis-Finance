@@ -56,16 +56,24 @@ def setup_scheduler():
 
     _scheduler = AsyncIOScheduler(jobstores=jobstores)
 
-    # Hourly mark-to-market during US market hours (9:30-16:30 ET)
+    # Close-of-day mark-to-market (2026-07-16 cost change: was hourly 10-16).
+    # The forward record only needs the CLOSE mark — intraday marks overwrite
+    # the same paper_nav date row and add nothing durable, at ~7x the fetches.
+    # 17:30-19:30 slots are cheap catch-up retries: _hourly_mtm self-skips
+    # when the close mark already landed (no-new-market-data check), but a
+    # failed 16:30 run gets three more shots — a missed close mark is an
+    # unrecoverable gap in the track record.
+    # Job id stays "pi_hourly_mtm": the SQLAlchemy jobstore persists by id, so
+    # renaming would strand the old hourly job firing forever alongside.
     _scheduler.add_job(
         _hourly_mtm,
         CronTrigger(
-            hour="10-16", minute=30,
+            hour="16-19", minute=30,
             day_of_week="mon-fri",
             timezone="US/Eastern",
         ),
         id="pi_hourly_mtm",
-        name="PI hourly mark-to-market",
+        name="PI close mark-to-market (+catch-up retries)",
         replace_existing=True,
         misfire_grace_time=3600,
     )

@@ -4,7 +4,7 @@ import { use, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { getStockAnalysis, getStockShap, getStockSignal, resolveTicker } from "@/lib/api";
+import { getStockAnalysis, getStockShap, getStockSignal, getStockAnalysts, resolveTicker } from "@/lib/api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -207,6 +207,109 @@ function AnalystVsModelCard({ stock }: { stock: StockAnalysis }) {
             </div>
           </div>
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function WallStreetActionsCard({ ticker }: { ticker: string }) {
+  const { data } = useQuery({
+    queryKey: ["stock-analysts", ticker],
+    queryFn: () => getStockAnalysts(ticker),
+    staleTime: 60 * 60 * 1000,
+    retry: 1,
+  });
+  if (!data) return null;
+
+  const pt = data.price_targets;
+  const rating = data.consensus_rating;
+  const actions = data.recent_actions ?? [];
+  if (!pt && !rating && actions.length === 0) return null;
+
+  const actionColor = (a: string | null) =>
+    a === "upgrade" ? "text-emerald-400"
+      : a === "downgrade" ? "text-red-400"
+      : a === "initiated" ? "text-sky-400"
+      : "text-muted-foreground";
+
+  // position of a price on the low→high band, clamped to [0,100]
+  const bandPos = (v: number | null) => {
+    if (v == null || pt?.low == null || pt?.high == null || pt.high <= pt.low) return null;
+    return Math.min(100, Math.max(0, ((v - pt.low) / (pt.high - pt.low)) * 100));
+  };
+  const curPos = bandPos(pt?.current_price ?? null);
+  const meanPos = bandPos(pt?.mean ?? null);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+          Wall Street View
+          <InfoTooltip text="What major firms say: consensus 12-month price targets and recent firm-by-firm rating changes (upgrades / downgrades). Informational only — firms publish these with their own agendas and a wide error bar." />
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        {rating && (rating.score != null || rating.label) && (
+          <div className="flex items-center gap-3 flex-wrap">
+            {rating.label && (
+              <Badge variant="outline" className="text-sm capitalize">{rating.label}</Badge>
+            )}
+            {rating.score != null && (
+              <span className="text-sm text-muted-foreground tabular-nums">
+                {rating.score.toFixed(1)} / 5 (1 = Strong Buy)
+              </span>
+            )}
+            {rating.n_analysts != null && (
+              <span className="text-sm text-muted-foreground">{rating.n_analysts} analysts</span>
+            )}
+          </div>
+        )}
+
+        {pt && pt.low != null && pt.high != null && (
+          <div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">12-Month Price Target Band</p>
+            <div className="relative h-2 rounded-full bg-gradient-to-r from-red-400/60 via-amber-400/60 to-emerald-400/60">
+              {curPos != null && (
+                <div className="absolute -top-1 h-4 w-1 rounded bg-foreground" style={{ left: `${curPos}%` }} title="Current price" />
+              )}
+              {meanPos != null && (
+                <div className="absolute -top-1 h-4 w-1 rounded bg-sky-400" style={{ left: `${meanPos}%` }} title="Mean target" />
+              )}
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground mt-1 tabular-nums">
+              <span>Low ${pt.low.toFixed(0)}</span>
+              <span>
+                Mean <span className="text-sky-400 font-medium">${pt.mean?.toFixed(0) ?? "?"}</span>
+                {pt.upside_pct != null && (
+                  <span className={pt.upside_pct >= 0 ? "text-emerald-400" : "text-red-400"}>
+                    {" "}({pt.upside_pct >= 0 ? "+" : ""}{pt.upside_pct.toFixed(1)}%)
+                  </span>
+                )}
+              </span>
+              <span>High ${pt.high.toFixed(0)}</span>
+            </div>
+          </div>
+        )}
+
+        {actions.length > 0 && (
+          <div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Recent Firm Actions</p>
+            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+              {actions.slice(0, 12).map((a, i) => (
+                <div key={i} className="flex items-center justify-between gap-2 text-sm rounded-md bg-muted/20 px-3 py-1.5">
+                  <span className="font-medium truncate">{a.firm}</span>
+                  <span className="text-muted-foreground whitespace-nowrap">
+                    {a.from_grade ? `${a.from_grade} → ` : ""}{a.to_grade ?? ""}
+                  </span>
+                  <span className={`capitalize whitespace-nowrap ${actionColor(a.action)}`}>{a.action ?? ""}</span>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap tabular-nums">{a.date}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <p className="text-xs text-muted-foreground">{data.attribution}</p>
       </CardContent>
     </Card>
   );
@@ -520,6 +623,10 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           {stockData.recommendations && (
             <AnalystConsensus recommendations={stockData.recommendations} />
           )}
+
+          {/* Wall Street View — firm-attributed targets + upgrades/downgrades */}
+          <WallStreetActionsCard ticker={upperTicker} />
+
 
           {/* Price Expectations */}
           {stockData.analyst_targets && (

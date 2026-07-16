@@ -287,7 +287,9 @@ def analyze_stock(
 
     sharpe = (final_arithmetic - risk_free_rate) / final_sigma if final_sigma > 0 else 0
 
-    # Enriched data from yfinance (non-critical — failures return None per field)
+    # Enriched data from yfinance (non-critical — failures return None per field).
+    # Lazy handle: yf.Ticker() does no network I/O until an attribute is read.
+    stock = yf.Ticker(ticker)
     analyst_targets = _get_analyst_targets(stock)
     recommendations = _get_recommendations(stock)
     holders = _get_holders(stock)
@@ -393,7 +395,7 @@ def _get_analyst_targets(stock) -> Optional[dict]:
             "median": t.get("median"),
             "high": t.get("high"),
         }
-    except (AttributeError, KeyError, TypeError, ValueError) as e:
+    except Exception as e:  # optional field — network/parse failures degrade to None
         logger.debug("%s: analyst targets extraction failed — %s", getattr(stock, 'ticker', '?'), e)
         return None
 
@@ -417,7 +419,7 @@ def _get_recommendations(stock) -> Optional[dict]:
                 "strongSell": int(latest.get("strongSell", 0)),
             }
         return None
-    except (AttributeError, KeyError, TypeError, ValueError, IndexError) as e:
+    except Exception as e:  # optional field — network/parse failures degrade to None
         logger.debug("Recommendations extraction failed — %s", e)
         return None
 
@@ -455,7 +457,7 @@ def _get_holders(stock) -> Optional[dict]:
             result["top_holders"] = top
 
         return result if result else None
-    except (AttributeError, KeyError, TypeError, ValueError) as e:
+    except Exception as e:  # optional field — network/parse failures degrade to None
         logger.debug("Holders extraction failed — %s", e)
         return None
 
@@ -476,7 +478,7 @@ def _get_news(stock, max_items: int = 8) -> Optional[list]:
                 "date": content.get("pubDate", item.get("providerPublishTime", "")),
             })
         return items if items else None
-    except (AttributeError, KeyError, TypeError) as e:
+    except Exception as e:  # optional field — network/parse failures degrade to None
         logger.debug("News extraction failed — %s", e)
         return None
 
@@ -513,7 +515,7 @@ def _get_earnings(stock) -> Optional[dict]:
             "estimate": estimate,
             "surprise_history": surprises,
         }
-    except (AttributeError, KeyError, TypeError, ValueError, IndexError) as e:
+    except Exception as e:  # optional field — network/parse failures degrade to None
         logger.debug("Earnings extraction failed — %s", e)
         return None
 

@@ -79,6 +79,22 @@ async def _prewarm_cache():
 _ENDPOINT_WARM_INTERVAL_S = 600  # check every 10 min; recompute only when expired
 
 
+def _us_market_open_now() -> bool:
+    """Coarse US-market-hours check for the warm loop's cost dial.
+
+    Deliberately padded (9:00-17:30 ET) — this only decides how often caches
+    refresh, not any market logic. Holidays count as closed via the weekday
+    check only when they fall on weekends; a few holiday false-positives per
+    year just mean normal-cadence warming, which is safe.
+    """
+    from zoneinfo import ZoneInfo
+    now = datetime.now(ZoneInfo("US/Eastern"))
+    if now.weekday() >= 5:
+        return False
+    minutes = now.hour * 60 + now.minute
+    return 9 * 60 <= minutes <= 17 * 60 + 30
+
+
 def _endpoint_warm_targets() -> list[tuple[str, int, object]]:
     """The endpoints whose synchronous compute takes minutes (MC, GARCH, HMM,
     crash inference). Everything here is also served stale-while-revalidate,
@@ -117,7 +133,11 @@ async def _warm_endpoint_caches_loop():
     """
     import asyncio
 
-    from backend.cache import cache_peek, cache_set
+    from backend.cache import cache_peek, cache_set, cache_sweep
+
+    cache_cfg = config["cache"]
+    offhours_mult = max(1, int(cache_cfg.get("offhours_ttl_multiplier", 1)))
+    sweep_age_s = int(cache_cfg.get("sweep_max_age_hours", 24)) * 3600
 
     while True:
         try:
@@ -126,10 +146,13 @@ async def _warm_endpoint_caches_loop():
             # An import failure here must not kill the loop forever-silently.
             logger.error("Endpoint warm: target resolution failed: %s", e)
             targets = []
+        # Off-hours the compute inputs are static (no new prices), so stretch
+        # every TTL — identical outputs, ~offhours_mult fewer recomputes.
+        ttl_mult = 1 if _us_market_open_now() else offhours_mult
         for key, ttl_s, compute in targets:
             try:
                 _, age = cache_peek(key, max_stale=10 ** 9)
-                if age is not None and age <= ttl_s:
+                if age is not None and age <= ttl_s * ttl_mult:
                     continue  # still fresh
                 result = await asyncio.to_thread(compute)
                 if result is not None:
@@ -137,6 +160,21 @@ async def _warm_endpoint_caches_loop():
                     logger.info("Endpoint warm: %s refreshed", key)
             except Exception as e:
                 logger.warning("Endpoint warm failed for %s: %s", key, e)
+
+        # Housekeeping piggybacked on the same cycle: evict leaked memory-cache
+        # entries and drop the ~2 GB FinBERT model once it has sat idle.
+        try:
+            cache_sweep(sweep_age_s)
+            from backend.services.sentiment_analyzer import maybe_unload_finbert
+            maybe_unload_finbert()
+            try:  # hand freed pages back to the OS (Linux; no-op elsewhere)
+                import ctypes
+                ctypes.CDLL("libc.so.6").malloc_trim(0)
+            except Exception:
+                pass
+        except Exception as e:
+            logger.warning("Warm-loop housekeeping failed: %s", e)
+
         await asyncio.sleep(_ENDPOINT_WARM_INTERVAL_S)
 
 
