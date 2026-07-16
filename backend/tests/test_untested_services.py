@@ -937,8 +937,14 @@ class TestPortfolioEngineExceptNarrowing:
         import re
         # analyze_stock has legitimate broad excepts (yfinance fetch, GARCH fit)
         # + v9 integrations (factor exposure, insider, liquidity) each non-blocking
+        # + 2026-07-16: the five OPTIONAL enrichment extractors (_get_analyst_
+        #   targets/_get_recommendations/_get_holders/_get_news/_get_earnings)
+        #   moved from narrow to broad excepts ON PURPOSE — their contract is
+        #   "degrade this one field to None"; the narrow tuples let network-layer
+        #   exceptions kill the whole analysis (postmortem
+        #   docs/postmortems/2026-07-16-screener-nameerror.md). Each logs debug.
         broad = re.findall(r"except Exception\b", source)
-        assert len(broad) <= 5, f"Found {len(broad)} broad excepts in stock_analyzer (expected ≤5)"
+        assert len(broad) <= 10, f"Found {len(broad)} broad excepts in stock_analyzer (expected ≤10)"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

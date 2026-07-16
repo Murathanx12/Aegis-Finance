@@ -14,6 +14,8 @@ Usage:
 """
 
 import logging
+import threading
+import time
 
 from backend.config import config
 
@@ -25,6 +27,46 @@ logger = logging.getLogger(__name__)
 
 _finbert_pipeline = None
 _finbert_available = None
+_finbert_last_used: float | None = None
+_finbert_lock = threading.Lock()
+
+
+def maybe_unload_finbert(idle_seconds: int | None = None) -> bool:
+    """Free the FinBERT pipeline after a period of no scoring calls.
+
+    The loaded model holds ~1.5-2 GB resident — most of the Railway memory
+    bill — while a reload from the local HF cache costs ~5-10s. Off-hours
+    the model sits unused for 14+ h/day, so idle-unloading converts a 24/7
+    RAM cost into a few load/unload cycles. Quality is untouched: the same
+    model reloads on the next scoring call (`_finbert_available` resets to
+    None so `_get_finbert` retries).
+
+    Returns True if an unload happened. idle_seconds=0 disables unloading.
+    """
+    global _finbert_pipeline, _finbert_available, _finbert_last_used
+    if idle_seconds is None:
+        idle_seconds = int(config.get("sentiment", {})
+                           .get("finbert_idle_unload_minutes", 45)) * 60
+    if idle_seconds <= 0:
+        return False
+    with _finbert_lock:
+        if _finbert_pipeline is None or _finbert_last_used is None:
+            return False
+        idle = time.time() - _finbert_last_used
+        if idle < idle_seconds:
+            return False
+        _finbert_pipeline = None
+        _finbert_available = None  # next _get_finbert() reloads
+        _finbert_last_used = None
+    import gc
+    gc.collect()
+    try:  # return freed pages to the OS (Linux/Railway; no-op elsewhere)
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        pass
+    logger.info("FinBERT unloaded after %.0f min idle (reloads on next use)", idle / 60)
+    return True
 
 
 def _get_finbert():
@@ -36,32 +78,35 @@ def _get_finbert():
     keyword-lexicon; every response already reports its `method`, so the
     degradation is visible, never silent.
     """
-    global _finbert_pipeline, _finbert_available
-    if _finbert_available is not None:
-        return _finbert_pipeline
+    global _finbert_pipeline, _finbert_available, _finbert_last_used
+    with _finbert_lock:
+        if _finbert_available is not None:
+            _finbert_last_used = time.time()
+            return _finbert_pipeline
 
-    import os
-    if os.getenv("AEGIS_DISABLE_FINBERT") == "1":
-        logger.info("FinBERT disabled via AEGIS_DISABLE_FINBERT=1 — keyword fallback")
-        _finbert_available = False
-        return None
+        import os
+        if os.getenv("AEGIS_DISABLE_FINBERT") == "1":
+            logger.info("FinBERT disabled via AEGIS_DISABLE_FINBERT=1 — keyword fallback")
+            _finbert_available = False
+            return None
 
-    try:
-        from transformers import pipeline
-        _finbert_pipeline = pipeline(
-            "sentiment-analysis",
-            model="ProsusAI/finbert",
-            tokenizer="ProsusAI/finbert",
-            truncation=True,
-            max_length=512,
-        )
-        _finbert_available = True
-        logger.info("FinBERT loaded successfully")
-        return _finbert_pipeline
-    except Exception as e:
-        logger.warning("FinBERT unavailable (%s), using keyword fallback", e)
-        _finbert_available = False
-        return None
+        try:
+            from transformers import pipeline
+            _finbert_pipeline = pipeline(
+                "sentiment-analysis",
+                model="ProsusAI/finbert",
+                tokenizer="ProsusAI/finbert",
+                truncation=True,
+                max_length=512,
+            )
+            _finbert_available = True
+            _finbert_last_used = time.time()
+            logger.info("FinBERT loaded successfully")
+            return _finbert_pipeline
+        except Exception as e:
+            logger.warning("FinBERT unavailable (%s), using keyword fallback", e)
+            _finbert_available = False
+            return None
 
 
 def _score_with_finbert(headlines: list[str]) -> list[dict]:

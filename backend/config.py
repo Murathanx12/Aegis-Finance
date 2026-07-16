@@ -705,6 +705,13 @@ config: dict = {
         "ttl_simulation": 3600,     # 1 hr for Monte Carlo sims
         "ttl_portfolio": 0,         # No cache — unique per request body
         "ttl_backtest": 86400,      # 24 hr for backtest results
+        # Off-hours cost dial (2026-07-16): when US markets are closed the
+        # inputs to screener/MC/sector computes don't change, so the warm loop
+        # stretches every TTL by this factor — same outputs, ~6x fewer
+        # recomputes overnight/weekends. 1 = always-on behavior.
+        "offhours_ttl_multiplier": 6,
+        # Purge memory-cache entries this old each warm cycle (disk unaffected).
+        "sweep_max_age_hours": 24,
     },
 
     # ── EXTERNAL VALIDATION THRESHOLDS ──────────────────────────────────
@@ -774,6 +781,15 @@ config: dict = {
         "slightly_bullish_threshold": 0.05, # avg_numeric > 0.05 → slightly_bullish
         "bearish_threshold": -0.15,         # avg_numeric < -0.15 → bearish
         "slightly_bearish_threshold": -0.05,# avg_numeric < -0.05 → slightly_bearish
+        # Unload the ~2 GB FinBERT model after this many minutes without a
+        # scoring call (reload from local HF cache ~5-10s). 0 = never unload.
+        "finbert_idle_unload_minutes": 45,
+    },
+
+    # ── ANALYST INTELLIGENCE (Wall Street consensus display) ────────────
+    "analyst_intelligence": {
+        "max_actions": 30,             # firm-attributed actions returned
+        "actions_lookback_days": 365,  # ignore rating actions older than this
     },
 
     # ── STOCK UNIVERSE ───────────────────────────────────────────────────

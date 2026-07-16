@@ -13,6 +13,7 @@ GET /api/stock/{ticker}/valuation   — Relative valuation vs sector peers (Koyf
 GET /api/stock/{ticker}/patterns    — Chart pattern recognition (TradingView-style)
 GET /api/stock/{ticker}/volatility  — Volatility analytics (Bloomberg-style vol cone, GARCH)
 GET /api/stock/{ticker}/dividends   — Dividend intelligence (Morningstar-style)
+GET /api/stock/{ticker}/analysts    — Wall Street consensus (targets, ratings, firm actions)
 """
 
 import asyncio
@@ -1229,6 +1230,30 @@ async def get_stock_fundamentals(ticker: str):
 def _stock_fundamentals(ticker: str) -> dict:
     from backend.services.fundamentals import get_fundamentals
     return get_fundamentals(ticker)
+
+
+@router.get("/{ticker}/analysts")
+async def get_stock_analysts(ticker: str):
+    """Wall Street consensus: price-target band, monthly Strong Buy→Sell
+    trend, 1-5 rating, and firm-attributed upgrades/downgrades (the
+    Bloomberg-ANR-shaped view). Display intelligence only."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+    try:
+        from backend.services.analyst_intelligence import get_analyst_intelligence
+        result = await asyncio.to_thread(get_analyst_intelligence, ticker)
+        if result is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No analyst coverage data available for {ticker}",
+            )
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("analysts failed for %s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{ticker}/technicals")

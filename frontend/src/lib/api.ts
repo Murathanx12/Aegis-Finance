@@ -157,6 +157,45 @@ export function getDailyBrief(tickers: string[]) {
   return fetchAPI<DailyBriefResponse>(`/api/news/brief${param}`, undefined, HEAVY_TIMEOUT_MS);
 }
 
+// Analyst intelligence — Wall Street consensus (Bloomberg-ANR-shaped view)
+export interface AnalystIntelligence {
+  ticker: string;
+  price_targets: {
+    current_price: number | null;
+    low: number | null;
+    mean: number | null;
+    median: number | null;
+    high: number | null;
+    upside_pct: number | null;
+  } | null;
+  recommendation_trend: {
+    period: string;
+    strongBuy: number;
+    buy: number;
+    hold: number;
+    sell: number;
+    strongSell: number;
+    total: number;
+  }[] | null;
+  consensus_rating: {
+    score: number | null;
+    label: string | null;
+    n_analysts: number | null;
+    scale: string;
+  } | null;
+  recent_actions: {
+    date: string;
+    firm: string;
+    from_grade: string | null;
+    to_grade: string | null;
+    action: string | null;
+  }[] | null;
+  attribution: string;
+}
+export function getStockAnalysts(ticker: string) {
+  return fetchAPI<AnalystIntelligence>(`/api/stock/${ticker}/analysts`, undefined, HEAVY_TIMEOUT_MS);
+}
+
 // News
 export function getMarketNews() {
   return fetchAPI<MarketNewsResponse>("/api/news/market");

@@ -21,6 +21,13 @@ COPY engine/ engine/
 # Port from env (Railway sets PORT)
 ENV PORT=8000
 
+# glibc arena bloat guard (2026-07-16): the 80-ticker screener runs numpy MC
+# across 8 worker threads; default glibc grows up to 8*ncores malloc arenas
+# and freed pages never return to the OS — Railway bills that plateau as
+# RAM-hours. 2 arenas is the standard fix for threaded numpy services
+# (negligible lock contention at our request volume).
+ENV MALLOC_ARENA_MAX=2
+
 EXPOSE ${PORT}
 
 CMD uvicorn backend.main:app --host 0.0.0.0 --port ${PORT}
