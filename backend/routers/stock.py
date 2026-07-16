@@ -368,7 +368,21 @@ def _screener() -> dict:
     # Falls back to Sharpe if opportunity_score is not available
     stocks.sort(key=lambda x: x.get("opportunity_score", x.get("sharpe", 0)), reverse=True)
 
-    result = {"stocks": stocks, "count": len(stocks), "market_signal": market_sig}
+    return _public_screener_payload(stocks, market_sig, signal_analytics)
+
+
+def _public_screener_payload(stocks, market_sig, signal_analytics=None) -> dict:
+    """Assemble the screener response with a JSON-safe market signal.
+
+    Underscore keys on market_sig are internal plumbing (numpy HMM arrays,
+    raw crash prob) passed between compute stages — they are NOT JSON-
+    serializable and must never reach the response. Historically the raw
+    dict was embedded and only serialized when another consumer happened to
+    strip the shared cached copy first (race) — the 2026-07-16 boot 500'd
+    every screener request on `_hmm_state_means`.
+    """
+    public_sig = {k: v for k, v in market_sig.items() if not k.startswith("_")}
+    result = {"stocks": stocks, "count": len(stocks), "market_signal": public_sig}
     if signal_analytics:
         result["signal_analytics"] = signal_analytics
     return result
