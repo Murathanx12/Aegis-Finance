@@ -450,9 +450,16 @@ def run_cycle(cycle: int, model: str, baseline_failures: str, *,
         cwd=str(REPO_DIR), timeout=300,
     )
 
-    # Build prompt (with trend-awareness + hypothesis memory)
+    # Build prompt (with trend-awareness + hypothesis memory + canonical findings)
     trend = trend_summary(read_history(HISTORY_PATH, last_n=10))
     hypothesis_block = hypotheses.summarise_for_prompt(HYPOTHESES_PATH)
+    try:
+        import findings
+        findings_block = findings.summarise_for_prompt()
+        if findings_block:
+            hypothesis_block = findings_block + "\n\n" + hypothesis_block
+    except Exception as e:
+        print(f"  [WARN] findings ledger unavailable: {e}")
     prompt = build_prompt(
         cycle, cycle_dir, baseline_failures,
         trend=trend,
