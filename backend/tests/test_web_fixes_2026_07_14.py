@@ -227,6 +227,31 @@ class TestDailyBrief:
         assert "MRVL,NVDA" in resp.json()["key"]
 
 
+# ── 4b. GDELT outage behavior (2026-07-16) ──────────────────────────────────
+
+
+class TestGdeltStaleServe:
+    def test_failure_serves_last_good_with_disclosed_staleness(self):
+        from backend.services import news_intelligence as ni
+        good = {"avg_tone": -1.2, "conflict_score": 0.4,
+                "raw_data": {"conflict": [1, 2]}, "success": True}
+        with patch.object(ni, "_fetch_tone_timeline",
+                          side_effect=RuntimeError("429")), \
+             patch("backend.cache.cache_peek", return_value=(good, 1800.0)):
+            out = ni.fetch_gdelt_signals()
+        assert out["stale"] is True
+        assert out["stale_age_s"] == 1800
+        assert out["conflict_score"] == 0.4  # real data, just old
+
+    def test_failure_without_stale_copy_is_honest_fallback(self):
+        from backend.services import news_intelligence as ni
+        with patch.object(ni, "_fetch_tone_timeline",
+                          side_effect=RuntimeError("429")), \
+             patch("backend.cache.cache_peek", return_value=(None, None)):
+            out = ni.fetch_gdelt_signals()
+        assert out.get("success") is not True  # disclosed unavailable, never fabricated
+
+
 # ── 5. Screener NameError regression (2026-07-16) ───────────────────────────
 
 

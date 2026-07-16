@@ -305,6 +305,13 @@ def scheduler_health() -> dict:
             "running": bool(getattr(_scheduler, "running", False)),
             "n_jobs": len(jobs),
             "job_ids": sorted(j.id for j in jobs),
+            # next fire times make trigger changes VERIFIABLE live (e.g. the
+            # 2026-07-16 hourly→close-only MTM change: pi_hourly_mtm must
+            # show 16:30 ET, not the next intraday hour)
+            "next_runs": {
+                j.id: j.next_run_time.isoformat() if j.next_run_time else None
+                for j in jobs
+            },
             "jobstore": type(store).__name__ if store else None,
             "persistent": bool(store and "SQLAlchemy" in type(store).__name__),
             "last_mtm": _last_mtm_timestamp.isoformat() if _last_mtm_timestamp else None,

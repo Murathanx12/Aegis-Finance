@@ -529,6 +529,47 @@ def _compute_market_signal() -> dict:
     return signal
 
 
+@router.get("/model-vs-firms")
+async def get_model_vs_firms():
+    """Our MC S&P 500 expected return next to the published capital-market
+    assumptions of major firms — the honest baseline: the firms themselves
+    disagree by >5pp, and our median sits inside their dispersion.
+
+    Display-only comparison; horizons differ (ours 5y, firms mostly 10y) and
+    are labeled per row. Firm numbers are hardcoded published figures with
+    as-of dates (config.firm_baselines), refreshed on the firms' annual cycle.
+    """
+    from backend.cache import cache_peek
+
+    proj, age = cache_peek("sp500_projection:10000:5", max_stale=24 * 3600)
+    ours = None
+    if proj and proj.get("median_annual_return") is not None:
+        ours = {
+            "median_annual_pct": proj["median_annual_return"],
+            "horizon": "5y",
+            "p05_total_pct": round((proj["p05_final"] / proj["start_price"] - 1) * 100, 1)
+            if proj.get("p05_final") and proj.get("start_price") else None,
+            "p95_total_pct": round((proj["p95_final"] / proj["start_price"] - 1) * 100, 1)
+            if proj.get("p95_final") and proj.get("start_price") else None,
+            "as_of": proj.get("last_updated"),
+            "cache_age_s": int(age) if age else 0,
+        }
+    fb = config["firm_baselines"]
+    return {
+        "our_model": ours,  # null until the projection cache warms — disclosed
+        "firms": fb["us_large_cap_expected_return"],
+        "street_target_note": fb["street_target_hit_rate_note"],
+        "framing": (
+            "Nominal annualized US large-cap expected returns as published by "
+            "each firm (horizons differ and are labeled). The firms disagree "
+            "with each other by several percentage points — that dispersion "
+            "is the honest margin of error on ANY long-run return forecast, "
+            "including ours. Educational comparison, not advice."
+        ),
+        "sources_doc": "docs/research/DATA_SOURCES_AND_BASELINES_2026-07-16.md",
+    }
+
+
 @router.get("/macro")
 async def get_macro_indicators():
     """FRED macro indicators with latest values."""

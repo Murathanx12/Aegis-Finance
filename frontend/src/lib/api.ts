@@ -196,6 +196,24 @@ export function getStockAnalysts(ticker: string) {
   return fetchAPI<AnalystIntelligence>(`/api/stock/${ticker}/analysts`, undefined, HEAVY_TIMEOUT_MS);
 }
 
+// Model vs firm baselines (published capital market assumptions)
+export interface ModelVsFirmsResponse {
+  our_model: {
+    median_annual_pct: number;
+    horizon: string;
+    p05_total_pct: number | null;
+    p95_total_pct: number | null;
+    as_of: string | null;
+    cache_age_s: number;
+  } | null;
+  firms: { firm: string; horizon: string; low_pct: number; high_pct: number; as_of: string; note?: string }[];
+  street_target_note: string;
+  framing: string;
+}
+export function getModelVsFirms() {
+  return fetchAPI<ModelVsFirmsResponse>("/api/model-vs-firms");
+}
+
 // News
 export function getMarketNews() {
   return fetchAPI<MarketNewsResponse>("/api/news/market");

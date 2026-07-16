@@ -15,7 +15,6 @@ Usage:
 """
 
 import logging
-from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 
 import numpy as np
@@ -44,16 +43,16 @@ def fetch_gdelt_signals(query: str = "market OR economy OR financial", days: int
         return _gdelt_fallback("requests library not available")
 
     try:
-        # Parallel GDELT fetches — 3 independent API calls
-        gdelt_workers = config["performance"]["gdelt_max_workers"]
-        with ThreadPoolExecutor(max_workers=gdelt_workers) as executor:
-            tone_future = executor.submit(_fetch_tone_timeline, query, days)
-            volume_future = executor.submit(_fetch_volume_timeline, query, days)
-            conflict_future = executor.submit(_fetch_conflict_timeline, days)
-
-        tone_data = tone_future.result()
-        volume_data = volume_future.result()
-        conflict_data = conflict_future.result()
+        # SEQUENTIAL fetches with a small stagger (2026-07-16): GDELT
+        # rate-limits per IP and three simultaneous calls at boot were
+        # 429-ing each other (self-inflicted burst — see prod warnings).
+        # Three staggered calls cost ~2s more and stop the storm.
+        import time as _time
+        tone_data = _fetch_tone_timeline(query, days)
+        _time.sleep(1.0)
+        volume_data = _fetch_volume_timeline(query, days)
+        _time.sleep(1.0)
+        conflict_data = _fetch_conflict_timeline(days)
 
         # Compute summary stats
         avg_tone = 0.0
@@ -82,7 +81,7 @@ def fetch_gdelt_signals(query: str = "market OR economy OR financial", days: int
             max_conflict = max(conflicts) if conflicts else 1
             conflict_score = float(np.clip(recent_conflict / max(max_conflict, 1), 0, 1))
 
-        return {
+        result = {
             "avg_tone": round(avg_tone, 3),
             "tone_trend": round(tone_trend, 3),
             "volume_zscore": round(volume_zscore, 2),
@@ -94,8 +93,30 @@ def fetch_gdelt_signals(query: str = "market OR economy OR financial", days: int
             },
             "success": True,
         }
+        # Keep the last GOOD read for stale-serving through GDELT outages —
+        # but only if it actually contains data (an all-empty "success" is
+        # not worth preserving).
+        if conflict_data or tone_data:
+            try:
+                from backend.cache import cache_set
+                cache_set("gdelt:last_good", result)
+            except Exception:
+                pass
+        return result
 
     except Exception as e:
+        # Serve the last good read (<=24h) with DISCLOSED staleness before
+        # falling back to the honest "unavailable" default — a day-old real
+        # geopolitical read beats a fabricated calm one (silent-fragility).
+        try:
+            from backend.cache import cache_peek
+            stale, age = cache_peek("gdelt:last_good", max_stale=24 * 3600)
+        except Exception:
+            stale, age = None, None
+        if stale is not None:
+            logger.warning("GDELT fetch failed (%s) — serving last good read "
+                           "(%.0f min old, disclosed)", e, (age or 0) / 60)
+            return {**stale, "stale": True, "stale_age_s": int(age or 0)}
         logger.warning("GDELT fetch failed: %s", e)
         return _gdelt_fallback(str(e))
 
