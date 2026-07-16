@@ -792,6 +792,40 @@ config: dict = {
         "actions_lookback_days": 365,  # ignore rating actions older than this
     },
 
+    # ── FIRM BASELINES (published capital market assumptions) ───────────
+    # For the model-vs-firm comparison surface. Nominal annualized US
+    # large-cap expected returns as PUBLISHED by each firm — display-only
+    # anchors, refreshed on the firms' annual cycle (next ~Oct-Dec 2026).
+    # Sources + verification: docs/research/DATA_SOURCES_AND_BASELINES_2026-07-16.md
+    "firm_baselines": {
+        "us_large_cap_expected_return": [
+            {"firm": "J.P. Morgan LTCMA 2026", "horizon": "10-15y",
+             "low_pct": 6.7, "high_pct": 6.7, "as_of": "2025-10"},
+            {"firm": "Vanguard VEMO 2026", "horizon": "5-10y",
+             "low_pct": 4.0, "high_pct": 5.0, "as_of": "2025-12"},
+            {"firm": "BlackRock CMA", "horizon": "10y",
+             "low_pct": 8.5, "high_pct": 8.5, "as_of": "2026-03-31"},
+            {"firm": "Schwab", "horizon": "2026-2035",
+             "low_pct": 5.9, "high_pct": 5.9, "as_of": "2025"},
+            {"firm": "Invesco CMA", "horizon": "10y",
+             "low_pct": 5.0, "high_pct": 5.0, "as_of": "2025"},
+            {"firm": "AQR", "horizon": "5-10y",
+             "low_pct": 6.3, "high_pct": 6.3, "as_of": "2025",
+             "note": "3.9% real, ~6.3% nominal-equivalent"},
+            {"firm": "Goldman Sachs", "horizon": "10y",
+             "low_pct": 6.5, "high_pct": 6.5, "as_of": "2025-11",
+             "note": "updated from the Oct-2024 3% call; secondary-sourced "
+                     "(primary paywalled) — verify before UI display"},
+        ],
+        # Documented street 12m price-target behavior (cited, for UI caveats
+        # and the TRIAL-FORECAST-LEDGER prior — never our own claim):
+        "street_target_hit_rate_note": (
+            "Studies: ~25% of 12m targets reached by month 12 (100k targets "
+            "1997-2002, Columbia); <50% of large-cap targets reached (2023); "
+            "S&P 500 ratings Dec 2025: 57.5% Buy vs 4.8% Sell."
+        ),
+    },
+
     # ── STOCK UNIVERSE ───────────────────────────────────────────────────
     # Expanded universe: S&P 100 constituents + popular growth/value names
     # Organized by GICS sector for screener and factor analysis
