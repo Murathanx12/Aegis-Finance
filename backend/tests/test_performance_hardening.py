@@ -217,7 +217,8 @@ class TestParallelScreener:
 
 
 class TestGdeltParallelization:
-    """Test GDELT fetch parallelization and retry behavior."""
+    """GDELT fetch behavior (sequential-staggered since 2026-07-16 — the
+    3-way parallel burst was 429-ing itself; class name kept for history)."""
 
     @patch("backend.services.news_intelligence._fetch_tone_timeline")
     @patch("backend.services.news_intelligence._fetch_volume_timeline")
@@ -257,13 +258,17 @@ class TestGdeltParallelization:
     @patch("backend.services.news_intelligence._fetch_volume_timeline")
     @patch("backend.services.news_intelligence._fetch_conflict_timeline")
     def test_exception_in_one_fetch_triggers_fallback(self, mock_conflict, mock_volume, mock_tone):
-        """If any fetch raises, the whole function should return fallback."""
+        """If a fetch raises and NO stale copy exists, return the honest
+        fallback. cache_peek must be patched: an earlier test in the same
+        run legitimately primes the real gdelt:last_good stale cache (the
+        2026-07-16 stale-serve path, pinned in test_web_fixes_2026_07_14)."""
         mock_tone.side_effect = Exception("network timeout")
         mock_volume.return_value = [100, 110]
         mock_conflict.return_value = [50]
 
         from backend.services.news_intelligence import fetch_gdelt_signals
-        result = fetch_gdelt_signals("test", 7)
+        with patch("backend.cache.cache_peek", return_value=(None, None)):
+            result = fetch_gdelt_signals("test", 7)
 
         # Should hit the except branch and return fallback
         assert result["success"] is False
