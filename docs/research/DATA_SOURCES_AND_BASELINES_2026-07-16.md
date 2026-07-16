@@ -21,12 +21,20 @@ acceptance test: rerun `engine/research/survivorship_audit.py` (the exact
 - **Pass bar (pre-committed): ≥16/20 delisted names return usable price
   history with a sane final print.** If it fails, cancel and get a Sharadar
   SEP quote instead.
-- Caveats found: EODHD documents NO delisting-return methodology or
-  corporate-action guarantees for delisted names (their claims are
-  marketing-verified only — the audit is the truth); the €19.99 tier is a
-  personal-use license (fine for offline VALIDATION, the CRSP role; public
-  redistribution of raw data would need their commercial tier — we display
-  derived analytics only, and validation results stay in docs).
+- ✅ **Phase 1 acceptance PASSED 2026-07-16: 16/20 delisted audit names
+  present** in EODHD's 58,580-ticker delisted registry (LEH/BSC/SIVB/FRC/
+  SGEN all listed; missing: JAVA, EMC, SBNY, RE). Free tier serves the list
+  but NOT dead-company price history → phase 2 needs the paid month.
+- Caveats (license section FACT-CHECKED 2026-07-16): price is **$19.99/mo
+  USD** (not €); EODHD documents NO delisting-return methodology for
+  delisted names (the phase-2 audit is the truth). License is stricter than
+  first read: ALL standard plans are "personal use only" — any business or
+  regulated use, INCLUDING internal research inside a business, requires
+  their commercial tier ($399/mo Internal Use). For Murathan as an
+  individual doing personal research/validation it's fine. HARD RULE for
+  us: EODHD data stays OFFLINE in engine/research validation (the CRSP
+  role); nothing EODHD-derived is served on the public website; revisit
+  the license the day Aegis becomes a business.
 - Bulk download: pull the audited universe once into `engine/data/bulk/`
   (check retention terms before relying on retain-after-cancel).
 
