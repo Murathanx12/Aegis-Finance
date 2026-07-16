@@ -265,3 +265,27 @@ class TestAnalyzeStockCompletes:
         # enrichment fields degrade to None, never crash the analysis
         assert r.get("analyst_targets") is None
         assert r.get("recommendations") is None
+
+
+class TestScreenerPayloadJsonSafe:
+    def test_numpy_hmm_arrays_never_reach_response(self):
+        """Regression (2026-07-16 prod 500): market_sig carries numpy arrays
+        under underscore keys; the screener response must strip them so
+        FastAPI's jsonable_encoder cannot choke."""
+        from fastapi.encoders import jsonable_encoder
+        from backend.routers.stock import _public_screener_payload
+        market_sig = {
+            "action": "Hold", "confidence": 55,
+            "_crash_3m_pct": 12.0,
+            "_hmm_state_means": np.array([0.1, -0.2, 0.0]),
+            "_hmm_regime_probs": np.array([0.7, 0.2, 0.1]),
+            "_hmm_state_vols": np.array([0.1, 0.3, 0.6]),
+        }
+        payload = _public_screener_payload(
+            [{"ticker": "AAPL", "sharpe": 1.0}], market_sig,
+            signal_analytics={"consensus": 0.4},
+        )
+        encoded = jsonable_encoder(payload)  # must not raise
+        assert encoded["market_signal"] == {"action": "Hold", "confidence": 55}
+        assert encoded["count"] == 1
+        assert encoded["signal_analytics"]["consensus"] == 0.4
