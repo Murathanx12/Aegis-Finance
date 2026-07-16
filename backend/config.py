@@ -820,9 +820,10 @@ config: dict = {
         # Documented street 12m price-target behavior (cited, for UI caveats
         # and the TRIAL-FORECAST-LEDGER prior — never our own claim):
         "street_target_hit_rate_note": (
-            "Studies: ~25% of 12m targets reached by month 12 (100k targets "
-            "1997-2002, Columbia); <50% of large-cap targets reached (2023); "
-            "S&P 500 ratings Dec 2025: 57.5% Buy vs 4.8% Sell."
+            "Studies: 24% of 12m targets met at horizon end (~100k targets "
+            "1997-2002, Bradshaw & Brown WP; peer-reviewed 2013 version on "
+            "2000-2009: 38% at horizon end, 64% at some point); S&P 500 "
+            "ratings Dec 2025: 57.5% Buy vs 4.8% Sell."
         ),
     },
 
