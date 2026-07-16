@@ -495,6 +495,19 @@ async def _daily_check():
     except Exception as e:
         logger.error("Revisions-IC collection failed: %s", e, exc_info=True)
 
+    # TRIAL-FORECAST-LEDGER — pair the MC-implied 1y forecast with the street
+    # target-implied forecast from the SAME cached screener snapshot. Weekly-
+    # throttled, measurement-only (never a signal), matures from 2027-07.
+    try:
+        from backend.services.portfolio_intelligence.forecast_ledger import (
+            collect_forecast_snapshots,
+        )
+        fl = await asyncio.to_thread(collect_forecast_snapshots)
+        logger.info("Forecast-ledger collect: status=%s n=%s written=%s (measurement)",
+                    fl.get("status"), fl.get("n"), fl.get("written"))
+    except Exception as e:
+        logger.error("Forecast-ledger collection failed: %s", e, exc_info=True)
+
     # TRIAL-PEAD-IC — snapshot the post-earnings-announcement-drift score
     # (analyst surprise + announcement-window excess return, two-way) per book
     # name. Weekly-throttled, descriptive, forward-only. Honest prior: decayed

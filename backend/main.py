@@ -254,6 +254,13 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning("Fragility trial pre-registration failed (non-fatal): %s", e)
         try:
+            from backend.services.portfolio_intelligence.forecast_ledger import (
+                ensure_forecast_ledger_trial,
+            )
+            await asyncio.to_thread(ensure_forecast_ledger_trial)
+        except Exception as e:
+            logger.warning("Forecast-ledger trial pre-registration failed (non-fatal): %s", e)
+        try:
             from backend.services.portfolio_intelligence.congress_collector import (
                 ensure_congress_trial,
             )
