@@ -52,11 +52,43 @@ GREED_TERMS = [
 ]
 
 
+# Google blocks datacenter IPs aggressively; from Railway pytrends fails ~always.
+# After a failure we COOL DOWN instead of re-hammering every warm cycle: one
+# loud warning on entry, then quiet fast-fails until the cooldown expires.
+# The signal is disclosed as unavailable (None) downstream — never neutral-faked.
+_TRENDS_COOLDOWN_S = 6 * 3600
+_TRENDS_COOLDOWN_KEY = "trends:blocked"
+
+
+def _in_cooldown() -> bool:
+    try:
+        from backend.cache import cache_get
+        return cache_get(_TRENDS_COOLDOWN_KEY, _TRENDS_COOLDOWN_S) is not None
+    except Exception:
+        return False
+
+
+def _enter_cooldown(reason: str) -> None:
+    try:
+        from backend.cache import cache_set
+        cache_set(_TRENDS_COOLDOWN_KEY, {"reason": reason})
+        logger.warning(
+            "Google Trends unavailable (%s) — cooling down %dh; fear/greed "
+            "signal disclosed as unavailable until then", reason,
+            _TRENDS_COOLDOWN_S // 3600,
+        )
+    except Exception:
+        logger.warning("Google Trends unavailable (%s)", reason)
+
+
 def _fetch_trends(keywords: list[str], timeframe: str = "today 3-m") -> Optional[dict]:
     """Fetch Google Trends data for keywords.
 
     Returns dict of {keyword: latest_value} or None on failure.
     """
+    if _in_cooldown():
+        logger.debug("Google Trends in failure cooldown — skipping fetch")
+        return None
     try:
         from pytrends.request import TrendReq
 
@@ -89,10 +121,10 @@ def _fetch_trends(keywords: list[str], timeframe: str = "today 3-m") -> Optional
         return result
 
     except ImportError:
-        logger.warning("pytrends not installed — Google Trends unavailable")
+        _enter_cooldown("pytrends not installed")
         return None
     except Exception as e:
-        logger.warning("Google Trends fetch failed: %s", e)
+        _enter_cooldown(f"fetch failed: {e}")
         return None
 
 

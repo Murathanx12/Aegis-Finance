@@ -13,6 +13,7 @@ import { SectorHeatmap } from "@/components/dashboard/sector-heatmap";
 import { SignalBadge } from "@/components/dashboard/signal-badge";
 import { HeroSection } from "@/components/dashboard/hero-section";
 import { DailyBriefCard } from "@/components/dashboard/daily-brief-card";
+import { ModelVsFirmsCard } from "@/components/dashboard/model-vs-firms-card";
 import { ErrorCard } from "@/components/error-card";
 import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import { InfoTooltip } from "@/components/info-tooltip";
@@ -113,6 +114,8 @@ export default function DashboardPage() {
         <CrashGauge data={market.data ?? null} />
         <SP500Chart data={projection.data ?? null} />
       </div>
+
+      <ModelVsFirmsCard />
 
       <div>
         <h2 className="text-base font-medium text-muted-foreground mb-3">
