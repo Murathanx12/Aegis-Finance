@@ -308,6 +308,20 @@ async def lifespan(app: FastAPI):
                 logger.warning("CONSERVATIVE-ATR SEEDING (AEGIS_SEED_CONSERVATIVE_ATR=1): %s", res)
             except Exception as e:
                 logger.error("Conservative-ATR seeding failed: %s", e, exc_info=True)
+        # Alpaca paper mirror seeding — ATTENDED, env-gated, same pattern.
+        # Needs ALPACA_API_KEY_ID + ALPACA_API_SECRET_KEY set on Railway.
+        # Set AEGIS_SEED_ALPACA_MIRROR=1 for ONE boot to replicate the mirror
+        # lane's positions into the paper account (idempotent — an account
+        # already holding positions never re-seeds), then unset the flag.
+        if os.environ.get("AEGIS_SEED_ALPACA_MIRROR") == "1":
+            try:
+                from backend.services.portfolio_intelligence.alpaca_mirror import (
+                    seed_alpaca_mirror,
+                )
+                res = await asyncio.to_thread(seed_alpaca_mirror)
+                logger.warning("ALPACA-MIRROR SEEDING (AEGIS_SEED_ALPACA_MIRROR=1): %s", res)
+            except Exception as e:
+                logger.error("Alpaca-mirror seeding failed: %s", e, exc_info=True)
     asyncio.create_task(_init_lanes())
 
     try:
