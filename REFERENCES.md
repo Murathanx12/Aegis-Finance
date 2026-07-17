@@ -1,5 +1,12 @@
 # REFERENCES — external projects we study, and what we take from each
 
+> **2026-07-17: the machine-readable successor to this file is
+> `docs/KNOWLEDGE/projects.jsonl`** (104 entries, injected into every lab
+> cycle; human-readable view in `docs/PROJECT_LANDSCAPE.md`). New
+> examinations go THERE, in the same commit as the examining work
+> (CANON §11). This file stays as narrative background for the early
+> study-closely set.
+
 > Policy: **patterns, re-implemented — never vendored code.** Copying other
 > repos in would be license contamination (Aegis is MIT), bloat, and a dilution
 > of the one thing that is ours (the honest forward record + the private brain).

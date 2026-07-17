@@ -48,6 +48,18 @@
 
 ---
 
+## DONE 2026-07-17 (V5 session 1 — project ledger + collector hardening)
+
+| Item | What was done |
+|---|---|
+| **Project ledger** | `docs/KNOWLEDGE/projects.jsonl` (104 entries: absorbed/rejected/unmined with why + file pointers), `lab/projects.py` loader injected into every rd_loop cycle, `docs/PROJECT_LANDSCAPE.md` (approach audit + ranked unmined top-10), CANON §11 (entry in same commit as examination). Bounded sweep done; search TERMINATES. |
+| **FMP budget ledger** (V4 lack #9) | `fmp_budget.py`: 240/day ceiling, 40 reserved for congress-IC; provider/ESG stop at 200; live 402 fast-fails all until UTC rollover; exposed at `/api/health/full → fmp_budget`. Root cause confirmed: 07:30 ET slot ALSO died on 402 (2026-07-17) — overnight fallback traffic burns the quota; scheduling can't fix an unmetered resource. |
+| **GDELT 429 storm** (V4 lack #10) | Root-caused to warm-loop cadence (news recompute 3×/hr, 24/7, GDELT uncached). Fix: 1h result cache + 15-min failure cooldown in `fetch_gdelt_signals`; retry + stale-serve logs → INFO; WARNING now = genuinely no data. |
+| **^TNX boot failure** | Treasury columns (T10Y/T3M/T30Y) backfill from FRED DGS10/DGS3MO/DGS30 when the yfinance batch drops them (loud INFO on fallback, WARNING only if both sources fail). |
+| **Close-only MTM verified** | The 2026-07-16 lever changed the TRIGGER (cron 16:30–19:30 ET weekdays), not just the write — `pi_hourly_mtm` no longer wakes hourly; skip-checks precede any fetch. Fully done; RAM glance stays on Murat. |
+| **Alpaca keys validated** | Paper account ACTIVE ($100k, 0 positions) + IEX daily bars verified. Seed still needs Railway env vars + `AEGIS_SEED_ALPACA_MIRROR=1` boot (Murat), then key rotation. |
+| Google Trends | Examined; keep as-is (6h cooldown + None-disclosure is the right shape for a datacenter-blocked source). |
+
 ## DONE THIS SESSION (2026-06-14)
 
 | ID | Item | What was done |
