@@ -307,6 +307,33 @@ export function getEconomicSurprise() {
   return fetchAPI<EconomicSurprise>("/api/analytics/economic-surprise");
 }
 
+// FRED economic calendar: RECENT releases vs our trend proxy (disclosed,
+// never presented as street consensus). Distinct from getEconomicCalendar
+// below, the Finnhub UPCOMING-events feed.
+export interface FredCalendarRelease {
+  series_id: string;
+  name: string;
+  importance: 1 | 2 | 3;
+  date: string | null;
+  frequency: string | null;
+  actual: number | null;
+  forecast_trend: number | null;
+  previous: number | null;
+  surprise_pct: number | null;
+  direction: "beat" | "miss" | "inline";
+}
+
+export interface FredEconomicCalendarResponse {
+  releases: FredCalendarRelease[];
+  composite_score: number | null;
+  signal: string | null;
+  note: string;
+}
+
+export function getFredEconomicCalendar() {
+  return fetchAPI<FredEconomicCalendarResponse>("/api/analytics/economic-calendar");
+}
+
 // Google Trends Sentiment
 export function getTrendsSentiment() {
   return fetchAPI<TrendsSentimentFull>("/api/analytics/trends-sentiment");

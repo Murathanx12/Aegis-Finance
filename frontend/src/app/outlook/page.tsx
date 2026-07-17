@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/info-tooltip";
 import { ErrorCard } from "@/components/error-card";
+import { EconomicCalendarCard } from "@/components/outlook/economic-calendar-card";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, ReferenceLine,
@@ -584,6 +585,9 @@ export default function OutlookPage() {
           </Card>
         )}
       </div>
+
+      {/* ── Row 6: Economic calendar (recent FRED releases vs trend) ── */}
+      <EconomicCalendarCard />
 
       {(crashQuery.error || projQuery.error || scenQuery.error || valQuery.error) && (
         <ErrorCard

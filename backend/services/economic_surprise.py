@@ -34,17 +34,25 @@ logger = logging.getLogger(__name__)
 # Indicators and whether higher is "good" (positive surprise = bullish)
 # For inverted indicators (like unemployment, claims), higher = bearish
 _INDICATORS = {
-    "ICSA": {"name": "Initial Jobless Claims", "inverted": True, "weight": 1.5},
-    "UNRATE": {"name": "Unemployment Rate", "inverted": True, "weight": 1.0},
-    "INDPRO": {"name": "Industrial Production", "inverted": False, "weight": 1.2},
-    "MANEMP": {"name": "Manufacturing Employment", "inverted": False, "weight": 0.8},
+    "ICSA": {"name": "Initial Jobless Claims", "inverted": True, "weight": 1.5,
+             "frequency": "weekly"},
+    "UNRATE": {"name": "Unemployment Rate", "inverted": True, "weight": 1.0,
+               "frequency": "monthly"},
+    "INDPRO": {"name": "Industrial Production", "inverted": False, "weight": 1.2,
+               "frequency": "monthly"},
+    "MANEMP": {"name": "Manufacturing Employment", "inverted": False, "weight": 0.8,
+               "frequency": "monthly"},
     # CPI is a monotonically increasing price level. Using the raw level causes
     # a systematic bearish bias (latest always > trailing median). Instead, we
     # compute surprise on month-over-month % change (inflation rate).
-    "CPIAUCSL": {"name": "Consumer Price Index", "inverted": True, "weight": 0.8, "use_change": True},
-    "NFCI": {"name": "Chicago Fed NFCI", "inverted": True, "weight": 1.3},
-    "BAMLH0A0HYM2": {"name": "High Yield Spread", "inverted": True, "weight": 1.2},
-    "UMCSENT": {"name": "Consumer Sentiment", "inverted": False, "weight": 1.0},
+    "CPIAUCSL": {"name": "Consumer Price Index", "inverted": True, "weight": 0.8,
+                 "use_change": True, "frequency": "monthly"},
+    "NFCI": {"name": "Chicago Fed NFCI", "inverted": True, "weight": 1.3,
+             "frequency": "weekly"},
+    "BAMLH0A0HYM2": {"name": "High Yield Spread", "inverted": True, "weight": 1.2,
+                     "frequency": "daily"},
+    "UMCSENT": {"name": "Consumer Sentiment", "inverted": False, "weight": 1.0,
+                "frequency": "monthly"},
     # Industrial Production is also a level index, but changes slowly enough
     # that the rolling median tracks it well. Add use_change if bias appears.
 }
@@ -146,10 +154,22 @@ def compute_surprise_index() -> Optional[dict]:
         display_latest = float(data.iloc[-1])
         display_trend = round(trend_val, 2) if not meta.get("use_change") else round(float(data.rolling(_TREND_WINDOW).median().iloc[-1]), 2)
 
+        # Calendar-card fields: when the latest observation is dated, what the
+        # prior print was, and the series cadence.
+        latest_date = None
+        try:
+            latest_date = data.index[-1].date().isoformat()
+        except AttributeError:
+            pass
+        previous_value = round(float(data.iloc[-2]), 2) if len(data) >= 2 else None
+
         indicator_surprises.append({
             "series_id": series_id,
             "name": meta["name"],
             "latest_value": round(display_latest, 2),
+            "latest_date": latest_date,
+            "previous_value": previous_value,
+            "frequency": meta.get("frequency"),
             "trend_value": display_trend,
             "surprise_pct": round(surprise_pct, 2),
             "surprise_normalized": round(surprise_normalized, 3),
@@ -209,3 +229,46 @@ def get_indicator_surprises() -> list[dict]:
     if result is None:
         return []
     return result.get("indicators", [])
+
+
+def get_economic_calendar() -> Optional[dict]:
+    """Recent-releases calendar: Actual / trend-forecast / Previous per FRED
+    indicator, with importance stars, sorted most-recent first.
+
+    Honesty note baked into the payload: the "forecast" column is OUR
+    12-period rolling-median trend proxy computed from the data itself —
+    NOT a street consensus (we don't have a consensus feed, and won't fake
+    one). Beat/miss is relative to that trend.
+    """
+    result = compute_surprise_index()
+    if result is None:
+        return None
+
+    releases = []
+    for ind in result.get("indicators", []):
+        w = ind.get("weight", 1.0)
+        stars = 3 if w >= 1.3 else 2 if w >= 1.0 else 1
+        norm = ind.get("surprise_normalized", 0.0)
+        direction = "beat" if norm > 0.05 else "miss" if norm < -0.05 else "inline"
+        releases.append({
+            "series_id": ind["series_id"],
+            "name": ind["name"],
+            "importance": stars,
+            "date": ind.get("latest_date"),
+            "frequency": ind.get("frequency"),
+            "actual": ind.get("latest_value"),
+            "forecast_trend": ind.get("trend_value"),
+            "previous": ind.get("previous_value"),
+            "surprise_pct": ind.get("surprise_pct"),
+            "direction": direction,
+        })
+    releases.sort(key=lambda r: r.get("date") or "", reverse=True)
+
+    return {
+        "releases": releases,
+        "composite_score": result.get("composite_score"),
+        "signal": result.get("signal"),
+        "note": ("Forecast = 12-period rolling-median trend computed from the "
+                 "series itself (consensus proxy), not a street consensus. "
+                 "Beat/miss is relative to trend. Source: FRED."),
+    }

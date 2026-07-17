@@ -313,6 +313,30 @@ async def get_economic_surprise():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/economic-calendar")
+async def get_economic_calendar_endpoint():
+    """Recent FRED releases as a calendar card: Actual / trend-forecast /
+    Previous + importance stars. The forecast is our rolling-median trend
+    proxy, disclosed as such — never presented as street consensus."""
+    cached = cache_get("economic_calendar", _CACHE_TTL.get("ttl_macro", 300))
+    if cached is not None:
+        return cached
+
+    try:
+        from backend.services.economic_surprise import get_economic_calendar
+        result = await asyncio.to_thread(get_economic_calendar)
+        if result is None:
+            raise HTTPException(status_code=503,
+                                detail="Economic calendar unavailable (FRED)")
+        cache_set("economic_calendar", result)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("economic calendar failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ── Crash Timeline ────────────────────────────────────────────────
 
 
