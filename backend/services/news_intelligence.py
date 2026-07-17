@@ -42,6 +42,23 @@ def fetch_gdelt_signals(query: str = "market OR economy OR financial", days: int
     if not _HAS_REQUESTS:
         return _gdelt_fallback("requests library not available")
 
+    # Result cache (2026-07-17): the endpoint warm loop recomputes the news
+    # payload ~3x/hour around the clock, and GDELT rate-limits well below
+    # that — the perpetual 429 storm was self-inflicted cadence. A 30-day
+    # timeline is safely servable for an hour; after a failure, the disclosed
+    # stale/unavailable result is held for a shorter cooldown so a dead GDELT
+    # is not re-hammered every warm cycle.
+    _sig_key = f"gdelt:signals:{query}:{days}"
+    try:
+        from backend.cache import cache_get
+        hit = cache_get(_sig_key, _GDELT_CACHE_TTL)
+        if hit is None:
+            hit = cache_get(_sig_key + ":fail", _GDELT_FAIL_COOLDOWN)
+        if hit is not None:
+            return hit
+    except Exception:
+        pass
+
     try:
         # SEQUENTIAL fetches with a small stagger (2026-07-16): GDELT
         # rate-limits per IP and three simultaneous calls at boot were
@@ -96,12 +113,13 @@ def fetch_gdelt_signals(query: str = "market OR economy OR financial", days: int
         # Keep the last GOOD read for stale-serving through GDELT outages —
         # but only if it actually contains data (an all-empty "success" is
         # not worth preserving).
-        if conflict_data or tone_data:
-            try:
-                from backend.cache import cache_set
+        try:
+            from backend.cache import cache_set
+            if conflict_data or tone_data:
                 cache_set("gdelt:last_good", result)
-            except Exception:
-                pass
+            cache_set(_sig_key, result)
+        except Exception:
+            pass
         return result
 
     except Exception as e:
@@ -114,20 +132,34 @@ def fetch_gdelt_signals(query: str = "market OR economy OR financial", days: int
         except Exception:
             stale, age = None, None
         if stale is not None:
-            logger.warning("GDELT fetch failed (%s) — serving last good read "
-                           "(%.0f min old, disclosed)", e, (age or 0) / 60)
-            return {**stale, "stale": True, "stale_age_s": int(age or 0)}
-        logger.warning("GDELT fetch failed: %s", e)
-        return _gdelt_fallback(str(e))
+            # A disclosed day-old real read is a SUCCESS of the fallback
+            # design, not an operational emergency — INFO, so the chronic
+            # GDELT churn stops burying real warnings in the health buffer.
+            logger.info("GDELT fetch failed (%s) — serving last good read "
+                        "(%.0f min old, disclosed)", e, (age or 0) / 60)
+            ret = {**stale, "stale": True, "stale_age_s": int(age or 0)}
+        else:
+            # No cached read at all — the product surface genuinely degrades;
+            # this one stays loud.
+            logger.warning("GDELT fetch failed: %s", e)
+            ret = _gdelt_fallback(str(e))
+        try:
+            from backend.cache import cache_set
+            cache_set(_sig_key + ":fail", ret)
+        except Exception:
+            pass
+        return ret
 
 
 _GDELT_RETRIES = config["performance"]["gdelt_max_retries"]
 _GDELT_BASE_DELAY = config["performance"]["gdelt_retry_base_delay"]
+_GDELT_CACHE_TTL = config["performance"]["gdelt_cache_ttl"]
+_GDELT_FAIL_COOLDOWN = config["performance"]["gdelt_fail_cooldown"]
 _GDELT_RETRY_EXC = (requests.RequestException,) if _HAS_REQUESTS else (Exception,)
 
 
 @retry_with_backoff(max_retries=_GDELT_RETRIES, base_delay=_GDELT_BASE_DELAY, max_delay=8.0,
-                    retryable_exceptions=_GDELT_RETRY_EXC)
+                    retryable_exceptions=_GDELT_RETRY_EXC, retry_log_level=logging.INFO)
 def _fetch_tone_timeline(query: str, days: int) -> list:
     """Fetch daily news tone from GDELT DOC API."""
     params = {
@@ -148,7 +180,7 @@ def _fetch_tone_timeline(query: str, days: int) -> list:
 
 
 @retry_with_backoff(max_retries=_GDELT_RETRIES, base_delay=_GDELT_BASE_DELAY, max_delay=8.0,
-                    retryable_exceptions=_GDELT_RETRY_EXC)
+                    retryable_exceptions=_GDELT_RETRY_EXC, retry_log_level=logging.INFO)
 def _fetch_volume_timeline(query: str, days: int) -> list:
     """Fetch daily article volume from GDELT DOC API."""
     params = {
@@ -169,7 +201,7 @@ def _fetch_volume_timeline(query: str, days: int) -> list:
 
 
 @retry_with_backoff(max_retries=_GDELT_RETRIES, base_delay=_GDELT_BASE_DELAY, max_delay=8.0,
-                    retryable_exceptions=_GDELT_RETRY_EXC)
+                    retryable_exceptions=_GDELT_RETRY_EXC, retry_log_level=logging.INFO)
 def _fetch_conflict_timeline(days: int) -> list:
     """Fetch geopolitical conflict article volume."""
     params = {

@@ -38,6 +38,24 @@ def _host_of(address):
 
 
 @pytest.fixture(autouse=True)
+def _fresh_fmp_budget():
+    """Reset the FMP daily-quota ledger around every test (2026-07-17).
+
+    The ledger is process-global on purpose (prod), but in the suite a test
+    that mocks an FMP 402 marks the ledger exhausted and silently starves
+    every later FMP-touching test in the same process — exactly the
+    cross-test state leak the ledger is meant to create in prod, and
+    exactly wrong for isolated unit tests.
+    """
+    try:
+        from backend.services import fmp_budget
+        fmp_budget._reset_for_tests()
+    except Exception:
+        pass
+    yield
+
+
+@pytest.fixture(autouse=True)
 def _block_network(request):
     """Block non-loopback sockets for non-slow/non-network tests (fail fast, loud)."""
     marker = request.node.get_closest_marker("slow") or request.node.get_closest_marker("network")

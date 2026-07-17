@@ -782,7 +782,26 @@ config: dict = {
         "gdelt_max_workers": 3,          # Workers for parallel GDELT API calls
         "gdelt_max_retries": 2,          # Retry attempts per GDELT endpoint
         "gdelt_retry_base_delay": 1.0,   # Base delay for GDELT retry backoff (seconds)
+        # GDELT result cache (2026-07-17): a 30-day tone/volume timeline does
+        # not change in 15 minutes, but the endpoint warm loop was refetching
+        # it ~3x/hour around the clock — the source of the perpetual 429
+        # storm. Successful reads are served for gdelt_cache_ttl; after a
+        # failure the (stale-served or unavailable) result is held for
+        # gdelt_fail_cooldown so a dead GDELT is not hammered every cycle.
+        "gdelt_cache_ttl": 3600,
+        "gdelt_fail_cooldown": 900,
         "slow_request_threshold_s": 10.0,# Requests slower than this get a warning log
+    },
+
+    # ── FMP DAILY QUOTA BUDGET ───────────────────────────────────────────
+    # FMP free tier is ~250 requests/day shared by ALL callers (provider
+    # fallback, ESG, congress collector). The pre-registered congress-IC
+    # collector died on 402 at its 07:30 ET slot (2026-07-17) because
+    # fallback traffic had burned the whole quota overnight — scheduling
+    # cannot protect an unmetered shared resource. fmp_budget.py meters it.
+    "fmp": {
+        "daily_budget": 240,       # spend ceiling (free tier 250; keep headroom)
+        "priority_reserve": 40,    # slice only priority callers may draw from
     },
 
     # ── SENTIMENT ANALYSIS ───────────────────────────────────────────────

@@ -530,6 +530,12 @@ async def health_full():
     except Exception as e:
         llm = {"error": str(e)}
 
+    try:
+        from backend.services.fmp_budget import snapshot as fmp_snapshot
+        fmp = fmp_snapshot()
+    except Exception as e:
+        fmp = {"error": str(e)}
+
     cs = cache_status()
     return {
         "status": "ok",
@@ -547,6 +553,7 @@ async def health_full():
         "overlay": overlay,
         "lppls": lppls,
         "llm": llm,
+        "fmp_budget": fmp,
         "data_sources": source_health(),
         "recent_warnings": recent_warnings(),
     }

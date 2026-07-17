@@ -220,6 +220,16 @@ class TestGdeltParallelization:
     """GDELT fetch behavior (sequential-staggered since 2026-07-16 — the
     3-way parallel burst was 429-ing itself; class name kept for history)."""
 
+    @pytest.fixture(autouse=True)
+    def _no_gdelt_result_cache(self):
+        # 2026-07-17: fetch_gdelt_signals caches results (1h) + failures
+        # (15 min cooldown). These tests assert on fetcher call counts and
+        # fallback branches, so they must bypass the result cache — both
+        # across tests in this class and across suite runs (disk cache).
+        with patch("backend.cache.cache_get", return_value=None), \
+             patch("backend.cache.cache_set"):
+            yield
+
     @patch("backend.services.news_intelligence._fetch_tone_timeline")
     @patch("backend.services.news_intelligence._fetch_volume_timeline")
     @patch("backend.services.news_intelligence._fetch_conflict_timeline")
