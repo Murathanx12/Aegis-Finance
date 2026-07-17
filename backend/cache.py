@@ -296,6 +296,7 @@ def retry_with_backoff(
     max_delay: float = 30.0,
     jitter: bool = True,
     retryable_exceptions: tuple = (Exception,),
+    retry_log_level: int = logging.WARNING,
 ):
     """Decorator: retry with exponential backoff on failure.
 
@@ -305,6 +306,11 @@ def retry_with_backoff(
         max_delay: Maximum delay cap in seconds
         jitter: Add random jitter to prevent thundering herd
         retryable_exceptions: Tuple of exception types to retry on
+        retry_log_level: Level for per-attempt retry logs. Sources with a
+            disclosed stale-serve fallback (GDELT) log retries at INFO so
+            chronic rate-limit churn cannot bury real warnings in the
+            50-slot health buffer; the caller's FINAL failure path stays
+            responsible for the loud log.
     """
     def decorator(fn):
         @wraps(fn)
@@ -320,7 +326,8 @@ def retry_with_backoff(
                     delay = min(base_delay * (2 ** attempt), max_delay)
                     if jitter:
                         delay *= 0.5 + random.random()
-                    logger.warning(
+                    logger.log(
+                        retry_log_level,
                         "Retry %d/%d for %s after %.1fs: %s",
                         attempt + 1, max_retries, fn.__qualname__, delay, e,
                     )

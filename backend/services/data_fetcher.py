@@ -346,6 +346,26 @@ class DataFetcher:
             if tick in market_batch:
                 data[col] = market_batch[tick] / 100
 
+        # FRED fallback for treasury yields (2026-07-17): yfinance
+        # rate-limits index tickers at boot (^TNX failed at startup on
+        # 2026-07-17 and the T10Y column silently vanished). FRED publishes
+        # the same constant-maturity yields authoritatively, so a missing
+        # column is backfilled instead of dropped.
+        missing_treasuries = [c for c in treasury_map.values() if c not in data.columns]
+        if missing_treasuries:
+            fred_fallback = {"T10Y": "DGS10", "T3M": "DGS3MO", "T30Y": "DGS30"}
+            recovered = self._fetch_fred_treasury_fallback(
+                {c: fred_fallback[c] for c in missing_treasuries}, data.index, start
+            )
+            for col, series in recovered.items():
+                data[col] = series
+                logger.info("Treasury %s backfilled from FRED %s (yfinance ticker missing)",
+                            col, fred_fallback[col])
+            still_missing = [c for c in treasury_map.values() if c not in data.columns]
+            if still_missing:
+                logger.warning("Treasury columns unavailable from BOTH yfinance and FRED: %s",
+                               still_missing)
+
         # ── Batch 2: Sector ETFs ─────────────────────────────────────
         sector_tickers = config["data"]["sectors"]
         sector_start = config["data"]["sector_start"]
@@ -371,6 +391,37 @@ class DataFetcher:
         )
 
         return data, sector_data
+
+    def _fetch_fred_treasury_fallback(
+        self, col_to_series: dict[str, str], index: pd.Index, start: str
+    ) -> dict[str, pd.Series]:
+        """Fetch missing treasury-yield columns from FRED, aligned to `index`.
+
+        Returns only the columns that actually came back — callers keep the
+        loud warning for anything still missing. Values are converted to
+        decimal form to match the yfinance-derived columns.
+        """
+        if not api_keys.has("fred"):
+            return {}
+        try:
+            from fredapi import Fred
+        except ImportError:
+            return {}
+        recovered: dict[str, pd.Series] = {}
+        try:
+            fred = Fred(api_key=api_keys.fred)
+            for col, series_id in col_to_series.items():
+                s = fred.get_series(series_id, observation_start=start)
+                if s is None or len(s.dropna()) == 0:
+                    continue
+                s = s.dropna() / 100.0
+                s.index = pd.to_datetime(s.index)
+                if getattr(index, "tz", None) is not None:
+                    s.index = s.index.tz_localize(index.tz)
+                recovered[col] = s.reindex(index).ffill()
+        except Exception as e:
+            logger.warning("FRED treasury fallback failed: %s", e)
+        return recovered
 
     @cached(ttl=86400)
     def fetch_fred_data(self) -> dict[str, pd.Series]:

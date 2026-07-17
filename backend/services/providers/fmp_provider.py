@@ -39,6 +39,12 @@ class FMPProvider(BaseProvider):
     def _get(self, path: str, params: Optional[dict] = None) -> Optional[object]:
         if not self.is_available():
             raise ProviderUnavailable("FMP key not set")
+        # Fallback traffic is metered (2026-07-17): this provider is the
+        # biggest drain on the shared 250/day quota and it must never starve
+        # the pre-registered congress-IC collector again.
+        from backend.services import fmp_budget
+        if not fmp_budget.try_spend():
+            raise ProviderUnavailable("FMP daily budget spent — deferring to other providers")
         params = dict(params or {})
         params["apikey"] = api_keys.fmp
         try:
@@ -47,6 +53,9 @@ class FMPProvider(BaseProvider):
                 raise ProviderUnavailable(f"FMP auth failed: {r.status_code}")
             if r.status_code == 429:
                 raise ProviderUnavailable("FMP rate limit")
+            if r.status_code == 402:
+                fmp_budget.mark_exhausted()
+                raise ProviderUnavailable("FMP quota exhausted (402)")
             r.raise_for_status()
             return r.json()
         except ProviderUnavailable:

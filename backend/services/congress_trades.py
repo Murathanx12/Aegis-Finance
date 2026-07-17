@@ -42,6 +42,14 @@ def _fmp_get(endpoint: str, page: int, limit: int) -> list[dict]:
     errors — bad key, rate limit — as a JSON object, not a list)."""
     if not api_keys.has("fmp"):
         raise RuntimeError("FMP_API_KEY not set — congress trades unavailable")
+    # Priority draw (2026-07-17): this pre-registered collector may spend the
+    # reserved slice that fmp_budget holds back from fallback/ESG traffic.
+    from backend.services import fmp_budget
+    if not fmp_budget.try_spend(priority=True):
+        raise RuntimeError(
+            f"FMP {endpoint} skipped — daily FMP budget exhausted (ledger); "
+            "congress source unavailable this run (retries next slot)"
+        )
     resp = requests.get(
         f"{_BASE}/{endpoint}",
         params={"page": page, "limit": limit, "apikey": api_keys.fmp},
@@ -50,8 +58,11 @@ def _fmp_get(endpoint: str, page: int, limit: int) -> list[dict]:
     if resp.status_code == 402:
         # FMP signals an exhausted free-tier daily quota as 402 on otherwise
         # free endpoints (senate-latest verified free 2026-07-11 AND
-        # 2026-07-17 — the 2026-07-16 prod 402 was the day's shared quota,
-        # burned by fallback-provider traffic before the 16:30 ET check).
+        # 2026-07-17 — the 2026-07-16 AND 2026-07-17 prod 402s were the
+        # day's shared quota, burned by fallback-provider traffic — at the
+        # 07:30 ET slot the quota was ALREADY gone, which is why the
+        # fmp_budget ledger now meters every caller).
+        fmp_budget.mark_exhausted()
         raise RuntimeError(
             f"FMP {endpoint} returned 402 — daily FMP quota exhausted; "
             "congress source unavailable this run (retries next slot)"

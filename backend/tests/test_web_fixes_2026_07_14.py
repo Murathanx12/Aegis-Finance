@@ -237,6 +237,8 @@ class TestGdeltStaleServe:
                 "raw_data": {"conflict": [1, 2]}, "success": True}
         with patch.object(ni, "_fetch_tone_timeline",
                           side_effect=RuntimeError("429")), \
+             patch("backend.cache.cache_get", return_value=None), \
+             patch("backend.cache.cache_set"), \
              patch("backend.cache.cache_peek", return_value=(good, 1800.0)):
             out = ni.fetch_gdelt_signals()
         assert out["stale"] is True
@@ -247,9 +249,44 @@ class TestGdeltStaleServe:
         from backend.services import news_intelligence as ni
         with patch.object(ni, "_fetch_tone_timeline",
                           side_effect=RuntimeError("429")), \
+             patch("backend.cache.cache_get", return_value=None), \
+             patch("backend.cache.cache_set"), \
              patch("backend.cache.cache_peek", return_value=(None, None)):
             out = ni.fetch_gdelt_signals()
         assert out.get("success") is not True  # disclosed unavailable, never fabricated
+
+
+class TestGdeltResultCache:
+    """2026-07-17: fetch_gdelt_signals caches results so the 24/7 endpoint
+    warm loop cannot hammer GDELT into a perpetual 429 storm."""
+
+    def test_success_is_cached_and_not_refetched(self):
+        import uuid
+        from backend.services import news_intelligence as ni
+        q = f"cache-test-success-{uuid.uuid4()}"  # disk cache persists across runs
+        tone = MagicMock(return_value=[1.0] * 30)
+        with patch.object(ni, "_fetch_tone_timeline", tone), \
+             patch.object(ni, "_fetch_volume_timeline", return_value=[5.0] * 30), \
+             patch.object(ni, "_fetch_conflict_timeline", return_value=[2.0] * 30), \
+             patch("time.sleep"):
+            first = ni.fetch_gdelt_signals(query=q, days=30)
+            second = ni.fetch_gdelt_signals(query=q, days=30)
+        assert first["success"] is True
+        assert second == first
+        assert tone.call_count == 1  # second call served from cache
+
+    def test_failure_enters_cooldown_and_is_not_rehammered(self):
+        import uuid
+        from backend.services import news_intelligence as ni
+        q = f"cache-test-fail-{uuid.uuid4()}"
+        tone = MagicMock(side_effect=RuntimeError("429"))
+        with patch.object(ni, "_fetch_tone_timeline", tone), \
+             patch("backend.cache.cache_peek", return_value=(None, None)):
+            first = ni.fetch_gdelt_signals(query=q, days=30)
+            second = ni.fetch_gdelt_signals(query=q, days=30)
+        assert first.get("success") is not True
+        assert second == first
+        assert tone.call_count == 1  # cooldown: no second HTTP attempt
 
 
 # ── 5. Screener NameError regression (2026-07-16) ───────────────────────────

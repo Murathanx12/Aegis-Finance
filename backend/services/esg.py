@@ -110,6 +110,12 @@ def fetch_fmp_esg(ticker: str) -> Optional[dict]:
     if cached is not None:
         return cached or None
 
+    # ESG is a nice-to-have — never let it eat the shared FMP quota that the
+    # pre-registered congress-IC collector needs (2026-07-17 budget ledger).
+    from backend.services import fmp_budget
+    if not fmp_budget.try_spend():
+        return None
+
     try:
         r = requests.get(
             f"{_FMP_BASE}/esg-environmental-social-governance-data",
