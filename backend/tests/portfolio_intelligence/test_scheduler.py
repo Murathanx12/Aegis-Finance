@@ -20,8 +20,9 @@ from backend.services.portfolio_intelligence.scheduler import (
 
 
 class TestSetupScheduler:
-    def test_creates_scheduler_with_three_jobs(self):
-        """Scheduler should register hourly MTM, daily check, and weekly aggressive."""
+    def test_creates_scheduler_with_expected_jobs(self):
+        """Scheduler should register close MTM, daily check, weekly aggressive,
+        and the congress-IC morning collect (fresh-FMP-quota slot)."""
         from backend.services.portfolio_intelligence.scheduler import (
             setup_scheduler, shutdown_scheduler,
         )
@@ -34,7 +35,8 @@ class TestSetupScheduler:
             assert "pi_hourly_mtm" in job_ids, "Missing hourly MTM job"
             assert "pi_daily_check" in job_ids, "Missing daily check job"
             assert "pi_weekly_aggressive" in job_ids, "Missing weekly aggressive job"
-            assert len(jobs) == 3
+            assert "pi_congress_collect" in job_ids, "Missing congress morning collect job"
+            assert len(jobs) == 4
             shutdown_scheduler()
 
         asyncio.run(_run())

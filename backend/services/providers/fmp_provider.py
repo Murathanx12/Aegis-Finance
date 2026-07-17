@@ -52,7 +52,7 @@ class FMPProvider(BaseProvider):
         except ProviderUnavailable:
             raise
         except Exception as e:
-            logger.debug("FMP request failed for %s: %s", path, e)
+            logger.debug("FMP request failed for %s: %s", path, api_keys.redact(str(e)))
             return None
 
     def get_equity_history(

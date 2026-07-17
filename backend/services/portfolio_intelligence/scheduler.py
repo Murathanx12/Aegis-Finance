@@ -98,6 +98,21 @@ def setup_scheduler():
         misfire_grace_time=3600,
     )
 
+    # TRIAL-CONGRESS-IC morning slot (2026-07-17): the 16:30 ET daily check
+    # competes for FMP's free-tier daily quota AFTER a full day of
+    # fallback-provider traffic — the 2026-07-16 collection died on 402 that
+    # way. Disclosure data needs no close prices, so collect at 07:30 ET when
+    # the quota is fresh; the 5-day PIT throttle turns the daily-check call
+    # into a same-day retry, never a duplicate write.
+    _scheduler.add_job(
+        _congress_morning_collect,
+        CronTrigger(hour=7, minute=30, day_of_week="mon-fri", timezone="US/Eastern"),
+        id="pi_congress_collect",
+        name="PI congress-IC morning collect",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
+
     _scheduler.start()
     logger.info(
         "Portfolio Intelligence scheduler started (job store: %s, %d jobs)",
@@ -636,6 +651,25 @@ async def _daily_check():
                     sg.get("status"), sg.get("n"))
     except Exception as e:
         logger.error("Smartgrowth collection failed: %s", e, exc_info=True)
+
+
+async def _congress_morning_collect():
+    """TRIAL-CONGRESS-IC collection at 07:30 ET, when the shared FMP daily
+    quota is fresh (the 16:30 ET slot inside _daily_check stays as the
+    same-day retry — the collector's 5-day PIT throttle deduplicates).
+    Source failure raises inside the collector BEFORE any PIT write, so a
+    broken feed logs loudly and never lands false-zero cross-sections."""
+    import asyncio
+    from backend.services.portfolio_intelligence.congress_collector import (
+        collect_congress_scores,
+    )
+
+    try:
+        cg = await asyncio.to_thread(collect_congress_scores)
+        logger.info("Congress-IC morning collect: status=%s n=%s nonzero=%s "
+                    "(descriptive)", cg.get("status"), cg.get("n"), cg.get("nonzero"))
+    except Exception as e:
+        logger.error("Congress-IC morning collection failed: %s", e, exc_info=True)
 
 
 async def _weekly_aggressive_check():
