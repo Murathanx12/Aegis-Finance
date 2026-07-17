@@ -232,6 +232,26 @@ export function getStockSignal(ticker: string) {
   return fetchAPI<StockSignal>(`/api/stock/${ticker}/signal`, undefined, HEAVY_TIMEOUT_MS);
 }
 
+// Bull/bear two-sided card: AI argues both sides of the computed signal.
+// status !== "ok" means the LLM is unkeyed/capped/declined — render nothing.
+export interface TwoSidedResponse {
+  status: "ok" | "unavailable";
+  reason?: string;
+  ticker?: string;
+  bull_case?: string;
+  bear_case?: string;
+  watch_for?: string;
+  signal_action?: string | null;
+  composite_score?: number | null;
+  provider?: string;
+}
+
+export function getStockTwoSided(ticker: string) {
+  return fetchAPI<TwoSidedResponse>(
+    `/api/stock/${encodeURIComponent(ticker)}/two-sided`, undefined, HEAVY_TIMEOUT_MS,
+  );
+}
+
 // Options & Earnings Intelligence
 export function getOptionsAnalysis(ticker: string) {
   return fetchAPI<OptionsAnalysis>(`/api/options/${ticker}`);
