@@ -115,6 +115,18 @@ existing SQLite/PIT stores, AGPL code (OpenBB) never enters this MIT repo.
 External projects contribute **patterns, re-implemented** — never vendored
 code (see REFERENCES.md).
 
+### 11. Every examination leaves a ledger entry
+External projects/tools/data sources examined in a session get an entry in
+`docs/KNOWLEDGE/projects.jsonl` **in the same commit** as the work that
+examined them — verdict (absorbed / partially-absorbed / rejected / unmined),
+what was taken (with file pointers), what was rejected and WHY. Same
+discipline as findings.jsonl. The rejects are the most valuable entries:
+they are what makes the search terminate instead of re-running
+(`docs/PROJECT_LANDSCAPE.md` is the human-readable view; the lab loop
+injects the ledger into every cycle). Projects whose pitch is
+price/crash/return prediction are rejected-by-category without testing —
+that class is refuted (F-001/F-002/F-006/F-009, LPPLS ×2).
+
 ---
 
 ## Closed rabbit holes — do not re-run
