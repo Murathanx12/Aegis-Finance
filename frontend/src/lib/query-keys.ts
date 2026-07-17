@@ -56,6 +56,7 @@ export const queryKeys = {
   analytics: {
     crossAsset: ["analytics", "cross-asset"] as const,
     macroRegime: ["analytics", "macro-regime"] as const,
+    economicCalendar: ["analytics", "economic-calendar"] as const,
   },
   pi: {
     referenceState: (lane: string) => ["pi", "reference", lane, "state"] as const,

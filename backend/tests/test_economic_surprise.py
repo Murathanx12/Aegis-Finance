@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from backend.services.economic_surprise import (
     compute_surprise_index,
+    get_economic_calendar,
     get_indicator_surprises,
 )
 
@@ -156,6 +157,41 @@ class TestCPINormalizationGranularity:
                     assert 0 < abs(ind["surprise_normalized"]) < 1.0, (
                         f"Expected intermediate CPI surprise, got {ind['surprise_normalized']}"
                     )
+
+
+class TestEconomicCalendar:
+    @patch("backend.services.economic_surprise._fetch_fred_series")
+    def test_calendar_fields_and_order(self, mock_fetch):
+        mock_fetch.return_value = _make_fred_series(60)
+        cal = get_economic_calendar()
+        assert cal is not None
+        assert "note" in cal and "not a street consensus" in cal["note"]
+        assert cal["releases"], "expected at least one release row"
+        dates = [r["date"] for r in cal["releases"]]
+        assert dates == sorted(dates, reverse=True), "most-recent first"
+        for r in cal["releases"]:
+            for key in ("series_id", "name", "importance", "date", "actual",
+                        "forecast_trend", "previous", "surprise_pct",
+                        "direction", "frequency"):
+                assert key in r, f"missing {key}"
+            assert r["importance"] in (1, 2, 3)
+            assert r["direction"] in ("beat", "miss", "inline")
+
+    @patch("backend.services.economic_surprise._fetch_fred_series")
+    def test_calendar_previous_differs_from_actual(self, mock_fetch):
+        mock_fetch.return_value = _make_fred_series(60)
+        cal = get_economic_calendar()
+        assert cal is not None
+        # previous is the second-to-last print — with noisy synthetic data it
+        # must exist and (for this seed) differ from the latest
+        row = cal["releases"][0]
+        assert row["previous"] is not None
+        assert row["previous"] != row["actual"]
+
+    @patch("backend.services.economic_surprise.compute_surprise_index")
+    def test_calendar_none_on_failure(self, mock_compute):
+        mock_compute.return_value = None
+        assert get_economic_calendar() is None
 
 
 class TestGetIndicatorSurprises:
