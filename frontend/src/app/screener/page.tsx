@@ -11,8 +11,57 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorCard } from "@/components/error-card";
 import { InfoTooltip } from "@/components/info-tooltip";
 
-type SortKey = "ticker" | "current_price" | "expected_return" | "sharpe" | "prob_loss" | "volatility" | "beta" | "crash_prob_3m" | "signal_confidence" | "rsi_14" | "momentum_percentile";
+type SortKey = "ticker" | "current_price" | "expected_return" | "sharpe" | "prob_loss" | "volatility" | "beta" | "crash_prob_3m" | "signal_confidence" | "rsi_14" | "momentum_percentile" | "analyst_upside" | "dividend_yield";
 type SortDir = "asc" | "desc";
+
+// Screener presets: honest, transparent filters over fields already in the
+// payload — each chip states its exact rule so nothing reads as a stock tip.
+type EnrichedStock = ScreenerStock & { analyst_upside: number | null };
+
+type Preset = {
+  id: string;
+  label: string;
+  description: string;
+  filter: (s: EnrichedStock) => boolean;
+  sort: { key: SortKey; dir: SortDir };
+};
+
+const PRESETS: Preset[] = [
+  {
+    id: "all",
+    label: "All stocks",
+    description: "",
+    filter: () => true,
+    sort: { key: "sharpe", dir: "desc" },
+  },
+  {
+    id: "analyst-upside",
+    label: "Analyst Strong Buys",
+    description:
+      "Mean Wall Street price target implies ≥15% upside vs the current price. Caveat: street targets are systematically optimistic — treat as sentiment, not a forecast.",
+    filter: (s) => s.analyst_upside != null && s.analyst_upside >= 15,
+    sort: { key: "analyst_upside", dir: "desc" },
+  },
+  {
+    id: "dividend-safety",
+    label: "High Dividend Safety",
+    description:
+      "Trailing yield ≥2% with a Safe or Very Safe payout grade (coverage, growth streak, balance sheet).",
+    filter: (s) =>
+      (s.dividend_yield ?? 0) >= 2 &&
+      (s.dividend_safety === "Safe" || s.dividend_safety === "Very Safe"),
+    sort: { key: "dividend_yield", dir: "desc" },
+  },
+  {
+    id: "momentum",
+    label: "Momentum Leaders",
+    description:
+      "Top-quartile cross-sectional momentum (percentile ≥75) with a bullish trend. Momentum reverses without warning — this is a factor lens, not a recommendation.",
+    filter: (s) =>
+      (s.momentum_percentile ?? 0) >= 75 && s.trend_direction === "bullish",
+    sort: { key: "momentum_percentile", dir: "desc" },
+  },
+];
 
 const SECTORS = [
   "All",
@@ -121,6 +170,7 @@ const COMPONENT_LABELS: Record<string, string> = {
 export default function ScreenerPage() {
   const router = useRouter();
   const [sectorFilter, setSectorFilter] = useState("All");
+  const [presetId, setPresetId] = useState("all");
   const [sortKey, setSortKey] = useState<SortKey>("sharpe");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [expandedTicker, setExpandedTicker] = useState<string | null>(null);
@@ -140,9 +190,28 @@ export default function ScreenerPage() {
     }
   };
 
+  const preset = PRESETS.find((p) => p.id === presetId) ?? PRESETS[0];
+
+  const applyPreset = (p: Preset) => {
+    setPresetId(p.id);
+    setSortKey(p.sort.key);
+    setSortDir(p.sort.dir);
+  };
+
+  const enriched: EnrichedStock[] = useMemo(
+    () =>
+      (data?.stocks ?? []).map((s) => ({
+        ...s,
+        analyst_upside:
+          s.analyst_target != null && s.current_price > 0
+            ? (s.analyst_target / s.current_price - 1) * 100
+            : null,
+      })),
+    [data],
+  );
+
   const filtered = useMemo(() => {
-    if (!data?.stocks) return [];
-    let stocks = data.stocks;
+    let stocks = enriched.filter(preset.filter);
     if (sectorFilter !== "All") {
       stocks = stocks.filter((s) => s.sector === sectorFilter);
     }
@@ -154,7 +223,7 @@ export default function ScreenerPage() {
       }
       return sortDir === "asc" ? (av as number) - (bv as number) : (bv as number) - (av as number);
     });
-  }, [data, sectorFilter, sortKey, sortDir]);
+  }, [enriched, preset, sectorFilter, sortKey, sortDir]);
 
   const summaryStocks = data?.stocks ?? [];
 
@@ -199,6 +268,31 @@ export default function ScreenerPage() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Preset chips: each states its exact rule — a lens, never a tip */}
+      <div className="flex flex-wrap items-center gap-2">
+        {PRESETS.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => applyPreset(p)}
+            aria-pressed={presetId === p.id}
+            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+              presetId === p.id
+                ? "border-primary/50 bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:text-foreground hover:bg-accent"
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+      {preset.description && (
+        <p className="text-xs text-muted-foreground -mt-3">
+          <span className="font-medium text-foreground">{preset.label}:</span>{" "}
+          {preset.description}{" "}
+          <span className="tabular-nums">({filtered.length} match{filtered.length === 1 ? "" : "es"})</span>
+        </p>
       )}
 
       <Card>
