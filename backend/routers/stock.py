@@ -1134,6 +1134,53 @@ def _stock_signal(ticker: str) -> dict:
     return signal
 
 
+@router.get("/{ticker}/two-sided")
+async def get_stock_two_sided(ticker: str):
+    """Bull/bear two-sided card (V4 chunk 5): the LLM argues BOTH sides of
+    the COMPUTED signal. Prose only — the numeric signal is input, never
+    output; recommendation language is rejected fail-closed; runs under the
+    existing DeepSeek spend guards. Returns status=unavailable rather than
+    500 when the LLM is unkeyed/capped/declining: a missing card beats a
+    fabricated one."""
+    ticker = ticker.upper()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=422, detail="Invalid ticker format")
+
+    from backend.services.llm_analyzer import argue_signal_two_sided, is_available
+
+    if not is_available():
+        return {"status": "unavailable", "reason": "llm_not_configured"}
+
+    cache_key = f"stock_two_sided:{ticker}"
+    cached = cache_get(cache_key, 6 * 3600)
+    if cached is not None:
+        return cached
+
+    try:
+        sig = await cache_swr(
+            f"stock_signal:{ticker}", _CACHE_TTL["ttl_stock"],
+            partial(_stock_signal, ticker),
+        )
+        import json as _json
+        payload = _json.dumps({
+            "action": sig.get("action"),
+            "composite_score": sig.get("composite_score"),
+            "confidence": sig.get("confidence"),
+            "components": sig.get("components"),
+            "price": sig.get("current_price"),
+            "crash_prob_3m": sig.get("crash_prob_3m"),
+        }, sort_keys=True)
+        result = await asyncio.to_thread(argue_signal_two_sided, ticker, payload)
+        if result is None:
+            return {"status": "unavailable", "reason": "llm_declined_or_capped"}
+        out = {"status": "ok", **result}
+        cache_set(cache_key, out)
+        return out
+    except Exception as e:
+        logger.error("two-sided card failed for %s: %s", ticker, e)
+        return {"status": "unavailable", "reason": "error"}
+
+
 @router.get("/{ticker}/shap")
 async def get_stock_shap(ticker: str):
     """SHAP explanation for how crash model views this ticker's risk."""

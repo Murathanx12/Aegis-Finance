@@ -29,6 +29,7 @@ export const queryKeys = {
     analysis: (ticker: string) => ["stock", "analysis", ticker] as const,
     shap: (ticker: string) => ["stock", "shap", ticker] as const,
     signal: (ticker: string) => ["stock", "signal", ticker] as const,
+    twoSided: (ticker: string) => ["stock", "two-sided", ticker] as const,
   },
   sectors: ["sectors"] as const,
   portfolio: {

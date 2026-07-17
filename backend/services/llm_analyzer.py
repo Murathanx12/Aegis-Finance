@@ -279,6 +279,104 @@ def summarize_market_news(news_items: list[dict]) -> Optional[dict]:
     return {"summary": result, "sentiment": sentiment, "provider": _get_provider()}
 
 
+_ADVICE_PATTERN = None  # compiled lazily
+
+
+def _contains_advice_language(text: str) -> bool:
+    """True when LLM prose crosses from analysis into recommendation.
+
+    The two-sided card's hard constraint: no buy/sell language. Nouns like
+    "analyst buy ratings" are fine; imperatives and recommendations are not.
+    """
+    global _ADVICE_PATTERN
+    if _ADVICE_PATTERN is None:
+        import re
+        _ADVICE_PATTERN = re.compile(
+            r"\b(we|i|you|investors?|one)\s+(should|must|ought to)\b"
+            r"|\brecommend(s|ed|ing)?\b"
+            r"|\b(buy|sell|short|accumulate)\s+(this|the)\s+(stock|shares|name)\b",
+            re.IGNORECASE,
+        )
+    return bool(_ADVICE_PATTERN.search(text))
+
+
+@cached(ttl=6 * 3600, key_prefix="llm_two_sided")
+def argue_signal_two_sided(ticker: str, signal_json: str) -> Optional[dict]:
+    """Argue BOTH sides of the computed per-stock signal (V4 chunk 5).
+
+    The numeric signal is the input, never the output: the LLM writes prose
+    around a score the engine already computed, and nothing it says feeds
+    back into any number. Responses containing recommendation language are
+    rejected outright (fail-closed) — disclosed-unavailable beats advice.
+
+    signal_json: JSON string of {action, composite_score, confidence,
+    components, price, crash_prob_3m} — a string so the cache key is stable.
+    """
+    import json as _json
+
+    try:
+        sig = _json.loads(signal_json)
+    except (TypeError, ValueError):
+        return None
+
+    components = sig.get("components") or {}
+    ranked = sorted(components.items(), key=lambda kv: abs(kv[1]), reverse=True)
+    comp_lines = "\n".join(f"- {k}: {v:+.2f}" for k, v in ranked[:6]) or "n/a"
+
+    system = (
+        "You write educational two-sided analysis of a quantitative model's "
+        "stock signal. Given the model's computed reading and its component "
+        "scores, write the strongest honest case that the positives dominate "
+        "(BULL) and the strongest honest case that the negatives dominate "
+        "(BEAR), 2-3 sentences each, grounded ONLY in the evidence given. "
+        "Then one sentence on what evidence would most change the picture "
+        "(WATCH). Hard rules: no investment advice, no recommendation "
+        "language (should/recommend), never tell anyone to buy or sell, no "
+        "new numbers beyond those provided. Format exactly:\n"
+        "BULL: ...\nBEAR: ...\nWATCH: ..."
+    )
+    user = (
+        f"Ticker: {ticker}\n"
+        f"Model signal: {sig.get('action', 'n/a')} "
+        f"(composite {sig.get('composite_score', 'n/a')}, "
+        f"confidence {sig.get('confidence', 'n/a')}%)\n"
+        f"Price: {sig.get('price', 'n/a')}\n"
+        f"3m crash probability (stock-adjusted): {sig.get('crash_prob_3m', 'n/a')}\n"
+        f"Signal components (weighted, +bullish/−bearish):\n{comp_lines}"
+    )
+
+    result = _call_llm(system, user)
+    if result is None:
+        return None
+    if _contains_advice_language(result):
+        logger.warning("two-sided card: rejected LLM output with advice "
+                       "language for %s (fail-closed)", ticker)
+        return None
+
+    bull, bear, watch = "", "", ""
+    for line in result.split("\n"):
+        line = line.strip()
+        if line.startswith("BULL:"):
+            bull = line[5:].strip()
+        elif line.startswith("BEAR:"):
+            bear = line[5:].strip()
+        elif line.startswith("WATCH:"):
+            watch = line[6:].strip()
+
+    if not bull or not bear:
+        return None  # malformed — the card renders nothing rather than half
+
+    return {
+        "ticker": ticker,
+        "bull_case": bull,
+        "bear_case": bear,
+        "watch_for": watch,
+        "signal_action": sig.get("action"),
+        "composite_score": sig.get("composite_score"),
+        "provider": _get_provider(),
+    }
+
+
 @cached(ttl=1800, key_prefix="llm_daily_brief")
 def summarize_daily_brief(payload_json: str) -> Optional[dict]:
     """Personalized daily brief summary — FinGPT-Forecaster-style contract.
