@@ -10,6 +10,7 @@ import Link from "next/link";
 import { piGetTrackRecord } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import { LANE_STYLE, LaneEquityChart } from "@/components/pi/lane-equity-chart";
+import { LaneStatsCI } from "@/components/pi/lane-stats-ci";
 
 export default function TrackRecordPage() {
   const { data, isLoading, error } = useQuery({
@@ -135,6 +136,7 @@ export default function TrackRecordPage() {
                     {delta >= 0 ? "+" : ""}{delta.toFixed(3)}% since inception
                     {data.intraday_date === last.date && " · intraday"}
                   </p>
+                  <LaneStatsCI laneId={key} />
                 </CardContent>
               </Card>
             );
