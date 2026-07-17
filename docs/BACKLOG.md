@@ -48,6 +48,16 @@
 
 ---
 
+## DONE 2026-07-18 (V5 session 2 — investor-history data sweep + 73yr mandate check)
+
+| Item | What was done |
+|---|---|
+| **Sweep #2 (investor/firm history + long horizon)** | 20 sources verified + ledgered (124 entries now). Top: CFTC COT 1986+ (PIT-gold positioning), Shiller monthly 1871+, Damodaran 1928+, N-PORT bulk datasets, 13D/13G on existing plumbing, FINRA short interest, SEC FTD, CBOE P/C archives, JST 18-country panel, EDGAR full-text API (2001+). Sweep CLOSED. |
+| **73-year mandate direction-check** | `engine/research/long_horizon_mandates.py` (French + GS10-derived bond TR + datahub gold, 1953-2026, monthly rebalance) vs S&P + 60/40. Findings: risk ladder orders correctly in every crash; conservative's worst-ever DD = 2022 rate shock (−18.3%, duration risk → candidate NEW short-duration lane, NOT an in-flight edit); Sharpe flat ~0.55 across ladder (allocation ≠ alpha); 3-6 yrs underwater episodes everywhere. Grade DIRECTIONAL, CANON §2 compliant. Doc: `docs/research/LONG_HORIZON_MANDATES_2026-07-18.md`. |
+| **F-019 "too early" state SHIPPED** | Track-record page: first-class amber card — day N of 24-month window (% elapsed), first decision date 2027-06-10, 73-yr underwater calibration. Chart baselines already existed (SPY/AGG/60-40). `npx next build` green. |
+| **start-aegis.bat** | One-click local launcher (backend + frontend + browser). Exe verdict: NOT worth it — hosted web app + PyInstaller would bundle ~2GB torch and break on dep bumps. |
+| NN / deep backtests to 2000 | HELD at the gate (unchanged): stock-selection backtests stay T7-blocked until EODHD phase 2 / WRDS; NN is TRIAL-NN-1, drafted only after the survivorship-free panel lands. |
+
 ## DONE 2026-07-17 (V5 session 1 — project ledger + collector hardening)
 
 | Item | What was done |

@@ -74,6 +74,39 @@ Everything below it in the sweep was examined-and-passed (entries in the ledger)
 
 **Sweep is closed.** New sweeps require a new gap statement, not curiosity.
 
+## 3b. Sweep #2 (2026-07-18) — investor/firm decision history + long-horizon returns
+
+Gap statement: "historical investing decisions of other people and firms" +
+"50-100yr asset-class returns for mandate direction-checks". All verified by
+fetching the actual pages; full entries in the ledger. Top finds, in order:
+
+| # | Source | What it buys us | Depth |
+|---|---|---|---|
+| 1 | **CFTC Commitments of Traders** | 40 years of institutional futures positioning, dual-dated (PIT-gold), free CSVs — drops straight into `pit_score_collector` | 1986+ |
+| 2 | **Shiller monthly data** | The only free MONTHLY 150-year series — extends the mandate replay to 1871 (captures 1929) | 1871+ |
+| 3 | **Damodaran annual returns** | 7 asset classes, one xls, independent cross-check of our replay | 1928+ |
+| 4 | **SEC N-PORT bulk datasets** | Structured monthly fund holdings beyond 13F (bonds/derivatives included), no XML parsing | 2019q4+ |
+| 5 | **13D/13G activist stakes** | >5% stake events on EXISTING `_sec_get` plumbing — just a form-type filter | decades |
+| 6 | **FINRA short interest** | Bi-monthly short-interest history (2021 regime break flagged) | 2014+ |
+| 7 | **SEC fails-to-deliver** | 20+ yrs of squeeze/stress microstructure for the fragility composite | 2009+ (2004 via FOIA) |
+| 8 | **CBOE put/call archives** | 24-yr free P/C backfill + forward-scrape path (free daily archive ends 2019-10) | 1995–2019 + fwd |
+| 9 | **JST macrohistory** | 150-yr, 18-country return panel — cross-country mandate robustness (CC BY-NC-SA, attribute) | 1870+ |
+| 10 | **EDGAR full-text search API** | Keyless filing-text search verified to 2001 — the backbone for the 8-K/guidance text program | 2001+ |
+
+Passed: WhaleWisdom ($300/yr for repackaged 13F), Dataroma (no API, derived
+data), ApeWisdom (no history), Motley Fool transcripts (no rights), ICI flows
+(terms unverified), MeasuringWorth/BoE (cite-only/superseded), hedge-fund
+letter aggregators (link lists), Robintrack (unique but frozen 2018-2020 —
+research-only). **Sweep #2 is closed.**
+
+Also produced 2026-07-18: the 73-year mandate direction-check
+(`docs/research/LONG_HORIZON_MANDATES_2026-07-18.md`) — mandates behave as
+designed in equity crashes; the conservative lane's worst drawdown in 73
+years was the 2022 rate shock (duration risk, candidate NEW
+short-duration lane); Sharpe flat across the ladder (allocation ≠ alpha);
+every mandate spent 3-6 years underwater at least once (the day-39
+"too early" calibration now shown on the track-record page).
+
 ## 4. Rejected-by-category (never re-test)
 
 - **"Predicts prices/crashes/returns" pitches** — refuted three separate times
