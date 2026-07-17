@@ -82,6 +82,16 @@ class APIKeys:
         val = getattr(self, key, "")
         return bool(val) and val != "" and "placeholder" not in val.lower()
 
+    def redact(self, text: str) -> str:
+        """Strip every configured key value out of *text*. Error messages from
+        HTTP clients embed the full request URL — including ``apikey=`` query
+        params — so anything that might reach a log line goes through here."""
+        for field_name in ("fred", "finnhub", "fmp", "alpha_vantage", "polygon"):
+            val = getattr(self, field_name, "")
+            if val:
+                text = text.replace(val, "***")
+        return text
+
 
 api_keys: APIKeys = APIKeys.from_env()
 

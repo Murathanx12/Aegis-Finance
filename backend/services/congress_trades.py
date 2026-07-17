@@ -47,7 +47,21 @@ def _fmp_get(endpoint: str, page: int, limit: int) -> list[dict]:
         params={"page": page, "limit": limit, "apikey": api_keys.fmp},
         timeout=_TIMEOUT,
     )
-    resp.raise_for_status()
+    if resp.status_code == 402:
+        # FMP signals an exhausted free-tier daily quota as 402 on otherwise
+        # free endpoints (senate-latest verified free 2026-07-11 AND
+        # 2026-07-17 — the 2026-07-16 prod 402 was the day's shared quota,
+        # burned by fallback-provider traffic before the 16:30 ET check).
+        raise RuntimeError(
+            f"FMP {endpoint} returned 402 — daily FMP quota exhausted; "
+            "congress source unavailable this run (retries next slot)"
+        )
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError as e:
+        # requests embeds the full URL (incl. apikey) in the message — redact
+        # before the scheduler's error handler can put it in a log line.
+        raise requests.HTTPError(api_keys.redact(str(e)), response=resp) from None
     data = resp.json()
     if not isinstance(data, list):
         raise ValueError(f"FMP {endpoint} returned non-list payload: {str(data)[:200]}")

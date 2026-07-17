@@ -154,6 +154,60 @@ class TestFetchContractGuards:
             ct.fetch_congress_trades(as_of=AS_OF)
 
 
+class TestFmpErrorHygiene:
+    """The 2026-07-16 prod incident: FMP 402 (quota) raised an HTTPError whose
+    message embedded the full request URL — apikey included — and the
+    scheduler logged it. Errors must be loud but secret-free."""
+
+    class _Resp:
+        def __init__(self, status_code, url):
+            self.status_code = status_code
+            self.url = url
+
+        def raise_for_status(self):
+            import requests
+            if self.status_code >= 400:
+                raise requests.HTTPError(
+                    f"{self.status_code} Client Error for url: {self.url}",
+                    response=self)
+
+        def json(self):
+            return []
+
+    def test_402_maps_to_quota_message_without_key(self, monkeypatch):
+        from backend.services import congress_trades as ct
+        monkeypatch.setattr(ct.api_keys, "fmp", "SENTINEL_KEY_123")
+        monkeypatch.setattr(
+            ct.requests, "get",
+            lambda url, **kw: self._Resp(402, f"{url}?apikey=SENTINEL_KEY_123"))
+        with pytest.raises(RuntimeError, match="402") as exc:
+            ct._fmp_get("senate-latest", 0, 250)
+        assert "SENTINEL_KEY_123" not in str(exc.value)
+        assert "quota" in str(exc.value)
+
+    def test_http_error_message_is_redacted(self, monkeypatch):
+        import requests
+        from backend.services import congress_trades as ct
+        monkeypatch.setattr(ct.api_keys, "fmp", "SENTINEL_KEY_123")
+        monkeypatch.setattr(
+            ct.requests, "get",
+            lambda url, **kw: self._Resp(500, f"{url}?apikey=SENTINEL_KEY_123"))
+        with pytest.raises(requests.HTTPError) as exc:
+            ct._fmp_get("senate-latest", 0, 250)
+        assert "SENTINEL_KEY_123" not in str(exc.value)
+        assert "***" in str(exc.value)
+
+    def test_redact_strips_every_configured_key(self):
+        from backend.config import APIKeys
+        keys = APIKeys(fred="FREDK", fmp="FMPK", finnhub="FINN")
+        out = keys.redact("url?apikey=FMPK&other=FREDK plain FINN")
+        assert "FMPK" not in out and "FREDK" not in out and "FINN" not in out
+
+    def test_redact_noop_when_keys_unset(self):
+        from backend.config import APIKeys
+        assert APIKeys().redact("nothing to hide") == "nothing to hide"
+
+
 class TestTrialRegistration:
     def test_ensure_congress_trial_idempotent(self, db_path):
         id1 = ensure_congress_trial(db_path=db_path)
