@@ -65,6 +65,7 @@ export const queryKeys = {
     replay: (lane: string) => ["pi", "replay", lane] as const,
     replaySnapshot: (lane: string) => ["pi", "replay-snapshot", lane] as const,
     trackRecord: ["pi", "track-record"] as const,
+    laneStatsCI: (lane: string) => ["pi", "lane", lane, "stats-ci"] as const,
     convictionDecisions: ["pi", "conviction", "decisions"] as const,
     riskWatch: ["pi", "risk-watch"] as const,
   },

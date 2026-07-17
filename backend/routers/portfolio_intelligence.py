@@ -542,6 +542,75 @@ async def get_track_record():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def _record_lanes() -> tuple:
+    """Every lane that can appear on the track record (reference + seeded
+    book + ATR overlay). Import stays local — rules pulls YAML at import."""
+    from backend.services.portfolio_intelligence.rules import (
+        BOOK_LANES,
+        CONSERVATIVE_ATR_LANES,
+    )
+    return (*REFERENCE_LANES, *BOOK_LANES, *CONSERVATIVE_ATR_LANES)
+
+
+@router.get("/lane/{lane_id}/stats-ci")
+async def get_lane_stats_ci(lane_id: str):
+    """Sharpe / Sortino / max drawdown for a lane's forward paper record,
+    each with a 95% bootstrap CI (BCa; block bootstrap for drawdown).
+
+    The honest headline: "Sharpe 1.1 [95% CI: −0.2, 2.4]" — at 6 weeks of
+    history the intervals are wide, and that is the point. Read-only.
+    """
+    if lane_id not in _record_lanes():
+        raise HTTPException(status_code=404, detail=f"Unknown lane: {lane_id}")
+
+    from backend.cache import cache_get, cache_set
+    from backend.services.portfolio_intelligence.tearsheet import (
+        lane_stats_with_cis,
+    )
+
+    cache_key = f"pi:stats-ci:{lane_id}"
+    cached = cache_get(cache_key, 3600)
+    if cached is not None:
+        return cached
+    try:
+        result = await asyncio.to_thread(lane_stats_with_cis, lane_id)
+    except Exception as e:
+        logger.error("stats-ci failed for %s: %s", lane_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+    cache_set(cache_key, result)
+    return result
+
+
+@router.get("/lane/{lane_id}/tearsheet")
+async def get_lane_tearsheet(lane_id: str):
+    """Full quantstats HTML tearsheet rendered from the lane's REAL paper_nav
+    rows (quantstats as renderer only — no quantstats network utilities).
+    Served as text/html; generated on demand and cached for 6h."""
+    from fastapi.responses import HTMLResponse
+
+    if lane_id not in _record_lanes():
+        raise HTTPException(status_code=404, detail=f"Unknown lane: {lane_id}")
+
+    from backend.cache import cache_get, cache_set
+    from backend.services.portfolio_intelligence.tearsheet import (
+        lane_tearsheet_html,
+    )
+
+    cache_key = f"pi:tearsheet:{lane_id}"
+    cached = cache_get(cache_key, 6 * 3600)
+    if cached is not None:
+        return HTMLResponse(content=cached)
+    try:
+        html = await asyncio.to_thread(lane_tearsheet_html, lane_id)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error("tearsheet failed for %s: %s", lane_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+    cache_set(cache_key, html)
+    return HTMLResponse(content=html)
+
+
 @router.get("/reference/{lane_id}/explain", response_model=ExplainResponse)
 async def get_reference_explain(lane_id: str):
     """Most recent rebalance explanation. Shape consistent whether events exist or not."""

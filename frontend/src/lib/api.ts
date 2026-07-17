@@ -2932,6 +2932,42 @@ export function piGetTrackRecord() {
   return fetchAPI<PITrackRecordResponse>("/api/pi/track-record");
 }
 
+// PI: per-lane bootstrap-CI stats + quantstats tearsheet (V4 rigor layer).
+// The CIs are the honest headline: "Sharpe 1.1 [95% CI: -0.2, 2.4]".
+export interface PILaneStatCI {
+  value: number | null;
+  ci_lo: number | null;
+  ci_hi: number | null;
+  method: string;
+}
+
+export interface PILaneStatsCIResponse {
+  lane_id: string;
+  status: "ok" | "insufficient_history";
+  n_obs: number;
+  min_obs?: number;
+  confidence?: number;
+  rf_convention?: string;
+  first_date?: string;
+  last_date?: string;
+  stats: {
+    sharpe: PILaneStatCI;
+    sortino: PILaneStatCI;
+    max_drawdown: PILaneStatCI;
+  } | null;
+}
+
+export function piGetLaneStatsCI(laneId: string) {
+  return fetchAPI<PILaneStatsCIResponse>(
+    `/api/pi/lane/${encodeURIComponent(laneId)}/stats-ci`,
+  );
+}
+
+// Served as a full HTML page — open in a new tab, not fetched as JSON.
+export function piLaneTearsheetUrl(laneId: string) {
+  return `${API_BASE}/api/pi/lane/${encodeURIComponent(laneId)}/tearsheet`;
+}
+
 // PI: Experiment registry (every trial ever recorded, adopted AND rejected)
 export interface PIRegistryTrial {
   id: number;
