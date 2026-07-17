@@ -58,6 +58,32 @@ export default function TrackRecordPage() {
         </Card>
       )}
 
+      {/* F-019: "too early" is a first-class display state, not a footnote.
+          Calibration numbers come from the 73-year mandate replay
+          (docs/research/LONG_HORIZON_MANDATES_2026-07-18.md). */}
+      {data?.age_days != null && data.age_days < 730 && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="py-3 space-y-1 text-xs">
+            <p className="font-medium flex items-center gap-2 text-amber-500">
+              <Clock3 className="h-3.5 w-3.5" />
+              Too early to read: day {data.age_days} of a 24-month minimum
+              window ({Math.max(1, Math.round((data.age_days / 730) * 100))}%
+              elapsed).
+            </p>
+            <p className="text-muted-foreground">
+              At this age, differences between lanes — including the largest
+              one on this board — are noise, not skill. The first
+              pre-registered decision date is 2027-06-10 (TRIAL-001, HRP vs
+              equal-weight); nothing is judged before its date. For scale: in
+              a 73-year replay of these same mandates, every one of them spent
+              3&ndash;6 consecutive <em>years</em> below a prior peak at least
+              once and still compounded. A few weeks of NAV cannot rank the
+              lanes.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Intraday re-mark notice — honesty about today's moving point */}
       {data?.intraday_date && (
         <Card className="border-blue-500/30 bg-blue-500/5">
