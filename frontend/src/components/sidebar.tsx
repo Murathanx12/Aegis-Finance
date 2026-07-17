@@ -30,11 +30,15 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { Button } from "@/components/ui/button";
 import { useBeginnerMode } from "@/hooks/use-beginner-mode";
 
-type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; code: string };
-type NavGroup = { title: string | null; items: NavItem[]; hideForBeginner?: boolean };
+type NavItem = {
+  href: string; label: string; icon: typeof LayoutDashboard; code: string;
+  advancedOnly?: boolean; // dense analytics surfaces, hidden in casual mode
+};
+type NavGroup = { title: string | null; items: NavItem[]; advancedOnly?: boolean };
 
 // Grouped navigation: 5 sections instead of a flat 15-item list, with the
 // previously unreachable pages (Track Record, World Markets) surfaced.
+// advancedOnly marks the dense quant surfaces the casual default hides.
 const NAV_GROUPS: NavGroup[] = [
   {
     title: null,
@@ -47,7 +51,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/outlook", label: "Market Outlook", icon: TrendingDown, code: "ECO" },
       { href: "/sectors", label: "Sectors", icon: PieChart, code: "SECT" },
-      { href: "/world", label: "World Markets", icon: LayoutGrid, code: "WM" },
+      { href: "/world", label: "World Markets", icon: LayoutGrid, code: "WM", advancedOnly: true },
       { href: "/news", label: "News & Intel", icon: Newspaper, code: "NI" },
     ],
   },
@@ -64,14 +68,14 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/portfolio", label: "Builder & Analysis", icon: Briefcase, code: "PORT" },
       { href: "/portfolio-intelligence/track-record", label: "Track Record", icon: Activity, code: "NAV" },
-      { href: "/portfolio-intelligence/conviction", label: "Conviction", icon: NotebookPen, code: "CONV" },
-      { href: "/portfolio-intelligence/risk-watch", label: "Risk Watch", icon: Activity, code: "RISK" },
+      { href: "/portfolio-intelligence/conviction", label: "Conviction", icon: NotebookPen, code: "CONV", advancedOnly: true },
+      { href: "/portfolio-intelligence/risk-watch", label: "Risk Watch", icon: Activity, code: "RISK", advancedOnly: true },
       { href: "/retirement", label: "Retirement", icon: Target, code: "RETIRE" },
     ],
   },
   {
     title: "Tools",
-    hideForBeginner: true,
+    advancedOnly: true,
     items: [
       { href: "/copilot", label: "Copilot", icon: Sparkles, code: "AI" },
       { href: "/workspace", label: "Workspace", icon: LayoutGrid, code: "WORK" },
@@ -83,12 +87,12 @@ const NAV_GROUPS: NavGroup[] = [
 
 function NavLinks({ onClick }: { onClick?: () => void }) {
   const pathname = usePathname();
-  const { beginner } = useBeginnerMode();
+  const { beginner } = useBeginnerMode(); // beginner === casual mode
 
   return (
-    <nav className="flex flex-col gap-1 px-3">
+    <nav className="flex flex-col gap-1 px-3" data-tour="nav">
       {NAV_GROUPS.map((group) => {
-        if (group.hideForBeginner && beginner) return null;
+        if (group.advancedOnly && beginner) return null;
         return (
           <div key={group.title ?? "top"} className="flex flex-col gap-0.5">
             {group.title && (
@@ -97,12 +101,14 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
               </p>
             )}
             {group.items.map((item) => {
+              if (item.advancedOnly && beginner) return null;
               const active = pathname === item.href;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={onClick}
+                  data-tour={item.code === "NAV" ? "track-record-link" : undefined}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium transition-colors group",
                     active
@@ -131,31 +137,53 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
   );
 }
 
-function BeginnerToggle() {
-  const { beginner, toggle } = useBeginnerMode();
+function ModeSwitch() {
+  const { beginner, toggle } = useBeginnerMode(); // beginner === casual
 
   return (
-    <button
-      onClick={toggle}
-      className={cn(
-        "flex items-center gap-2 w-full rounded-lg px-3 py-2 text-xs font-medium transition-colors",
-        beginner
-          ? "bg-blue-500/15 text-blue-400"
-          : "text-muted-foreground hover:bg-accent hover:text-foreground"
-      )}
-      aria-pressed={beginner}
-      aria-label="Toggle beginner mode"
+    <div
+      className="flex w-full rounded-lg border border-border/60 p-0.5 text-xs font-medium"
+      role="group"
+      aria-label="Interface mode"
+      data-tour="mode-switch"
     >
-      <span className={cn(
-        "inline-flex h-5 w-9 items-center rounded-full transition-colors",
-        beginner ? "bg-blue-500" : "bg-muted"
-      )}>
-        <span className={cn(
-          "h-3.5 w-3.5 rounded-full bg-white transition-transform",
-          beginner ? "translate-x-4.5" : "translate-x-0.5"
-        )} />
-      </span>
-      Beginner Mode
+      <button
+        onClick={beginner ? undefined : toggle}
+        aria-pressed={beginner}
+        className={cn(
+          "flex-1 rounded-md px-2 py-1.5 transition-colors",
+          beginner
+            ? "bg-blue-500/15 text-blue-400"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        Casual
+      </button>
+      <button
+        onClick={beginner ? toggle : undefined}
+        aria-pressed={!beginner}
+        className={cn(
+          "flex-1 rounded-md px-2 py-1.5 transition-colors",
+          !beginner
+            ? "bg-blue-500/15 text-blue-400"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        Advanced
+      </button>
+    </div>
+  );
+}
+
+function TourButton() {
+  return (
+    <button
+      onClick={() => window.dispatchEvent(new Event("aegis:start-tour"))}
+      className="flex items-center gap-2 w-full rounded-lg px-3 py-2 text-xs font-medium transition-colors text-muted-foreground hover:bg-accent hover:text-foreground"
+      aria-label="Take the tour"
+    >
+      <Sparkles className="h-4 w-4" />
+      Take the tour
     </button>
   );
 }
@@ -223,14 +251,15 @@ function SidebarContent({ onClick }: { onClick?: () => void }) {
         <Image src="/logo.png" alt="Aegis Finance" width={32} height={32} />
         <span className="text-lg font-bold tracking-tight">Aegis Finance</span>
       </div>
-      <div className="px-3 mb-3">
+      <div className="px-3 mb-3" data-tour="command">
         <CommandHint />
       </div>
       <NavLinks onClick={onClick} />
       <div className="mt-auto px-6 py-4 space-y-3">
         <div className="px-0 space-y-1">
           <ThemeToggle />
-          <BeginnerToggle />
+          <ModeSwitch />
+          <TourButton />
         </div>
         <p className="text-xs text-muted-foreground">
           Educational tool only. Not financial advice.{" "}
