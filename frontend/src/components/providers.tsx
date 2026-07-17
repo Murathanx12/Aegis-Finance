@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BeginnerModeContext, useBeginnerModeState } from "@/hooks/use-beginner-mode";
 import { ShortcutManager } from "@/components/shortcut-manager";
+import { FirstRunTour } from "@/components/first-run-tour";
 
 const STALE_TIME_DEFAULT = 5 * 60 * 1000; // 5 min
 // One retry: the heavy endpoints recompute for minutes when cold, so a
@@ -49,6 +50,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <BeginnerModeBodyClass />
             {children}
             <ShortcutManager />
+            <FirstRunTour />
           </TooltipProvider>
         </BeginnerModeContext.Provider>
       </QueryClientProvider>

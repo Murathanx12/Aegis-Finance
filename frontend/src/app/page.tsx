@@ -101,7 +101,9 @@ export default function DashboardPage() {
 
       <DisclaimerBanner />
 
-      <DailyBriefCard />
+      <div data-tour="daily-brief">
+        <DailyBriefCard />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <SignalBadge data={signal.data ?? null} />
@@ -111,7 +113,9 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <CrashGauge data={market.data ?? null} />
+        <div data-tour="crash-gauge">
+          <CrashGauge data={market.data ?? null} />
+        </div>
         <SP500Chart data={projection.data ?? null} />
       </div>
 
