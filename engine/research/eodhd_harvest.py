@@ -46,32 +46,36 @@ def _token() -> str:
     return tok
 
 
-def fetch_delisted_list(tok: str) -> list[dict]:
-    out = DATA_DIR / f"delisted_symbol_list_{date.today().isoformat()}.json.gz"
+def fetch_symbol_list(tok: str, delisted: bool) -> list[dict]:
+    kind = "delisted" if delisted else "active"
+    out = DATA_DIR / f"{kind}_symbol_list_{date.today().isoformat()}.json.gz"
     if out.exists():
         with gzip.open(out, "rt", encoding="utf-8") as f:
             return json.load(f)
-    r = requests.get(f"{BASE}/exchange-symbol-list/US",
-                     params={"api_token": tok, "fmt": "json", "delisted": "1"},
+    params = {"api_token": tok, "fmt": "json"}
+    if delisted:
+        params["delisted"] = "1"
+    r = requests.get(f"{BASE}/exchange-symbol-list/US", params=params,
                      timeout=180)
     r.raise_for_status()
     rows = r.json()
     out.parent.mkdir(parents=True, exist_ok=True)
     with gzip.open(out, "wt", encoding="utf-8") as f:
         json.dump(rows, f)
-    log.info("delisted list snapshot: %d rows -> %s", len(rows), out.name)
+    log.info("%s list snapshot: %d rows -> %s", kind, len(rows), out.name)
     return rows
 
 
-def harvest(limit: int | None = None) -> None:
+def harvest(limit: int | None = None, active: bool = False) -> None:
     tok = _token()
-    rows = fetch_delisted_list(tok)
+    rows = fetch_symbol_list(tok, delisted=not active)
     # Common stocks only — funds/ETNs/warrants are not the survivorship asset.
     commons = [r for r in rows if (r.get("Type") or "") == "Common Stock"
                and r.get("Code")]
-    log.info("delisted common stocks in list: %d", len(commons))
+    log.info("%s common stocks in list: %d",
+             "active" if active else "delisted", len(commons))
 
-    dest = DATA_DIR / "delisted"
+    dest = DATA_DIR / ("active" if active else "delisted")
     dest.mkdir(parents=True, exist_ok=True)
     todo = []
     skipped = 0
@@ -129,4 +133,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=None,
                     help="harvest only the first N (smoke test)")
-    harvest(ap.parse_args().limit)
+    ap.add_argument("--active", action="store_true",
+                    help="harvest ACTIVE US common stocks instead of delisted")
+    a = ap.parse_args()
+    harvest(a.limit, active=a.active)
