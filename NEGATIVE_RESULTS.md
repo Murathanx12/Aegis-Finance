@@ -209,5 +209,37 @@ paper and is uninvestable in practice. Successor registered
 (TRIAL-MOM-TREND #14): the same spec + the 10-month trend filter — the one
 mechanism with surviving OOS evidence for truncating exactly this crash.
 
+## 10. The trend-filter rescue makes momentum WORSE — inquiry closed (TRIAL-MOM-TREND #14)
+
+Source: `engine/research/mom_backtest.py --trend`, spec frozen and committed
+BEFORE evaluation (`c9a31ad`), one run, 2017-01 -> 2026-06.
+
+| | CAGR | Sharpe | Max DD |
+|---|---|---|---|
+| #13 momentum, unfiltered | 17.9% | 0.629 | -54.7% |
+| **#14 momentum + SPY 10-mo SMA cash filter** | **4.8%** | **0.307** | **-61.3%** |
+| SPY | 15.3% | 0.871 | -33.7% |
+
+**FAIL — and dramatically worse than the thing it was supposed to fix.**
+The filter fired on exactly the right months (verified by hand: 2018Q4,
+COVID Mar-May 2020, eight months of 2022, Jan 2023, Nov 2023, Apr 2025,
+Apr 2026 — no sign bug). The mechanism of failure is the known one, at
+full violence: a monthly-cadence trend rule TAKES the first leg of every
+crash (exit lags by up to a month) and then MISSES the V-shaped rebound
+(re-entry lags too). 2017-2026 contained five V-shaped recoveries and zero
+1973/2008-style long grinding bears — the single regime where trend rules
+earn their keep never occurred. Deeper maxDD than unfiltered is the
+sell-the-bottom arithmetic: lock the loss, sit out the recovery, re-enter
+at a lower base, take the next leg down.
+
+**Per the pre-registered stopping rule: the momentum-lane inquiry is
+CLOSED for this window.** No third variant. What survives: momentum stays
+a component of the forward multi-factor IC trial; the +2.7pp/yr selection
+evidence from #13 stands as descriptive context with its uninvestable
+risk profile stated alongside. The honest conclusion of the pair: on
+survivorship-free data, the two best-documented beat-SPY mechanisms in
+the public literature both fail their risk-adjusted gates in this window
+- which is precisely what the live-fund scoreboard (F-023) predicted.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
