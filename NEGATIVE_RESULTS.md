@@ -144,5 +144,41 @@ fragility composite remains the crisis read; the overlay stays
 `model_not_deployed`. Full metrics:
 `engine/training/output/crash2_eval_2026-07-14.json`.
 
+## 8. EODHD fails its own pre-registered acceptance gate (14/20 vs bar 16)
+
+Source: `engine/research/eodhd_acceptance.py`, gate frozen 2026-07-16 in
+`docs/research/DATA_SOURCES_AND_BASELINES_2026-07-16.md`; run 2026-07-18 on
+the paid All World plan.
+
+**Phase 2 result: 13/20 delisted audit names usable, +1 rescued via the
+`JAVA_old` alternate code = 14/20. Bar was >=16. FAIL — subscription
+canceled, per the pre-committed rule.**
+
+Failure anatomy (all seven, verified by hand):
+- **Recycled-symbol contamination:** `CFC` (Countrywide, died 2008) trades to
+  2019 in the EOD series; `BSC` in the delisted list is an *ETN*, not Bear
+  Stearns; `MON` is a SPAC, not Monsanto. The naive symbol is a lie.
+- **Genuinely absent:** EMC (died 2016), Everest Re's `RE` history (renamed
+  EG), SBNY common stock (only preferreds/warrants present).
+- **Rescued:** Sun Microsystems exists as `JAVA_old` (3,036 rows ending
+  2010-01-26, the Oracle close) — the *script's* query was wrong, not the data.
+
+Second-order finding: **Phase 1's 16/20 "PASS" was itself inflated** — its
+membership check matched ticker codes, and two of those matches (BSC, MON)
+were recycled symbols owned by different companies. A name-aware phase 1
+would have scored ~14/20 and said *don't subscribe*. The gate design, not
+just the data, had a false-positive path. (Money impact: one $19.99 month,
+bounded by design — the two-phase gate did its job at the second fence.)
+
+What survives: EODHD's coverage of **2017+ deaths is solid** (Yahoo, Time
+Warner, Celgene, Allergan, Xilinx, Activision, Twitter, First Republic,
+SVB, Pioneer, Seagen, Abiomed all usable). It is the pre-2016 record and
+symbol-identity hygiene that fail. For a 2015->today replay that is not
+good enough.
+
+Consequence: the honest historical replay moves to **QuantConnect** (free,
+survivorship-free, third-party-hosted) as the primary venue; **Sharadar
+SEP** remains the local-data option if a quote comes back sane.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*

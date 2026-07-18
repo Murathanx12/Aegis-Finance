@@ -121,6 +121,29 @@ class TestSeedAndSync:
         assert out["status"] == "already_seeded"
         assert not any(p == "/v2/orders" for _, p, _ in calls)
 
+    def test_seed_idempotent_on_open_orders_market_closed(self, tmp_db, monkeypatch):
+        """Regression (live 2026-07-18): market closed, seed orders accepted
+        but unfilled, positions empty — a re-run must NOT re-order."""
+        monkeypatch.setenv("AEGIS_SEED_ALPACA_MIRROR", "1")
+        monkeypatch.setenv("ALPACA_API_KEY_ID", "k")
+        monkeypatch.setenv("ALPACA_API_SECRET_KEY", "s")
+        _seed_internal(tmp_db, {"DKNG": 1897.0})
+        calls = []
+
+        def fake(method, path, payload=None):
+            calls.append((method, path, payload))
+            if path == "/v2/positions" and method == "GET":
+                return []  # nothing filled yet
+            if path == "/v2/orders?status=open" and method == "GET":
+                return [{"id": "o1", "symbol": "DKNG", "status": "accepted"}]
+            return {"equity": "100000", "cash": "100000"}
+
+        with patch.object(am, "_request", side_effect=fake):
+            out = am.seed_alpaca_mirror(db_path=tmp_db)
+        assert out["status"] == "already_seeded"
+        assert out["n_open_orders"] == 1
+        assert not any(m == "POST" for m, _, _ in calls)
+
     def test_sync_no_trades_when_position_set_unchanged(self, tmp_db, monkeypatch):
         monkeypatch.setenv("ALPACA_API_KEY_ID", "k")
         monkeypatch.setenv("ALPACA_API_SECRET_KEY", "s")

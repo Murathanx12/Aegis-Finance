@@ -1,28 +1,145 @@
 {
-  "phase": 1,
-  "present": {
-    "LEH": true,
-    "BSC": true,
-    "CFC": true,
-    "JAVA": false,
-    "EMC": false,
-    "YHOO": true,
-    "MON": true,
-    "TWX": true,
-    "CELG": true,
-    "AGN": true,
-    "XLNX": true,
-    "ATVI": true,
-    "TWTR": true,
-    "FRC": true,
-    "SIVB": true,
-    "SBNY": false,
-    "PXD": true,
-    "SGEN": true,
-    "ABMD": true,
-    "RE": false
+  "phase": 2,
+  "results": {
+    "LEH": {
+      "usable": true,
+      "rows": 2695,
+      "last_date": "2008-09-17",
+      "exit_year": 2008,
+      "reason": null
+    },
+    "BSC": {
+      "usable": false,
+      "rows": 626,
+      "last_date": "2011-08-25",
+      "exit_year": 2008,
+      "reason": "history ends 2011-08-25 but company died 2008 (recycled symbol?)"
+    },
+    "CFC": {
+      "usable": false,
+      "rows": 5261,
+      "last_date": "2019-11-27",
+      "exit_year": 2008,
+      "reason": "history ends 2019-11-27 but company died 2008 (recycled symbol?)"
+    },
+    "JAVA": {
+      "usable": false,
+      "rows": 7227,
+      "last_date": "2026-07-17",
+      "exit_year": 2010,
+      "reason": "history ends 2026-07-17 but company died 2010 (recycled symbol?)"
+    },
+    "EMC": {
+      "usable": false,
+      "rows": 796,
+      "last_date": "2026-07-17",
+      "exit_year": 2016,
+      "reason": "history ends 2026-07-17 but company died 2016 (recycled symbol?)"
+    },
+    "YHOO": {
+      "usable": true,
+      "rows": 4897,
+      "last_date": "2017-06-16",
+      "exit_year": 2017,
+      "reason": null
+    },
+    "MON": {
+      "usable": false,
+      "rows": 454,
+      "last_date": "2022-12-30",
+      "exit_year": 2018,
+      "reason": "history ends 2022-12-30 but company died 2018 (recycled symbol?)"
+    },
+    "TWX": {
+      "usable": true,
+      "rows": 5148,
+      "last_date": "2018-06-15",
+      "exit_year": 2018,
+      "reason": null
+    },
+    "CELG": {
+      "usable": true,
+      "rows": 8135,
+      "last_date": "2019-11-20",
+      "exit_year": 2019,
+      "reason": null
+    },
+    "AGN": {
+      "usable": true,
+      "rows": 6857,
+      "last_date": "2020-05-08",
+      "exit_year": 2020,
+      "reason": null
+    },
+    "XLNX": {
+      "usable": true,
+      "rows": 7984,
+      "last_date": "2022-02-16",
+      "exit_year": 2022,
+      "reason": null
+    },
+    "ATVI": {
+      "usable": true,
+      "rows": 7487,
+      "last_date": "2023-10-13",
+      "exit_year": 2023,
+      "reason": null
+    },
+    "TWTR": {
+      "usable": true,
+      "rows": 2259,
+      "last_date": "2022-10-27",
+      "exit_year": 2022,
+      "reason": null
+    },
+    "FRC": {
+      "usable": true,
+      "rows": 3109,
+      "last_date": "2023-05-02",
+      "exit_year": 2023,
+      "reason": null
+    },
+    "SIVB": {
+      "usable": true,
+      "rows": 8306,
+      "last_date": "2023-03-09",
+      "exit_year": 2023,
+      "reason": null
+    },
+    "SBNY": {
+      "usable": false,
+      "rows": 5605,
+      "last_date": "2026-07-17",
+      "exit_year": 2023,
+      "reason": "history ends 2026-07-17 but company died 2023 (recycled symbol?)"
+    },
+    "PXD": {
+      "usable": true,
+      "rows": 9145,
+      "last_date": "2024-05-02",
+      "exit_year": 2024,
+      "reason": null
+    },
+    "SGEN": {
+      "usable": true,
+      "rows": 5729,
+      "last_date": "2023-12-13",
+      "exit_year": 2023,
+      "reason": null
+    },
+    "ABMD": {
+      "usable": true,
+      "rows": 8819,
+      "last_date": "2022-12-23",
+      "exit_year": 2022,
+      "reason": null
+    },
+    "RE": {
+      "usable": false,
+      "reason": "rows=0"
+    }
   },
-  "n": 16,
+  "n": 13,
   "bar": 16,
-  "verdict": "PROCEED to phase 2 (subscribe)"
+  "verdict": "FAIL \u2014 cancel EODHD; get a Sharadar SEP quote instead"
 }
