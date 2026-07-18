@@ -43,9 +43,34 @@ TRIAL-001), the crash overlay (model not deployed live). See the header of
    CAGR / maxDD / Sharpe into `docs/research/HONEST_REPLAY_2026.md` and
    builds the labeled UI section.
 
-## Results (fill in after the runs)
-| Lane | QC URL | CAGR | Max DD | Sharpe | SPY CAGR (same window) |
+## Results
+
+### Local reproduction (run 2026-07-18, same spec, yfinance adjusted closes)
+`engine/research/mandate_replay.py` — survivorship-safe here because every
+sleeve ETF is alive (the delisted-data problem was the STOCK universe, T7).
+One run per lane, zero parameter search. 6 bps per-side costs, rf=0.
+
+| 2015-01→2026-07 | CAGR | Vol | Sharpe | Max DD | $100k → |
 |---|---|---|---|---|---|
-| conservative | — | | | | |
-| balanced | — | | | | |
-| aggressive | — | | | | |
+| conservative | 6.88% | 8.9% | 0.79 | −20.9% | $215,465 |
+| balanced | 9.48% | 13.2% | 0.76 | −26.0% | $284,201 |
+| aggressive | 11.50% | 17.1% | 0.72 | −32.3% | $351,107 |
+| SPY | 13.66% | 17.6% | 0.82 | −33.7% | $438,034 |
+| 60/40 | 9.06% | 10.9% | 0.85 | −21.5% | $271,896 |
+
+**Reading (matches the pre-commitment above):** every mandate trails SPY
+and every mandate has a smaller drawdown — the normal, expected shape for
+diversified allocations across a bull decade. Balanced edges 60/40 on CAGR
+(+0.4pp) but not on Sharpe. No skill claim lives here; this is the
+direction-check that says the mandates are historically sane.
+
+### Third-party confirmation (QuantConnect, fill in when Murat's runs finish)
+| Lane | QC URL | CAGR | Max DD | Sharpe |
+|---|---|---|---|---|
+| conservative | — | | | |
+| balanced | — | | | |
+| aggressive | — | | | |
+
+Divergence between the QC and local numbers beyond ~1pp CAGR needs
+explaining (fees model, dividend handling, start-day) before either is
+quoted anywhere.
