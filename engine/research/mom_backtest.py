@@ -192,6 +192,17 @@ def compute_nav(holdings: dict, rebal_dates: list, cal: pd.DatetimeIndex,
 
         # 3) rebalance to the month's frozen holdings
         if day in rb_days:
+            if not holdings[day]:
+                # risk-off (TRIAL-MOM-TREND): liquidate to cash with costs
+                if shares:
+                    traded = sum(sh * (last_px(c, day)[0] or 0.0)
+                                 for c, sh in shares.items())
+                    nav_val -= traded * cost
+                    turn_dollars += traded
+                    shares = {}
+                cash = nav_val
+                nav_out.append((day, nav_val))
+                continue
             prices = {}
             for c in holdings[day]:
                 px, when = last_px(c, day)
@@ -224,12 +235,35 @@ def _stats(nav: pd.Series) -> dict:
             "final": round(float(nav.iloc[-1]), 0)}
 
 
+def trend_risk_on(bench: pd.DataFrame, rebal_dates: list) -> dict:
+    """TRIAL-MOM-TREND frozen filter: at each rebalance, risk-on iff SPY's
+    last completed MONTHLY close >= SMA of the last 10 monthly closes."""
+    m = bench["SPY"].resample("ME").last().dropna()
+    sma10 = m.rolling(10).mean()
+    out = {}
+    for d in rebal_dates:
+        pos = m.index.searchsorted(d) - 1  # last completed month before d
+        out[d] = bool(pos >= 9 and m.iloc[pos] >= sma10.iloc[pos])
+    return out
+
+
 if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--trend", action="store_true",
+                    help="TRIAL-MOM-TREND (#14): SPY 10-mo SMA cash filter")
+    args = ap.parse_args()
+
     compute_nav._cash = 0.0
     feats, rebal_dates, bench = build_monthly_features()
     cal = bench.loc[START:END].index
 
     holdings = select_holdings(feats, rebal_dates)
+    if args.trend:
+        risk_on = trend_risk_on(bench, rebal_dates)
+        holdings = {d: (h if risk_on[d] else []) for d, h in holdings.items()}
+        n_off = sum(1 for d in rebal_dates if not risk_on[d])
+        log.info("trend filter: %d/%d months risk-OFF", n_off, len(rebal_dates))
     nav, turned = compute_nav(holdings, rebal_dates, cal)
     strat = _stats(nav)
     spy = _stats(bench["SPY"].loc[START:END])
@@ -238,12 +272,13 @@ if __name__ == "__main__":
     passed = (strat["sharpe_rf0"] >= spy["sharpe_rf0"]
               and strat["max_dd_pct"] >= 1.25 * spy["max_dd_pct"])  # dd negative
     verdict = "PASS (direction-check)" if passed else "FAIL"
+    trial = "mom-trend-backtest-12-1" if args.trend else "mom-backtest-12-1"
     log.info("STRATEGY  %s", strat)
     log.info("SPY       %s", spy)
     log.info("RSP       %s", rsp)
-    log.info("TRIAL-MOM-BACKTEST FROZEN VERDICT: %s", verdict)
+    log.info("%s FROZEN VERDICT: %s", trial.upper(), verdict)
 
-    out = {"trial": "mom-backtest-12-1", "frozen_run": {
+    out = {"trial": trial, "frozen_run": {
         "strategy": strat, "spy": spy, "rsp": rsp,
         "avg_annual_turnover_x": round(turned / 100_000 / 9.5, 2),
         "verdict": verdict}}
@@ -255,6 +290,8 @@ if __name__ == "__main__":
                          (50, 100, 0.0015), (50, 100, 0.0025)]:
         compute_nav._cash = 0.0
         h = select_holdings(feats, rebal_dates, top_n=tn, band_n=bn)
+        if args.trend:
+            h = {d: (hh if risk_on[d] else []) for d, hh in h.items()}
         n, _ = compute_nav(h, rebal_dates, cal, cost=cost)
         s = _stats(n)
         cloud.append({"top_n": tn, "band": bn, "cost_bps": cost * 1e4, **s})
@@ -264,5 +301,7 @@ if __name__ == "__main__":
                               "sharpe_mean": round(float(np.mean(sharpes)), 3),
                               "sharpe_min": min(sharpes), "sharpe_max": max(sharpes),
                               "note": "annex per F-025 — reported, never deciding"}
-    OUT.write_text(json.dumps(out, indent=2), encoding="utf-8")
-    log.info("written: %s", OUT)
+    dest = OUT.with_name(f"mom_trend_backtest_{date.today().isoformat()}.json") \
+        if args.trend else OUT
+    dest.write_text(json.dumps(out, indent=2), encoding="utf-8")
+    log.info("written: %s", dest)
