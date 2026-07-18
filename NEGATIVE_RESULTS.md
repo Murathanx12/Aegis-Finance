@@ -180,5 +180,34 @@ Consequence: the honest historical replay moves to **QuantConnect** (free,
 survivorship-free, third-party-hosted) as the primary venue; **Sharadar
 SEP** remains the local-data option if a quote comes back sane.
 
+## 9. Long-only momentum beats SPY's return and STILL fails (TRIAL-MOM-BACKTEST #13)
+
+Source: `engine/research/mom_backtest.py` on the survivorship-free panel
+(50,462 names incl. 32,334 delisted), spec frozen BEFORE the panel existed
+(`docs/TRIALS/TRIAL-MOM-BACKTEST-12-1-momentum.md`), one evaluation,
+2017-01 -> 2026-06.
+
+| | CAGR | Sharpe (rf=0) | Max DD |
+|---|---|---|---|
+| 12-1 momentum top-50 (net of 20bps/side) | **17.9%** | 0.629 | **-54.7%** |
+| SPY | 15.3% | **0.871** | -33.7% |
+| RSP (equal-weight control) | 11.8% | 0.693 | -39.0% |
+
+**The verdict is FAIL on the pre-registered deciding metric** (Sharpe >= SPY
+AND maxDD <= 1.25x SPY): Sharpe trails by 0.24 and the drawdown blows the
+-42.2% bound by 12 points. The parameter-cloud annex (8 perturbations of
+top-N/band/costs) puts every variant at Sharpe 0.53-0.64 — the failure is
+structural (a momentum crash lives in the window), not a parameter corner.
+
+**What makes this negative result valuable:** the strategy DID out-return
+SPY by +2.7pp/yr and out-returned equal-weight by +6.2pp/yr — genuine
+selection, at the top of the literature's realistic band. The failure is
+the RISK: nobody holds a -55% drawdown, so the extra CAGR is not
+collectible by a human investor. This is the honest, survivorship-free
+version of "just pick winning momentum stocks" — it makes more money on
+paper and is uninvestable in practice. Successor registered
+(TRIAL-MOM-TREND #14): the same spec + the 10-month trend filter — the one
+mechanism with surviving OOS evidence for truncating exactly this crash.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*

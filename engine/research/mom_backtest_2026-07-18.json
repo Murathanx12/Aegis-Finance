@@ -1,0 +1,105 @@
+{
+  "trial": "mom-backtest-12-1",
+  "frozen_run": {
+    "strategy": {
+      "cagr_pct": 17.93,
+      "sharpe_rf0": 0.629,
+      "max_dd_pct": -54.68,
+      "final": 477223.0
+    },
+    "spy": {
+      "cagr_pct": 15.27,
+      "sharpe_rf0": 0.871,
+      "max_dd_pct": -33.72,
+      "final": 747.0
+    },
+    "rsp": {
+      "cagr_pct": 11.77,
+      "sharpe_rf0": 0.693,
+      "max_dd_pct": -39.04,
+      "final": 213.0
+    },
+    "avg_annual_turnover_x": 9.65,
+    "verdict": "FAIL"
+  },
+  "parameter_cloud": {
+    "runs": [
+      {
+        "top_n": 40,
+        "band": 80,
+        "cost_bps": 20.0,
+        "cagr_pct": 15.24,
+        "sharpe_rf0": 0.559,
+        "max_dd_pct": -60.92,
+        "final": 383346.0
+      },
+      {
+        "top_n": 60,
+        "band": 120,
+        "cost_bps": 20.0,
+        "cagr_pct": 17.27,
+        "sharpe_rf0": 0.624,
+        "max_dd_pct": -53.05,
+        "final": 452536.0
+      },
+      {
+        "top_n": 40,
+        "band": 100,
+        "cost_bps": 20.0,
+        "cagr_pct": 14.12,
+        "sharpe_rf0": 0.534,
+        "max_dd_pct": -59.98,
+        "final": 349274.0
+      },
+      {
+        "top_n": 60,
+        "band": 100,
+        "cost_bps": 20.0,
+        "cagr_pct": 18.09,
+        "sharpe_rf0": 0.642,
+        "max_dd_pct": -53.73,
+        "final": 483236.0
+      },
+      {
+        "top_n": 50,
+        "band": 80,
+        "cost_bps": 20.0,
+        "cagr_pct": 18.66,
+        "sharpe_rf0": 0.644,
+        "max_dd_pct": -54.36,
+        "final": 505805.0
+      },
+      {
+        "top_n": 50,
+        "band": 120,
+        "cost_bps": 20.0,
+        "cagr_pct": 16.9,
+        "sharpe_rf0": 0.604,
+        "max_dd_pct": -57.66,
+        "final": 439018.0
+      },
+      {
+        "top_n": 50,
+        "band": 100,
+        "cost_bps": 15.0,
+        "cagr_pct": 18.24,
+        "sharpe_rf0": 0.636,
+        "max_dd_pct": -54.36,
+        "final": 489342.0
+      },
+      {
+        "top_n": 50,
+        "band": 100,
+        "cost_bps": 25.0,
+        "cagr_pct": 17.63,
+        "sharpe_rf0": 0.622,
+        "max_dd_pct": -55.0,
+        "final": 465401.0
+      }
+    ],
+    "sharpe_mean": 0.61,
+    "sharpe_min": 0.534,
+    "sharpe_max": 0.644,
+    "note": "annex per F-025 \u2014 reported, never deciding"
+  }
+}

@@ -287,3 +287,15 @@ class TestMomBacktestTrial:
         assert len(rows) == 1
         assert "NOT a forward clock" in rows[0]["notes"]
         assert "docs/TRIALS/TRIAL-MOM-BACKTEST" in rows[0]["notes"]
+
+    def test_mom_trend_successor_registers(self, tmp_path):
+        from backend.db import init_db
+        from backend.services.portfolio_intelligence.trial_registry import (
+            ensure_mom_backtest_trial,
+            ensure_mom_trend_trial,
+        )
+        db = tmp_path / "reg2.db"
+        init_db(db)
+        ensure_mom_backtest_trial(db_path=db)
+        rid = ensure_mom_trend_trial(db_path=db)
+        assert rid == ensure_mom_trend_trial(db_path=db)  # idempotent

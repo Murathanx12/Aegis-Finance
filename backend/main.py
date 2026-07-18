@@ -288,6 +288,13 @@ async def lifespan(app: FastAPI):
             await asyncio.to_thread(ensure_mom_backtest_trial)
         except Exception as e:
             logger.warning("Mom-backtest trial pre-registration failed (non-fatal): %s", e)
+        try:
+            from backend.services.portfolio_intelligence.trial_registry import (
+                ensure_mom_trend_trial,
+            )
+            await asyncio.to_thread(ensure_mom_trend_trial)
+        except Exception as e:
+            logger.warning("Mom-trend trial pre-registration failed (non-fatal): %s", e)
         # P1 #6 book-lane seeding — ATTENDED, env-gated. A normal deploy does NOT
         # seed (flag unset). Set AEGIS_SEED_BOOK_LANES=1 on Railway for ONE boot to
         # seed mirror+conviction at live prices (idempotent), confirm via

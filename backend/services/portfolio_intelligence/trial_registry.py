@@ -79,3 +79,28 @@ def ensure_mom_backtest_trial(db_path=None) -> int:
     }
     return ensure_trial_registered(MOM_BACKTEST_TRIAL_PARAM, notes,
                                    db_path=db_path)
+
+
+MOM_TREND_TRIAL_PARAM = "mom-trend-backtest-12-1"
+
+
+def ensure_mom_trend_trial(db_path=None) -> int:
+    """Idempotently pre-register TRIAL-MOM-TREND — the successor to the
+    FAILED mom-backtest-12-1 (#13): identical frozen spec + SPY 10-month SMA
+    risk-off-to-cash filter. Offline direction-check, not a forward clock.
+    Doc: docs/TRIALS/TRIAL-MOM-TREND-momentum-with-trend-filter.md."""
+    notes = {
+        "hypothesis": ("SPY 10-month-SMA cash filter on the exact #13 spec "
+                       "lifts net Sharpe to >= SPY and maxDD inside 1.25x "
+                       "SPY (prior: moderate; COVID-2020 whipsaw may kill it)"),
+        "purpose": "offline direction-check successor to FAILED #13 - NOT a forward clock",
+        "primary_metric": "net Sharpe (rf=0) minus SPY net Sharpe, one frozen run",
+        "decision_rule": {
+            "pass": "Sharpe >= SPY AND maxDD <= 1.25x SPY -> lane PROPOSAL only (attended)",
+            "fail": "else -> NEGATIVE_RESULTS; momentum-lane inquiry CLOSES for this window",
+            "reruns": "forbidden; no third variant without a new mechanism class",
+        },
+        "predecessor": "mom-backtest-12-1 (#13) FAILED: Sharpe 0.629 vs SPY 0.871, maxDD -54.7%",
+        "doc": "docs/TRIALS/TRIAL-MOM-TREND-momentum-with-trend-filter.md",
+    }
+    return ensure_trial_registered(MOM_TREND_TRIAL_PARAM, notes, db_path=db_path)
