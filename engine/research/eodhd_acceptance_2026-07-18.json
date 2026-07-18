@@ -1,0 +1,28 @@
+{
+  "phase": 1,
+  "present": {
+    "LEH": true,
+    "BSC": true,
+    "CFC": true,
+    "JAVA": false,
+    "EMC": false,
+    "YHOO": true,
+    "MON": true,
+    "TWX": true,
+    "CELG": true,
+    "AGN": true,
+    "XLNX": true,
+    "ATVI": true,
+    "TWTR": true,
+    "FRC": true,
+    "SIVB": true,
+    "SBNY": false,
+    "PXD": true,
+    "SGEN": true,
+    "ABMD": true,
+    "RE": false
+  },
+  "n": 16,
+  "bar": 16,
+  "verdict": "PROCEED to phase 2 (subscribe)"
+}
