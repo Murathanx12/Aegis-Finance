@@ -50,3 +50,32 @@ def ensure_trial_registered(param: str, notes: dict, db_path=None,
         return int(cur.lastrowid)
     finally:
         conn.close()
+
+
+MOM_BACKTEST_TRIAL_PARAM = "mom-backtest-12-1"
+
+
+def ensure_mom_backtest_trial(db_path=None) -> int:
+    """Idempotently pre-register TRIAL-MOM-BACKTEST — the OFFLINE 12-1
+    momentum direction-check on the survivorship-free 2017+ panel. Counted
+    here so the DSR/PBO guards deflate against it even though it is not a
+    forward clock. Canonical commitment (hypothesis, frozen params, decision
+    rule): docs/TRIALS/TRIAL-MOM-BACKTEST-12-1-momentum.md, committed BEFORE
+    the first backtest run."""
+    notes = {
+        "hypothesis": ("net-of-cost long-only 12-1 momentum on the "
+                       "survivorship-free 2017+ panel achieves Sharpe >= SPY "
+                       "over the identical window (honest prior: weak; PASS "
+                       "means consistent-with-literature, never alpha)"),
+        "purpose": "offline direction-check - NOT a forward clock",
+        "primary_metric": "net Sharpe (rf=0) minus SPY net Sharpe, one frozen run",
+        "decision_rule": {
+            "pass": "Sharpe >= SPY AND maxDD <= 1.25x SPY -> lane PROPOSAL only (attended)",
+            "fail": "else -> NEGATIVE_RESULTS, no proposal",
+            "void": "panel-quality gate failure voids trial unrun",
+            "reruns": "forbidden under this ID; variants are new trials",
+        },
+        "doc": "docs/TRIALS/TRIAL-MOM-BACKTEST-12-1-momentum.md",
+    }
+    return ensure_trial_registered(MOM_BACKTEST_TRIAL_PARAM, notes,
+                                   db_path=db_path)

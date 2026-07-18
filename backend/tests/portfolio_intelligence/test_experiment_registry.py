@@ -261,3 +261,29 @@ def test_no_verdict_path_is_unstamped(tmp_db):
     for bt in (1, 5):
         ev = evaluate_candidate(_candidate_returns(), 0.02, batch_trials=bt, db_path=tmp_db)
         assert ev.get("data_grade"), f"un-stamped verdict for batch_trials={bt}"
+
+
+class TestMomBacktestTrial:
+    """TRIAL-MOM-BACKTEST registers idempotently and counts toward DSR/PBO."""
+
+    def test_registers_once_and_increments_cumulative(self, tmp_path):
+        from backend.db import get_connection, init_db
+        from backend.services.portfolio_intelligence.trial_registry import (
+            MOM_BACKTEST_TRIAL_PARAM,
+            ensure_mom_backtest_trial,
+        )
+        db = tmp_path / "reg.db"
+        init_db(db)
+        rid1 = ensure_mom_backtest_trial(db_path=db)
+        rid2 = ensure_mom_backtest_trial(db_path=db)
+        assert rid1 == rid2  # idempotent
+        conn = get_connection(db)
+        try:
+            rows = conn.execute(
+                "SELECT param, verdict, notes FROM rule_experiments "
+                "WHERE param = ?", (MOM_BACKTEST_TRIAL_PARAM,)).fetchall()
+        finally:
+            conn.close()
+        assert len(rows) == 1
+        assert "NOT a forward clock" in rows[0]["notes"]
+        assert "docs/TRIALS/TRIAL-MOM-BACKTEST" in rows[0]["notes"]
