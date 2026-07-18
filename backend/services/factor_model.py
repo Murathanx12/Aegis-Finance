@@ -87,6 +87,40 @@ def get_factor_data(lookback_days: Optional[int] = None) -> Optional[pd.DataFram
         return None
 
 
+def _fetch_french_daily_csv(url: str, col_name: str) -> Optional[pd.DataFrame]:
+    """Download a Kenneth French daily-factor zip and parse it robustly:
+    keep only rows that start with an 8-digit date, drop the -99.99/-999
+    missing markers, convert percent -> decimal. Immune to preamble/footer
+    format drift that breaks pandas_datareader."""
+    import io
+    import re
+    import zipfile
+
+    import requests
+
+    r = requests.get(url, timeout=60)
+    r.raise_for_status()
+    with zipfile.ZipFile(io.BytesIO(r.content)) as zf:
+        text = zf.read(zf.namelist()[0]).decode("utf-8", errors="replace")
+
+    dates, vals = [], []
+    row_re = re.compile(r"^\s*(\d{8})\s*,\s*(-?\d+(?:\.\d+)?)")
+    for line in text.splitlines():
+        m = row_re.match(line)
+        if not m:
+            continue
+        v = float(m.group(2))
+        if v <= -99.0:  # French library missing-data markers
+            continue
+        dates.append(m.group(1))
+        vals.append(v / 100.0)
+    if not dates:
+        return None
+    df = pd.DataFrame({col_name: vals},
+                      index=pd.to_datetime(dates, format="%Y%m%d"))
+    return df.sort_index()
+
+
 def decompose_stock(
     ticker: str,
     price_series: Optional[pd.Series] = None,
@@ -287,18 +321,18 @@ def get_momentum_factor(lookback_days: Optional[int] = None) -> Optional[pd.Data
         return df
 
     try:
-        import pandas_datareader.data as web
-        mom = web.DataReader(
-            "F-F_Momentum_Factor_daily",
-            "famafrench",
+        # pandas_datareader's famafrench parser breaks on the current
+        # momentum CSV (its preamble line "Missing data are indicated by
+        # -99.99..." lands in the date column -> DateParseError locally,
+        # str/float compare in prod). Caught live 2026-07-19: FF6 silently
+        # degraded to FF5 everywhere. Fetch + parse the file directly.
+        df = _fetch_french_daily_csv(
+            "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/"
+            "F-F_Momentum_Factor_daily_CSV.zip",
+            col_name="Mom",
         )
-        df = mom[0] / 100.0  # Convert percentage to decimal
-        df.columns = ["Mom"]
-        if isinstance(df.index, pd.PeriodIndex):
-            df.index = df.index.to_timestamp()
-        else:
-            df.index = pd.to_datetime(df.index)
-        df = df.sort_index()
+        if df is None:
+            raise ValueError("momentum CSV parse yielded no rows")
 
         _FACTOR_CACHE[cache_key] = df
         _FACTOR_CACHE_TS[cache_key] = now

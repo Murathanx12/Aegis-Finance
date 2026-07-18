@@ -17,7 +17,7 @@ V5's theme was buying and building honest history. It closed in two days.
 | Investor Brain plan | 3-speed validation architecture (direction-checks / forward-IC / 24mo claims); suppliers-vs-appliers PIT study design; event-ledger; GKX NN blueprint | `INVESTOR_BRAIN_PLAN_2026-07-18.md` |
 | Factor Lens (F-018) | Shipped: contributions (loading × realized premium), t-stats, rolling 1y loadings; new stock-page card | `c4c6ea4` |
 | Builder absorbs (F-017) | Shipped: contradiction warnings (SEC IM 2017-02), glide-path disclosure, plain-English fan bands, prob-of-target + three levers | `c4c6ea4` |
-| Silent-fragility fix | Portfolio /analyze factor exposures read nonexistent keys → alpha/R²/β were None for months; fixed + regression test | `c4c6ea4` |
+| Silent-fragility fix ×2 | (a) /analyze factor exposures read nonexistent keys → alpha/R²/β None for months; (b) momentum factor NEVER loaded in prod (pandas_datareader breaks on the current French CSV preamble) → FF6 silently degraded to FF5 — caught by the first live ff6 call; direct zip parser shipped + regression tests | `c4c6ea4`, momentum fix follow-up |
 | Registry | 14 cumulative trials (13/#14 added this arc), DSR/PBO deflate against all | `/api/pi/registry` |
 | Fast suite | 2,949 passed, 0 failed | 2026-07-19 run |
 
