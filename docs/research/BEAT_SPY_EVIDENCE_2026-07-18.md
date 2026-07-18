@@ -51,6 +51,27 @@ forward.
 - Any strategy adopted on its published backtest without pre-registration —
   the decay meta-evidence IS the justification for the registry discipline.
 
+## Addendum (same day): the QC community-strategy audit (F-024/F-025)
+Murat supplied 6 QC community strategy URLs. Audit result: all six are
+JS-walled and unauditable without an account; two don't exist anywhere in
+the indexed web. More importantly, the platform's own postmortem (Alpha
+Streams Refactoring 2.0) measured that even the TOP 5% of its filtered
+community alphas underperformed the S&P 500 live — and its leaderboard
+ranks by 3-month return, which actively selects lucky variance. The
+"Sharpe ≥ 0.4 to publish" gate is an engineering-hygiene gate (error-free
+run, default fees, mandatory last-5-years window), not a validity gate.
+
+What we extracted anyway (the real value): **parameter-cloud robustness
+reporting** (Quantitativo — publish the distribution over ±10-20% parameter
+perturbations, treat the point estimate as the cloud's mean; he deflated
+his own 2.11 Sharpe to ~1.95 and disclosed losing to QQQ 7 of 10 years);
+**fixed-universe-first design** (freeze the universe hash before signal
+research — QC's own post-collapse corrective, a natural extension of our
+PIT layer); fractional-Kelly sizing ceilings; ML-as-gate-not-signal (we
+already do this via drift discounting). Recurring sources worth reading:
+Quantitativo (methodology), Concretum/Zarattini SSRN (fully-specified
+backtests), QuantPedia free tier as a bibliography. Composer: noise.
+
 ## The honest answer to "we should beat SPY"
 A rules-based public-information strategy has roughly a 20-35% chance of
 beating SPY's raw CAGR over a random decade, concentrated in decades
