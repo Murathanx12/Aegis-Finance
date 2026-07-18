@@ -103,3 +103,4 @@ htmlcov/
 
 # Machine-specific MCP wiring (absolute paths)
 .mcp.json
+engine/data/

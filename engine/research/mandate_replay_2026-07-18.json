@@ -1,0 +1,55 @@
+{
+  "spec": "ETF-sleeve EW mandate replay, 6bps per-side, rf=0",
+  "results": [
+    {
+      "name": "conservative",
+      "start": "2015-01-02",
+      "end": "2026-07-17",
+      "final_value": 215465.4,
+      "cagr_pct": 6.88,
+      "vol_pct": 8.9,
+      "sharpe_rf0": 0.794,
+      "max_drawdown_pct": -20.86
+    },
+    {
+      "name": "balanced",
+      "start": "2015-01-02",
+      "end": "2026-07-17",
+      "final_value": 284200.68,
+      "cagr_pct": 9.48,
+      "vol_pct": 13.16,
+      "sharpe_rf0": 0.756,
+      "max_drawdown_pct": -25.97
+    },
+    {
+      "name": "aggressive",
+      "start": "2015-01-02",
+      "end": "2026-07-17",
+      "final_value": 351106.69,
+      "cagr_pct": 11.5,
+      "vol_pct": 17.14,
+      "sharpe_rf0": 0.723,
+      "max_drawdown_pct": -32.34
+    },
+    {
+      "name": "SPY",
+      "start": "2015-01-02",
+      "end": "2026-07-17",
+      "final_value": 438033.78,
+      "cagr_pct": 13.66,
+      "vol_pct": 17.63,
+      "sharpe_rf0": 0.817,
+      "max_drawdown_pct": -33.72
+    },
+    {
+      "name": "60-40",
+      "start": "2015-01-02",
+      "end": "2026-07-17",
+      "final_value": 271896.13,
+      "cagr_pct": 9.06,
+      "vol_pct": 10.86,
+      "sharpe_rf0": 0.855,
+      "max_drawdown_pct": -21.46
+    }
+  ]
+}
