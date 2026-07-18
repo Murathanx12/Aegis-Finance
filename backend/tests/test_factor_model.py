@@ -340,3 +340,33 @@ class TestFactorLens:
         assert fe["r_squared"] == 0.8
         assert fe["market_beta"] == 1.1
         assert fe["stocks"]["A"]["market_beta"] == 1.1
+
+
+class TestFrenchCsvParser:
+    """Regression: pandas_datareader broke on the momentum CSV preamble ->
+    FF6 silently degraded to FF5 in prod (caught live 2026-07-19)."""
+
+    def test_parses_only_dated_rows_and_drops_missing(self):
+        import io, zipfile
+        from unittest.mock import MagicMock
+        from backend.services import factor_model as fm
+        csv = (
+            "This file was created by ...\n"
+            "Missing data are indicated by -99.99 or -999.\n"
+            ",Mom\n"
+            "19261103,    0.56\n"
+            "19261104,   -0.20\n"
+            "19261105,  -99.99\n"
+            "Annual Factors: January-December\n"
+            "1927,   22.90\n"
+        )
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr("mom.csv", csv)
+        resp = MagicMock(content=buf.getvalue())
+        resp.raise_for_status = MagicMock()
+        with patch("requests.get", return_value=resp):
+            df = fm._fetch_french_daily_csv("http://x/mom.zip", "Mom")
+        assert len(df) == 2                        # -99.99 dropped, footer ignored
+        assert abs(df["Mom"].iloc[0] - 0.0056) < 1e-9   # percent -> decimal
+        assert str(df.index[0].date()) == "1926-11-03"
