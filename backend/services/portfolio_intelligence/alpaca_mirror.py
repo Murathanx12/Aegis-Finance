@@ -175,8 +175,14 @@ def seed_alpaca_mirror(db_path=None) -> dict:
         return {"status": "no_keys"}
 
     existing = _request("GET", "/v2/positions") or []
-    if existing:
-        return {"status": "already_seeded", "n_positions": len(existing)}
+    # Positions alone are NOT enough: while the market is closed, seed orders
+    # sit accepted-but-unfilled and positions stay empty — a second deploy
+    # with the flag still set would double-order (happened live 2026-07-18,
+    # duplicate DKNG canceled by hand). Open orders count as seeded.
+    open_orders = _request("GET", "/v2/orders?status=open") or []
+    if existing or open_orders:
+        return {"status": "already_seeded", "n_positions": len(existing),
+                "n_open_orders": len(open_orders)}
 
     internal = _internal_positions(db_path)
     nav = _internal_nav(db_path)
