@@ -1,0 +1,141 @@
+{
+  "check1": {
+    "check": 1,
+    "n_ok": 12,
+    "n": 14,
+    "frac": 0.8571428571428571,
+    "verdict": "PASS",
+    "detail": {
+      "YHOO": {
+        "ok": true,
+        "last_date": "2017-06-16",
+        "exit_year": 2017,
+        "reason": null
+      },
+      "MON": {
+        "ok": false,
+        "last_date": "2022-12-30",
+        "exit_year": 2018,
+        "reason": "ends far from death (recycled?)"
+      },
+      "TWX": {
+        "ok": true,
+        "last_date": "2018-06-15",
+        "exit_year": 2018,
+        "reason": null
+      },
+      "CELG": {
+        "ok": true,
+        "last_date": "2019-11-20",
+        "exit_year": 2019,
+        "reason": null
+      },
+      "AGN": {
+        "ok": true,
+        "last_date": "2020-05-08",
+        "exit_year": 2020,
+        "reason": null
+      },
+      "XLNX": {
+        "ok": true,
+        "last_date": "2022-02-16",
+        "exit_year": 2022,
+        "reason": null
+      },
+      "ATVI": {
+        "ok": true,
+        "last_date": "2023-10-13",
+        "exit_year": 2023,
+        "reason": null
+      },
+      "TWTR": {
+        "ok": true,
+        "last_date": "2022-10-27",
+        "exit_year": 2022,
+        "reason": null
+      },
+      "FRC": {
+        "ok": true,
+        "last_date": "2023-05-02",
+        "exit_year": 2023,
+        "reason": null
+      },
+      "SIVB": {
+        "ok": true,
+        "last_date": "2023-03-09",
+        "exit_year": 2023,
+        "reason": null
+      },
+      "SBNY": {
+        "ok": false,
+        "reason": "file missing"
+      },
+      "PXD": {
+        "ok": true,
+        "last_date": "2024-05-02",
+        "exit_year": 2024,
+        "reason": null
+      },
+      "SGEN": {
+        "ok": true,
+        "last_date": "2023-12-13",
+        "exit_year": 2023,
+        "reason": null
+      },
+      "ABMD": {
+        "ok": true,
+        "last_date": "2022-12-23",
+        "exit_year": 2022,
+        "reason": null
+      }
+    }
+  },
+  "check2": {
+    "check": 2,
+    "n_ok": 1,
+    "n": 10,
+    "verdict": "FAIL/incomplete",
+    "detail": {
+      "AAPL": {
+        "ok": true,
+        "max_dev_pct": 0.0
+      },
+      "MSFT": {
+        "ok": false,
+        "reason": "not harvested yet"
+      },
+      "NVDA": {
+        "ok": false,
+        "reason": "not harvested yet"
+      },
+      "GOOGL": {
+        "ok": false,
+        "reason": "not harvested yet"
+      },
+      "AMZN": {
+        "ok": false,
+        "reason": "not harvested yet"
+      },
+      "META": {
+        "ok": false,
+        "reason": "not harvested yet"
+      },
+      "AVGO": {
+        "ok": false,
+        "reason": "not harvested yet"
+      },
+      "TSLA": {
+        "ok": false,
+        "reason": "not harvested yet"
+      },
+      "LLY": {
+        "ok": false,
+        "reason": "not harvested yet"
+      },
+      "JPM": {
+        "ok": false,
+        "reason": "not harvested yet"
+      }
+    }
+  }
+}
