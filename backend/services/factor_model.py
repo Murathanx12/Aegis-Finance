@@ -422,6 +422,17 @@ def decompose_stock_ff6(
             "significant": bool(p_val < sig_level) if not np.isnan(p_val) else False,
         }
 
+    # Factor-lens additions (F-018): historical premium earned by each factor
+    # over THIS regression window, and contribution = loading x premium —
+    # "this factor earned you X%/yr". Premiums are realized averages, not
+    # forecasts; the frontend states this.
+    for name in factor_names:
+        premium_annual = float(combined[name].mean() * 252)
+        fd = factor_details[name]
+        fd["premium_annual"] = round(premium_annual, 4)
+        fd["contribution_annual"] = round(
+            float(factor_loadings[name]) * premium_annual, 4)
+
     alpha_annual = float(alpha) * 252
     style = _interpret_style(factor_loadings)
 
@@ -446,8 +457,34 @@ def decompose_stock_ff6(
         "factors": factor_details,
         "style": style,
         "residual_vol": round(float(np.sqrt(mse) * np.sqrt(252)), 4) if n > k else None,
+        "rolling": _rolling_loadings(combined, factor_names),
         "residuals": residuals,  # For PCA analysis
     }
+
+
+def _rolling_loadings(combined: pd.DataFrame, factor_names: list[str],
+                      window: int = 252, step: int = 21) -> Optional[dict]:
+    """Rolling-window OLS loadings (monthly steps, 1y window) — the
+    presentation gap F-018 identified: static loadings hide regime shifts.
+    Returns None when the sample supports fewer than 4 windows."""
+    n = len(combined)
+    if n < window + 3 * step:
+        return None
+    y_all = (combined["stock_ret"] - combined["RF"]).values
+    X_all = combined[factor_names].values
+    dates, series = [], {f: [] for f in factor_names}
+    for end in range(window, n + 1, step):
+        Xw = np.column_stack([np.ones(window), X_all[end - window:end]])
+        try:
+            b, _, _, _ = np.linalg.lstsq(Xw, y_all[end - window:end], rcond=None)
+        except np.linalg.LinAlgError:
+            continue
+        dates.append(str(combined.index[end - 1].date()))
+        for i, f in enumerate(factor_names):
+            series[f].append(round(float(b[i + 1]), 3))
+    if len(dates) < 4:
+        return None
+    return {"dates": dates, "window_days": window, **series}
 
 
 def pca_residual_factors(
@@ -583,10 +620,12 @@ def decompose_portfolio(
     portfolio_alpha = 0.0
     total_weight = sum(v["weight"] for v in stock_results.values())
 
+    portfolio_r2 = 0.0
     for ticker, data in stock_results.items():
         w = data["weight"] / total_weight if total_weight > 0 else 0
         decomp = data["decomposition"]
         portfolio_alpha += w * decomp["alpha_annual"]
+        portfolio_r2 += w * decomp.get("r_squared", 0.0)
         for f in factor_names:
             portfolio_loadings[f] += w * decomp["factors"][f]["loading"]
 
@@ -604,6 +643,7 @@ def decompose_portfolio(
 
     return {
         "portfolio_alpha_annual": round(portfolio_alpha, 4),
+        "portfolio_r_squared": round(portfolio_r2, 4),
         "portfolio_factors": {
             f: round(v, 4) for f, v in portfolio_loadings.items()
         },

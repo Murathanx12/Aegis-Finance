@@ -297,15 +297,22 @@ def _compute_factor_exposures(weights: dict) -> dict:
         if not factor_result:
             cache_set(cache_key, {})  # cache empties too â€” avoids re-failing
             return {}
+        # Keys must match decompose_portfolio's actual contract — this block
+        # silently rendered None/"—" for months because it read a "portfolio"
+        # sub-dict that never existed (caught 2026-07-19 survey).
+        pf = factor_result.get("portfolio_factors", {})
         out = {
             "factor_exposures": {
-                "r_squared": factor_result.get("portfolio", {}).get("r_squared"),
-                "alpha_annual": factor_result.get("portfolio", {}).get("alpha_annual"),
-                "market_beta": factor_result.get("portfolio", {}).get("market_beta"),
-                "style": factor_result.get("portfolio", {}).get("style"),
+                "r_squared": factor_result.get("portfolio_r_squared"),
+                "alpha_annual": factor_result.get("portfolio_alpha_annual"),
+                "market_beta": pf.get("Mkt-RF"),
+                "style": factor_result.get("portfolio_style"),
                 "stocks": {
-                    t: {"market_beta": s.get("market_beta"), "style": s.get("style")}
-                    for t, s in factor_result.get("stocks", {}).items()
+                    t: {
+                        "market_beta": s["decomposition"]["factors"]["Mkt-RF"]["loading"],
+                        "style": s["decomposition"].get("style"),
+                    }
+                    for t, s in factor_result.get("stock_details", {}).items()
                 },
             }
         }
@@ -473,6 +480,7 @@ class ProjectRequest(BaseModel):
     holdings: list[Holding] = Field(..., min_length=1, max_length=50)
     years: int = Field(1, ge=1, le=30)
     monthly_add: float = Field(0, ge=0, le=1_000_000)
+    target_amount: Optional[float] = Field(None, ge=0, le=1_000_000_000)
 
 
 @router.post("/project")
@@ -485,6 +493,7 @@ async def project_portfolio(request: ProjectRequest):
             holdings,
             years=request.years,
             monthly_add=request.monthly_add,
+            target_amount=request.target_amount,
         )
         return result
     except Exception as e:

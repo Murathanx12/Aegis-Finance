@@ -15,6 +15,7 @@ import { InfoTooltip } from "@/components/info-tooltip";
 import type { StockSignal } from "@/lib/api";
 import { ErrorCard } from "@/components/error-card";
 import { TwoSidedCard } from "@/components/stock/two-sided-card";
+import { FactorLensCard } from "@/components/stock/factor-lens-card";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, ReferenceLine,
@@ -872,39 +873,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                   );
                 })()}
 
-                {stockData.factor_exposure && (() => {
-                  const fe = stockData.factor_exposure;
-                  const r2pct = fe.r_squared != null ? fe.r_squared * 100 : null;
-                  const alphaPct = fe.alpha_annual != null ? fe.alpha_annual * 100 : null;
-                  return (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
-                        Factor Exposure (FF5)
-                        <InfoTooltip text={`Fama-French 5-factor decomposition. R-squared: ${nf(r2pct, 1, "%")} of returns explained by factors. Alpha is the unexplained excess return.`} />
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center gap-4 text-sm">
-                        <span className="text-muted-foreground">Alpha: <span className={`font-bold ${(alphaPct ?? 0) > 0 ? "text-emerald-400" : "text-red-400"}`}>
-                          {alphaPct != null && alphaPct > 0 ? "+" : ""}{nf(alphaPct, 1, "%")}
-                        </span></span>
-                        <span className="text-muted-foreground">R²: <span className="font-bold">{nf(r2pct, 1, "%")}</span></span>
-                        <span className="text-muted-foreground">Market β: <span className="font-bold">{nf(fe.market_beta, 2)}</span></span>
-                      </div>
-                      {fe.style && typeof fe.style === "object" && (
-                        <div className="flex flex-wrap gap-2">
-                          {Object.entries(fe.style).map(([factor, style]) => (
-                            <span key={factor} className="text-xs px-2 py-1 rounded-md bg-muted/50">
-                              <span className="text-muted-foreground">{factor}:</span> <span className="font-medium">{String(style)}</span>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                  );
-                })()}
+                {/* F-018 Factor Lens — replaces the old static FF5 card:
+                    t-stats, per-factor earned contribution, rolling loadings */}
+                <FactorLensCard ticker={upperTicker} />
               </div>
 
               {/* Relative Valuation */}
