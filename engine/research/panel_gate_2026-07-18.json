@@ -92,49 +92,49 @@
   },
   "check2": {
     "check": 2,
-    "n_ok": 1,
+    "n_ok": 10,
     "n": 10,
-    "verdict": "FAIL/incomplete",
+    "verdict": "PASS",
     "detail": {
       "AAPL": {
         "ok": true,
         "max_dev_pct": 0.0
       },
       "MSFT": {
-        "ok": false,
-        "reason": "not harvested yet"
+        "ok": true,
+        "max_dev_pct": 0.0
       },
       "NVDA": {
-        "ok": false,
-        "reason": "not harvested yet"
+        "ok": true,
+        "max_dev_pct": 0.0
       },
       "GOOGL": {
-        "ok": false,
-        "reason": "not harvested yet"
+        "ok": true,
+        "max_dev_pct": 0.0
       },
       "AMZN": {
-        "ok": false,
-        "reason": "not harvested yet"
+        "ok": true,
+        "max_dev_pct": 0.0
       },
       "META": {
-        "ok": false,
-        "reason": "not harvested yet"
+        "ok": true,
+        "max_dev_pct": 0.0
       },
       "AVGO": {
-        "ok": false,
-        "reason": "not harvested yet"
+        "ok": true,
+        "max_dev_pct": 0.009
       },
       "TSLA": {
-        "ok": false,
-        "reason": "not harvested yet"
+        "ok": true,
+        "max_dev_pct": 0.0
       },
       "LLY": {
-        "ok": false,
-        "reason": "not harvested yet"
+        "ok": true,
+        "max_dev_pct": 0.0
       },
       "JPM": {
-        "ok": false,
-        "reason": "not harvested yet"
+        "ok": true,
+        "max_dev_pct": 0.001
       }
     }
   }
