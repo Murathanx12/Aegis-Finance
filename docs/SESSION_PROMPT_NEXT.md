@@ -1,4 +1,12 @@
-# Next Session — V5 kickoff (written 2026-07-17)
+# Next Session — V5 kickoff (updated 2026-07-18)
+
+**NEW: `docs/ROADMAP_V5_2026-07-18.md` is the V5 plan of record.** EODHD
+Phase 1 gate PASSED 16/20 (subscribe justified); Alpaca paper account
+verified ACTIVE ($100k, unseeded). Next session starts at Chunk 1 (Phase 2
+acceptance with the paid token), then loader → honest replay → QuantConnect.
+
+---
+
 
 **V4 is CLOSED.** The full audit — what shipped, what's live-verified, the
 adversarial gap list (validation / product / data / trust), Murat's
