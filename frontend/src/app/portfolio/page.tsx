@@ -162,8 +162,10 @@ function PortfolioAnalyzeSection() {
     },
   });
 
+  const [targetAmount, setTargetAmount] = useState("");
   const projectionMutation = useMutation({
-    mutationFn: (h: Holding[]) => projectPortfolio(h, 1, 0),
+    mutationFn: (h: Holding[]) =>
+      projectPortfolio(h, 1, 0, parseFloat(targetAmount) || undefined),
   });
 
   const analysis = analyzeMutation.data ?? null;
@@ -857,6 +859,53 @@ function PortfolioAnalyzeSection() {
                       <Area type="monotone" dataKey="p10" stroke="transparent" fill="#ef4444" fillOpacity={0.05} name="10th" />
                     </AreaChart>
                   </ResponsiveContainer>
+
+                  {/* F-017 Betterment absorb: the fan in plain English */}
+                  {projection.p10_final != null && projection.p90_final != null && (
+                    <p className="text-xs text-muted-foreground mt-3 bg-muted/30 rounded px-3 py-2">
+                      In a bad year (worst 1 in 10 of simulations) this
+                      portfolio ends below{" "}
+                      <span className="font-medium text-red-400">{fmtMoney(projection.p10_final, 0)}</span>;
+                      the typical outcome is{" "}
+                      <span className="font-medium">{fmtMoney(projection.expected_final, 0)}</span>;
+                      in a great year (best 1 in 10) it ends above{" "}
+                      <span className="font-medium text-emerald-400">{fmtMoney(projection.p90_final, 0)}</span>.
+                      All three are simulations, not promises.
+                    </p>
+                  )}
+
+                  {projection.prob_target != null && (
+                    <p className="text-xs text-muted-foreground mt-2 px-3">
+                      Chance of reaching your{" "}
+                      {fmtMoney(projection.target_amount ?? 0, 0)} target this
+                      year:{" "}
+                      <span className={`font-bold ${projection.prob_target >= 50 ? "text-emerald-400" : "text-amber-400"}`}>
+                        {projection.prob_target}%
+                      </span>
+                      . If that feels low, the three honest levers are:
+                      contribute more, extend the horizon, or lower the
+                      target — not taking more risk.
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-2 mt-3">
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="Target amount ($)"
+                      value={targetAmount}
+                      onChange={(e) => setTargetAmount(e.target.value)}
+                      className="w-40 rounded-md border border-border bg-background px-2 py-1 text-xs"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={projLoading}
+                      onClick={() => projectionMutation.mutate(holdings)}
+                    >
+                      Re-run with target
+                    </Button>
+                  </div>
                 </>
               )}
               {projection?.error && (
@@ -1019,6 +1068,21 @@ function PortfolioBuildSection() {
 
       {error && (
         <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">{error}</div>
+      )}
+
+      {/* F-017 (SEC IM 2017-02): contradictory answers get flagged, never
+          silently resolved — and the automatic bond tilt is disclosed */}
+      {result && !loading && (result.warnings?.length ?? 0) > 0 && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="py-3 space-y-1.5">
+            {result.warnings!.map((w, i) => (
+              <p key={i} className="text-xs text-amber-500/90 flex gap-2">
+                <span aria-hidden>⚠</span>
+                <span>{w}</span>
+              </p>
+            ))}
+          </CardContent>
+        </Card>
       )}
 
       {result && !loading && (

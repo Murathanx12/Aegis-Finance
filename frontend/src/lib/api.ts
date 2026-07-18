@@ -289,10 +289,20 @@ export function submitQuestionnaire(answers: QuestionnaireAnswers) {
 }
 
 // Portfolio projection
-export function projectPortfolio(holdings: Holding[], years = 1, monthlyAdd = 0) {
+export function projectPortfolio(
+  holdings: Holding[],
+  years = 1,
+  monthlyAdd = 0,
+  targetAmount?: number,
+) {
   return fetchAPI<PortfolioProjection>("/api/portfolio/project", {
     method: "POST",
-    body: JSON.stringify({ holdings, years, monthly_add: monthlyAdd }),
+    body: JSON.stringify({
+      holdings,
+      years,
+      monthly_add: monthlyAdd,
+      target_amount: targetAmount ?? null,
+    }),
   });
 }
 
@@ -1521,6 +1531,8 @@ export interface PortfolioProjection {
   p90_final: number;
   prob_gain: number;
   expected_return_pct: number;
+  target_amount?: number;
+  prob_target?: number;
   quarterly: {
     quarter: number;
     median: number;
@@ -1758,6 +1770,8 @@ export interface PortfolioBuilt {
   time_horizon: string;
   investment_amount: number;
   description: string;
+  // F-017: contradiction flags (e.g. short horizon + aggressive risk); plain sentences
+  warnings?: string[];
   holdings: {
     ticker: string;
     weight: number;
@@ -1920,12 +1934,25 @@ export interface CopulaPairResult {
 export interface FactorDecomposition {
   ticker: string;
   model: string;
+  observations?: number;
   r_squared: number;
   alpha_annual: number;
   alpha_significant: boolean;
-  factors: Record<string, { loading: number; t_stat: number | null; significant: boolean }>;
+  factors: Record<
+    string,
+    {
+      loading: number;
+      t_stat: number | null;
+      p_value?: number | null;
+      significant: boolean;
+      premium_annual?: number;
+      contribution_annual?: number;
+    }
+  >;
   style: Record<string, string>;
   residual_vol: number | null;
+  // Rolling 1y-window loadings at monthly steps (F-018 lens); factor name -> series
+  rolling?: ({ dates: string[]; window_days: number } & Record<string, number[] | string[]>) | null;
 }
 
 export interface TrendsSentiment {

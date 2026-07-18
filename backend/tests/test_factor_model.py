@@ -278,3 +278,65 @@ class TestFactorExposureIntegration:
         mock_decompose.side_effect = Exception("network error")
         result = _get_factor_exposure("ERR", _make_mock_price_series(100))
         assert result is None
+
+
+# ── Factor lens (F-018): premiums, contributions, rolling ─────────
+
+
+class TestFactorLens:
+    @patch("backend.services.factor_model.get_momentum_factor")
+    @patch("backend.services.factor_model.get_factor_data")
+    def test_ff6_premiums_and_contributions(self, mock_ff5, mock_mom):
+        from backend.services.factor_model import decompose_stock_ff6
+        ff5 = _make_mock_factor_data(400)
+        mock_ff5.return_value = ff5
+        rng = np.random.default_rng(7)
+        mock_mom.return_value = pd.DataFrame(
+            {"Mom": rng.normal(0.0002, 0.004, 400)}, index=ff5.index)
+        prices = _make_mock_price_series(400, beta=1.2)
+
+        result = decompose_stock_ff6("TEST", price_series=prices,
+                                     lookback_days=350)
+        assert result is not None
+        for f, d in result["factors"].items():
+            assert "premium_annual" in d and "contribution_annual" in d
+            # contribution = loading x premium (rounding tolerance)
+            assert abs(d["contribution_annual"]
+                       - d["loading"] * d["premium_annual"]) < 5e-3
+        # rolling windows: 350 obs, 252 window, 21 step -> >=4 windows
+        assert result["rolling"] is not None
+        assert result["rolling"]["window_days"] == 252
+        assert len(result["rolling"]["dates"]) >= 4
+        for f in result["factors"]:
+            assert len(result["rolling"][f]) == len(result["rolling"]["dates"])
+
+    @patch("backend.services.factor_model.decompose_stock")
+    def test_portfolio_r_squared_weighted(self, mock_stock):
+        def fake(ticker, **kw):
+            r2 = {"A": 0.9, "B": 0.5}[ticker]
+            return {"alpha_annual": 0.01, "r_squared": r2, "style": {},
+                    "factors": {f: {"loading": 1.0} for f in
+                                ["Mkt-RF", "SMB", "HML", "RMW", "CMA"]}}
+        mock_stock.side_effect = fake
+        result = decompose_portfolio({"A": 0.5, "B": 0.5})
+        assert result["portfolio_r_squared"] == 0.7
+
+    @patch("backend.services.factor_model.decompose_stock")
+    def test_router_factor_exposures_key_fix(self, mock_stock):
+        """Regression: _compute_factor_exposures read keys that never
+        existed -> alpha/beta/r2 were silently None for months."""
+        def fake(ticker, **kw):
+            return {"alpha_annual": 0.02, "r_squared": 0.8,
+                    "style": {"market": "neutral"},
+                    "factors": {f: {"loading": 1.1 if f == "Mkt-RF" else 0.1}
+                                for f in ["Mkt-RF", "SMB", "HML", "RMW", "CMA"]}}
+        mock_stock.side_effect = fake
+        from backend.routers.portfolio import _compute_factor_exposures
+        with patch("backend.routers.portfolio.cache_get", return_value=None), \
+             patch("backend.routers.portfolio.cache_set"):
+            out = _compute_factor_exposures({"A": 1.0})
+        fe = out["factor_exposures"]
+        assert fe["alpha_annual"] == 0.02
+        assert fe["r_squared"] == 0.8
+        assert fe["market_beta"] == 1.1
+        assert fe["stocks"]["A"]["market_beta"] == 1.1

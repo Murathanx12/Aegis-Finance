@@ -552,6 +552,30 @@ class PortfolioEngine:
         if "goal" not in result:
             result["goal"] = goal
 
+        # F-017 absorb (SEC IM Guidance 2017-02): flag contradictory inputs
+        # instead of silently resolving them. Plain sentences, no advice —
+        # the glide-path bond boost that _build_template already applies for
+        # short horizons is DISCLOSED here rather than hidden.
+        warnings: list[str] = []
+        if time_horizon in ("1y", "3y") and risk_tolerance in ("aggressive", "max_growth"):
+            warnings.append(
+                f"Your answers pull in opposite directions: a {time_horizon} "
+                "horizon is short, but the risk level you chose is built for "
+                "money you won't need for many years. Historically, "
+                "aggressive mixes have lost 30%+ in bad years — a short "
+                "horizon may not leave time to recover."
+            )
+            warnings.append(
+                "Because of the short horizon, this mix was automatically "
+                "tilted toward bonds versus the standard "
+                f"{risk_tolerance} template."
+            )
+        if time_horizon == "1y" and goal in ("growth", "aggressive_growth"):
+            warnings.append(
+                "A growth goal usually needs years to play out; over a "
+                "single year, outcomes are mostly luck, not allocation."
+            )
+        result["warnings"] = warnings
         return result
 
     @staticmethod
@@ -854,6 +878,7 @@ class PortfolioEngine:
         holdings: list[dict],
         years: int = 1,
         monthly_add: float = 0,
+        target_amount: Optional[float] = None,
     ) -> dict:
         """Project portfolio value forward using GARCH-enhanced jump-diffusion MC.
 
@@ -1027,7 +1052,7 @@ class PortfolioEngine:
                 "p90": round(float(np.percentile(vals, 90)), 2),
             })
 
-        return {
+        out = {
             "current_value": round(total_value, 2),
             "horizon_years": years,
             "monthly_add": monthly_add,
@@ -1038,6 +1063,15 @@ class PortfolioEngine:
             "expected_return_pct": round(float(np.median(final) / total_invested - 1) * 100, 1),
             "quarterly": quarterly,
         }
+        # F-017 absorb: probability of reaching a user-stated target across
+        # the simulated distribution. Educational readout only — the three
+        # levers (contribute more / extend horizon / lower target) are stated
+        # by the UI as options, never as advice or auto-adjustment.
+        if target_amount and target_amount > 0:
+            out["target_amount"] = round(float(target_amount), 2)
+            out["prob_target"] = round(
+                float(np.mean(final >= target_amount)) * 100, 1)
+        return out
 
     @staticmethod
     def stress_test(holdings: list[dict], scenario: str = "2008") -> dict:
