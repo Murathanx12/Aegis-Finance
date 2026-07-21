@@ -50,8 +50,11 @@ class AegisLaneMandateReplay(QCAlgorithm):
         self.SetStartDate(2015, 1, 1)
         # no SetEndDate -> runs to the latest available day
         self.SetCash(100_000)
+        # Margin account: LEAN models T+2 settlement in Cash accounts, which
+        # can silently reject rebalance orders (worst at weekly cadence) and
+        # drag the result. No leverage is ever requested (weights sum to 1).
         self.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage,
-                               AccountType.Cash)
+                               AccountType.Margin)
 
         eq, bd, alt, cadence = MANDATES[LANE]
         self.sleeves = [(EQUITY_SLEEVE, eq), (BOND_SLEEVE, bd),
