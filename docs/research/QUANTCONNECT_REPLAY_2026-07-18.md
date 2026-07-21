@@ -64,12 +64,27 @@ diversified allocations across a bull decade. Balanced edges 60/40 on CAGR
 (+0.4pp) but not on Sharpe. No skill claim lives here; this is the
 direction-check that says the mandates are historically sane.
 
-### Third-party confirmation (QuantConnect, fill in when Murat's runs finish)
-| Lane | QC URL | CAGR | Max DD | Sharpe |
-|---|---|---|---|---|
-| conservative | — | | | |
-| balanced | — | | | |
-| aggressive | — | | | |
+### Third-party confirmation (QuantConnect — RECORDED 2026-07-21, PASSED)
+Murat's three runs, stats pulled from QC's public share API
+(`api/v2/sharing/backtests/result/read`). Lane identity inferred from
+vol/CAGR/DD ordering and confirmed by near-exact drawdown matches.
+
+| Lane | QC URL (backtestId) | CAGR | Max DD | QC Sharpe | QC Vol |
+|---|---|---|---|---|---|
+| conservative | [624c0e6a…](https://www.quantconnect.cloud/backtest/624c0e6a699d9da54778046ba4581c30/) | 6.65% | −20.9% | 0.31 | 7.3% |
+| balanced | [a74c4080…](https://www.quantconnect.cloud/backtest/a74c4080a35e1f48c96122424f84011f/) | 9.25% | −26.0% | 0.40 | 10.8% |
+| aggressive | [6a52edbe…](https://www.quantconnect.cloud/backtest/6a52edbeb3a6518f7c748f65942fd72e/) | 11.47% | −32.1% | 0.45 | 14.1% |
+
+**Cross-check verdict: CONFIRMED.** Every lane agrees with the local
+reproduction within the pre-committed 1pp CAGR tolerance (conservative
+6.65 vs 6.88, balanced 9.25 vs 9.48, aggressive 11.47 vs 11.50) and the
+max drawdowns match to the decimal (−20.9/−26.0 exact; −32.1 vs −32.3).
+The QC Sharpes (0.31/0.40/0.45) vs local (0.79/0.76/0.72) differ ONLY by
+denomination: QC subtracts its risk-free model (implied rf ≈ 4.9%/yr from
+the balanced numbers), local uses rf=0. Same result, two conventions —
+both quoted wherever this replay is surfaced. The mandates are
+third-party-confirmed historically sane: trail SPY across a bull decade,
+with uniformly smaller drawdowns, exactly as pre-committed.
 
 **How to read the QC numbers (added 2026-07-21, after first run attempt):**
 - **QC's Sharpe is NOT our Sharpe.** QuantConnect subtracts a risk-free rate;
