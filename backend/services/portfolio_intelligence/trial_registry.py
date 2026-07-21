@@ -104,3 +104,40 @@ def ensure_mom_trend_trial(db_path=None) -> int:
         "doc": "docs/TRIALS/TRIAL-MOM-TREND-momentum-with-trend-filter.md",
     }
     return ensure_trial_registered(MOM_TREND_TRIAL_PARAM, notes, db_path=db_path)
+
+
+CMP_INSIDER_TRIAL_PARAM = "cmp-insider-ic"
+
+
+def ensure_cmp_insider_trial(db_path=None) -> int:
+    """Idempotently pre-register TRIAL-CMP-INSIDER-IC — the forward IC clock for
+    the CMP-classified opportunistic-insider signal promoted from the brain
+    module (BRAIN-003, first kill-condition survivor; weak positive prior, deploy
+    gate NOT met on backtest). Runs beside T9 insider_opp: (different signal —
+    routine + unclassifiable buyers dropped via the 2006-2026Q1 bulk history
+    artifact). Doc: docs/TRIALS/TRIAL-CMP-INSIDER-IC.md, committed BEFORE the
+    first forward observation."""
+    notes = {
+        "hypothesis": ("stocks with more DISTINCT opportunistic (CMP 2012) "
+                       "insider buyers over trailing 12mo earn higher forward "
+                       "returns in large/mid caps (prior from BRAIN-003: "
+                       "FF5+UMD alpha +102 bps/mo t=1.89 - weak positive, "
+                       "NOT a discovery; null in microcap)"),
+        "purpose": "forward IC clock - descriptive only, never arms",
+        "primary_metric": "126d forward rank IC with 90% block-bootstrap CI",
+        "decision_rule": {
+            "earliest_decision": "2027-07-21",
+            "adopt_consideration": ("126d IC > 0 with 90% CI excluding 0 AND "
+                                    "21/63d ICs not significantly negative -> "
+                                    "evaluate_candidate gate"),
+            "kill": "126d IC <= 0 at decision date -> NEGATIVE_RESULTS",
+            "contamination": ("artifact defect or >=25% degraded snapshots -> "
+                              "affected snapshots excluded, inception moves forward"),
+            "crash_override": "SPY -20% defers decision to >=6mo past trough",
+        },
+        "frozen": ("365d window; 200d live fetch / 60 filings; 210d staleness "
+                   "guard; book universe; weekly throttle; CMP rule verbatim"),
+        "provenance": "brain module TRIAL-BRAIN-003 (export/opportunistic_insider bundle)",
+        "doc": "docs/TRIALS/TRIAL-CMP-INSIDER-IC.md",
+    }
+    return ensure_trial_registered(CMP_INSIDER_TRIAL_PARAM, notes, db_path=db_path)

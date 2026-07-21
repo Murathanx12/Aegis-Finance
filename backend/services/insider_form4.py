@@ -107,6 +107,10 @@ def parse_form4_open_market_buys(xml_text: str) -> list[dict]:
     except ET.ParseError:
         return out
     owner = (root.findtext(".//reportingOwner/reportingOwnerId/rptOwnerName") or "").strip()
+    # Owner CIK enables per-insider history lookups (CMP routine/opportunistic);
+    # normalised without leading zeros to match SEC bulk-file RPTOWNERCIK.
+    owner_cik = (root.findtext(".//reportingOwner/reportingOwnerId/rptOwnerCik") or "").strip()
+    owner_cik = owner_cik.lstrip("0") or owner_cik
     for tx in root.findall(".//nonDerivativeTransaction"):
         code = tx.findtext(".//transactionCoding/transactionCode")
         if code != "P":  # open-market purchase only
@@ -123,6 +127,7 @@ def parse_form4_open_market_buys(xml_text: str) -> list[dict]:
             continue
         out.append({
             "name": owner or "Unknown",
+            "cik": owner_cik,
             "shares": shares,
             "value": shares * price,
             "date": tx.findtext(".//transactionDate/value") or "",
@@ -187,7 +192,10 @@ def fetch_open_market_buys(ticker: str, lookback_days: int = 180,
         seen += 1
         xml_text = _filing_xml(cik_int, acc.replace("-", ""), doc)
         if xml_text:
-            buys.extend(parse_form4_open_market_buys(xml_text))
+            parsed = parse_form4_open_market_buys(xml_text)
+            for b in parsed:
+                b["filing_date"] = fdate  # PIT stamp: the signal fires on filing, not trans
+            buys.extend(parsed)
 
     return {"ticker": ticker, "source": "sec_form4", "lookback_days": lookback_days,
             "buys": buys, "n_buys": len(buys),
