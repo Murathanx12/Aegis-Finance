@@ -504,6 +504,21 @@ async def _daily_check():
     except Exception as e:
         logger.error("Insider-IC collection failed: %s", e, exc_info=True)
 
+    # TRIAL-CMP-INSIDER-IC — snapshot the CMP-classified opportunistic-buyer
+    # count (routine + unclassifiable buyers dropped via the brain module's
+    # bulk-history artifact) per book name. Runs BESIDE the T9 clock — different
+    # signal; the IC comparison is itself informative. Weekly-throttled,
+    # descriptive only. Promoted from BRAIN-003 (first survivor, weak prior).
+    try:
+        from backend.services.portfolio_intelligence.cmp_insider_collector import (
+            collect_cmp_insider_scores,
+        )
+        cmp_ = await asyncio.to_thread(collect_cmp_insider_scores)
+        logger.info("CMP-insider-IC collect: status=%s n=%s nonzero=%s (descriptive)",
+                    cmp_.get("status"), cmp_.get("n"), cmp_.get("nonzero"))
+    except Exception as e:
+        logger.error("CMP-insider-IC collection failed: %s", e, exc_info=True)
+
     # TRIAL-REVISIONS-IC (T10) — snapshot the analyst revision-momentum score
     # (net Raises/Lowers + up/downgrades over 90d, NOT implied upside) per book
     # name. Weekly-throttled, descriptive, forward-only. Starts that IC clock.
