@@ -71,6 +71,22 @@ direction-check that says the mandates are historically sane.
 | balanced | — | | | |
 | aggressive | — | | | |
 
+**How to read the QC numbers (added 2026-07-21, after first run attempt):**
+- **QC's Sharpe is NOT our Sharpe.** QuantConnect subtracts a risk-free rate;
+  the local table above uses rf=0. With 2015-2026 average rf ≈ 2%+, the same
+  balanced result reads ≈ 0.5 on QC vs 0.76 here. A "low" QC Sharpe is the
+  SAME result, differently denominated — not a failed run.
+- **A low Sharpe never blocks sharing.** The Share button works on any
+  completed backtest regardless of performance: open the finished backtest →
+  Share → copy the public URL. Per the pre-committed reading above, trailing
+  SPY IS the expected outcome — the URL of an "ugly" result is exactly the
+  point (third-party-hosted honesty, not a highlight reel).
+- **Re-run on the fixed algo:** the original used `AccountType.Cash`; LEAN
+  models T+2 settlement there and can silently reject rebalance orders
+  (worst at aggressive's weekly cadence). Now `Margin` (no leverage is
+  requested — weights sum to 1). Re-paste the updated
+  `engine/research/quantconnect/aegis_lane_mandates.py` before the 3 runs.
+
 Divergence between the QC and local numbers beyond ~1pp CAGR needs
 explaining (fees model, dividend handling, start-day) before either is
 quoted anywhere.
