@@ -1,4 +1,21 @@
-# Investor Brain v2 — master roadmap (2026-07-22)
+# Investor Brain v2 — master roadmap (2026-07-22; status updated same day EOD)
+
+## Status board (EOD 2026-07-22)
+
+| Chunk | Status |
+|---|---|
+| 1. Factory batch 1 (price/vol) | ✅ CLOSED — 0 graduates; dip-buy theses rejected |
+| 2. Factory batch 2 (fundamentals) | ✅ CLOSED — **BRAIN-008 gp-small: confirm PASS + 42-yr robustness** |
+| 3. Factory batch 3 (events/alt) | 🔶 3a done (SI/congress/gemini/daily adjudicated), 3b running (customer momentum, best-ideas, tgt upside); remaining: FDA drift, buyback/spinoff (needs event data), theme BASKET arm |
+| 4. Confirm + fusion | 🔶 **BRAIN-007 fusion SURVIVES** (beats best single, 3.6× names); remaining: INSTR-OVERFIT-CEILING |
+| 5. Allocation layer | 🔶 **smallmid-quality lane SHIPPED (`bc0608f`, awaiting Murat's seed flag)**; remaining: trend/managed-futures overlay trial |
+| 6. LLM brain v2 | ⬜ (event extraction at scale, episodic memory, thesis generator) |
+| 7. Average-Joe copilot | ⬜ (holdings-first UX; most analytics already served) |
+
+Scoreboard: 84 explore candidates → 2 confirmed survivors (insider, gp-small)
++ 1 surviving fusion + 1 forward lane awaiting seed. Unifying lesson: only
+low-turnover signals survive honest costs (NMV recipe, independently
+rediscovered by our own scans).
 
 Murat's directive: "test hundreds of simple strategies, build the brain from
 the ones that work, beat SPY, and make the Average-Joe terminal." Adjudicated
