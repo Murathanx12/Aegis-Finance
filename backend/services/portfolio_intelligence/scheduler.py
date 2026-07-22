@@ -151,6 +151,7 @@ def nav_freshness() -> dict:
         BOOK_LANES,
         CONSERVATIVE_ATR_LANES,
         REFERENCE_LANES,
+        SMQ_LANES,
     )
     try:
         from backend.db import get_connection
@@ -173,7 +174,7 @@ def nav_freshness() -> dict:
         # Book + conservative-ATR lanes count toward freshness ONLY once seeded —
         # an unseeded attended lane has no paper_portfolios row and must not drag
         # all_fresh false before its attended seed runs.
-        _optional = (*BOOK_LANES, *CONSERVATIVE_ATR_LANES)
+        _optional = (*BOOK_LANES, *CONSERVATIVE_ATR_LANES, *SMQ_LANES)
         lane_ids = (*REFERENCE_LANES, *[l for l in _optional if l in seeded])
         last_dates = {r["portfolio_id"]: r["last_date"] for r in rows}
         lanes = {
@@ -395,6 +396,14 @@ async def _hourly_mtm():
             results.update(await asyncio.to_thread(mark_all_conservative_atr_lanes))
         except Exception as e:
             logger.error("Conservative-ATR MTM failed: %s", e, exc_info=True)
+        # Smallmid-quality lane (TRIAL-SMQ-FWD) marks alongside; skipped until seeded.
+        try:
+            from backend.services.portfolio_intelligence.smq_lane import (
+                mark_all_smq_lanes,
+            )
+            results.update(await asyncio.to_thread(mark_all_smq_lanes))
+        except Exception as e:
+            logger.error("SMQ MTM failed: %s", e, exc_info=True)
         if any(v is not None for v in results.values()):
             _last_mtm_timestamp = now
         else:

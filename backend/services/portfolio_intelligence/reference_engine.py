@@ -755,6 +755,27 @@ def _register_lane_trial(lane_id: str, config_version: str, db_path=None) -> Non
                 "crash_event_override": "SPY drawdown >=20% defers decisions until >=6mo past trough",
             },
         },
+        "smallmid-quality": {
+            "hypothesis": "The BRAIN-007 composite book (top-30 by mean winsorized "
+                          "z of PIT gross profitability + opportunistic-insider "
+                          "flag, EW buy-and-hold, quarterly artifact refresh) "
+                          "beats IWM on forward data. Backtest prior: replicated "
+                          "in 3 independent windows over 42y but DSR~0.10 and "
+                          "FF6 alpha negative — the forward clock is the test",
+            "purpose": "smq-forward-trial",
+            "canonical_doc": "docs/TRIALS/TRIAL-SMQ-FWD.md",
+            "pre_registered": "2026-07-22",
+            "decision_rule": {
+                "trial": "TRIAL-SMQ-FWD",
+                "primary_metric": "since-inception total return vs IWM",
+                "min_window_months": 24,
+                "earliest_decision": "2028-07-22",
+                "adopt_threshold": "lane - IWM > 0 with bootstrap 90% CI excluding 0",
+                "reject_threshold": "lane - IWM < -5pp at 24mo",
+                "params_frozen": "holdings are the yaml hash; refresh = stamped config change",
+                "degraded_clause": ">3 holdings unpriceable mid-flight flags the lane degraded",
+            },
+        },
     }
     meta = hypotheses.get(lane_id, {
         "hypothesis": f"lane {lane_id} forward trial",

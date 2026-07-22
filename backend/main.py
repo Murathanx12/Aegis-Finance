@@ -329,6 +329,19 @@ async def lifespan(app: FastAPI):
                 logger.warning("CONSERVATIVE-ATR SEEDING (AEGIS_SEED_CONSERVATIVE_ATR=1): %s", res)
             except Exception as e:
                 logger.error("Conservative-ATR seeding failed: %s", e, exc_info=True)
+        # TRIAL-SMQ-FWD smallmid-quality seeding — ATTENDED, env-gated, same
+        # pattern. Set AEGIS_SEED_SMALLMID_QUALITY=1 on Railway for ONE boot to
+        # seed the BRAIN-007 composite book EW at today's prices (idempotent),
+        # confirm via /api/pi/registry + track-record, then unset the flag.
+        if os.environ.get("AEGIS_SEED_SMALLMID_QUALITY") == "1":
+            try:
+                from backend.services.portfolio_intelligence.smq_lane import (
+                    seed_smallmid_quality_lane,
+                )
+                res = await asyncio.to_thread(seed_smallmid_quality_lane)
+                logger.warning("SMQ SEEDING (AEGIS_SEED_SMALLMID_QUALITY=1): %s", res)
+            except Exception as e:
+                logger.error("Smallmid-quality seeding failed: %s", e, exc_info=True)
         # Alpaca paper mirror seeding — ATTENDED, env-gated, same pattern.
         # Needs ALPACA_API_KEY_ID + ALPACA_API_SECRET_KEY set on Railway.
         # Set AEGIS_SEED_ALPACA_MIRROR=1 for ONE boot to replicate the mirror
