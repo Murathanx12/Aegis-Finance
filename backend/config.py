@@ -1258,3 +1258,22 @@ def load_conservative_atr_lanes() -> dict:
 
 
 conservative_atr_lanes: dict = load_conservative_atr_lanes()
+
+
+def load_smallmid_quality_lanes() -> dict:
+    """Load the smallmid-quality lane definition (TRIAL-SMQ-FWD) from a SEPARATE
+    YAML — same load-bearing isolation reasoning as the book and ATR lanes: its
+    holdings ARE the strategy, so the file carries its OWN hash and a quarterly
+    refresh is a stamped config-version change, never a silent edit."""
+    yaml_path = BACKEND_DIR / "data" / "smallmid_quality_lanes.yaml"
+    if not yaml_path.exists():
+        return {}
+    try:
+        import yaml
+        with open(yaml_path, "r") as f:
+            return yaml.safe_load(f) or {}
+    except ImportError:
+        raise ImportError("PyYAML required for smallmid-quality config: pip install pyyaml")
+
+
+smallmid_quality_lanes: dict = load_smallmid_quality_lanes()

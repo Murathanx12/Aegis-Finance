@@ -480,6 +480,7 @@ async def get_track_record():
     from backend.services.portfolio_intelligence.rules import (
         BOOK_LANES,
         CONSERVATIVE_ATR_LANES,
+        SMQ_LANES,
     )
     from backend.services.portfolio_intelligence.scheduler import nav_freshness
 
@@ -493,7 +494,7 @@ async def get_track_record():
             # touches the reference lanes' config hash (TRIAL-001 isolation is a
             # write-path concern, not a read one). Without this they were marked-to-
             # market and fresh yet INVISIBLE on the canonical track record.
-            _optional = (*BOOK_LANES, *CONSERVATIVE_ATR_LANES)
+            _optional = (*BOOK_LANES, *CONSERVATIVE_ATR_LANES, *SMQ_LANES)
             for lane_id in (*REFERENCE_LANES, *_optional):
                 rows = get_nav_series(conn, lane_id)
                 if not rows and lane_id in _optional:
@@ -548,8 +549,9 @@ def _record_lanes() -> tuple:
     from backend.services.portfolio_intelligence.rules import (
         BOOK_LANES,
         CONSERVATIVE_ATR_LANES,
+        SMQ_LANES,
     )
-    return (*REFERENCE_LANES, *BOOK_LANES, *CONSERVATIVE_ATR_LANES)
+    return (*REFERENCE_LANES, *BOOK_LANES, *CONSERVATIVE_ATR_LANES, *SMQ_LANES)
 
 
 @router.get("/lane/{lane_id}/stats-ci")

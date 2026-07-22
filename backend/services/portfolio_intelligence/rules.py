@@ -22,7 +22,12 @@ Usage:
 import logging
 from datetime import date
 
-from backend.config import book_lanes, conservative_atr_lanes, paper_portfolios
+from backend.config import (
+    book_lanes,
+    conservative_atr_lanes,
+    paper_portfolios,
+    smallmid_quality_lanes,
+)
 from backend.services.portfolio_intelligence.nav import CASH_TICKER
 
 logger = logging.getLogger(__name__)
@@ -51,6 +56,14 @@ BOOK_LANES: tuple[str, ...] = tuple(
 # `conservative` control's segment) is never perturbed. Identified by `purpose`.
 CONSERVATIVE_ATR_LANES: tuple[str, ...] = tuple(
     k for k, v in conservative_atr_lanes.items()
+    if isinstance(v, dict) and "purpose" in v
+)
+
+# Smallmid-quality lane (TRIAL-SMQ-FWD) — the BRAIN-007 composite book, from
+# smallmid_quality_lanes.yaml with its OWN hash (holdings are part of the hash:
+# the book IS the strategy). Same isolation reasoning as the other attended lanes.
+SMQ_LANES: tuple[str, ...] = tuple(
+    k for k, v in smallmid_quality_lanes.items()
     if isinstance(v, dict) and "purpose" in v
 )
 

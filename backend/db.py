@@ -382,6 +382,15 @@ def get_conservative_atr_config_hash() -> str:
     return _compute_config_hash(BACKEND_DIR / "data" / "conservative_atr_lanes.yaml")
 
 
+def get_smq_config_hash() -> str:
+    """Hash of smallmid_quality_lanes.yaml (TRIAL-SMQ-FWD lane).
+
+    Fully isolated from every other lane hash. The holdings list is part of the
+    file, so the quarterly book refresh changes this hash — that boundary is the
+    stamped config-version change the trial doc requires."""
+    return _compute_config_hash(BACKEND_DIR / "data" / "smallmid_quality_lanes.yaml")
+
+
 # ── Point-in-time (as-of) data store — v7 (docs/V3_DATA_LAYER_DESIGN.md) ──────
 
 

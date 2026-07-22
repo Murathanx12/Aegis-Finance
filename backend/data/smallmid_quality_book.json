@@ -1,0 +1,252 @@
+{
+  "artifact": "smallmid_quality_book",
+  "method": "BRAIN-007 frozen composite (mean winsorized z: gp PIT + opportunistic-insider 12m flag), top 30 EW, above-median dollar-vol universe",
+  "formed_at_utc": "2026-07-22T09:31:30Z",
+  "module_commit": "a64d7e5",
+  "panel_end": "2024-12-31",
+  "insider_panel_max_filing": "2026-03-31",
+  "n_universe": 1447,
+  "n_with_insider_flag_in_book": 30,
+  "holdings": [
+    {
+      "permno": "18011",
+      "ticker": "SONO",
+      "name": "SONOS INC",
+      "composite_z": 2.7562,
+      "z_gp": 2.5123,
+      "insider_flag": true
+    },
+    {
+      "permno": "88159",
+      "ticker": "EXEL",
+      "name": "EXELIXIS INC",
+      "composite_z": 2.6556,
+      "z_gp": 2.3113,
+      "insider_flag": true
+    },
+    {
+      "permno": "81294",
+      "ticker": "WDFC",
+      "name": "WD 40 CO",
+      "composite_z": 2.5029,
+      "z_gp": 2.0058,
+      "insider_flag": true
+    },
+    {
+      "permno": "91832",
+      "ticker": "MDGL",
+      "name": "MADRIGAL PHARMACEUTICALS INC",
+      "composite_z": 2.4932,
+      "z_gp": 1.9864,
+      "insider_flag": true
+    },
+    {
+      "permno": "18835",
+      "ticker": "DKNG",
+      "name": "DRAFTKINGS INC",
+      "composite_z": 2.2762,
+      "z_gp": 1.5525,
+      "insider_flag": true
+    },
+    {
+      "permno": "91090",
+      "ticker": "CROX",
+      "name": "CROCS INC",
+      "composite_z": 2.1905,
+      "z_gp": 1.3809,
+      "insider_flag": true
+    },
+    {
+      "permno": "93132",
+      "ticker": "FTNT",
+      "name": "FORTINET INC",
+      "composite_z": 2.1305,
+      "z_gp": 1.261,
+      "insider_flag": true
+    },
+    {
+      "permno": "89973",
+      "ticker": "UTI",
+      "name": "UNIVERSAL TECHNICAL INSTITUTE IN",
+      "composite_z": 2.1269,
+      "z_gp": 1.2539,
+      "insider_flag": true
+    },
+    {
+      "permno": "18846",
+      "ticker": "MIRM",
+      "name": "MIRUM PHARMACEUTICALS INC",
+      "composite_z": 2.1041,
+      "z_gp": 1.2081,
+      "insider_flag": true
+    },
+    {
+      "permno": "88446",
+      "ticker": "ILMN",
+      "name": "ILLUMINA INC",
+      "composite_z": 1.998,
+      "z_gp": 0.996,
+      "insider_flag": true
+    },
+    {
+      "permno": "18735",
+      "ticker": "GO",
+      "name": "GROCERY OUTLET HOLDING CORP",
+      "composite_z": 1.9789,
+      "z_gp": 0.9579,
+      "insider_flag": true
+    },
+    {
+      "permno": "56573",
+      "ticker": "ITW",
+      "name": "ILLINOIS TOOL WORKS INC",
+      "composite_z": 1.9588,
+      "z_gp": 0.9176,
+      "insider_flag": true
+    },
+    {
+      "permno": "20920",
+      "ticker": "DV",
+      "name": "DOUBLEVERIFY HOLDINGS INC",
+      "composite_z": 1.9511,
+      "z_gp": 0.9022,
+      "insider_flag": true
+    },
+    {
+      "permno": "75460",
+      "ticker": "TNC",
+      "name": "TENNANT CO",
+      "composite_z": 1.8974,
+      "z_gp": 0.7948,
+      "insider_flag": true
+    },
+    {
+      "permno": "72304",
+      "ticker": "STAA",
+      "name": "STAAR SURGICAL CO",
+      "composite_z": 1.8625,
+      "z_gp": 0.7251,
+      "insider_flag": true
+    },
+    {
+      "permno": "17688",
+      "ticker": "GSHD",
+      "name": "GOOSEHEAD INSURANCE INC",
+      "composite_z": 1.8548,
+      "z_gp": 0.7096,
+      "insider_flag": true
+    },
+    {
+      "permno": "20391",
+      "ticker": "TPL",
+      "name": "TEXAS PACIFIC LAND CORP",
+      "composite_z": 1.8468,
+      "z_gp": 0.6936,
+      "insider_flag": true
+    },
+    {
+      "permno": "21273",
+      "ticker": "AISP",
+      "name": "AIRSHIP A I HOLDINGS INC",
+      "composite_z": 1.8302,
+      "z_gp": 0.6605,
+      "insider_flag": true
+    },
+    {
+      "permno": "11600",
+      "ticker": "XRAY",
+      "name": "DENTSPLY SIRONA INC",
+      "composite_z": 1.8174,
+      "z_gp": 0.6348,
+      "insider_flag": true
+    },
+    {
+      "permno": "21593",
+      "ticker": "XMTR",
+      "name": "XOMETRY INC",
+      "composite_z": 1.8049,
+      "z_gp": 0.6099,
+      "insider_flag": true
+    },
+    {
+      "permno": "70578",
+      "ticker": "ECL",
+      "name": "ECOLAB INC",
+      "composite_z": 1.6947,
+      "z_gp": 0.3893,
+      "insider_flag": true
+    },
+    {
+      "permno": "14939",
+      "ticker": "KEYS",
+      "name": "KEYSIGHT TECHNOLOGIES INC",
+      "composite_z": 1.6759,
+      "z_gp": 0.3517,
+      "insider_flag": true
+    },
+    {
+      "permno": "76095",
+      "ticker": "HOLX",
+      "name": "HOLOGIC INC",
+      "composite_z": 1.6127,
+      "z_gp": 0.2253,
+      "insider_flag": true
+    },
+    {
+      "permno": "23433",
+      "ticker": "RXO",
+      "name": "R X O INC",
+      "composite_z": 1.6078,
+      "z_gp": 0.2156,
+      "insider_flag": true
+    },
+    {
+      "permno": "41080",
+      "ticker": "CMI",
+      "name": "CUMMINS INC",
+      "composite_z": 1.5997,
+      "z_gp": 0.1994,
+      "insider_flag": true
+    },
+    {
+      "permno": "15400",
+      "ticker": "ENR",
+      "name": "ENERGIZER HOLDINGS INC NEW",
+      "composite_z": 1.5936,
+      "z_gp": 0.1873,
+      "insider_flag": true
+    },
+    {
+      "permno": "50606",
+      "ticker": "TDW",
+      "name": "TIDEWATER INC NEW",
+      "composite_z": 1.5909,
+      "z_gp": 0.1818,
+      "insider_flag": true
+    },
+    {
+      "permno": "56223",
+      "ticker": "LPX",
+      "name": "LOUISIANA PACIFIC CORP",
+      "composite_z": 1.5879,
+      "z_gp": 0.1759,
+      "insider_flag": true
+    },
+    {
+      "permno": "18452",
+      "ticker": "LYFT",
+      "name": "LYFT INC",
+      "composite_z": 1.5719,
+      "z_gp": 0.1439,
+      "insider_flag": true
+    },
+    {
+      "permno": "87299",
+      "ticker": "AKAM",
+      "name": "AKAMAI TECHNOLOGIES INC",
+      "composite_z": 1.5478,
+      "z_gp": 0.0956,
+      "insider_flag": true
+    }
+  ]
+}
