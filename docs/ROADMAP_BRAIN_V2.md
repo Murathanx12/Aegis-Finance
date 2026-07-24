@@ -6,7 +6,7 @@
 |---|---|
 | 1. Factory batch 1 (price/vol) | ✅ CLOSED — 0 graduates; dip-buy theses rejected |
 | 2. Factory batch 2 (fundamentals) | ✅ CLOSED — **BRAIN-008 gp-small: confirm PASS + 42-yr robustness** |
-| 3. Factory batch 3 (events/alt) | 🔶 3a/3b/3c adjudicated (cust_mom + best_ideas CLOSED on merits; **both tgt_upside runs VOID** — IBES split-adjust look-ahead, fix needs `ibes.adj`); remaining: FDA drift (sponsor→ticker crosswalk first — 16,195 ORIG approvals on disk, of which 2,742 NDA/BLA = the novel-drug event set), TRIAL-THEME-SUPPLY basket arm, buyback/spinoff; best_ideas_frac (3c) also CLOSED |
+| 3. Factory batch 3 (events/alt) | 🔶 3a/3b/3c adjudicated (cust_mom + best_ideas CLOSED on merits; **both tgt_upside runs VOID** — IBES split-adjust look-ahead, fix needs `ibes.adj`); **FDA drift ADJUDICATED 2026-07-24: TRIAL-BRAIN-006 REJECT** (crosswalk built, −30.1 bps/mo t −0.89 large/mid, micro untestable at monthly resolution — daily-CAR revisit = new registration post `crsp.dsf`); remaining: TRIAL-THEME-SUPPLY basket arm, buyback/spinoff; best_ideas_frac (3c) also CLOSED |
 | 4. Confirm + fusion | 🔶 **BRAIN-007 fusion SURVIVES** (beats best single, 3.6× names); remaining: INSTR-OVERFIT-CEILING (queued, needs pre-registration before run) |
 | 5. Allocation layer | 🔶 **smallmid-quality lane SEEDED + LIVE** (trial #16, first NAV rows 07-22/07-23, −1.02%, decision 2028-07-22); **NEW: Batch 4 macro-regime/cross-asset instruments** (see below); remaining: trend/managed-futures overlay trial → now INSTR-TSMOM-XA |
 | 6. LLM brain v2 | ⬜ (event extraction at scale, episodic memory, thesis generator) |

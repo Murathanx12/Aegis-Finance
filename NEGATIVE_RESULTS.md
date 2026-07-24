@@ -241,5 +241,28 @@ survivorship-free data, the two best-documented beat-SPY mechanisms in
 the public literature both fail their risk-adjusted gates in this window
 - which is precisely what the live-fund scoreboard (F-023) predicted.
 
+## 11. FDA approval drift is dead net of costs at monthly resolution (TRIAL-BRAIN-006)
+
+**Date:** 2026-07-24. **Registered:** module registry row 16 + doc committed
+BEFORE the run (`investing-test-module` 30b7032; results cd1a7ba).
+
+Pre-registered one-shot calendar-time test of post-approval drift on 671
+matched, in-panel (shrcd 10/11) NDA/BLA original approvals 2002-2024, entered
+the month AFTER approval (announcement pop excluded), 3-month hold, honest
+costs, pharma-universe benchmark. Result: **REJECT** — Arm B large/mid
+−30.1 bps/mo net excess (t = −0.89; gross t −0.68, so not even a cost story);
+PRIORITY-review sub-arm t = 0.13; timing-permutation noise arm clean (gross
+t = 0.06). If anything the sign points to approval-day full-pricing +
+sell-the-news.
+
+Two disclosures that bound the claim: (1) the micro-cap segment — where the
+hypothesis actually lived — had 2 live months and is UNTESTABLE at monthly
+resolution in this universe; a daily-CAR revisit on `crsp.dsf` would be a NEW
+registration, not a rerun. (2) The crosswalk build caught an IBES-class data
+trap first: openFDA `sponsor_name` is the CURRENT application holder, so PE
+roll-ups "sponsor" approvals that predate their founding — 154 such events
+excluded as unattributable rather than mismapped (the +91 bps/t=7.1 lesson:
+book inspection before the run, not after).
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
