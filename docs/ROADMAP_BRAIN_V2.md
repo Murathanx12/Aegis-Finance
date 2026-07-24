@@ -19,9 +19,16 @@ directional; TRIAL-THEME-SUPPLY +2; voids stay counted for DSR honesty) →
 PASS) + 1 surviving fusion. **INSTR-HOLD-HORIZON answered "how long to
 hold": FLAT 14-17 bps/mo net across 1-24mo hold-bands, 12mo gentle optimum —
 signal-band exits make long holds free (sell when the name exits the band,
-not on calendar/stop-loss).** Batch-6 hypothesis stubs from sign reversals:
-high-DTC (+, IC t 6.2), inst-persist (+, IC t 3.4), insider_cluster/si under
-the flag harness (batch-5 decile scans VOID-DESIGN — sparse events)
+not on calendar/stop-loss).** **Batch 6 + BRAIN-009 ADJUDICATED same day (→ 130 cumulative): ZERO
+graduates.** The dtc mirrors posted the factory's best-ever largemid net t
+(3.4/3.0) and FAILED the IC leg — the two-legged rule held under maximum
+temptation. inst-persist mirror refuted (both tails lose to the middle).
+cust_conc = 4th sign reversal, book-inspected clean (IC t −7.4, Dhaliwal
+side). Insider clusters add nothing over single opportunistic buys (BRAIN-009
+closed; FF6 alpha t 3.0 is vs factors, not vs the single-buyer universe).
+Round-3 panel adjudicated (`AI_PANEL_2026-07-24B.md`): horizon-first
+registration rule adopted; accruals/supply-chain/news/RL re-litigations
+refused. Batch-7 stubs: conc_low mirror, dtc book-effect mechanism study
 + 1 forward lane LIVE (SMQ). Unifying lesson: only low-turnover signals
 survive honest costs (NMV recipe, independently rediscovered by our own scans).
 
