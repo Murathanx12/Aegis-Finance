@@ -288,5 +288,30 @@ two-sided — there is no holding period at which supply-chain links pay
 retail-accessible costs on 2004-2018 CRSP. Revival requires a different
 mechanism class (event-conditioned links on daily data), registered fresh.
 
+## 13. A double-legged explore graduate dies at confirm — the wall works (TRIAL-BRAIN-010)
+
+**Date:** 2026-07-25. **Chain:** `investing-test-module` 4480fd3 (batch-7
+pre-reg) → e00f9e0 (graduation + confirm pre-reg BEFORE touching 2019+) →
+edfdae8 (confirm result).
+
+conc_low (diversified-customer suppliers — the mirror of batch 6's
+book-inspected concentration reversal) became the first candidate since
+gp-small to pass BOTH explore graduation legs (largemid net t 2.28, IC t
+4.46, 7%/mo turnover). Return-blind book inspection passed. The single
+pre-registered confirm run on held-out 2019-2024 at 50 bps stress costs:
+**net −5.5 bps/mo (t = −0.20), DSR 0.0003 at N_TRIALS=140, FF6 alpha
+negative.** KILL. The rank information persists out-of-window (IC t 2.6) —
+the tradeable premium does not.
+
+Why this entry matters more than another dead signal: it is the first
+live-fire validation of the explore/confirm wall on a full-strength
+graduate. A signal good enough to clear a two-legged in-window bar — with a
+disclosed sequential-mirror provenance and a clean book — still evaporated
+out-of-window. "Explore numbers are hypothesis generation, never evidence"
+is now an empirical statement about this factory, not a slogan. Also
+recorded: Ball et al.'s RE/ME (the strongest-prior candidate of the day)
+failed the explore bar in 2004-2018 — value's lost decade shows up honestly
+rather than being rescued.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
