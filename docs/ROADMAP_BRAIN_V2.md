@@ -28,7 +28,14 @@ side). Insider clusters add nothing over single opportunistic buys (BRAIN-009
 closed; FF6 alpha t 3.0 is vs factors, not vs the single-buyer universe).
 Round-3 panel adjudicated (`AI_PANEL_2026-07-24B.md`): horizon-first
 registration rule adopted; accruals/supply-chain/news/RL re-litigations
-refused. Batch-7 stubs: conc_low mirror, dtc book-effect mechanism study
+refused. **2026-07-25: WRDS batch 4 HARVESTED (ibes_adj, funda ext cols,
+dsf pharma daily, BoardEx starters, comp_pit). Batch 7 → cumulative 140:
+conc_low GRADUATED explore (first since gp-small) then DIED at confirm
+(TRIAL-BRAIN-010 KILL, DSR 0.0003) — first live-fire validation of the
+explore/confirm wall (NEG_RESULTS §13); RE/ME strong-prior failed the bar
+(value's decade); conc family closed both directions.** Unblocked next:
+tgt-price rebuild (ibes_adj), FDA daily-CAR (dsf), BoardEx signal design,
+Batch-4 macro instruments (daily harness)
 + 1 forward lane LIVE (SMQ). Unifying lesson: only low-turnover signals
 survive honest costs (NMV recipe, independently rediscovered by our own scans).
 
