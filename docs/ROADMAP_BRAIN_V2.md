@@ -12,9 +12,16 @@
 | 6. LLM brain v2 | ⬜ (event extraction at scale, episodic memory, thesis generator) |
 | 7. Average-Joe copilot | ⬜ (holdings-first UX; most analytics already served) |
 
-Scoreboard: **88** explore candidates (84 was pre-3c; voids stay counted for
-DSR honesty) → 2 survivors (insider — weak-positive, promoted; gp-small —
-confirm-tier PASS) + 1 surviving fusion
+Scoreboard (updated 2026-07-24 EOD): **120** explore candidates (batch 5 =
+15 signals ×2 segments, ZERO graduates, replication-sweep priors 15/15
+directional; TRIAL-THEME-SUPPLY +2; voids stay counted for DSR honesty) →
+2 survivors (insider — weak-positive, promoted; gp-small — confirm-tier
+PASS) + 1 surviving fusion. **INSTR-HOLD-HORIZON answered "how long to
+hold": FLAT 14-17 bps/mo net across 1-24mo hold-bands, 12mo gentle optimum —
+signal-band exits make long holds free (sell when the name exits the band,
+not on calendar/stop-loss).** Batch-6 hypothesis stubs from sign reversals:
+high-DTC (+, IC t 6.2), inst-persist (+, IC t 3.4), insider_cluster/si under
+the flag harness (batch-5 decile scans VOID-DESIGN — sparse events)
 + 1 forward lane LIVE (SMQ). Unifying lesson: only low-turnover signals
 survive honest costs (NMV recipe, independently rediscovered by our own scans).
 
