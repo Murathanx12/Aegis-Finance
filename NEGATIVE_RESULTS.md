@@ -264,5 +264,29 @@ roll-ups "sponsor" approvals that predate their founding — 154 such events
 excluded as unattributable rather than mismapped (the +91 bps/t=7.1 lesson:
 book inspection before the run, not after).
 
+## 12. The supplier thesis is fully adjudicated — no holding period works (TRIAL-THEME-SUPPLY)
+
+**Date:** 2026-07-24. **Registered:** module registry row 18, committed before
+implementation (`investing-test-module` fe067d5; results 55c83d8).
+
+The slow basket arm of Murat's "buy the suppliers of the winners" thesis —
+salecs-weighted 12-1 customer momentum, annual June formation, 12-month hold,
+per-segment deciles, honest costs, explore window 2004-2018 only. This was
+the arm batch 3b's cust_mom rejection explicitly left open, with the turnover
+objection removed by design.
+
+Result: **REJECT on both pre-registered kill conditions.** The B−A decile
+spread is t = 0.10 (+3.2 bps/mo) — at annual cadence there is NO
+cross-sectional information left in customer links; top and bottom deciles
+are indistinguishable gross and both lose net (micro top decile −80.8 bps/mo,
+t = −4.27). Noise arm clean.
+
+The complete picture across both arms: monthly customer-link information is
+real but too weak for its own 70% churn (3b); by the time a slow book could
+hold it, it has already diffused (this trial). The thesis's receipt is now
+two-sided — there is no holding period at which supply-chain links pay
+retail-accessible costs on 2004-2018 CRSP. Revival requires a different
+mechanism class (event-conditioned links on daily data), registered fresh.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
