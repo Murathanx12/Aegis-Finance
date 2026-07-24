@@ -1,21 +1,53 @@
-# Investor Brain v2 — master roadmap (2026-07-22; status updated same day EOD)
+# Investor Brain v2 — master roadmap (2026-07-22; status updated 2026-07-24)
 
-## Status board (EOD 2026-07-22)
+## Status board (2026-07-24)
 
 | Chunk | Status |
 |---|---|
 | 1. Factory batch 1 (price/vol) | ✅ CLOSED — 0 graduates; dip-buy theses rejected |
 | 2. Factory batch 2 (fundamentals) | ✅ CLOSED — **BRAIN-008 gp-small: confirm PASS + 42-yr robustness** |
-| 3. Factory batch 3 (events/alt) | 🔶 3a done (SI/congress/gemini/daily adjudicated), 3b running (customer momentum, best-ideas, tgt upside); remaining: FDA drift, buyback/spinoff (needs event data), theme BASKET arm |
-| 4. Confirm + fusion | 🔶 **BRAIN-007 fusion SURVIVES** (beats best single, 3.6× names); remaining: INSTR-OVERFIT-CEILING |
-| 5. Allocation layer | 🔶 **smallmid-quality lane SHIPPED (`bc0608f`, awaiting Murat's seed flag)**; remaining: trend/managed-futures overlay trial |
+| 3. Factory batch 3 (events/alt) | 🔶 3a/3b/3c adjudicated (cust_mom + best_ideas CLOSED on merits; **both tgt_upside runs VOID** — IBES split-adjust look-ahead, fix needs `ibes.adj`); remaining: FDA drift (sponsor→ticker crosswalk first — 16,195 ORIG approvals on disk, of which 2,742 NDA/BLA = the novel-drug event set), TRIAL-THEME-SUPPLY basket arm, buyback/spinoff; best_ideas_frac (3c) also CLOSED |
+| 4. Confirm + fusion | 🔶 **BRAIN-007 fusion SURVIVES** (beats best single, 3.6× names); remaining: INSTR-OVERFIT-CEILING (queued, needs pre-registration before run) |
+| 5. Allocation layer | 🔶 **smallmid-quality lane SEEDED + LIVE** (trial #16, first NAV rows 07-22/07-23, −1.02%, decision 2028-07-22); **NEW: Batch 4 macro-regime/cross-asset instruments** (see below); remaining: trend/managed-futures overlay trial → now INSTR-TSMOM-XA |
 | 6. LLM brain v2 | ⬜ (event extraction at scale, episodic memory, thesis generator) |
 | 7. Average-Joe copilot | ⬜ (holdings-first UX; most analytics already served) |
 
-Scoreboard: 84 explore candidates → 2 confirmed survivors (insider, gp-small)
-+ 1 surviving fusion + 1 forward lane awaiting seed. Unifying lesson: only
-low-turnover signals survive honest costs (NMV recipe, independently
-rediscovered by our own scans).
+Scoreboard: **88** explore candidates (84 was pre-3c; voids stay counted for
+DSR honesty) → 2 survivors (insider — weak-positive, promoted; gp-small —
+confirm-tier PASS) + 1 surviving fusion
++ 1 forward lane LIVE (SMQ). Unifying lesson: only low-turnover signals
+survive honest costs (NMV recipe, independently rediscovered by our own scans).
+
+## Batch 4 — macro-regime & cross-asset (registered 2026-07-24)
+
+From the 5-AI panel adjudication (`docs/research/AI_PANEL_2026-07-24.md`):
+four models independently converged on the chunk-5 allocation layer. Every
+adopted claim became an instrument; nothing already adjudicated was reopened
+(accruals = inverted, batch 2; supply-chain monthly = dead, batch 3b; news
+sentiment backtests = barred by PIT policy).
+
+| Instrument | Question | Gate notes |
+|---|---|---|
+| INSTR-REGIME-HMM | Causal 3-state HMM rotation SPY/TLT/GLD vs buy-and-hold, explore 2004-2018 / confirm 2019-2024 | Inference must be causal/expanding (no full-sample Baum-Welch); DSR-deflated vs cumulative count |
+| INSTR-TSMOM-XA | 12-1 cross-asset TSMOM overlay (SPY/TLT/GLD/USO, vol-scaled) — crisis alpha without killing full-period return | Subsumes the chunk-5 trend-overlay item; "trend rescues momentum selection" stays CLOSED (#14) |
+| INSTR-GPR-EVENT | Descriptive CAR(0,+30) of SPY/USO/ITA around >2σ daily GPR spikes | GPR revisions caveat disclosed; start Monday snapshots of the daily file NOW (PIT-forward) |
+| INSTR-DOD-FWD | Forward-only DoD award drift (war.gov RSS, 17:00 ET pubDate) | Historical arm REJECTED on data (USAspending ~90-day OPSEC delay, no announcement timestamps); design note only until attended collector add |
+
+Data prerequisite (small): daily ETF closes (SPY/TLT/GLD/USO/ITA) — nothing
+daily exists on disk; GPR daily/monthly .xls (free, URLs verified 2026-07-24).
+Later candidate (not this batch): INSTR-QUALDIP — quality-conditioned crash
+deployment into the SMQ book (legitimate NEW candidate per the batch-1
+dip-buy closure note).
+
+## WRDS shopping list (next attended session, Duo tap)
+
+1. `ibes.adj` (or CRSP `cumfacpr`) — un-voids the target-price family rebuild.
+2. `comp_pit` exploration (catalog-confirmed accessible).
+3. **BoardEx starter set — subscription CONFIRMED LIVE 2026-07-24 (HKU email).**
+   Org/company summary + individual profiles + networks tables. Signal class:
+   board-connection lead-lag, director-network-informed insider filtering,
+   boardroom centrality (Larcker-So-Wang) — all low-turnover, i.e. the class
+   that survives our costs.
 
 Murat's directive: "test hundreds of simple strategies, build the brain from
 the ones that work, beat SPY, and make the Average-Joe terminal." Adjudicated
@@ -93,7 +125,21 @@ Mostly UX unification of what aegis-finance already serves:
 - Daily news → portfolio impact briefs (LLM explains, cites, never orders).
 
 ## Standing duties (calendar)
-- PDUFA ledger scoring (first ~late Aug 2026) + next event batch.
-- Quarterly CMP artifact refresh (~Oct 2026).
-- Forward clocks: TRIAL-CMP-INSIDER-IC earliest decision 2027-07-21; lane
-  track record 24-month rule.
+- PDUFA ledger scoring: first event 2026-07-26 (SCPH), scoreable ~late Aug
+  2026 via `scripts.ledger_score`; then next event batch.
+- Quarterly CMP artifact refresh (~Oct 2026) + SMQ book refresh (~Oct 2026).
+- Forward clocks: TRIAL-CMP-INSIDER-IC earliest decision 2027-07-21;
+  TRIAL-SMQ-FWD earliest decision 2028-07-22; lane track record 24-month rule.
+
+## Prod hygiene found by 2026-07-24 recon (→ BACKLOG)
+- `/api/health/full` track_record block omits the smallmid-quality lane
+  (hardcoded-lanes visibility bug pattern, again) — monitoring via health/full
+  or aegis_verified_state cannot see SMQ NAV.
+- ALL non-reference lanes' paper_nav rows are stamped with the reference
+  config hash (`mark_lane_to_market` uses global `get_config_hash()`), not
+  their own lane hash — weakens the hash-flip segment invariant; fix touches
+  the sacred write path → design note + lane-integrity-check before/after.
+- insider_cmp collector state is INFO-only (unobservable from public surface);
+  add an IC-collector last-run/last-snapshot health section.
+- yfinance "No earnings dates found" errors across ~15 large tickers in prod
+  logs — new pattern, likely a yfinance API change; triage.
