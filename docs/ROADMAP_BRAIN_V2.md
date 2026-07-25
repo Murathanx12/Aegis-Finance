@@ -51,7 +51,18 @@ dispersion-conditioned design (Palley-Steffen-Zhang MS 2025); BoardEx prior
 weakened (centrality alpha may be beta — Mgmt Sci). Refused: payout,
 divergences, conditional conc, hold-horizon duplicates.**
 
-## Batch 4 — macro-regime & cross-asset (registered 2026-07-24)
+## Batch 4 — macro-regime & cross-asset (registered 2026-07-24; RUN 2026-07-25)
+
+**Status 2026-07-25 EOD:** daily harness BUILT (`aegis_brain/macro/` in the
+module); explore AND held-out confirm run one-shot (`INSTR-MACRO-BATCH4.md`).
+**INSTR-REGIME-JM (jump model) = REJECT at confirm** (2022 TLT trap −21.6%,
+2020 missed rebound; explore pass was one crisis in disguise; NEG_RESULTS
+§15) — regime rotation with a single safe asset CLOSED. **INSTR-TSMOM-XA =
+CONFIRM PASS, first macro survivor** (2020 +9.2%, 2022 flat; overlay DD
+−18.8% vs SPY −33.7%; return drag t −1.86 disclosed → DEFENSIVE diversifier,
+Goal B) — next: forward paper lane, attended seed. SBCORR gate claim refuted
+in-window; GPR spikes not a sell signal (both descriptive receipts to the
+brain layer).
 
 From the 5-AI panel adjudication (`docs/research/AI_PANEL_2026-07-24.md`):
 four models independently converged on the chunk-5 allocation layer. Every

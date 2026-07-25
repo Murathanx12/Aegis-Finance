@@ -351,5 +351,37 @@ segments) — agreement-gated PEAD, the literature's flagship refinement
 sign reversal on record; monthly-cadence PEAD is closed, and the only
 admissible successor class is a daily-resolution event harness.
 
+## 15. Regime rotation dies at confirm; the correlation "master switch" fails first contact (INSTR-MACRO-BATCH4)
+
+**Date:** 2026-07-25. **Chain:** `investing-test-module` cb494ed (freeze) →
+0c758c7 (explore results + confirm pre-reg BEFORE 2019+ touched) → confirm
+same day, one shot.
+
+The statistical jump model (the panel's recommended replacement for HMMs —
+and mechanically it delivered: 0.4-1.0 switches/yr, no whipsaw) passed ALL
+three pre-committed explore bars on 2004-2018: 11.2% CAGR vs SPY 7.7%,
+maxDD −26.6% vs −55.2%. The held-out confirm window rejected it: **2022 cost
+−21.6%** (the model went risk-off into TLT during the dual stock-bond
+crash — the "safe" asset was the crashing asset) and 2020 dodged the crash
+but missed the rebound (+4.8% vs SPY +18%). Both frozen bars missed.
+The explore pass was one crisis (2008) wearing three bars as a disguise.
+Regime timing with a single safe asset is CLOSED; successors (multi-asset
+risk-off basket, VIX features) need new registrations carrying this receipt.
+
+Same run, descriptive: the reviews' most confident macro claim — "disable
+dip-buying when stock-bond correlation flips positive" — is refuted
+in-window: dips during POSITIVE correlation bounced harder (+2.9% fwd-21d,
+n=50) than dips in negative-correlation regimes (+0.6%, n=705). Thin n and
+no 2022-style regime in-window, disclosed — but the gate is not adoptable
+on this evidence. GPR spikes are also not a sell signal (SPY CAR(0,+30)
++0.61%, 64% positive; oil FADES −2.5% excess).
+
+The other side of the same day: **INSTR-TSMOM-XA is the first macro
+instrument to SURVIVE the wall** — crisis alpha in both unseen crises
+(2020 +9.2%, 2022 flat), overlay maxDD −18.8% vs SPY −33.7% — at a real,
+disclosed price (overlay return drag t −1.86 vs SPY). It is a defensive
+diversifier for the product's protect-the-investor goal, not a beat-SPY
+engine, and it goes to a forward paper lane (attended) before any claim.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
