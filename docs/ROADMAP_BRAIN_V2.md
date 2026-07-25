@@ -38,6 +38,18 @@ tgt-price rebuild (ibes_adj), FDA daily-CAR (dsf), BoardEx signal design,
 Batch-4 macro instruments (daily harness)
 + 1 forward lane LIVE (SMQ). Unifying lesson: only low-turnover signals
 survive honest costs (NMV recipe, independently rediscovered by our own scans).
+**2026-07-25 PM (panel round 4, `AI_PANEL_2026-07-25.md`): Batch 8 = ZERO
+graduates (→ 146 cumulative): si_trend IC-real/net-dead (turnover kill, as
+declared), rd_gp book-without-rank (AND-rule), pead_agree INVERTED (IC t
+−2.6 = 5th sign reversal; monthly-cadence PEAD closed). SIGNAL_TAXONOMY
+adopted (4-tag registration rule; ranked family map in the module).
+INSTR-OVERFIT-CEILING run (self-deception ceiling measured on the closed
+library — see module trial doc). Amendments: INSTR-REGIME-HMM → statistical
+jump model (Shu-Yu-Mulvey 2024, verified); NEW INSTR-SBCORR (stock-bond
+60d correlation regime gate, descriptive); tgt rebuild inherits
+dispersion-conditioned design (Palley-Steffen-Zhang MS 2025); BoardEx prior
+weakened (centrality alpha may be beta — Mgmt Sci). Refused: payout,
+divergences, conditional conc, hold-horizon duplicates.**
 
 ## Batch 4 — macro-regime & cross-asset (registered 2026-07-24)
 
@@ -49,10 +61,11 @@ sentiment backtests = barred by PIT policy).
 
 | Instrument | Question | Gate notes |
 |---|---|---|
-| INSTR-REGIME-HMM | Causal 3-state HMM rotation SPY/TLT/GLD vs buy-and-hold, explore 2004-2018 / confirm 2019-2024 | Inference must be causal/expanding (no full-sample Baum-Welch); DSR-deflated vs cumulative count |
+| INSTR-REGIME-HMM | Causal 3-state regime rotation SPY/TLT/GLD vs buy-and-hold, explore 2004-2018 / confirm 2019-2024 | **AMENDED 2026-07-25: primary spec = statistical JUMP MODEL (Shu-Yu-Mulvey JAM 2024 — jump penalty forces regime persistence, kills HMM whipsaw); causal/expanding unchanged**; DSR-deflated vs cumulative count |
 | INSTR-TSMOM-XA | 12-1 cross-asset TSMOM overlay (SPY/TLT/GLD/USO, vol-scaled) — crisis alpha without killing full-period return | Subsumes the chunk-5 trend-overlay item; "trend rescues momentum selection" stays CLOSED (#14) |
 | INSTR-GPR-EVENT | Descriptive CAR(0,+30) of SPY/USO/ITA around >2σ daily GPR spikes | GPR revisions caveat disclosed; start Monday snapshots of the daily file NOW (PIT-forward) |
 | INSTR-DOD-FWD | Forward-only DoD award drift (war.gov RSS, 17:00 ET pubDate) | Historical arm REJECTED on data (USAspending ~90-day OPSEC delay, no announcement timestamps); design note only until attended collector add |
+| INSTR-SBCORR (added 2026-07-25, panel round 4) | Descriptive: 60d rolling SPY/TLT correlation as an inflation-regime gate; behavior of GLD/USO conditional on positive-correlation flips | Descriptive first (never arms); dailies on disk; registration with the daily-harness build |
 
 Data prerequisite (small): daily ETF closes (SPY/TLT/GLD/USO/ITA) — nothing
 daily exists on disk; GPR daily/monthly .xls (free, URLs verified 2026-07-24).

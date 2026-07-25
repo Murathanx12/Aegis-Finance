@@ -313,5 +313,43 @@ recorded: Ball et al.'s RE/ME (the strongest-prior candidate of the day)
 failed the explore bar in 2004-2018 — value's lost decade shows up honestly
 rather than being rescued.
 
+## 14. The self-deception ceiling, measured (INSTR-OVERFIT-CEILING) + monthly PEAD is inverted
+
+**Date:** 2026-07-25. **Chain:** `investing-test-module` 0297101 (pre-reg,
+contamination clause) → run same day (one shot). Companion: batch 8 (146
+cumulative), zero graduates.
+
+We measured what pure post-hoc selection can manufacture on our own data:
+full-window (2004-2024) scans of the 53-signal CLOSED-family library
+(insider family excluded as live), then mining arms with no information
+content whatsoever.
+
+- **Pick-the-best honest-direction signal: t 2.94. Top-5 composite: t 3.27.**
+  The zero-skill expected maximum for a library this size is **t ≈ 3.6-4.0**
+  (Bailey/López de Prado) — i.e. the best full-sample results our entire
+  closed library can show are INDISTINGUISHABLE from selection noise.
+- **Allow sign-flips (the realistic mining move — we have 4 of our own on
+  record) and you get t 6.16 single / 6.58 top-5, Sharpe 1.44** — a fake
+  track record most funds would envy, built by flipping dtc_low. It even
+  survives a split-half check (t > 3 in both halves) because the dtc book
+  effect is a real full-window mean effect WITHOUT rank IC — exactly the
+  batch-6 AND-rule catch. Fragility checks do not stop this class; only the
+  two-legged rule (book AND rank) plus cost honesty do.
+- **t≈7 "bug alarm" is now calibrated:** mining tops out ≈6.6 here, so
+  anything ≥7 on this data is a book/data defect, not alpha.
+- **The wall's decay curve, on all 53:** explore→confirm t rank-correlation
+  0.49; the top of the explore table shrinks 60-100% (dtc_qual 3.39→1.30,
+  conc_low 2.28→−0.05 — §13 reproduced). Disclosed with both hands: the
+  value class IMPROVED out-of-window (re_me 0.28→1.30, payout 0.80→1.63) —
+  the wall has a false-negative cost, those families stay closed anyway
+  (contamination clause), and the lesson routes to the ALLOCATION layer
+  (regime dependence), not to resurrecting dead pickers.
+
+Same day, batch 8: **pead_agree came out INVERTED** (IC t −2.6 both
+segments) — agreement-gated PEAD, the literature's flagship refinement
+(Livnat-Mendenhall), is wrong-signed at monthly cadence in 2004-2018. Fifth
+sign reversal on record; monthly-cadence PEAD is closed, and the only
+admissible successor class is a daily-resolution event harness.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
