@@ -67,9 +67,20 @@ brain layer). **Build 2 same day: TRIAL-BRAIN-011 FDA daily-CAR REJECT
 both resolutions, NEG_RESULTS §16). Round-6 brain review: prior-check gate
 ADOPTED (`scripts/prior_check.py`, procedural registration requirement);
 vector-DB/graph infra refused at current corpus size. Queued: Build 3 tgt
-rebuild → INSTR-REGIME-JM2 (post-hoc-repair provenance declared) + batch-9
+rebuild → INSTR-REGIME-JM2 (post-hoc-repair provenance declared) + batch-10
 (zombie/rate-cut exclusion screen, insider role-weights) → TSMOM forward
 lane seed (attended).**
+
+**2026-07-26 (self-directed sweep, `RESEARCH_SWEEP_2026-07-26.md`): Batch 9
+= 0 graduates (→ 152): conn_mom = starkest paper-vs-cost gap on record
+(lit t 9.67 → net t −0.78 at 67% turnover); industry_mom flat-since-2000
+confirmed; comp_issue_5y reinforces the issuance shelf (1.15/2.86).
+INSTR-VOC: complexity claim NOT SUPPORTED (loses to B&H both windows,
+non-monotone) — complexity class barred from the factory. Gates killed 3
+candidates pre-registration (low-beta, NOA, ea_prem). Banked: OSAP
+SignalDoc (calibration benchmark). Newly queued: INSTR-ANOMALY-TIME
+(rdq-timing upgrade for the gp-small survivor — TOP priority),
+INSTR-CZ-CALIB, INSTR-HARNESS-VALID, Chen-Velikov cost-model port.**
 
 From the 5-AI panel adjudication (`docs/research/AI_PANEL_2026-07-24.md`):
 four models independently converged on the chunk-5 allocation layer. Every
