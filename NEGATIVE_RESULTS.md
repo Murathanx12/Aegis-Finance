@@ -383,5 +383,25 @@ disclosed price (overlay return drag t −1.86 vs SPY). It is a defensive
 diversifier for the product's protect-the-investor goal, not a beat-SPY
 engine, and it goes to a forward paper lane (attended) before any claim.
 
+## 16. FDA approval drift is dead at daily resolution too (TRIAL-BRAIN-011)
+
+**Date:** 2026-07-25. **Chain:** `investing-test-module` f6d1648 (pre-reg,
+crosswalk v2 signed off by Murat + programmatic validation) → run same day,
+one shot. Explore events only; the confirm gate never opened.
+
+The pre-declared daily successor to BRAIN-006: market-model CAR on 500
+usable NDA/BLA approvals 2002-2018 (drops counted: 153 dedupe, 247 outside
+the pharma-SIC daily slice). CAR(+1,+20) = +2.1% but **t = 1.45** against a
+frozen bar of 2.0 — REJECT. What the corpse teaches: the drift, to the
+extent it exists, lives entirely in days 1-5, entirely in the small half
+(+4.0% vs +0.2%), and in HIGH-attention events (+3.6% vs +0.6%) — the
+opposite of the "low-attention drift" gate two AI panels proposed. Day-0
+reaction is real (t 2.04) but not tradeable close-to-close. Priority
+approvals show LESS drift than standard ones (better pre-priced).
+
+FDA approval drift is now closed at BOTH resolutions with receipts. The
+forward-only PDUFA ledger (a different event class with a different clock)
+remains the house's only live FDA instrument.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*

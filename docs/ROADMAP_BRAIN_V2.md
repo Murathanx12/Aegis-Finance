@@ -62,7 +62,14 @@ CONFIRM PASS, first macro survivor** (2020 +9.2%, 2022 flat; overlay DD
 −18.8% vs SPY −33.7%; return drag t −1.86 disclosed → DEFENSIVE diversifier,
 Goal B) — next: forward paper lane, attended seed. SBCORR gate claim refuted
 in-window; GPR spikes not a sell signal (both descriptive receipts to the
-brain layer).
+brain layer). **Build 2 same day: TRIAL-BRAIN-011 FDA daily-CAR REJECT
+(t 1.45 vs bar 2.0; attention gate refuted in its own arm; family closed
+both resolutions, NEG_RESULTS §16). Round-6 brain review: prior-check gate
+ADOPTED (`scripts/prior_check.py`, procedural registration requirement);
+vector-DB/graph infra refused at current corpus size. Queued: Build 3 tgt
+rebuild → INSTR-REGIME-JM2 (post-hoc-repair provenance declared) + batch-9
+(zombie/rate-cut exclusion screen, insider role-weights) → TSMOM forward
+lane seed (attended).**
 
 From the 5-AI panel adjudication (`docs/research/AI_PANEL_2026-07-24.md`):
 four models independently converged on the chunk-5 allocation layer. Every
