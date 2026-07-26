@@ -95,6 +95,20 @@ hardened (word-split + stems) after a whole-phrase near-miss. Remaining
 queue order: Build 3 tgt rebuild → INSTR-CZ-CALIB / INSTR-HARNESS-VALID →
 batch 10 → TSMOM lane seed (attended).**
 
+**2026-07-26 EOD (panel round 8, `AI_PANEL_2026-07-26B.md`): Build 3
+TRIAL-TGT-REBUILD executed — REJECT, family closed (#154-155, cumulative
+155). Raw target upside strongly perverse (t −3.62/−7.21); PSZ
+dispersion-conditioning direction real, sign never positive (NEG_RESULTS
+§17). Analyst-source pickers 0-for-3. Round-8 adoption: **GPT's Layer-2
+argument → INSTR-REGIME-ANALOG queued** (deterministic k-NN historical
+state retrieval, descriptive phase first, LLM narrates never allocates) as
+the post-freeze Brain direction; NN-for-trading refused by all four
+reviews (VOC receipt); DeepSeek's hallucinated receipts corrected
+(INSTR-REVERSAL nonexistent; sentiment PIT-barred not tested-dead).
+Gemini's ordering answered: calibration pair BEFORE cost model. Queue:
+CZ-CALIB + HARNESS-VALID → Chen-Velikov → JM2 + REGIME-ANALOG → batch 10
+(if ceiling-sensible) → ceiling ~196 → freeze → paper.**
+
 From the 5-AI panel adjudication (`docs/research/AI_PANEL_2026-07-24.md`):
 four models independently converged on the chunk-5 allocation layer. Every
 adopted claim became an instrument; nothing already adjudicated was reopened

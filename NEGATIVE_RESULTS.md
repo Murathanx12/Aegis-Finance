@@ -403,5 +403,30 @@ FDA approval drift is now closed at BOTH resolutions with receipts. The
 forward-only PDUFA ledger (a different event class with a different clock)
 remains the house's only live FDA instrument.
 
+## 17. Analyst price targets are anti-signal — the un-voided family is worse than dead (TRIAL-TGT-REBUILD)
+
+The target-price family was VOID for a year (the original run used IBES
+split-adjusted values, a look-ahead). WRDS batch 4 delivered nominal ptgdet
+plus the ibes_adj split calendar, so the rebuild used NO adjustment
+arithmetic at all: nominal median 12m target vs nominal CRSP price, with any
+target straddling a split event simply dropped. Two pre-registered arms
+(#154-155), priors declared: raw upside flat-to-negative, low-dispersion
+conditioning (PSZ, Mgmt Sci 2025) positive.
+
+Result: **raw implied upside is strongly perverse** — largemid −90 bps/mo
+net (t −3.62, IC t −3.47), small −199 bps/mo (t −7.21). The names analysts
+say will rise 40% are precisely the names that bleed. Da-Schaumburg
+optimism bias, reproduced on clean data at honest costs. The PSZ
+conditioning halves the bleed (−90 → −43.5) — the published DIRECTION is
+real — but never reaches a positive sign (IC t −3.77): on our universe the
+conditional effect does not exist as a tradeable long signal.
+
+Lessons banked: (1) analyst-source pickers are now 0-for-3 (rev_conf,
+tgt_upside, tgt_ld) — the sell-side consensus is either priced or
+perverse; (2) a mirror (long LOW-expectation names) is admissible as a
+future candidate but carries 22–45% turnover — the house law predicts net
+death, so it is not queued; (3) the un-voiding protocol worked: a voided
+family now has an adjudicated grave instead of an asterisk.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
