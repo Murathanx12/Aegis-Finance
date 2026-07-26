@@ -428,5 +428,38 @@ future candidate but carries 22–45% turnover — the house law predicts net
 death, so it is not queued; (3) the un-voiding protocol worked: a voided
 family now has an adjudicated grave instead of an asterisk.
 
+## 18. The post-hoc repair failed to fix the crash it was built for (INSTR-REGIME-JM2)
+
+**Date:** 2026-07-26. **Chain:** `investing-test-module` 470ed0f (freeze,
+provenance declared, BEFORE data fetch) → one execution, both windows.
+
+JM1 died at confirm because TLT crashed alongside stocks in 2022. JM2 was
+the sanctioned successor: an inflation gate (T10YIE 126-day momentum >
++0.10pp) routing risk-off capital to GLD instead of TLT when breakevens
+rise. The registration declared post-hoc-repair provenance up front:
+explore ≈ zero evidential weight, confirm weakened (the motivating event
+sits inside it), forward the only clean test.
+
+Explore 2004-2018 FLATTERED the repair — CAGR 12.2% vs SPY 7.7%, maxDD
+−20.4%, calendar-2008 +32.4%, better than JM1 on every line. Had explore
+carried weight, JM2 graduates.
+
+Confirm 2019-2024: **REJECT, and the gate made 2022 WORSE than the design
+it repaired** (calendar-2022 −23.9% vs JM1's −21.6%; t JM2-vs-JM1 −1.18).
+Mechanism: 2022's bond crash was REAL-RATE-driven — breakevens peaked in
+April 2022 and fell through the worst of the TLT collapse, so an
+inflation-momentum gate switched risk-off capital back INTO TLT precisely
+when the repair was supposed to route it out (only 9.5% of confirm
+risk-off days were gated away from TLT). No gate lookback (63/126/252)
+rescues it — the failure is the gate's information, not its speed.
+
+Lessons banked: (1) the zero-weight declaration for post-hoc repairs was
+EARNED — the explore pass measured exactly nothing; (2) repairing a design
+against an observed crash does not even guarantee fixing THAT crash — the
+repair encodes your story about the event, not the event itself; (3)
+single-trigger regime rotation (state machine + one macro gate) is CLOSED
+with two receipts; successors need a different information class and
+inherit both.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
