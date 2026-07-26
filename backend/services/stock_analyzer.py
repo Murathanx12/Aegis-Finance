@@ -125,8 +125,19 @@ def analyze_stock(
         logger.warning("%s: Insufficient price history", ticker)
         return None
 
-    prices = hist["Close"]
+    # dropna: a NaN final Close row (yfinance under rate pressure / partial
+    # sessions) made current_price + momentum_1m/3m NaN for EVERY ticker in
+    # prod on 2026-07-26 — first killing the screener at int(confidence),
+    # then 500ing the endpoint at JSON serialization. NaN rows carry no
+    # information; price math runs on real closes only.
+    prices = hist["Close"].dropna()
+    if len(prices) < 252:
+        logger.warning("%s: Insufficient non-NaN price history", ticker)
+        return None
     current_price = float(prices.iloc[-1])
+    if not np.isfinite(current_price) or current_price <= 0:
+        logger.warning("%s: unpriceable (last close %r)", ticker, current_price)
+        return None
 
     market_cap = info.get("marketCap", None)
     cap_tier = _get_cap_tier(market_cap)

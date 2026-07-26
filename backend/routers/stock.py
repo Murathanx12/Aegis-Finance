@@ -339,7 +339,7 @@ def _screener() -> dict:
                 "factor_alpha": round(_factor_alpha * 100, 2) if _factor_alpha is not None else None,
             }
         except Exception as e:
-            logger.warning("screener skip %s: %s", ticker, e)
+            logger.warning("screener skip %s: %s", ticker, e, exc_info=True)
             return None
 
     stocks = []
@@ -387,7 +387,22 @@ def _public_screener_payload(stocks, market_sig, signal_analytics=None) -> dict:
     result = {"stocks": stocks, "count": len(stocks), "market_signal": public_sig}
     if signal_analytics:
         result["signal_analytics"] = signal_analytics
-    return result
+    # JSON safety net: one NaN/inf float anywhere in one row 500s the WHOLE
+    # endpoint at serialization (2026-07-26 outage, phase 2). NaN means
+    # "missing" → None. Applied last so no field can sneak past.
+    return _json_sanitize(result)
+
+
+def _json_sanitize(obj):
+    """Recursively replace non-finite floats with None (JSON-compliant)."""
+    import math as _math
+    if isinstance(obj, float):
+        return obj if _math.isfinite(obj) else None
+    if isinstance(obj, dict):
+        return {k: _json_sanitize(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_json_sanitize(v) for v in obj]
+    return obj
 
 
 def _compute_sector_momentum() -> dict:
