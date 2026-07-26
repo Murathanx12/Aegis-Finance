@@ -265,7 +265,7 @@ def run_exit_overlay_check(db_path=None, as_of_date=None, panel=None,
 
         current = _re._get_current_weights(conn, LANE_ID, prices)
         last_rebalance = _re._get_last_rebalance_date(conn, LANE_ID)
-        notional = _re._get_portfolio_notional(conn, LANE_ID)
+        notional = _re._get_portfolio_notional(conn, LANE_ID, prices)
 
         meta: dict = {}
         base = _base_target(panel, meta)

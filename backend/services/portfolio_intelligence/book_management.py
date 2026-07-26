@@ -106,7 +106,7 @@ def run_mirror_check(db_path=None, as_of_date=None, force_reason=None,
             prices = _re._get_current_prices(tickers)
         current = _re._get_current_weights(conn, lane_id, prices)
         last_rebalance = _re._get_last_rebalance_date(conn, lane_id)
-        notional = _re._get_portfolio_notional(conn, lane_id)
+        notional = _re._get_portfolio_notional(conn, lane_id, prices)
 
         meta: dict = {}
         if panel is None:
@@ -229,7 +229,7 @@ def apply_conviction_decisions(db_path=None, as_of_date=None, prices=None) -> di
                     "pending": [r["id"] for r in new]}
 
         current = _re._get_current_weights(conn, lane_id, prices)
-        notional = _re._get_portfolio_notional(conn, lane_id)
+        notional = _re._get_portfolio_notional(conn, lane_id, prices)
         cfg = book_lanes["conviction"]
         trades, total_cost = compute_trades(
             current, target, prices, notional,

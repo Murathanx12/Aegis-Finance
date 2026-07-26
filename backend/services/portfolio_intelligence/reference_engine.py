@@ -101,8 +101,37 @@ def _get_last_rebalance_date(conn, portfolio_id: str) -> date | None:
     return None
 
 
-def _get_portfolio_notional(conn, portfolio_id: str) -> float:
-    """Get the portfolio's current notional value."""
+def _get_portfolio_notional(conn, portfolio_id: str, prices: dict | None = None) -> float:
+    """Current marked value of the lane's OPEN book — the notional a rebalance
+    re-books at. Valued exactly like the NAV engine: shares × live price
+    (cost_basis fallback per position), CASH at $1.
+
+    THE 2026-07-26 RE-BOOK DEFECT: this used to return the static
+    inception_value, so every cadence/config/decision rebalance re-booked the
+    lane at $100k − costs — NAV teleported toward inception at every rebalance
+    boundary and compounding was severed (aggressive lost its +2.0% at the
+    2026-07-08 weekly reset on a +0.85% SPY day). The open book's marked value
+    is the only correct rebalance notional. Falls back to inception_value ONLY
+    when the lane has no open positions yet (first build).
+    """
+    rows = conn.execute(
+        "SELECT ticker, shares, cost_basis FROM paper_positions "
+        "WHERE portfolio_id = ? AND closed_at IS NULL",
+        (portfolio_id,),
+    ).fetchall()
+    prices = prices or {}
+    total = 0.0
+    for r in rows:
+        ticker, n = r["ticker"], r["shares"]
+        if ticker == CASH_TICKER:
+            total += n
+            continue
+        px = prices.get(ticker)
+        mark = px if (px is not None and px > 0) else r["cost_basis"]
+        total += n * mark
+    if rows and total > 0:
+        return float(total)
+
     row = conn.execute(
         "SELECT inception_value FROM paper_portfolios WHERE id = ?",
         (portfolio_id,),
@@ -292,7 +321,7 @@ def run_reference_check(
 
         current_weights = _get_current_weights(conn, lane_id, prices)
         last_rebalance = _get_last_rebalance_date(conn, lane_id)
-        notional = _get_portfolio_notional(conn, lane_id)
+        notional = _get_portfolio_notional(conn, lane_id, prices)
 
         # Compute target weights. Lanes with optimizer=hrp get an AS-OF price
         # panel (live: ends at the latest bar) — the optimizer never fetches
