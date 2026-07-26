@@ -82,6 +82,8 @@ def effective_independent_trials(db_path=None, min_obs: int = 30) -> dict:
         BOOK_LANES,
         CONSERVATIVE_ATR_LANES,
         REFERENCE_LANES,
+        SMQ_LANES,
+        TSMOM_LANES,
     )
 
     init_db(db_path)
@@ -91,8 +93,11 @@ def effective_independent_trials(db_path=None, min_obs: int = 30) -> dict:
         # Reference lanes + book lanes (P1 #6). Book lanes (mirror/conviction)
         # share the same holdings → highly correlated → N_eff treats them as ~1
         # independent stream, which is exactly why N_eff is reported and the raw
-        # cumulative count stays the gate floor.
-        for lane_id in (*REFERENCE_LANES, *BOOK_LANES, *CONSERVATIVE_ATR_LANES):
+        # cumulative count stays the gate floor. SMQ + TSMOM lanes were added
+        # 2026-07-26 (the hardcoded-lane-list bug class — every seeded lane
+        # with a NAV stream belongs in N_eff).
+        for lane_id in (*REFERENCE_LANES, *BOOK_LANES, *CONSERVATIVE_ATR_LANES,
+                        *SMQ_LANES, *TSMOM_LANES):
             rows = get_nav_series(conn, lane_id)
             if rows:
                 series[lane_id] = {r["date"]: r["nav"] for r in rows}

@@ -27,6 +27,7 @@ from backend.config import (
     conservative_atr_lanes,
     paper_portfolios,
     smallmid_quality_lanes,
+    tsmom_xa_lanes,
 )
 from backend.services.portfolio_intelligence.nav import CASH_TICKER
 
@@ -64,6 +65,14 @@ CONSERVATIVE_ATR_LANES: tuple[str, ...] = tuple(
 # the book IS the strategy). Same isolation reasoning as the other attended lanes.
 SMQ_LANES: tuple[str, ...] = tuple(
     k for k, v in smallmid_quality_lanes.items()
+    if isinstance(v, dict) and "purpose" in v
+)
+
+# TSMOM-XA lanes (TRIAL-TSMOM-XA) — overlay + 60/40 control pair, from
+# tsmom_xa_lanes.yaml with its OWN hash (the frozen signal params are part of
+# the hash). Same isolation reasoning as the other attended lanes.
+TSMOM_LANES: tuple[str, ...] = tuple(
+    k for k, v in tsmom_xa_lanes.items()
     if isinstance(v, dict) and "purpose" in v
 )
 

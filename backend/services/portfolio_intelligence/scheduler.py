@@ -152,6 +152,7 @@ def nav_freshness() -> dict:
         CONSERVATIVE_ATR_LANES,
         REFERENCE_LANES,
         SMQ_LANES,
+        TSMOM_LANES,
     )
     try:
         from backend.db import get_connection
@@ -174,7 +175,8 @@ def nav_freshness() -> dict:
         # Book + conservative-ATR lanes count toward freshness ONLY once seeded —
         # an unseeded attended lane has no paper_portfolios row and must not drag
         # all_fresh false before its attended seed runs.
-        _optional = (*BOOK_LANES, *CONSERVATIVE_ATR_LANES, *SMQ_LANES)
+        _optional = (*BOOK_LANES, *CONSERVATIVE_ATR_LANES, *SMQ_LANES,
+                     *TSMOM_LANES)
         lane_ids = (*REFERENCE_LANES, *[l for l in _optional if l in seeded])
         last_dates = {r["portfolio_id"]: r["last_date"] for r in rows}
         lanes = {
@@ -404,6 +406,14 @@ async def _hourly_mtm():
             results.update(await asyncio.to_thread(mark_all_smq_lanes))
         except Exception as e:
             logger.error("SMQ MTM failed: %s", e, exc_info=True)
+        # TSMOM-XA lanes (TRIAL-TSMOM-XA) mark alongside; skipped until seeded.
+        try:
+            from backend.services.portfolio_intelligence.tsmom_lane import (
+                mark_all_tsmom_lanes,
+            )
+            results.update(await asyncio.to_thread(mark_all_tsmom_lanes))
+        except Exception as e:
+            logger.error("TSMOM MTM failed: %s", e, exc_info=True)
         if any(v is not None for v in results.values()):
             _last_mtm_timestamp = now
         else:
@@ -462,6 +472,20 @@ async def _daily_check():
                     atr.get("status"), atr.get("reason"), atr.get("n_stopped"))
     except Exception as e:
         logger.error("Conservative-ATR exit-overlay check failed: %s", e, exc_info=True)
+
+    # TRIAL-TSMOM-XA: monthly signal rebalance for the overlay + control pair.
+    # NO-OP (status=not_seeded) until AEGIS_SEED_TSMOM_XA seeds them, so wiring
+    # this pre-seed is safe. Stamped with the ISOLATED TSMOM hash — cannot
+    # perturb any other lane's NAV. Wrapped so a failure never breaks the
+    # checks above.
+    try:
+        from backend.services.portfolio_intelligence.tsmom_lane import run_tsmom_check
+        tsm = await asyncio.to_thread(run_tsmom_check)
+        for lane_id, res in tsm.items():
+            logger.info("TSMOM lane %s: status=%s reason=%s", lane_id,
+                        res.get("status"), res.get("reason"))
+    except Exception as e:
+        logger.error("TSMOM check failed: %s", e, exc_info=True)
 
     # Descriptive LPPLS fragility flag (T1) — market-level, persisted each cycle
     # for the forward-Brier measurement. Descriptive only; never arms a lane.

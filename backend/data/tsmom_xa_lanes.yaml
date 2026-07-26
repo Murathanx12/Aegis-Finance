@@ -1,0 +1,58 @@
+# Aegis Finance — TSMOM-XA Lane Configuration (TRIAL-TSMOM-XA)
+# =============================================================
+#
+# TWO lanes, one trial: `tsmom-overlay` (50% SPY + 50% cross-asset 12-1 TSMOM
+# sleeve, vol-sized, monthly) vs `tsmom-6040-control` (60/40 SPY/TLT, monthly).
+# Pre-registered in docs/TRIALS/TRIAL-TSMOM-XA.md. Goal-B framing: defensive
+# diversifier vs the 60/40 control — NOT beat-SPY.
+#
+# WHY A SEPARATE FILE (load-bearing — identical reasoning to book_lanes.yaml /
+# conservative_atr_lanes.yaml / smallmid_quality_lanes.yaml): the other lane
+# YAMLs' whole-file hashes version LIVE segments; adding lanes there would fire
+# spurious boundary rebalances. These lanes live here with their OWN hash
+# (db.get_tsmom_config_hash) and their own env-gated seeding path.
+#
+# ⚠️ NEVER-SHORTS EXEMPTION (declared): the confirmed spec takes short
+# positions inside the paper sleeve (negative shares; proceeds in CASH).
+# Murat authorized the paper-only exemption 2026-07-26 (attended). Nothing
+# product-facing inherits shorts.
+#
+# SEEDING DISCIPLINE: inception = seed day, current prices, $100k each, NO
+# reconstructed past. Attended + env-gated (AEGIS_SEED_TSMOM_XA=1), only
+# AFTER the 2026-07-26 re-book fix (36c8ece) is verified live.
+#
+# Signal params are FROZEN (module INSTR-MACRO-BATCH4 confirmed spec) and are
+# part of this file's hash: lookback 252/21 trading days, vol window 60d,
+# vol target 0.10, leverage cap 1.5, EW across active assets, 50/50 overlay.
+
+tsmom-overlay:
+  purpose: tsmom-xa-forward-trial
+  optimizer: tsmom_xa            # the frozen signal is the allocator
+  rebalance_frequency: monthly_calendar   # first daily check of a new month
+  rebalance_trigger_drift: 1.0   # drift disabled — cadence-only by spec
+  transaction_cost_bps: 5
+  slippage_bps: 1
+  assets: [SPY, TLT, GLD, USO]
+  core_weight: 0.5               # SPY buy-and-hold core
+  sleeve_weight: 0.5             # TSMOM sleeve
+  lookback_days: 252
+  skip_days: 21
+  vol_window_days: 60
+  vol_target: 0.10
+  leverage_cap: 1.5
+  allow_short_in_sleeve: true    # declared exemption — paper sleeve only
+
+tsmom-6040-control:
+  purpose: tsmom-xa-control
+  optimizer: static_6040
+  rebalance_frequency: monthly_calendar
+  rebalance_trigger_drift: 1.0
+  transaction_cost_bps: 5
+  slippage_bps: 1
+  weights:
+    SPY: 0.6
+    TLT: 0.4
+
+inception:
+  notional_usd: 100000.0
+  benchmark: tsmom-6040-control   # the trial IS the pairwise comparison

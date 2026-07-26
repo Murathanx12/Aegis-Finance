@@ -391,6 +391,15 @@ def get_smq_config_hash() -> str:
     return _compute_config_hash(BACKEND_DIR / "data" / "smallmid_quality_lanes.yaml")
 
 
+def get_tsmom_config_hash() -> str:
+    """Hash of tsmom_xa_lanes.yaml (TRIAL-TSMOM-XA overlay + control lanes).
+
+    Fully isolated from every other lane hash. The frozen signal params are
+    part of the file, so ANY spec change is a stamped config-version boundary
+    (and per the trial doc, a variant is a NEW lane, not an edit)."""
+    return _compute_config_hash(BACKEND_DIR / "data" / "tsmom_xa_lanes.yaml")
+
+
 # ── Point-in-time (as-of) data store — v7 (docs/V3_DATA_LAYER_DESIGN.md) ──────
 
 

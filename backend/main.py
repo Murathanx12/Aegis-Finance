@@ -342,6 +342,20 @@ async def lifespan(app: FastAPI):
                 logger.warning("SMQ SEEDING (AEGIS_SEED_SMALLMID_QUALITY=1): %s", res)
             except Exception as e:
                 logger.error("Smallmid-quality seeding failed: %s", e, exc_info=True)
+        # TRIAL-TSMOM-XA seeding — ATTENDED, env-gated, same pattern. Set
+        # AEGIS_SEED_TSMOM_XA=1 on Railway for ONE boot to seed the overlay +
+        # 60/40 control pair at today's prices (idempotent per lane), confirm
+        # via /api/pi/registry + track-record, then unset the flag. Seed only
+        # AFTER the 36c8ece re-book fix is verified live.
+        if os.environ.get("AEGIS_SEED_TSMOM_XA") == "1":
+            try:
+                from backend.services.portfolio_intelligence.tsmom_lane import (
+                    seed_tsmom_lanes,
+                )
+                res = await asyncio.to_thread(seed_tsmom_lanes)
+                logger.warning("TSMOM-XA SEEDING (AEGIS_SEED_TSMOM_XA=1): %s", res)
+            except Exception as e:
+                logger.error("TSMOM-XA seeding failed: %s", e, exc_info=True)
         # 2026-07-26 RE-BOOK DEFECT reconstruction — ATTENDED, env-gated, one
         # boot, idempotent (audit-marker). Archives paper_nav, corrects the
         # NAV chain by per-boundary factors, rescales open books so future MTM
@@ -533,10 +547,15 @@ async def health_full():
             BOOK_LANES,
             CONSERVATIVE_ATR_LANES,
             REFERENCE_LANES,
+            SMQ_LANES,
+            TSMOM_LANES,
         )
         # Book lanes (P1 #6) appear once seeded: the FROM is paper_portfolios, so
         # an unseeded book lane has no row and is simply absent — no special-case.
-        lane_ids = (*REFERENCE_LANES, *BOOK_LANES, *CONSERVATIVE_ATR_LANES)
+        # SMQ + TSMOM added 2026-07-26 (finding (a): SMQ was marked-to-market
+        # yet invisible here — the hardcoded-lane-list bug class again).
+        lane_ids = (*REFERENCE_LANES, *BOOK_LANES, *CONSERVATIVE_ATR_LANES,
+                    *SMQ_LANES, *TSMOM_LANES)
         placeholders = ",".join("?" for _ in lane_ids)
         conn = get_connection()
         try:

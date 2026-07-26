@@ -554,11 +554,17 @@ def _apply_rebalance_positions(
     notional: float,
     total_cost: float,
     timestamp: str,
+    allow_negative: bool = False,
 ) -> None:
     """Re-book the lane at the target weights: close all open positions and
     open the target book at current prices (CASH at 1.0). Net notional after
     transaction costs. This is what makes a rebalance event REAL — before
     this existed, events were recorded but the book never traded.
+
+    allow_negative=True books signed weights (short legs as negative shares,
+    negative CASH as a margin balance) — used ONLY by the TSMOM-XA lane pair
+    under its declared paper-only never-shorts exemption (TRIAL-TSMOM-XA).
+    Default False: long-only behavior, byte-identical to before.
     """
     from backend.db import _write_lock
 
@@ -570,7 +576,7 @@ def _apply_rebalance_positions(
             (timestamp, lane_id),
         )
         for ticker, weight in target_weights.items():
-            if weight <= 0:
+            if (abs(weight) < 1e-9) if allow_negative else (weight <= 0):
                 continue
             if ticker == CASH_TICKER:
                 px = 1.0
@@ -783,6 +789,44 @@ def _register_lane_trial(lane_id: str, config_version: str, db_path=None) -> Non
                 "params_frozen": "atr_stop_multiple/vol_target at config defaults (no tuning)",
                 "crash_event_override": "SPY drawdown >=20% defers decisions until >=6mo past trough",
             },
+        },
+        "tsmom-overlay": {
+            "hypothesis": "The module-confirmed INSTR-TSMOM-XA overlay (50% SPY "
+                          "+ 50% cross-asset 12-1 TSMOM sleeve, vol-sized, "
+                          "monthly) delivers SHALLOWER drawdowns than a 60/40 "
+                          "SPY/TLT control on forward data at a bounded return "
+                          "cost — Goal-B defensive diversifier, NOT beat-SPY. "
+                          "Prior: confirm PASS both held-out crises (2020 +9.2%, "
+                          "2022 flat; overlay maxDD -18.8% vs SPY -33.7%) with "
+                          "real disclosed return drag (t -1.86 vs SPY)",
+            "purpose": "tsmom-xa-forward-trial",
+            "canonical_doc": "docs/TRIALS/TRIAL-TSMOM-XA.md",
+            "pre_registered": "2026-07-26",
+            "decision_rule": {
+                "trial": "TRIAL-TSMOM-XA",
+                "primary_metric": "overlay maxDD vs control maxDD (must be "
+                                  "shallower by >=3pp)",
+                "co_primary": "overlay net Sharpe within -0.15 of control",
+                "min_window_months": 24,
+                "crisis_clause": "in-window SPY maxDD <15% -> primary "
+                                 "unresolvable, defer 12mo (one deferral max)",
+                "reject_threshold": "Sharpe trails control by >=0.25 OR (SPY "
+                                    "maxDD >=15% AND overlay DD not shallower)",
+                "params_frozen": "tsmom_xa_lanes.yaml (part of the config hash)",
+                "never_shorts_exemption": "paper sleeve only, Murat-authorized "
+                                          "2026-07-26",
+                "crash_event_override": "SPY drawdown >=20% defers decisions "
+                                        "until >=6mo past trough",
+            },
+        },
+        "tsmom-6040-control": {
+            "hypothesis": "Control arm for TRIAL-TSMOM-XA: frozen 60/40 SPY/TLT "
+                          "at the same monthly cadence, costs and inception — "
+                          "the pairwise benchmark the overlay's defensive claim "
+                          "is judged against",
+            "purpose": "tsmom-xa-control",
+            "canonical_doc": "docs/TRIALS/TRIAL-TSMOM-XA.md",
+            "pre_registered": "2026-07-26",
         },
         "smallmid-quality": {
             "hypothesis": "The BRAIN-007 composite book (top-30 by mean winsorized "

@@ -1277,3 +1277,22 @@ def load_smallmid_quality_lanes() -> dict:
 
 
 smallmid_quality_lanes: dict = load_smallmid_quality_lanes()
+
+
+def load_tsmom_xa_lanes() -> dict:
+    """Load the TSMOM-XA lane pair (TRIAL-TSMOM-XA) from a SEPARATE YAML —
+    same load-bearing isolation reasoning as the book/ATR/SMQ lanes: the
+    frozen signal params ARE the strategy, so the file carries its OWN hash
+    and any change is a stamped config-version boundary, never a silent edit."""
+    yaml_path = BACKEND_DIR / "data" / "tsmom_xa_lanes.yaml"
+    if not yaml_path.exists():
+        return {}
+    try:
+        import yaml
+        with open(yaml_path, "r", encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+    except ImportError:
+        raise ImportError("PyYAML required for TSMOM-XA config: pip install pyyaml")
+
+
+tsmom_xa_lanes: dict = load_tsmom_xa_lanes()
