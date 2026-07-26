@@ -82,6 +82,19 @@ SignalDoc (calibration benchmark). Newly queued: INSTR-ANOMALY-TIME
 (rdq-timing upgrade for the gp-small survivor — TOP priority),
 INSTR-CZ-CALIB, INSTR-HARNESS-VALID, Chen-Velikov cost-model port.**
 
+**2026-07-26 PM (panel round 7, `AI_PANEL_2026-07-26.md`):
+INSTR-ANOMALY-TIME executed same day — PASS + UPGRADE, the factory's first
+UPGRADE-class verdict (#153). EAD/rdq availability ADOPTED for the module
+fundamentals stack: confirm t 0.89→1.24, +24.1→+33.5 bps/mo; disclosed
+decomposition = book +2.7 bps/mo (weak) + benchmark-composition +6.8.
+Adoption rests on PIT-correctness + costless weak-positive, not the
+headline. Round-7 reviewer hypotheses: idio-skew and CF-volatility =
+closed-family re-litigations (refused with receipts); inventory-EAD retry
+now admissible; Chen-Velikov cost model endorsed (queued build). prior_check
+hardened (word-split + stems) after a whole-phrase near-miss. Remaining
+queue order: Build 3 tgt rebuild → INSTR-CZ-CALIB / INSTR-HARNESS-VALID →
+batch 10 → TSMOM lane seed (attended).**
+
 From the 5-AI panel adjudication (`docs/research/AI_PANEL_2026-07-24.md`):
 four models independently converged on the chunk-5 allocation layer. Every
 adopted claim became an instrument; nothing already adjudicated was reopened
