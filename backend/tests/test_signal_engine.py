@@ -950,3 +950,43 @@ class TestTrendsFearGreedSignal:
         result = get_market_signal(trends_fear_greed=0.1)
         reasons_text = " ".join(result["reasons"])
         assert "trend" not in reasons_text.lower()
+
+
+class TestNaNInputSanitization:
+    """2026-07-26 screener outage regression: a NaN numeric input passed every
+    `is not None` guard, propagated through np.clip, and detonated at
+    int(confidence) — every screener ticker was skipped (0 rows live). NaN
+    must be treated exactly like a missing input, never crash, and the
+    result must be a valid signal with an int confidence."""
+
+    def _assert_valid(self, result):
+        assert result["action"] in {"Strong Buy", "Buy", "Hold", "Sell", "Strong Sell"}
+        assert isinstance(result["confidence"], int)
+        assert 0 <= result["confidence"] <= 100
+        assert result["composite_score"] == result["composite_score"]  # not NaN
+
+    def test_nan_sector_momentum(self):
+        market = get_market_signal()
+        self._assert_valid(get_stock_signal(market, sector_momentum=float("nan")))
+
+    def test_nan_everything(self):
+        market = get_market_signal()
+        nan = float("nan")
+        result = get_stock_signal(
+            market, beta=nan, analyst_target=nan, current_price=nan,
+            sector_momentum=nan, pe_ratio=nan, forward_pe=nan, stock_vol=nan,
+            drawdown_from_peak=nan, stock_momentum_1m=nan,
+            stock_momentum_3m=nan, options_signal_score=nan,
+            earnings_signal_score=nan, insider_signal_score=nan,
+            ta_signal_score=nan,
+        )
+        self._assert_valid(result)
+
+    def test_nan_matches_missing(self):
+        """A NaN input must produce the same signal as omitting the input."""
+        market = get_market_signal()
+        with_nan = get_stock_signal(market, stock_momentum_3m=float("nan"),
+                                    pe_ratio=float("nan"))
+        without = get_stock_signal(market)
+        assert with_nan["composite_score"] == without["composite_score"]
+        assert with_nan["action"] == without["action"]

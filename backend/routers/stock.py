@@ -109,7 +109,9 @@ def _screener() -> dict:
                 return None
 
             stock_sector = r.get("sector", "Unknown")
-            sec_mom = sector_momentum.get(stock_sector, 0.0)
+            # `or 0.0`: a failed sector fetch stores None, and .get's default
+            # only covers a MISSING key — None here reaches signal arithmetic.
+            sec_mom = sector_momentum.get(stock_sector, 0.0) or 0.0
 
             fwd_pe = None
             key_stats = r.get("key_stats")
@@ -403,9 +405,15 @@ def _compute_sector_momentum() -> dict:
         try:
             hist = yf.Ticker(etf_ticker).history(period="6mo")
             if hist is not None and len(hist) >= 63:
-                current = float(hist["Close"].iloc[-1])
-                past = float(hist["Close"].iloc[-63])
-                return sector_name, (current / past - 1) * 100
+                # dropna: yfinance can emit a NaN final row (partial session /
+                # rate-limited response); a NaN here poisoned every stock's
+                # composite downstream (2026-07-26 screener outage).
+                close = hist["Close"].dropna()
+                if len(close) >= 63:
+                    current = float(close.iloc[-1])
+                    past = float(close.iloc[-63])
+                    if current > 0 and past > 0:
+                        return sector_name, (current / past - 1) * 100
         except (KeyError, IndexError, ValueError, TypeError) as e:
             logger.debug("sector momentum skip %s: %s", sector_name, e)
         return sector_name, None

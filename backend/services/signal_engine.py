@@ -20,6 +20,7 @@ Usage:
 """
 
 import logging
+import math
 from typing import Optional
 
 import numpy as np
@@ -530,6 +531,46 @@ def get_stock_signal(
     Returns:
         Dict with action, confidence, color, reasons
     """
+    # NaN sanitization (2026-07-26): a NaN input (e.g. a sector-ETF fetch whose
+    # last Close row is NaN) passes every `is not None` guard, propagates
+    # through np.clip, and detonates at int(confidence) — this killed the
+    # entire screener in prod (0 of ~80 rows, every ticker "cannot convert
+    # float NaN to integer"). NaN means "value unavailable" → treat exactly
+    # like None (optional inputs) or the neutral default (required inputs),
+    # and NAME the offending fields in the log so the upstream is findable.
+    def _nn(x):
+        return None if (isinstance(x, float) and math.isnan(x)) else x
+
+    _nan_fields = [k for k, v in {
+        "beta": beta, "analyst_target": analyst_target,
+        "current_price": current_price, "sector_momentum": sector_momentum,
+        "pe_ratio": pe_ratio, "forward_pe": forward_pe,
+        "stock_vol": stock_vol, "drawdown_from_peak": drawdown_from_peak,
+        "stock_momentum_1m": stock_momentum_1m,
+        "stock_momentum_3m": stock_momentum_3m,
+        "options_signal_score": options_signal_score,
+        "earnings_signal_score": earnings_signal_score,
+        "insider_signal_score": insider_signal_score,
+        "ta_signal_score": ta_signal_score,
+    }.items() if isinstance(v, float) and math.isnan(v)]
+    if _nan_fields:
+        logger.warning("get_stock_signal: NaN inputs sanitized to missing: %s",
+                       _nan_fields)
+        beta = _nn(beta) if _nn(beta) is not None else 1.0
+        current_price = _nn(current_price) if _nn(current_price) is not None else 0.0
+        sector_momentum = _nn(sector_momentum) if _nn(sector_momentum) is not None else 0.0
+        analyst_target = _nn(analyst_target)
+        pe_ratio = _nn(pe_ratio)
+        forward_pe = _nn(forward_pe)
+        stock_vol = _nn(stock_vol)
+        drawdown_from_peak = _nn(drawdown_from_peak)
+        stock_momentum_1m = _nn(stock_momentum_1m)
+        stock_momentum_3m = _nn(stock_momentum_3m)
+        options_signal_score = _nn(options_signal_score)
+        earnings_signal_score = _nn(earnings_signal_score)
+        insider_signal_score = _nn(insider_signal_score)
+        ta_signal_score = _nn(ta_signal_score)
+
     _sw = config.get("stock_signal_weights", {})
     analyst_w = _sw.get("analyst_target", 0.12)
     sector_w = _sw.get("sector_momentum", 0.012)
