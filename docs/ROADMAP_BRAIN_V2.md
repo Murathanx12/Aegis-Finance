@@ -129,6 +129,17 @@ INSTR-COST-REMEASURE-REJECTS admissible (one deflated shot, AND-rule
 intact; queued for decision). Harness gains per-name cost_frame, flat path
 byte-identical (regression-guarded).**
 
+**2026-07-26 night2 (round 10, `AI_PANEL_2026-07-26D.md`):
+INSTR-COST-REMEASURE-REJECTS executed — **COHORT EMPTY** (frozen rule
+committed pre-application; best gross among rank-real rejects 1.48 < 1.5
+bar; gross-passed-net-failed set literally empty across 155). Paper
+finding: largemid rejections were ALL informational — costs never the
+sole executioner; shelf permanently closed, no further cost appeals.
+GPT belief-engine/state-estimation ADOPTED as REGIME-ANALOG design spec
+(analog retrieval + belief states w/ confidence trajectories; LLM
+narrates, deterministic engine allocates). Next build: JM2 +
+REGIME-ANALOG → batch 10 (8-K) → ceiling ~196 → freeze → paper.**
+
 From the 5-AI panel adjudication (`docs/research/AI_PANEL_2026-07-24.md`):
 four models independently converged on the chunk-5 allocation layer. Every
 adopted claim became an instrument; nothing already adjudicated was reopened
