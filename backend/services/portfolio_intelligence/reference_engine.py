@@ -891,9 +891,21 @@ def mark_lane_to_market(
 
         nav_value = mark_to_market(shares, marks, cash=0.0)
 
+        # Stamp the LANE'S OWN config_version, not the global reference-yaml
+        # hash: book/ATR/SMQ lanes have their own segment identity, and
+        # stamping them with the reference hash (the pre-2026-07-26 behavior)
+        # made every non-reference lane's NAV rows claim the wrong segment.
+        # Reference lanes' stored version IS the reference hash → unchanged.
+        ver_row = conn.execute(
+            "SELECT config_version FROM paper_portfolios WHERE id = ?",
+            (lane_id,),
+        ).fetchone()
+        lane_version = (ver_row["config_version"] if ver_row and
+                        ver_row["config_version"] else get_config_hash())
+
         insert_nav(
             conn, lane_id, as_of_date.isoformat(), float(nav_value),
-            get_config_hash(), datetime.now().isoformat(),
+            lane_version, datetime.now().isoformat(),
         )
         return float(nav_value)
     finally:
