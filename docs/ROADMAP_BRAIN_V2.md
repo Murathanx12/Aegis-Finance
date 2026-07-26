@@ -119,6 +119,16 @@ historical news backtests deliberately absent (forward-only); batch-10
 stub added: 8-K event-flow family (EDGAR item codes = PIT-safe structured
 news — the honest route to the day-by-day-news thesis).**
 
+**2026-07-26 late (round 9, `AI_PANEL_2026-07-26C.md`): INSTR-COST-MODEL
+executed — KO invariance spreads (C-S/Roll infeasible on our pull; formula
+verified from ECTA 2016 PDF). Gates pass; **BRAIN-008 AFFIRMED +
+strengthened** (confirm t 0.89→1.11 base / 1.45 EAD under half-spread
+primary; holds under stress). Flat 50bps over-penalized the small book;
+flat 25bps over-penalized largemid rejects (~3-4 bps realistic) →
+INSTR-COST-REMEASURE-REJECTS admissible (one deflated shot, AND-rule
+intact; queued for decision). Harness gains per-name cost_frame, flat path
+byte-identical (regression-guarded).**
+
 From the 5-AI panel adjudication (`docs/research/AI_PANEL_2026-07-24.md`):
 four models independently converged on the chunk-5 allocation layer. Every
 adopted claim became an instrument; nothing already adjudicated was reopened
