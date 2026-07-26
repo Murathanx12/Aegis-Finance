@@ -342,6 +342,22 @@ async def lifespan(app: FastAPI):
                 logger.warning("SMQ SEEDING (AEGIS_SEED_SMALLMID_QUALITY=1): %s", res)
             except Exception as e:
                 logger.error("Smallmid-quality seeding failed: %s", e, exc_info=True)
+        # 2026-07-26 RE-BOOK DEFECT reconstruction — ATTENDED, env-gated, one
+        # boot, idempotent (audit-marker). Archives paper_nav, corrects the
+        # NAV chain by per-boundary factors, rescales open books so future MTM
+        # continues the corrected chain. Set AEGIS_RECONSTRUCT_NAV=1 for ONE
+        # boot AFTER the 36c8ece fix is verified live, confirm via
+        # /api/pi/track-record (since-inception numbers change), then unset.
+        if os.environ.get("AEGIS_RECONSTRUCT_NAV") == "1":
+            try:
+                from backend.services.portfolio_intelligence.nav_reconstruction import (
+                    reconstruct_nav_history,
+                )
+                res = await asyncio.to_thread(reconstruct_nav_history)
+                logger.warning("NAV RECONSTRUCTION (AEGIS_RECONSTRUCT_NAV=1): status=%s",
+                               res.get("status"))
+            except Exception as e:
+                logger.error("NAV reconstruction failed: %s", e, exc_info=True)
         # Alpaca paper mirror seeding — ATTENDED, env-gated, same pattern.
         # Needs ALPACA_API_KEY_ID + ALPACA_API_SECRET_KEY set on Railway.
         # Set AEGIS_SEED_ALPACA_MIRROR=1 for ONE boot to replicate the mirror
