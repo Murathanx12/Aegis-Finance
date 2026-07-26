@@ -109,6 +109,16 @@ Gemini's ordering answered: calibration pair BEFORE cost model. Queue:
 CZ-CALIB + HARNESS-VALID → Chen-Velikov → JM2 + REGIME-ANALOG → batch 10
 (if ceiling-sensible) → ceiling ~196 → freeze → paper.**
 
+**2026-07-26 night: calibration pair EXECUTED. HARNESS-VALID: 3/3 proxy
+bars met vs French (0.927/0.778/0.645) — plumbing validated, Chen-Velikov
+unblocked. CZ-CALIB: rank corr(|OSAP t|,|our t_ic|) = −0.544 (p 0.055) —
+published-t is a CONTRARIAN indicator of current-window strength (sign
+agreement 0.923 + harness pass = decay, not defect; median level ratio
+0.378). PIT posture confirmed for Murat: forecasts/events all as-of-dated;
+historical news backtests deliberately absent (forward-only); batch-10
+stub added: 8-K event-flow family (EDGAR item codes = PIT-safe structured
+news — the honest route to the day-by-day-news thesis).**
+
 From the 5-AI panel adjudication (`docs/research/AI_PANEL_2026-07-24.md`):
 four models independently converged on the chunk-5 allocation layer. Every
 adopted claim became an instrument; nothing already adjudicated was reopened
