@@ -461,5 +461,34 @@ single-trigger regime rotation (state machine + one macro gate) is CLOSED
 with two receipts; successors need a different information class and
 inherit both.
 
+## 19. LLM/agent trading alpha is comprehensively dead — external receipts (family stays closed)
+
+Not our run — banked external evidence, 2026-07-27 sweep (adjudicated
+AI_PANEL_2026-07-27F), closing a family we would otherwise be lobbied to
+revisit. INSTR-VOC already found the complexity class adds nothing on our
+data; the outside record now says the same thing with receipts:
+
+1. **The flagship paper was withdrawn.** Kim, Muhn & Nikolaev (arXiv
+   2407.17866, "GPT-4 beats analysts at earnings direction") — withdrawn
+   2025-02-20 after a co-author's own replication of the paper's analyses
+   found inconsistencies. Internal replication failure within ~7 months.
+2. **Independent multi-system evaluation kills the agent literature.**
+   FINSABER (arXiv 2505.07078, KDD 2026): FinMem / FinAgent / FINCON /
+   Lopez-Lira-style prompting alpha disappears over 2004-2024 across 100+
+   symbols after commissions; buy-and-hold beats the agents on most headline
+   names. The favourable literature rests on a ~6-month 2022-23 window and
+   hand-picked large caps. Failure is regime-asymmetric (risk-on in bulls,
+   risk-off in bears) — not fixable by framework complexity.
+3. **The one honest replication self-describes as infeasible.** Glasserman &
+   Lin (arXiv 2309.17322): the GPT headline-sentiment long-short is
+   profitable only gross, daily-rebalanced, short-heavy — "not a feasible
+   strategy" per the authors. Bonus finding: anonymizing tickers IMPROVED
+   returns (the model's company knowledge is a negative distraction), and
+   the edge concentrates in LARGE caps.
+
+Standing rule reaffirmed: the LLM narrates, the deterministic engine
+computes, nothing LLM-derived allocates. Any future LLM-signal proposal must
+rebut ALL THREE receipts in its registration, not just cite a new paper.
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*

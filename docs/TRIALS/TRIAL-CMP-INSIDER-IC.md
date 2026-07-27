@@ -110,6 +110,21 @@ Quarterly, when SEC publishes a new bulk quarter: brain module re-runs
 `export_routine_history`; a human reviews and commits the refreshed artifact
 here. The artifact refresh updates COVERAGE only — the rule itself is frozen.
 
+## Annotation 2026-07-27 — the 2023 Rule 10b5-1 structural break (documented hazard, no spec change)
+
+The 2022 10b5-1 amendment (effective early 2023) destroyed the predictive
+content of 10b5-1 insider SALES (short-window plan trading collapsed 31.1% →
+1.7%; post-amendment sales are followed by flat-to-positive returns) and
+closed the gift-timing anomaly. Our signal is opportunistic open-market BUYS
+(code P), which the amendment does not address — the trial is NOT invalidated
+and nothing in the frozen rule changes. Banked hazard: the panel straddles
+the break, and pooling pre/post-2023 insider data is now known-unsafe in
+general. **Standing audit item for the quarterly artifact refresh (~Oct
+2026): check whether the CMP routine/opportunistic split and the buy base
+rate shift across 2023, and report the IC with a pre/post-2023 split as a
+REPORTED-never-deciding cut.** (Source: 2026-07-27 sweep §5.3, adjudicated
+AI_PANEL_2026-07-27F #8.)
+
 ## Status
 
 - ✅ Artifact built + committed (panel_end 2026-03-31; 25,020 insiders; 3,648
