@@ -490,5 +490,53 @@ Standing rule reaffirmed: the LLM narrates, the deterministic engine
 computes, nothing LLM-derived allocates. Any future LLM-signal proposal must
 rebut ALL THREE receipts in its registration, not just cite a new paper.
 
+## 20. Distress-8-K "drift" is selection, not information (TRIAL-EVENT-8K-FILTER)
+
+Batch 10 ran the Lerman-Livnat reframe: names filing a distress 8-K (items
+1.03 bankruptcy, 2.04 obligation acceleration, 5.01 control change) should
+earn significantly negative forward returns, usable as a long-only EXCLUSION
+screen. Acquisition was clean — 4,860 EDGAR daily indexes 2004-2024, zero
+failed days, 1,530,116 8-K originals, 3,949 flagged events inside explore.
+
+The headline passed its pre-registered bar and is still worthless:
+
+| arm | 3m market-adjusted | t | n |
+|---|---|---|---|
+| B — flagged (the claim) | -5.95% | -7.06 | 1,264 |
+| A — same names, dates -12mo (expected ~0) | **-6.79%** | **-11.33** | 2,528 |
+
+**The control beat the treatment.** The pre-registered pseudo-event arm, whose
+declared job was pipeline validation, produced a larger negative effect than
+the hypothesis it was there to null out.
+
+The attrition audit says why, and it is not subtle. Of the same 3,949 events,
+Arm B keeps 1,264 (32%) while Arm A keeps 2,528 (64%); the gap is almost
+entirely one filter — **2,574 events (65%) are dropped from Arm B because the
+name is no longer in the liquid universe** (dollar-volume rank <=3000) at the
+filing month, versus 1,408 (36%) a year earlier. Segment eligibility is
+evaluated at formation, so by the time a firm files for bankruptcy it has
+usually already fallen out. Arm B silently excludes the worst distress cases;
+Arm A retains them. The arms measure different cohorts, and the measurement
+conditions on survival-to-event.
+
+The calendar-time arm agrees from the other direction: the flagged cohort runs
+-79.7 bps/mo (t -1.50, below the bar) against the pseudo-cohort's -229.4
+bps/mo (t -11.10).
+
+**What this means generally:** a naive event study on distress items recovers
+firm-level distress persistence plus universe-eligibility selection, and will
+report ~-6% per quarter with a t-stat near -7 while measuring nothing about
+the filing. These firms were doing worse a year BEFORE the event. Any
+event-study design on a distressed cohort must fix eligibility at a pre-event
+date and must carry a same-firm displaced-time control -- without the control
+this would have graduated to confirm as a clean pass.
+
+Not filed as a family closure: the frozen kill clause requires a non-negative
+cohort, which is not what happened. The family is UNADJUDICATED and any
+successor needs a new registration with a valid control. The confirm window
+(2019-2024) was NOT opened -- spending the held-out window on an
+uninterpretable explore result is exactly what the wall exists to prevent.
+
+---
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
