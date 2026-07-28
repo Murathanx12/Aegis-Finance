@@ -106,7 +106,18 @@ zero bars" pattern is worth a targeted audit of the yfinance paths, since a bare
 - `output_type=4` on `fred/series/observations` returns each observation **as
   first published**. The default (`output_type=1`) returns **fully revised** data.
 - `pandas-datareader`'s FRED reader **cannot do PIT at all** — it scrapes
-  `fredgraph.csv`, no realtime params, silently revised.
+  `fredgraph.csv`, no realtime params, silently revised. **Checked: we do not use
+  it for FRED.** No `get_data_fred` anywhere in the backtest path.
+
+**But the grep found a different, more relevant exposure.**
+`backend/services/factor_model.py:57-58` uses `pandas_datareader` against the
+**`famafrench`** source — i.e. it re-downloads whatever vintage French is
+currently publishing, on every call. Given §3 (92.8% of HML months change across
+one vintage step), this means **the same portfolio analysed twice, months apart,
+gets different factor alphas with no code change and no error.** For a live
+descriptive attribution that is tolerable; it is not reproducible, and any figure
+lifted from this surface into the paper must be pinned to a stored vintage first.
+This is the FF-vintage problem showing up in our own code, not the FRED one.
 - **NFCI is not a market series.** The Chicago Fed re-estimates and **rewrites it
   in full, weekly.** Using today's NFCI in a 2008 backtest is severe lookahead.
   NFCI is in our 9-factor risk score (`config.py:166`).
