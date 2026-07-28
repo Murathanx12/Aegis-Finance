@@ -140,6 +140,48 @@ GPT belief-engine/state-estimation ADOPTED as REGIME-ANALOG design spec
 narrates, deterministic engine allocates). Next build: JM2 +
 REGIME-ANALOG → batch 10 (8-K) → ceiling ~196 → freeze → paper.**
 
+**2026-07-26/27 (round 11 + round-12 open — detail in module STATUS.md):
+INSTR-REGIME-JM2 REJECT at confirm** (inflation gate made 2022 WORSE than
+JM1, −23.9% vs −21.6%; single-trigger regime rotation closed with two
+receipts, NEG_RESULTS §18); **REGIME-ANALOG phase 1 LIVE** (283 BeliefStates,
+descriptive). External sweep (42 sources) banked + adjudicated
+(`RESEARCH_SWEEP_2026-07-27.md` → `AI_PANEL_2026-07-27F.md`); **batch 10
+registered REFRAMED** (TRIAL-EVENT-8K-FILTER distress exclusion screen +
+TRIAL-TEXT-LAZY, cumulative 158); paper repositioned (McLean-Pontiff Fig 1.B
+= prior art for −0.544 → lead becomes method + empty cost-killed cohort);
+LLM/agent-alpha closed on external receipts (NEG_RESULTS §19). TSMOM-XA lane
+pair SEEDED live 07-27 (registry #17/#18).
+
+**2026-07-28 (round 12 RUN, mid-round): TRIAL-EVENT-8K-FILTER = NO
+GRADUATION — killed by its own control** (Arm B −5.95% t −7.06 cleared the
+bar; the −12mo pseudo-event control returned −6.79% t −11.33; attrition
+audit pinned it to eligibility-at-formation selection — distressed names
+exit the liquid universe BEFORE they file; confirm never opened; family
+UNADJUDICATED, NEG_RESULTS §20). TEXT-LAZY 10-K pull in flight (coverage
+shrink to 10-K-only declared pre-pull; CIK bridge = CRSP names ×
+cik-lookup-data.txt, 88.5% coverage). **Two external reviews adjudicated
+(`AI_PANEL_2026-07-28.md`):** matched-non-filer control ADOPTED as 8-K
+successor requirement; CIK-bridge coverage audit ADOPTED (reported-never-
+deciding, runs BEFORE TEXT-LAZY interpretation); freeze at ~158 on the
+EXISTING ceiling measurement (no re-registration below ~196); evidence-weight
+schema (forward 10 / confirm 8 / explore 3 / literature 2 / LLM 0.5) ADOPTED
+into REGIME-ANALOG phase-2 spec; "pivot to dynamic allocation" mission
+rewrite DECLINED (allocation program already exists: JM1/JM2 tested-and-
+rejected, TSMOM-XA confirmed+live — untested ≠ tested-and-rejected); event-
+sequence mining = design-note only; causal-graph brain refused at corpus
+size. External-research intake protocol frozen
+(`EXTERNAL_RESEARCH_INTAKE.md`).
+
+## Post-freeze program (sequenced 2026-07-28)
+
+| Chunk | What | Owner / gate |
+|---|---|---|
+| R12-A (in flight) | TEXT-LAZY one-shot explore (**bridge audit FIRST**, then interpret) → freeze candidate universe at the converged count on the existing ceiling | Opus run session |
+| R12-B | Paper draft. Lead = factory method + empty cost-killed cohort. Exhibits: −0.544 as McLean-Pontiff Fig 1.B replication, 8-K control-that-beat-the-treatment, KO cost model, CZ sign-agreement. Robustness arm: SignalDoc-own-construction re-run of the 13 matched signals (small registered instrument). Position vs Chen-Welch + Reviving Anomalies (complexity-class contrast). Venue: FAJ / Critical Finance Review | Opus session(s) |
+| R13 | Allocation program phase 2 — REGIME-ANALOG phase 2 (Bayesian belief updating + the evidence-weight schema; still descriptive, never arms). Admissible-not-queued (each = NEW deflated registration): 8-K matched-control successor; cross-sectional SELL-signal family (10b5-1 2023 break binds insider-sales designs); specific timed-allocation hypotheses (post-hoc-repair provenance rule binds) | post-freeze |
+| Product (Goal B) | Copilot chunks 6–7 unchanged; retail-mission finding from the 07-27 sweep binds Goal B framing (defensive/protection value, not beat-SPY promises) | parallel, aegis-finance |
+| Forward clocks | Nothing new — TSMOM-XA pair (24mo), CMP-insider (2027-07-21), SMQ (2028-07-22), 5 IC clocks accruing | calendar |
+
 From the 5-AI panel adjudication (`docs/research/AI_PANEL_2026-07-24.md`):
 four models independently converged on the chunk-5 allocation layer. Every
 adopted claim became an instrument; nothing already adjudicated was reopened
