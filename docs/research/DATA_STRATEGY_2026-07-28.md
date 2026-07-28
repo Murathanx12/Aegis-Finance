@@ -167,6 +167,41 @@ unknowable in real time. Anything built on COT needs that hard-coded.
 the SEC proposed reverting to quarterly entirely) or Form SHO (exempted until
 2028-01-02 — there is nothing to collect).
 
+## 6b. Measured limits (audits run, not vendor copy taken on trust)
+
+- **Bigdata.com / RavenPack has no individual archive tier.** Public news is a
+  **5-year rolling window**; the metered model was confirmed empirically when the
+  connected account returned "You've used up your credits." It cannot serve a
+  2004-2024 study at any individual price.
+- **Massive** $29/mo reaches back to **2016**; **Benzinga** $99/mo reaches **2001**
+  but consumes the whole budget. Best depth-per-dollar is Massive, and it still
+  does not reach our explore window's start.
+- **SEC `company_tickers.json` is proven survivorship-filtered** — measured, not
+  inferred. This retroactively validates the name-link design choice in
+  `aegis_brain/events/name_link.py`, which rejected it on exactly this suspicion.
+- **EDGAR full-text search is empirically bounded at 2001** — consistent with the
+  TRIAL-TEXT-LAZY spec's refusal to use it (that refusal was made on the
+  100-result cap, and the date bound is a second independent reason).
+- **Polygon/Massive delisted coverage: 8 of 11** exchange-listed test names, and
+  **recycled tickers return the wrong entity** — the same defect class as the
+  yfinance BBBY/Overstock fabrication in §4.
+- **ALFRED per-series vintage floors cap genuine PIT macro backtests at ~2011.**
+
+## 6c. A methods lesson from the audit itself — worth more than the pricing
+
+The agent's first Polygon sweep returned **0 of 20** names and was **entirely
+false misses**: silent rate-limiting returning **HTTP 200 with an empty array**.
+Its FINRA start-date measurement was wrong the same way — a query on a non-settlement
+date returned empty and was read as "data absent."
+
+**An empty 200 is not evidence of absence.**
+
+This is our house failure mode in a new costume, and the agent connected it to the
+right receipt unprompted: it is the same mechanism that inflated **EODHD phase-1
+to 16/20 before phase-2 came back 14/20** (NEG_RESULTS §8). Any future data audit
+must pace its requests and assert against a **known-good control** before
+recording an absence. Add to the silent-fragility checklist.
+
 ## 7. Actions
 
 1. **No purchase.** Keep the $100.
