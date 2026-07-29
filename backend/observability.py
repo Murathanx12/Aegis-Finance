@@ -99,6 +99,57 @@ def record_fred_fetch(loaded: list[str], failed: list[str]) -> None:
         s["last_fetch_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+# ── EVENT-INTEL extraction counters ──────────────────────────────────────────
+# Per the 2026-07-29B acceptance spec: events/day, direction mix,
+# feed-unavailable rate, tier mix — surfaced on /api/health/full and /dev.
+
+_event_intel: dict = {
+    "events_extracted": 0,
+    "by_tier": {},        # {"HIGH": n, ...}
+    "by_direction": {},   # {"positive": n, ...}
+    "by_method": {},      # {"deterministic": n, "llm": n, "keyword": n}
+    "feed_calls": {},     # {feed: {"ok": n, "unavailable": n}}
+    "last_extraction_at": None,
+}
+
+
+def record_event_extraction(events: list[dict], feed_statuses: dict) -> None:
+    """Record one extraction pass: emitted events + per-feed availability."""
+    with _lock:
+        s = _event_intel
+        s["events_extracted"] += len(events)
+        for ev in events:
+            tier = (ev.get("extraction") or {}).get("tier", "?")
+            s["by_tier"][tier] = s["by_tier"].get(tier, 0) + 1
+            d = ev.get("direction", "?")
+            s["by_direction"][d] = s["by_direction"].get(d, 0) + 1
+            method = (ev.get("extraction") or {}).get("method", "?")
+            s["by_method"][method] = s["by_method"].get(method, 0) + 1
+        for feed, block in feed_statuses.items():
+            fc = s["feed_calls"].setdefault(feed, {"ok": 0, "unavailable": 0})
+            key = "ok" if block.get("status") == "ok" else "unavailable"
+            fc[key] += 1
+        s["last_extraction_at"] = datetime.now(timezone.utc).isoformat(
+            timespec="seconds")
+
+
+def event_intel_stats() -> dict:
+    """Snapshot of extraction outcomes with derived unavailable rates."""
+    with _lock:
+        s = {
+            "events_extracted": _event_intel["events_extracted"],
+            "by_tier": dict(_event_intel["by_tier"]),
+            "by_direction": dict(_event_intel["by_direction"]),
+            "by_method": dict(_event_intel["by_method"]),
+            "feed_calls": {k: dict(v) for k, v in _event_intel["feed_calls"].items()},
+            "last_extraction_at": _event_intel["last_extraction_at"],
+        }
+    for feed, fc in s["feed_calls"].items():
+        total = fc["ok"] + fc["unavailable"]
+        fc["unavailable_rate"] = round(fc["unavailable"] / total, 3) if total else None
+    return s
+
+
 def source_health() -> dict:
     """Snapshot of data-source outcomes with derived success rates."""
     with _lock:
@@ -124,4 +175,8 @@ def reset_for_tests() -> None:
         _sources["fred"].update({
             "fetches": 0, "series_loaded": [], "series_failed": [],
             "last_fetch_at": None,
+        })
+        _event_intel.update({
+            "events_extracted": 0, "by_tier": {}, "by_direction": {},
+            "by_method": {}, "feed_calls": {}, "last_extraction_at": None,
         })

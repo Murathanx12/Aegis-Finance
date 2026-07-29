@@ -153,6 +153,18 @@ permitted thing).
 
 ### Priority A — EVENT-INTEL acceptance spec (binding for the build session)
 
+> **BUILT 2026-07-29 (same-day sandbox session).** `backend/services/
+> event_intel.py` + `/api/event-intel` router + daily-brief events block +
+> stock-page/brief cards + /dev extraction stats. Every spec item below is
+> implemented; the LLM classifies into ENUMS only, so the playbook is
+> enforced by construction. Shakedown: 162 live events over 18 tickers,
+> 100% valid-structure (bar 90%), 0 forbidden-language leaks; EDGAR canary
+> correctly disclosed a locally-403ing feed as suspect. Also shipped: the
+> FF-vintage pin (hardening item below), the daily-brief geopolitical
+> key-mismatch fix (event_score/label had silently served None), and
+> edgar_events now honors SEC_USER_AGENT (the §5 one-UA convention).
+> Prod verification: see the deploy commit + session postmortem.
+
 Typed event: `{scope, event_type, direction, source, timestamp,
 extraction_tier}` (+ optional actor/action/duration-class/affected-industries;
 `scope` is the primary key).

@@ -1147,6 +1147,46 @@ config: dict = {
         },
         "divergence_threshold": 0.25,    # Correlation divergence alert threshold
     },
+
+    # ── EVENT-INTEL (descriptive news brain) ────────────────────────────
+    # Structured events over EXISTING feeds. Adopted 2026-07-29B under a
+    # binding acceptance spec (docs/research/ROADMAP_2026-07-29_POST_FREEZE.md):
+    # descriptive-only, no buy/sell language, failed feed = disclosed
+    # unavailable, direction always relative to the scope entity. The LLM
+    # classifies into ENUMS only — every rendered sentence is templated, so
+    # the no-advice playbook is enforced by construction.
+    "event_intel": {
+        "max_headlines_per_ticker": 8,   # LLM batch size; 500-token responses cap this
+        "max_tickers_per_brief": 10,
+        "news_window_days": 7,           # headlines older than this are not events
+        "edgar_days_back": 30,
+        "earnings_window_days": 30,      # past results + upcoming dates within this
+        "cache_ttl": 900,                # matches ttl_news
+        "canary_ticker": "AAPL",         # high-volume filer/newsmaker; empty canary
+        "canary_ttl": 3600,              #   = feed suspect, disclosed (never quiet zero)
+        # Deterministic direction keywords (fallback when LLM unavailable).
+        # Matched case-insensitively on headline text -> direction IMPLIED, tier LOW.
+        "positive_keywords": [
+            "beats", "beat estimates", "tops estimates", "raises guidance",
+            "raises outlook", "approval", "approves", "wins", "record revenue",
+            "record profit", "upgrade", "upgraded", "buyback", "dividend increase",
+            "exceeds expectations", "settles", "clears",
+        ],
+        "negative_keywords": [
+            "misses", "missed estimates", "cuts guidance", "lowers outlook",
+            "recall", "probe", "investigation", "lawsuit", "downgrade",
+            "downgraded", "layoffs", "bankruptcy", "default", "delisting",
+            "restatement", "resigns", "halts", "warns", "shortfall",
+        ],
+        # 8-K item codes with an EXPLICIT direction (the filing type itself
+        # carries it). Everything else in the taxonomy -> direction unknown.
+        "edgar_item_direction": {
+            "1.03": "negative",          # bankruptcy/receivership
+            "2.04": "negative",          # triggering events accelerating obligations
+            "3.01": "negative",          # delisting / listing-standard notice
+            "4.02": "negative",          # non-reliance on prior financials
+        },
+    },
 }
 
 

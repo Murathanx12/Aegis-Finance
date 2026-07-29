@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, Brain, ExternalLink, FlaskConical } from "lucide-react";
+import { AlertTriangle, Brain, CalendarClock, ExternalLink, FlaskConical } from "lucide-react";
 import Link from "next/link";
 import {
   getHealthFull, piGetRegistry, piGetTrackRecord,
@@ -180,6 +180,61 @@ export default function DevDashboard() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* EVENT-INTEL extraction stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <CalendarClock className="h-4 w-4" />
+            EVENT-INTEL extraction (since deploy)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!h?.event_intel || h.event_intel.error ? (
+            <p className="text-sm text-muted-foreground">
+              Extraction stats unavailable{h?.event_intel?.error ? ` (${h.event_intel.error})` : ""}.
+            </p>
+          ) : h.event_intel.events_extracted === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No extraction passes yet this deploy (surface is on-demand — zeros
+              mean uncalled, not necessarily healthy).
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">Events</p>
+                <p className="text-lg font-bold tabular-nums">{h.event_intel.events_extracted}</p>
+                <p className="text-xs text-muted-foreground">
+                  last: {h.event_intel.last_extraction_at?.slice(11, 19) ?? "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">Direction mix</p>
+                {Object.entries(h.event_intel.by_direction).map(([k, v]) => (
+                  <p key={k} className="text-xs tabular-nums">{k}: {v}</p>
+                ))}
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">Tier / method</p>
+                {Object.entries(h.event_intel.by_tier).map(([k, v]) => (
+                  <p key={k} className="text-xs tabular-nums">{k}: {v}</p>
+                ))}
+                {Object.entries(h.event_intel.by_method).map(([k, v]) => (
+                  <p key={k} className="text-xs tabular-nums text-muted-foreground">{k}: {v}</p>
+                ))}
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">Feed availability</p>
+                {Object.entries(h.event_intel.feed_calls).map(([k, v]) => (
+                  <p key={k} className={`text-xs tabular-nums ${v.unavailable ? "text-amber-400" : ""}`}>
+                    {k}: {v.ok} ok / {v.unavailable} unavail
+                  </p>
+                ))}
+              </div>
             </div>
           )}
         </CardContent>

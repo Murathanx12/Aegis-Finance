@@ -21,7 +21,7 @@ from backend.cache import cache_clear, set_cache_status, cache_ready, cache_stat
 from backend.config import config
 from backend.middleware import add_timing_middleware
 from backend.observability import install_log_buffer
-from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, markets, crypto, portfolio_intelligence
+from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence
 
 logging.basicConfig(
     level=logging.INFO,
@@ -448,6 +448,7 @@ app.include_router(analytics.router)
 app.include_router(copilot.router)
 app.include_router(bond.router)
 app.include_router(events.router)
+app.include_router(event_intel.router)
 app.include_router(markets.router)
 app.include_router(crypto.router)
 app.include_router(portfolio_intelligence.router)
@@ -481,6 +482,8 @@ async def root():
             "/api/portfolio/copula-risk",
             "/api/portfolio/commentary",
             "/api/news/market",
+            "/api/event-intel/{ticker}",
+            "/api/event-intel/stats",
             "/api/crash/prediction",
             "/api/options/{ticker}",
             "/api/options/vix-term",
@@ -605,6 +608,12 @@ async def health_full():
     except Exception as e:
         fmp = {"error": str(e)}
 
+    try:
+        from backend.observability import event_intel_stats
+        event_intel_health = event_intel_stats()
+    except Exception as e:
+        event_intel_health = {"error": str(e)}
+
     cs = cache_status()
     return {
         "status": "ok",
@@ -623,6 +632,7 @@ async def health_full():
         "lppls": lppls,
         "llm": llm,
         "fmp_budget": fmp,
+        "event_intel": event_intel_health,
         "data_sources": source_health(),
         "recent_warnings": recent_warnings(),
     }

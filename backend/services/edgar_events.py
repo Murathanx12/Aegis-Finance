@@ -42,6 +42,7 @@ Cache: per-ticker submissions live ~10 min; CIK lookup table lives 24h.
 from __future__ import annotations
 
 import logging
+import os
 import re
 import threading
 import time
@@ -54,9 +55,12 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-# SEC requires a non-bot User-Agent with contact info; this is a project
-# identifier rather than a personal email so it can be safely committed.
-_USER_AGENT = "AegisFinance Research aegis-finance@github.io"
+# SEC requires a non-bot User-Agent with contact info. Honor the same
+# SEC_USER_AGENT env the insider collector uses (the 2026-06-17 prod-403
+# lesson: one UA convention for ALL SEC calls); the committed project
+# identifier is only the fallback.
+_USER_AGENT = os.environ.get(
+    "SEC_USER_AGENT", "AegisFinance Research aegis-finance@github.io")
 _CIK_LOOKUP_URL = "https://www.sec.gov/files/company_tickers.json"
 _SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
 

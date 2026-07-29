@@ -52,6 +52,9 @@ export const queryKeys = {
   earnings: {
     ticker: (ticker: string) => ["earnings", "ticker", ticker] as const,
   },
+  events: {
+    ticker: (ticker: string) => ["events", "ticker", ticker] as const,
+  },
   correlation: {
     tailDependence: (tickers: string[]) => ["correlation", "tail-dep", ...tickers] as const,
   },

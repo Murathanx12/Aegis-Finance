@@ -16,6 +16,7 @@ import type { StockSignal } from "@/lib/api";
 import { ErrorCard } from "@/components/error-card";
 import { TwoSidedCard } from "@/components/stock/two-sided-card";
 import { FactorLensCard } from "@/components/stock/factor-lens-card";
+import { EventsCard } from "@/components/stock/events-card";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, ReferenceLine,
@@ -547,6 +548,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
 
       {/* Two-sided view: AI argues both sides of the computed signal */}
       {signalData && !signalData.error && <TwoSidedCard ticker={upperTicker} />}
+
+      {/* EVENT-INTEL: structured descriptive events (filings, earnings, news) */}
+      <EventsCard ticker={upperTicker} />
 
       {stockLoading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

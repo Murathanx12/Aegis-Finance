@@ -125,6 +125,49 @@ export function resolveTicker(q: string) {
   return fetchAPI<TickerResolveResponse>(`/api/stock/resolve?q=${encodeURIComponent(q)}`);
 }
 
+// EVENT-INTEL — structured descriptive events (no signals, no advice).
+// Direction is what the SOURCE stated/implied about the scope entity;
+// extraction tier is PARSE FIDELITY, never an outcome probability.
+export interface EventIntelEvent {
+  scope: string;
+  event_type: string;
+  direction: "positive" | "negative" | "neutral" | "unknown";
+  direction_basis: "EXPLICIT" | "IMPLIED" | "NEUTRAL" | "UNKNOWN";
+  direction_relative_to: string;
+  source: { feed: string; url: string | null; publisher: string | null };
+  timestamp: string | null;
+  title: string;
+  extraction: { tier: "HIGH" | "MEDIUM" | "LOW" | "FAILED"; method: string };
+  context: {
+    base_rate:
+      | { status: "none_measured" }
+      | { status: "measured"; stat: string; value: number; n: number; window: string };
+    materiality?: number;
+    note?: string;
+  };
+}
+export interface EventIntelResponse {
+  ticker: string;
+  events: EventIntelEvent[];
+  feeds: Record<string, { status: string; error?: string }>;
+  unavailable_feeds: string[];
+  generated_at: string;
+  disclaimer: string;
+}
+export function getTickerEvents(ticker: string) {
+  return fetchAPI<EventIntelResponse>(`/api/event-intel/${encodeURIComponent(ticker)}`);
+}
+export interface BriefEventRow {
+  scope: string;
+  event_type: string;
+  direction: string;
+  direction_basis: string;
+  title: string;
+  timestamp: string | null;
+  tier: string;
+  url: string | null;
+}
+
 // Daily brief — "what happened today and how it affects your stocks"
 export interface DailyBriefResponse {
   date: string;
@@ -137,6 +180,14 @@ export interface DailyBriefResponse {
     note: string | null;
   };
   regime: { regime: string | null; risk_score: number | null };
+  events: {
+    status: "ok" | "unavailable";
+    error?: string;
+    events: BriefEventRow[];
+    n_events: number;
+    n_directed: number;
+    unavailable: Record<string, string[]>;
+  } | null;
   your_tickers: {
     ticker: string;
     change_1d_pct: number | null;
@@ -3089,6 +3140,15 @@ export interface HealthFullResponse {
     calls_today: number;
     daily_cap: number;
     breaker_active: boolean;
+  };
+  event_intel?: {
+    events_extracted: number;
+    by_tier: Record<string, number>;
+    by_direction: Record<string, number>;
+    by_method: Record<string, number>;
+    feed_calls: Record<string, { ok: number; unavailable: number; unavailable_rate: number | null }>;
+    last_extraction_at: string | null;
+    error?: string;
   };
   recent_warnings: { ts: string; level: string; logger: string; message: string }[];
 }

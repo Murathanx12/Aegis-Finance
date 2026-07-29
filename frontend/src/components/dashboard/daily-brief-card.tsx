@@ -114,6 +114,45 @@ export function DailyBriefCard() {
           </div>
         )}
 
+        {/* Structured events (EVENT-INTEL) — descriptive log, never advice */}
+        {data.events && data.events.events.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Events on your tickers
+            </p>
+            {data.events.events.slice(0, 5).map((ev, i) => (
+              <p key={i} className="text-xs leading-snug">
+                <Link href={`/stock/${encodeURIComponent(ev.scope)}`} className="font-semibold hover:underline">
+                  {ev.scope}
+                </Link>{" "}
+                <span
+                  className={
+                    ev.direction === "positive"
+                      ? "text-emerald-400"
+                      : ev.direction === "negative"
+                        ? "text-red-400"
+                        : "text-muted-foreground"
+                  }
+                >
+                  [{ev.direction === "unknown" ? "unclear" : ev.direction}]
+                </span>{" "}
+                {ev.url ? (
+                  <a href={ev.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                    {ev.title}
+                  </a>
+                ) : (
+                  ev.title
+                )}
+              </p>
+            ))}
+            {Object.keys(data.events.unavailable).length > 0 && (
+              <p className="text-[11px] text-amber-500">
+                Some event feeds were unavailable — missing feeds are disclosed, never assumed quiet.
+              </p>
+            )}
+          </div>
+        )}
+
         {/* User tickers */}
         {data.your_tickers.length > 0 ? (
           <div className="flex flex-wrap gap-2">

@@ -23,6 +23,7 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 from backend.cache import cache_peek
 
@@ -82,11 +83,15 @@ def _geopolitical_block() -> dict:
     conflict = event_score = event_label = None
     gdelt = {}
 
+    # NB the producer's keys are event_score/interpretation — this block read
+    # .score/.label for weeks and silently served None (caught 2026-07-29:
+    # None is also the legitimate unavailable value, so nothing looked wrong).
     news, _age = cache_peek("news_market", 6 * 3600)
     if news:
         gdelt = news.get("gdelt") or {}
         event = news.get("event_score") or {}
-        event_score, event_label = event.get("score"), event.get("label")
+        event_score = event.get("event_score")
+        event_label = event.get("interpretation")
     else:
         try:
             from backend.services.news_intelligence import (
@@ -94,7 +99,8 @@ def _geopolitical_block() -> dict:
             )
             gdelt = fetch_gdelt_signals()
             event = compute_event_score(gdelt)
-            event_score, event_label = event.get("score"), event.get("label")
+            event_score = event.get("event_score")
+            event_label = event.get("interpretation")
         except Exception as e:
             logger.warning("daily brief GDELT read failed: %s", e)
 
@@ -128,6 +134,36 @@ def _geopolitical_block() -> dict:
     }
 
 
+def _events_block(tickers: list[str]) -> dict:
+    """EVENT-INTEL digest — additive, never blocks the brief.
+
+    'No events' and 'extraction unavailable' are different values: the
+    `unavailable` map names any feed that did not answer.
+    """
+    try:
+        from backend.services.event_intel import get_events_for_brief
+        digest = get_events_for_brief(tickers)
+        # Compact card rows for the surface; full events stay on /api/event-intel.
+        digest["events"] = [
+            {
+                "scope": e["scope"],
+                "event_type": e["event_type"],
+                "direction": e["direction"],
+                "direction_basis": e["direction_basis"],
+                "title": e["title"],
+                "timestamp": e["timestamp"],
+                "tier": e["extraction"]["tier"],
+                "url": (e.get("source") or {}).get("url"),
+            }
+            for e in digest["events"]
+        ]
+        return {"status": "ok", **digest}
+    except Exception as e:
+        logger.warning("daily brief events block failed: %s", e)
+        return {"status": "unavailable", "error": str(e),
+                "events": [], "n_events": 0, "n_directed": 0, "unavailable": {}}
+
+
 def _headlines_for(ticker: str) -> list[dict]:
     """Up to 3 headlines; served from the news cache when warm."""
     cached, _age = cache_peek(f"news_stock:{ticker}", 6 * 3600)
@@ -150,7 +186,8 @@ def _headlines_for(ticker: str) -> list[dict]:
     ]
 
 
-def _template_summary(market: list[dict], geo: dict, yours: list[dict]) -> dict:
+def _template_summary(market: list[dict], geo: dict, yours: list[dict],
+                      events: Optional[dict] = None) -> dict:
     """Deterministic fallback when no LLM is available."""
     spy = next((m for m in market if m["ticker"] == "SPY"), None)
     oil = next((m for m in market if m["ticker"] == "CL=F"), None)
@@ -175,6 +212,17 @@ def _template_summary(market: list[dict], geo: dict, yours: list[dict]) -> dict:
         impact = f"Among your tickers, the biggest moves today: {top}."
     else:
         impact = "Add tickers to your watchlist or portfolio to see how the day touched them."
+
+    if events and events.get("n_events"):
+        first = events["events"][0]
+        impact += (
+            f" {events['n_events']} structured events logged across your tickers"
+            f" ({events['n_directed']} with a stated or implied direction);"
+            f" most recent high-confidence: {first['scope']} — {first['title']}"
+        )
+    if events and events.get("unavailable"):
+        feeds = sorted({f for fl in events["unavailable"].values() for f in fl})
+        impact += f" (Event feeds unavailable for some tickers: {', '.join(feeds)}.)"
 
     risks = "Watch the VIX, oil, and 10-year yield rows above — sharp moves there tend to lead sector rotation."
 
@@ -214,6 +262,7 @@ def build_daily_brief(tickers: list[str]) -> dict:
         y["headlines"] = _headlines_for(y["ticker"])
 
     geo = _geopolitical_block()
+    events = _events_block(tickers)
 
     status, _age = cache_peek("market_status", 6 * 3600)
     regime = {
@@ -232,18 +281,22 @@ def build_daily_brief(tickers: list[str]) -> dict:
                 "your_tickers": [
                     {k: v for k, v in y.items()} for y in yours
                 ],
+                # Enums + titles only — the LLM narrates measured facts, it
+                # never gets (or emits) a forecast.
+                "events": events["events"][:6],
             }, separators=(",", ":"))
             summary = summarize_daily_brief(payload)
     except Exception as e:
         logger.warning("daily brief LLM summary failed: %s", e)
     if summary is None:
-        summary = _template_summary(market, geo, yours)
+        summary = _template_summary(market, geo, yours, events)
 
     return {
         "date": datetime.now(timezone.utc).date().isoformat(),
         "horizon": "today",
         "market": market,
         "geopolitical": geo,
+        "events": events,
         "regime": regime,
         "your_tickers": yours,
         "summary": summary,
