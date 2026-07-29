@@ -537,6 +537,74 @@ successor needs a new registration with a valid control. The confirm window
 (2019-2024) was NOT opened -- spending the held-out window on an
 uninterpretable explore result is exactly what the wall exists to prevent.
 
+## 21. Conditional volatility targeting is dead too — the 2020 crash outran the signal (TRIAL-COND-VT)
+
+**Date:** 2026-07-29. **Chain:** `Aegis module` TRIALS/TRIAL-COND-VT.md +
+registry row (frozen 06:30 UTC) -> `scripts/trial_cond_vt.py` written after ->
+explore run -> confirm run, one shot each. Registered under the freeze's S3
+de-risking door, cumulative candidate 159.
+
+Continuous/unconditional volatility targeting was already on the dead list
+(Liu-Tang-Zhou 2019; Cederburg et al. 2020 Jobson-Korkie **p = 0.30**;
+DeMiguel et al. 2024 OOS-net-of-costs **p = 0.979**; Angelidis-Tessaromatis
+2023). The one survivor was Bongaerts, Kang & van Dijk (FAJ 2020)
+**conditional** VT — adjust exposure only in the extreme-vol state, unscaled
+otherwise, leverage capped: US dSharpe **+0.16**, dMaxDD **-8.3%**, turnover
+**1.6x/yr**, significant in only **2 of 10** markets, **no post-2010 split.**
+This trial supplied the missing split: long-only, cap 1.0, SPY, month-end,
+2 bps, held-out 2019-2024.
+
+| | explore COND_VT | explore SPY | confirm COND_VT | confirm SPY |
+|---|---|---|---|---|
+| Sharpe | **0.615** | 0.497 | **0.836** | 0.897 |
+| max drawdown | **-40.19%** | -55.19% | **-33.72%** | **-33.72%** |
+| CAGR | 8.57% | 7.69% | 14.55% | 17.12% |
+| turnover | 0.41x/yr | - | 0.85x/yr | - |
+
+Explore passed all three pre-registered bars (Sharpe >= SPY-0.05, maxDD
+shallower by >=5pp, turnover <=50%/mo). **Confirm missed two.** The drawdown
+bar did not miss narrowly — the overlay's max drawdown is **identical to SPY's
+to four decimal places, on the same trough date (2020-03-23)**. Bootstrap 90%
+CI on the Sharpe difference vs SPY: **[-0.164, +0.055]** — indistinguishable
+from doing nothing, while giving up 2.6pp of CAGR.
+
+**The mechanism of failure, from the frozen weight path.** At month-end
+2020-02-28, trailing 63-day realized vol was **0.162 against a causal
+80th-percentile breakpoint of 0.2018** — because 60 of those 63 days were the
+calmest market in years — so the rule entered March at **w = 1.00** with SPY
+already ~12% off its high. It then cut to 0.373 / 0.345 / 0.350 for
+March/April/May: the rebound. Result: 2020 **+3.28% vs SPY +18.33%**, with the
+full drawdown taken anyway. 2022, the rule's home turf, worked exactly as
+designed (gradual de-risk 1.00 -> 0.73 by June) and bought **+2.3pp of return
+and 1.8pp of drawdown** — correctly signed, an order of magnitude short of the
+bar.
+
+**A backward-looking 63-day vol window crossed with an expanding-window
+quantile is a SLOW threshold: it cannot fire before a fast crash and barely
+fires during a slow one.** Those are the same defect seen from two sides, and
+no lookback or threshold value fixes it — none was tried (frozen kill clause).
+
+**The contrast exhibit came out backwards and is reported that way.** The
+descriptive UNCONDITIONAL arm (w = min(1, causal-median-vol/current vol),
+registered as expected-to-fail) beat the conditional arm on **both** Sharpe and
+max drawdown in **both** windows (explore 0.687 / -27.11%; confirm 0.871 /
+-29.40%). This does not revive it — it also fails the confirm drawdown bar
+(4.3pp vs the 5pp requirement) for the same 2020 reason, and four published
+refutations are not overturned by one instrument on one 21-year sample. What it
+does mean is that the Bongaerts extremes-only refinement, which *was* the
+hypothesis, bought nothing over the plainer rule.
+
+**Costs were never the executioner:** 0.8-1.7 bp/yr of drag, and every bar is
+unchanged at the 10 bps stress. Consistent with the freeze finding that our
+rejections are informational, not cost-driven.
+
+**Third allocation instrument killed by the wall** (after INSTR-REGIME-JM and
+INSTR-REGIME-JM2), and the same pattern each time: an explore pass carried
+almost entirely by 2008 (dMaxDD +15.0pp) collapses on 2020+2022
+(dMaxDD **0.00pp**). Family CLOSED; no paper lane; any successor addressing the
+resolution failure (intra-month trigger, faster estimator) is a new
+registration against the deflation count.
+
 ---
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*

@@ -49,15 +49,26 @@ glyph verification.
 
 ## Track C — 🔴 ATTENDED (Murat's calls, not a session's)
 
-1. **Conditional volatility targeting** (Bongaerts FAJ 2020: extremes-only,
-   long-only-compatible, 1.6×/yr turnover; ΔSharpe +0.16, ΔMaxDD −8.3% US) — the
-   single best-evidenced allocation idea in the review, but 2-of-10 significant
-   with no post-2010 split. Needs Murat's freeze ruling: is a de-risking overlay
-   S3 (exits) or a new family needing exemption? If it proceeds: `prior_check` →
-   `pre-register-trial` → explore 2004-2018 → confirm 2019-2024, one shot.
-   **The paper opportunity attached:** no peer-reviewed long-only no-leverage
-   vol target on SPY, OOS, net, post-2010 split exists — we are equipped to run
-   exactly that experiment and publish the result either way.
+1. **Conditional volatility targeting — RULED & REGISTERED 2026-07-29.** Murat
+   delegated the call; ruling: de-risking overlay = S3 open door, same registry,
+   same cumulative deflation count; registration mandatory (external "skip
+   pre-registration" advice refused). TRIAL-COND-VT frozen BEFORE any run:
+   63-td realized vol (not VIX — PIT-clean, matches Bongaerts conditioning;
+   VIX variant refused as a second hypothesis), causal expanding quintiles,
+   de-risk only ≥80th pct, leverage cap 1.0, month-end, 2 bps; explore
+   2004-2018 → confirm 2019-2024 one shot; controls SPY B&H + static 60/40 +
+   unconditional-VT contrast arm. Results: see
+   `Aegis module/TRIALS/TRIAL-COND-VT.md` + AI_PANEL_2026-07-29.md.
+   **RESULT: explore PASS (all 3 bars, carried by 2008, ΔmaxDD +15.0pp) →
+   confirm 2019-2024 REJECT (Sharpe −0.011 under bar; maxDD identical to SPY
+   to 4dp — trailing 63d vol was at its calmest going into the 23-day 2020
+   crash, so the overlay entered March at full weight). Family CLOSED; third
+   allocation instrument killed by the wall after JM/JM2, same
+   explore-passes-confirm-fails signature. Unconditional-VT contrast arm beat
+   the conditional arm in both windows but also fails the bar (dead family
+   stands). NEGATIVE_RESULTS §21.** The paper experiment landed: first
+   held-out post-2010 refutation of the conditional variant, named mechanism
+   (a backward vol window cannot resolve a fast crash from a calm base).
 2. Unset stale seed flags (`AEGIS_SEED_*`) on Railway (long-standing TODO).
 3. PDUFA ledger first scoring ~late Aug; quarterly panel refresh ~Oct.
 
@@ -114,3 +125,19 @@ the attached long-only/no-leverage/post-2010 null paper; (2) the paper itself
 (method + empty-cost-cohort + contrarian-t + this engine's honest null); (3)
 the forward clocks accruing; (4) a successor belief engine, if attempted, as a
 new walled registration scored by the D3 harness from birth (fwd12m first).
+
+---
+
+## Panel harness
+
+`scripts/ai_panel.py` replaces the manual panel loop (paste prompt into a web UI,
+paste the reply back): it builds a prompt pack from repo state (newest
+`SESSION_*.md`, newest post-freeze roadmap, the top of `Aegis module/STATUS.md`)
+and fans it out to OpenAI / Gemini / DeepSeek over plain HTTPS. Replies land raw
+and UNVERIFIED in `docs/research/panel_raw/` — untrusted text, not citable until a
+Claude session adjudicates them into an `AI_PANEL_<date>.md` with adopt/refuse
+receipts. Env vars Murat must set (keys are read from the environment only, never
+a file): `OPENAI_API_KEY` + `OPENAI_PANEL_MODEL`, `GEMINI_API_KEY` +
+`GEMINI_PANEL_MODEL`, `DEEPSEEK_API_KEY` (model defaults to `deepseek-chat`);
+providers with no key are skipped, not failed. Usage:
+`python scripts/ai_panel.py --build-prompt --out-file docs/research/panel_prompt.md && python scripts/ai_panel.py --prompt-file docs/research/panel_prompt.md --tag round14`
