@@ -1,0 +1,24 @@
+{
+  "sha256": "17a97adc5094c3053f469c7b2cced13503bd8d615048c97f72241e6238601323",
+  "download_date": "2026-07-29",
+  "sources": [
+    "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_5_Factors_2x3_daily_CSV.zip",
+    "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_daily_CSV.zip"
+  ],
+  "rows": 26152,
+  "ff5_start": "1963-07-01",
+  "ff5_end": "2026-05-29",
+  "mom_start": "1926-11-03",
+  "mom_end": "2026-05-29",
+  "columns": [
+    "Mkt-RF",
+    "SMB",
+    "HML",
+    "RMW",
+    "CMA",
+    "RF",
+    "Mom"
+  ],
+  "units": "decimal daily returns",
+  "note": "Pinned vintage for product factor attribution. French rewrites history across vintages (92.8% of HML months changed across one 18-month step, measured on the research pin). Rows after ff5_end/mom_end come from a disclosed live append at runtime, never from silently refetching this span."
+}

@@ -19,6 +19,7 @@ Usage:
 """
 
 import logging
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
@@ -34,25 +35,69 @@ _FACTOR_CACHE: dict = {}
 _FACTOR_CACHE_TS: dict[str, float] = {}  # per-key timestamps
 _CACHE_TTL = 86400  # 24 hours
 
+# Pinned daily vintage (baked into the image, NOT under AEGIS_DATA_DIR — the
+# persistence volume must not shadow it). French rewrites factor history across
+# vintages (92.8% of HML months changed across one 18-month step, measured on
+# the research pin), so served attribution is anchored to this frozen file and
+# only the post-vintage tail may come from a live fetch — disclosed, never
+# silently re-derived on a floating vintage.
+_PINNED_CSV = Path(__file__).parent.parent / "data" / "ff_daily_pinned.csv.gz"
+_PINNED_VINTAGE = _PINNED_CSV.with_name("ff_daily_pinned_VINTAGE.json")
 
-def get_factor_data(lookback_days: Optional[int] = None) -> Optional[pd.DataFrame]:
-    """Download Fama-French 5-factor daily returns from Kenneth French Data Library.
+_FF5_COLS = ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "RF"]
 
-    Returns DataFrame with columns: Mkt-RF, SMB, HML, RMW, CMA, RF
-    Values are daily returns in decimal form (e.g., 0.01 = 1%).
+
+def _load_pinned() -> tuple[Optional[pd.DataFrame], dict]:
+    """Load the pinned daily FF vintage behind its sha256 gate.
+
+    Returns (df, meta). A hash mismatch REFUSES the file (an unpinned live
+    fetch with disclosed provenance beats a silently tampered pin).
+    Cached without TTL — the pin is immutable for the life of the process.
     """
-    import time
+    cached = _FACTOR_CACHE.get("ff_pinned")
+    if cached is not None:
+        return cached
 
-    global _FACTOR_CACHE, _FACTOR_CACHE_TS
+    df: Optional[pd.DataFrame] = None
+    meta: dict = {"status": "absent"}
+    try:
+        if _PINNED_CSV.exists() and _PINNED_VINTAGE.exists():
+            import hashlib
+            import json
 
-    now = time.time()
-    cache_key = "ff5_daily"
-    if cache_key in _FACTOR_CACHE and (now - _FACTOR_CACHE_TS.get(cache_key, 0)) < _CACHE_TTL:
-        df = _FACTOR_CACHE[cache_key]
-        if lookback_days and len(df) > lookback_days:
-            return df.iloc[-lookback_days:]
-        return df
+            recorded = json.loads(_PINNED_VINTAGE.read_text(encoding="utf-8"))
+            actual = hashlib.sha256(_PINNED_CSV.read_bytes()).hexdigest()
+            if actual != recorded.get("sha256"):
+                logger.error(
+                    "Pinned FF vintage FAILED its hash gate (%s… != recorded %s…) — "
+                    "refusing the file; attribution falls back to live_unpinned",
+                    actual[:12], str(recorded.get("sha256"))[:12],
+                )
+                meta = {"status": "hash_mismatch"}
+            else:
+                df = pd.read_csv(_PINNED_CSV, index_col="Date", parse_dates=True)
+                meta = {
+                    "status": "ok",
+                    "vintage_date": recorded.get("download_date"),
+                    "sha256": recorded.get("sha256"),
+                    "ff5_end": recorded.get("ff5_end"),
+                    "mom_end": recorded.get("mom_end"),
+                }
+        else:
+            logger.warning(
+                "Pinned FF vintage not found at %s — factor attribution runs "
+                "live_unpinned (vintage floats across French rewrites)", _PINNED_CSV,
+            )
+    except Exception as e:
+        logger.error("Pinned FF vintage unreadable (%s) — live_unpinned fallback", e)
+        meta = {"status": "unreadable", "error": str(e)}
 
+    _FACTOR_CACHE["ff_pinned"] = (df, meta)
+    return df, meta
+
+
+def _fetch_ff5_live() -> Optional[pd.DataFrame]:
+    """Live FF5 daily fetch (pandas_datareader, ~5y rolling window)."""
     try:
         import pandas_datareader.data as web
         ff5 = web.DataReader(
@@ -71,20 +116,77 @@ def get_factor_data(lookback_days: Optional[int] = None) -> Optional[pd.DataFram
             df.index = df.index.to_timestamp()
         else:
             df.index = pd.to_datetime(df.index)
-        df = df.sort_index()
+        return df.sort_index()
+    except Exception as e:
+        logger.warning("Live Fama-French fetch failed: %s", e)
+        return None
 
-        _FACTOR_CACHE[cache_key] = df
-        _FACTOR_CACHE_TS[cache_key] = now
 
-        logger.info("Loaded %d days of Fama-French 5-factor data", len(df))
+def factor_provenance() -> dict:
+    """Disclosed provenance of the factor data currently being served."""
+    return {
+        "ff5": _FACTOR_CACHE.get("ff5_provenance", {"mode": "not_loaded"}),
+        "mom": _FACTOR_CACHE.get("mom_provenance", {"mode": "not_loaded"}),
+    }
 
+
+def get_factor_data(lookback_days: Optional[int] = None) -> Optional[pd.DataFrame]:
+    """Fama-French 5-factor daily returns: pinned vintage + disclosed live tail.
+
+    Returns DataFrame with columns: Mkt-RF, SMB, HML, RMW, CMA, RF
+    Values are daily returns in decimal form (e.g., 0.01 = 1%).
+    Provenance of the served frame is available via factor_provenance().
+    """
+    import time
+
+    global _FACTOR_CACHE, _FACTOR_CACHE_TS
+
+    now = time.time()
+    cache_key = "ff5_daily"
+    if cache_key in _FACTOR_CACHE and (now - _FACTOR_CACHE_TS.get(cache_key, 0)) < _CACHE_TTL:
+        df = _FACTOR_CACHE[cache_key]
         if lookback_days and len(df) > lookback_days:
             return df.iloc[-lookback_days:]
         return df
 
-    except Exception as e:
-        logger.warning("Failed to load Fama-French data: %s", e)
+    pinned, pin_meta = _load_pinned()
+    live = _fetch_ff5_live()
+
+    if pinned is not None:
+        base = pinned[_FF5_COLS].dropna()
+        if live is not None:
+            tail = live[live.index > base.index[-1]]
+            df = pd.concat([base, tail]) if len(tail) else base
+            mode = "pinned+live_append"
+        else:
+            df = base
+            mode = "pinned_only"
+        prov = {
+            "mode": mode,
+            "vintage_date": pin_meta.get("vintage_date"),
+            "sha256_prefix": str(pin_meta.get("sha256"))[:12],
+            "pinned_through": pin_meta.get("ff5_end"),
+            "extended_through": str(df.index[-1].date()),
+        }
+    elif live is not None:
+        df = live
+        prov = {"mode": "live_unpinned", "pin_status": pin_meta.get("status")}
+    else:
+        _FACTOR_CACHE["ff5_provenance"] = {
+            "mode": "unavailable", "pin_status": pin_meta.get("status"),
+        }
+        logger.warning("Fama-French data unavailable (no pin, live fetch failed)")
         return None
+
+    _FACTOR_CACHE[cache_key] = df
+    _FACTOR_CACHE_TS[cache_key] = now
+    _FACTOR_CACHE["ff5_provenance"] = prov
+
+    logger.info("Loaded %d days of Fama-French 5-factor data (%s)", len(df), prov["mode"])
+
+    if lookback_days and len(df) > lookback_days:
+        return df.iloc[-lookback_days:]
+    return df
 
 
 def _fetch_french_daily_csv(url: str, col_name: str) -> Optional[pd.DataFrame]:
@@ -252,6 +354,7 @@ def decompose_stock(
         "factors": factor_details,
         "style": style,
         "residual_vol": round(float(np.sqrt(mse) * np.sqrt(252)), 4) if n > k else None,
+        "factor_data_provenance": _FACTOR_CACHE.get("ff5_provenance", {"mode": "not_loaded"}),
     }
 
 
@@ -302,8 +405,31 @@ def _interpret_style(loadings: dict) -> dict:
     return style
 
 
+def _fetch_mom_live() -> Optional[pd.DataFrame]:
+    """Live daily momentum fetch.
+
+    pandas_datareader's famafrench parser breaks on the current momentum CSV
+    (its preamble line "Missing data are indicated by -99.99..." lands in the
+    date column -> DateParseError locally, str/float compare in prod). Caught
+    live 2026-07-19: FF6 silently degraded to FF5 everywhere. Fetch + parse
+    the file directly.
+    """
+    try:
+        df = _fetch_french_daily_csv(
+            "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/"
+            "F-F_Momentum_Factor_daily_CSV.zip",
+            col_name="Mom",
+        )
+        if df is None:
+            raise ValueError("momentum CSV parse yielded no rows")
+        return df
+    except Exception as e:
+        logger.warning("Live Momentum factor fetch failed: %s", e)
+        return None
+
+
 def get_momentum_factor(lookback_days: Optional[int] = None) -> Optional[pd.DataFrame]:
-    """Download Carhart Momentum (UMD) factor from Kenneth French Data Library.
+    """Carhart Momentum (UMD) daily returns: pinned vintage + disclosed live tail.
 
     UMD = Up Minus Down = returns of past winners minus past losers.
     Adding this to FF5 creates the FF5+Momentum (FF6) model.
@@ -320,32 +446,44 @@ def get_momentum_factor(lookback_days: Optional[int] = None) -> Optional[pd.Data
             return df.iloc[-lookback_days:]
         return df
 
-    try:
-        # pandas_datareader's famafrench parser breaks on the current
-        # momentum CSV (its preamble line "Missing data are indicated by
-        # -99.99..." lands in the date column -> DateParseError locally,
-        # str/float compare in prod). Caught live 2026-07-19: FF6 silently
-        # degraded to FF5 everywhere. Fetch + parse the file directly.
-        df = _fetch_french_daily_csv(
-            "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/"
-            "F-F_Momentum_Factor_daily_CSV.zip",
-            col_name="Mom",
-        )
-        if df is None:
-            raise ValueError("momentum CSV parse yielded no rows")
+    pinned, pin_meta = _load_pinned()
+    live = _fetch_mom_live()
 
-        _FACTOR_CACHE[cache_key] = df
-        _FACTOR_CACHE_TS[cache_key] = now
-
-        logger.info("Loaded %d days of Momentum factor data", len(df))
-
-        if lookback_days and len(df) > lookback_days:
-            return df.iloc[-lookback_days:]
-        return df
-
-    except Exception as e:
-        logger.warning("Failed to load Momentum factor: %s", e)
+    if pinned is not None and "Mom" in pinned.columns:
+        base = pinned[["Mom"]].dropna()
+        if live is not None:
+            tail = live[live.index > base.index[-1]]
+            df = pd.concat([base, tail]) if len(tail) else base
+            mode = "pinned+live_append"
+        else:
+            df = base
+            mode = "pinned_only"
+        prov = {
+            "mode": mode,
+            "vintage_date": pin_meta.get("vintage_date"),
+            "sha256_prefix": str(pin_meta.get("sha256"))[:12],
+            "pinned_through": pin_meta.get("mom_end"),
+            "extended_through": str(df.index[-1].date()),
+        }
+    elif live is not None:
+        df = live
+        prov = {"mode": "live_unpinned", "pin_status": pin_meta.get("status")}
+    else:
+        _FACTOR_CACHE["mom_provenance"] = {
+            "mode": "unavailable", "pin_status": pin_meta.get("status"),
+        }
+        logger.warning("Momentum factor unavailable (no pin, live fetch failed)")
         return None
+
+    _FACTOR_CACHE[cache_key] = df
+    _FACTOR_CACHE_TS[cache_key] = now
+    _FACTOR_CACHE["mom_provenance"] = prov
+
+    logger.info("Loaded %d days of Momentum factor data (%s)", len(df), prov["mode"])
+
+    if lookback_days and len(df) > lookback_days:
+        return df.iloc[-lookback_days:]
+    return df
 
 
 def decompose_stock_ff6(
@@ -493,6 +631,7 @@ def decompose_stock_ff6(
         "residual_vol": round(float(np.sqrt(mse) * np.sqrt(252)), 4) if n > k else None,
         "rolling": _rolling_loadings(combined, factor_names),
         "residuals": residuals,  # For PCA analysis
+        "factor_data_provenance": factor_provenance(),
     }
 
 
