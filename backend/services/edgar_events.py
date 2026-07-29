@@ -42,7 +42,6 @@ Cache: per-ticker submissions live ~10 min; CIK lookup table lives 24h.
 from __future__ import annotations
 
 import logging
-import os
 import re
 import threading
 import time
@@ -51,16 +50,12 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from urllib.parse import quote_plus
 
-import requests
-
 logger = logging.getLogger(__name__)
 
-# SEC requires a non-bot User-Agent with contact info. Honor the same
-# SEC_USER_AGENT env the insider collector uses (the 2026-06-17 prod-403
-# lesson: one UA convention for ALL SEC calls); the committed project
-# identifier is only the fallback.
-_USER_AGENT = os.environ.get(
-    "SEC_USER_AGENT", "AegisFinance Research aegis-finance@github.io")
+# All SEC HTTP in this module goes through insider_form4._sec_get (shared
+# limiter + SEC_USER_AGENT env + 403 retry) — one choke point, one UA. This
+# module's former standalone UA 403'd on www.sec.gov in prod (caught by the
+# EVENT-INTEL canary 2026-07-29).
 _CIK_LOOKUP_URL = "https://www.sec.gov/files/company_tickers.json"
 _SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
 
@@ -158,16 +153,19 @@ class EdgarEvent:
 
 
 def _refresh_cik_lookup() -> None:
-    """Pull SEC's master ticker→CIK file."""
+    """Pull SEC's master ticker→CIK file.
+
+    Routed through insider_form4._sec_get — the ONE choke point for all SEC
+    HTTP (2026-06-17 convention). Caught live 2026-07-29 by the EVENT-INTEL
+    canary: this module's own UA fallback (a github.io pseudo-contact) 403s
+    on www.sec.gov while _sec_get's real-contact UA succeeds from the same
+    host — this endpoint had been silently dead in prod.
+    Lazy import: insider_form4 imports this module at module level.
+    """
     global _CIK_CACHE, _CIK_CACHE_TS
     try:
-        _RATE_LIMITER.wait()
-        resp = requests.get(
-            _CIK_LOOKUP_URL,
-            headers={"User-Agent": _USER_AGENT, "Accept": "application/json"},
-            timeout=10,
-        )
-        resp.raise_for_status()
+        from backend.services.insider_form4 import _sec_get
+        resp = _sec_get(_CIK_LOOKUP_URL)
         data = resp.json()
         # Schema: {"0": {"cik_str": 320193, "ticker": "AAPL", "title": "Apple Inc."}, ...}
         cache: dict[str, str] = {}
@@ -213,13 +211,8 @@ def _fetch_submissions(cik: int) -> Optional[dict]:
         return cached[1]
 
     try:
-        _RATE_LIMITER.wait()
-        resp = requests.get(
-            _SUBMISSIONS_URL.format(cik=int(cik)),
-            headers={"User-Agent": _USER_AGENT, "Accept": "application/json"},
-            timeout=15,
-        )
-        resp.raise_for_status()
+        from backend.services.insider_form4 import _sec_get
+        resp = _sec_get(_SUBMISSIONS_URL.format(cik=int(cik)))
         data = resp.json()
         _SUBMISSION_CACHE[str(cik)] = (now, data)
         return data

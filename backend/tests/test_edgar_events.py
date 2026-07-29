@@ -110,7 +110,9 @@ def test_lookup_cik_uses_cache_after_refresh():
     ee._CIK_CACHE.clear()
     ee._CIK_CACHE_TS = None
 
-    with patch.object(ee.requests, "get", return_value=FakeResp()):
+    # All EDGAR HTTP goes through the shared _sec_get choke point now.
+    with patch("backend.services.insider_form4._sec_get",
+               return_value=FakeResp()):
         assert ee.lookup_cik("aapl") == 320193
         assert ee.lookup_cik("MSFT") == 789019
         assert ee.lookup_cik("NOTLISTED") is None
