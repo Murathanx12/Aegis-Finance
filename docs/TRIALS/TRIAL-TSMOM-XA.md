@@ -82,3 +82,38 @@ tests.
 Arms nothing; never touches reference/book/ATR/SMQ lanes (own config hash);
 no reconstructed past (inception = seed day); shorts never leave the paper
 sleeve; the session builds and verifies — Murat flips the flag.
+
+---
+
+## Declared adverse prior (added 2026-07-30, BEFORE the 24-month decision window closes)
+
+Banked in round 13 (`docs/research/AI_PANEL_2026-07-30.md`). Recorded now,
+while the lane is 52 days old and the doubt costs nothing.
+
+The registration's prior rests on INSTR-TSMOM-XA's confirm pass — crisis alpha
+in both held-out crises (2020 +9.2%, 2022 flat; overlay maxDD −18.8% vs SPY
+−33.7%) with a disclosed return drag (t −1.86). The adverse side of the
+time-series-momentum literature was **not** represented in that registration and
+is now:
+
+- Huang et al., *Time series momentum: is it there?* — pooled regressions
+  **overstate** the predictive ability of the trailing 12-month return; the
+  statistical evidence for TSM weakens materially on extended samples.
+- Out-of-sample evaluations on ETF implementations report **negative test-period
+  Sharpe ratios for nearly all parameterisations**.
+- Roughly **40%** of TSM returns are attributable to time-varying exposure to
+  business-cycle macro variables rather than to a standalone trend premium, and
+  TSM performs *worse* than average following crises and cycle turns.
+
+**Consequence for how this trial should be read at decision time:** the lane's
+pre-registered claim is already the defensible one — **shallower drawdowns at a
+bounded return cost (Goal B), explicitly not beat-SPY** — and nothing here
+changes a bar or the crisis clause. What it changes is the reading of a *null*:
+if the overlay fails to deliver a ≥3pp drawdown advantage, that is consistent
+with the broader literature and should be reported as such, not as an
+implementation problem to be tuned away. The spec stays frozen either way.
+
+Standing on the record already: the overlay trails its own 60/40 control by
+0.68pp over the first 52 days, on a window containing no drawdown for it to
+protect against — which is exactly the crisis clause's territory and decides
+nothing.

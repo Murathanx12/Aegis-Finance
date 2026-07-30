@@ -132,3 +132,30 @@ AI_PANEL_2026-07-27F #8.)
 - ✅ Collector `cmp_insider_collector.py` wired into `scheduler._daily_check`,
   weekly-throttled, wrapped (a SEC outage can't break lane processing).
 - ⬜ Forward accrual — clock starts on the next deploy's daily check.
+
+---
+
+## Declared adverse prior (added 2026-07-30, BEFORE the 2027-07-21 decision date)
+
+Banked in round 13 (`docs/research/AI_PANEL_2026-07-30.md`). Recorded now, while
+it is free: after the decision date it would be rationalisation.
+
+The registration's prior cites BRAIN-003's FF5+UMD alpha of **+102 bps/mo
+(t 1.89)**, itself anchored on Cohen-Malloy-Pomorski (*Decoding Inside
+Information*, JF 2012), whose headline was **82 bps/mo** value-weighted for
+opportunistic insiders. The post-2010 literature reports that this has decayed
+by roughly **60-70%**, to on the order of **30-40 bps/mo**, attributed to the
+growth of algorithmic trading and 10b5-1 usage compressing the public-
+information window — both of which post-date the CMP sample.
+
+**Consequence for how this trial should be read at decision time:** a forward
+126d rank IC that is *positive but small* is the outcome the current literature
+predicts, not a pleasant surprise, and should not be narrated as a discovery.
+The pre-registered decision rule is unchanged (it was never magnitude-based —
+it asks whether the 90% CI excludes zero), and this note does **not** alter any
+bar. It exists so that the size of whatever we find is judged against 30-40
+bps/mo rather than against 82 or 102.
+
+Compounding note already on file: the 2023 10b5-1 amendments destroyed the
+*sales*-side signal. Our signal is buys-side and unaffected in principle, but
+pre/post-2023 pooling remains flagged for the October refresh audit.
