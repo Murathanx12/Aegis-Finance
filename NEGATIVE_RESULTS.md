@@ -605,6 +605,153 @@ almost entirely by 2008 (dMaxDD +15.0pp) collapses on 2020+2022
 resolution failure (intra-month trigger, faster estimator) is a new
 registration against the deflation count.
 
+## 22. The small-cap shelf: the graduation door was shut on a backwards cost premise, and opening it changes nothing (INSTR-SMALL-SHELF)
+
+**Date:** 2026-07-30. **Chain:** `Aegis module` c95a97b (registration frozen
+BEFORE any run code existed) → `scripts/run_instr_small_shelf.py` written after
+→ one run. Cumulative candidate 160.
+
+### The defect that motivated the trial
+
+`docs/STRATEGY_FACTORY.md`, frozen 2026-07-22, defines the graduation rule on
+**largemid only**, and justifies excluding the small segment like this:
+
+> `small` — ranks 1001..3000. Reported, but **25 bps understates true small-cap
+> costs**; treat small-only results as directional.
+
+For the whole 159-candidate search, the small segment was therefore
+structurally ineligible to graduate. Later registrations hardened it further
+("small documented 50 bps"). **INSTR-COST-MODEL then measured the thing and the
+premise is backwards:** Kyle-Obizhaeva half-spreads in small are **13.1 / 12.1 /
+11.6 bps** by era, against a flat wall of 25 (scans) to 50 (documentation) — a
+2-4× *over*-penalty, not an under-penalty. The largemid propagation of that
+measurement ran in round 10 (INSTR-COST-REMEASURE-REJECTS, cohort EMPTY, shelf
+closed). **Small never received it.** This trial performs it, once, under the
+identical frozen cohort rule with only the segment changed.
+
+### Result: cohort NON-EMPTY (5 members), **ZERO graduates**
+
+| signal | source | t_ic | t_gross | t_net flat-25 | turnover |
+|---|---|---|---|---|---|
+| rec_mom | batch3a | 3.32 | **2.64** | 0.48 | 0.368 |
+| industry_mom | batch9 | 2.06 | 2.03 | 1.39 | 0.244 |
+| fscore_lite | batch2 | 6.63 | 2.01 | 1.46 | 0.129 |
+| cash_prof | batch2 | 7.90 | 1.73 | 1.26 | 0.095 |
+| re_me | batch7 | 5.30 | 1.56 | 1.37 | 0.074 |
+
+Re-scanned on explore 2004-2018, small, under three cost arms (KO half-spread
+primary, KO full-spread stress, zero-cost bound). **The flat-25 regression guard
+reproduced every banked number exactly** (rec_mom 0.48, industry_mom 1.39,
+fscore_lite 1.46, cash_prof 1.26, re_me 1.37) — the rebuilds are byte-identical.
+
+| signal | KO-half t_net | KO-full t_net | zero-cost bound |
+|---|---|---|---|
+| rec_mom | 1.42 | **0.20** | 2.64 |
+| industry_mom | 1.63 | 1.22 | 2.03 |
+| fscore_lite | **1.72** | 1.44 | 2.01 |
+| cash_prof | 1.45 | 1.17 | 1.73 |
+| re_me | 1.39 | 1.23 | 1.56 |
+
+Two signals (fscore_lite 1.72, industry_mom 1.63) clear the 1.5 net bar under
+the primary arm — and **both fail the stress arm**, which the registration
+required them to clear as well. The confirm window was never opened.
+
+### What the corpse teaches — a sharper result than "empty"
+
+The **zero-cost bound is the decisive column**, and it is the same terminating
+logic that closed largemid. It answers "could this graduate if trading were
+*free*?", and by construction it equals t_gross:
+
+- In **large/mid**, the best rank-real reject reached **1.48 gross** — below the
+  1.5 bar, so *nothing there could graduate even at zero cost*. That is why the
+  cohort was empty.
+- In **small**, exactly one candidate — `rec_mom` — clears both legs for free
+  (net 2.64, IC 3.32). It is **the only signal in 160 candidates that is
+  genuinely killed by trading costs and nothing else.** Its executioner is
+  turnover: 36.8%/month one-way, which is why it falls from 2.64 (free) to 1.42
+  (KO half) to 0.20 (KO full).
+
+So the honest statement is not "the shelf is empty everywhere." It is: **the
+retail-accessible shelf contains exactly one genuinely cost-killed signal, and
+it is cost-killed because it trades 37% of the book every month — a property no
+cost model correction can repair.** The paper's lead exhibit survives the
+extension and gets a named exception instead of a blanket claim.
+
+**Bookkeeping consequence, stated plainly:** the factory's small-segment cost
+premise was wrong for the entire search, and correcting it moved **zero
+verdicts**. The design defect was real and immaterial — both halves of that
+sentence belong on the record. Small-cap cost shelf **CLOSED**; per the frozen
+kill clause, **no further cost-model appeals exist for either segment.**
+
+## 23. Residual momentum buys the risk reduction and loses the signal (INSTR-RESID-MOM)
+
+**Date:** 2026-07-30. **Chain:** `Aegis module` c95a97b (registration frozen
+BEFORE any signal code) → implementation → **spec test caught an off-by-one,
+first execution VOIDED** (below) → corrected → one run. Cumulative candidates
+161-162.
+
+Residual (idiosyncratic) momentum is one of the short list of anomalies with an
+explicit post-publication out-of-sample survival claim (Blitz-Huij-Martens
+JEmpFin 2011; Blitz-Hanauer-Vidojevic IRFA 2020: comparable returns at ~half the
+volatility, no long-term reversal). It was admitted against the CLOSED momentum
+family as a **new mechanism class**: trials #13/#14 both ranked *total* return
+and varied only the holding rule — the timing mechanism that failed twice —
+whereas residualisation changes *what is ranked*, and targets the exact recorded
+cause of death (§9's −54.7% momentum crash, which §10's trend filter made worse).
+
+Spec frozen verbatim from BHM: FF3 OLS over months m-35..m (all 36 required),
+signal = mean residual over m-11..m-1 divided by its sd over the same window,
+direction +1. Bars declared at registration: largemid @ flat 25, small @ KO
+half-spread, both `t_net >= 1.5 AND t_ic >= 2.0`.
+
+### ⚠️ The first execution was VOID — disclosed with its numbers
+
+The implementation put the signal window at estimation-window positions 24..**35**.
+Position 35 is the **formation month itself**, so the first run folded one-month
+reversal into a momentum signal and violated the frozen 12-1 skip. It was caught
+not by inspection but by a spec test written after the run
+(`tests/test_resid_mom.py::test_frozen_spec_constants`), and the defective run's
+numbers are recorded here rather than discarded quietly: small IC t **−0.58**,
+largemid IC t −0.06, small net −12.7 bps. Those are **not** the trial. A run that
+does not implement the registered spec is not an execution of it; the fix and
+re-run are repair, not a second bite — but the reader is entitled to both sets of
+numbers and to notice that the void run made the signal look *worse*, not better.
+
+### Result: **REJECT, no graduate in either segment. Family CLOSED.**
+
+Explore 2004-2018, 180 months, paired against `mom_12_1` re-run on identical
+windows and cost arms:
+
+| | segment | net bps/mo | t_net | t_gross | **t_ic** | turnover | **maxDD** |
+|---|---|---|---|---|---|---|---|
+| resid_mom | largemid @ flat25 | −20.6 | −1.29 | −0.67 | **0.33** | 0.201 | −0.585 |
+| mom_12_1 | largemid @ flat25 | −28.6 | −1.17 | −0.82 | 0.63 | 0.170 | −0.641 |
+| resid_mom | small @ KO-half | −16.9 | −1.34 | −0.83 | **0.81** | 0.207 | **−0.543** |
+| mom_12_1 | small @ KO-half | −37.5 | −1.83 | −1.50 | **3.05** | 0.181 | −0.657 |
+
+**The construction did exactly what it claims, and that is why it failed.**
+FF3 loadings of the top-decile book confirm the mechanism worked mechanically
+(see the trial doc for the full table): residualisation pulls market beta back
+toward 1 and strips the size/value tilts that the total-momentum book carries.
+It also delivers the advertised risk reduction — **maxDD −65.7% → −54.3% in
+small, 11.4 points shallower**, and it halves the net bleed (−37.5 → −16.9
+bps/mo).
+
+And it **destroys the rank information**: small-cap IC t falls **3.05 → 0.81**.
+
+That is the finding, and it is more interesting than the rejection. In our
+window, **the cross-sectional information in small-cap total-return momentum was
+its factor tilt, not idiosyncratic continuation.** Residualising removes the tilt
+and the information leaves with it. What remains is a better-behaved book with
+nothing in it — lower drawdown, lower beta, no alpha, no rank. The one
+anomaly-with-an-OOS-survival-claim we could test on this panel does not survive
+here, and it fails in a way that explains the failure of its parent.
+
+Per the frozen kill clause: **residual-momentum family CLOSED; the momentum
+family is now closed at BOTH total-return and residual resolution.** No third
+variant — a successor requires a mechanism class distinct from both timing and
+residualisation, registered fresh against the deflation count.
+
 ---
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
