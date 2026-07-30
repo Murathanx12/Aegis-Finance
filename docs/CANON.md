@@ -47,9 +47,13 @@ methodology banner.
 
 ### 3. The LLM-lane firewall — no backtest "experience" for the brain
 An LLM knows history; a backtested LLM strategy is hindsight wearing a lab
-coat. Measured basis (canon A2): the "profit mirage" — lookahead inflates
-apparent LLM predictive power by ~37% of the standalone effect, and genuinely
-out-of-sample the edge is insignificant (arXiv 2510.07920, 2512.23847); KTD-Fin
+coat. Measured basis (canon A2): lookahead inflates apparent LLM predictive
+power by ~37% of the standalone effect (Llama-3.3) and genuinely
+out-of-sample the edge is insignificant (p=0.033, Llama-2) — arXiv
+2512.23847 (Gao-Jiang-Yan); the "profit mirage" phenomenon label is arXiv
+2510.07920 (Li et al.). *(Attribution split corrected 2026-07-30 during
+paper verification — this line previously cited both IDs jointly for the
+37%, blurring which paper measured it.)* KTD-Fin
 (arXiv 2605.28359): 9/10 models show **negative** selection alpha under blinded
 eval. Therefore: the conviction/LLM lanes are **forward-only**; the brain never
 "learns" from replayed history; no LLM theme-pick is ever backtested to justify
