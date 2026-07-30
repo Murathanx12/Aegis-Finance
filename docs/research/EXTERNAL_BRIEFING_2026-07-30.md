@@ -91,7 +91,7 @@ Explore 2004-2018 / confirm 2019-2024 held out, CRSP survivorship-free panel
 
 | Survivor | Explore | Confirm (held out) | Caveats — all disclosed |
 |---|---|---|---|
-| **gp-small** (gross profitability, small caps; Novy-Marx) | 50bps t_net 1.96 → 2.19 after EAD re-timing | **+24.1 bps/mo net, IC t 4.29**; after EAD re-timing **+33.5 bps/mo, t 1.24**; under measured KO costs t **1.11–1.45** | DSR **0.098**, FF6 alpha **negative**, Newey-West t **0.77**. Of the +9.4 bps EAD headline gain, +6.8 is benchmark composition. **Not significant by any conventional bar.** |
+| **gp-small** (gross profitability, small caps; Novy-Marx) | 50bps t_net 1.96 → 2.19 after EAD re-timing | **+24.1 bps/mo, net t 0.89, IC t 4.29**; after EAD re-timing **+33.5 bps/mo, net t 1.24, IC t 4.35** (IC essentially unchanged — the two t-stats measure different things and are labelled here after a reviewer misread the pair as an IC collapse); under measured KO costs net t **1.11–1.45** | DSR **0.098**, FF6 alpha **negative**, Newey-West t **0.77**. Of the +9.4 bps EAD headline gain, +6.8 is benchmark composition. **Not significant by any conventional bar.** |
 | **INSTR-TSMOM-XA** (cross-asset 12-1 trend overlay) | passed | **2020 +9.2%, 2022 flat**; overlay maxDD **−18.8% vs SPY −33.7%** | Return drag vs SPY **t −1.86**. This is a *defensive diversifier*, explicitly **not** beat-SPY. Now live as a paper lane. |
 | **insider CMP** (opportunistic buyers, Cohen-Malloy-Pomorski rule) | FF5+UMD alpha **+102 bps/mo, t 1.89** largemid | forward-only clock, undecided until 2027 | Null in microcap. Post-2010 literature says the effect decayed **60-70%** off CMP's 82 bps/mo baseline. |
 | **fusion** (BRAIN-007 composite) | re-opened on 2 survivors | pending | — |
@@ -134,7 +134,7 @@ Every row is a pre-registered, one-shot run. Full text in
 | 6 | Crash-model retrain | loads, predicts, passes 214 tests, **still not deployable** — label sparsity; walk-forward AUC unmeasurable |
 | 7 | Crash severity model (TRIAL-CRASH-2) | **0 of 6 dense cells passed**; negative Brier skill vs climatology at every cell |
 | 8 | EODHD paid data acceptance gate | **14/20 vs bar 16 → FAIL**, subscription cancelled. Phase-1's "16/20 PASS" was itself inflated by recycled-symbol false positives |
-| 9 | Long-only 12-1 momentum, survivorship-free | CAGR **17.9%** vs SPY 15.3% — and **REJECTED**: Sharpe 0.629 vs 0.871, maxDD **−54.7%** vs −33.7%. Out-returns and is uninvestable |
+| 9 | Long-only 12-1 momentum, survivorship-free — **window 2017-01→2026-06 on the 50,462-name delisting-aware panel, NOT the 2004-2018 CRSP explore window** | CAGR **17.9%** vs SPY 15.3% — and **REJECTED**: Sharpe 0.629 vs 0.871, maxDD **−54.7%** vs SPY −33.7% (the COVID drawdown; SPY's −55.2% figure elsewhere in this document belongs to the 2004-2018 window and the two are not comparable). Out-returns and is uninvestable |
 | 10 | Momentum + 10-month SMA trend filter | **CAGR 4.8%, Sharpe 0.307, maxDD −61.3%** — worse than the thing it was built to fix. Filter fired on the right months; monthly cadence takes the first leg down and misses the V-rebound |
 | 11 | FDA approval drift, monthly | −30.1 bps/mo net, **t −0.89** |
 | 12 | Supply-chain / customer momentum, annual | decile spread **t 0.10** |
@@ -147,7 +147,7 @@ Every row is a pre-registered, one-shot run. Full text in
 | 19 | LLM / AI-agent trading alpha | closed on external receipts — see §6 |
 | 20 | Distress 8-K exclusion screen | headline passed (−5.95%, t −7.06) and **the control beat it** (−6.79%, t −11.33). Measured eligibility selection, not filing information |
 | 21 | **Conditional volatility targeting** (the "go to cash when vol spikes" family) | explore PASS → **confirm REJECT. Overlay maxDD identical to SPY to 4 decimal places on the same trough date.** 2020: +3.28% vs SPY +18.33% — a 63-day vol window entered March 2020 at full weight because the prior 60 days were the calmest in years. Bootstrap CI on Sharpe diff vs SPY: **[−0.164, +0.055]** |
-| 22 | Small-cap cost-killed shelf (NEW, 2026-07-30) | cohort non-empty (5), **zero graduates**. Across 160 candidates exactly **one** signal is genuinely cost-killed (`rec_mom`) and its executioner is **36.8%/month turnover** |
+| 22 | Small-cap cost-killed shelf (NEW, 2026-07-30) | cohort non-empty (5), **zero graduates**. Across the 160 candidates that existed *when this trial ran* exactly **one** signal is genuinely cost-killed (`rec_mom`), executioner **36.8%/month turnover**. (Cumulative is 162 today; INSTR-RESID-MOM added 2 afterwards — the counts differ by timing, not by error) |
 | 23 | **Residual momentum** (NEW, 2026-07-30) | **REJECT.** See §5 |
 
 ### Two cross-cutting measurements
@@ -257,7 +257,13 @@ receipt costs a round.
 - LLM/agent trading alpha → §19: the flagship paper was **withdrawn**, FINSABER
   kills the agent literature net of costs 2004-2024, and the one honest
   replication self-describes as infeasible. Any new proposal must rebut **all
-  three**, not cite a fourth paper.
+  three**, not cite a fourth paper. **Scope correction (2026-07-30, credit
+  DeepSeek):** these receipts close *LLM-as-trader* — an LLM deciding what or
+  when to trade. They do **not** close *LLM-as-feature-extractor*, where an LLM
+  produces a typed input that a deterministic, tested engine consumes. The house
+  already does the latter (EVENT-INTEL classifies enums; the engine computes),
+  and the standing rule permits it by construction. A feature-extraction
+  proposal is admissible and needs its own control arm, not a rebuttal of §19.
 - Neural nets / "virtue of complexity" → INSTR-VOC: not supported on our data
 - Kelly sizing from model probabilities → the binary-bet formula doesn't apply
   to continuous returns, and §6 says our probabilities have no resolution
