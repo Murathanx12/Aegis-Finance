@@ -846,6 +846,61 @@ supplies a cheap screening rule for future candidates — a flow construction wi
 turnover above ~0.15/month one-way should be expected to die net regardless of
 its IC, and the IC is not evidence against that.
 
+## 25. The cost ruler fails its own cross-check — and the lead exhibit survives anyway (INSTR-CS-SPREAD)
+
+**Date:** 2026-07-30. **Chain:** `Aegis module` ab3fa49 (registered, all four
+verdicts declared, BEFORE any estimator code) -> P0 WRDS harvest -> one run.
+Cumulative candidate 163.
+
+INSTR-COST-MODEL recorded Corwin-Schultz as **infeasible** because our pull had
+no daily high/low. The P0 harvest landed `crsp.dsf` with `askhi`/`bidlo` for the
+full universe (24.0M rows, 2002-2024), so the check that could not be run became
+runnable — against the one ruler the paper's lead exhibit depends on and that
+had never been cross-checked.
+
+| segment | CS median (one-way) | KO median | **ratio** | Spearman |
+|---|---|---|---|---|
+| large/mid | 25.8 - 32.2 bps | 3.4 - 4.2 bps | **7.6 - 9.1x** | 0.57 - 0.62 |
+| small | 41.7 - 49.2 bps | 11.6 - 13.1 bps | **3.4 - 4.2x** | 0.61 - 0.68 |
+
+Pooled Spearman **0.660** (n = 735,523). Sanity gate PASS, rank gate PASS,
+**level gate FAIL**. Frozen verdict: **KO UNDERSTATES COSTS.**
+
+**The two estimators agree strongly on WHICH names are expensive and disagree by
+3.4-9.1x on HOW expensive.**
+
+**Reported with both hands.** The frozen verdict is stated as frozen, but the
+defensible reading is *disagreement, not refutation*: Corwin-Schultz is
+documented to be biased upward in illiquid names and where overnight gaps are
+frequent; a $0.01 tick is a hard spread floor that CS partly measures rather
+than liquidity; and a 26-32 bps one-way median for the **top 1000 US stocks by
+dollar volume** is implausible against any market-quality report of the era.
+True costs are likely between the two, nearer KO in large/mid. The durable
+lesson is procedural: **a single-model cost number should never again be quoted
+without an interval.**
+
+### Why the lead exhibit survives — the part worth more than the verdict
+
+The registration said an adverse result would force the cost-killed cohort to be
+re-derived. **On inspection it cannot change, because both cohort results were
+decided by a cost-independent leg:**
+
+- **Large/mid:** the cohort was empty because the best gross t among
+  rank-informative rejects was **1.48, under the 1.5 gross bar**. Gross t
+  contains no costs. **No cost model can move it** — KO, CS, flat or zero.
+- **Small (SS22):** graduation required clearing the bar under *both* cost arms,
+  and the deciding column was the **zero-cost bound**. A harsher cost estimate
+  only pushes net t down. Zero graduates stays zero.
+
+So the exhibit stands, and now stands for a *demonstrated* reason instead of an
+assumed one. What must change is the wording. "Costs were never the executioner"
+is a claim about cost levels and is now contested. **"Nothing could graduate even
+at zero cost"** is cost-model-independent, survives this trial intact, and was
+always the stronger sentence. The paper leads with that one from here.
+
+No re-derivation registration was opened: the frozen consequence was conditional
+on the cohort changing, and it cannot.
+
 ---
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
