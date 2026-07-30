@@ -279,9 +279,26 @@ receipt costs a round.
    pharma slice. Both the 8-K and PEAD families are closed at monthly resolution
    with the explicit note that a **daily event harness is the only admissible
    successor** — and it cannot be built without this.
-3. **13F best-ideas.** Data already on disk (3.6M rows, 1980→present, untouched).
-   Cohen-Polk-Silli is the prior; the 45-day disclosure lag is the killer and
-   must be honoured, not modelled away.
+3. ~~**13F best-ideas.** Data already on disk (3.6M rows, 1980→present,
+   untouched).~~ **❌ CORRECTION 2026-07-30 (v2): THIS WAS WRONG. `best_ideas`
+   WAS tested — factory batch 3b, 180 explore months.** Construction: count of
+   distinct 13F managers holding the name among their **top-3** positions,
+   45-day filing lag (`altstores2.load_best_ideas`). Result:
+
+   | segment | net bps/mo | t_net | t_gross | **t_IC** | turnover |
+   |---|---|---|---|---|---|
+   | small | −5.7 | −0.53 | 0.51 | **2.70** | 0.226 |
+   | largemid | −15.3 | −1.28 | −0.92 | −0.02 | 0.084 |
+
+   Recorded verdict (`docs/STRATEGY_FACTORY.md`): *"real information in small
+   caps (IC t 2.70), net-negative book."* **What genuinely remains open** is
+   narrower than "run 13F": the tested version is a *count* proxy, and the
+   protocol itself flags that *"the crude count proxy ≠ CPS's weight-tilt
+   construction; a tilt-based variant is a legitimate NEW future candidate."*
+   So: a portfolio-weight-tilt implementation of Cohen-Polk-Silli is open; the
+   naive best-ideas clone is not. **This error propagated — four external
+   reviewers independently made "run 13F best-ideas" their top recommendation
+   because this document told them it was untouched.**
 4. **Meta-labeling** (López de Prado) as a *sizing* layer. Never tried. Weak
    prior: sizing a t≈1.1 signal mostly amplifies estimation error.
 5. **The honest non-alpha levers**, which are larger than anything above:

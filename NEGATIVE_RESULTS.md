@@ -752,6 +752,100 @@ family is now closed at BOTH total-return and residual resolution.** No third
 variant — a successor requires a mechanism class distinct from both timing and
 residualisation, registered fresh against the deflation count.
 
+### Post-mortem: the estimation-noise objection, tested and refuted
+
+An external reviewer (panel round 14, 2026-07-30) challenged the conclusion
+above with a specific, testable alternative: *a 36-month rolling OLS on illiquid
+small caps estimates betas so noisily that subtracting β̂′F injects sampling
+noise which swamps a real idiosyncratic signal — you did not kill residual
+momentum, you measured your own estimation error.* Good objection, and it makes
+predictions opposite to ours. Run as a diagnostic
+(`scripts/diag_resid_mom_decomp.py`). The REJECT stands either way: nothing here
+is scored against a bar and no variant can graduate — the only question is *why*
+the null happened.
+
+**Test A — decompose the same 11-month window three ways, identical mean/sd
+functional form, same 36-month betas.** If the information was the tilt, the
+*fitted* leg carries it:
+
+| component (small caps, explore) | mean IC | **t(IC)** |
+|---|---|---|
+| total = mean(excess)/sd | 0.0219 | 2.84 |
+| **fitted = mean(β′F)/sd — the tilt** | **0.0208** | **2.80** |
+| residual = mean(e)/sd — resid_mom | 0.0030 | 0.58 |
+
+**The tilt leg alone reproduces essentially all of total momentum's rank
+information** (t 2.80 vs 2.84) and carries **75.9%** of the cross-sectional
+variance of the score. Largemid agrees (fitted t 1.22, residual t 0.11).
+
+**Test B — dose-response on estimation error.** If beta noise is the executioner,
+*reducing* it must restore the IC. Two arms, each strictly less noisy than the
+frozen spec:
+
+| spec | parameters | small-cap t(IC) |
+|---|---|---|
+| FF3 / 36m (frozen) | 4 | 0.58 |
+| CAPM / 36m (half the parameters) | 2 | **0.49** |
+| FF3 / 60m (two-thirds more observations) | 4 | **1.13** |
+
+Halving the parameter count made it marginally *worse*. Lengthening the window
+to 60 months moved it 0.58 → 1.13 — **a real partial concession: some estimation
+noise is present** — but that recovers only a fraction of the 2.80 the tilt leg
+carries alone, and stays far under the 2.0 IC bar.
+
+**Verdict: the tilt explanation is confirmed; estimation noise is refuted as the
+primary cause**, with the 60-month arm disclosed as the one point in the
+reviewer's favour. The finding is now stronger than when it was a single null:
+small-cap total-return momentum's cross-sectional information in 2004-2018 is
+*reproducible from the factor-tilt component alone*.
+
+## 24. Flow signals have MORE rank information and LESS tradability than levels — measured across 19 candidates
+
+**Date:** 2026-07-30 (panel round 14 audit; no new run — this is a synthesis of
+banked results that had never been stated as a single finding).
+
+Two external reviewers independently claimed the program had tested only *level*
+signals and had "not systematically tested" change/first-difference/acceleration
+versions. A full sweep of every `FactorySignal` definition refutes the claim —
+**19 distinct flow signals were pre-registered and scanned** — but the sweep
+produced something more useful than a rebuttal:
+
+| flow signal | best segment | **t(IC)** | t(net) | turnover 1-way |
+|---|---|---|---|---|
+| text_jac (YoY 10-K text change) | small | **7.47** | 0.87 | 0.096 |
+| text_cos | small | 6.53 | 0.10 | 0.103 |
+| si_chg_low (3m Δ short interest) | small | **6.09** | 2.16 | **0.457** |
+| sue_streak | small | 4.66 | 0.30 | 0.173 |
+| comp_issue_5y | small | 4.49 | 0.72 | 0.104 |
+| net_issuance_low | small | 4.05 | −0.42 | 0.129 |
+| roa_mom | small | 3.98 | −2.89 | 0.225 |
+| ea_shift | small | 3.95 | −2.11 | 0.238 |
+| rec_mom | small | 3.32 | 0.48 | **0.368** |
+| earn_accel (2nd derivative of EPS growth) | small | 2.81 | −1.85 | 0.339 |
+| conn_mom | small | 2.65 | −0.71 | **0.682** |
+| si_trend | largemid | 2.12 | −0.92 | 0.334 |
+| cust_mom | small | 1.84 | −1.44 | **0.709** |
+
+Includes a deliberate **level-vs-flow pair** on the same variable (short-interest
+LEVEL `dtc_low`/`dtc_high` vs CHANGE `si_trend`, documented as such in
+`batch8.py`) and the differenced version of the program's only survivor
+(`gross_prof` → `gp_mom`, small IC t 0.08 — the difference of a working level
+signal is *not* a working flow signal).
+
+**The finding: differencing systematically raises rank information and destroys
+tradability.** Flow signals dominate the top of the IC table — the three highest
+IC t-stats in the entire 159-candidate library are flow signals — and almost all
+of them have net-dead books, because differencing drives one-way turnover to
+0.3-0.7/month. The only flows with a positive net t anywhere are the three
+low-turnover ones (`comp_issue_5y` 0.062, `net_issuance_low` 0.078,
+`fscore_lite` 0.129).
+
+This is the same shape as the whole program's central result, seen from a new
+angle: **the information is real and the premium is not collectible.** It also
+supplies a cheap screening rule for future candidates — a flow construction with
+turnover above ~0.15/month one-way should be expected to die net regardless of
+its IC, and the IC is not evidence against that.
+
 ---
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
