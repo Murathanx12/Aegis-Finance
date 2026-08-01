@@ -63,6 +63,30 @@ differ on horizon and industry-neutralisation, so this is recorded as
 
 ---
 
+## Round 16 (2026-08-01) — status changes + one echo, no new independent predictions
+
+**Status changes from the P0 harvest (2026-07-30):**
+
+| # | New status |
+|---|---|
+| R15-2 (RIV-spread) | 🟡 **RUNNABLE after P0b** — `optionm` entitlement CONFIRMED; surface data pull scripted (`fetch_wrds_optionm.py`), awaiting one attended WRDS session |
+| R15-3 (option-implied disagreement) | 🟡 same |
+| R15-4 (5-day reversal) | 🟡 **RUNNABLE after the daily event/return harness** — `crsp.dsf` is on disk (24.0M rows); harness build assigned to the next Opus session |
+| R15-1, R15-5 | ❌ unchanged (no transcript corpus; self-invalidating) |
+
+**Round 16 produced zero new independent predictions.** Perplexity restated a
+RIV-spread forecast whose interval (net t 0.4–1.0, IC t 1.0–2.0, 65%) is
+**numerically identical to DeepSeek's R15-2** — which was published in the
+briefing it read. Recorded as an **echo of this ledger**, not an independent
+prediction; it will not be scored under Perplexity's name. Gemini offered a
+spec question (O/S decile/holding period) instead of a number; GPT, DeepSeek
+and Consensus offered recommendations without intervals.
+
+When the option cohort is registered (roadmap v2 P3), R15-2 and R15-3 attach
+to it as the external forecasts of record.
+
+---
+
 ## Reviewer reliability record (cumulative, rounds 13-15)
 
 Not a score of usefulness — a score of **whether claims about this project turned
@@ -74,7 +98,7 @@ out to be true.**
 | Gemini | R14: residual-momentum estimation-noise objection — specific, testable, and **refuted by the run**, but the 60-month arm partly supported it. R15: correctly flagged 3 real documentation defects in the briefing | R14 round 2B: fabricated a base-rate table. R15: misread §9's window and misread an IC t as a net t (both caused by briefing defects, both wrong as stated) | one (round 2B) |
 | DeepSeek | R14: correctly caught that the Dew-Becker & Giglio closure is scoped to *index* options. R15: correctly caught that the FINSABER closure is scoped to LLM-as-trader, not LLM-as-feature-extractor | R13: asserted the EDGAR parser was dead (it had been fixed and prod-verified twice); quoted insider alpha 2-5× the current literature | none |
 | Consensus | R14: recommended Bowles et al. *Anomaly Time* — already implemented. R15: supplied three resolvable, genuinely new post-2024 citations (Kirk 2025, Voleti 2025, Ying 2024) | none recorded | none — the only reviewer that has never made an unresolvable citation |
-| Perplexity | R15: no false claims about the project | R14: ~30 citations to a public GitHub repo that is not this project; a 7.7× internal self-contradiction on a headline statistic | **~30 (round 14)** |
+| Perplexity | R15: no false claims about the project | R14: ~30 citations to a public GitHub repo that is not this project; a 7.7× internal self-contradiction on a headline statistic. R16: cited the same non-project repo again; echoed R15-2's interval as its own prediction | **~30 (round 14) + relapse (round 16)** |
 
 **Reading:** Consensus is the most reliable on literature and has never
 fabricated. Gemini produces the sharpest testable objections and the most
