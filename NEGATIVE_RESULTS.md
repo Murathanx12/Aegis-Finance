@@ -1425,7 +1425,125 @@ timing, and both stages were substantially measuring cohort selection instead.
 cohort-matched benchmark (the only design that could actually test harvestability
 of the timing effect). That is a NEW registration against the deflation count,
 not a retry, and it is Murat's call. Nothing was registered this session;
-cumulative candidates remain **177**.
+cumulative candidates remain **177**. **[Resolved 2026-08-02: that successor was
+registered and run as candidate 178 -- see 30 below. It reached NO CONCLUSION,
+because the parent's control rule turned out not to control the cohort either.]**
+
+## 30. The first design killed by its own control before its result existed (TRIAL-EVENT-13DG-HARVEST)
+
+**Date:** 2026-08-02. **Chain:** `Aegis module` `0951193` (arm, control rule,
+window, costs, eligibility, bar and the placebo GATE all declared BEFORE any run
+code) -> `factory/event_harvest.py` + 28 spec tests -> one shot. Candidate 178,
+one arm. Logged as a negative result about a DESIGN, not about a hypothesis: the
+hypothesis was never tested.
+
+**Frozen verdict: NO CONCLUSION. The placebo gate failed at pooled clustered
+t -3.17 against a |t| < 2.0 bar, and the real number was never computed.**
+
+The book stage (29, book extension) discovered after the fact that its
+EW-universe benchmark measured cohort selection rather than event timing. This
+trial existed to correct that defect structurally: reuse the parent trial's
+matched-control rule VERBATIM, and promote the random-date placebo from
+diagnostic to GATE — read first, and if it fires, nothing downstream is
+readable. `gated_run` calls the real arm's closure only on the passing branch,
+so compute order is the tamper-evidence rather than a promise.
+
+The gate fired. Five seeds, same permnos, filing dates redrawn uniformly at
+random, identical pipeline:
+
+| | seed 0 | seed 1 | seed 2 | seed 3 | seed 4 | **pooled** |
+|---|---|---|---|---|---|---|
+| diff NET bps/3mo | **-184.9** | -86.1 | -128.2 | -22.7 | -96.9 | **-102.9** |
+| clustered t | -2.48 | -1.23 | -1.95 | -0.31 | -1.42 | **-3.17** |
+| diff GROSS bps | -155.3 | -57.3 | -99.7 | +5.4 | -69.3 | **-74.3** |
+
+Every seed negative in net, four of five in gross. The pooled decomposition
+reconciles exactly: gross -74.3 minus the 28.5 bps round-trip charged to the
+event leg only = -102.8 vs the measured -102.9. **So 72% of the placebo effect
+is a gross cohort drag of -24.8 bps/mo that the matched control does not
+remove**, and 28% is the deliberately one-sided cost convention.
+
+### What was actually learned: matching on liquidity rank is not cohort control
+
+Same segment, same calendar month, nearest dollar-volume rank, no event within
++/-60 calendar days — the rule that established the 13D effect at event
+resolution — leaves the 13D-targeted cohort losing ~25 bps/mo gross to its own
+controls on RANDOM dates at monthly horizons. Dollar-volume rank is a LIQUIDITY
+match. Within a segment and month, activist targets are still the value/laggard
+tail, and nothing in the rule touches that.
+
+**The consequence is that the design's null is not zero.** A true timing effect
+of exactly zero would have measured about -103 bps here and been read as a
+decisive fail. A number cannot be scored against a bar written at zero when its
+own null sits three standard errors below zero. That is what NO CONCLUSION
+means and why the gate was frozen in front of the result rather than behind it.
+
+### The pipeline was checked before the number was believed, and it holds
+
+The house rule fires on a surprising number, and this one was surprising (the
+freeze predicted a clean placebo at |t| < 1). Two checks, neither needing a
+re-run: (1) **the control leg reproduces a known quantity** — 220.0 bps/3mo =
+**73.3 bps/mo** against the book stage's independently measured EW
+eligible-universe benchmark of **+72.6 bps/mo**, within 0.7 bps/mo; (2) **the
+result agrees with the book-stage placebo, reduced by exactly the amount the
+matching buys** — random dates vs the UNMATCHED universe gave -39.9 to -85.9
+bps/mo, random dates vs MATCHED controls give -34.3 net / -24.8 gross. Two
+constructions, same sign, magnitude down by about half. Also
+`n_entry_months` = 177 in every seed, exactly the count of entry month-ends from
+2004-01-31 to 2018-09-30 (the last entry whose 3rd month-end stays inside
+explore).
+
+### What this does NOT license, stated because it is tempting
+
+- **The frozen FAIL branch is NOT triggered and the 13D family does NOT close.**
+  Closure was conditioned on "gate clean AND bar missed". The gate was not
+  clean. **Harvestability at monthly resolution remains open and unanswered** —
+  reading the fail branch off a failed gate is precisely the inference the gate
+  forbids.
+- **29 is not retroactively damaged; the bias runs in its favour.** The measured
+  design bias is NEGATIVE, and a negatively-biased design still reported +152.2
+  bps at clustered t 2.37 for `13d_first` over +1..+60. The event-resolution
+  finding stands, now with a disclosed negative cohort residue in its control
+  arm rather than an assumed-clean one.
+- **No debiasing and no re-cut were taken.** Subtracting the placebo mean, or
+  matching on characteristics instead of liquidity rank, is a NEW design against
+  the deflation count, not a repair of this one.
+
+### The prediction: 0 of 1 scoreable, 3 unscoreable BY DESIGN
+
+Declared: *"+8 to +25 bps/mo, clustered t 0.8-1.6, most likely a NARROW FAIL;
+placebo gate passes (|t| < 1)."* The only scoreable leg — the placebo — is a
+**MISS** at |t| 3.17. The other three stay permanently unscoreable, because
+computing the real number to settle a prediction is the exact violation the gate
+was built to prevent, and the prediction is worth less than the gate.
+
+The missed leg is the one the house was most confident about: that borrowing the
+parent's control rule had solved the cohort problem structurally. **Three stages
+of this family have now made predictions and all three missed on the same axis —
+the house keeps predicting timing while its constructions keep measuring
+cohort.** The difference is that this time the design caught it before the number
+existed, which is the entire point of a gate.
+
+**Fourth receipt for one house lesson, now from four directions:** 20 (the
+control arm IS the test), 28 (a result is only meaningful relative to a stated
+construction class), the book stage (an unmatched benchmark measures cohort),
+and now this — **a control arm can be mandatory, matched, and still not control
+the thing that matters; the only way to know is to run the null through it.**
+Every future control-armed design in this programme carries a random-date
+placebo gate in front of the result.
+
+**Attrition, disclosed:** per seed, of 7,360 banked events ~3,400 survive control
+matching (a random date often lands outside the name's live months, vs 5,542 on
+real dates), ~1,140 are ineligible at entry, ~44 would cross the explore wall,
+and ~2,200 reach a measurement. The placebo cohort is ~46% of the arm and skews
+toward long-lived names.
+
+**Attended decision owed:** whether to register a successor that controls the
+cohort on RETURN-RELEVANT characteristics (size / book-to-market / prior return)
+rather than liquidity rank, with the same gate in front of it — and whether that
+is worth a candidate given this family has consumed four (175-178) and produced
+one real event-resolution effect with no demonstrated path to a monthly account.
+Nothing was registered this session; cumulative candidates remain **178**.
 
 ---
 ---
