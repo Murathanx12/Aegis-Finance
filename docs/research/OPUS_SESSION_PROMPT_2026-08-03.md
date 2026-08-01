@@ -57,6 +57,8 @@ portfolio/scan_signal step** and flag — that step plus confirm are attended.
 Results into both trial docs + NEGATIVE_RESULTS sections (or pass notes),
 house predictions scored, ledger updated if anything becomes scoreable.
 Module tests green, module pushed, prod untouched and verified healthy.
+Then refresh the Optimus brain so the corpus includes this session's results:
+`cd C:\Users\mrthn\optimus && python tools/refresh_aegis.py` (idempotent).
 Candidate count after this session: **177** (nothing new may be registered
 this session — zero exceptions).
 
