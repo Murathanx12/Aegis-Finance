@@ -902,5 +902,125 @@ No re-derivation registration was opened: the frozen consequence was conditional
 on the cohort changing, and it cannot.
 
 ---
+
+## 26. Abnormal institutional ownership: residualisation subtracted information, and a t=11 IC bought nothing (TRIAL-ABIO-KIRK)
+
+**Date:** 2026-08-01. **Chain:** `Aegis module` 66add9e (registered, three arms,
+decisive comparison and bars all declared, BEFORE any run code) -> two disclosed
+plumbing repairs, both made before any number existed -> one shot, explore only.
+Cumulative candidates 164-166.
+
+Kirk (2025, JAAF 41:524-546) reports **76 bps/mo** next-month high-minus-low
+from *abnormal* institutional ownership — actual IO residualised on firm
+characteristics — over 2.29M firm-months. The claim under test: the abnormal
+component carries cross-sectional information the raw level does not, and
+survives our harness net of costs. Three arms, each counted: `io_level` (raw
+fraction), `io_chg` (quarterly flow), `io_abn` (the Kirk-style residual).
+
+**Frozen verdict: all three arms REJECTED. No graduate, confirm not read.**
+
+| arm | segment | deciding cost arm | net bps/mo | t_net | t_gross | t_ic |
+|---|---|---|---|---|---|---|
+| io_level | large/mid | flat 25 | -19.0 | -1.91 | -1.42 | 1.64 |
+| io_level | small | KO-half | -1.4 | -0.14 | +0.02 | **11.29** |
+| io_chg | large/mid | flat 25 | -46.2 | -3.50 | -2.40 | -3.34 |
+| io_chg | small | KO-half | -30.0 | -2.47 | -1.80 | -0.07 |
+| io_abn | large/mid | flat 25 | -4.5 | -0.46 | +0.32 | 1.66 |
+| io_abn | small | KO-half | +7.4 | +0.87 | +1.16 | **10.64** |
+
+Bar: t_ic >= 2.0 AND t_gross >= 1.5 AND t_net >= 1.5. **The zero-cost bound
+graduates nothing either** — best zero-cost net t across the six deciding cells
+is +1.16. Costs are not the executioner here; there was nothing to execute.
+
+### The pre-declared comparison fired
+
+Declared at registration, before any number existed: *if
+t_ic(io_abn) <= t_ic(io_level) + 0.5 pooled, the finding is recorded as
+"residualisation added nothing over the raw level".*
+
+**Pooled: io_level +7.77, io_abn +6.89, gap -0.88.** The rule fired. And note
+the sign — residualising on five firm characteristics did not merely fail to add
+information, it **removed** some.
+
+This is §23 (INSTR-RESID-MOM) reproduced in a **structurally different
+construction class**. There the residualisation was on factor *returns* and the
+fitted leg carried IC t 2.80 of a total 2.84. Here it is on firm
+*characteristics*, and the raw level again beats its own residual. Two
+independent construction classes, same result: **in this programme, the fitted
+component is where the information lives, and "abnormal" is where it goes to
+die.** That generalisation is now worth carrying as a prior into the queued
+option-implied cohort, where a residual-skew arm is already proposed — it starts
+with two receipts against it, not one.
+
+### The number that should bother us
+
+`io_level` in small has a mean rank IC of **+4.91%, t = 11.29**. `io_abn` in
+small, **+4.06%, t = 10.64**. These are among the largest IC t-statistics in the
+entire 166-candidate programme. The corresponding books earn a **gross** excess
+t of **+0.02 and +1.16** — nothing. Turnover is 0.068-0.087 one-way, so this is
+not a trading-cost story, and the zero-cost arm confirms it.
+
+The likely mechanism, stated as a hypothesis and not a result: the information
+sits in the **lower** tail. Low-IO small names — the neglected, un-held end —
+underperform reliably; high-IO small names are merely average. A long-only
+top-decile book buys the top and cannot harvest the short leg, so a large
+full-cross-section IC converts to zero excess return. Testing that requires a
+new registration; this trial does not license one, and none was opened.
+
+This is the eighth 13F variant to show real rank information and a dead book
+(after best_ideas, breadth_chg, inst_persist x2, own_dur_t10). **The family is
+now closed at level, flow AND residual resolution.**
+
+### One registered prediction was wrong, and the miss is the useful part
+
+Five of six declared legs scored correct (io_abn IC t in 1.5-3.0 and net t < 1.0
+in large/mid; io_chg highest turnover and dead net; no graduate). The miss:
+we predicted io_chg would carry the **highest** IC, per the §24 flow finding
+(*flows carry more rank information than levels and less tradability*). It
+carried the **lowest** — pooled t_ic **-2.37**, and **-3.34** in large/mid,
+i.e. names institutions bought last quarter *underperform* the next month. That
+is Dasgupta-Prat-Verardo (2011) appearing with the sign their paper predicts.
+
+Consequence: **§24 is narrowed, not extended.** Its flow-vs-level generalisation
+was measured across 19 price/volume/fundamental candidates and does **not**
+carry over to 13F ownership flow, where the flow arm is not a noisy-but-informative
+signal but a mildly contrarian one.
+
+### Two repairs, both made before any number existed
+
+**The frozen spec named a table that could not answer the question.** The
+registration specifies `tr13f_ownership_ext` and quotes its row count (662,688,
+"1980+"). That file spans **1980-2001 only**; the explore window 2004-2018
+contains **zero rows** of it. Run literally, the trial would have produced no
+scored month. Repaired by reading the union with `tr13f_ownership` (2002-2025),
+after verifying the two are one WRDS s34 series split by era — identical dtypes,
+disjoint date ranges, no duplicate keys, and a continuous 2001Q4->2002Q1
+boundary (11,374 -> 11,221 cusips, median inst_shares 858,827 -> 862,849). No
+lag, winsorisation, characteristic, direction or bar changed. Second repair:
+shrout matched on calendar year-month rather than exact date equality, because
+CRSP month-ends are trading days (2002-03-28) and 13F fdates are calendar
+quarter-ends (2002-03-31).
+
+Both were found and fixed **before any result was visible**, which is the only
+property that makes a repair legitimate rather than a degree of freedom. Logged
+here so the sequencing is auditable rather than asserted.
+
+### What the discipline bought this round
+
+The uncapped forward-fill implied by the frozen availability rule looked
+alarming when first measured — 47% of name-months carried a 13F quarter more
+than six months old, p95 of **147 months**. Measured again on the population the
+scan actually *ranks*, it is 3.0 months at the median, p95 **4.96**, and under
+1.2% beyond six months: the 47% was entirely dead names that are never ranked.
+The scary number was real and irrelevant, and only measuring the right
+population showed which. Similarly, a `divide by zero in log` warning in the run
+log was chased down to pandas masked-array noise with **zero infinities** in all
+five regressors — `dropna` would not have caught an `inf`, so it was verified
+rather than assumed.
+
+Neither check changed the verdict. Both are the reason the verdict can be
+trusted.
+
+---
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
