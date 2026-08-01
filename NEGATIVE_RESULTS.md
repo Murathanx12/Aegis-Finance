@@ -1170,6 +1170,188 @@ log regressors, since `dropna` does not catch an `inf`.
 
 ---
 
+
+## 28. The rank-real / book-dead puzzle is solved: the information is in the short leg (INSTR-RANK-DEAD)
+
+**Date:** 2026-08-02. **Chain:** `Aegis module` 98c99e2 (four readings R1-R4 and
+every threshold declared BEFORE any run code) -> one shot, explore only, all
+gross. Cumulative candidate 174. No repair was needed and nothing was re-cut.
+
+Three trials in a row produced the same shape: a huge cross-sectional rank IC
+and a long-only book worth nothing (§26 `io_level` t_ic 11.29 / gross t +0.02;
+§27 `skew_25d` 8.34 / +1.01 and `skew_resid` 7.90 / +1.02). It was the
+most-repeated unexplained pattern in the ledger, and it collided with Murat's
+standing question — published, well-documented results conflict with our
+rejections, so **are we testing strategies wrong?**
+
+**Frozen verdict: R1 and R2 fired, R3 and R4 did not. The conflict is a
+construction-class difference, not a harness defect.**
+
+### The guard, which is the part that makes the rest admissible
+
+The two frozen builders were re-run unchanged and had to reproduce their banked
+explore IC t before a single ladder number was computed:
+
+| signal | IC t measured | IC t banked | gross t measured | gross t banked |
+|---|---|---|---|---|
+| `io_level` (small) | **11.29** | 11.29 | **+0.02** | +0.02 |
+| `skew_25d` (optionable small) | **8.34** | 8.34 | **+1.01** | +1.01 |
+
+Exact, to the decimal. The §26 and §27 receipts are reproducible from frozen
+code.
+
+### The ladder — 180 months, small segment, everything gross
+
+| rung | `io_level` | t | `skew_25d` | t |
+|---|---|---|---|---|
+| **L1** D10-D1 equal-weighted | **+145.8 bps/mo** | **5.92** | **+112.5** | **6.52** |
+| **L1** D10-D1 value-weighted | **+77.6** | **3.96** | **+70.9** | **4.94** |
+| **L2** top - universe (the banked book) | +0.2 | 0.02 | +12.4 | 1.01 |
+| **L2** universe - bottom (the mirror) | **+150.6** | **8.50** | **+93.4** | **7.30** |
+| **L3** rank-IC, upper liquidity half | 0.0323 | 7.55 | 0.0201 | 5.14 |
+| **L3** rank-IC, lower liquidity half | 0.0531 | 9.29 | 0.0255 | 7.45 |
+
+**Under published conditions both signals are large and highly significant.**
+A paper reporting either decile spread would be reporting a real number. Our
+harness computes the same number and does not bank it, because the graduation
+bar reads a long-only, cost-charged, top-decile book.
+
+### R2 is the answer: the top decile has nothing to say
+
+The equal-weighted spread decomposes almost entirely into the leg a long-only
+mandate cannot hold — **150.6 of 150.8 bps (99.9%)** for `io_level` and
+**93.4 of 105.8 (88%)** for `skew_25d`. Restated in words: high institutional
+ownership does not predict outperformance, LOW institutional ownership predicts
+underperformance; low put-call skew does not predict outperformance, HIGH skew
+predicts underperformance. The §26 hypothesis line — "the information sits in
+the lower tail, unharvestable long-only" — was right, and is now measured
+rather than supposed.
+
+R1 is scored FIRED on `io_level` and, literally, not on `skew_25d`: the frozen
+text requires the banked gross t <= 0.5 and `skew_25d`'s is 1.01. Its spread
+clause clears by a mile. Reported as written rather than as intended.
+
+### R3 did not fire, and that is the thing nobody predicted
+
+The lower liquidity half does carry more IC than the upper — 9.29 vs 7.55 and
+7.45 vs 5.14 — but nowhere near the 2x the reading required (ratios **1.23** and
+**1.45**). **The information is not hiding below tradability.** The more liquid
+half of the small segment carries strongly significant rank information on its
+own; it simply carries it in the short leg too. Any future "the effect is real
+but only in illiquid names" explanation now has a receipt against it.
+
+### What it means for how this programme reads the literature
+
+1. **We are not testing strategies wrong. We are testing a different object, on
+   purpose.** Published cross-sectional results are long-short, gross, equal-
+   and value-weighted; our bar is a long-only, cost-charged top-decile book
+   under a mandate that forbids shorting. Both can be right at once, and here
+   both are. Any future comparison of one of our rejections to a published
+   effect must state the construction class or it is comparing two different
+   objects.
+2. **These signals are usable long-only only defensively**, as exclusion
+   screens, never as a return source. Whether an exclusion screen clears our
+   bars is a separate question needing its own registration. The frozen scope
+   forbade opening one and none was opened.
+3. **R4 did not fire**, so the harness-audit branch the freeze committed to is
+   not triggered. That was declared in advance precisely so this outcome could
+   not be claimed after the fact.
+
+Nothing was revived, graduated or seeded; no cost model was loaded anywhere in
+the instrument, so §25's cost dispute cannot touch any of it; the confirm window
+was not read. The declared honest prior ("R1 and R2 both fire") scored
+**correct**.
+
+---
+
+## 29. NOT a negative result — the first event family to clear its gate (TRIAL-EVENT-13DG)
+
+**Date:** 2026-08-02. **Chain:** `Aegis module` 98c99e2 (three arms, windows,
+mandatory control arm, kill condition, era split and the honest prediction all
+declared BEFORE any run code) -> one shot per arm, explore only. Cumulative
+candidates 175-177. Logged here because this file is the programme's running
+receipt ledger and a pass belongs in the same chain as the rejections.
+
+**Frozen verdict: two arms and both contrasts clear their CAR gate. STOPPED
+before the portfolio / `scan_signal` step — that step, and confirm, are
+attended.** The confirm window was NOT read and no forward lane was seeded.
+
+| arm | +1..+5 | +1..+20 | +1..+60 |
+|---|---|---|---|
+| `13d_all` (n 9,431) | **+96.6 bps, t 4.75** | **+120.7, t 3.38** | +105.2, t 1.74 |
+| `13g_all` (n 59,598) — the placebo | -3.3, t -0.40 | -34.6, t -1.77 | -29.1, t -0.69 |
+| `13d_first` (n 5,542) | **+95.8, t 4.01** | **+164.3, t 4.07** | **+152.2, t 2.37** |
+
+All figures are differenced CARs against matched controls (same segment, same
+calendar month, nearest dollar-volume rank, no event within +/-60 calendar
+days), t clustered by event month. The 13D-minus-13G contrast — the kill
+condition — is **+99.9 bps at t 4.25** (+1..+5) and **+155.3 at t 3.76**
+(+1..+20) for `13d_all`, and clears in all three windows for `13d_first`.
+
+**Why this one is different from §20.** The 8-K trial's "drift" was selection:
+its own pseudo-event control beat the treatment. Here the control arm was
+mandatory from the freeze and the design carried a second, harder control — the
+13G placebo, same 5% threshold, same filer population, same salience, differing
+only in declared intent. **13G is flat to mildly negative at every horizon.**
+The two do not drift together, so "large-holder disclosure is a selection
+marker" is refuted on its own terms. Declared intent is carrying the number.
+
+**The -1..0 announcement window did the job it was registered for.** Reported,
+never deciding, and its purpose was to tell us whether to believe a null:
+`13d_all` **+95.5 bps at t 7.74**, `13d_first` +116.3 at t 6.87, `13g_all` +9.7
+at t 1.64. 13D filings move the stock on their own announcement window and 13G
+filings do not — which a broken date pipeline could not produce. The nulls in
+the 13G arm are believable.
+
+**The era split, declared in advance, did not bite.** The reason for declaring
+it — 13D volume falls 2,756/yr to 1,024/yr, so a pooled number is
+early-weighted — turns out not to matter: the short-horizon 13D effect is
+LARGER in 2011-2018 (+112.6, t 3.84) than in 2004-2010 (+83.1, t 2.95), sign
+stable in both. The 13G arm is the one that flips sign across eras, which is a
+further reason to read it as noise.
+
+### Two limitations that decide what the attended step is actually testing
+
+1. **24.2% of 13D events never reach a CAR.** 12,447 initial filings, 9,431 with
+   a matched control; every event that reached matching got one (9,431/9,431),
+   so the entire loss is at the liquidity-rank join — the name has no CRSP
+   dollar-volume observation in its filing month. This is §20-shaped and must be
+   read that way: **the result is a result on survivors-to-the-filing-month.**
+2. **31% of the matched 13D population is micro-cap** (dollar-volume rank
+   > 3,000): 4,848 small, 2,944 micro, 1,639 large/mid. A monthly book cannot
+   hold the micro third, and this CAR does not say what survives dropping it.
+   That is precisely the question the `scan_signal` step exists to answer, which
+   is why a CAR result was frozen as unable to graduate anything on its own.
+
+Plus the limitation accepted at freeze: 63.31% unambiguous CRSP subject
+resolution, with the unresolved 37% skewed toward issuers outside our bridge.
+And one disclosed discrepancy found before any CAR existed: the freeze's
+"13D-first-in-24m 6,826" is not reproducible from the banked parquet under any
+reading of its own rule (initial-13D prior gives 7,360; including amendments
+5,601; de-duplicated 6,591 / 4,981). Every other count in the freeze reproduces
+exactly, so the base is right and only that derived figure is off; the trial was
+run on the rule as written, at 7,360 events.
+
+### The declared prior was wrong, and the prediction went 3 of 5
+
+The freeze declared **WEAK-NEGATIVE** on §20, CZ-CALIB fame decay, and a 13F
+ownership family 8-for-8 dead. It called the effect SIZE almost exactly
+(predicted "< 100 bps" at +1..+5, measured +96.6) and its SIGNIFICANCE badly
+(predicted clustered t 1.0-2.5, measured 4.75). The 13G-is-zero and
++1..+60-is-zero legs hit. The contrast leg missed with a clean cause: it was
+predicted to shrink the 13D number, and instead 13G is slightly negative, so
+differencing makes the contrast bigger. "Nothing graduates to a book" is not yet
+resolvable and stays PENDING on the attended step.
+
+**Both misses point the same way — we expected an event family to die and it did
+not.** After §14 (PEAD), §16 (FDA), §20 (8-K) and §21, the house prior on event
+families had hardened into an expectation. That prior is now one receipt weaker,
+and the discipline that produced this result is the same discipline that killed
+the other four: the placebo arm was counted, the control arm was mandatory, and
+the sanity window was declared non-deciding before it was read.
+
+---
+
 ---
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
