@@ -1340,8 +1340,9 @@ ownership family 8-for-8 dead. It called the effect SIZE almost exactly
 (predicted clustered t 1.0-2.5, measured 4.75). The 13G-is-zero and
 +1..+60-is-zero legs hit. The contrast leg missed with a clean cause: it was
 predicted to shrink the 13D number, and instead 13G is slightly negative, so
-differencing makes the contrast bigger. "Nothing graduates to a book" is not yet
-resolvable and stays PENDING on the attended step.
+differencing makes the contrast bigger. "Nothing graduates to a book" is now
+RESOLVED as a **HIT** by the book stage below -- though for a reason the
+prediction did not contain.
 
 **Both misses point the same way — we expected an event family to die and it did
 not.** After §14 (PEAD), §16 (FDA), §20 (8-K) and §21, the house prior on event
@@ -1351,6 +1352,80 @@ the other four: the placebo arm was counted, the control arm was mandatory, and
 the sanity window was declared non-deciding before it was read.
 
 ---
+
+
+### BOOK STAGE (2026-08-02, module `6fcc381`) — neither book clears, and the placebo says why
+
+§29 above ends with "nothing graduates to a book" recorded as PENDING. It is now
+resolved: **neither book clears the frozen bar.** Two books, one shot each,
+explore only, no new candidates (second stage of already-counted arms 175/177;
+`13g_all` failed its CAR gate and got no book).
+
+Frozen construction: entry at the first month-end ON OR AFTER the filing date
+(forfeiting the announcement pop by design), 3-month hold with reset-on-refiling,
+equal weight, factory universe at rank <= 3000, pooled net excess vs the EW
+eligible universe, per-name Kyle-Obizhaeva half-spread on actual turnover.
+Bar: net excess t >= 1.5 with a positive mean.
+
+| book | deciding (KO-half) | flat-25 guard | zero-cost bound | turnover 1-way |
+|---|---|---|---|---|
+| `13d_all` | **−44.9 bps/mo, t −3.08** | −50.3, t −3.45 | −33.7, t −2.30 | 0.349 |
+| `13d_first` | **−41.0 bps/mo, t −2.63** | −47.4, t −3.04 | −29.4, t −1.89 | 0.374 |
+
+Not merely short of a positive bar — **significantly negative, and negative at
+zero cost too.** Gross excess is already −32.9 / −28.7 bps/mo, so costs are not
+the executioner. In levels the `13d_all` book earns +39.7 bps/mo gross against a
+universe benchmark of +72.6.
+
+**The sign reversal against §29 triggered the house rule: suspect the pipeline
+before believing the number.** The book was re-run on a placebo — same permnos,
+same count, same construction, filing dates redrawn uniformly at random, five
+seeds. Net excess: **−47.0, −85.9, −44.5, −39.9, −64.1 bps/mo** (t −3.01 to
+−5.52). **The real book's −44.9 sits inside the placebo's range.**
+
+Random entry dates on the 13D-targeted cohort reproduce the whole effect. The
+negative number is a property of *which names these are*, not of *when the book
+buys them*: activists target laggards, and laggards lose to the equal-weighted
+universe whenever you hold them.
+
+What this does and does not license:
+
+- **The verdict stands as frozen.** Bar, benchmark and one-shot rule were fixed
+  in advance; the book does not clear; the stage closes. No re-cut was taken.
+- **The frozen kill-condition wording overstates the design.** It records "13D
+  drift is real at event resolution and unharvestable by a monthly long-only
+  book at realistic costs". Clause one is established. Clause two is true of
+  THIS book, but not for the reason implied: **the registered benchmark does not
+  control for the cohort, so the stage cannot separate event timing from cohort
+  selection and would have failed even if the drift were fully harvestable.**
+  Disclosed as a defect in the frozen design rather than repaired after the fact.
+
+**Third receipt for one house lesson, now from three directions:** §20 (the
+control arm IS the test), §28 (a result is only meaningful relative to a stated
+construction class), and this — **an event book benchmarked against an unmatched
+universe measures cohort selection, not event information.** The event study got
+this right in 2026-08 and the book stage, frozen two hours later, got it wrong.
+
+**Entry attrition, disclosed:** 51% of banked events never take a position —
+`13d_all` 12,447 in, 2,072 not in the panel, 4,237 ineligible at entry, **6,138
+entered**; `13d_first` 7,360 / 1,308 / 2,261 / **3,791**. The declared micro
+exclusion does most of it. Eligibility is checked at entry only, as frozen;
+**10.2% / 9.1% of held name-months are held while no longer eligible** —
+measured, not assumed.
+
+**The frozen book-stage prediction scored 2 of 4.** Predicted: both books +5..+35
+bps/mo, t 0.5-1.5, `13d_first` > `13d_all`, neither clears. The ordering (HIT)
+and the outcome (HIT) were right; the level and the SIGN were wrong (MISS, MISS).
+Note the direction: at event resolution the house **under**-predicted a family it
+expected to die; at book resolution it **over**-predicted a book it expected to
+be merely weak. Both misses share one root — the predictions were about event
+timing, and both stages were substantially measuring cohort selection instead.
+
+**Attended decision now owed:** whether to register a successor with a
+cohort-matched benchmark (the only design that could actually test harvestability
+of the timing effect). That is a NEW registration against the deflation count,
+not a retry, and it is Murat's call. Nothing was registered this session;
+cumulative candidates remain **177**.
 
 ---
 ---

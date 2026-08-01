@@ -131,6 +131,26 @@ Had it been credited, it would have recorded the same miss.
 | R15-4 (5-day reversal) | 🟡 **RUNNABLE** — `daily_events.py` harness shipped 2026-08-01; needs its own registration before it can be run |
 | R15-5 (0DTE skew) | ❌ unchanged — self-invalidating (reviewer states 0DTE volume was negligible before ~2020, inside the window it names) |
 
+## Ledger reviewed 2026-08-02 (13DG BOOK STAGE) — nothing newly scoreable
+
+The book stage carried **no external forecast**: no reviewer offered a
+prediction about 13D/13G at any round, so none was attached at freeze and none
+becomes scoreable now. Recorded so the check is visible rather than silently
+skipped.
+
+| # | Status after the 13DG book stage |
+|---|---|
+| R15-1 (earnings-call tone) | unchanged — no transcript corpus on disk |
+| R15-2, R15-3 | scored 2026-08-02 (both MISS), closed |
+| R15-4 (5-day reversal) | still RUNNABLE, still UNREGISTERED — the daily harness exists and has now been used twice, but running R15-4 needs its own pre-registration, and no registration was permitted this session. **This is the one external prediction the programme could now score and has not.** |
+| R15-5 (0DTE skew) | unchanged — self-invalidating |
+
+Tally unchanged: across rounds 13-16 **no external reviewer prediction has yet
+been scored as a HIT**. The house scored its own book-stage prediction 2 of 4
+this session (ordering and outcome right, level and sign wrong).
+
+---
+
 ---
 
 ## Reviewer reliability record (cumulative, rounds 13-15)
