@@ -1022,5 +1022,154 @@ Neither check changed the verdict. Both are the reason the verdict can be
 trusted.
 
 ---
+
+## 27. The option-implied family closes on all seven mechanism classes — and residualisation gets its third receipt (TRIAL-OPT-COHORT)
+
+**Date:** 2026-08-02. **Chain:** `Aegis module` a84e5b1 (registered as ONE
+cohort, seven arms, directions and null rule declared, BEFORE any run code) ->
+one disclosed pre-run repair -> one shot, explore only. Cumulative candidates
+167-173.
+
+Options were the panel's unanimous #1 recommendation across two rounds
+(AI_PANEL round 16 §1: "options as data, options as trades never"), and the
+house queue agreed. P0b landed the OptionMetrics surface — 23/23 years, 99.7%
+large/mid link coverage, AAPL ATM IV matching public history (0.805 in Sept
+2008, 0.156-0.283 through 2017). The data was good. The signals were not.
+
+**Frozen verdict: all seven arms REJECTED. The option-implied cross-sectional
+family CLOSES** — level, spread, skew, term structure, flow and residual are
+every mechanism class the literature offers, which is why the cohort was
+registered as one unit rather than seven bites.
+
+| arm | segment | deciding arm | net bps/mo | t_net | t_gross | t_ic | turnover |
+|---|---|---|---|---|---|---|---|
+| iv_atm | large/mid | flat25 | -2.6 | -0.10 | +0.05 | 1.85 | 0.076 |
+| iv_atm | small | KO-half | +12.3 | +0.53 | +0.63 | **5.45** | 0.171 |
+| riv_spread | large/mid | flat25 | -47.4 | -2.75 | -0.51 | -1.07 | 0.771 |
+| riv_spread | small | KO-half | -55.2 | -2.88 | -1.68 | +0.56 | 0.684 |
+| skew_25d | large/mid | flat25 | -27.0 | -2.81 | -0.21 | 1.17 | 0.500 |
+| skew_25d | small | KO-half | -4.1 | -0.34 | +1.01 | **8.34** | 0.499 |
+| term_slope | large/mid | flat25 | -42.5 | -3.46 | -0.80 | 1.05 | 0.654 |
+| term_slope | small | KO-half | -19.2 | -1.45 | -0.23 | -0.68 | 0.589 |
+| os_ratio | large/mid | flat25 | -20.2 | -1.90 | -1.66 | **-3.15** | 0.052 |
+| os_ratio | small | KO-half | **-92.3** | **-6.68** | **-6.35** | **-6.11** | 0.162 |
+| pc_volume | large/mid | flat25 | -31.3 | -2.15 | -0.85 | -1.98 | 0.380 |
+| pc_volume | small | KO-half | -40.6 | -2.34 | -1.36 | -3.10 | 0.543 |
+| skew_resid | large/mid | flat25 | -35.1 | -3.35 | -0.99 | +0.41 | 0.494 |
+| skew_resid | small | KO-half | -1.7 | -0.12 | +1.02 | **7.90** | 0.513 |
+
+Bar: t_ic >= 2.0 AND t_gross >= 1.5 AND t_net >= 1.5. **The zero-cost bound
+graduates nothing either** — best zero-cost gross t across fourteen deciding
+cells is +1.02. And **DSR = 0.0000 in every cell**: at n_trials = 173 the
+expected max Sharpe under the null is 0.3816 monthly, against a best observed
+Sharpe of +0.0396. The multiple-testing hurdle alone disqualifies the cohort
+before costs or bars are applied.
+
+Small-segment statements concern **optionable** small caps: ~33-35% of the
+ranked small universe has no usable surface in a given month, and the missing
+names are the least liquid.
+
+### The third residualisation receipt — declared before the run, held in both segments
+
+| segment | `t_ic(skew_25d)` | `t_ic(skew_resid)` | prediction |
+|---|---|---|---|
+| large/mid | 1.17 | **0.41** | holds |
+| small | 8.34 | **7.90** | holds |
+
+§23 residualised momentum on factor **returns** (fitted leg carried IC t 2.80 of
+2.84). §26 residualised institutional ownership on firm **characteristics**
+(io_abn 6.89 < io_level 7.77). This residualised option-implied **skew** on four
+characteristics, and the residual again carried less than the raw signal, in
+both segments, exactly as predicted at freeze.
+
+**Three independent construction classes, same direction, prediction declared in
+advance each time. This is now a house finding rather than a coincidence:** in
+this harness, residualising a signal on characteristics moves information into
+the fitted leg and leaves less in the residual. Every future "abnormal X"
+construct starts with three receipts against it and owes a mechanism argument
+for why it should differ.
+
+### O/S is a significant anti-signal, and the direction was frozen
+
+Johnson-So (2012) predicts high option-to-stock volume forecasts **high**
+returns; direction was frozen at +1 before the run. Measured: t_ic **-3.15**
+large/mid and **-6.11** small, with net **-92.3 bps/mo at t -6.68** in small —
+among the most strongly significant results in the whole programme, pointing the
+wrong way. Turnover was the *lowest* of all seven arms (0.052 large/mid), so
+this is not a cost artifact; the ranking itself is inverted.
+
+Under the frozen rule a sign flip is a new candidate in a future cohort, **never
+a free retry**, and none was opened. This repeats §17 (analyst price targets):
+the un-voided family is worse than dead.
+
+### The rank-real / book-dead pattern, third consecutive trial
+
+iv_atm small t_ic **5.45**, skew_25d small **8.34**, skew_resid small **7.90** —
+large, highly significant rank information — against gross excess t of +0.63,
++1.01, +1.02. Identical in shape to §26's io_level (t_ic 11.29, gross t +0.02),
+from a completely unrelated data source.
+
+Three consecutive trials have produced high-IC/zero-book results in the small
+segment. The recurring hypothesis — the information sits in the **lower** tail,
+unharvestable by a long-only top-decile book — remains **untested and
+unregistered**. It is now the most-repeated unexplained pattern in the ledger.
+
+### The frozen robustness line was right to exist and right not to fire
+
+The freeze required an always-covered subsample check for any arm whose
+top-VIX-tercile drop rate exceeded 2x its bottom-tercile rate, because the raw
+surface null rate IS stress-correlated (0.8% in 2004-06 vs 13.0% in 2020).
+
+**It did not trigger for any arm.** Every high/low ratio landed in 0.58-1.05,
+and large/mid drop rates actually FALL in high-VIX months (0.0088 vs 0.0134) —
+volatility spikes bring option activity to names that lacked it in calm periods.
+The alarming 13% figure was driven by 2020, which sits in the confirm window and
+was not read. Same shape as §26's staleness scare: a real raw number that turns
+out not to touch the population being ranked.
+
+### External predictions: two more misses, no hits yet
+
+| # | reviewer | predicted | actual | verdict |
+|---|---|---|---|---|
+| R15-2 | DeepSeek | RIV-spread large/mid: net t 0.4-1.0, IC t 1.0-2.0 | net t **-2.75**, IC t **-1.07** | **MISS, both legs** |
+| R15-3 | GPT | skew / term-structure: net t 0.8-1.5, IC t 1.5-2.4 | skew net t -2.81 IC t 1.17; term net t -3.46 IC t 1.05 | **MISS, both legs** |
+
+Disclosed in the reviewers' favour: R15-3 specified *dispersion* of skew/term
+structure and the cohort registered their **levels**, so it is scored against
+the closest registered construct rather than its literal spec. The miss is far
+too large for the mismatch to explain it, but the caveat belongs on the record.
+
+Both misses share a structure — modestly positive net t predicted, significantly
+negative measured, driven by turnover of 0.50-0.77 one-way. **Across rounds 13-16
+no external reviewer has yet produced a prediction this programme scored as a
+hit.** Our own declared predictions went 5 of 7 this round.
+
+### The repair, disclosed
+
+The first implementation reused §26's blanket link-ambiguity rule. Measured at
+2011-06-30 it dropped 1,041 permnos, of which **660 had no secid carrying data
+at all** (dead OptionMetrics records, link score 4-5), **379 had exactly one**
+(score 1), and **only 2 had more than one**. It was discarding 379 resolvable
+names a month — ~11% of the usable cross-section — to disambiguate 2.
+
+Fixed to judge ambiguity among secids that actually carry data, which is the
+faithful reading of "drop when you cannot tell which one". Reverse-ambiguity
+drops fell **770,482 -> 658**; coverage rose to 2,352.7 names/month; 99.98% of
+links used are score 1. Made **before any signal number was visible**, which is
+the only property that makes a repair legitimate rather than a degree of
+freedom. The frozen spec is silent on link ambiguity, so a choice was required
+either way.
+
+Also verified rather than assumed, in the §26 tradition: the parquet stores the
+link's `sdate`/`edate` as **strings** (unparsed, every date comparison would
+have been wrong — pinned by a test against the real file); a build-time coverage
+guard now asserts every input spans the explore window, because §26's spec named
+a table holding 1980-2001 for a 2004-2018 question; and the run log's
+`divide by zero in log` warning was chased to **zero infinities** in all three
+log regressors, since `dropna` does not catch an `inf`.
+
+---
+
+---
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*

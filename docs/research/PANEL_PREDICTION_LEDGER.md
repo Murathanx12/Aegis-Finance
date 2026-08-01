@@ -24,8 +24,8 @@ reviewer understood what the program can actually execute.
 | # | Reviewer | Signal predicted | Predicted net t | Predicted rank-IC t | Conf. | Data status |
 |---|---|---|---|---|---|---|
 | R15-1 | Consensus | Earnings-call FinBERT tone / OM-content, large-mid, event-timed, explore 2004-2018 | 1.0 – 2.1 | 2.2 – 3.3 | 58% | ❌ **UNRUNNABLE** — no earnings-call transcript corpus on disk; PIT-barred for historical text |
-| R15-2 | DeepSeek | OptionMetrics realized-minus-implied vol spread, single-stock, large-mid, explore | 0.4 – 1.0 | 1.0 – 2.0 | 65% | ❌ **UNRUNNABLE** — `optionm` read entitlement unverified |
-| R15-3 | GPT | Option-implied disagreement (skew / term-structure dispersion), traded through stocks | 0.8 – 1.5 | 1.5 – 2.4 | 42% | ❌ **UNRUNNABLE** — same blocker |
+| R15-2 | DeepSeek | OptionMetrics realized-minus-implied vol spread, single-stock, large-mid, explore | 0.4 – 1.0 | 1.0 – 2.0 | 65% | ✅ **RUN 2026-08-02** (TRIAL-OPT-COHORT arm `riv_spread`) → **MISS, both legs**: net t **−2.75**, IC t **−1.07** |
+| R15-3 | GPT | Option-implied disagreement (skew / term-structure dispersion), traded through stocks | 0.8 – 1.5 | 1.5 – 2.4 | 42% | ✅ **RUN 2026-08-02** (arms `skew_25d`, `term_slope`) → **MISS, both legs**: net t −2.81 / −3.46, IC t 1.17 / 1.05. Spec caveat below |
 | R15-4 | Gemini | `rev_5d` — 5-day industry-neutral short-term reversal, T+1 entry, deciles | −1.20 – +0.40 | +4.50 – +6.80 | 85% | ❌ **UNRUNNABLE at the stated spec** — the factory panel is MONTHLY; a 5-day holding period needs `crsp.dsf`. See note below |
 | R15-5 | Perplexity | 0DTE SPX put/call skew, 5-day hold, explore 2004-2018 | 1.2 – 1.8 | 1.5 – 2.5 | 65% | ❌ **UNRUNNABLE, and self-invalidating** — the reviewer states in its own answer that 0DTE volume was negligible before ~2020, i.e. the prediction is for a signal that does not exist in the window it names |
 
@@ -84,6 +84,52 @@ and Consensus offered recommendations without intervals.
 
 When the option cohort is registered (roadmap v2 P3), R15-2 and R15-3 attach
 to it as the external forecasts of record.
+
+---
+
+## Round 15 predictions SCORED — 2026-08-02 (TRIAL-OPT-COHORT, module a84e5b1)
+
+Two of the five round-15 predictions became runnable when P0b landed the
+OptionMetrics surface, and both were attached to TRIAL-OPT-COHORT **at freeze,
+before any run code existed**. Both are now scored against the one shot.
+
+| # | Reviewer | Predicted net t | Predicted IC t | **Actual net t** | **Actual IC t** | Verdict |
+|---|---|---|---|---|---|---|
+| R15-2 | DeepSeek | 0.4 – 1.0 | 1.0 – 2.0 | **−2.75** (deciding, flat25) / −0.51 (zero-cost) | **−1.07** | ❌ **MISS on both legs** |
+| R15-3 | GPT | 0.8 – 1.5 | 1.5 – 2.4 | **−2.81** (skew_25d) / **−3.46** (term_slope) | 1.17 / 1.05 | ❌ **MISS on both legs** |
+
+**Spec mismatch on R15-3, disclosed in the reviewer's favour.** GPT specified
+the *dispersion* of skew / term structure; the registered cohort carried skew
+and term-structure **levels**, not their cross-sectional dispersion. R15-3 is
+therefore scored against the closest registered constructs rather than its
+literal spec. The gap is far too large for the mismatch to account for
+(predicted net t 0.8–1.5, observed −2.81 and −3.46), but the caveat is on the
+record and R15-3 may be re-offered as a dispersion construct in a future cohort.
+
+**Both misses share one structure:** modestly positive net t predicted on
+option-implied signals in large/mid; significantly *negative* net t measured,
+driven by one-way turnover of 0.50–0.77. Neither reviewer's interval contained
+the outcome, and R15-2's IC prediction had the wrong sign.
+
+**Running tally: across rounds 13–16, no external reviewer has yet produced a
+falsifiable prediction that this programme scored as a HIT.** Five round-15
+predictions produced: two run and missed, three still unrunnable (R15-1 no
+transcript corpus; R15-4 runnable now that the daily harness exists but not yet
+run; R15-5 self-invalidating). Over the same round the house's own declared
+predictions went **5 of 7** on TRIAL-OPT-COHORT and **5 of 6** on
+TRIAL-ABIO-KIRK.
+
+Perplexity's round-16 echo of R15-2's interval is **not** scored under its name
+(AI_PANEL round 16 §2) — it restated a number published in the briefing it read.
+Had it been credited, it would have recorded the same miss.
+
+### Status of the remaining round-15 predictions
+
+| # | Status after 2026-08-02 |
+|---|---|
+| R15-1 (earnings-call tone) | ❌ unchanged — no transcript corpus on disk, PIT-barred for historical text |
+| R15-4 (5-day reversal) | 🟡 **RUNNABLE** — `daily_events.py` harness shipped 2026-08-01; needs its own registration before it can be run |
+| R15-5 (0DTE skew) | ❌ unchanged — self-invalidating (reviewer states 0DTE volume was negligible before ~2020, inside the window it names) |
 
 ---
 
