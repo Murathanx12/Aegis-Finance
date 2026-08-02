@@ -523,9 +523,17 @@ def _get_price_panel(tickers: list[str], lookback_days: int = 504):
     latest bar). Batch-fetched, cached for the day — the optimizer itself
     never fetches data, so replay can hand it a truncated panel instead.
     """
+    import hashlib
+
     from backend.cache import cache_get, cache_set
 
-    key = f"pi:price-panel:{lookback_days}:{date.today().isoformat()}"
+    # The ticker set MUST be part of the key: this cache is shared by every
+    # lane family (reference equities, ATR mandate, TSMOM ETFs). Without it,
+    # whichever lane fetches first poisons the panel for the rest of the day —
+    # 2026-08-01 the TSMOM check received the reference lanes' equity panel
+    # and HELD on "panel missing assets: ['GLD','TLT','USO']".
+    tset = hashlib.md5(",".join(sorted(tickers)).encode()).hexdigest()[:10]
+    key = f"pi:price-panel:{lookback_days}:{tset}:{date.today().isoformat()}"
     hit = cache_get(key, 3600)
     if hit is not None:
         return hit

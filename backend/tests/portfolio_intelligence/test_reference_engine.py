@@ -336,3 +336,4 @@ class TestGetRegime:
         from backend.services.portfolio_intelligence.reference_engine import _get_regime
         mock_fetch.side_effect = RuntimeError("network down")
         assert _get_regime() is None
+
