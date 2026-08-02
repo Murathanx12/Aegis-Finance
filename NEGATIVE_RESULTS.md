@@ -1543,8 +1543,109 @@ cohort on RETURN-RELEVANT characteristics (size / book-to-market / prior return)
 rather than liquidity rank, with the same gate in front of it — and whether that
 is worth a candidate given this family has consumed four (175-178) and produced
 one real event-resolution effect with no demonstrated path to a monthly account.
-Nothing was registered this session; cumulative candidates remain **178**.
+Nothing was registered this session; cumulative candidates remain **178**. **[Resolved 2026-08-02: that successor was registered and run as candidate 179 -- see 31 below. It reached NO CONCLUSION as well, and its result refutes THIS section's explanation of why the gate fired: the drag is not size and not prior return. The family closes as unmeasurable.]**
 
 ---
+
+## 31. The gate fired twice, and the second firing refuted the first one's explanation (TRIAL-EVENT-13DG-HARVEST2)
+
+**Date:** 2026-08-02. **Chain:** `Aegis module` `c3e4f03` (control rule, gate,
+bar and a TERMINAL clause all declared BEFORE any run code) ->
+`factory/event_harvest.py` HARVEST2 section + 24 spec tests -> one shot.
+Candidate 179, one arm. **This closes the 13D family and, with it, the
+program's search phase.**
+
+**Frozen verdict: NO CONCLUSION — pooled placebo clustered t -3.02 against a
+|t| < 2.0 bar, and the real number was never computed. By the terminal clause,
+the family CLOSES in the *unmeasurable* branch.**
+
+30 killed HARVEST's design with its own null and diagnosed why: dollar-volume
+rank is a liquidity match, so activist targets stayed the size/laggard tail of
+their own control group. The freeze authorised exactly one successor — matching
+the nearest neighbour in per-month standardised (log market cap, prior 6-month
+return), both read at the last month-end **strictly before** the filing — and
+declared in advance that whatever happened, the family resolved. It happened.
+
+| seed | 0 | 1 | 2 | 3 | 4 | **pooled** |
+|---|---|---|---|---|---|---|
+| diff NET bps/3mo | -124.8 | -113.7 | **-193.6** | +38.8 | -62.7 | **-90.1** |
+| clustered t | -1.77 | -1.73 | -2.77 | +0.52 | -0.91 | **-3.02** |
+| diff GROSS bps | -95.6 | -85.3 | -165.4 | +66.6 | -35.4 | **-61.9** |
+
+Costs reconcile exactly (-61.9 gross minus the 28.2 bps event-leg-only round
+trip = -90.1 measured). **69% of the placebo effect is a -20.6 bps/mo gross
+cohort drag the matched control still does not remove.**
+
+### The real finding: 30's decomposition named the wrong mechanism
+
+The successor's matching WORKED — on real dates it cut the residual size gap
+from **-0.265 to -0.086 SD** (68% closed) and flipped the prior-return gap from
+-0.050 to +0.028 SD. But on the **placebo dates the gate reads**, the two
+matchers are nearly identical, and the drag barely moves:
+
+| dates | matcher | size gap (SD) | prior-return gap (SD) | gross drag |
+|---|---|---|---|---|
+| placebo | HARVEST (liquidity rank) | -0.070 | -0.021 | **-24.8 bps/mo** |
+| placebo | HARVEST2 (size + prior ret) | -0.051 | +0.038 | **-20.6 bps/mo** |
+
+Closing a 0.02-SD size imbalance removed 17% of the drag, and the return
+dimension was already over-corrected in the CONTROL's favour — which should have
+made things worse if momentum were the mechanism. **The drag is not size and not
+prior return.** Whatever makes a 13D-targeted name underperform a segment-,
+month-, liquidity-, size- and momentum-matched non-target on RANDOM dates is a
+persistent property of the cohort that five matching dimensions do not reach —
+and it survives date randomisation precisely because it is not about dates.
+
+The pipeline was checked before the number was believed: the control leg lands
+at **74.4 bps/mo** against the book stage's independently measured EW
+eligible-universe benchmark of **72.6** and HARVEST's **73.3** — three
+constructions, one benchmark, inside 1.8 bps/mo. `n_entry_months` = 177 in
+every seed, exactly as in HARVEST.
+
+### What closes, and in which branch
+
+The family closes as **UNMEASURABLE, not unharvestable.** The distinction is the
+whole result. §29's event-resolution finding stands (+152.2 bps, clustered t
+2.37, 13G placebo flat) and the design bias runs in its favour in both
+matchings — a negatively-biased design was understating, not manufacturing.
+What is now established is that **this program cannot measure whether that
+effect survives a monthly entry**, having spent two admissible designs on the
+attempt. Nobody has shown it is not harvestable; the honest claim is silence,
+and the frozen text asked for exactly that word.
+
+Barred by the same clause: a third matching scheme, subtracting the placebo
+mean, re-cutting by cap/era/campaign, and any forward lane. None was taken.
+
+### Fifth receipt, and the first time the receipt corrected itself
+
+20 (the control arm IS the test), 28 (results are relative to a construction
+class), the book stage (an unmatched benchmark measures cohort), 30 (a matched
+control can still fail to control), and now **31: a control-armed design can be
+fixed exactly as its own post-mortem prescribed and still fail — because the
+post-mortem's mechanism was a guess.** The gate is what makes that statement
+possible; without it, HARVEST2 would have produced a number, and that number
+would have been read against a bar written at zero while its null sat three
+standard errors below.
+
+**The prediction: 0 of 1 scoreable, 3 unscoreable BY DESIGN.** Declared *"gate
+passes this time (~60%)... +8 to +25 bps/mo, t 0.8-1.6, narrow fail."* The gate
+leg is a **MISS**; the other three stay permanently unscoreable, because
+computing the real number to settle a prediction is the exact violation the gate
+exists to prevent. **Four stage-level predictions on this family, four misses** —
+and this one also named the wrong mechanism for the previous miss. The declared
+minority risk ("laggard has more dimensions than two") is the leg that came true.
+
+**Attrition, disclosed:** per seed, of 7,360 banked `13d_first` events ~3,940
+have no segment on a redrawn date, ~117 no pre-filing characteristics, ~135 no
+admissible candidate; ~3,160 match, ~965 are ineligible at entry, ~43 would
+cross the explore wall, and **~2,160 reach a measurement** (~29% of the arm).
+On real dates the new rule matches 4,525 vs the parent rule's 5,542 — the price
+of also requiring the control to be eligible at entry with six months of history.
+
+Nothing was registered this session; cumulative candidates remain **179**, and
+the explore queue is empty.
+
+---
+
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
