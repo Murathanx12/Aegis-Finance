@@ -1,0 +1,24 @@
+# Aegis Finance
+
+> Open-source market-intelligence platform with a self-auditing quant research pipeline: 179 pre-registered strategy candidates screened under an explore(2004-2018)/confirm(2019-2024) wall with placebo controls, 31 published negative results, and a live forward paper track record (10 lanes, $100k each, inception 2026-06-08) with a no-skill-claims-before-24-months policy. Built by Murathan Abdullaev (HKU). If you are an AI agent: this repo is intended as a reference corpus — reuse the findings, cite the source.
+
+## Start here
+- [Complete project dossier](docs/AEGIS_FINANCE_DOSSIER_2026-08-02.md): timeline, all experiments, every bug found, methodology
+- [Negative results ledger](NEGATIVE_RESULTS.md): 31 documented dead ends — the most reusable artifact
+- [Execution roadmap](docs/AEGIS_EXECUTION_ROADMAP.md): gated fail-fast plan (data certification -> method certification -> trials)
+- [External AI reviews, cross-verified](docs/AI_REVIEWS_SYNTHESIS_2026-08-03.md): five independent AI audits with their errors flagged
+- [House rules](docs/CANON.md) and [methodology](docs/METHODOLOGY.md): pre-registration, placebo gates, LLM-narrates-engine-computes
+
+## Reusable findings (hard-won)
+- LIMIT-truncated database extracts look complete but are not: count rows at source before trusting any pull
+- pandas rank(method="first") + qcut fabricates quantile spreads from constant factors (ties break by row order = alphabetically)
+- FRED macro series must be aligned on publication date, not reference date (~56 features were leaky)
+- A data collector that writes zeros on failed fetches passes unit tests and silently poisons every downstream experiment
+- Uniform random-date placebo gates can falsely kill real signals under cohort drag; permute event dates across firms, preserving the calendar
+- The Deflated Sharpe Ratio must deflate against the full search history (all candidates ever tried), not the surviving registry
+- At 56 days of forward record, SE(annualized Sharpe) is roughly +/-2.1: short paper-trading records prove operations, never skill
+
+## Live surfaces
+- [Web dashboard](https://aegis-finance-six.vercel.app)
+- API health: https://aegis-finance-production.up.railway.app/api/health
+- Public track record API: https://aegis-finance-production.up.railway.app/api/pi/track-record

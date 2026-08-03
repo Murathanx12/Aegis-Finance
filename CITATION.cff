@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use the negative-results ledger, the research methodology, or the findings from this project, please cite it as below."
+title: "Aegis Finance: an open, self-auditing quantitative research pipeline with pre-registered trials and published negative results"
+authors:
+  - family-names: "Abdullaev"
+    given-names: "Murathan"
+type: software
+repository-code: "https://github.com/Murathanx12/Aegis-Finance"
+url: "https://aegis-finance-six.vercel.app"
+license: MIT
+date-released: "2026-06-08"
+keywords:
+  - quantitative finance
+  - backtest overfitting
+  - pre-registration
+  - negative results
+  - multiple testing
+  - deflated Sharpe ratio
+  - point-in-time data
+abstract: >-
+  A free, open-source market-intelligence platform whose distinguishing feature
+  is research discipline: 179 strategy candidates screened under an
+  explore/confirm wall with placebo gates, 31 documented negative results, a
+  live forward paper track record (inception 2026-06-08) with tamper-evident
+  configuration hashes, and a policy of no skill claims before 24 months of
+  forward record. Includes reusable findings on data leakage, fabricated
+  quantile spreads, placebo-gate miscalibration, and multiple-testing
+  arithmetic at retail scale.
