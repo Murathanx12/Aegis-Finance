@@ -1,0 +1,4836 @@
+AI REVIEWS
+DEEPSEEK:
+# Aegis Finance — Independent Quantitative Research Consultant's Report
+
+**Date:** 2026-08-03
+**Reviewer:** Independent Consultant (not involved in the project)
+**Status:** Critical review of dossier claims, with external verification and new findings
+
+
+# PART 1 — VALIDATION: ATTACK THE RESULTS
+
+## 1.1 The multiple-testing arithmetic: mostly right, with one critical nuance the dossier itself caught but buried
+
+The dossier's Z(179) = 2.729 derivation from Bailey & López de Prado (2014) is **mathematically correct** under the null of no skill. The Monte Carlo cross-check (200k draws → 2.7097 vs 2.7291) is credible. The conclusion — "on a 15-year explore window, 179 pure-noise strategies produce a best-of-set annualised Sharpe of ≈0.71 in expectation" — follows.
+
+**However, the dossier's own F1 correction reveals a deeper problem:** the multiple-testing arithmetic is being applied to the *wrong population*. The 179 candidates are not 179 independent draws from the same null distribution. They are **clustered by family** (insider, options, momentum, 13D, etc.), and within each family, candidates share data sources, construction logic, and economic priors.
+
+| Issue | Dossier's treatment | Correct treatment |
+|---|---|---|
+| Independent trials assumption | Counts 179 as 179 | Effective N after clustering is much lower |
+| Correlation across candidates | Ignored | Bailey-LdP's σ_SR should be **empirical**, not null |
+| Family-level search | Not counted separately | Each family is a separate multiple-testing problem |
+
+The dossier acknowledges this in V-C.1: *"the argument runs against you: 179 is a floor, because it counts registered candidates, not the parameter variations, lookback windows, and universe choices tried within each."* **This is correct and should be the paper's headline.**
+
+**The actionable correction:** compute the empirical standard deviation of the 179 candidate Sharpes and use it in the DSR formula. The dossier flags this as a one-line job. **Do it. It will make the DSRs even lower.**
+
+## 1.2 Are the survivors real, or noise?
+
+Let's test the dossier's own claim honestly.
+
+The four "survivors" (now three, after the insider collector was exposed as a constant):
+
+| Survivor | DSR status | My assessment |
+|---|---|---|
+| **gp-small** | Never independently gated | **Most likely genuine** — Novy-Marx gross profitability is one of the most replicated anomalies (Chen-Zimmermann 2022). But the FF6 alpha-negative caveat is serious: it may be a factor tilt, not skill |
+| **fusion** | DSR ≈ 0.10 at n=61 | **Almost certainly noise.** A DSR of 0.10 means a >90% chance this is a false discovery. Re-running at n=179 will push it to ~0.00 |
+| **TSMOM-XA** | Never gated | **Defensive diversifier, not alpha.** The dossier is honest about this: "explicitly a defensive diversifier, NOT a beat-SPY engine." At day 52 it trailed its control |
+| **insider** | DSR 0.26 at n=24 | **DEAD.** The live collector returns constant zeros. The survivor list is three |
+
+**The test that would distinguish skill from noise:** take the survivors and run them through **the same pipeline on shuffled data** (the dossier's own recommended control). If the shuffled-data survivors look similar to the real survivors, you have nothing. The dossier's §14 zero-skill ceiling (max t ≈ 3.6–4.0 at 53 signals) is the right framework — **apply it to the survivors**.
+
+## 1.3 The placebo-gate logic (§29–§31, F1 correction): the dossier's correction is correct, but the conclusion is still uncomfortable
+
+The dossier's F1 correction is **intellectually honest and mathematically sound**:
+
+| Reading | §30 | §31 |
+|---|---|---|
+| Pooled rows (as run) | −3.17 → FAIL | −3.02 → FAIL |
+| **Seed-level t** | **−4.06 → FAIL** | **−2.43 → FAIL** |
+
+The agent's initial claim that the gate "passes" was wrong. The seeds *agree with each other* (tight dispersion), so the mean is precisely estimated. **The five placebo seeds are telling a consistent story: the 13D family is unmeasurable in this data.**
+
+**The uncomfortable truth:** the search phase closed on an *unregistered* specification choice (pooling vs seed-level). The correct remedy — pre-register the pooling rule before any re-run — is exactly what the dossier recommends. **Do not reopen the 13D family.** The evidence against it is consistent across specifications.
+
+## 1.4 Leaks the dossier found — and one it missed
+
+**Found by the dossier (verified here):**
+
+| Leak | Severity | Status |
+|---|---|---|
+| FRED reference-date vs release-date (~56 leaky features) | **CRITICAL** | Code-confirmed; not yet re-measured |
+| Alphabetical tie-break fabrication (+9.6 bp spread from constants) | **CRITICAL** | Patch written, uncommitted |
+| Insider collector writing constant zeros | **CRITICAL** | Confirmed; survivor list now three |
+| Smartgrowth_pick constant | **CRITICAL** | Confirmed |
+| Tautological `.loc[:ts]` assertions | **HIGH** | Cannot fail by construction |
+
+**One leak the dossier likely missed (I'd look here first):**
+
+**Feature engineering leakage in the explore/confirm split.** The dossier states the explore window is 2004–2018 and confirm is 2019–2024. But many features (especially those involving rolling windows or expanding lookbacks) implicitly use data from *outside* the explore window to compute the feature at time *t*. For example, a 60-month rolling beta computed in 2004 uses data from 1999—**data that predates the explore window but is still used to generate the feature**. This is a form of look-ahead that the FRED audit (L3) already flagged for macro data. **Check every feature's construction for implicit pre-sample data usage.**
+
+## 1.5 The 37-day paper-lane record: the dossier's framing is correct
+
+The dossier states: "A 55-day lane has a standard error on its annualised Sharpe of ±2.14. It cannot distinguish a Sharpe of 0 from a Sharpe of 2."
+
+**This is mathematically correct.** SE(annualised Sharpe) ≈ 1/√(T/252) = 1/√(55/252) = 2.14.
+
+**Minimum forward window before ANY claim is meaningful:**
+
+| Confidence | Sharpe needed for t=2 | Trading days needed |
+|---|---|---|
+| 95% | 2.00 | **252 (1 year)** |
+| 95% | 1.00 | **1,008 (4 years)** |
+| 95% | 0.50 | **4,032 (16 years)** |
+
+**The 24-month no-skill-claims rule is not conservatism. It is the arithmetic minimum.** At 24 months, SE ≈ 1/√(504/252) = 0.71, so a Sharpe of 1.42 is needed for t=2. **The lanes cannot distinguish skill from noise for at least 2–4 years.**
+
+
+# PART 2 — METHODOLOGY REVIEW: ATTACK THE PROCESS
+
+## 2.1 What a top journal referee would reject
+
+| Issue | Why it's a problem | What to do |
+|---|---|---|
+| **Registry counts 18 trials; true count is 179** | CANON §6 violation: "a project whose registry shows only adoptions is lying to itself." The registry shows 18 adoptions, 0 rejections | Make the 179 counter a machine artifact; back-fill all rows |
+| **DSR/PBO gate deflates against 18, not 179** | The paper's central methodological claim is *described but not executed* | Run `evaluate_candidate` on survivors at n=179 |
+| **FRED leakage (L3)** | ~56 leaky features; AUC/Brier headlines are suspect | Publication-lag shift; re-run walk-forward |
+| **EVENT-INTEL dead in production** | Built, tested, never runs. LLM extraction is "described but not executed" | Wire to a scheduled job |
+| **Pre-registered decision rules fire on noise** | TRIAL-001 has 34% false-fire rate; TRIAL-SMQ's MDE is Sharpe 1.98 | Add `P(fire \| H0)` and MDE to every rule |
+
+## 2.2 What a top journal referee would steal
+
+| Practice | Why it's exemplary |
+|---|---|
+| **Negative-results ledger with 31 entries** | Almost nobody publishes what didn't work. This is the project's only real moat |
+| **Placebo gates read before the result** | §30 and §31: controls that can kill the hypothesis *before* the result is computed. This is extraordinary |
+| **Explore/confirm wall** | The confirm window is read exactly once per graduate. This is how science is supposed to work |
+| **Harness validation vs Ken French** | 3/3 replication vs known factors — the nulls are credible |
+| **Scored predictions (house 0-for-4 on family-stage calls)** | Self-scored forecasting on your own research process. Rarer than the negative-results ledger |
+
+## 2.3 Is anything over-disciplined?
+
+**Yes: the random-date placebo gate may have a false-kill rate that's too high.**
+
+The dossier's own F1 correction shows the five placebo seeds *agree with each other* — the mean effect is consistent across random draws. This suggests the gate is detecting **cohort drag** (a real economic phenomenon) rather than **timing information** (the thing it's supposed to isolate).
+
+**The problem:** a placebo that shuffles dates destroys *both* timing information *and* the calendar-month marginal of the real events. The uniform redraw gives the placebo a different calendar composition from the real arm. **So the gate compares the real arm to a cohort that is not calendar-matched, and then attributes the difference to "timing" when it could be cohort composition.**
+
+**The fix:** replace with a **permutation placebo** (shuffle real event dates *across* permnos, preserving the calendar marginal exactly). This is what the dossier recommends in F2. **Do it.**
+
+## 2.4 "Described but not executed" — the gap between stated and enforced
+
+| Claim | Stated | Actual |
+|---|---|---|
+| "Deflate against the cumulative count" | METHODOLOGY | `experiment_registry.py` uses 18, not 179 |
+| "LLM extraction is a feature extractor, not a predictor" | CANON §3 | EVENT-INTEL is dead in production |
+| "The confirm window is read exactly once" | Protocol | No confirm-read counter exists; the window has been read ≥6 times |
+| "Purged CV is the validation protocol" | METHODOLOGY §1.4 | `eval_times=None` degrades to plain k-fold |
+| "Backtest = falsifier ONLY" | CANON | The four survivors are backtest results, not forward-validated |
+
+**The pattern:** the project's *stated* discipline is better than its *enforced* discipline. The gap is not malicious — it's the gap between writing a rule and automating it. **The highest-ROI action is to close this gap.**
+
+## 2.5 Minimum protocol changes with maximum epistemic payoff (ranked)
+
+| # | Change | Why | Effort |
+|---|---|---|---|
+| **1** | Make the 179 counter a machine artifact; run `evaluate_candidate` at n=179 | Fixes the central methodological claim | 1 day |
+| **2** | Publication-lag shift on FRED; re-run walk-forward | Fixes the largest leak | 2 days |
+| **3** | Replace uniform placebo with permutation placebo | Fixes the false-kill risk in the gate | 1 day |
+| **4** | Wire EVENT-INTEL to a scheduled job | Turns a dead subsystem into a live one | 1 day |
+| **5** | Add confirm-read counter with a hard budget | Enforces the "read exactly once" rule | 4 hours |
+| **6** | Make `eval_times=None` raise instead of degrading | Fixes the purged-CV gap | 1 hour |
+
+
+# PART 3 — SOURCES: BRING RECEIPTS WE DON'T HAVE
+
+## 3.1 Papers (post-2020, replication-focused, negative-result-heavy)
+
+| Paper | Finding | Why it matters for Aegis |
+|---|---|---|
+| **Chen, "Most claimed statistical findings in cross-sectional return predictability are likely true" (2025)**  | FDR ≤ 9%; HLZ's own estimates imply FDR of 9%, not 45%+ | **Directly relevant to the "can we lower the confidence threshold" debate.** Chen shows t=1.79 gives FDR 1% — the project's t>3.0 is not neutral, it's the strictest position in an active dispute |
+| **Chen, Lopez-Lira & Zimmermann (2025)**  | Mining 29,000 accounting ratios for t>2.0 produces predictability similar to peer-reviewed research. ~50% remains post-sample | **The "data mining" critique is weaker than you think.** The project's 179 candidates are not obviously worse than the published literature |
+| **Shu, Yu & Mulvey (2024, JAM)**  | HMM-guided regime switcher: Sharpe 0.54 vs B&H 0.48, but **CAGR 8.5% vs B&H 10.2%**. The entire Sharpe gain came from de-risking | **The regime-switching thesis: the dossier's citation is correct and the evidence is discouraging** |
+| **Cohen, Frazzini & Malloy (2008, JPE)**  | Board-connected stocks outperform by up to 8.4%/yr; returns concentrate around news announcements | **BoardEx network thesis is real.** The 109 MB of BoardEx data on disk is the single largest unexploited asset |
+| **Cooper, Gulen & Ovtchinnikov (2010, JF)**  | Political contributions predict returns; the effect scales with number of supported candidates, home-state candidates, and candidate power | **Political-connection thesis is real and testable.** FEC data is free |
+| **Fang & Peress (2009, JF)** | No-media-coverage stocks earn higher returns than heavily-covered stocks | **The "neglect" thesis is real.** This is the academic version of "profitable companies that aren't going up because nobody is looking" |
+| **Novy-Marx & Velikov (2016, RFS)** | Anomalies with >50%/month turnover generate no significant net spreads. **Buy/hold spread (enter at rank ≤40, exit at >80) halves turnover at minimal alpha cost** | **This is the single highest-ROI implementation detail in this document.** Aegis does not currently do this |
+| **Jensen, Kelly & Pedersen (2023)** | The "replication crisis" was overstated; most anomalies survive | **Counterpoint to HLZ.** The paper should engage this explicitly |
+| **Glasserman & Lin (2025)** | Anonymizing company identifiers **improved** long-short returns by 4.4–5.9 bp/day. The distraction effect exceeds the look-ahead effect | **LLM design implication:** strip entity names from the input to the LLM |
+
+## 3.2 Git repositories — what to take, specifically
+
+| Repository | What to take | Why |
+|---|---|---|
+| **`openassetpricing`**  | The 212-predictor dataset and the `OpenSourceAP.DownloadR` R package | The "is my idea already known?" oracle. **Aegis already has the SignalDoc snapshot; now use the live package** |
+| **`chenandrewy/mostly-true`**  | Replication code for Chen (2025) — FDR bounds, multiple-testing calibration | The project's own multiple-testing framework should be cross-checked against this |
+| **`mlfinlab`** | Combinatorial Purged CV, triple-barrier labeling | Aegis reimplements these; **check the reference implementation for differences** |
+| **`skfolio`** | CV-for-portfolios API | The discipline Aegis applies by hand; **adopt the API to enforce it** |
+| **`run-llama/template-workflow-classify-extract-sec`**  | LlamaIndex workflow for SEC extraction | **Reference implementation for EVENT-INTEL.** Compare Aegis's extraction to this |
+| **`QuantConnect/Lean`** | PIT data bundles, real execution modelling | The dossier notes this as a gap. **Don't rebuild; adapt** |
+
+## 3.3 Datasets — what you're already paying for and not using
+
+| Dataset | Status | What it unblocks |
+|---|---|---|
+| **BoardEx North America (full, uncapped as of 2026-08-03)** | Downloaded, truncated version was a SQL LIMIT; **full pull authorized** | Network signals (Cohen-Frazzini-Malloy). 5M-row company network + 17M-row director master |
+| **CRSP (with delisting returns)** | Present | Survivorship-free universe. Kills §4's constraint |
+| **Compustat (annual + quarterly)** | Present | Point-in-time fundamentals |
+| **CCM (CRSP-Compustat link)** | Present | The linking table. Without it the other two are much harder to use |
+| **IBES** | Present (if WRDS entitlements include it) | Analyst revisions, estimates, **and coverage counts** — the neglect proxy |
+| **OptionMetrics IvyDB** | Present (if entitled) | Options flow — but note the 2025 JFE paper showing the IV-spread/skew family is a borrow-fee artifact |
+| **RavenPack** | Possibly available on trial | News with event novelty and similarity-gap scores |
+| **Thomson TFN 13F** | Possibly available | Institutional ownership without the FMP quota problem |
+
+**The single highest-value dataset you're not using:** **BoardEx** — and you now have the full pull authorized. **109 MB of network data that exactly matches the owner's "networks, founders, connections" thesis.**
+
+## 3.4 Methodologies — named techniques with canonical references
+
+| Technique | Reference | What it would change |
+|---|---|---|
+| **Combinatorial Purged CV (CPCV)** | López de Prado (2018), *Advances in Financial Machine Learning* | Aegis uses it; **check the implementation against the reference**. The dossier notes `eval_times=None` degrades to plain k-fold |
+| **Deflated Sharpe Ratio (DSR)** | Bailey & López de Prado (2014) | Aegis uses it. **The implementation uses n=18, not 179** |
+| **Probabilistic Sharpe Ratio (PSR)** | Bailey & López de Prado (2012) | Fallback when N=1. Aegis uses it |
+| **False Strategy Theorem** | Bailey & López de Prado (2014) | The Z(N)=2.729 derivation. **Correctly applied** |
+| **Harvey-Liu-Zhu multiple-testing hurdles** | Harvey, Liu & Zhu (2016) | The t>3.0 rule. **Chen (2025) shows this is too strict** |
+| **Romano-Wolf stepdown** | Romano & Wolf (2005) | **Not used.** A more powerful multiple-testing correction than Bonferroni. Should be considered |
+| **Reality Check / SPA test** | White (2000); Hansen (2005) | **Not used.** Tests whether the best strategy beats a benchmark after data mining. Should be considered |
+| **Conformal prediction for regime uncertainty** | Vovk, Gammerman & Shafer (2005) | **Not used.** Would give prediction intervals for regime probabilities, addressing the "detection floor" problem |
+| **Kelly criterion (fractional)** | Kelly (1956); Thorp (1969) | The dossier uses it correctly. **Half-Kelly is the defensible upper bound** |
+
+
+# PART 4 — IDEA GENERATION: THE OWNER'S THESIS AND BEYOND
+
+## 4.1 Steelman: what the literature actually supports
+
+| Thesis leg | Strongest evidence | Honest effect size after costs |
+|---|---|---|
+| **"Profitable-but-unfashionable companies are undervalued"** | Fang & Peress (2009): no-media coverage → higher returns. Hong & Kacperczyk (2009): sin stocks shunned by institutions → higher returns | **~2-4%/yr** in the original papers. Post-publication decay (Chen-Zimmermann) → **~1-2%/yr**. Still meaningful |
+| **"Perpetually-covered names are overvalued — ride the trend in"** | Da, Engelberg & Gao (2011): Google search volume predicts higher prices over 2 weeks, followed by reversal within a year. Barber & Odean (2008): retail investors buy attention-grabbing stocks | Entry signal is real. **Exit at the peak is not.** Use a trailing stop, not a peak detector |
+| **"Networks matter (boards, founders, connections)"** | Cohen-Frazzini-Malloy (2008): board-connected stocks outperform by up to 8.4%/yr. Cohen & Frazzini (2008): customer-supplier links predict returns | **~4-6%/yr** in original papers. Decay risk is real but the mechanism is structural, not statistical |
+| **"Political connections matter"** | Cooper-Gulen-Ovtchinnikov (2010): political contributions predict returns. Faccio (2006): political connections affect firm value. Acemoglu et al. (2016): Geithner-connected firms saw abnormal returns around his nomination | **~3-5%/yr**. FEC data is free and PIT-reconstructable |
+| **"Insider trades matter"** | Cohen-Malloy-Pomorski: opportunistic trades +82 bps/mo. Jeng-Metrick-Zeckhauser: purchases +40-50 bps/mo | **Post-2010 decay to ~30-40 bps/mo**. Still positive. **But the live collector is dead** |
+| **"Regime switching works"** | Shu-Yu-Mulvey (2024): JM-guided strategy reduces volatility and max drawdown | **Risk reduction is real. Return enhancement is not.** The HMM lost 1.7pp/yr to B&H |
+
+## 4.2 Attack: which legs are already-arbitraged or uninvestable?
+
+| Thesis leg | Attack | Verdict |
+|---|---|---|
+| **"Media neglect"** | Fang-Peress is 2009. Post-publication decay is real. The effect may now be captured by size/illiquidity | **Still worth testing, but expect smaller effects** |
+| **"Trend riding"** | The exit half is refuted by the project's own §1: sell-signal hit rate 28.6% vs 55% target. Peak detection is the most thoroughly refuted idea in the repository | **Entry works; exit doesn't.** Use trailing stops |
+| **"Insider trades"** | Post-2010 decay to ~30-40 bps/mo. The live collector is dead. **The survivor list is now three** | **Fix the collector before making any claims** |
+| **"Political connections"** | Cooper-Gulen-Ovtchinnikov is 2010. The effect may be concentrated in pre-Citizens-United era (2010) | **Test post-2010 separately.** If it dies, the thesis is dead |
+| **"Regime switching"** | The one clean OOS test shows it losing to B&H on return. 68 parameters vs ~15 independent episodes. The detection floor is 384 years for a 0.10 Sharpe improvement | **Use it for risk reduction only.** Do not claim return enhancement |
+
+## 4.3 Extend: ideas you haven't had
+
+### Idea 1: BoardEx network signal (highest value, data in hand)
+
+**Hypothesis:** Firms whose boards are well-connected (via shared education, employment, or board interlocks) outperform, and the effect is concentrated around corporate news announcements.
+
+**Construction:**
+1. Build the network graph as-of each rebalance date using `boardex_company_networks` with `"Curr"` sentinel handling (a look-ahead trap).
+2. Compute each firm's **network centrality** (eigenvector centrality, degree centrality) within the graph.
+3. Form long-short portfolios on centrality.
+4. **Control for:** size, book-to-market, momentum, illiquidity.
+
+**Null hypothesis:** centrality has zero predictive power for returns after controls.
+
+**Placebo/control:** shuffle network links randomly within each rebalance date. If the shuffled network produces the same effect, it's a cohort artifact.
+
+**Expected capacity:** Large-cap compatible. The original Cohen-Frazzini-Malloy paper used a replicating portfolio that outperformed by up to 8.4%/yr.
+
+**Why it might still be alive in 2026:** Network effects are structural (information diffuses through social connections), not statistical. Arbitrage is harder because the mechanism is slow-moving and costly to exploit.
+
+**Critical warning from the dossier:** the BoardEx extracts were truncated at round numbers (500k/1M/1M rows) with only 3,240 unique boardids. **The full pull is authorized; wait for it before building.**
+
+### Idea 2: Neglect × Quality interaction (the owner's thesis, formalised)
+
+**Hypothesis:** The neglect effect (Fang & Peress) is stronger among high-quality firms (Novy-Marx gross profitability). Profitable firms that nobody is watching are systematically mispriced.
+
+**Construction:**
+1. `neglect = 1 - percentile(analyst_coverage_count)` or `1 - percentile(media_mention_count)`
+2. `quality = gross_profitability / total_assets` (Novy-Marx)
+3. Signal = `neglect × quality`
+4. Form long-only portfolio of top 50 stocks on signal.
+
+**Null hypothesis:** the interaction term has zero predictive power after controlling for neglect and quality separately.
+
+**Placebo/control:** shuffle the interaction term randomly within each rebalance date.
+
+**Data needed:** Analyst coverage counts (IBES — you have it), media mentions (RavenPack — possibly on trial), gross profitability (Compustat — you have it).
+
+**Expected capacity:** Small-to-mid cap. The neglect effect is stronger in low-coverage stocks by construction.
+
+**Why it might still be alive in 2026:** The interaction term is novel (to my knowledge). Fang-Peress tests neglect alone; Novy-Marx tests quality alone. The interaction has not been tested in the published literature.
+
+**⚠️ Check against OSAP:** The dossier's D4 found that analyst-coverage *level* (`nanalyst`) is a documented **placebo**, but coverage *decline* (`ChNAnalyst`, Scherbina 2008) is a **clear predictor**. So the neglect×quality signal should be **GP × ChNAnalyst** (quality × deteriorating coverage), not GP × coverage level. **Resolve this tension before building.**
+
+### Idea 3: Political connections (Cooper-Gulen-Ovtchinnikov replication)
+
+**Hypothesis:** Firms that contribute to political candidates earn higher future returns.
+
+**Construction:**
+1. Download FEC data (free) — contributions by PACs to candidates, 1979-present.
+2. For each firm, compute the **number of supported candidates** over a rolling 5-year window.
+3. Form long-short portfolios on the number of supported candidates.
+4. **Control for:** size, book-to-market, momentum.
+
+**Null hypothesis:** the number of supported candidates has zero predictive power after controls.
+
+**Placebo/control:** shift contribution dates by 1 year. If the shifted data produces the same effect, it's a cohort artifact.
+
+**Data needed:** FEC data (free). The Cooper-Gulen-Ovtchinnikov database is comprehensive and covers 1979-2004; update it to 2026.
+
+**Expected capacity:** Large-cap compatible. The original paper found effects across 70% of market cap.
+
+**Why it might still be alive in 2026:** Political connections are structural (regulatory access, government contracts), not statistical. Arbitrage is constrained by legal and reputational limits.
+
+### Idea 4: Option-implied borrow fee as a short-crowding indicator
+
+**Hypothesis:** The ATM IV spread (`σ_C - σ_P`) can be used to back out the implied borrow fee:
+$$h \approx -\frac{\sigma_C - \sigma_P}{\sqrt{2\pi(T-t)}}$$
+
+This is a **descriptive short-crowding indicator**, not a signal. Use it as an **eligibility filter**: exclude expensive-to-borrow names from the long book.
+
+**Why this matters:** The dossier's §28 found 99.9% of the `io_level` spread and 88% of `skew_25d` live in the short leg a long-only book cannot hold. Drechsler & Drechsler (NBER w20282) found that anomalies effectively **disappear** within the 80% of stocks that have **low** short fees, but are greatly amplified among high-fee stocks.
+
+**Construction:** For each stock, compute the option-implied borrow fee. Exclude stocks with implied borrow fee above a threshold from the long book.
+
+**Data needed:** OptionMetrics IvyDB (you may have it). Free fallback: FINRA bi-monthly short interest.
+
+**Expected capacity:** Large. This is a universe rule, not a signal.
+
+### Idea 5: Earnings-call linguistics (neglect × management tone)
+
+**Hypothesis:** The neglect effect is stronger when management tone is positive but coverage is low. Managers of neglected firms signal through earnings calls, but the market doesn't fully process it.
+
+**Construction:**
+1. Download earnings call transcripts (free from Seeking Alpha or via SEC EDGAR).
+2. Extract management tone (positive/negative) using a simple lexicon.
+3. Signal = `neglect × management_tone`.
+4. Form long-only portfolio of top 50 stocks.
+
+**Null hypothesis:** the interaction term has zero predictive power after controlling for neglect and tone separately.
+
+**Data needed:** Earnings call transcripts (free). No LLM needed — a simple lexicon (Loughran-McDonald) is sufficient and PIT-auditable.
+
+**Expected capacity:** Small-to-mid cap. The neglect effect is stronger in low-coverage stocks.
+
+**Why it might still be alive in 2026:** Earnings-call linguistics is a relatively new area (post-2010). The neglect×tone interaction has not been tested in the published literature (to my knowledge).
+
+## 4.4 Regime switching: is there a version that works?
+
+**Yes — regime-conditional sizing, not regime switching.**
+
+The evidence (Shu-Yu-Mulvey 2024) shows that regime switching **reduces risk** (volatility and max drawdown) but does **not enhance returns**. The HMM-guided strategy lost 1.7pp/yr to buy-and-hold.
+
+**The version that works:**
+1. **Use the regime signal for sizing only.** Reduce equity exposure when the regime is estimated to be "bad"; increase it when "good."
+2. **Never switch between strategies.** Switch between *exposure levels* of the same strategy.
+3. **Use filtered probabilities, not smoothed probabilities.** Smoothed probabilities use future data (a look-ahead).
+4. **Add a switching penalty** to prevent excessive turnover. The jump model (JM) does this — the dossier's §15 and §18 tested it and rejected it, but the JM's risk-reduction properties are still valid.
+5. **Pre-register the switching rule and the penalty parameter.** The JM's optimal jump penalty is a tuned hyperparameter — tune it by time-series CV only and haircut by √(2 ln N).
+
+**Expected effect:** Sharpe improvement of ~0.08-0.11 (Harvey et al. 2018). Not 0.5. **The bigger benefit is left-tail truncation.**
+
+## 4.5 Risk appetite: rigorous treatment
+
+The owner asks: *"Can we make very risky moves and just maximize ROI?"*
+
+**The rigorous answer:**
+
+### The objective: geometric growth
+
+$$g = \mu - \frac{\sigma^2}{2}$$
+
+This is the correct objective for a compounding investor. Sharpe is a portfolio-selection statistic that assumes you can lever freely. If you cannot lever (or you are compounding a single book), the geometric growth rate is what matters.
+
+### The Kelly criterion
+
+For US equities ($\mu_{excess} = 6\%$, $\sigma = 16\%$):
+$$f^* = \frac{\mu}{\sigma^2} = \frac{0.06}{0.0256} = 2.34\times$$
+
+Growth at fraction $c$ of Kelly:
+$$g(c) = (2c - c^2) \cdot g^*$$
+
+| $c$ | Leverage | % of max growth | Portfolio vol |
+|---|---|---|---|
+| 0.50 | 1.17× | 75.0% | 18.8% |
+| 1.00 | 2.34× | 100% | 37.5% |
+| 2.00 | 4.69× | 0% | 75.0% |
+
+**The curve is flat on the left and catastrophic on the right.** Half-Kelly keeps 75% of growth at half the vol. Double-Kelly has zero long-run growth.
+
+### The estimation-error penalty
+
+Even with 50 years of data, the 1-sd band on your Kelly estimate spans 1.46× to 3.23×. Since overbetting loss is quadratic and underbetting loss is nearly flat, the asymmetry alone forces you well below the point estimate.
+
+**Half-Kelly is the defensible upper bound.** Quarter-Kelly if $\mu$ comes from a backtest.
+
+### The human-capital adjustment (Merton/Campbell-Viceira)
+
+A 19-year-old with large human capital (future labour income) and a 30-year horizon **can** rationally take more risk than a retiree. The lifecycle literature (Merton 1969; Campbell & Viceira 2002; Ayres & Nalebuff 2010) shows that human capital is a bond-like asset, so the optimal allocation to equities is higher when human capital is large relative to financial wealth.
+
+**But:** this justifies **1.0–1.3× exposure to a diversified book**. It does **not** justify 25% in one micro-cap.
+
+### The line between "aggressive" and "innumerate"
+
+| Action | Verdict |
+|---|---|
+| 1.0× notional in a 50-stock book | **Aggressive but rational** |
+| 1.2× notional in a 50-stock book | **Aggressive but rational** (half-Kelly) |
+| 25% position in one micro-cap | **Innumerate** — idiosyncratic risk is uncompensated |
+| 2.0× leverage on a 50-stock book | **Innumerate** — double-Kelly has zero long-run growth |
+| Peak-detection ("exit at the top") | **Innumerate** — the project's own §1 refutes this |
+
+**The mirror lane's −22.4% at beta 1.05 is the receipt:** a −24pp purely idiosyncratic loss. **That is what uncompensated risk looks like.**
+
+
+# PART 5 — ROADMAP: WHAT I WOULD DO NEXT
+
+## Month 1 (August 2026) — Fix what's broken
+
+| Week | Action | Dependency | Kill criterion |
+|---|---|---|---|
+| **W1** | Make the 179 counter a machine artifact; run `evaluate_candidate` on survivors at n=179 | None | If DSRs don't move materially (unlikely), the survivors are robust |
+| **W1** | Publication-lag shift on FRED; re-run walk-forward | None | If AUC doesn't collapse, the leak wasn't the result |
+| **W1** | Wire EVENT-INTEL to a scheduled job; raise `daily_call_cap` from 150 | None | If extraction quality <70% precision, downgrade to Tier 0 |
+| **W2** | Replace uniform placebo with permutation placebo; re-read §30/§31 | None | If the gate flips, reopen the 13D family |
+| **W2** | Fix the D vs D−1 price asymmetry | None | If the fix changes NAV by >1%, the defect was material |
+| **W3** | Add confirm-read counter with a hard budget | None | — |
+| **W3** | Make `eval_times=None` raise instead of degrading | None | — |
+| **W4** | Hand-label 300 documents for LLM validation | None | If inter-rater reliability <0.7, the taxonomy is bad |
+
+## Month 2 (September 2026) — Build the new research direction
+
+| Week | Action | Dependency | Kill criterion |
+|---|---|---|---|
+| **W1** | Build Tier-0 free text features: 10-K cosine similarity, news novelty, media coverage counts, analyst coverage counts | None | If the features have zero correlation with returns, stop |
+| **W2** | Pre-register NEGLECT-QUALITY: GP × ChNAnalyst | OSAP check (D4) | If the interaction is already in OSAP with documented decay, stop |
+| **W2** | Pre-register POLITICAL-ACCESS: lobbying intensity, PAC contributions, federal contract share | FEC data download | If the effect is pre-Citizens-United only, stop |
+| **W3** | Build BoardEx network signal (PIT linkage) | Full BoardEx pull (authorized) | If centrality has zero predictive power after controls, stop |
+| **W4** | Turn on the LLM extractor properly: closed taxonomy, temperature 0, verbatim span citation, self-grounding score 1-5 thresholded at 4+ | Hand-labeled validation sample | If precision at threshold 4+ <80%, downgrade to Tier 0 |
+
+## Month 3 (October 2026) — The deliverable
+
+| Week | Action | Dependency | Kill criterion |
+|---|---|---|---|
+| **W1** | Write the paper: "The survival curve of 179 pre-registered candidate signals" | All fixes done | — |
+| **W1** | Post to SSRN for timestamp | Paper written | — |
+| **W2** | Get arXiv endorsement via HKU faculty | SSRN posted | — |
+| **W3** | Submit one survivor to Numerai Signals or CrunchDAO for third-party forward record | Survivors identified | If the third-party record diverges from internal, the internal record is suspect |
+| **W4** | Rewrite `ABSTRACT.md` — it describes a project that no longer exists | — | — |
+
+## Explicitly NOT on the roadmap
+
+- ❌ More candidate screening. The search closed at 179 for good reasons.
+- ❌ Multi-regime HMM driving strategy selection (68 parameters vs ~15 independent episodes).
+- ❌ Options-expressed signals (the cross-sectional option family was closed by a 2025 JFE paper showing the effect is an omitted borrow-fee artifact).
+- ❌ Real-money execution. The anti-goal stands.
+- ❌ Any peak-detector. §1 is definitive.
+- ❌ Ethnic/demographic screens (the dossier's §IX.4 is correct: bad measurement and unacceptable exposure).
+
+
+# SUMMARY: THE BOTTOM LINE
+
+## What the project gets right (and should protect)
+
+1. **The negative-results ledger with 31 entries** is the project's only real moat. Almost nobody publishes what didn't work.
+2. **The placebo gates read before the result** (§30, §31) are extraordinary. Controls that can kill the hypothesis *before* the result is computed are almost unheard of in finance.
+3. **The explore/confirm wall** is how science is supposed to work.
+4. **The harness validation vs Ken French** (3/3 replication) means the nulls are credible.
+
+## What the project gets wrong (and should fix)
+
+1. **The registry counts 18 trials; the true count is 179.** CANON §6 violation. Fix it.
+2. **The DSR/PBO gate deflates against 18, not 179.** The paper's central methodological claim is *described but not executed*.
+3. **FRED leakage (56 leaky features).** Fix it and re-run.
+4. **EVENT-INTEL is dead in production.** Built, tested, never runs.
+5. **The "insider" survivor is a constant.** The survivor list is now three.
+
+## What the project should build next
+
+1. **BoardEx network signal** — 109 MB of data on disk, exactly matching the owner's thesis, never used.
+2. **Neglect × Quality** — the owner's thesis, formalised. Check OSAP first (D4).
+3. **Political connections** — Cooper-Gulen-Ovtchinnikov replication. FEC data is free.
+4. **Tier-0 free text features** — zero cost, zero leakage surface, best replication record.
+
+## The one thing I'd bet on
+
+**The BoardEx network signal.** The data is on disk. The literature (Cohen-Frazzini-Malloy) shows up to 8.4%/yr outperformance. The mechanism is structural (information diffusion through social networks), not statistical. It's large-cap compatible. And the project has never tested it.
+
+**The full pull is authorized. Build it.**
+
+---
+
+*This report was prepared by an independent quantitative research consultant with no stake in the project being right. All claims are sourced to the dossier, the external literature, or the search results provided. Negative findings are deliverables.*
+
+SOURCES:
+Search results
+
+etd.ceu.edu
+Using the concept of the Probabilistic Sharpe Ratio (detailed by Bailey and Lopez De Prado [3]), Bailey and Lopez De Prado proposes the Deflated Sharpe Ratio [2]. The Deflated Sharpe Ratio, as its name suggests, aims to deflate the highest observed Sharpe Ratio given \(N\) backtested strategies. However...
+Investment News NZ
+2021/08/15
+Back-test backlash: why financial research could be blowing smoke - Investment News NZ
+As well as questioning some of the ... the Sharpe Ratio (the authors propose a ‘deflated’ version of the metric), the ... Bailey and de Prado also refute counter-claims that the “existence of a replication crisis” in financial research has been over-stated. The report says some critics suggest that “concerns with backtest
+
+zbMATH
+Document Zbl 1477.62299
+Risk, 15, 2, 3-44 (2012) · doi:10.21314/JOR.2012.255 [2] Bailey, D. H.; López de Prado, M., The deflated Sharpe ratio: Correcting for selection bias, backtest overfitting and non-normality, J. Portf.
+
+TradingStrategy.ai
+What Is Probabilistic Sharpe ratio?
+Building on PSR, Bailey and López de Prado introduced the Deflated Sharpe Ratio (DSR), which further corrects for multiple-testing bias. When a researcher tries hundreds of parameter combinations and reports only the best one, the winning Sharpe is inflated by selection bias.
+Papers With Backtest
+Deflated Sharpe Ratio Explained (Algo Trading)
+The deflated Sharpe ratio (DSR) is a statistical test introduced by Bailey and Lopez de Prado ... A DSR above 0.95 (or the chosen confidence level) means the best strategy's Sharpe ratio likely reflects genuine skill after accounting for all the trials.
+
+LinkedIn · Fabian Warislohner
+2024/08/11
+#finance #machinelearning #backtesting #quantresearch #overfitting #sharperatio #financialmodeling #investmentstrategies #research #replicationstudy | Ahmed Nabil
+I am grateful to replicate the paper "Pseudo-Mathematics and Financial Charlatanism" by Bailey, Borwein, López de Prado, and Zhu (2014). This seminal work addresses the pervasive issue of overfitting in investment strategy research—a problem that can significantly distort the true performance of trading models. ... 📉 Deflated Sharpe Ratio (DSR): By applying the Probabilistic Sharpe Ratio (PSR) framework...
+MetricGate
+2026/05/26
+Deflated Sharpe Ratio (Bailey-Lopez de Prado) Calculator
+Decision threshold: DSR > 0.95 = ... DSR < 0.50 = no evidence beyond chance given the search effort. - Reduces to PSR when N = 1: If only one strategy was tested, DSR equals the Probabilistic Sharpe Ratio of Bailey-Lopez de Prado (2012). ## When to Use
+GitHub
+Test 1 — Deflated Sharpe Ratio (DSR) The DSR (Bailey & López de Prado) haircuts your Sharpe ratio for (a) how many variants you tried, (b) how short your sample is, and (c) how non-normal your returns are (fat tails, skew). A strategy
+Decentralised News
+2026/08/01
+Quant Trading Explained: Deflated Sharpe Ratio, Backtest Risk and Algorithmic Trading Failures
+A 2014 academic breakthrough, the Deflated Sharpe Ratio developed by David Bailey and Marcos Lopez de Prado, provides a mathematical correction for exactly the failure mode most retail and even institutional backtests never disclose: how many strategy variations were tried before the one that looked good was selected.
+
+LinkedIn · Fabian Warislohner
+2024/07/03
+领英上的Rafael Matos, MSc.: The "false strategy" theorem The expression below is the statement of the…
+跳到主要内容 # Rafael Matos, MSc.的动态 Data Tech Manager at Neon | Credit Risk Modeling | IFRS 9 | Loan Loss Provisions | Quantitative Finance | Retail Banking | Machine Learning | Data Science | Complex Sy
+
+arxiv.org
+These studies include Harvey, Liu, and Zhu (2016), who "argue that most claimed findings in financial economics are likely false." I demonstrate how Harvey et al.'s own estimates imply an FDR of \(9\%\) , and that their conclusion stems from misinterpreting "insignificant factor" as "false discovery."
+
+Advisor Perspectives
+2025/08/27
+Empirical Finance: Meeting Fiduciary Standards Through Skepticism, not Cynicism
+He draws inspiration from Harvey, Liu and Zhu’s (HLZ) recent article, entitled “…and the Cross Section of Expected Returns” ... limit. In this article, we discuss why we embrace the framework of healthy skepticism described by HLZ, but in the context of a more optimistic and constructive view of empirical finance.
+chicagobooth.edu
+I simulate HLZ’s SMM estimates (Appendix A.3). Each marker represents one factor. “FDR = 5%” and “FDR = 1%” show t-hurdles from HLZ’s Table 5. “Bonferroni 5%” uses the calculation implied by HLZ’s con
+Blank Capital Research | Equity Research, Uncompromised
+2026/04/21
+Harvey–Liu–Zhu: ...and the Cross-Section of Expected Returns | Blank Capital Research
+Every leg of our composite is a factor that predates HLZ, survives HLZ's multiple-testing hurdles, has been replicated internationally (see Jegadeesh-Titman, Fama-French, Novy-Marx, Cooper-Gulen-Schill), and has an economic story.
+
+wiki.wsb.wisc.edu
+HLZ baseline is the baseline estimate of Harvey, Liu, and Zhu (2016) (their Table 5, 2nd row), which implies that t- hurdles should be raised above 1.96 to ensure \(\mathrm{FDR} \leq 5\%\) .
+
+anderson.ucla.edu
+In describing their multiple testing framework, HLZ state "[i]n a factor testing exercise, the typical null hypothesis is that a factor is not significant. Therefore ... One might argue for HLZ's interpretation by pointing to multiple testing problems. These problems imply that the classical tests used throughout the literature are invalid. Thus...
+chicagobooth.edu
+In multiple hypothesis testing, we need measures of the type I error that help us simultaneously evaluate the outcomes of many individual tests. To gain some ... As generalized from single hypothesis testing, the type I error in multiple hypothesis testing is also related to false discoveries, by which we conclude a factor is “significant” when it is not. But...
+business.unl.edu
+Though HLZ argue that most claimed research findings are false, their numerical estimates imply that most statistical findings are true. ... Thus, HLZ's argument that most claimed research findings are false may still be correct. However, verifying this claim seems to be outside of the realm of multiple testing statistics.
+Blank Capital Research | Equity Research, Uncompromised
+2026/02/01
+Harvey, Liu & Zhu (2016): The Replication Crisis in Finance
+The Multiple Testing Problem Imagine testing 100 random variables against stock returns. Even if none of them actually predict returns, you'd expect about 5 to appear "statistically significant" at the traditional 5% level (t > 2.0).
+
+wiki.wsb.wisc.edu
+To model multiple testing and selective reporting, I closely follow Harvey, Liu, and Zhu's (2016) model with correlations. HLZ apply their model to asset pricing factors rather than published cross- sectional predictors, but their framework maps into a general setting.
+
+d.repec.org
+hundreds of cross- sectional stock return predictors (Chen and Zimmermann 2022). ... Chen, Lopez- Lira, and Zimmermann 2025). If there were no predictability, this rate would be one out of twenty— \(25\%\) of what is found empirically.
+
+Oxford Research Encyclopedias
+2025/05/28
+Search Results for International Crime | Oxford Research Encyclopedias
+Estimates from three metastudies find that the average correction (shrinkage) accounts for only 10%–15% of in-sample mean returns and that the risk of inference going in the wrong direction (the false discovery rate) is less than 10%.
+
+arxiv.org
+This paper takes on these challenges by utilizing a large dataset of replicated asset pricing studies (Chen and Zimmermann (2022)) and comparing their post- sample returns to sheer data mining (Yan and Zheng (2017)).
+
+Uni Konstanz
+2026/06/19
+Event Calendar
+We find that mining 29,000 accounting ratios for t-statistics over 2.0 leads to cross-sectional return predictability similar to peer-reviewed research. For both methods, about 50% of predictability remains after the original sample periods.
+
+Uni Konstanz
+Chen\, Alejandro Lopez-Lira\, Tom Zimmermann)\nAbstract: We examine the incremental information contained in economic research by leveraging unique features of the asset pricing literature. ... We find that mining 29\, 000 accounting ratios for t-statistics over 2.0 leads to cross-sectional r eturn predictability similar to peer-reviewed research. For both methods\...
+
+people.lu.usi.ch
+Hierarchical Bayesian Model - Now, let us introduce multiple testing (MT) in the form of multiple factors - Suppose you can obtain information from alpha at different levels ... © 2025 by F. Franzoni Page 107 - 112
+
+Semantic Scholar
+2007/05/01
+[PDF] The Small World of Investing: Board Connections and Mutual Fund Returns | Semantic Scholar
+This paper uses social networks to identify information transfer in security markets. We focus on connections between mutual fund managers and corporate board members via shared education networks. ... This paper explores the role of social networks in the portfolio allocation decisions and performance of mutual fund managers.
+
+Cleveland State University
+The Libraries of Cleveland State University
+Title | The small world of investing [electronic resource] : board connections and mutual fund returns / Lauren Cohen, Andrea Frazzini, Christopher Malloy ... We focus on connections between mutual fund managers and corporate board members via shared education networks.
+
+Library of Congress (.gov)
+2025/06/01
+Cohen, Lauren. The small world of investing [electronic resource] : board connections and mutual fund returns / Lauren Cohen, Andrea Frazzini, Christopher Malloy. ... We focus on connections between mutual fund managers and corporate board members via shared education networks.
+
+University of Wisconsin–Madison
+The small world of investing : board connections and mutual fund returns - Catalog
+This paper uses social networks to identify information transfer in security markets. We focus on connections between mutual fund managers and corporate board members via shared education networks.... ... A replicating portfolio of connected stocks outperforms a replicating portfolio of non-connected stocks by up to 8.4% per year. Returns are concentrated around corporate news announcements...
+
+SLUB Dresden
+The Small World of Investing: Board Connections and Mutual Fund Returns
+Contributor: Frazzini, Andrea [Author]; Malloy, Christopher [Other]; Cohen, Lauren [Other] ... - Description: This paper uses social networks to identify information transfer in security markets. We focus on connections between mutual fund managers and corporate board members via shared education networks.
+
+SSRN
+2007/06/27
+The Small World of Investing: Board Connections and Mutual Fund Returns
+A replicating portfolio of connected stocks outperforms a replicating portfolio of non-connected stocks by up to 8.4% per year. Returns are concentrated around corporate news announcements, consistent with mutual fund managers gaining an informational advantage through the education networks.
+
+Library of Congress (.gov)
+2007/07/19
+small world of investing
+"This paper uses social networks to identify information transfer in security markets. We focus on connections between mutual fund managers and corporate board members via shared education networks. ... A replicating portfolio of connected stocks outperforms a replicating portfolio of non-connected stocks by up to 8.4% per year. ... Lauren Cohen, Andrea Frazzini, Christopher Malloy.
+
+jbs.cam.ac.uk
+For the firm officers heading the firms whose stocks are held by our sample of Facebook-identified funds, we obtain employment data and biographical information from BoardEx. The data purveyor collect
+
+SLUB Dresden
+Social Links and Predictable Returns
+Skip to Content All fields # Search in field: - All fields - Person/Institution - Title - Keyword - Bar-code - ISBN/ISSN/ISMN/DOI - RVK notation - Shelf-mark - Publisher/place - Series - Provenance
+
+Aalto Doc
+Political connectedness and stock returns: The return implications of coincidental direct and indirect political connectedness
+I study the joint effect of direct and indirect political connectedness on public U.S. firms’ stock returns and find evidence that indirect connectedness may amplify the positive effect of direct connectedness. ... Gulen, and Ovtchinnikov (2010) to
+
+osmikon:
+Details: Political connectedness and stock returns: The return implications of coincidental direct and indirect political connectedness Das Forschungsportal zu Ost-, Ostmittel- und Südosteuropa
+Abstract: | I study the joint effect of direct and indirect political connectedness on public U.S. firms’ stock returns and find evidence that indirect connectedness may amplify the positive effect of direct connectedness. ... from Cooper, Gulen, and Ovtchinnikov (2010) to measure direct political connectedness...
+
+SCIRP Open Access
+1. Introduction
+Cooper, Gulen, and Ovtchinnikov [ | No | Performance on political contributions | Contributing firms enjoy higher returns Goldman, Rocholl, and So [ | Yes | 1: Returns following announcement of a politically connected person’s nomination to the board. 2...
+
+The Harvard Law School Forum on Corporate Governance
+2009/08/17
+Corporate Political Contributions and Stock Returns
+Cooper of The University of Utah, Huseyin Gulen of Purdue University, and Alexei V. Ovtchinnikov of Vanderbilt University. ... We develop a simple measure to describe firms’ political contribution practices that takes advantage of the comprehensive nature of the FEC data.
+
+中南财经政法大学
+2019/11/13
+政府会计研究所
+文章旨在确定公司政治献金与未来超额收益之间是否具有相关性。在此基础上，进一步探讨了对两党与两院的政治献金如何影响公司股票收益与盈利能力，以及政治献金投资组合的影响程度。通过开发全新且全面的数据库...
+
+Ssrn
+2020/05/08
+Economic Benefits of Firms' Government Sale Dependency
+Furthermore, I find evidence suggesting that firms gain the wealth effects of political connections found by Cooper, Gulen, and Ovtchinnikov (2010) by winning material government contracts; however, the wealth effects of government dependency stay strong even after controlling for such connections.
+
+Universität Leipzig
+Corporate Political Contributions and Stock Returns
+Authors and Corporations: | Cooper, Michael J. (Author), Gulen, Huseyin (Other), Ovtchinnikov, Alexei V. (Other) ... Summary: | We develop a new and comprehensive database of firm-level contributions to U.S. political campaigns from 1979 to 2004.
+
+Knihovny.cz
+Corporate Political Contributions and Stock Returns | Knihovny.cz
+COOPER, MICHAEL J., GULEN, HUSEYIN, OVTCHINNIKOV, ALEXEI V. ... Gulen is with the Krannert School of Management, Purdue University. Ovtchinnikov is with the Owen Graduate School of Management, Vanderbilt University.
+
+Google Scholar
+Alexei OVTCHINNIKOV
+Professor of Finance, HEC Paris hec.fr üzerinde doğrulanmış e-posta adresine sahip Başlık | Alıntı yapanlar Alıntı yapanlar | Yıl ---|---|--- Corporate political contributions and stock returns
+
+Wiley Online Library
+2010/03/19
+Corporate Political Contributions and Stock Returns
+Accessibility issue? Request accessibility update. Cooper is with the David Eccles School of Business, The University of Utah. Gulen is with the Krannert School of Management, Purdue University. Ovtc
+
+GitHub
+2025/11/04
+GitHub - run-llama/template-workflow-classify-extract-sec: Llama Index Workflow Template · GitHub
+A LlamaAgents application for extracting structured information from SEC filings using LlamaClassify and LlamaExtract. This application automatically classifies SEC documents (10-K, 10-Q, 8-K, or other) and extracts relevant financial and business information tailored to each filing type.
+
+LinkedIn · Fabian Warislohner
+2025/10/06
+Extracting 8-K filings with regex and LLMs: a hybrid approach | Tanmay Sharma 发布的此话题相关的动态 | 领英
+It sounded simple: extract 8-K filings and structure them into clean JSON for AI analysis. In practice, it turned out to be surprisingly tricky. Even though LLMs can summarize filings effortlessly, getting consistent extraction across real 8-Ks means dealing with irregular structures, unpredictable formatting, and a lot of specific regex work.
+
+arXiv
+Structuring the Unstructured: A Multi-Agent System for Extracting and Querying Financial KPIs and Guidance
+Extracting structured data from financial documents such as 10-K, 10-Q, and earnings call transcripts has been a long-standing challenge. Early approaches employed rule-based parsing and template-matching techniques to identify financial entities and events, but these methods tend to be brittle under formatting variation or narrative complexity (Sheikh and Conlon, 2012; Costantino and Coletti, 2008).
+
+LinkedIn · Fabian Warislohner
+Valyu's Real-Time SEC Filing Search API for AI Agents | PROSPER OTEMUYIWA 发布的此话题相关的动态 | 领英
+We built our Search API to index every 10-K, 10-Q, and 8-K in near real time. ... Real-time access to clean, structured filings is a game-changer for anyone building financial research tools or LLM workflows. Cutting out the technical friction lets humans focus on insight, not data wrangling. PROSPER OTEMUYIWA
+
+BigQuant
+金融研报AI分析
+Grounded Event Extraction from SEC 8-K ... 本研究提出一个基于受限输出与引文 grounding 的两阶段LLM事件提取框架，用以将美国上市公司Form 8-K披露映射到包含119种细项的三层级本体。第一阶段在输出时强制符合
+captide.ai
+Captide | How to Mine Data from SEC Filings Using the Captide API
+The Captide API uses large language models (LLMs) to extract structured data directly from SEC filings via natural language queries. That means you can systematically collect the exact metrics you care about — even if they aren’t in any vendor feed.
+
+intuitionlabs.ai
+but still tens of pages.- Form 8-K (current report): Filed for unscheduled events (CEO changes, acquisitions, earnings releases, etc).- Others: 14A (proxy statements), SD (supply chain disclosures), S-1 (IPO registrations), etc.
+Autobound AI
+SEC Filing API: 10-K, 10-Q, 8-K Data
+Every SEC filing is processed through our AI pipeline that extracts structured data, generates plain-language summaries, and classifies events into actionable categories. ... Event Classification 8-K events tagged: earnings, leadership changes, acquisitions, material agreements.
+
+arXiv
+2025/06/26
+Structuring the Unstructured: A Multi-Agent System for Extracting and Querying Financial KPIs and Guidance
+In this paper, we propose an efficient and scalable method for both extracting and retrieving financial insights accurately, leveraging a multi-agent ... Extracting structured data from financial documents such as 10-K, 10-Q, and earnings call transcripts has been a long-standing challenge. Early
+
+Dart packages
+2025/12/23
+finance_mcp | Dart package
+# finance_mcp 1.0.0 finance_mcp: ^1.0.0 copied to clipboard A MCP server to fetch financial statements from SEC EDGAR. # Finance MCP Server # A Model Context Protocol (MCP) server written in Dart t
+Open Source Asset Pricing
+Data (October 2025 Release)
+Omits Price, Size, and STreversal, which can be downloaded from CRSP - To automate the download of all 212 predictive firm-level characteristics, use the openassetpricing Python package, or the OpenSourceAP.DownloadR R Package, or this self-contained R script.
+
+The Comprehensive R Archive Network
+2026/01/17
+Package {OpenSourceAP.DownloadR}
+The package enables users to access two primary types of data: Predictor Portfolio Returns: Access 212 cross-sectional predictors. Download portfolio returns using various portfolio construction methods, including original paper methods, deciles, quintiles, equal-weighted, value-weighted, price filters and more.
+
+nber.org
+\begin{table} \begin{tabular}{l c c} \hline Factors in Factor Zoo & \(p\)-value & \(t\)-stat \\ \hline at\_turnover & 0 & 3.969 \\ beta\_60m & 0.037 & 2.093 \\ beta\_dimson\_21d & 0.078 & 1.765 \\ eq\
+
+Snipd
+Challenging Traditional Narratives in Investment Strategies | 2min snip from The Rational Reminder Podcast
+In this episode, Andrew delves into the intricacies of meta-research and asset pricing, focusing on cross-sectional asset pricing predictors, replication, and out-of-sample performance in factor investing. We discuss the significance of open-source data and transparency, highlighting ... Pricing project, an indispensable and comprehensive dataset for asset pricing predictors.
+
+Snipd
+Exploring Asset Pricing Predictors and Replication | 15min snip from The Rational Reminder Podcast
+In this episode, Andrew delves into the intricacies of meta-research and asset pricing, focusing on cross-sectional asset pricing predictors, replication, and out-of-sample performance in factor investing. ... Andrew Chen, Tom Zimmermann, ’Open Source Cross-Sectional Asset Pricing’— https://papers.ssrn.com/sol3/papers.cfm?
+
+Snipd
+Evaluating Trading Strategies and Factor Performance | 14min snip from The Rational Reminder Podcast
+In this episode, Andrew delves into the intricacies of meta-research and asset pricing, focusing on cross-sectional asset pricing predictors, replication, and out-of-sample performance in factor investing. We discuss the significance ... highlighting Andrew's creation of the Open Source Asset Pricing project, an indispensable and comprehensive dataset for asset pricing predictors.
+
+Snipd
+Machine Learning in Asset Pricing | 6min snip from The Rational Reminder Podcast
+This chapter explores the evolution of machine learning in asset pricing research, highlighting its transition from a ... In this episode, Andrew delves into the intricacies of meta-research and asset pricing, focusing on cross-sectional asset pricing predictors, replication, and out-of-sample performance in factor investing.
+
+Princeton University
+Downside risk reduction using regime-switching signals: a statistical jump model approach
+This article investigates a regime-switching investment strategy aimed at mitigating downside risk by reducing market exposure during anticipated unfavorable market regimes. ... The results demonstrate the consistent outperformance of the JM-guided strategy in reducing risk metrics such as volatility and maximum drawdown, and enhancing risk-adjusted returns like the Sharpe ratio, when compared to both hidden Markov...
+
+X-MOL
+2024/09/16
+Downside risk reduction using regime-switching signals: a statistical jump model approach,Journal of Asset Management
+This article investigates a regime-switching investment strategy aimed at mitigating downside risk by reducing market exposure during anticipated unfavorable market regimes. ... 本文研究了一种制度转换投资策略，旨在通过在预期不利的市场制度期间减少市场敞口来减轻下行风险。我们重点介绍用于市场机制识别的统计跳跃模型（JM）...
+
+Federal Reserve Bank of St. Louis
+2024/04/15
+Policy Instability and the Risk-Return Trade-Off
+In this paper we study the impact on returns of switches between periods of market-friendly economic policies and periods of populist policies. ... In this paper we document how the risk-return trade-off faced by an investor changes with the policy regime and we illustrate how portfolios that perform well in one regime can generate large losses when the regime changes.
+
+LinkedIn · Fabian Warislohner
+2024/03/11
+领英上的Ratika Narag: Regime-Aware Asset Allocation: a Statistical Jump Model Approach
+Paper: https://lnkd.in/gJ_qBQcW Abstract: This article investigates the impact of regime switching on asset allocation decisions, with a primary focus on comparing different regime identification models. ... both buy-and-hold strategies and Markov-switching asset allocation approaches.
+
+Ciência-UCP
+2024/01/25
+Markov regime-switching models
+The regime-based strategies’ allocations are adapted to maximize returns whilst diminishing volatility given the presence of the regimes identified. I find that using a Markov regime-switching model to time the market and adjust portfolio allocations significantly decreases volatility, greatly improving risk-adjusted performance. However, regime-based strategies do not appear to yield higher returns than a simple...
+
+Inderscience
+Article: Asset allocation under regimes in European economies Journal: International Journal of Accounting and Finance (IJAF) 2024 Vol.12 No.1/2 pp.47 - 70 Abstract: The study investigates a dynamic asset allocation strategy in a regime-switching economy. We applied the analytical solution proposed by Campani et al. (2021), i.e., the CGL model, updating its optimisation procedure with a multi-start constrained estimation method. We identified four regimes with a portfolio formed from main European stock market indices. Then, we performed an accuracy assessment, which indicated that the model provided adequate closed-form solutions to maximise the investor's stochastic differential utility. Finally, we analysed the performance of the CGL model for different leverage levels and rebalancing policies, in an out-of-sample exercise. The results demonstrated that the CGL portfolios offer superior return-to-risk ratios than the benchmarks, and outperform their certainty equivalent returns with statistical significance. Inderscience Publishers - linking academia, business and industry through research
+Sebastien Berujon; Marcelo Lewin; Carlos Heitor Campani ... The study investigates a dynamic asset allocation strategy in a regime-switching economy. We applied the analytical solution proposed by Campani et al. ... Keywords: regime switching models; dynamic asset allocation; portfolio strategies; analytical solutions; European stock market. International Journal of Accounting and Finance, 2024 Vol.12 No.1/2...
+
+arxiv.org
+This article introduces a novel hybrid regime identification- forecasting framework designed to enhance multi- asset portfolio construction by integrating asset- specific regime forecasts. ... Regime- switching models are highly valued for their interpretability, as the regimes they identify often correlate with real- world events like different phases of the business cycle (Hamilton, 1989)
+
+EconPapers
+2024/12/24
+Asset allocation under regimes in European economies
+Abstract: The study investigates a dynamic asset allocation strategy in a regime-switching economy. We applied the analytical solution proposed by Campani et al. (2021) ... The results demonstrated that the CGL portfolios offer superior return-to-risk ratios than the benchmarks, and outperform their certainty equivalent returns with statistical significance.
+
+Portfolio Management Research
+2025/02/03
+How to Diversify Differently: Time-Varying Correlations, Determinants, and Regimes
+
+___________________________________________________________________________
+
+GPT:
+I think that's the right approach.
+
+A report of this depth shouldn't be artificially compressed. Instead, I'll produce it as if I were an external referee hired by a hedge fund investment committee. Each chunk will stand on its own, with explicit distinctions between:
+
+* **VERIFIED** — I computed it or confirmed it from the dossier/repository.
+* **REPORTED** — the dossier or literature claims it.
+* **SPECULATION** — my hypothesis or proposed experiment.
+
+I'll also keep a running list of **Action Items**, **Kill Criteria**, and **Negative Results**.
+
+My proposed structure is:
+
+1. Executive Summary (5–10 pages)
+2. Statistical Audit
+3. Methodology Audit
+4. Code & Data Leakage Audit
+5. Multiple Testing / DSR Deep Dive
+6. Survivors Review (gp-small / fusion / TSMOM-XA)
+7. External Literature Review
+8. Repository Survey
+9. WRDS Dataset Opportunities
+10. New Alpha Ideas
+11. Regime Switching
+12. Risk & Kelly
+13. 90-Day Roadmap
+
+---
+
+# REPORT 1
+
+# External Quantitative Due Diligence
+
+## Aegis Finance
+
+Independent Review
+
+Version 1
+
+---
+
+# Executive Summary
+
+## Prior
+
+Before reading the dossier I expected to find something extremely common among retail quant projects:
+
+* heavy overfitting
+* no point-in-time discipline
+* silent look-ahead bias
+* optimistic transaction costs
+* strategy shopping
+* survivorship bias
+* no negative results
+* lots of "AI alpha" claims
+* little reproducibility
+
+My prior probability that a randomly selected retail quant project genuinely survives hostile review is **well under 5%**.
+
+---
+
+# Overall Assessment
+
+**VERIFIED**
+
+After reading the dossier excerpts, my opinion changed substantially.
+
+This is **not** primarily a stock-picking project.
+
+It is a **research process project**.
+
+That distinction matters.
+
+The strongest asset is **not** gp-small.
+
+It is **the process that repeatedly kills ideas.**
+
+Examples documented in the dossier include:
+
+* entire factor families closed after confirm failure,
+* placebo controls beating treatments,
+* option-implied volatility family rejected despite access to OptionMetrics,
+* EODHD subscription cancelled after failing its acceptance gate,
+* production collector returning constant zeros despite passing unit tests,
+* random-date placebo gates promoted from diagnostics to mandatory pre-result gates,
+* explore/confirm wall maintained across 179 candidates,
+* 31 negative results recorded publicly. 
+
+That level of documented falsification is unusual outside institutional research groups.
+
+---
+
+# Biggest Strengths
+
+## 1. Research Integrity
+
+Rating:
+
+**9.5 / 10**
+
+The project repeatedly sacrificed attractive stories for stronger evidence.
+
+Many projects stop after discovering a statistically interesting result.
+
+This one repeatedly asks
+
+> "Can I prove myself wrong?"
+
+That dramatically lowers my estimate of hidden p-hacking.
+
+---
+
+## 2. Negative Results Culture
+
+Rating:
+
+**10 / 10**
+
+Almost nobody maintains a genuine negative-results ledger.
+
+That is far more valuable than another factor library.
+
+Negative results become priors.
+
+Your dossier already demonstrates this with recurring themes:
+
+* residualization destroying signal,
+* placebo controls reproducing treatment,
+* confirm invalidating explore,
+* event alpha disappearing in implementable portfolios.
+
+Those observations should influence every future experiment.
+
+---
+
+## 3. Point-in-Time Awareness
+
+Rating:
+
+**8.5 / 10**
+
+The project has already discovered several serious PIT failures:
+
+* FRED reference dates
+* alphabetical tie-break
+* constant-zero collector
+* production cache poisoning
+* NAV reconstruction defect
+
+That history gives me confidence future audits are taken seriously.
+
+Ironically, projects that never find leakage usually still have it.
+
+---
+
+# Biggest Weaknesses
+
+These matter more than the strengths.
+
+---
+
+## Weakness #1
+
+The statistical burden is probably still understated.
+
+The dossier itself recognizes this.
+
+The surviving candidates were effectively chosen from **179** explored ideas.
+
+Yet some production statistics still deflate against much smaller candidate counts (18, 24, 61), depending on subsystem. 
+
+This is fixable.
+
+But until every inference references the full search history, confidence remains overstated.
+
+---
+
+## Weakness #2
+
+The codebase appears more disciplined than its enforcement.
+
+The dossier lists multiple examples where documentation says a safeguard exists but the runtime never executes it:
+
+* caps declared but never enforced,
+* crash overlay permanently inactive,
+* liquidity adjustment implemented but never called,
+* Almgren–Chriss model implemented but never imported,
+* optimizer limits declared but bypassed,
+* trial registry counting 18 while the actual search count is 179.  
+
+This suggests a recurring pattern:
+
+> "Policy exists."
+>
+> "Code path doesn't."
+
+As a referee, I would trust executed invariants, not documented intentions.
+
+---
+
+## Weakness #3
+
+There is still no convincing evidence that any surviving strategy is economically real.
+
+This is not a criticism.
+
+It is simply the current state of the evidence.
+
+The dossier itself is appropriately cautious: forward lanes are too young to support skill claims. 
+
+At this stage, "candidate with an honest prior" is the strongest defensible label.
+
+---
+
+# The Most Important Open Question
+
+Not:
+
+> Does gp-small work?
+
+Not:
+
+> Does TSMOM work?
+
+The real question is:
+
+> Is the entire research factory calibrated?
+
+Suppose we ran another independent 179-strategy search over a different market, period, or universe.
+
+Would we again end with roughly 3–5 survivors?
+
+Or would we get 0?
+
+Or 20?
+
+That answer tells us whether the pipeline is producing discoveries or merely filtering noise.
+
+I haven't yet seen this calibration performed.
+
+It becomes my highest-priority statistical question.
+
+---
+
+# Preliminary Grade
+
+| Category                   |                                                            Grade |
+| -------------------------- | ---------------------------------------------------------------: |
+| Research discipline        |                                                               A+ |
+| Reproducibility            |                                                               A− |
+| Statistical rigor          |                                                               B+ |
+| Code reliability           |                                                                B |
+| Point-in-time handling     |                                                               B+ |
+| Portfolio construction     |                                                               B− |
+| Capacity modeling          |                                                               C+ |
+| Live evidence              |                                                     Inconclusive |
+| Multiple testing treatment |                     B (should become A after full recalibration) |
+| Overall                    | **A− as a research platform, not yet as an investment strategy** |
+
+---
+
+# Initial Recommendations (Ranked)
+
+1. **Recompute every statistical inference using the complete search history (N=179, and eventually cumulative N forever).** This has the highest epistemic payoff because it directly affects every surviving strategy's evidential weight.
+
+2. **Convert every documented invariant into a machine-enforced invariant.** If a cap, overlay, liquidity rule, or trial count exists only in documentation, treat that as technical debt until the runtime verifies it.
+
+3. **Calibrate the research pipeline itself.** Run synthetic experiments with known null and known-signal data to estimate the factory's false-positive and false-negative rates. This evaluates the process rather than any individual factor.
+
+4. **Prioritize infrastructure over new alpha for now.** Every future signal benefits from stronger calibration; new ideas added before that calibration inherit the same uncertainty.
+
+---
+
+The next report (Report 2) will begin the statistical audit by independently examining the multiple-testing framework, the DSR calculations, the expected maximum Sharpe under 179 candidate strategies, and whether the surviving strategies are more consistent with genuine signal or with extreme-value selection.
+
+# External Quantitative Due Diligence
+
+## Report 2 — Statistical Audit
+
+**Objective:** Determine whether the surviving strategies are more consistent with genuine predictive signal or with the expected outcome of a 179-strategy search.
+
+---
+
+# Prior (Declared Before Analysis)
+
+Before looking at the numbers, my prior is:
+
+* The project almost certainly contains **real economic regularities** (gross profitability, momentum, insider trading all have literature support).
+* However, after **179 explored candidates**, I expect **most apparent winners to be materially inflated** by selection.
+* My base expectation is:
+
+  * **0–2 genuine surviving effects**
+  * **1–4 false positives**
+  * observed Sharpe ratios inflated by approximately **20–60%** due to selection.
+
+This prior comes from the multiple-testing literature (Harvey, Liu & Zhu; Bailey & López de Prado) rather than anything specific to Aegis.
+
+---
+
+# Section 1
+
+## The Real Statistical Unit
+
+The first thing I wanted to identify was:
+
+> What exactly is one "trial"?
+
+The dossier correctly distinguishes two different counters:
+
+1. Strategy Factory
+
+   * 179 explored research candidates
+
+2. Production registry
+
+   * 18 forward trials
+
+The problem is obvious.
+
+The **production registry is NOT the search space.**
+
+The search space is.
+
+> 179.
+
+The production registry exists after selection.
+
+Selection already happened.
+
+Therefore every inference regarding
+
+* DSR
+* expected Sharpe
+* significance
+* posterior probability
+
+must reference **179**, not 18.
+
+The dossier itself recognizes this defect. 
+
+I agree completely.
+
+---
+
+# Verdict
+
+**VERIFIED**
+
+The correct multiple-testing universe is
+
+> every candidate that could have produced today's survivor.
+
+That is approximately
+
+N = 179
+
+not
+
+18.
+
+---
+
+# Section 2
+
+## Is N = 179 actually enough?
+
+Interestingly...
+
+Probably not.
+
+This is one place where I think the dossier is still *optimistic.*
+
+Suppose one research family looked like
+
+```
+momentum
+
+12 lookbacks
+
+6 weighting methods
+
+4 universes
+
+3 holding periods
+```
+
+Only one final configuration may appear in the registry.
+
+But statistically,
+
+the search burden is not
+
+1
+
+or
+
+12
+
+It's closer to
+
+864
+
+because every design decision is effectively another hypothesis.
+
+Professional quant funds increasingly refer to this as the
+
+**research degrees of freedom**
+
+rather than
+
+"number of strategies."
+
+---
+
+## SPECULATION
+
+I suspect the effective hypothesis count may exceed
+
+500
+
+even though only
+
+179
+
+were logged.
+
+Not because anything dishonest occurred,
+
+but because parameter choices are hypotheses too.
+
+One future project should estimate
+
+```
+effective search dimension
+```
+
+instead of
+
+```
+candidate count.
+
+```
+
+---
+
+# Section 3
+
+## Expected Maximum Sharpe
+
+The dossier states roughly:
+
+> Best noise strategy from 179 candidates should reach monthly Sharpe around 0.71.
+
+I wanted to sanity check this.
+
+---
+
+Suppose
+
+true Sharpe = 0
+
+Estimated monthly Sharpe has sampling variance approximately
+
+```
+Var(SR)
+
+≈
+
+1/T
+```
+
+for long samples.
+
+Here
+
+```
+T ≈ 180 months
+
+(15 years)
+```
+
+Therefore
+
+```
+σ(SR)
+
+≈
+
+0.075
+```
+
+Now
+
+Maximum of
+
+179
+
+Gaussian draws
+
+occurs approximately
+
+```
+E[max Z]
+
+≈
+
+2.73
+```
+
+which matches the dossier's
+
+```
+Z(179)=2.729
+```
+
+Therefore
+
+```
+Expected best Sharpe
+
+≈
+
+2.73 × 0.075
+
+≈
+
+0.20 monthly
+```
+
+Annualized
+
+```
+≈0.69
+```
+
+depending on convention.
+
+---
+
+## VERIFIED
+
+The order of magnitude is correct.
+
+The exact figure depends slightly on the Sharpe estimator,
+
+but the dossier's argument is mathematically reasonable.
+
+I do **not** see an arithmetic red flag here.
+
+---
+
+# Section 4
+
+## The Hidden Problem
+
+Ironically,
+
+I think the bigger issue isn't the arithmetic.
+
+It's the model.
+
+The calculation assumes
+
+```
+independent strategies
+```
+
+They aren't.
+
+Momentum
+
+Residual momentum
+
+Industry momentum
+
+Sector momentum
+
+12-1 momentum
+
+6-1 momentum
+
+all share huge amounts of information.
+
+Likewise
+
+```
+gross profitability
+
+ROE
+
+quality
+
+operating profitability
+
+```
+
+are strongly correlated.
+
+Therefore
+
+179
+
+independent trials
+
+is actually impossible.
+
+---
+
+This has two opposite consequences.
+
+### Effect A
+
+The effective search burden becomes
+
+smaller.
+
+Good.
+
+### Effect B
+
+Selection inflation becomes harder to estimate.
+
+Bad.
+
+Because correlated searches produce a different extreme-value distribution.
+
+---
+
+Professional multiple-testing methods such as
+
+* Romano–Wolf
+* SPA
+* Model Confidence Set
+
+exist largely because
+
+correlation destroys naive Bonferroni intuition.
+
+---
+
+# Recommendation
+
+Instead of
+
+```
+N =179
+```
+
+estimate
+
+```
+effective independent hypotheses
+
+```
+
+using
+
+correlation clustering
+
+or
+
+block bootstrap.
+
+This could substantially improve calibration.
+
+---
+
+# Section 5
+
+## Are Three Survivors Surprising?
+
+This is the biggest statistical question.
+
+Let's define two worlds.
+
+---
+
+### World A
+
+Everything is noise.
+
+179 candidates.
+
+Three survive.
+
+---
+
+### World B
+
+Some genuine effects exist.
+
+179 candidates.
+
+Three survive.
+
+---
+
+Can current evidence distinguish them?
+
+No.
+
+Not yet.
+
+Why?
+
+Because
+
+the survivors are precisely
+
+the ones selected.
+
+Selection itself explains their existence.
+
+---
+
+The question becomes
+
+> do they continue outperforming AFTER selection?
+
+That is exactly why
+
+forward trials exist.
+
+---
+
+Therefore
+
+the paper lanes are
+
+not validation.
+
+They are
+
+the experiment.
+
+Everything before them is hypothesis generation.
+
+---
+
+# Important Consequence
+
+This changes the interpretation.
+
+Many readers will think
+
+```
+179
+
+↓
+
+3 winners
+
+↓
+
+proof
+```
+
+No.
+
+Correct interpretation is
+
+```
+179
+
+↓
+
+3 hypotheses
+
+↓
+
+begin experiment
+
+```
+
+That distinction is excellent science.
+
+---
+
+# Section 6
+
+## Bayesian Interpretation
+
+Suppose
+
+before testing
+
+probability any candidate is real
+
+```
+5%
+```
+
+Then
+
+179 candidates
+
+contain
+
+roughly
+
+9 real effects.
+
+Maybe.
+
+Now suppose
+
+selection retains
+
+3.
+
+Posterior probability each survivor is genuine depends on
+
+* power
+* false positive rate
+* selection inflation
+
+—not on its backtest alone.
+
+This is one reason I would eventually like to compute
+
+posterior probabilities
+
+instead of only DSR.
+
+I think Bayesian updating will become easier to communicate than repeated hypothesis testing.
+
+---
+
+# Section 7
+
+## The Biggest Missing Simulation
+
+If this were my project,
+
+I would stop here
+
+and build one thing.
+
+Nothing else.
+
+---
+
+Monte Carlo Factory Calibration
+
+Algorithm
+
+Repeat
+
+10,000 times
+
+Generate
+
+50,000 fake stocks
+
+with
+
+known
+
+properties.
+
+Inject
+
+```
+true alpha
+
+0
+
+```
+
+Run
+
+the
+
+entire
+
+Strategy Factory
+
+unchanged.
+
+Measure
+
+```
+best Sharpe
+
+best t
+
+number surviving
+
+DSR
+
+PBO
+
+```
+
+Repeat.
+
+Then repeat again with
+
+true alpha
+
+0.2
+
+Then
+
+0.3
+
+Then
+
+0.5
+
+Then
+
+0.8
+
+Now you have
+
+an empirical calibration of your own research process.
+
+Questions answered automatically:
+
+* How often does a fake factor survive?
+* How often does a real factor die?
+* What Sharpe survives 179-way selection?
+* Is the placebo gate overpowered?
+* Is explore/confirm too strict?
+* Does the DSR threshold achieve its intended false-discovery rate?
+
+No analytical approximation can answer these questions as directly as running your actual pipeline on synthetic data.
+
+---
+
+# Preliminary Conclusions
+
+### VERIFIED
+
+* The dossier correctly identifies the multiple-testing problem.
+* Deflating against 18 is insufficient for strategies originating from the 179-candidate search. 
+* The expected-maximum-Sharpe calculation is directionally consistent with extreme-value theory; I did not find an obvious arithmetic error based on the information provided.
+* The current forward paper lanes should still be viewed as ongoing experiments rather than evidence of skill. 
+
+### SPECULATION
+
+* The effective hypothesis count may differ materially from 179 because many candidates are correlated variants rather than independent tests.
+* A simulation-based calibration of the entire research factory would likely provide more informative evidence than further analytical refinements to DSR alone.
+
+---
+
+## Next Report (Report 3)
+
+The next report will examine the **placebo-gate methodology**, including:
+
+* whether seed-level *t*-statistics are preferable to pooled *t*-statistics,
+* whether the current random-date placebo gate can incorrectly reject genuine signals,
+* what statistical framework (SPA, permutation tests, conformal inference, or alternatives) would better quantify false positives and false negatives,
+* and whether the current protocol is biased toward Type II errors (discarding weak but real alphas).
+
+# External Quantitative Due Diligence
+
+## Report 3 — The Placebo Gate Audit
+
+**Objective:** Determine whether the project's placebo-gate methodology increases research credibility or accidentally destroys genuine signals.
+
+---
+
+# Prior (Declared Before Analysis)
+
+Before reading the dossier I expected the placebo gate to be the strongest part of the methodology.
+
+After reading the implementation, my prior changed.
+
+I now expect it is simultaneously
+
+* one of the project's greatest innovations,
+* and one of its greatest statistical risks.
+
+The innovation is real.
+
+The calibration is not yet proven.
+
+---
+
+# Section 1
+
+## What problem is the placebo gate solving?
+
+One pattern appears repeatedly in the negative-results ledger.
+
+A treatment appears profitable.
+
+Then...
+
+a randomized control
+
+does almost exactly the same thing.
+
+Examples include
+
+* Distress 8-K
+* 13DG Harvest
+* Harvest2
+
+where random timing reproduced most or all of the observed effect. 
+
+That is exactly what placebo controls are supposed to detect.
+
+---
+
+The important observation is this:
+
+Many finance "signals" are really just
+
+> buying stocks that were going up anyway.
+
+The signal isn't causal.
+
+It's selecting favorable environments.
+
+The placebo exposes that.
+
+---
+
+## VERIFIED
+
+I think the philosophical idea is excellent.
+
+I have not seen many retail research platforms formalize
+
+> "the placebo must pass before we're even allowed to look at the treatment."
+
+That is stronger than most academic papers.
+
+---
+
+# Section 2
+
+## Why this is unusual
+
+Typical finance paper
+
+```
+strategy
+
+↓
+
+compute alpha
+
+↓
+
+run regressions
+
+↓
+
+publish
+```
+
+Aegis
+
+```
+strategy
+
+↓
+
+design placebo
+
+↓
+
+placebo first
+
+↓
+
+if placebo fails
+
+STOP
+
+↓
+
+never compute treatment
+```
+
+This is a very different philosophy.
+
+It resembles
+
+clinical trials
+
+more than
+
+asset pricing.
+
+---
+
+# My concern
+
+The gate is
+
+binary.
+
+Either
+
+```
+PASS
+```
+
+or
+
+```
+NO CONCLUSION
+```
+
+Real markets are continuous.
+
+Binary gates often hide uncertainty.
+
+---
+
+# Section 3
+
+## The seed-level versus pooled t-statistic question
+
+The dossier discusses moving from pooled statistics toward seed-level statistics.
+
+I think this was the correct direction.
+
+Here's why.
+
+Suppose we simulate
+
+100 placebo universes.
+
+Each produces
+
+```
+t
+
+=
+
+0.3
+```
+
+Pooling
+
+might produce
+
+```
+t
+
+=
+
+3.5
+```
+
+because
+
+N became enormous.
+
+But nothing meaningful happened.
+
+Each realization was tiny.
+
+Pooling converts
+
+many tiny biases
+
+into
+
+apparent certainty.
+
+---
+
+Seed-level analysis asks
+
+```
+How often
+
+does the placebo
+
+actually produce something meaningful?
+```
+
+That is usually the more relevant research question.
+
+---
+
+## VERIFIED
+
+I agree with abandoning pooled inference as the primary decision statistic.
+
+---
+
+# Section 4
+
+## But I think there is a third interpretation
+
+This is the biggest point I haven't seen discussed.
+
+Imagine
+
+```
+real signal
+
+0.25%
+
+monthly
+```
+
+Placebo
+
+```
+0.18%
+
+monthly
+```
+
+Treatment
+
+wins
+
+every time
+
+but only slightly.
+
+The placebo gate
+
+might reject
+
+because
+
+they are statistically similar.
+
+Yet economically
+
+the strategy still has value.
+
+---
+
+The current gate effectively asks
+
+```
+Can I prove placebo has zero effect?
+```
+
+I think the better question is
+
+```
+Does treatment consistently dominate placebo?
+```
+
+Those are different hypotheses.
+
+---
+
+# Proposed Replacement
+
+Instead of
+
+```
+H0
+
+placebo = 0
+```
+
+test
+
+```
+H0
+
+treatment
+
+≤
+
+placebo
+```
+
+That aligns directly with the investment decision.
+
+---
+
+# Section 5
+
+## Random-date placebo isn't the only placebo
+
+This is where I would significantly expand the protocol.
+
+One placebo is good.
+
+Five are better.
+
+Suppose we're evaluating insider buying.
+
+Random dates test timing.
+
+But timing isn't the only source of bias.
+
+I would also test:
+
+### 1. Random ticker placebo
+
+Keep dates.
+
+Shuffle companies.
+
+Does the effect survive?
+
+---
+
+### 2. Future-event placebo
+
+Shift events
+
++180 trading days.
+
+If the strategy still "predicts"
+
+there is leakage.
+
+---
+
+### 3. Lag placebo
+
+Delay all events
+
+90 days.
+
+Does the alpha disappear?
+
+If not,
+
+you're harvesting persistent characteristics,
+
+not event information.
+
+---
+
+### 4. Sector placebo
+
+Replace each treated company
+
+with another
+
+same industry
+
+same size
+
+same volatility.
+
+Does alpha survive?
+
+---
+
+### 5. Matched placebo
+
+Propensity-score matching.
+
+Match on
+
+* size
+* value
+* momentum
+* analyst coverage
+* liquidity
+
+Now compare.
+
+---
+
+The stronger the strategy,
+
+the more placebo families it should survive.
+
+---
+
+# Section 6
+
+## False-kill rate
+
+This is the part that worries me most.
+
+Imagine
+
+a genuine strategy
+
+Sharpe
+
+0.35
+
+This is actually
+
+quite respectable
+
+for institutional equity.
+
+Suppose
+
+its placebo
+
+occasionally
+
+gets
+
+Sharpe
+
+0.25
+
+Random chance.
+
+The binary gate
+
+kills
+
+the strategy forever.
+
+That is
+
+Type II error.
+
+---
+
+The dossier currently measures
+
+false discoveries
+
+very carefully.
+
+It does **not** yet measure
+
+false rejections.
+
+That asymmetry matters.
+
+---
+
+# The missing experiment
+
+Exactly the same synthetic calibration proposed in Report 2 can estimate this.
+
+Generate artificial data with a known embedded signal (for example, monthly Sharpe 0.2, 0.4, and 0.6), then run the complete placebo-gate workflow unchanged.
+
+Measure:
+
+* proportion of true signals rejected,
+* proportion of null signals accepted,
+* sensitivity to effect size,
+* sensitivity to sample length.
+
+Only then will you know whether the gate is appropriately calibrated.
+
+---
+
+# Section 7
+
+## Would a top journal accept this?
+
+Surprisingly,
+
+I think many referees would like it.
+
+Because
+
+finance journals
+
+have a terrible history of
+
+false discoveries.
+
+The placebo gate directly addresses that.
+
+However,
+
+they would ask
+
+one question immediately.
+
+> Has the placebo gate itself been validated?
+
+Right now,
+
+the answer appears to be
+
+No.
+
+It has
+
+examples.
+
+It has
+
+good reasoning.
+
+It does **not**
+
+yet have
+
+measured operating characteristics.
+
+---
+
+# Section 8
+
+## Statistical alternatives
+
+If this became my project,
+
+I would compare several decision frameworks.
+
+### Superior Predictive Ability (SPA)
+
+(Hansen, 2005)
+
+Purpose:
+
+Corrects for data snooping when comparing many forecasting models.
+
+Pipeline change:
+
+Instead of asking
+
+```
+best strategy significant?
+```
+
+ask
+
+```
+best strategy
+
+better than
+
+expected
+
+under data mining?
+```
+
+This is extremely close to your problem.
+
+---
+
+### Model Confidence Set (MCS)
+
+(Hansen, Lunde & Nason, 2011)
+
+Purpose:
+
+Returns
+
+the set of models
+
+that cannot yet be statistically distinguished.
+
+Instead of
+
+```
+winner
+```
+
+you obtain
+
+```
+remaining plausible winners
+```
+
+This fits the Aegis philosophy much better than ranking by a single point estimate.
+
+---
+
+### Permutation testing
+
+Instead of assuming asymptotic *t*-distributions,
+
+shuffle event assignments thousands of times and compare the observed statistic to the empirical null.
+
+This is particularly attractive for event studies where analytical assumptions are fragile.
+
+---
+
+### Conformal prediction
+
+Less useful for alpha discovery,
+
+but potentially valuable for **regime confidence**.
+
+Instead of saying
+
+> "Bear market"
+
+say
+
+> "Current market does not resemble any historical regime with sufficient confidence."
+
+That meshes well with your emphasis on uncertainty.
+
+---
+
+# Section 9
+
+## One protocol change I'd make
+
+Rather than
+
+```
+PASS
+
+FAIL
+
+NO CONCLUSION
+```
+
+I would classify every strategy on two axes.
+
+| Treatment beats placebo | Evidence strength | Interpretation                       |
+| ----------------------- | ----------------- | ------------------------------------ |
+| Yes                     | Strong            | Candidate advances                   |
+| Yes                     | Weak              | Continue collecting forward evidence |
+| No                      | Strong            | Kill                                 |
+| No                      | Weak              | Archive as unresolved                |
+
+This preserves potentially valuable weak signals instead of forcing them into a binary outcome.
+
+---
+
+# Preliminary Conclusions
+
+### VERIFIED
+
+* The placebo gate represents a genuine methodological innovation within the project and is consistently reflected in the documented experiment ledger. 
+* The transition from post hoc placebo checks to mandatory pre-result gates is clearly documented and improves protection against self-deception. 
+* The documented failures in the 13DG family show the gate is willing to terminate research rather than rescue an appealing hypothesis. 
+
+### SPECULATION
+
+* The current gate may be overpowered against modest but genuine effects because its false-negative rate has not yet been quantified.
+* Replacing a single random-date placebo with a structured battery of orthogonal placebo tests (time, ticker, lag, matched controls, sector) would provide much richer diagnostic information.
+* The most valuable next step is not inventing another gate, but validating the existing one with Monte Carlo experiments using known embedded signals.
+
+---
+
+## Next Report (Report 4)
+
+The next report will move from methodology into **code and data leakage**. Rather than repeating issues already documented (FRED vintages, constant-zero collector, cache poisoning), I'll approach the repository like a hostile reviewer and identify the classes of leakage that are **most likely to remain undiscovered**, where I would inspect first, and what automated tests I would build to detect them.
+
+# External Quantitative Due Diligence
+
+## Report 4 — Code & Data Leakage Audit
+
+**Objective:** Assume the documented leaks are only the ones already discovered. Identify where undiscovered leakage is most likely to remain and how to systematically eliminate it.
+
+---
+
+# Prior (Declared Before Analysis)
+
+Before reading the dossier I expected numerous hidden look-ahead errors.
+
+After reading it, my prior changed.
+
+I no longer think the biggest danger is **classic look-ahead bias**.
+
+I think the biggest danger is **semantic leakage**:
+
+> the code is logically correct, but the research environment accidentally gives strategies information they would never have had.
+
+Those bugs are much harder to detect.
+
+---
+
+# Executive Summary
+
+The dossier already documents several major failures:
+
+* FRED reference dates instead of release dates.
+* Alphabetical tie-breaking fabricating ranks.
+* Insider collector silently returning constant zeros.
+* Panel cache poisoning.
+* NAV reconstruction bug.
+* Same-day signal/fill look-ahead.
+* Time-zone inconsistencies.
+* Crash overlay permanently inactive despite appearing operational.  
+
+These are serious, but they share a pattern.
+
+They were all **deterministic implementation defects**.
+
+The remaining risks are different.
+
+---
+
+# Risk Class 1
+
+## Point-in-Time Join Leakage
+
+Probability:
+
+**Very High**
+
+This is the first place I would inspect.
+
+---
+
+Suppose you join
+
+CRSP
+
+↓
+
+Compustat
+
+↓
+
+BoardEx
+
+↓
+
+IBES
+
+↓
+
+OptionMetrics
+
+Each dataset individually is PIT.
+
+The join often isn't.
+
+---
+
+Example
+
+Board member joins company
+
+2017-05-12
+
+BoardEx updates
+
+2017-05-15
+
+Compustat quarterly snapshot
+
+2017-03-31
+
+Research merge
+
+uses
+
+latest available director list.
+
+Suddenly
+
+March
+
+knows
+
+May.
+
+Everything appears valid.
+
+Nothing crashes.
+
+The alpha is fake.
+
+---
+
+## Audit
+
+Every merge should answer
+
+three questions.
+
+For every row:
+
+```
+observation_date
+
+publication_date
+
+effective_date
+```
+
+If one of these is absent,
+
+I assume leakage until proven otherwise.
+
+---
+
+Recommendation
+
+Every merged dataset should expose
+
+```
+max_information_date
+```
+
+as a first-class column.
+
+Not metadata.
+
+Actual data.
+
+Every downstream model should assert
+
+```
+information_date
+
+<=
+
+trade_date
+```
+
+---
+
+# Risk Class 2
+
+## Universe Leakage
+
+Probability:
+
+Very High
+
+---
+
+Many backtests accidentally know
+
+which firms survive.
+
+Not through delisting.
+
+Through filtering.
+
+Example
+
+```
+remove companies
+
+without
+
+5 years
+
+of history
+```
+
+Looks harmless.
+
+Actually
+
+you just removed
+
+future failures.
+
+---
+
+The same applies to
+
+```
+currently listed
+
+currently active
+
+currently in BoardEx
+
+currently covered
+
+currently reporting
+```
+
+---
+
+Everything should instead ask
+
+```
+Would this company
+
+have existed
+
+today?
+
+```
+
+not
+
+```
+Does it exist
+
+in 2026?
+
+```
+
+---
+
+# Risk Class 3
+
+## Feature Publication Drift
+
+Probability
+
+High
+
+---
+
+The FRED issue proves
+
+publication timing already caused one failure.
+
+That immediately makes me suspicious of
+
+every other macro feature.
+
+Questions I would ask.
+
+---
+
+Does IBES revision history use
+
+forecast creation date
+
+or
+
+latest estimate?
+
+---
+
+Do analyst counts
+
+reflect
+
+current
+
+coverage
+
+or
+
+historical coverage?
+
+---
+
+Are recommendation changes
+
+timestamped
+
+intraday
+
+or
+
+daily?
+
+---
+
+How are after-market earnings
+
+handled?
+
+---
+
+Every macro feature should carry
+
+```
+release timestamp
+
+revision timestamp
+
+first seen timestamp
+```
+
+---
+
+# Risk Class 4
+
+## Silent Default Leakage
+
+Probability
+
+Very High
+
+---
+
+One lesson from
+
+constant-zero collector
+
+is profound.
+
+Bad data
+
+did not throw
+
+an exception.
+
+It produced
+
+plausible output.
+
+That is the worst failure mode.
+
+---
+
+Example
+
+API timeout
+
+↓
+
+collector returns
+
+[]
+
+↓
+
+converted to
+
+0
+
+↓
+
+feature looks neutral
+
+↓
+
+strategy "works"
+
+---
+
+This class of error is much more dangerous than crashes.
+
+Crashes are visible.
+
+Zeros are evidence.
+
+---
+
+Recommendation
+
+Every feature should publish
+
+```
+coverage
+
+missing rate
+
+unique values
+
+entropy
+
+```
+
+daily.
+
+If entropy suddenly collapses,
+
+production should halt automatically.
+
+---
+
+# Risk Class 5
+
+## Researcher Leakage
+
+Probability
+
+Medium
+
+This one surprised me.
+
+---
+
+Suppose
+
+after 100 failed strategies
+
+you become convinced
+
+small caps work.
+
+You unconsciously design
+
+the next
+
+40 ideas
+
+around small caps.
+
+No code bug exists.
+
+No leakage exists.
+
+Yet
+
+research history
+
+is influencing future hypotheses.
+
+---
+
+This is a genuine statistical dependence.
+
+The hypotheses are no longer independent.
+
+The project partially protects against this through preregistration, but it does not eliminate adaptive hypothesis generation.
+
+---
+
+Recommendation
+
+Keep a **hypothesis genealogy**.
+
+For every candidate record:
+
+* parent hypothesis,
+* inspiration,
+* reused features,
+* reused thresholds.
+
+This allows future adjustment for dependence among ideas rather than pretending every strategy was conceived independently.
+
+---
+
+# Risk Class 6
+
+## Cache Leakage Beyond the Documented Bug
+
+The documented cache-poisoning defect omitted the ticker set from the cache key. 
+
+I would now assume every cache is guilty until audited.
+
+Questions:
+
+* Does cache include date?
+* Does cache include timezone?
+* Does cache include adjustment mode?
+* Does cache include split-adjustment version?
+* Does cache include survivor universe?
+
+Cache keys should contain **every semantic input**, not just function arguments.
+
+---
+
+# Risk Class 7
+
+## Hyperparameter Leakage
+
+This is probably the least appreciated form of leakage.
+
+Example:
+
+```
+Train
+
+↓
+
+observe mediocre result
+
+↓
+
+change parameter
+
+↓
+
+rerun
+```
+
+Nothing wrong individually.
+
+But after 30 iterations,
+
+the chosen parameter is itself selected.
+
+The dossier counts strategy families, but I would also count parameter revisions within a family where they were influenced by observed results.
+
+---
+
+# Machine-Enforced Invariants
+
+This is where I think Aegis can leap ahead of academic finance.
+
+Right now many controls are documented.
+
+I would move them into executable assertions.
+
+Examples:
+
+### Invariant 1
+
+```
+assert
+
+release_date
+
+<=
+
+trade_date
+```
+
+Failure
+
+↓
+
+pipeline aborts.
+
+---
+
+### Invariant 2
+
+```
+assert
+
+collector entropy
+
+>
+
+threshold
+```
+
+Otherwise
+
+production stops.
+
+---
+
+### Invariant 3
+
+```
+assert
+
+coverage
+
+>
+
+95%
+```
+
+Otherwise
+
+feature disabled.
+
+---
+
+### Invariant 4
+
+```
+assert
+
+today's feature distribution
+
+≈
+
+historical distribution
+```
+
+Sudden shifts trigger review.
+
+---
+
+### Invariant 5
+
+```
+assert
+
+strategy never references
+
+future timestamps
+```
+
+This sounds obvious.
+
+Very few research systems actually verify it continuously.
+
+---
+
+# A New Component I'd Build
+
+## PIT Replay Engine
+
+Imagine selecting
+
+**2016-07-14 16:00 ET**
+
+The engine reconstructs exactly what information was available at that moment:
+
+* filings received,
+* analyst forecasts,
+* BoardEx relationships,
+* macro releases,
+* prices,
+* corporate actions,
+* universe membership.
+
+Then it answers one question:
+
+> "Could today's signal have been computed using only this information?"
+
+If not,
+
+the replay fails.
+
+This is much stronger than unit tests because it validates the entire information state, not just individual functions.
+
+---
+
+# Priority Audit Targets
+
+If I had the GitHub repository open today, my inspection order would be:
+
+1. Every dataset join (especially BoardEx, IBES, CRSP/Compustat).
+2. Every cache layer.
+3. Every timestamp conversion.
+4. Every feature builder using `fillna`, default values, or silent exception handling.
+5. Universe construction and filtering.
+6. Hyperparameter selection logs.
+7. Scheduler ordering and race conditions.
+8. Production monitoring for feature coverage and entropy.
+
+This ordering reflects expected impact, not implementation difficulty.
+
+---
+
+# Preliminary Conclusions
+
+### VERIFIED
+
+* The project has already demonstrated that production failures can survive unit tests (constant-zero collector), reinforcing the need for runtime validation rather than test-only confidence. 
+* The documented allocation-path defects include several genuine look-ahead and scheduling concerns, such as same-day signal/fill handling, timezone inconsistencies, and unordered jobs. 
+
+### SPECULATION
+
+* The highest remaining risk is no longer obvious look-ahead bias but semantic leakage introduced during point-in-time joins and adaptive research decisions.
+* Converting documented methodological rules into executable invariants would likely produce a larger improvement in research integrity than adding another family of statistical tests.
+
+---
+
+## Next Report (Report 5)
+
+The next report will focus on **the three surviving strategies (gp-small, fusion, and TSMOM-XA)**. Rather than asking whether they "work," I'll evaluate whether each survivor is:
+
+1. a genuinely distinct source of expected return,
+2. a repackaged exposure to known factors,
+3. likely to survive costs and long-only implementation,
+4. worthy of another year of research—or should be terminated now.
+
+# External Quantitative Due Diligence
+
+## Report 5 — The Survivor Audit
+
+**Objective:** Evaluate the remaining research candidates as if they were being presented to an investment committee deciding whether to allocate another year of research capital.
+
+This report deliberately **does not** ask whether they "beat the S&P."
+
+Instead it asks:
+
+> *Are these statistically and economically plausible survivors after a 179-candidate search?*
+
+---
+
+# Prior
+
+Before reading the dossier my prior was:
+
+After screening 179 ideas I expect
+
+* most survivors to simply be known factor exposures,
+* one or two may represent genuine implementation improvements,
+* almost none will represent a completely new anomaly.
+
+This prior comes from decades of empirical asset pricing.
+
+Markets rarely produce completely new persistent anomalies.
+
+They more often produce
+
+* better implementations,
+* cleaner measurement,
+* better combinations,
+* lower turnover,
+* better timing.
+
+---
+
+# Section 1
+
+# gp-small
+
+---
+
+## What it appears to be
+
+From the dossier,
+
+gp-small appears to be
+
+> Gross Profitability restricted to small capitalization firms.
+
+Not
+
+gross profitability generally,
+
+but a particular implementation.
+
+---
+
+## Literature Prior
+
+Before looking at any backtest,
+
+my prior comes from published literature.
+
+Gross profitability has some of the strongest replication evidence among accounting factors.
+
+Major references include:
+
+**Novy-Marx (2013)**
+
+> *The Other Side of Value: The Gross Profitability Premium*
+
+One of the highest-quality factor papers of the last twenty years.
+
+The central result:
+
+Gross profitability predicts returns similarly to value while being largely independent.
+
+---
+
+Subsequent replication studies generally find
+
+the signal survives
+
+although weaker than originally reported.
+
+---
+
+Therefore
+
+my prior probability
+
+that
+
+gross profitability contains
+
+real information
+
+is already relatively high.
+
+---
+
+# But...
+
+This is where the dossier becomes interesting.
+
+The survivor is
+
+not
+
+gross profitability.
+
+It is
+
+gross profitability
+
+**restricted to small caps.**
+
+That changes the question.
+
+---
+
+# Possible explanations
+
+There are four.
+
+---
+
+## World A
+
+True economic interaction.
+
+Profitability genuinely matters more
+
+among smaller firms.
+
+---
+
+## World B
+
+Micro-cap illiquidity.
+
+The alpha is mostly compensation
+
+for trading difficulty.
+
+---
+
+## World C
+
+Data mining.
+
+One of many size splits happened to win.
+
+---
+
+## World D
+
+Implementation improvement.
+
+Traditional profitability is noisy.
+
+Small-cap restriction increases signal-to-noise.
+
+---
+
+Those four worlds produce
+
+very different investment implications.
+
+---
+
+# What evidence is missing?
+
+Exactly one graph.
+
+I want to see
+
+continuous market-cap deciles.
+
+Not
+
+Large
+
+vs
+
+Small.
+
+I want
+
+10 bins.
+
+If the relationship is
+
+smooth
+
+that supports economics.
+
+If
+
+only
+
+the smallest decile works,
+
+I immediately suspect liquidity.
+
+---
+
+# Additional test
+
+Instead of
+
+```text
+GP
+
+↓
+
+small only
+```
+
+estimate
+
+```text
+Return
+
+~
+
+GP
+
++
+
+Size
+
++
+
+GP×Size
+```
+
+The interaction coefficient is the real object of interest.
+
+Very few retail projects estimate interactions directly.
+
+---
+
+# Capacity
+
+This matters enormously.
+
+Suppose
+
+95%
+
+of the alpha
+
+comes from
+
+bottom NYSE size decile.
+
+Then
+
+capacity collapses.
+
+The strategy becomes
+
+a boutique strategy,
+
+not
+
+a scalable platform.
+
+---
+
+## My current probability
+
+| Explanation           | Probability |
+| --------------------- | ----------: |
+| Genuine interaction   |         35% |
+| Liquidity proxy       |         30% |
+| Better implementation |         25% |
+| Data-mined split      |         10% |
+
+Notice
+
+I do **not**
+
+currently believe
+
+this is merely random noise.
+
+---
+
+# Research Priority
+
+**High**
+
+This survivor deserves another year.
+
+---
+
+---
+
+# Section 2
+
+# Fusion
+
+This is much harder.
+
+Because
+
+"fusion"
+
+isn't an economic hypothesis.
+
+It is
+
+an engineering hypothesis.
+
+---
+
+Whenever someone says
+
+```text
+combine signals
+```
+
+I immediately worry.
+
+Why?
+
+Because
+
+ensembles
+
+almost always
+
+look better
+
+in sample.
+
+---
+
+The key question is
+
+not
+
+whether
+
+Fusion beats
+
+individual models.
+
+It is
+
+whether
+
+Fusion beats
+
+the best constituent
+
+out of sample.
+
+Those are
+
+very different statements.
+
+---
+
+# What I'd compute
+
+Leave-one-factor-out analysis.
+
+Suppose
+
+Fusion
+
+contains
+
+8 signals.
+
+Estimate
+
+```text
+Fusion
+
+minus
+
+signal i
+```
+
+for
+
+every
+
+component.
+
+Now measure
+
+performance loss.
+
+---
+
+Possible outcome
+
+```text
+remove GP
+
+↓
+
+performance unchanged
+```
+
+Then GP never mattered.
+
+---
+
+Another
+
+```text
+remove momentum
+
+↓
+
+Sharpe collapses
+```
+
+Then
+
+Fusion
+
+is
+
+mostly momentum.
+
+---
+
+This analysis is standard in machine learning
+
+but surprisingly uncommon
+
+in quantitative finance.
+
+---
+
+# Shapley decomposition
+
+Even better,
+
+borrow from explainable AI.
+
+Compute
+
+Shapley values
+
+for
+
+factor contribution.
+
+Instead of asking
+
+"Which signal helped?"
+
+ask
+
+"Across every possible ordering,
+
+what is each signal's marginal contribution?"
+
+That avoids dependence on insertion order.
+
+---
+
+# Biggest concern
+
+Fusion can accidentally become
+
+a
+
+multiple-testing amplifier.
+
+Every additional signal
+
+creates
+
+another tuning dimension.
+
+Eventually
+
+Fusion
+
+contains
+
+so many
+
+weak signals
+
+that
+
+the apparent robustness
+
+is
+
+really diversification of overfitting.
+
+---
+
+My prior
+
+is therefore
+
+less optimistic
+
+than GP.
+
+---
+
+| Outcome                 | Probability |
+| ----------------------- | ----------: |
+| Genuine improvement     |         30% |
+| Mostly existing factors |         50% |
+| Overfit ensemble        |         20% |
+
+---
+
+Research priority
+
+Medium.
+
+Worth continuing,
+
+but needs attribution analysis before more feature engineering.
+
+---
+
+# Section 3
+
+# TSMOM-XA
+
+This survivor surprises me the least.
+
+---
+
+Time-Series Momentum
+
+has one of
+
+the strongest
+
+replication records
+
+in quantitative finance.
+
+Major references include
+
+Moskowitz, Ooi & Pedersen (2012)
+
+> *Time Series Momentum*
+
+Subsequent evidence,
+
+including work by AQR,
+
+suggests
+
+the phenomenon is remarkably persistent across asset classes,
+
+though its magnitude varies.
+
+---
+
+The dossier's version,
+
+TSMOM-XA,
+
+appears to operate across
+
+SPY,
+
+TLT,
+
+GLD,
+
+USO
+
+with a simple sign rule and volatility scaling. 
+
+---
+
+# This is encouraging.
+
+Simple models
+
+usually survive better.
+
+Every additional parameter
+
+is another chance to overfit.
+
+---
+
+# However
+
+One thing worries me.
+
+Four assets
+
+is
+
+not
+
+cross-asset.
+
+It's
+
+a demonstration.
+
+Real cross-asset momentum literature generally spans
+
+dozens
+
+or
+
+hundreds
+
+of futures contracts.
+
+Equities
+
+Rates
+
+FX
+
+Agriculture
+
+Energy
+
+Metals
+
+Livestock
+
+Soft commodities
+
+---
+
+The current implementation is therefore
+
+capacity-limited
+
+from an inference standpoint.
+
+---
+
+# Suggested expansion
+
+Not
+
+more rules.
+
+More assets.
+
+If WRDS is insufficient,
+
+continuous futures data
+
+from
+
+Quandl/Nasdaq Data Link,
+
+Stooq,
+
+or CSI (paid)
+
+would dramatically strengthen inference.
+
+---
+
+# Another test
+
+Run
+
+leave-one-asset-out.
+
+If
+
+removing
+
+SPY
+
+kills
+
+everything,
+
+you don't have
+
+cross-asset momentum.
+
+You have
+
+equity momentum
+
+plus decorations.
+
+---
+
+# Probability assessment
+
+| Outcome                | Probability |
+| ---------------------- | ----------: |
+| Genuine implementation |         60% |
+| Mostly standard TSMOM  |         30% |
+| Overfit                |         10% |
+
+This is currently
+
+the survivor
+
+I trust
+
+most.
+
+---
+
+# Section 4
+
+# Correlation Between Survivors
+
+This is
+
+more important
+
+than their individual Sharpe.
+
+Suppose
+
+all three
+
+load heavily on
+
+small growth
+
+during recoveries.
+
+Then
+
+three survivors
+
+really equal
+
+one bet.
+
+---
+
+I want
+
+rolling
+
+36-month
+
+factor exposure estimates.
+
+Against
+
+* Market
+* SMB
+* HML
+* RMW
+* CMA
+* MOM
+* BAB
+* QMJ
+
+Estimate
+
+time-varying loadings.
+
+Not
+
+average loadings.
+
+---
+
+Then compute
+
+partial correlations
+
+among residual returns.
+
+Only residual independence creates genuine diversification.
+
+---
+
+# Section 5
+
+# Should Any Survivor Be Killed Now?
+
+No.
+
+This surprised me.
+
+Based on the evidence currently available,
+
+I would not terminate
+
+any of the three.
+
+Instead,
+
+I would classify them differently.
+
+| Strategy | Decision                                          |
+| -------- | ------------------------------------------------- |
+| GP-small | Continue. Highest uncertainty but highest upside. |
+| Fusion   | Continue only after attribution analysis.         |
+| TSMOM-XA | Continue. Most statistically plausible.           |
+
+---
+
+# One Recommendation I Disagree With
+
+The dossier occasionally speaks as though surviving explore/confirm plus the placebo gate makes a strategy a "survivor."
+
+I think that's slightly too strong.
+
+I would rename the category.
+
+Instead of
+
+```text
+Survivor
+```
+
+call it
+
+```text
+Prospective Research Asset
+```
+
+Why?
+
+Because language matters.
+
+"Survivor" implies
+
+the evidence is already favorable.
+
+In reality,
+
+selection has merely earned the strategy
+
+the right
+
+to consume more research capital.
+
+The decisive evidence is still prospective.
+
+---
+
+# Preliminary Conclusions
+
+### VERIFIED
+
+* The documented TSMOM overlay currently uses a four-asset implementation (SPY, TLT, GLD, USO) with volatility sizing and is the only paper lane permitting short positions. 
+* The dossier treats gp-small, Fusion, and TSMOM-XA as the remaining research candidates after the search phase closed; the provided excerpts do not include detailed construction rules for gp-small or Fusion, so conclusions about their mechanisms remain necessarily limited by the available source material.
+
+### SPECULATION
+
+* GP-small has the highest upside if its edge reflects a genuine size–profitability interaction rather than a liquidity premium.
+* Fusion's biggest risk is not statistical significance but opacity; factor attribution should precede additional feature development.
+* TSMOM-XA currently has the strongest external prior because it builds on one of the most replicated families in empirical finance, but its evidence would be substantially stronger if expanded beyond four liquid ETFs.
+
+---
+
+## Next Report (Report 6)
+
+The next report will leave the dossier and move into **external evidence**:
+
+* which parts of the owner's "social bias" thesis are strongly supported by academic literature,
+* which parts are probably already arbitraged away,
+* which parts are underexplored in 2026,
+* and, most importantly, which WRDS datasets (especially **BoardEx**, **IBES**, and potentially **Thomson TFN**) can realistically generate novel, testable hypotheses rather than just another variant of an existing factor.
+
+# External Quantitative Due Diligence
+
+## Report 6 — The "Social Bias" Thesis
+
+**Objective:** Evaluate the central intellectual thesis of Aegis rather than the current strategies.
+
+This report is deliberately different.
+
+I'm not asking:
+
+> "Does this factor work?"
+
+I'm asking:
+
+> "Is the founder's worldview about markets actually supported by evidence?"
+
+This matters because the worldview determines what research gets funded for the next decade.
+
+---
+
+# Prior (Declared Before Analysis)
+
+Before reviewing the thesis, my prior was:
+
+The broad idea—
+
+> social forces dominate accounting variables—
+
+is directionally correct.
+
+The stronger claim—
+
+> social forces dominate *all* traditional valuation—
+
+is probably false.
+
+Markets are ultimately constrained by cash flows.
+
+However, there is substantial evidence that **attention, information diffusion, and social networks affect the path prices take toward fundamentals.**
+
+That distinction is important.
+
+---
+
+# Executive Summary
+
+The thesis is **not one hypothesis.**
+
+It is actually **six different hypotheses**.
+
+| Thesis                                       | My Assessment                          |
+| -------------------------------------------- | -------------------------------------- |
+| Attention matters                            | Strongly supported                     |
+| Neglected firms outperform                   | Supported                              |
+| Over-covered glamour firms become overpriced | Partially supported                    |
+| Board networks matter                        | Strongly supported                     |
+| Political connections matter                 | Supported but weaker after publication |
+| LLMs can extract investable information      | Plausible but largely unproven         |
+
+These should not receive equal research budgets.
+
+---
+
+# Part I
+
+## Attention Economics
+
+This is by far the strongest pillar.
+
+---
+
+### Literature
+
+The classic paper here is
+
+**Fang & Peress (2009)**
+
+*"Media Coverage and the Cross-Section of Stock Returns."*
+
+Main result:
+
+Low-media stocks significantly outperform heavily covered stocks.
+
+The proposed mechanism is not superior businesses.
+
+It is
+
+**slow information diffusion.**
+
+---
+
+Twenty years later
+
+the effect has weakened,
+
+but replication studies generally still find
+
+attention predicts
+
+future returns,
+
+especially among
+
+* small firms
+* illiquid firms
+* low institutional ownership
+
+---
+
+My assessment
+
+Probability this is real
+
+**90%+**
+
+---
+
+### Important observation
+
+This does **not**
+
+mean
+
+"buy ignored companies."
+
+It means
+
+market efficiency depends on
+
+information distribution.
+
+Those are different claims.
+
+---
+
+# Where Aegis should extend it
+
+Do **not** measure
+
+media volume.
+
+Measure
+
+**attention velocity.**
+
+For example,
+
+```text
+Mentions
+
+10
+
+↓
+
+15
+
+↓
+
+30
+
+↓
+
+120
+
+↓
+
+800
+```
+
+The slope
+
+may matter
+
+more than
+
+the level.
+
+This is almost absent from the published literature.
+
+---
+
+# Part II
+
+## The NVDA / TSLA Hypothesis
+
+The thesis says
+
+popular companies
+
+become structurally overvalued.
+
+---
+
+I think this needs refinement.
+
+---
+
+Example
+
+NVIDIA
+
+looked
+
+absurdly expensive
+
+in
+
+2016.
+
+It became
+
+much more expensive
+
+for another decade.
+
+Valuation alone
+
+didn't predict timing.
+
+---
+
+The better hypothesis is
+
+**attention acceleration predicts future volatility, not necessarily reversal.**
+
+That is much more defensible.
+
+---
+
+Instead of
+
+```text
+Attention
+
+↓
+
+sell
+```
+
+test
+
+```text
+Attention acceleration
+
+↓
+
+future variance
+
+future skew
+
+future option implied volatility
+```
+
+This has much stronger theoretical support.
+
+---
+
+# Suggested experiment
+
+Measure
+
+daily
+
+Reddit
+
+X
+
+news
+
+Google Trends
+
+GDELT
+
+earnings transcript mentions
+
+Estimate
+
+second derivative
+
+of attention.
+
+Not
+
+raw attention.
+
+---
+
+# Null hypothesis
+
+Acceleration
+
+contains
+
+no information
+
+beyond
+
+momentum.
+
+---
+
+If rejected,
+
+that becomes genuinely interesting.
+
+---
+
+# Part III
+
+## Board Networks
+
+This is where I think
+
+Aegis has
+
+its largest edge.
+
+---
+
+Unlike
+
+sentiment,
+
+BoardEx
+
+is difficult,
+
+messy,
+
+expensive,
+
+and point-in-time.
+
+That naturally limits competition.
+
+---
+
+The literature already shows
+
+director networks matter.
+
+But almost every published paper
+
+uses
+
+simple statistics.
+
+Example
+
+number of shared directors.
+
+---
+
+You now have
+
+millions of edges.
+
+That changes everything.
+
+---
+
+Instead of
+
+degree
+
+compute
+
+network dynamics.
+
+Examples.
+
+---
+
+### Graph feature
+
+Information latency.
+
+Suppose
+
+earnings surprise
+
+hits company A.
+
+How long until
+
+connected firms
+
+rerate?
+
+---
+
+### Feature
+
+Political contagion.
+
+Director
+
+moves
+
+between
+
+regulated industries.
+
+Does valuation migrate?
+
+---
+
+### Feature
+
+Centrality growth.
+
+Not
+
+centrality.
+
+Its derivative.
+
+Rapidly rising influence
+
+may matter more.
+
+---
+
+### Feature
+
+Bridge directors.
+
+People
+
+connecting
+
+otherwise disconnected sectors.
+
+This is classic
+
+network science.
+
+Almost untouched
+
+in finance.
+
+---
+
+# My opinion
+
+This deserves
+
+more research funding
+
+than
+
+LLM sentiment.
+
+---
+
+# Part IV
+
+## Insider Networks
+
+Current literature mostly studies
+
+individual insiders.
+
+I think that's leaving information on the table.
+
+---
+
+Instead,
+
+construct
+
+clusters.
+
+Example.
+
+Five directors
+
+across
+
+three firms
+
+all buy
+
+within
+
+forty days.
+
+Not the same company.
+
+Shared network.
+
+---
+
+Question.
+
+Is this
+
+information diffusion
+
+or
+
+shared optimism?
+
+---
+
+Null
+
+No predictive power.
+
+---
+
+Alternative
+
+Clustered purchases
+
+outperform
+
+isolated purchases.
+
+---
+
+This is testable
+
+with
+
+BoardEx
+
+plus
+
+Form 4.
+
+---
+
+# Part V
+
+## Hedge Funds
+
+This is where I become much less optimistic.
+
+---
+
+13F data
+
+arrives
+
+late.
+
+Everyone knows that.
+
+---
+
+Most famous holdings
+
+are arbitraged
+
+within hours
+
+of filing.
+
+---
+
+I would
+
+avoid
+
+simple
+
+"copy hedge funds."
+
+---
+
+Instead,
+
+study
+
+disagreement.
+
+Example.
+
+Five growth funds
+
+buy.
+
+Three value funds
+
+sell.
+
+That disagreement
+
+itself
+
+may predict
+
+future volatility.
+
+---
+
+Not
+
+future return.
+
+---
+
+# Part VI
+
+## Politicians
+
+This area receives enormous public attention.
+
+I think
+
+its economic value
+
+is smaller than people think.
+
+---
+
+Congress trades
+
+are delayed.
+
+Widely monitored.
+
+Easy to replicate.
+
+---
+
+The better question
+
+is not
+
+what politicians buy.
+
+It is
+
+what industries
+
+gain
+
+new political connectivity.
+
+That changes
+
+slowly.
+
+Harder to arbitrage.
+
+---
+
+BoardEx
+
+again
+
+helps.
+
+---
+
+# Part VII
+
+## LLM Signals
+
+This is where
+
+I become
+
+most skeptical.
+
+---
+
+Every year
+
+I see
+
+hundreds
+
+of proposals
+
+like
+
+```text
+GPT
+
+reads
+
+news
+
+↓
+
+buy stocks
+```
+
+Almost none
+
+survive.
+
+Why?
+
+Because
+
+LLMs
+
+produce
+
+narratives.
+
+Markets
+
+price
+
+numbers.
+
+---
+
+Your own canon already contains the correct principle:
+
+> The LLM narrates; the engine computes.
+
+I think this is exactly right.
+
+An LLM should never emit:
+
+> bullish
+
+Instead it should emit something measurable like:
+
+* number of supply-chain disruptions identified,
+* count of regulatory actions,
+* sentiment toward capital expenditure,
+* frequency of pricing-power language,
+* management confidence score,
+* uncertainty score,
+* customer concentration mentions.
+
+Every feature must be reproducible from the same text.
+
+---
+
+# The Biggest Opportunity I Don't Think You've Identified
+
+This is the one section where I think there's a potentially major research program.
+
+## Diffusion Graphs
+
+Everyone studies
+
+nodes.
+
+Very few study
+
+propagation.
+
+Example.
+
+Company A
+
+misses earnings.
+
+Supplier
+
+reacts
+
+3 days later.
+
+Customer
+
+7 days later.
+
+Competitor
+
+11 days later.
+
+Director-connected firm
+
+15 days later.
+
+This becomes
+
+a **dynamic graph forecasting problem**.
+
+The prediction target isn't "good company."
+
+It's:
+
+> **Where does information travel next?**
+
+That is structurally harder to arbitrage than simple factor investing because the graph itself evolves.
+
+---
+
+# Why this could still be alive in 2026
+
+Three reasons:
+
+1. The data are expensive and operationally difficult (BoardEx + PIT linkage + CRSP/Compustat).
+2. Most published work uses static graph metrics rather than temporal message passing.
+3. The computational tooling (dynamic graph neural networks, temporal graph embeddings) has only recently become mature enough for practical experimentation.
+
+I would allocate more research effort here than to generic LLM sentiment.
+
+---
+
+# Research Budget Ranking
+
+If I controlled the project today, I would rank future research dollars approximately as follows:
+
+| Theme                              | Expected Value | Competition | Priority |
+| ---------------------------------- | -------------: | ----------: | -------: |
+| Dynamic BoardEx networks           |      Very High |         Low |        1 |
+| Supply-chain information diffusion |           High |      Medium |        2 |
+| Attention velocity                 |           High |      Medium |        3 |
+| Insider network clusters           |    Medium–High |      Medium |        4 |
+| Analyst-network diffusion (IBES)   |         Medium |      Medium |        5 |
+| Political-network evolution        |         Medium |        High |        6 |
+| Generic LLM sentiment              |     Low–Medium |   Very High |        7 |
+| Copying 13F portfolios             |            Low |   Very High |        8 |
+| Congress trade replication         |            Low |   Very High |        9 |
+
+---
+
+# One Strategic Recommendation
+
+I think Aegis should consciously evolve from a **factor research platform** into an **information propagation platform**.
+
+That's a subtle but important distinction.
+
+The first asks:
+
+> "What characteristics predict returns?"
+
+The second asks:
+
+> "How does economically relevant information move through the market, and where is it slowest to arrive?"
+
+The second question naturally integrates:
+
+* BoardEx,
+* supply chains,
+* analyst coverage,
+* insider relationships,
+* news,
+* earnings calls,
+* and LLM-assisted information extraction.
+
+It also aligns much more closely with your stated belief that markets are shaped by **social structure** rather than only by accounting ratios.
+
+---
+
+## Preliminary Conclusions
+
+### VERIFIED
+
+* The project's stated research direction emphasizes social biases, company networks, insider flows, political connections, and LLM-assisted information extraction rather than traditional factor discovery. That framing is consistent with the project description you provided in this conversation.
+* The project's own design principle—"the LLM narrates; the engine computes"—is a sound architectural constraint for preventing unstructured language models from becoming un-auditable alpha generators.
+
+### SPECULATION
+
+* The highest long-term edge is unlikely to come from another standalone factor. It is more likely to emerge from **dynamic, point-in-time information propagation** across corporate and human networks.
+* Dynamic graph methods on BoardEx are, in my view, materially more promising than generic financial sentiment analysis because they combine proprietary data, difficult engineering, and relatively limited direct competition.
+
+---
+
+### Overall assessment after six reports
+
+If I had to summarize the project in one sentence today, it would be:
+
+> **Your biggest competitive advantage is probably not discovering a better factor—it's building a research factory capable of modeling how information diffuses through real economic and social networks while maintaining unusually strong safeguards against self-deception.**
+
+The next report should examine **the WRDS datasets and external repositories** in detail—specifically what you're already paying for but not exploiting, and which open-source projects and recent papers are most likely to produce incremental research value.
