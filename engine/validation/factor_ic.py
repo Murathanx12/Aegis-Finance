@@ -127,9 +127,22 @@ def quantile_return_spread(
     top-minus-bottom spread is the visual signature of a real factor.
     """
     rows = []
+    n_degenerate = 0
+    n_seen = 0
     for date, grp in panel.groupby(date_col):
         g = grp[[factor_col, fwd_col]].dropna()
         if len(g) < n_quantiles:
+            continue
+        n_seen += 1
+        # A cross-section with fewer distinct factor values than quantiles cannot
+        # be bucketed on information. rank(method="first") breaks ties by ROW
+        # ORDER, so qcut would happily manufacture clean quantiles — and a
+        # spread — out of a constant factor (row order is usually sorted ticker,
+        # i.e. alphabetical). That is a fabricated result, not a weak one.
+        # Measured: a 12-name all-zero cross-section produced a +174bp
+        # "top-minus-bottom" spread with available=True. Skip these dates.
+        if g[factor_col].nunique() < n_quantiles:
+            n_degenerate += 1
             continue
         try:
             q = pd.qcut(g[factor_col].rank(method="first"), n_quantiles, labels=False)
@@ -139,6 +152,18 @@ def quantile_return_spread(
         rows.append(g.groupby("_q")[fwd_col].mean())
 
     if not rows:
+        if n_degenerate:
+            return {
+                "available": False,
+                "reason": "degenerate cross-section",
+                "detail": (
+                    f"{n_degenerate} of {n_seen} cross-sections had fewer than "
+                    f"{n_quantiles} distinct factor values (constant or "
+                    f"near-constant factor); no bucketing is possible"
+                ),
+                "n_degenerate_dates": n_degenerate,
+                "n_dates_seen": n_seen,
+            }
         return {"available": False, "reason": "insufficient cross-sections"}
 
     by_q = pd.DataFrame(rows).mean()  # average each quantile's mean across dates
@@ -147,13 +172,24 @@ def quantile_return_spread(
     spread = float(by_q.loc[top] - by_q.loc[bottom])
     monotonic = bool(by_q.is_monotonic_increasing)
 
-    return {
+    out = {
         "available": True,
         "n_quantiles": n_quantiles,
         "quantile_mean_fwd_return": means,
         "top_minus_bottom": round(spread, 5),
         "monotonic_increasing": monotonic,
+        "n_dates_used": len(rows),
     }
+    if n_degenerate:
+        # Partial degeneracy still matters: a sparse signal (e.g. insider
+        # scores, 0 for most names) can have most of its spread come from
+        # tie-breaking on the dates that did bucket. Surface it loudly.
+        out["n_degenerate_dates_skipped"] = n_degenerate
+        out["warning"] = (
+            f"{n_degenerate} of {n_seen} cross-sections were degenerate and "
+            f"were skipped; spread is computed on {len(rows)} dates only"
+        )
+    return out
 
 
 def analyze_factor(
