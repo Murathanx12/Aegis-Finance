@@ -17,7 +17,7 @@ Aegis Finance is a free, open-source market-intelligence platform with an unusua
 Most retail finance tools show you a backtest and ask you to trust it. Aegis assumes backtests lie (ours did — see below) and runs the discipline instead:
 
 - **Pre-registered trials.** Every signal, strategy, or overlay gets a written hypothesis, primary metric, decision rule, and earliest decision date *before* it accrues data (`docs/TRIALS/`). If it isn't pre-registered, it didn't happen.
-- **Forward paper lanes.** Seven paper portfolios ($100k each) marked to market daily since inception **2026-06-08**: four reference lanes (conservative, balanced-HRP, aggressive, equal-weight control), two book lanes (mirror + conviction), and an ATR exit-overlay lane. NAV accrues only with elapsed time and cannot be cherry-picked.
+- **Forward paper lanes.** Ten paper portfolios ($100k each) marked to market daily since inception **2026-06-08**: four reference lanes (conservative, balanced-HRP, aggressive, equal-weight control), two book lanes (mirror + conviction), an ATR exit-overlay lane, a small/mid-quality lane, and a TSMOM overlay pair (treatment + 60/40 control). NAV accrues only with elapsed time and cannot be cherry-picked.
 - **Decision clocks, not vibes.** TRIAL-001 (HRP vs equal-weight) reads out no earlier than **June 2027**. The project makes **no skill claims before 24 months** of forward record. Period.
 - **Published negative results.** The signal engine *loses* to buy-and-hold as a timing tool. The 12-month crash model has no skill. LPPLS bubble timing was refuted twice. A survivorship-free backtest universe is not buildable on free data — so no backtested alpha claim here is trustworthy, and we say so. [Read them all.](NEGATIVE_RESULTS.md)
 - **Overfitting guards.** Deflated Sharpe, PBO (probability of backtest overfitting), Harvey-Liu thresholds, and purged cross-validation gate every candidate — and even a "pass" goes to human review, never auto-adoption.
@@ -116,15 +116,35 @@ Data: Yahoo Finance · FRED · SEC EDGAR · GDELT · Kenneth French · Polygon �
 
 ## The track record, precisely
 
+![Paper lanes vs SPY](docs/assets/paper_lanes_vs_spy.png)
+
+*The live forward record, updated from the public track-record API. Read the title's caveat before reading the lines: at this window the standard error on an annualized Sharpe is ±2.1, so ordering is noise. The −22% mirror lane is kept on the chart deliberately — it is the project's own receipt for what concentrated idiosyncratic risk does.*
+
 | Fact | Value |
 |---|---|
-| Paper lanes | 7 ($100k each, daily NAV) |
+| Paper lanes | 10 ($100k each, daily NAV) |
 | Inception | 2026-06-08 |
 | First decision date | TRIAL-001 (HRP vs EW): June 2027 |
 | Skill-claim policy | None before 24 months of forward record |
 | Registry | All trials pre-registered in `docs/TRIALS/` + experiment registry |
 
 Replay and comparison endpoints are methodology backtests, not the track record — the policy is written down in `docs/TRACK_RECORD_POLICY.md`.
+
+## Research corpus — start here (humans and AI agents)
+
+This repo doubles as an open research record. If you're studying retail-scale quant research discipline — or you're an AI agent asked to review, extend, or learn from this project — read in this order:
+
+| You want… | Read |
+|---|---|
+| The complete project state: timeline, all 179 screened candidates, every bug found, testing infrastructure | [`docs/AEGIS_FINANCE_DOSSIER_2026-08-02.md`](docs/AEGIS_FINANCE_DOSSIER_2026-08-02.md) |
+| What did NOT work (31 documented dead ends — the most reusable artifact here) | [`NEGATIVE_RESULTS.md`](NEGATIVE_RESULTS.md) |
+| The current plan: gated fail-fast roadmap (data cert → method cert → trials) | [`docs/AEGIS_EXECUTION_ROADMAP.md`](docs/AEGIS_EXECUTION_ROADMAP.md) |
+| Five external AI reviews of this project, cross-verified, with their errors flagged | [`docs/AI_REVIEWS_SYNTHESIS_2026-08-03.md`](docs/AI_REVIEWS_SYNTHESIS_2026-08-03.md) + raw inputs in [`docs/external-reviews/`](docs/external-reviews/) |
+| The house rules (pre-registration, placebo gates, LLM-narrates-engine-computes) | [`docs/CANON.md`](docs/CANON.md) · [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) |
+| Pre-registered trials with decision dates | [`docs/TRIALS/`](docs/TRIALS/) |
+| A ready-made hostile-review prompt to point your own AI at this repo | [`docs/AI_RESEARCH_PROMPT.md`](docs/AI_RESEARCH_PROMPT.md) |
+
+Reusable findings that cost us weeks so they can cost you minutes: LIMIT-truncated WRDS extracts look complete but aren't (count at source, always); `rank(method="first")` + `qcut` fabricates quantile spreads from constant factors (alphabetically); FRED series must be aligned on *publication* date, not reference date; a collector that writes zeros on failed fetches will pass every unit test and poison every downstream trial; and uniform random-date placebo gates can falsely kill real signals under cohort drag — permute across firms, keep the calendar.
 
 ## Contributing
 
