@@ -1,0 +1,64 @@
+# Prod monitor + wake pinger.
+# Two jobs for Murat's standing manual checks:
+#  1. Pings the Railway app every 15 min during US market hours (also keeps it
+#     awake through the 16:30 ET mark-to-market window once app sleeping is
+#     enabled — APScheduler dies while asleep, so the pinger must cover MTM).
+#  2. Verifies /api/health/full (status ok + NAV freshness). On failure it
+#     opens a "PROD ALERT" issue (idempotent — one open issue, updated);
+#     when health returns it closes the issue. No more silent outages.
+
+name: Prod monitor
+
+on:
+  schedule:
+    - cron: "*/15 13-21 * * 1-5"   # every 15 min, 13:00-21:59 UTC, Mon-Fri
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping + health check
+        id: health
+        run: |
+          set +e
+          # wake ping (harmless when not sleeping; vital when sleeping)
+          curl -s -o /dev/null --max-time 60 https://aegis-finance-production.up.railway.app/ || true
+          body=$(curl -s --max-time 90 https://aegis-finance-production.up.railway.app/api/health/full)
+          status=$(echo "$body" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('status','missing'))" 2>/dev/null || echo "unparseable")
+          fresh=$(echo "$body" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('scheduler',{}).get('nav',{}).get('all_fresh','missing'))" 2>/dev/null || echo "unparseable")
+          echo "status=$status fresh=$fresh"
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          echo "fresh=$fresh" >> "$GITHUB_OUTPUT"
+          if [ "$status" = "ok" ]; then
+            echo "healthy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "healthy=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Manage alert issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEALTHY: ${{ steps.health.outputs.healthy }}
+          STATUS: ${{ steps.health.outputs.status }}
+          FRESH: ${{ steps.health.outputs.fresh }}
+        run: |
+          open_issue=$(gh issue list --repo "$GITHUB_REPOSITORY" \
+            --state open --search "PROD ALERT in:title" \
+            --json number --jq '.[0].number // empty')
+          if [ "$HEALTHY" != "true" ]; then
+            msg="Health check failed at $(date -u +'%F %T UTC'): status=\`$STATUS\`, nav all_fresh=\`$FRESH\`. https://aegis-finance-production.up.railway.app/api/health/full"
+            if [ -n "$open_issue" ]; then
+              gh issue comment "$open_issue" --repo "$GITHUB_REPOSITORY" --body "$msg"
+            else
+              gh issue create --repo "$GITHUB_REPOSITORY" \
+                --title "PROD ALERT: health check failing" --body "$msg"
+            fi
+          elif [ -n "$open_issue" ]; then
+            gh issue comment "$open_issue" --repo "$GITHUB_REPOSITORY" \
+              --body "Recovered at $(date -u +'%F %T UTC') — status ok, nav all_fresh=$FRESH."
+            gh issue close "$open_issue" --repo "$GITHUB_REPOSITORY"
+          fi
