@@ -1676,3 +1676,25 @@ Recorded here so no future batch proposes it as an innovation.
 (The five-version iteration log that produced this — factor premia, alpha-in-
 residual, factor autocorrelation, contemporaneous-σ conditioning — lives in
 `aegis_brain/calibration/panel_gen.py`'s docstring and is paper material.)
+
+## 33. The crash model's offline case was inflated by two leaks — fixed, it has no skill at any horizon
+
+Source: `docs/C4_FRED_LAG_RERUN_2026-08-04.md` (+ the defect filings in
+`docs/FULL_SAMPLE_FIT_AUDIT_2026-08-04.md`).
+
+Two leaks sat under every historical crash-model evaluation: FRED features
+aligned on **reference dates** instead of release dates (a March print
+"known" in March when the public saw it in April), and LASSO feature
+selection fitted on the **full sample** — the feature list peeked at every
+future test period. Fixing both and re-running the pooled purged 5-fold
+harness on the same data snapshot:
+
+| Config | 3m AUC | 6m AUC | 12m AUC |
+|---|---|---|---|
+| Pre-fix (both leaks) | 0.499 | 0.500 | **0.650** |
+| Honest pipeline | 0.499 | 0.528 | **0.461** |
+
+The one horizon that ever looked skillful loses its entire edge when the
+leaks close. 3m/6m were at chance even *with* the leaks. This extends §
+(12m no skill) with the mechanism: the offline case was never real. The
+overlay stays disabled; no retraining without pre-registration.
