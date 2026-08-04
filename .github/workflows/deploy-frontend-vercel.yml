@@ -1,0 +1,62 @@
+# vercel: The Vercel project was created via CLI on 2026-07-11 and was never
+# connected to the GitHub repo, so pushes never auto-deployed (discovered
+# 2026-08-04 when /llms.txt 404'd: last production deploy was 23 days old).
+# This workflow restores push-to-deploy without the dashboard integration.
+#
+# Requires ONE repo secret: VERCEL_TOKEN (create at vercel.com/account/tokens,
+# add under GitHub repo Settings -> Secrets and variables -> Actions).
+# Until the secret exists the job exits early and green — it never fails CI.
+
+name: Deploy frontend to Vercel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: team_jkpM2DT5mIS5JULv8ChoZGRI
+      VERCEL_PROJECT_ID: prj_pGDhsYgigH86RhFbPga5Ua8cP1Gt
+    steps:
+      - name: Check for token
+        id: gate
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN secret not set - skipping deploy."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.enabled == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.enabled == 'true'
+        with:
+          node-version: 20
+
+      - name: Install Vercel CLI
+        if: steps.gate.outputs.enabled == 'true'
+        run: npm install -g vercel
+
+      - name: Pull Vercel environment
+        if: steps.gate.outputs.enabled == 'true'
+        working-directory: frontend
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build
+        if: steps.gate.outputs.enabled == 'true'
+        working-directory: frontend
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy to production
+        if: steps.gate.outputs.enabled == 'true'
+        working-directory: frontend
+        run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
