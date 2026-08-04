@@ -1,17 +1,19 @@
 # Prod monitor + wake pinger.
-# Two jobs for Murat's standing manual checks:
-#  1. Pings the Railway app every 15 min during US market hours (also keeps it
-#     awake through the 16:30 ET mark-to-market window once app sleeping is
-#     enabled — APScheduler dies while asleep, so the pinger must cover MTM).
-#  2. Verifies /api/health/full (status ok + NAV freshness). On failure it
-#     opens a "PROD ALERT" issue (idempotent — one open issue, updated);
-#     when health returns it closes the issue. No more silent outages.
+# Railway runs SERVERLESS since 2026-08-04 (scale-to-zero): APScheduler dies
+# while the app sleeps, so every scheduled job only fires if something wakes
+# the app first. The scheduler's day (US/Eastern): 07:30 congress collect,
+# Mon 09:00 aggressive check, 16:30 MTM + daily check, 17:30-19:30 MTM
+# retries. The ping window must cover ALL of it: 11:00-23:59 UTC, every
+# 10 min (inside Railway's sleep threshold), Mon-Fri.
+# Also verifies /api/health/full (status + NAV freshness): failure opens a
+# "PROD ALERT" issue (idempotent), recovery closes it. No silent outages,
+# no silently-skipped collector jobs.
 
 name: Prod monitor
 
 on:
   schedule:
-    - cron: "*/15 13-21 * * 1-5"   # every 15 min, 13:00-21:59 UTC, Mon-Fri
+    - cron: "*/10 11-23 * * 1-5"   # every 10 min, 11:00-23:59 UTC, Mon-Fri
   workflow_dispatch:
 
 permissions:
