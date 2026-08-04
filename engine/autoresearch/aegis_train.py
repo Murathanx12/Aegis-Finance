@@ -140,10 +140,12 @@ def train_and_evaluate(data: dict, horizon: str = "3m") -> dict:
         lgb_model.fit(X_train, y_train.astype(int))
         lgb_raw = lgb_model.predict_proba(X_test)[:, 1]
 
-        # Logistic Regression
+        # Logistic Regression (median fill computed on TRAIN, applied to both —
+        # fillna(0) planted in-distribution values; house rule is median)
+        train_med = X_train.median()
         scaler = StandardScaler()
-        X_train_sc = scaler.fit_transform(X_train.fillna(0))
-        X_test_sc = scaler.transform(X_test.fillna(0))
+        X_train_sc = scaler.fit_transform(X_train.fillna(train_med))
+        X_test_sc = scaler.transform(X_test.fillna(train_med))
 
         lr_model = LogisticRegression(
             penalty="l2", C=0.1, class_weight="balanced",

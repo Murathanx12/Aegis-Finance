@@ -100,3 +100,43 @@ class TestCollector:
                                          as_of="2026-06-17", momentum_fn=mom)
         assert res["status"] == "collected"
         assert res["scores"]["AAA"] > res["scores"]["BBB"]
+
+
+class TestC6AbsentIsNotZero:
+    """C6 regression (2026-08-04): a dead factor must drop out of the
+    composite entirely — absent used to become fabricated 0.0s and a
+    degenerate cross-section became all-zero z-scores, so a dead factor
+    silently consumed its 1/3 weight (the live 2-factor-as-3-factor bug)."""
+
+    def test_dead_factor_does_not_consume_weight(self):
+        live_only = {"momentum": {"A": 90.0, "B": 10.0}}
+        with_dead = {
+            "momentum": {"A": 90.0, "B": 10.0},
+            "insider": {"A": 0.0, "B": 0.0},   # zero spread = dead
+        }
+        assert (compute_multifactor_scores(with_dead)
+                == compute_multifactor_scores(live_only))
+
+    def test_collector_reports_dead_factors(self, db_path):
+        # nothing seeded: insider and revisions are absent everywhere
+        mom = lambda ts: {"AAA": 80.0, "BBB": 20.0}
+        res = collect_multifactor_scores(db_path=db_path,
+                                         tickers=["AAA", "BBB"],
+                                         as_of="2026-06-17", momentum_fn=mom)
+        assert res["status"] == "collected"
+        assert set(res["dead_factors"]) == {"insider", "revisions"}
+        assert res["scores"]["AAA"] > res["scores"]["BBB"]
+
+    def test_stale_observations_read_as_absent(self, db_path):
+        conn = get_connection(db_path)
+        try:
+            # last insider print >45 days before as_of -> stale -> absent
+            snapshot(conn, "insider_opp:AAA", "2026-01-02", 2.0, source="sec_form4")
+            snapshot(conn, "insider_opp:BBB", "2026-01-02", -1.0, source="sec_form4")
+        finally:
+            conn.close()
+        mom = lambda ts: {"AAA": 80.0, "BBB": 20.0}
+        res = collect_multifactor_scores(db_path=db_path,
+                                         tickers=["AAA", "BBB"],
+                                         as_of="2026-06-17", momentum_fn=mom)
+        assert "insider" in res["dead_factors"]

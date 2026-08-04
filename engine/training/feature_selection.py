@@ -68,8 +68,11 @@ def select_features(
     # Fast filter to get top candidates (2x target count)
     n_mi_candidates = min(len(X_clean.columns), max_features * 2)
 
+    # Median fill, not fillna(0): zeros are in-distribution values for
+    # z-scored macro features and bias MI toward NaN-heavy columns.
+    X_filled = X_clean.fillna(X_clean.median())
     mi_scores = mutual_info_classif(
-        X_clean.fillna(0),
+        X_filled,
         y_clean,
         random_state=random_state,
         n_neighbors=5,
@@ -90,7 +93,7 @@ def select_features(
     X_candidates = X_clean[top_candidates]
 
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X_candidates.fillna(0))
+    X_scaled = scaler.fit_transform(X_candidates.fillna(X_candidates.median()))
 
     lasso = LogisticRegressionCV(
         penalty="l1",

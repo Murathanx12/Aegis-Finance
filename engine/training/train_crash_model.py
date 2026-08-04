@@ -116,10 +116,15 @@ def main():
     logger.info("Step 4: Running LASSO feature selection...")
     primary_target = crash_targets["3m"]  # Optimize for 3-month prediction
 
+    # FS-1 fix (2026-08-04, docs/FULL_SAMPLE_FIT_AUDIT): selection may only
+    # see the first 60% of the sample — strictly before the validation window
+    # CrashPredictor carves from the end (~last 22%). Selecting on the full
+    # sample let the feature list peek at every later test period.
+    sel_end = int(len(features) * 0.60)
     try:
         selected = select_features(
-            features,
-            primary_target,
+            features.iloc[:sel_end],
+            primary_target.iloc[:sel_end],
             max_features=30,
             min_features=20,
         )

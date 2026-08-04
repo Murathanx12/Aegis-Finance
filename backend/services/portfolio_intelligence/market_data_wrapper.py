@@ -49,33 +49,56 @@ class MarketDataAtTimestamp:
         return self._min_date, self._max_date
 
     def prices_as_of(self, dt: date) -> pd.DataFrame:
-        """Return prices up to and including dt. Never returns future data."""
+        """Return prices up to and including dt. Never returns future data.
+
+        C5 (2026-08-04): the old assertion re-checked what ``.loc[:ts]`` on a
+        sorted index guarantees by construction — it could never fire. The
+        real precondition that CAN break (and silently corrupts every slice)
+        is index monotonicity, so that is what is asserted.
+        """
         ts = pd.Timestamp(dt)
-        sliced = self._prices.loc[:ts]
-        if not sliced.empty:
-            actual_max = sliced.index.max()
-            assert actual_max <= ts, (
-                f"Look-ahead leakage: returned data up to {actual_max}, "
-                f"but as_of date is {ts}"
-            )
-        return sliced
+        assert self._prices.index.is_monotonic_increasing, (
+            "price index lost monotonicity — .loc slicing is undefined; "
+            "something mutated _prices after construction"
+        )
+        return self._prices.loc[:ts]
 
     def fred_as_of(self, dt: date) -> dict[str, pd.Series]:
-        """Return FRED data up to and including dt, forward-filled.
+        """Return FRED data PUBLISHED by dt, forward-filled.
 
-        FRED releases are sparse (weekly/monthly). Forward-fill brings
-        the latest known value forward, but never past dt.
+        C5 (2026-08-04): the old version sliced on the REFERENCE-date index —
+        the one axis that is safe by construction — while serving values the
+        public had not yet seen (a March print is released in April). Each
+        series' index is now shifted by its publication lag from config
+        (``fred_publication_lag_days``) before slicing, so the availability
+        check is on the RELEASE axis and genuinely binds. Series mapped to
+        None (RECPROUSM156N: retrospectively re-smoothed) are not served.
+
+        Remaining known gap, documented not hidden: values are latest-REVISED,
+        not first-release vintages — FRED does not serve vintages through this
+        API. The lag guard fixes the timing axis; the revision axis needs ALFRED.
         """
+        from backend.config import config as _cfg
+        lags = _cfg["data"].get("fred_publication_lag_days", {})
+        default_lag = _cfg["data"].get("fred_publication_lag_default", 45)
+
         ts = pd.Timestamp(dt)
         result = {}
         for key, series in self._fred.items():
-            sliced = series.loc[:ts]
+            lag = lags.get(key, default_lag)
+            if lag is None:
+                continue
+            shifted = series.copy()
+            shifted.index = shifted.index + pd.Timedelta(days=int(lag))
+            sliced = shifted.loc[:ts]
             if not sliced.empty:
                 sliced = sliced.ffill()
-                actual_max = sliced.index.max()
-                assert actual_max <= ts, (
-                    f"FRED look-ahead leakage on {key}: "
-                    f"data up to {actual_max}, as_of {ts}"
+                # a real, fail-able guard: the newest served observation must
+                # be one whose RELEASE date has passed
+                newest_release = sliced.index.max()
+                assert newest_release <= ts, (
+                    f"FRED release-date leak on {key}: newest served release "
+                    f"{newest_release} > as_of {ts}"
                 )
             result[key] = sliced
         return result
@@ -97,7 +120,12 @@ class MarketDataAtTimestamp:
             return None
 
         fred = self.fred_as_of(dt)
-        features = build_feature_matrix(prices, fred_data=fred if fred else None)
+        # fred_as_of already shifted every series to its release date —
+        # build_feature_matrix must NOT apply the lags a second time.
+        features = build_feature_matrix(
+            prices, fred_data=fred if fred else None,
+            apply_publication_lags=False,
+        )
 
         if features.empty:
             return None

@@ -165,6 +165,42 @@ config: dict = {
             "initial_claims_4wk": "IC4WSA",      # 4-week avg initial claims (smoother leading)
             "nfci": "NFCI",                      # Chicago Fed NFCI (leading)
         },
+        # C4 (2026-08-04): FRED indexes observations by REFERENCE-PERIOD date,
+        # not release date. Features built by reindex+ffill on that index see
+        # prints weeks before the public did. Each series' index is shifted
+        # forward by this many calendar days before it may enter a feature
+        # matrix (conservative release lags, rounded up). None = the series is
+        # EXCLUDED from model features entirely: RECPROUSM156N is published
+        # ~3 months late AND retrospectively re-smoothed, so its historical
+        # values were never observable as recorded — irreparable look-ahead.
+        # (Dashboard/display uses may still read it; models may not.)
+        "fred_publication_lag_days": {
+            "yield_spread": 1,           # daily market rate
+            "sahm_rule": 40,             # real-time version, out with jobs report
+            "insured_unemployment_rate": 14,   # weekly, ~2wk release delay
+            "recession_prob": None,      # EXCLUDED — see above
+            "unemployment": 40,          # jobs report, first Friday next month
+            "cpi": 45,                   # mid-next-month release
+            "fed_funds": 35,             # monthly avg, early next month
+            "consumer_sentiment": 30,    # final print ~end of reference month
+            "vix_fred": 1,
+            "hy_oas": 2,
+            "ig_oas": 2,
+            "consumer_credit": 70,       # G.19: ~5th business day, 2 months on
+            "tips_10y": 1,
+            "margin_credit": 165,        # Z.1 quarterly, ~10 weeks after quarter
+            "mfg_employment": 40,        # jobs report
+            "industrial_prod": 45,       # G.17 mid-next-month
+            "business_loans": 45,        # H.8 monthly aggregation
+            "lei": 60,                   # state leading index, ~2 months
+            "sloos_ci": 40,              # quarterly survey, ~5wk after quarter start
+            "sloos_cc": 40,
+            "initial_claims": 7,         # weekly, following Thursday
+            "initial_claims_4wk": 7,
+            "nfci": 7,                   # weekly, following Wednesday
+        },
+        # Unknown/new series get this until a real lag is assigned.
+        "fred_publication_lag_default": 45,
     },
 
     # ── ML SETTINGS ──────────────────────────────────────────────────────

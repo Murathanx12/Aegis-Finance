@@ -94,8 +94,15 @@ def prepare_data(
     # ── Step 4: Feature selection ───────────────────────────────
     logger.info("Running feature selection...")
     primary_target = targets["3m"]
+    # FS-1 fix (2026-08-04): under purged k-fold the test folds tile the whole
+    # timeline, so no single selection window avoids them all — the first 60%
+    # bounds the leak to the early folds and is the registered interim fix;
+    # the full remedy (per-fold selection) is a future harness change.
+    sel_end = int(len(features) * 0.60)
     try:
-        selected = select_features(features, primary_target, max_features=30, min_features=20)
+        selected = select_features(features.iloc[:sel_end],
+                                   primary_target.iloc[:sel_end],
+                                   max_features=30, min_features=20)
     except Exception:
         selected = [f for f in SELECTED_FEATURES if f in features.columns]
 

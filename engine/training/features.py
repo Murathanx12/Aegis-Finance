@@ -34,7 +34,8 @@ import pandas as pd
 
 
 def build_feature_matrix(
-    data: pd.DataFrame, fred_data: dict = None
+    data: pd.DataFrame, fred_data: dict = None,
+    apply_publication_lags: bool = True,
 ) -> pd.DataFrame:
     """Build 80+ backward-looking features from market data and optional FRED macro.
 
@@ -278,11 +279,24 @@ def build_feature_matrix(
     # 9. FRED MACRO FEATURES (time-varying, if provided)
     # ══════════════════════════════════════════════════════════════════
     if fred_data:
+        # C4 (2026-08-04): shift every series to its PUBLICATION date before
+        # reindex+ffill. FRED indexes by reference period; without the shift a
+        # feature at date t contains prints the public first saw weeks later.
+        # A lag of None excludes the series from features entirely.
+        from backend.config import config as _cfg
+        _lags = _cfg["data"].get("fred_publication_lag_days", {})
+        _default_lag = _cfg["data"].get("fred_publication_lag_default", 45)
+
         fred_cols: Dict[str, pd.Series] = {}
         for k, series in fred_data.items():
+            lag = _lags.get(k, _default_lag)
+            if apply_publication_lags and lag is None:
+                continue
             try:
                 s = pd.Series(series).astype(float)
                 s.index = pd.to_datetime(s.index)
+                if apply_publication_lags:
+                    s.index = s.index + pd.Timedelta(days=int(lag))
                 s = s.reindex(df.index).ffill()
                 col = f"fred_{k}"
                 fred_cols[col] = s

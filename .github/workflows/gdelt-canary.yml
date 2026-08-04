@@ -1,0 +1,49 @@
+# GDELT stability canary (T4/T5 gate — see scripts/gdelt_stability_canary.py).
+# Runs from GitHub's IP pool because GDELT rate-limits the home/prod IP.
+# --auto: first successful run records the baseline; runs >= 14 days later
+# perform the comparison; runs in between no-op. Results commit back to
+# docs/canaries/ so the protocol is tamper-evident in git history.
+
+name: GDELT stability canary
+
+on:
+  schedule:
+    - cron: "17 6 * * 1,4"   # Mon+Thu 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests
+
+      - name: Run canary (auto mode)
+        id: canary
+        run: python scripts/gdelt_stability_canary.py --auto
+        continue-on-error: true
+
+      - name: Commit results if changed
+        run: |
+          git config user.name "gdelt-canary[bot]"
+          git config user.email "noreply@github.com"
+          git add docs/canaries/ || true
+          if ! git diff --cached --quiet; then
+            git commit -m "canary: GDELT stability check ($(date -u +%F))"
+            git push
+          else
+            echo "no canary changes to commit"
+          fi
+
+      - name: Surface canary failure
+        if: steps.canary.outcome == 'failure'
+        run: |
+          echo "::warning::GDELT canary exited non-zero — either rate-limited or MATERIAL drift detected; check docs/canaries/"

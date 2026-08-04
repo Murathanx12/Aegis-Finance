@@ -30,13 +30,24 @@ FACTOR_WEIGHTS = {"momentum": 1.0, "insider": 1.0, "revisions": 1.0}
 
 
 def _zscore(d: dict[str, float]) -> dict[str, float]:
-    """Cross-sectional z-score. Degenerate cases (n<2 or zero spread) → all 0."""
+    """Cross-sectional z-score. Degenerate cases (n<2 or zero spread) → {}.
+
+    C6 (2026-08-04): degenerate cases used to return all-ZEROS, which made a
+    dead factor indistinguishable from a real flat cross-section — it silently
+    contributed nothing while still consuming its weight in the composite
+    (the live 2026-08-02 payloads showed insider=0.0 everywhere: a 2-factor
+    model reported as 3-factor, deflated by 1/3). An empty dict makes the
+    estimator's own documented contract ("a ticker missing a factor just uses
+    the rest") actually apply: the dead factor drops out of the denominator.
+    """
     vals = list(d.values())
     if len(vals) < 2:
-        return {k: 0.0 for k in d}
+        return {}
     mu, sd = mean(vals), pstdev(vals)
     if sd == 0:
-        return {k: 0.0 for k in d}
+        logger.warning("multifactor: degenerate cross-section (n=%d, sd=0) — "
+                       "factor excluded from composite this run", len(vals))
+        return {}
     return {k: (v - mu) / sd for k, v in d.items()}
 
 
@@ -64,12 +75,35 @@ def compute_multifactor_scores(components: dict[str, dict[str, float]],
     return out
 
 
-def _read_pit_scores(conn, prefix: str, tickers: list[str]) -> dict[str, float]:
-    """Latest leak-safe value per ticker for a PIT key prefix (0.0 if absent)."""
+STALENESS_DAYS = 45  # a component frozen longer than this reads as ABSENT
+
+
+def _read_pit_scores(conn, prefix: str, tickers: list[str],
+                     as_of: str | None = None) -> dict[str, float]:
+    """Latest leak-safe value per ticker for a PIT key prefix.
+
+    C6 (2026-08-04): absent used to become 0.0 — a fabricated in-distribution
+    value indistinguishable from a real zero score. Absent tickers are now
+    OMITTED, and observations older than STALENESS_DAYS relative to as_of are
+    treated as absent too (get_latest_observable has no staleness bound of its
+    own, so a collector dead for months used to read as current).
+    """
+    from datetime import timedelta
+    cutoff = None
+    if as_of:
+        try:
+            cutoff = (date.fromisoformat(as_of)
+                      - timedelta(days=STALENESS_DAYS)).isoformat()
+        except ValueError:
+            pass
     out: dict[str, float] = {}
     for t in tickers:
         obs = get_latest_observable(conn, prefix + t)
-        out[t] = float(obs["value"]) if obs and obs.get("value") is not None else 0.0
+        if not obs or obs.get("value") is None:
+            continue
+        if cutoff and obs.get("as_of") and str(obs["as_of"]) < cutoff:
+            continue
+        out[t] = float(obs["value"])
     return out
 
 
@@ -115,23 +149,34 @@ def collect_multifactor_scores(db_path=None, tickers=None, *, as_of=None,
             momentum = {}
         components = {
             "momentum": momentum,
-            "insider": _read_pit_scores(conn, "insider_opp:", tickers),
-            "revisions": _read_pit_scores(conn, "revisions_score:", tickers),
+            "insider": _read_pit_scores(conn, "insider_opp:", tickers, as_of=aso),
+            "revisions": _read_pit_scores(conn, "revisions_score:", tickers, as_of=aso),
         }
         composite = compute_multifactor_scores(components)
+
+        # C6 disclosure: which factors actually contributed this run. A factor
+        # whose cross-section is empty or degenerate is DEAD, and the payload
+        # says so instead of writing fabricated zeros.
+        dead = [f for f, scores in components.items() if not _zscore(scores)]
+        if dead:
+            logger.warning("multifactor: dead factors this run: %s", dead)
 
         observed = datetime.now(timezone.utc).isoformat()
         written = 0
         for t in tickers:
+            live = [f for f in components if f not in dead and t in components[f]]
+            payload = {f: (round(components[f][t], 4) if t in components[f] else None)
+                       for f in components}
+            payload["n_factors"] = len(live)
+            payload["estimator_rev"] = 2  # C6: absent != zero (2026-08-04)
             rid = snapshot(conn, KEY_PREFIX + t, aso, float(composite.get(t, 0.0)),
                            source="multifactor", observed_at=observed,
-                           payload={f: round(components[f].get(t, 0.0), 4)
-                                    for f in components})
+                           payload=payload)
             if rid is not None:
                 written += 1
         logger.info("multifactor collect: %d tickers, %d written (as_of %s)",
                     len(tickers), written, aso)
         return {"status": "collected", "as_of": aso, "n": len(tickers),
-                "written": written, "scores": composite}
+                "written": written, "scores": composite, "dead_factors": dead}
     finally:
         conn.close()
