@@ -1649,3 +1649,30 @@ the explore queue is empty.
 
 ---
 *These are not reasons to distrust the project. They are the reason to trust it.*
+
+## 32. Zero alpha does not imply zero rank-IC — graduating on IC alone is known-broken
+
+Source: Gate M1 factory calibration, Stage 1 (2026-08-04),
+`Aegis module/aegis_brain/calibration/` + `runs/GATE-M1/stage1_fidelity.json`.
+
+While certifying the calibration's null-panel generator, the F8 leak gate
+produced a result about the **production pipeline itself**: on panels with
+mathematically zero extractable alpha (means equalized by construction),
+σ-correlated signals (`vol_12m_low`, `amihud_3m`, `price_level`, `max_ret_low`)
+showed persistent mean rank-ICs up to 0.05 — while their top-decile books
+earned **nothing** (mean excess t-stats ≈ 1). Mechanism: firms differ in
+volatility, and volatile-firm months are right-skewed — equal means, unequal
+medians — so the *typical rank* of a high-vol name is low even when no money
+is on the table. Rank statistics see the shape of the cross-section; P&L sees
+its mean.
+
+**Consequence:** the factory's graduation rule (`t_net ≥ 1.5 AND t_ic ≥ 2.0`)
+is safe **only because of the AND** — the money leg vetoes the rank artifact.
+Any variant that graduates, screens, or sizes on IC alone (IC-weighted
+ensembles, "IC momentum," IC-only explore filters) inherits a structural
+false-positive channel for the entire volatility/liquidity signal family.
+Recorded here so no future batch proposes it as an innovation.
+
+(The five-version iteration log that produced this — factor premia, alpha-in-
+residual, factor autocorrelation, contemporaneous-σ conditioning — lives in
+`aegis_brain/calibration/panel_gen.py`'s docstring and is paper material.)

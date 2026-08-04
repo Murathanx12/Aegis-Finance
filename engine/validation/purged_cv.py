@@ -70,7 +70,10 @@ class PurgedKFold:
             eval_times: Series mapping each sample index to the end of its
                        forward-looking evaluation window. This is critical —
                        it tells us which training samples could leak into test.
-                       If None, no purging is applied (falls back to standard k-fold).
+                       REQUIRED: passing None raises. (C7, 2026-08-04: the old
+                       silent fallback to standard k-fold meant a caller that
+                       forgot eval_times got unpurged folds that LOOKED purged.
+                       Use compute_eval_times(X.index, horizon_days).)
 
         Yields:
             (train_indices, test_indices) as integer arrays
@@ -78,6 +81,17 @@ class PurgedKFold:
         n_samples = len(X)
         if n_samples < self.n_splits:
             raise ValueError(f"Cannot split {n_samples} samples into {self.n_splits} folds")
+        if eval_times is None:
+            raise ValueError(
+                "PurgedKFold.split requires eval_times — without it no purging "
+                "happens and this degrades to plain k-fold on time-series data. "
+                "Build it with compute_eval_times(X.index, horizon_days)."
+            )
+        if len(eval_times) != n_samples:
+            raise ValueError(
+                f"eval_times length {len(eval_times)} != n_samples {n_samples} — "
+                "a mismatch used to silently disable purging"
+            )
 
         # Compute embargo size
         if self.embargo_td is not None:
@@ -101,19 +115,17 @@ class PurgedKFold:
             train_mask[test_start:test_end] = False
 
             # PURGE: remove training samples whose eval window overlaps test
-            if eval_times is not None and len(eval_times) == n_samples:
-                test_start_time = X.index[test_start]
-                test_end_time = X.index[min(test_end - 1, n_samples - 1)]
+            test_start_time = X.index[test_start]
 
-                for i in range(n_samples):
-                    if not train_mask[i]:
-                        continue
-                    # If this training sample's evaluation window extends
-                    # into or past the test period, purge it
-                    if eval_times.iloc[i] >= test_start_time:
-                        # Only purge if the sample is BEFORE the test set
-                        if X.index[i] < test_start_time:
-                            train_mask[i] = False
+            for i in range(n_samples):
+                if not train_mask[i]:
+                    continue
+                # If this training sample's evaluation window extends
+                # into or past the test period, purge it
+                if eval_times.iloc[i] >= test_start_time:
+                    # Only purge if the sample is BEFORE the test set
+                    if X.index[i] < test_start_time:
+                        train_mask[i] = False
 
             # PRE-EMBARGO: remove training samples immediately before test set
             # This prevents information leakage from serial correlation

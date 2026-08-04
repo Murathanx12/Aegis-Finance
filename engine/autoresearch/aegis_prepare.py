@@ -32,7 +32,7 @@ from backend.config import config
 from backend.services.data_fetcher import DataFetcher
 from engine.training.features import build_feature_matrix, build_target_crash_multi
 from engine.training.feature_selection import select_features, SELECTED_FEATURES
-from engine.validation.purged_cv import PurgedKFold, HORIZON_DAYS
+from engine.validation.purged_cv import PurgedKFold, HORIZON_DAYS, compute_eval_times
 
 logging.basicConfig(
     level=logging.INFO,
@@ -115,10 +115,16 @@ def prepare_data(
         y_valid = target[valid]
 
         h_days = HORIZON_DAYS.get(horizon, 63)
-        cv = PurgedKFold(n_splits=5, embargo_pct=0.01, horizon_days=h_days)
+        # C7 fix (2026-08-04): horizon_days= was passed to PurgedKFold, which
+        # has no such parameter — TypeError, so this path had never run; and
+        # split() without eval_times silently degraded to plain k-fold. The
+        # horizon now flows through eval_times, where purging actually uses it.
+        cv = PurgedKFold(n_splits=5, embargo_pct=0.01)
+        eval_times = compute_eval_times(X_valid.index, h_days)
 
         horizon_splits = []
-        for fold, (train_idx, test_idx) in enumerate(cv.split(X_valid)):
+        for fold, (train_idx, test_idx) in enumerate(
+                cv.split(X_valid, eval_times=eval_times)):
             horizon_splits.append({
                 "fold": fold,
                 "train_idx": train_idx,
