@@ -62,12 +62,16 @@ posterior map monotone and shipped.
 Cheap where banked: explore re-gating needs only (inj_t_net, inj_t_ic)
 from the 3,250 banked rep files (sweep.py pattern). Downstream stages
 (confirm scans for newly-graduating reps, DSR, PBO) need fresh runs — the
-old grid only ran confirm for old-gate graduates. Reuse the chain
-machinery: `scripts/run_m1_overnight.cmd [workers]` (idempotent rep files;
-15 workers need ~18GB, use 4-8 on a loaded machine; LOCK the machine,
-never sign out; spawn workers match `multiprocessing.spawn` in process
-filters; keeper schtask M1GridKeeper exists, currently disabled). Use new
-rep filenames (e.g. `rep_r1_*.json`) — never overwrite the BRAIN-008 grid.
+old grid only ran confirm for old-gate graduates. The overnight chain is
+already written: `scripts/run_recal_overnight.cmd [workers] [tag]` +
+keeper `scripts/recal_keeper.ps1` (idempotent rep files; 15 workers need
+~18GB, use 4-8 on a loaded machine; LOCK the machine, never sign out;
+spawn workers match `multiprocessing.spawn` in process filters; sentinel
+"RECAL CHAIN COMPLETE" in `runs/GATE-M1/recal_chain.log`). It ABORTS until
+you add `--ruleset` and `--tag` to `run_grid` (and `--tag` to `posterior`
++ `exhibits`) — that is the contract: tagged rep filenames
+(`rep_r1_*.json`, `stage3_tables_r1.json`) so the BRAIN-008 grid is never
+overwritten. Do not delete or re-run the frozen grid.
 If acceptance targets fail, iterate the ladder (each iteration = its own
 committed spec delta + rerun), until targets pass or you can prove a
 ceiling and report it.
