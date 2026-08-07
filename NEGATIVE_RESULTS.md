@@ -1733,3 +1733,44 @@ The meta-lesson mirrors §5 and §8: the instrument that adjudicates everything
 else must itself be adjudicated. The factory's ruler was the last unmeasured
 component in the pipeline, and measuring it dissolved a year of "nothing
 works" into "nothing could have been seen."
+
+## 35. The one-shot replay (2026-08-08): §34 confirmed out-of-sample — and the honest half of a positive result
+
+The replay of the banked candidates under measured gates fired 2026-08-08
+(registration `Aegis module/TRIALS/PREREG_REPLAY_2.md`; pre-fire conditions
+from two independent adversarial reviews in
+`Aegis module/docs/REPLAY2_PREFIRE_ADDENDUM_2026-08-08.md`; full record in
+`Aegis module/docs/replay_record/`). Selection: BH q=0.10 on empirical
+p-values against a real-data information-free persistent null (n=20,000 per
+segment, guards reproducing banked numbers exactly), PLUS a statistics-blind
+semantic-family t_ic floor. Result: **10 graduates, all small-segment, and
+all 10 passed the held-out 2019-2024 confirm at rank-IC t 4.40-7.71** —
+beyond the p99 of every measured null.
+
+What belongs in a negative-results ledger about a positive outcome:
+
+- **The information/tradability split is the finding.** Confirm money legs:
+  none ≥ t 1.5 individually; two of ten ≈ 0 or negative net (the daily
+  σ-arms, cost-eaten at 0.26-0.38 turnover). Held-out IC t of 5+ coexists
+  with unproven monetizability — §26/§28's rank-without-money lesson,
+  measured now on ADOPTED candidates, not rejects.
+- **Four of ten graduates are σ-family constructions** whose confirm IC
+  persistence was predicted in advance by the structural-bias analysis
+  (§32) and is not, by itself, edge evidence. They cleared their own
+  family-null p95s — necessary, not sufficient.
+- **The 0-for-179 record is now formally explained**: same candidates, same
+  data, measured gates → 10 adoptions. §34's inference ("nothing small was
+  ever seen") is an out-of-sample empirical fact. Every prior small-segment
+  threshold-kill in this ledger should be read with that correction.
+- **What the replay did NOT show:** nothing about largemid (zero graduates
+  there — the committed empty-result interpretation applies);
+  nothing about negative-bias families (illiquidity/drawdown exit
+  UNMEASURED — structurally unable to clear a one-sided positive floor);
+  nothing about capacity or real small-cap costs (flat-25 is believed
+  optimistic; the pre-registered TRIAL-REPLAY-BOOK-1 adjudicates the
+  equal-weight book under KO-half and stress-50 with persistent-null
+  placebo books before any lane is seeded).
+
+The meta-lesson extends §34's: after the ruler was fixed, the pool answered
+in one night. The year was not wasted on a dead pool; it was spent building
+the only instrument that could tell the difference.
