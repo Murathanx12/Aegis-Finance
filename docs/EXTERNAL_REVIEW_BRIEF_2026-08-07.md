@@ -92,7 +92,7 @@ which rule the runner-up would fail). The frozen result ("BRAIN-009"):
 ```
 explore t_ic >= 1.5 (rank by IC, largemid, top-5) ->
 confirm t_ic >= 0.5 + IC sign gate -> DSR/PBO inert (reported, not gating)
-Measured: FDR 1.6% [Wilson 0.4-5.7%], P(adopt) = 16.4% / 43.6% / 79.6%
+Measured: per-candidate FPR 1.6% [Wilson 0.62-4.04%, n=250], P(adopt) = 16.4% / 43.6% / 79.6%
 at true Sharpe 0.2 / 0.4 / 0.6; held-out half reproduces (44.0%, 1.6%).
 ```
 
