@@ -96,6 +96,10 @@ Measured: FDR 1.6% [Wilson 0.4-5.7%], P(adopt) = 16.4% / 43.6% / 79.6%
 at true Sharpe 0.2 / 0.4 / 0.6; held-out half reproduces (44.0%, 1.6%).
 ```
 
+(All FDR/power numbers in this brief are conditional statements: "under
+DGP-A v6 and the registered selection mechanism" — they are properties of
+the simulator × pipeline × rule, not of the strategy universe.)
+
 **(b) Classify every past kill by mechanism** (kill audit, 2026-08-07):
 - Kills backed by their own receipts **stand** — placebo gates that fired,
   confirm-window sign flips, zero-cost bounds ("could this graduate if
@@ -124,7 +128,7 @@ short-leg decomposition printed as receipts next to every survivor. Without
 this, the replay would "resurrect" volatility artifacts and we would be
 manufacturing the very false positives the project exists to prevent.
 
-**(e) Sizing by measured posterior, not conviction.** Adopted candidates
+**(e) Evidence-conditioned sizing, not conviction.** Adopted candidates
 are sized by a coarse evidence ladder (no confirm read → 0×; confirm
 t_ic < 1.5 → 0.25×; ≥ 1.5 → 0.75×), shipped only because it is monotone on
 selection AND held-out halves independently; the finer 5-band map failed
