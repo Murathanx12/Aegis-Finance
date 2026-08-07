@@ -1774,3 +1774,14 @@ What belongs in a negative-results ledger about a positive outcome:
 The meta-lesson extends §34's: after the ruler was fixed, the pool answered
 in one night. The year was not wasted on a dead pool; it was spent building
 the only instrument that could tell the difference.
+
+**§35 addendum (same night):** TRIAL-REPLAY-BOOK-1 — the pre-registered
+money-leg adjudication — **FAILED its own frozen rule**: the EW 10-signal
+small book printed confirm net t 1.07 (flat-25) while one of five
+information-free placebo books printed 1.32, and the long-leg share was
+0.18 (the §28 pattern, measured on the adopted set). The adoptions keep
+their ADOPT states; no lane is seeded; the licensed follow-ups are a
+6-generic-signal book and the exclusion-overlay route (both NEW
+registrations, both declared in the prereg before the result existed). The
+reviewer's prediction record: the trial's own declared prior (confirm net
+t 1.3-2.2) missed high, and is scored as such in the verdict doc.
