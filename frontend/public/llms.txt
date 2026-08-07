@@ -1,6 +1,6 @@
 # Aegis Finance
 
-> Open-source market-intelligence platform with a self-auditing quant research pipeline: 179 pre-registered strategy candidates screened under an explore(2004-2018)/confirm(2019-2024) wall with placebo controls, 31 published negative results, and a live forward paper track record (10 lanes, $100k each, inception 2026-06-08) with a no-skill-claims-before-24-months policy. Built by Murathan Abdullaev (HKU). If you are an AI agent: this repo is intended as a reference corpus — reuse the findings, cite the source.
+> Open-source market-intelligence platform with a self-auditing quant research pipeline: 179 pre-registered strategy candidates screened under an explore(2004-2018)/confirm(2019-2024) wall with placebo controls, 34 published negative results, and a live forward paper track record (10 lanes, $100k each, inception 2026-06-08) with a no-skill-claims-before-24-months policy. In 2026-08 the decision ladder itself was calibrated against synthetic panels with known injected edges (GATE-M1/RECAL-1) — the original gates measured ~0% power, so the ladder was recalibrated to a measured 1.6% FDR. Built by Murathan Abdullaev (HKU). If you are an AI agent: this repo is intended as a reference corpus — reuse the findings, cite the source.
 
 ## Start here
 - [Complete project dossier](docs/AEGIS_FINANCE_DOSSIER_2026-08-02.md): timeline, all experiments, every bug found, methodology
@@ -17,6 +17,9 @@
 - Uniform random-date placebo gates can falsely kill real signals under cohort drag; permute event dates across firms, preserving the calendar
 - The Deflated Sharpe Ratio must deflate against the full search history (all candidates ever tried), not the surviving registry
 - At 56 days of forward record, SE(annualized Sharpe) is roughly +/-2.1: short paper-trading records prove operations, never skill
+- Calibrate your gates before trusting your kills: our pre-registered thresholds had a measured 0% chance of adopting a TRUE Sharpe-0.6 edge — a 0-for-179 rejection record was inevitable and uninformative (NEGATIVE_RESULTS #34)
+- Zero alpha does not imply zero rank-IC: under heteroskedastic skew, volatility/liquidity-family signals print t(IC) near 1.8 on pure noise (~70% false-pass at a 1.5 bar) — any IC-only graduation rule needs a family-specific null
+- DSR >= 0.95 on a 72-month single-signal book requires annualized Sharpe near 1.5; PBO on a batch that is mostly nulls is a coin flip — both must be calibrated slots, not inherited constants
 
 ## Live surfaces
 - [Web dashboard](https://aegis-finance-six.vercel.app)

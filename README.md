@@ -20,7 +20,7 @@ Most retail finance tools show you a backtest and ask you to trust it. Aegis ass
 - **Forward paper lanes.** Ten paper portfolios ($100k each) marked to market daily since inception **2026-06-08**: four reference lanes (conservative, balanced-HRP, aggressive, equal-weight control), two book lanes (mirror + conviction), an ATR exit-overlay lane, a small/mid-quality lane, and a TSMOM overlay pair (treatment + 60/40 control). NAV accrues only with elapsed time and cannot be cherry-picked.
 - **Decision clocks, not vibes.** TRIAL-001 (HRP vs equal-weight) reads out no earlier than **June 2027**. The project makes **no skill claims before 24 months** of forward record. Period.
 - **Published negative results.** The signal engine *loses* to buy-and-hold as a timing tool. The 12-month crash model has no skill. LPPLS bubble timing was refuted twice. A survivorship-free backtest universe is not buildable on free data — so no backtested alpha claim here is trustworthy, and we say so. [Read them all.](NEGATIVE_RESULTS.md)
-- **Overfitting guards.** Deflated Sharpe, PBO (probability of backtest overfitting), Harvey-Liu thresholds, and purged cross-validation gate every candidate — and even a "pass" goes to human review, never auto-adoption.
+- **Overfitting guards — themselves calibrated.** Deflated Sharpe, PBO, Harvey-Liu thresholds, and purged cross-validation are computed for every candidate. In Aug 2026 we ran the whole decision ladder against synthetic markets with *known* injected edges (GATE-M1) and found our own gates had ~0% power — so the ladder was recalibrated to a **measured** 1.6% false-discovery rate, with DSR/PBO reported as diagnostics rather than pretending they gate ([NEGATIVE_RESULTS §34](NEGATIVE_RESULTS.md)). Even a "pass" goes to human review, never auto-adoption.
 
 ## What it does
 
@@ -40,7 +40,7 @@ Most retail finance tools show you a backtest and ask you to trust it. Aegis ass
 - Retirement: Monte Carlo simulation with contributions/withdrawals, safe-withdrawal-rate calculator
 
 **The forward track record**
-- 7 paper lanes with daily NAV, tamper-evident config hashes, and a public track-record API
+- 10 paper lanes with daily NAV, tamper-evident config hashes, and a public track-record API
 - Forward information-coefficient trials on selection signals: insider Form 4 clusters, analyst revision momentum, multi-factor composite
 
 **Data collectors (point-in-time, leak-free)**
