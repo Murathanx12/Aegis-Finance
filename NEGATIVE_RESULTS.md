@@ -1698,3 +1698,38 @@ The one horizon that ever looked skillful loses its entire edge when the
 leaks close. 3m/6m were at chance even *with* the leaks. This extends §
 (12m no skill) with the mechanism: the offline case was never real. The
 overlay stays disabled; no retraining without pre-registration.
+
+## 34. The factory's own gates had ~0% power — the 0-for-179 record was measurement of the ruler, not the pool
+
+Source: GATE-M1 / RECAL-1, `Aegis module/docs/RECAL1_VERDICT_RUN1_2026-08-07.md`
++ `RECAL1_RUN2_DESIGN_SWEEP_2026-08-07.md` + `KILL_AUDIT_2026-08-07.md`.
+
+The decision ladder the whole 179-candidate search ran under was finally run
+against synthetic panels holding **known** injected edges. The ratified ladder
+adopts a true α=0.6 constant edge with probability **0.000**; so does the
+ratified starting point for the recalibration. Every stage contributed:
+explore t-bars killed 93–99% of decaying edges, DSR ≥ 0.95 needs SR ≈ 1.5
+where a true edge delivers ~0.03, and PBO < 0.5 on a 42-book batch of 41
+nulls is a coin flip. **Consequence for this ledger:** entries that carry
+their own receipts (placebo gates that fired, confirm sign flips, zero-cost
+bounds, direct measurements — the majority) are untouched; rejections whose
+only evidence was "failed the explore threshold" are *unmeasured*, not
+confirmed-false, and are queued for a single pre-registered replay under the
+recalibrated ladder (BRAIN-009: measured FDR 1.6%, power 44% at α=0.4).
+
+Two sub-findings worth their own line:
+
+- **The small segment was structurally invisible** (not merely cost-penalized,
+  §22): a real small-cap-only edge is adopted at exactly the null rate
+  (0.016) at every injected strength. Nothing small was ever killed; it was
+  never seen.
+- **§32 quantified:** on certified null panels, σ/liquidity-family signals
+  print mean |t_ic| ≈ 1.8 with **P(t_ic ≥ 1.5) ≈ 70%** (p95 ≈ 3.0 largemid,
+  ≈ 4.2–4.5 small). An IC-only gate false-passes that family most of the
+  time; the replay therefore carries a binding family-null veto
+  (`Aegis module/docs/family_null_tic_r1_frozen.json`).
+
+The meta-lesson mirrors §5 and §8: the instrument that adjudicates everything
+else must itself be adjudicated. The factory's ruler was the last unmeasured
+component in the pipeline, and measuring it dissolved a year of "nothing
+works" into "nothing could have been seen."
