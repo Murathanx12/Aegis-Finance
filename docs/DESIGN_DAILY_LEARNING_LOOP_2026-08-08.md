@@ -12,10 +12,19 @@ it should learn every day and update itself."**
 A real, excellent edge (~0.6 annualized Sharpe — better than almost every
 fund) produces a daily return signal of roughly **+3–5 bps against daily
 noise of 100–200 bps**. That is why SPY itself only prints t≈1.1 over 72
-months, and why KTD-Fin measured 9/10 LLM agents that self-train on their
-own P&L ending with *negative* selection alpha: at daily granularity, P&L
-is almost pure noise, and anything that updates weights on it learns the
-noise. **Daily P&L cannot be the teacher.**
+months: at daily granularity, P&L is almost pure noise, and anything that
+updates weights on it learns the noise. **Daily P&L cannot be the teacher.**
+
+*(Correction 2026-08-08, R2 deep-research verification: this paragraph
+previously cited KTD-Fin (arXiv:2605.28359) as "9/10 LLM agents that
+self-train on their own P&L end with negative selection alpha." The 9/10
+negative-selection-alpha number is real, but those agents run NO
+P&L-reflection loop — KTD-Fin is a leakage-controlled attribution study
+proving absence of selection skill, not harm from P&L-training. The
+never-P&L-train argument is instead carried by Trade-R1 (arXiv:2601.03948),
+the outcome-vs-proper-scoring controlled experiment (arXiv:2607.00164, 3.4×
+ECE gap), ForecastCompass (arXiv:2605.30858), and "Honest Lying"
+(arXiv:2605.29463). See `RESEARCH_SYNTHESIS_2026-08-08_R1-R4.md` §2.)*
 
 But the system can still genuinely learn every day — because P&L is not
 the only ground truth that resolves daily. **Predictions resolve daily.**

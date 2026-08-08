@@ -89,8 +89,12 @@ made in §3 and are binding until he overrides. Full raw transcript:
   LLM narrative), (b) nightly attribution ("what worked/why" vs benchmarks,
   written into Optimus brain), (c) calibration memory (the brain's own
   calls graded forward like the lanes). The one thing NOT built: retraining
-  a model on its own P&L — measured to fail (KTD-Fin: 9/10 LLM agents
-  negative selection alpha; profit-mirage receipts). The statistical
+  a model on its own P&L — measured to fail (profit-mirage receipts;
+  Trade-R1 arXiv:2601.03948; outcome-vs-proper-scoring ECE 3.4× gap,
+  arXiv:2607.00164). *(Citation corrected 2026-08-08: KTD-Fin's 9/10
+  negative selection alpha is real but its agents run no P&L-reflection
+  loop — it proves absent selection skill, not P&L-training harm; see
+  RESEARCH_SYNTHESIS_2026-08-08_R1-R4.md §2.)* The statistical
   learner remains the REGISTERED ML track (EXT-ML-1 ridge → kNN challenger).
 - **D4 — GP forward-lane proposal PREPARED for Murat's flag** (30yr era
   receipts + double external validation; label "information-confirmed,
