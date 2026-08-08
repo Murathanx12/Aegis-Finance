@@ -62,8 +62,27 @@ G6 ex-best-year ≥ +1.5%, ≥4 of 5 evaluable regime blocks, G3 ≥6 of 8 grid
 configs positive, G8 P(DD > 60%) ≤ 0.20. Verdict classes WINNER / UNRESOLVED /
 FAILED, ranked by excess terminal wealth under the ruin constraint.
 
-**Status at handoff:** Phase A running (`runs/PF/CAMPAIGN_PF1.json`, written
-incrementally; log at `runs/PF/campaign_pf1.log`). First completed grid:
+**COMPLETED AND ADJUDICATED — full verdict:
+`Aegis module/docs/PF1_CAMPAIGN_VERDICT_2026-08-08.md`.** 448 experiments
+(48 runs + 400 placebo books), 0 errors, holdout unread, **no winner**:
+
+| strategy | window | net excess CAGR | t (NW) | maxDD | P(DD>60%) | wealth vs bench | placebo | verdict |
+|---|---|---|---|---|---|---|---|---|
+| PF-ENGINE-ALPHA | 59.5y | **+5.21%/yr** | 3.77 (2.72) | −35.4% | 0.005 | **15.6×** | PASS | FAILED — regimes 3/5 |
+| PF-PROF-COMPOSITE | 40.2y | **+4.35%/yr** | 2.32 (2.00) | −56.1% | 0.241 | 4.68× | PASS | FAILED — ruin >0.20 |
+| PF-REGIME-SWITCH | 59.5y | +1.87%/yr | 0.83 | −30.9% | 0.002 | 2.72× | PASS | FAILED |
+| PF-GP-SMALL | 40.2y | +1.79%/yr | 1.39 | −67.0% | 0.560 | 1.90× | PASS | FAILED |
+| PF-INSIDER-TILT | 15.8y | −5.48%/yr | −0.99 | −62.4% | 0.385 | 0.44× | — | FAILED |
+| PF-RISK-SAT-1 | 58.8y | −2.25%/yr | 0.90 | −83.7% | **0.994** | 0.30× | — | FAILED |
+
+The decisive qualifier on the best one: **ENGINE-ALPHA's FF5+UMD alpha is
++0.89%/yr with t = 0.71.** It beats the market by harvesting size/value/
+profitability/momentum premia with lower drawdown than the market — a real
+product, but not engine alpha, and labelled as such. The timing overlay
+destroyed 3.34%/yr; the concentrated conviction satellite lost money with a
+99.4% chance of a 60% drawdown. Pre-registered predictions scored **1 of 5**.
+
+Detail of the first grid, for the breadth lesson:
 
 | PF-GP-SMALL config | net excess CAGR | t | window |
 |---|---|---|---|
@@ -168,13 +187,14 @@ at scale, that is the moment to spend the $20, not now.
 
 ## 6. Next session picks up here
 
-1. **Collect the campaign** — `runs/PF/CAMPAIGN_PF1.json` (verdicts land in
-   Phase C). Write the campaign summary doc with the total experiment count as
-   the multiple-testing denominator.
-2. **PF-2 registration** — the breadth finding (N=150 beats N=25 on t for the
-   same signal) and the KO-costs finding belong in the next grid, plus the
-   combination phase (pairwise overlays among survivors, standalone / marginal
-   / interaction contribution).
+1. **PF-2 registration** — the two near-misses go forward as registered
+   successors, never as post-hoc rescues: ENGINE-ALPHA with the **FF5+UMD
+   regression promoted to a gate** (its alpha vanished there) and a
+   regime-breadth question; PROF-COMPOSITE at breadth N=150 where its ruin
+   number is 0.102, inside tolerance. Add a `NEAR-MISS(gate)` verdict class —
+   "failed one gate with the placebo passed" and "lost money for 59 years"
+   should not print the same word. Then the combination phase (pairwise
+   overlays, standalone / marginal / interaction contribution).
 3. **AMNESIA-2** — 5-day event windows (earnings, PDUFA), masked, with the
    positive control and famous-case stratification built in from the start.
 4. **N3 daily simulator** (G7) — the last gate before any strategy can reach a
