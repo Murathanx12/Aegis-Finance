@@ -224,3 +224,70 @@ thin books — it is not, and must never be cited as, evidence that an edge is
 more than factor exposure.** That question is G4a's alone. The equal-weight-
 universe control and the FF5+UMD regression are the sharp instruments; the
 placebo band stays as a necessary but weak gate.
+
+---
+
+# AMENDMENT 2026-08-09 (second) — the PRODUCT TRACK and its own gate set
+
+**Forward-only. Nothing already adjudicated is re-scored or re-labelled under
+this amendment** — in particular `PF-ENGINE-ALPHA-2` keeps its PF-2 verdict of
+FAILED, and is *not* retro-promoted. This amendment binds registrations opened
+on or after 2026-08-09 (second amendment).
+
+Authorized by Murat 2026-08-09 in answer to the open question raised in the
+PF-2 verdict: *is the regime-breadth gate right for long-only factor books?*
+
+**The answer adopted is: do not loosen the gate — split the claim.** Requiring
+positive excess in ≥4 of 5 regime blocks is the correct bar for the claim *"our
+engine is skilled."* It is the wrong bar for a different, also-honest claim:
+*"this is a better thing to buy than anything you could otherwise pick."* One
+gate set was being asked to adjudicate two different sentences. So there are now
+two tracks, and a candidate must declare which one it is registered under
+**before** its compute.
+
+### (a) The two tracks
+
+| | ENGINE-SKILL TRACK | PRODUCT TRACK |
+|---|---|---|
+| the sentence | the engine found something the standard factors do not span | this is a better investable holding than the alternatives |
+| G4a FF5+UMD α ≥ +2 %/yr, t ≥ 2.0 | **GATING** | reported, not gating |
+| regime breadth ≥4/5 blocks | **GATING** | **REPORTED AS DISCLOSURE, not gating** |
+| product bar (below) | reported | **GATING** |
+| G1 materiality, G3 placebo, G8 ruin, grid stability | gating | gating |
+| **G2 holdout + G7 daily simulator** | **required before paper** | **required before paper** |
+| may be called engine alpha / model skill / a discovery | yes | **never, in any document, UI string, or lane label** |
+
+### (b) The product bar (registered here, before the compute it judges)
+
+A product-track candidate passes its bar when, on the full evaluated window
+excluding the holdout, it beats **every** pre-registered investable alternative
+on **excess terminal wealth**, subject to the ruin constraint P(maxDD > 60 %)
+≤ 0.20. The alternative set must be frozen in the registration and must contain
+at minimum: the benchmark itself, the equal-weight universe, a simple
+value+profitability screen, and a naive multifactor mix — all net of the same
+cost model. "Beats the market" alone is not a product bar; the comparison is
+against what a person could actually have bought instead.
+
+### (c) Mandatory disclosure, because a non-gating metric must still be printed
+
+A product-track graduate must publish, in the same artifact as its headline
+number: per-regime-block excess (including every negative block, named), the
+worst calendar year, time underwater, and the FF5+UMD decomposition showing
+**which known premia it is harvesting**. The label exists so a user knows what
+they are buying. A product-track result presented without its negative blocks is
+a violation of this standard, not an oversight.
+
+### (d) What this amendment explicitly does NOT do
+
+- It does not lower any bar for engine-skill claims. G4a and regime breadth are
+  unchanged there.
+- It does not create a path to a lane that skips G2 or G7. Both tracks still
+  require the holdout and the daily simulator before paper.
+- It does not retro-apply. `PF-ENGINE-ALPHA-2` is FAILED and stays FAILED; if it
+  is to run on the product track it must be registered fresh, under a new ID,
+  with the honest disclosure that its product-bar numbers were already computed
+  and are therefore not blind (see `TRIALS/PREREG_PF_ENGINE_ALPHA_PRODUCT_2.md`).
+
+The reason for (d) is the same reason the standard exists: a gate that is
+rewritten to admit the candidate that just failed it is not a gate. Splitting a
+claim into two honestly-labelled claims is legitimate; moving the line is not.
