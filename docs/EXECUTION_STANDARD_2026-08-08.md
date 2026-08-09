@@ -147,3 +147,80 @@ processing (existing queue first) · T9 overnight campaigns (variants,
 combinations, interactions — standalone + marginal + interaction
 contribution reported per signal) · T10 graduates → paper (Murat's
 flags).
+
+---
+
+# AMENDMENT 2026-08-09 — G4a factor gate, the FACTOR-HARVEST label, and
+# the NEAR-MISS verdict class
+
+**Forward-only. PF-1 is NOT re-scored under this amendment** — its verdicts
+stand as adjudicated under the rule frozen on 2026-08-08. This amendment binds
+every registration opened on or after 2026-08-09.
+
+Written because PF-1 produced a strategy that beat the market by +5.21 %/yr net
+over 59.5 years, at lower drawdown, beating 100 turnover-matched random books —
+and whose FF5+UMD alpha was +0.89 %/yr with t = 0.71. The old rule had no way to
+say what that is.
+
+### (a) G4a — the factor gate, and the two things a strategy may graduate as
+
+G4 (beats controls) gains a sub-gate. Every money run reports a CAPM and an
+FF5+UMD (Fama-French 5 + momentum) regression of monthly net excess returns.
+
+**G4a — ENGINE SKILL bar:** annualized FF5+UMD alpha **≥ +2.0 %/yr with
+t ≥ 2.0** over the full evaluated window. Registered here, before the PF-2
+compute that will be judged by it.
+
+Consequences, both directions:
+
+- A strategy passing every gate **including G4a** may be claimed as **ENGINE
+  SKILL** — the engine found something the standard factors do not span.
+- A strategy passing every gate **except G4a** is **not** a failure. It
+  graduates as a **FACTOR-HARVEST PRODUCT**: a well-built, cost-aware,
+  low-drawdown implementation of premia that are already public. This is a
+  legitimate deliverable and may proceed down the stage ladder. It may **never**
+  be described as engine alpha, model skill, or a discovery, in any document,
+  UI string, or lane label.
+- The distinction is a labelling gate, not a permission gate. Both labels still
+  require G1-G9. Neither label is available to a strategy that fails them.
+
+**Why t ≥ 2.0 and not the lfdr-anchored t ≈ 4.0 used for claim promotion:** the
+t ≈ 4.0 bar governs *forward* claim promotion in the belief ledger, where the
+multiple-testing denominator is thousands of claims. G4a governs the *labelling*
+of a small, pre-registered set of portfolio candidates whose returns have
+already cleared an independent placebo gate; 2.0 is the conventional
+factor-model bar (Fama-French, Novy-Marx) and is the right instrument here. The
+two bars are not interchangeable and neither replaces the other.
+
+### (b) The verdict taxonomy gains NEAR-MISS(gate)
+
+`WINNER` · `NEAR-MISS(<gate>)` · `UNRESOLVED(<reason>)` · `FAILED`
+
+**NEAR-MISS(gate)** = failed **exactly one** gate, with the placebo gate PASSED
+and net excess positive. It records the specific gate in the verdict string.
+
+A NEAR-MISS does **not** graduate and does **not** seed a lane. Its only
+privilege is that a successor addressing that one gate may be registered without
+being treated as a rescue — and the successor must carry its own prediction and
+be judged on its own receipts. Post-hoc promotion of a variant that happened to
+clear the failed gate remains forbidden; that is precisely the cherry-picking
+this taxonomy exists to make visible rather than tempting.
+
+### (c) Recorded measurement — what the turnover-matched placebo actually tests
+
+PF-1 ran 600 placebo books across six strategies. Measured properties, now
+standing:
+
+- Random selection at realistic turnover **loses** −2 to −3 %/yr on broad
+  universes; trading costs alone sink it. Any strategy with positive net excess
+  clears such a band nearly automatically.
+- The band **widens where books are concentrated or windows are short** — p95
+  went positive (+0.23%, +0.25%/yr) for the 10-name and 15.8-year specs versus
+  −0.30% to −0.66% for broad-universe specs. Both PF-1 placebo failures occurred
+  there.
+
+Therefore: **the placebo gate is a test of construction artifacts and of luck in
+thin books — it is not, and must never be cited as, evidence that an edge is
+more than factor exposure.** That question is G4a's alone. The equal-weight-
+universe control and the FF5+UMD regression are the sharp instruments; the
+placebo band stays as a necessary but weak gate.
