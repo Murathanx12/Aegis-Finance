@@ -187,6 +187,18 @@ MISSION, in order, stopping cleanly wherever time runs out:
    - PF-INSIDER-2-TIEAWARE — successor, only if cheap: tie-aware insider
      construction (magnitude/recency-weighted, not raw buyer counts).
      One base + small grid; a second clean failure closes the family.
+   - PF-META-1 — Murat's "11th account" idea, tested in backtest FIRST:
+     treat the PF-1 base strategies as assets and run a meta-portfolio
+     that allocates to whichever strategies "have been working"
+     (trailing-window winner selection; frozen grid: lookback 6/12/24
+     months, hold top-1/top-2, monthly review). Controls: equal-weight
+     of the same strategies, and the best single strategy held
+     throughout. REGISTERED HOUSE PREDICTION: selection-by-trailing-
+     performance does NOT beat equal-weighting the strategies — it is
+     market timing at the strategy level, and timing has failed every
+     test to date. If the prediction is wrong, that is exactly what
+     pre-registration is for. Cheap to run; answers whether the
+     winner-copying paper account should ever exist.
 3. RUN under the calibrated harness with the full NIGHT-1 rule set:
    placebo bands where evaluable, equal-weight-universe control, FF5+UMD
    regression on every run, per-regime blocks, denominator printed on
@@ -201,62 +213,99 @@ key changes, no holdout reads, honesty over completeness.
 
 ---
 
-## NIGHT-3 PROMPT — LLM event replay, rebuilt on the amnesia receipts
+## NIGHT-3 PROMPT (REVISED 2026-08-09) — masked DECISION replay + the
+## lesson brain ("what we imagined vs what happened", at scale)
+
+Murat's directive (2026-08-09, binding for this night): use DeepSeek
+volume aggressively; replay masked historical situations as actual
+buy/hold/sell decisions, not just event forecasts; record expected-vs-
+actual for every decision; distill the deltas into a retrievable
+"lesson brain" the LLM consults next time; the METHOD must be
+model-agnostic (the learning lives in the brain, the LLM is a swappable
+component); the LLM must be consistent (no noise re-rolls) and aware of
+its own earlier claims WITHIN a run.
 
 Prereq: PF-2 receipts exist. Work in `Aegis module`, branch
-`factory/night-3`. Read first: `docs/AMNESIA_VERDICT_2026-08-08.md`
-(binding — it replaces guesswork with measurements),
-EXECUTION_STANDARD §5.1-5.2, MEMORY current state.
+`factory/night-3` cut from the latest factory branch. Read first:
+`docs/AMNESIA_VERDICT_2026-08-08.md` (binding),
+`docs/PF1_CAMPAIGN_VERDICT_2026-08-08.md`, EXECUTION_STANDARD §5.1-5.2,
+MEMORY current state, pre-register-trial skill.
 
-What the amnesia trials already settled — do NOT re-test: instruction-
-based "forgetting" does nothing; masking works (0/240 identifications);
-synthetic scenarios (fake names/dates, jittered facts) score within
-0.0004 Brier of real-masked, so scenario manufacture from the 63yr panel
-is validated and unlimited; contamination is sparse but near-perfect
-where it fires (5/5 correct on famous collapses) — so CANARIES GATE
-PER-CASE, never on aggregate stats.
+Already settled — do NOT re-test: instruction-based "forgetting" does
+nothing; masking works (0/240); synthetic scenarios ≈ masked (ΔBrier
+0.0004) so scenario manufacture from the 63yr panel is unlimited;
+contamination is sparse but near-perfect where it fires ⇒ CANARIES GATE
+PER-CASE, never on aggregates. And the standing warning: on digested
+numeric percentiles the masked LLM LOST to logistic regression — the
+LLM only gets a chance to add value on RAW TEXT and on decision
+integration, so those are the two registered questions.
 
-And the warning that shapes this night: on five pre-digested numeric
-percentiles, the masked LLM LOST to a 5-feature logistic regression.
-If NIGHT-3 feeds the LLM the same digested numbers, it will measure
-nothing new. The registered question is therefore: does the LLM add
-information ABOVE cheap baselines when given what only it can read —
-the raw text (8-K bodies, earnings-release language, FDA letters,
-insider filing context)?
+MISSION (each stage pre-registered before its compute):
 
-MISSION:
 1. EVENT SPINE from immutable PIT sources (SEC EDGAR full text primary;
-   FDA archives; GDELT timestamps): earnings releases, FDA/PDUFA, insider
-   clusters. ~200 events/class, stratified 2010-2024 and by cap segment,
-   sample sizes pre-registered. Every record carries publication/
-   availability/retrieval timestamps + version hash.
-2. MASKING using the validated protocol (entity-scrubbed, relative dates,
-   percentile-expressed numbers) + PER-CASE canaries: every masked
-   context gets an identification probe; any case the model identifies
-   (company, period, or outcome) is BURNED and logged. Famous-event
-   classes (large biotech, household names) get double-strength probes.
-3. ELICITATION (R1 frozen): structured claims, numeric anchor,
-   median-of-10, no extremization, Platt α=√3 downstream, explicit
-   ABSTAIN allowed and tracked per bucket, first forecast immutable.
-   Two arms per event, pre-registered: TEXT arm (raw filing text, masked)
-   vs NUMBERS arm (digested percentiles only). The delta between them is
-   the measurement — "does reading help?"
-4. BASELINE BANK graded on identical events: class base rate, logistic
-   on event features, and where available analyst consensus direction.
-   LLM evaluated as a forecaster first (Brier, log loss, calibration,
-   ECE, coverage, abstention, sharpness), economics second (abnormal-
-   return ranking). The LLM earns attention only above the best baseline.
-5. MEMORY ABLATION (pre-register first): arms A no-memory / C structured
-   event memory / D calibrated claim-type memory, memory built only from
-   events resolved before t. Feed resolutions into the ABN
-   (`aegis_brain/abn/`) — this doubles as its first real workload at
-   scale; the promotion gate's verdict on each bucket goes in the report.
-6. RECEIPTS: dataset manifest, per-class calibration reports, TEXT-vs-
-   NUMBERS delta table, LLM-vs-baseline table, ablation verdicts, burned-
-   canary log, spend log (guards on; cache keyed by masked-context hash;
-   deepseek-chat temperature 0). Branch `factory/night-3`. STATUS
-   handoff at end.
+   FDA archives; GDELT timestamps): earnings releases, FDA/PDUFA,
+   insider clusters. ~200 events/class, stratified 2010-2024 and by cap
+   segment. Every record: publication/availability/retrieval timestamps
+   + version hash.
+2. MASKING (validated protocol: entity-scrubbed, relative dates,
+   percentile-expressed numbers) + PER-CASE canaries — any case the
+   model identifies (company, period, or outcome) is BURNED and logged;
+   famous-name classes get double-strength probes.
+3. EVENT FORECASTS, two arms per event: TEXT (raw masked filing text)
+   vs NUMBERS (digested percentiles only). The TEXT−NUMBERS delta is
+   measurement #1: "does reading help?" Elicitation frozen per R1:
+   structured claims, numeric anchor, median-of-10, no extremization,
+   Platt α=√3 downstream, explicit ABSTAIN tracked per bucket, first
+   forecast immutable.
+4. DECISION REPLAY (new — Murat's core ask): at masked historical
+   rebalance points, present the LLM with a candidate slate (the
+   engine's screener output at time t, masked) + each name's engine
+   numbers + any live masked events, and elicit BUY/HOLD/SELL with
+   conviction and a one-enum reason. Grade against realized forward
+   returns AND against the engine's own numeric signal acting alone.
+   Measurement #2: does LLM decision-making add anything over the
+   numeric engine that already prints +5.21%/yr? Every decision writes
+   an expected-vs-actual row (the "what happened vs what we imagined"
+   ledger).
+5. THE LESSON BRAIN (new): distill graded decisions into structured
+   lesson records — {situation fingerprint (numeric features + event
+   class + regime context), what was claimed, what happened, error
+   size, attributed reason enum}. Retrieval = k-nearest-neighbour over
+   situation fingerprints (kNN: "find the most similar past situations
+   and their outcomes" — deterministic engine code, model-agnostic).
+   Then the ablation that answers "does learning from mistakes help",
+   with strict out-of-sample sequencing (lessons available at t only if
+   resolved before t):
+     arm A no-memory / arm C structured event memory / arm D calibrated
+     claim-type memory (ABN posteriors) / arm E lesson-retrieval (kNN).
+   Feed all resolutions into the ABN (`aegis_brain/abn/`) — its first
+   at-scale workload; report the promotion gate's per-bucket verdicts.
+6. CONSISTENCY PROTOCOL (frozen): temperature 0; median-of-10 for
+   probability elicitation; every response cached immutably keyed by
+   (model_id, masked-context hash) — the same question can never be
+   silently re-rolled; within a run the model SEES its own prior claims
+   and their resolutions (resolved-before-t only) via the ledger, so it
+   is self-consistent per instance, exactly as Murat asked.
+7. MODEL-AGNOSTIC BY CONSTRUCTION: every claim/lesson/posterior row
+   carries model_id; the brain, resolver, lesson store and gates are
+   pure engine code that would work identically with any LLM. OPTIONAL
+   model-swap probe: IF an Anthropic key is present, re-run a paired
+   subset (≤100 events, spend hard-capped at $15, spend log printed) on
+   a Claude model to measure whether model quality changes the verdict.
+   Skip silently if no key — never block the night on it.
+8. BASELINE BANK on identical events/decisions: class base rate,
+   logistic on event features, the numeric engine alone, and (where
+   available) analyst consensus. Forecaster metrics first (Brier, log
+   loss, calibration, ECE, coverage, abstention, sharpness), economics
+   second. The LLM earns attention only above the best cheap baseline.
+9. RECEIPTS: dataset manifest, per-class calibration reports,
+   TEXT-vs-NUMBERS delta table, DECISION-vs-ENGINE delta table, ablation
+   verdicts (A/C/D/E), burned-canary log, lesson-store dump + schema,
+   spend log. Branch `factory/night-3`. STATUS handoff at end.
 
-Same hard limits. Replay output = bounds and baselines on the LLM layer,
-never a standalone alpha claim; the forward claim ledger stays the gold
-standard.
+Same hard limits as always (no lanes, no flags, no holdout, no key
+changes). Replay output = bounds and baselines on the LLM layer, never
+a standalone alpha claim; the forward claim ledger stays the gold
+standard. If the LLM does NOT beat the engine/baselines, that is a
+publishable receipt, not a failed night — it tells us the brain should
+route LLM attention to narration and event triage, not stock selection.
