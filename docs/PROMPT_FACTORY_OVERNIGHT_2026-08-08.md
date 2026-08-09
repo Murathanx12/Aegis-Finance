@@ -309,3 +309,64 @@ a standalone alpha claim; the forward claim ledger stays the gold
 standard. If the LLM does NOT beat the engine/baselines, that is a
 publishable receipt, not a failed night — it tells us the brain should
 route LLM attention to narration and event triage, not stock selection.
+
+---
+
+## NIGHT-3 REVISION 2026-08-09 — six adopted deltas (binding)
+
+Adjudicated from Murat's home-session review. Full spec:
+`docs/DESIGN_MEMORY_TAXONOMY_2026-08-09.md`, which is binding and is read
+before building. These REPLACE the corresponding parts of the NIGHT-3
+prompt above; everything not mentioned stands unchanged.
+
+1. **EXPERIENCE replaces "lesson record"** as the canonical unit of
+   learning — one record per GRADED DECISION, ~20 required fields
+   (information state, walk-forward regime, fingerprint, model_id,
+   brain_version, thesis enums, expected return + horizon, target,
+   invalidation, realized outcome, abnormal return, error, attribution
+   enum, outcome class, lesson text, embedding). Deterministic writer,
+   loud-fail on missing fields, unit tests, append-only. Stage 5's kNN
+   retrieval (arm E) runs over these.
+2. **Two memories, separately ablatable.** EPISODIC = the experience
+   store (kNN over fingerprints, arm E). SEMANTIC = ABN posteriors +
+   distilled generalizations (arm D). Hard rule: a semantic
+   generalization must CITE the n experiences it was distilled from and
+   print n; generalizations without receipts are rejected at write time,
+   exactly as claims without resolve_rules are today.
+3. **Decision persistence.** Every position/candidate carries a
+   persistent state object; every re-review forces the elicitation
+   schema OLD BELIEF → NEW EVIDENCE → BELIEF UPDATE → NEW BELIEF →
+   reason enum. Update-appropriateness is graded deterministically,
+   flagging BOTH overreaction and underreaction. This is the
+   consistency mechanism — never prompt "be consistent."
+4. **Policy-coherence battery (new stage, runs BEFORE any economics).**
+   Pre-register monotone response directions; perturb ONE variable per
+   pair on synthetic scenarios (valuation ±, earnings beat→miss, regime
+   bull→bear, geopolitical risk ±, revisions ±); report per-direction
+   pass rates. A reasoner that fails monotonicity fails cheap. This
+   gates the LLM layer; it is never evidence of alpha.
+5. **NAME-ONLY arm** added to the identity ablation — real ticker + real
+   date, minimal/no numeric data, same 120-situation set. It measures
+   what the model does on memory ALONE, which is the contamination
+   ceiling for any unmasked diagnostic. Do NOT re-run named /
+   named+instructed / masked / synthetic — already measured.
+6. **Anti-reward-hacking guard on every decision arm:** report exposure
+   (fraction invested), abstention rate, and opportunity cost of
+   abstention beside accuracy/Brier. An arm that "wins" by hiding in
+   cash must be visible as exactly that. Applies to PF-META-1's
+   scorecard too (already satisfied — every PF-2 meta book runs at 0.0%
+   mean cash; receipt `runs/PF2/META_COMMON_WINDOW.json`).
+
+**REJECTED / DEFERRED — do not build, recorded so they are not
+re-proposed:** multi-agent debating personas (may return later ONLY as a
+single-LLM vs role-ensemble ablation, and only after the single-LLM path
+shows value above baselines); ten new experimental paper accounts (arms
+live in the historical lab; nothing seeds a lane except through the
+frozen gates); neural/learned representations (deferred until >100k
+graded experiences make shrinkage posteriors saturate — a milestone, not
+a date); P&L-learning arms (stays its own registered trial — one
+campaign, one question).
+
+Registry rows for the two new pre-registered pieces —
+`TRIAL-COHERENCE-BATTERY-1` and `TRIAL-NAME-ONLY-1` — are committed
+before their compute, per canon.
