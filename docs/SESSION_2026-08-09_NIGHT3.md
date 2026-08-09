@@ -75,9 +75,17 @@ isolates the LLM, and it prints **t 0.93** against a **3.62 %/yr MDE**. Quoting
 the standalone number instead of the registered metric would be exactly the
 substitution the registry exists to prevent.
 
-A control that can only undercut arm E — **`DIAG-NIGHT3-MEMORY-PLACEBO-1`**,
-same memory with the situation→outcome mapping scrambled — was registered before
-compute and is running.
+**And the control settled it.** `DIAG-NIGHT3-MEMORY-PLACEBO-1` — registered
+before compute, run over the full 204 months — gave arm **E-SHUFFLED** memory of
+identical shape, volume and marginal distribution with only the
+situation→outcome mapping destroyed. It printed **+5.07 %/yr**, *still above
+no-memory's +4.67 %*, and **E − E-SHUFFLED = +1.13 %/yr at NW t 0.43** against a
+4.52 %/yr MDE.
+
+> **What helped was the memory BLOCK, not its CONTENT.** Most of arm E's
+> apparent advantage survives destroying everything the memory was supposed to
+> know. Without this control, arm E's +6.21 % at t 2.58 would be sitting in the
+> verdict looking like learning.
 
 ### Answers to Murat's questions, with numbers
 
