@@ -291,3 +291,98 @@ a violation of this standard, not an oversight.
 The reason for (d) is the same reason the standard exists: a gate that is
 rewritten to admit the candidate that just failed it is not a gate. Splitting a
 claim into two honestly-labelled claims is legitimate; moving the line is not.
+
+---
+
+# AMENDMENT 2026-08-09 (third) — NIGHT-5 standing amendments
+
+**Forward-only. Nothing already adjudicated is re-scored or re-labelled.**
+Adopted from external review 3 after home adjudication. Each item below is a
+standing requirement on every FUTURE factor candidate, not a re-reading of a
+banked one.
+
+### (a) Era-appropriate cost stress is MANDATORY
+
+Every factor candidate must be run under `decomp.era_cost_frame` — the
+mechanical tick-size floor ($1/8 → 1997-06, $1/16 → 2001-03, $0.01 after, over a
+25 bps base) — **in addition to** whatever cost model its spec names, and both
+numbers go on the scorecard.
+
+Measured reason, not a precaution: on the 63-year panel, era costs cut
+`PF-PROF-COMPOSITE-150`'s pre-2001 excess from ~5.0 %/yr to **+1.31 %/yr**. A
+flat 25 bps applied to a period when the minimum price increment was 12.5 ¢ is
+not a conservative assumption; it is a wrong one, and it is wrong in the
+direction that flatters us.
+
+**Recorded limit, so this is not over-claimed:** era costs are a *panel-era*
+correction. They do almost nothing to a post-decimalisation study — the closed
+179-signal search ran on 2002-2024 and is barely touched by this rule.
+
+### (b) The characteristic-matched placebo REPLACES turnover-matching as the edge gate
+
+The edge gate is now: **N ≥ 100 control books matched on dollar-volume ×
+momentum × book-to-market deciles, with only the hypothesised characteristic
+randomised.** Turnover-matched placebo remains, demoted to a *construction
+check* — it detects artifacts and thin-book luck, which the 2026-08-09 (second)
+amendment §(c) already recorded as all it can do.
+
+Reason: the turnover-matched placebo is nearly automatic to clear, and NIGHT-4
+found the characteristic-matched version is not — while still failing to kill
+`PF-PROF-COMPOSITE-150`, which beat all 100 matched draws gross and net
+(p = 0.0099). A gate that the candidate passes is only informative if it could
+have failed.
+
+**Mandatory disclosure with it:** report the control's realised turnover beside
+the strategy's. NIGHT-4's smoke test ran the control 30 % hot, which would have
+charged the control more cost than the strategy and flattered the strategy —
+the same error class the placebo exists to catch. Where they differ, the
+**gross** band is primary and the net band is reported with the discrepancy
+printed.
+
+### (c) Every scorecard prints the family's decision-branch count
+
+Beside the programme-wide test denominator (`aegis_brain/pf/ledger.py`), each
+scorecard prints **how many decision branches this family has consumed** — grid
+points, clock variants, segment choices, window choices. Lightweight genealogy:
+count the branches, do not build a provenance database.
+
+Reason: the denominator answers "how many tests has the programme run"; the
+branch count answers "how many ways could this particular result have been
+reported". NIGHT-5's rebalance frontier is the worked example — six clock
+variants, and **not one of the fifteen pairwise differences between them is
+statistically significant** (level correlations 0.958–0.993). Reporting the best
+branch as though it were the only branch is how an unmeasurable choice becomes a
+headline.
+
+### (d) Verdict taxonomy v2 is machine-enforced
+
+`aegis_brain/verdicts.py` replaces the prose taxonomy with nine states and
+executable guards (23 unit tests). A write-up whose statistics say `UNRESOLVED`
+**cannot** print `REJECT`; a `FACTOR_EXPLAINED` result **cannot** be written as
+"no edge"; nothing may print "proves".
+
+States: `CONFIRMED` · `UNRESOLVED` · `FACTOR_EXPLAINED` ·
+`IMPLEMENTATION_FAILED` · `DATA_FAILED` · `POWER_FAILED` · `PLACEBO_FAILED` ·
+`LEAKAGE_FAILED` · `REJECTED`.
+
+`NEAR-MISS(gate)` from the first amendment is retained as a *gate-level* label
+and is orthogonal to these nine, which are *statistics-level*.
+
+Reason, stated plainly: the rule that would have prevented the NIGHT-3
+retraction already existed in writing, in `POWER_CHECK.json`, and it lost to the
+author anyway. Prose does not enforce. A test does.
+
+**What this does not claim:** the guards cannot make a conclusion correct. They
+constrain the write-up to what the statistics granted, which is the specific
+failure that actually occurred — twice.
+
+### (e) Any null must be reported with the effect size it could have seen
+
+No result may be written as an absence without its MDE, or the equivalent
+detectable-effect number, in the same sentence. `verdicts.Finding` refuses to
+construct an `UNRESOLVED` or `POWER_FAILED` finding that carries no MDE.
+
+Reason: 66 % of the closed 179-signal search could not have detected the +3 %/yr
+effect the standard itself requires (median MDE **3.74 %/yr**). Those nulls were
+recorded as though they were evidence about the ideas. They were evidence about
+the screen.
