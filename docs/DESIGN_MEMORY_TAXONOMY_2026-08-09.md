@@ -144,3 +144,44 @@ better — component-attributable, out-of-sample sequenced, locked final era
 untouched.
 
 If memory does not help, that is a publishable receipt, not a failed night.
+
+---
+
+## 9. AMENDMENT 2026-08-09 (evening) — elicitation resolution, measured
+
+Added after `TRIAL-COHERENCE-BATTERY-1` and `DIAG-COHERENCE-RESOLUTION-1`.
+Forward-only; it changes how future elicitations are written, and re-scores
+nothing.
+
+**Finding.** Asked for expected excess return as a decimal, `deepseek-chat` at
+temperature 0 answers in coarse whole-percent steps. Across 500 single-variable
+perturbation pairs it never once moved in the wrong direction — **0 wrong out of
+500** — but it gave *identical* answers to both sides of a pair 115 times. Those
+ties are what failed the coherence gate on valuation and earnings, the two
+variables whose true effect over one horizon is smallest.
+
+Re-asking the identical scenarios in **integer basis points**, with an explicit
+note that 25 bp differences are meaningful, cut ties from 115/500 to 35/500 and
+took the battery from 3/5 to 5/5 directions passing.
+
+The same signature appears independently in `DIAG-NAME-ONLY-FORCED-1`: 120
+probability elicitations produced **5 distinct values** spanning 0.35-0.55.
+
+**Standing rules from this, binding on future elicitation design:**
+
+1. **Ask for integer basis points, not decimals**, for any quantity whose
+   interesting variation is smaller than a whole percent. Say in the prompt that
+   small differences are meaningful.
+2. **Report output resolution as a diagnostic** wherever an elicitation is
+   graded — number of distinct values, and their range. A model answering on a
+   five-point grid cannot express a small effect, and any null result from it is
+   partly a measurement failure rather than a finding about the world.
+3. **Ties are not the same defect as reversals** and must never be merged into
+   one "failure" count. A grader that cannot distinguish them will report a
+   coherent model as incoherent, which is what happened here before the
+   decomposition was read.
+
+**What this does NOT do:** it does not re-score `TRIAL-COHERENCE-BATTERY-1`,
+which was pre-registered with the decimal format and stands at 3/5, INCOHERENT,
+prediction N3 MISS. A gate re-run in a friendlier format until it passes is not
+a gate.
