@@ -45,6 +45,27 @@ behave); selection signals validate **forward only** — PIT-store IC + paper-la
 NAV. Every backtest-derived number carries its `data_grade` stamp and the
 methodology banner.
 
+**Scoped by data grade (amended 2026-08-10 after external review).** The rule
+above is about **free-data** universes and stands unchanged for anything running
+on yfinance/EODHD in production. It is **not** a blanket ban on historical
+inference, and reading it as one made NIGHT-7's CRSP work look unlicensed under
+our own canon. Two grades, stated separately:
+
+- **`data_grade: free`** (production, yfinance/EODHD) — direction-checks only.
+  1-of-20 delisted-name recovery means absolute alpha is not measurable there,
+  and no selection-signal claim may rest on it.
+- **`data_grade: crsp`** (offline research module, CRSP/Compustat via WRDS,
+  28,913 real delisting returns, survivorship-free) — historical *inference* is
+  permitted, and remains bounded by everything else: pre-registration, power
+  check, placebo, trial-count deflation, era-appropriate costs, G7 for
+  turnover-sensitive claims, and the holdout. NIGHT-4 measured the delisting
+  correction on this spine at **−0.01%/yr**, which is what survivorship-free
+  buys.
+
+A CRSP-grade backtest is still **not a skill claim** — the forward-record rule
+governs that — but it is admissible evidence, and the grade must appear on every
+scorecard.
+
 ### 3. The LLM-lane firewall — no backtest "experience" for the brain
 An LLM knows history; a backtested LLM strategy is hindsight wearing a lab
 coat. Measured basis (canon A2): lookahead inflates apparent LLM predictive
@@ -180,6 +201,22 @@ points per year at a ~0.8 one-way-turnover increment — measured twice
 independently (NIGHT-6 clock compare; NIGHT-7 trailing stop, where the panel
 ranked the arm *first* and daily execution put it 3.08%/yr *behind*, having
 paid 74% of starting capital in extra costs over 23 years).
+
+**Scoped precisely (amended 2026-08-10 after external review):** the trigger is
+**path-dependence, not trading frequency**. Any strategy that can change
+positions *between* scheduled portfolio snapshots — stops, intra-period exits,
+delayed entries, replacement-on-event — must be scored from the actual
+**trade/event ledger**, never inferred from periodic holdings snapshots. Monthly
+simulation remains valid for a strategy whose only permitted transactions occur
+on those month-end dates and whose position changes reconcile exactly.
+
+Hard invariants for the daily simulator, from the two bugs this rule has already
+caught: every position delta creates a trade; replaying the trade ledger
+reconstructs holdings exactly; a zero-cost run reconciles against the gross
+research path; an exit without a rebalance still generates turnover; and a
+measured turnover that contradicts the panel's turnover is a **construction
+artifact until proven otherwise** (NIGHT-7B: an ensemble measured at 1.51× the
+panel's turnover was a monthly re-targeting artifact, not a real cost).
 
 So: any candidate whose one-way annual turnover differs from its baseline by
 more than 0.10 may **not** have its net number quoted until G7 has measured it.
