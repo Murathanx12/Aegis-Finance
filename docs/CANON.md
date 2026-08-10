@@ -54,13 +54,24 @@ our own canon. Two grades, stated separately:
 - **`data_grade: free`** (production, yfinance/EODHD) — direction-checks only.
   1-of-20 delisted-name recovery means absolute alpha is not measurable there,
   and no selection-signal claim may rest on it.
-- **`data_grade: crsp`** (offline research module, CRSP/Compustat via WRDS,
-  28,913 real delisting returns, survivorship-free) — historical *inference* is
-  permitted, and remains bounded by everything else: pre-registration, power
-  check, placebo, trial-count deflation, era-appropriate costs, G7 for
-  turnover-sensitive claims, and the holdout. NIGHT-4 measured the delisting
-  correction on this spine at **−0.01%/yr**, which is what survivorship-free
-  buys.
+- **`data_grade: crsp`** (offline research module) — the **CRSP security
+  universe with real delisting returns** (28,913 of them), and **Compustat
+  fundamentals subject to point-in-time reporting-lag and CCM linkage controls**.
+  Historical *inference* is permitted, bounded by everything else:
+  pre-registration, power check, placebo, trial-count deflation, era-appropriate
+  costs, G7 for turnover-sensitive claims, and the holdout.
+
+  The two halves of that grade are not equally strong and must not be quoted as
+  one word. Delisting returns close a **survivorship** hole. They say nothing
+  about whether a linked accounting field was *available on the formation date* —
+  that is a separate control, and it is the reporting-lag one. A run that has the
+  first and not the second is survivorship-free and still leaks.
+
+  **The delisting correction measured on this spine was −0.01%/yr *for this
+  strategy over this window*** (NIGHT-4). That is one measurement of one book,
+  not a general finding that survivorship bias is economically negligible — the
+  same audit on free data found 1-of-20 recovery, and the gap between those two
+  numbers is the whole reason the grades are separate.
 
 A CRSP-grade backtest is still **not a skill claim** — the forward-record rule
 governs that — but it is admissible evidence, and the grade must appear on every
@@ -224,6 +235,31 @@ A turnover-increasing arm's monthly-panel net is an **upper bound**; a
 turnover-decreasing arm's is a **lower bound**. Corollary: every high-turnover
 corpse in the graveyard was judged on a panel that flattered it, so those are
 *more* dead, not candidates for resurrection.
+
+### 16. A cost comparison needs a denominator, and it must not be the winner's
+Two arms that start at the same NAV do not end at the same NAV. The one that
+compounds less trades fewer dollars for the same turnover *rate*, so **totalling
+cost in dollars silently rewards whichever arm made less money.**
+
+This rule exists because the same claim was made three times in three nights and
+was wrong twice, in opposite directions, purely from the denominator:
+
+| night | instrument | verdict on the clock ensemble |
+|---|---|---|
+| NIGHT-7 | monthly-panel turnover rate | "free" — violated §15 |
+| NIGHT-7B | total cost **dollars** | "cheaper by $19,390" |
+| NIGHT-8 | cost / (average NAV × years) | **indistinguishable**; at $1m the ensemble is 3.54 bps/traded and 0.011 pt/yr *worse* |
+
+So: **a cost comparison between arms is quoted as cost drag per year against
+average NAV, and as bps of traded notional.** Dollar totals may appear beside
+those, never instead of them. Two corollaries the same run produced:
+
+- **Capital rungs are re-simulated, never scaled.** Participation caps and impact
+  are nonlinear in size: at $50m the single clock executed only 47.7× the
+  turnover of the $1m run against 50× the capital, because it could not fill.
+- **Counters summed across sleeves are not comparable to a single book's.**
+  `days_with_capped_orders` summed over twelve sleeves counts one bad day twelve
+  times. Report the fraction of desired notional that failed to execute instead.
 
 ---
 

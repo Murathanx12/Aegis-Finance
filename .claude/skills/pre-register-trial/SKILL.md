@@ -36,6 +36,44 @@ only adoptions is lying to itself; rejected trials are published
 
 ## Procedure
 
+0. **Run the corpse check. It is code now, not a habit.**
+
+   ```bash
+   cd "C:/Users/mrthn/Aegis module"
+   python scripts/lint_prereg.py TRIALS/PREREG_<NAME>.md
+   ```
+
+   It scores the draft against all 295 recorded experiments — 148 graveyard
+   rows, 89 registry trials, ~60 preregs — and returns one of four verdicts.
+   Exit code 1 on BLOCKED.
+
+   | verdict | what it means | what to do |
+   |---|---|---|
+   | `BLOCKED` | matches something adequately powered and **refuted** | drop it, or declare a new instrument |
+   | `DUPLICATE` | near-identical wording to a trial already on the books | find the earlier result; do not re-run it |
+   | `RESURRECTION` | matches a **POWER/IMPL/DATA** failure — a question never answered | allowed, but name what changed |
+   | `PASS` | no close match | proceed. **PASS means unmatched, not novel** — it knows nothing about the literature |
+
+   To proceed past BLOCKED or RESURRECTION, the draft must carry a line naming
+   the corpse *and* the instrument that changed:
+
+   ```
+   Resurrects: accruals_low/small — new instrument: the CRSP 1962-2001 era
+   spine triples the sample and takes the MDE below the 3%/yr bar
+   ```
+
+   "We are trying again" is not a new instrument, and the linter will not
+   accept it as one. The distinction matters because the graveyard census found
+   most of the graveyard is **not refuted**: 31 POWER, 29 IMPL and 14 DATA rows
+   never produced a usable number. Re-running those is often exactly right —
+   with an instrument that can see what the last one could not. Re-running them
+   with the same instrument reproduces the same uninformative null, which this
+   programme has already done.
+
+   Known limits, so the verdict is read for what it is: it compares **wording**,
+   its false-positive and false-negative behaviour is pinned by tests against
+   the real corpus, and a `PASS` is silent about whether the idea is any good.
+
 1. Write the canonical doc: `docs/TRIALS/TRIAL-<NAME>-<slug>.md` following
    TRIAL-001's structure (including the "What this rule may NOT do" section).
 2. Register the row: the trial enters `rule_experiments` with the decision
