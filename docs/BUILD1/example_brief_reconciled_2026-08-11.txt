@@ -1,0 +1,196 @@
+==============================================================================
+OPTIMUS MORNING BRIEF   2026-08-11T01:25:25   account=murat_live   mode=high_growth
+==============================================================================
+
+!! SIMULATED — this book cannot produce an executable ticket. positions are unconfirmed placeholders reconstructed from a PDF — no share counts, no cash balance
+
+PORTFOLIO $40,518   invested $40,518   cash $0
+          valued on: shares x live price  [reconstructed]
+
+12-MONTH VIEW (BASE)   median $43,946   p25 $36,036   p75 $54,062
+                     P(reach target) 0.6%    P(below floor) 9.5%    P(below ruin) 0.3%
+                     expected max drawdown -21.2%   P(worse than -50%) 0.7%
+                     required return for the target +146.8%
+
+MODEL SENSITIVITY — the same book, three sets of assumptions
+  scenario       haircut   corr  vol x     median  P(target)  P(<floor)  P(<ruin)  E[maxDD]
+  conservative      0.20   0.55   1.15    $39,865       1.6%      23.1%      3.4%   -30.4%
+  base              0.35   0.35   1.00    $43,946       0.6%       9.5%      0.3%   -21.2%
+  optimistic        0.50   0.25   1.00    $46,808       0.5%       4.3%      0.0%   -17.2%
+  => scenario-model range for P(reach target): 0.5% to 1.6%, base 0.6%. The spread is MODEL uncertainty, not Monte Carlo error.
+
+------------------------------------------------------------------------------
+HOLDINGS   SHARES    PRICE     VALUE      P&L    WGT    TGT   UPSIDE  ACTION
+------------------------------------------------------------------------------
+AARD       1,000    $7.43    $7,430   -25.7%  18.3%   0.0%   -12.5%  SELL  $-7,431
+ABSI         600    $9.02    $5,409      n/a  13.4%   0.0%   +44.2%  SELL  $-5,409
+BHVN         300   $14.72    $4,416   +84.0%  10.9%   0.0%   +35.9%  SELL  $-4,416
+DKNG         150   $25.06    $3,759   -13.6%   9.3%   4.7%   +31.7%  TRIM  $-1,876
+SOC          700    $5.04    $3,524    +0.7%   8.7%   0.0%  +178.1%  SELL  $-3,525
+PRCH         200   $15.42    $3,084   +54.2%   7.6%   0.0%   +29.7%  SELL  $-3,083
+NTLA         250   $12.14    $3,036    -6.6%   7.5%   0.0%   +40.0%  SELL  $-3,035
+QUBT         300    $8.99    $2,698   -30.8%   6.7%   3.6%  +100.1%  TRIM  $-1,224
+HUBS          10  $215.89    $2,159      n/a   5.3%   0.0%   +13.5%  SELL  $-2,160
+KYTX         250    $8.04    $2,010      n/a   5.0%   4.1%  +298.0%  HOLD  
+AMSC          50   $32.00    $1,600      n/a   4.0%   4.2%   +95.3%  HOLD  
+SLDP         600    $2.32    $1,392      n/a   3.4%   5.6%  +196.3%  HOLD  
+
+SIMULATED TICKETS — BOOK UNCONFIRMED — DO NOT EXECUTE
+  SELL      $7,431  AARD   18.3% -> 0.0%
+        sized to zero on the evidence, not on its absence
+        kill condition: coverage drops below four analysts or the consensus cracks
+  SELL      $5,409  ABSI   13.4% -> 0.0%
+        sized to zero on the evidence, not on its absence
+  SELL      $4,416  BHVN   10.9% -> 0.0%
+        sized to zero on the evidence, not on its absence
+        kill condition: a second regulatory setback on the core pipeline
+  TRIM      $1,876  DKNG   9.3% -> 4.7%
+        kill condition: consensus target falls below entry, or two quarters of negative revisions
+  SELL      $2,160  HUBS   5.3% -> 0.0%
+        sized to zero on the evidence, not on its absence
+  SELL      $3,035  NTLA   7.5% -> 0.0%
+        sized to zero on the evidence, not on its absence
+        kill condition: further clinical holds or serious adverse events
+  SELL      $3,083  PRCH   7.6% -> 0.0%
+        sized to zero on the evidence, not on its absence
+        kill condition: loss ratios deteriorate again
+  TRIM      $1,224  QUBT   6.7% -> 3.6%
+        kill condition: narrative rotation; dilution at these levels
+  SELL      $3,525  SOC    8.7% -> 0.0%
+        sized to zero on the evidence, not on its absence
+        kill condition: consensus breaks below the mark
+  BUY       $4,570  TGTX   0.0% -> 11.3%
+  BUY       $4,891  NVDA   0.0% -> 12.1%
+  BUY       $3,529  ZYME   0.0% -> 8.7%
+  BUY       $4,352  BMRN   0.0% -> 10.7%
+  BUY       $3,063  TSM    0.0% -> 7.6%
+  BUY       $2,569  TTWO   0.0% -> 6.3%
+  BUY       $2,026  DHR    0.0% -> 5.0%
+  BUY       $1,511  LLY    0.0% -> 3.7%
+  BUY       $2,387  ORCL   0.0% -> 5.9%
+  BUY       $1,807  AVGO   0.0% -> 4.5%
+
+CASH   before $0  raised by sales $32,159  buys $30,705  after $1,454
+
+UPCOMING CATALYSTS
+  0-7d    2026-08-11  AARD   earnings   EPS and revenue vs consensus
+  0-7d    2026-08-11  ABSI   earnings   EPS and revenue vs consensus
+  0-7d    2026-08-18  KYTX   earnings   EPS and revenue vs consensus
+  8-30d   2026-08-19  AARD   earnings   EPS and revenue vs consensus
+  31-90d  2026-11-02  SLDP   earnings   EPS and revenue vs consensus
+  31-90d  2026-11-03  HUBS   earnings   EPS and revenue vs consensus
+  31-90d  2026-11-03  PRCH   earnings   EPS and revenue vs consensus
+  31-90d  2026-11-04  DKNG   earnings   EPS and revenue vs consensus
+  31-90d  2026-11-04  NTLA   earnings   EPS and revenue vs consensus
+  31-90d  2026-11-09  BHVN   earnings   EPS and revenue vs consensus
+  coverage: v0 — earnings only — NOT covered: FDA/PDUFA action dates, clinical readout windows, secondary offerings and shelf takedowns, 13D/13G filings, lockup expiries
+  an empty calendar means no EARNINGS date was found in the window. It is NOT evidence that nothing is scheduled: PDUFA dates, readouts, offerings and lockups have no entitled source here and must be entered by hand.
+
+THREATS
+  AARD   net downgrades in 90d: -2
+  AARD   single-event risk: pre-revenue clinical/regulatory name
+  AARD   trading ABOVE the consensus target
+  AARD   thin: median ADV $964,860
+  AMSC   stale coverage: 221 days since the last rating action
+  BHVN   street getting LESS positive (3m rating drift -0.065)
+  BHVN   net downgrades in 90d: -1
+  BHVN   single-event risk: pre-revenue clinical/regulatory name
+  HUBS   street getting LESS positive (3m rating drift -0.3714)
+  HUBS   net downgrades in 90d: -7
+  KYTX   single-event risk: pre-revenue clinical/regulatory name
+  NTLA   street getting LESS positive (3m rating drift -0.0664)
+  PRCH   street getting LESS positive (3m rating drift -0.2679)
+  PRCH   net downgrades in 90d: -1
+
+OPPORTUNITY RADAR — watchlist only — this is a user watchlist view. The market-wide funnel is a separate section; see `market_radar`.
+  TGTX   IN TARGET  CE +0.064  E[R] +16.6%  upside +56.2%    6 analysts
+  NVDA   IN TARGET  CE +0.050  E[R] +11.8%  upside +37.4%   58 analysts
+  ZYME   IN TARGET  CE +0.037  E[R] +17.9%  upside +56.0%   12 analysts
+  BMRN   IN TARGET  CE +0.033  E[R] +9.3%  upside +28.4%   25 analysts
+  TSM    IN TARGET  CE +0.007  E[R] +8.9%  upside +26.3%   18 analysts
+  TTWO   IN TARGET  CE -0.004  E[R] +4.7%  upside +14.2%   29 analysts
+  DHR    IN TARGET  CE -0.013  E[R] +3.5%  upside +11.6%   23 analysts
+  LLY    IN TARGET  CE -0.029  E[R] +3.4%  upside +10.6%   27 analysts
+  ORCL   IN TARGET  CE -0.034  E[R] +19.2%  upside +59.8%   41 analysts
+  AVGO   IN TARGET  CE -0.041  E[R] +7.3%  upside +24.7%   45 analysts
+
+!! EVIDENCE CONFLICT (HIGH) — analyst_target_upside_xs is PERVERSE
+   candidates are ranked by a certainty equivalent built from analyst-implied upside, which is CHOOSING on a signal the registry permits only for SIZING
+   evidence: -8% to -18%/yr GROSS over 21 years of point-in-time IBES (ANALYST-IBES-1, 2026-08-11); t -3.6 largemid and -7.2 small on two earlier instruments
+   affects: TGTX, NVDA, ZYME, BMRN, TSM, TTWO, DHR, LLY, ORCL, AVGO
+   every BUY in this brief rests on an ordering the lab has measured as negative. Treat them as candidates for your own judgement, not as a ranked recommendation.
+   fix: select candidates with a registry-permitted PICKER (profitability_small is the one available on free data, and the opportunity funnel already uses it), then use the haircut target only to size what was chosen.
+
+MARKET OPPORTUNITY RADAR — 5,324 US listed names screened, 0h ago
+  funnel: 1500 eligible -> 250 shortlist -> 40 enriched -> 25 candidates
+  ranked by ['profitability_small']; NOT ranked on momentum_12_1 (CLOSED/REJECTED); analyst_target_upside_xs (CLOSED/PERVERSE — RISK_INPUT only)
+  NVDA   GP/A +0.98  vol  37%  $  5419.8bn  Semiconductors
+  YETI   GP/A +0.86  vol  39%  $     3.8bn  Leisure Products
+  GWW    GP/A +0.80  vol  24%  $    60.2bn  Trading Companies & Di
+  AAPL   GP/A +0.61  vol  25%  $  4572.8bn  Technology
+  LLY    GP/A +0.55  vol  36%  $  1116.2bn  Pharmaceuticals
+  META   GP/A +0.49  vol  38%  $  1508.4bn  Media
+  YUM    GP/A +0.49  vol  23%  $    43.3bn  Hotels, Restaurants & 
+  AMZN   GP/A +0.44  vol  34%  $  2960.6bn  Retail
+  GRMN   GP/A +0.42  vol  34%  $    60.0bn  Consumer products
+  LNTH   GP/A +0.41  vol  37%  $     6.6bn  Health Care
+  ! stage1_truncated: 2912 names passed eligibility; kept the 1500 most liquid. The 1412 dropped are eligible but less liquid, and were never scored.
+
+REPLACEMENTS — decomposition of the one solved target portfolio
+  OK     NVDA funded by AARD  $4,891
+        edge +0.852 = gross +0.860 - switch cost 0.0080 (expected-return units, CE lambda=1)
+  OK     TGTX funded by AARD  $2,540
+        edge +0.866 = gross +0.874 - switch cost 0.0080 (expected-return units, CE lambda=1)
+  OK     TGTX funded by ABSI  $2,030
+        edge +0.484 = gross +0.488 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     BMRN funded by ABSI  $3,379
+        edge +0.453 = gross +0.457 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     BMRN funded by BHVN  $973
+        edge +0.395 = gross +0.399 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     ZYME funded by BHVN  $3,443
+        edge +0.399 = gross +0.403 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     ZYME funded by SOC  $86
+        edge +0.866 = gross +0.870 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     TSM funded by SOC  $3,063
+        edge +0.837 = gross +0.841 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     TTWO funded by SOC  $376
+        edge +0.825 = gross +0.829 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     TTWO funded by PRCH  $2,193
+        edge +0.189 = gross +0.193 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     ORCL funded by PRCH  $890
+        edge +0.160 = gross +0.164 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     ORCL funded by NTLA  $1,497
+        edge +0.368 = gross +0.372 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     DHR funded by NTLA  $1,538
+        edge +0.389 = gross +0.393 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     DHR funded by HUBS  $488
+        edge +0.191 = gross +0.195 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     AVGO funded by HUBS  $1,672
+        edge +0.164 = gross +0.168 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  DISSENT AVGO funded by DKNG  $135
+        edge -0.002 = gross +0.002 - switch cost 0.0040 (expected-return units, CE lambda=1)
+        DISSENT — the plan makes this trade, but this pair does not clear its own switching cost. The cost-aware band suppresses the worst of these; anything left is a judgement call.
+  DISSENT LLY funded by DKNG  $1,511
+        edge +0.010 = gross +0.014 - switch cost 0.0040 (expected-return units, CE lambda=1)
+        DISSENT — the plan makes this trade, but this pair does not clear its own switching cost. The cost-aware band suppresses the worst of these; anything left is a judgement call.
+
+==============================================================================
+MODEL STATUS — how much of the above to believe today
+==============================================================================
+  book confirmed          False   <- every dollar above is SIMULATED
+  valuation               shares x live price [reconstructed], NAV complete: True
+  positions               12 (12 decisionable, 0 in REVIEW)
+  evidence completeness   78% of the fields we would want
+  reliability discount    0.714 (UNCALIBRATED heuristic)
+  analyst sources         yahoo (yfinance)
+  target revisions        MISSING — needs two snapshots of the same ticker spanning the window
+  analyst PIT ledger      43 rows, 1 distinct day(s)
+  catalyst coverage       v0 — EARNINGS ONLY (15 scheduled across 12 names). NOT covered: FDA/PDUFA action dates, clinical readout windows, second
+  return model            OBSERVATIONAL, unvalidated — TARGET_HAIRCUT is fitted to nothing
+  scenario sensitivity    P(target) 0.5% .. 1.6% (base 0.6%)
+  last refresh            2026-08-11T01:25:25
+  signal registry         15 usable, 11 CLOSED, 4 queued, 5 uncalibrated
+  the one that matters    analyst_target_upside_xs is CLOSED/PERVERSE. Ranking a cross-section by analyst-implied upside lost 8-18%/yr GROSS on 21 years of point-in-time IBES (ANALYST-IBES-1, 2026-08-11), and -3.6/-7.2 t on two earlier instruments. This brief uses the haircut target only to SIZE a held name — but its CANDIDATE list is still ranked by that same quantity, which is choosing. See registry_conflicts; the contradiction is printed rather than quietly kept.
+
+Everything analyst-derived here is OBSERVATIONAL and has not been validated by the Aegis research lab. That label is deliberate: the lab's job is to say how much to trust it, and until it has, this is a disciplined version of a process that has been run by hand — not a demonstrated edge.
+scenario-model probability under stated assumptions, not a forecast. The spread between the conservative and optimistic arms is MODEL uncertainty about the haircut and the correlation; the Monte Carlo error inside any one arm is far smaller and far less important.

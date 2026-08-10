@@ -1,0 +1,593 @@
+{
+  "generated_at": "2026-08-10T17:31:45+00:00",
+  "sources": {
+    "book_lanes": {
+      "status": "READ",
+      "note": "backend/data/book_lanes.yaml `holdings:` \u2014 its own header calls these share counts GROUND TRUTH, used to derive lane seed weights",
+      "n_holdings": 12
+    },
+    "conviction_log": {
+      "status": "READ",
+      "note": "immutable personal decision log (prod, /api/pi/conviction/decisions), 12 `enter` rows dated 2026-07-11",
+      "n_open": 12,
+      "logged_at": "2026-08-10T16:27:20+00:00",
+      "payload_sha256": "66e3adff27dd2d19b4ac144b5ab5c6d71efd43b8f44bbd2c728103d9be81fc5b",
+      "source_url": "https://aegis-finance-production.up.railway.app/api/pi/conviction/decisions"
+    },
+    "murat_book": {
+      "status": "READ",
+      "note": "backend/data/murat_book.yaml \u2014 reconstructed from the January 2026 research PDF; positions are a placeholder dollar split, cost_basis is the PDF's entry price",
+      "n_positions": 12
+    }
+  },
+  "positions": [
+    {
+      "ticker": "AARD",
+      "shares": 1000.0,
+      "shares_source": "conviction_log",
+      "shares_contested": false,
+      "shares_claims": [
+        {
+          "source": "conviction_log",
+          "value": 1000.0,
+          "as_of": "2026-07-11"
+        },
+        {
+          "source": "book_lanes",
+          "value": 1000.0,
+          "as_of": "2026-06-14"
+        },
+        {
+          "source": "murat_book",
+          "value": 1000.0,
+          "as_of": "2026-08-11"
+        }
+      ],
+      "cost_basis": 10.0,
+      "cost_basis_source": "murat_book",
+      "cost_basis_status": "RECONSTRUCTED",
+      "last_logged_price": 5.84,
+      "last_logged_at": "2026-07-11T05:53:34.766762",
+      "entry_date": "2025-11-07",
+      "thesis": "5/5 consensus, unanimous outperform",
+      "kill_condition": "coverage drops below four analysts or the consensus cracks",
+      "sources_present": [
+        "conviction_log",
+        "book_lanes",
+        "murat_book"
+      ],
+      "notes": [
+        "cost basis is the January 2026 PDF's entry price, not a broker fill \u2014 good enough for P&L colour, not for tax"
+      ]
+    },
+    {
+      "ticker": "ABSI",
+      "shares": 600.0,
+      "shares_source": "conviction_log",
+      "shares_contested": false,
+      "shares_claims": [
+        {
+          "source": "conviction_log",
+          "value": 600.0,
+          "as_of": "2026-07-11"
+        },
+        {
+          "source": "book_lanes",
+          "value": 600.0,
+          "as_of": "2026-06-14"
+        },
+        {
+          "source": "murat_book",
+          "value": 600.0,
+          "as_of": "2026-08-11"
+        }
+      ],
+      "cost_basis": null,
+      "cost_basis_source": null,
+      "cost_basis_status": "MISSING",
+      "last_logged_price": 3.15,
+      "last_logged_at": "2026-07-11T05:54:33.280862",
+      "entry_date": null,
+      "thesis": "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)",
+      "kill_condition": "",
+      "sources_present": [
+        "conviction_log",
+        "book_lanes",
+        "murat_book"
+      ],
+      "notes": [
+        "thesis carried from the decision log \u2014 generic, and it is his own words rather than a guess",
+        "NO KILL CONDITION \u2014 no source carries one, and none was invented"
+      ]
+    },
+    {
+      "ticker": "AMSC",
+      "shares": 50.0,
+      "shares_source": "conviction_log",
+      "shares_contested": false,
+      "shares_claims": [
+        {
+          "source": "conviction_log",
+          "value": 50.0,
+          "as_of": "2026-07-11"
+        },
+        {
+          "source": "book_lanes",
+          "value": 50.0,
+          "as_of": "2026-06-14"
+        },
+        {
+          "source": "murat_book",
+          "value": 50.0,
+          "as_of": "2026-08-11"
+        }
+      ],
+      "cost_basis": null,
+      "cost_basis_source": null,
+      "cost_basis_status": "MISSING",
+      "last_logged_price": 31.29,
+      "last_logged_at": "2026-07-11T05:56:30.350013",
+      "entry_date": null,
+      "thesis": "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)",
+      "kill_condition": "",
+      "sources_present": [
+        "conviction_log",
+        "book_lanes",
+        "murat_book"
+      ],
+      "notes": [
+        "thesis carried from the decision log \u2014 generic, and it is his own words rather than a guess",
+        "NO KILL CONDITION \u2014 no source carries one, and none was invented"
+      ]
+    },
+    {
+      "ticker": "BHVN",
+      "shares": 300.0,
+      "shares_source": "conviction_log",
+      "shares_contested": false,
+      "shares_claims": [
+        {
+          "source": "conviction_log",
+          "value": 300.0,
+          "as_of": "2026-07-11"
+        },
+        {
+          "source": "book_lanes",
+          "value": 300.0,
+          "as_of": "2026-06-14"
+        },
+        {
+          "source": "murat_book",
+          "value": 300.0,
+          "as_of": "2026-08-11"
+        }
+      ],
+      "cost_basis": 8.0,
+      "cost_basis_source": "murat_book",
+      "cost_basis_status": "RECONSTRUCTED",
+      "last_logged_price": 8.66,
+      "last_logged_at": "2026-07-11T05:54:18.096267",
+      "entry_date": "2025-11-07",
+      "thesis": "post-CRL refocus on late-stage neuro; consensus target ~3x mark",
+      "kill_condition": "a second regulatory setback on the core pipeline",
+      "sources_present": [
+        "conviction_log",
+        "book_lanes",
+        "murat_book"
+      ],
+      "notes": [
+        "cost basis is the January 2026 PDF's entry price, not a broker fill \u2014 good enough for P&L colour, not for tax"
+      ]
+    },
+    {
+      "ticker": "DKNG",
+      "shares": 150.0,
+      "shares_source": "conviction_log",
+      "shares_contested": false,
+      "shares_claims": [
+        {
+          "source": "conviction_log",
+          "value": 150.0,
+          "as_of": "2026-07-11"
+        },
+        {
+          "source": "book_lanes",
+          "value": 150.0,
+          "as_of": "2026-06-14"
+        },
+        {
+          "source": "murat_book",
+          "value": 150.0,
+          "as_of": "2026-08-11"
+        }
+      ],
+      "cost_basis": 29.0,
+      "cost_basis_source": "murat_book",
+      "cost_basis_status": "RECONSTRUCTED",
+      "last_logged_price": 28.74,
+      "last_logged_at": "2026-07-11T05:53:01.113453",
+      "entry_date": "2025-11-07",
+      "thesis": "analyst upside + federal prediction-markets optionality; FY25 guide raised",
+      "kill_condition": "consensus target falls below entry, or two quarters of negative revisions",
+      "sources_present": [
+        "conviction_log",
+        "book_lanes",
+        "murat_book"
+      ],
+      "notes": [
+        "cost basis is the January 2026 PDF's entry price, not a broker fill \u2014 good enough for P&L colour, not for tax"
+      ]
+    },
+    {
+      "ticker": "HUBS",
+      "shares": 10.0,
+      "shares_source": "conviction_log",
+      "shares_contested": false,
+      "shares_claims": [
+        {
+          "source": "conviction_log",
+          "value": 10.0,
+          "as_of": "2026-07-11"
+        },
+        {
+          "source": "book_lanes",
+          "value": 10.0,
+          "as_of": "2026-06-14"
+        },
+        {
+          "source": "murat_book",
+          "value": 10.0,
+          "as_of": "2026-08-11"
+        }
+      ],
+      "cost_basis": null,
+      "cost_basis_source": null,
+      "cost_basis_status": "MISSING",
+      "last_logged_price": 268.54,
+      "last_logged_at": "2026-07-11T05:55:09.142404",
+      "entry_date": null,
+      "thesis": "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)",
+      "kill_condition": "",
+      "sources_present": [
+        "conviction_log",
+        "book_lanes",
+        "murat_book"
+      ],
+      "notes": [
+        "thesis carried from the decision log \u2014 generic, and it is his own words rather than a guess",
+        "NO KILL CONDITION \u2014 no source carries one, and none was invented"
+      ]
+    },
+    {
+      "ticker": "KYTX",
+      "shares": 250.0,
+      "shares_source": "conviction_log",
+      "shares_contested": false,
+      "shares_claims": [
+        {
+          "source": "conviction_log",
+          "value": 250.0,
+          "as_of": "2026-07-11"
+        },
+        {
+          "source": "book_lanes",
+          "value": 250.0,
+          "as_of": "2026-06-14"
+        },
+        {
+          "source": "murat_book",
+          "value": 250.0,
+          "as_of": "2026-08-11"
+        }
+      ],
+      "cost_basis": null,
+      "cost_basis_source": null,
+      "cost_basis_status": "MISSING",
+      "last_logged_price": 8.28,
+      "last_logged_at": "2026-07-11T05:55:29.950470",
+      "entry_date": null,
+      "thesis": "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)",
+      "kill_condition": "",
+      "sources_present": [
+        "conviction_log",
+        "book_lanes",
+        "murat_book"
+      ],
+      "notes": [
+        "thesis carried from the decision log \u2014 generic, and it is his own words rather than a guess",
+        "NO KILL CONDITION \u2014 no source carries one, and none was invented"
+      ]
+    },
+    {
+      "ticker": "NTLA",
+      "shares": 250.0,
+      "shares_source": "conviction_log",
+      "shares_contested": false,
+      "shares_claims": [
+        {
+          "source": "conviction_log",
+          "value": 250.0,
+          "as_of": "2026-07-11"
+        },
+        {
+          "source": "book_lanes",
+          "value": 250.0,
+          "as_of": "2026-06-14"
+        },
+        {
+          "source": "murat_book",
+          "value": 250.0,
+          "as_of": "2026-08-11"
+        }
+      ],
+      "cost_basis": 13.0,
+      "cost_basis_source": "murat_book",
+      "cost_basis_status": "RECONSTRUCTED",
+      "last_logged_price": 11.0,
+      "last_logged_at": "2026-07-11T05:53:17.061584",
+      "entry_date": "2025-11-07",
+      "thesis": "in-vivo CRISPR; ATTR programme restart",
+      "kill_condition": "further clinical holds or serious adverse events",
+      "sources_present": [
+        "conviction_log",
+        "book_lanes",
+        "murat_book"
+      ],
+      "notes": [
+        "cost basis is the January 2026 PDF's entry price, not a broker fill \u2014 good enough for P&L colour, not for tax"
+      ]
+    },
+    {
+      "ticker": "PRCH",
+      "shares": 200.0,
+      "shares_source": "conviction_log",
+      "shares_contested": false,
+      "shares_claims": [
+        {
+          "source": "conviction_log",
+          "value": 200.0,
+          "as_of": "2026-07-11"
+        },
+        {
+          "source": "book_lanes",
+          "value": 200.0,
+          "as_of": "2026-06-14"
+        },
+        {
+          "source": "murat_book",
+          "value": 200.0,
+          "as_of": "2026-08-11"
+        }
+      ],
+      "cost_basis": 10.0,
+      "cost_basis_source": "murat_book",
+      "cost_basis_status": "RECONSTRUCTED",
+      "last_logged_price": 9.84,
+      "last_logged_at": "2026-07-11T05:55:47.971889",
+      "entry_date": "2025-11-07",
+      "thesis": "insurance-attach turnaround, high analyst upside",
+      "kill_condition": "loss ratios deteriorate again",
+      "sources_present": [
+        "conviction_log",
+        "book_lanes",
+        "murat_book"
+      ],
+      "notes": [
+        "cost basis is the January 2026 PDF's entry price, not a broker fill \u2014 good enough for P&L colour, not for tax"
+      ]
+    },
+    {
+      "ticker": "QUBT",
+      "shares": 300.0,
+      "shares_source": "conviction_log",
+      "shares_contested": true,
+      "shares_claims": [
+        {
+          "source": "conviction_log",
+          "value": 300.0,
+          "as_of": "2026-07-11"
+        },
+        {
+          "source": "book_lanes",
+          "value": 200.0,
+          "as_of": "2026-06-14"
+        },
+        {
+          "source": "murat_book",
+          "value": 300.0,
+          "as_of": "2026-08-11"
+        }
+      ],
+      "cost_basis": 13.0,
+      "cost_basis_source": "murat_book",
+      "cost_basis_status": "RECONSTRUCTED",
+      "last_logged_price": 9.41,
+      "last_logged_at": "2026-07-11T05:56:08.057513",
+      "entry_date": "2025-11-07",
+      "thesis": "quantum theme, pre-revenue narrative exposure",
+      "kill_condition": "narrative rotation; dilution at these levels",
+      "sources_present": [
+        "conviction_log",
+        "book_lanes",
+        "murat_book"
+      ],
+      "notes": [
+        "share count CONTESTED (conviction_log=300, book_lanes=200, murat_book=300); using conviction_log because it is the most recent dated statement",
+        "cost basis is the January 2026 PDF's entry price, not a broker fill \u2014 good enough for P&L colour, not for tax"
+      ]
+    },
+    {
+      "ticker": "SLDP",
+      "shares": 600.0,
+      "shares_source": "conviction_log",
+      "shares_contested": false,
+      "shares_claims": [
+        {
+          "source": "conviction_log",
+          "value": 600.0,
+          "as_of": "2026-07-11"
+        },
+        {
+          "source": "book_lanes",
+          "value": 600.0,
+          "as_of": "2026-06-14"
+        },
+        {
+          "source": "murat_book",
+          "value": 600.0,
+          "as_of": "2026-08-11"
+        }
+      ],
+      "cost_basis": null,
+      "cost_basis_source": null,
+      "cost_basis_status": "MISSING",
+      "last_logged_price": 3.05,
+      "last_logged_at": "2026-07-11T05:57:03.250467",
+      "entry_date": null,
+      "thesis": "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)",
+      "kill_condition": "",
+      "sources_present": [
+        "conviction_log",
+        "book_lanes",
+        "murat_book"
+      ],
+      "notes": [
+        "thesis carried from the decision log \u2014 generic, and it is his own words rather than a guess",
+        "NO KILL CONDITION \u2014 no source carries one, and none was invented"
+      ]
+    },
+    {
+      "ticker": "SOC",
+      "shares": 700.0,
+      "shares_source": "conviction_log",
+      "shares_contested": false,
+      "shares_claims": [
+        {
+          "source": "conviction_log",
+          "value": 700.0,
+          "as_of": "2026-07-11"
+        },
+        {
+          "source": "book_lanes",
+          "value": 700.0,
+          "as_of": "2026-06-14"
+        },
+        {
+          "source": "murat_book",
+          "value": 700.0,
+          "as_of": "2026-08-11"
+        }
+      ],
+      "cost_basis": 5.0,
+      "cost_basis_source": "murat_book",
+      "cost_basis_status": "RECONSTRUCTED",
+      "last_logged_price": 6.54,
+      "last_logged_at": "2026-07-11T05:52:28.582864",
+      "entry_date": "2025-11-07",
+      "thesis": "5/5 consensus, target well above mark",
+      "kill_condition": "consensus breaks below the mark",
+      "sources_present": [
+        "conviction_log",
+        "book_lanes",
+        "murat_book"
+      ],
+      "notes": [
+        "cost basis is the January 2026 PDF's entry price, not a broker fill \u2014 good enough for P&L colour, not for tax"
+      ]
+    }
+  ],
+  "disagreements": [
+    {
+      "kind": "share_count",
+      "ticker": "QUBT",
+      "claims": {
+        "conviction_log": 300.0,
+        "book_lanes": 200.0,
+        "murat_book": 300.0
+      },
+      "using": {
+        "source": "conviction_log",
+        "value": 300.0
+      },
+      "why": "the conviction log is a dated immutable entry; book_lanes.yaml is an undated config file",
+      "needs_murat": true
+    }
+  ],
+  "unrecoverable": [
+    {
+      "field": "kill_condition",
+      "ticker": "ABSI",
+      "why": "neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventing a plausible-sounding rule would be worse than saying so.",
+      "needs_murat": true
+    },
+    {
+      "field": "cost_basis",
+      "ticker": "ABSI",
+      "why": "no source carries a fill price for this name. The conviction log's `price` is the market price on 2026-07-11, the day it was typed in, and the rationale says the shares were bought months earlier.",
+      "observed_price_when_logged": 3.15
+    },
+    {
+      "field": "kill_condition",
+      "ticker": "AMSC",
+      "why": "neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventing a plausible-sounding rule would be worse than saying so.",
+      "needs_murat": true
+    },
+    {
+      "field": "cost_basis",
+      "ticker": "AMSC",
+      "why": "no source carries a fill price for this name. The conviction log's `price` is the market price on 2026-07-11, the day it was typed in, and the rationale says the shares were bought months earlier.",
+      "observed_price_when_logged": 31.29
+    },
+    {
+      "field": "kill_condition",
+      "ticker": "HUBS",
+      "why": "neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventing a plausible-sounding rule would be worse than saying so.",
+      "needs_murat": true
+    },
+    {
+      "field": "cost_basis",
+      "ticker": "HUBS",
+      "why": "no source carries a fill price for this name. The conviction log's `price` is the market price on 2026-07-11, the day it was typed in, and the rationale says the shares were bought months earlier.",
+      "observed_price_when_logged": 268.54
+    },
+    {
+      "field": "kill_condition",
+      "ticker": "KYTX",
+      "why": "neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventing a plausible-sounding rule would be worse than saying so.",
+      "needs_murat": true
+    },
+    {
+      "field": "cost_basis",
+      "ticker": "KYTX",
+      "why": "no source carries a fill price for this name. The conviction log's `price` is the market price on 2026-07-11, the day it was typed in, and the rationale says the shares were bought months earlier.",
+      "observed_price_when_logged": 8.28
+    },
+    {
+      "field": "kill_condition",
+      "ticker": "SLDP",
+      "why": "neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventing a plausible-sounding rule would be worse than saying so.",
+      "needs_murat": true
+    },
+    {
+      "field": "cost_basis",
+      "ticker": "SLDP",
+      "why": "no source carries a fill price for this name. The conviction log's `price` is the market price on 2026-07-11, the day it was typed in, and the rationale says the shares were bought months earlier.",
+      "observed_price_when_logged": 3.05
+    },
+    {
+      "field": "cash",
+      "why": "no source records a cash balance. book_lanes.yaml normalises to a notional $100k, the conviction log records share decisions only, and murat_book.yaml carries `cash: 0` as a placeholder. An unknown cash balance is an unknown NAV.",
+      "needs_murat": true
+    }
+  ],
+  "excluded": [],
+  "summary": {
+    "n_positions_recovered": 12,
+    "n_share_counts_known": 12,
+    "n_contested": 1,
+    "n_cost_basis_reconstructed": 7,
+    "n_cost_basis_missing": 5,
+    "cash": "UNRECOVERABLE",
+    "n_excluded": 0
+  }
+}

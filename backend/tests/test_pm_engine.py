@@ -247,6 +247,31 @@ def test_the_shipped_book_is_marked_unconfirmed():
     assert b.wealth_targets["target_value"] > b.wealth_targets["floor_value"]
 
 
-def test_every_position_carries_a_thesis_and_a_kill_condition():
+def test_every_position_carries_a_thesis_and_a_recorded_kill_condition_gap():
+    """A thesis is required. A kill condition is required to be HONEST.
+
+    The reconciled book (2026-08-11) recovered five names — ABSI, AMSC, HUBS,
+    KYTX, SLDP — that the January reconstruction never covered. The conviction
+    log carries Murat's own rationale for them, so a thesis exists. No source
+    states an exit rule, and inventing a plausible-sounding one would be worse
+    than admitting the gap, so the reconciler records it as unrecoverable
+    instead.
+    """
+    import json
+    from pathlib import Path
+
+    missing_kill: list[str] = []
     for p in pm_engine.load_book().positions:
-        assert p.thesis and p.kill_condition, p.ticker
+        assert p.thesis, f"{p.ticker}: no thesis from any source"
+        if not p.kill_condition:
+            missing_kill.append(p.ticker)
+
+    if missing_kill:
+        rep = json.loads(
+            (Path(__file__).resolve().parents[2] / "docs"
+             / "portfolio_reconciliation.json").read_text(encoding="utf-8"))
+        recorded = {u["ticker"] for u in rep["unrecoverable"]
+                    if u.get("field") == "kill_condition"}
+        assert set(missing_kill) <= recorded, (
+            f"{sorted(set(missing_kill) - recorded)} have no exit rule and the "
+            f"reconciliation does not say so — an invisible gap is the bug")

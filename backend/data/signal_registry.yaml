@@ -1,0 +1,799 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# SIGNAL REGISTRY — what the research lab permits the portfolio manager to use
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Murat's correction, and the reason this file exists:
+#
+#   "research discovers what has evidence -> Optimus uses that evidence to
+#    manage the portfolio -> shadow portfolios test alternative ways of using
+#    it -> their outcomes create new research questions."
+#
+# Until now every one of those findings lived in prose: SIGNAL_TAXONOMY.md,
+# thirty NIGHT verdicts, eighty-nine pre-registrations, a graveyard census of
+# 148 rows. The PM could not read any of it, so it could neither obey a kill
+# nor benefit from a survivor. This file is the machine-readable interface
+# between the two halves.
+#
+# ── THE THREE RULES ────────────────────────────────────────────────────────
+#
+# 1. A CLOSED mechanism cannot quietly re-enter the PM. `allowed_in_pm: false`
+#    is enforced in code (backend/services/signal_registry.py), not by memory.
+#
+# 2. A closed mechanism is closed AS THAT MECHANISM. "Raw 13F ownership level"
+#    is dead; "a specialist filer initiating a concentrated position ahead of a
+#    catalyst" is a different object and may be registered as a NEW hypothesis
+#    with its own denominator. The distinction is `family` + `mechanism`, and
+#    a new hypothesis must name the corpse it is NOT (`distinct_from`).
+#
+# 3. OBSERVATIONAL is a permitted status, not a failing grade. NIGHT-9's
+#    mandate is explicit: research sets reliability WEIGHTS, it does not block
+#    labelled observational information from reaching the PM. What research
+#    forbids is an observational signal being *presented* as validated.
+#
+# ── EVIDENCE GRADES ────────────────────────────────────────────────────────
+#   VALIDATED       survived pre-registered confirm on PIT data, net of costs
+#   SUPPORTED       real effect, but spanned by a known factor or era-fragile
+#   SHELF           real rank information, no net premium — combiner inventory
+#   OBSERVATIONAL   used by the PM, never tested by this lab on real data
+#   HYPOTHESIS      registered, not yet run
+#   REJECTED        adjudicated and killed as this mechanism
+#   PERVERSE        adjudicated and killed WITH THE SIGN AGAINST US
+#
+# ── PERMITTED ROLES ────────────────────────────────────────────────────────
+#   PICKER              may choose which stock to hold
+#   FILTER              may screen or condition a book; may not choose
+#   VETO                may block a name; may never promote one
+#   RISK_INPUT          feeds sizing/vol/correlation; never expected return
+#   EXPECTATION_SENSOR  reads what the market already expects
+#   CATALYST_SENSOR     locates a dated event; carries no direction
+#   ALLOCATOR           macro exposure only; may never stock-pick
+#   CLOSED              no role
+#
+# reliability_weight is a bounded MULTIPLIER on a signal's contribution, in
+# [0, 1]. It is never an amplifier and never exceeds 1.0. `null` means
+# UNCALIBRATED — the PM must treat it as UNKNOWN (0.5), never as 1.0. That was
+# a real BUILD-1.1 bug: unknown scored as perfect.
+
+schema: signal-registry-v1
+written: 2026-08-11
+source_of_truth: >
+  Aegis module: docs/SIGNAL_TAXONOMY.md (v1, 2026-07-25, 146-candidate map),
+  docs/NIGHT{3,5,6,7,8,9}_VERDICT_*.md, docs/PF{1,2,4}_*_VERDICT_*.md,
+  docs/GRAVEYARD_CENSUS_2026-08-09.md, TRIALS/registry.jsonl (89 rows),
+  docs/CORRIGENDUM_OSAP_SIGNS_2026-08-08.md, docs/RETRACTION_NIGHT3_5_2.md.
+standing_constraints:
+  - id: NIGHT-9-RANK-IC
+    rule: >
+      rank-IC may describe ORDERING only. It may not corroborate a null money
+      result, and "orders better" may not be claimed without a magnitude test
+      beside it. A long-only book is paid in SIMPLE returns; a rank correlation
+      is invariant to the log/simple relabelling that decides the money.
+  - id: CANON-15
+    rule: >
+      A signal that ranks first on a frictionless panel is not thereby a
+      trading rule. The trailing stop ranked first and lost 3.08%/yr under G7.
+  - id: CANON-16
+    rule: A cost comparison needs a denominator that is not the winner's.
+  - id: CANON-17
+    rule: An execution number carries the model that produced it.
+  - id: PM-MANDATE
+    rule: >
+      The LLM never sizes. The engine never trades. Every wealth-target screen
+      prints the ruin probability beside the dream number.
+
+signals:
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # ANALYST FAMILY — the one the product actually runs on
+  # ══════════════════════════════════════════════════════════════════════════
+
+  - signal_id: analyst_target_upside_xs
+    family: analyst
+    mechanism: >
+      Rank the cross-section by consensus 12-month price target divided by
+      spot, and hold the highest.
+    description: Raw analyst-implied upside as a cross-sectional stock picker.
+    research_status: CLOSED
+    evidence_grade: PERVERSE
+    permitted_role: CLOSED
+    allowed_in_pm: false
+    reliability_weight: 0.0
+    horizon: 3-12mo
+    universe: CRSP US common, large/mid and small segments
+    data_grade: OSAP-derived signal on the CRSP panel
+    known_effect: >
+      NEGATIVE, on three independent instruments. Raw upside t -3.6 (largemid)
+      and -7.2 (small) on OSAP. PSZ (2025) low-dispersion conditioning halves
+      the bleed but never turns it positive (IC t -3.8). TRIAL-TGT-REBUILD
+      (#154-155, 2026-07-26) re-ran it on nominal split-guarded data after the
+      void and adjudicated REJECT. ANALYST-IBES-1 (2026-08-11) rebuilt it on
+      unadjusted IBES ptgsumu over 2002-2022 and got -8.6% to -17.6%/yr net in
+      all eight cells -- and -8.6% to -16.7%/yr GROSS, so it is not a cost
+      story: the names with the highest analyst-implied upside lost money
+      before a single basis point of trading friction.
+    known_failure: >
+      High target/price is a proxy for a name the street has already given up
+      on, and for HIGH turnover, which the taxonomy records as the single best
+      predictor of net death in this programme.
+    receipts:
+      - "Aegis module docs/SIGNAL_TAXONOMY.md, row 'Target price (tgt_upside)'"
+      - "TRIAL-TGT-REBUILD #154-155 (2026-07-26) — REJECT"
+    implementation_notes: >
+      READ THIS BEFORE QUOTING THE PM. The Optimus PM ranks its book and its
+      radar by exactly this quantity, after a 0.35 haircut. The lab has
+      adjudicated it PERVERSE as a cross-sectional picker on a broad panel.
+      Those two facts are both true and they are not the same claim: the PM
+      applies it to a 12-name concentrated book that Murat already selected on
+      a thesis, alongside catalysts and a kill condition, and it is used to
+      SIZE names already chosen rather than to choose them from a universe.
+      That distinction is a hypothesis, not a defence, and it is registered as
+      analyst_upside_ibes below. Until that resolves, every PM number derived
+      from implied upside must print OBSERVATIONAL, and the opportunity funnel
+      may NOT use raw upside as its primary rank.
+    distinct_from: []
+    last_updated: 2026-08-11
+
+  - signal_id: analyst_target_level_haircut
+    family: analyst
+    mechanism: >
+      Consensus target x haircut x reliability, used as the EXPECTED RETURN
+      input for sizing a name that has already been selected.
+    description: What the Optimus PM actually computes today.
+    research_status: IN_USE
+    evidence_grade: OBSERVATIONAL
+    permitted_role: RISK_INPUT
+    allowed_in_pm: true
+    reliability_weight: null   # UNCALIBRATED — treated as UNKNOWN, not 1.0
+    horizon: 12mo
+    universe: Murat's book + watchlist
+    data_grade: yfinance consensus, no timestamp
+    known_effect: null
+    known_failure: >
+      TARGET_HAIRCUT = 0.35 is fitted to nothing. Every probability the PM
+      prints is linear in it. The cross-sectional version of this signal is
+      PERVERSE (see analyst_target_upside_xs).
+    receipts:
+      - "aegis-finance docs/PORTFOLIO_MANAGER_v1_1.md"
+      - "aegis-finance docs/BUILD1/ANALYST_SOURCE_COVERAGE.md"
+    implementation_notes: >
+      Permitted as RISK_INPUT, not PICKER: it may set the size of a name Murat
+      or the funnel has already chosen on other grounds, and it may not be the
+      reason a name enters the book. This is the narrowest role consistent with
+      both the mandate (observational data may reach the PM) and the evidence
+      (the picker version is dead).
+    last_updated: 2026-08-11
+
+  - signal_id: analyst_target_revision
+    family: analyst
+    mechanism: >
+      Change in the consensus target over 7/30/90 days, and the breadth of
+      up-vs-down target revisions — a first difference, not a level.
+    description: The signal Murat's Bloomberg process actually watched.
+    research_status: HYPOTHESIS
+    evidence_grade: HYPOTHESIS
+    permitted_role: PICKER   # permitted IF the registered trial resolves
+    allowed_in_pm: false     # ...and it has not, so: not yet
+    reliability_weight: null
+    horizon: 1-3mo
+    universe: to be declared by ANALYST-REVISION-1
+    data_grade: >
+      IBES ptgsumu (numup1m/numdown1m) — PIT, 1999-03 to 2026-05, 1,352,950
+      rows, pulled 2026-08-11. Retail vendors are 402/403 on this object.
+    known_effect: >
+      MEASURED, 2026-08-11, and it is the good half of the analyst family.
+      ANALYST-IBES-1 over 2002-2022: revision BREADTH earns +1.5% to +6.1%/yr
+      GROSS in all eight cells, against a level signal that loses 8-18%/yr.
+      The levels-vs-revisions distinction the PM was built on is real.
+    known_failure: >
+      It does not survive its own turnover, exactly as the taxonomy predicted
+      for a HIGH-turnover family. Monthly rebalancing runs 10.2x annual
+      turnover and gives up 5.67 of those 6.05 points to cost. Nothing reaches
+      the registered bar of +3%/yr at |t| >= 2; the best cell is +5.29%/yr at
+      t 1.66. AND the two constructions DISAGREE IN SIGN in the small segment
+      (breadth +6.05 gross, magnitude -0.73 gross), so by the pre-registered
+      rule the idea is not identified there and no verdict may be issued.
+    receipts:
+      - "Aegis module docs/ANALYST_IBES_1_VERDICT_2026-08-11.md"
+      - "Aegis module runs/ARENA1/ANALYST_IBES_1/results.json (32 books)"
+      - "Aegis module runs/ARENA1/wrds_ibes_probe.json (IBES_TARGETS_READABLE)"
+      - "aegis-finance backend/services/analyst_ledger.py (forward PIT ledger)"
+    implementation_notes: >
+      The PM's ledger returns MISSING for every window until two snapshots
+      span it. MISSING is never zero and never a neutral tilt. The one
+      structurally encouraging point, registered rather than asserted: what
+      killed every arm was TURNOVER, and Murat's book does not turn over. A
+      50-name book rebalanced monthly pays 10x annual turnover; a 12-name book
+      held for months pays a fraction of it. Whether that fraction is small
+      enough is an ARENA question, not a claim.
+    last_updated: 2026-08-11
+
+  - signal_id: rating_drift_3m
+    family: analyst
+    mechanism: Net count of upgrades minus downgrades over ~90 days.
+    description: Counts ratings. Not a target revision, and no longer called one.
+    research_status: IN_USE
+    evidence_grade: OBSERVATIONAL
+    permitted_role: FILTER
+    allowed_in_pm: true
+    reliability_weight: null
+    horizon: 1-3mo
+    universe: Murat's book + watchlist
+    data_grade: yfinance recommendation table, 4 rows, coarse
+    known_effect: null
+    known_failure: >
+      A stale table is indistinguishable from a quiet quarter unless staleness
+      is measured; the PM prints days-since-last-action for this reason.
+    receipts: ["aegis-finance BUILD-1.1 commit d54723f"]
+    last_updated: 2026-08-11
+
+  - signal_id: analyst_dispersion
+    family: analyst
+    mechanism: Cross-analyst standard deviation of the target, and its change.
+    description: PSZ (2025) target-price dispersion conditioning.
+    research_status: HYPOTHESIS
+    evidence_grade: HYPOTHESIS
+    permitted_role: FILTER
+    allowed_in_pm: false
+    reliability_weight: null
+    horizon: 3-12mo
+    universe: to be declared
+    data_grade: IBES ptgsumu stdev/ptghigh/ptglow — now on disk
+    known_effect: >
+      Halved the bleed of raw upside but never turned it positive (IC t -3.8).
+      That is a conditioning result, not a picker.
+    known_failure: The conditioned version remained negative.
+    receipts: ["docs/SIGNAL_TAXONOMY.md 'Target price' row"]
+    last_updated: 2026-08-11
+
+  - signal_id: earnings_estimate_revision
+    family: analyst
+    mechanism: numup/numdown breadth on FY1 EPS consensus.
+    description: The canonical revision-breadth signal.
+    research_status: HYPOTHESIS
+    evidence_grade: HYPOTHESIS
+    permitted_role: PICKER
+    allowed_in_pm: false
+    reliability_weight: null
+    horizon: 1-3mo
+    universe: to be declared
+    data_grade: IBES statsumu_epsus — pulled 2026-08-11
+    known_effect: null
+    known_failure: >
+      Same HIGH-turnover exposure as every other fast-decay analyst family.
+    receipts: []
+    last_updated: 2026-08-11
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # ACCOUNTING — where every survivor in this programme actually lives
+  # ══════════════════════════════════════════════════════════════════════════
+
+  - signal_id: profitability_small
+    family: accounting
+    mechanism: >
+      Gross profitability / cash profitability / F-score, ranked within the
+      small-cap segment, held at annual-ish turnover.
+    description: The only PICKER this programme has ever promoted.
+    research_status: OPEN
+    evidence_grade: SUPPORTED
+    permitted_role: PICKER
+    allowed_in_pm: true
+    reliability_weight: 0.7
+    horizon: annual+
+    universe: CRSP small segment
+    data_grade: Compustat/CCM PIT + EAD availability adjustment
+    known_effect: >
+      BRAIN-008 survivor across 3 windows and 42 years. PF4 decomposition
+      CONFIRMED +4.23%/yr t 3.65.
+    known_failure: >
+      DECISIVE CAVEAT — a self-built small-cap profitability factor SPANS the
+      decomposition: incremental alpha 1.04%/yr at t 1.07. So this is FACTOR
+      HARVEST and must never be described as engine skill. Net-dead in
+      large/mid. Era costs are decisive.
+    receipts:
+      - "docs/PF4_VERDICT_2026-08-09.md"
+      - "INSTR-ANOMALY-TIME (2026-07-26) — EAD availability adopted"
+    implementation_notes: >
+      Usable by the PM as a quality FILTER and as a legitimate picker inside
+      the opportunity funnel's small-cap sleeve. Any claim it makes is a claim
+      about a factor, not about Aegis.
+    last_updated: 2026-08-11
+
+  - signal_id: value_btm
+    family: accounting
+    mechanism: Book-to-market and its variants as a cross-sectional picker.
+    research_status: CLOSED
+    evidence_grade: REJECTED
+    permitted_role: CLOSED
+    allowed_in_pm: false
+    reliability_weight: 0.0
+    horizon: annual+
+    universe: CRSP
+    data_grade: Compustat PIT
+    known_effect: "Flat in this era. re_me STRONG prior FAILED (batch 7)."
+    known_failure: Value's lost decade is inside the sample.
+    receipts: ["docs/SIGNAL_TAXONOMY.md 'Value' row"]
+    last_updated: 2026-08-11
+
+  - signal_id: accruals
+    family: accounting
+    mechanism: Accruals / asset growth / investment as pickers.
+    research_status: CLOSED
+    evidence_grade: PERVERSE
+    permitted_role: CLOSED
+    allowed_in_pm: false
+    reliability_weight: 0.0
+    horizon: annual
+    universe: CRSP
+    data_grade: Compustat PIT
+    known_effect: INVERTED post-publication.
+    known_failure: >
+      Re-litigation refused three times. N2's negative-selection arm put
+      accruals at 1.05x chance — i.e. chance — after the placebo was correctly
+      count-matched (the 15x figure was withdrawn).
+    receipts:
+      - "docs/SIGNAL_TAXONOMY.md 'Accruals/investment' row"
+      - "NIGHT-9 corrigendum to N2 (placebo count-matching)"
+    last_updated: 2026-08-11
+
+  - signal_id: issuance_payout
+    family: accounting
+    mechanism: Net issuance, 5y composite issuance, payout yield.
+    research_status: CLOSED
+    evidence_grade: SHELF
+    permitted_role: FILTER
+    allowed_in_pm: true
+    reliability_weight: 0.4
+    horizon: annual
+    universe: CRSP
+    data_grade: Compustat PIT
+    known_effect: >
+      Two independent constructions, same shape: IC clears (1.10/2.18 and
+      1.15/2.86), net book does not. N2 put issuance-based negative selection
+      at 2.22x chance.
+    known_failure: Closed as a PICKER in batches 2, 7 and 9.
+    receipts: ["docs/SIGNAL_TAXONOMY.md 'Issuance/payout' row"]
+    implementation_notes: >
+      Strongest case on the combiner shelf. Admissible to the PM as a dilution
+      VETO on pre-revenue names, which is a different use from ranking.
+    last_updated: 2026-08-11
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # PRICE / MOMENTUM
+  # ══════════════════════════════════════════════════════════════════════════
+
+  - signal_id: momentum_12_1
+    family: price
+    mechanism: 12-1 and 6-1 cross-sectional momentum.
+    research_status: CLOSED
+    evidence_grade: REJECTED
+    permitted_role: CLOSED
+    allowed_in_pm: false
+    reliability_weight: 0.0
+    horizon: 3-12mo
+    universe: CRSP largemid
+    data_grade: CRSP
+    known_effect: Net-dead in large/mid at honest costs.
+    known_failure: >
+      MED turnover; the quality-momentum interaction also failed (batch 5).
+    receipts: ["docs/SIGNAL_TAXONOMY.md 'Momentum' row"]
+    last_updated: 2026-08-11
+
+  - signal_id: momentum_spillover
+    family: price/links
+    mechanism: Industry and customer/supplier momentum spillover.
+    research_status: CLOSED
+    evidence_grade: REJECTED
+    permitted_role: CLOSED
+    allowed_in_pm: false
+    reliability_weight: 0.0
+    horizon: 1-6mo
+    universe: CRSP + link tables
+    data_grade: CRSP + Compustat segment
+    known_effect: >
+      The starkest paper-vs-cost gap this programme has measured: literature
+      1.68%/mo at t 9.67, our net t -0.78 at turnover 0.67.
+    known_failure: HIGH turnover; industry arm flat since 2000.
+    receipts: ["docs/SIGNAL_TAXONOMY.md 'Momentum spillover' row"]
+    last_updated: 2026-08-11
+
+  - signal_id: reversal_dip
+    family: price
+    mechanism: Short-term reversal, 3-month dip, drawdown-from-high, long-term reversal.
+    research_status: CLOSED
+    evidence_grade: REJECTED
+    permitted_role: CLOSED
+    allowed_in_pm: false
+    reliability_weight: 0.0
+    horizon: 1-36mo
+    universe: CRSP
+    data_grade: CRSP
+    known_effect: None.
+    known_failure: >
+      Explicitly recorded as "Murat's dip theses rejected". Buying a name
+      because it has fallen is the specific pattern this closed.
+    receipts: ["docs/SIGNAL_TAXONOMY.md 'Reversal/dip' row"]
+    last_updated: 2026-08-11
+
+  - signal_id: low_volatility
+    family: price
+    mechanism: Low realised vol / low max-return / low skew, as a screen.
+    research_status: OPEN
+    evidence_grade: SUPPORTED
+    permitted_role: FILTER
+    allowed_in_pm: true
+    reliability_weight: 0.6
+    horizon: 6-12mo
+    universe: CRSP
+    data_grade: CRSP
+    known_effect: >
+      IC t 7.1 and a decisive risk effect — max drawdown -35% against -52% to
+      -82% for the alternatives. ZERO net excess return.
+    known_failure: It is not a stock picker and must never be sold as one.
+    receipts: ["docs/SIGNAL_TAXONOMY.md 'Low-vol/defensive' row"]
+    implementation_notes: >
+      Correct PM use: a lane risk design and a RISK_INPUT, never a reason to
+      prefer one name's expected return over another's.
+    last_updated: 2026-08-11
+
+  - signal_id: drawdown_trigger_information
+    family: price
+    mechanism: >
+      The STATE of being in a deep drawdown, used as a scheduled rank penalty
+      at the next rebalance — not as an immediate exit.
+    description: An informative corpse, decomposed.
+    research_status: OPEN
+    evidence_grade: SUPPORTED
+    permitted_role: RISK_INPUT
+    allowed_in_pm: true
+    reliability_weight: 0.5
+    horizon: 1-12mo
+    universe: CRSP small/mid
+    data_grade: CRSP daily
+    known_effect: >
+      Names whose trailing stop TRIGGERS go on to underperform by 7.2 to 8.4
+      %/yr, and this survives momentum controls. The information is real.
+    known_failure: >
+      The VEHICLE is dead. See trailing_stop_rule. This entry exists because
+      NIGHT-7 separated the information source from the delivery mechanism, and
+      that separation is the reusable finding.
+    receipts:
+      - "docs/NIGHT7_VERDICT_2026-08-10.md"
+      - "PF7B trigger-penalty pre-registration (confound analysis OPEN)"
+    implementation_notes: >
+      Confounded until PF8 runs: the trigger co-occurs with momentum and
+      volatility states we have not fully separated. Usable as a caution flag
+      in the brief, NOT as a sizing input, until that resolves.
+    last_updated: 2026-08-11
+
+  - signal_id: trailing_stop_rule
+    family: execution
+    mechanism: Sell on an N% trailing drawdown.
+    research_status: CLOSED
+    evidence_grade: REJECTED
+    permitted_role: CLOSED
+    allowed_in_pm: false
+    reliability_weight: 0.0
+    horizon: any
+    universe: CRSP small/mid
+    data_grade: CRSP daily + G7 costs
+    known_effect: >
+      Ranked FIRST on the frictionless exit panel and returned -3.08%/yr once
+      charged. This is the canonical CANON-15 exhibit.
+    known_failure: >
+      Turnover. The rule pays the spread precisely when the spread is widest.
+    receipts: ["docs/NIGHT7_VERDICT_2026-08-10.md", "CANON.md sec15"]
+    implementation_notes: >
+      The PM may print a kill_condition, which is a THESIS statement Murat
+      wrote, and it may not implement an automatic trailing stop.
+    last_updated: 2026-08-11
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # POSITIONING — including the corpse Murat remembered
+  # ══════════════════════════════════════════════════════════════════════════
+
+  - signal_id: inst_ownership_level_13f
+    family: positioning
+    mechanism: >
+      Buy what institutions own or are accumulating; follow the big funds.
+    description: Raw hedge-fund following. THE CORPSE.
+    research_status: CLOSED
+    evidence_grade: REJECTED
+    permitted_role: CLOSED
+    allowed_in_pm: false
+    reliability_weight: 0.0
+    horizon: quarters
+    universe: CRSP + Thomson 13F
+    data_grade: tr13f
+    known_effect: >
+      None. Institutional persistence, ownership duration and "best ideas" all
+      failed: BOTH TAILS LOSE TO THE MIDDLE, which is the shape that rules out
+      a monotone story in either direction.
+    known_failure: >
+      13F is a quarterly snapshot published up to 45 days late, so the trade is
+      stale before it is visible.
+    receipts: ["docs/SIGNAL_TAXONOMY.md '13F positioning' row (b3/b5/b6)"]
+    implementation_notes: >
+      Murat asked whether hedge-fund following could return. As this mechanism:
+      no, and the re-litigation ban applies. See specialist_filer_initiation.
+    last_updated: 2026-08-11
+
+  - signal_id: specialist_filer_initiation
+    family: positioning
+    mechanism: >
+      A NEW INITIATION or large increase by a filer that is (a) concentrated,
+      (b) historically skilled in that sector, (c) independent of the other
+      filers already in the name, penalised by (d) crowding and (e) the price
+      move between the reported quarter-end and the PUBLICATION date, and
+      conditioned on (f) alignment with a dated catalyst.
+    description: A different object from raw ownership. Registered, not run.
+    research_status: HYPOTHESIS
+    evidence_grade: HYPOTHESIS
+    permitted_role: PICKER
+    allowed_in_pm: false
+    reliability_weight: null
+    horizon: 1-2 quarters
+    universe: to be declared
+    data_grade: 13F + 13D/G with PIT publication lag; EDGAR harvest exists
+    known_effect: null
+    known_failure: >
+      The obvious failure is that after (e) — charging the move since quarter
+      end — nothing is left. That is the first thing the trial must measure,
+      and it must be measured BEFORE the return leg.
+    distinct_from: [inst_ownership_level_13f]
+    receipts: ["Aegis module scripts/harvest_edgar_13dg.py (data spine exists)"]
+    implementation_notes: >
+      It is NOT enough to say this differs from the corpse. The pre-registration
+      must state which specific component carries the claimed information and
+      must include an arm that is the corpse itself, so the increment over raw
+      ownership is what gets tested. Without that arm this is re-litigation.
+    last_updated: 2026-08-11
+
+  - signal_id: short_interest_level
+    family: positioning
+    mechanism: Short interest level / days-to-cover.
+    research_status: CLOSED
+    evidence_grade: SHELF
+    permitted_role: FILTER
+    allowed_in_pm: true
+    reliability_weight: 0.35
+    horizon: 1-6mo
+    universe: CRSP
+    data_grade: exchange SI files
+    known_effect: >
+      A book without rank IC (dtc t 3.4 under the AND-rule) — the mirror image
+      of the shelf's usual shape. Inverse in the small segment.
+    known_failure: Closed as a picker in both directions.
+    receipts: ["docs/SIGNAL_TAXONOMY.md 'Short interest LEVEL' row (b6)"]
+    last_updated: 2026-08-11
+
+  - signal_id: insider_opportunistic
+    family: filings
+    mechanism: Single-buyer opportunistic insider purchase.
+    research_status: OPEN
+    evidence_grade: SUPPORTED
+    permitted_role: PICKER
+    allowed_in_pm: true
+    reliability_weight: 0.5
+    horizon: 1-6mo
+    universe: CRSP + Form 4
+    data_grade: SEC Form 4 PIT
+    known_effect: Weak-positive. BRAIN-003 promoted; forward clock ends 2027-07.
+    known_failure: >
+      Clusters add nothing (BRAIN-009) — the intuitive "many insiders buying"
+      version is the dead one. Role weights remain an open stub.
+    receipts: ["docs/SIGNAL_TAXONOMY.md 'Opportunistic insider' row"]
+    last_updated: 2026-08-11
+
+  - signal_id: fusion_insider_profitability
+    family: composite
+    mechanism: Insider signal fused with a gross-profitability z-score.
+    research_status: OPEN
+    evidence_grade: SUPPORTED
+    permitted_role: PICKER
+    allowed_in_pm: true
+    reliability_weight: 0.55
+    horizon: mixed
+    universe: CRSP small/mid
+    data_grade: Form 4 + Compustat
+    known_effect: BRAIN-007 survives and beats the best single signal on 3.6x the names.
+    known_failure: Inherits the PF4 spanning caveat through its profitability leg.
+    receipts: ["docs/SIGNAL_TAXONOMY.md 'Fusion' row; SMQ lane live"]
+    last_updated: 2026-08-11
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # EVENTS AND OPTIONS
+  # ══════════════════════════════════════════════════════════════════════════
+
+  - signal_id: earnings_surprise_monthly
+    family: events
+    mechanism: SUE streak, earnings acceleration, PEAD at monthly resolution.
+    research_status: CLOSED
+    evidence_grade: SHELF
+    permitted_role: FILTER
+    allowed_in_pm: true
+    reliability_weight: 0.3
+    horizon: 1-3mo
+    universe: CRSP
+    data_grade: Compustat + IBES actuals
+    known_effect: >
+      pead_agree INVERTED at IC t -2.6 — the fifth sign reversal, and in-window
+      confirmation that PEAD has decayed.
+    known_failure: >
+      HIGH turnover at monthly cadence. The taxonomy admits exactly one retry
+      class: a DAILY event harness.
+    receipts: ["docs/SIGNAL_TAXONOMY.md 'Earnings surprise' row (b5+b8)"]
+    last_updated: 2026-08-11
+
+  - signal_id: catalyst_proximity
+    family: events
+    mechanism: >
+      Distance in days to a dated, scheduled event (earnings, PDUFA, readout).
+      Carries NO direction.
+    research_status: IN_USE
+    evidence_grade: OBSERVATIONAL
+    permitted_role: CATALYST_SENSOR
+    allowed_in_pm: true
+    reliability_weight: null
+    horizon: 0-90d
+    universe: Murat's book + funnel candidates
+    data_grade: Finnhub earnings calendar (free, verified 200); hand-entered PDUFA
+    known_effect: null
+    known_failure: >
+      Coverage is v0 and EARNINGS ONLY. FDA/PDUFA action dates, clinical
+      readout windows, secondary offerings, 13D/G, lockup expiries, index adds,
+      investor days and guidance updates are NOT covered, and the module says
+      so rather than returning an empty calendar.
+    receipts: ["aegis-finance backend/services/pm_catalysts.py"]
+    implementation_notes: >
+      A catalyst sensor may change SIZE (an event inside the horizon widens the
+      distribution) and may never change DIRECTION on its own.
+    last_updated: 2026-08-11
+
+  - signal_id: fda_approval_monthly
+    family: events
+    mechanism: FDA approval events at monthly resolution.
+    research_status: CLOSED
+    evidence_grade: REJECTED
+    permitted_role: CLOSED
+    allowed_in_pm: false
+    reliability_weight: 0.0
+    horizon: days-weeks
+    universe: biotech
+    data_grade: openFDA
+    known_effect: REJECT at monthly resolution.
+    known_failure: The horizon is days; the measurement was months.
+    receipts: ["docs/SIGNAL_TAXONOMY.md 'FDA approvals' row"]
+    implementation_notes: >
+      A daily-CAR successor is queued and the daily CRSP file is on disk. The
+      corpse is the MONTHLY construction, not the event class.
+    last_updated: 2026-08-11
+
+  - signal_id: options_ranking_raw
+    family: options
+    mechanism: Rank the cross-section by an options-surface statistic.
+    research_status: CLOSED
+    evidence_grade: REJECTED
+    permitted_role: CLOSED
+    allowed_in_pm: false
+    reliability_weight: 0.0
+    horizon: 1-3mo
+    universe: optionable US equity
+    data_grade: OptionMetrics entitlement was never established
+    known_effect: None established.
+    known_failure: Closed as a picker family.
+    receipts: ["Aegis module aegis_brain/factory/optsurf.py"]
+    last_updated: 2026-08-11
+
+  - signal_id: options_expectation_sensor
+    family: options
+    mechanism: >
+      IV skew, put/call ratio, term structure and max pain read as WHAT THE
+      MARKET ALREADY EXPECTS around a dated event — not as a return forecast.
+    research_status: IN_USE
+    evidence_grade: OBSERVATIONAL
+    permitted_role: EXPECTATION_SENSOR
+    allowed_in_pm: true
+    reliability_weight: null
+    horizon: 0-90d
+    universe: optionable names in the book
+    data_grade: yfinance option chains
+    known_effect: null
+    known_failure: >
+      Thin chains on microcaps produce confident nonsense; the PM's quote
+      guards (round lot, bracketing, <500bps) apply here too.
+    distinct_from: [options_ranking_raw]
+    receipts: ["aegis-finance backend/services/options_intelligence.py"]
+    implementation_notes: >
+      Permitted role is deliberately narrow: it may widen a distribution and it
+      may not create expected return. This is the distinction that keeps it
+      from being options_ranking_raw wearing new clothes.
+    last_updated: 2026-08-11
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # MACRO AND DESCRIPTIVE
+  # ══════════════════════════════════════════════════════════════════════════
+
+  - signal_id: macro_regime_allocator
+    family: macro
+    mechanism: Jump model, TSMOM-XA, GPR, net liquidity — asset-level exposure.
+    research_status: OPEN
+    evidence_grade: SUPPORTED
+    permitted_role: ALLOCATOR
+    allowed_in_pm: true
+    reliability_weight: 0.4
+    horizon: weeks-months
+    universe: asset classes, never single stocks
+    data_grade: FRED + futures
+    known_effect: Registered batch-4 instruments; TSMOM overlay lane is live.
+    known_failure: >
+      Timing has been killed twice in this programme (NIGHT-1, and again in the
+      conviction arm). It must never leak into stock selection.
+    receipts: ["docs/SIGNAL_TAXONOMY.md 'Macro regime' row"]
+    last_updated: 2026-08-11
+
+  - signal_id: crash_composite_descriptive
+    family: macro
+    mechanism: LPPLS, fragility composite, 9-factor crash score.
+    research_status: OPEN
+    evidence_grade: OBSERVATIONAL
+    permitted_role: RISK_INPUT
+    allowed_in_pm: true
+    reliability_weight: 0.3
+    horizon: n/a
+    universe: index level
+    data_grade: FRED + price
+    known_effect: Descriptive only. Explicitly has NO promotion path.
+    known_failure: >
+      crash_model.pkl is broken (M3) and the lane overlay reports
+      model_not_deployed on all four lanes. It is dark right now, and the
+      health surface says so, which is the point.
+    receipts: ["aegis_verified_state overlay: all_operational false"]
+    last_updated: 2026-08-11
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # THE LLM
+  # ══════════════════════════════════════════════════════════════════════════
+
+  - signal_id: llm_stock_selection
+    family: llm
+    mechanism: An LLM chooses or orders the names in the book.
+    research_status: CLOSED
+    evidence_grade: REJECTED
+    permitted_role: CLOSED
+    allowed_in_pm: false
+    reliability_weight: 0.0
+    horizon: 1-12mo
+    universe: masked profitability slate
+    data_grade: replay, masked
+    known_effect: >
+      M1 t 0.04 and M2 t 0.93 across 16,320 graded decisions. Its ordering is
+      orthogonal to the engine's at Spearman 0.014, and that orthogonality
+      bought no diversification. At temperature 0.7, 21.6% of decisions flip.
+    known_failure: A 21.6% flip rate is not a signal, it is a coin with prose.
+    receipts: ["docs/NIGHT3_VERDICT_2026-08-09.md"]
+    last_updated: 2026-08-11
+
+  - signal_id: llm_event_extraction
+    family: llm
+    mechanism: >
+      Extract structured event facts (what, when, which ticker, direction of
+      the claim) from text, for the engine to weigh.
+    research_status: IN_USE
+    evidence_grade: OBSERVATIONAL
+    permitted_role: CATALYST_SENSOR
+    allowed_in_pm: true
+    reliability_weight: null
+    horizon: 0-90d
+    universe: news/filings for the book
+    data_grade: GDELT/news + FinBERT
+    known_effect: >
+      Asking for an answer in BASIS POINTS gives 5/5 internal coherence versus
+      3/5 in prose. Adopted.
+    known_failure: >
+      The veto record is not yet Brier-scoreable; the calibration curve the
+      firewall needs does not exist.
+    receipts: ["docs/NIGHT3_VERDICT_2026-08-09.md", "PREREG_N4_LLM_VETO_CAL.md"]
+    implementation_notes: >
+      The LLM may extract event STRUCTURE. It may never determine position
+      size. This is the firewall, and it is code, not a convention.
+    last_updated: 2026-08-11

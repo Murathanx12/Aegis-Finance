@@ -828,6 +828,13 @@ def test_p4_the_no_trade_band_widens_with_the_cost_of_trading():
 def test_18_an_empty_catalyst_calendar_never_reads_as_nothing_is_coming(
         monkeypatch):
     from backend.services import pm_catalysts
+    # Disable the cache as 18b does. Without this the test passes alone and
+    # fails in a full run, because an earlier test (or a live brief in the same
+    # process) can leave a warm calendar for these tickers — a WARM CACHE
+    # MASKING A DEAD FEED, which is the exact condition this test exists to
+    # detect. Found by the suite on 2026-08-11.
+    monkeypatch.setattr(pm_catalysts, "cache_get", lambda *a, **k: None)
+    monkeypatch.setattr(pm_catalysts, "cache_set", lambda *a, **k: None)
     monkeypatch.setattr(pm_catalysts, "_finnhub", lambda p, q: None)
     cal = pm_catalysts.calendar(["APLT", "NTLA"])
     assert cal["events_found"] == 0

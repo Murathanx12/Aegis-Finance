@@ -213,6 +213,40 @@ def main() -> int:
                   f"{o['state'].get('n_analysts') or 0:>3} analysts"
                   f"{'  BINARY' if o['state'].get('binary_event_risk') else ''}")
 
+    for c in (b.get("registry_conflicts") or []):
+        print(f"\n!! EVIDENCE CONFLICT ({c['severity']}) — {c['signal']} is "
+              f"{c['grade']}")
+        print(f"   {c['what']}")
+        print(f"   evidence: {c['evidence']}")
+        print(f"   affects: {', '.join(c['affects'])}")
+        print(f"   {c['consequence']}")
+        print(f"   fix: {c['fix']}")
+
+    mr = b.get("market_radar") or {}
+    if mr.get("status") in ("OK", "STALE"):
+        print(f"\nMARKET OPPORTUNITY RADAR — {mr['universe_screened']:,} US "
+              f"listed names screened, {mr['age_hours']:.0f}h ago")
+        if mr["status"] == "STALE":
+            print(f"  ! STALE — {mr['consequence']}")
+        st = mr.get("stages") or {}
+        print(f"  funnel: {st.get('stage1_eligible')} eligible -> "
+              f"{st.get('stage2_shortlist')} shortlist -> "
+              f"{st.get('stage3_enriched')} enriched -> "
+              f"{st.get('stage4_candidates')} candidates")
+        print(f"  ranked by {mr.get('ranked_by')}; NOT ranked on "
+              f"{'; '.join(mr.get('not_ranked_on') or [])}")
+        for c in mr.get("candidates", [])[:10]:
+            q = "  -  " if c.get("quality") is None else f"{c['quality']:+.2f}"
+            mc = (c.get("market_cap") or 0) / 1e9
+            print(f"  {c['ticker']:<6} GP/A {q}  vol "
+                  f"{100*(c.get('vol_annual') or 0):3.0f}%  "
+                  f"${mc:8.1f}bn  {(c.get('sector') or '')[:22]}")
+        for k, v in (mr.get("funnel_failures") or {}).items():
+            print(f"  ! {k}: {v}")
+    elif mr:
+        print(f"\nMARKET OPPORTUNITY RADAR — {mr.get('status')}")
+        print(f"  {mr.get('consequence') or mr.get('how') or ''}")
+
     if b["replacements"]:
         print("\nREPLACEMENTS — decomposition of the one solved target portfolio")
         for s in b["replacements"]:
@@ -263,6 +297,16 @@ def main() -> int:
               f"{prob(ss['p_reach_target_high'])} "
               f"(base {prob(ss['p_reach_target_base'])})")
     print(f"  last refresh            {ms['last_refresh']}")
+    eb = b.get("evidence_basis") or {}
+    if eb.get("status") == "OK":
+        print(f"  signal registry         {len(eb['usable_now'])} usable, "
+              f"{len(eb['closed_and_cannot_be_used'])} CLOSED, "
+              f"{len(eb['queued_not_yet_permitted'])} queued, "
+              f"{len(eb['uncalibrated'])} uncalibrated")
+        print(f"  the one that matters    {eb['the_one_that_matters']}")
+    else:
+        print(f"  signal registry         {eb.get('status')} — "
+              f"{eb.get('consequence','')}")
     if ms["book_problems"]:
         print("  book problems:")
         for p in ms["book_problems"]:

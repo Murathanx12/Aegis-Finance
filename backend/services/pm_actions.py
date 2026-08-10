@@ -31,7 +31,9 @@ from __future__ import annotations
 
 import logging
 import math
+import time
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Optional
 
 import numpy as np
@@ -542,10 +544,164 @@ def wealth_scenarios(rows: list[dict], nav: float, cash: float, targets: dict,
 
 # ────────────────────────────── the daily brief ────────────────────────────
 
+def _evidence_basis() -> dict:
+    """Which research verdicts are actually constraining today's numbers.
+
+    A brief that prints an analyst-derived number without saying what the lab
+    measured about analyst-derived numbers is not a disciplined brief, it is a
+    brief with a disclaimer at the bottom. This block names the specific
+    verdicts and their receipts.
+    """
+    try:
+        from backend.services import signal_registry as SR
+        reg = SR.load()
+    except Exception as exc:  # noqa: BLE001 - a missing registry is a finding
+        return {"status": "REGISTRY UNAVAILABLE", "error": str(exc)[:200],
+                "consequence": ("nothing below is evidence-graded; treat every "
+                                "number as ungraded")}
+    return {
+        "status": "OK",
+        "registry_written": reg.written,
+        "usable_now": [f"{s.signal_id} [{s.label()}]" for s in reg.pm_allowed()],
+        "closed_and_cannot_be_used": [
+            f"{s.signal_id} [{s.evidence_grade}]" for s in reg.closed()],
+        "queued_not_yet_permitted": [s.signal_id for s in reg.queued()],
+        "uncalibrated": [s.signal_id for s in reg.uncalibrated()],
+        "the_one_that_matters": (
+            "analyst_target_upside_xs is CLOSED/PERVERSE. Ranking a "
+            "cross-section by analyst-implied upside lost 8-18%/yr GROSS on "
+            "21 years of point-in-time IBES (ANALYST-IBES-1, 2026-08-11), and "
+            "-3.6/-7.2 t on two earlier instruments. This brief uses the "
+            "haircut target only to SIZE a held name — but its CANDIDATE list "
+            "is still ranked by that same quantity, which is choosing. See "
+            "registry_conflicts; the contradiction is printed rather than "
+            "quietly kept."),
+    }
+
+
+#: Where the funnel leaves its last run. The brief READS this; it never runs
+#: the funnel inline, because a 27-batch market screen inside a morning report
+#: is how a report becomes something nobody waits for.
+MARKET_RADAR_PATH = (Path(__file__).resolve().parents[2] / "docs"
+                     / "opportunity_funnel_run.json")
+MARKET_RADAR_STALE_HOURS = 36
+
+
+def _market_radar(path: Path | None = None, *, top: int = 10) -> dict:
+    """The last opportunity-funnel run, with its age stated.
+
+    A stale radar is not a missing radar and neither is an outage — all three
+    are distinguished, because a market screen that quietly shows last week's
+    names is worse than one that shows none.
+    """
+    import json as _json
+
+    p = Path(path or MARKET_RADAR_PATH)
+    if not p.exists():
+        return {"status": "NEVER RUN",
+                "how": "python -m backend.services.opportunity_funnel, or "
+                       "scripts/run_funnel.py",
+                "consequence": "the brief can only see the watchlist today"}
+    try:
+        raw = _json.loads(p.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        return {"status": "UNREADABLE", "error": str(exc)[:200],
+                "consequence": "treated as absent, NOT as an empty market"}
+    age_h = (time.time() - p.stat().st_mtime) / 3600.0
+    out = {
+        "status": "STALE" if age_h > MARKET_RADAR_STALE_HOURS else "OK",
+        "generated_at": raw.get("generated_at"),
+        "age_hours": round(age_h, 1),
+        "universe_screened": (raw.get("universe") or {}).get("screened"),
+        "stages": raw.get("stages"),
+        "funnel_failures": raw.get("failures") or {},
+        "ranked_by": (raw.get("evidence_basis") or {}).get("ranked_by"),
+        "not_ranked_on": (raw.get("evidence_basis") or {}).get(
+            "recorded_but_not_ranked_on"),
+        "candidates": (raw.get("candidates") or [])[:top],
+    }
+    if out["status"] == "STALE":
+        out["consequence"] = (
+            f"this radar is {age_h:.0f}h old; prices and fundamentals have "
+            f"moved and it must not be traded from")
+    return out
+
+
+def _registry_conflicts(actions: list[dict]) -> list[dict]:
+    """Where this brief is doing something the research lab has graded against.
+
+    This is not decoration. On 2026-08-11 the lab measured analyst-implied
+    upside as a CROSS-SECTIONAL PICKER and found it negative on three
+    independent instruments, most recently -8% to -18%/yr GROSS over 21 years
+    of point-in-time IBES. The registry therefore permits the haircut target
+    only as a RISK_INPUT: it may size a name chosen on other grounds.
+
+    The brief's candidate list does not yet obey that. Candidates are ranked by
+    a certainty equivalent built from implied upside, which IS using it to
+    choose. Rather than redesign the selection layer in the same session that
+    produced the finding -- and ship an untested ranking on Murat's real book --
+    the contradiction is printed at the top of every brief until it is fixed.
+
+    A product that knows it is inconsistent and says so is recoverable. One
+    that quietly keeps ranking on a killed signal is the thing this programme
+    exists to prevent.
+    """
+    from backend.services import signal_registry as SR
+
+    out: list[dict] = []
+    try:
+        reg = SR.load()
+    except Exception as exc:  # noqa: BLE001
+        # An unreadable registry must not produce a CLEAN brief. Returning an
+        # empty conflict list here would make "no known conflicts" and "we
+        # could not check" render identically — the house bug, in the one
+        # function whose whole job is to notice a problem.
+        logger.error("registry unavailable; conflicts NOT checked: %s", exc)
+        return [{
+            "severity": "HIGH",
+            "what": "the signal registry could not be loaded, so NOTHING in "
+                    "this brief was checked against a research verdict",
+            "signal": "(registry)",
+            "grade": "UNKNOWN",
+            "evidence": f"{type(exc).__name__}: {str(exc)[:160]}",
+            "affects": ["every recommendation below"],
+            "consequence": "absence of a warning here is not evidence of "
+                           "absence of a conflict",
+            "fix": "restore backend/data/signal_registry.yaml and re-run",
+        }]
+
+    buys = [a for a in actions
+            if a.get("action") in ("BUY", "ADD") and not a.get("held")]
+    if buys and not reg.permits("analyst_target_upside_xs", "PICKER"):
+        out.append({
+            "severity": "HIGH",
+            "what": ("candidates are ranked by a certainty equivalent built "
+                     "from analyst-implied upside, which is CHOOSING on a "
+                     "signal the registry permits only for SIZING"),
+            "signal": "analyst_target_upside_xs",
+            "grade": reg.get("analyst_target_upside_xs").evidence_grade,
+            "evidence": ("-8% to -18%/yr GROSS over 21 years of point-in-time "
+                         "IBES (ANALYST-IBES-1, 2026-08-11); t -3.6 largemid "
+                         "and -7.2 small on two earlier instruments"),
+            "affects": [a["ticker"] for a in buys],
+            "consequence": ("every BUY in this brief rests on an ordering the "
+                            "lab has measured as negative. Treat them as "
+                            "candidates for your own judgement, not as a "
+                            "ranked recommendation."),
+            "fix": ("select candidates with a registry-permitted PICKER "
+                    "(profitability_small is the one available on free data, "
+                    "and the opportunity funnel already uses it), then use the "
+                    "haircut target only to size what was chosen."),
+        })
+    return out
+
+
 def daily_brief(book: Book | None = None, *, include_watchlist: bool = True,
                 max_candidates: int = 10,
-                record_snapshots: bool = False) -> dict:
+                record_snapshots: bool = False,
+                market_radar_path: Path | None = None) -> dict:
     book = book or load_book()
+    market_radar = _market_radar(market_radar_path)
     mode = book.mode
     problems = validate_book(book)
 
@@ -728,8 +884,12 @@ def daily_brief(book: Book | None = None, *, include_watchlist: bool = True,
                                       "rating_drift_3m", "net_90d",
                                       "binary_event_risk")}}
                           for c in candidates],
-        "opportunity_scope": ("watchlist only — this is a user watchlist view, "
-                              "not a market-wide funnel"),
+        "opportunity_scope": ("watchlist only — this is a user watchlist view. "
+                              "The market-wide funnel is a separate section; "
+                              "see `market_radar`."),
+        "market_radar": market_radar,
+        "evidence_basis": _evidence_basis(),
+        "registry_conflicts": _registry_conflicts(actions),
         "funding_plan": funding,
         "replacements": replacements,
         "threats": threats,

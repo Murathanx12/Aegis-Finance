@@ -104,3 +104,7 @@ htmlcov/
 # Machine-specific MCP wiring (absolute paths)
 .mcp.json
 engine/data/
+
+# Opportunity-funnel runtime cache (symbol list, regenerated on a 7d TTL).
+# The RUN OUTPUT (docs/opportunity_funnel_run.json) is committed; this is not.
+backend/data/funnel_cache/
