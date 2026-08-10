@@ -1,0 +1,109 @@
+# Murat's live book — the reference account for the Optimus Portfolio Manager.
+#
+# READ THIS FIRST. Every position below is UNCONFIRMED. It was reconstructed
+# from the January 2026 research PDF ("my portfolio (2025 +115%)"), which lists
+# tickers, an entry price and a mark, but no share counts and no cash balance.
+# The dollar amounts are a placeholder split of $45,000 across the eleven names
+# still shown as held, and they are almost certainly not what you actually own.
+#
+# Until `confirmed: true` is set, the engine prints every dollar figure with an
+# UNCONFIRMED banner and refuses to write a decision to the journal as executed.
+# Fix `dollars` (or `shares`) and `cost_basis` per line, then flip the flag.
+
+account: murat_live
+confirmed: false
+as_of: 2026-08-10
+currency: USD
+source: "docs/reconstruction from 'stock (1).pdf', research dated 2025-11-07 / 2026-01-13"
+
+cash: 0
+
+# What the account is FOR. These are stretch targets the engine computes
+# probabilities around. They are not expected returns and the engine will never
+# present them as such.
+wealth_targets:
+  horizon_months: 12
+  target_value: 100000      # the stretch goal
+  floor_value: 30000        # the number below which this stops being fun
+  ruin_value: 20000
+
+# growth | high_growth | moonshot — changes SIZING ONLY, never evidence quality.
+sizing_mode: high_growth
+
+positions:
+  - ticker: DKNG
+    dollars: 5000
+    cost_basis: 29.0
+    entry_date: 2025-11-07
+    thesis: "analyst upside + federal prediction-markets optionality; FY25 guide raised"
+    kill_condition: "consensus target falls below entry, or two quarters of negative revisions"
+  - ticker: MSTR
+    dollars: 5000
+    cost_basis: 250.0
+    entry_date: 2025-11-07
+    thesis: "levered bitcoin proxy with a software stub"
+    kill_condition: "bitcoin thesis breaks, or the debt stack forces dilution"
+  - ticker: APLT
+    dollars: 2000
+    cost_basis: 0.80
+    entry_date: 2025-11-07
+    thesis: "binary clinical readout on govorestat; sub-$1 optionality"
+    kill_condition: "trial failure or a going-concern financing"
+  - ticker: FSLR
+    dollars: 4500
+    cost_basis: 280.0
+    entry_date: 2025-11-07
+    thesis: "domestic solar manufacturing, policy-supported backlog"
+    kill_condition: "policy reversal on domestic content credits"
+  - ticker: QUBT
+    dollars: 3000
+    cost_basis: 13.0
+    entry_date: 2025-11-07
+    thesis: "quantum theme, pre-revenue narrative exposure"
+    kill_condition: "narrative rotation; dilution at these levels"
+  - ticker: NTLA
+    dollars: 3500
+    cost_basis: 13.0
+    entry_date: 2025-11-07
+    thesis: "in-vivo CRISPR; ATTR programme restart"
+    kill_condition: "further clinical holds or serious adverse events"
+  - ticker: SOC
+    dollars: 4000
+    cost_basis: 5.0
+    entry_date: 2025-11-07
+    thesis: "5/5 consensus, target well above mark"
+    kill_condition: "consensus breaks below the mark"
+  - ticker: ELF
+    dollars: 4500
+    cost_basis: 78.0
+    entry_date: 2025-11-07
+    thesis: "share gains in mass beauty; the only profitable compounder in the book"
+    kill_condition: "gross-margin compression or a guide-down"
+  - ticker: PRCH
+    dollars: 3000
+    cost_basis: 10.0
+    entry_date: 2025-11-07
+    thesis: "insurance-attach turnaround, high analyst upside"
+    kill_condition: "loss ratios deteriorate again"
+  - ticker: BHVN
+    dollars: 5000
+    cost_basis: 8.0
+    entry_date: 2025-11-07
+    thesis: "post-CRL refocus on late-stage neuro; consensus target ~3x mark"
+    kill_condition: "a second regulatory setback on the core pipeline"
+  - ticker: AARD
+    dollars: 5500
+    cost_basis: 10.0
+    entry_date: 2025-11-07
+    thesis: "5/5 consensus, unanimous outperform"
+    kill_condition: "coverage drops below four analysts or the consensus cracks"
+
+# Sold, kept for the process dataset — these are the decisions to learn from.
+closed:
+  - {ticker: TVTX, entry: 34.0, exit: 34.4, entry_date: 2025-11-07}
+  - {ticker: ALMS, entry: 4.5, exit: 10.0, entry_date: 2025-11-07}
+  - {ticker: SLDP, entry: 8.5, exit: 8.1, entry_date: 2025-11-07}
+
+watchlist: [NVDA, AMD, TSM, ORCL, AVGO, PLTR, DHR, LLY, MU, MP, COHU, OUST,
+            ADBE, MRVL, RGTI, TTWO, CYTK, SRRK, BMRN, OLMA, HUBS, SLNO, ACVA,
+            AMSC, XNCR, RVMD, BEAM, KYMR, TGTX, KYTX, ZYME, CRSP, GLXY, MRNA]

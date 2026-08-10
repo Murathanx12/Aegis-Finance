@@ -21,7 +21,7 @@ from backend.cache import cache_clear, set_cache_status, cache_ready, cache_stat
 from backend.config import config
 from backend.middleware import add_timing_middleware
 from backend.observability import install_log_buffer
-from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence
+from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm
 
 logging.basicConfig(
     level=logging.INFO,
@@ -452,6 +452,7 @@ app.include_router(event_intel.router)
 app.include_router(markets.router)
 app.include_router(crypto.router)
 app.include_router(portfolio_intelligence.router)
+app.include_router(pm.router)
 
 
 @app.get("/")

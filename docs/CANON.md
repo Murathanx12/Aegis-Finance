@@ -254,12 +254,37 @@ So: **a cost comparison between arms is quoted as cost drag per year against
 average NAV, and as bps of traded notional.** Dollar totals may appear beside
 those, never instead of them. Two corollaries the same run produced:
 
-- **Capital rungs are re-simulated, never scaled.** Participation caps and impact
-  are nonlinear in size: at $50m the single clock executed only 47.7× the
-  turnover of the $1m run against 50× the capital, because it could not fill.
+- **Capital rungs are re-simulated, never scaled.** Participation caps are
+  nonlinear in size: at $50m the single clock executed only 47.7× the turnover
+  of the $1m run against 50× the capital, because it could not fill. *(Amended
+  the same night: the original wording said "participation caps **and impact**",
+  and the simulator that produced the number has no impact term at all. See §17
+  — that omission is a second, larger reason a rung cannot be scaled.)*
 - **Counters summed across sleeves are not comparable to a single book's.**
   `days_with_capped_orders` summed over twelve sleeves counts one bad day twelve
   times. Report the fraction of desired notional that failed to execute instead.
+
+### 17. An execution number carries the model that produced it
+Two simulators now exist and they answer different questions. A capacity or cost
+figure that does not name which one produced it is not quotable.
+
+| grade | what it prices | what it cannot see |
+|---|---|---|
+| **G7** | explicit costs, Corwin-Schultz half-spread, participation caps, execution delay, carried unfilled orders | **price impact.** NIGHT-8 measured 31.00 bps per dollar traded at ADV multiples of 1e6, 100, 5 and 1 — identical across a million-fold liquidity range |
+| **G8** | everything G7 prices, plus a metaorder square-root impact term charged on the whole order against ADV | execution urgency/horizon, permanent-vs-temporary decomposition, cross-impact, and the coefficient itself |
+
+Three consequences, all binding:
+
+- **Every capacity number produced before G8 is a delay-only lower bound** and
+  must be labelled as one. That includes NIGHT-5's "$100m → $500m" and NIGHT-7's
+  $50m rung.
+- **A G8 number is quoted with its coefficient and its scenario band**, never as
+  a point estimate, until real execution data replaces the assumption. The
+  published square-root prefactor ranges roughly 0.25–1.0 and we have no TCA of
+  our own.
+- **G7 is not modified to become G8.** `impact_coef = 0.0` skips the arithmetic
+  entirely and reproduces G7 exactly, so historical outputs stay comparable and
+  the receipt records which model ran.
 
 ---
 
