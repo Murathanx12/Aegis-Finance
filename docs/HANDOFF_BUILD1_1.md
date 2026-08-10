@@ -2,8 +2,10 @@
 
 Written 2026-08-10. BUILD-1.1 was a **product-correctness** build, not a
 research night and not a feature night. External review of PM v1 found six
-defects that made its dollar figures untrustworthy; all six are fixed, four more
-were found while fixing them, and the analyst spine that B1 required now exists.
+defects that made its dollar figures untrustworthy. All six are fixed; **eight
+more were found on the way** — four while fixing them and four from the
+project's own silent-fragility audit — and the analyst spine that B1 required
+now exists.
 
 Read `docs/PORTFOLIO_MANAGER_v1_1.md` for the full design rationale. This is the
 operational handoff.
@@ -14,8 +16,8 @@ operational handoff.
 
 | repo | commit | state |
 |---|---|---|
-| aegis-finance | `<BUILD11_COMMIT>` (parent `0c3f170`) | clean |
-| Aegis module | `dccea33` — untouched by this build | clean |
+| aegis-finance | `d54723f` (parent `0c3f170`) | clean |
+| Aegis module | `be0c786` (on `dccea33`) — research untouched by this build | clean |
 
 No lane seeded, no flag flipped, no `paper_nav` written, no keys changed.
 **LLM spend: $0.** NIGHT-9's findings, G8, the N2 corrigendum and the rank-IC
