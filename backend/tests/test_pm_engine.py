@@ -3,6 +3,8 @@
 Nothing here touches the network. The enrichment layer is the part that talks to
 Yahoo; everything below it is arithmetic, and arithmetic is where the decisions
 actually get made, so that is what is pinned.
+
+BUILD-1.1 acceptance tests live in `test_pm_build11.py`.
 """
 import math
 
@@ -15,6 +17,9 @@ def state(price=10.0, median=20.0, low=12.0, high=40.0, n=8, drift=0.1,
           net=2, days=30, binary=False, adv=5e6):
     return {
         "ticker": "TEST", "available": True, "price": price,
+        "market_data_status": "ok", "analyst_data_status": "ok",
+        "distribution_status": "ok" if median else "no_target",
+        "decisionable": bool(median), "missing_reasons": [],
         "target_low": low, "target_median": median, "target_high": high,
         "target_mean": median,
         "implied_upside": (median / price - 1.0) if median else None,
@@ -23,8 +28,10 @@ def state(price=10.0, median=20.0, low=12.0, high=40.0, n=8, drift=0.1,
         "rating_drift_3m": drift, "upgrades_90d": max(net, 0),
         "downgrades_90d": max(-net, 0), "net_90d": net,
         "days_since_last_action": days, "binary_event_risk": binary,
+        "rating_history_present": True, "target_history_present": False,
         "liquidity": {"available": True, "adv_dollar": adv,
-                      "tradeable_at_retail_size": adv > 1e6},
+                      "tradeable_at_retail_size": adv > 1e6,
+                      "assumed_round_trip_cost": 0.004},
     }
 
 
@@ -35,22 +42,29 @@ def test_the_distribution_is_one_lognormal_read_consistently(monkeypatch):
     d = pm_engine.distribution(state())
     assert d["available"]
     assert d["bear"] < d["base"] < d["bull"]
-    # lognormal: the mean sits ABOVE the median
-    assert d["expected_return"] > d["base"]
+    # the MEAN is the anchor and the median sits BELOW it — the reverse of v1,
+    # where the median was the anchor and the mean floated up with sigma
+    assert d["expected_return"] > d["median_return"]
 
 
 def test_the_haircut_actually_bites(monkeypatch):
     monkeypatch.setattr(pm_engine, "_vol", lambda t: 0.60)
-    d = pm_engine.distribution(state(price=10, median=20))
-    # raw implied upside is +100%; the base case must be far below it
-    assert d["base"] == pytest.approx(1.0 * pm_engine.TARGET_HAIRCUT, abs=1e-6)
+    e = state(price=10, median=20)
+    d = pm_engine.distribution(e)
+    rel = e["evidence"]["reliability"]["multiplier"] if "evidence" in e else None
+    # raw implied upside is +100%; the EXPECTED return must be far below it and
+    # must equal haircut x upside x reliability x tilt, exactly
+    er = pm_engine.expected_return(e)
+    assert d["expected_return"] == pytest.approx(er["mu"], abs=1e-4)
+    assert d["expected_return"] < 1.0 * pm_engine.TARGET_HAIRCUT + 1e-9
+    assert rel is None or rel <= 1.0
 
 
 def test_a_binary_name_is_haircut_harder(monkeypatch):
     monkeypatch.setattr(pm_engine, "_vol", lambda t: 0.60)
     plain = pm_engine.distribution(state(binary=False))
     binary = pm_engine.distribution(state(binary=True))
-    assert binary["base"] < plain["base"]
+    assert binary["expected_return"] < plain["expected_return"]
     assert binary["haircut"] < plain["haircut"]
 
 
@@ -142,26 +156,36 @@ def test_a_ticket_below_the_minimum_is_not_a_ticket():
 
 def test_no_data_is_a_review_not_a_sale():
     """The engine must never sell a position it simply cannot see."""
-    r = pm_actions.action_for(0.05, 0.0, 45_000, no_data=True)
+    r = pm_actions.action_for(0.05, 0.0, 45_000, decisionable=False)
     assert r["action"] == "REVIEW" and r["dollars"] == 0
 
 
 def test_a_zero_target_on_a_visible_name_is_a_sale():
-    r = pm_actions.action_for(0.05, 0.0, 45_000)
+    r = pm_actions.action_for(0.05, 0.0, 45_000, decisionable=True)
     assert r["action"] == "SELL" and r["dollars"] == pytest.approx(-2250)
 
 
 def test_replacement_edge_names_who_funds_the_trade():
-    c = {"ticker": "NEW", "alpha": {"score": 0.60}}
-    h = {"ticker": "OLD", "alpha": {"score": 0.10}}
-    e = pm_actions.replacement_edge(c, h)
+    c = {"ticker": "NEW", "alpha": {"score": 0.60},
+         "distribution": {"available": True, "expected_return": 0.40,
+                          "annual_vol": 0.50}}
+    h = {"ticker": "OLD", "alpha": {"score": 0.10},
+         "distribution": {"available": True, "expected_return": 0.05,
+                          "annual_vol": 0.50}}
+    e = pm_actions.replacement_edge(c, h, switch_cost=0.004)
     assert e["verdict"] == "SWITCH" and e["funded_by"] == "OLD"
-    assert e["edge"] == pytest.approx(0.60 - 0.10 - 0.004)
+    # same vol on both sides, so the CE difference is the mu difference
+    assert e["gross_edge"] == pytest.approx(0.35)
+    assert e["replacement_edge"] == pytest.approx(0.35 - 0.004)
 
 
 def test_a_marginal_edge_does_not_justify_a_switch():
-    c = {"ticker": "NEW", "alpha": {"score": 0.12}}
-    h = {"ticker": "OLD", "alpha": {"score": 0.10}}
+    c = {"ticker": "NEW", "alpha": {"score": 0.12},
+         "distribution": {"available": True, "expected_return": 0.11,
+                          "annual_vol": 0.50}}
+    h = {"ticker": "OLD", "alpha": {"score": 0.10},
+         "distribution": {"available": True, "expected_return": 0.10,
+                          "annual_vol": 0.50}}
     assert pm_actions.replacement_edge(c, h)["verdict"] == "STAY"
 
 

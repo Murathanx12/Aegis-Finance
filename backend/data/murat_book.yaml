@@ -6,9 +6,28 @@
 # The dollar amounts are a placeholder split of $45,000 across the eleven names
 # still shown as held, and they are almost certainly not what you actually own.
 #
-# Until `confirmed: true` is set, the engine prints every dollar figure with an
-# UNCONFIRMED banner and refuses to write a decision to the journal as executed.
-# Fix `dollars` (or `shares`) and `cost_basis` per line, then flip the flag.
+# ── HOW TO CONFIRM IT (BUILD-1.1) ──────────────────────────────────────────
+# `shares` is the authoritative state of a confirmed position, because it is the
+# only field that marks to market: shares x live price. `dollars` is a
+# reconstruction placeholder and NOTHING ELSE — a number in this file does not
+# move when the stock does, so a book valued on `dollars` will still say
+# "$45,000" after the account has halved. That was the v1 bug.
+#
+# For each line below:
+#   1. set `shares:` from your broker (the actual share count, not an estimate)
+#   2. set `cost_basis:` — PER SHARE, not total
+#   3. delete `dollars:` (or leave it; it is ignored once shares exist)
+#   4. set `cash:` to the real cash balance
+#   5. only then set `confirmed: true`
+#
+# A confirmed book with a position missing `shares` is REJECTED at load — it
+# cannot produce a dollar figure anyone should act on. Until the flag flips, the
+# brief prints "SIMULATED TICKETS — DO NOT EXECUTE" and the API returns
+# `actionable: false`.
+#
+# If you only know the dollar amount, `pm_engine.shares_from_dollars(dollars,
+# price)` will do the arithmetic and print a warning — but it is an attended
+# helper. The engine never infers a share count on its own.
 
 account: murat_live
 confirmed: false

@@ -1,0 +1,133 @@
+# EXAMPLE ONLY — invented share counts, used to demonstrate the
+# confirmed path end to end. This is NOT Murat's book and must never
+# be copied over backend/data/murat_book.yaml.
+#   python scripts/morning_brief.py --book docs/BUILD1/example_confirmed_book.yaml
+
+account: EXAMPLE_ONLY_not_a_real_book
+confirmed: true
+as_of: 2026-08-10
+currency: USD
+source: docs/reconstruction from 'stock (1).pdf', research dated 2025-11-07 / 2026-01-13
+cash: 2500
+wealth_targets:
+  horizon_months: 12
+  target_value: 100000
+  floor_value: 30000
+  ruin_value: 20000
+sizing_mode: high_growth
+positions:
+- ticker: DKNG
+  cost_basis: 29.0
+  entry_date: 2025-11-07
+  thesis: analyst upside + federal prediction-markets optionality; FY25 guide raised
+  kill_condition: consensus target falls below entry, or two quarters of negative
+    revisions
+  shares: 201.0
+- ticker: MSTR
+  cost_basis: 250.0
+  entry_date: 2025-11-07
+  thesis: levered bitcoin proxy with a software stub
+  kill_condition: bitcoin thesis breaks, or the debt stack forces dilution
+  shares: 51.0
+- ticker: APLT
+  cost_basis: 0.8
+  entry_date: 2025-11-07
+  thesis: binary clinical readout on govorestat; sub-$1 optionality
+  kill_condition: trial failure or a going-concern financing
+  shares: 3636.0
+- ticker: FSLR
+  cost_basis: 280.0
+  entry_date: 2025-11-07
+  thesis: domestic solar manufacturing, policy-supported backlog
+  kill_condition: policy reversal on domestic content credits
+  shares: 19.0
+- ticker: QUBT
+  cost_basis: 13.0
+  entry_date: 2025-11-07
+  thesis: quantum theme, pre-revenue narrative exposure
+  kill_condition: narrative rotation; dilution at these levels
+  shares: 332.0
+- ticker: NTLA
+  cost_basis: 13.0
+  entry_date: 2025-11-07
+  thesis: in-vivo CRISPR; ATTR programme restart
+  kill_condition: further clinical holds or serious adverse events
+  shares: 287.0
+- ticker: SOC
+  cost_basis: 5.0
+  entry_date: 2025-11-07
+  thesis: 5/5 consensus, target well above mark
+  kill_condition: consensus breaks below the mark
+  shares: 798.0
+- ticker: ELF
+  cost_basis: 78.0
+  entry_date: 2025-11-07
+  thesis: share gains in mass beauty; the only profitable compounder in the book
+  kill_condition: gross-margin compression or a guide-down
+  shares: 47.0
+- ticker: PRCH
+  cost_basis: 10.0
+  entry_date: 2025-11-07
+  thesis: insurance-attach turnaround, high analyst upside
+  kill_condition: loss ratios deteriorate again
+  shares: 195.0
+- ticker: BHVN
+  cost_basis: 8.0
+  entry_date: 2025-11-07
+  thesis: post-CRL refocus on late-stage neuro; consensus target ~3x mark
+  kill_condition: a second regulatory setback on the core pipeline
+  shares: 338.0
+- ticker: AARD
+  cost_basis: 10.0
+  entry_date: 2025-11-07
+  thesis: 5/5 consensus, unanimous outperform
+  kill_condition: coverage drops below four analysts or the consensus cracks
+  shares: 733.0
+closed:
+- ticker: TVTX
+  entry: 34.0
+  exit: 34.4
+  entry_date: 2025-11-07
+- ticker: ALMS
+  entry: 4.5
+  exit: 10.0
+  entry_date: 2025-11-07
+- ticker: SLDP
+  entry: 8.5
+  exit: 8.1
+  entry_date: 2025-11-07
+watchlist:
+- NVDA
+- AMD
+- TSM
+- ORCL
+- AVGO
+- PLTR
+- DHR
+- LLY
+- MU
+- MP
+- COHU
+- OUST
+- ADBE
+- MRVL
+- RGTI
+- TTWO
+- CYTK
+- SRRK
+- BMRN
+- OLMA
+- HUBS
+- SLNO
+- ACVA
+- AMSC
+- XNCR
+- RVMD
+- BEAM
+- KYMR
+- TGTX
+- KYTX
+- ZYME
+- CRSP
+- GLXY
+- MRNA

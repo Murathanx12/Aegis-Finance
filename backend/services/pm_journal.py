@@ -33,10 +33,20 @@ FREEZE = ("price", "target_median", "target_low", "target_high", "n_analysts",
 
 def _row(brief: dict, r: dict, rec: dict, note: str) -> dict:
     st = r.get("state") or {}
+    ev = st.get("evidence") or {}
     return {
         "recorded_at": datetime.now().isoformat(timespec="seconds"),
         "account": brief.get("account"),
         "positions_confirmed": brief.get("positions_confirmed"),
+        # An entry is a RECOMMENDATION. Nothing in this codebase executes, and
+        # an unconfirmed book cannot even be read as an executable ticket.
+        "actionable": bool(brief.get("actionable")),
+        "executed": False,
+        "valuation_basis": (brief.get("valuation") or {}).get("basis"),
+        "decisionable": st.get("decisionable"),
+        "missing_reasons": st.get("missing_reasons"),
+        "evidence_completeness": (ev.get("completeness") or {}).get("known_fraction"),
+        "reliability_multiplier": (ev.get("reliability") or {}).get("multiplier"),
         "sizing_mode": brief.get("sizing_mode"),
         "ticker": r["ticker"],
         "action": rec["action"],
@@ -72,9 +82,11 @@ def record_brief(brief: dict, *, note: str = "") -> dict:
             written.append(row)
     return {"written": len(written), "path": str(JOURNAL),
             "entries": written,
-            "caveat": None if brief.get("positions_confirmed") else
-            "book unconfirmed — these are recorded as REASONING, not as "
-            "executed trades"}
+            "actionable": bool(brief.get("actionable")),
+            "caveat": None if brief.get("actionable") else
+            "book is not actionable (" +
+            "; ".join(brief.get("actionable_blockers") or ["unconfirmed"]) +
+            ") — these are recorded as REASONING, never as executable tickets"}
 
 
 def tail(limit: int = 50) -> list[dict]:

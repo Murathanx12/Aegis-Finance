@@ -1,0 +1,133 @@
+==============================================================================
+OPTIMUS MORNING BRIEF   2026-08-10T23:23:09   account=EXAMPLE_ONLY_not_a_real_book   mode=high_growth
+==============================================================================
+PORTFOLIO $48,382   invested $45,882   cash $2,500
+          valued on: MIXED — some positions could not be marked to market  [degraded]
+
+12-MONTH VIEW (BASE)   median $51,531   p25 $41,851   p75 $64,420
+                     P(reach target) 3.0%    P(below floor) 3.6%    P(below ruin) 0.1%
+                     expected max drawdown -23.2%   P(worse than -50%) 1.1%
+                     required return for the target +106.7%
+
+MODEL SENSITIVITY — the same book, three sets of assumptions
+  scenario       haircut   corr  vol x     median  P(target)  P(<floor)  P(<ruin)  E[maxDD]
+  conservative      0.20   0.55   1.15    $46,773       4.6%      13.2%      1.3%   -32.0%
+  base              0.35   0.35   1.00    $51,531       3.0%       3.6%      0.1%   -23.2%
+  optimistic        0.50   0.25   1.00    $54,786       3.0%       1.4%      0.0%   -19.3%
+  => scenario-model range for P(reach target): 3.0% to 4.6%, base 3.0%. The spread is MODEL uncertainty, not Monte Carlo error.
+
+------------------------------------------------------------------------------
+HOLDINGS   SHARES    PRICE     VALUE      P&L    WGT    TGT   UPSIDE  ACTION
+------------------------------------------------------------------------------
+AARD         733    $7.50    $5,494   -25.1%  11.4%   0.0%   -13.3%  SELL  $-5,496
+MSTR          51   $98.37    $5,017   -60.7%  10.4%  10.9%   +96.2%  HOLD  
+BHVN         338   $14.81    $5,006   +85.1%  10.3%   2.3%   +35.0%  TRIM  $-3,890
+DKNG         201   $24.86    $4,997   -14.3%  10.3%   8.3%   +32.7%  TRIM  $-968
+FSLR          19  $236.48    $4,493   -15.5%   9.3%   4.6%   +13.8%  TRIM  $-2,284
+ELF           47   $94.96    $4,463   +21.7%   9.2%   2.3%    +5.3%  TRIM  $-3,363
+SOC          798    $5.01    $3,998    +0.2%   8.3%   4.8%  +179.4%  TRIM  $-1,660
+NTLA         287   $12.20    $3,501    -6.2%   7.2%   3.0%   +39.3%  TRIM  $-2,042
+PRCH         195   $15.41    $3,005   +54.1%   6.2%   4.1%   +29.8%  TRIM  $-1,031
+QUBT         332    $9.04    $3,000   -30.5%   6.2%   6.6%   +99.2%  HOLD  
+APLT       3,636      n/a    $2,909      n/a   6.0%   6.0%      n/a  REVIEW
+  ! no live quote: APLT — 6.0% of NAV is unpriced (tolerance 10%)
+
+TODAY'S TICKETS
+  TRIM        $968  DKNG   10.3% -> 8.3%
+        kill condition: consensus target falls below entry, or two quarters of negative revisions
+  REVIEW        $0  APLT   6.0% -> 6.0%
+        no usable market or analyst data — decide by hand. The engine does not sell what it cannot see.
+        kill condition: trial failure or a going-concern financing
+  TRIM      $2,284  FSLR   9.3% -> 4.6%
+        kill condition: policy reversal on domestic content credits
+  TRIM      $2,042  NTLA   7.2% -> 3.0%
+        kill condition: further clinical holds or serious adverse events
+  TRIM      $1,660  SOC    8.3% -> 4.8%
+        kill condition: consensus breaks below the mark
+  TRIM      $3,363  ELF    9.2% -> 2.3%
+        kill condition: gross-margin compression or a guide-down
+  TRIM      $1,031  PRCH   6.2% -> 4.1%
+        kill condition: loss ratios deteriorate again
+  TRIM      $3,890  BHVN   10.3% -> 2.3%
+        kill condition: a second regulatory setback on the core pipeline
+  SELL      $5,496  AARD   11.4% -> 0.0%
+        sized to zero on the evidence, not on its absence
+        kill condition: coverage drops below four analysts or the consensus cracks
+  BUY       $7,257  TGTX   0.0% -> 15.0%
+  BUY       $7,257  NVDA   0.0% -> 15.0%
+  BUY       $7,257  BMRN   0.0% -> 15.0%
+
+REVIEW — held, and the engine cannot see it. NOT a sell signal.
+  APLT   analyst layer returned nothing; no usable current price
+
+CASH   before $2,500  raised by sales $20,734  buys $21,771  after $1,463
+
+UPCOMING CATALYSTS
+  0-7d    2026-08-10  QUBT   earnings   EPS and revenue vs consensus
+  0-7d    2026-08-10  SOC    earnings   EPS and revenue vs consensus
+  0-7d    2026-08-10  BHVN   earnings   EPS and revenue vs consensus
+  0-7d    2026-08-11  AARD   earnings   EPS and revenue vs consensus
+  8-30d   2026-08-19  AARD   earnings   EPS and revenue vs consensus
+  31-90d  2026-10-28  MSTR   earnings   EPS and revenue vs consensus
+  31-90d  2026-10-28  FSLR   earnings   EPS and revenue vs consensus
+  31-90d  2026-11-03  ELF    earnings   EPS and revenue vs consensus
+  31-90d  2026-11-03  PRCH   earnings   EPS and revenue vs consensus
+  31-90d  2026-11-04  DKNG   earnings   EPS and revenue vs consensus
+  coverage: v0 — earnings only — NOT covered: FDA/PDUFA action dates, clinical readout windows, secondary offerings and shelf takedowns, 13D/13G filings, lockup expiries
+  an empty calendar means no EARNINGS date was found in the window. It is NOT evidence that nothing is scheduled: PDUFA dates, readouts, offerings and lockups have no entitled source here and must be entered by hand.
+
+THREATS
+  MSTR   down -61% against cost — is the thesis or the kill condition the thing that changed?
+  APLT   NOT DECISIONABLE — analyst layer returned nothing; no usable current price
+  NTLA   street getting LESS positive (3m rating drift -0.0664)
+  PRCH   street getting LESS positive (3m rating drift -0.2679)
+  PRCH   net downgrades in 90d: -1
+  BHVN   street getting LESS positive (3m rating drift -0.065)
+  BHVN   net downgrades in 90d: -1
+  BHVN   single-event risk: pre-revenue clinical/regulatory name
+  AARD   net downgrades in 90d: -2
+  AARD   single-event risk: pre-revenue clinical/regulatory name
+  AARD   trading ABOVE the consensus target
+  AARD   thin: median ADV $964,860
+
+OPPORTUNITY RADAR — watchlist only — this is a user watchlist view, not a market-wide funnel
+  TGTX   IN TARGET  CE +0.059  E[R] +16.1%  upside +54.4%    6 analysts
+  NVDA   IN TARGET  CE +0.049  E[R] +11.6%  upside +36.8%   58 analysts
+  BMRN   IN TARGET  CE +0.043  E[R] +10.2%  upside +30.9%   25 analysts
+
+REPLACEMENTS — decomposition of the one solved target portfolio
+  OK     TGTX funded by AARD  $5,496
+        edge +0.859 = gross +0.867 - switch cost 0.0080 (expected-return units, CE lambda=1)
+  OK     TGTX funded by BHVN  $1,761
+        edge +0.421 = gross +0.425 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     NVDA funded by BHVN  $2,129
+        edge +0.411 = gross +0.415 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     NVDA funded by ELF  $3,363
+        edge +0.254 = gross +0.258 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     BMRN funded by FSLR  $2,284
+        edge +0.144 = gross +0.148 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     BMRN funded by NTLA  $2,042
+        edge +0.447 = gross +0.451 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     BMRN funded by SOC  $1,660
+        edge +0.868 = gross +0.872 - switch cost 0.0040 (expected-return units, CE lambda=1)
+  OK     BMRN funded by PRCH  $536
+        edge +0.236 = gross +0.240 - switch cost 0.0040 (expected-return units, CE lambda=1)
+
+==============================================================================
+MODEL STATUS — how much of the above to believe today
+==============================================================================
+  book confirmed          True
+  valuation               MIXED — some positions could not be marked to market [degraded], NAV complete: False
+  positions               11 (10 decisionable, 1 in REVIEW)
+  evidence completeness   78% of the fields we would want
+  reliability discount    0.75 (UNCALIBRATED heuristic)
+  analyst sources         yahoo (yfinance)
+  target revisions        MISSING — needs two snapshots of the same ticker spanning the window
+  analyst PIT ledger      43 rows, 1 distinct day(s)
+  catalyst coverage       v0 — EARNINGS ONLY (14 scheduled across 11 names). NOT covered: FDA/PDUFA action dates, clinical readout windows, second
+  return model            OBSERVATIONAL, unvalidated — TARGET_HAIRCUT is fitted to nothing
+  scenario sensitivity    P(target) 3.0% .. 4.6% (base 3.0%)
+  last refresh            2026-08-10T23:23:09
+
+Everything analyst-derived here is OBSERVATIONAL and has not been validated by the Aegis research lab. That label is deliberate: the lab's job is to say how much to trust it, and until it has, this is a disciplined version of a process that has been run by hand — not a demonstrated edge.
+scenario-model probability under stated assumptions, not a forecast. The spread between the conservative and optimistic arms is MODEL uncertainty about the haircut and the correlation; the Monte Carlo error inside any one arm is far smaller and far less important.

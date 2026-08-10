@@ -1,0 +1,438 @@
+{
+  "ticker": "DKNG",
+  "probed_at": "2026-08-10T23:08:13",
+  "keys_present": {
+    "finnhub": true,
+    "fmp": true,
+    "polygon": true,
+    "alpha_vantage": true,
+    "eodhd": true
+  },
+  "results": [
+    {
+      "vendor": "finnhub",
+      "endpoint": "price-target",
+      "wants": "current consensus target (low/high/median/mean) + lastUpdated",
+      "key_present": true,
+      "status": 403,
+      "ok": false,
+      "rows": 1,
+      "fields": [
+        "error"
+      ],
+      "has": {
+        "analyst_identity": false,
+        "firm_identity": false,
+        "target_value": false,
+        "target_timestamp": false,
+        "rating_action": false,
+        "history": false
+      },
+      "sample": "{\"error\": \"You don't have access to this resource.\"}",
+      "error": "{\"error\": \"You don't have access to this resource.\"}"
+    },
+    {
+      "vendor": "finnhub",
+      "endpoint": "recommendation-trend",
+      "wants": "monthly buy/hold/sell counts \u2014 a real rating HISTORY",
+      "key_present": true,
+      "status": 200,
+      "ok": true,
+      "rows": 4,
+      "fields": [
+        "buy",
+        "hold",
+        "period",
+        "sell",
+        "strongbuy",
+        "strongsell",
+        "symbol"
+      ],
+      "has": {
+        "analyst_identity": false,
+        "firm_identity": false,
+        "target_value": false,
+        "target_timestamp": true,
+        "rating_action": true,
+        "history": true
+      },
+      "sample": "{\"symbol\": \"DKNG\", \"period\": \"2026-08-01\", \"strongBuy\": 10, \"buy\": 25, \"hold\": 9, \"sell\": 1, \"strongSell\": 0}",
+      "error": null
+    },
+    {
+      "vendor": "finnhub",
+      "endpoint": "upgrade-downgrade",
+      "wants": "firm-attributed rating actions with dates",
+      "key_present": true,
+      "status": 403,
+      "ok": false,
+      "rows": 1,
+      "fields": [
+        "error"
+      ],
+      "has": {
+        "analyst_identity": false,
+        "firm_identity": false,
+        "target_value": false,
+        "target_timestamp": false,
+        "rating_action": false,
+        "history": false
+      },
+      "sample": "{\"error\": \"You don't have access to this resource.\"}",
+      "error": "{\"error\": \"You don't have access to this resource.\"}"
+    },
+    {
+      "vendor": "finnhub",
+      "endpoint": "earnings-calendar",
+      "wants": "next earnings date \u2014 the catalyst layer (B5)",
+      "key_present": true,
+      "status": 200,
+      "ok": true,
+      "rows": 1,
+      "fields": [
+        "date",
+        "earningscalendar",
+        "epsactual",
+        "epsestimate",
+        "hour",
+        "quarter",
+        "revenueactual",
+        "revenueestimate",
+        "symbol",
+        "year"
+      ],
+      "has": {
+        "analyst_identity": false,
+        "firm_identity": false,
+        "target_value": false,
+        "target_timestamp": true,
+        "rating_action": false,
+        "history": false
+      },
+      "sample": "{\"earningsCalendar\": [{\"symbol\": \"DKNG\", \"date\": \"2026-08-06\", \"hour\": \"amc\", \"quarter\": 2, \"year\": 2026, \"epsEstimate\": 0.0171, \"epsActual\": -0.14, \"revenueEstimate\": 1542885619, \"revenueActual\": 1443235000}]}",
+      "error": null
+    },
+    {
+      "vendor": "finnhub",
+      "endpoint": "earnings-surprises",
+      "wants": "estimate vs actual history per quarter",
+      "key_present": true,
+      "status": 200,
+      "ok": true,
+      "rows": 4,
+      "fields": [
+        "actual",
+        "estimate",
+        "period",
+        "quarter",
+        "surprise",
+        "surprisepercent",
+        "symbol",
+        "year"
+      ],
+      "has": {
+        "analyst_identity": false,
+        "firm_identity": false,
+        "target_value": false,
+        "target_timestamp": true,
+        "rating_action": false,
+        "history": true
+      },
+      "sample": "{\"symbol\": \"DKNG\", \"estimate\": 0.0171, \"actual\": -0.14, \"period\": \"2026-06-30\", \"surprise\": -0.1571, \"surprisePercent\": -918.7135, \"year\": 2026, \"quarter\": 2}",
+      "error": null
+    },
+    {
+      "vendor": "fmp",
+      "endpoint": "stable/price-target-consensus",
+      "wants": "current consensus target on the CURRENT api",
+      "key_present": true,
+      "status": 402,
+      "ok": false,
+      "rows": null,
+      "fields": [],
+      "has": {},
+      "sample": null,
+      "error": "non-JSON body: Premium Query Parameter: 'Special Endpoint : This value set for 'symbol' is not available under your current subscriptio"
+    },
+    {
+      "vendor": "fmp",
+      "endpoint": "stable/price-target-news",
+      "wants": "per-analyst target CHANGES with dates \u2014 the ideal spine",
+      "key_present": true,
+      "status": 402,
+      "ok": false,
+      "rows": null,
+      "fields": [],
+      "has": {},
+      "sample": null,
+      "error": "non-JSON body: Restricted Endpoint: This endpoint is not available under your current subscription please visit our subscription page t"
+    },
+    {
+      "vendor": "fmp",
+      "endpoint": "stable/grades-historical",
+      "wants": "rating history",
+      "key_present": true,
+      "status": 402,
+      "ok": false,
+      "rows": null,
+      "fields": [],
+      "has": {},
+      "sample": null,
+      "error": "non-JSON body: Premium Query Parameter: 'Special Endpoint : This value set for 'symbol' is not available under your current subscriptio"
+    },
+    {
+      "vendor": "fmp",
+      "endpoint": "price-target (v4)",
+      "wants": "PER-ANALYST targets with publishedDate, analystName, analystCompany \u2014 this is the spine if the free tier serves it",
+      "key_present": true,
+      "status": 403,
+      "ok": false,
+      "rows": 1,
+      "fields": [
+        "error message"
+      ],
+      "has": {
+        "analyst_identity": false,
+        "firm_identity": false,
+        "target_value": false,
+        "target_timestamp": false,
+        "rating_action": false,
+        "history": false
+      },
+      "sample": "{\"Error Message\": \"Legacy Endpoint : Due to Legacy endpoints being no longer supported - This endpoint is only available for legacy users who have valid subscriptions prior August 31, 2025. Please visit our documentation page https://site.financialmodelingprep.com/developer/docs for our current APIs. \"}",
+      "error": "{\"Error Message\": \"Legacy Endpoint : Due to Legacy endpoints being no longer supported - This endpoint is only available for legacy users who have valid subscriptions prior August 31, 2025. Please vis"
+    },
+    {
+      "vendor": "fmp",
+      "endpoint": "price-target-consensus",
+      "wants": "consensus target high/low/median",
+      "key_present": true,
+      "status": 403,
+      "ok": false,
+      "rows": 1,
+      "fields": [
+        "error message"
+      ],
+      "has": {
+        "analyst_identity": false,
+        "firm_identity": false,
+        "target_value": false,
+        "target_timestamp": false,
+        "rating_action": false,
+        "history": false
+      },
+      "sample": "{\"Error Message\": \"Legacy Endpoint : Due to Legacy endpoints being no longer supported - This endpoint is only available for legacy users who have valid subscriptions prior August 31, 2025. Please visit our documentation page https://site.financialmodelingprep.com/developer/docs for our current APIs. \"}",
+      "error": "{\"Error Message\": \"Legacy Endpoint : Due to Legacy endpoints being no longer supported - This endpoint is only available for legacy users who have valid subscriptions prior August 31, 2025. Please vis"
+    },
+    {
+      "vendor": "fmp",
+      "endpoint": "upgrades-downgrades",
+      "wants": "rating actions with newGrade/previousGrade and a date",
+      "key_present": true,
+      "status": 403,
+      "ok": false,
+      "rows": 1,
+      "fields": [
+        "error message"
+      ],
+      "has": {
+        "analyst_identity": false,
+        "firm_identity": false,
+        "target_value": false,
+        "target_timestamp": false,
+        "rating_action": false,
+        "history": false
+      },
+      "sample": "{\"Error Message\": \"Legacy Endpoint : Due to Legacy endpoints being no longer supported - This endpoint is only available for legacy users who have valid subscriptions prior August 31, 2025. Please visit our documentation page https://site.financialmodelingprep.com/developer/docs for our current APIs. \"}",
+      "error": "{\"Error Message\": \"Legacy Endpoint : Due to Legacy endpoints being no longer supported - This endpoint is only available for legacy users who have valid subscriptions prior August 31, 2025. Please vis"
+    },
+    {
+      "vendor": "fmp",
+      "endpoint": "analyst-estimates",
+      "wants": "EPS/revenue estimate history \u2014 revision measurement",
+      "key_present": true,
+      "status": 403,
+      "ok": false,
+      "rows": 1,
+      "fields": [
+        "error message"
+      ],
+      "has": {
+        "analyst_identity": false,
+        "firm_identity": false,
+        "target_value": false,
+        "target_timestamp": false,
+        "rating_action": false,
+        "history": false
+      },
+      "sample": "{\"Error Message\": \"Legacy Endpoint : Due to Legacy endpoints being no longer supported - This endpoint is only available for legacy users who have valid subscriptions prior August 31, 2025. Please visit our documentation page https://site.financialmodelingprep.com/developer/docs for our current APIs. \"}",
+      "error": "{\"Error Message\": \"Legacy Endpoint : Due to Legacy endpoints being no longer supported - This endpoint is only available for legacy users who have valid subscriptions prior August 31, 2025. Please vis"
+    },
+    {
+      "vendor": "alpha_vantage",
+      "endpoint": "OVERVIEW",
+      "wants": "AnalystTargetPrice + AnalystRatingStrongBuy..Sell counts",
+      "key_present": true,
+      "status": 200,
+      "ok": true,
+      "rows": 1,
+      "fields": [
+        "200daymovingaverage",
+        "50daymovingaverage",
+        "52weekhigh",
+        "52weeklow",
+        "address",
+        "analystratingbuy",
+        "analystratinghold",
+        "analystratingsell",
+        "analystratingstrongbuy",
+        "analystratingstrongsell",
+        "analysttargetprice",
+        "assettype",
+        "beta",
+        "bookvalue",
+        "cik",
+        "country",
+        "currency",
+        "description",
+        "dilutedepsttm",
+        "dividenddate",
+        "dividendpershare",
+        "dividendyield",
+        "ebitda",
+        "eps",
+        "evtoebitda",
+        "evtorevenue",
+        "exchange",
+        "exdividenddate",
+        "fiscalyearend",
+        "forwardpe",
+        "grossprofitttm",
+        "industry",
+        "latestquarter",
+        "marketcapitalization",
+        "name",
+        "officialsite",
+        "operatingmarginttm",
+        "pegratio",
+        "peratio",
+        "percentinsiders"
+      ],
+      "has": {
+        "analyst_identity": true,
+        "firm_identity": false,
+        "target_value": true,
+        "target_timestamp": true,
+        "rating_action": true,
+        "history": false
+      },
+      "sample": "{\"Symbol\": \"DKNG\", \"AssetType\": \"Common Stock\", \"Name\": \"DraftKings Inc\", \"Description\": \"DraftKings Inc. is a digital sports entertainment and games company in the United States. The company is headquartered in Boston, Massachusetts.\", \"CIK\": \"1883685\", \"Exchange\": \"NASDAQ\", \"Currency\": \"USD\", \"Country\": \"USA\", \"Sector\": \"CONSUMER CYCLICAL\", \"Industry\": \"GAMBLING\", \"Address\": \"222 BERKELEY STREET",
+      "error": null
+    },
+    {
+      "vendor": "eodhd",
+      "endpoint": "fundamentals (AnalystRatings)",
+      "wants": "TargetPrice + rating counts",
+      "key_present": true,
+      "status": 403,
+      "ok": false,
+      "rows": null,
+      "fields": [],
+      "has": {},
+      "sample": null,
+      "error": "non-JSON body: Forbidden. Please contact support@eodhistoricaldata.com"
+    },
+    {
+      "vendor": "eodhd",
+      "endpoint": "fundamentals (Earnings::Trend)",
+      "wants": "estimate REVISION history (up/down last 7/30 days)",
+      "key_present": true,
+      "status": 403,
+      "ok": false,
+      "rows": null,
+      "fields": [],
+      "has": {},
+      "sample": null,
+      "error": "non-JSON body: Forbidden. Please contact support@eodhistoricaldata.com"
+    },
+    {
+      "vendor": "polygon",
+      "endpoint": "last quote (NBBO)",
+      "wants": "a REAL bid/ask \u2014 the retail execution question (P4)",
+      "key_present": true,
+      "status": 403,
+      "ok": false,
+      "rows": 1,
+      "fields": [
+        "message",
+        "request_id",
+        "status"
+      ],
+      "has": {
+        "analyst_identity": false,
+        "firm_identity": false,
+        "target_value": false,
+        "target_timestamp": false,
+        "rating_action": false,
+        "history": false
+      },
+      "sample": "{\"status\": \"NOT_AUTHORIZED\", \"request_id\": \"fe0f6c08d7b7d313ea852dfd6e4bb307\", \"message\": \"You are not entitled to this data. Please upgrade your plan at https://massive.com/pricing\"}",
+      "error": null
+    },
+    {
+      "vendor": "polygon",
+      "endpoint": "ticker overview",
+      "wants": "listing status / share class \u2014 universe eligibility",
+      "key_present": true,
+      "status": 200,
+      "ok": true,
+      "rows": 1,
+      "fields": [
+        "active",
+        "address",
+        "address1",
+        "branding",
+        "cik",
+        "city",
+        "composite_figi",
+        "currency_name",
+        "description",
+        "homepage_url",
+        "icon_url",
+        "list_date",
+        "locale",
+        "logo_url",
+        "market",
+        "market_cap",
+        "name",
+        "phone_number",
+        "postal_code",
+        "primary_exchange",
+        "request_id",
+        "results",
+        "round_lot",
+        "share_class_figi",
+        "share_class_shares_outstanding",
+        "sic_code",
+        "sic_description",
+        "state",
+        "status",
+        "ticker",
+        "ticker_root",
+        "total_employees",
+        "type",
+        "weighted_shares_outstanding"
+      ],
+      "has": {
+        "analyst_identity": false,
+        "firm_identity": false,
+        "target_value": false,
+        "target_timestamp": true,
+        "rating_action": false,
+        "history": false
+      },
+      "sample": "{\"request_id\": \"3466e23fe47edcc760583e65203d2938\", \"results\": {\"ticker\": \"DKNG\", \"name\": \"DraftKings Inc. Class A Common Stock\", \"market\": \"stocks\", \"locale\": \"us\", \"primary_exchange\": \"XNAS\", \"type\": \"CS\", \"active\": true, \"currency_name\": \"usd\", \"cik\": \"0001883685\", \"composite_figi\": \"BBG0134WCM78\", \"share_class_figi\": \"BBG0134WCMB3\", \"market_cap\": 11921975472.51, \"phone_number\": \"(617) 986-6744\"",
+      "error": null
+    }
+  ]
+}
