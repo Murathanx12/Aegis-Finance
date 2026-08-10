@@ -131,6 +131,63 @@ injects the ledger into every cycle). Projects whose pitch is
 price/crash/return prediction are rejected-by-category without testing —
 that class is refuted (F-001/F-002/F-006/F-009, LPPLS ×2).
 
+### 12. Protected characteristics are never features
+Inferred ethnicity, race, religion, national origin, gender or any other
+protected characteristic — of a CEO, a board, a workforce or a company — is
+**excluded as a feature, permanently and without exception**. This is not a
+tuning choice and does not get revisited when a backtest looks interesting.
+
+The mechanisms people reach for it to proxy are real, and every one of them
+is directly observable and already legal to use: board connections (BoardEx),
+prior employment and appointments, lobbying spend, campaign contributions,
+government contracts, disclosed ownership, geographic revenue, supplier and
+customer relationships. Those are the features. An inferred demographic is a
+worse proxy for each of them than the thing itself, so the rule costs nothing
+even before the ethics.
+
+### 13. Masking the name is not masking the date
+Entity anonymisation hides *which company* a text is about; it does **not**
+hide *when*. Outcome memory keyed on the date survives it (Lookahead
+Propensity, arXiv:2512.23847; FinCAD, arXiv:2605.24564 — suppressing it cuts
+in-sample backtest returns by up to −67.1% on memorised dates). NIGHT-1's
+0/240 identification result measured entity masking only.
+
+Therefore: **masked historical replay is a reasoning laboratory, not an
+alpha-certification laboratory.** Any masked-replay result claiming an edge
+must additionally either date-shift/synthesise the timeline, or report an
+in-sample-vs-post-cutoff contrast. Enforced in code:
+`aegis_brain.firewall.ExtractionRequest.alpha_certifiable` is False unless
+date or era leakage was controlled.
+
+### 14. P&L never writes beliefs; the LLM never learns from outcomes
+An LLM that reads a result and writes a prose "lesson" into memory has not
+learned — no weights moved. It has fitted an unregularised prior to the test
+set and expressed it in fluent English, which makes it unfalsifiable and more
+persuasive the more overfitted it is. The licensed architecture is the one-way
+firewall (`aegis_brain/firewall/`): LLM extracts numbers from anonymised text
+and never sees outcomes → a small regularised model learns under purged CV →
+the LLM adjudicates read-only, scored on Brier, never on P&L.
+
+Memory updates by class: **procedural** (leakage patterns, bad controls, bugs)
+updates freely from history; **mechanism** updates with retrospective tags and
+shrinkage; **calibration** updates only from scored extractions; **return
+beliefs** update only from forward evidence. No self-improving memory loop runs
+until Layer 1 has a measured calibration curve.
+
+### 15. Turnover-sensitive claims route through the daily simulator
+The monthly panel understates the cost of frequent trading by ≈2.4 percentage
+points per year at a ~0.8 one-way-turnover increment — measured twice
+independently (NIGHT-6 clock compare; NIGHT-7 trailing stop, where the panel
+ranked the arm *first* and daily execution put it 3.08%/yr *behind*, having
+paid 74% of starting capital in extra costs over 23 years).
+
+So: any candidate whose one-way annual turnover differs from its baseline by
+more than 0.10 may **not** have its net number quoted until G7 has measured it.
+A turnover-increasing arm's monthly-panel net is an **upper bound**; a
+turnover-decreasing arm's is a **lower bound**. Corollary: every high-turnover
+corpse in the graveyard was judged on a panel that flattered it, so those are
+*more* dead, not candidates for resurrection.
+
 ---
 
 ## Closed rabbit holes — do not re-run
@@ -147,3 +204,8 @@ that class is refuted (F-001/F-002/F-006/F-009, LPPLS ×2).
 | Fitting fragility-composite weights to past crashes | Hindsight overfitting; equal-weight stays | BACKLOG V1 |
 | Finnhub-free + edgartools for Form 4 | Missing fields / 50-min hangs | BACKLOG T9 |
 | N_eff loosening the adoption gate | Raw trial count stays the strictness floor | postmortem 2026-06-14-t2 |
+| LLM picking stocks directly | REJECT: t 0.04 / 0.93, 204 months, 16,320 graded decisions | NIGHT-3 verdict |
+| Trailing stops on the small-cap book | −3.08%/yr under measured daily execution; +$743,599 of cost per $1m over 23yr | NIGHT-7 T2b |
+| "Big funds hold it so it can't fail" | Index ownership is mechanical cap-weight tracking — zero information, no backstop | NIGHT-7 brief §2.4 |
+| ">1% of the S&P means it has peaked" | Cap weight is an output of value, not a ceiling on returns | NIGHT-7 brief §2.4 |
+| Rebalancing premium as a source of edge | Maeso-Martellini's >100bps is vs **buy-and-hold**, not vs a rebalanced benchmark — withdrawn | NIGHT-7 T1 item 18 |
