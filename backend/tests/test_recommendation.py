@@ -22,10 +22,10 @@ from backend.services import signal_registry as registry_mod
 
 
 def _cand(ticker, *, quality=None, mcap=1_000_000_000.0, upside=None,
-          mom=None, vol=0.30, price=50.0, sector="Test"):
+          mom=None, vol=0.30, price=50.0, sector="Test", insider_score=None):
     return {"ticker": ticker, "quality": quality, "market_cap": mcap,
             "analyst_upside": upside, "mom_12_1": mom, "vol_annual": vol,
-            "price": price, "sector": sector}
+            "price": price, "sector": sector, "insider_score": insider_score}
 
 
 @pytest.fixture(scope="module")
@@ -232,3 +232,34 @@ def test_better_alternatives_point_upward(small_caps, registry):
     recs = rec.score_candidates(small_caps, registry=registry)
     assert recs[0].better_alternatives == []
     assert recs[-1].better_alternatives[:1] == [recs[0].ticker]
+
+
+# ── ties are not an order ────────────────────────────────────────────────────
+
+def test_tied_scores_share_a_rank(registry):
+    """Most candidates score at the modal insider reading. Printing them in
+    list order would be a confident ranking of a coin flip."""
+    tied = [_cand(f"T{i}", quality=0.5, mcap=1e9) for i in range(6)]
+    recs = rec.score_candidates(tied, registry=registry)
+    assert len({r.ranking_score for r in recs}) == 1
+    assert {r.rank for r in recs} == {1}, "tied names must share a rank"
+    assert all(r.tied_with == 5 for r in recs)
+
+
+def test_a_tied_name_is_never_a_buy(registry):
+    """A BUY has to be earned by evidence, not by list position."""
+    tied = [_cand(f"T{i}", quality=0.5, mcap=1e9) for i in range(6)]
+    recs = rec.score_candidates(tied, registry=registry)
+    assert all(r.recommendation != "BUY" for r in recs)
+
+
+def test_untied_leader_can_still_buy(registry):
+    cands = [_cand("LEAD", quality=0.95, mcap=1e9, insider_score=3.0)] + \
+            [_cand(f"T{i}", quality=0.5, mcap=1e9, insider_score=0.0)
+             for i in range(6)]
+    recs = rec.score_candidates(cands, registry=registry)
+    top = recs[0]
+    assert top.ticker == "LEAD"
+    assert top.tied_with == 0
+    assert top.confidence in ("MEDIUM", "HIGH")
+    assert top.recommendation == "BUY"

@@ -107,6 +107,8 @@ class Candidate:
     market_cap: Optional[float] = None
     analyst_upside: Optional[float] = None    # RISK_INPUT only, never the rank
     n_analysts: Optional[int] = None
+    insider_score: Optional[float] = None     # SUPPORTED/PICKER, all cap bands
+    insider_reason: str = ""                  # why it is absent, when it is
     score: Optional[float] = None
     stage: int = 0
     why: list[str] = field(default_factory=list)
@@ -468,7 +470,24 @@ def stage3(cands: list[Candidate], *, keep: int = STAGE3_KEEP,
                             else float(fund["target"]) / c.price - 1.0)
         c.n_analysts = fund.get("n_analysts")
 
+        # `insider_opportunistic` is SUPPORTED/PICKER and — unlike
+        # profitability_small — licensed across ALL cap bands, so it is the one
+        # signal that can carry evidence on a large-cap candidate. It was worth
+        # wiring only after NIGHT-10 fixed the collector: the fetcher read a
+        # field the API returns as null, so every ticker scored a confident 0.0.
+        calls += 1
+        c.insider_score, c.insider_reason = _insider(c.ticker)
+
         c.stage = 3
+        if c.insider_score is not None:
+            c.why.append(
+                f"opportunistic insider buy score {c.insider_score:.2f} "
+                f"(insider_opportunistic: SUPPORTED/PICKER, weight "
+                f"{reg.weight('insider_opportunistic')})")
+        elif c.insider_reason:
+            c.blocked_by.append(
+                f"insider_opportunistic UNSCOREABLE ({c.insider_reason}) — "
+                f"absent, not zero")
         if c.quality is not None:
             c.why.append(
                 f"gross profitability {c.quality:.2f} "
@@ -488,6 +507,25 @@ def stage3(cands: list[Candidate], *, keep: int = STAGE3_KEEP,
     logger.info("funnel stage 3: %d enriched, %d failed, %d calls (budget %d)",
                 len(enriched), failures, calls, budget)
     return enriched
+
+
+def _insider(ticker: str) -> tuple[Optional[float], str]:
+    """Opportunistic open-market buy score, or None AND the reason why not.
+
+    Returning a reason rather than a zero is the whole point: "no insider
+    bought" and "the feed carried no SEC transaction codes" are different facts
+    and were the same value until NIGHT-10.
+    """
+    try:
+        from backend.services.insider_trading import (
+            compute_opportunistic_buy_score, get_insider_transactions,
+        )
+        s = compute_opportunistic_buy_score(get_insider_transactions(ticker))
+    except Exception as exc:  # noqa: BLE001 - the reason IS the result
+        return None, f"{type(exc).__name__}: {exc}"
+    if s.get("available") is False or s.get("opp_score") is None:
+        return None, str(s.get("reason") or "unavailable")
+    return float(s["opp_score"]), ""
 
 
 def _interleave(cands: list[Candidate]) -> list[Candidate]:
@@ -544,8 +582,29 @@ def _fundamentals(ticker: str) -> tuple[Optional[dict], str]:
             out["quality_proxy"] = "roaTTM (assetTurnover unavailable)"
         prof = _finnhub("stock/profile2", {"symbol": ticker}) or {}
         out["sector"] = prof.get("finnhubIndustry") or ""
+        # Finnhub reports marketCapitalization in the company's REPORTING
+        # currency, not USD. Multiplying by 1e6 and calling it dollars
+        # overstated IBN by 95x (INR), TSM by 28x (TWD) and FMX by 6x (MXN) —
+        # a plausible-looking number that silently decides which cap band a
+        # name is in, and therefore which signals are licensed to score it.
+        # No FX table is wired here, so a non-USD profile is treated as an
+        # UNKNOWN cap rather than converted with a guessed rate. Unknown is
+        # already handled correctly downstream: `recommendation.in_universe`
+        # refuses to apply a size-limited signal to a name whose size it does
+        # not know.
         mc = prof.get("marketCapitalization")
-        out["market_cap"] = float(mc) * 1e6 if isinstance(mc, (int, float)) else None
+        ccy = str(prof.get("currency") or "").upper()
+        if not isinstance(mc, (int, float)):
+            out["market_cap"] = None
+            out["market_cap_note"] = "finnhub returned no market capitalisation"
+        elif ccy and ccy != "USD":
+            out["market_cap"] = None
+            out["market_cap_note"] = (
+                f"finnhub reports market cap in {ccy}, not USD, and no FX "
+                f"conversion is wired — recorded as unknown rather than "
+                f"converted with a guessed rate")
+        else:
+            out["market_cap"] = float(mc) * 1e6
         rec = _finnhub("stock/price-target", {"symbol": ticker}) or {}
         tm = rec.get("targetMean")
         out["target"] = float(tm) if isinstance(tm, (int, float)) and tm else None

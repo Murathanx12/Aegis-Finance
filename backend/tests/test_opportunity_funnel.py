@@ -174,3 +174,55 @@ def test_stage3_budget_is_a_hard_cap(monkeypatch):
     cands = [_cand(f"T{i:03d}") for i in range(500)]
     F.stage3(cands, keep=1000, budget=12)
     assert calls["n"] <= 12, "the per-ticker stage must never run away"
+
+
+class TestMarketCapCurrency:
+    """Finnhub reports market cap in the company's REPORTING currency.
+
+    Multiplying by 1e6 and calling it USD overstated IBN by 95x (INR), TSM by
+    28x (TWD) and FMX by 6x (MXN). Market cap decides which cap band a name is
+    in, and therefore which signals `recommendation.in_universe` will license
+    to score it — so a wrong cap silently applies the wrong evidence.
+    """
+
+    def _profile(self, monkeypatch, profile, metric=None):
+        from backend.services import opportunity_funnel as F
+
+        def fake(path, params=None):
+            if path == "stock/metric":
+                return {"metric": metric or {"grossMarginTTM": 40.0,
+                                             "assetTurnoverTTM": 1.0}}
+            if path == "stock/profile2":
+                return profile
+            return {}
+
+        monkeypatch.setattr("backend.services.pm_catalysts._finnhub", fake)
+        return F._fundamentals("TEST")
+
+    def test_usd_market_cap_is_scaled_to_dollars(self, monkeypatch):
+        out, why = self._profile(
+            monkeypatch, {"marketCapitalization": 842.72, "currency": "USD"})
+        assert why == "ok"
+        assert out["market_cap"] == pytest.approx(842.72e6)
+
+    def test_foreign_currency_market_cap_is_unknown_not_converted(self, monkeypatch):
+        out, why = self._profile(
+            monkeypatch, {"marketCapitalization": 61_459_714.86,
+                          "currency": "TWD"})
+        assert why == "ok"
+        assert out["market_cap"] is None, (
+            "a TWD market cap read as USD put TSM at $61 trillion")
+        assert "TWD" in out["market_cap_note"]
+
+    def test_missing_market_cap_records_a_reason(self, monkeypatch):
+        out, _why = self._profile(monkeypatch, {"currency": "USD"})
+        assert out["market_cap"] is None
+        assert out["market_cap_note"]
+
+    def test_unknown_cap_denies_a_size_limited_signal(self):
+        """The downstream consequence, asserted end to end."""
+        from backend.services import recommendation as REC
+        from backend.services import signal_registry as SR
+        reg = SR.load()
+        ok, why = REC.in_universe(reg.get("profitability_small"), None)
+        assert ok is False and "unknown" in why.lower()

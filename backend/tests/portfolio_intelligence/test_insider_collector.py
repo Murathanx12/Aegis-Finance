@@ -89,4 +89,9 @@ class TestCollect:
         res = collect_insider_opp_scores(db_path=db_path, tickers=_TICKERS, fetch=fetch,
                                          as_of="2026-06-16")
         assert res["status"] == "collected" and res["n"] == 3
-        assert res["scores"]["BBB"] == 0.0  # failed ticker → zero, not a crash
+        # NIGHT-10: a failed fetch is UNSCOREABLE, not a zero. The run still
+        # completes (that is what this test is for), but a ticker whose feed
+        # never answered must not be written into the PIT store as "no
+        # insider bought" — later research reads those rows as fact.
+        assert res["scores"]["BBB"] is None
+        assert "BBB" in res["unscoreable"]

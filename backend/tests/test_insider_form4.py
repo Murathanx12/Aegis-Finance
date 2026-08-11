@@ -63,8 +63,13 @@ class TestParseForm4:
 
 
 class TestOpportunisticScore:
-    def test_no_data_is_zero(self):
-        assert compute_opportunistic_buy_score(None)["opp_score"] == 0.0
+    def test_no_data_is_unavailable_not_zero(self):
+        # NIGHT-10: "no feed answered" and "no insider bought" were the same
+        # return value, which is how an uncoded Finnhub feed reported a
+        # confident 0.0 for every ticker in the universe.
+        out = compute_opportunistic_buy_score(None)
+        assert out["opp_score"] is None
+        assert out["available"] is False
         assert compute_opportunistic_buy_score({"buys": []})["opp_score"] == 0.0
 
     def test_non_open_market_buys_score_zero(self):

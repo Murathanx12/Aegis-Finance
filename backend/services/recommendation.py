@@ -108,6 +108,8 @@ class Recommendation:
 
     ticker: str
     rank: int = 0
+    #: How many OTHER names share this exact score. A tie is not an order.
+    tied_with: int = 0
     recommendation: str = "HOLD"
     ranking_score: float = 0.0
     percentile: Optional[float] = None
@@ -410,8 +412,24 @@ def score_candidates(candidates: Iterable[Any],
 
     recs.sort(key=lambda r: -r.ranking_score)
     n = len(recs)
+    # Names with identical scores are TIED, and a list position is not a
+    # ranking. Most candidates score exactly at the modal insider reading, so
+    # without this the page would print 30 names in a confident order that is
+    # really just list order. Ties share a rank and say how many they share it
+    # with.
+    tie_counts: dict[float, int] = {}
+    for r in recs:
+        tie_counts[r.ranking_score] = tie_counts.get(r.ranking_score, 0) + 1
+    rank = 0
+    seen: dict[float, int] = {}
     for idx, r in enumerate(recs):
-        r.rank = idx + 1
+        if r.ranking_score in seen:
+            r.rank = seen[r.ranking_score]
+        else:
+            rank = idx + 1
+            seen[r.ranking_score] = rank
+            r.rank = rank
+        r.tied_with = tie_counts[r.ranking_score] - 1
         r.percentile = round(100.0 * (n - idx) / n, 1) if n else None
         r.recommendation = _verdict(r)
         r.reason_for_rank = _reason(r)
@@ -456,8 +474,10 @@ def _verdict(r: Recommendation) -> str:
         return "NO_ACTION"
     if r.ranking_score <= 0:
         return "HOLD"
-    if r.rank <= 10 and r.confidence in ("HIGH", "MEDIUM"):
+    if r.rank <= 10 and r.confidence in ("HIGH", "MEDIUM") and r.tied_with == 0:
         return "BUY"
+    if r.tied_with:
+        return "WATCH"
     return "WATCH"
 
 

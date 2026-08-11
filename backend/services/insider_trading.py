@@ -84,6 +84,10 @@ def _fetch_finnhub_insiders(ticker: str, lookback_days: int) -> Optional[dict]:
 
         transactions = data["data"]
         if not transactions:
+            # Zero Form 4 rows is NOT the same as "no insider bought". Foreign
+            # private issuers file 40-F/20-F and never file Form 4 at all, so an
+            # empty feed conflates "nobody traded" with "this issuer is not in
+            # the Form 4 universe". Marked unclassifiable; the consumer decides.
             return {
                 "ticker": ticker,
                 "source": "finnhub",
@@ -94,13 +98,26 @@ def _fetch_finnhub_insiders(ticker: str, lookback_days: int) -> Optional[dict]:
                 "n_sells": 0,
                 "total_buy_value": 0,
                 "total_sell_value": 0,
+                "n_transactions": 0,
+                "n_uncoded": 0,
+                "codes_available": False,
             }
 
         buys = []
         sells = []
+        n_uncoded = 0
         for tx in transactions:
             change = tx.get("change", 0) or 0
-            tx_type = tx.get("transactionType", "")
+            # Finnhub returns the SEC Form 4 code in `transactionCode` — a
+            # single letter (P/S/A/M/F/G/D). This read `transactionType`, which
+            # the API returns as null on 100% of rows, so every transaction
+            # arrived UNCODED and the open-market filter downstream silently
+            # discarded all of it while reporting "no open-market purchases".
+            # `transactionType` is kept as a fallback in case the field returns.
+            tx_type = str(tx.get("transactionCode")
+                          or tx.get("transactionType") or "").strip()
+            if not tx_type:
+                n_uncoded += 1
 
             entry = {
                 "name": tx.get("name", "Unknown"),
@@ -108,12 +125,23 @@ def _fetch_finnhub_insiders(ticker: str, lookback_days: int) -> Optional[dict]:
                 "value": abs(change) * (tx.get("transactionPrice", 0) or 0),
                 "date": tx.get("filingDate", ""),
                 "type": tx_type,
+                # A "P" on a derivative is not an open-market common-stock
+                # purchase, and the opportunistic signal is about the latter.
+                "is_derivative": bool(tx.get("isDerivative")),
             }
 
-            # Classify: P = Purchase, S = Sale, A = Award/Grant
-            if tx_type in ("P - Purchase", "P") or change > 0:
+            # Classify: P = Purchase, S = Sale, A = Award/Grant, M = option
+            # exercise, F = tax withholding, G = gift. The `change` sign is the
+            # fallback ONLY when the code is absent — it cannot tell an
+            # open-market purchase from an award, which is the whole point of
+            # the opportunistic score.
+            if tx_type.startswith(("P",)) or (not tx_type and change > 0):
                 buys.append(entry)
-            elif tx_type in ("S - Sale", "S - Sale+OE", "S") or change < 0:
+            elif tx_type.startswith(("S",)) or (not tx_type and change < 0):
+                sells.append(entry)
+            elif change > 0:
+                buys.append(entry)
+            elif change < 0:
                 sells.append(entry)
 
         total_buy_value = sum(b["value"] for b in buys)
@@ -129,6 +157,12 @@ def _fetch_finnhub_insiders(ticker: str, lookback_days: int) -> Optional[dict]:
             "n_sells": len(sells),
             "total_buy_value": total_buy_value,
             "total_sell_value": total_sell_value,
+            # How much of the feed arrived without an SEC code. A consumer that
+            # needs the code (the opportunistic score does) must be able to tell
+            # "no purchases" from "no codes" — those look identical otherwise.
+            "n_transactions": len(transactions),
+            "n_uncoded": n_uncoded,
+            "codes_available": n_uncoded < len(transactions),
         }
 
     except Exception as e:
@@ -215,14 +249,43 @@ def compute_opportunistic_buy_score(insider_data: Optional[dict]) -> dict:
     filter is the opportunistic proxy. Documented in the trial doc.
     """
     empty = {"opp_score": 0.0, "n_distinct_buyers": 0, "buy_value": 0.0,
-             "cluster_buy": False, "interpretation": "No open-market insider purchases"}
+             "cluster_buy": False, "available": True,
+             "interpretation": "No open-market insider purchases"}
+    unavailable = {"opp_score": None, "n_distinct_buyers": None,
+                   "buy_value": None, "cluster_buy": None, "available": False}
     if not insider_data:
-        return empty
+        return {**unavailable,
+                "interpretation": "No insider feed answered for this ticker",
+                "reason": "no_data"}
+
+    # "No purchases" and "cannot tell what these transactions were" are
+    # different facts and must not share a return value. Until 2026-08-11 they
+    # did: the fetcher read a field the API returns as null, every transaction
+    # arrived uncoded, the filter below discarded 100% of real buying, and this
+    # function reported a confident 0.0 — "No open-market insider purchases" —
+    # for every ticker on earth. It would have run green forever.
+    if insider_data.get("codes_available") is False:
+        n_tx = insider_data.get("n_transactions", 0)
+        if not n_tx:
+            return {**unavailable,
+                    "interpretation": (
+                        "No Form 4 transactions in the window — this issuer may "
+                        "not file Form 4 at all (foreign private issuers do "
+                        "not), so silence here is not evidence of no buying"),
+                    "reason": "no_transactions_in_window"}
+        return {**unavailable,
+                "interpretation": (
+                    f"{n_tx} insider transactions found, none carrying an SEC "
+                    f"transaction code — open-market purchases cannot be "
+                    f"isolated"),
+                "reason": "no_transaction_codes"}
+
     buys = insider_data.get("buys", []) or []
     open_market = [
         b for b in buys
         if str(b.get("type", "")).strip() in _OPEN_MARKET_BUY_CODES
         and (b.get("shares", 0) or 0) > 0
+        and not b.get("is_derivative", False)
     ]
     if not open_market:
         return empty
@@ -247,6 +310,7 @@ def compute_opportunistic_buy_score(insider_data: Optional[dict]) -> dict:
         "n_distinct_buyers": distinct_buyers,
         "buy_value": round(buy_value, 0),
         "cluster_buy": cluster_buy,
+        "available": True,
         "interpretation": interp,
     }
 

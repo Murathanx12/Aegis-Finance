@@ -16,8 +16,9 @@ to a small-cap watchlist is a future step. Cadence is weekly (insider holdings m
 slowly), throttled internally so wiring into the daily check is cheap.
 
 Network: `fetch_open_market_buys` hits SEC EDGAR with hard per-request timeouts; a
-failed ticker degrades to a zero score (never raises, never hangs). Tests inject a
-stub `fetch` so they stay offline.
+failed ticker is recorded as UNSCOREABLE and nothing is written for it (never
+raises, never hangs, never invents a zero). Tests inject a stub `fetch` so they
+stay offline.
 """
 
 from __future__ import annotations
@@ -74,7 +75,8 @@ def collect_insider_opp_scores(db_path=None, tickers=None, *, fetch=None,
         # UTC to match the leak-safe read cutoff (get_*_observable use UTC now);
         # a local-time stamp ahead of UTC would make the row unreadable.
         observed = datetime.now(timezone.utc).isoformat()
-        scores: dict[str, float] = {}
+        scores: dict[str, float | None] = {}
+        unscoreable: dict[str, str] = {}
         written = 0
         for t in tickers:
             try:
@@ -84,6 +86,14 @@ def collect_insider_opp_scores(db_path=None, tickers=None, *, fetch=None,
                 data = None
             s = compute_opportunistic_buy_score(data)
             scores[t] = s["opp_score"]
+            # An unscoreable ticker is NOT a zero. Writing 0.0 for "we could not
+            # classify these transactions" would put a fabricated observation
+            # into a point-in-time store that later research reads as fact —
+            # the same conflation that let an uncoded Finnhub feed report "no
+            # open-market purchases" for every ticker on earth (NIGHT-10).
+            if s.get("available") is False or s["opp_score"] is None:
+                unscoreable[t] = s.get("reason", "unavailable")
+                continue
             rid = snapshot(
                 conn, KEY_PREFIX + t, as_of, float(s["opp_score"]),
                 source="sec_form4", observed_at=observed,
@@ -92,10 +102,16 @@ def collect_insider_opp_scores(db_path=None, tickers=None, *, fetch=None,
             )
             if rid is not None:
                 written += 1
-        nonzero = sum(1 for v in scores.values() if v > 0)
-        logger.info("insider-IC collect: %d tickers, %d written, %d non-zero (as_of %s)",
-                    len(tickers), written, nonzero, as_of)
+        nonzero = sum(1 for v in scores.values() if v)
+        if unscoreable:
+            logger.warning("insider-IC collect: %d of %d tickers UNSCOREABLE "
+                           "(nothing written for them): %s", len(unscoreable),
+                           len(tickers), dict(list(unscoreable.items())[:5]))
+        logger.info("insider-IC collect: %d tickers, %d written, %d non-zero, "
+                    "%d unscoreable (as_of %s)",
+                    len(tickers), written, nonzero, len(unscoreable), as_of)
         return {"status": "collected", "as_of": as_of, "n": len(tickers),
-                "written": written, "nonzero": nonzero, "scores": scores}
+                "written": written, "nonzero": nonzero, "scores": scores,
+                "unscoreable": unscoreable}
     finally:
         conn.close()
