@@ -126,9 +126,24 @@ def main() -> int:
     cands = payload["candidates"]
 
     px = _prices(sorted(holdings))
+    if "error" in px or not px:
+        # A total price failure must NOT produce a plausible-looking $0 NAV
+        # with twelve "unmarked" names. That is the fake-NAV failure: a
+        # fabricated number is worse than a refusal, because a refusal is
+        # obviously not an answer and $0.00 is not obviously not an answer.
+        raise SystemExit(
+            f"REFUSING to write a mirror challenge: no price came back for any "
+            f"of the {len(holdings)} held names "
+            f"({px.get('error', 'empty price map')}). Every NAV, weight and "
+            f"fork figure below would be a fabrication.")
     marked = {t: (n * px[t]) for t, n in holdings.items() if t in px}
     unmarked = sorted(set(holdings) - set(px))
     nav = sum(marked.values())
+    if not nav:
+        raise SystemExit(
+            f"REFUSING to write a mirror challenge: {len(px)} price(s) came "
+            f"back but marked NAV is $0. Something is wrong with the share "
+            f"counts or the prices, and a zero NAV would read as a real one.")
 
     # QUBT fork, both ways, printed
     forks = {}

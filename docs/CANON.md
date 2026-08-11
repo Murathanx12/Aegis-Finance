@@ -288,6 +288,73 @@ Three consequences, all binding:
 
 ---
 
+## §18 — A prediction that two things AGREE is a claim about their DIFFERENCE
+
+*Added NIGHT-10 (2026-08-11). Type specimen: ANALYST-IBES-1 prediction 5.*
+
+A registered prediction of the form "construction A and construction B agree"
+must be adjudicated by **testing the difference, with its own standard error**,
+on the paired series where the two are computed on the same names in the same
+months. It may **never** be adjudicated by comparing two point estimates and
+reading their signs.
+
+ANALYST-IBES-1 recorded prediction 5 as **REFUTED** because A2 printed
++6.05 %/yr and A3 printed −0.73 %/yr, and moved the small segment to UNRESOLVED
+on that basis. Tested on the paired monthly series — correlation 0.578, so an
+independent-errors formula would have overstated the standard error — the
+difference is **+3.70 %/yr, SE 3.60, t = 1.03**. It was never distinguishable
+from zero.
+
+Two underpowered estimates disagree in sign routinely. A decision rule that
+reads that as refutation manufactures "the object is not identified" verdicts
+out of noise, and will keep doing so for as long as it is left in place.
+
+## §19 — Every arm reports its own 80%-power MDE, beside its effect
+
+*Added NIGHT-10 (2026-08-11).*
+
+An effect below its design's 80%-power minimum detectable effect is reported as
+**"not reliably detectable by this design"** — never as evidence for or against
+a mechanism, and never as a kill.
+
+The measurement that forced this: across 21 configurations audited on 2026-08-11
+(10 published ANALYST-IBES-1 arms re-run through the parent's own Factory, and
+11 forbidden HERESY-1 configurations over 6 distinct closed signals), **zero**
+reported an effect above their own MDE. The standard adjudication shape — EW
+top-50, monthly, 2002–2022 — resolves **6.3% to 19.9 %/yr**, roughly double the
+largest credible equity anomaly.
+
+The consequence is an annotation, not an amnesty: affected corpses are marked
+`kill_power: INADEQUATE` and **nothing is reopened by that alone**. Reopening
+one requires its own pre-registration, the corpse as a control arm, and an
+instrument whose MDE clears the effect being sought. A multi-instrument kill is
+not overturned by one underpowered arm.
+
+## §20 — A batch of proposals is checked against ITSELF
+
+*Added NIGHT-10 (2026-08-11).*
+
+`lint_prereg.lint()` asks "has this been tried before?" and cannot ask "are
+these ten proposals actually ten ideas?", because it sees one document at a
+time. Run `lint_batch()` on any set of proposals generated together, and use
+**`effective_distinct_ideas`** — not the proposal count — as the denominator for
+anything selected out of that batch.
+
+Ten LLM-generated hypotheses on 2026-08-11 each PASSED against 306 prior
+experiments, strongest near-match ~0.23. Against **each other**, 37 of their 45
+pairs sat at or above the 0.30 block threshold and the whole batch collapsed to
+**one connected component**: one mechanism template in ten costumes, each
+passing individually because they were all novel in the same direction. A
+best-of-10 bar computed over that is not a bar.
+
+Calibrated before it was trusted, as gates must be: 8 real preregs from
+different families resolve to 6 distinct groups, and the only merge is
+`TRIAL-EVENT-13DG` with its two HARVEST variants, which genuinely are one
+family.
+
+
+---
+
 ## Closed rabbit holes — do not re-run
 
 | Closed | Verdict | Where |

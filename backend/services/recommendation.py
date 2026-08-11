@@ -610,20 +610,41 @@ def assert_registry_discipline(candidates: list[Any],
     violations = audit_leadership(recs, registry=reg)
 
     checks: list[dict] = []
+    unchecked: list[dict] = []
     for sig in list(reg.closed()) + reg.by_role("RISK_INPUT"):
         if not any(a.signal_id == sig.signal_id for a in _ADAPTERS):
+            # No adapter means the signal reads no candidate field, so it has
+            # no path to the ranking at all. That is a genuine exemption, not
+            # a skipped check, and it is recorded rather than passed over.
+            unchecked.append({"signal_id": sig.signal_id,
+                              "reason": "no adapter — reads no candidate field, "
+                                        "so it cannot reach the ranking"})
             continue
         try:
             checks.append(rank_invariance(candidates, sig.signal_id, registry=reg))
-        except registry_mod.RegistryError:
-            continue
-    broken = [c for c in checks if not c["invariant_holds"]]
+        except Exception as exc:  # noqa: BLE001
+            # A check that FAILED TO RUN is not a check that passed. Swallowing
+            # this would let the gate return CLEAN because its own verification
+            # crashed — the exact "no output wearing a green checkmark" failure
+            # this module exists to prevent.
+            unchecked.append({"signal_id": sig.signal_id,
+                              "reason": f"invariance check ERRORED: "
+                                        f"{type(exc).__name__}: {exc}"})
+            logger.error("invariance check for %s could not run: %s",
+                         sig.signal_id, exc)
 
-    if violations or broken:
+    broken = [c for c in checks if not c["invariant_holds"]]
+    errored = [u for u in unchecked if "ERRORED" in u["reason"]]
+
+    if violations or broken or errored:
         raise RankLeadershipError(
-            f"BUY ranking is steered by signals that may not steer it: "
+            f"BUY ranking cannot be published: "
             f"{len(violations)} contribution violation(s), "
-            f"{len(broken)} invariance failure(s): "
-            f"{[c['signal_id'] for c in broken]}")
+            f"{len(broken)} invariance failure(s) "
+            f"{[c['signal_id'] for c in broken]}, "
+            f"{len(errored)} check(s) that could not run "
+            f"{[e['signal_id'] for e in errored]}. A check that did not run is "
+            f"not a check that passed.")
     return {"status": "CLEAN", "n_candidates": len(recs),
-            "invariance_checks": checks, "violations": violations}
+            "invariance_checks": checks, "violations": violations,
+            "exempt_no_adapter": unchecked}

@@ -263,3 +263,33 @@ def test_untied_leader_can_still_buy(registry):
     assert top.tied_with == 0
     assert top.confidence in ("MEDIUM", "HIGH")
     assert top.recommendation == "BUY"
+
+
+# ── the gate must not pass because its own check crashed ─────────────────────
+
+def test_gate_refuses_when_an_invariance_check_cannot_run(small_caps, registry,
+                                                          monkeypatch):
+    """A check that did not run is not a check that passed.
+
+    `assert_registry_discipline` used to `except RegistryError: continue`, so a
+    crashing invariance check was silently skipped and the gate still returned
+    CLEAN. That is the house failure mode aimed squarely at the one control
+    whose whole job is to refuse publication.
+    """
+    def boom(*_a, **_k):
+        raise RuntimeError("simulated failure inside the invariance check")
+
+    monkeypatch.setattr(rec, "rank_invariance", boom)
+    with pytest.raises(rec.RankLeadershipError) as e:
+        rec.assert_registry_discipline(small_caps, registry=registry)
+    assert "could not run" in str(e.value)
+
+
+def test_gate_records_signals_exempt_for_having_no_adapter(small_caps, registry):
+    """An exemption is recorded, not passed over in silence."""
+    out = rec.assert_registry_discipline(small_caps, registry=registry)
+    assert out["status"] == "CLEAN"
+    exempt = out["exempt_no_adapter"]
+    assert exempt, "closed signals with no adapter should be listed"
+    assert all("no adapter" in x["reason"] for x in exempt)
+    assert not any("ERRORED" in x["reason"] for x in exempt)

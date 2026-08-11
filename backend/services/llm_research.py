@@ -118,8 +118,9 @@ def available() -> tuple[bool, str]:
     try:
         from dotenv import load_dotenv
         load_dotenv()
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("dotenv load failed (%s); relying on the ambient "
+                       "environment for keys", exc)
     if os.getenv("DEEPSEEK_API_KEY"):
         return True, "deepseek"
     if os.getenv("ANTHROPIC_API_KEY"):
@@ -350,12 +351,15 @@ def ledger_summary(ledger_path: Optional[Path] = None) -> dict:
     if not p.exists():
         return {"n_calls": 0, "total_usd": 0.0, "by_purpose": {},
                 "budget_usd": CAMPAIGN_BUDGET_USD, "note": "no calls made"}
-    rows = []
+    rows, unreadable = [], 0
     for line in p.read_text(encoding="utf-8").splitlines():
         try:
             rows.append(json.loads(line))
-        except Exception:  # noqa: BLE001
-            continue
+        except Exception:  # noqa: BLE001 — counted, never silently dropped
+            unreadable += 1
+    if unreadable:
+        logger.warning("%d unreadable ledger line(s); reported spend is a "
+                       "LOWER BOUND", unreadable)
     by: dict[str, dict] = {}
     for r in rows:
         b = by.setdefault(r.get("purpose", "?"),
@@ -365,6 +369,8 @@ def ledger_summary(ledger_path: Optional[Path] = None) -> dict:
         b["ok" if r.get("ok") else "failed"] += 1
     total = round(sum(float(r.get("cost_usd") or 0) for r in rows), 4)
     return {"n_calls": len(rows), "total_usd": total,
+            "unreadable_ledger_lines": unreadable,
+            "spend_is_lower_bound": bool(unreadable),
             "budget_usd": CAMPAIGN_BUDGET_USD,
             "budget_remaining_usd": round(CAMPAIGN_BUDGET_USD - total, 4),
             "by_purpose": by,
