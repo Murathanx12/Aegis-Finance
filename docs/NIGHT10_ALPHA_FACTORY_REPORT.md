@@ -25,21 +25,42 @@ it. It was, and it holds:
 | void pass-1 preserved, not deleted | ✅ 384 rows, 100% negative — the tell that voided it |
 | holdout unread | ✅ |
 
-**The correction.** The published "+4.87%/yr false-discovery bar — best of 384
-when nothing predicts anything" does **not** trace to the null-world receipt it
-describes. `synthetic_results.json → null_calibration` says **+2.73%/yr**, and
-that is a single seed; the power curve's three null seeds give **+2.73, +4.16,
-+7.43 %/yr** (mean 4.77). The published +4.87 is numerically the **real-data
-equal-weight control**, which is also the separately-published "4th of 384" — so
-two of the four headline numbers are one measurement counted twice.
+**The correction, now measured properly.** The published "+4.87 %/yr
+false-discovery bar — best of 384 when nothing predicts anything" does **not**
+trace to the null-world receipt it describes. `synthetic_results.json →
+null_calibration` says **+2.73 %/yr**, and that is a single seed. The published
++4.87 is numerically the **real-data equal-weight control**, which is also the
+separately-published "4th of 384" — so two of the four headline numbers were one
+measurement counted twice.
 
-**ARENA-1's null survives the correction at every candidate bar.** At the lowest
-defensible one (2.73%), 27 non-control genomes clear it, best t = 1.96, and
-Bonferroni p_adj = **1.000**. The verdict was never bar-sensitive.
+A best-of-N maximum is a draw from an extreme-value distribution, and no single
+draw is a bar. **60 null worlds** were run through the same generator, the same
+frozen 384-genome pool and the same scorer (`scripts/arena_null_bar.py`,
+`runs/ARENA1/null_bar.json`):
 
-**What should be said instead:** best-of-384 under the null is **+2.7 to
-+7.4 %/yr across three seeds**. There is no credible single-point bar at n=3,
-and any future arena needs many more null seeds before quoting one.
+| best-of-384 under the null | %/yr |
+|---|---:|
+| minimum | 0.83 |
+| 25th percentile | 2.15 |
+| **median** | **3.58** |
+| mean | 3.72 (sd 1.79) |
+| 90th percentile | 6.19 |
+| **95th percentile — the operating bar** | **6.90** |
+| maximum | 7.68 |
+
+**The honest false-discovery bar is +6.90 %/yr, not +4.87.** And against it:
+
+| pool | clearing the honest bar |
+|---|---:|
+| all 384 scored genomes | **0** |
+| the 66 frozen-rule survivors | **0** |
+| the 58 non-control survivors | **0** |
+| the best genome overall (G0245, +6.06 %/yr) | **below it** |
+
+**ARENA-1's null is stronger than it was reported to be, not weaker.** The
+arena found nothing, and that statement is now exact rather than approximately
+right for the wrong reason. The bar is specific to a pool of 384; a different
+pool size takes a different number of chances and must have its bar recomputed.
 
 ---
 

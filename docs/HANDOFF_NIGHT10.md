@@ -143,8 +143,11 @@ Next, in order:
    names per leg, or a panel estimator with an SE smaller than the effects
    sought. Searching harder at a 12 %/yr MDE spends compute to produce
    ambiguity.
-2. **Re-run the ARENA null calibration with many seeds.** Three seeds spanning
-   2.7–7.4 %/yr is not a bar (see the correction below).
+2. ~~Re-run the ARENA null calibration with many seeds.~~ **DONE tonight** —
+   60 seeds, and the honest bar is **+6.90 %/yr**, which zero of the 384
+   genomes clear (see the correction below). The successor task is to
+   **recompute the bar for whatever pool the next arena uses**, since an
+   extreme-value bar scales with the number of chances taken.
 3. **Wire more licensed evidence.** Capacity binds at 4 names of 20 at $250m;
    the fix is a wider licensed universe, not a cleverer optimiser.
 4. **Ten separate LLM calls, each forbidden the previous answers' vocabulary**,
@@ -199,19 +202,37 @@ Each looked fine on every dashboard:
 
 ---
 
-## CORRECTION TO A PUBLISHED NUMBER
+## CORRECTION TO A PUBLISHED NUMBER — and the honest bar, measured
 
 The **"+4.87 %/yr false-discovery bar — best of 384 when nothing predicts
 anything"** does not trace to the receipt it describes.
-`synthetic_results.json → null_calibration` says **+2.73 %/yr** (one seed); the
-power curve's three null seeds give **+2.73 / +4.16 / +7.43**. The published
-+4.87 is numerically the **real-data equal-weight control** — which is also the
-separately-published "4th of 384", so **two of the four headline numbers are one
-measurement counted twice**.
+`synthetic_results.json → null_calibration` says **+2.73 %/yr** (one seed). The
+published +4.87 is numerically the **real-data equal-weight control** — the same
+genome as the separately-published "4th of 384", so **two of the four headline
+numbers were one measurement counted twice**.
 
-**ARENA-1's null survives at every candidate bar** (at 2.73%, best t = 1.96,
-Bonferroni p_adj = 1.000). Say instead: *best-of-384 under the null is +2.7 to
-+7.4 %/yr across three seeds*, and no single-point bar is credible at n = 3.
+A best-of-N maximum is a draw from an extreme-value distribution, so **60 null
+worlds** were run through the same generator, the same frozen pool and the same
+scorer (`runs/ARENA1/null_bar.json`):
+
+| best-of-384 under the null | %/yr |
+|---|---:|
+| min / median / max | 0.83 / **3.58** / 7.68 |
+| mean (sd) | 3.72 (1.79) |
+| **95th percentile — the operating bar** | **6.90** |
+
+**The honest bar is +6.90 %/yr.** Against it:
+
+| pool | clearing it |
+|---|---:|
+| all 384 scored genomes | **0** |
+| the 66 frozen-rule survivors | **0** |
+| the best genome overall (G0245, +6.06 %/yr) | **below it** |
+
+**ARENA-1's null is stronger than it was reported to be.** The arena found
+nothing, and that is now exact rather than approximately right for the wrong
+reason. The bar is specific to a pool of 384 and must be recomputed for any
+other pool size — that is what an extreme-value bar is for.
 
 Everything else in ARENA-1 validated: freeze predates scoring, 0 orphan genomes,
 66 survivors reproduce exactly, the best genome is still excluded by the frozen
@@ -264,5 +285,6 @@ model.
 | fragility audit, 3 findings | `docs/NIGHT10_FRAGILITY_AUDIT.md` |
 | the decision page | `docs/BUILD1/investment_committee.{json,txt}` |
 | machine-readable | `docs/BUILD1/{funnel_night10,mirror_challenge,capital_frontier,llm_hypotheses,llm_hypothesis_diversity,llm_adversarial_review}.json`, `llm_ledger.jsonl` |
+| the measured null bar (60 seeds) | `Aegis module/runs/ARENA1/null_bar.json` |
 | trials | `Aegis module/TRIALS/PREREG_{ANALYST_IDENT_1,HERESY_1}.md` |
 | verdicts | `Aegis module/docs/ANALYST_IDENT_1_VERDICT_2026-08-11.md`, `runs/HERESY/heresy_1.json` |
