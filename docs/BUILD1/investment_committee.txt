@@ -1,6 +1,6 @@
 ==============================================================================
                          OPTIMUS INVESTMENT COMMITTEE                         
-            2026-08-11T02:22:25+00:00  ·  5,324 US names screened             
+            2026-08-11T02:34:06+00:00  ·  5,324 US names screened             
 ==============================================================================
 
 RANKING GATE: CLEAN
@@ -8,60 +8,45 @@ RANKING GATE: CLEAN
   momentum_12_1                    REJECTED/CLOSED: rho=1.0, 0 names moved -> cannot reorder the BUY list
   analyst_target_level_haircut     OBSERVATIONAL/RISK_INPUT: rho=1.0, 0 names moved -> cannot reorder the BUY list
 
-EVIDENCE COVERAGE: 36 of 40 candidates carry a signal this programme licenses.
-  The other 4 are screened, liquid and priced — and the engine has NOTHING it is allowed to say about them.
+EVIDENCE COVERAGE: 33 of 40 candidates carry a signal this programme licenses.
+  The other 7 are screened, liquid and priced — and the engine has NOTHING it is allowed to say about them.
 
 ------------------------------------------------------------------------------
 TOP OPPORTUNITIES
 ------------------------------------------------------------------------------
   # ticker     price      $bn   score   pct  verdict  conf   grade      led by
-  1 TSM       418.47 61459.71   1.420   100  WATCH    LOW    SUPPORTED  insider_opportunistic
-  2 CVLG       33.48     0.84   0.882    98  BUY      MEDIUM SUPPORTED  profitability_small
-  3 INDV       38.47     4.54   0.256    95  WATCH    LOW    SUPPORTED  insider_opportunistic
-  8 EXPD      179.00    23.27  -0.113    82  HOLD     LOW    SUPPORTED  insider_opportunistic
-  9 INCY      121.55    24.64  -0.113    80  HOLD     LOW    SUPPORTED  insider_opportunistic
- 10 NBIX      164.92    16.76  -0.113    78  HOLD     LOW    SUPPORTED  insider_opportunistic
- 11 AAPL      308.26  4498.80  -0.113    75  HOLD     LOW    SUPPORTED  insider_opportunistic
- 12 AMZN      278.09  2999.57  -0.113    72  HOLD     LOW    SUPPORTED  insider_opportunistic
- 13 FMX       119.92   243.02  -0.113    70  HOLD     LOW    SUPPORTED  insider_opportunistic
- 14 GRMN      313.16    60.39  -0.113    68  HOLD     LOW    SUPPORTED  insider_opportunistic
- 15 NFLX       76.29   317.67  -0.113    65  HOLD     LOW    SUPPORTED  insider_opportunistic
- 16 GOOGL     357.52  4372.47  -0.113    62  HOLD     LOW    SUPPORTED  insider_opportunistic
- 17 JKHY      155.08    11.02  -0.113    60  HOLD     LOW    SUPPORTED  insider_opportunistic
- 18 MSFT      506.06  3757.77  -0.113    58  HOLD     LOW    SUPPORTED  insider_opportunistic
- 19 CSCO      122.57   483.10  -0.113    55  HOLD     LOW    SUPPORTED  insider_opportunistic
- 20 CON        34.10     4.35  -0.113    52  HOLD     LOW    SUPPORTED  insider_opportunistic
- 21 PHIN       73.81     2.70  -0.113    50  HOLD     LOW    SUPPORTED  insider_opportunistic
- 22 PRVA       22.37     2.86  -0.113    48  HOLD     LOW    SUPPORTED  insider_opportunistic
- 23 LLY      1231.94  1159.70  -0.124    45  HOLD     LOW    SUPPORTED  insider_opportunistic
- 24 BOX        33.60     4.65  -0.135    42  HOLD     LOW    SUPPORTED  insider_opportunistic
- 25 JAZZ      256.52    16.65  -0.135    40  HOLD     LOW    SUPPORTED  insider_opportunistic
- 26 NVDA      217.55  5264.71  -0.138    38  HOLD     LOW    SUPPORTED  insider_opportunistic
- 27 META      594.92  1515.56  -0.162    35  HOLD     LOW    SUPPORTED  insider_opportunistic
- 28 VTS        16.15     0.64  -0.184    32  HOLD     MEDIUM SUPPORTED  profitability_small
- 29 BWA        69.28    14.11  -0.190    30  HOLD     LOW    SUPPORTED  insider_opportunistic
+  1 CVLG       33.48     0.84   0.882   100  BUY      MEDIUM SUPPORTED  profitability_small
+  2 INDV       38.47     4.54   0.256    98  WATCH    LOW    SUPPORTED  insider_opportunistic
+ 10 EXPD      179.00    23.27  -0.113    78  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 10 INCY      121.55    24.64  -0.113    75  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 10 NBIX      164.92    16.76  -0.113    72  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 10 AAPL      308.26  4498.80  -0.113    70  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 10 AMZN      278.09  2999.57  -0.113    68  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 10 GRMN      313.16    60.39  -0.113    65  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 10 NFLX       76.29   317.67  -0.113    62  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 10 GOOGL     357.52  4372.47  -0.113    60  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 10 JKHY      155.08    11.02  -0.113    58  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 10 MSFT      506.06  3757.77  -0.113    55  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 10 CSCO      122.57   483.10  -0.113    52  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 10 CON        34.10     4.35  -0.113    50  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 10 PHIN       73.81     2.70  -0.113    48  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 10 PRVA       22.37     2.86  -0.113    45  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 24 LLY      1231.94  1159.70  -0.124    42  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 25 BOX        33.60     4.65  -0.135    40  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 26 JAZZ      256.52    16.65  -0.135    38  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 27 NVDA      217.55  5264.71  -0.138    35  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 28 META      594.92  1515.56  -0.162    32  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 29 VTS        16.15     0.64  -0.184    30  HOLD     MEDIUM SUPPORTED  profitability_small
+ 30 BWA        69.28    14.11  -0.190    28  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 31 GXO        46.96     5.39  -0.196    25  HOLD     LOW    SUPPORTED  insider_opportunistic
+ 32 DDS       633.98     9.90  -0.198    22  HOLD     LOW    SUPPORTED  insider_opportunistic
 
 ------------------------------------------------------------------------------
 THE DETAIL
 ------------------------------------------------------------------------------
 
-1. TSM — Semiconductors  $61459.71bn  $418.47
-   VERDICT WATCH  ·  ranking score +1.420 (100th pct)  ·  confidence LOW  ·  evidence SUPPORTED
-   EXPECTED RETURN: NOT_CALIBRATED — the engine has an ordering here, not a forecast.
-   WHY IT RANKS: led by insider_opportunistic (SUPPORTED/PICKER, +1.50); single-signal rank
-     + insider_opportunistic          +1.500  [SUPPORTED/PICKER] PICKER, weight 0.50 x z +3.00 = +1.500
-     · momentum_12_1                  raw +0.726  NOT USED — REJECTED/CLOSED
-     ? fusion_insider_profitability   ABSENT — fusion signal needs both insider and profitability legs
-     ? short_interest_level           ABSENT — short interest not wired into the funnel candidate yet
-     ? earnings_surprise_monthly      ABSENT — earnings surprise not wired into the funnel candidate yet
-     ? rating_drift_3m                ABSENT — no 3-month rating drift
-     ? analyst_target_level_haircut   ABSENT — no consensus target
-     ? analyst_target_upside_xs       ABSENT — no consensus target
-   RISKS: annualised volatility 40%; confidence LOW: only 1 licensed signal(s) speak to this name
-   KILL CONDITION (PROPOSED_AWAITING_MURAT): the insiders who bought sell any part of the stake, or two quarters pass with no further open-market purchase
-
-2. CVLG — Road & Rail  $0.84bn  $33.48
-   VERDICT BUY  ·  ranking score +0.882 (98th pct)  ·  confidence MEDIUM  ·  evidence SUPPORTED
+1. CVLG — Road & Rail  $0.84bn  $33.48
+   VERDICT BUY  ·  ranking score +0.882 (100th pct)  ·  confidence MEDIUM  ·  evidence SUPPORTED
    EXPECTED RETURN: NOT_CALIBRATED — the engine has an ordering here, not a forecast.
    WHY IT RANKS: led by profitability_small (SUPPORTED/PICKER, +1.09); also insider_opportunistic -0.11
      + profitability_small            +1.095  [SUPPORTED/PICKER] PICKER, weight 0.70 x z +1.56 = +1.095
@@ -75,10 +60,9 @@ THE DETAIL
      ? analyst_target_upside_xs       ABSENT — no consensus target
    RISKS: annualised volatility 42%; small cap — thinner liquidity, wider spreads, higher delisting and dilution risk
    KILL CONDITION (PROPOSED_AWAITING_MURAT): gross profitability falls below the small-cap cross-sectional median for two consecutive quarters (currently 0.75)
-   RANKED BELOW: TSM
 
-3. INDV — Pharmaceuticals  $4.54bn  $38.47
-   VERDICT WATCH  ·  ranking score +0.256 (95th pct)  ·  confidence LOW  ·  evidence SUPPORTED
+2. INDV — Pharmaceuticals  $4.54bn  $38.47
+   VERDICT WATCH  ·  ranking score +0.256 (98th pct)  ·  confidence LOW  ·  evidence SUPPORTED
    EXPECTED RETURN: NOT_CALIBRATED — the engine has an ordering here, not a forecast.
    WHY IT RANKS: led by insider_opportunistic (SUPPORTED/PICKER, +0.28); single-signal rank
      + insider_opportunistic          +0.284  [SUPPORTED/PICKER] PICKER, weight 0.50 x z +0.57 = +0.284
@@ -91,10 +75,10 @@ THE DETAIL
      ? analyst_target_upside_xs       ABSENT — no consensus target
    RISKS: annualised volatility 37%; confidence LOW: only 1 licensed signal(s) speak to this name
    KILL CONDITION (PROPOSED_AWAITING_MURAT): the insiders who bought sell any part of the stake, or two quarters pass with no further open-market purchase
-   RANKED BELOW: TSM, CVLG
+   RANKED BELOW: CVLG
 
-8. EXPD — Logistics & Transportation  $23.27bn  $179.00
-   VERDICT HOLD  ·  ranking score -0.113 (82th pct)  ·  confidence LOW  ·  evidence SUPPORTED
+10. EXPD — Logistics & Transportation  $23.27bn  $179.00
+   VERDICT HOLD  ·  ranking score -0.113 (78th pct)  ·  confidence LOW  ·  evidence SUPPORTED
    EXPECTED RETURN: NOT_CALIBRATED — the engine has an ordering here, not a forecast.
    WHY IT RANKS: led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank
      + insider_opportunistic          -0.113  [SUPPORTED/PICKER] PICKER, weight 0.50 x z -0.23 = -0.113
@@ -107,10 +91,10 @@ THE DETAIL
      ? analyst_target_upside_xs       ABSENT — no consensus target
    RISKS: annualised volatility 31%; confidence LOW: only 1 licensed signal(s) speak to this name
    KILL CONDITION (PROPOSED_AWAITING_MURAT): the insiders who bought sell any part of the stake, or two quarters pass with no further open-market purchase
-   RANKED BELOW: TSM, CVLG, INDV
+   RANKED BELOW: CVLG, INDV, FMX
 
-9. INCY — Biotechnology  $24.64bn  $121.55
-   VERDICT HOLD  ·  ranking score -0.113 (80th pct)  ·  confidence LOW  ·  evidence SUPPORTED
+10. INCY — Biotechnology  $24.64bn  $121.55
+   VERDICT HOLD  ·  ranking score -0.113 (75th pct)  ·  confidence LOW  ·  evidence SUPPORTED
    EXPECTED RETURN: NOT_CALIBRATED — the engine has an ordering here, not a forecast.
    WHY IT RANKS: led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank
      + insider_opportunistic          -0.113  [SUPPORTED/PICKER] PICKER, weight 0.50 x z -0.23 = -0.113
@@ -123,10 +107,10 @@ THE DETAIL
      ? analyst_target_upside_xs       ABSENT — no consensus target
    RISKS: annualised volatility 33%; confidence LOW: only 1 licensed signal(s) speak to this name
    KILL CONDITION (PROPOSED_AWAITING_MURAT): the insiders who bought sell any part of the stake, or two quarters pass with no further open-market purchase
-   RANKED BELOW: TSM, CVLG, INDV
+   RANKED BELOW: CVLG, INDV, FMX
 
 10. NBIX — Biotechnology  $16.76bn  $164.92
-   VERDICT HOLD  ·  ranking score -0.113 (78th pct)  ·  confidence LOW  ·  evidence SUPPORTED
+   VERDICT HOLD  ·  ranking score -0.113 (72th pct)  ·  confidence LOW  ·  evidence SUPPORTED
    EXPECTED RETURN: NOT_CALIBRATED — the engine has an ordering here, not a forecast.
    WHY IT RANKS: led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank
      + insider_opportunistic          -0.113  [SUPPORTED/PICKER] PICKER, weight 0.50 x z -0.23 = -0.113
@@ -139,10 +123,10 @@ THE DETAIL
      ? analyst_target_upside_xs       ABSENT — no consensus target
    RISKS: annualised volatility 33%; confidence LOW: only 1 licensed signal(s) speak to this name
    KILL CONDITION (PROPOSED_AWAITING_MURAT): the insiders who bought sell any part of the stake, or two quarters pass with no further open-market purchase
-   RANKED BELOW: TSM, CVLG, INDV
+   RANKED BELOW: CVLG, INDV, FMX
 
-11. AAPL — Technology  $4498.80bn  $308.26
-   VERDICT HOLD  ·  ranking score -0.113 (75th pct)  ·  confidence LOW  ·  evidence SUPPORTED
+10. AAPL — Technology  $4498.80bn  $308.26
+   VERDICT HOLD  ·  ranking score -0.113 (70th pct)  ·  confidence LOW  ·  evidence SUPPORTED
    EXPECTED RETURN: NOT_CALIBRATED — the engine has an ordering here, not a forecast.
    WHY IT RANKS: led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank
      + insider_opportunistic          -0.113  [SUPPORTED/PICKER] PICKER, weight 0.50 x z -0.23 = -0.113
@@ -155,10 +139,10 @@ THE DETAIL
      ? analyst_target_upside_xs       ABSENT — no consensus target
    RISKS: annualised volatility 25%; confidence LOW: only 1 licensed signal(s) speak to this name
    KILL CONDITION (PROPOSED_AWAITING_MURAT): the insiders who bought sell any part of the stake, or two quarters pass with no further open-market purchase
-   RANKED BELOW: TSM, CVLG, INDV
+   RANKED BELOW: CVLG, INDV, FMX
 
-12. AMZN — Retail  $2999.57bn  $278.09
-   VERDICT HOLD  ·  ranking score -0.113 (72th pct)  ·  confidence LOW  ·  evidence SUPPORTED
+10. AMZN — Retail  $2999.57bn  $278.09
+   VERDICT HOLD  ·  ranking score -0.113 (68th pct)  ·  confidence LOW  ·  evidence SUPPORTED
    EXPECTED RETURN: NOT_CALIBRATED — the engine has an ordering here, not a forecast.
    WHY IT RANKS: led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank
      + insider_opportunistic          -0.113  [SUPPORTED/PICKER] PICKER, weight 0.50 x z -0.23 = -0.113
@@ -171,26 +155,10 @@ THE DETAIL
      ? analyst_target_upside_xs       ABSENT — no consensus target
    RISKS: annualised volatility 34%; confidence LOW: only 1 licensed signal(s) speak to this name
    KILL CONDITION (PROPOSED_AWAITING_MURAT): the insiders who bought sell any part of the stake, or two quarters pass with no further open-market purchase
-   RANKED BELOW: TSM, CVLG, INDV
+   RANKED BELOW: CVLG, INDV, FMX
 
-13. FMX — Beverages  $243.02bn  $119.92
-   VERDICT HOLD  ·  ranking score -0.113 (70th pct)  ·  confidence LOW  ·  evidence SUPPORTED
-   EXPECTED RETURN: NOT_CALIBRATED — the engine has an ordering here, not a forecast.
-   WHY IT RANKS: led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank
-     + insider_opportunistic          -0.113  [SUPPORTED/PICKER] PICKER, weight 0.50 x z -0.23 = -0.113
-     · momentum_12_1                  raw +0.497  NOT USED — REJECTED/CLOSED
-     ? fusion_insider_profitability   ABSENT — fusion signal needs both insider and profitability legs
-     ? short_interest_level           ABSENT — short interest not wired into the funnel candidate yet
-     ? earnings_surprise_monthly      ABSENT — earnings surprise not wired into the funnel candidate yet
-     ? rating_drift_3m                ABSENT — no 3-month rating drift
-     ? analyst_target_level_haircut   ABSENT — no consensus target
-     ? analyst_target_upside_xs       ABSENT — no consensus target
-   RISKS: annualised volatility 26%; confidence LOW: only 1 licensed signal(s) speak to this name
-   KILL CONDITION (PROPOSED_AWAITING_MURAT): the insiders who bought sell any part of the stake, or two quarters pass with no further open-market purchase
-   RANKED BELOW: TSM, CVLG, INDV
-
-14. GRMN — Consumer products  $60.39bn  $313.16
-   VERDICT HOLD  ·  ranking score -0.113 (68th pct)  ·  confidence LOW  ·  evidence SUPPORTED
+10. GRMN — Consumer products  $60.39bn  $313.16
+   VERDICT HOLD  ·  ranking score -0.113 (65th pct)  ·  confidence LOW  ·  evidence SUPPORTED
    EXPECTED RETURN: NOT_CALIBRATED — the engine has an ordering here, not a forecast.
    WHY IT RANKS: led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank
      + insider_opportunistic          -0.113  [SUPPORTED/PICKER] PICKER, weight 0.50 x z -0.23 = -0.113
@@ -203,32 +171,64 @@ THE DETAIL
      ? analyst_target_upside_xs       ABSENT — no consensus target
    RISKS: annualised volatility 34%; confidence LOW: only 1 licensed signal(s) speak to this name
    KILL CONDITION (PROPOSED_AWAITING_MURAT): the insiders who bought sell any part of the stake, or two quarters pass with no further open-market purchase
-   RANKED BELOW: TSM, CVLG, INDV
+   RANKED BELOW: CVLG, INDV, FMX
+
+10. NFLX — Media  $317.67bn  $76.29
+   VERDICT HOLD  ·  ranking score -0.113 (62th pct)  ·  confidence LOW  ·  evidence SUPPORTED
+   EXPECTED RETURN: NOT_CALIBRATED — the engine has an ordering here, not a forecast.
+   WHY IT RANKS: led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank
+     + insider_opportunistic          -0.113  [SUPPORTED/PICKER] PICKER, weight 0.50 x z -0.23 = -0.113
+     · momentum_12_1                  raw -0.397  NOT USED — REJECTED/CLOSED
+     ? fusion_insider_profitability   ABSENT — fusion signal needs both insider and profitability legs
+     ? short_interest_level           ABSENT — short interest not wired into the funnel candidate yet
+     ? earnings_surprise_monthly      ABSENT — earnings surprise not wired into the funnel candidate yet
+     ? rating_drift_3m                ABSENT — no 3-month rating drift
+     ? analyst_target_level_haircut   ABSENT — no consensus target
+     ? analyst_target_upside_xs       ABSENT — no consensus target
+   RISKS: annualised volatility 35%; confidence LOW: only 1 licensed signal(s) speak to this name
+   KILL CONDITION (PROPOSED_AWAITING_MURAT): the insiders who bought sell any part of the stake, or two quarters pass with no further open-market purchase
+   RANKED BELOW: CVLG, INDV, FMX
+
+10. GOOGL — Media  $4372.47bn  $357.52
+   VERDICT HOLD  ·  ranking score -0.113 (60th pct)  ·  confidence LOW  ·  evidence SUPPORTED
+   EXPECTED RETURN: NOT_CALIBRATED — the engine has an ordering here, not a forecast.
+   WHY IT RANKS: led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank
+     + insider_opportunistic          -0.113  [SUPPORTED/PICKER] PICKER, weight 0.50 x z -0.23 = -0.113
+     · momentum_12_1                  raw +0.734  NOT USED — REJECTED/CLOSED
+     ? fusion_insider_profitability   ABSENT — fusion signal needs both insider and profitability legs
+     ? short_interest_level           ABSENT — short interest not wired into the funnel candidate yet
+     ? earnings_surprise_monthly      ABSENT — earnings surprise not wired into the funnel candidate yet
+     ? rating_drift_3m                ABSENT — no 3-month rating drift
+     ? analyst_target_level_haircut   ABSENT — no consensus target
+     ? analyst_target_upside_xs       ABSENT — no consensus target
+   RISKS: annualised volatility 33%; confidence LOW: only 1 licensed signal(s) speak to this name
+   KILL CONDITION (PROPOSED_AWAITING_MURAT): the insiders who bought sell any part of the stake, or two quarters pass with no further open-market purchase
+   RANKED BELOW: CVLG, INDV, FMX
 
 ------------------------------------------------------------------------------
 THE BOOKS
 ------------------------------------------------------------------------------
 
 OPTIMUS_BALANCED — REFUSED
-   3 names cannot fill a book at a 10% cap — the archetype needs at least 10 names
+   2 names cannot fill a book at a 10% cap — the archetype needs at least 10 names
 
 OPTIMUS_AGGRESSIVE — REFUSED
-   3 names cannot fill a book at a 20% cap — the archetype needs at least 5 names
+   2 names cannot fill a book at a 20% cap — the archetype needs at least 5 names
 
 OPTIMUS_HIGH_CONVICTION — REFUSED
    1 names cannot fill a book at a 25% cap — the archetype needs at least 4 names
 
 OPTIMUS_DIVERSIFIED_ALPHA — REFUSED
-   3 names cannot fill a book at a 5% cap — the archetype needs at least 20 names
+   2 names cannot fill a book at a 5% cap — the archetype needs at least 20 names
 
 OPTIMUS_LOW_TURNOVER — REFUSED
-   3 names cannot fill a book at a 10% cap — the archetype needs at least 10 names
+   2 names cannot fill a book at a 10% cap — the archetype needs at least 10 names
 
 CONTROL_EQUAL_WEIGHT — REFUSED
-   3 names cannot fill a book at a 10% cap — the archetype needs at least 10 names
+   2 names cannot fill a book at a 10% cap — the archetype needs at least 10 names
 
 OPTIMUS_MAX_GROWTH — REFUSED
-   OPTIMUS_MAX_GROWTH needs a CALIBRATED expected return and none exists (e.g. TSM, CVLG, INDV, GOOG, OMAB). A ranking score is an ordering, not a magnitude; feeding it to Kelly would turn a scoring artefact into a position size.
+   OPTIMUS_MAX_GROWTH needs a CALIBRATED expected return and none exists (e.g. CVLG, INDV, FMX, GOOG, OMAB). A ranking score is an ordering, not a magnitude; feeding it to Kelly would turn a scoring artefact into a position size.
 
 ------------------------------------------------------------------------------
 CAPITAL FRONTIER — OPTIMUS_BALANCED

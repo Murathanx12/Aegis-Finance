@@ -1,0 +1,364 @@
+{
+ "generated_at": "2026-08-11T02:35:44+00:00",
+ "status": "PAPER PROPOSAL \u2014 no trade, no lane, no flag, no order path",
+ "book_confirmed_by_murat": false,
+ "arms": {
+  "MURAT_CONVICTION": {
+   "description": "the book as recorded, at its current share counts",
+   "n_names": 12,
+   "nav_marked": 39499.6,
+   "weights": {
+    "AARD": 0.1914,
+    "ABSI": 0.1369,
+    "AMSC": 0.0392,
+    "BHVN": 0.1104,
+    "DKNG": 0.0922,
+    "HUBS": 0.0547,
+    "KYTX": 0.0499,
+    "NTLA": 0.0761,
+    "PRCH": 0.0781,
+    "QUBT": 0.0452,
+    "SLDP": 0.0357,
+    "SOC": 0.0902
+   },
+   "unmarked_names": [],
+   "cash": null,
+   "cash_note": "UNKNOWN \u2014 Murat has not supplied a cash figure, so NAV here is the marked equity only and every weight below is a share of that, not of the account"
+  },
+  "OPTIMUS_HOLDINGS_ONLY": {
+   "description": "Optimus may resize or sell what is held and may buy nothing new",
+   "n_names_with_licensed_evidence": 11,
+   "names_with_evidence": [
+    "AARD",
+    "ABSI",
+    "AMSC",
+    "DKNG",
+    "HUBS",
+    "KYTX",
+    "NTLA",
+    "PRCH",
+    "QUBT",
+    "SLDP",
+    "SOC"
+   ],
+   "names_without_evidence": [
+    "BHVN"
+   ],
+   "per_name": [
+    {
+     "ticker": "AARD",
+     "rank": 51,
+     "ranking_score": -1.423891,
+     "recommendation": "HOLD",
+     "confidence": "LOW",
+     "evidence_grade": "SUPPORTED",
+     "led_by": "profitability_small",
+     "market_cap": 165444244.81518987,
+     "reason": "led by profitability_small (SUPPORTED/PICKER, -1.42); single-signal rank",
+     "absent_signals": [
+      "insider_opportunistic",
+      "fusion_insider_profitability",
+      "low_volatility",
+      "short_interest_level",
+      "earnings_surprise_monthly",
+      "rating_drift_3m",
+      "analyst_target_level_haircut",
+      "analyst_target_upside_xs",
+      "momentum_12_1"
+     ]
+    },
+    {
+     "ticker": "ABSI",
+     "rank": 47,
+     "ranking_score": -0.564851,
+     "recommendation": "HOLD",
+     "confidence": "MEDIUM",
+     "evidence_grade": "SUPPORTED",
+     "led_by": "profitability_small",
+     "market_cap": 1526297021.8309069,
+     "reason": "led by profitability_small (SUPPORTED/PICKER, -1.40); also insider_opportunistic +0.83",
+     "absent_signals": [
+      "fusion_insider_profitability",
+      "low_volatility",
+      "short_interest_level",
+      "earnings_surprise_monthly",
+      "rating_drift_3m",
+      "analyst_target_level_haircut",
+      "analyst_target_upside_xs",
+      "momentum_12_1"
+     ]
+    },
+    {
+     "ticker": "AMSC",
+     "rank": 46,
+     "ranking_score": -0.345785,
+     "recommendation": "HOLD",
+     "confidence": "MEDIUM",
+     "evidence_grade": "SUPPORTED",
+     "led_by": "profitability_small",
+     "market_cap": 1501222085.9166791,
+     "reason": "led by profitability_small (SUPPORTED/PICKER, -0.23); also insider_opportunistic -0.12",
+     "absent_signals": [
+      "fusion_insider_profitability",
+      "low_volatility",
+      "short_interest_level",
+      "earnings_surprise_monthly",
+      "rating_drift_3m",
+      "analyst_target_level_haircut",
+      "analyst_target_upside_xs",
+      "momentum_12_1"
+     ]
+    },
+    {
+     "ticker": "BHVN",
+     "rank": 6,
+     "ranking_score": 0.0,
+     "recommendation": "NO_ACTION",
+     "confidence": "NONE",
+     "evidence_grade": "NO_EVIDENCE",
+     "led_by": null,
+     "market_cap": 2189156762.465211,
+     "reason": "no rank-bearing signal available for this name",
+     "absent_signals": [
+      "insider_opportunistic",
+      "fusion_insider_profitability",
+      "low_volatility",
+      "short_interest_level",
+      "earnings_surprise_monthly",
+      "rating_drift_3m",
+      "analyst_target_level_haircut",
+      "analyst_target_upside_xs",
+      "momentum_12_1"
+     ]
+    },
+    {
+     "ticker": "DKNG",
+     "rank": 16,
+     "ranking_score": -0.118695,
+     "recommendation": "HOLD",
+     "confidence": "LOW",
+     "evidence_grade": "SUPPORTED",
+     "led_by": "insider_opportunistic",
+     "market_cap": 12041046676.931335,
+     "reason": "led by insider_opportunistic (SUPPORTED/PICKER, -0.12); single-signal rank",
+     "absent_signals": [
+      "fusion_insider_profitability",
+      "low_volatility",
+      "short_interest_level",
+      "earnings_surprise_monthly",
+      "rating_drift_3m",
+      "analyst_target_level_haircut",
+      "analyst_target_upside_xs",
+      "momentum_12_1"
+     ]
+    },
+    {
+     "ticker": "HUBS",
+     "rank": 16,
+     "ranking_score": -0.118695,
+     "recommendation": "HOLD",
+     "confidence": "LOW",
+     "evidence_grade": "SUPPORTED",
+     "led_by": "insider_opportunistic",
+     "market_cap": 10766610976.280401,
+     "reason": "led by insider_opportunistic (SUPPORTED/PICKER, -0.12); single-signal rank",
+     "absent_signals": [
+      "fusion_insider_profitability",
+      "low_volatility",
+      "short_interest_level",
+      "earnings_surprise_monthly",
+      "rating_drift_3m",
+      "analyst_target_level_haircut",
+      "analyst_target_upside_xs",
+      "momentum_12_1"
+     ]
+    },
+    {
+     "ticker": "KYTX",
+     "rank": 52,
+     "ranking_score": -1.685411,
+     "recommendation": "HOLD",
+     "confidence": "MEDIUM",
+     "evidence_grade": "SUPPORTED",
+     "led_by": "profitability_small",
+     "market_cap": 479674223.1557789,
+     "reason": "led by profitability_small (SUPPORTED/PICKER, -1.57); also insider_opportunistic -0.12",
+     "absent_signals": [
+      "fusion_insider_profitability",
+      "low_volatility",
+      "short_interest_level",
+      "earnings_surprise_monthly",
+      "rating_drift_3m",
+      "analyst_target_level_haircut",
+      "analyst_target_upside_xs",
+      "momentum_12_1"
+     ]
+    },
+    {
+     "ticker": "NTLA",
+     "rank": 50,
+     "ranking_score": -1.392595,
+     "recommendation": "HOLD",
+     "confidence": "MEDIUM",
+     "evidence_grade": "SUPPORTED",
+     "led_by": "profitability_small",
+     "market_cap": 1684322799.1021776,
+     "reason": "led by profitability_small (SUPPORTED/PICKER, -1.27); also insider_opportunistic -0.12",
+     "absent_signals": [
+      "fusion_insider_profitability",
+      "low_volatility",
+      "short_interest_level",
+      "earnings_surprise_monthly",
+      "rating_drift_3m",
+      "analyst_target_level_haircut",
+      "analyst_target_upside_xs",
+      "momentum_12_1"
+     ]
+    },
+    {
+     "ticker": "PRCH",
+     "rank": 4,
+     "ranking_score": 0.178514,
+     "recommendation": "BUY",
+     "confidence": "MEDIUM",
+     "evidence_grade": "SUPPORTED",
+     "led_by": "profitability_small",
+     "market_cap": 1751611118.5444796,
+     "reason": "led by profitability_small (SUPPORTED/PICKER, +0.30); also insider_opportunistic -0.12",
+     "absent_signals": [
+      "fusion_insider_profitability",
+      "low_volatility",
+      "short_interest_level",
+      "earnings_surprise_monthly",
+      "rating_drift_3m",
+      "analyst_target_level_haircut",
+      "analyst_target_upside_xs",
+      "momentum_12_1"
+     ]
+    },
+    {
+     "ticker": "QUBT",
+     "rank": 16,
+     "ranking_score": -0.118695,
+     "recommendation": "HOLD",
+     "confidence": "LOW",
+     "evidence_grade": "SUPPORTED",
+     "led_by": "insider_opportunistic",
+     "market_cap": 2014027513.0348585,
+     "reason": "led by insider_opportunistic (SUPPORTED/PICKER, -0.12); single-signal rank",
+     "absent_signals": [
+      "fusion_insider_profitability",
+      "low_volatility",
+      "short_interest_level",
+      "earnings_surprise_monthly",
+      "rating_drift_3m",
+      "analyst_target_level_haircut",
+      "analyst_target_upside_xs",
+      "momentum_12_1"
+     ]
+    },
+    {
+     "ticker": "SLDP",
+     "rank": 48,
+     "ranking_score": -0.614322,
+     "recommendation": "HOLD",
+     "confidence": "MEDIUM",
+     "evidence_grade": "SUPPORTED",
+     "led_by": "profitability_small",
+     "market_cap": 536225834.1201716,
+     "reason": "led by profitability_small (SUPPORTED/PICKER, -0.50); also insider_opportunistic -0.12",
+     "absent_signals": [
+      "fusion_insider_profitability",
+      "low_volatility",
+      "short_interest_level",
+      "earnings_surprise_monthly",
+      "rating_drift_3m",
+      "analyst_target_level_haircut",
+      "analyst_target_upside_xs",
+      "momentum_12_1"
+     ]
+    },
+    {
+     "ticker": "SOC",
+     "rank": 49,
+     "ranking_score": -0.967086,
+     "recommendation": "HOLD",
+     "confidence": "LOW",
+     "evidence_grade": "SUPPORTED",
+     "led_by": "profitability_small",
+     "market_cap": 950966962.1031579,
+     "reason": "led by profitability_small (SUPPORTED/PICKER, -0.97); single-signal rank",
+     "absent_signals": [
+      "insider_opportunistic",
+      "fusion_insider_profitability",
+      "low_volatility",
+      "short_interest_level",
+      "earnings_surprise_monthly",
+      "rating_drift_3m",
+      "analyst_target_level_haircut",
+      "analyst_target_upside_xs",
+      "momentum_12_1"
+     ]
+    }
+   ],
+   "verdict": "Optimus has licensed evidence on 11 of 12 held names. It cannot form a considered view on the rest, and says so rather than issuing a HOLD that would read as an endorsement."
+  },
+  "OPTIMUS_OPEN_UNIVERSE": {
+   "description": "same capital, full investable US universe, only names Optimus can justify",
+   "books": {},
+   "refused": {
+    "OPTIMUS_BALANCED": "2 names cannot fill a book at a 10% cap \u2014 the archetype needs at least 10 names",
+    "OPTIMUS_AGGRESSIVE": "2 names cannot fill a book at a 20% cap \u2014 the archetype needs at least 5 names",
+    "OPTIMUS_HIGH_CONVICTION": "1 names cannot fill a book at a 25% cap \u2014 the archetype needs at least 4 names",
+    "OPTIMUS_DIVERSIFIED_ALPHA": "2 names cannot fill a book at a 5% cap \u2014 the archetype needs at least 20 names",
+    "OPTIMUS_LOW_TURNOVER": "2 names cannot fill a book at a 10% cap \u2014 the archetype needs at least 10 names",
+    "CONTROL_EQUAL_WEIGHT": "2 names cannot fill a book at a 10% cap \u2014 the archetype needs at least 10 names",
+    "OPTIMUS_MAX_GROWTH": "OPTIMUS_MAX_GROWTH needs a CALIBRATED expected return and none exists (e.g. CVLG, INDV, FMX, GOOG, OMAB). A ranking score is an ordering, not a magnitude; feeding it to Kelly would turn a scoring artefact into a position size."
+   },
+   "n_candidates_screened": 40
+  }
+ },
+ "known_forks": {
+  "QUBT": {
+   "config_shares": 200,
+   "decision_log_shares": 300,
+   "note": "the conviction decision log says 300, backend config says 200. Both are run below; neither is adopted.",
+   "value_at_config": 1786.0,
+   "value_at_log": 2679.0,
+   "nav_difference": 893.0
+  }
+ },
+ "proposed_kill_conditions": {
+  "ABSI": {
+   "condition": "cash runway falls below 12 months, or a lead programme is discontinued without a named successor",
+   "status": "PROPOSED_AWAITING_MURAT",
+   "note": "none was invented from the engine; these are for Murat to accept, amend or reject"
+  },
+  "AMSC": {
+   "condition": "two consecutive quarters of declining grid-segment backlog, or the largest customer concentration exceeds 40% of revenue",
+   "status": "PROPOSED_AWAITING_MURAT",
+   "note": "none was invented from the engine; these are for Murat to accept, amend or reject"
+  },
+  "HUBS": {
+   "condition": "net revenue retention falls below 100% for two consecutive quarters",
+   "status": "PROPOSED_AWAITING_MURAT",
+   "note": "none was invented from the engine; these are for Murat to accept, amend or reject"
+  },
+  "KYTX": {
+   "condition": "a lead clinical programme misses its primary endpoint, or cash runway falls below 12 months",
+   "status": "PROPOSED_AWAITING_MURAT",
+   "note": "none was invented from the engine; these are for Murat to accept, amend or reject"
+  },
+  "SLDP": {
+   "condition": "a named OEM partnership lapses without replacement, or cash runway falls below 12 months",
+   "status": "PROPOSED_AWAITING_MURAT",
+   "note": "none was invented from the engine; these are for Murat to accept, amend or reject"
+  }
+ },
+ "what_optimus_cannot_say": {
+  "cash": "unknown \u2014 not supplied",
+  "cost_bases": "5 of 12 unknown, so no per-name P&L is computed",
+  "confirmed": "the book carries no `confirmed: true`, so every number here is a SIMULATION on an unconfirmed book",
+  "expected_return": "NOT CALIBRATED for any name in any arm \u2014 the comparison is of composition, never of forecast return"
+ }
+}

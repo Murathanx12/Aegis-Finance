@@ -1,0 +1,79 @@
+{
+ "concerns": [
+  {
+   "concern": "The top 3 names (TSM, CVLG, INDV) were selected from a pool of 40 candidates, but with only 3 positive scores and 9 negative/zero scores, the ranking is likely driven by noise rather than signal, and the multiple testing across 40 candidates inflates the chance of false positives.",
+   "severity": "HIGH",
+   "why_it_matters_bps_per_year": 250,
+   "how_to_check": "Compute the false discovery rate (e.g., Benjamini-Hochberg) on the 40 candidate scores; if the top 3 p-values are not below the adjusted threshold, the selection is not statistically significant."
+  },
+  {
+   "concern": "The evidence grades are 'SUPPORTED' for TSM, CVLG, INDV, but the confidence is LOW for two of them and MEDIUM for one, yet the portfolio weights (if any were assigned) would likely be concentrated in these names, implying the grades do not justify the risk taken.",
+   "severity": "HIGH",
+   "why_it_matters_bps_per_year": 300,
+   "how_to_check": "Backtest a portfolio that weights names inversely to confidence (LOW gets less weight) vs. equal weight; if the equal-weight version outperforms, the grades are not informative for sizing."
+  },
+  {
+   "concern": "The signals 'insider_opportunistic' and 'profitability_small' appear to be the only drivers, and TSM, CVLG, INDV are all led by these two factors, suggesting the portfolio is not diversified across independent signals but is effectively a double-down on the same two factors.",
+   "severity": "MEDIUM",
+   "why_it_makes_bps_per_year": 150,
+   "how_to_check": "Calculate the correlation of the factor scores across the 40 candidates; if the top names are all in the same factor cluster, the effective number of independent bets is less than 3."
+  },
+  {
+   "concern": "The portfolio has only 3 names with positive scores, and the refusal messages indicate that no book can be filled at the required caps, meaning the actual portfolio is empty or forced to hold cash, which is a capacity and turnover failure that will underperform any benchmark.",
+   "severity": "HIGH",
+   "why_it_matters_bps_per_year": 400,
+   "how_to_check": "Simulate the portfolio construction with the stated caps; if the optimizer cannot allocate to at least the minimum number of names, the strategy is not investable and should be rejected."
+  },
+  {
+   "concern": "The signals are likely regime-dependent: 'insider_opportunistic' and 'profitability_small' may work in certain market conditions (e.g., small-cap bull markets) but fail in others, and the portfolio has no regime filter or hedge, making it vulnerable to a single economic state.",
+   "severity": "MEDIUM",
+   "why_it_matters_bps_per_year": 200,
+   "how_to_check": "Split the historical sample by market regime (e.g., VIX above/below median, growth vs. value) and test if the top 3 names' excess returns are positive in both regimes; if not, the strategy is regime-dependent."
+  },
+  {
+   "concern": "The scores are point estimates (e.g., TSM score 1.419979) with no confidence intervals or standard errors, and the 'expected_return_status' is 'NOT_CALIBRATED for every name', meaning the scores are being read as if they were expected returns, which is a category error that will lead to mis-sized positions.",
+   "severity": "HIGH",
+   "why_it_matters_bps_per_year": 350,
+   "how_to_check": "Regress the scores against subsequent realized returns; if the R-squared is near zero or the slope is not statistically significant, the scores have no predictive magnitude and should not be used for sizing."
+  },
+  {
+   "concern": "The inclusion of GOOG, OMAB, CCEP, IMO with score 0.0 and grade 'NO_EVIDENCE' suggests they were added to fill the book after seeing the result, which is a classic look-ahead bias or data snooping, as they have no supporting evidence but are in the top list.",
+   "severity": "HIGH",
+   "why_it_matters_bps_per_year": 300,
+   "how_to_check": "Re-run the selection process without the zero-score names; if the portfolio's performance materially changes, the zero-score names are not neutral and were likely cherry-picked."
+  },
+  {
+   "concern": "The refusal for OPTIMUS_MAX_GROWTH explicitly states that no calibrated expected return exists, yet the top list includes names like TSM and GOOG that would be in a growth portfolio, indicating the system is inconsistent in applying its own rules and may be forcing a growth tilt without proper justification.",
+   "severity": "MEDIUM",
+   "why_it_matters_bps_per_year": 150,
+   "how_to_check": "Compare the top 3 names to a growth index (e.g., Russell 1000 Growth); if the names are not statistically different from the index's top holdings, the strategy is not adding alpha."
+  },
+  {
+   "concern": "The 'tied_with' field is null for all names, but the scores for EXPD, INCY, NBIX, AAPL, AMZN are all exactly -0.112842, suggesting a tie that is not resolved, and the ranking may be arbitrary, leading to unstable portfolio weights if the tie-breaker is not deterministic.",
+   "severity": "LOW",
+   "why_it_matters_bps_per_year": 50,
+   "how_to_check": "Re-run the ranking with a different tie-breaker (e.g., alphabetical, market cap); if the top 3 changes, the portfolio is not robust to tie resolution."
+  },
+  {
+   "concern": "The portfolio has only 3 names with positive scores, but the 'n_candidates' is 40, meaning 37 names were discarded; this extreme selection ratio suggests the strategy is overfitting to a few outliers, and the out-of-sample performance will likely revert to the mean.",
+   "severity": "HIGH",
+   "why_it_matters_bps_per_year": 250,
+   "how_to_check": "Perform a bootstrap or cross-validation: randomly sample 40 names, compute scores, and see how often the top 3 are the same; if the overlap is low, the selection is unstable."
+  }
+ ],
+ "parsed_ok": true,
+ "raw": "[\n  {\n    \"concern\": \"The top 3 names (TSM, CVLG, INDV) were selected from a pool of 40 candidates, but with only 3 positive scores and 9 negative/zero scores, the ranking is likely driven by noise rather than signal, and the multiple testing across 40 candidates inflates the chance of false positives.\",\n    \"severity\": \"HIGH\",\n    \"why_it_matters_bps_per_year\": 250,\n    \"how_to_check\": \"Compute the false discovery rate (e.g., Benjamini-Hochberg) on the 40 candidate scores; if the top 3 p-values are not below the adjusted threshold, the selection is not statistically significant.\"\n  },\n  {\n    \"concern\": \"The evidence grades are 'SUPPORTED' for TSM, CVLG, INDV, but the confidence is LOW for two of them and MEDIUM for one, yet the portfolio weights (if any were assigned) would likely be concentrated in these names, implying the grades do not justify the risk taken.\",\n    \"severity\": \"HIGH\",\n    \"why_it_matters_bps_per_year\": 300,\n    \"how_to_check\": \"Backtest a portfolio that weights names inversely to confidence (LOW gets less weight) vs. equal weight; if the equal-weight version outperforms, the grades are not informative for sizing.\"\n  },\n  {\n    \"concern\": \"The signals 'insider_opportunistic' and 'profitability_small' appear to be the only drivers, and TSM, CVLG, INDV are all led by these two factors, suggesting the portfolio is not diversified across independent signals but is effectively a double-down on the same two factors.\",\n    \"severity\": \"MEDIUM\",\n    \"why_it_makes_bps_per_year\": 150,\n    \"how_to_check\": \"Calculate the correlation of the factor scores across the 40 candidates; if the top names are all in the same factor cluster, the effective number of independent bets is less than 3.\"\n  },\n  {\n    \"concern\": \"The portfolio has only 3 names with positive scores, and the refusal messages indicate that no book can be filled at the required caps, meaning the actual portfolio is empty or forced to hold cash, which is a capacity and turnover failure that will underperform any benchmark.\",\n    \"severity\": \"HIGH\",\n    \"why_it_matters_bps_per_year\": 400,\n    \"how_to_check\": \"Simulate the portfolio construction with the stated caps; if the optimizer cannot allocate to at least the minimum number of names, the strategy is not investable and should be rejected.\"\n  },\n  {\n    \"concern\": \"The signals are likely regime-dependent: 'insider_opportunistic' and 'profitability_small' may work in certain market conditions (e.g., small-cap bull markets) but fail in others, and the portfolio has no regime filter or hedge, making it vulnerable to a single economic state.\",\n    \"severity\": \"MEDIUM\",\n    \"why_it_matters_bps_per_year\": 200,\n    \"how_to_check\": \"Split the historical sample by market regime (e.g., VIX above/below median, growth vs. value) and test if the top 3 names' excess returns are positive in both regimes; if not, the strategy is regime-dependent.\"\n  },\n  {\n    \"concern\": \"The scores are point estimates (e.g., TSM score 1.419979) with no confidence intervals or standard errors, and the 'expected_return_status' is 'NOT_CALIBRATED for every name', meaning the scores are being read as if they were expected returns, which is a category error that will lead to mis-sized positions.\",\n    \"severity\": \"HIGH\",\n    \"why_it_matters_bps_per_year\": 350,\n    \"how_to_check\": \"Regress the scores against subsequent realized returns; if the R-squared is near zero or the slope is not statistically significant, the scores have no predictive magnitude and should not be used for sizing.\"\n  },\n  {\n    \"concern\": \"The inclusion of GOOG, OMAB, CCEP, IMO with score 0.0 and grade 'NO_EVIDENCE' suggests they were added to fill the book after seeing the result, which is a classic look-ahead bias or data snooping, as they have no supporting evidence but are in the top list.\",\n    \"severity\": \"HIGH\",\n    \"why_it_matters_bps_per_year\": 300,\n    \"how_to_check\": \"Re-run the selection process without the zero-score names; if the portfolio's performance materially changes, the zero-score names are not neutral and were likely cherry-picked.\"\n  },\n  {\n    \"concern\": \"The refusal for OPTIMUS_MAX_GROWTH explicitly states that no calibrated expected return exists, yet the top list includes names like TSM and GOOG that would be in a growth portfolio, indicating the system is inconsistent in applying its own rules and may be forcing a growth tilt without proper justification.\",\n    \"severity\": \"MEDIUM\",\n    \"why_it_matters_bps_per_year\": 150,\n    \"how_to_check\": \"Compare the top 3 names to a growth index (e.g., Russell 1000 Growth); if the names are not statistically different from the index's top holdings, the strategy is not adding alpha.\"\n  },\n  {\n    \"concern\": \"The 'tied_with' field is null for all names, but the scores for EXPD, INCY, NBIX, AAPL, AMZN are all exactly -0.112842, suggesting a tie that is not resolved, and the ranking may be arbitrary, leading to unstable portfolio weights if the tie-breaker is not deterministic.\",\n    \"severity\": \"LOW\",\n    \"why_it_matters_bps_per_year\": 50,\n    \"how_to_check\": \"Re-run the ranking with a different tie-breaker (e.g., alphabetical, market cap); if the top 3 changes, the portfolio is not robust to tie resolution.\"\n  },\n  {\n    \"concern\": \"The portfolio has only 3 names with positive scores, but the 'n_candidates' is 40, meaning 37 names were discarded; this extreme selection ratio suggests the strategy is overfitting to a few outliers, and the out-of-sample performance will likely revert to the mean.\",\n    \"severity\": \"HIGH\",\n    \"why_it_matters_bps_per_year\": 250,\n    \"how_to_check\": \"Perform a bootstrap or cross-validation: randomly sample 40 names, compute scores, and see how often the top 3 are the same; if the overlap is low, the selection is unstable.\"\n  }\n]",
+ "call": {
+  "purpose": "adversarial_portfolio_review",
+  "model": "deepseek-v4-flash",
+  "prompt_tokens": 1234,
+  "completion_tokens": 1414,
+  "cost_usd": 0.001889,
+  "output_sha256": "f553c26a698db795",
+  "seconds": 13.7,
+  "temperature": 0.0,
+  "ok": true,
+  "error": "",
+  "meta": {}
+ }
+}

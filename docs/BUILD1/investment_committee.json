@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-08-11T02:22:25+00:00",
+ "generated_at": "2026-08-11T02:34:06+00:00",
  "source_funnel": "C:\\Users\\mrthn\\aegis-finance\\docs\\BUILD1\\funnel_night10.json",
- "funnel_generated_at": "2026-08-11T02:18:36+00:00",
+ "funnel_generated_at": "2026-08-11T02:33:48+00:00",
  "universe_screened": 5324,
  "registry_gate": {
   "status": "CLEAN",
@@ -43,258 +43,15 @@
   "violations": []
  },
  "n_candidates": 40,
- "n_with_licensed_evidence": 36,
+ "n_with_licensed_evidence": 33,
  "opportunities": [
   {
-   "ticker": "TSM",
-   "rank": 1,
-   "recommendation": "WATCH",
-   "ranking_score": 1.419979,
-   "percentile": 100.0,
-   "expected_return": null,
-   "expected_return_low": null,
-   "expected_return_high": null,
-   "expected_return_basis": "NOT_CALIBRATED",
-   "confidence": "LOW",
-   "evidence_grade": "SUPPORTED",
-   "signal_contributions": [
-    {
-     "signal_id": "profitability_small",
-     "role": "PICKER",
-     "grade": "SUPPORTED",
-     "raw_value": 0.34582789999999997,
-     "weight": 0.7,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "PICKER, but OUT OF UNIVERSE: measured in CRSP small segment (small); this name is large-cap \u2014 out of the licensed universe",
-     "available": true,
-     "missing_reason": ""
-    },
-    {
-     "signal_id": "insider_opportunistic",
-     "role": "PICKER",
-     "grade": "SUPPORTED",
-     "raw_value": 7.6802,
-     "weight": 0.5,
-     "contribution": 1.5,
-     "rank_bearing": true,
-     "basis": "PICKER, weight 0.50 x z +3.00 = +1.500",
-     "available": true,
-     "missing_reason": ""
-    },
-    {
-     "signal_id": "fusion_insider_profitability",
-     "role": "PICKER",
-     "grade": "SUPPORTED",
-     "raw_value": null,
-     "weight": 0.55,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "PICKER, but OUT OF UNIVERSE: measured in CRSP small/mid (mid/small); this name is large-cap \u2014 out of the licensed universe",
-     "available": false,
-     "missing_reason": "fusion signal needs both insider and profitability legs"
-    },
-    {
-     "signal_id": "low_volatility",
-     "role": "FILTER",
-     "grade": "SUPPORTED",
-     "raw_value": 0.4047666306979976,
-     "weight": 0.6,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "FILTER, bounded penalty 0.080 (cap 0.40); cannot lead",
-     "available": true,
-     "missing_reason": ""
-    },
-    {
-     "signal_id": "short_interest_level",
-     "role": "FILTER",
-     "grade": "SHELF",
-     "raw_value": null,
-     "weight": 0.35,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "FILTER/SHELF \u2014 not rank-bearing",
-     "available": false,
-     "missing_reason": "short interest not wired into the funnel candidate yet"
-    },
-    {
-     "signal_id": "earnings_surprise_monthly",
-     "role": "FILTER",
-     "grade": "SHELF",
-     "raw_value": null,
-     "weight": 0.3,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "FILTER/SHELF \u2014 not rank-bearing",
-     "available": false,
-     "missing_reason": "earnings surprise not wired into the funnel candidate yet"
-    },
-    {
-     "signal_id": "rating_drift_3m",
-     "role": "FILTER",
-     "grade": "OBSERVATIONAL",
-     "raw_value": null,
-     "weight": 0.5,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "FILTER/OBSERVATIONAL \u2014 not rank-bearing",
-     "available": false,
-     "missing_reason": "no 3-month rating drift"
-    },
-    {
-     "signal_id": "analyst_target_level_haircut",
-     "role": "RISK_INPUT",
-     "grade": "OBSERVATIONAL",
-     "raw_value": null,
-     "weight": 0.5,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "RISK_INPUT \u2014 may cap SIZE after the order is fixed; may not order names",
-     "available": false,
-     "missing_reason": "no consensus target"
-    },
-    {
-     "signal_id": "analyst_target_upside_xs",
-     "role": "CLOSED",
-     "grade": "PERVERSE",
-     "raw_value": null,
-     "weight": 0.0,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "CLOSED/PERVERSE \u2014 read and printed, ZERO rank influence by construction",
-     "available": false,
-     "missing_reason": "no consensus target"
-    },
-    {
-     "signal_id": "momentum_12_1",
-     "role": "CLOSED",
-     "grade": "REJECTED",
-     "raw_value": 0.7257357982669228,
-     "weight": 0.0,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "CLOSED/REJECTED \u2014 read and printed, ZERO rank influence by construction",
-     "available": true,
-     "missing_reason": ""
-    }
-   ],
-   "positive_catalysts": [],
-   "negative_catalysts": [],
-   "risk_factors": [
-    "annualised volatility 40%",
-    "confidence LOW: only 1 licensed signal(s) speak to this name"
-   ],
-   "kill_condition": "the insiders who bought sell any part of the stake, or two quarters pass with no further open-market purchase",
-   "kill_condition_status": "PROPOSED_AWAITING_MURAT",
-   "position_size_candidate": null,
-   "size_caps_applied": [],
-   "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, +1.50); single-signal rank",
-   "better_alternatives": [],
-   "blocked_by": [
-    "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
-   ],
-   "price": 418.4700012207031,
-   "sector": "Semiconductors",
-   "market_cap": 61459714863281.0,
-   "rank_led_by": "insider_opportunistic",
-   "median_dollar_vol": 5333038987.5,
-   "vol_annual": 0.4047666306979976,
-   "why": [
-    "liquid: median 60d dollar volume $5333.0m, so a $10,000 ticket is 0.00% of a day",
-    "cleared the retail liquidity gate",
-    "volatility 40%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
-    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
-    "opportunistic insider buy score 7.68 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
-    "gross profitability 0.35 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
-    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
-   ],
-   "capacity": [
-    {
-     "capital": 10000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 40000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 100000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 1000000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 10000000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 50000000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 250000000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    }
-   ]
-  },
-  {
    "ticker": "CVLG",
-   "rank": 2,
+   "rank": 1,
+   "tied_with": 0,
    "recommendation": "BUY",
    "ranking_score": 0.881871,
-   "percentile": 97.5,
+   "percentile": 100.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -434,9 +191,7 @@
    "position_size_candidate": null,
    "size_caps_applied": [],
    "reason_for_rank": "led by profitability_small (SUPPORTED/PICKER, +1.09); also insider_opportunistic -0.11",
-   "better_alternatives": [
-    "TSM"
-   ],
+   "better_alternatives": [],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
    ],
@@ -537,10 +292,11 @@
   },
   {
    "ticker": "INDV",
-   "rank": 3,
+   "rank": 2,
+   "tied_with": 0,
    "recommendation": "WATCH",
    "ranking_score": 0.256291,
-   "percentile": 95.0,
+   "percentile": 97.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -681,7 +437,6 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, +0.28); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG"
    ],
    "blocked_by": [
@@ -783,8 +538,257 @@
    ]
   },
   {
+   "ticker": "FMX",
+   "rank": 3,
+   "tied_with": 4,
+   "recommendation": "NO_ACTION",
+   "ranking_score": 0.0,
+   "percentile": 95.0,
+   "expected_return": null,
+   "expected_return_low": null,
+   "expected_return_high": null,
+   "expected_return_basis": "NOT_CALIBRATED",
+   "confidence": "NONE",
+   "evidence_grade": "NO_EVIDENCE",
+   "signal_contributions": [
+    {
+     "signal_id": "profitability_small",
+     "role": "PICKER",
+     "grade": "SUPPORTED",
+     "raw_value": 0.4412754299999999,
+     "weight": 0.7,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
+     "available": true,
+     "missing_reason": ""
+    },
+    {
+     "signal_id": "insider_opportunistic",
+     "role": "PICKER",
+     "grade": "SUPPORTED",
+     "raw_value": 0.0,
+     "weight": 0.5,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
+     "available": true,
+     "missing_reason": ""
+    },
+    {
+     "signal_id": "fusion_insider_profitability",
+     "role": "PICKER",
+     "grade": "SUPPORTED",
+     "raw_value": null,
+     "weight": 0.55,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
+     "available": false,
+     "missing_reason": "fusion signal needs both insider and profitability legs"
+    },
+    {
+     "signal_id": "low_volatility",
+     "role": "FILTER",
+     "grade": "SUPPORTED",
+     "raw_value": 0.25807081050795977,
+     "weight": 0.6,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "FILTER, bounded penalty 0.000 (cap 0.40); cannot lead",
+     "available": true,
+     "missing_reason": ""
+    },
+    {
+     "signal_id": "short_interest_level",
+     "role": "FILTER",
+     "grade": "SHELF",
+     "raw_value": null,
+     "weight": 0.35,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "FILTER/SHELF \u2014 not rank-bearing",
+     "available": false,
+     "missing_reason": "short interest not wired into the funnel candidate yet"
+    },
+    {
+     "signal_id": "earnings_surprise_monthly",
+     "role": "FILTER",
+     "grade": "SHELF",
+     "raw_value": null,
+     "weight": 0.3,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "FILTER/SHELF \u2014 not rank-bearing",
+     "available": false,
+     "missing_reason": "earnings surprise not wired into the funnel candidate yet"
+    },
+    {
+     "signal_id": "rating_drift_3m",
+     "role": "FILTER",
+     "grade": "OBSERVATIONAL",
+     "raw_value": null,
+     "weight": 0.5,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "FILTER/OBSERVATIONAL \u2014 not rank-bearing",
+     "available": false,
+     "missing_reason": "no 3-month rating drift"
+    },
+    {
+     "signal_id": "analyst_target_level_haircut",
+     "role": "RISK_INPUT",
+     "grade": "OBSERVATIONAL",
+     "raw_value": null,
+     "weight": 0.5,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "RISK_INPUT \u2014 may cap SIZE after the order is fixed; may not order names",
+     "available": false,
+     "missing_reason": "no consensus target"
+    },
+    {
+     "signal_id": "analyst_target_upside_xs",
+     "role": "CLOSED",
+     "grade": "PERVERSE",
+     "raw_value": null,
+     "weight": 0.0,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "CLOSED/PERVERSE \u2014 read and printed, ZERO rank influence by construction",
+     "available": false,
+     "missing_reason": "no consensus target"
+    },
+    {
+     "signal_id": "momentum_12_1",
+     "role": "CLOSED",
+     "grade": "REJECTED",
+     "raw_value": 0.49733042042070763,
+     "weight": 0.0,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "CLOSED/REJECTED \u2014 read and printed, ZERO rank influence by construction",
+     "available": true,
+     "missing_reason": ""
+    }
+   ],
+   "positive_catalysts": [],
+   "negative_catalysts": [],
+   "risk_factors": [
+    "annualised volatility 26%",
+    "confidence NONE: only 0 licensed signal(s) speak to this name"
+   ],
+   "kill_condition": "",
+   "kill_condition_status": "NONE_SET",
+   "position_size_candidate": null,
+   "size_caps_applied": [],
+   "reason_for_rank": "no rank-bearing signal available for this name",
+   "better_alternatives": [
+    "CVLG",
+    "INDV"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
+   ],
+   "price": 119.91999816894531,
+   "sector": "Beverages",
+   "market_cap": null,
+   "rank_led_by": null,
+   "median_dollar_vol": 64751734.92050171,
+   "vol_annual": 0.25807081050795977,
+   "why": [
+    "liquid: median 60d dollar volume $64.8m, so a $10,000 ticket is 0.02% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 26%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 3 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.44 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "capacity": [
+    {
+     "capital": 10000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 40000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 100000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 1000000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 10000000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 50000000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 250000000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    }
+   ]
+  },
+  {
    "ticker": "GOOG",
-   "rank": 4,
+   "rank": 3,
+   "tied_with": 4,
    "recommendation": "NO_ACTION",
    "ranking_score": 0.0,
    "percentile": 92.5,
@@ -928,9 +932,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "no rank-bearing signal available for this name",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -1031,7 +1035,8 @@
   },
   {
    "ticker": "OMAB",
-   "rank": 5,
+   "rank": 3,
+   "tied_with": 4,
    "recommendation": "NO_ACTION",
    "ranking_score": 0.0,
    "percentile": 90.0,
@@ -1050,7 +1055,7 @@
      "weight": 0.7,
      "contribution": 0.0,
      "rank_bearing": false,
-     "basis": "PICKER, but OUT OF UNIVERSE: measured in CRSP small segment (small); this name is large-cap \u2014 out of the licensed universe",
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
      "available": true,
      "missing_reason": ""
     },
@@ -1061,8 +1066,8 @@
      "raw_value": null,
      "weight": 0.5,
      "contribution": 0.0,
-     "rank_bearing": true,
-     "basis": "PICKER/SUPPORTED \u2014 not rank-bearing",
+     "rank_bearing": false,
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
      "available": false,
      "missing_reason": "no insider signal wired into the funnel candidate yet"
     },
@@ -1074,7 +1079,7 @@
      "weight": 0.55,
      "contribution": 0.0,
      "rank_bearing": false,
-     "basis": "PICKER, but OUT OF UNIVERSE: measured in CRSP small/mid (mid/small); this name is large-cap \u2014 out of the licensed universe",
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
      "available": false,
      "missing_reason": "fusion signal needs both insider and profitability legs"
     },
@@ -1175,16 +1180,16 @@
    "size_caps_applied": [],
    "reason_for_rank": "no rank-bearing signal available for this name",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
    ],
    "price": 108.52999877929688,
    "sector": "Transportation Infrastructure",
-   "market_cap": 79402620000.0,
+   "market_cap": null,
    "rank_led_by": null,
    "median_dollar_vol": 8325754.371261597,
    "vol_annual": 0.3115567205800296,
@@ -1278,7 +1283,8 @@
   },
   {
    "ticker": "CCEP",
-   "rank": 6,
+   "rank": 3,
+   "tied_with": 4,
    "recommendation": "NO_ACTION",
    "ranking_score": 0.0,
    "percentile": 87.5,
@@ -1297,7 +1303,7 @@
      "weight": 0.7,
      "contribution": 0.0,
      "rank_bearing": false,
-     "basis": "PICKER, but OUT OF UNIVERSE: measured in CRSP small segment (small); this name is large-cap \u2014 out of the licensed universe",
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
      "available": true,
      "missing_reason": ""
     },
@@ -1308,8 +1314,8 @@
      "raw_value": null,
      "weight": 0.5,
      "contribution": 0.0,
-     "rank_bearing": true,
-     "basis": "PICKER/SUPPORTED \u2014 not rank-bearing",
+     "rank_bearing": false,
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
      "available": false,
      "missing_reason": "no insider signal wired into the funnel candidate yet"
     },
@@ -1321,7 +1327,7 @@
      "weight": 0.55,
      "contribution": 0.0,
      "rank_bearing": false,
-     "basis": "PICKER, but OUT OF UNIVERSE: measured in CRSP small/mid (mid/small); this name is large-cap \u2014 out of the licensed universe",
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
      "available": false,
      "missing_reason": "fusion signal needs both insider and profitability legs"
     },
@@ -1422,16 +1428,16 @@
    "size_caps_applied": [],
    "reason_for_rank": "no rank-bearing signal available for this name",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
    ],
    "price": 106.02999877929688,
    "sector": "Beverages",
-   "market_cap": 46994364736.402626,
+   "market_cap": null,
    "rank_led_by": null,
    "median_dollar_vol": 183242847.40447998,
    "vol_annual": 0.22665029707837878,
@@ -1525,7 +1531,8 @@
   },
   {
    "ticker": "IMO",
-   "rank": 7,
+   "rank": 3,
+   "tied_with": 4,
    "recommendation": "NO_ACTION",
    "ranking_score": 0.0,
    "percentile": 85.0,
@@ -1544,7 +1551,7 @@
      "weight": 0.7,
      "contribution": 0.0,
      "rank_bearing": false,
-     "basis": "PICKER, but OUT OF UNIVERSE: measured in CRSP small segment (small); this name is large-cap \u2014 out of the licensed universe",
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
      "available": true,
      "missing_reason": ""
     },
@@ -1555,8 +1562,8 @@
      "raw_value": null,
      "weight": 0.5,
      "contribution": 0.0,
-     "rank_bearing": true,
-     "basis": "PICKER/SUPPORTED \u2014 not rank-bearing",
+     "rank_bearing": false,
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
      "available": false,
      "missing_reason": "no insider signal wired into the funnel candidate yet"
     },
@@ -1568,7 +1575,7 @@
      "weight": 0.55,
      "contribution": 0.0,
      "rank_bearing": false,
-     "basis": "PICKER, but OUT OF UNIVERSE: measured in CRSP small/mid (mid/small); this name is large-cap \u2014 out of the licensed universe",
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
      "available": false,
      "missing_reason": "fusion signal needs both insider and profitability legs"
     },
@@ -1669,16 +1676,16 @@
    "size_caps_applied": [],
    "reason_for_rank": "no rank-bearing signal available for this name",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
    ],
    "price": 128.7899932861328,
    "sector": "Energy",
-   "market_cap": 84246689674.0,
+   "market_cap": null,
    "rank_led_by": null,
    "median_dollar_vol": 62705322.80654907,
    "vol_annual": 0.28277803726136,
@@ -1771,11 +1778,509 @@
    ]
   },
   {
-   "ticker": "EXPD",
+   "ticker": "PDS",
    "rank": 8,
+   "tied_with": 0,
+   "recommendation": "NO_ACTION",
+   "ranking_score": -0.035043,
+   "percentile": 82.5,
+   "expected_return": null,
+   "expected_return_low": null,
+   "expected_return_high": null,
+   "expected_return_basis": "NOT_CALIBRATED",
+   "confidence": "NONE",
+   "evidence_grade": "NO_EVIDENCE",
+   "signal_contributions": [
+    {
+     "signal_id": "profitability_small",
+     "role": "PICKER",
+     "grade": "SUPPORTED",
+     "raw_value": 0.21179927999999998,
+     "weight": 0.7,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
+     "available": true,
+     "missing_reason": ""
+    },
+    {
+     "signal_id": "insider_opportunistic",
+     "role": "PICKER",
+     "grade": "SUPPORTED",
+     "raw_value": null,
+     "weight": 0.5,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
+     "available": false,
+     "missing_reason": "no insider signal wired into the funnel candidate yet"
+    },
+    {
+     "signal_id": "fusion_insider_profitability",
+     "role": "PICKER",
+     "grade": "SUPPORTED",
+     "raw_value": null,
+     "weight": 0.55,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
+     "available": false,
+     "missing_reason": "fusion signal needs both insider and profitability legs"
+    },
+    {
+     "signal_id": "low_volatility",
+     "role": "FILTER",
+     "grade": "SUPPORTED",
+     "raw_value": 0.3746373530242043,
+     "weight": 0.6,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "FILTER, bounded penalty 0.035 (cap 0.40); cannot lead",
+     "available": true,
+     "missing_reason": ""
+    },
+    {
+     "signal_id": "short_interest_level",
+     "role": "FILTER",
+     "grade": "SHELF",
+     "raw_value": null,
+     "weight": 0.35,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "FILTER/SHELF \u2014 not rank-bearing",
+     "available": false,
+     "missing_reason": "short interest not wired into the funnel candidate yet"
+    },
+    {
+     "signal_id": "earnings_surprise_monthly",
+     "role": "FILTER",
+     "grade": "SHELF",
+     "raw_value": null,
+     "weight": 0.3,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "FILTER/SHELF \u2014 not rank-bearing",
+     "available": false,
+     "missing_reason": "earnings surprise not wired into the funnel candidate yet"
+    },
+    {
+     "signal_id": "rating_drift_3m",
+     "role": "FILTER",
+     "grade": "OBSERVATIONAL",
+     "raw_value": null,
+     "weight": 0.5,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "FILTER/OBSERVATIONAL \u2014 not rank-bearing",
+     "available": false,
+     "missing_reason": "no 3-month rating drift"
+    },
+    {
+     "signal_id": "analyst_target_level_haircut",
+     "role": "RISK_INPUT",
+     "grade": "OBSERVATIONAL",
+     "raw_value": null,
+     "weight": 0.5,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "RISK_INPUT \u2014 may cap SIZE after the order is fixed; may not order names",
+     "available": false,
+     "missing_reason": "no consensus target"
+    },
+    {
+     "signal_id": "analyst_target_upside_xs",
+     "role": "CLOSED",
+     "grade": "PERVERSE",
+     "raw_value": null,
+     "weight": 0.0,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "CLOSED/PERVERSE \u2014 read and printed, ZERO rank influence by construction",
+     "available": false,
+     "missing_reason": "no consensus target"
+    },
+    {
+     "signal_id": "momentum_12_1",
+     "role": "CLOSED",
+     "grade": "REJECTED",
+     "raw_value": 0.49569742077766765,
+     "weight": 0.0,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "CLOSED/REJECTED \u2014 read and printed, ZERO rank influence by construction",
+     "available": true,
+     "missing_reason": ""
+    }
+   ],
+   "positive_catalysts": [],
+   "negative_catalysts": [],
+   "risk_factors": [
+    "annualised volatility 37%",
+    "confidence NONE: only 0 licensed signal(s) speak to this name"
+   ],
+   "kill_condition": "",
+   "kill_condition_status": "NONE_SET",
+   "position_size_candidate": null,
+   "size_caps_applied": [],
+   "reason_for_rank": "no rank-bearing signal available for this name",
+   "better_alternatives": [
+    "CVLG",
+    "INDV",
+    "FMX"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
+   ],
+   "price": 81.38999938964844,
+   "sector": "Energy",
+   "market_cap": null,
+   "rank_led_by": null,
+   "median_dollar_vol": 8277807.983779907,
+   "vol_annual": 0.3746373530242043,
+   "why": [
+    "liquid: median 60d dollar volume $8.3m, so a $10,000 ticket is 0.12% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 37%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 5 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.21 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "capacity": [
+    {
+     "capital": 10000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 40000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 100000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 1000000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 10000000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 50000000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 250000000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    }
+   ]
+  },
+  {
+   "ticker": "TSM",
+   "rank": 9,
+   "tied_with": 0,
+   "recommendation": "NO_ACTION",
+   "ranking_score": -0.080021,
+   "percentile": 80.0,
+   "expected_return": null,
+   "expected_return_low": null,
+   "expected_return_high": null,
+   "expected_return_basis": "NOT_CALIBRATED",
+   "confidence": "NONE",
+   "evidence_grade": "NO_EVIDENCE",
+   "signal_contributions": [
+    {
+     "signal_id": "profitability_small",
+     "role": "PICKER",
+     "grade": "SUPPORTED",
+     "raw_value": 0.34582789999999997,
+     "weight": 0.7,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
+     "available": true,
+     "missing_reason": ""
+    },
+    {
+     "signal_id": "insider_opportunistic",
+     "role": "PICKER",
+     "grade": "SUPPORTED",
+     "raw_value": 7.6802,
+     "weight": 0.5,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
+     "available": true,
+     "missing_reason": ""
+    },
+    {
+     "signal_id": "fusion_insider_profitability",
+     "role": "PICKER",
+     "grade": "SUPPORTED",
+     "raw_value": null,
+     "weight": 0.55,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "PICKER, but OUT OF UNIVERSE: market cap unknown, so the licensed segment cannot be checked",
+     "available": false,
+     "missing_reason": "fusion signal needs both insider and profitability legs"
+    },
+    {
+     "signal_id": "low_volatility",
+     "role": "FILTER",
+     "grade": "SUPPORTED",
+     "raw_value": 0.4047666306979976,
+     "weight": 0.6,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "FILTER, bounded penalty 0.080 (cap 0.40); cannot lead",
+     "available": true,
+     "missing_reason": ""
+    },
+    {
+     "signal_id": "short_interest_level",
+     "role": "FILTER",
+     "grade": "SHELF",
+     "raw_value": null,
+     "weight": 0.35,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "FILTER/SHELF \u2014 not rank-bearing",
+     "available": false,
+     "missing_reason": "short interest not wired into the funnel candidate yet"
+    },
+    {
+     "signal_id": "earnings_surprise_monthly",
+     "role": "FILTER",
+     "grade": "SHELF",
+     "raw_value": null,
+     "weight": 0.3,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "FILTER/SHELF \u2014 not rank-bearing",
+     "available": false,
+     "missing_reason": "earnings surprise not wired into the funnel candidate yet"
+    },
+    {
+     "signal_id": "rating_drift_3m",
+     "role": "FILTER",
+     "grade": "OBSERVATIONAL",
+     "raw_value": null,
+     "weight": 0.5,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "FILTER/OBSERVATIONAL \u2014 not rank-bearing",
+     "available": false,
+     "missing_reason": "no 3-month rating drift"
+    },
+    {
+     "signal_id": "analyst_target_level_haircut",
+     "role": "RISK_INPUT",
+     "grade": "OBSERVATIONAL",
+     "raw_value": null,
+     "weight": 0.5,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "RISK_INPUT \u2014 may cap SIZE after the order is fixed; may not order names",
+     "available": false,
+     "missing_reason": "no consensus target"
+    },
+    {
+     "signal_id": "analyst_target_upside_xs",
+     "role": "CLOSED",
+     "grade": "PERVERSE",
+     "raw_value": null,
+     "weight": 0.0,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "CLOSED/PERVERSE \u2014 read and printed, ZERO rank influence by construction",
+     "available": false,
+     "missing_reason": "no consensus target"
+    },
+    {
+     "signal_id": "momentum_12_1",
+     "role": "CLOSED",
+     "grade": "REJECTED",
+     "raw_value": 0.7257357982669228,
+     "weight": 0.0,
+     "contribution": 0.0,
+     "rank_bearing": false,
+     "basis": "CLOSED/REJECTED \u2014 read and printed, ZERO rank influence by construction",
+     "available": true,
+     "missing_reason": ""
+    }
+   ],
+   "positive_catalysts": [],
+   "negative_catalysts": [],
+   "risk_factors": [
+    "annualised volatility 40%",
+    "confidence NONE: only 0 licensed signal(s) speak to this name"
+   ],
+   "kill_condition": "",
+   "kill_condition_status": "NONE_SET",
+   "position_size_candidate": null,
+   "size_caps_applied": [],
+   "reason_for_rank": "no rank-bearing signal available for this name",
+   "better_alternatives": [
+    "CVLG",
+    "INDV",
+    "FMX"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
+   ],
+   "price": 418.4700012207031,
+   "sector": "Semiconductors",
+   "market_cap": null,
+   "rank_led_by": null,
+   "median_dollar_vol": 5333038987.5,
+   "vol_annual": 0.4047666306979976,
+   "why": [
+    "liquid: median 60d dollar volume $5333.0m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 40%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "opportunistic insider buy score 7.68 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
+    "gross profitability 0.35 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "capacity": [
+    {
+     "capital": 10000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 40000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 100000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 1000000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 10000000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 50000000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    },
+    {
+     "capital": 250000000.0,
+     "weight": 0.0,
+     "position_usd": 0.0,
+     "adv_fraction": 0.0,
+     "days_to_exit": 0.0,
+     "round_trip_cost": 0.004,
+     "cost_usd": 0.0,
+     "tradeable": true,
+     "binding_constraint": ""
+    }
+   ]
+  },
+  {
+   "ticker": "EXPD",
+   "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 82.5,
+   "percentile": 77.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -1916,9 +2421,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -2020,10 +2525,11 @@
   },
   {
    "ticker": "INCY",
-   "rank": 9,
+   "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 80.0,
+   "percentile": 75.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -2164,9 +2670,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -2269,9 +2775,10 @@
   {
    "ticker": "NBIX",
    "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 77.5,
+   "percentile": 72.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -2412,9 +2919,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -2516,10 +3023,11 @@
   },
   {
    "ticker": "AAPL",
-   "rank": 11,
+   "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 75.0,
+   "percentile": 70.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -2660,9 +3168,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -2764,10 +3272,11 @@
   },
   {
    "ticker": "AMZN",
-   "rank": 12,
+   "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 72.5,
+   "percentile": 67.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -2908,9 +3417,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -3011,259 +3520,12 @@
    ]
   },
   {
-   "ticker": "FMX",
-   "rank": 13,
-   "recommendation": "HOLD",
-   "ranking_score": -0.112842,
-   "percentile": 70.0,
-   "expected_return": null,
-   "expected_return_low": null,
-   "expected_return_high": null,
-   "expected_return_basis": "NOT_CALIBRATED",
-   "confidence": "LOW",
-   "evidence_grade": "SUPPORTED",
-   "signal_contributions": [
-    {
-     "signal_id": "profitability_small",
-     "role": "PICKER",
-     "grade": "SUPPORTED",
-     "raw_value": 0.4412754299999999,
-     "weight": 0.7,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "PICKER, but OUT OF UNIVERSE: measured in CRSP small segment (small); this name is large-cap \u2014 out of the licensed universe",
-     "available": true,
-     "missing_reason": ""
-    },
-    {
-     "signal_id": "insider_opportunistic",
-     "role": "PICKER",
-     "grade": "SUPPORTED",
-     "raw_value": 0.0,
-     "weight": 0.5,
-     "contribution": -0.112842,
-     "rank_bearing": true,
-     "basis": "PICKER, weight 0.50 x z -0.23 = -0.113",
-     "available": true,
-     "missing_reason": ""
-    },
-    {
-     "signal_id": "fusion_insider_profitability",
-     "role": "PICKER",
-     "grade": "SUPPORTED",
-     "raw_value": null,
-     "weight": 0.55,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "PICKER, but OUT OF UNIVERSE: measured in CRSP small/mid (mid/small); this name is large-cap \u2014 out of the licensed universe",
-     "available": false,
-     "missing_reason": "fusion signal needs both insider and profitability legs"
-    },
-    {
-     "signal_id": "low_volatility",
-     "role": "FILTER",
-     "grade": "SUPPORTED",
-     "raw_value": 0.25807081050795977,
-     "weight": 0.6,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "FILTER, bounded penalty 0.000 (cap 0.40); cannot lead",
-     "available": true,
-     "missing_reason": ""
-    },
-    {
-     "signal_id": "short_interest_level",
-     "role": "FILTER",
-     "grade": "SHELF",
-     "raw_value": null,
-     "weight": 0.35,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "FILTER/SHELF \u2014 not rank-bearing",
-     "available": false,
-     "missing_reason": "short interest not wired into the funnel candidate yet"
-    },
-    {
-     "signal_id": "earnings_surprise_monthly",
-     "role": "FILTER",
-     "grade": "SHELF",
-     "raw_value": null,
-     "weight": 0.3,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "FILTER/SHELF \u2014 not rank-bearing",
-     "available": false,
-     "missing_reason": "earnings surprise not wired into the funnel candidate yet"
-    },
-    {
-     "signal_id": "rating_drift_3m",
-     "role": "FILTER",
-     "grade": "OBSERVATIONAL",
-     "raw_value": null,
-     "weight": 0.5,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "FILTER/OBSERVATIONAL \u2014 not rank-bearing",
-     "available": false,
-     "missing_reason": "no 3-month rating drift"
-    },
-    {
-     "signal_id": "analyst_target_level_haircut",
-     "role": "RISK_INPUT",
-     "grade": "OBSERVATIONAL",
-     "raw_value": null,
-     "weight": 0.5,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "RISK_INPUT \u2014 may cap SIZE after the order is fixed; may not order names",
-     "available": false,
-     "missing_reason": "no consensus target"
-    },
-    {
-     "signal_id": "analyst_target_upside_xs",
-     "role": "CLOSED",
-     "grade": "PERVERSE",
-     "raw_value": null,
-     "weight": 0.0,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "CLOSED/PERVERSE \u2014 read and printed, ZERO rank influence by construction",
-     "available": false,
-     "missing_reason": "no consensus target"
-    },
-    {
-     "signal_id": "momentum_12_1",
-     "role": "CLOSED",
-     "grade": "REJECTED",
-     "raw_value": 0.49733042042070763,
-     "weight": 0.0,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "CLOSED/REJECTED \u2014 read and printed, ZERO rank influence by construction",
-     "available": true,
-     "missing_reason": ""
-    }
-   ],
-   "positive_catalysts": [],
-   "negative_catalysts": [],
-   "risk_factors": [
-    "annualised volatility 26%",
-    "confidence LOW: only 1 licensed signal(s) speak to this name"
-   ],
-   "kill_condition": "the insiders who bought sell any part of the stake, or two quarters pass with no further open-market purchase",
-   "kill_condition_status": "PROPOSED_AWAITING_MURAT",
-   "position_size_candidate": null,
-   "size_caps_applied": [],
-   "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
-   "better_alternatives": [
-    "TSM",
-    "CVLG",
-    "INDV"
-   ],
-   "blocked_by": [
-    "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
-   ],
-   "price": 119.91999816894531,
-   "sector": "Beverages",
-   "market_cap": 243023820000.0,
-   "rank_led_by": "insider_opportunistic",
-   "median_dollar_vol": 64751734.92050171,
-   "vol_annual": 0.25807081050795977,
-   "why": [
-    "liquid: median 60d dollar volume $64.8m, so a $10,000 ticket is 0.02% of a day",
-    "cleared the retail liquidity gate",
-    "volatility 26%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
-    "size band 3 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
-    "opportunistic insider buy score 0.00 (insider_opportunistic: SUPPORTED/PICKER, weight 0.5)",
-    "gross profitability 0.44 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
-    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
-   ],
-   "capacity": [
-    {
-     "capital": 10000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 40000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 100000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 1000000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 10000000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 50000000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 250000000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    }
-   ]
-  },
-  {
    "ticker": "GRMN",
-   "rank": 14,
+   "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 67.5,
+   "percentile": 65.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -3404,9 +3666,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -3508,10 +3770,11 @@
   },
   {
    "ticker": "NFLX",
-   "rank": 15,
+   "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 65.0,
+   "percentile": 62.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -3652,9 +3915,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -3756,10 +4019,11 @@
   },
   {
    "ticker": "GOOGL",
-   "rank": 16,
+   "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 62.5,
+   "percentile": 60.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -3900,9 +4164,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -4004,10 +4268,11 @@
   },
   {
    "ticker": "JKHY",
-   "rank": 17,
+   "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 60.0,
+   "percentile": 57.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -4148,9 +4413,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -4252,10 +4517,11 @@
   },
   {
    "ticker": "MSFT",
-   "rank": 18,
+   "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 57.5,
+   "percentile": 55.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -4396,9 +4662,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -4500,10 +4766,11 @@
   },
   {
    "ticker": "CSCO",
-   "rank": 19,
+   "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 55.0,
+   "percentile": 52.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -4644,9 +4911,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -4748,10 +5015,11 @@
   },
   {
    "ticker": "CON",
-   "rank": 20,
+   "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 52.5,
+   "percentile": 50.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -4892,9 +5160,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -4996,10 +5264,11 @@
   },
   {
    "ticker": "PHIN",
-   "rank": 21,
+   "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 50.0,
+   "percentile": 47.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -5140,9 +5409,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -5244,10 +5513,11 @@
   },
   {
    "ticker": "PRVA",
-   "rank": 22,
+   "rank": 10,
+   "tied_with": 13,
    "recommendation": "HOLD",
    "ranking_score": -0.112842,
-   "percentile": 47.5,
+   "percentile": 45.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -5388,9 +5658,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -5492,10 +5762,11 @@
   },
   {
    "ticker": "LLY",
-   "rank": 23,
+   "rank": 24,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.124038,
-   "percentile": 45.0,
+   "percentile": 42.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -5636,9 +5907,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -5740,10 +6011,11 @@
   },
   {
    "ticker": "BOX",
-   "rank": 24,
+   "rank": 25,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.134568,
-   "percentile": 42.5,
+   "percentile": 40.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -5884,9 +6156,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -5988,10 +6260,11 @@
   },
   {
    "ticker": "JAZZ",
-   "rank": 25,
+   "rank": 26,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.135375,
-   "percentile": 40.0,
+   "percentile": 37.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -6132,9 +6405,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -6236,10 +6509,11 @@
   },
   {
    "ticker": "NVDA",
-   "rank": 26,
+   "rank": 27,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.137735,
-   "percentile": 37.5,
+   "percentile": 35.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -6380,9 +6654,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -6484,10 +6758,11 @@
   },
   {
    "ticker": "META",
-   "rank": 27,
+   "rank": 28,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.161683,
-   "percentile": 35.0,
+   "percentile": 32.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -6628,9 +6903,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -6732,10 +7007,11 @@
   },
   {
    "ticker": "VTS",
-   "rank": 28,
+   "rank": 29,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.184057,
-   "percentile": 32.5,
+   "percentile": 30.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -6876,9 +7152,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by profitability_small (SUPPORTED/PICKER, -0.73); also insider_opportunistic +0.55",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -6980,10 +7256,11 @@
   },
   {
    "ticker": "BWA",
-   "rank": 29,
+   "rank": 30,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.190091,
-   "percentile": 30.0,
+   "percentile": 27.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -7124,9 +7401,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -7228,10 +7505,11 @@
   },
   {
    "ticker": "GXO",
-   "rank": 30,
+   "rank": 31,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.196149,
-   "percentile": 27.5,
+   "percentile": 25.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -7372,9 +7650,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -7476,10 +7754,11 @@
   },
   {
    "ticker": "DDS",
-   "rank": 31,
+   "rank": 32,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.198478,
-   "percentile": 25.0,
+   "percentile": 22.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -7620,9 +7899,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -7724,10 +8003,11 @@
   },
   {
    "ticker": "ANIP",
-   "rank": 32,
+   "rank": 33,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.203059,
-   "percentile": 22.5,
+   "percentile": 20.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -7868,9 +8148,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); also profitability_small -0.09",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -7972,10 +8252,11 @@
   },
   {
    "ticker": "IRTC",
-   "rank": 33,
+   "rank": 34,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.213768,
-   "percentile": 20.0,
+   "percentile": 17.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -8116,9 +8397,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -8220,10 +8501,11 @@
   },
   {
    "ticker": "AVPT",
-   "rank": 34,
+   "rank": 35,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.221983,
-   "percentile": 17.5,
+   "percentile": 15.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -8364,9 +8646,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -8468,10 +8750,11 @@
   },
   {
    "ticker": "CWK",
-   "rank": 35,
+   "rank": 36,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.238468,
-   "percentile": 15.0,
+   "percentile": 12.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -8612,9 +8895,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -8716,10 +8999,11 @@
   },
   {
    "ticker": "BTSG",
-   "rank": 36,
+   "rank": 37,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.242356,
-   "percentile": 12.5,
+   "percentile": 10.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -8860,9 +9144,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by insider_opportunistic (SUPPORTED/PICKER, -0.11); single-signal rank",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -8964,10 +9248,11 @@
   },
   {
    "ticker": "CRAI",
-   "rank": 37,
+   "rank": 38,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.406514,
-   "percentile": 10.0,
+   "percentile": 7.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -9108,9 +9393,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by profitability_small (SUPPORTED/PICKER, -0.24); also insider_opportunistic -0.11",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -9212,10 +9497,11 @@
   },
   {
    "ticker": "BBSI",
-   "rank": 38,
+   "rank": 39,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.466931,
-   "percentile": 7.5,
+   "percentile": 5.0,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -9356,9 +9642,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by profitability_small (SUPPORTED/PICKER, -0.28); also insider_opportunistic -0.11",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -9460,10 +9746,11 @@
   },
   {
    "ticker": "APOG",
-   "rank": 39,
+   "rank": 40,
+   "tied_with": 0,
    "recommendation": "HOLD",
    "ranking_score": -0.677848,
-   "percentile": 5.0,
+   "percentile": 2.5,
    "expected_return": null,
    "expected_return_low": null,
    "expected_return_high": null,
@@ -9604,9 +9891,9 @@
    "size_caps_applied": [],
    "reason_for_rank": "led by profitability_small (SUPPORTED/PICKER, -0.46); also insider_opportunistic -0.11",
    "better_alternatives": [
-    "TSM",
     "CVLG",
-    "INDV"
+    "INDV",
+    "FMX"
    ],
    "blocked_by": [
     "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
@@ -9705,266 +9992,18 @@
      "binding_constraint": ""
     }
    ]
-  },
-  {
-   "ticker": "PDS",
-   "rank": 40,
-   "recommendation": "HOLD",
-   "ranking_score": -0.759723,
-   "percentile": 2.5,
-   "expected_return": null,
-   "expected_return_low": null,
-   "expected_return_high": null,
-   "expected_return_basis": "NOT_CALIBRATED",
-   "confidence": "LOW",
-   "evidence_grade": "SUPPORTED",
-   "signal_contributions": [
-    {
-     "signal_id": "profitability_small",
-     "role": "PICKER",
-     "grade": "SUPPORTED",
-     "raw_value": 0.21179927999999998,
-     "weight": 0.7,
-     "contribution": -0.72468,
-     "rank_bearing": true,
-     "basis": "PICKER, weight 0.70 x z -1.04 = -0.725",
-     "available": true,
-     "missing_reason": ""
-    },
-    {
-     "signal_id": "insider_opportunistic",
-     "role": "PICKER",
-     "grade": "SUPPORTED",
-     "raw_value": null,
-     "weight": 0.5,
-     "contribution": 0.0,
-     "rank_bearing": true,
-     "basis": "PICKER/SUPPORTED \u2014 not rank-bearing",
-     "available": false,
-     "missing_reason": "no insider signal wired into the funnel candidate yet"
-    },
-    {
-     "signal_id": "fusion_insider_profitability",
-     "role": "PICKER",
-     "grade": "SUPPORTED",
-     "raw_value": null,
-     "weight": 0.55,
-     "contribution": 0.0,
-     "rank_bearing": true,
-     "basis": "PICKER/SUPPORTED \u2014 not rank-bearing",
-     "available": false,
-     "missing_reason": "fusion signal needs both insider and profitability legs"
-    },
-    {
-     "signal_id": "low_volatility",
-     "role": "FILTER",
-     "grade": "SUPPORTED",
-     "raw_value": 0.3746373530242043,
-     "weight": 0.6,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "FILTER, bounded penalty 0.035 (cap 0.40); cannot lead",
-     "available": true,
-     "missing_reason": ""
-    },
-    {
-     "signal_id": "short_interest_level",
-     "role": "FILTER",
-     "grade": "SHELF",
-     "raw_value": null,
-     "weight": 0.35,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "FILTER/SHELF \u2014 not rank-bearing",
-     "available": false,
-     "missing_reason": "short interest not wired into the funnel candidate yet"
-    },
-    {
-     "signal_id": "earnings_surprise_monthly",
-     "role": "FILTER",
-     "grade": "SHELF",
-     "raw_value": null,
-     "weight": 0.3,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "FILTER/SHELF \u2014 not rank-bearing",
-     "available": false,
-     "missing_reason": "earnings surprise not wired into the funnel candidate yet"
-    },
-    {
-     "signal_id": "rating_drift_3m",
-     "role": "FILTER",
-     "grade": "OBSERVATIONAL",
-     "raw_value": null,
-     "weight": 0.5,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "FILTER/OBSERVATIONAL \u2014 not rank-bearing",
-     "available": false,
-     "missing_reason": "no 3-month rating drift"
-    },
-    {
-     "signal_id": "analyst_target_level_haircut",
-     "role": "RISK_INPUT",
-     "grade": "OBSERVATIONAL",
-     "raw_value": null,
-     "weight": 0.5,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "RISK_INPUT \u2014 may cap SIZE after the order is fixed; may not order names",
-     "available": false,
-     "missing_reason": "no consensus target"
-    },
-    {
-     "signal_id": "analyst_target_upside_xs",
-     "role": "CLOSED",
-     "grade": "PERVERSE",
-     "raw_value": null,
-     "weight": 0.0,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "CLOSED/PERVERSE \u2014 read and printed, ZERO rank influence by construction",
-     "available": false,
-     "missing_reason": "no consensus target"
-    },
-    {
-     "signal_id": "momentum_12_1",
-     "role": "CLOSED",
-     "grade": "REJECTED",
-     "raw_value": 0.49569742077766765,
-     "weight": 0.0,
-     "contribution": 0.0,
-     "rank_bearing": false,
-     "basis": "CLOSED/REJECTED \u2014 read and printed, ZERO rank influence by construction",
-     "available": true,
-     "missing_reason": ""
-    }
-   ],
-   "positive_catalysts": [],
-   "negative_catalysts": [],
-   "risk_factors": [
-    "annualised volatility 37%",
-    "small cap \u2014 thinner liquidity, wider spreads, higher delisting and dilution risk",
-    "confidence LOW: only 1 licensed signal(s) speak to this name"
-   ],
-   "kill_condition": "gross profitability falls below the small-cap cross-sectional median for two consecutive quarters (currently 0.21)",
-   "kill_condition_status": "PROPOSED_AWAITING_MURAT",
-   "position_size_candidate": null,
-   "size_caps_applied": [],
-   "reason_for_rank": "led by profitability_small (SUPPORTED/PICKER, -0.72); single-signal rank",
-   "better_alternatives": [
-    "TSM",
-    "CVLG",
-    "INDV"
-   ],
-   "blocked_by": [
-    "momentum_12_1 is REJECTED/CLOSED \u2014 printed, not ranked"
-   ],
-   "price": 81.38999938964844,
-   "sector": "Energy",
-   "market_cap": 1345388686.0,
-   "rank_led_by": "profitability_small",
-   "median_dollar_vol": 8277807.983779907,
-   "vol_annual": 0.3746373530242043,
-   "why": [
-    "liquid: median 60d dollar volume $8.3m, so a $10,000 ticket is 0.12% of a day",
-    "cleared the retail liquidity gate",
-    "volatility 37%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
-    "size band 5 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
-    "gross profitability 0.21 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
-    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
-   ],
-   "capacity": [
-    {
-     "capital": 10000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 40000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 100000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 1000000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 10000000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 50000000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    },
-    {
-     "capital": 250000000.0,
-     "weight": 0.0,
-     "position_usd": 0.0,
-     "adv_fraction": 0.0,
-     "days_to_exit": 0.0,
-     "round_trip_cost": 0.004,
-     "cost_usd": 0.0,
-     "tradeable": true,
-     "binding_constraint": ""
-    }
-   ]
   }
  ],
  "books": {
   "built": {},
   "refused": {
-   "OPTIMUS_BALANCED": "3 names cannot fill a book at a 10% cap \u2014 the archetype needs at least 10 names",
-   "OPTIMUS_AGGRESSIVE": "3 names cannot fill a book at a 20% cap \u2014 the archetype needs at least 5 names",
+   "OPTIMUS_BALANCED": "2 names cannot fill a book at a 10% cap \u2014 the archetype needs at least 10 names",
+   "OPTIMUS_AGGRESSIVE": "2 names cannot fill a book at a 20% cap \u2014 the archetype needs at least 5 names",
    "OPTIMUS_HIGH_CONVICTION": "1 names cannot fill a book at a 25% cap \u2014 the archetype needs at least 4 names",
-   "OPTIMUS_DIVERSIFIED_ALPHA": "3 names cannot fill a book at a 5% cap \u2014 the archetype needs at least 20 names",
-   "OPTIMUS_LOW_TURNOVER": "3 names cannot fill a book at a 10% cap \u2014 the archetype needs at least 10 names",
-   "CONTROL_EQUAL_WEIGHT": "3 names cannot fill a book at a 10% cap \u2014 the archetype needs at least 10 names",
-   "OPTIMUS_MAX_GROWTH": "OPTIMUS_MAX_GROWTH needs a CALIBRATED expected return and none exists (e.g. TSM, CVLG, INDV, GOOG, OMAB). A ranking score is an ordering, not a magnitude; feeding it to Kelly would turn a scoring artefact into a position size."
+   "OPTIMUS_DIVERSIFIED_ALPHA": "2 names cannot fill a book at a 5% cap \u2014 the archetype needs at least 20 names",
+   "OPTIMUS_LOW_TURNOVER": "2 names cannot fill a book at a 10% cap \u2014 the archetype needs at least 10 names",
+   "CONTROL_EQUAL_WEIGHT": "2 names cannot fill a book at a 10% cap \u2014 the archetype needs at least 10 names",
+   "OPTIMUS_MAX_GROWTH": "OPTIMUS_MAX_GROWTH needs a CALIBRATED expected return and none exists (e.g. CVLG, INDV, FMX, GOOG, OMAB). A ranking score is an ordering, not a magnitude; feeding it to Kelly would turn a scoring artefact into a position size."
   },
   "control": null,
   "note": "Every archetype draws on the same evidence and the same registry gates; they differ in risk budget only. A refusal is a finding about the evidence, not a failure of the factory. CONTROL_EQUAL_WEIGHT is the bar the others must clear \u2014 winner-copying already lost to it once (PF-2)."

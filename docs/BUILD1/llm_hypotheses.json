@@ -1,0 +1,187 @@
+{
+ "hypotheses": [
+  {
+   "mechanism": "Trade the cross-sectional drift in analyst earnings estimate dispersion after a large downward revision cluster",
+   "economic_rationale": "When multiple analysts cut estimates in a short window, the remaining optimistic holdouts create a temporary overvaluation that corrects as the revision cascade continues",
+   "why_market_underreacts": "Institutional committees rebalance slowly; the information in the revision cluster is public but requires aggregation across individual analyst actions that most systematic funds do not compute at high frequency",
+   "data_required": [
+    "IBES statsumu EPS consensus with up/down revision counts",
+    "CRSP monthly panel"
+   ],
+   "pit_available": true,
+   "horizon": "3m",
+   "expected_turnover_x_per_year": 4,
+   "expected_gross_edge_bps_per_year": 320,
+   "best_falsification": "If the signal is flat or negative after controlling for the level of analyst dispersion itself (which is a closed signal), the mechanism is just a re-parameterization of dispersion",
+   "closest_existing_corpse": "analyst_dispersion",
+   "why_genuinely_different": "analyst_dispersion was a static level filter; this trades the dynamic change in the shape of the estimate distribution after a shock, not the level of disagreement",
+   "implementation": "For each stock, compute the monthly change in the ratio of numdown1m to numup1m. Rank stocks by the magnitude of the increase in this ratio (downward revision cluster). Long the top quintile of stocks with the largest ratio increase but where the consensus level has not yet fully adjusted (i.e., price change less than the estimate cut implies). Rebalance monthly, hold 3 months."
+  },
+  {
+   "mechanism": "Trade the post-earnings drift in the revision of the number of analysts covering a stock (coverage initiation/termination as information)",
+   "economic_rationale": "Analyst coverage changes reflect information production; a sudden drop in coverage removes a monitoring mechanism and creates a temporary information vacuum that prices slowly",
+   "why_market_underreacts": "The market observes the coverage change but does not fully account for the reduced information flow that follows, leading to a delayed adjustment in the stock's risk premium",
+   "data_required": [
+    "IBES ptgsumu unadjusted",
+    "CRSP monthly panel"
+   ],
+   "pit_available": true,
+   "horizon": "6m",
+   "expected_turnover_x_per_year": 2,
+   "expected_gross_edge_bps_per_year": 250,
+   "best_falsification": "If the effect is entirely explained by the stock's size or liquidity (small illiquid names naturally lose coverage), the mechanism is a size proxy",
+   "closest_existing_corpse": "analyst_target_level_haircut",
+   "why_genuinely_different": "analyst_target_level_haircut traded the level of the target price; this trades the change in the number of analysts producing those targets, which is a different information-production mechanism",
+   "implementation": "From IBES ptgsumu, compute the monthly change in numest (number of analysts). Create a signal that is negative for stocks with a large drop in numest (coverage loss) and positive for stocks with a large increase. Long the top decile of coverage-gain stocks, exclude the bottom decile of coverage-loss stocks. Rebalance monthly, hold 6 months."
+  },
+  {
+   "mechanism": "Trade the cross-sectional difference in the speed of price adjustment to insider selling versus insider buying, focusing on the asymmetry in the information content of the two",
+   "economic_rationale": "Insider sales are more likely to be liquidity-driven than information-driven, but when a cluster of insider sales occurs in a stock with no other news, it signals private information that the market underweights",
+   "why_market_underreacts": "The market has learned to discount insider sales as noise (due to the high base rate of liquidity sales), so genuine information-driven sales are initially mispriced as noise",
+   "data_required": [
+    "SEC Form 4 insider filings",
+    "CRSP monthly panel"
+   ],
+   "pit_available": true,
+   "horizon": "3m",
+   "expected_turnover_x_per_year": 4,
+   "expected_gross_edge_bps_per_year": 280,
+   "best_falsification": "If the signal is subsumed by the existing insider_opportunistic signal (which is already promoted), the asymmetry is not a separate mechanism",
+   "closest_existing_corpse": "insider_opportunistic",
+   "why_genuinely_different": "insider_opportunistic trades the level of insider activity; this trades the differential speed of adjustment between buys and sells, specifically the underreaction to clustered sells in the absence of other news",
+   "implementation": "From Form 4 filings, compute the 3-month rolling count of insider sales minus insider buys, scaled by shares outstanding. Restrict to stocks where the sale cluster is not accompanied by a concurrent earnings announcement or 8-K filing (using CRSP return data to proxy for news). Long the bottom quintile of net-sale-ratio stocks. Rebalance monthly, hold 3 months."
+  },
+  {
+   "mechanism": "Trade the cross-sectional drift in stocks whose 52-week high is revised upward but where the price has not yet caught up, conditional on low volatility",
+   "economic_rationale": "A new 52-week high with a lagging price indicates the market is slowly incorporating positive information; the low-volatility filter selects for names where the drift is more likely to persist",
+   "why_market_underreacts": "The anchoring bias causes investors to underweight the significance of a new high when the stock is perceived as 'risky' (high vol), but when vol is low, the new high is more informative and still underreacted",
+   "data_required": [
+    "CRSP monthly panel"
+   ],
+   "pit_available": true,
+   "horizon": "3m",
+   "expected_turnover_x_per_year": 4,
+   "expected_gross_edge_bps_per_year": 300,
+   "best_falsification": "If the effect is entirely captured by the existing low_volatility filter (which is already supported), the interaction is not additive",
+   "closest_existing_corpse": "low_volatility",
+   "why_genuinely_different": "low_volatility is a pure risk-based filter; this trades the interaction between a price-level event (52-week high) and the volatility regime, which is a behavioral anchoring mechanism",
+   "implementation": "For each stock, compute the ratio of current price to the trailing 252-day high. Flag stocks where this ratio is between 0.95 and 0.99 (near high but not at it) and where the 12-month realized volatility is in the bottom tercile. Long this intersection. Rebalance monthly, hold 3 months."
+  },
+  {
+   "mechanism": "Trade the cross-sectional drift in stocks with a sudden increase in dollar volume (liquidity shock) that is not accompanied by a price move, indicating informed trading",
+   "economic_rationale": "An abnormal volume spike without a corresponding price change suggests information is being accumulated by informed traders who are not yet ready to move the price; the subsequent drift occurs as the information is revealed",
+   "why_market_underreacts": "The market attributes the volume spike to noise or index rebalancing, but the persistence of the volume (over multiple days) reveals it is information-driven, and the market is slow to reclassify",
+   "data_required": [
+    "CRSP monthly panel"
+   ],
+   "pit_available": true,
+   "horizon": "1m",
+   "expected_turnover_x_per_year": 6,
+   "expected_gross_edge_bps_per_year": 350,
+   "best_falsification": "If the signal is subsumed by the existing drawdown_trigger_information signal (which also uses volume/price dynamics), the mechanism is not distinct",
+   "closest_existing_corpse": "drawdown_trigger_information",
+   "why_genuinely_different": "drawdown_trigger_information trades the trigger of a trailing stop (a price event); this trades a volume event without a price trigger, which is a different information channel",
+   "implementation": "For each stock, compute the 5-day average dollar volume divided by the trailing 60-day average. Flag stocks where this ratio exceeds 3 but where the 5-day return is between -1% and +1% (no price move). Long the top decile of this volume-shock ratio. Rebalance weekly, hold 1 month."
+  },
+  {
+   "mechanism": "Trade the cross-sectional drift in stocks whose earnings estimate revisions are positive but where the stock price has not yet moved, conditional on the stock being in a downtrend",
+   "economic_rationale": "Positive estimate revisions in a downtrending stock represent a conflict between fundamental improvement and technical weakness; the market resolves this conflict slowly, favoring the fundamental improvement over time",
+   "why_market_underreacts": "The disposition effect causes investors to sell winners and hold losers; when a loser gets good news, the selling pressure from existing holders delays the price adjustment",
+   "data_required": [
+    "IBES statsumu EPS consensus with up/down revision counts",
+    "CRSP monthly panel"
+   ],
+   "pit_available": true,
+   "horizon": "3m",
+   "expected_turnover_x_per_year": 4,
+   "expected_gross_edge_bps_per_year": 270,
+   "best_falsification": "If the signal is subsumed by the existing earnings_estimate_revision signal (which is a hypothesis picker), the downtrend condition is not adding information",
+   "closest_existing_corpse": "earnings_estimate_revision",
+   "why_genuinely_different": "earnings_estimate_revision trades the revision alone; this trades the interaction between the revision and the price trend, which is a behavioral conflict-resolution mechanism",
+   "implementation": "From IBES, compute the monthly net revision ratio (numup1m - numdown1m) / numest. Flag stocks in the top quintile of this ratio. From CRSP, compute the 12-month price trend (12-1 momentum). Select stocks in the bottom quintile of momentum (downtrend) but top quintile of revisions. Long this intersection. Rebalance monthly, hold 3 months."
+  },
+  {
+   "mechanism": "Trade the cross-sectional drift in stocks with a high ratio of short interest to float but where the short interest is decreasing (short covering), indicating the market is slowly recognizing the stock is oversold",
+   "economic_rationale": "A decrease in short interest after a period of high shorting signals that informed short sellers are covering their positions, which is a positive signal that the market underweights because it focuses on the level of short interest, not the change",
+   "why_market_underreacts": "The market anchors on the high level of short interest as a negative signal and fails to update on the direction of the change, which is the more informative component",
+   "data_required": [
+    "CRSP monthly panel",
+    "Compustat/CCM fundamentals via OSAP characteristic panel"
+   ],
+   "pit_available": true,
+   "horizon": "3m",
+   "expected_turnover_x_per_year": 4,
+   "expected_gross_edge_bps_per_year": 290,
+   "best_falsification": "If the signal is subsumed by the existing short_interest_level signal (which is a shelf filter), the change component is not additive",
+   "closest_existing_corpse": "short_interest_level",
+   "why_genuinely_different": "short_interest_level trades the level of short interest; this trades the first difference in short interest, which is a different information channel (the direction of informed trading)",
+   "implementation": "From the OSAP panel, extract the short interest ratio (short interest / float) for each month. Compute the 3-month change in this ratio. Flag stocks in the top quintile of short interest level but the bottom quintile of the change (i.e., high but decreasing). Long this intersection. Rebalance monthly, hold 3 months."
+  },
+  {
+   "mechanism": "Trade the cross-sectional drift in stocks whose Corwin-Schultz spread estimate widens sharply without a corresponding increase in volatility, indicating a liquidity provision withdrawal",
+   "economic_rationale": "A widening spread without a volatility increase suggests market makers are withdrawing liquidity due to private information, not public risk; the subsequent price adjustment is slow as the market realizes the information",
+   "why_market_underreacts": "The market attributes the spread widening to a temporary liquidity event, but the persistence of the wide spread (over multiple weeks) reveals it is information-driven, and the market is slow to reclassify",
+   "data_required": [
+    "CRSP monthly panel",
+    "Corwin-Schultz spread estimates from daily high/low"
+   ],
+   "pit_available": true,
+   "horizon": "1m",
+   "expected_turnover_x_per_year": 6,
+   "expected_gross_edge_bps_per_year": 310,
+   "best_falsification": "If the signal is subsumed by the existing low_volatility filter (which uses volatility), the spread-widening condition is not adding information beyond the vol control",
+   "closest_existing_corpse": "low_volatility",
+   "why_genuinely_different": "low_volatility trades the level of volatility; this trades the change in the spread conditional on volatility being unchanged, which is a liquidity-provision mechanism, not a risk mechanism",
+   "implementation": "From the Corwin-Schultz estimates, compute the monthly change in the spread. From CRSP, compute the monthly change in realized volatility. Flag stocks in the top quintile of spread increase but the bottom quintile of volatility increase. Long this intersection. Rebalance weekly, hold 1 month."
+  },
+  {
+   "mechanism": "Trade the cross-sectional drift in stocks whose payout ratio (dividends + buybacks / earnings) is increasing but where the stock price has not yet adjusted, indicating the market underweights the signal from capital allocation",
+   "economic_rationale": "An increasing payout ratio signals management confidence in future earnings and a commitment to return capital; the market underweights this signal because it focuses on the level of payout, not the change",
+   "why_market_underreacts": "The market has learned to discount payout ratios as a static characteristic (due to the closed issuance_payout signal), but the change in payout is a dynamic signal of management behavior that is not fully priced",
+   "data_required": [
+    "Compustat/CCM fundamentals via OSAP characteristic panel",
+    "CRSP monthly panel"
+   ],
+   "pit_available": true,
+   "horizon": "6m",
+   "expected_turnover_x_per_year": 2,
+   "expected_gross_edge_bps_per_year": 240,
+   "best_falsification": "If the signal is subsumed by the existing issuance_payout signal (which is a shelf filter), the change component is not additive",
+   "closest_existing_corpse": "issuance_payout",
+   "why_genuinely_different": "issuance_payout trades the level of payout; this trades the first difference in payout, which is a different mechanism (management signaling via changes in capital allocation policy)",
+   "implementation": "From the OSAP panel, extract the payout ratio (dividends + buybacks / earnings) for each quarter. Compute the 4-quarter change in this ratio. Flag stocks in the top quintile of the change. Long this quintile. Rebalance quarterly, hold 6 months."
+  },
+  {
+   "mechanism": "Trade the cross-sectional drift in stocks whose earnings surprise is positive but where the analyst revision following the surprise is negative, indicating the market is slow to resolve the conflict between actual results and forward guidance",
+   "economic_rationale": "A positive earnings surprise followed by negative analyst revisions suggests the surprise was driven by one-time items, but the market initially overreacts to the surprise and then slowly corrects as the revisions come in",
+   "why_market_underreacts": "The market anchors on the headline earnings surprise and fails to update on the subsequent analyst revisions, which are the more forward-looking information",
+   "data_required": [
+    "IBES statsumu EPS consensus with up/down revision counts",
+    "CRSP monthly panel"
+   ],
+   "pit_available": true,
+   "horizon": "1m",
+   "expected_turnover_x_per_year": 6,
+   "expected_gross_edge_bps_per_year": 260,
+   "best_falsification": "If the signal is subsumed by the existing earnings_surprise_monthly signal (which is a shelf filter), the revision interaction is not additive",
+   "closest_existing_corpse": "earnings_surprise_monthly",
+   "why_genuinely_different": "earnings_surprise_monthly trades the surprise alone; this trades the interaction between the surprise and the subsequent revision, which is a different mechanism (the market's slow resolution of conflicting signals)",
+   "implementation": "From IBES, compute the monthly earnings surprise (actual vs. consensus). From the same file, compute the 1-month post-surprise revision (numup1m - numdown1m). Flag stocks in the top quintile of surprise but the bottom quintile of post-surprise revision. Short this intersection (or avoid it in a long-only context). Rebalance weekly, hold 1 month."
+  }
+ ],
+ "parsed_ok": true,
+ "raw": "```json\n[\n  {\n    \"mechanism\": \"Trade the cross-sectional drift in analyst earnings estimate dispersion after a large downward revision cluster\",\n    \"economic_rationale\": \"When multiple analysts cut estimates in a short window, the remaining optimistic holdouts create a temporary overvaluation that corrects as the revision cascade continues\",\n    \"why_market_underreacts\": \"Institutional committees rebalance slowly; the information in the revision cluster is public but requires aggregation across individual analyst actions that most systematic funds do not compute at high frequency\",\n    \"data_required\": [\"IBES statsumu EPS consensus with up/down revision counts\", \"CRSP monthly panel\"],\n    \"pit_available\": true,\n    \"horizon\": \"3m\",\n    \"expected_turnover_x_per_year\": 4,\n    \"expected_gross_edge_bps_per_year\": 320,\n    \"best_falsification\": \"If the signal is flat or negative after controlling for the level of analyst dispersion itself (which is a closed signal), the mechanism is just a re-parameterization of dispersion\",\n    \"closest_existing_corpse\": \"analyst_dispersion\",\n    \"why_genuinely_different\": \"analyst_dispersion was a static level filter; this trades the dynamic change in the shape of the estimate distribution after a shock, not the level of disagreement\",\n    \"implementation\": \"For each stock, compute the monthly change in the ratio of numdown1m to numup1m. Rank stocks by the magnitude of the increase in this ratio (downward revision cluster). Long the top quintile of stocks with the largest ratio increase but where the consensus level has not yet fully adjusted (i.e., price change less than the estimate cut implies). Rebalance monthly, hold 3 months.\"\n  },\n  {\n    \"mechanism\": \"Trade the post-earnings drift in the revision of the number of analysts covering a stock (coverage initiation/termination as information)\",\n    \"economic_rationale\": \"Analyst coverage changes reflect information production; a sudden drop in coverage removes a monitoring mechanism and creates a temporary information vacuum that prices slowly\",\n    \"why_market_underreacts\": \"The market observes the coverage change but does not fully account for the reduced information flow that follows, leading to a delayed adjustment in the stock's risk premium\",\n    \"data_required\": [\"IBES ptgsumu unadjusted\", \"CRSP monthly panel\"],\n    \"pit_available\": true,\n    \"horizon\": \"6m\",\n    \"expected_turnover_x_per_year\": 2,\n    \"expected_gross_edge_bps_per_year\": 250,\n    \"best_falsification\": \"If the effect is entirely explained by the stock's size or liquidity (small illiquid names naturally lose coverage), the mechanism is a size proxy\",\n    \"closest_existing_corpse\": \"analyst_target_level_haircut\",\n    \"why_genuinely_different\": \"analyst_target_level_haircut traded the level of the target price; this trades the change in the number of analysts producing those targets, which is a different information-production mechanism\",\n    \"implementation\": \"From IBES ptgsumu, compute the monthly change in numest (number of analysts). Create a signal that is negative for stocks with a large drop in numest (coverage loss) and positive for stocks with a large increase. Long the top decile of coverage-gain stocks, exclude the bottom decile of coverage-loss stocks. Rebalance monthly, hold 6 months.\"\n  },\n  {\n    \"mechanism\": \"Trade the cross-sectional difference in the speed of price adjustment to insider selling versus insider buying, focusing on the asymmetry in the information content of the two\",\n    \"economic_rationale\": \"Insider sales are more likely to be liquidity-driven than information-driven, but when a cluster of insider sales occurs in a stock with no other news, it signals private information that the market underweights\",\n    \"why_market_underreacts\": \"The market has learned to discount insider sales as noise (due to the high base rate of liquidity sales), so genuine information-driven sales are initially mispriced as noise\",\n    \"data_required\": [\"SEC Form 4 insider filings\", \"CRSP monthly panel\"],\n    \"pit_available\": true,\n    \"horizon\": \"3m\",\n    \"expected_turnover_x_per_year\": 4,\n    \"expected_gross_edge_bps_per_year\": 280,\n    \"best_falsification\": \"If the signal is subsumed by the existing insider_opportunistic signal (which is already promoted), the asymmetry is not a separate mechanism\",\n    \"closest_existing_corpse\": \"insider_opportunistic\",\n    \"why_genuinely_different\": \"insider_opportunistic trades the level of insider activity; this trades the differential speed of adjustment between buys and sells, specifically the underreaction to clustered sells in the absence of other news\",\n    \"implementation\": \"From Form 4 filings, compute the 3-month rolling count of insider sales minus insider buys, scaled by shares outstanding. Restrict to stocks where the sale cluster is not accompanied by a concurrent earnings announcement or 8-K filing (using CRSP return data to proxy for news). Long the bottom quintile of net-sale-ratio stocks. Rebalance monthly, hold 3 months.\"\n  },\n  {\n    \"mechanism\": \"Trade the cross-sectional drift in stocks whose 52-week high is revised upward but where the price has not yet caught up, conditional on low volatility\",\n    \"economic_rationale\": \"A new 52-week high with a lagging price indicates the market is slowly incorporating positive information; the low-volatility filter selects for names where the drift is more likely to persist\",\n    \"why_market_underreacts\": \"The anchoring bias causes investors to underweight the significance of a new high when the stock is perceived as 'risky' (high vol), but when vol is low, the new high is more informative and still underreacted\",\n    \"data_required\": [\"CRSP monthly panel\"],\n    \"pit_available\": true,\n    \"horizon\": \"3m\",\n    \"expected_turnover_x_per_year\": 4,\n    \"expected_gross_edge_bps_per_year\": 300,\n    \"best_falsification\": \"If the effect is entirely captured by the existing low_volatility filter (which is already supported), the interaction is not additive\",\n    \"closest_existing_corpse\": \"low_volatility\",\n    \"why_genuinely_different\": \"low_volatility is a pure risk-based filter; this trades the interaction between a price-level event (52-week high) and the volatility regime, which is a behavioral anchoring mechanism\",\n    \"implementation\": \"For each stock, compute the ratio of current price to the trailing 252-day high. Flag stocks where this ratio is between 0.95 and 0.99 (near high but not at it) and where the 12-month realized volatility is in the bottom tercile. Long this intersection. Rebalance monthly, hold 3 months.\"\n  },\n  {\n    \"mechanism\": \"Trade the cross-sectional drift in stocks with a sudden increase in dollar volume (liquidity shock) that is not accompanied by a price move, indicating informed trading\",\n    \"economic_rationale\": \"An abnormal volume spike without a corresponding price change suggests information is being accumulated by informed traders who are not yet ready to move the price; the subsequent drift occurs as the information is revealed\",\n    \"why_market_underreacts\": \"The market attributes the volume spike to noise or index rebalancing, but the persistence of the volume (over multiple days) reveals it is information-driven, and the market is slow to reclassify\",\n    \"data_required\": [\"CRSP monthly panel\"],\n    \"pit_available\": true,\n    \"horizon\": \"1m\",\n    \"expected_turnover_x_per_year\": 6,\n    \"expected_gross_edge_bps_per_year\": 350,\n    \"best_falsification\": \"If the signal is subsumed by the existing drawdown_trigger_information signal (which also uses volume/price dynamics), the mechanism is not distinct\",\n    \"closest_existing_corpse\": \"drawdown_trigger_information\",\n    \"why_genuinely_different\": \"drawdown_trigger_information trades the trigger of a trailing stop (a price event); this trades a volume event without a price trigger, which is a different information channel\",\n    \"implementation\": \"For each stock, compute the 5-day average dollar volume divided by the trailing 60-day average. Flag stocks where this ratio exceeds 3 but where the 5-day return is between -1% and +1% (no price move). Long the top decile of this volume-shock ratio. Rebalance weekly, hold 1 month.\"\n  },\n  {\n    \"mechanism\": \"Trade the cross-sectional drift in stocks whose earnings estimate revisions are positive but where the stock price has not yet moved, conditional on the stock being in a downtrend\",\n    \"economic_rationale\": \"Positive estimate revisions in a downtrending stock represent a conflict between fundamental improvement and technical weakness; the market resolves this conflict slowly, favoring the fundamental improvement over time\",\n    \"why_market_underreacts\": \"The disposition effect causes investors to sell winners and hold losers; when a loser gets good news, the selling pressure from existing holders delays the price adjustment\",\n    \"data_required\": [\"IBES statsumu EPS consensus with up/down revision counts\", \"CRSP monthly panel\"],\n    \"pit_available\": true,\n    \"horizon\": \"3m\",\n    \"expected_turnover_x_per_year\": 4,\n    \"expected_gross_edge_bps_per_year\": 270,\n    \"best_falsification\": \"If the signal is subsumed by the existing earnings_estimate_revision signal (which is a hypothesis picker), the downtrend condition is not adding information\",\n    \"closest_existing_corpse\": \"earnings_estimate_revision\",\n    \"why_genuinely_different\": \"earnings_estimate_revision trades the revision alone; this trades the interaction between the revision and the price trend, which is a behavioral conflict-resolution mechanism\",\n    \"implementation\": \"From IBES, compute the monthly net revision ratio (numup1m - numdown1m) / numest. Flag stocks in the top quintile of this ratio. From CRSP, compute the 12-month price trend (12-1 momentum). Select stocks in the bottom quintile of momentum (downtrend) but top quintile of revisions. Long this intersection. Rebalance monthly, hold 3 months.\"\n  },\n  {\n    \"mechanism\": \"Trade the cross-sectional drift in stocks with a high ratio of short interest to float but where the short interest is decreasing (short covering), indicating the market is slowly recognizing the stock is oversold\",\n    \"economic_rationale\": \"A decrease in short interest after a period of high shorting signals that informed short sellers are covering their positions, which is a positive signal that the market underweights because it focuses on the level of short interest, not the change\",\n    \"why_market_underreacts\": \"The market anchors on the high level of short interest as a negative signal and fails to update on the direction of the change, which is the more informative component\",\n    \"data_required\": [\"CRSP monthly panel\", \"Compustat/CCM fundamentals via OSAP characteristic panel\"],\n    \"pit_available\": true,\n    \"horizon\": \"3m\",\n    \"expected_turnover_x_per_year\": 4,\n    \"expected_gross_edge_bps_per_year\": 290,\n    \"best_falsification\": \"If the signal is subsumed by the existing short_interest_level signal (which is a shelf filter), the change component is not additive\",\n    \"closest_existing_corpse\": \"short_interest_level\",\n    \"why_genuinely_different\": \"short_interest_level trades the level of short interest; this trades the first difference in short interest, which is a different information channel (the direction of informed trading)\",\n    \"implementation\": \"From the OSAP panel, extract the short interest ratio (short interest / float) for each month. Compute the 3-month change in this ratio. Flag stocks in the top quintile of short interest level but the bottom quintile of the change (i.e., high but decreasing). Long this intersection. Rebalance monthly, hold 3 months.\"\n  },\n  {\n    \"mechanism\": \"Trade the cross-sectional drift in stocks whose Corwin-Schultz spread estimate widens sharply without a corresponding increase in volatility, indicating a liquidity provision withdrawal\",\n    \"economic_rationale\": \"A widening spread without a volatility increase suggests market makers are withdrawing liquidity due to private information, not public risk; the subsequent price adjustment is slow as the market realizes the information\",\n    \"why_market_underreacts\": \"The market attributes the spread widening to a temporary liquidity event, but the persistence of the wide spread (over multiple weeks) reveals it is information-driven, and the market is slow to reclassify\",\n    \"data_required\": [\"CRSP monthly panel\", \"Corwin-Schultz spread estimates from daily high/low\"],\n    \"pit_available\": true,\n    \"horizon\": \"1m\",\n    \"expected_turnover_x_per_year\": 6,\n    \"expected_gross_edge_bps_per_year\": 310,\n    \"best_falsification\": \"If the signal is subsumed by the existing low_volatility filter (which uses volatility), the spread-widening condition is not adding information beyond the vol control\",\n    \"closest_existing_corpse\": \"low_volatility\",\n    \"why_genuinely_different\": \"low_volatility trades the level of volatility; this trades the change in the spread conditional on volatility being unchanged, which is a liquidity-provision mechanism, not a risk mechanism\",\n    \"implementation\": \"From the Corwin-Schultz estimates, compute the monthly change in the spread. From CRSP, compute the monthly change in realized volatility. Flag stocks in the top quintile of spread increase but the bottom quintile of volatility increase. Long this intersection. Rebalance weekly, hold 1 month.\"\n  },\n  {\n    \"mechanism\": \"Trade the cross-sectional drift in stocks whose payout ratio (dividends + buybacks / earnings) is increasing but where the stock price has not yet adjusted, indicating the market underweights the signal from capital allocation\",\n    \"economic_rationale\": \"An increasing payout ratio signals management confidence in future earnings and a commitment to return capital; the market underweights this signal because it focuses on the level of payout, not the change\",\n    \"why_market_underreacts\": \"The market has learned to discount payout ratios as a static characteristic (due to the closed issuance_payout signal), but the change in payout is a dynamic signal of management behavior that is not fully priced\",\n    \"data_required\": [\"Compustat/CCM fundamentals via OSAP characteristic panel\", \"CRSP monthly panel\"],\n    \"pit_available\": true,\n    \"horizon\": \"6m\",\n    \"expected_turnover_x_per_year\": 2,\n    \"expected_gross_edge_bps_per_year\": 240,\n    \"best_falsification\": \"If the signal is subsumed by the existing issuance_payout signal (which is a shelf filter), the change component is not additive\",\n    \"closest_existing_corpse\": \"issuance_payout\",\n    \"why_genuinely_different\": \"issuance_payout trades the level of payout; this trades the first difference in payout, which is a different mechanism (management signaling via changes in capital allocation policy)\",\n    \"implementation\": \"From the OSAP panel, extract the payout ratio (dividends + buybacks / earnings) for each quarter. Compute the 4-quarter change in this ratio. Flag stocks in the top quintile of the change. Long this quintile. Rebalance quarterly, hold 6 months.\"\n  },\n  {\n    \"mechanism\": \"Trade the cross-sectional drift in stocks whose earnings surprise is positive but where the analyst revision following the surprise is negative, indicating the market is slow to resolve the conflict between actual results and forward guidance\",\n    \"economic_rationale\": \"A positive earnings surprise followed by negative analyst revisions suggests the surprise was driven by one-time items, but the market initially overreacts to the surprise and then slowly corrects as the revisions come in\",\n    \"why_market_underreacts\": \"The market anchors on the headline earnings surprise and fails to update on the subsequent analyst revisions, which are the more forward-looking information\",\n    \"data_required\": [\"IBES statsumu EPS consensus with up/down revision counts\", \"CRSP monthly panel\"],\n    \"pit_available\": true,\n    \"horizon\": \"1m\",\n    \"expected_turnover_x_per_year\": 6,\n    \"expected_gross_edge_bps_per_year\": 260,\n    \"best_falsification\": \"If the signal is subsumed by the existing earnings_surprise_monthly signal (which is a shelf filter), the revision interaction is not additive\",\n    \"closest_existing_corpse\": \"earnings_surprise_monthly\",\n    \"why_genuinely_different\": \"earnings_surprise_monthly trades the surprise alone; this trades the interaction between the surprise and the subsequent revision, which is a different mechanism (the market's slow resolution of conflicting signals)\",\n    \"implementation\": \"From IBES, compute the monthly earnings surprise (actual vs. consensus). From the same file, compute the 1-month post-surprise revision (numup1m - numdown1m). Flag stocks in the top quintile of surprise but the bottom quintile of post-surprise revision. Short this intersection (or avoid it in a long-only context). Rebalance weekly, hold 1 month.\"\n  }\n]\n```",
+ "call": {
+  "purpose": "hypothesis_generation",
+  "model": "deepseek-v4-flash",
+  "prompt_tokens": 2250,
+  "completion_tokens": 3796,
+  "cost_usd": 0.004783,
+  "output_sha256": "f368019be7cf303f",
+  "seconds": 32.81,
+  "temperature": 0.0,
+  "ok": true,
+  "error": "",
+  "meta": {}
+ }
+}
