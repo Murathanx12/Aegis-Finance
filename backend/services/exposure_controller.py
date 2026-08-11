@@ -89,12 +89,16 @@ def classify(bench: pd.Series, policy: ExposurePolicy) -> pd.DataFrame:
     v_ref = r.rolling(policy.vol_lookback).std(ddof=1)
     v_ratio = v_now / v_ref
 
-    state, budget, dwell = [], [], 0
+    state, budget, dwell, warmup = [], [], 0, 0
     prev_state = "risk_on"
     for i in range(len(px)):
         g, vr = gap.iloc[i], v_ratio.iloc[i]
         if not np.isfinite(g) or not np.isfinite(vr):
-            state.append("risk_on"); budget.append(1.0); continue
+            # Warmup: not enough history for the trend or vol reference. The
+            # controller is silently FULL RISK here, which is a real state and
+            # not a neutral one, so it is counted and reported.
+            warmup += 1
+            state.append("warmup_full_risk"); budget.append(1.0); continue
 
         if g < policy.trend_trigger and vr > policy.vol_trigger:
             s = "crisis"
@@ -115,6 +119,11 @@ def classify(bench: pd.Series, policy: ExposurePolicy) -> pd.DataFrame:
         state.append(s)
         budget.append(EXPOSURE_BUDGET[s])
 
+    if warmup:
+        logger.warning("exposure controller: %d of %d days had insufficient "
+                       "history and carried FULL risk by default — a short "
+                       "price history silently disables the control", warmup,
+                       len(px))
     return pd.DataFrame({"state": state, "exposure": budget}, index=px.index)
 
 

@@ -194,3 +194,31 @@ def test_the_live_ledger_has_records_and_none_of_them_are_scoreable_yet():
     assert all(r.get("outcome") is None for r in rows)
     voided = [r for r in rows if r.get("void_reason")]
     assert all(not (0 < (r["threshold"] or 0.5) < 1) for r in voided)
+
+
+# ── the canary: would anything say so if this went dark? ────────────────────
+def test_an_empty_ledger_reads_as_degraded_not_as_healthy(tmp_path):
+    """A prediction ledger fails by NOT growing, and an empty append looks
+    identical to a night with nothing to say. Silence must not read as ok."""
+    from backend.services.belief_state import ledger_health
+    out = ledger_health(tmp_path / "nothing.jsonl")
+    assert out["status"] == "DEGRADED"
+    assert out["n"] == 0
+
+
+def test_a_forecast_past_its_resolution_date_degrades_the_canary(tmp_path):
+    """An overdue record means the resolver cannot see its security. Counting it
+    as 'pending' hides a permanently dark forecast behind a growing backlog."""
+    from backend.services.belief_state import ledger_health
+    p = tmp_path / "led.jsonl"
+    append([_pred(made_at="2025-02-03T00:00:00")], p)
+    out = ledger_health(p)
+    assert out["status"] == "DEGRADED"
+    assert out["n_overdue"] == 1
+
+
+def test_the_live_ledger_canary_is_healthy():
+    from backend.services.belief_state import ledger_health
+    out = ledger_health()
+    assert out["status"] == "ok", out
+    assert out["distinct_specialists"] >= 5

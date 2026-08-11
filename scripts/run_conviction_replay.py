@@ -84,9 +84,10 @@ def main() -> int:
     logger.info("pool: %d picks, %d non-picks, window %s..%s",
                 len(picks), len(nonpicks), START, END)
 
-    b_pick = basket(prices, picks, START, END, "his picks")
-    b_non = basket(prices, nonpicks, START, END, "his non-picks")
-    b_all = basket(prices, pool, START, END, "the whole pool")
+    # These three decide the verdict, so an excluded name is a hard failure.
+    b_pick = basket(prices, picks, START, END, "his picks", require_all=True)
+    b_non = basket(prices, nonpicks, START, END, "his non-picks", require_all=True)
+    b_all = basket(prices, pool, START, END, "the whole pool", require_all=True)
 
     pr = np.array([b_pick.per_name[t] for t in b_pick.members])
     nr = np.array([b_non.per_name[t] for t in b_non.members])

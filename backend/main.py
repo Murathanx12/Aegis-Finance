@@ -615,6 +615,16 @@ async def health_full():
     except Exception as e:
         event_intel_health = {"error": str(e)}
 
+    # The prediction ledger fails by NOT growing: an empty append looks exactly
+    # like a night with nothing to say, and forward calibration accrues only
+    # from written records. It needs a status row here or it can go dark for
+    # weeks behind a green checkmark.
+    try:
+        from backend.services.belief_state import ledger_health
+        prediction_ledger = ledger_health()
+    except Exception as e:
+        prediction_ledger = {"status": "DEGRADED", "error": str(e)}
+
     cs = cache_status()
     return {
         "status": "ok",
@@ -634,6 +644,7 @@ async def health_full():
         "llm": llm,
         "fmp_budget": fmp,
         "event_intel": event_intel_health,
+        "prediction_ledger": prediction_ledger,
         "data_sources": source_health(),
         "recent_warnings": recent_warnings(),
     }

@@ -298,6 +298,11 @@ def resolve_one(rec: dict, prices) -> dict | None:
         return None
     tkr = rec["ticker"]
     if tkr not in prices.columns:
+        # Distinguishable from "not yet due": a record whose security is absent
+        # from the price frame will NEVER resolve, and counting it as pending
+        # hides a permanently dark forecast behind a growing backlog.
+        logger.warning("%s: %s is not in the price frame — this record can "
+                       "never resolve", rec["prediction_id"], tkr)
         return None
     start = pd.Timestamp(rec["made_at"][:10])
     s = prices[tkr].loc[start:].dropna()
@@ -347,8 +352,20 @@ def resolve_all(prices, path: Path | None = None) -> dict:
         path.write_text("\n".join(json.dumps(r, ensure_ascii=False)
                                   for r in graded) + "\n", encoding="utf-8")
     done = [r for r in graded if r.get("outcome") is not None]
-    return {"total": len(graded), "resolved": len(done),
-            "newly_resolved": newly, "pending": len(graded) - len(done)}
+    void = [r for r in graded if r.get("void_reason")]
+    today = date.today()
+    overdue = [r for r in graded
+               if r.get("outcome") is None and not r.get("void_reason")
+               and today >= date.fromisoformat(r["resolves_after"][:10])]
+    if overdue:
+        logger.warning("%d record(s) are past their resolution date and still "
+                       "unresolved — check the price frame covers them", len(overdue))
+    return {"total": len(graded), "resolved": len(done), "void": len(void),
+            "newly_resolved": newly,
+            "pending_not_yet_due": len(graded) - len(done) - len(void) - len(overdue),
+            "OVERDUE_AND_UNRESOLVED": len(overdue),
+            "overdue_ids": [r["prediction_id"] for r in overdue][:20],
+            "health": "ok" if not overdue else "DEGRADED: forecasts past due"}
 
 
 def calibration(path: Path | None = None, *, by: str = "specialist") -> dict:
@@ -386,3 +403,40 @@ def calibration(path: Path | None = None, *, by: str = "specialist") -> dict:
     return {"n_resolved": len(rows), "sliced_by": by, "groups": out,
             "note": ("a Brier score below climatology is the only version of "
                      "'the forecast was informative' this ledger recognises")}
+
+
+def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7) -> dict:
+    """Would anything say so if the specialists stopped writing?
+
+    A prediction ledger is exactly the kind of subsystem that goes dark quietly:
+    it fails by not growing, and an empty append looks identical to a night with
+    nothing to say. This is the status row for it.
+    """
+    rows = read_predictions(path)
+    if not rows:
+        return {"status": "DEGRADED", "n": 0,
+                "reason": "the ledger is empty — no forecast has ever been "
+                          "written, so no calibration can ever accrue"}
+    last = max(r["made_at"][:10] for r in rows)
+    quiet = (date.today() - date.fromisoformat(last)).days
+    overdue = [r for r in rows
+               if r.get("outcome") is None and not r.get("void_reason")
+               and date.today() >= date.fromisoformat(r["resolves_after"][:10])]
+    problems = []
+    if quiet > max_quiet_days:
+        problems.append(f"no new forecast in {quiet} days")
+    if overdue:
+        problems.append(f"{len(overdue)} forecast(s) past due and unresolved")
+    return {
+        "status": "ok" if not problems else "DEGRADED",
+        "problems": problems,
+        "n_records": len(rows),
+        "n_void": sum(1 for r in rows if r.get("void_reason")),
+        "n_resolved": sum(1 for r in rows if r.get("outcome") is not None),
+        "n_overdue": len(overdue),
+        "last_written": last,
+        "days_quiet": quiet,
+        "distinct_specialists": len({r["specialist"] for r in rows}),
+        "distinct_models": len({f"{r['model']}:{r['model_version']}"
+                                for r in rows}),
+    }

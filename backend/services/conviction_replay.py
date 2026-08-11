@@ -77,25 +77,40 @@ class GroupReturn:
     median_return: float
     members: list[str] = field(default_factory=list)
     per_name: dict = field(default_factory=dict)
+    #: names asked for that produced no return. A dropped name is removed from
+    #: one side of a comparison and moves the answer invisibly — APLT did
+    #: exactly that and cost ten points before anyone noticed.
+    excluded: list[str] = field(default_factory=list)
 
 
-def basket(prices: pd.DataFrame, tickers: list[str], start: str,
-           end: str, name: str) -> GroupReturn:
-    """Equal-weighted mean total return, dropping only names that had no price
-    at the START date (a name that did not exist yet was never selectable)."""
-    per = {}
+def basket(prices: pd.DataFrame, tickers: list[str], start: str, end: str,
+           name: str, *, require_all: bool = False) -> GroupReturn:
+    """Equal-weighted mean total return over `tickers`.
+
+    Set `require_all=True` where a dropped name would change the verdict. The
+    default is permissive because ranking rules legitimately name securities
+    that did not trade for the whole window — but the exclusions are always
+    recorded on the result, never merely logged.
+    """
+    per, dropped = {}, []
     for t in tickers:
         r = total_return(prices, t, start, end)
         if r is not None:
             per[t] = r
         else:
+            dropped.append(t)
             logger.warning("%s: %s has no return over %s..%s and is EXCLUDED",
                            name, t, start, end)
+    if dropped and require_all:
+        raise ValueError(
+            f"{name}: {dropped} produced no return. This basket decides a "
+            f"verdict, so a silently missing name is not acceptable — resolve "
+            f"the price or record a corporate action for it")
     vals = np.array(list(per.values()), dtype=float)
     return GroupReturn(name=name, n=len(vals),
                        mean_return=float(vals.mean()) if len(vals) else float("nan"),
                        median_return=float(np.median(vals)) if len(vals) else float("nan"),
-                       members=sorted(per), per_name=per)
+                       members=sorted(per), per_name=per, excluded=dropped)
 
 
 def permutation_test(pick_returns: np.ndarray, pool_returns: np.ndarray, *,

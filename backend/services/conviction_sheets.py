@@ -99,6 +99,9 @@ class Holding:
 class Sheet:
     date: str
     holdings: list[Holding] = field(default_factory=list)
+    #: rows the parser could not read. Surfaced rather than discarded: a
+    #: silently dropped holding is indistinguishable from one he never held.
+    unparsed: list[str] = field(default_factory=list)
 
     def section(self, name: str) -> list[Holding]:
         return [h for h in self.holdings if h.section == name]
@@ -124,6 +127,7 @@ class Sheet:
 
 def _parse_lines(lines: list[str], sheet_date: str, n_price_cols: int) -> Sheet:
     sheet = Sheet(date=sheet_date)
+    unparsed: list[str] = []
     section = None
     pending_sold: float | None = None
     for raw in lines:
@@ -171,7 +175,12 @@ def _parse_lines(lines: list[str], sheet_date: str, n_price_cols: int) -> Sheet:
         nums = [_to_float(t) for t in _NUM.findall(rest)]
         nums = [n for n in nums if n is not None]
         if len(nums) < 2:
-            logger.debug("%s: skipping unparsable row %r", sheet_date, line)
+            # WARNING, not DEBUG. A row that fails to parse leaves a holding
+            # out of an equal-weighted basket, which moves the answer with
+            # nothing to contradict it — and DEBUG is invisible by default.
+            logger.warning("%s: UNPARSED row dropped from %s: %r",
+                           sheet_date, section, line)
+            unparsed.append(line)
             continue
 
         if n_price_cols == 2:
@@ -221,9 +230,13 @@ def load_sheet(date: str) -> Sheet:
             f"{date}: parsed {len(sheet.portfolio)} portfolio and "
             f"{len(sheet.watchlist)} watchlist rows — a sheet with an empty "
             f"side cannot support the comparison it exists for")
-    logger.info("%s: %d portfolio, %d watchlist, %d sold-at annotations",
-                date, len(sheet.portfolio), len(sheet.watchlist),
-                sum(1 for h in sheet.holdings if h.sold_at is not None))
+    if sheet.unparsed:
+        logger.warning("%s: %d row(s) could not be parsed and are NOT in any "
+                       "basket: %s", date, len(sheet.unparsed), sheet.unparsed)
+    logger.info("%s: %d portfolio, %d watchlist, %d sold-at annotations, "
+                "%d unparsed", date, len(sheet.portfolio), len(sheet.watchlist),
+                sum(1 for h in sheet.holdings if h.sold_at is not None),
+                len(sheet.unparsed))
     return sheet
 
 
@@ -231,8 +244,8 @@ def all_tickers() -> list[str]:
     """Every distinct traded symbol across both sheets."""
     out: set[str] = set()
     for d in SHEETS:
-        try:
-            out.update(h.ticker for h in load_sheet(d).holdings)
-        except FileNotFoundError:
-            logger.warning("%s sheet missing", d)
+        # Deliberately NOT caught. A partial universe silently shrinks the price
+        # fetch, which silently drops names from one side of the comparison —
+        # the failure this whole replay is built to avoid.
+        out.update(h.ticker for h in load_sheet(d).holdings)
     return sorted(out)
