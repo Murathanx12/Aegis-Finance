@@ -90,14 +90,32 @@ happens to be cached.
 
 ---
 
+## Verified live
+
+Deploy `84287c5`, CI green, commit flipped, checked on the running service:
+
+```
+"prediction_ledger": {"status": "ok", "n_records": 87, "n_void": 6,
+                      "n_resolved": 0, "n_overdue": 0,
+                      "distinct_specialists": 5, "distinct_models": 1}
+```
+
+The CONTENT was read, not the status code — 87 records across 5 specialists with
+6 voided is the ledger as written, so the canary is reporting the real
+subsystem and not a default. `scheduler.nav.all_fresh` true, 4 jobs, FRED 23/23,
+yfinance 23/23.
+
+One warning present and **not** attributable to this change: `trends_sentiment`
+got a 429 from Google Trends and is cooling down for 6h. It discloses itself as
+unavailable rather than writing a value, which is the correct behaviour. Noted,
+not ignored.
+
+---
+
 ## NOT covered
 
 * **Rate limits and prod volume.** No SEC/EDGAR path was touched; the DeepSeek
   client inherits the existing breaker and daily cap in `llm_analyzer`, which
   was **not** re-audited.
-* **Live verification of the new health field.** `prediction_ledger` is wired
-  into `/api/health/full` and `ledger_health()` returns `ok` when called
-  directly, but the endpoint itself was NOT exercised against a running deploy
-  this session — `verify-prod-after-deploy` is owed on the next push.
 * The ~70 legacy swallowed-exception sites repo-wide (BACKLOG H5). Nothing in
   this session added to them.
