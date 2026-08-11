@@ -1,0 +1,141 @@
+{
+ "trial": "COUNTERFACTUAL-EXITS-1",
+ "status": "EXPLORE / OBSERVATIONAL \u2014 a hypothesis generator, never a fitted policy. Every branch is one realised path.",
+ "leakage": "none possible: no model is involved, only arithmetic on prices that already happened. This is the half of the market-laboratory proposal that CAN be run honestly today (CANON \u00a713 \u2014 masking the name is not masking the date).",
+ "window": [
+  "2025-11-07",
+  "2026-08-10"
+ ],
+ "decision_dates": [
+  "2025-12-01",
+  "2026-01-02",
+  "2026-02-02",
+  "2026-03-02",
+  "2026-04-01",
+  "2026-05-01"
+ ],
+ "branches": [
+  "hold",
+  "sell_to_cash",
+  "sell_to_benchmark",
+  "trim_25",
+  "trim_50",
+  "take_original_out",
+  "rotate_to_best_momentum"
+ ],
+ "effective_sample": {
+  "n_rows": 60,
+  "n_distinct_names": 12,
+  "n_dates": 5,
+  "effective_n_for_inference": 12,
+  "why": "decision dates overlap on one realised path, so rows are repeated measurements of the same nine months; only the names are separate draws, and they are correlated too"
+ },
+ "mean_terminal_value_per_dollar": {
+  "hold": 1.166113524110426,
+  "sell_to_cash": 1.0,
+  "sell_to_benchmark": 1.1291106035172802,
+  "trim_25": 1.1245851430828193,
+  "trim_50": 1.083056762055213,
+  "take_original_out": 1.1259998412536614,
+  "rotate_to_best_momentum": 1.111048927156539
+ },
+ "times_each_branch_was_best": {
+  "hold": 23,
+  "sell_to_benchmark": 21,
+  "rotate_to_best_momentum": 16
+ },
+ "win_counts_omitted_for": {
+  "branches": [
+   "trim_25",
+   "trim_50",
+   "take_original_out"
+  ],
+  "why": "each is a convex combination of hold and sell_to_cash, so it can never exceed both and its win count is a theorem rather than a result. Their MEANS are reported and are meaningful."
+ },
+ "the_soc_question": {
+  "definition": "rows where the position was already up more than 50%",
+  "n_rows": 8,
+  "n_names": 4,
+  "mean_hold": 1.2445206943802818,
+  "mean_sell_to_benchmark": 1.1160844957776157,
+  "mean_take_original_out": 1.1326705936520196,
+  "hold_minus_sell": 0.12843619860266609,
+  "reading": "the average big winner was worth holding"
+ },
+ "separating_features": [
+  {
+   "feature": "gain_since_entry",
+   "n_names": 12,
+   "n_rows": 60,
+   "correlation_with_hold_minus_sell": 0.3243772141406365,
+   "p_value": 0.2844,
+   "mde_correlation_80pct_power": 0.9835199312428501,
+   "detectable": false,
+   "verdict": "UNRESOLVED",
+   "note": "permuted across NAMES, not rows \u2014 permuting rows treats repeated views of one stock as independent facts"
+  },
+  {
+   "feature": "drawdown_from_peak",
+   "n_names": 12,
+   "n_rows": 60,
+   "correlation_with_hold_minus_sell": 0.641777547572119,
+   "p_value": 0.0211,
+   "mde_correlation_80pct_power": 0.7991728422644985,
+   "detectable": false,
+   "verdict": "UNRESOLVED",
+   "note": "permuted across NAMES, not rows \u2014 permuting rows treats repeated views of one stock as independent facts"
+  },
+  {
+   "feature": "return_1m",
+   "n_names": 12,
+   "n_rows": 60,
+   "correlation_with_hold_minus_sell": 0.48493121982920256,
+   "p_value": 0.1188,
+   "mde_correlation_80pct_power": 0.8655797275216208,
+   "detectable": false,
+   "verdict": "UNRESOLVED",
+   "note": "permuted across NAMES, not rows \u2014 permuting rows treats repeated views of one stock as independent facts"
+  },
+  {
+   "feature": "return_3m",
+   "n_names": 12,
+   "n_rows": 48,
+   "correlation_with_hold_minus_sell": 0.043264604339373375,
+   "p_value": 0.87,
+   "mde_correlation_80pct_power": 0.9436799358925245,
+   "detectable": false,
+   "verdict": "UNRESOLVED",
+   "note": "permuted across NAMES, not rows \u2014 permuting rows treats repeated views of one stock as independent facts"
+  },
+  {
+   "feature": "vol_3m_annual",
+   "n_names": 12,
+   "n_rows": 48,
+   "correlation_with_hold_minus_sell": -0.28407888736558357,
+   "p_value": 0.3471,
+   "mde_correlation_80pct_power": 0.8697713023763481,
+   "detectable": false,
+   "verdict": "UNRESOLVED",
+   "note": "permuted across NAMES, not rows \u2014 permuting rows treats repeated views of one stock as independent facts"
+  },
+  {
+   "feature": "run_up_from_trough",
+   "n_names": 12,
+   "n_rows": 60,
+   "correlation_with_hold_minus_sell": 0.23598590834795052,
+   "p_value": 0.3936,
+   "mde_correlation_80pct_power": 0.9795751394283985,
+   "detectable": false,
+   "verdict": "UNRESOLVED",
+   "note": "permuted across NAMES, not rows \u2014 permuting rows treats repeated views of one stock as independent facts"
+  }
+ ],
+ "n_features_that_separate": 0,
+ "verdict": "NO_OBSERVABLE_SEPARATES_AT_THIS_SAMPLE",
+ "may_not_conclude": [
+  "that any of these branches is a policy \u2014 one path, one regime",
+  "that a stop-loss is rehabilitated; CANON \u00a715 stands",
+  "any money claim"
+ ],
+ "runtime_secs": 1.0
+}

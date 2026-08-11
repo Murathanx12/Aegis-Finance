@@ -1,0 +1,91 @@
+{
+ "trial": "EXPOSURE-CONTROLLER-V0",
+ "status": "MEASURING INSTRUMENT, NOT A PROMOTED RULE. Not calibrated, not attached to any lane, no capital.",
+ "design": {
+  "not_a_crash_model": "maps observable trend and realised vol to an exposure budget; no crash probability appears",
+  "budgets": {
+   "risk_on": 1.0,
+   "neutral": 0.75,
+   "risk_off": 0.5,
+   "crisis": 0.25
+  },
+  "re_entry_is_mandatory": "ExposurePolicy REFUSES to construct without a minimum dwell and a re-entry band above the de-risking threshold - a controller with no re-entry looks fine in every backtest that ends during the drawdown",
+  "overlay_is_lagged_one_day": true,
+  "policy": {
+   "trend_window": 200,
+   "vol_window": 21,
+   "vol_lookback": 252,
+   "trend_trigger": -0.02,
+   "vol_trigger": 1.5,
+   "min_dwell_days": 10,
+   "reentry_trigger": 0.01
+  }
+ },
+ "window": [
+  "2025-11-07",
+  "2026-08-10"
+ ],
+ "state_days": {
+  "risk_on": 188
+ },
+ "mean_exposure": 1.0,
+ "benchmark_max_drawdown": -0.088849681755238,
+ "books": {
+  "his_picks": {
+   "unmanaged": {
+    "n_days": 187,
+    "up_capture": 2.3132176268301783,
+    "down_capture": 2.478271028604148,
+    "capture_ratio": 0.9333997775590616,
+    "total_return": 0.23867558576941628,
+    "benchmark_total": 0.1616533412431962,
+    "max_drawdown": -0.2286511826510964,
+    "benchmark_max_drawdown": -0.088849681755238,
+    "reading": "a capture ratio above 1 is the only version of timing skill this reports; below 1 with both captures reduced is just less risk, which costs nothing to buy"
+   },
+   "with_overlay": {
+    "n_days": 187,
+    "up_capture": 2.3132176268301783,
+    "down_capture": 2.478271028604148,
+    "capture_ratio": 0.9333997775590616,
+    "total_return": 0.23867558576941628,
+    "benchmark_total": 0.1616533412431962,
+    "max_drawdown": -0.2286511826510964,
+    "benchmark_max_drawdown": -0.088849681755238,
+    "reading": "a capture ratio above 1 is the only version of timing skill this reports; below 1 with both captures reduced is just less risk, which costs nothing to buy"
+   },
+   "cost_of_the_overlay_pts": 0.0,
+   "drawdown_saved_pts": 0.0
+  },
+  "his_non_picks": {
+   "unmanaged": {
+    "n_days": 187,
+    "up_capture": 1.999585335141072,
+    "down_capture": 1.8252594993592697,
+    "capture_ratio": 1.0955074255704444,
+    "total_return": 0.4377057831875979,
+    "benchmark_total": 0.1616533412431962,
+    "max_drawdown": -0.2184155329848947,
+    "benchmark_max_drawdown": -0.088849681755238,
+    "reading": "a capture ratio above 1 is the only version of timing skill this reports; below 1 with both captures reduced is just less risk, which costs nothing to buy"
+   },
+   "with_overlay": {
+    "n_days": 187,
+    "up_capture": 1.999585335141072,
+    "down_capture": 1.8252594993592697,
+    "capture_ratio": 1.0955074255704444,
+    "total_return": 0.4377057831875979,
+    "benchmark_total": 0.1616533412431962,
+    "max_drawdown": -0.2184155329848947,
+    "benchmark_max_drawdown": -0.088849681755238,
+    "reading": "a capture ratio above 1 is the only version of timing skill this reports; below 1 with both captures reduced is just less risk, which costs nothing to buy"
+   },
+   "cost_of_the_overlay_pts": 0.0,
+   "drawdown_saved_pts": 0.0
+  }
+ },
+ "THE_FINDING": "The controller NEVER left risk_on: SPY held above its 200-day average all window and realised vol never reached 1.5x its one-year level. The overlay therefore cost nothing and saved nothing. But his book drew down 22.9% while SPY drew down 8.9%, at a measured beta of 2.15 - so his drawdown was mostly his OWN beta amplifying a shallow market dip that no market-regime trigger would ever fire on. His third self-diagnosed failure is therefore NOT primarily a market-timing problem in this window; it is the cost of carrying 2.15 beta. That is a position-sizing question and an exposure controller keyed to the MARKET cannot answer it.",
+ "why_the_policy_was_not_tuned_until_it_fired": "Loosening the trigger until it fires on the one sample available is fitting the rule to the window it is being tested on. The null is reported as the result. A trigger keyed to the BOOK's own drawdown rather than the market's is the design that follows from it, and it is a separate pre-registration - not an adjustment made after seeing this.",
+ "THE_CAVEAT": "SPY returned +16% over this window with a shallow maximum drawdown, so this is a BULL sample and an exposure rule can very nearly only lose in it. A small measured cost here is NOT evidence the rule is cheap, and the drawdown Murat actually regrets is not necessarily inside this window. The honest reading is that this window cannot price the rule; it can only show it does not misbehave.",
+ "runtime_secs": 0.0
+}
