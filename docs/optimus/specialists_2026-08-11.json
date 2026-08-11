@@ -1,0 +1,45 @@
+{
+ "run": "OPTIMUS-SPECIALISTS-1",
+ "date": "2026-08-11",
+ "provider": "deepseek",
+ "why_deepseek": "ANTHROPIC_API_KEY is still empty \u2014 the .env line carries a trailing comment, not a key, which is why a length check called it present. Verified by attempting a live call, not by measuring a string.",
+ "firewall": "specialists propose and forecast; they never size, weight or allocate. Recommendation language is refused at parse time, not asked for politely.",
+ "batches": [
+  {
+   "specialist": "skeptic",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "793e73099e698906",
+   "n_candidates": 6,
+   "n_predictions": 18,
+   "n_refused": 0,
+   "refusals": [],
+   "canon_20_batch_check": {
+    "n_forecasts": 18,
+    "effective_distinct_ideas": 18,
+    "ratio": 1.0,
+    "distinct_tickers": 6,
+    "distinct_observables": 3,
+    "reading": "the denominator for any claim about this batch is the effective count, not the raw count (CANON \u00a720)"
+   }
+  }
+ ],
+ "totals": {
+  "n_predictions_written": 18,
+  "n_beliefs_written": 6,
+  "canon_20_across_all_specialists": {
+   "n_forecasts": 18,
+   "effective_distinct_ideas": 18,
+   "ratio": 1.0,
+   "distinct_tickers": 6,
+   "distinct_observables": 3,
+   "reading": "the denominator for any claim about this batch is the effective count, not the raw count (CANON \u00a720)"
+  },
+  "ledger_size": 87,
+  "calibration_now": {
+   "n_resolved": 0,
+   "reading": "nothing has resolved yet \u2014 the clock started when the first record was written, and calibration is a statement about resolved records only"
+  },
+  "runtime_secs": 22.5
+ }
+}
