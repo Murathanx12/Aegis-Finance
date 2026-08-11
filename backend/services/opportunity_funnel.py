@@ -306,14 +306,43 @@ def stage1(tickers: list[str], *, keep: int = STAGE1_KEEP) -> list[Candidate]:
     out.sort(key=lambda c: -(c.median_dollar_vol or 0))
     logger.info("funnel stage 1: %d of %d priced names pass eligibility",
                 len(out), len(close.columns))
-    if len(out) > keep:
-        # A cap that silently drops 400 eligible names reads as "only 1,500
-        # names were investable". Say what was cut and on what.
-        STAGE_FAILURES["stage1_truncated"] = (
-            f"{len(out)} names passed eligibility; kept the {keep} most liquid. "
-            f"The {len(out) - keep} dropped are eligible but less liquid, and "
-            f"were never scored.")
-    return out[:keep]
+    if len(out) <= keep:
+        return out
+
+    # NIGHT-10 (RECO-1): this used to be `out[:keep]` — the `keep` most liquid
+    # names. Every survivor has ALREADY cleared the hard retail liquidity gate
+    # above, so that truncation controlled no risk; it was a pure size filter,
+    # and it silently decided what the whole product could ever recommend.
+    # Measured consequence: 0 of 25 final candidates fell inside the small-cap
+    # band, and the smallest was $3.8bn — while the only SUPPORTED picker in
+    # the registry, `profitability_small`, is licensed on the CRSP small
+    # segment and its own entry reads "Net-dead in large/mid". The search and
+    # the evidence were pointed at disjoint segments of the market.
+    #
+    # So retain a size-STRATIFIED sample instead: the eligible list is cut into
+    # liquidity deciles and each contributes its share. The pool stays the same
+    # size, still every name is retail-tradeable, and the small end survives to
+    # the stage where a licensed signal can actually be applied to it.
+    n_bands = N_SIZE_STRATA
+    per = keep // n_bands
+    bands: list[list[Candidate]] = [
+        out[i * len(out) // n_bands:(i + 1) * len(out) // n_bands]
+        for i in range(n_bands)
+    ]
+    kept: list[Candidate] = []
+    for b in bands:
+        kept.extend(b[:per])
+    # any remainder goes to the most liquid names that were not already taken
+    if len(kept) < keep:
+        taken = {c.ticker for c in kept}
+        kept.extend([c for c in out if c.ticker not in taken][:keep - len(kept)])
+    STAGE_FAILURES["stage1_truncated"] = (
+        f"{len(out)} names passed eligibility; kept {len(kept)} as a "
+        f"{n_bands}-band size-stratified sample rather than the {keep} most "
+        f"liquid. Every kept name clears the retail liquidity gate. The "
+        f"{len(out) - len(kept)} dropped were never scored.")
+    kept.sort(key=lambda c: -(c.median_dollar_vol or 0))
+    return kept
 
 
 # ─────────────────────────────── stage 2 ────────────────────────────────────

@@ -1,0 +1,1037 @@
+{
+ "generated_at": "2026-08-11T01:49:23+00:00",
+ "runtime_secs": 496.4,
+ "universe": {
+  "n": 5324,
+  "source": "finnhub /stock/symbol?exchange=US",
+  "from_cache": true,
+  "screened": 5324,
+  "truncated": false,
+  "truncation_note": null
+ },
+ "stages": {
+  "stage1_eligible": 1500,
+  "stage2_shortlist": 250,
+  "stage3_enriched": 60,
+  "stage4_candidates": 40
+ },
+ "failures": {
+  "stage1_truncated": "2920 names passed eligibility; kept 1500 as a 5-band size-stratified sample rather than the 1500 most liquid. Every kept name clears the retail liquidity gate. The 1420 dropped were never scored."
+ },
+ "candidates": [
+  {
+   "ticker": "NVDA",
+   "price": 217.5500030517578,
+   "median_dollar_vol": 29267364804.125977,
+   "vol_annual": 0.3678379290351171,
+   "mom_12_1": 0.11121421003444465,
+   "quality": 0.9787800000000001,
+   "sector": "Semiconductors",
+   "market_cap": 5264710157825.745,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 1.0,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $29267.4m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 37%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.98 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "INDV",
+   "price": 38.470001220703125,
+   "median_dollar_vol": 63782990.01312256,
+   "vol_annual": 0.36960679837076965,
+   "mom_12_1": 0.7605078290648197,
+   "quality": 0.8654628600000002,
+   "sector": "Pharmaceuticals",
+   "market_cap": 4539985041.176198,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.9881355932203391,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $63.8m, so a $10,000 ticket is 0.02% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 37%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 3 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.87 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "EXPD",
+   "price": 179.0,
+   "median_dollar_vol": 188154989.80407715,
+   "vol_annual": 0.30887801694773365,
+   "mom_12_1": 0.4537773212837102,
+   "quality": 0.8036352,
+   "sector": "Logistics & Transportation",
+   "market_cap": 23268323841.435844,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.9762711864406779,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $188.2m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 31%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.80 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "INCY",
+   "price": 121.55000305175781,
+   "median_dollar_vol": 186100723.96011353,
+   "vol_annual": 0.3335070639234227,
+   "mom_12_1": 0.3997059490579693,
+   "quality": 0.76035912,
+   "sector": "Biotechnology",
+   "market_cap": 24637911488.302917,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.964406779661017,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $186.1m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 33%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.76 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "CVLG",
+   "price": 33.47999954223633,
+   "median_dollar_vol": 8053445.606040955,
+   "vol_annual": 0.41815656056402206,
+   "mom_12_1": 0.9194352727219441,
+   "quality": 0.75258729,
+   "sector": "Road & Rail",
+   "market_cap": 842724756.3116883,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.9525423728813558,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $8.1m, so a $10,000 ticket is 0.12% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 42%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 5 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.75 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "NBIX",
+   "price": 164.9199981689453,
+   "median_dollar_vol": 184174605.2581787,
+   "vol_annual": 0.33383094566493726,
+   "mom_12_1": 0.3507642713007737,
+   "quality": 0.69000271,
+   "sector": "Biotechnology",
+   "market_cap": 16763982737.543112,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.9406779661016949,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $184.2m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 33%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.69 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "DDS",
+   "price": 633.97998046875,
+   "median_dollar_vol": 62987464.19067383,
+   "vol_annual": 0.4085279071774903,
+   "mom_12_1": 0.09840523756993758,
+   "quality": 0.6849430799999999,
+   "sector": "Retail",
+   "market_cap": 9902432359.280296,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.9288135593220339,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $63.0m, so a $10,000 ticket is 0.02% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 41%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 3 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.68 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "BOX",
+   "price": 33.599998474121094,
+   "median_dollar_vol": 64712164.7895813,
+   "vol_annual": 0.3657165680856678,
+   "mom_12_1": -0.05312297639732788,
+   "quality": 0.6193746,
+   "sector": "Technology",
+   "market_cap": 4654696890.397112,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.9169491525423727,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $64.7m, so a $10,000 ticket is 0.02% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 37%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 3 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.62 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "AAPL",
+   "price": 308.260009765625,
+   "median_dollar_vol": 15262368341.923523,
+   "vol_annual": 0.25046887101990006,
+   "mom_12_1": 0.3817113258954514,
+   "quality": 0.6085141999999999,
+   "sector": "Technology",
+   "market_cap": 4498801637673.312,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.9050847457627118,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $15262.4m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 25%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.61 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "IRTC",
+   "price": 124.77999877929688,
+   "median_dollar_vol": 63494105.516052246,
+   "vol_annual": 0.4187701564994437,
+   "mom_12_1": -0.26898678260902253,
+   "quality": 0.5613969999999999,
+   "sector": "Health Care",
+   "market_cap": 4113123654.385638,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.8932203389830509,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $63.5m, so a $10,000 ticket is 0.02% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 42%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 3 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.56 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "LLY",
+   "price": 1231.93994140625,
+   "median_dollar_vol": 3191950215.4418945,
+   "vol_annual": 0.3586627019818646,
+   "mom_12_1": 0.8483180467833433,
+   "quality": 0.5465202,
+   "sector": "Pharmaceuticals",
+   "market_cap": 1159695372949.657,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.8813559322033897,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $3192.0m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 36%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.55 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "META",
+   "price": 594.9199829101562,
+   "median_dollar_vol": 10111042515.969849,
+   "vol_annual": 0.3838796803222138,
+   "mom_12_1": -0.16869622725474687,
+   "quality": 0.49262550000000005,
+   "sector": "Media",
+   "market_cap": 1515562286729.5757,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.8694915254237288,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $10111.0m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 38%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.49 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "AMZN",
+   "price": 278.0899963378906,
+   "median_dollar_vol": 10548698495.133972,
+   "vol_annual": 0.3445957663085894,
+   "mom_12_1": 0.11667492750921205,
+   "quality": 0.4427144,
+   "sector": "Retail",
+   "market_cap": 2999566306330.34,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.8576271186440678,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $10548.7m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 34%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.44 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "FMX",
+   "price": 119.91999816894531,
+   "median_dollar_vol": 64751734.92050171,
+   "vol_annual": 0.25807081050795977,
+   "mom_12_1": 0.49733042042070763,
+   "quality": 0.4412754299999999,
+   "sector": "Beverages",
+   "market_cap": 243023820000.0,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.8457627118644067,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $64.8m, so a $10,000 ticket is 0.02% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 26%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 3 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.44 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "AVPT",
+   "price": 12.989999771118164,
+   "median_dollar_vol": 23952251.26619339,
+   "vol_annual": 0.4242733791780593,
+   "mom_12_1": -0.1489932463215372,
+   "quality": 0.44068008000000003,
+   "sector": "Technology",
+   "market_cap": 2748234724.75215,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.8338983050847457,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $24.0m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 42%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.44 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "GRMN",
+   "price": 313.1600036621094,
+   "median_dollar_vol": 183804172.70736694,
+   "vol_annual": 0.34238972447991706,
+   "mom_12_1": 0.045760909215542434,
+   "quality": 0.42001928000000005,
+   "sector": "Consumer products",
+   "market_cap": 60393699199.65904,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.8220338983050848,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $183.8m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 34%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.42 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "NFLX",
+   "price": 76.29000091552734,
+   "median_dollar_vol": 3083102929.193878,
+   "vol_annual": 0.34817533998967937,
+   "mom_12_1": -0.3974438340248032,
+   "quality": 0.41319743999999997,
+   "sector": "Media",
+   "market_cap": 317666975514.3116,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.8101694915254236,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $3083.1m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 35%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.41 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "ANIP",
+   "price": 75.76000213623047,
+   "median_dollar_vol": 23884251.808547974,
+   "vol_annual": 0.30930264372732996,
+   "mom_12_1": -0.08218241801898285,
+   "quality": 0.40038305999999996,
+   "sector": "Pharmaceuticals",
+   "market_cap": 1723197658.7133548,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.7983050847457627,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $23.9m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 31%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.40 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "GOOGL",
+   "price": 357.5199890136719,
+   "median_dollar_vol": 10315069213.046265,
+   "vol_annual": 0.32586294331378657,
+   "mom_12_1": 0.7335989776446055,
+   "quality": 0.39384030000000003,
+   "sector": "Media",
+   "market_cap": 4372469599999.9995,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.7745762711864406,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $10315.1m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 33%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.39 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "GOOG",
+   "price": 355.8399963378906,
+   "median_dollar_vol": 7009555817.9626465,
+   "vol_annual": 0.3215615780062488,
+   "mom_12_1": 0.7176234675627418,
+   "quality": 0.39384030000000003,
+   "sector": "Media",
+   "market_cap": 4372469599999.9995,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.7745762711864406,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $7009.6m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 32%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.39 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "JKHY",
+   "price": 155.0800018310547,
+   "median_dollar_vol": 182659418.76296997,
+   "vol_annual": 0.2718814310148748,
+   "mom_12_1": -0.0566994050895927,
+   "quality": 0.36336282000000003,
+   "sector": "Financial Services",
+   "market_cap": 11018554940.522734,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.7627118644067796,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $182.7m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 27%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.36 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "CRAI",
+   "price": 168.50999450683594,
+   "median_dollar_vol": 24660757.31277466,
+   "vol_annual": 0.38476960185611236,
+   "mom_12_1": -0.11210932972113807,
+   "quality": 0.35482131000000006,
+   "sector": "Professional Services",
+   "market_cap": 1057713623.2627133,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.7508474576271186,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $24.7m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 38%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.35 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "JAZZ",
+   "price": 256.5199890136719,
+   "median_dollar_vol": 191440634.58633423,
+   "vol_annual": 0.36625719697761744,
+   "mom_12_1": 1.0909732409072337,
+   "quality": 0.3541221,
+   "sector": "Pharmaceuticals",
+   "market_cap": 16651888236.772688,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.7389830508474575,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $191.4m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 37%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.35 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "TSM",
+   "price": 418.4700012207031,
+   "median_dollar_vol": 5333038987.5,
+   "vol_annual": 0.4047666306979976,
+   "mom_12_1": 0.7257357982669228,
+   "quality": 0.34582789999999997,
+   "sector": "Semiconductors",
+   "market_cap": 61459714863281.0,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.7271186440677966,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $5333.0m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 40%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.35 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "BBSI",
+   "price": 32.290000915527344,
+   "median_dollar_vol": 8090276.332530975,
+   "vol_annual": 0.3974852376003922,
+   "mom_12_1": -0.17593570593677876,
+   "quality": 0.3425054,
+   "sector": "Professional Services",
+   "market_cap": 782553966.6766124,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.7152542372881355,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $8.1m, so a $10,000 ticket is 0.12% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 40%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 5 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.34 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "MSFT",
+   "price": 506.05999755859375,
+   "median_dollar_vol": 14295201815.177917,
+   "vol_annual": 0.3219453793873534,
+   "mom_12_1": -0.26122364626825667,
+   "quality": 0.32740286,
+   "sector": "Technology",
+   "market_cap": 3757771436868.2983,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.7033898305084745,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $14295.2m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 32%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.33 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "CSCO",
+   "price": 122.56999969482422,
+   "median_dollar_vol": 2680396092.0791626,
+   "vol_annual": 0.32920037076319725,
+   "mom_12_1": 0.6706360967853613,
+   "quality": 0.31753287999999996,
+   "sector": "Communications",
+   "market_cap": 483101666421.77,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.6915254237288135,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $2680.4m, so a $10,000 ticket is 0.00% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 33%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 1 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.32 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "OMAB",
+   "price": 108.52999877929688,
+   "median_dollar_vol": 8325754.371261597,
+   "vol_annual": 0.3115567205800296,
+   "mom_12_1": -0.014760526822010123,
+   "quality": 0.3134505,
+   "sector": "Transportation Infrastructure",
+   "market_cap": 79402620000.0,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.6796610169491525,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $8.3m, so a $10,000 ticket is 0.12% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 31%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 5 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.31 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "APOG",
+   "price": 42.52000045776367,
+   "median_dollar_vol": 8116060.130310059,
+   "vol_annual": 0.4234926960287114,
+   "mom_12_1": -0.0988909172831175,
+   "quality": 0.29135379,
+   "sector": "Building",
+   "market_cap": 887319941.1130514,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.6677966101694915,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $8.1m, so a $10,000 ticket is 0.12% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 42%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 5 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.29 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "BTSG",
+   "price": 61.45000076293945,
+   "median_dollar_vol": 183251404.0046692,
+   "vol_annual": 0.43792033420741194,
+   "mom_12_1": 2.206261583389206,
+   "quality": 0.2885778,
+   "sector": "Health Care",
+   "market_cap": 12158756826.309467,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.6559322033898305,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $183.3m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 44%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.29 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "CWK",
+   "price": 13.279999732971191,
+   "median_dollar_vol": 24380661.73682213,
+   "vol_annual": 0.4353161357424377,
+   "mom_12_1": -0.06263197332396442,
+   "quality": 0.25663015,
+   "sector": "Real Estate",
+   "market_cap": 3116997910.0737524,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.6440677966101696,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $24.4m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 44%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.26 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "CON",
+   "price": 34.099998474121094,
+   "median_dollar_vol": 24320734.469604492,
+   "vol_annual": 0.28434834821018895,
+   "mom_12_1": 0.40133928233111393,
+   "quality": 0.22388403,
+   "sector": "Health Care",
+   "market_cap": 4348354792.43394,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.6322033898305084,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $24.3m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 28%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.22 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "CCEP",
+   "price": 106.02999877929688,
+   "median_dollar_vol": 183242847.40447998,
+   "vol_annual": 0.22665029707837878,
+   "mom_12_1": 0.13709502909187443,
+   "quality": 0.2174270998,
+   "sector": "Beverages",
+   "market_cap": 46994364736.402626,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.6203389830508474,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $183.2m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 23%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.22 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "IMO",
+   "price": 128.7899932861328,
+   "median_dollar_vol": 62705322.80654907,
+   "vol_annual": 0.28277803726136,
+   "mom_12_1": 0.4830274117355404,
+   "quality": 0.21277215000000002,
+   "sector": "Energy",
+   "market_cap": 84246689674.0,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.6084745762711864,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $62.7m, so a $10,000 ticket is 0.02% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 28%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 3 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.21 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "PDS",
+   "price": 81.38999938964844,
+   "median_dollar_vol": 8277807.983779907,
+   "vol_annual": 0.3746373530242043,
+   "mom_12_1": 0.49569742077766765,
+   "quality": 0.21179927999999998,
+   "sector": "Energy",
+   "market_cap": 1345388686.0,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.5966101694915253,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $8.3m, so a $10,000 ticket is 0.12% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 37%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 5 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.21 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "VTS",
+   "price": 16.149999618530273,
+   "median_dollar_vol": 8108195.87726593,
+   "vol_annual": 0.3256906971780663,
+   "mom_12_1": -0.3729814706972948,
+   "quality": 0.20881445000000004,
+   "sector": "Energy",
+   "market_cap": 642371348.7868853,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.5847457627118644,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $8.1m, so a $10,000 ticket is 0.12% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 33%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 5 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.21 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "BWA",
+   "price": 69.27999877929688,
+   "median_dollar_vol": 191459546.8345642,
+   "vol_annual": 0.4029093661027701,
+   "mom_12_1": 0.5854509306759066,
+   "quality": 0.20679549,
+   "sector": "Auto Components",
+   "market_cap": 14110005498.565332,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.5728813559322034,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $191.5m, so a $10,000 ticket is 0.01% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 40%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 2 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.21 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "PHIN",
+   "price": 73.80999755859375,
+   "median_dollar_vol": 24408901.61743164,
+   "vol_annual": 0.3374187658783431,
+   "mom_12_1": 0.41381205512814034,
+   "quality": 0.20172603,
+   "sector": "Auto Components",
+   "market_cap": 2704257423.9838476,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.5610169491525423,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $24.4m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 34%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.20 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "GXO",
+   "price": 46.959999084472656,
+   "median_dollar_vol": 63083127.46143341,
+   "vol_annual": 0.40696746228403224,
+   "mom_12_1": -0.04688715517252895,
+   "quality": 0.17085095999999997,
+   "sector": "Logistics & Transportation",
+   "market_cap": 5385587729.386689,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.5491525423728814,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $63.1m, so a $10,000 ticket is 0.02% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 41%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 3 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.17 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  },
+  {
+   "ticker": "PRVA",
+   "price": 22.3700008392334,
+   "median_dollar_vol": 23990438.286209106,
+   "vol_annual": 0.32844861238125045,
+   "mom_12_1": 0.3466924491831096,
+   "quality": 0.16813288999999998,
+   "sector": "Health Care",
+   "market_cap": 2857414140.689978,
+   "analyst_upside": null,
+   "n_analysts": null,
+   "score": 0.5372881355932203,
+   "stage": 4,
+   "why": [
+    "liquid: median 60d dollar volume $24.0m, so a $10,000 ticket is 0.04% of a day",
+    "cleared the retail liquidity gate",
+    "volatility 33%/yr, below the universe median 44% (low_volatility: SUPPORTED/FILTER)",
+    "size band 4 of 5 by dollar volume \u2014 the shortlist is stratified so that size cannot act as a picker",
+    "gross profitability 0.17 (profitability_small: SUPPORTED/PICKER, weight 0.7)",
+    "survived to the final shortlist and is eligible for the joint portfolio optimizer alongside current holdings"
+   ],
+   "blocked_by": [
+    "momentum_12_1 is CLOSED/REJECTED (net-dead at honest costs) \u2014 shown for description, not used to rank"
+   ]
+  }
+ ],
+ "evidence_basis": {
+  "ranked_by": [
+   "profitability_small"
+  ],
+  "filtered_by": [
+   "low_volatility",
+   "liquidity (retail ticket bar)"
+  ],
+  "recorded_but_not_ranked_on": [
+   "momentum_12_1 (CLOSED/REJECTED)",
+   "analyst_target_upside_xs (CLOSED/PERVERSE \u2014 RISK_INPUT only)"
+  ],
+  "why_not_analyst_upside": "Sorting a universe by analyst-implied upside is the obvious move and it is the one the lab has measured as NEGATIVE: t -3.6 in large/mid and -7.2 in small. The funnel records it for sizing and refuses to rank on it."
+ }
+}

@@ -1372,3 +1372,55 @@ def load_tsmom_xa_lanes() -> dict:
 
 
 tsmom_xa_lanes: dict = load_tsmom_xa_lanes()
+
+
+# ─────────────── signal universe bands (NIGHT-10, RECO-1) ────────────────────
+# The signal registry records the universe each signal was measured in, and
+# until NIGHT-10 nothing enforced it: `profitability_small` — whose own registry
+# entry says "Net-dead in large/mid" — was ranking NVDA, AAPL and META in the
+# opportunity funnel. Borrowing evidence from a segment where the effect was
+# measured to be absent is the same defect as ranking on a closed signal; it
+# just had no printed name. `backend/services/recommendation.py` gates on these.
+#
+# Bands are dollar market cap. CRSP's small segment is a percentile breakpoint,
+# not a dollar one, so these are a deliberately conservative operationalisation:
+# a name only counts as small if it is unambiguously small.
+SIGNAL_UNIVERSE_SMALL_MAX_USD = 2_000_000_000.0
+SIGNAL_UNIVERSE_MID_MAX_USD = 10_000_000_000.0
+
+#: registry `universe` string -> the cap band(s) a signal may be applied to.
+#: A signal whose universe string is not listed here is treated as UNKNOWN and
+#: gets no rank influence — unknown is not a free pass (same rule as
+#: `reliability_weight: null` resolving to UNCALIBRATED rather than to 1.0).
+#
+# Every universe string that appears in the registry is listed, so that a
+# signal blocked here is blocked by the SIZE gate deliberately, and never by an
+# accidental gap in this table. Strings describing a non-equity or non-size
+# scope (index level, asset classes) map to the empty set: they can never lead
+# a cross-sectional stock ranking, which is the correct reading of their own
+# registry entries.
+SIGNAL_UNIVERSE_BANDS: dict = {
+    "CRSP": {"small", "mid", "large"},
+    "CRSP small segment": {"small"},
+    "CRSP small/mid": {"small", "mid"},
+    "CRSP largemid": {"mid", "large"},
+    "CRSP US common, large/mid and small segments": {"small", "mid", "large"},
+    "CRSP + Form 4": {"small", "mid", "large"},
+    "CRSP + IBES": {"small", "mid", "large"},
+    "CRSP + Thomson 13F": {"small", "mid", "large"},
+    "CRSP + link tables": {"small", "mid", "large"},
+    "US listed": {"small", "mid", "large"},
+    "optionable US equity": {"mid", "large"},
+    "optionable names in the book": {"mid", "large"},
+    "biotech": {"small", "mid", "large"},
+    "masked profitability slate": {"small", "mid", "large"},
+    "Murat's book + watchlist": {"small", "mid", "large"},
+    "Murat's book + funnel candidates": {"small", "mid", "large"},
+    "news/filings for the book": {"small", "mid", "large"},
+    # Not cross-sectional stock scopes at all — never licensed to rank names.
+    "index level": set(),
+    "asset classes, never single stocks": set(),
+    # Universes a trial has not declared yet. Undeclared is not permission.
+    "to be declared": set(),
+    "to be declared by ANALYST-REVISION-1": set(),
+}
