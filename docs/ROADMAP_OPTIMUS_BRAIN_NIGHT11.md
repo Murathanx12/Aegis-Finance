@@ -1,5 +1,28 @@
 # ROADMAP — from a truth machine to an investment brain
 
+> **NIGHT-12 UPDATE (2026-08-11).** Five of the queue items below are now done
+> or answered; see `SESSION_2026-08-11_NIGHT12.md`. The dependency chain held,
+> and one link in it broke in the programme's favour:
+>
+> * **The short-leg decomposition RAN and the revision family SURVIVED it** —
+>   short-leg share 41.8–52.1% against Round 16's 88–99.9%, long leg clears its
+>   own MDE in 6 of 7 arms. The "first licensed signals" step is no longer
+>   blocked. **`eps_rev_breadth` small at Layer 2, carrying G7 turnover in the
+>   same trial, is now the single highest-value open item in the programme.**
+> * **BeliefState + PredictionRecord are frozen and the calibration clock is
+>   running** — 87 live forecasts. This was named the prerequisite for a
+>   two-way Optimus and it is now in place; the remaining work is resolution
+>   and scoring, which only time can supply.
+> * **The counterfactual replay engine is built** — the leakage-free half of
+>   the "market laboratory" proposal, no LLM involved.
+> * **The graveyard rescue queue is rescoped down, not up.** CONVICTION-REPLAY-1
+>   measured an 80-point MDE on a 13-name book; the counterfactual exit study
+>   returned no separating observable. Small-n instruments stay small-n.
+> * **The exposure controller exists and never fired**, which reframed the third
+>   failure as a sizing problem rather than a timing one.
+>
+> Everything below is retained as written for the record.
+
 **Written 2026-08-11, NIGHT-11.** Supersedes nothing; it is the first roadmap
 this programme has written about the *player* rather than the *referee*.
 
