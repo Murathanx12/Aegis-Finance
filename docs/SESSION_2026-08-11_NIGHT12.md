@@ -159,6 +159,15 @@ NIGHT-10 found ten "independent" LLM hypotheses that were one connected
 component; this batch is genuinely diverse). Nothing resolves yet; the shortest
 horizon is 5 trading days. That is the point.
 
+**A gap, stated rather than papered over:** all 37 belief states came back with
+coherent probability trees (branch probabilities summing to 1.0) but **no price
+targets**, so `expected_value()` correctly returns `None` for every one of them.
+The positive-skew valuation object therefore EXISTS and is REFUSING to price
+itself, which is the right failure — an EV from a tree with no targets would be
+a valuation with nothing behind it. The contract now requires numeric targets;
+the fix lands on the next run rather than being retrofitted onto a batch that
+is already written and internally consistent.
+
 **`ANTHROPIC_API_KEY` is still empty.** The `.env` line carries a trailing
 comment, so a length check reports 79 characters and a live call fails. Verified
 by calling, not by measuring a string.

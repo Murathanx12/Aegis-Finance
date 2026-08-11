@@ -100,6 +100,10 @@ Hard rules:
   horizon does and would move your credence.
 - Base rates first. If you do not have specific information that distinguishes
   this security, say so and give a probability near the base rate.
+- Every scenario in "belief.scenarios" MUST carry a numeric price_target and
+  the branch probabilities MUST sum to 1.0. A tree with no targets cannot be
+  priced, and an expected value from branches that do not sum to one is
+  arithmetic on an error - the engine refuses both rather than guessing.
 - THRESHOLDS ARE DECIMAL FRACTIONS, NEVER PERCENTAGES. A 25% move is 0.25, not
   25. "abs_move_exceeds" and "drawdown_exceeds" REQUIRE a threshold strictly
   between 0 and 1; the other two observables require threshold: null.
