@@ -169,3 +169,64 @@ def test_forecast_error_is_realised_minus_expected():
         resolved_as_of="b", horizon_days=90,
         realised_return=0.12, expected_return=0.05)
     assert s.forecast_error == pytest.approx(0.07)
+
+
+# ── the registry's headline number must trace to a receipt ──────────────────
+# The register shipped saying the false-discovery bar was +4.87 %/yr and that
+# two challengers had cleared it. Neither survived contact with the measurement:
+# 4.87 was the real-data equal-weight CONTROL genome, quoted a second time as
+# the threshold its own challengers were judged against, and the bar measured
+# over 60 null worlds is +6.90 %/yr, which nothing in the pool clears.
+#
+# The defect was not that someone computed a number wrong. It was that a
+# headline number sat in a file with no link to the run that produced it, so
+# nothing could notice when the run was superseded. These tests are that link.
+
+MEASURED_BAR_PCT_YR = 6.90          # runs/ARENA1/null_bar.json, Aegis module
+RETIRED_BAR_PCT_YR = 4.87           # the control genome it was confused with
+
+
+def _registry() -> dict:
+    import yaml
+    return yaml.safe_load(S.REGISTRY_PATH.read_text(encoding="utf-8"))
+
+
+def test_the_registry_bar_is_the_measured_one():
+    reg = _registry()
+    assert reg["false_discovery_bar_pct_yr"] == pytest.approx(
+        MEASURED_BAR_PCT_YR), (
+        "the shadow register's false-discovery bar no longer matches the "
+        "measured null bar; a forward record labelled with a stale bar "
+        "mislabels every book in it")
+    assert reg["false_discovery_bar_receipt"], (
+        "the bar must name the run that produced it — an unsourced headline "
+        "number is exactly how 4.87 survived")
+
+
+def test_the_retired_bar_is_recorded_not_deleted():
+    """A number that was wrong is part of the record, not an embarrassment."""
+    reg = _registry()
+    assert reg["superseded_bar_pct_yr"] == pytest.approx(RETIRED_BAR_PCT_YR)
+    assert "counted twice" in reg["superseded_bar_note"]
+
+
+def test_no_book_claims_to_have_cleared_the_bar():
+    reg = _registry()
+    for book in reg["books"]:
+        excess = book.get("arena_excess")
+        if excess is None:
+            continue
+        assert book.get("cleared_false_discovery_bar") is False, (
+            f"{book['shadow_id']} carries no explicit clearance flag; the "
+            "previous register implied clearance in prose instead")
+        assert excess < MEASURED_BAR_PCT_YR, (
+            f"{book['shadow_id']} reports {excess} %/yr against a bar of "
+            f"{MEASURED_BAR_PCT_YR} — if a genome genuinely clears the bar "
+            "that is a finding and must be adjudicated, not asserted in YAML")
+    assert reg["genomes_clearing_the_bar"] == 0
+
+
+def test_nothing_in_the_register_is_seeded_without_an_attended_decision():
+    """Seeding changes what the record MEANS, so it is not a code change."""
+    reg = _registry()
+    assert "inception_note" in reg

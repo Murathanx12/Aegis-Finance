@@ -1,10 +1,35 @@
 # Forward shadow register — champion and challengers
 # ═══════════════════════════════════════════════════════════════════════════
 #
-# NOTHING HERE IS A WINNER. ARENA-1 was a null: 384 genomes, 66 survived the
-# pre-declared selection rule, 2 cleared the false-discovery bar (+4.87 %/yr,
-# the best of 384 when nothing predicts anything), both at t ~ 1.2, and
-# Bonferroni over 384 gives p_adj = 1.000.
+# NOTHING HERE IS A WINNER, AND NOTHING HERE EVER CLEARED THE BAR.
+#
+# ARENA-1 was a null: 384 genomes, 66 survived the pre-declared selection rule,
+# and Bonferroni over 384 gives p_adj = 1.000.
+#
+# This file previously said that 2 genomes "cleared the false-discovery bar
+# (+4.87 %/yr)". Both halves of that sentence were wrong, and they were wrong
+# together. +4.87 was never the bar: it is the real-data equal-weight CONTROL
+# genome — the same measurement separately published as "ranked 4th of 384" —
+# quoted a second time as though it were a threshold. The bar is the MAXIMUM of
+# 384 draws when nothing predicts anything, which is a sample from an
+# extreme-value distribution and cannot be read off one draw.
+#
+# Measured over 60 null worlds through the same generator, pool and scorer
+# (`runs/ARENA1/null_bar.json`, Aegis module):
+#
+#     best-of-384 under the null   0.83 -> 7.68 %/yr   (mean 3.72, sd 1.79)
+#     operating bar, 95th pctile   +6.90 %/yr
+#
+# Against that bar **0 of 384 genomes clear**, including the best genome in the
+# whole pool (G0245, +6.06 %/yr). The two entries below once described as
+# "above the bar at t ~ 1.2" were above a number that was never the bar.
+#
+# The corrected reading is not weaker than the published one. It is the same
+# conclusion stated exactly: the Arena found nothing.
+#
+# The bar is specific to a pool of 384. An extreme-value threshold scales with
+# how many chances were taken, so a successor arena recomputes its own; it may
+# not inherit this one.
 #
 # These books exist for the only reason a forward record is worth keeping:
 # every genome in the Arena has already seen all 252 months of history, so a
@@ -27,7 +52,20 @@ schema: shadow-v1
 seeded: 2026-08-11
 arena: ARENA-1
 arena_manifest_sha256: f7f7e7ef7457be50
-false_discovery_bar_pct_yr: 4.87
+
+# Measured, not quoted. See runs/ARENA1/null_bar.json in the Aegis module.
+false_discovery_bar_pct_yr: 6.90
+false_discovery_bar_basis: >
+  95th percentile of the best-of-384 excess CAGR across 60 null worlds, same
+  generator/pool/scorer as ARENA-1. Range across worlds 0.83 to 7.68 %/yr.
+  Pool-size-specific: a different pool size needs its own bar.
+false_discovery_bar_receipt: aegis-module:runs/ARENA1/null_bar.json
+genomes_clearing_the_bar: 0
+superseded_bar_pct_yr: 4.87
+superseded_bar_note: >
+  The retired 4.87 was the real-data equal-weight CONTROL genome (G0004), also
+  published as "4th of 384" — one measurement counted twice, once as a result
+  and once as the threshold it was supposed to be judged against.
 inception_note: >
   Not yet seeded with positions. Seeding is attended: it needs a decision from
   Murat about whether these run on the funnel's live universe or on the panel
@@ -59,10 +97,12 @@ books:
     evidence_grade: SUPPORTED (the picker) / SCREEN ONLY (this combination)
     arena_rank: 2
     arena_excess: 5.06
+    cleared_false_discovery_bar: false
     why_here: >
-      One of only two genomes above the false-discovery bar, at t 1.19 — which
-      is to say, barely distinguishable from the luckiest of 384 noise draws.
-      Forward is the only place that gets settled.
+      Ranked 2nd of 384 in-sample at t 1.19, and BELOW the measured
+      false-discovery bar of +6.90 %/yr — 5.06 is well inside the range a pool
+      of 384 reaches on noise alone. It is here as a screen candidate, not as a
+      finding. Forward is the only place that gets settled.
 
   - shadow_id: CHALLENGER_QUALITY_LOWVOL_LARGE
     represents: the same mechanism in the other segment
@@ -72,9 +112,13 @@ books:
     evidence_grade: SCREEN ONLY
     arena_rank: 3
     arena_excess: 4.88
+    cleared_false_discovery_bar: false
     why_here: >
-      A second segment for the same mechanism. If the mechanism is real both
-      should drift positive together; if it is noise they will not.
+      A second segment for the same mechanism, also below the +6.90 %/yr bar.
+      If the mechanism is real both should drift positive together; if it is
+      noise they will not. Note that this is one point of separation from the
+      random control (4.87) — which is the sharpest available statement of how
+      little the in-sample ranking distinguishes them.
 
   - shadow_id: CHALLENGER_EXCLUDED_G0245
     represents: the genome the frozen rule refused
@@ -86,6 +130,7 @@ books:
     evidence_grade: EXCLUDED BY THE PRE-DECLARED RULE
     arena_rank: 1
     arena_excess: 6.06
+    cleared_false_discovery_bar: false
     excluded_because: >
       turnover 3.03 against a frozen gate of 3.00 — a 1 % overshoot on one axis
       disqualifying the best-looking result in the search.
@@ -104,8 +149,14 @@ books:
     evidence_grade: CONTROL
     arena_rank: 4
     arena_excess: 4.87
+    cleared_false_discovery_bar: false
     why_here: >
-      It ranked FOURTH of 384 in-sample. Every challenger above is being
-      measured against a book that picks at random, forward, in real time —
-      which is the comparison that would have caught most of what this
-      programme has killed, years earlier.
+      It ranked FOURTH of 384 in-sample while picking names at random. Every
+      challenger above is being measured against it forward, in real time —
+      the comparison that would have caught most of what this programme has
+      killed, years earlier.
+
+      Its +4.87 is also the number this file once printed as the
+      false-discovery bar. A control book's own result was doing duty as the
+      threshold the challengers were judged against, which is why two of them
+      appeared to clear it.
