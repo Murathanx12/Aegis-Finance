@@ -1,0 +1,420 @@
+{
+ "trial": "CONVICTION-REPLAY-1",
+ "prereg": "Aegis module/TRIALS/PREREG_CONVICTION_REPLAY_1.md",
+ "status": "EXPLORE / OBSERVATIONAL \u2014 designed after seeing the history, so it can never be confirmation of it",
+ "accrues_to_denominator": 1,
+ "window": [
+  "2025-11-07",
+  "2026-08-10"
+ ],
+ "data_note": "equal-weighted baskets from actual adjusted closes. His sheets carry no share counts, no cash and no transactions, so NONE of these numbers is his return, and the +73.7% vs '2025 +115%' gap is NOT reconciled here \u2014 the inputs to settle it are not in the repo.",
+ "corporate_actions": {
+  "APLT": {
+   "ticker": "APLT",
+   "effective": "2026-02-03",
+   "cash_per_share": 0.088,
+   "kind": "merger_cash_and_cvr",
+   "source": "Cycle Group Holdings tender offer; Nasdaq delisting 2026-02-03",
+   "note": "plus one NON-TRADEABLE CVR per share, marked at zero \u2014 a non-tradeable claim has no observable price and inventing one would decide, by assumption, whether his worst position was a total loss"
+  },
+  "SLNO": {
+   "ticker": "SLNO",
+   "effective": "2026-05-18",
+   "cash_per_share": 53.0,
+   "kind": "merger_cash",
+   "source": "Neurocrine Biosciences acquisition, $2.9bn, completed 2026-05-18",
+   "note": "88.9% of shares tendered; watchlist name, not a holding"
+  }
+ },
+ "reconstructed_entry_prices": {
+  "APLT": {
+   "date": "2025-11-07",
+   "price": 0.8,
+   "why": "no surviving bars; entry from his 2025-11-07 sheet"
+  },
+  "SLNO": {
+   "date": "2025-11-07",
+   "price": 43.0,
+   "why": "no surviving bars; entry from his 2025-11-07 sheet"
+  }
+ },
+ "sensitivity_to_reconstructed_names": {
+  "excluding_reconstructed_names": {
+   "dropped": [
+    "APLT",
+    "SLNO"
+   ],
+   "n_picks": 12,
+   "n_non_picks": 47,
+   "picks_mean": 0.44949170071560723,
+   "non_picks_mean": 0.3325200914463029,
+   "difference": 0.11697160926930433,
+   "p_value_two_sided": 0.70455
+  },
+  "difference_moved_by": -0.10095528246714869,
+  "verdict_changes": false
+ },
+ "primary": {
+  "hypothesis": "H1 \u2014 his picks beat the non-picks he drew them from",
+  "picks": {
+   "n": 13,
+   "mean": 0.34645387758363744,
+   "median": -0.0722701614848612,
+   "members": [
+    "ALMS",
+    "AMPX",
+    "AMZN",
+    "APLT",
+    "DKNG",
+    "FSLR",
+    "MRVL",
+    "MSTR",
+    "NTLA",
+    "RGTI",
+    "SLDP",
+    "TTWO",
+    "TVTX"
+   ]
+  },
+  "non_picks": {
+   "n": 48,
+   "mean": 0.3304375507814817,
+   "median": 0.2898150468696473
+  },
+  "whole_pool": {
+   "n": 61,
+   "mean": 0.3338508663294822
+  },
+  "test": {
+   "observed_difference": 0.016016326802155645,
+   "p_value_two_sided": 0.9587,
+   "null_mean": -0.0021694977275212835,
+   "null_sd": 0.27898015859297537,
+   "null_p05": -0.4064661140210578,
+   "null_p95": 0.5114582018426339,
+   "n_picks": 13,
+   "n_pool": 48,
+   "n_permutations": 20000,
+   "significant_at_5pct": false
+  },
+  "power": {
+   "mde_at_80pct_power": 0.8,
+   "grid": [
+    {
+     "planted": 0.0,
+     "power": 0.047
+    },
+    {
+     "planted": 0.1,
+     "power": 0.0745
+    },
+    {
+     "planted": 0.2,
+     "power": 0.1205
+    },
+    {
+     "planted": 0.30000000000000004,
+     "power": 0.177
+    },
+    {
+     "planted": 0.4,
+     "power": 0.2785
+    },
+    {
+     "planted": 0.5,
+     "power": 0.383
+    },
+    {
+     "planted": 0.6000000000000001,
+     "power": 0.5085
+    },
+    {
+     "planted": 0.7000000000000001,
+     "power": 0.644
+    },
+    {
+     "planted": 0.8,
+     "power": 0.802
+    }
+   ],
+   "target_power": 0.8,
+   "note": "measured by planting effects of known size in a random k of the observed names, not derived from a formula",
+   "if_none": "no effect on the grid reached 80% power: this design cannot reliably detect ANY selection edge, and a null is a statement about the design (CANON \u00a719)"
+  },
+  "mde_at_80pct_power": 0.8,
+  "verdict": "UNRESOLVED_ABSENCE_OF_EVIDENCE",
+  "reading": "+1.6 pts, p 0.959, MDE 80.0. The design cannot see an effect of this size. This is absence of evidence and may NOT be recorded as a kill or as a finding about his skill (CANON \u00a719)."
+ },
+ "alternative_rankings": {
+  "sheet_upside": {
+   "mean_return": 0.5120961850036064,
+   "n": 13,
+   "tie_break_p05": 0.5120961850036064,
+   "tie_break_p95": 0.5120961850036064,
+   "members_strict": [
+    "AARD",
+    "ABSI",
+    "ACVA",
+    "ALMS",
+    "APLT",
+    "ATYR",
+    "BHVN",
+    "KYTX",
+    "OLMA",
+    "SLNO",
+    "SOC",
+    "TVRD"
+   ],
+   "tied_at_cutoff": [
+    "NTLA"
+   ],
+   "n_slots_filled_from_the_tie": 1,
+   "spread_from_ties": 0.0,
+   "is_a_real_ranking": true,
+   "whole_tied_group_return": 0.2626050293895963,
+   "cutoff": 1.2307692307692308,
+   "n_strictly_above_cutoff": 12,
+   "overlap_with_his_picks": 3,
+   "his_picks_minus_this_rule": -0.165642307419969
+  },
+  "consensus_rating": {
+   "mean_return": 0.7855360380534963,
+   "n": 13,
+   "tie_break_p05": 0.47615421573363104,
+   "tie_break_p95": 0.8790955486982591,
+   "members_strict": [],
+   "tied_at_cutoff": [
+    "AAPG",
+    "AARD",
+    "ABSI",
+    "ALMS",
+    "AMPX",
+    "IMNM",
+    "KYMR",
+    "KYTX",
+    "OLMA",
+    "QBTS",
+    "RVMD",
+    "SLNO",
+    "SOC",
+    "SRRK"
+   ],
+   "n_slots_filled_from_the_tie": 13,
+   "spread_from_ties": 0.4029413329646281,
+   "is_a_real_ranking": false,
+   "whole_tied_group_return": 0.7873308805659059,
+   "cutoff": 5.0,
+   "n_strictly_above_cutoff": 0,
+   "overlap_with_his_picks": 2,
+   "his_picks_minus_this_rule": -0.4390821604698588
+  }
+ },
+ "benchmarks": {
+  "SPY": 0.16165334124319686,
+  "QQQ": 0.18657650451262864,
+  "IWM": 0.25093512371439375,
+  "XBI": 0.4565754229107686,
+  "SMH": 0.6407610326305078
+ },
+ "rebalance_h3": {
+  "promoted": [
+   "AARD",
+   "BHVN",
+   "ELF",
+   "PRCH",
+   "QUBT",
+   "SOC"
+  ],
+  "demoted": [
+   "AMPX",
+   "AMZN",
+   "MRVL",
+   "RGTI",
+   "TTWO"
+  ],
+  "promoted_mean": -0.024711329607011483,
+  "demoted_mean": 0.3253172680924526,
+  "from": "2026-01-13",
+  "test": {
+   "observed_difference": -0.3500285976994641,
+   "p_value_two_sided": 0.37445,
+   "null_mean": -0.0047883492908413995,
+   "null_sd": 0.35211081003402006,
+   "null_p05": -0.5761679434709039,
+   "null_p95": 0.5541998060490116,
+   "n_picks": 6,
+   "n_pool": 5,
+   "n_permutations": 20000,
+   "significant_at_5pct": false
+  },
+  "note": "an independent second draw on the same skill, two months later, from the same pool"
+ },
+ "exits_h2": {
+  "rows": [
+   {
+    "ticker": "TVTX",
+    "sheet_entry_price": 34.0,
+    "sold_at": 34.4,
+    "price_at_end": 60.88999938964844,
+    "realised_return_vs_sheet_price": 0.0117647058823529,
+    "return_if_held_to_end": 0.7908823349896599,
+    "cost_of_selling_pct_of_entry": 0.779117629107307,
+    "verdict": "EARLY_EXIT"
+   },
+   {
+    "ticker": "ALMS",
+    "sheet_entry_price": 4.5,
+    "sold_at": 10.0,
+    "price_at_end": 27.530000686645508,
+    "realised_return_vs_sheet_price": 1.2222222222222223,
+    "return_if_held_to_end": 5.117777930365668,
+    "cost_of_selling_pct_of_entry": 3.895555708143446,
+    "verdict": "EARLY_EXIT"
+   },
+   {
+    "ticker": "SLDP",
+    "sheet_entry_price": 8.5,
+    "sold_at": 8.1,
+    "price_at_end": 2.3499999046325684,
+    "realised_return_vs_sheet_price": -0.04705882352941182,
+    "return_if_held_to_end": -0.7235294229844037,
+    "cost_of_selling_pct_of_entry": -0.6764705994549919,
+    "verdict": "GOOD_EXIT"
+   }
+  ],
+  "sign_is_uniform": false,
+  "registered_prediction": "the sign is NOT uniform across his exits",
+  "prediction_held": true
+ },
+ "capture_h4": {
+  "his_picks": {
+   "benchmark": "SPY",
+   "n_days": 187,
+   "n_up_days": 101,
+   "n_down_days": 86,
+   "up_capture": 2.3132176268301783,
+   "down_capture": 2.478271028604148,
+   "book_total": 0.23867558576941628,
+   "benchmark_total": 0.1616533412431962,
+   "book_vol_annual": 0.4041104891999349,
+   "benchmark_vol_annual": 0.13551474344657136,
+   "beta": 2.153273685772567,
+   "reading": "up_capture below 1 with down_capture also below 1 is lower risk, not timing skill; the pair must be read together"
+  },
+  "his_non_picks": {
+   "benchmark": "SPY",
+   "n_days": 187,
+   "n_up_days": 101,
+   "n_down_days": 86,
+   "up_capture": 1.999585335141072,
+   "down_capture": 1.8252594993592697,
+   "book_total": 0.4377057831875979,
+   "benchmark_total": 0.1616533412431962,
+   "book_vol_annual": 0.3407567574393861,
+   "benchmark_vol_annual": 0.13551474344657136,
+   "beta": 1.9116670035933645,
+   "reading": "up_capture below 1 with down_capture also below 1 is lower risk, not timing skill; the pair must be read together"
+  },
+  "whole_pool": {
+   "benchmark": "SPY",
+   "n_days": 187,
+   "n_up_days": 101,
+   "n_down_days": 86,
+   "up_capture": 2.0633749537897037,
+   "down_capture": 1.9580754036124652,
+   "book_total": 0.39831634542689964,
+   "benchmark_total": 0.1616533412431962,
+   "book_vol_annual": 0.3447541363865207,
+   "benchmark_vol_annual": 0.13551474344657136,
+   "beta": 1.960807345731507,
+   "reading": "up_capture below 1 with down_capture also below 1 is lower risk, not timing skill; the pair must be read together"
+  }
+ },
+ "position_paths": {
+  "best_three_held": [
+   {
+    "ticker": "ALMS",
+    "start_price": 4.71999979019165,
+    "end_price": 27.530000686645508,
+    "total_return": 4.832627523385479,
+    "mfe": 5.419491649136334,
+    "mae": 0.0,
+    "mfe_date": "2026-07-09",
+    "mae_date": "2025-11-07",
+    "capture_of_best": 0.8917123295421299,
+    "n_bars": 188
+   },
+   {
+    "ticker": "MRVL",
+    "start_price": 90.78677368164062,
+    "end_price": 208.55999755859372,
+    "total_return": 1.2972509001139865,
+    "mfe": 2.4845599903996805,
+    "mae": -0.1884837512239903,
+    "mfe_date": "2026-06-04",
+    "mae_date": "2026-02-04",
+    "capture_of_best": 0.5221250060882222,
+    "n_bars": 188
+   },
+   {
+    "ticker": "TVTX",
+    "start_price": 32.34000015258789,
+    "end_price": 60.88999938964844,
+    "total_return": 0.8828076407654544,
+    "mfe": 0.9406307367166498,
+    "mae": -0.17161407578461096,
+    "mfe_date": "2026-08-05",
+    "mae_date": "2026-03-24",
+    "capture_of_best": 0.9385273160932082,
+    "n_bars": 188
+   }
+  ],
+  "worst_three_held": [
+   {
+    "ticker": "SLDP",
+    "start_price": 6.860000133514404,
+    "end_price": 2.3499999046325684,
+    "total_return": -0.6574344229015847,
+    "mfe": 0.0714285366736771,
+    "mae": -0.7084548161698953,
+    "mfe_date": "2025-11-10",
+    "mae_date": "2026-07-29",
+    "capture_of_best": -9.204086399040888,
+    "n_bars": 188
+   },
+   {
+    "ticker": "MSTR",
+    "start_price": 241.92999267578125,
+    "end_price": 97.33000183105467,
+    "total_return": -0.5976935279724083,
+    "mfe": 0.0,
+    "mae": -0.6597776214175304,
+    "mfe_date": "2025-11-07",
+    "mae_date": "2026-06-26",
+    "capture_of_best": null,
+    "n_bars": 188
+   },
+   {
+    "ticker": "RGTI",
+    "start_price": 33.77000045776367,
+    "end_price": 17.649999618530273,
+    "total_return": -0.4773467758579031,
+    "mfe": 0.0,
+    "mae": -0.6180041621656365,
+    "mfe_date": "2025-11-07",
+    "mae_date": "2026-03-30",
+    "capture_of_best": null,
+    "n_bars": 188
+   }
+  ],
+  "median_capture_of_best_move": 0.41130289317028035,
+  "note": "capture_of_best is the fraction of the best available move a buy-and-hold kept; it turns 'I sold too early' into a measurement"
+ },
+ "may_not_conclude": [
+  "that he has or lacks selection skill \u2014 one window, 13 names",
+  "that his style should be copied into production",
+  "that any corpse is reopened",
+  "any money claim, Sharpe, or half-life"
+ ],
+ "runtime_secs": 39.4
+}
