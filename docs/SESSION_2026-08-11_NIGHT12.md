@@ -4,7 +4,8 @@
 to learn from it. Five phases ran. Two produced real findings, three produced
 honest nulls, and the nulls are the ones with the most decision value.
 
-Commits: `d99f5ba` `eb97949` `3f6cde1` (aegis-finance) · `3a6aa17` (Aegis module).
+Commits: `d99f5ba` `eb97949` `3f6cde1` `2c69fcf` `ebc65b1` `eca5fd5`
+(aegis-finance) · `3a6aa17` `5fa438a` `7409bff` (Aegis module).
 
 ---
 
@@ -244,6 +245,11 @@ live call) · seeding the shadow books · the graceful-degradation ruling.
 
 ## 8. Next, in order
 
+0. **REVINFO-2 is already pre-registered** — `TRIALS/PREREG_REVINFO_2_LAYER2.md`,
+   corpse-lint PASS vs 308 priors. It puts the decision boundary and G7 turnover
+   in the SAME trial, because testing them separately would report the good half
+   first. It **accrues one arm**. Registered expectation: `UNRESOLVED` or
+   `NET_DEAD`.
 1. **The transactions.** They are the only thing that can reconcile +73.7% vs
    +115% and separate his selection from his sizing. Everything about his record
    is limited by their absence, not by instrument power.
