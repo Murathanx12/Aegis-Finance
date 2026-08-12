@@ -113,6 +113,39 @@ def _record(call: LLMCall, ledger_path: Optional[Path] = None) -> None:
         fh.write(json.dumps(row) + "\n")
 
 
+def _mirror(call: LLMCall, *, prompt: str, schema_valid: bool) -> str:
+    """Mirror this call into the PROGRAMME-WIDE ledger; return its call_id.
+
+    This module's own `llm_ledger.jsonl` predates the unified one and stays: it
+    is what enforces `CAMPAIGN_BUDGET_USD`, and re-pointing a budget gate during
+    an instrumentation change is how budgets stop being enforced. The mirror
+    exists so research spend appears in the same accounting as specialist and
+    product spend — one ledger that can answer "what did the night cost".
+
+    Returns "" when the mirror fails, which is a signal to skip the later
+    `attach_outputs` rather than attach to a row that was never written.
+    """
+    from backend.services import llm_telemetry as _tel
+
+    try:
+        row = _tel.build_call(
+            provider="deepseek", model=call.model, purpose=call.purpose,
+            agent="research", prompt=prompt,
+            tokens_in=call.prompt_tokens, tokens_out=call.completion_tokens,
+            latency_ms=call.seconds * 1000.0, schema_valid=schema_valid,
+            error=call.error or None,
+            meta={"temperature": call.temperature,
+                  "output_sha256": call.output_sha256,
+                  "module_ledger_cost_usd": call.cost_usd})
+        _tel.append([row])
+        return row.call_id
+    except Exception as exc:                              # noqa: BLE001
+        logger.warning("llm_research: telemetry mirror failed (%s: %s) — the "
+                       "call itself is unaffected, this spend is missing from "
+                       "the unified ledger", type(exc).__name__, exc)
+        return ""
+
+
 def available() -> tuple[bool, str]:
     """Is any LLM path usable? Returns (ok, reason)."""
     try:
@@ -174,7 +207,13 @@ def ask(prompt: str, *, purpose: str, model: str = DEFAULT_MODEL,
                        seconds=round(time.time() - t0, 2),
                        temperature=temperature, ok=True)
         _record(call, ledger_path)
-        return {"text": text, "call": asdict(call)}
+        # `schema_valid` here is provisional: whether the reply matched the
+        # role's schema is only knowable after `parse_json_block`, so the roles
+        # below amend it. A call with a schema_hint that produced no parseable
+        # block is the zero-yield case, and the amendment is what records it.
+        call_id = _mirror(call, prompt=full,
+                          schema_valid=bool(text and text.strip()))
+        return {"text": text, "call": asdict(call), "call_id": call_id}
     except Exception as exc:  # noqa: BLE001 — a failed call is ledgered too
         call = LLMCall(purpose=purpose, model=model, prompt_tokens=0,
                        completion_tokens=0, cost_usd=0.0, output_sha256="",
@@ -182,7 +221,33 @@ def ask(prompt: str, *, purpose: str, model: str = DEFAULT_MODEL,
                        temperature=temperature, ok=False,
                        error=f"{type(exc).__name__}: {exc}")
         _record(call, ledger_path)
+        _mirror(call, prompt=full, schema_valid=False)
         raise LLMUnavailable(str(exc)) from exc
+
+
+def hypothesis_id(h: Any) -> str:
+    """Content id for one proposed mechanism.
+
+    Keyed on the mechanism text rather than a counter so the SAME proposal
+    re-emitted on a later night carries the SAME id — otherwise a model that
+    repeats itself looks like a model producing new ideas, and spend-per-idea
+    is measured against a denominator that only grows.
+    """
+    key = h.get("mechanism", "") if isinstance(h, dict) else str(h)
+    return "hyp_" + hashlib.sha256(str(key).strip().lower().encode()
+                                   ).hexdigest()[:14]
+
+
+def _attach(out: dict, *, hypothesis_ids: Optional[list] = None,
+            schema_valid: Optional[bool] = None) -> None:
+    """Amend the mirrored telemetry row once the reply has been parsed."""
+    from backend.services.llm_telemetry import attach_outputs
+
+    cid = out.get("call_id") or ""
+    if not cid:
+        return
+    attach_outputs(cid, hypothesis_ids=hypothesis_ids or (),
+                   schema_valid=schema_valid)
 
 
 def parse_json_block(text: str) -> Any:
@@ -272,7 +337,10 @@ economic reason for mispricing, not a different parameter on the same one.
     out = ask(prompt, purpose="hypothesis_generation", max_tokens=4000,
               ledger_path=ledger_path)
     parsed = parse_json_block(out["text"])
-    return {"hypotheses": parsed if isinstance(parsed, list) else [],
+    hyps = parsed if isinstance(parsed, list) else []
+    _attach(out, hypothesis_ids=[hypothesis_id(h) for h in hyps],
+            schema_valid=isinstance(parsed, list))
+    return {"hypotheses": hyps,
             "parsed_ok": isinstance(parsed, list),
             "raw": out["text"], "call": out["call"]}
 
@@ -304,6 +372,10 @@ Reply with ONLY a JSON array of objects:
     out = ask(prompt, purpose="adversarial_portfolio_review", max_tokens=2500,
               ledger_path=ledger_path)
     parsed = parse_json_block(out["text"])
+    # No hypothesis_ids on purpose: a concern is prose with a number in it, not
+    # a record anything will later grade. This call therefore lands in the
+    # zero-gradeable bucket, which is the honest reading of what it bought.
+    _attach(out, schema_valid=isinstance(parsed, list))
     return {"concerns": parsed if isinstance(parsed, list) else [],
             "parsed_ok": isinstance(parsed, list),
             "raw": out["text"], "call": out["call"]}
@@ -340,6 +412,7 @@ Reply with ONLY JSON:
     out = ask(prompt, purpose="failure_diagnosis", max_tokens=1200,
               ledger_path=ledger_path)
     parsed = parse_json_block(out["text"])
+    _attach(out, schema_valid=isinstance(parsed, dict))
     return {"diagnosis": parsed if isinstance(parsed, dict) else {},
             "parsed_ok": isinstance(parsed, dict),
             "raw": out["text"], "call": out["call"]}

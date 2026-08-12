@@ -1,0 +1,643 @@
+"""The inference ledger: what every LLM call cost, and what it bought.
+
+WHY THIS EXISTS
+===============
+
+Murat's standing question is not "how many calls did we make" — it is "is the
+money buying anything". The external review put the failure mode precisely: the
+worry is not many calls, it is **calls that produce no learning sample**.
+DeepSeek billed ~$5.26 for 40M tokens across 8,936 requests, which is cheap
+enough to treat inference as an experimental resource rather than a cost centre
+— but only if each call is accounted for. Before this module there was no single
+place that knew what was spent or what it produced: `llm_research.py` ledgered
+its own three roles, `llm_analyzer.py` counted calls-per-day and nothing else,
+and `optimus_specialists.py` and `copilot.py` recorded nothing at all.
+
+The objective in `docs/OPTIMUS_OBJECTIVE.md` becomes measurable only with this
+row: every dollar of inference should produce a decision, a hypothesis, or a
+labelled experience.
+
+THE INTERESTING CASE IS THE EMPTY ONE
+-------------------------------------
+A call whose output did not parse, or which minted no gradeable record, is not
+an error to be swallowed — it is the finding. `schema_valid=False` and an empty
+`prediction_ids`/`hypothesis_ids` pair are the "spent money, learned nothing"
+bucket, and `summary()` prints it as a first-class number rather than something
+a reader has to derive. NIGHT-13 found a resolver with no caller, green for a
+month; the same shape here would be a ledger whose zero-yield share nobody ever
+computed.
+
+COST IS AN ESTIMATE, AND SAYS SO
+--------------------------------
+Prices come from `config.LLM_PRICE_PER_MTOK` — point-in-time list prices that
+drift. An unknown model yields `cost_usd=None` and a WARNING, never a zero. A
+fabricated zero would read as "free" on every dashboard that sums the column,
+which is exactly the house failure mode: a number that is wrong in the direction
+of looking fine.
+
+TELEMETRY MAY NEVER TAKE DOWN A FORECAST
+----------------------------------------
+`record_call()` swallows its own failures to a WARNING and returns None. A
+crash in accounting must not cost a specialist its batch. Callers are given
+nothing to branch on, by the same house rule that makes
+`belief_state.append()` return None.
+
+CACHE HITS ARE INVISIBLE ON PURPOSE
+-----------------------------------
+`llm_analyzer` wraps its helpers in `@cached`; a cache hit makes no wire call,
+spends nothing, and writes no row. The ledger counts wire attempts. A call
+refused by the daily-cap or billing breaker likewise writes no row — it spent
+nothing and produced nothing, and counting it would dilute the very denominator
+this file exists to compute.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import itertools
+import json
+import logging
+import os
+import re
+from dataclasses import asdict, dataclass, field
+from datetime import date, datetime, timezone
+from pathlib import Path
+from typing import Any, Iterable
+
+from backend.config import (LLM_PRICE_AS_OF, LLM_PRICE_PER_MTOK,
+                            LLM_TELEMETRY_PATH_ENV)
+
+logger = logging.getLogger(__name__)
+
+#: Sits beside predictions.jsonl deliberately: the join in `summary()` is
+#: between these two files, and a ledger that can drift to another directory is
+#: a join that can silently match nothing.
+LEDGER_DIR = Path(__file__).resolve().parents[1] / "data" / "optimus"
+LLM_CALLS = LEDGER_DIR / "llm_calls.jsonl"
+
+SCHEMA_VERSION = "1.0.0"
+
+#: Dated model ids (`claude-haiku-4-5-20251001`) name the same model as the
+#: undated alias and are priced identically, so stripping an 8-digit date suffix
+#: is a rename, not a guess. Anything else unknown stays unknown.
+_DATE_SUFFIX = re.compile(r"-\d{8}$")
+
+#: In-process sequence, part of every call_id — see the comment in `build_call`.
+_SEQ = itertools.count()
+
+
+def _hash(payload: Any) -> str:
+    """Stable content hash. Two calls with the same hash saw the same world."""
+    blob = json.dumps(payload, sort_keys=True, default=str, ensure_ascii=False)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]
+
+
+def _now() -> str:
+    """Microsecond resolution, deliberately.
+
+    belief_state stamps records to the second because a resolution date is
+    daily. A call ledger is not: a specialist panel fires several calls inside
+    one second, and at second resolution two of them with the same prompt and
+    token counts hash to the SAME `call_id` — whereupon `read_calls` dedupes
+    one away and the night's spend is quietly understated. Caught by
+    `test_the_zero_gradeable_bucket_is_a_first_class_number`, which counted two
+    rows where three were written.
+    """
+    return datetime.now(timezone.utc).isoformat(timespec="microseconds")
+
+
+# ── pricing ─────────────────────────────────────────────────────────────────
+def price_call(model: str, tokens_in: int, tokens_out: int,
+               cached_tokens: int = 0) -> float | None:
+    """USD estimate for one call, or None when the model is not in the table.
+
+    `tokens_in` is the count billed at the FULL input rate and `cached_tokens`
+    the count billed at the discounted cache-read rate. The two providers report
+    this differently — DeepSeek's `prompt_tokens` INCLUDES its cache hits, while
+    Anthropic reports `cache_read_input_tokens` beside `input_tokens` — so the
+    normalisation happens at the call site (see `extract_usage`) and this
+    function is handed two disjoint counts. Defining the field this way is the
+    only reason the same arithmetic can price both providers.
+
+    Returns None rather than 0.0 for an unknown model. A zero would be summed
+    into a spend total and read as "this was free"; None forces every consumer
+    to decide what to do about a call it cannot price.
+    """
+    key = model.strip()
+    price = LLM_PRICE_PER_MTOK.get(key)
+    if price is None:
+        alias = _DATE_SUFFIX.sub("", key)
+        price = LLM_PRICE_PER_MTOK.get(alias)
+    if price is None:
+        logger.warning(
+            "llm_telemetry: no price for model %r — this call is recorded with "
+            "cost_usd=None and every total that includes it is a LOWER BOUND. "
+            "Add it to config.LLM_PRICE_PER_MTOK.", model)
+        return None
+    cached_rate = price.get("cached_in", price["in"])
+    return round((int(tokens_in) * price["in"]
+                  + int(cached_tokens) * cached_rate
+                  + int(tokens_out) * price["out"]) / 1_000_000.0, 8)
+
+
+def extract_usage(resp: Any, provider: str) -> dict:
+    """Normalise a provider's usage object into (tokens_in, cached, tokens_out).
+
+    The two wire formats disagree about whether cached input is inside or beside
+    the input count, and getting that wrong silently double-counts or drops a
+    whole token class. Doing the reconciliation here — once, with the reason
+    written down — keeps every call site from re-deriving it:
+
+    * OpenAI/DeepSeek: `prompt_tokens` is the TOTAL prompt, with
+      `prompt_cache_hit_tokens` a subset of it, so the full-rate count is the
+      difference.
+    * Anthropic: `input_tokens` already EXCLUDES `cache_read_input_tokens`, so
+      the two add up rather than nest.
+
+    A provider that reports nothing yields zeros — priced at $0, which is
+    honest (we know the rate, we don't know the tokens) and distinguishable
+    from an unknown model, which yields None.
+    """
+    u = getattr(resp, "usage", None)
+    if u is None:
+        return {"tokens_in": 0, "tokens_out": 0, "cached_tokens": 0}
+
+    def _get(name: str) -> int:
+        v = getattr(u, name, None)
+        if v is None and isinstance(u, dict):
+            v = u.get(name)
+        try:
+            return int(v or 0)
+        except (TypeError, ValueError):
+            return 0
+
+    if provider == "anthropic":
+        return {"tokens_in": _get("input_tokens"),
+                "tokens_out": _get("output_tokens"),
+                "cached_tokens": _get("cache_read_input_tokens")}
+    total_in = _get("prompt_tokens")
+    cached = _get("prompt_cache_hit_tokens")
+    return {"tokens_in": max(total_in - cached, 0),
+            "tokens_out": _get("completion_tokens"),
+            "cached_tokens": cached}
+
+
+# ── the record ──────────────────────────────────────────────────────────────
+@dataclass
+class LLMCall:
+    """One wire attempt against a language model, and what it produced."""
+    call_id: str
+    ts: str
+    provider: str
+    model: str
+    purpose: str
+    model_version: str = ""
+    agent: str | None = None
+    prompt_hash: str = ""
+    context_hash: str = ""
+    tokens_in: int = 0
+    tokens_out: int = 0
+    cached_tokens: int = 0
+    latency_ms: float | None = None
+    cost_usd: float | None = None
+    #: Always True. Kept as a field rather than a docstring so it travels with
+    #: every exported row — a consumer reading the JSONL has no other way to
+    #: know the number is a list-price reconstruction, not a billed amount.
+    cost_is_estimate: bool = True
+    pricing_as_of: str = LLM_PRICE_AS_OF
+    schema_valid: bool = True
+    retries: int = 0
+    error: str | None = None
+    prediction_ids: list[str] = field(default_factory=list)
+    hypothesis_ids: list[str] = field(default_factory=list)
+    meta: dict = field(default_factory=dict)
+    #: "call" for a wire attempt, "amendment" for a later link (see
+    #: `attach_outputs`). Folded by `read_calls`, never summed twice.
+    row_type: str = "call"
+    schema_version: str = SCHEMA_VERSION
+
+    def gradeable(self) -> bool:
+        """Did this call produce anything that can later be scored?
+
+        The definition is deliberately strict: parsed output that minted no
+        record is still zero learning. A call that merely 'worked' is not a
+        call that taught us anything.
+        """
+        return bool(self.schema_valid
+                    and (self.prediction_ids or self.hypothesis_ids))
+
+
+def build_call(*, provider: str, model: str, purpose: str,
+               agent: str | None = None,
+               prompt: Any = None, prompt_hash: str | None = None,
+               context: Any = None, context_hash: str | None = None,
+               model_version: str | None = None,
+               tokens_in: int = 0, tokens_out: int = 0,
+               cached_tokens: int = 0,
+               latency_ms: float | None = None,
+               schema_valid: bool = True, retries: int = 0,
+               error: str | None = None,
+               prediction_ids: Iterable[str] | None = None,
+               hypothesis_ids: Iterable[str] | None = None,
+               meta: dict | None = None,
+               ts: str | None = None) -> LLMCall:
+    """Assemble a record. Pure: builds nothing on disk, raises on nothing."""
+    ts = ts or _now()
+    ph = prompt_hash if prompt_hash is not None else (
+        _hash(prompt) if prompt is not None else "")
+    ch = context_hash if context_hash is not None else (
+        _hash(context) if context is not None else "")
+    preds = [str(p) for p in (prediction_ids or [])]
+    hyps = [str(h) for h in (hypothesis_ids or [])]
+    return LLMCall(
+        # The id salt is (pid, in-process sequence), NOT the timestamp. Windows'
+        # clock granularity is ~15ms — coarser than the rate a specialist panel
+        # issues calls at — so five rows written in a loop share one timestamp
+        # to the microsecond and hash identically. `read_calls` would then dedupe
+        # four of them away and the night's spend would read 1/5 of the truth.
+        # pid separates concurrent writers; the counter separates calls within
+        # one of them.
+        call_id=_hash([provider, model, purpose, agent, ts, ph, ch,
+                       tokens_in, tokens_out, os.getpid(), next(_SEQ)]),
+        ts=ts, provider=provider, model=str(model), purpose=purpose,
+        model_version=str(model_version or model), agent=agent,
+        prompt_hash=ph, context_hash=ch,
+        tokens_in=int(tokens_in), tokens_out=int(tokens_out),
+        cached_tokens=int(cached_tokens),
+        latency_ms=(round(float(latency_ms), 2)
+                    if latency_ms is not None else None),
+        cost_usd=price_call(model, tokens_in, tokens_out, cached_tokens),
+        schema_valid=bool(schema_valid), retries=int(retries),
+        error=(str(error)[:400] if error else None),
+        prediction_ids=preds, hypothesis_ids=hyps, meta=dict(meta or {}))
+
+
+# ── the ledger ──────────────────────────────────────────────────────────────
+def _resolve_path(path: Path | None) -> Path | None:
+    """Where to write. None means "do not write", and is not an error.
+
+    Under pytest with no explicit destination the answer is None. Test doubles
+    make no wire call and spend no money; a row for one would put fabricated
+    spend into the ledger this module exists to keep honest — which is worse
+    than the row being missing. Telemetry's own tests pass `path=` (or set the
+    env var), so the write path is still exercised.
+    """
+    if path is not None:
+        return path
+    env = os.getenv(LLM_TELEMETRY_PATH_ENV)
+    if env:
+        return Path(env)
+    if os.getenv("PYTEST_CURRENT_TEST"):
+        return None
+    return LLM_CALLS
+
+
+def append(records: list[LLMCall], path: Path | None = None) -> None:
+    """Append rows. Returns None: nothing may branch on a write."""
+    p = _resolve_path(path)
+    if p is None:
+        logger.debug("llm_telemetry: write suppressed under pytest (%d row(s))",
+                     len(records))
+        return
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("a", encoding="utf-8") as fh:
+        for r in records:
+            fh.write(json.dumps(asdict(r), ensure_ascii=False) + "\n")
+
+
+def record_call(**kwargs: Any) -> None:
+    """Build and append one row. NEVER raises, NEVER returns anything usable.
+
+    This is the whole contract with the call sites: instrumentation may degrade
+    to a log line, but a forecast, a summary or a chat turn must return exactly
+    what it would have returned without it.
+    """
+    path = kwargs.pop("path", None)
+    try:
+        append([build_call(**kwargs)], path=path)
+    except Exception as exc:                              # noqa: BLE001
+        logger.warning("llm_telemetry: failed to record a %s call (%s: %s) — "
+                       "the call itself is unaffected, but this spend is now "
+                       "MISSING from the ledger",
+                       kwargs.get("purpose", "?"), type(exc).__name__, exc)
+
+
+def attach_outputs(call_id: str, *, prediction_ids: Iterable[str] = (),
+                   hypothesis_ids: Iterable[str] = (),
+                   schema_valid: bool | None = None,
+                   path: Path | None = None) -> None:
+    """Link outputs discovered AFTER the row was written, append-only.
+
+    Some roles only know what a call produced once the reply has been parsed
+    (`llm_research.generate_hypotheses` is the case that forced this). Rewriting
+    the original row would destroy the evidence of what was known at write time,
+    so the link arrives as a second row carrying the same `call_id`, folded by
+    `read_calls`. Never raises, for the same reason `record_call` does not.
+    """
+    try:
+        row = LLMCall(call_id=call_id, ts=_now(), provider="", model="",
+                      purpose="", prediction_ids=[str(p) for p in prediction_ids],
+                      hypothesis_ids=[str(h) for h in hypothesis_ids],
+                      schema_valid=(True if schema_valid is None
+                                    else bool(schema_valid)),
+                      row_type="amendment",
+                      meta={"schema_valid_set": schema_valid is not None})
+        append([row], path=path)
+    except Exception as exc:                              # noqa: BLE001
+        logger.warning("llm_telemetry: failed to attach outputs to %s (%s: %s)",
+                       call_id, type(exc).__name__, exc)
+
+
+def read_calls(path: Path | None = None) -> list[dict]:
+    """Read the ledger with amendments folded into their base rows.
+
+    Unreadable lines are COUNTED and logged, never skipped in silence: a corrupt
+    line is missing spend, and spend that quietly disappears is the one direction
+    a cost ledger must not fail in.
+    """
+    p = _resolve_path(path)
+    if p is None or not p.exists():
+        return []
+    base: dict[str, dict] = {}
+    order: list[str] = []
+    amendments: list[dict] = []
+    unreadable = 0
+    for line in p.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            unreadable += 1
+            continue
+        if row.get("row_type") == "amendment":
+            amendments.append(row)
+            continue
+        cid = row.get("call_id", "")
+        if cid in base:
+            # With pid+microsecond in the id, a repeat is a replayed write of
+            # the SAME call, and counting it twice would overstate spend.
+            # Logged loudly all the same: if ids ever start colliding for
+            # genuinely distinct calls, this line is the only warning that the
+            # total has begun to understate.
+            logger.warning("llm_telemetry: duplicate call_id %s — later row "
+                           "ignored; if these were two DISTINCT calls the "
+                           "reported spend is now understated", cid)
+            continue
+        base[cid] = row
+        order.append(cid)
+    for a in amendments:
+        tgt = base.get(a.get("call_id", ""))
+        if tgt is None:
+            logger.warning("llm_telemetry: amendment for unknown call_id %s — "
+                           "the outputs it claims are unattributable",
+                           a.get("call_id"))
+            continue
+        for key in ("prediction_ids", "hypothesis_ids"):
+            merged = list(dict.fromkeys(list(tgt.get(key) or [])
+                                        + list(a.get(key) or [])))
+            tgt[key] = merged
+        if (a.get("meta") or {}).get("schema_valid_set"):
+            tgt["schema_valid"] = bool(a.get("schema_valid"))
+    if unreadable:
+        logger.warning("llm_telemetry: %d unreadable ledger line(s) — reported "
+                       "spend and yield are both LOWER BOUNDS", unreadable)
+    out = [base[c] for c in order]
+    if unreadable and out:
+        out[0].setdefault("_unreadable_lines", unreadable)
+    return out
+
+
+# ── information per dollar ──────────────────────────────────────────────────
+def _as_date(v: Any) -> date | None:
+    if v is None:
+        return None
+    if isinstance(v, datetime):
+        return v.date()
+    if isinstance(v, date):
+        return v
+    return date.fromisoformat(str(v)[:10])
+
+
+def _gradeable(row: dict) -> bool:
+    return bool(row.get("schema_valid")
+                and (row.get("prediction_ids") or row.get("hypothesis_ids")))
+
+
+def summary(since: Any = None, path: Path | None = None,
+            predictions_path: Path | None = None) -> dict:
+    """What the spend bought, sliced so the empty bucket cannot hide.
+
+    Every ratio is printed beside its own count. A "schema-valid rate" over
+    three calls is a description of three calls, and CANON §19's habit — print
+    the n, always — applies to spend accounting for exactly the same reason it
+    applies to a Brier score.
+    """
+    rows = read_calls(path)
+    cutoff = _as_date(since)
+    if cutoff is not None:
+        rows = [r for r in rows
+                if r.get("ts") and _as_date(r["ts"]) >= cutoff]
+
+    base = {
+        "n_calls": len(rows),
+        "since": str(cutoff) if cutoff else None,
+        "cost_is_estimate": True,
+        "pricing_as_of": LLM_PRICE_AS_OF,
+        "pricing_note": ("costs are reconstructed from point-in-time list "
+                         "prices in config.LLM_PRICE_PER_MTOK, not from billed "
+                         "amounts; if the rates have drifted the total is wrong "
+                         "by that drift and by nothing else"),
+    }
+    if not rows:
+        # A stated zero, not a crash and not a blank: "no calls in this window"
+        # is a real answer, and it is the answer that means the LLM went dark.
+        base.update({
+            "total_cost_usd": 0.0, "n_unpriced_calls": 0,
+            "total_is_lower_bound": False,
+            "by_purpose": {}, "by_model": {},
+            "schema_valid_rate": None, "n_schema_invalid": 0,
+            "predictions_minted": 0, "hypotheses_minted": 0,
+            "predictions_per_dollar": None,
+            "zero_gradeable_output": {
+                "n_calls": 0, "share_of_calls": None,
+                "cost_usd": 0.0, "share_of_spend": None},
+            "resolution": {"n_prediction_ids_claimed": 0,
+                           "reading": "no calls, so nothing to join"},
+            "status": "EMPTY",
+            "reading": ("no LLM call has been recorded in this window — either "
+                        "nothing ran, or a call path is uninstrumented; both "
+                        "are findings, and neither is zero spend"),
+        })
+        return base
+
+    priced = [r for r in rows if r.get("cost_usd") is not None]
+    unpriced = [r for r in rows if r.get("cost_usd") is None]
+    total = round(sum(float(r["cost_usd"]) for r in priced), 6)
+
+    def _bucket(rs: list[dict]) -> dict:
+        p = [r for r in rs if r.get("cost_usd") is not None]
+        return {
+            "n": len(rs),
+            "cost_usd": round(sum(float(r["cost_usd"]) for r in p), 6),
+            "n_unpriced": len(rs) - len(p),
+            "n_schema_invalid": sum(1 for r in rs if not r.get("schema_valid")),
+            "n_zero_gradeable": sum(1 for r in rs if not _gradeable(r)),
+            "predictions_minted": sum(len(r.get("prediction_ids") or [])
+                                      for r in rs),
+            "tokens_in": sum(int(r.get("tokens_in") or 0) for r in rs),
+            "tokens_out": sum(int(r.get("tokens_out") or 0) for r in rs),
+        }
+
+    by_purpose: dict[str, list[dict]] = {}
+    by_model: dict[str, list[dict]] = {}
+    for r in rows:
+        by_purpose.setdefault(str(r.get("purpose") or "?"), []).append(r)
+        by_model.setdefault(str(r.get("model") or "?"), []).append(r)
+
+    dead = [r for r in rows if not _gradeable(r)]
+    dead_cost = round(sum(float(r["cost_usd"]) for r in dead
+                          if r.get("cost_usd") is not None), 6)
+    n_valid = sum(1 for r in rows if r.get("schema_valid"))
+    pred_ids: list[str] = []
+    for r in rows:
+        pred_ids.extend(r.get("prediction_ids") or [])
+    hyp_ids = sum(len(r.get("hypothesis_ids") or []) for r in rows)
+
+    base.update({
+        "total_cost_usd": total,
+        "n_unpriced_calls": len(unpriced),
+        "total_is_lower_bound": bool(unpriced),
+        "unpriced_models": sorted({str(r.get("model")) for r in unpriced}),
+        "by_purpose": {k: _bucket(v) for k, v in sorted(by_purpose.items())},
+        "by_model": {k: _bucket(v) for k, v in sorted(by_model.items())},
+        "schema_valid_rate": round(n_valid / len(rows), 4),
+        "n_schema_invalid": len(rows) - n_valid,
+        "n_errored": sum(1 for r in rows if r.get("error")),
+        "predictions_minted": len(pred_ids),
+        "distinct_predictions_minted": len(set(pred_ids)),
+        "hypotheses_minted": hyp_ids,
+        "predictions_per_dollar": (round(len(pred_ids) / total, 2)
+                                   if total > 0 else None),
+        "zero_gradeable_output": {
+            "n_calls": len(dead),
+            "share_of_calls": round(len(dead) / len(rows), 4),
+            "cost_usd": dead_cost,
+            "share_of_spend": (round(dead_cost / total, 4)
+                               if total > 0 else None),
+            "reading": ("spend that produced no schema-valid, gradeable output "
+                        "— the bucket this ledger exists to make visible"),
+        },
+        "resolution": _resolution_join(pred_ids, total, rows, predictions_path),
+    })
+    base["status"] = "ok"
+    return base
+
+
+def _resolution_join(pred_ids: list[str], total_cost: float,
+                     rows: list[dict], predictions_path: Path | None) -> dict:
+    """Join telemetry to the prediction ledger and report only what resolved.
+
+    Two integrity numbers matter more than the metrics here. `n_not_found_in_
+    prediction_ledger` counts rows claiming to have minted records that do not
+    exist — a telemetry row that lies about its yield is worse than no row, so
+    it is surfaced rather than quietly dropped from the denominator. And when
+    nothing has resolved, the count is stated and NO metric is computed: a
+    Brier over an empty set is not a small number, it is not a number.
+    """
+    from backend.services.belief_state import read_predictions
+
+    claimed = list(dict.fromkeys(pred_ids))
+    if not claimed:
+        return {"n_prediction_ids_claimed": 0,
+                "reading": ("no call in this window minted a PredictionRecord "
+                            "— nothing to grade, and therefore no statement "
+                            "about forecast quality is available")}
+    try:
+        ledger = {r["prediction_id"]: r
+                  for r in read_predictions(predictions_path)}
+    except Exception as exc:                              # noqa: BLE001
+        logger.warning("llm_telemetry: could not read the prediction ledger "
+                       "(%s: %s) — the join is unavailable, not empty",
+                       type(exc).__name__, exc)
+        return {"n_prediction_ids_claimed": len(claimed),
+                "status": "DEGRADED",
+                "reading": "the prediction ledger could not be read"}
+
+    found = [ledger[p] for p in claimed if p in ledger]
+    missing = [p for p in claimed if p not in ledger]
+    if missing:
+        logger.warning("llm_telemetry: %d claimed prediction_id(s) are absent "
+                       "from the prediction ledger — a telemetry row claiming "
+                       "yield it did not mint is worse than no row", len(missing))
+    out = {
+        "n_prediction_ids_claimed": len(claimed),
+        "n_matched_in_prediction_ledger": len(found),
+        "n_not_found_in_prediction_ledger": len(missing),
+        "not_found_ids": missing[:10],
+    }
+    resolved = [r for r in found
+                if r.get("outcome") is not None and not r.get("void_reason")]
+    if not resolved:
+        out["n_resolved"] = 0
+        out["reading"] = (
+            f"{len(found)} minted forecast(s) matched, 0 have resolved yet — "
+            f"no Brier, no cost-per-informative-forecast, and no substitute "
+            f"for them is computed on an empty set")
+        return out
+
+    briers = [float(r["brier"]) for r in resolved]
+    base_rate = sum(int(r["outcome"]) for r in resolved) / len(resolved)
+    climatology = base_rate * (1 - base_rate)
+    informative = [r for r in resolved if float(r["brier"]) < climatology]
+    out.update({
+        "n_resolved": len(resolved),
+        "mean_brier": round(sum(briers) / len(briers), 6),
+        "base_rate": round(base_rate, 4),
+        "climatology_brier": round(climatology, 6),
+        "n_informative": len(informative),
+        "cost_per_resolved_forecast_usd": (round(total_cost / len(resolved), 6)
+                                           if total_cost > 0 else None),
+        "cost_per_informative_forecast_usd": (
+            round(total_cost / len(informative), 6)
+            if (total_cost > 0 and informative) else None),
+        "reading": ("cost-per-informative divides ALL spend in the window by "
+                    "the forecasts that beat climatology — that is the point: "
+                    "calls that taught nothing are charged to the ones that did"),
+    })
+    return out
+
+
+def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
+                  today: date | None = None) -> dict:
+    """Would anything say so if the ledger stopped growing?
+
+    Same failure shape as `belief_state.ledger_health`: an accounting file fails
+    by not being written to, and an empty append is indistinguishable from a
+    quiet night unless something checks the clock.
+    """
+    today = today or date.today()
+    rows = read_calls(path)
+    if not rows:
+        return {"status": "DEGRADED", "n_calls": 0,
+                "reason": ("the LLM ledger is empty — either no call has been "
+                           "made, or a call path is uninstrumented and its "
+                           "spend is invisible")}
+    last = max(str(r.get("ts", ""))[:10] for r in rows)
+    quiet = (today - date.fromisoformat(last)).days
+    problems = []
+    if quiet > max_quiet_days:
+        problems.append(f"no LLM call recorded in {quiet} days")
+    n_dead = sum(1 for r in rows if not _gradeable(r))
+    return {
+        "status": "ok" if not problems else "DEGRADED",
+        "problems": problems,
+        "n_calls": len(rows),
+        "n_unpriced": sum(1 for r in rows if r.get("cost_usd") is None),
+        "n_zero_gradeable": n_dead,
+        "distinct_purposes": len({r.get("purpose") for r in rows}),
+        "distinct_models": len({r.get("model") for r in rows}),
+        "last_written": last,
+        "days_quiet": quiet,
+    }

@@ -41,6 +41,7 @@ import json
 import logging
 import os
 import re
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -166,6 +167,24 @@ def _extract_json(text: str) -> dict:
         return json.loads(m.group(0))
 
 
+def _usage_of(resp: Any) -> dict:
+    """Token counts for the telemetry row, normalised per provider."""
+    from backend.services.llm_telemetry import extract_usage
+
+    return extract_usage(resp, "deepseek")
+
+
+def _record_batch(kw: dict, *, schema_valid: bool, error: str | None,
+                  preds: list[PredictionRecord], meta: dict | None = None) -> None:
+    """Write the batch's telemetry row. Never raises — accounting must not cost
+    a specialist its forecasts, so this degrades to a WARNING and returns."""
+    from backend.services.llm_telemetry import record_call
+
+    record_call(schema_valid=schema_valid, error=error,
+                prediction_ids=[p.prediction_id for p in preds],
+                meta=meta or {}, **kw)
+
+
 def build_prompt(specialist: str, candidates: list[dict]) -> tuple[str, str]:
     """System and user prompt. The snapshot is what the model is allowed to see."""
     system = SPECIALISTS[specialist] + "\n" + CONTRACT
@@ -189,13 +208,31 @@ def run_specialist(specialist: str, candidates: list[dict], *,
         raise KeyError(f"unknown specialist {specialist}")
     system, user = build_prompt(specialist, candidates)
     cli = client or _client()
+    t0 = time.perf_counter()
     resp = cli.chat.completions.create(
         model=model, temperature=temperature,
         messages=[{"role": "system", "content": system},
                   {"role": "user", "content": user}])
     text = resp.choices[0].message.content or ""
     version = getattr(resp, "model", model)
-    raw = _extract_json(text)
+    # Everything the telemetry row needs about the WIRE call is known now; what
+    # it produced is not. The row is written once, at the end, so its
+    # prediction_ids are the ids actually minted — a row that claimed yield it
+    # did not mint would be worse than no row at all.
+    _tel_kw = dict(provider="deepseek", model=model, model_version=str(version),
+                   purpose="specialist_forecast", agent=specialist,
+                   prompt=system + user, context=candidates,
+                   latency_ms=(time.perf_counter() - t0) * 1000.0,
+                   **_usage_of(resp))
+    try:
+        raw = _extract_json(text)
+    except Exception as exc:                               # noqa: BLE001
+        # Money spent, nothing gradeable produced — the single most interesting
+        # row in the ledger, and the one an `except: pass` would erase.
+        _record_batch(_tel_kw, schema_valid=False,
+                      error=f"unparseable reply: {type(exc).__name__}",
+                      preds=[])
+        raise
 
     known = {c["ticker"] for c in candidates}
     preds: list[PredictionRecord] = []
@@ -270,6 +307,11 @@ def run_specialist(specialist: str, candidates: list[dict], *,
                        len(refusals), refusals[:4])
     logger.info("%s: %d prediction(s), %d refusal(s), model %s",
                 specialist, len(preds), len(refusals), version)
+    # A batch that parsed but minted zero records is schema_valid and yet taught
+    # nothing; both facts are recorded, and `summary()` reports the second.
+    _record_batch(_tel_kw, schema_valid=True, error=None, preds=preds,
+                  meta={"n_refusals": len(refusals),
+                        "n_candidates": len(candidates)})
     return SpecialistBatch(
         specialist=specialist, model=model, model_version=str(version),
         prompt_hash=preds[0].prompt_hash if preds else "",

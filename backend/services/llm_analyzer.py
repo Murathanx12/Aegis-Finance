@@ -171,10 +171,46 @@ def _get_openai_client():
         return None
 
 
+def _record(provider: str, model: str, purpose: str, *, system: str, user: str,
+            resp=None, text: Optional[str] = None, t0: float,
+            validate=None, error: Optional[Exception] = None) -> None:
+    """Write one telemetry row. Never raises — see llm_telemetry.record_call.
+
+    `schema_valid` is answered by the CALLER's contract, not by "the HTTP call
+    returned 200": a helper that needs `BULL:/BEAR:/WATCH:` and gets loose prose
+    spent money and learned nothing, and that is the bucket the ledger exists to
+    count. Absent a validator the bar is a non-empty reply — the weakest honest
+    claim available, never an assumed True.
+    """
+    from backend.services import llm_telemetry as _tel
+
+    usage = _tel.extract_usage(resp, provider) if resp is not None else {}
+    if error is not None:
+        ok = False
+    elif validate is not None and text is not None:
+        try:
+            ok = bool(validate(text))
+        except Exception:                                  # noqa: BLE001
+            ok = False
+    else:
+        ok = bool((text or "").strip())
+    _tel.record_call(
+        provider=provider, model=model, purpose=purpose,
+        prompt=system + "\n" + user, context=user,
+        latency_ms=(time.perf_counter() - t0) * 1000.0,
+        schema_valid=ok, error=(f"{type(error).__name__}: {error}"
+                                if error else None),
+        **usage,
+    )
+
+
 def _call_llm(
     system_prompt: str,
     user_prompt: str,
     quality: bool = False,
+    *,
+    purpose: str = "unspecified",
+    validate=None,
 ) -> Optional[str]:
     """Make a single LLM call. Tries Claude first, then DeepSeek.
 
@@ -182,9 +218,18 @@ def _call_llm(
         system_prompt: System instructions
         user_prompt: User message
         quality: If True, use higher-quality model (Sonnet vs Haiku)
+        purpose: what this call is FOR — the slice every spend report is cut
+            by. Defaulted rather than required so no caller can break, but a
+            call left "unspecified" is unattributable spend and shows up as
+            such in `llm_telemetry.summary()`.
+        validate: optional predicate on the reply text deciding `schema_valid`.
 
     Returns:
         LLM response text or None on failure.
+
+    Telemetry is deliberately NOT written on the two no-wire paths below (no
+    provider, budget/breaker refusal): those cost nothing and produce nothing,
+    and counting them would dilute the zero-yield share the ledger reports.
     """
     provider = _get_provider()
     if provider == "none" or not _acquire_call_budget():
@@ -194,17 +239,24 @@ def _call_llm(
     if provider == "claude":
         client = _get_anthropic_client()
         if client:
+            model = _CLAUDE_MODEL_QUALITY if quality else _CLAUDE_MODEL_FAST
+            t0 = time.perf_counter()
             try:
-                model = _CLAUDE_MODEL_QUALITY if quality else _CLAUDE_MODEL_FAST
                 response = client.messages.create(
                     model=model,
                     max_tokens=_MAX_TOKENS,
                     system=system_prompt,
                     messages=[{"role": "user", "content": user_prompt}],
                 )
-                return response.content[0].text.strip()
+                text = response.content[0].text.strip()
+                _record("anthropic", model, purpose, system=system_prompt,
+                        user=user_prompt, resp=response, text=text, t0=t0,
+                        validate=validate)
+                return text
             except Exception as e:
                 logger.warning("Claude API call failed: %s", e)
+                _record("anthropic", model, purpose, system=system_prompt,
+                        user=user_prompt, t0=t0, error=e)
                 if _is_billing_error(e):
                     _trip_breaker(e)
                     return None
@@ -214,6 +266,7 @@ def _call_llm(
     if _DEEPSEEK_API_KEY:
         client = _get_openai_client()
         if client:
+            t0 = time.perf_counter()
             try:
                 response = client.chat.completions.create(
                     model=_DEEPSEEK_MODEL,
@@ -224,9 +277,15 @@ def _call_llm(
                     max_tokens=_MAX_TOKENS,
                     temperature=_llm_cfg.get("temperature", 0.3),
                 )
-                return response.choices[0].message.content.strip()
+                text = response.choices[0].message.content.strip()
+                _record("deepseek", _DEEPSEEK_MODEL, purpose,
+                        system=system_prompt, user=user_prompt, resp=response,
+                        text=text, t0=t0, validate=validate)
+                return text
             except Exception as e:
                 logger.warning("DeepSeek API call failed: %s", e)
+                _record("deepseek", _DEEPSEEK_MODEL, purpose,
+                        system=system_prompt, user=user_prompt, t0=t0, error=e)
                 if _is_billing_error(e):
                     _trip_breaker(e)
 
@@ -261,7 +320,7 @@ def summarize_market_news(news_items: list[dict]) -> Optional[dict]:
     )
     user = f"Summarize these recent market headlines:\n\n{headlines}"
 
-    result = _call_llm(system, user)
+    result = _call_llm(system, user, purpose="news_summary")
     if result is None:
         return None
 
@@ -345,7 +404,11 @@ def argue_signal_two_sided(ticker: str, signal_json: str) -> Optional[dict]:
         f"Signal components (weighted, +bullish/−bearish):\n{comp_lines}"
     )
 
-    result = _call_llm(system, user)
+    # The card renders nothing unless BOTH sides came back, so that — not a
+    # 200 — is what "the call worked" means here.
+    result = _call_llm(
+        system, user, purpose="two_sided_signal_card",
+        validate=lambda t: "BULL:" in t and "BEAR:" in t)
     if result is None:
         return None
     if _contains_advice_language(result):
@@ -377,6 +440,25 @@ def argue_signal_two_sided(ticker: str, signal_json: str) -> Optional[dict]:
     }
 
 
+def _daily_brief_parses(text: str) -> bool:
+    """The brief's contract is JSON with a non-empty `what_happened`.
+
+    Same predicate the parser below applies, hoisted so the ledger records the
+    SAME notion of success the product uses — a schema_valid flag that means
+    something looser than "the card rendered" is a flag that flatters the spend.
+    """
+    import json as _json
+
+    t = text.strip()
+    if t.startswith("```"):
+        t = t.strip("`")
+        t = t[t.find("{"):t.rfind("}") + 1]
+    try:
+        return bool(str(_json.loads(t).get("what_happened", "")).strip())
+    except Exception:                                      # noqa: BLE001
+        return False
+
+
 @cached(ttl=1800, key_prefix="llm_daily_brief")
 def summarize_daily_brief(payload_json: str) -> Optional[dict]:
     """Personalized daily brief summary — FinGPT-Forecaster-style contract.
@@ -400,7 +482,8 @@ def summarize_daily_brief(payload_json: str) -> Optional[dict]:
         "sector pattern (energy/defense vs travel/rate-sensitives) as a "
         "historical tendency, not a forecast."
     )
-    result = _call_llm(system, payload_json)
+    result = _call_llm(system, payload_json, purpose="daily_brief",
+                       validate=_daily_brief_parses)
     if result is None:
         return None
     try:
@@ -465,7 +548,7 @@ def analyze_stock_outlook(
         f"Recent News:\n{headlines}"
     )
 
-    result = _call_llm(system, user)
+    result = _call_llm(system, user, purpose="stock_outlook")
     if result is None:
         return None
 
@@ -535,7 +618,7 @@ def generate_expectations(
     )
     user = f"Stock: {ticker}\n{target_info}\n{earnings_info}"
 
-    result = _call_llm(system, user)
+    result = _call_llm(system, user, purpose="expectations")
     if result is None:
         return None
 
@@ -618,7 +701,8 @@ def generate_portfolio_commentary(
         f"{factor_str}\n{risk_str}"
     )
 
-    result = _call_llm(system, user, quality=True)
+    result = _call_llm(system, user, quality=True,
+                       purpose="portfolio_commentary")
     if result is None:
         return None
 

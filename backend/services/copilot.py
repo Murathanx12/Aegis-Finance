@@ -30,6 +30,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import time
 from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
@@ -295,24 +296,56 @@ def _anthropic_tool_schema() -> list[dict]:
     ]
 
 
+def _record_turn(provider: str, model: str, *, resp, t0: float,
+                 messages: list[dict], schema_valid: bool,
+                 round_: int, final: bool = False) -> None:
+    """Ledger one copilot wire turn. Never raises.
+
+    Every row here has an empty `prediction_ids` BY CONSTRUCTION — the copilot
+    narrates over numbers the engine already computed and mints no gradeable
+    record. That makes the whole surface land in the zero-gradeable bucket, and
+    that is not a defect in the instrumentation: it is the measurement. If
+    copilot turns out to be a large share of nightly spend, the ledger will say
+    so rather than leaving it uncounted.
+    """
+    from backend.services import llm_telemetry as _tel
+
+    _tel.record_call(
+        provider=provider, model=model, purpose="copilot_chat", agent="copilot",
+        prompt=SYSTEM_PROMPT, context=messages,
+        latency_ms=(time.perf_counter() - t0) * 1000.0,
+        schema_valid=schema_valid,
+        meta={"round": round_, "final_synthesis": final},
+        **_tel.extract_usage(resp, provider),
+    )
+
+
 def _chat_with_deepseek(messages: list[dict]) -> dict:
     from openai import OpenAI
     client = OpenAI(
         api_key=_DEEPSEEK_API_KEY,
         base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
     )
+    model = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
     chat_history = [{"role": "system", "content": SYSTEM_PROMPT}] + list(messages)
     tool_trace: list[dict] = []
 
-    for _ in range(_MAX_TOOL_ROUNDS):
+    for _round in range(_MAX_TOOL_ROUNDS):
+        t0 = time.perf_counter()
         resp = client.chat.completions.create(
-            model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
+            model=model,
             messages=chat_history,
             tools=_openai_tool_schema(),
             tool_choice="auto",
             temperature=0.2,
         )
         msg = resp.choices[0].message
+        # A turn that returned neither text nor a tool call is a paid round trip
+        # that moved the conversation nowhere.
+        _record_turn("deepseek", model, resp=resp, t0=t0, messages=messages,
+                     schema_valid=bool((msg.content or "").strip()
+                                       or msg.tool_calls),
+                     round_=_round)
         chat_history.append({
             "role": "assistant",
             "content": msg.content or "",
@@ -342,11 +375,15 @@ def _chat_with_deepseek(messages: list[dict]) -> dict:
             })
 
     # Ran out of rounds — ask for a final synthesis
+    t0 = time.perf_counter()
     resp = client.chat.completions.create(
-        model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
+        model=model,
         messages=chat_history + [{"role": "user", "content": "Synthesize a final answer now."}],
         temperature=0.2,
     )
+    _record_turn("deepseek", model, resp=resp, t0=t0, messages=messages,
+                 schema_valid=bool((resp.choices[0].message.content or "").strip()),
+                 round_=_MAX_TOOL_ROUNDS, final=True)
     return {
         "answer": (resp.choices[0].message.content or "").strip(),
         "tool_calls": tool_trace,
@@ -359,17 +396,21 @@ def _chat_with_claude(messages: list[dict]) -> dict:
     import anthropic
     client = anthropic.Anthropic(api_key=_ANTHROPIC_API_KEY)
     # Anthropic wants tools on the top level, not embedded in messages
+    model = os.getenv("COPILOT_CLAUDE_MODEL", "claude-haiku-4-5-20251001")
     chat_messages = [{"role": m["role"], "content": m["content"]} for m in messages]
     tool_trace: list[dict] = []
 
-    for _ in range(_MAX_TOOL_ROUNDS):
+    for _round in range(_MAX_TOOL_ROUNDS):
+        t0 = time.perf_counter()
         resp = client.messages.create(
-            model=os.getenv("COPILOT_CLAUDE_MODEL", "claude-haiku-4-5-20251001"),
+            model=model,
             max_tokens=1500,
             system=SYSTEM_PROMPT,
             tools=_anthropic_tool_schema(),
             messages=chat_messages,
         )
+        _record_turn("anthropic", model, resp=resp, t0=t0, messages=messages,
+                     schema_valid=bool(resp.content), round_=_round)
         if resp.stop_reason != "tool_use":
             # Extract the final text
             text = "".join(
@@ -398,12 +439,16 @@ def _chat_with_claude(messages: list[dict]) -> dict:
         chat_messages.append({"role": "user", "content": tool_results})
 
     # Exceeded rounds — force a summary
+    t0 = time.perf_counter()
     resp = client.messages.create(
-        model=os.getenv("COPILOT_CLAUDE_MODEL", "claude-haiku-4-5-20251001"),
+        model=model,
         max_tokens=1000,
         system=SYSTEM_PROMPT + "\n\nYou've used your tool budget. Write a final answer now.",
         messages=chat_messages,
     )
+    _record_turn("anthropic", model, resp=resp, t0=t0, messages=messages,
+                 schema_valid=bool(resp.content), round_=_MAX_TOOL_ROUNDS,
+                 final=True)
     text = "".join(
         (b.text if hasattr(b, "text") else "")
         for b in resp.content
