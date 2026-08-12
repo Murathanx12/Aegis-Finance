@@ -1798,14 +1798,24 @@ WHY_MOVED_FORBIDDEN_PATTERN = (
 RESEARCH_LLM_ENABLED = os.getenv("AEGIS_RESEARCH_LLM", "1") not in ("0", "false", "")
 #: Per-campaign ceilings. Deliberately generous relative to observed cost
 #: (~$5.26 for 40M tokens historically) and deliberately FINITE.
-#: RAISED 2026-08-12 by Amendment A12. Murat: "dont worry about the cost go
-#: deep, use better prompts, more data". The 8,014-call swarm cost $12.04, so
-#: these ceilings buy roughly 40x that campaign. They stay FINITE and enforced:
-#: the governor exists because these paths were previously ungoverned, and "go
-#: deep" is not "remove the brakes" — an unbounded loop against a shared key
-#: still takes the production path down with it.
-RESEARCH_LLM_MAX_CALLS = int(os.getenv("AEGIS_RESEARCH_LLM_MAX_CALLS", "60000"))
-RESEARCH_LLM_MAX_USD = float(os.getenv("AEGIS_RESEARCH_LLM_MAX_USD", "150.0"))
+#: THE CEILING MUST BIND BEFORE THE VENDOR BALANCE DOES.
+#:
+#: Amendment A12 raised this to $150 on "don't worry about the cost". That was
+#: wrong, and not because $150 is a lot to spend — because the account holds
+#: ~$10. A ceiling above the balance is not a ceiling at all: the vendor balance
+#: becomes the real limit, and the first symptom of hitting it is a 402 on the
+#: PRODUCTION path, which shares the key. That is precisely the failure this
+#: governor was built to prevent, reintroduced by setting the number too high.
+#:
+#: RULE: keep the dollar ceiling BELOW the actual DeepSeek balance, with
+#: headroom. Raise it in the same motion as a top-up, not before one, via
+#: AEGIS_RESEARCH_LLM_MAX_USD.
+#:
+#: Measured unit cost, for sizing this: the 8,014-call swarm cost $12.04, i.e.
+#: **$0.0015 per call** (~2,500 tokens in / 900 out). Nightly WHY-MOVED is ~7
+#: lens calls with a larger prompt, roughly $0.03/night — under $1/month.
+RESEARCH_LLM_MAX_CALLS = int(os.getenv("AEGIS_RESEARCH_LLM_MAX_CALLS", "12000"))
+RESEARCH_LLM_MAX_USD = float(os.getenv("AEGIS_RESEARCH_LLM_MAX_USD", "8.0"))
 #: A call is only worth its money if it produces something gradeable. If the
 #: share of calls yielding NO prediction and NO hypothesis exceeds this, the
 #: campaign is buying tokens rather than information and should halt for

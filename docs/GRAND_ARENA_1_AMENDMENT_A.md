@@ -164,14 +164,45 @@ Predeclared, so the word cannot be awarded retroactively. At least one of:
 
 ---
 
-## A12 — Budget
+## A12 — Budget ~~($150)~~ **SUPERSEDED same day — see A12-R**
 
 Murat: *"dont worry about the cost go deep, use better prompts, more data."*
-The research ceiling is raised accordingly. It remains **finite and enforced** —
-the governor exists because the swarm paths were previously ungoverned, and
-"go deep" is not "remove the brakes." The zero-yield brake is **unchanged**: a
-campaign buying tokens instead of gradeable output still halts for inspection,
-and that limit protects the quality of the answer, not the wallet.
+The research ceiling was raised to 60,000 calls / $150 on that instruction.
+
+## A12-R — REVISED. The ceiling must bind before the vendor balance does.
+
+The $150 figure was wrong, and **not because $150 is a lot to spend.** The
+DeepSeek account holds about **$10**. A ceiling set above the balance is not a
+ceiling: the vendor balance becomes the real limit, and the first symptom of
+reaching it is a **402 on the PRODUCTION path**, which shares the key. That is
+exactly the failure this governor was built to prevent, reintroduced by setting
+the number too high.
+
+**Rule: keep the dollar ceiling BELOW the actual balance, with headroom. Raise
+it in the same motion as a top-up, never before one.** Now
+**12,000 calls / $8.00** (`AEGIS_RESEARCH_LLM_MAX_USD` to change).
+
+### Measured costs, for sizing any future decision
+
+| item | measured |
+|---|---|
+| LLM-SWARM-1 | **8,014 calls → $12.04** |
+| per call | **$0.0015** (~2,500 tokens in / 900 out) |
+| per gradeable output | **$0.0015** |
+| nightly WHY-MOVED | ~7 lens calls ≈ **$0.03/night**, under **$1/month** |
+
+### What the rest of GRAND-ARENA-1 actually costs
+
+**Approximately nothing.** Chunks 5–9 are CPU: the research scripts contain no
+LLM call sites, and the ablation *permutes the stored 20,073 swarm records*
+rather than generating new ones — the shuffled-LLM placebo (A4) works on the
+existing score distribution by construction.
+
+So the expensive part is already bought and paid for. $10 covers the remaining
+campaign **and** roughly a year of nightly WHY-MOVED.
+
+The zero-yield brake is **unchanged at 40%** — it protects the quality of the
+answer, not the wallet, and no budget change touches it.
 
 ---
 
