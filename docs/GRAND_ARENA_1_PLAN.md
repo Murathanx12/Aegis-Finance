@@ -17,9 +17,9 @@ paper record remain the certification layer.
 
 | # | Chunk | State | Artifact |
 |---|---|---|---|
-| **0** | Research budget + machine verification | **DONE** | `backend/services/research_budget.py`, 12 tests |
-| **1** | KNOWN-WORLD-1 — can learners recover planted rules? | **RUNNING** (started 2026-08-12) | `docs/GRAND_ARENA_KNOWN_WORLDS.md` |
-| **2** | EXIT-LAB-1 — counterfactual decision factory | **RUNNING** (started 2026-08-12) | `docs/GRAND_ARENA_EXIT_LAB.md` |
+| **0** | Research budget + machine verification | **DONE** `9ed42d2` | `backend/services/research_budget.py`, 12 tests |
+| **1** | KNOWN-WORLD-1 — can learners recover planted rules? | **PARTIAL — RESUME HERE** | `data/factory/known_world_1_results.json` (checkpointed) |
+| **2** | EXIT-LAB-1 — counterfactual decision factory | **DONE** `8429ab4` | `docs/GRAND_ARENA_EXIT_LAB.md` |
 | 3 | LLM-SWARM-1 — thousands of gradeable calls | NEXT | `docs/GRAND_ARENA_SWARM.md` |
 | 4 | WHY-MOVED at scale (universe, not one book) | pending | extends chunk 3 |
 | 5 | Regime learning | pending | — |
@@ -76,6 +76,41 @@ Refusals write no telemetry row: they never reached the vendor, and counting
 them would dilute the zero-yield denominator they exist to protect.
 
 ---
+
+## Chunk 1 — PARTIAL. Resume here.
+
+Pre-registered at `05e5315` (twelve worlds, verdict rules frozen before any
+learner ran). The runner checkpoints, so **resume it — do not restart**:
+`data/factory/known_world_1_results.json` holds what has been scored.
+
+Scored so far: **1 RECOVERED, 1 CORRECT-NULL**. The CORRECT-NULL is the
+important one — on WORLD-I (pure correlated noise) the contextual bandit gained
+**+0.0009/yr against its own MDE of 0.0140**, i.e. it correctly found nothing.
+That is the single most valuable cell in the matrix, because a learner that
+invents an edge in a world containing none would make every real-market result
+in this campaign untrustworthy.
+
+Remaining: the other ten worlds × the learner set, and the two other negative
+controls (**J** cost-killed-edge net leg, **L** dynamic-exposure-adds-nothing).
+**Read the negative controls first when it completes.**
+
+## Chunk 2 — DONE, and it did two things
+
+**25.3M state-action rows, 152M state-action-horizon outcome cells, 11,145 CRSP
+securities, 23 years.** That is the denominator NIGHT-12's null never had — 60
+rows from one portfolio was an anecdote.
+
+1. **The cash null survived.** Given the real denominator, `SELL→CASH` is never
+   the best action at any horizon tested.
+2. **An instrument that never saw NIGHT-7 independently reproduced the
+   trailing-stop corpse**: −4.94 pp against an MDE of 4.82, sign holding in 8 of
+   8 regime blocks. A finding that reappears from a different instrument is a
+   finding; the first version could have been an artifact of its own harness,
+   and now it is not.
+
+Baselines win, which is the honest and expected outcome. One comparison at
+−2.55 pp against an MDE of 2.77 is labelled **NOT DETECTABLE** rather than read
+as a kill (CANON §19).
 
 ## Chunk 3 — LLM-SWARM-1 (next up)
 
