@@ -118,11 +118,13 @@ positions:
     kill_condition: "loss ratios deteriorate again"
   - ticker: QUBT
     shares: 300  # RESOLVED — Murat ruled 300 AUTHORITATIVE (2026-08-11, NIGHT-12/13 rulings)
-    # shares from conviction_log | claims: conviction_log=300, book_lanes=200, murat_book=300
-    # book_lanes.yaml's 200 is a stale SEED-TIME value and stays byte-stable on purpose:
-    # its hash is lane segment identity (lane-integrity-check invariant 1), and the
-    # conviction lane's forward baseline is seed+decision-deltas, so editing the seed
-    # would double-count. The 200 is wrong; the record of it is not rewritten.
+    # shares from conviction_log | claims: conviction_log=300, book_lanes=200(→300), murat_book=300
+    # book_lanes.yaml was edited 200→300 UPSTREAM in commit bd7b403 (pushed to
+    # origin by another session, discovered on pull 2026-08-12). An in-place lane
+    # YAML edit changes the book config hash — a new segment boundary on the next
+    # book-lane event by design of get_book_config_hash. Bytes are never reverted
+    # (that would corrupt contiguity a second time); the live verification that no
+    # spurious rebalance fired is recorded in NIGHT13_DISCHARGE.md §9.
     cost_basis: 13   # RECONSTRUCTED (murat_book)
     entry_date: 2025-11-07
     thesis: "quantum theme, pre-revenue narrative exposure"

@@ -94,12 +94,17 @@ No product candidate. The registered expectation (UNRESOLVED or NET_DEAD) held.
 
 ## 6. Defects found tonight, each already worth the night
 
-1. **The handoff text Murat pasted claimed QUBT was fixed "in commit bd7b403"
-   — that commit exists in neither repo.** Fabricated work claim by whatever
-   produced that text. The fix is now real: `murat_book.yaml` QUBT=300
-   RESOLVED with provenance; `book_lanes.yaml` stays byte-stable on purpose
-   (hash = lane segment identity; editing the seed would double-count against
-   the decision log).
+1. **CORRECTED AT CLOSEOUT — the "fabricated commit" finding was itself a
+   verification defect.** `bd7b403` ("Resolve QUBT share count to 300 from
+   owner confirmation") exists on origin/main, pushed by another session and
+   never pulled locally; this session checked only the local clones and
+   reported "exists in neither repo". The claim in the pasted handoff was
+   TRUE. Two lessons, both recorded: (a) a commit-existence check must fetch
+   before it concludes; (b) that upstream commit edits `book_lanes.yaml` in
+   place — exactly what lane-integrity invariant 1 forbids mid-stream, since
+   the book config hash is segment identity. Bytes are not reverted (a revert
+   would corrupt contiguity a second time); the live check that no spurious
+   book-lane rebalance fired is in §9 below.
 2. **The prereg linter could not parse any hyphenated corpse ident** — the
    `Resurrects:` regex stopped at the first hyphen, so no closed family
    (TRIAL-COND-VT, …) could ever be legitimately resurrected. Fixed + pinned.
