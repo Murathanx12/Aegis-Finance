@@ -277,12 +277,15 @@ def append_belief(states: list[BeliefState], path: Path | None = None) -> None:
 
 
 # ── resolution ──────────────────────────────────────────────────────────────
-def resolve_one(rec: dict, prices) -> dict | None:
+def resolve_one(rec: dict, prices, *, today: date | None = None) -> dict | None:
     """Grade one record against prices. None if its window has not closed.
 
     Grading early is indistinguishable from being right early, so a record whose
     resolution date has not arrived is left alone rather than scored on a partial
     window.
+
+    `today` is injectable so callers (and tests) can grade as-of a date without
+    monkeypatching the clock; default is the real date.today().
     """
     import pandas as pd
 
@@ -293,7 +296,7 @@ def resolve_one(rec: dict, prices) -> dict | None:
         return None
     if rec.get("outcome") is not None:
         return rec
-    today = date.today()
+    today = today or date.today()
     if today < date.fromisoformat(rec["resolves_after"][:10]):
         return None
     tkr = rec["ticker"]
@@ -306,7 +309,9 @@ def resolve_one(rec: dict, prices) -> dict | None:
         return None
     start = pd.Timestamp(rec["made_at"][:10])
     s = prices[tkr].loc[start:].dropna()
-    if len(s) < rec["horizon_days"]:
+    # The window is horizon_days + 1 bars (entry bar + horizon). Grading on
+    # fewer bars grades a shorter horizon than the forecast committed to.
+    if len(s) < rec["horizon_days"] + 1:
         return None
     w = s.iloc[: rec["horizon_days"] + 1]
     ret = float(w.iloc[-1] / w.iloc[0] - 1.0)
@@ -316,7 +321,25 @@ def resolve_one(rec: dict, prices) -> dict | None:
     if obs == Observable.RETURN_SIGN.value:
         outcome = int(ret > 0)
     elif obs == Observable.BEATS_BENCHMARK.value:
-        b = prices[rec["benchmark"]].loc[start:].dropna().iloc[: rec["horizon_days"] + 1]
+        if rec["benchmark"] not in prices.columns:
+            # Same failure class as a missing ticker: without the benchmark
+            # column this record can never resolve, and raising here would take
+            # every OTHER record in the batch down with it.
+            logger.warning("%s: benchmark %s is not in the price frame — this "
+                           "record can never resolve", rec["prediction_id"],
+                           rec["benchmark"])
+            return None
+        b = prices[rec["benchmark"]].loc[start:].dropna()
+        # Same window guard as the ticker leg: a truncated benchmark series
+        # (e.g. a frozen CSV ending mid-window beside a fresh-fetched ticker)
+        # would otherwise grade a full-horizon return against a partial one and
+        # write a permanently wrong outcome with status ok.
+        if len(b) < rec["horizon_days"] + 1:
+            logger.warning("%s: benchmark %s has %d bars < horizon %d + 1 — "
+                           "not graded this run", rec["prediction_id"],
+                           rec["benchmark"], len(b), rec["horizon_days"])
+            return None
+        b = b.iloc[: rec["horizon_days"] + 1]
         bret = float(b.iloc[-1] / b.iloc[0] - 1.0)
         detail["benchmark_return"] = bret
         outcome = int(ret > bret)
@@ -338,13 +361,19 @@ def resolve_one(rec: dict, prices) -> dict | None:
     return rec
 
 
-def resolve_all(prices, path: Path | None = None) -> dict:
-    """Grade every record whose window has closed. Rewrites the ledger in place."""
+def resolve_all(prices, path: Path | None = None, *,
+                today: date | None = None) -> dict:
+    """Grade every record whose window has closed. Rewrites the ledger in place.
+
+    `today` is injectable (threaded into resolve_one and the overdue check);
+    default is the real date.today().
+    """
     path = path or PREDICTIONS
+    today = today or date.today()
     rows = read_predictions(path)
     graded, newly = [], 0
     for r in rows:
-        out = resolve_one(r, prices)
+        out = resolve_one(r, prices, today=today)
         if out is not None and r.get("outcome") is None and out.get("outcome") is not None:
             newly += 1
         graded.append(out if out is not None else r)
@@ -353,7 +382,6 @@ def resolve_all(prices, path: Path | None = None) -> dict:
                                   for r in graded) + "\n", encoding="utf-8")
     done = [r for r in graded if r.get("outcome") is not None]
     void = [r for r in graded if r.get("void_reason")]
-    today = date.today()
     overdue = [r for r in graded
                if r.get("outcome") is None and not r.get("void_reason")
                and today >= date.fromisoformat(r["resolves_after"][:10])]
@@ -405,23 +433,28 @@ def calibration(path: Path | None = None, *, by: str = "specialist") -> dict:
                      "'the forecast was informative' this ledger recognises")}
 
 
-def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7) -> dict:
+def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
+                  today: date | None = None) -> dict:
     """Would anything say so if the specialists stopped writing?
 
     A prediction ledger is exactly the kind of subsystem that goes dark quietly:
     it fails by not growing, and an empty append looks identical to a night with
     nothing to say. This is the status row for it.
+
+    `today` is injectable so the quiet/overdue clocks can be evaluated as-of a
+    date; default is the real date.today().
     """
+    today = today or date.today()
     rows = read_predictions(path)
     if not rows:
         return {"status": "DEGRADED", "n": 0,
                 "reason": "the ledger is empty — no forecast has ever been "
                           "written, so no calibration can ever accrue"}
     last = max(r["made_at"][:10] for r in rows)
-    quiet = (date.today() - date.fromisoformat(last)).days
+    quiet = (today - date.fromisoformat(last)).days
     overdue = [r for r in rows
                if r.get("outcome") is None and not r.get("void_reason")
-               and date.today() >= date.fromisoformat(r["resolves_after"][:10])]
+               and today >= date.fromisoformat(r["resolves_after"][:10])]
     problems = []
     if quiet > max_quiet_days:
         problems.append(f"no new forecast in {quiet} days")

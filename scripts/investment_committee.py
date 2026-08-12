@@ -25,132 +25,21 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-from backend.services import capital_frontier as CF          # noqa: E402
-from backend.services import portfolio_factory as PF         # noqa: E402
-from backend.services import recommendation as REC           # noqa: E402
-from backend.services import signal_registry as SR           # noqa: E402
+# The build itself now lives in the service, shared with the API router and
+# the composer. The strict contract is unchanged: build() RAISES when the
+# ranking gate is dirty, and this script refuses to print.
+from backend.services.investment_committee import build_page as build  # noqa: E402
 
 DEFAULT_FUNNEL = ROOT / "docs" / "BUILD1" / "funnel_night10.json"
 DEFAULT_OUT = ROOT / "docs" / "BUILD1"
 
 HEADLINE_CAPITALS = (40_000.0, 1_000_000.0, 50_000_000.0)
-
-
-def _kill_condition(rec) -> tuple[str, str]:
-    """A kill condition tied to the signal that actually decided the rank.
-
-    Proposed, never adopted: a kill condition Murat has not ruled on is a
-    suggestion, and the page says so on every line rather than once at the top.
-    """
-    lead = rec.leader()
-    if lead is None:
-        return "", "NONE_SET"
-    if lead.signal_id == "profitability_small":
-        return (f"gross profitability falls below the small-cap cross-sectional "
-                f"median for two consecutive quarters (currently "
-                f"{lead.raw_value:.2f})"), "PROPOSED_AWAITING_MURAT"
-    if lead.signal_id.startswith("insider"):
-        return ("the insiders who bought sell any part of the stake, or two "
-                "quarters pass with no further open-market purchase"), \
-            "PROPOSED_AWAITING_MURAT"
-    return (f"{lead.signal_id} reverses sign and holds there for one quarter"), \
-        "PROPOSED_AWAITING_MURAT"
-
-
-def _risk_factors(rec, cand: dict) -> list[str]:
-    out = []
-    vol = cand.get("vol_annual")
-    if vol:
-        out.append(f"annualised volatility {100*vol:.0f}%")
-    mc = rec.market_cap
-    if mc and mc < 2e9:
-        out.append("small cap — thinner liquidity, wider spreads, higher "
-                   "delisting and dilution risk")
-    if rec.confidence in ("LOW", "NONE"):
-        out.append(f"confidence {rec.confidence}: only "
-                   f"{sum(1 for c in rec.signal_contributions if c.rank_bearing and c.available)} "
-                   f"licensed signal(s) speak to this name")
-    for c in rec.signal_contributions:
-        if c.role == "CLOSED" and c.available and c.signal_id.startswith("analyst"):
-            out.append(f"analyst implied upside {100*(c.raw_value or 0):+.0f}% is "
-                       f"recorded but NOT used — it is PERVERSE as a picker")
-    return out
-
-
-def build(funnel_path: Path) -> dict:
-    payload = json.loads(funnel_path.read_text(encoding="utf-8"))
-    cands = payload["candidates"]
-    reg = SR.load()
-
-    # This RAISES if anything closed is steering. A page that cannot prove its
-    # own ranking is clean does not print.
-    gate = REC.assert_registry_discipline(cands, registry=reg)
-    recs = REC.score_candidates(cands, registry=reg)
-    by_ticker = {c["ticker"]: c for c in cands}
-
-    vols = {c["ticker"]: c.get("vol_annual") for c in cands
-            if c.get("vol_annual")}
-    books = PF.build_all(recs, vols=vols)
-
-    opportunities = []
-    for r in recs:
-        cand = by_ticker.get(r.ticker, {})
-        kill, kill_status = _kill_condition(r)
-        r.kill_condition, r.kill_condition_status = kill, kill_status
-        r.risk_factors = _risk_factors(r, cand)
-        d = r.to_dict()
-        d["median_dollar_vol"] = cand.get("median_dollar_vol")
-        d["vol_annual"] = cand.get("vol_annual")
-        d["why"] = cand.get("why", [])
-        d["capacity"] = [
-            row.to_dict() for row in CF.capacity_for(
-                weight=(books["built"].get("OPTIMUS_BALANCED", {})
-                        .get("weights", {}).get(r.ticker, 0.0)),
-                median_dollar_vol=cand.get("median_dollar_vol"))
-        ]
-        opportunities.append(d)
-
-    frontiers = {}
-    for name, book in books["built"].items():
-        frontiers[name] = CF.frontier(cands, book["weights"])
-
-    licensed = [o for o in opportunities if o["evidence_grade"] != "NO_EVIDENCE"]
-    return {
-        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "source_funnel": str(funnel_path),
-        "funnel_generated_at": payload.get("generated_at"),
-        "universe_screened": (payload.get("universe") or {}).get("screened"),
-        "registry_gate": {"status": gate["status"],
-                          "invariance_checks": gate["invariance_checks"],
-                          "violations": gate["violations"]},
-        "n_candidates": len(recs),
-        "n_with_licensed_evidence": len(licensed),
-        "opportunities": opportunities,
-        "books": books,
-        "capital_frontier": frontiers,
-        "evidence_basis": payload.get("evidence_basis"),
-        "honesty": {
-            "expected_return": (
-                "NOT CALIBRATED for any name. The permitted pickers are graded "
-                "SUPPORTED, not VALIDATED, and no map from picker composite to "
-                "a 12-month expected return exists in this programme. The page "
-                "reports an ordering and its percentile, and refuses to print a "
-                "return it cannot defend."),
-            "capacity": CF.frontier(cands, {}).get("impact_caveat"),
-            "kill_conditions": (
-                "PROPOSED. Every kill condition here awaits Murat's ruling; "
-                "none is adopted and none is armed."),
-            "no_trade": ("Paper only. No lane seeded, no flag flipped, no "
-                         "order path touched."),
-        },
-    }
 
 
 def render(page: dict) -> str:

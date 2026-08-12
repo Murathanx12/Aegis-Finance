@@ -1,0 +1,224 @@
+"""The caller resolve_one/resolve_all never had.
+
+WHY THIS FILE EXISTS
+====================
+`belief_state.py` shipped a complete resolution machine — and for a month
+NOTHING called it. No scheduler job, no route, no script. Records would have
+sailed past `resolves_after` forever while the calibration clock read "still
+accruing". That is the house failure mode (code that runs green and silently
+does nothing), so this entry point is built to make skipping LOUD:
+
+* every due record is accounted for in the returned report — resolved, still
+  pending, overdue, or UNPRICEABLE, never absent;
+* a ticker the resolver cannot price is surfaced by name with the number of
+  records it strands, and leaves the ledger canary DEGRADED (overdue keeps
+  growing) rather than quietly shrinking the denominator;
+* the report ends with `ledger_health()` so the caller sees the same status
+  row the /api/health/full canary pages on.
+
+PRICE PANEL
+-----------
+The frozen conviction CSV (`backend/data/conviction_prices.csv`) is used only
+when it actually covers made_at → today for every needed ticker — it is a
+replay artifact that ends where the replay ended, and this module NEVER
+mutates it. When it does not suffice, fresh adjusted closes are fetched via
+yfinance (auto_adjust=True, the same convention as
+scripts/fetch_conviction_prices.py), with the frozen CSV as a per-ticker
+fallback for anything the fetch fails to return.
+"""
+
+from __future__ import annotations
+
+import logging
+from datetime import date, timedelta
+from pathlib import Path
+from typing import Callable
+
+import pandas as pd
+
+from backend.config import (LEDGER_RESOLVER_CSV_GRACE_DAYS,
+                            LEDGER_RESOLVER_FETCH_PAD_DAYS)
+from backend.services.belief_state import (Observable, ledger_health,
+                                           read_predictions, resolve_all)
+
+logger = logging.getLogger(__name__)
+
+#: price_fetch contract: (tickers, start_iso, end_iso) -> wide DataFrame of
+#: adjusted closes (DatetimeIndex, one column per ticker; missing tickers may
+#: simply be absent — the caller accounts for them).
+PriceFetch = Callable[[list[str], str, str], pd.DataFrame]
+
+
+def _default_price_fetch(tickers: list[str], start: str, end: str) -> pd.DataFrame:
+    """Live yfinance fetch, same convention as fetch_conviction_prices.py."""
+    import yfinance as yf
+    df = yf.download(tickers, start=start, end=end, auto_adjust=True,
+                     progress=False, timeout=30)["Close"]
+    if isinstance(df, pd.Series):  # single ticker collapses to a Series
+        df = df.to_frame(name=tickers[0])
+    return df
+
+
+def _load_frozen_csv() -> pd.DataFrame | None:
+    """The conviction replay panel, read-only. None if missing/unreadable."""
+    try:
+        from backend.services.conviction_prices import load_prices
+        return load_prices()
+    except Exception as e:
+        logger.warning("frozen conviction CSV unavailable (%s) — resolver will "
+                       "rely on the live fetch alone", e)
+        return None
+
+
+def _needed_tickers(records: list[dict]) -> set[str]:
+    """Every column a record needs to resolve: its ticker AND its benchmark."""
+    need: set[str] = set()
+    for r in records:
+        need.add(r["ticker"])
+        if r.get("observable") == Observable.BEATS_BENCHMARK.value and r.get("benchmark"):
+            need.add(r["benchmark"])
+    return need
+
+
+def _usable(panel: pd.DataFrame | None, ticker: str) -> bool:
+    """A column exists and has at least one real price in it."""
+    if panel is None or ticker not in panel.columns:
+        return False
+    return int(pd.to_numeric(panel[ticker], errors="coerce").notna().sum()) > 0
+
+
+def resolve_due(path: Path | None = None, *,
+                price_fetch: PriceFetch | None = None,
+                today: date | None = None) -> dict:
+    """Resolve every ledger record whose window has closed, loudly.
+
+    Returns the full accounting: {as_of, due, newly_resolved, pending, overdue,
+    unpriceable, priced_from, resolve_report, health}. An unpriceable due
+    record is COUNTED AND NAMED, never silently skipped — it stays overdue and
+    keeps the health canary DEGRADED until someone prices it or voids it.
+    """
+    today = today or date.today()
+    rows = read_predictions(path)
+    active = [r for r in rows
+              if r.get("outcome") is None and not r.get("void_reason")]
+    due = [r for r in active
+           if today >= date.fromisoformat(r["resolves_after"][:10])]
+
+    if not due:
+        # Nothing has matured: no price panel is needed, and fetching one
+        # anyway would burn quota nightly for months. The report still carries
+        # the full accounting so "nothing to do" is a statement, not silence.
+        health = ledger_health(path, today=today)
+        return {
+            "as_of": str(today),
+            "due": 0,
+            "newly_resolved": 0,
+            "pending": len(active),
+            "overdue": 0,
+            "unpriceable": [],
+            "priced_from": None,
+            "resolve_report": None,
+            "health": health,
+        }
+
+    need = _needed_tickers(due)
+    start = (min(date.fromisoformat(r["made_at"][:10]) for r in due)
+             - timedelta(days=LEDGER_RESOLVER_FETCH_PAD_DAYS))
+    csv_panel = _load_frozen_csv()
+
+    csv_covers = (
+        csv_panel is not None
+        and need.issubset(set(csv_panel.columns))
+        and csv_panel.index.min().date() <= start + timedelta(
+            days=LEDGER_RESOLVER_FETCH_PAD_DAYS)
+        and csv_panel.index.max().date() >= today - timedelta(
+            days=LEDGER_RESOLVER_CSV_GRACE_DAYS)
+    )
+
+    if csv_covers:
+        panel, priced_from = csv_panel[sorted(need)].copy(), "frozen_csv"
+    else:
+        priced_from = "fresh_fetch"
+        fetch = price_fetch or _default_price_fetch
+        try:
+            panel = fetch(sorted(need), str(start), str(today + timedelta(days=1)))
+        except Exception as e:
+            logger.error("ledger resolver: fresh price fetch failed outright "
+                         "(%s) — falling back to the frozen CSV", e, exc_info=True)
+            panel = pd.DataFrame()
+            priced_from = "frozen_csv_fallback_after_fetch_error"
+        # Per-ticker fallback: anything the fetch did not return is taken from
+        # the frozen CSV when the CSV has it AND its bars actually reach back
+        # to the earliest due made_at. A column that starts mid-window would
+        # not refuse — resolve_one slices .loc[start:] and would happily grade
+        # a benchmark on the wrong window — so partial coverage is rejected
+        # here, loudly, and the record lands in `unpriceable` instead.
+        if csv_panel is not None:
+            earliest_made_at = start + timedelta(days=LEDGER_RESOLVER_FETCH_PAD_DAYS)
+            # A fallback column must cover BOTH ends of the due window: bars
+            # reaching back to the earliest made_at AND forward to the latest
+            # due resolves_after. The frozen CSV ends at its build date, so a
+            # ticker graded from it beside a fresh-fetched counterpart would
+            # otherwise pair a full-horizon leg with a truncated one — the
+            # belief_state window guard refuses to grade that, but refusing
+            # HERE names the ticker in `unpriceable` instead of leaving the
+            # record silently pending forever.
+            latest_due = max(date.fromisoformat(r["resolves_after"][:10])
+                             for r in due)
+            fallback_cols = []
+            for t in sorted(need):
+                if _usable(panel, t) or not _usable(csv_panel, t):
+                    continue
+                bars = pd.to_numeric(csv_panel[t], errors="coerce").dropna()
+                first_bar = bars.index.min().date()
+                last_bar = bars.index.max().date()
+                if first_bar <= earliest_made_at and last_bar >= latest_due:
+                    fallback_cols.append(t)
+                else:
+                    logger.warning(
+                        "ledger resolver: frozen CSV covers %s only %s..%s but "
+                        "the due windows span %s..%s — NOT used (a partial "
+                        "series would grade the wrong window)",
+                        t, first_bar, last_bar, earliest_made_at, latest_due)
+            if fallback_cols:
+                panel = panel.drop(
+                    columns=[c for c in fallback_cols if c in panel.columns])
+                panel = pd.concat([panel, csv_panel[fallback_cols]], axis=1)
+                for t in fallback_cols:
+                    logger.warning("ledger resolver: %s priced from the frozen "
+                                   "CSV (live fetch returned nothing)", t)
+        panel = panel.sort_index()
+
+    # ── the loud part: who CANNOT be priced ─────────────────────────────────
+    dark = sorted(t for t in need if not _usable(panel, t))
+    unpriceable = []
+    for t in dark:
+        stranded = [r["prediction_id"] for r in due
+                    if r["ticker"] == t or r.get("benchmark") == t]
+        unpriceable.append({
+            "ticker": t,
+            "n_due_records_stranded": len(stranded),
+            "prediction_ids": stranded[:20],
+            "reason": ("no usable bars from the live fetch and none in the "
+                       "frozen CSV — these records stay OVERDUE and keep the "
+                       "ledger canary DEGRADED until priced or voided"),
+        })
+    if unpriceable:
+        logger.warning("ledger resolver: %d ticker(s) UNPRICEABLE, stranding "
+                       "%d due record(s): %s", len(unpriceable),
+                       sum(u["n_due_records_stranded"] for u in unpriceable),
+                       [u["ticker"] for u in unpriceable])
+
+    report = resolve_all(panel, path, today=today)
+    health = ledger_health(path, today=today)
+    return {
+        "as_of": str(today),
+        "due": len(due),
+        "newly_resolved": report["newly_resolved"],
+        "pending": report["pending_not_yet_due"],
+        "overdue": report["OVERDUE_AND_UNRESOLVED"],
+        "unpriceable": unpriceable,
+        "priced_from": priced_from,
+        "resolve_report": report,
+        "health": health,
+    }

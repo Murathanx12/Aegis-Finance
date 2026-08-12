@@ -115,6 +115,121 @@ export function buildPortfolio(risk: string, amount: number, horizon: string) {
   });
 }
 
+// Investment Committee (NIGHT-13 graceful degradation: benchmark core +
+// evidence-scaled tilts — never an empty page). New interfaces on purpose:
+// ICPosition extends the holding shape with source/reason without touching
+// PortfolioBuilt's consumers.
+export function getInvestmentCommittee(capital?: number) {
+  const q = capital != null ? `?capital=${capital}` : "";
+  return fetchAPI<ICCommitteeResponse>(`/api/ic/committee${q}`);
+}
+
+export interface ICPosition {
+  ticker: string;
+  weight: number;
+  dollars: number;
+  shares: number | null;
+  price: number | null;
+  source: "evidence-led" | "benchmark-core";
+  reason: string;
+  capacity: {
+    checked?: boolean;
+    note?: string;
+    tradeable?: boolean;
+    days_to_exit?: number | null;
+    binding_constraint?: string;
+  };
+}
+
+export interface ICWealthTargets {
+  horizon_months: number;
+  target_value: number;
+  floor_value: number;
+  ruin_value: number;
+}
+
+export interface ICWealth {
+  available: boolean;
+  p_reach_target: number | null;
+  p_below_floor: number | null;
+  p_below_ruin: number | null;
+  median: number;
+  p5: number;
+  p25: number;
+  p75: number;
+  p95: number;
+  expected_max_drawdown: number;
+  horizon_months: number;
+  targets: ICWealthTargets;
+  assumption_note: string;
+  health_warning: string;
+}
+
+export interface ICComposedBook {
+  capital: number;
+  template: string;
+  template_description: string;
+  n_positions: number;
+  core_weight: number;
+  tilt_weight: number;
+  positions: ICPosition[];
+  degradation_reasons: string[];
+  wealth: ICWealth;
+}
+
+export interface ICInvarianceCheck {
+  signal_id: string;
+  grade: string;
+  role: string;
+  spearman_rho: number;
+  n_names_moved: number;
+  invariant_holds: boolean;
+}
+
+export interface ICOpportunity {
+  ticker: string;
+  rank: number;
+  tied_with: number;
+  recommendation: string;
+  confidence: string;
+  evidence_grade: string;
+  ranking_score: number;
+  percentile: number | null;
+  price: number | null;
+  market_cap: number | null;
+  sector: string;
+  rank_led_by: string | null;
+  reason_for_rank: string;
+  kill_condition: string;
+  kill_condition_status: string;
+  risk_factors: string[];
+  vol_annual?: number | null;
+}
+
+export interface ICCommitteeResponse {
+  generated_at: string;
+  funnel_available: boolean;
+  funnel_generated_at: string | null;
+  universe_screened: number | null;
+  registry_gate: {
+    status: string;
+    invariance_checks?: ICInvarianceCheck[];
+    violations?: unknown[];
+    error?: string;
+  };
+  ranking_summary: {
+    n_candidates: number;
+    n_with_licensed_evidence: number;
+    n_buy: number;
+    n_watch: number;
+  };
+  top_opportunities: ICOpportunity[];
+  books: Record<string, ICComposedBook>;
+  degradation_reasons: string[];
+  evidence_basis: Record<string, unknown> | null;
+  honesty: { core_and_tilts: string } & Record<string, string>;
+}
+
 // Ticker resolution ("marvell" → MRVL)
 export interface TickerResolveResponse {
   query: string;

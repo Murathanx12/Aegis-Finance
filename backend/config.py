@@ -54,6 +54,17 @@ US_MARKET_HOLIDAYS = {
 }
 
 
+# ── Prediction-ledger resolver (services/ledger_resolver.py) ──────────────────
+# Calendar-day pad prepended to the earliest due record's made_at when fetching
+# a fresh price panel — covers weekend/holiday gaps so the first bar of the
+# window is never missing.
+LEDGER_RESOLVER_FETCH_PAD_DAYS = 7
+# The frozen conviction CSV counts as covering `today` only if its last bar is
+# within this many calendar days — beyond that the resolver must fetch fresh
+# rather than silently grade on a stale panel.
+LEDGER_RESOLVER_CSV_GRACE_DAYS = 4
+
+
 # ── API Keys ──────────────────────────────────────────────────────────────────
 
 
@@ -1312,6 +1323,15 @@ def load_book_lanes() -> dict:
 
 book_lanes: dict = load_book_lanes()
 
+#: Cash sweep for a book whose cash balance is UNRECOVERABLE (murat_book.yaml
+#: `cash: null`). NIGHT-13 §0: unknown cash is a SENSITIVITY PARAMETER, never a
+#: silent zero. Each entry is cash as a FRACTION of the marked equity NAV; the
+#: engine reports NAV and weights across the whole grid and probabilities as
+#: ranges over its endpoints. House pattern: grid-report-never-pick — a ranking
+#: over a convex sweep is a theorem, not a finding (counterfactual_replay
+#: INTERPOLATING; conviction_replay.measure_mde).
+CASH_SENSITIVITY_GRID: tuple[float, ...] = (0.0, 0.02, 0.05, 0.10, 0.20)
+
 
 def load_conservative_atr_lanes() -> dict:
     """Load the conservative-ATR lane definition (TRIAL-EXIT) from a SEPARATE YAML.
@@ -1424,3 +1444,157 @@ SIGNAL_UNIVERSE_BANDS: dict = {
     "to be declared": set(),
     "to be declared by ANALYST-REVISION-1": set(),
 }
+
+
+# ─────────── Investment Committee (NIGHT-13 §2: graceful degradation) ────────
+# Adopted ruling: when evidence cannot fill a book, the answer is a low-cost
+# benchmark core plus evidence-scaled tilts — never an empty page, never a
+# refusal. Every parameter of that composition lives here.
+
+#: Funnel run the IC page reads. Missing file degrades to pure benchmark core
+#: with degradation_reason "no funnel run available" — never a 500.
+#: Lives under backend/data (NOT docs/): .dockerignore excludes docs, so a
+#: docs path would make the IC permanently degraded in every prod image while
+#: green locally — the insider-collector failure shape (NIGHT-13 audit F1).
+IC_FUNNEL_PATH = BACKEND_DIR / "data" / "funnel_night10.json"
+
+#: TTL for the funnel-derived state (gate + ranking + archetype books). The
+#: funnel is a nightly artifact; composition itself is computed per request.
+IC_FUNNEL_TTL = 3600
+
+#: Headline capital levels the committee page composes a book for. A subset of
+#: capital_frontier.CAPITAL_LEVELS — the retail-to-small-fund range the page
+#: is answering for.
+IC_CAPITAL_LEVELS: tuple = (10_000.0, 40_000.0, 1_000_000.0)
+
+#: Benchmark core template (portfolio_engine._ALLOCATION_TEMPLATES key).
+#: "moderate", not "aggressive", deliberately: the IC book exists BECAUSE the
+#: evidence could not fill an archetype on its own. Pairing thin evidence with
+#: the highest-volatility template would take risk the evidence does not
+#: license — and Murat's own record shows the damage is done by SIZING, not
+#: timing (NIGHT-12: dd 22.9% vs SPY 8.9% at beta 2.15). The core must be the
+#: thing that is defensible with ZERO tilts.
+IC_BENCHMARK_TEMPLATE = "moderate"
+
+#: Hard cap on any single evidence-led tilt. CVLG-sized: even the one name
+#: that clears the BUY gate today is a single-name bet resting on one or two
+#: SUPPORTED (not VALIDATED) signals with no calibrated expected return.
+IC_SINGLE_NAME_TILT_CAP = 0.03
+
+#: Ceiling on the SUM of all evidence tilts. The core is the product; the
+#: tilts are the garnish, and they stay that way until the evidence grows.
+IC_TOTAL_TILT_BUDGET = 0.10
+
+#: At most this many tilt names (best rank first) — a page of 0.5% slivers is
+#: noise wearing a book's clothes.
+IC_MAX_TILT_NAMES = 10
+
+#: Evidence-strength scaling for tilt size: tilt = cap x verdict x confidence.
+#: WATCH is half a BUY; confidence steps follow recommendation._confidence
+#: (count of independent licensed pickers). NONE-confidence never tilts.
+IC_TILT_VERDICT_SCALE: dict = {"BUY": 1.0, "WATCH": 0.5}
+IC_TILT_CONFIDENCE_SCALE: dict = {"NONE": 0.0, "LOW": 1 / 3,
+                                  "MEDIUM": 2 / 3, "HIGH": 1.0}
+
+# Ruin-beside-dream defaults for pm_actions.simulate_wealth, scaled to the
+# capital being composed. 1.5x at 24 months is a STRETCH target (~22.5%/yr) —
+# printed as a dream precisely so the ruin number beside it stays honest;
+# floor/ruin at 70%/50% of starting capital match the pm wealth-target idiom.
+IC_WEALTH_HORIZON_MONTHS = 24
+IC_WEALTH_TARGET_MULT = 1.5
+IC_WEALTH_FLOOR_MULT = 0.7
+IC_WEALTH_RUIN_MULT = 0.5
+#: Monte Carlo draws for the IC wealth simulation (endpoint-latency bound;
+#: pm_actions defaults to 20k, the IC runs one sim per capital level).
+IC_WEALTH_DRAWS = 8000
+
+#: Scenario assumptions (annual mu, vol) for the benchmark-core ETFs, used
+#: ONLY by the wealth simulation. These are long-run institutional-consensus
+#: style numbers (cf. "MC 5Y annualized +2% to +8%" healthy range), NOT
+#: engine forecasts — the page says so in its honesty block.
+IC_CORE_ASSUMPTIONS: dict = {
+    "VTI":  {"mu": 0.059, "vol": 0.16},
+    "VXUS": {"mu": 0.060, "vol": 0.17},
+    "BND":  {"mu": 0.045, "vol": 0.06},
+    "VTIP": {"mu": 0.035, "vol": 0.05},
+    "GLD":  {"mu": 0.030, "vol": 0.15},
+    "VNQ":  {"mu": 0.055, "vol": 0.20},
+    "QQQ":  {"mu": 0.065, "vol": 0.22},
+    "MTUM": {"mu": 0.060, "vol": 0.18},
+    "VGT":  {"mu": 0.065, "vol": 0.23},
+}
+
+#: Evidence tilts get the EQUITY-CORE drift in the wealth sim, not a premium:
+#: the licensed pickers are an ORDERING, not a magnitude, so the simulation
+#: grants a tilt extra volatility (its own) and zero extra expected return.
+IC_TILT_ASSUMED_RETURN = 0.059
+IC_TILT_FALLBACK_VOL = 0.50
+
+
+# ── TRANSACTION-ENSEMBLE-1 (prereg frozen at Aegis module c5b81aa) ───────────
+# Generator parameters for the licensed substitute for Murat's missing broker
+# records: an ensemble of transaction histories consistent with declared
+# maximal-consistent anchor subsets. SYNTHETIC — no member is his history.
+# The range across members IS the result; nothing here may be collapsed to a
+# preferred member (that would be the outcome-shopping the prereg refuses).
+
+#: Master seed; member i uses np.random.default_rng([TE_MASTER_SEED, i]).
+TE_MASTER_SEED = 20260811
+#: Members per declared-subset arm x 8 arms ({} plus the 7 subsets of {7,8,9})
+#: x 2 QUBT arms. 8 x 2 x 15 = 240 >= the prereg's 200.
+TE_MEMBERS_PER_ARM = 15
+#: Attempts before a (subset, seed) slot is reported unfilled (a finding).
+TE_MAX_ATTEMPTS_PER_MEMBER = 500
+#: Anchor 6 — cash unknown at every date, swept 0-30% of NAV. Checked at the
+#: dates the record actually pins the book (Jan sheet date, conviction log date).
+TE_CASH_FRAC_RANGE = (0.0, 0.30)
+#: The three annotated exits (TVTX 34.4 / ALMS 10 / SLDP 8.1) must land on a
+#: day whose close is within this fraction of the stated fill.
+TE_EXIT_PRICE_TOL = 0.06
+#: Unknown-share positions sized as U(range) x the median dollar value of the
+#: KNOWN positions (DKNG 150, NTLA 250 at the same date's close).
+TE_WEIGHT_MULT_RANGE = (0.3, 3.0)
+#: Probability a known-final-count position was built in two tranches, and the
+#: initial fraction range. Buy-constant-shares-per-episode is otherwise forced,
+#: which would narrow the family more than the records justify.
+TE_TRANCHE_PROB = 0.5
+TE_TRANCHE_INITIAL_FRAC = (0.3, 1.0)
+#: Price bars start 2025-10-27; anchors 7/8/9 reach back further. The uncovered
+#: months enter as ONE bounded free parameter per anchor — the book's return
+#: over the gap — and the report states how much work the gap does. An anchor
+#: satisfiable only by a gap outside these bounds is INCONSISTENT for that
+#: member.
+TE_GAP_RETURN_BOUNDS = (-0.50, 1.50)
+#: Tolerance on the dollar anchors (7's $15,165 / implied levels, 9's $45k).
+TE_DOLLAR_TOL = 0.10
+#: Anchor 7 — "+73.7% / +$15,165 over ~1yr" (docs/NIGHT13_BRIEFING.md §1).
+#: Implies start ~$20,577 and end ~$35,742; the ~1yr window's end date is
+#: unknown and swept over this window (disclosure was 2026-08).
+TE_ANCHOR7_PCT = 0.737
+TE_ANCHOR7_DOLLARS = 15165.0
+TE_ANCHOR7_END_WINDOW = ("2026-06-01", "2026-08-10")
+#: Anchor 8 — "2025 +115%" (raw_text_2026-01-13.txt line 2).
+TE_ANCHOR8_PCT = 1.15
+#: Anchor 9 — "$25k -> $45k" legacy figure (docs/PORTFOLIO_MANAGER_v1.md).
+TE_ANCHOR9_START = 25000.0
+TE_ANCHOR9_END = 45000.0
+#: Anchor 5 — QUBT 300 is Murat-authoritative; 200 (book_lanes) kept as a
+#: bound arm, never dropped.
+TE_QUBT_ARMS = (300.0, 200.0)
+#: Anchor 10 takeout-proceeds treatments (the `reinvest_in` sensitivity
+#: CONVICTION-REPLAY-1 named but never implemented).
+TE_TAKEOUT_TREATMENTS = ("idle_cash", "spy", "pro_rata")
+#: APLT has NO surviving bars: 0.80 on his Nov sheet, 0.09 on his Jan sheet,
+#: $0.088 cash on 2026-02-03. WHEN it collapsed inside Nov->Jan is unknown, so
+#: the drop date is a sampled ensemble dimension, not an assumption.
+TE_APLT_JAN_MARK = 0.09
+#: Declared-subset arms over the mutually unreconciled anchors {7,8,9};
+#: () = always-on anchors 1-6,10 only.
+TE_SUBSETS = ((), (7,), (8,), (9,), (7, 8), (7, 9), (8, 9), (7, 8, 9))
+#: Magnitude classes for the frozen grading rule (pts): |x| < 5 small,
+#: 5 <= |x| < 20 moderate, >= 20 large. sign+class must agree across every
+#: member of every maximal consistent subset for `ensemble_robust`.
+TE_MAGNITUDE_CLASS_EDGES = (5.0, 20.0)
+#: The covered window (price panel) and the war sub-window (FACTORIAL-PM-1 H3).
+TE_WINDOW = ("2025-11-07", "2026-08-10")
+TE_WAR_WINDOW = ("2026-06-04", "2026-07-29")

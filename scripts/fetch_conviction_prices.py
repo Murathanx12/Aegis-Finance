@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 import sys
+from datetime import date, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -24,17 +25,26 @@ from backend.services.conviction_prices import (BENCHMARKS, CACHE,
                                                 CORPORATE_ACTIONS)
 from backend.services.conviction_sheets import all_tickers
 
-START, END = "2025-10-25", "2026-08-12"
+START = "2025-10-25"
+
+
+def _default_end() -> str:
+    """Today-driven end (exclusive, so +1 day covers today's close). The old
+    hardcoded END literal froze the panel at 2026-08-12 — every fetch after
+    that date would have LOOKED fresh while silently refusing to advance."""
+    return str(date.today() + timedelta(days=1))
+
 
 logger = logging.getLogger(__name__)
 
 
-def main() -> int:
+def main(end: str | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    end = end or _default_end()
     tickers = sorted(set(all_tickers()) | set(BENCHMARKS))
-    logger.info("fetching %d symbols %s -> %s", len(tickers), START, END)
+    logger.info("fetching %d symbols %s -> %s", len(tickers), START, end)
 
-    df = yf.download(tickers, start=START, end=END, auto_adjust=True,
+    df = yf.download(tickers, start=START, end=end, auto_adjust=True,
                      progress=False)["Close"]
     empty = sorted(c for c in df.columns if df[c].notna().sum() == 0)
     expected = sorted(CORPORATE_ACTIONS)

@@ -192,8 +192,19 @@ def main() -> int:
     logger.info("%d predictions on the record; effective distinct ideas %s of "
                 "%s across all specialists", len(all_preds),
                 across["effective_distinct_ideas"], across["n_forecasts"])
-    logger.info("nothing resolves yet — the earliest horizon is 5 trading days. "
-                "That is the point: the clock started tonight.")
+    if all_preds:
+        # Measured from the records just written, never asserted: the first
+        # live run printed "5 trading days" while the ledger's actual minimum
+        # was 20 — a false statement about our own data, in our own log.
+        min_h = min(p.horizon_days for p in all_preds)
+        logger.info("nothing resolves yet — the earliest horizon written is "
+                    "%d trading days (resolves after %s). That is the point: "
+                    "the clock started tonight.", min_h,
+                    min(p.resolves_after for p in all_preds
+                        if p.horizon_days == min_h))
+    else:
+        logger.info("no predictions written this run — nothing new on the "
+                    "resolution clock.")
     return 0
 
 

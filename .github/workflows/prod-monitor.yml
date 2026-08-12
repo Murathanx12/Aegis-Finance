@@ -32,10 +32,15 @@ jobs:
           body=$(curl -s --max-time 90 https://aegis-finance-production.up.railway.app/api/health/full)
           status=$(echo "$body" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('status','missing'))" 2>/dev/null || echo "unparseable")
           fresh=$(echo "$body" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('scheduler',{}).get('nav',{}).get('all_fresh','missing'))" 2>/dev/null || echo "unparseable")
-          echo "status=$status fresh=$fresh"
+          ledger=$(echo "$body" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('prediction_ledger',{}).get('status','missing'))" 2>/dev/null || echo "unparseable")
+          echo "status=$status fresh=$fresh ledger=$ledger"
           echo "status=$status" >> "$GITHUB_OUTPUT"
           echo "fresh=$fresh" >> "$GITHUB_OUTPUT"
-          if [ "$status" = "ok" ]; then
+          echo "ledger=$ledger" >> "$GITHUB_OUTPUT"
+          # prediction_ledger checked EXPLICITLY as well as via top-level
+          # status: belt-and-suspenders, so a regression that re-hardcodes the
+          # top-level "ok" cannot silence the ledger canary again.
+          if [ "$status" = "ok" ] && [ "$ledger" = "ok" ]; then
             echo "healthy=true" >> "$GITHUB_OUTPUT"
           else
             echo "healthy=false" >> "$GITHUB_OUTPUT"
@@ -47,12 +52,13 @@ jobs:
           HEALTHY: ${{ steps.health.outputs.healthy }}
           STATUS: ${{ steps.health.outputs.status }}
           FRESH: ${{ steps.health.outputs.fresh }}
+          LEDGER: ${{ steps.health.outputs.ledger }}
         run: |
           open_issue=$(gh issue list --repo "$GITHUB_REPOSITORY" \
             --state open --search "PROD ALERT in:title" \
             --json number --jq '.[0].number // empty')
           if [ "$HEALTHY" != "true" ]; then
-            msg="Health check failed at $(date -u +'%F %T UTC'): status=\`$STATUS\`, nav all_fresh=\`$FRESH\`. https://aegis-finance-production.up.railway.app/api/health/full"
+            msg="Health check failed at $(date -u +'%F %T UTC'): status=\`$STATUS\`, nav all_fresh=\`$FRESH\`, prediction_ledger=\`$LEDGER\`. https://aegis-finance-production.up.railway.app/api/health/full"
             if [ -n "$open_issue" ]; then
               gh issue comment "$open_issue" --repo "$GITHUB_REPOSITORY" --body "$msg"
             else
@@ -61,6 +67,6 @@ jobs:
             fi
           elif [ -n "$open_issue" ]; then
             gh issue comment "$open_issue" --repo "$GITHUB_REPOSITORY" \
-              --body "Recovered at $(date -u +'%F %T UTC') — status ok, nav all_fresh=$FRESH."
+              --body "Recovered at $(date -u +'%F %T UTC') — status ok, nav all_fresh=$FRESH, prediction_ledger=$LEDGER."
             gh issue close "$open_issue" --repo "$GITHUB_REPOSITORY"
           fi

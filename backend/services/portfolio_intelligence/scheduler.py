@@ -8,6 +8,7 @@ Railway redeploys. Railway cron endpoint as belt-and-suspenders fallback.
 Schedule:
   - Hourly (market hours): mark-to-market, short-circuits if no new data
   - Daily 16:30 ET: full rebalance check for all lanes
+  - Daily 16:30 ET: prediction-ledger auto-resolution (pi_ledger_resolve)
   - Weekly Mon 09:00 ET: additional aggressive lane check
 
 Usage:
@@ -109,6 +110,21 @@ def setup_scheduler():
         CronTrigger(hour=7, minute=30, day_of_week="mon-fri", timezone="US/Eastern"),
         id="pi_congress_collect",
         name="PI congress-IC morning collect",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
+
+    # Prediction-ledger auto-resolution (NIGHT-13). belief_state.py shipped
+    # resolve_one/resolve_all with NO caller — no job, no route, no script —
+    # so every record would have sailed past resolves_after unresolved while
+    # the calibration clock read "still accruing". Daily after the close,
+    # same timing convention as pi_daily_check; resolve_due() reports every
+    # due record as resolved/pending/overdue/unpriceable, never silence.
+    _scheduler.add_job(
+        _ledger_resolve,
+        CronTrigger(hour=16, minute=30, timezone="US/Eastern"),
+        id="pi_ledger_resolve",
+        name="Prediction-ledger auto-resolution",
         replace_existing=True,
         misfire_grace_time=3600,
     )
@@ -718,6 +734,35 @@ async def _congress_morning_collect():
                     "(descriptive)", cg.get("status"), cg.get("n"), cg.get("nonzero"))
     except Exception as e:
         logger.error("Congress-IC morning collection failed: %s", e, exc_info=True)
+
+
+async def _ledger_resolve():
+    """Daily prediction-ledger resolution (the caller resolve_all never had).
+
+    Logs the FULL report at INFO on a clean run and at WARNING whenever any due
+    record is overdue or unpriceable — an unresolved forecast must never look
+    like a night with nothing to grade. A crash logs at ERROR and the
+    /api/health/full prediction_ledger canary stays DEGRADED on the growing
+    overdue count, so a silently-dead resolver still pages.
+    """
+    import asyncio
+    from backend.services.ledger_resolver import resolve_due
+
+    try:
+        report = await asyncio.to_thread(resolve_due)
+        if report.get("overdue", 0) > 0 or report.get("unpriceable"):
+            logger.warning("Ledger resolve DEGRADED: %s", report)
+        else:
+            logger.info(
+                "Ledger resolve: newly_resolved=%s pending=%s overdue=%s "
+                "unpriceable=%s priced_from=%s health=%s",
+                report.get("newly_resolved"), report.get("pending"),
+                report.get("overdue"), len(report.get("unpriceable") or []),
+                report.get("priced_from"),
+                (report.get("health") or {}).get("status"),
+            )
+    except Exception as e:
+        logger.error("Ledger resolve failed: %s", e, exc_info=True)
 
 
 async def _weekly_aggressive_check():

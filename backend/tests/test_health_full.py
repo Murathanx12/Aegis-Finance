@@ -117,6 +117,25 @@ class TestHealthFullEndpoint:
         # Lane with no NAV rows yet is present with explicit nulls.
         assert tr["lanes"]["conservative"]["nav"] is None
 
+    def test_ic_funnel_row_present_and_visible_when_missing(self, monkeypatch):
+        """NIGHT-13 audit F1/F5: the IC page degrades to pure benchmark core
+        when its funnel artifact is missing — that state must be visible on the
+        health surface, not only inside the page payload."""
+        body = client.get("/api/health/full").json()
+        ic = body["investment_committee"]
+        assert "funnel_available" in ic and "status" in ic
+        # With the artifact shipped under backend/data the row is ok.
+        assert ic["funnel_available"] is True and ic["status"] == "ok"
+
+        from pathlib import Path
+        from backend import config as cfg
+        monkeypatch.setattr(cfg, "IC_FUNNEL_PATH",
+                            Path("Z:/nonexistent/funnel.json"))
+        body = client.get("/api/health/full").json()
+        ic = body["investment_committee"]
+        assert ic["funnel_available"] is False and ic["status"] == "DEGRADED"
+        assert "ic funnel unavailable" in body["degraded_reasons"]
+
     def test_warnings_flow_through(self):
         obs.install_log_buffer()
         logging.getLogger("aegis.test.flow").warning("endpoint-flow-check")

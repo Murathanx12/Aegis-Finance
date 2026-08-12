@@ -21,7 +21,7 @@ from backend.cache import cache_clear, set_cache_status, cache_ready, cache_stat
 from backend.config import config
 from backend.middleware import add_timing_middleware
 from backend.observability import install_log_buffer
-from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm
+from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee
 
 logging.basicConfig(
     level=logging.INFO,
@@ -453,6 +453,7 @@ app.include_router(markets.router)
 app.include_router(crypto.router)
 app.include_router(portfolio_intelligence.router)
 app.include_router(pm.router)
+app.include_router(investment_committee.router)
 
 
 @app.get("/")
@@ -510,6 +511,13 @@ async def root():
             "/api/savings/safe-rate",
         ],
     }
+
+
+# Registered here (not in the block above) deliberately: the ledger router is
+# health-adjacent, and this keeps the edit clear of the primary router block.
+from backend.routers import optimus_ledger as _optimus_ledger  # noqa: E402
+
+app.include_router(_optimus_ledger.router)
 
 
 @app.get("/api/health")
@@ -625,9 +633,29 @@ async def health_full():
     except Exception as e:
         prediction_ledger = {"status": "DEGRADED", "error": str(e)}
 
+    # The IC page degrades to pure benchmark core when its funnel artifact is
+    # missing — by design on the page, but invisible-in-prod is the insider-
+    # collector shape, so the file's presence is a health row too.
+    try:
+        from backend.services.investment_committee import ic_health
+        investment_committee_health = ic_health()
+    except Exception as e:
+        investment_committee_health = {"status": "DEGRADED", "error": str(e)}
+
     cs = cache_status()
+    # The top-level status was hardcoded "ok", which made the prod monitor's
+    # status check decorative: prediction_ledger could sit DEGRADED for weeks
+    # and never page. Fold the canaries that must page into the top level.
+    _degraded_reasons = []
+    if str(prediction_ledger.get("status", "")) != "ok":
+        _degraded_reasons.append("prediction_ledger not ok")
+    if not (sched.get("nav") or {}).get("all_fresh"):
+        _degraded_reasons.append("nav not fresh")
+    if str(investment_committee_health.get("status", "")) != "ok":
+        _degraded_reasons.append("ic funnel unavailable")
     return {
-        "status": "ok",
+        "status": "ok" if not _degraded_reasons else "DEGRADED",
+        "degraded_reasons": _degraded_reasons,
         "deploy": {
             "commit": _DEPLOY_COMMIT,
             "version": "0.2.0",
@@ -645,6 +673,7 @@ async def health_full():
         "fmp_budget": fmp,
         "event_intel": event_intel_health,
         "prediction_ledger": prediction_ledger,
+        "investment_committee": investment_committee_health,
         "data_sources": source_health(),
         "recent_warnings": recent_warnings(),
     }
