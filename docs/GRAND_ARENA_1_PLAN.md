@@ -157,8 +157,10 @@ Checkpoint resume verified: truncating to 70 cells and re-running reproduces all
 securities, 23 years.** That is the denominator NIGHT-12's null never had — 60
 rows from one portfolio was an anecdote.
 
-1. **The cash null survived.** Given the real denominator, `SELL→CASH` is never
-   the best action at any horizon tested.
+1. **The cash null survived — with one honest qualification.** `SELL_CASH` −
+   `HOLD` is −2.82 pp vs MDE 2.76 at 60 d (7/8 blocks) and −11.27 vs 7.55 at
+   252 d (8/8). But **at zero cost the 60-day gap is −2.55 vs MDE 2.77 — NOT
+   detectable.** Only the 252-day result is cost-independent.
 2. **An instrument that never saw NIGHT-7 independently reproduced the
    trailing-stop corpse**: −4.94 pp against an MDE of 4.82, sign holding in 8 of
    8 regime blocks. A finding that reappears from a different instrument is a
@@ -208,9 +210,13 @@ Three outcomes, all publishable:
 
 ## Things a resuming session must not re-derive
 
-- **Selection vs management.** Four independent measurements now agree: the edge
-  is in selection, the losses are in management and sizing (NIGHT-12 exposure,
-  NIGHT-13 factorial, NIGHT-13 ensemble, NIGHT-14 WINNER-GENOME).
+- **THE STANDING BET WAS HALF-WITHDRAWN BY CHUNK 2.** Do not restate the old
+  version. EXIT-LAB-1 supports *losses are in management* (every one of 20
+  rules, 6 learned policies and 16 single actions is negative; the best baseline
+  is `NEVER_SELL`) but finds **no evidence for *edge is in selection***: gross of
+  costs, swapping the held name for the index is worth −0.04 pp at 60 d and
+  −0.14 pp at 252 d. The honest claim now is: **the only thing repeatedly
+  measured as large is EXPOSURE — whether you are invested, and how much.**
 - **WINNER-GENOME left execution untested.** The design forms on day 0 and
   holds. The CUHK captain says active intraday entry/exit was the core. A null
   on selection is **not** a null on execution — that gap is chunk 6's job.

@@ -145,10 +145,42 @@ objective).
 
 > **The bet: the edge is in selection and the losses are in management.**
 
-If that is right, the highest-value thing the programme can build is not a
-better stock picker. It is the execution and sizing layer that sits between "this
-is a good idea" and "this is how much of it you own" — and an honest referee
-that can tell whether that layer is working.
+`WINNER-GENOME-1` was registered as the first real test of the bet. It could
+fail, and then `EXIT-LAB-1` — the first instrument with a real denominator —
+**failed half of it.**
 
-`WINNER-GENOME-1` is the first real test of the bet. It is registered so it can
-fail.
+### AMENDED 2026-08-12 after EXIT-LAB-1 (`bb676e1`)
+
+1.58M position-states → 25.3M state-action rows → 152M outcome cells, 11,145
+securities, 23 years. It supports the second half of the bet and **withdraws the
+first**:
+
+- *The losses are in management* — **supported.** Twenty pre-declared rules, six
+  learned policies, sixteen single actions: **every point estimate negative**,
+  several detectably so, and the ordering tracks how much each rule trades. The
+  best baseline out-of-fold is `NEVER_SELL` itself, so learned-vs-baseline is
+  learned-vs-doing-nothing, and doing nothing wins.
+- *The edge is in selection* — **no evidence for it either.** Gross of costs,
+  `SELL_BENCH` − `HOLD` is **−0.04 pp at 60 days and −0.14 pp at 252**. Swapping
+  the held name for the index is free. That is the same null NIGHT-14 found for
+  tournament strategy families and NIGHT-10 found across 21 configurations,
+  arriving from a third direction.
+
+**The honest restatement after five nights:**
+
+> **The only thing this programme has repeatedly measured as large is
+> *exposure* — whether you are invested, and how much. Neither which name you
+> pick nor what you do with it afterwards has cleared its own ruler on any
+> instrument we have built.**
+
+That is a smaller claim than the one we started with, it is the one the receipts
+support, and it is the least useful claim for anyone selling a strategy. It is
+also the one that most changes what a saver should actually do.
+
+**Consequence for this roadmap:** the highest-value build is no longer "the
+execution and sizing layer between a good idea and a position size", because the
+good-idea half is unevidenced. It is the **exposure** question — and chunk 6 of
+GRAND-ARENA-1 is where that gets its own denominator. Note the warning from
+KNOWN-WORLD-1's WORLD-L before starting it: a learner handed the exposure lever
+**invented a timing edge in a world containing none**, and only
+matched-average-exposure comparison and its own MDE refused it.
