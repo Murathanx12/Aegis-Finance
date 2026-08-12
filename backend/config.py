@@ -1810,12 +1810,14 @@ RESEARCH_LLM_ENABLED = os.getenv("AEGIS_RESEARCH_LLM", "1") not in ("0", "false"
 #: RULE: keep the dollar ceiling BELOW the actual DeepSeek balance, with
 #: headroom. Raise it in the same motion as a top-up, not before one, via
 #: AEGIS_RESEARCH_LLM_MAX_USD.
+#: 2026-08-12: balance topped up to ~$50, so the ceiling moves to $40 —
+#: still below it, still with headroom, per the rule above.
 #:
 #: Measured unit cost, for sizing this: the 8,014-call swarm cost $12.04, i.e.
 #: **$0.0015 per call** (~2,500 tokens in / 900 out). Nightly WHY-MOVED is ~7
 #: lens calls with a larger prompt, roughly $0.03/night — under $1/month.
-RESEARCH_LLM_MAX_CALLS = int(os.getenv("AEGIS_RESEARCH_LLM_MAX_CALLS", "12000"))
-RESEARCH_LLM_MAX_USD = float(os.getenv("AEGIS_RESEARCH_LLM_MAX_USD", "8.0"))
+RESEARCH_LLM_MAX_CALLS = int(os.getenv("AEGIS_RESEARCH_LLM_MAX_CALLS", "40000"))
+RESEARCH_LLM_MAX_USD = float(os.getenv("AEGIS_RESEARCH_LLM_MAX_USD", "40.0"))
 #: A call is only worth its money if it produces something gradeable. If the
 #: share of calls yielding NO prediction and NO hypothesis exceeds this, the
 #: campaign is buying tokens rather than information and should halt for
