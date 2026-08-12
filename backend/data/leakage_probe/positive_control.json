@@ -1,0 +1,119 @@
+{
+ "rows": [
+  {
+   "ticker": "SPY",
+   "as_of": "2020-02-19",
+   "truth_20d": "DOWN",
+   "recall": "YES",
+   "direction_20d": "DOWN",
+   "directional": true,
+   "correct": true,
+   "served_model": "deepseek-v4-flash",
+   "what": "COVID crash began; SPY fell sharply over 20 days and, despite partial rebound, stayed below the pre-crash level after 60"
+  },
+  {
+   "ticker": "SPY",
+   "as_of": "2020-03-23",
+   "truth_20d": "UP",
+   "recall": "YES",
+   "direction_20d": "UP",
+   "directional": true,
+   "correct": true,
+   "served_model": "deepseek-v4-flash",
+   "what": "Sharp rally from COVID crash low; SPY rose strongly over next 20 and 60 trading days."
+  },
+  {
+   "ticker": "SPY",
+   "as_of": "2008-09-15",
+   "truth_20d": "DOWN",
+   "recall": "YES",
+   "direction_20d": "DOWN",
+   "directional": true,
+   "correct": true,
+   "served_model": "deepseek-v4-flash",
+   "what": "After Lehman's collapse, SPY fell sharply; 20 and 60 trading days later it was substantially lower."
+  },
+  {
+   "ticker": "SPY",
+   "as_of": "2008-03-10",
+   "truth_20d": "UP",
+   "recall": "UNPARSEABLE",
+   "direction_20d": "",
+   "directional": false,
+   "correct": false,
+   "served_model": "deepseek-v4-flash",
+   "what": ""
+  },
+  {
+   "ticker": "AAPL",
+   "as_of": "2007-01-09",
+   "truth_20d": "UP",
+   "recall": "UNPARSEABLE",
+   "direction_20d": "",
+   "directional": false,
+   "correct": false,
+   "served_model": "deepseek-v4-flash",
+   "what": ""
+  },
+  {
+   "ticker": "TSLA",
+   "as_of": "2020-08-31",
+   "truth_20d": "DOWN",
+   "recall": "UNPARSEABLE",
+   "direction_20d": "",
+   "directional": false,
+   "correct": false,
+   "served_model": "deepseek-v4-flash",
+   "what": ""
+  },
+  {
+   "ticker": "GME",
+   "as_of": "2021-01-27",
+   "truth_20d": "DOWN",
+   "recall": "YES",
+   "direction_20d": "DOWN",
+   "directional": true,
+   "correct": true,
+   "served_model": "deepseek-v4-flash",
+   "what": "After the Jan 2021 short squeeze peak, GME fell sharply from ~$347, then trended lower over the following months."
+  },
+  {
+   "ticker": "NVDA",
+   "as_of": "2023-05-24",
+   "truth_20d": "UP",
+   "recall": "YES",
+   "direction_20d": "UP",
+   "directional": true,
+   "correct": true,
+   "served_model": "deepseek-v4-flash",
+   "what": "NVDA surged after May 24, 2023 earnings and continued broadly higher over the following months."
+  },
+  {
+   "ticker": "META",
+   "as_of": "2022-02-02",
+   "truth_20d": "DOWN",
+   "recall": "YES",
+   "direction_20d": "DOWN",
+   "directional": true,
+   "correct": true,
+   "served_model": "deepseek-v4-flash",
+   "what": "Meta stock plunged over 26% on Feb 3, 2022 after weak Q4 earnings guidance, and remained lower for months."
+  },
+  {
+   "ticker": "SVB",
+   "as_of": "2023-03-08",
+   "truth_20d": "DOWN",
+   "recall": "YES",
+   "direction_20d": "DOWN",
+   "directional": true,
+   "correct": true,
+   "served_model": "deepseek-v4-flash",
+   "what": "SVB collapsed within days, was placed into receivership, and the stock was effectively wiped out."
+  }
+ ],
+ "n": 10,
+ "n_recall_yes": 7,
+ "n_directional": 7,
+ "n_correct": 7,
+ "verdict": "CANARY IS LIVE \u2014 it can emit YES, so the probe's 0/419 on its own items is a real measurement of no outcome recall"
+}

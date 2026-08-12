@@ -1,0 +1,32 @@
+{
+ "started_utc": "2026-08-12T12:13:39+00:00",
+ "wall_clock_min": 58.0,
+ "workers": 12,
+ "halted": null,
+ "as_of": "2026-08-11",
+ "n_items": 12,
+ "arms": [
+  "A0",
+  "A1",
+  "A2",
+  "A3",
+  "A4"
+ ],
+ "seed": 20260812,
+ "spend_this_run_usd": 0.526459,
+ "calls_this_run": 2018,
+ "budget_at_end": {
+  "campaign": "grand_arena_1",
+  "n_calls": 16889,
+  "cost_usd": 6.334756,
+  "cost_is_estimate": true,
+  "cost_is_lower_bound": false,
+  "zero_yield_rate": 0.0802,
+  "calls_remaining": 23111,
+  "usd_remaining": 33.6652,
+  "max_calls": 40000,
+  "max_usd": 40.0,
+  "ok": true,
+  "reason": null
+ }
+}

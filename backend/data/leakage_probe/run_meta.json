@@ -1,15 +1,12 @@
 {
- "last_wave": "core",
- "at": "2026-08-12T12:12:39+00:00",
+ "last_wave": "canary",
+ "at": "2026-08-12T13:14:49+00:00",
  "result": {
-  "ran": 40,
+  "ran": 1600,
   "counts": {
-   "ok": 38,
-   "reject:coin_flip_filler": 2,
-   "reject:slot_missing": 4,
-   "reject:recommendation_language": 2,
-   "zero_yield": 2,
-   "reject:unparseable_json": 2
+   "identify:refused_mask": 97,
+   "identify:ok": 703,
+   "recall:ok": 800
   },
   "halted": null
  }
