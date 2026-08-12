@@ -372,21 +372,25 @@ def attach_outputs(call_id: str, *, prediction_ids: Iterable[str] = (),
                        call_id, type(exc).__name__, exc)
 
 
-def read_calls(path: Path | None = None) -> list[dict]:
-    """Read the ledger with amendments folded into their base rows.
+#: Incremental parse state, keyed by resolved path. The ledger is append-only,
+#: so re-parsing 21MB to answer "how much have we spent" is pure waste — and it
+#: was not free waste: MARKET-GRAPH-1 measured `research_budget.require()`
+#: consuming 95% of its throughput while the vendor itself answered in 2.9s.
+#: A governor that is expensive to consult creates pressure to consult it less
+#: often, which is how a spend ceiling quietly becomes advisory.
+#:
+#: Cache validity is (size, mtime_ns) plus the requirement that the file only
+#: GREW. Anything else — truncation, rewrite, a different path — forces a full
+#: re-parse, because a stale spend total is the one error this module exists to
+#: prevent.
+_PARSE_CACHE: dict[str, dict] = {}
 
-    Unreadable lines are COUNTED and logged, never skipped in silence: a corrupt
-    line is missing spend, and spend that quietly disappears is the one direction
-    a cost ledger must not fail in.
-    """
-    p = _resolve_path(path)
-    if p is None or not p.exists():
-        return []
-    base: dict[str, dict] = {}
-    order: list[str] = []
-    amendments: list[dict] = []
+
+def _parse_lines(lines: Iterable[str], base: dict[str, dict], order: list[str],
+                 pending: list[dict]) -> int:
+    """Fold raw ledger lines into `base`/`order`; return the unreadable count."""
     unreadable = 0
-    for line in p.read_text(encoding="utf-8").splitlines():
+    for line in lines:
         line = line.strip()
         if not line:
             continue
@@ -396,7 +400,7 @@ def read_calls(path: Path | None = None) -> list[dict]:
             unreadable += 1
             continue
         if row.get("row_type") == "amendment":
-            amendments.append(row)
+            pending.append(row)
             continue
         cid = row.get("call_id", "")
         if cid in base:
@@ -411,12 +415,23 @@ def read_calls(path: Path | None = None) -> list[dict]:
             continue
         base[cid] = row
         order.append(cid)
-    for a in amendments:
+    return unreadable
+
+
+def _apply_amendments(base: dict[str, dict], pending: list[dict]) -> None:
+    """Apply what can be applied; KEEP what cannot, and retry it next read.
+
+    A full parse saw every line before applying, so an amendment could never
+    precede its base row. An incremental parse can end mid-pair — the amendment
+    in this tail, its base row in the next. Dropping it there would silently
+    lose the outputs a call claimed, so unapplied amendments stay pending and
+    are retried. Only a full re-parse may declare one genuinely unattributable.
+    """
+    still: list[dict] = []
+    for a in pending:
         tgt = base.get(a.get("call_id", ""))
         if tgt is None:
-            logger.warning("llm_telemetry: amendment for unknown call_id %s — "
-                           "the outputs it claims are unattributable",
-                           a.get("call_id"))
+            still.append(a)
             continue
         for key in ("prediction_ids", "hypothesis_ids"):
             merged = list(dict.fromkeys(list(tgt.get(key) or [])
@@ -424,6 +439,76 @@ def read_calls(path: Path | None = None) -> list[dict]:
             tgt[key] = merged
         if (a.get("meta") or {}).get("schema_valid_set"):
             tgt["schema_valid"] = bool(a.get("schema_valid"))
+    pending[:] = still
+
+
+def read_calls(path: Path | None = None) -> list[dict]:
+    """Read the ledger with amendments folded into their base rows.
+
+    Unreadable lines are COUNTED and logged, never skipped in silence: a corrupt
+    line is missing spend, and spend that quietly disappears is the one direction
+    a cost ledger must not fail in.
+
+    Append-only files are parsed INCREMENTALLY — see `_PARSE_CACHE`. The returned
+    rows are the cache's own dicts and must be treated as READ-ONLY; `reprice()`
+    already returns new dicts rather than mutating.
+    """
+    p = _resolve_path(path)
+    if p is None or not p.exists():
+        return []
+    key = str(p.resolve())
+    st = p.stat()
+    c = _PARSE_CACHE.get(key)
+
+    # "Grew" means: same file, no shorter, and if identical in size then also
+    # untouched. Anything else — truncated, rewritten in place — invalidates the
+    # cache, because a cache that trusted mtime alone would keep reporting spend
+    # for rows that no longer exist.
+    grew = (c is not None and st.st_size >= c["size"]
+            and (st.st_size != c["size"] or st.st_mtime_ns == c["mtime_ns"]))
+    full = not grew
+    if full:
+        c = {"size": 0, "mtime_ns": st.st_mtime_ns, "base": {}, "order": [],
+             "pending": [], "unreadable": 0}
+        _PARSE_CACHE[key] = c
+    base, order, pending = c["base"], c["order"], c["pending"]
+    unreadable = c["unreadable"]
+
+    if st.st_size > c["size"]:
+        with p.open("rb") as fh:
+            fh.seek(c["size"])
+            tail = fh.read()
+        text = tail.decode("utf-8", errors="replace")
+        consumed = c["size"] + len(tail)
+        # A partially-flushed final line is not corruption — it is a line still
+        # being written. Hold the remainder back and re-read it next time rather
+        # than counting a torn write as lost spend. This applies to the FIRST
+        # read as much as to a later one: 24 concurrent writers tore two lines
+        # in LLM-SWARM-1, and whether we happened to be caching at the time is
+        # not a property of the data.
+        if not text.endswith("\n"):
+            cut = text.rfind("\n")
+            consumed = (c["size"] + len(text[:cut + 1].encode("utf-8"))
+                        if cut >= 0 else c["size"])
+            text = text[:cut + 1] if cut >= 0 else ""
+        if text:
+            unreadable += _parse_lines(text.splitlines(), base, order, pending)
+        c["size"], c["mtime_ns"], c["unreadable"] = (consumed, st.st_mtime_ns,
+                                                     unreadable)
+
+    if full:
+        # Only a complete parse can prove an amendment has no base row anywhere.
+        _apply_amendments(base, pending)
+        for a in pending:
+            logger.warning("llm_telemetry: amendment for unknown call_id %s — "
+                           "the outputs it claims are unattributable",
+                           a.get("call_id"))
+    return _finish(base, order, pending, unreadable)
+
+
+def _finish(base: dict[str, dict], order: list[str], pending: list[dict],
+            unreadable: int) -> list[dict]:
+    _apply_amendments(base, pending)
     if unreadable:
         logger.warning("llm_telemetry: %d unreadable ledger line(s) — reported "
                        "spend and yield are both LOWER BOUNDS", unreadable)
@@ -442,6 +527,20 @@ def _as_date(v: Any) -> date | None:
     if isinstance(v, date):
         return v
     return date.fromisoformat(str(v)[:10])
+
+
+def row_cost(row: dict) -> float | None:
+    """One row's cost at CURRENT list prices, from the tokens the vendor reported.
+
+    The shared kernel of `reprice()` and `spend()`. `spend()` runs before every
+    vendor request and must not allocate a dict per row to answer one float.
+    """
+    ti, to = row.get("tokens_in"), row.get("tokens_out")
+    if ti is None and to is None:
+        c = row.get("cost_usd")
+        return None if c is None else float(c)
+    return price_call(str(row.get("model") or ""), int(ti or 0), int(to or 0),
+                      int(row.get("cached_tokens") or 0))
 
 
 def reprice(rows: list[dict]) -> list[dict]:
@@ -464,13 +563,10 @@ def reprice(rows: list[dict]) -> list[dict]:
     """
     out: list[dict] = []
     for r in rows:
-        ti, to = r.get("tokens_in"), r.get("tokens_out")
-        if ti is None and to is None:
+        if r.get("tokens_in") is None and r.get("tokens_out") is None:
             out.append(r)
             continue
-        fresh = price_call(str(r.get("model") or ""), int(ti or 0), int(to or 0),
-                           int(r.get("cached_tokens") or 0))
-        out.append({**r, "cost_usd": fresh, "cost_repriced": True,
+        out.append({**r, "cost_usd": row_cost(r), "cost_repriced": True,
                     "cost_usd_as_written": r.get("cost_usd")})
     return out
 
@@ -724,7 +820,9 @@ def spend(since: Any = None, path: Path | None = None) -> dict:
     as "spend is UNKNOWN" and refuses, which is the only safe reading when the
     accounting is broken.
     """
-    rows = reprice(read_calls(path))
+    # NOT reprice(): that materialises a new dict per row, and this function is
+    # called before EVERY vendor request. Same arithmetic, no allocation.
+    rows = read_calls(path)
     cutoff = _as_date(since)
     if cutoff is not None:
         rows = [r for r in rows if r.get("ts") and _as_date(r["ts"]) >= cutoff]
@@ -733,13 +831,18 @@ def spend(since: Any = None, path: Path | None = None) -> dict:
                 "total_is_lower_bound": False,
                 "zero_gradeable_output": {"n_calls": 0, "share_of_calls": None},
                 "cost_is_estimate": True}
-    priced = [r for r in rows if r.get("cost_usd") is not None]
+    total, n_priced = 0.0, 0
+    for r in rows:
+        c = row_cost(r)
+        if c is not None:
+            total += c
+            n_priced += 1
     dead = sum(1 for r in rows if not _gradeable(r))
     return {
         "n_calls": len(rows),
-        "total_cost_usd": round(sum(float(r["cost_usd"]) for r in priced), 6),
-        "total_is_lower_bound": len(priced) < len(rows),
-        "n_unpriced_calls": len(rows) - len(priced),
+        "total_cost_usd": round(total, 6),
+        "total_is_lower_bound": n_priced < len(rows),
+        "n_unpriced_calls": len(rows) - n_priced,
         "zero_gradeable_output": {"n_calls": dead,
                                   "share_of_calls": round(dead / len(rows), 4)},
         "cost_is_estimate": True,

@@ -501,3 +501,92 @@ def test_concurrent_appends_do_not_tear_rows(tmp_path):
     for i, line in enumerate(lines, 1):
         json.loads(line)          # a torn row raises here — that is the point
     assert len(t.read_calls(path)) == n_threads * per_thread
+
+
+# ── incremental parse (added after MARKET-GRAPH-1 measured the governor
+# ── consuming 95% of its throughput on a 21MB ledger) ───────────────────────
+#
+# These gate SPENDING. If the incremental path disagrees with a full re-parse by
+# one row, the ceiling is wrong, and a wrong ceiling is the failure this whole
+# module exists to prevent. So every test here compares against a cold re-parse
+# rather than against an expected constant.
+
+def _cold(path):
+    """A full re-parse from an empty cache — the reference answer."""
+    tel._PARSE_CACHE.clear()
+    return tel.read_calls(path)
+
+
+def _append(path, rows):
+    with path.open("a", encoding="utf-8") as fh:
+        for r in rows:
+            fh.write(json.dumps(r) + "\n")
+
+
+def _row(cid, **kw):
+    return {"call_id": cid, "ts": "2026-08-12T00:00:00+00:00",
+            "model": "deepseek-v4-flash", "tokens_in": 100, "tokens_out": 50,
+            "cached_tokens": 0, "cost_usd": 0.0001, "schema_valid": True,
+            "prediction_ids": [], **kw}
+
+
+def test_incremental_read_matches_a_cold_reparse_after_appends(tmp_path):
+    p = tmp_path / "calls.jsonl"
+    _append(p, [_row(f"c{i}") for i in range(5)])
+    warm = tel.read_calls(p)
+    assert len(warm) == 5
+    _append(p, [_row(f"d{i}") for i in range(3)])
+    warm2 = tel.read_calls(p)
+    assert [r["call_id"] for r in warm2] == [r["call_id"] for r in _cold(p)]
+    assert len(warm2) == 8
+
+
+def test_a_truncated_or_rewritten_ledger_forces_a_full_reparse(tmp_path):
+    """Shrinking is not appending. A cache that trusted mtime alone here would
+    keep reporting spend for rows that no longer exist."""
+    p = tmp_path / "calls.jsonl"
+    _append(p, [_row(f"c{i}") for i in range(6)])
+    assert len(tel.read_calls(p)) == 6
+    p.write_text(json.dumps(_row("only")) + "\n", encoding="utf-8")
+    assert [r["call_id"] for r in tel.read_calls(p)] == ["only"]
+
+
+def test_a_half_written_final_line_is_held_back_not_counted_as_corrupt(tmp_path):
+    """24 concurrent writers tore two lines in LLM-SWARM-1. A line still being
+    flushed must be re-read next time, not counted as lost spend."""
+    p = tmp_path / "calls.jsonl"
+    _append(p, [_row("c0")])
+    with p.open("a", encoding="utf-8") as fh:
+        fh.write('{"call_id": "c1", "model": "deepseek-v4-fl')  # mid-flush
+    assert [r["call_id"] for r in tel.read_calls(p)] == ["c0"]
+    with p.open("a", encoding="utf-8") as fh:                    # writer finishes
+        fh.write('ash", "tokens_in": 1, "tokens_out": 1}\n')
+    assert [r["call_id"] for r in tel.read_calls(p)] == ["c0", "c1"]
+    assert [r["call_id"] for r in _cold(p)] == ["c0", "c1"]
+
+
+def test_an_amendment_split_across_two_reads_still_applies(tmp_path):
+    """A full parse saw every line before applying, so this pair could never
+    split. An incremental parse can end between them; dropping the amendment
+    would silently lose the outputs a call claimed."""
+    p = tmp_path / "calls.jsonl"
+    _append(p, [{"row_type": "amendment", "call_id": "late",
+                 "prediction_ids": ["p1"]}])
+    assert tel.read_calls(p) == []
+    _append(p, [_row("late")])
+    rows = tel.read_calls(p)
+    assert rows[0]["prediction_ids"] == ["p1"]
+    assert _cold(p)[0]["prediction_ids"] == ["p1"]
+
+
+def test_spend_and_reprice_agree_on_every_row(tmp_path):
+    """`spend()` skips reprice() for speed. Same arithmetic or the governor and
+    the report disagree about the same ledger."""
+    p = tmp_path / "calls.jsonl"
+    _append(p, [_row("a"), _row("b", tokens_out=900),
+                _row("c", model="unknown-model", cost_usd=None)])
+    rows = tel.read_calls(p)
+    from_reprice = sum(r["cost_usd"] for r in tel.reprice(rows)
+                       if r["cost_usd"] is not None)
+    assert tel.spend(path=p)["total_cost_usd"] == pytest.approx(from_reprice)
+    assert tel.spend(path=p)["total_is_lower_bound"] is True

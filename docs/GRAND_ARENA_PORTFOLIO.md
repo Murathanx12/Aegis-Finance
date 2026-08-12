@@ -421,6 +421,32 @@ Every configuration executed, including the ones that failed.
   not 1,500 on 263. They are run in the sub-arena and the ablation, on the set
   where the comparison is fair.
 
+### 7.1 Reproduction check — every chunk-7 artefact re-derived from the committed code
+
+**A fix that landed but whose dependants were not re-run is worse than no fix,
+because the numbers look repaired.** So the claim in defect 1 was not taken from
+its own commit message. Every artefact this chunk reports was regenerated from
+scratch by the code as committed, and compared byte-for-byte:
+
+| command | artefact | result |
+|---|---|---|
+| `python -m scripts.run_portfolio_arena_1` | `portfolio_arena_1_full.json` | **IDENTICAL** (76,566 bytes of canonicalised JSON, `wall_seconds` excluded) |
+| `python -m scripts.run_portfolio_arena_1 --sub` | `portfolio_arena_1_sub.json` | **IDENTICAL** (76,183 bytes) |
+| `python -m scripts.arena_decompose` | `arena_decomposition.json` | **IDENTICAL** |
+| `python -m scripts.arena_tables` | `arena_tables.md` | **IDENTICAL** (`diff` clean) |
+
+Every beta-matched cell reproduces to the last printed digit — `P5_aegis`
+−4.58 %/yr at 1.321× gross, `P3_random` −9.25 at 0.865×, `P13_positive_skew`
+−12.82 at 0.707× — and no book is levered anywhere near the 1.4-2.0× that was
+the bug's signature. **The fix was in the working tree before the arena ran.
+The artefacts on disk, the numbers in this document and the code in `357fef9`
+are one consistent object.**
+
+What the check does *not* establish: it re-derives the arena from the same
+frozen panel (`arena_panel.parquet`, `arena_market.parquet`, `exit_lab_1_aux.npz`,
+all unmodified since 19:39), so it proves the pipeline from panel to verdict is
+reproducible and unaffected by the defect. It does not re-derive the panel.
+
 ### What went wrong, recorded rather than tidied away
 
 1. **The ex-ante beta was computed from a doubly-differenced market series.**
@@ -431,6 +457,16 @@ Every configuration executed, including the ones that failed.
    gross-exposure column, fixed, and the whole arena and decomposition rerun.
    Volatility matching was unaffected (it never touched the market series) and
    its numbers are unchanged.
+
+   **Independently re-verified 2026-08-12 22:0x — see §7.1.** The session that
+   found this defect died to an API stall immediately after committing the fix,
+   with its last words *"fixing and rerunning"*. Whether the rerun actually
+   happened could not be read off the commit: the fix commit `357fef9` is
+   stamped **20:14:45** and the arena artefacts were written at **20:05-20:07**,
+   nine minutes EARLIER, which reads exactly like a fix whose dependants were
+   never re-run. That reading is wrong, and the commit clock is why — it records
+   when the change was committed, not when the file was edited.
+
 2. **Effective N was computed on unnormalised weights**, so a vol-matched sleeve
    at scale 0.47 printed "effective 106.7 names" for a 20-name portfolio. Fixed
    to normalise to the stock sleeve; the arena was rerun.
