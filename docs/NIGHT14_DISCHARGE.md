@@ -179,6 +179,36 @@ Deployed `3344fc7`. CI green → commit flipped → surfaces exercised for
 
 Local: **3491 passed, 3 skipped, 0 failed** (19:00).
 
+### The loop is armed (final state, `2a3b78c`)
+
+`pi_why_moved` was added AFTER the first verification, which is the exact
+NIGHT-13 hazard — a new scheduler job whose target the old replica cannot
+deserialize from the shared jobstore. **This time the canary was there to check
+it, and the job survived**: 6 of 6 live, `missing: []`, `unexpected: []`.
+
+| job | next run |
+|---|---|
+| `pi_congress_collect` | 07:30 ET |
+| `pi_hourly_mtm` / `pi_daily_check` / `pi_ledger_resolve` | 16:30 ET |
+| **`pi_why_moved`** | **17:15 ET** |
+| `pi_weekly_aggressive` | Mon 09:00 ET |
+
+Ledger: 112 records on `/data/optimus/predictions.jsonl`, 0 overdue, status ok.
+**First resolution 2026-08-16.** From tonight it runs without anyone asking it
+to.
+
+### One CI failure worth recording
+
+The `pi_why_moved` commit failed CI on `assert len(jobs) == 5` in
+`test_scheduler.py` — a hardcoded count sitting beside five membership checks.
+The irony is the point: that is the same shape as the `/health/scheduler` gate
+which could not see NIGHT-13's vanished job. **A number is a weak proxy for a
+set and fails in both directions** — it breaks on a correct addition and stays
+silent when two jobs swap. Replaced with set equality against
+`EXPECTED_JOB_IDS`, so a correctly-added job now needs no edit to that test at
+all. Same class as NIGHT-13's hardcoded QUBT pins: local runs passed because I
+ran the canary file, not that one.
+
 ---
 
 ## §5 — Refusals and what is still owed
