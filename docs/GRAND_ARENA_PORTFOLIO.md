@@ -170,7 +170,7 @@ surprise *history*, named as one.
 | `P13_positive_skew` | −16.52 | −12.82 | −9.29 | −15.86 | 15.54 | NOT DETECTABLE |
 | `P14_risk_targeted_positive_skew` | −9.29 | −8.99 | −8.96 | −9.29 | 7.65 | **DETECTABLE NEGATIVE** |
 | `P10_evolutionary_survivor` | **DECLARED NON-RUN** — chunk 8 has not run; there is no survivor, and fabricating one would be inventing a competitor | | | | | |
-| `P6/P7/P8` LLM-fed | run in the **sub-arena** (§5) and in `GRAND_ARENA_ABLATION.md`; they cannot choose from 1,500 names because the LLM panel covers 40 | | | | | |
+| `P6/P7/P8` LLM-fed | run in `GRAND_ARENA_ABLATION.md`, **not here and not in the sub-arena table of §5**; they cannot choose from 1,500 names because the LLM panel covers 40. `run_portfolio_arena_1._llm_systems()` returns `{}` by design so that a sub-arena run made before the LLM panel landed cannot silently omit them — corrected 2026-08-12, an earlier revision of this row read "run in the sub-arena", which the code does not do | | | | | |
 
 **The five A3 dimensions, measured rather than asserted.**
 
