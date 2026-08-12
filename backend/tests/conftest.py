@@ -10,6 +10,29 @@ for 2.5h (a non-slow test made a live yfinance/FRED call with no timeout):
      `slow`/`network`, so a unit test that reaches for the network fails FAST and
      LOUD instead of hanging. The rule is explicit: **a network call in a unit
      test is a bug** — mark it `@pytest.mark.slow` or mock the fetch.
+
+THE HOLE THAT EXISTED UNTIL 2026-08-12, AND WHY IT MATTERED
+-----------------------------------------------------------
+Net (2) patched `socket.socket.connect` and `socket.create_connection`, which
+catches anything built on Python's socket module — `requests`, `urllib3`,
+`http.client`. **It did not catch `curl_cffi`**, which reaches libcurl through
+CFFI and never touches Python sockets at all.
+
+That is not a hypothetical gap: **yfinance 1.1.0 uses curl_cffi**, so every
+yfinance call in the entire fast suite was unguarded. Proven empirically rather
+than argued — see `test_network_guard.py`, where the socket control is blocked
+and the curl_cffi probe reached example.com from a non-slow test.
+
+Both backstops were down at once on this machine: `pytest-timeout` is declared
+in requirements but was not installed locally, so the pytest.ini `timeout` was
+inert too. The observable symptom was the LLM-SWARM-1 run — a non-slow test
+hung under network contention while 24 workers saturated the connection, and
+nothing stopped it.
+
+The docstring's "un-hangable" claim was therefore false for the single most
+common external dependency in this repo. It is true again now, and
+`test_network_guard.py` exists so that the next transport change fails a test
+rather than silently reopening the hole.
 """
 
 import socket
@@ -19,6 +42,12 @@ import pytest
 _REAL_CONNECT = socket.socket.connect
 _REAL_CREATE_CONNECTION = socket.create_connection
 _LOOPBACK = {"127.0.0.1", "::1", "localhost", "0.0.0.0"}
+
+_BLOCK_MESSAGE = (
+    "BLOCKED live network connect to {target!r} in a non-slow test. "
+    "Unit tests must be offline — mark it @pytest.mark.slow (or .network) "
+    "or mock the fetch. (This is the 2.5h-hang bug class.)"
+)
 
 
 def pytest_configure(config):
@@ -85,8 +114,35 @@ def _block_network(request):
 
     socket.socket.connect = _guard_connect
     socket.create_connection = _guard_create_connection
+
+    # curl_cffi bypasses Python sockets entirely (libcurl via CFFI), so the two
+    # patches above cannot see it — and yfinance 1.1.0 uses exactly that
+    # transport. Patch its Session.request, which every curl_cffi entry point
+    # (`requests.get`, `Session.get`, yfinance's pooled session) funnels through.
+    # Wrapped in its own try/except ImportError because curl_cffi is a
+    # transitive dependency: if a future yfinance drops it, the guard must
+    # degrade to "socket-only" rather than erroring every test in the suite.
+    _curl_patched = []
+    try:
+        from curl_cffi import requests as _curl_requests
+
+        _real_curl_request = _curl_requests.Session.request
+
+        def _guard_curl(self, method, url, *args, **kwargs):
+            host = str(url).split("//")[-1].split("/")[0].split(":")[0]
+            if host in _LOOPBACK:
+                return _real_curl_request(self, method, url, *args, **kwargs)
+            raise RuntimeError(_BLOCK_MESSAGE.format(target=url))
+
+        _curl_requests.Session.request = _guard_curl
+        _curl_patched.append((_curl_requests, _real_curl_request))
+    except ImportError:
+        pass
+
     try:
         yield
     finally:
         socket.socket.connect = _REAL_CONNECT
         socket.create_connection = _REAL_CREATE_CONNECTION
+        for mod, real in _curl_patched:
+            mod.Session.request = real

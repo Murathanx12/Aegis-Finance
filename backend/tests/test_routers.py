@@ -606,10 +606,18 @@ class TestBacktestRouter:
         r = client.get("/api/backtest/signal?start=2023-01-01&end=2023-01-01")
         assert r.status_code == 422
 
+    # MARKED SLOW 2026-08-12. Their siblings above assert a 422 and are refused
+    # by validation BEFORE any fetch, so they stay offline. These two assert the
+    # request gets PAST validation, which means the backtest actually runs and
+    # pulls prices. They passed only because the fast suite's network guard
+    # could not see curl_cffi (yfinance's transport); with it closed the fetch
+    # fails and the route returns 422, so the assertion reads `422 != 422`.
+    @pytest.mark.slow
     def test_valid_date_range_not_422(self, client):
         r = client.get("/api/backtest/signal?start=2022-01-01&end=2023-01-01")
         assert r.status_code != 422
 
+    @pytest.mark.slow
     def test_default_dates_not_422(self, client):
         """Default dates should pass validation."""
         r = client.get("/api/backtest/signal")

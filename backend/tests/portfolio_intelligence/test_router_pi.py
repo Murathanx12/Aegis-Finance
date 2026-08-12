@@ -133,6 +133,21 @@ class TestReferenceStateColdInit:
     """
 
     def test_cold_call_returns_200(self, tmp_path, monkeypatch):
+        # Prices are STUBBED (2026-08-12). This test used to reach yfinance and
+        # pass only because a warm disk cache answered — the cache-masking case
+        # from the silent-fragility checklist: offline when warm, live network
+        # when cold. During LLM-SWARM-1 it hung, because the conftest guard
+        # could not see curl_cffi (yfinance's transport) and pytest-timeout was
+        # not installed, so BOTH backstops were down at once.
+        # The guard is fixed and pinned by test_network_guard.py, which turns
+        # that hang into a loud failure. Stubbing here removes the dependence on
+        # cache state entirely — this test is about the cold-DB foreign-key
+        # regression, and a price fetch was never part of what it verifies.
+        from backend.services.portfolio_intelligence import (
+            reference_engine as _re,
+        )
+        monkeypatch.setattr(_re, "_get_current_prices", lambda tickers: {})
+
         # Point DB at a fresh tmp file. We can't easily inject db_path through
         # the FastAPI route (run_reference_check has db_path=None default), so
         # we patch the DB_PATH module-level constant for this test.

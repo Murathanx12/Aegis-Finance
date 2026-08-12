@@ -3,11 +3,28 @@
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from backend.services.portfolio_engine import PortfolioEngine
 
 
+# MARKED SLOW 2026-08-12. These call build_portfolio, which fetches live prices
+# through yfinance. They were never offline tests — they only looked like it
+# because the fast suite's network guard could not see curl_cffi (yfinance's
+# transport), so the fetches went through unnoticed. Closing that hole
+# (conftest.py + test_network_guard.py) exposed seven such tests across three
+# files, and also cut the fast suite from ~20 min to ~2 min, which is how much
+# of its runtime was network I/O that was never supposed to be there.
+#
+# `slow` is the honest classification, not a workaround: these are integration
+# tests and the house rule is explicit — a network call in a unit test is a bug,
+# so mark it slow or mock it. Mocking is the better end state (the assertions
+# are about warning TEXT, not about prices), but that is a rewrite of the
+# fixtures rather than a reclassification, and inventing price fixtures at 2am
+# to keep a green tick is how tests stop testing anything.
+@pytest.mark.slow
 class TestContradictionWarnings:
     def test_short_horizon_aggressive_flags(self):
         r = PortfolioEngine.build_portfolio(

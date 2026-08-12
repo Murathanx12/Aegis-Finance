@@ -242,8 +242,17 @@ class TestRegimeInterpretation:
         assert "normal" in interp.lower()
 
 
+@pytest.mark.slow
 class TestGetVolatilityAnalytics:
-    """Integration test using real yfinance data (fast — single ticker)."""
+    """Integration test using real yfinance data (fast — single ticker).
+
+    MARKED SLOW 2026-08-12. The docstring said "integration test using real
+    yfinance data" while the class sat in the fast suite — it was labelled
+    correctly and marked wrongly. It only passed because the network guard could
+    not see curl_cffi, yfinance's transport; with the hole closed the fetch
+    returns nothing and the service reports `{'error': "'NoneType' object is not
+    subscriptable"}`, which is the honest answer for an offline run.
+    """
 
     @pytest.mark.parametrize("ticker", ["AAPL"])
     def test_full_analytics(self, ticker):

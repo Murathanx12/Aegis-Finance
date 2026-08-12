@@ -151,10 +151,20 @@ uvicorn backend.main:app --reload --port 8000
 # Frontend (separate terminal)
 cd frontend && npm install && npm run dev
 
-# Run fast backend tests (~14 min, ~2460 tests; OFFLINE + un-hangable)
+# Run fast backend tests (~20 min, ~3560 tests; OFFLINE + un-hangable)
 # The fast suite is network-BLOCKED (backend/tests/conftest.py) and has a hard
-# per-test timeout (pytest.ini) — a non-slow test can never hit the live network
-# or hang the suite. Any network call in a unit test is a bug → mark it `slow` or mock it.
+# per-test timeout (pytest.ini). Any network call in a unit test is a bug →
+# mark it `slow` or mock it.
+#
+# TWO CAVEATS, both paid for on 2026-08-12 when the suite hung mid-swarm:
+#  1. The block covers Python sockets AND curl_cffi. It did NOT cover curl_cffi
+#     until then — which is yfinance's transport, so every yfinance call in the
+#     suite was unguarded. `test_network_guard.py` pins both transports; if a
+#     dependency moves to a third (a new CFFI/Rust binding), that guard must be
+#     extended or this claim silently becomes false again.
+#  2. `pytest-timeout` is in requirements but CAN BE ABSENT locally, and when it
+#     is, pytest.ini's `timeout` is inert with only a config warning. Verify it
+#     is installed before trusting "un-hangable": python -c "import pytest_timeout"
 python -m pytest backend/tests/ -v -m "not slow"
 
 # Run ALL backend tests (~25 min, slow tests need network)
