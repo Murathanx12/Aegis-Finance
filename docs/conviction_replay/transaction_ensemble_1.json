@@ -1,0 +1,1217 @@
+{
+ "trial": "TRANSACTION-ENSEMBLE-1",
+ "prereg": "Aegis module/TRIALS/PREREG_TRANSACTION_ENSEMBLE_1.md",
+ "prereg_commit": "c5b81aa",
+ "SYNTHETIC": "bounds derived from generated transaction histories, not from Murat's records; accrues ZERO; can promote nothing; CONVICTION-REPLAY-1's UNRESOLVED stands",
+ "generated_at": "2026-08-11T13:02:52+00:00",
+ "n_members": 200,
+ "n_slots": 240,
+ "members_per_arm": 15,
+ "arms": [
+  "{}|QUBT300",
+  "{}|QUBT200",
+  "{7}|QUBT300",
+  "{7}|QUBT200",
+  "{8}|QUBT300",
+  "{8}|QUBT200",
+  "{9}|QUBT300",
+  "{9}|QUBT200",
+  "{7,8}|QUBT300",
+  "{7,8}|QUBT200",
+  "{7,9}|QUBT300",
+  "{7,9}|QUBT200",
+  "{8,9}|QUBT300",
+  "{8,9}|QUBT200",
+  "{7,8,9}|QUBT300",
+  "{7,8,9}|QUBT200"
+ ],
+ "master_seed": 20260811,
+ "max_attempts_per_member": 500,
+ "gap_bounds": [
+  -0.5,
+  1.5
+ ],
+ "magnitude_class_edges_pts": [
+  5.0,
+  20.0
+ ],
+ "grading_rule": "ensemble_robust iff sign AND magnitude class agree across every member of every arm; otherwise DATA_NEEDED with the minimal exact ask (prereg \u00a74)",
+ "exit_fill_tolerances": {
+  "TVTX": 0.06,
+  "ALMS": 0.06,
+  "SLDP": 0.2391
+ },
+ "rejections": {
+  "{}|QUBT300": {
+   "cash_band_jul": 9,
+   "cash_band_jan": 66
+  },
+  "{}|QUBT200": {
+   "cash_band_jul": 8,
+   "cash_band_jan": 160
+  },
+  "{7}|QUBT300": {
+   "cash_band_jan": 3420,
+   "anchor7_end_level": 376,
+   "cash_band_jul": 270,
+   "anchor7_gap_bounds": 35,
+   "cash_infeasible": 25
+  },
+  "{7}|QUBT200": {
+   "cash_band_jan": 5144,
+   "cash_band_jul": 404,
+   "anchor7_end_level": 417,
+   "cash_infeasible": 25,
+   "anchor7_gap_bounds": 43
+  },
+  "{8}|QUBT300": {
+   "cash_band_jul": 15,
+   "cash_band_jan": 146,
+   "cash_infeasible": 2,
+   "anchor8_gap_bounds": 1
+  },
+  "{8}|QUBT200": {
+   "cash_band_jan": 116,
+   "cash_band_jul": 12
+  },
+  "{9}|QUBT300": {
+   "cash_band_jan": 718,
+   "anchor9_end_level": 55,
+   "cash_band_jul": 52,
+   "cash_infeasible": 2,
+   "anchor9_gap_bounds": 3
+  },
+  "{9}|QUBT200": {
+   "cash_band_jul": 39,
+   "cash_band_jan": 466,
+   "anchor9_gap_bounds": 1,
+   "anchor9_end_level": 27,
+   "cash_infeasible": 2
+  },
+  "{7,8}|QUBT300": {
+   "cash_band_jan": 3427,
+   "cash_band_jul": 331,
+   "anchor7_end_level": 349,
+   "cash_infeasible": 21,
+   "anchor7_gap_bounds": 28,
+   "anchor8_gap_bounds": 1
+  },
+  "{7,8}|QUBT200": {
+   "cash_band_jan": 3834,
+   "cash_band_jul": 275,
+   "anchor7_end_level": 321,
+   "anchor7_gap_bounds": 30,
+   "cash_infeasible": 19
+  },
+  "{7,9}|QUBT300": {
+   "cash_band_jan": 4446,
+   "cash_infeasible": 33,
+   "cash_band_jul": 377,
+   "anchor7_end_level": 464,
+   "anchor7_gap_bounds": 46,
+   "anchor9_end_level": 1
+  },
+  "{7,9}|QUBT200": {
+   "anchor7_end_level": 338,
+   "cash_band_jan": 4216,
+   "anchor7_gap_bounds": 36,
+   "cash_band_jul": 290,
+   "cash_infeasible": 23,
+   "anchor9_end_level": 1
+  },
+  "{8,9}|QUBT300": {
+   "anchor9_end_level": 52,
+   "cash_band_jan": 618,
+   "anchor9_gap_bounds": 5,
+   "cash_band_jul": 63,
+   "cash_infeasible": 5,
+   "anchor8_gap_bounds": 2
+  },
+  "{8,9}|QUBT200": {
+   "cash_band_jan": 619,
+   "cash_band_jul": 43,
+   "anchor9_end_level": 43,
+   "anchor9_gap_bounds": 2,
+   "cash_infeasible": 2,
+   "anchor8_gap_bounds": 2
+  },
+  "{7,8,9}|QUBT300": {
+   "cash_band_jan": 3441,
+   "cash_band_jul": 283,
+   "anchor7_end_level": 371,
+   "anchor7_gap_bounds": 36,
+   "cash_infeasible": 24
+  },
+  "{7,8,9}|QUBT200": {
+   "cash_band_jan": 4379,
+   "anchor7_gap_bounds": 47,
+   "anchor7_end_level": 349,
+   "cash_band_jul": 304,
+   "anchor9_end_level": 1,
+   "cash_infeasible": 14
+  }
+ },
+ "unfilled": {
+  "{7}|QUBT300": 4,
+  "{7}|QUBT200": 8,
+  "{7,8}|QUBT300": 6,
+  "{7,8}|QUBT200": 4,
+  "{7,9}|QUBT300": 5,
+  "{7,9}|QUBT200": 5,
+  "{7,8,9}|QUBT300": 4,
+  "{7,8,9}|QUBT200": 4
+ },
+ "Q1": {
+  "headline_73.7": {
+   "selection_pts": {
+    "label": "ensemble_robust",
+    "unit": "pts of headline",
+    "range": {
+     "min": 20.189055448004023,
+     "max": 43.11960335737059,
+     "p05": 20.189055448004023,
+     "p50": 20.189055448004023,
+     "p95": 33.67932616510605
+    },
+    "n_members": 178,
+    "member_counts": {
+     "{7}": 36,
+     "{8}": 4,
+     "{9}": 2,
+     "{7,8}": 40,
+     "{7,9}": 40,
+     "{8,9}": 12,
+     "{7,8,9}": 44
+    },
+    "sign_classes": [
+     "+"
+    ],
+    "magnitude_classes": [
+     "large"
+    ]
+   },
+   "weighting_trading_pts": {
+    "label": "ensemble_robust",
+    "unit": "pts of headline",
+    "range": {
+     "min": -65.9638338274316,
+     "max": -29.252313394872644,
+     "p05": -56.96970480088052,
+     "p50": -45.543236232169846,
+     "p95": -37.028076055083005
+    },
+    "n_members": 178,
+    "member_counts": {
+     "{7}": 36,
+     "{8}": 4,
+     "{9}": 2,
+     "{7,8}": 40,
+     "{7,9}": 40,
+     "{8,9}": 12,
+     "{7,8,9}": 44
+    },
+    "sign_classes": [
+     "-"
+    ],
+    "magnitude_classes": [
+     "large"
+    ]
+   },
+   "gap_pts": {
+    "label": "ensemble_robust",
+    "unit": "pts of headline",
+    "range": {
+     "min": 76.23684781400058,
+     "max": 106.10321967561,
+     "p05": 86.99288900071465,
+     "p50": 95.9804063697674,
+     "p95": 102.72824641394311
+    },
+    "n_members": 178,
+    "member_counts": {
+     "{7}": 36,
+     "{8}": 4,
+     "{9}": 2,
+     "{7,8}": 40,
+     "{7,9}": 40,
+     "{8,9}": 12,
+     "{7,8,9}": 44
+    },
+    "sign_classes": [
+     "+"
+    ],
+    "magnitude_classes": [
+     "large"
+    ]
+   }
+  },
+  "headline_115": {
+   "selection_pts": {
+    "label": "ensemble_robust",
+    "unit": "pts of headline",
+    "range": {
+     "min": -1.467776014155986,
+     "max": -1.467776014155986,
+     "p05": -1.467776014155986,
+     "p50": -1.467776014155986,
+     "p95": -1.467776014155986
+    },
+    "n_members": 400,
+    "member_counts": {
+     "{}": 60,
+     "{7}": 36,
+     "{8}": 60,
+     "{9}": 60,
+     "{7,8}": 40,
+     "{7,9}": 40,
+     "{8,9}": 60,
+     "{7,8,9}": 44
+    },
+    "sign_classes": [
+     "-"
+    ],
+    "magnitude_classes": [
+     "small"
+    ]
+   },
+   "weighting_trading_pts": {
+    "label": "DATA_NEEDED",
+    "unit": "pts of headline",
+    "range": {
+     "min": -12.462204412861444,
+     "max": 16.792442660642138,
+     "p05": -8.497568443289582,
+     "p50": 2.75783314878163,
+     "p95": 13.316794794796339
+    },
+    "n_members": 400,
+    "member_counts": {
+     "{}": 60,
+     "{7}": 36,
+     "{8}": 60,
+     "{9}": 60,
+     "{7,8}": 40,
+     "{7,9}": 40,
+     "{8,9}": 60,
+     "{7,8,9}": 44
+    },
+    "sign_classes": [
+     "+",
+     "-"
+    ],
+    "magnitude_classes": [
+     "moderate",
+     "small"
+    ],
+    "minimal_ask": "broker CSV export \u2014 every transaction (date, ticker, shares, fill, cash movement) Aug-2025 -> Aug-2026, ~2 minutes \u2014 resolves the weighting_trading_pts share of the headline_115 headline (Q1)"
+   },
+   "gap_pts": {
+    "label": "ensemble_robust",
+    "unit": "pts of headline",
+    "range": {
+     "min": 99.67533335351384,
+     "max": 128.92998042701743,
+     "p05": 103.15098121935962,
+     "p50": 113.70994286537433,
+     "p95": 124.96534445744555
+    },
+    "n_members": 400,
+    "member_counts": {
+     "{}": 60,
+     "{7}": 36,
+     "{8}": 60,
+     "{9}": 60,
+     "{7,8}": 40,
+     "{7,9}": 40,
+     "{8,9}": 60,
+     "{7,8,9}": 44
+    },
+    "sign_classes": [
+     "+"
+    ],
+    "magnitude_classes": [
+     "large"
+    ]
+   }
+  },
+  "decomposition": "headline = selection (EW buy-and-hold of his 13 Nov picks, covered window) + weighting/trading (as-traded minus selection) + gap (the part the uncovered pre-2025-11 months must supply; residual, includes the cross term)"
+ },
+ "Q2": {
+  "matrix": {
+   "{}|QUBT300": {
+    "n_accepted": 15,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jul": 9,
+     "cash_band_jan": 66
+    },
+    "unfilled_slots": 0,
+    "required_gap_anchor8": {
+     "min": 0.9006094460598713,
+     "max": 1.4925730504616004,
+     "median": 1.2043004763843626,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 1.4291844236618463,
+     "max": 1.4302632340188413,
+     "median": 1.4297238288403438,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{}|QUBT200": {
+    "n_accepted": 15,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jul": 8,
+     "cash_band_jan": 160
+    },
+    "unfilled_slots": 0,
+    "required_gap_anchor8": {
+     "min": 0.9180170075236671,
+     "max": 1.4033670650030778,
+     "median": 1.1761966658312377,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 1.251175574717362,
+     "max": 1.251175574717362,
+     "median": 1.251175574717362,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{7}|QUBT300": {
+    "n_accepted": 11,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jan": 3420,
+     "anchor7_end_level": 376,
+     "cash_band_jul": 270,
+     "anchor7_gap_bounds": 35,
+     "cash_infeasible": 25
+    },
+    "unfilled_slots": 4,
+    "required_gap_anchor7": {
+     "min": 1.248361555977806,
+     "max": 1.4912985503791276,
+     "median": 1.4300082058194339,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor8": {
+     "min": 0.8845522652445474,
+     "max": 1.24800291896916,
+     "median": 1.0385195217421588,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 0.850551044580919,
+     "max": 1.050504342822224,
+     "median": 1.0000583143148831,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{7}|QUBT200": {
+    "n_accepted": 7,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jan": 5144,
+     "cash_band_jul": 404,
+     "anchor7_end_level": 417,
+     "cash_infeasible": 25,
+     "anchor7_gap_bounds": 43
+    },
+    "unfilled_slots": 8,
+    "required_gap_anchor7": {
+     "min": 1.2188729621848067,
+     "max": 1.48574257108849,
+     "median": 1.3662946834802399,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor8": {
+     "min": 1.0009682508443887,
+     "max": 1.2765556023860087,
+     "median": 1.211795863300984,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 0.8262799713179154,
+     "max": 1.0459314024725619,
+     "median": 0.9646197663076366,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{8}|QUBT300": {
+    "n_accepted": 15,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jul": 15,
+     "cash_band_jan": 146,
+     "cash_infeasible": 2,
+     "anchor8_gap_bounds": 1
+    },
+    "unfilled_slots": 0,
+    "required_gap_anchor8": {
+     "min": 0.9536244705344301,
+     "max": 1.3686205681813464,
+     "median": 1.1426063716929535,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 1.1459384185085821,
+     "max": 1.239389128898051,
+     "median": 1.2150669546639126,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{8}|QUBT200": {
+    "n_accepted": 15,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jan": 116,
+     "cash_band_jul": 12
+    },
+    "unfilled_slots": 0,
+    "required_gap_anchor7": {
+     "min": 1.344344763489293,
+     "max": 1.391032128429079,
+     "median": 1.367688445959186,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor8": {
+     "min": 0.9853536651587576,
+     "max": 1.4467358810100572,
+     "median": 1.2221002388262363,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 0.9295516058787046,
+     "max": 1.4463599693163074,
+     "median": 0.9679784112687644,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{9}|QUBT300": {
+    "n_accepted": 15,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jan": 718,
+     "anchor9_end_level": 55,
+     "cash_band_jul": 52,
+     "cash_infeasible": 2,
+     "anchor9_gap_bounds": 3
+    },
+    "unfilled_slots": 0,
+    "required_gap_anchor7": {
+     "min": 1.4805435619993643,
+     "max": 1.4805435619993643,
+     "median": 1.4805435619993643,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor8": {
+     "min": 1.0116694986783266,
+     "max": 1.4911161665995842,
+     "median": 1.1655864473578759,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 1.0412550023026723,
+     "max": 1.4961951026482212,
+     "median": 1.1712075853551012,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{9}|QUBT200": {
+    "n_accepted": 15,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jul": 39,
+     "cash_band_jan": 466,
+     "anchor9_gap_bounds": 1,
+     "anchor9_end_level": 27,
+     "cash_infeasible": 2
+    },
+    "unfilled_slots": 0,
+    "required_gap_anchor8": {
+     "min": 0.920779205600367,
+     "max": 1.4964806440148886,
+     "median": 1.1324144639457363,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 0.9638380319824003,
+     "max": 1.4317679519818243,
+     "median": 1.323199021390899,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{7,8}|QUBT300": {
+    "n_accepted": 9,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jan": 3427,
+     "cash_band_jul": 331,
+     "anchor7_end_level": 349,
+     "cash_infeasible": 21,
+     "anchor7_gap_bounds": 28,
+     "anchor8_gap_bounds": 1
+    },
+    "unfilled_slots": 6,
+    "required_gap_anchor7": {
+     "min": 0.9599606408484906,
+     "max": 1.4924937435099723,
+     "median": 1.305304294882391,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor8": {
+     "min": 0.8643019420906417,
+     "max": 1.2047036076724789,
+     "median": 1.0045631199809688,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 0.6131779168774689,
+     "max": 1.0514880662322246,
+     "median": 0.8974187045802695,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{7,8}|QUBT200": {
+    "n_accepted": 11,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jan": 3834,
+     "cash_band_jul": 275,
+     "anchor7_end_level": 321,
+     "anchor7_gap_bounds": 30,
+     "cash_infeasible": 19
+    },
+    "unfilled_slots": 4,
+    "required_gap_anchor7": {
+     "min": 1.2362787572153464,
+     "max": 1.4953027097418223,
+     "median": 1.3837091212503814,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor8": {
+     "min": 0.8906497690151449,
+     "max": 1.156467297546985,
+     "median": 1.0340049524487847,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 0.8452884994888306,
+     "max": 1.0538000321972723,
+     "median": 0.9785609927195316,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{7,9}|QUBT300": {
+    "n_accepted": 10,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jan": 4446,
+     "cash_infeasible": 33,
+     "cash_band_jul": 377,
+     "anchor7_end_level": 464,
+     "anchor7_gap_bounds": 46,
+     "anchor9_end_level": 1
+    },
+    "unfilled_slots": 5,
+    "required_gap_anchor7": {
+     "min": 1.2488740241571863,
+     "max": 1.4935261386551226,
+     "median": 1.4189143557386392,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor8": {
+     "min": 1.0165473003852061,
+     "max": 1.3761072600501616,
+     "median": 1.1194071277902329,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 0.8509728399643817,
+     "max": 1.0523377960762517,
+     "median": 0.9909273381154121,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{7,9}|QUBT200": {
+    "n_accepted": 10,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "anchor7_end_level": 338,
+     "cash_band_jan": 4216,
+     "anchor7_gap_bounds": 36,
+     "cash_band_jul": 290,
+     "cash_infeasible": 23,
+     "anchor9_end_level": 1
+    },
+    "unfilled_slots": 5,
+    "required_gap_anchor7": {
+     "min": 1.153905788663391,
+     "max": 1.4889151418393967,
+     "median": 1.4158022706135505,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor8": {
+     "min": 0.9147975536329804,
+     "max": 1.2295296628858394,
+     "median": 1.0616851309063857,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 0.7728076681183351,
+     "max": 1.048542639131314,
+     "median": 0.988365885148141,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{8,9}|QUBT300": {
+    "n_accepted": 15,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "anchor9_end_level": 52,
+     "cash_band_jan": 618,
+     "anchor9_gap_bounds": 5,
+     "cash_band_jul": 63,
+     "cash_infeasible": 5,
+     "anchor8_gap_bounds": 2
+    },
+    "unfilled_slots": 0,
+    "required_gap_anchor7": {
+     "min": 1.3145242127496215,
+     "max": 1.408972533352379,
+     "median": 1.3617483730510003,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor8": {
+     "min": 0.8722585367287616,
+     "max": 1.4979662031759156,
+     "median": 1.1653224534460938,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 0.9050073099781826,
+     "max": 1.4850541449274828,
+     "median": 1.2319535764757688,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{8,9}|QUBT200": {
+    "n_accepted": 15,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jan": 619,
+     "cash_band_jul": 43,
+     "anchor9_end_level": 43,
+     "anchor9_gap_bounds": 2,
+     "cash_infeasible": 2,
+     "anchor8_gap_bounds": 2
+    },
+    "unfilled_slots": 0,
+    "required_gap_anchor7": {
+     "min": 1.1178597747824974,
+     "max": 1.490329618908766,
+     "median": 1.3875474072706429,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor8": {
+     "min": 0.9630816243784304,
+     "max": 1.4272490474793105,
+     "median": 1.0671042220677616,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 0.7431394021479822,
+     "max": 1.4816695181623039,
+     "median": 1.2281212013724079,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{7,8,9}|QUBT300": {
+    "n_accepted": 11,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jan": 3441,
+     "cash_band_jul": 283,
+     "anchor7_end_level": 371,
+     "anchor7_gap_bounds": 36,
+     "cash_infeasible": 24
+    },
+    "unfilled_slots": 4,
+    "required_gap_anchor7": {
+     "min": 1.086189006077329,
+     "max": 1.4640980562107941,
+     "median": 1.316547545623111,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor8": {
+     "min": 0.9348342354335752,
+     "max": 1.1452455014900225,
+     "median": 1.0558236887820045,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 0.7170722538487218,
+     "max": 1.0281165276763473,
+     "median": 0.9066726474558742,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   },
+   "{7,8,9}|QUBT200": {
+    "n_accepted": 11,
+    "n_slots": 15,
+    "admits_a_consistent_history": true,
+    "rejections": {
+     "cash_band_jan": 4379,
+     "anchor7_gap_bounds": 47,
+     "anchor7_end_level": 349,
+     "cash_band_jul": 304,
+     "anchor9_end_level": 1,
+     "cash_infeasible": 14
+    },
+    "unfilled_slots": 4,
+    "required_gap_anchor7": {
+     "min": 1.183367469475292,
+     "max": 1.4910457174554619,
+     "median": 1.3777205566037098,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor8": {
+     "min": 1.0020457990545761,
+     "max": 1.2460760009924745,
+     "median": 1.1766524298353893,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    },
+    "required_gap_anchor9": {
+     "min": 0.7970565902085649,
+     "max": 1.0502962445162596,
+     "median": 0.9570221026266084,
+     "bounds": [
+      -0.5,
+      1.5
+     ]
+    }
+   }
+  },
+  "witnessed_satisfied_sets": [
+   [
+    7,
+    8,
+    9
+   ],
+   [
+    8,
+    9
+   ],
+   [
+    7,
+    8
+   ],
+   [
+    8
+   ]
+  ],
+  "maximal_consistent_subset": [
+   7,
+   8,
+   9
+  ],
+  "reading": "a subset 'admits' if >= 1 sampled history satisfied every anchor in it; an empty arm is a finding about the anchors, not an error. The required-gap stats say how much work the uncovered pre-2025-11 months must do."
+ },
+ "Q3": {
+  "TVTX": {
+   "label": "DATA_NEEDED",
+   "unit": "pts of terminal NAV (positive = the exit cost him)",
+   "range": {
+    "min": 1.9741402510473804,
+    "max": 21.761909966616567,
+    "p05": 2.655303630186035,
+    "p50": 7.235070926023249,
+    "p95": 17.630187543696707
+   },
+   "n_members": 200,
+   "member_counts": {
+    "{}": 30,
+    "{7}": 18,
+    "{8}": 30,
+    "{9}": 30,
+    "{7,8}": 20,
+    "{7,9}": 20,
+    "{8,9}": 30,
+    "{7,8,9}": 22
+   },
+   "sign_classes": [
+    "+"
+   ],
+   "magnitude_classes": [
+    "large",
+    "moderate",
+    "small"
+   ],
+   "minimal_ask": "broker CSV export \u2014 every transaction (date, ticker, shares, fill, cash movement) Aug-2025 -> Aug-2026, ~2 minutes \u2014 pins the TVTX position size; resolves Q3"
+  },
+  "ALMS": {
+   "label": "DATA_NEEDED",
+   "unit": "pts of terminal NAV (positive = the exit cost him)",
+   "range": {
+    "min": 7.638688713444508,
+    "max": 96.55803820525902,
+    "p05": 9.975753687632345,
+    "p50": 27.618193568160237,
+    "p95": 61.7347215668295
+   },
+   "n_members": 200,
+   "member_counts": {
+    "{}": 30,
+    "{7}": 18,
+    "{8}": 30,
+    "{9}": 30,
+    "{7,8}": 20,
+    "{7,9}": 20,
+    "{8,9}": 30,
+    "{7,8,9}": 22
+   },
+   "sign_classes": [
+    "+"
+   ],
+   "magnitude_classes": [
+    "large",
+    "moderate"
+   ],
+   "minimal_ask": "broker CSV export \u2014 every transaction (date, ticker, shares, fill, cash movement) Aug-2025 -> Aug-2026, ~2 minutes \u2014 pins the ALMS position size; resolves Q3"
+  },
+  "SLDP": {
+   "label": "DATA_NEEDED",
+   "unit": "pts of terminal NAV (positive = the exit cost him)",
+   "range": {
+    "min": -13.94530607207496,
+    "max": -1.3056494237848504,
+    "p05": -11.23267832267141,
+    "p50": -4.736518128976514,
+    "p95": -1.8104435316560235
+   },
+   "n_members": 200,
+   "member_counts": {
+    "{}": 30,
+    "{7}": 18,
+    "{8}": 30,
+    "{9}": 30,
+    "{7,8}": 20,
+    "{7,9}": 20,
+    "{8,9}": 30,
+    "{7,8,9}": 22
+   },
+   "sign_classes": [
+    "-"
+   ],
+   "magnitude_classes": [
+    "moderate",
+    "small"
+   ],
+   "minimal_ask": "broker CSV export \u2014 every transaction (date, ticker, shares, fill, cash movement) Aug-2025 -> Aug-2026, ~2 minutes \u2014 pins the SLDP position size; resolves Q3"
+  },
+  "total": {
+   "label": "DATA_NEEDED",
+   "unit": "pts of terminal NAV",
+   "range": {
+    "min": -1.659215525042927,
+    "max": 98.04517776036722,
+    "p05": 10.870652670250651,
+    "p50": 30.485429391420517,
+    "p95": 67.4494604144045
+   },
+   "n_members": 200,
+   "member_counts": {
+    "{}": 30,
+    "{7}": 18,
+    "{8}": 30,
+    "{9}": 30,
+    "{7,8}": 20,
+    "{7,9}": 20,
+    "{8,9}": 30,
+    "{7,8,9}": 22
+   },
+   "sign_classes": [
+    "+",
+    "-"
+   ],
+   "magnitude_classes": [
+    "large",
+    "moderate",
+    "small"
+   ],
+   "minimal_ask": "broker CSV export \u2014 every transaction (date, ticker, shares, fill, cash movement) Aug-2025 -> Aug-2026, ~2 minutes \u2014 resolves Q3's total exit cost"
+  },
+  "definition": "cost = (sold shares held to 2026-08-10) minus (the proceeds riding the member's own subsequent book), as % of terminal NAV \u2014 proceeds are charged with the return they actually earned, not zero"
+ },
+ "Q4": {
+  "total_return": {
+   "label": "DATA_NEEDED",
+   "unit": "fraction, 2025-11-07 -> 2026-08-10",
+   "range": {
+    "min": -0.3519495354472759,
+    "max": 0.04888249090789687,
+    "p05": -0.2514949637337437,
+    "p50": -0.14932456322369675,
+    "p95": -0.041426779261480494
+   },
+   "n_members": 200,
+   "member_counts": {
+    "{}": 30,
+    "{7}": 18,
+    "{8}": 30,
+    "{9}": 30,
+    "{7,8}": 20,
+    "{7,9}": 20,
+    "{8,9}": 30,
+    "{7,8,9}": 22
+   },
+   "sign_classes": [
+    "+",
+    "-"
+   ],
+   "magnitude_classes": [
+    "small"
+   ],
+   "minimal_ask": "broker CSV export \u2014 every transaction (date, ticker, shares, fill, cash movement) Aug-2025 -> Aug-2026, ~2 minutes \u2014 pins the as-traded total_return (Q4)"
+  },
+  "max_drawdown": {
+   "label": "ensemble_robust",
+   "unit": "fraction",
+   "range": {
+    "min": -0.44971431756073443,
+    "max": -0.2355609007530719,
+    "p05": -0.4049155991856902,
+    "p50": -0.3458667739129128,
+    "p95": -0.27873378666869764
+   },
+   "n_members": 200,
+   "member_counts": {
+    "{}": 30,
+    "{7}": 18,
+    "{8}": 30,
+    "{9}": 30,
+    "{7,8}": 20,
+    "{7,9}": 20,
+    "{8,9}": 30,
+    "{7,8,9}": 22
+   },
+   "sign_classes": [
+    "-"
+   ],
+   "magnitude_classes": [
+    "small"
+   ]
+  },
+  "war_window_drawdown": {
+   "label": "ensemble_robust",
+   "unit": "fraction",
+   "range": {
+    "min": -0.242920190035273,
+    "max": -0.1389226714120153,
+    "p05": -0.20772591698213663,
+    "p50": -0.1793867044989022,
+    "p95": -0.14531570967293603
+   },
+   "n_members": 200,
+   "member_counts": {
+    "{}": 30,
+    "{7}": 18,
+    "{8}": 30,
+    "{9}": 30,
+    "{7,8}": 20,
+    "{7,9}": 20,
+    "{8,9}": 30,
+    "{7,8,9}": 22
+   },
+   "sign_classes": [
+    "-"
+   ],
+   "magnitude_classes": [
+    "small"
+   ]
+  },
+  "terminal_wealth_ratio": {
+   "label": "ensemble_robust",
+   "unit": "x",
+   "range": {
+    "min": 0.6480504645527241,
+    "max": 1.0488824909078969,
+    "p05": 0.7485050362662563,
+    "p50": 0.8506754367763032,
+    "p95": 0.9585732207385195
+   },
+   "n_members": 200,
+   "member_counts": {
+    "{}": 30,
+    "{7}": 18,
+    "{8}": 30,
+    "{9}": 30,
+    "{7,8}": 20,
+    "{7,9}": 20,
+    "{8,9}": 30,
+    "{7,8,9}": 22
+   },
+   "sign_classes": [
+    "+"
+   ],
+   "magnitude_classes": [
+    "small"
+   ]
+  },
+  "consumer": "FACTORIAL-PM-1 B1 as-traded column: use the RANGE with its label, never a point (prereg \u00a71)"
+ },
+ "what_this_may_not_do": [
+  "enter murat_book.yaml, book_lanes.yaml, any lane, ledger or NAV table",
+  "train anything \u2014 members are bounds, not data",
+  "overturn CONVICTION-REPLAY-1 (UNRESOLVED stands)",
+  "claim skill in either direction",
+  "be collapsed to a preferred member (outcome-shopping)"
+ ]
+}

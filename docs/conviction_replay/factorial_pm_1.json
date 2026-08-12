@@ -1,0 +1,1790 @@
+{
+ "trial": "FACTORIAL-PM-1",
+ "prereg": "Aegis module/TRIALS/PREREG_FACTORIAL_PM_1.md @ c5b81aa",
+ "computed_at": "2026-08-11T21:07:04",
+ "accrues_to_denominator": true,
+ "window": {
+  "start": "2025-11-07",
+  "end": "2026-08-10",
+  "trading_days": 188,
+  "no_annualization": true
+ },
+ "canon": [
+  "\u00a718 differences tested as differences with their own SE",
+  "\u00a719 every arm prints its measured 80%-power MDE"
+ ],
+ "books": {
+  "B1": [
+   "ALMS",
+   "AMPX",
+   "AMZN",
+   "APLT",
+   "DKNG",
+   "FSLR",
+   "MRVL",
+   "MSTR",
+   "NTLA",
+   "RGTI",
+   "SLDP",
+   "TTWO",
+   "TVTX"
+  ],
+  "B2": [
+   "AAPG",
+   "AARD",
+   "ABSI",
+   "ACVA",
+   "ADBE",
+   "AMD",
+   "AMSC",
+   "ATYR",
+   "AVGO",
+   "BE",
+   "BEAM",
+   "BHVN",
+   "BMRN",
+   "CHYM",
+   "COHU",
+   "CRSP",
+   "CYTK",
+   "DAVE",
+   "DHR",
+   "ELF",
+   "GLXY",
+   "HUBS",
+   "IMNM",
+   "KLAR",
+   "KYMR",
+   "KYTX",
+   "LLY",
+   "MP",
+   "MRNA",
+   "MU",
+   "NVDA",
+   "OLMA",
+   "ORCL",
+   "OUST",
+   "PLTR",
+   "PRCH",
+   "QBTS",
+   "QS",
+   "QUBT",
+   "RVMD",
+   "SLNO",
+   "SOC",
+   "SRRK",
+   "TGTX",
+   "TSM",
+   "TVRD",
+   "XNCR",
+   "ZYME"
+  ],
+  "pool_n": 61
+ },
+ "matrix": {
+  "B1": {
+   "M1": {
+    "management": "M1",
+    "terminal_wealth": 1.3464538775836377,
+    "n_names": 13,
+    "synthetic_included_via_step_path": [
+     "APLT"
+    ],
+    "terminal_wealth_per_dollar": 1.346454,
+    "window_return_pts": 34.65,
+    "status": "OK",
+    "mde_pts": null,
+    "mde_basis": "baseline cell \u2014 management effects are measured against it; cross-BOOK comparisons carry CONVICTION-REPLAY-1's measured selection MDE: 80 pts"
+   },
+   "M2": {
+    "management": "M2",
+    "terminal_wealth": 1.1413887035995245,
+    "mean_exposure": 0.4211904927392604,
+    "min_exposure": 0.2565243502741849,
+    "days_below_full": 187,
+    "total_cost_paid_pts": 0.09976389385624206,
+    "n_unmeasurable_vol_days": 0,
+    "sigma_estimated_on": [
+     "ALMS",
+     "AMPX",
+     "AMZN",
+     "DKNG",
+     "FSLR",
+     "MRVL",
+     "MSTR",
+     "NTLA",
+     "RGTI",
+     "SLDP",
+     "TTWO",
+     "TVTX"
+    ],
+    "params": {
+     "vol_target_annual": 0.2,
+     "vol_lookback_days": 63,
+     "cost_bps_oneway": 10,
+     "lag_days": 1,
+     "cash_earns": 0.0
+    },
+    "terminal_wealth_per_dollar": 1.141389,
+    "window_return_pts": 14.14,
+    "status": "OK",
+    "mde_pts": 100.0,
+    "mde_basis": "measured 80%-power MDE of the paired management effect vs M1 (planted effects, 21td block bootstrap)",
+    "paired_vs_M1": {
+     "difference_pts": -20.50651739841145,
+     "se_pts": 27.12797190961092,
+     "z": -0.7559178204230735,
+     "significant_at_5pct": false
+    }
+   },
+   "M3": {
+    "management": "M3",
+    "status": "REFUSED_NOT_MECHANIZABLE",
+    "n_names": 13,
+    "n_checkable": 0,
+    "fraction_checkable": 0.0,
+    "per_name": [
+     {
+      "ticker": "ALMS",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "AMPX",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "AMZN",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "APLT",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "DKNG",
+      "condition": "consensus target falls below entry, or two quarters of negative revisions",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "analyst_consensus_history",
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires analyst_consensus_history, fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "FSLR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "MRVL",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "MSTR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "NTLA",
+      "condition": "further clinical holds or serious adverse events",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "clinical_regulatory_events"
+      ],
+      "reason": "requires clinical_regulatory_events \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "RGTI",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "SLDP",
+      "condition": "a named OEM partnership lapses without replacement, or cash runway falls below 12 months",
+      "provenance": "auto_adopted_default",
+      "checkable": false,
+      "required_feeds": [
+       "corporate_events",
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires corporate_events, fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "TTWO",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "TVTX",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     }
+    ],
+    "note": "fewer than 50% of the book's names carry a kill condition that can be evaluated point-in-time from the frozen price CSV \u2014 the cell refuses rather than inventing rules"
+   },
+   "M4": {
+    "management": "M4",
+    "terminal_wealth": 1.1363075485988716,
+    "n_rebalances": 10,
+    "rebalances": [
+     {
+      "date": "2025-11-07",
+      "reason": "initialization",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (9 obs, need 252+)",
+      "turnover": 0.0
+     },
+     {
+      "date": "2025-11-21",
+      "reason": "drift",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (19 obs, need 252+)",
+      "turnover": 0.1602
+     },
+     {
+      "date": "2025-12-19",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (38 obs, need 252+)",
+      "turnover": 0.0907
+     },
+     {
+      "date": "2026-01-12",
+      "reason": "drift",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (52 obs, need 252+)",
+      "turnover": 0.1321
+     },
+     {
+      "date": "2026-02-03",
+      "reason": "drift",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (67 obs, need 252+)",
+      "turnover": 0.1807
+     },
+     {
+      "date": "2026-03-03",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (86 obs, need 252+)",
+      "turnover": 0.0934
+     },
+     {
+      "date": "2026-03-31",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (106 obs, need 252+)",
+      "turnover": 0.1325
+     },
+     {
+      "date": "2026-04-28",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (125 obs, need 252+)",
+      "turnover": 0.104
+     },
+     {
+      "date": "2026-05-26",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (144 obs, need 252+)",
+      "turnover": 0.1511
+     },
+     {
+      "date": "2026-06-23",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (163 obs, need 252+)",
+      "turnover": 0.177
+     },
+     {
+      "date": "2026-07-21",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (182 obs, need 252+)",
+      "turnover": 0.1398
+     }
+    ],
+    "total_cost_paid_pts": 0.08168798930526469,
+    "hrp_ever_passed_its_gate": false,
+    "hrp_gate_note": "the frozen gate (min_observations=252, paper_portfolios.yaml optimizer_params) can never pass on the 197-bar frozen panel; every rebalance ran the lane's frozen loud fallback (equal weight over still-trading names). This cell is therefore 'mirror rules under their fallback', labelled as such \u2014 NOT an HRP result.",
+    "params": {
+     "rebalance": "monthly(>=28d)",
+     "drift_trigger": 0.05,
+     "cost_bps": 5,
+     "slippage_bps": 1,
+     "max_single_name": 0.25,
+     "sector_cap": "NOT applied \u2014 no frozen PIT sector map; disclosed above"
+    },
+    "terminal_wealth_per_dollar": 1.136308,
+    "window_return_pts": 13.63,
+    "status": "OK",
+    "mde_pts": 150.0,
+    "mde_basis": "measured 80%-power MDE of the paired management effect vs M1",
+    "paired_vs_M1": {
+     "difference_pts": -21.014632898476627,
+     "se_pts": 25.64776453289051,
+     "z": -0.819355342705506,
+     "significant_at_5pct": false
+    }
+   },
+   "as_traded": {
+    "ensemble_label": "DATA_NEEDED",
+    "synthetic_note": "bounds derived from generated transaction histories, not from Murat's records; accrues ZERO; can promote nothing; CONVICTION-REPLAY-1's UNRESOLVED stands",
+    "range_terminal_wealth": {
+     "lower": 0.6480504645527241,
+     "upper": 1.0488824909078969
+    },
+    "range_pts": {
+     "lower": -35.19,
+     "upper": 4.89,
+     "p05": -25.15,
+     "p50": -14.93,
+     "p95": -4.14
+    },
+    "n_members": 200,
+    "status": "DATA_NEEDED",
+    "note": "Q4.total_return is labelled DATA_NEEDED by the ensemble (SYNTHETIC bounds; minimal ask: broker CSV export \u2014 every transaction (date, ticker, shares, fill, cash movement) Aug-2025 -> Aug-2026, ~2 minutes \u2014 pins the as-traded total_return (Q4)). The as-traded column prints the RANGE with that label (prereg \u00a71); H1 uses the registered fallback comparator B1\u00d7M1"
+   }
+  },
+  "B2": {
+   "M1": {
+    "management": "M1",
+    "terminal_wealth": 1.3304375507814816,
+    "n_names": 48,
+    "synthetic_included_via_step_path": [
+     "SLNO"
+    ],
+    "terminal_wealth_per_dollar": 1.330438,
+    "window_return_pts": 33.04,
+    "status": "OK",
+    "mde_pts": null,
+    "mde_basis": "baseline cell \u2014 management effects are measured against it; cross-BOOK comparisons carry CONVICTION-REPLAY-1's measured selection MDE: 80 pts"
+   },
+   "M2": {
+    "management": "M2",
+    "terminal_wealth": 1.1646422225748698,
+    "mean_exposure": 0.5869334423251324,
+    "min_exposure": 0.48335453757699465,
+    "days_below_full": 187,
+    "total_cost_paid_pts": 0.1320311604364283,
+    "n_unmeasurable_vol_days": 0,
+    "sigma_estimated_on": [
+     "AAPG",
+     "AARD",
+     "ABSI",
+     "ACVA",
+     "ADBE",
+     "AMD",
+     "AMSC",
+     "ATYR",
+     "AVGO",
+     "BE",
+     "BEAM",
+     "BHVN",
+     "BMRN",
+     "CHYM",
+     "COHU",
+     "CRSP",
+     "CYTK",
+     "DAVE",
+     "DHR",
+     "ELF",
+     "GLXY",
+     "HUBS",
+     "IMNM",
+     "KLAR",
+     "KYMR",
+     "KYTX",
+     "LLY",
+     "MP",
+     "MRNA",
+     "MU",
+     "NVDA",
+     "OLMA",
+     "ORCL",
+     "OUST",
+     "PLTR",
+     "PRCH",
+     "QBTS",
+     "QS",
+     "QUBT",
+     "RVMD",
+     "SOC",
+     "SRRK",
+     "TGTX",
+     "TSM",
+     "TVRD",
+     "XNCR",
+     "ZYME"
+    ],
+    "params": {
+     "vol_target_annual": 0.2,
+     "vol_lookback_days": 63,
+     "cost_bps_oneway": 10,
+     "lag_days": 1,
+     "cash_earns": 0.0
+    },
+    "terminal_wealth_per_dollar": 1.164642,
+    "window_return_pts": 16.46,
+    "status": "OK",
+    "mde_pts": 50.0,
+    "mde_basis": "measured 80%-power MDE of the paired management effect vs M1 (planted effects, 21td block bootstrap)",
+    "paired_vs_M1": {
+     "difference_pts": -16.579532820661026,
+     "se_pts": 17.239709917034947,
+     "z": -0.9617060206029577,
+     "significant_at_5pct": false
+    }
+   },
+   "M3": {
+    "management": "M3",
+    "status": "REFUSED_NOT_MECHANIZABLE",
+    "n_names": 48,
+    "n_checkable": 0,
+    "fraction_checkable": 0.0,
+    "per_name": [
+     {
+      "ticker": "AAPG",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "AARD",
+      "condition": "coverage drops below four analysts or the consensus cracks",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "analyst_consensus_history",
+       "narrative_qualitative"
+      ],
+      "reason": "requires analyst_consensus_history, narrative_qualitative \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "ABSI",
+      "condition": "cash runway falls below 12 months, or a lead programme is discontinued without a named successor",
+      "provenance": "auto_adopted_default",
+      "checkable": false,
+      "required_feeds": [
+       "clinical_regulatory_events",
+       "corporate_events",
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires clinical_regulatory_events, corporate_events, fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "ACVA",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "ADBE",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "AMD",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "AMSC",
+      "condition": "two consecutive quarters of declining grid-segment backlog, or the largest customer concentration exceeds 40% of revenue",
+      "provenance": "auto_adopted_default",
+      "checkable": false,
+      "required_feeds": [
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "ATYR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "AVGO",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "BE",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "BEAM",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "BHVN",
+      "condition": "a second regulatory setback on the core pipeline",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "clinical_regulatory_events"
+      ],
+      "reason": "requires clinical_regulatory_events \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "BMRN",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "CHYM",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "COHU",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "CRSP",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "CYTK",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "DAVE",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "DHR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "ELF",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "GLXY",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "HUBS",
+      "condition": "net revenue retention falls below 100% for two consecutive quarters",
+      "provenance": "auto_adopted_default",
+      "checkable": false,
+      "required_feeds": [
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "IMNM",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "KLAR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "KYMR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "KYTX",
+      "condition": "a lead clinical programme misses its primary endpoint, or cash runway falls below 12 months",
+      "provenance": "auto_adopted_default",
+      "checkable": false,
+      "required_feeds": [
+       "clinical_regulatory_events",
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires clinical_regulatory_events, fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "LLY",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "MP",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "MRNA",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "MU",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "NVDA",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "OLMA",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "ORCL",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "OUST",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "PLTR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "PRCH",
+      "condition": "loss ratios deteriorate again",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "QBTS",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "QS",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "QUBT",
+      "condition": "narrative rotation; dilution at these levels",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "corporate_events",
+       "narrative_qualitative"
+      ],
+      "reason": "requires corporate_events, narrative_qualitative \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "RVMD",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "SLNO",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "SOC",
+      "condition": "consensus breaks below the mark",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "analyst_consensus_history"
+      ],
+      "reason": "requires analyst_consensus_history \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "SRRK",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "TGTX",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "TSM",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "TVRD",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "XNCR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "ZYME",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     }
+    ],
+    "note": "fewer than 50% of the book's names carry a kill condition that can be evaluated point-in-time from the frozen price CSV \u2014 the cell refuses rather than inventing rules"
+   },
+   "M4": {
+    "management": "M4",
+    "terminal_wealth": 1.418538535041698,
+    "n_rebalances": 9,
+    "rebalances": [
+     {
+      "date": "2025-11-07",
+      "reason": "initialization",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (9 obs, need 252+)",
+      "turnover": 0.0
+     },
+     {
+      "date": "2025-12-05",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (28 obs, need 252+)",
+      "turnover": 0.168
+     },
+     {
+      "date": "2026-01-02",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (46 obs, need 252+)",
+      "turnover": 0.0938
+     },
+     {
+      "date": "2026-01-30",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (65 obs, need 252+)",
+      "turnover": 0.1227
+     },
+     {
+      "date": "2026-02-27",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (84 obs, need 252+)",
+      "turnover": 0.098
+     },
+     {
+      "date": "2026-03-27",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (104 obs, need 252+)",
+      "turnover": 0.1283
+     },
+     {
+      "date": "2026-04-24",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (123 obs, need 252+)",
+      "turnover": 0.1415
+     },
+     {
+      "date": "2026-05-22",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (143 obs, need 252+)",
+      "turnover": 0.1622
+     },
+     {
+      "date": "2026-06-22",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (162 obs, need 252+)",
+      "turnover": 0.1753
+     },
+     {
+      "date": "2026-07-20",
+      "reason": "monthly",
+      "optimizer": "hrp_fallback_equal_weight: insufficient as-of history (181 obs, need 252+)",
+      "turnover": 0.1798
+     }
+    ],
+    "total_cost_paid_pts": 0.07617449120290486,
+    "hrp_ever_passed_its_gate": false,
+    "hrp_gate_note": "the frozen gate (min_observations=252, paper_portfolios.yaml optimizer_params) can never pass on the 197-bar frozen panel; every rebalance ran the lane's frozen loud fallback (equal weight over still-trading names). This cell is therefore 'mirror rules under their fallback', labelled as such \u2014 NOT an HRP result.",
+    "params": {
+     "rebalance": "monthly(>=28d)",
+     "drift_trigger": 0.05,
+     "cost_bps": 5,
+     "slippage_bps": 1,
+     "max_single_name": 0.25,
+     "sector_cap": "NOT applied \u2014 no frozen PIT sector map; disclosed above"
+    },
+    "terminal_wealth_per_dollar": 1.418539,
+    "window_return_pts": 41.85,
+    "status": "OK",
+    "mde_pts": 30.0,
+    "mde_basis": "measured 80%-power MDE of the paired management effect vs M1",
+    "paired_vs_M1": {
+     "difference_pts": 8.810098426021629,
+     "se_pts": 7.080518635790879,
+     "z": 1.244273036933764,
+     "significant_at_5pct": false
+    }
+   }
+  },
+  "B3": {
+   "draws": {
+    "n": 1000,
+    "seed": 20260811,
+    "rule": "random-13 from the 61-name pool, np.random.default_rng(20260811)"
+   },
+   "M1": {
+    "status": "OK",
+    "terminal_wealth_dist": {
+     "median": 1.307,
+     "p05": 1.0216,
+     "p95": 1.7119,
+     "n_draws": 1000
+    },
+    "window_return_pts_dist": {
+     "median": 30.6963,
+     "p05": 2.163,
+     "p95": 71.1946,
+     "n_draws": 1000
+    },
+    "mde_pts": null,
+    "mde_basis": "baseline cell (distribution); cross-BOOK comparisons carry CONVICTION-REPLAY-1's measured selection MDE: 80 pts"
+   },
+   "M2": {
+    "status": "OK",
+    "terminal_wealth_dist": {
+     "median": 1.1437,
+     "p05": 1.0064,
+     "p95": 1.3091,
+     "n_draws": 1000
+    },
+    "window_return_pts_dist": {
+     "median": 14.3654,
+     "p05": 0.6358,
+     "p95": 30.9118,
+     "n_draws": 1000
+    },
+    "effect_vs_M1_pts_dist": {
+     "median": -16.0628,
+     "p05": -42.6202,
+     "p95": -1.0242,
+     "n_draws": 1000
+    },
+    "mde_pts_subsample": {
+     "median_pts": 75.0,
+     "min_pts": 30.0,
+     "max_pts": 150.0,
+     "n_measured": 30,
+     "n_reached_80pct": 30
+    },
+    "mde_basis": "measured on the first 30 draws (paired vs each draw's own M1)"
+   },
+   "M3": {
+    "management": "M3",
+    "status": "REFUSED_NOT_MECHANIZABLE",
+    "n_names": 61,
+    "n_checkable": 0,
+    "fraction_checkable": 0.0,
+    "per_name": [
+     {
+      "ticker": "AAPG",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "AARD",
+      "condition": "coverage drops below four analysts or the consensus cracks",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "analyst_consensus_history",
+       "narrative_qualitative"
+      ],
+      "reason": "requires analyst_consensus_history, narrative_qualitative \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "ABSI",
+      "condition": "cash runway falls below 12 months, or a lead programme is discontinued without a named successor",
+      "provenance": "auto_adopted_default",
+      "checkable": false,
+      "required_feeds": [
+       "clinical_regulatory_events",
+       "corporate_events",
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires clinical_regulatory_events, corporate_events, fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "ACVA",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "ADBE",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "ALMS",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "AMD",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "AMPX",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "AMSC",
+      "condition": "two consecutive quarters of declining grid-segment backlog, or the largest customer concentration exceeds 40% of revenue",
+      "provenance": "auto_adopted_default",
+      "checkable": false,
+      "required_feeds": [
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "AMZN",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "APLT",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "ATYR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "AVGO",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "BE",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "BEAM",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "BHVN",
+      "condition": "a second regulatory setback on the core pipeline",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "clinical_regulatory_events"
+      ],
+      "reason": "requires clinical_regulatory_events \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "BMRN",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "CHYM",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "COHU",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "CRSP",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "CYTK",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "DAVE",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "DHR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "DKNG",
+      "condition": "consensus target falls below entry, or two quarters of negative revisions",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "analyst_consensus_history",
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires analyst_consensus_history, fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "ELF",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "FSLR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "GLXY",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "HUBS",
+      "condition": "net revenue retention falls below 100% for two consecutive quarters",
+      "provenance": "auto_adopted_default",
+      "checkable": false,
+      "required_feeds": [
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "IMNM",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "KLAR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "KYMR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "KYTX",
+      "condition": "a lead clinical programme misses its primary endpoint, or cash runway falls below 12 months",
+      "provenance": "auto_adopted_default",
+      "checkable": false,
+      "required_feeds": [
+       "clinical_regulatory_events",
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires clinical_regulatory_events, fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "LLY",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "MP",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "MRNA",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "MRVL",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "MSTR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "MU",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "NTLA",
+      "condition": "further clinical holds or serious adverse events",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "clinical_regulatory_events"
+      ],
+      "reason": "requires clinical_regulatory_events \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "NVDA",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "OLMA",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "ORCL",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "OUST",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "PLTR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "PRCH",
+      "condition": "loss ratios deteriorate again",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "QBTS",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "QS",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "QUBT",
+      "condition": "narrative rotation; dilution at these levels",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "corporate_events",
+       "narrative_qualitative"
+      ],
+      "reason": "requires corporate_events, narrative_qualitative \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "RGTI",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "RVMD",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "SLDP",
+      "condition": "a named OEM partnership lapses without replacement, or cash runway falls below 12 months",
+      "provenance": "auto_adopted_default",
+      "checkable": false,
+      "required_feeds": [
+       "corporate_events",
+       "fundamentals_quarterly"
+      ],
+      "reason": "requires corporate_events, fundamentals_quarterly \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "SLNO",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "SOC",
+      "condition": "consensus breaks below the mark",
+      "provenance": "murat_stated",
+      "checkable": false,
+      "required_feeds": [
+       "analyst_consensus_history"
+      ],
+      "reason": "requires analyst_consensus_history \u2014 none exists point-in-time in the frozen data (price CSV only)"
+     },
+     {
+      "ticker": "SRRK",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "TGTX",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "TSM",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "TTWO",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "TVRD",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "TVTX",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "XNCR",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     },
+     {
+      "ticker": "ZYME",
+      "condition": "",
+      "provenance": "",
+      "checkable": false,
+      "required_feeds": [],
+      "reason": "no kill condition on record from any source"
+     }
+    ],
+    "note": "fewer than 50% of the book's names carry a kill condition that can be evaluated point-in-time from the frozen price CSV \u2014 the cell refuses rather than inventing rules",
+    "note_draws": "pool-level audit: 0/61 names checkable -> the maximum checkable fraction any 13-name draw can reach is 0/13; every one of the 1,000 draws is below 50% and REFUSED"
+   },
+   "M4": {
+    "status": "OK",
+    "terminal_wealth_dist": {
+     "median": 1.3592,
+     "p05": 1.068,
+     "p95": 1.7105,
+     "n_draws": 1000
+    },
+    "window_return_pts_dist": {
+     "median": 35.9237,
+     "p05": 6.7985,
+     "p95": 71.0543,
+     "n_draws": 1000
+    },
+    "effect_vs_M1_pts_dist": {
+     "median": 3.5246,
+     "p05": -12.391,
+     "p95": 21.7958,
+     "n_draws": 1000
+    },
+    "mde_pts_subsample": {
+     "median_pts": 50.0,
+     "min_pts": 30.0,
+     "max_pts": 100.0,
+     "n_measured": 30,
+     "n_reached_80pct": 29
+    },
+    "mde_basis": "measured on the first 30 draws (paired vs each draw's own M1)"
+   }
+  },
+  "B4": {
+   "status": "NOT_EVALUABLE",
+   "refusal": "the funnel ran in Aug-2026; replaying it from Nov-2025 is look-ahead by construction. Recording the refusal is the point (a check that cannot run honestly is not run)",
+   "forward_cell": {
+    "registered": true,
+    "start": "2026-08-11",
+    "note": "B4 enters the matrix as a forward cell only, from 2026-08-11"
+   }
+  }
+ },
+ "h1": {
+  "as_traded": {
+   "ensemble_label": "DATA_NEEDED",
+   "synthetic_note": "bounds derived from generated transaction histories, not from Murat's records; accrues ZERO; can promote nothing; CONVICTION-REPLAY-1's UNRESOLVED stands",
+   "range_terminal_wealth": {
+    "lower": 0.6480504645527241,
+    "upper": 1.0488824909078969
+   },
+   "range_pts": {
+    "lower": -35.19,
+    "upper": 4.89,
+    "p05": -25.15,
+    "p50": -14.93,
+    "p95": -4.14
+   },
+   "n_members": 200,
+   "status": "DATA_NEEDED",
+   "note": "Q4.total_return is labelled DATA_NEEDED by the ensemble (SYNTHETIC bounds; minimal ask: broker CSV export \u2014 every transaction (date, ticker, shares, fill, cash movement) Aug-2025 -> Aug-2026, ~2 minutes \u2014 pins the as-traded total_return (Q4)). The as-traded column prints the RANGE with that label (prereg \u00a71); H1 uses the registered fallback comparator B1\u00d7M1"
+  },
+  "arms": {
+   "M2": {
+    "vs_M1_diff_pts": -20.507,
+    "vs_M1_se_pts": 27.128,
+    "vs_M1_z": -0.76,
+    "mde_pts": 100.0
+   },
+   "M4": {
+    "vs_M1_diff_pts": -21.015,
+    "vs_M1_se_pts": 25.648,
+    "vs_M1_z": -0.82,
+    "mde_pts": 150.0
+   }
+  },
+  "comparator": {
+   "kind": "REGISTERED_FALLBACK_B1xM1",
+   "note": "*** SUBSTITUTION, PROMINENT: the as-traded column is DATA_NEEDED \u2014 H1 is evaluated against the registered fallback comparator B1\u00d7M1 (prereg's paired design). Re-run with --finalize if/when the ensemble's Q4 total_return is re-labelled from DATA_NEEDED (minimal ask: his broker CSV). ***"
+  },
+  "synthetic_range_for_the_record": {
+   "b1_m2_terminal": 1.1414,
+   "b1_m4_terminal": 1.1363,
+   "synthetic_upper_bound": 1.0489,
+   "note": "both managed cells sit above the ensemble's SYNTHETIC upper bound, but that bound is DATA_NEEDED, accrues ZERO, and cannot resolve H1 \u2014 recorded so nobody re-derives it as a finding; the registered fallback comparator governs"
+  },
+  "arms_vs_comparator": {
+   "M2": {
+    "diff_vs_fallback_M1_pts": -20.507,
+    "mde_pts": 100.0,
+    "verdict": "DIRECTION_REJECTED"
+   },
+   "M4": {
+    "diff_vs_fallback_M1_pts": -21.015,
+    "mde_pts": 150.0,
+    "verdict": "DIRECTION_REJECTED"
+   }
+  },
+  "overall": "DIRECTION_REJECTED"
+ },
+ "h2": {
+  "M2": {
+   "dod_pts": -2.1871470441282277,
+   "se_pts": 18.667554140566835,
+   "z": -0.11716302133953878,
+   "significant_at_5pct": false,
+   "n_b3_draws_point": 1000,
+   "n_b3_draws_se": 200,
+   "n_boot": 1000,
+   "note": "SE from a joint day-block bootstrap over B1 and a B3 draw subsample; point estimate over all draws",
+   "mde_pts": 75.0,
+   "mde_grid": [
+    {
+     "planted_pts": 5.0,
+     "power": 0.16666666666666666
+    },
+    {
+     "planted_pts": 10.0,
+     "power": 0.3416666666666667
+    },
+    {
+     "planted_pts": 15.0,
+     "power": 0.3416666666666667
+    },
+    {
+     "planted_pts": 20.0,
+     "power": 0.45
+    },
+    {
+     "planted_pts": 30.0,
+     "power": 0.5416666666666666
+    },
+    {
+     "planted_pts": 50.0,
+     "power": 0.7416666666666667
+    },
+    {
+     "planted_pts": 75.0,
+     "power": 0.875
+    }
+   ],
+   "mde_note": "measured by planting interaction effects of known size on B1's management effect in jointly block-resampled worlds (null-centered) \u2014 not derived from a formula",
+   "registered_expectation": "NOT detectable at this sample (prereg \u00a72)",
+   "verdict": "NOT_DETECTABLE \u2014 as registered (\u00a719: below the measured MDE is a design statement, never a kill)"
+  },
+  "M4": {
+   "dod_pts": -25.061516642770634,
+   "se_pts": 20.638163242291622,
+   "z": -1.2143288309404734,
+   "significant_at_5pct": false,
+   "n_b3_draws_point": 1000,
+   "n_b3_draws_se": 200,
+   "n_boot": 1000,
+   "note": "SE from a joint day-block bootstrap over B1 and a B3 draw subsample; point estimate over all draws",
+   "mde_pts": null,
+   "mde_grid": [
+    {
+     "planted_pts": 5.0,
+     "power": 0.08333333333333333
+    },
+    {
+     "planted_pts": 10.0,
+     "power": 0.08333333333333333
+    },
+    {
+     "planted_pts": 15.0,
+     "power": 0.075
+    },
+    {
+     "planted_pts": 20.0,
+     "power": 0.125
+    },
+    {
+     "planted_pts": 30.0,
+     "power": 0.19166666666666668
+    },
+    {
+     "planted_pts": 50.0,
+     "power": 0.30833333333333335
+    },
+    {
+     "planted_pts": 75.0,
+     "power": 0.5166666666666667
+    },
+    {
+     "planted_pts": 100.0,
+     "power": 0.6666666666666666
+    }
+   ],
+   "mde_note": "measured by planting interaction effects of known size on B1's management effect in jointly block-resampled worlds (null-centered) \u2014 not derived from a formula",
+   "registered_expectation": "NOT detectable at this sample (prereg \u00a72)",
+   "verdict": "NOT_DETECTABLE \u2014 as registered (\u00a719: below the measured MDE is a design statement, never a kill)"
+  }
+ },
+ "h3": {
+  "subwindow": "2026-06-04 -> 2026-07-29",
+  "b1_m1_maxdd_pct": -17.98,
+  "b1_m2_maxdd_pct": -8.48,
+  "reduction_pp": 9.49,
+  "registered_bar": ">= 5pp reduction",
+  "descriptive_n1": true,
+  "verdict": "MET (descriptive receipt, n=1 \u2014 no inference)"
+ },
+ "decision_rule_verbatim_prereg_s3": [
+  [
+   "H1 holds net of costs with the paired difference >= its own measured MDE",
+   "CONFIRMED_IN_DIRECTION \u2014 the product pitch (\"bring your ideas, the engine manages them\") gains its first licensed receipt; still NO alpha claim, NO skill claim"
+  ],
+  [
+   "H1 sign positive but below MDE",
+   "UNRESOLVED"
+  ],
+  [
+   "H1 sign negative",
+   "DIRECTION_REJECTED on this window \u2014 reported, with the window's one-bull-path caveat"
+  ],
+  [
+   "any cell's inputs contaminated (per CONVICTION-REPLAY-1 defect class)",
+   "cell VOID, investigated before any number is reported"
+  ]
+ ],
+ "what_this_may_not_do": [
+  "No annualization of a 9-month window into a headline.",
+  "No cell promotes a strategy, seeds a lane, or arms anything.",
+  "B3's distribution may not be collapsed to its mean alone (p05-p95 printed).",
+  "The matrix may not be summarized without each cell's MDE beside it (\u00a719).",
+  "This does not and cannot grade Murat's skill (24-month rule; one window).",
+  "M4 is 'mirror rules under their frozen equal-weight fallback' \u2014 the HRP gate (min 252 obs) cannot pass on the 197-bar frozen panel; nothing here is an HRP result.",
+  "The as-traded comparator is an ensemble RANGE, never a point; if it is pending, H1 is evaluated against the registered fallback (B1\u00d7M1) and says so.",
+  "Synthetic names (APLT, SLNO) enter period returns via entry+payout on a disclosed step path; within-window drawdown timing for those names is an assumption, and they are excluded from every daily-path statistic."
+ ],
+ "cross_check": {
+  "b1_m1_pts": 34.65,
+  "conviction_replay_1_picks_pts": 34.645387758363746,
+  "agree_within_0p5": true
+ },
+ "runtime_secs": 65.4,
+ "finalized_at": "2026-08-11T21:08:23"
+}
