@@ -20,24 +20,33 @@ from backend.services.portfolio_intelligence.scheduler import (
 
 
 class TestSetupScheduler:
-    def test_creates_scheduler_with_expected_jobs(self):
-        """Scheduler should register close MTM, daily check, weekly aggressive,
-        and the congress-IC morning collect (fresh-FMP-quota slot)."""
+    def test_creates_scheduler_with_exactly_the_declared_job_set(self):
+        """The registered jobs must equal EXPECTED_JOB_IDS — set equality, not a
+        count.
+
+        This assertion used to read `len(jobs) == 5` alongside five membership
+        checks, and adding `pi_why_moved` broke it in CI while every scheduler
+        test passed locally. That is the same shape as the count-based
+        `/health/scheduler` gate which could not see NIGHT-13's vanished job: a
+        number is a weak proxy for a set, and it fails in both directions — it
+        breaks on a legitimate addition and it stays silent when two jobs swap.
+
+        Comparing against EXPECTED_JOB_IDS instead means the declaration is the
+        single source of truth: a job added without declaring it fails here, a
+        job declared without registering it fails here, and a correctly-added
+        job needs no edit to this test at all.
+        """
         from backend.services.portfolio_intelligence.scheduler import (
-            setup_scheduler, shutdown_scheduler,
+            EXPECTED_JOB_IDS, setup_scheduler, shutdown_scheduler,
         )
 
         async def _run():
             scheduler = setup_scheduler()
             assert scheduler is not None
-            jobs = scheduler.get_jobs()
-            job_ids = {j.id for j in jobs}
-            assert "pi_hourly_mtm" in job_ids, "Missing hourly MTM job"
-            assert "pi_daily_check" in job_ids, "Missing daily check job"
-            assert "pi_weekly_aggressive" in job_ids, "Missing weekly aggressive job"
-            assert "pi_congress_collect" in job_ids, "Missing congress morning collect job"
-            assert "pi_ledger_resolve" in job_ids, "Missing prediction-ledger resolve job"
-            assert len(jobs) == 5
+            job_ids = {j.id for j in scheduler.get_jobs()}
+            assert job_ids == set(EXPECTED_JOB_IDS), (
+                f"registered {sorted(job_ids)} != declared "
+                f"{sorted(EXPECTED_JOB_IDS)}")
             shutdown_scheduler()
 
         asyncio.run(_run())
