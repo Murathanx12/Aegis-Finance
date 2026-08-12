@@ -1844,7 +1844,20 @@ RESEARCH_LLM_ENABLED = os.getenv("AEGIS_RESEARCH_LLM", "1") not in ("0", "false"
 #: Measured unit cost, for sizing this: the 8,014-call swarm cost $12.04, i.e.
 #: **$0.0015 per call** (~2,500 tokens in / 900 out). Nightly WHY-MOVED is ~7
 #: lens calls with a larger prompt, roughly $0.03/night — under $1/month.
-RESEARCH_LLM_MAX_CALLS = int(os.getenv("AEGIS_RESEARCH_LLM_MAX_CALLS", "40000"))
+#: RAISED 2026-08-13, 40,000 -> 120,000, and the reason is not "we hit it".
+#:
+#: The call ceiling was a PROXY for the dollar ceiling, sized when a call was
+#: believed to cost $0.0015. At that price 40,000 calls was ~$60 and the dollar
+#: ceiling bound first, which is correct: dollars are what is actually scarce
+#: and what the vendor balance limits. The measured price is $0.00039, so the
+#: proxy became the binding constraint and halted LLM-ARCHITECTURE-ARENA-1 at
+#: 89% coverage while only $16.53 of $40 had been spent.
+#:
+#: A proxy that binds before the thing it stands for is not a safety mechanism;
+#: it is an arbitrary stop whose number no longer means anything. 120,000 at the
+#: measured rate is ~$47, so the $40 dollar ceiling binds again — and that
+#: ceiling remains BELOW the vendor balance, which is the rule that matters.
+RESEARCH_LLM_MAX_CALLS = int(os.getenv("AEGIS_RESEARCH_LLM_MAX_CALLS", "120000"))
 RESEARCH_LLM_MAX_USD = float(os.getenv("AEGIS_RESEARCH_LLM_MAX_USD", "40.0"))
 #: A call is only worth its money if it produces something gradeable. If the
 #: share of calls yielding NO prediction and NO hypothesis exceeds this, the
