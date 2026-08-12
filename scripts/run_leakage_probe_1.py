@@ -47,6 +47,15 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+# Windows consoles default to cp1252 and a single arrow in a progress line will
+# take the whole run down at the last print. Losing an eight-hour campaign to an
+# encoding error in a status message is not a risk worth carrying.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:                                         # pragma: no cover
+    pass
+
 try:
     from dotenv import load_dotenv
     load_dotenv(ROOT / ".env")
