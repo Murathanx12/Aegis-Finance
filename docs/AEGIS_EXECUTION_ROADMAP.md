@@ -1,4 +1,13 @@
 # AEGIS EXECUTION ROADMAP — BACKTEST + IMPLEMENTATION
+
+> **2026-08-12 — SEQUENCING SUPERSEDED FOR THE LLM/LEARNING ARC.**
+> `ROADMAP_LEARNING_LOOP_2026-08-12.md` carries the current ordering and
+> dependency graph. **The standards in THIS document still bind** — the Gate
+> D/M certification logic, the discovery bar, the posterior sizing ladder and
+> the objective function are unchanged and are not up for renegotiation because
+> a newer document is more exciting. What changed is only what gets built next
+> and in what order.
+
 **Date:** 2026-08-03 · **Supersedes** the §4 ordering in `AI_REVIEWS_SYNTHESIS_2026-08-03.md` (same content, now gated)
 **Design constraint (Murat):** we cannot afford to test for months and then discover the data or the method was bad.
 **Design answer:** *certify before you spend.* Three certification gates run FIRST, each takes days and has a pre-registered kill criterion. Nothing downstream starts until its gate is green. A bad foundation costs at most one week, never a quarter.
