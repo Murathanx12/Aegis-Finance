@@ -22,8 +22,11 @@ against 321 prior experiments) **before a single row existed**. Runner
 > 8/8 blocks.
 >
 > **Not one of the 20 pre-declared management policies beat never-selling at
-> any of the six horizons.** Every single one has a negative point estimate at
-> every horizon. The best of them — take-profit at +100%, which trades 2.2% of
+> any of the six horizons by a detectable margin.** 119 of the 120
+> policy × horizon cells have a negative point estimate; the single positive
+> cell is `VOL_SPIKE_TRIM` at **1 day**, +0.021 pp against an MDE of 0.048 —
+> not detectable, and at a horizon nobody manages a position on. The best of
+> them — take-profit at +100%, which trades 2.2% of
 > states — loses 0.04 pp at 60 days. The worst — always-to-cash — loses 11.27.
 > The trailing stop, entered as a declared CORPSE control (CANON §15,
 > −3.08%/yr under G7), came back **DETECTABLE_NEGATIVE at 252 days** on an
@@ -43,6 +46,26 @@ against 321 prior experiments) **before a single row existed**. Runner
 > momentum- or revision-ranked basket beat its own equally-concentrated
 > RANDOM basket** at any horizon. Every replacement advantage over cash is
 > "being invested", which is the equity premium, not a decision.
+>
+> **And the learners lost to doing nothing.** A LightGBM action-value model and
+> a small NN, trained per action on purged embargoed walk-forward folds with
+> every scaler fitted in-fold, produced **six negative policies out of six**
+> against a best baseline that turned out to be `NEVER_SELL` itself. The most
+> constrained of them — a gate that may only choose between holding and cash —
+> is **DETECTABLE NEGATIVE at −1.05 pp against an MDE of 0.85, sign holding in
+> 7 of 7 available regime blocks.** The unconstrained one spends 30-41% of its
+> decisions on the single-name replacement arm (and 4-13% on the *random* one),
+> which is what argmax over sixteen noisy value estimates does. The
+> pre-registered offline-RL gate therefore stays closed.
+>
+> **73 of 78 CANON §18 difference-of-differences are below their own MDE, and
+> all five exceptions are at the 1-day horizon.** At the pre-registered 60-day
+> horizon, and at 20, 120 and 252 days, **0 of 65** contrasts clear. Not one of
+> the five pre-declared conditioning variables — unrealised gain, event
+> proximity, surprise sign, drawdown depth, revision sign — measurably changes
+> the exit decision at any horizon a saver would act on. The conditional tables
+> in §4 look convincing and almost none of them survives being tested as a
+> difference.
 >
 > **These are DIRECTION CHECKS on simulated counterfactuals, never alpha
 > evidence.** Nothing here licenses a change to any live or paper lane.
@@ -81,7 +104,7 @@ permno; they are **dropped and counted**, not linked by guesswork.
 - **Position-state** = `(permno, decision date, entry cohort)`. Decision dates
   are the **264 month-ends** from 2003-01-31 to 2024-12-31 with ≥252 trading
   days of prior history. Entry cohorts are 21 / 63 / 126 / 252 trading days
-  before the decision — a synthetic holder, declared as synthetic (§8.3).
+  before the decision — a synthetic holder, declared as synthetic (§7.3).
 - **Universe per date**: price ≥ $5, ≥252 days of history, 63-day median dollar
   volume ≥ $1m, top 1,500 by dollar volume. **Exactly 1,500 on all 264 dates**,
   0 dates skipped as thin. Identical to the WINNER-GENOME-1 rule.
@@ -99,7 +122,7 @@ permno; they are **dropped and counted**, not linked by guesswork.
   decision at T0 — correctly, because the decision would not exist. The state
   population is therefore conditioned on survival **to** the decision, and on
   liquidity. Deaths **after** T0 are fully modelled. This is stated as a
-  limitation in §8, not as a footnote.
+  limitation in §7, not as a footnote.
 - **No-lookahead proof.** On decision date 2014-01-31 every return, price,
   volume, market-cap and risk-free cell after T0 was replaced with garbage
   (returns ~ N(0.5, 1), prices 1e6, volumes 1e15, rf 50%/day). All 30 columns
@@ -197,8 +220,11 @@ kill.
 | `REPLACE_1N` (single best name) | +0.026 | **10.899** | 0.01 | 3/8 | no | NOT DETECTABLE |
 | `REPLACE_RNDW` (20 random) | −0.648 | 0.655 | −2.77 | 8/8 | yes | NOT DETECTABLE |
 
-**Every action's point estimate except `REPLACE_1N` (whose ruler is 10.9 pp) is
-negative.** Trimming is detectably worse than not trimming, in exact proportion
+**At this horizon every action's point estimate except `REPLACE_1N` (whose
+ruler is 10.9 pp) is negative.** Across all 96 action × horizon cells there are
+exactly **two** positive point estimates — `REPLACE_1N` at 60 days (+0.026,
+MDE 10.9) and `REPLACE_REV` at 252 days (+0.207, MDE 7.9) — and both sit inside
+rulers 419× and 38× their own size. Trimming is detectably worse than not trimming, in exact proportion
 to how much you trim — the −0.281 / −0.704 / −1.407 / −2.815 ladder for
 10/25/50/100% is the same number scaled, which is the arithmetic signature of a
 single underlying effect: **the return you give up is the return of the thing
@@ -246,7 +272,7 @@ ruler grows more slowly than the gap does.
 | `FIXED_HOLD_63` | −2.111 | 2.073 | 75.0% | **DETECTABLE NEGATIVE** |
 | `ALWAYS_CASH` | −2.815 | 2.764 | 100% | **DETECTABLE NEGATIVE** |
 
-At 252 days, nine of the twenty are DETECTABLE_NEGATIVE, including both
+At 252 days, ten of the twenty are DETECTABLE_NEGATIVE, including both
 trailing stops (−2.75 pp / MDE 3.43, and **−4.94 pp / MDE 4.82, 8/8 blocks**),
 `REVISION_SELL_NEG` (−4.30 / 3.30), `MOMENTUM_SELL_LOSERS` (−4.86 / 4.72),
 `TARGET_SELL_NEG` (−1.84 / 1.17) and `ALWAYS_REDUCE_BETA` (−1.86 / 1.50).
@@ -258,9 +284,71 @@ horizon. That is the single most compressible statement the trial produces.
 
 ---
 
-## 3. The learned action-value policy
+## 3. The learned action-value policy — it lost, and it lost informatively
 
-*(pending — filled from `exit_lab_1_learned.json`)*
+**Protocol.** One model per action (Q(s, a) with an action-specific head),
+28 features, target = the action's net 60-day sleeve return. **Expanding-train
+walk-forward with a 13-decision-date purged embargo** — longer than the label
+horizon — five test blocks, `1,320,000` out-of-fold states. Every imputer and
+every scaler is fitted **inside** the training fold. LightGBM first, then a
+small MLP (64, 32); `torch` is installed but broken against NumPy 2.4 on this
+box, so the NN is scikit-learn's, capped at 250k training rows and declared as
+such. 160 model fits, 1,854 seconds of CPU.
+
+| fold | train dates | train states | test dates | test states | seconds |
+|---:|---|---:|---|---:|---:|
+| 0 | 0–30 | 186,000 | 44–87 | 264,000 | 219 |
+| 1 | 0–74 | 450,000 | 88–131 | 264,000 | 442 |
+| 2 | 0–118 | 714,000 | 132–175 | 264,000 | 394 |
+| 3 | 0–162 | 978,000 | 176–219 | 264,000 | 395 |
+| 4 | 0–206 | 1,242,000 | 220–263 | 264,000 | 404 |
+
+**The best baseline, re-scored on exactly the out-of-fold states, is
+`NEVER_SELL`.** Every one of the twenty pre-declared policies is negative
+out-of-fold; the closest is `REPLACE_EDGE_BOTTOM_DECILE` at −0.031 pp. So the
+learned-versus-baseline comparison and the learned-versus-holding comparison
+are the same comparison.
+
+| learned policy | Δ vs HOLD = Δ vs best baseline | its MDE | t | trades | blocks | verdict |
+|---|---:|---:|---:|---:|:--:|---|
+| `lgb` argmax over all 16 actions | **−3.594** | 5.595 | −1.80 | 98.5% | 5/7 | not detectable |
+| `lgb` argmax over 4 actions | **−1.683** | 2.193 | −2.15 | 62.4% | 6/7 | not detectable |
+| `lgb` sell-gate (cash only if Q̂ says so) | **−1.054** | **0.853** | −3.46 | 25.1% | **7/7** | **DETECTABLE NEGATIVE** |
+| `mlp` argmax over all 16 | −4.063 | 6.830 | −1.67 | 97.5% | 6/7 | not detectable |
+| `mlp` argmax over 4 | −1.160 | 2.248 | −1.45 | 72.7% | 5/7 | not detectable |
+| `mlp` sell-gate | −0.943 | 1.104 | −2.39 | 33.9% | 6/7 | not detectable |
+
+**All six are negative. The most constrained one — the sell-gate, which may
+only choose between holding and cash — is DETECTABLE NEGATIVE with the sign in
+7 of 7 available regime blocks.** Giving a fitted model the narrowest possible
+discretion did not protect it; it sharpened the ruler enough to catch it losing.
+**H4 is confirmed in the strongest available form: the learner does not merely
+fail to add, it detectably subtracts.**
+
+**Why the unconstrained learner fails is visible in its action mix.** Argmaxing
+over sixteen noisy value predictions is a winner's-curse machine, and it picks
+exactly the arm with the widest ruler:
+
+| chosen action | share of out-of-fold decisions, `lgb` | `mlp` |
+|---|---:|---:|
+| `REPLACE_1N` (the single top-momentum name) | **29.9%** | **41.0%** |
+| `REPLACE_1` (top-5 basket) | 14.7% | 9.8% |
+| `REPLACE_RND` (**the random control**) | 12.7% | 4.5% |
+| `REPLACE_REV` | 10.7% | 12.7% |
+| `HOLD` | 1.5% | 2.5% |
+
+The model concentrates on the highest-variance branch — including the *random*
+one, 12.7% of the time — because a high-variance branch has the highest
+*estimated* maximum. It holds 1.5% of the time. That is the mechanism NIGHT-8
+recorded from the other direction ("learned rankers order better, earn less"),
+seen here as a policy rather than a ranking.
+
+**The offline-RL gate stays closed, as pre-registered.** §7 of the prereg
+committed that a conservative offline-RL action-value learner runs **only if**
+LightGBM or the NN beats the best baseline. Neither did — one of them lost
+detectably. The gate is therefore not opened, and this is recorded as a
+**declared non-run**, not an omission: opening it after seeing six negative
+results would be searching until something wins.
 
 ---
 
@@ -273,8 +361,12 @@ as a difference-of-differences with its own SE and its own MDE — CANON §18,
 because reading two rows and saying "this one is bigger" is not a measurement.
 
 **The headline for all five questions: every conditional pattern below looks
-convincing and not one of them survives §18.** All 78 difference-of-differences
-tests, across all six horizons, are below their own MDE.
+convincing and almost none of them survives §18.** Of 78
+difference-of-differences tests (13 contrasts × 6 horizons), **73 are below
+their own MDE.** All five exceptions live at the **1-day** horizon, where the
+ruler is tightest and the outcome is mostly the cost of trading; they are
+listed in full at the end of this section. At **20, 60, 120 and 252 days —
+every horizon a position is actually managed on — 0 of 65 contrasts clear.**
 
 ### Q1 — When does holding a large winner beat trimming it?
 
@@ -394,8 +486,9 @@ ranker-vs-random contrasts — **30 comparisons** — the answer is:
 | `REPLACE_2W` − `REPLACE_RNDW` | −0.01 / 1.07 | −0.10 / 2.40 | −1.59 / 3.50 | −3.28 / 6.24 |
 
 **Twenty-nine of thirty are below their own MDE, and the thirtieth is
-DETECTABLE NEGATIVE.** The momentum ranker's point estimate is negative in 19
-of 24 of its cells. The revision ranker is a clean zero.
+DETECTABLE NEGATIVE.** The momentum ranker's point estimate is negative in **22
+of its 24** cells. The revision ranker is a clean zero (+0.02 to +0.70 pp
+against rulers of 0.33 to 8.26).
 
 One structural finding worth stating rather than burying. Conditioning the
 replacement-versus-cash comparison on the *held* position's state — loser,
@@ -438,6 +531,33 @@ later, paying a second round trip. Δ against staying in cash, pp:
 > re-entry advantage is *smallest and least detectable*. There is no
 > conditioning variable in this trial that identifies a de-risking worth doing,
 > so there is none whose reversal can be timed.
+
+### The five §18 contrasts that DO clear their rulers — all at 1 day
+
+Reported in full because a search denominator that hides its five positives is
+not a search denominator.
+
+| contrast @ h=1 | Δ (pp) | MDE | t | blocks | halves | verdict |
+|---|---:|---:|---:|:--:|:--:|---|
+| Q1 (HOLD−TRIM25 \| gain>+50%) − (\| gain<0) | +0.047 | 0.040 | 3.23 | 8/8 | yes | DIRECTION_SUPPORTED |
+| Q1 (HOLD−TRIM25 \| gain>+100%) − (\| gain<0) | +0.069 | 0.060 | 3.19 | 8/8 | yes | DIRECTION_SUPPORTED |
+| Q1 (HOLD−SELL_BENCH \| gain>+50%) − (\| gain<0) | +0.186 | 0.162 | 3.23 | 8/8 | yes | DIRECTION_SUPPORTED |
+| Q2 (HOLD−CASH \| 0-20d post-earnings) − (\| >60d) | −0.093 | 0.079 | −3.31 | 7/8 | yes | DETECTABLE NEGATIVE |
+| Q2 (HOLD−CASH \| 0-5d & SUE>0) − (\| 0-5d & SUE≤0) | +0.489 | 0.349 | 3.92 | 7/8 | yes | DIRECTION_SUPPORTED |
+
+Read them for what they are. The three Q1 rows say that over **one day**, a
+position already up 50-100% is worth 4.7 to 18.6 **basis points** more to hold
+than one that is down — real, stable across all 8 regime blocks, and roughly
+the width of a single bid-ask spread. The Q2 rows say the same thing about the
+week after an earnings beat: **+0.49 pp over one day**, the largest of the five,
+decaying to +0.974 (MDE 1.547) by 60 days and to +2.558 (MDE 2.893) by 252 — it
+starts detectable and ends inside its ruler.
+
+**The honest reading is that the conditioning information is real and one day
+long.** It is the only place in this trial where a state variable measurably
+moves an exit decision, and it is a horizon at which the round-trip cost
+(27 bps) exceeds every one of these effects except the last. Nothing here is
+tradeable and nothing here is claimed to be.
 
 ---
 
@@ -496,7 +616,9 @@ Every configuration executed, including the ones that failed.
 | the five questions, conditional cells | 564 | Q1 132, Q2 72, Q3 228, Q4 114, Q5 18 |
 | §18 differences of differences | 78 | 13 contrasts × 6 horizons |
 | cost sensitivity | 84 | 7 actions × 3 horizons × 4 multipliers |
-| learned action-value | *(§3)* | 16 actions × 5 folds × 2 model families |
+| learned action-value | 186 | 160 model fits (16 actions × 5 folds × 2 families) + 20 baselines re-scored out-of-fold + 6 learned-vs-baseline |
+| offline RL | **0 — declared non-run** | the prereg gated it on a learner beating the best baseline; none did |
+| **total** | **1,130** | 0 skipped, 0 voided, 0 dropped |
 
 **What went wrong, recorded rather than tidied away.**
 
@@ -515,8 +637,8 @@ Every configuration executed, including the ones that failed.
 
 **Nothing was dropped for being unflattering.** The `REPLACE_1N` arm was kept
 even though its ruler is 11-21 pp; the gross-cost column was kept even though
-it removes the 60-day verdict; all 78 §18 contrasts are reported and all 78 are
-nulls. The single post-hoc addition relative to the prereg is the §18 contrast
+it removes the 60-day verdict; all 78 §18 contrasts are reported, including the
+five that clear their rulers and would have been easy to leave out. The single post-hoc addition relative to the prereg is the §18 contrast
 block, which is a *stricter* test of the pre-registered questions, not a new
 question — and it made every answer weaker, not stronger.
 
@@ -553,12 +675,14 @@ Read this before quoting any number above.
    month-end decision.** The same limitation NIGHT-14 recorded applies verbatim:
    if the edge in position management lives in when-in-the-day you act, or in
    reacting to news within hours, this design is looking in a different place.
-7. **Below-MDE is not a kill.** Every §18 contrast came back NOT DETECTABLE.
-   None of the five conditioning hypotheses is *refuted*; each is below this
-   instrument's resolution at n = 252-264 decision dates. A longer sample, a
-   finer decision grid, or a sharper conditioning variable could still find
-   something — and the MDEs printed beside every number say exactly how big it
-   would have to be.
+7. **Below-MDE is not a kill.** 73 of 78 §18 contrasts came back NOT
+   DETECTABLE. None of the five conditioning hypotheses is *refuted*; each is
+   below this instrument's resolution at n = 252-264 decision dates, at every
+   horizon except one day. A longer sample, a finer decision grid, or a sharper
+   conditioning variable could still find something — and the MDEs printed
+   beside every number say exactly how big it would have to be. The five 1-day
+   positives are a standing reason to build a *shorter-horizon* instrument, not
+   a result to trade.
 8. **The 60-day headline is cost-dependent.** Stated in the verdict and repeated
    here: gross, holding does not detectably beat selling at 60 days. Only the
    252-day result is cost-independent.
@@ -570,3 +694,43 @@ Read this before quoting any number above.
    WINNER-GENOME-1 measured that other thing and found the position **budget**
    dominates; nothing here contradicts it, and §5's `SELL_BENCH` decomposition
    points the same way.
+
+---
+
+## 8. What this does to the standing bet
+
+The bet this phase existed to test was: *the edge is in selection, the losses
+are in management and sizing.* Four prior measurements pointed at it — NIGHT-12
+(`sell_to_cash` never best in 60 rows; a beta-2.15 book drawing down 22.9% vs
+SPY's 8.9%), NIGHT-13 (selection +20 to +43 points, management −29 to −66),
+NIGHT-14 (selection below resolution at every position budget, the budget
+itself dominant), and the exposure-control null. This is the fifth, and it is
+the first with a denominator.
+
+**It supports the second half of the bet and it sharpens the first half into
+something narrower and more uncomfortable.**
+
+- *The losses are in management*: supported. Twenty pre-declared rules, six
+  learned policies, sixteen single actions — **every point estimate is
+  negative**, several detectably so, and the ordering tracks how much each rule
+  trades.
+- *The edge is in selection*: **this trial found no evidence for it either.**
+  Gross of costs, `SELL_BENCH` − `HOLD` is −0.04 pp at 60 days and −0.14 pp at
+  252 — swapping the held name for the index is free. The held position has no
+  measurable expected-return advantage over the market. That is the same null
+  NIGHT-14 reported for tournament strategy families and NIGHT-10 reported
+  across 21 configurations, arriving now from a third direction.
+
+Put together, the honest restatement of the bet after five nights is not
+"selection good, management bad". It is:
+
+> **The only thing this programme has repeatedly measured as large is
+> *exposure* — whether you are invested, and how much. Neither which name you
+> pick nor what you do with it afterwards has cleared its own ruler on any
+> instrument we have built.**
+
+That is a smaller claim than the one we started with, and it is the one the
+receipts support. It also happens to be the claim that most changes what a
+saver should do, and the least useful one for anybody selling a strategy.
+
+**None of this is a forward record and none of it moves a lane.**
