@@ -160,18 +160,24 @@ first**:
   several detectably so, and the ordering tracks how much each rule trades. The
   best baseline out-of-fold is `NEVER_SELL` itself, so learned-vs-baseline is
   learned-vs-doing-nothing, and doing nothing wins.
-- *The edge is in selection* — **no evidence for it either.** Gross of costs,
-  `SELL_BENCH` − `HOLD` is **−0.04 pp at 60 days and −0.14 pp at 252**. Swapping
-  the held name for the index is free. That is the same null NIGHT-14 found for
-  tournament strategy families and NIGHT-10 found across 21 configurations,
-  arriving from a third direction.
+- *The edge is in selection* — **no evidence from the mechanisms tested.** Gross
+  of costs, `SELL_BENCH` − `HOLD` is **−0.04 pp at 60 days and −0.14 pp at 252**.
+  That is the same null NIGHT-14 found for tournament strategy families and
+  NIGHT-10 found across 21 configurations, arriving from a third direction.
 
-**The honest restatement after five nights:**
+**The honest restatement after five nights (corrected per Amendment A0 — my
+first version over-reached):**
 
-> **The only thing this programme has repeatedly measured as large is
-> *exposure* — whether you are invested, and how much. Neither which name you
-> pick nor what you do with it afterwards has cleared its own ruler on any
-> instrument we have built.**
+> **No TESTED stock-selection mechanism has produced a large, reproducible,
+> product-level advantage, while exposure/risk has repeatedly produced large
+> effects.**
+
+That is deliberately narrower than "selection does not matter." EXIT-LAB's
+replacement arms were momentum/revision-ranked **proxies** and its holders were
+**synthetic entry cohorts** — the report says outright that the momentum proxy
+is not claimed to be the best available candidate selector. A null against that
+proxy is a null against that mechanism, and the broader phrasing would close the
+LLM opportunity-discovery question by assertion rather than by measurement.
 
 That is a smaller claim than the one we started with, it is the one the receipts
 support, and it is the least useful claim for anyone selling a strategy. It is

@@ -1798,8 +1798,14 @@ WHY_MOVED_FORBIDDEN_PATTERN = (
 RESEARCH_LLM_ENABLED = os.getenv("AEGIS_RESEARCH_LLM", "1") not in ("0", "false", "")
 #: Per-campaign ceilings. Deliberately generous relative to observed cost
 #: (~$5.26 for 40M tokens historically) and deliberately FINITE.
-RESEARCH_LLM_MAX_CALLS = int(os.getenv("AEGIS_RESEARCH_LLM_MAX_CALLS", "12000"))
-RESEARCH_LLM_MAX_USD = float(os.getenv("AEGIS_RESEARCH_LLM_MAX_USD", "25.0"))
+#: RAISED 2026-08-12 by Amendment A12. Murat: "dont worry about the cost go
+#: deep, use better prompts, more data". The 8,014-call swarm cost $12.04, so
+#: these ceilings buy roughly 40x that campaign. They stay FINITE and enforced:
+#: the governor exists because these paths were previously ungoverned, and "go
+#: deep" is not "remove the brakes" — an unbounded loop against a shared key
+#: still takes the production path down with it.
+RESEARCH_LLM_MAX_CALLS = int(os.getenv("AEGIS_RESEARCH_LLM_MAX_CALLS", "60000"))
+RESEARCH_LLM_MAX_USD = float(os.getenv("AEGIS_RESEARCH_LLM_MAX_USD", "150.0"))
 #: A call is only worth its money if it produces something gradeable. If the
 #: share of calls yielding NO prediction and NO hypothesis exceeds this, the
 #: campaign is buying tokens rather than information and should halt for

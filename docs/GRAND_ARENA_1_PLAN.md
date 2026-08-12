@@ -244,13 +244,19 @@ Three outcomes, all publishable:
 
 ## Things a resuming session must not re-derive
 
-- **THE STANDING BET WAS HALF-WITHDRAWN BY CHUNK 2.** Do not restate the old
-  version. EXIT-LAB-1 supports *losses are in management* (every one of 20
-  rules, 6 learned policies and 16 single actions is negative; the best baseline
-  is `NEVER_SELL`) but finds **no evidence for *edge is in selection***: gross of
-  costs, swapping the held name for the index is worth −0.04 pp at 60 d and
-  −0.14 pp at 252 d. The honest claim now is: **the only thing repeatedly
-  measured as large is EXPOSURE — whether you are invested, and how much.**
+- **THE STANDING BET WAS HALF-WITHDRAWN BY CHUNK 2 — read the CORRECTED wording
+  (Amendment A0), not my first version.** EXIT-LAB-1 supports *losses are in
+  management* (all 20 rules, 6 learned policies and 16 single actions negative;
+  best baseline `NEVER_SELL`). On selection it found `SELL_BENCH` − `HOLD` at
+  −0.04 pp / 60 d and −0.14 pp / 252 d.
+  **Licensed conclusion: no TESTED stock-selection mechanism has produced a
+  large, reproducible, product-level advantage, while exposure/risk repeatedly
+  has.** NOT "selection does not matter" — EXIT-LAB's replacement arms were
+  momentum/revision-ranked *proxies* and its holders were *synthetic entry
+  cohorts*, so this is a null against that mechanism, not against selection in
+  general. The stronger phrasing would close the LLM opportunity-discovery
+  question by assertion, which is exactly what the remaining chunks exist to
+  answer.
 - **WINNER-GENOME left execution untested.** The design forms on day 0 and
   holds. The CUHK captain says active intraday entry/exit was the core. A null
   on selection is **not** a null on execution — that gap is chunk 6's job.
