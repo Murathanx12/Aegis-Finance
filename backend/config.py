@@ -1761,3 +1761,44 @@ WHY_MOVED_FORBIDDEN_PATTERN = (
     r"\b(buy|sell|hold|trim|add to|overweight|underweight|allocate|"
     r"position size|take profit|stop loss|we recommend|you should)\b"
 )
+
+
+# ── RESEARCH LLM BUDGET (GRAND-ARENA-1 Phase 0) ──────────────────────────────
+#: PRODUCTION AND RESEARCH ARE DIFFERENT BUDGETS, AND UNTIL NOW ONLY ONE OF
+#: THEM EXISTED.
+#:
+#: `llm.daily_call_cap = 150` guards the PRODUCTION path (llm_analyzer) and was
+#: sized for a $20 prepaid balance. It is the right shape for a user-facing
+#: endpoint: a runaway loop there burns a balance the product depends on.
+#:
+#: The premise worth correcting is that this cap was throttling research. It was
+#: not — it never applied. `why_moved` and `optimus_specialists` construct their
+#: own client and call DeepSeek directly, so the research swarm was not
+#: throttled, it was UNGOVERNED. For a campaign of thousands of calls that is
+#: the more dangerous of the two failures: nothing would have stopped a bad loop
+#: except the vendor's balance running out, and the first symptom would have
+#: been a dead key on the production path that shares it.
+#:
+#: So the fix is not "raise the cap". It is a SEPARATE, explicit research budget
+#: that the swarm paths actually consult, leaving the production guard where it
+#: is. Both a call ceiling and a dollar ceiling, because they fail differently:
+#: a cheap-model loop hits the call ceiling first, an expensive-model or
+#: long-context run hits the dollar ceiling first.
+#:
+#: Enforcement reads the telemetry ledger, which is the only place that knows
+#: what was actually spent. A budget checked against a counter that resets on
+#: process restart is not a budget.
+RESEARCH_LLM_ENABLED = os.getenv("AEGIS_RESEARCH_LLM", "1") not in ("0", "false", "")
+#: Per-campaign ceilings. Deliberately generous relative to observed cost
+#: (~$5.26 for 40M tokens historically) and deliberately FINITE.
+RESEARCH_LLM_MAX_CALLS = int(os.getenv("AEGIS_RESEARCH_LLM_MAX_CALLS", "12000"))
+RESEARCH_LLM_MAX_USD = float(os.getenv("AEGIS_RESEARCH_LLM_MAX_USD", "25.0"))
+#: A call is only worth its money if it produces something gradeable. If the
+#: share of calls yielding NO prediction and NO hypothesis exceeds this, the
+#: campaign is buying tokens rather than information and should halt for
+#: inspection rather than spend the rest of the budget the same way.
+RESEARCH_LLM_MAX_ZERO_YIELD_RATE = float(
+    os.getenv("AEGIS_RESEARCH_LLM_MAX_ZERO_YIELD", "0.40"))
+#: Below this many calls the zero-yield brake is not armed — an early run of
+#: unlucky parses would otherwise halt a campaign on n=3.
+RESEARCH_LLM_ZERO_YIELD_MIN_N = 50
