@@ -1,0 +1,2864 @@
+{
+ "module_version": "why_moved/1.0.0",
+ "generated_at": "2026-08-12T06:02:02+00:00",
+ "as_of": "2026-08-10",
+ "prev_close_date": "2026-08-07",
+ "requested_date": "2026-08-10",
+ "attribution": {
+  "as_of": "2026-08-10",
+  "prev_close_date": "2026-08-07",
+  "requested_date": "2026-08-10",
+  "book_value_prev": 40625.500354766846,
+  "book_value_now": 40392.600445747375,
+  "pnl_usd": -232.89990901947021,
+  "pnl_pct": -0.5732850229182287,
+  "benchmark": "SPY",
+  "benchmark_return_pct": -0.029741673673222557,
+  "book_beta": 2.1899500649117387,
+  "market_component_pct": -0.0651327801912575,
+  "market_component_usd": -26.46051784766882,
+  "sector_component_pct": 1.1335824050208105,
+  "sector_component_usd": 460.52352397330395,
+  "idiosyncratic_pct": -1.641734647747782,
+  "idiosyncratic_usd": -666.9629151451054,
+  "positions": [
+   {
+    "ticker": "AARD",
+    "shares": 1000.0,
+    "price_prev": 7.900000095367432,
+    "price_now": 7.559999942779541,
+    "value_prev": 7900.000095367432,
+    "value_now": 7559.999942779541,
+    "pnl_usd": -340.0001525878906,
+    "return_pct": -4.303799347892001,
+    "weight_prev": 0.19445914576755421,
+    "contribution_pct": -0.8369131447460354,
+    "contribution_bps": -83.69131447460353,
+    "beta": 3.0477604625152286,
+    "beta_source": "estimated",
+    "sector": "Health Care",
+    "sector_return_pct": 1.6658678703747043
+   },
+   {
+    "ticker": "AMSC",
+    "shares": 50.0,
+    "price_prev": 32.77000045776367,
+    "price_now": 30.989999771118164,
+    "value_prev": 1638.5000228881836,
+    "value_now": 1549.4999885559082,
+    "pnl_usd": -89.00003433227539,
+    "return_pct": -5.431799395119629,
+    "weight_prev": 0.040331811511976325,
+    "contribution_pct": -0.2190743093748319,
+    "contribution_bps": -21.90743093748319,
+    "beta": 3.4432370989654495,
+    "beta_source": "estimated",
+    "sector": "Industrials",
+    "sector_return_pct": -0.3132015310536751
+   },
+   {
+    "ticker": "PRCH",
+    "shares": 200.0,
+    "price_prev": 15.850000381469727,
+    "price_now": 15.430000305175781,
+    "value_prev": 3170.0000762939453,
+    "value_now": 3086.0000610351562,
+    "pnl_usd": -84.00001525878906,
+    "return_pct": -2.6498426888681204,
+    "weight_prev": 0.07802981006046832,
+    "contribution_pct": -0.2067667217025001,
+    "contribution_bps": -20.676672170250008,
+    "beta": 1.9233136715670174,
+    "beta_source": "estimated",
+    "sector": "Information Technology",
+    "sector_return_pct": -0.8777963961105972
+   },
+   {
+    "ticker": "QUBT",
+    "shares": 300.0,
+    "price_prev": 9.180000305175781,
+    "price_now": 8.930000305175781,
+    "value_prev": 2754.0000915527344,
+    "value_now": 2679.0000915527344,
+    "pnl_usd": -75.0,
+    "return_pct": -2.7233114563084193,
+    "weight_prev": 0.06778993655470364,
+    "contribution_pct": -0.1846131108418453,
+    "contribution_bps": -18.461311084184533,
+    "beta": 3.7043805481492167,
+    "beta_source": "estimated",
+    "sector": "Information Technology",
+    "sector_return_pct": -0.8777963961105972
+   },
+   {
+    "ticker": "BHVN",
+    "shares": 300.0,
+    "price_prev": 14.65999984741211,
+    "price_now": 14.539999961853027,
+    "value_prev": 4397.999954223633,
+    "value_now": 4361.999988555908,
+    "pnl_usd": -35.99996566772461,
+    "return_pct": -0.8185531160170179,
+    "weight_prev": 0.10825712707086911,
+    "contribution_pct": -0.08861420869491017,
+    "contribution_bps": -8.861420869491017,
+    "beta": 1.0284596793948095,
+    "beta_source": "estimated",
+    "sector": "Health Care",
+    "sector_return_pct": 1.6658678703747043
+   },
+   {
+    "ticker": "KYTX",
+    "shares": 250.0,
+    "price_prev": 7.960000038146973,
+    "price_now": 7.889999866485596,
+    "value_prev": 1990.0000095367432,
+    "value_now": 1972.499966621399,
+    "pnl_usd": -17.50004291534424,
+    "return_pct": -0.8793991372602061,
+    "weight_prev": 0.04898401231145068,
+    "contribution_pct": -0.04307649816623304,
+    "contribution_bps": -4.307649816623304,
+    "beta": 2.5199861604620035,
+    "beta_source": "estimated",
+    "sector": "Health Care",
+    "sector_return_pct": 1.6658678703747043
+   },
+   {
+    "ticker": "SLDP",
+    "shares": 600.0,
+    "price_prev": 2.3299999237060547,
+    "price_now": 2.3499999046325684,
+    "value_prev": 1397.9999542236328,
+    "value_now": 1409.999942779541,
+    "pnl_usd": 11.999988555908203,
+    "return_pct": 0.8583683082144411,
+    "weight_prev": 0.03441188273413097,
+    "contribution_pct": 0.029538069564969734,
+    "contribution_bps": 2.9538069564969733,
+    "beta": 3.185047006576939,
+    "beta_source": "estimated",
+    "sector": "Consumer Discretionary",
+    "sector_return_pct": -0.15852030739088585
+   },
+   {
+    "ticker": "NTLA",
+    "shares": 250.0,
+    "price_prev": 11.9399995803833,
+    "price_now": 12.020000457763672,
+    "value_prev": 2984.999895095825,
+    "value_now": 3005.000114440918,
+    "pnl_usd": 20.000219345092773,
+    "return_pct": 0.6700241222102443,
+    "weight_prev": 0.07347601553282965,
+    "contribution_pct": 0.04923070281089046,
+    "contribution_bps": 4.923070281089046,
+    "beta": 2.2682207225984876,
+    "beta_source": "estimated",
+    "sector": "Health Care",
+    "sector_return_pct": 1.6658678703747043
+   },
+   {
+    "ticker": "DKNG",
+    "shares": 150.0,
+    "price_prev": 24.030000686645508,
+    "price_now": 24.270000457763672,
+    "value_prev": 3604.500102996826,
+    "value_now": 3640.500068664551,
+    "pnl_usd": 35.99996566772461,
+    "return_pct": 0.9987505795267859,
+    "weight_prev": 0.08872506360586614,
+    "contribution_pct": 0.08861420869490974,
+    "contribution_bps": 8.861420869490974,
+    "beta": 0.6489586946524373,
+    "beta_source": "estimated",
+    "sector": "Consumer Discretionary",
+    "sector_return_pct": -0.15852030739088585
+   },
+   {
+    "ticker": "ABSI",
+    "shares": 600.0,
+    "price_prev": 8.930000305175781,
+    "price_now": 9.010000228881836,
+    "value_prev": 5358.000183105469,
+    "value_now": 5406.000137329102,
+    "pnl_usd": 47.99995422363281,
+    "return_pct": 0.8958557779632725,
+    "weight_prev": 0.13188761089257037,
+    "contribution_pct": 0.11815227825988099,
+    "contribution_bps": 11.8152278259881,
+    "beta": 3.344035540226705,
+    "beta_source": "estimated",
+    "sector": "Health Care",
+    "sector_return_pct": 1.6658678703747043
+   },
+   {
+    "ticker": "HUBS",
+    "shares": 10.0,
+    "price_prev": 210.4499969482422,
+    "price_now": 215.91000366210938,
+    "value_prev": 2104.499969482422,
+    "value_now": 2159.1000366210938,
+    "pnl_usd": 54.600067138671875,
+    "return_pct": 2.5944437125413833,
+    "weight_prev": 0.05180243815102914,
+    "contribution_pct": 0.13439850995525143,
+    "contribution_bps": 13.439850995525143,
+    "beta": 0.5290775992722326,
+    "beta_source": "estimated",
+    "sector": "Information Technology",
+    "sector_return_pct": -0.8777963961105972
+   },
+   {
+    "ticker": "SOC",
+    "shares": 700.0,
+    "price_prev": 4.75,
+    "price_now": 5.090000152587891,
+    "value_prev": 3325.0,
+    "value_now": 3563.0001068115234,
+    "pnl_usd": 238.00010681152344,
+    "return_pct": 7.15789794921875,
+    "weight_prev": 0.08184514580655144,
+    "contribution_pct": 0.5858392013222241,
+    "contribution_bps": 58.58392013222242,
+    "beta": 0.2462452541077006,
+    "beta_source": "estimated",
+    "sector": "Energy",
+    "sector_return_pct": 4.660870095957881
+   }
+  ],
+  "sector_returns_pct": {
+   "Consumer Discretionary": -0.15852030739088585,
+   "Energy": 4.660870095957881,
+   "Health Care": 1.6658678703747043,
+   "Industrials": -0.3132015310536751,
+   "Information Technology": -0.8777963961105972
+  },
+  "sector_unmapped": [],
+  "beta_fallbacks": [],
+  "notes": [
+   "market/sector/idiosyncratic is a DECOMPOSITION, not a causal claim: the residual is what these two factors leave over, and on a concentrated small-cap book that is normally most of the move."
+  ]
+ },
+ "epistemics": {
+  "what_this_grades": [
+   "whether the cross-asset signature a hypothesis REQUIRED was present on the same day (hit / miss / unavailable)",
+   "whether its forward claim resolves, on the ledger's schedule"
+  ],
+  "what_this_never_claims": [
+   "that any hypothesis caused the move. One day of data cannot identify a cause, competing explanations are preserved rather than collapsed, and a corroboration hit is evidence a mechanism was PRESENT, not that it was operative."
+  ],
+  "descriptive_only": "this surface explains; it never recommends an action, and hypothesis text that reaches for one is refused"
+ },
+ "status": "ok",
+ "status_detail": "at least one lens answered",
+ "lenses": {
+  "company_news": {
+   "status": "ok",
+   "degraded_reason": null,
+   "n_hypotheses": 4,
+   "n_rejected": 0,
+   "rejections": [],
+   "corroboration_hits": 7,
+   "corroboration_misses": 1,
+   "corroboration_unavailable": 0,
+   "n_predictions_minted": 4,
+   "corroboration_hit_rate_external": 0.8,
+   "corroboration_hits_external": 4,
+   "corroboration_misses_external": 1,
+   "corroboration_hit_rate_derivable": 1.0,
+   "corroboration_hits_derivable": 3,
+   "corroboration_misses_derivable": 0,
+   "corroboration_checkable": 8,
+   "corroboration_hit_rate_combined": 0.875
+  },
+  "macro_rates": {
+   "status": "ok",
+   "degraded_reason": null,
+   "n_hypotheses": 1,
+   "n_rejected": 3,
+   "rejections": [
+    {
+     "lens": "macro_rates",
+     "hypothesis_id": "energy-rally-lifts-long-duration",
+     "reason": "contains recommendation language — this surface explains, it does not advise"
+    },
+    {
+     "lens": "macro_rates",
+     "hypothesis_id": "biotech-idiosyncratic-selloff",
+     "reason": "contains recommendation language — this surface explains, it does not advise"
+    },
+    {
+     "lens": "macro_rates",
+     "hypothesis_id": "tech-weakness-hits-growth",
+     "reason": "contains recommendation language — this surface explains, it does not advise"
+    }
+   ],
+   "corroboration_hits": 2,
+   "corroboration_misses": 0,
+   "corroboration_unavailable": 0,
+   "n_predictions_minted": 1,
+   "corroboration_hit_rate_external": 1.0,
+   "corroboration_hits_external": 1,
+   "corroboration_misses_external": 0,
+   "corroboration_hit_rate_derivable": 1.0,
+   "corroboration_hits_derivable": 1,
+   "corroboration_misses_derivable": 0,
+   "corroboration_checkable": 2,
+   "corroboration_hit_rate_combined": 1.0
+  },
+  "geopolitical": {
+   "status": "degraded",
+   "degraded_reason": "unparseable JSON: JSONDecodeError: Expecting ',' delimiter: line 154 column 6 (char 8700)",
+   "n_hypotheses": 0,
+   "n_rejected": 1,
+   "rejections": [
+    {
+     "lens": "geopolitical",
+     "hypothesis_id": null,
+     "reason": "unparseable JSON from the model: Expecting ',' delimiter: line 154 column 6 (char 8700)"
+    }
+   ],
+   "corroboration_hits": 0,
+   "corroboration_misses": 0,
+   "corroboration_unavailable": 0,
+   "n_predictions_minted": 0,
+   "corroboration_hit_rate_external": null,
+   "corroboration_hits_external": 0,
+   "corroboration_misses_external": 0,
+   "corroboration_hit_rate_derivable": null,
+   "corroboration_hits_derivable": 0,
+   "corroboration_misses_derivable": 0,
+   "corroboration_checkable": 0,
+   "corroboration_hit_rate_combined": null
+  },
+  "sector_factor": {
+   "status": "ok",
+   "degraded_reason": null,
+   "n_hypotheses": 4,
+   "n_rejected": 0,
+   "rejections": [],
+   "corroboration_hits": 8,
+   "corroboration_misses": 0,
+   "corroboration_unavailable": 0,
+   "n_predictions_minted": 4,
+   "corroboration_hit_rate_external": 1.0,
+   "corroboration_hits_external": 2,
+   "corroboration_misses_external": 0,
+   "corroboration_hit_rate_derivable": 1.0,
+   "corroboration_hits_derivable": 6,
+   "corroboration_misses_derivable": 0,
+   "corroboration_checkable": 8,
+   "corroboration_hit_rate_combined": 1.0
+  },
+  "options_vol": {
+   "status": "ok",
+   "degraded_reason": null,
+   "n_hypotheses": 4,
+   "n_rejected": 0,
+   "rejections": [],
+   "corroboration_hits": 8,
+   "corroboration_misses": 0,
+   "corroboration_unavailable": 0,
+   "n_predictions_minted": 4,
+   "corroboration_hit_rate_external": 1.0,
+   "corroboration_hits_external": 2,
+   "corroboration_misses_external": 0,
+   "corroboration_hit_rate_derivable": 1.0,
+   "corroboration_hits_derivable": 6,
+   "corroboration_misses_derivable": 0,
+   "corroboration_checkable": 8,
+   "corroboration_hit_rate_combined": 1.0
+  },
+  "revisions": {
+   "status": "ok",
+   "degraded_reason": null,
+   "n_hypotheses": 4,
+   "n_rejected": 0,
+   "rejections": [],
+   "corroboration_hits": 7,
+   "corroboration_misses": 1,
+   "corroboration_unavailable": 0,
+   "n_predictions_minted": 4,
+   "corroboration_hit_rate_external": 0.75,
+   "corroboration_hits_external": 3,
+   "corroboration_misses_external": 1,
+   "corroboration_hit_rate_derivable": 1.0,
+   "corroboration_hits_derivable": 4,
+   "corroboration_misses_derivable": 0,
+   "corroboration_checkable": 8,
+   "corroboration_hit_rate_combined": 0.875
+  },
+  "skeptic": {
+   "status": "ok",
+   "degraded_reason": null,
+   "n_hypotheses": 4,
+   "n_rejected": 0,
+   "rejections": [],
+   "corroboration_hits": 8,
+   "corroboration_misses": 3,
+   "corroboration_unavailable": 0,
+   "n_predictions_minted": 4,
+   "corroboration_hit_rate_external": 0.8,
+   "corroboration_hits_external": 4,
+   "corroboration_misses_external": 1,
+   "corroboration_hit_rate_derivable": 0.6666666666666666,
+   "corroboration_hits_derivable": 4,
+   "corroboration_misses_derivable": 2,
+   "corroboration_checkable": 11,
+   "corroboration_hit_rate_combined": 0.7272727272727273
+  }
+ },
+ "hypotheses": [
+  {
+   "lens": "company_news",
+   "hypothesis_id": "soc-energy-surge",
+   "claim": "SOC's 7.16% gain on 2026-08-10 was driven by a broad energy sector rally, as reflected in the 4.66% sector return and the positive moves in oil and natural gas futures.",
+   "causal_chain": [
+    "Energy sector experienced a significant rally on 2026-08-10",
+    "SOC, being an energy company, benefited from the sector-wide upward move",
+    "Investors rotated into energy names, lifting SOC's price"
+   ],
+   "affected_assets": [
+    {
+     "ticker": "SOC",
+     "expected_sign": "up"
+    },
+    {
+     "ticker": "XLE",
+     "expected_sign": "up"
+    },
+    {
+     "ticker": "USO",
+     "expected_sign": "up"
+    }
+   ],
+   "confidence": 0.7,
+   "counter_evidence": "SOC's return (7.16%) far exceeds the sector return (4.66%), suggesting company-specific factors may also be at play.",
+   "falsification_condition": "If XLE, USO, or CL=F did not close up on 2026-08-10, the energy sector rally hypothesis is weakened.",
+   "evidence": [
+    {
+     "what": "SOC returned +7.16% on 2026-08-10",
+     "source": "Position data",
+     "first_public_timestamp": "2026-08-10"
+    },
+    {
+     "what": "Energy sector returned +4.66% on 2026-08-10",
+     "source": "Sector returns data",
+     "first_public_timestamp": "2026-08-10"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLE",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": 4.660870095957881
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "USO",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 6.729949640694843
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "CL=F",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 5.052439156847499
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "SOC",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.6,
+    "threshold": null,
+    "claim": "SOC will close up on 2026-08-11 if the energy rally continues.",
+    "prediction_id": "e0e7e328554ea3d6",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 3,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 3,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 2,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "company_news",
+   "hypothesis_id": "healthcare-strength",
+   "claim": "The Health Care sector's 1.67% gain on 2026-08-10, driven by positive sector news, lifted several health care holdings including ABSI, NTLA, and BHVN, though AARD's decline was idiosyncratic.",
+   "causal_chain": [
+    "Health Care sector outperformed on 2026-08-10",
+    "Positive sector sentiment boosted health care stocks",
+    "ABSI, NTLA, and BHVN rose, while AARD fell due to company-specific issues"
+   ],
+   "affected_assets": [
+    {
+     "ticker": "ABSI",
+     "expected_sign": "up"
+    },
+    {
+     "ticker": "NTLA",
+     "expected_sign": "up"
+    },
+    {
+     "ticker": "BHVN",
+     "expected_sign": "up"
+    }
+   ],
+   "confidence": 0.5,
+   "counter_evidence": "AARD fell 4.3% despite sector strength, indicating idiosyncratic negative news.",
+   "falsification_condition": "If XLV or IBB did not close up on 2026-08-10, the sector strength hypothesis is weakened.",
+   "evidence": [
+    {
+     "what": "Health Care sector returned +1.67% on 2026-08-10",
+     "source": "Sector returns data",
+     "first_public_timestamp": "2026-08-10"
+    },
+    {
+     "what": "ABSI, NTLA, BHVN all closed up on 2026-08-10",
+     "source": "Position data",
+     "first_public_timestamp": "2026-08-10"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLV",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": 1.6658678703747043
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "IBB",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 1.1683766527492256
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "ABSI",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.55,
+    "threshold": null,
+    "claim": "ABSI will close up on 2026-08-11 if health care momentum persists.",
+    "prediction_id": "23c15ed54b5a48e5",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "company_news",
+   "hypothesis_id": "tech-weakness",
+   "claim": "Information Technology stocks, including PRCH and QUBT, declined on 2026-08-10 due to sector-wide weakness, while HUBS bucked the trend with a 2.59% gain on company-specific news.",
+   "causal_chain": [
+    "Information Technology sector fell 0.88% on 2026-08-10",
+    "Negative sector sentiment dragged down most tech stocks",
+    "PRCH and QUBT declined, while HUBS rose due to idiosyncratic factors"
+   ],
+   "affected_assets": [
+    {
+     "ticker": "PRCH",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "QUBT",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "HUBS",
+     "expected_sign": "up"
+    }
+   ],
+   "confidence": 0.6,
+   "counter_evidence": "HUBS rose 2.59% despite sector weakness, suggesting company-specific positive news.",
+   "falsification_condition": "If XLK or SMH did not close down on 2026-08-10, the tech weakness hypothesis is weakened.",
+   "evidence": [
+    {
+     "what": "Information Technology sector returned -0.88% on 2026-08-10",
+     "source": "Sector returns data",
+     "first_public_timestamp": "2026-08-10"
+    },
+    {
+     "what": "PRCH and QUBT both declined on 2026-08-10",
+     "source": "Position data",
+     "first_public_timestamp": "2026-08-10"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLK",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -0.8777963961105972
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "SMH",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": -2.2807686260658766
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "PRCH",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.5,
+    "threshold": null,
+    "claim": "PRCH will close down on 2026-08-11 if tech weakness persists.",
+    "prediction_id": "41e166653787966f",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "company_news",
+   "hypothesis_id": "market-neutrality",
+   "claim": "The book's small market component (-0.065%) and large idiosyncratic component (-1.642%) indicate that the day's loss was driven by stock-specific factors rather than broad market moves, consistent with the flat SPY return.",
+   "causal_chain": [
+    "SPY was nearly flat on 2026-08-10",
+    "Market beta contributed little to the book's return",
+    "Idiosyncratic moves in individual positions drove the loss"
+   ],
+   "affected_assets": [
+    {
+     "ticker": "SPY",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "AARD",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.8,
+   "counter_evidence": "The book's beta is 2.19, so even a small market move could have a larger impact, but the market component is tiny.",
+   "falsification_condition": "If SPY moved more than 0.5% on 2026-08-10, the market-neutrality hypothesis is weakened.",
+   "evidence": [
+    {
+     "what": "SPY returned -0.03% on 2026-08-10",
+     "source": "Benchmark data",
+     "first_public_timestamp": "2026-08-10"
+    },
+    {
+     "what": "Idiosyncratic component was -1.642%",
+     "source": "Position data",
+     "first_public_timestamp": "2026-08-10"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "magnitude",
+     "asset": "^VIX",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": 5.0,
+     "status": "miss",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 3.7583921741867643,
+      "abs_move_pct": 3.7583921741867643,
+      "min_abs_move_pct": 5.0
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "SPY",
+    "observable": "abs_move_exceeds",
+    "horizon_days": 1,
+    "probability": 0.3,
+    "threshold": 0.005,
+    "claim": "SPY will move less than 0.5% on 2026-08-11, confirming low market volatility.",
+    "prediction_id": "a17bafd91f02ee37",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 0,
+    "corroboration_misses": 1,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 1,
+    "corroboration_hit_rate": 0.0,
+    "corroboration_hit_rate_external": 0.0,
+    "corroboration_hits_external": 0,
+    "corroboration_misses_external": 1,
+    "corroboration_hit_rate_derivable": null,
+    "corroboration_hits_derivable": 0,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 0.0
+   }
+  },
+  {
+   "lens": "macro_rates",
+   "hypothesis_id": "high-beta-idiosyncratic-losses",
+   "claim": "The book's losses were primarily driven by idiosyncratic negative returns in a few high-beta positions, amplified by the book's high beta, rather than by a common macro factor.",
+   "causal_chain": [
+    "Idiosyncratic negative returns in AARD, AMSC, PRCH, QUBT",
+    "High book beta (2.19) amplifies these idiosyncratic moves",
+    "Market component is small (-0.065%)",
+    "Idiosyncratic component (-1.642%) dominates"
+   ],
+   "affected_assets": [
+    {
+     "ticker": "AARD",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "AMSC",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "PRCH",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "QUBT",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.6,
+   "counter_evidence": "The sector component was +1.134%, so sector tailwinds partially offset idiosyncratic losses; the losses are not purely idiosyncratic.",
+   "falsification_condition": "If the book's idiosyncratic component were not large negative, or if the market component were significant, this hypothesis is falsified.",
+   "evidence": [
+    {
+     "what": "Idiosyncratic component -1.642%, market component -0.065%, sector component +1.134%.",
+     "source": "provided book data",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "SPY",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -0.029741673673222557
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "QQQ",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": -0.29874750593527066
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "AARD",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.5,
+    "threshold": null,
+    "claim": "AARD will continue to decline the next day if the idiosyncratic negative news persists.",
+    "prediction_id": "63db57ac7a353e21",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "sector_factor",
+   "hypothesis_id": "healthcare-idio-rally",
+   "claim": "The book's Health Care names rallied on idiosyncratic news, not sector beta, while the sector itself was flat-to-up.",
+   "causal_chain": [
+    "Health Care sector return was +1.666% while the book's Health Care names (AARD, BHVN, KYTX, NTLA, ABSI) had mixed moves, with AARD down sharply and ABSI up.",
+    "The large negative contribution from AARD (-83.7 bps) is idiosyncratic, as the sector was positive.",
+    "The positive contributions from NTLA and ABSI are also idiosyncratic, as they outperformed the sector.",
+    "The book's sector component was +1.134%, but the idiosyncratic component was -1.642%, indicating that stock-specific moves dominated."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "AARD",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "ABSI",
+     "expected_sign": "up"
+    },
+    {
+     "ticker": "NTLA",
+     "expected_sign": "up"
+    }
+   ],
+   "confidence": 0.6,
+   "counter_evidence": "If the Health Care sector had a broad rally, we would expect most Health Care names to be up, but AARD fell sharply, and BHVN and KYTX were down, which is inconsistent with a pure sector move.",
+   "falsification_condition": "If XLV (Health Care sector ETF) had moved down more than 0.5% on the day, or if AARD's move was matched by a similar move in XLV, the idiosyncratic hypothesis would be weakened.",
+   "evidence": [
+    {
+     "what": "Health Care sector return was +1.666% on the day, while AARD fell 4.304% and ABSI rose 0.896%.",
+     "source": "Provided sector_returns_pct and position returns",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLV",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": 1.6658678703747043
+     }
+    },
+    {
+     "kind": "relative",
+     "asset": "AARD",
+     "expect": "underperforms",
+     "versus": "XLV",
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -4.303799347892001,
+      "versus_return_pct": 1.6658678703747043,
+      "spread_pct": -5.969667218266705
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "AARD",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.4,
+    "threshold": null,
+    "claim": "AARD's return will be negative on the next trading day, consistent with continued idiosyncratic weakness.",
+    "prediction_id": "ebde5ab013cb3060",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": null,
+    "corroboration_hits_external": 0,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 2,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "sector_factor",
+   "hypothesis_id": "energy-soc-rally",
+   "claim": "SOC's +7.158% move was driven by a broad energy sector rally, as the Energy sector returned +4.661% on the day.",
+   "causal_chain": [
+    "The Energy sector return was +4.661%, the highest among sectors.",
+    "SOC, an Energy name, returned +7.158%, contributing +58.6 bps to the book.",
+    "The book's sector component was +1.134%, partly due to the energy rally.",
+    "The move is consistent with sector beta rather than idiosyncratic news."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "SOC",
+     "expected_sign": "up"
+    }
+   ],
+   "confidence": 0.7,
+   "counter_evidence": "If SOC's move were purely idiosyncratic, we would not expect other energy names to rally as strongly, but the sector return of +4.661% suggests a broad move.",
+   "falsification_condition": "If XLE (Energy sector ETF) had moved down or been flat on the day, the sector-driven hypothesis would be falsified.",
+   "evidence": [
+    {
+     "what": "Energy sector return was +4.661% on the day, and SOC returned +7.158%.",
+     "source": "Provided sector_returns_pct and position returns",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLE",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": 4.660870095957881
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "CL=F",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 5.052439156847499
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "SOC",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.5,
+    "threshold": null,
+    "claim": "SOC will continue to rise on the next trading day if the energy rally persists.",
+    "prediction_id": "a1df6231a9c27fb7",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "sector_factor",
+   "hypothesis_id": "tech-weakness-idio",
+   "claim": "The Information Technology names in the book (PRCH, QUBT, HUBS) fell due to idiosyncratic weakness, not a broad tech selloff, as the sector return was -0.878%.",
+   "causal_chain": [
+    "The Information Technology sector returned -0.878% on the day.",
+    "PRCH fell -2.65% and QUBT fell -2.723%, both underperforming the sector.",
+    "HUBS rose +2.594%, outperforming the sector, indicating stock-specific moves.",
+    "The book's idiosyncratic component was -1.642%, suggesting that stock-specific factors dominated."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "PRCH",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "QUBT",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "HUBS",
+     "expected_sign": "up"
+    }
+   ],
+   "confidence": 0.5,
+   "counter_evidence": "If the tech sector had a broad selloff, we would expect most tech names to fall, but HUBS rose, which is inconsistent with a pure sector move.",
+   "falsification_condition": "If XLK (Technology sector ETF) had fallen more than 1% on the day, or if PRCH and QUBT had moved in line with XLK, the idiosyncratic hypothesis would be weakened.",
+   "evidence": [
+    {
+     "what": "Information Technology sector return was -0.878%, while PRCH fell -2.65%, QUBT fell -2.723%, and HUBS rose +2.594%.",
+     "source": "Provided sector_returns_pct and position returns",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLK",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -0.8777963961105972
+     }
+    },
+    {
+     "kind": "relative",
+     "asset": "PRCH",
+     "expect": "underperforms",
+     "versus": "XLK",
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -2.6498426888681204,
+      "versus_return_pct": -0.8777963961105972,
+      "spread_pct": -1.7720462927575231
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "PRCH",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.4,
+    "threshold": null,
+    "claim": "PRCH will continue to fall on the next trading day if idiosyncratic weakness persists.",
+    "prediction_id": "d50ddd5bb08db625",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": null,
+    "corroboration_hits_external": 0,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 2,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "sector_factor",
+   "hypothesis_id": "high-beta-idio-loss",
+   "claim": "The book's high beta (2.19) amplified a small market move, but the majority of the loss was idiosyncratic, as the market component was only -0.065%.",
+   "causal_chain": [
+    "The book's beta is 2.19, so a -0.03% move in SPY would contribute approximately -0.065% to the book's return.",
+    "The actual book return was -0.573%, far larger than the market component.",
+    "The idiosyncratic component was -1.642%, indicating that stock-specific moves drove the loss.",
+    "The largest loss came from AARD, which fell -4.304% on a day when its sector was up."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "SPY",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.8,
+   "counter_evidence": "If the market had fallen significantly more than -0.03%, the market component would be larger, but the provided data shows a small market move.",
+   "falsification_condition": "If SPY had fallen more than 1% on the day, the market component would be larger, weakening the idiosyncratic hypothesis.",
+   "evidence": [
+    {
+     "what": "SPY returned -0.03% on the day, while the book returned -0.573% with an idiosyncratic component of -1.642%.",
+     "source": "Provided benchmark_return_pct, book_return_pct, idiosyncratic_component_pct",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "SPY",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -0.029741673673222557
+     }
+    },
+    {
+     "kind": "magnitude",
+     "asset": "^VIX",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": 3.0,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 3.7583921741867643,
+      "abs_move_pct": 3.7583921741867643,
+      "min_abs_move_pct": 3.0
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "SPY",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.5,
+    "threshold": null,
+    "claim": "SPY will continue to fall on the next trading day if the market weakness persists.",
+    "prediction_id": "e0d32ead8b0a1d57",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "options_vol",
+   "hypothesis_id": "healthcare-idio-selloff",
+   "claim": "The book's large loss was driven by idiosyncratic negative news in the Health Care positions AARD and AMSC, not by a broad market or sector move.",
+   "causal_chain": [
+    "AARD and AMSC, with combined weight ~23.5%, fell 4.3% and 5.4% respectively, contributing -105.6 bps to book PnL.",
+    "The Health Care sector return was +1.67%, so these losses were not sector-driven.",
+    "The market component was negligible (-0.065%), and the book's idiosyncratic component was -1.642%, confirming stock-specific drivers.",
+    "The losses likely reflect company-specific news or events, such as clinical trial failures or guidance cuts, which are not captured by sector or market indices."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "AARD",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "AMSC",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.7,
+   "counter_evidence": "If the losses were due to a broad risk-off event, we would expect correlated declines across many positions, but several positions rose, and the sector was positive.",
+   "falsification_condition": "If AARD and AMSC had positive returns or if the Health Care sector had fallen sharply, this hypothesis would be falsified.",
+   "evidence": [
+    {
+     "what": "AARD fell 4.3% and AMSC fell 5.4% on a day when the Health Care sector rose 1.67%.",
+     "source": "Book PnL data",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLV",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": 1.6658678703747043
+     }
+    },
+    {
+     "kind": "relative",
+     "asset": "AARD",
+     "expect": "underperforms",
+     "versus": "XLV",
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -4.303799347892001,
+      "versus_return_pct": 1.6658678703747043,
+      "spread_pct": -5.969667218266705
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "AARD",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.6,
+    "threshold": null,
+    "claim": "AARD will likely continue to decline over the next day if the negative news is company-specific.",
+    "prediction_id": "70f5a2f3ef6a242a",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": null,
+    "corroboration_hits_external": 0,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 2,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "options_vol",
+   "hypothesis_id": "energy-long-drives-gains",
+   "claim": "The book's gains were driven by a strong energy sector, particularly the SOC position, which rose 7.16% on a day when energy was the best-performing sector.",
+   "causal_chain": [
+    "SOC, with weight 8.18%, returned +7.16%, contributing +58.6 bps to book PnL.",
+    "The Energy sector returned +4.66%, the highest of all sectors, indicating a broad energy rally.",
+    "The book's sector component was +1.134%, largely due to this energy exposure.",
+    "The energy rally likely reflects a rise in oil prices or positive sector news, benefiting SOC and other energy names."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "SOC",
+     "expected_sign": "up"
+    }
+   ],
+   "confidence": 0.8,
+   "counter_evidence": "If energy had been flat or down, or if SOC had fallen despite a strong sector, this hypothesis would be weakened.",
+   "falsification_condition": "If the Energy sector return had been negative or SOC had underperformed the sector, this hypothesis would be falsified.",
+   "evidence": [
+    {
+     "what": "SOC rose 7.16% and Energy sector rose 4.66%.",
+     "source": "Book PnL data",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLE",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": 4.660870095957881
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "CL=F",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 5.052439156847499
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "SOC",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.6,
+    "threshold": null,
+    "claim": "SOC will likely continue to rise if the energy rally persists.",
+    "prediction_id": "8ebe9135a77f4323",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "options_vol",
+   "hypothesis_id": "tech-weakness-idiosyncratic",
+   "claim": "The losses in Information Technology positions PRCH and QUBT were idiosyncratic, not driven by a broad tech selloff, as the sector was only slightly down.",
+   "causal_chain": [
+    "PRCH and QUBT, with combined weight ~14.6%, fell 2.65% and 2.72% respectively, contributing -39.2 bps to book PnL.",
+    "The Information Technology sector returned -0.878%, a mild decline, so these losses were much larger than the sector move.",
+    "The book's market component was negligible, and the idiosyncratic component was large, indicating stock-specific factors.",
+    "These losses likely reflect company-specific news, such as earnings misses or product issues, rather than a sector-wide tech selloff."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "PRCH",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "QUBT",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.6,
+   "counter_evidence": "If the tech sector had fallen sharply or if other tech names had also dropped significantly, this would suggest a sector-wide move.",
+   "falsification_condition": "If PRCH and QUBT had positive returns or if the tech sector had fallen more than 2%, this hypothesis would be falsified.",
+   "evidence": [
+    {
+     "what": "PRCH fell 2.65% and QUBT fell 2.72% while the tech sector fell only 0.878%.",
+     "source": "Book PnL data",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLK",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -0.8777963961105972
+     }
+    },
+    {
+     "kind": "relative",
+     "asset": "PRCH",
+     "expect": "underperforms",
+     "versus": "XLK",
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -2.6498426888681204,
+      "versus_return_pct": -0.8777963961105972,
+      "spread_pct": -1.7720462927575231
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "PRCH",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.55,
+    "threshold": null,
+    "claim": "PRCH will likely continue to decline if the negative news is company-specific.",
+    "prediction_id": "0a6b0493bc535029",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": null,
+    "corroboration_hits_external": 0,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 2,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "options_vol",
+   "hypothesis_id": "market-neutrality",
+   "claim": "The book's overall performance was largely idiosyncratic, with market and sector effects playing a minor role, as indicated by the small market component and the large idiosyncratic component.",
+   "causal_chain": [
+    "The market component was only -0.065% of the book's return, while the idiosyncratic component was -1.642%.",
+    "The book's beta is 2.19, but the market move was tiny (-0.03%), so the market impact was minimal.",
+    "The sector component was +1.134%, but this was offset by large idiosyncratic losses in Health Care and Tech.",
+    "This suggests the book's PnL was driven by stock-specific news and events, not by broad market or sector moves."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "SPY",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.9,
+   "counter_evidence": "If the market had moved significantly or if the sector component had been large, this would indicate a more systematic driver.",
+   "falsification_condition": "If the market component had been large (e.g., >1%) or if the idiosyncratic component had been small, this hypothesis would be falsified.",
+   "evidence": [
+    {
+     "what": "Market component was -0.065%, idiosyncratic component was -1.642%.",
+     "source": "Book PnL data",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "SPY",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -0.029741673673222557
+     }
+    },
+    {
+     "kind": "magnitude",
+     "asset": "^VIX",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": 3.0,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 3.7583921741867643,
+      "abs_move_pct": 3.7583921741867643,
+      "min_abs_move_pct": 3.0
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "SPY",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.5,
+    "threshold": null,
+    "claim": "SPY will likely continue to be flat or slightly down, as the market is not the main driver.",
+    "prediction_id": "ae0d71479a83fb10",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "revisions",
+   "hypothesis_id": "healthcare-idio-selloff",
+   "claim": "The book's outsized loss was driven by idiosyncratic negative news in small-cap healthcare names AARD and AMSC, not by sector or market moves.",
+   "causal_chain": [
+    "AARD and AMSC, with combined weight ~23.5%, fell 4.3% and 5.4% respectively, contributing -105.6 bps.",
+    "The Health Care sector rose +1.666% and the market was flat (-0.03%), so the declines are not explained by sector or market factors.",
+    "The idiosyncratic component of -1.642% indicates stock-specific negative catalysts for these positions."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "AARD",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "AMSC",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.7,
+   "counter_evidence": "The sector Health Care rose, so if the decline were sector-driven, AARD and AMSC would likely have risen. Also, the book's other healthcare names (BHVN, KYTX, NTLA, ABSI) were mixed, suggesting idiosyncratic effects.",
+   "falsification_condition": "If AARD and AMSC had positive returns or if the Health Care sector fell on the same day, the hypothesis would be falsified.",
+   "evidence": [
+    {
+     "what": "AARD fell 4.304% and AMSC fell 5.432% on 2026-08-10.",
+     "source": "Book P&L data",
+     "first_public_timestamp": "unknown"
+    },
+    {
+     "what": "Health Care sector return was +1.666% on the same day.",
+     "source": "Sector returns data",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLV",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": 1.6658678703747043
+     }
+    },
+    {
+     "kind": "relative",
+     "asset": "XBI",
+     "expect": "underperforms",
+     "versus": "SPY",
+     "min_abs_move_pct": null,
+     "status": "miss",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 0.41939612542905014,
+      "versus_return_pct": -0.029741673673222557,
+      "spread_pct": 0.4491377991022727
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "AARD",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.6,
+    "threshold": null,
+    "claim": "AARD will continue to decline the next trading day if the negative idiosyncratic news persists.",
+    "prediction_id": "5e717a4b0c6d662a",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 1,
+    "corroboration_misses": 1,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 0.5,
+    "corroboration_hit_rate_external": 0.0,
+    "corroboration_hits_external": 0,
+    "corroboration_misses_external": 1,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 0.5
+   }
+  },
+  {
+   "lens": "revisions",
+   "hypothesis_id": "energy-strength-soc",
+   "claim": "The book's positive contribution from SOC was driven by a broad energy sector rally, as evidenced by strong oil and energy ETF gains.",
+   "causal_chain": [
+    "SOC rose 7.158% and contributed +58.6 bps, the largest positive contributor.",
+    "The Energy sector returned +4.661%, indicating a sector-wide move.",
+    "Oil prices likely rose, lifting energy equities."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "SOC",
+     "expected_sign": "up"
+    }
+   ],
+   "confidence": 0.8,
+   "counter_evidence": "SOC could have had company-specific positive news (e.g., earnings) independent of the sector. However, the sector return of +4.661% is unusually high and suggests a common driver.",
+   "falsification_condition": "If the Energy sector did not rise or if oil prices fell, the hypothesis would be falsified.",
+   "evidence": [
+    {
+     "what": "SOC rose 7.158% on 2026-08-10.",
+     "source": "Book P&L data",
+     "first_public_timestamp": "unknown"
+    },
+    {
+     "what": "Energy sector return was +4.661% on the same day.",
+     "source": "Sector returns data",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLE",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": 4.660870095957881
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "CL=F",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 5.052439156847499
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "SOC",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.65,
+    "threshold": null,
+    "claim": "SOC will likely continue to rise if the energy rally persists.",
+    "prediction_id": "da7fa5dbd83a2679",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "revisions",
+   "hypothesis_id": "tech-weakness-broad",
+   "claim": "The negative contributions from PRCH and QUBT reflect a broad technology sector decline, not idiosyncratic issues, as the Information Technology sector fell.",
+   "causal_chain": [
+    "PRCH fell 2.65% and QUBT fell 2.723%, contributing -39.2 bps combined.",
+    "The Information Technology sector returned -0.878%, indicating a sector-wide decline.",
+    "The market was flat, so the tech decline is sector-specific."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "PRCH",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "QUBT",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.6,
+   "counter_evidence": "The tech sector decline was modest (-0.878%), while PRCH and QUBT fell more than 2.5%, suggesting possible idiosyncratic factors. Also, HUBS (tech) rose 2.594%, so not all tech fell.",
+   "falsification_condition": "If the Information Technology sector had risen or if PRCH and QUBT had positive returns, the hypothesis would be falsified.",
+   "evidence": [
+    {
+     "what": "PRCH fell 2.65% and QUBT fell 2.723% on 2026-08-10.",
+     "source": "Book P&L data",
+     "first_public_timestamp": "unknown"
+    },
+    {
+     "what": "Information Technology sector return was -0.878% on the same day.",
+     "source": "Sector returns data",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLK",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -0.8777963961105972
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "QQQ",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": -0.29874750593527066
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "PRCH",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.55,
+    "threshold": null,
+    "claim": "PRCH will likely continue to decline if the tech sector remains weak.",
+    "prediction_id": "e2fd1aa85fc78724",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "revisions",
+   "hypothesis_id": "high-beta-magnified",
+   "claim": "The book's high beta (2.19) magnified the small market decline into a larger book loss, but the market component was small; the loss was mostly idiosyncratic.",
+   "causal_chain": [
+    "SPY fell only -0.03%, but with beta 2.19, the expected market-driven return is about -0.065%.",
+    "The actual book return was -0.573%, far more negative than the market component.",
+    "The idiosyncratic component of -1.642% indicates that stock-specific moves dominated the loss."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "SPY",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.5,
+   "counter_evidence": "The market component is tiny, so beta alone cannot explain the magnitude. The loss is driven by idiosyncratic moves, not beta.",
+   "falsification_condition": "If the market had fallen significantly or if the book's beta were lower, the hypothesis would be falsified.",
+   "evidence": [
+    {
+     "what": "SPY fell -0.03% on 2026-08-10.",
+     "source": "Benchmark data",
+     "first_public_timestamp": "unknown"
+    },
+    {
+     "what": "Book beta is 2.19 and market component is -0.065%.",
+     "source": "Book data",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "SPY",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -0.029741673673222557
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "^VIX",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 3.7583921741867643
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "SPY",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.5,
+    "threshold": null,
+    "claim": "SPY will likely continue to decline slightly if the market remains weak.",
+    "prediction_id": "3b97ae55c400940e",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "skeptic",
+   "hypothesis_id": "idiosyncratic_flow_dominance",
+   "claim": "The book's loss is dominated by idiosyncratic, stock-specific flow in a few small positions (AARD, AMSC, PRCH, QUBT) rather than any common factor.",
+   "causal_chain": [
+    "Small, high-beta, low-liquidity names experience idiosyncratic selling pressure (e.g., sector rotation, tax-loss harvesting, or index rebalancing) on 2026-08-10.",
+    "These names have low average daily volume, so even modest flow moves prices disproportionately.",
+    "The book's concentrated weights in these names translate the moves into a large P&L hit.",
+    "The market (SPY) and sector moves are small and cannot explain the magnitude of the losses."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "AARD",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "AMSC",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "PRCH",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "QUBT",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.6,
+   "counter_evidence": "If the losses were driven by a common factor, we would see correlated moves across many small caps and a broader risk-off tone. The book's winners (SOC +7.16%, HUBS +2.59%) argue against a uniform selloff.",
+   "falsification_condition": "If on 2026-08-10 the small-cap indices (IWM, RSP) and the specific sectors (XLV, XLI, XLK) also fell sharply (e.g., IWM down >1%), and the losers' moves were matched by broad declines in their sectors, then the idiosyncratic explanation is weakened.",
+   "evidence": [
+    {
+     "what": "AARD fell 4.30%, AMSC fell 5.43%, PRCH fell 2.65%, QUBT fell 2.72% on a day when SPY was flat (-0.03%).",
+     "source": "provided book P&L",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "IWM",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": -0.5239377188808403
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "XLV",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "miss",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": 1.6658678703747043
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "XLI",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -0.3132015310536751
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "XLK",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -0.8777963961105972
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "AARD",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.5,
+    "threshold": null,
+    "claim": "If the move was idiosyncratic flow, AARD's price on 2026-08-11 should not show a strong continuation (i.e., it is as likely to bounce as to fall further).",
+    "prediction_id": "75304cc4a26b9a67",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 3,
+    "corroboration_misses": 1,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 4,
+    "corroboration_hit_rate": 0.75,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 0.6666666666666666,
+    "corroboration_hits_derivable": 2,
+    "corroboration_misses_derivable": 1,
+    "corroboration_hit_rate_combined": 0.75
+   }
+  },
+  {
+   "lens": "skeptic",
+   "hypothesis_id": "sector_rotation_healthcare",
+   "claim": "The losses in health care names (AARD, BHVN, KYTX) are due to a sector-wide rotation out of health care, despite the sector index showing a gain, because the book's specific sub-sectors (biotech) underperformed.",
+   "causal_chain": [
+    "On 2026-08-10, investors rotate out of speculative biotech into more defensive or other sectors.",
+    "The health care sector as measured by XLV includes large pharma, which may be flat or up, masking weakness in small-cap biotech.",
+    "The book's health care positions are small-cap biotech, which suffer disproportionately.",
+    "The book's health care losses (AARD -4.30%, BHVN -0.82%, KYTX -0.88%) are consistent with a biotech-specific selloff."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "AARD",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "BHVN",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "KYTX",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.3,
+   "counter_evidence": "The health care sector return in the book's data is +1.67%, and XLV might have risen. Also, other health care names in the book (NTLA +0.67%, ABSI +0.90%) gained, so the weakness is not uniform.",
+   "falsification_condition": "If on 2026-08-10 XLV rose (or was flat) and the biotech ETF IBB also rose, then the sector-rotation hypothesis is falsified.",
+   "evidence": [
+    {
+     "what": "Book's health care positions show mixed returns: AARD -4.30%, BHVN -0.82%, KYTX -0.88%, NTLA +0.67%, ABSI +0.90%.",
+     "source": "provided book P&L",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLV",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "miss",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": 1.6658678703747043
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "IBB",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "miss",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 1.1683766527492256
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "IBB",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.5,
+    "threshold": null,
+    "claim": "If the move was sector rotation, IBB should also be down on 2026-08-10 (or at least not strongly up).",
+    "prediction_id": "8da9ed6944dc023d",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 0,
+    "corroboration_misses": 2,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 0.0,
+    "corroboration_hit_rate_external": 0.0,
+    "corroboration_hits_external": 0,
+    "corroboration_misses_external": 1,
+    "corroboration_hit_rate_derivable": 0.0,
+    "corroboration_hits_derivable": 0,
+    "corroboration_misses_derivable": 1,
+    "corroboration_hit_rate_combined": 0.0
+   }
+  },
+  {
+   "lens": "skeptic",
+   "hypothesis_id": "energy_surge_offsets",
+   "claim": "The book's energy position (SOC) surged due to a spike in oil prices, which offset some losses but does not explain the losers; the losers are unrelated to energy.",
+   "causal_chain": [
+    "On 2026-08-10, oil prices (CL=F) rise sharply, possibly due to supply concerns or geopolitical news.",
+    "Energy stocks, including SOC, rally in sympathy.",
+    "The book's SOC position gains +7.16%, contributing +58.6 bps.",
+    "The losses in other sectors are independent of the energy move."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "SOC",
+     "expected_sign": "up"
+    }
+   ],
+   "confidence": 0.5,
+   "counter_evidence": "If oil prices did not rise on 2026-08-10, then the SOC move is idiosyncratic. Also, the book's energy sector return is +4.66%, which is large, but could be due to SOC alone.",
+   "falsification_condition": "If on 2026-08-10 CL=F did not rise (e.g., fell or was flat), then the energy surge hypothesis is falsified.",
+   "evidence": [
+    {
+     "what": "SOC rose 7.16% on the day, and the book's energy sector return was +4.66%.",
+     "source": "provided book P&L",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "CL=F",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 5.052439156847499
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "XLE",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": 4.660870095957881
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "USO",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 6.729949640694843
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "SOC",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.5,
+    "threshold": null,
+    "claim": "If the move was oil-driven, SOC should continue to correlate with oil on 2026-08-11.",
+    "prediction_id": "c562a41bf4f681b2",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 3,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 3,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 2,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "skeptic",
+   "hypothesis_id": "tech_selloff",
+   "claim": "The losses in technology names (PRCH, QUBT) are due to a selloff in the technology sector, particularly in small-cap and speculative tech.",
+   "causal_chain": [
+    "On 2026-08-10, the technology sector (XLK) declines, possibly due to profit-taking or negative news.",
+    "Small-cap tech and high-beta names like PRCH and QUBT fall more than the sector.",
+    "The book's tech positions suffer, contributing to the loss.",
+    "The book's tech sector return is -0.88%, consistent with a modest sector decline."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "PRCH",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "QUBT",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.4,
+   "counter_evidence": "The book's tech sector return is -0.88%, but XLK might have been flat or up. Also, HUBS (tech) gained +2.59%, so the weakness is not uniform.",
+   "falsification_condition": "If on 2026-08-10 XLK rose or was flat, and SMH (semiconductors) also rose, then the tech selloff hypothesis is falsified.",
+   "evidence": [
+    {
+     "what": "PRCH fell 2.65%, QUBT fell 2.72%, while HUBS rose 2.59%.",
+     "source": "provided book P&L",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLK",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -0.8777963961105972
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "SMH",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": -2.2807686260658766
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "PRCH",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.5,
+    "threshold": null,
+    "claim": "If the move was sector-driven, PRCH should move in line with XLK on 2026-08-11.",
+    "prediction_id": "4af5b1018b4828d4",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate": 1.0,
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  }
+ ],
+ "batch": {
+  "n_hypotheses": 21,
+  "effective_distinct_ideas": 14,
+  "ratio": 0.667,
+  "distinct_lenses": 6,
+  "components": [
+   [
+    "sector_factor:energy-soc-rally",
+    "options_vol:energy-long-drives-gains",
+    "revisions:energy-strength-soc"
+   ],
+   [
+    "company_news:soc-energy-surge",
+    "skeptic:energy_surge_offsets"
+   ],
+   [
+    "company_news:tech-weakness",
+    "skeptic:tech_selloff"
+   ],
+   [
+    "sector_factor:healthcare-idio-rally",
+    "options_vol:healthcare-idio-selloff"
+   ],
+   [
+    "sector_factor:tech-weakness-idio",
+    "options_vol:tech-weakness-idiosyncratic"
+   ],
+   [
+    "sector_factor:high-beta-idio-loss",
+    "options_vol:market-neutrality"
+   ],
+   [
+    "company_news:healthcare-strength"
+   ],
+   [
+    "company_news:market-neutrality"
+   ],
+   [
+    "macro_rates:high-beta-idiosyncratic-losses"
+   ],
+   [
+    "revisions:healthcare-idio-selloff"
+   ],
+   [
+    "revisions:tech-weakness-broad"
+   ],
+   [
+    "revisions:high-beta-magnified"
+   ],
+   [
+    "skeptic:idiosyncratic_flow_dominance"
+   ],
+   [
+    "skeptic:sector_rotation_healthcare"
+   ]
+  ],
+  "reading": "the denominator for any claim about this batch is the number of components, not the number of rows (CANON §20)",
+  "n_rejected": 4,
+  "corroboration": {
+   "corroboration_hit_rate_external": 0.8421052631578947,
+   "corroboration_hits_external": 16,
+   "corroboration_misses_external": 3,
+   "corroboration_hit_rate_derivable": 0.9230769230769231,
+   "corroboration_hits_derivable": 24,
+   "corroboration_misses_derivable": 2,
+   "corroboration_hits": 40,
+   "corroboration_misses": 5,
+   "corroboration_unavailable": 0,
+   "corroboration_checkable": 45,
+   "corroboration_hit_rate_combined": 0.8888888888888888,
+   "derivable_assets": [
+    "AARD",
+    "ABSI",
+    "AMSC",
+    "BHVN",
+    "DKNG",
+    "HUBS",
+    "KYTX",
+    "NTLA",
+    "PRCH",
+    "QUBT",
+    "SLDP",
+    "SOC",
+    "SPY",
+    "XLE",
+    "XLI",
+    "XLK",
+    "XLV",
+    "XLY"
+   ],
+   "headline": "corroboration_hit_rate_external",
+   "note": "re-scored: only assertions about instruments the prompt did NOT disclose count toward the headline rate"
+  }
+ },
+ "predictions": [
+  {
+   "prediction_id": "e0e7e328554ea3d6",
+   "ticker": "SOC",
+   "specialist": "why_moved:company_news",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.6,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "SOC will close up on 2026-08-11 if the energy rally continues.",
+   "counter_thesis": "SOC's return (7.16%) far exceeds the sector return (4.66%), suggesting company-specific factors may also be at play.",
+   "next_observable": "If XLE, USO, or CL=F did not close up on 2026-08-10, the energy sector rally hypothesis is weakened.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "a0ea6a4798d5e13c",
+   "input_snapshot_hash": "c10612458aa020ac",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "23c15ed54b5a48e5",
+   "ticker": "ABSI",
+   "specialist": "why_moved:company_news",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.55,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "ABSI will close up on 2026-08-11 if health care momentum persists.",
+   "counter_thesis": "AARD fell 4.3% despite sector strength, indicating idiosyncratic negative news.",
+   "next_observable": "If XLV or IBB did not close up on 2026-08-10, the sector strength hypothesis is weakened.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "a0ea6a4798d5e13c",
+   "input_snapshot_hash": "e0909c87b100d10b",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "41e166653787966f",
+   "ticker": "PRCH",
+   "specialist": "why_moved:company_news",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "PRCH will close down on 2026-08-11 if tech weakness persists.",
+   "counter_thesis": "HUBS rose 2.59% despite sector weakness, suggesting company-specific positive news.",
+   "next_observable": "If XLK or SMH did not close down on 2026-08-10, the tech weakness hypothesis is weakened.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "a0ea6a4798d5e13c",
+   "input_snapshot_hash": "d2ca2b85e20988de",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "a17bafd91f02ee37",
+   "ticker": "SPY",
+   "specialist": "why_moved:company_news",
+   "observable": "abs_move_exceeds",
+   "horizon_days": 1,
+   "probability": 0.3,
+   "threshold": 0.005,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "SPY will move less than 0.5% on 2026-08-11, confirming low market volatility.",
+   "counter_thesis": "The book's beta is 2.19, so even a small market move could have a larger impact, but the market component is tiny.",
+   "next_observable": "If SPY moved more than 0.5% on 2026-08-10, the market-neutrality hypothesis is weakened.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "a0ea6a4798d5e13c",
+   "input_snapshot_hash": "87d5771e61bf19c6",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "63db57ac7a353e21",
+   "ticker": "AARD",
+   "specialist": "why_moved:macro_rates",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "AARD will continue to decline the next day if the idiosyncratic negative news persists.",
+   "counter_thesis": "The sector component was +1.134%, so sector tailwinds partially offset idiosyncratic losses; the losses are not purely idiosyncratic.",
+   "next_observable": "If the book's idiosyncratic component were not large negative, or if the market component were significant, this hypothesis is falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "ebdd1741c7cc2c47",
+   "input_snapshot_hash": "c9df9d1789b3e276",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "ebde5ab013cb3060",
+   "ticker": "AARD",
+   "specialist": "why_moved:sector_factor",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.4,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "AARD's return will be negative on the next trading day, consistent with continued idiosyncratic weakness.",
+   "counter_thesis": "If the Health Care sector had a broad rally, we would expect most Health Care names to be up, but AARD fell sharply, and BHVN and KYTX were down, which is inconsistent with a pure sector move.",
+   "next_observable": "If XLV (Health Care sector ETF) had moved down more than 0.5% on the day, or if AARD's move was matched by a similar move in XLV, the idiosyncratic hypothesis would be weakened.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "5b043e251a1c714a",
+   "input_snapshot_hash": "cbb0428cb90fabcc",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "a1df6231a9c27fb7",
+   "ticker": "SOC",
+   "specialist": "why_moved:sector_factor",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "SOC will continue to rise on the next trading day if the energy rally persists.",
+   "counter_thesis": "If SOC's move were purely idiosyncratic, we would not expect other energy names to rally as strongly, but the sector return of +4.661% suggests a broad move.",
+   "next_observable": "If XLE (Energy sector ETF) had moved down or been flat on the day, the sector-driven hypothesis would be falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "5b043e251a1c714a",
+   "input_snapshot_hash": "3dd249f635343f2c",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "d50ddd5bb08db625",
+   "ticker": "PRCH",
+   "specialist": "why_moved:sector_factor",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.4,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "PRCH will continue to fall on the next trading day if idiosyncratic weakness persists.",
+   "counter_thesis": "If the tech sector had a broad selloff, we would expect most tech names to fall, but HUBS rose, which is inconsistent with a pure sector move.",
+   "next_observable": "If XLK (Technology sector ETF) had fallen more than 1% on the day, or if PRCH and QUBT had moved in line with XLK, the idiosyncratic hypothesis would be weakened.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "5b043e251a1c714a",
+   "input_snapshot_hash": "486550b7820c3128",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "e0d32ead8b0a1d57",
+   "ticker": "SPY",
+   "specialist": "why_moved:sector_factor",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "SPY will continue to fall on the next trading day if the market weakness persists.",
+   "counter_thesis": "If the market had fallen significantly more than -0.03%, the market component would be larger, but the provided data shows a small market move.",
+   "next_observable": "If SPY had fallen more than 1% on the day, the market component would be larger, weakening the idiosyncratic hypothesis.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "5b043e251a1c714a",
+   "input_snapshot_hash": "1b4d3a4544f2b22c",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "70f5a2f3ef6a242a",
+   "ticker": "AARD",
+   "specialist": "why_moved:options_vol",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.6,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "AARD will likely continue to decline over the next day if the negative news is company-specific.",
+   "counter_thesis": "If the losses were due to a broad risk-off event, we would expect correlated declines across many positions, but several positions rose, and the sector was positive.",
+   "next_observable": "If AARD and AMSC had positive returns or if the Health Care sector had fallen sharply, this hypothesis would be falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "9e9fcf37a0957681",
+   "input_snapshot_hash": "681398dae7396616",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "8ebe9135a77f4323",
+   "ticker": "SOC",
+   "specialist": "why_moved:options_vol",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.6,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "SOC will likely continue to rise if the energy rally persists.",
+   "counter_thesis": "If energy had been flat or down, or if SOC had fallen despite a strong sector, this hypothesis would be weakened.",
+   "next_observable": "If the Energy sector return had been negative or SOC had underperformed the sector, this hypothesis would be falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "9e9fcf37a0957681",
+   "input_snapshot_hash": "a490acf1cdda14aa",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "0a6b0493bc535029",
+   "ticker": "PRCH",
+   "specialist": "why_moved:options_vol",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.55,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "PRCH will likely continue to decline if the negative news is company-specific.",
+   "counter_thesis": "If the tech sector had fallen sharply or if other tech names had also dropped significantly, this would suggest a sector-wide move.",
+   "next_observable": "If PRCH and QUBT had positive returns or if the tech sector had fallen more than 2%, this hypothesis would be falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "9e9fcf37a0957681",
+   "input_snapshot_hash": "97e63abe093d3d8b",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "ae0d71479a83fb10",
+   "ticker": "SPY",
+   "specialist": "why_moved:options_vol",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "SPY will likely continue to be flat or slightly down, as the market is not the main driver.",
+   "counter_thesis": "If the market had moved significantly or if the sector component had been large, this would indicate a more systematic driver.",
+   "next_observable": "If the market component had been large (e.g., >1%) or if the idiosyncratic component had been small, this hypothesis would be falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "9e9fcf37a0957681",
+   "input_snapshot_hash": "5fed5ca5a2046b4b",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "5e717a4b0c6d662a",
+   "ticker": "AARD",
+   "specialist": "why_moved:revisions",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.6,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "AARD will continue to decline the next trading day if the negative idiosyncratic news persists.",
+   "counter_thesis": "The sector Health Care rose, so if the decline were sector-driven, AARD and AMSC would likely have risen. Also, the book's other healthcare names (BHVN, KYTX, NTLA, ABSI) were mixed, suggesting idiosyncratic effects.",
+   "next_observable": "If AARD and AMSC had positive returns or if the Health Care sector fell on the same day, the hypothesis would be falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "0342c11122a12f06",
+   "input_snapshot_hash": "aae441315abbde70",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "da7fa5dbd83a2679",
+   "ticker": "SOC",
+   "specialist": "why_moved:revisions",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.65,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "SOC will likely continue to rise if the energy rally persists.",
+   "counter_thesis": "SOC could have had company-specific positive news (e.g., earnings) independent of the sector. However, the sector return of +4.661% is unusually high and suggests a common driver.",
+   "next_observable": "If the Energy sector did not rise or if oil prices fell, the hypothesis would be falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "0342c11122a12f06",
+   "input_snapshot_hash": "cf8cba42ce861937",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "e2fd1aa85fc78724",
+   "ticker": "PRCH",
+   "specialist": "why_moved:revisions",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.55,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "PRCH will likely continue to decline if the tech sector remains weak.",
+   "counter_thesis": "The tech sector decline was modest (-0.878%), while PRCH and QUBT fell more than 2.5%, suggesting possible idiosyncratic factors. Also, HUBS (tech) rose 2.594%, so not all tech fell.",
+   "next_observable": "If the Information Technology sector had risen or if PRCH and QUBT had positive returns, the hypothesis would be falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "0342c11122a12f06",
+   "input_snapshot_hash": "50f44f87a6cc1ea2",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "3b97ae55c400940e",
+   "ticker": "SPY",
+   "specialist": "why_moved:revisions",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "SPY will likely continue to decline slightly if the market remains weak.",
+   "counter_thesis": "The market component is tiny, so beta alone cannot explain the magnitude. The loss is driven by idiosyncratic moves, not beta.",
+   "next_observable": "If the market had fallen significantly or if the book's beta were lower, the hypothesis would be falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "0342c11122a12f06",
+   "input_snapshot_hash": "e79091bffb11ddfe",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "75304cc4a26b9a67",
+   "ticker": "AARD",
+   "specialist": "why_moved:skeptic",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "If the move was idiosyncratic flow, AARD's price on 2026-08-11 should not show a strong continuation (i.e., it is as likely to bounce as to fall further).",
+   "counter_thesis": "If the losses were driven by a common factor, we would see correlated moves across many small caps and a broader risk-off tone. The book's winners (SOC +7.16%, HUBS +2.59%) argue against a uniform selloff.",
+   "next_observable": "If on 2026-08-10 the small-cap indices (IWM, RSP) and the specific sectors (XLV, XLI, XLK) also fell sharply (e.g., IWM down >1%), and the losers' moves were matched by broad declines in their sectors, then the idiosyncratic explanation is weakened.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "afca6c3d1c67f556",
+   "input_snapshot_hash": "af52351f4f7ce257",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "8da9ed6944dc023d",
+   "ticker": "IBB",
+   "specialist": "why_moved:skeptic",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "If the move was sector rotation, IBB should also be down on 2026-08-10 (or at least not strongly up).",
+   "counter_thesis": "The health care sector return in the book's data is +1.67%, and XLV might have risen. Also, other health care names in the book (NTLA +0.67%, ABSI +0.90%) gained, so the weakness is not uniform.",
+   "next_observable": "If on 2026-08-10 XLV rose (or was flat) and the biotech ETF IBB also rose, then the sector-rotation hypothesis is falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "afca6c3d1c67f556",
+   "input_snapshot_hash": "ed68b1d67c49b868",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "c562a41bf4f681b2",
+   "ticker": "SOC",
+   "specialist": "why_moved:skeptic",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "If the move was oil-driven, SOC should continue to correlate with oil on 2026-08-11.",
+   "counter_thesis": "If oil prices did not rise on 2026-08-10, then the SOC move is idiosyncratic. Also, the book's energy sector return is +4.66%, which is large, but could be due to SOC alone.",
+   "next_observable": "If on 2026-08-10 CL=F did not rise (e.g., fell or was flat), then the energy surge hypothesis is falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "afca6c3d1c67f556",
+   "input_snapshot_hash": "d085e8ea8a122a41",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "4af5b1018b4828d4",
+   "ticker": "PRCH",
+   "specialist": "why_moved:skeptic",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:03:37+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "If the move was sector-driven, PRCH should move in line with XLK on 2026-08-11.",
+   "counter_thesis": "The book's tech sector return is -0.88%, but XLK might have been flat or up. Also, HUBS (tech) gained +2.59%, so the weakness is not uniform.",
+   "next_observable": "If on 2026-08-10 XLK rose or was flat, and SMH (semiconductors) also rose, then the tech selloff hypothesis is falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "afca6c3d1c67f556",
+   "input_snapshot_hash": "09b38e0057a810e8",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  }
+ ],
+ "n_predictions_minted": 21,
+ "ledger_written": "default",
+ "regrades": [
+  {
+   "at": "2026-08-12T06:10:26+00:00",
+   "module_version": "why_moved/1.0.0",
+   "what_changed": "corroboration assertions classified external vs derivable_from_prompt; the headline rate now counts external assertions only",
+   "no_model_calls": true,
+   "no_records_minted": true
+  }
+ ]
+}

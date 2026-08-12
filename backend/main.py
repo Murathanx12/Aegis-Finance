@@ -21,7 +21,7 @@ from backend.cache import cache_clear, set_cache_status, cache_ready, cache_stat
 from backend.config import config
 from backend.middleware import add_timing_middleware
 from backend.observability import install_log_buffer
-from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee
+from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved
 
 logging.basicConfig(
     level=logging.INFO,
@@ -224,6 +224,22 @@ async def lifespan(app: FastAPI):
         logger.info("Portfolio Intelligence DB initialized")
     except Exception as e:
         logger.warning("PI DB init failed (non-fatal): %s", e)
+
+    # Prediction-ledger persistence (NIGHT-14, F7). The ledger used to resolve
+    # to a path INSIDE the image, so every forecast the nightly specialists
+    # wrote died at the next deploy while the calibration clock read "still
+    # accruing". The path now follows DATA_DIR; this carries the existing
+    # history onto the volume ONCE, and refuses to touch a volume that already
+    # holds records. Synchronous and before anything can write: a night's
+    # appends must not land beside an unmigrated history. Idempotent — after the
+    # first migrated boot it is two stat calls and a "not_needed".
+    try:
+        from backend.services.belief_state import ensure_ledger_migrated
+        _mig = ensure_ledger_migrated()
+        logger.info("Prediction-ledger persistence: %s", _mig)
+    except Exception as e:
+        logger.error("Prediction-ledger migration failed at startup: %s", e,
+                     exc_info=True)
 
     # Idempotently initialize reference lanes ($100k each, anchored to
     # inception date + config hash), then apply any SHA-versioned config
@@ -454,6 +470,7 @@ app.include_router(crypto.router)
 app.include_router(portfolio_intelligence.router)
 app.include_router(pm.router)
 app.include_router(investment_committee.router)
+app.include_router(why_moved.router)
 
 
 @app.get("/")
@@ -653,6 +670,15 @@ async def health_full():
         _degraded_reasons.append("nav not fresh")
     if str(investment_committee_health.get("status", "")) != "ok":
         _degraded_reasons.append("ic funnel unavailable")
+    # NIGHT-13 §8: a rolling deploy's old replica deleted `pi_ledger_resolve`
+    # from the shared jobstore and the count still looked plausible. Name the
+    # missing id — "scheduler degraded" would send the next session hunting.
+    # `unavailable` (no scheduler in-process, e.g. tests) is NOT a missing job
+    # and must not fabricate one; the dead-scheduler case is /health/scheduler's.
+    for _jid in ((sched.get("jobs") or {}).get("missing") or []):
+        _degraded_reasons.append(f"scheduler job missing: {_jid}")
+    for _jid in ((sched.get("jobs") or {}).get("unexpected") or []):
+        _degraded_reasons.append(f"scheduler job undeclared: {_jid}")
     return {
         "status": "ok" if not _degraded_reasons else "DEGRADED",
         "degraded_reasons": _degraded_reasons,

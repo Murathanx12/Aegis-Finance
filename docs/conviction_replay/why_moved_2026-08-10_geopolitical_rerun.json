@@ -1,0 +1,796 @@
+{
+ "module_version": "why_moved/1.0.0",
+ "generated_at": "2026-08-12T06:10:37+00:00",
+ "as_of": "2026-08-10",
+ "prev_close_date": "2026-08-07",
+ "requested_date": "2026-08-10",
+ "attribution": {
+  "as_of": "2026-08-10",
+  "prev_close_date": "2026-08-07",
+  "requested_date": "2026-08-10",
+  "book_value_prev": 40625.500354766846,
+  "book_value_now": 40392.600445747375,
+  "pnl_usd": -232.89990901947021,
+  "pnl_pct": -0.5732850229182287,
+  "benchmark": "SPY",
+  "benchmark_return_pct": -0.029741673673222557,
+  "book_beta": 2.1899500649117387,
+  "market_component_pct": -0.0651327801912575,
+  "market_component_usd": -26.46051784766882,
+  "sector_component_pct": 1.1335824050208105,
+  "sector_component_usd": 460.52352397330395,
+  "idiosyncratic_pct": -1.641734647747782,
+  "idiosyncratic_usd": -666.9629151451054,
+  "positions": [
+   {
+    "ticker": "AARD",
+    "shares": 1000.0,
+    "price_prev": 7.900000095367432,
+    "price_now": 7.559999942779541,
+    "value_prev": 7900.000095367432,
+    "value_now": 7559.999942779541,
+    "pnl_usd": -340.0001525878906,
+    "return_pct": -4.303799347892001,
+    "weight_prev": 0.19445914576755421,
+    "contribution_pct": -0.8369131447460354,
+    "contribution_bps": -83.69131447460353,
+    "beta": 3.0477604625152286,
+    "beta_source": "estimated",
+    "sector": "Health Care",
+    "sector_return_pct": 1.6658678703747043
+   },
+   {
+    "ticker": "AMSC",
+    "shares": 50.0,
+    "price_prev": 32.77000045776367,
+    "price_now": 30.989999771118164,
+    "value_prev": 1638.5000228881836,
+    "value_now": 1549.4999885559082,
+    "pnl_usd": -89.00003433227539,
+    "return_pct": -5.431799395119629,
+    "weight_prev": 0.040331811511976325,
+    "contribution_pct": -0.2190743093748319,
+    "contribution_bps": -21.90743093748319,
+    "beta": 3.4432370989654495,
+    "beta_source": "estimated",
+    "sector": "Industrials",
+    "sector_return_pct": -0.3132015310536751
+   },
+   {
+    "ticker": "PRCH",
+    "shares": 200.0,
+    "price_prev": 15.850000381469727,
+    "price_now": 15.430000305175781,
+    "value_prev": 3170.0000762939453,
+    "value_now": 3086.0000610351562,
+    "pnl_usd": -84.00001525878906,
+    "return_pct": -2.6498426888681204,
+    "weight_prev": 0.07802981006046832,
+    "contribution_pct": -0.2067667217025001,
+    "contribution_bps": -20.676672170250008,
+    "beta": 1.9233136715670174,
+    "beta_source": "estimated",
+    "sector": "Information Technology",
+    "sector_return_pct": -0.8777963961105972
+   },
+   {
+    "ticker": "QUBT",
+    "shares": 300.0,
+    "price_prev": 9.180000305175781,
+    "price_now": 8.930000305175781,
+    "value_prev": 2754.0000915527344,
+    "value_now": 2679.0000915527344,
+    "pnl_usd": -75.0,
+    "return_pct": -2.7233114563084193,
+    "weight_prev": 0.06778993655470364,
+    "contribution_pct": -0.1846131108418453,
+    "contribution_bps": -18.461311084184533,
+    "beta": 3.7043805481492167,
+    "beta_source": "estimated",
+    "sector": "Information Technology",
+    "sector_return_pct": -0.8777963961105972
+   },
+   {
+    "ticker": "BHVN",
+    "shares": 300.0,
+    "price_prev": 14.65999984741211,
+    "price_now": 14.539999961853027,
+    "value_prev": 4397.999954223633,
+    "value_now": 4361.999988555908,
+    "pnl_usd": -35.99996566772461,
+    "return_pct": -0.8185531160170179,
+    "weight_prev": 0.10825712707086911,
+    "contribution_pct": -0.08861420869491017,
+    "contribution_bps": -8.861420869491017,
+    "beta": 1.0284596793948095,
+    "beta_source": "estimated",
+    "sector": "Health Care",
+    "sector_return_pct": 1.6658678703747043
+   },
+   {
+    "ticker": "KYTX",
+    "shares": 250.0,
+    "price_prev": 7.960000038146973,
+    "price_now": 7.889999866485596,
+    "value_prev": 1990.0000095367432,
+    "value_now": 1972.499966621399,
+    "pnl_usd": -17.50004291534424,
+    "return_pct": -0.8793991372602061,
+    "weight_prev": 0.04898401231145068,
+    "contribution_pct": -0.04307649816623304,
+    "contribution_bps": -4.307649816623304,
+    "beta": 2.5199861604620035,
+    "beta_source": "estimated",
+    "sector": "Health Care",
+    "sector_return_pct": 1.6658678703747043
+   },
+   {
+    "ticker": "SLDP",
+    "shares": 600.0,
+    "price_prev": 2.3299999237060547,
+    "price_now": 2.3499999046325684,
+    "value_prev": 1397.9999542236328,
+    "value_now": 1409.999942779541,
+    "pnl_usd": 11.999988555908203,
+    "return_pct": 0.8583683082144411,
+    "weight_prev": 0.03441188273413097,
+    "contribution_pct": 0.029538069564969734,
+    "contribution_bps": 2.9538069564969733,
+    "beta": 3.185047006576939,
+    "beta_source": "estimated",
+    "sector": "Consumer Discretionary",
+    "sector_return_pct": -0.15852030739088585
+   },
+   {
+    "ticker": "NTLA",
+    "shares": 250.0,
+    "price_prev": 11.9399995803833,
+    "price_now": 12.020000457763672,
+    "value_prev": 2984.999895095825,
+    "value_now": 3005.000114440918,
+    "pnl_usd": 20.000219345092773,
+    "return_pct": 0.6700241222102443,
+    "weight_prev": 0.07347601553282965,
+    "contribution_pct": 0.04923070281089046,
+    "contribution_bps": 4.923070281089046,
+    "beta": 2.2682207225984876,
+    "beta_source": "estimated",
+    "sector": "Health Care",
+    "sector_return_pct": 1.6658678703747043
+   },
+   {
+    "ticker": "DKNG",
+    "shares": 150.0,
+    "price_prev": 24.030000686645508,
+    "price_now": 24.270000457763672,
+    "value_prev": 3604.500102996826,
+    "value_now": 3640.500068664551,
+    "pnl_usd": 35.99996566772461,
+    "return_pct": 0.9987505795267859,
+    "weight_prev": 0.08872506360586614,
+    "contribution_pct": 0.08861420869490974,
+    "contribution_bps": 8.861420869490974,
+    "beta": 0.6489586946524373,
+    "beta_source": "estimated",
+    "sector": "Consumer Discretionary",
+    "sector_return_pct": -0.15852030739088585
+   },
+   {
+    "ticker": "ABSI",
+    "shares": 600.0,
+    "price_prev": 8.930000305175781,
+    "price_now": 9.010000228881836,
+    "value_prev": 5358.000183105469,
+    "value_now": 5406.000137329102,
+    "pnl_usd": 47.99995422363281,
+    "return_pct": 0.8958557779632725,
+    "weight_prev": 0.13188761089257037,
+    "contribution_pct": 0.11815227825988099,
+    "contribution_bps": 11.8152278259881,
+    "beta": 3.344035540226705,
+    "beta_source": "estimated",
+    "sector": "Health Care",
+    "sector_return_pct": 1.6658678703747043
+   },
+   {
+    "ticker": "HUBS",
+    "shares": 10.0,
+    "price_prev": 210.4499969482422,
+    "price_now": 215.91000366210938,
+    "value_prev": 2104.499969482422,
+    "value_now": 2159.1000366210938,
+    "pnl_usd": 54.600067138671875,
+    "return_pct": 2.5944437125413833,
+    "weight_prev": 0.05180243815102914,
+    "contribution_pct": 0.13439850995525143,
+    "contribution_bps": 13.439850995525143,
+    "beta": 0.5290775992722326,
+    "beta_source": "estimated",
+    "sector": "Information Technology",
+    "sector_return_pct": -0.8777963961105972
+   },
+   {
+    "ticker": "SOC",
+    "shares": 700.0,
+    "price_prev": 4.75,
+    "price_now": 5.090000152587891,
+    "value_prev": 3325.0,
+    "value_now": 3563.0001068115234,
+    "pnl_usd": 238.00010681152344,
+    "return_pct": 7.15789794921875,
+    "weight_prev": 0.08184514580655144,
+    "contribution_pct": 0.5858392013222241,
+    "contribution_bps": 58.58392013222242,
+    "beta": 0.2462452541077006,
+    "beta_source": "estimated",
+    "sector": "Energy",
+    "sector_return_pct": 4.660870095957881
+   }
+  ],
+  "sector_returns_pct": {
+   "Consumer Discretionary": -0.15852030739088585,
+   "Energy": 4.660870095957881,
+   "Health Care": 1.6658678703747043,
+   "Industrials": -0.3132015310536751,
+   "Information Technology": -0.8777963961105972
+  },
+  "sector_unmapped": [],
+  "beta_fallbacks": [],
+  "notes": [
+   "market/sector/idiosyncratic is a DECOMPOSITION, not a causal claim: the residual is what these two factors leave over, and on a concentrated small-cap book that is normally most of the move."
+  ]
+ },
+ "epistemics": {
+  "what_this_grades": [
+   "COHERENCE: whether the cross-asset signature a hypothesis REQUIRED was actually present that day (hit / miss / unavailable), counted only over instruments the prompt did not already disclose",
+   "SKILL: whether its forward claim resolves, on the ledger's schedule, scored by Brier against climatology"
+  ],
+  "what_this_never_claims": [
+   "that any hypothesis caused the move. One day of data cannot identify a cause, competing explanations are preserved rather than collapsed, and a corroboration hit is evidence a mechanism was PRESENT, not that it was operative.",
+   "that a corroboration hit rate is forecasting skill. It is a coherence check on the past; the two instruments are reported separately and are never to be added together."
+  ],
+  "descriptive_only": "this surface explains; it never recommends an action, and hypothesis text that reaches for one is refused"
+ },
+ "status": "ok",
+ "status_detail": "at least one lens answered",
+ "lenses": {
+  "geopolitical": {
+   "status": "ok",
+   "degraded_reason": null,
+   "n_hypotheses": 4,
+   "n_rejected": 0,
+   "rejections": [],
+   "corroboration_hit_rate_external": 0.8333333333333334,
+   "corroboration_hits_external": 5,
+   "corroboration_misses_external": 1,
+   "corroboration_hit_rate_derivable": 1.0,
+   "corroboration_hits_derivable": 3,
+   "corroboration_misses_derivable": 0,
+   "corroboration_hits": 8,
+   "corroboration_misses": 1,
+   "corroboration_unavailable": 0,
+   "corroboration_checkable": 9,
+   "corroboration_hit_rate_combined": 0.8888888888888888,
+   "n_predictions_minted": 4
+  }
+ },
+ "hypotheses": [
+  {
+   "lens": "geopolitical",
+   "hypothesis_id": "healthcare-idiosyncratic",
+   "claim": "The book's loss was driven by idiosyncratic negative news in Health Care names (AARD, AMSC, BHVN, KYTX) rather than sector or market moves.",
+   "causal_chain": [
+    "Health Care sector returned +1.666% on the day, yet AARD fell -4.304%, AMSC -5.432%, BHVN -0.819%, KYTX -0.879%.",
+    "The book's market component was negligible (-0.065%) and sector component positive (+1.134%), leaving a large negative idiosyncratic component (-1.642%).",
+    "The largest single loss came from AARD (contribution -83.7 bps), a Health Care name, indicating company-specific negative news or event.",
+    "No broad geopolitical or macro shock is needed to explain the book's loss; the pattern is stock-specific."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "AARD",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "AMSC",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "BHVN",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "KYTX",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.6,
+   "counter_evidence": "If the loss were due to a sector-wide healthcare selloff, XLV and IBB would have fallen sharply, but XLV returned +1.666% and IBB likely positive. Also, other healthcare names like NTLA and ABSI rose, so the selloff was not sector-wide.",
+   "falsification_condition": "If XLV or IBB fell more than 1% on the same day, or if AARD, AMSC, BHVN, KYTX all moved in line with sector, the idiosyncratic hypothesis is falsified.",
+   "evidence": [
+    {
+     "what": "Health Care sector return was +1.666% while AARD fell -4.304% and AMSC -5.432%.",
+     "source": "provided data",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLV",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": 1.6658678703747043
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "IBB",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 1.1683766527492256
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "AARD",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.5,
+    "threshold": null,
+    "claim": "AARD's next-day return is more likely to be positive than negative if the drop was an overreaction to idiosyncratic news.",
+    "prediction_id": "a738e058d3240a4f",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "geopolitical",
+   "hypothesis_id": "energy-strength",
+   "claim": "A geopolitical or supply-driven shock lifted Energy (SOC +7.158%) and oil prices, while the broader market was flat, consistent with a geopolitical risk premium.",
+   "causal_chain": [
+    "Energy sector returned +4.661% on the day, with SOC up +7.158%, the largest positive contributor.",
+    "Oil futures (CL=F) likely rose, as Energy sector strength typically tracks oil prices.",
+    "A geopolitical shock (e.g., supply disruption, Middle East tension) would lift oil and energy equities while leaving broad equities flat or slightly down.",
+    "The book's loss is not explained by this, but the energy strength is a separate signal of geopolitical risk."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "SOC",
+     "expected_sign": "up"
+    },
+    {
+     "ticker": "CL=F",
+     "expected_sign": "up"
+    },
+    {
+     "ticker": "XLE",
+     "expected_sign": "up"
+    }
+   ],
+   "confidence": 0.5,
+   "counter_evidence": "If oil prices fell or XLE was flat, the energy move could be stock-specific (e.g., SOC earnings). Also, if there were a geopolitical shock, gold (GLD) and VIX would likely rise, which is not observed in the book data.",
+   "falsification_condition": "If CL=F closed down or XLE returned less than +2%, the geopolitical energy hypothesis is falsified.",
+   "evidence": [
+    {
+     "what": "Energy sector returned +4.661% and SOC +7.158%.",
+     "source": "provided data",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "CL=F",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 5.052439156847499
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "XLE",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": 4.660870095957881
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "USO",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 6.729949640694843
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "CL=F",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.6,
+    "threshold": null,
+    "claim": "Oil futures are more likely to close up the next day if the energy move was driven by a persistent geopolitical factor.",
+    "prediction_id": "bd2b1f8d37f2c032",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 2,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hits": 3,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 3,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "geopolitical",
+   "hypothesis_id": "tech-weakness",
+   "claim": "Information Technology weakness (XLK -0.878%) contributed to the book's losses via PRCH and QUBT, possibly due to a sector rotation or tech-specific negative sentiment.",
+   "causal_chain": [
+    "Information Technology sector returned -0.878% on the day, the weakest sector.",
+    "PRCH fell -2.65% and QUBT -2.723%, both in IT, contributing -39.2 bps combined.",
+    "A tech selloff could be driven by rising rates (TNX up) or profit-taking after a strong run.",
+    "The book's beta of 2.19 amplified the small market move, but the tech weakness is a sector-level factor."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "PRCH",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "QUBT",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "XLK",
+     "expected_sign": "down"
+    }
+   ],
+   "confidence": 0.4,
+   "counter_evidence": "If XLK was flat or up, the PRCH and QUBT moves would be idiosyncratic. Also, QQQ may have outperformed SPY, contradicting a broad tech selloff.",
+   "falsification_condition": "If XLK returned positive or QQQ outperformed SPY, the tech weakness hypothesis is falsified.",
+   "evidence": [
+    {
+     "what": "Information Technology sector returned -0.878%.",
+     "source": "provided data",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "direction",
+     "asset": "XLK",
+     "expect": "down",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "derivable_from_prompt",
+     "observed": {
+      "return_pct": -0.8777963961105972
+     }
+    },
+    {
+     "kind": "relative",
+     "asset": "QQQ",
+     "expect": "underperforms",
+     "versus": "SPY",
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": -0.29874750593527066,
+      "versus_return_pct": -0.029741673673222557,
+      "spread_pct": -0.2690058322620481
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "XLK",
+    "observable": "return_sign",
+    "horizon_days": 1,
+    "probability": 0.5,
+    "threshold": null,
+    "claim": "XLK is more likely to be down the next day if the tech weakness is part of a sustained rotation.",
+    "prediction_id": "166005b5001d3b2f",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hit_rate_external": 1.0,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 0,
+    "corroboration_hit_rate_derivable": 1.0,
+    "corroboration_hits_derivable": 1,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hits": 2,
+    "corroboration_misses": 0,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate_combined": 1.0
+   }
+  },
+  {
+   "lens": "geopolitical",
+   "hypothesis_id": "no-macro-shock",
+   "claim": "The book's loss was not driven by a broad geopolitical or macro shock, as the market was flat and no defensive or safe-haven assets spiked.",
+   "causal_chain": [
+    "SPY returned -0.03%, essentially flat, indicating no broad risk-off or risk-on move.",
+    "The book's market component was only -0.065%, so the market did not drive the loss.",
+    "If a geopolitical shock had occurred, we would expect VIX to spike, gold (GLD) to rise, and bonds (TLT) to rally, but the flat SPY suggests none of these occurred strongly.",
+    "The loss is concentrated in specific names, not a systemic event."
+   ],
+   "affected_assets": [
+    {
+     "ticker": "SPY",
+     "expected_sign": "down"
+    },
+    {
+     "ticker": "^VIX",
+     "expected_sign": "up"
+    }
+   ],
+   "confidence": 0.7,
+   "counter_evidence": "If VIX rose more than 5% or GLD gained more than 1%, a macro shock would be plausible. Also, if TLT rallied sharply, it would suggest a flight to safety.",
+   "falsification_condition": "If ^VIX rose more than 5% or GLD gained more than 1%, the no-macro-shock hypothesis is falsified.",
+   "evidence": [
+    {
+     "what": "SPY returned -0.03%, essentially flat.",
+     "source": "provided data",
+     "first_public_timestamp": "unknown"
+    }
+   ],
+   "corroboration": [
+    {
+     "kind": "magnitude",
+     "asset": "^VIX",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": 5.0,
+     "status": "miss",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 3.7583921741867643,
+      "abs_move_pct": 3.7583921741867643,
+      "min_abs_move_pct": 5.0
+     }
+    },
+    {
+     "kind": "direction",
+     "asset": "GLD",
+     "expect": "up",
+     "versus": null,
+     "min_abs_move_pct": null,
+     "status": "hit",
+     "evidence_class": "external",
+     "observed": {
+      "return_pct": 1.021408716277361
+     }
+    }
+   ],
+   "forward": {
+    "ticker": "^VIX",
+    "observable": "abs_move_exceeds",
+    "horizon_days": 1,
+    "probability": 0.3,
+    "threshold": 0.05,
+    "claim": "VIX is unlikely to move more than 5% the next day if no macro shock is present.",
+    "prediction_id": "1343da0878e5ff1c",
+    "refusal": null
+   },
+   "score": {
+    "parse_sub_reasons": [],
+    "corroboration_hit_rate_external": 0.5,
+    "corroboration_hits_external": 1,
+    "corroboration_misses_external": 1,
+    "corroboration_hit_rate_derivable": null,
+    "corroboration_hits_derivable": 0,
+    "corroboration_misses_derivable": 0,
+    "corroboration_hits": 1,
+    "corroboration_misses": 1,
+    "corroboration_unavailable": 0,
+    "corroboration_checkable": 2,
+    "corroboration_hit_rate_combined": 0.5
+   }
+  }
+ ],
+ "batch": {
+  "n_hypotheses": 4,
+  "effective_distinct_ideas": 4,
+  "ratio": 1.0,
+  "distinct_lenses": 1,
+  "components": [
+   [
+    "geopolitical:healthcare-idiosyncratic"
+   ],
+   [
+    "geopolitical:energy-strength"
+   ],
+   [
+    "geopolitical:tech-weakness"
+   ],
+   [
+    "geopolitical:no-macro-shock"
+   ]
+  ],
+  "reading": "the denominator for any claim about this batch is the number of components, not the number of rows (CANON §20)",
+  "n_rejected": 0,
+  "corroboration": {
+   "corroboration_hit_rate_external": 0.8333333333333334,
+   "corroboration_hits_external": 5,
+   "corroboration_misses_external": 1,
+   "corroboration_hit_rate_derivable": 1.0,
+   "corroboration_hits_derivable": 3,
+   "corroboration_misses_derivable": 0,
+   "corroboration_hits": 8,
+   "corroboration_misses": 1,
+   "corroboration_unavailable": 0,
+   "corroboration_checkable": 9,
+   "corroboration_hit_rate_combined": 0.8888888888888888,
+   "derivable_assets": [
+    "AARD",
+    "ABSI",
+    "AMSC",
+    "BHVN",
+    "DKNG",
+    "HUBS",
+    "KYTX",
+    "NTLA",
+    "PRCH",
+    "QUBT",
+    "SLDP",
+    "SOC",
+    "SPY",
+    "XLE",
+    "XLI",
+    "XLK",
+    "XLV",
+    "XLY"
+   ],
+   "headline": "corroboration_hit_rate_external",
+   "note": "unavailable is never a hit, and a rate over zero checkable assertions is None rather than zero. corroboration_hit_rate_external is the only rate to quote: an assertion about an instrument whose return the prompt already printed measures instruction-following, not information. Neither rate is forecasting skill — this is a COHERENCE check on a day that already happened. Skill lives in the forward PredictionRecords and nowhere else."
+  }
+ },
+ "predictions": [
+  {
+   "prediction_id": "a738e058d3240a4f",
+   "ticker": "AARD",
+   "specialist": "why_moved:geopolitical",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:10:52+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "AARD's next-day return is more likely to be positive than negative if the drop was an overreaction to idiosyncratic news.",
+   "counter_thesis": "If the loss were due to a sector-wide healthcare selloff, XLV and IBB would have fallen sharply, but XLV returned +1.666% and IBB likely positive. Also, other healthcare names like NTLA and ABSI rose, so the selloff was not sector-wide.",
+   "next_observable": "If XLV or IBB fell more than 1% on the same day, or if AARD, AMSC, BHVN, KYTX all moved in line with sector, the idiosyncratic hypothesis is falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "08832fd2110060f9",
+   "input_snapshot_hash": "22fc0c6dd8002c0d",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "bd2b1f8d37f2c032",
+   "ticker": "CL=F",
+   "specialist": "why_moved:geopolitical",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.6,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:10:52+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "Oil futures are more likely to close up the next day if the energy move was driven by a persistent geopolitical factor.",
+   "counter_thesis": "If oil prices fell or XLE was flat, the energy move could be stock-specific (e.g., SOC earnings). Also, if there were a geopolitical shock, gold (GLD) and VIX would likely rise, which is not observed in the book data.",
+   "next_observable": "If CL=F closed down or XLE returned less than +2%, the geopolitical energy hypothesis is falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "08832fd2110060f9",
+   "input_snapshot_hash": "cb178df80e04b9cb",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "166005b5001d3b2f",
+   "ticker": "XLK",
+   "specialist": "why_moved:geopolitical",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "threshold": null,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:10:52+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "XLK is more likely to be down the next day if the tech weakness is part of a sustained rotation.",
+   "counter_thesis": "If XLK was flat or up, the PRCH and QUBT moves would be idiosyncratic. Also, QQQ may have outperformed SPY, contradicting a broad tech selloff.",
+   "next_observable": "If XLK returned positive or QQQ outperformed SPY, the tech weakness hypothesis is falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "08832fd2110060f9",
+   "input_snapshot_hash": "a2482f5360e7bc1a",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  },
+  {
+   "prediction_id": "1343da0878e5ff1c",
+   "ticker": "^VIX",
+   "specialist": "why_moved:geopolitical",
+   "observable": "abs_move_exceeds",
+   "horizon_days": 1,
+   "probability": 0.3,
+   "threshold": 0.05,
+   "benchmark": null,
+   "made_at": "2026-08-12T06:10:52+00:00",
+   "resolves_after": "2026-08-16",
+   "thesis": "VIX is unlikely to move more than 5% the next day if no macro shock is present.",
+   "counter_thesis": "If VIX rose more than 5% or GLD gained more than 1%, a macro shock would be plausible. Also, if TLT rallied sharply, it would suggest a flight to safety.",
+   "next_observable": "If ^VIX rose more than 5% or GLD gained more than 1%, the no-macro-shock hypothesis is falsified.",
+   "model": "deepseek-chat",
+   "model_version": "deepseek-v4-flash",
+   "prompt_hash": "08832fd2110060f9",
+   "input_snapshot_hash": "24a9fc763f56f10f",
+   "schema_version": "1.0.0",
+   "resolved_at": null,
+   "void_reason": null,
+   "outcome": null,
+   "brier": null,
+   "resolution_detail": {}
+  }
+ ],
+ "n_predictions_minted": 4,
+ "ledger_written": "default"
+}
