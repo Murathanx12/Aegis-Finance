@@ -51,23 +51,64 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import os
+import shutil
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from backend import config as _config
+
 logger = logging.getLogger(__name__)
 
-LEDGER_DIR = Path(__file__).resolve().parents[1] / "data" / "optimus"
+#: WHERE THE LEDGER LIVES, AND WHY IT MOVED (NIGHT-14, defect F7)
+#: ---------------------------------------------------------------
+#: This used to be `Path(__file__).parents[1] / "data" / "optimus"` — a path
+#: INSIDE the container image. On Railway the persistent volume is mounted at
+#: AEGIS_DATA_DIR (=/data) and nothing else survives a deploy, so every record
+#: the nightly specialists wrote was destroyed by the next push, and the forward
+#: calibration clock — which starts at the first written record and cannot be
+#: backfilled — would have silently restarted at zero, repeatedly, before the
+#: first resolution came due (2026-09-12). The failure was invisible by
+#: construction: a ledger that lost its history looks exactly like a ledger that
+#: was always young.
+#: Locally AEGIS_DATA_DIR is unset, DATA_DIR is backend/data, and this resolves
+#: to the identical path it always had — dev is byte-for-byte unchanged.
+#: Module-level names are kept (rather than functions) because every existing
+#: caller and test binds `PREDICTIONS` / `BELIEFS` directly.
+LEDGER_DIR = _config.OPTIMUS_LEDGER_DIR
 PREDICTIONS = LEDGER_DIR / "predictions.jsonl"
 BELIEFS = LEDGER_DIR / "beliefs.jsonl"
+
+#: Ledger files carried across by the one-time migration below. Both are
+#: append-only JSONL with one record per line.
+LEDGER_FILES = ("predictions.jsonl", "beliefs.jsonl")
+
+#: Set once the migration has been attempted in this process — the migration is
+#: idempotent, but it should not stat the filesystem on every append.
+_MIGRATION_ATTEMPTED = False
 
 SCHEMA_VERSION = "1.0.0"
 
 #: Horizons, in trading days. Frozen: a horizon invented after the fact is a
 #: degree of freedom, and the resolution date is what makes a record honest.
-HORIZONS = (5, 20, 60, 120, 252)
+#:
+#: 1 and 2 were added on NIGHT-14 and the reason is a measurement, not taste.
+#: With 5 as the floor the ledger's first grade fell on 2026-09-12 — a month of
+#: nightly inference producing nothing checkable, which is the same shape as the
+#: defect NIGHT-13 found (a resolver nobody called). A reaction hypothesis about
+#: yesterday's move is ABOUT the next day or two; forcing it onto a 5-day
+#: horizon grades a different claim than the one made. Adding the short end is
+#: backward compatible: every existing record keeps its own horizon, and the
+#: tuple is only ever checked for membership.
+#:
+#: The short end is NOT a licence to read a 1-day Brier as skill. One trading
+#: day is mostly noise, so a 1d slice needs a far larger n before it says
+#: anything — which is exactly why it is useful: it accrues n fast. CANON §19
+#: applies unchanged; every slice prints its own count.
+HORIZONS = (1, 2, 5, 20, 60, 120, 252)
 
 
 class Observable(str, Enum):
@@ -236,8 +277,171 @@ def make_prediction(*, ticker: str, specialist: str, observable: Observable,
         model_version=model_version, prompt_hash=ph, input_snapshot_hash=snap)
 
 
+# ── persistence: getting the history onto the volume, exactly once ──────────
+def _read_jsonl(path: Path) -> list[dict]:
+    """Parse a JSONL ledger file. Raises on a malformed line, deliberately.
+
+    A ledger file that will not parse must stop the migration rather than be
+    partially copied: half a history is worse than a history in one place, and
+    the corruption is a thing to be told about, not to route around.
+    """
+    out: list[dict] = []
+    for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        line = line.strip()
+        if line:
+            try:
+                out.append(json.loads(line))
+            except json.JSONDecodeError as e:
+                raise ValueError(f"{path}:{i} is not valid JSON: {e}") from e
+    return out
+
+
+def _verified_copy(src: Path, dst: Path) -> int:
+    """Byte-copy src→dst and prove every record round-tripped. Returns the count.
+
+    The copy lands on a staging file first and is only swapped in by an atomic
+    `os.replace` AFTER the destination has been re-read and compared record by
+    record against the source. A truncated copy (disk full, process killed
+    mid-write) therefore leaves the destination untouched instead of silently
+    shortening the calibration history — the whole point of the exercise is that
+    these ~87 records cannot be regenerated, because forward calibration only
+    accrues forward.
+
+    Compared as parsed rows rather than by id: `beliefs.jsonl` carries no
+    prediction_id, and a check that silently degrades to "both are None" on one
+    of the two files is not a check.
+    """
+    src_rows = _read_jsonl(src)
+    # Per-process staging name. Railway runs TWO replicas through a rolling
+    # deploy (the same overlap that ate pi_ledger_resolve), so both can migrate
+    # an empty volume at once. With a shared staging name, replica B's copyfile
+    # could truncate the file replica A had just verified, and A's os.replace
+    # would then publish a partial history. With a private one, each replica
+    # verifies and atomically publishes its own complete copy; the loser's
+    # replace is simply overwritten by an identical file.
+    staging = dst.with_name(f"{dst.name}.migrating.{os.getpid()}")
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(src, staging)
+    try:
+        back = _read_jsonl(staging)
+        if back != src_rows:
+            raise ValueError(
+                f"copy of {src} did not round-trip: {len(src_rows)} record(s) "
+                f"in, {len(back)} out — destination left untouched")
+        os.replace(staging, dst)
+    except Exception:
+        staging.unlink(missing_ok=True)
+        raise
+    return len(src_rows)
+
+
+def ensure_ledger_migrated(dest_dir: Path | None = None,
+                           legacy_dir: Path | None = None) -> dict:
+    """One-time move of the pre-NIGHT-14 in-image ledger onto the volume (F7).
+
+    THE RULE THAT MAKES THIS SAFE: a destination that already holds records is
+    NEVER written to. Once the volume has a ledger, the volume is the truth —
+    the image copy is a git snapshot that ages with every commit, and letting a
+    stale snapshot overwrite records accrued in production would delete exactly
+    the forward calibration this whole subsystem exists to accumulate. So the
+    only state this function can change is "the volume has no ledger yet".
+
+    Failure modes, all loud: a source that will not parse aborts before any
+    write; a copy whose record ids do not round-trip is discarded and the
+    destination left alone; both log at ERROR and are reported in the returned
+    dict. Returns a report; callers must not branch on it beyond logging.
+    """
+    global _MIGRATION_ATTEMPTED
+    dest_dir = Path(dest_dir or _config.OPTIMUS_LEDGER_DIR)
+    legacy_dir = Path(legacy_dir or _config.OPTIMUS_LEDGER_LEGACY_DIR)
+    report: dict = {"dest_dir": str(dest_dir), "legacy_dir": str(legacy_dir),
+                    "files": {}}
+
+    # Local dev (AEGIS_DATA_DIR unset): the two paths are the same directory and
+    # there is nothing to move. Stated explicitly rather than falling through a
+    # copy-onto-itself, which would truncate the file.
+    if dest_dir.resolve() == legacy_dir.resolve():
+        _MIGRATION_ATTEMPTED = True
+        report["status"] = "same_path"
+        report["reason"] = ("ledger dir and legacy dir are the same directory "
+                            "(no AEGIS_DATA_DIR volume) — nothing to migrate")
+        return report
+
+    statuses = []
+    for name in LEDGER_FILES:
+        src, dst = legacy_dir / name, dest_dir / name
+        entry: dict = {"src": str(src), "dst": str(dst)}
+        try:
+            src_rows = _read_jsonl(src) if src.exists() else []
+            dst_rows = _read_jsonl(dst) if dst.exists() else []
+            entry["legacy_records"] = len(src_rows)
+            entry["dest_records"] = len(dst_rows)
+            if dst_rows:
+                # The steady state after the first migrated boot. Reported, not
+                # acted on. If the image copy carries records the volume lacks,
+                # say so — that is a real divergence and it should not be silent.
+                # Compared by content hash so this means something for
+                # beliefs.jsonl too, which has no prediction_id.
+                legacy_only = ({_hash(r) for r in src_rows}
+                               - {_hash(r) for r in dst_rows})
+                entry["legacy_only_records"] = len(legacy_only)
+                entry["status"] = "destination_not_empty"
+                if legacy_only:
+                    logger.warning(
+                        "ledger migration: %s holds %d record(s) absent from "
+                        "the persisted ledger at %s — NOT copied (the persisted "
+                        "ledger is authoritative once non-empty)",
+                        src, len(legacy_only), dst)
+            elif not src_rows:
+                entry["status"] = "nothing_to_migrate"
+            else:
+                n = _verified_copy(src, dst)
+                entry["status"] = "migrated"
+                entry["migrated_records"] = n
+                logger.warning(
+                    "LEDGER MIGRATION: copied %d record(s) from the in-image "
+                    "ledger %s to the persistent ledger %s — this history was "
+                    "previously destroyed on every redeploy (NIGHT-14 F7)",
+                    n, src, dst)
+        except Exception as e:
+            entry["status"] = "failed"
+            entry["error"] = str(e)
+            logger.error("ledger migration FAILED for %s → %s: %s", src, dst, e,
+                         exc_info=True)
+        statuses.append(entry["status"])
+        report["files"][name] = entry
+
+    _MIGRATION_ATTEMPTED = True
+    if "failed" in statuses:
+        report["status"] = "failed"
+    elif "migrated" in statuses:
+        report["status"] = "migrated"
+    else:
+        report["status"] = "not_needed"
+    return report
+
+
+def _migrate_once() -> None:
+    """Run the migration at most once per process, and never raise into a caller.
+
+    Called from the write path (`append`) as a backstop for the startup call in
+    main.py: if startup migration failed, the first night's write retries it
+    rather than appending to a fresh empty file beside an unmigrated history.
+    """
+    global _MIGRATION_ATTEMPTED
+    if _MIGRATION_ATTEMPTED:
+        return
+    try:
+        ensure_ledger_migrated()
+    except Exception as e:  # pragma: no cover - ensure_ledger_migrated catches
+        _MIGRATION_ATTEMPTED = True
+        logger.error("ledger migration raised unexpectedly: %s", e, exc_info=True)
+
+
 def append(records: list[PredictionRecord], path: Path | None = None) -> None:
     """Append to the ledger. Returns None: nothing may branch on a write."""
+    if path is None:
+        _migrate_once()
     path = path or PREDICTIONS
     path.parent.mkdir(parents=True, exist_ok=True)
     seen = {r["prediction_id"] for r in read_predictions(path)}
@@ -433,6 +637,61 @@ def calibration(path: Path | None = None, *, by: str = "specialist") -> dict:
                      "'the forecast was informative' this ledger recognises")}
 
 
+def ledger_persistence(path: Path | None = None, *,
+                       data_dir: Path | None = None) -> dict:
+    """Does the ledger sit on the volume, or on a filesystem the next deploy eats?
+
+    The F7 defect could run for months while every other number on the health
+    surface stayed green: records were written, the append log said so, and the
+    file simply ceased to exist at the next deploy. Nothing measured WHERE it
+    was written. This does, and it is the only check that can see that class of
+    failure before the resolutions it destroys come due.
+
+    DEGRADED requires evidence: AEGIS_DATA_DIR is set (a persistent volume is
+    configured, i.e. this is a deployment) AND the ledger resolves outside it.
+    With no volume configured the path is the local repo one, which is correct
+    for dev and indistinguishable from a prod box that forgot the variable —
+    that contract is pinned separately by test_deploy_gate.py, and inventing a
+    verdict here would be guessing.
+    """
+    p = Path(path or PREDICTIONS)
+    d = Path(data_dir if data_dir is not None else _config.DATA_DIR)
+    volume = os.environ.get("AEGIS_DATA_DIR")
+    try:
+        under = p.resolve().is_relative_to(d.resolve())
+    except (ValueError, OSError) as e:
+        # Different drives on Windows, or an unresolvable path. Treated as NOT
+        # under the volume (the cautious direction: it degrades rather than
+        # reassures) and logged, because a ledger path that will not resolve is
+        # itself worth knowing about.
+        logger.warning("ledger persistence: could not relate %s to %s: %s",
+                       p, d, e)
+        under = False
+    row: dict = {
+        "ledger_path": str(p),
+        "data_dir": str(d),
+        "volume_configured": bool(volume),
+        "under_data_dir": under,
+    }
+    if volume and not under:
+        row["status"] = "DEGRADED"
+        row["reason"] = (
+            f"AEGIS_DATA_DIR={volume} is set, so a persistent volume is mounted, "
+            f"but the ledger resolves to {p}, which is NOT under {d} — every "
+            f"record written there is destroyed by the next deploy and the "
+            f"forward calibration clock silently restarts at zero")
+    else:
+        row["status"] = "ok"
+        if not volume:
+            row["note"] = (
+                "AEGIS_DATA_DIR is unset, so DATA_DIR is the in-repo "
+                "backend/data — the expected LOCAL configuration. This check "
+                "cannot distinguish a dev box from a deployment that forgot the "
+                "variable; the volume-mount contract itself is pinned by "
+                "test_deploy_gate.py")
+    return row
+
+
 def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
                   today: date | None = None) -> dict:
     """Would anything say so if the specialists stopped writing?
@@ -445,11 +704,15 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
     date; default is the real date.today().
     """
     today = today or date.today()
+    # Where the ledger lives is part of its health: a ledger on an ephemeral
+    # filesystem reads perfectly right up until the deploy that empties it.
+    persistence = ledger_persistence(path)
     rows = read_predictions(path)
     if not rows:
         return {"status": "DEGRADED", "n": 0,
                 "reason": "the ledger is empty — no forecast has ever been "
-                          "written, so no calibration can ever accrue"}
+                          "written, so no calibration can ever accrue",
+                "persistence": persistence}
     last = max(r["made_at"][:10] for r in rows)
     quiet = (today - date.fromisoformat(last)).days
     overdue = [r for r in rows
@@ -460,9 +723,12 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
         problems.append(f"no new forecast in {quiet} days")
     if overdue:
         problems.append(f"{len(overdue)} forecast(s) past due and unresolved")
+    if persistence["status"] != "ok":
+        problems.append(f"ledger persistence: {persistence['reason']}")
     return {
         "status": "ok" if not problems else "DEGRADED",
         "problems": problems,
+        "persistence": persistence,
         "n_records": len(rows),
         "n_void": sum(1 for r in rows if r.get("void_reason")),
         "n_resolved": sum(1 for r in rows if r.get("outcome") is not None),

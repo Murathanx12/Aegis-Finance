@@ -65,6 +65,24 @@ LEDGER_RESOLVER_FETCH_PAD_DAYS = 7
 LEDGER_RESOLVER_CSV_GRACE_DAYS = 4
 
 
+# ── Optimus prediction ledger (services/belief_state.py) ──────────────────────
+# The ledger is WRITTEN state, so it belongs under DATA_DIR (the persistent
+# volume on Railway), not inside the image. Until NIGHT-14 it resolved to
+# BACKEND_DIR/data/optimus unconditionally, which on Railway is a path inside
+# the container filesystem: every PredictionRecord the nightly specialists wrote
+# was destroyed by the next deploy, and forward calibration — which accrues from
+# the first written record and from no earlier date — would have silently reset
+# to zero before the first resolution fell due (2026-09-12). This is defect F7
+# in docs/NIGHT13_DISCHARGE.md §7.
+# Locally AEGIS_DATA_DIR is unset, so DATA_DIR is BACKEND_DIR/data and this path
+# is byte-identical to the pre-NIGHT-14 one — dev behaviour is unchanged.
+OPTIMUS_LEDGER_DIR = DATA_DIR / "optimus"
+# Where the ledger used to live. Kept ONLY as the source of the one-time
+# migration in belief_state.ensure_ledger_migrated(); when AEGIS_DATA_DIR is
+# unset the two are the same directory and the migration is a documented no-op.
+OPTIMUS_LEDGER_LEGACY_DIR = BACKEND_DIR / "data" / "optimus"
+
+
 # ── API Keys ──────────────────────────────────────────────────────────────────
 
 
@@ -1598,3 +1616,148 @@ TE_MAGNITUDE_CLASS_EDGES = (5.0, 20.0)
 #: The covered window (price panel) and the war sub-window (FACTORIAL-PM-1 H3).
 TE_WINDOW = ("2025-11-07", "2026-08-10")
 TE_WAR_WINDOW = ("2026-06-04", "2026-07-29")
+
+# ── LLM CALL TELEMETRY (NIGHT-14) ────────────────────────────────────────────
+#: Per-model list prices in USD per 1,000,000 tokens, used by
+#: `backend/services/llm_telemetry.py` to price every recorded inference call.
+#:
+#: THESE ARE POINT-IN-TIME LIST PRICES AND THEY DRIFT. Nothing here is a billed
+#: amount: the provider invoice is the only authority, and every cost this table
+#: produces is labelled an ESTIMATE all the way out to the summary. If a rate
+#: changes and this table does not, the ledger is wrong by exactly that drift
+#: and by nothing else — which is a knowable error, unlike the alternative.
+#:
+#: A model absent from this table is priced None, not 0.0, and the caller logs a
+#: WARNING (see `llm_telemetry.price_call`). A fabricated zero would be summed
+#: into a spend total and read as "free" on every dashboard — the house failure
+#: mode of a number that is wrong in the direction of looking fine. Adding a
+#: model here is the fix; guessing its price is not.
+#:
+#: `cached_in` is the discounted rate for input tokens served from a prompt
+#: cache. Anthropic's cache-read rate is 0.1x list input; DeepSeek publishes its
+#: own cache-hit rate. The two providers disagree about whether cached tokens
+#: are counted inside or beside the input count — `llm_telemetry.extract_usage`
+#: normalises that, so this table only needs the three rates.
+LLM_PRICE_AS_OF = "2026-08-12"
+LLM_PRICE_PER_MTOK: dict[str, dict[str, float]] = {
+    # DeepSeek — the workhorse for specialists and research roles.
+    "deepseek-chat": {"in": 0.27, "cached_in": 0.07, "out": 1.10},
+    "deepseek-reasoner": {"in": 0.55, "cached_in": 0.14, "out": 2.19},
+    # Anthropic — used by llm_analyzer/copilot when ANTHROPIC_API_KEY is set.
+    "claude-opus-5": {"in": 5.00, "cached_in": 0.50, "out": 25.00},
+    "claude-opus-4-8": {"in": 5.00, "cached_in": 0.50, "out": 25.00},
+    "claude-sonnet-5": {"in": 3.00, "cached_in": 0.30, "out": 15.00},
+    "claude-sonnet-4-6": {"in": 3.00, "cached_in": 0.30, "out": 15.00},
+    "claude-haiku-4-5": {"in": 1.00, "cached_in": 0.10, "out": 5.00},
+}
+#: Env var that overrides the telemetry ledger path. Named here rather than
+#: hardcoded in the service so a deploy can move the file with the rest of the
+#: data-dir configuration.
+LLM_TELEMETRY_PATH_ENV = "AEGIS_LLM_TELEMETRY_PATH"
+
+# ── WHY-MOVED (NIGHT-14): explaining a day's move, gradeably ────────────────
+# The deterministic attribution is arithmetic; everything below it is a
+# parameter of how the LANGUAGE MODEL's explanations get CHECKED. None of it
+# decides what caused the move — see backend/services/why_moved.py.
+
+#: The market leg of the decomposition. Book beta x this instrument's return.
+WHY_MOVED_BENCHMARK = "SPY"
+#: Trading days of history used to estimate each position's beta. One year is
+#: long enough to be an estimate and short enough to be about the current book.
+WHY_MOVED_BETA_LOOKBACK_DAYS = 252
+#: Fewer overlapping bars than this and the beta is not estimated at all — the
+#: position is carried at beta 1.0 and NAMED in `beta_fallbacks`, because a
+#: beta fitted on eleven days is a random number with a t-stat.
+WHY_MOVED_MIN_BETA_OBS = 60
+#: Calendar days of price history requested so the beta window can be filled.
+WHY_MOVED_PRICE_PAD_DAYS = 420
+#: Sector leg: the traded proxy for each GICS sector. A sector return that is
+#: not a tradeable instrument cannot be checked, so the proxy is an ETF.
+WHY_MOVED_SECTOR_ETFS = {
+    "Health Care": "XLV",
+    "Information Technology": "XLK",
+    "Industrials": "XLI",
+    "Consumer Discretionary": "XLY",
+    "Consumer Staples": "XLP",
+    "Energy": "XLE",
+    "Financials": "XLF",
+    "Materials": "XLB",
+    "Utilities": "XLU",
+    "Real Estate": "XLRE",
+    "Communication Services": "XLC",
+}
+#: Ticker -> GICS sector for the securities the book actually holds. Declared
+#: here rather than fetched: a vendor sector field that changes silently would
+#: re-cut a past attribution, and an unmapped ticker is reported by name
+#: (`sector_unmapped`) instead of being quietly folded into the market leg.
+WHY_MOVED_TICKER_SECTOR = {
+    "AARD": "Health Care",
+    "ABSI": "Health Care",
+    "AMSC": "Industrials",
+    "BHVN": "Health Care",
+    "DKNG": "Consumer Discretionary",
+    "HUBS": "Information Technology",
+    "KYTX": "Health Care",
+    "NTLA": "Health Care",
+    "PRCH": "Information Technology",
+    "QUBT": "Information Technology",
+    "SLDP": "Consumer Discretionary",
+    "SOC": "Energy",
+}
+#: The instruments a specialist may point at when it states a cross-asset
+#: signature. Offered in the prompt and used as the ONLY whitelist for a
+#: forward claim's subject, so every assertion lands on something the resolver
+#: can actually price. ^TNX is the 10-year yield ITSELF (not a bond price):
+#: "^TNX up" means yields rose.
+WHY_MOVED_CORROBORATION_UNIVERSE = (
+    "SPY", "QQQ", "IWM", "DIA", "RSP",
+    "TLT", "IEF", "SHY", "HYG", "LQD", "^TNX", "^IRX",
+    "GLD", "SLV", "USO", "CL=F", "BZ=F", "NG=F", "DBC",
+    "^VIX", "^VIX3M", "UUP", "FXE",
+    "XLE", "XLK", "XLV", "XLF", "XLI", "XLY", "XLP", "XLB", "XLU", "XLRE",
+    "XLC", "XBI", "IBB", "ITA", "SMH", "ARKK", "KRE",
+    "EEM", "EFA", "FXI", "EWZ", "BTC-USD",
+)
+#: Ceilings on what one specialist may return. Not a style preference: an
+#: unbounded list of assertions lets a forecaster spray until something hits,
+#: and the hit RATE is the number this module exists to measure.
+WHY_MOVED_MAX_HYPOTHESES_PER_SPECIALIST = 4
+WHY_MOVED_MAX_CORROBORATION_PER_HYPOTHESIS = 4
+#: `min_abs_move_pct` on a magnitude assertion is stated in PERCENT (3.0 = 3%),
+#: deliberately unlike belief_state thresholds, which are decimal fractions.
+#: Both bounds are refusals, not clamps: below the floor the assertion is not a
+#: claim (anything moves 0.01%), above the ceiling it is a units error.
+WHY_MOVED_MAGNITUDE_MIN_PCT_FLOOR = 0.25
+WHY_MOVED_MAGNITUDE_MAX_PCT = 100.0
+#: CANON §20. Two hypotheses are the SAME idea when they assert the same
+#: cross-asset signature, or when their claim wording overlaps at least this
+#: much (Jaccard over content tokens). Components, not rows, are the
+#: denominator for any statement about a batch.
+WHY_MOVED_IDEA_JACCARD = 0.6
+#: Tokens carrying no idea; excluded before the Jaccard so "the market fell on
+#: rates" and "the market fell on earnings" do not read as one idea.
+WHY_MOVED_STOPWORDS = (
+    "the", "a", "an", "of", "on", "in", "to", "and", "or", "for", "with",
+    "as", "at", "by", "from", "that", "this", "is", "was", "were", "be",
+    "been", "its", "it", "their", "was", "has", "have", "had", "s",
+)
+#: DeepSeek settings for the seven lenses. Cheap by design — the point is to
+#: spend calls on output that can be graded within days.
+WHY_MOVED_MODEL = "deepseek-chat"
+WHY_MOVED_TEMPERATURE = 0.4
+#: 2400 truncated the geopolitical lens mid-JSON on the first live run
+#: (2026-08-10) — the module counted it as a rejection rather than crashing,
+#: which is correct behaviour but a wasted call. Seven hypotheses with causal
+#: chains and evidence rows run to ~9k characters.
+WHY_MOVED_MAX_TOKENS = 4000
+WHY_MOVED_LLM_TIMEOUT_S = 180
+#: Price panels are stable once the day has closed; an hour is plenty and
+#: keeps a page refresh off the vendor.
+WHY_MOVED_PRICE_CACHE_TTL = 3600
+#: Descriptive only, house rule. A hypothesis whose text reaches for an action
+#: is refused rather than sanitised — the sanitised version would still have
+#: been written by a forecaster that thought it was allowed to advise.
+WHY_MOVED_FORBIDDEN_PATTERN = (
+    r"\b(buy|sell|hold|trim|add to|overweight|underweight|allocate|"
+    r"position size|take profit|stop loss|we recommend|you should)\b"
+)

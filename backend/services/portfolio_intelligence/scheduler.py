@@ -31,6 +31,25 @@ _last_mtm_timestamp: datetime | None = None
 # volume as aegis_pi.db. See config.DATA_DIR for the volume-mount contract.
 _DB_DIR = DATA_DIR
 
+#: EVERY job this module registers, declared once. THE DEFECT THIS EXISTS FOR
+#: (NIGHT-13, verified live — docs/NIGHT13_DISCHARGE.md §8): both replicas of a
+#: rolling deploy share the persistent SQLAlchemy jobstore. The OLD replica, on
+#: code that has never heard of the newly-added job's target function, calls
+#: get_jobs(), fails to deserialize that job — and APScheduler REMOVES jobs it
+#: cannot restore. `pi_ledger_resolve` was added, logged as "5 jobs" at startup,
+#: and was gone from the live scheduler minutes later. n_jobs alone cannot see
+#: this: 4 jobs is a perfectly plausible number. Only an expected SET can.
+#: Keep this in lockstep with the add_job() calls below — a job registered and
+#: not declared here (or vice versa) is itself reported, by
+#: scheduler_jobs_health() and by test_scheduler_job_canary.py.
+EXPECTED_JOB_IDS: frozenset[str] = frozenset({
+    "pi_hourly_mtm",
+    "pi_daily_check",
+    "pi_weekly_aggressive",
+    "pi_congress_collect",
+    "pi_ledger_resolve",
+})
+
 
 def setup_scheduler():
     """Set up APScheduler with SQLite persistence.
@@ -130,10 +149,19 @@ def setup_scheduler():
     )
 
     _scheduler.start()
+    # Log the SET, not the count: "5 jobs" is what the process logged on the
+    # night a job silently vanished from the shared jobstore minutes later.
+    registered = sorted(j.id for j in _scheduler.get_jobs())
     logger.info(
-        "Portfolio Intelligence scheduler started (job store: %s, %d jobs)",
-        job_store_url, len(_scheduler.get_jobs()),
+        "Portfolio Intelligence scheduler started (job store: %s, %d jobs: %s)",
+        job_store_url, len(registered), registered,
     )
+    jobs = scheduler_jobs_health()
+    if jobs["status"] != "ok":
+        # At startup this means the jobstore did not restore what this code
+        # registers — the rolling-deploy failure, caught in the process that
+        # would otherwise have logged a healthy-looking count.
+        logger.error("Scheduler job-set MISMATCH at startup: %s", jobs)
     return _scheduler
 
 
@@ -318,6 +346,58 @@ def lppls_status() -> dict:
         return {"error": str(e), "operational": False, "armed": False}
 
 
+def scheduler_jobs_health() -> dict:
+    """Is the LIVE job set the set this code registers? (NIGHT-13 §8 canary)
+
+    Compares EXPECTED_JOB_IDS against what the running scheduler actually holds
+    and names both differences:
+
+    * `missing` — declared here, absent live. This is the rolling-deploy defect:
+      the old replica deleted a job it could not deserialize from the shared
+      jobstore, and the work silently stopped happening. DEGRADED.
+    * `unexpected` — live but not declared. A renamed job whose old id is still
+      persisted in the jobstore keeps firing forever alongside the new one; it
+      is also how this declaration goes stale. DEGRADED.
+
+    Detection only. Re-adding a job from here would be a write on a read path,
+    and a health endpoint that repairs the thing it measures can never report
+    that the thing was broken.
+    """
+    expected = sorted(EXPECTED_JOB_IDS)
+    if _scheduler is None:
+        # NOT "everything is missing": with no scheduler there is no job set to
+        # compare, and fabricating five missing jobs would drown the real signal
+        # every time the process runs without APScheduler (tests, local dev).
+        # A dead scheduler is already the /health/scheduler canary's job.
+        return {"status": "unavailable", "expected": expected, "actual": [],
+                "missing": [], "unexpected": [],
+                "reason": "scheduler not started — no live job set to compare"}
+    try:
+        actual = sorted(j.id for j in _scheduler.get_jobs())
+    except Exception as e:
+        logger.warning("Scheduler job-set check could not read jobs: %s", e)
+        return {"status": "unavailable", "expected": expected, "actual": [],
+                "missing": [], "unexpected": [], "error": str(e),
+                "reason": "the live job set could not be read"}
+    missing = sorted(EXPECTED_JOB_IDS - set(actual))
+    unexpected = sorted(set(actual) - EXPECTED_JOB_IDS)
+    row = {"status": "ok" if not (missing or unexpected) else "DEGRADED",
+           "expected": expected, "actual": actual,
+           "missing": missing, "unexpected": unexpected}
+    if missing:
+        row["reason"] = (
+            f"scheduled job(s) {missing} are registered by this code but absent "
+            f"from the live scheduler — the work they do is not happening "
+            f"(NIGHT-13: a rolling deploy's old replica deletes jobs it cannot "
+            f"deserialize from the shared jobstore)")
+    elif unexpected:
+        row["reason"] = (
+            f"job(s) {unexpected} are running but not declared in "
+            f"EXPECTED_JOB_IDS — either a stale id persisted in the jobstore "
+            f"still firing, or the declaration is out of date")
+    return row
+
+
 def scheduler_health() -> dict:
     """Health snapshot for the /health/scheduler canary.
 
@@ -325,17 +405,21 @@ def scheduler_health() -> dict:
     rebalances) — the #1 deploy risk. Exposes liveness (running flag, jobs,
     last MTM timestamp) AND freshness (per-lane paper_nav MAX(date) vs the
     expected last trading day) — a green liveness over zero persisted rows
-    is exactly the failure this canary must catch.
+    is exactly the failure this canary must catch. `jobs` adds the third
+    question: not "is it alive" or "did rows land" but "is the job set the one
+    this code registers" — the NIGHT-13 defect that n_jobs could not see.
     """
     if _scheduler is None:
         return {"running": False, "n_jobs": 0, "jobstore": None,
                 "job_ids": [], "last_mtm": None,
                 "nav": nav_freshness(),
+                "jobs": scheduler_jobs_health(),
                 "reason": "scheduler not started (APScheduler missing or setup failed)"}
     try:
         jobs = _scheduler.get_jobs()
         store = _scheduler._jobstores.get("default")
         return {
+            "jobs": scheduler_jobs_health(),
             "running": bool(getattr(_scheduler, "running", False)),
             "n_jobs": len(jobs),
             "job_ids": sorted(j.id for j in jobs),
