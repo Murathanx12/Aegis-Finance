@@ -48,6 +48,11 @@ from typing import Any, Optional
 
 import yaml
 
+from backend.services.kill_conditions import (AUTO_ADOPTED_KILL_CONDITIONS,
+                                              AUTO_ADOPTED_NOTE,
+                                              PROVENANCE_AUTO_ADOPTED,
+                                              PROVENANCE_MURAT_STATED)
+
 logger = logging.getLogger(__name__)
 
 DATA = Path(__file__).resolve().parents[1] / "data"
@@ -115,6 +120,8 @@ class ReconciledPosition:
     entry_date: Optional[str] = None
     thesis: str = ""
     kill_condition: str = ""
+    #: "murat_stated" | "auto_adopted_default" | "" — see kill_conditions.py.
+    kill_condition_provenance: str = ""
     sources_present: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
@@ -136,6 +143,7 @@ class ReconciledPosition:
             "entry_date": self.entry_date,
             "thesis": self.thesis,
             "kill_condition": self.kill_condition,
+            "kill_condition_provenance": self.kill_condition_provenance,
             "sources_present": self.sources_present,
             "notes": self.notes,
         }
@@ -346,25 +354,40 @@ def reconcile(*, book_lanes_path: Path | None = None,
             pos.entry_date = None if ed is None else str(ed)
             pos.thesis = entry.get("thesis") or ""
             pos.kill_condition = entry.get("kill_condition") or ""
+            if pos.kill_condition:
+                # an explicit provenance in the book file wins; a bare kill
+                # condition there is Murat's own record.
+                pos.kill_condition_provenance = (
+                    entry.get("kill_condition_provenance")
+                    or PROVENANCE_MURAT_STATED)
 
         # Five recovered names (ABSI, AMSC, HUBS, KYTX, SLDP) are absent from
         # the January reconstruction, so they arrive with no thesis at all. The
         # conviction log DOES carry Murat's rationale for them, and a generic
-        # real reason beats an invented specific one. A kill condition is a
-        # different matter: none exists, none is inferred, and the gap is
-        # reported so the brief can say a position has no exit discipline.
+        # real reason beats an invented specific one. A kill condition used to
+        # be a different matter — none existed, none was inferred, and the gap
+        # was reported as unrecoverable. NIGHT-13 §0 ruled that the mirror
+        # challenge's PROPOSED texts auto-adopt as DEFAULTS, with provenance,
+        # and with an explicit override slot for Murat. A name outside that
+        # ruled set still gets the honest gap, not an invention.
         if not pos.thesis and conv_entry and conv_entry.get("rationale"):
             pos.thesis = ("(from the conviction log, 2026-07-11) "
                           + str(conv_entry["rationale"]).strip())
             pos.notes.append("thesis carried from the decision log — generic, "
                              "and it is his own words rather than a guess")
-        if not pos.kill_condition:
-            pos.notes.append("NO KILL CONDITION — no source carries one, and "
-                             "none was invented")
+        if not pos.kill_condition and tic in AUTO_ADOPTED_KILL_CONDITIONS:
+            pos.kill_condition = AUTO_ADOPTED_KILL_CONDITIONS[tic]
+            pos.kill_condition_provenance = PROVENANCE_AUTO_ADOPTED
+            pos.notes.append("kill condition is the " + AUTO_ADOPTED_NOTE)
+        elif not pos.kill_condition:
+            pos.notes.append("NO KILL CONDITION — no source carries one, none "
+                             "was invented, and no NIGHT-13 default exists "
+                             "for this name")
             report["unrecoverable"].append({
                 "field": "kill_condition", "ticker": tic,
                 "why": ("neither the January reconstruction nor the decision "
-                        "log states an exit rule for this name. A position "
+                        "log states an exit rule for this name, and it is not "
+                        "in the NIGHT-13 auto-adopted default set. A position "
                         "without one has no exit discipline, and inventing a "
                         "plausible-sounding rule would be worse than saying so."),
                 "needs_murat": True,
@@ -467,15 +490,18 @@ def reconcile(*, book_lanes_path: Path | None = None,
 
 
 def to_book_yaml(report: dict, *, confirmed: bool = False,
-                 cash: float = 0.0, sizing_mode: str = "high_growth",
+                 cash: float | None = None, sizing_mode: str = "high_growth",
                  wealth_targets: dict | None = None,
                  watchlist: list[str] | None = None) -> str:
     """Render the reconciliation as a murat_book.yaml with provenance per line.
 
     `confirmed` defaults to FALSE and this function will not set it true: a
     reconciliation is evidence about the book, not the broker's statement of it.
-    The share counts are recovered, but cash is not, and a NAV missing its cash
-    leg is not a NAV.
+    The share counts are recovered; cash is not — `cash=None` (the default)
+    renders `cash: null`, which the engine sweeps as a sensitivity parameter
+    (config.CASH_SENSITIVITY_GRID) rather than silently reading as $0.
+    Auto-adopted kill conditions render with their provenance and an empty
+    `murat_override:` slot.
     """
     wt = wealth_targets or {"horizon_months": 12, "target_value": 100000,
                             "floor_value": 30000, "ruin_value": 20000}
@@ -502,6 +528,17 @@ def to_book_yaml(report: dict, *, confirmed: bool = False,
     if n_contested:
         add(f"#   - {n_contested} share count(s) CONTESTED between sources; see")
         add("#     docs/PORTFOLIO_RECONCILIATION.md. Marked inline below.")
+    n_auto = sum(1 for p in report["positions"]
+                 if p.get("kill_condition_provenance")
+                 == PROVENANCE_AUTO_ADOPTED)
+    if n_auto:
+        add("#")
+        add(f"# {n_auto} kill condition(s) below are AUTO-ADOPTED NIGHT-13 §0 "
+            f"defaults —")
+        add("# thesis labels for paper/shadow evaluation only, NEVER an armed "
+            "exit or an")
+        add("# order path. Each carries provenance and an empty "
+            "`murat_override:` slot.")
     add("")
     add("account: murat_live")
     add(f"confirmed: {str(bool(confirmed)).lower()}")
@@ -510,7 +547,12 @@ def to_book_yaml(report: dict, *, confirmed: bool = False,
     add('source: "reconciled from book_lanes.yaml + conviction decision log '
         '(prod, immutable) + murat_book.yaml reconstruction"')
     add("")
-    add(f"cash: {cash}   # UNRECOVERABLE from any source — Murat must supply it")
+    if cash is None:
+        add("cash: null  # UNRECOVERABLE — swept as sensitivity parameter "
+            "(see config CASH_SENSITIVITY_GRID)")
+    else:
+        add(f"cash: {cash}   # supplied at render time, not recovered from "
+            f"any source")
     add("")
     add("wealth_targets:")
     for k, v in wt.items():
@@ -538,7 +580,17 @@ def to_book_yaml(report: dict, *, confirmed: bool = False,
         if p.get("thesis"):
             add(f"    thesis: {json.dumps(p['thesis'])}")
         if p.get("kill_condition"):
+            prov = p.get("kill_condition_provenance") or ""
             add(f"    kill_condition: {json.dumps(p['kill_condition'])}")
+            if prov == PROVENANCE_AUTO_ADOPTED:
+                add("    # ^ AUTO-ADOPTED DEFAULT (NIGHT-13 §0) — thesis "
+                    "label for paper/shadow evaluation")
+                add("    #   only, never an armed exit. Fill murat_override: "
+                    "to replace it.")
+                add(f"    kill_condition_provenance: {prov}")
+                add("    murat_override:")
+            elif prov:
+                add(f"    kill_condition_provenance: {prov}")
     add("")
     if report.get("excluded"):
         add("# Excluded — in the January reconstruction, not in the current book:")

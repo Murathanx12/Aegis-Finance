@@ -38,6 +38,9 @@ def _row(brief: dict, r: dict, rec: dict, note: str) -> dict:
         "recorded_at": datetime.now().isoformat(timespec="seconds"),
         "account": brief.get("account"),
         "positions_confirmed": brief.get("positions_confirmed"),
+        # NIGHT-13 §0: confirmation is an evidence grade on the BOOK, not a
+        # blocker — recorded so a post-mortem knows whose statement it judged.
+        "book_evidence_grade": brief.get("evidence_grade"),
         # An entry is a RECOMMENDATION. Nothing in this codebase executes, and
         # an unconfirmed book cannot even be read as an executable ticket.
         "actionable": bool(brief.get("actionable")),
@@ -55,6 +58,7 @@ def _row(brief: dict, r: dict, rec: dict, note: str) -> dict:
         "target_weight": rec["target_weight"],
         "thesis": r.get("thesis"),
         "kill_condition": r.get("kill_condition"),
+        "kill_condition_provenance": r.get("kill_condition_provenance"),
         "alpha_score": (r.get("alpha") or {}).get("score"),
         "distribution": r.get("distribution"),
         "state": {k: st.get(k) for k in FREEZE},
@@ -83,9 +87,10 @@ def record_brief(brief: dict, *, note: str = "") -> dict:
     return {"written": len(written), "path": str(JOURNAL),
             "entries": written,
             "actionable": bool(brief.get("actionable")),
+            "book_evidence_grade": brief.get("evidence_grade"),
             "caveat": None if brief.get("actionable") else
             "book is not actionable (" +
-            "; ".join(brief.get("actionable_blockers") or ["unconfirmed"]) +
+            "; ".join(brief.get("actionable_blockers") or ["book incomplete"]) +
             ") — these are recorded as REASONING, never as executable tickets"}
 
 

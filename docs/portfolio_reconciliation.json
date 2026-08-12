@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-10T17:31:45+00:00",
+  "generated_at": "2026-08-11T12:24:04+00:00",
   "sources": {
     "book_lanes": {
       "status": "READ",
@@ -51,6 +51,7 @@
       "entry_date": "2025-11-07",
       "thesis": "5/5 consensus, unanimous outperform",
       "kill_condition": "coverage drops below four analysts or the consensus cracks",
+      "kill_condition_provenance": "murat_stated",
       "sources_present": [
         "conviction_log",
         "book_lanes",
@@ -89,16 +90,14 @@
       "last_logged_at": "2026-07-11T05:54:33.280862",
       "entry_date": null,
       "thesis": "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)",
-      "kill_condition": "",
+      "kill_condition": "cash runway falls below 12 months, or a lead programme is discontinued without a named successor",
+      "kill_condition_provenance": "auto_adopted_default",
       "sources_present": [
         "conviction_log",
         "book_lanes",
         "murat_book"
       ],
-      "notes": [
-        "thesis carried from the decision log \u2014 generic, and it is his own words rather than a guess",
-        "NO KILL CONDITION \u2014 no source carries one, and none was invented"
-      ]
+      "notes": []
     },
     {
       "ticker": "AMSC",
@@ -129,16 +128,14 @@
       "last_logged_at": "2026-07-11T05:56:30.350013",
       "entry_date": null,
       "thesis": "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)",
-      "kill_condition": "",
+      "kill_condition": "two consecutive quarters of declining grid-segment backlog, or the largest customer concentration exceeds 40% of revenue",
+      "kill_condition_provenance": "auto_adopted_default",
       "sources_present": [
         "conviction_log",
         "book_lanes",
         "murat_book"
       ],
-      "notes": [
-        "thesis carried from the decision log \u2014 generic, and it is his own words rather than a guess",
-        "NO KILL CONDITION \u2014 no source carries one, and none was invented"
-      ]
+      "notes": []
     },
     {
       "ticker": "BHVN",
@@ -170,6 +167,7 @@
       "entry_date": "2025-11-07",
       "thesis": "post-CRL refocus on late-stage neuro; consensus target ~3x mark",
       "kill_condition": "a second regulatory setback on the core pipeline",
+      "kill_condition_provenance": "murat_stated",
       "sources_present": [
         "conviction_log",
         "book_lanes",
@@ -209,6 +207,7 @@
       "entry_date": "2025-11-07",
       "thesis": "analyst upside + federal prediction-markets optionality; FY25 guide raised",
       "kill_condition": "consensus target falls below entry, or two quarters of negative revisions",
+      "kill_condition_provenance": "murat_stated",
       "sources_present": [
         "conviction_log",
         "book_lanes",
@@ -247,16 +246,14 @@
       "last_logged_at": "2026-07-11T05:55:09.142404",
       "entry_date": null,
       "thesis": "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)",
-      "kill_condition": "",
+      "kill_condition": "net revenue retention falls below 100% for two consecutive quarters",
+      "kill_condition_provenance": "auto_adopted_default",
       "sources_present": [
         "conviction_log",
         "book_lanes",
         "murat_book"
       ],
-      "notes": [
-        "thesis carried from the decision log \u2014 generic, and it is his own words rather than a guess",
-        "NO KILL CONDITION \u2014 no source carries one, and none was invented"
-      ]
+      "notes": []
     },
     {
       "ticker": "KYTX",
@@ -287,16 +284,14 @@
       "last_logged_at": "2026-07-11T05:55:29.950470",
       "entry_date": null,
       "thesis": "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)",
-      "kill_condition": "",
+      "kill_condition": "a lead clinical programme misses its primary endpoint, or cash runway falls below 12 months",
+      "kill_condition_provenance": "auto_adopted_default",
       "sources_present": [
         "conviction_log",
         "book_lanes",
         "murat_book"
       ],
-      "notes": [
-        "thesis carried from the decision log \u2014 generic, and it is his own words rather than a guess",
-        "NO KILL CONDITION \u2014 no source carries one, and none was invented"
-      ]
+      "notes": []
     },
     {
       "ticker": "NTLA",
@@ -328,6 +323,7 @@
       "entry_date": "2025-11-07",
       "thesis": "in-vivo CRISPR; ATTR programme restart",
       "kill_condition": "further clinical holds or serious adverse events",
+      "kill_condition_provenance": "murat_stated",
       "sources_present": [
         "conviction_log",
         "book_lanes",
@@ -367,6 +363,7 @@
       "entry_date": "2025-11-07",
       "thesis": "insurance-attach turnaround, high analyst upside",
       "kill_condition": "loss ratios deteriorate again",
+      "kill_condition_provenance": "murat_stated",
       "sources_present": [
         "conviction_log",
         "book_lanes",
@@ -406,6 +403,7 @@
       "entry_date": "2025-11-07",
       "thesis": "quantum theme, pre-revenue narrative exposure",
       "kill_condition": "narrative rotation; dilution at these levels",
+      "kill_condition_provenance": "murat_stated",
       "sources_present": [
         "conviction_log",
         "book_lanes",
@@ -445,16 +443,14 @@
       "last_logged_at": "2026-07-11T05:57:03.250467",
       "entry_date": null,
       "thesis": "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)",
-      "kill_condition": "",
+      "kill_condition": "a named OEM partnership lapses without replacement, or cash runway falls below 12 months",
+      "kill_condition_provenance": "auto_adopted_default",
       "sources_present": [
         "conviction_log",
         "book_lanes",
         "murat_book"
       ],
-      "notes": [
-        "thesis carried from the decision log \u2014 generic, and it is his own words rather than a guess",
-        "NO KILL CONDITION \u2014 no source carries one, and none was invented"
-      ]
+      "notes": []
     },
     {
       "ticker": "SOC",
@@ -486,6 +482,7 @@
       "entry_date": "2025-11-07",
       "thesis": "5/5 consensus, target well above mark",
       "kill_condition": "consensus breaks below the mark",
+      "kill_condition_provenance": "murat_stated",
       "sources_present": [
         "conviction_log",
         "book_lanes",
@@ -515,22 +512,10 @@
   ],
   "unrecoverable": [
     {
-      "field": "kill_condition",
-      "ticker": "ABSI",
-      "why": "neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventing a plausible-sounding rule would be worse than saying so.",
-      "needs_murat": true
-    },
-    {
       "field": "cost_basis",
       "ticker": "ABSI",
       "why": "no source carries a fill price for this name. The conviction log's `price` is the market price on 2026-07-11, the day it was typed in, and the rationale says the shares were bought months earlier.",
       "observed_price_when_logged": 3.15
-    },
-    {
-      "field": "kill_condition",
-      "ticker": "AMSC",
-      "why": "neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventing a plausible-sounding rule would be worse than saying so.",
-      "needs_murat": true
     },
     {
       "field": "cost_basis",
@@ -539,34 +524,16 @@
       "observed_price_when_logged": 31.29
     },
     {
-      "field": "kill_condition",
-      "ticker": "HUBS",
-      "why": "neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventing a plausible-sounding rule would be worse than saying so.",
-      "needs_murat": true
-    },
-    {
       "field": "cost_basis",
       "ticker": "HUBS",
       "why": "no source carries a fill price for this name. The conviction log's `price` is the market price on 2026-07-11, the day it was typed in, and the rationale says the shares were bought months earlier.",
       "observed_price_when_logged": 268.54
     },
     {
-      "field": "kill_condition",
-      "ticker": "KYTX",
-      "why": "neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventing a plausible-sounding rule would be worse than saying so.",
-      "needs_murat": true
-    },
-    {
       "field": "cost_basis",
       "ticker": "KYTX",
       "why": "no source carries a fill price for this name. The conviction log's `price` is the market price on 2026-07-11, the day it was typed in, and the rationale says the shares were bought months earlier.",
       "observed_price_when_logged": 8.28
-    },
-    {
-      "field": "kill_condition",
-      "ticker": "SLDP",
-      "why": "neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventing a plausible-sounding rule would be worse than saying so.",
-      "needs_murat": true
     },
     {
       "field": "cost_basis",

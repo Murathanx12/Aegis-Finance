@@ -28,16 +28,28 @@ BAR = "=" * 78
 
 def money(x) -> str:
     if x is None:
-        return "     n/a"
+        # cash: null now means UNRECOVERABLE and swept — say so, never $0
+        return "UNKNOWN (swept)"
+    if isinstance(x, dict):
+        # a {"low","high"} RANGE from the cash sweep (NIGHT-13 §0)
+        return f"${x['low']:,.0f}–${x['high']:,.0f}"
     return f"${x:,.0f}"
 
 
 def pct(x, nd=1) -> str:
-    return "  n/a" if x is None else f"{x * 100:+.{nd}f}%"
+    if x is None:
+        return "  n/a"
+    if isinstance(x, dict):
+        return f"{x['low'] * 100:+.{nd}f}%…{x['high'] * 100:+.{nd}f}%"
+    return f"{x * 100:+.{nd}f}%"
 
 
 def prob(x) -> str:
-    return " n/a" if x is None else f"{x:.1%}"
+    if x is None:
+        return " n/a"
+    if isinstance(x, dict):
+        return f"{x['low']:.1%}–{x['high']:.1%}"
+    return f"{x:.1%}"
 
 
 def main() -> int:
@@ -94,10 +106,12 @@ def main() -> int:
               f"    P(below floor) {prob(base['p_below_floor'])}"
               f"    P(below ruin) {prob(base['p_below_ruin'])}")
         print(f"                     expected max drawdown "
-              f"{base['expected_max_drawdown']:.1%}   "
+              f"{prob(base['expected_max_drawdown'])}   "
               f"P(worse than -50%) {prob(base['p_drawdown_worse_than_50pct'])}")
         print(f"                     required return for the target "
-              f"{base['required_return_for_target']:+.1%}")
+              f"{pct(base['required_return_for_target'])}")
+        if base.get("cash_basis"):
+            print(f"                     cash: {base['cash_basis']}")
 
         print("\nMODEL SENSITIVITY — the same book, three sets of assumptions")
         print(f"  {'scenario':<14}{'haircut':>8}{'corr':>7}{'vol x':>7}"
@@ -115,7 +129,7 @@ def main() -> int:
                   f"{prob(s['p_reach_target']):>11}"
                   f"{prob(s['p_below_floor']):>11}"
                   f"{prob(s['p_below_ruin']):>10}"
-                  f"{s['expected_max_drawdown']:>9.1%}")
+                  f"{prob(s['expected_max_drawdown']):>9}")
         pr = rng.get("p_reach_target") or {}
         if pr:
             print(f"  => scenario-model range for P(reach target): "

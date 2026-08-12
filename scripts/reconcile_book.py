@@ -156,7 +156,10 @@ def main() -> int:
                     help="re-pull the conviction log from prod first")
     ap.add_argument("--write-book", action="store_true")
     ap.add_argument("--write-doc", action="store_true")
-    ap.add_argument("--cash", type=float, default=0.0)
+    ap.add_argument("--cash", type=float, default=None,
+                    help="brokerage cash balance if Murat supplies one; "
+                         "omitted = rendered as `cash: null` and swept as a "
+                         "sensitivity parameter (CASH_SENSITIVITY_GRID)")
     args = ap.parse_args()
 
     if args.snapshot:

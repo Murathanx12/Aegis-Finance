@@ -225,6 +225,99 @@ def test_unrecoverable_cash_is_stated_in_the_file(lanes_file, conv_file, book_fi
     assert "cash:" in text
 
 
+def _absi_fixtures(tmp_path):
+    """A minimal source set holding ABSI (in the NIGHT-13 default set) and
+    BBB (not in it)."""
+    lanes = tmp_path / "lanes_absi.yaml"
+    lanes.write_text(yaml.safe_dump({
+        "holdings": {"ABSI": 600, "BBB": 200}}), encoding="utf-8")
+    conv = tmp_path / "conv_absi.json"
+    conv.write_text(json.dumps({"decisions": [
+        {"id": 1, "timestamp": "2026-07-11T05:00:00", "ticker": "ABSI",
+         "action": "enter", "shares_delta": 600.0, "price": 3.15,
+         "rationale": "bought months ago"},
+        {"id": 2, "timestamp": "2026-07-11T05:01:00", "ticker": "BBB",
+         "action": "enter", "shares_delta": 200.0, "price": 4.0,
+         "rationale": "bought months ago"},
+    ]}), encoding="utf-8")
+    book = tmp_path / "book_absi.yaml"
+    book.write_text(yaml.safe_dump({
+        "account": "t", "confirmed": False, "cash": None,
+        "sizing_mode": "high_growth", "wealth_targets": {},
+        "positions": [], "watchlist": []}), encoding="utf-8")
+    return lanes, conv, book
+
+
+def test_a_night13_name_auto_adopts_its_default_kill_condition(tmp_path):
+    """NIGHT-13 §0: the five owed names adopt the mirror challenge's proposed
+    texts as defaults with provenance, instead of an unrecoverable gap. A name
+    OUTSIDE the ruled set still gets the honest gap — nothing is invented."""
+    from backend.services.kill_conditions import AUTO_ADOPTED_KILL_CONDITIONS
+
+    lanes, conv, book = _absi_fixtures(tmp_path)
+    rep = R.reconcile(book_lanes_path=lanes, conviction_path=conv,
+                      murat_book_path=book)
+    by = {p["ticker"]: p for p in rep["positions"]}
+    assert by["ABSI"]["kill_condition"] == AUTO_ADOPTED_KILL_CONDITIONS["ABSI"]
+    assert by["ABSI"]["kill_condition_provenance"] == "auto_adopted_default"
+    assert by["BBB"]["kill_condition"] == ""
+    unrec = {u["ticker"] for u in rep["unrecoverable"]
+             if u.get("field") == "kill_condition"}
+    assert "ABSI" not in unrec, "adopted AND unrecoverable is a contradiction"
+    assert "BBB" in unrec, "a non-ruled name keeps the honest gap"
+
+
+def test_the_rendered_book_carries_default_provenance_and_an_override_slot(
+        tmp_path):
+    from backend.services.kill_conditions import AUTO_ADOPTED_KILL_CONDITIONS
+
+    lanes, conv, book = _absi_fixtures(tmp_path)
+    rep = R.reconcile(book_lanes_path=lanes, conviction_path=conv,
+                      murat_book_path=book)
+    text = R.to_book_yaml(rep)
+    assert "kill_condition_provenance: auto_adopted_default" in text
+    assert "murat_override:" in text
+    assert "AUTO-ADOPTED DEFAULT" in text
+    assert "never an armed exit" in text
+    # and it round-trips: the loaded Position keeps the text and provenance
+    out = tmp_path / "recovered_absi.yaml"
+    out.write_text(text, encoding="utf-8")
+    loaded = pm_engine.load_book(out, strict=False)
+    absi = next(p for p in loaded.positions if p.ticker == "ABSI")
+    assert absi.kill_condition == AUTO_ADOPTED_KILL_CONDITIONS["ABSI"]
+    assert absi.kill_condition_provenance == "auto_adopted_default"
+    assert not absi.murat_override
+
+
+def test_a_filled_override_supersedes_the_default_at_load(tmp_path):
+    p = tmp_path / "book_override.yaml"
+    p.write_text(yaml.safe_dump({
+        "account": "t", "confirmed": False, "cash": None,
+        "sizing_mode": "growth", "wealth_targets": {},
+        "positions": [{
+            "ticker": "ABSI", "shares": 600, "thesis": "t",
+            "kill_condition": "the shipped default text",
+            "kill_condition_provenance": "auto_adopted_default",
+            "murat_override": "sell if the ferment dies"}]}), encoding="utf-8")
+    b = pm_engine.load_book(p, strict=False)
+    absi = b.positions[0]
+    assert absi.kill_condition == "sell if the ferment dies"
+    assert absi.kill_condition_provenance == "murat_stated"
+
+
+def test_a_rendered_null_cash_line_is_the_sweep_sentence(lanes_file, conv_file,
+                                                         book_file):
+    rep = _run(lanes_file, conv_file, book_file)
+    text = R.to_book_yaml(rep)         # cash defaults to None now
+    assert "cash: null" in text
+    assert "CASH_SENSITIVITY_GRID" in text
+    parsed = yaml.safe_load(text)
+    assert parsed["cash"] is None
+    # and a supplied cash figure still renders as itself
+    with_cash = R.to_book_yaml(rep, cash=1234.0)
+    assert yaml.safe_load(with_cash)["cash"] == 1234.0
+
+
 def test_the_mirror_lane_notional_is_never_used_as_shares(lanes_file, conv_file,
                                                           book_file):
     """The $100k paper lane rescales the book; its shares are not holdings.

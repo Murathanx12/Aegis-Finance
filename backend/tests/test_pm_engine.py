@@ -240,22 +240,27 @@ def test_an_empty_book_refuses_rather_than_inventing_a_number():
 # ── the book file ──────────────────────────────────────────────────────────
 
 def test_the_shipped_book_is_marked_unconfirmed():
-    """Reconstructed placeholders must never be presented as real positions."""
+    """Reconstructed placeholders must never be presented as real positions —
+    but NIGHT-13 §0 makes that an EVIDENCE GRADE, not a blocker."""
     b = pm_engine.load_book()
     assert b.confirmed is False
+    assert b.evidence_grade == "BEST_EVIDENCE_UNCONFIRMED"
     assert b.positions and b.watchlist
     assert b.wealth_targets["target_value"] > b.wealth_targets["floor_value"]
 
 
-def test_every_position_carries_a_thesis_and_a_recorded_kill_condition_gap():
+def test_the_shipped_book_declares_its_cash_unknown_not_zero():
+    """`cash: null` loads as None (swept), never as a silent $0."""
+    b = pm_engine.load_book()
+    assert b.cash is None
+
+
+def test_every_position_has_a_kill_condition_or_a_recorded_gap():
     """A thesis is required. A kill condition is required to be HONEST.
 
-    The reconciled book (2026-08-11) recovered five names — ABSI, AMSC, HUBS,
-    KYTX, SLDP — that the January reconstruction never covered. The conviction
-    log carries Murat's own rationale for them, so a thesis exists. No source
-    states an exit rule, and inventing a plausible-sounding one would be worse
-    than admitting the gap, so the reconciler records it as unrecoverable
-    instead.
+    NIGHT-13 §0: a position either carries a kill condition (Murat's own, or
+    an auto-adopted default with provenance) OR the reconciliation records the
+    gap as unrecoverable. An invisible gap is the bug.
     """
     import json
     from pathlib import Path
@@ -275,3 +280,43 @@ def test_every_position_carries_a_thesis_and_a_recorded_kill_condition_gap():
         assert set(missing_kill) <= recorded, (
             f"{sorted(set(missing_kill) - recorded)} have no exit rule and the "
             f"reconciliation does not say so — an invisible gap is the bug")
+
+
+def test_the_five_owed_names_carry_auto_adopted_defaults():
+    """NIGHT-13 §0: ABSI, AMSC, HUBS, KYTX, SLDP now carry the mirror
+    challenge's proposed kill conditions as ADOPTED defaults — with provenance,
+    with an override slot, and gone from the unrecoverable list."""
+    import json
+    from pathlib import Path
+
+    from backend.services.kill_conditions import (
+        AUTO_ADOPTED_KILL_CONDITIONS, NO_KILL_CONDITION_NAMES)
+
+    by = {p.ticker: p for p in pm_engine.load_book().positions}
+    for t in NO_KILL_CONDITION_NAMES:
+        p = by[t]
+        assert p.kill_condition == AUTO_ADOPTED_KILL_CONDITIONS[t], (
+            f"{t}: the adopted text must match the single source verbatim")
+        assert p.kill_condition_provenance == "auto_adopted_default", t
+        assert not p.murat_override, (
+            f"{t}: the override slot ships EMPTY — filling it is Murat's act")
+
+    rep = json.loads(
+        (Path(__file__).resolve().parents[2] / "docs"
+         / "portfolio_reconciliation.json").read_text(encoding="utf-8"))
+    still_unrecoverable = {u["ticker"] for u in rep["unrecoverable"]
+                           if u.get("field") == "kill_condition"}
+    assert not (set(NO_KILL_CONDITION_NAMES) & still_unrecoverable), (
+        "an adopted default and an unrecoverable gap for the same name is a "
+        "contradiction")
+
+
+def test_murat_stated_kill_conditions_keep_their_provenance():
+    """A kill condition Murat wrote grades murat_stated at load, and an
+    auto-adopted one can never be mistaken for it."""
+    by = {p.ticker: p for p in pm_engine.load_book().positions}
+    assert by["AARD"].kill_condition_provenance == "murat_stated"
+    assert by["QUBT"].kill_condition_provenance == "murat_stated"
+    grades = {p.kill_condition_provenance
+              for p in by.values() if p.kill_condition}
+    assert grades <= {"murat_stated", "auto_adopted_default"}

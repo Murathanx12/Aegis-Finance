@@ -139,6 +139,29 @@ def test_a_recorded_decision_round_trips_with_its_evidence():
     assert r["cost_assumption"]["round_trip"] == 0.004
 
 
+def test_kill_condition_provenance_rounds_trips_and_is_optional():
+    """NIGHT-13 §0: kill_conditions values may now be auto-adopted default
+    texts, so a decision can say WHOSE words each one is. The field is
+    optional — an old-style decision without it still records fine (its rows
+    on disk keep their old hashes; only NEW payloads hash the new field)."""
+    with_prov = _decision(
+        kill_conditions={"AAA": "cash runway falls below 12 months"},
+        kill_condition_provenance={"AAA": "auto_adopted_default"})
+    S.record_decision(with_prov)
+    back = S.decisions("CHALLENGER_X")[-1]
+    assert back["kill_condition_provenance"] == {"AAA": "auto_adopted_default"}
+
+    without = _decision(shadow_id="LEGACY_SHAPE")
+    row = S.record_decision(without)
+    assert row["kill_condition_provenance"] == {}
+
+    # provenance is part of what a decision SAYS, so it moves the hash
+    a = _decision(kill_conditions={"AAA": "k"})
+    b = _decision(kill_conditions={"AAA": "k"},
+                  kill_condition_provenance={"AAA": "murat_stated"})
+    assert a.payload_hash() != b.payload_hash()
+
+
 def test_the_hash_ignores_when_it_was_written_but_not_what_it_says():
     a = _decision(decided_at="2026-08-11T00:00:00+00:00")
     b = _decision(decided_at="2026-09-01T00:00:00+00:00")

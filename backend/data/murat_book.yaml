@@ -12,14 +12,17 @@
 #   murat_book       READ       backend/data/murat_book.yaml — reconstructed from the January 2026 research PDF; positions
 #
 # STILL UNCONFIRMED, and these are the reasons:
-#   - kill_condition: neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventin
-#   - kill_condition: neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventin
-#   - kill_condition: neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventin
-#   - kill_condition: neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventin
-#   - kill_condition: neither the January reconstruction nor the decision log states an exit rule for this name. A position without one has no exit discipline, and inventin
 #   - cash: no source records a cash balance. book_lanes.yaml normalises to a notional $100k, the conviction log records share decisions only, and murat_book.yaml
 #   - 1 share count(s) CONTESTED between sources; see
 #     docs/PORTFOLIO_RECONCILIATION.md. Marked inline below.
+#
+# 5 kill conditions below (ABSI, AMSC, HUBS, KYTX, SLDP) are AUTO-ADOPTED
+# NIGHT-13 §0 defaults — the mirror challenge's proposed texts, adopted per
+# Murat's ruling instead of blocking on him. They are thesis labels for
+# paper/shadow evaluation only, NEVER an armed exit or an order path
+# (signal_registry trailing-stop corpse, CANON §15). Each carries provenance
+# and an empty `murat_override:` slot he can fill at any time.
+# Single source of the texts: backend/services/kill_conditions.py
 
 account: murat_live
 confirmed: false
@@ -27,7 +30,7 @@ as_of: 2026-08-11
 currency: USD
 source: "reconciled from book_lanes.yaml + conviction decision log (prod, immutable) + murat_book.yaml reconstruction"
 
-cash: 0.0   # UNRECOVERABLE from any source — Murat must supply it
+cash: null  # UNRECOVERABLE — swept as sensitivity parameter (see config CASH_SENSITIVITY_GRID)
 
 wealth_targets:
   horizon_months: 12
@@ -50,11 +53,21 @@ positions:
     # shares from conviction_log | claims: conviction_log=600, book_lanes=600, murat_book=600
     # cost_basis: MISSING — no source carries a fill price. Logged mark on 2026-07-11 was 3.15
     thesis: "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)"
+    kill_condition: "cash runway falls below 12 months, or a lead programme is discontinued without a named successor"
+    # ^ AUTO-ADOPTED DEFAULT (NIGHT-13 §0) — thesis label for paper/shadow evaluation
+    #   only, never an armed exit. Fill murat_override: to replace it.
+    kill_condition_provenance: auto_adopted_default
+    murat_override:
   - ticker: AMSC
     shares: 50
     # shares from conviction_log | claims: conviction_log=50, book_lanes=50, murat_book=50
     # cost_basis: MISSING — no source carries a fill price. Logged mark on 2026-07-11 was 31.29
     thesis: "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)"
+    kill_condition: "two consecutive quarters of declining grid-segment backlog, or the largest customer concentration exceeds 40% of revenue"
+    # ^ AUTO-ADOPTED DEFAULT (NIGHT-13 §0) — thesis label for paper/shadow evaluation
+    #   only, never an armed exit. Fill murat_override: to replace it.
+    kill_condition_provenance: auto_adopted_default
+    murat_override:
   - ticker: BHVN
     shares: 300
     # shares from conviction_log | claims: conviction_log=300, book_lanes=300, murat_book=300
@@ -74,11 +87,21 @@ positions:
     # shares from conviction_log | claims: conviction_log=10, book_lanes=10, murat_book=10
     # cost_basis: MISSING — no source carries a fill price. Logged mark on 2026-07-11 was 268.54
     thesis: "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)"
+    kill_condition: "net revenue retention falls below 100% for two consecutive quarters"
+    # ^ AUTO-ADOPTED DEFAULT (NIGHT-13 §0) — thesis label for paper/shadow evaluation
+    #   only, never an armed exit. Fill murat_override: to replace it.
+    kill_condition_provenance: auto_adopted_default
+    murat_override:
   - ticker: KYTX
     shares: 250
     # shares from conviction_log | claims: conviction_log=250, book_lanes=250, murat_book=250
     # cost_basis: MISSING — no source carries a fill price. Logged mark on 2026-07-11 was 8.28
     thesis: "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)"
+    kill_condition: "a lead clinical programme misses its primary endpoint, or cash runway falls below 12 months"
+    # ^ AUTO-ADOPTED DEFAULT (NIGHT-13 §0) — thesis label for paper/shadow evaluation
+    #   only, never an armed exit. Fill murat_override: to replace it.
+    kill_condition_provenance: auto_adopted_default
+    murat_override:
   - ticker: NTLA
     shares: 250
     # shares from conviction_log | claims: conviction_log=250, book_lanes=250, murat_book=250
@@ -94,8 +117,12 @@ positions:
     thesis: "insurance-attach turnaround, high analyst upside"
     kill_condition: "loss ratios deteriorate again"
   - ticker: QUBT
-    shares: 300  # CONTESTED
+    shares: 300  # RESOLVED — Murat ruled 300 AUTHORITATIVE (2026-08-11, NIGHT-12/13 rulings)
     # shares from conviction_log | claims: conviction_log=300, book_lanes=200, murat_book=300
+    # book_lanes.yaml's 200 is a stale SEED-TIME value and stays byte-stable on purpose:
+    # its hash is lane segment identity (lane-integrity-check invariant 1), and the
+    # conviction lane's forward baseline is seed+decision-deltas, so editing the seed
+    # would double-count. The 200 is wrong; the record of it is not rewritten.
     cost_basis: 13   # RECONSTRUCTED (murat_book)
     entry_date: 2025-11-07
     thesis: "quantum theme, pre-revenue narrative exposure"
@@ -105,6 +132,11 @@ positions:
     # shares from conviction_log | claims: conviction_log=600, book_lanes=600, murat_book=600
     # cost_basis: MISSING — no source carries a fill price. Logged mark on 2026-07-11 was 3.05
     thesis: "(from the conviction log, 2026-07-11) These are the stocks I bought months ago. My decisions were based on trends on tech, Iran war and petrol prices, FDA and medical news and Stock forecasts and price targets (I Logged them when I used the bloomberg terminal)"
+    kill_condition: "a named OEM partnership lapses without replacement, or cash runway falls below 12 months"
+    # ^ AUTO-ADOPTED DEFAULT (NIGHT-13 §0) — thesis label for paper/shadow evaluation
+    #   only, never an armed exit. Fill murat_override: to replace it.
+    kill_condition_provenance: auto_adopted_default
+    murat_override:
   - ticker: SOC
     shares: 700
     # shares from conviction_log | claims: conviction_log=700, book_lanes=700, murat_book=700

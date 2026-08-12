@@ -35,9 +35,12 @@ sys.path.insert(0, str(ROOT))
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 from backend.config import book_lanes                        # noqa: E402
+from backend.services import pm_engine                       # noqa: E402
 from backend.services import portfolio_factory as PF         # noqa: E402
 from backend.services import recommendation as REC           # noqa: E402
 from backend.services import signal_registry as SR           # noqa: E402
+from backend.services.kill_conditions import (               # noqa: E402
+    AUTO_ADOPTED_KILL_CONDITIONS, AUTO_ADOPTED_NOTE, NO_KILL_CONDITION_NAMES)
 
 FUNNEL = ROOT / "docs" / "BUILD1" / "funnel_night10.json"
 OUT = ROOT / "docs" / "BUILD1" / "mirror_challenge.json"
@@ -47,25 +50,15 @@ OUT = ROOT / "docs" / "BUILD1" / "mirror_challenge.json"
 KNOWN_FORKS = {
     "QUBT": {"config_shares": 200, "decision_log_shares": 300,
              "note": "the conviction decision log says 300, backend config says "
-                     "200. Both are run below; neither is adopted."},
+                     "200. Murat ruled 300 AUTHORITATIVE (2026-08-11); the "
+                     "config's 200 is a byte-stable lane seed. Both are still "
+                     "printed."},
 }
 
-#: Names with no kill condition on record. None is invented; each gets a
-#: PROPOSED one, labelled as awaiting Murat.
-NO_KILL_CONDITION = ("ABSI", "AMSC", "HUBS", "KYTX", "SLDP")
-
-PROPOSED_KILLS = {
-    "ABSI": "cash runway falls below 12 months, or a lead programme is "
-            "discontinued without a named successor",
-    "AMSC": "two consecutive quarters of declining grid-segment backlog, or "
-            "the largest customer concentration exceeds 40% of revenue",
-    "HUBS": "net revenue retention falls below 100% for two consecutive "
-            "quarters",
-    "KYTX": "a lead clinical programme misses its primary endpoint, or cash "
-            "runway falls below 12 months",
-    "SLDP": "a named OEM partnership lapses without replacement, or cash "
-            "runway falls below 12 months",
-}
+# The five names with no kill condition on record, and the texts this script
+# once proposed for them, now live in backend/services/kill_conditions.py —
+# NIGHT-13 §0 adopted them as defaults, so this script REPORTS them as
+# ACTIVE_DEFAULT rather than proposing them again.
 
 
 def _enrich_holdings(tickers: list[str], cands: list[dict]) -> list[dict]:
@@ -198,9 +191,12 @@ def main() -> int:
                         if nav else {}),
             "unmarked_names": unmarked,
             "cash": None,
+            "nav_basis": "equity_only",
             "cash_note": ("UNKNOWN — Murat has not supplied a cash figure, so "
                           "NAV here is the marked equity only and every weight "
-                          "below is a share of that, not of the account"),
+                          "below is a share of that, not of the account. The "
+                          "engine sweeps this as a sensitivity parameter "
+                          "(config.CASH_SENSITIVITY_GRID)"),
         },
         "OPTIMUS_HOLDINGS_ONLY": {
             "description": ("Optimus may resize or sell what is held and may "
@@ -225,23 +221,33 @@ def main() -> int:
         },
     }
 
+    # The book's evidence grade comes from the book itself, not from
+    # book_lanes.yaml — the old `book_lanes.get("confirmed")` read was dead
+    # (that file has no `confirmed:` key, so it was structurally always
+    # False: the house silent-fragility shape).
+    try:
+        book_grade = pm_engine.load_book(strict=False).evidence_grade
+    except Exception as exc:  # noqa: BLE001 — an unreadable book is a finding
+        book_grade = f"UNREADABLE ({type(exc).__name__}: {exc})"
+
     out = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "status": "PAPER PROPOSAL — no trade, no lane, no flag, no order path",
-        "book_confirmed_by_murat": bool(book_lanes.get("confirmed")),
+        "book_evidence_grade": book_grade,
         "arms": arms,
         "known_forks": forks,
-        "proposed_kill_conditions": {
-            t: {"condition": PROPOSED_KILLS[t],
-                "status": "PROPOSED_AWAITING_MURAT",
-                "note": "none was invented from the engine; these are for "
-                        "Murat to accept, amend or reject"}
-            for t in NO_KILL_CONDITION},
+        "kill_conditions": {
+            t: {"condition": AUTO_ADOPTED_KILL_CONDITIONS[t],
+                "status": "ACTIVE_DEFAULT",
+                "note": AUTO_ADOPTED_NOTE}
+            for t in NO_KILL_CONDITION_NAMES},
         "what_optimus_cannot_say": {
-            "cash": "unknown — not supplied",
+            "cash": "unknown — not supplied; swept as a sensitivity parameter",
             "cost_bases": "5 of 12 unknown, so no per-name P&L is computed",
-            "confirmed": ("the book carries no `confirmed: true`, so every "
-                          "number here is a SIMULATION on an unconfirmed book"),
+            "book_evidence": (f"the book grades {book_grade} — proposals are "
+                              f"priced on the best-evidence book and labelled "
+                              f"with that grade (NIGHT-13 §0: an evidence "
+                              f"grade, not a blocker)"),
             "expected_return": ("NOT CALIBRATED for any name in any arm — the "
                                 "comparison is of composition, never of "
                                 "forecast return"),
@@ -253,7 +259,7 @@ def main() -> int:
     print(f"MIRROR CHALLENGE — {out['status']}")
     print(f"\nbook: {len(holdings)} names, marked NAV ${nav:,.0f}"
           f"{' (' + str(len(unmarked)) + ' unmarked: ' + ', '.join(unmarked) + ')' if unmarked else ''}")
-    print(f"cash: UNKNOWN | confirmed: {out['book_confirmed_by_murat']}")
+    print(f"cash: UNKNOWN (swept) | book: {out['book_evidence_grade']}")
     print(f"\nOptimus has licensed evidence on "
           f"{len(covered)}/{len(holdings)} held names: "
           f"{', '.join(sorted(covered)) or 'none'}")

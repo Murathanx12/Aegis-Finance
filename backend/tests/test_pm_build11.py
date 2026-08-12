@@ -486,13 +486,39 @@ def a_book(confirmed=False, shares=None):
         watchlist=["CCC"])
 
 
-def test_14_an_unconfirmed_book_is_not_actionable(monkeypatch):
+def test_14_a_placeholder_book_is_not_actionable(monkeypatch):
+    """NIGHT-13 §0 changed WHY: confirmation is now an evidence grade, not a
+    gate — but a book of dollar placeholders still cannot mark to market, so
+    the materiality gate (not the attestation gate) keeps it simulated.
+    """
     b = fake_brief(monkeypatch, a_book(confirmed=False))
     assert b["actionable"] is False
     assert b["ticket_label"] == \
-        "SIMULATED TICKETS — BOOK UNCONFIRMED — DO NOT EXECUTE"
+        "SIMULATED TICKETS — BOOK INCOMPLETE — DO NOT EXECUTE"
     assert b["banner"] and "SIMULATED" in b["banner"]
     assert b["actionable_blockers"]
+    # the blocker is the unpriced NAV, never the missing attestation
+    assert not any("unconfirmed" in x.lower()
+                   for x in b["actionable_blockers"])
+    assert b["evidence_grade"] == "BEST_EVIDENCE_UNCONFIRMED"
+
+
+def test_14f_a_best_evidence_book_with_shares_is_actionable_and_labelled(
+        monkeypatch):
+    """THE NIGHT-13 §0 change: `confirmed` no longer blocks. A book that loads,
+    validates and marks to market is actionable even unconfirmed — and every
+    surface says which grade of book priced it, instead of refusing.
+    """
+    b = fake_brief(monkeypatch, a_book(confirmed=False, shares=500))
+    assert b["actionable"] is True
+    assert b["evidence_grade"] == "BEST_EVIDENCE_UNCONFIRMED"
+    assert b["ticket_label"] == \
+        "TODAY'S TICKETS — BEST-EVIDENCE BOOK (UNCONFIRMED)"
+    assert b["banner"] == ("proposals priced on best-evidence book "
+                           "(unconfirmed) — evidence grade, not a blocker")
+    assert b["actionable_blockers"] == []
+    assert b["model_status"]["book_evidence_grade"] == \
+        "BEST_EVIDENCE_UNCONFIRMED"
 
 
 def test_14b_a_confirmed_priced_book_is_actionable(monkeypatch):
@@ -1021,6 +1047,76 @@ def test_sf5_the_model_status_surfaces_every_degradation(monkeypatch):
               "analyst_ledger", "catalyst_coverage",
               "trades_not_clearing_their_own_cost"):
         assert k in ms, k
+
+
+# ── NIGHT-13 §0: unknown cash is a sensitivity parameter, never zero ───────
+
+def test_n13_cash_none_marks_equity_only_and_carries_a_sweep():
+    book = pm_engine.Book(
+        account="t", confirmed=False, cash=None, sizing_mode="growth",
+        wealth_targets={}, positions=[
+            pm_engine.Position(ticker="AAA", shares=100, cost_basis=10.0),
+            pm_engine.Position(ticker="BBB", shares=50, cost_basis=20.0)])
+    m = pm_engine.mark_book(book, {"AAA": 20.0, "BBB": 40.0})
+    assert m["nav_basis"] == "equity_only"
+    assert m["cash"] is None
+    assert m["nav"] == pytest.approx(2_000 + 2_000)      # equity only, no leg
+    sweep = m["cash_sweep"]
+    from backend.config import CASH_SENSITIVITY_GRID
+    assert sweep["grid"] == sorted(CASH_SENSITIVITY_GRID)
+    assert sweep["nav_range"]["low"] == pytest.approx(4_000)
+    assert sweep["nav_range"]["high"] == pytest.approx(
+        4_000 * (1 + max(CASH_SENSITIVITY_GRID)))
+    # and a known cash balance produces the other basis, with no sweep
+    book2 = pm_engine.Book(
+        account="t", confirmed=False, cash=1_000.0, sizing_mode="growth",
+        wealth_targets={}, positions=book.positions)
+    m2 = pm_engine.mark_book(book2, {"AAA": 20.0, "BBB": 40.0})
+    assert m2["nav_basis"] == "equity_plus_cash"
+    assert "cash_sweep" not in m2
+
+
+def test_n13_the_cash_sweep_reports_and_never_picks():
+    """Grid-report-never-pick: a ranking over a convex sweep is a theorem, not
+    a finding (counterfactual_replay.INTERPOLATING). No point is 'best'."""
+    sweep = pm_engine.cash_sweep(10_000.0)
+    assert "never picked" in sweep["note"]
+    for point in sweep["points"]:
+        assert set(point) == {"cash_fraction", "cash", "nav"}, (
+            "a sweep point may carry no rank, score or 'best' marker")
+    fracs = [p["cash_fraction"] for p in sweep["points"]]
+    assert fracs == sorted(fracs), "grid order, not preference order"
+
+
+def test_n13_simulate_wealth_with_unknown_cash_reports_ranges():
+    from backend.tests.test_pm_engine import rows
+    t = {"horizon_months": 12, "target_value": 100_000,
+         "floor_value": 30_000, "ruin_value": 20_000}
+    w = pm_actions.simulate_wealth(rows(), 45_000, None, t)
+    assert w["available"] is True
+    assert "RANGE" in w["cash_basis"]
+    for k in ("p_reach_target", "p_below_ruin", "p_below_floor", "median"):
+        assert set(w[k]) == {"low", "high"}, k
+        assert w[k]["low"] <= w[k]["high"], k
+    assert set(w["endpoints"]) == {"low_cash", "high_cash"}
+    assert "never picked" in w["sweep_note"]
+    # more cash cushions the ruin leg: the high-cash endpoint cannot be worse
+    lo_end, hi_end = w["endpoints"]["low_cash"], w["endpoints"]["high_cash"]
+    assert hi_end["p_below_ruin"] <= lo_end["p_below_ruin"]
+    assert hi_end["start_value"] > lo_end["start_value"]
+
+
+def test_n13_wealth_scenarios_survive_an_unknown_cash_balance():
+    from backend.tests.test_pm_engine import rows
+    w = pm_actions.wealth_scenarios(rows(), 45_000, None,
+                                    {"horizon_months": 12,
+                                     "target_value": 100_000,
+                                     "floor_value": 30_000,
+                                     "ruin_value": 20_000})
+    assert w["available"] is True
+    rng = w["range"]["p_reach_target"]
+    assert rng["low"] <= rng["high"]
+    assert "volatility_dominates_target" in w
 
 
 # ── 20. nothing here can place an order ────────────────────────────────────

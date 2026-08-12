@@ -127,6 +127,10 @@ class Recommendation:
     negative_catalysts: list[str] = field(default_factory=list)
     risk_factors: list[str] = field(default_factory=list)
     kill_condition: str = ""
+    #: Vocabulary: "NONE_SET" (no condition exists) |
+    #: "PROPOSED_AWAITING_MURAT" (engine-drafted, not yet ruled on) |
+    #: "ACTIVE_DEFAULT" (a NIGHT-13 §0 auto-adopted default — see
+    #: kill_conditions.py; a THESIS label, never an armed exit).
     kill_condition_status: str = "NONE_SET"
     position_size_candidate: Optional[float] = None
     size_caps_applied: list[str] = field(default_factory=list)

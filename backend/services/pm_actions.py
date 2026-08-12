@@ -382,7 +382,17 @@ def replacement_edge(candidate: dict, holding: dict, *,
 
 # ─────────────────────────── the wealth question ───────────────────────────
 
-def simulate_wealth(rows: list[dict], nav: float, cash: float, targets: dict,
+#: The numeric outputs of `simulate_wealth` that become {"low","high"} RANGES
+#: when the cash balance is unknown and the sweep endpoints are simulated.
+_SWEEP_RANGE_KEYS = ("start_value", "p5", "p25", "median", "p75", "p95",
+                     "p_reach_target", "p_below_floor", "p_below_ruin",
+                     "expected_max_drawdown", "p_drawdown_worse_than_50pct",
+                     "median_max_drawdown", "worst_5pct_max_drawdown",
+                     "required_return_for_target")
+
+
+def simulate_wealth(rows: list[dict], nav: float, cash: Optional[float],
+                    targets: dict,
                     *, n: int = 20_000, seed: int = 20260810,
                     correlation: float = DEFAULT_CORRELATION,
                     haircut: float = TARGET_HAIRCUT,
@@ -398,7 +408,46 @@ def simulate_wealth(rows: list[dict], nav: float, cash: float, targets: dict,
     `haircut` and `vol_mult` exist so the same book can be re-run under
     different assumptions without re-fetching anything: mu is linear in the
     haircut, so scaling it is exact.
+
+    `cash=None` means the cash balance is UNRECOVERABLE (NIGHT-13 §0). The
+    simulation then runs at BOTH endpoints of `config.CASH_SENSITIVITY_GRID`
+    (as fractions of `nav`) and reports every probability and quantile as a
+    {"low","high"} RANGE — never a point estimate that silently assumed zero,
+    and never a preferred point in the sweep.
     """
+    if cash is None:
+        from backend.config import CASH_SENSITIVITY_GRID
+        grid = tuple(sorted(CASH_SENSITIVITY_GRID))
+        f_lo, f_hi = grid[0], grid[-1]
+        ends = {
+            f: simulate_wealth(rows, nav, f * float(nav or 0.0), targets,
+                               n=n, seed=seed, correlation=correlation,
+                               haircut=haircut, vol_mult=vol_mult, label=label)
+            for f in (f_lo, f_hi)}
+        lo, hi = ends[f_lo], ends[f_hi]
+        if not (lo.get("available") and hi.get("available")):
+            return lo if not lo.get("available") else hi
+        out: dict[str, Any] = {
+            "available": True, "scenario": label,
+            "cash_basis": ("UNKNOWN — swept over the endpoints of "
+                           "CASH_SENSITIVITY_GRID; every figure below is a "
+                           "RANGE across the sweep, not a point estimate"),
+            "cash_fraction_endpoints": [f_lo, f_hi],
+            "horizon_months": lo["horizon_months"],
+            "names_simulated": lo["names_simulated"],
+            "assumptions": lo["assumptions"],
+            "endpoints": {"low_cash": lo, "high_cash": hi},
+            "sweep_note": ("reported, never picked — no cash fraction in the "
+                           "sweep is chosen, and nothing downstream may rank "
+                           "the endpoints (grid-report-never-pick)"),
+            "health_warning": lo["health_warning"],
+        }
+        for k in _SWEEP_RANGE_KEYS:
+            a, b = lo.get(k), hi.get(k)
+            out[k] = (None if a is None or b is None
+                      else {"low": min(a, b), "high": max(a, b)})
+        return out
+
     live = [r for r in rows
             if (r.get("distribution") or {}).get("available")
             and (r.get("proposed") or {}).get("target_weight", 0) > 0]
@@ -483,8 +532,8 @@ def simulate_wealth(rows: list[dict], nav: float, cash: float, targets: dict,
     }
 
 
-def wealth_scenarios(rows: list[dict], nav: float, cash: float, targets: dict,
-                     **kw) -> dict:
+def wealth_scenarios(rows: list[dict], nav: float, cash: Optional[float],
+                     targets: dict, **kw) -> dict:
     """The same book under three sets of assumptions, reported together.
 
     "P(reach $100k) = 19.8%" is three significant figures resting on
@@ -504,13 +553,23 @@ def wealth_scenarios(rows: list[dict], nav: float, cash: float, targets: dict,
     if not out["available"]:
         out["reason"] = base.get("reason")
         return out
+    # A value may itself be a {"low","high"} RANGE when the cash balance is
+    # unknown and simulate_wealth swept it — the scenario range then spans the
+    # sweep as well as the model assumptions.
+    def _lo(v: Any) -> float:
+        return v["low"] if isinstance(v, dict) else v
+
+    def _hi(v: Any) -> float:
+        return v["high"] if isinstance(v, dict) else v
+
     for key in ("p_reach_target", "p_below_floor", "p_below_ruin", "median",
                 "expected_max_drawdown", "p_drawdown_worse_than_50pct"):
         vals = [s.get(key) for s in out["scenarios"].values()
                 if s.get("available") and s.get(key) is not None]
         if vals:
             out.setdefault("range", {})[key] = {
-                "low": min(vals), "high": max(vals),
+                "low": min(_lo(v) for v in vals),
+                "high": max(_hi(v) for v in vals),
                 "base": base.get(key)}
     out["base"] = base
     # A stretch target sitting far out in the right tail is reached by
@@ -524,9 +583,22 @@ def wealth_scenarios(rows: list[dict], nav: float, cash: float, targets: dict,
     if (con.get("available") and base.get("available")
             and con.get("p_reach_target") is not None
             and base.get("p_reach_target") is not None):
-        out["volatility_dominates_target"] = (
-            con["p_reach_target"] >= base["p_reach_target"])
+        cp, bp = con["p_reach_target"], base["p_reach_target"]
+        if isinstance(cp, dict) or isinstance(bp, dict):
+            # cash-swept ranges: only claim dominance if it holds at BOTH ends
+            # of the sweep; anything else is indeterminate, and saying so is
+            # the finding.
+            at_low, at_high = _lo(cp) >= _lo(bp), _hi(cp) >= _hi(bp)
+            out["volatility_dominates_target"] = (
+                at_low if at_low == at_high
+                else "INDETERMINATE_WITHIN_CASH_SWEEP")
+        else:
+            out["volatility_dominates_target"] = (cp >= bp)
         out["tail_note"] = (
+            "the cash balance is unknown and the dominance comparison flips "
+            "inside the cash sweep — no single reading is honest, so none is "
+            "given" if out["volatility_dominates_target"]
+            == "INDETERMINATE_WITHIN_CASH_SWEEP" else
             "the conservative arm reaches the target MORE often than the base "
             "arm while ending poorer in the median and ruined more often — the "
             "target is far enough out that it is a volatility outcome, not a "
@@ -714,6 +786,7 @@ def daily_brief(book: Book | None = None, *, include_watchlist: bool = True,
                      "held": True,
                      "decisionable": bool(e.get("decisionable")),
                      "thesis": p.thesis, "kill_condition": p.kill_condition,
+                     "kill_condition_provenance": p.kill_condition_provenance,
                      "cost_basis": p.cost_basis, "shares": p.shares,
                      "dollars": p.dollars})
 
@@ -775,16 +848,27 @@ def daily_brief(book: Book | None = None, *, include_watchlist: bool = True,
         rec["ticker"] = r["ticker"]
         rec["thesis"] = r.get("thesis", "")
         rec["kill_condition"] = r.get("kill_condition", "")
+        rec["kill_condition_provenance"] = r.get("kill_condition_provenance",
+                                                 "")
         # the row holds the SAME object, so a later cash-constraint rescale is
         # reflected in the holdings table and not just in the ticket list
         r["recommendation"] = rec
         if rec["action"] not in ("HOLD", "SKIP"):
             actions.append(rec)
-    cash_check = enforce_cash_constraint(actions, book.cash, nav)
+    # Unknown cash buys nothing: for FUNDING purposes an unrecoverable balance
+    # is $0 (the conservative reading), while NAV and the wealth question sweep
+    # it as a sensitivity parameter instead of assuming it away.
+    funding_cash = 0.0 if book.cash is None else float(book.cash)
+    cash_check = enforce_cash_constraint(actions, funding_cash, nav)
+    if book.cash is None:
+        cash_check["cash_basis"] = (
+            "UNKNOWN — treated as $0 for funding buys (unknown cash may not "
+            "fund a ticket); swept over CASH_SENSITIVITY_GRID in NAV and the "
+            "wealth simulation")
     actions = [a for a in actions if a["action"] not in ("HOLD", "SKIP")]
 
     # ── 5. the replacement table is a DECOMPOSITION of that one solution ────
-    funding = funding_plan(actions, book.cash)
+    funding = funding_plan(actions, funding_cash)
     replacements = []
     for f in funding:
         if f["funded_by"] in ("CASH", "UNFUNDED"):
@@ -837,13 +921,32 @@ def daily_brief(book: Book | None = None, *, include_watchlist: bool = True,
     # uncertainty in every number below. Tolerate a small one, name it, and
     # refuse above the threshold.
     material = stale_frac > UNPRICED_NAV_TOLERANCE
-    actionable = bool(book.confirmed) and not problems and not material
+    # NIGHT-13 §0: `confirmed` no longer gates actionability — it grades the
+    # evidence. A book is actionable when it LOADS AND VALIDATES and its NAV is
+    # priced within tolerance; an unconfirmed book's proposals are priced on
+    # the best-evidence book and LABELLED with that grade instead of blocked.
+    actionable = not problems and not material
+    grade = book.evidence_grade
+    grade_note = (None if book.confirmed else
+                  "proposals priced on best-evidence book (unconfirmed) — "
+                  "evidence grade, not a blocker")
+    blockers = _blockers(book, problems, marked, stale_frac)
+    if actionable:
+        ticket_label = ("TODAY'S TICKETS" if book.confirmed else
+                        "TODAY'S TICKETS — BEST-EVIDENCE BOOK (UNCONFIRMED)")
+        banner = grade_note
+    else:
+        ticket_label = "SIMULATED TICKETS — BOOK INCOMPLETE — DO NOT EXECUTE"
+        banner = ("SIMULATED — this book cannot produce an executable ticket. "
+                  + "; ".join(blockers))
     return {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "account": book.account,
         "positions_confirmed": book.confirmed,
+        "evidence_grade": grade,
+        "evidence_grade_note": grade_note,
         "actionable": actionable,
-        "actionable_blockers": _blockers(book, problems, marked, stale_frac),
+        "actionable_blockers": blockers,
         "nav_uncertainty": {
             "unpriced_value": round(stale_value, 2),
             "unpriced_share_of_nav": round(stale_frac, 4),
@@ -851,19 +954,15 @@ def daily_brief(book: Book | None = None, *, include_watchlist: bool = True,
             "material": material,
             "note": ("every ticket is sized off NAV, so an unpriced position is "
                      "uncertainty in every dollar figure here")},
-        "ticket_label": ("TODAY'S TICKETS" if actionable else
-                         "SIMULATED TICKETS — " +
-                         ("BOOK UNCONFIRMED" if not book.confirmed else
-                          "BOOK INCOMPLETE") + " — DO NOT EXECUTE"),
-        "banner": (None if actionable else
-                   "SIMULATED — this book cannot produce an executable ticket. "
-                   + "; ".join(_blockers(book, problems, marked, stale_frac))),
+        "ticket_label": ticket_label,
+        "banner": banner,
         "book_problems": problems,
         "sizing_mode": book.sizing_mode,
         "mode_limits": mode,
         "valuation": marked,
         "portfolio_value": round(nav, 2),
-        "cash": round(book.cash, 2),
+        "nav_basis": marked.get("nav_basis", "equity_plus_cash"),
+        "cash": (None if book.cash is None else round(book.cash, 2)),
         "cash_reconciliation": cash_check,
         "holdings": rows,
         "actions": actions,
@@ -911,10 +1010,10 @@ def daily_brief(book: Book | None = None, *, include_watchlist: bool = True,
 
 def _blockers(book: Book, problems: list[str], marked: dict,
               stale_frac: float = 0.0) -> list[str]:
+    """What actually stops a ticket. NIGHT-13 §0: lack of confirmation is NOT
+    a blocker any more — it is an evidence grade, reported beside the answer
+    (`evidence_grade`, `evidence_grade_note`), never in this list."""
     out = []
-    if not book.confirmed:
-        out.append("positions are unconfirmed placeholders reconstructed from a "
-                   "PDF — no share counts, no cash balance")
     if problems:
         out.append(f"{len(problems)} book validation problem(s)")
     if marked.get("no_shares"):
@@ -950,9 +1049,11 @@ def model_status(book: Book, rows: list[dict], marked: dict, wealth: dict,
     decisionable = sum(1 for r in rows if r.get("decisionable"))
     return {
         "book_confirmed": book.confirmed,
+        "book_evidence_grade": book.evidence_grade,
         "book_problems": problems,
         "valuation_basis": marked["basis"],
         "valuation_grade": marked["valuation_grade"],
+        "nav_basis": marked.get("nav_basis", "equity_plus_cash"),
         "nav_complete": marked["nav_complete"],
         "positions": len(rows),
         "decisionable_positions": decisionable,

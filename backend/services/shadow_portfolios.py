@@ -90,6 +90,13 @@ class ShadowDecision:
     cost_assumption: dict[str, Any]
     catalysts: dict[str, list] = field(default_factory=dict)
     kill_conditions: dict[str, str] = field(default_factory=dict)
+    #: Optional per-ticker provenance for kill_conditions values, which may now
+    #: be NIGHT-13 auto-adopted default texts: "murat_stated" |
+    #: "auto_adopted_default" | "" (see kill_conditions.py). Adding this field
+    #: changes payload_hash for NEW rows only — rows already on disk keep the
+    #: hash they were written with, and LearningSample.decision_hash links
+    #: forward from whichever hash the decision row carries.
+    kill_condition_provenance: dict[str, str] = field(default_factory=dict)
     nav_basis: float = 100.0
     notes: str = ""
     schema: str = SCHEMA

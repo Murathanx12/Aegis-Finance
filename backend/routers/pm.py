@@ -25,17 +25,26 @@ def get_book() -> dict:
     b = pm_engine.load_book(strict=False)
     problems = pm_engine.validate_book(b)
     return {
-        "account": b.account, "confirmed": b.confirmed, "as_of": b.as_of,
-        "cash": b.cash, "sizing_mode": b.sizing_mode,
+        "account": b.account, "confirmed": b.confirmed,
+        "evidence_grade": b.evidence_grade, "as_of": b.as_of,
+        "cash": b.cash,
+        "cash_basis": ("stated" if b.cash is not None else
+                       "UNRECOVERABLE — swept as a sensitivity parameter "
+                       "(config.CASH_SENSITIVITY_GRID)"),
+        "sizing_mode": b.sizing_mode,
         "wealth_targets": b.wealth_targets, "source": b.source,
         "positions": [p.__dict__ for p in b.positions],
         "closed": b.closed, "watchlist": b.watchlist,
-        "actionable": bool(b.confirmed) and not problems,
+        # NIGHT-13 §0: confirmation grades the evidence; it no longer blocks.
+        "actionable": not problems,
         "problems": problems,
-        "warning": None if (b.confirmed and not problems) else
-        "positions are unconfirmed or invalid — every dollar figure is "
-        "SIMULATED. Edit backend/data/murat_book.yaml (shares, cost basis, "
-        "cash) before acting on any ticket size",
+        "warning": (None if not problems else
+                    "book validation problems — every dollar figure is "
+                    "SIMULATED. Edit backend/data/murat_book.yaml before "
+                    "acting on any ticket size"),
+        "note": (None if b.confirmed else
+                 "proposals priced on best-evidence book (unconfirmed) — "
+                 "evidence grade, not a blocker"),
     }
 
 
@@ -45,10 +54,13 @@ def validate() -> dict:
     b = pm_engine.load_book(strict=False)
     problems = pm_engine.validate_book(b)
     return {
-        "confirmed": b.confirmed, "problems": problems,
-        "actionable": bool(b.confirmed) and not problems,
+        "confirmed": b.confirmed, "evidence_grade": b.evidence_grade,
+        "problems": problems,
+        "actionable": not problems,
         "requirement": ("a confirmed position must carry a finite positive "
-                        "share count — `dollars` cannot mark to market"),
+                        "share count — `dollars` cannot mark to market. "
+                        "Confirmation itself is an evidence grade "
+                        "(NIGHT-13 §0), not an actionability gate."),
     }
 
 

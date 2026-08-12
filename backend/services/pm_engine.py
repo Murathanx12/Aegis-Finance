@@ -120,6 +120,13 @@ class Position:
     unconfirmed reconstruction input and historical snapshot metadata only —
     it is never the live value of a confirmed position, because a number in a
     file does not move when the stock does. `cost_basis` is PER SHARE.
+
+    `kill_condition` is a THESIS label for paper/shadow evaluation — never an
+    armed exit, never an order path (signal_registry trailing-stop corpse,
+    CANON §15). `kill_condition_provenance` says who wrote it:
+    "murat_stated" | "auto_adopted_default" | "" (none on record) — see
+    `kill_conditions.py`. `murat_override` is the attended slot where Murat
+    replaces an auto-adopted default with his own words.
     """
     ticker: str
     shares: Optional[float] = None
@@ -128,15 +135,27 @@ class Position:
     entry_date: Optional[str] = None
     thesis: str = ""
     kill_condition: str = ""
+    kill_condition_provenance: str = ""
+    murat_override: str = ""
     binary: Optional[bool] = None
     catalysts: list = field(default_factory=list)
 
 
 @dataclass
 class Book:
+    """The account state.
+
+    `cash` is Optional on purpose (NIGHT-13 §0): the YAML's `cash: null` (or an
+    absent key) means UNRECOVERABLE, and the engine sweeps it as a sensitivity
+    parameter over `config.CASH_SENSITIVITY_GRID` instead of silently equating
+    unknown with zero — the house silent-fragility shape.
+
+    `confirmed` is kept for backward compatibility, but it no longer gates
+    `actionable`; it GRADES the evidence. See `evidence_grade`.
+    """
     account: str
     confirmed: bool
-    cash: float
+    cash: Optional[float]
     sizing_mode: str
     wealth_targets: dict
     positions: list[Position]
@@ -148,6 +167,24 @@ class Book:
     @property
     def mode(self) -> dict:
         return MODES.get(self.sizing_mode, MODES["growth"])
+
+    @property
+    def evidence_grade(self) -> str:
+        """How good the book's provenance is — an EVIDENCE axis, not a gate.
+
+        "MURAT_CONFIRMED"          — Murat attested the positions and cash
+        "BEST_EVIDENCE_UNCONFIRMED" — reconciled from the repo's own records
+                                      (the best evidence available), without
+                                      his attestation
+
+        NIGHT-13 §0 retired `confirmed: true` as a BLOCKER: an unconfirmed
+        book that loads and validates still prices proposals — they are
+        labelled with this grade instead of being refused. Distinct from
+        `mark_book`'s valuation_grade (live/reconstructed/degraded), which is
+        about today's PRICES, not the book's provenance.
+        """
+        return "MURAT_CONFIRMED" if self.confirmed \
+            else "BEST_EVIDENCE_UNCONFIRMED"
 
 
 def validate_book(book: Book) -> list[str]:
@@ -185,18 +222,45 @@ def validate_book(book: Book) -> list[str]:
             elif is_finite(p.shares) and float(p.shares) == 0:
                 problems.append(f"{t}: confirmed position with zero shares — "
                                 f"move it to `closed:` instead")
-    if not is_finite(book.cash) or float(book.cash) < 0:
+    if book.cash is None:
+        # Unknown cash is a declared sensitivity parameter for an unconfirmed
+        # book (swept over config.CASH_SENSITIVITY_GRID). A CONFIRMED book is
+        # order-ready by definition and must state its cash.
+        if book.confirmed:
+            problems.append("confirmed book with no cash balance — cash: null "
+                            "is a sensitivity parameter for a best-evidence "
+                            "book, not for an order-ready one")
+    elif not is_finite(book.cash) or float(book.cash) < 0:
         problems.append(f"cash is not a usable number ({book.cash!r})")
     return problems
 
 
 def load_book(path: Path | str | None = None, *, strict: bool = True) -> Book:
-    """Load the book. A CONFIRMED book that fails validation raises."""
+    """Load the book. A CONFIRMED book that fails validation raises.
+
+    `cash: null` (or an absent cash key) loads as None — UNRECOVERABLE, to be
+    swept as a sensitivity parameter — never as a silent 0.0. The book's
+    `evidence_grade` is derived from `confirmed` here (see Book.evidence_grade).
+
+    Kill-condition provenance: an explicit `kill_condition_provenance` in the
+    file wins; a kill condition without one is Murat's own statement
+    ("murat_stated") because the book file is his record — auto-adopted
+    defaults are always written WITH explicit provenance. A filled
+    `murat_override:` supersedes an auto-adopted default and re-grades the
+    condition as murat_stated.
+    """
     raw = yaml.safe_load(Path(path or BOOK_PATH).read_text(encoding="utf-8"))
     pos = [Position(**p) for p in raw.get("positions", [])]
+    for p in pos:
+        if p.murat_override:
+            p.kill_condition = p.murat_override
+            p.kill_condition_provenance = "murat_stated"
+        elif p.kill_condition and not p.kill_condition_provenance:
+            p.kill_condition_provenance = "murat_stated"
+    raw_cash = raw.get("cash", None)
     book = Book(account=raw.get("account", "unknown"),
                 confirmed=bool(raw.get("confirmed", False)),
-                cash=float(raw.get("cash", 0.0)),
+                cash=(None if raw_cash is None else float(raw_cash)),
                 sizing_mode=raw.get("sizing_mode", "growth"),
                 wealth_targets=raw.get("wealth_targets", {}),
                 positions=pos, watchlist=list(raw.get("watchlist", [])),
@@ -259,8 +323,43 @@ def mark_position(p: Position, price: Optional[float], *,
             "stale": True, "gap": "no_shares_no_placeholder"}
 
 
+def cash_sweep(invested: float) -> dict:
+    """The NAV/weight consequences of an UNKNOWN cash balance, as a sweep.
+
+    Cash fractions come from `config.CASH_SENSITIVITY_GRID` (fractions of the
+    marked equity NAV). This REPORTS the grid and the ranges it implies; it
+    never ranks the points and never picks one — a ranking over a convex sweep
+    is a theorem, not a finding (counterfactual_replay.INTERPOLATING;
+    conviction_replay.measure_mde's grid-report-never-pick pattern).
+    """
+    from backend.config import CASH_SENSITIVITY_GRID
+    grid = tuple(sorted(CASH_SENSITIVITY_GRID))
+    points = [{"cash_fraction": f, "cash": round(invested * f, 2),
+               "nav": round(invested * (1.0 + f), 2)} for f in grid]
+    return {
+        "grid": list(grid),
+        "unit": "cash as a fraction of the marked equity NAV",
+        "points": points,
+        "nav_range": {"low": round(invested * (1.0 + grid[0]), 2),
+                      "high": round(invested * (1.0 + grid[-1]), 2)},
+        "weight_scale_range": {
+            # every equity weight scales by 1/(1+f); reported as a factor so
+            # the whole sweep is two numbers per position, not a table per name
+            "low": round(1.0 / (1.0 + grid[-1]), 4),
+            "high": round(1.0 / (1.0 + grid[0]), 4)},
+        "note": ("reported, never picked — no point in this sweep is 'best', "
+                 "and nothing downstream may select one"),
+    }
+
+
 def mark_book(book: Book, prices: dict[str, Optional[float]]) -> dict:
-    """Mark the whole book. NAV = cash + Σ market value."""
+    """Mark the whole book. NAV = cash + Σ market value.
+
+    When `book.cash` is None (UNRECOVERABLE), the NAV is EQUITY-ONLY and says
+    so (`nav_basis: "equity_only"`), and a `cash_sweep` reports what the NAV
+    and weights would be across `config.CASH_SENSITIVITY_GRID` — a sensitivity
+    report, never a silent `cash = 0`.
+    """
     marks, invested = {}, 0.0
     no_quote, no_shares = [], []
     for p in book.positions:
@@ -273,7 +372,8 @@ def mark_book(book: Book, prices: dict[str, Optional[float]]) -> dict:
                         "no_shares_no_placeholder"):
             no_shares.append(p.ticker)
     stale = sorted(set(no_quote) | set(no_shares))
-    nav = invested + float(book.cash)
+    cash_known = book.cash is not None
+    nav = invested + (float(book.cash) if cash_known else 0.0)
     for t, m in marks.items():
         m["weight"] = (m["market_value"] / nav) if nav > 0 else 0.0
     if not stale:
@@ -283,14 +383,26 @@ def mark_book(book: Book, prices: dict[str, Optional[float]]) -> dict:
                  "NOT move with the price")
     else:
         basis = "MIXED — some positions could not be marked to market"
-    return {"marks": marks, "invested": round(invested, 2),
-            "cash": round(float(book.cash), 2), "nav": round(nav, 2),
-            "unpriced": stale, "no_quote": no_quote, "no_shares": no_shares,
-            "nav_complete": not stale,
-            "basis": basis,
-            "valuation_grade": ("live" if (book.confirmed and not stale)
-                                else "reconstructed" if not book.confirmed
-                                else "degraded")}
+    out = {"marks": marks, "invested": round(invested, 2),
+           "cash": (round(float(book.cash), 2) if cash_known else None),
+           "nav": round(nav, 2),
+           "nav_basis": ("equity_plus_cash" if cash_known else "equity_only"),
+           "unpriced": stale, "no_quote": no_quote, "no_shares": no_shares,
+           "nav_complete": not stale,
+           "basis": basis,
+           # A different axis from Book.evidence_grade: valuation_grade says
+           # how well TODAY'S PRICES marked the book (live / reconstructed /
+           # degraded); evidence_grade says whose statement the BOOK itself is
+           # (MURAT_CONFIRMED / BEST_EVIDENCE_UNCONFIRMED). Both are printed.
+           "valuation_grade": ("live" if (book.confirmed and not stale)
+                               else "reconstructed" if not book.confirmed
+                               else "degraded")}
+    if not cash_known:
+        out["cash_note"] = ("UNRECOVERABLE — NAV is the marked equity only; "
+                            "every weight is a share of that, not of the "
+                            "account. See cash_sweep.")
+        out["cash_sweep"] = cash_sweep(invested)
+    return out
 
 
 # ───────────────────────────── enrichment ──────────────────────────────────
