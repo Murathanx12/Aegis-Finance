@@ -444,6 +444,37 @@ def _as_date(v: Any) -> date | None:
     return date.fromisoformat(str(v)[:10])
 
 
+def reprice(rows: list[dict]) -> list[dict]:
+    """Recompute `cost_usd` from the STORED TOKENS at CURRENT list prices.
+
+    `cost_usd` is written into each row at call time, which makes every total
+    a snapshot of whatever the price table said that day. On 2026-08-12 the
+    table was found to be pricing two model names that no longer exist —
+    `deepseek-chat` and `deepseek-reasoner` both resolve server-side to
+    `deepseek-v4-flash` — at roughly 2.8x the real rate. Ten thousand rows had
+    already been written at the wrong number, and the budget governor was
+    gating on their sum.
+
+    Tokens are the FACT the vendor reported; dollars are a reconstruction from
+    a table that drifts. So the fact is stored and the reconstruction is
+    recomputed on read. A row with no token counts keeps whatever it was
+    written with, because there is nothing better to do with it than say so.
+
+    Returns new dicts; the caller's rows are not mutated.
+    """
+    out: list[dict] = []
+    for r in rows:
+        ti, to = r.get("tokens_in"), r.get("tokens_out")
+        if ti is None and to is None:
+            out.append(r)
+            continue
+        fresh = price_call(str(r.get("model") or ""), int(ti or 0), int(to or 0),
+                           int(r.get("cached_tokens") or 0))
+        out.append({**r, "cost_usd": fresh, "cost_repriced": True,
+                    "cost_usd_as_written": r.get("cost_usd")})
+    return out
+
+
 def _gradeable(row: dict) -> bool:
     return bool(row.get("schema_valid")
                 and (row.get("prediction_ids") or row.get("hypothesis_ids")))
@@ -458,7 +489,7 @@ def summary(since: Any = None, path: Path | None = None,
     the n, always — applies to spend accounting for exactly the same reason it
     applies to a Brier score.
     """
-    rows = read_calls(path)
+    rows = reprice(read_calls(path))
     # A torn line is spend that vanished, and it makes the total a LOWER BOUND
     # for a completely different reason than an unpriced model does. Both
     # reasons now reach the reader; LLM-SWARM-1 produced two of these from 24
@@ -693,7 +724,7 @@ def spend(since: Any = None, path: Path | None = None) -> dict:
     as "spend is UNKNOWN" and refuses, which is the only safe reading when the
     accounting is broken.
     """
-    rows = read_calls(path)
+    rows = reprice(read_calls(path))
     cutoff = _as_date(since)
     if cutoff is not None:
         rows = [r for r in rows if r.get("ts") and _as_date(r["ts"]) >= cutoff]

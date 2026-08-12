@@ -1646,10 +1646,38 @@ TE_WAR_WINDOW = ("2026-06-04", "2026-07-29")
 #: are counted inside or beside the input count — `llm_telemetry.extract_usage`
 #: normalises that, so this table only needs the three rates.
 LLM_PRICE_AS_OF = "2026-08-12"
+#: CORRECTED 2026-08-12 against the live account. `GET /models` returns EXACTLY
+#: TWO ids — `deepseek-v4-flash` and `deepseek-v4-pro`. The names this codebase
+#: has always used are SERVER-SIDE ALIASES, verified by reading `model` off the
+#: response body:
+#:
+#:     asked "deepseek-chat"     -> served deepseek-v4-flash
+#:     asked "deepseek-reasoner" -> served deepseek-v4-flash   <- SILENT ALIAS
+#:     asked "deepseek-v4-pro"   -> served deepseek-v4-pro
+#:
+#: Two consequences, both paid for:
+#:  1. Any experiment whose ARMS were "chat vs reasoner" compared v4-flash with
+#:     ITSELF. That is a null manufactured by a config bug, not a finding.
+#:     Callers that care about the model MUST read `served_model` off the
+#:     response and store it — never trust the requested name.
+#:  2. The old prices below (0.27/1.10 and 0.55/2.19) were for models that no
+#:     longer exist under those names, and they overstated the true cost by
+#:     ~2.8x. The governor was braking on a number that was wrong in the
+#:     direction of looking expensive, which is the safe direction and still
+#:     wrong. Real rates from api-docs.deepseek.com/quick_start/pricing.
+#:
+#: Note `cached_in` for v4-flash is FIFTY TIMES cheaper than a cache miss
+#: ($0.0028 vs $0.14). Sharing a long common prefix across the arms of an
+#: experiment is therefore worth more than any other cost optimisation
+#: available to us.
 LLM_PRICE_PER_MTOK: dict[str, dict[str, float]] = {
     # DeepSeek — the workhorse for specialists and research roles.
-    "deepseek-chat": {"in": 0.27, "cached_in": 0.07, "out": 1.10},
-    "deepseek-reasoner": {"in": 0.55, "cached_in": 0.14, "out": 2.19},
+    "deepseek-v4-flash": {"in": 0.14, "cached_in": 0.0028, "out": 0.28},
+    "deepseek-v4-pro": {"in": 0.435, "cached_in": 0.003625, "out": 0.87},
+    # Legacy aliases. Both resolve server-side to v4-flash, so they are priced
+    # as v4-flash. Kept because call sites still send these strings.
+    "deepseek-chat": {"in": 0.14, "cached_in": 0.0028, "out": 0.28},
+    "deepseek-reasoner": {"in": 0.14, "cached_in": 0.0028, "out": 0.28},
     # Anthropic — used by llm_analyzer/copilot when ANTHROPIC_API_KEY is set.
     "claude-opus-5": {"in": 5.00, "cached_in": 0.50, "out": 25.00},
     "claude-opus-4-8": {"in": 5.00, "cached_in": 0.50, "out": 25.00},
