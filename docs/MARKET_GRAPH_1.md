@@ -2,7 +2,17 @@
 
 **Pre-registration:** `Aegis module/TRIALS/PREREG_MARKET_GRAPH_1.md`, frozen at
 commit `57cf834` before any edge existed.
-**Free parameters enumerated:** `Aegis module/scripts/mg1_config.py`.
+**Corpse check:** run before registration — **PASS against 331 prior
+experiments**, unmatched in the 148 graveyard rows, the trial registry and the
+prereg folder. `PASS` means *unmatched*, not *novel*: the linter compares
+wording against what this programme has recorded and knows nothing about the
+literature.
+**Free parameters enumerated:** `Aegis module/scripts/mg1_config.py`. The
+pre-registration *names* universe, cut dates and horizons as frozen but does not
+*enumerate* them; they were fixed in that file and committed before any forward
+correlation was computed, so the choice is dated rather than
+defensible-in-hindsight. That is a weaker commitment than a fully enumerated
+pre-registration and it is stated here rather than glossed.
 **Run artifacts:** `Aegis module/runs/MARKET-GRAPH-1/` (`tables.md` is generated
 from the JSON; every number below is printed from it, none retyped).
 **Date:** 2026-08-12. Resumed from a prior agent that died to an API stall with
@@ -20,7 +30,7 @@ on all 3,637 calls, read off the response every time.
 | **H2** — `semantic YES / numeric NO` pairs develop co-movement more often than matched `semantic NO / numeric NO` pairs | ~25/75 against | **HEADLINE DETECTABLE, DECISION RULE NOT MET.** +5.98pp against an MDE of 2.48pp (t = 6.76), surviving placebo, random edges, same-sector exclusion and same-2-digit-SIC exclusion — **but the pre-registration additionally requires the reversed-direction control, and that control is NOT detectable** (+0.0036 against MDE 0.0041). H2 is **not adopted**. |
 
 **What this licenses:** research use of the semantic graph as one small
-additional feature in a pairwise co-movement model, subject to the limits in §8.
+additional feature in a pairwise co-movement model, subject to the limits in §9.
 **What it does not license:** any claim of transmission, causation, or lead-lag.
 Correlation is symmetric, and the one arm designed to break that symmetry
 could not. On this evidence the graph found **co-movement, not causation** —
@@ -30,7 +40,7 @@ reason it made H2 conditional on this control rather than on its own headline.
 The reversed-direction number is 89% of its own MDE with the predicted sign.
 Per §19 that is **not detectable, not a kill.** It is an underpowered null on
 4,055 directed pairs, and the cheapest way to resolve it is more directed
-edges — see §9.
+edges — see §10.
 
 ---
 
@@ -335,7 +345,78 @@ thing.
 
 ---
 
-## 8. Which controls ran, and what they cannot cover
+## 8. Three audits the pre-registration did not require
+
+All five mandatory controls passed. That is necessary and it is not sufficient,
+because none of the five closes the hole a sceptical reader finds first:
+
+> `has_edge` is not spread evenly over the pair distribution. Edge-carrying
+> pairs are **53.4% same-sector against 11.5% overall**, and sit at **mean
+> ρ_trail 0.103 against 0.0003 overall** (mean trailing decile 6.13 against
+> 4.5). The baseline is a ridge on ρ_trail and ρ_trail². **If the true relation
+> between trailing and forward correlation is more curved than a quadratic, any
+> variable concentrated at high ρ_trail will absorb the leftover curvature and
+> look informative.**
+
+Neither pre-registered placebo tests that. Node-label shuffling moves edges to
+pairs with a *different* ρ_trail; random edges are drawn uniformly. Both destroy
+the concentration along with the relationships, so **both would come out null
+whether the effect is real or is baseline misspecification.** Three arms close
+it.
+
+**A. Flexible baseline.** Replace `ρ_trail + ρ_trail²` with nine within-date
+decile dummies — fully flexible in trailing correlation up to the decile grid,
+leaving no smooth curvature for the semantic block to absorb.
+
+**B. Stratified placebo.** Permute the edge labels among pairs **within each
+(cut date × same-sector × ρ_trail decile) cell**. This is the placebo the other
+two are not: it reproduces the real edge set's position in the pair
+distribution *exactly* — same count, same sector mix, same decile profile,
+verified cell-by-cell at runtime — and destroys only *which* pair inside the
+cell carries the edge.
+
+**C. Purged.** Cut dates are one quarter apart while the label window is two
+quarters, so the most recent training date's outcome reaches inside the test
+window. `purge=2` removes the overlap outright, which is CLAUDE.md's standing
+rule (purged CV with embargo) and had not been applied.
+
+| arm | ΔR² | MDE | t | detectable | on-edge MSE reduction | MDE | detectable |
+|---|---|---|---|---|---|---|---|
+| A. real, quadratic baseline *(the headline)* | 9.68e-04 | 6.23e-04 | 4.35 | **YES** | 10.80% | 5.75% | **YES** |
+| **A. real, decile baseline** | **2.27e-03** | 9.06e-04 | **7.02** | **YES** | **18.43%** | 6.41% | **YES** |
+| B. stratified placebo, quadratic | 1.00e-05 | 3.72e-05 | 0.75 | no | 0.07% | 0.62% | no |
+| B. stratified placebo, decile | 6.95e-05 | 8.42e-05 | 2.31 | no | 1.28% | 1.29% | no |
+| C. real, purged, quadratic | 9.49e-04 | 6.03e-04 | 4.41 | **YES** | 10.53% | 5.86% | **YES** |
+| C. real, purged, decile | 2.24e-03 | 8.86e-04 | 7.08 | **YES** | 18.30% | 6.34% | **YES** |
+| C. stratified placebo, purged | 8.10e-06 | 3.90e-05 | 0.58 | no | -0.01% | 0.66% | no |
+
+**The misspecification hypothesis is refuted, not merely unsupported.** Under a
+fully flexible baseline the semantic block helps **more**, not less (ΔR²
+2.27e-03, t = 7.02, and 18.4% of the baseline's own error on edge-carrying
+pairs). If the effect were leftover curvature, removing the curvature would
+remove the effect; instead it more than doubles.
+
+**H2 under the stratified placebo:** rate difference **+0.63pp against an MDE of
+1.02pp** (t = 1.73, not detectable), against **+5.98pp** for the real graph —
+about a tenth of the effect and below its own bar. On the continuous outcome,
++0.0014 against an MDE of 0.0048. H2's headline is **not** "edges happen to sit
+in high-ρ cells".
+
+**Purging moves nothing** (9.49e-04 against 9.68e-04). The quarterly-overlap
+leak was shared between the two arms and did not manufacture the difference.
+
+**One honest wrinkle:** the stratified placebo is not perfectly null under the
+decile baseline — t = 2.31, and 2.78 on the on-edge statistic. Both are below
+their MDEs and the real effect is **33× larger** on the same comparison, but
+"below MDE" is not "zero". A future run with more edges should re-check whether
+that residual grows.
+
+Arms A/B/C are in `scripts/mg1_robust.py`; `robust_report.json` holds the raw
+output.
+
+---
+
+## 9. Which controls ran, and what they cannot cover
 
 **All five pre-registered controls ran.** None was skipped.
 
@@ -359,6 +440,17 @@ thing.
   discipline, and it also means the results are single-point.
 - **No holdout beyond walk-forward.** Every cut date from the 5th onward is
   graded out of sample, but the whole 2015–2024 window was used.
+- **No per-edge-type decomposition.** `competitor` alone is 51% of the graph and
+  two of the eight pre-registered types (`commodity_input`,
+  `geographic_exposure`) never fired at all. The result is therefore mostly a
+  statement about competitor and customer edges; which types carry the effect
+  was not measured.
+- **No re-grade on quote-verified edges only.** 10.8% of evidence quotes did not
+  verify verbatim against the source document. Restricting the graph to the
+  89.2% that did is the obvious hallucination sensitivity and it was not run.
+
+**Now run, and no longer on this list:** purged walk-forward (§8C), a fully
+flexible baseline (§8A), and a ρ_trail-stratified placebo (§8B).
 
 **What the design cannot rule out, however many controls pass:**
 
@@ -381,7 +473,7 @@ thing.
 
 ---
 
-## 9. What would settle the open question, cheaply
+## 10. What would settle the open question, cheaply
 
 The reversed-direction control failed on power, not on sign. It graded 4,055
 directed pairs, drawn from 982 supplier and 3,382 customer edge-instances —
@@ -406,7 +498,58 @@ are frozen; changing them is a **new pre-registration with a new name**.
 
 ---
 
-## 10. Files
+## 11. SEMANTIC-TEACHER-NN-1 — not started, and the reason is itself a finding
+
+The brief proposed treating "the 20,073 already-minted swarm records" as free
+labels for a supervised model with **actual future residual returns as the
+target**. Checked directly rather than assumed:
+
+```
+backend/data/optimus/predictions.jsonl : 20,073 records
+outcome / resolved_at                  : None on 20,073 of 20,073 — 100%
+```
+
+**They are not labels.** Every record is unresolved; the ledger's first forward
+resolution is **2026-08-16**. There is no realised outcome attached to any of
+them, so the setup as briefed has no target column at all — and a model fitted
+to the LLM's own probabilities without a realised outcome would be learning to
+*imitate the teacher*, which is precisely what the brief's own "reality supplies
+the reward" fence exists to prevent. Building it anyway would have produced a
+trained model, a plausible ablation table, and no information.
+
+The honest substitute exists and was not run for time:
+`Aegis module/data/factory/arena_llm_predictions.jsonl` holds historical records
+that **can** be resolved offline against CRSP. Those are
+`ARCHITECTURE_RESULT_ONLY` under Amendment A6 — contaminated by construction,
+usable for comparing architectures under identical contamination, never for
+alpha. That is the correct next step, and it is queued rather than claimed.
+
+---
+
+## 12. Budget
+
+| | |
+|---|---|
+| allocation | up to **$12** and ~20,000 calls |
+| spent | **$2.66** over **3,637 calls** — 22% of the dollars, 18% of the calls |
+| per call | $0.00073, against the $0.00039 campaign average — the payload is a 10-K excerpt, not a template |
+| tokens | 16,113,387 uncached in / 3,018,112 cached / 1,423,360 out |
+| cache hit share | **15.8%** |
+| `served_model` | `deepseek-v4-flash` on **3,637 of 3,637**, read off the response body every time |
+| `research_budget.require()` | consulted before every wire request (throttled to ≤1 ledger read per 20 s across workers, both hard in-process ceilings still checked per call); **never refused**; neither ceiling approached |
+| all controls and audits | **$0** — every control and all three audits are permutations and refits of the same edge corpus, no vendor calls |
+
+**On the cache lever.** The byte-frozen system prefix was the right move and it
+is *bounded here*: the prefix is ~700 tokens against a ~5,000-token document, so
+the ceiling on cache share is ~14–16% and the run sat at it. Uncached, the
+extraction would have cost about $3.08; caching saved roughly $0.42. The lever
+is worth pulling and it is not the dominant term when the payload is a document
+rather than a template — which is worth recording, because the brief expected it
+to be the single biggest cost lever and for this workload it was not.
+
+---
+
+## 13. Files
 
 | what | where |
 |---|---|
@@ -416,6 +559,7 @@ are frozen; changing them is a **new pre-registration with a new name**.
 | stage 3 — the extractor (frozen system prefix, `--repair`) | `scripts/mg1_extract.py` |
 | stage 4 — name → permno, six routes, failure classification | `scripts/mg1_resolve.py` |
 | stage 5 — H1, H2, five controls | `scripts/mg1_grade.py` |
+| stage 6 — the three extra audits (flexible baseline, stratified placebo, purged) | `scripts/mg1_robust.py` |
 | the resolution A/B | `scripts/mg1_resolution_ab.py` |
 | table renderer (report numbers are printed, never retyped) | `scripts/mg1_tables.py` |
 | run outputs | `Aegis module/runs/MARKET-GRAPH-1/` |
@@ -431,5 +575,6 @@ python -m scripts.mg1_extract --repair --workers 8
 python -m scripts.mg1_resolve
 python -m scripts.mg1_resolution_ab
 python -m scripts.mg1_grade
+python -m scripts.mg1_robust
 python -m scripts.mg1_tables > runs/MARKET-GRAPH-1/tables.md
 ```
