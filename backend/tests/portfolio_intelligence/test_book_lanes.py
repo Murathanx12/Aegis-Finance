@@ -41,9 +41,11 @@ class TestLaneSetsIsolated:
 class TestBookConfig:
     def test_holdings_match_confirmed_book(self):
         h = book_lanes["holdings"]
+        # QUBT 300 since bd7b403 — Murat ruled 300 authoritative (the 200 was
+        # a stale seed-time value; conviction log and murat_book both say 300).
         assert h == {
             "SOC": 700, "DKNG": 150, "NTLA": 250, "AARD": 1000, "BHVN": 300,
-            "HUBS": 10, "KYTX": 250, "PRCH": 200, "QUBT": 200, "AMSC": 50,
+            "HUBS": 10, "KYTX": 250, "PRCH": 200, "QUBT": 300, "AMSC": 50,
             "ABSI": 600, "SLDP": 600,
         }
 
