@@ -478,21 +478,28 @@ def read_calls(path: Path | None = None) -> list[dict]:
         with p.open("rb") as fh:
             fh.seek(c["size"])
             tail = fh.read()
-        text = tail.decode("utf-8", errors="replace")
-        consumed = c["size"] + len(tail)
-        # A partially-flushed final line is not corruption — it is a line still
-        # being written. Hold the remainder back and re-read it next time rather
-        # than counting a torn write as lost spend. This applies to the FIRST
-        # read as much as to a later one: 24 concurrent writers tore two lines
-        # in LLM-SWARM-1, and whether we happened to be caching at the time is
-        # not a property of the data.
-        if not text.endswith("\n"):
-            cut = text.rfind("\n")
-            consumed = (c["size"] + len(text[:cut + 1].encode("utf-8"))
-                        if cut >= 0 else c["size"])
-            text = text[:cut + 1] if cut >= 0 else ""
-        if text:
-            unreadable += _parse_lines(text.splitlines(), base, order, pending)
+        # The cut is found in BYTES, never in decoded text. Decoding with
+        # errors="replace" turns each bad byte into U+FFFD, which re-encodes to
+        # THREE bytes — so measuring the offset by re-encoding the decoded text
+        # drifts by 2 bytes per damaged byte. Drift backwards re-reads rows
+        # already parsed (a duplicate-call_id warning storm, which is how this
+        # was caught); drift forwards SKIPS rows, and skipped rows are spend
+        # that silently vanishes. This ledger already carries two torn lines.
+        #
+        # A partially-flushed final line is not corruption either — it is a line
+        # still being written. Hold the remainder back and re-read it next time.
+        # 24 concurrent writers tore two lines in LLM-SWARM-1; whether we happen
+        # to be caching at that moment is not a property of the data.
+        if tail.endswith(b"\n"):
+            chunk, consumed = tail, c["size"] + len(tail)
+        else:
+            cut = tail.rfind(b"\n")
+            chunk = tail[:cut + 1] if cut >= 0 else b""
+            consumed = c["size"] + len(chunk)
+        if chunk:
+            unreadable += _parse_lines(
+                chunk.decode("utf-8", errors="replace").splitlines(),
+                base, order, pending)
         c["size"], c["mtime_ns"], c["unreadable"] = (consumed, st.st_mtime_ns,
                                                      unreadable)
 

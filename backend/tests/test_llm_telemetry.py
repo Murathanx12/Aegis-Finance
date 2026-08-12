@@ -590,3 +590,36 @@ def test_spend_and_reprice_agree_on_every_row(tmp_path):
                        if r["cost_usd"] is not None)
     assert tel.spend(path=p)["total_cost_usd"] == pytest.approx(from_reprice)
     assert tel.spend(path=p)["total_is_lower_bound"] is True
+
+
+def test_invalid_utf8_in_the_tail_does_not_drift_the_offset(tmp_path):
+    """Decoded text is NOT a byte count.
+
+    errors="replace" maps each bad byte to U+FFFD, which re-encodes to three
+    bytes. Measuring the resume offset by re-encoding decoded text therefore
+    drifts by two bytes per damaged byte. Backwards drift re-parses rows already
+    seen (caught in the wild as a duplicate-call_id warning storm); forwards
+    drift SKIPS rows, and a skipped row is spend that silently vanishes.
+    """
+    p = tmp_path / "calls.jsonl"
+    _append(p, [_row("c0")])
+    tel.read_calls(p)                                  # prime the cache
+    with p.open("ab") as fh:                           # a torn line: bad bytes
+        fh.write(b'{"call_id": "torn", \xff\xfe bad}\n')
+    _append(p, [_row(f"c{i}") for i in range(1, 4)])
+    warm = [r["call_id"] for r in tel.read_calls(p)]
+    assert warm == [r["call_id"] for r in _cold(p)]
+    assert warm == ["c0", "c1", "c2", "c3"]
+
+
+def test_a_torn_line_is_counted_once_not_on_every_reread(tmp_path):
+    """The unreadable count is a property of the file, not of how often we
+    looked at it. A count that grew per read would make spend look like a
+    lower bound by an amount that depends on polling frequency."""
+    p = tmp_path / "calls.jsonl"
+    with p.open("wb") as fh:
+        fh.write(b'not json at all\n')
+    _append(p, [_row("c0")])
+    first = tel.summary(path=p)["n_unreadable_ledger_lines"]
+    _append(p, [_row("c1")])
+    assert tel.summary(path=p)["n_unreadable_ledger_lines"] == first == 1
