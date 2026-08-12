@@ -187,3 +187,56 @@ def test_ledger_health_accepts_an_injected_today(tmp_path):
     assert ok["status"] == "ok"
     bad = ledger_health(p, today=date(2026, 12, 1))
     assert bad["status"] == "DEGRADED" and bad["n_overdue"] == 1
+
+
+# ── the fetch is chunked, because LLM-SWARM-1 changed the scale ─────────────
+
+def test_the_price_fetch_is_chunked_so_one_bad_symbol_cannot_strand_the_ledger(
+        monkeypatch):
+    """One 460-symbol request fails as a unit; chunks fail proportionally.
+
+    Before LLM-SWARM-1 the ledger held ~100 records over a dozen names and a
+    single request was right. The swarm put hundreds of securities in it in one
+    night, at which point a single timeout would mark EVERY due record
+    unpriceable and page on a problem that is not in the ledger.
+    """
+    import pandas as pd
+
+    from backend.services import ledger_resolver as lr
+
+    seen: list[list[str]] = []
+    idx = pd.bdate_range("2026-08-01", periods=5)
+
+    class _FakeYF:
+        @staticmethod
+        def download(tickers, start, end, auto_adjust, progress, timeout):
+            chunk = list(tickers)
+            seen.append(chunk)
+            if "BAD" in chunk:
+                raise RuntimeError("read timed out")
+            return {"Close": pd.DataFrame(
+                {t: [1.0] * len(idx) for t in chunk}, index=idx)}
+
+    monkeypatch.setitem(__import__("sys").modules, "yfinance", _FakeYF)
+    names = [f"T{i}" for i in range(7)] + ["BAD"] + [f"U{i}" for i in range(4)]
+    panel = lr._default_price_fetch(names, "2026-08-01", "2026-08-08", batch=4)
+
+    assert [len(c) for c in seen] == [4, 4, 4]
+    # The bad chunk's names are simply absent — the contract this callable
+    # already declares — and every other chunk survived it.
+    assert "BAD" not in panel.columns
+    assert "T0" in panel.columns and "U3" in panel.columns
+    assert len(panel.columns) == 8
+
+
+def test_a_fetch_where_every_chunk_fails_returns_empty_not_a_crash(monkeypatch):
+    from backend.services import ledger_resolver as lr
+
+    class _DeadYF:
+        @staticmethod
+        def download(*a, **k):
+            raise RuntimeError("network down")
+
+    monkeypatch.setitem(__import__("sys").modules, "yfinance", _DeadYF)
+    out = lr._default_price_fetch(["A", "B"], "2026-08-01", "2026-08-08")
+    assert out.empty

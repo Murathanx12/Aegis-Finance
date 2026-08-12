@@ -20,7 +20,7 @@ paper record remain the certification layer.
 | **0** | Research budget + machine verification | **DONE** `9ed42d2` | `backend/services/research_budget.py`, 12 tests |
 | **1** | KNOWN-WORLD-1 — can learners recover planted rules? | **DONE** `2ce58f3` | `docs/GRAND_ARENA_KNOWN_WORLDS.md` |
 | **2** | EXIT-LAB-1 — counterfactual decision factory | **DONE** `8429ab4` | `docs/GRAND_ARENA_EXIT_LAB.md` |
-| 3 | LLM-SWARM-1 — thousands of gradeable calls | NEXT | `docs/GRAND_ARENA_SWARM.md` |
+| **3** | LLM-SWARM-1 — thousands of gradeable calls | **DONE** | `docs/GRAND_ARENA_SWARM.md` |
 | 4 | WHY-MOVED at scale (universe, not one book) | pending | extends chunk 3 |
 | 5 | Regime learning | pending | — |
 | 6 | Exposure/timing arena | pending | — |
@@ -171,25 +171,59 @@ Baselines win, which is the honest and expected outcome. One comparison at
 −2.55 pp against an MDE of 2.77 is labelled **NOT DETECTABLE** rather than read
 as a kill (CANON §19).
 
-## Chunk 3 — LLM-SWARM-1 (next up)
+## Chunk 3 — DONE. 8,014 calls, 1.5% zero yield, and one number that matters.
 
-Prerequisites now met: budget governor exists, telemetry records real token
-counts, ledger persists across deploys, fast horizons exist.
+`backend/services/llm_swarm.py` · `scripts/run_llm_swarm_1.py` ·
+`docs/GRAND_ARENA_SWARM.md` · 54 offline tests ·
+pre-registered at `docs/TRIALS/TRIAL-SWARM-CAL-specialist-calibration.md`
+(linter: PASS vs 324 prior experiments) **before any record could resolve**.
 
-- Broad universe selected on PIT-visible information only.
-- ~14 specialist roles; **no agent sees another's answer before forming its
-  own** — otherwise the panel is one forecaster and §20 collapses the effective
-  n to 1.
-- Structured output, numeric probabilities. **ABSTAIN is required to be
-  available and is better than fake precision.** Reject `p=0.50` filler: the
-  first WHY-MOVED batch was 23 of 25 one-day `return_sign` claims at 0.50, which
-  accrues records fast and says nothing.
-- Report `effective_distinct_ideas`, zero-yield rate, cost, and cost per
-  gradeable output.
-- **Never treat repeated samples of one model as independent observations.**
-  Asking DeepSeek 1,000 times is not n=1,000; it is one correlated opinion. Use
-  the volume for *diversity of exploration*, and let market outcomes supply the
-  evidence.
+**8,014 calls in 59.3 minutes at 24 workers. Zero wire failures, zero retries,
+$12.04 (estimate, LOWER BOUND). Cost per gradeable output $0.00152.**
+14 roles × 459 securities, each role called separately and shown nothing but the
+snapshot. 19,961 distinct `PredictionRecord`s minted through the existing spine.
+
+### The headline is not the call count
+
+**Zero-yield rate 1.5%** — 117 of 8,014 calls produced nothing gradeable (27 of
+those were honest abstentions). The refusals that did the work: 526
+recommendation-language, 348 unfrozen horizons, 33 unparseable, 6 coin-flip
+`p=0.50`. The p=0.50 monoculture is gone by construction: all four observables
+and all seven horizons are populated, and **no record in the ledger sits at
+exactly 0.50.**
+
+### §20: 22,607 forecasts → 6,772 effective distinct ideas (ratio **0.30**)
+
+And two sharper measurements that this design made possible:
+
+- **The fourteen roles are largely one forecaster.** On 3,901 cells where ≥2
+  roles forecast the same (security, observable, horizon), the mean spread of
+  their probabilities is **0.059** and the mean range **0.147**. Separation
+  prevented contagion; it did not create independence.
+- **Asking twice buys exploration, not information.** Across 2,544 repeated
+  cells the mean |Δp| on matched slots is **0.066** — but 9,137 slots were asked
+  by only one pass. The second pass explored differently rather than confirming.
+  2,646 forecasts were byte-identical repeats and the ledger refused them by id.
+
+### What it does not license
+
+Every record is unresolved. **ARCHITECTURE_RESULT_ONLY**: the foundation model
+may know history overlapping any backtest, so only forward resolution is
+evidence. The batch *looks* overconfident (mass piled at 0.55–0.70) — which is
+the failure mode the prereg named in advance, and which the forward Brier, not
+this document, will decide.
+
+**The ledger's first grade moved from 2026-09-12 to 2026-08-16.**
+
+### Five defects it exposed, all fixed or disclosed
+
+Torn telemetry rows under 24-thread concurrent append (now locked, with a
+16-thread regression test); a budget governor costing 0.31s per gate because it
+joined a 25MB ledger it did not need (`llm_telemetry.spend()`); a universe
+source that silently read as empty (now flagged in the provenance table); a
+ledger resolver fetching every due ticker in one all-or-nothing request (now
+chunked); and `ResearchBudgetExhausted` being absorbed into a per-cell failure
+count (now re-raised).
 
 ## Chunk 9 — the ablation (why the others exist)
 

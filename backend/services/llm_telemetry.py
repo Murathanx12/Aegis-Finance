@@ -59,6 +59,7 @@ import json
 import logging
 import os
 import re
+import threading
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -292,17 +293,40 @@ def _resolve_path(path: Path | None) -> Path | None:
     return LLM_CALLS
 
 
+#: Serialises appends WITHIN this process. See `append` for why it exists and
+#: for the case it deliberately does not cover.
+_APPEND_LOCK = threading.Lock()
+
+
 def append(records: list[LLMCall], path: Path | None = None) -> None:
-    """Append rows. Returns None: nothing may branch on a write."""
+    """Append rows. Returns None: nothing may branch on a write.
+
+    LOCKED, and the reason is a measurement rather than a precaution. LLM-SWARM-1
+    ran 24 worker threads through this function 8,014 times and **two rows came
+    back torn** — one line holding only `"1.0.0"}`, another only `"}`. A
+    single `write()` of a short line is atomic on POSIX by convention and is NOT
+    guaranteed on Windows, so interleaved appends can and did split a row in the
+    middle. The cost is two calls' spend silently missing from a ledger whose
+    entire purpose is to know what was spent; `read_calls` counts the
+    unreadable lines and downgrades every total to a LOWER BOUND, which is how
+    this was caught at all.
+
+    WHAT THE LOCK DOES NOT COVER: two PROCESSES (or two Railway replicas)
+    writing the same file. That needs an OS-level file lock, and it is a
+    different problem from the one measured here — stating the boundary rather
+    than implying the file is now safe against everything.
+    """
     p = _resolve_path(path)
     if p is None:
         logger.debug("llm_telemetry: write suppressed under pytest (%d row(s))",
                      len(records))
         return
     p.parent.mkdir(parents=True, exist_ok=True)
-    with p.open("a", encoding="utf-8") as fh:
-        for r in records:
-            fh.write(json.dumps(asdict(r), ensure_ascii=False) + "\n")
+    blob = "".join(json.dumps(asdict(r), ensure_ascii=False) + "\n"
+                   for r in records)
+    with _APPEND_LOCK:
+        with p.open("a", encoding="utf-8") as fh:
+            fh.write(blob)
 
 
 def record_call(**kwargs: Any) -> None:
@@ -435,6 +459,11 @@ def summary(since: Any = None, path: Path | None = None,
     applies to a Brier score.
     """
     rows = read_calls(path)
+    # A torn line is spend that vanished, and it makes the total a LOWER BOUND
+    # for a completely different reason than an unpriced model does. Both
+    # reasons now reach the reader; LLM-SWARM-1 produced two of these from 24
+    # concurrent writers and only the warning log said so.
+    unreadable = int(rows[0].get("_unreadable_lines", 0)) if rows else 0
     cutoff = _as_date(since)
     if cutoff is not None:
         rows = [r for r in rows
@@ -443,6 +472,7 @@ def summary(since: Any = None, path: Path | None = None,
     base = {
         "n_calls": len(rows),
         "since": str(cutoff) if cutoff else None,
+        "n_unreadable_ledger_lines": unreadable,
         "cost_is_estimate": True,
         "pricing_as_of": LLM_PRICE_AS_OF,
         "pricing_note": ("costs are reconstructed from point-in-time list "
@@ -508,7 +538,7 @@ def summary(since: Any = None, path: Path | None = None,
     base.update({
         "total_cost_usd": total,
         "n_unpriced_calls": len(unpriced),
-        "total_is_lower_bound": bool(unpriced),
+        "total_is_lower_bound": bool(unpriced or unreadable),
         "unpriced_models": sorted({str(r.get("model")) for r in unpriced}),
         "by_purpose": {k: _bucket(v) for k, v in sorted(by_purpose.items())},
         "by_model": {k: _bucket(v) for k, v in sorted(by_model.items())},
@@ -640,4 +670,46 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
         "distinct_models": len({r.get("model") for r in rows}),
         "last_written": last,
         "days_quiet": quiet,
+    }
+
+
+def spend(since: Any = None, path: Path | None = None) -> dict:
+    """The four numbers a budget governor actually decides on, and nothing else.
+
+    `summary()` is the reporting surface and it joins every claimed
+    prediction_id against the prediction ledger. That join is the right thing
+    for a report and the wrong thing for a gate: at 8,000 telemetry rows and
+    12,000 minted forecasts it costs ~0.31s, against ~0.05s for the counts
+    below. A campaign that calls the governor before EVERY vendor request — as
+    it must, because a governor consulted every hundredth call is not a
+    governor — would spend twenty minutes of one core re-reading a 25MB ledger
+    to answer a question that does not depend on it.
+
+    The failure this prevents is not slowness. It is the pressure slowness
+    creates to check LESS often, which is how a spend ceiling quietly becomes
+    advisory. Same inputs, same decision, one join cheaper.
+
+    Returns {} on failure, never a zero: `research_budget` reads an empty dict
+    as "spend is UNKNOWN" and refuses, which is the only safe reading when the
+    accounting is broken.
+    """
+    rows = read_calls(path)
+    cutoff = _as_date(since)
+    if cutoff is not None:
+        rows = [r for r in rows if r.get("ts") and _as_date(r["ts"]) >= cutoff]
+    if not rows:
+        return {"n_calls": 0, "total_cost_usd": 0.0,
+                "total_is_lower_bound": False,
+                "zero_gradeable_output": {"n_calls": 0, "share_of_calls": None},
+                "cost_is_estimate": True}
+    priced = [r for r in rows if r.get("cost_usd") is not None]
+    dead = sum(1 for r in rows if not _gradeable(r))
+    return {
+        "n_calls": len(rows),
+        "total_cost_usd": round(sum(float(r["cost_usd"]) for r in priced), 6),
+        "total_is_lower_bound": len(priced) < len(rows),
+        "n_unpriced_calls": len(rows) - len(priced),
+        "zero_gradeable_output": {"n_calls": dead,
+                                  "share_of_calls": round(dead / len(rows), 4)},
+        "cost_is_estimate": True,
     }

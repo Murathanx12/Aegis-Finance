@@ -141,3 +141,55 @@ def ensure_cmp_insider_trial(db_path=None) -> int:
         "doc": "docs/TRIALS/TRIAL-CMP-INSIDER-IC.md",
     }
     return ensure_trial_registered(CMP_INSIDER_TRIAL_PARAM, notes, db_path=db_path)
+
+
+SWARM_CAL_TRIAL_PARAM = "swarm-specialist-calibration"
+
+
+def ensure_swarm_calibration_trial(db_path=None) -> int:
+    """Idempotently pre-register TRIAL-SWARM-CAL — the forward calibration clock
+    for the fourteen LLM-SWARM-1 specialist roles (GRAND-ARENA-1 chunk 3).
+
+    Registered BEFORE the first record could resolve, which is the only moment
+    at which it can be registered honestly: the ledger's forward clock starts at
+    the first written record and cannot be backfilled. Doc:
+    docs/TRIALS/TRIAL-SWARM-CAL-specialist-calibration.md.
+
+    Counted in the cumulative trial count even though the honest prior is that
+    most roles FAIL — a registry showing only the trials that worked is lying to
+    itself, and the DSR/PBO guards deflate against the cumulative count.
+    """
+    notes = {
+        "hypothesis": ("per specialist role, forward Brier on records minted by "
+                       "backend/services/llm_swarm.py is BELOW that role's own "
+                       "realised climatology (honest prior: most roles fail; "
+                       "NIGHT-3 measured no LLM edge in ORDERING, and the "
+                       "expected failure mode here is overconfidence)"),
+        "purpose": "measurement (calibration of a forecaster) - NEVER a signal",
+        "primary_metric": ("mean Brier minus that slice's climatology Brier, "
+                           "per specialist; negative and clearing its own "
+                           "80%-power MDE = informative (CANON §19)"),
+        "decision_rule": {
+            "adopt": "gap negative AND clears the slice's 80%-power MDE",
+            "reject": "gap positive AND clears the MDE in that direction",
+            "not_detectable": "anything between - never read as a kill",
+            "min_window": ("200 resolved records per role; 2,000 swarm-wide; "
+                           "earliest decision 2026-11-15"),
+            "crash_override": "SPY >= 20% drawdown defers to >= 6mo past trough",
+        },
+        "frozen": ["SWARM_COIN_FLIP_EPS", "SWARM_MAX_FORECASTS_PER_CALL",
+                   "SWARM_SCENARIO_PROB_TOL", "SWARM_BENCHMARK",
+                   "the 14 role prompts and CONTRACT",
+                   "backend/data/swarm/swarm_1_universe.json"],
+        "may_not": ("arm a lane, size a position, rank securities, or emit "
+                    "buy/sell language; NIGHT-3's ordering null is not "
+                    "contested by this trial"),
+        "ARCHITECTURE_RESULT_ONLY": ("the foundation model may know history "
+                                     "overlapping any backtest, so only forward "
+                                     "resolution of these records is evidence"),
+        "canon_20": ("volume is not n - every claim prints "
+                     "effective_distinct_ideas beside its raw count"),
+        "doc": "docs/TRIALS/TRIAL-SWARM-CAL-specialist-calibration.md",
+    }
+    return ensure_trial_registered(SWARM_CAL_TRIAL_PARAM, notes,
+                                   db_path=db_path)

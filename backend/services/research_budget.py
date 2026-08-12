@@ -106,7 +106,12 @@ def _summary(since: str | None, path: Path | None) -> dict:
     """
     try:
         from backend.services import llm_telemetry
-        return llm_telemetry.summary(since=since, path=path)
+        # `spend` rather than `summary`: identical inputs to the decision below,
+        # without the prediction-ledger join a gate does not need. The join is
+        # ~6x the cost of the counts, and this function is called before EVERY
+        # vendor request — a governor that is expensive to consult is a governor
+        # someone eventually consults less often.
+        return llm_telemetry.spend(since=since, path=path)
     except Exception as exc:                                   # noqa: BLE001
         logger.warning("research_budget: cannot read the telemetry ledger "
                        "(%s: %s) — spend is UNKNOWN, not zero",

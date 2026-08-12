@@ -37,6 +37,7 @@ from typing import Callable
 import pandas as pd
 
 from backend.config import (LEDGER_RESOLVER_CSV_GRACE_DAYS,
+                            LEDGER_RESOLVER_FETCH_BATCH,
                             LEDGER_RESOLVER_FETCH_PAD_DAYS)
 from backend.services.belief_state import (Observable, ledger_health,
                                            read_predictions, resolve_all)
@@ -49,14 +50,45 @@ logger = logging.getLogger(__name__)
 PriceFetch = Callable[[list[str], str, str], pd.DataFrame]
 
 
-def _default_price_fetch(tickers: list[str], start: str, end: str) -> pd.DataFrame:
-    """Live yfinance fetch, same convention as fetch_conviction_prices.py."""
+def _default_price_fetch(tickers: list[str], start: str, end: str,
+                         *, batch: int = LEDGER_RESOLVER_FETCH_BATCH) -> pd.DataFrame:
+    """Live yfinance fetch, same convention as fetch_conviction_prices.py.
+
+    CHUNKED, and the reason is a change in scale rather than taste. This used
+    to be one request for every ticker with a due record, which was correct
+    when the ledger held ~100 records over a dozen names. LLM-SWARM-1 put
+    hundreds of securities in the ledger in one night, and a single 460-symbol
+    request against a 30-second timeout fails as a UNIT: one slow symbol and
+    the whole panel comes back empty, every due record becomes unpriceable, and
+    the ledger canary goes DEGRADED on a problem that is not in the ledger.
+
+    Chunking makes the failure PROPORTIONAL — a bad chunk strands its own
+    names, which `resolve_due` already counts and names — instead of total. A
+    chunk that raises is logged and skipped rather than taking the other
+    chunks' prices down with it; its tickers are simply absent from the panel,
+    which is exactly the contract this callable already declares.
+    """
     import yfinance as yf
-    df = yf.download(tickers, start=start, end=end, auto_adjust=True,
-                     progress=False, timeout=30)["Close"]
-    if isinstance(df, pd.Series):  # single ticker collapses to a Series
-        df = df.to_frame(name=tickers[0])
-    return df
+    frames: list[pd.DataFrame] = []
+    ordered = list(tickers)
+    for i in range(0, len(ordered), max(1, batch)):
+        chunk = ordered[i:i + batch]
+        try:
+            df = yf.download(chunk, start=start, end=end, auto_adjust=True,
+                             progress=False, timeout=30)["Close"]
+        except Exception as e:                                # noqa: BLE001
+            logger.error("ledger resolver: price chunk %d-%d (%d tickers) "
+                         "failed (%s) — those names are absent from the panel "
+                         "and will be reported UNPRICEABLE, the rest are "
+                         "unaffected", i, i + len(chunk), len(chunk), e)
+            continue
+        if isinstance(df, pd.Series):  # single ticker collapses to a Series
+            df = df.to_frame(name=chunk[0])
+        frames.append(df)
+    if not frames:
+        return pd.DataFrame()
+    out = pd.concat(frames, axis=1).sort_index()
+    return out.loc[:, ~out.columns.duplicated()]
 
 
 def _load_frozen_csv() -> pd.DataFrame | None:

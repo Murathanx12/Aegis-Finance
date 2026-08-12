@@ -53,6 +53,7 @@ import json
 import logging
 import os
 import shutil
+import threading
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from enum import Enum
@@ -438,21 +439,40 @@ def _migrate_once() -> None:
         logger.error("ledger migration raised unexpectedly: %s", e, exc_info=True)
 
 
+#: Serialises the read-dedupe-append sequence WITHIN this process.
+_APPEND_LOCK = threading.Lock()
+
+
 def append(records: list[PredictionRecord], path: Path | None = None) -> None:
-    """Append to the ledger. Returns None: nothing may branch on a write."""
+    """Append to the ledger. Returns None: nothing may branch on a write.
+
+    LOCKED because this is a read-modify-write, not a write. The dedupe reads
+    the whole ledger and then appends; two threads interleaving between those
+    two steps would each see the other's record as absent and write it twice,
+    and a duplicate record is scored twice — which is worse than a missing one,
+    because it silently doubles a forecaster's weight in its own calibration.
+    LLM-SWARM-1 tore two rows out of `llm_telemetry` doing exactly this class of
+    thing from 24 threads; this path happened to be called from one thread, and
+    "happened to" is not a guarantee anyone should rely on.
+
+    Same boundary as the telemetry lock: it serialises THIS process, not two
+    processes or two Railway replicas sharing a volume.
+    """
     if path is None:
         _migrate_once()
     path = path or PREDICTIONS
     path.parent.mkdir(parents=True, exist_ok=True)
-    seen = {r["prediction_id"] for r in read_predictions(path)}
-    with path.open("a", encoding="utf-8") as fh:
-        for r in records:
-            if r.prediction_id in seen:
-                logger.warning("%s already in the ledger — a duplicate record "
-                               "would be scored twice", r.prediction_id)
-                continue
-            fh.write(json.dumps(asdict(r), ensure_ascii=False) + "\n")
-            seen.add(r.prediction_id)
+    with _APPEND_LOCK:
+        seen = {r["prediction_id"] for r in read_predictions(path)}
+        with path.open("a", encoding="utf-8") as fh:
+            for r in records:
+                if r.prediction_id in seen:
+                    logger.warning("%s already in the ledger — a duplicate "
+                                   "record would be scored twice",
+                                   r.prediction_id)
+                    continue
+                fh.write(json.dumps(asdict(r), ensure_ascii=False) + "\n")
+                seen.add(r.prediction_id)
     logger.info("ledger: %d record(s) written to %s", len(records), path)
 
 

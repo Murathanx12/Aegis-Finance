@@ -63,6 +63,13 @@ LEDGER_RESOLVER_FETCH_PAD_DAYS = 7
 # within this many calendar days — beyond that the resolver must fetch fresh
 # rather than silently grade on a stale panel.
 LEDGER_RESOLVER_CSV_GRACE_DAYS = 4
+# Tickers per vendor request when the resolver fetches a fresh panel. One
+# request for every due ticker was fine at ~12 names; LLM-SWARM-1 put hundreds
+# of securities in the ledger in a night, and a single request that large fails
+# as a UNIT — one slow symbol strands every due record at once and the ledger
+# canary reports a problem that is not in the ledger. Chunking makes the
+# failure proportional to the chunk instead of total.
+LEDGER_RESOLVER_FETCH_BATCH = 100
 
 
 # ── Optimus prediction ledger (services/belief_state.py) ──────────────────────
@@ -1802,3 +1809,65 @@ RESEARCH_LLM_MAX_ZERO_YIELD_RATE = float(
 #: Below this many calls the zero-yield brake is not armed — an early run of
 #: unlucky parses would otherwise halt a campaign on n=3.
 RESEARCH_LLM_ZERO_YIELD_MIN_N = 50
+
+
+# ── LLM-SWARM-1 (GRAND-ARENA-1 chunk 3) ──────────────────────────────────────
+# Thousands of independent specialist calls, each of which must produce
+# something a machine can later grade. Every knob of that campaign lives here;
+# `backend/services/llm_swarm.py` reads them and hardcodes none.
+
+#: The workhorse. deepseek-chat is priced in LLM_PRICE_PER_MTOK, so every call
+#: lands in the telemetry ledger with a cost rather than as a LOWER BOUND.
+SWARM_MODEL = os.getenv("AEGIS_SWARM_MODEL", "deepseek-chat")
+#: Warm enough that fourteen roles do not collapse into one voice, cool enough
+#: that the JSON contract survives. The §20 measurement is what actually checks
+#: this: if the ratio collapses, temperature is the first thing to look at.
+SWARM_TEMPERATURE = float(os.getenv("AEGIS_SWARM_TEMPERATURE", "0.6"))
+#: The reply is one security's structured view. Generous, because a truncated
+#: reply is an unparseable reply and an unparseable reply is money spent for
+#: nothing — the single most expensive failure this campaign can have.
+SWARM_MAX_TOKENS = int(os.getenv("AEGIS_SWARM_MAX_TOKENS", "1800"))
+SWARM_TIMEOUT_S = float(os.getenv("AEGIS_SWARM_TIMEOUT_S", "180"))
+#: Concurrency. Measured, not guessed: 12 concurrent trivial requests returned
+#: in 2.4s with zero 429s, so 24 is inside the observed envelope and is backed
+#: off only on evidence (a counted 429), never pre-emptively.
+SWARM_WORKERS = int(os.getenv("AEGIS_SWARM_WORKERS", "24"))
+#: Retries on 429/5xx/timeout, with exponential backoff and jitter. A dropped
+#: call is never silent: it is counted as failed and reported.
+SWARM_MAX_RETRIES = int(os.getenv("AEGIS_SWARM_MAX_RETRIES", "4"))
+SWARM_BACKOFF_BASE_S = float(os.getenv("AEGIS_SWARM_BACKOFF_BASE_S", "1.5"))
+
+#: How many forecasts one call may mint. A cap, because an unbounded list lets
+#: a forecaster spray until something resolves in its favour, and because the
+#: ledger is a shared resource — 8,000 calls x 8 forecasts would bury 112
+#: existing records under 64,000 correlated ones.
+SWARM_MAX_FORECASTS_PER_CALL = 3
+#: A non-abstaining call that produces fewer than this many gradeable forecasts
+#: has not met the contract it was asked for. It is still recorded — the
+#: shortfall is the finding — but it is counted separately.
+SWARM_MIN_FORECASTS_PER_CALL = 2
+
+#: p = 0.50 IS REFUSED, AND THIS IS THE MOST OPINIONATED LINE IN THE FILE.
+#: The first WHY-MOVED batch was 23 of 25 one-day `return_sign` claims at
+#: exactly 0.50. That accrues records at full speed and says nothing: a coin
+#: flip you called a coin flip is not a forecast, it is the absence of one
+#: wearing a number. The ABSTAIN channel exists precisely so a specialist with
+#: no view has somewhere honest to put it, and abstentions are counted. So an
+#: exact 0.50 is a counted rejection rather than a minted record.
+SWARM_COIN_FLIP_EPS = 0.005
+#: Scenario branch probabilities must sum to one within this tolerance. Same
+#: band belief_state.expected_value() uses, so a tree this module accepts is a
+#: tree the ledger can price.
+SWARM_SCENARIO_PROB_TOL = 0.03
+#: The benchmark every `beats_benchmark` forecast is graded against.
+SWARM_BENCHMARK = "SPY"
+#: Records are appended to the prediction ledger in batches of this size.
+#: `belief_state.append` re-reads the whole ledger to dedupe, so appending per
+#: call would be quadratic; appending only at the end would lose a crashed
+#: run's work.
+SWARM_LEDGER_BATCH = 200
+#: Trading days of history a security must have at the observation timestamp to
+#: enter the universe. A name we cannot price cannot be forecast about and its
+#: records could never resolve — the failure would look exactly like a growing
+#: pending backlog (belief_state warns about that case for a reason).
+SWARM_MIN_HISTORY_BARS = 252

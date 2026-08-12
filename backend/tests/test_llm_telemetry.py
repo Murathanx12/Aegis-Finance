@@ -462,3 +462,42 @@ def test_a_hypothesis_id_is_stable_across_nights():
     b = hypothesis_id({"mechanism": "  small-cap revision drift  "})
     c = hypothesis_id({"mechanism": "Something else entirely"})
     assert a == b and a != c
+
+
+def test_concurrent_appends_do_not_tear_rows(tmp_path):
+    """LLM-SWARM-1 measured this failure, so it gets a test.
+
+    24 worker threads wrote 8,014 rows through `append` and TWO came back torn —
+    one line holding `"1.0.0"}`, another `"}`. A single short `write()` is
+    atomic on POSIX by convention and is not guaranteed on Windows, so the
+    accounting silently lost two calls' spend. Losing spend is the one direction
+    a cost ledger must not fail in.
+    """
+    import threading
+
+    from backend.services import llm_telemetry as t
+
+    path = tmp_path / "llm_calls.jsonl"
+    n_threads, per_thread = 16, 40
+
+    def writer(k: int) -> None:
+        for i in range(per_thread):
+            t.record_call(provider="deepseek", model="deepseek-chat",
+                          purpose="swarm_specialist_forecast",
+                          agent=f"agent{k}", prompt="p" * 200,
+                          context={"i": i, "k": k},
+                          tokens_in=2500, tokens_out=900,
+                          prediction_ids=[f"p{k}-{i}"], path=path)
+
+    threads = [threading.Thread(target=writer, args=(k,))
+               for k in range(n_threads)]
+    for th in threads:
+        th.start()
+    for th in threads:
+        th.join()
+
+    lines = [l for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    assert len(lines) == n_threads * per_thread
+    for i, line in enumerate(lines, 1):
+        json.loads(line)          # a torn row raises here — that is the point
+    assert len(t.read_calls(path)) == n_threads * per_thread
