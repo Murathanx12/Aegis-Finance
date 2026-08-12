@@ -124,7 +124,7 @@ positions:
     # YAML edit changes the book config hash — a new segment boundary on the next
     # book-lane event by design of get_book_config_hash. Bytes are never reverted
     # (that would corrupt contiguity a second time); the live verification that no
-    # spurious rebalance fired is recorded in NIGHT13_DISCHARGE.md §9.
+    # spurious rebalance fired is recorded in NIGHT13_DISCHARGE.md §8.
     cost_basis: 13   # RECONSTRUCTED (murat_book)
     entry_date: 2025-11-07
     thesis: "quantum theme, pre-revenue narrative exposure"

@@ -104,7 +104,7 @@ No product candidate. The registered expectation (UNRESOLVED or NET_DEAD) held.
    place — exactly what lane-integrity invariant 1 forbids mid-stream, since
    the book config hash is segment identity. Bytes are not reverted (a revert
    would corrupt contiguity a second time); the live check that no spurious
-   book-lane rebalance fired is in §9 below.
+   book-lane rebalance fired is in §8 below.
 2. **The prereg linter could not parse any hyphenated corpse ident** — the
    `Resurrects:` regex stopped at the first hyphen, so no closed family
    (TRIAL-COND-VT, …) could ever be legitimately resurrected. Fixed + pinned.
@@ -141,7 +141,38 @@ No product candidate. The registered expectation (UNRESOLVED or NET_DEAD) held.
   `committee()`; F10 a standing unpriceable ticker holds the prod-alert issue
   open by design.
 
-## 8. Registry accounting
+## 8. Live verification (verify-prod-after-deploy, 2026-08-12)
+
+Deployed `1b2a272` after two CI rounds — both failures were tests pinning the
+stale QUBT 200 that `bd7b403` corrected (the local suite had run before the
+rebase; CI ran after it). Verified live, content not status codes:
+
+- `/api/health/full`: status ok, no degraded reasons, nav all_fresh,
+  `investment_committee` row ok with the funnel artifact found at
+  `/app/backend/data/funnel_night10.json` (the F1 fix, proven in the image),
+  prediction_ledger ok (87 records / 0 overdue).
+- `/api/ic/committee?capital=40000`: full composed book served — 6
+  benchmark-core positions + CVLG 2% + INDV 0.5% evidence-led, all seven
+  archetype refusals printed verbatim as degradation reasons, wealth block
+  with quantiles + target/ruin probabilities.
+- `/api/optimus/calibration`: 19 cells, 87 records, 81 pending, health ok.
+- **`pi_ledger_resolve` initially VANISHED from the live scheduler** — the
+  night's last silent-fragility find, in production: during the rolling
+  deploy the OLD replica (code without `_ledger_resolve`) shared the
+  persistent APScheduler jobstore, failed to deserialize the new job on a
+  read, and APScheduler's reader REMOVES unrestorable jobs. The new process
+  logged "5 jobs" at startup; the old one deleted the fifth. A service
+  restart with only new code running re-registered it; verified live: 5 jobs,
+  `pi_ledger_resolve` next run 16:30 ET. **Backlog: any deploy that ADDS a
+  scheduler job needs a post-deploy job-set check (this is now that check,
+  manual); the prod monitor gates on health status but not on job_ids.**
+- Book lanes: mirror + conviction NAV continuous through 2026-08-11, exactly
+  two config versions (known 2026-07-27 boundary). `bd7b403` never deployed
+  on its own (CI-gated), so its hash change goes live WITH tonight's deploy —
+  the next book-lane event will stamp one new config version, expected and
+  documented here in advance.
+
+## 9. Registry accounting
 
 EXPOSURE-CONTROL-1 (+1 arm, UNRESOLVED) · FACTORIAL-PM-1 (+1 arm,
 DIRECTION_REJECTED on H1 / H3 met) · TRANSACTION-ENSEMBLE-1 (+0, instrument) ·
