@@ -260,20 +260,313 @@ horizon. That is the single most compressible statement the trial produces.
 
 ## 3. The learned action-value policy
 
-*(filled in from `exit_lab_1_learned.json` — see §3.1)*
+*(pending — filled from `exit_lab_1_learned.json`)*
 
 ---
 
 ## 4. The five questions, each with its MDE
 
+Two tables are needed for each question and only one of them is a measurement.
+The **conditional table** shows the hold-versus-act gap inside each state
+bucket. The **contrast table** tests whether those buckets actually *differ*,
+as a difference-of-differences with its own SE and its own MDE — CANON §18,
+because reading two rows and saying "this one is bigger" is not a measurement.
+
+**The headline for all five questions: every conditional pattern below looks
+convincing and not one of them survives §18.** All 78 difference-of-differences
+tests, across all six horizons, are below their own MDE.
+
+### Q1 — When does holding a large winner beat trimming it?
+
+Conditional Δ(`HOLD` − `TRIM_25`) by unrealised gain since entry, pp:
+
+| unrealised gain | h=20 | h=60 | h=252 | n states |
+|---|---:|---:|---:|---:|
+| < 0 | +0.245 / 0.311 | +0.642 / 0.751 | **+2.560 / 2.062** | 619,449 |
+| 0 to +25% | +0.246 / 0.251 | **+0.676 / 0.618** | **+2.732 / 1.639** | 661,256 |
+| +25 to +50% | +0.271 / 0.275 | **+0.730 / 0.694** | **+2.931 / 1.855** | 171,578 |
+| +50 to +100% | **+0.346 / 0.308** | **+0.864 / 0.799** | **+3.103 / 2.130** | 79,160 |
+| > +100% | +0.350 / 0.447 | +0.981 / 1.116 | **+2.866 / 2.843** | 34,557 |
+
+*(Δ / its own MDE; **bold** = detectable and DIRECTION_SUPPORTED.)*
+
+The pattern is monotone and it is in the opposite direction to the folk rule:
+the more a position is up, the more trimming it costs. At 252 days the effect
+is detectable in every gain bucket.
+
+**But the §18 contrast refuses to license the conditioning.**
+(HOLD−TRIM25 | gain > +50%) − (| gain < 0) = **+0.246 pp against an MDE of
+0.402** at h=60, **+0.451 / 1.056** at h=252, **+0.103 / 0.155** at h=20.
+Not detectable at any horizon. The same holds for the > +100% cut
+(+0.339 / 0.735 at h=60) and for the winner × positive-momentum interaction
+(+0.496 / 0.869 at h=60).
+
+> **Answer: holding beats trimming at every level of unrealised gain, and the
+> size of the gain does not measurably change by how much.** The "let winners
+> run" instruction and the "take profits" instruction are both unsupported as
+> *conditioning* rules; what is supported is the unconditional one — don't trim.
+> The one honest asymmetry sits in the *sign* of every cell, not in their
+> spread.
+
+### Q2 — When does an event close the expectation gap?
+
+Conditional Δ(`HOLD` − `SELL_CASH`) by days since the last earnings
+announcement, h = 60 / h = 252, pp:
+
+| days since `rdq` | h=60 | h=252 | n states |
+|---|---:|---:|---:|
+| 0-5 | +2.955 / 2.824 | +10.967 / 7.808 | 152,052 |
+| 6-20 | +2.767 / 2.876 | +11.251 / 8.110 | 191,380 |
+| 21-60 | +2.888 / 2.922 | +11.149 / 7.816 | 706,680 |
+| > 60 | +2.624 / 2.802 | +11.155 / 7.964 | 508,956 |
+
+The four rows are the same number. §18 confirms it:
+(0-5d) − (>60d) = **+0.343 / MDE 0.858** at h=60 and **−0.096 / 1.876** at
+h=252. The SUE sign does no better: (SUE>0) − (SUE≤0) = **+0.096 / 0.641** at
+h=60, **+0.747 / 1.396** at h=252. The tightest cell in the whole question —
+freshly-announced *and* a positive surprise, against freshly-announced and a
+negative one — is **+2.558 pp against an MDE of 2.893** at 252 days: the
+largest contrast the trial produced anywhere, and still below its ruler.
+
+> **Answer: on this instrument, an earnings event does not close the
+> expectation gap.** Proximity to an announcement, and the sign of the surprise,
+> leave the hold-versus-sell decision statistically where it was. The trial
+> cannot see intraday reaction, revisions inside the announcement week, or any
+> non-earnings catalyst — §7.
+
+### Q3 — When does a drawdown signify thesis damage rather than noise?
+
+Conditional Δ(`HOLD` − `SELL_CASH`) by drawdown from peak-since-entry, h=60:
+
+| drawdown from peak | all | revisions > 0 | revisions < 0 | n (all) |
+|---|---:|---:|---:|---:|
+| 0 to −10% | **+2.775 / 2.373** | **+2.855 / 2.326** | **+2.691 / 2.442** | 941,882 |
+| −10 to −25% | +2.597 / 2.912 | **+2.945 / 2.922** | +2.724 / 2.960 | 409,064 |
+| −25 to −50% | +1.543 / 3.647 | +1.899 / 3.686 | +2.409 / 3.821 | 176,244 |
+| < −50% | +0.770 / 4.872 | +2.868 / 5.711 | +1.887 / 5.052 | 38,810 |
+
+The first column decays monotonically — holding through a shallow drawdown is
+worth 2.8 pp, holding through a catastrophic one is worth 0.8 — which is
+exactly the shape the "thesis damage" hypothesis predicts. It does not survive:
+(dd < −25%) − (dd > −10%) = **−1.266 / MDE 1.927** at h=60 and
+**−4.434 / 5.614** at h=252. Not detectable.
+
+And the mechanism the hypothesis actually names — deteriorating fundamentals —
+is **not there at all**. Inside the deep-drawdown cell, negative revisions make
+holding look *better*, not worse: (dd<−25% & rev<0) − (dd<−25% & rev>0) =
+**+0.344 / 1.241** at h=60, **−0.394 / 3.676** at h=252 — no sign, no
+magnitude, no detection. Unconditionally, (rev<0) − (rev>0) = **−0.116 /
+0.809**.
+
+> **Answer: this instrument cannot distinguish thesis damage from noise, and
+> the candidate discriminator it was given — the analyst-revision sign — does
+> not discriminate.** The drawdown-depth gradient is real to look at and below
+> its own ruler to measure. What IS measured is that the corresponding *policy*
+> loses: `DD_AND_REVISION` (sell on a −20% drawdown with falling revisions) is
+> −0.353 pp at h=60 and −1.636 pp at h=252, and both trailing stops are
+> DETECTABLE_NEGATIVE at 252 days.
+
+### Q4 — When is REPLACEMENT superior to cash? (the NIGHT-12 hint, tested)
+
+Δ versus `SELL_CASH`, by arm and horizon (Δ / MDE, pp):
+
+| arm | h=20 | h=60 | h=120 | h=252 |
+|---|---:|---:|---:|---:|
+| `HOLD` (do nothing at all) | +1.06 / 1.14 | **+2.81 / 2.76** | **+5.38 / 4.74** | **+11.27 / 7.55** |
+| `SELL_BENCH` (into the index) | +0.76 / 0.91 | **+2.45 / 2.19** | **+5.03 / 3.74** | **+10.81 / 6.12** |
+| `REPLACE_RNDW` (20 **random** names) | +0.47 / 1.24 | +2.17 / 2.82 | **+5.12 / 4.80** | **+10.93 / 7.37** |
+| `REPLACE_REV` (top-5 by revision) | +0.44 / 1.66 | +2.24 / 4.09 | +5.05 / 7.41 | +11.48 / 12.16 |
+| `REPLACE_1W` (top-20 momentum) | −0.01 / 1.98 | +1.30 / 4.65 | +2.86 / 7.50 | +6.20 / 12.32 |
+| `REPLACE_1` (top-5 momentum) | −0.37 / 2.45 | +0.19 / 5.94 | +2.69 / 10.15 | +7.02 / 15.69 |
+| `REPLACE_1N` (the single best name) | +0.19 / 4.88 | +2.84 / 11.53 | +5.07 / 17.82 | +1.94 / 20.79 |
+
+**Yes — anything invested beats cash, and that is the equity risk premium, not
+a decision.** The deciding clause was pre-registered: does a *ranked* basket
+beat its **equally-concentrated random** basket? Across all 6 horizons × 5
+ranker-vs-random contrasts — **30 comparisons** — the answer is:
+
+| contrast | h=20 | h=60 | h=120 | h=252 |
+|---|---:|---:|---:|---:|
+| `REPLACE_1` − `REPLACE_RND` | −0.72 / 2.14 | −1.73 / 5.06 | −2.11 / 8.63 | −3.76 / 14.36 |
+| `REPLACE_2` − `REPLACE_RND` | −0.13 / 1.99 | −1.53 / 3.79 | −4.88 / 5.55 | **−11.02 / 10.56** |
+| `REPLACE_REV` − `REPLACE_RND` | +0.09 / 1.26 | +0.31 / 2.78 | +0.26 / 4.89 | +0.70 / 8.26 |
+| `REPLACE_1W` − `REPLACE_RNDW` | −0.47 / 1.33 | −0.87 / 3.24 | −2.26 / 5.11 | −4.73 / 9.58 |
+| `REPLACE_2W` − `REPLACE_RNDW` | −0.01 / 1.07 | −0.10 / 2.40 | −1.59 / 3.50 | −3.28 / 6.24 |
+
+**Twenty-nine of thirty are below their own MDE, and the thirtieth is
+DETECTABLE NEGATIVE.** The momentum ranker's point estimate is negative in 19
+of 24 of its cells. The revision ranker is a clean zero.
+
+One structural finding worth stating rather than burying. Conditioning the
+replacement-versus-cash comparison on the *held* position's state — loser,
+winner, deep drawdown, falling revisions — returns **the identical number**
+(+1.296 / +1.297 / +1.293 / +1.299 / +1.295 at h=60). That is not a bug: both
+branches liquidate the position entirely, and the held name's exit cost is
+charged to *both*, so it cancels exactly. **Whether to replace or go to cash
+is provably independent of the state of what you are exiting.** The only thing
+it can depend on is the opportunity set — and the opportunity set is not
+measurably ordered by either ranker.
+
+> **Answer: replacement is not superior to cash by any detectable margin
+> attributable to the ranking; it is superior only in so far as it is
+> *invested*, and `HOLD` — doing nothing — is invested more cheaply.** NIGHT-12's
+> hint that cash is never best survives its real denominator; the corollary it
+> did not have is that *what you replace it with does not matter either*, which
+> makes the whole exit-and-redeploy decision, on this instrument, a cost.
+
+### Q5 — When is re-entry after de-risking justified?
+
+Two-step policy, built outside the factory because it is not a single
+disposition: sell to cash at T0, then buy the same name back 20 trading days
+later, paying a second round trip. Δ against staying in cash, pp:
+
+| state at de-risking | h=60 | h=120 | h=252 |
+|---|---:|---:|---:|
+| all de-risked states | +1.514 / 1.874 | +4.028 / 4.080 | **+9.940 / 7.235** |
+| in a drawdown < −25% | +0.579 / 2.619 | +1.730 / 5.734 | +5.649 / 10.416 |
+| with negative revisions | +1.581 / 1.996 | +4.044 / 4.323 | **+10.177 / 7.486** |
+| with positive momentum | +1.362 / 1.705 | +3.552 / 3.588 | **+9.140 / 6.184** |
+| with negative momentum | +1.042 / 2.208 | +3.070 / 4.786 | +8.340 / 8.354 |
+| **versus never having de-risked** | **−1.301 / 1.182** | **−1.352 / 1.293** | −1.330 / 1.639 |
+
+> **Answer: re-entry beats staying in cash — but only because being invested
+> beats cash, and it never recovers the cost of having left.** The last row is
+> the one that decides it: buying back after twenty days is
+> **DETECTABLE NEGATIVE against simply never having de-risked** at both 60 and
+> 120 days, at −1.3 pp, which is roughly two round trips. And the one case where
+> staying out ought to pay — de-risking in a deep drawdown — is where the
+> re-entry advantage is *smallest and least detectable*. There is no
+> conditioning variable in this trial that identifies a de-risking worth doing,
+> so there is none whose reversal can be timed.
+
 ---
 
 ## 5. Robustness
+
+**Costs, and the one place they change a verdict.** Because every branch charges
+cost linearly on its traded fraction, the whole cost curve is recoverable
+exactly from the stored half-spread. At 0× / 1× / 2× / 3×:
+
+| comparison | 0× (gross) | 1× (decides) | 2× | 3× |
+|---|---:|---:|---:|---:|
+| `SELL_CASH` − `HOLD` @60 | −2.545 / 2.766 **not detectable** | **−2.815 / 2.764** | −3.085 / 2.762 | −3.355 / 2.760 |
+| `TRIM_25` − `HOLD` @60 | −0.636 / 0.692 **not detectable** | **−0.704 / 0.691** | −0.771 / 0.691 | −0.839 / 0.690 |
+| `SELL_CASH` − `HOLD` @252 | **−10.999 / 7.544** | **−11.270 / 7.545** | −11.541 | −11.812 |
+| `SELL_BENCH` − `HOLD` @252 | −0.140 / 2.527 | −0.462 / 2.535 | −0.784 | −1.106 |
+
+**This is the trial's most important qualification and it is stated in the
+verdict.** At 60 days the *gross* gap between holding and selling is BELOW its
+own MDE. Costs are what make it detectable. At 252 days the gap is detectable
+gross, so the long-horizon result does not depend on the cost model at all.
+
+**The decomposition that falls out of the `SELL_BENCH` row.** Gross, selling
+the held name and buying the index is worth **−0.04 pp at 60 days and −0.14 pp
+at 252** — indistinguishable from zero at every horizon. So the held position
+has no measurable expected-return advantage over the index; what selling to
+*cash* gives up is the equity premium, not the name. Two independent statements
+that the trial can make cleanly:
+
+- *which* name you hold: no measurable effect (consistent with NIGHT-14's
+  selection null and NIGHT-10's 21 configurations)
+- *whether* you are invested: measurable, large, and the whole of the effect
+
+**Regime blocks and halves.** Eight pre-declared blocks (2002-03 … 2022-24).
+`SELL_CASH` − `HOLD` is negative in 7 of 8 at h=60 and **8 of 8** at h=252, and
+in both sample halves at every horizon. The exceptional block is 2007-09.
+
+**Assertions (all pass, `exit_lab_1_robust.json`).** Delisting path fired
+(16,755 in-horizon terminations at 252 days; worst state −100.0%; 2,172 states
+below −95%). `TRIM_50 ≡ ½(HOLD + SELL_CASH)` to 2.7e-07. Universe exactly 1,500
+on 264/264 dates, 0 thin skips, 0 short candidate pools, 0 half-spread
+fallbacks. Decision dates with resolvable outcomes: 263 at 1-20 days, 261 at
+60, 258 at 120, 252 at 252. Perturbation proof PASS on 30/30 columns.
 
 ---
 
 ## 6. Search denominator
 
+Every configuration executed, including the ones that failed.
+
+| stage | configurations | note |
+|---|---:|---|
+| factory | 1 | 264 dates × 1,500 names × 4 cohorts × 16 actions × 6 horizons |
+| no-lookahead perturbation | 1 | PASS, 30/30 columns bit-identical |
+| single actions vs HOLD | 96 | 16 actions × 6 horizons |
+| baseline policies vs NEVER_SELL | 120 | 20 policies × 6 horizons |
+| the five questions, conditional cells | 564 | Q1 132, Q2 72, Q3 228, Q4 114, Q5 18 |
+| §18 differences of differences | 78 | 13 contrasts × 6 horizons |
+| cost sensitivity | 84 | 7 actions × 3 horizons × 4 multipliers |
+| learned action-value | *(§3)* | 16 actions × 5 folds × 2 model families |
+
+**What went wrong, recorded rather than tidied away.**
+
+1. The first auxiliary build **crashed** on 170,466 SUE rows carrying a null
+   permno. Fixed by dropping and *counting* them; a link to nothing is not an
+   event.
+2. The first learned run **died with no traceback**. Cause: two concurrent
+   copies of the same job on a 33.8 GB box with 8.8 GB free, both loading all
+   six horizons. Fixed by loading only the primary horizon in the learn stage
+   and checkpointing predictions per fold.
+3. The `TRIM_50` midpoint assertion was written with the **wrong identity** on
+   the first pass (it added back a cost term that cancels) and reported a
+   1.5e-02 error. Corrected; the right identity passes at 2.7e-07. An assertion
+   that is wrong is worse than no assertion, and it is recorded here because it
+   nearly passed for the wrong reason.
+
+**Nothing was dropped for being unflattering.** The `REPLACE_1N` arm was kept
+even though its ruler is 11-21 pp; the gross-cost column was kept even though
+it removes the 60-day verdict; all 78 §18 contrasts are reported and all 78 are
+nulls. The single post-hoc addition relative to the prereg is the §18 contrast
+block, which is a *stricter* test of the pre-registered questions, not a new
+question — and it made every answer weaker, not stronger.
+
 ---
 
 ## 7. What this cannot tell us
+
+Read this before quoting any number above.
+
+1. **These are DIRECTION CHECKS on simulated counterfactuals, never alpha
+   evidence.** No Sharpe claim, no money claim, no skill claim. Nothing here
+   licenses a change to any live or paper lane, any position size, any product
+   default, or any buy/sell language. No skill claims before 24 months of
+   forward record.
+2. **One-shot decisions, not paths.** Each state resolves a single disposition
+   over a horizon; nothing compounds a policy through time. There is no CAGR
+   here and there cannot be one. A rule that loses 0.7 pp per 60-day decision is
+   not thereby shown to lose 4.3%/yr — that would need a sequential simulation
+   through G7, which this is not.
+3. **The holder is synthetic.** No book bought these names. Unrealised gain and
+   drawdown-from-peak are properties of a *hypothetical* holder at 21/63/126/252
+   trading days. The trial measures what such a holder should have done, not
+   what anyone did — and in particular it is **not** a replay of Murat's book.
+4. **Survivorship is conditioned on reaching the decision.** A position that
+   died before T0 generates no decision at T0. Deaths after T0 are fully modelled
+   (16,755 in-horizon terminations, −100% resolutions included), but the state
+   population is liquid-name-biased: price ≥ $5, ≥252 days of history, ≥$1m
+   median dollar volume, top 1,500 by dollar volume. **On a micro-cap or
+   illiquid book none of these numbers transfer.**
+5. **A null on replacement is a null on *momentum-* and *revision-*ranked
+   replacement.** There is no PIT-visible oracle candidate and this trial did
+   not invent one. A better ranker could still beat cash and beat holding.
+6. **It cannot see execution, intraday behaviour, or anything faster than a
+   month-end decision.** The same limitation NIGHT-14 recorded applies verbatim:
+   if the edge in position management lives in when-in-the-day you act, or in
+   reacting to news within hours, this design is looking in a different place.
+7. **Below-MDE is not a kill.** Every §18 contrast came back NOT DETECTABLE.
+   None of the five conditioning hypotheses is *refuted*; each is below this
+   instrument's resolution at n = 252-264 decision dates. A longer sample, a
+   finer decision grid, or a sharper conditioning variable could still find
+   something — and the MDEs printed beside every number say exactly how big it
+   would have to be.
+8. **The 60-day headline is cost-dependent.** Stated in the verdict and repeated
+   here: gross, holding does not detectably beat selling at 60 days. Only the
+   252-day result is cost-independent.
+9. **This does not say "never sell".** It says that no rule *in this list*, on
+   *these states*, at *these horizons*, produced a detectable improvement over
+   not selling — and that several of them produced a detectable deterioration.
+   A saver with a liquidity need, a tax lot, a concentration limit or a
+   risk-of-ruin constraint is optimising something this trial never measured.
+   WINNER-GENOME-1 measured that other thing and found the position **budget**
+   dominates; nothing here contradicts it, and §5's `SELL_BENCH` decomposition
+   points the same way.

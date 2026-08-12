@@ -18,7 +18,7 @@ paper record remain the certification layer.
 | # | Chunk | State | Artifact |
 |---|---|---|---|
 | **0** | Research budget + machine verification | **DONE** `9ed42d2` | `backend/services/research_budget.py`, 12 tests |
-| **1** | KNOWN-WORLD-1 — can learners recover planted rules? | **PARTIAL — RESUME HERE** | `data/factory/known_world_1_results.json` (checkpointed) |
+| **1** | KNOWN-WORLD-1 — can learners recover planted rules? | **DONE** `2ce58f3` | `docs/GRAND_ARENA_KNOWN_WORLDS.md` |
 | **2** | EXIT-LAB-1 — counterfactual decision factory | **DONE** `8429ab4` | `docs/GRAND_ARENA_EXIT_LAB.md` |
 | 3 | LLM-SWARM-1 — thousands of gradeable calls | NEXT | `docs/GRAND_ARENA_SWARM.md` |
 | 4 | WHY-MOVED at scale (universe, not one book) | pending | extends chunk 3 |
@@ -77,22 +77,79 @@ them would dilute the zero-yield denominator they exist to protect.
 
 ---
 
-## Chunk 1 — PARTIAL. Resume here.
+## Chunk 1 — DONE. 82 cells, and the most important result of the campaign.
 
-Pre-registered at `05e5315` (twelve worlds, verdict rules frozen before any
-learner ran). The runner checkpoints, so **resume it — do not restart**:
-`data/factory/known_world_1_results.json` holds what has been scored.
+Pre-registered at `05e5315`, verdict rules frozen before any learner ran. Every
+world passed `verify()` against its own declared plant before scoring, and every
+signal world had an oracle ceiling clearing 1.98×–4.23× its MDE — so the MISSED
+cells are **learner** failures, not unrecoverable worlds.
 
-Scored so far: **1 RECOVERED, 1 CORRECT-NULL**. The CORRECT-NULL is the
-important one — on WORLD-I (pure correlated noise) the contextual bandit gained
-**+0.0009/yr against its own MDE of 0.0140**, i.e. it correctly found nothing.
-That is the single most valuable cell in the matrix, because a learner that
-invents an edge in a world containing none would make every real-market result
-in this campaign untrustworthy.
+**27 RECOVERED · 16 PARTIAL · 26 MISSED · 13 CORRECT-NULL · 0 FALSE-POSITIVE.**
 
-Remaining: the other ten worlds × the learner set, and the two other negative
-controls (**J** cost-killed-edge net leg, **L** dynamic-exposure-adds-nothing).
-**Read the negative controls first when it completes.**
+### The three negative controls are clean — and one is a warning
+
+**WORLD-I (pure noise): 13/13 CORRECT-NULL.** And the nulls are *informative*,
+not vacuous: deliberately misaligning the label by one month makes the **same
+harness** print IC +0.4283 at t = 87.8, 44× its MDE. The tripwire has teeth.
+
+**WORLD-L (no timing edge): 5/5 CORRECT-NULL — but not because the learners
+behaved.** The evolutionary policy **invented a timing rule**: zero exposure in
+52% of months, raw annualised Sharpe 0.500 against the static 0.478. *Reported
+the way a dashboard would report it, that is a discovery.* It was refused by
+two things and **neither was the learner** — matched-average-exposure comparison
+(gain collapses to +1.89%/yr) and its own MDE (2.43%/yr). The conservative
+offline-Q did the same thing more quietly. This is the exact failure this whole
+campaign exists to catch, caught.
+
+**WORLD-J (cost-killed edge): 7/7 refused to trade.** Gross recovered by 6 of 7;
+net never declared. Breakeven 12–21 bps against 65 charged. Honest limit: at
+2.5× the oracle breakeven this is the *easy* version — a near-breakeven variant
+has not been run.
+
+### WORLD-K — the sharpest finding, and it rhymes with the standing bet
+
+All four action learners MISSED. Not because they failed to find the
+replacement rule — ridge found it (+33pp replace-share on stale names), evo
+found it (+29pp). They missed because **every learner reached for cash**, 20% to
+39% of actions, in a world where cash is *never* optimal. Cash is a
+market-level bet, so it injected market variance and pushed their own MDEs to
+4.1–5.1%/yr against a 3.6%/yr ceiling.
+
+**They made themselves undetectable by de-risking.** The *conservative*
+offline-Q was worst at 39%, and structurally so: pessimism subtracts an
+uncertainty allowance from every action, and cash has no uncertainty to be
+pessimistic about.
+
+### Which learners are trusted for later chunks
+
+| learner | verdict |
+|---|---|
+| **contextual bandit** | **TRUSTED** for specialist/sector attribution — the only instrument that recovered G and H (100% of pulls to the skilled specialist, 0–0.5% to the decoy) where 6 of 7 cross-sectional learners failed |
+| ridge / logistic | TRUSTED as **detectors**, NOT as explainers — in world F they tilt toward momentum on average while the world reverses it exactly where money is lost |
+| LightGBM | TRUSTED **with a caveat** — recovered F and G but failed H, G's mirror; conditional structure it reports needs independent confirmation |
+| evolutionary | CONDITIONALLY trusted, discipline-dependent (see WORLD-L) |
+| HMM | **NOT TRUSTED** as a regime instrument — 58.8% state accuracy against a 76.0% Bayes ceiling; every world-C cell PARTIAL |
+| offline-Q | **NOT TRUSTED** for exit/action work (WORLD-K) |
+| MLP | **NOT TRUSTED** at this sample size — 1 recovery in 9, and it missed the *linear* world A |
+
+### Two silent defects caught only because the answer was known
+
+LinUCB with a unit-scale confidence width against 0.02-scale rewards ran green
+**as a uniform random policy** (35% to the skilled arm instead of 100%).
+Single-restart Baum-Welch landed at 52% state accuracy — chance — where five
+restarts reach 59%. Neither would have been visible in a real-market run.
+
+### Caveats disclosed rather than buried
+
+Worlds D, K and L were re-specified **before** the sweep from oracle
+calculations, because their own optimal policies sat below their MDEs. Worlds
+E–H were **not** power-checked in advance; their ceilings cleared 2× afterwards,
+but that was luck — later chunks must compute ceilings before sweeping.
+
+**§20: median 2.36 effective distinct learners from 7 nominal.** So zero false
+positives is less impressive than it looks, and any future one is worth more.
+Checkpoint resume verified: truncating to 70 cells and re-running reproduces all
+82 verdicts exactly.
 
 ## Chunk 2 — DONE, and it did two things
 
