@@ -16,6 +16,19 @@ committed **before** the simulator produced a number. Runner
 > tails** (p95 up, p5 down by almost exactly as much) while leaving the centre
 > where it was. That is the arithmetic signature of risk-taking, not selection.
 >
+> The only detectable family effects anywhere in the trial are on the
+> **maximum**: sector concentration raises the leaderboard number (+1.92 pp
+> vs its matched control, MDE 1.09), while momentum-filtering and quality-
+> screening measurably **lower** it (−3.02 and −7.26). Every effect this trial
+> can see is about the tail, and none of them is about the middle.
+>
+> Re-running the identical selections at six position budgets: **all 30
+> family-minus-control comparisons stay below their own MDE** — the picks add
+> nothing at any budget — while **the budget itself dominates**: swapping the
+> tournament's 20% cap for inverse-volatility weighting raised compound return
+> AND cut drawdown AND cut ruin probability in all five families, in one case
+> from a 24.5% to a 6.7% chance of losing half the account.
+>
 > **This does NOT say the winners had no skill.** It says the *published*
 > component of what they described — which names to pick — is below this
 > instrument's resolution, while the *dispersion* component is measured and
@@ -176,7 +189,56 @@ A leaderboard does not report a median. It reports the **maximum over ~2,600
 draws**, which is an order statistic, and order statistics of fat-tailed
 distributions are enormous whether or not anybody was skilled.
 
-<!--LEADERBOARD_TABLE-->
+Per family, the maximum over its own 2,600 teams **within each window** — the
+like-for-like leaderboard number, since the real field is ~2,600 — and the same
+statistic for its volatility-matched random control:
+
+| family | median max over 2,600 | mean | p90 window | best single window | its control's median max | **Δmax** | MDE |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| F1 momentum+volume | +20.8% | +22.6% | +35.6% | **+194.5%** | +22.5% | **−3.02** | 1.99 |
+| F2 bet-on-volatility | **+27.0%** | +31.6% | **+51.0%** | **+195.7%** | +27.5% | +0.17 | 1.14 |
+| F3 quality momentum | +14.6% | +15.0% | +24.8% | +36.2% | +20.5% | **−7.26** | 2.29 |
+| F4 concentrated sector | +23.0% | +25.7% | +40.1% | +185.2% | +20.8% | **+1.92** | 1.09 |
+| F5 speculative underdogs | +25.5% | +28.7% | +47.3% | **+207.6%** | +26.6% | −1.65 | 1.87 |
+
+Δmax is the only place in this trial where a family is measurably different
+from its matched control, and the signs are worth reading slowly. **Only F4
+raises the maximum** (+1.92 pp against a ruler of 1.09) — sector concentration
+really does buy a bigger leaderboard number, because correlated names move
+together. **F1 and F3 measurably *lower* it** (−3.02 and −7.26): momentum
+filtering and quality screening both throw away exactly the lottery tickets a
+tournament needs. F2 and F5 are indistinguishable from random names of the
+same volatility — their maxima are large, and entirely explained by the
+volatility they selected for.
+
+Every family's single best window is the same one: **2020-12-18 → 2021-01-26**,
+the SPAC/meme melt-up. The ~+200% simulated "winners" are one window out of
+220, and even they have a same-window worst sibling in the field.
+
+Pooling the whole simulated field (28,600 teams per window — 11× the real field
+size, so these are upper bounds on the real event):
+
+| | value |
+|---|---:|
+| winning team's 5-week return, median window | **+31.6%** |
+| winning team, mean window | +36.0% |
+| winning team, 90th-percentile window | +56.0% |
+| winning team, best window in 23 years | **+223.6%** |
+| **same field's worst team, median window** | **−23.3%** |
+| same field's worst team, worst window | **−59.1%** |
+
+The two bold rows are the same tournament. The reviewer's line — "nobody
+remembers its identical cousin that lost 60%" — is now a measured number rather
+than a rhetorical one.
+
+**The Drexel biotech instance, separately.** The concentrated-biotech sub-arm
+(SIC 2833-2836, 8731) came back with a median of **+1.16%** against C4's
++1.50%, wider tails on both sides (p5 −12.2% vs −10.9%, p95 +14.6% vs +11.9%),
+and — notably — a *lower* median per-window maximum than random names at market
+volatility (+19.7% vs +21.5%). Over 2002-2024, concentrating into biotech
+bought the extra variance without even buying the bigger leaderboard number.
+Their professor's reasoning was sound for the objective; the specific sector
+was not what made it work.
 
 **P(this family produces the field winner)**, from 220 windows × 200 bootstrap
 fields assembled in equal parts from the seven stochastic arms plus the two
@@ -358,10 +420,20 @@ buys the chance of being first, and the RIT captain said plainly that this was
 the deliberate optimisation; **that** part is real and repeatable. Which names
 you pick *within* that style did not measurably move the middle of the
 distribution in any of the five styles, in any regime block, at any position
-budget. And the same high dispersion that produces a +195% cousin produces a
-−59% one in the same window — which is the part nobody interviews, and the part
-that turns into a 24-37% chance of losing half the account when the tournament's
-20% budget is run for twenty years instead of five weeks.
+budget — the only measurable name-picking effects were on the *maximum*, and
+two of the three were in the wrong direction. And the same high dispersion that
+produces a +195% cousin produces a −59% one in the same window — which is the
+part nobody interviews, and the part that turns into a 24-37% chance of losing
+half the account when the tournament's 20% budget is run for twenty years
+instead of five weeks.
+
+**For his own book, the one transferable line:** three nights have now measured
+the same thing from three directions — NIGHT-12 (a beta-2.15 book, drawdown
+22.9% vs SPY's 8.9%, `sell_to_cash` never best in 60 rows), NIGHT-13 (his
+selection added +20 to +43 points while his management subtracted 29 to 66),
+and now this. **The high-dispersion opportunity classes he is drawn to are not
+the problem; the position budget applied to them is.** That claim is still not
+proven forward, and nothing here changes a lane.
 
 ---
 
