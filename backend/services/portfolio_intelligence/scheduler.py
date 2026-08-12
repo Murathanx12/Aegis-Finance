@@ -48,6 +48,7 @@ EXPECTED_JOB_IDS: frozenset[str] = frozenset({
     "pi_weekly_aggressive",
     "pi_congress_collect",
     "pi_ledger_resolve",
+    "pi_why_moved",
 })
 
 
@@ -144,6 +145,25 @@ def setup_scheduler():
         CronTrigger(hour=16, minute=30, timezone="US/Eastern"),
         id="pi_ledger_resolve",
         name="Prediction-ledger auto-resolution",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
+
+    # WHY-MOVED, nightly. 17:15 ET — after the 16:30 mark-to-market and the
+    # ledger resolution, because the day's explanation should be written
+    # against a book that has already been marked, and grading yesterday's
+    # forecasts before writing today's keeps the two clocks from interleaving.
+    #
+    # This job is what makes the thing a LOOP rather than a tool. Run by hand it
+    # explains one day; run nightly it accrues the record that eventually says
+    # whether any lens was ever worth listening to. Murat's instruction was
+    # explicit — "make it test and learn at my absence" — and a subsystem that
+    # only runs when someone remembers to run it does neither.
+    _scheduler.add_job(
+        _why_moved_nightly,
+        CronTrigger(hour=17, minute=15, timezone="America/New_York"),
+        id="pi_why_moved",
+        name="WHY-MOVED nightly attribution + lens hypotheses",
         replace_existing=True,
         misfire_grace_time=3600,
     )
@@ -847,6 +867,48 @@ async def _ledger_resolve():
             )
     except Exception as e:
         logger.error("Ledger resolve failed: %s", e, exc_info=True)
+
+
+async def _why_moved_nightly():
+    """Nightly WHY-MOVED: explain the day, and mint forecasts that can be wrong.
+
+    The failure this is written against is the one the whole subsystem exists to
+    avoid: a night that produced no gradeable output looking exactly like a
+    night with nothing to say. So the log line always carries the COUNTS —
+    hypotheses, rejections, forecasts minted — and a run that minted nothing is
+    a WARNING, not a quiet INFO. Zero minted with no error is the interesting
+    case: it means the lenses spoke and said nothing checkable.
+
+    A missing DEEPSEEK_API_KEY, a vendor outage, or a day the book cannot be
+    priced all degrade to a logged status rather than a crash — but they never
+    degrade to a fabricated explanation. The attribution stands on its own; the
+    hypotheses are simply absent.
+    """
+    import asyncio
+
+    logger.info("Running nightly WHY-MOVED at %s", datetime.now().isoformat())
+    try:
+        from backend.services import why_moved as wm
+
+        result = await asyncio.to_thread(wm.run_why_moved, with_hypotheses=True)
+        minted = result.get("n_predictions_minted", 0)
+        n_hyp = len(result.get("hypotheses") or [])
+        rejected = sum(len(l.get("rejections") or [])
+                       for l in (result.get("lenses") or []))
+        attrib = result.get("attribution") or {}
+        msg = ("WHY-MOVED %s: pnl=%s (%s%%) hypotheses=%d rejected=%d minted=%d "
+               "status=%s")
+        args = (result.get("as_of"), round(attrib.get("pnl_usd") or 0.0, 2),
+                round(attrib.get("pnl_pct") or 0.0, 3), n_hyp, rejected, minted,
+                result.get("status"))
+        if minted == 0:
+            # Not an error, and that is exactly why it needs to be loud: the
+            # run "succeeded" and bought nothing gradeable.
+            logger.warning(msg + " — NOTHING GRADEABLE WAS WRITTEN", *args)
+        else:
+            logger.info(msg, *args)
+    except Exception as e:
+        logger.error("Nightly WHY-MOVED failed: %s", e, exc_info=True)
 
 
 async def _weekly_aggressive_check():
