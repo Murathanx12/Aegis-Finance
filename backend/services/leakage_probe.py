@@ -679,6 +679,24 @@ def mint(parsed: ParsedCall, *, snapshot: dict, prompt: str, model: str,
 
 # ── the vendor call ─────────────────────────────────────────────────────────
 
+#: The two ids the vendor actually serves, measured 2026-08-12 against the live
+#: account. `deepseek-chat` and `deepseek-reasoner` are SERVER-SIDE ALIASES and
+#: BOTH resolve to `deepseek-v4-flash`; an experiment whose arms were "chat vs
+#: reasoner" compared one model with itself. Requested names are inputs. Only
+#: `served_model`, read off the response body, is evidence.
+REAL_MODELS = ("deepseek-v4-flash", "deepseek-v4-pro")
+
+#: Thinking-on calls need an enormous completion budget or they return NOTHING.
+#: Measured: at max_tokens 300, 600, 1500 and 3000 the model spent the ENTIRE
+#: budget on reasoning tokens and returned `content_len=0` with
+#: `finish_reason="length"`. Only at 8,000 did v4-pro finish (4,039 completion
+#: tokens, of which 4,011 were reasoning, leaving 76 characters of answer). A
+#: thinking arm run at an ordinary cap does not produce a weak result — it
+#: produces a 100% zero-yield arm that looks like a parser bug.
+THINKING_MAX_TOKENS = 12000
+NO_THINKING_MAX_TOKENS = 1400
+
+
 @dataclass
 class Reply:
     text: str
@@ -688,6 +706,19 @@ class Reply:
     cached_tokens: int = 0
     latency_ms: float = 0.0
     retries: int = 0
+    #: What the vendor SAYS it ran, off the response body. Never the requested
+    #: name. `None` means the field was absent and the record is marked
+    #: `model_unverified` rather than credited to whatever was asked for.
+    served_model: str | None = None
+    #: Thinking depth, separate from answer length. Two calls can produce the
+    #: same 900-token answer having spent 40 or 4,000 tokens getting there, and
+    #: only this field tells them apart.
+    reasoning_tokens: int = 0
+    thinking: bool = False
+
+    @property
+    def model_unverified(self) -> bool:
+        return not self.served_model
 
 
 _RETRYABLE = ("429", "500", "502", "503", "504", "timeout", "timed out",
@@ -717,10 +748,26 @@ def _client(timeout: float = cfg.SWARM_TIMEOUT_S):
                   timeout=timeout, max_retries=0)
 
 
+def _reasoning_tokens(resp: Any) -> int:
+    """Reasoning tokens, defensively. Absent means zero, never a crash."""
+    u = getattr(resp, "usage", None)
+    d = getattr(u, "completion_tokens_details", None) if u is not None else None
+    if d is None and isinstance(u, dict):
+        d = u.get("completion_tokens_details")
+    v = (getattr(d, "reasoning_tokens", None)
+         if d is not None and not isinstance(d, dict) else
+         (d or {}).get("reasoning_tokens") if isinstance(d, dict) else None)
+    try:
+        return int(v or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def call_llm(system: str, user: str, *, client=None,
              model: str = cfg.SWARM_MODEL,
              temperature: float = cfg.SWARM_TEMPERATURE,
-             max_tokens: int = 1400,
+             max_tokens: int | None = None,
+             thinking: bool = False,
              max_retries: int = cfg.SWARM_MAX_RETRIES,
              since: str | None = None,
              rng: random.Random | None = None) -> Reply:
@@ -730,6 +777,14 @@ def call_llm(system: str, user: str, *, client=None,
     before each attempt. When it raises, it propagates: an exhausted budget is a
     campaign-level stop, and absorbing it into a per-cell failure count would
     make it look like vendor flakiness while the pool kept submitting work.
+
+    THINKING IS AN EXPLICIT ARGUMENT, and both states are requested by NAME.
+    `extra_body={"thinking": {"type": "disabled"}}` reproduces the
+    `deepseek-chat` signature exactly (prompt_tokens 77, no reasoning tokens,
+    content returned) while naming the real model, so the record says which
+    model ran instead of which alias was typed. Leaving thinking on the vendor's
+    default is how "chat vs reasoner" became a comparison of v4-flash with
+    itself.
     """
     from backend.services import research_budget
     from backend.services.llm_telemetry import extract_usage
@@ -738,20 +793,20 @@ def call_llm(system: str, user: str, *, client=None,
     rnd = rng or random
     retries = 0
     last: Exception | None = None
+    mt = max_tokens or (THINKING_MAX_TOKENS if thinking
+                        else NO_THINKING_MAX_TOKENS)
     t0 = time.perf_counter()
     for attempt in range(max_retries + 1):
         research_budget.require(CAMPAIGN, since=since)
         try:
-            kw: dict[str, Any] = {"model": model, "max_tokens": max_tokens,
+            kw: dict[str, Any] = {"model": model, "max_tokens": mt,
+                                  "temperature": temperature,
                                   "response_format": {"type": "json_object"},
                                   "messages": [
                                       {"role": "system", "content": system},
                                       {"role": "user", "content": user}]}
-            # deepseek-reasoner rejects `temperature`; passing it to chat and
-            # omitting it for the reasoner is the difference between the two
-            # models being comparable and one of them 400-ing every call.
-            if not str(model).endswith("reasoner"):
-                kw["temperature"] = temperature
+            if not thinking:
+                kw["extra_body"] = {"thinking": {"type": "disabled"}}
             resp = cli.chat.completions.create(**kw)
         except ResearchBudgetExhausted:
             raise
@@ -764,8 +819,17 @@ def call_llm(system: str, user: str, *, client=None,
                        * (0.5 + rnd.random()))
             continue
         u = extract_usage(resp, "deepseek")
+        served = getattr(resp, "model", None)
+        if served and str(served) != str(model):
+            # Not an error — an ALIAS. Logged at INFO rather than swallowed so a
+            # silently redirected arm is discoverable from the logs as well as
+            # from the stored field.
+            logger.info("requested model %r was served by %r", model, served)
         return Reply(text=(resp.choices[0].message.content or ""),
-                     model_version=str(getattr(resp, "model", model)),
+                     model_version=str(served or model),
+                     served_model=(str(served) if served else None),
+                     reasoning_tokens=_reasoning_tokens(resp),
+                     thinking=thinking,
                      latency_ms=(time.perf_counter() - t0) * 1000.0,
                      retries=retries, **u)
     assert last is not None
@@ -810,9 +874,16 @@ class CellResult:
             "tokens_in": (self.reply.tokens_in if self.reply else 0),
             "tokens_out": (self.reply.tokens_out if self.reply else 0),
             "cached_tokens": (self.reply.cached_tokens if self.reply else 0),
+            "reasoning_tokens": (self.reply.reasoning_tokens if self.reply else 0),
             "latency_ms": round(self.reply.latency_ms, 1) if self.reply else None,
             "retries": (self.reply.retries if self.reply else 0),
-            "model": self.extra.get("model", cfg.SWARM_MODEL),
+            "model_requested": self.extra.get("model", cfg.SWARM_MODEL),
+            # THE FIELD THAT DECIDES WHETHER A MODEL ARM MEANS ANYTHING. The
+            # requested name is what we typed; this is what ran.
+            "served_model": (self.reply.served_model if self.reply else None),
+            "model_unverified": (self.reply.model_unverified if self.reply
+                                 else True),
+            "thinking": bool(self.extra.get("thinking")),
             "model_version": (self.reply.model_version if self.reply else ""),
             "extra": self.extra,
         }
@@ -822,6 +893,7 @@ def run_cell(*, cell_id: str, condition: str, arm: str, role: str,
              item: dict, snapshot: dict, slate: list[dict],
              model: str = cfg.SWARM_MODEL,
              temperature: float = cfg.SWARM_TEMPERATURE,
+             thinking: bool = False,
              framing: str | None = None, opponent: dict | None = None,
              since: str | None = None,
              llm: Callable[..., Reply] | None = None,
@@ -847,20 +919,21 @@ def run_cell(*, cell_id: str, condition: str, arm: str, role: str,
         if viol:
             logger.warning("mask leak in %s: %s", cell_id, viol[:3])
             return CellResult(status="refused_mask", parsed=None,
-                              extra={"violations": viol[:6], "model": model},
+                              extra={"violations": viol[:6], "model": model,
+                                     "thinking": thinking},
                               **base)
 
     call = llm or call_llm
     try:
         reply = call(system, user, model=model, temperature=temperature,
-                     since=since)
+                     thinking=thinking, since=since)
     except ResearchBudgetExhausted:
         raise
     except Exception as exc:                                   # noqa: BLE001
         logger.warning("cell %s failed: %s: %s", cell_id, type(exc).__name__, exc)
         return CellResult(status="failed", parsed=None,
                           error=f"{type(exc).__name__}: {exc}"[:280],
-                          extra={"model": model}, **base)
+                          extra={"model": model, "thinking": thinking}, **base)
 
     parsed = parse_reply(role, item["ticker"], slate, reply.text)
     records = ([] if (parsed.abstained or not parsed.forecasts)
@@ -888,7 +961,11 @@ def run_cell(*, cell_id: str, condition: str, arm: str, role: str,
                     meta={"cell_id": cell_id, "condition": condition,
                           "arm": arm, "ticker": parsed.ticker,
                           "as_of": item["as_of"], "era": item["era"],
-                          "status": status, "module": MODULE_VERSION},
+                          "status": status, "module": MODULE_VERSION,
+                          "served_model": reply.served_model,
+                          "model_unverified": reply.model_unverified,
+                          "reasoning_tokens": reply.reasoning_tokens,
+                          "thinking": thinking},
                     path=telemetry_path)
     except Exception as exc:                                   # noqa: BLE001
         logger.warning("telemetry not recorded for %s (%s) — the spend is "
@@ -897,7 +974,7 @@ def run_cell(*, cell_id: str, condition: str, arm: str, role: str,
 
     r = CellResult(status=status, parsed=parsed, records=records, reply=reply,
                    extra={"model": model, "temperature": temperature,
-                          "framing": framing}, **base)
+                          "framing": framing, "thinking": thinking}, **base)
     r.extra["raw"] = parsed.raw if (opponent is None and condition == "debate") else None
     return r
 
