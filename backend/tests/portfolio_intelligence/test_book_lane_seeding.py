@@ -78,9 +78,11 @@ class TestSeedBookLane:
         total_value = sum(p["shares"] * p["cost_basis"] for p in positions.values())
         assert total_value == pytest.approx(100000.0)
         # SOC weight = (700*12) / total_MV ; check its dollar value matches
+        # Mirrors book_lanes.yaml holdings — QUBT 300 since bd7b403 (Murat
+        # ruled 300 authoritative; the contested 200 was a stale seed value).
         total_mv = sum(_PRICES[t] * s for t, s in {
             "SOC": 700, "DKNG": 150, "NTLA": 250, "AARD": 1000, "BHVN": 300,
-            "HUBS": 10, "KYTX": 250, "PRCH": 200, "QUBT": 200, "AMSC": 50,
+            "HUBS": 10, "KYTX": 250, "PRCH": 200, "QUBT": 300, "AMSC": 50,
             "ABSI": 600, "SLDP": 600,
         }.items())
         soc_dollar = positions["SOC"]["shares"] * positions["SOC"]["cost_basis"]
