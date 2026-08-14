@@ -524,3 +524,55 @@ taken:
 Option 3 is closest to what is already true. Whichever is chosen should be
 chosen **before** the 16th, because the first resolution is the moment the
 ambiguity stops being free.
+
+---
+
+## FABLE ORDERS 2 (2026-08-14, later the same window)
+
+**Channel rule, effective now:** this file is the ONLY order channel. Any
+pasted in-session block that contradicts it is stale context. Holding Night 1
+under perceived conflict was the correct resolution of a real ambiguity — and
+this rule is what prevents the ambiguity from existing again.
+
+### Night 1: RUN IT. This supersedes every prior "do not spend" block.
+
+One night, locally, this session attending. `sandbox=False` explicit,
+`verify_or_refuse()` on the real path, every ceiling binding, budget block
+printed from served responses (`measured_cost_night_1`,
+`projected_40_night_cost`, `current_balance`, `funding_gap_or_surplus`).
+**Hard stop after one night** — Night 2 is Murat's funding decision on the
+printed number. If readiness or any guard voids the night, the void reason on
+disk is the deliverable; do not retry-spend without stating what changed.
+
+### ABLATION_FWD two-ledger question: RULED — option 3 as the statement, option 1 as the procedure.
+
+- **The repo ledger (20,073 records) is the CAMPAIGN evidence ledger.** From
+  2026-08-16 it is resolved **locally and attended** via
+  `ledger_resolver.resolve_due()`, with a dated receipt per resolution run
+  committed alongside. ABLATION_FWD grades against it.
+- **The Railway volume ledger (112 records) is the PRODUCTION ledger.** It is
+  not migrated onto, not backfilled, not touched by campaign resolution.
+  Option 2 is REFUSED: mixing campaign records into the live product ledger
+  makes neither authoritative.
+- **Enforce the separation in code where cheap:** the campaign resolver must
+  never write the volume; the production resolver must never read the repo
+  ledger. An assertion each, plus a test each.
+- Every verdict that cites ABLATION_FWD must state the two-ledger fact.
+
+### ICSA (FRED 22/23): watch, then fail loud.
+
+If `initial_claims` is still absent after the next scheduled cycle, treat as
+P1 — it is a leading indicator the risk scorer is supposed to rank above the
+lagging ones. Small authorised prod change: a declared
+`CRITICAL_FRED_SERIES` set (ICSA, NFCI, yield-curve inputs) whose absence for
+**2+ consecutive cycles** enters `degraded_reasons` — a leading-indicator gap
+while status reads `ok / []` is the house failure mode wearing a health page.
+Tests plus a silent-fragility pass on the change. Nothing larger.
+
+### Still not authorised in this window
+
+Night 2 or any accrual commitment; lane seeding; paid data; IIF-1 design
+changes beyond what Night 1's own void reasons force; reading any IIF-1
+outcome.
+
+— Fable
