@@ -1,0 +1,22 @@
+{
+  "submitted": 1563,
+  "written": 0,
+  "duplicates": 1563,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\teacher_library\\events.jsonl",
+  "day": "2026-08-13",
+  "source_status": "OK_DATA",
+  "reason": "",
+  "n_index_rows": 1098,
+  "n_ownership_filings_in_index": 512,
+  "n_joint_filing_rows_collapsed": 586,
+  "n_attempted": 512,
+  "sampled": false,
+  "coverage": 1.0,
+  "n_parse_errors": 0,
+  "usable_events": 1563,
+  "n_buys": 87,
+  "n_sells": 516,
+  "started_at": "2026-08-14T15:29:38+00:00",
+  "finished_at": "2026-08-14T15:37:28+00:00",
+  "elapsed_s": 469.7
+}

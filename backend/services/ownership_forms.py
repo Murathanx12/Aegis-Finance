@@ -158,11 +158,35 @@ def parse_ownership_form(xml_text: str | bytes) -> dict:
     issuer_name = (root.findtext(".//issuer/issuerName") or "").strip()
     ticker = (root.findtext(".//issuer/issuerTradingSymbol") or "").strip().upper()
 
-    owner_name = (root.findtext(
-        ".//reportingOwner/reportingOwnerId/rptOwnerName") or "").strip()
-    owner_cik = (root.findtext(
-        ".//reportingOwner/reportingOwnerId/rptOwnerCik") or "").strip()
-    owner_cik = owner_cik.lstrip("0") or owner_cik
+    # EVERY reporting owner, not just the first.
+    #
+    # A Form 4 can be filed jointly: 2026-08-13 carried one filed by Chime
+    # Financial together with ten DST Global funds. `findtext` returns the FIRST
+    # match, so reading a single owner attributed the whole filing to whichever
+    # entity happened to be listed first and silently dropped the other ten —
+    # and joint filings are precisely the CLUSTER case the Teacher Library
+    # exists to study, so the loss would have been concentrated exactly where it
+    # mattered most.
+    owners: list[dict] = []
+    for ro in root.findall(".//reportingOwner"):
+        nm = (ro.findtext("./reportingOwnerId/rptOwnerName") or "").strip()
+        ck = (ro.findtext("./reportingOwnerId/rptOwnerCik") or "").strip()
+        ck = ck.lstrip("0") or ck
+        if not nm and not ck:
+            continue
+        owners.append({
+            "owner_name": nm or "Unknown",
+            "owner_cik": ck,
+            "is_director": _flag(ro, "./reportingOwnerRelationship/isDirector"),
+            "is_officer": _flag(ro, "./reportingOwnerRelationship/isOfficer"),
+            "is_ten_pct_owner": _flag(
+                ro, "./reportingOwnerRelationship/isTenPercentOwner"),
+            "officer_title": (
+                ro.findtext("./reportingOwnerRelationship/officerTitle")
+                or "").strip(),
+        })
+    owner_name = owners[0]["owner_name"] if owners else ""
+    owner_cik = owners[0]["owner_cik"] if owners else ""
 
     header = {
         "status": "OK_DATA",
@@ -174,6 +198,12 @@ def parse_ownership_form(xml_text: str | bytes) -> dict:
         "ticker": ticker,
         "owner_name": owner_name or "Unknown",
         "owner_cik": owner_cik,
+        # The full list, and its length. A count of one is not the same claim
+        # as "we only looked at one", and downstream cluster analysis needs to
+        # know which it is looking at.
+        "owners": owners,
+        "n_reporting_owners": len(owners),
+        "is_joint_filing": len(owners) > 1,
         "is_director": _flag(root, ".//reportingOwnerRelationship/isDirector"),
         "is_officer": _flag(root, ".//reportingOwnerRelationship/isOfficer"),
         "is_ten_pct_owner": _flag(

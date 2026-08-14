@@ -296,3 +296,108 @@ def test_a_historical_day_is_refused_unless_asked_for_explicitly():
     assert out["status"] == "REFUSED"
     assert "historical" in out["reason"]
     assert out["parsed"] == []
+
+
+# ── joint filings: the cluster case, where the loss would be concentrated ───
+
+_JOINT = """<?xml version="1.0"?>
+<ownershipDocument>
+  <documentType>4</documentType>
+  <issuer><issuerCik>0000111</issuerCik><issuerName>Chime</issuerName>
+    <issuerTradingSymbol>CHYM</issuerTradingSymbol></issuer>
+  <reportingOwner>
+    <reportingOwnerId><rptOwnerCik>0001550172</rptOwnerCik>
+      <rptOwnerName>DST Global Advisors Ltd</rptOwnerName></reportingOwnerId>
+    <reportingOwnerRelationship><isTenPercentOwner>1</isTenPercentOwner>
+    </reportingOwnerRelationship>
+  </reportingOwner>
+  <reportingOwner>
+    <reportingOwnerId><rptOwnerCik>0001745295</rptOwnerCik>
+      <rptOwnerName>DST Global VI, L.P.</rptOwnerName></reportingOwnerId>
+    <reportingOwnerRelationship><isTenPercentOwner>1</isTenPercentOwner>
+    </reportingOwnerRelationship>
+  </reportingOwner>
+  <reportingOwner>
+    <reportingOwnerId><rptOwnerCik>0001782400</rptOwnerCik>
+      <rptOwnerName>DST Global VII, L.P.</rptOwnerName></reportingOwnerId>
+    <reportingOwnerRelationship><isTenPercentOwner>1</isTenPercentOwner>
+    </reportingOwnerRelationship>
+  </reportingOwner>
+  <nonDerivativeTransaction>
+    <securityTitle><value>Class A</value></securityTitle>
+    <transactionDate><value>2026-08-12</value></transactionDate>
+    <transactionCoding><transactionCode>S</transactionCode></transactionCoding>
+    <transactionAmounts>
+      <transactionShares><value>100000</value></transactionShares>
+      <transactionPricePerShare><value>20.00</value></transactionPricePerShare>
+      <transactionAcquiredDisposedCode><value>D</value></transactionAcquiredDisposedCode>
+    </transactionAmounts>
+  </nonDerivativeTransaction>
+</ownershipDocument>"""
+
+
+def test_every_reporting_owner_is_parsed_not_just_the_first():
+    p = OF.parse_ownership_form(_JOINT)
+
+    # `findtext` returns the FIRST match, so reading one owner attributed the
+    # whole filing to whichever entity was listed first and dropped the rest.
+    # Joint filings ARE the cluster case, so the loss landed exactly where it
+    # mattered most.
+    assert p["n_reporting_owners"] == 3
+    assert p["is_joint_filing"] is True
+    assert [o["owner_cik"] for o in p["owners"]] == ["1550172", "1745295",
+                                                     "1782400"]
+    assert p["owner_cik"] == "1550172"        # lead filer, still first
+
+
+def test_a_single_owner_filing_is_not_marked_joint():
+    p = OF.parse_ownership_form(_doc(_tx("P", "A")))
+    assert p["n_reporting_owners"] == 1
+    assert p["is_joint_filing"] is False
+
+
+def test_a_joint_filing_emits_the_trade_once_and_says_it_is_joint():
+    from backend.services.teacher_library import adapters_ownership as AO
+    parsed = dict(OF.parse_ownership_form(_JOINT),
+                  accession="0001193125-26-349702", filed_date="2026-08-13",
+                  form_type="4", status="OK_DATA")
+
+    events = AO.OwnershipFormsAdapter()._events_for_filing(parsed, "2026-08-14")
+
+    # ONCE. Emitting per owner would multiply 100,000 shares by three and turn
+    # one disposal into a three-insider "cluster" that never happened.
+    assert len(events) == 1
+    assert events[0].shares == 100000
+    assert events[0].action_type == "SELL"
+    # And the attribution is declared rather than silent.
+    assert any(fl.startswith("joint_filing_lead_filer_of_3")
+               for fl in events[0].data_quality_flags)
+
+
+def test_the_index_is_deduplicated_by_accession_before_fetching(monkeypatch):
+    import datetime as dt
+    rows = [{"form_type": "4", "company": f"Co {i}", "cik": str(i),
+             "filed_date": "2026-08-13", "path": "p",
+             "accession": "0001193125-26-349702"} for i in range(11)]
+    rows.append({"form_type": "4", "company": "Other", "cik": "999",
+                 "filed_date": "2026-08-13", "path": "p",
+                 "accession": "0000000000-26-000001"})
+    monkeypatch.setattr(IDX, "fetch_index",
+                        lambda d: {"date": "2026-08-13", "status": "OK_DATA",
+                                   "filings": rows, "url": "u"})
+    fetched = []
+    monkeypatch.setattr(IDX, "fetch_filing_document",
+                        lambda cik, acc: fetched.append(acc) or _doc(_tx("P", "A")))
+
+    out = IDX.collect_day(dt.date(2026, 8, 13), allow_historical=True,
+                          today=dt.date(2026, 8, 14))
+
+    # One Chime/DST filing appeared eleven times in the real 2026-08-13 index.
+    # Fetching per row asked SEC for the same document eleven times.
+    assert len(fetched) == 2
+    assert out["n_index_rows"] == 12
+    assert out["n_ownership_filings_in_index"] == 2
+    assert out["n_joint_filing_rows_collapsed"] == 10
+    # Coverage of DOCUMENTS. Against index rows it would read 1.000 while
+    # eleven of them were one file.
+    assert out["coverage"] == 1.0

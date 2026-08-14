@@ -49,6 +49,7 @@ EXPECTED_JOB_IDS: frozenset[str] = frozenset({
     "pi_congress_collect",
     "pi_ledger_resolve",
     "pi_why_moved",
+    "pi_ownership_collect",
 })
 
 
@@ -147,6 +148,24 @@ def setup_scheduler():
         name="Prediction-ledger auto-resolution",
         replace_existing=True,
         misfire_grace_time=3600,
+    )
+
+    # Teacher Library ownership collection (Forms 3/4/5), daily.
+    #
+    # 06:00 ET, and the hour is the whole design. EDGAR publishes a day's
+    # `form.YYYYMMDD.idx` AFTER that filing day closes, so the collector always
+    # works one day behind — which is not a lag to engineer away, it is what
+    # makes the corpus point-in-time by construction. Nothing here can see a
+    # filing before the world did. Asking for today's index instead returns
+    # S3's 403 AccessDenied, indistinguishable from a block, which is why
+    # `fetch_index` checks the directory listing and reports NOT_YET_PUBLISHED.
+    _scheduler.add_job(
+        _ownership_collect,
+        CronTrigger(hour=6, minute=0, timezone="US/Eastern"),
+        id="pi_ownership_collect",
+        name="Teacher Library ownership-forms collection",
+        replace_existing=True,
+        misfire_grace_time=6 * 3600,
     )
 
     # WHY-MOVED, nightly. 17:15 ET — after the 16:30 mark-to-market and the
@@ -838,6 +857,75 @@ async def _congress_morning_collect():
                     "(descriptive)", cg.get("status"), cg.get("n"), cg.get("nonzero"))
     except Exception as e:
         logger.error("Congress-IC morning collection failed: %s", e, exc_info=True)
+
+
+async def _ownership_collect():
+    """Daily Teacher Library collection: yesterday's Forms 3/4/5.
+
+    ZERO EVENTS IS A WARNING, NOT A QUIET SUCCESS. The house failure mode is a
+    collector that runs green and produces nothing forever, and this project has
+    already shipped one: the insider collector passed twelve tests while 403-ing
+    on 100% of production fetches. So the log line always carries the counts,
+    both directions, and any run that writes nothing says so loudly.
+    """
+    import asyncio
+    from datetime import datetime, timedelta, timezone
+
+    from backend.services.teacher_library import adapters_ownership as AO
+
+    day = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
+    try:
+        res = await asyncio.to_thread(AO.collect_and_append, day)
+        await asyncio.to_thread(_write_collection_receipt, day, res)
+        status = res.get("source_status")
+        if status == "NOT_YET_PUBLISHED":
+            # Expected near the boundary, and named rather than counted as a
+            # failure — EDGAR simply had not posted the index yet.
+            logger.warning("Ownership collect %s: index not yet published", day)
+        elif res.get("written", 0) == 0:
+            logger.warning(
+                "Ownership collect %s produced NO new events (status=%s "
+                "reason=%s documents=%s attempted=%s parse_errors=%s "
+                "duplicates=%s) — a collector that writes nothing looks "
+                "identical to a quiet day and to a dead fetch path",
+                day, status, res.get("reason"),
+                res.get("n_ownership_filings_in_index"),
+                res.get("n_attempted"), res.get("n_parse_errors"),
+                res.get("duplicates"))
+        else:
+            logger.info(
+                "Ownership collect %s: documents=%s attempted=%s coverage=%.3f "
+                "written=%s duplicates=%s usable=%s BUY=%s SELL=%s "
+                "parse_errors=%s",
+                day, res.get("n_ownership_filings_in_index"),
+                res.get("n_attempted"), res.get("coverage", 0.0),
+                res.get("written"), res.get("duplicates"),
+                res.get("usable_events"), res.get("n_buys"), res.get("n_sells"),
+                res.get("n_parse_errors"))
+    except Exception as e:                                     # noqa: BLE001
+        logger.error("Ownership collect failed for %s: %s", day, e,
+                     exc_info=True)
+
+
+def _write_collection_receipt(day: str, res: dict) -> None:
+    """A dated receipt per collection run. Never raises."""
+    try:
+        import json
+        from datetime import datetime, timezone
+
+        from backend import config as _config
+        d = (_config.OPTIMUS_LEDGER_DIR / "teacher_library"
+             / "collection_receipts")
+        d.mkdir(parents=True, exist_ok=True)
+        body = dict(res)
+        body["job"] = "pi_ownership_collect"
+        body["ran_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        (d / f"{day}.json").write_text(json.dumps(body, indent=2, default=str),
+                                       encoding="utf-8")
+    except Exception as exc:                                   # noqa: BLE001
+        logger.error("collection receipt write FAILED (%s: %s) — the run was "
+                     "unaffected but left no evidence it happened",
+                     type(exc).__name__, exc)
 
 
 def _write_resolver_receipt(report: dict) -> None:

@@ -81,12 +81,16 @@ def main(argv: list[str] | None = None) -> int:
     print(f"day                 {day}")
     print(f"source status       {res.get('source_status')} "
           f"{res.get('reason', '')}")
-    print(f"filings in index    {res.get('n_ownership_filings_in_index')}")
+    print(f"index rows          {res.get('n_index_rows')}  "
+          f"({res.get('n_joint_filing_rows_collapsed')} joint-filing rows "
+          f"collapsed)")
+    print(f"distinct documents  {res.get('n_ownership_filings_in_index')}")
     print(f"attempted           {res.get('n_attempted')}"
           + ("   [SAMPLE — not the day]" if res.get("sampled") else ""))
     print(f"coverage            {res.get('coverage', 0.0):.3f}")
     print(f"parse errors        {res.get('n_parse_errors')}")
-    print(f"events appended     {res.get('appended')}  "
+    print(f"events submitted    {res.get('submitted')}")
+    print(f"events written      {res.get('written')}  "
           f"(duplicates skipped {res.get('duplicates', 0)})")
     print(f"usable events       {res.get('usable_events')}")
     # Both directions, side by side, always. A collector that printed only the

@@ -237,7 +237,22 @@ def collect_day(d: date | str, *, limit: int | None = None,
     if idx["status"] != "OK_DATA":
         return {**idx, "parsed": [], "n_parsed": 0, "n_parse_errors": 0}
 
-    filings = idx["filings"]
+    # ONE FETCH PER DOCUMENT, NOT PER INDEX ROW.
+    #
+    # A jointly-filed Form 4 appears once per reporting entity: 2026-08-13 held
+    # 1,098 ownership rows covering only 512 distinct accessions, and one filing
+    # (Chime Financial with ten DST Global funds) appeared eleven times. Fetching
+    # per row asked SEC for the same document eleven times, doubled the run to
+    # 28 minutes, and then reported "1,098 attempted" for 512 documents — a
+    # coverage figure describing work rather than data.
+    seen_acc: set[str] = set()
+    filings = []
+    for f in idx["filings"]:
+        if f["accession"] in seen_acc:
+            continue
+        seen_acc.add(f["accession"])
+        filings.append(f)
+    n_index_rows = len(idx["filings"])
     truncated = limit is not None and len(filings) > limit
     if truncated:
         # Announced, never silent. A capped run that reported its parsed count
@@ -265,11 +280,14 @@ def collect_day(d: date | str, *, limit: int | None = None,
         "date": d.isoformat(),
         "status": "OK_DATA",
         "url": idx.get("url"),
-        "n_ownership_filings_in_index": len(idx["filings"]),
+        "n_index_rows": n_index_rows,
+        "n_ownership_filings_in_index": len(seen_acc),
+        "n_joint_filing_rows_collapsed": n_index_rows - len(seen_acc),
         "n_attempted": len(filings),
         "sampled": truncated,
-        "coverage": (len(filings) / len(idx["filings"])
-                     if idx["filings"] else 0.0),
+        # Coverage of DOCUMENTS, which is the thing that can be missed. Against
+        # index rows it would read 1.000 while eleven of them were one file.
+        "coverage": (len(filings) / len(seen_acc)) if seen_acc else 0.0,
         "n_parsed": len(parsed) - errors,
         "n_parse_errors": errors,
         "parsed": parsed,

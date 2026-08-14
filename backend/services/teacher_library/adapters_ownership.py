@@ -125,6 +125,15 @@ class OwnershipFormsAdapter:
                 flags.append("rule_10b5_1_unknown")
             if not ticker:
                 flags.append("no_trading_symbol_on_filing")
+            n_owners = int(f.get("n_reporting_owners") or 1)
+            if n_owners > 1:
+                # ONE event per transaction, attributed to the LEAD filer, and
+                # said so. A jointly-filed Form 4 reports the group's trade
+                # once; emitting it once per owner would multiply the share
+                # count by the number of co-filers and turn one purchase into
+                # an eleven-insider "cluster" that never happened. Attributing
+                # it silently to the first name would be the opposite error.
+                flags.append(f"joint_filing_lead_filer_of_{n_owners}")
 
             try:
                 rows.append(TeacherEvent(
@@ -211,8 +220,11 @@ def collect_and_append(day: str, *, path=None, limit: int | None = None,
         "day": day,
         "source_status": payload.get("status"),
         "reason": payload.get("reason", ""),
+        "n_index_rows": payload.get("n_index_rows", 0),
         "n_ownership_filings_in_index":
             payload.get("n_ownership_filings_in_index", 0),
+        "n_joint_filing_rows_collapsed":
+            payload.get("n_joint_filing_rows_collapsed", 0),
         "n_attempted": payload.get("n_attempted", 0),
         "sampled": payload.get("sampled", False),
         "coverage": payload.get("coverage", 0.0),
