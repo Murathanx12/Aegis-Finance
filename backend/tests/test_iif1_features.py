@@ -115,8 +115,13 @@ def test_unavailable_features_are_omitted_so_the_scorer_discloses_them(monkeypat
     assert feats["filing_within_2d"] is False       # OK_EMPTY IS a measurement
     assert "price" in snap["unavailable"]["XYZ"]
 
+    # The scorer never sees a fabricated number for anything it could not
+    # measure. Here that also means the liquidity floor is unverifiable, so the
+    # name is excluded rather than admitted on the strength of two booleans.
     c = TR.score_candidate("XYZ", feats)
-    assert "missing" in c.reason and "abs_resid_return_z_1d" in c.reason
+    assert "abs_resid_return_z_1d" not in c.components
+    assert not c.eligible
+    assert "liquidity unverifiable" in c.reason
 
 
 # ── the filing clock is acceptance, not date ────────────────────────────────

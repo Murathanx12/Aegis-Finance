@@ -121,9 +121,27 @@ def score_candidate(ticker: str, feats: dict) -> TriggerCandidate:
     price = _num(feats.get("price"))
     dv = _num(feats.get("dollar_volume_20d"))
     eligible, reason = True, ""
-    if price is not None and price < MIN_PRICE:
+    if price is None or dv is None:
+        # THE FLOOR CANNOT BE WAIVED BY IGNORANCE.
+        #
+        # This read `if price is not None and price < MIN_PRICE`, so a security
+        # with NO price data skipped the check entirely and was admitted. Found
+        # by the first full-universe assembly: MMC, PXD and SQ returned no price
+        # series at all (stale/renamed symbols) and came through ELIGIBLE, with
+        # every liquidity guard silently inapplicable.
+        #
+        # The floor exists because a name that cannot be priced reliably cannot
+        # be GRADED reliably, and "no price at all" is the limiting case of that,
+        # not an exemption from it. An unmeasured security is not a liquid one.
+        unmeasured = [n for n, v in (("price", price),
+                                     ("dollar_volume_20d", dv)) if v is None]
+        eligible, reason = False, (
+            f"liquidity unverifiable: {','.join(unmeasured)} unavailable — "
+            f"excluded rather than admitted, because the floor cannot be "
+            f"cleared by a value nobody has")
+    elif price < MIN_PRICE:
         eligible, reason = False, f"price {price:.2f} < {MIN_PRICE}"
-    elif dv is not None and dv < MIN_DOLLAR_VOLUME_20D:
+    elif dv < MIN_DOLLAR_VOLUME_20D:
         eligible, reason = False, f"dollar volume {dv:,.0f} below floor"
     elif len(missing) == len(TRIGGER_WEIGHTS):
         # Every component missing is not a calm security, it is an unmeasured

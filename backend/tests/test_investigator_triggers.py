@@ -108,10 +108,14 @@ def test_a_security_with_no_features_at_all_is_excluded_not_ranked_zero():
 
 
 def test_nan_and_junk_are_treated_as_missing_not_as_numbers():
+    # Liquidity is supplied so this test measures COMPONENT parsing and not the
+    # liquidity floor. Without it the name is excluded for an unrelated reason
+    # and the assertion below would pass for the wrong one.
     c = TR.score_candidate("A", {"abs_resid_return_z_1d": float("nan"),
                                  "volume_z_20d": "banana",
                                  "earnings_within_5d": False,
-                                 "filing_within_2d": False})
+                                 "filing_within_2d": False,
+                                 "price": 100.0, "dollar_volume_20d": 1e9})
     assert "abs_resid_return_z_1d" not in c.components
     assert "volume_z_20d" not in c.components
     assert c.eligible          # the two boolean components still measured
@@ -193,3 +197,53 @@ def test_the_guard_names_what_diverged():
     with pytest.raises(ValueError) as e:
         TR.assert_arms_share_cells({"A_snapshot": ["X", "Y"], "B_tools": ["X"]})
     assert "Y" in str(e.value)
+
+
+# ── the liquidity floor cannot be waived by ignorance ───────────────────────
+
+def test_a_security_with_no_price_is_excluded_not_admitted():
+    """Found by the first full-universe assembly: MMC, PXD and SQ returned no
+    price series (stale/renamed symbols) and came through ELIGIBLE, because the
+    floor read `if price is not None and price < MIN_PRICE`.
+
+    The floor exists because a name that cannot be PRICED reliably cannot be
+    GRADED reliably. "No price at all" is the limiting case of that, not an
+    exemption from it.
+    """
+    f = _f(z=9.0)
+    del f["price"]
+    c = TR.score_candidate("MMC", f)
+    assert not c.eligible
+    assert "liquidity unverifiable" in c.reason and "price" in c.reason
+
+
+def test_a_security_with_no_dollar_volume_is_excluded_too():
+    f = _f(z=9.0)
+    del f["dollar_volume_20d"]
+    c = TR.score_candidate("PXD", f)
+    assert not c.eligible
+    assert "dollar_volume_20d" in c.reason
+
+
+def test_nan_liquidity_is_treated_as_unmeasured_not_as_a_number():
+    f = _f(z=9.0, price=float("nan"))
+    assert not TR.score_candidate("X", f).eligible
+
+
+def test_an_unpriceable_name_cannot_reach_the_trigger_list():
+    """The property that actually matters: a name nobody can price must not be
+    able to consume one of the forty paid slots."""
+    feats = {"GOOD": _f(z=1.0)}
+    bad = _f(z=9.0)                       # the highest score in the universe
+    del bad["price"]
+    feats["STALE"] = bad
+    out = TR.select_triggers(feats, k=2)
+    assert out["tickers"] == ["GOOD"]
+    assert out["n_excluded"] == 1
+    assert any(r["ticker"] == "STALE" for r in out["excluded"])
+
+
+def test_measured_liquidity_still_passes_and_still_fails_on_its_merits():
+    assert TR.score_candidate("A", _f(z=1.0)).eligible
+    assert not TR.score_candidate("B", _f(z=1.0, price=2.0)).eligible
+    assert not TR.score_candidate("C", _f(z=1.0, dv=1e5)).eligible
