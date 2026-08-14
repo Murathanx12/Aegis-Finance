@@ -80,7 +80,11 @@ around it.
 
 ---
 
-## The four tracks
+## The tracks
+
+A–D were written 2026-08-14 from the post-arena position; **E was added the same
+day** on Murat's direction and is the only one whose subject is a new *data
+class* rather than a new method.
 
 ### Track A — close out GRAND-ARENA (small, mostly waiting)
 
