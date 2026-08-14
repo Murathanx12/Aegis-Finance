@@ -47,6 +47,19 @@ async def _prewarm_cache():
     """
     import asyncio
     set_cache_status("pending")
+
+    def _note_no_fred_fetch(reason: str) -> None:
+        """A prewarm that died before/inside the FRED fetch left NOTHING on the
+        health page: zero recorded passes reads the same as a quiet, healthy
+        one. Say it instead."""
+        try:
+            from backend.services import fred_health
+            if fred_health.fetch_passes() == 0:
+                fred_health.record_no_fetch(reason)
+        except Exception:                                      # noqa: BLE001
+            logger.error("could not record the missing FRED pass — the health "
+                         "page cannot see this gap", exc_info=True)
+
     try:
         from backend.services.data_fetcher import DataFetcher
         fetcher = DataFetcher()
@@ -62,9 +75,11 @@ async def _prewarm_cache():
     except asyncio.TimeoutError:
         logger.warning("Cache prewarm timeout — running in degraded mode")
         set_cache_status("failed", "timeout")
+        _note_no_fred_fetch("cache prewarm timed out")
     except Exception as e:
         logger.warning("Cache prewarm failed (non-fatal): %s", e)
         set_cache_status("failed", str(e))
+        _note_no_fred_fetch(f"cache prewarm failed: {e}")
 
     # Background warm of PI fast-lane metrics so /compare is instant.
     # Heavy walk-forward replays are NOT prewarmed — they run on-demand from
@@ -659,6 +674,17 @@ async def health_full():
     except Exception as e:
         investment_committee_health = {"status": "DEGRADED", "error": str(e)}
 
+    # A leading indicator can vanish from the feature set for a whole cache TTL
+    # without anything failing: the fetch drops the key and every consumer skips
+    # what is not there. 22/23 loaded reads as fine. It is not fine when the one
+    # missing is ICSA.
+    try:
+        from backend.services import fred_health as _fh
+        fred_source_health = _fh.health()
+    except Exception as e:                                     # noqa: BLE001
+        fred_source_health = {"status": "DEGRADED", "error": str(e),
+                              "degraded_reasons": ["fred health unreadable"]}
+
     cs = cache_status()
     # The top-level status was hardcoded "ok", which made the prod monitor's
     # status check decorative: prediction_ledger could sit DEGRADED for weeks
@@ -679,6 +705,9 @@ async def health_full():
         _degraded_reasons.append(f"scheduler job missing: {_jid}")
     for _jid in ((sched.get("jobs") or {}).get("unexpected") or []):
         _degraded_reasons.append(f"scheduler job undeclared: {_jid}")
+    # Named, never counted: "fred degraded" would send the next reader hunting
+    # through 23 series to find out which one stopped arriving.
+    _degraded_reasons.extend(fred_source_health.get("degraded_reasons") or [])
     return {
         "status": "ok" if not _degraded_reasons else "DEGRADED",
         "degraded_reasons": _degraded_reasons,
@@ -701,6 +730,7 @@ async def health_full():
         "prediction_ledger": prediction_ledger,
         "investment_committee": investment_committee_health,
         "data_sources": source_health(),
+        "fred_health": fred_source_health,
         "recent_warnings": recent_warnings(),
     }
 

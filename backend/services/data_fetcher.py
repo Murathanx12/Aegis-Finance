@@ -430,14 +430,21 @@ class DataFetcher:
         Returns:
             dict mapping series name to pd.Series of values
         """
+        # A pass that never happens must not read as a clean one. Both of these
+        # returned an empty dict and recorded nothing at all, so every critical
+        # series sat at `passes_seen == 0` and the health page said nothing.
+        from backend.services import fred_health as _fh
+
         if not api_keys.has("fred"):
             logger.warning("FRED_API_KEY not set, skipping FRED data")
+            _fh.record_no_fetch("FRED_API_KEY not set")
             return {}
 
         try:
             from fredapi import Fred
         except ImportError:
             logger.warning("fredapi not installed, skipping FRED data")
+            _fh.record_no_fetch("fredapi not installed")
             return {}
 
         logger.info("Fetching macroeconomic indicators from FRED (parallel)...")
@@ -471,6 +478,17 @@ class DataFetcher:
         logger.info(
             "Loaded %d/%d FRED series", len(results), len(series_ids)
         )
+        # A critical series that failed this pass is served from the last known
+        # good where one exists, and reported STALE_USABLE either way. Before
+        # this, a failed fetch simply removed the key, `get_macro_features`
+        # skipped it, and the composite quietly changed what it measures for a
+        # whole cache TTL while the health page read ok / [].
+        try:
+            from backend.services import fred_health
+            results = fred_health.record_pass(results, series_ids)
+        except Exception as e:                                 # noqa: BLE001
+            logger.error("FRED health accounting failed (%s: %s) — series "
+                         "status is now UNKNOWN for this pass", type(e).__name__, e)
         try:
             from backend.observability import record_fred_fetch
             failed = [n for n in series_ids if n not in results]

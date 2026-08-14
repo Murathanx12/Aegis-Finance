@@ -54,6 +54,34 @@ US_MARKET_HOLIDAYS = {
 }
 
 
+# ── Critical FRED inputs (services/fred_health.py) ────────────────────────────
+# Series whose absence is a MODEL INPUT DEGRADATION, not a temporary source
+# miss. The distinction is the whole point: `fetch_fred_data` drops a failed
+# series from its result dict and `get_macro_features` skips any key that is not
+# there, so a leading indicator can vanish for a day — the FRED cache TTL is
+# 86,400s — while /api/health/full reads `ok` with an empty degraded_reasons.
+# That is the house failure mode wearing a health page.
+#
+# These are the LEADING inputs. The programme's own feature-importance
+# requirement is that leading indicators (ICSA, NFCI, the yield curve) rank
+# ABOVE lagging ones, so their silent disappearance changes what the composite
+# is measuring — not merely how precisely.
+CRITICAL_FRED_SERIES = (
+    "initial_claims",        # ICSA — weekly, the fastest labour signal there is
+    "initial_claims_4wk",    # IC4WSA
+    "nfci",                  # Chicago Fed National Financial Conditions Index
+    "yield_spread",          # T10Y3M
+    "hy_oas",                # high-yield spread
+)
+# A failed fetch may fall back to the last known good series for this long. The
+# fallback is USED and DISCLOSED (STALE_USABLE), never silently substituted.
+# 48h covers a weekly series missing one daily fetch plus a retry window.
+FRED_LKG_TTL_HOURS = 48
+# Consecutive failed fetch passes before a critical series enters
+# degraded_reasons. One miss is a transient; two is a pattern.
+FRED_DEGRADED_AFTER_MISSES = 2
+
+
 # ── Prediction-ledger resolver (services/ledger_resolver.py) ──────────────────
 # Calendar-day pad prepended to the earliest due record's made_at when fetching
 # a fresh price panel — covers weekend/holiday gaps so the first bar of the
