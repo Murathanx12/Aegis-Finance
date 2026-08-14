@@ -304,10 +304,20 @@ Build order:
 6. **Teachers are features and weak labels, never training targets.**
    Supervised targets remain realised outcomes (residual return, vol,
    covariance, drawdown, event response).
-7. **No shadow lanes on day 1.** Feature-level results earn lanes; lanes go
-   through `seed-a-lane` (attended, Murat flips flags). Paid normalizers
-   (Quiver/Capitol Trades) are an attended purchase decision taken only after
-   the free Tier-1 build measures the gap they'd close.
+7. **No RESEARCH shadow lanes on day 1.** Feature-level results earn research
+   lanes; lanes go through `seed-a-lane` (attended, Murat flips flags). Paid
+   normalizers (Quiver/Capitol Trades) are an attended purchase decision taken
+   only after the free Tier-1 build measures the gap they'd close.
+8. **One PRODUCT lane is authorised by Murat (2026-08-14): `TEACHER-COPY`** —
+   a paper account that literally copies flagged public actors' disclosed
+   portfolios (insider clusters and/or congressional disclosures). This is a
+   product-side decision, explicitly NOT a research claim, and it is his to
+   make. Conditions that keep it honest anyway: entries only at `public_at`
+   (never `transaction_date`); a risk-matched benchmark plus SPY beside it
+   from day one; labelled `PRODUCT_LANE` in the lane YAML so no verdict ever
+   cites it as evidence; seeded through `seed-a-lane` (attended, env-gated).
+   Run this way it costs nothing extra and doubles as a live measurement of
+   the disclosure-delay problem the literature predicts.
 
 **Sequencing:** TL-1 starts after IIF-1's Night 1 is running cleanly — the
 pilot does not share attention with a new lane's build-out.
