@@ -1,0 +1,247 @@
+# COPY-LAB v1 — the SEEDED lane configuration
+# =============================================================================
+# This file is the config whose hash identifies every COPY-LAB segment from
+# inception. It is separate from:
+#
+#   * `paper_portfolios.yaml` — the live research book. Its hash identifies ten
+#     lanes accruing since 2026-06-08 and nothing here may perturb it.
+#   * `teacher_copy_lanes.yaml` — the seed-READY spec, kept as written history.
+#     A seeded config gets its own file rather than an in-place edit, because an
+#     edited YAML reuses an old content hash and corrupts segment identity.
+#
+# WHAT THESE LANES ARE
+# --------------------
+# PRODUCT_EXPERIMENT. FORWARD PAPER. NOT VALIDATED ALPHA.
+# They may run before statistical certification — that is what a paper lane is
+# for — but no verdict, research document or product surface may cite them as
+# evidence of skill. `validation_status: PRODUCT_EXPERIMENT` is on every lane so
+# the distinction is machine-checkable rather than remembered.
+#
+# THE RULE THE NUMBERS REST ON
+# ----------------------------
+# Entry is at `public_at` and fills at the NEXT session's open after it. Never
+# the actor's transaction date, and never the same session. A lane entering on
+# the transaction date measures a portfolio nobody could have held.
+#
+# NO RETROACTIVE FILLS. A lane's clock starts at `seeded_at`; an event that was
+# public before that is ineligible forever, however attractive it looks. The
+# historical events in the Teacher Library are research material for a
+# pre-registered study, not forward paper performance.
+
+version: 1
+config_version: copy_lab_v1
+label: PRODUCT_LANE
+validation_status: PRODUCT_EXPERIMENT
+created: 2026-08-14
+authorised_by: "Murat directive 2026-08-14 (ORDER 4), ratified docs/IIF1_PRE_NIGHT_1_CHECKLIST.md FABLE ORDERS 3"
+spec: docs/TEACHER_LIBRARY_COPY_LAB.md
+namespace: copy_lab          # its own ledger; never the research book's tables
+
+defaults:
+  notional_usd: 100000.0
+  entry_timestamp_field: public_at
+  fill: next_session_open_after_public_at
+  no_retroactive_fills: true
+  transaction_cost_bps: 5
+  slippage_bps: 10
+  sizing: equal_weight_target      # see services/copy_lab/engine.py SIZING
+  target_weight: 0.05
+  max_single_name: 0.05
+  max_positions: 20
+  min_price: 5.0
+  min_dollar_volume_20d: 5000000.0
+  max_pct_of_adv_20d: 0.01         # a paper fill still has to be plausible
+  unfilled_expiry_sessions: 3      # a signal that cannot fill expires, loudly
+  cash_yield_source: fred:DTB3
+  corporate_actions: adjust
+  delisting: liquidate_at_last_price
+  benchmarks:
+    - SPY
+    - risk_matched
+
+metrics:
+  - nav
+  - excess_return_vs_spy
+  - excess_return_vs_risk_matched
+  - volatility
+  - sharpe
+  - sortino
+  - max_drawdown
+  - turnover
+  - hit_rate
+  - beta
+  - sector_exposure
+  - copyability_lag_days
+  - contribution_by_actor
+  - contribution_by_action_type
+  - contribution_by_disclosure_lag_bucket
+
+# ── ACTIVE ───────────────────────────────────────────────────────────────────
+# Two lanes, and only two, because two sources are live end to end on real SEC
+# data. A lane whose source is not live would accrue an inception date against
+# an empty feed — a track record of a strategy that never ran.
+lanes:
+
+  CORPORATE_INSIDER_CLUSTER:
+    active: true
+    source: sec_form4
+    actor_type: CORPORATE_INSIDER
+    action_types: [BUY]
+    thesis: >
+      Multiple INDEPENDENT Section 16 insiders making open-market purchases in
+      the same issuer within a bounded window. The cluster is the signal; a
+      single buy is not.
+    entry_rule: n_distinct_actors >= 2 within 30 calendar days, each public_at <= entry
+    cluster_window_days: 30
+    min_distinct_actors: 2
+    exit_rule: time_stop at holding_days; no discretionary exit
+    holding_days: 126
+    benchmark: SPY
+
+  ACTIVIST_13D:
+    active: true
+    source: sec_13d
+    actor_type: ACTIVIST_INVESTOR
+    action_types: [ACTIVIST_STAKE]
+    thesis: >
+      A >5% crossing with declared control intent. Economically different from
+      passive ownership, and since 2023 the initial deadline is five business
+      days — a far faster public clock than 13F.
+    entry_rule: first ACTIVIST_STAKE event per issuer, public_at <= entry
+    exit_rule: time_stop at holding_days
+    holding_days: 252
+    benchmark: SPY
+
+# ── CREATED, INACTIVE ────────────────────────────────────────────────────────
+# Defined now so the design is fixed before the data arrives, and inactive so
+# nothing accrues against a feed that does not exist. `blocked_by` says what
+# would have to be true, and `SOURCE_UNAVAILABLE` is an honest state.
+
+  CORPORATE_INSIDER_OPPORTUNISTIC:
+    active: false
+    source: sec_form4
+    actor_type: CORPORATE_INSIDER
+    thesis: >
+      A purchase unusual FOR THAT INSIDER — first buy after a long sell-only
+      history, or large relative to their own past size. Actor-relative, never
+      dollar-absolute.
+    holding_days: 126
+    blocked_by: needs per-insider history from SEC bulk Form 3/4/5 (ORDER 6)
+
+  CONGRESS_DISCLOSURE_COPY:
+    active: false
+    source: house_senate_ptr
+    actor_type: POLITICIAN
+    thesis: >
+      Naive copy at disclosure. The STOCK Act literature's mean-politician null
+      is the STATED PRIOR. The question is how much survives a legal 45-day
+      reporting window.
+    holding_days: 126
+    sizing_note: >
+      Disclosed amounts are RANGES. Sizing is the lane's fixed target weight —
+      a range is never collapsed to a midpoint and called a position size.
+    blocked_by: adapter not built (ORDER 9)
+
+  CONGRESS_CONTEXTUAL:
+    active: false
+    source: house_senate_ptr
+    actor_type: POLITICIAN
+    thesis: >
+      Committee/domain relevance as a conditioning variable rather than copying
+      every disclosure.
+    holding_days: 126
+    blocked_by: adapter not built; committee mapping not built (ORDER 9)
+
+  SPECIALIST_13F_INITIATION:
+    active: false
+    source: sec_13f
+    actor_type: HEDGE_FUND_MANAGER
+    thesis: A domain-specialist manager INITIATING a high-weight position.
+    holding_days: 189
+    mandatory_control: >
+      Raw 13F popularity (top-3-holding manager count) is a CORPSE with a
+      net-negative book. This lane runs beside that corpse or it is a dead test
+      under a new name.
+    blocked_by: 13F adapter not built (ORDER 10)
+
+  SPECIALIST_13F_CONVICTION_ADD:
+    active: false
+    source: sec_13f
+    actor_type: HEDGE_FUND_MANAGER
+    thesis: A material weight increase in an existing high-conviction position.
+    holding_days: 189
+    blocked_by: 13F adapter not built (ORDER 10)
+
+  PUBLIC_FUND_TRAJECTORY:
+    active: false
+    source: sec_nport
+    actor_type: FUND_MANAGER
+    thesis: >
+      Trajectory rather than snapshot — initiation, accumulation, reduction,
+      synchronized fund behaviour.
+    holding_days: 189
+    blocked_by: N-PORT ingestion not built (ORDER 11)
+
+  ARK_PUBLIC_ACTIONS:
+    active: false
+    source: ark_daily_disclosure
+    actor_type: TRACKER_PORTFOLIO
+    thesis: Daily published trades — an unusually fast public clock.
+    holding_days: 63
+    blocked_by: adapter not built; TRIAL-ARK-IC is already accruing and must not be re-registered
+
+  CRAMER_FOLLOW:
+    active: false
+    source: public_recommendation_feed
+    actor_type: MEDIA_RECOMMENDER
+    thesis: Follow timestamped public recommendations.
+    holding_days: 63
+    blocked_by: SOURCE_UNAVAILABLE — no timestamped feed ingested
+
+  CRAMER_INVERSE:
+    active: false
+    source: public_recommendation_feed
+    actor_type: MEDIA_RECOMMENDER
+    thesis: >
+      The mirror of CRAMER_FOLLOW, declared NOW and as a separate lane so both
+      pay their own costs. Choosing the direction after seeing performance is
+      outcome-shopping; declaring both in advance is not.
+    holding_days: 63
+    blocked_by: SOURCE_UNAVAILABLE — no timestamped feed ingested
+
+  CALACANIS_PUBLIC_COPY:
+    active: false
+    source: unidentified
+    actor_type: PUBLIC_INVESTOR
+    thesis: >
+      Copy publicly observable actions. Private-startup investment history is
+      NOT a liquid public-stock portfolio and may not stand in for one.
+    holding_days: 126
+    blocked_by: >
+      SOURCE_UNAVAILABLE — no public signal with reconstructable timestamps has
+      been identified. Nobody guesses a dataset into existence.
+
+  CROSS_TEACHER_CONSENSUS:
+    active: false
+    source: multi
+    thesis: >
+      Independent channels agreeing. Requires effective_independent_teacher_count:
+      three trackers derived from one SEC filing are ONE lineage, not three votes.
+    holding_days: 126
+    blocked_by: needs >= 2 independent live sources and the lineage graph (ORDER 15)
+
+  TEACHER_COMPOSITE_LEARNED:
+    active: false
+    source: multi
+    thesis: A learned combination over teacher features.
+    holding_days: 126
+    blocked_by: >
+      needs the reliability tensor to be estimated from RESOLVED outcomes.
+      Nothing routes or allocates on reliability before then.
+
+seeding:
+  attended: true
+  procedure: .claude/skills/seed-a-lane
+  env_gated: true
+  env_flag: AEGIS_SEED_COPY_LAB
+  authorised: true          # Murat's ORDER 4; the session still never sets the flag

@@ -1,8 +1,47 @@
 # TEACHER-LIBRARY-1 / COPY-LAB — design and status
 
-**Status 2026-08-14: substrate built, TWO sources live end to end on real SEC
-data (Form 4 and Schedule 13D/G), 22 events in the ledger. No lane seeded. No
-hypothesis evaluated. $0.00 spent.**
+**Status 2026-08-14 (later): substrate live, and COPY-LAB is now SEEDED.**
+Two sources on real SEC data (Form 4 and Schedule 13D/G), 22 events. Two lanes
+seeded `2026-08-14T12:46:47Z` — `CORPORATE_INSIDER_CLUSTER` and `ACTIVIST_13D`
+— under config `copy_lab_lanes_v1.yaml`; twelve more lanes created inactive with
+a stated blocker each. No hypothesis evaluated. $0.00 spent by this package.
+
+## Seeding, and what the first pass actually did
+
+Authorised by Murat's ORDER 4 (2026-08-14), executed through `seed-a-lane`:
+own config file, own hash, own ledger namespace
+(`<ledger>/copy_lab/<lane>/`), `lane-integrity-check` green on both sides —
+all nine tracked lane YAMLs byte-identical, `paper_portfolios.yaml` hash
+`CBAFBFE0…` unchanged, the PI suite 771 green.
+
+The first pass found one qualifying insider cluster and **refused it**:
+
+```
+CORPORATE_INSIDER_CLUSTER   5 events considered, 1 signal, 1 INELIGIBLE
+  public_at 2026-08-04 is not after the lane's inception 2026-08-14 —
+  historical events are research material, never forward paper performance
+ACTIVIST_13D                0 events considered
+```
+
+That refusal is the deliverable. The lane's NAV is empty and will stay empty
+until a qualifying event is disclosed *after* seeding, which is what an honest
+forward record looks like on day zero.
+
+`ACTIVIST_13D` sees nothing because the ledger's 13D/G rows are **13G**
+(`PASSIVE_STAKE`, `FUND_MANAGER` — Vanguard, BlackRock) and the lane trades
+`ACTIVIST_STAKE`. Passive threshold-crossings are not activist declarations,
+and the adapter was built to keep them apart.
+
+**Defect found by running it, not by review:** the first version marked every
+session in the price panel and wrote **124 NAV rows dated from February** for a
+lane seeded that afternoon. Flat, harmless-looking, and a six-month track record
+for a strategy that had not been declared. Marking now starts at the inception;
+the polluted state was deleted and the lanes re-seeded before anything accrued.
+
+**How it accrues:** `python -m scripts.copy_lab_run --run`. There is no
+scheduler job yet, deliberately — the Teacher Library collectors do not run in
+production, so a nightly job would produce zero events forever and look healthy
+doing it. Scheduling the collectors is the prerequisite, not the job.
 
 Roadmap: `ROADMAP_BRAIN_V3_2026-08-14.md` Track E.
 
@@ -217,11 +256,15 @@ absence.**
 
 ## What is NOT done
 
-- **No lane seeded.** `backend/data/copy_lab/teacher_copy_lanes.yaml` is
-  seed-ready and marked `SPEC_ONLY_NOT_SEEDED`. Seeding is attended via
-  `seed-a-lane`; Murat flips the flag. The file is deliberately **separate from
-  `paper_portfolios.yaml`**, which is baked into the config hash the live track
-  record's integrity depends on.
+- ~~**No lane seeded.**~~ **SEEDED 2026-08-14** — see above. The seeded config
+  is `copy_lab_lanes_v1.yaml`, a NEW file: `teacher_copy_lanes.yaml` remains as
+  the written spec, because an edited YAML reuses an old content hash and
+  corrupts segment identity. Both are separate from `paper_portfolios.yaml`,
+  whose hash the live track record's integrity depends on.
+- **No collector runs in production**, so COPY-LAB accrues only when the
+  attended runner is invoked. This is the next bottleneck, and it is the house
+  failure mode if left implicit: a lane that quietly never accrues looks exactly
+  like a lane with nothing to do.
 - **No hypothesis evaluated.** No outcome join, no IC, no signal evaluation
   anywhere in this package. The moment a number could grade a hypothesis,
   `pre-register-trial` comes first.

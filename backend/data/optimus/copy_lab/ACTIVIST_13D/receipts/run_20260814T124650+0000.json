@@ -1,0 +1,30 @@
+{
+  "receipt": "COPY-LAB engine run",
+  "engine_version": "copy_lab_engine@v1",
+  "execution_policy": {
+    "policy_id": "next_session_open_after_public_at@v1",
+    "price_point": "open",
+    "same_session_fills": false,
+    "retroactive_fills": false
+  },
+  "lane_id": "ACTIVIST_13D",
+  "config_hash": "697ddd4e000560ffd87c61fce31e61de281cc0ebfdbb4c4f406920ed9b30933d",
+  "seeded_at": "2026-08-14T12:46:47+00:00",
+  "run_at": "2026-08-14T12:46:50+00:00",
+  "as_of": "2026-08-14",
+  "label": "PRODUCT_LANE",
+  "validation_status": "PRODUCT_EXPERIMENT",
+  "paper_only": true,
+  "events_considered": 0,
+  "signals_new": 0,
+  "signals_ineligible": 0,
+  "ineligible_reasons": {},
+  "fills": 0,
+  "expired_unfilled": 0,
+  "open_positions": 0,
+  "closed_positions": 0,
+  "cash": 100000.0,
+  "nav": null,
+  "nav_rows_written": 0,
+  "note": "PRODUCT_EXPERIMENT / NOT VALIDATED ALPHA. No hypothesis was evaluated and no historical fill was written."
+}
