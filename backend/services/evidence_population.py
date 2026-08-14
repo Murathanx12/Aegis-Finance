@@ -11,10 +11,20 @@ ledger:
                      outcomes fall due. This is what ABLATION_FWD certifies
                      against.
 
-  LIVE_FORWARD       the deployed product's own accrual — ~112 records on the
-                     Railway persistent volume, resolved by the nightly
+  LIVE_FORWARD       the deployed product's own accrual, resolved by the nightly
                      `pi_ledger_resolve` job. Authoritative for anything said
                      about the live deployment.
+
+                     **Its true size is currently ZERO.** This paragraph used to
+                     read "~112 records on the Railway persistent volume", and
+                     that was wrong: adjudicated 2026-08-15, all 112 of those
+                     records are content-identical to the FIRST 112 rows of the
+                     campaign ledger — a partial copy that reached the volume
+                     before the migration guard existed, not the product's own
+                     history. `live_forward_is_established()` enforces the
+                     distinction so no surface can claim a live forward record
+                     that does not exist. See
+                     `docs/LEDGER_DIVERGENCE_ADJUDICATION_2026-08-15.md`.
 
 They were discovered to be different populations only because ABLATION_FWD read
 one while production resolved the other, and the boot warning about "19,961
@@ -330,6 +340,61 @@ def lineage(pop: "str | EvidencePopulation",
     }
 
 
+def _record_hash(r: dict) -> str:
+    """The same full-record hash `belief_state`'s migration guard compares on."""
+    return hashlib.sha256(
+        json.dumps(r, sort_keys=True, default=str,
+                   ensure_ascii=False).encode("utf-8")).hexdigest()[:16]
+
+
+def live_forward_is_established(sample_cap: int = 50_000) -> dict:
+    """Does LIVE_FORWARD hold anything the campaign did not already write?
+
+    ADJUDICATED 2026-08-15 (`docs/LEDGER_DIVERGENCE_ADJUDICATION_2026-08-15.md`).
+    The docstring at the top of this module used to describe LIVE_FORWARD as
+    "the deployed product's own accrual — ~112 records on the Railway persistent
+    volume". That was false. The boot warning reported 19,961 of the image
+    ledger's 20,073 records as absent from the volume, which puts the
+    intersection at exactly 112 — the volume's entire contents — so the
+    persisted ledger is a strict SUBSET of the campaign ledger. Four independent
+    checks agree it is specifically the first 112 rows: 12 distinct specialists,
+    six void records, one distinct model, last-written 2026-08-12.
+
+    So the live population's true size is ZERO, and the volume holds a partial
+    copy of campaign history that arrived before the migration guard existed.
+
+    This function exists so that no surface can claim otherwise. It does not
+    delete anything — removing rows from the authoritative persisted ledger is
+    irreversible and belongs to Murat, not to a session — it just makes the
+    claim unavailable. An empty ledger and a ledger full of somebody else's
+    records must not both read as "the product has a forward record".
+    """
+    live = read_population(EvidencePopulation.LIVE_FORWARD)
+    if not live:
+        return {"established": False, "n_records": 0,
+                "n_shared_with_campaign": 0,
+                "reason": "LIVE_FORWARD is empty — the product has accrued no "
+                          "forward evidence yet, which is the honest state"}
+    campaign = {_record_hash(r) for r in
+                read_population(EvidencePopulation.CAMPAIGN_FORWARD)
+                [:sample_cap]}
+    shared = sum(1 for r in live if _record_hash(r) in campaign)
+    established = shared < len(live)
+    return {
+        "established": established,
+        "n_records": len(live),
+        "n_shared_with_campaign": shared,
+        "reason": ("" if established else
+                   f"every one of {len(live)} LIVE_FORWARD record(s) is "
+                   f"content-identical to a CAMPAIGN_FORWARD record. This is "
+                   f"not the product's accrual, it is a partial copy of "
+                   f"campaign history that reached the volume before the "
+                   f"migration guard existed. Treat the live population as "
+                   f"UNESTABLISHED (size zero) — see "
+                   f"docs/LEDGER_DIVERGENCE_ADJUDICATION_2026-08-15.md"),
+    }
+
+
 def _population_status(pop: EvidencePopulation) -> dict:
     from datetime import date
     rows = read_population(pop)
@@ -374,6 +439,11 @@ def status() -> dict:
         "populations": {p.value: _population_status(p)
                         for p in (EvidencePopulation.CAMPAIGN_FORWARD,
                                   EvidencePopulation.LIVE_FORWARD)},
+        # A record COUNT is not evidence that a population exists. The live
+        # ledger reported 112 for days while holding nothing but a copy of the
+        # campaign's first 112 rows, and every surface that read the count
+        # would have called that a live forward record.
+        "live_forward_established": live_forward_is_established(),
         "pooling": ("REFUSED — no prospectively declared pooling rule exists. "
                     "These two numbers are never added."),
     }

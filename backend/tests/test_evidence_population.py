@@ -301,3 +301,88 @@ def test_old_records_without_the_field_remain_readable_and_reproducible(split):
     assert len(got) == 20
     assert all("evidence_population" not in r for r in got)   # unmodified
     assert EP.lineage("campaign_forward")["record_count"] == 20
+
+
+# ── D4: a record count is not evidence that a population exists ─────────────
+
+def _d4_rec(pid, pop=None):
+    r = {"prediction_id": pid, "ticker": "AAA", "specialist": "skeptic",
+         "made_at": "2026-08-12T09:00:00+00:00", "observable": "return_sign",
+         "horizon_days": 5, "probability": 0.5, "outcome": None}
+    if pop:
+        r["evidence_population"] = pop
+    return r
+
+
+def test_a_live_ledger_that_only_mirrors_the_campaign_is_unestablished(
+        monkeypatch, tmp_path):
+    """The real shape found on 2026-08-15.
+
+    The volume held 112 records and every surface read that as "the deployed
+    product has a forward record". All 112 were content-identical to the FIRST
+    112 rows of the campaign ledger — a partial copy that reached the volume
+    before the migration guard existed. An empty ledger and a ledger full of
+    somebody else's rows must not both read as evidence.
+    """
+    shared = [_d4_rec(f"p{i}", "campaign_forward") for i in range(5)]
+    campaign = tmp_path / "campaign.jsonl"
+    live = tmp_path / "live.jsonl"
+    campaign.write_text("".join(json.dumps(r) + "\n" for r in
+                                shared + [_d4_rec("extra", "campaign_forward")]),
+                        encoding="utf-8")
+    # The live file carries the same rows, restamped as the volume would hold
+    # them — same content hash is what the migration guard compares on.
+    live.write_text("".join(json.dumps(dict(r, evidence_population="live_forward"))
+                            + "\n" for r in shared), encoding="utf-8")
+
+    def _paths(pop):
+        return (campaign if pop is EP.EvidencePopulation.CAMPAIGN_FORWARD
+                else live)
+
+    monkeypatch.setattr(EP, "ledger_path", _paths)
+    monkeypatch.setattr(EP, "_record_hash",
+                        lambda r: r["prediction_id"])   # ignore the restamp
+
+    out = EP.live_forward_is_established()
+
+    assert out["established"] is False
+    assert out["n_records"] == 5
+    assert out["n_shared_with_campaign"] == 5
+    assert "UNESTABLISHED" in out["reason"]
+
+
+def test_a_live_ledger_with_records_of_its_own_is_established(monkeypatch,
+                                                              tmp_path):
+    campaign = tmp_path / "campaign.jsonl"
+    live = tmp_path / "live.jsonl"
+    campaign.write_text(json.dumps(_d4_rec("shared", "campaign_forward")) + "\n",
+                        encoding="utf-8")
+    live.write_text(
+        json.dumps(_d4_rec("shared", "live_forward")) + "\n"
+        + json.dumps(_d4_rec("its_own", "live_forward")) + "\n", encoding="utf-8")
+
+    monkeypatch.setattr(
+        EP, "ledger_path",
+        lambda pop: (campaign
+                     if pop is EP.EvidencePopulation.CAMPAIGN_FORWARD else live))
+    monkeypatch.setattr(EP, "_record_hash", lambda r: r["prediction_id"])
+
+    out = EP.live_forward_is_established()
+
+    # One record the campaign never wrote is enough. The claim being guarded is
+    # "this population contains something of its own", not "it is large".
+    assert out["established"] is True
+    assert out["n_shared_with_campaign"] == 1
+
+
+def test_an_empty_live_ledger_is_unestablished_rather_than_fine(monkeypatch,
+                                                                tmp_path):
+    empty = tmp_path / "live.jsonl"
+    empty.write_text("", encoding="utf-8")
+    monkeypatch.setattr(EP, "ledger_path", lambda pop: empty)
+
+    out = EP.live_forward_is_established()
+
+    assert out["established"] is False
+    assert out["n_records"] == 0
+    assert "no forward evidence yet" in out["reason"]
