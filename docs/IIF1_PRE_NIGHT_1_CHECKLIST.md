@@ -576,3 +576,70 @@ changes beyond what Night 1's own void reasons force; reading any IIF-1
 outcome.
 
 — Fable
+
+---
+
+## FABLE ORDERS 3 (2026-08-14) — Murat's 20-order directive RATIFIED, with amendments
+
+Murat's full 20-order block (GPT-drafted, Murat-issued) is the active backlog.
+It is ratified as written EXCEPT where amended below. Where it and prior Fable
+orders agree — Night 1, the dual-ledger ruling, ICSA — execute once, to the
+stricter spec.
+
+### Amendments and clarifications
+
+1. **This is a multi-session backlog, not one night.** Work Order 20's
+   milestone list in order; commit and push at every green boundary. This
+   session: Night 1 receipt → dual-ledger namespaces → ICSA semantics →
+   COPY-LAB seed + execution engine. Everything after queues behind those.
+2. **Order 4 (COPY-LAB seeding): the flag is flipped.** Murat's directive IS
+   the attended authorisation. Still execute via the `seed-a-lane` procedure;
+   TWO lanes active (`CORPORATE_INSIDER_CLUSTER`, `ACTIVIST_13D`), twelve
+   created inactive; COPY-LAB lives in its own ledger/accounting namespace and
+   never touches the 10 research lanes or `paper_portfolios.yaml`'s hash.
+   Every lane carries `PRODUCT_EXPERIMENT / NOT VALIDATED ALPHA`.
+3. **Order 8 (FORM4-CLUSTER-FWD-1): draft must state its relationship to the
+   LIVE trials.** `TRIAL-INSIDER-IC` and `TRIAL-CMP-INSIDER-IC` are accruing
+   toward 2027 decisions in the same signal family. The draft names what it
+   measures that they do not, uses them as corpses/controls where applicable,
+   and must not double-count their accrual. Primary endpoint preference:
+   magnitude/residual-risk, per the programme's thrice-measured convergence.
+   Draft and report — do not register, do not evaluate.
+4. **Order 12 (Calacanis): SOURCE_UNAVAILABLE until an observable public
+   signal with reconstructable timestamps is identified.** Fable could not
+   identify the tracker Murat referenced; do not guess a dataset into
+   existence.
+5. **Order 14 (reliability tensor): data model only.** The inherited
+   dependency edge stands — nothing routes or allocates on reliability until
+   estimates are resolved-outcome-based.
+6. **Nothing in the 20 orders loosens** the read gate, the ceilings, prereg
+   discipline, or the two-ledger separation. Where wording could be read
+   either way, the stricter reading applies.
+
+### New order — MURAT-ACTOR: his own history joins the Teacher Library
+
+The conviction site (Vercel) logs what he bought and when he logged it. Ingest
+that log as TeacherEvents with `actor_type = SELF`, `public_at` = the log
+timestamp, provenance = the conviction ledger. Murat becomes one more teacher
+in the library, graded by the same machinery as every other actor — no special
+treatment in either direction. Caveat carried from NIGHT-13: conviction logs
+are PICKS, not fills — sizing/transactions still require the broker CSV, which
+remains the one owed item. PIT sheets already in `docs/conviction_replay/`
+are the starting corpus; reconcile against the site's log rather than
+replacing it.
+
+### Legacy files: catalogued, no action required
+
+Fable inspected `Downloads/stock reseacrh old files/` (+ `market research
+(legacy)/`). Contents: the pre-Aegis ancestry — Market Prediction v2→v6
+(Feb 2026), reports, old engines, UI iterations. Two items of value:
+1. **Provenance for the research paper.** v2 projected RGTI at +96,991%/5y;
+   v3's fix and the institutional-benchmark calibration that followed are the
+   origin story of the calibration discipline Aegis now runs on. Keep the
+   folder; cite it in the paper's evolution narrative. Do not port code.
+2. **VIIRS night-lights** (`hku light viirs/`: 2015/2024 GeoTIFFs + his
+   processing scripts) — satellite luminosity as an economic-activity proxy.
+   Logged as a FUTURE data-class idea for the world model (country/region
+   activity nodes). No current order.
+
+— Fable
