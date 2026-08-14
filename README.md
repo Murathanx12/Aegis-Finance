@@ -105,6 +105,17 @@ verdicts. Receipts for every row live in [`docs/`](docs/README.md).
 | Do public actors' disclosed trades carry structure? | ⏳ Teacher Library ingesting (SEC Form 4, 13D/G); paper copy-lanes accruing | Track E + COPY-LAB |
 | Where does forecastable information live? | 📐 **Magnitude and risk — not direction.** Measured three independent ways | exposure-oracle gap · covariance closure · σ_π decomposition |
 
+### The findings, in pictures
+
+*Every figure is generated from the frozen run artifacts and the live API by
+[`tools/readme_charts.py`](tools/readme_charts.py) — numbers are read, never retyped.*
+
+![The one clean positive: the semantic graph clears its MDE while both placebos sit at zero](docs/assets/finding_market_graph.png)
+
+![The honest closure: perfect foresight of forward correlation ties the trailing sample matrix](docs/assets/finding_covariance_ladder.png)
+
+![Why the brain forecasts magnitude, not direction: sigma_pi is 20-30x larger for magnitude events](docs/assets/finding_direction_vs_magnitude.png)
+
 ## What it does
 
 **Market intelligence**
@@ -201,7 +212,7 @@ Data: Yahoo Finance · FRED · SEC EDGAR · GDELT · Kenneth French · Polygon �
 
 ![Paper lanes vs SPY](docs/assets/paper_lanes_vs_spy.png)
 
-*The live forward record, updated from the public track-record API. Read the title's caveat before reading the lines: at this window the standard error on an annualized Sharpe is ±2.1, so ordering is noise. The −22% mirror lane is kept on the chart deliberately — it is the project's own receipt for what concentrated idiosyncratic risk does.*
+*The live forward record, regenerated from the public track-record API by `tools/readme_charts.py`. Read the title's caveat before reading the lines: at this window the standard error on an annualized Sharpe is ±2.1, so ordering is noise — including against SPY. The deeply underwater mirror lane is kept on the chart deliberately: it is the project's own receipt for what concentrated idiosyncratic risk does.*
 
 | Fact | Value |
 |---|---|
