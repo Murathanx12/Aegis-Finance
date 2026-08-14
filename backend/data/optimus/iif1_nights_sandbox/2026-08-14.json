@@ -228,6 +228,6 @@
   },
   "decision_lag_minutes": null,
   "sandbox": true,
-  "elapsed_s": 0.0005826000051456504,
+  "elapsed_s": 0.000585400004638359,
   "trial": "INTERNET-INVESTIGATOR-FWD-1"
 }

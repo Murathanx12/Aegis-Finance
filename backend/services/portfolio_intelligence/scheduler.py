@@ -840,6 +840,58 @@ async def _congress_morning_collect():
         logger.error("Congress-IC morning collection failed: %s", e, exc_info=True)
 
 
+def _write_resolver_receipt(report: dict) -> None:
+    """One dated receipt per run, on the persistent volume. Never raises.
+
+    WHY A RECEIPT AND NOT JUST THE LOG LINE
+    =======================================
+    Verifying "did the scheduled resolver actually run" from logs alone is
+    unfalsifiable in the one direction that matters: when nothing is due, a
+    healthy run mutates nothing, so an unchanged ledger is the EXPECTED result
+    and is indistinguishable from a job that never fired. Add a log-retention
+    window or a fetch that misses and the absence of a line proves nothing
+    either.
+
+    A dated file on the volume answers it directly. `nothing_was_due` is a
+    RESULT, written down, not an inference from silence — which is the same
+    distinction this project draws everywhere else between OK_EMPTY and
+    UNAVAILABLE.
+
+    Never raises: a receipt-writing failure must not take down the resolution
+    it is describing.
+    """
+    try:
+        import json
+        from datetime import datetime, timezone
+
+        from backend import config as _config
+        d = _config.OPTIMUS_LEDGER_DIR / "resolver_receipts"
+        d.mkdir(parents=True, exist_ok=True)
+        now = datetime.now(timezone.utc)
+        body = {
+            "job": "pi_ledger_resolve",
+            "population": "live_forward",
+            "ran_at": now.isoformat(timespec="seconds"),
+            "status": report.get("status", "ok"),
+            "reason": report.get("reason", ""),
+            "due": report.get("due"),
+            "newly_resolved": report.get("newly_resolved"),
+            "pending": report.get("pending"),
+            "overdue": report.get("overdue"),
+            "unpriceable": report.get("unpriceable"),
+            "priced_from": report.get("priced_from"),
+            "health": report.get("health"),
+            "lineage": report.get("lineage"),
+            "nothing_was_due": bool(not report.get("due")),
+        }
+        (d / f"{now.strftime('%Y-%m-%dT%H%M%SZ')}.json").write_text(
+            json.dumps(body, indent=2, default=str), encoding="utf-8")
+    except Exception as exc:                                   # noqa: BLE001
+        logger.error("resolver receipt write FAILED (%s: %s) — the run itself "
+                     "was unaffected, but this run left no evidence it "
+                     "happened", type(exc).__name__, exc)
+
+
 async def _ledger_resolve():
     """Daily prediction-ledger resolution (the caller resolve_all never had).
 
@@ -859,7 +911,10 @@ async def _ledger_resolve():
         # population here is what stops a future path change from quietly
         # pointing production at the campaign's history.
         report = await asyncio.to_thread(resolve_due, population="live_forward")
-        if report.get("overdue", 0) > 0 or report.get("unpriceable"):
+        await asyncio.to_thread(_write_resolver_receipt, report)
+        if report.get("status") == "REFUSED":
+            logger.error("Ledger resolve REFUSED: %s", report.get("reason"))
+        elif report.get("overdue", 0) > 0 or report.get("unpriceable"):
             logger.warning("Ledger resolve DEGRADED: %s", report)
         else:
             logger.info(

@@ -171,6 +171,39 @@ def resolve_due(path: Path | None = None, *,
         path = path or EP.ledger_path(pop)
         assert_single_population(path, population)
         lineage = EP.lineage(pop, path)
+
+        # AN UNESTABLISHED POPULATION IS NOT RESOLVED, IT IS REFUSED.
+        #
+        # Adjudicated 2026-08-15: every record on the LIVE_FORWARD volume is
+        # content-identical to a CAMPAIGN_FORWARD record — a partial copy of
+        # campaign history that reached the volume before the migration guard
+        # existed. Their `resolves_after` dates begin 2026-08-16, with 25 due
+        # that month, so this nightly job was four days away from grading
+        # campaign swarm rows into the live product's ledger, automatically and
+        # unattended, and every surface reading "the deployed product's forward
+        # record" would then have been reading the swarm.
+        #
+        # Resolving them is not a small error that could be corrected later: an
+        # outcome written onto a record is the thing that makes it evidence.
+        # See docs/LEDGER_DIVERGENCE_ADJUDICATION_2026-08-15.md.
+        if pop is EP.EvidencePopulation.LIVE_FORWARD:
+            est = EP.live_forward_is_established()
+            if est["n_records"] and not est["established"]:
+                logger.error("ledger resolve REFUSED for %s: %s",
+                             pop.value, est["reason"])
+                return {
+                    "as_of": str(today), "status": "REFUSED",
+                    "reason": est["reason"],
+                    "due": 0, "newly_resolved": 0,
+                    "pending": est["n_records"], "overdue": 0,
+                    "unpriceable": [], "priced_from": None,
+                    "resolve_report": None,
+                    "health": {"status": "DEGRADED",
+                               "problems": ["live_forward population "
+                                            "unestablished — resolution "
+                                            "refused, nothing was graded"]},
+                    "lineage": lineage,
+                }
     rows = read_predictions(path)
     active = [r for r in rows
               if r.get("outcome") is None and not r.get("void_reason")]
