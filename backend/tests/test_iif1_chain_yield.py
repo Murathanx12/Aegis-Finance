@@ -27,6 +27,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from backend.services import investigator_night as N
 from backend.services import llm_telemetry as T
 from backend.services import research_budget as RB
@@ -220,6 +222,34 @@ def test_a_telemetry_failure_during_resolution_does_not_lose_the_night(
 
     out = N.resolve_chain_yield({"calls": {"n:A:X": ["c1"]}}, [], night="n")
     assert out["n_chains"] == 1                      # returned, not raised
+
+
+# ── the ceiling has to be able to READ spend ────────────────────────────────
+def test_the_nightly_ceiling_reads_the_key_the_ledger_actually_returns(tmp_path):
+    """Night 1 spent $0.0665 and reported $0.00.
+
+    `_spend_since` read `s["cost_usd"]`; `spend()` returns `total_cost_usd`.
+    Nothing errored — `.get(...) or 0.0` turned the missing key into a number —
+    so every ceiling check compared 0.00 + 0.05 against $12.00 and the nightly
+    USD ceiling was decorative from the day it was written.
+    """
+    p = _ledger(tmp_path, [_row(i, pids=["p"]) for i in range(10)])
+    s = T.spend(path=p)
+    assert N.SPEND_KEY in s, "the constant must name a key spend() returns"
+    assert s[N.SPEND_KEY] > 0
+
+
+def test_a_summary_without_the_spend_key_stops_the_night(monkeypatch):
+    """A default of 0.0 is what turned a typo into an unarmed ceiling."""
+    monkeypatch.setattr(T, "spend", lambda **kw: {"n_calls": 5})
+    with pytest.raises(N.NightlyBudgetExhausted, match="UNKNOWN, not zero"):
+        N._spend_since("2026-08-14T00:00:00+00:00")
+
+
+def test_spend_is_read_not_assumed(monkeypatch):
+    monkeypatch.setattr(T, "spend",
+                        lambda **kw: {"total_cost_usd": 3.25, "n_calls": 7})
+    assert N._spend_since("2026-08-14T00:00:00+00:00") == (3.25, 7)
 
 
 # ── the information guard, at the unit that can actually be barren ───────────

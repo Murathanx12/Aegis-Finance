@@ -203,12 +203,28 @@ def project_funding(measured_cost_usd: float, *,
     }
 
 
+#: The key `llm_telemetry.spend()` actually returns the money under. Named as a
+#: constant because reading the WRONG key is not an error anywhere — it returns
+#: None, `or 0.0` turns that into a number, and a ceiling that compares against
+#: zero passes forever. Night 1 spent $0.0665 and reported $0.00.
+SPEND_KEY = "total_cost_usd"
+
+
 def _spend_since(since_iso: str) -> tuple[float, int]:
     """(usd, calls) from the telemetry ledger since `since_iso`.
 
     Raises on a read failure rather than returning zero: a telemetry read that
     fails and reports free would disarm the nightly ceiling at exactly the
     moment it is needed.
+
+    AND IT RAISES ON A MISSING KEY, for the same reason. This function read
+    `s["cost_usd"]` — a key `spend()` has never returned — so every ceiling
+    check compared `0.00 + 0.05 > $12.00` and the nightly USD ceiling was
+    decorative from the day it was written. It was found because Night 1's
+    funding block, the entire point of the night, printed `measured_cost:
+    unknown` while the telemetry ledger held 224 priced rows totalling $0.0665.
+    A default of 0.0 is what let a typo become an unarmed ceiling; there is now
+    no default.
     """
     from backend.services import llm_telemetry
     s = llm_telemetry.spend(since=since_iso)
@@ -216,7 +232,12 @@ def _spend_since(since_iso: str) -> tuple[float, int]:
         raise NightlyBudgetExhausted(
             "telemetry ledger unreadable — nightly spend is UNKNOWN, not zero; "
             "refusing to continue rather than spend blind")
-    return float(s.get("cost_usd", 0.0) or 0.0), int(s.get("n_calls", 0) or 0)
+    if SPEND_KEY not in s:
+        raise NightlyBudgetExhausted(
+            f"the telemetry summary has no {SPEND_KEY!r} (got {sorted(s)}) — "
+            f"nightly spend is UNKNOWN, not zero, and a ceiling that cannot "
+            f"read spend must stop the night rather than wave it through")
+    return float(s[SPEND_KEY] or 0.0), int(s.get("n_calls", 0) or 0)
 
 
 def make_llm_call(*, since_iso: str, max_usd: float = NIGHTLY_MAX_USD,

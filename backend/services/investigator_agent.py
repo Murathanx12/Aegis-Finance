@@ -87,6 +87,25 @@ FORECAST_CELLS = (
     ("return_sign", 5, None),
 )
 
+# ── why a cell was dropped: a CLOSED, VALUE-FREE vocabulary ─────────────────
+# The receipt is read every morning during a 40-night blind, so a drop reason
+# may never carry a model-stated number or name a cell. These codes say what
+# was wrong with the SHAPE and nothing about the content.
+DROP_REPLY_NOT_A_LIST = "reply_not_a_list"
+DROP_REPLY_NOT_AN_OBJECT = "reply_not_an_object"
+DROP_CELL_NOT_AN_OBJECT = "cell_not_an_object"
+DROP_FIELD_MISSING = "field_missing_or_unparseable"
+DROP_CELL_NOT_REQUESTED = "cell_not_requested"
+DROP_BELIEF_OUT_OF_RANGE = "belief_out_of_unit_range"
+DROP_SIZE_BOUND_NOT_A_FRACTION = "size_bound_not_a_fraction"
+DROP_CALL_FAILED = "call_failed"
+
+DROP_REASONS = frozenset({
+    DROP_REPLY_NOT_A_LIST, DROP_REPLY_NOT_AN_OBJECT, DROP_CELL_NOT_AN_OBJECT,
+    DROP_FIELD_MISSING, DROP_CELL_NOT_REQUESTED, DROP_BELIEF_OUT_OF_RANGE,
+    DROP_SIZE_BOUND_NOT_A_FRACTION, DROP_CALL_FAILED,
+})
+
 
 # ── prompts: identical across arms, by construction ─────────────────────────
 
@@ -181,6 +200,9 @@ class Investigation:
     event: dict | None = None
     expectations: dict | None = None
     forecasts: list[dict] = field(default_factory=list)
+    #: Why cells were dropped, counted by reason. A barren cell that says only
+    #: `n_forecasts: 0` cannot be diagnosed after the night, at any price.
+    forecast_drops: dict = field(default_factory=dict)
     critique: dict | None = None
     error: str = ""
 
@@ -197,6 +219,7 @@ class Investigation:
         return {"arm": self.arm, "ticker": self.ticker, "status": self.status,
                 "n_calls": len(self.calls), "n_tool_calls": len(self.tool_log),
                 "n_forecasts": len(self.forecasts),
+                "forecast_drops": dict(self.forecast_drops),
                 "served_models": sorted(self.served_models),
                 "tokens_in": self.tokens[0], "tokens_out": self.tokens[1],
                 "error": self.error[:200]}
@@ -404,7 +427,12 @@ class Investigator:
                 + f"\n\nForecast EXACTLY these cells:\n{cells}")
             inv.calls.append(c_fc)
             if c_fc.ok and isinstance(c_fc.parsed, dict):
-                inv.forecasts = self._validate(c_fc.parsed.get("forecasts"))
+                inv.forecasts, inv.forecast_drops = self._validate(
+                    c_fc.parsed.get("forecasts"))
+            elif c_fc.ok:
+                inv.forecast_drops = {DROP_REPLY_NOT_AN_OBJECT: 1}
+            else:
+                inv.forecast_drops = {DROP_CALL_FAILED: 1}
 
             c_cr = self._task(
                 "critic", SYS_CRITIC,
@@ -425,7 +453,7 @@ class Investigator:
         return inv
 
     @staticmethod
-    def _validate(raw: Any) -> list[dict]:
+    def _validate(raw: Any) -> "tuple[list[dict], dict]":
         """Keep only forecasts that could actually be graded.
 
         A malformed cell is DROPPED and not repaired. Coercing a forecaster's
@@ -434,11 +462,29 @@ class Investigator:
         swarm produced six guaranteed-wrong records that way.
         """
         out: list[dict] = []
+        drops: dict[str, int] = {}
+
+        def _drop(code: str) -> None:
+            # WHY a cell was dropped is the only thing that makes a barren arm
+            # diagnosable. Night 1 lost 15 of 40 cells in one arm and 8 of 10 in
+            # another, and the receipt recorded only `n_forecasts: 0` — so the
+            # cause could not be established afterwards at any price.
+            #
+            # CODES ONLY. The receipt is read every morning during a 40-night
+            # blind, so a reason may never interpolate a model-stated number or
+            # name a cell — "the size bound was not a fraction" is diagnostic;
+            # "0.07 was not a fraction" is a forecast leaking out through the
+            # error path. The vocabulary is closed and pinned by a test.
+            assert code in DROP_REASONS, code
+            drops[code] = drops.get(code, 0) + 1
+
         if not isinstance(raw, list):
-            return out
+            _drop(DROP_REPLY_NOT_A_LIST)
+            return out, drops
         wanted = {(o, h) for o, h, _ in FORECAST_CELLS}
         for f in raw:
             if not isinstance(f, dict):
+                _drop(DROP_CELL_NOT_AN_OBJECT)
                 continue
             try:
                 obs = str(f["observable"])
@@ -446,17 +492,24 @@ class Investigator:
                 pri = float(f["prior"])
                 pos = float(f["posterior"])
             except (KeyError, TypeError, ValueError):
+                _drop(DROP_FIELD_MISSING)
                 continue
             if (obs, hz) not in wanted:
+                _drop(DROP_CELL_NOT_REQUESTED)
                 continue
             if not (0.0 <= pri <= 1.0 and 0.0 <= pos <= 1.0):
+                _drop(DROP_BELIEF_OUT_OF_RANGE)
                 continue
             thr = f.get("threshold")
             thr = float(thr) if isinstance(thr, (int, float)) else None
             if obs == "abs_move_exceeds" and not (thr and 0 < thr < 1.0):
+                # The leading suspect: a size bound stated in PERCENT (5) where
+                # a fraction (0.05) is required is out of range, and the cell
+                # dies silently.
+                _drop(DROP_SIZE_BOUND_NOT_A_FRACTION)
                 continue
             out.append({"observable": obs, "horizon_days": hz,
                         "threshold": thr, "prior": pri, "posterior": pos,
                         "belief_change": pos - pri,
                         "rationale": str(f.get("rationale", ""))[:600]})
-        return out
+        return out, drops

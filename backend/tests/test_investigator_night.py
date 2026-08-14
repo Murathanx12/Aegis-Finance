@@ -322,8 +322,40 @@ def test_the_receipt_carries_operational_diagnostics_and_no_trial_statistics(
         assert leak not in blob, f"receipt leaks {leak!r} during the blind"
     row = res.per_arm["B_tools"]["rows"][0]
     assert set(row) == {"arm", "ticker", "status", "n_calls", "n_tool_calls",
-                        "n_forecasts", "served_models", "tokens_in",
-                        "tokens_out", "error"}
+                        "n_forecasts", "forecast_drops", "served_models",
+                        "tokens_in", "tokens_out", "error"}
+
+
+def test_forecast_drop_reasons_are_a_closed_value_free_vocabulary():
+    """Night 1 lost 15 of 40 cells in one arm and 8 of 10 in another, and the
+    receipt said only `n_forecasts: 0` — the cause could not be established
+    afterwards at any price. Reasons are recorded now, as CODES: a reason that
+    interpolated the model's own number would leak a forecast out through the
+    error path, which the blind scan above would then have to catch.
+    """
+    from backend.services.investigator_agent import (DROP_REASONS,
+                                                     Investigator)
+    banned = ("posterior", "probability", "brier", "rationale", "threshold",
+              "contrast", "t_statistic", "observable")
+    for code in DROP_REASONS:
+        assert not any(b in code for b in banned), code
+
+    # Every rejection path emits a code from the closed set, including the one
+    # that is the leading suspect: a size bound stated in percent.
+    bad = [{"observable": "abs_move_exceeds", "horizon_days": 5,
+            "prior": 0.2, "posterior": 0.3, "threshold": 5},
+           {"observable": "return_sign", "horizon_days": 999,
+            "prior": 0.2, "posterior": 0.3},
+           {"observable": "abs_move_exceeds", "horizon_days": 1,
+            "prior": 0.2, "posterior": 4.0, "threshold": 0.03},
+           "not an object"]
+    kept, drops = Investigator._validate(bad)
+    assert kept == []
+    assert set(drops) <= DROP_REASONS
+    assert drops.get("size_bound_not_a_fraction") == 1
+    assert drops.get("cell_not_requested") == 1
+    assert drops.get("belief_out_of_unit_range") == 1
+    assert drops.get("cell_not_an_object") == 1
 
 
 # ── the runner's constants are the registered ones ──────────────────────────
