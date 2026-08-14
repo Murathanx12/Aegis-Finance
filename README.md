@@ -90,6 +90,35 @@ flowchart TB
     REALITY -->|calibration| ENGINE
 ```
 
+## How to read the evidence here
+
+This project mixes four very different kinds of evidence, and confusing them
+is how finance projects mislead people. Every claim on this page carries one
+of these badges:
+
+| Badge | Meaning |
+|---|---|
+| 🟢 **LIVE FORWARD** | Happened *after* the rule was frozen. No hindsight possible. |
+| 🟡 **FORWARD TRIAL** | Pre-registered experiment currently collecting evidence — verdict pending. |
+| 🔵 **BACKTEST** | Historical simulation. Useful for direction-finding, vulnerable to hindsight. Never an alpha claim here. |
+| 🟣 **ORACLE** | A deliberately *impossible* benchmark that is allowed to see the future. Measures the ceiling on how valuable an information source could ever be — not performance. |
+| 🔴 **REFUTED** | Tested and failed its pre-defined bar. Kept public. |
+| ⚪ **EXPLORATORY** | Interesting observation, not yet evidence. |
+
+## The story so far, in one paragraph
+
+We built a market timer 🔵. It detected danger correctly — and still lost
+badly to buy-and-hold, because *recognizing risk* and *predicting returns*
+turned out to be different problems. So we rebuilt the project around finding
+where useful information actually lives: measurement showed **magnitude and
+risk look far more forecastable than direction**; an LLM reading SEC filings
+turned out to know **how companies are economically connected** in ways price
+history doesn't 🟡→✅; an oracle test 🟣 then showed one obvious use of that
+knowledge (better covariance matrices) is a dead end even with perfect
+information — so the live experiments now test the uses that remain. Paper
+portfolios 🟢 will eventually say whether any of it makes money. No verdict
+before its clock.
+
 ## Scoreboard — what the research has actually established (Aug 2026)
 
 The questions this project has spent real compute answering, with the honest
@@ -97,13 +126,13 @@ verdicts. Receipts for every row live in [`docs/`](docs/README.md).
 
 | Question | Verdict | Receipt |
 |---|---|---|
-| Can an LLM pick stocks directly? | ❌ No evidence — measured role: presentation & research assistance | 16,320 graded decisions; ablation p=0.105–0.185; ~40% of apparent effect reproduced by permuted noise |
-| Do 14 specialist LLM personas beat one generic agent? | ❌ No — retired | 0.49 vs 0.85 effective distinct ideas, at 5.2× the calls |
-| Does the LLM know **economic relationships** the correlation matrix doesn't? | ✅ **Yes — the campaign's one clean positive** | MARKET-GRAPH-1: t = 4.35 vs its own MDE, every placebo intact |
-| Does that graph improve a covariance/risk model? | ❌ Closed, for $0 — perfect foresight of forward correlation *ties* the trailing sample matrix | GRAPH-COVARIANCE-1: oracle vs sample \|t\| = 0.23; industry diagonal −86.6% |
-| Does autonomous internet investigation beat a data snapshot? | ⏳ Forward trial live — first read at 40 graded nights, enforced in code | INTERNET-INVESTIGATOR-FWD-1 |
-| Do public actors' disclosed trades carry structure? | ⏳ Teacher Library ingesting (SEC Form 4, 13D/G); paper copy-lanes accruing | Track E + COPY-LAB |
-| Where does forecastable information live? | 📐 **Magnitude and risk — not direction.** Measured three independent ways | exposure-oracle gap · covariance closure · σ_π decomposition |
+| Can an LLM pick stocks directly? | 🔴 No evidence — measured role: presentation & research assistance | 16,320 graded decisions 🔵; ablation p=0.105–0.185; ~40% of apparent effect reproduced by permuted noise |
+| Do 14 specialist LLM personas beat one generic agent? | 🔴 No — retired | 0.49 vs 0.85 effective distinct ideas, at 5.2× the calls |
+| Does the LLM know **economic relationships** the correlation matrix doesn't? | ✅ **Yes — the campaign's one clean positive** 🔵 (architecture result, not a trading claim) | MARKET-GRAPH-1: t = 4.35 vs its own MDE, every placebo intact |
+| Does that graph improve a covariance/risk model? | 🔴 Closed, for $0 — even a cheating model that *sees* future correlations ties the ordinary trailing matrix 🟣 | GRAPH-COVARIANCE-1: oracle vs sample \|t\| = 0.23; industry diagonal −86.6% |
+| Does autonomous internet investigation beat a data snapshot? | 🟡 Forward trial live — first read at 40 graded nights, enforced in code | INTERNET-INVESTIGATOR-FWD-1 |
+| Do public actors' disclosed trades carry structure? | 🟡 Teacher Library ingesting (SEC Form 4, 13D/G); paper copy-lanes accruing 🟢 | Track E + COPY-LAB |
+| Where does Aegis currently see the strongest forecasting opportunity? | 📐 **Magnitude, volatility and risk appear substantially more promising than return direction** — three independent measurements point the same way | exposure-oracle gap 🟣 · covariance closure 🟣 · σ_π decomposition 🔵 |
 
 ### The findings, in pictures
 
@@ -114,7 +143,96 @@ verdicts. Receipts for every row live in [`docs/`](docs/README.md).
 
 ![The honest closure: perfect foresight of forward correlation ties the trailing sample matrix](docs/assets/finding_covariance_ladder.png)
 
-![Why the brain forecasts magnitude, not direction: sigma_pi is 20-30x larger for magnitude events](docs/assets/finding_direction_vs_magnitude.png)
+<details>
+<summary><b>What is an "oracle" and why test one? (plain English)</b></summary>
+
+An oracle 🟣 is a deliberately **impossible** model — it's allowed to see the
+future. It is not Aegis, not a strategy, and can never be traded. Its job is
+to answer one question before money gets spent: *even if God told us this
+particular variable, would knowing it actually help?*
+
+Weather-stand version: before spending six months building a temperature AI
+for your ice-cream stand, hand the system *tomorrow's actual temperature*.
+If profits barely move, temperature wasn't the valuable information — no
+forecaster can beat the oracle that already knew the answer.
+
+Aegis has run this test twice, with opposite answers:
+
+- **Covariance oracle** (chart above): a portfolio built with *perfect
+  knowledge of future correlations* was statistically **tied** with one
+  built from ordinary trailing history (\|t\| = 0.23). Verdict: stop
+  researching correlation predictors for this objective — the information
+  itself isn't worth enough. Door closed for $0.
+- **Exposure oracle**: knowing *when to take market risk* was worth
+  **+21.6 pp/yr** — over ten times its detection bar — but our best
+  real-world (non-cheating) controller captured only ~7% of it. Verdict:
+  the information is enormously valuable and remains mostly uncaptured —
+  keep researching.
+
+Same test, two doors: one closed forever, one confirmed worth walking
+through. That's what oracles are for.
+
+</details>
+
+![Why Aegis is prioritizing magnitude over direction](docs/assets/finding_direction_vs_magnitude.png)
+
+<details>
+<summary><b>What does "magnitude vs direction" mean? (plain English)</b></summary>
+
+**Direction** asks: *which way* will the stock move? ("NVDA will be UP over
+the next 5 days.")
+
+**Magnitude** asks: *how big* will the move be, either way? ("NVDA will
+probably move more than 5% this week" — +8% and −8% both count.)
+
+The chart shows why the distinction matters: across 927,423 stock-day
+observations, the true probability of a big move varies hugely from stock to
+stock (some names have a 5% chance of a >5% week, others 44%), while the
+probability of an *up* move barely varies at all (roughly 52% for
+everything). Simply: **predicting whether a stock will move a lot appears
+much easier than predicting whether it moves up or down.**
+
+Knowing magnitude without direction is still valuable — it drives position
+sizing, options pricing, risk limits, hedging, stop distances, and expected
+drawdown. And if any other signal supplies even a weak directional lean,
+magnitude multiplies its value. This is why the project moved from "AI
+predicts BUY/SELL" toward "AI + numeric models describe the *distribution*
+of what might happen."
+
+</details>
+
+## Historical backtests: what worked, what didn't
+
+> 🔵 **HISTORICAL BACKTEST — NOT FORWARD PERFORMANCE.** Shown because the
+> failure taught the project more than a win would have. Full numbers:
+> [`backend/BACKTEST_RESULTS.md`](backend/BACKTEST_RESULTS.md) ·
+> [`NEGATIVE_RESULTS.md §1`](NEGATIVE_RESULTS.md)
+
+| Historical experiment (2020-01 → 2025-06) | Aegis | Benchmark | What we learned |
+|---|---:|---:|---|
+| Signal-engine timing strategy, total return | **+250.9%** | **+740.0%** (buy & hold) | Stress detection ≠ market timing |
+| Sharpe ratio | 0.675 | 0.921 | Sitting out rebounds costs more than dodging drawdowns saved |
+| Buy-signal 3-month hit rate | **67.4%** | target >60% ✓ | Some real directional information on entries |
+| Sell-signal 3-month hit rate | **28.6%** | target >55% ✗ | Sell signals fired at VIX>25 — historically the *best buying opportunities* |
+
+The mechanism of the failure is the interesting part. The engine was
+genuinely good at detecting that the market was under stress — and then made
+the classic mistake of translating *"the market is dangerous right now"*
+into *"therefore sell."* Those are different predictions. April 2020: the
+engine issued SELL at VIX 57; the next three months returned **+26.1%**. By
+the time stress is extreme enough to scream, expected forward returns are
+often improving, not deteriorating.
+
+That failure split one question into two, and the split now organizes the
+whole project:
+
+1. **Can Aegis recognize danger?** — yes, measurably.
+2. **Can Aegis make money *because* it recognized danger?** — that is a
+   different claim, it failed here, and nothing on this page asserts it.
+
+The engine survives as a **risk-awareness system**, not a timing system —
+and the research program went hunting for where information actually lives
+instead (see the scoreboard above).
 
 ## What it does
 
@@ -212,7 +330,7 @@ Data: Yahoo Finance · FRED · SEC EDGAR · GDELT · Kenneth French · Polygon �
 
 ![Paper lanes vs SPY](docs/assets/paper_lanes_vs_spy.png)
 
-*The live forward record, regenerated from the public track-record API by `tools/readme_charts.py`. Read the title's caveat before reading the lines: at this window the standard error on an annualized Sharpe is ±2.1, so ordering is noise — including against SPY. The deeply underwater mirror lane is kept on the chart deliberately: it is the project's own receipt for what concentrated idiosyncratic risk does.*
+🟢 **LIVE FORWARD** — *the record above is regenerated from the public track-record API by `tools/readme_charts.py`. Read the title's caveat before reading the lines: at this window the standard error on an annualized Sharpe is ±2.1, so ordering is noise — including against SPY. The deeply underwater mirror lane is kept on the chart deliberately: it is the project's own receipt for what concentrated idiosyncratic risk does.*
 
 | Fact | Value |
 |---|---|

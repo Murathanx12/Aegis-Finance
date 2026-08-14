@@ -211,9 +211,9 @@ def chart_direction_vs_magnitude() -> None:
         )
     ax.set_xticks(list(xs), [r[0] for r in rows], fontsize=9)
     ax.set_ylabel("σ of true event probability across stocks\n(bigger = more forecastable)")
-    _title(ax, "Why the brain forecasts magnitude, not direction",
-           "Measured before spending a dollar (927,423 obs, 2015-2024): direction is a coin flip 20-30x less\n"
-           "forecastable than magnitude. The forward LLM trial was re-aimed accordingly.")
+    _title(ax, "Why Aegis is prioritizing magnitude over direction",
+           "927,423 obs, 2015-2024, measured before spending a dollar: magnitude events show ~20x more cross-stock\n"
+           "probability dispersion than direction -- far more signal for a model to find. The LLM trial was re-aimed accordingly.")
     _style(ax)
     fig.tight_layout()
     fig.savefig(ASSETS / "finding_direction_vs_magnitude.png", bbox_inches="tight")
