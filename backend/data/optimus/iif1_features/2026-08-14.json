@@ -1,0 +1,403 @@
+{
+  "trial": "INTERNET-INVESTIGATOR-FWD-1",
+  "decision_ts": "2026-08-14T21:00:00-04:00",
+  "decision_ts_tz": "America/New_York",
+  "assembled_at": "2026-08-14T09:45:41+00:00",
+  "n_universe": 6,
+  "n_with_any_feature": 6,
+  "n_fully_unavailable": 0,
+  "status_counts": {
+    "OK_DATA": 36,
+    "OK_EMPTY": 0,
+    "UNAVAILABLE": 0
+  },
+  "features": {
+    "AAPL": {
+      "price": 305.260009765625,
+      "dollar_volume_20d": 15581755252.716064,
+      "volume_z_20d": -0.5212696515080149,
+      "abs_resid_return_z_1d": 0.4156178830161998,
+      "earnings_within_5d": false,
+      "filing_within_2d": true
+    },
+    "MSFT": {
+      "price": 496.8800048828125,
+      "dollar_volume_20d": 13648440455.325317,
+      "volume_z_20d": -0.7354094804586652,
+      "abs_resid_return_z_1d": 0.029015705523695166,
+      "earnings_within_5d": false,
+      "filing_within_2d": false
+    },
+    "NVDA": {
+      "price": 225.3000030517578,
+      "dollar_volume_20d": 25182288362.68921,
+      "volume_z_20d": -1.3421920147611552,
+      "abs_resid_return_z_1d": 0.4380740893967548,
+      "earnings_within_5d": false,
+      "filing_within_2d": false
+    },
+    "JPM": {
+      "price": 363.1099853515625,
+      "dollar_volume_20d": 2328801102.2369385,
+      "volume_z_20d": -1.1576794953034946,
+      "abs_resid_return_z_1d": 0.6309480670583069,
+      "earnings_within_5d": false,
+      "filing_within_2d": true
+    },
+    "XOM": {
+      "price": 158.61000061035156,
+      "dollar_volume_20d": 2178155183.785248,
+      "volume_z_20d": -0.9986378343439528,
+      "abs_resid_return_z_1d": 0.09553252439914693,
+      "earnings_within_5d": false,
+      "filing_within_2d": false
+    },
+    "UNH": {
+      "price": 399.05999755859375,
+      "dollar_volume_20d": 1864938947.2076416,
+      "volume_z_20d": -0.7644196508565825,
+      "abs_resid_return_z_1d": 0.9600098652465829,
+      "earnings_within_5d": false,
+      "filing_within_2d": true
+    }
+  },
+  "provenance": {
+    "AAPL": {
+      "price": {
+        "value": 305.260009765625,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:15+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": ""
+      },
+      "dollar_volume_20d": {
+        "value": 15581755252.716064,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:15+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": "median of close x volume over the last 20 sessions"
+      },
+      "volume_z_20d": {
+        "value": -0.5212696515080149,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:15+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": ""
+      },
+      "abs_resid_return_z_1d": {
+        "value": 0.4156178830161998,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y) residual vs SPY",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:15+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": "beta 0.219 over 60 sessions"
+      },
+      "earnings_within_5d": {
+        "value": false,
+        "status": "OK_DATA",
+        "source": "yfinance:calendar",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:15+00:00",
+        "published_at": "2026-10-30",
+        "note": "77d from the decision date"
+      },
+      "filing_within_2d": {
+        "value": true,
+        "status": "OK_DATA",
+        "source": "sec:data.sec.gov/submissions",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:15+00:00",
+        "published_at": "2026-08-13T18:30:20-04:00",
+        "note": "newest public filing via acceptanceDateTime"
+      }
+    },
+    "MSFT": {
+      "price": {
+        "value": 496.8800048828125,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:22+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": ""
+      },
+      "dollar_volume_20d": {
+        "value": 13648440455.325317,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:22+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": "median of close x volume over the last 20 sessions"
+      },
+      "volume_z_20d": {
+        "value": -0.7354094804586652,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:22+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": ""
+      },
+      "abs_resid_return_z_1d": {
+        "value": 0.029015705523695166,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y) residual vs SPY",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:22+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": "beta 1.179 over 60 sessions"
+      },
+      "earnings_within_5d": {
+        "value": false,
+        "status": "OK_DATA",
+        "source": "yfinance:calendar",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:22+00:00",
+        "published_at": "2026-10-29",
+        "note": "76d from the decision date"
+      },
+      "filing_within_2d": {
+        "value": false,
+        "status": "OK_DATA",
+        "source": "sec:data.sec.gov/submissions",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:22+00:00",
+        "published_at": "2026-08-06T18:01:48-04:00",
+        "note": "newest public filing via acceptanceDateTime"
+      }
+    },
+    "NVDA": {
+      "price": {
+        "value": 225.3000030517578,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:25+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": ""
+      },
+      "dollar_volume_20d": {
+        "value": 25182288362.68921,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:25+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": "median of close x volume over the last 20 sessions"
+      },
+      "volume_z_20d": {
+        "value": -1.3421920147611552,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:25+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": ""
+      },
+      "abs_resid_return_z_1d": {
+        "value": 0.4380740893967548,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y) residual vs SPY",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:25+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": "beta 1.949 over 60 sessions"
+      },
+      "earnings_within_5d": {
+        "value": false,
+        "status": "OK_DATA",
+        "source": "yfinance:calendar",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:25+00:00",
+        "published_at": "2026-08-27",
+        "note": "13d from the decision date"
+      },
+      "filing_within_2d": {
+        "value": false,
+        "status": "OK_DATA",
+        "source": "sec:data.sec.gov/submissions",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:25+00:00",
+        "published_at": "2026-08-12T17:13:10-04:00",
+        "note": "newest public filing via acceptanceDateTime"
+      }
+    },
+    "JPM": {
+      "price": {
+        "value": 363.1099853515625,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:30+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": ""
+      },
+      "dollar_volume_20d": {
+        "value": 2328801102.2369385,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:30+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": "median of close x volume over the last 20 sessions"
+      },
+      "volume_z_20d": {
+        "value": -1.1576794953034946,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:30+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": ""
+      },
+      "abs_resid_return_z_1d": {
+        "value": 0.6309480670583069,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y) residual vs SPY",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:30+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": "beta 0.395 over 60 sessions"
+      },
+      "earnings_within_5d": {
+        "value": false,
+        "status": "OK_DATA",
+        "source": "yfinance:calendar",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:30+00:00",
+        "published_at": "2026-10-13",
+        "note": "60d from the decision date"
+      },
+      "filing_within_2d": {
+        "value": true,
+        "status": "OK_DATA",
+        "source": "sec:data.sec.gov/submissions",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:30+00:00",
+        "published_at": "2026-08-13T17:28:22-04:00",
+        "note": "newest public filing via acceptanceDateTime"
+      }
+    },
+    "XOM": {
+      "price": {
+        "value": 158.61000061035156,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:34+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": ""
+      },
+      "dollar_volume_20d": {
+        "value": 2178155183.785248,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:34+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": "median of close x volume over the last 20 sessions"
+      },
+      "volume_z_20d": {
+        "value": -0.9986378343439528,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:34+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": ""
+      },
+      "abs_resid_return_z_1d": {
+        "value": 0.09553252439914693,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y) residual vs SPY",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:34+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": "beta -0.802 over 60 sessions"
+      },
+      "earnings_within_5d": {
+        "value": false,
+        "status": "OK_DATA",
+        "source": "yfinance:calendar",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:34+00:00",
+        "published_at": "2026-10-30",
+        "note": "77d from the decision date"
+      },
+      "filing_within_2d": {
+        "value": false,
+        "status": "OK_DATA",
+        "source": "sec:data.sec.gov/submissions",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:34+00:00",
+        "published_at": "2026-08-03T14:55:38-04:00",
+        "note": "newest public filing via acceptanceDateTime"
+      }
+    },
+    "UNH": {
+      "price": {
+        "value": 399.05999755859375,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:38+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": ""
+      },
+      "dollar_volume_20d": {
+        "value": 1864938947.2076416,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:38+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": "median of close x volume over the last 20 sessions"
+      },
+      "volume_z_20d": {
+        "value": -0.7644196508565825,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y)",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:38+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": ""
+      },
+      "abs_resid_return_z_1d": {
+        "value": 0.9600098652465829,
+        "status": "OK_DATA",
+        "source": "yfinance:history(1y) residual vs SPY",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:38+00:00",
+        "published_at": "2026-08-13T00:00:00-04:00",
+        "note": "beta -0.070 over 60 sessions"
+      },
+      "earnings_within_5d": {
+        "value": false,
+        "status": "OK_DATA",
+        "source": "yfinance:calendar",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:38+00:00",
+        "published_at": "2026-10-27",
+        "note": "74d from the decision date"
+      },
+      "filing_within_2d": {
+        "value": true,
+        "status": "OK_DATA",
+        "source": "sec:data.sec.gov/submissions",
+        "observed_at": "2026-08-14T21:00:00-04:00",
+        "fetched_at": "2026-08-14T09:45:38+00:00",
+        "published_at": "2026-08-13T18:21:26-04:00",
+        "note": "newest public filing via acceptanceDateTime"
+      }
+    }
+  },
+  "unavailable": {}
+}
