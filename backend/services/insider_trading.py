@@ -264,6 +264,20 @@ def compute_opportunistic_buy_score(insider_data: Optional[dict]) -> dict:
     # arrived uncoded, the filter below discarded 100% of real buying, and this
     # function reported a confident 0.0 — "No open-market insider purchases" —
     # for every ticker on earth. It would have run green forever.
+    # The SOURCE's own verdict outranks anything inferred from the payload.
+    # `fetch_open_market_buys` now says OK_DATA / OK_EMPTY / UNAVAILABLE
+    # explicitly; before it did, three different failures (dead CIK map, failed
+    # submissions fetch, unreadable filings) all arrived here as an ordinary
+    # empty buy list and were scored a confident 0.0.
+    status = insider_data.get("status")
+    if status == "UNAVAILABLE":
+        reason = insider_data.get("reason", "unavailable")
+        return {**unavailable,
+                "interpretation": (
+                    f"The Form 4 source could not answer for this ticker "
+                    f"({reason}) — this is NOT evidence of no insider buying"),
+                "reason": reason}
+
     if insider_data.get("codes_available") is False:
         n_tx = insider_data.get("n_transactions", 0)
         if not n_tx:

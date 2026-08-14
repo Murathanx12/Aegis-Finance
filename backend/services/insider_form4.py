@@ -82,15 +82,60 @@ def _sec_get(url: str) -> requests.Response:
     return last
 
 
-@lru_cache(maxsize=1)
+# ── the tri-state source contract ───────────────────────────────────────────
+# The prerequisite for Track E, and the same vocabulary the tool layer and the
+# feature layer use. "No open-market purchases in the window" and "we could not
+# find out" are different facts about the world and must not share a value.
+STATUS_OK_DATA = "OK_DATA"
+STATUS_OK_EMPTY = "OK_EMPTY"
+STATUS_UNAVAILABLE = "UNAVAILABLE"
+
+#: Successful map only. See `_ticker_cik_map`.
+_CIK_MAP_CACHE: dict[str, str] = {}
+
+
 def _ticker_cik_map() -> dict[str, str]:
-    """Ticker → zero-padded 10-digit CIK, from SEC's master list (cached once)."""
+    """Ticker → zero-padded 10-digit CIK, from SEC's master list.
+
+    THIS WAS `@lru_cache(maxsize=1)` AND RETURNED `{}` ON FAILURE.
+
+    That combination is the worst bug in this file's history, and it never
+    raised anything. One transient SEC hiccup — a 403 from the rate threshold, a
+    timeout, a bad gateway — cached an EMPTY MAP for the entire process
+    lifetime. Every ticker afterwards resolved to "no CIK", every fetch returned
+    the zero-buy shape, and `compute_opportunistic_buy_score` reported a
+    confident `0.0 — "No open-market insider purchases"` for the whole universe,
+    forever, until someone redeployed. On Railway that is until the next push.
+
+    It is the exact shape of the failure the docstring above already describes
+    happening once with Finnhub, reproduced one layer down by a caching
+    decorator.
+
+    Now: only a NON-EMPTY map is cached. A failure is a failure every time it is
+    asked, which is the only honest answer.
+    """
+    if _CIK_MAP_CACHE:
+        return _CIK_MAP_CACHE
     try:
         r = _sec_get("https://www.sec.gov/files/company_tickers.json")
-        return {v["ticker"].upper(): str(v["cik_str"]).zfill(10) for v in r.json().values()}
-    except Exception as e:  # network/parse — degrade to empty
-        logger.warning("SEC ticker→CIK map fetch failed: %s", e)
+        m = {v["ticker"].upper(): str(v["cik_str"]).zfill(10)
+             for v in r.json().values()}
+    except Exception as e:                                     # network/parse
+        logger.warning("SEC ticker→CIK map fetch failed: %s — NOT cached; the "
+                       "next call retries rather than reporting an empty "
+                       "universe", e)
         return {}
+    if m:
+        _CIK_MAP_CACHE.update(m)
+    else:
+        logger.warning("SEC ticker→CIK map came back EMPTY — not cached")
+    return m
+
+
+def cik_map_is_loaded() -> bool:
+    """Whether a real CIK map is in hand. Distinguishes 'unknown ticker' from
+    'we never got the map', which is what makes the tri-state honest."""
+    return bool(_CIK_MAP_CACHE)
 
 
 def cik_for(ticker: str) -> Optional[str]:
@@ -165,22 +210,36 @@ def fetch_open_market_buys(ticker: str, lookback_days: int = 180,
     all degrade to an empty (zero-buy) result — this never raises and, with the
     hard per-request timeout, never hangs the scheduler.
     """
-    empty = {"ticker": ticker, "source": "sec_form4", "lookback_days": lookback_days,
-             "buys": [], "n_buys": 0, "total_buy_value": 0.0}
+    base = {"ticker": ticker, "source": "sec_form4",
+            "lookback_days": lookback_days, "buys": [], "n_buys": 0,
+            "total_buy_value": 0.0, "n_filings_examined": 0,
+            "n_filings_unfetchable": 0}
+
+    def unavailable(reason: str, **extra) -> dict:
+        return {**base, "status": STATUS_UNAVAILABLE, "reason": reason,
+                "codes_available": False, **extra}
+
     cik = cik_for(ticker)
     if not cik:
-        return empty
+        # These are DIFFERENT facts. Before the tri-state they were the same
+        # return value, so a dead CIK map read as "this company has no insider
+        # buying" for every ticker at once.
+        if not cik_map_is_loaded():
+            return unavailable("cik_map_unavailable")
+        return unavailable("ticker_not_in_cik_map")
+
     try:
         sub = _sec_get(f"https://data.sec.gov/submissions/CIK{cik}.json").json()
         rec = sub["filings"]["recent"]
     except Exception as e:
         logger.warning("SEC submissions fetch failed for %s: %s", ticker, e)
-        return empty
+        return unavailable("submissions_fetch_failed", error=str(e)[:200])
 
     cutoff = (date.today() - timedelta(days=lookback_days)).isoformat()
     cik_int = int(cik)
     buys: list[dict] = []
     seen = 0
+    unfetchable = 0
     for form, acc, doc, fdate in zip(
         rec.get("form", []), rec.get("accessionNumber", []),
         rec.get("primaryDocument", []), rec.get("filingDate", []),
@@ -191,12 +250,46 @@ def fetch_open_market_buys(ticker: str, lookback_days: int = 180,
             break
         seen += 1
         xml_text = _filing_xml(cik_int, acc.replace("-", ""), doc)
-        if xml_text:
-            parsed = parse_form4_open_market_buys(xml_text)
-            for b in parsed:
-                b["filing_date"] = fdate  # PIT stamp: the signal fires on filing, not trans
-            buys.extend(parsed)
+        if not xml_text:
+            # A filing we could not read is not a filing with no purchases in
+            # it. Counted, and it can invalidate an otherwise-empty answer.
+            unfetchable += 1
+            continue
+        parsed = parse_form4_open_market_buys(xml_text)
+        for b in parsed:
+            b["filing_date"] = fdate   # PIT stamp: fires on filing, not trans
+        buys.extend(parsed)
 
-    return {"ticker": ticker, "source": "sec_form4", "lookback_days": lookback_days,
-            "buys": buys, "n_buys": len(buys),
-            "total_buy_value": float(sum(b["value"] for b in buys))}
+    out = {**base, "buys": buys, "n_buys": len(buys),
+           "total_buy_value": float(sum(b["value"] for b in buys)),
+           "n_filings_examined": seen, "n_filings_unfetchable": unfetchable,
+           "codes_available": True}
+
+    if buys:
+        # Real purchases found. If some filings were unreadable the COUNT is a
+        # lower bound, and saying so is the difference between a measurement and
+        # a number.
+        out["status"] = STATUS_OK_DATA
+        if unfetchable:
+            out["partial"] = True
+            out["reason"] = f"{unfetchable}_of_{seen}_filings_unreadable"
+        return out
+
+    if unfetchable:
+        # Nothing found, and part of the window could not be read. An absence we
+        # did not fully look for is not an absence.
+        return unavailable("empty_but_unverified",
+                           n_filings_examined=seen,
+                           n_filings_unfetchable=unfetchable)
+
+    if seen == 0:
+        # No Form 4s at all in the window. Real, and informative — but not the
+        # same as "insiders did not buy": foreign private issuers do not file
+        # Form 4 at all, so silence here has two explanations.
+        out["status"] = STATUS_OK_EMPTY
+        out["reason"] = "no_form4_filings_in_window"
+        return out
+
+    out["status"] = STATUS_OK_EMPTY
+    out["reason"] = "no_open_market_purchases"
+    return out
