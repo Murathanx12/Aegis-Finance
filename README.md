@@ -1,5 +1,15 @@
 # Aegis Finance
 
+<p align="center">
+  <a href="https://aegis-finance-six.vercel.app"><img alt="Live app" src="https://img.shields.io/badge/live-aegis--finance-0891b2?style=flat-square"></a>
+  <img alt="Tests" src="https://img.shields.io/badge/tests-3%2C800%2B%20passing-2ea44f?style=flat-square">
+  <img alt="Python" src="https://img.shields.io/badge/python-3.12-3776AB?style=flat-square&logo=python&logoColor=white">
+  <img alt="Next.js" src="https://img.shields.io/badge/next.js-14-000000?style=flat-square&logo=nextdotjs">
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-backend-009688?style=flat-square&logo=fastapi&logoColor=white">
+  <img alt="Forward record" src="https://img.shields.io/badge/forward%20record-since%202026--06--08-blueviolet?style=flat-square">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square"></a>
+</p>
+
 Aegis Finance is a free, open-source market-intelligence platform with an unusual spine: it **measures itself in public and tells you when it's wrong**. Every strategy idea is pre-registered before it touches data, tested on live forward paper portfolios (running since 2026-06-08), and published whether it works or not — the failures live in [NEGATIVE_RESULTS.md](NEGATIVE_RESULTS.md), at the top level, where a skeptic finds them first. Around that spine sits a full market dashboard: crash-risk and fragility measurement, Monte Carlo projections, portfolio construction, factor analysis, and a growing set of point-in-time data collectors — all on free data sources.
 
 **This is an educational tool, not financial advice.**
@@ -21,6 +31,79 @@ Most retail finance tools show you a backtest and ask you to trust it. Aegis ass
 - **Decision clocks, not vibes.** TRIAL-001 (HRP vs equal-weight) reads out no earlier than **June 2027**. The project makes **no skill claims before 24 months** of forward record. Period.
 - **Published negative results.** The signal engine *loses* to buy-and-hold as a timing tool. The 12-month crash model has no skill. LPPLS bubble timing was refuted twice. A survivorship-free backtest universe is not buildable on free data — so no backtested alpha claim here is trustworthy, and we say so. [Read them all.](NEGATIVE_RESULTS.md)
 - **Overfitting guards — themselves calibrated.** Deflated Sharpe, PBO, Harvey-Liu thresholds, and purged cross-validation are computed for every candidate. In Aug 2026 we ran the whole decision ladder against synthetic markets with *known* injected edges (GATE-M1) and found our own gates had ~0% power — so the ladder was recalibrated to a **measured** 1.6% false-discovery rate, with DSR/PBO reported as diagnostics rather than pretending they gate ([NEGATIVE_RESULTS §34](NEGATIVE_RESULTS.md)). Even a "pass" goes to human review, never auto-adoption.
+
+Every idea walks the same gauntlet — and most die, cheaply and on the record:
+
+```mermaid
+flowchart LR
+    IDEA([Idea]) --> CORPSE{Corpse check vs<br/>335+ prior trials}
+    CORPSE -->|match found| DEAD[Refused —<br/>it already has a corpse]
+    CORPSE -->|pass| PREREG[Pre-registration<br/>frozen in a commit<br/>BEFORE any data]
+    PREREG --> RUN[Run — every arm prints<br/>its own 80%-power MDE]
+    RUN --> PLACEBO{Placebos<br/>clean?}
+    PLACEBO -->|no| VOID[VOID — disclosed<br/>with its numbers,<br/>never deleted]
+    PLACEBO -->|yes| BAR{Clears its<br/>own MDE?}
+    BAR -->|no| NR[NEGATIVE_RESULTS.md /<br/>NOT_DETECTABLE]
+    BAR -->|yes| FWD[Forward paper lane —<br/>reality decides,<br/>24-month clock]
+    style DEAD fill:#7f1d1d,color:#fff
+    style VOID fill:#7f1d1d,color:#fff
+    style NR fill:#78350f,color:#fff
+    style FWD fill:#14532d,color:#fff
+```
+
+## The brain, in one picture
+
+The system is converging on a specific architecture: **the LLM perceives, the
+engine computes, learned models forecast, Aegis referees, and reality grades
+everyone** — in a loop.
+
+```mermaid
+flowchart TB
+    subgraph WORLD["🌍 The world"]
+        NEWS[News · SEC filings ·<br/>public disclosures]
+        MKT[Prices · options ·<br/>fundamentals · revisions]
+        MACRO[FRED macro ·<br/>net liquidity]
+    end
+    subgraph PERCEIVE["🧠 Perception (LLM)"]
+        EV[Event extraction<br/><i>what changed?</i>]
+        REL[Relation graph<br/><i>who affects whom?</i>]
+        IIF[Autonomous investigator<br/><i>IIF-1 — forward trial LIVE</i>]
+    end
+    subgraph ENGINE["⚙️ Engine (numbers)"]
+        PIT[Point-in-time store<br/><i>nothing peeks at the future</i>]
+        TEACH[Teacher Library<br/><i>insiders · funds · politicians</i>]
+        MODELS[ML: crash · Monte Carlo ·<br/>factors · regimes]
+    end
+    subgraph REFEREE["⚖️ Aegis (the referee)"]
+        DISC[Pre-registration · MDE ·<br/>placebos · read gates]
+    end
+    LANES[📈 Paper lanes — daily NAV,<br/>hash-pinned configs,<br/>since 2026-06-08]
+    REALITY([Reality grades everything])
+    WORLD --> PERCEIVE
+    WORLD --> ENGINE
+    PERCEIVE --> ENGINE
+    ENGINE --> DISC
+    PERCEIVE --> DISC
+    DISC --> LANES
+    LANES --> REALITY
+    REALITY -->|resolved outcomes<br/>feed back| PERCEIVE
+    REALITY -->|calibration| ENGINE
+```
+
+## Scoreboard — what the research has actually established (Aug 2026)
+
+The questions this project has spent real compute answering, with the honest
+verdicts. Receipts for every row live in [`docs/`](docs/README.md).
+
+| Question | Verdict | Receipt |
+|---|---|---|
+| Can an LLM pick stocks directly? | ❌ No evidence — measured role: presentation & research assistance | 16,320 graded decisions; ablation p=0.105–0.185; ~40% of apparent effect reproduced by permuted noise |
+| Do 14 specialist LLM personas beat one generic agent? | ❌ No — retired | 0.49 vs 0.85 effective distinct ideas, at 5.2× the calls |
+| Does the LLM know **economic relationships** the correlation matrix doesn't? | ✅ **Yes — the campaign's one clean positive** | MARKET-GRAPH-1: t = 4.35 vs its own MDE, every placebo intact |
+| Does that graph improve a covariance/risk model? | ❌ Closed, for $0 — perfect foresight of forward correlation *ties* the trailing sample matrix | GRAPH-COVARIANCE-1: oracle vs sample \|t\| = 0.23; industry diagonal −86.6% |
+| Does autonomous internet investigation beat a data snapshot? | ⏳ Forward trial live — first read at 40 graded nights, enforced in code | INTERNET-INVESTIGATOR-FWD-1 |
+| Do public actors' disclosed trades carry structure? | ⏳ Teacher Library ingesting (SEC Form 4, 13D/G); paper copy-lanes accruing | Track E + COPY-LAB |
+| Where does forecastable information live? | 📐 **Magnitude and risk — not direction.** Measured three independent ways | exposure-oracle gap · covariance closure · σ_π decomposition |
 
 ## What it does
 
@@ -90,7 +173,7 @@ Or run the full stack with Docker: `docker compose up --build`
 ### Tests
 
 ```bash
-# Fast suite (~2,500 tests, offline — network calls are blocked by design)
+# Fast suite (~3,800 tests, offline — network calls are blocked by design)
 python -m pytest backend/tests/ -m "not slow"
 
 # Everything (slow tests need network)
@@ -137,7 +220,9 @@ This repo doubles as an open research record. If you're studying retail-scale qu
 | You want… | Read |
 |---|---|
 | The complete project state: timeline, all 179 screened candidates, every bug found, testing infrastructure | [`docs/AEGIS_FINANCE_DOSSIER_2026-08-02.md`](docs/AEGIS_FINANCE_DOSSIER_2026-08-02.md) |
-| What did NOT work (31 documented dead ends — the most reusable artifact here) | [`NEGATIVE_RESULTS.md`](NEGATIVE_RESULTS.md) |
+| What did NOT work (35+ documented dead ends — the most reusable artifact here) | [`NEGATIVE_RESULTS.md`](NEGATIVE_RESULTS.md) |
+| The current research direction (post-GRAND-ARENA: four tracks + the Teacher Library) | [`docs/ROADMAP_BRAIN_V3_2026-08-14.md`](docs/ROADMAP_BRAIN_V3_2026-08-14.md) |
+| A guided map of the whole research record | [`docs/README.md`](docs/README.md) |
 | The current plan: gated fail-fast roadmap (data cert → method cert → trials) | [`docs/AEGIS_EXECUTION_ROADMAP.md`](docs/AEGIS_EXECUTION_ROADMAP.md) |
 | Five external AI reviews of this project, cross-verified, with their errors flagged | [`docs/AI_REVIEWS_SYNTHESIS_2026-08-03.md`](docs/AI_REVIEWS_SYNTHESIS_2026-08-03.md) + raw inputs in [`docs/external-reviews/`](docs/external-reviews/) |
 | The house rules (pre-registration, placebo gates, LLM-narrates-engine-computes) | [`docs/CANON.md`](docs/CANON.md) · [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) |
