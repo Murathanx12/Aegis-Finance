@@ -36,6 +36,7 @@ nothing is minted.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import time
@@ -44,6 +45,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
+from backend import config as _config
 from backend.services import investigator_tools as IT
 from backend.services import investigator_triggers as TR
 from backend.services.belief_state import (Observable, PredictionRecord,
@@ -61,8 +63,24 @@ NIGHTLY_MAX_CALLS = 3_000
 REQUEST_MODEL = "deepseek-v4-flash"
 BENCHMARK = "SPY"
 
-RECEIPTS_DIR = (Path(__file__).resolve().parents[2] / "backend" / "data"
-                / "optimus" / "iif1_nights")
+#: WHERE THE RECEIPTS LIVE — the same lesson as NIGHT-14 defect F7, and this
+#: file had reproduced the bug it fixed. The receipt was written under the repo
+#: while the ledger it describes lives on the persistent volume, so a Railway
+#: deploy would keep every prediction and destroy the evidence of how it was
+#: produced. Locally AEGIS_DATA_DIR is unset and this resolves to the same
+#: backend/data path it always had.
+RECEIPTS_DIR = _config.OPTIMUS_LEDGER_DIR / "iif1_nights"
+
+#: Sandbox receipts never mix with production ones. A rehearsal that wrote into
+#: the evidence directory would be indistinguishable from a real night later.
+SANDBOX_RECEIPTS_DIR = _config.OPTIMUS_LEDGER_DIR / "iif1_nights_sandbox"
+
+#: Reserved against the ceiling BEFORE a request is transmitted. Checking
+#: `spent >= ceiling` after the fact permits one more call at $11.99 against a
+#: $12 cap, and that call can carry the night past a ceiling described as hard.
+#: Sized well above MARKET-GRAPH-1's measured $0.00073/call on document-sized
+#: payloads so the reserve is genuinely worst-case rather than typical.
+WORST_CASE_CALL_USD = 0.05
 
 # ── the funding arithmetic ──────────────────────────────────────────────────
 # $10-15 is a SAFETY CEILING, not a planning budget, and the distinction is the
@@ -110,10 +128,22 @@ class NightResult:
     spend_usd: float = 0.0
     served_models: list[str] = field(default_factory=list)
     budget: dict = field(default_factory=dict)
+    cell_pairing: dict = field(default_factory=dict)
+    #: True for a rehearsal/test. A sandbox night never reaches the evidence
+    #: ledger and never writes a production receipt, and the flag is carried on
+    #: the receipt so the two can never be confused after the fact.
+    sandbox: bool = False
     elapsed_s: float = 0.0
+    #: The minted records, in memory only. Deliberately EXCLUDED from
+    #: `as_dict()` and therefore from the receipt: it carries priors and
+    #: posteriors, and the receipt is read by a human every morning during a
+    #: 40-night blind. Present so a rehearsal can inspect exactly what a
+    #: production night would have written, without writing it.
+    records: list = field(default_factory=list, repr=False)
 
     def as_dict(self) -> dict:
         d = dict(self.__dict__)
+        d.pop("records", None)
         d["trial"] = TRIAL
         return d
 
@@ -188,10 +218,17 @@ def make_llm_call(*, since_iso: str, max_usd: float = NIGHTLY_MAX_USD,
     def call(*, system: str, user: str, model: str = REQUEST_MODEL,
              temperature: float = 0.0, max_tokens: int = 1600):
         usd, n = _spend_since(since_iso)
-        if usd >= max_usd:
+        # RESERVE the worst case before transmitting, rather than checking
+        # `usd >= max_usd` after. The old form permitted one more call at
+        # $11.99 against a $12 cap and that call could carry the night past a
+        # ceiling the pre-registration calls hard.
+        if usd + WORST_CASE_CALL_USD > max_usd:
             raise NightlyBudgetExhausted(
-                f"nightly ceiling reached: ${usd:.4f} >= ${max_usd:.2f} "
-                f"(read from served responses, not estimated)")
+                f"nightly ceiling would be breached: ${usd:.4f} spent + "
+                f"${WORST_CASE_CALL_USD:.4f} reserved for this call > "
+                f"${max_usd:.2f} (spend read from served responses, never "
+                f"estimated; the reserve is what makes the ceiling hard rather "
+                f"than approximate)")
         if n >= max_calls:
             raise NightlyBudgetExhausted(
                 f"nightly call ceiling reached: {n} >= {max_calls}")
@@ -239,13 +276,51 @@ def _record_telemetry(reply: Any, *, model: str, system: str,
                      type(exc).__name__, exc)
 
 
-def mint_records(inv, *, snapshot: dict, night: str) -> list[PredictionRecord]:
+def cell_key(ticker: str, f: dict) -> tuple:
+    """The unit the paired statistic is actually computed on.
+
+    `night x ticker x observable x horizon x threshold`. Ticker-level pairing is
+    not enough: malformed forecasts are dropped (correctly — coercing one is
+    scoring a judgement nobody made), so arm A can hold NVDA/abs_move/5d/5%
+    while arm B lost exactly that cell, and a ticker-level guard sees two arms
+    that both "did NVDA". The difference is then a comparison of two different
+    cell sets wearing the name of a paired test.
+    """
+    t = f.get("threshold")
+    return (str(ticker), str(f.get("observable")), int(f.get("horizon_days", 0)),
+            None if t is None else round(float(t), 6))
+
+
+def _forecast_served_model(inv) -> str:
+    """The model that served the FORECAST call specifically.
+
+    `sorted(inv.served_models)[0]` returns whichever name sorts first across
+    five microtasks. If the extractor and the forecaster were served different
+    models — the exact failure that voided a model-diversity arm — the record
+    would carry a model that did not make the forecast it is attached to.
+    """
+    for c in inv.calls:
+        if getattr(c, "task", "") == "forecast" and c.served_model:
+            return c.served_model
+    return ""
+
+
+def mint_records(inv, *, snapshot: dict, night: str,
+                 allowed_cells: set | None = None) -> list[PredictionRecord]:
     """Forecasts -> ledger records under the belief-change contract.
 
     A cell the ledger cannot grade is DROPPED with a log line, never coerced.
+    `allowed_cells`, when given, is the cross-arm intersection: a cell missing
+    from any arm is removed from EVERY arm, symmetrically, so the comparison
+    stays paired.
     """
     out: list[PredictionRecord] = []
+    served = _forecast_served_model(inv)
+    dossier_sha = hashlib.sha256(
+        (inv.dossier or "").encode("utf-8")).hexdigest()
     for f in inv.forecasts:
+        if allowed_cells is not None and cell_key(inv.ticker, f) not in allowed_cells:
+            continue
         obs = _OBSERVABLE.get(f["observable"])
         if obs is None:
             logger.warning("[%s] unmappable observable %r dropped",
@@ -267,15 +342,73 @@ def mint_records(inv, *, snapshot: dict, night: str) -> list[PredictionRecord]:
                 next_observable=((inv.event or {}).get("what_changed")
                                  or "unspecified")[:400],
                 model=REQUEST_MODEL,
-                model_version=(sorted(inv.served_models)[0]
-                               if inv.served_models else REQUEST_MODEL),
+                model_version=served or REQUEST_MODEL,
                 prompt=f"{TRIAL}:{inv.arm}:{night}",
                 input_snapshot={"snapshot": snapshot, "arm": inv.arm,
-                                "dossier_hash": hash(inv.dossier)}))
+                                # SHA-256, not `hash()`: Python's hash is salted
+                                # per process, so the same dossier produced a
+                                # different "identifier" on every run and the
+                                # field could never link a record to its input.
+                                "dossier_sha256": dossier_sha,
+                                "all_served_models": sorted(inv.served_models)}))
         except ValueError as exc:
             logger.warning("[%s/%s] record refused by the ledger: %s",
                            inv.arm, inv.ticker, exc)
     return out
+
+
+class SandboxRequired(RuntimeError):
+    """A production invocation carried something only a sandbox may carry."""
+
+
+def assert_production_invocation(*, k: int, arms: tuple[str, ...],
+                                 max_usd: float,
+                                 llm_call: Callable | None,
+                                 tool_runner: Callable | None) -> dict:
+    """The EFFECTIVE invocation must equal the registered rule.
+
+    `verify_or_refuse()` compares module CONSTANTS against the frozen config.
+    It cannot see arguments. So this was possible and passed every check:
+
+        run_night(k=10, arms=("A_snapshot", "B_tools"), max_usd=100)
+
+    — the verifier reads `TRIGGERS_PER_NIGHT == 40`, `ARMS` complete and
+    `NIGHTLY_MAX_USD == 12.00`, reports the trial as registered, and the run
+    then executes ten triggers across two arms at a hundred dollars. A frozen
+    parameter that a caller can override is not frozen; it is a default.
+
+    Injected dependencies are refused on the same footing. An injected
+    `llm_call` skipped pre-registration verification on the theory that it
+    spends nothing — but `dry_run` defaults to False, so a caller could pass a
+    real paid client through that argument and write the evidence ledger with
+    no verification at all. `tool_runner` is the same hole for tools.
+    """
+    from backend.services.iif1_prereg import verify_or_refuse
+    frozen = verify_or_refuse()
+
+    bad = []
+    if llm_call is not None:
+        bad.append("llm_call was injected — a production night uses the frozen "
+                   "budget-gated client and nothing else")
+    if tool_runner is not None:
+        bad.append("tool_runner was injected — a production night uses the "
+                   "frozen tool layer and nothing else")
+    if int(k) != int(frozen["TRIGGERS_PER_NIGHT"]):
+        bad.append(f"k={k} overrides the registered "
+                   f"TRIGGERS_PER_NIGHT={frozen['TRIGGERS_PER_NIGHT']}")
+    if tuple(arms) != tuple(frozen["ARMS"]):
+        bad.append(f"arms={tuple(arms)} overrides the registered "
+                   f"ARMS={tuple(frozen['ARMS'])}")
+    if float(max_usd) != float(frozen["NIGHTLY_MAX_USD"]):
+        bad.append(f"max_usd={max_usd} overrides the registered "
+                   f"NIGHTLY_MAX_USD={frozen['NIGHTLY_MAX_USD']}")
+    if bad:
+        raise SandboxRequired(
+            "this invocation cannot accrue against "
+            f"{TRIAL}:\n  - " + "\n  - ".join(bad) +
+            "\n\nPass sandbox=True to run it anyway. A sandbox run may "
+            "override anything and can NEVER write the evidence ledger.")
+    return frozen
 
 
 def run_night(features_by_ticker: dict[str, dict], *,
@@ -285,14 +418,38 @@ def run_night(features_by_ticker: dict[str, dict], *,
               llm_call: Callable | None = None,
               tool_runner: Callable | None = None,
               dry_run: bool = False,
+              sandbox: bool = False,
               max_usd: float = NIGHTLY_MAX_USD,
               balance_usd: float = DEFAULT_BALANCE_USD,
               night: str | None = None) -> NightResult:
-    """One night, end to end. Writes nothing when `dry_run`."""
+    """One night, end to end.
+
+    TWO MODES, AND THE SEPARATION IS THE POINT
+    ------------------------------------------
+    **Production** (`sandbox=False`, the default): every frozen parameter must
+    equal the registered rule, dependencies may not be injected, the
+    pre-registration must be readable, and the run may write the forward
+    evidence ledger.
+
+    **Sandbox** (`sandbox=True`): override anything, inject anything, run with
+    no sibling tree — and it can never write the evidence ledger or a
+    production receipt, whatever `dry_run` says. Rehearsals and tests live
+    here.
+
+    Before this split, dependency injection and production accrual shared one
+    path, so a rehearsal was one default argument away from writing forward
+    evidence.
+    """
     t0 = time.perf_counter()
     night = night or str(date.today())
     since_iso = datetime.now(timezone.utc).isoformat(timespec="seconds")
     res = NightResult(night=night)
+    res.sandbox = bool(sandbox)
+
+    if not sandbox:
+        assert_production_invocation(k=k, arms=arms, max_usd=max_usd,
+                                     llm_call=llm_call,
+                                     tool_runner=tool_runner)
 
     sel = TR.select_triggers(features_by_ticker, k=k)
     res.trigger_report = {kk: vv for kk, vv in sel.items()
@@ -305,20 +462,12 @@ def run_night(features_by_ticker: dict[str, dict], *,
         return res
 
     counter: dict = {"calls": 0, "served": set()}
-    if llm_call is None:
-        # About to construct a REAL, paying vendor call. A night that spends
-        # money must be running the registered rule, and this is the only place
-        # that can still be checked. Deliberately not gated on the CI opt-out:
-        # a context that cannot read the pre-registration cannot accrue against
-        # it. An injected `llm_call` is a test or a simulation and spends
-        # nothing, so it does not need the sibling tree present.
-        from backend.services.iif1_prereg import verify_or_refuse
-        verify_or_refuse()
     call = llm_call or make_llm_call(since_iso=since_iso, max_usd=max_usd,
                                      counter=counter)
 
     per_arm_tickers: dict[str, list[str]] = {}
-    all_records: list[PredictionRecord] = []
+    per_arm_inv: dict[str, list] = {}
+    per_arm_snaps: dict[str, dict] = {}
     stopped = ""
 
     # The cell set is frozen ONCE, here, before a single vendor call. Everything
@@ -348,7 +497,7 @@ def run_night(features_by_ticker: dict[str, dict], *,
         agent = Investigator(arm, llm_call=call,
                              tool_runner=tool_runner or IT.run_tool,
                              model=REQUEST_MODEL)
-        rows, done = [], []
+        rows, done, invs = [], [], []
         for tkr in arm_cells:
             snap = (snapshots or {}).get(tkr, {})
             try:
@@ -360,10 +509,10 @@ def run_night(features_by_ticker: dict[str, dict], *,
                 break
             rows.append(inv.as_row())
             done.append(tkr)
-            if inv.forecasts:
-                all_records.extend(mint_records(inv, snapshot=snap,
-                                                night=night))
+            invs.append(inv)
+            per_arm_snaps.setdefault(arm, {})[tkr] = snap
         per_arm_tickers[arm] = done
+        per_arm_inv[arm] = invs
         res.per_arm[arm] = {
             "n_cells": len(done),
             "n_with_forecasts": sum(1 for r in rows if r["n_forecasts"] > 0),
@@ -373,15 +522,55 @@ def run_night(features_by_ticker: dict[str, dict], *,
         if stopped:
             break
 
-    # ── the pairing guard ───────────────────────────────────────────────────
+    # ── the pairing guards ──────────────────────────────────────────────────
     # A partial night written to the ledger would look like data. If the arms
     # diverged, nothing is minted and the reason is recorded.
+    all_records: list[PredictionRecord] = []
     try:
         TR.assert_arms_share_cells(per_arm_tickers)
     except ValueError as exc:
         res.status = "void"
         res.void_reason = str(exc)
-        all_records = []
+
+    # Ticker-level agreement is necessary and NOT sufficient. Malformed
+    # forecasts are dropped, so two arms can hold the same tickers and
+    # different gradeable cells. Only the cross-arm INTERSECTION is minted, and
+    # a cell missing anywhere is dropped everywhere — symmetrically, so the
+    # removal cannot favour an arm.
+    if res.status == "ok" and per_arm_inv:
+        per_arm_keys = {
+            arm: {cell_key(i.ticker, f) for i in invs for f in i.forecasts}
+            for arm, invs in per_arm_inv.items()}
+        shared: set = set.intersection(*per_arm_keys.values()) \
+            if per_arm_keys else set()
+        union: set = set().union(*per_arm_keys.values()) if per_arm_keys else set()
+
+        # Differential drop rates are themselves an architectural result: an arm
+        # that returns malformed JSON more often is telling us something about
+        # the arm, so this is reported rather than silently repaired.
+        res.cell_pairing = {
+            "n_cells_union": len(union),
+            "n_cells_paired": len(shared),
+            "n_cells_dropped_unpaired": len(union - shared),
+            "per_arm": {arm: {"n_cells": len(ks),
+                              "n_dropped_for_pairing": len(ks - shared)}
+                        for arm, ks in per_arm_keys.items()},
+            "key": "night x ticker x observable x horizon_days x threshold",
+        }
+        if not shared:
+            res.status = "void"
+            res.void_reason = (
+                f"no forecast cell survived cross-arm intersection "
+                f"({len(union)} cells produced across {len(per_arm_keys)} arms, "
+                f"0 held by all) — there is nothing paired to compare")
+        else:
+            for arm, invs in per_arm_inv.items():
+                snaps = per_arm_snaps.get(arm, {})
+                for i in invs:
+                    if i.forecasts:
+                        all_records.extend(mint_records(
+                            i, snapshot=snaps.get(i.ticker, {}), night=night,
+                            allowed_cells=shared))
 
     if stopped and res.status == "ok":
         res.status = "budget_stopped"
@@ -395,7 +584,11 @@ def run_night(features_by_ticker: dict[str, dict], *,
     res.served_models = sorted(m for m in counter.get("served", set()) if m)
     res.budget = project_funding(res.spend_usd, balance_usd=balance_usd)
 
-    if all_records and not dry_run and res.status == "ok":
+    # THE EVIDENCE LEDGER IS PRODUCTION-ONLY. `sandbox` outranks every other
+    # condition here: a rehearsal with a stubbed client must not be able to
+    # write forward evidence by forgetting `dry_run=True`.
+    res.records = all_records
+    if all_records and not sandbox and not dry_run and res.status == "ok":
         from backend.services import belief_state
         belief_state.append(all_records)
         res.records_written = len(all_records)
@@ -404,7 +597,8 @@ def run_night(features_by_ticker: dict[str, dict], *,
 
     res.elapsed_s = time.perf_counter() - t0
     if not dry_run:
-        RECEIPTS_DIR.mkdir(parents=True, exist_ok=True)
-        (RECEIPTS_DIR / f"{night}.json").write_text(
+        out_dir = SANDBOX_RECEIPTS_DIR if sandbox else RECEIPTS_DIR
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / f"{night}.json").write_text(
             json.dumps(res.as_dict(), indent=2, default=str), encoding="utf-8")
     return res

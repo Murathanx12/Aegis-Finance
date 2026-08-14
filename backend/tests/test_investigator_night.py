@@ -73,7 +73,7 @@ def test_a_dry_run_produces_records_for_every_arm_and_writes_nothing(tmp_path,
                         lambda recs, path=None: appended.extend(recs))
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(6)},
                       k=3, llm_call=good_llm, tool_runner=no_tools,
-                      dry_run=True, night="2026-08-14")
+                      dry_run=True, sandbox=True, night="2026-08-14")
     assert res.status == "ok"
     assert len(res.tickers) == 3
     assert set(res.per_arm) == set(N.ARMS)
@@ -88,7 +88,7 @@ def test_every_arm_receives_the_identical_cell_set():
     """The property the paired Brier statistic depends on."""
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(8)},
                       k=4, llm_call=good_llm, tool_runner=no_tools,
-                      dry_run=True)
+                      dry_run=True, sandbox=True)
     seen = {arm: {r["ticker"] for r in res.per_arm[arm]["rows"]}
             for arm in N.ARMS}
     assert len(set(map(frozenset, seen.values()))) == 1, seen
@@ -102,8 +102,12 @@ def test_records_carry_the_arm_and_the_belief_change(monkeypatch):
         __import__("tempfile").mkdtemp()))
     monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
     res = N.run_night({"T1": _feats()}, k=1, llm_call=good_llm,
-                      tool_runner=no_tools, dry_run=False)
+                      tool_runner=no_tools, dry_run=False, sandbox=True)
     assert res.status == "ok"
+    # A sandbox run mints in memory and writes NOTHING to the evidence ledger,
+    # `dry_run=False` notwithstanding — that is the separation.
+    assert captured == [], "a sandbox run reached the evidence ledger"
+    captured = list(res.records)
     assert captured, "nothing was minted"
     arms = {r.arm for r in captured}
     assert arms == set(N.ARMS)
@@ -117,7 +121,7 @@ def test_records_carry_the_arm_and_the_belief_change(monkeypatch):
 
 def test_an_empty_trigger_night_is_void_not_silently_empty():
     res = N.run_night({"T1": {"price": 1.0}}, k=5, llm_call=good_llm,
-                      tool_runner=no_tools, dry_run=True)
+                      tool_runner=no_tools, dry_run=True, sandbox=True)
     assert res.status == "void"
     assert "no eligible triggers" in res.void_reason
     assert res.records_written == 0
@@ -166,7 +170,7 @@ def test_budget_exhaustion_mid_night_marks_the_night_rather_than_pretending(
 
     monkeypatch.setattr(N, "_spend_since", lambda s: (12.0, 50))
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(4)},
-                      k=4, llm_call=flaky, tool_runner=no_tools, dry_run=True)
+                      k=4, llm_call=flaky, tool_runner=no_tools, dry_run=True, sandbox=True)
     assert res.status in ("budget_stopped", "void")
     assert res.void_reason
 
@@ -194,7 +198,7 @@ def test_divergent_cells_void_the_night_and_mint_nothing(monkeypatch):
     monkeypatch.setattr(N, "Investigator", Sabotage)
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
                       k=3, llm_call=good_llm, tool_runner=no_tools,
-                      dry_run=True)
+                      dry_run=True, sandbox=True)
     assert res.status in ("void", "budget_stopped")
     assert captured == [], "a divergent night minted records"
 
@@ -224,7 +228,7 @@ def test_the_frozen_cell_set_is_checked_before_any_arm_makes_a_call(monkeypatch)
     monkeypatch.setattr(N, "_spend_since", lambda s: (0.0, 0))
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
                       k=3, llm_call=counting_llm, tool_runner=no_tools,
-                      dry_run=True)
+                      dry_run=True, sandbox=True)
     assert res.status == "void"
     assert calls["n"] == 0, "the night spent money before checking its pairing"
 
@@ -284,7 +288,7 @@ def test_run_night_attaches_the_budget_block_to_the_receipt(monkeypatch):
     monkeypatch.setattr(N, "_spend_since", lambda s: (0.50, 20))
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
                       k=3, llm_call=good_llm, tool_runner=no_tools,
-                      dry_run=True, night="2026-08-15")
+                      dry_run=True, sandbox=True, night="2026-08-15")
     assert res.budget["measured_cost_night_1"] == pytest.approx(0.50)
     assert res.budget["projected_40_night_cost"] == pytest.approx(20.0)
     assert "trial" in res.as_dict()
@@ -303,8 +307,14 @@ def test_the_receipt_carries_operational_diagnostics_and_no_trial_statistics(
     monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
                       k=3, llm_call=good_llm, tool_runner=no_tools,
-                      dry_run=True)
-    blob = json.dumps(res.as_dict(), default=str)
+                      dry_run=True, sandbox=True)
+    d = res.as_dict()
+    # `cell_pairing.key` is a prose description of the pairing key, not data —
+    # it names the fields ("... x threshold") without carrying any of their
+    # values. Dropped before the scan so the scan can stay a blunt substring
+    # search, which is what makes it hard to defeat by accident.
+    d.get("cell_pairing", {}).pop("key", None)
+    blob = json.dumps(d, default=str)
     # Counts (`n_forecasts`) are operational and stay. Anything from which a
     # forecast's VALUE could be recovered does not.
     for leak in ("posterior", "prior\"", "probability", "brier", "rationale",
@@ -364,9 +374,13 @@ def test_a_paying_night_refuses_without_the_prereg_even_when_exempted(
     monkeypatch.setattr(P, "CONFIG_PATH", tmp_path / "gone" / "iif1_config.py")
     monkeypatch.setenv(P.OPT_OUT_ENV, "1")
     monkeypatch.setattr(N, "_spend_since", lambda s: (0.0, 0))
+    # NOT sandbox — the whole point is that the PRODUCTION path refuses. Marking
+    # this sandbox would skip the guard and send the run at the real vendor,
+    # which is how it was caught: the test hung in retry backoff instead of
+    # raising.
     with pytest.raises(P.FrozenPreregMissing):
         N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
-                    k=3, tool_runner=no_tools, dry_run=True)
+                    dry_run=True)
 
 
 def test_an_injected_llm_call_does_not_require_the_sibling_tree(monkeypatch,
@@ -378,7 +392,7 @@ def test_an_injected_llm_call_does_not_require_the_sibling_tree(monkeypatch,
     monkeypatch.setattr(N, "_spend_since", lambda s: (0.0, 0))
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
                       k=3, llm_call=good_llm, tool_runner=no_tools,
-                      dry_run=True)
+                      dry_run=True, sandbox=True)
     assert res.status == "ok"
 
 
