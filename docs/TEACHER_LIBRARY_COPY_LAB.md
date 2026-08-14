@@ -1,7 +1,8 @@
 # TEACHER-LIBRARY-1 / COPY-LAB — design and status
 
-**Status 2026-08-14: substrate built and demonstrated end to end on real SEC
-data. No lane seeded. No hypothesis evaluated. $0.00 spent.**
+**Status 2026-08-14: substrate built, TWO sources live end to end on real SEC
+data (Form 4 and Schedule 13D/G), 22 events in the ledger. No lane seeded. No
+hypothesis evaluated. $0.00 spent.**
 
 Roadmap: `ROADMAP_BRAIN_V3_2026-08-14.md` Track E.
 
@@ -127,6 +128,37 @@ week.
 SEC rate limiter, the User-Agent, the 403 retry and the XML parser. A second
 insider parser would be a second thing to keep correct.
 
+### `adapters_13dg.py` — Schedule 13D / 13G, the second source
+
+Its own adapter rather than a flag, because **13D declares intent to influence
+or control** (five business days to file since 2023) and **13G is the passive
+twin**. Collapsing them would average an activist's declaration with an index
+fund crossing a threshold mechanically — two different things that happen to
+share a percentage.
+
+The actor is the **filer**, not the issuer. The regex anchors on `FILED BY:`,
+because the issuer appears *first* in EDGAR's header and a naive match would
+attribute every 13G to the company it was filed against, silently swapping actor
+and subject.
+
+Two limits flagged rather than papered over: `actor_type` is inferred from the
+**form**, not the filer's nature (a 13G filer can be an individual); and EDGAR
+does not say which filing a `/A` amends, so `is_amendment` is set while
+`amends_event_id` stays None — the safe direction, since the ledger only
+supersedes when the link is present.
+
+Live, on real data:
+
+```
+SC 13G/A  VANGUARD GROUP INC   accepted 2024-03-11T13:59:07
+SC 13G/A  BlackRock Inc.       accepted 2024-03-07T17:29:52
+SC 13G/A  VANGUARD GROUP INC   accepted 2024-02-13T21:55:49
+```
+
+That last one is the argument for acceptance timestamps in a single line:
+**21:55 UTC is 16:55 ET, after the close.** A backtest treating it as same-day
+tradable information would help itself to most of a session it never had.
+
 ---
 
 ## The end-to-end demonstration (real SEC data, $0.00)
@@ -197,8 +229,8 @@ absence.**
   2027-01-11), `TRIAL-INSIDER-IC` / `TRIAL-CMP-INSIDER-IC` (2027-07-21) and
   `TRIAL-ARK-IC` are accruing forward. TL-1 extends them; it must never
   re-register them or read their clocks early.
-- **Adapters not yet built:** House/Senate PTR, 13D/13G, 13F, N-PORT, ARK,
-  public recommendation feeds.
+- **Adapters not yet built:** House/Senate PTR, 13F, N-PORT, ARK, public
+  recommendation feeds. (13D/13G is now built — see above.)
 
 ---
 
@@ -208,9 +240,10 @@ absence.**
    `CORPORATE_INSIDER_OPPORTUNISTIC` from `ready: false` to buildable —
    actor-relative surprise needs a history, and it must use only outcomes
    already resolved before the event being described.
-2. **13D/13G.** A distinct event family, not institutional ownership. The
-   post-2023 five-business-day initial deadline makes it a far faster public
-   clock than 13F.
+2. ~~**13D/13G**~~ — **BUILT 2026-08-14.** Next for this family: bulk
+   historical 13D/G rather than the per-issuer submissions feed, and parsing the
+   filing body for stake size and declared purpose, which the header does not
+   carry.
 3. **House/Senate PTR.** The 45-day window is the interesting part, not an
    obstacle to it.
 4. **Matched-control machinery** (`ORDER H`) before any hypothesis: same sector,
