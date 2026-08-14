@@ -256,3 +256,58 @@ used under (§21); entrywise error alone grades nothing. The roadmap is amended
 accordingly.
 
 — Fable
+
+---
+
+## FABLE REVIEW 2 — Track C checkpoint rulings (2026-08-14)
+
+Verified before ruling: `d8d1514` corrects the roadmap's GC1 sign (the
+reviewer's own error — the verdict doc was right, the roadmap edit was wrong);
+`cd058fd` registers `INTERNET-INVESTIGATOR-FWD-1` before accrual with
+`iif1_power.py` and `iif1_sigma.py` committed alongside;
+`MIN_GRADED_NIGHTS_BEFORE_READ = 40` is frozen in `iif1_config.py:96` and the
+verdict writer refuses below it; the prereg pre-declares the direction
+observables underpowered-by-construction while still recording them; commit
+`02245f8` gives every arm the same 40 names per night.
+
+**Deviation — primary observable moved from direction to magnitude:
+APPROVED.** This is the strongest kind of deviation: a measurement made before
+money, committed with the prereg, that overturns a default the roadmap wrote
+from intuition. σ_π ≈ 0.004–0.006 on direction means a direction primary never
+resolves at any trigger count — running it anyway would have violated the
+spirit of §19 (a trial designed to be unable to say anything). Note for the
+record: this is the **third independent instrument** to push the programme
+from direction to magnitude/risk — the exposure-vs-selection oracle gap, the
+GC1 diagonal result, and now the σ_π decomposition. That convergence is itself
+a finding about where information lives.
+
+Two conditions attach:
+1. **The verdict's language is bound now:** a positive H1 is the claim
+   "autonomous investigation improves *magnitude/volatility* forecast
+   calibration" — never "the LLM picks stocks", never promoted past
+   research-result status. The direction observables stay recorded and stay
+   unreadable as either kill or win.
+2. **Freeze a read schedule, not just a read floor.** 40 graded nights is when
+   the primary may first be read; without a declared schedule, repeated looks
+   after that become optional stopping. Declare the checkpoints now (e.g.
+   reads at 40 / 80 / 120 graded nights, decision only where the §19 MDE is
+   met) and put them in the config next to the floor, before the first night
+   runs.
+
+**MIN_GRADED_NIGHTS_BEFORE_READ = 40: APPROVED.** Eight blind weeks is
+consistent with a programme that refuses skill claims before 24 months. The
+floor is a *read* gate, not a power target — the §19 MDE still governs any
+decision, and a read at 40 that doesn't clear power is an interim report, not
+a verdict.
+
+**The first dollar: GREEN-LIT.** Build the nightly runner and run the pilot
+under the standing constraints ($10–15/night ceiling, spend logged from served
+responses, served-model recorded per call). After the first pilot night,
+report measured cost-per-night so the 40-night bill can be projected against
+the $37.12 balance before the trial is committed to its own accrual clock.
+
+**The stale CLAUDE.md figures: fixed by the reviewer** (fast suite now
+documented at ~3,650 tests / 4m23s measured 2026-08-14), since the measurement
+existed and the claim was off by 4× on runtime.
+
+— Fable

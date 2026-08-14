@@ -151,7 +151,8 @@ uvicorn backend.main:app --reload --port 8000
 # Frontend (separate terminal)
 cd frontend && npm install && npm run dev
 
-# Run fast backend tests (~20 min, ~3560 tests; OFFLINE + un-hangable)
+# Run fast backend tests (~3650 tests; OFFLINE + un-hangable; 4m23s measured
+# on the dev machine 2026-08-14 — the old "~20 min" figure predates fixture work)
 # The fast suite is network-BLOCKED (backend/tests/conftest.py) and has a hard
 # per-test timeout (pytest.ini). Any network call in a unit test is a bug →
 # mark it `slow` or mock it.
@@ -261,7 +262,7 @@ them at their trigger points, don't re-derive the procedure:
 | Portfolio Stress (3 profiles) | `test_stress_portfolio.py` | 10 | Slow (network) |
 | Portfolio Projection (MC) | `test_portfolio_projection.py` | 5 | Slow (network) |
 | Edge Cases (tickers) | `test_edge_cases.py` | 7 | Slow (network) |
-| **Total** | **40+ files** | **2460+** | **~2467 fast / ~95 slow** |
+| **Total** | **40+ files** | **3740+** | **~3653 fast / ~95 slow** (fast count measured 2026-08-14) |
 
 Run fast tests: `python -m pytest backend/tests/ -v -m "not slow"`
 
