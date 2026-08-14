@@ -20,7 +20,7 @@ import pytest
 from backend.services import investigator_night as N
 from backend.services import investigator_tools as IT
 from backend.services.investigator_agent import FORECAST_CELLS
-from backend.tests.iif1_prereg_check import load_frozen_config
+from backend.services.iif1_prereg import load_frozen_config
 
 
 def _feats(z=1.0):
@@ -326,7 +326,7 @@ def test_runner_constants_match_the_frozen_prereg_config():
     """
     mod = load_frozen_config()
     if mod is None:
-        pytest.fail("unreachable without the declared opt-out")
+        pytest.skip("frozen-config exemption declared for this context")
     assert tuple(mod.ARMS) == N.ARMS
     assert mod.REQUEST_MODEL == N.REQUEST_MODEL
     assert mod.BENCHMARK == N.BENCHMARK
@@ -342,5 +342,61 @@ def test_the_first_read_look_is_the_horizon_the_funding_is_projected_over():
     rather than quietly projecting the wrong bill."""
     mod = load_frozen_config()
     if mod is None:
-        pytest.fail("unreachable without the declared opt-out")
+        pytest.skip("frozen-config exemption declared for this context")
     assert mod.READ_SCHEDULE[0][0] == N.GRADED_NIGHTS_TO_FIRST_LOOK
+
+
+# ── the exemption stops at the money ────────────────────────────────────────
+
+def test_a_paying_night_refuses_without_the_prereg_even_when_exempted(
+        monkeypatch, tmp_path):
+    """The reason the CI exemption is safe.
+
+    `AEGIS_IIF1_PREREG_ABSENT_OK=1` lets a non-accruing context (CI, a prod
+    image) run without the sibling tree. If it also waved through the runner,
+    the skip would simply have been rebuilt one layer down — which is this
+    trial's own tool-layer bug, committed a second time in the fix for it.
+
+    So: exemption declared, config absent, real vendor path requested (no
+    injected `llm_call`) -> REFUSE.
+    """
+    from backend.services import iif1_prereg as P
+    monkeypatch.setattr(P, "CONFIG_PATH", tmp_path / "gone" / "iif1_config.py")
+    monkeypatch.setenv(P.OPT_OUT_ENV, "1")
+    monkeypatch.setattr(N, "_spend_since", lambda s: (0.0, 0))
+    with pytest.raises(P.FrozenPreregMissing):
+        N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
+                    k=3, tool_runner=no_tools, dry_run=True)
+
+
+def test_an_injected_llm_call_does_not_require_the_sibling_tree(monkeypatch,
+                                                                tmp_path):
+    """An injected call spends nothing, so it needs no pre-registration to
+    spend it against. Tests must not be forced to carry the sibling repo."""
+    from backend.services import iif1_prereg as P
+    monkeypatch.setattr(P, "CONFIG_PATH", tmp_path / "gone" / "iif1_config.py")
+    monkeypatch.setattr(N, "_spend_since", lambda s: (0.0, 0))
+    res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
+                      k=3, llm_call=good_llm, tool_runner=no_tools,
+                      dry_run=True)
+    assert res.status == "ok"
+
+
+def test_drifted_runtime_constants_refuse_a_paying_night(monkeypatch):
+    """Drift is not a warning. An accrual under unregistered parameters is not
+    the trial that was pre-registered, and no number of nights fixes that."""
+    from backend.services import iif1_prereg as P
+    if P.load_frozen_config() is None:
+        pytest.skip("frozen-config exemption declared for this context")
+    monkeypatch.setattr(N, "ARMS", ("A_snapshot", "B_tools"))   # an arm dropped
+    with pytest.raises(P.FrozenPreregDrifted, match="ARMS"):
+        P.verify_or_refuse()
+
+
+def test_verify_or_refuse_passes_on_the_real_tree_as_shipped():
+    from backend.services import iif1_prereg as P
+    if P.load_frozen_config() is None:
+        pytest.skip("frozen-config exemption declared for this context")
+    surface = P.verify_or_refuse()
+    assert tuple(surface["ARMS"]) == N.ARMS
+    assert surface["REQUEST_MODEL"] == N.REQUEST_MODEL

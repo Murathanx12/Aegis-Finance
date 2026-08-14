@@ -305,6 +305,15 @@ def run_night(features_by_ticker: dict[str, dict], *,
         return res
 
     counter: dict = {"calls": 0, "served": set()}
+    if llm_call is None:
+        # About to construct a REAL, paying vendor call. A night that spends
+        # money must be running the registered rule, and this is the only place
+        # that can still be checked. Deliberately not gated on the CI opt-out:
+        # a context that cannot read the pre-registration cannot accrue against
+        # it. An injected `llm_call` is a test or a simulation and spends
+        # nothing, so it does not need the sibling tree present.
+        from backend.services.iif1_prereg import verify_or_refuse
+        verify_or_refuse()
     call = llm_call or make_llm_call(since_iso=since_iso, max_usd=max_usd,
                                      counter=counter)
 

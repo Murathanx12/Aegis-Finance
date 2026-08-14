@@ -9,8 +9,8 @@ from __future__ import annotations
 import pytest
 
 from backend.services import investigator_triggers as TR
-from backend.tests import iif1_prereg_check as PC
-from backend.tests.iif1_prereg_check import load_frozen_config
+from backend.services import iif1_prereg as PC
+from backend.services.iif1_prereg import load_frozen_config
 
 
 def _f(z=0.0, vol=0.0, earn=False, filing=False, price=100.0, dv=1e9):
@@ -28,12 +28,15 @@ def test_runtime_weights_match_the_frozen_prereg_config():
 
     This used to `pytest.skip` when the sibling tree was absent — i.e. report
     green while executing nothing, in exactly the checkouts where it mattered.
-    See `iif1_prereg_check` for why the default is now a loud failure.
+    See `backend/services/iif1_prereg.py` for why the default is now a loud
+    failure and why the real enforcement moved to the runner.
     """
     mod = load_frozen_config()
     if mod is None:
-        pytest.fail("unreachable: load_frozen_config returned None without "
-                    "the opt-out having been declared")
+        # Only reachable where the exemption was DECLARED, which by definition
+        # is a context that never accrues. `verify_or_refuse` still binds on
+        # any night that spends, and that is pinned separately.
+        pytest.skip(f"{PC.OPT_OUT_ENV}=1 declared — see the banner above")
     assert mod.TRIGGER_WEIGHTS == TR.TRIGGER_WEIGHTS
     assert mod.TRIGGERS_PER_NIGHT == TR.TRIGGERS_PER_NIGHT
     assert mod.MIN_PRICE == TR.MIN_PRICE

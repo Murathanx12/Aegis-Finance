@@ -38,6 +38,19 @@ jobs:
         continue-on-error: true
         run: pip-audit || true
       - name: Pytest (fast suite — offline, blocking)
+        # This job checks out ONE repo, so the `Aegis module` sibling that holds
+        # the frozen IIF-1 pre-registration is genuinely absent here. That is
+        # declared rather than inferred: the loader prints a banner naming
+        # everything left unverified, and the two consistency tests skip with a
+        # reason instead of a bare "not present".
+        #
+        # This is safe because CI never accrues. The enforcement that matters
+        # lives in `backend/services/iif1_prereg.verify_or_refuse()`, which the
+        # nightly runner calls before constructing a real vendor call and which
+        # deliberately IGNORES this variable — a context that cannot read the
+        # pre-registration cannot spend money against it.
+        env:
+          AEGIS_IIF1_PREREG_ABSENT_OK: "1"
         run: python -m pytest backend/tests/ -m "not slow" -q
 
   frontend:
