@@ -398,3 +398,69 @@ Pinned.
 
 Interpret nothing from Night 1 but operations: valid paired cells, arm
 completion, tool-failure rates, model provenance, calls, spend, projection.
+
+---
+
+## FABLE ORDERS — next tasks (2026-08-14, Murat away for a few hours, interim authority delegated to the brain)
+
+Murat's standing instruction for this window: keep working; the new tasks
+follow. His added note on TEACHER-COPY: personal/research use only, not sold —
+noted; the `public_at` discipline stays anyway because it is what makes the
+lane's numbers mean anything, not a legal posture.
+
+### Order 1 — read the 182-name probe, then gate
+
+When the availability probe lands, read it against two thresholds: the
+UNAVAILABLE rate, and whether the frozen per-night trigger count is actually
+reachable from the real universe. If either fails, STOP — report and hold for
+Murat; do not run a paid night against an infeasible pool. The probe's serial
+runtime (~25+ min observed) is itself an operational input: state what the
+nightly schedule has to accommodate, and whether simple caching keeps it
+inside the window. No re-architecture.
+
+### Order 2 — RUN NIGHT 1. One night. Authorised now.
+
+Murat authorised the paid pilot when the read schedule froze; the schedule is
+frozen, the checklist is closed, the rehearsal ran clean. Conditions:
+
+- Locally, this session attending. `sandbox=False` stated explicitly in the
+  invocation; the frozen config verified by `verify_or_refuse()` on the real
+  path; every ceiling binding.
+- The receipt must print the full budget block from SERVED responses:
+  `measured_cost_night_1`, `projected_40_night_cost`, `current_balance`,
+  `funding_gap_or_surplus`. "UNKNOWN" was the right answer before a paid
+  night; after one it is a defect.
+- **STOP after one night.** Night 2 is Murat's funding decision, made on the
+  printed block when he returns. No accrual schedule is committed.
+- If anything voids the night (guard, drift, encoding, tooling), the void
+  reason on disk IS the deliverable — report it, do not retry-spend the same
+  night without stating what changed.
+
+### Order 3 — while waiting or after Night 1: Track E groundwork, $0, data engineering only
+
+In priority order, all vendor-spend-free:
+
+1. **Form 4 tri-state source contract** — `OK_EMPTY` / `OK_DATA` /
+   `UNAVAILABLE` through `fetch_open_market_buys()` and its consumers, with a
+   silent-fragility pass over the collector. This is the pre-registered
+   prerequisite for everything else in Track E.
+2. **Canonical public-action ledger** — schema + ingestion skeleton for the
+   free Tier-1 sources (SEC bulk insider transactions first). `public_at` is
+   the only signal timestamp; provenance and data-quality status on every
+   row. **Data engineering only: no IC, no outcome joins, no signal
+   evaluation of any kind** — the moment a number could grade a hypothesis,
+   pre-registration comes first (`pre-register-trial`).
+3. **TEACHER-COPY lane spec** — a seed-ready YAML + one-page spec per roadmap
+   Track E item 8 (public_at entries, risk-matched benchmark + SPY,
+   `PRODUCT_LANE` label). **Spec only — seeding is attended; Murat flips the
+   flag.**
+4. **Track A hook** — the `ABLATION_FWD` auto-append for the first forward
+   resolutions on 2026-08-16, if it is not already wired.
+
+### What is NOT authorised in this window
+
+Night 2 or any accrual commitment; seeding any lane; any paid data purchase;
+any IIF-1 design change beyond what Night 1's own void reasons force; reading
+any IIF-1 outcome (the read gate answers this anyway).
+
+— Fable
