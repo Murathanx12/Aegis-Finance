@@ -1,0 +1,175 @@
+# COPY-LAB — teacher-copy paper lanes (SPEC ONLY, NOT SEEDED)
+# =============================================================================
+# Roadmap Track E item 8. Written seed-ready and deliberately NOT seeded:
+# seeding is attended and Murat flips the flag (`seed-a-lane`).
+#
+# THIS FILE IS SEPARATE FROM paper_portfolios.yaml ON PURPOSE.
+# That file is immutable, version-controlled and baked into the config hash the
+# live track record's integrity checks depend on. A new lane definition landing
+# in it would change that hash and perturb ten lanes that have been accruing
+# since 2026-06-08. Nothing in COPY-LAB may touch the existing book.
+#
+# WHAT THESE LANES ARE
+# --------------------
+# EXPERIMENTAL. FORWARD PAPER. NOT VALIDATED ALPHA.
+# They may run before statistical certification — that is the point of a paper
+# lane — but no verdict, no research document and no product surface may cite
+# them as evidence of skill. They carry `label: PRODUCT_LANE` so the
+# distinction is machine-checkable rather than a convention someone remembers.
+#
+# THE RULE THAT MAKES THE NUMBERS MEAN ANYTHING
+# ---------------------------------------------
+# Entries happen at `public_at`, never at the actor's transaction date, and fill
+# on the NEXT tradable session after it. A lane entering on the transaction date
+# would be measuring a portfolio nobody could have held — a fantasy backtest
+# wearing a paper account's clothes. Measured Form 4 lag is 0–1 days; Senate
+# PTRs may legally arrive up to 45 days late, and that lane's numbers will look
+# completely different because of it. Measuring that difference IS the product
+# question.
+
+version: 1
+status: SPEC_ONLY_NOT_SEEDED
+label: PRODUCT_LANE
+created: 2026-08-14
+roadmap: docs/ROADMAP_BRAIN_V3_2026-08-14.md  # Track E item 8
+spec: docs/TEACHER_LIBRARY_COPY_LAB.md
+
+# Every lane shares this accounting so cross-lane comparison means something.
+defaults:
+  notional_usd: 100000.0
+  # `public_at` is the only entry trigger. Not negotiable per lane.
+  entry_timestamp_field: public_at
+  fill: next_session_open_after_public_at
+  no_retroactive_fills: true
+  transaction_cost_bps: 5
+  slippage_bps: 10          # wider than the book's lanes: these are reactive
+                            # trades into names that just printed news
+  max_single_name: 0.05
+  max_positions: 40
+  min_price: 5.0
+  min_dollar_volume_20d: 5000000.0
+  cash_yield_source: fred:DTB3
+  corporate_actions: adjust
+  delisting: liquidate_at_last_price
+  # Two benchmarks from day one. SPY alone flatters anything with a small-cap
+  # or high-beta tilt, and every one of these lanes has one.
+  benchmarks:
+    - SPY
+    - risk_matched   # beta- and sector-matched basket, rebuilt at each rebalance
+
+# Tracked for every lane. Contribution attribution is what turns a paper lane
+# into a research input rather than a scoreboard.
+metrics:
+  - nav
+  - cagr
+  - excess_return_vs_risk_matched
+  - excess_return_vs_spy
+  - volatility
+  - sharpe
+  - sortino
+  - max_drawdown
+  - turnover
+  - hit_rate
+  - avg_gain
+  - avg_loss
+  - beta
+  - sector_exposure
+  - capacity_adv_pct
+  - contribution_by_actor
+  - contribution_by_action_type
+  - contribution_by_disclosure_lag_bucket
+
+lanes:
+
+  CORPORATE_INSIDER_CLUSTER:
+    source: sec_form4
+    actor_type: CORPORATE_INSIDER
+    thesis: >
+      Multiple INDEPENDENT Section 16 insiders making open-market purchases (code
+      P) in the same issuer within a bounded window. Cluster, not any single buy.
+    entry: n_distinct_buyers >= 2 within 30d, both public_at <= entry
+    holding_days: 126
+    ready: true          # the Form 4 adapter is live and tri-state clean
+
+  CORPORATE_INSIDER_OPPORTUNISTIC:
+    source: sec_form4
+    actor_type: CORPORATE_INSIDER
+    thesis: >
+      A single insider's purchase that is unusual FOR THAT INSIDER — first buy
+      after a long sell-only history, or large relative to their own past size.
+      Actor-relative, not dollar-absolute.
+    entry: actor_surprise_score high, computed only from history public before entry
+    holding_days: 126
+    ready: false         # needs per-insider history from SEC bulk Form 3/4/5
+
+  CONGRESS_DISCLOSURE_COPY:
+    source: house_senate_ptr
+    actor_type: POLITICIAN
+    thesis: >
+      Naive copy at disclosure. The STOCK Act literature's mean-politician null
+      is the STATED PRIOR, not a strawman — this lane exists to measure how much
+      survives a legal 45-day reporting window, which is the honest product
+      question.
+    entry: public_at, unconditional
+    holding_days: 126
+    ready: false         # adapter not built
+
+  CRAMER_FOLLOW:
+    source: public_recommendation_feed
+    actor_type: MEDIA_RECOMMENDER
+    thesis: Follow timestamped public recommendations.
+    holding_days: 63
+    ready: false
+
+  CRAMER_INVERSE:
+    source: public_recommendation_feed
+    actor_type: MEDIA_RECOMMENDER
+    thesis: >
+      The mirror of CRAMER_FOLLOW. Kept as a SEPARATE lane rather than a sign
+      flip so both pay their own costs — the inverse of a strategy is not free,
+      and SJIM (the actual Inverse Cramer ETF) was liquidated in Feb 2024.
+    holding_days: 63
+    ready: false
+
+  ACTIVIST_13D:
+    source: sec_13d
+    actor_type: ACTIVIST_INVESTOR
+    thesis: >
+      A >5% crossing with declared control intent. Economically different from
+      passive institutional ownership, and post-2023 the initial filing deadline
+      is five business days — a far faster public clock than 13F.
+    holding_days: 252
+    ready: false
+
+  SPECIALIST_13F_INITIATION:
+    source: sec_13f
+    actor_type: HEDGE_FUND_MANAGER
+    thesis: >
+      A domain-specialist manager INITIATING a high-weight position.
+    control: >
+      MANDATORY. Raw 13F popularity (top-3-holding manager count) is a corpse:
+      real rank information in small caps at t(IC)=2.70 and a NET-NEGATIVE book.
+      This lane must be run beside that corpse or it is re-running a dead test
+      under a new name.
+    holding_days: 189
+    ready: false
+
+  CROSS_TEACHER_CONSENSUS:
+    source: multi
+    thesis: >
+      Independent channels agreeing. Requires genuinely different information
+      channels — three websites republishing one filing is one channel, and the
+      lane must track effective_independent_teacher_count rather than raw count.
+    ready: false
+
+# Seeding checklist — every box is a human's, not a session's.
+seeding:
+  attended: true
+  procedure: .claude/skills/seed-a-lane
+  env_gated: true
+  prerequisites:
+    - the source adapter is live and tri-state clean (OK_DATA/OK_EMPTY/UNAVAILABLE)
+    - public_at present and validated on every event the lane would trade
+    - risk-matched benchmark constructed and checked against SPY
+    - lane-integrity-check green BEFORE and AFTER
+    - PRODUCT_LANE label present so no verdict can cite it as evidence
