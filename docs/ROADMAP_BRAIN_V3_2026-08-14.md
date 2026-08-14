@@ -102,11 +102,18 @@ relationship experiments:
   (−0.06%, −0.02%, +0.03%). The pre-registered power gate failed, and chasing
   why produced the result that matters: **perfect foresight of the realised
   forward correlation matrix is statistically indistinguishable from the
-  trailing sample matrix** (`oracle_full − sample` = +0.000158 against MDE
-  0.001916, **t = 0.23**), while the industry-standard diagonal specific-risk
-  assumption is **86.6% worse at t = 12.60**. The metric is not blind; there is
-  simply **no headroom for any correlation predictor** to occupy at this
-  universe size. Two reusable instrument rules were earned: entrywise
+  trailing sample matrix** — risk reduction of `oracle_full` over `sample` =
+  **−0.000158** (perfect foresight realised marginally *higher* risk) against
+  MDE 0.001916, **|t| = 0.23**, and not detectable at any eigenvalue floor
+  tested — while the industry-standard diagonal specific-risk assumption is
+  **86.6% worse at t = 12.60**. The metric is not blind; the headroom left for
+  any correlation predictor is **bounded at ≤15.4%** of the gain the trailing
+  matrix already delivers over the diagonal assumption. Stated as a bound, not
+  an absence: `not detectable` is not `zero` (§19). **The closure is pool- and
+  objective-specific** — minimum-variance realised volatility, N≈300 US
+  large-cap, 126-day horizon, 2015–2024 — and reopening it requires a new
+  pre-registration naming which of those four boundaries changed.
+  Two reusable instrument rules were earned: entrywise
   correlation MSE and portfolio risk are different loss functions that here
   disagree by 45% in opposite directions; and an oracle must be built *inside*
   the architecture it is the ceiling for, or its own scale-inconsistency
