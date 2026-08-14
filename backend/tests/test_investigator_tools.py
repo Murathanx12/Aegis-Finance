@@ -98,6 +98,74 @@ def test_the_model_visible_text_distinguishes_failure_from_absence():
     assert "found nothing" not in failed
 
 
+def test_a_swallowed_upstream_failure_is_caught_and_reported_as_unavailable():
+    """The bug that defeated this whole module, pinned.
+
+    Every wrapped service swallows its own exception and returns a default:
+
+        except Exception as e:
+            logger.warning("Failed to fetch news for %s: %s", ticker, e)
+            return []
+
+    So a throttled feed and a genuinely quiet week arrive here as the same
+    empty list, and `empty` vs `unavailable` — the distinction that stops a
+    model forecasting calm when the feed is down — silently stopped working.
+    The original tests missed it because they mocked the FUNCTIONS rather than
+    reproducing the services' swallow-and-log behaviour.
+    """
+    import logging as _logging
+    lg = _logging.getLogger("backend.services.news_intelligence")
+
+    def swallows_like_production(ticker: str, **_):
+        lg.warning("Failed to fetch news for %s: 429 Too Many Requests", ticker)
+        return []
+
+    monkey = T.ToolSpec("search_news", "d", {"type": "object"},
+                        swallows_like_production)
+    T.TOOLS["search_news"], original = monkey, T.TOOLS["search_news"]
+    try:
+        r = T.run_tool("search_news", {"ticker": "AAPL"})
+    finally:
+        T.TOOLS["search_news"] = original
+
+    assert r.status == T.STATUS_UNAVAILABLE, "a swallowed failure read as empty"
+    assert "429" in r.reason
+    assert "LOOKUP FAILED" in r.as_model_text()
+
+
+def test_a_genuine_empty_with_no_warning_is_still_reported_as_empty():
+    """The other half: the guard must not turn every quiet result into a
+    failure, or the model is told it knows nothing whenever nothing happened."""
+    monkey = T.ToolSpec("search_news", "d", {"type": "object"},
+                        lambda ticker, **_: [])
+    T.TOOLS["search_news"], original = monkey, T.TOOLS["search_news"]
+    try:
+        r = T.run_tool("search_news", {"ticker": "AAPL"})
+    finally:
+        T.TOOLS["search_news"] = original
+    assert r.status == T.STATUS_EMPTY
+
+
+def test_a_warning_alongside_a_NON_empty_result_is_not_a_failure():
+    """A service can warn about one thing and still return real data."""
+    import logging as _logging
+    lg = _logging.getLogger("backend.services.news_intelligence")
+
+    def warns_but_delivers(ticker: str, **_):
+        lg.warning("one source degraded")
+        return [{"title": "real headline"}]
+
+    monkey = T.ToolSpec("search_news", "d", {"type": "object"},
+                        warns_but_delivers)
+    T.TOOLS["search_news"], original = monkey, T.TOOLS["search_news"]
+    try:
+        r = T.run_tool("search_news", {"ticker": "AAPL"})
+    finally:
+        T.TOOLS["search_news"] = original
+    assert r.status == T.STATUS_OK
+    assert "real headline" in r.as_model_text()
+
+
 def test_a_successful_result_carries_its_payload_into_the_text():
     r = T.ToolResult("query_options", T.STATUS_OK,
                      payload={"iv_rank": 88, "skew": -0.4})

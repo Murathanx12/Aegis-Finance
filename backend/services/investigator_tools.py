@@ -87,11 +87,21 @@ class ToolResult:
     `status` is load-bearing and is rendered into the model-visible text. See
     the module docstring: `empty` and `unavailable` mean opposite things and
     merging them is how this project has fabricated calm before.
+
+    `caveat` covers the third case, which is the one that nearly got through:
+    a payload that arrives looking complete while the source was failing
+    underneath it. `get_earnings_summary` on a 404 returns
+    `{"signal": {"sentiment": "neutral", "confidence": 0, ...}}` — a fabricated
+    neutral reading about a company whose data could not be fetched. It is not
+    empty, so no emptiness rule catches it. The honest move is not to guess
+    whether the payload is trustworthy but to hand the model the payload AND
+    what went wrong while producing it.
     """
     tool: str
     status: str
     payload: Any = None
     reason: str = ""
+    caveat: str = ""
     latency_ms: float = 0.0
 
     @property
@@ -111,10 +121,17 @@ class ToolResult:
             body = json.dumps(self.payload, default=str)[:6000]
         except (TypeError, ValueError):
             body = str(self.payload)[:6000]
-        return f"[{self.tool}] {body}"
+        head = f"[{self.tool}] {body}"
+        if self.caveat:
+            head += (f"\n[{self.tool}] PARTIAL — the source reported problems "
+                     f"while producing the above: {self.caveat[:300]}. Treat "
+                     f"any neutral or zero-valued field as possibly missing "
+                     f"rather than measured.")
+        return head
 
     def as_row(self) -> dict:
         return {"tool": self.tool, "status": self.status, "reason": self.reason,
+                "caveat": self.caveat[:200], "partial": bool(self.caveat),
                 "latency_ms": round(self.latency_ms, 1)}
 
 
@@ -273,6 +290,74 @@ def openai_tool_schemas(names: list[str]) -> list[dict]:
     return out
 
 
+#: Loggers whose warnings mean "this lookup failed" during a tool call.
+#: See `_CapturedFailure` for why this exists.
+_WATCHED_LOGGERS = (
+    "backend.services.news_intelligence",
+    "backend.services.edgar_events",
+    "backend.services.estimate_revisions",
+    "backend.services.options_intelligence",
+    "backend.services.earnings_intelligence",
+    "backend.services.data_fetcher",
+    # The vendor libraries themselves. A live check found yfinance emitting
+    # "HTTP Error 404 ... Quote not found" while the wrapping service returned
+    # a complete-looking dict, so watching only our own modules missed it.
+    "yfinance",
+    "peewee",
+    "urllib3",
+)
+
+
+class _CapturedFailure(logging.Handler):
+    """Turn the wrapped services' log warnings into a status this layer can read.
+
+    THE PROBLEM THIS SOLVES
+    -----------------------
+    Every function this module wraps swallows its own exceptions and returns a
+    default — `fetch_stock_news` returns `[]`, the others return `None`:
+
+        except Exception as e:
+            logger.warning("Failed to fetch news for %s: %s", ticker, e)
+            return []
+
+    From the outside, a throttled feed and a genuinely quiet week are the same
+    empty list. So this module's whole `empty` vs `unavailable` distinction —
+    the thing that stops a model forecasting calm when the news feed is down —
+    was being defeated one layer below the wrapper. The tests passed because
+    they mocked the functions rather than the services.
+
+    Rather than change five production contracts that other callers depend on,
+    this reads what those functions already do loudly: they LOG the failure
+    before returning the default. If a watched logger emitted a warning during
+    the call and the result came back empty, the lookup failed.
+
+    Errs toward `unavailable`: an unrelated warning during the call will
+    misclassify a genuine empty as a failure, which makes the model
+    appropriately uncertain rather than falsely confident. That is the safe
+    direction, and it is the direction chosen deliberately.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(level=logging.WARNING)
+        self.messages: list[str] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            self.messages.append(record.getMessage())
+        except Exception:                                      # noqa: BLE001
+            self.messages.append(str(record.msg))
+
+    def __enter__(self) -> "_CapturedFailure":
+        self._attached = [logging.getLogger(n) for n in _WATCHED_LOGGERS]
+        for lg in self._attached:
+            lg.addHandler(self)
+        return self
+
+    def __exit__(self, *exc: Any) -> None:
+        for lg in getattr(self, "_attached", []):
+            lg.removeHandler(self)
+
+
 def run_tool(name: str, args: dict, budget: ToolBudget | None = None
              ) -> ToolResult:
     """Execute one tool call. The ONLY place an exception becomes `unavailable`.
@@ -306,7 +391,8 @@ def run_tool(name: str, args: dict, budget: ToolBudget | None = None
             name, STATUS_UNAVAILABLE,
             reason=f"tool budget exhausted after {budget.max_calls} calls"))
     try:
-        payload = spec.fn(**(args or {}))
+        with _CapturedFailure() as cap:
+            payload = spec.fn(**(args or {}))
     except TypeError as exc:
         # A bad argument set from the model is not a vendor failure, and
         # labelling it one would hide a contract bug behind a flaky-network
@@ -320,8 +406,21 @@ def run_tool(name: str, args: dict, budget: ToolBudget | None = None
     else:
         empty = (payload is None
                  or (isinstance(payload, (list, dict, str)) and len(payload) == 0))
-        res = ToolResult(name, STATUS_EMPTY if empty else STATUS_OK,
-                         payload=None if empty else payload)
+        note = "; ".join(cap.messages[:3])
+        if empty and note:
+            # Empty AND the service logged a warning while producing it: the
+            # lookup failed and swallowed its own exception. Reported as the
+            # failure it is, not as an absence of news.
+            res = ToolResult(name, STATUS_UNAVAILABLE,
+                             reason=f"the source reported a failure: "
+                                    f"{note[:200]}")
+        elif empty:
+            res = ToolResult(name, STATUS_EMPTY)
+        else:
+            # Non-empty but the source complained: hand over BOTH. Deciding
+            # whether a payload is trustworthy is guesswork; disclosing what
+            # went wrong is not.
+            res = ToolResult(name, STATUS_OK, payload=payload, caveat=note)
     return _finish(res)
 
 
