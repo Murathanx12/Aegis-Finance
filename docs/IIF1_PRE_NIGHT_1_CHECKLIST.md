@@ -464,3 +464,63 @@ any IIF-1 design change beyond what Night 1's own void reasons force; reading
 any IIF-1 outcome (the read gate answers this anyway).
 
 — Fable
+
+---
+
+## ORDER 3.4 — ABLATION_FWD hook: **already wired, and it surfaced a gap**
+
+**The harness exists and is correct.** `Aegis module/scripts/ablation_fwd.py`
+runs today and prints exactly what it should:
+
+```
+ABLATION-FWD  status=STATED_EMPTY  records=20073  resolved=0  earliest=2026-08-16
+```
+
+It reads the ledger directly and fills automatically as records resolve, so
+there is nothing to build. Building a second path would have duplicated
+infrastructure that already works.
+
+**But checking it found something.** The harness and production are reading two
+different ledgers:
+
+| | path | records |
+|---|---|---:|
+| `ablation_fwd.py` | `aegis-finance/backend/data/optimus/predictions.jsonl` (in-repo) | **20,073** |
+| production resolver | `/data/optimus/predictions.jsonl` (Railway volume) | **112** |
+
+`pi_ledger_resolve` runs nightly against the volume. The 20,073 forward records
+ABLATION_FWD will grade are in the **repo** file, which production never
+touches — and production's 112 records are ones ABLATION_FWD never sees.
+
+This is a **known and disclosed** state, not a new bug: the boot warning fires on
+every deploy —
+
+> `ledger migration: /app/backend/data/optimus/predictions.jsonl holds 19,961
+> record(s) absent from the persisted ledger at /data/optimus/predictions.jsonl
+> — NOT copied (the persisted ledger is authoritative once non-empty)`
+
+— and that refusal-to-copy is correct behaviour. A deploy silently merging an
+image ledger into the persisted one would corrupt the forward clock.
+
+**The consequence, stated plainly:** on 2026-08-16, ABLATION_FWD will still
+print `STATED_EMPTY` unless someone runs the resolver against the repo ledger
+locally. "Fills automatically as records resolve" is true of the harness; nothing
+currently resolves the ledger it reads.
+
+**Not fixed here, deliberately.** Resolving 20,073 records writes outcomes into
+the forward evidence ledger — that is the single most consequential write in the
+programme and it is attended work, not a background tidy-up. Three options, none
+taken:
+
+1. run `ledger_resolver.resolve_due()` locally against the repo ledger from
+   2026-08-16, and treat the repo copy as the campaign's evidence ledger;
+2. migrate the 19,961 records onto the volume once, explicitly and with a
+   receipt, accepting that the persisted ledger stops being authoritative for
+   one operation;
+3. accept two ledgers with two purposes and say so in the verdict — the campaign
+   ledger (20,073, graded locally) and the live forward ledger (112, graded in
+   production).
+
+Option 3 is closest to what is already true. Whichever is chosen should be
+chosen **before** the 16th, because the first resolution is the moment the
+ambiguity stops being free.
