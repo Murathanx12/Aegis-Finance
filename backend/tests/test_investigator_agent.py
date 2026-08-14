@@ -266,6 +266,42 @@ def test_an_unparseable_reply_is_a_failed_call_not_an_empty_answer():
     assert any(not c.ok and "unparseable" in c.error for c in inv.calls)
 
 
+def test_a_budget_exception_PROPAGATES_and_is_never_a_cell_failure():
+    """The most expensive bug this module could have, pinned.
+
+    `_task` catches `Exception` so a flaky vendor marks one microtask failed and
+    the chain continues. A spend ceiling must NOT behave that way: absorbed into
+    a per-cell failure it keeps calling the vendor, once per remaining microtask
+    per remaining ticker per remaining arm, logging a warning each time.
+
+    `llm_swarm.default_llm_call` already wrote this rule down — "an exhausted
+    budget must stop the campaign, not be absorbed into a per-cell failure count
+    where it would look like flakiness" — and this module reimplemented the bug
+    anyway until its own test found it.
+    """
+    calls = {"n": 0}
+
+    def broke(*, system, user, **kw):
+        calls["n"] += 1
+        raise IT.BudgetExhausted("nightly ceiling reached")
+
+    with pytest.raises(IT.BudgetExhausted):
+        Investigator("A_snapshot", llm_call=broke).investigate("AAPL", {})
+    assert calls["n"] == 1, (
+        f"the ceiling was swallowed and the vendor was called {calls['n']} "
+        f"times after it tripped")
+
+
+def test_a_governor_refusal_also_propagates():
+    from backend.services.research_budget import ResearchBudgetExhausted
+
+    def refused(*, system, user, **kw):
+        raise ResearchBudgetExhausted("campaign budget exhausted")
+
+    with pytest.raises(ResearchBudgetExhausted):
+        Investigator("A_snapshot", llm_call=refused).investigate("AAPL", {})
+
+
 def test_a_vendor_exception_is_recorded_on_the_call_not_raised():
     def llm(*, system, user, **kw):
         raise ConnectionError("vendor down")

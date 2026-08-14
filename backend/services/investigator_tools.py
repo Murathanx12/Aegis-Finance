@@ -65,6 +65,21 @@ STATUS_EMPTY = "empty"
 STATUS_UNAVAILABLE = "unavailable"
 
 
+class BudgetExhausted(RuntimeError):
+    """A spend ceiling was hit. **This must never be caught as a cell failure.**
+
+    It lives here, rather than in the runner, because the agent and the runner
+    both need to recognise it and the agent cannot import the runner.
+
+    The distinction is load-bearing and this project has already written it
+    down once, in `llm_swarm.default_llm_call`: *"When the governor raises, it
+    propagates: an exhausted budget must stop the campaign, not be absorbed
+    into a per-cell failure count where it would look like flakiness."* A
+    swallowed ceiling does not degrade gracefully — it keeps calling the vendor
+    while logging warnings, which is the most expensive possible way to fail.
+    """
+
+
 @dataclass
 class ToolResult:
     """What a tool returned, including the fact that it returned nothing.

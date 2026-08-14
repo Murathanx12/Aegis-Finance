@@ -1,0 +1,198 @@
+"""INTERNET-INVESTIGATOR-FWD-1 nightly runner — pairing, budget, and voiding.
+
+Offline: the LLM call, the tool runner and the ledger append are all injected or
+monkeypatched. Nothing here reaches a vendor or writes the live ledger.
+
+WHAT THESE PROTECT
+==================
+A night is only usable if every arm saw the same cells and the spend was read
+rather than guessed. Both failure modes are silent by nature — a partial night
+looks exactly like a complete one in the ledger, and an unreadable telemetry
+file looks exactly like a free night — so both are tested for explicitly.
+"""
+
+from __future__ import annotations
+
+import json
+
+import pytest
+
+from backend.services import investigator_night as N
+from backend.services import investigator_tools as IT
+from backend.services.investigator_agent import FORECAST_CELLS
+
+
+def _feats(z=1.0):
+    return {"abs_resid_return_z_1d": z, "volume_z_20d": 0.5,
+            "earnings_within_5d": False, "filing_within_2d": False,
+            "price": 100.0, "dollar_volume_20d": 1e9}
+
+
+class FakeReply:
+    def __init__(self, text, model="deepseek-v4-flash"):
+        self.text = text
+        self.model_version = model
+        self.tokens_in = 10
+        self.tokens_out = 20
+        self.latency_ms = 1.0
+        self.retries = 0
+
+
+def good_llm(*, system, user, model="deepseek-v4-flash", **kw):
+    if "Extract what changed" in system:
+        body = {"what_changed": "earnings", "when": "soon",
+                "who_is_affected": [], "novelty": "low",
+                "expectedness": "fully_expected", "unknowns": []}
+    elif "prior_market_belief" in system:
+        body = {"prior_market_belief": "b", "what_moved_in_expectations": "m",
+                "already_priced": "partly"}
+    elif "MAGNITUDE" in system:
+        body = {"forecasts": [
+            {"observable": o, "horizon_days": h, "threshold": t,
+             "prior": 0.20, "posterior": 0.35, "rationale": "r"}
+            for o, h, t in FORECAST_CELLS]}
+    elif "strongest_objection" in system:
+        body = {"strongest_objection": "o", "contradicting_evidence": "c",
+                "falsifying_check": "f", "confidence_in_chain": "low"}
+    else:
+        body = {"calls": [], "done": True}
+    return FakeReply(json.dumps(body), model)
+
+
+def no_tools(name, args, budget=None):
+    return IT.ToolResult(name, IT.STATUS_EMPTY)
+
+
+# ── the night runs ──────────────────────────────────────────────────────────
+
+def test_a_dry_run_produces_records_for_every_arm_and_writes_nothing(tmp_path,
+                                                                     monkeypatch):
+    appended = []
+    monkeypatch.setattr("backend.services.belief_state.append",
+                        lambda recs, path=None: appended.extend(recs))
+    res = N.run_night({f"T{i}": _feats(float(i)) for i in range(6)},
+                      k=3, llm_call=good_llm, tool_runner=no_tools,
+                      dry_run=True, night="2026-08-14")
+    assert res.status == "ok"
+    assert len(res.tickers) == 3
+    assert set(res.per_arm) == set(N.ARMS)
+    for arm in N.ARMS:
+        assert res.per_arm[arm]["n_cells"] == 3
+        assert res.per_arm[arm]["n_with_forecasts"] == 3
+    assert appended == [], "a dry run wrote to the ledger"
+    assert res.records_written == 0
+
+
+def test_every_arm_receives_the_identical_cell_set():
+    """The property the paired Brier statistic depends on."""
+    res = N.run_night({f"T{i}": _feats(float(i)) for i in range(8)},
+                      k=4, llm_call=good_llm, tool_runner=no_tools,
+                      dry_run=True)
+    seen = {arm: {r["ticker"] for r in res.per_arm[arm]["rows"]}
+            for arm in N.ARMS}
+    assert len(set(map(frozenset, seen.values()))) == 1, seen
+
+
+def test_records_carry_the_arm_and_the_belief_change(monkeypatch):
+    captured = []
+    monkeypatch.setattr("backend.services.belief_state.append",
+                        lambda recs, path=None: captured.extend(recs))
+    monkeypatch.setattr(N, "RECEIPTS_DIR", __import__("pathlib").Path(
+        __import__("tempfile").mkdtemp()))
+    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
+    res = N.run_night({"T1": _feats()}, k=1, llm_call=good_llm,
+                      tool_runner=no_tools, dry_run=False)
+    assert res.status == "ok"
+    assert captured, "nothing was minted"
+    arms = {r.arm for r in captured}
+    assert arms == set(N.ARMS)
+    for r in captured:
+        assert r.prior == pytest.approx(0.20)
+        assert r.posterior == pytest.approx(0.35)
+        assert r.belief_change == pytest.approx(0.15)
+        assert r.probability == r.posterior
+        assert r.specialist.startswith("investigator:")
+
+
+def test_an_empty_trigger_night_is_void_not_silently_empty():
+    res = N.run_night({"T1": {"price": 1.0}}, k=5, llm_call=good_llm,
+                      tool_runner=no_tools, dry_run=True)
+    assert res.status == "void"
+    assert "no eligible triggers" in res.void_reason
+    assert res.records_written == 0
+
+
+# ── budget ──────────────────────────────────────────────────────────────────
+
+def test_an_unreadable_telemetry_ledger_stops_the_night_rather_than_spending_blind():
+    """A read failure that reported zero would disarm the ceiling at exactly
+    the moment it is needed."""
+    from backend.services import llm_telemetry
+    import backend.services.investigator_night as NN
+
+    orig = llm_telemetry.spend
+    try:
+        llm_telemetry.spend = lambda **kw: {}
+        with pytest.raises(N.NightlyBudgetExhausted, match="UNKNOWN, not zero"):
+            NN._spend_since("2026-08-14T00:00:00+00:00")
+    finally:
+        llm_telemetry.spend = orig
+
+
+def test_the_nightly_ceiling_refuses_before_the_call_not_after(monkeypatch):
+    monkeypatch.setattr(N, "_spend_since", lambda s: (99.0, 10))
+    call = N.make_llm_call(since_iso="2026-08-14T00:00:00+00:00", max_usd=12.0)
+    with pytest.raises(N.NightlyBudgetExhausted, match="nightly ceiling"):
+        call(system="s", user="u")
+
+
+def test_the_call_ceiling_also_binds(monkeypatch):
+    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 99_999))
+    call = N.make_llm_call(since_iso="x", max_usd=12.0, max_calls=3000)
+    with pytest.raises(N.NightlyBudgetExhausted, match="call ceiling"):
+        call(system="s", user="u")
+
+
+def test_budget_exhaustion_mid_night_marks_the_night_rather_than_pretending(
+        monkeypatch):
+    calls = {"n": 0}
+
+    def flaky(*, system, user, model="m", **kw):
+        calls["n"] += 1
+        if calls["n"] > 6:
+            raise N.NightlyBudgetExhausted("nightly ceiling reached")
+        return good_llm(system=system, user=user, model=model)
+
+    monkeypatch.setattr(N, "_spend_since", lambda s: (12.0, 50))
+    res = N.run_night({f"T{i}": _feats(float(i)) for i in range(4)},
+                      k=4, llm_call=flaky, tool_runner=no_tools, dry_run=True)
+    assert res.status in ("budget_stopped", "void")
+    assert res.void_reason
+
+
+# ── the pairing guard voids rather than degrades ────────────────────────────
+
+def test_divergent_cells_void_the_night_and_mint_nothing(monkeypatch):
+    """A partial night written to the ledger would look like data."""
+    captured = []
+    monkeypatch.setattr("backend.services.belief_state.append",
+                        lambda recs, path=None: captured.extend(recs))
+    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
+
+    seen = {"n": 0}
+    real = N.Investigator
+
+    class Sabotage(real):                                    # type: ignore
+        def investigate(self, ticker, snapshot=None):
+            seen["n"] += 1
+            # the third arm silently drops a name
+            if self.arm == "C_tools_only" and ticker.endswith("2"):
+                raise N.NightlyBudgetExhausted("simulated drop")
+            return super().investigate(ticker, snapshot)
+
+    monkeypatch.setattr(N, "Investigator", Sabotage)
+    res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
+                      k=3, llm_call=good_llm, tool_runner=no_tools,
+                      dry_run=True)
+    assert res.status in ("void", "budget_stopped")
+    assert captured == [], "a divergent night minted records"

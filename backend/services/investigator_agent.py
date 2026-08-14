@@ -51,6 +51,26 @@ from backend.services import investigator_tools as IT
 
 logger = logging.getLogger(__name__)
 
+
+def _budget_errors() -> tuple[type[BaseException], ...]:
+    """Exceptions that mean "stop", not "this cell failed".
+
+    `ResearchBudgetExhausted` is imported defensively: the agent must work in a
+    checkout where the research-budget module is absent, but it must never
+    silently lose the ability to recognise a governor refusal.
+    """
+    errs: list[type[BaseException]] = [IT.BudgetExhausted]
+    try:
+        from backend.services.research_budget import ResearchBudgetExhausted
+        errs.append(ResearchBudgetExhausted)
+    except Exception:                                          # noqa: BLE001
+        logger.warning("research_budget unavailable — a governor refusal will "
+                       "not be distinguishable from a cell failure")
+    return tuple(errs)
+
+
+_BUDGET_ERRORS = _budget_errors()
+
 #: Max rounds the model may spend calling tools before it must answer. Bounded
 #: because an agent loop with no ceiling is a budget leak with a story attached.
 MAX_TOOL_ROUNDS = 4
@@ -263,6 +283,11 @@ class Investigator:
             reply = self.llm_call(system=system, user=user, model=self.model,
                                   temperature=TEMPERATURE,
                                   max_tokens=MAX_TOKENS)
+        except _BUDGET_ERRORS:
+            # NEVER absorbed into a per-cell failure. A swallowed ceiling keeps
+            # calling the vendor while logging warnings — the most expensive
+            # possible way to fail, and the one `llm_swarm` already documented.
+            raise
         except Exception as exc:                               # noqa: BLE001
             logger.warning("[%s/%s] %s failed: %s", self.arm, task,
                            type(exc).__name__, exc)
@@ -391,6 +416,8 @@ class Investigator:
 
             if not inv.forecasts:
                 inv.status = "no_forecast"
+        except _BUDGET_ERRORS:
+            raise                       # stop the night, do not mark one cell
         except Exception as exc:                               # noqa: BLE001
             logger.exception("[%s/%s] investigation failed", self.arm, ticker)
             inv.status = "failed"
