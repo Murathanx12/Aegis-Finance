@@ -79,6 +79,11 @@ class BudgetState:
     usd_remaining: float | None
     ok: bool
     reason: str | None
+    #: Calls whose yield is accounted at the chain level and not knowable yet.
+    #: Excluded from the zero-yield denominator, reported so that exclusion is
+    #: never invisible — a pending count that never falls is a stuck campaign.
+    n_yield_pending: int = 0
+    n_yield_resolvable: int = 0
 
     def as_dict(self) -> dict:
         return {
@@ -92,6 +97,8 @@ class BudgetState:
             "usd_remaining": self.usd_remaining,
             "max_calls": RESEARCH_LLM_MAX_CALLS,
             "max_usd": RESEARCH_LLM_MAX_USD,
+            "n_yield_pending": self.n_yield_pending,
+            "n_yield_resolvable": self.n_yield_resolvable,
             "ok": self.ok,
             "reason": self.reason,
         }
@@ -137,7 +144,20 @@ def check(campaign: str = "grand_arena_1", *, since: str | None = None,
     n = int(s.get("n_calls", 0) or 0)
     cost = s.get("total_cost_usd")
     lower_bound = bool(s.get("total_is_lower_bound"))
-    zy = (s.get("zero_gradeable_output") or {}).get("share_of_calls")
+
+    # THE DENOMINATOR IS THE RESOLVABLE CALLS, NOT ALL OF THEM.
+    # `share_of_calls` counts a call whose chain has not finished as zero-yield,
+    # which is true of EVERY call of a microtask-chain campaign until its last
+    # arm ends. IIF-1 halted at 100% after 50 calls for that reason alone — the
+    # rule was reading the minting schedule, not the information content. Rows
+    # that never declare a chain are unaffected: pending is 0 and this is the
+    # old number exactly.
+    zbucket = s.get("zero_gradeable_output") or {}
+    n_pending = int(zbucket.get("n_yield_pending", 0) or 0)
+    n_resolvable = int(zbucket.get("n_resolvable", n - n_pending) or 0)
+    zy = zbucket.get("share_of_resolvable")
+    if zy is None and not n_pending:
+        zy = zbucket.get("share_of_calls")
 
     calls_left = max(0, RESEARCH_LLM_MAX_CALLS - n)
     usd_left = (None if cost is None
@@ -151,17 +171,21 @@ def check(campaign: str = "grand_arena_1", *, since: str | None = None,
                   f"${RESEARCH_LLM_MAX_USD:.2f}"
                   + (" (and the estimate is a LOWER BOUND — unpriced models "
                      "are in the ledger)" if lower_bound else ""))
-    elif (zy is not None and n >= RESEARCH_LLM_ZERO_YIELD_MIN_N
+    elif (zy is not None and n_resolvable >= RESEARCH_LLM_ZERO_YIELD_MIN_N
           and float(zy) > RESEARCH_LLM_MAX_ZERO_YIELD_RATE):
         # Not a spend limit — an information limit. The campaign is buying
         # tokens rather than gradeable output and should be looked at.
         reason = (f"zero-yield rate {float(zy):.1%} exceeds "
-                  f"{RESEARCH_LLM_MAX_ZERO_YIELD_RATE:.0%} over {n} calls — "
-                  f"halting for inspection: this campaign is buying tokens, "
-                  f"not information")
+                  f"{RESEARCH_LLM_MAX_ZERO_YIELD_RATE:.0%} over {n_resolvable} "
+                  f"resolvable calls (of {n} total"
+                  + (f", {n_pending} pending" if n_pending else "")
+                  + ") — halting for inspection: this campaign is buying "
+                    "tokens, not information")
 
     return BudgetState(campaign, n, cost, lower_bound, zy, calls_left, usd_left,
-                       reason is None, reason)
+                       reason is None, reason,
+                       n_yield_pending=n_pending,
+                       n_yield_resolvable=n_resolvable)
 
 
 def require(campaign: str = "grand_arena_1", *, since: str | None = None,

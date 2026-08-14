@@ -95,6 +95,17 @@ GRADED_NIGHTS_TO_FIRST_LOOK = 40
 DEFAULT_BALANCE_USD = 37.12
 BALANCE_AS_OF = "2026-08-14"
 
+#: How many cells in a row may produce NO gradeable forecast before the night
+#: stops. This is the information guard the campaign governor's zero-yield rule
+#: cannot be for a chain campaign: that rule is consulted per CALL and a cell's
+#: yield is not knowable until every arm has finished, so applied here it fired
+#: at 100% on every night regardless of what the model returned. The unit that
+#: can actually yield or not yield is the CELL, and five barren ones in a row is
+#: a night that is buying tokens — the same judgement, at the unit that supports
+#: it. Deliberately not a fraction: the first cells are the cheap place to find
+#: out, and a ratio only crosses its threshold once the money is spent.
+MAX_BARREN_CELLS = 5
+
 #: Map the agent's observable strings onto the ledger enum. A cell the ledger
 #: cannot grade is dropped rather than coerced.
 _OBSERVABLE = {
@@ -129,6 +140,9 @@ class NightResult:
     served_models: list[str] = field(default_factory=list)
     budget: dict = field(default_factory=dict)
     cell_pairing: dict = field(default_factory=dict)
+    #: What the telemetry ledger was told each cell's calls jointly minted.
+    #: `n_chains_minted_nothing` is the honest zero-yield count for the night.
+    chain_yield: dict = field(default_factory=dict)
     #: True for a rehearsal/test. A sandbox night never reaches the evidence
     #: ledger and never writes a production receipt, and the flag is carried on
     #: the receipt so the two can never be confused after the fact.
@@ -207,11 +221,18 @@ def _spend_since(since_iso: str) -> tuple[float, int]:
 
 def make_llm_call(*, since_iso: str, max_usd: float = NIGHTLY_MAX_USD,
                   max_calls: int = NIGHTLY_MAX_CALLS,
-                  counter: dict | None = None) -> Callable:
+                  counter: dict | None = None,
+                  chain: dict | None = None) -> Callable:
     """A budget-gated LLM call the agent can be handed.
 
     Two gates fire before every request: the campaign governor inside
     `default_llm_call`, and this night's own ceiling read from served responses.
+
+    `chain`, when given, is the runner's live cursor: `chain["id"]` is the cell
+    currently being investigated and `chain["calls"]` collects the telemetry ids
+    each cell produced, so the night can tell the ledger afterwards what those
+    five calls jointly minted. Without it every row of a chain campaign reads as
+    zero-yield forever — see `llm_telemetry._yield_pending`.
     """
     from backend.services.llm_swarm import default_llm_call
 
@@ -240,14 +261,15 @@ def make_llm_call(*, since_iso: str, max_usd: float = NIGHTLY_MAX_USD,
             counter["calls"] = counter.get("calls", 0) + 1
             served = str(getattr(reply, "model_version", "") or "")
             counter.setdefault("served", set()).add(served)
-        _record_telemetry(reply, model=model, system=system, user=user)
+        _record_telemetry(reply, model=model, system=system, user=user,
+                          chain=chain)
         return reply
 
     return call
 
 
 def _record_telemetry(reply: Any, *, model: str, system: str,
-                      user: str) -> None:
+                      user: str, chain: dict | None = None) -> None:
     """One telemetry row per vendor call, with the SERVED model.
 
     The API silently aliases — `deepseek-chat` and `deepseek-reasoner` were both
@@ -257,7 +279,14 @@ def _record_telemetry(reply: Any, *, model: str, system: str,
     """
     try:
         from backend.services import llm_telemetry
-        llm_telemetry.record_call(
+        chain_id = (chain or {}).get("id")
+        meta = {"trial": TRIAL}
+        if chain_id:
+            # Declared, not inferred. The ledger has no way to know that five
+            # rows are one unit of work unless the call site says so.
+            meta.update({"yield_unit": llm_telemetry.YIELD_UNIT_CHAIN,
+                         "chain_id": chain_id})
+        row = llm_telemetry.build_call(
             provider="deepseek", model=model, purpose=TRIAL, agent=TRIAL,
             model_version=str(getattr(reply, "model_version", "") or model),
             prompt=system + user,
@@ -266,7 +295,14 @@ def _record_telemetry(reply: Any, *, model: str, system: str,
             cached_tokens=int(getattr(reply, "cached_tokens", 0) or 0),
             latency_ms=getattr(reply, "latency_ms", None),
             retries=int(getattr(reply, "retries", 0) or 0),
-            meta={"trial": TRIAL})
+            meta=meta)
+        # `build_call` + `append` rather than `record_call`, only because the id
+        # has to be kept: `record_call` deliberately returns nothing usable, and
+        # a chain that cannot name its own rows can never resolve them.
+        llm_telemetry.append([row])
+        if chain_id and chain is not None:
+            chain.setdefault("calls", {}).setdefault(chain_id,
+                                                     []).append(row.call_id)
     except Exception as exc:                                   # noqa: BLE001
         # Loud, and it matters: the ledger this writes to is the same one the
         # nightly ceiling reads from, so a silent telemetry failure would make
@@ -274,6 +310,49 @@ def _record_telemetry(reply: Any, *, model: str, system: str,
         logger.error("TELEMETRY WRITE FAILED for %s (%s: %s) — the nightly "
                      "ceiling now under-counts this call", TRIAL,
                      type(exc).__name__, exc)
+
+
+def chain_id(night: str, arm: str, ticker: str) -> str:
+    """The unit of work five microtask calls share. One cell, one arm."""
+    return f"{night}:{arm}:{ticker}"
+
+
+def resolve_chain_yield(chain: dict, records: list, *, night: str) -> dict:
+    """Tell the ledger what each cell's calls jointly minted. Never raises.
+
+    Every call of a finished chain is amended — with the cell's prediction ids,
+    or with none. The empty case is the important one: a cell that produced
+    nothing lands in the zero-yield bucket exactly as a barren single call does,
+    so declaring the chain unit costs the governor no strictness. It only stops
+    it from reading "the night has not finished yet" as "this campaign is buying
+    tokens".
+    """
+    from backend.services import llm_telemetry
+    by_chain: dict[str, list[str]] = {}
+    for r in records:
+        cid = chain_id(night, getattr(r, "arm", "") or "", r.ticker)
+        by_chain.setdefault(cid, []).append(r.prediction_id)
+
+    n_calls = n_barren_calls = n_chains = n_barren_chains = 0
+    for cid, call_ids in (chain.get("calls") or {}).items():
+        pids = by_chain.get(cid, [])
+        n_chains += 1
+        n_calls += len(call_ids)
+        if not pids:
+            n_barren_chains += 1
+            n_barren_calls += len(call_ids)
+        for call_id in call_ids:
+            try:
+                llm_telemetry.attach_outputs(call_id, prediction_ids=pids,
+                                             yield_resolved=True)
+            except Exception as exc:                           # noqa: BLE001
+                logger.error("could not resolve chain yield for %s/%s "
+                             "(%s: %s) — that row stays PENDING and the "
+                             "governor's denominator is short by one",
+                             cid, call_id, type(exc).__name__, exc)
+    return {"n_chains": n_chains, "n_chains_minted_nothing": n_barren_chains,
+            "n_calls_resolved": n_calls, "n_calls_in_barren_chains":
+                n_barren_calls}
 
 
 def cell_key(ticker: str, f: dict) -> tuple:
@@ -462,13 +541,15 @@ def run_night(features_by_ticker: dict[str, dict], *,
         return res
 
     counter: dict = {"calls": 0, "served": set()}
+    chain_ctx: dict = {"id": None, "calls": {}}
     call = llm_call or make_llm_call(since_iso=since_iso, max_usd=max_usd,
-                                     counter=counter)
+                                     counter=counter, chain=chain_ctx)
 
     per_arm_tickers: dict[str, list[str]] = {}
     per_arm_inv: dict[str, list] = {}
     per_arm_snaps: dict[str, dict] = {}
     stopped = ""
+    barren_stop = ""
 
     # The cell set is frozen ONCE, here, before a single vendor call. Everything
     # below iterates this tuple and nothing may re-derive it.
@@ -498,8 +579,10 @@ def run_night(features_by_ticker: dict[str, dict], *,
                              tool_runner=tool_runner or IT.run_tool,
                              model=REQUEST_MODEL)
         rows, done, invs = [], [], []
+        barren = 0
         for tkr in arm_cells:
             snap = (snapshots or {}).get(tkr, {})
+            chain_ctx["id"] = chain_id(night, arm, tkr)
             try:
                 inv = agent.investigate(tkr, snap)
             except NightlyBudgetExhausted as exc:
@@ -511,6 +594,17 @@ def run_night(features_by_ticker: dict[str, dict], *,
             done.append(tkr)
             invs.append(inv)
             per_arm_snaps.setdefault(arm, {})[tkr] = snap
+
+            barren = 0 if inv.forecasts else barren + 1
+            if barren >= MAX_BARREN_CELLS:
+                barren_stop = (
+                    f"information guard: {barren} consecutive cells in arm "
+                    f"{arm} produced no gradeable forecast — stopping rather "
+                    f"than paying for the remaining "
+                    f"{len(arm_cells) - len(done)} in this arm and "
+                    f"{len(arms) - list(arms).index(arm) - 1} further arms")
+                logger.error(barren_stop)
+                break
         per_arm_tickers[arm] = done
         per_arm_inv[arm] = invs
         res.per_arm[arm] = {
@@ -519,18 +613,25 @@ def run_night(features_by_ticker: dict[str, dict], *,
             "n_tool_calls": sum(r["n_tool_calls"] for r in rows),
             "rows": rows,
         }
-        if stopped:
+        if stopped or barren_stop:
             break
 
     # ── the pairing guards ──────────────────────────────────────────────────
     # A partial night written to the ledger would look like data. If the arms
     # diverged, nothing is minted and the reason is recorded.
     all_records: list[PredictionRecord] = []
-    try:
-        TR.assert_arms_share_cells(per_arm_tickers)
-    except ValueError as exc:
+    # The information stop is reported FIRST. It necessarily leaves the arms
+    # holding different cells, and "the arms disagree" would be a true sentence
+    # describing the consequence rather than the cause.
+    if barren_stop:
         res.status = "void"
-        res.void_reason = str(exc)
+        res.void_reason = barren_stop
+    else:
+        try:
+            TR.assert_arms_share_cells(per_arm_tickers)
+        except ValueError as exc:
+            res.status = "void"
+            res.void_reason = str(exc)
 
     # Ticker-level agreement is necessary and NOT sufficient. Malformed
     # forecasts are dropped, so two arms can hold the same tickers and
@@ -575,6 +676,12 @@ def run_night(features_by_ticker: dict[str, dict], *,
     if stopped and res.status == "ok":
         res.status = "budget_stopped"
         res.void_reason = stopped
+
+    # Resolve the chains WHATEVER the night's verdict. These calls happened and
+    # what they minted — including nothing — is now known; leaving them pending
+    # would take them out of the governor's denominator permanently, which is
+    # the failure this whole change exists to avoid, one level up.
+    res.chain_yield = resolve_chain_yield(chain_ctx, all_records, night=night)
 
     try:
         res.spend_usd, res.calls = _spend_since(since_iso)

@@ -349,6 +349,7 @@ def record_call(**kwargs: Any) -> None:
 def attach_outputs(call_id: str, *, prediction_ids: Iterable[str] = (),
                    hypothesis_ids: Iterable[str] = (),
                    schema_valid: bool | None = None,
+                   yield_resolved: bool = False,
                    path: Path | None = None) -> None:
     """Link outputs discovered AFTER the row was written, append-only.
 
@@ -365,7 +366,11 @@ def attach_outputs(call_id: str, *, prediction_ids: Iterable[str] = (),
                       schema_valid=(True if schema_valid is None
                                     else bool(schema_valid)),
                       row_type="amendment",
-                      meta={"schema_valid_set": schema_valid is not None})
+                      meta={"schema_valid_set": schema_valid is not None,
+                            # An empty resolution is a REAL answer — "this chain
+                            # finished and minted nothing" — and it must land in
+                            # the dead bucket rather than stay pending forever.
+                            "yield_resolved": bool(yield_resolved)})
         append([row], path=path)
     except Exception as exc:                              # noqa: BLE001
         logger.warning("llm_telemetry: failed to attach outputs to %s (%s: %s)",
@@ -439,6 +444,11 @@ def _apply_amendments(base: dict[str, dict], pending: list[dict]) -> None:
             tgt[key] = merged
         if (a.get("meta") or {}).get("schema_valid_set"):
             tgt["schema_valid"] = bool(a.get("schema_valid"))
+        if (a.get("meta") or {}).get("yield_resolved"):
+            # Copy rather than mutate in place: `read_calls` hands out the parse
+            # cache's own dicts, and a shared `meta` object would let one
+            # amendment silently mark rows it was never about.
+            tgt["meta"] = {**(tgt.get("meta") or {}), "yield_resolved": True}
     pending[:] = still
 
 
@@ -583,6 +593,41 @@ def _gradeable(row: dict) -> bool:
                 and (row.get("prediction_ids") or row.get("hypothesis_ids")))
 
 
+#: How a row's gradeable output is accounted. Declared by the CALL SITE, in
+#: `meta`, and defaulting to the strict per-call reading everything used before.
+YIELD_UNIT_CALL = "call"
+YIELD_UNIT_CHAIN = "chain"
+
+
+def _yield_pending(row: dict) -> bool:
+    """Is this row's yield not knowable YET, as opposed to known to be zero?
+
+    A one-call-one-record campaign learns immediately whether a call minted
+    anything. A microtask CHAIN does not: INTERNET-INVESTIGATOR-FWD-1 spends
+    five calls per cell — extract, expectations, forecast, critic, tool plan —
+    and mints nothing until every arm has finished, because the records are the
+    cross-arm intersection and that set does not exist until the last arm ends.
+
+    Read per call, every row of such a night is "spent money, learned nothing"
+    until the moment it is not, and `research_budget` halted the night at 100%
+    zero-yield after 50 calls. The gate was measuring WHEN minting happens, not
+    whether the spend bought anything.
+
+    So a chain row is PENDING until the chain resolves it — never silently
+    excused. `investigator_night` amends every call of a finished chain: with
+    the ids it minted, or with nothing, and a chain that minted nothing lands in
+    the dead bucket exactly as a barren single call does. An unresolved pending
+    row is a chain that never finished, and it stays visible as pending rather
+    than being counted either way.
+    """
+    meta = row.get("meta") or {}
+    if str(meta.get("yield_unit") or YIELD_UNIT_CALL) != YIELD_UNIT_CHAIN:
+        return False
+    if meta.get("yield_resolved"):
+        return False
+    return not (row.get("prediction_ids") or row.get("hypothesis_ids"))
+
+
 def summary(since: Any = None, path: Path | None = None,
             predictions_path: Path | None = None) -> dict:
     """What the spend bought, sliced so the empty bucket cannot hide.
@@ -626,6 +671,8 @@ def summary(since: Any = None, path: Path | None = None,
             "predictions_per_dollar": None,
             "zero_gradeable_output": {
                 "n_calls": 0, "share_of_calls": None,
+                "n_resolvable": 0, "n_yield_pending": 0,
+                "share_of_resolvable": None,
                 "cost_usd": 0.0, "share_of_spend": None},
             "resolution": {"n_prediction_ids_claimed": 0,
                            "reading": "no calls, so nothing to join"},
@@ -660,7 +707,8 @@ def summary(since: Any = None, path: Path | None = None,
         by_purpose.setdefault(str(r.get("purpose") or "?"), []).append(r)
         by_model.setdefault(str(r.get("model") or "?"), []).append(r)
 
-    dead = [r for r in rows if not _gradeable(r)]
+    pending_rows = [r for r in rows if _yield_pending(r)]
+    dead = [r for r in rows if not _gradeable(r) and not _yield_pending(r)]
     dead_cost = round(sum(float(r["cost_usd"]) for r in dead
                           if r.get("cost_usd") is not None), 6)
     n_valid = sum(1 for r in rows if r.get("schema_valid"))
@@ -687,11 +735,23 @@ def summary(since: Any = None, path: Path | None = None,
         "zero_gradeable_output": {
             "n_calls": len(dead),
             "share_of_calls": round(len(dead) / len(rows), 4),
+            "n_resolvable": len(rows) - len(pending_rows),
+            "n_yield_pending": len(pending_rows),
+            "share_of_resolvable": (
+                round(len(dead) / (len(rows) - len(pending_rows)), 4)
+                if len(rows) - len(pending_rows) else None),
+            "pending_cost_usd": round(sum(float(r["cost_usd"])
+                                          for r in pending_rows
+                                          if r.get("cost_usd") is not None), 6),
             "cost_usd": dead_cost,
             "share_of_spend": (round(dead_cost / total, 4)
                                if total > 0 else None),
             "reading": ("spend that produced no schema-valid, gradeable output "
-                        "— the bucket this ledger exists to make visible"),
+                        "— the bucket this ledger exists to make visible. "
+                        "`n_yield_pending` is spend on chain campaigns whose "
+                        "yield is not knowable yet and is NOT in either bucket; "
+                        "a pending count that never falls is a chain that never "
+                        "resolved, which is its own finding"),
         },
         "resolution": _resolution_join(pred_ids, total, rows, predictions_path),
     })
@@ -844,13 +904,23 @@ def spend(since: Any = None, path: Path | None = None) -> dict:
         if c is not None:
             total += c
             n_priced += 1
-    dead = sum(1 for r in rows if not _gradeable(r))
+    pending = sum(1 for r in rows if _yield_pending(r))
+    dead = sum(1 for r in rows if not _gradeable(r) and not _yield_pending(r))
+    resolvable = len(rows) - pending
     return {
         "n_calls": len(rows),
         "total_cost_usd": round(total, 6),
         "total_is_lower_bound": n_priced < len(rows),
         "n_unpriced_calls": len(rows) - n_priced,
-        "zero_gradeable_output": {"n_calls": dead,
-                                  "share_of_calls": round(dead / len(rows), 4)},
+        "zero_gradeable_output": {
+            "n_calls": dead,
+            "share_of_calls": round(dead / len(rows), 4),
+            # The denominator a governor must decide on. A pending row is not
+            # evidence of zero yield, and dividing by it turns "the night has
+            # not finished" into "this campaign is buying tokens".
+            "n_resolvable": resolvable,
+            "n_yield_pending": pending,
+            "share_of_resolvable": (round(dead / resolvable, 4)
+                                    if resolvable else None)},
         "cost_is_estimate": True,
     }
