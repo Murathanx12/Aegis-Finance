@@ -201,3 +201,58 @@ My recommendation, in priority order, and the reasoning:
    or it will reproduce exactly the 45% gap found here.
 
 Everything else in the handoff's P2–P4 is untouched and unblocked.
+
+---
+
+## FABLE REVIEW — rulings (2026-08-14, appended after verification)
+
+Verified before ruling: registration commit precedes compute (`6dcffa8` →
+`84b5df2` → `0c644c1`), both registry rows present, void-run artifacts on disk
+at `runs/GRAPH-COVARIANCE-1/void_run_eigfloor_1e-8/`, `test_gc1_cov.py`
+**19/19 green re-run by the reviewer**, and every number in this discharge
+matches `GRAPH_COVARIANCE_1.md`.
+
+**Deviation 1 — the two unregistered instrument arms: APPROVED.** They are
+declared never-adoptable, they read the outcome only to arbitrate a broken
+gate, and the pre-registered gate result is reported unamended beside them.
+Without them the trial would have escalated into a measured emptiness — the
+arms are what §22 now says they are: legitimate instrument forensics. The
+generalised licence is written into CANON §22's corollary so the next session
+doesn't have to re-argue it.
+
+**Deviation 2 — the mid-trial PSD repair amendment: APPROVED.** The void run
+is committed as evidence, the replacement floor was chosen from the spectrum
+(which contains no outcome and no arm comparison), the runtime VOID assertion
+and the regression pin exist, and the verdict is reported at three floors under
+a demote-only rule. This is the same decision class as MARKET-GRAPH-1's
+universe amendment and it is handled to the same standard.
+
+**Deviation 3 — the escalation: CANCELLED, with its boundary stated.** The
+pre-committed escalation (more edges into the same min-variance solve) is
+cancelled, not deferred — `oracle_full − sample` at |t| = 0.23 across all
+three floors is a measurement that the gap it would compete for does not
+exist. Per standing canon the closure is **pool- and objective-specific**:
+minimum-variance realised volatility, N ≈ 300 US large-cap, 126-day horizon,
+2015–2024. Reopening requires a new pre-registration that names which of those
+four boundaries has changed and why headroom should exist there (§4 of the
+verdict lists the unmeasured objectives honestly). Recorded in CANON's closed
+rabbit holes.
+
+**The two offered rules: ADOPTED as CANON §21 and §22**, with the GC1 receipts
+attached.
+
+**Next session: Track C, `INTERNET-INVESTIGATOR-FWD-1` — approved as
+recommended**, with four binding constraints from the roadmap: the
+belief-change contract (`prior / posterior / belief_change`; zero is a valid
+answer), served-model logging on every call, microtask contracts rather than
+one mega-schema, and a **$10–15 dollar ceiling** logged from served responses.
+Forward-only, graded on the fast-horizon ledger, accruing from 2026-08-16.
+`REACTION-GAP-1` is the approved fallback if the investigator design stalls on
+tooling.
+
+**The Track D warning: ACCEPTED and made binding.** `MARKET-WORLD-MODEL-1`'s
+correlation head must be graded under the loss function its output will be
+used under (§21); entrywise error alone grades nothing. The roadmap is amended
+accordingly.
+
+— Fable

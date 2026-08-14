@@ -170,6 +170,13 @@ finance and KNOWN-WORLD showed learners invent timing edges in worlds with none.
   target with a proven semantic signal), future volatility, covariance,
   abnormal residual moves, contagion after shocks, revision direction. Raw
   return prediction comes last, if at all.
+  **Binding constraint from GRAPH-COVARIANCE-1 (CANON §21):** every head is
+  graded under the loss function its output will actually be used under, not
+  a surrogate. The parent's semantic signal is real on entrywise co-movement
+  and measurably does NOT transfer to a min-variance portfolio objective —
+  a correlation head graded on entrywise error alone would reproduce that 45%
+  gap. If a head's output feeds a portfolio decision, its validation metric is
+  the portfolio-level loss.
 - **The comparison that legitimises any GNN:** numeric-only LightGBM vs
   numeric+semantic features vs numeric graph vs semantic graph vs fused
   temporal GNN — same targets, same purged walk-forward folds, same MDEs.

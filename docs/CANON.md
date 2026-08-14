@@ -352,6 +352,48 @@ different families resolve to 6 distinct groups, and the only merge is
 `TRIAL-EVENT-13DG` with its two HARVEST variants, which genuinely are one
 family.
 
+---
+
+## §21 — An improvement under one loss function is not an improvement under another
+
+*Added 2026-08-14 (GRAPH-COVARIANCE-1). Offered by the builder, adopted by the
+brain after verification.*
+
+Any claim that a model, estimate or feature is "better" must print **the loss
+function under which it will actually be used**, and the evidence must be
+measured under that loss function. Improvement under a surrogate loss licenses
+nothing about the deployment loss.
+
+The receipt: MARKET-GRAPH-1's ridge beats the trailing correlation matrix on
+out-of-sample **entrywise MSE** (R² 0.126 → 0.127, the H1 result) — and the
+same ridge family realises **45% MORE minimum-variance portfolio risk** than
+that same trailing matrix (`GRAPH_COVARIANCE_1.md` §3a, t = +9.34). Both
+numbers are correct. The ridge flattens the eigenvalue spectrum to win
+entrywise; the spectrum is what a portfolio consumes. Applies with equal force
+to any future NN head: a "correlation head" graded on entrywise error has not
+been graded at all for portfolio use (binding note on `MARKET-WORLD-MODEL-1`).
+
+## §22 — An oracle is a ceiling only if it is built INSIDE the architecture it bounds
+
+*Added 2026-08-14 (GRAPH-COVARIANCE-1). Offered by the builder, adopted by the
+brain after verification.*
+
+A perfect-information arm bounds a real predictor only when the perfect
+information enters through **the same estimator, at the same scale, with the
+same constraints** as the real arm's information would. Otherwise the oracle is
+not a ceiling — it is a different and possibly worse estimator, and its number
+bounds nothing.
+
+The receipt: `oracle_on_edges` wrote full-dispersion truth (σ = 0.180) into
+0.58% of a matrix whose other 99.42% carried quarter-dispersion predictions
+(σ = 0.063) — a matrix no predictor could emit — and came in **detectably
+WORSE with perfect information** (−16.85%, t = −5.11). `oracle_feature` (the
+same truth through the same ridge) is the ceiling the prereg meant, and it is
+also negative — which is how the architecture itself was convicted. Corollary:
+when a pre-registered oracle gate fails, the first suspect is the oracle's
+construction, and never-adoptable instrument arms to arbitrate that are
+legitimate — provided they are declared as instruments, cannot promote
+anything, and the original gate result is reported unamended.
 
 ---
 
@@ -370,6 +412,7 @@ family.
 | Finnhub-free + edgartools for Form 4 | Missing fields / 50-min hangs | BACKLOG T9 |
 | N_eff loosening the adoption gate | Raw trial count stays the strictness floor | postmortem 2026-06-14-t2 |
 | LLM picking stocks directly | REJECT: t 0.04 / 0.93, 204 months, 16,320 graded decisions | NIGHT-3 verdict |
+| Predicting the correlation matrix for min-variance portfolios (N≈300 US large-cap, 126d) | Perfect foresight ≈ trailing sample (\|t\| 0.23 at every floor); headroom ≤15.4% of sample's own gain; diagonal −86.6% proves the metric sees | GRAPH_COVARIANCE_1.md §3b |
 | Trailing stops on the small-cap book | −3.08%/yr under measured daily execution; +$743,599 of cost per $1m over 23yr | NIGHT-7 T2b |
 | "Big funds hold it so it can't fail" | Index ownership is mechanical cap-weight tracking — zero information, no backstop | NIGHT-7 brief §2.4 |
 | ">1% of the S&P means it has peaked" | Cap weight is an output of value, not a ceiling on returns | NIGHT-7 brief §2.4 |
