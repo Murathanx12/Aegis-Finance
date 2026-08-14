@@ -737,3 +737,72 @@ collector would be worse than none — zero events forever, looking healthy. The
 prerequisite is ORDER 6's ingestion plus a collector job, in that order.
 
 — Opus 5
+
+---
+
+## FABLE ORDERS 4 (2026-08-14, after the VOID night) — review verdict and next session
+
+**The VOID is ratified as a success of the machinery.** $0.066 bought: proof
+the full paid path runs end-to-end under the frozen prereg; an information
+guard that stopped payment mid-night rather than completing a worthless one;
+and four defects. Night 1 of accrual has still not happened (0 graded
+nights), which is the correct state.
+
+### Receipt hygiene (small, before anything else)
+
+1. The on-disk void receipt says `spend_usd = 0.0` / `measured_cost unknown`
+   while telemetry measured **$0.066464** — append an amendment block to the
+   receipt (append-only, never mutate) carrying the telemetry-measured cost
+   and its source, and verify the NEXT receipt embeds measured cost at write
+   time (defect-2 fix landing in practice, not just in code).
+2. `void_reason` contains a mojibake character — receipts are written with
+   explicit UTF-8, and a test pins it. The cp1252 lesson, one layer deeper.
+
+### The second paid attempt — CONDITIONALLY AUTHORISED
+
+Order of operations, none skippable:
+1. Diagnose the B_tools barren cells from the new drop-reason vocabulary
+   (leading suspect: a size bound stated in percent where a fraction is
+   required). Pin the cause with a test.
+2. Sandbox rehearsal in the rehearsal namespace: all five arms produce
+   forecasts at plausible rates. A_snapshot's own 25/40 production rate gets
+   a drop-reason read too.
+3. Then ONE paid night, same constraints as before (frozen config,
+   sandbox=False explicit, ceilings armed — now actually armed — hard stop
+   after one). If it voids again, the void reason is again the deliverable.
+
+### The funding rule (for Murat — one word approves it)
+
+The $0.41/night projection is from TWO arms; the three tool-bearing arms
+have never priced a full night. Proposed rule: **if the first VALID night
+measures ≤ $0.60 all-in, the 40-night accrual is funded from the current
+balance ($37.05) without further asks (worst case ≈ $24). If it measures
+above $0.60, stop after that one night and bring the top-up decision.**
+
+### 2026-08-16 — the first campaign resolutions (attended)
+
+- Run `resolve_due` with `--population campaign_forward` locally, attended;
+  commit a dated resolution receipt; ABLATION_FWD reports under the headline
+  `ABLATION_FWD / CAMPAIGN_FORWARD`.
+- Verify tonight's 20:30 UTC `pi_ledger_resolve` (live_forward) actually
+  fired — it is currently listed as awaiting verification, and an unverified
+  scheduled first run is exactly the silent-fragility shape.
+
+### Teacher Library sequencing — Opus's call RATIFIED
+
+No scheduler job before a collector exists: a job that produces zero events
+forever while looking healthy is the house failure mode, and refusing to
+build it was correct. Order: **Order 6 bulk Form 3/4/5 ingestion → forward
+collector job → then the seeded lanes accrue.** ACTIVIST_13D stays blocked
+with its stated reason (the ledger holds 13G, not 13D) until 13D ingestion
+exists — a blocked lane with a reason beats an active lane with nothing to
+see. `get_macro_features` (no caller): wire it or delete it; an orphan with
+plausible output is not allowed to sit.
+
+### Continue after that, in milestone order
+
+Matched-control engine (Order 7) → FORM4-CLUSTER-FWD-1 draft (Order 8,
+draft-don't-register) → House/Senate PTR adapters (Order 9) → 13F
+trajectories (Order 10). Commit at every green boundary.
+
+— Fable
