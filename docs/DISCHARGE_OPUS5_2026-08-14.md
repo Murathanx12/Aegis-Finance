@@ -311,3 +311,81 @@ documented at ~3,650 tests / 4m23s measured 2026-08-14), since the measurement
 existed and the claim was off by 4× on runtime.
 
 — Fable
+
+---
+
+## FABLE REVIEW 3 — pre-Night-1 lockdown + TEACHER-LIBRARY-1 adoption (2026-08-14, Murat's rulings incorporated)
+
+**Correction accepted:** `origin/main` resolves past `d0e14f8` — the runner
+(`34922f2`) and a tools fix (`ff3950e`) are pushed. Verified now:
+`READ_CHECKPOINTS` exists **nowhere** in either repo, so Night 1 remains
+blocked on exactly the steps below.
+
+### IIF-1 status line (Murat's wording, adopted verbatim)
+
+> **IIF-1: CONDITIONALLY GREEN-LIT — scientific design frozen;
+> magnitude/volatility primary approved; Night 1 blocked only on executable
+> 40/80/120 read-schedule enforcement and runner completion. No further
+> architecture changes before pilot.**
+
+### Binding pre-Night-1 orders (narrow; nothing else may change)
+
+1. **`READ_CHECKPOINTS_GRADED_NIGHTS = (40, 80, 120)`** frozen beside the
+   floor, **enforced in executable code** — a read at 39, 41, 57, 79, 81, 119
+   or 121 is refused as firmly as at 39. Config text alone does not remove
+   optional stopping.
+2. **Terminal rule frozen now:** at 40/80 without the MDE →
+   `INTERIM_UNDERPOWERED`, carrying **no** H1 win/kill reading. **At 120
+   without detectability the prereg terminates `NOT_DETECTABLE`;** accrual
+   beyond 120 requires a new prospective amendment/pre-registration. Anything
+   else just moves optional stopping from 40 to 120.
+3. **Boundary tests pin it:** 39→REFUSE, 40→READ, 41→REFUSE, 79→REFUSE,
+   80→READ, 81→REFUSE, 119→REFUSE, 120→READ, 121→REFUSE/NEW_PREREG_REQUIRED;
+   plus: a checkpoint lacking the MDE can produce neither a positive nor a
+   negative substantive verdict.
+4. **The runner stays a boring orchestration layer:** frozen trigger set
+   selected once; identical cells to every arm, equality asserted before calls
+   AND before grading; requested/served model, tokens, cost, tool failures,
+   malformed/drop counts, arm completion — all durable; **no trial-result
+   statistics** during the blind besides operational diagnostics.
+5. **Budget framing corrected and adopted:** $37.12 ÷ 40 = **$0.928/night**
+   is the funding average; **$10–15 is a hard safety ceiling, not a planning
+   budget.** Night-1 report must print `measured_cost_night_1`,
+   `projected_40_night_cost`, `current_balance`, `funding_gap_or_surplus` —
+   and the funding decision happens before the accrual schedule is committed
+   to, not when the balance runs out.
+6. **CI skip-integrity, before paid accrual:** the backend tests that skip
+   their frozen-config consistency assertion when the `Aegis module` sibling
+   tree is absent must not let a missing prereg/config read as green — a
+   conspicuous integrity failure or a separate prerequisite check, either is
+   acceptable; a silent `SKIP` is not.
+
+### TEACHER-LIBRARY-1 / PUBLIC-ACTOR-TRAJECTORY-1: ADOPTED as the next major lane
+
+Roadmap Track E written (`ROADMAP_BRAIN_V3_2026-08-14.md`), with the corrected
+hypothesis (conditional structure, not celebrity skill — the STOCK Act
+literature's mean-politician null is the stated prior). Brain-level
+constraints the corpse check surfaced:
+
+- **The predecessors are alive.** `TRIAL-CONGRESS-IC` (decision 2027-01-11),
+  `TRIAL-INSIDER-IC`/`TRIAL-CMP-INSIDER-IC` (2027-07-21) and `TRIAL-ARK-IC`
+  are accruing forward right now. TL-1 must extend them (historical bulk +
+  behaviour taxonomy + `public_at` ledger), never re-register them, and never
+  read them early.
+- The **13F-popularity corpse** (small-cap t(IC)=2.70, net-dead book) is the
+  mandatory control for H3.
+- **H1 + H5 run first** — free SEC bulk data, and H5 (activity predicts
+  magnitude/risk where direction is absent) points where three instruments
+  now agree the information lives.
+- The **Form 4 tri-state source contract** (`OK_EMPTY`/`OK_DATA`/`UNAVAILABLE`)
+  is a prerequisite before the dataset scales — accepted exactly as argued;
+  it is the IIF tool-layer lesson applied to a collector with a prod-403
+  history.
+- **Masking trio** on any historical-LLM arm; `public_at` only; teachers as
+  features/weak labels with reality as the only supervised target; **no
+  shadow lanes until feature-level results earn them**, and then only through
+  `seed-a-lane` (attended).
+- **Sequencing: after IIF-1 Night 1 runs cleanly.** The pilot does not share
+  its builder with a new lane.
+
+— Fable

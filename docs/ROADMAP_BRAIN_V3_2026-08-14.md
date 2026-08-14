@@ -204,6 +204,66 @@ finance and KNOWN-WORLD showed learners invent timing edges in worlds with none.
 
 ---
 
+### Track E — TEACHER-LIBRARY-1: public actors as a data class (added 2026-08-14, Murat's direction)
+
+**The hypothesis is NOT "Pelosi/Cramer/insiders know things, copy them."** The
+literature's prior is that the mean congressional portfolio is unremarkable
+(STOCK Act studies, 2012–2023). The hypothesis is: **publicly observable
+investment decisions contain conditional behavioural/informational structure —
+learn which actors × actions × contexts × disclosure patterns carry
+information, and whether it survives the transaction→publication delay.**
+
+**Predecessors are LIVE, not dead — build around them, not over them:**
+`TRIAL-CONGRESS-IC` (earliest decision 2027-01-11), `TRIAL-INSIDER-IC` /
+`TRIAL-CMP-INSIDER-IC` (2027-07-21), `TRIAL-ARK-IC` — all forward-accruing.
+Their clocks are untouched; TL-1 adds the **historical bulk layer** (SEC
+insider transactions 2006–2026, official 13F 2013–2026, House/Senate PTRs —
+all free) plus the behaviour taxonomy. The 13F-popularity corpse (top-3-holding
+count: rank info in small caps t(IC)=2.70, **net-dead book**) is the mandatory
+control for any 13F descendant.
+
+Build order:
+1. **Canonical public-action ledger** — `actor_id/type, security, action,
+   transaction_date, public_at, filing_at, size band, ownership attribution,
+   source, provenance`. **`public_at` is the only signal timestamp.** Tier 1 =
+   SEC/House/Senate primary; trackers are Tier-2 enrichment, never ground
+   truth. Sources with unreconstructable publication history are collected
+   forward-only from now.
+2. **Prerequisite fix before scaling Form 4:** the raw source contract must
+   distinguish `OK_EMPTY` / `OK_DATA` / `UNAVAILABLE` — `fetch_open_market_buys`
+   currently returns the same empty shape for "no purchases" and "SEC lookup
+   failed" (the house silent-fragility mode, and this collector already has a
+   prod-403 history).
+3. **Behaviour extraction, not celebrity scores** — `NEW_POSITION`,
+   `CONVICTION_ADD`, `TRIM`, `FULL_EXIT`, `CLUSTER_BUY`,
+   `PRE_EVENT_POSITIONING`, `POST_DRAWDOWN_ADD`, `WINNER_HELD`, `LOSER_CUT` …
+   → actor × domain × behaviour reliability, resolutions only.
+4. **First hypotheses, each separately pre-registered with its corpse:**
+   H1 insider cluster purchases (residual outcomes post-`public_at`); **H5
+   teacher activity predicts MAGNITUDE/risk even where direction is absent** —
+   run H1+H5 first (free data; aligned with the programme's thrice-measured
+   direction→magnitude convergence). H2 congressional-contextual, H3
+   specialist conviction-change (13F-popularity corpse as control), H4
+   cross-teacher agreement (must be genuinely independent channels, not three
+   republishers of one filing) follow.
+5. **Hindsight behind the firewall** (AUTOPSY-TO-ALPHA pattern): actor's
+   winner studied WITH outcome → mechanism → actor/security/event excluded →
+   precursor tested on unrelated securities/periods. **Masking trio binds
+   (§13 extended):** unmasked / ticker-masked / identity+calendar-masked; the
+   arm difference IS the leakage measurement; famous-event flag applies.
+6. **Teachers are features and weak labels, never training targets.**
+   Supervised targets remain realised outcomes (residual return, vol,
+   covariance, drawdown, event response).
+7. **No shadow lanes on day 1.** Feature-level results earn lanes; lanes go
+   through `seed-a-lane` (attended, Murat flips flags). Paid normalizers
+   (Quiver/Capitol Trades) are an attended purchase decision taken only after
+   the free Tier-1 build measures the gap they'd close.
+
+**Sequencing:** TL-1 starts after IIF-1's Night 1 is running cleanly — the
+pilot does not share attention with a new lane's build-out.
+
+---
+
 ## Closed doors (do not reopen without new evidence)
 
 - **SWARM-3 / persona-count scaling.** Answered twice (prompt statistics and
