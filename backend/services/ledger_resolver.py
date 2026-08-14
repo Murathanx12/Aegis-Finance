@@ -187,7 +187,7 @@ def resolve_due(path: Path | None = None, *,
         # outcome written onto a record is the thing that makes it evidence.
         # See docs/LEDGER_DIVERGENCE_ADJUDICATION_2026-08-15.md.
         if pop is EP.EvidencePopulation.LIVE_FORWARD:
-            est = EP.live_forward_is_established()
+            est = EP.live_forward_is_established(path=path)
             if est["n_records"] and not est["established"]:
                 logger.error("ledger resolve REFUSED for %s: %s",
                              pop.value, est["reason"])

@@ -149,3 +149,31 @@ def test_a_receipt_failure_never_takes_down_the_resolution(monkeypatch):
     monkeypatch.setattr(_config, "OPTIMUS_LEDGER_DIR",
                         __import__("pathlib").Path("\0invalid"))
     S._write_resolver_receipt({"due": 0})
+
+
+def test_the_guard_inspects_the_same_file_resolution_will_act_on(monkeypatch,
+                                                                 tmp_path):
+    """A check that passed for a different ledger is worse than no check."""
+    default = tmp_path / "default.jsonl"
+    override = tmp_path / "override.jsonl"
+    default.write_text("", encoding="utf-8")          # clean, would pass
+    override.write_text(json.dumps(_rec("p1")) + "\n", encoding="utf-8")
+
+    monkeypatch.setattr(EP, "ledger_path", lambda pop: default)
+    monkeypatch.setattr(LR, "assert_single_population", lambda *a, **k: None)
+    monkeypatch.setattr(EP, "lineage", lambda *a, **k: {})
+    seen = {}
+
+    def _est(sample_cap=50_000, path=None):
+        seen["path"] = path
+        return {"established": False, "n_records": 1,
+                "n_shared_with_campaign": 1, "reason": "UNESTABLISHED"}
+
+    monkeypatch.setattr(EP, "live_forward_is_established", _est)
+
+    import datetime as dt
+    out = LR.resolve_due(path=override, population="live_forward",
+                         today=dt.date(2026, 8, 16))
+
+    assert seen["path"] == override
+    assert out["status"] == "REFUSED"

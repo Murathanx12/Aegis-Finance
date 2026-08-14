@@ -347,7 +347,8 @@ def _record_hash(r: dict) -> str:
                    ensure_ascii=False).encode("utf-8")).hexdigest()[:16]
 
 
-def live_forward_is_established(sample_cap: int = 50_000) -> dict:
+def live_forward_is_established(sample_cap: int = 50_000,
+                                path: "Path | None" = None) -> dict:
     """Does LIVE_FORWARD hold anything the campaign did not already write?
 
     ADJUDICATED 2026-08-15 (`docs/LEDGER_DIVERGENCE_ADJUDICATION_2026-08-15.md`).
@@ -369,7 +370,11 @@ def live_forward_is_established(sample_cap: int = 50_000) -> dict:
     claim unavailable. An empty ledger and a ledger full of somebody else's
     records must not both read as "the product has a forward record".
     """
-    live = read_population(EvidencePopulation.LIVE_FORWARD)
+    # `path` is threaded so the guard inspects the SAME file the caller is about
+    # to act on. Checking the default location while resolution runs against an
+    # overridden one would be a check that passed for a different ledger, which
+    # is worse than no check at all.
+    live = read_population(EvidencePopulation.LIVE_FORWARD, path=path)
     if not live:
         return {"established": False, "n_records": 0,
                 "n_shared_with_campaign": 0,
