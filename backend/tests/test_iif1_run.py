@@ -27,7 +27,7 @@ def _isolated_snapshots(monkeypatch):
     monkeypatch.setattr(F, "SNAPSHOT_DIR", d / "prod")
     monkeypatch.setattr(F, "SANDBOX_SNAPSHOT_DIR", d / "sandbox")
     monkeypatch.setattr(N, "SANDBOX_RECEIPTS_DIR", d / "receipts")
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.0, 0))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.0, 0))
     return d
 
 

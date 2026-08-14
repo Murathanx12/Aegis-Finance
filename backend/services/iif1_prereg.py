@@ -89,6 +89,7 @@ def load_frozen_config(*, allow_opt_out: bool = True) -> types.ModuleType | None
 
 def runtime_surface() -> dict:
     """Every frozen value the runtime carries its own copy of."""
+    from backend.services import investigator_agent as A
     from backend.services import investigator_night as N
     from backend.services import investigator_triggers as TR
     return {
@@ -101,6 +102,12 @@ def runtime_surface() -> dict:
         "BENCHMARK": N.BENCHMARK,
         "NIGHTLY_MAX_USD": N.NIGHTLY_MAX_USD,
         "NIGHTLY_MAX_CALLS": N.NIGHTLY_MAX_CALLS,
+        # Added 2026-08-15. `MAX_TOKENS` was the constant that voided Night 1,
+        # and it earned a place here by being able to bias the primary contrast
+        # while appearing in no registered document — the same class of hole as
+        # a caller-overridable "frozen" parameter, one layer further down.
+        "MAX_TOKENS": A.MAX_TOKENS,
+        "TEMPERATURE": A.TEMPERATURE,
     }
 
 
@@ -115,6 +122,8 @@ def frozen_surface(mod: types.ModuleType) -> dict:
         "BENCHMARK": mod.BENCHMARK,
         "NIGHTLY_MAX_USD": mod.NIGHTLY_MAX_USD,
         "NIGHTLY_MAX_CALLS": mod.NIGHTLY_MAX_CALLS,
+        "MAX_TOKENS": mod.MAX_TOKENS,
+        "TEMPERATURE": mod.TEMPERATURE,
     }
 
 

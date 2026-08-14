@@ -845,5 +845,22 @@
   },
   "sandbox": false,
   "elapsed_s": 2057.470194900001,
-  "trial": "INTERNET-INVESTIGATOR-FWD-1"
+  "trial": "INTERNET-INVESTIGATOR-FWD-1",
+  "amendments": [
+    {
+      "kind": "cost_correction",
+      "field": "spend_usd",
+      "as_written": 0.0,
+      "measured": 0.06646378,
+      "n_priced_calls": 224,
+      "source": "backend/data/optimus/llm_calls.jsonl (served-response telemetry, filtered to purpose=INTERNET-INVESTIGATOR-FWD-1 on this date)",
+      "why_the_receipt_said_zero": "_spend_since() read s['cost_usd']; llm_telemetry.spend() returns the money under 'total_cost_usd'. The missing key yielded None, `or 0.0` made it a number, and every nightly-ceiling check therefore compared $0.00 against $12.00 \u2014 the ceiling had never been armed. Fixed at SPEND_KEY with no default; a missing key now raises.",
+      "totals_are_lower_bounds": true,
+      "lower_bound_reason": "the telemetry ledger carries 2 torn lines (5910, 7198) from concurrent appends during LLM-SWARM-1 on 2026-08-12; they are quarantined to llm_calls.jsonl.quarantine.jsonl and neither belongs to this trial or date, so this night's figure is exact while the ledger's grand total is a lower bound",
+      "original_fields_untouched": true,
+      "authority": "docs/HANDOFF_OPUS5_2026-08-15.md Order 1 (D1)",
+      "amended_at": "2026-08-14T13:57:49+00:00",
+      "seq": 1
+    }
+  ]
 }

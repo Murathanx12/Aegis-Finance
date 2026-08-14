@@ -28,6 +28,8 @@
       "n_cells": 1,
       "n_with_forecasts": 1,
       "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
       "rows": [
         {
           "arm": "A_snapshot",
@@ -37,6 +39,9 @@
           "n_tool_calls": 0,
           "n_forecasts": 3,
           "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
           "served_models": [
             "deepseek-v4-flash"
           ],
@@ -50,6 +55,8 @@
       "n_cells": 1,
       "n_with_forecasts": 1,
       "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
       "rows": [
         {
           "arm": "B_tools",
@@ -59,6 +66,9 @@
           "n_tool_calls": 0,
           "n_forecasts": 3,
           "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
           "served_models": [
             "deepseek-v4-flash"
           ],
@@ -72,6 +82,8 @@
       "n_cells": 1,
       "n_with_forecasts": 1,
       "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
       "rows": [
         {
           "arm": "C_tools_only",
@@ -81,6 +93,9 @@
           "n_tool_calls": 0,
           "n_forecasts": 3,
           "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
           "served_models": [
             "deepseek-v4-flash"
           ],
@@ -94,6 +109,8 @@
       "n_cells": 1,
       "n_with_forecasts": 1,
       "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
       "rows": [
         {
           "arm": "D_all",
@@ -103,6 +120,9 @@
           "n_tool_calls": 0,
           "n_forecasts": 3,
           "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
           "served_models": [
             "deepseek-v4-flash"
           ],
@@ -116,6 +136,8 @@
       "n_cells": 1,
       "n_with_forecasts": 1,
       "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
       "rows": [
         {
           "arm": "B_anon",
@@ -125,6 +147,9 @@
           "n_tool_calls": 0,
           "n_forecasts": 3,
           "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
           "served_models": [
             "deepseek-v4-flash"
           ],
@@ -186,7 +211,23 @@
     "n_calls_resolved": 0,
     "n_calls_in_barren_chains": 0
   },
+  "truncation": {
+    "n_cells": 5,
+    "n_cells_truncated": 0,
+    "pooled_rate": 0.0,
+    "per_arm_rate": {
+      "A_snapshot": 0.0,
+      "B_tools": 0.0,
+      "C_tools_only": 0.0,
+      "D_all": 0.0,
+      "B_anon": 0.0
+    },
+    "worst_arm": "A_snapshot",
+    "worst_arm_rate": 0.0,
+    "spread": 0.0
+  },
+  "decision_lag_minutes": null,
   "sandbox": true,
-  "elapsed_s": 0.0005949000042164698,
+  "elapsed_s": 0.0007619000025442801,
   "trial": "INTERNET-INVESTIGATOR-FWD-1"
 }

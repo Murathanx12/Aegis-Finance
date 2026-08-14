@@ -106,6 +106,70 @@ BALANCE_AS_OF = "2026-08-14"
 #: out, and a ratio only crosses its threshold once the money is spent.
 MAX_BARREN_CELLS = 5
 
+#: Fraction of a night's cells that may die at the TOKEN CEILING before the
+#: night is void.
+#:
+#: Distinct from `MAX_BARREN_CELLS`, which is a money guard: it asks "is this
+#: night buying tokens and getting nothing", and five barren cells in a row is
+#: a cheap place to find out. This is an INTEGRITY guard and it asks a different
+#: question: "are the cells that survived a fair sample of the cells we tried".
+#:
+#: Truncation is not a random tax. An arm that gathers more evidence writes
+#: longer prompts, thinks longer, and truncates more — so a night can lose most
+#: of `B_tools` while keeping most of `A_snapshot` and still hand the paired
+#: statistic a full-looking, silently biased cell set. Night 1 was doing exactly
+#: that (`B_tools` 8/10 barren vs `A_snapshot` 15/40) and nothing would have
+#: said so. Set low deliberately: with the ceiling correctly sized, truncation
+#: should be rare, and a night where it is not is a night whose configuration
+#: has drifted, not a night with slightly less data.
+MAX_TRUNCATION_RATE = 0.05
+
+#: Minutes a production night may start AFTER the decision timestamp its
+#: snapshot was frozen at.
+#:
+#: The tool layer states its own rule plainly: "the trial is forward-only, so
+#: *now* is point-in-time by construction". The tools read the live internet at
+#: the moment they are called. That is only equivalent to the record's
+#: `decision_ts` if the night runs close to it. Start a night three hours after
+#: its snapshot and the four tool-bearing arms have three hours of hindsight on
+#: a one-day horizon, stamped with a decision time before the market opened —
+#: which is not a slow night, it is a forecast made with the answer partly in
+#: view.
+#:
+#: Nothing enforced this. Night 1 happened to run 16 minutes after its snapshot,
+#: so the protocol held by luck and habit rather than by construction.
+MAX_DECISION_LAG_MINUTES = 45
+
+
+class DecisionTimeStale(RuntimeError):
+    """The snapshot is older than a production night may act on."""
+
+
+def assert_decision_time_fresh(decision_ts, *, now=None,
+                               max_lag_minutes: int = MAX_DECISION_LAG_MINUTES
+                               ) -> float:
+    """Refuse a paying night whose snapshot has gone stale. Returns lag minutes.
+
+    Deliberately a REFUSAL rather than a warning, and deliberately before the
+    first vendor call. A night that discovers this afterwards has already
+    bought the contaminated forecasts.
+    """
+    now = now or datetime.now(timezone.utc)
+    if isinstance(decision_ts, str):
+        decision_ts = datetime.fromisoformat(decision_ts)
+    if decision_ts.tzinfo is None:
+        decision_ts = decision_ts.replace(tzinfo=timezone.utc)
+    lag = (now - decision_ts).total_seconds() / 60.0
+    if lag > max_lag_minutes:
+        raise DecisionTimeStale(
+            f"the frozen snapshot's decision_ts is {lag:.0f} minutes old "
+            f"(limit {max_lag_minutes}). The tool-bearing arms read the live "
+            f"internet, so they would investigate a world {lag:.0f} minutes "
+            f"newer than the timestamp their forecasts are graded from — "
+            f"hindsight on the horizon, handed specifically to the arms under "
+            f"test. Freeze a new snapshot and run the night against it.")
+    return lag
+
 #: Map the agent's observable strings onto the ledger enum. A cell the ledger
 #: cannot grade is dropped rather than coerced.
 _OBSERVABLE = {
@@ -113,6 +177,61 @@ _OBSERVABLE = {
     "return_sign": Observable.RETURN_SIGN,
     "beats_benchmark": Observable.BEATS_BENCHMARK,
 }
+
+
+#: The one encoding any receipt or ledger this trial writes is ever opened
+#: with, on BOTH sides. Night 1's void reason came back mojibaked on read, and
+#: the file was clean UTF-8 the whole time — the damage was a cp1252 default on
+#: the reading end. Pinning only the write side would have left that intact.
+RECEIPT_ENCODING = "utf-8"
+
+
+def read_receipt(night: str, *, sandbox: bool = False) -> dict:
+    """Read a night's receipt. UTF-8, explicitly, always."""
+    d = SANDBOX_RECEIPTS_DIR if sandbox else RECEIPTS_DIR
+    return json.loads((d / f"{night}.json").read_text(encoding=RECEIPT_ENCODING))
+
+
+def amend_receipt(night: str, amendment: dict, *,
+                  sandbox: bool = False) -> dict:
+    """Append a dated correction to a receipt WITHOUT altering what it said.
+
+    The original fields stay exactly as the night wrote them — including a
+    `spend_usd: 0.0` that is now known to be wrong. Overwriting it would erase
+    the evidence that the ceiling had been unarmed, which is the finding; the
+    receipt has to be able to say "I reported zero, and here is why that was
+    false" rather than quietly become correct.
+
+    Amendments accumulate in order and are never rewritten in place.
+    """
+    d = SANDBOX_RECEIPTS_DIR if sandbox else RECEIPTS_DIR
+    path = d / f"{night}.json"
+    receipt = json.loads(path.read_text(encoding=RECEIPT_ENCODING))
+    row = dict(amendment)
+    row.setdefault("amended_at",
+                   datetime.now(timezone.utc).isoformat(timespec="seconds"))
+    prior = list(receipt.get("amendments") or [])
+    row.setdefault("seq", len(prior) + 1)
+    receipt["amendments"] = prior + [row]
+    path.write_text(json.dumps(receipt, indent=2, default=str),
+                    encoding=RECEIPT_ENCODING)
+    return receipt
+
+
+def measured_spend_for_night(night: str) -> tuple[float, int]:
+    """(usd, n_calls) this trial actually spent on `night`, from telemetry.
+
+    Read from the served-response ledger by trial and date, which is the only
+    place Night 1's cost survived: the receipt said $0.00 because the ceiling
+    was reading a key `spend()` has never returned.
+    """
+    from backend.services import llm_telemetry
+    rows = [r for r in llm_telemetry.read_calls()
+            if r.get("row_type") != "amendment"
+            and str(r.get("ts", ""))[:10] == night
+            and r.get("purpose") == TRIAL]
+    return (round(sum(float(r.get("cost_usd") or 0.0) for r in rows), 8),
+            len(rows))
 
 
 class NightlyBudgetExhausted(IT.BudgetExhausted):
@@ -143,6 +262,15 @@ class NightResult:
     #: What the telemetry ledger was told each cell's calls jointly minted.
     #: `n_chains_minted_nothing` is the honest zero-yield count for the night.
     chain_yield: dict = field(default_factory=dict)
+    #: How many cells died at the token ceiling, per arm. On EVERY receipt,
+    #: including clean nights: the number that matters is that it stayed near
+    #: zero, and a field that only appears when it is bad teaches the reader to
+    #: assume its absence means fine.
+    truncation: dict = field(default_factory=dict)
+    #: Minutes between the snapshot's decision_ts and the night starting. On the
+    #: receipt because it bounds how much of the horizon the tool arms could
+    #: already see.
+    decision_lag_minutes: float | None = None
     #: True for a rehearsal/test. A sandbox night never reaches the evidence
     #: ledger and never writes a production receipt, and the flag is carried on
     #: the receipt so the two can never be confused after the fact.
@@ -210,7 +338,8 @@ def project_funding(measured_cost_usd: float, *,
 SPEND_KEY = "total_cost_usd"
 
 
-def _spend_since(since_iso: str) -> tuple[float, int]:
+def _spend_since(since_iso: str, *, purpose: str | None = None,
+                 path=None) -> tuple[float, int]:
     """(usd, calls) from the telemetry ledger since `since_iso`.
 
     Raises on a read failure rather than returning zero: a telemetry read that
@@ -227,7 +356,7 @@ def _spend_since(since_iso: str) -> tuple[float, int]:
     no default.
     """
     from backend.services import llm_telemetry
-    s = llm_telemetry.spend(since=since_iso)
+    s = llm_telemetry.spend(since=since_iso, purpose=purpose, path=path)
     if not s:
         raise NightlyBudgetExhausted(
             "telemetry ledger unreadable — nightly spend is UNKNOWN, not zero; "
@@ -240,10 +369,21 @@ def _spend_since(since_iso: str) -> tuple[float, int]:
     return float(s[SPEND_KEY] or 0.0), int(s.get("n_calls", 0) or 0)
 
 
+#: A rehearsal's telemetry. Separate FILE, not a suppressed write: the chain
+#: bookkeeping — mint an id, collect it under a chain, amend it with what the
+#: chain produced — is the machinery that was wrong on Night 1, and a rehearsal
+#: that skipped it would be simulating everything except the part that broke.
+#: Writing it into the real ledger instead would put $0.00 rows for calls that
+#: never happened beside the rows the funding rule reads.
+SANDBOX_TELEMETRY = _config.OPTIMUS_LEDGER_DIR / "llm_calls_sandbox.jsonl"
+
+
 def make_llm_call(*, since_iso: str, max_usd: float = NIGHTLY_MAX_USD,
                   max_calls: int = NIGHTLY_MAX_CALLS,
                   counter: dict | None = None,
-                  chain: dict | None = None) -> Callable:
+                  chain: dict | None = None,
+                  transport: Callable | None = None,
+                  telemetry_path=None) -> Callable:
     """A budget-gated LLM call the agent can be handed.
 
     Two gates fire before every request: the campaign governor inside
@@ -259,7 +399,7 @@ def make_llm_call(*, since_iso: str, max_usd: float = NIGHTLY_MAX_USD,
 
     def call(*, system: str, user: str, model: str = REQUEST_MODEL,
              temperature: float = 0.0, max_tokens: int = 1600):
-        usd, n = _spend_since(since_iso)
+        usd, n = _spend_since(since_iso, path=telemetry_path)
         # RESERVE the worst case before transmitting, rather than checking
         # `usd >= max_usd` after. The old form permitted one more call at
         # $11.99 against a $12 cap and that call could carry the night past a
@@ -274,23 +414,28 @@ def make_llm_call(*, since_iso: str, max_usd: float = NIGHTLY_MAX_USD,
         if n >= max_calls:
             raise NightlyBudgetExhausted(
                 f"nightly call ceiling reached: {n} >= {max_calls}")
-        reply = default_llm_call(system, user, model=model,
-                                 temperature=temperature,
-                                 max_tokens=max_tokens, campaign=CAMPAIGN,
-                                 since=since_iso)
+        if transport is None:
+            reply = default_llm_call(system, user, model=model,
+                                     temperature=temperature,
+                                     max_tokens=max_tokens, campaign=CAMPAIGN,
+                                     since=since_iso)
+        else:
+            reply = transport(system=system, user=user, model=model,
+                              temperature=temperature, max_tokens=max_tokens)
         if counter is not None:
             counter["calls"] = counter.get("calls", 0) + 1
             served = str(getattr(reply, "model_version", "") or "")
             counter.setdefault("served", set()).add(served)
         _record_telemetry(reply, model=model, system=system, user=user,
-                          chain=chain)
+                          chain=chain, path=telemetry_path)
         return reply
 
     return call
 
 
 def _record_telemetry(reply: Any, *, model: str, system: str,
-                      user: str, chain: dict | None = None) -> None:
+                      user: str, chain: dict | None = None,
+                      path=None) -> None:
     """One telemetry row per vendor call, with the SERVED model.
 
     The API silently aliases — `deepseek-chat` and `deepseek-reasoner` were both
@@ -320,7 +465,7 @@ def _record_telemetry(reply: Any, *, model: str, system: str,
         # `build_call` + `append` rather than `record_call`, only because the id
         # has to be kept: `record_call` deliberately returns nothing usable, and
         # a chain that cannot name its own rows can never resolve them.
-        llm_telemetry.append([row])
+        llm_telemetry.append([row], path=path)
         if chain_id and chain is not None:
             chain.setdefault("calls", {}).setdefault(chain_id,
                                                      []).append(row.call_id)
@@ -338,7 +483,8 @@ def chain_id(night: str, arm: str, ticker: str) -> str:
     return f"{night}:{arm}:{ticker}"
 
 
-def resolve_chain_yield(chain: dict, records: list, *, night: str) -> dict:
+def resolve_chain_yield(chain: dict, records: list, *, night: str,
+                        path=None) -> dict:
     """Tell the ledger what each cell's calls jointly minted. Never raises.
 
     Every call of a finished chain is amended — with the cell's prediction ids,
@@ -365,7 +511,7 @@ def resolve_chain_yield(chain: dict, records: list, *, night: str) -> dict:
         for call_id in call_ids:
             try:
                 llm_telemetry.attach_outputs(call_id, prediction_ids=pids,
-                                             yield_resolved=True)
+                                             yield_resolved=True, path=path)
             except Exception as exc:                           # noqa: BLE001
                 logger.error("could not resolve chain yield for %s/%s "
                              "(%s: %s) — that row stays PENDING and the "
@@ -374,6 +520,40 @@ def resolve_chain_yield(chain: dict, records: list, *, night: str) -> dict:
     return {"n_chains": n_chains, "n_chains_minted_nothing": n_barren_chains,
             "n_calls_resolved": n_calls, "n_calls_in_barren_chains":
                 n_barren_calls}
+
+
+def _tally(dicts) -> dict:
+    """Sum a sequence of {code: count} maps. Sorted, so receipts diff cleanly."""
+    out: dict[str, int] = {}
+    for d in dicts:
+        for k, v in (d or {}).items():
+            out[k] = out.get(k, 0) + int(v)
+    return dict(sorted(out.items()))
+
+
+def truncation_report(per_arm: dict) -> dict:
+    """How many cells died at the token ceiling, and how unevenly.
+
+    `worst_arm_rate` is the number that decides, not the pooled rate. Pooling
+    is what hides the failure: 15/40 in the control and 8/10 in the treatment
+    pools to 46%, but the damage is the 25-point GAP, and a night that lost a
+    quarter of each arm uniformly would be a much less dangerous night than one
+    that lost four fifths of one.
+    """
+    arms = {a: v for a, v in per_arm.items() if v.get("n_cells")}
+    rates = {a: (v.get("n_cells_truncated", 0) / v["n_cells"])
+             for a, v in arms.items()}
+    n_cells = sum(v["n_cells"] for v in arms.values())
+    n_trunc = sum(v.get("n_cells_truncated", 0) for v in arms.values())
+    return {
+        "n_cells": n_cells,
+        "n_cells_truncated": n_trunc,
+        "pooled_rate": (n_trunc / n_cells) if n_cells else 0.0,
+        "per_arm_rate": {a: round(r, 4) for a, r in rates.items()},
+        "worst_arm": (max(rates, key=lambda a: rates[a]) if rates else None),
+        "worst_arm_rate": (max(rates.values()) if rates else 0.0),
+        "spread": (max(rates.values()) - min(rates.values())) if rates else 0.0,
+    }
 
 
 def cell_key(ticker: str, f: dict) -> tuple:
@@ -517,10 +697,12 @@ def run_night(features_by_ticker: dict[str, dict], *,
               arms: tuple[str, ...] = ARMS,
               llm_call: Callable | None = None,
               tool_runner: Callable | None = None,
+              transport: Callable | None = None,
               dry_run: bool = False,
               sandbox: bool = False,
               max_usd: float = NIGHTLY_MAX_USD,
               balance_usd: float = DEFAULT_BALANCE_USD,
+              decision_ts: str | None = None,
               night: str | None = None) -> NightResult:
     """One night, end to end.
 
@@ -550,6 +732,16 @@ def run_night(features_by_ticker: dict[str, dict], *,
         assert_production_invocation(k=k, arms=arms, max_usd=max_usd,
                                      llm_call=llm_call,
                                      tool_runner=tool_runner)
+        # Before the first dollar, like every other refusal here. A sandbox run
+        # may replay a snapshot of any age — that is what a rehearsal is for.
+        if decision_ts is not None:
+            res.decision_lag_minutes = round(
+                assert_decision_time_fresh(decision_ts), 2)
+        else:
+            logger.warning(
+                "run_night: no decision_ts supplied, so the snapshot-staleness "
+                "guard DID NOT RUN. The tool arms read live data; if this "
+                "snapshot is hours old they are forecasting with hindsight.")
 
     sel = TR.select_triggers(features_by_ticker, k=k)
     res.trigger_report = {kk: vv for kk, vv in sel.items()
@@ -563,8 +755,27 @@ def run_night(features_by_ticker: dict[str, dict], *,
 
     counter: dict = {"calls": 0, "served": set()}
     chain_ctx: dict = {"id": None, "calls": {}}
-    call = llm_call or make_llm_call(since_iso=since_iso, max_usd=max_usd,
-                                     counter=counter, chain=chain_ctx)
+    tele_path = None
+    if transport is not None:
+        # A REHEARSAL WITH THE CHAIN MACHINERY ATTACHED. `llm_call=` bypasses
+        # `make_llm_call` entirely, so a stubbed rehearsal never minted a
+        # telemetry id, never collected one under a chain, and never amended it
+        # — it reported `n_chains: 0` and simulated everything except the part
+        # that broke. Night 1's whole divergence was that the zero-yield gate
+        # cannot see a chain, and the rehearsal was structurally incapable of
+        # showing it. Swapping only the TRANSPORT keeps every layer above the
+        # wire in the test.
+        if not sandbox:
+            raise SandboxRequired(
+                "transport= replaces the vendor and may only be used with "
+                "sandbox=True; a production night uses the frozen client")
+        tele_path = SANDBOX_TELEMETRY
+        call = make_llm_call(since_iso=since_iso, max_usd=max_usd,
+                             counter=counter, chain=chain_ctx,
+                             transport=transport, telemetry_path=tele_path)
+    else:
+        call = llm_call or make_llm_call(since_iso=since_iso, max_usd=max_usd,
+                                         counter=counter, chain=chain_ctx)
 
     per_arm_tickers: dict[str, list[str]] = {}
     per_arm_inv: dict[str, list] = {}
@@ -576,77 +787,133 @@ def run_night(features_by_ticker: dict[str, dict], *,
     # below iterates this tuple and nothing may re-derive it.
     cells = tuple(res.tickers)
 
-    for arm in arms:
-        # Equality asserted BEFORE the calls as well as after them. The check at
-        # the end catches an arm that dropped cells while running; this one
-        # catches an arm that was handed the wrong ones to begin with — and it
-        # catches it before any money is spent, rather than after five arms have
-        # been paid for and the night is void anyway.
-        arm_cells = list(cells)
-        try:
-            TR.assert_arms_share_cells({"__frozen_trigger_set__": list(cells),
-                                        arm: arm_cells})
-        except ValueError as exc:
-            # VOID, not a crash. A traceback out of the nightly runner is an
-            # ops incident that loses the receipt; a void night with its reason
-            # on disk is a record. Same outcome for the trial, different
-            # outcome for knowing why.
-            res.status = "void"
-            res.void_reason = f"pre-call cell check failed for {arm}: {exc}"
-            logger.error("[%s] %s", arm, res.void_reason)
-            break
+    # Equality asserted BEFORE the calls as well as after them. The check at the
+    # end catches an arm that dropped cells while running; this one catches an
+    # arm that was handed the wrong ones to begin with — and it catches it
+    # before any money is spent, rather than after five arms have been paid for
+    # and the night is void anyway.
+    try:
+        TR.assert_arms_share_cells(
+            {"__frozen_trigger_set__": list(cells),
+             **{arm: list(cells) for arm in arms}})
+    except ValueError as exc:
+        # VOID, not a crash. A traceback out of the nightly runner is an ops
+        # incident that loses the receipt; a void night with its reason on disk
+        # is a record. Same outcome for the trial, different outcome for
+        # knowing why.
+        res.status = "void"
+        res.void_reason = f"pre-call cell check failed: {exc}"
+        logger.error(res.void_reason)
+        cells = ()
 
-        agent = Investigator(arm, llm_call=call,
-                             tool_runner=tool_runner or IT.run_tool,
-                             model=REQUEST_MODEL)
-        rows, done, invs = [], [], []
-        barren = 0
-        for tkr in arm_cells:
-            snap = (snapshots or {}).get(tkr, {})
+    agents = {arm: Investigator(arm, llm_call=call,
+                                tool_runner=tool_runner or IT.run_tool,
+                                model=REQUEST_MODEL)
+              for arm in arms}
+    rows_by_arm: dict[str, list] = {arm: [] for arm in arms}
+    barren_run: dict[str, int] = {arm: 0 for arm in arms}
+    for arm in arms:
+        per_arm_tickers[arm], per_arm_inv[arm] = [], []
+
+    # ── CELL-MAJOR, NOT ARM-MAJOR, AND IT IS AN INTEGRITY FIX ────────────────
+    # This loop used to run every cell of arm A, then every cell of arm B, and
+    # so on. The tool layer states its own PIT rule as "the trial is
+    # forward-only, so *now* is point-in-time by construction" — the tools read
+    # the live internet at the moment they are called. So in arm-major order the
+    # arms are not merely different treatments, they are different TIMES: on a
+    # 200-cell night the last arm sees hours more of the world than the first,
+    # and the ordering is fixed, so `B_tools` had a systematic information
+    # advantage over `A_snapshot` that the trial would have attributed to tools.
+    # That is the primary contrast, confounded by loop order.
+    #
+    # Cell-major makes the pairing temporal as well as nominal: the five arms of
+    # one cell run within seconds of each other, against the same world. It also
+    # fails better — a night that stops early now leaves every arm with the SAME
+    # completed cells, which is a shorter paired night instead of a void one.
+    for tkr in cells:
+        snap = (snapshots or {}).get(tkr, {})
+        for arm in arms:
             chain_ctx["id"] = chain_id(night, arm, tkr)
             try:
-                inv = agent.investigate(tkr, snap)
+                inv = agents[arm].investigate(tkr, snap)
             except NightlyBudgetExhausted as exc:
                 stopped = str(exc)
                 logger.warning("[%s] nightly budget stopped the run: %s",
                                arm, exc)
                 break
-            rows.append(inv.as_row())
-            done.append(tkr)
-            invs.append(inv)
+            rows_by_arm[arm].append(inv.as_row())
+            per_arm_tickers[arm].append(tkr)
+            per_arm_inv[arm].append(inv)
             per_arm_snaps.setdefault(arm, {})[tkr] = snap
 
-            barren = 0 if inv.forecasts else barren + 1
-            if barren >= MAX_BARREN_CELLS:
+            barren_run[arm] = 0 if inv.forecasts else barren_run[arm] + 1
+            if barren_run[arm] >= MAX_BARREN_CELLS:
                 barren_stop = (
-                    f"information guard: {barren} consecutive cells in arm "
-                    f"{arm} produced no gradeable forecast — stopping rather "
-                    f"than paying for the remaining "
-                    f"{len(arm_cells) - len(done)} in this arm and "
-                    f"{len(arms) - list(arms).index(arm) - 1} further arms")
+                    f"information guard: {barren_run[arm]} consecutive cells "
+                    f"in arm {arm} produced no gradeable forecast — stopping "
+                    f"rather than paying for the remaining "
+                    f"{len(cells) - len(per_arm_tickers[arm])} cells across "
+                    f"{len(arms)} arms")
                 logger.error(barren_stop)
                 break
-        per_arm_tickers[arm] = done
-        per_arm_inv[arm] = invs
+        if stopped or barren_stop:
+            # Drop the partial cell: an arm that was cut off mid-cell leaves the
+            # others holding a cell it does not have, and a ragged edge is the
+            # thing the pairing guard exists to refuse. Trimming to the shortest
+            # completed prefix keeps what was paid for AND paired.
+            keep = min(len(v) for v in per_arm_tickers.values())
+            for arm in arms:
+                del per_arm_tickers[arm][keep:]
+                del per_arm_inv[arm][keep:]
+                del rows_by_arm[arm][keep:]
+            break
+
+    for arm in arms:
+        rows, done = rows_by_arm[arm], per_arm_tickers[arm]
         res.per_arm[arm] = {
             "n_cells": len(done),
             "n_with_forecasts": sum(1 for r in rows if r["n_forecasts"] > 0),
             "n_tool_calls": sum(r["n_tool_calls"] for r in rows),
+            # Per-arm, not just per-night: the whole danger of truncation is
+            # that it lands UNEVENLY across the arms being compared, and a
+            # night-level rate would average that away into a number that looks
+            # tolerable while the primary contrast is already broken.
+            "n_cells_truncated": sum(1 for r in rows
+                                     if r.get("n_truncated_calls")),
+            "drop_reasons": _tally(r.get("forecast_drops") for r in rows),
             "rows": rows,
         }
-        if stopped or barren_stop:
-            break
 
     # ── the pairing guards ──────────────────────────────────────────────────
     # A partial night written to the ledger would look like data. If the arms
     # diverged, nothing is minted and the reason is recorded.
     all_records: list[PredictionRecord] = []
-    # The information stop is reported FIRST. It necessarily leaves the arms
-    # holding different cells, and "the arms disagree" would be a true sentence
-    # describing the consequence rather than the cause.
+    # The information stop is still reported FIRST, though for a weaker reason
+    # than before: under cell-major order an early stop leaves the arms holding
+    # the SAME trimmed cell set, so "the arms disagree" is no longer even true.
+    # It is reported first because it is the CAUSE — a short night and a barren
+    # arm are the same event, and the receipt should name the one that decided.
+    res.truncation = truncation_report(res.per_arm)
     if barren_stop:
         res.status = "void"
         res.void_reason = barren_stop
+    elif res.truncation["worst_arm_rate"] > MAX_TRUNCATION_RATE:
+        # Ordered AFTER the barren stop and BEFORE the pairing checks, because
+        # each of the three describes the one below it. A truncated night still
+        # produces a tidy paired cell set — that is exactly what makes it
+        # dangerous — so "the arms agree" would be true and meaningless here.
+        t = res.truncation
+        res.status = "void"
+        res.void_reason = (
+            f"truncation guard: arm {t['worst_arm']} lost "
+            f"{t['worst_arm_rate']:.0%} of its cells at the token ceiling "
+            f"(limit {MAX_TRUNCATION_RATE:.0%}; spread across arms "
+            f"{t['spread']:.0%}). The surviving cells are the ones the model "
+            f"could answer INSIDE the budget, which is not a random subset — "
+            f"arms that gather more evidence think longer and truncate more, "
+            f"so accruing this night would bias the primary contrast by a "
+            f"constant that is not in the pre-registration")
+        logger.error(res.void_reason)
     else:
         try:
             TR.assert_arms_share_cells(per_arm_tickers)
@@ -702,10 +969,18 @@ def run_night(features_by_ticker: dict[str, dict], *,
     # what they minted — including nothing — is now known; leaving them pending
     # would take them out of the governor's denominator permanently, which is
     # the failure this whole change exists to avoid, one level up.
-    res.chain_yield = resolve_chain_yield(chain_ctx, all_records, night=night)
+    res.chain_yield = resolve_chain_yield(chain_ctx, all_records, night=night,
+                                          path=tele_path)
 
     try:
-        res.spend_usd, res.calls = _spend_since(since_iso)
+        # SCOPED TO THIS TRIAL for the receipt, while the ceiling above stays
+        # unscoped. The ceiling should be conservative — any spend on the box
+        # counts against the night's $12 — but `measured_cost_night_1` is the
+        # number the funding rule reads, so it must be this trial's own money.
+        # The rehearsal that spent nothing reported $0.115184 before this split,
+        # which was the day's diagnostic probes wearing the night's name.
+        res.spend_usd, res.calls = _spend_since(since_iso, purpose=TRIAL,
+                                               path=tele_path)
     except NightlyBudgetExhausted as exc:
         res.spend_usd, res.calls = -1.0, counter.get("calls", 0)
         logger.error("could not read this night's spend: %s", exc)

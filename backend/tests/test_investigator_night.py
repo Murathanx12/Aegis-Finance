@@ -100,7 +100,7 @@ def test_records_carry_the_arm_and_the_belief_change(monkeypatch):
                         lambda recs, path=None: captured.extend(recs))
     monkeypatch.setattr(N, "RECEIPTS_DIR", __import__("pathlib").Path(
         __import__("tempfile").mkdtemp()))
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.01, 5))
     res = N.run_night({"T1": _feats()}, k=1, llm_call=good_llm,
                       tool_runner=no_tools, dry_run=False, sandbox=True)
     assert res.status == "ok"
@@ -145,14 +145,14 @@ def test_an_unreadable_telemetry_ledger_stops_the_night_rather_than_spending_bli
 
 
 def test_the_nightly_ceiling_refuses_before_the_call_not_after(monkeypatch):
-    monkeypatch.setattr(N, "_spend_since", lambda s: (99.0, 10))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (99.0, 10))
     call = N.make_llm_call(since_iso="2026-08-14T00:00:00+00:00", max_usd=12.0)
     with pytest.raises(N.NightlyBudgetExhausted, match="nightly ceiling"):
         call(system="s", user="u")
 
 
 def test_the_call_ceiling_also_binds(monkeypatch):
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 99_999))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.01, 99_999))
     call = N.make_llm_call(since_iso="x", max_usd=12.0, max_calls=3000)
     with pytest.raises(N.NightlyBudgetExhausted, match="call ceiling"):
         call(system="s", user="u")
@@ -168,7 +168,7 @@ def test_budget_exhaustion_mid_night_marks_the_night_rather_than_pretending(
             raise N.NightlyBudgetExhausted("nightly ceiling reached")
         return good_llm(system=system, user=user, model=model)
 
-    monkeypatch.setattr(N, "_spend_since", lambda s: (12.0, 50))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (12.0, 50))
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(4)},
                       k=4, llm_call=flaky, tool_runner=no_tools, dry_run=True, sandbox=True)
     assert res.status in ("budget_stopped", "void")
@@ -182,7 +182,7 @@ def test_divergent_cells_void_the_night_and_mint_nothing(monkeypatch):
     captured = []
     monkeypatch.setattr("backend.services.belief_state.append",
                         lambda recs, path=None: captured.extend(recs))
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.01, 5))
 
     seen = {"n": 0}
     real = N.Investigator
@@ -225,7 +225,7 @@ def test_the_frozen_cell_set_is_checked_before_any_arm_makes_a_call(monkeypatch)
         return real_assert(per_arm)
 
     monkeypatch.setattr(N.TR, "assert_arms_share_cells", sabotage)
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.0, 0))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.0, 0))
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
                       k=3, llm_call=counting_llm, tool_runner=no_tools,
                       dry_run=True, sandbox=True)
@@ -285,7 +285,7 @@ def test_an_unreadable_spend_is_reported_unknown_rather_than_free():
 def test_run_night_attaches_the_budget_block_to_the_receipt(monkeypatch):
     monkeypatch.setattr("backend.services.belief_state.append",
                         lambda recs, path=None: None)
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.50, 20))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.50, 20))
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
                       k=3, llm_call=good_llm, tool_runner=no_tools,
                       dry_run=True, sandbox=True, night="2026-08-15")
@@ -304,7 +304,7 @@ def test_the_receipt_carries_operational_diagnostics_and_no_trial_statistics(
     """
     monkeypatch.setattr("backend.services.belief_state.append",
                         lambda recs, path=None: None)
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.01, 5))
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
                       k=3, llm_call=good_llm, tool_runner=no_tools,
                       dry_run=True, sandbox=True)
@@ -321,9 +321,22 @@ def test_the_receipt_carries_operational_diagnostics_and_no_trial_statistics(
                  "threshold", "contrast", "t_statistic", "observable"):
         assert leak not in blob, f"receipt leaks {leak!r} during the blind"
     row = res.per_arm["B_tools"]["rows"][0]
+    # Deliberately exhaustive: a new field on this row reaches a human's eyes
+    # every morning of the blind, so adding one has to be a decision rather
+    # than a diff nobody looked at. The three added 2026-08-15 are diagnostic
+    # and value-free — a closed-vocabulary drop CODE, a count of truncated
+    # calls, and the vendor's stop reason ("stop"/"length"). None of them can
+    # carry a probability.
     assert set(row) == {"arm", "ticker", "status", "n_calls", "n_tool_calls",
-                        "n_forecasts", "forecast_drops", "served_models",
+                        "n_forecasts", "forecast_drops", "terminal_drop_reason",
+                        "n_truncated_calls", "finish_reasons", "served_models",
                         "tokens_in", "tokens_out", "error"}
+    assert row["terminal_drop_reason"] in ({""} | set(
+        __import__("backend.services.investigator_agent", fromlist=["x"])
+        .DROP_REASONS))
+    assert isinstance(row["n_truncated_calls"], int)
+    assert all(fr in ("stop", "length", "content_filter", "tool_calls")
+               for fr in row["finish_reasons"])
 
 
 def test_forecast_drop_reasons_are_a_closed_value_free_vocabulary():
@@ -405,7 +418,7 @@ def test_a_paying_night_refuses_without_the_prereg_even_when_exempted(
     from backend.services import iif1_prereg as P
     monkeypatch.setattr(P, "CONFIG_PATH", tmp_path / "gone" / "iif1_config.py")
     monkeypatch.setenv(P.OPT_OUT_ENV, "1")
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.0, 0))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.0, 0))
     # NOT sandbox — the whole point is that the PRODUCTION path refuses. Marking
     # this sandbox would skip the guard and send the run at the real vendor,
     # which is how it was caught: the test hung in retry backoff instead of
@@ -421,7 +434,7 @@ def test_an_injected_llm_call_does_not_require_the_sibling_tree(monkeypatch,
     spend it against. Tests must not be forced to carry the sibling repo."""
     from backend.services import iif1_prereg as P
     monkeypatch.setattr(P, "CONFIG_PATH", tmp_path / "gone" / "iif1_config.py")
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.0, 0))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.0, 0))
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
                       k=3, llm_call=good_llm, tool_runner=no_tools,
                       dry_run=True, sandbox=True)

@@ -650,6 +650,13 @@ class SwarmReply:
     cached_tokens: int = 0
     latency_ms: float = 0.0
     retries: int = 0
+    #: The vendor's own word for WHY generation stopped — "stop" for a finished
+    #: reply, "length" for one cut off at max_tokens. It was being dropped on
+    #: the floor here, and it is the single field that distinguishes "the model
+    #: returned malformed JSON" from "we truncated the model mid-sentence".
+    #: Night 1 lost 23 of 50 cells and could not tell those two apart at any
+    #: price, because this string never left `default_llm_call`.
+    finish_reason: str = ""
 
 
 #: (system, user) -> SwarmReply. Injectable so the offline suite never reaches
@@ -731,6 +738,11 @@ def default_llm_call(system: str, user: str, *, client=None,
         return SwarmReply(
             text=(resp.choices[0].message.content or ""),
             model_version=str(getattr(resp, "model", model)),
+            # Defensive: `finish_reason` is the vendor's field, not ours, and a
+            # provider that omits it must degrade to "unknown" rather than take
+            # the forecast down — the same rule `extract_usage` follows.
+            finish_reason=str(getattr(resp.choices[0], "finish_reason", "")
+                              or ""),
             latency_ms=(time.perf_counter() - t0) * 1000.0, retries=retries,
             **u)
     assert last is not None

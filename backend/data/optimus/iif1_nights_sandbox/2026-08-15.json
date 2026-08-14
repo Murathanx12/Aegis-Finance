@@ -1,0 +1,1062 @@
+{
+  "night": "2026-08-15",
+  "status": "ok",
+  "void_reason": "",
+  "tickers": [
+    "NEM",
+    "HD",
+    "ICE",
+    "ETN",
+    "FCX",
+    "WEC",
+    "AMAT",
+    "CSCO",
+    "PCG",
+    "AVB"
+  ],
+  "trigger_report": {
+    "as_of": "2026-08-14",
+    "k_requested": 40,
+    "n_universe": 10,
+    "n_eligible": 10,
+    "n_selected": 10,
+    "n_excluded": 0,
+    "short_of_k": true,
+    "tickers": [
+      "NEM",
+      "HD",
+      "ICE",
+      "ETN",
+      "FCX",
+      "WEC",
+      "AMAT",
+      "CSCO",
+      "PCG",
+      "AVB"
+    ],
+    "weights": {
+      "abs_resid_return_z_1d": 1.0,
+      "volume_z_20d": 1.0,
+      "earnings_within_5d": 1.5,
+      "filing_within_2d": 1.0
+    }
+  },
+  "per_arm": {
+    "A_snapshot": {
+      "n_cells": 10,
+      "n_with_forecasts": 10,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "rows": [
+        {
+          "arm": "A_snapshot",
+          "ticker": "NEM",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "HD",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "ICE",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "ETN",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "FCX",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "WEC",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "AMAT",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "CSCO",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "PCG",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "AVB",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        }
+      ]
+    },
+    "B_tools": {
+      "n_cells": 10,
+      "n_with_forecasts": 10,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "rows": [
+        {
+          "arm": "B_tools",
+          "ticker": "NEM",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "HD",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "ICE",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "ETN",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "FCX",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "WEC",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "AMAT",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "CSCO",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "PCG",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "AVB",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        }
+      ]
+    },
+    "C_tools_only": {
+      "n_cells": 10,
+      "n_with_forecasts": 10,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "rows": [
+        {
+          "arm": "C_tools_only",
+          "ticker": "NEM",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "HD",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "ICE",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "ETN",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "FCX",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "WEC",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "AMAT",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "CSCO",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "PCG",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "AVB",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        }
+      ]
+    },
+    "D_all": {
+      "n_cells": 10,
+      "n_with_forecasts": 10,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "rows": [
+        {
+          "arm": "D_all",
+          "ticker": "NEM",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "D_all",
+          "ticker": "HD",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "D_all",
+          "ticker": "ICE",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "D_all",
+          "ticker": "ETN",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "D_all",
+          "ticker": "FCX",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "D_all",
+          "ticker": "WEC",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "D_all",
+          "ticker": "AMAT",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "D_all",
+          "ticker": "CSCO",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "D_all",
+          "ticker": "PCG",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "D_all",
+          "ticker": "AVB",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        }
+      ]
+    },
+    "B_anon": {
+      "n_cells": 10,
+      "n_with_forecasts": 10,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "rows": [
+        {
+          "arm": "B_anon",
+          "ticker": "NEM",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "HD",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "ICE",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "ETN",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "FCX",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "WEC",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "AMAT",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "CSCO",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "PCG",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "AVB",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": ""
+        }
+      ]
+    }
+  },
+  "records_written": 0,
+  "calls": 240,
+  "spend_usd": 0.0,
+  "served_models": [
+    "stub-rehearsal"
+  ],
+  "budget": {
+    "measured_cost_night_1": null,
+    "measured_cost_status": "unknown",
+    "projected_40_night_cost": null,
+    "current_balance": 37.12,
+    "balance_as_of": "2026-08-14",
+    "funding_gap_or_surplus": null,
+    "fundable_nights_at_this_rate": null,
+    "nights_required": 40,
+    "funding_average_per_night": 0.928,
+    "safety_ceiling_per_night": 12.0,
+    "note": "The ceiling is a stop, not a plan. The planning number is funding_average_per_night; a night under the ceiling but over the average shortens the trial rather than fitting in it. The funding decision is made BEFORE the accrual clock starts, not when the balance runs out."
+  },
+  "cell_pairing": {
+    "n_cells_union": 30,
+    "n_cells_paired": 30,
+    "n_cells_dropped_unpaired": 0,
+    "per_arm": {
+      "A_snapshot": {
+        "n_cells": 30,
+        "n_dropped_for_pairing": 0
+      },
+      "B_tools": {
+        "n_cells": 30,
+        "n_dropped_for_pairing": 0
+      },
+      "C_tools_only": {
+        "n_cells": 30,
+        "n_dropped_for_pairing": 0
+      },
+      "D_all": {
+        "n_cells": 30,
+        "n_dropped_for_pairing": 0
+      },
+      "B_anon": {
+        "n_cells": 30,
+        "n_dropped_for_pairing": 0
+      }
+    },
+    "key": "night x ticker x observable x horizon_days x threshold"
+  },
+  "chain_yield": {
+    "n_chains": 50,
+    "n_chains_minted_nothing": 0,
+    "n_calls_resolved": 240,
+    "n_calls_in_barren_chains": 0
+  },
+  "truncation": {
+    "n_cells": 50,
+    "n_cells_truncated": 0,
+    "pooled_rate": 0.0,
+    "per_arm_rate": {
+      "A_snapshot": 0.0,
+      "B_tools": 0.0,
+      "C_tools_only": 0.0,
+      "D_all": 0.0,
+      "B_anon": 0.0
+    },
+    "worst_arm": "A_snapshot",
+    "worst_arm_rate": 0.0,
+    "spread": 0.0
+  },
+  "sandbox": true,
+  "elapsed_s": 1.5328336999955354,
+  "trial": "INTERNET-INVESTIGATOR-FWD-1"
+}

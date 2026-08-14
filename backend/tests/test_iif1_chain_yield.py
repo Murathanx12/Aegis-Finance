@@ -284,9 +284,19 @@ def test_consecutive_barren_cells_stop_the_night_and_void_it(monkeypatch):
 
     assert res.status == "void"
     assert "information guard" in res.void_reason
-    # It stopped inside the FIRST arm rather than paying for all five.
-    assert len(res.per_arm) == 1
-    assert res.per_arm["A_snapshot"]["n_cells"] == N.MAX_BARREN_CELLS
+    # It stopped after a handful of cells rather than paying for 40 x 5 = 200.
+    # The shape of the evidence changed when the loop became cell-major: every
+    # arm now appears, each holding the SAME trimmed prefix, because the five
+    # arms of a cell run together instead of one arm running to completion
+    # before the next begins. The economic claim is unchanged and is asserted
+    # on the total, which is what actually cost money.
+    assert set(res.per_arm) == set(N.ARMS)
+    n_each = {a: v["n_cells"] for a, v in res.per_arm.items()}
+    assert len(set(n_each.values())) == 1, f"arms left ragged: {n_each}"
+    assert sum(n_each.values()) <= N.MAX_BARREN_CELLS * len(N.ARMS)
+    # ... and the arms are still PAIRED after the stop, which arm-major order
+    # could not deliver: it always left one arm short and voided on divergence.
+    assert res.per_arm["A_snapshot"]["n_cells"] >= 1
 
 
 def test_the_guard_resets_when_a_cell_produces_forecasts(monkeypatch):

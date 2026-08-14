@@ -76,7 +76,36 @@ _BUDGET_ERRORS = _budget_errors()
 MAX_TOOL_ROUNDS = 4
 
 TEMPERATURE = 0.0
-MAX_TOKENS = 1600
+
+#: THE CEILING THAT VOIDED NIGHT 1, AND WHY IT IS NOW THIS LARGE.
+#:
+#: It was 1600, and 23 of 50 cells died against it. Measured live on 2026-08-15
+#: against the frozen Night-1 snapshot: every barren cell came back
+#: `finish_reason="length"` with `tokens_out` exactly 1600, while the two that
+#: produced came in at 1396 and 1591 — one of them survived by nine tokens.
+#: Re-run at 4000, the same eight cells produced 8/8.
+#:
+#: The mechanism is NOT reply length. `deepseek-v4-flash` is a reasoning model
+#: and `max_tokens` bounds THINKING PLUS ANSWER: CSCO spent 3,238 output tokens
+#: to emit a 681-character reply, and a `B_tools` cell (NEM) spent 7,186 to emit
+#: 1,617 characters. Below the budget the model needs to finish thinking it
+#: never reaches the JSON at all, which is why the truncated replies arrive as
+#: an EMPTY string rather than as half an object.
+#:
+#: This was not a uniform tax. Tool arms gather dossiers, dossiers make prompts
+#: longer, longer prompts make the model think longer — so the ceiling was
+#: silently killing the TREATMENT arm of the primary contrast more often than
+#: the control (`B_tools` 8/10 barren against `A_snapshot` 15/40). Had Night 1
+#: completed, A-vs-B would have been biased by an implementation constant that
+#: appears nowhere in the pre-registration. The information guard did not only
+#: save $0.40; it stopped a biased trial from accruing.
+#:
+#: 12000 is sized off the measured worst case (7,186) with room for the arms
+#: that gather more, not off a round number. A ceiling costs nothing when it is
+#: not reached — the vendor bills generated tokens — so the only price of
+#: headroom is a runaway cell, which `MAX_TOKENS` bounds and the nightly USD
+#: ceiling bounds again.
+MAX_TOKENS = 12_000
 
 #: The observables this trial forecasts, mirroring `iif1_config.PRIMARY_
 #: OBSERVABLES` and `SECONDARY_OBSERVABLES_UNDERPOWERED`. Kept here as the
@@ -99,11 +128,23 @@ DROP_CELL_NOT_REQUESTED = "cell_not_requested"
 DROP_BELIEF_OUT_OF_RANGE = "belief_out_of_unit_range"
 DROP_SIZE_BOUND_NOT_A_FRACTION = "size_bound_not_a_fraction"
 DROP_CALL_FAILED = "call_failed"
+#: The reply was CUT OFF at max_tokens — the vendor said so via finish_reason.
+#: Split out of `call_failed` because the two demand opposite responses: a
+#: truncated reply means our own ceiling is too low and the fix is ours, while
+#: a malformed one means the model answered badly and the fix is the prompt.
+#: Night 1 recorded both as the same thing and the distinction cost 23 cells.
+DROP_REPLY_TRUNCATED = "reply_truncated_at_token_ceiling"
+#: The reply arrived whole and would not parse. Genuinely the model's fault.
+DROP_REPLY_UNPARSEABLE = "reply_unparseable"
+#: No reply at all — transport, vendor error, refusal. Nothing to blame the
+#: model's formatting for.
+DROP_CALL_TRANSPORT_FAILED = "call_transport_failed"
 
 DROP_REASONS = frozenset({
     DROP_REPLY_NOT_A_LIST, DROP_REPLY_NOT_AN_OBJECT, DROP_CELL_NOT_AN_OBJECT,
     DROP_FIELD_MISSING, DROP_CELL_NOT_REQUESTED, DROP_BELIEF_OUT_OF_RANGE,
     DROP_SIZE_BOUND_NOT_A_FRACTION, DROP_CALL_FAILED,
+    DROP_REPLY_TRUNCATED, DROP_REPLY_UNPARSEABLE, DROP_CALL_TRANSPORT_FAILED,
 })
 
 
@@ -179,12 +220,19 @@ class MicrotaskCall:
     tokens_out: int = 0
     latency_ms: float = 0.0
     error: str = ""
+    #: The vendor's stop reason. "length" means WE cut the model off.
+    finish_reason: str = ""
+
+    @property
+    def truncated(self) -> bool:
+        return self.finish_reason == "length"
 
     def as_row(self) -> dict:
         return {"task": self.task, "ok": self.ok,
                 "served_model": self.served_model,
                 "tokens_in": self.tokens_in, "tokens_out": self.tokens_out,
                 "latency_ms": round(self.latency_ms, 1),
+                "finish_reason": self.finish_reason,
                 "error": self.error[:200]}
 
 
@@ -215,11 +263,33 @@ class Investigation:
         return (sum(c.tokens_in for c in self.calls),
                 sum(c.tokens_out for c in self.calls))
 
+    @property
+    def terminal_drop_reason(self) -> str:
+        """The ONE code that explains this cell, or "" if it produced.
+
+        D3: a receipt row saying `status: no_forecast, error: ""` cannot be
+        diagnosed without a manual join against the telemetry ledger, and the
+        ledger does not store replies — so Night 1's 23 barren cells were
+        undiagnosable at any price. The dominant drop code travels on the row
+        itself. Ties break by the vocabulary's own order so the field is
+        deterministic rather than dict-ordered.
+        """
+        if self.forecasts or not self.forecast_drops:
+            return ""
+        return max(sorted(self.forecast_drops),
+                   key=lambda k: self.forecast_drops[k])
+
     def as_row(self) -> dict:
         return {"arm": self.arm, "ticker": self.ticker, "status": self.status,
                 "n_calls": len(self.calls), "n_tool_calls": len(self.tool_log),
                 "n_forecasts": len(self.forecasts),
                 "forecast_drops": dict(self.forecast_drops),
+                "terminal_drop_reason": self.terminal_drop_reason,
+                # Truncation ANYWHERE in the chain degrades what the forecaster
+                # was shown, even when the forecast call itself came back whole.
+                "n_truncated_calls": sum(1 for c in self.calls if c.truncated),
+                "finish_reasons": sorted({c.finish_reason for c in self.calls
+                                          if c.finish_reason}),
                 "served_models": sorted(self.served_models),
                 "tokens_in": self.tokens[0], "tokens_out": self.tokens[1],
                 "error": self.error[:200]}
@@ -322,13 +392,17 @@ class Investigator:
             served_model=str(getattr(reply, "model_version", "") or ""),
             tokens_in=int(getattr(reply, "tokens_in", 0) or 0),
             tokens_out=int(getattr(reply, "tokens_out", 0) or 0),
+            finish_reason=str(getattr(reply, "finish_reason", "") or ""),
             latency_ms=(time.perf_counter() - t0) * 1000)
         if parse:
             try:
                 c.parsed = _extract_json(c.text)
             except (json.JSONDecodeError, ValueError) as exc:
                 c.ok = False
-                c.error = f"unparseable reply: {exc}"
+                # A truncated reply is OUR ceiling, not the model's formatting,
+                # and saying so is the difference between "raise max_tokens" and
+                # "rewrite the prompt". Both used to arrive as `call_failed`.
+                c.error = (f"{'truncated at token ceiling' if c.truncated else 'unparseable reply'}: {exc}")
         return c
 
     # ── the gather step ─────────────────────────────────────────────────────
@@ -431,8 +505,16 @@ class Investigator:
                     c_fc.parsed.get("forecasts"))
             elif c_fc.ok:
                 inv.forecast_drops = {DROP_REPLY_NOT_AN_OBJECT: 1}
+            elif c_fc.truncated:
+                # Distinguished BEFORE the generic failure: a cell killed by our
+                # own token ceiling is a configuration defect we can fix, and it
+                # was indistinguishable from a model that answered badly.
+                inv.forecast_drops = {DROP_REPLY_TRUNCATED: 1}
+            elif c_fc.text:
+                # A reply arrived and would not parse. The model's fault.
+                inv.forecast_drops = {DROP_REPLY_UNPARSEABLE: 1}
             else:
-                inv.forecast_drops = {DROP_CALL_FAILED: 1}
+                inv.forecast_drops = {DROP_CALL_TRANSPORT_FAILED: 1}
 
             c_cr = self._task(
                 "critic", SYS_CRITIC,

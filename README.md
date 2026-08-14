@@ -67,7 +67,7 @@ flowchart TB
     subgraph PERCEIVE["🧠 Perception (LLM)"]
         EV[Event extraction<br/><i>what changed?</i>]
         REL[Relation graph<br/><i>who affects whom?</i>]
-        IIF[Autonomous investigator<br/><i>IIF-1 — forward trial LIVE</i>]
+        IIF[Autonomous investigator<br/><i>IIF-1 — armed, 0/40 valid nights</i>]
     end
     subgraph ENGINE["⚙️ Engine (numbers)"]
         PIT[Point-in-time store<br/><i>nothing peeks at the future</i>]
@@ -100,10 +100,11 @@ of these badges:
 |---|---|
 | 🟢 **LIVE FORWARD** | Happened *after* the rule was frozen. No hindsight possible. |
 | 🟡 **FORWARD TRIAL** | Pre-registered experiment currently collecting evidence — verdict pending. |
+| ⚪ **ARMED** | Machinery built and pre-registered, but **nothing has accrued yet**. Distinct from 🟡 on purpose: "the apparatus runs" and "evidence is arriving" are different claims, and conflating them is how a project sounds further along than it is. |
 | 🔵 **BACKTEST** | Historical simulation. Useful for direction-finding, vulnerable to hindsight. Never an alpha claim here. |
 | 🟣 **ORACLE** | A deliberately *impossible* benchmark that is allowed to see the future. Measures the ceiling on how valuable an information source could ever be — not performance. |
 | 🔴 **REFUTED** | Tested and failed its pre-defined bar. Kept public. |
-| ⚪ **EXPLORATORY** | Interesting observation, not yet evidence. |
+| 🔶 **EXPLORATORY** | Interesting observation, not yet evidence. |
 
 ## The story so far, in one paragraph
 
@@ -130,8 +131,8 @@ verdicts. Receipts for every row live in [`docs/`](docs/README.md).
 | Do 14 specialist LLM personas beat one generic agent? | 🔴 No — retired | 0.49 vs 0.85 effective distinct ideas, at 5.2× the calls |
 | Does the LLM know **economic relationships** the correlation matrix doesn't? | ✅ **Yes — the campaign's one clean positive** 🔵 (architecture result, not a trading claim) | MARKET-GRAPH-1: t = 4.35 vs its own MDE, every placebo intact |
 | Does that graph improve a covariance/risk model? | 🔴 Closed, for $0 — even a cheating model that *sees* future correlations ties the ordinary trailing matrix 🟣 | GRAPH-COVARIANCE-1: oracle vs sample \|t\| = 0.23; industry diagonal −86.6% |
-| Does autonomous internet investigation beat a data snapshot? | 🟡 Forward trial live — first read at 40 graded nights, enforced in code | INTERNET-INVESTIGATOR-FWD-1 |
-| Do public actors' disclosed trades carry structure? | 🟡 Teacher Library ingesting (SEC Form 4, 13D/G); paper copy-lanes accruing 🟢 | Track E + COPY-LAB |
+| Does autonomous internet investigation beat a data snapshot? | ⚪ **Armed — first valid night pending (0/40 graded).** Night 1 spent $0.066 and VOIDed itself on its own information guard; nothing has accrued | INTERNET-INVESTIGATOR-FWD-1 · [receipt](backend/data/optimus/iif1_nights/2026-08-14.json) |
+| Do public actors' disclosed trades carry structure? | ⚪ **Paper lanes seeded — production ingestion pending.** 2 lanes live, 12 declared inactive; no production collector yet, so no new teacher signal can arrive | Track E + COPY-LAB |
 | Where does Aegis currently see the strongest forecasting opportunity? | 📐 **Magnitude, volatility and risk appear substantially more promising than return direction** — three independent measurements point the same way | exposure-oracle gap 🟣 · covariance closure 🟣 · σ_π decomposition 🔵 |
 
 ### The findings, in pictures

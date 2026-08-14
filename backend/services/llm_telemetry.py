@@ -76,6 +76,11 @@ logger = logging.getLogger(__name__)
 LEDGER_DIR = Path(__file__).resolve().parents[1] / "data" / "optimus"
 LLM_CALLS = LEDGER_DIR / "llm_calls.jsonl"
 
+#: Where torn lines go. A corrupt line is DELETED FROM NOTHING: it is copied
+#: here with its line number and the parser's complaint, so the missing spend
+#: has an address rather than only a count. See `quarantine_unreadable`.
+QUARANTINE_SUFFIX = ".quarantine.jsonl"
+
 SCHEMA_VERSION = "1.0.0"
 
 #: Dated model ids (`claude-haiku-4-5-20251001`) name the same model as the
@@ -546,6 +551,40 @@ def _as_date(v: Any) -> date | None:
     return date.fromisoformat(str(v)[:10])
 
 
+def _as_instant(v: Any) -> datetime | None:
+    """`since` as a MOMENT, when the caller gave one. None when they gave a day.
+
+    `_as_date` truncated every cutoff to its date, so `since="2026-08-15T18:00"`
+    silently meant "since midnight". Two things depended on that being exact and
+    neither said so:
+
+      * the IIF-1 nightly USD ceiling, which then counted every unrelated call
+        made earlier the same day against the night's own $12; and
+      * `measured_cost_night_1` — the number the funding rule turns on — which
+        a rehearsal reported as $0.115 on a night that made no vendor call at
+        all. That is how this was found.
+
+    A date-only `since` keeps date semantics, because a caller who passed a day
+    meant a day. Naive timestamps are read as UTC, which is what every writer in
+    this repo emits.
+    """
+    if v is None or isinstance(v, date) and not isinstance(v, datetime):
+        return None
+    if isinstance(v, datetime):
+        dt = v
+    else:
+        s = str(v)
+        # A bare "2026-08-15" is a DAY, not midnight: treating it as an instant
+        # would be the same truncation bug pointing the other way.
+        if len(s) <= 10:
+            return None
+        try:
+            dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
 def row_cost(row: dict) -> float | None:
     """One row's cost at CURRENT list prices, from the tokens the vendor reported.
 
@@ -833,6 +872,101 @@ def _resolution_join(pred_ids: list[str], total_cost: float,
     return out
 
 
+def scan_integrity(path: Path | None = None) -> dict:
+    """Every line the parser cannot read, WITH its line number.
+
+    `read_calls` already counts torn lines and downgrades spend to a lower
+    bound. A count is enough to know the total is wrong and not enough to do
+    anything about it: it cannot say which calls vanished, when, or whether the
+    damage is growing. This walks the raw file and returns addresses.
+
+    Read-only and total: it never repairs, never rewrites, and never decides.
+    `quarantine_unreadable` is the only thing that writes, and it only ever
+    COPIES.
+    """
+    # The SAME resolution `read_calls` uses, deliberately: an integrity report
+    # that read a different file from the one the totals came from would be
+    # reassurance about the wrong ledger. Under pytest with no explicit path
+    # that resolves to None, and this reports "no file" rather than reaching
+    # into the real ledger from a test.
+    p = _resolve_path(path)
+    if p is None or not p.exists():
+        return {"path": str(p) if p else None, "exists": False,
+                "n_lines": 0, "n_unreadable": 0, "unreadable": []}
+    bad: list[dict] = []
+    n_lines = 0
+    # errors="replace" rather than strict: a byte-level fault must arrive as a
+    # readable complaint about a locatable line, not as a UnicodeDecodeError
+    # that takes the whole integrity check down with it.
+    with p.open("r", encoding="utf-8", errors="replace") as fh:
+        for i, raw in enumerate(fh, 1):
+            line = raw.strip()
+            if not line:
+                continue
+            n_lines += 1
+            try:
+                json.loads(line)
+            except json.JSONDecodeError as exc:
+                bad.append({"line_no": i, "reason": str(exc),
+                            "n_chars": len(line),
+                            # A torn line is a FRAGMENT of accounting data, not
+                            # content: keeping it bounded stops one damaged
+                            # megabyte from becoming a health report nobody can
+                            # read, while the sidecar keeps the full text.
+                            "excerpt": line[:200]})
+    return {"path": str(p), "exists": True, "n_lines": n_lines,
+            "n_unreadable": len(bad), "unreadable": bad}
+
+
+def quarantine_unreadable(path: Path | None = None,
+                          quarantine_path: Path | None = None) -> dict:
+    """Copy every torn line to a sidecar. Copies; never deletes, never repairs.
+
+    The ledger is append-only and stays byte-identical — rewriting it to drop
+    two bad lines would destroy the only evidence that anything was lost, and
+    "the file parses cleanly now" is exactly the reassurance that must not be
+    manufacturable. The sidecar is the address book: line number, the parser's
+    complaint, the raw text, and when it was noticed.
+
+    Re-runnable. Lines already quarantined (same line number and text) are not
+    written twice, so this can sit in a health check without growing forever.
+    """
+    scan = scan_integrity(path)
+    p = Path(scan["path"]) if scan.get("path") else None
+    if p is None or not scan["exists"]:
+        return {**scan, "quarantine_path": None, "n_written": 0}
+    q = quarantine_path or p.with_suffix(p.suffix + QUARANTINE_SUFFIX)
+
+    seen: set[tuple[int, str]] = set()
+    if q.exists():
+        for line in q.read_text(encoding="utf-8", errors="replace").splitlines():
+            try:
+                r = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            seen.add((int(r.get("line_no", -1)), str(r.get("raw", ""))))
+
+    raw_lines = p.read_text(encoding="utf-8",
+                            errors="replace").split("\n")
+    detected_at = _now()
+    fresh = []
+    for b in scan["unreadable"]:
+        raw = raw_lines[b["line_no"] - 1].strip() if b["line_no"] - 1 < len(raw_lines) else ""
+        if (b["line_no"], raw) in seen:
+            continue
+        fresh.append({"line_no": b["line_no"], "reason": b["reason"],
+                      "raw": raw, "detected_at": detected_at,
+                      "source": str(p),
+                      "note": ("copied, not moved — the source ledger is "
+                               "append-only and still holds this line")})
+    if fresh:
+        q.parent.mkdir(parents=True, exist_ok=True)
+        with q.open("a", encoding="utf-8") as fh:
+            fh.write("".join(json.dumps(r, ensure_ascii=False) + "\n"
+                             for r in fresh))
+    return {**scan, "quarantine_path": str(q), "n_written": len(fresh)}
+
+
 def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
                   today: date | None = None) -> dict:
     """Would anything say so if the ledger stopped growing?
@@ -844,7 +978,12 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
     today = today or date.today()
     rows = read_calls(path)
     if not rows:
+        empty = scan_integrity(path)
         return {"status": "DEGRADED", "n_calls": 0,
+                "n_unreadable_lines": empty["n_unreadable"],
+                "unreadable_line_numbers": [b["line_no"]
+                                            for b in empty["unreadable"]],
+                "totals_are_lower_bounds": bool(empty["n_unreadable"]),
                 "reason": ("the LLM ledger is empty — either no call has been "
                            "made, or a call path is uninstrumented and its "
                            "spend is invisible")}
@@ -853,11 +992,25 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
     problems = []
     if quiet > max_quiet_days:
         problems.append(f"no LLM call recorded in {quiet} days")
+    # A torn line is missing spend, and until now the count lived only in a
+    # WARNING inside `read_calls` — logged once, into a log nobody reads on a
+    # schedule, while every total silently stayed a lower bound. Health is the
+    # surface that gets read, so the damage is reported HERE and it degrades the
+    # status: an accounting file that has lost rows is not "ok".
+    integ = scan_integrity(path)
+    if integ["n_unreadable"]:
+        problems.append(
+            f"{integ['n_unreadable']} unreadable ledger line(s) at "
+            f"{[b['line_no'] for b in integ['unreadable']][:10]} — every spend "
+            f"and yield total below is a LOWER BOUND")
     n_dead = sum(1 for r in rows if not _gradeable(r))
     return {
         "status": "ok" if not problems else "DEGRADED",
         "problems": problems,
         "n_calls": len(rows),
+        "n_unreadable_lines": integ["n_unreadable"],
+        "unreadable_line_numbers": [b["line_no"] for b in integ["unreadable"]],
+        "totals_are_lower_bounds": bool(integ["n_unreadable"]),
         "n_unpriced": sum(1 for r in rows if r.get("cost_usd") is None),
         "n_zero_gradeable": n_dead,
         "distinct_purposes": len({r.get("purpose") for r in rows}),
@@ -867,7 +1020,8 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
     }
 
 
-def spend(since: Any = None, path: Path | None = None) -> dict:
+def spend(since: Any = None, path: Path | None = None, *,
+          purpose: str | None = None) -> dict:
     """The four numbers a budget governor actually decides on, and nothing else.
 
     `summary()` is the reporting surface and it joins every claimed
@@ -890,9 +1044,21 @@ def spend(since: Any = None, path: Path | None = None) -> dict:
     # NOT reprice(): that materialises a new dict per row, and this function is
     # called before EVERY vendor request. Same arithmetic, no allocation.
     rows = read_calls(path)
-    cutoff = _as_date(since)
-    if cutoff is not None:
-        rows = [r for r in rows if r.get("ts") and _as_date(r["ts"]) >= cutoff]
+    instant = _as_instant(since)
+    if instant is not None:
+        rows = [r for r in rows if r.get("ts")
+                and (_as_instant(r["ts"]) or instant) >= instant]
+    else:
+        cutoff = _as_date(since)
+        if cutoff is not None:
+            rows = [r for r in rows
+                    if r.get("ts") and _as_date(r["ts"]) >= cutoff]
+    if purpose is not None:
+        # Scoping the MEASUREMENT is not the same as scoping the CEILING. A
+        # ceiling should stay broad — belt and braces — but the number the
+        # funding rule reads has to be this trial's own spend, or a diagnostic
+        # run the same evening silently decides whether 40 nights are affordable.
+        rows = [r for r in rows if r.get("purpose") == purpose]
     if not rows:
         return {"n_calls": 0, "total_cost_usd": 0.0,
                 "total_is_lower_bound": False,

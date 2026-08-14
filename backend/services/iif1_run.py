@@ -330,7 +330,12 @@ def main(argv: list[str] | None = None) -> int:
         print("\nREHEARSAL — sandbox, stub model, $0.00. This exercises "
               "parsing, minting, pairing and the receipt writer; it proves "
               "nothing about the vendor.")
-        res = N.run_night(snap["features"], llm_call=stub_llm,
+        # `transport=`, not `llm_call=`. Injecting the client replaced the
+        # budget gate, the telemetry write and the chain cursor along with the
+        # vendor, so the rehearsal reported `n_chains: 0` and could not have
+        # revealed the chain-yield divergence that voided Night 1. Swapping only
+        # the wire leaves every layer that broke inside the simulation.
+        res = N.run_night(snap["features"], transport=stub_llm,
                           tool_runner=stub_tools, dry_run=False, sandbox=True,
                           balance_usd=a.balance_usd,
                           night=str(ts.date()))
@@ -338,7 +343,9 @@ def main(argv: list[str] | None = None) -> int:
         print("\nPRODUCTION NIGHT — the effective invocation is verified "
               "against the frozen pre-registration before anything is spent.")
         res = N.run_night(snap["features"], dry_run=False, sandbox=False,
-                          balance_usd=a.balance_usd, night=str(ts.date()))
+                          balance_usd=a.balance_usd,
+                          decision_ts=snap["decision_ts"],
+                          night=str(ts.date()))
 
     print(f"\nstatus        {res.status}"
           + (f"  ({res.void_reason})" if res.void_reason else ""))

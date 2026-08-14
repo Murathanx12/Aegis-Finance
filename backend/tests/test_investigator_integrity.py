@@ -85,7 +85,7 @@ def test_a_sandbox_run_never_reaches_the_evidence_ledger(monkeypatch):
     wrote: list = []
     monkeypatch.setattr("backend.services.belief_state.append",
                         lambda recs, path=None: wrote.extend(recs))
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.01, 5))
     monkeypatch.setattr(N, "SANDBOX_RECEIPTS_DIR",
                         pathlib.Path(tempfile.mkdtemp()))
     res = N.run_night({"T1": _feats()}, k=1, llm_call=good_llm,
@@ -113,7 +113,7 @@ def test_the_minted_records_are_not_serialised_into_the_receipt(monkeypatch):
     """`records` exists so a rehearsal can inspect what a night would write. It
     carries priors and posteriors, and the receipt is read by a human every
     morning for forty mornings."""
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.01, 5))
     res = N.run_night({"T1": _feats()}, k=1, llm_call=good_llm,
                       tool_runner=no_tools, dry_run=True, sandbox=True)
     assert res.records
@@ -163,7 +163,7 @@ def test_a_cell_missing_from_one_arm_is_removed_from_every_arm(monkeypatch):
             return super().investigate(ticker, snapshot)
 
     monkeypatch.setattr(N, "Investigator", OneArmLoses)
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.01, 5))
     res = N.run_night({"T1": _feats()}, k=1, llm_call=lossy,
                       tool_runner=no_tools, dry_run=True, sandbox=True)
 
@@ -180,7 +180,7 @@ def test_a_cell_missing_from_one_arm_is_removed_from_every_arm(monkeypatch):
 def test_drop_rates_are_reported_rather_than_repaired(monkeypatch):
     """A differential malformed-output rate is itself an architectural result,
     so it is surfaced rather than quietly patched over."""
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.01, 5))
     res = N.run_night({"T1": _feats()}, k=1, llm_call=good_llm,
                       tool_runner=no_tools, dry_run=True, sandbox=True)
     cp = res.cell_pairing
@@ -198,7 +198,7 @@ def test_zero_shared_cells_voids_the_night(monkeypatch):
             return FakeReply(json.dumps({"forecasts": []}), model)
         return good_llm(system=system, user=user, model=model)
 
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.01, 5))
     res = N.run_night({"T1": _feats()}, k=1, llm_call=no_forecasts,
                       tool_runner=no_tools, dry_run=True, sandbox=True)
     assert res.status == "void"
@@ -229,7 +229,7 @@ def test_the_dossier_identifier_is_sha256_not_a_process_salted_hash():
 def test_the_snapshot_hash_is_stable_when_the_same_night_is_replayed(monkeypatch):
     """The property the SHA-256 buys: replay the identical night, get the
     identical record identity."""
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.01, 5))
     kw = dict(k=1, llm_call=good_llm, tool_runner=no_tools,
               dry_run=True, sandbox=True, night="2026-08-14")
     a = N.run_night({"T1": _feats()}, **kw)
@@ -252,7 +252,7 @@ def test_the_record_names_the_model_that_served_the_forecast_call(monkeypatch):
                            else "aaa-other-model")
         return r
 
-    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (0.01, 5))
     res = N.run_night({"T1": _feats()}, k=1, llm_call=mixed,
                       tool_runner=no_tools, dry_run=True, sandbox=True)
     assert res.records
@@ -267,7 +267,7 @@ def test_the_record_names_the_model_that_served_the_forecast_call(monkeypatch):
 def test_the_last_call_cannot_carry_the_night_past_the_ceiling(monkeypatch):
     """At $11.99 against a $12 cap the old gate permitted one more call, and
     that call could take the night over a ceiling the prereg calls hard."""
-    monkeypatch.setattr(N, "_spend_since", lambda s: (11.99, 10))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (11.99, 10))
     call = N.make_llm_call(since_iso="x", max_usd=12.0)
     with pytest.raises(N.NightlyBudgetExhausted, match="would be breached"):
         call(system="s", user="u")
@@ -280,7 +280,7 @@ def test_the_reserve_is_larger_than_a_typical_call_by_a_wide_margin():
 
 
 def test_spending_well_under_the_ceiling_still_proceeds(monkeypatch):
-    monkeypatch.setattr(N, "_spend_since", lambda s: (1.00, 10))
+    monkeypatch.setattr(N, "_spend_since", lambda s, **_: (1.00, 10))
     monkeypatch.setattr("backend.services.llm_swarm.default_llm_call",
                         lambda *a, **k: FakeReply("{}"))
     monkeypatch.setattr(N, "_record_telemetry", lambda *a, **k: None)
