@@ -91,7 +91,20 @@ LEDGER_FILES = ("predictions.jsonl", "beliefs.jsonl")
 #: idempotent, but it should not stat the filesystem on every append.
 _MIGRATION_ATTEMPTED = False
 
-SCHEMA_VERSION = "1.0.0"
+#: 1.1.0 (2026-08-14) adds the BELIEF-CHANGE contract — `prior`, `posterior`,
+#: `belief_change` — as OPTIONAL fields. Purely additive: every 1.0.0 record
+#: still reads, every consumer accesses by key, and `probability` remains the
+#: graded quantity (it equals `posterior` when the contract is used).
+#:
+#: The contract exists because the old `p != 0.50` refusal solved one problem
+#: and created another. It kept coin flips out of the ledger, but it also told
+#: forecasters that 0.50 was rejected — an incentive to say 0.51 rather than to
+#: say "this changed nothing". Under the new contract `belief_change = 0` is a
+#: valid, gradeable answer, and the candidate signal is `posterior - prior`
+#: rather than the level. Markets price changes in expectations, and the only
+#: analyst family that ever came close to surviving in this programme was
+#: revisions rather than target levels.
+SCHEMA_VERSION = "1.1.0"
 
 #: Horizons, in trading days. Frozen: a horizon invented after the fact is a
 #: degree of freedom, and the resolution date is what makes a record honest.
@@ -211,6 +224,19 @@ class PredictionRecord:
     prompt_hash: str
     input_snapshot_hash: str
     schema_version: str = SCHEMA_VERSION
+    # ── the belief-change contract (schema 1.1.0), optional by design ───────
+    #: `prior` is what the forecaster believed BEFORE seeing this evidence;
+    #: `posterior` is what it believes after; `belief_change = posterior - prior`.
+    #: `probability` stays the graded quantity and equals `posterior` when the
+    #: contract is used, so nothing about resolution or scoring changes.
+    #: All three are None on records written under the old contract.
+    prior: float | None = None
+    posterior: float | None = None
+    belief_change: float | None = None
+    #: Which experimental arm produced this record. None outside a trial that
+    #: has arms. Recorded on the record rather than inferred from `specialist`,
+    #: because an arm label reconstructed after the fact is not evidence.
+    arm: str | None = None
     # filled at resolution, never at write time
     resolved_at: str | None = None
     void_reason: str | None = None
@@ -237,7 +263,10 @@ def make_prediction(*, ticker: str, specialist: str, observable: Observable,
                     model_version: str, prompt: str, input_snapshot: Any,
                     threshold: float | None = None,
                     benchmark: str | None = None,
-                    made_at: str | None = None) -> PredictionRecord:
+                    made_at: str | None = None,
+                    prior: float | None = None,
+                    posterior: float | None = None,
+                    arm: str | None = None) -> PredictionRecord:
     """Build a record, refusing the ones that cannot be graded."""
     if horizon_days not in HORIZONS:
         raise ValueError(f"horizon {horizon_days} is not one of {HORIZONS}; a "
@@ -262,6 +291,28 @@ def make_prediction(*, ticker: str, specialist: str, observable: Observable,
                 f"at what the forecaster meant")
     if observable is Observable.BEATS_BENCHMARK and not benchmark:
         raise ValueError("BEATS_BENCHMARK needs a benchmark")
+    # ── belief-change contract, when supplied ───────────────────────────────
+    # Both halves or neither. A posterior with no prior is a level wearing the
+    # contract's clothes, and `belief_change` computed against a missing prior
+    # would silently become the posterior itself — which is exactly the level
+    # this contract exists to stop being the signal.
+    if (prior is None) != (posterior is None):
+        raise ValueError(
+            "the belief-change contract needs BOTH prior and posterior or "
+            "neither; one alone cannot produce a belief change")
+    belief_change = None
+    if prior is not None:
+        for nm, v in (("prior", prior), ("posterior", posterior)):
+            if not 0.0 <= float(v) <= 1.0:
+                raise ValueError(f"{nm} {v} is not a probability")
+        belief_change = float(posterior) - float(prior)
+        if abs(float(posterior) - float(probability)) > 1e-9:
+            # `probability` is what gets graded. If it disagrees with the
+            # posterior, two different numbers are being called the forecast and
+            # the ledger cannot say which one the forecaster meant.
+            raise ValueError(
+                f"probability {probability} must equal posterior {posterior}; "
+                f"the graded quantity and the stated belief cannot differ")
     made_at = made_at or datetime.now(timezone.utc).isoformat(timespec="seconds")
     snap = _hash(input_snapshot)
     ph = _hash(prompt)
@@ -275,7 +326,10 @@ def make_prediction(*, ticker: str, specialist: str, observable: Observable,
         resolves_after=PredictionRecord.resolution_date(made_at, horizon_days),
         thesis=thesis.strip(), counter_thesis=counter_thesis.strip(),
         next_observable=next_observable.strip(), model=model,
-        model_version=model_version, prompt_hash=ph, input_snapshot_hash=snap)
+        model_version=model_version, prompt_hash=ph, input_snapshot_hash=snap,
+        prior=(float(prior) if prior is not None else None),
+        posterior=(float(posterior) if posterior is not None else None),
+        belief_change=belief_change, arm=arm)
 
 
 # ── persistence: getting the history onto the volume, exactly once ──────────
