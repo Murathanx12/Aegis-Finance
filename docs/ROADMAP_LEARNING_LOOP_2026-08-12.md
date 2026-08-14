@@ -1,5 +1,10 @@
 # ROADMAP — the self-evaluating brain (NIGHT-14 onward)
 
+> **SEQUENCING SUPERSEDED 2026-08-14** by `ROADMAP_BRAIN_V3_2026-08-14.md`
+> (post-GRAND-ARENA pivot). The two dependency edges below — router waits for
+> the reliability tensor, gym waits for known-answer worlds — are inherited by
+> V3 and still bind.
+
 **Written 2026-08-12.** Supersedes the sequencing (not the standards) of
 `AEGIS_EXECUTION_ROADMAP.md` for the LLM/learning-loop arc. The certification
 gates and the discovery bar in that document still bind; this one says what gets
