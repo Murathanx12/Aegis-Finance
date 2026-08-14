@@ -36,6 +36,7 @@
           "n_calls": 4,
           "n_tool_calls": 0,
           "n_forecasts": 3,
+          "forecast_drops": {},
           "served_models": [
             "deepseek-v4-flash"
           ],
@@ -57,6 +58,7 @@
           "n_calls": 5,
           "n_tool_calls": 0,
           "n_forecasts": 3,
+          "forecast_drops": {},
           "served_models": [
             "deepseek-v4-flash"
           ],
@@ -78,6 +80,7 @@
           "n_calls": 5,
           "n_tool_calls": 0,
           "n_forecasts": 3,
+          "forecast_drops": {},
           "served_models": [
             "deepseek-v4-flash"
           ],
@@ -99,6 +102,7 @@
           "n_calls": 5,
           "n_tool_calls": 0,
           "n_forecasts": 3,
+          "forecast_drops": {},
           "served_models": [
             "deepseek-v4-flash"
           ],
@@ -120,6 +124,7 @@
           "n_calls": 5,
           "n_tool_calls": 0,
           "n_forecasts": 3,
+          "forecast_drops": {},
           "served_models": [
             "deepseek-v4-flash"
           ],
@@ -175,7 +180,13 @@
     },
     "key": "night x ticker x observable x horizon_days x threshold"
   },
+  "chain_yield": {
+    "n_chains": 0,
+    "n_chains_minted_nothing": 0,
+    "n_calls_resolved": 0,
+    "n_calls_in_barren_chains": 0
+  },
   "sandbox": true,
-  "elapsed_s": 0.0006157999996503349,
+  "elapsed_s": 0.0005949000042164698,
   "trial": "INTERNET-INVESTIGATOR-FWD-1"
 }

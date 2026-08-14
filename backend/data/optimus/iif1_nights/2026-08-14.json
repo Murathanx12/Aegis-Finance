@@ -1,0 +1,849 @@
+{
+  "night": "2026-08-14",
+  "status": "void",
+  "void_reason": "information guard: 5 consecutive cells in arm B_tools produced no gradeable forecast \u2014 stopping rather than paying for the remaining 30 in this arm and 3 further arms",
+  "tickers": [
+    "CSCO",
+    "WEC",
+    "AMAT",
+    "HD",
+    "AVB",
+    "ICE",
+    "PCG",
+    "FCX",
+    "NEM",
+    "ETN",
+    "AMD",
+    "GE",
+    "CMCSA",
+    "MA",
+    "MDLZ",
+    "INTU",
+    "BA",
+    "JNJ",
+    "PSA",
+    "AMT",
+    "KMI",
+    "BAC",
+    "CHTR",
+    "PSX",
+    "PFE",
+    "AXP",
+    "T",
+    "JPM",
+    "NVDA",
+    "CVX",
+    "UNH",
+    "SCHW",
+    "GIS",
+    "TMUS",
+    "WFC",
+    "META",
+    "FTNT",
+    "NFLX",
+    "MS",
+    "MRK"
+  ],
+  "trigger_report": {
+    "as_of": "2026-08-14",
+    "k_requested": 40,
+    "n_universe": 182,
+    "n_eligible": 179,
+    "n_selected": 40,
+    "n_excluded": 3,
+    "short_of_k": false,
+    "tickers": [
+      "CSCO",
+      "WEC",
+      "AMAT",
+      "HD",
+      "AVB",
+      "ICE",
+      "PCG",
+      "FCX",
+      "NEM",
+      "ETN",
+      "AMD",
+      "GE",
+      "CMCSA",
+      "MA",
+      "MDLZ",
+      "INTU",
+      "BA",
+      "JNJ",
+      "PSA",
+      "AMT",
+      "KMI",
+      "BAC",
+      "CHTR",
+      "PSX",
+      "PFE",
+      "AXP",
+      "T",
+      "JPM",
+      "NVDA",
+      "CVX",
+      "UNH",
+      "SCHW",
+      "GIS",
+      "TMUS",
+      "WFC",
+      "META",
+      "FTNT",
+      "NFLX",
+      "MS",
+      "MRK"
+    ],
+    "weights": {
+      "abs_resid_return_z_1d": 1.0,
+      "volume_z_20d": 1.0,
+      "earnings_within_5d": 1.5,
+      "filing_within_2d": 1.0
+    }
+  },
+  "per_arm": {
+    "A_snapshot": {
+      "n_cells": 40,
+      "n_with_forecasts": 25,
+      "n_tool_calls": 0,
+      "rows": [
+        {
+          "arm": "A_snapshot",
+          "ticker": "CSCO",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1307,
+          "tokens_out": 3166,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "WEC",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1537,
+          "tokens_out": 2452,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "AMAT",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1296,
+          "tokens_out": 2416,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "HD",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1051,
+          "tokens_out": 2634,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "AVB",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1067,
+          "tokens_out": 2709,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "ICE",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1107,
+          "tokens_out": 2515,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "PCG",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1244,
+          "tokens_out": 2662,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "FCX",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1076,
+          "tokens_out": 2456,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "NEM",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1281,
+          "tokens_out": 2007,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "ETN",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1316,
+          "tokens_out": 3166,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "AMD",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1249,
+          "tokens_out": 3502,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "GE",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1283,
+          "tokens_out": 1960,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "CMCSA",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1312,
+          "tokens_out": 3186,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "MA",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1060,
+          "tokens_out": 4070,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "MDLZ",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1088,
+          "tokens_out": 2786,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "INTU",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1272,
+          "tokens_out": 2304,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "BA",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1282,
+          "tokens_out": 2381,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "JNJ",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1342,
+          "tokens_out": 3373,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "PSA",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 986,
+          "tokens_out": 4200,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "AMT",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1286,
+          "tokens_out": 3429,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "KMI",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1055,
+          "tokens_out": 2702,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "BAC",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1087,
+          "tokens_out": 3739,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "CHTR",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1360,
+          "tokens_out": 3809,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "PSX",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1279,
+          "tokens_out": 3200,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "PFE",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1356,
+          "tokens_out": 2884,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "AXP",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1085,
+          "tokens_out": 3160,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "T",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1047,
+          "tokens_out": 2219,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "JPM",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1277,
+          "tokens_out": 2854,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "NVDA",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1304,
+          "tokens_out": 2986,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "CVX",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1290,
+          "tokens_out": 2923,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "UNH",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1286,
+          "tokens_out": 2817,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "SCHW",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1055,
+          "tokens_out": 2663,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "GIS",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1076,
+          "tokens_out": 2830,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "TMUS",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1279,
+          "tokens_out": 2635,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "WFC",
+          "status": "no_forecast",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 996,
+          "tokens_out": 4081,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "META",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1284,
+          "tokens_out": 2274,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "FTNT",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1337,
+          "tokens_out": 2715,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "NFLX",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1308,
+          "tokens_out": 2330,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "MS",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1166,
+          "tokens_out": 2490,
+          "error": ""
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "MRK",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1262,
+          "tokens_out": 2172,
+          "error": ""
+        }
+      ]
+    },
+    "B_tools": {
+      "n_cells": 10,
+      "n_with_forecasts": 2,
+      "n_tool_calls": 49,
+      "rows": [
+        {
+          "arm": "B_tools",
+          "ticker": "CSCO",
+          "status": "no_forecast",
+          "n_calls": 7,
+          "n_tool_calls": 7,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 10042,
+          "tokens_out": 9176,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "WEC",
+          "status": "no_forecast",
+          "n_calls": 7,
+          "n_tool_calls": 7,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 9161,
+          "tokens_out": 6310,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "AMAT",
+          "status": "no_forecast",
+          "n_calls": 7,
+          "n_tool_calls": 6,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 9318,
+          "tokens_out": 8821,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "HD",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 1139,
+          "tokens_out": 4509,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "AVB",
+          "status": "ok",
+          "n_calls": 6,
+          "n_tool_calls": 4,
+          "n_forecasts": 3,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 2206,
+          "tokens_out": 6044,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "ICE",
+          "status": "no_forecast",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 904,
+          "tokens_out": 4565,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "PCG",
+          "status": "no_forecast",
+          "n_calls": 8,
+          "n_tool_calls": 10,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 9957,
+          "tokens_out": 7834,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "FCX",
+          "status": "no_forecast",
+          "n_calls": 6,
+          "n_tool_calls": 4,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 4581,
+          "tokens_out": 4729,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "NEM",
+          "status": "no_forecast",
+          "n_calls": 7,
+          "n_tool_calls": 7,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 9580,
+          "tokens_out": 7187,
+          "error": ""
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "ETN",
+          "status": "no_forecast",
+          "n_calls": 6,
+          "n_tool_calls": 4,
+          "n_forecasts": 0,
+          "served_models": [
+            "deepseek-v4-flash"
+          ],
+          "tokens_in": 8130,
+          "tokens_out": 6247,
+          "error": ""
+        }
+      ]
+    }
+  },
+  "records_written": 0,
+  "calls": 224,
+  "spend_usd": 0.0,
+  "served_models": [
+    "deepseek-v4-flash"
+  ],
+  "budget": {
+    "measured_cost_night_1": null,
+    "measured_cost_status": "unknown",
+    "projected_40_night_cost": null,
+    "current_balance": 37.12,
+    "balance_as_of": "2026-08-14",
+    "funding_gap_or_surplus": null,
+    "fundable_nights_at_this_rate": null,
+    "nights_required": 40,
+    "funding_average_per_night": 0.928,
+    "safety_ceiling_per_night": 12.0,
+    "note": "The ceiling is a stop, not a plan. The planning number is funding_average_per_night; a night under the ceiling but over the average shortens the trial rather than fitting in it. The funding decision is made BEFORE the accrual clock starts, not when the balance runs out."
+  },
+  "cell_pairing": {},
+  "chain_yield": {
+    "n_chains": 50,
+    "n_chains_minted_nothing": 50,
+    "n_calls_resolved": 224,
+    "n_calls_in_barren_chains": 224
+  },
+  "sandbox": false,
+  "elapsed_s": 2057.470194900001,
+  "trial": "INTERNET-INVESTIGATOR-FWD-1"
+}
