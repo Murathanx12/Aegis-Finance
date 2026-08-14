@@ -1,11 +1,13 @@
 # INTERNET-INVESTIGATOR-FWD-1 — the pre-Night-1 checklist
 
-**Status: 6 / 6 built, and the attended item in §7 is now REGISTERED. Night 1 is
-unblocked.**
+**Status: Review-3's six orders DONE and registered (§1–§7). The follow-up
+review's P0s DONE (§8). The entrypoint and feature layer DONE and rehearsed on
+real data for $0.00 (§9). Night 1 is runnable and has not been run — the two
+things left are a full-universe dry run and the funding decision (§10).**
 
 Source of the orders: `DISCHARGE_OPUS5_2026-08-14.md` → *FABLE REVIEW 3*,
-"Binding pre-Night-1 orders (narrow; nothing else may change)". This file is the
-status board for those six, and nothing else. It is deliberately not a design
+"Binding pre-Night-1 orders", plus the follow-up integrity review. This file is
+the status board for those, and nothing else. It is deliberately not a design
 document — the design is frozen and lives in
 `Aegis module/TRIALS/PREREG_INTERNET_INVESTIGATOR_FWD_1.md` and
 `Aegis module/scripts/iif1_config.py`.
@@ -228,3 +230,171 @@ comment.
 No further architecture changes. `TEACHER-LIBRARY-1` (Track E) begins **after**
 Night 1 runs cleanly and its cost is reported — the pilot does not share its
 builder with a new lane's build-out.
+
+---
+
+## 8. The follow-up review's integrity holes — **DONE** (`d7e6876`)
+
+Seven defects, each verified against the code before it was touched. All seven
+were real. They share a shape: the night **worked**, and that was never the
+question. The question is whether a night that works is the trial that was
+registered.
+
+### 8.1 A production invocation could be reshaped by its own arguments
+
+`verify_or_refuse()` compares module CONSTANTS. It cannot see arguments. So this
+passed every check:
+
+```python
+run_night(k=10, arms=("A_snapshot", "B_tools"), max_usd=100)
+```
+
+The verifier read `TRIGGERS_PER_NIGHT == 40`, a complete `ARMS` and a $12
+ceiling, reported the trial as registered — and the run then executed ten
+triggers across two arms at a hundred dollars. **A frozen parameter a caller can
+override is not frozen; it is a default.**
+
+Worse, injection and accrual shared one path. An injected `llm_call` skipped
+verification on the theory that it spends nothing — but `dry_run` defaults to
+`False`, so a real paid client passed through that argument would have written
+the evidence ledger with no pre-registration check at all.
+
+`sandbox` is now an explicit, load-bearing keyword:
+
+| | production (`sandbox=False`, default) | sandbox (`sandbox=True`) |
+|---|---|---|
+| frozen params | must equal the registered rule | anything |
+| injected deps | refused | allowed |
+| pre-registration | must be readable | not required |
+| evidence ledger | may write | **never**, whatever `dry_run` says |
+| receipts | `iif1_nights/` | `iif1_nights_sandbox/` |
+
+`sandbox` outranks `dry_run` deliberately: forgetting one keyword must not turn a
+rehearsal into forward evidence.
+
+### 8.2 Pairing was asserted on tickers; the statistic is computed on cells
+
+`assert_arms_share_cells` only proved every arm *attempted* the same tickers.
+Malformed forecasts are dropped — correctly, since coercing one scores a
+judgement nobody made — so arm A could hold `NVDA/abs_move/5d/5%` while arm B
+lost exactly that cell, and the guard saw five arms that all "did NVDA".
+
+Cells are now keyed `night × ticker × observable × horizon_days × threshold`.
+Only the cross-arm **intersection** is minted; a cell missing anywhere is dropped
+everywhere, symmetrically, so the removal cannot favour an arm. Zero shared cells
+**voids** the night. Per-arm drop rates are reported, not repaired — a
+differential malformed-output rate is itself an architectural result.
+
+### 8.3 Provenance
+
+`hash(inv.dossier)` was worse than an ugly identifier. `input_snapshot` is not
+stored — the ledger stores `input_snapshot_hash` — so a process-salted hash
+inside that dict made the **entire snapshot hash non-reproducible**. Replay the
+same night, get a different hash; no record could ever be tied back to the input
+that produced it, which is the field's only job. Now SHA-256, pinned at the
+source because the symptom is invisible within one interpreter.
+
+`model_version` took `sorted(served_models)[0]` — whichever name sorts first
+across five microtasks. Now the **forecast call's** served model; the others stay
+on the receipt.
+
+`RECEIPTS_DIR` sat under the repo while the ledger it describes lives on the
+persistent volume — **NIGHT-14 defect F7 reproduced in the file that documents
+it**. A deploy would have kept every prediction and destroyed the evidence of how
+it was produced.
+
+### 8.4 The ceiling was approximate
+
+The gate checked `spent >= ceiling` *before* the request, so at $11.99 against a
+$12 cap it permitted one more call. A worst-case cost is now reserved before
+transmission (`WORST_CASE_CALL_USD = 0.05`, ~68x MARKET-GRAPH-1's measured
+$0.00073/call).
+
+`backend/tests/test_investigator_integrity.py` — its own file, because these are
+not about whether a night works.
+
+---
+
+## 9. The entrypoint and the feature layer — **DONE** (`d0274f1`)
+
+`run_night()` had twenty-four tests and no caller, and nothing produced the six
+features its trigger rule consumes.
+
+**`backend/services/iif1_features.py`.** A forward trial gets point-in-time
+discipline almost free, but only if it takes the offer. What we can fetch at
+21:00 tonight *is* what was knowable at 21:00 tonight — **provided the result is
+frozen and never recomputed.** Recomputing next month would silently substitute a
+corrected earnings calendar, a restated filing index and retroactively
+split-adjusted prices for what the model actually saw. So `assemble()` writes
+`iif1_features/<date>.json` and **refuses to overwrite it**. The snapshot, not
+the code, is the point-in-time record.
+
+Every feature carries `value / status / source / published_at / observed_at /
+fetched_at`, with the house tri-state: `OK_DATA` / `OK_EMPTY` / `UNAVAILABLE`.
+*"No filing in two days"* and *"SEC lookup failed"* score identically the moment
+those two collapse, and then a throttled feed becomes a trigger list of quiet
+names. `UNAVAILABLE` features are omitted, which `score_candidate` already
+discloses rather than reading as zero.
+
+Two point-in-time decisions worth naming:
+
+- **`decision_ts` is New York time**, and a naive string is read as NY, not UTC.
+  Guessing UTC for something a human typed while thinking about the close shifts
+  every boundary five hours in the direction that leaks.
+- **A filing is public at its SEC acceptance timestamp**, not its filing date.
+  One accepted at 18:05 was available to nobody during that session. Where
+  acceptance is missing the fallback is end-of-day and the note says so —
+  assuming a time the source did not give us is inventing precision.
+
+The residual is market-adjusted: on a day the index falls 3% every security
+prints an unusual move and the trigger list becomes a list of large caps.
+
+**`backend/services/iif1_run.py`** — three modes, one of which can spend:
+
+```
+--rehearse       sandbox + deterministic stub model, $0.00
+--assemble-only  real data, frozen snapshot, no model at all
+(default)        production
+```
+
+Features are frozen to disk **before** any vendor call. Assembling inside the run
+would make the inputs a side effect of it, so a crash halfway would leave a night
+whose inputs no longer exist and whose partial spend bought nothing auditable.
+
+**Verified end to end on real data, $0.00 spent:**
+
+```
+6 names · 36 features · OK_DATA 36 / OK_EMPTY 0 / UNAVAILABLE 0
+triggers: JPM 2.79 · UNH 2.72 · AAPL 1.94 · NVDA 1.78 · XOM 1.09 · MSFT 0.76
+5 arms · 18 cells produced · 18 paired · 0 dropped unpaired
+0 records written — sandbox, as designed
+cost: UNKNOWN, not $0.00
+```
+
+That last line is the tri-state earning its keep where it matters most: a
+rehearsal made no vendor call, so its cost is *unmeasured*, and printing zero
+would project a free 40-night trial.
+
+**One defect found by that first rehearsal:** the report crashed on a cp1252
+console encoding box characters — *after* the night had run. A production night
+would have spent the money, written the receipt, and then died printing it.
+Pinned.
+
+---
+
+## 10. What is left before the first dollar
+
+1. **A full-universe real-data dry run.** Measures the true `UNAVAILABLE` rate
+   across the 182-name universe and whether 40 triggers are actually reachable.
+   Costs nothing and must happen before anyone pays for a night.
+2. **The funding decision, at Murat's desk.** Once `measured_cost_night_1 × 40`
+   is a real number against $37.12. $0.928/night is the planning average; a $4
+   night is not "under budget", it is nine fundable nights out of forty.
+3. **Night 1 itself — locally and attended**, per the ruling. The deployed image
+   deliberately cannot run a paying night: it has no `Aegis module` sibling, so
+   `verify_or_refuse()` refuses. Packaging the frozen artifact with a content
+   hash is the automation step, earned after the pilot is stable rather than
+   designed in before the first night.
+
+Interpret nothing from Night 1 but operations: valid paired cells, arm
+completion, tool-failure rates, model provenance, calls, spend, projection.
