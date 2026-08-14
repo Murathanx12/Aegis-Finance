@@ -64,6 +64,19 @@ BENCHMARK = "SPY"
 RECEIPTS_DIR = (Path(__file__).resolve().parents[2] / "backend" / "data"
                 / "optimus" / "iif1_nights")
 
+# ── the funding arithmetic ──────────────────────────────────────────────────
+# $10-15 is a SAFETY CEILING, not a planning budget, and the distinction is the
+# whole point. The planning number is the funding average: the balance divided
+# by the nights the design must survive. A $4 night is not "under budget" — it
+# is nine fundable nights out of forty, and the accrual clock cannot honestly
+# start until that arithmetic has been looked at.
+GRADED_NIGHTS_TO_FIRST_LOOK = 40
+#: DeepSeek console balance, read by Murat 2026-08-14. Passed in per-run where a
+#: fresher figure exists; this is the dated default so the projection is never
+#: silently computed against nothing.
+DEFAULT_BALANCE_USD = 37.12
+BALANCE_AS_OF = "2026-08-14"
+
 #: Map the agent's observable strings onto the ledger enum. A cell the ledger
 #: cannot grade is dropped rather than coerced.
 _OBSERVABLE = {
@@ -96,12 +109,54 @@ class NightResult:
     calls: int = 0
     spend_usd: float = 0.0
     served_models: list[str] = field(default_factory=list)
+    budget: dict = field(default_factory=dict)
     elapsed_s: float = 0.0
 
     def as_dict(self) -> dict:
         d = dict(self.__dict__)
         d["trial"] = TRIAL
         return d
+
+
+def project_funding(measured_cost_usd: float, *,
+                    balance_usd: float = DEFAULT_BALANCE_USD,
+                    nights: int = GRADED_NIGHTS_TO_FIRST_LOOK,
+                    ceiling_usd: float = NIGHTLY_MAX_USD) -> dict:
+    """What this night's measured cost implies for the whole accrual.
+
+    The four numbers the referee required after night one, computed rather than
+    asserted. `fundable_nights` is the one that actually decides anything: it
+    converts a per-night figure into the only currency the design cares about,
+    which is how many of the forty nights the balance reaches.
+
+    A measured cost of exactly zero is reported as `unknown`, not as free — a
+    telemetry read that failed and a genuinely free night must not arrive as the
+    same value (the house failure mode, and this trial's own tool-layer lesson).
+    """
+    known = measured_cost_usd is not None and measured_cost_usd > 0
+    projected = float(measured_cost_usd) * nights if known else None
+    funding_average = balance_usd / nights if nights else float("nan")
+    return {
+        "measured_cost_night_1": (round(float(measured_cost_usd), 6)
+                                  if known else None),
+        "measured_cost_status": "measured" if known else "unknown",
+        "projected_40_night_cost": (round(projected, 4)
+                                    if projected is not None else None),
+        "current_balance": round(float(balance_usd), 4),
+        "balance_as_of": BALANCE_AS_OF,
+        "funding_gap_or_surplus": (round(balance_usd - projected, 4)
+                                   if projected is not None else None),
+        "fundable_nights_at_this_rate": (
+            int(balance_usd // measured_cost_usd) if known else None),
+        "nights_required": nights,
+        "funding_average_per_night": round(funding_average, 4),
+        "safety_ceiling_per_night": float(ceiling_usd),
+        "note": ("The ceiling is a stop, not a plan. The planning number is "
+                 "funding_average_per_night; a night under the ceiling but "
+                 "over the average shortens the trial rather than fitting in "
+                 "it. The funding decision is made BEFORE the accrual clock "
+                 "starts, not when the balance runs out."),
+    }
 
 
 def _spend_since(since_iso: str) -> tuple[float, int]:
@@ -231,6 +286,7 @@ def run_night(features_by_ticker: dict[str, dict], *,
               tool_runner: Callable | None = None,
               dry_run: bool = False,
               max_usd: float = NIGHTLY_MAX_USD,
+              balance_usd: float = DEFAULT_BALANCE_USD,
               night: str | None = None) -> NightResult:
     """One night, end to end. Writes nothing when `dry_run`."""
     t0 = time.perf_counter()
@@ -256,12 +312,35 @@ def run_night(features_by_ticker: dict[str, dict], *,
     all_records: list[PredictionRecord] = []
     stopped = ""
 
+    # The cell set is frozen ONCE, here, before a single vendor call. Everything
+    # below iterates this tuple and nothing may re-derive it.
+    cells = tuple(res.tickers)
+
     for arm in arms:
+        # Equality asserted BEFORE the calls as well as after them. The check at
+        # the end catches an arm that dropped cells while running; this one
+        # catches an arm that was handed the wrong ones to begin with — and it
+        # catches it before any money is spent, rather than after five arms have
+        # been paid for and the night is void anyway.
+        arm_cells = list(cells)
+        try:
+            TR.assert_arms_share_cells({"__frozen_trigger_set__": list(cells),
+                                        arm: arm_cells})
+        except ValueError as exc:
+            # VOID, not a crash. A traceback out of the nightly runner is an
+            # ops incident that loses the receipt; a void night with its reason
+            # on disk is a record. Same outcome for the trial, different
+            # outcome for knowing why.
+            res.status = "void"
+            res.void_reason = f"pre-call cell check failed for {arm}: {exc}"
+            logger.error("[%s] %s", arm, res.void_reason)
+            break
+
         agent = Investigator(arm, llm_call=call,
                              tool_runner=tool_runner or IT.run_tool,
                              model=REQUEST_MODEL)
         rows, done = [], []
-        for tkr in res.tickers:
+        for tkr in arm_cells:
             snap = (snapshots or {}).get(tkr, {})
             try:
                 inv = agent.investigate(tkr, snap)
@@ -305,6 +384,7 @@ def run_night(features_by_ticker: dict[str, dict], *,
         res.spend_usd, res.calls = -1.0, counter.get("calls", 0)
         logger.error("could not read this night's spend: %s", exc)
     res.served_models = sorted(m for m in counter.get("served", set()) if m)
+    res.budget = project_funding(res.spend_usd, balance_usd=balance_usd)
 
     if all_records and not dry_run and res.status == "ok":
         from backend.services import belief_state

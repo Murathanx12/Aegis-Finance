@@ -20,6 +20,7 @@ import pytest
 from backend.services import investigator_night as N
 from backend.services import investigator_tools as IT
 from backend.services.investigator_agent import FORECAST_CELLS
+from backend.tests.iif1_prereg_check import load_frozen_config
 
 
 def _feats(z=1.0):
@@ -196,3 +197,150 @@ def test_divergent_cells_void_the_night_and_mint_nothing(monkeypatch):
                       dry_run=True)
     assert res.status in ("void", "budget_stopped")
     assert captured == [], "a divergent night minted records"
+
+
+# ── the cell set is asserted BEFORE the money, not only after ───────────────
+
+def test_the_frozen_cell_set_is_checked_before_any_arm_makes_a_call(monkeypatch):
+    """The end-of-night guard catches an arm that dropped cells while running.
+    It cannot catch an arm handed the wrong cells to begin with until all five
+    arms have been paid for. This check fires before the first vendor call.
+    """
+    calls = {"n": 0}
+
+    def counting_llm(**kw):
+        calls["n"] += 1
+        return good_llm(**kw)
+
+    # Corrupt the frozen set the instant the runner tries to hand it out.
+    real_assert = N.TR.assert_arms_share_cells
+
+    def sabotage(per_arm):
+        if "__frozen_trigger_set__" in per_arm:
+            raise ValueError("simulated pre-call cell divergence")
+        return real_assert(per_arm)
+
+    monkeypatch.setattr(N.TR, "assert_arms_share_cells", sabotage)
+    monkeypatch.setattr(N, "_spend_since", lambda s: (0.0, 0))
+    res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
+                      k=3, llm_call=counting_llm, tool_runner=no_tools,
+                      dry_run=True)
+    assert res.status == "void"
+    assert calls["n"] == 0, "the night spent money before checking its pairing"
+
+
+def test_the_pre_call_check_names_the_frozen_set_as_the_reference():
+    """The reference arm in the message must be the frozen set, so a divergence
+    report says which side is authoritative rather than blaming whichever arm
+    happened to be iterated first."""
+    with pytest.raises(ValueError) as exc:
+        N.TR.assert_arms_share_cells({"__frozen_trigger_set__": ["A", "B"],
+                                      "B_tools": ["A"]})
+    assert "__frozen_trigger_set__" in str(exc.value)
+
+
+# ── the funding arithmetic, and the ceiling that is not a plan ──────────────
+
+def test_the_night_receipt_carries_the_four_required_funding_numbers():
+    res = N.project_funding(0.75)
+    for k in ("measured_cost_night_1", "projected_40_night_cost",
+              "current_balance", "funding_gap_or_surplus"):
+        assert k in res and res[k] is not None
+    assert res["projected_40_night_cost"] == pytest.approx(30.0)
+    assert res["funding_gap_or_surplus"] == pytest.approx(37.12 - 30.0)
+    assert res["fundable_nights_at_this_rate"] == 49
+
+
+def test_a_night_under_the_ceiling_can_still_be_unfundable():
+    """The distinction the referee insisted on. $4 is a third of the safety
+    ceiling and still leaves the trial unable to reach its first look."""
+    res = N.project_funding(4.00)
+    assert res["measured_cost_night_1"] < res["safety_ceiling_per_night"]
+    assert res["funding_gap_or_surplus"] < 0
+    assert res["fundable_nights_at_this_rate"] == 9
+    assert res["fundable_nights_at_this_rate"] < res["nights_required"]
+
+
+def test_the_funding_average_is_the_planning_number_not_the_ceiling():
+    res = N.project_funding(0.75)
+    assert res["funding_average_per_night"] == pytest.approx(37.12 / 40, abs=1e-4)
+    assert res["funding_average_per_night"] < res["safety_ceiling_per_night"]
+
+
+def test_an_unreadable_spend_is_reported_unknown_rather_than_free():
+    """`_spend_since` returns -1.0 when the telemetry ledger could not be read.
+    A projection of $0.00/night off that number would read as a free trial."""
+    for bad in (-1.0, 0.0):
+        res = N.project_funding(bad)
+        assert res["measured_cost_status"] == "unknown"
+        assert res["measured_cost_night_1"] is None
+        assert res["projected_40_night_cost"] is None
+        assert res["funding_gap_or_surplus"] is None
+
+
+def test_run_night_attaches_the_budget_block_to_the_receipt(monkeypatch):
+    monkeypatch.setattr("backend.services.belief_state.append",
+                        lambda recs, path=None: None)
+    monkeypatch.setattr(N, "_spend_since", lambda s: (0.50, 20))
+    res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
+                      k=3, llm_call=good_llm, tool_runner=no_tools,
+                      dry_run=True, night="2026-08-15")
+    assert res.budget["measured_cost_night_1"] == pytest.approx(0.50)
+    assert res.budget["projected_40_night_cost"] == pytest.approx(20.0)
+    assert "trial" in res.as_dict()
+
+
+# ── the blind stays blind ───────────────────────────────────────────────────
+
+def test_the_receipt_carries_operational_diagnostics_and_no_trial_statistics(
+        monkeypatch):
+    """The runner may not compute or store anything from which the primary
+    contrast could be read during the blind. Forecast probabilities live in the
+    ledger, which is gated; the nightly receipt is read by a human every day.
+    """
+    monkeypatch.setattr("backend.services.belief_state.append",
+                        lambda recs, path=None: None)
+    monkeypatch.setattr(N, "_spend_since", lambda s: (0.01, 5))
+    res = N.run_night({f"T{i}": _feats(float(i)) for i in range(3)},
+                      k=3, llm_call=good_llm, tool_runner=no_tools,
+                      dry_run=True)
+    blob = json.dumps(res.as_dict(), default=str)
+    # Counts (`n_forecasts`) are operational and stay. Anything from which a
+    # forecast's VALUE could be recovered does not.
+    for leak in ("posterior", "prior\"", "probability", "brier", "rationale",
+                 "threshold", "contrast", "t_statistic", "observable"):
+        assert leak not in blob, f"receipt leaks {leak!r} during the blind"
+    row = res.per_arm["B_tools"]["rows"][0]
+    assert set(row) == {"arm", "ticker", "status", "n_calls", "n_tool_calls",
+                        "n_forecasts", "served_models", "tokens_in",
+                        "tokens_out", "error"}
+
+
+# ── the runner's constants are the registered ones ──────────────────────────
+
+def test_runner_constants_match_the_frozen_prereg_config():
+    """`investigator_night` retypes ARMS, the model, the benchmark and both
+    ceilings from `iif1_config`. Only the trigger rule was previously checked
+    for drift, which left the arm list — the thing the whole trial compares —
+    unguarded. A missing sibling tree fails loudly rather than skipping.
+    """
+    mod = load_frozen_config()
+    if mod is None:
+        pytest.fail("unreachable without the declared opt-out")
+    assert tuple(mod.ARMS) == N.ARMS
+    assert mod.REQUEST_MODEL == N.REQUEST_MODEL
+    assert mod.BENCHMARK == N.BENCHMARK
+    assert mod.NIGHTLY_MAX_USD == N.NIGHTLY_MAX_USD
+    assert mod.NIGHTLY_MAX_CALLS == N.NIGHTLY_MAX_CALLS
+    assert mod.PRIMARY_CONTRAST[0] in N.ARMS
+    assert mod.PRIMARY_CONTRAST[1] in N.ARMS
+
+
+def test_the_first_read_look_is_the_horizon_the_funding_is_projected_over():
+    """The projection must be over the nights the design actually needs to
+    reach its first licensed look. If the read schedule ever moves, this fails
+    rather than quietly projecting the wrong bill."""
+    mod = load_frozen_config()
+    if mod is None:
+        pytest.fail("unreachable without the declared opt-out")
+    assert mod.READ_SCHEDULE[0][0] == N.GRADED_NIGHTS_TO_FIRST_LOOK

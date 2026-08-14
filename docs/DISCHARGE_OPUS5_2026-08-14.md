@@ -389,3 +389,56 @@ constraints the corpse check surfaced:
   its builder with a new lane.
 
 — Fable
+
+---
+
+## OPUS 5 — Review 3 orders discharged (2026-08-14, appended)
+
+Status board with the receipts: **`IIF1_PRE_NIGHT_1_CHECKLIST.md`**.
+All six built; **one attended decision remains** (§7 there).
+
+| # | order | where | state |
+|---|---|---|---|
+| 1 | executable 40/80/120 enforcement | `Aegis module/scripts/iif1_read_gate.py` | **DONE** |
+| 2 | terminal rule frozen | `iif1_read_gate.classify()` | **DONE** |
+| 3 | the nine boundary tests | `Aegis module/tests/test_iif1_read_gate.py` (37 green) | **DONE** |
+| 4 | boring runner, equality before calls | `backend/services/investigator_night.py` | **DONE** |
+| 5 | budget framing on the receipt | `investigator_night.project_funding()` | **DONE** |
+| 6 | CI skip-integrity | `backend/tests/iif1_prereg_check.py` | **DONE** |
+
+**The correction the orders were aimed at, stated plainly.** Before this
+session the trial's entire read discipline was one line —
+`register_internet_investigator_fwd_1.py:145`, `if n < 40: raise`. It refuses a
+read at 39 and permits one at 41, 57, 79, 119 and 600. `READ_SCHEDULE` existed
+in the config as text and was enforced nowhere. The referee's phrasing was
+exact: *config text alone does not remove optional stopping.*
+
+**Two things found while building, neither of them in the orders:**
+
+1. **A pre-call divergence crashed the runner.** The new equality check raised
+   `ValueError` straight out of `run_night`, losing the receipt — an ops
+   incident instead of a record. Caught by its own test, which asserts zero LLM
+   calls were made; now it voids the night with the reason on disk.
+2. **Only the trigger rule was checked against the frozen config.** `ARMS` —
+   the thing the entire trial compares — plus the requested model, the
+   benchmark and both ceilings were retyped into the runner and unguarded. Now
+   checked, through the same loader that no longer skips.
+
+**The one decision surfaced, and Murat's ruling.** The registered row froze a
+read *floor* and the flat house `MDE_Z = 2.80`. `cc0bb4c` replaced that with
+three looks carrying O'Brien-Fleming constants — a change to the **decision
+rule**, made before any accrual, documented only in a config comment. Under
+*pre-register or it didn't happen* that needs a registry row. It was raised
+rather than taken unilaterally, because registering increments the cumulative
+multiple-testing count and the registry has no delete API by design.
+
+**Ruled: register.** `AMEND-INTERNET-INVESTIGATOR-FWD-1-READ-SCHEDULE` written
+`2026-08-14T08:38:13Z` — looks `[40, 80, 120]`, constants
+`[4.3117, 3.2955, 2.8452]`, `graded_nights_at_amendment: 0`,
+`llm_spend_at_amendment_usd: 0.0`, terminal rule as its kill condition. The
+bars that decide this trial now have tamper evidence rather than a comment.
+**Night 1 is unblocked.**
+
+Nothing else changed. No architecture, no observables, no arms, no budget
+constants, no LLM call made — **$0.00 spent this session**; the DeepSeek balance
+is still **$37.12** and Night 1 is still the first dollar.

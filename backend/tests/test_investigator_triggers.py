@@ -9,6 +9,8 @@ from __future__ import annotations
 import pytest
 
 from backend.services import investigator_triggers as TR
+from backend.tests import iif1_prereg_check as PC
+from backend.tests.iif1_prereg_check import load_frozen_config
 
 
 def _f(z=0.0, vol=0.0, earn=False, filing=False, price=100.0, dv=1e9):
@@ -22,20 +24,46 @@ def _f(z=0.0, vol=0.0, earn=False, filing=False, price=100.0, dv=1e9):
 def test_runtime_weights_match_the_frozen_prereg_config():
     """The config in `Aegis module` is the frozen source of truth; this module
     carries a runtime copy. A silent drift between them would mean the trial
-    ran a rule other than the one registered."""
-    import importlib.util
-    import pathlib
-    cfg = (pathlib.Path(__file__).resolve().parents[3] / "Aegis module"
-           / "scripts" / "iif1_config.py")
-    if not cfg.exists():
-        pytest.skip("Aegis module not present in this checkout")
-    spec = importlib.util.spec_from_file_location("iif1_config", cfg)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)                                # type: ignore
+    ran a rule other than the one registered.
+
+    This used to `pytest.skip` when the sibling tree was absent — i.e. report
+    green while executing nothing, in exactly the checkouts where it mattered.
+    See `iif1_prereg_check` for why the default is now a loud failure.
+    """
+    mod = load_frozen_config()
+    if mod is None:
+        pytest.fail("unreachable: load_frozen_config returned None without "
+                    "the opt-out having been declared")
     assert mod.TRIGGER_WEIGHTS == TR.TRIGGER_WEIGHTS
     assert mod.TRIGGERS_PER_NIGHT == TR.TRIGGERS_PER_NIGHT
     assert mod.MIN_PRICE == TR.MIN_PRICE
     assert mod.MIN_DOLLAR_VOLUME_20D == TR.MIN_DOLLAR_VOLUME_20D
+
+
+def test_a_missing_frozen_config_fails_loudly_instead_of_skipping(monkeypatch,
+                                                                 tmp_path):
+    """The regression pin for the skip itself.
+
+    The failure this guards is invisible by construction: the test above would
+    keep passing, print nothing, and verify nothing. So the absence path is
+    exercised directly.
+    """
+    monkeypatch.setattr(PC, "CONFIG_PATH", tmp_path / "nope" / "iif1_config.py")
+    monkeypatch.delenv(PC.OPT_OUT_ENV, raising=False)
+    with pytest.raises(PC.FrozenPreregMissing):
+        PC.load_frozen_config()
+
+
+def test_the_opt_out_must_be_declared_explicitly_not_inferred(monkeypatch,
+                                                              tmp_path):
+    """A context with no sibling tree may opt out — but only by SAYING so."""
+    monkeypatch.setattr(PC, "CONFIG_PATH", tmp_path / "nope" / "iif1_config.py")
+    monkeypatch.setenv(PC.OPT_OUT_ENV, "1")
+    assert PC.load_frozen_config() is None
+
+    monkeypatch.setenv(PC.OPT_OUT_ENV, "true")      # anything but "1" is not it
+    with pytest.raises(PC.FrozenPreregMissing):
+        PC.load_frozen_config()
 
 
 def test_score_is_a_weighted_sum_of_its_components():

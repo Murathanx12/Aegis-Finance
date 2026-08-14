@@ -135,11 +135,57 @@ relationship experiments:
 
 ### Track C — build the actual brain (replaces the persona swarm as frontier)
 
-- **INTERNET-INVESTIGATOR-FWD-1** — forward-only, four arms: numerical snapshot
-  only / snapshot + autonomous tools (search, filings, IR, options, revisions,
-  prices, market graph) / tools only / engine + tools + graph. Same prediction
-  contract, forward graded. This finally tests whether *investigation* adds
-  anything beyond the engineered snapshot.
+- **INTERNET-INVESTIGATOR-FWD-1** — **REGISTERED AND FROZEN 2026-08-14; status
+  CONDITIONALLY GREEN-LIT, Night 1 not yet run.** Forward-only. The design as
+  built differs from this roadmap's original sketch in three ways, each from a
+  measurement made before any money was spent:
+
+  - **Five arms, not four.** `A_snapshot` (engineered numbers only) /
+    `B_tools` (snapshot + search, filings, IR, options, revisions, prices,
+    market graph) / `C_tools_only` / `D_all` (engine + tools + graph) /
+    `B_anon` (B with ticker identity masked — NEGATIVE_RESULTS §19's leakage
+    receipt, run as an arm rather than argued about). `PRIMARY_CONTRAST` is
+    `A_snapshot` vs `B_tools` and is named in the frozen config, so the
+    best-looking pair cannot become "the" result afterwards.
+  - **The primary observable is MAGNITUDE, not direction.** `iif1_sigma.py`
+    measured σ_π at **0.0036–0.0061** on the direction observables against
+    **0.1183** for 5%/5d absolute move — a 20–30× difference in how
+    forecastable they are at all. Cross-referenced with `iif1_power.py`, a
+    direction primary reaches 80% power at **no** trigger count and **no**
+    effect size, i.e. it is a trial designed to be unable to speak (§19).
+    Direction observables are still recorded, and are **pre-declared unable to
+    resolve** — a null on them is neither kill nor win. This is the **third
+    independent instrument** pushing the programme from direction to
+    magnitude/risk, after the exposure-vs-selection oracle gap and GC1's
+    diagonal result.
+  - **A read SCHEDULE, not a read floor.** Three licensed looks at **40 / 80 /
+    120 graded nights**. `iif1_boundaries.py` simulated what three looks at the
+    flat house constant would cost: family-wise **0.1079** against a single
+    look's 0.0501, **2.2× the declared rate**. So each look carries its own
+    O'Brien-Fleming constant — **MDE_Z 4.312 / 3.295 / 2.845** — solved to a
+    family-wise 0.0505. The final look pays almost nothing for the two peeks.
+    Enforced in `iif1_read_gate.py`: a read at 41, 79 or 119 is refused as
+    firmly as at 39, and 121 is `NEW_PREREG_REQUIRED`.
+
+  **Verdict language is bound in advance** (`iif1_read_gate.CLAIM_LANGUAGE`): a
+  positive H1 is the claim *"autonomous investigation improves
+  magnitude/volatility forecast calibration"*. Never stock picking, never
+  alpha, Sharpe, skill or tradability — the trial forecasts no return and
+  trades nothing, so no such claim is available to it at any n, including a
+  positive one at the final look. The gate refuses a verdict line containing
+  them.
+
+  **Terminal rule, frozen before Night 1:** 40/80 below the bar →
+  `INTERIM_UNDERPOWERED`, carrying no H1 reading in either direction; 120 below
+  the bar → the pre-registration **terminates** `NOT_DETECTABLE`; accrual past
+  120 requires a new prospective pre-registration. Anything softer just moves
+  optional stopping from 40 to 120.
+
+  **Budget framing:** $37.12 ÷ 40 = **$0.928/night is the planning number.**
+  The $10–15 ceiling is a safety stop, not a budget — a $4 night is not "under
+  budget", it is nine fundable nights out of forty. `project_funding()` prints
+  the gap on every receipt, and the funding decision is made before the accrual
+  clock starts.
 - **Microtask decomposition** — event extractor, relationship extractor,
   expectations analyst, forecaster, critic as separate small contracts, instead
   of one giant common schema. Division of cognition, not personas.
