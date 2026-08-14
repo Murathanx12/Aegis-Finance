@@ -643,3 +643,97 @@ Fable inspected `Downloads/stock reseacrh old files/` (+ `market research
    activity nodes). No current order.
 
 — Fable
+
+---
+
+## DISCHARGE — 2026-08-14, the session that ran Night 1
+
+Worked in the milestone order of ORDER 20. Four milestones, five commits, every
+boundary green before the next began.
+
+### A. Night 1 — RAN, and went VOID
+
+Eight pre-spend checks, then one production night. `sandbox=False`,
+`verify_or_refuse()` on the real path, every ceiling in force, no override.
+
+**One check was added and it was the one that mattered.** Simulation of the
+campaign governor against 60 investigator-shaped telemetry rows showed
+`research_budget` would halt the night at 100% zero-yield after 50 calls: a row
+is gradeable only if it carries a prediction id, and IIF-1 mints nothing until
+the last arm finishes because the records are the cross-arm intersection. Every
+running night reads as barren. The night would have spent, halted, and gone void
+with an empty intersection. Fixed before the first dollar — a chain declares its
+accounting unit, its rows are PENDING while it runs, and every call is amended
+when the chain finishes, with what it minted or with nothing. A cell that
+produced nothing still lands in the dead bucket.
+
+**Outcome:** 224 calls, 34 minutes, `deepseek-v4-flash` served throughout,
+**$0.066464** measured from the telemetry ledger. `A_snapshot` completed all 40
+cells, 25 producing gradeable forecasts. `B_tools` produced 2 in 10 and then
+five barren cells in a row, and the information guard stopped the night rather
+than paying for 30 more cells and three further arms. **VOID**, receipt on disk,
+nothing minted, nothing read. Not retried — the void reason is the deliverable.
+
+**Measured cost, for the funding decision:** `A_snapshot` $0.00097/cell,
+`B_tools` $0.00275/cell — tools cost 2.8x. A full five-arm night projects to
+roughly **$0.41** against the $0.928/night planning average, i.e. comfortably
+inside the balance. That projection is built from two arms; three have never
+run, so it is a projection and not a measurement.
+
+**Two defects the night exposed:**
+
+1. **The nightly USD ceiling has never been armed.** `_spend_since` read
+   `s["cost_usd"]`; `spend()` returns `total_cost_usd`. Nothing errored —
+   `.get(...) or 0.0` turned the missing key into a number — so every check
+   compared `$0.00 + $0.05` against `$12.00`. The night whose purpose was to
+   measure cost printed `measured_cost: unknown` while the ledger held 224
+   priced rows. Fixed, and the default removed.
+2. **A barren cell could not be diagnosed afterwards.** The receipt recorded
+   `n_forecasts: 0` and nothing else, so a 37.5% drop rate in one arm and 80% in
+   another was unexplainable at any price. Drop reasons are recorded now as a
+   CLOSED, VALUE-FREE vocabulary — the receipt is read every morning during a
+   40-night blind, so a reason may not carry the model's own number. The
+   existing blind-integrity test caught exactly that leak in the first draft.
+   Leading suspect for Night 2 to confirm: a size bound stated in percent where
+   a fraction is required, which kills both magnitude cells silently.
+
+**Night 2 is not authorised and was not run.**
+
+### B. The two-ledger ruling — implemented
+
+`CAMPAIGN_FORWARD` (20,073 records, earliest resolution 2026-08-16) and
+`LIVE_FORWARD` (the volume) are named in code. Population is a FIELD as well as
+a path, because on a developer machine — where the attended campaign
+resolutions actually run — the two paths are the SAME FILE and a path-only
+separation would hold only in production. `ablation_fwd` refuses without
+`--population`; the production resolver names `live_forward` and a test pins it
+in the source; `resolve_due` refuses a MIXED ledger outright, since resolution
+rewrites the whole file. No migration in either direction. 24 tests.
+
+### C. ICSA — diagnosed first, then given a vocabulary
+
+ICSA fetches correctly (3,110 observations, latest 2026-08-08), so the 22/23 was
+transient. The defect worth fixing was that a transient miss and a degraded
+model input were indistinguishable — and it is not cosmetic: one failed pass
+removes `fred_initial_claims_zscore` from the LIVE crash-model feature matrix
+for a 24-hour cache TTL while the page reads `ok / []`.
+FRESH / STALE_USABLE / DEGRADED_MISSING / UNAVAILABLE, last-known-good inside a
+48h TTL, named in `degraded_reasons` after two consecutive misses. The
+silent-fragility audit of the change found two bugs inside it, both fixed.
+
+### D. COPY-LAB — SEEDED
+
+Two lanes live, twelve declared inactive with a stated blocker each, own config
+hash, own namespace, `lane-integrity-check` green on both sides. The first pass
+found a qualifying insider cluster and REFUSED it as pre-inception. One defect
+found by running it: 124 NAV rows dated before the lane existed.
+
+### The next bottleneck
+
+**No Teacher Library collector runs in production.** COPY-LAB accrues only when
+the attended runner is invoked, so the lane that was just seeded to accumulate
+forward evidence will not accumulate any on its own. A scheduler job without a
+collector would be worse than none — zero events forever, looking healthy. The
+prerequisite is ORDER 6's ingestion plus a collector job, in that order.
+
+— Opus 5
