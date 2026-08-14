@@ -104,7 +104,11 @@ _MIGRATION_ATTEMPTED = False
 #: rather than the level. Markets price changes in expectations, and the only
 #: analyst family that ever came close to surviving in this programme was
 #: revisions rather than target levels.
-SCHEMA_VERSION = "1.1.0"
+#: 1.2.0 (2026-08-14) adds `evidence_population` and `ledger_id`, also OPTIONAL
+#: and also purely additive. Until it existed, a record could not say which of
+#: the two forward ledgers it belonged to, and a report that read "the forward
+#: ledger" was reading one of two different populations with no way to tell.
+SCHEMA_VERSION = "1.2.0"
 
 #: Horizons, in trading days. Frozen: a horizon invented after the fact is a
 #: degree of freedom, and the resolution date is what makes a record honest.
@@ -237,6 +241,15 @@ class PredictionRecord:
     #: has arms. Recorded on the record rather than inferred from `specialist`,
     #: because an arm label reconstructed after the fact is not evidence.
     arm: str | None = None
+    #: Which body of forward evidence this record belongs to (schema 1.2.0).
+    #: There are two — the campaign's ~20,073-record history and the deployed
+    #: product's own accrual — and they were read as one for a month because
+    #: nothing on a record said which it was. Stamped by `append` from the
+    #: ledger being written; None on every record written before 2026-08-14, and
+    #: those are attributed by the file they live in. See
+    #: `services/evidence_population.py`.
+    evidence_population: str | None = None
+    ledger_id: str | None = None
     # filled at resolution, never at write time
     resolved_at: str | None = None
     void_reason: str | None = None
@@ -497,8 +510,18 @@ def _migrate_once() -> None:
 _APPEND_LOCK = threading.Lock()
 
 
-def append(records: list[PredictionRecord], path: Path | None = None) -> None:
+def append(records: list[PredictionRecord], path: Path | None = None, *,
+           population: "str | None" = None) -> None:
     """Append to the ledger. Returns None: nothing may branch on a write.
+
+    EVERY RECORD IS STAMPED WITH ITS EVIDENCE POPULATION
+    ----------------------------------------------------
+    `population` defaults to the one that owns the file being written, which
+    keeps every existing caller correct without a change. Passing it explicitly
+    makes the write REFUSE if the target file belongs to the other population —
+    the campaign resolver must never write the live volume and the production
+    resolver must never write the repo ledger, and on Railway those are
+    different files. See `services/evidence_population.py`.
 
     LOCKED because this is a read-modify-write, not a write. The dedupe reads
     the whole ledger and then appends; two threads interleaving between those
@@ -516,6 +539,21 @@ def append(records: list[PredictionRecord], path: Path | None = None) -> None:
         _migrate_once()
     path = path or PREDICTIONS
     path.parent.mkdir(parents=True, exist_ok=True)
+
+    from backend.services import evidence_population as _pop
+    try:
+        pop = (_pop.parse(population) if population is not None
+               else _pop.owner_of(path))
+        if population is not None:
+            _pop.assert_write_allowed(pop, path)
+        _pop.stamp(records, pop)
+    except _pop.PopulationRequired:
+        # A test writing to a tmp_path is not one of the declared ledgers. That
+        # is legitimate and must not stamp a population onto records — an
+        # unattributable record is better than a mislabelled one.
+        if population is not None:
+            raise
+
     with _APPEND_LOCK:
         seen = {r["prediction_id"] for r in read_predictions(path)}
         with path.open("a", encoding="utf-8") as fh:

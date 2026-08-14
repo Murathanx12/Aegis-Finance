@@ -41,9 +41,12 @@ def test_a_record_without_the_contract_still_writes_and_carries_nulls():
     assert r.probability == 0.40
 
 
-def test_schema_version_advanced_so_the_two_generations_are_distinguishable():
-    assert SCHEMA_VERSION == "1.1.0"
-    assert _base().schema_version == "1.1.0"
+def test_schema_version_advanced_so_the_generations_are_distinguishable():
+    # 1.1.0 added the belief-change contract; 1.2.0 added the evidence
+    # population. Both are additive, and the version is what lets a reader tell
+    # a record that COULD have carried a field from one that could not.
+    assert SCHEMA_VERSION == "1.2.0"
+    assert _base().schema_version == "1.2.0"
 
 
 def test_the_new_fields_are_the_only_thing_added():

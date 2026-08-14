@@ -853,7 +853,12 @@ async def _ledger_resolve():
     from backend.services.ledger_resolver import resolve_due
 
     try:
-        report = await asyncio.to_thread(resolve_due)
+        # LIVE_FORWARD ONLY. This job resolves the DEPLOYED product's own
+        # accrual and nothing else; the campaign's ~20,073-record ledger is a
+        # separate population, graded locally and attended. Naming the
+        # population here is what stops a future path change from quietly
+        # pointing production at the campaign's history.
+        report = await asyncio.to_thread(resolve_due, population="live_forward")
         if report.get("overdue", 0) > 0 or report.get("unpriceable"):
             logger.warning("Ledger resolve DEGRADED: %s", report)
         else:

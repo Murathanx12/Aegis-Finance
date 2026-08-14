@@ -119,17 +119,58 @@ def _usable(panel: pd.DataFrame | None, ticker: str) -> bool:
     return int(pd.to_numeric(panel[ticker], errors="coerce").notna().sum()) > 0
 
 
+def assert_single_population(path: Path, population: str) -> dict:
+    """Refuse to resolve a ledger that holds more than one evidence population.
+
+    `resolve_all` rewrites the whole file, so resolving a mixed ledger would
+    grade the other population's records as a side effect of grading this one.
+    There is no rule that licenses that and there is no way to undo it, so the
+    resolver stops instead. This is the code half of the two-ledger ruling: the
+    campaign resolver never writes the volume, the production resolver never
+    reads the repo ledger.
+    """
+    from backend.services import evidence_population as EP
+    want = EP.parse(population)
+    EP.assert_write_allowed(want, path)
+    found: dict[str, int] = {}
+    for r in EP._read_jsonl(Path(path)):
+        try:
+            p = EP.population_of(r, path=path).value
+        except EP.PopulationRequired:
+            p = "unattributable"
+        found[p] = found.get(p, 0) + 1
+    foreign = {k: v for k, v in found.items() if k != want.value}
+    if foreign:
+        raise EP.PopulationCrossWrite(
+            f"{path} holds {foreign} alongside {found.get(want.value, 0)} "
+            f"{want.value} record(s). Resolution rewrites the whole file, so "
+            f"grading this population would grade the other one too. Refusing.")
+    return found
+
+
 def resolve_due(path: Path | None = None, *,
                 price_fetch: PriceFetch | None = None,
-                today: date | None = None) -> dict:
+                today: date | None = None,
+                population: str | None = None) -> dict:
     """Resolve every ledger record whose window has closed, loudly.
 
     Returns the full accounting: {as_of, due, newly_resolved, pending, overdue,
     unpriceable, priced_from, resolve_report, health}. An unpriceable due
     record is COUNTED AND NAMED, never silently skipped — it stays overdue and
     keeps the health canary DEGRADED until someone prices it or voids it.
+
+    `population`, when named, pins WHICH forward ledger this run may touch and
+    refuses everything else. Callers that pass a bare `path` (tests, one-off
+    tools) are unaffected and unattributed, exactly as before.
     """
     today = today or date.today()
+    lineage = None
+    if population is not None:
+        from backend.services import evidence_population as EP
+        pop = EP.parse(population)
+        path = path or EP.ledger_path(pop)
+        assert_single_population(path, population)
+        lineage = EP.lineage(pop, path)
     rows = read_predictions(path)
     active = [r for r in rows
               if r.get("outcome") is None and not r.get("void_reason")]
@@ -151,6 +192,7 @@ def resolve_due(path: Path | None = None, *,
             "priced_from": None,
             "resolve_report": None,
             "health": health,
+            "lineage": lineage,
         }
 
     need = _needed_tickers(due)
@@ -253,4 +295,5 @@ def resolve_due(path: Path | None = None, *,
         "priced_from": priced_from,
         "resolve_report": report,
         "health": health,
+        "lineage": lineage,
     }
