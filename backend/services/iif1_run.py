@@ -105,11 +105,13 @@ def stub_tools(name: str, args: dict, budget: Any = None):
 
 
 def assemble_and_freeze(as_of: str | None, *, overwrite: bool = False,
-                        universe: list[str] | None = None) -> dict:
+                        universe: list[str] | None = None,
+                        sandbox: bool = False) -> dict:
     """Build the snapshot, write it, and report what could not be measured."""
     ts = F.resolve_decision_ts(as_of)
     snap = F.assemble(ts, universe=universe)
-    path = F.write_snapshot(snap, overwrite=overwrite)
+    snap["sandbox"] = bool(sandbox)
+    path = F.write_snapshot(snap, overwrite=overwrite, sandbox=sandbox)
 
     sc = snap["status_counts"]
     print(f"decision_ts   {snap['decision_ts']}  ({snap['decision_ts_tz']})")
@@ -148,6 +150,118 @@ def preview_triggers(snap: dict, k: int = TR.TRIGGERS_PER_NIGHT) -> dict:
     return sel
 
 
+#: Microtask calls per (arm, cell). Five contracts: event, expectations,
+#: forecast, critic, plus one tool-planning turn. Used ONLY for an upper bound.
+CALLS_PER_CELL = 5
+
+
+def readiness_report(snap: dict, sel: dict, *, as_of: str | None,
+                     balance_usd: float, sandbox_snapshot: bool = False) -> int:
+    """Everything a human needs before authorising the first dollar. Spends $0.
+
+    Deliberately ends with the literal command rather than a description of it.
+    A readiness report whose last line is "then run the production night" makes
+    the reader reconstruct the invocation, and the invocation is where the
+    `sandbox=False` decision actually lives.
+    """
+    from backend.services import iif1_prereg as P
+    from backend.services import investigator_night as N2
+
+    print("\n" + "=" * 70)
+    print("NIGHT-1 READINESS — nothing below spent money")
+    print("=" * 70)
+
+    # 1. the registered rule
+    try:
+        frozen = P.verify_or_refuse()
+        print(f"\nfrozen prereg      MATCHES ({len(frozen)} fields verified)")
+        print(f"  arms             {list(frozen['ARMS'])}")
+        print(f"  triggers/night   {frozen['TRIGGERS_PER_NIGHT']}")
+        print(f"  model requested  {frozen['REQUEST_MODEL']}")
+        print(f"  ceilings         ${frozen['NIGHTLY_MAX_USD']:.2f} / "
+              f"{frozen['NIGHTLY_MAX_CALLS']} calls")
+        prereg_ok = True
+    except Exception as exc:                                   # noqa: BLE001
+        print(f"\nfrozen prereg      *** {type(exc).__name__}: {exc}")
+        print("  a paying night will REFUSE until this resolves")
+        frozen, prereg_ok = {}, False
+
+    # 2. the inputs
+    sc = snap["status_counts"]
+    total = sum(sc.values()) or 1
+    print(f"\ninputs             decision_ts {snap['decision_ts']}")
+    print(f"  universe         {snap['n_universe']} names")
+    print(f"  features         OK_DATA {sc.get('OK_DATA', 0)}  "
+          f"OK_EMPTY {sc.get('OK_EMPTY', 0)}  "
+          f"UNAVAILABLE {sc.get('UNAVAILABLE', 0)}  "
+          f"({100.0 * sc.get('UNAVAILABLE', 0) / total:.1f}% unavailable)")
+    if snap["unavailable"]:
+        by_feat: dict[str, int] = {}
+        for feats in snap["unavailable"].values():
+            for k in feats:
+                by_feat[k] = by_feat.get(k, 0) + 1
+        print("  unavailable by   "
+              + ", ".join(f"{k}={v}" for k, v in
+                          sorted(by_feat.items(), key=lambda kv: -kv[1])))
+
+    # 3. the pool
+    k = int(frozen.get("TRIGGERS_PER_NIGHT", TR.TRIGGERS_PER_NIGHT))
+    reachable = sel["n_selected"] >= k
+    print(f"\ntrigger pool       {sel['n_eligible']} eligible, "
+          f"{sel['n_excluded']} excluded")
+    print(f"  selected         {sel['n_selected']}/{k}  "
+          + ("REACHABLE" if reachable else "*** SHORT OF K — the frozen count "
+                                           "is not reachable from this pool"))
+
+    # 4. what it would cost, as a bound rather than a guess
+    arms = list(frozen.get("ARMS", N2.ARMS))
+    max_calls = sel["n_selected"] * len(arms) * CALLS_PER_CELL
+    ceiling = float(frozen.get("NIGHTLY_MAX_USD", N2.NIGHTLY_MAX_USD))
+    bound = max_calls * N2.WORST_CASE_CALL_USD
+    print(f"\ncost              {sel['n_selected']} cells x {len(arms)} arms x "
+          f"{CALLS_PER_CELL} microtasks = {max_calls} calls (upper bound)")
+    print(f"  reserve/call     ${N2.WORST_CASE_CALL_USD:.4f} -> "
+          f"${bound:.2f} worst case")
+    print(f"  hard ceiling     ${ceiling:.2f}  "
+          + ("(binds first — the night stops before the bound)"
+             if bound > ceiling else "(the bound stays under it)"))
+    print(f"  balance          ${balance_usd:.2f}   "
+          f"planning average ${balance_usd / N2.GRADED_NIGHTS_TO_FIRST_LOOK:.3f}"
+          f"/night over {N2.GRADED_NIGHTS_TO_FIRST_LOOK} nights")
+    print("  NOTE             this is a BOUND, not an estimate. The number "
+          "that decides funding is measured from served responses after the "
+          "night, never predicted before it.")
+
+    # 5. where the evidence lands
+    print(f"\nreceipts           {N2.RECEIPTS_DIR}")
+    print(f"  sandbox receipts {N2.SANDBOX_RECEIPTS_DIR}")
+    print(f"  feature snapshot "
+          f"{F.snapshot_path(F.resolve_decision_ts(as_of), sandbox=sandbox_snapshot)}"
+          + ("   [SANDBOX]" if sandbox_snapshot else ""))
+
+    blockers = []
+    if sandbox_snapshot:
+        blockers.append("this is a SANDBOX snapshot (rehearsal or hand-picked "
+                        "universe) — a paying night must be frozen against a "
+                        "production snapshot of the full universe")
+    if not prereg_ok:
+        blockers.append("frozen pre-registration unreadable")
+    if not reachable:
+        blockers.append(f"trigger pool cannot fill {k}")
+    print("\n" + "-" * 70)
+    if blockers:
+        print("NOT READY: " + "; ".join(blockers))
+        return 1
+
+    print("READY. Nothing above spent money. The command that WOULD:\n")
+    stamp = f' --as-of "{as_of}"' if as_of else ""
+    print(f"    python -m backend.services.iif1_run --reuse-snapshot{stamp}")
+    print("\nThat invocation runs with sandbox=False. It verifies the frozen "
+          "pre-registration on the real path, refuses every override, and "
+          "writes the forward evidence ledger. It is the first dollar.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="iif1_run", description=f"Run one {N.TRIAL} night.")
@@ -166,6 +280,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="comma-separated tickers, for rehearsals")
     ap.add_argument("--balance-usd", type=float, default=N.DEFAULT_BALANCE_USD,
                     help="current vendor balance, for the funding projection")
+    ap.add_argument("--readiness", action="store_true",
+                    help="print the pre-spend readiness report and the exact "
+                         "command that would spend money; spends nothing")
     a = ap.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO,
@@ -183,15 +300,26 @@ def main(argv: list[str] | None = None) -> int:
     universe = ([u.strip().upper() for u in a.universe.split(",") if u.strip()]
                 if a.universe else None)
 
+    # A rehearsal, or a hand-picked universe, is not a production night, and its
+    # snapshot must not claim a production date. A six-name test snapshot in the
+    # production namespace freezes that night against a pool that cannot fill
+    # the frozen trigger count -- and the immutability rule then refuses to
+    # correct it.
+    snap_sandbox = bool(a.rehearse or universe)
     if a.reuse_snapshot:
-        snap = F.load_snapshot(ts)
-        print(f"reusing frozen snapshot for {ts.date()} "
-              f"(assembled {snap.get('assembled_at')})")
+        snap = F.load_snapshot(ts, sandbox=snap_sandbox)
+        print(f"reusing frozen {'sandbox ' if snap_sandbox else ''}snapshot for "
+              f"{ts.date()} (assembled {snap.get('assembled_at')})")
     else:
         snap = assemble_and_freeze(a.as_of, overwrite=a.overwrite_snapshot,
-                                   universe=universe)
+                                   universe=universe, sandbox=snap_sandbox)
 
-    preview_triggers(snap)
+    sel = preview_triggers(snap)
+
+    if a.readiness:
+        return readiness_report(snap, sel, as_of=a.as_of,
+                                balance_usd=a.balance_usd,
+                                sandbox_snapshot=snap_sandbox)
 
     if a.assemble_only:
         print("\n--assemble-only: inputs frozen, nothing was reasoned about "

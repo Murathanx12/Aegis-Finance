@@ -24,7 +24,8 @@ from backend.services import investigator_night as N
 @pytest.fixture(autouse=True)
 def _isolated_snapshots(monkeypatch):
     d = pathlib.Path(tempfile.mkdtemp())
-    monkeypatch.setattr(F, "SNAPSHOT_DIR", d)
+    monkeypatch.setattr(F, "SNAPSHOT_DIR", d / "prod")
+    monkeypatch.setattr(F, "SANDBOX_SNAPSHOT_DIR", d / "sandbox")
     monkeypatch.setattr(N, "SANDBOX_RECEIPTS_DIR", d / "receipts")
     monkeypatch.setattr(N, "_spend_since", lambda s: (0.0, 0))
     return d
@@ -74,7 +75,11 @@ def test_assemble_only_freezes_the_inputs_and_spends_nothing(capsys):
     assert rc == 0
     assert "inputs frozen" in out
     assert "nothing was spent" in out
-    assert F.snapshot_path(F.resolve_decision_ts("2026-08-14 21:00")).exists()
+    # `--universe` is a sandbox run, so its snapshot lands in the sandbox
+    # namespace and must NOT claim the production date.
+    ts = F.resolve_decision_ts("2026-08-14 21:00")
+    assert F.snapshot_path(ts, sandbox=True).exists()
+    assert not F.snapshot_path(ts, sandbox=False).exists()
 
 
 def test_a_rehearsal_runs_end_to_end_and_writes_no_evidence(capsys, monkeypatch):
@@ -133,7 +138,7 @@ def test_reuse_snapshot_reads_the_frozen_inputs_rather_than_refetching(capsys):
     capsys.readouterr()
     rc = R.main(["--rehearse", "--reuse-snapshot", "--as-of", "2026-08-14 21:00"])
     out = capsys.readouterr().out
-    assert rc == 0 and "reusing frozen snapshot" in out
+    assert rc == 0 and "reusing frozen sandbox snapshot" in out
 
 
 def test_being_short_of_k_is_announced_not_padded(capsys):
@@ -151,3 +156,75 @@ def test_the_report_survives_a_console_that_cannot_encode_box_characters(
     rc = R.main(["--rehearse", "--as-of", "2026-08-14 21:00", "--universe", "AAA"])
     assert rc == 0
     assert "funding" in capsys.readouterr().out
+
+
+# ── a rehearsal must not claim a production date ───────────────────────────
+
+def test_a_rehearsal_snapshot_does_not_occupy_the_production_namespace(_isolated_snapshots):
+    """Caught by the readiness report on its first real run.
+
+    A six-name test snapshot written into the production namespace CLAIMS that
+    date: the night is frozen against a pool that cannot fill the frozen trigger
+    count, and the immutability rule then refuses to correct it.
+    """
+    ts = F.resolve_decision_ts("2026-08-14 21:00")
+    assert R.main(["--rehearse", "--as-of", "2026-08-14 21:00",
+                   "--universe", "AAA,BBB"]) == 0
+    assert F.snapshot_path(ts, sandbox=True).exists()
+    assert not F.snapshot_path(ts, sandbox=False).exists()
+
+
+def test_a_hand_picked_universe_is_treated_as_a_sandbox_run(_isolated_snapshots):
+    """`--universe` is a subset chosen by a human. Whatever else it is, it is
+    not the registered universe, so its snapshot is not a production record."""
+    ts = F.resolve_decision_ts("2026-08-14 21:00")
+    R.main(["--assemble-only", "--as-of", "2026-08-14 21:00",
+            "--universe", "AAA,BBB"])
+    assert F.snapshot_path(ts, sandbox=True).exists()
+    assert not F.snapshot_path(ts, sandbox=False).exists()
+
+
+def test_sandbox_and_production_snapshots_do_not_share_a_directory():
+    assert F.SANDBOX_SNAPSHOT_DIR != F.SNAPSHOT_DIR
+
+
+# ── the readiness report spends nothing and refuses when it should ─────────
+
+def test_readiness_refuses_a_sandbox_snapshot_for_a_paying_night(capsys):
+    rc = R.main(["--readiness", "--as-of", "2026-08-14 21:00",
+                 "--universe", "AAA,BBB,CCC"])
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "NOT READY" in out
+    assert "SANDBOX snapshot" in out
+    assert "python -m backend.services.iif1_run" not in out.split("NOT READY")[1]
+
+
+def test_readiness_refuses_when_the_pool_cannot_fill_the_frozen_count(capsys):
+    """The gate that matters most: a paying night against a pool that cannot
+    fill k would spend real money on a night that is short by construction."""
+    rc = R.main(["--readiness", "--as-of", "2026-08-14 21:00",
+                 "--universe", "AAA,BBB"])
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "cannot fill" in out
+
+
+def test_readiness_prints_a_bound_and_says_it_is_not_an_estimate(capsys):
+    R.main(["--readiness", "--as-of", "2026-08-14 21:00", "--universe", "AAA"])
+    out = capsys.readouterr().out
+    assert "upper bound" in out
+    assert "BOUND, not an estimate" in out
+    assert "measured from served responses after the night" in out
+
+
+def test_readiness_spends_nothing_and_writes_no_evidence(monkeypatch, capsys):
+    wrote = []
+    monkeypatch.setattr("backend.services.belief_state.append",
+                        lambda recs, path=None: wrote.extend(recs))
+    calls = {"n": 0}
+    monkeypatch.setattr(N, "make_llm_call",
+                        lambda **kw: calls.__setitem__("n", calls["n"] + 1))
+    R.main(["--readiness", "--as-of", "2026-08-14 21:00", "--universe", "AAA"])
+    assert wrote == [] and calls["n"] == 0
+    assert "nothing below spent money" in capsys.readouterr().out

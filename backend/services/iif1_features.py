@@ -70,6 +70,13 @@ UNAVAILABLE = "UNAVAILABLE"
 
 SNAPSHOT_DIR = _config.OPTIMUS_LEDGER_DIR / "iif1_features"
 
+#: Rehearsal snapshots live somewhere else, for the same reason sandbox receipts
+#: do. A six-name test snapshot written into the production namespace CLAIMS
+#: that date: the night is frozen against a pool that cannot fill the frozen
+#: trigger count, and the immutability rule then refuses to correct it. Caught by
+#: the readiness report on the first run, which is what a readiness report is for.
+SANDBOX_SNAPSHOT_DIR = _config.OPTIMUS_LEDGER_DIR / "iif1_features_sandbox"
+
 #: The market proxy the residual is taken against.
 MARKET = "SPY"
 
@@ -439,11 +446,13 @@ def assemble(as_of: str | datetime | None = None,
     }
 
 
-def snapshot_path(decision_ts: datetime) -> "object":
-    return SNAPSHOT_DIR / f"{decision_ts.date().isoformat()}.json"
+def snapshot_path(decision_ts: datetime, *, sandbox: bool = False) -> "object":
+    d = SANDBOX_SNAPSHOT_DIR if sandbox else SNAPSHOT_DIR
+    return d / f"{decision_ts.date().isoformat()}.json"
 
 
-def write_snapshot(snap: dict, *, overwrite: bool = False) -> "object":
+def write_snapshot(snap: dict, *, overwrite: bool = False,
+                   sandbox: bool = False) -> "object":
     """Freeze the snapshot. Refuses to overwrite unless told twice.
 
     The refusal is the feature. If a night could be re-assembled in place, the
@@ -451,7 +460,7 @@ def write_snapshot(snap: dict, *, overwrite: bool = False) -> "object":
     and nothing downstream could tell.
     """
     ts = resolve_decision_ts(snap["decision_ts"])
-    p = snapshot_path(ts)
+    p = snapshot_path(ts, sandbox=sandbox)
     if p.exists() and not overwrite:
         raise FileExistsError(
             f"{p} already exists. A feature snapshot is the point-in-time "
@@ -464,8 +473,8 @@ def write_snapshot(snap: dict, *, overwrite: bool = False) -> "object":
     return p
 
 
-def load_snapshot(decision_ts: datetime) -> dict:
-    p = snapshot_path(decision_ts)
+def load_snapshot(decision_ts: datetime, *, sandbox: bool = False) -> dict:
+    p = snapshot_path(decision_ts, sandbox=sandbox)
     if not p.exists():
         raise FileNotFoundError(
             f"no feature snapshot at {p} — assemble one before running the "
