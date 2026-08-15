@@ -1,5 +1,41 @@
 # CLAUDE.md — Aegis Finance
 
+## Mission (amended 2026-08-15 — full text in `docs/OPTIMUS_OBJECTIVE.md` §0)
+
+> Build a **self-improving investment intelligence system** whose objective is
+> maximising real-world **portfolio utility** — risk-adjusted or deliberately
+> risk-seeking by declared choice — using numerical models, LLM reasoning,
+> internet-scale information, observed expert behaviour, simulation, and
+> continual outcome feedback.
+
+Three deliverables from one system: Murat's own capital · a public open-source
+tool others run at *their* utility function · an HKU paper if a novel and
+defensible result emerges.
+
+Five rules that follow, and that override habits formed before them:
+
+1. **Investing is a sequential learning problem**, not a bag of independent
+   hypothesis tests. The question is *"given what was knowable at t, what action,
+   what alternative, what happened, why, and what should change?"*
+2. **Explaining a winner afterwards is trivial; finding precursors observable
+   beforehand is the research problem.** Every mechanism carries an executable
+   precursor that is tested on foreign slices with its parent barred.
+3. **The objective is terminal wealth under a declared utility, not
+   classification accuracy or raw return.** Every ranked comparison names the
+   objective it was computed under. One brain, several personalities
+   (preservation / balanced / aggressive / extreme growth).
+4. **Study losers as hard as winners** — the informative unit is *winner vs
+   matched loser*, never a gallery of survivors.
+5. **Maximise information per dollar, not minimise API calls.** Score
+   experiments as `P(changes the roadmap) × value of decision improved − cost`.
+
+**The methodology is the guardrail, not the mission.** Pre-registration, MDE,
+corpses and matched controls exist to stop a self-learning machine from learning
+nonsense — not to conclude that nothing works. Correspondingly: a negative
+result requires evidence just as a positive one does, and **a global negative
+does not answer a conditional question that was never asked** (scope-aware
+verdicts, `docs/HANDOFF_2026-08-16_BRAIN_TO_BUILDER.md` §2).
+
 ## Project Overview
 
 Aegis Finance is a free, open-source market intelligence web platform combining ML crash prediction, Monte Carlo simulation, portfolio construction, and macroeconomic analysis into a single web dashboard.

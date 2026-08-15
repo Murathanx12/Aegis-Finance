@@ -102,9 +102,28 @@ class FeatureValue:
     value: Any
     status: str
     source: str
+    #: The instant the night is TAKEN to know things at. Constant across the
+    #: whole snapshot by construction — it is the frozen decision time, not a
+    #: measurement of when this datum was seen. Kept because it is what the
+    #: feature is graded against; not evidence of anything on its own.
     observed_at: str
+    #: The real wall-clock instant this datum was retrieved. Genuinely varies:
+    #: assembly takes ~13-20 minutes, so most rows are fetched AFTER
+    #: `observed_at`. That is safe only because the CONTENT is cut — which is
+    #: what `published_at` exists to prove.
     fetched_at: str
+    #: The timestamp of the newest INFORMATION this datum contains — the last
+    #: bar, the filing's acceptance time. Must never exceed the decision time;
+    #: `assert_snapshot_pit_safe` enforces exactly that.
     published_at: str | None = None
+    #: A SCHEDULED FUTURE event date (the next earnings date). Deliberately NOT
+    #: `published_at`: it is legitimately in the future, and storing it there
+    #: made the one field capable of proving the point-in-time cut report a max
+    #: of 2026-11-13 on a 2026-08-14 snapshot — three months of apparent
+    #: lookahead that was really a calendar entry. A cutoff check reading that
+    #: field would have failed loudly on a snapshot with nothing wrong with it,
+    #: which is how a real check gets switched off.
+    event_at: str | None = None
     note: str = ""
 
     @property
@@ -306,8 +325,11 @@ def _earnings_within(ticker: str, decision_ts: datetime,
         return FeatureValue(None, UNAVAILABLE, src, obs, fetched,
                             note=f"unparseable earnings date {raw!r}")
     delta = abs((d - decision_ts.date()).days)
+    # `event_at`, NOT `published_at` — a scheduled earnings date is legitimately
+    # in the future, and it was the only thing making the snapshot's newest
+    # "published" timestamp land three months after the decision.
     return FeatureValue(bool(delta <= EARNINGS_WITHIN_DAYS), OK_DATA, src, obs,
-                        fetched, published_at=str(d),
+                        fetched, event_at=str(d),
                         note=f"{delta}d from the decision date")
 
 
@@ -409,6 +431,7 @@ def assemble(as_of: str | datetime | None = None,
     is omitted, which `score_candidate` discloses rather than scoring as zero.
     """
     ts = resolve_decision_ts(as_of)
+    started_at = _now_iso()
     names = list(universe) if universe is not None else default_universe()
 
     features: dict[str, dict] = {}
@@ -431,11 +454,25 @@ def assemble(as_of: str | datetime | None = None,
         for v in vals.values():
             status_counts[v.status] = status_counts.get(v.status, 0) + 1
 
-    return {
+    frozen_at = _now_iso()
+    snap = {
         "trial": TRIAL,
         "decision_ts": ts.isoformat(),
         "decision_ts_tz": str(ts.tzinfo),
-        "assembled_at": _now_iso(),
+        "assembled_at": frozen_at,
+        # THE THREE INSTANTS, NAMED SEPARATELY (P2 audit, 2026-08-16).
+        #
+        # Measured on the 2026-08-14 production snapshot: `decision_ts` was
+        # 11:50:25 UTC and `fetched_at` ran to 12:03:54 UTC — 13.5 minutes of
+        # retrieval AFTER the instant the night is graded from. That is safe
+        # only if the CONTENT is cut, and it was (last price bar 2026-08-13,
+        # newest filing 03:43 ET the same morning). But nothing in the snapshot
+        # PROVED it: `observed_at` was assigned the decision time on all 1,092
+        # rows, so the field that should evidence the cut was a copy of the
+        # thing it was supposed to check.
+        "snapshot_started_at": started_at,
+        "snapshot_frozen_at": frozen_at,
+        "information_cutoff_at": ts.isoformat(),
         "n_universe": len(names),
         "n_with_any_feature": len(features),
         "n_fully_unavailable": len(names) - len(features),
@@ -444,6 +481,67 @@ def assemble(as_of: str | datetime | None = None,
         "provenance": provenance,
         "unavailable": unavailable,
     }
+    snap["max_input_published_at"] = max_input_published_at(snap)
+    return snap
+
+
+class PointInTimeViolation(RuntimeError):
+    """A datum in the snapshot is newer than the instant it is graded from."""
+
+
+def max_input_published_at(snap: dict) -> str | None:
+    """The newest INFORMATION timestamp anywhere in the snapshot."""
+    best = None
+    for feats in (snap.get("provenance") or {}).values():
+        for v in feats.values():
+            p = v.get("published_at")
+            if p and (best is None or str(p) > str(best)):
+                best = str(p)
+    return best
+
+
+def assert_snapshot_pit_safe(snap: dict) -> dict:
+    """Every datum's CONTENT must predate the decision instant.
+
+    This is the check the P2 audit found missing. It is deliberately written
+    against `published_at` (information) and never against `fetched_at`
+    (retrieval): assembly legitimately runs for ~20 minutes after the decision
+    instant, so a check on retrieval time would refuse every real snapshot and
+    be switched off within a day.
+
+    It also cannot be satisfied by assignment. `observed_at` is the decision
+    time on every row by construction, so a check against it would pass on a
+    snapshot that had never cut anything — the self-confirming audit trail this
+    replaces.
+    """
+    cutoff = snap.get("information_cutoff_at") or snap.get("decision_ts")
+    if not cutoff:
+        raise PointInTimeViolation(
+            "the snapshot names no information cutoff, so nothing about its "
+            "point-in-time safety can be checked")
+    cut = resolve_decision_ts(cutoff)
+    offenders = []
+    for tkr, feats in (snap.get("provenance") or {}).items():
+        for name, v in feats.items():
+            p = v.get("published_at")
+            if not p:
+                continue
+            try:
+                when = resolve_decision_ts(str(p))
+            except Exception:                                  # noqa: BLE001
+                continue
+            if when > cut:
+                offenders.append(f"{tkr}.{name} published {p}")
+    if offenders:
+        raise PointInTimeViolation(
+            f"{len(offenders)} datum/data are NEWER than the decision instant "
+            f"{cutoff} — the night would be graded from a timestamp it did not "
+            f"actually know at: {offenders[:5]}")
+    return {"information_cutoff_at": cutoff,
+            "max_input_published_at": max_input_published_at(snap),
+            "n_checked": sum(len(f) for f in
+                             (snap.get("provenance") or {}).values()),
+            "assembly_seconds": snap.get("assembly_seconds")}
 
 
 def snapshot_path(decision_ts: datetime, *, sandbox: bool = False) -> "object":
@@ -459,6 +557,10 @@ def write_snapshot(snap: dict, *, overwrite: bool = False,
     point-in-time record would become whatever the last run happened to fetch,
     and nothing downstream could tell.
     """
+    # The point-in-time check runs BEFORE the file exists, not after. A frozen
+    # snapshot is immutable by design, so a violation discovered afterwards
+    # cannot be corrected — it can only be argued about.
+    assert_snapshot_pit_safe(snap)
     ts = resolve_decision_ts(snap["decision_ts"])
     p = snapshot_path(ts, sandbox=sandbox)
     if p.exists() and not overwrite:

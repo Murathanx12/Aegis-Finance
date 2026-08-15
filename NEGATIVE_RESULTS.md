@@ -2094,3 +2094,56 @@ fully redundant is conservative. The principled middle — an effective number o
 independent assets from the correlation matrix — is a refinement, and it is
 flagged rather than guessed, because guessing it would move every MDE in the
 kinder direction.
+
+## 42. NOT a defect — the point-in-time cut was real, but nothing in the snapshot could prove it (IIF-1 P2 audit)
+
+**The hypothesis, from the principal's review:** assembly takes ~20 minutes and
+`decision_ts` is stamped when it *starts*; if observations retrieved afterwards
+are not cut to it, the trial compares timestamp **labels** rather than
+information sets. This was ordered ahead of parallelism because concurrency
+changes exactly these timings.
+
+**Measured on the real 2026-08-14 production snapshot — 1,092 feature rows over
+182 tickers, not reasoned about:**
+
+| | |
+|---|---|
+| `decision_ts` | 2026-08-14T07:50:25-04:00 (11:50:25 UTC), stamped at assembly START |
+| `fetched_at` | 11:50:25 → 12:03:54 UTC — **13.5 minutes of retrieval after it** |
+| `observed_at` | **ONE distinct value across all 1,092 rows**: `decision_ts` |
+| price / volume `published_at` | max **2026-08-13** — the last completed bar |
+| `filing_within_2d` | max **2026-08-14 03:43 ET** — same morning, pre-decision |
+| `earnings_within_5d` | max **2026-11-13** — three months *after* the decision |
+
+**Verdict: no point-in-time defect.** The content genuinely is cut.
+`_history_upto` filters bars to `<= decision_ts` and `_filing_within` skips
+anything accepted after it, so retrieval running 13.5 minutes late is harmless.
+
+**But two things were wrong with the evidence, and both mattered.**
+
+1. **The audit trail confirmed itself.** `observed_at` is *assigned*
+   `decision_ts` on every row. The field that should evidence the cut is a copy
+   of the thing it is supposed to check, so a snapshot that had never cut
+   anything would look identical to one that had.
+2. **The one field that could prove it would have lied.**
+   `earnings_within_5d` stored a **scheduled future** earnings date in
+   `published_at`. Running the new cutoff check against the real snapshot as it
+   was frozen refuses **170 rows** — a snapshot with nothing wrong with it,
+   failing on its first run, in the way that gets a check switched off by
+   lunchtime rather than believed. Re-homing those dates to a new `event_at`
+   field and re-running: **passes, with newest information 2026-08-14 03:43 ET
+   against a 07:50 ET decision.**
+
+Fixed: `snapshot_started_at` / `snapshot_frozen_at` / `information_cutoff_at` are
+recorded separately (one number cannot describe three instants);
+`assert_snapshot_pit_safe` runs **at the freeze, before the immutable file
+exists**, because a frozen snapshot cannot be corrected afterwards, only argued
+about; and it reads `published_at` only — never `fetched_at` (which is
+legitimately later) and never `observed_at` (which is satisfiable by
+assignment).
+
+**The transferable lesson:** a safety property that holds by construction and a
+safety property that is *checked* look identical from the outside, right up
+until the construction changes. And the first version of a real check is most
+likely to fail on data that is fine — so the thing to verify first is not
+whether it fires, but whether the field it fires on means what its name says.

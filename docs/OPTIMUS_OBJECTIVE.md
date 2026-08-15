@@ -1,6 +1,192 @@
 # OPTIMUS — what this system is for
 
-**Written 2026-08-11 (NIGHT-10) on Murat's ruling. Binding until he changes it.**
+**Written 2026-08-11 (NIGHT-10) on Murat's ruling.**
+**AMENDED 2026-08-15 on Murat's ruling — §0 below supersedes where it conflicts.
+Everything from §1 down remains binding as constraint, not as mission.**
+
+---
+
+# §0 — THE MISSION (2026-08-15 amendment)
+
+> **Build a self-improving investment intelligence system whose objective is
+> maximising real-world portfolio utility — risk-adjusted or deliberately
+> risk-seeking, by declared choice — using numerical models, LLM reasoning,
+> internet-scale information, observed expert behaviour, simulation, and
+> continual outcome feedback.**
+
+**The methodology is the guardrail. It is not the mission.** Everything below
+§1 — pre-registration, MDE, corpses, matched controls, the refusal to publish —
+exists to stop a self-learning machine from learning nonsense. It does not exist
+to conclude that nothing works.
+
+## §0.1 Three deliverables from one system
+
+1. **Murat's own capital** — genuinely useful for making money and managing a
+   real portfolio, at an aggressive utility function of his choosing.
+2. **A public open-source system** other people can run on their own portfolios,
+   at their own utility function. His personality is not the product's default.
+3. **A research paper** through HKU, *if* the work produces a novel and
+   defensible result. Not a reason to overclaim; a reason to aim high.
+
+## §0.2 The central reframe — investing is a sequential learning problem
+
+Stop treating "find alpha" as a bag of independent hypothesis tests. The
+question is no longer only *"does signal X predict returns?"* It is:
+
+> Given everything known at time *t*, what action should I take, what was the
+> alternative, what happened afterwards, **why** did it happen, and what should
+> the system change because of that observation?
+
+**The Micron test.** If MU runs +100%, recording `MU = +100%` is worthless.
+Reconstruct the episode: what demand chain was shifting, what memory pricing
+showed, what hyperscaler capex implied, what analysts were revising, what
+comparables moved first, how insiders behaved, what options implied, which
+narratives existed — then ask the only question that matters:
+
+> **Could the system have recognised enough of that state BEFORE the move to
+> justify owning more?**
+
+Explaining a winner afterwards is trivial. **Finding precursors observable
+beforehand is the research problem.** `Autopsy.executable_precursor` +
+foreign-slice transfer is the mechanised form of exactly this, and it is why
+that pipeline matters more than any single mechanism it produces.
+
+## §0.3 Competing explanations, scored longitudinally
+
+Do not ask only *"why did the book lose $1,000?"* Emit a hypothesis set —
+biotech factor drawdown · rates repricing · geopolitical risk · concentrated
+high-beta exposure · company-specific catalyst · random residual — where the
+**engine quantifies exposures**, the **LLM investigates context**, and Aegis
+assigns probabilities. Then grade those explanations when the outcome resolves.
+
+What accumulates is the asset: **a longitudinal database of the system's own
+reasoning errors.** That is worth incomparably more than a store of prompts.
+
+## §0.4 Learning is plural — there is no LLM-vs-NN choice to make
+
+```
+World → Perception → Hypotheses → Numerical verification → Decision
+      → Portfolio → Outcome → Attribution → Learning → Memory → next decision
+```
+
+Seven distinct learners, each with its own job:
+
+| learner | learns by |
+|---|---|
+| LLM | retrieved episodic memory — *"I have seen something like this"* |
+| statistical models | parameter updates |
+| policy model | which actions work in which states |
+| calibration layer | whether LLM confidence means anything |
+| mechanism graph | which causal explanations survived |
+| portfolio optimiser | the utility consequences of decisions |
+| Research Gym | aggressive search for entirely new patterns |
+
+The foundation model's weights are **not** retrained. The learning system is
+built *around* a stable LLM.
+
+## §0.5 Teacher — Researcher — Trader — Critic
+
+- **Researcher** observes episodes and generates hypotheses.
+- **Teacher** is reality plus observed decisions: insiders, executives,
+  politicians, disclosed institutional portfolios, indices, great historical
+  investors, **failed traders**, Aegis itself, synthetic portfolios.
+- **Trader** must act on information available at the time.
+- **Critic** decomposes the result into: selection · timing · sizing · portfolio
+  interaction · thesis · catalyst · regime · execution/cost · calibration ·
+  unavoidable randomness.
+
+That decomposition is the training data.
+
+## §0.6 Study losers as aggressively as winners — contrastive by construction
+
+Looking only at Buffett, winning funds, and +500% stocks builds a beautiful
+selection-biased fiction. The informative dataset is **winner vs matched
+loser**:
+
+- Why did company A explode while economically similar company B did not?
+- Why did fund A survive while fund B with similar exposures collapsed?
+- Why did two investors hold the same stock and earn different returns?
+- Why did one concentrated portfolio succeed where 20,599 similar ones failed?
+
+Much of the discriminating information is **semantic, not tabular** —
+management language, technological inflections, supplier and regulatory
+relationships, capital allocation, second-order effects. That is the LLM's real
+job. The engine then decides whether the apparent semantic insight carries
+measurable information. **That relationship is worth far more than asking a
+model "which stock goes up".**
+
+## §0.7 The Observed Decision Library
+
+Not "copy politicians". Every observed decision records: actor · asset · action
+· size · portfolio context · information available · **public disclosure time** ·
+market state · company state · subsequent return · subsequent risk ·
+counterfactual alternatives · actor's historical skill · similar prior decisions.
+
+Then the questions become answerable: does this actor have skill at *selection*,
+*timing*, *holding through volatility*, *sizing*, *industry specialisation*,
+*buying after drawdowns*, *selling before deterioration*? **Does the apparent
+skill survive disclosure delay?** Is it just beta? Would copying the portfolio
+work, or is the entry price essential? **Is an actor's unusual behaviour more
+informative than their ordinary trades?** — Actor Surprise is one piece of this.
+
+## §0.8 Compute posture — maximise information per dollar
+
+Murat is willing to spend. The objective is **not** "minimise API calls"; it is
+**information gained per dollar**. A $30 experiment that eliminates six
+architectures is cheap. Ten thousand slightly-different prompts asking the same
+weak question is expensive at any price.
+
+Design experiments as information acquisition, and score them:
+
+> **EV(experiment) = P(changes the roadmap) × value of the decision improved
+> − experiment cost**
+
+## §0.9 The objective is terminal wealth, not classification accuracy
+
+System A is directionally right 60% of the time and earns tiny gains. System B
+is right 52%, catches the rare 50–300% opportunities, sizes them, avoids
+catastrophic loss, and stays invested through noise. **We want B.**
+
+So evaluation moves toward **portfolio utility**: expected geometric growth,
+CAGR under drawdown constraints, Sortino, expected shortfall, probability of
+ruin — or explicitly aggressive forms such as *maximise expected log wealth
+subject to a maximum tolerable catastrophic-loss probability*.
+
+**One brain, several utility functions** → operating personalities: capital
+preservation · balanced · aggressive · extreme growth. Murat's own book may run
+aggressive without the public system inheriting one universal risk profile.
+
+## §0.10 The paper
+
+Not *"can an LLM predict stocks?"* — saturated and uninteresting. The candidate:
+
+> **Does structured post-outcome reflection improve prospective portfolio
+> decisions when reflections are converted into falsifiable mechanisms rather
+> than natural-language memories?**
+
+Most reflective agents tell the model what happened and ask it to remember a
+lesson. Aegis does the harder thing: outcome → explanation → measurable
+precursors → did the precursors exist beforehand → matched controls → foreign
+transfer → structured memory → retrieval at the next decision → reality grades
+whether using it helped. That is **machine scientific discovery inside a
+sequential financial decision environment**, not LLM trading.
+
+## §0.11 What this changes about the discipline
+
+Nothing is relaxed. The search space is about to get much larger, which makes
+the guardrails matter more, not less. But their purpose is stated correctly
+from here on:
+
+> The discipline does not exist to say *"sorry, nothing works."*
+> It exists to stop the self-learning machine from learning bullshit.
+
+**Aegis does not contain one investment strategy. Aegis is a machine for
+creating, testing, combining, remembering and continuously improving investment
+strategies.**
+
+---
+
+# §1 — The NIGHT-10 objective (still binding as constraint)
 
 ## The objective
 

@@ -336,6 +336,54 @@ representation and neural fusion. Yesterday's labels would have trained it on
 inflated regret, false failure classes, bad n_effective and fabricated kills —
 and it would have looked like it was working.
 
+## 4b. P0.5 — THE GYM RANKS ON RAW RETURN AND HAS NO RISK TERM AT ALL
+
+Added 2026-08-15 after Murat's mission amendment (`OPTIMUS_OBJECTIVE.md` §0).
+Insert between P0 and P1. Small, and it changes what every Gym number *means*.
+
+**Confirmed in code:**
+
+- `PolicyResult` carries `gross_return_pct`, `cost_pct`, `net_return_pct`,
+  `turnover`, `first_divergence_day`. **No drawdown. No path risk. No utility.**
+- `CounterfactualSurface.ranked()` sorts by `-net_return_pct` and nothing else.
+- `best()` is therefore *the highest-return policy*, and **every regret number,
+  every failure classification, and all 425 tensor cells are denominated against
+  it.**
+
+Two consequences, both live right now:
+
+1. **The menu contains levered policies** (`buy_25` = 1.25×, `buy_50` = 1.5×).
+   Ranking by raw return with no risk penalty biases "the best available action"
+   toward maximum exposure on a positive-drift asset. Part of *"you should have
+   held or bought more"* is an artifact of the ranking function, not a finding.
+2. **`sell_100` at VIX≥35 scores −16.93pp at 120d and −38.84pp at 252d against
+   HOLD — and we have never computed what drawdown it avoided.** For a
+   leveraged or ruin-averse investor those two facts can point opposite ways.
+   §0.9 is explicit: the objective is terminal wealth under a declared utility,
+   not return. **We are currently measuring System A while aiming at System B.**
+
+The exposure path is already stored, so the data exists; only the objective is
+missing.
+
+**Order:**
+- Add path-risk fields to `PolicyResult`: max drawdown, time-under-water,
+  realised vol, terminal log-wealth. Compute from the exposure path already
+  retained.
+- Make the ranking objective **pluggable and declared**, never implicit.
+  Minimum set: `total_return` (today's behaviour, kept and labelled) ·
+  `log_wealth` · `log_wealth_with_ruin_constraint(p_max)` · `sortino`. Every
+  regret, tensor cell and verdict prints **which objective it was computed
+  under**.
+- **Re-run the regret tensor under at least two objectives** and report where
+  the ranking of best-action *changes*. Cells where the de-risking verdict flips
+  under a drawdown-aware objective are the most interesting output the Gym can
+  currently produce, and they are one afternoon away.
+- Wire this to personalities (§0.9): preservation · balanced · aggressive ·
+  extreme growth. Same surface, different `argmax`.
+
+This does not retract the de-risking result. It puts a second axis on it, which
+is what the mission asks for.
+
 ## 5. Process rule — check kills harder than passes
 
 This session proved why. **A positive bug looks suspicious; a kill bug looks
