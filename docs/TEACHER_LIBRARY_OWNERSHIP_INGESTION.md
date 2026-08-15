@@ -138,6 +138,51 @@ already shipped one: *the insider collector passed twelve tests while 403-ing on
   `CORPORATE_INSIDER_CLUSTER` eligibility is the next step, not this one.
   `ACTIVIST_13D` stays blocked until 13D ingestion exists.
 
+## Matched controls exist BEFORE any winner is interpreted (T3, 2026-08-15)
+
+`backend/services/teacher_library/matched_controls.py`, 21 tests.
+
+The tempting first result from a Teacher Library is a story — *a CEO bought
+after a 40% drawdown and the stock doubled*. That sentence contains no
+comparison, so it cannot be wrong, so it cannot be evidence. A control built
+after such a story is found is chosen, however honestly, by someone who already
+knows which control lets the story survive. So the engine is written first and
+its covariates are declared before an event is scored:
+
+`sector` (matched **exactly** — a nearby sector is not a sector), `log_market_cap`,
+`beta`, `momentum_12m`, `realised_vol_60d`, `drawdown_pct`, `log_dollar_volume`,
+`days_to_next_earnings`. **`valuation` is deliberately absent**: unreliable
+across financials, REITs and loss-makers, and a covariate missing for a third of
+candidates silently restricts the pool to the two-thirds where it exists.
+
+Four arms, all run together so the kind one cannot be chosen afterwards:
+
+| arm | what it removes | what survives means |
+|---|---|---|
+| `matched_security` | sector, size, momentum, vol, drawdown, liquidity | not the market |
+| `actor_shuffle` | *who* acted | not the identity |
+| `date_shuffle` | *when* they acted | not the timing |
+| `sign_flip` | buys vs sells | not long-equity drift |
+
+Design points that are load-bearing rather than decorative:
+
+- **Controls come from the same date.** A control measured over a different
+  window compares against a different market, and the market moves further than
+  any insider signal in this sample.
+- **Balance is measured, not claimed.** Every match reports the standardised
+  mean difference per covariate; an unbalanced set is marked *uninterpretable*,
+  because "matched" carries authority the numbers have to earn.
+- **A candidate missing a covariate is not a close match on it.** Skipping the
+  term would preferentially select candidates with missing data.
+- **Clustered events are not independent ones.** Five insiders filing on one
+  issuer in one week are one event; `n_event_clusters` shrinks the effective
+  sample, and not doing so is the easiest way to manufacture significance here,
+  because clusters are exactly where the interesting stories live.
+- **Too few controls is UNPOWERED, not a null**, and the summary distinguishes
+  *"we cannot evaluate this yet"* from *"we evaluated it and found nothing"*.
+- **A shuffle placebo requires a seeded rng** and refuses without one: an
+  irreproducible placebo is a number, not a control.
+
 ## ACTOR SURPRISE is data-blocked, measured 2026-08-15
 
 The ordered next step (T1) is `P(action | actor history, issuer state, market

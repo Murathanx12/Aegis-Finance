@@ -169,6 +169,18 @@ unblock the rest is a per-actor Form 4 backfill — PIT-safe, a baseline rather
 than a track record, **not authorized**, and not to be confused with a COPY-LAB
 historical fill.
 
+**T3 — matched controls: BUILT** (`teacher_library/matched_controls.py`, 21
+tests). Ordered as "before any insider winner is interpreted", and done in that
+order deliberately: a control built after a story is found is chosen by someone
+who already knows which control lets the story survive. Eight declared
+covariates (sector matched *exactly*; `valuation` deliberately excluded as
+unreliable across a third of the universe), four arms run together
+(`matched_security`, `actor_shuffle`, `date_shuffle`, `sign_flip`) so the kind
+one cannot be picked afterwards. Balance is measured per covariate and an
+unbalanced set is *uninterpretable*; clustered events are shrunk by
+`n_event_clusters`; too few controls reports UNPOWERED rather than a null; the
+shuffle arms refuse to run without a seeded rng.
+
 COPY-LAB eligibility: unchanged, still gated on M1. `ACTIVIST_13D` still
 blocked. No fake history anywhere.
 
@@ -253,6 +265,30 @@ reason that is not a defect.
 At $57.12 over 40 nights the planning average is **$1.428/night** — which is
 exactly the brain's stated $1.43 break-even, so that figure was computed from
 the topped-up balance and the two agree.
+
+## 7c. What was deliberately NOT started
+
+**T4 (stress-shape investigation) was not begun**, and the reason is the order's
+own first sentence: *a session that starts eighteen finishes none.* T4 is a
+workstream — level *and* change *and* acceleration, term structure, vol-of-vol,
+breadth, credit, liquidity, drawdown depth and speed, revisions, dispersion,
+correlation spikes, reversals, compared across thresholds / splines / trees /
+HMM — not a task, and starting it with the two clocks still open would have
+produced a half-built state vocabulary rather than a finding.
+
+The bounded version I considered and rejected: rebuild the tensor with a
+transition-state definition (level × direction of change) to test the brain's
+own hypothesis that the useful representation is a transition rather than a
+level. It is one measurement and it is tempting. It also doubles the cell count
+and its multiple-comparison burden, on a table where honest `n_effective`
+already leaves only 31 of 425 cells detectable. It should be **pre-declared**
+and run as its own registered comparison, not appended to this one.
+
+**Also not done, and each for a stated reason:** expanding the transfer corpus
+(would be selecting the test after seeing a mechanism at 2-of-3 — any expansion
+must be pre-declared and re-run across all six); the per-actor Form 4 backfill
+that would unblock Actor Surprise (not authorized); anything in the DEFERRED
+list.
 
 ## 8. Next bottleneck
 
