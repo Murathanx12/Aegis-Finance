@@ -51,7 +51,7 @@ It does not replace checking CI. Nothing replaces checking CI, and I did not.
 |---|---|
 | `aegis-finance` | **`e53bb95`**, clean, pushed |
 | `Aegis module` | **`70d529f`**, clean, pushed |
-| tests | **4,218 fast** — green with the sibling present *and* hidden |
+| tests | **4,219 fast** — green with the sibling present *and* hidden |
 | CI | **green** (`bfb5e09`, `7cd5a24`, `5344e54` all pass) |
 | deploy | **flipped to `bfb5e09`**, `nav.all_fresh` true, 7 jobs, 10 lanes fresh |
 
