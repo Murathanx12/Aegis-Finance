@@ -1,0 +1,289 @@
+{
+  "universe": [
+    "SPY",
+    "QQQ",
+    "IWM",
+    "XLF",
+    "XLE",
+    "XLK",
+    "XLV",
+    "XLP",
+    "XLU",
+    "XLY",
+    "XLI",
+    "XLB"
+  ],
+  "n_folds": 6,
+  "seed": 20260816,
+  "results": [
+    {
+      "horizon": 5,
+      "target": "sign (FIRST moment)",
+      "metric": "auc",
+      "mean": 0.49882086684243737,
+      "sd": 0.017780699961755426,
+      "n_folds": 6,
+      "n_effective": 6.0,
+      "mde": 0.02033654001912889,
+      "null": 0.5,
+      "edge": -0.0011791331575626285,
+      "detectable": false,
+      "folds": [
+        0.492,
+        0.4726,
+        0.523,
+        0.5142,
+        0.4943,
+        0.4969
+      ],
+      "vs_persistence_baseline": null
+    },
+    {
+      "horizon": 5,
+      "target": "|return| (SECOND)",
+      "metric": "ic",
+      "mean": 0.29630304841670807,
+      "sd": 0.07213004859712328,
+      "n_folds": 6,
+      "n_effective": 6.0,
+      "mde": 0.08249819315506236,
+      "null": 0.0,
+      "edge": 0.29630304841670807,
+      "detectable": true,
+      "folds": [
+        0.2142,
+        0.4065,
+        0.2966,
+        0.242,
+        0.3532,
+        0.2653
+      ],
+      "vs_persistence_baseline": {
+        "baseline_mean": 0.30045712225567534,
+        "diff": -0.004154073838967247,
+        "diff_sd": 0.03228634572959962,
+        "diff_mde": 0.036927261773366686,
+        "detectable": false
+      }
+    },
+    {
+      "horizon": 5,
+      "target": "realised vol (SECOND)",
+      "metric": "ic",
+      "mean": 0.5365016721101583,
+      "sd": 0.10400880787160965,
+      "n_folds": 6,
+      "n_effective": 6.0,
+      "mde": 0.11895928102787992,
+      "null": 0.0,
+      "edge": 0.5365016721101583,
+      "detectable": true,
+      "folds": [
+        0.414,
+        0.6854,
+        0.5255,
+        0.4632,
+        0.6352,
+        0.4958
+      ],
+      "vs_persistence_baseline": {
+        "baseline_mean": 0.520280428703335,
+        "diff": 0.016221243406823394,
+        "diff_sd": 0.08583849384838678,
+        "diff_mde": 0.09817712289641066,
+        "detectable": false
+      }
+    },
+    {
+      "horizon": 20,
+      "target": "sign (FIRST moment)",
+      "metric": "auc",
+      "mean": 0.5126939198795127,
+      "sd": 0.025712559351374526,
+      "n_folds": 6,
+      "n_effective": 6.0,
+      "mde": 0.02940854372258527,
+      "null": 0.5,
+      "edge": 0.012693919879512738,
+      "detectable": false,
+      "folds": [
+        0.5098,
+        0.5096,
+        0.5576,
+        0.5207,
+        0.4818,
+        0.4968
+      ],
+      "vs_persistence_baseline": null
+    },
+    {
+      "horizon": 20,
+      "target": "|return| (SECOND)",
+      "metric": "ic",
+      "mean": 0.2431383978296647,
+      "sd": 0.05621983134194162,
+      "n_folds": 6,
+      "n_effective": 6.0,
+      "mde": 0.06430100347079905,
+      "null": 0.0,
+      "edge": 0.2431383978296647,
+      "detectable": true,
+      "folds": [
+        0.1704,
+        0.3249,
+        0.2412,
+        0.2067,
+        0.2899,
+        0.2258
+      ],
+      "vs_persistence_baseline": {
+        "baseline_mean": 0.279542349527608,
+        "diff": -0.03640395169794328,
+        "diff_sd": 0.05958897889460994,
+        "diff_mde": 0.06815444029738983,
+        "detectable": false
+      }
+    },
+    {
+      "horizon": 20,
+      "target": "realised vol (SECOND)",
+      "metric": "ic",
+      "mean": 0.6222602096888837,
+      "sd": 0.07387120399942716,
+      "n_folds": 6,
+      "n_effective": 6.0,
+      "mde": 0.0844896263716757,
+      "null": 0.0,
+      "edge": 0.6222602096888837,
+      "detectable": true,
+      "folds": [
+        0.6124,
+        0.7547,
+        0.5748,
+        0.5368,
+        0.623,
+        0.6319
+      ],
+      "vs_persistence_baseline": {
+        "baseline_mean": 0.596661963511674,
+        "diff": 0.025598246177209776,
+        "diff_sd": 0.06696038391151216,
+        "diff_mde": 0.07658542858502074,
+        "detectable": false
+      }
+    },
+    {
+      "horizon": 60,
+      "target": "sign (FIRST moment)",
+      "metric": "auc",
+      "mean": 0.4979916103505693,
+      "sd": 0.044913944583708156,
+      "n_folds": 6,
+      "n_effective": 6.0,
+      "mde": 0.0513699816884679,
+      "null": 0.5,
+      "edge": -0.002008389649430675,
+      "detectable": false,
+      "folds": [
+        0.4847,
+        0.5829,
+        0.4965,
+        0.4919,
+        0.4486,
+        0.4833
+      ],
+      "vs_persistence_baseline": null
+    },
+    {
+      "horizon": 60,
+      "target": "|return| (SECOND)",
+      "metric": "ic",
+      "mean": 0.16223086351493246,
+      "sd": 0.11607909707863467,
+      "n_folds": 6,
+      "n_effective": 6.0,
+      "mde": 0.13276458228312307,
+      "null": 0.0,
+      "edge": 0.16223086351493246,
+      "detectable": true,
+      "folds": [
+        -0.0317,
+        0.3291,
+        0.2024,
+        0.1517,
+        0.1519,
+        0.17
+      ],
+      "vs_persistence_baseline": {
+        "baseline_mean": 0.24720096668820846,
+        "diff": -0.08497010317327601,
+        "diff_sd": 0.15759444427710734,
+        "diff_mde": 0.18024744412353044,
+        "detectable": false
+      }
+    },
+    {
+      "horizon": 60,
+      "target": "realised vol (SECOND)",
+      "metric": "ic",
+      "mean": 0.5650472862850353,
+      "sd": 0.1041655326307605,
+      "n_folds": 6,
+      "n_effective": 6.0,
+      "mde": 0.11913853377627087,
+      "null": 0.0,
+      "edge": 0.5650472862850353,
+      "detectable": true,
+      "folds": [
+        0.5985,
+        0.7505,
+        0.5558,
+        0.4692,
+        0.4694,
+        0.547
+      ],
+      "vs_persistence_baseline": {
+        "baseline_mean": 0.5623570152185629,
+        "diff": 0.002690271066472396,
+        "diff_sd": 0.07114664833569967,
+        "diff_mde": 0.08137343660361732,
+        "detectable": false
+      }
+    }
+  ],
+  "d4_magnitude_gated_direction": [
+    {
+      "horizon": 5,
+      "auc_unconditional": 0.4989344947346887,
+      "auc_high_magnitude": 0.4933681030075728,
+      "diff": -0.005566391727115871,
+      "diff_sd": 0.032756041279391274,
+      "diff_mde": 0.037464472477427284,
+      "detectable": false,
+      "n_folds": 6,
+      "mean_kept": 2379.5
+    },
+    {
+      "horizon": 20,
+      "auc_unconditional": 0.5122908670699599,
+      "auc_high_magnitude": 0.5088901058664613,
+      "diff": -0.0034007612034985257,
+      "diff_sd": 0.03459863058473829,
+      "diff_mde": 0.03957191994730231,
+      "detectable": false,
+      "n_folds": 6,
+      "mean_kept": 2373.5
+    },
+    {
+      "horizon": 60,
+      "auc_unconditional": 0.4965112553842291,
+      "auc_high_magnitude": 0.5007008123018706,
+      "diff": 0.0041895569176414555,
+      "diff_sd": 0.047144993578596486,
+      "diff_mde": 0.05392172696659386,
+      "detectable": false,
+      "n_folds": 6,
+      "mean_kept": 2357.5
+    }
+  ]
+}

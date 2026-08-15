@@ -2810,3 +2810,110 @@ warn about crashes is, to the extent it does anything, marking recoveries.**
    the tails of six ETFs across 27 years. The finding is not "precursors do not
    work" — it is that the library is currently far too small to be doing the
    job it is being validated for, and nobody had measured how far.
+
+## 52. N6 — the second-moment regularity is REAL, and the predictability is free
+
+The strongest positive of the night, and the check on it is the more useful
+half.
+
+**The claim.** Four results pointed the same way and none was designed to:
+MARKET-GRAPH-1's one clean positive was co-movement; GRAPH-COVARIANCE-1 closed;
+IIF-1's pre-registration chose magnitude over direction (prior spread 0.0036 vs
+0.1183); NIGHT-3 found no LLM selection edge over 16,320 decisions. Stated as a
+regularity: **second moments keep being detectable and first moments keep not
+being.** Four coincidences are a story, so this is the test.
+
+**The design is the whole point.** One feature set (14 point-in-time features,
+all lagged one day). One model class. One set of walk-forward folds with an
+embargo. Three targets differing ONLY in which moment they ask about. Twelve
+securities, 1999-2026, 82,954 rows.
+
+| horizon | target | metric | score | null | MDE | verdict |
+|---|---|---|---|---|---|---|
+| 5d | **sign** | AUC | 0.4967 | 0.50 | 0.025 | not detectable |
+| 5d | abs return | IC | **0.294** | 0 | 0.087 | DETECTABLE |
+| 5d | realised vol | IC | **0.531** | 0 | 0.127 | DETECTABLE |
+| 20d | **sign** | AUC | 0.5092 | 0.50 | 0.034 | not detectable |
+| 20d | abs return | IC | **0.244** | 0 | 0.064 | DETECTABLE |
+| 20d | realised vol | IC | **0.622** | 0 | 0.083 | DETECTABLE |
+| 60d | **sign** | AUC | 0.5014 | 0.50 | 0.051 | not detectable |
+| 60d | abs return | IC | **0.169** | 0 | 0.140 | DETECTABLE |
+| 60d | realised vol | IC | **0.567** | 0 | 0.118 | DETECTABLE |
+
+**SUPPORTED at every horizon**, by the rule declared before the run: the second
+moments clear their MDEs, the first moment does not, in the same splits on the
+same features. The verdict survives shrinking `n_effective` from six folds to
+three.
+
+**What the null does and does not say.** At five days the MDE is 0.025, so an
+AUC of 0.525 would have been seen and was not. At sixty days the MDE is 0.051,
+so an AUC of 0.54 could still hide. Directional edges are **bounded** here, not
+excluded.
+
+### And then the rival explanation was tested rather than noted
+
+Volatility is persistent. A model handed `rv20` and asked for forward
+volatility can score a large IC by copying it, and "volatility is persistent"
+is not a finding — it is the *reason* the second moment is predictable at all.
+So every second-moment score is reported beside the **free** predictor:
+trailing 20-day realised volatility, alone, no model. Paired by fold,
+differenced, tested per SS18.
+
+| horizon | target | model | free `rv20` | model − free | verdict |
+|---|---|---|---|---|---|
+| 5d | abs return | 0.294 | **0.301** | −0.007 | adds nothing |
+| 5d | vol | 0.531 | **0.520** | +0.011 | adds nothing |
+| 20d | abs return | 0.244 | **0.280** | −0.036 | adds nothing |
+| 20d | vol | 0.622 | **0.597** | +0.025 | adds nothing |
+| 60d | abs return | 0.169 | **0.247** | −0.085 | adds nothing |
+| 60d | vol | 0.567 | **0.562** | +0.003 | adds nothing |
+
+**A gradient-boosted model with fourteen features on 83,000 rows does not beat
+one trailing volatility number, at any horizon, for either second-moment
+target.** At sixty days it is materially *worse* for absolute return — the
+extra features buy overfitting.
+
+### The architectural consequence, sharpened rather than weakened
+
+1. **Build the volatility head. It works, and it works with almost nothing.**
+   A trailing realised-vol estimate already delivers IC around 0.6 against
+   forward volatility. That is cheap, robust, and immediately useful for
+   sizing, for ruin constraints, and for the `gamma*` machinery from P0.5.
+2. **Do not expect ML to add to it.** Fourteen features and 83k rows added
+   zero. Volatility forecasting is a well-defended area, and this measurement
+   says so without needing a literature search.
+3. **"We predict volatility better" is NOT the defensible product.** If a
+   risk-model product is the defensible one — and this asymmetry says risk is
+   where the signal is — it has to be built on something a single trailing
+   number cannot express: **co-movement structure, conditional tails, regime
+   transitions, drawdown shape.** That is a far more specific research
+   direction than "second moments are predictable", and it came out of the
+   check rather than out of the result.
+
+## 53. D4 — direction is not hiding inside the high-magnitude subset
+
+Worth testing precisely because N6 makes it plausible: if direction is a coin
+*on average*, that average could be over a mixture, and a weak edge might be
+economically useful deployed only where the move distribution is wide enough to
+pay for being right.
+
+Same folds, same features. Stage 1 predicts absolute return; stage 2's
+directional model is then scored ONLY on the top quintile of predicted
+magnitude. SS18 — the DIFFERENCE between conditional and unconditional AUC,
+with its own SE, not two numbers compared to 0.5 separately.
+
+| horizon | AUC all | AUC top-quintile magnitude | diff | MDE | verdict |
+|---|---|---|---|---|---|
+| 5d | 0.4989 | 0.4934 | −0.0056 | 0.0375 | not detectable |
+| 20d | 0.5123 | 0.5089 | −0.0034 | 0.0396 | not detectable |
+| 60d | 0.4965 | 0.5007 | +0.0042 | 0.0539 | not detectable |
+
+**NOT_DETECTABLE at every horizon, and the point estimates lean the wrong way
+at two of three.** Conditioning on predicted magnitude does not reveal a
+directional edge that the unconditional test missed. The coin is a coin in the
+wide part of the distribution too.
+
+A cheap kill of a plausible idea, which is what a discovery sprint is for. It
+also closes a loop: the second-moment asymmetry is not "direction is
+predictable somewhere specific" — it is that the first moment is not where the
+information is, anywhere this was looked.
