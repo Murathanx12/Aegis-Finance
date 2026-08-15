@@ -106,6 +106,25 @@ def mde_mean(sd: float, n_effective: float) -> float | None:
         float(n_effective))
 
 
+def mde_from_se(se: float | None) -> float | None:
+    """Smallest effect detectable given an ALREADY-COMPUTED standard error.
+
+    `mde_mean` is this with `se = sd / sqrt(n_effective)` folded in. It is
+    separated out for §18: the minimum detectable *difference* between two
+    groups is driven by the SE of the difference, `sqrt(se_a**2 + se_b**2)`,
+    which no single (sd, n) pair describes.
+
+    §18 exists because "significant in A, not significant in B" was repeatedly
+    offered as evidence of conditionality. It is not — two point estimates on
+    opposite sides of a threshold can easily have a difference whose interval
+    covers zero. The interaction has to be tested as its own quantity, with its
+    own SE and its own MDE, and this is the second half of that.
+    """
+    if se is None or se <= 0:
+        return None
+    return (Z_ALPHA_TWO_SIDED_05 + Z_POWER_80) * float(se)
+
+
 def se_proportion(p: float, n_effective: float) -> float | None:
     """Standard error of a proportion at the EFFECTIVE sample size."""
     if n_effective is None or n_effective < 1.0 or p is None:

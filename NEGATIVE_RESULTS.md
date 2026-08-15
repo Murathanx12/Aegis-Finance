@@ -2010,3 +2010,87 @@ asymmetry that made this survive: the guard for starting too LATE relative to
 the snapshot existed since 2026-08-14; the guard for finishing too late relative
 to the market did not, because the first failure is loud and the second is
 silent.
+
+## 40. The machinery collected the discriminating half of every hypothesis and then ignored it (RESEARCH-GYM, scope-blindness)
+
+**The defect, found by reading `adjudicate()` rather than its output.**
+`Autopsy` **required** `expected_unaffected_states`: validated non-empty,
+validated disjoint from the affected list, written into
+`LineageRow.params["unaffected"]`. The verdict then came from
+`charter.request_export -> TransferTest.n_independent_slices_passed()` — a
+**flat count** of slices where `passed` was true, with **no notion of which
+slices the mechanism had declared it should work in**.
+
+The declaration changed no outcome. So a mechanism that is real in its declared
+regime and correctly silent everywhere else scored its correctly-silent slices
+as *failed* slices and came back `REFUSED — survived 1 of 3`. The machinery
+could not distinguish **does not generalise** from **is conditional, exactly as
+declared** — and firing everywhere is what beta does.
+
+**The fix raises the bar, it does not lower it.** The declaration is now
+executable in the same closed grammar and vocabulary as the precursor, so every
+episode is labelled AFFECTED / UNAFFECTED / OUT_OF_SCOPE **before any number
+exists**. In the unaffected region the *same action swap* is measured on every
+episode whether or not the precursor fires: **a powered null there is
+confirming; a detectable effect there is disconfirming**, because what was found
+is broader than the mechanism. That turns the unaffected declaration into a
+placebo family built into the hypothesis — the thing canon has demanded for
+months ("carry your corpse as control") and had never had structurally.
+
+`DEAD` is retired. Nine scoped verdicts replace it; **only `REFUTED_IN_SCOPE`
+and `STRUCTURALLY_CLOSED` close anything, and the first closes only its own
+scope.** Every non-support carries a computed `revisit_when`. The corpse check
+follows: a corpse only blocks if its verdict is one of those two, so a register
+full of `NOT_DETECTABLE_IN_SCOPE` rows stops gate-keeping the moment the
+verdicts are honest — which is where "195 kills are absence-of-evidence" stops
+being rhetoric and starts being code.
+
+## 41. Every refutation the new standard produced was manufactured by its own denominator (§37, applied to itself)
+
+The first scoped re-run of all six mechanisms returned **5 × REFUTED_IN_SCOPE +
+1 × TRANSFER_PENDING**, every refutation driven by the placebo arm clearing its
+MDE. Under §37 the kills were checked before being reported — and **not one of
+them survived.**
+
+Two faults, both in the kill-inflating direction, both invisible while they
+agreed with each other:
+
+1. **`n_effective` was `n`.** The transfer probes are sampled **monthly** and
+   graded over a **63-trading-day** window (~3 months), across **six correlated
+   tickers** (QQQ, IWM, XLF, XLE, XLK, EFA). Counting 150 such rows as 150
+   independent observations understates every MDE by more than 3×. An
+   understated MDE is not a neutral error: it manufactures detections, and in a
+   placebo arm a manufactured detection is a manufactured **refutation**.
+2. **`se_pp` used raw `n` while `mde_pp` used `n_effective`.** A cell's
+   t-statistic and its minimum detectable effect were computed from two
+   different beliefs about the same sample. Undetectable for exactly as long as
+   `n_effective == n`.
+
+Corrected to distinct-months / 3, burst-clustered, with the SE computed from the
+same count — and the **hypotheses held fixed** (`--reuse-autopsies`, no new
+calls), so a moved verdict can only be the instrument:
+
+| | before | after |
+|---|---|---|
+| REFUTED_IN_SCOPE | **5** | **0** |
+| TRANSFER_PENDING | 1 | 0 |
+| NOT_DETECTABLE_IN_SCOPE | 0 | **5** |
+| UNPOWERED_IN_SCOPE | 0 | **1** |
+| closures | 5 | **0** |
+
+**All six verdicts moved. Nothing is closed.** The GFC affected cell went from
+an MDE of 4.7pp on "n=54" to **24.7pp on n_effective ≈ 3** — 54 rows drawn from
+six co-moving ETFs across nine months of one crisis were never 54 observations.
+
+**The rule this earns:** §37 said *check the kills as hard as the passes*. This
+is the sharper version — **a standard built to prevent false kills produced five
+of its own on its first run, and the only reason they were caught is that the
+instrument was audited before the result was believed.** A new evaluator is not
+exempt from the failure mode it was built to fix. Check its kills first, because
+they are the ones that look like it working.
+
+*Open and deliberately not invented away:* treating six correlated tickers as
+fully redundant is conservative. The principled middle — an effective number of
+independent assets from the correlation matrix — is a refinement, and it is
+flagged rather than guessed, because guessing it would move every MDE in the
+kinder direction.

@@ -54,6 +54,10 @@ Reply with ONE json object and nothing else. Every field is required.
                                         "value": 35}]},
   "expected_affected_states":   ["states where this must show up"],
   "expected_unaffected_states": ["states where this must be ABSENT"],
+  "affected_precursor":       {"all": [{"feature": "vix", "op": ">=",
+                                        "value": 35}]},
+  "unaffected_precursor":     {"all": [{"feature": "vix", "op": "<",
+                                        "value": 20}]},
   "falsifier":                "the observation that would kill this",
   "alternative_explanation":  "the most credible rival account",
   "proposed_action":          "one policy name from the menu given above",
@@ -73,6 +77,17 @@ RULES THE REPLY MUST OBEY OR IT IS DISCARDED
 - `expected_unaffected_states` may not be empty and may not overlap
   `expected_affected_states`. A mechanism that predicts every state predicts
   nothing.
+- `affected_precursor` and `unaffected_precursor` are those two lists written
+  in the SAME executable grammar and the SAME vocabulary, and they are the ones
+  that actually get tested. The prose lists are for humans; these are scored.
+  THE UNAFFECTED ONE IS NOT A FORMALITY — it is your hypothesis' placebo arm.
+  The same action swap is measured there, and if it pays off in the states you
+  declared silent, your mechanism is refuted, because what you found is the
+  ACTION rather than the conditioning. Buying beats selling in calm markets for
+  reasons that have nothing to do with your episode.
+  So: make `affected_precursor` narrow enough to be a claim, and
+  `unaffected_precursor` a region where you genuinely expect NO edge from the
+  same swap. They must be disjoint — no state may satisfy both.
 - Anything you knew only because you were shown the outcome belongs in
   `post_outcome_evidence`, never in `contemporaneous_evidence`.
 """
@@ -204,6 +219,11 @@ def parse_reply(text: str, episode_id: str, *, author: str = "") -> Autopsy:
                 raw.get("expected_affected_states") or []),
             expected_unaffected_states=list(
                 raw.get("expected_unaffected_states") or []),
+            # Absent => None, never {}. An empty dict would fail to compile and
+            # be reported as a bad precursor, hiding "the model did not answer
+            # this field" inside "the model wrote an invalid rule".
+            affected_precursor=raw.get("affected_precursor") or None,
+            unaffected_precursor=raw.get("unaffected_precursor") or None,
             falsifier=str(raw.get("falsifier") or ""),
             alternative_explanation=str(
                 raw.get("alternative_explanation") or ""),

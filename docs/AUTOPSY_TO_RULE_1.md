@@ -335,3 +335,42 @@ everywhere. The placebo arm should therefore **refute** most of them. If it
 does, that is the same finding as the 67.4% BUY hit rate scoring -0.57pp against
 HOLD — the action, not the conditioning — and it is a result, not a failure of
 the standard.
+
+### 8.4 What the re-run actually did — reported against 8.3's prediction
+
+Six mechanisms, zero replies dropped, six scoped adjudications.
+
+**First pass, as declared.** `REFUTED_IN_SCOPE 5, TRANSFER_PENDING 1,
+exportable 0` — every refutation driven by the **placebo arm**, not by a wrong
+-direction effect in an affected cell. That matched 8.3's stated expectation
+exactly: these are "we sold and should have held" mechanisms, holding beats
+selling nearly everywhere, and the declared-silent regions (`vix < 20`) are
+where beta guarantees an edge.
+
+**Then §37 was applied to the new standard itself, and it did not survive.**
+The instrument that produced those five kills was audited before they were
+reported, and both of its sample-size assumptions were wrong in the
+kill-inflating direction (NEGATIVE_RESULTS §41). Holding the hypotheses fixed
+and correcting only the denominator:
+
+| verdict | first pass | corrected |
+|---|---|---|
+| REFUTED_IN_SCOPE | 5 | **0** |
+| TRANSFER_PENDING | 1 | 0 |
+| NOT_DETECTABLE_IN_SCOPE | 0 | **5** |
+| UNPOWERED_IN_SCOPE | 0 | **1** |
+
+**All six moved. Nothing is closed. Nothing is exportable.**
+
+So the honest statement of the re-run is narrower than either pass suggested on
+its own: **the transfer corpus cannot currently resolve any of these six
+mechanisms in either direction.** The affected cells that matter carry
+n_effective between 1 and 3 against MDEs of 10-50pp. That is not a result about
+de-risking; it is a measurement of the corpus.
+
+This is a `revisit_when`, and it is specific: these mechanisms become testable
+when the affected regions carry an effective sample that can hold an MDE — which
+means more independent stress *episodes*, not more rows, and not more
+co-moving tickers within the same months. That is a TRANSFER_ATLAS_V1 (P6)
+requirement, and it is exactly the kind of expansion that must be declared once
+for all six rather than reached for after seeing which one came closest.

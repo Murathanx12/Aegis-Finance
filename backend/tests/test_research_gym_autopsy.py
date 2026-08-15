@@ -281,7 +281,19 @@ def test_exclusion_is_not_left_to_the_caller(tmp_path):
     assert results["s1"].n_fired == 0
 
 
-def test_a_mechanism_that_fires_only_on_its_parent_is_DEAD_and_ledgered(tmp_path):
+def test_a_mechanism_whose_conditions_never_OCCUR_is_untested_and_ledgered(
+        tmp_path):
+    """Renamed from `..._is_DEAD_...` on 2026-08-16, and the rename is the point.
+
+    This corpus contains no episode where the precursor's conditions hold. The
+    mechanism was therefore never presented with a chance to be wrong. Calling
+    that DEAD retires a hypothesis on the strength of what the corpus happens to
+    contain — which is exactly how 195 existing kills became absence-of-evidence.
+
+    What is still pinned, unchanged: it is not exportable, and the non-result is
+    LEDGERED (SS20), because a search whose failures go unrecorded reports a
+    multiple-comparison count that understates.
+    """
     led = tmp_path / "lineage.jsonl"
     au = _autopsy()
     # Everywhere else, the precursor does not fire.
@@ -289,7 +301,9 @@ def test_a_mechanism_that_fires_only_on_its_parent_is_DEAD_and_ledgered(tmp_path
               "s2": [_rec("b", 18, 5.0, 0.0)]}
     rep = A.adjudicate(au, slices, ledger_path=led)
 
-    assert rep["verdict"].startswith("DEAD")
+    assert rep["verdict"].startswith("UNTESTED")
+    assert "DEAD" not in rep["verdict"]
+    assert "Revisit when" in rep["verdict"]
     assert rep["exportable"] is False
     assert rep["n_fired_outside_parent"] == 0
     # SS20: an unledgered death makes the campaign's comparison count

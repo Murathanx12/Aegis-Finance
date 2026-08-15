@@ -146,6 +146,20 @@ def assert_probe_vocabulary(state: dict) -> None:
             f"TRANSFERABLE_FEATURES — do not proceed.")
 
 
+def _autopsy_from_dict(d: dict):
+    """Rebuild a saved Autopsy. Every validation runs again on the way in.
+
+    `vocabulary` is dropped deliberately: it serialises as a string, and
+    rehydrating a frozenset from a repr is the kind of quiet reconstruction that
+    would let a saved autopsy re-enter under a vocabulary nobody checked. The
+    dataclass default is the current TRANSFERABLE_FEATURES, which is what a
+    re-adjudication should be held to.
+    """
+    from backend.services.research_gym.autopsy import Autopsy
+    fields = {f for f in Autopsy.__dataclass_fields__ if f != "vocabulary"}
+    return Autopsy(**{k: v for k, v in d.items() if k in fields})
+
+
 def build_transfer_slices(cost_bps: float) -> dict[str, list[tuple]]:
     """Foreign episodes: other securities, other decades, one decision a month.
 
@@ -232,6 +246,12 @@ def main(argv: list[str] | None = None) -> int:
                     help="dataset_zero jsonl; defaults to the newest")
     ap.add_argument("--limit", type=int, default=5,
                     help="how many episodes to autopsy (each costs one call)")
+    ap.add_argument("--reuse-autopsies", default=None,
+                    help="re-adjudicate autopsies from a previous run instead "
+                         "of proposing new ones. Spends nothing, and holds the "
+                         "HYPOTHESES fixed so that a change in verdict can only "
+                         "be the instrument — which is the only way to report "
+                         "honestly on a correction to the instrument.")
     ap.add_argument("--only-failures", action="store_true",
                     help="autopsy only episodes carrying a failure mode")
     ap.add_argument("--offline", action="store_true",
@@ -274,11 +294,31 @@ def main(argv: list[str] | None = None) -> int:
     slices = build_transfer_slices(
         records[0][1].cost_bps if records else G.DEFAULT_COST_BPS)
 
+    reused: dict[str, dict] = {}
+    if a.reuse_autopsies:
+        for line in Path(a.reuse_autopsies).read_text(
+                encoding="utf-8").splitlines():
+            if line.strip():
+                r = json.loads(line)
+                reused[r["episode_id"]] = r
+        print(f"re-adjudicating {len(reused)} SAVED autopsies from "
+              f"{Path(a.reuse_autopsies).name} — the hypotheses are held fixed, "
+              f"so any verdict that moves moved because the INSTRUMENT changed\n")
+
     results, n_ok, n_dropped = [], 0, 0
     for ep, surface in pool:
         print(f"\n── {ep.decision_ts}  {ep.security}  {ep.action} "
               f"({ep.failure_mode}) ──")
-        out = AL.propose(ep, surface)
+        if reused:
+            saved = reused.get(ep.episode_id)
+            if saved is None:
+                print("  SKIPPED  no saved autopsy for this episode")
+                continue
+            out = {"autopsy": _autopsy_from_dict(saved["autopsy"]),
+                   "call": saved.get("call"),
+                   "prior_verdict": saved["adjudication"].get("verdict")}
+        else:
+            out = AL.propose(ep, surface)
         if out["autopsy"] is None:
             n_dropped += 1
             print(f"  DROPPED  {out['drop_reason']}")
@@ -291,12 +331,41 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  falsifier   {au.falsifier[:150]}")
         print(f"  rival       {au.alternative_explanation[:150]}")
 
+        if au.is_scoped:
+            print(f"  affected    "
+                  f"{json.dumps(au.affected_precursor)[:120]}")
+            print(f"  UNaffected  "
+                  f"{json.dumps(au.unaffected_precursor)[:120]}   <- placebo")
+
         rep = G.adjudicate(au, slices, origin_episode_ids=[ep.episode_id])
-        print(f"  VERDICT     {rep['verdict'][:200]}")
-        for k, sl in rep["slices"].items():
-            print(f"    {k:<22s} fired {sl['n_fired']:>4d}  "
-                  f"edge {sl['mean_edge_pp']}  MDE {sl['mde_pp']}  "
-                  f"{'PASS' if sl['passed'] else 'no'}")
+        print(f"  FLAT        {rep['flat_verdict'][:150]}")
+        if out.get("prior_verdict"):
+            moved = "  <<< MOVED" if out["prior_verdict"] != rep["verdict"] else ""
+            print(f"  PRIOR       {out['prior_verdict']}")
+            print(f"  SCOPED      {rep['verdict'][:150]}{moved}")
+        else:
+            print(f"  SCOPED      {rep['verdict'][:150]}")
+
+        sc = rep.get("scoped")
+        if sc:
+            # The effect SURFACE, not a scalar. A mechanism may be positive in
+            # one state and negative in another, and that is allowed.
+            for k, by_scope in sc["effect_surface"].items():
+                for scope_name in ("AFFECTED", "UNAFFECTED"):
+                    cell = sc["cells"][k][scope_name]
+                    v = by_scope[scope_name]
+                    print(f"    {k:<22s} {scope_name:<10s} n {cell['n']:>4d}  "
+                          f"edge {cell['mean_pp']}  MDE {cell['mde_pp']}  "
+                          f"{v['verdict']}")
+            it = sc["interaction"]
+            print(f"    SS18 interaction  affected-unaffected {it['diff_pp']}pp "
+                  f"vs MDE {it['mde_pp']}  "
+                  f"{'DETECTABLE' if it['detectable'] else 'not detectable'}")
+        else:
+            for k, sl in rep["slices"].items():
+                print(f"    {k:<22s} fired {sl['n_fired']:>4d}  "
+                      f"edge {sl['mean_edge_pp']}  MDE {sl['mde_pp']}  "
+                      f"{'PASS' if sl['passed'] else 'no'}")
         results.append({"episode_id": ep.episode_id,
                         "autopsy": au.as_dict(), "adjudication": rep,
                         "call": out.get("call")})
@@ -306,9 +375,18 @@ def main(argv: list[str] | None = None) -> int:
     print(f"replies dropped       {n_dropped}  (counted — a model asked and "
           f"producing nothing testable belongs in the denominator)")
     exportable = sum(1 for r in results if r["adjudication"]["exportable"])
-    dead = sum(1 for r in results
-               if r["adjudication"]["verdict"].startswith("DEAD"))
-    print(f"explains only parent  {dead}")
+    by_verdict: dict[str, int] = {}
+    n_scoped = 0
+    for r in results:
+        adj = r["adjudication"]
+        n_scoped += 1 if adj.get("scoped") else 0
+        by_verdict[adj["verdict"].split()[0]] = by_verdict.get(
+            adj["verdict"].split()[0], 0) + 1
+    print(f"scoped adjudications  {n_scoped} of {len(results)}")
+    for v, n in sorted(by_verdict.items(), key=lambda kv: -kv[1]):
+        print(f"  {v:<26s} {n}")
+    print("  NOTE  only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED close "
+          "anything, and the first closes only its own scope")
     print(f"exportable            {exportable}  (and export still needs a "
           f"frozen prereg and forward certification — the Gym cannot certify "
           f"itself)")
