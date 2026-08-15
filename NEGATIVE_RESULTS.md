@@ -2574,3 +2574,87 @@ requirement is not more history, more rows, or more co-moving tickers. It is
 atlas adds `UNTESTED` cells, not evidence — and an atlas scored on slice count
 would look like it was growing while the number of slices capable of saying
 anything stayed at three.
+
+## 49. N8 — the corpus cannot determine how much corpus it needs, and the scarcity is dispersion, not history
+
+Run overnight 2026-08-16 against the protocol declared in
+`docs/OVERNIGHT_2026-08-16_PROTOCOL.md` before any number existed.
+
+**Question.** Every mechanism in the library is `NOT_DETECTABLE_IN_SCOPE` or
+`UNPOWERED_IN_SCOPE`, and TRANSFER_ATLAS_V1 has been an ambition rather than a
+specification. How many independent affected episodes would resolve an effect
+of the size actually observed?
+
+```
+n_required = ((Z_alpha + Z_power) * sd / d)^2
+```
+
+**The declared kill condition fired.** Median `n_required` = **304.6**
+independent affected episodes against a threshold of 200, and an observed
+median `n_effective` of **2.0**.
+
+### And then §37 was applied to the kill, which changed the answer
+
+`n_required` scales with `1/d^2`, and `d` here is measured on `n_effective`
+around two. So the requirement inherits the effect's entire uncertainty,
+squared and inverted:
+
+| slice | n_eff | effect | effect upper-95 | sd | n_required | n_required at upper-95 |
+|---|---|---|---|---|---|---|
+| eurocrisis | 1.3 | 0.95 | 2.17 | 0.72 | 4.4 | **0.9** |
+| gfc | 2.0 | 4.53 | 36.31 | 22.93 | 201.5 | **3.1** |
+| taper | 3.7 | −0.26 | 1.77 | 1.48 | 255.7 | 5.5 |
+| latecycle | 4.7 | 0.27 | 1.77 | 1.66 | 304.6 | 6.9 |
+| gfc | 2.0 | 1.50 | 18.75 | 12.45 | 543.3 | 3.5 |
+| gfc | 2.0 | 1.88 | 38.29 | 26.27 | **1534.1** | 3.7 |
+
+**The requirement spans 0.9 to 1,534 episodes — a factor of 1,700.** At the
+point estimate the median is 305; at the optimistic edge of the effect's own
+95% interval it is 3.5.
+
+So the declared kill fired on an input too noisy to act on. **The corpus cannot
+determine how much corpus is needed.** Reporting "305, change the question"
+would have been the third false kill of the week, and it would have looked
+exactly like rigour.
+
+### The reframe that makes N8 actionable
+
+Sizing a corpus from the effect you happened to measure is circular when that
+effect is measured on two observations. **Dispersion, unlike the effect, is
+estimated from all the data and is stable.** So the sizeable question is a
+DECISION rather than a measurement: *how big an edge would we act on?*
+
+| minimum effect of interest | episodes needed, CRISIS slices (sd 17.7pp) | CALM slices (sd 1.5pp) |
+|---|---|---|
+| 1pp | **2,456** | 17 |
+| 2pp | 614 | 4 |
+| 3pp | 273 | 2 |
+| 5pp | 98 | 1 |
+| 10pp | **25** | — |
+| 20pp | 6 | — |
+
+**This is the finding.** The scarcity is not history and it is not tickers. It
+is **dispersion, and it is concentrated entirely in the states every mechanism
+in the library is about.** Crisis dispersion is ~12x calm dispersion, `n` goes
+as `sd^2`, so the same edge costs **144x** more episodes in the states we keep
+asking about. The programme has been trying to measure small edges precisely
+where the noise is largest.
+
+### Two consequences
+
+1. **TRANSFER_ATLAS_V1 cannot be sized until a minimum effect of interest is
+   declared.** At 10pp the target is ~25 independent crisis episodes, which is
+   plausibly collectable internationally. At 3pp it is 273, which is not. The
+   programme has never declared this number, and without it "is the corpus big
+   enough" has no answer.
+2. **The Gym is already internally consistent, and always was.** G1
+   recalibrated the failure threshold at VIX>=35 from 1.0pp to **35.16pp** —
+   the percentile of the state-and-action-matched null. At crisis dispersion an
+   effect that large needs **two** independent episodes, and the affected cells
+   carry about two. The corpus is adequate for the bar the Gym actually applies
+   and hopeless for a 1-3pp bar. Those were never two facts.
+
+`n_required_for` and `design_curve` now live in
+`backend/services/research_gym/power.py` with the warning attached to the
+function that produces the problem, so the next caller cannot feed it a
+measured effect without reading why not.

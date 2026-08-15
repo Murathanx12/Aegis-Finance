@@ -378,3 +378,68 @@ def test_the_null_builder_refuses_states_that_do_not_line_up_with_returns():
         RG.build_matched_null([0.01] * 100, ["a"] * 99, universe="x",
                               horizon_days=10, cost_bps=10.0,
                               sample_start="x", sample_end="y")
+
+
+# ── N8: sizing a corpus (added 2026-08-16) ──────────────────────────────────
+
+def test_n_required_is_the_exact_inverse_of_the_MDE():
+    """If a corpus of n can just detect d, then d needs exactly n."""
+    from backend.services.research_gym import power as P
+
+    sd, n = 12.0, 40.0
+    d = P.mde_mean(sd, n)
+    assert P.n_required_for(d, sd) == pytest.approx(n, rel=1e-9)
+
+
+def test_n_required_scales_with_the_INVERSE_SQUARE_of_the_effect():
+    """The property that makes N8's headline unusable and its curve usable.
+
+    Halving the effect of interest quadruples the corpus. So a requirement
+    computed from an effect measured on two observations inherits that
+    effect's whole uncertainty, squared and inverted — measured across the six
+    autopsied mechanisms, the implied requirement spanned 0.9 to 1,534
+    episodes.
+    """
+    from backend.services.research_gym import power as P
+
+    a = P.n_required_for(4.0, 20.0)
+    b = P.n_required_for(2.0, 20.0)
+    assert b == pytest.approx(4.0 * a)
+
+
+def test_the_design_curve_reproduces_the_numbers_the_atlas_is_sized_from():
+    """Crisis dispersion is ~12x calm dispersion, and n goes as sd^2, so the
+    scarcity is concentrated entirely in the states every mechanism is about."""
+    from backend.services.research_gym import power as P
+
+    crisis = P.design_curve(17.69)
+    calm = P.design_curve(1.48)
+    assert round(crisis[3.0]) == 273
+    assert round(crisis[10.0]) == 25
+    assert round(calm[1.0]) == 17
+    # 144x more episodes for the same edge, purely from dispersion.
+    assert crisis[3.0] / calm[3.0] == pytest.approx((17.69 / 1.48) ** 2,
+                                                    rel=1e-6)
+
+
+def test_the_GYMS_OWN_recalibrated_bar_needs_the_corpus_it_already_has():
+    """An internal-consistency check worth keeping.
+
+    G1 recalibrated the failure threshold at VIX>=35 from 1.0pp to 35.16pp,
+    because that is the percentile of the state-and-action-matched null. At the
+    crisis dispersion, an effect that large needs about TWO independent
+    episodes — and the affected cells carry about two. The corpus is adequate
+    for the bar the Gym actually applies and hopeless for a 1-3pp bar, and
+    those two facts have always been the same fact.
+    """
+    from backend.services.research_gym import power as P
+
+    assert round(P.n_required_for(35.16, 17.69)) == 2
+
+
+def test_a_zero_effect_has_no_finite_requirement():
+    from backend.services.research_gym import power as P
+
+    assert P.n_required_for(0.0, 10.0) is None
+    assert P.n_required_for(5.0, 0.0) is None
+    assert P.n_required_for(None, 10.0) is None

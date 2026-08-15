@@ -187,3 +187,45 @@ def power_for(n_obs: int, horizon_days: int, sd: float | None, *,
         mde_mean_pct=(None if sd is None else mde_mean(sd, n_eff)),
         mde_proportion=mde_proportion(n_eff, p0),
     )
+
+
+def n_required_for(effect: float, sd: float) -> float | None:
+    """Independent observations needed to detect `effect` at 80% power.
+
+    The inverse of `mde_mean`, and the quantity that turns "the corpus is too
+    small" from a complaint into a specification:
+
+        n = ((Z_alpha + Z_power) * sd / effect)^2
+
+    USE IT WITH A **DECLARED** EFFECT, NOT A MEASURED ONE (N8, 2026-08-16).
+    `n` scales with the inverse SQUARE of the effect, so feeding it an effect
+    estimated on two observations produces a requirement that inherits the
+    effect's entire uncertainty, squared and inverted. Measured on the six
+    autopsied mechanisms, the implied requirement ranged from **0.9 to 1,534
+    episodes** — the sample could not determine how large a sample it needed.
+
+    Dispersion, unlike the effect, is estimated from all the data and is
+    stable. So the honest way to size a corpus is to declare the smallest edge
+    worth acting on and read `n` off that. That makes corpus size a DECISION
+    with a number attached, rather than a measurement of a thing too small to
+    measure.
+    """
+    if effect is None or sd is None or sd <= 0 or abs(float(effect)) < 1e-12:
+        return None
+    return ((Z_ALPHA_TWO_SIDED_05 + Z_POWER_80) * float(sd)
+            / abs(float(effect))) ** 2
+
+
+def design_curve(sd: float,
+                 effects: Sequence[float] = (1.0, 2.0, 3.0, 5.0, 10.0, 20.0)
+                 ) -> dict[float, float | None]:
+    """`n_required` across a grid of declared minimum effects of interest.
+
+    Measured 2026-08-16: at the dispersion of the Gym's CRISIS slices
+    (~17.7pp over the relevant windows) a 3pp edge needs **273** independent
+    episodes and a 10pp edge needs **25**; at the dispersion of the CALM slices
+    (~1.5pp) a 1pp edge needs **17**. The scarcity is not in history — it is
+    concentrated entirely in the states with the largest dispersion, which are
+    exactly the states every mechanism in the library is about.
+    """
+    return {float(e): n_required_for(e, sd) for e in effects}
