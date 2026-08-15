@@ -1,0 +1,76 @@
+{
+  "threshold": 0.961726,
+  "markets": {
+    "US_SP500": {
+      "ticker": "^GSPC",
+      "n_days": 9221,
+      "n_evaluable": 8698,
+      "n_fires": 523,
+      "n_episodes": 18
+    },
+    "Japan": {
+      "ticker": "^N225",
+      "n_days": 8984,
+      "n_evaluable": 8461,
+      "n_fires": 236,
+      "n_episodes": 12
+    },
+    "Germany": {
+      "ticker": "^GDAXI",
+      "n_days": 9264,
+      "n_evaluable": 8741,
+      "n_fires": 366,
+      "n_episodes": 12
+    },
+    "UK": {
+      "ticker": "^FTSE",
+      "n_days": 9249,
+      "n_evaluable": 8726,
+      "n_fires": 452,
+      "n_episodes": 18
+    },
+    "HongKong": {
+      "ticker": "^HSI",
+      "n_days": 9035,
+      "n_evaluable": 8512,
+      "n_fires": 337,
+      "n_episodes": 16
+    },
+    "Korea": {
+      "ticker": "^KS11",
+      "n_days": 7304,
+      "n_evaluable": 6781,
+      "n_fires": 123,
+      "n_episodes": 4
+    },
+    "Australia": {
+      "ticker": "^AXJO",
+      "n_days": 8525,
+      "n_evaluable": 8002,
+      "n_fires": 472,
+      "n_episodes": 18
+    },
+    "India": {
+      "ticker": "^BSESN",
+      "n_days": 7173,
+      "n_evaluable": 6650,
+      "n_fires": 202,
+      "n_episodes": 9
+    },
+    "Switzerland": {
+      "ticker": "^SSMI",
+      "n_days": 8978,
+      "n_evaluable": 8455,
+      "n_fires": 393,
+      "n_episodes": 12
+    }
+  },
+  "faithfulness": {
+    "both": 253,
+    "only_vix": 96,
+    "only_pctile": 270,
+    "precision": 0.4837476099426386,
+    "recall": 0.7249283667621776,
+    "jaccard": 0.4087237479806139
+  }
+}

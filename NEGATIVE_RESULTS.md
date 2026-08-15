@@ -2917,3 +2917,111 @@ A cheap kill of a plausible idea, which is what a discovery sprint is for. It
 also closes a loop: the second-moment asymmetry is not "direction is
 predictable somewhere specific" — it is that the first moment is not where the
 information is, anywhere this was looked.
+
+## 54. The transfer atlas was unreachable in principle, and one feature fixes it — partly
+
+N2 established the supply. This is about whether any of it can be **used**.
+
+**Every precursor in the mechanism library is written over `vix`. Exactly one
+market has a VIX.** So the 152 international stress episodes N2 measured could
+not be evaluated by a single rule already in the library — not because the data
+was missing, but because the grammar could not express the question. More
+collection would not have helped.
+
+The obvious substitute fails for a reason worth keeping. `realised_vol_20d` is
+already in the vocabulary and is portable as a NUMBER and meaningless as a
+THRESHOLD: N2's frequency-matched bars came out at **57.3% annualised for Korea
+and 27.2% for Australia**, so a rule reading `realised_vol_20d >= 40` selects a
+country, not a state.
+
+`stress_pctile` — where a security's own trailing volatility sits in its own
+**past** — is now in `TRANSFERABLE_FEATURES`, computed on an expanding window
+so a rank never sees the distribution it will belong to. (A full-sample
+percentile would rank 2008 differently depending on whether 2020 had happened
+yet, which is lookahead of exactly the kind the vocabulary exists to prevent.)
+
+### Faithfulness was checked BEFORE reach, and it is only moderate
+
+A translation that makes rules RUN everywhere and mean something different in
+each place is worse than no translation, because it converts an honest
+`UNTESTED` into a dishonest tested. So the first measurement is on the US,
+where both rules can be evaluated:
+
+| | days |
+|---|---|
+| `vix >= 35` fires | 349 |
+| `stress_pctile >= 0.9617` fires | 523 |
+| both | **253** |
+| VIX only | 96 |
+| portable only | 270 |
+
+**Recall 72.5%, precision 48.4%, Jaccard 40.9%.** The portable rule catches
+about three-quarters of the VIX rule's days and fires on half again as many
+besides. It is a **related state selector, not a synonym**, and every mechanism
+tested through it must say so — which is exactly what the §40 scope declaration
+is for.
+
+**And the firing rate is not uniform across markets**, which the frequency
+matching was supposed to deliver: 6.0% in the US, 5.9% Australia, 5.2% UK, 4.7%
+Switzerland, 4.2% Germany, 4.0% Hong Kong, 3.0% India, 2.8% Japan, **1.8%
+Korea**. An expanding-window percentile is not rate-uniform, and it
+systematically penalises markets whose worst crisis came EARLY — Korea's 1997
+collapse sets a bar that later stress cannot clear. That is a real limitation
+of the construction, not of the data, and it is stated rather than smoothed.
+
+### What it buys
+
+| | before | after |
+|---|---|---|
+| episodes evaluable outside the US | **0** | **101** |
+| markets a library rule can run in | 1 | 9 |
+
+The atlas is now reachable. It is reachable through a state selector that
+agrees with the incumbent on 41% of the union of their firings, and that number
+travels with every result computed on it.
+
+## 55. A test asserting live health would have frozen the deploy pipeline overnight
+
+Found at 01:30 local, six hours before it fired.
+
+`test_the_live_ledger_canary_is_healthy` asserted `status == "ok"` against the
+**real** prediction ledger. The campaign's first forecasts fall due on
+2026-08-16. Evaluated as of successive dates against the real file:
+
+```
+2026-08-15   status ok        0 overdue     <- CI was green here
+2026-08-16   status DEGRADED  110 overdue
+2026-08-17   status DEGRADED  201 overdue
+```
+
+CI runs in UTC and was still green at 17:14 UTC on 08-15. **It would have
+turned red the moment UTC crossed midnight — on no commit, from no code
+change.** Railway gates deploys on CI, so production freezes.
+
+And this one is worse than the morning's two. §44 and §47 could be fixed by
+editing code. This one clears only when a **human runs an attended,
+irreversible resolution** — so the pipeline would have stayed blocked until
+someone woke up, and every unrelated fix would have been stuck behind another
+person's chores. The failure would also have looked like a mystery: a red build
+on a commit that changed nothing, for the second time in two days.
+
+**The canary is right.** DEGRADED is the correct reading of "110 forecasts are
+past due", and `/api/health/full` should say so loudly. What was wrong is
+asserting it in the suite that gates shipping. The detection behaviour was
+already covered on a constructed fixture
+(`test_a_forecast_past_its_resolution_date_degrades_the_canary`), where it
+belongs; the live test now checks that the canary RUNS and returns a complete,
+well-formed report — and that if it degrades, it NAMES its reason.
+
+**Fourth instance this week of one defect:** a test that asserts the state of
+the world rather than the behaviour of the code. The CI world (§0), the
+calendar's world (§44), the clock's world (§47), and now the operational
+backlog's. In every case the code was right and the assertion described the
+machine, the day, or the chores.
+
+*Left ready rather than done:* the resolution itself is attended.
+`scripts/campaign_resolution_readiness.py` runs the resolver against a
+byte-identical COPY and verifies the real ledger's SHA-256 before and after, so
+the decision can be prepared unattended without touching anything. As of
+2026-08-16: **110 due, 110 would resolve, 0 unpriceable, health returns to ok**,
+priced from a fresh fetch, real ledger unchanged.

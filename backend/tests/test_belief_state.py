@@ -217,8 +217,55 @@ def test_a_forecast_past_its_resolution_date_degrades_the_canary(tmp_path):
     assert out["n_overdue"] == 1
 
 
-def test_the_live_ledger_canary_is_healthy():
+def test_the_live_ledger_canary_RUNS_and_returns_a_complete_report():
+    """This asserted `status == "ok"` on the LIVE ledger until 2026-08-16, and
+    it was a time bomb pointed at the deploy gate.
+
+    WHAT WOULD HAVE HAPPENED, measured before it fired
+    ==================================================
+    The campaign ledger's first forecasts fall due on 2026-08-16. Evaluated as
+    of successive dates against the real file:
+
+        2026-08-15   status ok        0 overdue
+        2026-08-16   status DEGRADED  110 overdue
+        2026-08-17   status DEGRADED  201 overdue
+
+    CI runs in UTC and was still green at 17:14 UTC on 08-15. It would have
+    turned red the moment UTC crossed midnight — on no commit, from no code
+    change — and **Railway gates deploys on CI**, so production would have
+    frozen. Worse than this morning's version (§44, §47): clearing it needs an
+    ATTENDED, irreversible resolution run, so the pipeline would have stayed
+    blocked until a human woke up, and any unrelated fix would have been stuck
+    behind someone else's chores.
+
+    The canary itself is right. DEGRADED is the correct reading of "110
+    forecasts are past due", and `/api/health/full` should say so loudly. What
+    was wrong is asserting it in a suite that gates shipping.
+
+    So this test now checks what a test can check — that the canary RUNS
+    against the real ledger and returns a complete, well-formed report — and
+    the detection behaviour it used to imply is already covered by
+    `test_a_forecast_past_its_resolution_date_degrades_the_canary` on a
+    constructed fixture, where it belongs.
+
+    Third instance this week of the same defect: **a test that asserts the
+    state of the world rather than the behaviour of the code.** The CI world
+    (§0), the calendar's world (§44), the clock's world (§47), and now the
+    operational backlog's.
+    """
     from backend.services.belief_state import ledger_health
     out = ledger_health()
-    assert out["status"] == "ok", out
+
+    # The report must be complete, whatever it says.
+    for key in ("status", "n_records", "n_overdue", "n_void", "last_written",
+                "distinct_specialists", "persistence"):
+        assert key in out, f"the canary's report is missing {key}: {out}"
+    assert out["status"] in ("ok", "DEGRADED")
     assert out["distinct_specialists"] >= 5
+    assert out["n_records"] > 0
+    # A DEGRADED live ledger is operational information, not a build failure.
+    # It must still NAME its problem rather than degrading silently.
+    if out["status"] == "DEGRADED":
+        assert out.get("problems"), (
+            "the canary degraded without naming a reason, which is the one "
+            "thing it must never do")

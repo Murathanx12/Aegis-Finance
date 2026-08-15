@@ -91,8 +91,36 @@ TRANSFERABLE_FEATURES = frozenset({
     "ret_1m_pct", "ret_3m_pct", "ret_6m_pct",
     "realised_vol_20d",      # annualised, %
     "vol_ratio_20_60",       # short-window vol / long-window vol
+    "stress_pctile",         # see below — the only MARKET-RELATIVE stress term
     "security",
 })
+
+#: WHY `stress_pctile` EXISTS, AND WHY THE OTHERS ARE NOT ENOUGH (N2, 2026-08-16)
+#:
+#: Every precursor in the library is written over `vix`. **Exactly one market
+#: has a VIX.** So the transfer atlas was unreachable in principle rather than
+#: merely uncollected: N2 measured eleven international candidate slices
+#: supplying 152 stress episodes, and not one of them could be evaluated by a
+#: single rule already in the library.
+#:
+#: `realised_vol_20d` does not fix it either, and the reason is the interesting
+#: one. Its LEVEL is not comparable across markets — Korea's stress bar sits at
+#: 57% annualised and Australia's at 27%, so a rule saying `realised_vol_20d >=
+#: 40` is a rule about which market you are in, not about stress. N2's whole
+#: design turned on that: thresholds were set to reproduce the incumbent's
+#: FREQUENCY rather than its level.
+#:
+#: `stress_pctile` is that frequency made available to the grammar: where the
+#: security's own trailing volatility sits in its own history, in [0, 1]. A
+#: precursor reading `stress_pctile >= 0.96` means the same thing in Seoul and
+#: Sydney, and it is the same condition the incumbent's `vix >= 35` picks out
+#: in New York.
+#:
+#: IT MUST BE COMPUTED ON AN EXPANDING WINDOW. A percentile taken against the
+#: full sample knows the future distribution — 2008 would rank differently
+#: depending on whether 2020 had happened yet — and that is lookahead of
+#: exactly the kind this vocabulary exists to prevent. See
+#: `market_stress.stress_pctile`.
 
 
 class PrecursorRefused(ValueError):

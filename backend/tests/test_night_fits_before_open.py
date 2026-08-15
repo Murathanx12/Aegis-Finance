@@ -413,16 +413,37 @@ def test_the_receipt_records_the_headroom_the_night_actually_had():
 
 def test_the_measured_efficiency_is_recorded_so_the_declared_one_can_die():
     """The declared 2.0 exists to be replaced by a measurement, and the night
-    that replaces it has to record one."""
+    that replaces it has to record one.
+
+    THE STUB MUST TAKE MEASURABLE TIME. The first version of this test used the
+    instant stub, so every arm started and finished inside one tick of a
+    Windows clock (~15 ms), the cell's wall time came out as exactly 0.0, and
+    `measured_efficiency` correctly returned None because it will not divide by
+    zero. It passed alone and failed under load — a flaky test asserting a
+    timing property of a thing with no timing.
+
+    A stub with no latency cannot test a latency measurement, which is the same
+    sentence as the reason `DECLARED_CONCURRENCY_EFFICIENCY` exists at all.
+    """
+    import time
+
     from backend.tests.test_investigator_night import (_feats, good_llm,
                                                        no_tools)
+
+    def slow(**kw):
+        time.sleep(0.01)
+        return good_llm(**kw)
+
     res = N.run_night({f"T{i}": _feats(float(i)) for i in range(4)},
-                      k=3, llm_call=good_llm, tool_runner=no_tools,
+                      k=3, llm_call=slow, tool_runner=no_tools,
                       dry_run=True, sandbox=True, arm_concurrency=5)
     m = N.measured_concurrency_efficiency(res)
     assert m["n_cells_measured"] >= 1
     assert m["declared_efficiency"] == N.DECLARED_CONCURRENCY_EFFICIENCY
-    assert m["measured_efficiency"] is not None
+    assert m["measured_efficiency"] is not None, (
+        "the night recorded no measured efficiency, so nothing could ever "
+        "replace the declared placeholder")
+    assert m["mean_cell_wall_seconds"] > 0.0
 
 
 def test_every_GUARD_constant_is_live_not_frozen_at_import():
