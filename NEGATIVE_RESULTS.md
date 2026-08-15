@@ -2455,3 +2455,122 @@ new place, found by re-running rather than by arguing about it.
   episode count, fewer at a 252-day horizon. A 100% crossing rate is not a
   large sample.
 * Gym output. Cells are hypotheses, never claims (R2 wall 1).
+
+## 47. The test proving the timing guard fires had never made it fire (default-argument binding)
+
+Found 2026-08-15 by reproducing a red CI build instead of assuming it was
+flaky. `330666d` — a commit that **adds 246 lines to a single markdown file
+and touches no code** — failed the backend suite. `b8102ad`, 53 minutes
+earlier, passed.
+
+Reproduced in a worktree at that exact commit:
+
+```
+FAILED test_night_fits_before_open.py::test_the_guard_ACTUALLY_FIRES_on_a_production_night
+E   AttributeError: 'NoneType' object has no attribute 'items'
+```
+
+The AttributeError is the tell: it comes from `select_triggers`, which the test
+stubs out, and execution should never have reached it. **The guard did not
+raise.**
+
+### Why
+
+```python
+def projected_night_minutes(*, call_seconds: float = MEASURED_CALL_SECONDS, ...)
+```
+
+A module constant used as a default argument is bound when the function is
+**defined**. The test does `monkeypatch.setattr(N, "MEASURED_CALL_SECONDS",
+3600.0)` — which changes the module attribute and **nothing the function
+reads**. Verified directly: after the patch, `N.MEASURED_CALL_SECONDS` reports
+3600.0 and `projected_night_minutes` still returns 139.2 minutes.
+
+So the test never tested what it says. It passed anyway, for its entire life,
+because with the real 8.7s constant the night is 2.32 hours — and the OLD guard
+(§44) fabricated a 13:30 UTC open every calendar day, so any run inside the
+2.3 hours before 13:30 UTC refused for an unrelated reason. CI ran at 13:23
+UTC and was green. CI ran at 14:16 UTC and was red. **The suite's colour was a
+function of the time of day.**
+
+Three failures compounding, each of which hid the next:
+1. the constant could not be patched, so the guard was never exercised;
+2. the guard fabricated a daily open, which made it refuse anyway — but only
+   inside one window;
+3. the test asserted the refusal without checking WHICH refusal, so a right
+   answer for a wrong reason read as a pass.
+
+### Fixed
+
+Every constant in `projected_night_minutes` and
+`assert_night_fits_before_open` is read at **call time** via a `None`
+sentinel. This is not a style preference: these constants decide whether a paid
+night may run, and one of them (`DECLARED_CONCURRENCY_EFFICIENCY`) exists
+specifically to be **replaced by a measurement after the first concurrent
+night**. Frozen at import, that replacement would have required a source edit
+and silently done nothing anywhere else.
+
+The test now pins `now` to a real pre-open session moment, so the clock cannot
+decide the outcome, and a new test asserts the patch takes effect at all —
+which is the property that failed, rather than the behaviour it was hiding.
+
+**The rule, and it is the inverse of an existing one.** Canon already says *a
+frozen parameter a caller can override is a default*. This is the mirror
+image: **a constant that looks live and is frozen at import is not a
+parameter** — it is a literal, and everything that depends on being able to
+change it is decoration. Both are the same question asked from opposite ends:
+*where is this value actually read?*
+
+## 48. N5 — the LLM's scope declarations localise by sign in 4 of 6 and by evidence in none
+
+The order ranked this "free, from data already on disk", and it is: the scope
+layer already computes the §18 interaction (declared-AFFECTED minus
+declared-UNAFFECTED) with its own SE and MDE for every mechanism. The question
+it answers is the first direct test of whether **LLM reasoning localises** —
+when the model says "this works in X and not in Y", is the second half borne
+out? The whole scope layer inherits that noise, so its calibration matters
+beyond this one test.
+
+Re-adjudicated with hypotheses held fixed (`--reuse-autopsies`), corrected
+denominators:
+
+| # | mechanism | AFFECTED − UNAFFECTED | MDE | detectable |
+|---|---|---|---|---|
+| 1 | VIX>=35 mean reversion | **+2.56pp** | 17.26 | no |
+| 2 | VIX>=35 overreaction | **+6.36pp** | 31.92 | no |
+| 3 | VIX>=35 + drawdown < -10% | **+1.91pp** | 17.20 | no |
+| 4 | VIX>=35 + 1m return <= -8% | **+3.58pp** | 39.78 | no |
+| 5 | low-vol bull, regime shift | −0.45pp | 2.72 | no |
+| 6 | low-vol bull, regime shift | −1.88pp | 9.11 | no |
+
+**Four positive, two negative, none detectable.** 4-of-6 under a fair coin is
+p = 0.34, and the six are not independent anyway: mechanisms 1-4 are near-
+duplicate VIX>=35 rules autopsied from different episodes of the same corpus.
+This is closer to two observations than six.
+
+**What DID work:** every declared-UNAFFECTED cell returned
+`SUPPORTED_IN_SCOPE` — the placebo family is correctly silent everywhere it
+was declared to be. Under the inverted sign that is confirming, and it is the
+first evidence that the §40 placebo arm behaves as designed rather than merely
+existing.
+
+### The structural finding is worth more than the statistic
+
+For the four VIX>=35 mechanisms, **two of the five transfer slices contain
+ZERO affected episodes**:
+
+```
+taper_2014_2016       AFFECTED   n 0   UNTESTED
+latecycle_2017_2019   AFFECTED   n 0   UNTESTED
+```
+
+VIX never reached 35 between 2014 and 2019. So a "five-slice transfer corpus"
+is, for this precursor, a corpus of **three** — and two of those three carry
+n = 3-6 affected episodes against MDEs of 17-40pp.
+
+**This is the specification TRANSFER_ATLAS_V1 has been missing.** The
+requirement is not more history, more rows, or more co-moving tickers. It is
+**slices in which the precursor actually fires**. Adding calm decades to the
+atlas adds `UNTESTED` cells, not evidence — and an atlas scored on slice count
+would look like it was growing while the number of slices capable of saying
+anything stayed at three.

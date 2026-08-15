@@ -236,13 +236,28 @@ MAX_PREOPEN_LEAD_HOURS = 18
 
 
 def projected_night_minutes(*, k: int, n_arms: int,
-                            call_seconds: float = MEASURED_CALL_SECONDS,
-                            calls_per_cell: float = MEASURED_CALLS_PER_CELL,
+                            call_seconds: float | None = None,
+                            calls_per_cell: float | None = None,
                             arm_concurrency: int = 1,
-                            efficiency: float = DECLARED_CONCURRENCY_EFFICIENCY,
-                            max_arm_calls: int = MEASURED_MAX_ARM_CALLS
-                            ) -> float:
+                            efficiency: float | None = None,
+                            max_arm_calls: int | None = None) -> float:
     """How long this night will actually take. Cells are always sequential.
+
+    EVERY CONSTANT IS READ AT CALL TIME, AND THAT IS NOT A STYLE CHOICE.
+    These were written as `call_seconds: float = MEASURED_CALL_SECONDS`, which
+    binds the value at DEFINITION time. Setting `N.MEASURED_CALL_SECONDS` then
+    changes the module attribute and nothing the function reads — a constant
+    that looks live and is frozen at import.
+
+    It cost a red CI build and hid a dead guard for a day. The test that proves
+    the timing guard fires on a production night sets `MEASURED_CALL_SECONDS`
+    to an hour so that no start time can fit; the patch did nothing, so the
+    guard never raised, and the test PASSED anyway — for the whole of its life
+    — purely because the suite happened to run inside the 2.3-hour window
+    before the (fabricated) daily open, where the real 8.7s constant also
+    refuses. It ran seven minutes before 13:30 UTC and was green; it ran
+    forty-six minutes after and was red. Nothing about the code had changed:
+    the failing commit added 246 lines to one markdown file.
 
     Serial is a sum and needs no model: `n_arms * calls_per_cell * call_seconds`
     per cell. Concurrency needs one, because a cell ends when its SLOWEST arm
@@ -263,6 +278,14 @@ def projected_night_minutes(*, k: int, n_arms: int,
     over, so a generous future measurement cannot talk the night into a window
     that one slow arm makes impossible.
     """
+    call_seconds = (MEASURED_CALL_SECONDS if call_seconds is None
+                    else call_seconds)
+    calls_per_cell = (MEASURED_CALLS_PER_CELL if calls_per_cell is None
+                      else calls_per_cell)
+    efficiency = (DECLARED_CONCURRENCY_EFFICIENCY if efficiency is None
+                  else efficiency)
+    max_arm_calls = (MEASURED_MAX_ARM_CALLS if max_arm_calls is None
+                     else max_arm_calls)
     serial_cell = float(n_arms) * float(calls_per_cell) * float(call_seconds)
     conc = max(1, min(int(arm_concurrency), int(n_arms)))
     if conc == 1:
@@ -275,10 +298,9 @@ def projected_night_minutes(*, k: int, n_arms: int,
 
 
 def assert_night_fits_before_open(*, k: int, n_arms: int, now=None,
-                                  call_seconds: float = MEASURED_CALL_SECONDS,
+                                  call_seconds: float | None = None,
                                   arm_concurrency: int = 1,
-                                  max_lead_hours: float = MAX_PREOPEN_LEAD_HOURS
-                                  ) -> dict:
+                                  max_lead_hours: float | None = None) -> dict:
     """Refuse a night that cannot finish before the session it forecasts opens.
 
     FOUND 2026-08-15, BY MULTIPLYING TWO NUMBERS THAT WERE BOTH ALREADY KNOWN.
@@ -315,6 +337,13 @@ def assert_night_fits_before_open(*, k: int, n_arms: int, now=None,
     now = now or datetime.now(timezone.utc)
     if now.tzinfo is None:
         now = now.replace(tzinfo=timezone.utc)
+    # Read at call time — see `projected_night_minutes`. A module constant used
+    # as a default argument is frozen at import, and this one decides whether a
+    # paid night may run.
+    call_seconds = (MEASURED_CALL_SECONDS if call_seconds is None
+                    else call_seconds)
+    max_lead_hours = (MAX_PREOPEN_LEAD_HOURS if max_lead_hours is None
+                      else max_lead_hours)
     minutes = projected_night_minutes(k=k, n_arms=n_arms,
                                       call_seconds=call_seconds,
                                       arm_concurrency=arm_concurrency)
@@ -401,14 +430,20 @@ def measured_concurrency_efficiency(res) -> dict:
 
 
 def assert_decision_time_fresh(decision_ts, *, now=None,
-                               max_lag_minutes: int = MAX_DECISION_LAG_MINUTES
-                               ) -> float:
+                               max_lag_minutes: int | None = None) -> float:
     """Refuse a paying night whose snapshot has gone stale. Returns lag minutes.
 
     Deliberately a REFUSAL rather than a warning, and deliberately before the
     first vendor call. A night that discovers this afterwards has already
     bought the contaminated forecasts.
+
+    `max_lag_minutes` is read at call time for the reason given in
+    `projected_night_minutes`: a guard constant bound as a default argument
+    cannot be changed by anything except a source edit, and a guard nobody can
+    exercise is a guard nobody has tested.
     """
+    max_lag_minutes = (MAX_DECISION_LAG_MINUTES if max_lag_minutes is None
+                       else max_lag_minutes)
     now = now or datetime.now(timezone.utc)
     if isinstance(decision_ts, str):
         decision_ts = datetime.fromisoformat(decision_ts)

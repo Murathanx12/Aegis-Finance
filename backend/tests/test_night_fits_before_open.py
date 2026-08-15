@@ -63,6 +63,11 @@ def _at(h, m=0, day=SESSION):
     return datetime(*day, h, m, tzinfo=timezone.utc)
 
 
+#: Captured BEFORE any test can monkeypatch the name, so a test that pins the
+#: clock still exercises the real guard rather than its own stub.
+_real_guard = N.assert_night_fits_before_open
+
+
 def test_the_full_night_is_about_two_and_a_quarter_hours():
     """The number nobody had computed."""
     mins = N.projected_night_minutes(k=40, n_arms=5)
@@ -305,17 +310,51 @@ def test_the_guard_runs_on_the_production_path_before_any_paid_call(monkeypatch)
         "spending, like every other refusal here")
 
 
+def test_a_module_constant_used_as_a_DEFAULT_ARGUMENT_is_frozen_at_import():
+    """The trap that hid a dead guard for a day, pinned so it cannot return.
+
+    `def f(call_seconds=MEASURED_CALL_SECONDS)` binds the value when the
+    function is DEFINED. Setting `N.MEASURED_CALL_SECONDS` afterwards changes
+    the module attribute and nothing the function reads — a constant that looks
+    live and is frozen at import. Every constant here decides whether a paid
+    night may run, so all of them are read at call time.
+    """
+    import backend.services.investigator_night as _N
+    real = _N.MEASURED_CALL_SECONDS
+    try:
+        _N.MEASURED_CALL_SECONDS = 3600.0
+        assert _N.projected_night_minutes(k=40, n_arms=5) > 10_000, (
+            "the projection ignored a patched MEASURED_CALL_SECONDS — the "
+            "constant is bound as a default argument again, and the guard "
+            "that depends on it is untestable and unconfigurable")
+    finally:
+        _N.MEASURED_CALL_SECONDS = real
+
+
 def test_the_guard_ACTUALLY_FIRES_on_a_production_night(monkeypatch):
     """Not source inspection — the real call path, refusing before it spends.
 
     The test above reads `run_night`'s source, which cannot tell you the line
     executes. This one drives the production branch with a latency constant
-    large enough that no start time could fit, so it does not depend on when
-    the suite happens to run, and asserts the refusal arrives before any
-    trigger selection or vendor call.
+    large enough that no start time could fit and asserts the refusal arrives
+    before any trigger selection or vendor call.
+
+    IT PASSED FOR A YEAR OF ITS LIFE WITHOUT THE GUARD EVER FIRING. The
+    monkeypatch below did nothing (see the test above), so the projection used
+    the real 8.7s constant — and the old guard refused anyway, but only while
+    the suite happened to run inside the 2.3 hours before the fabricated daily
+    open. On 2026-08-15 it ran seven minutes before 13:30 UTC and was green;
+    forty-six minutes later, on a commit that added 246 lines to one markdown
+    file, it was red. `now` is pinned now so the clock cannot decide.
     """
     spent = []
     monkeypatch.setattr(N, "MEASURED_CALL_SECONDS", 3600.0)
+    # A real pre-open session moment, so the LEAD clause passes and the test is
+    # about the timing clause it names. Without this, the test passes on a
+    # weekend for the wrong reason and fails on a Monday for the right one.
+    monkeypatch.setattr(
+        N, "assert_night_fits_before_open",
+        lambda **kw: _real_guard(**{**kw, "now": _at(9, 0)}))
     monkeypatch.setattr(N, "make_llm_call",
                         lambda **kw: spent.append(1), raising=False)
     monkeypatch.setattr(N.TR, "select_triggers",
@@ -384,3 +423,59 @@ def test_the_measured_efficiency_is_recorded_so_the_declared_one_can_die():
     assert m["n_cells_measured"] >= 1
     assert m["declared_efficiency"] == N.DECLARED_CONCURRENCY_EFFICIENCY
     assert m["measured_efficiency"] is not None
+
+
+def test_every_GUARD_constant_is_live_not_frozen_at_import():
+    """The census, turned into a check.
+
+    105 module constants are used as default arguments across
+    `backend/services`, and most are harmless — a lookback window or a seed
+    read once is fine. The dangerous subclass is narrow and precise:
+
+      * a constant a GUARD reads to decide whether to refuse, and
+      * a constant whose entire purpose is to be REPLACED by a measurement.
+
+    `DECLARED_CONCURRENCY_EFFICIENCY` is both. It exists to be replaced after
+    the first concurrent night measures the real speedup, and frozen at import
+    that replacement would have required a source edit and silently done
+    nothing anywhere else.
+    """
+    import backend.services.investigator_night as _N
+
+    probes = {
+        "MEASURED_CALL_SECONDS": (
+            3600.0, lambda: _N.projected_night_minutes(k=40, n_arms=5)),
+        "MEASURED_CALLS_PER_CELL": (
+            999.0, lambda: _N.projected_night_minutes(k=40, n_arms=5)),
+        "DECLARED_CONCURRENCY_EFFICIENCY": (
+            5.0, lambda: _N.projected_night_minutes(k=40, n_arms=5,
+                                                    arm_concurrency=5)),
+        "MEASURED_MAX_ARM_CALLS": (
+            500, lambda: _N.projected_night_minutes(k=40, n_arms=5,
+                                                    arm_concurrency=5)),
+    }
+    for name, (patched, call) in probes.items():
+        real = getattr(_N, name)
+        before = call()
+        try:
+            setattr(_N, name, patched)
+            after = call()
+        finally:
+            setattr(_N, name, real)
+        assert after != before, (
+            f"{name} is bound as a default argument again — patching the "
+            f"module attribute changed nothing the function reads, so the "
+            f"guard that depends on it cannot be exercised or reconfigured")
+
+
+def test_the_FRESHNESS_guard_constant_is_live_too():
+    import backend.services.investigator_night as _N
+    stale = (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat()
+    assert _N.assert_decision_time_fresh(stale) > 0     # 30 < 45, allowed
+    real = _N.MAX_DECISION_LAG_MINUTES
+    try:
+        _N.MAX_DECISION_LAG_MINUTES = 5
+        with pytest.raises(_N.DecisionTimeStale):
+            _N.assert_decision_time_fresh(stale)
+    finally:
+        _N.MAX_DECISION_LAG_MINUTES = real
