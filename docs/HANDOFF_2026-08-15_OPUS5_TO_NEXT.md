@@ -188,11 +188,19 @@ only the first owner, losing the rest exactly on the cluster case.
    Murat.
 2. **Report the funding number and get Murat's word** before the 40-night
    accrual starts. ≈$1.04/night, ≈$41.61 total vs $37.12.
-3. **Verify `pi_ledger_resolve`'s 20:30 UTC run by its receipt** —
-   `backend/data/optimus/resolver_receipts/`. It did not fire during this
-   session. Expect `status: REFUSED` while `LIVE_FORWARD` is unestablished; a
-   receipt saying `nothing_was_due` is also a pass. **No receipt at all is a
-   failure**, and that is now distinguishable.
+3. ~~Verify `pi_ledger_resolve`'s 20:30 UTC run.~~ **DONE — verified live at the
+   end of this session.** It fired on schedule at **2026-08-14T20:30:12Z** and
+   returned `status: REFUSED`, *"every one of 112 LIVE_FORWARD record(s) is
+   content-identical to a CAMPAIGN_FORWARD record"*. So the §3 adjudication is
+   confirmed by production itself rather than by analysis alone, and the guard
+   demonstrably held on the first run after deploy. Read it with
+   `GET /api/optimus/job_receipts`.
+
+   `pi_ownership_collect` correctly reports `exists: false` — *"no run has
+   written one yet"* — its first run is 2026-08-15 06:00 ET. **Verify that one
+   by its receipt**, and remember local success is not evidence: Railway egress
+   is a different network, and the insider collector once passed twelve tests
+   while 403-ing on 100% of prod fetches.
 4. **2026-08-16, attended:** first CAMPAIGN_FORWARD resolutions,
    `--population campaign_forward`, dated receipt. Never pooled with
    LIVE_FORWARD.
