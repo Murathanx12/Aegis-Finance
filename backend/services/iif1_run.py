@@ -49,6 +49,7 @@ import argparse
 import json
 import logging
 import sys
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from backend.services import iif1_features as F
@@ -189,7 +190,8 @@ CALLS_PER_CELL = 5
 
 
 def readiness_report(snap: dict, sel: dict, *, as_of: str | None,
-                     balance_usd: float, sandbox_snapshot: bool = False) -> int:
+                     balance_usd: float, sandbox_snapshot: bool = False,
+                     now: datetime | None = None) -> int:
     """Everything a human needs before authorising the first dollar. Spends $0.
 
     Deliberately ends with the literal command rather than a description of it.
@@ -272,7 +274,52 @@ def readiness_report(snap: dict, sel: dict, *, as_of: str | None,
           f"{F.snapshot_path(F.resolve_decision_ts(as_of), sandbox=sandbox_snapshot)}"
           + ("   [SANDBOX]" if sandbox_snapshot else ""))
 
+    # 6. THE SESSION WINDOW — added 2026-08-15, after the guard was found to
+    # have invented a Sunday opening bell. This report is the human gate before
+    # the first dollar and it said nothing about whether tonight is a session,
+    # so a reader could be told READY on a Saturday. The night itself would
+    # have refused (that is what the guard is for), but a readiness report that
+    # can say READY when the exchange is shut is a report that trains its
+    # reader to overrule the guard.
+    window_ok, window_note = True, ""
+    try:
+        from backend.services import market_sessions as MS
+        _now = now or datetime.now(timezone.utc)
+        _nxt = MS.next_session_open(_now)
+        print(f"\nsession window     next XNYS open {_nxt.isoformat(timespec='minutes')}"
+              f"  ({(_nxt - _now).total_seconds() / 3600.0:.1f}h away)")
+        print(f"  today            {_now.date().isoformat()} "
+              + ("IS a session" if MS.is_session(_now.date())
+                 else "is NOT a session"))
+        for _conc, _label in ((1, "serial     "), (N2.MAX_ARM_CONCURRENCY,
+                                                   "concurrent ")):
+            _m = N2.projected_night_minutes(k=k, n_arms=len(arms),
+                                            arm_concurrency=_conc)
+            _m90 = N2.projected_night_minutes(
+                k=k, n_arms=len(arms), arm_concurrency=_conc,
+                call_seconds=N2.MEASURED_CALL_SECONDS_P90)
+            print(f"  {_label}      {_m:5.0f} min projected, latest start "
+                  f"{(_nxt - timedelta(minutes=_m)).strftime('%H:%M')}Z "
+                  f"(at p90 latency {(_nxt - timedelta(minutes=_m90)).strftime('%H:%M')}Z)")
+        try:
+            _rep = N2.assert_night_fits_before_open(
+                k=k, n_arms=len(arms), now=_now,
+                arm_concurrency=N2.MAX_ARM_CONCURRENCY)
+            print(f"  headroom         {_rep['minutes_of_headroom']:.0f} min "
+                  f"at the declared {_rep['concurrency_efficiency_declared']}x "
+                  f"efficiency (DECLARED, never yet measured)")
+        except N2.NightWouldSpanTheOpen as exc:
+            window_ok = False
+            window_note = str(exc).split(".")[0]
+            print(f"  *** {window_note}")
+    except Exception as exc:                                     # noqa: BLE001
+        window_ok = False
+        window_note = f"session calendar unavailable: {exc}"
+        print(f"\nsession window     *** {window_note}")
+
     blockers = []
+    if not window_ok:
+        blockers.append(window_note)
     if sandbox_snapshot:
         blockers.append("this is a SANDBOX snapshot (rehearsal or hand-picked "
                         "universe) — a paying night must be frozen against a "

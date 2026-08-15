@@ -175,92 +175,229 @@ class NightWouldSpanTheOpen(RuntimeError):
 
 
 #: Measured per-call vendor latency, from Night 1's 224 REAL calls:
-#: median 6.6s, mean 8.7s, p90 15.6s. The mean is used because the night is a
-#: long serial run and the long tail is part of it.
+#: median 6.6s, mean 8.7s, p90 15.6s. The mean drives the serial projection
+#: because a serial night is a long sum and the tail averages into it.
 MEASURED_CALL_SECONDS = 8.7
+MEASURED_CALL_SECONDS_P90 = 15.6
 
 #: Calls a cell actually makes, measured on the five-arm rehearsal:
-#: A_snapshot 4, the other four arms 5 each.
+#: A_snapshot 4, the other four arms 5 each. `MEASURED_CALLS_PER_CELL` is the
+#: MEAN over arms (24 / 5); `MEASURED_MAX_ARM_CALLS` is the slowest arm's own
+#: count, and under concurrency it is the slowest arm that ends the cell.
 MEASURED_CALLS_PER_CELL = 4.8
+MEASURED_MAX_ARM_CALLS = 5
 
-#: 09:30 America/New_York, as UTC hour/minute. The night's whole premise is a
-#: PRE-OPEN decision; once the session starts, the tool-bearing arms read live
-#: intraday data while their forecasts are still graded from a timestamp before
-#: it. That is hindsight handed specifically to the treatment arms of the
-#: primary contrast — the same differential structure that voided Night 1, and
-#: unlike a void it would ACCRUE.
-US_OPEN_UTC_HOUR, US_OPEN_UTC_MINUTE = 13, 30
+#: Ratio the p90 call sits above the mean call. Used to scale the tail when a
+#: caller supplies a different latency assumption, so `call_seconds=15.6`
+#: (already the p90) still projects a tail above its own mean rather than
+#: silently flattening to it.
+P90_OVER_MEAN = MEASURED_CALL_SECONDS_P90 / MEASURED_CALL_SECONDS
+
+#: How much of the nominal arm-concurrency factor the projection is ALLOWED to
+#: claim before a real concurrent night has measured it.
+#:
+#: FOUND 2026-08-15, IN REVIEW, AND IT IS THE SAME BUG AS THE CALENDAR ONE.
+#: The old docstring said the projection "stays deliberately pessimistic: real
+#: concurrency never achieves the full factor (a cell ends when its SLOWEST arm
+#: ends, and the slowest of five draws exceeds the mean of five)" — and then
+#: the next line divided by the FULL factor, which is the optimistic bound and
+#: the exact flattering projection the docstring forbids. The comment modelled
+#: max-of-arms; the code implemented mean-over-five.
+#:
+#: Three compounding errors, every one of them in the UNSAFE direction:
+#:   * the latency input was the serial MEAN, and the max of five draws is not
+#:     the mean of five (p90 15.6s vs mean 8.7s is nearly 2x);
+#:   * a cell ends with its slowest arm, not its average arm;
+#:   * the tool-bearing arms are SYSTEMATICALLY the slow ones (5 calls plus
+#:     tool round-trips vs A_snapshot's 4), so the max is not a random draw
+#:     from the arm distribution — it is nearly always the same arms.
+#: At a plausible ~2.5x real speedup a "28 minute" night is really ~55, the
+#: guard authorises a start that ends PAST the opening bell, and that night
+#: ACCRUES rather than voiding.
+#:
+#: 2.0 is DECLARED, not measured. The first real concurrent night measures the
+#: speedup and either earns a larger number or replaces this one; until then a
+#: night is sized as though concurrency bought half of what it nominally offers.
+DECLARED_CONCURRENCY_EFFICIENCY = 2.0
+
+#: A night may only run in the PRE-OPEN window of the session it forecasts.
+#:
+#: The calendar fix alone would have made a Sunday night look excellent: with
+#: the next real bell 26 hours away, the headroom check passes with room for
+#: anything. But the trial's premise is a decision taken shortly before the
+#: session it is graded against, and a forecast made on Sunday morning for
+#: Monday's open is not that — the snapshot ages across a weekend of news the
+#: night's own freshness guard would have refused on a weekday.
+#:
+#: 18h admits a legitimately early start (03:00 UTC is 10.5h before an EDT
+#: bell) and excludes a weekend, a holiday eve, and any run that has drifted
+#: onto the wrong day.
+MAX_PREOPEN_LEAD_HOURS = 18
 
 
 def projected_night_minutes(*, k: int, n_arms: int,
                             call_seconds: float = MEASURED_CALL_SECONDS,
                             calls_per_cell: float = MEASURED_CALLS_PER_CELL,
-                            arm_concurrency: int = 1) -> float:
-    """How long this night will actually take.
+                            arm_concurrency: int = 1,
+                            efficiency: float = DECLARED_CONCURRENCY_EFFICIENCY,
+                            max_arm_calls: int = MEASURED_MAX_ARM_CALLS
+                            ) -> float:
+    """How long this night will actually take. Cells are always sequential.
 
-    Cells are always sequential. `arm_concurrency` is how many of the ARMS
-    inside one cell run at once, so the wall clock divides by it — the cell
-    takes as long as its slowest arm rather than the sum of all five.
+    Serial is a sum and needs no model: `n_arms * calls_per_cell * call_seconds`
+    per cell. Concurrency needs one, because a cell ends when its SLOWEST arm
+    ends, and this function's previous version divided by the full arm count —
+    the optimistic bound — while its docstring claimed pessimism.
 
-    The projection stays deliberately pessimistic: real concurrency never
-    achieves the full factor (a cell ends when its SLOWEST arm ends, and the
-    slowest of five draws exceeds the mean of five). A projection that flattered
-    the night would let it start too late, which is the exact failure this whole
-    guard exists to prevent.
+    Two bounds are computed and the SLOWER is taken:
+
+    * **max-of-arms floor** — the slowest arm's calls at the p90 latency. No
+      amount of concurrency beats one arm's own serial chain.
+    * **throughput bound** — the serial cell divided by
+      `DECLARED_CONCURRENCY_EFFICIENCY`, never by more than that, and never by
+      more arms than exist.
+
+    At the declared efficiency of 2.0 the throughput bound binds. That is
+    deliberate: it means raising the declared efficiency after a real night
+    measures it moves the projection only until the max-of-arms floor takes
+    over, so a generous future measurement cannot talk the night into a window
+    that one slow arm makes impossible.
     """
+    serial_cell = float(n_arms) * float(calls_per_cell) * float(call_seconds)
     conc = max(1, min(int(arm_concurrency), int(n_arms)))
-    return (k * n_arms * calls_per_cell * call_seconds) / 60.0 / conc
+    if conc == 1:
+        cell = serial_cell
+    else:
+        slowest_arm = float(max_arm_calls) * float(call_seconds) * P90_OVER_MEAN
+        throughput = serial_cell / min(float(conc), float(efficiency))
+        cell = max(slowest_arm, throughput)
+    return k * cell / 60.0
 
 
 def assert_night_fits_before_open(*, k: int, n_arms: int, now=None,
                                   call_seconds: float = MEASURED_CALL_SECONDS,
-                                  arm_concurrency: int = 1) -> dict:
-    """Refuse a night that cannot finish before the market it forecasts opens.
+                                  arm_concurrency: int = 1,
+                                  max_lead_hours: float = MAX_PREOPEN_LEAD_HOURS
+                                  ) -> dict:
+    """Refuse a night that cannot finish before the session it forecasts opens.
 
     FOUND 2026-08-15, BY MULTIPLYING TWO NUMBERS THAT WERE BOTH ALREADY KNOWN.
     The order specified a pre-open night at ~11:50 UTC. The night is 40 cells x
     5 arms x ~4.8 calls = ~960 SERIAL vendor calls, and Night 1's own ledger put
     the mean call at 8.7s. That is 2.3 hours. The ordered start time could never
-    have finished before the 13:30 UTC open — and nobody had multiplied the two,
-    because the call count lived in a config and the latency lived in a ledger.
+    have finished before the open — and nobody had multiplied the two, because
+    the call count lived in a config and the latency lived in a ledger.
 
     A guard, not a warning. The failure it prevents does not look like a failure:
     the night completes, the receipt says `ok`, and the contamination is visible
     only to someone who compares the last cell's timestamp against the opening
     bell.
+
+    THE BELL IS NOW READ FROM AN EXCHANGE CALENDAR (2026-08-15, in review).
+    This function used to build the next open by replacing the clock with
+    13:30 UTC and adding a calendar day if that had passed. On the Saturday it
+    was reviewed, that arithmetic returned a **Sunday** opening bell; from
+    November it would have been an hour wrong in the other direction, because
+    09:30 New York is 13:30 UTC only under EDT. See `market_sessions`.
+
+    Two refusals, not one:
+
+    * the night would still be running when the bell rings, or
+    * the bell is not within `max_lead_hours` — i.e. this is not a pre-open
+      window at all. Without that clause the calendar fix would make a weekend
+      night look *better* than a weekday one, because the next real session is
+      further away.
     """
     from datetime import datetime, timedelta, timezone
 
+    from backend.services import market_sessions as MS
+
     now = now or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
     minutes = projected_night_minutes(k=k, n_arms=n_arms,
                                       call_seconds=call_seconds,
                                       arm_concurrency=arm_concurrency)
     finish = now + timedelta(minutes=minutes)
-    open_today = now.replace(hour=US_OPEN_UTC_HOUR, minute=US_OPEN_UTC_MINUTE,
-                             second=0, microsecond=0)
-    if open_today <= now:
-        open_today += timedelta(days=1)
+    nxt = MS.next_session_open(now)
+    lead_hours = (nxt - now).total_seconds() / 3600.0
+    conc = max(1, min(int(arm_concurrency), int(n_arms)))
     report = {
         "projected_minutes": round(minutes, 1),
         "projected_finish_utc": finish.isoformat(timespec="minutes"),
-        "next_open_utc": open_today.isoformat(timespec="minutes"),
-        "minutes_of_headroom": round(
-            (open_today - finish).total_seconds() / 60.0, 1),
+        "next_open_utc": nxt.isoformat(timespec="minutes"),
+        "next_session": nxt.date().isoformat(),
+        "hours_until_open": round(lead_hours, 2),
+        "minutes_of_headroom": round((nxt - finish).total_seconds() / 60.0, 1),
         "call_seconds_assumed": call_seconds,
         "n_calls_projected": int(k * n_arms * MEASURED_CALLS_PER_CELL),
-        "arm_concurrency": max(1, min(int(arm_concurrency), int(n_arms))),
+        "arm_concurrency": conc,
+        "concurrency_efficiency_declared": (
+            DECLARED_CONCURRENCY_EFFICIENCY if conc > 1 else 1.0),
+        "calendar": "XNYS",
     }
-    if finish > open_today:
+    if lead_hours > float(max_lead_hours):
         raise NightWouldSpanTheOpen(
-            f"this night projects {minutes / 60:.1f}h ({report['n_calls_projected']} "
-            f"serial calls at {call_seconds:.1f}s) and would finish "
-            f"{finish.strftime('%H:%M')}Z, after the {open_today.strftime('%H:%M')}Z "
-            f"open. The tool-bearing arms would read live intraday data while "
-            f"their forecasts are graded from a pre-open timestamp — hindsight "
-            f"handed to the treatment arms of the primary contrast. Start "
-            f"earlier: the latest safe start is about "
-            f"{(open_today - timedelta(minutes=minutes)).strftime('%H:%M')}Z.")
+            f"this is not a pre-open window: the next {report['calendar']} "
+            f"session opens {nxt.isoformat(timespec='minutes')} "
+            f"({lead_hours:.1f}h away, limit {max_lead_hours}h). "
+            f"{now.date().isoformat()} is "
+            f"{'not a session' if not MS.is_session(now.date()) else 'a session'}"
+            f" and the next one is {report['next_session']}. A night run this "
+            f"far ahead of the bell is graded against a snapshot that has aged "
+            f"across the gap — the freshness guard would refuse the same lag "
+            f"inside a weekday.")
+    if finish > nxt:
+        raise NightWouldSpanTheOpen(
+            f"this night projects {minutes / 60:.1f}h "
+            f"({report['n_calls_projected']} calls at {call_seconds:.1f}s, "
+            f"arm_concurrency {conc} at a DECLARED efficiency of "
+            f"{DECLARED_CONCURRENCY_EFFICIENCY}) and would finish "
+            f"{finish.strftime('%H:%M')}Z, after the {nxt.strftime('%H:%M')}Z "
+            f"open of the {report['next_session']} session. The tool-bearing "
+            f"arms would read live intraday data while their forecasts are "
+            f"graded from a pre-open timestamp — hindsight handed to the "
+            f"treatment arms of the primary contrast. Start earlier: the "
+            f"latest safe start is about "
+            f"{(nxt - timedelta(minutes=minutes)).strftime('%H:%M')}Z.")
     return report
+
+
+def measured_concurrency_efficiency(res) -> dict:
+    """What the night's own clock says concurrency actually bought.
+
+    The declared efficiency is a placeholder with a job: be replaced by this.
+    Reported on the receipt and never acted on mid-night — a night that has
+    already been paid for is not improved by aborting it, and the end-of-night
+    headroom is a reason to refuse the NEXT night, not this one.
+    """
+    per_cell: list[float] = []
+    arm_sum: list[float] = []
+    n_arms = max(1, len(res.per_arm))
+    rows_by_cell: dict[str, list] = {}
+    for arm, blk in res.per_arm.items():
+        for r in blk.get("rows", []):
+            if r.get("arm_started_at") is None:
+                continue
+            rows_by_cell.setdefault(r["ticker"], []).append(r)
+    for tkr, rows in rows_by_cell.items():
+        if len(rows) < n_arms:
+            continue
+        wall = max(r["arm_finished_at"] for r in rows) - \
+            min(r["arm_started_at"] for r in rows)
+        per_cell.append(wall)
+        arm_sum.append(sum(r["arm_seconds"] for r in rows))
+    if not per_cell:
+        return {}
+    wall_total, serial_total = sum(per_cell), sum(arm_sum)
+    return {
+        "n_cells_measured": len(per_cell),
+        "mean_cell_wall_seconds": round(wall_total / len(per_cell), 3),
+        "mean_cell_serial_seconds": round(serial_total / len(per_cell), 3),
+        "measured_efficiency": (round(serial_total / wall_total, 3)
+                                if wall_total > 0 else None),
+        "declared_efficiency": DECLARED_CONCURRENCY_EFFICIENCY,
+    }
 
 
 def assert_decision_time_fresh(decision_ts, *, now=None,
@@ -1316,6 +1453,26 @@ def run_night(features_by_ticker: dict[str, dict], *,
         res.records_written = 0
 
     res.elapsed_s = time.perf_counter() - t0
+    # ── what the night ACTUALLY cost in wall clock, against what was projected
+    # The declared concurrency efficiency (2.0) is a placeholder whose entire
+    # job is to be replaced by a measurement. Recorded here, never enforced
+    # here: end-of-night headroom is a reason to refuse the NEXT night, and
+    # aborting a night that has already been paid for buys nothing.
+    if res.timing:
+        try:
+            from datetime import datetime as _DT
+            _fin = datetime.now(timezone.utc)
+            _open = _DT.fromisoformat(res.timing["next_open_utc"])
+            res.timing["actual_finish_utc"] = _fin.isoformat(timespec="minutes")
+            res.timing["actual_minutes"] = round(res.elapsed_s / 60.0, 1)
+            res.timing["actual_headroom_minutes"] = round(
+                (_open - _fin).total_seconds() / 60.0, 1)
+            res.timing["finished_before_open"] = _fin <= _open
+            res.timing["measured"] = measured_concurrency_efficiency(res)
+        except Exception:                                        # noqa: BLE001
+            # Instrumentation may degrade to absent; the night it describes
+            # may not be taken down by it.
+            res.timing["actual_headroom_minutes"] = None
     # How stale the snapshot had become by the time the LAST cell ran — see
     # `decision_lag_minutes_at_end`. Measured, never enforced: aborting a night
     # midway would throw away the forecasts already paid for AND leave the

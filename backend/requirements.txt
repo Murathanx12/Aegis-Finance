@@ -10,6 +10,13 @@ yfinance>=0.2.36
 fredapi>=0.5.1
 pandas-datareader>=0.10.0
 lxml>=5.0.0
+# XNYS session calendar (weekends, holidays, DST). Not a convenience: the IIF-1
+# night guard used to build the next opening bell as "13:30 UTC, plus a day if
+# that has passed", which invents a session every Saturday and Sunday and is an
+# hour wrong from November because 09:30 New York is 13:30 UTC only under EDT.
+# A hand-written holiday table is a promise to keep editing a file forever, and
+# forgetting does not fail — it silently starts calling a holiday a session.
+exchange_calendars>=4.13.0
 
 # ML
 # Security floor: CVE-2024-43598 (heap overflow in distributed-training socket

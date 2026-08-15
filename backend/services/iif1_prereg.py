@@ -116,6 +116,13 @@ def runtime_surface() -> dict:
         # change to have been chosen after.
         "EXECUTION_MODE": N.EXECUTION_MODE,
         "MAX_ARM_CONCURRENCY": N.MAX_ARM_CONCURRENCY,
+        # Added 2026-08-15 in review, still before the first valid night. The
+        # nominal concurrency factor was registered; what the timing guard was
+        # allowed to CLAIM from it was not, and the guard claimed all five while
+        # documenting that it claimed less. Both of these decide whether a night
+        # may run at all, so both belong where drift is a refusal.
+        "DECLARED_CONCURRENCY_EFFICIENCY": N.DECLARED_CONCURRENCY_EFFICIENCY,
+        "MAX_PREOPEN_LEAD_HOURS": N.MAX_PREOPEN_LEAD_HOURS,
     }
 
 
@@ -134,6 +141,8 @@ def frozen_surface(mod: types.ModuleType) -> dict:
         "TEMPERATURE": mod.TEMPERATURE,
         "EXECUTION_MODE": mod.EXECUTION_MODE,
         "MAX_ARM_CONCURRENCY": mod.MAX_ARM_CONCURRENCY,
+        "DECLARED_CONCURRENCY_EFFICIENCY": mod.DECLARED_CONCURRENCY_EFFICIENCY,
+        "MAX_PREOPEN_LEAD_HOURS": mod.MAX_PREOPEN_LEAD_HOURS,
     }
 
 

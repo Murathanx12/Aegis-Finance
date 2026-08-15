@@ -19,24 +19,46 @@ worlds**, and only one of them was being looked at. This plugin makes the second
 world reachable in four minutes without pushing.
 
 It does not replace checking CI. Nothing replaces checking CI.
+
+AND IT WAS INCOMPLETE ON ITS FIRST DAY (found 2026-08-15, one day later)
+========================================================================
+The first version hid the sibling and stopped there. `.github/workflows/ci.yml`
+also exports `AEGIS_IIF1_PREREG_ABSENT_OK: "1"`, which the consistency checks
+honour and `verify_or_refuse` deliberately ignores. Without it this plugin was
+STRICTER than CI — eleven prereg-consistency tests failed here and pass there —
+so a tool built to end "two green signals, two different worlds" was quietly
+introducing a **third** world, and the extra failures it produced looked exactly
+like real ones.
+
+Both halves of CI's environment are set here now, and the workflow file is the
+single source both read from.
 """
 
 from __future__ import annotations
 
+import os
 import pathlib
 
 #: Somewhere that cannot exist, rather than somewhere that merely does not
 #: exist yet — a path under the repo could be created by another test.
 _ABSENT = pathlib.Path("/nonexistent-ci-sim/Aegis module/scripts/iif1_config.py")
 
+#: Exactly what `.github/workflows/ci.yml` exports for the pytest step. A key
+#: here that CI does not set (or one CI sets that is missing here) is the same
+#: defect this plugin exists to prevent, one level up.
+_CI_ENV = {"AEGIS_IIF1_PREREG_ABSENT_OK": "1"}
+
 
 def pytest_configure(config) -> None:
     from backend.services import iif1_prereg as P
     config._aegis_real_prereg_path = P.CONFIG_PATH
+    config._aegis_real_env = {k: os.environ.get(k) for k in _CI_ENV}
     P.CONFIG_PATH = _ABSENT
+    os.environ.update(_CI_ENV)
     print(f"\n*** ci_env_sim: the `Aegis module` sibling is hidden "
-          f"({P.CONFIG_PATH}). Any test that needs it must supply it "
-          f"explicitly, as CI forces it to.\n")
+          f"({P.CONFIG_PATH}) and {sorted(_CI_ENV)} are set as CI sets them. "
+          f"Any test that needs the sibling must supply it explicitly, as CI "
+          f"forces it to.\n")
 
 
 def pytest_unconfigure(config) -> None:
@@ -44,3 +66,8 @@ def pytest_unconfigure(config) -> None:
     if real is not None:
         from backend.services import iif1_prereg as P
         P.CONFIG_PATH = real
+    for k, v in (getattr(config, "_aegis_real_env", None) or {}).items():
+        if v is None:
+            os.environ.pop(k, None)
+        else:
+            os.environ[k] = v

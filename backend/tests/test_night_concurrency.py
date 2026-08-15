@@ -230,10 +230,20 @@ def test_the_execution_mode_is_on_the_FROZEN_surface_not_just_the_runtime():
 # ── the timing guard, under the new mode ────────────────────────────────────
 
 def test_concurrency_shrinks_the_projected_night_and_the_guard_knows():
+    """This test used to assert the ratio was exactly 5.0.
+
+    It was pinning the bug. Dividing the night by the full arm count is the
+    OPTIMISTIC bound — a cell ends when its slowest arm ends, and the slow arms
+    are systematically the tool-bearing ones. The projection may now claim only
+    the DECLARED efficiency, which no real night has yet measured; the rehearsal
+    that produced "peak 5 in flight, skew 1.0 ms" ran against a stub, and a stub
+    with no latency cannot measure a latency speedup. See
+    `test_night_fits_before_open.py::test_concurrency_may_only_claim_the_DECLARED_efficiency`.
+    """
     serial = N.projected_night_minutes(k=40, n_arms=5)
     conc = N.projected_night_minutes(k=40, n_arms=5, arm_concurrency=5)
-    assert serial / conc == pytest.approx(5.0)
-    assert 25 < conc < 32, conc          # ~28 minutes, from 2.3 hours
+    assert serial / conc == pytest.approx(N.DECLARED_CONCURRENCY_EFFICIENCY)
+    assert 65 < conc < 75, conc          # ~70 minutes, from 2.3 hours
 
 
 def test_the_projection_never_divides_by_more_than_the_arms_it_has():

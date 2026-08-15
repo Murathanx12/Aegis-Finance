@@ -25,6 +25,8 @@ the irreversible write.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import pytest
 
 
@@ -110,6 +112,17 @@ def _sel(**over):
     return s
 
 
+#: A REAL pre-open moment: Monday 2026-08-17, 09:00 UTC, ahead of a 13:30 bell.
+#:
+#: Until 2026-08-15 this file called `readiness_report` with the wall clock, so
+#: whether it passed depended on **what day the suite happened to run**. It
+#: returns NOT READY on a weekend now that the report checks the session window,
+#: which means the test would have been green Monday morning and red Saturday
+#: afternoon — the same class of defect as the CI break documented below, with
+#: the clock playing the part of the missing sibling repo.
+_PRE_OPEN = datetime(2026, 8, 17, 9, 0, tzinfo=timezone.utc)
+
+
 @pytest.fixture
 def prereg_readable(monkeypatch):
     """Make the frozen pre-registration readable WITHOUT the sibling repo.
@@ -149,7 +162,8 @@ def test_the_report_runs_to_its_last_line_without_a_20_minute_assembly(
     twenty minutes of assembly.
     """
     from backend.services import iif1_run as R
-    rc = R.readiness_report(_snap(), _sel(), as_of=None, balance_usd=57.12)
+    rc = R.readiness_report(_snap(), _sel(), as_of=None, balance_usd=57.12,
+                            now=_PRE_OPEN)
     out = capsys.readouterr().out
     assert rc == 0
     assert "READY." in out
@@ -173,7 +187,7 @@ def test_a_report_that_is_NOT_ready_says_so_and_does_not_print_the_command(
     from backend.services import iif1_run as R
     # No reachable triggers: the night cannot fill its registered cell count.
     rc = R.readiness_report(_snap(), _sel(n_selected=0, n_eligible=0),
-                            as_of=None, balance_usd=57.12)
+                            as_of=None, balance_usd=57.12, now=_PRE_OPEN)
     out = capsys.readouterr().out
     assert rc == 1
     assert "NOT READY" in out
@@ -273,3 +287,51 @@ def test_a_frozen_snapshot_still_refuses_to_be_rebuilt(tmp_path, monkeypatch):
 
     with pytest.raises(FileExistsError, match="not rebuilt"):
         F.write_snapshot(snap)
+
+
+# ── the session window, added 2026-08-15 with the exchange-calendar fix ──────
+
+def test_a_WEEKEND_readiness_report_is_NOT_READY(capsys, prereg_readable):
+    """The report is the human gate before the first dollar, and it could say
+    READY on a Saturday.
+
+    The night itself would still have refused — that is what the guard is for —
+    but a readiness report that says READY when the exchange is shut trains its
+    reader to treat the night's refusal as a bug to be worked around. It was
+    written on a Saturday, by a session that had just been ordered to run a
+    paid night 'tomorrow', which is a Sunday.
+    """
+    from backend.services import iif1_run as R
+    saturday = datetime(2026, 8, 15, 14, 18, tzinfo=timezone.utc)
+    rc = R.readiness_report(_snap(), _sel(), as_of=None, balance_usd=57.12,
+                            now=saturday)
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "NOT READY" in out
+    assert "not a pre-open window" in out
+    assert "is NOT a session" in out
+    assert "python -m backend.services.iif1_run\n" not in out
+
+
+def test_the_report_states_the_LATEST_SAFE_START_in_both_modes(
+        capsys, prereg_readable):
+    """The operator's actual question is 'by when do I have to start', and the
+    answer differs by a bit over an hour between serial and concurrent."""
+    from backend.services import iif1_run as R
+    R.readiness_report(_snap(), _sel(), as_of=None, balance_usd=57.12,
+                       now=_PRE_OPEN)
+    out = capsys.readouterr().out
+    assert "latest start 11:10Z" in out       # serial, at the mean latency
+    assert "latest start 12:20Z" in out       # concurrent, at the DECLARED 2x
+    assert "p90 latency 09:20Z" in out
+    assert "DECLARED, never yet measured" in out
+
+
+def test_a_HOLIDAY_readiness_report_is_NOT_READY(capsys, prereg_readable):
+    from backend.services import iif1_run as R
+    thanksgiving = datetime(2026, 11, 26, 11, 0, tzinfo=timezone.utc)
+    rc = R.readiness_report(_snap(), _sel(), as_of=None, balance_usd=57.12,
+                            now=thanksgiving)
+    out = capsys.readouterr().out
+    assert rc == 1 and "not a pre-open window" in out
+    assert "2026-11-27" in out
