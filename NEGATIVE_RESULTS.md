@@ -1859,3 +1859,67 @@ fixed pre-declared default (the only one that can exonerate), and the excess
 over a state-and-action-matched null — and enforce matchedness in code: the
 first measurement of this null was run on SPY at 5bps against a finding computed
 on ^GSPC at 10bps, and `regret_triple()` now raises rather than subtract it.
+
+## 37. A verdict that KILLS is the hardest kind to notice being wrong (AUTOPSY-TO-RULE-1, first live run)
+
+The first end-to-end run of the autopsy pipeline reported, for every mechanism
+it had just generated:
+
+    DEAD — the mechanism never fires outside the episodes that generated it,
+    so it explains its parent and nothing else.
+
+Three mechanisms, five foreign slices each, fifteen clean zeros. Exactly the
+result the machinery was built to produce, arriving on schedule, in the shape
+of rigour.
+
+It was false. The mechanisms were never RUN.
+
+**The chain.** Optimus wrote precursors over `sp500_1m_return_pct` — a real
+field, present on every dataset-zero episode. The transfer probes carried `vix`
+and `drawdown_pct` and nothing else. Every feature lookup raised
+`PrecursorRefused`; `evaluate_slice` caught each raise and `continue`d; "could
+not be evaluated" silently became "did not fire".
+
+**A test one layer down already pinned the distinction.** `compile_precursor`
+raises on a missing feature specifically so that a typo cannot be read as a
+non-firing rule, and a test asserts it. The raise was correct. The caller threw
+it away — with a comment saying that counting it as non-firing would shrink the
+denominator, immediately above the line that did so.
+
+**The direction is the lesson.** A bug that manufactures a positive gets
+scrutinised, because a positive is what everyone is watching for. A bug that
+manufactures a KILL reads as the system working: hypotheses died, the walls
+held, nothing was exported. Fifteen zeros in a row did not look like a defect;
+they looked like discipline. It was found only by asking why a rule reading
+`vix >= 30` had fired zero times in 2008.
+
+**Fixed at three depths**, because the symptom fix alone would have left the
+next rule untestable in a new way:
+
+  * symptom — unevaluable episodes are COUNTED, and a mechanism that was never
+    run reports `UNTESTED — a vocabulary failure, not a refutation`, never DEAD;
+  * cause — a declared `TRANSFERABLE_FEATURES` vocabulary, enforced when the
+    `Autopsy` is CONSTRUCTED, so a rule the corpus cannot speak cannot exist;
+  * corpus — both sides now carry that vocabulary, and the runner halts if a
+    probe cannot answer every question a precursor is permitted to ask.
+
+**And the fix exposed a second defect.** With the shared vocabulary in place,
+episodes reported `realised_vol_20d = 0.0` for the first weeks of the sample — a
+cold 20-day rolling window, NaN, filled with zero. A rule reading
+`realised_vol_20d < 5` would have fired on every one of them for a reason having
+nothing to do with volatility. This repo bans `fillna(0)` on feature matrices;
+a state vector is a feature matrix with one row, and nothing enforced that.
+Unmeasured features are now `None`, comparing `None` RAISES, and the rolling
+features are computed on long history so the windows are warm.
+
+**Canon.** *Check the kills as hard as the passes.* A pipeline whose failure
+mode is to refute everything looks, from every dashboard, exactly like a
+pipeline working correctly. Add the same arithmetic sanity check to a negative
+that would be demanded of a positive: if a rule that fires on VIX ≥ 30 fires
+zero times in 2008, the rule is not wrong — the harness is.
+
+**After the fix, the same six episodes:** 6 mechanisms proposed, 0 dropped, 0
+dead, 0 exportable, and one at 2 of its 3 required slices (GFC +5.12pp over an
+MDE of 3.82; taper +4.94pp over 2.45) — on foreign securities, foreign decades,
+parent barred. Still REFUSED, and would remain refused with a third slice:
+export also needs a frozen pre-registration and forward certification.

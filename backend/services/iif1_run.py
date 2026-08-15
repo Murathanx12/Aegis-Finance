@@ -125,8 +125,19 @@ def assemble_and_freeze(as_of: str | None, *, overwrite: bool = False,
     documented purpose is to be safe. The guard belongs here, where the
     irreversible write is, not in the operator's memory of when to run it.
     """
+    import time as _time
     ts = F.resolve_decision_ts(as_of)
+    _t0 = _time.time()
     snap = F.assemble(ts, universe=universe)
+    # HOW LONG THE INPUTS TOOK IS PART OF THE FRESHNESS BUDGET.
+    #
+    # `decision_ts` is stamped when assembly STARTS, and the night's staleness
+    # guard measures `now - decision_ts` once, just before the first paid call.
+    # So every minute spent assembling is a minute already spent from the
+    # 45-minute allowance — and assembly walks the whole universe through
+    # yfinance and EDGAR, which is minutes, not seconds. Nobody was measuring
+    # it, which is how a budget gets consumed by the thing that checks it.
+    snap["assembly_seconds"] = round(_time.time() - _t0, 1)
     snap["sandbox"] = bool(sandbox)
     path = (F.write_snapshot(snap, overwrite=overwrite, sandbox=sandbox)
             if freeze else None)

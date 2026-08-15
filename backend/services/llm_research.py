@@ -83,6 +83,14 @@ class LLMCall:
     temperature: float
     ok: bool
     error: str = ""
+    #: The vendor's own word for why generation stopped. RECORDED BECAUSE
+    #: DISCARDING IT COST A NIGHT: IIF-1's Night 1 was voided by a `max_tokens`
+    #: ceiling that a reasoning model spends on THINKING before the answer
+    #: starts, so the reply arrived empty and the ceiling was invisible for two
+    #: days. `finish_reason == "length"` is the one field that says so
+    #: immediately, and this module was throwing it away too.
+    finish_reason: str = ""
+    truncated: bool = False
     meta: dict = field(default_factory=dict)
 
 
@@ -196,7 +204,12 @@ def ask(prompt: str, *, purpose: str, model: str = DEFAULT_MODEL,
             timeout=180)
         r.raise_for_status()
         body = r.json()
-        text = body["choices"][0]["message"]["content"]
+        choice = (body.get("choices") or [{}])[0]
+        text = (choice.get("message") or {}).get("content") or ""
+        # Read defensively: a vendor that omits the field must not take the
+        # call down, and an absent finish_reason is reported as absent rather
+        # than as "stop".
+        finish = str(choice.get("finish_reason") or "")
         usage = body.get("usage") or {}
         pin = int(usage.get("prompt_tokens") or 0)
         pout = int(usage.get("completion_tokens") or 0)
@@ -205,15 +218,27 @@ def ask(prompt: str, *, purpose: str, model: str = DEFAULT_MODEL,
                        cost_usd=round(_price(model, pin, pout), 6),
                        output_sha256=hashlib.sha256(text.encode()).hexdigest()[:16],
                        seconds=round(time.time() - t0, 2),
-                       temperature=temperature, ok=True)
+                       temperature=temperature, ok=True,
+                       finish_reason=finish,
+                       truncated=(finish == "length"))
         _record(call, ledger_path)
+        if call.truncated:
+            logger.warning(
+                "LLM reply hit the token ceiling (finish_reason=length, "
+                "max_tokens=%d, completion_tokens=%d) for purpose %r. On a "
+                "reasoning model this ceiling bounds THINKING PLUS answer, so "
+                "the reply may be empty or cut mid-structure — treat it as a "
+                "dropped call, not as a bad answer.",
+                max_tokens, pout, purpose)
         # `schema_valid` here is provisional: whether the reply matched the
         # role's schema is only knowable after `parse_json_block`, so the roles
         # below amend it. A call with a schema_hint that produced no parseable
         # block is the zero-yield case, and the amendment is what records it.
         call_id = _mirror(call, prompt=full,
-                          schema_valid=bool(text and text.strip()))
-        return {"text": text, "call": asdict(call), "call_id": call_id}
+                          schema_valid=bool(text and text.strip())
+                          and not call.truncated)
+        return {"text": text, "call": asdict(call), "call_id": call_id,
+                "finish_reason": finish, "truncated": call.truncated}
     except Exception as exc:  # noqa: BLE001 — a failed call is ledgered too
         call = LLMCall(purpose=purpose, model=model, prompt_tokens=0,
                        completion_tokens=0, cost_usd=0.0, output_sha256="",

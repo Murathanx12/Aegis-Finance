@@ -271,6 +271,19 @@ class NightResult:
     #: receipt because it bounds how much of the horizon the tool arms could
     #: already see.
     decision_lag_minutes: float | None = None
+    #: The same quantity measured when the LAST cell finished.
+    #:
+    #: `decision_lag_minutes` is checked once, before the first paid call, and
+    #: that is correct — a guard that aborts halfway has bought contaminated
+    #: forecasts and thrown away the night as well. But it means a night that
+    #: STARTS 30 minutes stale and RUNS for 60 ends with its tool arms reading
+    #: a world 90 minutes newer than the timestamp their forecasts are graded
+    #: from, and the guard reported 30. The exposure is differential — the tool
+    #: arms get it, the snapshot arm does not — which is the same bias
+    #: structure that voided Night 1, so it is measured on every receipt rather
+    #: than argued about. No behaviour depends on it yet; the number has to
+    #: exist before anyone can say what an acceptable value is.
+    decision_lag_minutes_at_end: float | None = None
     #: True for a rehearsal/test. A sandbox night never reaches the evidence
     #: ledger and never writes a production receipt, and the flag is carried on
     #: the receipt so the two can never be confused after the fact.
@@ -999,6 +1012,22 @@ def run_night(features_by_ticker: dict[str, dict], *,
         res.records_written = 0
 
     res.elapsed_s = time.perf_counter() - t0
+    # How stale the snapshot had become by the time the LAST cell ran — see
+    # `decision_lag_minutes_at_end`. Measured, never enforced: aborting a night
+    # midway would throw away the forecasts already paid for AND leave the
+    # trial with nothing.
+    if decision_ts is not None:
+        try:
+            _dts = (datetime.fromisoformat(decision_ts)
+                    if isinstance(decision_ts, str) else decision_ts)
+            if _dts.tzinfo is None:
+                _dts = _dts.replace(tzinfo=timezone.utc)
+            res.decision_lag_minutes_at_end = round(
+                (datetime.now(timezone.utc) - _dts).total_seconds() / 60.0, 2)
+        except Exception:                                        # noqa: BLE001
+            # Instrumentation may degrade to absent; the night it describes
+            # may not be taken down by it.
+            res.decision_lag_minutes_at_end = None
     if not dry_run:
         out_dir = SANDBOX_RECEIPTS_DIR if sandbox else RECEIPTS_DIR
         out_dir.mkdir(parents=True, exist_ok=True)

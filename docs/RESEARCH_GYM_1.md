@@ -300,6 +300,11 @@ for the episode dataset and for RESEARCH-GYM-1 to produce transfer-tested
 candidates. When it comes, the division stays: **LLM teaches meaning, market
 teaches weights, Aegis judges truth.**
 
+**AUTOPSY-TO-RULE-1 and the REGRET_TENSOR are built** — see
+`docs/AUTOPSY_TO_RULE_1.md` for what they do, the defect the first live run
+produced, and the first six mechanisms (0 exportable; one at 2 of its 3
+required transfer slices). What follows is the original statement of intent.
+
 **AUTOPSY-TO-RULE-1 (R5)** is the next headline: given a resolved episode and its
 surface, Optimus proposes a structured hypothesis — contemporaneous evidence and
 post-outcome evidence kept *separate*, a proposed mechanism, an executable rule —

@@ -220,6 +220,40 @@ def build(start: str, end: str) -> tuple[list, dict]:
               "1.0pp constant.")
     print()
 
+    # The shared-vocabulary features. Computed on the LONG history, not on the
+    # backtest window: a 60-day rolling standard deviation started at
+    # 2020-01-01 is NaN for its first quarter, and the first version of this
+    # code filled that with 0.0 — producing episodes whose declared realised
+    # volatility was exactly zero. A precursor reading `realised_vol_20d < 5`
+    # would have fired on every one of them for a reason having nothing to do
+    # with volatility. This repo already bans `fillna(0)` on feature matrices;
+    # the same rule applies to a state vector.
+    _hret = hist_px.pct_change().dropna()
+    _peak = hist_px.rolling(252, min_periods=20).max()
+    _dd = (hist_px / _peak - 1.0) * 100.0
+    _rv20 = _hret.rolling(20).std() * (252 ** 0.5) * 100.0
+    _rv60 = _hret.rolling(60).std() * (252 ** 0.5) * 100.0
+    _vr = _rv20 / _rv60
+    _r6m = hist_px.pct_change(126) * 100.0
+
+    def _at(series, ts):
+        """The value, or None. NEVER a stand-in — see above."""
+        s = series.reindex([pd.Timestamp(ts)], method="ffill")
+        v = s.iloc[0] if len(s) else None
+        return None if v is None or pd.isna(v) else float(v)
+
+    def dd_at(ts):
+        return _at(_dd, ts)
+
+    def rv_at(ts):
+        return _at(_rv20, ts)
+
+    def vr_at(ts):
+        return _at(_vr, ts)
+
+    def r6m_at(ts):
+        return _at(_r6m, ts)
+
     episodes = []
     for _, row in df.iterrows():
         d = pd.Timestamp(row["date"])
@@ -241,9 +275,21 @@ def build(start: str, end: str) -> tuple[list, dict]:
             if isinstance(row["reasons"], list) else str(row["reasons"])[:400],
             state={
                 "vix": float(row["vix"]),
+                "vix_bucket": G.vix_bucket(float(row["vix"])),
                 "regime": str(row["regime"]),
                 "sp500_1m_return_pct": float(row["sp500_1m"]),
                 "sp500_3m_return_pct": float(row["sp500_3m"]),
+                # THE SHARED NAMES. The same quantities under the vocabulary
+                # the transfer corpus also speaks — a rule written over
+                # `sp500_1m_return_pct` is untestable out of sample because
+                # nothing outside this backtest carries that field.
+                "ret_1m_pct": float(row["sp500_1m"]),
+                "ret_3m_pct": float(row["sp500_3m"]),
+                "ret_6m_pct": r6m_at(d),
+                "drawdown_pct": dd_at(d),
+                "realised_vol_20d": rv_at(d),
+                "vol_ratio_20_60": vr_at(d),
+                "security": "SPY",
                 "composite_score": float(row["composite_score"]),
                 "confidence": row["confidence"],
                 # Declared on the record, not only in this docstring.

@@ -56,6 +56,14 @@ from backend.services.research_gym.base_rate import (ESTABLISHED, SUGGESTIVE,
                                                      conditional_base_rate,
                                                      disagrees_with_base_rate,
                                                      vix_bucket)
+from backend.services.research_gym.autopsy import (Autopsy, AutopsyRefused,
+                                                   PrecursorRefused,
+                                                   SliceResult, adjudicate,
+                                                   compile_precursor,
+                                                   evaluate_slice,
+                                                   run_transfer)
+from backend.services.research_gym.tensor import (RegretTensor, TensorCell,
+                                                  build_regret_tensor)
 from backend.services.research_gym.power import (Power, count_episodes,
                                                  effective_n, mde_mean,
                                                  mde_proportion, power_for)
@@ -97,6 +105,11 @@ __all__ = [
     "Power", "power_for", "effective_n", "count_episodes", "mde_mean",
     "mde_proportion",
     "Assessment", "assess", "ESTABLISHED", "SUGGESTIVE", "TOO_THIN",
+    # AUTOPSY-TO-RULE-1 — a mechanism that only explains its parent dies.
+    "Autopsy", "AutopsyRefused", "PrecursorRefused", "compile_precursor",
+    "SliceResult", "evaluate_slice", "run_transfer", "adjudicate",
+    # REGRET_TENSOR — state x action x horizon, with a per-cell MDE.
+    "RegretTensor", "TensorCell", "build_regret_tensor",
     "FAILURE_MODES", "FAILURE_DESCRIPTIONS", "FORECAST_FAILURE",
     "ACTION_MAPPING_FAILURE", "TIMING_FAILURE", "SIZING_FAILURE",
     "STATE_TO_FORECAST_FAILURE",
