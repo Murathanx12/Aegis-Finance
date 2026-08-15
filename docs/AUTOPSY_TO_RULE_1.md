@@ -256,3 +256,82 @@ python -m scripts.gym_dissect_timing --write      # dataset zero
 python -m scripts.gym_autopsy_run --limit 6 --write
 python -m scripts.gym_build_tensor --stride 5
 ```
+
+---
+
+## 8. The conditionality standard (P0, ordered 2026-08-16) — DECLARED BEFORE THE RE-RUN
+
+Everything in this section was written and committed **before** the six
+mechanisms were re-run under it. That ordering is the whole point: a standard
+chosen after seeing which mechanisms it rescues is not a standard.
+
+### 8.1 The defect it fixes
+
+`Autopsy` required `expected_unaffected_states`, validated them non-empty,
+validated them disjoint from the affected list, and wrote them into the lineage
+row. `adjudicate()` then produced its verdict from
+`charter.request_export -> TransferTest.n_independent_slices_passed()` — a
+**flat count** of slices where `passed` was true, with no notion of which slices
+the mechanism itself had declared it should work in.
+
+The declaration changed no outcome. A mechanism that is real in its declared
+regime and correctly silent everywhere else scored its correctly-silent slices
+as failures and came back `REFUSED — survived 1 of 3`. **The discriminating half
+of every hypothesis was collected and thrown away.**
+
+### 8.2 What changed
+
+- The declaration is now **executable**. `affected_precursor` and
+  `unaffected_precursor` are written in the same closed grammar and the same
+  `TRANSFERABLE_FEATURES` vocabulary as the precursor, so every episode is
+  labelled `AFFECTED` / `UNAFFECTED` / `OUT_OF_SCOPE` from the **frozen**
+  declaration before any number is computed. Labels cannot be chosen to fit
+  results because they exist before the results do.
+- **The sign is inverted where it belongs.** In a declared-`UNAFFECTED` region
+  the *same action swap* is measured on every episode, whether or not the
+  precursor fires. A powered null there is **confirming**. A detectable effect
+  there is **disconfirming** — what was found is broader than the mechanism, and
+  on that evidence it is the ACTION rather than the conditioning. This makes the
+  unaffected declaration a placebo family built into the hypothesis, which canon
+  has demanded for months ("carry your corpse as control") and never had
+  structurally.
+- **Nine verdicts replace pass/fail and `DEAD`.** Only `REFUTED_IN_SCOPE` and
+  `STRUCTURALLY_CLOSED` close anything, and the first closes only its own scope.
+  Every non-support carries a computed `revisit_when`.
+- **§18 is enforced, not assumed.** The `AFFECTED - UNAFFECTED` interaction is
+  tested as its own quantity with its own SE and its own MDE, and export
+  requires it to be detectable. Without that, scope-awareness is a machine for
+  manufacturing regimes.
+- **The corpse check became scope-aware.** A corpse only blocks if its verdict
+  is one of the two closing verdicts; `NOT_DETECTABLE_IN_SCOPE` blocks nothing.
+  Exact rule + same scope -> BLOCKED. Same shape, moved thresholds -> resurrection
+  tax, and BLOCKED outright if declared after the parent's result was known.
+  Mechanistically distinct and prospectively declared -> allowed, parent corpse
+  mandatory as control.
+
+### 8.3 The re-run protocol, frozen here
+
+Symmetric across all six mechanisms. **One thing changes: the schema.**
+
+| held fixed | value |
+|---|---|
+| episodes | the same `dataset_zero_*.jsonl`, worst-first by regret vs HOLD |
+| limit | 6 |
+| transfer universe | QQQ, IWM, XLF, XLE, XLK, EFA (never SPY) |
+| transfer slices | dotcom / GFC / eurocrisis / taper / late-cycle |
+| horizon, cost | 63 days, `DEFAULT_COST_BPS` |
+| sample size | `effective_n(n, 1)` — deliberately UNCHANGED |
+
+That last row is deliberate. Changing the labelling and the denominator in one
+step would make it impossible to say which of them moved a verdict, and this
+re-run exists to answer exactly that question.
+
+**Both verdicts are recorded on every lineage row** (`flat_verdict` and
+`scoped_verdict`), so the migration is auditable rather than asserted.
+
+Expected outcome, stated in advance so it cannot be claimed afterwards: most of
+the six are "we sold and should have held", and holding beats selling almost
+everywhere. The placebo arm should therefore **refute** most of them. If it
+does, that is the same finding as the 67.4% BUY hit rate scoring -0.57pp against
+HOLD — the action, not the conditioning — and it is a result, not a failure of
+the standard.
