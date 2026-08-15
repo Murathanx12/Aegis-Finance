@@ -207,15 +207,44 @@ def _status_row(source: str, subject: str, status: str, reason: str,
 
 
 def collect_and_append(day: str, *, path=None, limit: int | None = None,
-                       allow_historical: bool = False) -> dict:
-    """One forward collection cycle: fetch a day, write its events, receipt it."""
-    from backend.services.teacher_library.ledger import append
+                       allow_historical: bool = False,
+                       collect=None, append_fn=None) -> dict:
+    """One forward collection cycle: fetch a day, write its events, receipt it.
 
-    adapter = OwnershipFormsAdapter()
+    `collect` and `append_fn` exist so this is testable WITHOUT reaching SEC.
+    They were added after a test file monkeypatched `OwnershipFormsAdapter.
+    _collect` — which is an INSTANCE attribute assigned in `__init__`, so the
+    class patch silently created a new attribute and the real fetch ran anyway.
+    One of those tests then passed, because it only asserted key presence, and
+    the keys came from a live NOT_YET_PUBLISHED response. A seam that exists is
+    worth more than a patch that looks like one.
+    """
+    import collections
+    import time
+
+    from backend.services.teacher_library.ledger import append as _default_append
+
+    append = append_fn or _default_append
+    t0 = time.time()
+    adapter = OwnershipFormsAdapter(collect=collect)
     payload = adapter.fetch(day, limit=limit,
                             allow_historical=allow_historical)
+    fetch_seconds = round(time.time() - t0, 2)
     produced = adapter.to_events(payload)
     res = append(produced, path=path)
+
+    # EVERYTHING A HUMAN NEEDS TO JUDGE THE RUN WITHOUT RE-RUNNING IT.
+    #
+    # The first production invocation is the only one that can prove Railway
+    # reaches EDGAR at all, and this project has already shipped a collector
+    # that passed twelve offline tests while 403-ing on 100% of prod fetches.
+    # A receipt that omits a field cannot be enriched afterwards — the day is
+    # gone. So the counts below are written whether or not anyone asks.
+    by_action = collections.Counter(e.action_type for e in produced)
+    actors = {e.actor_id for e in produced if getattr(e, "actor_id", None)}
+    tickers = {getattr(e, "ticker_at_event", None) for e in produced}
+    tickers.discard(None)
+    tickers.discard("")
     res.update({
         "day": day,
         "source_status": payload.get("status"),
@@ -223,14 +252,36 @@ def collect_and_append(day: str, *, path=None, limit: int | None = None,
         "n_index_rows": payload.get("n_index_rows", 0),
         "n_ownership_filings_in_index":
             payload.get("n_ownership_filings_in_index", 0),
+        "n_unique_accessions": payload.get("n_unique_accessions",
+                                           payload.get("n_attempted", 0)),
         "n_joint_filing_rows_collapsed":
             payload.get("n_joint_filing_rows_collapsed", 0),
         "n_attempted": payload.get("n_attempted", 0),
+        "n_documents_fetched": payload.get("n_documents_fetched",
+                                           payload.get("n_attempted", 0)),
         "sampled": payload.get("sampled", False),
         "coverage": payload.get("coverage", 0.0),
         "n_parse_errors": payload.get("n_parse_errors", 0),
+        # Failure CLASSES, not a total. "12 failures" cannot distinguish a
+        # rate limit from a schema change from an outage, and those need
+        # different responses.
+        "failure_classes": dict(payload.get("failure_classes", {}) or {}),
         "usable_events": sum(1 for e in produced if e.usable),
-        "n_buys": sum(1 for e in produced if e.action_type == "BUY"),
-        "n_sells": sum(1 for e in produced if e.action_type == "SELL"),
+        # Every action type, not just the flattering two. The old Form 4 path
+        # kept purchases and would have made the Teacher Library a collection
+        # of successful-looking buy stories.
+        "events_by_action": dict(by_action),
+        "n_buys": by_action.get("BUY", 0),
+        "n_sells": by_action.get("SELL", 0),
+        "n_mechanical": sum(v for k, v in by_action.items()
+                            if k not in ("BUY", "SELL")),
+        "n_distinct_actors": len(actors),
+        "n_distinct_tickers": len(tickers),
+        "fetch_seconds": fetch_seconds,
+        "total_seconds": round(time.time() - t0, 2),
+        # Idempotency, as a MEASURED field rather than a property anyone
+        # asserts: a second identical run must append nothing, and `duplicates`
+        # from `append` is what says so.
+        "idempotent_second_run": None,
     })
     return res

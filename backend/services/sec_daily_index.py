@@ -235,7 +235,14 @@ def collect_day(d: date | str, *, limit: int | None = None,
 
     idx = fetch_index(d)
     if idx["status"] != "OK_DATA":
-        return {**idx, "parsed": [], "n_parsed": 0, "n_parse_errors": 0}
+        # Same key set on every outcome. A receipt whose shape changes with the
+        # result forces the reader to know the result before they can read it.
+        return {**idx, "parsed": [], "n_parsed": 0, "n_parse_errors": 0,
+                "n_unique_accessions": 0, "n_documents_fetched": 0,
+                "failure_classes": {}, "n_attempted": 0, "coverage": 0.0,
+                "n_index_rows": idx.get("n_index_rows", 0),
+                "n_ownership_filings_in_index": 0,
+                "n_joint_filing_rows_collapsed": 0, "sampled": False}
 
     # ONE FETCH PER DOCUMENT, NOT PER INDEX ROW.
     #
@@ -262,18 +269,30 @@ def collect_day(d: date | str, *, limit: int | None = None,
                        d.isoformat())
         filings = filings[:limit]
 
-    parsed, errors = [], 0
+    # FAILURE CLASSES, NOT A FAILURE COUNT.
+    #
+    # "12 parse errors" cannot distinguish a rate limit from a schema change
+    # from an outage, and those need three different responses. The first
+    # production run is the only chance to learn which one Railway hits, so the
+    # breakdown is recorded from the start rather than added after a bad night.
+    failure_classes: dict[str, int] = {}
+    parsed, errors, fetched = [], 0, 0
     for f in filings:
         xml = fetch_filing_document(f["cik"], f["accession"])
         if not xml:
             errors += 1
+            failure_classes["document_not_retrievable"] = (
+                failure_classes.get("document_not_retrievable", 0) + 1)
             parsed.append({**f, "status": "UNAVAILABLE",
                            "reason": "document_not_retrievable"})
             continue
+        fetched += 1
         from backend.services.ownership_forms import parse_ownership_form
         p = parse_ownership_form(xml)
         if p["status"] == "PARSE_ERROR":
             errors += 1
+            cls = str(p.get("reason") or "parse_error")[:60]
+            failure_classes[cls] = failure_classes.get(cls, 0) + 1
         parsed.append({**f, **p})
 
     return {
@@ -282,8 +301,14 @@ def collect_day(d: date | str, *, limit: int | None = None,
         "url": idx.get("url"),
         "n_index_rows": n_index_rows,
         "n_ownership_filings_in_index": len(seen_acc),
+        "n_unique_accessions": len(seen_acc),
         "n_joint_filing_rows_collapsed": n_index_rows - len(seen_acc),
         "n_attempted": len(filings),
+        # Attempted and FETCHED are different numbers, and the gap between them
+        # is the whole T9 lesson: a collector 403-ing on every request still
+        # "attempts" the full day.
+        "n_documents_fetched": fetched,
+        "failure_classes": failure_classes,
         "sampled": truncated,
         # Coverage of DOCUMENTS, which is the thing that can be missed. Against
         # index rows it would read 1.000 while eleven of them were one file.
