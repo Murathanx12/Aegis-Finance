@@ -29,15 +29,26 @@ from backend.services.research_gym.policies import (DEFAULT_COST_BPS,
                                                     POLICY_MENU, PolicyResult,
                                                     run_policy)
 
-#: How much better an alternative must be, in percentage points of net return,
-#: before the taken action is called a mistake rather than a tie.
+#: FALLBACK ONLY, and known to be wrong. Kept so the classifier still runs when
+#: no matched null is available, and labelled UNCALIBRATED wherever it is used.
 #:
-#: Not a p-value and not pretending to be one. A single episode cannot support
-#: an inference; this threshold exists to stop the classifier labelling a 4bp
-#: difference as an "action-mapping failure", which would fill the taxonomy with
-#: noise and make the counts meaningless. The real test is whether a mode
-#: RECURS across episodes, and that test lives one layer up.
+#: WHY IT IS WRONG (G1, measured 2026-08-15). This gate was supposed to stop the
+#: classifier calling a 4bp difference a failure. It was never checked against
+#: what a blameless decision actually scores under this denominator. Measured:
+#: **P(an always-HOLD decision showing more than 1.0pp regret) = 0.931.** So the
+#: gate passed 93% of neutral holds through to a failure label, and 27 of the 28
+#: HOLDs in dataset zero were classified as failures by construction rather than
+#: by measurement. The real bar is a percentile of the state-and-action-matched
+#: null (`regret.failure_threshold_pct`), which at VIX>=35 for a full sell is
+#: **35pp, not 1pp**.
 MATERIAL_EDGE_PCT = 1.0
+
+#: A DIFFERENT question that happens to use the same number: how much of a gap
+#: between two policies' costs on the SAME window counts as the cost mattering.
+#: That is a direct comparison of two measured quantities, not a comparison
+#: against a null, so it does not inherit G1. Separated from `MATERIAL_EDGE_PCT`
+#: so that recalibrating the failure gate cannot silently move it.
+MATERIAL_COST_GAP_PCT = 1.0
 
 
 @dataclass
@@ -64,7 +75,15 @@ class ResponseSurface:
         return r[0] if r else None
 
     def regret_pct(self) -> float | None:
-        """Best available minus what was done. Never negative by construction."""
+        """Best available minus what was done. AN UPPER BOUND, NOT A MEASUREMENT.
+
+        "Never negative by construction" — which was the original docstring —
+        is the tell. This is a maximum over the whole menu minus one member of
+        it, so a decision-maker with no skill scores large positive values:
+        measured at roughly +5pp for always-HOLD and +17pp for a full sell
+        after VIX>=35. Use `regret.regret_triple()` for a number that can
+        exonerate as well as convict.
+        """
         b, t = self.best(), self.taken
         if b is None or t is None:
             return None
@@ -78,7 +97,11 @@ class ResponseSurface:
             "horizon_days": self.horizon_days,
             "taken_policy": self.taken_policy,
             "cost_bps": self.cost_bps,
-            "regret_pct": self.regret_pct(),
+            "regret_vs_ex_post_best_pct": self.regret_pct(),
+            "regret_vs_ex_post_best_note":
+                "UPPER BOUND — max over the menu minus the action taken. Has a "
+                "large positive null (G1). Not comparable across states or "
+                "actions without `regret.regret_triple`.",
             # The full surface, sorted for readability but complete. Truncating
             # to a top-N here would quietly turn the record into a leaderboard.
             "surface": [
@@ -143,9 +166,29 @@ def _direction_belief(ep: EP.DecisionEpisode) -> float | None:
     return None
 
 
+@dataclass(frozen=True)
+class Attribution:
+    """A classification, its regret in all three denominators, and its strength.
+
+    Returned as an object rather than `(mode, detail)` because the tuple was
+    exactly the shape that let the regret number travel without its
+    denominator, which is how G1 survived a review: `+26.5pp` reads as a
+    measurement of the engine right up until you ask what a blameless decision
+    scores, and the tuple never had anywhere to put that answer.
+    """
+    mode: str
+    detail: str
+    regret: "object | None" = None          # regret.RegretTriple
+    evidence_strength: str = ""
+    #: The bar this episode was judged against, and where the bar came from.
+    threshold_pct: float | None = None
+    threshold_provenance: str = ""
+
+
 def attribute(ep: EP.DecisionEpisode, surface: ResponseSurface,
               realised_return_pct: float,
-              base_rate=None) -> tuple[str, str]:
+              base_rate=None, *, matched_null=None,
+              state_key: str | None = None) -> Attribution:
     """Classify one resolved episode into the R4 taxonomy.
 
     THE CENTRAL DISTINCTION, and the reason the surface had to exist first:
@@ -173,32 +216,56 @@ def attribute(ep: EP.DecisionEpisode, surface: ResponseSurface,
     `UNCLASSIFIED`, because "we do not know what it believed" is not the same
     fact as "its belief was wrong".
     """
+    from backend.services.research_gym import regret as RG
+
     taken, best = surface.taken, surface.best()
     if taken is None or best is None:
-        return EP.UNCLASSIFIED, "no counterfactual surface"
+        return Attribution(EP.UNCLASSIFIED, "no counterfactual surface")
 
-    regret = best.net_return_pct - taken.net_return_pct
-    if regret < MATERIAL_EDGE_PCT:
-        return (EP.NO_FAILURE,
-                f"the action taken was within {MATERIAL_EDGE_PCT:.1f}pp of the "
-                f"best available alternative (regret {regret:.2f}pp)")
+    triple = RG.regret_triple(surface, state_key=state_key,
+                              matched_null=matched_null)
+    regret = triple.vs_ex_post_best
+
+    def _out(mode: str, detail: str, strength: str = "") -> Attribution:
+        return Attribution(mode=mode, detail=detail, regret=triple,
+                           evidence_strength=strength,
+                           threshold_pct=threshold,
+                           threshold_provenance=threshold_note)
+
+    # THE BAR IS THE NULL, NOT A ROUND NUMBER.
+    #
+    # "Within 1pp of the best of seventeen" sounded conservative and was the
+    # opposite: a blameless hold clears 1pp 93% of the time, so the old gate
+    # convicted almost everything it saw. The bar now moves with the state and
+    # the action, because 3pp of regret after a VIX-50 panic and 3pp in a calm
+    # market are not the same claim.
+    threshold, threshold_note = RG.failure_threshold_pct(
+        triple.null_cell, fallback_pct=MATERIAL_EDGE_PCT)
+    if regret < threshold:
+        return _out(EP.NO_FAILURE,
+                    f"regret {regret:.2f}pp against the ex-post best does not "
+                    f"clear {threshold:.2f}pp — {threshold_note}"
+                    + ("" if triple.excess_vs_matched_null is None else
+                       f". Excess over the matched null: "
+                       f"{triple.excess_vs_matched_null:+.2f}pp"))
 
     # Cost first: it is the only mode where the gross decision was RIGHT and the
     # implementation ate it, and testing it later would let a turnover problem
     # be misfiled as a timing one.
-    if (taken.gross_return_pct >= best.gross_return_pct - MATERIAL_EDGE_PCT
-            and taken.cost_pct > best.cost_pct + MATERIAL_EDGE_PCT):
-        return (EP.COST_FAILURE,
-                f"gross was competitive ({taken.gross_return_pct:.2f}pp vs "
-                f"{best.gross_return_pct:.2f}pp) and turnover cost "
-                f"{taken.cost_pct:.2f}pp against {best.cost_pct:.2f}pp")
+    if (taken.gross_return_pct >= best.gross_return_pct - MATERIAL_COST_GAP_PCT
+            and taken.cost_pct > best.cost_pct + MATERIAL_COST_GAP_PCT):
+        return _out(EP.COST_FAILURE,
+                    f"gross was competitive ({taken.gross_return_pct:.2f}pp vs "
+                    f"{best.gross_return_pct:.2f}pp) and turnover cost "
+                    f"{taken.cost_pct:.2f}pp against {best.cost_pct:.2f}pp")
 
     p_up = _direction_belief(ep)
     if p_up is None:
-        return (EP.UNCLASSIFIED,
-                f"regret {regret:.2f}pp, but the episode carries no directional "
-                f"belief, so a wrong VIEW and a wrong ACTION cannot be "
-                f"separated — and assuming either would invent the finding")
+        return _out(EP.UNCLASSIFIED,
+                    f"regret {regret:.2f}pp, but the episode carries no "
+                    f"directional belief, so a wrong VIEW and a wrong ACTION "
+                    f"cannot be separated — and assuming either would invent "
+                    f"the finding")
 
     expected_up = p_up > 0.5
     actual_up = realised_return_pct > 0
@@ -212,77 +279,92 @@ def attribute(ep: EP.DecisionEpisode, surface: ResponseSurface,
         # anything. The state's own history is the only pre-outcome evidence
         # available about whether the expectation was reasonable at the time.
         if base_rate is not None:
-            from backend.services.research_gym.base_rate import \
-                disagrees_with_base_rate
-            contradicted = disagrees_with_base_rate(p_up, base_rate)
-            if contradicted is True:
-                return (EP.STATE_TO_FORECAST_FAILURE,
-                        f"the state was read correctly ({base_rate.state_key}) "
-                        f"and the expectation drawn from it contradicted that "
-                        f"state's own history: P(up) believed {p_up:.2f}, "
-                        f"historical P(up | {base_rate.state_key}) = "
-                        f"{base_rate.p_up:.2f} over n={base_rate.n} "
-                        f"({base_rate.horizon_days}d), realised "
-                        f"{realised_return_pct:+.2f}%. Perception was fine; the "
-                        f"inference from state to expected return was wrong, "
-                        f"and it was wrong before the outcome was known")
-            if contradicted is None:
-                return (EP.FORECAST_FAILURE,
-                        f"believed P(up)={p_up:.2f}, realised "
-                        f"{realised_return_pct:+.2f}% — and the base rate for "
-                        f"{base_rate.state_key} is too thin (n={base_rate.n}) "
-                        f"to say whether the view was unreasonable at the time")
-            return (EP.FORECAST_FAILURE,
-                    f"believed P(up)={p_up:.2f}, consistent with the state's "
-                    f"own history (P(up | {base_rate.state_key}) = "
-                    f"{base_rate.p_up:.2f}, n={base_rate.n}), and the realised "
-                    f"return was {realised_return_pct:+.2f}% — an unlucky draw "
-                    f"rather than a fixable inference")
-        return (EP.FORECAST_FAILURE,
-                f"believed P(up)={p_up:.2f} and the {surface.horizon_days}-day "
-                f"return was {realised_return_pct:+.2f}% — the world went the "
-                f"other way. NO BASE RATE was supplied, so whether this was "
-                f"unlucky or systematically miscalibrated is UNKNOWN")
+            from backend.services.research_gym import base_rate as BR
+            a = BR.assess(p_up, base_rate)
+            n_eff = ("unknown" if a.n_effective is None
+                     else f"{a.n_effective:.1f}")
+            if a.disagrees is True:
+                return _out(EP.STATE_TO_FORECAST_FAILURE,
+                            f"the state was read correctly "
+                            f"({base_rate.state_key}) and the expectation "
+                            f"drawn from it contradicted that state's own "
+                            f"history: P(up) believed {p_up:.2f}, historical "
+                            f"P(up | {base_rate.state_key}) = "
+                            f"{base_rate.p_up:.2f} over n={base_rate.n} "
+                            f"(n_effective {n_eff}, {base_rate.horizon_days}d),"
+                            f" realised {realised_return_pct:+.2f}%. "
+                            f"Perception was fine; the inference from state to "
+                            f"expected return was wrong, and it was wrong "
+                            f"before the outcome was known. EVIDENCE "
+                            f"{a.strength.upper()}: {a.detail}",
+                            strength=a.strength)
+            if a.disagrees is None:
+                return _out(EP.FORECAST_FAILURE,
+                            f"believed P(up)={p_up:.2f}, realised "
+                            f"{realised_return_pct:+.2f}% — and the base rate "
+                            f"for {base_rate.state_key} is too thin "
+                            f"(n={base_rate.n}, n_effective {n_eff}) to say "
+                            f"whether the view was unreasonable at the time",
+                            strength=a.strength)
+            return _out(EP.FORECAST_FAILURE,
+                        f"believed P(up)={p_up:.2f}, consistent with the "
+                        f"state's own history (P(up | {base_rate.state_key}) = "
+                        f"{base_rate.p_up:.2f}, n={base_rate.n}, n_effective "
+                        f"{n_eff}), and the realised return was "
+                        f"{realised_return_pct:+.2f}% — an unlucky draw rather "
+                        f"than a fixable inference", strength=a.strength)
+        return _out(EP.FORECAST_FAILURE,
+                    f"believed P(up)={p_up:.2f} and the "
+                    f"{surface.horizon_days}-day return was "
+                    f"{realised_return_pct:+.2f}% — the world went the other "
+                    f"way. NO BASE RATE was supplied, so whether this was "
+                    f"unlucky or systematically miscalibrated is UNKNOWN")
 
     # Beliefs were directionally right, and the action still cost materially.
     # That is the policy layer, and the sub-mode says which knob.
     same_family = best.name.startswith(taken.name.split("_reenter")[0])
     reentry = "reenter" in best.name or "scale_in" in best.name
     if reentry and same_family:
-        return (EP.TIMING_FAILURE,
-                f"direction was right (P(up)={p_up:.2f}, realised "
-                f"{realised_return_pct:+.2f}%) and {best.name} beat "
-                f"{taken.name} by {regret:.2f}pp using the same direction with "
-                f"a different re-entry moment")
+        return _out(EP.TIMING_FAILURE,
+                    f"direction was right (P(up)={p_up:.2f}, realised "
+                    f"{realised_return_pct:+.2f}%) and {best.name} beat "
+                    f"{taken.name} by {regret:.2f}pp using the same direction "
+                    f"with a different re-entry moment")
     if reentry:
-        return (EP.TIMING_FAILURE,
-                f"direction was right and the best alternative ({best.name}) "
-                f"differs by when it returns to the market: +{regret:.2f}pp")
+        return _out(EP.TIMING_FAILURE,
+                    f"direction was right and the best alternative "
+                    f"({best.name}) differs by when it returns to the market: "
+                    f"+{regret:.2f}pp")
     if best.name in ("sell_25", "sell_50", "buy_25", "buy_50", "hold") and \
             taken.name in ("sell_25", "sell_50", "sell_100", "buy_25",
                            "buy_50", "hold"):
-        return (EP.SIZING_FAILURE,
-                f"direction was right (P(up)={p_up:.2f}, realised "
-                f"{realised_return_pct:+.2f}%) and the best alternative "
-                f"{best.name} differs from {taken.name} only in HOW MUCH: "
-                f"+{regret:.2f}pp")
-    return (EP.ACTION_MAPPING_FAILURE,
-            f"beliefs were directionally correct (P(up)={p_up:.2f}, realised "
-            f"{realised_return_pct:+.2f}%) and {best.name} beat the action "
-            f"taken ({taken.name}) by {regret:.2f}pp — perception was right and "
-            f"the policy layer converted it into the wrong action")
+        return _out(EP.SIZING_FAILURE,
+                    f"direction was right (P(up)={p_up:.2f}, realised "
+                    f"{realised_return_pct:+.2f}%) and the best alternative "
+                    f"{best.name} differs from {taken.name} only in HOW MUCH: "
+                    f"+{regret:.2f}pp")
+    return _out(EP.ACTION_MAPPING_FAILURE,
+                f"beliefs were directionally correct (P(up)={p_up:.2f}, "
+                f"realised {realised_return_pct:+.2f}%) and {best.name} beat "
+                f"the action taken ({taken.name}) by {regret:.2f}pp — "
+                f"perception was right and the policy layer converted it into "
+                f"the wrong action")
 
 
 def attribute_in_place(ep: EP.DecisionEpisode, surface: ResponseSurface,
-                       base_rate=None) -> EP.DecisionEpisode:
+                       base_rate=None, *, matched_null=None,
+                       state_key: str | None = None) -> EP.DecisionEpisode:
     """Classify and write the mode onto the episode. Requires an outcome."""
     if not ep.is_resolved:
         ep.failure_mode = EP.UNCLASSIFIED
         ep.failure_detail = "unresolved — no outcome attached yet"
         return ep
     assert ep.outcome is not None
-    mode, detail = attribute(ep, surface,
-                             float(ep.outcome.realised_return_pct or 0.0),
-                             base_rate=base_rate)
-    ep.failure_mode, ep.failure_detail = mode, detail
+    a = attribute(ep, surface, float(ep.outcome.realised_return_pct or 0.0),
+                  base_rate=base_rate, matched_null=matched_null,
+                  state_key=state_key)
+    ep.failure_mode, ep.failure_detail = a.mode, a.detail
+    ep.evidence_strength = a.evidence_strength
+    # The triple, never a scalar — see `DecisionEpisode.regret`.
+    ep.regret = {} if a.regret is None else a.regret.as_dict()
     return ep

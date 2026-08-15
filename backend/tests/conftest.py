@@ -85,6 +85,39 @@ def _fresh_fmp_budget():
 
 
 @pytest.fixture(autouse=True)
+def _sandbox_telemetry_to_tmp(tmp_path_factory, monkeypatch):
+    """Keep the suite's stub LLM calls out of the tracked sandbox ledger.
+
+    FOUND 2026-08-15 BY LOOKING AT `git status` AFTER A TEST RUN.
+    `investigator_night.SANDBOX_TELEMETRY` points at
+    `backend/data/optimus/llm_calls_sandbox.jsonl`, which is TRACKED — it holds
+    the five-arm rehearsal's record. Every full run of the fast suite was
+    appending ~624 stub rows to it: 3.9 MB accumulated, ~400 KB per run, and a
+    dirty working tree after every `pytest`.
+
+    The separation from the real ledger is correct and deliberate (stub rows
+    priced at $0.00 must never sit beside the rows the funding rule reads).
+    What was missing is that the SUITE needs its own file too, for the same
+    reason: exhaust from tests that never called a vendor should not accumulate
+    in an artifact whose job is to record that a rehearsal happened.
+
+    The same applies to `SANDBOX_RECEIPTS_DIR`, whose 2026-08-15 rehearsal
+    receipt the suite was silently rewriting on every run — the file recording
+    what the rehearsal did, overwritten by tests that did nothing.
+    """
+    try:
+        from backend.services import investigator_night as _in
+        d = tmp_path_factory.mktemp("sandbox_tele")
+        monkeypatch.setattr(_in, "SANDBOX_TELEMETRY",
+                            d / "llm_calls_sandbox.jsonl", raising=False)
+        monkeypatch.setattr(_in, "SANDBOX_RECEIPTS_DIR", d / "nights",
+                            raising=False)
+    except Exception:                                            # noqa: BLE001
+        pass
+    yield
+
+
+@pytest.fixture(autouse=True)
 def _block_network(request):
     """Block non-loopback sockets for non-slow/non-network tests (fail fast, loud)."""
     marker = request.node.get_closest_marker("slow") or request.node.get_closest_marker("network")

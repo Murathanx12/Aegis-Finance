@@ -183,6 +183,15 @@ class DecisionEpisode:
     #: without knowing what the other actions would have done.
     failure_mode: str = UNCLASSIFIED
     failure_detail: str = ""
+    #: All three regret denominators (`regret.RegretTriple.as_dict()`), never a
+    #: scalar. Written by `attribute_in_place`. A single regret number on this
+    #: record would be the G1 defect reintroduced: the obvious denominator is a
+    #: maximum over the menu and has a large positive null.
+    regret: dict = field(default_factory=dict)
+    #: How firmly the base rate contradicted the belief: established /
+    #: suggestive / too_thin. Carried separately from `failure_mode` so counts
+    #: can be split by evidence strength rather than reported as one total.
+    evidence_strength: str = ""
     #: What produced this episode, for the lineage ledger.
     source: str = ""
     created_at: str = field(

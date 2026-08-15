@@ -15,8 +15,12 @@ individually pre-registered, and never citable.
 
 THE SHAPE OF THE ANSWER
 =======================
-`surface.regret_pct()` says how much the decision cost against the best
-available alternative. `ep.failure_mode` says WHERE it went wrong — and the
+`regret.regret_triple()` says how much the decision cost, in THREE declared
+denominators — against the ex-post best (an upper bound with a large positive
+null), against a fixed default, and as an excess over the state-and-action
+matched null. `surface.regret_pct()` gives only the first and is kept for
+continuity; reading it alone is the G1 defect. `ep.failure_mode` says WHERE it
+went wrong — and the
 distinction between `forecast_failure` and `action_mapping_failure` is the one
 worth the whole exercise: the first means the world surprised us, the second
 means we saw it correctly and did the wrong thing about it.
@@ -37,17 +41,30 @@ from backend.services.research_gym.charter import (CAMPAIGN, ExportRefused,
                                                    record_lineage,
                                                    request_export,
                                                    unledgered_search_warning)
-from backend.services.research_gym.counterfactual import (MATERIAL_EDGE_PCT,
+from backend.services.research_gym.counterfactual import (MATERIAL_COST_GAP_PCT,
+                                                          MATERIAL_EDGE_PCT,
+                                                          Attribution,
                                                           ResponseSurface,
                                                           attribute,
                                                           attribute_in_place,
                                                           replay,
                                                           taken_policy_name)
-from backend.services.research_gym.base_rate import (BaseRate,
+from backend.services.research_gym.base_rate import (ESTABLISHED, SUGGESTIVE,
+                                                     TOO_THIN, Assessment,
+                                                     BaseRate, assess,
                                                      build_base_rates,
                                                      conditional_base_rate,
                                                      disagrees_with_base_rate,
                                                      vix_bucket)
+from backend.services.research_gym.power import (Power, count_episodes,
+                                                 effective_n, mde_mean,
+                                                 mde_proportion, power_for)
+from backend.services.research_gym.regret import (DEFAULT_FAILURE_PERCENTILE,
+                                                  MatchedNull, NullCell,
+                                                  NullMismatch, RegretTriple,
+                                                  build_matched_null,
+                                                  failure_threshold_pct,
+                                                  regret_triple)
 from backend.services.research_gym.episode import (ACTION_MAPPING_FAILURE,
                                                    CERTIFICATION,
                                                    CONCENTRATION_FAILURE,
@@ -71,7 +88,15 @@ __all__ = [
     "DecisionEpisode", "Beliefs", "Outcome",
     "POLICY_MENU", "PolicyResult", "run_policy", "DEFAULT_COST_BPS",
     "ResponseSurface", "replay", "attribute", "attribute_in_place",
-    "taken_policy_name", "MATERIAL_EDGE_PCT",
+    "taken_policy_name", "MATERIAL_EDGE_PCT", "MATERIAL_COST_GAP_PCT",
+    "Attribution",
+    # G1 — three denominators, and the calibrated gate that replaced 1.0pp.
+    "RegretTriple", "regret_triple", "MatchedNull", "NullCell", "NullMismatch",
+    "build_matched_null", "failure_threshold_pct", "DEFAULT_FAILURE_PERCENTILE",
+    # G2 — n_effective and MDE on every row.
+    "Power", "power_for", "effective_n", "count_episodes", "mde_mean",
+    "mde_proportion",
+    "Assessment", "assess", "ESTABLISHED", "SUGGESTIVE", "TOO_THIN",
     "FAILURE_MODES", "FAILURE_DESCRIPTIONS", "FORECAST_FAILURE",
     "ACTION_MAPPING_FAILURE", "TIMING_FAILURE", "SIZING_FAILURE",
     "STATE_TO_FORECAST_FAILURE",

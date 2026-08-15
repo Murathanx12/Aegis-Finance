@@ -106,12 +106,30 @@ def stub_tools(name: str, args: dict, budget: Any = None):
 
 def assemble_and_freeze(as_of: str | None, *, overwrite: bool = False,
                         universe: list[str] | None = None,
-                        sandbox: bool = False) -> dict:
-    """Build the snapshot, write it, and report what could not be measured."""
+                        sandbox: bool = False, freeze: bool = True) -> dict:
+    """Build the snapshot, write it, and report what could not be measured.
+
+    `freeze=False` builds without writing. THIS IS WHAT `--readiness` NEEDS.
+
+    WHY, found 2026-08-15 by reading the path before running it. A readiness
+    check is supposed to spend nothing, and it does not spend money — but with
+    `freeze=True` it spends the night's **one snapshot slot**. The decision
+    timestamp is `now`, the snapshot is keyed by date, and `write_snapshot`
+    refuses to overwrite (correctly — a re-assembled snapshot would substitute
+    today's corrected calendar and adjusted prices for what the model saw).
+
+    So a readiness check run six hours before a pre-open night freezes that
+    night's point-in-time record six hours early, and the night then hits the
+    45-minute decision-lag guard and REFUSES. That is the identical failure
+    that voided the previous attempt, arriving through the one command whose
+    documented purpose is to be safe. The guard belongs here, where the
+    irreversible write is, not in the operator's memory of when to run it.
+    """
     ts = F.resolve_decision_ts(as_of)
     snap = F.assemble(ts, universe=universe)
     snap["sandbox"] = bool(sandbox)
-    path = F.write_snapshot(snap, overwrite=overwrite, sandbox=sandbox)
+    path = (F.write_snapshot(snap, overwrite=overwrite, sandbox=sandbox)
+            if freeze else None)
 
     sc = snap["status_counts"]
     print(f"decision_ts   {snap['decision_ts']}  ({snap['decision_ts_tz']})")
@@ -121,7 +139,11 @@ def assemble_and_freeze(as_of: str | None, *, overwrite: bool = False,
           f"UNAVAILABLE {sc.get('UNAVAILABLE', 0)}")
     print(f"usable names  {snap['n_with_any_feature']}  "
           f"(fully unmeasured: {snap['n_fully_unavailable']})")
-    print(f"snapshot      {path}")
+    print(f"snapshot      {path}" if path is not None else
+          "snapshot      NOT WRITTEN — assembled in memory for the readiness "
+          "report.\n              The night's point-in-time record is still "
+          "unclaimed, which is\n              the only state from which a "
+          "pre-open night can run.")
 
     # An unmeasured security is not a calm one, so the count is printed rather
     # than left for someone to notice in a JSON file.
@@ -311,8 +333,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"reusing frozen {'sandbox ' if snap_sandbox else ''}snapshot for "
               f"{ts.date()} (assembled {snap.get('assembled_at')})")
     else:
+        # A readiness check must not claim the night's snapshot slot — see
+        # `assemble_and_freeze`. `--assemble-only` is the flag that exists to
+        # freeze deliberately, and it still does.
         snap = assemble_and_freeze(a.as_of, overwrite=a.overwrite_snapshot,
-                                   universe=universe, sandbox=snap_sandbox)
+                                   universe=universe, sandbox=snap_sandbox,
+                                   freeze=not a.readiness)
 
     sel = preview_triggers(snap)
 

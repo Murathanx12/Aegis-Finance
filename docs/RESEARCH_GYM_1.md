@@ -2,12 +2,33 @@
 
 **Registered** 2026-08-15 in `Aegis module/TRIALS/registry.jsonl`, once, as a
 campaign. **Charter:** `docs/HANDOFF_OPUS5_2026-08-15.md` R2–R5.
-**Code:** `backend/services/research_gym/`. **Tests:** `test_research_gym.py` (30).
+**Code:** `backend/services/research_gym/`. **Tests:** `test_research_gym.py`
+(30) + `test_gym_regret_denominator.py` (29).
 
 > Everything in this document that carries a number is **Gym output**: a
 > hypothesis, not a result. No figure here may appear in a README claim, a
 > track-record surface, or a funding argument. That is wall 1, and it is
 > enforced by a type that raises rather than by this paragraph.
+
+---
+
+## RESTATED 2026-08-15 — every number below has been recomputed
+
+The first version of this document reported a headline of **+26.5pp mean
+regret** on five de-risking decisions, classified **all five** as failures, and
+printed a five-bucket base-rate table whose shape was read off the column. An
+audit ordered by the brain (`HANDOFF_2026-08-15_BRAIN_TO_BUILDER.md` §2) found
+two defects, both by **running the numbers rather than reading the code**:
+
+| | defect | consequence |
+|---|---|---|
+| **G1** | regret was denominated against the **ex-post best of 17 policies**, whose null is large and positive | roughly half the headline was the denominator; and `MATERIAL_EDGE_PCT = 1.0` was cleared by a blameless hold **93%** of the time, so the failure *rate* measured the threshold rather than the engine |
+| **G2** | the base-rate table reported `n` where it owed **n_effective**, and printed no MDE | `n=353` for VIX≥35 is 353 daily observations of a 63-day window across 19 episodes — an effective sample of **5.6** |
+
+Both are fixed in code, and **every figure in the sections below is the
+recomputed one**. The audit is the argument *for* the Gym, not against it: it
+produced a number good enough to be worth auditing, and the audit found the
+denominator.
 
 ## Why it exists
 
@@ -81,6 +102,47 @@ Turnover is charged at 10bp per unit of exposure changed, because a menu that
 ignored cost would rank the busiest policy first every time, and the busiest
 policy is the one most likely to be fitting noise.
 
+### Three denominators, never one (G1)
+
+The original `regret_pct()` was documented as *"best available minus what was
+done. Never negative by construction."* That last clause is the defect stated
+out loud: a quantity that can never exonerate is not a measurement of skill.
+Measured on ^GSPC 1990–2026, 63-day horizon, 10bp cost, same menu — this is
+what a decision-maker with **no skill at all** scores:
+
+| state | always-HOLD | always-SELL_100 |
+|---|---:|---:|
+| VIX < 15 | +3.19pp | +5.44pp |
+| VIX 15–20 | +4.55pp | +6.42pp |
+| VIX 20–25 | +5.88pp | +7.54pp |
+| VIX 25–35 | +6.15pp | +10.85pp |
+| **VIX ≥ 35** | +10.24pp | **+17.31pp** |
+
+So every regret figure is now reported as a **triple** (`regret.RegretTriple`):
+
+1. **vs the ex-post best** — kept, labelled an **upper bound** everywhere.
+2. **vs a fixed default (HOLD)** — one pre-declared alternative, no selection
+   bias, and **it can be negative** when the decision was good.
+3. **excess over the state-and-action-matched null** — (1) minus the table
+   above, which is the skill-relevant number.
+
+Matchedness is enforced, not assumed: the first measurement of this null was run
+on SPY at 5bps while dataset zero ran on ^GSPC at 10bps — three mismatches
+inside a comparison whose only purpose is to be matched. `regret_triple()` now
+**raises** rather than subtract a null computed at a different cost, horizon or
+universe, and the policy menu is hashed into the null's identity because regret
+vs the best of 17 and vs the best of 25 are different quantities.
+
+### The gate, calibrated (G1)
+
+`MATERIAL_EDGE_PCT = 1.0` sounded conservative and was the opposite: measured
+**P(a blameless always-HOLD showing more than 1.0pp regret) = 0.931**. The gate
+is now a **percentile of the matched null for that state and that action**, so
+the bar moves with the situation — 3pp of regret in a calm market and 3pp after
+a VIX-50 panic are not the same claim. The p90 gate for a full sell at VIX ≥ 35
+is **35.16pp, not 1pp**. The old constant survives only as a labelled
+`UNCALIBRATED` fallback for when no null is available.
+
 ## The failure taxonomy (R4), and the mode that had to be added
 
 The first dataset-zero run classified **all five** de-risking failures as
@@ -109,50 +171,131 @@ own historical base rate rather than against the outcome**:
 Base rates are computed from long history (1990–), never from the episodes being
 judged — that circularity would be invisible.
 
+**And the disagreement is now graded rather than asserted (G2).** The first
+version returned a bare `True` whenever the historical P(up) sat more than 0.10
+on the other side of a coin flip — an answer that read identically at
+`n_effective` 44 and at `n_effective` 5.6. `base_rate.assess()` returns one of
+three grades: **established** (the tendency is distinguishable from a coin flip
+at the effective sample size), **suggestive** (the point estimate disagrees and
+this bucket cannot establish it), **too_thin** (nothing can be said either way,
+which is *not* evidence of agreement). Every `state_to_forecast_failure` in
+dataset zero is currently **suggestive**.
+
 ## Dataset zero: the timing backtest
 
 66 decisions, SPY, 2020-01 → 2025-06, 63-day horizon. **Conditional base rates,
-1990–2026:**
+1990–2026 — with the sample size they actually have (G2):**
 
-| state | n | P(up \| state) | mean 63d |
+| state | n | **n_eff** | episodes | P(up) | mean 63d | **MDE** | verdict |
+|---|---:|---:|---:|---:|---:|---:|---|
+| VIX < 15 | 2947 | 31.0 | 31 | 0.735 | +2.15% | 2.46 | below its own MDE |
+| VIX 15–20 | 2777 | 44.1 | 72 | 0.686 | +1.76% | 2.85 | below its own MDE |
+| VIX 20–25 | 1824 | 29.0 | 68 | 0.643 | **+1.56%** | 4.48 | below its own MDE |
+| VIX 25–35 | 1248 | 19.8 | 54 | 0.732 | +4.60% | 5.31 | below its own MDE |
+| VIX ≥ 35 | 353 | **5.6** | 19 | 0.731 | **+6.97%** | 15.27 | below its own MDE |
+
+`n_eff` is the smaller of two corrections — overlap (`n / horizon`) and episode
+clustering (occurrences more than 21 trading days apart) — because taking the
+larger would let whichever correction happened to be gentler set the sample
+size. **Not one row's mean is detectable at 80% power.**
+
+### Is the U-shape a shape? (§18)
+
+Five means in a column let the eye supply a curve. The U-shape is a claim that
+the middle bucket is *lower than* the extremes, which is a **difference**, and
+§18 requires differences to be tested as differences with their own SE. Each arm
+against the trough (VIX 20–25):
+
+| arm | diff | SE | t | MDE | verdict |
+|---|---:|---:|---:|---:|---|
+| VIX < 15 | +0.59 | 1.83 | 0.32 | 5.11 | not detectable |
+| VIX 15–20 | +0.21 | 1.90 | 0.11 | 5.31 | not detectable |
+| VIX 25–35 | +3.04 | 2.48 | 1.23 | 6.95 | not detectable |
+| **VIX ≥ 35** | +5.41 | 5.68 | **0.95** | 15.92 | not detectable |
+
+**No arm of the U is detectable.** The right arm — the +6.97% on which the whole
+re-entry hypothesis rests — is `t = 0.95` against the trough. The shape may well
+be real; this sample cannot establish it, and the earlier version of this
+document asserted it from a column of point estimates.
+
+### Does the panic add anything to the drawdown?
+
+VIX ≥ 35 essentially never occurs except after a large fall, so the named
+confound is that +6.97% is rebound from a depressed price rather than
+information in the volatility. Measured, with "deep" = 15%+ below the trailing
+252-day high:
+
+| cell | n | n_eff | P(up) | mean 63d |
+|---|---:|---:|---:|---:|
+| deep drawdown, **no** panic | 851 | 13.5 | 0.522 | **−0.67%** |
+| deep drawdown **and** panic | 283 | 4.5 | 0.696 | +6.59% |
+| panic without the drawdown | 70 | 1.1 | 0.871 | +8.50% *(no MDE — unusable)* |
+
+Panic's marginal contribution over the drawdown alone is **+7.25pp, SE 7.33,
+t = 0.99 — not detectable.** But note the direction: buying a deep drawdown
+*without* the panic earned −0.67% at a 52% hit rate, so the "it is only
+mechanical rebound" explanation is **not** what the data shows either. Both
+halves are honest and neither is established.
+
+**Corpse control.** "Buy the VIX spike" is among the most published and most
+traded rules in existence. Any Aegis re-entry mechanism must be measured against
+that naive published rule before pre-registration, never against a strawman.
+
+### The 66 decisions, restated
+
+| group | vs ex-post best *(upper bound)* | **vs HOLD** *(unbiased)* | excess over matched null |
 |---|---:|---:|---:|
-| VIX < 15 | 2947 | 0.735 | +2.15% |
-| VIX 15–20 | 2777 | 0.686 | +1.76% |
-| VIX 20–25 | 1824 | 0.643 | **+1.56%** |
-| VIX 25–35 | 1248 | 0.732 | +4.60% |
-| VIX ≥ 35 | 353 | 0.731 | **+6.97%** |
+| de-risking (5) | +26.54pp | **+13.87pp** | +10.53pp |
+| adding (33) | +4.16pp | **−0.57pp** | +0.20pp |
+| hold (28) | +6.55pp | 0.00pp | +1.20pp |
 
-**The relationship is U-shaped, not monotone.** The worst forward returns follow
-the *middle* bucket; the best follow the *highest-stress* bucket. The signal
-engine fires sells above VIX 25 — precisely where history most strongly says to
-be long.
+**The honest statement of the de-risking finding is "selling cost 13.87pp
+against simply holding", not "+26.5pp of regret".** The direction survives; the
+magnitude was roughly doubled by the denominator, and the vs-HOLD column is the
+one with no selection bias in it at all.
 
-**All 5 de-risking decisions classify as `state_to_forecast_failure`.** Mean
-regret against the best available alternative **+26.5pp**; median realised
-63-day return **+15.6%**; the best alternative was `buy_50` in 4 of 5.
+Classification, on the calibrated gate:
 
-The classifier is not degenerate — it discriminates. Within the 28 HOLD
-decisions the same test splits 7 `state_to_forecast` against 7 `forecast`
-(unlucky), plus 8 sizing and 5 timing.
+| group | no_failure | state_to_forecast | forecast | timing |
+|---|---:|---:|---:|---:|
+| de-risking (5) | **4** | 1 *(suggestive)* | 0 | 0 |
+| adding (33) | 30 | 0 | 3 *(suggestive)* | 0 |
+| hold (28) | **24** | 1 *(suggestive)* | 2 *(suggestive)* | 1 |
+
+The previous run labelled **all 5** de-risking decisions and **27 of 28** holds
+as failures. That was the 1.0pp gate, not the engine: a blameless hold clears
+1.0pp 93% of the time. Every surviving `state_to_forecast` label is marked
+**suggestive**, meaning the base rate's point estimate contradicts the belief
+and its effective sample cannot establish that it does.
 
 ### What this does and does not establish
 
-It **does** convert an assertion into a measurement. The README has said for
-months that sells fired at VIX>25, "historically the best buying opportunities".
-That was a claim about a base rate that nobody had computed, applied to episodes
-nobody had replayed. Now both exist, and the mechanism is more specific than the
-sentence was: it is not that stress is bullish, it is that the map from stress to
-expected return is **non-monotone** and the engine assumed it was monotone.
+It **does** convert an assertion into a measurement, twice over. The README said
+for months that sells fired at VIX>25, "historically the best buying
+opportunities" — a claim about a base rate nobody had computed, applied to
+episodes nobody had replayed. Both now exist. And the second measurement is the
+one that matters more: **the de-risking decisions cost 13.87pp against a
+pre-declared HOLD**, which is a comparison with no maximum-over-a-menu inside it.
 
-It **does not** establish that any fix works. This is Gym output on data this
-project has studied for months. The obvious next hypothesis — *extreme stress +
-falling volatility + still-depressed price is a re-entry state, not an exit
-state* — is exactly the kind of rule that will fit this history beautifully. It
-leaves the Gym only through wall 3.
+A finding nobody was looking for: the **adding** decisions — the celebrated
+67.4% hit rate — score **−0.57pp against HOLD** and **+0.20pp of excess over the
+null**. Buying on the signal was indistinguishable from simply staying invested.
+The old denominator hid this completely, because +4.16pp of raw regret looks
+like a result until you learn that doing nothing scores about the same.
+
+It **does not** establish that any fix works, and now it establishes rather less
+than the first version claimed. The obvious next hypothesis — *extreme stress +
+falling volatility + still-depressed price is a re-entry state* — rests on an
+arm of a curve with `t = 0.95` and on 19 crises, is a rule already widely
+published, and will fit this history beautifully. It leaves the Gym only through
+wall 3.
 
 ## What is deliberately NOT built
 
-**WORLD-MODEL-v1 is not authorized** (Order 7) and is not scaffolded. It waits
+**WORLD-MODEL-v1 is authorized in principle** as of 2026-08-15 (Murat's call,
+reversing R7) but is **gated** and is not scaffolded: it waits for known-answer
+worlds, a correctly denominated episode/regret substrate, and declared simple
+baselines. Never all-data → NN → BUY/SELL. It waits
 for the episode dataset and for RESEARCH-GYM-1 to produce transfer-tested
 candidates. When it comes, the division stays: **LLM teaches meaning, market
 teaches weights, Aegis judges truth.**
@@ -166,7 +309,12 @@ episode substrate it needs now exists.
 ## Running it
 
 ```bash
-python -m scripts.gym_dissect_timing --write     # dataset zero, with lineage
+# 1. the matched null FIRST — without it every regret number below falls back
+#    to the biased denominator and the uncalibrated 1.0pp gate
+python -m scripts.gym_build_matched_null
+
+# 2. dataset zero, with lineage
+python -m scripts.gym_dissect_timing --write
 ```
 
 Writes `backend/data/optimus/research_gym/dataset_zero_<stamp>.jsonl` (one line

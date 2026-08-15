@@ -52,8 +52,10 @@ from datetime import datetime, timezone
 
 from backend import config as _config
 from backend.services import research_gym as G
+from backend.services.research_gym import base_rate as BR
 
 OUT_DIR = _config.OPTIMUS_LEDGER_DIR / "research_gym"
+NULL_PATH = OUT_DIR / "matched_null_v1.json"
 
 #: Trading days in the 3-month horizon the backtest scored.
 HORIZON_DAYS = 63
@@ -121,13 +123,101 @@ def build(start: str, end: str) -> tuple[list, dict]:
         hist_vix = hist_vix.squeeze()
     base_rates = G.build_base_rates(hist_vix, hist_px,
                                     horizon_days=HORIZON_DAYS)
-    print("conditional base rates (long history, Gym material):")
+    print("conditional base rates (long history, Gym material)")
+    print("  SS19: every row prints n_effective and its 80%-power MDE. `n` is "
+          "daily\n  observations of an overlapping window and is NOT a sample "
+          "size.")
+    print(f"  {'state':<10s} {'n':>5s} {'n_eff':>6s} {'episodes':>9s} "
+          f"{'P(up)':>6s} {'mean':>7s} {'MDE':>7s}  verdict")
     for k, br in base_rates.items():
         if br.p_up is None:
             print(f"  {k:<10s} n=0")
             continue
-        print(f"  {k:<10s} n={br.n:>5d}  P(up|state)={br.p_up:.3f}  "
-              f"mean {HORIZON_DAYS}d {br.mean_forward_return_pct:+.2f}%")
+        p = br.power
+        mde = "  n/a" if p is None or p.mde_mean_pct is None \
+            else f"{p.mde_mean_pct:6.2f}"
+        detectable = (p is not None and p.mde_mean_pct is not None
+                      and abs(br.mean_forward_return_pct) >= p.mde_mean_pct)
+        print(f"  {k:<10s} {br.n:>5d} "
+              f"{(p.n_effective if p else 0):>6.1f} "
+              f"{(p.n_episodes if p else 0):>9d} "
+              f"{br.p_up:>6.3f} {br.mean_forward_return_pct:>+7.2f} {mde}  "
+              f"{'detectable' if detectable else 'BELOW ITS OWN MDE'}")
+
+    # THE SHAPE, TESTED AS A SHAPE (SS18). Five means printed in a column let
+    # the eye supply a curve. The U-shape is a claim that the middle bucket is
+    # LOWER THAN the extremes, and that is a difference — so it is measured as
+    # one, with the standard error the comparison actually has at n_effective.
+    trough = min((b for b in base_rates.values()
+                  if b.mean_forward_return_pct is not None),
+                 key=lambda b: b.mean_forward_return_pct)
+    print(f"\n  IS THE U-SHAPE A SHAPE? trough = {trough.state_key} "
+          f"({trough.mean_forward_return_pct:+.2f}%), each arm tested against "
+          f"it as a DIFFERENCE")
+    print(f"    {'arm':<10s} {'diff':>7s} {'SE':>7s} {'t':>6s} {'MDE':>7s}  "
+          f"verdict")
+    for key, br in base_rates.items():
+        if br.state_key == trough.state_key or br.mean_forward_return_pct is None:
+            continue
+        d = BR.bucket_difference(br, trough)
+        se = "  n/a" if d.se_pct is None else f"{d.se_pct:6.2f}"
+        t = "  n/a" if d.t_stat is None else f"{d.t_stat:5.2f}"
+        mde = "  n/a" if d.mde_pct is None else f"{d.mde_pct:6.2f}"
+        print(f"    {key:<10s} {d.diff_pct:>+7.2f} {se} {t} {mde}  "
+              f"{'detectable' if d.is_detectable else 'NOT DETECTABLE'}")
+
+    # THE MECHANICAL CONFOUND, MEASURED RATHER THAN NOTED. VIX>=35 occurs
+    # essentially only after a large fall, so part of the +6.97% is rebound
+    # from a depressed price and not information in the volatility.
+    ctrl = BR.drawdown_matched_control(hist_vix, hist_px,
+                                       horizon_days=HORIZON_DAYS)
+    print(f"\n  DOES PANIC ADD ANYTHING TO THE DRAWDOWN? "
+          f"(deep = 15%+ below the trailing 252d high)")
+    print(f"    {'cell':<26s} {'n':>5s} {'n_eff':>6s} {'P(up)':>6s} "
+          f"{'mean':>7s} {'MDE':>7s}")
+    for k in ("deep_drawdown_only", "deep_drawdown_and_panic", "panic_only"):
+        b = ctrl[k]
+        if b.p_up is None:
+            print(f"    {k:<26s} {b.n:>5d}  — no observations")
+            continue
+        mde = ("  n/a" if b.power is None or b.power.mde_mean_pct is None
+               else f"{b.power.mde_mean_pct:6.2f}")
+        print(f"    {k:<26s} {b.n:>5d} {b.power.n_effective:>6.1f} "
+              f"{b.p_up:>6.3f} {b.mean_forward_return_pct:>+7.2f} {mde}")
+    d = BR.bucket_difference(ctrl["deep_drawdown_and_panic"],
+                             ctrl["deep_drawdown_only"])
+    if d.se_pct is not None:
+        print(f"    panic's marginal contribution over the drawdown alone: "
+              f"{d.diff_pct:+.2f}pp  SE {d.se_pct:.2f}  t {d.t_stat:.2f}  "
+              f"{'detectable' if d.is_detectable else 'NOT DETECTABLE'}")
+
+    # THE CORPSE AS CONTROL. "Buy when VIX spikes" is among the most published
+    # and most traded rules in existence. Any Aegis re-entry mechanism is
+    # measured against that naive published rule, never against a strawman.
+    print("\n  CORPSE CONTROL: 'buy the VIX spike' is a widely published rule. "
+          "Any\n  re-entry mechanism derived here is measured against it, not "
+          "against\n  a strawman, before it may be pre-registered.")
+    print()
+
+    # THE MATCHED NULL (G1). Without it every regret number below is a maximum
+    # over seventeen policies and has a large positive value for a decision
+    # nobody could fault.
+    matched_null = None
+    if NULL_PATH.exists():
+        matched_null = G.MatchedNull.read(NULL_PATH)
+        print(f"matched null       {NULL_PATH.name}  universe "
+              f"{matched_null.universe}  {matched_null.cost_bps}bps  "
+              f"{matched_null.horizon_days}d  menu {matched_null.menu_hash}")
+        if matched_null.universe != "^GSPC":
+            raise SystemExit(
+                f"null universe {matched_null.universe} != ^GSPC used here — "
+                f"an unmatched null is worse than none")
+    else:
+        print("matched null       ABSENT — run scripts/gym_build_matched_null. "
+              "Every\n                   regret below will be reported against "
+              "the biased\n                   denominator only, and the "
+              "failure gate falls back to\n                   the uncalibrated "
+              "1.0pp constant.")
     print()
 
     episodes = []
@@ -177,13 +267,22 @@ def build(start: str, end: str) -> tuple[list, dict]:
             continue
         # The base rate for THIS episode's state — the only pre-outcome
         # evidence about whether the expectation was reasonable at the time.
-        br = base_rates.get(G.vix_bucket(float(row["vix"])))
-        G.attribute_in_place(ep, surface, base_rate=br)
+        bucket = G.vix_bucket(float(row["vix"]))
+        br = base_rates.get(bucket)
+        G.attribute_in_place(ep, surface, base_rate=br,
+                             matched_null=matched_null, state_key=bucket)
         episodes.append((ep, surface))
 
     return episodes, {"n_backtest_rows": len(df), "n_episodes": len(episodes),
-                      "base_rates": {k: v.__dict__ for k, v in
-                                     base_rates.items()}}
+                      "base_rates": {k: v.as_dict() for k, v in
+                                     base_rates.items()},
+                      "matched_null": None if matched_null is None
+                      else {"universe": matched_null.universe,
+                            "cost_bps": matched_null.cost_bps,
+                            "horizon_days": matched_null.horizon_days,
+                            "menu_hash": matched_null.menu_hash,
+                            "sample": [matched_null.sample_start,
+                                       matched_null.sample_end]}}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -219,14 +318,39 @@ def main(argv: list[str] | None = None) -> int:
         if not group:
             return
         modes = Counter(e.failure_mode for e, _ in group)
-        regrets = [s.regret_pct() for _, s in group if s.regret_pct() is not None]
+        raw = [e.regret.get("vs_ex_post_best_pp") for e, _ in group
+               if e.regret.get("vs_ex_post_best_pp") is not None]
+        dflt = [e.regret.get("vs_fixed_default_pp") for e, _ in group
+                if e.regret.get("vs_fixed_default_pp") is not None]
+        exc = [e.regret.get("excess_vs_matched_null_pp") for e, _ in group
+               if e.regret.get("excess_vs_matched_null_pp") is not None]
         print(f"\n── {title} ({len(group)}) ──")
-        print(f"  mean regret vs best alternative   "
-              f"{sum(regrets)/len(regrets):+.2f} pp")
+        # THREE DENOMINATORS, ALWAYS. Printing only the first is the G1 defect,
+        # and the first is the one that always looks the most alarming.
+        print(f"  mean regret vs ex-post best       "
+              f"{sum(raw)/len(raw):+.2f} pp   (UPPER BOUND, biased upward by "
+              f"the size of the menu)")
+        if dflt:
+            print(f"  mean regret vs HOLD               "
+                  f"{sum(dflt)/len(dflt):+.2f} pp   (fixed default; negative "
+                  f"means the action beat holding)")
+        if exc:
+            print(f"  mean EXCESS over matched null     "
+                  f"{sum(exc)/len(exc):+.2f} pp   (n={len(exc)}; the "
+                  f"skill-relevant number)")
+        else:
+            print("  mean EXCESS over matched null     UNAVAILABLE — no "
+                  "matched null, so nothing here separates the engine from a "
+                  "coin flip")
         print(f"  median realised {HORIZON_DAYS}d return          "
               f"{sorted(e.outcome.realised_return_pct for e, _ in group)[len(group)//2]:+.2f} %")
         for m, n in modes.most_common():
-            print(f"  {m:<28s} {n:>3d}  ({100*n/len(group):.0f}%)")
+            strengths = Counter(e.evidence_strength for e, _ in group
+                                if e.failure_mode == m and e.evidence_strength)
+            tail = ("  [" + ", ".join(f"{k} {v}" for k, v
+                                      in strengths.most_common()) + "]"
+                    if strengths else "")
+            print(f"  {m:<28s} {n:>3d}  ({100*n/len(group):.0f}%){tail}")
         wins = Counter(s.best().name for _, s in group)
         print("  best alternative, by frequency:")
         for name, n in wins.most_common(5):
@@ -258,10 +382,27 @@ def main(argv: list[str] | None = None) -> int:
               f"{modes.get(G.SIZING_FAILURE, 0)}")
         print(f"    ... of which timing                              "
               f"{modes.get(G.TIMING_FAILURE, 0)}")
-        print(f"  no failure (within {G.MATERIAL_EDGE_PCT}pp of best)          "
+        print(f"  no failure (below the calibrated gate)             "
               f"{modes.get(G.NO_FAILURE, 0)}")
         print(f"  unclassified                                       "
               f"{modes.get(G.UNCLASSIFIED, 0)}")
+        # The gate that decided all of the above, printed with its provenance.
+        # The previous run used a round 1.0pp that a blameless hold clears 93%
+        # of the time, so the counts measured the threshold, not the engine.
+        seen = {}
+        for e, _ in sells:
+            c = (e.regret or {}).get("null_cell")
+            if c:
+                seen[(c["state_key"], c["policy"])] = c
+        if seen:
+            print("\n  THE GATE EACH DECISION WAS JUDGED AGAINST")
+            print(f"    {'state':<10s} {'action':<12s} {'null mean':>10s} "
+                  f"{'gate p90':>9s} {'n_eff':>6s}")
+            for (st, pol), c in sorted(seen.items()):
+                print(f"    {st:<10s} {pol:<12s} "
+                      f"{c['mean_regret_pct']:>10.2f} "
+                      f"{c['percentiles']['90']:>9.2f} "
+                      f"{c['power']['n_effective']:>6.1f}")
         print("\n  A HYPOTHESIS, not a result. It was produced inside the Gym "
               "on\n  data this project has already studied many times, and it "
               "leaves\n  the Gym only via transfer test → prereg → forward "

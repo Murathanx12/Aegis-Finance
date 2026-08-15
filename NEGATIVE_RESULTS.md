@@ -1785,3 +1785,77 @@ their ADOPT states; no lane is seeded; the licensed follow-ups are a
 registrations, both declared in the prereg before the result existed). The
 reviewer's prediction record: the trial's own declared prior (confirm net
 t 1.3-2.2) missed high, and is scored as such in the verdict doc.
+
+## 36. The Gym's regret denominator had a large positive null, and the gate built on it convicted 93% of blameless decisions
+
+**RESEARCH-GYM-1, audited 2026-08-15.** Found by running the numbers, not by
+reading the code: thirty tests passed and all thirty asked whether the machinery
+computed what it said it computed. It did. None asked what the number reads for
+a decision nobody could fault.
+
+**G1 — the denominator.** `ResponseSurface.regret_pct()` was documented as *"best
+available minus what was done. Never negative by construction."* That clause is
+the defect stated out loud: it is a maximum over 17 noisy 63-day outcomes minus
+one of them, so a decision-maker with no skill scores large positive regret.
+Measured on ^GSPC 1990-2026 at the same 10bp cost and 63d horizon as the
+finding:
+
+| state | always-HOLD | always-SELL_100 |
+|---|---:|---:|
+| VIX 25-35 | +6.15pp | +10.85pp |
+| VIX >= 35 | +10.24pp | **+17.31pp** |
+
+Dataset zero's **+26.5pp** headline on five de-risking decisions was read as a
+measurement of the engine. Against the state-and-action-matched null it is
+**+10.53pp of excess**, and against a pre-declared HOLD — the comparison with no
+selection bias in it at all — **+13.87pp**. *The direction survived; the
+magnitude was roughly doubled by its denominator.*
+
+**The same cause broke the classifier.** `MATERIAL_EDGE_PCT = 1.0` returned
+NO_FAILURE below 1pp of regret. Measured: **P(a blameless always-HOLD showing
+> 1.0pp) = 0.931**. So 27 of 28 HOLDs were labelled failures by the threshold
+rather than by evidence. Recalibrated to a percentile of the matched null, the
+counts invert: **4 of 5 de-risking decisions and 24 of 28 holds are NO_FAILURE**.
+The p90 gate for a full sell at VIX>=35 is **35.16pp, not 1pp**.
+
+This is §34 in a second domain — *a gate whose power was never measured measures
+the ruler, not the pool* — and it was not recognised as the same error while it
+was being written.
+
+**G2 — `n` is not `n_effective`.** `n=353` for VIX>=35 is 353 **daily**
+observations of a **63-day** window spanning **19 episodes**: an effective sample
+of **5.6**. Every base-rate row now prints n_effective (the smaller of overlap
+and episode clustering) and its 80%-power MDE, and **not one of the five rows'
+means is detectable**.
+
+**And the U-shape was never tested as a shape (§18).** Five means in a column
+let the eye supply the curve. Tested as differences against the trough:
+
+| arm | diff | SE | t | verdict |
+|---|---:|---:|---:|---|
+| VIX 25-35 | +3.04 | 2.48 | 1.23 | not detectable |
+| **VIX >= 35** | +5.41 | 5.68 | **0.95** | not detectable |
+
+The right arm — the +6.97% carrying the entire re-entry hypothesis — is
+**t = 0.95**.
+
+**The named confound did not behave as assumed, either.** VIX>=35 only occurs
+after a large fall, so the objection was that the +6.97% is mechanical rebound.
+Measured with deep = 15%+ below the trailing 252d high: a deep drawdown
+**without** panic returns **-0.67%** at a 52% hit rate; **with** panic, +6.59%.
+Panic's marginal contribution is +7.25pp, SE 7.33, **t = 0.99** — not
+detectable, but pointing the other way from the objection. Buying the dip
+without the panic earned nothing.
+
+**A finding nobody was looking for.** The *adding* decisions — the celebrated
+67.4% hit rate — score **-0.57pp against HOLD** and +0.20pp of excess over the
+null. Buying on the signal was indistinguishable from staying invested. The
+biased denominator hid this completely: +4.16pp of raw regret looks like a
+result until you learn that doing nothing scores about the same.
+
+**Canon.** *A regret number without its null is a story about the size of the
+menu.* Report three declared denominators — ex-post best (an upper bound), a
+fixed pre-declared default (the only one that can exonerate), and the excess
+over a state-and-action-matched null — and enforce matchedness in code: the
+first measurement of this null was run on SPY at 5bps against a finding computed
+on ^GSPC at 10bps, and `regret_triple()` now raises rather than subtract it.
