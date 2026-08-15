@@ -51,25 +51,65 @@ class PolicyResult:
     #: Day index at which exposure first differs from the taken action's. Lets
     #: the attribution layer ask when a policy's advantage was actually earned.
     first_divergence_day: int | None
+    #: The NET WEALTH PATH, added 2026-08-15 for P0.5.
+    #:
+    #: Until then this dataclass carried return, cost and turnover and NOTHING
+    #: about the route — no drawdown, no minimum wealth, no time under water —
+    #: and `ResponseSurface.ranked()` sorted on `net_return_pct` alone. So the
+    #: identity of the "best" counterfactual, and every attribution label
+    #: derived from it, was computed under an objective nobody had declared:
+    #: raw terminal return, out of a menu containing 1.25x and 1.5x levered
+    #: arms. The programme's stated objective is terminal wealth under a
+    #: DECLARED utility. Those are different objectives and they disagree.
+    #:
+    #: The path is kept rather than a handful of summary statistics because
+    #: which statistics matter depends on the utility function, and the utility
+    #: functions are not all declared yet.
+    wealth_path: tuple[float, ...] = ()
+
+    @property
+    def path_net_return_pct(self) -> float | None:
+        """Terminal return of `wealth_path`. NOT identical to `net_return_pct`.
+
+        `net_return_pct` charges turnover as a single subtraction at the end;
+        the path charges it multiplicatively as it is incurred, so the two
+        differ by a compounding-of-costs term of order (cost x return). Both
+        are kept and neither is silently substituted for the other:
+        `net_return_pct` is the quantity every existing tensor cell was
+        computed with, and rewriting it would change published numbers to fix a
+        rounding difference.
+        """
+        if not self.wealth_path:
+            return None
+        return (self.wealth_path[-1] - 1.0) * 100.0
 
 
 def _apply(exposure: Sequence[float], daily_returns: Sequence[float],
-           start_exposure: float, cost_bps: float) -> tuple[float, float, float]:
-    """(gross %, cost %, turnover) for one exposure path.
+           start_exposure: float, cost_bps: float
+           ) -> tuple[float, float, float, tuple[float, ...]]:
+    """(gross %, cost %, turnover, net wealth path) for one exposure path.
 
     Compounded, not summed. A 60-day path summed rather than compounded drifts
     enough to reorder policies whose true difference is a few percent, and the
     whole exercise is about small differences between alternatives.
+
+    The wealth path is NET and charges each exposure change on the day it
+    happens. The three scalars are unchanged from the version that returned
+    only them — deliberately, because every tensor cell already computed was
+    computed with them, and a path is being ADDED rather than substituted.
     """
-    equity, prev, turnover = 1.0, float(start_exposure), 0.0
-    gross = 1.0
+    prev, turnover = float(start_exposure), 0.0
+    gross, wealth = 1.0, 1.0
+    path: list[float] = []
     for e, r in zip(exposure, daily_returns):
-        turnover += abs(float(e) - prev)
+        d = abs(float(e) - prev)
+        turnover += d
         prev = float(e)
         gross *= (1.0 + float(e) * float(r))
-    equity = gross
+        wealth *= (1.0 + float(e) * float(r)) * (1.0 - d * cost_bps / 10_000.0)
+        path.append(wealth)
     cost = turnover * (cost_bps / 10_000.0)
-    return ((equity - 1.0) * 100.0, cost * 100.0, turnover)
+    return ((gross - 1.0) * 100.0, cost * 100.0, turnover, tuple(path))
 
 
 # ── the menu ────────────────────────────────────────────────────────────────
@@ -191,8 +231,8 @@ def run_policy(name: str, daily_returns: Sequence[float], *,
         raise KeyError(f"unknown policy {name!r}")
     path = [float(x) for x in
             POLICY_MENU[name](list(daily_returns), ctx or {})]
-    gross, cost, turnover = _apply(path, daily_returns, start_exposure,
-                                   cost_bps)
+    gross, cost, turnover, wealth = _apply(path, daily_returns,
+                                           start_exposure, cost_bps)
     div = None
     if taken_exposure_path is not None:
         for i, (a, b) in enumerate(zip(path, taken_exposure_path)):
@@ -202,4 +242,4 @@ def run_policy(name: str, daily_returns: Sequence[float], *,
     return PolicyResult(name=name, exposure_path=tuple(path),
                         gross_return_pct=gross, cost_pct=cost,
                         net_return_pct=gross - cost, turnover=turnover,
-                        first_divergence_day=div)
+                        first_divergence_day=div, wealth_path=wealth)

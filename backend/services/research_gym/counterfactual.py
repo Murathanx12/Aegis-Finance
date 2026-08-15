@@ -66,13 +66,49 @@ class ResponseSurface:
     def taken(self) -> PolicyResult | None:
         return self.results.get(self.taken_policy)
 
-    def ranked(self) -> list[PolicyResult]:
-        return sorted(self.results.values(),
-                      key=lambda r: -r.net_return_pct)
+    def ranked(self, objective=None) -> list[PolicyResult]:
+        """Order the surface UNDER A NAMED OBJECTIVE.
 
-    def best(self) -> PolicyResult | None:
-        r = self.ranked()
+        FOUND 2026-08-15 (P0.5). This sorted on `net_return_pct` and nothing
+        else, so "the best counterfactual" silently meant "the highest raw
+        terminal return" — out of a menu containing `buy_25` and `buy_50`, i.e.
+        1.25x and 1.5x leverage. In an up window the levered arm wins by
+        construction, and every attribution label computed against the winner
+        inherited an objective nobody had declared.
+
+        `objective` may be an `utility.Objective`, its name, or None. None
+        keeps the historical behaviour — raw net return — because changing the
+        default would silently restate published numbers; what changes is that
+        the choice is now named on every record that uses it.
+
+        A distribution objective (expected-log growth) is REFUSED here: ranking
+        one episode by log wealth reproduces the raw-return order exactly,
+        because log is monotonic. See `utility.score_one`.
+        """
+        from backend.services.research_gym import utility as U
+
+        if objective is None:
+            return sorted(self.results.values(), key=lambda r: -r.net_return_pct)
+        obj = (U.get_objective(objective) if isinstance(objective, str)
+               else objective)
+        scored = []
+        for r in self.results.values():
+            s = U.score_one(obj, U.stats_of(r))
+            if s is not None:
+                scored.append((s, r))
+        sign = -1.0 if obj.higher_is_better else 1.0
+        return [r for _, r in sorted(scored, key=lambda t: sign * t[0])]
+
+    def best(self, objective=None) -> PolicyResult | None:
+        r = self.ranked(objective)
         return r[0] if r else None
+
+    def objective_used(self, objective=None) -> str:
+        """What `ranked`/`best` were computed under. Goes on every record."""
+        if objective is None:
+            return "total_return (implicit — raw net return, the historical "\
+                   "default)"
+        return objective if isinstance(objective, str) else objective.name
 
     def regret_pct(self) -> float | None:
         """Best available minus what was done. AN UPPER BOUND, NOT A MEASUREMENT.
@@ -97,6 +133,10 @@ class ResponseSurface:
             "horizon_days": self.horizon_days,
             "taken_policy": self.taken_policy,
             "cost_bps": self.cost_bps,
+            # WHICH OBJECTIVE RANKED THIS. Mission rule 3: every ranked
+            # comparison names the objective it was computed under. Before
+            # 2026-08-15 this record contained a ranking and no such name.
+            "objective_used": self.objective_used(),
             "regret_vs_ex_post_best_pct": self.regret_pct(),
             "regret_vs_ex_post_best_note":
                 "UPPER BOUND — max over the menu minus the action taken. Has a "

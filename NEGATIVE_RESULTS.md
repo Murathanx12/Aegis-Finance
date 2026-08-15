@@ -2190,3 +2190,268 @@ gate on the spending path had to be re-derived, not re-read.
 arms (`chain["id"]` is mutated per cell, so concurrent arms would file telemetry
 under whichever arm wrote last), and an unguarded `counter["calls"] += 1` on the
 number the receipt reports.
+
+## 44. The guard against a contaminated night invented a Sunday opening bell (IIF-1, calendar + DST)
+
+Found 2026-08-15 **in review, by someone reading the code against a calendar**
+— which is the only way it could have been found, because every test that
+covered it supplied the same fabricated world the code used.
+
+`assert_night_fits_before_open` computed the next opening bell like this:
+
+```python
+open_today = now.replace(hour=13, minute=30, second=0, microsecond=0)
+if open_today <= now:
+    open_today += timedelta(days=1)
+```
+
+Two independent errors:
+
+1. **No exchange calendar.** The day it was reviewed was **Saturday
+   2026-08-15**. That code says the next opening bell is **Sunday 2026-08-16 at
+   13:30 UTC**. There is no Sunday session. The same arithmetic invents one on
+   every weekend day, every NYSE holiday and across every long weekend. The
+   paid night had been ordered for "tomorrow", and tomorrow was the Sunday.
+2. **No DST.** 09:30 America/New_York is 13:30 UTC only under EDT; from the
+   first Sunday in November it is **14:30 UTC**, and the constants were
+   permanently `13, 30`. That error is an hour *pessimistic*, which is the safe
+   direction — and therefore the kind of error that survives for years.
+
+**Why the tests could not catch it.** Every timestamp in
+`test_night_fits_before_open.py` was on Saturday 2026-08-15, asserting a 13:30Z
+open on a day the exchange is shut, and one test asserted the next open was
+`2026-08-16` — **pinning the bug as the expected answer**. This is the same
+shape as the CI break found earlier the same day (§0 of the builder report):
+*the check and its test agreed with each other about a world neither had looked
+at.* The fix is the same one: pin the real world by known answer.
+
+Fixed by reading the bell from an XNYS session calendar
+(`backend/services/market_sessions.py`, `exchange_calendars`), with **refusal
+rather than fallback** if the calendar cannot be loaded — the only fallback
+available is the weekday arithmetic being deleted, and a night certified
+against a session that does not exist is worse than a night that does not run.
+
+**A second refusal was required, and finding out why is the more useful part.**
+Correcting the bell *alone* would have made a weekend night look like the
+safest night of the week: with the next real session 26 hours away, a Sunday
+11:00Z start passes the headroom check with 1,000 minutes to spare — more room
+than any weekday offers. A guard that measures only "can it finish" ranks the
+worst configuration highest. So the pre-open *lead* is now bounded too
+(`MAX_PREOPEN_LEAD_HOURS = 18`, registered): a night is a pre-open night or it
+is refused.
+
+**The rule:** correct arithmetic against the wrong world. It is the third
+instance this week — the CI world (§0), the denominator's world (§41), and now
+the calendar's — and in all three the code was internally consistent and its
+tests agreed with it.
+
+*Also corrected in the same pass, and independently unsafe:*
+`projected_night_minutes` documented itself as "deliberately pessimistic" on the
+grounds that "a cell ends when its SLOWEST arm ends, and the slowest of five
+draws exceeds the mean of five", and then divided the night by the **full**
+concurrency factor — the optimistic bound, and the exact flattering projection
+the docstring forbids. Three compounding errors, all in the unsafe direction:
+the latency input was the serial **mean** (p90 15.6s vs mean 8.7s is nearly
+2×); a cell ends with its slowest arm rather than its average arm; and the
+tool-bearing arms are **systematically** the slow ones, so the max is not a
+random draw. The projection now takes the slower of a max-of-arms floor and a
+throughput bound capped at a **declared** efficiency of 2.0 — declared, because
+the five-arm rehearsal that produced "peak 5 in flight, skew 1.0 ms" ran
+against a **stub**, and a stub with no latency cannot measure a latency
+speedup. The night's latest safe start moves from a claimed ~13:02Z to
+**12:20Z** (mean) / **11:25Z** (p90).
+
+## 45. The Gym's rankings never named an objective — and naming one changed nothing detectable (P0.5)
+
+Ordered 2026-08-15. `ResponseSurface.ranked()` was one line:
+
+```python
+return sorted(self.results.values(), key=lambda r: -r.net_return_pct)
+```
+
+and `PolicyResult` carried return, cost and turnover — no drawdown, no minimum
+wealth, no time under water, no utility. So **"the best counterfactual" meant
+"the highest raw terminal return"**, out of a menu containing `buy_25` and
+`buy_50` (1.25x and 1.5x leverage). In a rising window the levered arm wins by
+construction; every attribution label computed against the winner inherited
+that; and nothing on any record said which objective had been used. The mission
+says the objective is terminal wealth under a **declared** utility. We were
+measuring System A while aiming at System B.
+
+**What is NOT claimed.** `REGRET_TENSOR.mean_edge_vs_default` — the action
+minus a pre-declared HOLD — never went through `best()`. The `sell_100` result
+against HOLD is a raw-return result against a declared default, not a
+best-of-17 artefact. The raw-return tensor is not invalid; it is **incomplete
+relative to the objective we hold**. Nothing was overwritten; a dimension was
+added.
+
+### The trap, avoided by making it raise
+
+The obvious implementation is `utility_score = log(final_wealth)`. It would
+have changed **no ranking anywhere**, because log is monotonic in terminal
+wealth, and the resulting "utility tensor" would have agreed with the return
+tensor in every cell and been reported as evidence that the objective does not
+matter. Measured and kept as a test
+(`test_a_PER_PATH_log_utility_would_have_reordered_NOTHING`): across all 17
+policies on one episode, the log ordering is identical to the return ordering,
+while a PATH objective on the same episode is not.
+
+Objectives now declare a `kind`. `score_one` **raises** for distribution
+objectives, so the tautology cannot be computed by accident. Expected-log
+growth reorders across an episode DISTRIBUTION, where concavity bites on the
+spread; path risk (drawdown, ruin, time under water) reorders a single
+trajectory.
+
+### And the first thing the new instrument produced was thirteen false positives
+
+The UTILITY-FLIP ATLAS on the real corpus (SPY/QQQ/IWM/XLF/XLE/XLK, 1999-2026,
+stride 5, 5 horizons) reported **80 flips, 13 of them MATERIAL**. Every single
+one was `drawdown_penalised`, and every single one was `buy_50 -> sell_100`.
+
+A zero-exposure policy has zero return **and** zero drawdown, so it scores ~0,
+while any long policy whose drawdown exceeds its return scores below zero. The
+optimum is cash in almost every state for a reason that has nothing to do with
+markets. Measured by the guard added in response:
+
+| objective | prefers cash | verdict |
+|---|---|---|
+| `total_return` | 0/25 | — |
+| `sortino` | 0/25 | — |
+| `expected_log_growth` | 0/25 | — |
+| `log_growth_with_ruin_constraint` | 0/25 | — |
+| `aggressive_growth_lambda0.15` | 4/25 | — |
+| `drawdown_penalised_lambda0.25` | **13/25 (52%)** | DEGENERATE |
+| `drawdown_penalised_lambda1` | **24/25 (96%)** | DEGENERATE |
+
+Halving the penalty did not fix it, which is the more useful finding: a
+drawdown penalty **in units of return** is structurally biased toward cash,
+because cash has exactly zero of both. The objective is kept, declared and
+flagged rather than retuned until it produced an agreeable answer.
+
+**Material flips from a non-degenerate objective: ZERO.** The flips that do
+exist under expected-log growth and Sortino all point the same way — away from
+`buy_50`, toward `hold` or `sell_50` — and every one of them is below the MDE
+of its own gap (typically 0.0001-0.05 against MDEs of 0.006-0.11).
+
+**So the honest P0.5 result is a NOT_DETECTABLE, and it is worth more than a
+table:** on this corpus, declaring an objective does not detectably change
+which action is preferred. The direction of every non-degenerate disagreement
+is consistent (less leverage), and the corpus cannot resolve it.
+
+**The rule:** §37 says check the kills as hard as the passes. A new
+instrument's **first positive result** deserves exactly the same treatment,
+because that is the one that looks like it working. Three times this week now:
+the scope layer's five refutations, this atlas's thirteen flips, and N1's
+first-pass detectability (§46).
+
+## 46. N1 — the insider return does NOT accrue before disclosure, on five filing days
+
+The highest-EV cheap test in the order: COPY-LAB's premise is that an observed
+expert action can be copied, and that has a precondition nobody had measured.
+A Form 4 discloses a trade that already happened. **If the abnormal return
+accrues between the transaction and the filing, the signal can be real, strong
+and perfectly identified — and still uncopyable.** One measurement can
+terminate or license an entire track.
+
+Measured on 608 Form 4 / ownership events with both a transaction date and a
+filing date, market-adjusted against SPY and signed so that positive always
+means "the move went the insider's way":
+
+| | lag | n | n_eff | pre-disclosure | post-disclosure (+5d) |
+|---|---|---|---|---|---|
+| BUY | 0d | 15 | 12.6 | — (same day) | **+2.30%** (MDE 1.48) DETECTABLE |
+| BUY | 1d | 35 | 19.3 | +0.64% (MDE 1.97) no | **+1.80%** (MDE 1.76) DETECTABLE |
+| BUY | 2d | 30 | 11.2 | +0.23% (MDE 2.16) no | +1.11% (MDE 2.09) no |
+
+**The killer scenario is not observed.** For compliant (0-2 business day)
+insider buys the pre-disclosure move is small and not detectable, and the
+post-disclosure move is positive and clears its MDE at 0-1 day lag. COPY-LAB's
+premise survives its first test.
+
+### Three things that must be read with it
+
+1. **The corpus is FIVE filing days deep**, and 1,175 of its 1,589 events were
+   filed on 2026-08-13. The "+5 day" post-disclosure window is really 1-2
+   trading days for most rows. A +2.3% market-adjusted two-day move is not a
+   plausible persistent effect; it is much more likely one favourable
+   cross-section. This is a **licence to continue, not evidence of an edge.**
+2. **The order's premise that N1 is "nearly free on data already on disk" was
+   right about the cost and wrong about the depth.** The events file is one
+   production collector day plus stragglers. The full decay curve needs the
+   R12 Form 4 backfill (P5), which makes N1 a *consumer* of that work rather
+   than a cheap way to avoid it.
+3. **This script's own denominator had the §41 defect, in the script that
+   quotes §41.** Its header says n_effective is bounded by distinct filing
+   days; the first version computed it as the count of distinct (ticker,
+   filing-day) pairs, so 32 names filed on one day counted as 32 independent
+   observations. Corrected with a **measured** cross-sectional correlation
+   (rho = 0.044 across the event names' market-adjusted daily returns, giving
+   `m / (1 + (m-1) rho)` independent draws), n_eff falls from 32 to 19.3 and
+   from 211 to 17.4. The BUY result survives the correction; the large
+   late-filing SELL numbers (+12.2% pre-disclosure at n_eff 3.5) do not and are
+   not reported as findings.
+
+**The rule, again:** the docstring stated the correct principle and the code
+implemented the flattering one. That is the same shape as
+`projected_night_minutes` (§44), found the same day, in a different file, by a
+different route.
+
+### 45b. What DID survive P0.5: break-even risk aversion, and the U-shape in preference units
+
+The atlas is empty of material non-degenerate flips. `gamma*` is not.
+
+For each (state, horizon) the raw-return winner — always `buy_50`, the most
+levered arm on the menu — is compared against HOLD under CRRA utility, and the
+risk aversion at which the two are exactly indifferent is solved for. **Below
+gamma\* the levered arm is preferred; above it, holding is.** Intervals are
+90% moving-block bootstrap bands with block length = horizon / stride, so the
+overlap between forward windows is respected rather than resampled away.
+
+Run twice on purpose. The six-ETF corpus (SPY/QQQ/IWM/XLF/XLE/XLK) shares most
+of its variance, and §41 was caused by exactly that; so the same measurement
+was repeated on **SPY alone**, where no cross-ticker correction is needed
+because there is no cross-section.
+
+| state | H | gamma\* (SPY only) | 90% band | crossing exists in |
+|---|---|---|---|---|
+| `vix20-25` | 252d | **0.35** | [0.10, 2.84] | **48%** of resamples |
+| `vix15-20` | 252d | 2.27 | [1.11, 5.63] | 100% |
+| `vix25-35` | 60d | 5.33 | [2.52, 8.17] | 100% |
+| `vix>=35` | 252d | **6.27** | [5.17, 7.50] | 100% |
+| `vix<15` | 252d | **9.84** | [6.50, 14.30] | 100% |
+
+Two things worth separating.
+
+**The result.** The U-shape this programme has measured three times in return
+units reproduces in PREFERENCE units, on a single ticker, with intervals:
+gamma\* is high at both ends (calm, and deep stress) and collapses in the
+VIX 20-25 middle. At a one-year horizon after VIX >= 35, 1.5x leverage beats
+holding for any investor with risk aversion below ~6 — which covers every
+personality the product would plausibly offer. In the VIX 20-25 trough it beats
+holding only for someone almost risk-neutral, and in half the resamples not
+even for them.
+
+That is a more useful statement than "+6.97% vs +1.56%", because it is the form
+the four personalities can actually read, and nobody had computed it for any
+Aegis result.
+
+**The check that mattered.** The six-ETF run gave the SAME point estimate for
+the weak cell (0.35) with a much tighter band and "crossing in 83% of
+resamples". SPY alone gives 0.35 with a band nearly four times wider and
+crossing in **48%** — i.e. in half the resamples HOLD dominates at EVERY risk
+aversion and no break-even exists at all. **Pooling six co-moving ETFs did not
+move the estimate; it manufactured confidence in it.** Same lesson as §41, in a
+new place, found by re-running rather than by arguing about it.
+
+### What must be read with the number
+
+* **It is a restatement, not independent confirmation.** Same corpus, same
+  period, same U-shape. A new quantity with an interval — not new evidence.
+* **The menu bounds the answer.** gamma\* is measured against `buy_50` because
+  that is the most levered arm available. With a 2x arm the numbers change.
+  This is the SAME defect class P0.5 was ordered to fix: the menu, not the
+  market, decides what "best" means.
+* **The `vix>=35` bucket is a handful of episodes** — 17 by the earlier
+  episode count, fewer at a 252-day horizon. A 100% crossing rate is not a
+  large sample.
+* Gym output. Cells are hypotheses, never claims (R2 wall 1).
