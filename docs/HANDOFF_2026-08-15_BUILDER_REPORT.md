@@ -9,8 +9,63 @@ Reported in the sequence that order asks for.
 
 | | |
 |---|---|
-| **M1 `pi_ownership_collect`** | fires **10:00 UTC**. Status at time of writing below. |
-| **M2 corrected paid night** | pre-open, ~11:50 UTC. Readiness run: **clean**. |
+| **M1 `pi_ownership_collect`** | **VERIFIED LIVE.** Ran 2026-08-15T10:02:43Z. |
+| **M2 corrected paid night** | **NOT RUN — and must not have been.** See below. |
+
+### M1 — verified in production, and it is not the T9 shape
+
+```
+day 2026-08-14        ran_at 2026-08-15T10:02:43Z        163.7s
+index rows          1252   ->  589 unique accessions (663 joint-filing rows collapsed)
+documents fetched    589   of 589 attempted     coverage 1.000
+parse errors           0   failure_classes {}
+SELL 593    BUY 109    mechanical 1044
+525 actors    317 tickers    1746 events written    0 duplicates
+```
+
+**Attempted 589, fetched 589.** Railway's egress reaches EDGAR — the question a
+local success could never answer, and the one that once passed twelve offline
+tests while failing 100% in production. Every required field is present because
+the enrichment deployed 3.5 hours before the run; the day cannot be replayed and
+a receipt cannot be backfilled.
+
+The composition is the other confirmation: **593 sells against 109 buys**, plus
+1,044 mechanical events. The pre-2026-08 parser kept the 109 and discarded the
+rest. Idempotency remains honestly UNMEASURED — answerable tomorrow by whether
+`duplicates` absorbs the overlap.
+
+### M2 — refused on evidence, not skipped
+
+The night is **960 SERIAL vendor calls** (40 cells x 5 arms x ~4.8), and Night
+1's own ledger already held the latency of its 224 real calls: median 6.6s,
+**mean 8.7s**, p90 15.6s — a **2.3-hour** night.
+
+An 11:50 UTC start finishes ~14:10 UTC. **The session opens at 13:30 UTC.** The
+ordered window could never have finished pre-open, and nobody had noticed
+because the call count, the latency and the window lived in three different
+files that were each correct.
+
+Running it anyway would not have voided — it would have **accrued**, spending
+one of the forty nights on a night whose tool-bearing arms read live intraday
+data their forecasts are not graded against. That is hindsight handed to the
+treatment arms of the primary contrast: the same differential structure that
+voided Night 1 via `MAX_TOKENS`.
+
+`assert_night_fits_before_open` now runs before the first paid call and writes
+its headroom to every receipt. **Latest safe start ≈ 11:10 UTC at the measured
+mean; ≈ 09:20 UTC at p90.** NEGATIVE_RESULTS §39.
+
+**The bigger consequence, for the brain rather than for tonight.** The
+investigate loop is **serial** — no `asyncio`, no pool, no `gather`. At 2.3h per
+night, forty nights is ~92 hours of wall clock, and every one of them has to fit
+inside a pre-open window that the measurement has just shown to be narrower than
+anyone assumed. Running the five arms concurrently would cut a night to roughly
+28 minutes and make the schedule comfortable.
+
+It is also **not a change I will make unilaterally**: it alters execution
+characteristics mid-trial (latency, retry behaviour, and the chain cursor the
+arms share), and none of it is in the frozen pre-registration. Flagged as a
+decision, with the measurement attached.
 | `pi_ledger_resolve` | fired 2026-08-14T20:30:12Z and **REFUSED** — verified via `/api/optimus/job_receipts`. Unchanged. |
 
 **The collector's receipt was incomplete and was fixed with hours to spare.**

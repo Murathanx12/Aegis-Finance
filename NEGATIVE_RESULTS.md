@@ -1960,3 +1960,53 @@ which correction BINDS before concluding a fix to the other one is cosmetic —
 and never write "this changed nothing" into a comment without counting. Units on
 a gap, a window, or a lag are load-bearing in exactly the way a units error is
 invisible: every number still looks like a number.
+
+## 39. The ordered pre-open window could never have finished pre-open (IIF-1 M2)
+
+Found 2026-08-15 by multiplying two numbers that were both already recorded.
+
+The brain's order specified one corrected paid night, **pre-open, ~11:50 UTC**.
+The night is:
+
+    40 cells x 5 arms x ~4.8 calls/cell = ~960 vendor calls, SERIAL
+
+and Night 1's own telemetry already held the latency of its 224 real calls:
+
+    median 6.6s     mean 8.7s     p90 15.6s
+    => 1.8h              2.3h            4.2h
+
+An 11:50 UTC start finishes around **14:10 UTC**. The US session opens at
+**13:30 UTC**. The ordered start time was never compatible with the night's own
+duration, and neither was any start after roughly **11:10 UTC**.
+
+Nobody had noticed because the call count lived in a config file, the latency
+lived in a telemetry ledger, and the window lived in a prose order. Each was
+correct. No one had multiplied them.
+
+**Why this is worse than a void.** A night that spans the open completes
+normally. The receipt says `ok`. Nothing refuses. But the tool-bearing arms —
+A_snapshot excepted — read the live internet, so during the session they read
+intraday data while their forecasts are still graded from a pre-open timestamp.
+That is hindsight handed specifically to the TREATMENT arms of the primary
+contrast: the identical differential structure that voided Night 1 via
+`MAX_TOKENS`. And unlike a void, which mints nothing, this ACCRUES — it would
+have spent one of the forty nights on a contaminated result that looked clean.
+
+**The frozen pre-registration does not constrain the decision time.** It pins
+arms, ceilings, model, temperature, triggers/night and trigger weights. The
+"pre-open" requirement was an operational convention in prose, and prose does
+not refuse.
+
+Now `assert_night_fits_before_open` runs on the production path before the first
+paid call, beside the staleness guard, and the projected headroom is written to
+every receipt. The latest safe start at the measured mean is about **11:10 UTC**;
+at p90 latency it is about **09:20 UTC**.
+
+**Canon.** *A window is only a window if something measured fits inside it.*
+When a schedule constrains a process, multiply the process's own measured rate
+by its own registered size and compare — the inputs are usually already in the
+repo, sitting in three different files that nobody reads together. And note the
+asymmetry that made this survive: the guard for starting too LATE relative to
+the snapshot existed since 2026-08-14; the guard for finishing too late relative
+to the market did not, because the first failure is loud and the second is
+silent.

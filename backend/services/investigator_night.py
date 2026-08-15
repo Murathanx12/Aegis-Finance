@@ -153,6 +153,85 @@ class DecisionTimeStale(RuntimeError):
     """The snapshot is older than a production night may act on."""
 
 
+class NightWouldSpanTheOpen(RuntimeError):
+    """The night cannot finish before the session it is forecasting begins."""
+
+
+#: Measured per-call vendor latency, from Night 1's 224 REAL calls:
+#: median 6.6s, mean 8.7s, p90 15.6s. The mean is used because the night is a
+#: long serial run and the long tail is part of it.
+MEASURED_CALL_SECONDS = 8.7
+
+#: Calls a cell actually makes, measured on the five-arm rehearsal:
+#: A_snapshot 4, the other four arms 5 each.
+MEASURED_CALLS_PER_CELL = 4.8
+
+#: 09:30 America/New_York, as UTC hour/minute. The night's whole premise is a
+#: PRE-OPEN decision; once the session starts, the tool-bearing arms read live
+#: intraday data while their forecasts are still graded from a timestamp before
+#: it. That is hindsight handed specifically to the treatment arms of the
+#: primary contrast — the same differential structure that voided Night 1, and
+#: unlike a void it would ACCRUE.
+US_OPEN_UTC_HOUR, US_OPEN_UTC_MINUTE = 13, 30
+
+
+def projected_night_minutes(*, k: int, n_arms: int,
+                            call_seconds: float = MEASURED_CALL_SECONDS,
+                            calls_per_cell: float = MEASURED_CALLS_PER_CELL
+                            ) -> float:
+    """How long this night will actually take. The loop is SERIAL."""
+    return (k * n_arms * calls_per_cell * call_seconds) / 60.0
+
+
+def assert_night_fits_before_open(*, k: int, n_arms: int, now=None,
+                                  call_seconds: float = MEASURED_CALL_SECONDS
+                                  ) -> dict:
+    """Refuse a night that cannot finish before the market it forecasts opens.
+
+    FOUND 2026-08-15, BY MULTIPLYING TWO NUMBERS THAT WERE BOTH ALREADY KNOWN.
+    The order specified a pre-open night at ~11:50 UTC. The night is 40 cells x
+    5 arms x ~4.8 calls = ~960 SERIAL vendor calls, and Night 1's own ledger put
+    the mean call at 8.7s. That is 2.3 hours. The ordered start time could never
+    have finished before the 13:30 UTC open — and nobody had multiplied the two,
+    because the call count lived in a config and the latency lived in a ledger.
+
+    A guard, not a warning. The failure it prevents does not look like a failure:
+    the night completes, the receipt says `ok`, and the contamination is visible
+    only to someone who compares the last cell's timestamp against the opening
+    bell.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    now = now or datetime.now(timezone.utc)
+    minutes = projected_night_minutes(k=k, n_arms=n_arms,
+                                      call_seconds=call_seconds)
+    finish = now + timedelta(minutes=minutes)
+    open_today = now.replace(hour=US_OPEN_UTC_HOUR, minute=US_OPEN_UTC_MINUTE,
+                             second=0, microsecond=0)
+    if open_today <= now:
+        open_today += timedelta(days=1)
+    report = {
+        "projected_minutes": round(minutes, 1),
+        "projected_finish_utc": finish.isoformat(timespec="minutes"),
+        "next_open_utc": open_today.isoformat(timespec="minutes"),
+        "minutes_of_headroom": round(
+            (open_today - finish).total_seconds() / 60.0, 1),
+        "call_seconds_assumed": call_seconds,
+        "n_calls_projected": int(k * n_arms * MEASURED_CALLS_PER_CELL),
+    }
+    if finish > open_today:
+        raise NightWouldSpanTheOpen(
+            f"this night projects {minutes / 60:.1f}h ({report['n_calls_projected']} "
+            f"serial calls at {call_seconds:.1f}s) and would finish "
+            f"{finish.strftime('%H:%M')}Z, after the {open_today.strftime('%H:%M')}Z "
+            f"open. The tool-bearing arms would read live intraday data while "
+            f"their forecasts are graded from a pre-open timestamp — hindsight "
+            f"handed to the treatment arms of the primary contrast. Start "
+            f"earlier: the latest safe start is about "
+            f"{(open_today - timedelta(minutes=minutes)).strftime('%H:%M')}Z.")
+    return report
+
+
 def assert_decision_time_fresh(decision_ts, *, now=None,
                                max_lag_minutes: int = MAX_DECISION_LAG_MINUTES
                                ) -> float:
@@ -292,6 +371,10 @@ class NightResult:
     #: than argued about. No behaviour depends on it yet; the number has to
     #: exist before anyone can say what an acceptable value is.
     decision_lag_minutes_at_end: float | None = None
+    #: Projected duration vs the next open, from `assert_night_fits_before_open`.
+    #: On the receipt so the headroom a night actually had is a recorded fact
+    #: rather than something reconstructed from timestamps afterwards.
+    timing: dict = field(default_factory=dict)
     #: True for a rehearsal/test. A sandbox night never reaches the evidence
     #: ledger and never writes a production receipt, and the flag is carried on
     #: the receipt so the two can never be confused after the fact.
@@ -755,6 +838,9 @@ def run_night(features_by_ticker: dict[str, dict], *,
                                      tool_runner=tool_runner)
         # Before the first dollar, like every other refusal here. A sandbox run
         # may replay a snapshot of any age — that is what a rehearsal is for.
+        # A night that cannot FINISH before the open is as contaminated as one
+        # that STARTED stale, and until 2026-08-15 only the second was checked.
+        res.timing = assert_night_fits_before_open(k=k, n_arms=len(arms))
         if decision_ts is not None:
             res.decision_lag_minutes = round(
                 assert_decision_time_fresh(decision_ts), 2)
