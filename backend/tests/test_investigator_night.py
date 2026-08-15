@@ -251,8 +251,14 @@ def test_the_night_receipt_carries_the_four_required_funding_numbers():
               "current_balance", "funding_gap_or_surplus"):
         assert k in res and res[k] is not None
     assert res["projected_40_night_cost"] == pytest.approx(30.0)
-    assert res["funding_gap_or_surplus"] == pytest.approx(37.12 - 30.0)
-    assert res["fundable_nights_at_this_rate"] == 49
+    # Against the CONSTANT, not a literal. The balance is a dated fact that
+    # changes when Murat tops up (it did, 2026-08-15: 37.12 -> 57.12), and a
+    # test pinned to yesterday's figure fails for the one reason that is not a
+    # defect.
+    assert res["funding_gap_or_surplus"] == pytest.approx(
+        N.DEFAULT_BALANCE_USD - 30.0)
+    assert res["fundable_nights_at_this_rate"] == int(
+        N.DEFAULT_BALANCE_USD // 0.75)
 
 
 def test_a_night_under_the_ceiling_can_still_be_unfundable():
@@ -261,13 +267,16 @@ def test_a_night_under_the_ceiling_can_still_be_unfundable():
     res = N.project_funding(4.00)
     assert res["measured_cost_night_1"] < res["safety_ceiling_per_night"]
     assert res["funding_gap_or_surplus"] < 0
-    assert res["fundable_nights_at_this_rate"] == 9
+    assert res["fundable_nights_at_this_rate"] == int(
+        N.DEFAULT_BALANCE_USD // 4.00)
+    # The point of the test: under the ceiling, still short of the first look.
     assert res["fundable_nights_at_this_rate"] < res["nights_required"]
 
 
 def test_the_funding_average_is_the_planning_number_not_the_ceiling():
     res = N.project_funding(0.75)
-    assert res["funding_average_per_night"] == pytest.approx(37.12 / 40, abs=1e-4)
+    assert res["funding_average_per_night"] == pytest.approx(
+        N.DEFAULT_BALANCE_USD / 40, abs=1e-4)
     assert res["funding_average_per_night"] < res["safety_ceiling_per_night"]
 
 

@@ -1923,3 +1923,40 @@ dead, 0 exportable, and one at 2 of its 3 required slices (GFC +5.12pp over an
 MDE of 3.82; taper +4.94pp over 2.45) — on foreign securities, foreign decades,
 parent barred. Still REFUSED, and would remain refused with a third slice:
 export also needs a frozen pre-registration and forward certification.
+
+## 38. A units error in the sample-size correction inflated 75% of a findings table (REGRET_TENSOR)
+
+Same night as SS37, one layer over. The tensor's per-cell `n_effective` takes
+the smaller of two corrections — overlap (`n / (H/stride)`) and episode
+clustering (occurrences more than 21 days apart). The clustering call passed its
+gap as `max(21, H) // stride`, which is wrong twice:
+
+  * it expressed a gap in STRIDED units while the positions it compared were in
+    DAYS, so at stride 5 nothing clustered below H=25 at all;
+  * it folded the horizon into a correction that already handles the horizon
+    separately, in the adjacent argument.
+
+The fix was expected to be cosmetic. Overlap LOOKED like the binding constraint
+— it was, in every cell spot-checked by hand — so the code comment written
+alongside the fix said so, and was wrong.
+
+    detectable cells    126  ->  31
+    detectably positive  10  ->   7
+    episode-bound cells      357 of 425
+
+**Three quarters of the table's findings were an artefact of the units.** They
+were concentrated at short horizons, where the inflated count was largest: the
+H=20 cells carried n_effective figures in the hundreds (622 for one) that are
+really a few dozen distinct market episodes.
+
+It also reversed the one nominally-significant result in the accompanying
+difference test. Whether the payoff to adding exposure is LARGER in stress than
+in calm read `t = 2.47` at H=20 before the fix and `t = 0.83` after. Nothing
+about the estimate changed; only its standard error, which had been computed on
+a sample size that did not exist.
+
+**Canon.** *A sample-size correction is a finding, not a formality.* Spot-check
+which correction BINDS before concluding a fix to the other one is cosmetic —
+and never write "this changed nothing" into a comment without counting. Units on
+a gap, a window, or a lag are load-bearing in exactly the way a units error is
+invisible: every number still looks like a number.

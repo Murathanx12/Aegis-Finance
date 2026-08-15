@@ -69,6 +69,28 @@ def test_the_cli_passes_freeze_false_exactly_when_readiness_is_asked(monkeypatch
         "docstring would then describe a guard that is not wired")
 
 
+def test_the_report_does_not_tell_you_to_reuse_a_snapshot_it_never_wrote():
+    """A stale instruction is a broken instruction.
+
+    The report ended with `--reuse-snapshot`, which was correct while readiness
+    froze a snapshot as a side effect. Removing the freeze without changing the
+    line would have handed a FileNotFoundError to whoever typed the last line
+    of a report that had just printed READY — the same half-a-fix shape as
+    writing receipts nowhere anything could read them.
+    """
+    import inspect
+
+    from backend.services import iif1_run as R
+    src = inspect.getsource(R.readiness_report)
+    # The PRINTED command, not the prose around it — the docstring and the
+    # comment both mention the removed flag on purpose.
+    printed = [ln for ln in src.splitlines()
+               if "iif1_run{stamp}" in ln or "iif1_run --" in ln]
+    assert printed, "the report no longer prints a command at all"
+    assert not any("--reuse-snapshot" in ln for ln in printed), printed
+    assert "ASSEMBLES A FRESH SNAPSHOT" in src
+
+
 def test_the_receipt_records_how_stale_the_snapshot_was_when_the_night_ENDED():
     """The guard checks the start. The night keeps running afterwards.
 

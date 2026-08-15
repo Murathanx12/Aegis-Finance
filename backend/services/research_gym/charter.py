@@ -36,12 +36,15 @@ is excluded from the evidence for it, by construction, in `TransferTest`.
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from backend import config as _config
+
+logger = logging.getLogger(__name__)
 
 GYM_DIR = _config.OPTIMUS_LEDGER_DIR / "research_gym"
 LINEAGE_LEDGER = GYM_DIR / "lineage.jsonl"
@@ -124,16 +127,41 @@ def record_lineage(row: LineageRow, path: Path | None = None) -> None:
 
 
 def read_lineage(path: Path | None = None) -> list[dict]:
+    """Every ledgered candidate, plus a placeholder for every unreadable one.
+
+    A CORRUPT ROW MUST NOT VANISH.
+    The lineage ledger is the denominator in §20: it is how this campaign
+    reports its own multiple-comparison count. The previous version skipped
+    unparseable lines with a bare `continue`, which means a truncated write
+    would silently SHRINK the recorded search — in the direction that makes
+    every deflation computed against it too generous, and with no trace.
+
+    That is the same failure this whole module exists to prevent, sitting in
+    the function that reports it. Unreadable rows are now counted and returned
+    as explicit placeholders, so `unledgered_search_warning` sees them and a
+    reader cannot mistake a damaged ledger for a small one.
+    """
     p = path or LINEAGE_LEDGER
     if not p.exists():
         return []
-    out = []
-    for line in p.read_text(encoding="utf-8").splitlines():
-        if line.strip():
-            try:
-                out.append(json.loads(line))
-            except json.JSONDecodeError:
-                continue
+    out, unreadable = [], 0
+    for i, line in enumerate(p.read_text(encoding="utf-8").splitlines()):
+        if not line.strip():
+            continue
+        try:
+            out.append(json.loads(line))
+        except json.JSONDecodeError as exc:
+            unreadable += 1
+            out.append({"candidate_id": f"UNREADABLE:line{i + 1}",
+                        "campaign": CAMPAIGN, "unreadable": True,
+                        "error": f"{type(exc).__name__}: {exc}",
+                        "citable": False})
+    if unreadable:
+        logger.error(
+            "lineage ledger %s has %d unreadable row(s) — they are RETAINED as "
+            "placeholders because dropping them would understate this "
+            "campaign's search count (§20) and no deflation computed against "
+            "it would be trustworthy", p, unreadable)
     return out
 
 

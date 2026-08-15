@@ -109,6 +109,35 @@ def test_the_tensor_survives_a_round_trip(tmp_path):
     assert b.edge_is_detectable == a.edge_is_detectable
 
 
+def test_episode_clustering_uses_DAY_units_and_does_not_double_count_horizon():
+    """Two corrections, two jobs — and the first version conflated them.
+
+    `positions` are day indices, so the clustering gap must be in days (21, the
+    same regime-persistence gap the base-rate table uses). The first version
+    wrote `max(21, H) // stride`, which expressed a day gap in strided units AND
+    folded the horizon into a correction that already handles the horizon
+    separately.
+
+    It was expected to change nothing, because overlap LOOKED like the binding
+    constraint. It was not: 357 of 425 cells turned out to be episode-bound and
+    the detectable-cell count fell from 126 to 31. Assuming a units fix is
+    cosmetic is how three quarters of a findings table survives review.
+    """
+    r, _ = _flat_series(n=1000)
+    # One long contiguous stress run, then a gap far wider than 21 days, then
+    # another run. That is TWO episodes however the windows overlap.
+    states = (["calm"] * 100 + ["panic"] * 120 + ["calm"] * 300
+              + ["panic"] * 120 + ["calm"] * 360)
+    t = T.build_regret_tensor({"AAA": (r, states)}, horizons=[20],
+                              stride_days=5, sample_start="x", sample_end="y")
+    c = t.cell("panic", "hold", 20)
+    assert c.power.n_episodes == 2, (
+        f"expected 2 stress episodes, got {c.power.n_episodes} — a contiguous "
+        f"run sampled every 5 days is one event, not one per sample")
+    # And the reported n_effective takes the harsher of the two corrections.
+    assert c.power.n_effective == min(c.power.n_obs / (20 / 5), 2)
+
+
 def test_two_states_are_kept_apart():
     r, _ = _flat_series(n=600)
     states = ["calm"] * 300 + ["panic"] * 300

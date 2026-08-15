@@ -158,61 +158,82 @@ natural way to read a table of 425 cells is to scan for the largest number — a
 maximum over 425 noisy draws, which is G1 one dimension up. `worst_actions()`
 refuses to rank undetectable cells by default.
 
+`n_effective` is the smaller of two corrections: overlap (`n / (H/stride)`) and
+episode clustering (occurrences more than 21 **days** apart). Getting the units
+of the second wrong cost three quarters of the first build's findings — see
+below.
+
+### A units bug, and three quarters of the first table
+
+The first build of this tensor reported **126 of 425 cells detectable**. That
+was wrong. Episode clustering was passing its gap in *strided* units while the
+positions it compared were in *days*, and it folded the horizon into a
+correction that already handled the horizon separately.
+
+The fix was expected to be cosmetic, because overlap *looked* like the binding
+constraint. It was not: **357 of 425 cells are episode-bound**, and detectable
+cells fell from **126 to 31** — concentrated at short horizons, where the
+inflated count was largest. Three quarters of the first table's findings were an
+artefact of a unit mismatch, and assuming a units fix cannot matter is exactly
+how such a table survives a review. Everything below is the corrected build.
+
 ### What it says
 
-**126 of 425 cells are detectable. Of those, 116 are negative.**
+**31 of 425 cells are detectable: 24 negative, 7 positive.**
 
 Every detectably-different de-risking action lost to holding, and the loss grows
 with both stress and horizon:
 
-| state | action | 20d | 60d | 120d | 252d |
-|---|---|---:|---:|---:|---:|
-| VIX 25–35 | `sell_100` | −2.07 | −5.89 | −8.82 | |
-| VIX ≥ 35 | `sell_100` | | | −16.93 | **−38.84** |
+| state | action | 60d | 120d | 252d |
+|---|---|---:|---:|---:|
+| VIX 15–20 | `sell_100` | | | −9.84 |
+| VIX < 15 | `sell_100` | | | −11.67 |
+| VIX 25–35 | `sell_100` | **−5.89** | −8.82 | |
+| VIX ≥ 35 | `sell_100` | *not detectable* | −16.93 | **−38.84** |
 
-The worst variant everywhere is `sell_100_reenter_down_5pct` — sell, then wait
-for a *further* 5% fall before returning. Waiting for confirmation of the fall
-was the most damaging thing in the menu.
+Note the row that does *not* clear its bar: `sell_100` at VIX ≥ 35 over 63-ish
+days — the exact cell dataset zero's finding lives in — is **−7.58pp against an
+MDE of 10.98**, on 21 effective observations. The band that *is* detectable at
+that horizon is 25–35.
 
-### The ten positive cells, and the caveat that governs them
-
-Only **10 of 425** cells are detectably positive. All are leveraged-long, and
-they cluster in **VIX 25–35 — the moderate band, not the extreme one**:
+### The seven positive cells, and the caveat that governs them
 
 | state | action | H | edge | MDE | n_eff |
 |---|---|---:|---:|---:|---:|
 | VIX ≥ 35 | buy_50 | 252 | +20.07 | 18.89 | **7.8** |
+| VIX ≥ 35 | buy_25 | 252 | +10.01 | 8.91 | **7.8** |
 | VIX 25–35 | buy_50 | 120 | +4.13 | 4.02 | 45.0 |
-| VIX 25–35 | buy_50 | 60 | +2.64 | 1.98 | 75.0 |
-| VIX 25–35 | buy_50 | 20 | +0.85 | 0.62 | 296.0 |
-| VIX < 15 | buy_50 | 20 | +0.27 | 0.23 | 622.0 |
+| VIX < 15 | buy_25 | 252 | +2.74 | 2.68 | 19.0 |
+| VIX 25–35 | buy_50 | 60 | +2.64 | 2.47 | 48.0 |
+| VIX 25–35 | buy_25 | 120 | +2.08 | 1.97 | 45.0 |
+| VIX 25–35 | buy_25 | 60 | +1.34 | 1.22 | 48.0 |
 
 Three things follow, and the third is the one that matters:
 
-1. At the horizon dataset zero actually uses (63d), **VIX ≥ 35 cannot support
-   the claim**: `buy_50` there is +2.82pp against an MDE of 5.14. The band that
-   can is 25–35. The extreme-stress arm keeps failing to reach its own bar.
-2. The single largest number in the table — +20.07pp at VIX ≥ 35 over a year —
-   stands on **7.8 effective observations**. It is the U-shape's right arm
-   wearing a different hat.
-3. **`buy_50` is leveraged (1.5×), and this is an equity sample over a period
-   with strong equity drift.** Leverage beats no leverage almost everywhere,
-   including in calm markets. So "adding exposure wins" is not the claim; the
-   claim can only be that it wins **more** in stress — which is a difference,
-   and §18 requires it to be tested as one:
+1. Every one of these clears its MDE by a hair — the largest margin is 6%.
+2. The two largest numbers stand on **7.8 effective observations**. They are the
+   U-shape's right arm wearing a different hat.
+3. **`buy_25`/`buy_50` are leveraged (1.25×/1.5×), and this is an equity sample
+   over a period with strong equity drift.** Leverage beats no leverage almost
+   everywhere — note `VIX < 15 buy_25` in the table above, in a *calm* market.
+   So "adding exposure wins" is not the claim. The claim can only be that it
+   wins **more** in stress, which is a difference, and §18 requires it to be
+   tested as one:
 
 | H | stressed bucket | diff vs VIX<15 | SE | t | MDE | |
 |---:|---|---:|---:|---:|---:|---|
-| 20 | VIX 25–35 | +0.58 | 0.24 | **2.47** | 0.66 | not detectable |
-| 60 | VIX 25–35 | +1.70 | 0.96 | 1.77 | 2.70 | not detectable |
+| 20 | VIX 25–35 | +0.58 | 0.70 | 0.83 | 1.97 | not detectable |
+| 60 | VIX 25–35 | +1.70 | 1.19 | 1.43 | 3.34 | not detectable |
 | 120 | VIX ≥ 35 | +5.15 | 3.51 | 1.47 | 9.83 | not detectable |
-| 252 | VIX ≥ 35 | +14.63 | 7.58 | 1.93 | 21.22 | not detectable |
+| 252 | VIX ≥ 35 | +14.63 | 7.02 | **2.09** | 19.66 | not detectable |
 
-**All eight comparisons point the same way; not one is detectable.** The largest,
-`t = 2.47`, is nominally significant at 5% — and is one of eight overlapping,
-non-independent comparisons, and sits below its own 80%-power MDE. (Those are
-different bars: the MDE asks whether we *could* have seen an effect this size,
-which is stricter than asking whether this sample's estimate clears a p-value.)
+**All eight comparisons point the same way; not one is detectable.** Before the
+units fix the H=20 comparison read `t = 2.47` and was nominally significant;
+corrected, it is `t = 0.83`. The largest surviving `t` is 2.09 at a horizon of a
+year — nominally significant, one of eight overlapping non-independent
+comparisons, and a fifth of its own 80%-power MDE. (Those are different bars:
+the MDE asks whether an effect this size was *detectable at all*, which is
+stricter than asking whether this sample's estimate clears a p-value.)
 
 The honest summary: **consistent in sign, established nowhere.**
 

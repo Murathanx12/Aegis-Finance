@@ -239,7 +239,8 @@ def _percentile_rank(cell: NullCell, value: float) -> float | None:
 def regret_triple(surface, *, state_key: str | None = None,
                   matched_null: MatchedNull | None = None,
                   fixed_default: str = "hold",
-                  universe: str | None = None) -> RegretTriple:
+                  universe: str | None = None,
+                  menu: Sequence[str] | None = None) -> RegretTriple:
     """All three denominators for one replayed decision.
 
     `surface` is a `ResponseSurface`; typed loosely to avoid a circular import
@@ -270,6 +271,22 @@ def regret_triple(surface, *, state_key: str | None = None,
             raise NullMismatch(
                 f"null universe {matched_null.universe!r} vs episode "
                 f"{universe!r}")
+        # THE MENU IS PART OF THE QUANTITY, AND THIS WAS THE GAP.
+        #
+        # `menu_hash` was introduced in this module precisely because regret
+        # against the best of 17 and against the best of 25 are different
+        # numbers — and then nothing checked it. Adding one policy would have
+        # silently raised every historical regret figure, in the direction that
+        # makes the engine look worse, with no error anywhere. Found by
+        # auditing this file rather than by it failing.
+        observed = menu_hash(menu if menu is not None else surface.results)
+        if observed != matched_null.menu_hash:
+            raise NullMismatch(
+                f"the null was measured against menu {matched_null.menu_hash} "
+                f"and this surface carries {observed}. Regret vs the best of "
+                f"one menu is not comparable to regret vs the best of another "
+                f"— recompute the null against the menu in use rather than "
+                f"subtracting across them")
         cell, quality = matched_null.cell(state_key or "", surface.taken_policy)
         if cell is not None:
             excess = raw - cell.mean_regret_pct

@@ -169,13 +169,14 @@ def test_a_difference_without_dispersion_declines_to_report_a_t():
 
 # ── G1: the null, and the three denominators ────────────────────────────────
 
-def _null(cost_bps=10.0, horizon=63, universe="^GSPC", mean=17.31, p90=35.16):
+def _null(cost_bps=10.0, horizon=63, universe="^GSPC", mean=17.31, p90=35.16,
+          menu=("hold", "sell_100", "buy_25")):
     cell = RG.NullCell(
         state_key="vix>=35", policy="sell_100", mean_regret_pct=mean,
         percentiles={10: 2.0, 25: 6.0, 50: 12.0, 75: 24.0, 90: p90, 95: 41.0},
         power=PW.power_for(353, horizon, 20.0, n_episodes=19))
     mn = RG.MatchedNull(universe=universe, horizon_days=horizon,
-                        cost_bps=cost_bps, menu_hash="deadbeef",
+                        cost_bps=cost_bps, menu_hash=RG.menu_hash(menu),
                         sample_start="1990-01-04", sample_end="2026-08-14")
     mn.cells[("vix>=35", "sell_100")] = cell
     mn.pooled["sell_100"] = cell
@@ -216,7 +217,8 @@ def test_a_good_decision_can_score_NEGATIVE_regret_against_the_fixed_default():
     # The property the ex-post-best denominator structurally cannot have. A
     # denominator that can never exonerate is not a measurement of skill.
     t = RG.regret_triple(_S(taken="sell_100", hold=-30.0, sell_100=0.0),
-                         state_key="vix>=35", matched_null=_null())
+                         state_key="vix>=35",
+                         matched_null=_null(menu=("hold", "sell_100")))
     assert t.vs_fixed_default == pytest.approx(-30.0)
     assert t.vs_ex_post_best >= 0.0
 
@@ -225,7 +227,7 @@ def test_excess_over_the_null_is_the_headline_minus_what_a_blameless_actor_score
     # Dataset zero in miniature: 26.5pp of raw regret against a null of 17.31pp
     # for exactly this state and action is +9.2pp of excess, not +26.5pp.
     t = RG.regret_triple(_S(hold=26.5, sell_100=0.0), state_key="vix>=35",
-                         matched_null=_null())
+                         matched_null=_null(menu=("hold", "sell_100")))
     assert t.vs_ex_post_best == pytest.approx(26.5)
     assert t.excess_vs_matched_null == pytest.approx(26.5 - 17.31, abs=1e-9)
     assert t.match_quality == "state_and_action"
@@ -241,7 +243,7 @@ def test_without_a_null_the_triple_says_it_is_not_interpretable():
 
 def test_a_missing_state_cell_falls_back_to_pooled_and_SAYS_it_did():
     t = RG.regret_triple(_S(hold=26.5, sell_100=0.0), state_key="vix<15",
-                         matched_null=_null())
+                         matched_null=_null(menu=("hold", "sell_100")))
     assert t.match_quality == "action_only_pooled_over_states"
 
 
@@ -253,19 +255,46 @@ def test_a_null_measured_at_a_different_cost_is_REFUSED_not_subtracted():
     # purpose is to be matched.
     with pytest.raises(RG.NullMismatch, match="5.0bps"):
         RG.regret_triple(_S(hold=26.5, sell_100=0.0, cost_bps=10.0),
-                         state_key="vix>=35", matched_null=_null(cost_bps=5.0))
+                         state_key="vix>=35",
+                         matched_null=_null(cost_bps=5.0,
+                                            menu=("hold", "sell_100")))
 
 
 def test_a_null_measured_over_a_different_horizon_is_REFUSED():
     with pytest.raises(RG.NullMismatch, match="horizon"):
         RG.regret_triple(_S(hold=26.5, sell_100=0.0, horizon=63),
-                         state_key="vix>=35", matched_null=_null(horizon=21))
+                         state_key="vix>=35",
+                         matched_null=_null(horizon=21,
+                                            menu=("hold", "sell_100")))
 
 
 def test_a_null_measured_on_a_different_universe_is_REFUSED():
     with pytest.raises(RG.NullMismatch, match="universe"):
         RG.regret_triple(_S(hold=26.5, sell_100=0.0), state_key="vix>=35",
-                         matched_null=_null(universe="SPY"), universe="^GSPC")
+                         matched_null=_null(universe="SPY",
+                                            menu=("hold", "sell_100")),
+                         universe="^GSPC")
+
+
+def test_a_null_measured_against_a_DIFFERENT_MENU_is_refused():
+    """The gap this closes was found by auditing the file, not by it failing.
+
+    `menu_hash` was introduced in this module precisely because regret against
+    the best of 17 and against the best of 25 are different quantities — and
+    then nothing compared it. Adding one policy to `POLICY_MENU` would have
+    silently raised every historical regret figure against an unchanged null,
+    in the direction that makes the engine look worse, with no error anywhere.
+    """
+    with pytest.raises(RG.NullMismatch, match="menu"):
+        RG.regret_triple(_S(hold=26.5, sell_100=0.0), state_key="vix>=35",
+                         matched_null=_null(menu=("hold", "sell_100",
+                                                  "a_new_policy")))
+
+
+def test_the_real_menu_and_the_real_null_agree():
+    """The check must not fire on the pipeline it is meant to protect."""
+    from backend.services.research_gym.policies import POLICY_MENU
+    assert RG.menu_hash(POLICY_MENU.keys()) == RG.menu_hash(list(POLICY_MENU))
 
 
 def test_the_menu_is_part_of_the_number_identity():

@@ -255,9 +255,25 @@ def build_regret_tensor(series_by_security: dict[str, tuple],
         # Positions are strided indices into one security's series; episodes are
         # counted on them so a state that persists for a quarter is not read as
         # a quarter's worth of independent draws.
+        # `positions` are DAY indices, so the gap is in days — 21, the same
+        # regime-persistence gap the base-rate table uses.
+        #
+        # The first version wrote `max(21, H) // stride`, which was wrong twice:
+        # it expressed a day gap in strided units, and it folded the horizon
+        # into a correction that already handles the horizon separately (the
+        # `horizon_days=H/stride` argument below). Two occurrences H days apart
+        # have non-overlapping windows and ARE independent draws; what episode
+        # clustering measures is something else — that a stress state persists
+        # for weeks and those weeks are one event.
+        #
+        # THE CORRECTION WAS NOT COSMETIC. It was expected to change nothing,
+        # because overlap looked like the binding constraint. It is not: 357 of
+        # 425 cells are episode-bound, and detectable cells fell from 126 to
+        # 31. Three quarters of the first table's "detectable" findings were an
+        # artefact of a units error — concentrated, as usual, at short horizons
+        # where the inflated count was largest.
         n_eps = PW.count_episodes(positions[key],
-                                  gap_days=max(PW.DEFAULT_EPISODE_GAP_DAYS,
-                                               H) // max(stride_days, 1))
+                                  gap_days=PW.DEFAULT_EPISODE_GAP_DAYS)
         t.cells[key] = TensorCell(
             state_key=state_key, action=action, horizon_days=H,
             mean_net_return_pct=float(np.mean(nets[key])),
@@ -266,7 +282,12 @@ def build_regret_tensor(series_by_security: dict[str, tuple],
             sd_edge_pp=sd,
             percentiles_edge={p: float(np.percentile(arr, p))
                               for p in RG.KEPT_PERCENTILES},
-            power=PW.power_for(n_obs=len(arr), horizon_days=max(H // max(stride_days, 1), 1),
-                               sd=sd, n_episodes=n_eps),
+            # Overlap correction in SAMPLED units: with stride s and horizon H,
+            # consecutive samples overlap whenever s < H, so the
+            # non-overlapping-equivalent count is n / (H/s).
+            power=PW.power_for(
+                n_obs=len(arr),
+                horizon_days=max(round(H / max(stride_days, 1)), 1),
+                sd=sd, n_episodes=n_eps),
             securities=tuple(sorted(secs[key])))
     return t

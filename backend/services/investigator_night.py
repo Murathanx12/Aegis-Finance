@@ -89,11 +89,19 @@ WORST_CASE_CALL_USD = 0.05
 # is nine fundable nights out of forty, and the accrual clock cannot honestly
 # start until that arithmetic has been looked at.
 GRADED_NIGHTS_TO_FIRST_LOOK = 40
-#: DeepSeek console balance, read by Murat 2026-08-14. Passed in per-run where a
-#: fresher figure exists; this is the dated default so the projection is never
-#: silently computed against nothing.
-DEFAULT_BALANCE_USD = 37.12
-BALANCE_AS_OF = "2026-08-14"
+#: DeepSeek console balance. Passed in per-run where a fresher figure exists;
+#: this is the dated default so the projection is never silently computed
+#: against nothing.
+#:
+#: 2026-08-15: $37.12 + Murat's $20 top-up = $57.12, ratified in the brain's
+#: order (§3, "FUNDED, proceed"). Updated here rather than left to a CLI flag
+#: because a stale default is what the projection quietly uses when nobody
+#: passes one, and the whole point of the funding rule is that it decides
+#: against a real number. NOT part of the frozen pre-registration — checked
+#: before changing it, because a change to a frozen field would REFUSE the
+#: night rather than merely misreport it.
+DEFAULT_BALANCE_USD = 57.12
+BALANCE_AS_OF = "2026-08-15"
 
 #: How many cells in a row may produce NO gradeable forecast before the night
 #: stops. This is the information guard the campaign governor's zero-yield rule

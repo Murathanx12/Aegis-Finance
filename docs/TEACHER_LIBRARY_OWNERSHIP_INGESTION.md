@@ -137,3 +137,38 @@ already shipped one: *the insider collector passed twelve tests while 403-ing on
 - **COPY-LAB still cannot accrue from this.** Wiring these events into
   `CORPORATE_INSIDER_CLUSTER` eligibility is the next step, not this one.
   `ACTIVIST_13D` stays blocked until 13D ingestion exists.
+
+## ACTOR SURPRISE is data-blocked, measured 2026-08-15
+
+The ordered next step (T1) is `P(action | actor history, issuer state, market
+state)` — *how unusual is this action for THIS actor*. A CEO who buys every
+quarter is a different signal from one who sold or held for eight years and then
+buys after a 45% drawdown, and that distinction is the whole point.
+
+It needs actor **history**. Measured on the corpus as it stands:
+
+| | |
+|---|---:|
+| events | 1,589 |
+| resolved actors | 485 |
+| actors with exactly **1** event | **234** |
+| with 2 | 87 |
+| with 3 | 43 |
+| with ≥4 | 121 |
+| transaction months represented | one (2026-08 holds 1,147 of them) |
+
+The median actor has **one observation**. `P(action | actor history)` estimated
+on one observation is not a weak estimate, it is a restatement of the action.
+Building the scorer on this corpus would produce a number for every actor and
+mean nothing for almost all of them — and it would look like a working feature.
+
+**What IS computable now**, without actor history, and could be built first:
+insider role (officer / director / 10%), independent-insider clusters, opposite
+actions within one issuer, 10b5-1 status, and event proximity.
+
+**What unblocks the rest** is a per-actor backfill of prior Form 4s from EDGAR.
+That is a baseline, not a track record, and it is PIT-safe (filings carry
+`filed_at`) — but it is **not authorized** and must not be confused with a
+COPY-LAB historical fill, which stays forbidden. Roughly 12 months of history
+per actor would move the median from 1 observation to something estimable; that
+estimate has not been made and should be before the fetch is designed.

@@ -288,11 +288,36 @@ def readiness_report(snap: dict, sel: dict, *, as_of: str | None,
 
     print("READY. Nothing above spent money. The command that WOULD:\n")
     stamp = f' --as-of "{as_of}"' if as_of else ""
-    print(f"    python -m backend.services.iif1_run --reuse-snapshot{stamp}")
-    print("\nThat invocation runs with sandbox=False. It verifies the frozen "
-          "pre-registration on the real path, refuses every override, and "
-          "writes the forward evidence ledger. It is the first dollar.")
+    # NO `--reuse-snapshot`, and the reason is this report.
+    #
+    # It used to say `--reuse-snapshot`, because readiness froze a snapshot as
+    # a side effect. It no longer does — freezing here would consume the
+    # night's one point-in-time slot hours early and guarantee the staleness
+    # refusal. So there is nothing to reuse, and the instruction had to change
+    # with the behaviour. Leaving it would have handed a FileNotFoundError to
+    # whoever typed the last line of a report that had just said READY.
+    print(f"    python -m backend.services.iif1_run{stamp}")
+    print("\nThat invocation ASSEMBLES A FRESH SNAPSHOT and then runs with "
+          "sandbox=False. It verifies the frozen pre-registration on the real "
+          "path, refuses every override, and writes the forward evidence "
+          "ledger. It is the first dollar.")
+    print("\nTIMING MATTERS AND THE ASSEMBLY IS PART OF IT. `decision_ts` is "
+          "stamped when\nassembly begins and the staleness guard allows "
+          f"{N.MAX_DECISION_LAG_MINUTES} minutes; this report's own assembly "
+          "took\n"
+          f"{_assembly_note(snap)}. Start the night so that assembly plus the "
+          "night itself\nfits the window — do not assemble in advance and run "
+          "later.")
     return 0
+
+
+def _assembly_note(snap: dict) -> str:
+    s = snap.get("assembly_seconds")
+    if not s:
+        return "an unrecorded amount of time"
+    return (f"{s / 60.0:.0f} minutes, leaving roughly "
+            f"{max(0, N.MAX_DECISION_LAG_MINUTES - s / 60.0):.0f} of the "
+            f"{N.MAX_DECISION_LAG_MINUTES}-minute allowance")
 
 
 def main(argv: list[str] | None = None) -> int:
