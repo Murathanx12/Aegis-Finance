@@ -91,6 +91,83 @@ def test_the_report_does_not_tell_you_to_reuse_a_snapshot_it_never_wrote():
     assert "ASSEMBLES A FRESH SNAPSHOT" in src
 
 
+def _snap(**over):
+    s = {"decision_ts": "2026-08-15T07:50:00-04:00",
+         "decision_ts_tz": "America/New_York", "n_universe": 182,
+         "status_counts": {"OK_DATA": 1073, "OK_EMPTY": 3, "UNAVAILABLE": 16},
+         "n_with_any_feature": 182, "n_fully_unavailable": 0,
+         "unavailable": {"AAA": ["price"]}, "assembly_seconds": 1187.4,
+         "features": {}, "sandbox": False}
+    s.update(over)
+    return s
+
+
+def _sel(**over):
+    s = {"tickers": ["WMT", "AMD"], "n_selected": 40, "n_eligible": 179,
+         "n_scored": 182, "n_excluded": 3,
+         "selected": [{"ticker": "WMT", "score": 4.08}], "excluded": []}
+    s.update(over)
+    return s
+
+
+def test_the_report_runs_to_its_last_line_without_a_20_minute_assembly(capsys):
+    """A runtime smoke test of the block that only runs after the slow part.
+
+    The other tests here assert on the report's SOURCE. That is weaker than it
+    looks: a source string cannot tell you the final block executes. This one
+    calls it, and it caught nothing only because a hand-run had already caught
+    the fixture's missing keys — the code itself was fine. Keeping it means the
+    next edit to that block is checked in under a second instead of after
+    twenty minutes of assembly.
+    """
+    from backend.services import iif1_run as R
+    rc = R.readiness_report(_snap(), _sel(), as_of=None, balance_usd=57.12)
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "READY." in out
+    # The corrected command, and NOT the one that points at nothing.
+    assert "python -m backend.services.iif1_run\n" in out
+    assert "--reuse-snapshot" not in out
+    # The assembly budget, stated where the operator decides when to start.
+    assert "20 minutes, leaving roughly 25 of the 45-minute allowance" in out
+    # And the topped-up balance, not the stale one.
+    assert "$57.12" in out and "$1.428/night" in out
+
+
+def test_a_report_that_is_NOT_ready_says_so_and_does_not_print_the_command(
+        capsys):
+    """The last line is an instruction. It must not appear under a refusal."""
+    from backend.services import iif1_run as R
+    # No reachable triggers: the night cannot fill its registered cell count.
+    rc = R.readiness_report(_snap(), _sel(n_selected=0, n_eligible=0),
+                            as_of=None, balance_usd=57.12)
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "NOT READY" in out
+    assert "python -m backend.services.iif1_run\n" not in out
+
+
+def test_the_assembly_note_cannot_crash_the_last_line_of_the_report():
+    """It runs AFTER ~20 minutes of assembly, on the report's final line.
+
+    Added in the same change that removed the freeze, so it did not exist the
+    last time the readiness report ran for real. A throw here would kill the
+    report at its end — having already spent the twenty minutes, and having
+    already printed READY — which is the most expensive place in the whole
+    script to raise.
+    """
+    from backend.services import iif1_run as R
+
+    # Recorded, missing, zero, and absurd. None may raise.
+    assert "20 minutes" in R._assembly_note({"assembly_seconds": 1200.0})
+    assert "unrecorded" in R._assembly_note({})
+    assert "unrecorded" in R._assembly_note({"assembly_seconds": 0})
+    # An assembly longer than the whole allowance must clamp at zero remaining
+    # rather than print a negative budget.
+    long_note = R._assembly_note({"assembly_seconds": 60 * 60 * 3})
+    assert "0 of the" in long_note
+
+
 def test_the_receipt_records_how_stale_the_snapshot_was_when_the_night_ENDED():
     """The guard checks the start. The night keeps running afterwards.
 
