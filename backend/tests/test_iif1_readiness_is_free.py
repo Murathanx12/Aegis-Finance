@@ -110,7 +110,35 @@ def _sel(**over):
     return s
 
 
-def test_the_report_runs_to_its_last_line_without_a_20_minute_assembly(capsys):
+@pytest.fixture
+def prereg_readable(monkeypatch):
+    """Make the frozen pre-registration readable WITHOUT the sibling repo.
+
+    WHY THIS FIXTURE EXISTS — a CI break that this file caused, 2026-08-15
+    ====================================================================
+    `readiness_report` calls `iif1_prereg.verify_or_refuse()`, which reads
+    `../Aegis module/scripts/iif1_config.py` and **deliberately ignores**
+    `AEGIS_IIF1_PREREG_ABSENT_OK`. That is correct: a context that cannot read
+    the registered rule must not be able to wave itself through.
+
+    But CI checks out ONE repo, so the sibling is genuinely absent there, the
+    report correctly reports a blocker, and it returns 1. The smoke test below
+    asserted 0 — true on this machine, false everywhere else. It went green
+    locally on 4,153 tests and turned CI red for three commits, which stopped
+    every deploy: prod sat on `5d7ae15` while `a355fa6` was reported as shipped.
+
+    The lesson is not "mock the dependency". It is that **a test whose result
+    depends on what else happens to be checked out is not a test of the code**,
+    and the signal it corrupts is the one gating production. So both worlds are
+    now pinned explicitly: readable → READY here, absent → NOT READY below.
+    """
+    from backend.services import iif1_prereg as P
+    monkeypatch.setattr(P, "verify_or_refuse", P.runtime_surface)
+    return P
+
+
+def test_the_report_runs_to_its_last_line_without_a_20_minute_assembly(
+        capsys, prereg_readable):
     """A runtime smoke test of the block that only runs after the slow part.
 
     The other tests here assert on the report's SOURCE. That is weaker than it
@@ -135,8 +163,13 @@ def test_the_report_runs_to_its_last_line_without_a_20_minute_assembly(capsys):
 
 
 def test_a_report_that_is_NOT_ready_says_so_and_does_not_print_the_command(
-        capsys):
-    """The last line is an instruction. It must not appear under a refusal."""
+        capsys, prereg_readable):
+    """The last line is an instruction. It must not appear under a refusal.
+
+    The fixture matters here too. Without it this test passed in CI for the
+    wrong reason — the missing sibling blocked the report, so the assertion
+    never exercised the trigger-pool blocker it names.
+    """
     from backend.services import iif1_run as R
     # No reachable triggers: the night cannot fill its registered cell count.
     rc = R.readiness_report(_snap(), _sel(n_selected=0, n_eligible=0),
@@ -144,6 +177,34 @@ def test_a_report_that_is_NOT_ready_says_so_and_does_not_print_the_command(
     out = capsys.readouterr().out
     assert rc == 1
     assert "NOT READY" in out
+    assert "SHORT OF K" in out, (
+        "the refusal must come from the empty trigger pool this test set up, "
+        "not from some other blocker that happens to also be present")
+    assert "python -m backend.services.iif1_run\n" not in out
+
+
+def test_a_checkout_that_cannot_READ_the_frozen_rule_is_NOT_READY(
+        capsys, monkeypatch):
+    """CI's actual world, pinned deliberately instead of discovered in red.
+
+    This is the behaviour that broke the build, and it is the CORRECT
+    behaviour — `verify_or_refuse` ignores the opt-out variable on purpose, so
+    a checkout without the `Aegis module` sibling cannot certify a night it has
+    no way to check. Asserting it here means the next person who "fixes" CI by
+    loosening the guard breaks a test that explains why they must not.
+    """
+    import pathlib
+
+    from backend.services import iif1_prereg as P
+    from backend.services import iif1_run as R
+    monkeypatch.setattr(P, "CONFIG_PATH",
+                        pathlib.Path("/nonexistent/iif1_config.py"))
+    monkeypatch.setenv(P.OPT_OUT_ENV, "1")      # must NOT rescue a paying night
+
+    rc = R.readiness_report(_snap(), _sel(), as_of=None, balance_usd=57.12)
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "frozen pre-registration unreadable" in out
     assert "python -m backend.services.iif1_run\n" not in out
 
 

@@ -124,6 +124,17 @@ def test_the_guard_ACTUALLY_FIRES_on_a_production_night(monkeypatch):
                         lambda **kw: spent.append(1), raising=False)
     monkeypatch.setattr(N.TR, "select_triggers",
                         lambda *a, **k: spent.append("selected"))
+    # The registered-rule check runs FIRST on a production night, and it reads
+    # the `Aegis module` sibling. That ordering is correct — an unregistered
+    # invocation must be refused before anything else is considered — but it
+    # means this test asserted the timing guard's exception only on a machine
+    # that happens to have the sibling checked out. In CI it raised
+    # FrozenPreregMissing instead and turned the build red. Supplying the
+    # runtime's own surface keeps the trial-integrity check real (a mismatched
+    # k/arms/max_usd would still refuse) while letting the test reach the guard
+    # it is actually about.
+    from backend.services import iif1_prereg as P
+    monkeypatch.setattr(P, "verify_or_refuse", P.runtime_surface)
 
     with pytest.raises(N.NightWouldSpanTheOpen) as e:
         N.run_night({f"T{i}": {} for i in range(3)},
