@@ -336,10 +336,15 @@ def test_the_receipt_carries_operational_diagnostics_and_no_trial_statistics(
     # and value-free — a closed-vocabulary drop CODE, a count of truncated
     # calls, and the vendor's stop reason ("stop"/"length"). None of them can
     # carry a probability.
+    # The three added 2026-08-16 are wall-clock instants and a duration. They
+    # are the evidence for the concurrency amendment's whole claim — that the
+    # arms of one cell see the same world — so they have to be on the row that
+    # gets read. A clock cannot carry a probability.
     assert set(row) == {"arm", "ticker", "status", "n_calls", "n_tool_calls",
                         "n_forecasts", "forecast_drops", "terminal_drop_reason",
                         "n_truncated_calls", "finish_reasons", "served_models",
-                        "tokens_in", "tokens_out", "error"}
+                        "tokens_in", "tokens_out", "error",
+                        "arm_started_at", "arm_finished_at", "arm_seconds"}
     assert row["terminal_drop_reason"] in ({""} | set(
         __import__("backend.services.investigator_agent", fromlist=["x"])
         .DROP_REASONS))

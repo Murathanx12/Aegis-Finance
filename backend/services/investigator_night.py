@@ -63,6 +63,23 @@ NIGHTLY_MAX_CALLS = 3_000
 REQUEST_MODEL = "deepseek-v4-flash"
 BENCHMARK = "SPY"
 
+#: EXECUTION MODE — registered, because it can change the primary contrast.
+#:
+#: Cells stay strictly sequential; the ARMS INSIDE one cell may run
+#: concurrently. That is the shape R10 approved, and the scientific case is
+#: stronger than the operational one: cell-major ordering exists precisely so
+#: the five arms see the same world, and concurrency makes them MORE
+#: simultaneous. The operational case is that 960 serial calls at a measured
+#: 8.7s mean is 2.3 hours against a 13:30 UTC open, so a fraction of forty
+#: nights self-refuse and each refusal costs a calendar day.
+#:
+#: Registered rather than tuned. A number that can compress the arms'
+#: information-age spread from minutes to milliseconds belongs in the frozen
+#: surface for the same reason `MAX_TOKENS` earned its place there — it can bias
+#: the primary contrast while appearing in no registered document.
+EXECUTION_MODE = "cells_sequential_arms_concurrent"
+MAX_ARM_CONCURRENCY = 5
+
 #: WHERE THE RECEIPTS LIVE — the same lesson as NIGHT-14 defect F7, and this
 #: file had reproduced the bug it fixed. The receipt was written under the repo
 #: while the ledger it describes lives on the persistent volume, so a Railway
@@ -177,15 +194,27 @@ US_OPEN_UTC_HOUR, US_OPEN_UTC_MINUTE = 13, 30
 
 def projected_night_minutes(*, k: int, n_arms: int,
                             call_seconds: float = MEASURED_CALL_SECONDS,
-                            calls_per_cell: float = MEASURED_CALLS_PER_CELL
-                            ) -> float:
-    """How long this night will actually take. The loop is SERIAL."""
-    return (k * n_arms * calls_per_cell * call_seconds) / 60.0
+                            calls_per_cell: float = MEASURED_CALLS_PER_CELL,
+                            arm_concurrency: int = 1) -> float:
+    """How long this night will actually take.
+
+    Cells are always sequential. `arm_concurrency` is how many of the ARMS
+    inside one cell run at once, so the wall clock divides by it — the cell
+    takes as long as its slowest arm rather than the sum of all five.
+
+    The projection stays deliberately pessimistic: real concurrency never
+    achieves the full factor (a cell ends when its SLOWEST arm ends, and the
+    slowest of five draws exceeds the mean of five). A projection that flattered
+    the night would let it start too late, which is the exact failure this whole
+    guard exists to prevent.
+    """
+    conc = max(1, min(int(arm_concurrency), int(n_arms)))
+    return (k * n_arms * calls_per_cell * call_seconds) / 60.0 / conc
 
 
 def assert_night_fits_before_open(*, k: int, n_arms: int, now=None,
-                                  call_seconds: float = MEASURED_CALL_SECONDS
-                                  ) -> dict:
+                                  call_seconds: float = MEASURED_CALL_SECONDS,
+                                  arm_concurrency: int = 1) -> dict:
     """Refuse a night that cannot finish before the market it forecasts opens.
 
     FOUND 2026-08-15, BY MULTIPLYING TWO NUMBERS THAT WERE BOTH ALREADY KNOWN.
@@ -204,7 +233,8 @@ def assert_night_fits_before_open(*, k: int, n_arms: int, now=None,
 
     now = now or datetime.now(timezone.utc)
     minutes = projected_night_minutes(k=k, n_arms=n_arms,
-                                      call_seconds=call_seconds)
+                                      call_seconds=call_seconds,
+                                      arm_concurrency=arm_concurrency)
     finish = now + timedelta(minutes=minutes)
     open_today = now.replace(hour=US_OPEN_UTC_HOUR, minute=US_OPEN_UTC_MINUTE,
                              second=0, microsecond=0)
@@ -218,6 +248,7 @@ def assert_night_fits_before_open(*, k: int, n_arms: int, now=None,
             (open_today - finish).total_seconds() / 60.0, 1),
         "call_seconds_assumed": call_seconds,
         "n_calls_projected": int(k * n_arms * MEASURED_CALLS_PER_CELL),
+        "arm_concurrency": max(1, min(int(arm_concurrency), int(n_arms))),
     }
     if finish > open_today:
         raise NightWouldSpanTheOpen(
@@ -375,6 +406,23 @@ class NightResult:
     #: On the receipt so the headroom a night actually had is a recorded fact
     #: rather than something reconstructed from timestamps afterwards.
     timing: dict = field(default_factory=dict)
+    #: HOW SIMULTANEOUS THE ARMS ACTUALLY WERE, per cell, in milliseconds.
+    #:
+    #: The whole argument for running arms concurrently is that cell-major
+    #: ordering exists to make the five arms see the same world, and concurrency
+    #: makes them more simultaneous. That is a claim about a measurable
+    #: quantity, so it is measured — otherwise the amendment would rest on the
+    #: same kind of reasoning-from-design that made arm-major order look fine.
+    arm_start_skew_ms: list = field(default_factory=list)
+    #: Cells dropped for EVERY arm, with the reason. A cell that stopped one arm
+    #: is removed from all of them, so the arms can never differ by which cell
+    #: they were cut off in.
+    dropped_cells: list = field(default_factory=list)
+    #: The registered execution mode this night actually ran under.
+    execution_mode: str = ""
+    arm_concurrency: int = 1
+    #: The largest number of vendor calls in flight at once, from the governor.
+    peak_calls_in_flight: int = 0
     #: True for a rehearsal/test. A sandbox night never reaches the evidence
     #: ledger and never writes a production receipt, and the flag is carried on
     #: the receipt so the two can never be confused after the fact.
@@ -482,11 +530,78 @@ def _spend_since(since_iso: str, *, purpose: str | None = None,
 SANDBOX_TELEMETRY = _config.OPTIMUS_LEDGER_DIR / "llm_calls_sandbox.jsonl"
 
 
+class SpendGovernor:
+    """The nightly ceiling, made hard under CONCURRENCY as well as in series.
+
+    THE HAZARD, WHICH IS SPECIFIC (R10 pre-work, 2026-08-16)
+    ========================================================
+    `_spend_since` reads the telemetry ledger, and a row only appears there
+    AFTER its call has been served. In series that is fine: one call is ever in
+    flight, so "spent so far" is complete when it is read.
+
+    Run five arms concurrently and it stops being fine. All five can read the
+    ledger before any of them has written to it, all five see the same
+    `$11.99`, all five pass `usd + reserve > max_usd`, and all five transmit.
+    **The hard ceiling would become soft by exactly the concurrency factor** —
+    and it would fail silently, because every individual check was correct.
+
+    So the reserve becomes a real reservation held across the call, not a
+    calculation performed before it. Served spend still comes from the ledger
+    and is never estimated; what this adds is the spend that is in flight and
+    therefore not in the ledger yet.
+    """
+
+    def __init__(self, *, since_iso: str, max_usd: float, max_calls: int,
+                 telemetry_path=None):
+        import threading
+        self.since_iso = since_iso
+        self.max_usd = float(max_usd)
+        self.max_calls = int(max_calls)
+        self.telemetry_path = telemetry_path
+        self._lock = threading.Lock()
+        self._in_flight_usd = 0.0
+        self._in_flight_calls = 0
+        self.peak_in_flight = 0
+
+    def reserve(self) -> None:
+        """Refuse or reserve, atomically. Never both, never neither."""
+        with self._lock:
+            usd, n = _spend_since(self.since_iso, path=self.telemetry_path)
+            committed = usd + self._in_flight_usd
+            if committed + WORST_CASE_CALL_USD > self.max_usd:
+                raise NightlyBudgetExhausted(
+                    f"nightly ceiling would be breached: ${usd:.4f} served + "
+                    f"${self._in_flight_usd:.4f} in flight + "
+                    f"${WORST_CASE_CALL_USD:.4f} reserved for this call > "
+                    f"${self.max_usd:.2f}. Served spend is read from the "
+                    f"telemetry ledger and never estimated; the in-flight term "
+                    f"is what keeps the ceiling hard when arms run "
+                    f"concurrently, because a call that has not returned yet "
+                    f"has not been ledgered yet")
+            if n + self._in_flight_calls >= self.max_calls:
+                raise NightlyBudgetExhausted(
+                    f"nightly call ceiling reached: {n} served + "
+                    f"{self._in_flight_calls} in flight >= {self.max_calls}")
+            self._in_flight_usd += WORST_CASE_CALL_USD
+            self._in_flight_calls += 1
+            self.peak_in_flight = max(self.peak_in_flight,
+                                      self._in_flight_calls)
+
+    def release(self) -> None:
+        """Always, including when the call raised — a reservation that leaks on
+        failure would ratchet the night shut one error at a time."""
+        with self._lock:
+            self._in_flight_usd = max(
+                0.0, self._in_flight_usd - WORST_CASE_CALL_USD)
+            self._in_flight_calls = max(0, self._in_flight_calls - 1)
+
+
 def make_llm_call(*, since_iso: str, max_usd: float = NIGHTLY_MAX_USD,
                   max_calls: int = NIGHTLY_MAX_CALLS,
                   counter: dict | None = None,
                   chain: dict | None = None,
                   transport: Callable | None = None,
+                  governor: "SpendGovernor | None" = None,
                   telemetry_path=None) -> Callable:
     """A budget-gated LLM call the agent can be handed.
 
@@ -501,39 +616,50 @@ def make_llm_call(*, since_iso: str, max_usd: float = NIGHTLY_MAX_USD,
     """
     from backend.services.llm_swarm import default_llm_call
 
+    # One governor per night. Constructed here when the caller did not supply
+    # one, so the SERIAL path behaves exactly as before: a single in-flight
+    # call means the in-flight term is always zero when it is read.
+    gov = governor or SpendGovernor(since_iso=since_iso, max_usd=max_usd,
+                                    max_calls=max_calls,
+                                    telemetry_path=telemetry_path)
+
     def call(*, system: str, user: str, model: str = REQUEST_MODEL,
              temperature: float = 0.0, max_tokens: int = 1600):
-        usd, n = _spend_since(since_iso, path=telemetry_path)
         # RESERVE the worst case before transmitting, rather than checking
         # `usd >= max_usd` after. The old form permitted one more call at
         # $11.99 against a $12 cap and that call could carry the night past a
         # ceiling the pre-registration calls hard.
-        if usd + WORST_CASE_CALL_USD > max_usd:
-            raise NightlyBudgetExhausted(
-                f"nightly ceiling would be breached: ${usd:.4f} spent + "
-                f"${WORST_CASE_CALL_USD:.4f} reserved for this call > "
-                f"${max_usd:.2f} (spend read from served responses, never "
-                f"estimated; the reserve is what makes the ceiling hard rather "
-                f"than approximate)")
-        if n >= max_calls:
-            raise NightlyBudgetExhausted(
-                f"nightly call ceiling reached: {n} >= {max_calls}")
-        if transport is None:
-            reply = default_llm_call(system, user, model=model,
-                                     temperature=temperature,
-                                     max_tokens=max_tokens, campaign=CAMPAIGN,
-                                     since=since_iso)
-        else:
-            reply = transport(system=system, user=user, model=model,
-                              temperature=temperature, max_tokens=max_tokens)
+        gov.reserve()
+        try:
+            if transport is None:
+                reply = default_llm_call(system, user, model=model,
+                                         temperature=temperature,
+                                         max_tokens=max_tokens,
+                                         campaign=CAMPAIGN, since=since_iso)
+            else:
+                reply = transport(system=system, user=user, model=model,
+                                  temperature=temperature,
+                                  max_tokens=max_tokens)
+        finally:
+            # Released whether the call returned or raised. A reservation that
+            # leaked on failure would ratchet the night shut one error at a
+            # time, and the night would report a budget refusal for money it
+            # never spent.
+            gov.release()
         if counter is not None:
-            counter["calls"] = counter.get("calls", 0) + 1
-            served = str(getattr(reply, "model_version", "") or "")
-            counter.setdefault("served", set()).add(served)
+            # `counter` is shared across concurrently running arms. Guard it
+            # with the governor's lock rather than trusting the GIL: `x = x + 1`
+            # on a dict value is a read and a write with a bytecode boundary
+            # between them, and `n_calls` is a number the receipt reports.
+            with gov._lock:
+                counter["calls"] = counter.get("calls", 0) + 1
+                served = str(getattr(reply, "model_version", "") or "")
+                counter.setdefault("served", set()).add(served)
         _record_telemetry(reply, model=model, system=system, user=user,
                           chain=chain, path=telemetry_path)
         return reply
 
+    call.governor = gov                                    # type: ignore[attr-defined]
     return call
 
 
@@ -748,7 +874,8 @@ class SandboxRequired(RuntimeError):
 def assert_production_invocation(*, k: int, arms: tuple[str, ...],
                                  max_usd: float,
                                  llm_call: Callable | None,
-                                 tool_runner: Callable | None) -> dict:
+                                 tool_runner: Callable | None,
+                                 arm_concurrency: int = 1) -> dict:
     """The EFFECTIVE invocation must equal the registered rule.
 
     `verify_or_refuse()` compares module CONSTANTS against the frozen config.
@@ -786,6 +913,13 @@ def assert_production_invocation(*, k: int, arms: tuple[str, ...],
     if float(max_usd) != float(frozen["NIGHTLY_MAX_USD"]):
         bad.append(f"max_usd={max_usd} overrides the registered "
                    f"NIGHTLY_MAX_USD={frozen['NIGHTLY_MAX_USD']}")
+    reg_conc = frozen.get("MAX_ARM_CONCURRENCY")
+    if reg_conc is not None and int(arm_concurrency) != int(reg_conc):
+        bad.append(f"arm_concurrency={arm_concurrency} overrides the "
+                   f"registered MAX_ARM_CONCURRENCY={reg_conc}. Concurrency "
+                   f"changes how simultaneous the arms are, which is the "
+                   f"primary contrast — an unregistered value is a different "
+                   f"experiment wearing this one's name")
     if bad:
         raise SandboxRequired(
             "this invocation cannot accrue against "
@@ -807,6 +941,7 @@ def run_night(features_by_ticker: dict[str, dict], *,
               max_usd: float = NIGHTLY_MAX_USD,
               balance_usd: float = DEFAULT_BALANCE_USD,
               decision_ts: str | None = None,
+              arm_concurrency: int = MAX_ARM_CONCURRENCY,
               night: str | None = None) -> NightResult:
     """One night, end to end.
 
@@ -831,16 +966,22 @@ def run_night(features_by_ticker: dict[str, dict], *,
     since_iso = datetime.now(timezone.utc).isoformat(timespec="seconds")
     res = NightResult(night=night)
     res.sandbox = bool(sandbox)
+    arm_concurrency = max(1, int(arm_concurrency))
+    res.arm_concurrency = arm_concurrency
+    res.execution_mode = (EXECUTION_MODE if arm_concurrency > 1
+                          else "cells_sequential_arms_sequential")
 
     if not sandbox:
         assert_production_invocation(k=k, arms=arms, max_usd=max_usd,
                                      llm_call=llm_call,
-                                     tool_runner=tool_runner)
+                                     tool_runner=tool_runner,
+                                     arm_concurrency=arm_concurrency)
         # Before the first dollar, like every other refusal here. A sandbox run
         # may replay a snapshot of any age — that is what a rehearsal is for.
         # A night that cannot FINISH before the open is as contaminated as one
         # that STARTED stale, and until 2026-08-15 only the second was checked.
-        res.timing = assert_night_fits_before_open(k=k, n_arms=len(arms))
+        res.timing = assert_night_fits_before_open(
+            k=k, n_arms=len(arms), arm_concurrency=arm_concurrency)
         if decision_ts is not None:
             res.decision_lag_minutes = round(
                 assert_decision_time_fresh(decision_ts), 2)
@@ -861,6 +1002,13 @@ def run_night(features_by_ticker: dict[str, dict], *,
         return res
 
     counter: dict = {"calls": 0, "served": set()}
+    # ONE CHAIN CURSOR PER ARM. `chain["id"]` is a live cursor mutated before
+    # every cell, so a single shared dict is safe only while exactly one arm is
+    # running. Under concurrent arms the five would overwrite each other's
+    # cursor and telemetry rows would be filed under whichever arm wrote last —
+    # silently, and in a way that looks like clean data.
+    chain_by_arm: dict[str, dict] = {a: {"id": None, "calls": {}}
+                                     for a in arms}
     chain_ctx: dict = {"id": None, "calls": {}}
     tele_path = None
     if transport is not None:
@@ -877,12 +1025,22 @@ def run_night(features_by_ticker: dict[str, dict], *,
                 "transport= replaces the vendor and may only be used with "
                 "sandbox=True; a production night uses the frozen client")
         tele_path = SANDBOX_TELEMETRY
-        call = make_llm_call(since_iso=since_iso, max_usd=max_usd,
-                             counter=counter, chain=chain_ctx,
-                             transport=transport, telemetry_path=tele_path)
-    else:
-        call = llm_call or make_llm_call(since_iso=since_iso, max_usd=max_usd,
-                                         counter=counter, chain=chain_ctx)
+
+    # One governor for the whole night, shared by every arm — that is the point:
+    # the ceiling is nightly, so the reservation has to be too.
+    governor = SpendGovernor(since_iso=since_iso, max_usd=max_usd,
+                             max_calls=NIGHTLY_MAX_CALLS,
+                             telemetry_path=tele_path)
+    call_by_arm: dict[str, Callable] = {}
+    for _arm in arms:
+        if llm_call is not None and transport is None:
+            call_by_arm[_arm] = llm_call
+        else:
+            call_by_arm[_arm] = make_llm_call(
+                since_iso=since_iso, max_usd=max_usd, counter=counter,
+                chain=chain_by_arm[_arm], governor=governor,
+                transport=transport, telemetry_path=tele_path)
+    call = call_by_arm[arms[0]]
 
     per_arm_tickers: dict[str, list[str]] = {}
     per_arm_inv: dict[str, list] = {}
@@ -913,7 +1071,7 @@ def run_night(features_by_ticker: dict[str, dict], *,
         logger.error(res.void_reason)
         cells = ()
 
-    agents = {arm: Investigator(arm, llm_call=call,
+    agents = {arm: Investigator(arm, llm_call=call_by_arm[arm],
                                 tool_runner=tool_runner or IT.run_tool,
                                 model=REQUEST_MODEL)
               for arm in arms}
@@ -937,18 +1095,66 @@ def run_night(features_by_ticker: dict[str, dict], *,
     # one cell run within seconds of each other, against the same world. It also
     # fails better — a night that stops early now leaves every arm with the SAME
     # completed cells, which is a shorter paired night instead of a void one.
+    def _run_one(arm: str, tkr: str, snap: dict):
+        """One (arm, cell). Its own chain cursor, its own start/end clock."""
+        chain_by_arm[arm]["id"] = chain_id(night, arm, tkr)
+        t_start = time.time()
+        inv = agents[arm].investigate(tkr, snap)
+        return inv, t_start, time.time()
+
     for tkr in cells:
         snap = (snapshots or {}).get(tkr, {})
+        # ── the cell's arms, gathered before ANY of them is recorded ─────────
+        # Nothing is written until every arm of the cell has come back. A cell
+        # half-recorded because one arm hit the ceiling is precisely the ragged
+        # edge the pairing guard exists to refuse, and under concurrency it
+        # would be the normal case rather than the rare one.
+        done_cell: dict[str, tuple] = {}
+        cell_error: str = ""
+        if arm_concurrency > 1 and len(arms) > 1:
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(
+                    max_workers=min(arm_concurrency, len(arms)),
+                    thread_name_prefix="iif1-arm") as pool:
+                # Submitted in the FROZEN arm order so the launch sequence is
+                # deterministic even though completion order is not.
+                futures = {arm: pool.submit(_run_one, arm, tkr, snap)
+                           for arm in arms}
+                for arm in arms:
+                    try:
+                        done_cell[arm] = futures[arm].result()
+                    except NightlyBudgetExhausted as exc:
+                        cell_error = cell_error or str(exc)
+                    except Exception as exc:                   # noqa: BLE001
+                        cell_error = cell_error or (
+                            f"arm {arm} raised {type(exc).__name__}: {exc}")
+        else:
+            for arm in arms:
+                try:
+                    done_cell[arm] = _run_one(arm, tkr, snap)
+                except NightlyBudgetExhausted as exc:
+                    cell_error = cell_error or str(exc)
+                    break
+
+        if cell_error or len(done_cell) != len(arms):
+            # SYMMETRIC DROP. Whatever stopped one arm drops the whole cell for
+            # all of them, so the arms never differ by which cell they were cut
+            # off in — which is the one asymmetry the primary contrast cannot
+            # survive.
+            stopped = cell_error or "an arm did not complete this cell"
+            logger.warning("cell %s dropped for every arm: %s", tkr, stopped)
+            res.dropped_cells.append({"ticker": tkr, "reason": stopped})
+            break
+
+        starts = [v[1] for v in done_cell.values()]
+        res.arm_start_skew_ms.append(
+            round((max(starts) - min(starts)) * 1000.0, 1))
         for arm in arms:
-            chain_ctx["id"] = chain_id(night, arm, tkr)
-            try:
-                inv = agents[arm].investigate(tkr, snap)
-            except NightlyBudgetExhausted as exc:
-                stopped = str(exc)
-                logger.warning("[%s] nightly budget stopped the run: %s",
-                               arm, exc)
-                break
-            rows_by_arm[arm].append(inv.as_row())
+            inv, t_start, t_end = done_cell[arm]
+            rows_by_arm[arm].append(
+                inv.as_row() | {"arm_started_at": t_start,
+                                "arm_finished_at": t_end,
+                                "arm_seconds": round(t_end - t_start, 3)})
             per_arm_tickers[arm].append(tkr)
             per_arm_inv[arm].append(inv)
             per_arm_snaps.setdefault(arm, {})[tkr] = snap
@@ -962,7 +1168,6 @@ def run_night(features_by_ticker: dict[str, dict], *,
                     f"{len(cells) - len(per_arm_tickers[arm])} cells across "
                     f"{len(arms)} arms")
                 logger.error(barren_stop)
-                break
         if stopped or barren_stop:
             # Drop the partial cell: an arm that was cut off mid-cell leaves the
             # others holding a cell it does not have, and a ragged edge is the
@@ -1076,6 +1281,11 @@ def run_night(features_by_ticker: dict[str, dict], *,
     # what they minted — including nothing — is now known; leaving them pending
     # would take them out of the governor's denominator permanently, which is
     # the failure this whole change exists to avoid, one level up.
+    # Merge the per-arm chain cursors. The cell ids carry the arm name, so the
+    # union is lossless and collision-free by construction.
+    for _a, _c in chain_by_arm.items():
+        chain_ctx["calls"].update(_c.get("calls") or {})
+    res.peak_calls_in_flight = getattr(governor, "peak_in_flight", 0)
     res.chain_yield = resolve_chain_yield(chain_ctx, all_records, night=night,
                                           path=tele_path)
 

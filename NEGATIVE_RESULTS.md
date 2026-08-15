@@ -2147,3 +2147,46 @@ safety property that is *checked* look identical from the outside, right up
 until the construction changes. And the first version of a real check is most
 likely to fail on data that is fine — so the thing to verify first is not
 whether it fires, but whether the field it fires on means what its name says.
+
+## 43. The hard nightly ceiling would have become soft by exactly the concurrency factor (R10 pre-work)
+
+R10 approved running the five arms of a cell concurrently. Before writing the
+concurrency, the *existing* budget gate was asked whether it still worked when
+more than one call is in flight. It does not.
+
+`_spend_since` reads the telemetry ledger, and a row lands there only **after**
+its call has been served. In series that is complete information: one call is
+ever in flight, so "spent so far" is true when it is read. Concurrently, all
+five arms can read the ledger before any of them writes to it, all five see the
+same `$11.99`, all five pass `usd + reserve > max_usd`, and all five transmit.
+
+Measured against the pre-existing read-then-act logic, with room for exactly one
+worst-case call and five threads released from a barrier together:
+
+| | granted | refused |
+|---|---|---|
+| read-then-act (as written) | **5** | 0 |
+| `SpendGovernor` (reserve under a lock) | **1** | 4 |
+
+**The `$12.00` ceiling the pre-registration calls hard would have been a `$60`
+ceiling at five-way concurrency** — and every individual check along the way
+would have been correct. Nothing about the failure looks like a failure: the
+night completes, the receipt reports its spend accurately, and the number is
+simply larger than the registered maximum.
+
+Fixed by making the reserve a **reservation held across the call** rather than a
+calculation performed before it: served spend still comes from the ledger and is
+never estimated, and the governor adds the spend that is in flight and therefore
+not in the ledger yet. Released in a `finally`, because a reservation that
+leaked on failure would ratchet the night shut one error at a time and report a
+budget refusal for money that was never spent.
+
+**The rule:** a guard written for a serial world is not automatically a guard.
+Concurrency does not break checks that are wrong — it breaks checks that were
+right *because* nothing else was happening at the same time. Every read-then-act
+gate on the spending path had to be re-derived, not re-read.
+
+*Also found and fixed in the same pass:* one shared chain cursor for all five
+arms (`chain["id"]` is mutated per cell, so concurrent arms would file telemetry
+under whichever arm wrote last), and an unguarded `counter["calls"] += 1` on the
+number the receipt reports.

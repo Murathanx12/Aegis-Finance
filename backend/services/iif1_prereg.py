@@ -108,6 +108,14 @@ def runtime_surface() -> dict:
         # a caller-overridable "frozen" parameter, one layer further down.
         "MAX_TOKENS": A.MAX_TOKENS,
         "TEMPERATURE": A.TEMPERATURE,
+        # Added 2026-08-16 with R10. Concurrency compresses the arms'
+        # information-age spread from minutes to milliseconds, which is a change
+        # to the primary contrast itself — the same reason `MAX_TOKENS` is here.
+        # Registered before the first valid night, which is possible only
+        # because ZERO valid nights have accrued: there are no results for this
+        # change to have been chosen after.
+        "EXECUTION_MODE": N.EXECUTION_MODE,
+        "MAX_ARM_CONCURRENCY": N.MAX_ARM_CONCURRENCY,
     }
 
 
@@ -124,6 +132,8 @@ def frozen_surface(mod: types.ModuleType) -> dict:
         "NIGHTLY_MAX_CALLS": mod.NIGHTLY_MAX_CALLS,
         "MAX_TOKENS": mod.MAX_TOKENS,
         "TEMPERATURE": mod.TEMPERATURE,
+        "EXECUTION_MODE": mod.EXECUTION_MODE,
+        "MAX_ARM_CONCURRENCY": mod.MAX_ARM_CONCURRENCY,
     }
 
 
