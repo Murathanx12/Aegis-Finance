@@ -1,0 +1,269 @@
+{
+  "tail_quantile": 0.1,
+  "rows": [
+    {
+      "security": "SPY",
+      "horizon": 20,
+      "tail": "bottom",
+      "n": 693,
+      "n_total": 6924,
+      "base_rate": 0.1477469670710572,
+      "coverage": 0.15007215007215008,
+      "lift": 1.0157376022478661,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "SPY",
+      "horizon": 20,
+      "tail": "top",
+      "n": 693,
+      "n_total": 6924,
+      "base_rate": 0.1477469670710572,
+      "coverage": 0.18903318903318903,
+      "lift": 1.2794387105237544,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "SPY",
+      "horizon": 60,
+      "tail": "bottom",
+      "n": 689,
+      "n_total": 6884,
+      "base_rate": 0.1481696687972109,
+      "coverage": 0.15239477503628446,
+      "lift": 1.0285153248527277,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "SPY",
+      "horizon": 60,
+      "tail": "top",
+      "n": 689,
+      "n_total": 6884,
+      "base_rate": 0.1481696687972109,
+      "coverage": 0.19158200290275762,
+      "lift": 1.2929906941005722,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "QQQ",
+      "horizon": 20,
+      "tail": "bottom",
+      "n": 688,
+      "n_total": 6879,
+      "base_rate": 0.16979212094781218,
+      "coverage": 0.13662790697674418,
+      "lift": 0.8046775446001911,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "QQQ",
+      "horizon": 20,
+      "tail": "top",
+      "n": 688,
+      "n_total": 6879,
+      "base_rate": 0.16979212094781218,
+      "coverage": 0.1744186046511628,
+      "lift": 1.0272479292768397,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "QQQ",
+      "horizon": 60,
+      "tail": "bottom",
+      "n": 684,
+      "n_total": 6839,
+      "base_rate": 0.16946922064629333,
+      "coverage": 0.06871345029239766,
+      "lift": 0.40546271488326796,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "QQQ",
+      "horizon": 60,
+      "tail": "top",
+      "n": 684,
+      "n_total": 6839,
+      "base_rate": 0.16946922064629333,
+      "coverage": 0.18421052631578946,
+      "lift": 1.0869851505381225,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "IWM",
+      "horizon": 20,
+      "tail": "bottom",
+      "n": 658,
+      "n_total": 6571,
+      "base_rate": 0.15279257342870187,
+      "coverage": 0.1337386018237082,
+      "lift": 0.8752951718960026,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "IWM",
+      "horizon": 20,
+      "tail": "top",
+      "n": 658,
+      "n_total": 6571,
+      "base_rate": 0.15279257342870187,
+      "coverage": 0.1702127659574468,
+      "lift": 1.114012036958549,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "IWM",
+      "horizon": 60,
+      "tail": "bottom",
+      "n": 654,
+      "n_total": 6531,
+      "base_rate": 0.15372837237789005,
+      "coverage": 0.16972477064220184,
+      "lift": 1.1040562520559962,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "IWM",
+      "horizon": 60,
+      "tail": "top",
+      "n": 654,
+      "n_total": 6531,
+      "base_rate": 0.15372837237789005,
+      "coverage": 0.1620795107033639,
+      "lift": 1.0543239884498703,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "XLF",
+      "horizon": 20,
+      "tail": "bottom",
+      "n": 693,
+      "n_total": 6924,
+      "base_rate": 0.14861351819757365,
+      "coverage": 0.15873015873015872,
+      "lift": 1.0680734878985607,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "XLF",
+      "horizon": 20,
+      "tail": "top",
+      "n": 693,
+      "n_total": 6924,
+      "base_rate": 0.14861351819757365,
+      "coverage": 0.18759018759018758,
+      "lift": 1.262268667516481,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "XLF",
+      "horizon": 60,
+      "tail": "bottom",
+      "n": 689,
+      "n_total": 6884,
+      "base_rate": 0.14947704822777455,
+      "coverage": 0.1683599419448476,
+      "lift": 1.126326375459991,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "XLF",
+      "horizon": 60,
+      "tail": "top",
+      "n": 689,
+      "n_total": 6884,
+      "base_rate": 0.14947704822777455,
+      "coverage": 0.16400580551523947,
+      "lift": 1.0971972450601637,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "XLE",
+      "horizon": 20,
+      "tail": "bottom",
+      "n": 693,
+      "n_total": 6924,
+      "base_rate": 0.13214904679376083,
+      "coverage": 0.15007215007215008,
+      "lift": 1.1356279421853193,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "XLE",
+      "horizon": 20,
+      "tail": "top",
+      "n": 693,
+      "n_total": 6924,
+      "base_rate": 0.13214904679376083,
+      "coverage": 0.16305916305916307,
+      "lift": 1.2339034371821258,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "XLE",
+      "horizon": 60,
+      "tail": "bottom",
+      "n": 689,
+      "n_total": 6884,
+      "base_rate": 0.1329169087739686,
+      "coverage": 0.10014513788098693,
+      "lift": 0.7534416712270099,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "XLE",
+      "horizon": 60,
+      "tail": "top",
+      "n": 689,
+      "n_total": 6884,
+      "base_rate": 0.1329169087739686,
+      "coverage": 0.10014513788098693,
+      "lift": 0.7534416712270099,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "XLK",
+      "horizon": 20,
+      "tail": "bottom",
+      "n": 693,
+      "n_total": 6924,
+      "base_rate": 0.16854419410745233,
+      "coverage": 0.13131313131313133,
+      "lift": 0.7791020747318949,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "XLK",
+      "horizon": 20,
+      "tail": "top",
+      "n": 693,
+      "n_total": 6924,
+      "base_rate": 0.16854419410745233,
+      "coverage": 0.1673881673881674,
+      "lift": 0.9931411062516462,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "XLK",
+      "horizon": 60,
+      "tail": "bottom",
+      "n": 689,
+      "n_total": 6884,
+      "base_rate": 0.16792562463683905,
+      "coverage": 0.0841799709724238,
+      "lift": 0.5012931835416656,
+      "n_unevaluable": 0
+    },
+    {
+      "security": "XLK",
+      "horizon": 60,
+      "tail": "top",
+      "n": 689,
+      "n_total": 6884,
+      "base_rate": 0.16792562463683905,
+      "coverage": 0.1988388969521045,
+      "lift": 1.1840890714691066,
+      "n_unevaluable": 0
+    }
+  ]
+}

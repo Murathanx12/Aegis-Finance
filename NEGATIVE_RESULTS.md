@@ -2748,3 +2748,65 @@ atlas leaves crisis-conditioned mechanism testing viable only for effects of
 about 10pp or larger. Below that, no collection effort on index-level crises
 will ever be enough, because the scarcity is dispersion rather than history.
 The sample must become **names, not crises**.
+
+## 51. N4 — 85% of exceptional moves had no warning from anything in the library
+
+The Micron test, run as a programme metric rather than as a question about one
+mechanism. Every mechanism has been validated one at a time, and none of that
+answers the thing that decides whether the library is worth having: **of all the
+moves worth catching, what fraction had ANY precursor fire beforehand?**
+
+Six compiled `affected_precursor`s from the six autopsied mechanisms, evaluated
+against point-in-time state on six ETFs, 1999-2026, two horizons, both tails.
+**Zero unevaluable states** — every precursor compiled and ran on every day.
+
+| horizon | tail | n | covered | **no warning at all** |
+|---|---|---|---|---|
+| 20d | bottom decile | 4,118 | 14.4% | **85.6%** |
+| 20d | top decile | 4,118 | 17.5% | 82.5% |
+| 60d | bottom decile | 4,094 | 12.4% | **87.6%** |
+| 60d | top decile | 4,094 | 16.7% | 83.3% |
+
+### And the coverage it does have is what firing at random would give
+
+**The library fires on 15.3% of ALL days.** So covering 12-17% of exceptional
+moves is not coverage — it is the base rate. The reported metric is lift:
+
+| horizon | tail | mean lift | MDE | verdict |
+|---|---|---|---|---|
+| 20d | bottom | 0.95 | 0.29 | NO COVERAGE |
+| 20d | top | 1.15 | 0.25 | NO COVERAGE |
+| 60d | bottom | **0.82** | 0.62 | NO COVERAGE |
+| 60d | top | 1.08 | 0.36 | NO COVERAGE |
+
+`n_effective` is held to 2, not 6: the six ETFs are the same six co-moving ETFs
+that caused §41, and six measurements of coverage on co-moving securities are
+not six independent measurements of coverage.
+
+### The pattern inside the null is the part worth keeping
+
+**The library marks the TOP tail better than the BOTTOM tail at every horizon**
+— 1.15 vs 0.95 at 20 days, 1.08 vs 0.82 at 60. These precursors were derived
+from **SELL** autopsies: mechanisms about de-risking after volatility spikes.
+They fire slightly more before rallies than before crashes.
+
+That is coherent rather than contradictory — it is the U-shape again, since
+VIX >= 35 precedes strong forward returns — but it means **a library built to
+warn about crashes is, to the extent it does anything, marking recoveries.**
+
+### What this changes
+
+1. **Coverage is now a measurable programme metric with a baseline.** Lift 1.0
+   is where the library sits today. Any new mechanism can be scored on whether
+   it moves that number, which is a different and more useful question than
+   whether it survives its own transfer test.
+2. **The roadmap ordering flips.** With 85% of exceptional moves unwarned, the
+   marginal value of more rigour applied to the six existing mechanisms is
+   small compared with the marginal value of precursors that fire before the
+   other 85%. Validity of what we have was never the binding constraint;
+   coverage is.
+3. **This is a fair test of a SIX-rule library, not a verdict on precursors.**
+   Six rules from six autopsies of SPY sell decisions were never going to cover
+   the tails of six ETFs across 27 years. The finding is not "precursors do not
+   work" — it is that the library is currently far too small to be doing the
+   job it is being validated for, and nobody had measured how far.
