@@ -2658,3 +2658,93 @@ where the noise is largest.
 `backend/services/research_gym/power.py` with the warning attached to the
 function that produces the problem, so the next caller cannot feed it a
 measured effect without reading why not.
+
+## 50. N2 — twelve markets and thirty-six years are worth 1.3x the US alone
+
+Run overnight 2026-08-16 against the protocol declared before any count was
+read. The threshold outside the US was fixed as a **frequency**, never a level:
+measure how often VIX >= 35 holds in the US (`f` = 3.83% of days), then take
+the same percentile of each other market's own trailing-20d realised
+volatility. The bar is therefore never chosen to make episodes appear.
+
+**Raw supply looks transformative.**
+
+| slice | bar | stress days | episodes |
+|---|---|---|---|
+| US (^GSPC, real VIX) | 35.00 | 353 | **19** |
+| Japan | 42.82 | 344 | 18 |
+| Hong Kong | 46.85 | 346 | 17 |
+| UK | 32.73 | 354 | 14 |
+| Germany / France / India / Australia | 41-45 | ~350 | 11-12 |
+| Korea / Canada / Switzerland | 29-57 | 279-352 | 10-11 |
+| EM | 49.28 | 224 | 6 |
+| **total** | | | **152** |
+
+152 episodes against the incumbent's 19 is an 8x corpus, and it is the number a
+slice count would report.
+
+### It is not 8x. Measured two ways, both of which say so.
+
+**By correlation.** Mean pairwise correlation of daily returns **on stress
+days**, across all twelve: `rho_bar = 0.466`. The effective number of
+independent slices is `m / (1 + (m-1) rho)` = **1.96**. Twelve slices are worth
+two, and the corpus supplies **24.8 independent episodes — 1.31x the US
+alone.**
+
+**By timing**, which asks the question more directly: is this a new crisis, or
+2008 again with a different ticker? An episode is NOVEL if no US stress episode
+begins within +/-42 days of it.
+
+| slice | episodes | novel | novel % |
+|---|---|---|---|
+| India | 12 | 9 | **75%** |
+| Korea | 10 | 6 | 60% |
+| Hong Kong | 17 | 10 | 59% |
+| Japan | 19 | 10 | 53% |
+| Canada | 10 | 4 | 40% |
+| Germany / UK / Switzerland | 11-14 | 4-5 | 36% |
+| Australia / EM | 6-12 | 2-4 | 33% |
+| France | 12 | 3 | **25%** |
+| **total** | 152 | **80** | 53% |
+
+The two measures disagree by 3x — 24.8 against 80 — and the disagreement is
+informative rather than embarrassing. Correlation measures how much the
+ESTIMATES co-move, which is what governs a pooled standard error. Timing
+measures how many distinct economic events exist. The truth for precision is
+nearer the first; the truth for "distinct crises" is nearer the second.
+
+### The answer is robust to that disagreement, which is what makes it usable
+
+Against N8's design curve at crisis dispersion:
+
+| min effect of interest | episodes needed | 24.8 available | 80 available |
+|---|---|---|---|
+| 3pp | 273 | no | no |
+| 5pp | 98 | no | no |
+| **10pp** | **25** | **yes** | yes |
+| 20pp | 6 | yes | yes |
+
+**TRANSFER_ATLAS_V1 can support a 10pp minimum effect of interest and cannot
+support 5pp or below — on either measure of independence.** That is the first
+specification the atlas has ever had, and it does not depend on resolving the
+25-vs-80 question.
+
+### Two things that change the build order
+
+1. **Asia first, Europe last.** India, Korea, Hong Kong and Japan supply
+   53-75% novel crises; France, Germany, the UK and Switzerland supply 25-36%.
+   The instinct to "add developed markets" adds the least. Europe's crises are
+   largely the US's crises.
+2. **The foreign slices cannot currently be USED.** `TRANSFERABLE_FEATURES`
+   contains `vix`, and no other market has one. Every precursor in the library
+   is written over a feature that exists in exactly one slice. Making the atlas
+   usable requires a **market-relative** stress feature in the shared
+   vocabulary — a realised-volatility percentile rather than a level — and
+   until that exists the atlas is unreachable in principle rather than
+   uncollected.
+
+**And the headline that survives both N8 and N2:** even a maximal international
+atlas leaves crisis-conditioned mechanism testing viable only for effects of
+about 10pp or larger. Below that, no collection effort on index-level crises
+will ever be enough, because the scarcity is dispersion rather than history.
+The sample must become **names, not crises**.
