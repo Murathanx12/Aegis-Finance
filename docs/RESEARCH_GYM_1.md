@@ -74,6 +74,50 @@ surviving ≥3 slices that generated none of it, a frozen pre-registration, and
 forward certification. **The episode that inspired a rule is barred from proving
 it** — not down-weighted, barred, checked by set intersection.
 
+**Wall 4 (added 2026-08-16) — a verdict may only claim what it measured.**
+Wall 3 counted slices. It could not tell *does not generalise* from *is
+conditional, exactly as declared*, because the flat count had no idea which
+slices the mechanism had declared it should work in — so a mechanism that was
+correctly silent outside its regime was refused for keeping its word. See
+`scope.py`, NEGATIVE_RESULTS §40. Three consequences:
+
+- **The declaration is executable.** `affected_precursor` /
+  `unaffected_precursor` are written in the same closed grammar as the
+  precursor, so every episode is labelled AFFECTED / UNAFFECTED / OUT_OF_SCOPE
+  from the frozen declaration **before any number exists**.
+- **The unaffected region is a placebo arm, with the sign inverted.** The same
+  action swap is measured there whether or not the precursor fires. A powered
+  null is *confirming*; a detectable effect is *disconfirming*, because what was
+  found is broader than the mechanism. Firing everywhere is what beta does.
+- **`DEAD` is retired.** Nine verdicts; only `REFUTED_IN_SCOPE` and
+  `STRUCTURALLY_CLOSED` close anything, and the first closes only its own scope.
+  Every non-support carries a computed `revisit_when`. §18 is enforced: export
+  requires the AFFECTED−UNAFFECTED interaction to be detectable as its own
+  quantity with its own SE and MDE, so scope-awareness cannot become a machine
+  for manufacturing regimes.
+
+### The six mechanisms, restated under Wall 4
+
+| | flat count (Wall 3) | scoped, first pass | scoped, honest denominator |
+|---|---|---|---|
+| REFUSED / REFUTED_IN_SCOPE | 6 | 5 | **0** |
+| TRANSFER_PENDING | — | 1 | 0 |
+| NOT_DETECTABLE_IN_SCOPE | — | 0 | **5** |
+| UNPOWERED_IN_SCOPE | — | 0 | **1** |
+| exportable | 0 | 0 | 0 |
+
+The middle column is not a result — it is what the new standard produced before
+its own instrument was audited, and **every one of those five refutations was
+manufactured** by an `n_effective` that counted 150 monthly rows from six
+co-moving ETFs as 150 independent observations (§41). Corrected, with the
+hypotheses held fixed, all six verdicts moved and **nothing is closed**.
+
+The honest statement is narrower than any single column: **the transfer corpus
+cannot currently resolve these six mechanisms in either direction.** That is a
+measurement of the corpus, not a finding about de-risking, and it is what
+TRANSFER_ATLAS_V1 has to fix — with more independent stress *episodes*, not more
+rows and not more correlated tickers inside the same months.
+
 ## The DecisionEpisode (R3)
 
 Four separable parts: **STATE** (PIT), **BELIEFS** (probabilities, `None` means
