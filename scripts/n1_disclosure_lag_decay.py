@@ -197,6 +197,13 @@ def main(argv: list[str] | None = None) -> int:
 
     pre: dict[tuple, list[float]] = defaultdict(list)
     post: dict[tuple, list[float]] = defaultdict(list)
+    #: SS18. Two tables of separate means cannot answer COPY-LAB's question,
+    #: which is a DIFFERENCE: does more of the move accrue before disclosure
+    #: than after it? "Detectable pre, not detectable post" is the exact
+    #: substitution the canon names, and it is the one this script would
+    #: otherwise invite a reader to make from the two tables below. Paired per
+    #: EVENT so the difference has its own SE on the same names.
+    paired: dict[tuple, list[float]] = defaultdict(list)
     post_days: list[int] = []
     clusters: dict[tuple, set] = defaultdict(set)
     n_no_pre = 0
@@ -208,18 +215,25 @@ def main(argv: list[str] | None = None) -> int:
 
         rt = _ret(e["ticker"], e["tx"], e["filed"])
         rb = _ret(BENCH, e["tx"], e["filed"])
+        pre_val = None
         if rt is None or rb is None:
             n_no_pre += 1
         else:
             # Signed so a positive number always means "the move went the
             # insider's way", for buys and sells alike.
-            pre[key].append(sign * (rt - rb) * 100.0)
+            pre_val = sign * (rt - rb) * 100.0
+            pre[key].append(pre_val)
 
         f_t = _fwd(e["ticker"], e["filed"], a.forward_days)
         f_b = _fwd(BENCH, e["filed"], a.forward_days)
+        post_val = None
         if f_t and f_b:
-            post[key].append(sign * (f_t[0] - f_b[0]) * 100.0)
+            post_val = sign * (f_t[0] - f_b[0]) * 100.0
+            post[key].append(post_val)
             post_days.append(f_t[1])
+
+        if pre_val is not None and post_val is not None:
+            paired[key].append(pre_val - post_val)
 
     print(f"\npre-disclosure windows unmeasurable: {n_no_pre} "
           f"(same-day transaction/filing, or no price history)")
@@ -275,6 +289,38 @@ def main(argv: list[str] | None = None) -> int:
             pre)
     _report(f"POST-DISCLOSURE — filing to +{a.forward_days} trading days "
             f"(the copyable half)", post)
+
+    # ── SS18: the question is the DIFFERENCE, on the same events ────────────
+    # COPY-LAB dies if the move is already paid by the time it is disclosable.
+    # That is `pre - post > 0` with its own SE, not "one table has a YES and
+    # the other has a no". Paired within event, so the name and the market day
+    # cancel and only the split between the two windows remains.
+    print("\nPRE MINUS POST — the quantity COPY-LAB actually turns on (SS18)\n"
+          "positive = more of the move accrued BEFORE it could be copied")
+    print(f"{'action':<6s} {'lag':<7s} {'n':>5s} {'days':>5s} {'n_eff':>6s} "
+          f"{'diff%':>8s} {'sd':>7s} {'MDE%':>7s} {'detectable':>11s}")
+    for key in sorted(paired):
+        act, buck = key
+        xs = paired[key]
+        n = len(xs)
+        if n < 2:
+            continue
+        mean = sum(xs) / n
+        sd = (sum((x - mean) ** 2 for x in xs) / (n - 1)) ** 0.5
+        n_days = len({f for _t, f in clusters[key]})
+        n_eff = min(float(len(clusters[key])), float(n),
+                    _n_eff(len(clusters[key]), n_days))
+        mde = PW.mde_mean(sd, n_eff) if sd else None
+        det = "-" if mde is None else ("YES" if abs(mean) >= mde else "no")
+        print(f"{act:<6s} {buck:<7s} {n:>5d} {n_days:>5d} {n_eff:>6.1f} "
+              f"{mean:>8.3f} {sd:>7.3f} "
+              f"{('-' if mde is None else f'{mde:7.3f}')} {det:>11s}")
+        out["rows"].append({
+            "window": "PRE MINUS POST (SS18 difference, paired within event)",
+            "action": act, "lag_bucket": buck, "n": n,
+            "n_effective": n_eff, "n_filing_days": n_days,
+            "mean_pct": mean, "median_pct": None, "sd": sd, "mde_pct": mde,
+            "detectable": None if mde is None else abs(mean) >= mde})
 
     p = Path(a.out)
     p.parent.mkdir(parents=True, exist_ok=True)

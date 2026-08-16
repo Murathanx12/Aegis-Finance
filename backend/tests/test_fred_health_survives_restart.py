@@ -163,6 +163,43 @@ def test_a_cache_hit_still_reports_the_fred_data_it_is_serving(world):
     assert h["degraded_reasons"] == []
 
 
+def test_the_whole_payload_reads_the_way_production_read_it(world):
+    """The shape, asserted together — because the fields lie separately.
+
+    Verified live on 2026-08-16 at 8c57800, on a restart into a cache warmed at
+    the 04:36 UTC boot:
+
+        status ok · fetch_passes 1 · served_from_cache True
+        served_fetch_at 2026-08-16T04:36:10+00:00 · served_age_hours 1.44
+        19 FRESH · 4 STALE_USABLE · degraded_reasons []
+
+    Every individual field was already covered by a test below. None of them
+    would have caught `served_from_cache: True` paired with a `served_fetch_at`
+    of *now*, which is the combination that would mean the page had quietly gone
+    back to reporting on its own process. `fetch_passes == 1` is the deliberate
+    part: the serve floors it at one so `degraded_reasons` can still name a
+    critical series that never loaded (`_from_served_payload`, fred_health.py).
+    """
+    _fetch()
+    cold = FH.health()
+    assert cold["served_from_cache"] is False, "the cold pass is not a cache hit"
+    original_fetch_at = cold["served_fetch_at"]
+    assert original_fetch_at is not None
+
+    _restart(world)
+    _fetch()
+
+    warm = FH.health()
+    assert warm["served_from_cache"] is True
+    assert warm["served_fetch_at"] == original_fetch_at, (
+        "the served payload's own fetch time must survive the restart — a "
+        "fresh timestamp here is the page reporting on its process again")
+    assert warm["fetch_passes"] == 1
+    assert warm["status"] == "ok"
+    assert warm["degraded_reasons"] == []
+    assert not warm["by_status"].get(FH.STATUS_UNAVAILABLE)
+
+
 def test_a_critical_gap_frozen_into_the_cache_keeps_being_paged_on(world):
     """The half that matters, and the original incident arriving by a new door.
 
