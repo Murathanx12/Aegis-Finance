@@ -149,7 +149,8 @@ where ncusip in :cusips
 #: gap — a move nobody could trade on. Pulling the open lets the record carry
 #: both halves and lets a later reader ask the implementable question.
 SQL_PRICES = """
-select permno, date, abs(prc) as prc, abs(openprc) as openprc, ret
+select permno, date, abs(prc) as prc, abs(openprc) as openprc, ret,
+       vol, abs(bidlo) as bidlo, abs(askhi) as askhi
 from crsp.dsf
 where permno in :permnos and date >= :start and date <= :end
 """
@@ -284,6 +285,7 @@ def build_records(df, calendar: list[str], prices: dict) -> tuple[list, dict]:
 
         # rule 5 — the two price windows may not share a day
         runup = react = tradable = gap = None
+        pre: list = []
         permno = prices.get("link", {}).get(_link_key(row.cusip, ann_d))
         px = prices.get("by_permno", {}).get(permno) if permno else None
         if px is None:
@@ -294,7 +296,8 @@ def build_records(df, calendar: list[str], prices: dict) -> tuple[list, dict]:
             unknown["market_reaction_tradable"] = m
             unknown["overnight_gap"] = m
         else:
-            before = [b[1] for b in px if b[0] < ann_d][-RUNUP_DAYS:]
+            pre = [b for b in px if b[0] < ann_d][-RUNUP_DAYS:]
+            before = [b[1] for b in pre]
             after = [b for b in px if trd_day and b[0] >= trd_day][:1]
             if len(before) == RUNUP_DAYS:
                 cum = 1.0
@@ -305,7 +308,7 @@ def build_records(df, calendar: list[str], prices: dict) -> tuple[list, dict]:
                 unknown["pre_event_price_runup"] = (
                     f"only {len(before)} of {RUNUP_DAYS} pre-event trading days")
             if after:
-                _d, _ret, _prc, _open = after[0]
+                _d, _ret, _prc, _open = after[0][:4]
                 react = float(_ret)
                 # THE DECOMPOSITION.
                 #   tradable = open -> close, same session, so no adjustment
@@ -329,6 +332,30 @@ def build_records(df, calendar: list[str], prices: dict) -> tuple[list, dict]:
                 unknown["market_reaction_tradable"] = unknown["market_reaction"]
                 unknown["overnight_gap"] = unknown["market_reaction"]
 
+        # ── liquidity at the decision, from the SAME pre-event window ─────
+        # A gross edge is not an edge. These are the inputs to a break-even
+        # cost, and they are computed strictly before `ann_d` like every other
+        # covariate — a liquidity measure that includes the announcement day
+        # would be measuring the event's own volume spike.
+        dv = hlr = amh = None
+        _pre = pre
+        _dv = [float(b[2]) * float(b[4]) for b in _pre
+               if b[2] is not None and b[4] is not None and b[4] > 0]
+        if len(_dv) >= 10:
+            dv = float(sorted(_dv)[len(_dv) // 2])
+            _im = [abs(float(b[1])) / (float(b[2]) * float(b[4])) * 1e6
+                   for b in _pre
+                   if b[2] and b[4] and b[4] > 0 and b[1] is not None]
+            amh = float(sum(_im) / len(_im)) if _im else None
+            _hl = [(float(b[6]) - float(b[5])) / ((float(b[6]) + float(b[5])) / 2)
+                   for b in _pre
+                   if b[5] and b[6] and b[6] > 0 and b[5] > 0 and b[6] >= b[5]]
+            hlr = float(sum(_hl) / len(_hl)) if _hl else None
+        for _f, _v in (("dollar_volume_20d", dv), ("hl_range_20d", hlr),
+                       ("amihud_20d", amh)):
+            if _v is None:
+                unknown[_f] = (f"fewer than 10 usable pre-event sessions with "
+                               f"price and volume, or the inputs were absent")
         unknown["guidance_state"] = GUIDANCE_UNAVAILABLE
         unknown["options_implied_move"] = (
             "single-name option surface not extracted; the daily vsurfd pull "
@@ -351,6 +378,7 @@ def build_records(df, calendar: list[str], prices: dict) -> tuple[list, dict]:
             pre_event_price_runup=runup, market_reaction=react,
             overnight_gap=gap, market_reaction_tradable=tradable,
             options_implied_move=None,
+            dollar_volume_20d=dv, hl_range_20d=hlr, amihud_20d=amh,
             source_ids=[f"ibes.actu_epsus:{row.ticker}:{str(row.pends)[:10]}"]
             + ([f"ibes.statsumu_epsus:{row.ticker}:{str(row.statpers)[:10]}"]
                if row.statpers is not None else []),
@@ -426,7 +454,8 @@ def cmd_collect(y0: int, y1: int, *, overwrite: bool = False) -> int:
         g = g.sort_values("date")
         by_permno[int(p)] = list(zip(g["date"].astype(str).str[:10],
                                      g["ret"].astype(float),
-                                     g["prc"], g["openprc"]))
+                                     g["prc"], g["openprc"],
+                                     g["vol"], g["bidlo"], g["askhi"]))
 
     recs, refusals = build_records(
         df, cal, {"link": link, "by_permno": by_permno})

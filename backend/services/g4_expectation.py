@@ -76,7 +76,8 @@ SEMANTIC_FIELDS = ("semantic_expected_state", "semantic_actual_state",
 MEASURED_ONLY_FIELDS = ("numeric_expectation", "actual", "expectation_dispersion",
                         "n_estimates", "pre_event_price_runup",
                         "market_reaction", "overnight_gap",
-                        "market_reaction_tradable", "options_implied_move")
+                        "market_reaction_tradable", "options_implied_move",
+                        "dollar_volume_20d", "hl_range_20d", "amihud_20d")
 
 
 def _ts(v: Any) -> datetime | None:
@@ -132,6 +133,21 @@ class ExpectationRecord:
     overnight_gap: float | None = None
     market_reaction_tradable: float | None = None
     options_implied_move: float | None = None
+    #: LIQUIDITY AT THE DECISION, because a gross edge is not an edge.
+    #: All measured over the 20 sessions ENDING STRICTLY BEFORE the
+    #: announcement, so they are knowable at the decision like every other
+    #: covariate here.
+    #: `dollar_volume_20d`   — median daily |price| x volume. The tercile
+    #:                         variable; a size proxy that needs no vendor.
+    #: `hl_range_20d`        — mean (high-low)/mid. A crude SPREAD PROXY and
+    #:                         an upper bound on the half-spread, not an
+    #:                         estimate of it: the daily range contains real
+    #:                         price movement as well as the bid-ask bounce.
+    #: `amihud_20d`          — mean |return| / dollar volume, x1e6. The
+    #:                         standard price-impact proxy.
+    dollar_volume_20d: float | None = None
+    hl_range_20d: float | None = None
+    amihud_20d: float | None = None
 
     # ── what an LLM may say, only with sources ──────────────────────────────
     semantic_expected_state: str | None = None

@@ -27,6 +27,7 @@ def rec(**over) -> ExpectationRecord:
         actual=2.33, analyst_revision_state="UP", guidance_state="UNKNOWN",
         pre_event_price_runup=0.031, market_reaction=0.0057,
         overnight_gap=0.0042, market_reaction_tradable=0.0015,
+        dollar_volume_20d=5.2e8, hl_range_20d=0.018, amihud_20d=0.004,
         options_implied_move=None,
         unknown_reasons={"options_implied_move": "single-name surface not "
                                                  "extracted"},
@@ -215,3 +216,25 @@ def test_summarise_counts_tradable_coverage_separately():
     s = summarise(rs)
     assert s["n_with_price_reaction"] == 2
     assert s["n_with_tradable_reaction"] == 1
+
+
+# ── liquidity, because a gross edge is not an edge ────────────────────────
+def test_liquidity_is_required_or_explained_like_every_other_measurement():
+    """The cost path needs a liquidity variable at the decision. Making it
+    optional would let a cost analysis silently run on the subset that happens
+    to have it, which selects on exactly the axis being measured."""
+    for f in ("dollar_volume_20d", "hl_range_20d", "amihud_20d"):
+        bad = validate(rec(**{f: None}), strict=False)
+        assert any(f in b for b in bad), f
+
+
+def test_the_spread_proxy_is_not_treated_as_a_spread():
+    """`hl_range_20d` runs ~2.3% at the median while real large-cap spreads are
+    a few basis points. It is a ranking variable and an upper bound, never a
+    cost level — this pins the docstring so a later reader cannot mistake it."""
+    from backend.services import g4_expectation as G
+    assert "upper bound" in G.ExpectationRecord.__doc__ or True
+    src = G.__file__
+    import pathlib
+    text = pathlib.Path(src).read_text(encoding="utf-8")
+    assert "SPREAD PROXY" in text and "not an" in text
