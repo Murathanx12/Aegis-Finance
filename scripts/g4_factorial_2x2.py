@@ -127,17 +127,36 @@ def main(argv: list[str] | None = None) -> int:
     eps = np.array([float(r["actual"]) for r in ok])
     surp = np.array([float(r["numeric_surprise"]) for r in ok])
 
-    # Date-demeaned reaction: removes that day's common move exactly. A day on
-    # which only ONE firm announces demeans to zero and carries no information,
-    # so those rows are dropped from the demeaned panel and COUNTED.
-    dem = np.full_like(react, np.nan)
-    singleton = 0
-    for d in np.unique(dates):
-        m = dates == d
-        if m.sum() < 2:
-            singleton += int(m.sum())
-            continue
-        dem[m] = react[m] - react[m].mean()
+    # THE IMPLEMENTABLE HALF. `market_reaction` is close-to-close and contains
+    # the overnight gap, which for an after-hours report is a move nobody could
+    # act on. This is the open-to-close return on the first tradable session —
+    # what was actually on the table for someone who read the release. If the
+    # 2x2 survives here it is a different and much stronger statement; if it
+    # collapses, that IS the answer to "is the drift still there", measured on
+    # our own data rather than cited.
+    trad = np.array([float(r["market_reaction_tradable"])
+                     if r.get("market_reaction_tradable") is not None
+                     else np.nan for r in ok])
+    n_trad = int(np.sum(~np.isnan(trad)))
+    print(f"  of those, with a TRADABLE (open->close) reaction: {n_trad:,} "
+          f"({100*n_trad/len(ok):.1f}%)")
+
+    # Date-demeaned: removes that day's common move exactly. A day on which
+    # only ONE firm announces demeans to zero and carries no information, so
+    # those rows are dropped from the demeaned panel and COUNTED.
+    def demean(v: np.ndarray) -> tuple[np.ndarray, int]:
+        out = np.full_like(v, np.nan)
+        dropped = 0
+        for d in np.unique(dates):
+            m = (dates == d) & ~np.isnan(v)
+            if m.sum() < 2:
+                dropped += int(m.sum())
+                continue
+            out[m] = v[m] - v[m].mean()
+        return out, dropped
+
+    dem, singleton = demean(react)
+    dem_trad, _ = demean(trad)
     have_dem = ~np.isnan(dem)
     print(f"distinct announcement dates: {len(np.unique(dates)):,}  "
           f"(the inference unit, §58)")
@@ -155,10 +174,18 @@ def main(argv: list[str] | None = None) -> int:
 
     rng = np.random.default_rng(SEED)
 
-    for tag, vals, mask in (("RAW next-session reaction", react,
-                             np.ones(len(react), bool)),
-                            ("DATE-DEMEANED (market removed exactly)", dem,
-                             have_dem)):
+    panels = (
+        ("CLOSE-TO-CLOSE — the academic announcement return, NOT tradable",
+         react, np.ones(len(react), bool)),
+        ("CLOSE-TO-CLOSE, date-demeaned (market removed exactly)",
+         dem, have_dem),
+        ("OPEN-TO-CLOSE — the IMPLEMENTABLE half, gap excluded",
+         trad, ~np.isnan(trad)),
+        ("OPEN-TO-CLOSE, date-demeaned  <- the question that decides anything",
+         dem_trad, ~np.isnan(dem_trad)),
+    )
+    contrasts: dict[str, dict[str, float]] = {}
+    for tag, vals, mask in panels:
         print("\n" + "=" * 70)
         print(f"{tag}   threshold t = {t:g} sd")
         print("=" * 70)
@@ -174,7 +201,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {names[c]}   n {m.sum():>6,}   "
                   f"mean {100*mean:+6.2f}%   SE {100*se:.2f}pp")
 
-        def diff(c1: int, c2: int, what: str) -> None:
+        def diff(c1: int, c2: int, what: str) -> None:      # noqa: ANN202
             d = cells[c1][1] - cells[c2][1]
             bd = boot[:, c1] - boot[:, c2]
             se = np.nanstd(bd, ddof=1)
@@ -187,6 +214,7 @@ def main(argv: list[str] | None = None) -> int:
                   f"95% CI [{100*lo:+.2f}, {100*hi:+.2f}]pp")
             print(f"    80%-power MDE {100*mde:.2f}pp  "
                   f"({'RESOLVABLE' if abs(d) >= mde else 'below MDE — not detectable'})")
+            contrasts.setdefault(what.split(":")[0].strip(), {})[tag] = (d, mde)
 
         print("\n  --- does the EXPECTATION add anything, holding the "
               "announcement fixed? ---")
@@ -219,12 +247,40 @@ def main(argv: list[str] | None = None) -> int:
 
         # And the arithmetic that started this, shown as the nesting it is.
         pos = v[eps[mask] > 0]
-        big = v[(surp[mask] > 1)]
+        big = v[surp[mask] > 1]
         print(f"\n  the NESTED comparison that was reported as a finding:")
         print(f"    EPS>0        n {len(pos):>6,}  mean {100*pos.mean():+.2f}%")
         print(f"    surprise>1sd n {len(big):>6,}  mean {100*big.mean():+.2f}%")
         print(f"    -> overlapping sets, the second strictly tighter. NOT a "
               f"statement about expectations.")
+
+    # ── HOW MUCH OF IT WAS EVER ON THE TABLE ───────────────────────────────
+    # The single number this script exists to produce. Both panels below are
+    # date-demeaned, so the ONLY difference between them is the overnight gap.
+    cc, oc = panels[1][0], panels[3][0]
+    print("\n" + "=" * 70)
+    print("HOW MUCH OF THE ANNOUNCEMENT EFFECT WAS EVER TRADABLE?")
+    print("=" * 70)
+    print("  both panels date-demeaned; the ONLY difference is the overnight gap\n")
+    print(f"  {'contrast':<9} {'close-to-close':>15} {'open-to-close':>15} "
+          f"{'lost in the GAP':>17}")
+    for k, v in contrasts.items():
+        A_, B_ = v.get(cc), v.get(oc)
+        if A_ is None or B_ is None:
+            continue
+        a_, amde = A_
+        b_, _ = B_
+        # A share is only meaningful when the DENOMINATOR is resolvable.
+        # Dividing by a contrast that is itself below its own MDE produces a
+        # confident-looking percentage computed from noise — which is the
+        # house error with a percent sign on it.
+        share = (f"{100*(1 - b_/a_):>15.0f}%" if abs(a_) >= amde
+                 else "  base below MDE")
+        print(f"  {k:<9} {100*a_:>14.2f}pp {100*b_:>14.2f}pp {share:>17}")
+    print("\n  The gap is the move that happens while the market is shut. It is")
+    print("  inside every close-to-close announcement study and it was")
+    print("  available to nobody. What survives the open is what there was to")
+    print("  play for — and that figure is still BEFORE costs.")
 
     print("\nNo verdict is registered from this script: G4 is a data layer and "
           "this is its plumbing test. A tradable claim needs a "
