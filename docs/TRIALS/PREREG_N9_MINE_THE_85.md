@@ -149,5 +149,56 @@ would transfer and still not pay for the trade it implies.
 
 ## Result (filled in AFTER the run — never edited afterwards)
 
-- Verdict:
-- Receipt:
+Run 2026-08-16. Search denominator **13,728** candidate rules (176 single-clause,
+13,552 two-clause). Target: bottom-decile moves the incumbent six-rule library
+did **not** mark.
+
+| H | cleared TRAIN | cleared FOREIGN individually | foreign lift median (p90) | aggregate FOREIGN | aggregate CONFIRMATION |
+|---|---|---|---|---|---|
+| 20d | 582 / 13,728 | **0** | **1.51** (2.43) | 1.513 vs placebo 1.011, **p = 0.015** | 1.271 vs placebo 0.905, **p = 0.015** |
+| 60d | 276 / 13,728 | 0 | 0.91 (1.98) | 0.905 vs 0.844, p = 0.428 | 1.330 vs 0.970, p = 0.075 |
+
+**Verdict at 20 days: `SUPPORTED_IN_SCOPE`** by the amendment's declared rule
+(p < 0.05 and median lift ≥ 1.0 on securities in neither prior slice).
+**H0 — "the grammar cannot express a rule that marks these moves" — is
+refuted.** LLM autopsies compiling into this vocabulary are not doomed, which is
+what this experiment was run to find out before spending the dollar.
+
+**Verdict at 60 days: `NOT_DETECTABLE_IN_SCOPE`.** The foreign median collapses
+to 0.91 — the overfit signature — and the confirmation's p = 0.075 does not
+rescue it. The two horizons are different animals and are not pooled.
+
+**The kill that would have been wrong.** The first run printed `0 cleared on
+FOREIGN` at both horizons and that was very nearly the reported result. §37
+forced the diagnostic, and the two horizons separated immediately: at 20 days
+the foreign lifts do not collapse to 1.0 (median 1.51, 201 of 461 above the
+economic bar on the point estimate), so **461 rules each failing its own MDE was
+one underpowered instrument used 461 times, not 461 pieces of evidence for
+nothing.**
+
+**The effect decays monotonically, as it should:** ≥1.69 selected on train →
+1.513 foreign → **1.271 confirmation**. The last number is the unbiased one.
+
+### What this is NOT
+
+**It is not an investable signal, and that was fixed before the run.** 1.271 is
+below N4B's break-even de-risking lift of 1.69. The set marks uncovered moves
+better than chance and still does not mark them well enough to pay for the trade
+it implies. Coverage exists; it is not yet worth acting on.
+
+### Limitations, disclosed
+
+* **The confirmation is security-out-of-sample, not period-out-of-sample.** The
+  amendment declared "period: the full history", so the confirmation slice
+  overlaps the training *period* (though never the training securities). A
+  cleaner test would hold both out; this one holds out one.
+* The 60-day confirmation (1.330, p = 0.075) is *higher* than its foreign
+  counterpart (0.905, p = 0.428). Those two slices differ in period as well as
+  securities, so they are not comparable, and the inconsistency is a reason to
+  trust neither 60-day number rather than to pick the better one.
+* The 582 rules are highly redundant near-duplicates. "201 passed on the point
+  estimate" is not 201 independent confirmations, which is exactly why the
+  aggregate statistic — one test, one placebo — is the reported one.
+
+- Receipt: `backend/data/optimus/research_gym/n9_mine_the_85.json`
+- Script: `scripts/n9_mine_the_85.py` (`--confirm` for amendment 1)

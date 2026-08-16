@@ -60,6 +60,12 @@ AUTOPSIES = _config.OPTIMUS_LEDGER_DIR / "research_gym"
 
 TRAIN_SECURITIES = ("SPY", "XLF", "XLE")
 FOREIGN_SECURITIES = ("QQQ", "IWM", "XLK")
+#: AMENDMENT 1. Six securities in NEITHER slice, declared in the prereg before
+#: they were touched. The rules selected on train are frozen — no re-selection,
+#: no re-tuning — and scored once here. This is the confirmation of an
+#: aggregate test that was itself designed after seeing the per-rule failure,
+#: which is exactly why it needs one.
+CONFIRM_SECURITIES = ("DIA", "XLV", "XLI", "XLP", "XLU", "XLB")
 TRAIN_END = "2015-12-31"
 FOREIGN_START = "2016-01-01"
 
@@ -96,6 +102,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--start", default="1999-01-01")
     ap.add_argument("--end", default="2026-08-15")
     ap.add_argument("--autopsies", default=None)
+    ap.add_argument("--confirm", action="store_true",
+                    help="also score the FROZEN train-selected rules on the "
+                         "six confirmation securities (prereg amendment 1)")
     ap.add_argument("--out", default=str(OUT))
     a = ap.parse_args(argv)
 
@@ -133,7 +142,8 @@ def main(argv: list[str] | None = None) -> int:
     if isinstance(vix, pd.DataFrame):
         vix = vix.squeeze()
 
-    universe = tuple(TRAIN_SECURITIES) + tuple(FOREIGN_SECURITIES)
+    universe = (tuple(TRAIN_SECURITIES) + tuple(FOREIGN_SECURITIES)
+                + (tuple(CONFIRM_SECURITIES) if a.confirm else ()))
     frames: dict[str, pd.DataFrame] = {}
     for tkr in universe:
         px = yf.download(tkr, start=a.start, end=a.end, progress=False)["Close"]
@@ -255,6 +265,49 @@ def main(argv: list[str] | None = None) -> int:
                 "n_fired_uncovered": int((fire & uncovered).sum()),
                 "n_effective": n_eff, "mde_lift": mde}
 
+    def _aggregate(df: "pd.DataFrame", H: int, selected, label: str) -> dict | None:
+        """Does the SELECTED SET transfer to `df`, against a measured null?
+
+        One question instead of N underpowered ones. The null is BLOCK-SHIFTED
+        rather than assumed: a set chosen for high train lift has no null of
+        1.0, and SS20 records that permuted-label placebos in this programme are
+        not centred where theory says they should be.
+        """
+        got = [s["lift"] for cand, _ in selected
+               if (s := _score(df, H, cand)) is not None]
+        if not got:
+            return None
+        obs = sorted(got)[len(got) // 2]
+        rng = np.random.default_rng(SEED + H)
+        shuffled = df.copy()
+        src = df[f"fwd_{H}"].to_numpy(dtype=float)
+        meds = []
+        for _ in range(N_PLACEBO):
+            # Circular block shift: breaks the state -> outcome link while
+            # preserving the forward return's own autocorrelation, so the
+            # placebo is not made easy by destroying the series structure.
+            k = int(rng.integers(H * 2, max(len(src) - H * 2, H * 2 + 1)))
+            shuffled[f"fwd_{H}"] = np.roll(src, k)
+            g = [s["lift"] for cand, _ in selected
+                 if (s := _score(shuffled, H, cand)) is not None]
+            if g:
+                meds.append(sorted(g)[len(g) // 2])
+        if not meds:
+            return None
+        ms = sorted(meds)
+        p = (sum(1 for m in meds if m >= obs) + 1) / (len(meds) + 1)
+        out = {"slice": label, "n_rules_scored": len(got),
+               "observed_median_lift": obs, "placebo_median": ms[len(ms) // 2],
+               "placebo_p95": ms[int(0.95 * len(ms))], "n_placebo": len(meds),
+               "p_value": p}
+        print(f"  AGGREGATE [{label}] — median lift of the selected set: "
+              f"{obs:.3f}  ({len(got)} rules scored)")
+        print(f"    placebo ({len(meds)} block shifts): median "
+              f"{out['placebo_median']:.3f}  p95 {out['placebo_p95']:.3f}"
+              f"  ->  p = {p:.3f}")
+        print(f"    -> {'the SET transfers' if p < 0.05 else 'indistinguishable from label-broken selection'}")
+        return out
+
     results: dict = {"denominator": len(candidates), "horizons": {},
                      "train_securities": list(TRAIN_SECURITIES),
                      "foreign_securities": list(FOREIGN_SECURITIES),
@@ -336,40 +389,10 @@ def main(argv: list[str] | None = None) -> int:
         # transfer — and it needs a placebo, because a set selected for high
         # train lift does not have a null of 1.0 (SS20: permuted-label placebos
         # are not centred on zero, measured 2026-08-12).
-        placebo = None
-        if foreign_lifts:
-            obs = sorted(foreign_lifts)[len(foreign_lifts) // 2]
-            rng = np.random.default_rng(SEED + H)
-            fo_shuffled = fo.copy()
-            src = fo[f"fwd_{H}"].to_numpy(dtype=float)
-            meds = []
-            for _ in range(N_PLACEBO):
-                # Circular block shift: breaks the state->outcome link while
-                # preserving the forward return's own autocorrelation, so the
-                # placebo is not made easy by destroying the series structure.
-                k = int(rng.integers(H * 2, max(len(src) - H * 2, H * 2 + 1)))
-                fo_shuffled[f"fwd_{H}"] = np.roll(src, k)
-                got = []
-                for cand, _s in train_pass:
-                    s = _score(fo_shuffled, H, cand)
-                    if s:
-                        got.append(s["lift"])
-                if got:
-                    meds.append(sorted(got)[len(got) // 2])
-            if meds:
-                meds_sorted = sorted(meds)
-                p = (sum(1 for m in meds if m >= obs) + 1) / (len(meds) + 1)
-                placebo = {"observed_median_lift": obs,
-                           "placebo_median": meds_sorted[len(meds) // 2],
-                           "placebo_p95": meds_sorted[int(0.95 * len(meds))],
-                           "n_placebo": len(meds), "p_value": p}
-                print(f"  AGGREGATE — median foreign lift of the selected set: "
-                      f"{obs:.3f}")
-                print(f"    placebo (label-broken foreign slice, "
-                      f"{len(meds)} block shifts): median "
-                      f"{placebo['placebo_median']:.3f}  p95 "
-                      f"{placebo['placebo_p95']:.3f}  ->  p = {p:.3f}")
-                print(f"    -> {'the SET transfers' if p < 0.05 else 'the set is indistinguishable from label-broken selection'}")
+        placebo = _aggregate(fo, H, train_pass, "foreign") if foreign_lifts else None
+        confirm = (_aggregate(_slice(CONFIRM_SECURITIES), H, train_pass,
+                              "confirmation (amendment 1)")
+                   if (a.confirm and train_pass) else None)
 
         results["horizons"][str(H)] = {
             "placebo": placebo,
