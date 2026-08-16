@@ -56,6 +56,7 @@ from backend.services.research_gym import market_stress as MS
 from backend.services.research_gym import power as PW
 
 OUT = _config.OPTIMUS_LEDGER_DIR / "research_gym" / "n9_mine_the_85.json"
+OUT_WIDE = _config.OPTIMUS_LEDGER_DIR / "research_gym" / "n9b_wide_vocabulary.json"
 AUTOPSIES = _config.OPTIMUS_LEDGER_DIR / "research_gym"
 
 TRAIN_SECURITIES = ("SPY", "XLF", "XLE")
@@ -102,11 +103,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--start", default="1999-01-01")
     ap.add_argument("--end", default="2026-08-15")
     ap.add_argument("--autopsies", default=None)
+    ap.add_argument("--wide-vocab", action="store_true",
+                    help="admit the five cross-sectional/liquidity features "
+                         "(N9B: is 1.271 the vocabulary's ceiling?)")
     ap.add_argument("--confirm", action="store_true",
                     help="also score the FROZEN train-selected rules on the "
                          "six confirmation securities (prereg amendment 1)")
-    ap.add_argument("--out", default=str(OUT))
+    ap.add_argument("--out", default=None)
     a = ap.parse_args(argv)
+    if a.out is None:
+        a.out = str(OUT_WIDE if a.wide_vocab else OUT)
 
     for s in (sys.stdout, sys.stderr):
         try:
@@ -145,11 +151,18 @@ def main(argv: list[str] | None = None) -> int:
     universe = (tuple(TRAIN_SECURITIES) + tuple(FOREIGN_SECURITIES)
                 + (tuple(CONFIRM_SECURITIES) if a.confirm else ()))
     frames: dict[str, pd.DataFrame] = {}
+    raw: dict[str, "pd.DataFrame"] = {}
     for tkr in universe:
-        px = yf.download(tkr, start=a.start, end=a.end, progress=False)["Close"]
+        bars = yf.download(tkr, start=a.start, end=a.end, progress=False)
+        px = bars["Close"]
         if isinstance(px, pd.DataFrame):
             px = px.squeeze()
         px = px.dropna()
+        if a.wide_vocab:
+            vol = bars["Volume"]
+            if isinstance(vol, pd.DataFrame):
+                vol = vol.squeeze()
+            raw[tkr] = pd.DataFrame({"px": px, "vol": vol.reindex(px.index)})
         r = px.pct_change().dropna()
         rv20 = r.rolling(20).std() * np.sqrt(252) * 100.0
         rv60 = r.rolling(60).std() * np.sqrt(252) * 100.0
@@ -189,10 +202,55 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  {tkr}: {len(df)} days, incumbent fires "
               f"{100.0 * fired.mean():.1f}%")
 
+    # ── N9B: the five features the current vocabulary structurally cannot say
+    # Every existing term is computed within ONE security's own series, so
+    # "this security is volatile" is expressible and "everything is volatile"
+    # is not. These are cross-sectional and liquidity state, registered in
+    # docs/TRIALS/PREREG_N9B_WIDER_VOCABULARY.md before any number existed.
+    search_features = list(SEARCH_FEATURES)
+    if a.wide_vocab:
+        common = None
+        for tkr in universe:
+            idx = frames[tkr].index
+            common = idx if common is None else common.union(idx)
+        rv = pd.DataFrame({t: frames[t]["realised_vol_20d"] for t in universe},
+                          index=common)
+        ret20 = pd.DataFrame({t: frames[t]["ret_1m_pct"] for t in universe},
+                             index=common)
+        # EXPANDING rank, never a full-sample one: a percentile taken against
+        # the whole history knows a distribution it has not lived through.
+        hi = rv.expanding(min_periods=250).quantile(0.90)
+        breadth = (rv >= hi).sum(axis=1) / rv.notna().sum(axis=1)
+        xs_disp = ret20.std(axis=1)
+        dret = pd.DataFrame(
+            {t: frames[t]["ret_1m_pct"].diff() for t in universe},
+            index=common)
+        corr = dret.rolling(60).corr().groupby(level=0).apply(
+            lambda m: (m.to_numpy().sum() - np.trace(m.to_numpy()))
+            / max(m.shape[0] * (m.shape[0] - 1), 1))
+        for tkr in universe:
+            d = frames[tkr]
+            r_ = raw[tkr]["px"].pct_change()
+            dv = (raw[tkr]["px"] * raw[tkr]["vol"]).replace(0.0, np.nan)
+            ldv = np.log(dv.clip(lower=1.0))
+            d["breadth_stress"] = breadth.reindex(d.index).shift(1)
+            d["xs_dispersion"] = xs_disp.reindex(d.index).shift(1)
+            d["avg_pairwise_corr"] = corr.reindex(d.index).shift(1)
+            d["dollar_volume_z"] = ((ldv - ldv.rolling(20).mean())
+                                    / ldv.rolling(20).std()).reindex(
+                                        d.index).shift(1)
+            d["amihud_20d"] = ((r_.abs() / dv * 1e9).rolling(20).mean()
+                               .reindex(d.index).shift(1))
+        search_features += ["breadth_stress", "xs_dispersion",
+                            "avg_pairwise_corr", "dollar_volume_z",
+                            "amihud_20d"]
+        print(f"\nWIDE VOCABULARY: {len(search_features)} features "
+              f"({len(SEARCH_FEATURES)} narrow + 5 cross-sectional/liquidity)")
+
     # ── build the candidate grammar from the TRAINING distribution only ─────
     train = pd.concat([frames[t].loc[:TRAIN_END] for t in TRAIN_SECURITIES])
     clauses: list[tuple[str, str, float]] = []
-    for f in SEARCH_FEATURES:
+    for f in search_features:
         col = train[f].replace([np.inf, -np.inf], np.nan).dropna()
         if len(col) < 500:
             print(f"  (feature {f} has too little training history — skipped)")
@@ -299,7 +357,15 @@ def main(argv: list[str] | None = None) -> int:
         out = {"slice": label, "n_rules_scored": len(got),
                "observed_median_lift": obs, "placebo_median": ms[len(ms) // 2],
                "placebo_p95": ms[int(0.95 * len(ms))], "n_placebo": len(meds),
-               "p_value": p}
+               "p_value": p,
+               # PERSISTED for N9B, whose declared statistic is the DIFFERENCE
+               # between two runs' medians. `rng` is seeded per call, so shift
+               # `i` here is the same shift as `i` in any other run on the same
+               # slice — which makes the two placebo series PAIRED, and a
+               # paired difference is the only version of "the wide vocabulary
+               # scored higher" that has an interval. Without this the
+               # comparison is two point estimates in a sentence (SS18).
+               "placebo_series": meds}
         print(f"  AGGREGATE [{label}] — median lift of the selected set: "
               f"{obs:.3f}  ({len(got)} rules scored)")
         print(f"    placebo ({len(meds)} block shifts): median "
@@ -396,6 +462,13 @@ def main(argv: list[str] | None = None) -> int:
 
         results["horizons"][str(H)] = {
             "placebo": placebo,
+            # The confirmation was computed and PRINTED and never written to
+            # the artifact — so the amendment's own result existed only in a
+            # terminal that had scrolled away, and N9B's declared difference
+            # statistic had nothing to read. Found by trying to compute it.
+            # Same class as everything else this session: a value produced,
+            # reported, and not persisted.
+            "confirm": confirm,
             "train_pass": len(train_pass), "foreign_pass": len(survivors),
             "foreign_point_pass": point_pass,
             "foreign_lift_median": (sorted(foreign_lifts)[len(foreign_lifts) // 2]

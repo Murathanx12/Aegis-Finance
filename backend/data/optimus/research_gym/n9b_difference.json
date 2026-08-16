@@ -1,0 +1,54 @@
+{
+  "rows": [
+    {
+      "horizon": 20,
+      "gap_to_break_even": 0.4189325163904969,
+      "equivalence": {
+        "verdict": "RULED_OUT",
+        "estimate": 0.0828218765070321,
+        "se": 0.1103279818732388,
+        "margin": 0.4189325163904969,
+        "upper_bound": 0.26429525764546524,
+        "reason": "upper 95% one-sided bound 0.264 vs margin 0.419"
+      },
+      "narrow_median": 1.271067483609503,
+      "wide_median": 1.3538893601165352,
+      "difference": 0.0828218765070321,
+      "null_mean": 0.016940419907563894,
+      "null_sd": 0.1103279818732388,
+      "mde": 0.30909324316030135,
+      "p_paired": 0.2885572139303483,
+      "n_paired": 200,
+      "narrow_p": 0.014925373134328358,
+      "wide_p": 0.009950248756218905,
+      "L_min": 1.69,
+      "wide_clears_economic_bar": false,
+      "verdict": "NOT_DETECTABLE_IN_SCOPE"
+    },
+    {
+      "horizon": 60,
+      "gap_to_break_even": 0.7799470683364884,
+      "equivalence": {
+        "verdict": "RULED_OUT",
+        "estimate": 0.056435437217882356,
+        "se": 0.2109938628215001,
+        "margin": 0.7799470683364884,
+        "upper_bound": 0.40348945774432815,
+        "reason": "upper 95% one-sided bound 0.403 vs margin 0.780"
+      },
+      "narrow_median": 1.3300529316635115,
+      "wide_median": 1.3864883688813938,
+      "difference": 0.056435437217882356,
+      "null_mean": -0.04671354084537537,
+      "null_sd": 0.2109938628215001,
+      "mde": 0.5911172871932701,
+      "p_paired": 0.27860696517412936,
+      "n_paired": 200,
+      "narrow_p": 0.07462686567164178,
+      "wide_p": 0.014925373134328358,
+      "L_min": 2.11,
+      "wide_clears_economic_bar": false,
+      "verdict": "NOT_DETECTABLE_IN_SCOPE"
+    }
+  ]
+}

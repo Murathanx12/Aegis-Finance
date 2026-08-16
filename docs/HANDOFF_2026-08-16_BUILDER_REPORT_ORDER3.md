@@ -351,11 +351,37 @@ episodes through the factory (§5), and (b) **a wider vocabulary** — because
 every rule the atlas can currently express is a function of price and VIX, and
 the 1.271 ceiling may be the vocabulary's ceiling rather than the market's.
 
-**(b) is the cheaper diagnosis and I did not run it.** Re-running N9's search
-with event, revision, flow and liquidity features admitted to the grammar would
-say whether the ceiling moves. If it does, the factory has something to find. If
-it does not, the factory will produce a thousand stories that compile into the
-same 1.27.
+**(b) is the cheaper diagnosis, and it ran after this section was first
+written. It came out against my own expectation.**
+
+N9B admitted five cross-sectional/liquidity features — breadth of stress,
+cross-sectional dispersion, average pairwise correlation, dollar-volume z,
+Amihud — the information class a per-security price grammar structurally cannot
+express. Denominator 38,038 against 13,728.
+
+| H | narrow | wide | difference | MDE | needed to reach break-even | upper bound | |
+|---|---|---|---|---|---|---|---|
+| 20d | 1.271 | 1.354 | +0.083 | 0.309 | +0.419 | **+0.264** | **`RULED_OUT`** |
+| 60d | 1.330 | 1.386 | +0.056 | 0.591 | +0.780 | **+0.403** | **`RULED_OUT`** |
+
+`NOT_DETECTABLE_IN_SCOPE` on the difference, and **`RULED_OUT` on the difference
+that would have mattered.** These five features are excluded as a route to a
+tradeable rule.
+
+**And the §18 trap it caught was mine.** Read as two point estimates, the
+60-day row looks decisive — the narrow vocabulary does not transfer at 60 days
+(p = 0.428 / 0.075) and the wide one does (0.030 / 0.015). I would have written
+that up as "the vocabulary was the ceiling, confirmed." The paired difference
+refuses it: **+0.056 against MDE 0.591.** Comparing two p-values is the exact
+error this session spent the morning correcting in N6, and it took a
+pre-registered difference statistic to stop me committing it.
+
+**So the recommendation inverts.** Vocabulary width, on this evidence, is *not*
+where the ceiling is — which strengthens rather than weakens the case for the
+episode factory (§5). What remains untested is a genuinely different information
+class: event, revision, fundamental and text features. The same test answers for
+them, and the confirmation slice is now spent — that question needs new
+securities.
 
 ---
 
