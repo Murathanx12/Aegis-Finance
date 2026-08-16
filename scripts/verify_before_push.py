@@ -52,6 +52,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SIBLING = ROOT.parent / "Aegis module"
 
+#: Tracked paths the suite is ALLOWED to rewrite. Kept as an explicit suffix
+#: list, not a glob: every entry here is a place where a test writes into the
+#: repository, which is worth seeing in one list rather than discovering later.
+SUITE_MAY_WRITE: tuple[str, ...] = ()
+
 
 def _run(cmd: list[str], cwd: Path, **kw) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, cwd=str(cwd), text=True, encoding="utf-8",
@@ -65,22 +70,32 @@ def _tracked_files(repo: Path) -> list[str]:
     return [ln for ln in p.stdout.splitlines() if ln.strip()]
 
 
-def _tree_hash(repo: Path) -> str:
-    """A hash of the working tree as it is ON DISK, not as git has it staged.
+def _tree_hash(repo: Path) -> dict[str, str]:
+    """Per-file hashes of the working tree as it is ON DISK.
 
     `git status` would not notice an edit that was made and reverted, and
     `git stash list` says nothing at all. Hashing the bytes is the only way to
     answer "is this the same tree the suite just ran against".
+
+    Per FILE rather than one digest, because the first version printed "the
+    tree changed" and nothing else — and a guard that reports a problem it
+    cannot localise is a guard that gets switched off. It fired on its own
+    first real run and I could not act on it until it named the file.
     """
-    h = hashlib.sha256()
-    for rel in sorted(_tracked_files(repo)):
+    out: dict[str, str] = {}
+    for rel in _tracked_files(repo):
         p = repo / rel
         try:
-            h.update(rel.encode("utf-8"))
-            h.update(p.read_bytes() if p.is_file() else b"<absent>")
+            out[rel] = hashlib.sha256(
+                p.read_bytes() if p.is_file() else b"<absent>").hexdigest()
         except OSError:
-            h.update(b"<unreadable>")
-    return h.hexdigest()
+            out[rel] = "<unreadable>"
+    return out
+
+
+def _tree_diff(before: dict[str, str], after: dict[str, str]) -> list[str]:
+    keys = set(before) | set(after)
+    return sorted(k for k in keys if before.get(k) != after.get(k))
 
 
 def _changed_python(repo: Path) -> list[Path]:
@@ -161,7 +176,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # ── 3. the suite, in CI's world, with the tree pinned ───────────────────
     before = _tree_hash(ROOT)
-    before_sib = _tree_hash(SIBLING) if SIBLING.exists() else ""
+    before_sib = _tree_hash(SIBLING) if SIBLING.exists() else {}
     cmd = [sys.executable, "-m", "pytest", "backend/tests/", "-q",
            "-m", "not slow", "-p", "backend.tests.ci_env_sim"]
     if a.k:
@@ -178,13 +193,22 @@ def main(argv: list[str] | None = None) -> int:
     # ── 4. THE REPEAT: was the tree edited underneath the run? ──────────────
     print("\n[4/5] tree stability across the run")
     after = _tree_hash(ROOT)
-    after_sib = _tree_hash(SIBLING) if SIBLING.exists() else ""
-    if before != after or before_sib != after_sib:
+    after_sib = _tree_hash(SIBLING) if SIBLING.exists() else {}
+    moved = ([f"aegis-finance/{x}" for x in _tree_diff(before, after)]
+             + [f"Aegis module/{x}" for x in _tree_diff(before_sib, after_sib)])
+    # A test that legitimately WRITES a tracked artefact would trip this on
+    # every run, and a guard that cries wolf every run is off within a week.
+    # Those paths are excluded by name, and the exclusion is narrow and
+    # visible rather than a wildcard.
+    moved = [m for m in moved if not m.endswith(SUITE_MAY_WRITE)]
+    if moved:
         fail.append("TREE CHANGED DURING THE RUN — result discarded")
         print("  FAIL the working tree changed while the suite was running.\n"
               "       Whatever it just printed describes a tree that no longer\n"
               "       exists. Re-run without editing. (This happened twice on\n"
               "       2026-08-15 and is why this check is here.)")
+        for m in moved[:20]:
+            print(f"         changed: {m}")
     else:
         print("  ok — same tree before and after")
 
