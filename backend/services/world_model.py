@@ -41,6 +41,7 @@ and stops there.
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from typing import Sequence
 
@@ -209,6 +210,47 @@ class WorldModelV0:
     def predict(self, X: np.ndarray) -> np.ndarray:
         preds = np.column_stack([m.predict(X) for m in self.models])
         return enforce_monotone(preds)
+
+    def provenance(self) -> dict:
+        """Everything outside the data that could move a prediction.
+
+        A metric that reproduces is not proof a model reproduced — two runs can
+        land on the same rounded loss from different trees. What has to match
+        is the PREDICTIONS, and what has to be recorded beside them is the
+        environment that produced them, because `deterministic=True` is a
+        promise about a fixed library version and thread count and about
+        nothing else.
+        """
+        import lightgbm as lgb
+
+        return {
+            "lightgbm_version": lgb.__version__,
+            "quantiles": list(self.quantiles),
+            "n_estimators": self.n_estimators,
+            "learning_rate": self.learning_rate,
+            "num_leaves": self.num_leaves,
+            "min_child_samples": self.min_child_samples,
+            "seed": self.seed,
+            "deterministic": True,
+            "force_row_wise": True,
+            "feature_names": list(self.feature_names),
+        }
+
+
+def fingerprint(*arrays, feature_names: Sequence[str] = ()) -> str:
+    """Content hash of the exact arrays a fit or a score consumed.
+
+    Feature ORDER is part of the identity — a permuted matrix is a different
+    input even when every column is present — so the names are hashed with the
+    bytes rather than beside them.
+    """
+    h = hashlib.sha256()
+    h.update("|".join(feature_names).encode())
+    for a in arrays:
+        arr = np.ascontiguousarray(np.asarray(a, dtype=np.float64))
+        h.update(str(arr.shape).encode())
+        h.update(arr.tobytes())
+    return h.hexdigest()[:16]
 
 
 # ── walk-forward ────────────────────────────────────────────────────────────

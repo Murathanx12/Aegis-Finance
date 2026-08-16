@@ -284,3 +284,81 @@ def test_the_model_widens_where_the_noise_is_wider():
         X, y, ("x",))
     p = m.predict(np.array([[0.05], [0.95]]))
     assert (p[1, -1] - p[1, 0]) > (p[0, -1] - p[0, 0]) * 2.0
+
+
+# ── reproducibility is a property of the PREDICTIONS, not of the metric ─────
+
+def _repro_panel(n=900, seed=7):
+    rng = np.random.default_rng(seed)
+    X = rng.normal(size=(n, 5))
+    y = X[:, 0] * 2.0 + rng.normal(size=n) * (1.0 + np.abs(X[:, 1]))
+    return X, y
+
+
+def test_two_identical_fits_produce_identical_predictions():
+    """`random_state` alone did not do this — `deterministic=True` does.
+
+    Asserted on the prediction fingerprint rather than on a loss: two runs can
+    round to the same loss from different trees, so a matching metric is
+    consistent with an irreproducible model and proves nothing.
+    """
+    X, y = _repro_panel()
+    names = tuple(f"f{i}" for i in range(X.shape[1]))
+    a = WM.WorldModelV0(n_estimators=60).fit(X, y, names).predict(X)
+    b = WM.WorldModelV0(n_estimators=60).fit(X, y, names).predict(X)
+    assert WM.fingerprint(a) == WM.fingerprint(b)
+    assert np.array_equal(a, b)
+
+
+def test_the_fingerprint_can_actually_differ():
+    """The mutation control: a hash that never changes proves nothing."""
+    X, y = _repro_panel()
+    names = tuple(f"f{i}" for i in range(X.shape[1]))
+    base = WM.fingerprint(X, y, feature_names=names)
+    # a single changed cell
+    X2 = X.copy()
+    X2[0, 0] += 1e-9
+    assert WM.fingerprint(X2, y, feature_names=names) != base
+    # permuted feature ORDER with identical content
+    perm = [1, 0, 2, 3, 4]
+    assert WM.fingerprint(X[:, perm], y,
+                          feature_names=tuple(names[i] for i in perm)) != base
+    # ... and it responds to the MODEL, not only to the data. `num_leaves`
+    # would NOT work as the lever here: `min_child_samples=200` on 900 rows
+    # caps the tree far below either setting, so 15 and 63 fit the same trees.
+    m1 = WM.WorldModelV0(n_estimators=60, learning_rate=0.05).fit(X, y, names)
+    m2 = WM.WorldModelV0(n_estimators=60, learning_rate=0.20).fit(X, y, names)
+    assert WM.fingerprint(m1.predict(X)) != WM.fingerprint(m2.predict(X))
+
+
+def test_the_seed_was_never_the_thing_that_made_this_reproducible():
+    """Measured, and it changes what "pin the seeds" is worth as advice.
+
+    With no row or column subsampling — LightGBM's default, and this model's
+    configuration — `random_state` has nothing to randomise: the trees are a
+    deterministic function of the data and the split rules. The 1.22617 ->
+    1.22598 drift observed on an unchanged WM0 re-run therefore never had
+    anything to do with the seed, and pinning it would have "fixed" nothing.
+    It came from multithreaded histogram summation, which is what
+    `deterministic=True, force_row_wise=True` addresses.
+
+    Recorded as a test because the natural remediation — set more seeds — is
+    the one that does not work here, and a session that applied it would have
+    reported the problem closed.
+    """
+    X, y = _repro_panel(400)
+    names = tuple(f"f{i}" for i in range(X.shape[1]))
+    a = WM.WorldModelV0(n_estimators=40, seed=1).fit(X, y, names).predict(X)
+    b = WM.WorldModelV0(n_estimators=40, seed=999_983).fit(X, y, names).predict(X)
+    assert WM.fingerprint(a) == WM.fingerprint(b)
+
+
+def test_provenance_records_what_determinism_depends_on():
+    X, y = _repro_panel(300)
+    m = WM.WorldModelV0(n_estimators=20).fit(X, y, ("a", "b", "c", "d", "e"))
+    p = m.provenance()
+    assert p["deterministic"] is True and p["force_row_wise"] is True
+    assert p["seed"] == 20260816
+    assert p["feature_names"] == ["a", "b", "c", "d", "e"]
+    # The library version is the caveat `deterministic=True` is silent about.
+    assert p["lightgbm_version"] and p["lightgbm_version"][0].isdigit()
