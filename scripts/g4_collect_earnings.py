@@ -144,8 +144,12 @@ from crsp.stocknames
 where ncusip in :cusips
 """
 
+#: `openprc` is what makes the reaction decomposable. CRSP's `ret` is
+#: close-to-close, so for an after-hours announcement it CONTAINS the overnight
+#: gap — a move nobody could trade on. Pulling the open lets the record carry
+#: both halves and lets a later reader ask the implementable question.
 SQL_PRICES = """
-select permno, date, abs(prc) as prc, ret
+select permno, date, abs(prc) as prc, abs(openprc) as openprc, ret
 from crsp.dsf
 where permno in :permnos and date >= :start and date <= :end
 """
@@ -279,7 +283,7 @@ def build_records(df, calendar: list[str], prices: dict) -> tuple[list, dict]:
                 unknown["n_estimates"] = "snapshot carries no numest"
 
         # rule 5 — the two price windows may not share a day
-        runup = react = None
+        runup = react = tradable = gap = None
         permno = prices.get("link", {}).get(_link_key(row.cusip, ann_d))
         px = prices.get("by_permno", {}).get(permno) if permno else None
         if px is None:
@@ -287,9 +291,11 @@ def build_records(df, calendar: list[str], prices: dict) -> tuple[list, dict]:
                  if permno is None else "no CRSP prices in the window")
             unknown["pre_event_price_runup"] = m
             unknown["market_reaction"] = m
+            unknown["market_reaction_tradable"] = m
+            unknown["overnight_gap"] = m
         else:
-            before = [r for d, r in px if d < ann_d][-RUNUP_DAYS:]
-            after = [r for d, r in px if trd_day and d >= trd_day][:1]
+            before = [b[1] for b in px if b[0] < ann_d][-RUNUP_DAYS:]
+            after = [b for b in px if trd_day and b[0] >= trd_day][:1]
             if len(before) == RUNUP_DAYS:
                 cum = 1.0
                 for r in before:
@@ -299,10 +305,29 @@ def build_records(df, calendar: list[str], prices: dict) -> tuple[list, dict]:
                 unknown["pre_event_price_runup"] = (
                     f"only {len(before)} of {RUNUP_DAYS} pre-event trading days")
             if after:
-                react = float(after[0])
+                _d, _ret, _prc, _open = after[0]
+                react = float(_ret)
+                # THE DECOMPOSITION.
+                #   tradable = open -> close, same session, so no adjustment
+                #              factor enters and a split cannot corrupt it.
+                #   gap      = backed out of CRSP's OWN adjusted return rather
+                #              than from raw prices, so distributions and
+                #              splits are handled by the vendor that knows
+                #              about them:  (1+ret) = (1+gap)(1+tradable).
+                if _prc is not None and _open and _open > 0:
+                    tradable = float(_prc) / float(_open) - 1.0
+                    gap = (1.0 + react) / (1.0 + tradable) - 1.0
+                else:
+                    tradable = gap = None
+                    unknown["market_reaction_tradable"] = (
+                        "no CRSP open price on the first tradable session")
+                    unknown["overnight_gap"] = unknown["market_reaction_tradable"]
             else:
+                react = tradable = gap = None
                 unknown["market_reaction"] = (
                     "no CRSP return on or after tradable_at")
+                unknown["market_reaction_tradable"] = unknown["market_reaction"]
+                unknown["overnight_gap"] = unknown["market_reaction"]
 
         unknown["guidance_state"] = GUIDANCE_UNAVAILABLE
         unknown["options_implied_move"] = (
@@ -324,6 +349,7 @@ def build_records(df, calendar: list[str], prices: dict) -> tuple[list, dict]:
                 None if row.numdown is None or pd.isna(row.numdown) else row.numdown),
             guidance_state="UNKNOWN",
             pre_event_price_runup=runup, market_reaction=react,
+            overnight_gap=gap, market_reaction_tradable=tradable,
             options_implied_move=None,
             source_ids=[f"ibes.actu_epsus:{row.ticker}:{str(row.pends)[:10]}"]
             + ([f"ibes.statsumu_epsus:{row.ticker}:{str(row.statpers)[:10]}"]
@@ -399,7 +425,8 @@ def cmd_collect(y0: int, y1: int, *, overwrite: bool = False) -> int:
     for p, g in pxdf.dropna(subset=["ret"]).groupby("permno"):
         g = g.sort_values("date")
         by_permno[int(p)] = list(zip(g["date"].astype(str).str[:10],
-                                     g["ret"].astype(float)))
+                                     g["ret"].astype(float),
+                                     g["prc"], g["openprc"]))
 
     recs, refusals = build_records(
         df, cal, {"link": link, "by_permno": by_permno})

@@ -26,6 +26,7 @@ def rec(**over) -> ExpectationRecord:
         numeric_expectation=2.14, expectation_dispersion=0.10, n_estimates=40,
         actual=2.33, analyst_revision_state="UP", guidance_state="UNKNOWN",
         pre_event_price_runup=0.031, market_reaction=0.0057,
+        overnight_gap=0.0042, market_reaction_tradable=0.0015,
         options_implied_move=None,
         unknown_reasons={"options_implied_move": "single-name surface not "
                                                  "extracted"},
@@ -179,3 +180,38 @@ def test_validate_can_report_every_problem_at_once():
                        market_reaction=None,
                        analyst_revision_state="NOPE"), strict=False)
     assert len(bad) >= 3
+
+
+# ── the reaction split: what you could not trade vs what you could ────────
+def test_the_two_halves_of_the_reaction_are_separate_required_fields():
+    """CRSP's daily return is CLOSE-TO-CLOSE, so for an after-hours report it
+    contains the overnight gap — a move that happened while nobody could act.
+    A factory scored on the undivided number finds the announcement; scored on
+    the tradable half it finds whether anything was left. Both must be present
+    or explained, so the question cannot be dodged by omission."""
+    bad = validate(rec(market_reaction_tradable=None), strict=False)
+    assert any("market_reaction_tradable" in b for b in bad)
+    bad = validate(rec(overnight_gap=None), strict=False)
+    assert any("overnight_gap" in b for b in bad)
+
+
+def test_the_decomposition_identity_holds_on_the_fixture():
+    """(1+ret) == (1+gap)(1+tradable). The collector backs the gap out of
+    CRSP's own adjusted return rather than from raw prices, so splits and
+    distributions are handled by the vendor that knows about them."""
+    r = rec()
+    assert (1 + r.market_reaction) == pytest.approx(
+        (1 + r.overnight_gap) * (1 + r.market_reaction_tradable), rel=1e-3)
+
+
+def test_summarise_counts_tradable_coverage_separately():
+    """CRSP open prices are ~96% covered, not 100%. If the tradable count is
+    not reported beside the close-to-close one, a shortfall in the half that
+    matters hides behind the half that does not."""
+    rs = [rec(), rec(market_reaction_tradable=None, overnight_gap=None,
+                     unknown_reasons={"options_implied_move": "x",
+                                      "market_reaction_tradable": "no open",
+                                      "overnight_gap": "no open"})]
+    s = summarise(rs)
+    assert s["n_with_price_reaction"] == 2
+    assert s["n_with_tradable_reaction"] == 1

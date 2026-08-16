@@ -75,7 +75,8 @@ SEMANTIC_FIELDS = ("semantic_expected_state", "semantic_actual_state",
 #: months later, and it is the one that pays or does not pay.
 MEASURED_ONLY_FIELDS = ("numeric_expectation", "actual", "expectation_dispersion",
                         "n_estimates", "pre_event_price_runup",
-                        "market_reaction", "options_implied_move")
+                        "market_reaction", "overnight_gap",
+                        "market_reaction_tradable", "options_implied_move")
 
 
 def _ts(v: Any) -> datetime | None:
@@ -114,7 +115,22 @@ class ExpectationRecord:
     analyst_revision_state: str = "UNKNOWN"
     guidance_state: str = "UNKNOWN"
     pre_event_price_runup: float | None = None
+    #: Close-to-close on the first tradable session. This is the ACADEMIC
+    #: announcement return and it is NOT implementable: for an after-hours
+    #: report it contains the overnight gap, which happened while nobody could
+    #: trade. Kept because it is what the literature measures.
     market_reaction: float | None = None
+    #: The two halves of it, and the split is the whole point.
+    #: `overnight_gap` — previous close to the first tradable open. The move
+    #: that occurs while the market is shut; unavailable to anyone acting on
+    #: the announcement, and it is where most of the announcement effect lives.
+    #: `market_reaction_tradable` — that open to that close. What was actually
+    #: on the table for someone who read the release and acted at the open.
+    #: A factory scored on `market_reaction` will find the announcement; a
+    #: factory scored on `market_reaction_tradable` will find whether there was
+    #: anything left. They are different questions and only one pays.
+    overnight_gap: float | None = None
+    market_reaction_tradable: float | None = None
     options_implied_move: float | None = None
 
     # ── what an LLM may say, only with sources ──────────────────────────────
@@ -276,6 +292,8 @@ def summarise(records: list[ExpectationRecord]) -> dict:
                                      if r.analyst_revision_state != "UNKNOWN"),
         "n_with_price_reaction": sum(1 for r in records
                                      if r.market_reaction is not None),
+        "n_with_tradable_reaction": sum(
+            1 for r in records if r.market_reaction_tradable is not None),
         "n_with_implied_move": sum(1 for r in records
                                    if r.options_implied_move is not None),
         "n_with_semantic": sum(1 for r in records if any(
