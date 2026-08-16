@@ -122,6 +122,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--start", default=START)
     ap.add_argument("--end", default=END)
     ap.add_argument("--power-only", action="store_true")
+    ap.add_argument("--standardised", action="store_true",
+                    help="WM0B: fit quantiles of y / (rv20*sqrt(H/252)) and "
+                         "rescale by today's vol, so the model learns SHAPE "
+                         "while scale is handed to it. Registered separately "
+                         "as its own trial — see PREREG_WM0B.")
     ap.add_argument("--skip-slice-claim", action="store_true",
                     help="for reruns; the claim is idempotent-by-refusal")
     ap.add_argument("--out", default=str(OUT))
@@ -207,10 +212,24 @@ def main(argv: list[str] | None = None) -> int:
     preds_all: dict[str, list] = {k: [] for k in ("world_model", *BASELINES)}
     y_all, fold_rows = [], []
 
+    scale_all = rv * np.sqrt(HORIZON / WM.TRADING_DAYS)
+
     for tr, te, fold in folds:
-        model = WM.WorldModelV0(seed=SEED).fit(X[tr], y[tr], FEATURES)
+        if a.standardised:
+            # WM0B: the model sees the SHAPE problem only. Scale is handed to
+            # it by the same rv20 the baseline uses, so any difference is
+            # attributable to shape learning and not to rediscovering vol.
+            s_tr, s_te = scale_all[tr], scale_all[te]
+            ok = s_tr > 0
+            model = WM.WorldModelV0(seed=SEED).fit(
+                X[tr][ok], y[tr][ok] / s_tr[ok], FEATURES)
+            wm_pred = WM.enforce_monotone(
+                model.predict(X[te]) * s_te.reshape(-1, 1))
+        else:
+            model = WM.WorldModelV0(seed=SEED).fit(X[tr], y[tr], FEATURES)
+            wm_pred = model.predict(X[te])
         p = {
-            "world_model": model.predict(X[te]),
+            "world_model": wm_pred,
             "climatology": WM.climatology_quantiles(y[tr], te.size),
             "gaussian_vol": WM.gaussian_vol_quantiles(y[tr], rv[te], HORIZON),
             "scaled_empirical": WM.scaled_empirical_quantiles(
@@ -298,8 +317,11 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{'% better':<18s} " + "".join(f"{x:>+8.2f}" for x in per_q))
 
     payload = {
-        "trial": "WM0",
-        "prereg": "docs/TRIALS/PREREG_WM0_WORLD_MODEL_V0.md",
+        "trial": "WM0B" if a.standardised else "WM0",
+        "target_space": "standardised" if a.standardised else "level",
+        "prereg": ("docs/TRIALS/PREREG_WM0B_STANDARDISED_SHAPE.md"
+                   if a.standardised
+                   else "docs/TRIALS/PREREG_WM0_WORLD_MODEL_V0.md"),
         "slice_id": ident.slice_id,
         "universe": UNIVERSE, "horizon_days": HORIZON,
         "features": list(FEATURES), "quantiles": list(WM.QUANTILES),
