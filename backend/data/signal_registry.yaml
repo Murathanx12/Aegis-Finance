@@ -679,10 +679,11 @@ signals:
     horizon: 1-3mo
     universe: optionable US equity
     data_grade: >
-      OptionMetrics standardised volatility surface, ON DISK and measured
-      2026-08-16: `Aegis module/data/wrds_raw/optionm_vsurf_me/`, 23 parquet
-      files, 191.7 MB, 2002-2024, manifest 2026-08-01T12:27:44Z, CRSP link
-      present.
+      OptionMetrics standardised volatility surface. CACHED EXTRACT is
+      month-end by our own WHERE clause; ENTITLED SOURCE `optionm.vsurfd<year>`
+      is DAILY and read entitlement is proven by 23/23 successful year pulls.
+      On disk `Aegis module/data/wrds_raw/optionm_vsurf_me/`, 23 parquet files,
+      191.7 MB, 2002-2024, manifest 2026-08-01T12:27:44Z, CRSP link present.
     implementation_notes: >
       CORRECTION 2026-08-16. This entry read "OptionMetrics entitlement was
       never established" until today. That was FALSE, and had been false since
@@ -702,12 +703,36 @@ signals:
       conclusion by the wrong route: row count cannot identify sampling
       frequency when each date carries many surface coordinates.
 
-      USABILITY: RESEARCH INSTRUMENT, NOT A LIVE FEED. Monthly resolution means
-      this cannot be the forward rung of the DAILY realised-vol ladder (N11's
-      rv20/EWMA/HAR update every day); it defines its own MONTHLY ladder with
-      decision points at month-end. Coverage ends 2024 and updates annually, so
-      it can never serve a live lane. Convenient fit: the 30d and 91d
-      maturities map onto the 20d and 60d horizons N4B/N9 already use.
+      SECOND CORRECTION, SAME DAY. The paragraph above measures the CACHE and
+      the paragraph it replaced concluded a property of the DATA from it. Those
+      are different things and the first version got it wrong: it concluded
+      that monthly resolution barred this from the daily ladder and gave it a
+      monthly ladder of its own. That conclusion is FALSE and is withdrawn.
+
+      The month-end sampling is a WHERE CLAUSE WE WROTE. From
+      `Aegis module/scripts/fetch_wrds_optionm.py:128`:
+
+        from optionm.vsurfd{yr}
+        where days in (30, 91) and delta in (25, 50, -25, -50)
+          and date in (select max(date) from optionm.vsurfd{yr}
+                       group by date_trunc('month', date))
+
+      The source table is `optionm.vsurfd<year>` — the DAILY standardised
+      surface — and the month-end restriction, the two maturities and the four
+      deltas are all our own filters. Read entitlement to the daily table is
+      PROVEN, not assumed: 23/23 years pulled from it with zero errors
+      (`manifest_optionm.json`, 2026-08-01).
+
+      So the correct statement is: the CACHED EXTRACT is month-end; the
+      ENTITLED SOURCE is daily. A daily implied-vol rung can be built on the
+      same decision dates and folds as the realised-vol ladder, which is a far
+      better comparison than a separate monthly one. Re-pulling scoped to a
+      trial universe rather than all ~6,000 secids makes the cost negligible;
+      it was ~550k rows/year at month-end for the whole cross-section.
+
+      What survives from the first correction: coverage ends 2024 and updates
+      annually, so this can never serve a LIVE lane whatever its frequency, and
+      30d/91d map onto the 20d/60d horizons N4B/N9 already use.
       PIT caveat NOT cleared — max date never exceeds the file year, which
       rules out cross-year restatement in the extraction but says nothing about
       vintage restatement within a year. Verify before any live claim.
