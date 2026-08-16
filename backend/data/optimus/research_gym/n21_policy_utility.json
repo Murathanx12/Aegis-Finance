@@ -1,0 +1,241 @@
+{
+  "trial": "N21",
+  "prereg": "docs/TRIALS/PREREG_N21_POLICY_UTILITY.md",
+  "frozen_rules_sha256": "8093cf7306159108ecacca4499a1297b3a39ad42a6b21a7264c224cb5a5c9ac0",
+  "n_frozen_rules": 598,
+  "slice_id": "slc_c6ec0412bc3c2a41",
+  "fresh_slice": [
+    "XRT",
+    "XHB",
+    "KRE",
+    "XOP",
+    "ITB",
+    "SMH",
+    "IBB",
+    "IGV"
+  ],
+  "eval_start": "2006-07-01",
+  "eval_end": "2026-08-15",
+  "horizon_days": 20,
+  "cost_per_turn": 0.001,
+  "block_months": 6,
+  "dependence_unit": "one 6-month calendar block across the whole cross-section",
+  "results": {
+    "primary": {
+      "delta": 0.0,
+      "per_security": {
+        "XRT": {
+          "policy_log_growth_pp": 119.89152066942556,
+          "buyhold_log_growth_pp": 181.57344793508787,
+          "delta_log_growth_pp": -61.68192726566231,
+          "policy_max_dd_pct": 56.87054055725308,
+          "buyhold_max_dd_pct": 65.816673244693,
+          "avg_exposure": 0.6177865612648221
+        },
+        "XHB": {
+          "policy_log_growth_pp": 54.522243006908276,
+          "buyhold_log_growth_pp": 136.448105676469,
+          "delta_log_growth_pp": -81.92586266956073,
+          "policy_max_dd_pct": 49.572003097023554,
+          "buyhold_max_dd_pct": 78.57689150006775,
+          "avg_exposure": 0.5535573122529645
+        },
+        "KRE": {
+          "policy_log_growth_pp": 4.195738218136245,
+          "buyhold_log_growth_pp": 96.0183610912603,
+          "delta_log_growth_pp": -91.82262287312406,
+          "policy_max_dd_pct": 60.13625123925661,
+          "buyhold_max_dd_pct": 68.53952743891712,
+          "avg_exposure": 0.5041501976284585
+        },
+        "XOP": {
+          "policy_log_growth_pp": 73.25767980164049,
+          "buyhold_log_growth_pp": 41.118364871957006,
+          "delta_log_growth_pp": 32.139314929683486,
+          "policy_max_dd_pct": 38.79948804903643,
+          "buyhold_max_dd_pct": 90.27208197488001,
+          "avg_exposure": 0.36462450592885376
+        },
+        "ITB": {
+          "policy_log_growth_pp": 20.858116604921033,
+          "buyhold_log_growth_pp": 106.8146054642229,
+          "delta_log_growth_pp": -85.95648885930186,
+          "policy_max_dd_pct": 52.10316754257018,
+          "buyhold_max_dd_pct": 84.88455081986804,
+          "avg_exposure": 0.47608695652173916
+        },
+        "SMH": {
+          "policy_log_growth_pp": 223.00918627464608,
+          "buyhold_log_growth_pp": 372.63087625635256,
+          "delta_log_growth_pp": -149.62168998170648,
+          "policy_max_dd_pct": 53.845471563453295,
+          "buyhold_max_dd_pct": 64.1900131999665,
+          "avg_exposure": 0.616798418972332
+        },
+        "IBB": {
+          "policy_log_growth_pp": 133.8422826795536,
+          "buyhold_log_growth_pp": 214.19040039008843,
+          "delta_log_growth_pp": -80.34811771053484,
+          "policy_max_dd_pct": 43.475192635711004,
+          "buyhold_max_dd_pct": 39.815972459267925,
+          "avg_exposure": 0.6470355731225297
+        },
+        "IGV": {
+          "policy_log_growth_pp": 117.326733336213,
+          "buyhold_log_growth_pp": 264.60595077578574,
+          "delta_log_growth_pp": -147.27921743957273,
+          "policy_max_dd_pct": 55.66425831651702,
+          "buyhold_max_dd_pct": 49.81440818834775,
+          "avg_exposure": 0.7561264822134387
+        }
+      },
+      "pooled_delta_log_growth_pp": -83.31207648372245,
+      "securities_improved": 1,
+      "n_securities": 8,
+      "mean_max_dd_change_pp": -16.430468228148364,
+      "block_inference": {
+        "mean": -2.103825775859095,
+        "ci_lo": -4.3293036877937645,
+        "ci_hi": 0.7224680050927041,
+        "se": 1.531561487637255,
+        "mde_80pct_power": 4.29080002514156,
+        "n_rows": 320,
+        "n_dates": 40,
+        "n_securities": 8,
+        "n_effective": 40.0,
+        "block_days": 1,
+        "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+      },
+      "log_growth_verdict_UNPOWERED": "NOT_DETECTABLE_IN_SCOPE",
+      "n_blocks": 320,
+      "PRIMARY_drawdown": {
+        "observed_mean_block_dd_pp": -6.8429557501963725,
+        "placebo_p5": -6.579488613813788,
+        "placebo_p95": -1.3136150077725948,
+        "placebo_median": -3.210727350210978,
+        "p_value": 0.03125,
+        "n_placebo_draws": 1600,
+        "material_floor_pp": 3.0,
+        "verdict": "POLICY_REDUCES_DRAWDOWN",
+        "DIAGNOSTIC_block_shift_null": {
+          "note": "added after the primary; preserves fire count, run lengths and clustering, destroys only state-outcome alignment. Cannot change the registered verdict.",
+          "median": -5.272166924463551,
+          "p5": -11.889808262380564,
+          "p_value": 0.338125,
+          "survives": false
+        }
+      },
+      "personalities": {
+        "preservation": -571.0889200531155,
+        "balanced": -563.9328210815452,
+        "aggressive": -560.3547715957599,
+        "extreme_growth": -557.969405271903
+      }
+    },
+    "secondary": {
+      "delta": 0.5,
+      "per_security": {
+        "XRT": {
+          "policy_log_growth_pp": 160.2228942120717,
+          "buyhold_log_growth_pp": 181.57344793508787,
+          "delta_log_growth_pp": -21.350553723016162,
+          "policy_max_dd_pct": 50.77933270667992,
+          "buyhold_max_dd_pct": 65.816673244693,
+          "avg_exposure": 0.8088932806324111
+        },
+        "XHB": {
+          "policy_log_growth_pp": 110.55304581665273,
+          "buyhold_log_growth_pp": 136.448105676469,
+          "delta_log_growth_pp": -25.89505985981627,
+          "policy_max_dd_pct": 62.12201656408061,
+          "buyhold_max_dd_pct": 78.57689150006775,
+          "avg_exposure": 0.7767786561264822
+        },
+        "KRE": {
+          "policy_log_growth_pp": 68.88205863766345,
+          "buyhold_log_growth_pp": 96.0183610912603,
+          "delta_log_growth_pp": -27.136302453596855,
+          "policy_max_dd_pct": 55.53608366626359,
+          "buyhold_max_dd_pct": 68.53952743891712,
+          "avg_exposure": 0.7520750988142293
+        },
+        "XOP": {
+          "policy_log_growth_pp": 90.31019302439455,
+          "buyhold_log_growth_pp": 41.118364871957006,
+          "delta_log_growth_pp": 49.191828152437544,
+          "policy_max_dd_pct": 71.6419243692847,
+          "buyhold_max_dd_pct": 90.27208197488001,
+          "avg_exposure": 0.6823122529644269
+        },
+        "ITB": {
+          "policy_log_growth_pp": 82.67079227665577,
+          "buyhold_log_growth_pp": 106.8146054642229,
+          "delta_log_growth_pp": -24.14381318756712,
+          "policy_max_dd_pct": 69.78024679827156,
+          "buyhold_max_dd_pct": 84.88455081986804,
+          "avg_exposure": 0.7380434782608696
+        },
+        "SMH": {
+          "policy_log_growth_pp": 309.96156267581483,
+          "buyhold_log_growth_pp": 372.63087625635256,
+          "delta_log_growth_pp": -62.66931358053773,
+          "policy_max_dd_pct": 58.8489380576123,
+          "buyhold_max_dd_pct": 64.1900131999665,
+          "avg_exposure": 0.8083992094861661
+        },
+        "IBB": {
+          "policy_log_growth_pp": 180.0494637785397,
+          "buyhold_log_growth_pp": 214.19040039008843,
+          "delta_log_growth_pp": -34.14093661154874,
+          "policy_max_dd_pct": 37.74340357974009,
+          "buyhold_max_dd_pct": 39.815972459267925,
+          "avg_exposure": 0.8235177865612648
+        },
+        "IGV": {
+          "policy_log_growth_pp": 196.5561215841436,
+          "buyhold_log_growth_pp": 264.60595077578574,
+          "delta_log_growth_pp": -68.04982919164215,
+          "policy_max_dd_pct": 52.77219571637603,
+          "buyhold_max_dd_pct": 49.81440818834775,
+          "avg_exposure": 0.8780632411067194
+        }
+      },
+      "pooled_delta_log_growth_pp": -26.774247556910936,
+      "securities_improved": 1,
+      "n_securities": 8,
+      "mean_max_dd_change_pp": -10.335747170962412,
+      "block_inference": {
+        "mean": -0.682807814720152,
+        "ci_lo": -1.8402455261771307,
+        "ci_hi": 0.7950276263642867,
+        "se": 0.7967184199094501,
+        "mde_80pct_power": 2.2320745486046634,
+        "n_rows": 320,
+        "n_dates": 40,
+        "n_securities": 8,
+        "n_effective": 40.0,
+        "block_days": 1,
+        "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+      },
+      "log_growth_verdict_UNPOWERED": "NOT_DETECTABLE_IN_SCOPE",
+      "n_blocks": 320,
+      "PRIMARY_drawdown": {
+        "observed_mean_block_dd_pp": -3.8048568739549644,
+        "placebo_p5": -4.416244264577203,
+        "placebo_p95": -1.0642570548894015,
+        "placebo_median": -2.3211423851585353,
+        "p_value": 0.1225,
+        "n_placebo_draws": 1600,
+        "material_floor_pp": 3.0,
+        "verdict": "NO_TIMING_INFORMATION",
+        "DIAGNOSTIC_block_shift_null": {
+          "note": "added after the primary; preserves fire count, run lengths and clustering, destroys only state-outcome alignment. Cannot change the registered verdict.",
+          "median": -3.1552833220631893,
+          "p5": -6.491910253145223,
+          "p_value": 0.375,
+          "survives": false
+        }
+      }
+    }
+  }
+}

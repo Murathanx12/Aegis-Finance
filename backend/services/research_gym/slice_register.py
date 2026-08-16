@@ -186,6 +186,23 @@ class SliceRegister:
             raise ValueError(f"unknown purpose {purpose!r}; declared: {PURPOSES}")
 
         readers = self.prior_readers(identity)
+
+        # A trial re-running its OWN analysis is one consumption, not two.
+        # Without this the register refuses the author who claimed the slice
+        # correctly — which is not integrity, it is a trial that can never add
+        # a diagnostic to its own registered result without an escape hatch,
+        # and an escape hatch is what actually gets abused. Anyone ELSE
+        # reading it is still refused; that is the property being protected.
+        if readers and all(r.trial == trial for r in readers) and trial:
+            return {"allowed": True, "purpose": purpose,
+                    "slice_id": identity.slice_id,
+                    "prior_readers": [r.trial for r in readers],
+                    "why": (f"{trial} re-reading the slice it already claimed "
+                            f"— one consumption, not a new one. This does NOT "
+                            f"license a new claim: any result must be reported "
+                            f"under the original pre-registration."),
+                    "rerun_of_own_claim": True}
+
         if purpose != "CONFIRM" or not readers:
             return {"allowed": True, "purpose": purpose,
                     "slice_id": identity.slice_id,

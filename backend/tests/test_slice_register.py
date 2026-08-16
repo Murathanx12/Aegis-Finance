@@ -179,3 +179,42 @@ def test_the_seeded_register_records_both_consumptions_of_the_slice():
     n9b = next(r for r in reg.records if r.trial == "N9B")
     assert n9b.purpose in NON_INDEPENDENT, \
         "N9B must not be recorded as an independent confirmation"
+
+
+# ── a trial must be able to re-run its own analysis ────────────────────────
+
+def test_a_trial_may_reread_the_slice_it_already_claimed(tmp_path):
+    """Otherwise the only way to add a diagnostic is an escape hatch, and an
+    escape hatch is what actually gets abused."""
+    reg = _reg(tmp_path)
+    ident = SliceIdentity(securities=("AAA", "BBB"), start="2006-01-01",
+                          end="2026-01-01", outcome_horizon_days=20,
+                          outcome_definition="drawdown vs buy-hold")
+    reg.claim(ident, "CONFIRM", trial="N21", consumed_at="2026-08-16T00:00:00Z")
+    again = reg.check(ident, "CONFIRM", trial="N21")
+    assert again["allowed"] is True
+    assert again.get("rerun_of_own_claim") is True
+    assert "one consumption" in again["why"]
+
+
+def test_a_DIFFERENT_trial_is_still_refused_after_that(tmp_path):
+    """The property being protected. If this passed, the allowance would be a
+    hole rather than a fix."""
+    reg = _reg(tmp_path)
+    ident = SliceIdentity(securities=("AAA", "BBB"), start="2006-01-01",
+                          end="2026-01-01", outcome_horizon_days=20,
+                          outcome_definition="drawdown vs buy-hold")
+    reg.claim(ident, "CONFIRM", trial="N21", consumed_at="2026-08-16T00:00:00Z")
+    other = reg.check(ident, "CONFIRM", trial="N22")
+    assert other["allowed"] is False
+    assert "N21" in other["why"]
+
+
+def test_an_anonymous_rerun_is_not_a_rerun(tmp_path):
+    """An empty trial name must not match every prior reader."""
+    reg = _reg(tmp_path)
+    ident = SliceIdentity(securities=("AAA",), start="2006-01-01",
+                          end="2026-01-01", outcome_horizon_days=20,
+                          outcome_definition="drawdown vs buy-hold")
+    reg.claim(ident, "CONFIRM", trial="N21", consumed_at="2026-08-16T00:00:00Z")
+    assert reg.check(ident, "CONFIRM", trial="")["allowed"] is False

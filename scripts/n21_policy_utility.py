@@ -94,6 +94,7 @@ DELTA_PRIMARY = 0.0
 DELTA_SECONDARY = 0.5
 COST_PER_TURN = 0.0010             # 10bps each way, N4B's declared cost
 BLOCK_MONTHS = 6                   # the outcome unit
+N_PLACEBO = 200                    # matched-exposure draws per security
 SEED = 20260816
 
 
@@ -363,10 +364,64 @@ def _blocks(dates, months: int):
     return key, uniq
 
 
+def _max_dd(w) -> float:
+    """Max drawdown of a wealth path, in percentage points."""
+    import numpy as np
+    return float(100.0 * (1.0 - w / np.maximum.accumulate(w)).max())
+
+
+def _placebo_exposure(n: int, n_derisked: int, horizon: int, delta: float,
+                      rng):
+    """De-risk the SAME number of days, in randomly placed windows.
+
+    The registered null. Being out of the market lowers drawdown whether or not
+    the timing carries information, so "beats zero" is not evidence about the
+    signal — only "beats a policy with the same exposure budget" is.
+    """
+    import numpy as np
+    exp = np.ones(n, dtype=float)
+    if n_derisked <= 0:
+        return exp
+    n_windows = max(1, int(round(n_derisked / horizon)))
+    starts = rng.integers(0, max(1, n - horizon), size=n_windows)
+    for s in starts:
+        exp[s:s + horizon] = delta
+    return exp
+
+
 def _log_growth(w) -> float:
     """Terminal log growth of a wealth path, in percent."""
     import numpy as np
     return float(np.log(max(w[-1], 1e-9)) * 100.0)
+
+
+def _stats(w):
+    """A `utility.PathStats` from a wealth path, so the declared personalities
+    can score this policy with the same code the Gym uses."""
+    import numpy as np
+    r = np.diff(w) / w[:-1]
+    dn = r[r < 0]
+    peak = np.maximum.accumulate(w)
+    uw = w < peak
+    dd = 1.0 - w / peak
+    return U.PathStats(
+        n_days=len(w),
+        terminal_wealth=float(w[-1]), min_wealth=float(w.min()),
+        net_return_pct=float((w[-1] - 1.0) * 100.0),
+        realised_vol_pct=float(np.std(r, ddof=1) * np.sqrt(252) * 100.0),
+        downside_deviation_pct=(float(np.std(dn, ddof=1) * np.sqrt(252) * 100.0)
+                                if dn.size > 1 else None),
+        max_drawdown_pct=float(dd.max() * 100.0),
+        max_drawdown_days=int(uw.sum()),
+        time_under_water_frac=float(uw.mean()),
+        worst_day_pct=float(r.min() * 100.0) if r.size else None,
+        worst_week_pct=None,
+        expected_shortfall_5_pct=(
+            float(np.mean(np.sort(r)[:max(1, int(0.05 * r.size))]) * 100.0)
+            if r.size >= 20 else None),
+        recovery_days=None,
+        ruin=bool(w.min() <= U.RUIN_FLOOR),
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -622,6 +677,81 @@ def main(argv: list[str] | None = None) -> int:
                     "d_log_growth_pp": _log_growth(bp) - _log_growth(bb),
                 })
 
+        # ── PRIMARY: block drawdown difference vs a matched-exposure placebo
+        rng = np.random.default_rng(SEED)
+        dd_obs, dd_placebo = [], []
+        for tkr, d in frames.items():
+            r = d["ret"].to_numpy(dtype=float)
+            exp = _exposure_path(d["fire"].to_numpy(), len(d), HORIZON, delta)
+            key, uniq = _blocks(d.index, BLOCK_MONTHS)
+            for u in uniq:
+                m = key == u
+                if m.sum() < 40:
+                    continue
+                rm, em = r[m], exp[m]
+                base_dd = _max_dd(_wealth(rm, np.ones(int(m.sum())),
+                                          COST_PER_TURN))
+                dd_obs.append(_max_dd(_wealth(rm, em, COST_PER_TURN)) - base_dd)
+            n_off = int((exp < 1.0).sum())
+            for _ in range(N_PLACEBO):
+                pe = _placebo_exposure(len(d), n_off, HORIZON, delta, rng)
+                got = []
+                for u in uniq:
+                    m = key == u
+                    if m.sum() < 40:
+                        continue
+                    rm = r[m]
+                    got.append(_max_dd(_wealth(rm, pe[m], COST_PER_TURN))
+                               - _max_dd(_wealth(rm, np.ones(int(m.sum())),
+                                                 COST_PER_TURN)))
+                dd_placebo.append(float(np.mean(got)))
+        # ── DIAGNOSTIC, added after seeing the primary. Cannot change it. ──
+        # The registered placebo places de-risking windows UNIFORMLY at random.
+        # Real fires CLUSTER in volatile periods, and clustering alone lowers
+        # drawdown without any predictive skill — so the registered null may be
+        # too weak, in the direction that flatters the result. SS37: a new
+        # instrument's first positive is the one that looks like it working.
+        #
+        # The stronger null is a CIRCULAR BLOCK SHIFT of the actual fire mask:
+        # it preserves the count, the run lengths and the autocorrelation
+        # exactly, and destroys only the alignment between state and outcome.
+        # This is the null N9 used, and it is the one that matters.
+        shift_null = []
+        for tkr, d in frames.items():
+            r = d["ret"].to_numpy(dtype=float)
+            fire = d["fire"].to_numpy()
+            key, uniq = _blocks(d.index, BLOCK_MONTHS)
+            n = len(d)
+            for _ in range(N_PLACEBO):
+                k = int(rng.integers(1, n))
+                se = _exposure_path(np.roll(fire, k), n, HORIZON, delta)
+                got = []
+                for u in uniq:
+                    m = key == u
+                    if m.sum() < 40:
+                        continue
+                    rm = r[m]
+                    got.append(_max_dd(_wealth(rm, se[m], COST_PER_TURN))
+                               - _max_dd(_wealth(rm, np.ones(int(m.sum())),
+                                                 COST_PER_TURN)))
+                shift_null.append(float(np.mean(got)))
+        shift_null = np.asarray(shift_null)
+
+        dd_obs = np.asarray(dd_obs)
+        dd_placebo = np.asarray(dd_placebo)
+        obs_mean = float(dd_obs.mean())
+        p5 = float(np.quantile(dd_placebo, 0.05))
+        p95 = float(np.quantile(dd_placebo, 0.95))
+        p_val = float((dd_placebo <= obs_mean).mean())
+
+        if obs_mean <= p5:
+            dd_verdict = ("POLICY_REDUCES_DRAWDOWN" if abs(obs_mean) >= 3.0
+                          else "DETECTABLE_BUT_IMMATERIAL")
+        elif obs_mean >= p95:
+            dd_verdict = "POLICY_WORSENS_DRAWDOWN"
+        else:
+            dd_verdict = "NO_TIMING_INFORMATION"
+
         d_arr = np.array([b["d_log_growth_pp"] for b in block_rows])
         dates = np.array([np.datetime64(b["date"], "D") for b in block_rows])
         # block length 1 day: the calendar block IS the unit, so one bootstrap
@@ -643,8 +773,28 @@ def main(argv: list[str] | None = None) -> int:
             "pooled_delta_log_growth_pp": pooled,
             "securities_improved": n_better, "n_securities": len(per_sec),
             "mean_max_dd_change_pp": dd,
-            "block_inference": inf.as_dict(), "verdict": verdict,
+            "block_inference": inf.as_dict(),
+            "log_growth_verdict_UNPOWERED": verdict,
             "n_blocks": len(block_rows),
+            "PRIMARY_drawdown": {
+                "observed_mean_block_dd_pp": obs_mean,
+                "placebo_p5": p5, "placebo_p95": p95,
+                "placebo_median": float(np.median(dd_placebo)),
+                "p_value": p_val, "n_placebo_draws": len(dd_placebo),
+                "material_floor_pp": 3.0,
+                "verdict": dd_verdict,
+                "DIAGNOSTIC_block_shift_null": {
+                    "note": ("added after the primary; preserves fire count, "
+                             "run lengths and clustering, destroys only "
+                             "state-outcome alignment. Cannot change the "
+                             "registered verdict."),
+                    "median": float(np.median(shift_null)),
+                    "p5": float(np.quantile(shift_null, 0.05)),
+                    "p_value": float((shift_null <= obs_mean).mean()),
+                    "survives": bool(obs_mean
+                                     <= float(np.quantile(shift_null, 0.05))),
+                },
+            },
         }
 
         print(f"\n{'=' * 74}")
@@ -669,29 +819,57 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  mean {inf.mean:+.3f}pp per block  90% CI "
               f"[{inf.ci_lo:+.3f}, {inf.ci_hi:+.3f}]  MDE "
               f"{inf.mde_80pct_power:.3f}pp")
-        print(f"  VERDICT: {verdict}")
+        print(f"  log-growth reading: {verdict}  -- REGISTERED UNPOWERED "
+              f"(MDE {inf.mde_80pct_power * 12.0 / BLOCK_MONTHS:.2f}pp/yr vs a "
+              f"3pp/yr standard); this may NOT produce a verdict")
 
-        # the personalities, reported for the primary only
+        print(f"\n  PRIMARY — block max-drawdown difference vs a "
+              f"matched-exposure placebo")
+        print(f"    observed  {obs_mean:+.3f}pp per block")
+        print(f"    placebo   median {np.median(dd_placebo):+.3f}  "
+              f"5th {p5:+.3f}  95th {p95:+.3f}   "
+              f"({len(dd_placebo)} draws)")
+        print(f"    p = {p_val:.4f}   material floor 3.0pp")
+        print(f"    VERDICT: {dd_verdict}")
+
+        sp5 = float(np.quantile(shift_null, 0.05))
+        sp_p = float((shift_null <= obs_mean).mean())
+        print(f"\n    DIAGNOSTIC (added after the primary; cannot change it) —"
+              f"\n    circular block-shift of the ACTUAL fire mask, which "
+              f"preserves\n    count, run lengths and clustering and destroys "
+              f"only the alignment:")
+        print(f"      shifted null: median {np.median(shift_null):+.3f}  "
+              f"5th {sp5:+.3f}   observed {obs_mean:+.3f}   p = {sp_p:.4f}")
+        print("      " + ("the primary SURVIVES the stronger null"
+                          if obs_mean <= sp5 else
+                          "the primary DOES NOT survive the stronger null — "
+                          "the registered\n      placebo was too weak and the "
+                          "reduction is consistent with CLUSTERING"))
+
+        # the personalities — reported, and each one inherits the log-growth
+        # arm's unpowered status because each contains a terminal-return term
         if tag == "primary":
-            print("\n  by declared personality (terminal, whole path):")
+            print("\n  by declared personality (whole path) — ALL UNPOWERED, "
+                  "each contains a return term:")
             for obj in U.PERSONALITIES:
                 vals = []
                 for tkr, d in frames.items():
                     r = d["ret"].to_numpy(dtype=float)
                     e = _exposure_path(d["fire"].to_numpy(), len(d), HORIZON,
                                        delta)
-                    wp, wb = (_wealth(r, e, COST_PER_TURN),
-                              _wealth(r, np.ones(len(d)), COST_PER_TURN))
-                    sp = U.score_one(obj, U.stats_of_wealth(wp)) \
-                        if hasattr(U, "stats_of_wealth") else None
-                    if sp is None:
+                    wp = _wealth(r, e, COST_PER_TURN)
+                    wb = _wealth(r, np.ones(len(d)), COST_PER_TURN)
+                    sp = U.score_one(obj, _stats(wp))
+                    sb = U.score_one(obj, _stats(wb))
+                    if sp is None or sb is None:
                         vals = None
                         break
-                    vals.append(sp - U.score_one(obj, U.stats_of_wealth(wb)))
+                    vals.append(sp - sb)
                 if vals is None:
-                    print(f"    {obj.name:<16s} (not scorable from a wealth "
-                          f"path alone)")
+                    print(f"    {obj.name:<16s} (not scorable)")
                 else:
+                    results[tag].setdefault("personalities", {})[obj.name] = \
+                        float(np.mean(vals))
                     print(f"    {obj.name:<16s} {np.mean(vals):+8.2f} "
                           f"{obj.units}")
 
