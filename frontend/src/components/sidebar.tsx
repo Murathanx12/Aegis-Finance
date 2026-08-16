@@ -25,6 +25,7 @@ import {
   NotebookPen,
   Activity,
   Landmark,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -72,6 +73,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/portfolio-intelligence/track-record", label: "Track Record", icon: Activity, code: "NAV" },
       { href: "/portfolio-intelligence/conviction", label: "Conviction", icon: NotebookPen, code: "CONV", advancedOnly: true },
       { href: "/portfolio-intelligence/risk-watch", label: "Risk Watch", icon: Activity, code: "RISK", advancedOnly: true },
+      { href: "/risk", label: "Risk Layer", icon: ShieldCheck, code: "SIZE" },
       { href: "/retirement", label: "Retirement", icon: Target, code: "RETIRE" },
     ],
   },

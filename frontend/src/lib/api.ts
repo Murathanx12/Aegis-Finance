@@ -3380,3 +3380,94 @@ export interface RiskWatchResponse {
 export function piGetRiskWatch() {
   return fetchAPI<RiskWatchResponse>("/api/pi/risk-watch");
 }
+
+// ── M6: the risk layer ──────────────────────────────────────────────────────
+// The endpoint returns a POSITION SIZE and never a ticker to buy. That is a
+// finding, not a gap: 206 published predictors measured on our own panel give a
+// median of -0.12%/yr net, and nothing published clears +3%/yr net among names
+// we can actually trade.
+
+export interface RiskClaim {
+  outcome: string;
+  effect: number | null;
+  units: string;
+  mde: number | null;
+  established: boolean;
+  comparator: string;
+  note: string;
+}
+
+export interface RiskEvidence {
+  window: string;
+  base_asset: string;
+  n_days: number;
+  cost_bps_per_crossing: number;
+  status: string;
+  k_eff: number;
+  claims: RiskClaim[];
+}
+
+export interface RiskExposureResponse {
+  decision: {
+    realised_vol: number;
+    target_vol: number;
+    cap: number;
+    weight: number;
+    capped: boolean;
+    raise_to_cap_below_vol: number | null;
+    halve_above_vol: number;
+    note: string;
+  };
+  decision_log: {
+    month: string;
+    weight: number;
+    realised_vol: number;
+    market_return: number;
+    cost_vs_full: number;
+  }[];
+  claim: {
+    risk_reduced: { volatility_pp: number; mde_pp: number; vs: string; established: boolean };
+    not_merely_holding_less: { max_drawdown_pp: number; mde_pp: number; vs: string; established: boolean };
+    return_effect: { estimate_pp: number; mde_pp: number; established: boolean; statement: string };
+    break_even_sacrifice_pct_per_year: number;
+    break_even_note: string;
+    evidence: RiskEvidence;
+    target_vol: number;
+  };
+  personality: string;
+  unpriced_holdings: string[];
+  what_would_change_it: {
+    raise_to_cap_below_vol: number | null;
+    halve_above_vol: number;
+    current_vol: number;
+    statement: string;
+  };
+}
+
+export function getRiskLayerEvidence() {
+  return fetchAPI<{
+    evidence: RiskEvidence;
+    break_even_sacrifice_pct_per_year: Record<string, number>;
+    lookback_days: number;
+    note: string;
+  }>("/api/risk-layer/evidence");
+}
+
+export function getRiskLayerExposure(
+  holdings: { ticker: string; weight: number }[],
+  opts?: { target_vol?: number; cap?: number; personality?: string },
+) {
+  return fetchAPI<RiskExposureResponse>(
+    "/api/risk-layer/exposure",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        holdings,
+        target_vol: opts?.target_vol ?? 0.15,
+        cap: opts?.cap ?? 1.0,
+        personality: opts?.personality ?? "balanced",
+      }),
+    },
+    HEAVY_TIMEOUT_MS,
+  );
+}

@@ -176,6 +176,14 @@ def _case_ex_post():
             ExPostUsageError, "a hindsight scale coerced into a live number")
 
 
+def _case_risk_layer():
+    from backend.services.risk_layer import RiskLayerRefused, realised_vol
+    # Twelve days is a number. Sizing a real book from it is the honour-system
+    # failure with money attached.
+    return (lambda: realised_vol([0.01] * 12), RiskLayerRefused,
+            "an exposure asked for from too few observations")
+
+
 def _case_regret():
     from backend.services.research_gym import regret as rg
     pytest.importorskip("backend.services.research_gym.regret")
@@ -210,6 +218,7 @@ CASES = {
     "regret": _case_regret,
     "iif1_features": _case_iif1_features,
     "ex_post": _case_ex_post,
+    "risk_layer": _case_risk_layer,
 }
 
 
