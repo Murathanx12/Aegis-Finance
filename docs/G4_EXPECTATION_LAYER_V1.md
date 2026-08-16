@@ -13,17 +13,31 @@ why A beat B. The worry was that without an expectation layer it would keep
 rediscovering *"companies with good earnings go up"* — an announcement fact,
 already in the price, not tradable.
 
-That worry is now a number. On 4,524 events in 2015 with both a surprise and a
-reaction:
+That worry is now a number. **60,402 records, 2006–2019**; 58,066 with both a
+surprise and a reaction:
 
 | the claim | events | mean next-session reaction |
 |---|---|---|
-| **positive EPS** — an ANNOUNCEMENT fact | 4,002 | **+0.19%** |
-| **beat consensus by >1σ** — a SURPRISE fact | 2,078 | **+1.92%** |
+| **positive EPS** — an ANNOUNCEMENT fact | 51,384 | **+0.25%** |
+| **beat consensus by >1σ** — a SURPRISE fact | 28,010 | **+1.88%** |
 
-Ten times the signal, from the same events, by knowing what was expected. The
-first row is what the factory would have found without G4, and it is worth
-nothing.
+Seven and a half times the signal, from the same events, by knowing what was
+expected. The first row is what the factory would have found without G4, and it
+is worth nothing.
+
+**And it is stable.** The layer was built and checked on 2015 alone before the
+other thirteen years were collected:
+
+| | 2015 only | full 2006–2019 |
+|---|---|---|
+| announcement | +0.19% | +0.25% |
+| surprise >1σ | +1.92% | +1.88% |
+| corr(surprise, reaction) | +0.199 | +0.194 |
+| beat rate | 61.9% | 64.1% |
+
+Thirteen unseen years moved nothing. That is the check that distinguishes a
+working join from one that happened to line up on the year it was debugged
+against.
 
 ## 2. The layer works, checked against facts nobody here chose
 
@@ -66,10 +80,16 @@ tradable_at        the earliest we could have acted
 
 `first_public_ts − expectation_asof > 0` is what makes a surprise a surprise, and
 `validate` refuses the record if it is not **strictly** positive.
-`observed_at − first_public_ts` is the disclosure delay — measured median **0.021
-days (30 minutes)** across 2015, and it is the whole subject of actor
-intelligence. AAPL's Q1 was recorded 4m48s after the 16:30 announcement; its Q2
-not until 07:43 the next morning.
+`observed_at − first_public_ts` is the disclosure delay — across the full
+corpus **median 0.45h, p90 10.9h, max 740 days**. It is the whole subject of
+actor intelligence, and the spread is the point: AAPL's Q1 2015 was recorded
+4m48s after its 16:30 announcement; its Q2 not until 07:43 the next morning.
+
+The 740-day tail is a data-quality flag, not a defect in the record: IBES
+backfills some actuals long after the fact. Those records are still valid —
+`observed_at ≥ first_public_ts` holds — but any study of *our* latency must
+treat `observed_at` as IBES's clock rather than the world's, and a backfilled
+row is evidence about the vendor's process on that name.
 
 A record that cannot order these is **refused, never repaired**. A timestamp
 guessed to make a record valid is how look-ahead enters a dataset, and it enters
@@ -134,11 +154,14 @@ single-name surface exists yet.
 ## 7. Coverage, with the denominators visible
 
 ```
-2015:  17,268 IBES announcements
-        4,697 with >= 10 estimates   (12,571 dropped as thin coverage)
-        4,697 records written, 0 refused
-        4,636 surprise resolvable    (61 have zero/absent dispersion)
-        4,584 with a price reaction
+2015:   17,268 IBES announcements
+         4,697 with >= 10 estimates   (12,571 dropped as thin coverage)
+         4,697 records written, 0 refused
+         4,636 surprise resolvable    (61 have zero/absent dispersion)
+         4,584 with a price reaction
+
+2006-2019 total:  60,402 records across 14 years, 0 refused
+                  58,066 with BOTH a surprise and a reaction (96.1%)
 ```
 
 The `>= 10 estimates` floor is a data-quality bound, not a parameter: below it
