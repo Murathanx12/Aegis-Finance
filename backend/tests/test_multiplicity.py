@@ -171,16 +171,29 @@ def test_variants_tried_is_carried_because_it_cannot_be_reconstructed(cb):
 
 def test_the_outcome_is_part_of_the_window_identity(cb):
     """Max drawdown and terminal return on the same dates are different
-    questions with different power; spending one does not spend the other."""
+    questions with different power; spending one does not spend the other.
+
+    Order 8 kept that and added the half it was silent about: the two questions
+    do NOT get independent error rates, because the same COVID crash and the
+    same 2023-25 rally move both. So the slots stay separate and the alpha is
+    shared — which is why this test now declares the calendar first.
+    """
+    from backend.services.research_gym.multiplicity import (
+        RHO_DECLARED_CONSERVATIVE)
     a = window_id(universe="us", period="2020..2026", outcome="max_drawdown")
     b = window_id(universe="us", period="2020..2026", outcome="terminal_return")
     assert a != b
-    cb.declare_budget(a, budget=1, declared_by="t")
+    cb.declare_calendar("2020..2026",
+                        outcomes=["max_drawdown", "terminal_return"],
+                        rho_source=RHO_DECLARED_CONSERVATIVE, declared_by="t")
+    cb.declare_budget(a, budget=1, declared_by="t", fwer=0.025)
     cb.reserve(a, trial="M", hypothesis="h")
     with pytest.raises(MultiplicityRefusal, match="SPENT"):
         cb.reserve(a, trial="M2", hypothesis="h2")
-    cb.declare_budget(b, budget=1, declared_by="t")
+    cb.declare_budget(b, budget=1, declared_by="t", fwer=0.025)
     cb.reserve(b, trial="M2", hypothesis="h2")      # a different question
+    # Separate slots, shared alpha — both halves at once.
+    assert cb.alpha_for(a)[0] == pytest.approx(0.025)
 
 
 def test_the_report_shows_what_the_ledger_bought(cb):
@@ -288,3 +301,122 @@ def test_fdr_uses_tests_RUN_and_fwer_uses_the_DECLARED_budget(cb):
                              p_value=0.001)
     assert cb.decide(Ws)["m_used"] == 3
     assert cb.decide(W)["m_used"] == 100
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ORDER 8: the budget attaches to the CALENDAR, and outcomes count at their
+# effective number. `window_id` carries the outcome because S59 says drawdown
+# and terminal return do not spend each other's POWER — true, and silent about
+# the error rate they do share.
+# ═══════════════════════════════════════════════════════════════════════════
+from backend.services.research_gym.multiplicity import (  # noqa: E402
+    RHO_DECLARED_CONSERVATIVE, RHO_MEASURED, calendar_of, effective_tests)
+
+PERIOD = "2020-06-01..2026-07-17"
+W_M4 = window_id(universe="crsp_us", period=PERIOD,
+                 outcome="portfolio_utility_net")
+W_IV = window_id(universe="wm0_18_etfs", period=PERIOD,
+                 outcome="tail_pinball_h20")
+
+
+def test_the_design_effect_is_the_same_primitive_S58_used_on_series():
+    assert effective_tests(1, 0.0) == 1.0
+    assert effective_tests(2, 0.0) == 2.0            # independent: full charge
+    assert effective_tests(2, 1.0) == 1.0            # identical: one family
+    assert effective_tests(2, 0.5) == pytest.approx(4 / 3)
+    # S58's own worked example, with tests as the units instead of ETFs.
+    assert effective_tests(100, 0.10) == pytest.approx(9.17, abs=0.01)
+
+
+def test_a_different_universe_on_the_same_dates_is_the_same_calendar():
+    """S60: holding out securities is not holding out data when they co-move."""
+    assert calendar_of(W_M4) == calendar_of(W_IV) == PERIOD
+
+
+def test_two_outcome_families_on_one_calendar_do_not_each_get_a_full_alpha(cb):
+    cb.declare_calendar(PERIOD, outcomes=["portfolio_utility_net",
+                                          "tail_pinball_h20"],
+                        rho_source=RHO_DECLARED_CONSERVATIVE,
+                        declared_by="order-8")
+    alpha, why = cb.alpha_for(W_M4)
+    assert alpha == pytest.approx(0.025)
+    assert "k_eff 2.00" in why
+    assert cb.alpha_for(W_IV)[0] == pytest.approx(0.025)
+
+
+def test_a_measured_correlation_buys_the_power_back(cb):
+    cb.declare_calendar(PERIOD, outcomes=["a", "b"], rho_bar=0.6,
+                        rho_source=RHO_MEASURED, declared_by="t",
+                        rho_evidence="monthly outcome series, 2020-2026")
+    a, _ = cb.alpha_for(window_id(universe="u", period=PERIOD, outcome="a"))
+    # k_eff = 2 / 1.6 = 1.25  ->  alpha 0.04 rather than 0.025.
+    assert a == pytest.approx(0.04)
+
+
+def test_a_correlation_asserted_without_evidence_is_refused(cb):
+    with pytest.raises(MultiplicityRefusal, match="forces rho_bar=0"):
+        cb.declare_calendar(PERIOD, outcomes=["a", "b"], rho_bar=0.9,
+                            rho_source=RHO_DECLARED_CONSERVATIVE,
+                            declared_by="t")
+    with pytest.raises(MultiplicityRefusal, match="what was correlated"):
+        cb.declare_calendar(PERIOD, outcomes=["a", "b"], rho_bar=0.9,
+                            rho_source=RHO_MEASURED, declared_by="t")
+    with pytest.raises(MultiplicityRefusal, match="not one of"):
+        cb.declare_calendar(PERIOD, outcomes=["a"], rho_source="because",
+                            declared_by="t")
+
+
+def test_the_second_family_on_an_undeclared_calendar_is_refused(cb):
+    """The sole family needs no allocation; the second one is the moment the
+    silent default would have started costing something."""
+    cb.declare_budget(W_M4, budget=5, declared_by="t")
+    with pytest.raises(MultiplicityRefusal, match="has no declaration"):
+        cb.declare_budget(W_IV, budget=5, declared_by="t")
+
+
+def test_an_outcome_not_in_the_declaration_cannot_be_added_later(cb):
+    cb.declare_calendar(PERIOD, outcomes=["portfolio_utility_net"],
+                        rho_source=RHO_DECLARED_CONSERVATIVE, declared_by="t")
+    with pytest.raises(MultiplicityRefusal, match="grow k"):
+        cb.alpha_for(W_IV)
+
+
+def test_holm_re_derives_the_allocation_rather_than_trusting_the_ledger(cb):
+    """A budget declared before this layer existed carries a full alpha on
+    disk. The stale record must not buy back error rate."""
+    cb.declare_budget(W_M4, budget=5, declared_by="t")          # alpha 0.05
+    cb.declare_calendar(PERIOD, outcomes=["portfolio_utility_net",
+                                          "tail_pinball_h20"],
+                        rho_source=RHO_DECLARED_CONSERVATIVE, declared_by="t")
+    cb.reserve(W_M4, trial="M4", hypothesis="h")
+    cb.record_result(W_M4, trial="M4", hypothesis="h", p_value=0.009)
+    rep = cb.holm(W_M4)
+    assert rep["fwer_as_declared"] == pytest.approx(0.05)
+    assert rep["fwer"] == pytest.approx(0.025)
+    # 0.009 clears 0.05/5 = 0.010 but not 0.025/5 = 0.005.
+    assert rep["n_rejected"] == 0
+    assert rep["calendar_id"] == PERIOD
+
+
+def test_the_calendar_cannot_be_re_declared_once_a_result_exists(cb):
+    cb.declare_calendar(PERIOD, outcomes=["a"], rho_source=RHO_MEASURED,
+                        rho_bar=0.0, rho_evidence="none needed, k=1",
+                        declared_by="t")
+    w = window_id(universe="u", period=PERIOD, outcome="a")
+    cb.declare_budget(w, budget=3, declared_by="t")
+    cb.reserve(w, trial="T", hypothesis="h")
+    cb.record_result(w, trial="T", hypothesis="h", p_value=0.2)
+    with pytest.raises(MultiplicityRefusal, match="after seeing the outcomes"):
+        cb.declare_calendar(PERIOD, outcomes=["a", "b"], rho_bar=0.8,
+                            rho_source=RHO_MEASURED, rho_evidence="x",
+                            declared_by="t")
+
+
+def test_a_screen_window_is_untouched_by_the_calendar_allocation(cb):
+    """FDR screening is not family-wise; the Gym must keep working."""
+    from backend.services.research_gym.multiplicity import SCREEN
+    cb.declare_calendar(PERIOD, outcomes=["gym_screen"],
+                        rho_source=RHO_DECLARED_CONSERVATIVE, declared_by="t")
+    w = window_id(universe="gym", period=PERIOD, outcome="gym_screen")
+    b = cb.declare_budget(w, budget=500, declared_by="t", purpose=SCREEN)
+    assert b.rate == pytest.approx(0.10)

@@ -95,9 +95,71 @@ SCREEN = "SCREEN"
 EXPORT = "EXPORT"
 PURPOSES = (SCREEN, EXPORT)
 
+#: THE OUTCOME IS IN THE WINDOW IDENTITY, AND THAT IS RIGHT ABOUT POWER AND
+#: SILENT ABOUT ERROR RATE.
+#:
+#: `window_id` includes the outcome because S59 established that max-drawdown
+#: and terminal return on the same dates are different questions with different
+#: resolution — spending one does not spend the other. True, and it is a
+#: statement about POWER.
+#:
+#: It says nothing about the error rate. M4-SELECTOR and IV-ORACLE-GAP-1 confirm
+#: on the same six years: the same COVID crash, the same 2023-25 rally. Their
+#: test statistics are correlated, so two budgets of five on that calendar do
+#: not deliver FWER 0.05 twice. Full sharing is equally wrong — six years
+#: supporting five tests forever is a gate that gets deleted within the month.
+#:
+#: We already own the primitive. S58's design effect is about correlated UNITS,
+#: and tests are units:
+#:
+#:     k_eff = k / (1 + (k - 1) * rho_bar)
+#:
+#: So the budget attaches to the CALENDAR, and its outcome families count at
+#: their effective number. Independent outcomes (rho_bar = 0) each pay the full
+#: Bonferroni share; perfectly correlated ones (rho_bar = 1) collapse to a
+#: single family and share the whole alpha.
+RHO_MEASURED = "MEASURED"
+#: No measurement is possible yet, so rho_bar is FORCED to 0 — the strict
+#: direction, because a smaller rho_bar means more effective families and a
+#: smaller alpha each. Measurement can only ever buy power back; silence never
+#: does. Any other declared value must be accompanied by MEASURED evidence.
+RHO_DECLARED_CONSERVATIVE = "DECLARED_CONSERVATIVE"
+RHO_SOURCES = (RHO_MEASURED, RHO_DECLARED_CONSERVATIVE)
+
 
 class MultiplicityRefusal(RuntimeError):
     """A confirmation this window has no remaining chances for."""
+
+
+def effective_tests(k: int, rho_bar: float) -> float:
+    """S58's design effect, applied to TESTS instead of series.
+
+    `k` correlated units carry the information of `k / (1 + (k-1) * rho_bar)`
+    independent ones. Nothing about that derivation cares whether the unit is a
+    price series or a hypothesis.
+    """
+    if k < 1:
+        raise MultiplicityRefusal("k must be at least 1")
+    if not 0.0 <= rho_bar <= 1.0:
+        raise MultiplicityRefusal(
+            f"rho_bar={rho_bar} is not a correlation in [0, 1]")
+    return float(k) / (1.0 + (k - 1) * float(rho_bar))
+
+
+def calendar_of(window_id: str) -> str:
+    """The calendar a window sits on — its PERIOD, stripped of universe/outcome.
+
+    S60 settled that holding out securities is not holding out data when they
+    co-move, so a different universe on the same dates is not a different
+    calendar. What two tests genuinely share is the dates.
+    """
+    parts = window_id.split("|")
+    if len(parts) != 3:
+        raise MultiplicityRefusal(
+            f"{window_id!r} is not universe|period|outcome, so its calendar "
+            f"cannot be derived. A guard that cannot see what it checks must "
+            f"refuse rather than assume.")
+    return parts[1]
 
 
 @dataclass
@@ -116,6 +178,32 @@ class Reservation:
 
     def as_dict(self) -> dict:
         return {"kind": "reservation", **asdict(self)}
+
+
+@dataclass
+class Calendar:
+    """One irreplaceable stretch of dates, and every outcome family on it."""
+    calendar_id: str
+    outcomes: list[str]
+    rho_bar: float
+    rho_source: str
+    alpha: float
+    declared_at: str
+    declared_by: str
+    rho_evidence: str = ""
+    note: str = ""
+
+    @property
+    def k_eff(self) -> float:
+        return effective_tests(len(self.outcomes), self.rho_bar)
+
+    @property
+    def alpha_per_outcome(self) -> float:
+        """Bonferroni over the EFFECTIVE number of outcome families."""
+        return self.alpha / self.k_eff
+
+    def as_dict(self) -> dict:
+        return {"kind": "calendar", **asdict(self)}
 
 
 @dataclass
@@ -172,6 +260,24 @@ class ConfirmationBudget:
                 last = Budget(**{k: v for k, v in r.items() if k != "kind"})
         return last
 
+    def calendar_declaration(self, calendar_id: str) -> Calendar | None:
+        last = None
+        for r in self._rows():
+            if r.get("kind") == "calendar" and r["calendar_id"] == calendar_id:
+                last = Calendar(**{k: v for k, v in r.items() if k != "kind"})
+        return last
+
+    def windows_on(self, calendar_id: str) -> list[str]:
+        """Every window that has a declared budget on this calendar."""
+        seen: list[str] = []
+        for r in self._rows():
+            if r.get("kind") != "budget":
+                continue
+            w = r["window_id"]
+            if calendar_of(w) == calendar_id and w not in seen:
+                seen.append(w)
+        return seen
+
     def reservations(self, window_id: str) -> list[Reservation]:
         """Latest state per (trial, hypothesis) — the ledger is append-only, so
         a result is a second row for a reservation that already exists."""
@@ -184,6 +290,92 @@ class ConfirmationBudget:
         return list(by_key.values())
 
     # ── writing ────────────────────────────────────────────────────────────
+    def declare_calendar(self, calendar_id: str, *, outcomes: Iterable[str],
+                         rho_source: str, declared_by: str,
+                         rho_bar: float | None = None,
+                         alpha: float = DEFAULT_FWER,
+                         rho_evidence: str = "", note: str = "") -> Calendar:
+        """Say up front how many outcome families this calendar will support.
+
+        The honour-system failure this closes is declaring NOTHING and letting
+        each window quietly take a full alpha, so a calendar carrying two
+        confirmations delivers a family-wise rate near 0.0975 while every
+        artifact says 0.05.
+
+        `rho_bar` may be MEASURED, or DECLARED_CONSERVATIVE — which forces it to
+        zero and therefore charges the maximum. There is no third option where a
+        number is asserted without either evidence or the strict default,
+        because that is the branch every honour-system guard eventually takes.
+        """
+        outcomes = list(dict.fromkeys(outcomes))
+        if not outcomes:
+            raise MultiplicityRefusal(
+                "a calendar with no declared outcome families reserves nothing")
+        if rho_source not in RHO_SOURCES:
+            raise MultiplicityRefusal(
+                f"rho_source {rho_source!r} is not one of {RHO_SOURCES}. A "
+                f"correlation with no provenance is a guess, and independence "
+                f"as a silent default is the specific failure this refuses.")
+        if rho_source == RHO_DECLARED_CONSERVATIVE:
+            if rho_bar not in (None, 0.0):
+                raise MultiplicityRefusal(
+                    f"rho_source={RHO_DECLARED_CONSERVATIVE} forces rho_bar=0 "
+                    f"(the strict direction); {rho_bar} was asserted without "
+                    f"measurement. Measure it, or accept the full charge.")
+            rho_bar = 0.0
+        elif rho_bar is None or not rho_evidence.strip():
+            raise MultiplicityRefusal(
+                "a MEASURED rho_bar needs both the value and a statement of "
+                "what was correlated with what; without it the number cannot "
+                "be checked or reproduced.")
+        existing = self.calendar_declaration(calendar_id)
+        scored = [r for w in self.windows_on(calendar_id)
+                  for r in self.reservations(w) if r.p_value is not None]
+        if existing is not None and scored:
+            raise MultiplicityRefusal(
+                f"{calendar_id} already carries {len(scored)} recorded "
+                f"result(s); re-declaring its correlation structure now would "
+                f"be choosing the error rate after seeing the outcomes.")
+        c = Calendar(calendar_id=calendar_id, outcomes=outcomes,
+                     rho_bar=float(rho_bar), rho_source=rho_source,
+                     alpha=float(alpha), declared_at=_now(),
+                     declared_by=declared_by, rho_evidence=rho_evidence,
+                     note=note)
+        self._append(c.as_dict())
+        return c
+
+    def alpha_for(self, window_id: str, *, default: float = DEFAULT_FWER
+                  ) -> tuple[float, str]:
+        """The alpha this window may spend, and why it is that number.
+
+        One outcome family on a calendar needs no allocation and gets the full
+        alpha. A SECOND one on the same calendar without a declaration is
+        refused — that is the moment the silent default would have started
+        costing something.
+        """
+        cal_id = calendar_of(window_id)
+        cal = self.calendar_declaration(cal_id)
+        if cal is not None:
+            outcome = window_id.split("|")[2]
+            if outcome not in cal.outcomes:
+                raise MultiplicityRefusal(
+                    f"{outcome!r} is not among the outcome families declared "
+                    f"for calendar {cal_id} ({cal.outcomes}). Adding one now "
+                    f"would grow k after the allocation was fixed.")
+            return cal.alpha_per_outcome, (
+                f"calendar {cal_id}: alpha {cal.alpha} over k_eff "
+                f"{cal.k_eff:.2f} (k={len(cal.outcomes)}, "
+                f"rho_bar={cal.rho_bar}, {cal.rho_source})")
+        others = [w for w in self.windows_on(cal_id) if w != window_id]
+        if others:
+            raise MultiplicityRefusal(
+                f"calendar {cal_id} already carries budgets on {others} and "
+                f"has no declaration. Two outcome families on one calendar do "
+                f"not each get a full alpha — their statistics are correlated "
+                f"through the same events. Call declare_calendar first.")
+        return float(default), (
+            f"sole outcome family on calendar {cal_id}; no allocation needed")
+
     def declare_budget(self, window_id: str, *, budget: int, declared_by: str,
                        fwer: float = DEFAULT_FWER, note: str = "",
                        purpose: str = EXPORT,
@@ -210,6 +402,18 @@ class ConfirmationBudget:
                 f"purpose {purpose!r} is not one of {PURPOSES}. A window whose "
                 f"purpose is undeclared cannot be given an error criterion, and "
                 f"guessing one is how a screen result becomes an export claim.")
+        if purpose == EXPORT:
+            # The calendar decides how much alpha this window may spend. A
+            # window that asks for more than its share is refused rather than
+            # silently granted, which is the whole point of the allocation.
+            allowed, why = self.alpha_for(window_id, default=float(fwer))
+            if float(fwer) > allowed + 1e-12:
+                raise MultiplicityRefusal(
+                    f"{window_id} asked for FWER {fwer} but its calendar "
+                    f"allows {allowed:.4f} — {why}. Two outcome families on "
+                    f"one stretch of dates share the events that move both.")
+            fwer = allowed
+            note = (note + (" | " if note else "") + why).strip()
         if rate is None:
             rate = DEFAULT_FDR if purpose == SCREEN else float(fwer)
         b = Budget(window_id=window_id, budget=int(budget), fwer=float(fwer),
@@ -288,10 +492,16 @@ class ConfirmationBudget:
         scored = sorted((r for r in self.reservations(window_id)
                          if r.p_value is not None),
                         key=lambda r: r.p_value)
+        # Re-derive the calendar allocation AT DECISION TIME rather than trust
+        # what was stored. Budgets declared before the calendar layer existed
+        # carry a full alpha in the ledger, and the correct number is the
+        # smaller of the two — a stale record must not buy back error rate.
+        allowed, alloc_why = self.alpha_for(window_id, default=b.fwer)
+        alpha = min(float(b.fwer), float(allowed))
         m = max(b.budget, len(scored))
         out, rejected_so_far = [], True
         for i, r in enumerate(scored):
-            thresh = b.fwer / (m - i)
+            thresh = alpha / (m - i)
             # Step-down: once one fails, everything after it fails too,
             # regardless of its own p. Reporting the raw comparison without
             # that carry-forward is the most common way Holm is mis-applied.
@@ -303,13 +513,16 @@ class ConfirmationBudget:
                         "variants_tried": r.variants_tried})
         return {
             "window_id": window_id, "criterion": "HOLM_FWER",
-            "purpose": b.purpose, "fwer": b.rate if b.rate is not None else b.fwer,
+            "purpose": b.purpose, "fwer": alpha,
+            "fwer_as_declared": float(b.fwer),
+            "calendar_id": calendar_of(window_id),
+            "calendar_allocation": alloc_why,
             "declared_budget": b.budget, "m_used": m,
             "slots_taken": len(self.reservations(window_id)),
             "results_recorded": len(scored),
             "n_rejected": sum(1 for o in out if o["rejected"]),
             "naive_n_below_alpha": sum(1 for o in out
-                                       if o["p_value"] <= b.fwer),
+                                       if o["p_value"] <= alpha),
             "decisions": out,
             "note": ("`naive_n_below_alpha` is what would have been claimed "
                      "without family-wise control; the gap between it and "

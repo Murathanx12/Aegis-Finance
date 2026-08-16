@@ -140,6 +140,26 @@ def assert_pit(ep: Episode) -> list[str]:
     return bad
 
 
+def assert_pit_strict(ep: Episode) -> None:
+    """The same check, as a REFUSAL.
+
+    `LookAheadInMatching` was defined here and raised nowhere — an exception
+    with no firing path, which is S47's failure one step earlier: not a guard
+    whose test never made it fire, but a guard that could not fire at all.
+    Found by the missing-input contract on its first run.
+
+    `assert_pit` returning a list is right for the builder, which needs to
+    count and name what it drops. It is wrong for every other caller, because a
+    list of violations is only a guard if somebody looks at it.
+    """
+    bad = assert_pit(ep)
+    if bad:
+        raise LookAheadInMatching(
+            f"episode {ep.entity_id!r} @ {ep.decision_ts}: {len(bad)} "
+            f"characteristic(s) are not "
+            f"point-in-time — " + "; ".join(bad))
+
+
 def _numeric(eps: Sequence[Episode], dim: str) -> list[float]:
     return [float(e.characteristics[dim]) for e in eps
             if isinstance(e.characteristics.get(dim), (int, float))]
@@ -217,6 +237,19 @@ def match_pairs(episodes: Sequence[Episode], *, block_of,
             counts["no_outcome"] += 1
             continue
         usable.append(e)
+
+    # EVERY EPISODE DROPPED FOR LOOK-AHEAD IS NOT "NO PAIRS FOUND".
+    #
+    # Same shape as the block-local sd bug this module already carries a
+    # comment about: an empty result read as a fact about the world when it was
+    # a fact about the inputs. If nothing survived the point-in-time check, the
+    # honest output is a refusal naming the covariates, not a report of zero.
+    if episodes and not usable and counts["pit_violations"]:
+        raise LookAheadInMatching(
+            f"all {counts['pit_violations']} episodes failed the "
+            f"point-in-time check, so there is nothing to match. Offending "
+            f"covariates: {violations}. Reporting 'no pairs' here would blame "
+            f"the world for a property of the extraction.")
 
     by_block: dict[str, list[Episode]] = {}
     for e in usable:
