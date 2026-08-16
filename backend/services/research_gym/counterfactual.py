@@ -110,7 +110,7 @@ class ResponseSurface:
                    "default)"
         return objective if isinstance(objective, str) else objective.name
 
-    def regret_pct(self) -> float | None:
+    def regret_pct(self, objective=None) -> float | None:
         """Best available minus what was done. AN UPPER BOUND, NOT A MEASUREMENT.
 
         "Never negative by construction" — which was the original docstring —
@@ -119,11 +119,53 @@ class ResponseSurface:
         measured at roughly +5pp for always-HOLD and +17pp for a full sell
         after VIX>=35. Use `regret.regret_triple()` for a number that can
         exonerate as well as convict.
+
+        THE UNITS MISMATCH THIS SIGNATURE CLOSES (2026-08-16, G3)
+        --------------------------------------------------------
+        This took no objective and called `self.best()` with none either, then
+        differenced `net_return_pct` unconditionally. So a caller who ranked
+        under `log_growth_with_ruin` or `aggressive_growth` got a winner chosen
+        by one criterion and a regret measured in another — a units mismatch,
+        not merely an incomplete build.
+
+        For the pure-return and pure-log objectives the two agree, because log
+        is monotonic on a single episode (see `ranked`). They do NOT agree for
+        any drawdown- or ruin-penalised objective, which is exactly the family
+        a sizing learner would be trained against.
+
+        Selection and measurement now take the SAME argument, so they cannot
+        diverge. `objective=None` keeps the historical raw-return default —
+        changing it would silently restate published numbers — and
+        `objective_used()` names it on every record.
         """
-        b, t = self.best(), self.taken
+        b, t = self.best(objective), self.taken
         if b is None or t is None:
             return None
-        return b.net_return_pct - t.net_return_pct
+        if objective is None:
+            return b.net_return_pct - t.net_return_pct
+
+        from backend.services.research_gym import utility as U
+        obj = (U.get_objective(objective) if isinstance(objective, str)
+               else objective)
+        sb = U.score_one(obj, U.stats_of(b))
+        st = U.score_one(obj, U.stats_of(t))
+        if sb is None or st is None:
+            return None
+        # Regret is "how much better could it have been", so it is positive
+        # when the best beats the taken, whichever way the objective points.
+        return (sb - st) if obj.higher_is_better else (st - sb)
+
+    def regret_units(self, objective=None) -> str:
+        """What `regret_pct` is denominated in. Goes on the record beside it.
+
+        A regret number without its units is how the mismatch above survived.
+        """
+        if objective is None:
+            return "percentage points of net return"
+        from backend.services.research_gym import utility as U
+        obj = (U.get_objective(objective) if isinstance(objective, str)
+               else objective)
+        return f"score of objective {obj.name!r}"
 
     def as_dict(self) -> dict:
         return {
@@ -138,6 +180,10 @@ class ResponseSurface:
             # 2026-08-15 this record contained a ranking and no such name.
             "objective_used": self.objective_used(),
             "regret_vs_ex_post_best_pct": self.regret_pct(),
+            # The units, beside the number. A regret printed without them is
+            # how a policy chosen under one criterion came to be measured in
+            # another (G3, 2026-08-16).
+            "regret_units": self.regret_units(),
             "regret_vs_ex_post_best_note":
                 "UPPER BOUND — max over the menu minus the action taken. Has a "
                 "large positive null (G1). Not comparable across states or "

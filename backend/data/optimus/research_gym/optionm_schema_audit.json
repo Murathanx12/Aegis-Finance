@@ -1,0 +1,213 @@
+{
+  "dataset": "OptionMetrics standardized volatility surface (vsurf_me)",
+  "path": "C:\\Users\\mrthn\\Aegis module\\data\\wrds_raw\\optionm_vsurf_me",
+  "n_files": 23,
+  "total_mb": 191.7,
+  "years_present": [
+    2002,
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "probe_years": [
+    {
+      "file": "vsurf_me_2002.parquet",
+      "rows": 226480,
+      "n_secids": 2588,
+      "n_unique_dates": 12,
+      "first_date": "2002-01-31",
+      "last_date": "2002-12-31",
+      "gap_days_median": 31.0,
+      "gap_days_max": 33,
+      "gap_days_min": 28,
+      "dates_per_secid_median": 12.0,
+      "dates_per_secid_max": 12,
+      "rows_per_date_median": 18940.0,
+      "rows_per_secid_year_median": 96.0,
+      "probe_date": "2002-07-31",
+      "coords_per_secid_on_probe_date_median": 8.0,
+      "coords_per_secid_on_probe_date_max": 8,
+      "distinct_days_to_expiry": [
+        30.0,
+        91.0
+      ],
+      "distinct_deltas": [
+        -50.0,
+        -25.0,
+        25.0,
+        50.0
+      ],
+      "distinct_cp_flags": [
+        "C",
+        "P"
+      ],
+      "rectangular_grid_size": 16,
+      "impl_vol_null_frac": 0.04429530201342282,
+      "impl_vol_median": 0.49096700000000004,
+      "max_date_exceeds_file_year": false
+    },
+    {
+      "file": "vsurf_me_2008.parquet",
+      "rows": 309832,
+      "n_secids": 3622,
+      "n_unique_dates": 12,
+      "first_date": "2008-01-31",
+      "last_date": "2008-12-31",
+      "gap_days_median": 31.0,
+      "gap_days_max": 33,
+      "gap_days_min": 28,
+      "dates_per_secid_median": 12.0,
+      "dates_per_secid_max": 12,
+      "rows_per_date_median": 25828.0,
+      "rows_per_secid_year_median": 96.0,
+      "probe_date": "2008-07-31",
+      "coords_per_secid_on_probe_date_median": 8.0,
+      "coords_per_secid_on_probe_date_max": 8,
+      "distinct_days_to_expiry": [
+        30.0,
+        91.0
+      ],
+      "distinct_deltas": [
+        -50.0,
+        -25.0,
+        25.0,
+        50.0
+      ],
+      "distinct_cp_flags": [
+        "C",
+        "P"
+      ],
+      "rectangular_grid_size": 16,
+      "impl_vol_null_frac": 0.03555475225283379,
+      "impl_vol_median": 0.522787,
+      "max_date_exceeds_file_year": false
+    },
+    {
+      "file": "vsurf_me_2015.parquet",
+      "rows": 413048,
+      "n_secids": 4718,
+      "n_unique_dates": 12,
+      "first_date": "2015-01-30",
+      "last_date": "2015-12-31",
+      "gap_days_median": 31.0,
+      "gap_days_max": 32,
+      "gap_days_min": 28,
+      "dates_per_secid_median": 12.0,
+      "dates_per_secid_max": 12,
+      "rows_per_date_median": 34232.0,
+      "rows_per_secid_year_median": 96.0,
+      "probe_date": "2015-07-31",
+      "coords_per_secid_on_probe_date_median": 8.0,
+      "coords_per_secid_on_probe_date_max": 8,
+      "distinct_days_to_expiry": [
+        30.0,
+        91.0
+      ],
+      "distinct_deltas": [
+        -50.0,
+        -25.0,
+        25.0,
+        50.0
+      ],
+      "distinct_cp_flags": [
+        "C",
+        "P"
+      ],
+      "rectangular_grid_size": 16,
+      "impl_vol_null_frac": 0.047548953148302375,
+      "impl_vol_median": 0.3609475,
+      "max_date_exceeds_file_year": false
+    },
+    {
+      "file": "vsurf_me_2020.parquet",
+      "rows": 409808,
+      "n_secids": 4655,
+      "n_unique_dates": 12,
+      "first_date": "2020-01-31",
+      "last_date": "2020-12-31",
+      "gap_days_median": 31.0,
+      "gap_days_max": 32,
+      "gap_days_min": 28,
+      "dates_per_secid_median": 12.0,
+      "dates_per_secid_max": 12,
+      "rows_per_date_median": 33900.0,
+      "rows_per_secid_year_median": 96.0,
+      "probe_date": "2020-07-31",
+      "coords_per_secid_on_probe_date_median": 8.0,
+      "coords_per_secid_on_probe_date_max": 8,
+      "distinct_days_to_expiry": [
+        30.0,
+        91.0
+      ],
+      "distinct_deltas": [
+        -50.0,
+        -25.0,
+        25.0,
+        50.0
+      ],
+      "distinct_cp_flags": [
+        "C",
+        "P"
+      ],
+      "rectangular_grid_size": 16,
+      "impl_vol_null_frac": 0.13020731659704057,
+      "impl_vol_median": 0.548294,
+      "max_date_exceeds_file_year": false
+    },
+    {
+      "file": "vsurf_me_2024.parquet",
+      "rows": 545160,
+      "n_secids": 6044,
+      "n_unique_dates": 12,
+      "first_date": "2024-01-31",
+      "last_date": "2024-12-31",
+      "gap_days_median": 31.0,
+      "gap_days_max": 33,
+      "gap_days_min": 28,
+      "dates_per_secid_median": 12.0,
+      "dates_per_secid_max": 12,
+      "rows_per_date_median": 45404.0,
+      "rows_per_secid_year_median": 96.0,
+      "probe_date": "2024-07-31",
+      "coords_per_secid_on_probe_date_median": 8.0,
+      "coords_per_secid_on_probe_date_max": 8,
+      "distinct_days_to_expiry": [
+        30.0,
+        91.0
+      ],
+      "distinct_deltas": [
+        -50.0,
+        -25.0,
+        25.0,
+        50.0
+      ],
+      "distinct_cp_flags": [
+        "C",
+        "P"
+      ],
+      "rectangular_grid_size": 16,
+      "impl_vol_null_frac": 0.06540465184532981,
+      "impl_vol_median": 0.4145525,
+      "max_date_exceeds_file_year": false
+    }
+  ]
+}

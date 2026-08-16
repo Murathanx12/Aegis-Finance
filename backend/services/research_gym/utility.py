@@ -433,10 +433,59 @@ LOG_GROWTH_WITH_RUIN = Objective(
     dist_fn=_log_growth_with_ruin,
     contribution_fn=_log_growth_ruin_contribution, units="log")
 
+# ── the four personalities ──────────────────────────────────────────────────
+# "One brain, several personalities" (mission §0, rule 3). `aggressive_growth`
+# already said the four should be four configurations of one function; until
+# 2026-08-16 only one of them existed, so three quarters of the declared
+# objective surface was unreachable by name and G3 could not be end-to-end
+# authoritative.
+#
+# WHAT THESE NUMBERS ARE, HONESTLY: a declared preference LADDER, not an
+# elicited or fitted one. The ordering (preservation penalises drawdown most,
+# extreme growth least) is the content; the specific lambdas are conventions
+# standing in until Murat's own risk preference is elicited properly. They are
+# named and frozen so that a ranked comparison can cite one, which is the thing
+# that was missing — not because 0.60 is known to be right.
+#
+# All four keep ruin terminal. Risk-seeking is a statement about volatility,
+# never about survival: a path through the floor cannot compound out of it.
+#
+# None exceeds dd_lambda = 1.0, where the optimum is cash everywhere — see
+# `drawdown_penalised`. Preservation sits deliberately below that cliff, since
+# a "preservation" objective whose argmax is cash in every state would be a
+# specification error wearing the right name.
+
+def personality(name: str, dd_lambda: float,
+                ruin_floor: float = RUIN_FLOOR) -> Objective:
+    """One of the declared personalities. Four configurations, one function."""
+    def fn(s: PathStats) -> float:
+        if s.min_wealth <= ruin_floor:
+            return -100.0
+        return s.net_return_pct - dd_lambda * s.max_drawdown_pct
+    return Objective(
+        name=name, kind="path",
+        description=(f"declared personality {name!r}: net return minus "
+                     f"{dd_lambda:g} x maximum drawdown, ruin terminal at "
+                     f"{ruin_floor:g}"),
+        path_fn=fn, units="pct")
+
+
+PRESERVATION = personality("preservation", 0.60)
+BALANCED = personality("balanced", 0.30)
+AGGRESSIVE = personality("aggressive", 0.15)
+EXTREME_GROWTH = personality("extreme_growth", 0.05)
+
+#: Ordered least to most risk-tolerant. Anything iterating the personalities
+#: should use this rather than re-listing them, so adding a fifth cannot leave
+#: a caller silently covering four.
+PERSONALITIES: tuple[Objective, ...] = (PRESERVATION, BALANCED, AGGRESSIVE,
+                                        EXTREME_GROWTH)
+
 #: The declared set. Named and stable, because objective names end up in
 #: lineage rows exactly as policy names do.
 OBJECTIVES: dict[str, Objective] = {
-    o.name: o for o in (TOTAL_RETURN, SORTINO, DRAWDOWN_PENALISED,
+    o.name: o for o in (*PERSONALITIES,
+                        TOTAL_RETURN, SORTINO, DRAWDOWN_PENALISED,
                         DRAWDOWN_PENALISED_LIGHT,
                         EXPECTED_LOG_GROWTH, LOG_GROWTH_WITH_RUIN,
                         aggressive_growth())

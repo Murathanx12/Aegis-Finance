@@ -39,6 +39,7 @@ import sys
 from pathlib import Path
 
 from backend import config as _config
+from backend.services.research_gym import ex_post as XP
 from backend.services.research_gym import power as PW
 from backend.services.research_gym import utility as U
 
@@ -119,12 +120,22 @@ def main(argv: list[str] | None = None) -> int:
         # ── vol matching: one constant per policy, so every row is compared
         # at the SAME realised risk. Without it the whole table is a statement
         # about average exposure and nothing else.
+        #
+        # `pv` is the policy's realised vol over the WHOLE sample, so this
+        # scale is hindsight and can never be an exposure anyone could have
+        # taken. It is therefore built as an `ExPostScale`, which is not a
+        # number: `v * scale` raises rather than silently producing a
+        # deployable-looking series. Getting the value out requires naming the
+        # act — `.for_comparison_only()` — and that name is greppable.
         ref_vol = base["buy_hold"].realised_vol_pct
         matched = {}
         for k, v in policies.items():
             pv = base[k].realised_vol_pct
-            scale = (ref_vol / pv) if (pv and pv > 0) else 1.0
-            matched[k] = (_stats(v * scale), scale)
+            scale = XP.matched_vol_scale(
+                ref_vol, pv,
+                basis=(f"{k} realised vol measured over the full "
+                       f"{n}-day sample being evaluated"))
+            matched[k] = (_stats(v * scale.for_comparison_only()), scale)
 
         print(f"\n{'=' * 78}\n{tkr}  {n} days  "
               f"(reference realised vol {ref_vol:.1f}%)")
@@ -140,12 +151,16 @@ def main(argv: list[str] | None = None) -> int:
                   f"{s.realised_vol_pct:>6.1f} {s.max_drawdown_pct:>7.1f} "
                   f"{s.time_under_water_frac:>6.2f} "
                   f"{(s.expected_shortfall_5_pct or float('nan')):>7.2f} "
-                  f"{str(s.ruin):>5s}   {mcagr:>13.2f} {sc:>6.2f} "
+                  f"{str(s.ruin):>5s}   {mcagr:>13.2f} "
+                  f"{sc.for_comparison_only():>6.2f} "
                   f"{m.max_drawdown_pct:>7.1f}")
             rows.append({"security": tkr, "policy": k, "n_days": n,
                          "mean_exposure": float(policies[k].mean()),
                          "cagr_pct": cagr, "matched_cagr_pct": mcagr,
-                         "vol_match_scale": sc,
+                         # named so that nothing downstream can read this as a
+                         # deployable exposure multiplier
+                         "vol_match_scale_EX_POST": sc.for_comparison_only(),
+                         "vol_match_scale_basis": sc.basis,
                          "raw": s.as_dict(), "matched": m.as_dict()})
 
         # ── §18: the DIFFERENCE, paired, with its own SE ────────────────────

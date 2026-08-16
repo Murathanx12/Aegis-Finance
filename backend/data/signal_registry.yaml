@@ -678,11 +678,48 @@ signals:
     reliability_weight: 0.0
     horizon: 1-3mo
     universe: optionable US equity
-    data_grade: OptionMetrics entitlement was never established
+    data_grade: >
+      OptionMetrics standardised volatility surface, ON DISK and measured
+      2026-08-16: `Aegis module/data/wrds_raw/optionm_vsurf_me/`, 23 parquet
+      files, 191.7 MB, 2002-2024, manifest 2026-08-01T12:27:44Z, CRSP link
+      present.
+    implementation_notes: >
+      CORRECTION 2026-08-16. This entry read "OptionMetrics entitlement was
+      never established" until today. That was FALSE, and had been false since
+      the data landed on 2026-08-01. Entitlement and acquisition were never the
+      blocker. A false blocker in a registry is worse than no entry at all: it
+      stops work silently and indefinitely, and nothing ever re-checks it.
+      What remains true is a SCOPE limit, not an access limit.
+
+      SAMPLING, MEASURED rather than inferred from row counts
+      (`scripts/optionm_schema_audit.py`). `vsurf_me` is MONTH-END: exactly 12
+      observation dates per year, median gap 31 days, first 2002-01-31, last
+      2024-12-31. Each (secid, date) carries a COMPLETE 8-point rectangular
+      surface — days in {30, 91} x delta in {+/-25, +/-50} x cp in {C, P} — so
+      96 rows/secid-year is 12 dates x 8 coordinates, NOT 96 observations.
+      Implied-vol nulls 4.4%-6.5%. Securities grow 2,588 (2002) -> 6,044 (2024).
+      The earlier "~87 rows/secid-year means it is not daily" reached the right
+      conclusion by the wrong route: row count cannot identify sampling
+      frequency when each date carries many surface coordinates.
+
+      USABILITY: RESEARCH INSTRUMENT, NOT A LIVE FEED. Monthly resolution means
+      this cannot be the forward rung of the DAILY realised-vol ladder (N11's
+      rv20/EWMA/HAR update every day); it defines its own MONTHLY ladder with
+      decision points at month-end. Coverage ends 2024 and updates annually, so
+      it can never serve a live lane. Convenient fit: the 30d and 91d
+      maturities map onto the 20d and 60d horizons N4B/N9 already use.
+      PIT caveat NOT cleared — max date never exceeds the file year, which
+      rules out cross-year restatement in the extraction but says nothing about
+      vintage restatement within a year. Verify before any live claim.
     known_effect: None established.
-    known_failure: Closed as a picker family.
-    receipts: ["Aegis module aegis_brain/factory/optsurf.py"]
-    last_updated: 2026-08-11
+    known_failure: >
+      Closed as a PICKER family (ranking the cross-section by a surface
+      statistic). The expectation-sensor role is separate and open — see
+      `options_expectation_sensor`. Closing the picker never closed the rung.
+    receipts: ["Aegis module aegis_brain/factory/optsurf.py",
+               "Aegis module/data/wrds_raw/optionm_vsurf_me/ (23 files, 191.7 MB)",
+               "manifest_optionm.json 2026-08-01T12:27:44Z"]
+    last_updated: 2026-08-16
 
   - signal_id: options_expectation_sensor
     family: options
