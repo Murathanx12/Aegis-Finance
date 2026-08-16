@@ -180,15 +180,23 @@ def main(argv: list[str] | None = None) -> int:
             for tr, te, _f in folds])
         n_test = sum(f[1].size for f in folds)
         block = HORIZON * 2
-        n_eff = n_test / block          # honest, per R13b
+        # n_effective counts DATE blocks, never rows. Dividing test ROWS by the
+        # block length was the error: this panel is date-sorted and ~18 wide, so
+        # 40 rows span barely two days. It overstated n_eff by the width of the
+        # cross-section and would have declared a floor ~4x too optimistic.
+        test_dates = np.unique(np.concatenate([dates[f[1]] for f in folds]))
+        n_eff = test_dates.size / block
 
         print("\n=== POWER INPUTS (design stage) ===")
         print(f"  baseline mean pinball loss  = {ref.mean():.5f} pp")
         print(f"  sd of paired loss difference= {np.std(d, ddof=1):.5f} pp "
               f"(gaussian_vol vs scaled_empirical — no model fitted)")
         print(f"  outcome_horizon_days        = {HORIZON}")
-        print(f"  test observations           = {n_test}")
-        print(f"  effective n (R13b, {block}d blocks) = {n_eff:.0f}")
+        print(f"  test observations (rows)    = {n_test}")
+        print(f"  test DATES                  = {test_dates.size}"
+              f"   ({n_test / max(1, test_dates.size):.1f} securities/date)")
+        print(f"  effective n ({block}d DATE blocks) = {n_eff:.0f}"
+              f"   [counting rows would have claimed {n_test / block:.0f}]")
         floor = (1.959963985 + 0.8416212336) * np.std(d, ddof=1) / np.sqrt(n_eff)
         print(f"  smallest resolvable loss difference = {floor:.5f} pp "
               f"({100.0 * floor / ref.mean():.2f}% of baseline loss)")
@@ -275,24 +283,20 @@ def main(argv: list[str] | None = None) -> int:
     # The difference is the estimand, not the two levels. Block bootstrap over
     # calendar blocks, because overlapping H-day outcomes on co-moving
     # securities are nowhere near independent (R13b, the same error N20 hit).
-    rng = np.random.default_rng(SEED)
     d = L["world_model"].mean(axis=1) - ref.mean(axis=1)
-    n = d.size
+    test_dates = np.concatenate([dates[te] for _tr, te, _f in folds])
     block = HORIZON * 2
-    nb = int(np.ceil(n / block))
-    boots = []
-    for _ in range(2000):
-        starts = rng.integers(0, max(1, n - block), size=nb)
-        pos = np.concatenate([np.arange(s, s + block) for s in starts])[:n]
-        boots.append(float(d[pos].mean()))
-    lo, hi = float(np.quantile(boots, 0.05)), float(np.quantile(boots, 0.95))
-    se = float(np.std(boots, ddof=1))
-    mde = (1.959963985 + 0.8416212336) * se
+    inf = WM.block_bootstrap_paired(d, test_dates, block, n_boot=2000,
+                                    seed=SEED)
+    lo, hi, se, mde = inf.ci_lo, inf.ci_hi, inf.se, inf.mde_80pct_power
 
     print(f"\npaired difference (world_model - scaled_empirical), "
-          f"block bootstrap {block}d:")
+          f"block bootstrap over {block}-day DATE blocks:")
     print(f"  mean {d.mean():+.6f}   90% CI [{lo:+.6f}, {hi:+.6f}]   "
           f"SE {se:.6f}")
+    print(f"  dependence unit: {inf.dependence_unit}")
+    print(f"  {inf.n_rows} rows = {inf.n_dates} dates x ~{inf.n_securities} "
+          f"securities  =>  n_effective {inf.n_effective:.0f}")
     print(f"  80%-power MDE {mde:.6f}  "
           f"({100.0 * mde / float(ref.mean()):.2f}% of baseline loss)")
     beats = hi < 0.0
@@ -331,8 +335,7 @@ def main(argv: list[str] | None = None) -> int:
         "comparator_of_record": "scaled_empirical",
         "summary": summary,
         "paired_difference": {
-            "mean": float(d.mean()), "ci_lo": lo, "ci_hi": hi, "se": se,
-            "mde_80pct_power": float(mde),
+            **inf.as_dict(),
             "mde_as_pct_of_baseline": float(100.0 * mde / float(ref.mean())),
             "verdict": verdict_txt,
         },
@@ -343,6 +346,17 @@ def main(argv: list[str] | None = None) -> int:
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(payload, indent=2), encoding="utf-8")
     print(f"\nwrote {a.out}")
+
+    # Per-row predictions, cached so any later inference or decomposition is
+    # done on THESE fits rather than on a re-fit that would differ slightly and
+    # quietly become a different experiment.
+    npz = Path(a.out).with_suffix(".npz")
+    np.savez_compressed(
+        npz, y=y_cat, dates=np.concatenate([dates[te] for _t, te, _f in folds]),
+        secs=np.concatenate([secs[te] for _t, te, _f in folds]),
+        rv=np.concatenate([rv[te] for _t, te, _f in folds]),
+        **{f"pred_{k}": P[k] for k in ("world_model", *BASELINES)})
+    print(f"wrote {npz}")
     return 0
 
 

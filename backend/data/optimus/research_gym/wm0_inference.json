@@ -1,0 +1,158 @@
+{
+  "block_days": 40,
+  "economic_floor_pct": 2.0,
+  "refit": false,
+  "runs": {
+    "WM0": {
+      "mean_pinball": 1.2259756286245325,
+      "baseline": 1.1549214763908693,
+      "rel_pct": -6.152292920875224,
+      "paired": {
+        "mean": 0.07105415223366333,
+        "ci_lo": 0.03315751892925938,
+        "ci_hi": 0.12111433118566016,
+        "se": 0.027058285362249187,
+        "mde_80pct_power": 0.07580609231153806,
+        "n_rows": 92988,
+        "n_dates": 5166,
+        "n_securities": 18,
+        "n_effective": 129.15,
+        "block_days": 40,
+        "dependence_unit": "contiguous 40-trading-day block of the whole cross-section"
+      },
+      "equivalence": {
+        "economic_floor_pct": 2.0,
+        "margin_abs": -0.023098429527817387,
+        "lcb95_diff": 0.03315751892925938,
+        "meaningful_improvement_excluded": true,
+        "verdict": "MEANINGFUL_IMPROVEMENT_EXCLUDED"
+      }
+    },
+    "WM0B": {
+      "mean_pinball": 1.252822978811403,
+      "baseline": 1.15492127782442,
+      "rel_pct": -8.476915515090777,
+      "paired": {
+        "mean": 0.09790170098698303,
+        "ci_lo": 0.04172594304533917,
+        "ci_hi": 0.17162869306669865,
+        "se": 0.0394389867248555,
+        "mde_80pct_power": 0.11049168224491678,
+        "n_rows": 92988,
+        "n_dates": 5166,
+        "n_securities": 18,
+        "n_effective": 129.15,
+        "block_days": 40,
+        "dependence_unit": "contiguous 40-trading-day block of the whole cross-section"
+      },
+      "equivalence": {
+        "economic_floor_pct": 2.0,
+        "margin_abs": -0.0230984255564884,
+        "lcb95_diff": 0.04172594304533917,
+        "meaningful_improvement_excluded": true,
+        "verdict": "MEANINGFUL_IMPROVEMENT_EXCLUDED"
+      }
+    }
+  },
+  "decomposition": {
+    "oracle_basis": "realised volatility measured over the very H-day window whose return distribution is being predicted",
+    "oracle_coverage_pct": 100.0,
+    "n_rows": 92988,
+    "cells": {
+      "empirical|estimated": {
+        "mean_pinball": 1.15492127782442,
+        "tail_pinball": 0.8302086635828749
+      },
+      "learned|estimated": {
+        "mean_pinball": 1.252822978811403,
+        "tail_pinball": 0.9224830899570239
+      },
+      "empirical|oracle": {
+        "mean_pinball": 1.1316372574592526,
+        "tail_pinball": 0.6525517242050599
+      },
+      "learned|oracle": {
+        "mean_pinball": 1.2734854819096557,
+        "tail_pinball": 0.7903977931633656
+      }
+    },
+    "learned_minus_empirical": {
+      "estimated": {
+        "paired": {
+          "mean": 0.09790170098698303,
+          "ci_lo": 0.04172594304533917,
+          "ci_hi": 0.17162869306669865,
+          "se": 0.0394389867248555,
+          "mde_80pct_power": 0.11049168224491678,
+          "n_rows": 92988,
+          "n_dates": 5166,
+          "n_securities": 18,
+          "n_effective": 129.15,
+          "block_days": 40,
+          "dependence_unit": "contiguous 40-trading-day block of the whole cross-section"
+        },
+        "rel_pct": 8.476915515090786,
+        "verdict": "LEARNED_SHAPE_HURTS",
+        "baseline": 1.15492127782442
+      },
+      "oracle": {
+        "paired": {
+          "mean": 0.14184822445040313,
+          "ci_lo": 0.08196856981218321,
+          "ci_hi": 0.22235234262013237,
+          "se": 0.04255892984247621,
+          "mde_80pct_power": 0.11923246876611576,
+          "n_rows": 92988,
+          "n_dates": 5166,
+          "n_securities": 18,
+          "n_effective": 129.15,
+          "block_days": 40,
+          "dependence_unit": "contiguous 40-trading-day block of the whole cross-section"
+        },
+        "rel_pct": 12.534778571083828,
+        "verdict": "LEARNED_SHAPE_HURTS",
+        "baseline": 1.1316372574592526
+      }
+    },
+    "reading": "NO_INCREMENTAL_SHAPE_INFORMATION \u2014 handed a perfect scale, the learned shape still does not beat the pooled empirical one. The estimator-bottleneck hypothesis is NOT supported, and neither is 'conditional shape exists but was masked'.",
+    "calibration": {
+      "empirical|estimated": [
+        0.05163031789048049,
+        0.09953972555598573,
+        0.24025680732997806,
+        0.4816212844668129,
+        0.7311696132834344,
+        0.8909751795930658,
+        0.9450466726889492
+      ],
+      "learned|estimated": [
+        0.09108702198133092,
+        0.14359917408697898,
+        0.27291693551856155,
+        0.4767281799802125,
+        0.6917666795715576,
+        0.8399040736439111,
+        0.9011592893706715
+      ],
+      "empirical|oracle": [
+        0.016507506344904718,
+        0.06040564373897707,
+        0.22847034025895815,
+        0.4767389340560072,
+        0.698036305759883,
+        0.8528949972039402,
+        0.9165268636813352
+      ],
+      "learned|oracle": [
+        0.06254570482212758,
+        0.11404697380307137,
+        0.2577214264206134,
+        0.4731148105131845,
+        0.671366197788962,
+        0.7996408138684561,
+        0.8552393857271906
+      ]
+    },
+    "not_a_trial": "diagnosis only; no fit, tune or selection occurred"
+  }
+}

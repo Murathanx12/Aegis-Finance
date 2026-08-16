@@ -190,6 +190,15 @@ class WorldModelV0:
                 num_leaves=self.num_leaves,
                 min_child_samples=self.min_child_samples,
                 random_state=self.seed, verbose=-1,
+                # `random_state` alone does NOT make LightGBM reproducible:
+                # multithreaded histogram construction sums floats in a
+                # non-deterministic order. Re-running WM0 unchanged moved the
+                # pooled loss 1.22617 -> 1.22598, which is far too small to
+                # move a verdict and far too large for a registry that records
+                # exact numbers as evidence. Reproducible for a fixed thread
+                # count on a fixed machine; that caveat is real and is why the
+                # per-row predictions are cached rather than re-derived.
+                deterministic=True, force_row_wise=True,
             )
             # NaN is passed through: LightGBM handles it natively and
             # fillna(0) on a feature matrix is banned in this codebase.
