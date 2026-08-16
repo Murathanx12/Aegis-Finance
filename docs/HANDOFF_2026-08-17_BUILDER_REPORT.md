@@ -1,321 +1,251 @@
-# BUILDER → BRAIN — report against the principal review and continue order
+# BUILDER REPORT — against Order 5 and its review
 
-Executed 2026-08-15 ~14:20 UTC → 2026-08-16. Written in the order §7 asked for:
-positive results first, then shots on goal, then the atlas, then state.
+```
+written_at:     2026-08-16
+target_session: 2026-08-17
+spend:          $0.00 (no paid API calls)
+tests:          4370 passed, 14 skipped, 0 failed (fast suite)
+pushed:         NO — a push redeploys; that is Murat's call
+```
 
-**P0 (exchange calendar) and P0.5 (utility) complete. N1 and N5 run. P1/P2 are
-clock-bound and one of them for a reason the order did not anticipate.**
-
----
-
-## 1. ECONOMICALLY MEANINGFUL POSITIVE RESULT
-
-**Break-even risk aversion separates market states by more than an order of
-magnitude, and the U-shape reproduces in preference units.**
-
-For each (state, horizon) the raw-return winner — always `buy_50`, 1.5x
-leverage — is compared with HOLD under CRRA utility, and the risk aversion at
-which they are exactly indifferent is solved for. Below `gamma*` the levered
-arm is preferred; above it, holding is. Intervals are 90% **moving-block**
-bootstrap bands with block length = horizon / stride, so the overlap between
-forward windows is respected rather than resampled away.
-
-Run twice on purpose, because §41 was caused by pooling six co-moving ETFs.
-**On SPY alone**, where no cross-sectional correction is needed at all:
-
-| state | H | gamma\* | 90% band | crossing exists in |
-|---|---|---|---|---|
-| `vix20-25` | 252d | **0.35** | [0.10, 2.84] | **48%** of resamples |
-| `vix15-20` | 252d | 2.27 | [1.11, 5.63] | 100% |
-| `vix25-35` | 60d | 5.33 | [2.52, 8.17] | 100% |
-| `vix>=35` | 252d | **6.27** | [5.17, 7.50] | 100% |
-| `vix<15` | 252d | **9.84** | [6.50, 14.30] | 100% |
-
-At a one-year horizon after VIX >= 35, 1.5x leverage beats holding for any
-investor with risk aversion below ~6 — which covers **every personality the
-product would plausibly offer**. In the VIX 20-25 trough it beats holding only
-for someone almost risk-neutral, and in half the resamples not even for them.
-
-This is the same U-shape the programme has measured three times in return
-units, restated in the form the four personalities can actually read. Nobody
-had computed it for any Aegis result.
-
-**Read it with three things.** It is a restatement, not independent
-confirmation — same corpus, same period. `gamma*` is measured against `buy_50`
-because that is the most levered arm on the menu, so **the menu bounds the
-answer** — the same defect class P0.5 was ordered to fix. And the `vix>=35`
-bucket is ~17 episodes, fewer at a 252-day horizon.
-
-**And the check that mattered more than the result.** The six-ETF run gave the
-SAME point estimate for the weak cell (0.35) with a band four times tighter and
-"crossing in 83% of resamples". SPY alone gives 0.35 with crossing in **48%** —
-in half the resamples HOLD dominates at every risk aversion and no break-even
-exists. **Pooling co-moving ETFs did not move the estimate; it manufactured
-confidence in it.** §41 again, in a new place, found by re-running rather than
-by arguing.
+Results first, plumbing after.
 
 ---
 
-## 2. SERIOUS SHOTS ON GOAL
+## 1. Two registered priors, both refuted by the data
 
-**Two distinct mechanisms attempted, both measured, neither certified.**
+This is the headline, because both were written down before the run and both
+were wrong in a direction I would not have conceded afterwards.
 
-| shot | verdict |
-|---|---|
-| **N1** — is the insider return still available at disclosure? | licensed, not established |
-| **N5** — do the LLM's scope declarations localise? | not detectable; corpus specification produced |
+### N20 — the conditional `μ_rest` lever is closed, and it moved the wrong way
 
-The utility work (P0.5) is a **measurement instrument**, not a shot: it asks
-whether the objective changes the answer, not whether an edge exists. Counting
-it as a shot would be the accounting error §5 warns about.
+Order 5 named `μ_rest | fire` "the most decision-relevant unmeasured number in
+the programme". It is now measured.
 
-That is a low number and it should be. Of the session's ~9 hours, the calendar
-defect and the dead guard were pre-conditions for spending money at all, and
-both were found rather than built.
-
----
-
-## 3. UTILITY-FLIP ATLAS
-
-**80 flips. 13 material. Zero material from a non-degenerate objective.**
-
-The first run reported 13 MATERIAL flips and every one was `drawdown_penalised`,
-`buy_50 -> sell_100`. A zero-exposure policy has zero return **and** zero
-drawdown, so it scores ~0 while any long policy whose drawdown exceeds its
-return scores below it.
-
-| objective | prefers cash | verdict |
+| | 20d | 60d |
 |---|---|---|
-| `total_return`, `sortino`, `expected_log_growth`, `log_growth_with_ruin` | 0/25 | — |
-| `aggressive_growth_lambda0.15` | 4/25 | — |
-| `drawdown_penalised_lambda0.25` | 13/25 (52%) | **DEGENERATE** |
-| `drawdown_penalised_lambda1` | 24/25 (96%) | **DEGENERATE** |
+| `μ_rest` unconditional (what N4B used) | +2.158% | +4.742% |
+| **`μ_rest \| fire`** | **+2.356%** | **+5.001%** |
+| difference | **+0.198pp** | **+0.259pp** |
+| `L_min` | 1.6906 → **1.8121** | 2.1065 → **2.1945** |
 
-Halving the penalty did not fix it, which is the more useful finding: **a
-drawdown penalty in units of return is structurally biased toward cash**,
-because cash has exactly zero of both. Kept, declared and flagged rather than
-retuned until it agreed. The open design question is that the natural fix — a
-ratio like Calmar — is undefined for cash, which is the same problem in another
-costume.
+**I predicted the difference would be negative.** The rescue needed −0.642pp at
+20d; it measured +0.198pp. `L_min` moves **away** from N9's 1.271, not toward it.
 
-Every non-degenerate flip points the same way (away from leverage, toward
-`hold`/`sell_50`) and every one is below the MDE of its own gap.
+Economically this reads cleanly: the precursors fire in high-volatility states,
+and high-volatility states that do **not** produce a tail are the ones that
+rebound hardest. De-risking on a firing day forgoes *more* than an average day,
+not less.
 
-**So the atlas's answer is a NOT_DETECTABLE, and it is a real answer:** on this
-corpus, declaring an objective does not detectably change which action is
-preferred. That is the correction to Correction 1 stated as a measurement — the
-raw-return tensor is incomplete, and its incompleteness currently changes no
-recommendation at a detectable level.
+**Registered verdict: `NOT_DETECTABLE_IN_SCOPE`** in every cell — the slice
+cannot resolve 0.642pp (honest MDE 0.895–1.306pp). So this is "no support, and
+the wrong sign", not a refutation. I did **not** substitute the more flattering
+registered three-way rule (which would have read `REFUTED_IN_SCOPE` /
+`NOT_RESOLVED` per cell) after seeing the answer.
 
-### On the trap you named
+**Consequence for Order 5 §1:** of the three levers that could rescue N4B as a
+de-risking trigger, the estimand lever is closed. **Hedging (convex payoff) and
+the objective survive.**
 
-`utility_score = log(final_wealth)` would have changed **no ranking anywhere**.
-Measured and kept as a test across all 17 policies on one episode: the log
-ordering is identical to the return ordering, while a path objective on the
-same episode is not. Objectives now declare a `kind`, and `score_one`
-**raises** for distribution objectives — the tautology cannot be computed by
-accident rather than being warned about in a comment.
+### WM0/WM0B — the world model is worse than cheap volatility scaling
 
----
+G5's first training receipt. 92,988 out-of-sample observations, 21 annual
+walk-forward folds, 40-day embargo, 18 ETFs.
 
-## 4. FORWARD-EVIDENCE OPERATIONAL STATE
+| model | mean pinball | vs comparator |
+|---|---|---|
+| **WM0** (level space) | 1.22617 | **−6.17%** |
+| **WM0B** (standardised) | 1.25235 | **−8.44%** |
+| climatology | 1.18958 | −3.00% |
+| gaussian_vol | 1.15895 | −0.35% |
+| `scaled_empirical` *(comparator of record)* | 1.15492 | — |
 
-**The paid night cannot run on 2026-08-16, and neither could it have run on
-2026-08-15.** Both are non-sessions. The window is:
+Both are powered negatives: WM0 CI [+0.055, +0.089] with MDE 2.48%; WM0B CI
+[+0.077, +0.119] with MDE 3.06%. Both are beaten by climatology, which knows
+nothing about today.
+
+**I predicted WM0B would beat WM0 substantially.** It was worse. And the reason
+that matters is the diagnostic that came free:
 
 ```
-next XNYS bell        2026-08-17 13:30 UTC
-earliest legal start  2026-08-16 19:30 UTC   (MAX_PREOPEN_LEAD_HOURS = 18)
-latest safe start     2026-08-17 12:20 UTC   at the mean 8.7s latency
-                      2026-08-17 11:25 UTC   at p90 15.6s
+tau      0.05   0.10   0.25   0.50   0.75   0.90   0.95
+WM0     0.087  0.139  0.271  0.476  0.691  0.839  0.900
+WM0B    0.091  0.144  0.272  0.478  0.692  0.842  0.901
+target  0.050  0.100  0.250  0.500  0.750  0.900  0.950
 ```
 
-`--readiness` now prints exactly this and returns NOT READY on a non-session,
-so the human gate and the machine gate agree.
+Two radically different parameterisations — one re-deriving scale from
+features, one handed scale for free — miss by the same amount in the same
+direction, to within 0.005 at every quantile. **The fault was never the target
+space.** WM0's committed explanation ("cannot extrapolate to volatility outside
+its training range") is dead: WM0B removed exactly that handicap and got worse.
 
-**P1 campaign resolutions.** Verified rather than assumed, per your instruction
-not to fabricate a Sunday outcome: `resolve_one` counts **bars**, not calendar
-days (`len(s) < horizon_days + 1`). A non-session contributes no bar, so it
-cannot close a window and cannot be priced from nothing. A record with its bars
-grades against Friday's close — which is correct, Friday's close *is* the last
-observation on or before Sunday. A record short of bars stays pending. Pinned
-as a test. **No change needed, and the refusal path is structural rather than
-a check someone remembered to write.**
+The remaining shared component is the estimator: LightGBM quantile regression
+at `min_child_samples=200` on a low signal-to-noise target shrinks extreme
+quantile fits toward the conditional median, so both distributions come out
+**too narrow at both ends**.
 
-**LIVE_FORWARD quarantine.** Not done — irreversible and outward-facing, as you
-specified. Murat's call.
+**Kept apart deliberately:**
 
-**Collector idempotency.** Answerable free from the 06:00 EDT overlap; Monday.
+- **Established, twice, powered:** learned quantile regression *as configured*
+  does not beat cheap volatility scaling.
+- **NOT established:** that conditional shape does not exist. Both arms share
+  one estimator and one regularisation, and the calibration signature points at
+  that shared component rather than at the world.
 
-**H1 not read.**
-
----
-
-## 5. DISCOVERY PROGRAMS RUN AND SURVIVORS
-
-### N1 — disclosure-lag decay. The killer scenario is NOT observed.
-
-608 events with both a transaction and a filing date, market-adjusted, signed
-so positive always means "the move went the insider's way":
-
-| | lag | n_eff | pre-disclosure | post-disclosure (+5d) |
-|---|---|---|---|---|
-| BUY | 0d | 12.6 | — | **+2.30%** (MDE 1.48) DETECTABLE |
-| BUY | 1d | 19.3 | +0.64% (MDE 1.97) no | **+1.80%** (MDE 1.76) DETECTABLE |
-| BUY | 2d | 11.2 | +0.23% (MDE 2.16) no | +1.11% (MDE 2.09) no |
-
-For compliant insider buys the pre-disclosure move is small and not detectable;
-the post-disclosure move is positive and clears its MDE at 0-1 day lag.
-**COPY-LAB's premise survives its first test.**
-
-**But the corpus is FIVE filing days deep** — 1,175 of 1,589 events were filed
-on 2026-08-13 — so the "+5 day" window is really 1-2 days for most rows. A
-+2.3% two-day market-adjusted move is not a plausible persistent effect; one
-favourable cross-section is far more likely. **A licence to continue, not
-evidence of an edge.**
-
-**Correction to the order's premise:** N1 is cheap but it is not "free on data
-already on disk". The events file is one production collector day plus
-stragglers. The full decay curve is a **consumer** of the R12 backfill (P5),
-not a way to avoid it.
-
-*And this script's own denominator had the §41 defect, in the file that quotes
-§41.* Its header says n_effective is bounded by filing days; the code counted
-32 names filed on one day as 32 observations. Corrected with a **measured**
-cross-sectional correlation (rho = 0.044), n_eff falls 32 → 19.3 and 211 →
-17.4. The BUY result survives; the large late-filing SELL numbers (+12.2%
-pre-disclosure at n_eff 3.5) do not, and are not reported as findings.
-
-### N5 — do the LLM's scope declarations localise? By sign 4/6, by evidence 0/6.
-
-| # | mechanism | AFFECTED − UNAFFECTED | MDE |
-|---|---|---|---|
-| 1-4 | VIX>=35 variants | +2.56, +6.36, +1.91, +3.58pp | 17.3, 31.9, 17.2, 39.8 |
-| 5-6 | low-vol regime shift | −0.45, −1.88pp | 2.7, 9.1 |
-
-4-of-6 under a fair coin is p = 0.34, and mechanisms 1-4 are near-duplicates
-from the same corpus, so this is closer to two observations than six.
-
-**What did work:** every declared-UNAFFECTED cell returned
-`SUPPORTED_IN_SCOPE`. The placebo family from §40 is correctly silent
-everywhere it was declared to be — first evidence it behaves as designed rather
-than merely existing.
-
-**And the structural finding is worth more than the statistic.** For the four
-VIX>=35 mechanisms, **two of the five transfer slices contain ZERO affected
-episodes** (`taper_2014_2016`, `latecycle_2017_2019`, both `UNTESTED`): VIX
-never reached 35 between 2014 and 2019. A "five-slice corpus" is, for this
-precursor, a corpus of **three**, and two of those carry n = 3-6.
-
-**This is the specification TRANSFER_ATLAS_V1 has been missing** — see §7.
+**No WM0C.** The prereg budgeted two attempts and said a third without a new
+reason derived from measurement is fishing. There is now a new reason — the
+estimator confound — so it is the next session's registered trial, named, not a
+third fit tonight.
 
 ---
 
-## 6. DEFECTS FOUND
+## 2. The instrument finding: R13 passed a design its own data cannot resolve
 
-Five, all found by running or reproducing rather than reading, and **three of
-them were producing false POSITIVES** — the opposite direction from this
-week's earlier three.
+Worth more than N20 itself.
 
-1. **§44 — the guard against a contaminated night invented a Sunday opening
-   bell.** `now.replace(hour=13, minute=30)` plus a calendar day. On the
-   Saturday it was reviewed that returns **Sunday 2026-08-16 13:30Z**, the day
-   the paid night was ordered for. Same arithmetic invents a session every
-   weekend and every holiday; and 09:30 New York is 13:30 UTC only under EDT.
-   **Every timestamp in its test file was on that same Saturday, and one test
-   asserted the next open was "2026-08-16" — the test file pinned the bug.**
+R13's linter passed N20 at a claimed floor of **0.46pp** against a declared
+effect of 0.642pp. The block bootstrap's honest MDE was **0.895–1.306pp**. The
+declared effect sat *between* them, which is exactly how an underpowered design
+was registered as powered.
 
-   Correcting the bell alone would have made a weekend night look like the
-   *safest* of the week: with the next real session 26 hours away, a Sunday
-   11:00Z start passes the headroom check with 1,000 minutes to spare. Hence a
-   second refusal, `MAX_PREOPEN_LEAD_HOURS = 18`.
+The first error was mine: R13's docstring asks for `event_frequency_per_year`
+"counted as INDEPENDENT episodes, not days", and I declared 40.3 — the rate the
+precursor fires on **days**. But a field whose correctness is entirely on the
+honour system, inside a gate whose purpose is to stop an author fooling
+themselves, is not a guard. It fooled its own author.
 
-2. **§44b — the divisor, exactly as you diagnosed it.** The docstring said
-   "deliberately pessimistic… a cell ends when its SLOWEST arm ends"; the next
-   line divided by the full factor. Now the slower of a max-of-arms floor at
-   p90 and a throughput bound capped at a **declared** efficiency of 2.0. The
-   latest safe start moves from a claimed ~13:02Z to **12:20Z / 11:25Z**.
+**R13b** (`Aegis module` @ `a0ef261`) is the arithmetic that catches it without
+touching data: at a 20-day outcome only `252/20 = 12.6` non-overlapping episodes
+fit in a year, so a declared 40.3 is *proof* the episodes overlap.
 
-3. **§47 — the test proving the timing guard fires had never made it fire.**
-   A commit adding 246 lines to one markdown file turned CI red. Reproduced at
-   that sha: the guard did not raise. `def f(x = MODULE_CONST)` binds at
-   definition time, so `monkeypatch.setattr(N, "MEASURED_CALL_SECONDS", 3600)`
-   changed the attribute and nothing the function read. The test passed anyway
-   for its whole life, because the old fabricated daily open refused for an
-   unrelated reason inside a 2.3-hour window. **CI ran at 13:23 UTC and was
-   green; at 14:16 UTC it was red. The suite's colour was a function of the
-   time of day.**
+| | before | after |
+|---|---|---|
+| n_available | 1451 | **454** (capped) |
+| resolvable floor | 0.46pp | **0.816pp** |
+| verdict | RESOLVABLE | **UNPOWERED_AT_REGISTRATION** |
 
-4. **§45 — the utility atlas's first 13 material flips were an artefact** of an
-   objective whose optimum is cash (above).
+The cheap registration-time number (0.816pp) lands next to the expensive
+after-the-fact bootstrap (0.895pp at the tightest block), which is the only
+reason to trust it.
 
-5. **§46 — N1's own n_effective** repeated §41 in the file that cites §41
-   (above).
+**This is §41 (`n_effective = n`) recurring inside the gate built to prevent
+§41, and inverted** — there it manufactured false kills, here false passes.
+**Every R13 pass on an overlapping or cross-sectionally pooled outcome since
+the gate shipped is suspect.**
 
-*Plus one in the tool built to prevent this class:* `ci_env_sim` hid the
-sibling repo but did not set `AEGIS_IIF1_PREREG_ABSENT_OK`, which CI does. The
-thing built to end "two green signals, two different worlds" was quietly
-introducing a **third**, and the eleven extra failures it produced looked like
-real ones.
-
-### The canon this session earned
-
-> **A constant that looks live and is frozen at import is not a parameter.**
-> It is a literal, and everything that depends on being able to change it is
-> decoration.
-
-The mirror of *"a frozen parameter a caller can override is a default"*. Same
-question from opposite ends: **where is this value actually read?** A census
-found 105 module-constants-as-defaults across 36 service files; most are
-harmless, and the dangerous subclass now has a test — a constant a **guard**
-reads, or one whose purpose is to be **replaced by a measurement**.
-`DECLARED_CONCURRENCY_EFFICIENCY` is both.
+WM0's prereg is the first to declare `outcome_horizon_days`, so R13 scored it on
+265 independent windows rather than 92,988 overlapping rows.
 
 ---
 
-## 7. SHAs AND THE NEXT BINDING BOTTLENECK
+## 3. The four review corrections, applied
 
-| | |
+Order 5 amended in place at `acf6212`, with a §0 recording each weakening so it
+is visible rather than silent.
+
+1. **"δ cancels" scoped** to linear exposure + proportional cost. Decisive
+   against Order 4 §3 as written; it does **not** show partial sizing is
+   equivalent under compounding, non-linear impact, leverage limits, utility
+   curvature or option hedges. The conclusion is not "sizing is irrelevant" but
+   **"the tail-coverage algebra cannot tell you whether sizing helps."**
+2. **OptionMetrics reworded and measured** — see §4.
+3. **N9B labelled** a post-confirmation adaptive comparison on a spent slice.
+   Its paired differences and equivalence result stand as evidence; the
+   independent-confirmation status does not.
+4. **The log-growth/N12 causal claim withdrawn** — an explanation formed after
+   seeing N12, whose own matched-vol log-wealth comparison was
+   `NOT_DETECTABLE_IN_SCOPE`, so it cannot support a causal claim about itself.
+
+Provenance (`written_at` / `target_session`) is now explicit in the header.
+
+---
+
+## 4. OptionMetrics: measured, and the scope limit is real
+
+Entitlement and acquisition were **never** the blocker — 23 files, 191.7 MB,
+on disk since 2026-08-01. The registry line saying otherwise was false and is
+corrected (`8d8e915`).
+
+The earlier caveat inferred "not daily" from ~87 rows/secid-year. That route is
+invalid — **row count cannot identify sampling frequency** when each date
+carries many surface coordinates. Measured instead:
+
+| property | measurement |
 |---|---|
-| `480570c` | **P0** — the Sunday bell, the divisor, the readiness gate |
-| `74fbe21` | **P0.5** — utility tensor, flip atlas, gamma\*, N1 |
-| `9f041fa` | **§47** — the dead guard, live constants, N5 |
-| `f2d5d70` | `Aegis module` — efficiency and lead limit registered |
+| dates/year | **exactly 12**, every year 2002–2024 |
+| median gap | **31 days** — every date a month end |
+| coordinates per secid-date | **8**: `days ∈ {30,91}` × `delta ∈ {±25,±50}` × `cp ∈ {C,P}` |
+| rows/secid-year | 96 = 12 × 8, *not* 96 observations |
+| IV nulls | 4.4% → 6.5% |
 
-Tests: **4,300 fast green locally, 4,289 in the CI-simulated world.** CI green.
+`vsurf_me` is a **month-end** standardised surface, complete at every date.
 
-### The bottleneck is still the transfer corpus, and N5 has now specified it
+**The consequence changes §3's plan:** it cannot be the forward rung of the
+*daily* ladder — N11's rv20/EWMA/HAR update daily and a month-end reading
+cannot meet them at daily decision points. It defines its **own monthly
+ladder**. 276 month-ends per security across thousands of securities is ample
+for the level-accuracy metrics §3 demands, `days ∈ {30, 91}` maps onto the
+20d/60d horizons already in use, and the ±25/±50 deltas give the skew rung free.
 
-The previous report said TRANSFER_ATLAS_V1 needs "more independent stress
-*episodes*". N5 makes that concrete and narrower:
+**PIT is NOT cleared** and is recorded as not cleared.
 
-> **The atlas needs slices in which the PRECURSOR FIRES.**
+---
 
-Two of the five existing slices contain zero VIX>=35 episodes. Adding more
-calm history — more decades, more tickers, more rows — adds `UNTESTED` cells,
-and an atlas scored on slice count would appear to grow while the number of
-slices capable of saying anything stayed at three. Your N2 (international and
-cross-sectional stress episodes: Japan 90s, Europe 2011-12, EM 97-98, China
-2015, single-name crashes) is exactly the right shape, and the acceptance
-criterion for it should be **affected-episode count per slice**, declared
-before collection, not slice count.
+## 5. Three corrections that had to be code
 
-### Two things I did not do, deliberately
+`8d8e915`, `4c16fdf`.
 
-* **I did not retune the degenerate objective until it produced flips.** Both
-  penalty weights are declared and flagged. The atlas reporting zero material
-  non-degenerate flips is the finding.
-* **I did not treat the four VIX>=35 mechanisms as four observations** in N5,
-  or the six ETFs as independent in `gamma*`. Both would have made this report
-  stronger and both would have been §41.
+- **The ex-post guard.** `ExPostScale` is deliberately **not a number** — no
+  `__mul__`, no `__float__`, no `__array__` — so `exposures * scale` raises
+  from numpy at the point of use. It immediately found two leaks I had not
+  looked for: the print format and the `vol_match_scale` ledger field, both
+  handing the hindsight number onward as an ordinary float. 10 tests, including
+  a repo-wide check that no other script recomputes `ref_vol / pv` inline.
+- **The G3 units mismatch, fixed.** Selection and measurement now take the same
+  argument and cannot diverge; `regret_units()` prints beside the number. Note
+  the review was right that "silently sorts" was too strong — the default was
+  documented and named. The accurate remaining defect is that **raw return is
+  still the operational default**, and that one is open.
+- **The four personalities exist.** `PRESERVATION / BALANCED / AGGRESSIVE /
+  EXTREME_GROWTH`, one function, exported as `PERSONALITIES`. Declared honestly
+  as a preference **ladder**, not elicited: the ordering is the content, the
+  lambdas are conventions awaiting Murat's actual risk preference.
+- **The slice register.** Identity is universe × period × outcome × cutoff, and
+  reuse is caught by **overlap** — nudging the window five months mints a new
+  `slice_id` and is still refused. `CONFIRM` on touched data requires a
+  `REANALYSIS`/`PAIRED` declaration that **costs the confirmation claim**.
+  Seeded from real history (N9 CONFIRM, N9B PAIRED). `unread_candidates` names
+  10 untouched names from a 16-name pool.
 
-### One item for you
+---
 
-`DECLARED_CONCURRENCY_EFFICIENCY = 2.0` is a placeholder whose entire job is to
-be replaced. The first concurrent paid night records
-`measured_concurrency_efficiency` and its end-of-night headroom on the receipt.
-Until that night exists, the 12:20Z / 11:25Z window is the honest one — and it
-is now the *only* number the guard will accept, because the constant is finally
-readable at call time.
+## 6. What I did not do
 
-— builder, 2026-08-16
+- **Not pushed.** Everything is committed locally.
+- **The direct policy-utility test** `U(precursor sizing) − U(baseline)` did
+  **not** run. It needs a fresh slice, and the register now proves the
+  confirmation slice is spent twice. It is the top of the next session and the
+  register names where it can run cleanly.
+- **The prereg linter does not yet require a declared slice**, so the register
+  still depends on a trial choosing to call it. WM0 calls it; nothing forces it.
+- **The vol ladder's loss metrics** (QLIKE / MZ / tail error) are not added.
+  WM0/WM0B partly pre-empt this — pinball loss and PIT calibration are level
+  metrics on the same question — but the rungs N11 compared have not been
+  rescored.
+
+---
+
+## 7. Recommended order for the next session
+
+1. **Direct policy utility on a fresh registered slice.** The algebra has now
+   said everything it can; N20 closed its last estimand lever.
+2. **WM0C with the estimator confound named** — the calibration signature is a
+   specific, falsifiable hypothesis about shrinkage, not a fishing licence.
+   Vary regularisation and a distributional head; keep metric and comparator
+   frozen so all three runs stay comparable.
+3. **The monthly implied-vol ladder**, at its true frequency, with level losses.
+4. **Make the slice claim mandatory at registration**, so the register is a gate
+   rather than a courtesy.
+5. **Re-check R13 passes granted before `a0ef261`** — any trial with an
+   overlapping or pooled outcome may have been registered on an optimistic floor.
