@@ -174,7 +174,10 @@ def _build(a) -> tuple:
                 except Exception:                                # noqa: BLE001
                     pass
         df = pd.DataFrame({"fired": fired,
-                           "has_vix": state["vix"].notna().to_numpy()},
+                           "has_vix": state["vix"].notna().to_numpy(),
+                           # prior-day realised vol: the stratifier for the
+                           # composition diagnostic, never a decision input
+                           "rv20": state["realised_vol_20d"].to_numpy()},
                           index=r.index)
         for H in HORIZONS:
             df[f"fwd_{H}"] = ((px.shift(-H) / px - 1.0) * 100.0).reindex(r.index)
@@ -193,10 +196,11 @@ def _build(a) -> tuple:
     for tkr in UNIVERSE:
         d = per[tkr].loc[common]
         fire = d["fired"].to_numpy()
+        rv = d["rv20"].to_numpy()
         for H in HORIZONS:
             f = d[f"fwd_{H}"].to_numpy()
             ok = ~np.isnan(f)
-            arrays[(tkr, H)] = (f[ok], fire[ok])
+            arrays[(tkr, H)] = (f[ok], fire[ok], rv[ok])
     return arrays, common, len(precursors), path.name
 
 
@@ -213,7 +217,7 @@ def _power_inputs(arrays, common) -> dict:
     for H in HORIZONS:
         fires, sds, ns = [], [], []
         for tkr in UNIVERSE:
-            f, fire = arrays[(tkr, H)]
+            f, fire, _rv = arrays[(tkr, H)]
             fires.append(float(fire.mean()))
             sds.append(float(np.std(f, ddof=1)))
             ns.append(int(len(f)))
@@ -236,7 +240,7 @@ def _conditional_mu_rest(arrays, H: int, tail: str, pos=None):
 
     lifts, mts, mr_u, mr_c, nfc = [], [], [], [], []
     for tkr in UNIVERSE:
-        f, fire = arrays[(tkr, H)]
+        f, fire, _rv = arrays[(tkr, H)]
         if pos is not None:
             p = pos[pos < len(f)]
             f, fire = f[p], fire[p]
@@ -260,6 +264,62 @@ def _conditional_mu_rest(arrays, H: int, tail: str, pos=None):
     k = len(lifts)
     return (sum(lifts) / k, sum(mts) / k, sum(mr_u) / k, sum(mr_c) / k,
             int(sum(nfc)))
+
+
+def _vol_stratified_diff(arrays, H: int, tail: str, n_strata: int = 3):
+    """DIAGNOSTIC ONLY — is the pooled difference a volatility composition effect?
+
+    Registered at `docs/TRIALS/AMENDMENT_N20_NONINFERIORITY.md` §2. N20 asserted
+    a mechanism ("precursors fire in high-vol states, and the non-tail ones
+    rebound hardest") that it never measured. If that is what is happening, the
+    difference should largely VANISH inside volatility strata and survive only
+    in the pooled average.
+
+    Terciles are cut **within each security** so a stratum is a volatility
+    state, not a security ranking. Returns point estimates and counts; it
+    carries no decision rule, deliberately — a fourth verdict is exactly what
+    this must not become.
+    """
+    import numpy as np
+
+    per_stratum: list[dict] = []
+    for s in range(n_strata):
+        d_cond, d_unc, ns, n_sec = [], [], [], 0
+        for tkr in UNIVERSE:
+            f, fire, rv = arrays[(tkr, H)]
+            ok = ~np.isnan(rv)
+            if ok.sum() < 300:
+                continue
+            edges = np.quantile(rv[ok], np.linspace(0, 1, n_strata + 1))
+            lo, hi = edges[s], edges[s + 1]
+            sel = ok & (rv >= lo) & ((rv <= hi) if s == n_strata - 1
+                                     else (rv < hi))
+            fs, fr = f[sel], fire[sel]
+            if len(fs) < 150 or not fr.any():
+                continue
+            cut = (np.quantile(fs, TAIL_Q) if tail == "bottom"
+                   else np.quantile(fs, 1.0 - TAIL_Q))
+            mask = fs <= cut if tail == "bottom" else fs >= cut
+            rest = ~mask
+            rest_fire = rest & fr
+            if not rest_fire.any() or not rest.any():
+                continue
+            d_unc.append(float(fs[rest].mean()))
+            d_cond.append(float(fs[rest_fire].mean()))
+            ns.append(int(rest_fire.sum()))
+            n_sec += 1
+        if n_sec == 0:
+            per_stratum.append({"stratum": s, "n_securities": 0})
+            continue
+        per_stratum.append({
+            "stratum": s,
+            "n_securities": n_sec,
+            "mu_rest_uncond_pct": float(np.mean(d_unc)),
+            "mu_rest_cond_pct": float(np.mean(d_cond)),
+            "delta_pp": float(np.mean(d_cond) - np.mean(d_unc)),
+            "n_nontail_firing_days": int(sum(ns)),
+        })
+    return per_stratum
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -386,7 +446,27 @@ def main(argv: list[str] | None = None) -> int:
                     se = ((d_hi - d_lo) / 2.0) / 1.6448536
                     honest_mde = _Z_MDE * se
 
+                    # ── the EXCLUSION test (amendment, registered 71fb670) ──
+                    # `detectable` above asks whether the interval is narrow
+                    # enough. That is not the same question as whether the
+                    # rescue has been RULED OUT, and the handoff conflated
+                    # them. A one-sided 95% lower bound answers the second.
+                    delta_hat = mu_r_cond - mu_r_unc
+                    lcb_pct = float(np.quantile(diff, 0.05))
+                    # basic / reverse-percentile: 2*theta_hat - q95
+                    lcb_basic = 2.0 * delta_hat - float(np.quantile(diff, 0.95))
+                    # the LOWER decides — closing a route should be hard to earn
+                    lcb = min(lcb_pct, lcb_basic)
+                    excluded = lcb > required_diff
+                    noninf = ("RESCUE_RULED_OUT" if excluded
+                              else "RESCUE_NOT_EXCLUDED")
+
                     cells.append({
+                        "lcb95_percentile_pp": lcb_pct * 100.0,
+                        "lcb95_basic_pp": lcb_basic * 100.0,
+                        "lcb95_deciding_pp": lcb * 100.0,
+                        "delta_hat_pp": delta_hat * 100.0,
+                        "noninferiority_verdict": noninf,
                         "block": block, "cost": cost,
                         "L_min_conditional": lm_cond,
                         "L_min_unconditional": lm_unc,
@@ -402,6 +482,14 @@ def main(argv: list[str] | None = None) -> int:
             verdicts = [c["verdict"] for c in cells
                         if c["verdict"] != "DESCRIPTIVE_ONLY"]
             robust = _weakest(verdicts) if applicable else "DESCRIPTIVE_ONLY"
+
+            # weakest cell again, on its own axis: one un-excluded cell means
+            # the route is not excluded anywhere it matters
+            ni = [c["noninferiority_verdict"] for c in cells]
+            robust_ni = ("RESCUE_NOT_EXCLUDED"
+                         if (not ni or "RESCUE_NOT_EXCLUDED" in ni)
+                         else "RESCUE_RULED_OUT")
+
             out_rows.append({
                 "horizon": H, "tail": tail,
                 "margin_applicable": applicable,
@@ -416,6 +504,9 @@ def main(argv: list[str] | None = None) -> int:
                 "comparison_lift": COMPARISON_LIFT,
                 "cells": cells,
                 "robust_verdict": robust,
+                "robust_noninferiority_verdict": robust_ni,
+                "vol_stratified_diagnostic": _vol_stratified_diff(
+                    arrays, H, tail),
             })
 
     payload = {
@@ -462,6 +553,51 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  honest MDE (block bootstrap) {mdes[0]:.3f}-{mdes[-1]:.3f}pp"
               f"   vs required {req:.3f}pp  ({note})")
         print(f"  VERDICT (weakest cell): {r['robust_verdict']}")
+
+        # ── the exclusion test, reported next to the detectability test ──
+        lcbs = [c["lcb95_deciding_pp"] for c in r["cells"]]
+        reqd = next(c["required_diff_pp"] for c in r["cells"]
+                    if c["cost"] == COST)
+        if lcbs:
+            print(f"  EXCLUSION  LCB95(delta) {min(lcbs):+.3f} to "
+                  f"{max(lcbs):+.3f}pp   vs rescue threshold {reqd:+.3f}pp")
+            print(f"             {r['robust_noninferiority_verdict']}"
+                  + ("  <- the rescue is EXCLUDED on this slice"
+                     if r["robust_noninferiority_verdict"] == "RESCUE_RULED_OUT"
+                     else "  <- 'closed' is NOT earned"))
+            # WHICH cell fails is the whole content: cost is a parameter of the
+            # action, so the weakest cell on the L_min axis is the HIGHEST cost
+            # while the weakest cell on the exclusion axis is the LOWEST. The
+            # grid's adversarial direction flips between the two tests, and
+            # naming the failing cell is what stops that being used to pick.
+            bad = [c for c in r["cells"]
+                   if c["noninferiority_verdict"] == "RESCUE_NOT_EXCLUDED"]
+            if bad:
+                print("             not excluded in "
+                      f"{len(bad)}/{len(r['cells'])} cells: "
+                      + ", ".join(f"block={c['block']} cost={c['cost']:.4f}"
+                                  for c in bad))
+                at_declared = [c for c in r["cells"] if c["cost"] == COST]
+                if all(c["noninferiority_verdict"] == "RESCUE_RULED_OUT"
+                       for c in at_declared):
+                    print("             ...but excluded at EVERY block at the "
+                          f"declared cost {COST:.4f}")
+
+    print("\n=== DIAGNOSTIC (decides nothing): is it volatility composition? ===")
+    for r in out_rows:
+        if not r["margin_applicable"]:
+            continue
+        print(f"\nH={r['horizon']}d {r['tail']}   pooled delta "
+              f"{r['delta_mu_rest_pp']:+.3f}pp")
+        for st in r["vol_stratified_diagnostic"]:
+            if not st.get("n_securities"):
+                print(f"  rv20 tercile {st['stratum']}: too thin")
+                continue
+            print(f"  rv20 tercile {st['stratum']}: "
+                  f"uncond {st['mu_rest_uncond_pct']:+.3f}%  "
+                  f"| fire {st['mu_rest_cond_pct']:+.3f}%  "
+                  f"delta {st['delta_pp']:+.3f}pp  "
+                  f"(n={st['n_nontail_firing_days']})")
     print(f"\nwrote {a.out}")
     return 0
 
