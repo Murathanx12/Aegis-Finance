@@ -203,3 +203,88 @@ def test_the_ledger_survives_a_reload(cb, tmp_path):
     again = ConfirmationBudget(tmp_path / "budget.jsonl")
     assert again.remaining(W) == 2
     assert again.holm(W)["results_recorded"] == 1
+
+
+# ── SCREEN vs EXPORT: two purposes, two criteria ──────────────────────────
+def test_holm_at_five_would_have_made_the_gym_impossible(cb):
+    """The defect the split fixes. A screen of 200 candidates with 60 genuine
+    effects passes ONE under Holm-at-the-budget and sixty-odd under FDR. A
+    machine that cannot pass its own screen produces no candidates, and then
+    the kill machinery IS the programme."""
+    W2 = window_id(universe="gym", period="2006..2019", outcome="ic")
+    cb.declare_budget(W2, budget=200, declared_by="t", purpose="SCREEN")
+    # 60 real effects at p=0.001, 140 nulls spread over (0,1]
+    ps = [0.001] * 60 + [0.05 + 0.0068 * i for i in range(140)]
+    for i, p in enumerate(ps):
+        cb.reserve(W2, trial=f"C{i}", hypothesis=f"h{i}")
+        cb.record_result(W2, trial=f"C{i}", hypothesis=f"h{i}", p_value=min(p, 1.0))
+    bh = cb.decide(W2)
+    assert bh["criterion"] == "BH_FDR"
+    assert bh["n_rejected"] >= 60
+
+    holm = cb.holm(W2)
+    assert holm["n_rejected"] < bh["n_rejected"], (
+        "the whole reason for the split")
+
+
+def test_a_screen_says_out_loud_how_many_of_its_finds_are_expected_false(cb):
+    W2 = window_id(universe="gym", period="2006..2019", outcome="ic")
+    cb.declare_budget(W2, budget=50, declared_by="t", purpose="SCREEN", rate=0.10)
+    for i, p in enumerate([0.0001] * 20):
+        cb.reserve(W2, trial=f"C{i}", hypothesis=f"h{i}")
+        cb.record_result(W2, trial=f"C{i}", hypothesis=f"h{i}", p_value=p)
+    r = cb.decide(W2)
+    assert r["expected_false_among_rejected"] == pytest.approx(2.0)
+    assert "may NOT be reported as a confirmation" in r["note"]
+
+
+def test_bh_steps_UP_where_holm_steps_down(cb):
+    """Opposite directions, and it is the whole difference: Holm stops at the
+    first failure so one weak result blocks everything behind it; BH finds the
+    LAST passing rank and rejects everything at or below it."""
+    W2 = window_id(universe="gym", period="2006..2019", outcome="ic")
+    cb.declare_budget(W2, budget=10, declared_by="t", purpose="SCREEN", rate=0.10)
+    for i, p in enumerate([0.001, 0.02, 0.03, 0.04]):
+        cb.reserve(W2, trial=f"C{i}", hypothesis=f"h{i}")
+        cb.record_result(W2, trial=f"C{i}", hypothesis=f"h{i}", p_value=p)
+    assert cb.decide(W2)["n_rejected"] == 4
+    assert cb.holm(W2)["n_rejected"] == 1
+
+
+def test_the_default_purpose_is_the_strict_one(cb):
+    """A budget declared without thinking gets FWER. The safe direction for a
+    default is the one that refuses more."""
+    cb.declare_budget(W, budget=5, declared_by="t")
+    assert cb.budget_of(W).purpose == "EXPORT"
+    assert cb.decide(W)["criterion"] == "HOLM_FWER"
+
+
+def test_an_undeclared_purpose_is_refused_rather_than_guessed(cb):
+    with pytest.raises(MultiplicityRefusal, match="not one of"):
+        cb.declare_budget(W, budget=5, declared_by="t", purpose="MAYBE")
+
+
+def test_the_criterion_travels_with_every_decision(cb):
+    """So a screen result cannot be quoted as a confirmation three sessions
+    later, when both are just a dict with `n_rejected` in it."""
+    cb.declare_budget(W, budget=3, declared_by="t")
+    cb.reserve(W, trial="M", hypothesis="h")
+    cb.record_result(W, trial="M", hypothesis="h", p_value=0.001)
+    d = cb.decide(W)
+    assert d["criterion"] == "HOLM_FWER" and d["purpose"] == "EXPORT"
+
+
+def test_fdr_uses_tests_RUN_and_fwer_uses_the_DECLARED_budget(cb):
+    """Different m on purpose. FDR is a property of the discovery set actually
+    produced; a screen's budget is a capacity limit, not a family definition.
+    FWER's family was fixed in advance and that is what it must be charged."""
+    Ws = window_id(universe="gym", period="p", outcome="o")
+    cb.declare_budget(Ws, budget=100, declared_by="t", purpose="SCREEN")
+    cb.declare_budget(W, budget=100, declared_by="t", purpose="EXPORT")
+    for wid in (Ws, W):
+        for i in range(3):
+            cb.reserve(wid, trial=f"C{i}", hypothesis=f"h{i}")
+            cb.record_result(wid, trial=f"C{i}", hypothesis=f"h{i}",
+                             p_value=0.001)
+    assert cb.decide(Ws)["m_used"] == 3
+    assert cb.decide(W)["m_used"] == 100

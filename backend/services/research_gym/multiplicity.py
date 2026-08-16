@@ -63,10 +63,37 @@ LEDGER_PATH = (_config.OPTIMUS_LEDGER_DIR / "research_gym"
 #: Family-wise error rate the budget is enforced at.
 DEFAULT_FWER = 0.05
 
+#: False-discovery rate for SCREENING. Deliberately looser than the FWER: a
+#: screen that lets nothing through has no output to certify.
+DEFAULT_FDR = 0.10
+
 #: The recommended budget for one untouched historical window. Not derived —
 #: an engineering choice, recorded so it can be argued with rather than
 #: discovered in a footnote.
 RECOMMENDED_BUDGET = 5
+
+#: TWO PURPOSES, TWO ERROR CRITERIA, AND CONFLATING THEM WAS THE DEFECT.
+#:
+#: The first version applied Holm at a budget of five to everything. That is
+#: right for the last untouched window and wrong for the Gym, where the whole
+#: point is to generate in bulk — Holm over five hundred screening tests makes
+#: the threshold 0.0001 and nothing survives. A machine that cannot pass its own
+#: screen produces no candidates, and then the kill machinery IS the programme.
+#:
+#: SCREEN — the Gym. Hundreds of tests, cheap, and a false positive costs one
+#:   wasted follow-up rather than a wrong belief. Benjamini-Hochberg controls
+#:   the PROPORTION of discoveries that are false, which is the quantity that
+#:   actually matters when you are producing a shortlist.
+#: EXPORT — a shadow book, a paper lane, real money, or a claim in the paper.
+#:   Here a false positive is a wrong belief that gets acted on, so the
+#:   criterion is family-wise: Holm, over a budget declared in advance.
+#:
+#: A screen result may NEVER be reported as an export result. `decide` labels
+#: which criterion produced each decision so the two cannot be quoted
+#: interchangeably three sessions later.
+SCREEN = "SCREEN"
+EXPORT = "EXPORT"
+PURPOSES = (SCREEN, EXPORT)
 
 
 class MultiplicityRefusal(RuntimeError):
@@ -99,6 +126,13 @@ class Budget:
     declared_at: str
     declared_by: str
     note: str = ""
+    #: SCREEN (Benjamini-Hochberg FDR) or EXPORT (Holm FWER). Defaults to
+    #: EXPORT so a budget declared without thinking gets the STRICT criterion —
+    #: the safe direction for a default is the one that refuses more.
+    purpose: str = EXPORT
+    #: The rate the purpose is enforced at. `fwer` is kept for the export path
+    #: and back-compatibility; `rate` is what `decide` reads.
+    rate: float | None = None
 
     def as_dict(self) -> dict:
         return {"kind": "budget", **asdict(self)}
@@ -151,7 +185,9 @@ class ConfirmationBudget:
 
     # ── writing ────────────────────────────────────────────────────────────
     def declare_budget(self, window_id: str, *, budget: int, declared_by: str,
-                       fwer: float = DEFAULT_FWER, note: str = "") -> Budget:
+                       fwer: float = DEFAULT_FWER, note: str = "",
+                       purpose: str = EXPORT,
+                       rate: float | None = None) -> Budget:
         """Declare how many chances this window gets. Once, before any result.
 
         Refuses to change after a result exists, because a budget raised to
@@ -169,8 +205,16 @@ class ConfirmationBudget:
                 f"{existing.budget} and {len(scored)} recorded result(s). "
                 f"Changing it now would be choosing the family after seeing "
                 f"the outcomes. Open a NEW window instead.")
+        if purpose not in PURPOSES:
+            raise MultiplicityRefusal(
+                f"purpose {purpose!r} is not one of {PURPOSES}. A window whose "
+                f"purpose is undeclared cannot be given an error criterion, and "
+                f"guessing one is how a screen result becomes an export claim.")
+        if rate is None:
+            rate = DEFAULT_FDR if purpose == SCREEN else float(fwer)
         b = Budget(window_id=window_id, budget=int(budget), fwer=float(fwer),
-                   declared_at=_now(), declared_by=declared_by, note=note)
+                   declared_at=_now(), declared_by=declared_by, note=note,
+                   purpose=purpose, rate=float(rate))
         self._append(b.as_dict())
         return b
 
@@ -190,8 +234,12 @@ class ConfirmationBudget:
                 f"{trial}/{hypothesis} already holds a slot on {window_id}. "
                 f"Re-running the same hypothesis is not a second chance at it.")
         if len(held) >= b.budget:
+            extra = ("" if b.purpose == EXPORT else
+                     " (this is a SCREEN window — raise its capacity "
+                     "deliberately if the Gym needs more, but a screen that "
+                     "never ends is a screen nobody is counting)")
             raise MultiplicityRefusal(
-                f"{window_id} has {len(held)}/{b.budget} slots taken. This "
+                f"{window_id} has {len(held)}/{b.budget} slots taken{extra}. This "
                 f"window is SPENT for confirmations. Remaining options: forward "
                 f"time, a genuinely foreign market, or a different outcome "
                 f"variable — not one more test here.")
@@ -254,7 +302,8 @@ class ConfirmationBudget:
                         "rejected": passes, "rank": i + 1,
                         "variants_tried": r.variants_tried})
         return {
-            "window_id": window_id, "fwer": b.fwer,
+            "window_id": window_id, "criterion": "HOLM_FWER",
+            "purpose": b.purpose, "fwer": b.rate if b.rate is not None else b.fwer,
             "declared_budget": b.budget, "m_used": m,
             "slots_taken": len(self.reservations(window_id)),
             "results_recorded": len(scored),
@@ -266,6 +315,69 @@ class ConfirmationBudget:
                      "without family-wise control; the gap between it and "
                      "`n_rejected` is what this ledger bought."),
         }
+
+    def benjamini_hochberg(self, window_id: str) -> dict:
+        """FDR step-UP, for screening. Controls the PROPORTION of false finds.
+
+        The direction is opposite to Holm and that is the whole difference:
+        Holm steps DOWN and stops at the first failure, so one weak result
+        blocks everything behind it. BH walks UP from the largest p, finds the
+        LAST rank where p <= (i/m)q, and rejects everything at or below it — so
+        a shortlist of a hundred with sixty genuine effects passes sixty rather
+        than one.
+
+        `m` is the number of tests RUN, not the declared budget. FDR is a
+        property of the discovery set that was actually produced, and a screen's
+        budget is a capacity limit rather than a family definition.
+        """
+        b = self.budget_of(window_id)
+        if b is None:
+            raise MultiplicityRefusal(
+                f"no budget declared for {window_id}; nothing to control.")
+        q = b.rate if b.rate is not None else DEFAULT_FDR
+        scored = sorted((r for r in self.reservations(window_id)
+                         if r.p_value is not None),
+                        key=lambda r: r.p_value)
+        m = len(scored)
+        k = 0
+        for i, r in enumerate(scored, start=1):
+            if r.p_value <= (i / m) * q:
+                k = i
+        out = []
+        for i, r in enumerate(scored, start=1):
+            out.append({"trial": r.trial, "hypothesis": r.hypothesis,
+                        "p_value": r.p_value, "bh_threshold": (i / m) * q,
+                        "rejected": i <= k, "rank": i,
+                        "variants_tried": r.variants_tried})
+        return {
+            "window_id": window_id, "criterion": "BH_FDR", "purpose": SCREEN,
+            "q": q, "m_used": m, "declared_budget": b.budget,
+            "results_recorded": m, "n_rejected": k,
+            "naive_n_below_alpha": sum(1 for o in out if o["p_value"] <= q),
+            "expected_false_among_rejected": round(k * q, 2),
+            "decisions": out,
+            "note": ("SCREENING result under FDR. Roughly "
+                     f"{round(k * q, 1)} of these {k} are expected to be "
+                     f"false, BY DESIGN. This may NOT be reported as a "
+                     f"confirmation — an export needs its own EXPORT window "
+                     f"and Holm."),
+        }
+
+    def decide(self, window_id: str) -> dict:
+        """Apply whichever criterion this window's PURPOSE declared.
+
+        One entry point on purpose. Letting a caller choose `holm` or
+        `benjamini_hochberg` at the call site is letting it choose the error
+        criterion after seeing the p-values, which is the thing every other
+        guard here exists to prevent.
+        """
+        b = self.budget_of(window_id)
+        if b is None:
+            raise MultiplicityRefusal(
+                f"no budget declared for {window_id}; nothing to control.")
+        if b.purpose == SCREEN:
+            return self.benjamini_hochberg(window_id)
+        return self.holm(window_id)
 
     def remaining(self, window_id: str) -> int:
         b = self.budget_of(window_id)
