@@ -1,0 +1,56 @@
+{
+  "denominator": 13728,
+  "horizons": {
+    "20": {
+      "placebo": {
+        "observed_median_lift": 1.5132237837693379,
+        "placebo_median": 1.0114430508631462,
+        "placebo_p95": 1.3556526234169035,
+        "n_placebo": 200,
+        "p_value": 0.014925373134328358
+      },
+      "train_pass": 582,
+      "foreign_pass": 0,
+      "foreign_point_pass": 201,
+      "foreign_lift_median": 1.5132237837693379,
+      "foreign_lift_max": 4.196183847353894,
+      "expected_by_chance": 29.1,
+      "survivors": [],
+      "verdict": "NOT_DETECTABLE_IN_SCOPE"
+    },
+    "60": {
+      "placebo": {
+        "observed_median_lift": 0.905421170772048,
+        "placebo_median": 0.8438955550018209,
+        "placebo_p95": 1.5447619799478962,
+        "n_placebo": 200,
+        "p_value": 0.42786069651741293
+      },
+      "train_pass": 276,
+      "foreign_pass": 0,
+      "foreign_point_pass": 8,
+      "foreign_lift_median": 0.905421170772048,
+      "foreign_lift_max": 3.220987654320987,
+      "expected_by_chance": 13.8,
+      "survivors": [],
+      "verdict": "NOT_DETECTABLE_IN_SCOPE"
+    }
+  },
+  "train_securities": [
+    "SPY",
+    "XLF",
+    "XLE"
+  ],
+  "foreign_securities": [
+    "QQQ",
+    "IWM",
+    "XLK"
+  ],
+  "train_end": "2015-12-31",
+  "foreign_start": "2016-01-01",
+  "L_min": {
+    "20": 1.69,
+    "60": 2.11
+  },
+  "seed": 20260816
+}
