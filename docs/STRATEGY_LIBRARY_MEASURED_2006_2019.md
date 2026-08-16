@@ -39,6 +39,41 @@ This cuts both ways and both matter. The factory is not competing against a
 strong incumbent — and the standard that has been killing the factory's output
 has now been applied to the incumbents, so the comparison is honest.
 
+## Is eleven-of-206 just what 206 chances produce?
+
+That question is not answerable from the number, and "~1.1 expected false" is
+the FDR's own accounting rather than a measurement of this pipeline. So it was
+measured: the identical machinery, run on signals with the stock-to-signal
+mapping destroyed, 20 replications of each of two nulls.
+
+**Null A** permutes within each month — coverage and the within-month
+distribution survive exactly, persistence does not. **Null B** applies one fixed
+label permutation to every month — persistence, autocorrelation and therefore
+**turnover** survive, coverage travels with the permutation. Neither dominates,
+so both ran. Null A was built first and is the biased one: at 3.40 monthly
+turnover against the real 1.15 it pays about 2%/yr more in costs, which flatters
+the net-return gate. Null B matches at 1.11.
+
+```
+              screen survivors        liquid-detectable    turnover/mo
+  NULL A      0.9  (range 0-4)        0.0  (all 20 reps)      3.40  [not matched]
+  NULL B      1.0  (range 0-6)        0.0  (all 20 reps)      1.11  [matched]
+  REAL       11                       1                       1.15
+
+  P(placebo screen survivors >= 11) = 0.00   (resolution 1/20)
+  P(placebo liquid-detectable >= 1) = 0.00   (resolution 1/20)
+```
+
+**The set of eleven is not a multiplicity artefact**, and no placebo run in 40
+produced even one liquid-detectable survivor. What this does *not* settle is
+*which* of the eleven is real — the FDR's ~1.1 expected false still applies
+within the real set, so `ShareIss5Y` being the one tradable survivor is not
+thereby established. The claim the placebo supports is about the set.
+
+The screen's p-values come from the gross monthly mean, so Null A's turnover
+penalty could not have affected that column — only the liquid-tercile gate,
+which is why Null B exists.
+
 ## The ten seeded strategies
 
 ```
