@@ -569,10 +569,25 @@ def main(argv: list[str] | None = None) -> int:
               f"3pp/yr needs")
         need = ((1.959963985 + 0.8416212336) * sd_block
                 / (3.0 / (12.0 / BLOCK_MONTHS))) ** 2
-        print(f"    n = {need:.0f} independent blocks = "
-              f"{need * BLOCK_MONTHS / 12.0:.0f} YEARS, against the "
-              f"{years:.0f} this slice holds "
-              f"({n_eff / n_blocks:.2f} effective securities)")
+        # ERRATUM 2026-08-16, found in review. `need` is a count of EFFECTIVE
+        # observations, and this slice supplies `n_eff_cs` of them per block —
+        # not one. The first version divided by the block rate alone and
+        # printed 172 years, which is the honest 95 multiplied by the very
+        # cross-section the line above had just finished measuring. Using the
+        # design effect to compute n_eff and then dropping it when converting
+        # n_eff back to years counts the cross-section once and forgets it
+        # once. The conclusion (>> 20 years) survives; the number did not, and
+        # the error ran in the direction that made the finding louder.
+        eff_per_year = (12.0 / BLOCK_MONTHS) * n_eff_cs
+        print(f"    n = {need:.0f} independent-equivalent observations = "
+              f"{need / eff_per_year:.0f} YEARS at {eff_per_year:.2f} of them "
+              f"per year ({12.0 / BLOCK_MONTHS:.0f} blocks x "
+              f"{n_eff_cs:.2f} effective securities), against the "
+              f"{years:.0f} this slice holds")
+        print(f"    [counting blocks alone and ignoring the effective "
+              f"cross-section would claim {need * BLOCK_MONTHS / 12.0:.0f} "
+              f"years — the same cross-section used twice, once as a "
+              f"multiplier and once not at all]")
 
         # ── would a DIFFERENT outcome be resolvable on the same slice? ─────
         # Terminal log growth is the noisiest possible way to ask a question
@@ -737,6 +752,56 @@ def main(argv: list[str] | None = None) -> int:
                 shift_null.append(float(np.mean(got)))
         shift_null = np.asarray(shift_null)
 
+        # ── THE NULL INVARIANCE CONTRACT, applied to both nulls ────────────
+        # Written after this trial, because of this trial. Max drawdown is
+        # path-dependent, so `declared_invariants_for` requires the null to
+        # preserve clustering and run lengths as well as frequency — and the
+        # registered placebo does not. The check is run on the MASKS only, so
+        # it costs nothing and could have run at registration.
+        from backend.services.research_gym import null_invariance as NI
+
+        required = NI.declared_invariants_for("max drawdown per block")
+        crng = np.random.default_rng(SEED + 7)
+        contracts: dict[str, dict] = {}
+        for label, spec in (
+                ("registered_matched_exposure",
+                 NI.NullSpec("matched_exposure_uniform_windows",
+                             preserves=required,
+                             why="as pre-registered: same de-risked day count, "
+                                 "windows placed uniformly at random")),
+                ("diagnostic_block_shift",
+                 NI.NullSpec("circular_block_shift", preserves=required,
+                             why="rotate the real fire mask; alignment is the "
+                                 "only property destroyed"))):
+            worst = None
+            for tkr, d in frames.items():
+                n = len(d)
+                real = (_exposure_path(d["fire"].to_numpy(), n, HORIZON, delta)
+                        < 1.0).tolist()
+                n_off = sum(real)
+                draws = []
+                for _ in range(40):
+                    if label == "registered_matched_exposure":
+                        pe = _placebo_exposure(n, n_off, HORIZON, delta, crng)
+                        draws.append((pe < 1.0).tolist())
+                    else:
+                        k = int(crng.integers(1, n))
+                        se = _exposure_path(np.roll(d["fire"].to_numpy(), k), n,
+                                            HORIZON, delta)
+                        draws.append((se < 1.0).tolist())
+                v = NI.verify(spec, NI.summarise(real),
+                              [NI.summarise(x) for x in draws])
+                if worst is None or (not v.ok and worst["ok"]):
+                    worst = {**v.as_dict(), "security": tkr, "why": v.why()}
+            contracts[label] = worst
+            print(f"\n  NULL CONTRACT [{label}]: "
+                  f"{'PRESERVED' if worst['ok'] else 'VIOLATED'}")
+            if not worst["ok"]:
+                bad = [c["detail"] for c in worst["checks"] if not c["ok"]]
+                print(f"    fails {sorted(set(bad))} on {worst['security']} "
+                      f"— a p-value from this null measures the property it "
+                      f"broke as much as the alignment under test")
+
         dd_obs = np.asarray(dd_obs)
         dd_placebo = np.asarray(dd_placebo)
         obs_mean = float(dd_obs.mean())
@@ -783,6 +848,17 @@ def main(argv: list[str] | None = None) -> int:
                 "p_value": p_val, "n_placebo_draws": len(dd_placebo),
                 "material_floor_pp": 3.0,
                 "verdict": dd_verdict,
+                # The registered verdict is what the committed rule produced
+                # and stays. `inference_status` is a separate field because the
+                # two are separate facts: the rule ran as written, and the
+                # instrument it ran on does not support the reading. Rewriting
+                # `verdict` would destroy the first fact to record the second.
+                "inference_status": (
+                    "PRIMARY_INFERENCE_INVALIDATED_BY_NULL_MISSPECIFICATION"
+                    if not contracts["registered_matched_exposure"]["ok"]
+                    else "PRIMARY_INFERENCE_STANDS"),
+                "null_contracts": contracts,
+                "required_invariants_for_this_outcome": list(required),
                 "DIAGNOSTIC_block_shift_null": {
                     "note": ("added after the primary; preserves fire count, "
                              "run lengths and clustering, destroys only "

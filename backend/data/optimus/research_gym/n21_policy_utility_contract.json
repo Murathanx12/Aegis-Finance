@@ -1,0 +1,643 @@
+{
+  "trial": "N21",
+  "prereg": "docs/TRIALS/PREREG_N21_POLICY_UTILITY.md",
+  "frozen_rules_sha256": "8093cf7306159108ecacca4499a1297b3a39ad42a6b21a7264c224cb5a5c9ac0",
+  "n_frozen_rules": 598,
+  "slice_id": "slc_c6ec0412bc3c2a41",
+  "fresh_slice": [
+    "XRT",
+    "XHB",
+    "KRE",
+    "XOP",
+    "ITB",
+    "SMH",
+    "IBB",
+    "IGV"
+  ],
+  "eval_start": "2006-07-01",
+  "eval_end": "2026-08-15",
+  "horizon_days": 20,
+  "cost_per_turn": 0.001,
+  "block_months": 6,
+  "dependence_unit": "one 6-month calendar block across the whole cross-section",
+  "results": {
+    "primary": {
+      "delta": 0.0,
+      "per_security": {
+        "XRT": {
+          "policy_log_growth_pp": 119.89143224287105,
+          "buyhold_log_growth_pp": 181.57346111303136,
+          "delta_log_growth_pp": -61.68202887016031,
+          "policy_max_dd_pct": 56.87060706631053,
+          "buyhold_max_dd_pct": 65.81668143084298,
+          "avg_exposure": 0.6177865612648221
+        },
+        "XHB": {
+          "policy_log_growth_pp": 54.5221104732897,
+          "buyhold_log_growth_pp": 136.44814675944005,
+          "delta_log_growth_pp": -81.92603628615035,
+          "policy_max_dd_pct": 49.572007188420095,
+          "buyhold_max_dd_pct": 78.57689191531412,
+          "avg_exposure": 0.5535573122529645
+        },
+        "KRE": {
+          "policy_log_growth_pp": 4.196024432192314,
+          "buyhold_log_growth_pp": 96.01837387794254,
+          "delta_log_growth_pp": -91.82234944575022,
+          "policy_max_dd_pct": 60.136211493316935,
+          "buyhold_max_dd_pct": 68.53952075386084,
+          "avg_exposure": 0.5041501976284585
+        },
+        "XOP": {
+          "policy_log_growth_pp": 73.25772339382593,
+          "buyhold_log_growth_pp": 41.1183967566159,
+          "delta_log_growth_pp": 32.139326637210026,
+          "policy_max_dd_pct": 38.79956647896117,
+          "buyhold_max_dd_pct": 90.27208632973806,
+          "avg_exposure": 0.36462450592885376
+        },
+        "ITB": {
+          "policy_log_growth_pp": 20.05981319243915,
+          "buyhold_log_growth_pp": 106.81456051306373,
+          "delta_log_growth_pp": -86.75474732062457,
+          "policy_max_dd_pct": 52.103175670952886,
+          "buyhold_max_dd_pct": 84.88455731861121,
+          "avg_exposure": 0.4758893280632411
+        },
+        "SMH": {
+          "policy_log_growth_pp": 223.0092442997737,
+          "buyhold_log_growth_pp": 372.6308627822145,
+          "delta_log_growth_pp": -149.62161848244077,
+          "policy_max_dd_pct": 53.84546489939037,
+          "buyhold_max_dd_pct": 64.19001046410864,
+          "avg_exposure": 0.616798418972332
+        },
+        "IBB": {
+          "policy_log_growth_pp": 133.84232605312607,
+          "buyhold_log_growth_pp": 214.19040858250645,
+          "delta_log_growth_pp": -80.34808252938038,
+          "policy_max_dd_pct": 43.47522705133087,
+          "buyhold_max_dd_pct": 39.81597774039063,
+          "avg_exposure": 0.6470355731225297
+        },
+        "IGV": {
+          "policy_log_growth_pp": 117.3267070121905,
+          "buyhold_log_growth_pp": 264.60595723488393,
+          "delta_log_growth_pp": -147.27925022269343,
+          "policy_max_dd_pct": 55.66422347125173,
+          "buyhold_max_dd_pct": 49.81439447417024,
+          "avg_exposure": 0.7561264822134387
+        }
+      },
+      "pooled_delta_log_growth_pp": -83.41184831499875,
+      "securities_improved": 1,
+      "n_securities": 8,
+      "mean_max_dd_change_pp": -16.43045463838777,
+      "block_inference": {
+        "mean": -2.106320071583351,
+        "ci_lo": -4.331480326899289,
+        "ci_hi": 0.7199739020301217,
+        "se": 1.531544234077182,
+        "mde_80pct_power": 4.2907516878226915,
+        "n_rows": 320,
+        "n_dates": 40,
+        "n_securities": 8,
+        "n_effective": 40.0,
+        "block_days": 1,
+        "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+      },
+      "log_growth_verdict_UNPOWERED": "NOT_DETECTABLE_IN_SCOPE",
+      "n_blocks": 320,
+      "PRIMARY_drawdown": {
+        "observed_mean_block_dd_pp": -6.840755073689818,
+        "placebo_p5": -6.579491419505531,
+        "placebo_p95": -1.3136169666578978,
+        "placebo_median": -3.2107304096054214,
+        "p_value": 0.03125,
+        "n_placebo_draws": 1600,
+        "material_floor_pp": 3.0,
+        "verdict": "POLICY_REDUCES_DRAWDOWN",
+        "inference_status": "PRIMARY_INFERENCE_INVALIDATED_BY_NULL_MISSPECIFICATION",
+        "null_contracts": {
+          "registered_matched_exposure": {
+            "null": "matched_exposure_uniform_windows",
+            "preserves": [
+              "frequency",
+              "run_lengths",
+              "clustering",
+              "turnover"
+            ],
+            "undeclared": [],
+            "n_placebo": 40,
+            "ok": false,
+            "checks": [
+              {
+                "invariant": "frequency",
+                "detail": "frequency",
+                "real": 0.3822134387351779,
+                "placebo_mean": 0.31782114624505925,
+                "deviation": 0.16847207859358854,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": false
+              },
+              {
+                "invariant": "run_lengths",
+                "detail": "mean",
+                "real": 77.36,
+                "placebo_mean": 24.745235227874794,
+                "deviation": 0.6801288103945864,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": false
+              },
+              {
+                "invariant": "run_lengths",
+                "detail": "max",
+                "real": 310.0,
+                "placebo_mean": 60.775,
+                "deviation": 0.8039516129032258,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": false
+              },
+              {
+                "invariant": "clustering",
+                "detail": "1",
+                "real": 0.9789537129644033,
+                "placebo_mean": 0.9405795152523826,
+                "deviation": 0.03837419771202066,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": true
+              },
+              {
+                "invariant": "clustering",
+                "detail": "10",
+                "real": 0.810461147505371,
+                "placebo_mean": 0.4509132787603967,
+                "deviation": 0.3595478687449743,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": false
+              },
+              {
+                "invariant": "clustering",
+                "detail": "20",
+                "real": 0.6468680771588,
+                "placebo_mean": -0.004155275474068132,
+                "deviation": 0.6510233526328681,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": false
+              },
+              {
+                "invariant": "clustering",
+                "detail": "5",
+                "real": 0.9014642505376448,
+                "placebo_mean": 0.7133061246505561,
+                "deviation": 0.1881581258870887,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": false
+              },
+              {
+                "invariant": "turnover",
+                "detail": "turnover",
+                "real": 0.009881422924901186,
+                "placebo_mean": 0.025716403162055333,
+                "deviation": 1.6024999999999998,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": false
+              }
+            ],
+            "security": "XRT",
+            "why": "NULL CONTRACT VIOLATED \u2014 `matched_exposure_uniform_windows` declares it preserves frequency, run_lengths, clustering, turnover and does not: frequency/frequency real 0.3822 vs placebo mean 0.3178 (relative deviation 0.168 > 0.150); run_lengths/mean real 77.3600 vs placebo mean 24.7452 (relative deviation 0.680 > 0.150); run_lengths/max real 310.0000 vs placebo mean 60.7750 (relative deviation 0.804 > 0.150); clustering/10 real 0.8105 vs placebo mean 0.4509 (absolute deviation 0.360 > 0.050); clustering/20 real 0.6469 vs placebo mean -0.0042 (absolute deviation 0.651 > 0.050); clustering/5 real 0.9015 vs placebo mean 0.7133 (absolute deviation 0.188 > 0.050); turnover/turnover real 0.0099 vs placebo mean 0.0257 (relative deviation 1.602 > 0.150). A p-value from this ensemble measures the violated property as much as the alignment being tested \u2014 which is how N21's matched-exposure placebo produced p = 0.031 for a policy whose clustering-preserving null gives p = 0.338."
+          },
+          "diagnostic_block_shift": {
+            "null": "circular_block_shift",
+            "preserves": [
+              "frequency",
+              "run_lengths",
+              "clustering",
+              "turnover"
+            ],
+            "undeclared": [],
+            "n_placebo": 40,
+            "ok": true,
+            "checks": [
+              {
+                "invariant": "frequency",
+                "detail": "frequency",
+                "real": 0.3822134387351779,
+                "placebo_mean": 0.3820553359683795,
+                "deviation": 0.000413650465356713,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": true
+              },
+              {
+                "invariant": "run_lengths",
+                "detail": "mean",
+                "real": 77.36,
+                "placebo_mean": 76.51015384615384,
+                "deviation": 0.010985601781878986,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": true
+              },
+              {
+                "invariant": "run_lengths",
+                "detail": "max",
+                "real": 310.0,
+                "placebo_mean": 302.525,
+                "deviation": 0.024112903225806524,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": true
+              },
+              {
+                "invariant": "clustering",
+                "detail": "1",
+                "real": 0.9789537129644033,
+                "placebo_mean": 0.9789041070221527,
+                "deviation": 4.960594225056347e-05,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": true
+              },
+              {
+                "invariant": "clustering",
+                "detail": "10",
+                "real": 0.810461147505371,
+                "placebo_mean": 0.8103190617764515,
+                "deviation": 0.00014208572891949434,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": true
+              },
+              {
+                "invariant": "clustering",
+                "detail": "20",
+                "real": 0.6468680771588,
+                "placebo_mean": 0.6473733315060838,
+                "deviation": 0.0005052543472837678,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": true
+              },
+              {
+                "invariant": "clustering",
+                "detail": "5",
+                "real": 0.9014642505376448,
+                "placebo_mean": 0.9012892466071701,
+                "deviation": 0.00017500393047464868,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": true
+              },
+              {
+                "invariant": "turnover",
+                "detail": "turnover",
+                "real": 0.009881422924901186,
+                "placebo_mean": 0.009876482213438734,
+                "deviation": 0.0005000000000001025,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": true
+              }
+            ],
+            "security": "XRT",
+            "why": "null `circular_block_shift` preserves what it declared (frequency, run_lengths, clustering, turnover) across 40 draws"
+          }
+        },
+        "required_invariants_for_this_outcome": [
+          "frequency",
+          "run_lengths",
+          "clustering",
+          "turnover"
+        ],
+        "DIAGNOSTIC_block_shift_null": {
+          "note": "added after the primary; preserves fire count, run lengths and clustering, destroys only state-outcome alignment. Cannot change the registered verdict.",
+          "median": -5.2721625791964675,
+          "p5": -11.88981125898162,
+          "p_value": 0.338125,
+          "survives": false
+        }
+      },
+      "personalities": {
+        "preservation": -571.2112701827928,
+        "balanced": -564.0551669624022,
+        "aggressive": -560.4771153522067,
+        "extreme_growth": -558.0917476120765
+      }
+    },
+    "secondary": {
+      "delta": 0.5,
+      "per_security": {
+        "XRT": {
+          "policy_log_growth_pp": 160.22285525768228,
+          "buyhold_log_growth_pp": 181.57346111303136,
+          "delta_log_growth_pp": -21.350605855349073,
+          "policy_max_dd_pct": 50.77933936513384,
+          "buyhold_max_dd_pct": 65.81668143084298,
+          "avg_exposure": 0.8088932806324111
+        },
+        "XHB": {
+          "policy_log_growth_pp": 110.55300417711602,
+          "buyhold_log_growth_pp": 136.44814675944005,
+          "delta_log_growth_pp": -25.895142582324027,
+          "policy_max_dd_pct": 62.122002848682165,
+          "buyhold_max_dd_pct": 78.57689191531412,
+          "avg_exposure": 0.7767786561264822
+        },
+        "KRE": {
+          "policy_log_growth_pp": 68.88219635334674,
+          "buyhold_log_growth_pp": 96.01837387794254,
+          "delta_log_growth_pp": -27.136177524595794,
+          "policy_max_dd_pct": 55.53606861153426,
+          "buyhold_max_dd_pct": 68.53952075386084,
+          "avg_exposure": 0.7520750988142293
+        },
+        "XOP": {
+          "policy_log_growth_pp": 90.31021847139935,
+          "buyhold_log_growth_pp": 41.1183967566159,
+          "delta_log_growth_pp": 49.19182171478345,
+          "policy_max_dd_pct": 71.64193641615564,
+          "buyhold_max_dd_pct": 90.27208632973806,
+          "avg_exposure": 0.6823122529644269
+        },
+        "ITB": {
+          "policy_log_growth_pp": 82.27242233542601,
+          "buyhold_log_growth_pp": 106.81456051306373,
+          "delta_log_growth_pp": -24.54213817763771,
+          "policy_max_dd_pct": 69.78026969859532,
+          "buyhold_max_dd_pct": 84.88455731861121,
+          "avg_exposure": 0.7379446640316205
+        },
+        "SMH": {
+          "policy_log_growth_pp": 309.9615853031311,
+          "buyhold_log_growth_pp": 372.6308627822145,
+          "delta_log_growth_pp": -62.669277479083405,
+          "policy_max_dd_pct": 58.84893366601045,
+          "buyhold_max_dd_pct": 64.19001046410864,
+          "avg_exposure": 0.8083992094861661
+        },
+        "IBB": {
+          "policy_log_growth_pp": 180.04948999389038,
+          "buyhold_log_growth_pp": 214.19040858250645,
+          "delta_log_growth_pp": -34.140918588616074,
+          "policy_max_dd_pct": 37.743428168896045,
+          "buyhold_max_dd_pct": 39.81597774039063,
+          "avg_exposure": 0.8235177865612648
+        },
+        "IGV": {
+          "policy_log_growth_pp": 196.55611341638073,
+          "buyhold_log_growth_pp": 264.60595723488393,
+          "delta_log_growth_pp": -68.0498438185032,
+          "policy_max_dd_pct": 52.77217127780949,
+          "buyhold_max_dd_pct": 49.81439447417024,
+          "avg_exposure": 0.8780632411067194
+        }
+      },
+      "pooled_delta_log_growth_pp": -26.824035288915727,
+      "securities_improved": 1,
+      "n_securities": 8,
+      "mean_max_dd_change_pp": -10.335746296777437,
+      "block_inference": {
+        "mean": -0.6840525078150977,
+        "ci_lo": -1.8410175222977088,
+        "ci_hi": 0.7914252177401937,
+        "se": 0.7967029218325905,
+        "mde_80pct_power": 2.2320311294216166,
+        "n_rows": 320,
+        "n_dates": 40,
+        "n_securities": 8,
+        "n_effective": 40.0,
+        "block_days": 1,
+        "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+      },
+      "log_growth_verdict_UNPOWERED": "NOT_DETECTABLE_IN_SCOPE",
+      "n_blocks": 320,
+      "PRIMARY_drawdown": {
+        "observed_mean_block_dd_pp": -3.8048583278829375,
+        "placebo_p5": -4.416244007441032,
+        "placebo_p95": -1.0642569753212927,
+        "placebo_median": -2.3211433059134974,
+        "p_value": 0.1225,
+        "n_placebo_draws": 1600,
+        "material_floor_pp": 3.0,
+        "verdict": "NO_TIMING_INFORMATION",
+        "inference_status": "PRIMARY_INFERENCE_INVALIDATED_BY_NULL_MISSPECIFICATION",
+        "null_contracts": {
+          "registered_matched_exposure": {
+            "null": "matched_exposure_uniform_windows",
+            "preserves": [
+              "frequency",
+              "run_lengths",
+              "clustering",
+              "turnover"
+            ],
+            "undeclared": [],
+            "n_placebo": 40,
+            "ok": false,
+            "checks": [
+              {
+                "invariant": "frequency",
+                "detail": "frequency",
+                "real": 0.3822134387351779,
+                "placebo_mean": 0.31782114624505925,
+                "deviation": 0.16847207859358854,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": false
+              },
+              {
+                "invariant": "run_lengths",
+                "detail": "mean",
+                "real": 77.36,
+                "placebo_mean": 24.745235227874794,
+                "deviation": 0.6801288103945864,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": false
+              },
+              {
+                "invariant": "run_lengths",
+                "detail": "max",
+                "real": 310.0,
+                "placebo_mean": 60.775,
+                "deviation": 0.8039516129032258,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": false
+              },
+              {
+                "invariant": "clustering",
+                "detail": "1",
+                "real": 0.9789537129644033,
+                "placebo_mean": 0.9405795152523826,
+                "deviation": 0.03837419771202066,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": true
+              },
+              {
+                "invariant": "clustering",
+                "detail": "10",
+                "real": 0.810461147505371,
+                "placebo_mean": 0.4509132787603967,
+                "deviation": 0.3595478687449743,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": false
+              },
+              {
+                "invariant": "clustering",
+                "detail": "20",
+                "real": 0.6468680771588,
+                "placebo_mean": -0.004155275474068132,
+                "deviation": 0.6510233526328681,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": false
+              },
+              {
+                "invariant": "clustering",
+                "detail": "5",
+                "real": 0.9014642505376448,
+                "placebo_mean": 0.7133061246505561,
+                "deviation": 0.1881581258870887,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": false
+              },
+              {
+                "invariant": "turnover",
+                "detail": "turnover",
+                "real": 0.009881422924901186,
+                "placebo_mean": 0.025716403162055333,
+                "deviation": 1.6024999999999998,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": false
+              }
+            ],
+            "security": "XRT",
+            "why": "NULL CONTRACT VIOLATED \u2014 `matched_exposure_uniform_windows` declares it preserves frequency, run_lengths, clustering, turnover and does not: frequency/frequency real 0.3822 vs placebo mean 0.3178 (relative deviation 0.168 > 0.150); run_lengths/mean real 77.3600 vs placebo mean 24.7452 (relative deviation 0.680 > 0.150); run_lengths/max real 310.0000 vs placebo mean 60.7750 (relative deviation 0.804 > 0.150); clustering/10 real 0.8105 vs placebo mean 0.4509 (absolute deviation 0.360 > 0.050); clustering/20 real 0.6469 vs placebo mean -0.0042 (absolute deviation 0.651 > 0.050); clustering/5 real 0.9015 vs placebo mean 0.7133 (absolute deviation 0.188 > 0.050); turnover/turnover real 0.0099 vs placebo mean 0.0257 (relative deviation 1.602 > 0.150). A p-value from this ensemble measures the violated property as much as the alignment being tested \u2014 which is how N21's matched-exposure placebo produced p = 0.031 for a policy whose clustering-preserving null gives p = 0.338."
+          },
+          "diagnostic_block_shift": {
+            "null": "circular_block_shift",
+            "preserves": [
+              "frequency",
+              "run_lengths",
+              "clustering",
+              "turnover"
+            ],
+            "undeclared": [],
+            "n_placebo": 40,
+            "ok": true,
+            "checks": [
+              {
+                "invariant": "frequency",
+                "detail": "frequency",
+                "real": 0.3822134387351779,
+                "placebo_mean": 0.3820553359683795,
+                "deviation": 0.000413650465356713,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": true
+              },
+              {
+                "invariant": "run_lengths",
+                "detail": "mean",
+                "real": 77.36,
+                "placebo_mean": 76.51015384615384,
+                "deviation": 0.010985601781878986,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": true
+              },
+              {
+                "invariant": "run_lengths",
+                "detail": "max",
+                "real": 310.0,
+                "placebo_mean": 302.525,
+                "deviation": 0.024112903225806524,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": true
+              },
+              {
+                "invariant": "clustering",
+                "detail": "1",
+                "real": 0.9789537129644033,
+                "placebo_mean": 0.9789041070221527,
+                "deviation": 4.960594225056347e-05,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": true
+              },
+              {
+                "invariant": "clustering",
+                "detail": "10",
+                "real": 0.810461147505371,
+                "placebo_mean": 0.8103190617764515,
+                "deviation": 0.00014208572891949434,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": true
+              },
+              {
+                "invariant": "clustering",
+                "detail": "20",
+                "real": 0.6468680771588,
+                "placebo_mean": 0.6473733315060838,
+                "deviation": 0.0005052543472837678,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": true
+              },
+              {
+                "invariant": "clustering",
+                "detail": "5",
+                "real": 0.9014642505376448,
+                "placebo_mean": 0.9012892466071701,
+                "deviation": 0.00017500393047464868,
+                "tolerance": 0.05,
+                "scale": "absolute",
+                "ok": true
+              },
+              {
+                "invariant": "turnover",
+                "detail": "turnover",
+                "real": 0.009881422924901186,
+                "placebo_mean": 0.009876482213438734,
+                "deviation": 0.0005000000000001025,
+                "tolerance": 0.15,
+                "scale": "relative",
+                "ok": true
+              }
+            ],
+            "security": "XRT",
+            "why": "null `circular_block_shift` preserves what it declared (frequency, run_lengths, clustering, turnover) across 40 draws"
+          }
+        },
+        "required_invariants_for_this_outcome": [
+          "frequency",
+          "run_lengths",
+          "clustering",
+          "turnover"
+        ],
+        "DIAGNOSTIC_block_shift_null": {
+          "note": "added after the primary; preserves fire count, run lengths and clustering, destroys only state-outcome alignment. Cannot change the registered verdict.",
+          "median": -3.1552834900386495,
+          "p5": -6.491913290058815,
+          "p_value": 0.375,
+          "survives": false
+        }
+      }
+    }
+  }
+}
