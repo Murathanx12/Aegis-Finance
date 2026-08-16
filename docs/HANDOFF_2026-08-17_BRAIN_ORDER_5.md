@@ -1,7 +1,54 @@
 # ORDER 5 — reconciled. Supersedes both order-4 documents.
 
+```
+written_at:     2026-08-16
+target_session: 2026-08-17     <- what the FILENAME means
+amended_at:     2026-08-16     (four review corrections, see §0)
+```
+
+The filename is the target session date, not the authoring date. Stated
+explicitly because time provenance has bitten this project repeatedly and a
+date in a filename that nobody defined will eventually be read as an
+observation date.
+
 Binding. Every claim below was checked against code at the SHA named, not
 against a report.
+
+---
+
+## 0. AMENDMENTS after review (2026-08-16)
+
+Four claims below were correct in conclusion and overbroad in statement. They
+are corrected in place; this section records what changed so the weakening is
+visible rather than silent.
+
+1. **"δ cancels" is scoped to N4B's payoff model** — linear exposure,
+   proportional cost. It does not establish that partial sizing is
+   economically equivalent once daily compounding, time-varying exposure,
+   non-linear market impact, leverage constraints, utility curvature or option
+   hedges are present. See §1.
+2. **"OptionMetrics was never blocked" → entitlement/acquisition was never the
+   blocker; historical usability is now MEASURED and is a scope limit.** The
+   dataset is month-end, not daily. See §2.
+3. **N9B is labelled a post-confirmation adaptive comparison on a spent slice**,
+   not a fresh confirmation. Its paired differences and equivalence result
+   stand; its epistemic status does not. See §6.
+4. **The claim that log growth "likely explains" N12 is withdrawn.** It was an
+   explanation formed after seeing N12, whose own matched-vol log-wealth
+   comparison was `NOT_DETECTABLE_IN_SCOPE`. See §1.
+
+**Since ruled, by running rather than arguing** — full detail in
+`docs/HANDOFF_2026-08-17_BUILDER_REPORT.md`:
+
+- **N20 ran.** `μ_rest | fire` = **+2.356%** vs unconditional **+2.158%** at
+  20d — the correction moves `L_min` **UP** (1.6906 → 1.8121), away from N9's
+  1.271. The rescue needed −0.642pp; it measured +0.198pp. Verdict
+  `NOT_DETECTABLE_IN_SCOPE` under the registered R13 gate. **The estimand lever
+  in §1 is closed; hedging and the objective survive.**
+- **R13 passed a design its own data cannot resolve** — claimed floor 0.46pp,
+  honest block-bootstrap MDE 0.895–1.306pp. `n_available` counted overlapping
+  days as independent episodes. Fixed as R13b (`Aegis module` @ `a0ef261`).
+- The three code corrections in §4/§5 are **built and tested**, not queued.
 
 **State, verified 2026-08-16:** `aegis-finance` @ `725f5e8` (clean tree),
 `Aegis module` @ `8b93610`, CI green, prod on `2ba9fb3`, $0.00 spent last
@@ -16,7 +63,22 @@ instead of either; where they are not contradicted here, both stand.
 
 ---
 
-## 1. RULING — partial sizing does NOT lower the break-even lift. δ cancels.
+## 1. RULING — partial sizing does NOT lower the break-even lift. δ cancels
+##    *under N4B's linear payoff model.*
+
+> **SCOPE OF THE CANCELLATION (amended 2026-08-16).** δ factors out of both
+> sides exactly when exposure P&L is **linear in δ** and cost is
+> **proportional to δ** — which is how N4B defines the economics, and is
+> therefore decisive against the Order-4 §3 argument as written.
+>
+> It does **not** show that partial sizing is economically equivalent in
+> general. Daily compounding, time-varying exposure, non-linear market impact,
+> leverage constraints, utility curvature and option hedges all break the
+> proportionality, and any of them can reintroduce a δ-dependence.
+>
+> The correct conclusion is not "sizing is irrelevant" but **"the tail-coverage
+> algebra cannot tell you whether sizing helps"** — which is precisely why the
+> direct policy-utility measurement supersedes it.
 
 Order 4 §3 (builder) says the 1.69 bar is a property of the action, and that a
 signal moving exposure 1.0 → 0.7 "forgoes 30% of `μ_rest`, not 100%", so
@@ -74,11 +136,30 @@ number in the programme, and it is one line on data already on disk.
 The three things that genuinely change `L_min`, none of which is partial sizing:
 
 1. **Conditional `μ_rest | fire`** — above. Measure it first.
+   **MEASURED 2026-08-16 (N20): this lever is CLOSED.** `μ_rest | fire` is
+   **+2.356%** against an unconditional **+2.158%** — it moved **up** by
+   0.198pp, so `L_min` rises to **1.8121**, further from 1.271 rather than
+   nearer. The rescue required a fall of 0.642pp. Read economically: the
+   precursors fire in high-volatility states, and high-volatility states that
+   do **not** produce a tail are the ones that rebound hardest, so de-risking
+   on them forgoes *more* than average, not less. Registered verdict
+   `NOT_DETECTABLE_IN_SCOPE` — the slice cannot resolve 0.642pp (honest MDE
+   0.895–1.306pp) — so this is "no support and the wrong sign", not a
+   refutation. Prereg `docs/TRIALS/PREREG_N20_CONDITIONAL_MU_REST.md`.
 2. **The objective.** `L_min` is derived under arithmetic mean return. Under
    expected log growth, avoiding a −11% move is worth more than its arithmetic
-   contribution (variance drag). This is very likely why N12's vol targeting
-   wins at matched vol with no return edge, and it means the break-even must be
-   recomputed under the *declared* objective, not under total return.
+   contribution (variance drag), so the break-even must be recomputed under the
+   *declared* objective rather than under total return.
+
+   > **Withdrawn 2026-08-16:** this previously read "this is very likely why
+   > N12's vol targeting wins at matched vol." That was an explanation formed
+   > **after** seeing N12, and N12's own primary matched-vol log-wealth
+   > comparison was `NOT_DETECTABLE_IN_SCOPE` — so it cannot support a causal
+   > claim about itself. The defensible statement is: **log-growth utility is
+   > one plausible route by which tail avoidance could matter differently.
+   > Test it directly.** Concave utility penalising bad wealth outcomes more
+   > heavily is sound economics; that it explains this particular result is an
+   > untested hypothesis and is now queued as one.
 3. **A convex payoff.** A put hedge pays a premium on every firing day and a
    non-linear payoff on tail days, so neither term scales in δ. This is a
    different inequality, not a rescaling of this one — and since options are
@@ -106,7 +187,14 @@ arithmetic-return objective*. Sizing, hedging, and any log-utility objective are
 
 ---
 
-## 2. RULING — the OptionMetrics contradiction is resolved. It is NOT blocked.
+## 2. RULING — OptionMetrics entitlement/acquisition was never the blocker.
+##    Historical usability is now measured, and it is a SCOPE limit.
+
+> **Amended 2026-08-16.** This section previously read "It is NOT blocked",
+> which overstated a verified claim about *access* into an unverified claim
+> about *usability*. Both halves are now settled, and they point different ways:
+> acquisition was never the obstacle, and the data cannot do what the rung was
+> assumed to need.
 
 The principal asked whether the blocker is entitlement, availability,
 credentials, or a script that never connected. **Answer: none of them. The data
@@ -128,15 +216,53 @@ false. Correct it in this session** — it is the reason a whole session recorde
 "no licence" as fact, and a stale registry line that closes a data family is the
 same defect class as a false kill compiled into source.
 
-Two caveats to verify before building on it, **not** reasons to defer:
+### MEASURED 2026-08-16 — `scripts/optionm_schema_audit.py`
 
-- Row counts (~226k rows / ~2,588 secids in 2002) are ~87 rows per secid-year,
-  which is **not** daily. Determine the actual snapshot frequency before
-  declaring the rung PIT-daily; a month-end surface still supports a monthly
-  rung and still supports the ladder.
-- Coverage ends **2024**. IvyDB updates annually, so this is a research
-  instrument, not a live feed. Any conclusion is scoped to ≤2024 and the live
-  product still needs `options_intelligence.py` / VIX for the forward path.
+The earlier caveat read "~87 rows/secid-year means it is not daily." That
+reached the right conclusion by an invalid route: **row count cannot identify
+sampling frequency** when each date carries many surface coordinates. Measured
+directly instead, on five probe years spanning the range:
+
+| property | measurement |
+|---|---|
+| unique observation dates / year | **exactly 12**, every year 2002–2024 |
+| median / max date gap | **31 / 33 days** |
+| first, last | `2002-01-31` … `2024-12-31` — every date a **month end** |
+| dates per secid | **12** (median and max — the panel is complete) |
+| surface coordinates per secid-date | **8** |
+| grid | `days ∈ {30, 91}` × `delta ∈ {±25, ±50}` × `cp ∈ {C, P}` |
+| rows / secid-year | **96** = 12 dates × 8 coordinates, *not* 96 observations |
+| implied-vol nulls | 4.4% (2002) → 6.5% (2024) |
+| securities | 2,588 (2002) → 6,044 (2024) |
+
+**`vsurf_me` is a month-end standardised surface. The `_me` is month-end.** It
+is not sparse or partially extracted — the panel is complete at every date; it
+is simply monthly.
+
+**What that changes.** The implied-vol rung is buildable now, and it **cannot be
+the forward rung of the daily ladder in §3** — N11's rv20/EWMA/HAR update every
+day, and a month-end observation cannot be compared with them at daily decision
+points. It defines its **own monthly ladder**, with decision points at month
+end. That is a scope correction to §3's plan, not a deferral: 23 years × 12 =
+276 month-ends per security across thousands of securities is ample for the
+level-accuracy metrics §3 demands, and `days ∈ {30, 91}` maps cleanly onto the
+20d and 60d horizons N4B and N9 already use. The 25-delta/50-delta pairs give
+the skew rung for free.
+
+Remaining, honestly unresolved:
+
+- **PIT is NOT cleared.** Max date never exceeds the file year, which rules out
+  cross-year restatement in the extraction and says nothing about vintage
+  restatement within a year. Verify before any live claim.
+- Coverage ends **2024**; IvyDB updates annually. Research instrument, never a
+  live feed. The live product still needs `options_intelligence.py` / VIX.
+
+`backend/data/signal_registry.yaml:681` said
+`data_grade: OptionMetrics entitlement was never established`. **That line was
+false and had been since the data landed.** A stale registry line that closes a
+data family is the same defect class as a false kill compiled into source: it
+stops work silently and nothing re-checks it. **Corrected `8d8e915`**, with the
+measurement above recorded in the entry rather than the inference.
 
 Then add the rung, and restate the vol verdict as `NOT_DETECTABLE_IN_SCOPE`,
 scope = *forecasters constructed from realised-volatility history*; implied vol
@@ -187,7 +313,7 @@ many decision periods compared on realised compound wealth.
 |---|---|---|---|
 | G1 referee | PASSED | **OPERATIONAL / PROVISIONALLY STRONG** | A compiled false kill was found *this session* (`n4_precursor_coverage.py:207`, now fixed). A referee is never "unfoolable"; it is passed when the known-answer worlds recover known truths at declared FP **and FK** rates. That battery does not exist — `grep` for `known_answer\|synthetic_world` returns nothing. |
 | G2 regime→event | PASSED | **PASSED for high-frequency event families**, not for every question | 25 crisis episodes ever vs 1,746 insider filings/day; N8's curve resolves ≥10pp only. |
-| G3 objective | NOT STARTED | **PARTIAL** — principal is right | `utility.py` has `PathStats`, drawdown, time-under-water, ES, ruin, CRRA, `break_even_gamma`, `EXPECTED_LOG_GROWTH`, `LOG_GROWTH_WITH_RUIN`, and refuses the per-path-log mistake. `PolicyResult.wealth_path` landed (`policies.py:67`). |
+| G3 objective | NOT STARTED | **PARTIAL → mostly closed `8d8e915`** | `utility.py` has `PathStats`, drawdown, time-under-water, ES, ruin, CRRA, `break_even_gamma`, `EXPECTED_LOG_GROWTH`, `LOG_GROWTH_WITH_RUIN`, and refuses the per-path-log mistake. `PolicyResult.wealth_path` landed (`policies.py:67`). Since: the `regret_pct` units mismatch is fixed and all four personalities exist. **Remaining: raw return is still the operational default when no objective is named.** |
 | G4 expectation | NOT STARTED | **NOT STARTED — confirmed** | zero hits for `expectation_layer`. Both orders agree it is the most important missing abstraction. |
 | G5 world model | NOT STARTED | **NOT STARTED — confirmed** | zero hits for `world_model`. |
 | G6 sizing learner | — | **PARTIAL** | N12 is a baseline sizing policy; no learned policy. |
@@ -195,21 +321,34 @@ many decision periods compared on realised compound wealth.
 
 **G3's remaining gap, named precisely so it can be closed:**
 
-- `counterfactual.py:91` — `ranked(objective=None)` silently sorts on
-  `net_return_pct`. The docstring justifies the default (not restating
-  published numbers) and that reasoning was sound at the time, but the
-  principal's rule is stricter and correct: **no path may fall back to raw
-  return without naming `total_return` explicitly.** Make `objective` required,
-  or make `None` resolve to the literal `TOTAL_RETURN` object so
-  `objective_used()` cannot return the word "implicit".
-- `counterfactual.py:126` — `regret_pct()` calls `self.best()` with no
-  objective. Same fix.
-- `OBJECTIVES` currently holds `total_return`, `sortino`,
-  `drawdown_penalised` (×2), `expected_log_growth`,
-  `log_growth_with_ruin_constraint`, `aggressive_growth`. **Three of the four
-  declared personalities do not exist:** capital preservation, balanced,
-  extreme growth. Add them as explicit utility/risk constraints, not as strategy
-  names.
+- `counterfactual.py:91` — "**silently** sorts on `net_return_pct`" was too
+  strong and is **withdrawn**: the default is documented in the docstring and
+  named on every record by `objective_used()`. The accurate defect is narrower —
+  **raw return remains the operational default instead of an explicit declared
+  utility being required.** That is what must go before a policy learner is
+  trained against it. *(Still open.)*
+- `counterfactual.py:126` — `regret_pct()` called `self.best()` with no
+  objective and then differenced `net_return_pct` unconditionally, so a policy
+  selected under a drawdown- or ruin-aware objective was measured in raw
+  return. **That one was a genuine units mismatch and is FIXED (`8d8e915`):**
+  selection and measurement now take the same argument and cannot diverge, and
+  `regret_units()` prints beside the number.
+
+  Worth keeping straight: for `total_return` and pure log growth the two agree,
+  because log is monotonic on a single episode — the mismatch only bites for
+  drawdown- and ruin-penalised objectives, which is exactly the family a sizing
+  learner would use.
+- **The four personalities now exist (`8d8e915`).** `PRESERVATION`, `BALANCED`,
+  `AGGRESSIVE`, `EXTREME_GROWTH`, built by one `personality()` function as
+  `aggressive_growth`'s docstring always said they should be, exported as
+  `PERSONALITIES` so nothing can iterate three of four. All keep ruin terminal
+  and all sit below the `dd_lambda = 1.0` cliff where the argmax is cash
+  everywhere — checked behaviourally, not by reading the constant.
+
+  **Declared honestly as a preference *ladder*, not an elicited one.** The
+  ordering is the content; the specific lambdas (0.60 / 0.30 / 0.15 / 0.05) are
+  conventions standing in until Murat's risk preference is elicited properly.
+  They exist so a ranked comparison can *cite* one — which is what was missing.
 
 ---
 
@@ -243,10 +382,37 @@ not 10,000 ideas. Train → foreign security → temporal holdout; the generatin
 episode never certifies. Primary metric: **distinct serious mechanism families
 per dollar**, then transfer rate, then coverage.
 
-**P4 — the slice register.** Verified absent: `slice_register`/`spent slice`
-appear nowhere in the codebase except the order-4 document. Six securities were
-declared, consumed by N9, then consumed again by N9B — the second use is not an
-independent confirmation, and it survived only because someone remembered.
+**P4 — the slice register. BUILT `4c16fdf`.** Verified absent at the time of
+writing: `slice_register`/`spent slice` appeared nowhere in the codebase except
+the order-4 document. Six securities were declared, consumed by N9, then
+consumed again by N9B — and it survived only because someone remembered.
+
+### N9B's epistemic status, stated exactly (amended 2026-08-16)
+
+N9B is a **post-confirmation adaptive comparison on a spent slice** — *not* a
+fresh confirmation. Precisely:
+
+- its paired differences (+0.083 / +0.056 against MDE 0.309 / 0.591) are
+  **sound**, and its `RULED_OUT` equivalence against the +0.419 / +0.780 needed
+  **stands as evidence**;
+- what it may **not** carry is the epistemic status of independent
+  confirmation, because the experiment was *designed after* information from
+  that slice had already entered the research process;
+- so "the vocabulary was not the ceiling" remains supported, and "confirmed
+  twice on untouched data" was never true and must not be written.
+
+The register enforces the identity the review specified — **universe × period ×
+outcome definition × information cutoff**, not a ticker list — and detects reuse
+by **overlap**, so nudging the window five months mints a new `slice_id` and is
+still refused. A `CONFIRM` on touched data is refused unless the prereg declares
+`REANALYSIS` or `PAIRED`, and that declaration **costs the confirmation claim**
+(`may_claim_confirmation: False`); it cannot be applied retroactively. Seeded
+from the real history: N9 `CONFIRM`, N9B `PAIRED`, N4 `EXPLORE`, N4B and N20
+`REANALYSIS`. `unread_candidates` names where a clean confirmation can still
+run — 10 untouched names from a 16-name pool at 20d.
+
+Not done: the prereg linter does not yet require a declared slice, so the
+register still depends on a trial choosing to call it.
 Record securities, period, consuming trial, use count. **Consuming a spent slice
 is a refusal, not a warning — the exit code is the guard.** Declare the next
 untouched slice *before* the next confirmation.
