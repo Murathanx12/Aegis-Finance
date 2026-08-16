@@ -53,6 +53,10 @@ QUANTILES: tuple[float, ...] = (0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95)
 #: Trading days per year, for annualisation.
 TRADING_DAYS = 252.0
 
+#: z(alpha=.05 two-sided) + z(power=.80) — the same constant R13's linter uses,
+#: so a bootstrap MDE and a registration-time floor are directly comparable.
+_Z_MDE = 1.959963985 + 0.8416212336
+
 
 # ── scoring ─────────────────────────────────────────────────────────────────
 
@@ -199,6 +203,86 @@ class WorldModelV0:
 
 
 # ── walk-forward ────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class PairedInference:
+    """A paired difference with an interval that survives the panel's shape."""
+
+    mean: float
+    ci_lo: float
+    ci_hi: float
+    se: float
+    mde_80pct_power: float
+    n_rows: int
+    n_dates: int
+    n_securities: int
+    n_effective: float
+    block_days: int
+    dependence_unit: str
+
+    def as_dict(self) -> dict:
+        return {f: getattr(self, f) for f in self.__dataclass_fields__}
+
+
+def block_bootstrap_paired(diff: np.ndarray, dates: np.ndarray,
+                           block_days: int, *, n_boot: int = 2000,
+                           seed: int = 0) -> PairedInference:
+    """Interval on a per-row paired difference over a POOLED PANEL.
+
+    The unit resampled is a **contiguous run of calendar dates**, and every
+    panel row on a sampled date travels with it. Two dependencies make that
+    mandatory and either one alone is enough:
+
+    - **Overlap.** An H-day forward outcome at date t shares H-1 days with the
+      outcome at t+1, so neighbouring rows are near-copies.
+    - **Cross-section.** On any single date the whole universe moves together.
+      Eighteen ETFs on one day are closer to one observation than to eighteen.
+
+    Resampling **rows** instead gets both wrong, and gets them wrong in the
+    flattering direction — it manufactures independent observations out of a
+    panel and narrows every interval it produces. In a date-sorted panel it is
+    worse still: a block of `k` consecutive ROWS spans only `k / n_securities`
+    days, so a block chosen to span the outcome horizon spans a fraction of it.
+
+    This is the same arithmetic as R13b, one level up: `n_effective` is the
+    number of non-overlapping **date blocks**, never the number of rows.
+    """
+    diff = np.asarray(diff, dtype=float)
+    dates = np.asarray(dates)
+    if diff.shape[0] != dates.shape[0]:
+        raise ValueError("diff and dates must be row-aligned")
+
+    uniq, inv = np.unique(dates, return_inverse=True)
+    n_dates = int(uniq.size)
+    # rows grouped by date index, so a sampled date carries its whole cross-section
+    order = np.argsort(inv, kind="stable")
+    sorted_inv = inv[order]
+    starts = np.searchsorted(sorted_inv, np.arange(n_dates), side="left")
+    ends = np.searchsorted(sorted_inv, np.arange(n_dates), side="right")
+
+    block = max(1, int(block_days))
+    n_blocks = int(np.ceil(n_dates / block))
+    rng = np.random.default_rng(seed)
+    boots = np.empty(n_boot, dtype=float)
+    for b in range(n_boot):
+        s = rng.integers(0, max(1, n_dates - block), size=n_blocks)
+        picked = np.concatenate([np.arange(x, min(x + block, n_dates))
+                                 for x in s])
+        rows = np.concatenate([order[starts[j]:ends[j]] for j in picked])
+        boots[b] = float(diff[rows].mean())
+
+    lo, hi = float(np.quantile(boots, 0.05)), float(np.quantile(boots, 0.95))
+    se = float(np.std(boots, ddof=1))
+    return PairedInference(
+        mean=float(diff.mean()), ci_lo=lo, ci_hi=hi, se=se,
+        mde_80pct_power=float(_Z_MDE * se),
+        n_rows=int(diff.size), n_dates=n_dates,
+        n_securities=int(round(diff.size / max(1, n_dates))),
+        n_effective=float(n_dates) / block, block_days=block,
+        dependence_unit=f"contiguous {block}-trading-day block of the whole "
+                        f"cross-section",
+    )
+
 
 @dataclass
 class Fold:

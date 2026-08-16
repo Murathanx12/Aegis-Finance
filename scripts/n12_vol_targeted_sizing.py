@@ -39,7 +39,7 @@ import sys
 from pathlib import Path
 
 from backend import config as _config
-from backend.services.research_gym import ex_post as XP
+from backend.services.research_gym import evaluation_only as XP
 from backend.services.research_gym import power as PW
 from backend.services.research_gym import utility as U
 

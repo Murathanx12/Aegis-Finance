@@ -119,3 +119,59 @@ def matched_vol_scale(reference_vol: float, policy_vol: float,
     if not policy_vol or policy_vol <= 0:
         return ExPostScale(1.0, basis=basis + " (degenerate: policy vol <= 0)")
     return ExPostScale(float(reference_vol) / float(policy_vol), basis=basis)
+
+
+@dataclass(frozen=True)
+class ExPostArray:
+    """A vector of hindsight quantities, one per observation.
+
+    Same contract as `ExPostScale`, for the case where the hindsight is
+    per-row — a forward realised volatility, a future drawdown depth, the
+    outcome-conditional scale used in a decomposition. Arrays are the more
+    dangerous case, because `preds * oracle` broadcasts silently and produces a
+    plausible table.
+    """
+
+    values: object                     # np.ndarray, kept untyped to avoid an
+    basis: str                         # import of numpy at module scope
+
+    def __post_init__(self) -> None:
+        if not self.basis or not self.basis.strip():
+            raise ExPostUsageError(
+                "ExPostArray requires `basis`: one sentence naming the "
+                "hindsight it is built from.")
+
+    def __mul__(self, other):                                    # noqa: D105
+        raise ExPostUsageError(_REFUSAL.format(basis=self.basis))
+
+    __rmul__ = __mul__
+    __add__ = __mul__
+    __radd__ = __mul__
+    __truediv__ = __mul__
+    __rtruediv__ = __mul__
+
+    def __array__(self, *a, **k):                                # noqa: D105
+        raise ExPostUsageError(_REFUSAL.format(basis=self.basis))
+
+    def __iter__(self):                                          # noqa: D105
+        # iteration is the other silent route into a numeric context
+        raise ExPostUsageError(_REFUSAL.format(basis=self.basis))
+
+    def for_comparison_only(self):
+        """The raw array, for a diagnostic table and nowhere else."""
+        return self.values
+
+    def __repr__(self) -> str:                                   # noqa: D105
+        n = getattr(self.values, "shape", ("?",))
+        return f"ExPostArray(shape={n}, basis={self.basis!r}) [NOT DEPLOYABLE]"
+
+
+def oracle_scale(realised_forward_scale, *, basis: str) -> ExPostArray:
+    """A per-row scale measured over the outcome window the row is predicting.
+
+    This is maximal hindsight: it is the answer's own dispersion. It exists to
+    answer *"is the estimator the bottleneck, or the shape model?"* by handing
+    a candidate the one thing it cannot know, and it can never be evidence for
+    anything a policy would do.
+    """
+    return ExPostArray(realised_forward_scale, basis=basis)

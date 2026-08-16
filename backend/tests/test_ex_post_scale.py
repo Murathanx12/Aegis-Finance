@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from backend.services.research_gym.ex_post import (ExPostScale,
+from backend.services.research_gym.evaluation_only.ex_post import (ExPostScale,
                                                    ExPostUsageError,
                                                    matched_vol_scale)
 

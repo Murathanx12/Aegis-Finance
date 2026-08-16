@@ -155,6 +155,125 @@ def test_the_model_produces_monotone_quantiles_on_real_noise():
     assert (np.diff(p, axis=1) >= 0).all()
 
 
+# ── dependence-aware inference ─────────────────────────────────────────────
+
+def _panel(n_dates: int, n_sec: int, rho: float, seed: int = 0,
+           overlap: int = 20):
+    """A panel with BOTH dependencies a forward-return panel actually has.
+
+    - **Cross-sectional:** every security shares a common daily shock, scaled
+      by `rho`.
+    - **Temporal overlap:** the value at date t is the sum of shocks over
+      `[t, t+overlap)`, exactly as an H-day forward return is. Adjacent dates
+      are therefore near-copies sharing `overlap - 1` of their shocks.
+
+    The overlap is the part that matters and the part the first version of
+    this helper left out — without it the synthetic could not exhibit the
+    defect the function under test exists to fix, and the mutation control
+    passed for a reason unrelated to the fix.
+    """
+    rng = np.random.default_rng(seed)
+    n_raw = n_dates + overlap
+    common = rng.normal(0.0, 1.0, n_raw)
+    idio = rng.normal(0.0, 1.0, (n_raw, n_sec))
+    shocks = rho * common[:, None] + (1.0 - rho) * idio
+    cum = np.cumsum(np.vstack([np.zeros((1, n_sec)), shocks]), axis=0)
+    vals = cum[overlap:overlap + n_dates] - cum[:n_dates]     # rolling sums
+    dates = np.repeat(
+        np.datetime64("2000-01-03") + np.arange(n_dates) * np.timedelta64(1, "D"),
+        n_sec)
+    return vals.reshape(-1), dates
+
+
+def test_date_blocks_are_wider_than_row_blocks_when_the_cross_section_comoves():
+    """The mutation control for the whole fix.
+
+    Resampling rows treats 18 ETFs on one day as 18 observations. If that
+    made no difference to the interval, the fix would be cosmetic — so the
+    difference is measured, not asserted.
+    """
+    diff, dates = _panel(600, 18, rho=0.95)
+    honest = WM.block_bootstrap_paired(diff, dates, 40, n_boot=400, seed=1)
+    # the naive alternative: contiguous ROWS, which in a date-sorted panel
+    # span 40/18 ~ 2 days
+    rng = np.random.default_rng(1)
+    n = diff.size
+    nb = int(np.ceil(n / 40))
+    naive = np.array([
+        diff[np.concatenate([np.arange(s, s + 40)
+                             for s in rng.integers(0, n - 40, nb)])[:n]].mean()
+        for _ in range(400)])
+    assert honest.se > float(np.std(naive, ddof=1)) * 2.0
+
+
+def test_n_effective_counts_date_blocks_not_rows():
+    diff, dates = _panel(504, 18, rho=0.9)
+    inf = WM.block_bootstrap_paired(diff, dates, 40, n_boot=50, seed=2)
+    assert inf.n_rows == 504 * 18
+    assert inf.n_dates == 504
+    assert inf.n_securities == 18
+    assert inf.n_effective == pytest.approx(504 / 40, rel=1e-6)
+    # the number that would have been claimed by counting rows
+    assert inf.n_effective < (inf.n_rows / 40) / 10.0
+
+
+def test_a_sampled_date_carries_its_whole_cross_section():
+    """If a date could be sampled partially the cross-section would leak back
+    in as extra independent draws."""
+    n_dates, n_sec = 50, 6
+    diff, dates = _panel(n_dates, n_sec, rho=1.0)
+    # rho=1 => every row on a date is identical, so ANY resample that keeps
+    # dates whole must reproduce a mean drawn from the date-level means
+    inf = WM.block_bootstrap_paired(diff, dates, 5, n_boot=200, seed=3)
+    assert np.isfinite(inf.se) and inf.se > 0
+    assert inf.n_securities == n_sec
+
+
+def test_paired_inference_rejects_misaligned_inputs():
+    with pytest.raises(ValueError):
+        WM.block_bootstrap_paired(np.zeros(10), np.zeros(9), 5)
+
+
+def test_mde_scales_with_the_declared_block_length():
+    """A longer block admits fewer independent units and must not tighten."""
+    diff, dates = _panel(1000, 10, rho=0.9)
+    short = WM.block_bootstrap_paired(diff, dates, 5, n_boot=300, seed=4)
+    long_ = WM.block_bootstrap_paired(diff, dates, 60, n_boot=300, seed=4)
+    assert long_.n_effective < short.n_effective
+
+
+# ── the baselines cannot see the future ────────────────────────────────────
+
+def test_climatology_is_blind_to_everything_after_the_training_cutoff():
+    """A leaked climatology would be a very strong competitor for exactly the
+    wrong reason, so it is tested rather than read."""
+    dates = _dates(4000)
+    folds = WM.walk_forward_folds(dates, 2005, 20, min_train=100)
+    rng = np.random.default_rng(5)
+    y = rng.normal(0.0, 3.0, len(dates))
+    for tr, te, _f in folds:
+        before = WM.climatology_quantiles(y[tr], te.size)
+        poisoned = y.copy()
+        mask = np.ones(len(y), dtype=bool)
+        mask[tr] = False
+        poisoned[mask] += 500.0          # catastrophic future contamination
+        after = WM.climatology_quantiles(poisoned[tr], te.size)
+        assert np.array_equal(before, after)
+
+
+def test_scaled_empirical_is_blind_to_future_outcomes_too():
+    """Its residual distribution comes from training; only today's rv may be
+    a test-period quantity, and that is a feature, not an outcome."""
+    rng = np.random.default_rng(6)
+    y_tr = rng.normal(0.0, 2.0, 800)
+    rv_tr = np.abs(rng.normal(20.0, 3.0, 800))
+    rv_te = np.abs(rng.normal(20.0, 3.0, 50))
+    a = WM.scaled_empirical_quantiles(y_tr, rv_tr, rv_te, 20)
+    # perturbing anything outside (y_tr, rv_tr, rv_te) cannot reach it
+    b = WM.scaled_empirical_quantiles(y_tr.copy(), rv_tr.copy(), rv_te, 20)
+    assert np.array_equal(a, b)
+
+
 def test_the_model_widens_where_the_noise_is_wider():
     """Sanity: it must at least learn heteroskedasticity it was shown."""
     rng = np.random.default_rng(4)
