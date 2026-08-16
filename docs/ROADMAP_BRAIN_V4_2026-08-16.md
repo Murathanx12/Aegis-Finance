@@ -26,9 +26,9 @@ stand between here and a self-learning investment brain:
 
 | # | gate | status |
 |---|---|---|
-| G1 | A referee that cannot be fooled by its own instruments | **PASSED** — five denominator defects found by running, not reading |
+| G1 | A referee that cannot be fooled by its own instruments | **DOWNGRADED 2026-08-16 → OPERATIONAL / PROVISIONALLY STRONG.** I declared this passed on the strength of five denominator defects found by running. Then a **false kill was found compiled into the source** (`"NO COVERAGE"`, `n4_precursor_coverage.py:207`) — *after* the declaration. A gate asserting the referee cannot be fooled by its own instruments cannot be passed while an instrument was in fact fooling us, and the battery that would actually test it (known-answer worlds; `grep known_answer\|synthetic_world` returns nothing) **does not exist**. Flips to PASSED only when that battery recovers planted truth at declared false-positive **and false-kill** rates |
 | G2 | A unit of analysis with enough sample to resolve anything | **PASSED 2026-08-16** — regime→event (R14) |
-| G3 | An objective function that is terminal wealth, not return | **NOT STARTED** — `PolicyResult` still has no risk term |
+| G3 | An objective function that is terminal wealth, not return | **PARTIAL** — the wealth path landed (`policies.py:54`) and `utility.py` primitives exist, but the objective is **available, not authoritative**: `counterfactual.py:91` still sorts on `-net_return_pct` whenever no objective is passed, and `:126` computes `regret_pct` as a **`net_return_pct` difference unconditionally** — so `best()` can be selected under log-wealth while the regret beside it is reported in raw return. **A policy chosen by one criterion and measured by another is a units mismatch, not a partial build.** Three of four personalities (preservation, balanced, extreme growth) do not exist in `OBJECTIVES` |
 | G4 | An expectation layer — surprise, not announcement | **NOT STARTED** |
 | G5 | A world model whose heads are the moments we can actually forecast | **NOT STARTED** |
 | G6 | A sizing/policy learner trained against G3 | **NOT STARTED** |

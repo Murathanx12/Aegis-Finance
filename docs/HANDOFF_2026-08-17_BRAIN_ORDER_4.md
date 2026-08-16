@@ -70,6 +70,39 @@ product is unaffected**: sizing needs a forecaster, not the best forecaster.
 
 ## 3. THE REFRAME — 1.69 is a property of the ACTION, not of the signal
 
+> ### ERRATUM, 2026-08-16 — §3's central mechanism is arithmetically WRONG. δ cancels.
+>
+> Order 5 refuted this and it is right. I argued that cutting exposure by δ
+> forgoes only δ·`μ_rest` and so lowers `L_min`. **It also captures only
+> δ·|μ_tail| of the avoided loss, and turnover cost scales with δ too.** The
+> expected gain from firing is
+>
+> `δ · [ q·|μ_tail| − (1−q)·μ_rest − cost ]`
+>
+> and **δ factors out of every term**. Break-even precision is unchanged:
+> `L_min` = 1.6907 at δ = 1.0, 0.3 and 0.1 alike, verified against the live
+> ledger. I did the accounting on one side only.
+>
+> **The refined doctrine, which is what should have been written:** an action
+> that is a **linear scaling** of the tested action is **not a new scope** —
+> scaling is exactly what cancels. A scope changes only when the action changes
+> the **payoff shape**, the **objective**, or the **conditioning**. So of the
+> three levers §3 proposed, one survives and two are replaced:
+>
+> | lever | status |
+> |---|---|
+> | partial sizing (δ) | **REFUTED — δ cancels** |
+> | hedging | **survives** — a premium plus convex payoff is not linear in δ, so the cancellation does not apply |
+> | conditional `μ_rest` | **new, and the sharp one** — `n4b_coverage_equivalence.py:205` uses `f[~mask].mean()`, the *unconditional* non-tail mean. The correct quantity is `μ_rest \| fire`. N9's 1.271 clears break-even **iff `μ_rest\|fire` < 1.516% per 20d** (unconditional 2.158%, gap 0.64pp) **or < 2.542% per 60d**. One line on data in hand, and the 20d gap can fall either way |
+> | the objective | **new** — log growth values tail avoidance more than arithmetic return does, so the bar under log-wealth is lower. Likely why N12 wins at matched vol |
+>
+> **The conclusion of §3 survives; its stated reason does not.** Everything
+> below stands only with those substitutions.
+>
+> The lesson is Order 5's and it is canon: **a prereg written on that reasoning
+> would have been refuted by algebra before it touched data — so the next
+> prereg is written from the reason, not from the conclusion.**
+
 This is the order's headline and it comes out of your own formula.
 
 ```
