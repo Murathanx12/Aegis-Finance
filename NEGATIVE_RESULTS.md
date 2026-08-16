@@ -3136,3 +3136,30 @@ gives STALE_USABLE — so the payload now carries which names were carried
 forward, and the test that pins it was verified to FAIL without that argument
 before it was allowed to pass with it (§37: a new instrument's first positive is
 the one that looks like it working).
+
+### And the fix's own push turned CI red — the same defect, a third location
+
+`4d16013` was green on 4,321 local tests AND 4,310 in the CI-*simulated* world,
+and CI failed anyway. Cause: **CI exports no secrets.** Its pytest step sets
+`AEGIS_IIF1_PREREG_ABSENT_OK` and nothing else, so `api_keys.has("fred")` is
+True on this machine (`.env`) and False there. The four new tests leaned on the
+ambient key and received `{}`.
+
+`ci_env_sim` exists to end exactly this, and had modelled what CI **hides** (the
+sibling repo) but not what CI **lacks** (keys). It now blanks seven API keys —
+and does it by mutating the `api_keys` singleton **in place**, because every
+service does `from backend.config import api_keys` and holds the ORIGINAL
+object: rebinding `config.api_keys` would have been invisible, and blanking
+`os.environ` alone would not have moved a dataclass built at import.
+
+That is §47's question — *where is this value actually read?* — for the third
+time this week, now in the test harness rather than the code under test.
+
+Verified rather than assumed: with the test fix stashed, the improved simulator
+reproduces CI's exact four failures, so it would have caught this before the
+push. The full suite with secrets blanked is 4,310 passed, which also says no
+OTHER test was quietly depending on a real key.
+
+**The standing lesson, third restatement:** a simulator of another environment
+is only as good as the dimensions it models, and every dimension it omits looks
+exactly like a passing test.

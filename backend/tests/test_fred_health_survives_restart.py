@@ -97,14 +97,23 @@ class _StubFred:
 
 @pytest.fixture
 def world(monkeypatch):
-    """A cold process with an isolated disk cache and a stubbed FRED."""
+    """A cold process with an isolated disk cache and a stubbed FRED.
+
+    The key is forced present. CI exports no secrets at all — its pytest step
+    sets `AEGIS_IIF1_PREREG_ABSENT_OK` and nothing else — so a test that leans on
+    the ambient FRED_API_KEY passes on this machine and fails there. It did:
+    these four tests were green locally in both worlds and turned CI red on
+    4d16013. `ci_env_sim` now models the missing secrets so the next one cannot.
+    """
     import fredapi
 
     import backend.cache as C
+    from backend.services import data_fetcher as DF
 
     disk = _FakeDisk()
     monkeypatch.setattr(C, "_get_disk_cache", lambda: disk)
     monkeypatch.setattr(fredapi, "Fred", _StubFred)
+    monkeypatch.setattr(DF.api_keys, "fred", "test-key-not-a-real-one")
     _StubFred.calls = 0
     _StubFred.dark = False
 

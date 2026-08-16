@@ -32,6 +32,19 @@ like real ones.
 
 Both halves of CI's environment are set here now, and the workflow file is the
 single source both read from.
+
+AND IT WAS INCOMPLETE A SECOND WAY (found 2026-08-16, by another red CI)
+=======================================================================
+CI's pytest step exports `AEGIS_IIF1_PREREG_ABSENT_OK` and **nothing else** — no
+secrets. This machine has FRED_API_KEY, FINNHUB_API_KEY and the rest in `.env`,
+so `api_keys.has("fred")` is True here and False there. Four new FRED tests
+passed in this simulated world and turned CI red on `4d16013`.
+
+Same defect as the sibling repo, one dimension over: the plugin modelled what CI
+*hides* and not what CI *lacks*. Keys are now blanked and `config.api_keys` is
+rebuilt from the blanked environment, because it is a module-level singleton
+constructed at import — clearing `os.environ` alone would not have moved it,
+which is its own instance of "where is this value actually read?".
 """
 
 from __future__ import annotations
@@ -48,17 +61,43 @@ _ABSENT = pathlib.Path("/nonexistent-ci-sim/Aegis module/scripts/iif1_config.py"
 #: defect this plugin exists to prevent, one level up.
 _CI_ENV = {"AEGIS_IIF1_PREREG_ABSENT_OK": "1"}
 
+#: Secrets CI does NOT have. Blanked rather than deleted, so anything reading
+#: them sees the same empty string CI's runner produces.
+_CI_ABSENT_KEYS = (
+    "FRED_API_KEY",
+    "FINNHUB_API_KEY",
+    "FMP_API_KEY",
+    "ALPHA_VANTAGE_API_KEY",
+    "POLYGON_API_KEY",
+    "DEEPSEEK_API_KEY",
+    "ANTHROPIC_API_KEY",
+)
+
 
 def pytest_configure(config) -> None:
+    from backend import config as _cfg
     from backend.services import iif1_prereg as P
     config._aegis_real_prereg_path = P.CONFIG_PATH
-    config._aegis_real_env = {k: os.environ.get(k) for k in _CI_ENV}
+    config._aegis_real_env = {k: os.environ.get(k)
+                              for k in (*_CI_ENV, *_CI_ABSENT_KEYS)}
     P.CONFIG_PATH = _ABSENT
     os.environ.update(_CI_ENV)
+    for k in _CI_ABSENT_KEYS:
+        os.environ[k] = ""
+    # `api_keys` is built from the environment at IMPORT, so blanking os.environ
+    # is not enough on its own. Nor is rebinding `config.api_keys`: every
+    # service does `from backend.config import api_keys` and holds the ORIGINAL
+    # object, so a new one would never be seen. The singleton is mutated IN
+    # PLACE, which is the only version every reference actually observes.
+    config._aegis_real_api_keys = {f: getattr(_cfg.api_keys, f)
+                                   for f in _cfg.api_keys.__dataclass_fields__}
+    for field_name in config._aegis_real_api_keys:
+        setattr(_cfg.api_keys, field_name, "")
     print(f"\n*** ci_env_sim: the `Aegis module` sibling is hidden "
-          f"({P.CONFIG_PATH}) and {sorted(_CI_ENV)} are set as CI sets them. "
-          f"Any test that needs the sibling must supply it explicitly, as CI "
-          f"forces it to.\n")
+          f"({P.CONFIG_PATH}), {sorted(_CI_ENV)} are set as CI sets them, and "
+          f"{len(_CI_ABSENT_KEYS)} API keys are blanked because CI has no "
+          f"secrets. Any test that needs the sibling or a key must supply it "
+          f"explicitly, as CI forces it to.\n")
 
 
 def pytest_unconfigure(config) -> None:
@@ -71,3 +110,8 @@ def pytest_unconfigure(config) -> None:
             os.environ.pop(k, None)
         else:
             os.environ[k] = v
+    real_keys = getattr(config, "_aegis_real_api_keys", None)
+    if real_keys:
+        from backend import config as _cfg
+        for field_name, value in real_keys.items():
+            setattr(_cfg.api_keys, field_name, value)
