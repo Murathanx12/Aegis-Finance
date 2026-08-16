@@ -56,6 +56,30 @@ MANIFEST = OUT_DIR / "manifest.json"
 HOST, PORT, DBNAME, USER = ("wrds-pgdata.wharton.upenn.edu", 9737,
                             "wrds", "murathan12")
 
+#: THE ROUTE. Measured 2026-08-16, and it corrects an earlier reading of mine.
+#:
+#: `wrds-pgdata:9737`, `wrds-pgdata:5432` and `wrds-www:443` all time out from
+#: this network, which I first read as "the route to Wharton is closed, needs a
+#: campus VPN". It is not. DNS resolves all three names to 165.123.60.0/24, and
+#: `wrds-cloud.wharton.upenn.edu:22` **connects and offers keyboard-interactive
+#: auth**. Same /24, same instant. So the block is PORT FILTERING on this
+#: network, not a route, and one open port is enough:
+#:
+#:   ssh -N -L 9737:wrds-pgdata.wharton.upenn.edu:9737 \
+#:       murathan12@wrds-cloud.wharton.upenn.edu
+#:
+#: Three hosts timing out looked like one cause and was one guess. The cheap
+#: check that distinguished them was a fourth port, and it took ten seconds.
+TUNNEL_ADDR = "127.0.0.1"
+
+#: `host` stays the real WRDS name even when tunnelled, and only `hostaddr` is
+#: redirected. libpq uses `host` for the pgpass lookup and `hostaddr` for the
+#: socket, so the existing `%APPDATA%\\postgresql\\pgpass.conf` entry keyed on
+#: `wrds-pgdata.wharton.upenn.edu:9737:wrds:murathan12` keeps matching. The
+#: alternative — adding a `localhost` line to the credential file — would edit
+#: Murat's credentials to work around a networking detail, which is the wrong
+#: file to touch for this reason.
+
 #: WM0's panel, verbatim. The comparison is only interpretable on the panel the
 #: 21.4% headroom was measured on; a different universe measures a different
 #: question and would need its own bound.
@@ -69,19 +93,31 @@ UNIVERSE = ("SPY", "QQQ", "IWM", "XLF", "XLE", "XLK", "XLV", "XLI", "XLP",
 DAYS = (30, 60, 91)
 DELTAS = (50, -25)
 
+#: PER-YEAR TABLES, discovered rather than assumed. There is no unified
+#: `optionm.vsurfd`: the daily surface is `optionm.vsurfd2000` .. `vsurfd2025`
+#: (and `vsurfbrYYYY` for the Brazilian panel, which is not this universe).
+#: The prereg named the family `optionm.vsurfd`; that stays true as a family
+#: name and the manifest records the exact per-year relation actually queried.
+#:
+#: Scale, measured on one year: `optionm.vsurfd2015` holds **404,564,776 rows
+#: across 252 distinct observation dates**, 2015-01-02 .. 2015-12-31. Our
+#: month-end extraction of the same year holds 12 dates. That is the vendor
+#: confirming, from its own table, that the month-end limitation reported twice
+#: in this programme was OUR `WHERE` clause. At 404M rows/year the bound below
+#: is not an optimisation, it is what makes the pull possible at all.
 SQL_SURFACE = """
 select secid, date, days, delta, cp_flag, impl_volatility, dispersion
-from optionm.vsurfd
-where secid in %(secids)s
-  and days in %(days)s
-  and delta in %(deltas)s
-  and date >= %(start)s and date <= %(end)s
+from optionm.vsurfd{year}
+where secid in :secids
+  and days in :days
+  and delta in :deltas
+  and date >= :start and date <= :end
 """
 
 SQL_MAP = """
-select secid, ticker, issuer, issue_type, index_flag, effect_date, exchange_d
+select secid, cusip, ticker, class, issue_type, index_flag, exchange_d
 from optionm.securd
-where ticker in %(tickers)s
+where ticker in :tickers
 """
 
 
@@ -93,17 +129,32 @@ def _sha256(p: Path) -> str:
     return h.hexdigest()
 
 
-def _reachable() -> tuple[bool, str]:
-    """Say WHY, not just no. A pull that fails silently looks like empty data."""
+def _tcp(host: str, port: int, timeout: float = 12.0) -> tuple[bool, str]:
     s = socket.socket()
-    s.settimeout(12)
+    s.settimeout(timeout)
     try:
-        s.connect((HOST, PORT))
+        s.connect((host, port))
         return True, "tcp ok"
     except Exception as exc:                                     # noqa: BLE001
         return False, f"{type(exc).__name__}: {exc}"
     finally:
         s.close()
+
+
+def tunnel_open() -> bool:
+    """Is a local forward listening on 9737? Checked, never assumed.
+
+    Assuming the tunnel is up produces a connection error that reads exactly
+    like bad credentials, and the next hour goes into the wrong file.
+    """
+    return _tcp(TUNNEL_ADDR, PORT, timeout=3.0)[0]
+
+
+def _reachable() -> tuple[bool, str]:
+    """Say WHY, not just no. A pull that fails silently looks like empty data."""
+    if tunnel_open():
+        return True, f"tcp ok via local forward {TUNNEL_ADDR}:{PORT}"
+    return _tcp(HOST, PORT)
 
 
 def _engine():
@@ -120,8 +171,11 @@ def _engine():
         if cand.exists():
             os.environ["PGPASSFILE"] = str(cand)
     from sqlalchemy import create_engine
-    return create_engine(
-        f"postgresql+psycopg2://{USER}@{HOST}:{PORT}/{DBNAME}?sslmode=require")
+    url = f"postgresql+psycopg2://{USER}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
+    if tunnel_open():
+        # `host` is left alone so pgpass still matches; only the socket moves.
+        url += f"&hostaddr={TUNNEL_ADDR}"
+    return create_engine(url)
 
 
 def _load_manifest() -> dict:
@@ -153,12 +207,24 @@ def cmd_probe(a) -> int:
     ok, why = _reachable()
     print(f"{HOST}:{PORT} reachable: {ok}  ({why})")
     if not ok:
+        ssh_ok, ssh_why = _tcp("wrds-cloud.wharton.upenn.edu", 22, timeout=8)
         print("\nNOT A CODE FAILURE. The endpoint was called and the status is "
-              "printed above. WRDS is unreachable from this network — "
-              "wrds-www.wharton.upenn.edu:443 times out too, while other hosts "
-              "do not, so this is the route to Wharton rather than the port. "
-              "Likely a campus/VPN requirement. Nothing here is blocked on "
-              "credentials or on this script.")
+              "printed above. Nothing here is blocked on credentials or on "
+              "this script.")
+        print(f"  wrds-cloud.wharton.upenn.edu:22 -> "
+              f"{'OPEN' if ssh_ok else 'BLOCKED'} ({ssh_why})")
+        if ssh_ok:
+            print("\n  So the ROUTE is fine and the direct database PORT is "
+                  "filtered. Open a forward in your own shell — it needs a "
+                  "password and a Duo push, so it cannot be done unattended:\n")
+            print(f"    ssh -N -L {PORT}:{HOST}:{PORT} "
+                  f"{USER}@wrds-cloud.wharton.upenn.edu\n")
+            print("  Leave it running, then re-run --probe. This script "
+                  "detects the forward and routes through it without touching "
+                  "the credential file.")
+        else:
+            print("\n  Route and port both closed — this one really is the "
+                  "network (campus VPN).")
         return 1
     from sqlalchemy import text
     with _engine().connect() as c:
@@ -182,20 +248,52 @@ def cmd_map(a) -> int:
         print(f"unreachable ({why}) — cannot map tickers to secids offline")
         return 1
     import pandas as pd
-    from sqlalchemy import text
+    from sqlalchemy import bindparam, text
     started = datetime.now(timezone.utc).isoformat()
+    stmt = text(SQL_MAP).bindparams(bindparam("tickers", expanding=True))
     with _engine().connect() as c:
-        df = pd.read_sql(text(SQL_MAP), c, params={"tickers": tuple(UNIVERSE)})
-    # An ETF ticker can map to several secids across history. Refuse to guess:
-    # print them all and require the ambiguity to be resolved deliberately.
+        df = pd.read_sql(stmt, c, params={"tickers": list(UNIVERSE)})
+    # An ETF ticker maps to several secids, and 16 of our 18 do. The raw
+    # ambiguity is recorded before any rule is applied, so the manifest shows
+    # what was chosen FROM rather than only what was chosen.
+    raw = {t: sorted(set(g["secid"].astype(int)))
+           for t, g in df.groupby("ticker")}
+    #
+    # THE RULE, declared and derived from the vendor's OWN classification
+    # columns rather than from a ticker I recognise:
+    #
+    #   index_flag = '0'  and  issue_type = '%'
+    #
+    # Every ticker here resolves to exactly three kinds of row. `index_flag='1'`
+    # with `class` in {I, N}, `issue_type='A'` and `exchange_d=32768` are
+    # DERIVED INDEX series on the ETF, not the fund. `issue_type='%'` with
+    # `index_flag='0'` is the fund. A third kind appears for SPY (secid 7571,
+    # cusip 81750M10) and GLD (8274, 80217610): `issue_type` NULL and
+    # `exchange_d=0` — dead 1990s tickers that happen to reuse the symbol, and
+    # the reason "pick the lowest secid" would have been wrong for two names.
+    #
+    # Cross-checked against an EXTERNAL identifier the vendor did not choose:
+    # the surviving cusips are 78462F10 (SPY), 78467X10 (DIA), 46090E10 (QQQ),
+    # 4642876x/4642872x (the iShares family) and 81369Y** (every Select Sector
+    # SPDR). Two independent classifications agreeing is what makes this a
+    # derivation; either one alone would be a guess with a citation.
+    sel = df[(df["index_flag"].astype(str) == "0")
+             & (df["issue_type"].astype(str) == "%")]
     mapping, ambiguous = {}, {}
-    for tkr, grp in df.groupby("ticker"):
-        ids = sorted(set(grp["secid"].astype(int)))
+    for tkr in sorted(raw):
+        ids = sorted(set(sel.loc[sel["ticker"] == tkr, "secid"].astype(int)))
         if len(ids) == 1:
             mapping[tkr] = ids[0]
         else:
-            ambiguous[tkr] = ids
-    print(f"resolved {len(mapping)}/{len(UNIVERSE)}; ambiguous: {ambiguous}")
+            # Still ambiguous AFTER the rule, or eliminated by it. Either way
+            # the rule did not decide, so this script does not either.
+            ambiguous[tkr] = raw[tkr]
+    print(f"resolved {len(mapping)}/{len(UNIVERSE)} by "
+          f"index_flag='0' & issue_type='%'; ambiguous: {ambiguous}")
+    for t in sorted(mapping):
+        cu = sel.loc[sel["secid"].astype(int) == mapping[t], "cusip"]
+        print(f"   {t:<4} secid {mapping[t]:>7}  cusip {cu.iloc[0]}  "
+              f"(from {len(raw[t])} candidate(s))")
     missing = sorted(set(UNIVERSE) - set(mapping) - set(ambiguous))
     if missing:
         print(f"NOT FOUND: {missing} — these are named, never dropped quietly")
@@ -204,7 +302,12 @@ def cmd_map(a) -> int:
         "kind": "map", "started_at": started,
         "finished_at": datetime.now(timezone.utc).isoformat(),
         "sql": SQL_MAP.strip(), "tickers": list(UNIVERSE),
+        "disambiguation_rule": "index_flag == '0' and issue_type == '%'",
+        "candidates_before_rule": {k: [int(x) for x in v]
+                                   for k, v in raw.items()},
         "mapping": {k: int(v) for k, v in mapping.items()},
+        "cusips": {k: str(sel.loc[sel["secid"].astype(int) == v,
+                                  "cusip"].iloc[0]) for k, v in mapping.items()},
         "ambiguous": {k: [int(x) for x in v] for k, v in ambiguous.items()},
         "not_found": missing,
     })
@@ -219,7 +322,7 @@ def cmd_pull(a) -> int:
         print(f"unreachable ({why})")
         return 1
     import pandas as pd
-    from sqlalchemy import text
+    from sqlalchemy import bindparam, text
     secids = _secid_map()
     m = _load_manifest()
     eng = _engine()
@@ -231,11 +334,14 @@ def cmd_pull(a) -> int:
                   f"under a different extraction is evidence about that run.")
             continue
         started = datetime.now(timezone.utc).isoformat()
-        params = {"secids": tuple(sorted(secids.values())),
-                  "days": tuple(DAYS), "deltas": tuple(DELTAS),
+        params = {"secids": sorted(secids.values()),
+                  "days": list(DAYS), "deltas": list(DELTAS),
                   "start": f"{year}-01-01", "end": f"{year}-12-31"}
+        sql = SQL_SURFACE.format(year=year)
+        stmt = text(sql).bindparams(
+            *(bindparam(n, expanding=True) for n in ("secids", "days", "deltas")))
         with eng.connect() as c:
-            df = pd.read_sql(text(SQL_SURFACE), c, params=params)
+            df = pd.read_sql(stmt, c, params=params)
         OUT_DIR.mkdir(parents=True, exist_ok=True)
         df.to_parquet(out, index=False)
         d = pd.to_datetime(df["date"])
@@ -245,7 +351,7 @@ def cmd_pull(a) -> int:
             "kind": "pull", "year": year, "file": out.name,
             "started_at": started,
             "finished_at": datetime.now(timezone.utc).isoformat(),
-            "sql": SQL_SURFACE.strip(), "params": {
+            "sql": sql.strip(), "relation": f"optionm.vsurfd{year}", "params": {
                 k: (list(v) if isinstance(v, tuple) else v)
                 for k, v in params.items()},
             "rows": int(len(df)),

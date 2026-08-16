@@ -138,10 +138,12 @@ recomputation uses the predictions only, never the outcome ordering.
 ## 6. Slice claim and R13e
 
 ```
-slice_purpose      = EXPLORE
-selection_period   = NONE
-parent_trial       = NONE
-benchmark_source   = WM0  (the 0.17766 constant only — NOT a fitted parameter)
+slice_purpose             = EXPLORE
+selection_period          = NONE
+parent_trial              = NONE
+benchmark_source          = WM0  (the 0.17766 constant only — NOT fitted here)
+hypothesis_source         = WM0                                     ← R13f
+hypothesis_source_period  = 2006-01-03 .. 2026-07-17                ← R13f
 ```
 
 **Why EXPLORE and not CONFIRM.** This trial measures a bound. It cannot and
@@ -158,6 +160,37 @@ prior measurement — the over-strict reading R13e was explicitly scoped to
 avoid. The distinction is declared here so a reader can attack it rather than
 discover it.
 
+**AMENDED 2026-08-16, and the amendment weakens this document.** The paragraph
+above is correct and was *not sufficient*, which two reviewers caught
+independently. There is a third relation to a prior trial that neither
+`parent_trial` nor `benchmark_source` names: **WM0's 21.4% oracle-gap
+measurement is the entire reason this question exists.** WM0 selected nothing
+here — every rung is literature-specified — so `parent_trial = NONE` stays true.
+But WM0 read the panel **end to end**, including every date in Phase B.
+
+So Phase B is **not pristine confirmation**, and the original §6 wording
+("it exists so that a confirmation is *possible*") oversold it. Under `R13f`
+(`prereg_power.check_hypothesis_provenance`, built out of this) Phase B's own
+pre-registration will return:
+
+```
+ADAPTIVE_HISTORICAL_VALIDATION      may_claim_independent_confirmation = False
+```
+
+That is a **claim ceiling, not a refusal** — Phase B runs, and it is written up
+as *validation on dates whose outcomes were already seen by the work that raised
+the question*. The honest upgrade path is a route WM0 never read: a foreign
+market, a security set outside WM0's eighteen, or forward time. **None of those
+exists yet, so the strongest result this family can currently produce is an
+adaptive validation, and saying so now costs nothing while saying it later would
+cost the result.**
+
+R13f's rule, stated so it cannot drift: **the test is selection, not citation.**
+If a prior trial chose which rungs exist, it is a parent and spends the calendar.
+If it supplies a number this one divides by, it is a benchmark and spends
+nothing. If seeing its outcomes is why the hypothesis exists, it is a
+`hypothesis_source` — it spends no calendar but it caps the claim.
+
 **The calendar is split at registration, which is the whole point of R13e.**
 
 | | window | trading days | blocks |
@@ -167,10 +200,12 @@ discover it.
 
 The 153-day gap clears R13e's requirement at every horizon this family uses
 (42 days at H=20, 98 at H=60). Phase B is **not** registered by this document
-and no result from it may be quoted; it exists so that a confirmation is
-*possible* rather than discovered to be impossible three sessions after a
+and no result from it may be quoted; it exists so that a *second look* is
+possible rather than discovered to be impossible three sessions after a
 positive. Its own pre-registration must pass R13e with
-`selection_period = 2006-01-03 .. 2019-12-31` and `parent_trial = IV-ORACLE-GAP-1`.
+`selection_period = 2006-01-03 .. 2019-12-31` and `parent_trial = IV-ORACLE-GAP-1`
+— and will return `ADAPTIVE_HISTORICAL_VALIDATION` under R13f, per the
+amendment below.
 
 **Known and stated:** Phase B contains COVID and is not a regime-typical
 window. A confirmation there is a confirmation on an unusual slice, and that

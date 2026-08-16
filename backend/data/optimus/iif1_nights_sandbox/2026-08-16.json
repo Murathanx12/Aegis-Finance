@@ -1,0 +1,367 @@
+{
+  "night": "2026-08-16",
+  "status": "ok",
+  "void_reason": "",
+  "tickers": [
+    "MSFT",
+    "AAPL"
+  ],
+  "trigger_report": {
+    "as_of": "2026-08-16",
+    "k_requested": 40,
+    "n_universe": 2,
+    "n_eligible": 2,
+    "n_selected": 2,
+    "n_excluded": 0,
+    "short_of_k": true,
+    "tickers": [
+      "MSFT",
+      "AAPL"
+    ],
+    "weights": {
+      "abs_resid_return_z_1d": 1.0,
+      "volume_z_20d": 1.0,
+      "earnings_within_5d": 1.5,
+      "filing_within_2d": 1.0
+    }
+  },
+  "per_arm": {
+    "A_snapshot": {
+      "n_cells": 2,
+      "n_with_forecasts": 2,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "rows": [
+        {
+          "arm": "A_snapshot",
+          "ticker": "MSFT",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": "",
+          "arm_started_at": 1786886519.172405,
+          "arm_finished_at": 1786886519.4313843,
+          "arm_seconds": 0.259
+        },
+        {
+          "arm": "A_snapshot",
+          "ticker": "AAPL",
+          "status": "ok",
+          "n_calls": 4,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": "",
+          "arm_started_at": 1786886519.523221,
+          "arm_finished_at": 1786886519.6768093,
+          "arm_seconds": 0.154
+        }
+      ]
+    },
+    "B_tools": {
+      "n_cells": 2,
+      "n_with_forecasts": 2,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "rows": [
+        {
+          "arm": "B_tools",
+          "ticker": "MSFT",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": "",
+          "arm_started_at": 1786886519.172405,
+          "arm_finished_at": 1786886519.5222223,
+          "arm_seconds": 0.35
+        },
+        {
+          "arm": "B_tools",
+          "ticker": "AAPL",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": "",
+          "arm_started_at": 1786886519.523221,
+          "arm_finished_at": 1786886519.6962388,
+          "arm_seconds": 0.173
+        }
+      ]
+    },
+    "C_tools_only": {
+      "n_cells": 2,
+      "n_with_forecasts": 2,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "rows": [
+        {
+          "arm": "C_tools_only",
+          "ticker": "MSFT",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": "",
+          "arm_started_at": 1786886519.1729355,
+          "arm_finished_at": 1786886519.5212219,
+          "arm_seconds": 0.348
+        },
+        {
+          "arm": "C_tools_only",
+          "ticker": "AAPL",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": "",
+          "arm_started_at": 1786886519.523221,
+          "arm_finished_at": 1786886519.695244,
+          "arm_seconds": 0.172
+        }
+      ]
+    },
+    "D_all": {
+      "n_cells": 2,
+      "n_with_forecasts": 2,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "rows": [
+        {
+          "arm": "D_all",
+          "ticker": "MSFT",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": "",
+          "arm_started_at": 1786886519.1734624,
+          "arm_finished_at": 1786886519.5222223,
+          "arm_seconds": 0.349
+        },
+        {
+          "arm": "D_all",
+          "ticker": "AAPL",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": "",
+          "arm_started_at": 1786886519.523221,
+          "arm_finished_at": 1786886519.6962388,
+          "arm_seconds": 0.173
+        }
+      ]
+    },
+    "B_anon": {
+      "n_cells": 2,
+      "n_with_forecasts": 2,
+      "n_tool_calls": 0,
+      "n_cells_truncated": 0,
+      "drop_reasons": {},
+      "rows": [
+        {
+          "arm": "B_anon",
+          "ticker": "MSFT",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": "",
+          "arm_started_at": 1786886519.1734624,
+          "arm_finished_at": 1786886519.5212219,
+          "arm_seconds": 0.348
+        },
+        {
+          "arm": "B_anon",
+          "ticker": "AAPL",
+          "status": "ok",
+          "n_calls": 5,
+          "n_tool_calls": 0,
+          "n_forecasts": 3,
+          "forecast_drops": {},
+          "terminal_drop_reason": "",
+          "n_truncated_calls": 0,
+          "finish_reasons": [],
+          "served_models": [
+            "stub-rehearsal"
+          ],
+          "tokens_in": 0,
+          "tokens_out": 0,
+          "error": "",
+          "arm_started_at": 1786886519.523221,
+          "arm_finished_at": 1786886519.6962388,
+          "arm_seconds": 0.173
+        }
+      ]
+    }
+  },
+  "records_written": 0,
+  "calls": 48,
+  "spend_usd": 0.0,
+  "served_models": [
+    "stub-rehearsal"
+  ],
+  "budget": {
+    "measured_cost_night_1": null,
+    "measured_cost_status": "unknown",
+    "projected_40_night_cost": null,
+    "current_balance": 57.12,
+    "balance_as_of": "2026-08-15",
+    "funding_gap_or_surplus": null,
+    "fundable_nights_at_this_rate": null,
+    "nights_required": 40,
+    "funding_average_per_night": 1.428,
+    "safety_ceiling_per_night": 12.0,
+    "note": "The ceiling is a stop, not a plan. The planning number is funding_average_per_night; a night under the ceiling but over the average shortens the trial rather than fitting in it. The funding decision is made BEFORE the accrual clock starts, not when the balance runs out."
+  },
+  "cell_pairing": {
+    "n_cells_union": 6,
+    "n_cells_paired": 6,
+    "n_cells_dropped_unpaired": 0,
+    "per_arm": {
+      "A_snapshot": {
+        "n_cells": 6,
+        "n_dropped_for_pairing": 0
+      },
+      "B_tools": {
+        "n_cells": 6,
+        "n_dropped_for_pairing": 0
+      },
+      "C_tools_only": {
+        "n_cells": 6,
+        "n_dropped_for_pairing": 0
+      },
+      "D_all": {
+        "n_cells": 6,
+        "n_dropped_for_pairing": 0
+      },
+      "B_anon": {
+        "n_cells": 6,
+        "n_dropped_for_pairing": 0
+      }
+    },
+    "key": "night x ticker x observable x horizon_days x threshold"
+  },
+  "chain_yield": {
+    "n_chains": 10,
+    "n_chains_minted_nothing": 0,
+    "n_calls_resolved": 48,
+    "n_calls_in_barren_chains": 0
+  },
+  "truncation": {
+    "n_cells": 10,
+    "n_cells_truncated": 0,
+    "pooled_rate": 0.0,
+    "per_arm_rate": {
+      "A_snapshot": 0.0,
+      "B_tools": 0.0,
+      "C_tools_only": 0.0,
+      "D_all": 0.0,
+      "B_anon": 0.0
+    },
+    "worst_arm": "A_snapshot",
+    "worst_arm_rate": 0.0,
+    "spread": 0.0
+  },
+  "decision_lag_minutes": null,
+  "decision_lag_minutes_at_end": null,
+  "timing": {},
+  "arm_start_skew_ms": [
+    1.1,
+    0.0
+  ],
+  "dropped_cells": [],
+  "execution_mode": "cells_sequential_arms_concurrent",
+  "arm_concurrency": 5,
+  "peak_calls_in_flight": 5,
+  "sandbox": true,
+  "elapsed_s": 0.5469725000148173,
+  "trial": "INTERNET-INVESTIGATOR-FWD-1"
+}
