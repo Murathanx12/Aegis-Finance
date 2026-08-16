@@ -142,9 +142,32 @@ vol, tail probability, drawdown, co-movement change, state transition,
 uncertainty.
 
 **Mandatory baseline ladder, published beside every head:** naive base rate →
-`rv20` alone → linear/GARCH → GAM → LightGBM → NN. A neural model earns its
-complexity only by beating the ladder out of sample, and *the ladder's top rung
-is currently winning.*
+`rv20` alone → EWMA → HAR → Log-HAR → GAM/LightGBM → NN. A neural model earns
+its complexity only by beating the ladder out of sample.
+
+**AMENDED the same day by `d7172fc`, which changes this phase's emphasis.** The
+ladder was built and run: at 20 days the four cheap rungs land at
+0.6096 / 0.6143 / 0.6120 / 0.6140 with **paired MDEs of 0.005–0.010** — a
+*well-powered* comparison, because rungs that are nearly the same model vary
+little fold to fold — and they are **indistinguishable**. The 14-feature model
+adds +0.0240 against an MDE of 0.0716, and its MDE is fourteen times the gap
+between the cheap rungs *because the model is the volatile one across folds*.
+
+That is far stronger than "we could not tell". It is: **at five thousandths of
+an IC we still cannot tell four free volatility forecasters apart.**
+
+The consequence for this phase is direct: **realised volatility is a solved,
+commoditised head, and it is not where a neural network earns its keep.** Take
+the free forecaster and move on. World Model v0's value must come from the heads
+that are *not* commoditised — **tail probability, drawdown, co-movement change,
+state transition, and uncertainty** — each of which needs its own cheap-baseline
+ladder before the NN is allowed to claim anything. Build those ladders first;
+they may commoditise too, and finding that out costs nothing.
+
+My N11 premise was also refuted here, cleanly and on slices declared before the
+numbers: volatility is **more** predictable at regime transitions and high
+vol-of-vol (IC 0.633 / 0.652 vs 0.614), not less. Two of the four places the
+baseline was supposed to break are where everything works best.
 
 **Direction is a head, not the objective.** Everything we have measured says
 first moments are not there and second moments are.
