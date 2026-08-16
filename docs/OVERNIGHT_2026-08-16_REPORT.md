@@ -1,5 +1,13 @@
 # Overnight report — 2026-08-15 into 08-16
 
+> **CORRECTED 2026-08-16 — read `docs/VERDICT_CORRECTIONS_2026-08-16.md` with
+> this file.** Four labels in this report are wrong and the measurements are
+> not. In short: **D4 is `NOT_DETECTABLE_IN_SCOPE`, not a kill** (its own
+> pre-registration said so; every difference is <1/7 of its MDE); **N4 has not
+> demonstrated coverage rather than shown coverage absent**; **"do not expect ML
+> to add" is not supported**, and **"at sixty days it is materially worse" is
+> wrong** — that cell is 47% of its own MDE. Cheap kills 2 → 1; defects 2 → 3.
+
 Against the protocol committed at `f091809` **before any number existed**.
 Reported in the accounting the order asked for, including the entries that hurt.
 
@@ -11,7 +19,8 @@ Reported in the accounting the order asked for, including the entries that hurt.
 |---|---|
 | **dollars spent** | **$0.00** — zero paid LLM calls, as declared |
 | serious distinct hypotheses attempted | **5** (N8, N2, N4, N6, D4) |
-| cheap kills | **2** (D4; the reactive-corpus hope) |
+| ~~cheap kills~~ | ~~**2** (D4; the reactive-corpus hope)~~ — **corrected: 1**, the reactive-corpus hope only |
+| `NOT_DETECTABLE_IN_SCOPE` | **1** (D4 — added by the correction) |
 | unresolved / underpowered | **1** (N8's headline, which could not be identified) |
 | survivors | **1** (N6, with a large caveat) |
 | findings that changed architecture | **3** (N6's ordering, N2's build order, the atlas grammar) |
@@ -47,14 +56,22 @@ free predictor — trailing 20-day realised vol, alone, no model, paired by fold
 
 > **model minus baseline: −0.085 to +0.025. Not detectable anywhere.**
 
-A gradient-boosted model with fourteen features on 83,000 rows does not beat one
-trailing volatility number at any horizon for either target, and at sixty days
-it is materially worse.
+A gradient-boosted model with fourteen features on 83,000 rows ~~does not beat~~
+**was not shown to beat** one trailing volatility number at any horizon for
+either target ~~, and at sixty days it is materially worse~~.
+
+> **Correction.** Every one of those six differences carries an MDE, computed
+> and saved at the time (`n6_moments.json` → `vs_persistence_baseline`) and
+> dropped when the range was quoted. The −0.085 at sixty days is **47% of its
+> own MDE of 0.180** — the least detectable cell in the table, not the worst
+> performance. Full table in `docs/VERDICT_CORRECTIONS_2026-08-16.md` §C2.
 
 **So the architectural consequence sharpens rather than softens.** Build the
 volatility head — it works and costs nothing, and it feeds sizing, ruin
-constraints and the `gamma*` machinery immediately. Do not expect ML to add to
-it. And *"we forecast volatility better"* is **not** the defensible product: if
+constraints and the `gamma*` machinery immediately. ~~Do not expect ML to add to
+it.~~ **Whether ML adds to it is untested at this power — and the product does
+not depend on the answer** (order 3 §3: vol-targeted sizing needs volatility to
+be forecastable by *anything*, including rv20 itself). And *"we forecast volatility better"* is **not** the defensible product: if
 risk is where the signal is, the product has to be built on what a single
 trailing number cannot express — **co-movement structure, conditional tails,
 regime transitions, drawdown shape.**
@@ -158,7 +175,7 @@ The irreversible step stays yours:
 | `f091809` | the protocol, declared before any number |
 | `fe5a966` | **N8** — the corpus cannot size itself; the design curve |
 | `0a0781b` | **N2** — twelve markets are worth 1.3× the US |
-| `a6ff2ff` | **N4** — 85% of exceptional moves had no warning |
+| `a6ff2ff` | **N4** — 85% of exceptional moves had no warning; coverage beyond the base rate **not demonstrated** (not "absent" — see §C4) |
 | `59d953b` | **N6** supported, its predictability free; **D4** killed |
 | `b2f429b` | the atlas grammar unblocked; the CI time bomb defused |
 

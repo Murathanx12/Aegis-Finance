@@ -204,7 +204,13 @@ def main(argv: list[str] | None = None) -> int:
             sd = (sum((x - mean_lift) ** 2 for x in lifts)
                   / max(len(lifts) - 1, 1)) ** 0.5
             mde = PW.mde_mean(sd, n_eff) if sd > 0 else None
-            verdict = ("NO COVERAGE" if mde is None or
+            # NOT "NO COVERAGE". An estimate that fails to separate from 1.0
+            # is a statement about this instrument, not about the library:
+            # with MDE 0.25-0.62 the interval still covers lifts that would
+            # change a portfolio decision. Ruling those out needs an
+            # equivalence test against a declared economic margin, which is
+            # `scripts/n4b_coverage_equivalence.py`, not this line.
+            verdict = ("NOT DEMONSTRATED" if mde is None or
                        abs(mean_lift - 1.0) < mde else
                        ("COVERS" if mean_lift > 1.0 else "ANTI-COVERS"))
             print(f"  H={H:>3d}d {tail:<7s} mean lift {mean_lift:5.2f}  "

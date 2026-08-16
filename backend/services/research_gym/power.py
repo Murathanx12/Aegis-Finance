@@ -216,6 +216,77 @@ def n_required_for(effect: float, sd: float) -> float | None:
             / abs(float(effect))) ** 2
 
 
+#: One-sided 5%. An equivalence claim is directional — "the effect is smaller
+#: than M" — so it is tested one-sided, not with the two-sided constant above.
+Z_ALPHA_ONE_SIDED_05 = 1.6448536269514722
+
+
+def can_rule_out_at_least(estimate: float, se: float, margin: float) -> dict:
+    """Can we rule out an effect **at least as large as** `margin`?
+
+    THIS IS THE TEST A NULL OWES BEFORE IT MAY BE CALLED A NEGATIVE RESULT
+    ======================================================================
+    `mde_mean` answers "could we have seen it?" and its failure mode is that
+    a below-MDE estimate reads like an absence. It is not one. Failing to
+    distinguish an estimate from a null value is not the same statement as
+    excluding the values that would have mattered — the first is about our
+    instrument, the second is about the world.
+
+    So this is the other half, and the one the project kept skipping (N4,
+    2026-08-16: coverage lift 0.82-1.15 against MDE 0.25-0.62 was written up
+    as "the library has no coverage", which the data does not support). The
+    quantity here is a **one-sided non-inferiority test** against a margin
+    declared from economics *before* the estimate exists:
+
+        reject "effect >= margin"  iff  estimate + z_0.05 * se < margin
+
+    Three outcomes, and the vocabulary matters more than the arithmetic:
+
+    * ``RULED_OUT``       — the upper confidence bound sits below the smallest
+                            effect worth acting on. This is a real negative and
+                            may close its scope (`REFUTED_IN_SCOPE`).
+    * ``NOT_DEMONSTRATED`` — the estimate is small but the interval still
+                            covers economically meaningful values. Says nothing
+                            about the world; closes nothing.
+    * ``AT_LEAST_MARGIN``  — the estimate itself clears the margin.
+
+    `margin` must be on the estimate's own scale and must be justified from
+    turnover, cost, capacity and drawdown consequence — never chosen after
+    seeing how much power there happened to be.
+    """
+    if se is None or se <= 0 or margin is None:
+        return {"verdict": "NOT_DEMONSTRATED", "estimate": estimate,
+                "se": se, "margin": margin, "upper_bound": None,
+                "reason": "no usable standard error"}
+    upper = float(estimate) + Z_ALPHA_ONE_SIDED_05 * float(se)
+    if float(estimate) >= float(margin):
+        verdict = "AT_LEAST_MARGIN"
+    elif upper < float(margin):
+        verdict = "RULED_OUT"
+    else:
+        verdict = "NOT_DEMONSTRATED"
+    return {"verdict": verdict, "estimate": float(estimate), "se": float(se),
+            "margin": float(margin), "upper_bound": upper,
+            "reason": (f"upper 95% one-sided bound {upper:.3f} vs margin "
+                       f"{float(margin):.3f}")}
+
+
+def se_required_to_rule_out(estimate: float, margin: float) -> float | None:
+    """Largest SE that would let `estimate` rule out `margin`.
+
+    The planning inverse of `can_rule_out_at_least`: run it before spending
+    compute and it says how precise the measurement has to be for a null to be
+    worth anything. Below-margin estimates with SEs above this number cannot
+    produce a negative result no matter how the run goes.
+    """
+    if margin is None or estimate is None:
+        return None
+    gap = float(margin) - float(estimate)
+    if gap <= 0:
+        return None
+    return gap / Z_ALPHA_ONE_SIDED_05
+
+
 def design_curve(sd: float,
                  effects: Sequence[float] = (1.0, 2.0, 3.0, 5.0, 10.0, 20.0)
                  ) -> dict[float, float | None]:
