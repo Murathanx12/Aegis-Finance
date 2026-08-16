@@ -2,6 +2,11 @@
 
 Every test here drives the refusing path (SS47). The register is constructed
 against a tmp_path so no test can write the real ledger.
+
+Since R13e every CONFIRM says `parents=()` out loud. That is not ceremony: `()`
+means "nothing in this register selected the thing being confirmed" and silence
+means "nobody was asked", and the whole N9 defect lives in the difference. The
+tests below assert the second is refused.
 """
 
 from __future__ import annotations
@@ -32,7 +37,7 @@ def _reg(tmp_path) -> SliceRegister:
 
 def _consume_n9(reg) -> None:
     reg.claim(_ident(), "CONFIRM", trial="N9",
-              consumed_at="2026-08-16T04:00:00Z")
+              consumed_at="2026-08-16T04:00:00Z", parent_hypotheses=[])
 
 
 # ── identity ───────────────────────────────────────────────────────────────
@@ -56,7 +61,7 @@ def test_identity_changes_with_each_leg_of_the_four_tuple():
 def test_a_second_confirmation_on_a_consumed_slice_is_refused(tmp_path):
     reg = _reg(tmp_path)
     _consume_n9(reg)
-    v = reg.check(_ident(), "CONFIRM", trial="N21")
+    v = reg.check(_ident(), "CONFIRM", trial="N21", parents=())
     assert v["allowed"] is False
     assert v["prior_readers"] == ["N9"]
     assert "not an independent confirmation" in v["why"]
@@ -67,7 +72,7 @@ def test_claim_raises_so_the_verdict_cannot_be_ignored(tmp_path):
     _consume_n9(reg)
     with pytest.raises(SliceRefusal, match="CONFIRM refused"):
         reg.claim(_ident(), "CONFIRM", trial="N21",
-                  consumed_at="2026-08-17T00:00:00Z")
+                  consumed_at="2026-08-17T00:00:00Z", parent_hypotheses=[])
 
 
 def test_the_shifted_window_evasion_is_caught(tmp_path):
@@ -79,7 +84,7 @@ def test_the_shifted_window_evasion_is_caught(tmp_path):
     _consume_n9(reg)
     shifted = _ident(start="1999-06-01")
     assert shifted.slice_id != _ident().slice_id
-    assert reg.check(shifted, "CONFIRM", trial="N21")["allowed"] is False
+    assert reg.check(shifted, "CONFIRM", trial="N21", parents=())["allowed"] is False
 
 
 def test_one_shared_security_is_enough_to_contaminate(tmp_path):
@@ -87,7 +92,7 @@ def test_one_shared_security_is_enough_to_contaminate(tmp_path):
     reg = _reg(tmp_path)
     _consume_n9(reg)
     mostly_new = _ident(secs=("EEM", "EFA", "TLT", "GLD", "XLV"))
-    assert reg.check(mostly_new, "CONFIRM", trial="N21")["allowed"] is False
+    assert reg.check(mostly_new, "CONFIRM", trial="N21", parents=())["allowed"] is False
 
 
 # ── what is deliberately allowed ───────────────────────────────────────────
@@ -95,14 +100,14 @@ def test_one_shared_security_is_enough_to_contaminate(tmp_path):
 def test_a_different_horizon_is_a_different_slice(tmp_path):
     reg = _reg(tmp_path)
     _consume_n9(reg)
-    assert reg.check(_ident(hz=60), "CONFIRM", trial="N21")["allowed"] is True
+    assert reg.check(_ident(hz=60), "CONFIRM", trial="N21", parents=())["allowed"] is True
 
 
 def test_a_disjoint_period_is_a_different_slice(tmp_path):
     reg = _reg(tmp_path)
     _consume_n9(reg)
     later = _ident(start="2026-09-01", end="2027-09-01")
-    assert reg.check(later, "CONFIRM", trial="N21")["allowed"] is True
+    assert reg.check(later, "CONFIRM", trial="N21", parents=())["allowed"] is True
 
 
 def test_exploration_may_revisit_freely(tmp_path):
@@ -110,14 +115,15 @@ def test_exploration_may_revisit_freely(tmp_path):
     reg = _reg(tmp_path)
     _consume_n9(reg)
     for purpose in ("EXPLORE", "FOREIGN", "REANALYSIS", "PAIRED"):
-        assert reg.check(_ident(), purpose, trial="N21")["allowed"] is True
+        assert reg.check(_ident(), purpose, trial="N21",
+                         parents=())["allowed"] is True
 
 
 def test_a_declared_non_independent_confirm_is_allowed_but_stripped(tmp_path):
     """It may run. It may not be called confirmation."""
     reg = _reg(tmp_path)
     _consume_n9(reg)
-    v = reg.check(_ident(), "CONFIRM", trial="N9B",
+    v = reg.check(_ident(), "CONFIRM", trial="N9B", parents=(),
                   declared_non_independent=True)
     assert v["allowed"] is True
     assert v["may_claim_confirmation"] is False
@@ -125,7 +131,7 @@ def test_a_declared_non_independent_confirm_is_allowed_but_stripped(tmp_path):
 
 def test_an_unknown_purpose_is_rejected_rather_than_treated_as_safe(tmp_path):
     with pytest.raises(ValueError, match="unknown purpose"):
-        _reg(tmp_path).check(_ident(), "probably_fine", trial="N21")
+        _reg(tmp_path).check(_ident(), "probably_fine", trial="N21", parents=())
 
 
 # ── the ledger ─────────────────────────────────────────────────────────────
@@ -138,7 +144,8 @@ def test_the_register_is_append_only_and_survives_reload(tmp_path):
               declared_non_independent=True)
     reloaded = _reg(tmp_path)
     assert [r.trial for r in reloaded.records] == ["N9", "N9B"]
-    assert reloaded.check(_ident(), "CONFIRM", trial="N21")["allowed"] is False
+    assert reloaded.check(_ident(), "CONFIRM", trial="N21",
+                          parents=())["allowed"] is False
 
 
 def test_consumed_at_is_supplied_not_read_from_the_clock(tmp_path):
@@ -190,8 +197,9 @@ def test_a_trial_may_reread_the_slice_it_already_claimed(tmp_path):
     ident = SliceIdentity(securities=("AAA", "BBB"), start="2006-01-01",
                           end="2026-01-01", outcome_horizon_days=20,
                           outcome_definition="drawdown vs buy-hold")
-    reg.claim(ident, "CONFIRM", trial="N21", consumed_at="2026-08-16T00:00:00Z")
-    again = reg.check(ident, "CONFIRM", trial="N21")
+    reg.claim(ident, "CONFIRM", trial="N21", consumed_at="2026-08-16T00:00:00Z",
+              parent_hypotheses=[])
+    again = reg.check(ident, "CONFIRM", trial="N21", parents=())
     assert again["allowed"] is True
     assert again.get("rerun_of_own_claim") is True
     assert "one consumption" in again["why"]
@@ -204,8 +212,9 @@ def test_a_DIFFERENT_trial_is_still_refused_after_that(tmp_path):
     ident = SliceIdentity(securities=("AAA", "BBB"), start="2006-01-01",
                           end="2026-01-01", outcome_horizon_days=20,
                           outcome_definition="drawdown vs buy-hold")
-    reg.claim(ident, "CONFIRM", trial="N21", consumed_at="2026-08-16T00:00:00Z")
-    other = reg.check(ident, "CONFIRM", trial="N22")
+    reg.claim(ident, "CONFIRM", trial="N21", consumed_at="2026-08-16T00:00:00Z",
+              parent_hypotheses=[])
+    other = reg.check(ident, "CONFIRM", trial="N22", parents=())
     assert other["allowed"] is False
     assert "N21" in other["why"]
 
@@ -216,5 +225,131 @@ def test_an_anonymous_rerun_is_not_a_rerun(tmp_path):
     ident = SliceIdentity(securities=("AAA",), start="2006-01-01",
                           end="2026-01-01", outcome_horizon_days=20,
                           outcome_definition="drawdown vs buy-hold")
-    reg.claim(ident, "CONFIRM", trial="N21", consumed_at="2026-08-16T00:00:00Z")
-    assert reg.check(ident, "CONFIRM", trial="")["allowed"] is False
+    reg.claim(ident, "CONFIRM", trial="N21", consumed_at="2026-08-16T00:00:00Z",
+              parent_hypotheses=[])
+    assert reg.check(ident, "CONFIRM", trial="",
+                     parents=())["allowed"] is False
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# R13e — the calendar axis. Every test below reproduces N9's design.
+# ══════════════════════════════════════════════════════════════════════════
+
+def _explore(reg, secs=("SPY", "XLF", "XLE"), start="1999-01-01",
+             end="2015-12-31", trial="N9", hz=20) -> None:
+    """N9's selection: three securities, through 2015."""
+    reg.claim(_ident(secs=secs, start=start, end=end, hz=hz), "EXPLORE",
+              trial=trial, consumed_at="2026-08-10T00:00:00Z")
+
+
+def test_the_n9_confirmation_is_refused_on_the_calendar_axis(tmp_path):
+    """Fresh tickers, spent calendar — the design that produced 1.271.
+
+    No security is shared, so `overlaps` says clean and the securities axis
+    passes. This is the case the register was blind to.
+    """
+    reg = _reg(tmp_path)
+    _explore(reg)
+    confirm = _ident(secs=SIX, start="1999-01-01", end="2026-08-15")
+    assert not set(confirm.securities) & {"SPY", "XLF", "XLE"}
+    assert reg.prior_readers(confirm) == []                 # securities: clean
+    v = reg.check(confirm, "CONFIRM", trial="N9A", parents=("N9",))
+    assert v["allowed"] is False
+    assert v["verdict"] == "CALENDAR_CONFOUNDED"
+    assert v["axis"] == "CALENDAR"
+    assert v["calendar_confounds"] == ["N9"]
+
+
+def test_the_disjoint_half_is_allowed(tmp_path):
+    """2016+ — the half that scored 0.765 — is what the guard leaves open."""
+    reg = _reg(tmp_path)
+    _explore(reg)
+    later = _ident(secs=SIX, start="2016-03-01", end="2026-08-15")
+    v = reg.check(later, "CONFIRM", trial="N9A", parents=("N9",))
+    assert v["allowed"] is True
+
+
+def test_an_undeclared_lineage_is_refused_not_assumed_empty(tmp_path):
+    reg = _reg(tmp_path)
+    _explore(reg)
+    v = reg.check(_ident(), "CONFIRM", trial="N9A")
+    assert v["allowed"] is False
+    assert v["verdict"] == "UNDECLARED_LINEAGE"
+    assert "Silence is not" in v["why"]
+
+
+def test_an_unrelated_lineage_is_not_charged_for_someone_elses_reads(tmp_path):
+    """Scoped to lineage on purpose: otherwise the first EXPLORE at a horizon
+    spends the calendar for every unrelated mechanism, forever, and the guard
+    gets deleted the first week it costs somebody a slice."""
+    reg = _reg(tmp_path)
+    _explore(reg)
+    v = reg.check(_ident(), "CONFIRM", trial="XS-RETURN-1", parents=())
+    assert v["allowed"] is True
+
+
+def test_a_trial_cannot_confirm_on_a_calendar_it_explored_itself(tmp_path):
+    """The derivable half — no declaration needed, so none can be omitted."""
+    reg = _reg(tmp_path)
+    _explore(reg, trial="N30")
+    v = reg.check(_ident(), "CONFIRM", trial="N30", parents=())
+    assert v["allowed"] is False
+    assert v["verdict"] == "CALENDAR_CONFOUNDED"
+
+
+def test_the_label_reach_is_part_of_the_spent_window(tmp_path):
+    """Zero overlap is necessary, not sufficient: labels run forward."""
+    reg = _reg(tmp_path)
+    _explore(reg)                                    # ends 2015-12-31, H=20
+    abutting = _ident(secs=SIX, start="2016-01-04", end="2026-08-15")
+    v = reg.check(abutting, "CONFIRM", trial="N9A", parents=("N9",))
+    assert v["allowed"] is False
+    assert "inside the label reach" in v["why"]
+
+
+def test_a_different_horizon_does_not_share_a_calendar(tmp_path):
+    """The purge is per horizon, so the spent window is too."""
+    reg = _reg(tmp_path)
+    _explore(reg, hz=20)
+    v = reg.check(_ident(hz=60), "CONFIRM", trial="N9A", parents=("N9",))
+    assert v["allowed"] is True
+
+
+def test_a_declared_non_independent_calendar_reuse_may_run_but_not_claim(tmp_path):
+    reg = _reg(tmp_path)
+    _explore(reg)
+    v = reg.check(_ident(), "CONFIRM", trial="N9B", parents=("N9",),
+                  declared_non_independent=True)
+    assert v["allowed"] is True
+    assert v["may_claim_confirmation"] is False
+
+
+def test_the_refusal_names_where_a_clean_window_starts(tmp_path):
+    """A refusal that cannot say where to go next gets routed around."""
+    reg = _reg(tmp_path)
+    _explore(reg)
+    v = reg.check(_ident(), "CONFIRM", trial="N9A", parents=("N9",))
+    assert v["clean_from"] == "2016-02-12"     # 2015-12-31 + 42d + 1
+    assert "A clean window starts 2016-02-12" in v["why"]
+
+
+def test_clean_candidates_report_both_axes(tmp_path):
+    """The ten candidates named on 2026-08-16 were clean on ONE axis."""
+    reg = _reg(tmp_path)
+    _explore(reg)
+    rep = reg.clean_confirmation_windows(
+        ["SPY", "EEM", "EFA", "TLT"], _ident(), lineage=("N9",))
+    assert rep["securities_axis"]["unread"] == ["EEM", "EFA", "TLT"]
+    assert rep["securities_axis"]["spent"] == ["SPY"]
+    # ... and unread tickers over a calendar this lineage has already read is
+    # exactly the combination that produced the withdrawn 1.271.
+    assert rep["calendar_axis"]["window_is_clean"] is False
+    assert rep["calendar_axis"]["clean_from"] == "2016-02-12"
+    assert rep["calendar_axis"]["usable_window"] == ["2016-02-12", "2026-08-15"]
+
+
+def test_the_gap_is_the_measured_one(tmp_path):
+    from backend.services.research_gym.slice_register import required_gap_days
+    assert required_gap_days(20) == 42          # 7/5 x 20 + 14, vs 1.5x = 30
+    assert required_gap_days(60) == 98
+    assert required_gap_days(None) == 0

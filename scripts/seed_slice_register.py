@@ -10,6 +10,14 @@ The two that matter: N9 consumed the six-security confirmation slice
 (DIA XLV XLI XLP XLU XLB), and N9B consumed it again. The register is seeded
 with N9 as CONFIRM and N9B as PAIRED, which is what it actually was — a
 difference test designed after that slice had been seen.
+
+R13e amendment (2026-08-16). The first seeding recorded what was READ and not
+what SELECTED, so N9's own mining slice — SPY/XLF/XLE through TRAIN_END —
+was absent, and with it the calendar that later turned out to be the binding
+coordinate. It is seeded now, at both horizons, which makes the register able
+to reproduce the refusal on its own history: N9's confirmation is recorded as
+non-independent RETROSPECTIVELY, since its pre-registration claimed the
+opposite and the claim was withdrawn.
 """
 
 from __future__ import annotations
@@ -24,6 +32,11 @@ from backend.services.research_gym.slice_register import (REGISTER_PATH,
 
 EXPLORATION = ["SPY", "QQQ", "IWM", "XLF", "XLE", "XLK"]
 CONFIRMATION = ["DIA", "XLV", "XLI", "XLP", "XLU", "XLB"]
+#: N9's own coordinates, from `scripts/n9_mine_the_85.py` rather than prose.
+N9_TRAIN = ["SPY", "XLF", "XLE"]
+N9_FOREIGN = ["QQQ", "IWM", "XLK"]
+N9_TRAIN_END = "2015-12-31"
+N9_FOREIGN_START = "2016-01-01"
 
 #: (trial, securities, start, end, horizon, outcome, purpose, when, prereg,
 #:  parents, note, declared_non_independent)
@@ -38,11 +51,37 @@ HISTORY = [
      "2026-08-16T02:00:00Z", "docs/TRIALS/PREREG_N4B_COVERAGE_EQUIVALENCE.md",
      ["N4"], "equivalence against an economically derived margin", True),
 
+    # ── N9's SELECTION, absent from the first seeding ──────────────────────
+    # The register recorded what N9 read and not what chose N9's rules, so the
+    # coordinate that turned out to be binding was not in it. Both horizons:
+    # the purge is per horizon, so the spent calendar is too.
+    ("N9", N9_TRAIN, "1999-01-01", N9_TRAIN_END, 20,
+     "exceptional move, precursor grammar", "EXPLORE",
+     "2026-08-16T03:00:00Z", "",
+     [], "SELECTION. 13,728 candidates mined on three securities through "
+         "TRAIN_END. This is the calendar every N9 descendant inherits.", False),
+
+    ("N9", N9_TRAIN, "1999-01-01", N9_TRAIN_END, 60,
+     "exceptional move, precursor grammar", "EXPLORE",
+     "2026-08-16T03:00:01Z", "",
+     [], "SELECTION, H=60.", False),
+
+    ("N9", N9_FOREIGN, N9_FOREIGN_START, "2026-08-15", 20,
+     "exceptional move, precursor grammar", "FOREIGN",
+     "2026-08-16T03:30:00Z", "",
+     [], "the foreign slice — 1.412, p=0.040 at H=20. Calendar-disjoint from "
+         "selection, and by luck rather than by design: nothing in the "
+         "register or the prereg required it to be.", False),
+
     ("N9", CONFIRMATION, "1999-01-01", "2026-08-15", 20,
      "exceptional move, precursor grammar", "CONFIRM",
      "2026-08-16T04:00:00Z", "",
-     [], "13,728 candidates mined elsewhere; transfer confirmed here at "
-         "lift 1.271, p=0.015. THIS IS THE CONSUMPTION.", False),
+     ["N9"], "13,728 candidates mined elsewhere; transfer confirmed here at "
+         "lift 1.271, p=0.015. THIS IS THE CONSUMPTION — and it runs over "
+         "1999-2026, seventeen years of which N9 selected on. Recorded "
+         "non-independent RETROSPECTIVELY: the prereg claimed independence, "
+         "R13e refuses this design, and the claim was withdrawn 2026-08-16 as "
+         "TRANSFER_NOT_ESTABLISHED_CALENDAR_CONFOUNDED.", True),
 
     ("N9B", CONFIRMATION, "1999-01-01", "2026-08-15", 20,
      "exceptional move, precursor grammar", "PAIRED",
@@ -105,9 +144,32 @@ def main(argv: list[str] | None = None) -> int:
         outcome_horizon_days=20,
         outcome_definition="exceptional move, precursor grammar",
         information_cutoff="2026-08-15")
-    v = reg.check(ident, "CONFIRM", trial="N21-hypothetical")
+    v = reg.check(ident, "CONFIRM", trial="N21-hypothetical", parents=())
     print("\nA new CONFIRM on the six-security slice:")
     print(f"  allowed={v['allowed']}  prior readers: {v['prior_readers']}")
+
+    # ── R13e: the axis that was missing, on N9's own history ───────────────
+    fresh = SliceIdentity(
+        securities=("EFA", "EEM", "TLT"), start="1999-01-01", end="2026-08-15",
+        outcome_horizon_days=20,
+        outcome_definition="exceptional move, precursor grammar",
+        information_cutoff="2026-08-15")
+    print("\nN9's design, replayed: THREE UNREAD securities, full calendar.")
+    print(f"  securities axis — prior readers: "
+          f"{[r.trial for r in reg.prior_readers(fresh)]}  (clean)")
+    vc = reg.check(fresh, "CONFIRM", trial="N9-replay", parents=("N9",))
+    print(f"  calendar axis   — allowed={vc['allowed']}  "
+          f"{vc.get('verdict', '')}  confounds={vc.get('calendar_confounds')}")
+    print(f"  clean window starts: {vc.get('clean_from')}")
+
+    und = reg.check(fresh, "CONFIRM", trial="N9-replay")
+    print(f"  and with the lineage undeclared: allowed={und['allowed']}  "
+          f"{und.get('verdict', '')}")
+
+    rep = reg.clean_confirmation_windows(
+        ["EFA", "EEM", "TLT", "GLD", "SPY"], fresh, lineage=("N9",))
+    print(f"  both axes: unread={rep['securities_axis']['unread']}  "
+          f"usable window={rep['calendar_axis']['usable_window']}")
 
     # and the laundering attempt the four-tuple exists to catch
     shifted = SliceIdentity(
@@ -115,7 +177,8 @@ def main(argv: list[str] | None = None) -> int:
         outcome_horizon_days=20,
         outcome_definition="exceptional move, precursor grammar",
         information_cutoff="2026-08-15")
-    v2 = reg.check(shifted, "CONFIRM", trial="N21-shifted-window")
+    v2 = reg.check(shifted, "CONFIRM", trial="N21-shifted-window",
+                   parents=())
     print("Same six securities, start shifted five months (a 'new slice'):")
     print(f"  allowed={v2['allowed']}  slice_id differs "
           f"({shifted.slice_id} vs {ident.slice_id}) but overlap is detected")

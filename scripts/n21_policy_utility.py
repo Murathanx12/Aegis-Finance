@@ -468,11 +468,22 @@ def main(argv: list[str] | None = None) -> int:
         outcome_definition="net log wealth of a de-risking policy vs buy-hold",
         information_cutoff=EVAL_END)
     reg = SliceRegister()
-    verdict = reg.check(ident, "CONFIRM", trial="N21")
+    # R13e (2026-08-16): the lineage is declared, not implied. N21's rules were
+    # re-derived from N9's train securities through TRAIN_END, so N9's
+    # selection calendar is N21's selection calendar — and EVAL_START is
+    # 2006-07-01, nine and a half years INSIDE it. The register refuses that
+    # now. This is left as a refusal rather than repaired: the run happened,
+    # its headline was already withdrawn by its own null diagnostic, and
+    # re-scoring it on 2016+ would be a new experiment, not a correction.
+    verdict = reg.check(ident, "CONFIRM", trial="N21", parents=("N9",))
     print(f"slice {ident.slice_id}: CONFIRM allowed={verdict['allowed']}")
     if not verdict["allowed"]:
         print(f"  REFUSED: {verdict}")
-        return 1
+        if not a.skip_slice_claim:
+            return 1
+        print("  --skip-slice-claim: continuing for REPRODUCTION only. "
+              "Whatever this prints may not be described as a confirmation "
+              "or a transfer.")
 
     vix = _vix(EVAL_START, EVAL_END)
     frames = {}
@@ -653,6 +664,7 @@ def main(argv: list[str] | None = None) -> int:
             reg.claim(ident, "CONFIRM", trial="N21",
                       consumed_at="2026-08-16T21:00:00Z",
                       prereg="docs/TRIALS/PREREG_N21_POLICY_UTILITY.md",
+                      parent_hypotheses=["N9"],
                       note="direct policy-utility test of the frozen N9 rules")
         except SliceRefusal as exc:
             print(f"REFUSED: {exc}")
