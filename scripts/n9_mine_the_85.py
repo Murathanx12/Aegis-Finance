@@ -40,6 +40,23 @@ If no rule clears the bar even on TRAIN — with the outcome known, on the data
 the rule was chosen from — that is not a weak result. It says the vocabulary
 cannot express a rule that marks these moves at all, which is a statement about
 the language and is the one finding here that would close something.
+
+REPAIR, 2026-08-16: POINT 2 ABOVE WAS NOT TRUE AS WRITTEN
+==========================================================
+"Selection and evaluation do not share data" was the claim. The code downloaded
+prices to 2026, computed `fwd_20` and `fwd_60` on the whole series, and only
+then sliced the training frame at `TRAIN_END`. The last 20 (resp. 60) training
+rows therefore carried labels built from 2016 prices — the evaluation period.
+Measured by `scripts.audit_temporal_lineage`: **80 leaking training dates**
+across the two horizons, reaching to 2016-02-01 and 2016-03-30.
+
+The training slice is now built by `research_gym.lineage`, which derives each
+row's `label_end_ts` from the index and drops the rows whose label reaches the
+first foreign bar. Purged **per horizon**: the 20-day and 60-day training sets
+are different sets, and one embargo for both would leak 40 days of the longer.
+
+The pre-repair artifact is not overwritten — see `--out`. A leaked result is
+evidence about the process that produced it and is kept for that.
 """
 
 from __future__ import annotations
@@ -52,6 +69,7 @@ from pathlib import Path
 
 from backend import config as _config
 from backend.services.research_gym import autopsy as AU
+from backend.services.research_gym import lineage as LG
 from backend.services.research_gym import market_stress as MS
 from backend.services.research_gym import power as PW
 
@@ -110,6 +128,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="also score the FROZEN train-selected rules on the "
                          "six confirmation securities (prereg amendment 1)")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--overwrite", action="store_true",
+                    help="discard an existing artifact rather than refusing")
     a = ap.parse_args(argv)
     if a.out is None:
         a.out = str(OUT_WIDE if a.wide_vocab else OUT)
@@ -288,6 +308,32 @@ def main(argv: list[str] | None = None) -> int:
             parts.append(d)
         return pd.concat(parts)
 
+    def _train_slice(H: int) -> "pd.DataFrame":
+        """Training rows whose H-bar label resolves BEFORE the foreign period.
+
+        The repair. `frames[t].loc[:TRAIN_END]` is a temporal split *for the
+        features* and no split at all for the label, which was already built
+        from the full download. Each security is purged against its own index,
+        because a security with a different holiday history has a different
+        last admissible bar, and a single date applied to all of them would be
+        right for one series and wrong for the rest.
+        """
+        parts = []
+        for t in TRAIN_SECURITIES:
+            d = frames[t]
+            idx = [str(x)[:10] for x in d.index]
+            first_foreign = next((x for x in idx if x > TRAIN_END), None)
+            keep = LG.admissible_mask(
+                idx, split_cutoff=TRAIN_END, eval_start=first_foreign,
+                window=LG.LabelWindow(f"fwd_{H}", int(H)))
+            parts.append(d[np.array(keep, dtype=bool)])
+        out = pd.concat(parts)
+        naive = len(_slice(TRAIN_SECURITIES, hi=TRAIN_END))
+        print(f"  train H={H}: {len(out)} admissible rows "
+              f"(the pre-repair slice had {naive}; "
+              f"{naive - len(out)} carried labels built from foreign prices)")
+        return out
+
     def _score(df: pd.DataFrame, H: int, cand) -> dict | None:
         """Lift of `cand` over the exceptional moves the INCUMBENT missed."""
         f = df[f"fwd_{H}"].to_numpy(dtype=float)
@@ -380,12 +426,16 @@ def main(argv: list[str] | None = None) -> int:
                      "train_end": TRAIN_END, "foreign_start": FOREIGN_START,
                      "L_min": L_MIN, "seed": SEED}
 
-    tr = _slice(TRAIN_SECURITIES, hi=TRAIN_END)
     fo = _slice(FOREIGN_SECURITIES, lo=FOREIGN_START)
 
     for H in HORIZONS:
         bar = L_MIN[H]
         print(f"\n{'=' * 70}\nH={H}d — bar is N4B's break-even lift {bar}")
+        # Purged per horizon. The threshold grid above is built from FEATURES
+        # only, every one of them shifted by a bar, so it reads nothing past
+        # TRAIN_END and does not need purging; the labels did, and that is the
+        # distinction the original code did not draw.
+        tr = _train_slice(H)
         train_pass = []
         for cand in candidates:
             s = _score(tr, H, cand)
@@ -459,6 +509,25 @@ def main(argv: list[str] | None = None) -> int:
         confirm = (_aggregate(_slice(CONFIRM_SECURITIES), H, train_pass,
                               "confirmation (amendment 1)")
                    if (a.confirm and train_pass) else None)
+        # The confirmation slice holds out SECURITIES, not TIME: it runs from
+        # 1999, so most of it is calendar-simultaneous with the selection
+        # window. Different tickers, same market states. That is not a label
+        # leak — the rules never saw these series — but common macro state is
+        # exactly the channel a selection could ride, so the calendar-disjoint
+        # version is computed beside it and neither is allowed to stand alone.
+        confirm_oos = (_aggregate(_slice(CONFIRM_SECURITIES, lo=FOREIGN_START),
+                                  H, train_pass,
+                                  "confirmation 2016+ (calendar-disjoint)")
+                       if (a.confirm and train_pass) else None)
+        # And the complement. Without it, a low disjoint lift has two readings:
+        # the overlap was carrying the result, or the shorter slice is simply
+        # weaker. Splitting the SAME securities at the selection boundary
+        # separates them — if the overlapping half is high and the disjoint
+        # half is not, the difference is the calendar and not the sample size.
+        confirm_overlap = (_aggregate(_slice(CONFIRM_SECURITIES, hi=TRAIN_END),
+                                      H, train_pass,
+                                      "confirmation 1999-2015 (calendar-OVERLAPPING)")
+                           if (a.confirm and train_pass) else None)
 
         results["horizons"][str(H)] = {
             "placebo": placebo,
@@ -469,6 +538,9 @@ def main(argv: list[str] | None = None) -> int:
             # Same class as everything else this session: a value produced,
             # reported, and not persisted.
             "confirm": confirm,
+            "confirm_calendar_disjoint": confirm_oos,
+            "confirm_calendar_overlapping": confirm_overlap,
+            "n_train_rows": int(len(tr)),
             "train_pass": len(train_pass), "foreign_pass": len(survivors),
             "foreign_point_pass": point_pass,
             "foreign_lift_median": (sorted(foreign_lifts)[len(foreign_lifts) // 2]
@@ -481,6 +553,16 @@ def main(argv: list[str] | None = None) -> int:
                         else "NOT_DETECTABLE_IN_SCOPE")}
 
     p = Path(a.out)
+    if p.exists() and not a.overwrite:
+        # The pre-repair artifacts are the evidence that the leak happened and
+        # what it produced. A re-run that silently replaces them destroys the
+        # only record of the defect while claiming to have fixed it.
+        print(f"\nREFUSED: {p} already exists. The results of a run made under "
+              f"a different lineage are an audit artifact, not a cache. Pass "
+              f"--out with a new path (the repaired run belongs beside the old "
+              f"one, not on top of it) or --overwrite if you genuinely mean to "
+              f"discard the record.")
+        return 2
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(results, indent=2, default=str), encoding="utf-8")
     print(f"\nwritten  {p}")
