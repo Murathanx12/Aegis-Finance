@@ -66,6 +66,11 @@ COMPARISON_LIFT = 1.271
 _ORDER = {"BREAK_EVEN_CLEARED_IN_SCOPE": 0, "NOT_RESOLVED": 1,
           "REFUTED_IN_SCOPE": 2}
 
+#: z(alpha=.05 two-sided) + z(power=.80). Same constant R13's linter uses, so
+#: the honest MDE and the linter's floor are directly comparable and any gap
+#: between them is a statement about n_effective, not about the convention.
+_Z_MDE = 1.959963985 + 0.8416212336
+
 
 def _latest_autopsies() -> Path | None:
     files = sorted(AUTOPSIES.glob("autopsies_*.jsonl"))
@@ -372,6 +377,15 @@ def main(argv: list[str] | None = None) -> int:
                     else:
                         verdict = "NOT_RESOLVED"
 
+                    # The HONEST 80%-power MDE, from the block bootstrap's own
+                    # interval. R13's linter computes its floor from
+                    # `n_available = freq * years` treating every observation as
+                    # independent; with overlapping H-day windows on six
+                    # co-moving securities it is not, and the two numbers
+                    # disagree by a factor worth printing next to each other.
+                    se = ((d_hi - d_lo) / 2.0) / 1.6448536
+                    honest_mde = _Z_MDE * se
+
                     cells.append({
                         "block": block, "cost": cost,
                         "L_min_conditional": lm_cond,
@@ -380,6 +394,7 @@ def main(argv: list[str] | None = None) -> int:
                         "diff_ci_lo_pp": d_lo * 100.0,
                         "diff_ci_hi_pp": d_hi * 100.0,
                         "required_diff_pp": required_diff * 100.0,
+                        "honest_mde_pp": honest_mde * 100.0,
                         "detectable": bool(detectable),
                         "verdict": verdict,
                     })
@@ -434,6 +449,18 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  L_min    unconditional {r['L_min_uncond_declared_cost']:.4f}"
               f"   | conditional {r['L_min_cond_declared_cost']:.4f}"
               f"   vs N9 lift {COMPARISON_LIFT}")
+        mdes = sorted({round(c["honest_mde_pp"], 3) for c in r["cells"]})
+        req = abs(next(c["required_diff_pp"] for c in r["cells"]
+                       if c["cost"] == COST))
+        # The comparison, never a compiled verdict. A hardcoded conclusion in a
+        # print statement is how `"NO COVERAGE"` became a false kill (N4).
+        note = ("required is below the MDE at every block"
+                if req < mdes[0] else
+                "required is above the MDE at every block"
+                if req > mdes[-1] else
+                "required falls inside the MDE range — block length decides")
+        print(f"  honest MDE (block bootstrap) {mdes[0]:.3f}-{mdes[-1]:.3f}pp"
+              f"   vs required {req:.3f}pp  ({note})")
         print(f"  VERDICT (weakest cell): {r['robust_verdict']}")
     print(f"\nwrote {a.out}")
     return 0
