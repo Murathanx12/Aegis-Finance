@@ -331,6 +331,89 @@ SEED: list[StrategySpec] = [
 ]
 
 
+#: Which OSAP predictor implements which seeded strategy. `None` means no
+#: faithful implementation exists in the data we hold, and the library refuses
+#: rather than substituting a cousin under the original's name.
+IMPLEMENTED_BY: dict[str, str | None] = {
+    "UMD — cross-sectional momentum (12-1)": "Mom12m",
+    "HML — book-to-market value": "BM",
+    "Profitability (gross profits / assets)": "GP",
+    "PEAD — post-earnings-announcement drift": "EarningsSurprise",
+    "Low-volatility / defensive equity": "RealizedVol",
+    "BAB — betting against beta": "BetaFP",
+    "Short-term reversal (1-month)": "__own_1m_reversal",
+    "TSMOM — time-series momentum": "__own_tsmom",
+    "QMJ — quality minus junk": None,
+    "Volatility targeting": None,
+}
+
+
+class MeasurementUnavailable(RuntimeError):
+    """Someone asked to load measurements and the run has not happened."""
+
+
+def load_measured(path, *, window: str = "post_publication") -> list[StrategySpec]:
+    """Attach an Aegis measurement run to COPIES of the seeded specs.
+
+    Copies, not the module-level SEED: a library that mutates itself on import
+    makes `measured()` succeed or refuse depending on what ran earlier in the
+    process, and the whole point of that method is that it is predictable.
+
+    REFUSES on a missing file rather than returning the unmeasured seed. An
+    unmeasured library that looks measured is the exact confusion this module
+    was written to prevent, and "the file was not there" is not a reason to
+    quietly hand back claims.
+    """
+    import copy
+    import json
+    from pathlib import Path
+
+    p = Path(path)
+    if not p.exists():
+        raise MeasurementUnavailable(
+            f"no measurement at {p}. The seeded specs carry CLAIMS only; "
+            f"returning them as though a run had happened is the substitution "
+            f"this library exists to refuse. Run the measurement first.")
+    payload = json.loads(p.read_text(encoding="utf-8"))
+    results = payload.get("results", payload)
+    screens = payload.get("screens", {})
+    out = []
+    for spec in SEED:
+        s = copy.deepcopy(spec)
+        col = IMPLEMENTED_BY.get(s.name)
+        r = results.get(col) if col else None
+        if r is None or r.get("refused") or r.get("insufficient"):
+            s.reproduction_status = Reproduction.FAILED if col else \
+                Reproduction.NOT_ATTEMPTED
+            s.reproduction_note = (
+                "no faithful implementation in the data we hold" if not col
+                else f"{col} not measurable on this window")
+            out.append(s)
+            continue
+        perf = Performance(
+            start=str(payload.get("window", "")).split("..")[0],
+            end=str(payload.get("window", "")).split("..")[-1],
+            gross_annual_return=r.get("gross_annual"),
+            net_annual_return=r.get("net_annual"),
+            sharpe=r.get("sharpe"), n_months=r.get("n_months"),
+            annual_turnover=(None if r.get("monthly_turnover") is None
+                             else 12 * r["monthly_turnover"]),
+            cost_bps_per_side=screens.get("cost_bps_per_crossing"),
+            note=(f"equal-weighted decile spread on the CRSP panel; "
+                  f"break-even {r.get('breakeven_bps')}bp/crossing; "
+                  f"detectable net = {r.get('detectable')}"))
+        setattr(s, window, perf)
+        s.reproduction_status = Reproduction.PARTIAL
+        s.reproduction_note = (
+            "implemented from OSAP characteristics on our own return panel — "
+            "our universe, our weighting, our cost model, not the authors'. "
+            "2006-2019 is post-publication for this strategy, so this is the "
+            "DECAYED number and there is no matching in-sample half: the "
+            "authors' window predates our panel.")
+        out.append(s)
+    return out
+
+
 def by_priority() -> dict[str, list[str]]:
     out: dict[str, list[str]] = {}
     for s in SEED:

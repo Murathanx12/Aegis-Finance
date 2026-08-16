@@ -151,3 +151,73 @@ def test_sources_are_recorded_but_do_not_rank():
     r = status_report()
     assert r["by_source"]["PUBLISHED_ACADEMIC"] > 0
     assert r["by_source"]["PUBLIC_PRACTITIONER"] > 0
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Attaching a measurement run — the half that turns the library from a reading
+# list into a benchmark.
+# ═══════════════════════════════════════════════════════════════════════════
+import json  # noqa: E402
+
+from backend.services.strategy_library import (  # noqa: E402
+    IMPLEMENTED_BY, MeasurementUnavailable, Reproduction, load_measured)
+
+
+def test_every_seeded_strategy_is_mapped_or_explicitly_unmapped():
+    """The mapping is enrolment, not memory: a spec with no entry at all would
+    silently never be measured and would read as 'not run yet' forever."""
+    assert {s.name for s in SEED} == set(IMPLEMENTED_BY)
+
+
+def _payload(tmp_path, results):
+    p = tmp_path / "m.json"
+    p.write_text(json.dumps({"window": "200601..201912",
+                             "screens": {"cost_bps_per_crossing": 10.0},
+                             "results": results}), encoding="utf-8")
+    return p
+
+
+def test_a_missing_measurement_file_refuses_rather_than_returning_claims(
+        tmp_path):
+    with pytest.raises(MeasurementUnavailable, match="exists to refuse"):
+        load_measured(tmp_path / "never_ran.json")
+
+
+def test_loading_does_not_mutate_the_module_level_seed(tmp_path):
+    p = _payload(tmp_path, {"Mom12m": {"gross_annual": 0.004,
+                                       "net_annual": -0.011, "sharpe": 0.05,
+                                       "n_months": 167,
+                                       "monthly_turnover": 1.5,
+                                       "breakeven_bps": 2.6,
+                                       "detectable": False}})
+    specs = load_measured(p)
+    got = [s for s in specs if IMPLEMENTED_BY[s.name] == "Mom12m"][0]
+    assert got.measured("post_publication").net_annual_return == -0.011
+    # The originals are untouched, so `measured()` stays predictable.
+    orig = [s for s in SEED if IMPLEMENTED_BY[s.name] == "Mom12m"][0]
+    with pytest.raises(ClaimIsNotEvidence):
+        orig.measured("post_publication")
+
+
+def test_a_strategy_with_no_faithful_implementation_reports_that(tmp_path):
+    specs = load_measured(_payload(tmp_path, {}))
+    qmj = [s for s in specs if s.name.startswith("QMJ")][0]
+    assert qmj.reproduction_status is Reproduction.NOT_ATTEMPTED
+    assert "no faithful implementation" in qmj.reproduction_note
+    with pytest.raises(ClaimIsNotEvidence):
+        qmj.measured("post_publication")
+
+
+def test_the_measured_window_never_becomes_the_authors_claim(tmp_path):
+    """A post-publication number is not a reproduction of the original."""
+    p = _payload(tmp_path, {"GP": {"gross_annual": 0.069, "net_annual": 0.065,
+                                   "sharpe": 0.4, "n_months": 167,
+                                   "monthly_turnover": 0.34,
+                                   "breakeven_bps": 167.3,
+                                   "detectable": False}})
+    gp = [s for s in load_measured(p)
+          if IMPLEMENTED_BY[s.name] == "GP"][0]
+    assert gp.reproduction_status is Reproduction.PARTIAL
+    assert "DECAYED" in gp.reproduction_note
+    # No in-sample half exists, so decay must refuse rather than invent one.
+    assert gp.decay()["decay"] is None
