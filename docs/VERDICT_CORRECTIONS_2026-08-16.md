@@ -141,6 +141,34 @@ order ratified is untouched by this correction — coverage, not validity, is th
 binding constraint either way, because *demonstrated* coverage is what a
 library has to have to be worth adjudicating.
 
+### C4b — and then the equivalence test ran, and it says more than the null did
+
+`N4B` (prereg registered before the statistic existed; run 2026-08-16) supplies
+the margin the null was missing. The library's only declared action is to cut
+exposure when a precursor fires, so `L_min` is whatever makes that trade
+break even:
+
+```
+L_min = (mu_rest + cost) / ( q * (|mu_tail| + mu_rest) )
+```
+
+| H | tail | lift | precision | upper 95% bound | break-even `L_min` | verdict |
+|---|---|---|---|---|---|---|
+| 20d | bottom | 0.954 | 9.5% | 1.257 | **1.69** | **`RULED_OUT`** |
+| 60d | bottom | 0.808 | 8.1% | 1.234 | **2.11** | **`RULED_OUT`** |
+
+Stable across all nine cost × block-length combinations. **So the honest verdict
+is stronger than the corrected one, not weaker: `REFUTED_IN_SCOPE` as a
+de-risking trigger.** When a precursor fires, a bottom-decile move follows 9.5%
+of the time; cutting exposure needs 16.9%. The upper bound of the interval does
+not reach break-even either.
+
+This is the first powered negative the programme has produced from an
+equivalence test rather than from a failure to detect, and it exists only
+because the margin was derived from the return distribution instead of from
+whatever the sample could see. **The correction to C4 was not a softening —
+demanding the right test made the result sharper.**
+
 ---
 
 ## The corrected accounting

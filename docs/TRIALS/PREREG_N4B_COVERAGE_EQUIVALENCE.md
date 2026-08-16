@@ -130,5 +130,40 @@ frozen in the script. ONE run. The result is final for this trial.
 
 ## Result (filled in AFTER the run — never edited afterwards)
 
-- Verdict:
-- Receipt:
+Run 2026-08-16. 6,591 shared trading days, 2000-05-31 → 2026-08-14, six
+securities, 2,000 bootstrap resamples per block length, seed 20260816.
+
+| H | tail | lift | precision | se | upper 95% bound | `L_min` | verdict |
+|---|---|---|---|---|---|---|---|
+| 20d | bottom | 0.954 | 9.5% | 0.184 | **1.257** | **1.69** | `RULED_OUT` |
+| 60d | bottom | 0.808 | 8.1% | 0.259 | **1.234** | **2.11** | `RULED_OUT` |
+| 20d | top | 1.179 | 11.8% | 0.235 | 1.565 | (0.09) | descriptive only |
+| 60d | top | 1.117 | 11.2% | 0.319 | 1.642 | (0.33) | descriptive only |
+
+**Verdict: `REFUTED_IN_SCOPE` — the six-rule library is refuted AS A DE-RISKING
+TRIGGER**, at both horizons, on the tail it was built from. Stable across all
+nine sensitivity combinations (cost 0 / 10bp / 25bp × block H/2, H, 2H), so the
+robust verdict and the headline verdict are the same one.
+
+In plain terms: when a precursor fires, a bottom-decile move follows **9.5%**
+of the time at twenty days. Break-even for cutting exposure is **16.9%**. The
+signal is not weak — it is on the wrong side of the line, and the upper bound of
+its interval does not reach the line either.
+
+**Self-correction made during the run, before reading the bottom tail.** The
+first run adjudicated all four cells and returned `AT_LEAST_MARGIN` on both top
+tails. That was an artefact: `L_min` is derived from de-risking economics, the
+top tail's `mu_rest` is ≈0 or negative, so the margin collapses to 0.09–0.33 and
+any lift clears it. Two of the four cells would have been reported as the
+library *working*. The top tail has a different action and therefore a different
+margin; it is now marked `margin_applicable: false` and reported descriptively,
+as N4 reported it. **§37 — a new instrument's first POSITIVE is the one that
+looks like it working.**
+
+- Receipt: `backend/data/optimus/research_gym/n4b_coverage_equivalence.json`
+- Script: `scripts/n4b_coverage_equivalence.py`
+
+**What this does NOT close.** Nothing about individual mechanisms; nothing about
+other actions (sizing rather than exit has different economics and is untested);
+and nothing about the 85% of exceptional moves the library never marked, which
+is a generation problem (N9), not an adjudication one.

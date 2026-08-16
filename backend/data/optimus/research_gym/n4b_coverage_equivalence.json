@@ -1,0 +1,519 @@
+{
+  "universe": [
+    "SPY",
+    "QQQ",
+    "IWM",
+    "XLF",
+    "XLE",
+    "XLK"
+  ],
+  "tail_quantile": 0.1,
+  "seed": 20260816,
+  "cost_declared": 0.001,
+  "rows": [
+    {
+      "horizon": 20,
+      "tail": "bottom",
+      "lift": 0.9535134188705313,
+      "margin_applicable": true,
+      "margin_note": null,
+      "mu_tail_pct": -11.197461478925085,
+      "mu_rest_pct": 2.1578731618640115,
+      "L_min_declared_cost": 1.6906151905532527,
+      "precision_at_lift_pct": 9.535134188705314,
+      "headline": {
+        "block": 20,
+        "cost": 0.001,
+        "L_min": 1.6906151905532527,
+        "se": 0.1843820374984897,
+        "verdict": "RULED_OUT",
+        "estimate": 0.9535134188705313,
+        "margin": 1.6906151905532527,
+        "upper_bound": 1.2567948819946244,
+        "reason": "upper 95% one-sided bound 1.257 vs margin 1.691"
+      },
+      "robust_verdict": "RULED_OUT",
+      "sensitivity": [
+        {
+          "block": 10,
+          "cost": 0.0,
+          "L_min": 1.6157387440323352,
+          "se": 0.14959468139897492,
+          "verdict": "RULED_OUT",
+          "estimate": 0.9535134188705313,
+          "margin": 1.6157387440323352,
+          "upper_bound": 1.1995747731422852,
+          "reason": "upper 95% one-sided bound 1.200 vs margin 1.616"
+        },
+        {
+          "block": 10,
+          "cost": 0.001,
+          "L_min": 1.6906151905532527,
+          "se": 0.14959468139897492,
+          "verdict": "RULED_OUT",
+          "estimate": 0.9535134188705313,
+          "margin": 1.6906151905532527,
+          "upper_bound": 1.1995747731422852,
+          "reason": "upper 95% one-sided bound 1.200 vs margin 1.691"
+        },
+        {
+          "block": 10,
+          "cost": 0.0025,
+          "L_min": 1.8029298603346287,
+          "se": 0.14959468139897492,
+          "verdict": "RULED_OUT",
+          "estimate": 0.9535134188705313,
+          "margin": 1.8029298603346287,
+          "upper_bound": 1.1995747731422852,
+          "reason": "upper 95% one-sided bound 1.200 vs margin 1.803"
+        },
+        {
+          "block": 20,
+          "cost": 0.0,
+          "L_min": 1.6157387440323352,
+          "se": 0.1843820374984897,
+          "verdict": "RULED_OUT",
+          "estimate": 0.9535134188705313,
+          "margin": 1.6157387440323352,
+          "upper_bound": 1.2567948819946244,
+          "reason": "upper 95% one-sided bound 1.257 vs margin 1.616"
+        },
+        {
+          "block": 20,
+          "cost": 0.001,
+          "L_min": 1.6906151905532527,
+          "se": 0.1843820374984897,
+          "verdict": "RULED_OUT",
+          "estimate": 0.9535134188705313,
+          "margin": 1.6906151905532527,
+          "upper_bound": 1.2567948819946244,
+          "reason": "upper 95% one-sided bound 1.257 vs margin 1.691"
+        },
+        {
+          "block": 20,
+          "cost": 0.0025,
+          "L_min": 1.8029298603346287,
+          "se": 0.1843820374984897,
+          "verdict": "RULED_OUT",
+          "estimate": 0.9535134188705313,
+          "margin": 1.8029298603346287,
+          "upper_bound": 1.2567948819946244,
+          "reason": "upper 95% one-sided bound 1.257 vs margin 1.803"
+        },
+        {
+          "block": 40,
+          "cost": 0.0,
+          "L_min": 1.6157387440323352,
+          "se": 0.20552803851553578,
+          "verdict": "RULED_OUT",
+          "estimate": 0.9535134188705313,
+          "margin": 1.6157387440323352,
+          "upper_bound": 1.291576958463032,
+          "reason": "upper 95% one-sided bound 1.292 vs margin 1.616"
+        },
+        {
+          "block": 40,
+          "cost": 0.001,
+          "L_min": 1.6906151905532527,
+          "se": 0.20552803851553578,
+          "verdict": "RULED_OUT",
+          "estimate": 0.9535134188705313,
+          "margin": 1.6906151905532527,
+          "upper_bound": 1.291576958463032,
+          "reason": "upper 95% one-sided bound 1.292 vs margin 1.691"
+        },
+        {
+          "block": 40,
+          "cost": 0.0025,
+          "L_min": 1.8029298603346287,
+          "se": 0.20552803851553578,
+          "verdict": "RULED_OUT",
+          "estimate": 0.9535134188705313,
+          "margin": 1.8029298603346287,
+          "upper_bound": 1.291576958463032,
+          "reason": "upper 95% one-sided bound 1.292 vs margin 1.803"
+        }
+      ],
+      "n_days": 6591,
+      "n_boot": 2000
+    },
+    {
+      "horizon": 20,
+      "tail": "top",
+      "lift": 1.1788628619694774,
+      "margin_applicable": false,
+      "margin_note": "L_min is derived from de-risking economics; the top tail's action is not de-risking, so this cell is descriptive only",
+      "mu_tail_pct": 10.77048906709712,
+      "mu_rest_pct": -0.2867254275631172,
+      "L_min_declared_cost": 0.09284629451553045,
+      "precision_at_lift_pct": 11.788628619694775,
+      "headline": {
+        "block": 20,
+        "cost": 0.001,
+        "L_min": 0.09284629451553045,
+        "se": 0.2347446073957702,
+        "verdict": "AT_LEAST_MARGIN",
+        "estimate": 1.1788628619694774,
+        "margin": 0.09284629451553045,
+        "upper_bound": 1.5649833808517095,
+        "reason": "upper 95% one-sided bound 1.565 vs margin 0.093"
+      },
+      "robust_verdict": "AT_LEAST_MARGIN",
+      "sensitivity": [
+        {
+          "block": 10,
+          "cost": 0.0,
+          "L_min": 0.0,
+          "se": 0.1810553249246567,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1788628619694774,
+          "margin": 0.0,
+          "upper_bound": 1.4766723698506763,
+          "reason": "upper 95% one-sided bound 1.477 vs margin 0.000"
+        },
+        {
+          "block": 10,
+          "cost": 0.001,
+          "L_min": 0.09284629451553045,
+          "se": 0.1810553249246567,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1788628619694774,
+          "margin": 0.09284629451553045,
+          "upper_bound": 1.4766723698506763,
+          "reason": "upper 95% one-sided bound 1.477 vs margin 0.093"
+        },
+        {
+          "block": 10,
+          "cost": 0.0025,
+          "L_min": 0.23211573628882612,
+          "se": 0.1810553249246567,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1788628619694774,
+          "margin": 0.23211573628882612,
+          "upper_bound": 1.4766723698506763,
+          "reason": "upper 95% one-sided bound 1.477 vs margin 0.232"
+        },
+        {
+          "block": 20,
+          "cost": 0.0,
+          "L_min": 0.0,
+          "se": 0.2347446073957702,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1788628619694774,
+          "margin": 0.0,
+          "upper_bound": 1.5649833808517095,
+          "reason": "upper 95% one-sided bound 1.565 vs margin 0.000"
+        },
+        {
+          "block": 20,
+          "cost": 0.001,
+          "L_min": 0.09284629451553045,
+          "se": 0.2347446073957702,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1788628619694774,
+          "margin": 0.09284629451553045,
+          "upper_bound": 1.5649833808517095,
+          "reason": "upper 95% one-sided bound 1.565 vs margin 0.093"
+        },
+        {
+          "block": 20,
+          "cost": 0.0025,
+          "L_min": 0.23211573628882612,
+          "se": 0.2347446073957702,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1788628619694774,
+          "margin": 0.23211573628882612,
+          "upper_bound": 1.5649833808517095,
+          "reason": "upper 95% one-sided bound 1.565 vs margin 0.232"
+        },
+        {
+          "block": 40,
+          "cost": 0.0,
+          "L_min": 0.0,
+          "se": 0.2703002367844025,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1788628619694774,
+          "margin": 0.0,
+          "upper_bound": 1.6234671868101436,
+          "reason": "upper 95% one-sided bound 1.623 vs margin 0.000"
+        },
+        {
+          "block": 40,
+          "cost": 0.001,
+          "L_min": 0.09284629451553045,
+          "se": 0.2703002367844025,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1788628619694774,
+          "margin": 0.09284629451553045,
+          "upper_bound": 1.6234671868101436,
+          "reason": "upper 95% one-sided bound 1.623 vs margin 0.093"
+        },
+        {
+          "block": 40,
+          "cost": 0.0025,
+          "L_min": 0.23211573628882612,
+          "se": 0.2703002367844025,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1788628619694774,
+          "margin": 0.23211573628882612,
+          "upper_bound": 1.6234671868101436,
+          "reason": "upper 95% one-sided bound 1.623 vs margin 0.232"
+        }
+      ],
+      "n_days": 6591,
+      "n_boot": 2000
+    },
+    {
+      "horizon": 60,
+      "tail": "bottom",
+      "lift": 0.8078875748926958,
+      "margin_applicable": true,
+      "margin_note": null,
+      "mu_tail_pct": -18.244745436486877,
+      "mu_rest_pct": 4.742209113942273,
+      "L_min_declared_cost": 2.1065031051935814,
+      "precision_at_lift_pct": 8.078875748926958,
+      "headline": {
+        "block": 60,
+        "cost": 0.001,
+        "L_min": 2.1065031051935814,
+        "se": 0.25916191963321306,
+        "verdict": "RULED_OUT",
+        "estimate": 0.8078875748926958,
+        "margin": 2.1065031051935814,
+        "upper_bound": 1.2341709983690923,
+        "reason": "upper 95% one-sided bound 1.234 vs margin 2.107"
+      },
+      "robust_verdict": "RULED_OUT",
+      "sensitivity": [
+        {
+          "block": 30,
+          "cost": 0.0,
+          "L_min": 2.0630001697435554,
+          "se": 0.2209651772389187,
+          "verdict": "RULED_OUT",
+          "estimate": 0.8078875748926958,
+          "margin": 2.0630001697435554,
+          "upper_bound": 1.171342948104106,
+          "reason": "upper 95% one-sided bound 1.171 vs margin 2.063"
+        },
+        {
+          "block": 30,
+          "cost": 0.001,
+          "L_min": 2.1065031051935814,
+          "se": 0.2209651772389187,
+          "verdict": "RULED_OUT",
+          "estimate": 0.8078875748926958,
+          "margin": 2.1065031051935814,
+          "upper_bound": 1.171342948104106,
+          "reason": "upper 95% one-sided bound 1.171 vs margin 2.107"
+        },
+        {
+          "block": 30,
+          "cost": 0.0025,
+          "L_min": 2.1717575083686205,
+          "se": 0.2209651772389187,
+          "verdict": "RULED_OUT",
+          "estimate": 0.8078875748926958,
+          "margin": 2.1717575083686205,
+          "upper_bound": 1.171342948104106,
+          "reason": "upper 95% one-sided bound 1.171 vs margin 2.172"
+        },
+        {
+          "block": 60,
+          "cost": 0.0,
+          "L_min": 2.0630001697435554,
+          "se": 0.25916191963321306,
+          "verdict": "RULED_OUT",
+          "estimate": 0.8078875748926958,
+          "margin": 2.0630001697435554,
+          "upper_bound": 1.2341709983690923,
+          "reason": "upper 95% one-sided bound 1.234 vs margin 2.063"
+        },
+        {
+          "block": 60,
+          "cost": 0.001,
+          "L_min": 2.1065031051935814,
+          "se": 0.25916191963321306,
+          "verdict": "RULED_OUT",
+          "estimate": 0.8078875748926958,
+          "margin": 2.1065031051935814,
+          "upper_bound": 1.2341709983690923,
+          "reason": "upper 95% one-sided bound 1.234 vs margin 2.107"
+        },
+        {
+          "block": 60,
+          "cost": 0.0025,
+          "L_min": 2.1717575083686205,
+          "se": 0.25916191963321306,
+          "verdict": "RULED_OUT",
+          "estimate": 0.8078875748926958,
+          "margin": 2.1717575083686205,
+          "upper_bound": 1.2341709983690923,
+          "reason": "upper 95% one-sided bound 1.234 vs margin 2.172"
+        },
+        {
+          "block": 120,
+          "cost": 0.0,
+          "L_min": 2.0630001697435554,
+          "se": 0.2632823043527773,
+          "verdict": "RULED_OUT",
+          "estimate": 0.8078875748926958,
+          "margin": 2.0630001697435554,
+          "upper_bound": 1.240948428119503,
+          "reason": "upper 95% one-sided bound 1.241 vs margin 2.063"
+        },
+        {
+          "block": 120,
+          "cost": 0.001,
+          "L_min": 2.1065031051935814,
+          "se": 0.2632823043527773,
+          "verdict": "RULED_OUT",
+          "estimate": 0.8078875748926958,
+          "margin": 2.1065031051935814,
+          "upper_bound": 1.240948428119503,
+          "reason": "upper 95% one-sided bound 1.241 vs margin 2.107"
+        },
+        {
+          "block": 120,
+          "cost": 0.0025,
+          "L_min": 2.1717575083686205,
+          "se": 0.2632823043527773,
+          "verdict": "RULED_OUT",
+          "estimate": 0.8078875748926958,
+          "margin": 2.1717575083686205,
+          "upper_bound": 1.240948428119503,
+          "reason": "upper 95% one-sided bound 1.241 vs margin 2.172"
+        }
+      ],
+      "n_days": 6591,
+      "n_boot": 2000
+    },
+    {
+      "horizon": 60,
+      "tail": "top",
+      "lift": 1.1171361683625554,
+      "margin_applicable": false,
+      "margin_note": "L_min is derived from de-risking economics; the top tail's action is not de-risking, so this cell is descriptive only",
+      "mu_tail_pct": 19.38636515053318,
+      "mu_rest_pct": 0.554571488638357,
+      "L_min_declared_cost": 0.32825513689890135,
+      "precision_at_lift_pct": 11.171361683625554,
+      "headline": {
+        "block": 60,
+        "cost": 0.001,
+        "L_min": 0.32825513689890135,
+        "se": 0.3189415694200982,
+        "verdict": "AT_LEAST_MARGIN",
+        "estimate": 1.1171361683625554,
+        "margin": 0.32825513689890135,
+        "upper_bound": 1.6417483656087986,
+        "reason": "upper 95% one-sided bound 1.642 vs margin 0.328"
+      },
+      "robust_verdict": "AT_LEAST_MARGIN",
+      "sensitivity": [
+        {
+          "block": 30,
+          "cost": 0.0,
+          "L_min": 0.27810704114518325,
+          "se": 0.27937837347916605,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1171361683625554,
+          "margin": 0.27810704114518325,
+          "upper_bound": 1.5766726992715645,
+          "reason": "upper 95% one-sided bound 1.577 vs margin 0.278"
+        },
+        {
+          "block": 30,
+          "cost": 0.001,
+          "L_min": 0.32825513689890135,
+          "se": 0.27937837347916605,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1171361683625554,
+          "margin": 0.32825513689890135,
+          "upper_bound": 1.5766726992715645,
+          "reason": "upper 95% one-sided bound 1.577 vs margin 0.328"
+        },
+        {
+          "block": 30,
+          "cost": 0.0025,
+          "L_min": 0.4034772805294785,
+          "se": 0.27937837347916605,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1171361683625554,
+          "margin": 0.4034772805294785,
+          "upper_bound": 1.5766726992715645,
+          "reason": "upper 95% one-sided bound 1.577 vs margin 0.403"
+        },
+        {
+          "block": 60,
+          "cost": 0.0,
+          "L_min": 0.27810704114518325,
+          "se": 0.3189415694200982,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1171361683625554,
+          "margin": 0.27810704114518325,
+          "upper_bound": 1.6417483656087986,
+          "reason": "upper 95% one-sided bound 1.642 vs margin 0.278"
+        },
+        {
+          "block": 60,
+          "cost": 0.001,
+          "L_min": 0.32825513689890135,
+          "se": 0.3189415694200982,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1171361683625554,
+          "margin": 0.32825513689890135,
+          "upper_bound": 1.6417483656087986,
+          "reason": "upper 95% one-sided bound 1.642 vs margin 0.328"
+        },
+        {
+          "block": 60,
+          "cost": 0.0025,
+          "L_min": 0.4034772805294785,
+          "se": 0.3189415694200982,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1171361683625554,
+          "margin": 0.4034772805294785,
+          "upper_bound": 1.6417483656087986,
+          "reason": "upper 95% one-sided bound 1.642 vs margin 0.403"
+        },
+        {
+          "block": 120,
+          "cost": 0.0,
+          "L_min": 0.27810704114518325,
+          "se": 0.31511203747165084,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1171361683625554,
+          "margin": 0.27810704114518325,
+          "upper_bound": 1.6354493460938686,
+          "reason": "upper 95% one-sided bound 1.635 vs margin 0.278"
+        },
+        {
+          "block": 120,
+          "cost": 0.001,
+          "L_min": 0.32825513689890135,
+          "se": 0.31511203747165084,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1171361683625554,
+          "margin": 0.32825513689890135,
+          "upper_bound": 1.6354493460938686,
+          "reason": "upper 95% one-sided bound 1.635 vs margin 0.328"
+        },
+        {
+          "block": 120,
+          "cost": 0.0025,
+          "L_min": 0.4034772805294785,
+          "se": 0.31511203747165084,
+          "verdict": "AT_LEAST_MARGIN",
+          "estimate": 1.1171361683625554,
+          "margin": 0.4034772805294785,
+          "upper_bound": 1.6354493460938686,
+          "reason": "upper 95% one-sided bound 1.635 vs margin 0.403"
+        }
+      ],
+      "n_days": 6591,
+      "n_boot": 2000
+    }
+  ]
+}
