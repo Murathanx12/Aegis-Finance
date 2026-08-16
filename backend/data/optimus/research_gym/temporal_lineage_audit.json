@@ -1,0 +1,146 @@
+{
+  "calendar_bars": 6946,
+  "start": "1999-01-04",
+  "end": "2026-08-14",
+  "trading_bar_spans": {
+    "5": {
+      "mean": 7.261201555971762,
+      "max": 13,
+      "pct_over_1_5H": 0.17965710992652356,
+      "pct_over_2H": 0.0028814291888776835
+    },
+    "20": {
+      "mean": 29.045047646549236,
+      "max": 35,
+      "pct_over_1_5H": 0.1570892289922033,
+      "pct_over_2H": 0.0
+    },
+    "60": {
+      "mean": 87.13200697066512,
+      "max": 94,
+      "pct_over_1_5H": 0.04240487946558234,
+      "pct_over_2H": 0.0
+    }
+  },
+  "designs": [
+    {
+      "design": "n9_mine_the_85",
+      "note": "train sliced at TRAIN_END AFTER fwd_H computed on prices to 2026",
+      "verdict": "LEAKS",
+      "index_end": null,
+      "n_splits_checked": 2,
+      "n_leaking_dates_total": 80,
+      "n_starved_dates_total": 0,
+      "max_reach_bars": 60,
+      "leaking_splits": [
+        {
+          "split": "train<=TRAIN_END",
+          "cutoff": "2015-12-31",
+          "H": 20,
+          "eval_start": "2016-01-04",
+          "n_leaking_dates": 20,
+          "max_reach_bars": 20,
+          "reaches_to": "2016-02-01"
+        },
+        {
+          "split": "train<=TRAIN_END",
+          "cutoff": "2015-12-31",
+          "H": 60,
+          "eval_start": "2016-01-04",
+          "n_leaking_dates": 60,
+          "max_reach_bars": 60,
+          "reaches_to": "2016-03-30"
+        }
+      ]
+    },
+    {
+      "design": "n21_policy_utility --freeze",
+      "note": "same cutoff; download TRUNCATED at TRAIN_END, so the label starves",
+      "verdict": "CLEAN",
+      "index_end": "2015-12-31",
+      "n_splits_checked": 1,
+      "n_leaking_dates_total": 0,
+      "n_starved_dates_total": 20,
+      "max_reach_bars": 0,
+      "leaking_splits": []
+    },
+    {
+      "design": "n11_vol_baseline_ladder",
+      "note": "6 equal folds, embargo 1.5*H CALENDAR days, label in trading bars",
+      "verdict": "CLEAN",
+      "index_end": null,
+      "n_splits_checked": 18,
+      "n_leaking_dates_total": 0,
+      "n_starved_dates_total": 0,
+      "max_reach_bars": 0,
+      "leaking_splits": []
+    },
+    {
+      "design": "n6_moments",
+      "note": "6 equal folds, embargo 1.5*H CALENDAR days, label in trading bars",
+      "verdict": "CLEAN",
+      "index_end": null,
+      "n_splits_checked": 18,
+      "n_leaking_dates_total": 0,
+      "n_starved_dates_total": 0,
+      "max_reach_bars": 0,
+      "leaking_splits": []
+    },
+    {
+      "design": "wm0_train",
+      "note": "annual expanding folds, embargo 2*H CALENDAR days",
+      "verdict": "CLEAN",
+      "index_end": null,
+      "n_splits_checked": 21,
+      "n_leaking_dates_total": 0,
+      "n_starved_dates_total": 0,
+      "max_reach_bars": 0,
+      "leaking_splits": []
+    },
+    {
+      "design": "n4_precursor_coverage",
+      "note": "coverage of one slice; no fitted split",
+      "verdict": "NO_SPLIT",
+      "n_splits_checked": 0,
+      "n_leaking_dates_total": 0,
+      "max_reach_bars": 0,
+      "leaking_splits": []
+    },
+    {
+      "design": "n4b_coverage_equivalence",
+      "note": "equivalence on one slice; no fitted split",
+      "verdict": "NO_SPLIT",
+      "n_splits_checked": 0,
+      "n_leaking_dates_total": 0,
+      "max_reach_bars": 0,
+      "leaking_splits": []
+    },
+    {
+      "design": "n20_conditional_mu_rest",
+      "note": "conditional means on one slice; no split",
+      "verdict": "NO_SPLIT",
+      "n_splits_checked": 0,
+      "n_leaking_dates_total": 0,
+      "max_reach_bars": 0,
+      "leaking_splits": []
+    },
+    {
+      "design": "gym_dissect_timing",
+      "note": "decomposition of recorded episodes; no label fit",
+      "verdict": "NO_SPLIT",
+      "n_splits_checked": 0,
+      "n_leaking_dates_total": 0,
+      "max_reach_bars": 0,
+      "leaking_splits": []
+    },
+    {
+      "design": "wm0_inference",
+      "note": "re-does inference on wm0_train's cached folds",
+      "verdict": "NO_SPLIT",
+      "n_splits_checked": 0,
+      "n_leaking_dates_total": 0,
+      "max_reach_bars": 0,
+      "leaking_splits": []
+    }
+  ]
+}
