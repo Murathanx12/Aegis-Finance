@@ -1,0 +1,314 @@
+{
+  "universe": [
+    "SPY",
+    "QQQ",
+    "IWM",
+    "EFA",
+    "XLF",
+    "XLE",
+    "XLK",
+    "XLV",
+    "XLI",
+    "XLP",
+    "XLU",
+    "TLT"
+  ],
+  "n_folds": 6,
+  "seed": 20260816,
+  "slices": {
+    "regime_transition": "|rv20 - rv60| / rv60, top decile",
+    "vol_of_vol": "20d sd of rv20, top decile",
+    "stale_window": "|rv5 - rv20| / rv20, top decile",
+    "post_shock": "worst 1-day return in the last 5 days, bottom decile"
+  },
+  "rows": [
+    {
+      "horizon": 5,
+      "slice": "ALL",
+      "rung": "rv20",
+      "ic": 0.5253141262207793,
+      "sd": 0.10121463398090755,
+      "vs_best_cheap": -0.005850290356605402,
+      "best_cheap": "ewma",
+      "mde": 0.006319058228764734,
+      "detectable": false
+    },
+    {
+      "horizon": 5,
+      "slice": "ALL",
+      "rung": "ewma",
+      "ic": 0.5311644165773848,
+      "sd": 0.09991239695948272,
+      "is_best_cheap": true
+    },
+    {
+      "horizon": 5,
+      "slice": "ALL",
+      "rung": "har",
+      "ic": 0.5297263656431686,
+      "sd": 0.1005069398490868,
+      "vs_best_cheap": -0.0014380509342162378,
+      "best_cheap": "ewma",
+      "mde": 0.013819402418262195,
+      "detectable": false
+    },
+    {
+      "horizon": 5,
+      "slice": "ALL",
+      "rung": "log_har",
+      "ic": 0.5305250296784254,
+      "sd": 0.098438086388229,
+      "vs_best_cheap": -0.0006393868989594079,
+      "best_cheap": "ewma",
+      "mde": 0.006872025993292188,
+      "detectable": false
+    },
+    {
+      "horizon": 5,
+      "slice": "ALL",
+      "rung": "ml_14feat",
+      "ic": 0.5309119429979056,
+      "sd": 0.11750084758391305,
+      "vs_best_cheap": -0.00025247357947922694,
+      "best_cheap": "ewma",
+      "mde": 0.12326896157491578,
+      "detectable": false
+    },
+    {
+      "horizon": 5,
+      "slice": "regime_transition",
+      "rung": "ml_14feat",
+      "ic": 0.5635913378390361,
+      "best_cheap": "ewma",
+      "best_cheap_ic": 0.571870706195646,
+      "vs_best_cheap": -0.008279368356609876,
+      "mde": 0.13195274412277813,
+      "detectable": false
+    },
+    {
+      "horizon": 5,
+      "slice": "vol_of_vol",
+      "rung": "ml_14feat",
+      "ic": 0.5983224103576105,
+      "best_cheap": "ewma",
+      "best_cheap_ic": 0.5989107776374222,
+      "vs_best_cheap": -0.0005883672798116524,
+      "mde": 0.13260627354901067,
+      "detectable": false
+    },
+    {
+      "horizon": 5,
+      "slice": "stale_window",
+      "rung": "ml_14feat",
+      "ic": 0.5340074714127788,
+      "best_cheap": "ewma",
+      "best_cheap_ic": 0.5225276321125085,
+      "vs_best_cheap": 0.0114798393002703,
+      "mde": 0.11934364912178771,
+      "detectable": false
+    },
+    {
+      "horizon": 5,
+      "slice": "post_shock",
+      "rung": "ml_14feat",
+      "ic": 0.542541382157738,
+      "best_cheap": "ewma",
+      "best_cheap_ic": 0.5164669169507967,
+      "vs_best_cheap": 0.026074465206941167,
+      "mde": 0.11775341010677418,
+      "detectable": false
+    },
+    {
+      "horizon": 20,
+      "slice": "ALL",
+      "rung": "rv20",
+      "ic": 0.6096443183544187,
+      "sd": 0.10636939167171443,
+      "vs_best_cheap": -0.004656803487488499,
+      "best_cheap": "ewma",
+      "mde": 0.005019954067752231,
+      "detectable": false
+    },
+    {
+      "horizon": 20,
+      "slice": "ALL",
+      "rung": "ewma",
+      "ic": 0.6143011218419071,
+      "sd": 0.10447333695531529,
+      "is_best_cheap": true
+    },
+    {
+      "horizon": 20,
+      "slice": "ALL",
+      "rung": "har",
+      "ic": 0.6120107931109902,
+      "sd": 0.10180970632661061,
+      "vs_best_cheap": -0.002290328730916965,
+      "best_cheap": "ewma",
+      "mde": 0.010028041685519115,
+      "detectable": false
+    },
+    {
+      "horizon": 20,
+      "slice": "ALL",
+      "rung": "log_har",
+      "ic": 0.6140271083260841,
+      "sd": 0.10223606508630456,
+      "vs_best_cheap": -0.0002740135158230683,
+      "best_cheap": "ewma",
+      "mde": 0.004756248079770587,
+      "detectable": false
+    },
+    {
+      "horizon": 20,
+      "slice": "ALL",
+      "rung": "ml_14feat",
+      "ic": 0.6382962308866506,
+      "sd": 0.07175091293792538,
+      "vs_best_cheap": 0.02399510904474338,
+      "best_cheap": "ewma",
+      "mde": 0.0716073279329652,
+      "detectable": false
+    },
+    {
+      "horizon": 20,
+      "slice": "regime_transition",
+      "rung": "ml_14feat",
+      "ic": 0.658948428893711,
+      "best_cheap": "ewma",
+      "best_cheap_ic": 0.6331587822112484,
+      "vs_best_cheap": 0.02578964668246257,
+      "mde": 0.061679380228364625,
+      "detectable": false
+    },
+    {
+      "horizon": 20,
+      "slice": "vol_of_vol",
+      "rung": "ml_14feat",
+      "ic": 0.6484576281695856,
+      "best_cheap": "ewma",
+      "best_cheap_ic": 0.6520057732107358,
+      "vs_best_cheap": -0.0035481450411501783,
+      "mde": 0.08941914764927551,
+      "detectable": false
+    },
+    {
+      "horizon": 20,
+      "slice": "stale_window",
+      "rung": "ml_14feat",
+      "ic": 0.637903235331743,
+      "best_cheap": "ewma",
+      "best_cheap_ic": 0.5938921226212719,
+      "vs_best_cheap": 0.044011112710471145,
+      "mde": 0.09124834319004557,
+      "detectable": false
+    },
+    {
+      "horizon": 20,
+      "slice": "post_shock",
+      "rung": "ml_14feat",
+      "ic": 0.5723495070420317,
+      "best_cheap": "ewma",
+      "best_cheap_ic": 0.5877740443913868,
+      "vs_best_cheap": -0.015424537349355089,
+      "mde": 0.10863053521680412,
+      "detectable": false
+    },
+    {
+      "horizon": 60,
+      "slice": "ALL",
+      "rung": "rv20",
+      "ic": 0.5840055527979701,
+      "sd": 0.11777335546838827,
+      "vs_best_cheap": -0.002816753738666291,
+      "best_cheap": "log_har",
+      "mde": 0.0040361534800893144,
+      "detectable": false
+    },
+    {
+      "horizon": 60,
+      "slice": "ALL",
+      "rung": "ewma",
+      "ic": 0.5866173590936778,
+      "sd": 0.11575382081298052,
+      "vs_best_cheap": -0.00020494744295851408,
+      "best_cheap": "log_har",
+      "mde": 0.0006377774055621838,
+      "detectable": false
+    },
+    {
+      "horizon": 60,
+      "slice": "ALL",
+      "rung": "har",
+      "ic": 0.5856934550239082,
+      "sd": 0.11482201556725323,
+      "vs_best_cheap": -0.0011288515127281702,
+      "best_cheap": "log_har",
+      "mde": 0.004312591264973742,
+      "detectable": false
+    },
+    {
+      "horizon": 60,
+      "slice": "ALL",
+      "rung": "log_har",
+      "ic": 0.5868223065366364,
+      "sd": 0.11527395408231567,
+      "is_best_cheap": true
+    },
+    {
+      "horizon": 60,
+      "slice": "ALL",
+      "rung": "ml_14feat",
+      "ic": 0.5735606421481497,
+      "sd": 0.09107346503201635,
+      "vs_best_cheap": -0.013261664388486657,
+      "best_cheap": "log_har",
+      "mde": 0.12326422858963187,
+      "detectable": false
+    },
+    {
+      "horizon": 60,
+      "slice": "regime_transition",
+      "rung": "ml_14feat",
+      "ic": 0.6267883299508168,
+      "best_cheap": "log_har",
+      "best_cheap_ic": 0.628376351716766,
+      "vs_best_cheap": -0.0015880217659491973,
+      "mde": 0.09453071060444254,
+      "detectable": false
+    },
+    {
+      "horizon": 60,
+      "slice": "vol_of_vol",
+      "rung": "ml_14feat",
+      "ic": 0.5910671633512203,
+      "best_cheap": "log_har",
+      "best_cheap_ic": 0.6158624814659502,
+      "vs_best_cheap": -0.024795318114729837,
+      "mde": 0.1080249261031684,
+      "detectable": false
+    },
+    {
+      "horizon": 60,
+      "slice": "stale_window",
+      "rung": "ml_14feat",
+      "ic": 0.5850796771482684,
+      "best_cheap": "log_har",
+      "best_cheap_ic": 0.5653223222278949,
+      "vs_best_cheap": 0.019757354920373466,
+      "mde": 0.11463877290047361,
+      "detectable": false
+    },
+    {
+      "horizon": 60,
+      "slice": "post_shock",
+      "rung": "ml_14feat",
+      "ic": 0.4827700451970498,
+      "best_cheap": "log_har",
+      "best_cheap_ic": 0.5199270032404085,
+      "vs_best_cheap": -0.037156958043358786,
+      "mde": 0.08529839056482749,
+      "detectable": false
+    }
+  ]
+}
