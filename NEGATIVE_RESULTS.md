@@ -3025,3 +3025,114 @@ byte-identical COPY and verifies the real ledger's SHA-256 before and after, so
 the decision can be prepared unattended without touching anything. As of
 2026-08-16: **110 due, 110 would resolve, 0 unpriceable, health returns to ok**,
 priced from a fresh fetch, real ledger unchanged.
+
+## 56. The health page reported on the process, not on the data it was serving
+
+§55 was found by reasoning about a date. This one was found by doing the thing
+`verify-prod-after-deploy` exists to force: reading the live surface after the
+deploy rather than trusting that green tests meant a working system.
+
+`/api/health/full` on the tip read `fred_health: UNKNOWN`, with **all 23 series
+`UNAVAILABLE`**, `fetch_passes: 0`, `last_no_fetch_reason: null`. That last
+combination should be unreachable — `_prewarm_cache` records a no-fetch reason
+on *every* failure path — so either the page was wrong or prewarm never ran.
+
+The Railway logs settled it in two lines:
+
+```
+2026-08-15 17:42:48  Fetching macroeconomic indicators from FRED (parallel)...
+2026-08-15 17:42:52    Loaded 23/23 FRED series            <- 3.6s, the body ran
+2026-08-15 17:42:52  Prewarmed: FRED data
+
+2026-08-16 02:06:31,754  Prewarmed: market data
+2026-08-16 02:06:31,763  Prewarmed: FRED data              <- 9 MILLISECONDS
+```
+
+No "Fetching" line, no "Loaded 23/23". The process restarted 8.4 hours later,
+`@cached(ttl=86400)` served the payload from the SQLite disk cache
+(`backend/.cache`, which survives restarts by design), and **the decorator
+returns before the function body** — so `record_pass` never executed.
+
+### The defect stated precisely
+
+`fred_health` was built to answer *"are the FRED inputs trustworthy?"* What it
+actually measured was *"did the fetch body execute in THIS process?"* Those two
+agree right up until something serves the data without re-fetching it — which is
+exactly what a 24-hour cache is for.
+
+The module's scope note refuses to persist "a health claim that outlives the
+evidence for it", and that principle is correct. But its premise is false here:
+**the evidence does not die with the process.** The payload lives in the disk
+cache and is still being served. The restart destroyed the health *record*, not
+the data it describes. The two have different lifetimes and the module assumed
+they had the same one.
+
+### The harm is narrower than it first looks, and checked rather than asserted
+
+The obvious reading — "a dead FRED and a healthy warm cache produce identical
+pages" — is **wrong, and testing it is what showed that**. A dark source with a
+cold cache still runs, still records misses, and still reads `DEGRADED`. My
+first test asserted the two were indistinguishable and it *passed on the unfixed
+code*, which is how the overstatement got caught instead of shipped.
+
+The real harm is the paging surface. `degraded_reasons()` names a never-loaded
+critical series only when `passes_seen > 0` (`fred_health.py:247`), and a
+restart zeroes that. Measured on the real module:
+
+| | `degraded_reasons` | status |
+|---|---|---|
+| cold pass, ICSA missing | **1, named** | DEGRADED |
+| restart into that same warm cache | **0** | UNKNOWN |
+
+ICSA is still absent from the payload being served, for the rest of the 24h TTL.
+The page simply stops saying so. **That is the original ICSA incident — the one
+this entire module was written to eliminate — arriving through the cache instead
+of through the fetch.**
+
+### The fix re-derives; it does not remember
+
+Nothing is persisted and no claim is carried forward. `record_served()` runs on
+every read of the payload and reads the artefact in hand; the payload now
+carries its own `fetched_at`, so a cache hit reports the **real** age of what it
+is serving instead of manufacturing a fresh pass. It is idempotent on
+`fetched_at`, which is what stops a serve from silently upgrading a
+last-known-good substitution from `STALE_USABLE` to `FRESH`.
+
+Two smaller things fell out of it. `_fetch_fred_payload` now returns `None` —
+which `cached` declines to store — when no pass could be attempted, so a missing
+API key no longer poisons a 24-hour cache entry with a failure. And an unused
+`import time` in the new test file would have failed ruff and turned CI red on
+push; caught before the commit, not after (§0, again).
+
+### The family this belongs to
+
+§44, §47 and §55 were all *a test asserting the state of the world rather than
+the behaviour of the code*. This is the mirror image: **a health surface
+measuring its own process rather than the artefact it reports on.** The common
+root is the same question both times — *where is this value actually read, and
+what world does it describe?* Correct arithmetic against the wrong world, for
+the fifth time this week.
+
+The standing check to add to `silent-fragility-audit` #7 (cache masking): **if a
+function is cached, whatever instrumentation lives inside it is cached too.**
+Anything that must be true on every call has to sit outside the decorator.
+
+### The fix's own regression, found by reviewing it rather than by running it
+
+`record_pass` substitutes a last-known-good series for a failed critical one and
+labels it `STALE_USABLE`. That substituted series **is in the cached payload** —
+so a serve that only asked *"is it present?"* would report a carried-forward
+print as a live fetch after a restart:
+
+| | before | after, first draft |
+|---|---|---|
+| cold pass, critical series substituted | STALE_USABLE, disclosed | STALE_USABLE |
+| restart into that warm cache | UNAVAILABLE (wrong, but loud) | **FRESH** |
+
+That trades a false alarm for a false reassurance, which is the worse direction,
+and it would have been invisible: every test passed. Measured directly —
+`record_served(..., substituted=None)` gives FRESH, `substituted=['initial_claims']`
+gives STALE_USABLE — so the payload now carries which names were carried
+forward, and the test that pins it was verified to FAIL without that argument
+before it was allowed to pass with it (§37: a new instrument's first positive is
+the one that looks like it working).

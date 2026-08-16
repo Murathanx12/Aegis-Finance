@@ -43,7 +43,13 @@ Run these against the changed code (grep + read, then live where possible):
    plausible one). NaN is "unavailable", never a value with status ok.
 7. **Cache masking.** Would this pass on a cold cache? Warm disk caches have
    hidden both network-dependent "unit" tests and stale FRED reads. If the
-   behavior differs cold vs warm, test cold.
+   behavior differs cold vs warm, test cold. **And: if a function is cached,
+   the instrumentation INSIDE it is cached too** — `@cached` returns before the
+   body, so anything that must be true on every call (health accounting, status
+   rows, counters) belongs outside the decorator. A restart into a warm 24h
+   cache made `/api/health/full` report all 23 FRED series UNAVAILABLE while
+   serving them correctly, and silenced `degraded_reasons` on a real gap frozen
+   into the payload (§56). Ask of every status write: does a cache hit skip it?
 8. **Contract drift at load boundaries.** Anything deserialized (models,
    sidecars, schemas) verifies its contract at load and fails LOUD on
    mismatch (the 67-vs-30 feature break; the sidecar-deletion bypass — both

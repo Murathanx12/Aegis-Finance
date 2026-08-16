@@ -17,7 +17,7 @@ import math
 import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import pandas as pd
@@ -423,12 +423,43 @@ class DataFetcher:
             logger.warning("FRED treasury fallback failed: %s", e)
         return recovered
 
-    @cached(ttl=86400)
     def fetch_fred_data(self) -> dict[str, pd.Series]:
-        """Fetch all configured FRED series using parallel threads.
+        """Fetch all configured FRED series (cached 24h) and report on them.
+
+        The health accounting lives HERE rather than inside the cached body,
+        because `@cached` returns before the body runs. A process that restarts
+        into a warm 24h cache was serving 23 good series while `record_pass`
+        never executed — so `/api/health/full` read UNKNOWN with every series
+        UNAVAILABLE, and `degraded_reasons` went silent on gaps that were still
+        frozen into the payload. Observed live 2026-08-16 02:06 UTC; the second
+        prewarm took 9ms and logged no fetch at all.
 
         Returns:
             dict mapping series name to pd.Series of values
+        """
+        payload = self._fetch_fred_payload()
+        if not payload:
+            return {}
+        series_map = dict(payload.get("series") or {})
+        try:
+            from backend.services import fred_health as _fh
+            _fh.record_served(series_map, payload.get("fetched_at"),
+                              substituted=payload.get("substituted"))
+        except Exception as e:                                 # noqa: BLE001
+            logger.error("FRED health accounting failed on serve (%s: %s) — the "
+                         "health page cannot see this payload",
+                         type(e).__name__, e)
+        return series_map
+
+    @cached(ttl=86400)
+    def _fetch_fred_payload(self) -> "dict | None":
+        """The real fetch. Returns the series map PLUS its own fetch time.
+
+        The timestamp travels with the data so that a later cache hit can report
+        the age of what it is actually serving instead of claiming a fresh
+        fetch. Returns None — which `cached` declines to store — when no pass
+        could even be attempted, so the next caller retries rather than
+        inheriting a 24h-cached failure.
         """
         # A pass that never happens must not read as a clean one. Both of these
         # returned an empty dict and recorded nothing at all, so every critical
@@ -438,14 +469,14 @@ class DataFetcher:
         if not api_keys.has("fred"):
             logger.warning("FRED_API_KEY not set, skipping FRED data")
             _fh.record_no_fetch("FRED_API_KEY not set")
-            return {}
+            return None
 
         try:
             from fredapi import Fred
         except ImportError:
             logger.warning("fredapi not installed, skipping FRED data")
             _fh.record_no_fetch("fredapi not installed")
-            return {}
+            return None
 
         logger.info("Fetching macroeconomic indicators from FRED (parallel)...")
         fred = Fred(api_key=api_keys.fred)
@@ -483,19 +514,33 @@ class DataFetcher:
         # this, a failed fetch simply removed the key, `get_macro_features`
         # skipped it, and the composite quietly changed what it measures for a
         # whole cache TTL while the health page read ok / [].
+        fetched_at = datetime.now(timezone.utc)
         try:
             from backend.services import fred_health
-            results = fred_health.record_pass(results, series_ids)
+            results = fred_health.record_pass(results, series_ids,
+                                              fetched_at=fetched_at)
         except Exception as e:                                 # noqa: BLE001
             logger.error("FRED health accounting failed (%s: %s) — series "
                          "status is now UNKNOWN for this pass", type(e).__name__, e)
         try:
+            # Stays INSIDE the cached body on purpose. This counts fetch passes,
+            # and a cache hit is genuinely not a fetch — unlike the health
+            # accounting above, which describes the DATA and therefore has to
+            # run on every serve. Do not move it out.
             from backend.observability import record_fred_fetch
             failed = [n for n in series_ids if n not in results]
             record_fred_fetch(list(results.keys()), failed)
         except Exception:
             pass
-        return results
+        # `substituted` travels with the payload so a later serve can keep
+        # calling a carried-forward print STALE_USABLE instead of FRESH.
+        try:
+            from backend.services import fred_health as _fh2
+            substituted = _fh2.last_substituted()
+        except Exception:                                      # noqa: BLE001
+            substituted = []
+        return {"series": results, "fetched_at": fetched_at,
+                "substituted": substituted}
 
     def get_recession_probability(self, fred_data: dict) -> float:
         """Compute blended recession probability from FRED indicators.

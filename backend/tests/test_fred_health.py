@@ -179,12 +179,23 @@ def test_record_no_fetch_makes_the_gap_visible_and_named():
 
 
 def test_a_missing_api_key_records_a_no_fetch_pass(monkeypatch):
+    # `_fetch_fred_payload` is the cached half; `__wrapped__` reaches the real
+    # body. The public `fetch_fred_data` is now a thin uncached wrapper that
+    # also reports on whatever the cache hands it — see
+    # tests/test_fred_health_survives_restart.py.
     from backend.services import data_fetcher as DF
     monkeypatch.setattr(DF.api_keys, "has", lambda name: False)
-    out = DF.DataFetcher().fetch_fred_data.__wrapped__(DF.DataFetcher())
-    assert out == {}
+    out = DF.DataFetcher()._fetch_fred_payload.__wrapped__(DF.DataFetcher())
+    assert out is None, "a pass that could not be attempted must not be cached"
     assert FH.fetch_passes() > 0
     assert FH.health()["last_no_fetch_reason"] == "FRED_API_KEY not set"
+
+
+def test_a_missing_api_key_returns_an_empty_dict_to_every_caller(monkeypatch):
+    """Eighteen callers read `dict[str, pd.Series]`; None must never reach them."""
+    from backend.services import data_fetcher as DF
+    monkeypatch.setattr(DF.api_keys, "has", lambda name: False)
+    assert DF.DataFetcher().fetch_fred_data() == {}
 
 
 # ── what the health page shows ──────────────────────────────────────────────
