@@ -86,6 +86,40 @@ the return term — which is none.
 
 ---
 
+## E5–E7 — three more, found by the builder executing P0
+
+**E5 — "172 years" is arithmetically wrong; it is ≈95.** The cross-section was
+used once as a multiplier and dropped when converting back: 172 = 95 × 1.81.
+The need counts effective observations and the slice supplies **3.62/yr, not 2**.
+I amplified the number in the direction that made it louder. The design's
+conclusion is unaffected — the threshold is not reached either way — but the
+figure must not be quoted again.
+
+**E6 — "the bound is 1/ρ̄ ≈ 2 however many you add" was scoped wrong.** That
+describes series that **move together**. `design_effect_n(100, 0.10) = 9.2`
+against 2.03 at high correlation. So the *extension* I drew — that residual,
+firm-relative claims buy roughly an order of magnitude — is confirmed; the
+*bound* as I stated it was not general. State ρ̄ with every effective-n claim.
+
+**E7 — "pin LightGBM's seed" was a fix that could not fix anything.** Seed 1 ≡
+999983, and with no subsampling there is nothing to randomise. Had it been
+applied, reproducibility would have appeared to improve and nobody would have
+looked again. **A fix that cannot fail is as dangerous as a guard that cannot
+fire** — and I proposed one three days after writing the second half of that
+sentence. The residual 1.22617 → 1.22598 is a live defect, cause unknown;
+OpenMP thread scheduling in histogram construction is a **candidate**, testable
+via `deterministic=true` + `force_row_wise=true` + fixed `num_threads`, and must
+be reported as diagnosed only if it reproduces.
+
+## E8 — the λ repair is better than my correction
+
+I withdrew the λ claim as unrecoverable. The builder's repair is right and it is
+constructive: **λ cannot supply ΔE[R], but it converts a measured ΔRisk into a
+break-even ΔE[R]** — *"this policy is worth it iff expected return falls by no
+more than X."* That is the same shape as `L_min`, it is honest about what was
+measured, and it is decision-useful. It should become a reusable primitive:
+every risk-reducing policy reports its break-even return sacrifice.
+
 ## What survives
 
 The pivot survives all four corrections and is strengthened by E3's precise
