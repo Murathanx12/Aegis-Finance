@@ -3405,6 +3405,20 @@ export interface RiskEvidence {
   status: string;
   k_eff: number;
   claims: RiskClaim[];
+  /** N22: whether a confirmation is reachable at all, not merely pending. */
+  confirmation: string;
+  confirmation_note: string;
+}
+
+/** N24 — the equivalence half. "Not established" says our instrument could not
+ *  separate the estimate from zero; this says which values are excluded. */
+export interface RiskSacrificeBound {
+  upper_95_one_sided_drag_pct: number;
+  break_even_pct: number;
+  verdict: string;
+  worth_it_across_the_interval: boolean;
+  extra_years_required: number;
+  statement: string;
 }
 
 export interface RiskExposureResponse {
@@ -3428,7 +3442,13 @@ export interface RiskExposureResponse {
   claim: {
     risk_reduced: { volatility_pp: number; mde_pp: number; vs: string; established: boolean };
     not_merely_holding_less: { max_drawdown_pp: number; mde_pp: number; vs: string; established: boolean };
-    return_effect: { estimate_pp: number; mde_pp: number; established: boolean; statement: string };
+    return_effect: {
+      estimate_pp: number;
+      mde_pp: number;
+      established: boolean;
+      statement: string;
+      bound: RiskSacrificeBound;
+    };
     break_even_sacrifice_pct_per_year: number;
     break_even_note: string;
     evidence: RiskEvidence;

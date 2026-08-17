@@ -198,7 +198,18 @@ def _case_iif1_features():
             "a snapshot with no information cutoff")
 
 
+def _case_population():
+    from backend.services.research_gym.population import (
+        NoPopulationInScope, assess_population)
+    # The failure this guard exists for: a universe asserted rather than
+    # counted. Handed no counts it must refuse, because a declared population
+    # is exactly the honour-system input that produced std_turn's phantom cell.
+    return (lambda: assess_population("a universe nobody counted", None),
+            NoPopulationInScope, "a population claimed with no counts behind it")
+
+
 CASES = {
+    "population": _case_population,
     "execution_boundary": _case_execution_boundary,
     "multiplicity": _case_multiplicity,
     "autopsy": _case_autopsy,

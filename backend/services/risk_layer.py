@@ -88,6 +88,11 @@ class Evidence:
     status: str
     k_eff: float
     claims: tuple[Claim, ...]
+    #: Whether a confirmation of these claims is REACHABLE — N22, asked before
+    #: spending anything. "EXPLORE" without this reads as "confirmation
+    #: pending", and on this corpus it is not pending, it is unavailable.
+    confirmation: str = ""
+    confirmation_note: str = ""
 
     def claim(self, outcome: str) -> Claim:
         for c in self.claims:
@@ -118,6 +123,19 @@ EVIDENCE = Evidence(
     # confirmation window is reserved disjoint and deliberately unspent.
     status="EXPLORE — selection window, not a confirmation",
     k_eff=1.41,
+    # N22 (2026-08-17), asked before spending: NONE of the eight
+    # policy x outcome cells clears its own MDE on the 74 reserved months, at
+    # either the declared alpha 0.025 or the laxer 0.05.
+    confirmation="UNREACHABLE — this claim is permanently screen-grade on this "
+                 "corpus",
+    confirmation_note=(
+        "The reserved 2020-06..2026-07 window is 74 months. Measured on that "
+        "horizon rather than projected onto it, the volatility effect is "
+        "-2.84pp against an MDE of 4.94 and the drawdown effect -6.09pp "
+        "against 17.36. At the selection window's own crisis rate, 74 months "
+        "expects 0.44 drawdowns of 20% — below one. So the window is not "
+        "unspent because we are saving it; it cannot be spent usefully, and "
+        "no confirmation of this claim is pending."),
     claims=(
         Claim(outcome="annual_volatility_vs_buy_and_hold",
               effect=-4.95, units="pp/yr", mde=3.46, established=True,
@@ -158,6 +176,27 @@ EVIDENCE = Evidence(
 #: the measured variance reduction. Both inputs are measured; lambda prices the
 #: trade-off and does not supply a missing return estimate.
 BREAK_EVEN_SACRIFICE = {1.0: 0.81, 3.0: 2.42}
+
+#: N24 — THE BOUND, NOT JUST THE ESTIMATE.
+#:
+#: "Not established" is an `mde_mean` statement: our instrument could not
+#: separate the estimate from zero. It says nothing about which values were
+#: EXCLUDED, and exclusion is what a decision needs. So the upper one-sided 95%
+#: bound on the return DRAG is carried beside the break-even it has to clear:
+#:
+#:     UCB(drag) < break_even(lambda)  =>  worth it wherever the truth sits.
+#:
+#: On the shipped configuration it does NOT clear at either declared lambda,
+#: and that is the finding rather than a reason to look for a lambda that does.
+#: `extra_years_required` is what would decide it — single digits at lambda 3,
+#: against the ~95 years a RETURN claim needs. S59's ratio, a third time.
+RETURN_DRAG_UPPER_BOUND_PCT = 2.93
+RETURN_SACRIFICE_BOUND = {
+    1.0: {"break_even_pct": 0.81, "verdict": "NOT_DEMONSTRATED",
+          "extra_years_required": 128.0},
+    3.0: {"break_even_pct": 2.42, "verdict": "NOT_DEMONSTRATED",
+          "extra_years_required": 6.0},
+}
 
 
 @dataclass
@@ -267,6 +306,56 @@ def decision_log(dates, returns, *, target_vol: float, cap: float = 1.0,
     return rows[-n:]
 
 
+def sacrifice_bound(lam: float) -> dict:
+    """The equivalence half of the return statement (N24).
+
+    `verdict` is recomputed here from the two numbers rather than read from the
+    table, for the same reason `established` is: a stored verdict is an opinion
+    that can drift away from its arithmetic, and this one decides whether the
+    page says "worth it whatever the truth is" or "we still cannot say".
+    """
+    if lam not in RETURN_SACRIFICE_BOUND:
+        raise RiskLayerRefused(
+            f"no sacrifice bound computed at lambda={lam}; declared: "
+            f"{sorted(RETURN_SACRIFICE_BOUND)}")
+    b = RETURN_SACRIFICE_BOUND[lam]
+    ucb, be = RETURN_DRAG_UPPER_BOUND_PCT, b["break_even_pct"]
+    ruled_out = ucb < be
+    if ruled_out != (b["verdict"] == "RULED_OUT"):
+        raise RiskLayerRefused(
+            f"the stored verdict {b['verdict']!r} at lambda={lam} disagrees "
+            f"with its own arithmetic (upper bound {ucb} vs break-even {be}). "
+            f"A verdict that no longer follows from its numbers is the failure "
+            f"this module exists to make impossible.")
+    return {
+        "upper_95_one_sided_drag_pct": ucb,
+        "break_even_pct": be,
+        "verdict": b["verdict"],
+        "worth_it_across_the_interval": ruled_out,
+        "extra_years_required": b["extra_years_required"],
+        "statement": (
+            f"the return sacrifice is bounded above by {ucb:.2f}%/yr; at risk "
+            f"aversion {lam:g} the measured variance reduction is worth "
+            f"{be:.2f}%/yr, so the policy is worth it wherever the true return "
+            f"sits in the interval"
+            if ruled_out else
+            f"the return sacrifice is bounded above by {ucb:.2f}%/yr, which "
+            f"still exceeds the {be:.2f}%/yr the variance reduction is worth "
+            f"at risk aversion {lam:g} — short by {ucb - be:.2f}pp. About "
+            f"{b['extra_years_required']:.0f} more years of data would decide "
+            f"it"
+            # Only invoke the comparison where it is actually favourable. At
+            # lambda 1 the requirement EXCEEDS the ~95 years a return claim
+            # needs, and quoting the ratio there would be citing a benchmark
+            # this cell loses to.
+            + (", against the ~95 a return claim would need"
+               if b["extra_years_required"] < 90 else
+               " — which is longer than the ~95 a return claim needs, so at "
+               "this risk aversion the bound is the harder question, not the "
+               "easier one")),
+    }
+
+
 def honest_claim(target_vol: float, lam: float = 1.0) -> dict:
     """The claim shape, assembled only from measured pieces.
 
@@ -281,6 +370,7 @@ def honest_claim(target_vol: float, lam: float = 1.0) -> dict:
         raise RiskLayerRefused(
             f"no break-even computed at lambda={lam}; declared: "
             f"{sorted(BREAK_EVEN_SACRIFICE)}")
+    bound = sacrifice_bound(lam)
     return {
         "risk_reduced": {"volatility_pp": vol.effect, "mde_pp": vol.mde,
                          "vs": vol.comparator, "established": vol.established},
@@ -292,7 +382,8 @@ def honest_claim(target_vol: float, lam: float = 1.0) -> dict:
                           "statement": "NOT ESTABLISHED — the estimate is "
                                        "0.03x its own MDE, so this window "
                                        "cannot tell a small gain from a small "
-                                       "loss"},
+                                       "loss",
+                          "bound": bound},
         "break_even_sacrifice_pct_per_year": BREAK_EVEN_SACRIFICE[lam],
         "break_even_note": (
             f"at risk aversion {lam:g} the measured variance reduction is "

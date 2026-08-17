@@ -169,8 +169,17 @@ export default function RiskLayerPage() {
           {/* ── the number, and the one thing that would change it ── */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
+              {/* The grade sits ON THE HEADLINE, not below the claims. A
+                  "measured" badge at the top with an EXPLORE caveat four cards
+                  down is a caveat that gets scrolled past. */}
+              <CardTitle className="text-base flex flex-wrap items-center gap-2">
                 <ShieldCheck className="h-4 w-4" /> Hold {pct(d.weight, 0)} of your book
+                <Badge variant="outline" className="text-[10px] font-normal">
+                  {claim.evidence.status}
+                </Badge>
+                <Badge variant="outline" className="text-[10px] font-normal">
+                  k_eff {claim.evidence.k_eff}
+                </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -251,14 +260,40 @@ export default function RiskLayerPage() {
               <p className="text-xs text-muted-foreground">
                 {claim.return_effect.statement}
               </p>
-              <div className="rounded-lg bg-muted/30 p-3">
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                  break-even return sacrifice
-                </p>
-                <p className="text-lg font-bold tabular-nums">
-                  {claim.break_even_sacrifice_pct_per_year.toFixed(2)}%/yr
-                </p>
-                <p className="text-xs text-muted-foreground">{claim.break_even_note}</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg bg-muted/30 p-3">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    break-even return sacrifice
+                  </p>
+                  <p className="text-lg font-bold tabular-nums">
+                    {claim.break_even_sacrifice_pct_per_year.toFixed(2)}%/yr
+                  </p>
+                  <p className="text-xs text-muted-foreground">{claim.break_even_note}</p>
+                </div>
+                {/* The equivalence half. "We could not tell" is about our
+                    instrument; this is about which values are excluded, and
+                    only the second is something to decide on. */}
+                <div className="rounded-lg bg-muted/30 p-3">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    upper bound on the sacrifice
+                  </p>
+                  <p className="text-lg font-bold tabular-nums">
+                    {claim.return_effect.bound.upper_95_one_sided_drag_pct.toFixed(2)}%/yr
+                    <Badge
+                      variant="outline"
+                      className={`ml-2 align-middle text-[10px] font-normal ${
+                        claim.return_effect.bound.worth_it_across_the_interval
+                          ? ""
+                          : "text-amber-500"
+                      }`}
+                    >
+                      {claim.return_effect.bound.verdict.replace(/_/g, " ").toLowerCase()}
+                    </Badge>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {claim.return_effect.bound.statement}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -274,11 +309,19 @@ export default function RiskLayerPage() {
               <p className="mb-3 text-xs text-muted-foreground">
                 {claim.evidence.base_asset}, {claim.evidence.window},{" "}
                 {claim.evidence.n_days.toLocaleString()} days, net of{" "}
-                {claim.evidence.cost_bps_per_crossing}bp per crossing.{" "}
-                <Badge variant="outline" className="text-[10px]">
-                  {claim.evidence.status}
-                </Badge>{" "}
-                Effective independent tests across these cells: {claim.evidence.k_eff}.
+                {claim.evidence.cost_bps_per_crossing}bp per crossing. Effective
+                independent tests across these cells: {claim.evidence.k_eff}.
+              </p>
+              {/* EXPLORE on its own reads as "confirmation pending". The power
+                  check says it is not pending — it is unavailable — and a page
+                  that leaves the first impression standing is making a promise
+                  about the future that has already been refuted. */}
+              <p className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+                <strong>Confirmation: {claim.evidence.confirmation}</strong>
+                <br />
+                <span className="text-muted-foreground">
+                  {claim.evidence.confirmation_note}
+                </span>
               </p>
               {claim.evidence.claims.map((c) => (
                 <ClaimRow key={c.outcome} c={c} />
@@ -288,8 +331,9 @@ export default function RiskLayerPage() {
 
           <p className="text-xs text-muted-foreground">
             Educational tool, not financial advice. Measured on a selection
-            window; the confirmation window is deliberately unspent because its
-            minimum detectable effect is larger than the effect being tested.
+            window. The reserved confirmation window stays unspent — not because
+            we are saving it, but because a power check run before spending it
+            showed it cannot resolve an effect this size.
           </p>
         </>
       )}

@@ -30,8 +30,20 @@ def clean():
     FH.reset()
 
 
-def _series(last="2026-08-08", value=209000.0, n=5):
-    idx = pd.date_range(end=pd.Timestamp(last), periods=n, freq="W")
+def _series(last=None, value=209000.0, n=5):
+    """A fetched series. `last` defaults to NOW, not to a pinned date.
+
+    It was pinned to 2026-08-08, and freshness is measured against the release
+    lag from the current clock — so `test_a_fetched_series_is_fresh` passed on
+    the day it was written and turned into STALE_USABLE nine days later. A test
+    whose verdict depends on the wall clock is a test that reports a defect on a
+    date rather than on a change, and bumping the constant only re-arms it.
+
+    Callers testing staleness still pass an explicit far-past date; that is the
+    property under test there, rather than an accident of when it runs.
+    """
+    end = pd.Timestamp(last) if last is not None else pd.Timestamp(FH._now().date())
+    idx = pd.date_range(end=end, periods=n, freq="W")
     return pd.Series([value] * n, index=idx)
 
 

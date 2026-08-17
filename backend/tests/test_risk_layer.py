@@ -8,8 +8,10 @@ import pytest
 
 from backend.services.risk_layer import (BREAK_EVEN_SACRIFICE, EVIDENCE,
                                          MIN_OBSERVATIONS, RiskLayerRefused,
+                                         RETURN_SACRIFICE_BOUND,
                                          decide_exposure, decision_log,
-                                         honest_claim, realised_vol)
+                                         honest_claim, realised_vol,
+                                         sacrifice_bound)
 
 
 def _returns(n=300, sd=0.01, seed=7):
@@ -130,6 +132,66 @@ def test_the_log_scores_each_decision_on_the_month_that_FOLLOWED_it():
         expected = round((r["weight"] - 1.0) * r["market_return"], 4)
         assert r["cost_vs_full"] == pytest.approx(expected, abs=1e-4)
         assert math.isfinite(r["realised_vol"])
+
+
+# ── N22: the confirmation is not pending, it is unavailable ────────────────
+def test_the_page_says_confirmation_is_UNREACHABLE_not_merely_pending():
+    """EXPLORE alone reads as 'confirmation coming'. On this corpus it is not.
+
+    N22 measured the forward quantity on the forward horizon and none of the
+    eight cells clears its MDE on the 74 reserved months, at either alpha. A
+    status that leaves the reader expecting a confirmation is a claim about the
+    future that the power check has already refuted.
+    """
+    assert "UNREACHABLE" in EVIDENCE.confirmation
+    assert "0.44" in EVIDENCE.confirmation_note      # expected crises in 74mo
+
+
+# ── N24: the bound, and its verdict as arithmetic ───────────────────────────
+def test_the_sacrifice_bound_verdict_is_recomputed_not_trusted():
+    """A stored verdict that stops following from its numbers must RAISE."""
+    b = sacrifice_bound(3.0)
+    assert b["verdict"] == "NOT_DEMONSTRATED"
+    assert b["worth_it_across_the_interval"] is False
+    assert b["upper_95_one_sided_drag_pct"] > b["break_even_pct"]
+
+
+def test_an_editorial_RULED_OUT_cannot_survive_its_own_arithmetic(monkeypatch):
+    """The half of N24 that matters six weeks from now."""
+    import backend.services.risk_layer as rl
+    monkeypatch.setitem(rl.RETURN_SACRIFICE_BOUND, 3.0,
+                        {**rl.RETURN_SACRIFICE_BOUND[3.0],
+                         "verdict": "RULED_OUT"})
+    with pytest.raises(RiskLayerRefused, match="disagrees"):
+        sacrifice_bound(3.0)
+
+
+def test_the_bound_is_carried_beside_the_estimate_not_instead_of_it():
+    """'Not established' and 'bounded above by X' are different statements and
+    the page owes both — the first is about our instrument, the second about
+    which values have been excluded."""
+    r = honest_claim(0.15, lam=3.0)["return_effect"]
+    assert r["established"] is False
+    assert r["bound"]["verdict"] == "NOT_DEMONSTRATED"
+    assert "short by" in r["bound"]["statement"]
+
+
+def test_a_bound_at_an_undeclared_lambda_refuses():
+    with pytest.raises(RiskLayerRefused, match="no sacrifice bound"):
+        sacrifice_bound(2.5)
+
+
+def test_the_bound_does_not_quote_a_comparison_it_loses(monkeypatch):
+    """At lambda 1 the bound needs MORE data than a return claim would.
+
+    Citing the ~95-year ratio there would be quoting a benchmark this cell is
+    beaten by, which is the flattering-half habit in miniature.
+    """
+    s1 = sacrifice_bound(1.0)["statement"]
+    s3 = sacrifice_bound(3.0)["statement"]
+    assert "against the ~95" in s3
+    assert "against the ~95" not in s1
+    assert "longer than the ~95" in s1
 
 
 def test_break_even_is_priced_from_two_measured_quantities():
