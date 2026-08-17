@@ -57,6 +57,18 @@ class ClaimIsNotEvidence(RuntimeError):
     """Someone asked for a measurement and only a claim exists."""
 
 
+class RateNotDeclared(RuntimeError):
+    """A net figure or a survivor count was requested without its cost rate."""
+
+
+#: The rates every net figure is reported across. A single rate is a point
+#: estimate of an ASSUMPTION, and N25 measured what that costs: the count of
+#: predictors detectable and positive in the liquid tercile is 4 / 3 / 1 / 0 at
+#: 0 / 5 / 10 / 20bp. "Exactly one" was quoted for two sessions as a fact about
+#: the panel and it was a fact about 10bp.
+DEFAULT_GRID_BPS: tuple[float, ...] = (0.0, 2.0, 5.0, 10.0, 20.0, 30.0, 50.0)
+
+
 @dataclass
 class Performance:
     """One measured window. Every field is nullable and none is inferred."""
@@ -70,6 +82,44 @@ class Performance:
     n_months: int | None = None
     cost_bps_per_side: float | None = None
     note: str = ""
+    #: Standard error of the ANNUAL figure, so detectability can be recomputed
+    #: at any rate. Costs shift the estimate and leave its dispersion alone,
+    #: which is why the whole grid is exact arithmetic rather than a re-run.
+    se_annual: float | None = None
+    mde_annual: float | None = None
+
+    # ── the rate-conditioned layer ─────────────────────────────────────────
+    def net_at(self, bps: float | None) -> float:
+        """Net annual return at an explicitly named cost rate.
+
+        `bps=None` RAISES. That is the whole point of this method existing
+        beside `net_annual_return`: a net figure with no rate attached reads as
+        a property of the strategy, and it is a property of an assumption.
+        """
+        if bps is None:
+            raise RateNotDeclared(
+                f"net return requested with no cost rate. Net is a function of "
+                f"the rate, not a property of the strategy — measured on our "
+                f"own panel the tradable survivor count is 4/3/1/0 at "
+                f"0/5/10/20bp. Name the rate.")
+        if self.gross_annual_return is None or self.annual_turnover is None:
+            raise ClaimIsNotEvidence(
+                "net_at needs a measured gross return AND a measured turnover; "
+                "one of them is absent, and inferring either is the "
+                "substitution this library refuses.")
+        return self.gross_annual_return - self.annual_turnover * bps / 1e4
+
+    def detectable_at(self, bps: float | None) -> bool:
+        """|net(rate)| >= MDE. Tested on NET because net is the claim."""
+        if self.mde_annual is None:
+            raise ClaimIsNotEvidence(
+                "detectability needs the measurement's own MDE; without it "
+                "this would be an opinion about a number.")
+        return abs(self.net_at(bps)) >= self.mde_annual
+
+    def net_table(self, grid: tuple[float, ...] = DEFAULT_GRID_BPS) -> dict:
+        """The default emission: every net figure with its rate beside it."""
+        return {b: self.net_at(b) for b in grid}
 
 
 @dataclass
@@ -164,11 +214,24 @@ class StrategySpec:
 # ─────────────────────────────────────────────────────────────────────────────
 # V1 SEED. Claims transcribed from the literature; NOTHING here is measured.
 #
-# Priority follows the cost-survivability evidence rather than the headline
-# returns: Novy-Marx & Velikov found that low-turnover anomalies are the ones
-# that survive trading costs, and that high-turnover ones are much harder to
-# monetize. So size/value/profitability rank above anything that trades weekly,
-# regardless of gross Sharpe.
+# Priority follows cost survivability rather than headline returns. But the
+# version of that prior these priorities were assigned under was the FOLK one —
+# "low turnover survives" — and N25 measured it on our own panel and it is
+# false here:
+#
+#     low turnover   median gross 0.31%   median net@10bp  -0.20%
+#     mid turnover   median gross 1.20%   median net@10bp  +0.52%
+#     high turnover  median gross 1.51%   median net@10bp  -1.05%
+#
+# Low turnover LOSES to the middle band, because it has almost no gross edge to
+# protect. Novy-Marx & Velikov's actual result is about survival CONDITIONAL on
+# having an edge; turnover erodes a numerator and cannot supply one. The costs
+# story holds for the high-turnover band and says nothing useful about a
+# strategy whose gross return is already near zero.
+#
+# These priorities are therefore NOT re-sorted on the measurement — a priority
+# tuned to a result is a result wearing a plan. They stand as declared, with
+# the correction recorded beside them.
 # ─────────────────────────────────────────────────────────────────────────────
 SEED: list[StrategySpec] = [
     StrategySpec(
@@ -322,10 +385,15 @@ SEED: list[StrategySpec] = [
         publication_date="2017-08-01",
         universe="any", rebalance="monthly",
         construction=("scale exposure inversely to recent realised variance. "
-                      "This is a SIZING rule rather than a selection rule, "
-                      "which is the layer §59 says our slice can actually "
-                      "resolve — its effect on risk is measurable in ~4 years "
-                      "where a return effect would need ~95"),
+                      "A SIZING rule rather than a selection rule, which is the "
+                      "layer §59 says our slice can resolve: risk is measured "
+                      "~30x closer than return on identical data, and THAT "
+                      "RATIO is what reproduces. The '~4 years' figure this "
+                      "field used to carry was WITHDRAWN on 2026-08-17 — it "
+                      "rested on a single crisis. N22 then measured the "
+                      "forward question directly: 0 of 8 cells resolvable on "
+                      "the 74 reserved months, so the claim is permanently "
+                      "screen-grade on this corpus."),
         capacity_note="applies to whatever it wraps",
         priority="A — it is the sizing layer, not a stock picker"),
 ]
@@ -399,9 +467,13 @@ def load_measured(path, *, window: str = "post_publication") -> list[StrategySpe
             annual_turnover=(None if r.get("monthly_turnover") is None
                              else 12 * r["monthly_turnover"]),
             cost_bps_per_side=screens.get("cost_bps_per_crossing"),
+            se_annual=r.get("se_annual"), mde_annual=r.get("mde_annual"),
             note=(f"equal-weighted decile spread on the CRSP panel; "
-                  f"break-even {r.get('breakeven_bps')}bp/crossing; "
-                  f"detectable net = {r.get('detectable')}"))
+                  f"break-even {r.get('breakeven_bps')}bp/crossing. "
+                  f"Detectability is rate-conditioned — call "
+                  f"`detectable_at(bps)`; the stored `net_annual_return` is "
+                  f"the figure at "
+                  f"{screens.get('cost_bps_per_crossing')}bp and nothing else."))
         setattr(s, window, perf)
         s.reproduction_status = Reproduction.PARTIAL
         s.reproduction_note = (
@@ -412,6 +484,56 @@ def load_measured(path, *, window: str = "post_publication") -> list[StrategySpe
             "authors' window predates our panel.")
         out.append(s)
     return out
+
+
+def rate_table(specs: list[StrategySpec], *,
+               window: str = "post_publication",
+               grid: tuple[float, ...] = DEFAULT_GRID_BPS) -> dict:
+    """THE DEFAULT EMISSION: every strategy's net across the whole grid.
+
+    Returned instead of a single-rate table because a single-rate table is what
+    produced "exactly one detectable net in the liquid tercile" — true at 10bp,
+    quoted as a fact about the panel, and 4/3/1/0 across 0/5/10/20.
+    """
+    rows = []
+    for s in specs:
+        try:
+            p = s.measured(window)
+            rows.append({"name": s.name, "family": s.family,
+                         "turnover": p.annual_turnover,
+                         "gross": p.gross_annual_return,
+                         "net": p.net_table(grid),
+                         "detectable": {b: p.detectable_at(b) for b in grid}
+                         if p.mde_annual is not None else None})
+        except (ClaimIsNotEvidence, RateNotDeclared) as e:
+            rows.append({"name": s.name, "family": s.family,
+                         "unmeasured": str(e).split(".")[0]})
+    return {"grid_bps": list(grid), "window": window, "rows": rows,
+            "note": "net is a function of the rate; there is no scalar form."}
+
+
+def factory_bar(specs: list[StrategySpec], bps: float | None = None, *,
+                window: str = "post_publication") -> float | None:
+    """The best net a published strategy delivers — AT A NAMED RATE.
+
+    `bps=None` RAISES rather than defaulting to 10. The bar is what a new
+    mechanism has to beat, so a bar carrying an unstated cost assumption sets
+    the whole factory's threshold from a number nobody chose on purpose.
+    """
+    if bps is None:
+        raise RateNotDeclared(
+            "the factory bar was requested with no cost rate. The bar is the "
+            "threshold every new mechanism is judged against, and it moves with "
+            "the rate — name it, or read `rate_table()` instead of a scalar.")
+    best = None
+    for s in specs:
+        try:
+            v = s.measured(window).net_at(bps)
+        except (ClaimIsNotEvidence, RateNotDeclared):
+            continue
+        if v is not None and (best is None or v > best):
+            best = v
+    return best
 
 
 def by_priority() -> dict[str, list[str]]:
