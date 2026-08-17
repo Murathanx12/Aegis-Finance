@@ -122,6 +122,58 @@ serial latest safe start   11:10Z  ->  10:04Z      (19:10 -> 18:04 local)
 freedom, because the constant it replaced was optimistic. This reproduces Fable's
 corrected figure exactly, from the code rather than from arithmetic in a review.
 
+### What the corrected model means for Night 2's start time — a decision, not a fix
+
+Serial projection is now **205.5 min** (was 139.2). Against the 13:30Z bell, with
+local = UTC+8:
+
+| local | Z | available | headroom | ratio |
+|---|---|---|---|---|
+| 15:00 | 07:00 | 390 | 185 | **1.90×** |
+| 16:00 | 08:00 | 330 | 125 | 1.61× |
+| 17:00 | 09:00 | 270 | 65 | 1.31× |
+| 18:04 | 10:04 | 206 | 1 | 1.00× — **guard refuses after this** |
+| 19:10 | 11:10 | 140 | −65 | 0.68× (the old "latest safe start") |
+
+**The 1.9× cushion the planner targets now requires starting at 15:00 local — and
+15:00 is the freshness floor** ("not before 15:00", so the tool arms are reading
+something recent). So the corrected model leaves **no start that gets more than
+1.9× without breaking the freshness floor**, and the ordered 17:00 buys 1.31×.
+
+That is a trade-off between cushion and information freshness, and both sides are
+declared preferences rather than things a session should settle. Flagging it
+rather than picking: 15:00 for margin, 17:00 for freshness, nothing after 18:04 at
+any price.
+
+**DECIDED 2026-08-17 (review session, on Murat's delegation): 17:00 local stands.**
+Four reasons, in order of weight:
+
+1. **The 1.31× is against the worst case, not the expectation.** 205.5 min is the
+   serial decision basis; the runner executes at concurrency 5 and Night 1's
+   realized wall clock was 133 min, so 17:00 carries a **2.03× cushion against the
+   only night that has ever run** — and still completes with 65 min spare if
+   concurrency delivers nothing at all.
+2. **The 1.9× target was priced in a 139-minute world.** It is a planner
+   preference formed under the wrong constants, not a registered parameter.
+   Preserving the *ratio* by sliding to 15:00 buys it at the cost of the thing the
+   freshness floor exists to protect — and fresh inputs are the treatment arms'
+   entire mechanism.
+3. **The failure modes are asymmetric.** At 17:00 the bad outcome is a truncated
+   night: bounded (one of 40), loud (receipt shows it), and already excluded from
+   the calls/cell derivation. At 15:00 the bad outcome is systematically staler
+   snapshots on every remaining night — unbounded, silent, and sitting directly on
+   the measured contrast.
+4. **Consistency.** 17:00 is the ordered start Night 1 ran under; moving it now
+   adds a second information-set boundary mid-campaign on top of the
+   `implementation_version` 1→2 boundary this same commit created.
+
+Standing rule attached to the decision: **the guard is never overridden.** If the
+derived calls/cell grows past ~9.3, the serial projection exceeds 270 min and the
+guard will refuse a 17:00 start — the response is that the *next* night starts
+earlier (the readiness report now prints the derived latest-safe-start, so the
+operator sees it the day before), never that the refusal is argued with. Margin is
+bought when the measurement says it is needed, freshness kept when it is not.
+
 ### A second source of truth, found on the way
 
 `iif1_run.readiness_report` computed the operator-facing "latest safe start" from
