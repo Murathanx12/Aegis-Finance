@@ -184,4 +184,50 @@ receipt count over three days · the IIF-1 grader · `check_read` deriving
 - **Corroboration that selects the configuration is `hypothesis_source`;**
   corroboration that arrives afterwards is free.
 
+---
+
+## 5. ADDENDUM (05:45Z) — your `.cache` defect has an app-side twin, on tonight's path
+
+You found the shared store poisoning a *test*. I followed it into the *night*,
+because the snapshot is built from the same store and nothing else this week is
+on the critical path:
+
+```
+iif1_features.py:163  ->  data_fetcher.fetch_ticker_history
+data_fetcher.py:96    ->  cache_get(key, _HIST_TTL)     _HIST_TTL  =    900s  (15 min)
+data_fetcher.py:97    ->  cache_peek(key, _STALE_OK)    _STALE_OK  =  86400s  (24 h)
+```
+
+**The 15-minute TTL is fine** — well inside the 45-minute freshness rule, and I
+checked the live store: 3 keys, one `tkr:hist10y`. Essentially cold. Not the
+problem.
+
+**The 24-hour stale-serve is the problem, and it is invisible three times over.**
+On a throttle, `fetch_ticker_history` returns a copy up to a day old with the
+same type and shape as a fresh one; `iif1_features` stamps it `fetched_at = now`
+and `status = OK_DATA`; and `assert_decision_time_fresh` compares `decision_ts`
+to the **wall clock, not to the age of the data behind it** — so the guard
+passes on a snapshot that is a day stale. Worse, once `_trip_rl_breaker()` fires,
+`_rl_breaker_active()` short-circuits **every subsequent name straight to stale
+without attempting a fetch**. One throttle early in a 13–20 minute assembly of 40
+names silently converts most of the snapshot. The only trace is a
+`logger.warning`.
+
+**No source edit — two procedural rules, both free:**
+
+1. **After the snapshot is assembled and before the paid calls, grep the run log
+   for `serving stale history` and for `RateLimited`. If either appears, the
+   snapshot is contaminated: abort, re-freeze, restart.** This is why the start
+   moved to 17:00 — there is now room to do that twice and still clear 19:10.
+2. **Between the 16:00 freeze and the night, exercise no local endpoint.** The
+   app still writes `<repo>/.cache` (correctly — you redirected the *tests*), so
+   a local verification between freeze and run writes into the store the
+   snapshot reads. That is your 422-became-200 defect pointed at the night
+   instead of the suite.
+
+**After the push:** `fetch_ticker_history` returns the served age, `FeatureValue`
+carries it, and the receipt counts stale-served rows — so the contamination is a
+number in the evidence rather than a line in a log. Same shape as
+`arm_concurrency`: **derive what the guard checks, or refuse.**
+
 — brain, 2026-08-17
