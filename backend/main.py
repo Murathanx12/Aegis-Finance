@@ -662,7 +662,23 @@ async def health_full():
     # weeks behind a green checkmark.
     try:
         from backend.services.belief_state import ledger_health
-        prediction_ledger = ledger_health()
+        # The quarantine is threaded in so the row can distinguish "the resolver
+        # is refusing these on purpose" from "the resolver never reached these".
+        # Both previously reported as a bare overdue count, and on 2026-08-17 two
+        # independent reviewers read that count as a dead scheduler and proposed
+        # rebuilding one that was working. Computed defensively: a missing
+        # campaign artifact must degrade the DETAIL of this row, never the row.
+        try:
+            from backend.services.evidence_population import quarantined_hashes
+            _quarantined = quarantined_hashes()
+        except Exception as _qe:                                   # noqa: BLE001
+            logger.warning("prediction-ledger health: quarantine set "
+                           "unavailable (%s) — overdue counts are reported "
+                           "UNSPLIT, so a deliberate refusal and a resolver "
+                           "fault cannot be told apart in this row", _qe)
+            _quarantined = None
+        prediction_ledger = ledger_health(quarantined_hashes=_quarantined)
+        prediction_ledger["quarantine_split_available"] = _quarantined is not None
     except Exception as e:
         prediction_ledger = {"status": "DEGRADED", "error": str(e)}
 

@@ -165,6 +165,8 @@ def resolve_due(path: Path | None = None, *,
     """
     today = today or date.today()
     lineage = None
+    skip_hashes: frozenset = frozenset()
+    comparison_available = True
     if population is not None:
         from backend.services import evidence_population as EP
         pop = EP.parse(population)
@@ -188,7 +190,18 @@ def resolve_due(path: Path | None = None, *,
         # See docs/LEDGER_DIVERGENCE_ADJUDICATION_2026-08-15.md.
         if pop is EP.EvidencePopulation.LIVE_FORWARD:
             est = EP.live_forward_is_established(path=path)
-            if est["n_records"] and not est["established"]:
+            # RECORD-LEVEL, NOT POPULATION-LEVEL.
+            #
+            # The refusal below is correct but it is not sufficient, because its
+            # condition (`not established`) is released by the arrival of ONE
+            # unrelated record: 112 copies + 1 genuine forecast ⇒ established,
+            # and `resolve_all` rewrites the whole file, so all 112 copies get
+            # graded into the live product's forward record on the next tick.
+            # Reproduced 2026-08-17. So the copies are excluded BY CONTENT here
+            # and stay excluded after the population becomes established.
+            skip_hashes = est.get("quarantined_hashes") or frozenset()
+            comparison_available = est.get("comparison_available") is not False
+            if est["n_records"] and not est["established"] and comparison_available:
                 logger.error("ledger resolve REFUSED for %s: %s",
                              pop.value, est["reason"])
                 return {
@@ -203,18 +216,83 @@ def resolve_due(path: Path | None = None, *,
                                             "unestablished — resolution "
                                             "refused, nothing was graded"]},
                     "lineage": lineage,
+                    "quarantine": {
+                        "n_quarantined": len(skip_hashes),
+                        "reason": "whole population is campaign copies",
+                    },
                 }
     rows = read_predictions(path)
-    active = [r for r in rows
+    if skip_hashes:
+        from backend.services.evidence_population import record_hash
+        quarantined = [r for r in rows if record_hash(r) in skip_hashes]
+        rows_gradeable = [r for r in rows if record_hash(r) not in skip_hashes]
+    else:
+        quarantined, rows_gradeable = [], rows
+    # `active`/`due` drive the PRICE PANEL as well as the report, so quarantined
+    # records are removed here rather than only at grading time: otherwise their
+    # tickers get fetched nightly forever and every one of them lands in
+    # `unpriceable`, which would read as a resolver fault rather than as a
+    # deliberate quarantine awaiting attended disposition.
+    active = [r for r in rows_gradeable
               if r.get("outcome") is None and not r.get("void_reason")]
     due = [r for r in active
            if today >= date.fromisoformat(r["resolves_after"][:10])]
+    quarantined_overdue = [
+        r for r in quarantined
+        if r.get("outcome") is None and not r.get("void_reason")
+        and today >= date.fromisoformat(r["resolves_after"][:10])]
+    quarantine_note = {
+        "n_quarantined": len(quarantined),
+        "n_quarantined_overdue": len(quarantined_overdue),
+        "prediction_ids": [r.get("prediction_id") for r in quarantined][:20],
+        "reason": ("content-identical to CAMPAIGN_FORWARD records — never "
+                   "graded on the live volume, whatever else this file holds. "
+                   "Disposition is attended (Murat), not a session's: see "
+                   "docs/LEDGER_DIVERGENCE_ADJUDICATION_2026-08-15.md"),
+    } if quarantined else None
+    if quarantined:
+        logger.warning("ledger resolver: %d record(s) QUARANTINED (%d of them "
+                       "past due) and excluded from grading — campaign copies "
+                       "on the live volume, awaiting attended disposition",
+                       len(quarantined), len(quarantined_overdue))
+
+    # THE GUARD BINDS WHERE THE IRREVERSIBLE ACT IS, AND ONLY THERE.
+    #
+    # If the campaign ledger cannot be read, we cannot tell a copy from a genuine
+    # record — so grading anything here risks writing outcomes onto the campaign's
+    # rows, which cannot be undone. But a ledger with nothing due is in no danger,
+    # and refusing there would strand a clean live ledger on any machine that has
+    # no campaign artifact. So the refusal is conditioned on there being something
+    # to grade, which is derived from the records rather than declared.
+    if due and not comparison_available:
+        logger.error("ledger resolve REFUSED: %d record(s) are due but the "
+                     "campaign ledger is unreadable, so a copy cannot be told "
+                     "from a genuine record", len(due))
+        return {
+            "as_of": str(today), "status": "REFUSED",
+            "reason": (f"{len(due)} record(s) are due, but the campaign ledger "
+                       f"is missing or empty so the quarantine cannot be "
+                       f"computed. Absence of the comparison set is not "
+                       f"evidence these records are the product's own — "
+                       f"nothing was graded."),
+            "due": len(due), "newly_resolved": 0,
+            "pending": len(active), "overdue": 0,
+            "unpriceable": [], "priced_from": None,
+            "resolve_report": None,
+            "quarantine": {"n_quarantined": 0,
+                           "reason": "UNCOMPUTABLE — campaign ledger unreadable"},
+            "health": {"status": "DEGRADED",
+                       "problems": ["quarantine uncomputable — resolution "
+                                    "refused, nothing was graded"]},
+            "lineage": lineage,
+        }
 
     if not due:
         # Nothing has matured: no price panel is needed, and fetching one
         # anyway would burn quota nightly for months. The report still carries
         # the full accounting so "nothing to do" is a statement, not silence.
-        health = ledger_health(path, today=today)
+        health = ledger_health(path, today=today,
+                               quarantined_hashes=skip_hashes)
         return {
             "as_of": str(today),
             "due": 0,
@@ -222,6 +300,7 @@ def resolve_due(path: Path | None = None, *,
             "pending": len(active),
             "overdue": 0,
             "unpriceable": [],
+            "quarantine": quarantine_note,
             "priced_from": None,
             "resolve_report": None,
             "health": health,
@@ -316,8 +395,9 @@ def resolve_due(path: Path | None = None, *,
                        sum(u["n_due_records_stranded"] for u in unpriceable),
                        [u["ticker"] for u in unpriceable])
 
-    report = resolve_all(panel, path, today=today)
-    health = ledger_health(path, today=today)
+    report = resolve_all(panel, path, today=today, skip_hashes=skip_hashes)
+    health = ledger_health(path, today=today,
+                           quarantined_hashes=skip_hashes)
     return {
         "as_of": str(today),
         "due": len(due),
@@ -325,6 +405,7 @@ def resolve_due(path: Path | None = None, *,
         "pending": report["pending_not_yet_due"],
         "overdue": report["OVERDUE_AND_UNRESOLVED"],
         "unpriceable": unpriceable,
+        "quarantine": quarantine_note,
         "priced_from": priced_from,
         "resolve_report": report,
         "health": health,

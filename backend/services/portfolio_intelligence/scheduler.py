@@ -1005,11 +1005,17 @@ async def _ledger_resolve():
         elif report.get("overdue", 0) > 0 or report.get("unpriceable"):
             logger.warning("Ledger resolve DEGRADED: %s", report)
         else:
+            # `quarantined` is logged on the clean path too. A record excluded on
+            # purpose and a record the resolver failed to price are both "not
+            # graded", and prod's conflated "25 overdue" is exactly why the
+            # distinction has to appear in the routine line, not just the alarm.
+            _q = report.get("quarantine") or {}
             logger.info(
                 "Ledger resolve: newly_resolved=%s pending=%s overdue=%s "
-                "unpriceable=%s priced_from=%s health=%s",
+                "unpriceable=%s quarantined=%s priced_from=%s health=%s",
                 report.get("newly_resolved"), report.get("pending"),
                 report.get("overdue"), len(report.get("unpriceable") or []),
+                _q.get("n_quarantined", 0),
                 report.get("priced_from"),
                 (report.get("health") or {}).get("status"),
             )

@@ -377,18 +377,62 @@ def live_forward_is_established(sample_cap: int = 50_000,
     live = read_population(EvidencePopulation.LIVE_FORWARD, path=path)
     if not live:
         return {"established": False, "n_records": 0,
-                "n_shared_with_campaign": 0,
+                "n_shared_with_campaign": 0, "n_genuine": 0,
+                "quarantined_hashes": frozenset(),
+                "comparison_available": True,
                 "reason": "LIVE_FORWARD is empty — the product has accrued no "
                           "forward evidence yet, which is the honest state"}
     campaign = {_record_hash(r) for r in
                 read_population(EvidencePopulation.CAMPAIGN_FORWARD)
                 [:sample_cap]}
+    if not campaign:
+        # THE COMPARISON SET IS AN INPUT, AND ITS ABSENCE IS NOT A PASS.
+        #
+        # With no campaign ledger to compare against, `shared` is 0, every copy
+        # looks genuine, `established` is True and the quarantine clears itself —
+        # the guard would "pass" BECAUSE it could not see the thing it checks.
+        #
+        # This function does not raise, because health surfaces call it and a
+        # missing repo artifact must not take a status page down. It reports the
+        # gap instead, and `quarantined_hashes()` — the guard on the irreversible
+        # path — refuses on it. Reporting and refusing are different jobs.
+        return {
+            "established": False,
+            "n_records": len(live),
+            "n_shared_with_campaign": 0,
+            "n_genuine": 0,
+            "quarantined_hashes": frozenset(),
+            "comparison_available": False,
+            "reason": (f"cannot judge whether {len(live)} LIVE_FORWARD "
+                       f"record(s) are the product's own: the campaign ledger "
+                       f"at {ledger_path(EvidencePopulation.CAMPAIGN_FORWARD)} "
+                       f"is missing or empty, so there is nothing to compare "
+                       f"against. Absence of the comparison set is not evidence "
+                       f"these records are genuine."),
+        }
+    quarantined = frozenset(h for h in (_record_hash(r) for r in live)
+                            if h in campaign)
     shared = sum(1 for r in live if _record_hash(r) in campaign)
     established = shared < len(live)
     return {
         "established": established,
         "n_records": len(live),
         "n_shared_with_campaign": shared,
+        # THE COUNT THE RELEASE DECISION ACTUALLY TURNS ON.
+        #
+        # `established` is a statement about the population ("is there anything
+        # here the campaign did not write?"). It is NOT a licence to grade the
+        # shared records, and callers must not read it as one — see
+        # `quarantined_hashes`.
+        "n_genuine": len(live) - shared,
+        # Record-level identity of the copies, so a caller that IS allowed to
+        # resolve the genuine records can exclude these by content rather than
+        # by trusting a population-wide boolean. A genuine record would have to
+        # be byte-identical to a campaign record — same prediction_id, same
+        # timestamps — to land in here, so the false-quarantine risk is nil and
+        # the direction of the error is refusal.
+        "quarantined_hashes": quarantined,
+        "comparison_available": True,
         "reason": ("" if established else
                    f"every one of {len(live)} LIVE_FORWARD record(s) is "
                    f"content-identical to a CAMPAIGN_FORWARD record. This is "
@@ -398,6 +442,48 @@ def live_forward_is_established(sample_cap: int = 50_000,
                    f"UNESTABLISHED (size zero) — see "
                    f"docs/LEDGER_DIVERGENCE_ADJUDICATION_2026-08-15.md"),
     }
+
+
+def quarantined_hashes(path: "Path | None" = None,
+                       sample_cap: int = 50_000) -> frozenset:
+    """Hashes of LIVE_FORWARD records that the campaign already wrote.
+
+    WHY THIS IS NOT `live_forward_is_established()["established"]`
+    =============================================================
+    Because that boolean is released by the arrival of ONE unrelated record.
+    `established = shared < len(live)` was written to answer "has the product
+    accrued anything of its own?", and it answers that correctly. But
+    `ledger_resolver` used it as the gate on whether to grade the file — and
+    resolution rewrites the WHOLE file. So the first genuine forecast the
+    deployed product ever writes flips the gate open and hands all 112 copied
+    campaign records to the grader, unattended, on the next 16:30 ET tick.
+    Reproduced 2026-08-17: 112 copies + 1 genuine record ⇒ established True,
+    112 records due, all 112 of them copies.
+
+    An outcome written onto a record is the thing that makes it evidence, and it
+    cannot be un-written. So the quarantine is enforced per RECORD and survives
+    the population becoming established: the copies are never graded on the live
+    volume, whatever else is in the file. Removing them belongs to Murat, not to
+    a session; this only makes them ungradeable.
+
+    REFUSES when the campaign ledger — the set this compares against — is
+    missing or empty. This is the guard on an irreversible act, so an input it
+    cannot see is a refusal and not a clean verdict. Callers that only want to
+    DESCRIBE the population should read `live_forward_is_established()` and its
+    `comparison_available` flag, which reports the same gap without raising.
+    """
+    est = live_forward_is_established(sample_cap=sample_cap, path=path)
+    if est.get("comparison_available") is False:
+        raise PopulationRequired(
+            est["reason"] + " Refusing to compute the quarantine rather than "
+            "clearing it — see docs/"
+            "LEDGER_DIVERGENCE_ADJUDICATION_2026-08-15.md")
+    return est["quarantined_hashes"]
+
+
+def record_hash(r: dict) -> str:
+    """Public alias — callers outside this module need the same identity."""
+    return _record_hash(r)
 
 
 def _population_status(pop: EvidencePopulation) -> dict:

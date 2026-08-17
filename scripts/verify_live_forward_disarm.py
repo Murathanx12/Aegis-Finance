@@ -195,20 +195,40 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  due={report.get('due')}  "
               f"newly_resolved={report.get('newly_resolved')}  "
               f"pending={report.get('pending')}")
+        # THE VERDICT IS ON WHAT ENTERED GRADING, NOT ON THE PREDICATE.
+        #
+        # It used to be `disarmed and status != "REFUSED"`, which asked whether
+        # the population-level boolean had flipped. That predicate SHOULD flip —
+        # once the product writes a genuine record the population genuinely is
+        # established — so keying the verdict on it made this script accuse a
+        # fixed system. The harm was never the boolean; it was campaign copies
+        # entering grading. So the number to look at is how many did.
+        q = report.get("quarantine") or {}
+        copies_in_grading = report.get("due", 0)
         if status == "REFUSED":
-            print("  the guard held.")
+            print("  the guard held — resolution refused outright.")
+        elif copies_in_grading == 0:
+            print(f"  the guard held per-RECORD: it PROCEEDED (correctly — the "
+                  f"population is established) but carried {copies_in_grading} "
+                  f"campaign copies into grading, with "
+                  f"{q.get('n_quarantined', 0)} quarantined by content hash "
+                  f"({q.get('n_quarantined_overdue', 0)} of them past due).")
         else:
-            print(f"  THE GUARD DID NOT HOLD. {report.get('due')} record(s) "
+            print(f"  THE GUARD DID NOT HOLD. {copies_in_grading} record(s) "
                   f"entered grading, and every one of them is campaign "
                   f"history. Nothing downstream filters by population: "
                   f"`resolve_all` rewrites the whole file.")
 
+        broken = status != "REFUSED" and copies_in_grading > 0
         print("\n§1 VERDICT: "
               + ("the predicate IS defective — one genuine record lifts the "
-                 "refusal for the whole file."
-                 if disarmed and status != "REFUSED" else
-                 "NOT reproduced — re-read the predicate before acting."))
-        broken = disarmed and status != "REFUSED"
+                 "refusal for the whole file, and the copies are graded."
+                 if broken else
+                 "the one-record release no longer reaches the copies. The "
+                 "predicate still flips (correctly); the quarantine is now "
+                 "enforced per record, so nothing campaign-owned is graded. "
+                 "Fixed 2026-08-17 — see "
+                 "docs/LEDGER_QUARANTINE_RELEASE_2026-08-17.md"))
     finally:
         EP.owner_of, EP.ledger_path = real_owner, real_path
         shutil.rmtree(tmp, ignore_errors=True)
@@ -243,11 +263,26 @@ def main(argv: list[str] | None = None) -> int:
               f"and it happens on a night that cannot be repeated.")
 
     print("\nBOTH FINDINGS STAND INDEPENDENTLY:")
-    print(f"  predicate defective : {broken}   (fix before ANY genuine write "
-          f"reaches the volume)")
-    print(f"  armed on Monday     : {armed}   (this is the one that is "
-          f"date-bound)")
-    return 2 if (broken or not armed) else 0
+    print(f"  copies reach grading : {broken}   (the live defect — this is what "
+          f"the exit code gates)")
+    print(f"  Night 1 reaches live: {armed}   (settled history, reported not "
+          f"gated — see below)")
+
+    # WHY `not armed` NO LONGER FAILS THE EXIT CODE.
+    #
+    # It used to: `return 2 if (broken or not armed)`. That was right while Night
+    # 1 was ahead of us — "Night 1's records will not reach the live population,
+    # they will be stamped campaign_forward permanently" was a warning about an
+    # imminent irreversible event, and failing loudly was the point.
+    #
+    # Night 1 ran on 2026-08-17 and the records ARE stamped campaign_forward
+    # (585 of them, verified). The condition is now a recorded fact about a night
+    # that cannot be repeated, and `armed` is False permanently. A gate that can
+    # never pass again is not a guard — it teaches its readers to ignore the exit
+    # code, which is the failure mode the house rule "the exit code IS the guard"
+    # exists to prevent. So the exit code now gates the one thing that is still
+    # falsifiable: whether campaign copies can reach grading.
+    return 2 if broken else 0
 
 
 if __name__ == "__main__":

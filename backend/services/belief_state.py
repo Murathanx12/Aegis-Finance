@@ -678,17 +678,36 @@ def resolve_one(rec: dict, prices, *, today: date | None = None) -> dict | None:
 
 
 def resolve_all(prices, path: Path | None = None, *,
-                today: date | None = None) -> dict:
+                today: date | None = None,
+                skip_hashes: "frozenset | set | None" = None) -> dict:
     """Grade every record whose window has closed. Rewrites the ledger in place.
 
     `today` is injectable (threaded into resolve_one and the overdue check);
     default is the real date.today().
+
+    `skip_hashes` names records this call must NOT grade, by the content hash in
+    `evidence_population.record_hash`. They are written back verbatim and
+    counted in `skipped`. This exists because resolution rewrites the whole
+    file: without it, earning the right to grade ONE record in a ledger is
+    earning the right to grade every record in it, which is how the quarantined
+    campaign copies on the live volume nearly got graded as the product's own
+    forward record (see `evidence_population.quarantined_hashes`).
     """
     path = path or PREDICTIONS
     today = today or date.today()
     rows = read_predictions(path)
-    graded, newly = [], 0
+    skip_hashes = frozenset(skip_hashes or ())
+    if skip_hashes:
+        from backend.services.evidence_population import record_hash
+    graded, newly, skipped = [], 0, 0
     for r in rows:
+        if skip_hashes and record_hash(r) in skip_hashes:
+            # Passed through UNTOUCHED and counted. Not "no outcome available" —
+            # deliberately ungradeable, and the count is what makes that visible
+            # instead of looking like a price-panel gap.
+            skipped += 1
+            graded.append(r)
+            continue
         out = resolve_one(r, prices, today=today)
         if out is not None and r.get("outcome") is None and out.get("outcome") is not None:
             newly += 1
@@ -702,10 +721,20 @@ def resolve_all(prices, path: Path | None = None, *,
                if r.get("outcome") is None and not r.get("void_reason")
                and today >= date.fromisoformat(r["resolves_after"][:10])]
     if overdue:
-        logger.warning("%d record(s) are past their resolution date and still "
-                       "unresolved — check the price frame covers them", len(overdue))
+        # Separate the two reasons a record is sitting overdue, because the
+        # remedies are opposite: a price gap is a bug to fix, a quarantined
+        # copy is *supposed* to sit there until Murat disposes of it. Reporting
+        # one number for both is how "25 overdue" read as a broken resolver.
+        if skipped:
+            logger.warning("%d record(s) past due and unresolved, of which %d "
+                           "are deliberately quarantined and ungradeable; "
+                           "check the price frame covers the remaining %d",
+                           len(overdue), skipped, max(0, len(overdue) - skipped))
+        else:
+            logger.warning("%d record(s) are past their resolution date and still "
+                           "unresolved — check the price frame covers them", len(overdue))
     return {"total": len(graded), "resolved": len(done), "void": len(void),
-            "newly_resolved": newly,
+            "newly_resolved": newly, "skipped_quarantined": skipped,
             "pending_not_yet_due": len(graded) - len(done) - len(void) - len(overdue),
             "OVERDUE_AND_UNRESOLVED": len(overdue),
             "overdue_ids": [r["prediction_id"] for r in overdue][:20],
@@ -805,7 +834,8 @@ def ledger_persistence(path: Path | None = None, *,
 
 
 def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
-                  today: date | None = None) -> dict:
+                  today: date | None = None,
+                  quarantined_hashes: "frozenset | set | None" = None) -> dict:
     """Would anything say so if the specialists stopped writing?
 
     A prediction ledger is exactly the kind of subsystem that goes dark quietly:
@@ -814,6 +844,14 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
 
     `today` is injectable so the quiet/overdue clocks can be evaluated as-of a
     date; default is the real date.today().
+
+    `quarantined_hashes` splits the overdue count into the part someone must ACT
+    on and the part that is overdue ON PURPOSE. Added 2026-08-17 because this row
+    reported a bare "25 forecast(s) past due and unresolved" for records the
+    resolver was deliberately refusing to grade, and TWO independent reviewers
+    read it as a dead scheduler and proposed rebuilding a scheduler that was
+    working. A guard that refuses and a job that never ran produce the same
+    silence, so the row has to say which one it is.
     """
     today = today or date.today()
     # Where the ledger lives is part of its health: a ledger on an ephemeral
@@ -830,11 +868,27 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
     overdue = [r for r in rows
                if r.get("outcome") is None and not r.get("void_reason")
                and today >= date.fromisoformat(r["resolves_after"][:10])]
+    quarantined_hashes = frozenset(quarantined_hashes or ())
+    if quarantined_hashes:
+        from backend.services.evidence_population import record_hash
+        q_overdue = [r for r in overdue
+                     if record_hash(r) in quarantined_hashes]
+        actionable = [r for r in overdue
+                      if record_hash(r) not in quarantined_hashes]
+    else:
+        q_overdue, actionable = [], overdue
     problems = []
     if quiet > max_quiet_days:
         problems.append(f"no new forecast in {quiet} days")
-    if overdue:
-        problems.append(f"{len(overdue)} forecast(s) past due and unresolved")
+    if actionable:
+        problems.append(f"{len(actionable)} forecast(s) past due and unresolved")
+    if q_overdue:
+        # Deliberate, and NOT a fault. Phrased so it cannot be mistaken for a
+        # resolver that stopped: it names the reason and where the decision sits.
+        problems.append(
+            f"{len(q_overdue)} forecast(s) past due but QUARANTINED (campaign "
+            f"copies on the live volume) — the resolver is refusing these on "
+            f"purpose, not failing to reach them; disposition is attended")
     if persistence["status"] != "ok":
         problems.append(f"ledger persistence: {persistence['reason']}")
     return {
@@ -845,6 +899,8 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
         "n_void": sum(1 for r in rows if r.get("void_reason")),
         "n_resolved": sum(1 for r in rows if r.get("outcome") is not None),
         "n_overdue": len(overdue),
+        "n_overdue_actionable": len(actionable),
+        "n_overdue_quarantined": len(q_overdue),
         "last_written": last,
         "days_quiet": quiet,
         "distinct_specialists": len({r["specialist"] for r in rows}),
