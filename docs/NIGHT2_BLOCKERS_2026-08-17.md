@@ -245,11 +245,25 @@ is the correct thing to derive concurrency from.
 
 ## Verification
 
-* **Full fast suite green** (see the run recorded with this commit); the new files
-  add 39 tests across
-  `test_malformed_tool_calls_cost_a_call_not_a_cell.py` (12),
-  `test_receipt_records_the_arm_boundary.py` (6),
-  `test_timing_guard_derives_its_inputs.py` (14), plus 7 updated.
+* **Full fast suite green** (see the run recorded with this commit).
+
+  **Test counts, corrected 2026-08-18** — the review caught this line claiming
+  `12 + 6 + 14` against a different collected total. The counts were written
+  before the last tests were added, so the document was stale rather than wrong
+  about any individual file. Collected, verified with `--collect-only`:
+
+  | file | tests |
+  |---|---|
+  | `test_malformed_tool_calls_cost_a_call_not_a_cell.py` | 12 |
+  | `test_receipt_records_the_arm_boundary.py` | 12 |
+  | `test_timing_guard_derives_its_inputs.py` | 15 |
+  | `test_the_two_night_clocks.py` | 11 |
+  | **new-file total** | **50** |
+  | `test_quarantine_survives_establishment.py` (grew from 5) | 9 |
+
+  The lesson is small but the same one as everywhere else here: **a count written
+  in prose drifts from the count the runner reports.** Quote it from
+  `--collect-only` or do not quote it.
 * The malformed-tool-call tests were confirmed to **fail on the pre-fix source**
   by reproducing the ICE crash directly, not merely by an import error.
 * `exchange_calendars` had gone missing from the dev environment mid-session; it
