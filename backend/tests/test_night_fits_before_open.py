@@ -68,6 +68,25 @@ def _at(h, m=0, day=SESSION):
 _real_guard = N.assert_night_fits_before_open
 
 
+def _guard_minutes(*, k=40, n_arms=5, call_seconds=None):
+    """The projection the guard ACTUALLY decides on.
+
+    These tests used to compute their boundaries from
+    `projected_night_minutes(k, n_arms)` with its module defaults, which was the
+    same number the guard used — until 2026-08-17, when the guard began deriving
+    `calls_per_cell` from completed nights' receipts (4.8 declared, 7.085
+    measured on Night 1) and deciding on the SERIAL branch always.
+
+    A test that recomputes the boundary from a different basis than the guard
+    pins a coincidence. This helper is the single source, so a future
+    measurement moves the tests and the guard together instead of turning six
+    tests red on a correct change.
+    """
+    return N.projected_night_minutes(
+        k=k, n_arms=n_arms, call_seconds=call_seconds, arm_concurrency=1,
+        calls_per_cell=N.derive_calls_per_cell()["value"])
+
+
 def test_the_full_night_is_about_two_and_a_quarter_hours():
     """The number nobody had computed."""
     mins = N.projected_night_minutes(k=40, n_arms=5)
@@ -87,14 +106,19 @@ def test_the_ORDERED_start_time_would_have_spanned_the_open():
 def test_a_start_with_room_is_allowed_and_reports_its_headroom():
     rep = N.assert_night_fits_before_open(k=40, n_arms=5, now=_at(9, 0))
     assert rep["minutes_of_headroom"] > 0
-    assert rep["n_calls_projected"] == 960
+    # 1417, not 960. 960 was 40 x 5 x the DECLARED 4.8 calls/cell; 1417 is the
+    # number Night 1 actually made (40 x 5 x 7.085), which the guard now derives
+    # from that night's own receipt. The literal is kept rather than computed
+    # because this is the one place the measured total should be readable.
+    assert rep["n_calls_projected"] == 1417
+    assert rep["calls_per_cell_basis"] == "MEASURED_MAX_OVER_COMPLETED_NIGHTS"
     assert rep["next_open_utc"].startswith("2026-08-17T13:30")
     assert rep["calendar"] == "XNYS"
 
 
 def test_the_boundary_is_the_open_not_a_round_number():
     """Just inside passes; just outside refuses. No fudge either way."""
-    mins = N.projected_night_minutes(k=40, n_arms=5)
+    mins = _guard_minutes()
     open_utc = _at(13, 30)
     just_ok = open_utc - timedelta(minutes=mins + 1)
     just_late = open_utc - timedelta(minutes=mins - 1)
@@ -128,7 +152,7 @@ def test_the_usable_window_is_a_window_at_both_ends():
     """Too late is contamination; too early is a stale snapshot. Both refuse,
     and the receipt names which."""
     open_utc = _at(13, 30)
-    mins = N.projected_night_minutes(k=40, n_arms=5)
+    mins = _guard_minutes()
     latest = open_utc - timedelta(minutes=mins + 1)
     earliest = open_utc - timedelta(hours=N.MAX_PREOPEN_LEAD_HOURS) \
         + timedelta(minutes=1)
@@ -142,18 +166,32 @@ def test_the_usable_window_is_a_window_at_both_ends():
 def test_a_slower_vendor_shrinks_the_window():
     """p90 latency is 15.6s, and the window moves with the measurement.
 
-    Worth stating the arithmetic, because the first version of this test got it
-    wrong: at p90 the night is 4.2h, so a 09:00 start still lands at 13:10 with
-    twenty minutes to spare. It is 09:30 that stops fitting. The guard is
-    tighter than intuition in one direction and looser in the other, which is
-    the argument for computing it rather than eyeballing it.
+    Stated as the PROPERTY rather than as two clock times. The earlier version
+    asserted that 09:00 fits at p90 and 09:30 does not, which was correct
+    arithmetic in a world of 4.8 calls per cell and became wrong when the guard
+    started deriving 7.085 from Night 1's receipt — at p90 the night is now 6.1h,
+    so neither time fits. Pinning "the latest safe start moves EARLIER when the
+    vendor is slower" survives any future measurement, and it is the claim the
+    test's own name makes.
     """
-    ok = N.assert_night_fits_before_open(k=40, n_arms=5, now=_at(9, 0),
+    open_utc = _at(13, 30)
+    mean_mins = _guard_minutes()
+    slow_mins = _guard_minutes(call_seconds=15.6)
+    assert slow_mins > mean_mins, "a slower vendor must lengthen the night"
+
+    # Latest start that fits, at each latency. Slower vendor => earlier deadline.
+    latest_mean = open_utc - timedelta(minutes=mean_mins + 1)
+    latest_slow = open_utc - timedelta(minutes=slow_mins + 1)
+    assert latest_slow < latest_mean
+
+    ok = N.assert_night_fits_before_open(k=40, n_arms=5, now=latest_slow,
                                          call_seconds=15.6)
-    assert 0 < ok["minutes_of_headroom"] < 30
+    assert 0 < ok["minutes_of_headroom"] < 5
+    # One minute past its own deadline, the slow night refuses.
     with pytest.raises(N.NightWouldSpanTheOpen):
-        N.assert_night_fits_before_open(k=40, n_arms=5, now=_at(9, 30),
-                                        call_seconds=15.6)
+        N.assert_night_fits_before_open(
+            k=40, n_arms=5, now=open_utc - timedelta(minutes=slow_mins - 1),
+            call_seconds=15.6)
 
 
 # ── the calendar, which the guard used to invent ────────────────────────────
@@ -200,12 +238,19 @@ def test_a_WINTER_night_is_measured_against_a_1430_bell_not_1330():
     rep = N.assert_night_fits_before_open(k=40, n_arms=5,
                                           now=_at(9, 0, WINTER_SESSION))
     assert "T14:30" in rep["next_open_utc"]
-    # An 11:20Z start fits in winter and does not in summer: 2.32h from 11:20
-    # lands at 13:39 — after a 13:30 bell, comfortably before a 14:30 one. The
-    # hour is not cosmetic; it is the difference between a night that runs and
-    # a night that refuses, on identical inputs.
-    assert N.assert_night_fits_before_open(k=40, n_arms=5,
-                                           now=_at(11, 20, WINTER_SESSION))
+    # The hour is not cosmetic: there is a start that fits against a 14:30 bell
+    # and refuses against a 13:30 one, on identical inputs. Computed from the
+    # guard's own projection rather than written as a clock time, because the
+    # literal 11:20 encoded a 2.32h night and stopped being the boundary the
+    # moment the projection was measured.
+    mins = _guard_minutes()
+    fits_in_winter = _at(14, 30, WINTER_SESSION) - timedelta(minutes=mins + 2)
+    assert N.assert_night_fits_before_open(k=40, n_arms=5, now=fits_in_winter)
+    # The same offset before a SUMMER bell is one hour too late.
+    too_late_in_summer = _at(13, 30) - timedelta(minutes=mins - 30)
+    with pytest.raises(N.NightWouldSpanTheOpen):
+        N.assert_night_fits_before_open(k=40, n_arms=5,
+                                        now=too_late_in_summer)
     with pytest.raises(N.NightWouldSpanTheOpen):
         N.assert_night_fits_before_open(k=40, n_arms=5, now=_at(11, 20))
 
@@ -405,7 +450,7 @@ def test_the_receipt_records_the_headroom_the_night_actually_had():
     assert res.timing == {}
     res.timing = N.assert_night_fits_before_open(k=40, n_arms=5, now=_at(9, 0))
     d = res.as_dict()
-    assert "timing" in d and d["timing"]["n_calls_projected"] == 960
+    assert "timing" in d and d["timing"]["n_calls_projected"] == 1417
     # Value-free: a projection and a clock, no trial statistics.
     for leak in ("posterior", "probability", "brier", "contrast"):
         assert leak not in str(d["timing"])

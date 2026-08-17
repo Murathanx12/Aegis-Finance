@@ -80,6 +80,54 @@ BENCHMARK = "SPY"
 EXECUTION_MODE = "cells_sequential_arms_concurrent"
 MAX_ARM_CONCURRENCY = 5
 
+#: THE NIGHT1 → NIGHT2 IMPLEMENTATION BOUNDARY.
+#:
+#: IIF-1 buys 40 nights and pools them into one contrast. That pooling assumes
+#: the nights are HOMOGENEOUS — same treatment, same control. Hardening
+#: `investigator_agent`'s tool-call parsing on 2026-08-17 changed the behaviour
+#: of the tool-USING arms mid-campaign: before it, a malformed tool call killed
+#: the cell (and cost three paired cells from every other arm); after it, the
+#: call is skipped and counted. That is a better arm and a DIFFERENT arm, so a
+#: contrast pooled across the boundary silently mixes two versions of B.
+#:
+#: Bump this whenever arm behaviour changes. The number is not decoration: the
+#: analysis must report the contrast WITHIN version as well as pooled, and it
+#: cannot do that if the receipts do not say which version produced them.
+#:
+#:   1  Night 1 (2026-08-17). `dict(call.get("args"))` on untrusted args; a
+#:      malformed tool call killed the cell. B_tools/ICE died this way.
+#:   2  Night 2 onward. Malformed tool calls are skipped and counted in
+#:      `tool_call_drops`; per-arm failure counts on every receipt.
+IMPLEMENTATION_VERSION = 2
+
+
+def arm_implementation_fingerprint() -> str:
+    """Hash of the module that DEFINES arm behaviour, derived not declared.
+
+    `IMPLEMENTATION_VERSION` above is a hand-maintained integer, which makes it
+    exactly the kind of input the house rule warns about: a guard whose value is
+    on the honour system will eventually fool its own author, because the person
+    changing arm behaviour is the person who has to remember to bump it.
+
+    So the receipt carries BOTH. The declared version says what we believe
+    changed; this fingerprint says what actually did. Two nights with the same
+    version and different fingerprints are a forgotten bump, and that is
+    detectable after the fact instead of being an assumption baked into a pooled
+    contrast. It does not refuse anything on its own — it makes the claim
+    checkable, which is the most a fingerprint can honestly do.
+    """
+    from backend.services import investigator_agent as _IA
+    try:
+        src = Path(_IA.__file__).read_bytes()
+    except Exception as e:                                        # noqa: BLE001
+        # An unreadable source file must not silently become a stable-looking
+        # fingerprint that compares equal across genuinely different code.
+        logger.error("arm implementation fingerprint UNAVAILABLE (%s) — the "
+                     "receipt will say so rather than carry a value that "
+                     "cannot be trusted to differ when the code differs", e)
+        return "UNAVAILABLE"
+    return hashlib.sha256(src).hexdigest()[:16]
+
 #: WHERE THE RECEIPTS LIVE — the same lesson as NIGHT-14 defect F7, and this
 #: file had reproduced the bug it fixed. The receipt was written under the repo
 #: while the ledger it describes lives on the persistent volume, so a Railway
@@ -215,9 +263,44 @@ P90_OVER_MEAN = MEASURED_CALL_SECONDS_P90 / MEASURED_CALL_SECONDS
 #: guard authorises a start that ends PAST the opening bell, and that night
 #: ACCRUES rather than voiding.
 #:
-#: 2.0 is DECLARED, not measured. The first real concurrent night measures the
+#: MEASURED 2026-08-17, AND IT WENT THE OTHER WAY. The comment above used to end
+#: "2.0 is DECLARED, not measured. The first real concurrent night measures the
 #: speedup and either earns a larger number or replaces this one; until then a
-#: night is sized as though concurrency bought half of what it nominally offers.
+#: night is sized as though concurrency bought half of what it nominally offers."
+#:
+#: Night 1 ran the first real concurrent night, and the realized speedup at
+#: arm_concurrency=5 was **1.545x**, not 2.0:
+#:
+#:   serial cell   5 arms x 7.085 calls x 8.7s  = 308.2 s
+#:   actual cell   133 min / 40 cells           = 199.5 s
+#:   realized      308.2 / 199.5                = 1.545x
+#:
+#: So the number that called itself conservative was OPTIMISTIC by 23%, and this
+#: is the axis on which the guard could have authorised a night that ends past
+#: the bell.
+#:
+#: THE VALUE IS DELIBERATELY STILL 2.0, AND THAT IS NOT AN OVERSIGHT.
+#: It was changed to 1.545 on 2026-08-17 and `verify_or_refuse()` refused the
+#: tree: this constant is part of the FROZEN pre-registration, so editing it is
+#: an amendment to a registered trial — attended, and not a session's call. The
+#: guard was right and the edit was reverted. ("Attended" is a property of an
+#: ACTION: restructuring the projection so it does not depend on this number is
+#: not attended, and that is what was done instead.)
+#:
+#: Nothing operational is waiting on the amendment, because
+#: `assert_night_fits_before_open` no longer decides on this constant — the
+#: refusal is computed on the SERIAL branch, which needs no efficiency figure at
+#: all. This value now sizes only the informational projection printed beside it.
+#: Amend it when IIF-1's parameters are next opened; until then the receipt
+#: carries both numbers and the discrepancy is visible rather than assumed away.
+#:
+#: NOT to be confused with `measured_concurrency_efficiency()`, which reported
+#: 3.529 for the same night. That statistic counts CALLS IN FLIGHT; this constant
+#: divides a wall-clock cell estimate. Feeding the 3.529 in here would be a
+#: measurement that makes a guard more dangerous — it projects 58 minutes for a
+#: night that took 133 — which is why the refusal no longer rests on this
+#: constant at all (see `assert_night_fits_before_open`). It now sizes only the
+#: informational projection reported beside the serial decision.
 DECLARED_CONCURRENCY_EFFICIENCY = 2.0
 
 #: A night may only run in the PRE-OPEN window of the session it forecasts.
@@ -297,9 +380,125 @@ def projected_night_minutes(*, k: int, n_arms: int,
     return k * cell / 60.0
 
 
+class ConcurrencyNotDerivable(RuntimeError):
+    """The guard cannot see what concurrency the runner will use."""
+
+
+def derive_runner_concurrency() -> int:
+    """What the RUNNER will actually use, read from the registered rule.
+
+    THE DEFECT THIS EXISTS FOR (Night 1, 2026-08-17)
+    ================================================
+    `arm_concurrency` was supplied by the caller and derived by nobody. The
+    schedule planner validated the start time at `arm_concurrency=1` while the
+    runner executed at 5 — a five-fold difference with nothing in the system
+    positioned to notice, because both numbers were inputs and neither was a
+    measurement.
+
+    It did not bite, and the reason it did not bite is worse than if it had: the
+    conc=1 branch is PESSIMISTIC, so it happened to absorb a second error on a
+    different axis (`MEASURED_CALLS_PER_CELL` was 48% low). Two wrong constants
+    cancelled and produced 91.5 minutes of apparent headroom that was 4 minutes
+    at the declared efficiency. A projection agreeing with reality is not
+    evidence either input is right.
+
+    So the value is DERIVED from the frozen pre-registration — the same source
+    `assert_production_invocation` already holds a production night to — and a
+    guard that cannot read it REFUSES rather than falling back to a default. A
+    default here is precisely the honour-system input the house rule forbids.
+    """
+    try:
+        from backend.services.iif1_prereg import verify_or_refuse
+        frozen = verify_or_refuse()
+    except Exception as e:                                        # noqa: BLE001
+        raise ConcurrencyNotDerivable(
+            f"cannot read the frozen pre-registration to derive the runner's "
+            f"arm concurrency ({e}). Refusing rather than assuming a value: an "
+            f"unverified concurrency differed five-fold from the runner on "
+            f"Night 1 with nothing noticing.") from e
+    reg = frozen.get("MAX_ARM_CONCURRENCY")
+    if reg is None:
+        raise ConcurrencyNotDerivable(
+            "the frozen config does not declare MAX_ARM_CONCURRENCY, so the "
+            "runner's concurrency cannot be derived. Refusing.")
+    return max(1, int(reg))
+
+
+def derive_calls_per_cell(receipts_dir: Path | None = None) -> dict:
+    """Calls per cell from COMPLETED nights' own receipts, conservatively.
+
+    `MEASURED_CALLS_PER_CELL = 4.8` has the word measured in its name and came
+    from a five-arm REHEARSAL. Night 1's own receipt says 1417 calls over
+    40 x 5 cells = **7.085**, so the constant was 48% low on the one night that
+    has ever run to completion. Order 13 computed that correction and never
+    applied it, which is the same class of error one level up: a number written
+    in a document is not a number the guard reads.
+
+    Three rules, each paid for:
+
+    * **VOID AND SANDBOX NIGHTS ARE EXCLUDED.** A night that stopped early
+      undercounts calls per cell BY CONSTRUCTION — 2026-08-14 reads 2.8 because
+      it was truncated, not because it was efficient. Projecting a complete
+      night from an incomplete one is the denominator error in a new costume.
+    * **THE MAXIMUM, NOT THE MEAN.** This feeds a guard that decides whether a
+      paid night finishes before the opening bell. An average projection is
+      wrong half the time in the direction that contaminates the trial.
+    * **NEVER BELOW THE DECLARED CONSTANT.** If the receipts say less than the
+      rehearsal did, the rehearsal is retained. Observations may only make this
+      guard more conservative, never less — otherwise one cheap night could talk
+      the projection down into a window it does not fit.
+
+    With no usable receipts it returns the declared constant and SAYS SO in
+    `basis`, rather than refusing: with zero completed nights there is nothing to
+    derive, and refusing would make the first night of any campaign impossible.
+    The label is what stops that fallback from being silent.
+    """
+    declared = float(MEASURED_CALLS_PER_CELL)
+    d = receipts_dir or RECEIPTS_DIR
+    observed: list[dict] = []
+    try:
+        paths = sorted(Path(d).glob("*.json")) if Path(d).exists() else []
+    except Exception as e:                                        # noqa: BLE001
+        logger.warning("calls/cell: receipts dir unreadable (%s) — falling back "
+                       "to the DECLARED constant, and saying so", e)
+        paths = []
+    for p in paths:
+        try:
+            r = json.loads(p.read_text(encoding=RECEIPT_ENCODING))
+        except Exception as e:                                     # noqa: BLE001
+            # A torn receipt is not a night with no calls. Skipped and named.
+            logger.warning("calls/cell: receipt %s unreadable (%s) — skipped",
+                           p.name, e)
+            continue
+        if r.get("sandbox"):
+            continue
+        if str(r.get("status")) != "ok":
+            continue
+        k_n = len(r.get("tickers") or [])
+        n_arms = len(r.get("per_arm") or {})
+        calls = r.get("calls")
+        if not (k_n and n_arms and calls):
+            continue
+        observed.append({"night": r.get("night") or p.stem,
+                         "calls_per_cell": round(float(calls) / (k_n * n_arms), 3)})
+    if not observed:
+        return {"value": declared, "basis": "DECLARED_NO_COMPLETED_NIGHTS",
+                "n_nights": 0, "observed": [], "declared": declared}
+    worst = max(o["calls_per_cell"] for o in observed)
+    value = max(declared, worst)
+    return {
+        "value": value,
+        "basis": ("MEASURED_MAX_OVER_COMPLETED_NIGHTS" if value > declared
+                  else "DECLARED_EXCEEDS_MEASURED"),
+        "n_nights": len(observed),
+        "observed": observed,
+        "declared": declared,
+    }
+
+
 def assert_night_fits_before_open(*, k: int, n_arms: int, now=None,
                                   call_seconds: float | None = None,
-                                  arm_concurrency: int = 1,
+                                  arm_concurrency: int | None = None,
                                   max_lead_hours: float | None = None) -> dict:
     """Refuse a night that cannot finish before the session it forecasts opens.
 
@@ -344,13 +543,91 @@ def assert_night_fits_before_open(*, k: int, n_arms: int, now=None,
                     else call_seconds)
     max_lead_hours = (MAX_PREOPEN_LEAD_HOURS if max_lead_hours is None
                       else max_lead_hours)
+
+    # ── THE DECISION IS ALWAYS SERIAL, AND MEASUREMENT IS WHY ────────────────
+    #
+    # The obvious repair to "the guard validated at concurrency 1 while the
+    # runner ran 5" is to derive the runner's concurrency and project on it.
+    # That was tried here first and it makes the guard LESS SAFE. Measured
+    # against Night 1's actual 133-minute wall clock (40 cells, 199.5 s/cell):
+    #
+    #   serial, calls/cell 7.085          205.5 min   OVER  -> safe
+    #   conc=5 at declared efficiency 2.0 102.7 min   UNDER -> unsafe
+    #   conc=5 at "measured" eff 3.529     58.2 min   UNDER -> unsafe
+    #
+    # The realized speedup at concurrency 5 was 308.2/199.5 = **1.545x**, below
+    # the DECLARED 2.0 that the comment on that constant calls conservative. And
+    # the 3.529 figure `measured_concurrency_efficiency` reports is calls in
+    # flight, not wall-clock speedup, so feeding it in would be a measurement
+    # that makes a guard more dangerous.
+    #
+    # So the refusal rests on the branch that needs no concurrency model at all.
+    # A verdict that holds serially does not depend on an input this guard cannot
+    # verify — which is the whole lesson of the night, stated as code rather than
+    # as a habit someone has to remember at the call site.
+    #
+    # THE REFUSAL IS SCOPED TO WHAT THE DECISION ACTUALLY CONSUMES.
+    #
+    # First attempt made `derive_runner_concurrency()` a hard precondition. CI
+    # caught it: the CI-simulated world points the `Aegis module` sibling at a
+    # nonexistent path, so `verify_or_refuse` raises there and the guard refused
+    # outright — 15 tests, and no projection possible in any environment without
+    # the sibling repo.
+    #
+    # That was the wrong coupling. The decision is SERIAL and consumes no
+    # concurrency value at all, so making an unreadable registration fatal
+    # refused on an input the verdict never reads. Planning and readiness
+    # reporting legitimately run where the sibling is absent; a PAID night
+    # cannot (`verify_or_refuse` already gates the first dollar), so nothing is
+    # weakened by letting the projection through.
+    #
+    # The teeth stay exactly where they bite: a caller-supplied concurrency is
+    # still checked against the registration, and if the registration cannot be
+    # read then that claim cannot be verified and IS refused.
+    derived_conc: int | None = None
+    conc_basis = "DERIVED_FROM_FROZEN_PREREG"
+    try:
+        derived_conc = derive_runner_concurrency()
+    except ConcurrencyNotDerivable as e:
+        conc_basis = "UNAVAILABLE_PREREG_UNREADABLE"
+        if arm_concurrency is not None:
+            raise ConcurrencyNotDerivable(
+                f"arm_concurrency={arm_concurrency} was supplied but cannot be "
+                f"checked against the registered rule: {e}") from e
+        logger.warning(
+            "night-fits guard: runner concurrency NOT derivable (%s) — the "
+            "SERIAL decision is unaffected because it consumes no concurrency "
+            "value, and the informational projection is omitted rather than "
+            "computed from an assumption", e)
+    if (arm_concurrency is not None and derived_conc is not None
+            and int(arm_concurrency) != derived_conc):
+        raise ConcurrencyNotDerivable(
+            f"arm_concurrency={arm_concurrency} disagrees with the runner's "
+            f"registered concurrency of {derived_conc}. On Night 1 this exact "
+            f"gap was five-fold and nothing noticed, because both numbers were "
+            f"inputs and neither was a measurement. Omit the argument — this "
+            f"guard derives it — or fix the registration.")
+
+    # Calls per cell, derived from completed nights rather than the rehearsal
+    # constant that was 48% low on the only night that has ever finished.
+    cpc = derive_calls_per_cell()
+
     minutes = projected_night_minutes(k=k, n_arms=n_arms,
                                       call_seconds=call_seconds,
-                                      arm_concurrency=arm_concurrency)
+                                      calls_per_cell=cpc["value"],
+                                      arm_concurrency=1)
+    # Informational only. Never compared against the bell. `None` when the
+    # concurrency could not be derived — an omitted number, not a guessed one.
+    minutes_at_runner_conc = (
+        projected_night_minutes(k=k, n_arms=n_arms, call_seconds=call_seconds,
+                                calls_per_cell=cpc["value"],
+                                arm_concurrency=derived_conc)
+        if derived_conc is not None else None)
     finish = now + timedelta(minutes=minutes)
     nxt = MS.next_session_open(now)
     lead_hours = (nxt - now).total_seconds() / 3600.0
-    conc = max(1, min(int(arm_concurrency), int(n_arms)))
+    conc = (max(1, min(int(derived_conc), int(n_arms)))
+            if derived_conc is not None else None)
     report = {
         "projected_minutes": round(minutes, 1),
         "projected_finish_utc": finish.isoformat(timespec="minutes"),
@@ -359,10 +636,32 @@ def assert_night_fits_before_open(*, k: int, n_arms: int, now=None,
         "hours_until_open": round(lead_hours, 2),
         "minutes_of_headroom": round((nxt - finish).total_seconds() / 60.0, 1),
         "call_seconds_assumed": call_seconds,
-        "n_calls_projected": int(k * n_arms * MEASURED_CALLS_PER_CELL),
+        "n_calls_projected": int(k * n_arms * cpc["value"]),
+        # WHERE EVERY INPUT CAME FROM, on the receipt.
+        #
+        # Night 1's headroom was 91.5 projected minutes that were 4 at the
+        # declared efficiency, because two constants were wrong in opposite
+        # directions and cancelled. The projection agreeing with reality proved
+        # nothing about either input. So the basis of each input travels with
+        # the number, and a reader can tell a measurement from an assumption
+        # without going to the source.
+        "calls_per_cell_assumed": cpc["value"],
+        "calls_per_cell_basis": cpc["basis"],
+        "calls_per_cell_declared": cpc["declared"],
+        "calls_per_cell_nights_measured": cpc["n_nights"],
+        "decision_basis": "SERIAL_PESSIMISTIC_ALWAYS",
+        "runner_concurrency_derived": derived_conc,
+        "concurrency_basis": conc_basis,
+        # The projection at the concurrency the runner will ACTUALLY use, beside
+        # the serial one the decision rests on. Reported so the model's error is
+        # a measured quantity next night rather than an argument: on Night 1 this
+        # number was 102.7 against a 133-minute reality.
+        "projected_minutes_at_runner_concurrency": (
+            round(minutes_at_runner_conc, 1)
+            if minutes_at_runner_conc is not None else None),
         "arm_concurrency": conc,
         "concurrency_efficiency_declared": (
-            DECLARED_CONCURRENCY_EFFICIENCY if conc > 1 else 1.0),
+            DECLARED_CONCURRENCY_EFFICIENCY if (conc or 1) > 1 else 1.0),
         "calendar": "XNYS",
     }
     if lead_hours > float(max_lead_hours):
@@ -590,6 +889,18 @@ class NightResult:
     #: is removed from all of them, so the arms can never differ by which cell
     #: they were cut off in.
     dropped_cells: list = field(default_factory=list)
+    #: Which version of the arms produced this night, and what the code actually
+    #: was. A 40-night contrast pooled across a change in arm behaviour is not
+    #: one contrast; these two fields are what let the analysis say so.
+    implementation_version: int = 0
+    arm_implementation_fingerprint: str = ""
+    #: Per-arm failure counts, lifted to the top of the receipt.
+    #:
+    #: They are already inside `per_arm`, but a number that has to be dug out of
+    #: a nested structure is a number nobody reads on a clean night — and this
+    #: one's whole value is being read on clean nights, so a drift toward
+    #: tool-arm-only failures is caught while it is still small.
+    arm_failures: dict = field(default_factory=dict)
     #: The registered execution mode this night actually ran under.
     execution_mode: str = ""
     arm_concurrency: int = 1
@@ -1152,8 +1463,14 @@ def run_night(features_by_ticker: dict[str, dict], *,
         # may replay a snapshot of any age — that is what a rehearsal is for.
         # A night that cannot FINISH before the open is as contaminated as one
         # that STARTED stale, and until 2026-08-15 only the second was checked.
-        res.timing = assert_night_fits_before_open(
-            k=k, n_arms=len(arms), arm_concurrency=arm_concurrency)
+        # `arm_concurrency` is deliberately NOT passed. The guard derives it from
+        # the frozen pre-registration, and `assert_production_invocation` on the
+        # line above has already refused any run whose argument differs from that
+        # registered value — so the derived number is provably the one this runner
+        # will execute at, rather than the one the caller says it will. Handing
+        # the guard its input back is what let Night 1 validate at concurrency 1
+        # while running at 5.
+        res.timing = assert_night_fits_before_open(k=k, n_arms=len(arms))
         if decision_ts is not None:
             res.decision_lag_minutes = round(
                 assert_decision_time_fresh(decision_ts), 2)
@@ -1365,6 +1682,26 @@ def run_night(features_by_ticker: dict[str, dict], *,
             "n_cells_truncated": sum(1 for r in rows
                                      if r.get("n_truncated_calls")),
             "drop_reasons": _tally(r.get("forecast_drops") for r in rows),
+            # PER-ARM FAILURE COUNTS, ON EVERY RECEIPT INCLUDING CLEAN NIGHTS.
+            #
+            # Night 1 lost ONE cell of 200 — `B_tools/ICE` — and because the
+            # pairing key is night × ticker × observable × horizon × threshold,
+            # that dropped three paired cells from every other arm: 120 union,
+            # 117 paired. A 0.5% cell failure cost 2.5% of the contrast, and
+            # nobody had computed that multiplier in advance.
+            #
+            # The reason this is per-ARM and not a night total: a failure that
+            # can only strike tool-using arms is a bias with a DIRECTION, not
+            # noise. It pushes the primary contrast toward the null, which is
+            # the direction that looks like a clean negative — the single most
+            # expensive way for this trial to be wrong. A night-level count
+            # would average that away into a number that looks tolerable.
+            "n_cells_failed": sum(1 for r in rows
+                                  if r.get("status") == "failed"),
+            "n_tool_call_drops": sum(r.get("n_tool_call_drops", 0)
+                                     for r in rows),
+            "tool_call_drop_reasons": _tally(r.get("tool_call_drops")
+                                             for r in rows),
             "rows": rows,
         }
 
@@ -1378,6 +1715,22 @@ def run_night(features_by_ticker: dict[str, dict], *,
     # It is reported first because it is the CAUSE — a short night and a barren
     # arm are the same event, and the receipt should name the one that decided.
     res.truncation = truncation_report(res.per_arm)
+    res.implementation_version = IMPLEMENTATION_VERSION
+    res.arm_implementation_fingerprint = arm_implementation_fingerprint()
+    # Lifted out of per_arm so a clean night still shows the shape of its
+    # failures. `tool_only` is the number that matters: malformed tool calls can
+    # only be recorded by arms that use tools, so any nonzero value there is a
+    # bias with a direction, and comparing it against the cell failures tells
+    # you whether the asymmetry is growing.
+    res.arm_failures = {
+        arm: {
+            "n_cells": blk.get("n_cells", 0),
+            "n_cells_failed": blk.get("n_cells_failed", 0),
+            "n_tool_call_drops": blk.get("n_tool_call_drops", 0),
+            "tool_call_drop_reasons": blk.get("tool_call_drop_reasons", {}),
+        }
+        for arm, blk in res.per_arm.items()
+    }
     if barren_stop:
         res.status = "void"
         res.void_reason = barren_stop

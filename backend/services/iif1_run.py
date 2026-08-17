@@ -291,27 +291,66 @@ def readiness_report(snap: dict, sel: dict, *, as_of: str | None,
         print(f"  today            {_now.date().isoformat()} "
               + ("IS a session" if MS.is_session(_now.date())
                  else "is NOT a session"))
+        # ONE SOURCE FOR CALLS/CELL, AND IT IS THE GUARD'S.
+        #
+        # This block used to call `projected_night_minutes` with its module
+        # defaults, so the operator read a "latest safe start" computed on the
+        # DECLARED 4.8 calls/cell while the guard decided on the 7.085 derived
+        # from Night 1's receipt. The number a human acts on was the optimistic
+        # one, and the two would have disagreed by about an hour with nothing
+        # saying so. Same defect the guard itself was just fixed for, one screen
+        # further out.
+        _cpc = N2.derive_calls_per_cell()
         for _conc, _label in ((1, "serial     "), (N2.MAX_ARM_CONCURRENCY,
                                                    "concurrent ")):
             _m = N2.projected_night_minutes(k=k, n_arms=len(arms),
-                                            arm_concurrency=_conc)
+                                            arm_concurrency=_conc,
+                                            calls_per_cell=_cpc["value"])
             _m90 = N2.projected_night_minutes(
                 k=k, n_arms=len(arms), arm_concurrency=_conc,
+                calls_per_cell=_cpc["value"],
                 call_seconds=N2.MEASURED_CALL_SECONDS_P90)
             print(f"  {_label}      {_m:5.0f} min projected, latest start "
                   f"{(_nxt - timedelta(minutes=_m)).strftime('%H:%M')}Z "
                   f"(at p90 latency {(_nxt - timedelta(minutes=_m90)).strftime('%H:%M')}Z)")
+        print(f"  calls/cell       {_cpc['value']} "
+              f"({_cpc['basis']}, {_cpc['n_nights']} completed night(s); "
+              f"declared {_cpc['declared']})")
+        print("  SERIAL is the row to plan from — the guard refuses on it, and "
+              "every concurrency branch under-projects Night 1's real 133 min")
         try:
+            # No concurrency argument: the guard derives it from the frozen
+            # registration and decides on the serial branch regardless.
             _rep = N2.assert_night_fits_before_open(
-                k=k, n_arms=len(arms), now=_now,
-                arm_concurrency=N2.MAX_ARM_CONCURRENCY)
+                k=k, n_arms=len(arms), now=_now)
+            _at_conc = _rep.get("projected_minutes_at_runner_concurrency")
+            _tail = (
+                f"{_at_conc:.0f} min at the runner's derived concurrency "
+                f"{_rep['runner_concurrency_derived']} (INFORMATIONAL; measured "
+                f"102.7 against a 133 min reality)"
+                if _at_conc is not None else
+                # Omitted, not guessed. The serial decision is unaffected.
+                f"runner concurrency NOT derivable ({_rep.get('concurrency_basis')}) "
+                f"— serial decision unaffected, it consumes no concurrency value")
             print(f"  headroom         {_rep['minutes_of_headroom']:.0f} min "
-                  f"at the declared {_rep['concurrency_efficiency_declared']}x "
-                  f"efficiency (DECLARED, never yet measured)")
+                  f"on the SERIAL branch (decision basis); " + _tail)
         except N2.NightWouldSpanTheOpen as exc:
             window_ok = False
             window_note = str(exc).split(".")[0]
             print(f"  *** {window_note}")
+        except N2.ConcurrencyNotDerivable as exc:
+            # A REFUSAL IS A FINDING, AND NOT-READY IS THE RIGHT VERDICT.
+            #
+            # The guard now refuses when it cannot derive the runner's
+            # concurrency from the frozen registration. Only
+            # `NightWouldSpanTheOpen` was caught here, so that refusal would have
+            # escaped into the outer handler and been reported as a generic
+            # "session window unavailable" — a guard's specific verdict laundered
+            # into a vague one, which is how a refusal stops being read as
+            # information.
+            window_ok = False
+            window_note = str(exc).split(".")[0]
+            print(f"  *** concurrency not derivable: {window_note}")
     except Exception as exc:                                     # noqa: BLE001
         window_ok = False
         window_note = f"session calendar unavailable: {exc}"

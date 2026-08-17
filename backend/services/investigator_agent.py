@@ -148,6 +148,35 @@ DROP_REASONS = frozenset({
 })
 
 
+# ── malformed TOOL CALLS: a separate vocabulary, and separate for a reason ───
+#
+# A forecast drop costs a forecast. A malformed tool call costs a LOOKUP, and
+# before 2026-08-17 it cost the whole cell: `dict(call.get("args") or {})` on
+# args that were not a mapping raised out of `_gather` and killed B_tools/ICE.
+# Pooling the two vocabularies would hide the asymmetry that matters — these
+# codes can only ever be recorded by tool-USING arms, so a nonzero count here is
+# a directional bias in the primary contrast, not a data-quality footnote.
+TOOL_DROP_CALLS_NOT_A_LIST = "calls_not_a_list"
+TOOL_DROP_CALL_NOT_A_MAPPING = "call_not_a_mapping"
+TOOL_DROP_ARGS_NOT_A_MAPPING = "args_not_a_mapping"
+
+TOOL_CALL_DROP_REASONS = frozenset({
+    TOOL_DROP_CALLS_NOT_A_LIST, TOOL_DROP_CALL_NOT_A_MAPPING,
+    TOOL_DROP_ARGS_NOT_A_MAPPING,
+})
+
+
+def _drop_tool_call(inv: "Investigation", code: str) -> None:
+    """Count a skipped malformed tool call. CODES ONLY.
+
+    Same discipline as the forecast vocabulary: the receipt is read every morning
+    during a 40-night blind, so a reason may never carry a model-stated number or
+    name — that would leak a forecast out through the error path.
+    """
+    assert code in TOOL_CALL_DROP_REASONS, code
+    inv.tool_call_drops[code] = inv.tool_call_drops.get(code, 0) + 1
+
+
 # ── prompts: identical across arms, by construction ─────────────────────────
 
 SYS_GATHER = """You are an investigator. You have tools. Your job in this step \
@@ -251,6 +280,19 @@ class Investigation:
     #: Why cells were dropped, counted by reason. A barren cell that says only
     #: `n_forecasts: 0` cannot be diagnosed after the night, at any price.
     forecast_drops: dict = field(default_factory=dict)
+    #: Malformed model-emitted tool calls, counted by reason and SKIPPED.
+    #:
+    #: Night 1 lost `B_tools/ICE` to `dict(call.get("args") or {})` on args that
+    #: were not a mapping, and because the pairing key is
+    #: night × ticker × observable × horizon × threshold, that one dead cell
+    #: dropped three paired cells from every other arm: 120 union, 117 paired.
+    #: A 0.5% cell failure cost 2.5% of the contrast.
+    #:
+    #: These are counted rather than merely survived because the failure can
+    #: ONLY strike tool-using arms — it is a bias with a DIRECTION (toward the
+    #: null, which is the direction that looks like a clean negative), not
+    #: noise. A silent recovery would hide exactly the thing that biases H1.
+    tool_call_drops: dict = field(default_factory=dict)
     critique: dict | None = None
     error: str = ""
 
@@ -285,6 +327,12 @@ class Investigation:
                 "n_forecasts": len(self.forecasts),
                 "forecast_drops": dict(self.forecast_drops),
                 "terminal_drop_reason": self.terminal_drop_reason,
+                # Malformed tool calls, per cell. On the row even when zero: a
+                # count that only appears when it is bad teaches the reader that
+                # absence means fine, and this one is only recordable by
+                # tool-using arms — so its zero is as informative as its one.
+                "tool_call_drops": dict(self.tool_call_drops),
+                "n_tool_call_drops": sum(self.tool_call_drops.values()),
                 # Truncation ANYWHERE in the chain degrades what the forecaster
                 # was shown, even when the forecast call itself came back whole.
                 "n_truncated_calls": sum(1 for c in self.calls if c.truncated),
@@ -437,11 +485,38 @@ class Investigator:
             inv.calls.append(c)
             if not c.ok or not isinstance(c.parsed, dict):
                 break
-            for call in (c.parsed.get("calls") or [])[:6]:
+            raw_calls = c.parsed.get("calls") or []
+            if not isinstance(raw_calls, list):
+                # A string here would ITERATE AS CHARACTERS and produce six
+                # nonsense calls rather than an error. Refuse the whole reply.
+                _drop_tool_call(inv, TOOL_DROP_CALLS_NOT_A_LIST)
+                continue
+            for call in raw_calls[:6]:
                 if budget.exhausted:
                     break
+                # NOTHING THE MODEL EMITS IS TRUSTED INTO A CONSTRUCTOR.
+                #
+                # This is the line that killed B_tools/ICE on Night 1:
+                #   args = dict(call.get("args") or {})
+                #   ValueError: dictionary update sequence element #0 has
+                #               length 3; 2 is required
+                # A malformed reply is a normal event for an LLM, so it must cost
+                # a CALL, never a cell — and it is counted, because it can only
+                # strike tool-using arms.
+                #
+                # Deliberately NOT permissive: a list of pairs is not coerced
+                # into a mapping. Inventing an interpretation of a malformed
+                # reply would silently change which tool ran with what arguments,
+                # and a wrong tool call is worse than a skipped one.
+                if not isinstance(call, dict):
+                    _drop_tool_call(inv, TOOL_DROP_CALL_NOT_A_MAPPING)
+                    continue
                 name = str(call.get("tool", ""))
-                args = dict(call.get("args") or {})
+                raw_args = call.get("args") or {}
+                if not isinstance(raw_args, dict):
+                    _drop_tool_call(inv, TOOL_DROP_ARGS_NOT_A_MAPPING)
+                    continue
+                args = dict(raw_args)
                 # FORCE, never default. The model may not redirect a lookup to
                 # a different security: that would let one cell's evidence come
                 # from another company's news, which is silent cross-

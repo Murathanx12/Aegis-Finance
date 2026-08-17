@@ -78,7 +78,13 @@ def _next_close(after):
 
 
 def plan_one(open_utc, *, k: int, arms: int) -> dict:
-    minutes = N.projected_night_minutes(k=k, n_arms=arms, arm_concurrency=1)
+    # Serial, deliberately, and matching what the guard below will decide on: a
+    # start time that survives the pessimistic branch does not depend on an
+    # input the planner cannot verify. Measured against Night 1, every
+    # concurrency branch UNDER-projects the real wall clock.
+    minutes = N.projected_night_minutes(
+        k=k, n_arms=arms, arm_concurrency=1,
+        calls_per_cell=N.derive_calls_per_cell()["value"])
     start = open_utc - timedelta(minutes=minutes * TARGET_LATENCY_MULTIPLE)
     row = {"session": open_utc.date().isoformat(),
            "open_utc": open_utc, "projected_minutes": round(minutes, 1),
@@ -92,8 +98,11 @@ def plan_one(open_utc, *, k: int, arms: int) -> dict:
     # catch-all around the thing whose refusal you are reporting cannot tell a
     # refusal from a typo.
     try:
-        rep = N.assert_night_fits_before_open(k=k, n_arms=arms, now=start,
-                                              arm_concurrency=1)
+        # No concurrency argument: the guard decides on the SERIAL branch
+        # always, and derives the runner's concurrency for the record. Passing a
+        # number here is how the planner and the runner came to disagree
+        # five-fold on Night 1 with nothing positioned to notice.
+        rep = N.assert_night_fits_before_open(k=k, n_arms=arms, now=start)
         row["guard"] = "PASS"
         row["headroom_minutes"] = rep["minutes_of_headroom"]
         row["lead_hours"] = rep["hours_until_open"]

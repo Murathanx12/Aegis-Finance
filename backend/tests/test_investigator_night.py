@@ -340,11 +340,24 @@ def test_the_receipt_carries_operational_diagnostics_and_no_trial_statistics(
     # are the evidence for the concurrency amendment's whole claim — that the
     # arms of one cell see the same world — so they have to be on the row that
     # gets read. A clock cannot carry a probability.
+    # The two added 2026-08-17 are a count of malformed tool calls and the
+    # closed-vocabulary CODES for them. They earn a place on the row because the
+    # failure they record can only strike tool-USING arms — Night 1 lost
+    # B_tools/ICE this way, and one dead cell cost three paired cells from every
+    # other arm — so a nonzero value is a directional bias in the primary
+    # contrast rather than a data-quality footnote. Value-free by construction:
+    # `TOOL_CALL_DROP_REASONS` is closed and asserted below, and a count of
+    # skipped lookups cannot carry a probability.
     assert set(row) == {"arm", "ticker", "status", "n_calls", "n_tool_calls",
                         "n_forecasts", "forecast_drops", "terminal_drop_reason",
                         "n_truncated_calls", "finish_reasons", "served_models",
                         "tokens_in", "tokens_out", "error",
-                        "arm_started_at", "arm_finished_at", "arm_seconds"}
+                        "arm_started_at", "arm_finished_at", "arm_seconds",
+                        "tool_call_drops", "n_tool_call_drops"}
+    _IA = __import__("backend.services.investigator_agent", fromlist=["x"])
+    assert set(row["tool_call_drops"]) <= set(_IA.TOOL_CALL_DROP_REASONS), (
+        "a tool-call drop reason outside the closed vocabulary reached the "
+        "receipt, which is how a model-stated value leaks out via an error path")
     assert row["terminal_drop_reason"] in ({""} | set(
         __import__("backend.services.investigator_agent", fromlist=["x"])
         .DROP_REASONS))

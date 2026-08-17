@@ -315,16 +315,36 @@ def test_a_WEEKEND_readiness_report_is_NOT_READY(capsys, prereg_readable):
 
 def test_the_report_states_the_LATEST_SAFE_START_in_both_modes(
         capsys, prereg_readable):
-    """The operator's actual question is 'by when do I have to start', and the
-    answer differs by a bit over an hour between serial and concurrent."""
+    """The operator's actual question is 'by when do I have to start'.
+
+    THE NUMBERS MOVED, AND MEASUREMENT MOVED THEM THE UNINTUITIVE WAY (2026-08-17).
+    This asserted `latest start 11:10Z` for the serial row, computed from the
+    DECLARED 4.8 calls/cell. The guard now derives 7.085 from Night 1's own
+    receipt, and the serial deadline moves EARLIER — to 10:04Z. Measuring the
+    runtime cost 66 minutes of window; more data bought less freedom, because the
+    declared constant was optimistic.
+
+    Two things are pinned beyond the literals: the report reads its calls/cell
+    from the same place the guard does (it used to have its own, optimistic,
+    copy — so the human read one deadline while the guard enforced another), and
+    it says which row the decision rests on.
+    """
     from backend.services import iif1_run as R
     R.readiness_report(_snap(), _sel(), as_of=None, balance_usd=57.12,
                        now=_PRE_OPEN)
     out = capsys.readouterr().out
-    assert "latest start 11:10Z" in out       # serial, at the mean latency
-    assert "latest start 12:20Z" in out       # concurrent, at the DECLARED 2x
-    assert "p90 latency 09:20Z" in out
-    assert "DECLARED, never yet measured" in out
+    assert "latest start 10:04Z" in out       # serial, at the mean latency
+    assert "latest start 11:47Z" in out       # concurrent, INFORMATIONAL only
+    assert "p90 latency 07:21Z" in out
+    # Provenance, not just the number.
+    assert "MEASURED_MAX_OVER_COMPLETED_NIGHTS" in out
+    assert "declared 4.8" in out
+    assert "SERIAL is the row to plan from" in out
+    # The claim "DECLARED, never yet measured" was retired: it HAS been measured,
+    # and the realized 1.545x was below the declared 2.0. The constant itself is
+    # frozen pre-registration and may only be amended attended, which is why the
+    # decision was moved off it instead.
+    assert "never yet measured" not in out
 
 
 def test_a_HOLIDAY_readiness_report_is_NOT_READY(capsys, prereg_readable):
