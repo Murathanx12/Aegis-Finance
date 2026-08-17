@@ -123,6 +123,41 @@ not be discovered on a night that needs it.
   spread across arms, which is the result the token-ceiling guard exists to
   produce.
 
+## Prod verified on `1fb34ef` — and the night's evidence is NOT in prod's ledger
+
+Pushed 60 + 6 at 20:05; CI green; commit flipped at **20:20**; the changed
+surface exercised live for content rather than status codes.
+
+```
+  GET  /api/risk-layer/evidence   confirmation "UNREACHABLE — permanently
+                                  screen-grade", k_eff 1.41, provenance
+                                  NOT_SELECTED_BY_LITERATURE, six claims with
+                                  their established flags (2 true / 4 false)
+  POST /api/risk-layer/exposure   weight 1.0 capped at realised_vol 13.92%,
+                                  12 decision-log rows, N24 bound
+                                  NOT_DEMONSTRATED (ucb 2.93 vs 2.42),
+                                  top-level keys exactly the checked six
+  canaries                        nav.all_fresh true, scheduler 7/7 ok
+```
+
+The first POST returned an **empty body at a 30s timeout on a cold container**
+and answers fully at 120s. Not a failure — but worth recording before someone
+reads that timeout as a broken endpoint.
+
+**The finding that matters.** Prod warns:
+
+> `ledger migration: /app/backend/data/optimus/predictions.jsonl holds 20546
+> record(s) absent from the persisted ledger at /data/optimus/predictions.jsonl
+> — NOT copied (the persisted ledger is authoritative once non-empty)`
+
+The count moved by **exactly 585**, which is Night 1. The repo file deploys to
+`/app/…`; the authoritative ledger is the persisted volume at `/data/…`. So
+**the night's forecasts are safe in git and are not in the production resolution
+path** — they would not be resolved even if the resolver were awake, and it is
+not (`prediction_ledger DEGRADED, 25 overdue, 0 resolved`). Two separate
+problems that compound, neither caused by this push, and both now on the
+post-night list ahead of the Railway work.
+
 ## What was deliberately NOT done
 
 * **No campaign `--commit`. No `LIVE_FORWARD` quarantine.** Reserved as attended
