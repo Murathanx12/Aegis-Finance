@@ -93,6 +93,10 @@ class Evidence:
     #: pending", and on this corpus it is not pending, it is unavailable.
     confirmation: str = ""
     confirmation_note: str = ""
+    #: S61: provenance is not citation — the test is SELECTION. Recorded here
+    #: because the moment outside work is cited, the question of whether it
+    #: CHOSE anything has to have an answer on file rather than in a memory.
+    provenance: str = ""
 
     def claim(self, outcome: str) -> Claim:
         for c in self.claims:
@@ -136,6 +140,21 @@ EVIDENCE = Evidence(
         "expects 0.44 drawdowns of 20% — below one. So the window is not "
         "unspent because we are saving it; it cannot be spent usefully, and "
         "no confirmation of this claim is pending."),
+    # S61 applied to the volatility-managed-portfolio literature, which was
+    # raised on 2026-08-17 AFTER this rule was declared and measured.
+    provenance=(
+        "NOT_SELECTED_BY_LITERATURE. The rule reached us through our own N11 "
+        "volatility ladder and N12/N18, and its configuration (15% target, cap "
+        "1.0, 60-day lookback, monthly rebalance) was declared conventional "
+        "before it was scored. Moreira & Muir and the critique literature "
+        "(Cederburg/O'Doherty/Wang/Yan; Barroso & Detzel) were raised after "
+        "both, so they are corroboration and spend no calendar. They are NOT "
+        "`hypothesis_source` and this claim is NOT capped at "
+        "ADAPTIVE_HISTORICAL_VALIDATION. That changes the moment one of their "
+        "OUTCOMES picks a rung for us — e.g. preferring the market book to "
+        "factor books because they found the managed market portfolio the "
+        "encouraging case. Corroboration that arrives after we chose is free; "
+        "corroboration that chooses is spent calendar."),
     claims=(
         Claim(outcome="annual_volatility_vs_buy_and_hold",
               effect=-4.95, units="pp/yr", mde=3.46, established=True,

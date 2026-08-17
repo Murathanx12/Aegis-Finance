@@ -117,6 +117,37 @@ def _sandbox_telemetry_to_tmp(tmp_path_factory, monkeypatch):
     yield
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _disk_cache_to_tmp(tmp_path_factory):
+    """Give the suite its own disk cache instead of the repo's live one.
+
+    FOUND 2026-08-17, AND FOUND THE EMBARRASSING WAY. `backend/cache.py` keeps
+    a diskcache at `<repo>/.cache`, shared by the running app and by pytest.
+    Verifying `/api/risk-layer/exposure` by hand wrote a real 200 response into
+    it, and `test_an_unpriceable_book_is_422...` — which patches the price
+    fetch to raise — then got a cache HIT and its 200 back. The refusal test
+    had been passing only because nobody had exercised the endpoint first.
+
+    That is the same family as the wall-clock fixture repaired this morning: a
+    test whose verdict depends on something outside the code under test reports
+    a defect on a CIRCUMSTANCE rather than on a change. Here the circumstance is
+    whether a human happened to call the endpoint, which is worse, because
+    exercising the thing you just built is exactly what we tell ourselves to do.
+
+    Session-scoped and switched at the module attribute, so nothing in the
+    production cache path changes and no test can reach the tracked directory.
+    """
+    try:
+        from backend import cache as _c
+        d = tmp_path_factory.mktemp("diskcache")
+        _c._CACHE_DIR = d
+        _c._disk_cache = None          # force a lazy re-init against the tmp dir
+        yield
+        _c._disk_cache = None
+    except Exception:                                            # noqa: BLE001
+        yield
+
+
 @pytest.fixture(autouse=True)
 def _block_network(request):
     """Block non-loopback sockets for non-slow/non-network tests (fail fast, loud)."""

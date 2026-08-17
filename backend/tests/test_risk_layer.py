@@ -147,6 +147,21 @@ def test_the_page_says_confirmation_is_UNREACHABLE_not_merely_pending():
     assert "0.44" in EVIDENCE.confirmation_note      # expected crises in 74mo
 
 
+def test_the_provenance_of_the_rule_is_on_file_not_in_a_memory():
+    """S61's test is SELECTION, and it needs an answer that survives the week.
+
+    The volatility-managed-portfolio literature was raised after this rule was
+    declared and measured, so it corroborates and spends nothing. The record
+    also names the thing that would change that, because the failure mode is a
+    later version quietly letting someone else's outcome pick a rung.
+    """
+    p = EVIDENCE.provenance
+    assert p.startswith("NOT_SELECTED_BY_LITERATURE")
+    assert "spend no calendar" in p
+    assert "ADAPTIVE_HISTORICAL_VALIDATION" in p   # names what a cap would be
+    assert "changes the moment" in p               # and what would trigger it
+
+
 # ── N24: the bound, and its verdict as arithmetic ───────────────────────────
 def test_the_sacrifice_bound_verdict_is_recomputed_not_trusted():
     """A stored verdict that stops following from its numbers must RAISE."""
