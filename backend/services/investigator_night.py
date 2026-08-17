@@ -222,9 +222,23 @@ class NightWouldSpanTheOpen(RuntimeError):
     """The night cannot finish before the session it is forecasting begins."""
 
 
-#: Measured per-call vendor latency, from Night 1's 224 REAL calls:
+#: Measured per-call vendor latency, from the VOID night's 224 REAL calls:
 #: median 6.6s, mean 8.7s, p90 15.6s. The mean drives the serial projection
 #: because a serial night is a long sum and the tail averages into it.
+#:
+#: KNOWN TO BE ~2x LOW, AND LEFT AT 8.7 ON PURPOSE (2026-08-17).
+#: Night 1's own receipt implies 17.24 s/call:
+#:   mean_cell_serial_seconds 610.572 / (5 arms x 7.085 calls) = 17.24
+#: so this constant understates the paid night by 1.98x. It is NOT corrected
+#: here, because raising it inflates the MODELLED SERIAL projection to 407 min —
+#: a bound on a fully serial night that this runner never performs (it runs at
+#: concurrency 5 and measured a genuine 3.529x per-cell speedup). Feeding the
+#: true latency into the serial model would refuse every start time that has
+#: ever worked, on a hypothetical.
+#:
+#: The decision no longer rests on this number at all: see
+#: `derive_night_duration_bound`, which bounds the quantity actually at risk —
+#: how long the run TAKES — from completed nights' measured durations.
 MEASURED_CALL_SECONDS = 8.7
 MEASURED_CALL_SECONDS_P90 = 15.6
 
@@ -424,6 +438,212 @@ def derive_runner_concurrency() -> int:
     return max(1, int(reg))
 
 
+#: THE TWO CLOCKS, NAMED. Both are legitimate; calling either "wall clock"
+#: without saying which is what produced a false calibration on 2026-08-17.
+#:
+#: Night 1's receipt carries both, and they differ by the snapshot lag:
+#:   CLOCK_RUN_ELAPSED         115.4 min  = elapsed_s 6921.8 / 60
+#:                                        = timing.actual_minutes
+#:                                        = run_night() t0 -> return
+#:   CLOCK_DECISION_TO_FINISH  133.6 min  = decision_lag_minutes_at_end
+#:                                        = snapshot decision_ts -> last cell
+#:   difference                 18.2 min  = decision_lag_minutes (assembly lag)
+#:
+#: A first version of the timing calibration used 133.6 as "the actual wall
+#: clock" and derived 199.5 s/cell from it. The true per-cell wall time is
+#: 173.0 s (`measured.mean_cell_wall_seconds`, and 173.0 x 40 = 115.3 min,
+#: which is CLOCK_RUN_ELAPSED). Every number derived from 133.6 was wrong.
+#:
+#: WHICH ONE THE GUARD FORECASTS: **CLOCK_RUN_ELAPSED**. The question is
+#: "will the run finish before the bell", and the run starts when the run
+#: starts. The snapshot lag is a separate, separately-guarded quantity
+#: (`assert_decision_time_fresh`), and adding it here would double-count it —
+#: the guard is invoked BEFORE the run, so the lag is already spent and already
+#: checked at that moment.
+CLOCK_RUN_ELAPSED = "run_night_elapsed"
+CLOCK_DECISION_TO_FINISH = "decision_ts_to_last_cell"
+DURATION_FORECAST_CLOCK = CLOCK_RUN_ELAPSED
+
+#: Multiplier applied to the worst completed night's measured duration to get a
+#: refusal bound. DECLARED, not fitted: 2.0 is a round number chosen before
+#: looking at what start time it permits, precisely so it cannot be tuned to
+#: bless a preferred schedule. With Night 1's 115.4 min it yields 230.8 min,
+#: which is MORE conservative than the 205.5 the modelled serial branch gave.
+DECLARED_DURATION_SAFETY_FACTOR = 2.0
+
+
+def derive_night_duration_bound(receipts_dir: Path | None = None) -> dict:
+    """A refusal bound on how long the run TAKES, from completed nights.
+
+    WHY THIS REPLACES THE MODELLED SERIAL BRANCH AS THE DECISION
+    ===========================================================
+    The serial branch was adopted on 2026-08-17 because "a verdict that holds
+    serially does not depend on an input the guard cannot verify". That was
+    wrong in an instructive way: it depends on `MEASURED_CALL_SECONDS`, which
+    Night 1 showed to be 1.98x low. Checked against the receipt:
+
+      modelled serial   205.5 min   (5 arms x 7.085 calls x 8.7 s x 40 cells)
+      TRUE serial       407.0 min   (measured mean_cell_serial_seconds x 40)
+      actual run        115.4 min   (CLOCK_RUN_ELAPSED)
+
+    So the modelled serial is HALF the true serial cost, and it is nonetheless
+    1.78x conservative against the real run — because ignoring a measured 3.529x
+    concurrency speedup roughly cancels the 1.98x latency understatement
+    (3.529 / 1.98 = 1.78). **Its safety came from two errors cancelling, which is
+    this project's signature failure mode, reproduced inside the fix written to
+    eliminate it.** A projection agreeing with reality is not evidence either
+    input is right — and here neither was.
+
+    So the bound is placed on the quantity actually at risk: the measured
+    duration of completed nights, times a DECLARED factor. Same three rules as
+    `derive_calls_per_cell`, for the same reasons: void and sandbox nights
+    excluded (a truncated night did not discover a faster way to run), the
+    MAXIMUM rather than the mean (an average bound is wrong half the time in the
+    direction that contaminates the trial), and the caller takes the more
+    conservative of this and the modelled serial so a measurement can only ever
+    tighten the guard.
+
+    Returns `{"value": minutes|None, "basis", "n_nights", "observed",
+    "safety_factor", "clock"}`. `value` is None with no completed night, and the
+    caller falls back to the modelled serial — with zero completed nights there
+    is nothing to measure, and refusing would make any campaign's first night
+    impossible.
+    """
+    d = receipts_dir or RECEIPTS_DIR
+    observed: list[dict] = []
+    try:
+        paths = sorted(Path(d).glob("*.json")) if Path(d).exists() else []
+    except Exception as e:                                        # noqa: BLE001
+        logger.warning("duration bound: receipts dir unreadable (%s)", e)
+        paths = []
+    for p in paths:
+        try:
+            r = json.loads(p.read_text(encoding=RECEIPT_ENCODING))
+        except Exception as e:                                     # noqa: BLE001
+            logger.warning("duration bound: receipt %s unreadable (%s) — "
+                           "skipped", p.name, e)
+            continue
+        if r.get("sandbox") or str(r.get("status")) != "ok":
+            continue
+        # CLOCK_RUN_ELAPSED, from whichever field carries it. `elapsed_s` is the
+        # primary because it is the runner's own stopwatch; `actual_minutes` is
+        # the same clock recorded by the timing block and is used as a fallback.
+        mins = None
+        if isinstance(r.get("elapsed_s"), (int, float)):
+            mins = float(r["elapsed_s"]) / 60.0
+        elif isinstance((r.get("timing") or {}).get("actual_minutes"),
+                        (int, float)):
+            mins = float(r["timing"]["actual_minutes"])
+        if mins is None or mins <= 0:
+            continue
+        # The projection error, kept beside the realization. The bound is
+        # computed from `minutes` alone — the error is here so a reader can see
+        # HOW WRONG the model was without recomputing it, which is the difference
+        # between logging a projection and calibrating against it.
+        row = {"night": r.get("night") or p.stem, "minutes": round(mins, 2)}
+        proj = (r.get("timing") or {}).get("projected_minutes")
+        if isinstance(proj, (int, float)) and proj > 0:
+            row["projected_minutes"] = proj
+            row["projection_error_minutes"] = round(mins - float(proj), 1)
+            row["projection_ratio"] = round(mins / float(proj), 3)
+        observed.append(row)
+    if not observed:
+        return {"value": None, "basis": "NO_COMPLETED_NIGHTS", "n_nights": 0,
+                "observed": [], "safety_factor": DECLARED_DURATION_SAFETY_FACTOR,
+                "clock": DURATION_FORECAST_CLOCK}
+    worst = max(o["minutes"] for o in observed)
+    return {
+        "value": round(worst * DECLARED_DURATION_SAFETY_FACTOR, 1),
+        "basis": "MEASURED_WORST_COMPLETED_NIGHT_X_DECLARED_FACTOR",
+        "n_nights": len(observed),
+        "observed": observed,
+        "worst_minutes": worst,
+        "safety_factor": DECLARED_DURATION_SAFETY_FACTOR,
+        "clock": DURATION_FORECAST_CLOCK,
+    }
+
+
+def git_provenance() -> dict:
+    """`{"git_commit": str|None, "git_dirty": bool|None}`.
+
+    THE FOURTH AND THIRD DIMENSIONS OF RECEIPT PROVENANCE (ordered 2026-08-17).
+    A night's arms are identified by four things, and each catches what the
+    others cannot:
+
+      implementation_version          what we BELIEVE changed (declared)
+      arm_implementation_fingerprint  what the arm module's bytes ACTUALLY are
+      git_commit                      which published tree it came from
+      git_dirty                       whether the tree matched that commit
+
+    The fingerprint is deliberately NOT replaced by the commit SHA: it is derived
+    from the source bytes that define arm behaviour, so it differs when the
+    behaviour differs even on an uncommitted edit, which a SHA cannot see. The
+    SHA adds what the fingerprint cannot: where to FIND that code again.
+
+    `git_dirty` is `None` when it cannot be determined, never `False`. A guard
+    that reports "clean" because it failed to look is the honour-system failure
+    in its most direct form, and here it would certify a night as reproducible
+    from a commit that does not contain the code that ran.
+    """
+    from backend.services.evidence_population import _source_commit
+    commit = None
+    try:
+        commit = _source_commit()
+    except Exception as e:                                        # noqa: BLE001
+        logger.warning("git provenance: commit unreadable (%s)", e)
+
+    dirty: bool | None = None
+    try:
+        import subprocess
+        out = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=str(_config.PROJECT_ROOT), capture_output=True, text=True,
+            timeout=20, check=False)
+        # A nonzero exit means we do not KNOW, so it stays None. Reading `dirty`
+        # off a failed command would be the same class of error as trusting an
+        # exit code through a pipe.
+        if out.returncode == 0:
+            dirty = bool(out.stdout.strip())
+        else:
+            logger.warning("git provenance: `git status --porcelain` exited %s "
+                           "— dirty state recorded as UNKNOWN rather than clean",
+                           out.returncode)
+    except Exception as e:                                        # noqa: BLE001
+        logger.warning("git provenance: dirty state UNKNOWN (%s) — recorded as "
+                       "None, never as clean", e)
+    return {"git_commit": commit, "git_dirty": dirty}
+
+
+def decision_minutes(*, k: int, n_arms: int,
+                     call_seconds: float | None = None,
+                     calls_per_cell: float | None = None
+                     ) -> "tuple[float, str, float, dict]":
+    """THE ONE PLACE the refusal duration is computed. Returns
+    `(minutes, basis, modelled_serial, duration_bound)`.
+
+    It exists because the tests used to recompute the boundary from
+    `projected_night_minutes` with module defaults while the guard used something
+    else, and a test that recomputes a boundary from a different basis than the
+    guard pins a coincidence. Both now call this.
+
+    THE MAX IS THE POINT. The modelled serial is retained as a FLOOR — not
+    because it is trustworthy (Night 1 showed it is half the true serial cost,
+    conservative only because a 1.98x latency understatement cancelled a 3.529x
+    concurrency speedup) but because with zero completed nights it is the only
+    number available. Taking the maximum means a measurement can only ever
+    TIGHTEN this guard, never license a start the previous basis refused.
+    """
+    if calls_per_cell is None:
+        calls_per_cell = derive_calls_per_cell()["value"]
+    modelled_serial = projected_night_minutes(
+        k=k, n_arms=n_arms, call_seconds=call_seconds,
+        calls_per_cell=calls_per_cell, arm_concurrency=1)
+    dur = derive_night_duration_bound()
+    if dur["value"] is not None and dur["value"] >= modelled_serial:
+        return dur["value"], "MEASURED_DURATION_BOUND", modelled_serial, dur
+    return modelled_serial, "MODELLED_SERIAL_PESSIMISTIC", modelled_serial, dur
+
+
 def derive_calls_per_cell(receipts_dir: Path | None = None) -> dict:
     """Calls per cell from COMPLETED nights' own receipts, conservatively.
 
@@ -612,10 +832,9 @@ def assert_night_fits_before_open(*, k: int, n_arms: int, now=None,
     # constant that was 48% low on the only night that has ever finished.
     cpc = derive_calls_per_cell()
 
-    minutes = projected_night_minutes(k=k, n_arms=n_arms,
-                                      call_seconds=call_seconds,
-                                      calls_per_cell=cpc["value"],
-                                      arm_concurrency=1)
+    minutes, decision_basis, modelled_serial, dur = decision_minutes(
+        k=k, n_arms=n_arms, call_seconds=call_seconds,
+        calls_per_cell=cpc["value"])
     # Informational only. Never compared against the bell. `None` when the
     # concurrency could not be derived — an omitted number, not a guessed one.
     minutes_at_runner_conc = (
@@ -649,7 +868,13 @@ def assert_night_fits_before_open(*, k: int, n_arms: int, now=None,
         "calls_per_cell_basis": cpc["basis"],
         "calls_per_cell_declared": cpc["declared"],
         "calls_per_cell_nights_measured": cpc["n_nights"],
-        "decision_basis": "SERIAL_PESSIMISTIC_ALWAYS",
+        "decision_basis": decision_basis,
+        "decision_clock": DURATION_FORECAST_CLOCK,
+        # Both candidates, so the reader can see which one bound and by how much
+        # — and so the day the modelled serial stops being the tighter one is a
+        # visible event rather than a silent change of regime.
+        "modelled_serial_minutes": round(modelled_serial, 1),
+        "measured_duration_bound": dur,
         "runner_concurrency_derived": derived_conc,
         "concurrency_basis": conc_basis,
         # The projection at the concurrency the runner will ACTUALLY use, beside
@@ -894,6 +1119,17 @@ class NightResult:
     #: one contrast; these two fields are what let the analysis say so.
     implementation_version: int = 0
     arm_implementation_fingerprint: str = ""
+    #: Where that code came from, and whether the tree matched it. `git_dirty`
+    #: None means UNKNOWN — a night stamped with a commit it was not actually
+    #: built from is worse than one that admits it does not know.
+    git_commit: str | None = None
+    git_dirty: bool | None = None
+    #: The schedule, as intended and as it happened. `start_delay_minutes` is
+    #: None when no plan was supplied — never 0, which would claim punctuality
+    #: nobody measured.
+    planned_start_utc: str | None = None
+    actual_start_utc: str | None = None
+    start_delay_minutes: float | None = None
     #: Per-arm failure counts, lifted to the top of the receipt.
     #:
     #: They are already inside `per_arm`, but a number that has to be dug out of
@@ -1425,6 +1661,7 @@ def run_night(features_by_ticker: dict[str, dict], *,
               balance_usd: float = DEFAULT_BALANCE_USD,
               decision_ts: str | None = None,
               arm_concurrency: int = MAX_ARM_CONCURRENCY,
+              planned_start: str | None = None,
               night: str | None = None) -> NightResult:
     """One night, end to end.
 
@@ -1448,6 +1685,36 @@ def run_night(features_by_ticker: dict[str, dict], *,
     night = night or str(date.today())
     since_iso = datetime.now(timezone.utc).isoformat(timespec="seconds")
     res = NightResult(night=night)
+    # WHEN THE RUN ACTUALLY BEGAN, and how late that was.
+    #
+    # Night 1 was ordered for 17:05 local and launched at 17:44 — 39 minutes
+    # late, unattended, which ate two thirds of the margin the guard had
+    # certified. Nothing recorded that, so the delay had to be reconstructed
+    # from log timestamps afterwards. A slip is a fact about the night, so it
+    # travels on the receipt: `planned_start` is whatever the operator or
+    # scheduler intended, and the delay is DERIVED rather than asserted.
+    res.actual_start_utc = datetime.now(timezone.utc).isoformat(
+        timespec="seconds")
+    if planned_start:
+        res.planned_start_utc = str(planned_start)
+        try:
+            _ps = datetime.fromisoformat(str(planned_start))
+            if _ps.tzinfo is None:
+                _ps = _ps.replace(tzinfo=timezone.utc)
+            res.start_delay_minutes = round(
+                (datetime.fromisoformat(res.actual_start_utc) - _ps
+                 ).total_seconds() / 60.0, 1)
+            if res.start_delay_minutes > 0:
+                logger.warning(
+                    "run_night: started %.1f min LATE (planned %s, actual %s) — "
+                    "a slip spends the guard's certified margin, and the guard "
+                    "was evaluated at the PLANNED time",
+                    res.start_delay_minutes, res.planned_start_utc,
+                    res.actual_start_utc)
+        except ValueError as e:
+            logger.warning("run_night: planned_start %r unparseable (%s) — the "
+                           "delay is recorded as None rather than zero",
+                           planned_start, e)
     res.sandbox = bool(sandbox)
     arm_concurrency = max(1, int(arm_concurrency))
     res.arm_concurrency = arm_concurrency
@@ -1717,6 +1984,9 @@ def run_night(features_by_ticker: dict[str, dict], *,
     res.truncation = truncation_report(res.per_arm)
     res.implementation_version = IMPLEMENTATION_VERSION
     res.arm_implementation_fingerprint = arm_implementation_fingerprint()
+    _gp = git_provenance()
+    res.git_commit = _gp["git_commit"]
+    res.git_dirty = _gp["git_dirty"]
     # Lifted out of per_arm so a clean night still shows the shape of its
     # failures. `tool_only` is the number that matters: malformed tool calls can
     # only be recorded by arms that use tools, so any nonzero value there is a

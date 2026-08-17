@@ -316,8 +316,28 @@ def readiness_report(snap: dict, sel: dict, *, as_of: str | None,
         print(f"  calls/cell       {_cpc['value']} "
               f"({_cpc['basis']}, {_cpc['n_nights']} completed night(s); "
               f"declared {_cpc['declared']})")
-        print("  SERIAL is the row to plan from — the guard refuses on it, and "
-              "every concurrency branch under-projects Night 1's real 133 min")
+        # THE CALIBRATION, SHOWN. The decision no longer rests on the modelled
+        # serial branch: it rests on the worst completed night's MEASURED duration
+        # times a declared factor, because Night 1 proved the model unreliable in
+        # both directions at once.
+        _dur = N2.derive_night_duration_bound()
+        if _dur["value"] is not None:
+            print(f"  duration bound   {_dur['value']:.0f} min "
+                  f"= worst completed night {_dur['worst_minutes']:.1f} min "
+                  f"x declared {_dur['safety_factor']}  "
+                  f"(clock: {_dur['clock']}, n={_dur['n_nights']})")
+            for _o in _dur["observed"][-3:]:
+                if "projection_ratio" in _o:
+                    print(f"    {_o['night']}  projected "
+                          f"{_o['projected_minutes']:.0f} -> took "
+                          f"{_o['minutes']:.0f} min "
+                          f"({_o['projection_ratio']:.2f}x, error "
+                          f"{_o['projection_error_minutes']:+.0f} min)")
+        else:
+            print("  duration bound   UNAVAILABLE — no completed night yet, so "
+                  "the modelled serial branch governs")
+        print("  PLAN FROM THE DECISION BASIS BELOW, not from either projection "
+              "row: the model was 1.66x optimistic on the night it certified.")
         try:
             # No concurrency argument: the guard derives it from the frozen
             # registration and decides on the serial branch regardless.
@@ -326,14 +346,25 @@ def readiness_report(snap: dict, sel: dict, *, as_of: str | None,
             _at_conc = _rep.get("projected_minutes_at_runner_concurrency")
             _tail = (
                 f"{_at_conc:.0f} min at the runner's derived concurrency "
-                f"{_rep['runner_concurrency_derived']} (INFORMATIONAL; measured "
-                f"102.7 against a 133 min reality)"
+                f"{_rep['runner_concurrency_derived']} (INFORMATIONAL — this "
+                f"row projected 103 for a night that took 115.4)"
                 if _at_conc is not None else
-                # Omitted, not guessed. The serial decision is unaffected.
-                f"runner concurrency NOT derivable ({_rep.get('concurrency_basis')}) "
-                f"— serial decision unaffected, it consumes no concurrency value")
-            print(f"  headroom         {_rep['minutes_of_headroom']:.0f} min "
-                  f"on the SERIAL branch (decision basis); " + _tail)
+                f"runner concurrency NOT derivable "
+                f"({_rep.get('concurrency_basis')}) — the decision is unaffected, "
+                f"it consumes no concurrency value")
+            # The basis is PRINTED rather than asserted in prose: it is now
+            # whichever of the modelled serial and the measured-duration bound is
+            # more conservative, and saying "SERIAL" when the duration bound is
+            # governing is the same second-source-of-truth defect one line down.
+            print(f"  DECISION         {_rep['projected_minutes']:.0f} min via "
+                  f"{_rep['decision_basis']} (clock {_rep['decision_clock']}); "
+                  f"modelled serial {_rep['modelled_serial_minutes']:.0f} min")
+            _lsz = _nxt - timedelta(minutes=_rep["projected_minutes"])
+            print(f"  LATEST SAFE START {_lsz.strftime('%H:%M')}Z  "
+                  f"— this is the boundary the guard enforces, and it MOVES with "
+                  f"measurement; do not quote a remembered clock time")
+            print(f"  headroom         {_rep['minutes_of_headroom']:.0f} min; "
+                  + _tail)
         except N2.NightWouldSpanTheOpen as exc:
             window_ok = False
             window_note = str(exc).split(".")[0]

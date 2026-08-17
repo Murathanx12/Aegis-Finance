@@ -140,6 +140,86 @@ def test_an_unreadable_source_refuses_rather_than_faking_a_stable_hash(
     assert N.arm_implementation_fingerprint() == "UNAVAILABLE"
 
 
+# ── four-dimensional provenance ────────────────────────────────────────────
+def test_provenance_is_four_dimensional_and_the_fingerprint_is_not_the_sha():
+    """Each of the four catches what the others cannot.
+
+      implementation_version          what we BELIEVE changed (declared)
+      arm_implementation_fingerprint  what the arm module's bytes ACTUALLY are
+      git_commit                      which published tree it came from
+      git_dirty                       whether the tree matched that commit
+
+    The fingerprint must NOT be replaced by the commit SHA: it is derived from
+    the source bytes defining arm behaviour, so it differs on an uncommitted edit
+    that a SHA cannot see. The SHA adds what the fingerprint cannot — where to
+    find that code again.
+    """
+    res = _run(good_llm, ok_tools)
+    d = res.as_dict()
+    assert d["implementation_version"] == N.IMPLEMENTATION_VERSION
+    fp = d["arm_implementation_fingerprint"]
+    assert fp and fp != "UNAVAILABLE"
+    assert "git_commit" in d and "git_dirty" in d
+    if d["git_commit"]:
+        assert fp != d["git_commit"][:len(fp)], (
+            "the behaviour fingerprint has become the commit SHA — it can no "
+            "longer see uncommitted changes to the arms")
+
+
+def test_git_dirty_is_UNKNOWN_rather_than_clean_when_it_cannot_be_read(
+        monkeypatch):
+    """A guard that reports 'clean' because it failed to look would certify a
+    night as reproducible from a commit that does not contain the code that ran.
+    """
+    import subprocess
+    monkeypatch.setattr(subprocess, "run",
+                        lambda *a, **k: (_ for _ in ()).throw(OSError("no git")))
+    out = N.git_provenance()
+    assert out["git_dirty"] is None, "absence of evidence read as 'clean'"
+
+
+def test_a_nonzero_git_exit_is_also_UNKNOWN_not_clean(monkeypatch):
+    """Reading `dirty` off a failed command is the exit-code-through-a-pipe error
+    in a new place."""
+    import subprocess
+
+    class _R:
+        returncode = 128
+        stdout = ""
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: _R())
+    assert N.git_provenance()["git_dirty"] is None
+
+
+# ── the schedule, as intended and as it happened ───────────────────────────
+def test_a_late_start_is_recorded_as_a_derived_delay():
+    """Night 1 launched 39 min late unattended and nothing recorded it, so the
+    slip had to be reconstructed from log timestamps. The guard was evaluated at
+    the PLANNED time, so a slip spends certified margin."""
+    res = N.run_night({f"T{i}": _feats(float(i)) for i in range(4)}, k=3,
+                      llm_call=good_llm, tool_runner=ok_tools, dry_run=True,
+                      sandbox=True,
+                      planned_start="2026-08-17T09:00:00+00:00")
+    d = res.as_dict()
+    assert d["planned_start_utc"] == "2026-08-17T09:00:00+00:00"
+    assert d["actual_start_utc"]
+    assert isinstance(d["start_delay_minutes"], float)
+
+
+def test_no_plan_means_the_delay_is_None_not_zero():
+    """0 would claim a punctuality nobody measured."""
+    d = _run(good_llm, ok_tools).as_dict()
+    assert d["planned_start_utc"] is None
+    assert d["start_delay_minutes"] is None
+    assert d["actual_start_utc"], "the actual start is always knowable"
+
+
+def test_an_unparseable_plan_does_not_fake_a_delay():
+    res = N.run_night({f"T{i}": _feats(float(i)) for i in range(4)}, k=3,
+                      llm_call=good_llm, tool_runner=ok_tools, dry_run=True,
+                      sandbox=True, planned_start="not-a-timestamp")
+    assert res.as_dict()["start_delay_minutes"] is None
+
+
 # ── per-arm failure counts ─────────────────────────────────────────────────
 def test_arm_failures_is_on_a_clean_receipt_with_zeros():
     """A field that only appears when it is bad teaches readers absence is fine.

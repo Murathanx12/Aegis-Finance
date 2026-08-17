@@ -877,23 +877,43 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
                       if record_hash(r) not in quarantined_hashes]
     else:
         q_overdue, actionable = [], overdue
+    # DEGRADED = ACTIONABLE overdue OR excessive quiet OR persistence failure.
+    #
+    # Adjudicated 2026-08-17 in review. The first version of the split put the
+    # quarantine message into `problems` — which was better than a bare overdue
+    # count, but `problems` is what computes DEGRADED, so 25 deliberately
+    # ungradeable rows kept the canary red forever. A permanently red canary is
+    # not a warning, it is alarm fatigue with extra steps: the next genuine
+    # actionable overdue record would arrive on a page that already said DEGRADED
+    # for months and nobody would look.
+    #
+    # The refinement that keeps it honest: quiet and persistence STILL degrade.
+    # The narrow bug was the quarantine, not the concept — "make health depend
+    # only on actionable overdue" would paint a dead or unpersisted ledger green,
+    # which is the failure this row exists to catch.
     problems = []
     if quiet > max_quiet_days:
         problems.append(f"no new forecast in {quiet} days")
     if actionable:
         problems.append(f"{len(actionable)} forecast(s) past due and unresolved")
+    if persistence["status"] != "ok":
+        problems.append(f"ledger persistence: {persistence['reason']}")
+
+    # Deliberate and NOT a fault, so it lives OUTSIDE `problems` — prominently
+    # counted, never degrading. Phrased so it cannot be mistaken for a resolver
+    # that stopped: it names the reason and where the decision sits.
+    notices = []
     if q_overdue:
-        # Deliberate, and NOT a fault. Phrased so it cannot be mistaken for a
-        # resolver that stopped: it names the reason and where the decision sits.
-        problems.append(
+        notices.append(
             f"{len(q_overdue)} forecast(s) past due but QUARANTINED (campaign "
             f"copies on the live volume) — the resolver is refusing these on "
             f"purpose, not failing to reach them; disposition is attended")
-    if persistence["status"] != "ok":
-        problems.append(f"ledger persistence: {persistence['reason']}")
     return {
         "status": "ok" if not problems else "DEGRADED",
         "problems": problems,
+        # Never empty-by-omission: an absent key would read as "no quarantine"
+        # to a caller that cannot tell missing from zero.
+        "notices": notices,
         "persistence": persistence,
         "n_records": len(rows),
         "n_void": sum(1 for r in rows if r.get("void_reason")),

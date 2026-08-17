@@ -82,9 +82,13 @@ def _guard_minutes(*, k=40, n_arms=5, call_seconds=None):
     measurement moves the tests and the guard together instead of turning six
     tests red on a correct change.
     """
-    return N.projected_night_minutes(
-        k=k, n_arms=n_arms, call_seconds=call_seconds, arm_concurrency=1,
-        calls_per_cell=N.derive_calls_per_cell()["value"])
+    # `decision_minutes` IS what the guard decides on — the max of the modelled
+    # serial and the measured-duration bound. Recomputing only the serial branch
+    # here would pin a coincidence again, which is how this helper was wrong for
+    # the second time in one day.
+    minutes, _basis, _serial, _dur = N.decision_minutes(
+        k=k, n_arms=n_arms, call_seconds=call_seconds)
+    return minutes
 
 
 def test_the_full_night_is_about_two_and_a_quarter_hours():

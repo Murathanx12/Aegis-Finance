@@ -232,8 +232,10 @@ def test_an_underivable_concurrency_does_not_block_the_serial_decision(
                                             tzinfo=timezone.utc))
     rep = N.assert_night_fits_before_open(k=5, n_arms=5, now=now)
 
-    assert rep["decision_basis"] == "SERIAL_PESSIMISTIC_ALWAYS"
-    assert rep["minutes_of_headroom"] > 0, "the serial decision must still stand"
+    assert rep["decision_basis"] in ("MEASURED_DURATION_BOUND",
+                                     "MODELLED_SERIAL_PESSIMISTIC")
+    assert rep["decision_clock"] == N.CLOCK_RUN_ELAPSED
+    assert rep["minutes_of_headroom"] > 0, "the decision must still stand"
     assert rep["concurrency_basis"] == "UNAVAILABLE_PREREG_UNREADABLE"
     assert rep["runner_concurrency_derived"] is None
     # OMITTED, not guessed. A number here would be an assumption wearing a
@@ -279,7 +281,8 @@ def test_the_decision_basis_and_every_input_basis_are_on_the_report(
     monkeypatch.setattr(MS, "next_session_open", lambda _now: bell)
     rep = N.assert_night_fits_before_open(k=5, n_arms=5, now=now)
 
-    assert rep["decision_basis"] == "SERIAL_PESSIMISTIC_ALWAYS"
+    assert rep["decision_basis"] in ("MEASURED_DURATION_BOUND",
+                                     "MODELLED_SERIAL_PESSIMISTIC")
     assert rep["runner_concurrency_derived"] == 5
     assert rep["calls_per_cell_basis"] in (
         "MEASURED_MAX_OVER_COMPLETED_NIGHTS", "DECLARED_EXCEEDS_MEASURED",
@@ -290,8 +293,8 @@ def test_the_decision_basis_and_every_input_basis_are_on_the_report(
     # the report is claiming concurrency makes the night longer.
     assert (rep["projected_minutes_at_runner_concurrency"]
             <= rep["projected_minutes"])
-    # And the decision must NOT have used it.
-    assert rep["projected_minutes"] == pytest.approx(
-        N.projected_night_minutes(k=5, n_arms=5, arm_concurrency=1,
-                                  calls_per_cell=rep["calls_per_cell_assumed"]),
-        abs=0.2)
+    # And the decision must NOT have used the concurrent projection: it is the
+    # max of the modelled serial and the measured-duration bound.
+    expected, _b, _s, _d = N.decision_minutes(
+        k=5, n_arms=5, calls_per_cell=rep["calls_per_cell_assumed"])
+    assert rep["projected_minutes"] == pytest.approx(expected, abs=0.2)

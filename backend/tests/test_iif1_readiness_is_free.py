@@ -339,7 +339,21 @@ def test_the_report_states_the_LATEST_SAFE_START_in_both_modes(
     # Provenance, not just the number.
     assert "MEASURED_MAX_OVER_COMPLETED_NIGHTS" in out
     assert "declared 4.8" in out
-    assert "SERIAL is the row to plan from" in out
+    # THE DECISION BASIS IS PRINTED, NOT NAMED IN PROSE (corrected 2026-08-17).
+    # This used to assert "SERIAL is the row to plan from". Serial stopped being
+    # the basis when Night 1 showed the modelled serial is half the TRUE serial
+    # cost and conservative only because a 1.98x latency understatement cancelled
+    # a 3.529x concurrency speedup. The decision is now the more conservative of
+    # the modelled serial and the worst completed night's MEASURED duration times
+    # a declared factor — so the report prints which one governed rather than
+    # claiming one always does.
+    assert "DECISION" in out and "clock run_night_elapsed" in out
+    assert ("MEASURED_DURATION_BOUND" in out
+            or "MODELLED_SERIAL_PESSIMISTIC" in out)
+    assert "LATEST SAFE START" in out
+    assert "MOVES with measurement" in out, (
+        "the boundary must be printed as derived, so nobody quotes a remembered "
+        "clock time back at the guard")
     # The claim "DECLARED, never yet measured" was retired: it HAS been measured,
     # and the realized 1.545x was below the declared 2.0. The constant itself is
     # frozen pre-registration and may only be amended attended, which is why the

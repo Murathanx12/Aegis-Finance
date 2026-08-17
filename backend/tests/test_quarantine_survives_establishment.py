@@ -239,11 +239,56 @@ def test_health_names_the_refusal_instead_of_a_bare_overdue_count(split):
                               quarantined_hashes=EP.quarantined_hashes())
     assert split_row["n_overdue_quarantined"] == 5
     assert split_row["n_overdue_actionable"] == 1
-    assert any("QUARANTINED" in p and "on purpose" in p
-               for p in split_row["problems"]), (
+    # The words live in `notices`, NOT `problems` — `problems` computes DEGRADED,
+    # and 25 deliberately ungradeable rows would hold the canary red forever.
+    assert any("QUARANTINED" in n and "on purpose" in n
+               for n in split_row["notices"]), (
         "the row must say the refusal is deliberate, in words, not leave it to "
         "be inferred from a number")
+    assert not any("QUARANTINED" in p for p in split_row["problems"]), (
+        "a deliberate quarantine must not sit in the list that degrades health")
     assert split_row["n_overdue"] == 6, "the total must still be reported"
+    # It still degrades, because ONE overdue record here is genuinely actionable.
+    assert split_row["status"] == "DEGRADED"
+
+
+def test_a_quarantine_alone_does_not_degrade_but_quiet_and_persistence_do(split):
+    """DEGRADED = actionable overdue OR excessive quiet OR persistence failure.
+
+    Adjudicated in review 2026-08-17. A permanently red canary is alarm fatigue
+    with extra steps — the next genuine actionable record would arrive on a page
+    that had said DEGRADED for months. But "depend only on actionable overdue"
+    would paint a DEAD or UNPERSISTED ledger green, which is the failure this row
+    exists to catch, so those two still degrade.
+    """
+    from backend.services.belief_state import ledger_health
+
+    repo, vol = split
+    copies = [_copy_record(i) for i in range(5)]
+    _write(EP.ledger_path(EP.EvidencePopulation.CAMPAIGN_FORWARD), copies)
+    live = EP.ledger_path(EP.EvidencePopulation.LIVE_FORWARD)
+    _write(live, copies)                       # quarantined ONLY, none genuine
+
+    q = EP.quarantined_hashes()
+    # These records mature 30 days after `made_at`, so ANY date at which they are
+    # overdue is also >7 days quiet. The quiet threshold is widened here so the
+    # test isolates the one condition it is about; the quiet case below uses the
+    # default and asserts the opposite, which is what keeps this honest.
+    row = ledger_health(live, today=date(2025, 3, 6), quarantined_hashes=q,
+                        max_quiet_days=60)
+    assert row["n_overdue_quarantined"] == 5
+    assert row["n_overdue_actionable"] == 0
+    assert row["status"] == "ok", (
+        f"a pure quarantine must not degrade; problems={row['problems']}")
+    assert row["notices"], "and it must still be reported prominently"
+
+    # Quiet DOES degrade — a ledger that stopped growing is the failure mode this
+    # row exists for, and the quarantine fix must not have painted it green.
+    quiet_row = ledger_health(live, today=date(2025, 6, 2), quarantined_hashes=q)
+    assert quiet_row["status"] == "DEGRADED"
+    assert any("no new forecast" in p for p in quiet_row["problems"])
+    assert quiet_row["n_overdue_actionable"] == 0, (
+        "and it degrades on QUIET, not by smuggling the quarantine back in")
 
 
 def test_a_clean_live_ledger_with_nothing_due_is_not_refused(split):
