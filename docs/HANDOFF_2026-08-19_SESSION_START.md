@@ -1,8 +1,10 @@
 # SESSION START 2026-08-19 — what two days built, broke, and owe
 
 The retrospective of 2026-08-17/18 and the standing queue. A fresh session
-reads this, then `docs/HANDOFF_2026-08-18_BRAIN_ORDER_{15..19}.md` for the
-binding detail. Prod verified `ok` on `da13120` (the latest commit) at
+reads this, then **`docs/HANDOFF_2026-08-19_BRAIN_ORDER_20.md`** (issued
+after external review round 2 was adjudicated —
+`docs/EXTERNAL_REVIEW_ADJUDICATION_2026-08-18.md`), then
+`docs/HANDOFF_2026-08-18_BRAIN_ORDER_{15..19}.md` for the binding detail. Prod verified `ok` on `da13120` (the latest commit) at
 19:46 on 08-18; all 10 lanes fresh; working tree clean; everything pushed.
 
 ---
@@ -12,8 +14,9 @@ binding detail. Prod verified `ok` on `da13120` (the latest commit) at
 **Aim: keep the IIF-1 campaign accruing cleanly.** SUCCEEDED — Night 1 (585
 records) and Night 2 (600 records, 120/120 cells, 0 dropped, $0.918) both
 `status ok`. Night 2 ran under `implementation_version 2` from the frozen
-worktree with a launch manifest. First resolutions land **Thursday 08-21**
-(396 at h=1).
+worktree with a launch manifest. First resolutions land **Friday 08-21**
+(396 at h=1). Sequence: Wed 08-19 Night 3 · Thu 08-20 Night 4 · Fri 08-21
+first resolutions.
 
 **Aim: nights without a human.** MOSTLY DONE — launcher built with derived
 refusals and receipts; scheduled task registered, then repaired twice by
@@ -35,8 +38,9 @@ AGK → AGK's own detection floor (over-charges liquid names) → declared 1–5
 one-way band → **TAQ entitlement verified by probes** → a real calibration
 panel (182 tickers × 23–24 days of NBBO quoted spreads,
 `backend/data/optimus/taq_quoted_spreads_calibration.csv`). Verdict: **the
-declared band was right** — 15 below / 136 inside / 29 above, median 2.73bp
-one-way vs the 3.0 midpoint. TAQ retires the band per NAME. Still owed:
+declared band was right** — 16 below / 137 inside / 29 above of 182 retired
+names (post GOOGL/CMCSA re-pull), median 2.73bp one-way vs the 3.0 midpoint.
+TAQ retires the band per NAME. Still owed:
 effective (not quoted) spreads via the trade-quote join — a daemon job.
 
 **Aim: start the research engine (Orders 15–17).** STARTED, not finished —
@@ -67,6 +71,11 @@ Same-day self-corrections, each now a standing rule:
 - `sym_root` caps at 4 chars ⇒ GOOGL/CMCSA silently absent from the panel.
 - A climatology was measured for a cell that does not exist (caught by the
   per-cell refusal while being written).
+- **This document shipped with two defects caught by external review
+  (08-18):** it called 08-21 a Thursday (it is a Friday), and it paired the
+  pre-recovery TAQ split 15/136/29 (n=180) with the 182-name panel — the
+  stale-summary failure mode, in the retrospective about eliminating it.
+  Both corrected in place; the external brief carried the same TAQ count.
 - Roll spread had been scoring NOISE live (floor 265–280bp vs a 0–100bp
   scoring band) — 16.7 points on a live score; Amihud, measured the same
   way, was ANNOTATED not amputated. Absorption reads 0.42 on independent
@@ -83,7 +92,7 @@ still unenrolled (sibling repo) · the write-only-field backlog.
 Gates: G1 operational · G2 partial (high-freq event families) · G5 three
 negative receipts (conditional SHAPE adds nothing — every conditional build
 must confront it by name) · **G7 ready with ZERO resolved campaign evidence —
-Thursday is the first resolution ever**. Demonstrated edge: still 0%, by
+Friday 08-21 is the first resolution ever**. Demonstrated edge: still 0%, by
 design — the clocks (IC trials 2027, lanes 24mo) have not matured. The
 research line's honest position: nothing published clears +3%/yr net in
 tradable names; the affordable frontier is RELATIVE × RISK; the four-system
@@ -91,7 +100,7 @@ architecture (frozen forward lane / research factory / learning brain /
 shadow arena) is adopted and one-quarter built.
 
 The two most decision-relevant open numbers in the whole programme:
-1. **Thursday's first resolutions** — the campaign stops being a promise.
+1. **Friday's (08-21) first resolutions** — the campaign stops being a promise.
 2. **The 14-point mirror-vs-conviction gap is EQUAL WEIGHT, not HRP** — the
    autopsy's cross-arm replay (conviction's book under mirror weighting and
    vice versa) is the next cut and directly improves Murat's own investing.
@@ -108,11 +117,11 @@ The two most decision-relevant open numbers in the whole programme:
 5. LANE-AUTOPSY cross-arms (the EW finding's next cut).
 6. NEURAL-RELATIVE-VALUE-1 labels (unblocked: TAQ names + surviving-band
    names; G5 named in the registration).
-7. Thursday: attended resolve run; grader consumes it; nothing read beyond
+7. Friday 08-21: attended resolve run; grader consumes it; nothing read beyond
    what the read gate licenses (nothing — the gate opens at 40 nights).
 
 Attended (Murat): Brier-bar signature (draft exists, `c2a85f2`) · NET prereg
-signature (when drafted) · Thursday resolve · arm launcher after 3/3 ·
+signature (when drafted) · Friday 08-21 resolve · arm launcher after 3/3 ·
 LOSS amendment · Track E prereg · one sibling-repo session (read-gate) ·
 arena lane flags · Bloomberg 2026 window check when HKU term starts.
 

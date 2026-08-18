@@ -17,7 +17,7 @@ a job daemon with pre-committed priorities, a canonical ML dataset
 which measured AUC≈0.50 vs MDE 0.034 while magnitude/vol are learnable), and
 a cost model just calibrated against real millisecond-TAQ NBBO spreads
 (182 tickers: median 2.73bp one-way; the declared 1–5bp band held with
-15/136/29 below/inside/above). Our own negative results bind us: 206
+16/137/29 below/inside/above). Our own negative results bind us: 206
 published predictors have median −0.12%/yr net; a learned conditional SHAPE
 added nothing in three registered tests (G5); 87–95% of the earnings effect
 arrives while the market is shut; terminal-return claims price at ~95 years

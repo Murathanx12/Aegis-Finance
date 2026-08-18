@@ -5,7 +5,7 @@
 
 WHY (Order 18 §3.2)
 ===================
-Thursday is the first time the resolver, the grader and the paired read will
+Friday 08-21 is the first time the resolver, the grader and the paired read will
 run in sequence against real outcomes. Every piece has been tested; the
 SEQUENCE has not, and the pieces were built on different days by someone who
 had a different part of the system in mind each time. A pipeline whose parts
@@ -21,7 +21,7 @@ PROVES: the four stages hand their outputs to each other in the shapes they
 expect, the receipt is writable, the grader's refusals fire where they should,
 and the campaign ledger is byte-identical afterwards.
 
-DOES NOT PROVE: that Thursday's prices will be fetchable, that the outcomes
+DOES NOT PROVE: that Friday's prices will be fetchable, that the outcomes
 will be what the fake ones are, or that the read will be licensed. The
 synthetic outcomes here are drawn at the MEASURED base rate so the printed
 Brier is in a realistic range — a rehearsal that produced an absurd number
@@ -109,7 +109,7 @@ def _synthetic_prices(seed: int):
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="dress_rehearsal_0821")
     ap.add_argument("--as-of", default="2026-08-21",
-                    help="the date Thursday's run will use")
+                    help="the date Friday's (08-21) run will use")
     ap.add_argument("--workdir", default="",
                     help="where the copy lives; a temp dir by default")
     ap.add_argument("--seed", type=int, default=SEED)
@@ -151,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
                              price_fetch=_synthetic_prices(a.seed))
     except Exception as e:                                     # noqa: BLE001
         print(f"      STAGE FAILED: {type(e).__name__}: {e}")
-        print("      This is exactly what the rehearsal is for. Thursday would "
+        print("      This is exactly what the rehearsal is for. Friday would "
               "have failed here, attended, with the window closing.")
         return 1
     print(f"      due              {report.get('due')}")
@@ -192,7 +192,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if out is None:
         # The grader's synthetic path lives behind the script's --synthetic
-        # flag rather than a library entry point; call it the same way Thursday
+        # flag rather than a library entry point; call it the same way Friday
         # would, so the rehearsal exercises the real surface.
         import subprocess
         rc = subprocess.run(
@@ -213,16 +213,16 @@ def main(argv: list[str] | None = None) -> int:
     if after != before:
         print("\n  *** THE REAL LEDGER CHANGED DURING A REHEARSAL. ***")
         print("  Something in this pipeline writes to the population path "
-              "rather than the path it was handed. Do NOT run Thursday's "
+              "rather than the path it was handed. Do NOT run Friday's "
               "resolve until that is found.")
         return 2
     print("      IDENTICAL — the rehearsal touched a copy, and this is the "
           "check rather than the claim")
 
     print("\n" + "=" * 74)
-    print("REHEARSAL COMPLETE. Thursday's sequence runs.")
+    print("REHEARSAL COMPLETE. Friday's (08-21) sequence runs.")
     print(f"  workdir: {work}")
-    print("  Thursday, for real:  python -m scripts.resolve_campaign_ledger "
+    print("  Friday 08-21, for real:  python -m scripts.resolve_campaign_ledger "
           "--dry-run   then --commit")
     print("=" * 74)
     return 0
