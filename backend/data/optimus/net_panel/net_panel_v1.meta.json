@@ -1,0 +1,29 @@
+{
+  "panel": "AEGIS-NET-PANEL-1",
+  "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\leakage_probe\\panel.parquet",
+  "source_sha256": "a75997cdecfdd91dce38d7c0ac83eb4b7e9b763569a41dae64d7327715fe5c49",
+  "horizon_days": 20,
+  "barriers": [
+    [
+      0.2,
+      0.1
+    ],
+    [
+      0.4,
+      0.2
+    ],
+    [
+      0.75,
+      0.3
+    ]
+  ],
+  "magnitude_thresholds": [
+    0.03,
+    0.05,
+    0.1
+  ],
+  "min_history": 252,
+  "decision_freq": "month-end trading day",
+  "generated_at": "2026-08-18T14:04:07+00:00",
+  "deterministic": "same source bytes -> same rows; no RNG anywhere"
+}
