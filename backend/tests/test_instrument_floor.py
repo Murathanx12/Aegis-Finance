@@ -276,3 +276,97 @@ def test_the_agk_floor_reproduces_the_track_R_finding():
         f"harness says {prof.detection_floor:.1f}bp, Track R measured 23-49bp "
         f"by hand; a disagreement here invalidates the sweep")
     assert math.isfinite(prof.null_median)
+
+
+# ── the sweep's findings, wired into the instruments that report them ──────
+def test_rolls_floor_is_wired_into_the_liquidity_score():
+    """The sweep is only worth running if something refuses afterwards.
+
+    Roll's scoring band is "<5bps = 100, 100bps+ = 0" and its measured floor at
+    the production 21-day window is 265bp — so the ENTIRE band lies below the
+    floor, and the component was carrying 20% of the composite as noise.
+    """
+    from backend.services import liquidity_risk as LR
+
+    below = LR.compute_liquidity_score(
+        amihud_illiq=0.05, roll_spread=0.0030,        # 30bp, under the floor
+        avg_dollar_volume_mm=500.0, turnover_pct=0.4)
+    assert below["roll_spread_unresolvable"] is True
+    assert "roll_spread" not in below["components"], (
+        "an unresolvable component must be DROPPED, not scored")
+    assert "does NOT mean the spread is small" in below["roll_spread_note"]
+
+
+def test_a_resolvable_roll_reading_still_scores_normally():
+    """The refusal must not swallow the cases the estimator CAN see, or the
+    fix is just a deletion wearing a rule."""
+    from backend.services import liquidity_risk as LR
+
+    above = LR.compute_liquidity_score(
+        amihud_illiq=0.05, roll_spread=0.0400,        # 400bp, resolvable
+        avg_dollar_volume_mm=5.0, turnover_pct=0.05)
+    assert above["roll_spread_unresolvable"] is False
+    assert "roll_spread" in above["components"]
+
+
+def test_the_surviving_weights_are_RENORMALISED_not_left_short():
+    """Dropping a 20% component without renormalising would shrink every
+    composite by a fifth and read as a market-wide liquidity deterioration."""
+    from backend.services import liquidity_risk as LR
+
+    out = LR.compute_liquidity_score(
+        amihud_illiq=0.05, roll_spread=0.0030,
+        avg_dollar_volume_mm=500.0, turnover_pct=0.4)
+    assert sum(out["weights_used"].values()) == pytest.approx(0.80)
+    # ...and the composite is a proper weighted mean over what survived.
+    manual = sum(c["score"] * c["weight"]
+                 for c in out["components"].values()) / 0.80
+    assert out["composite"] == pytest.approx(round(manual, 0))
+    assert 0.0 <= out["composite"] <= 100.0
+
+
+def test_an_unresolvable_roll_is_NOT_replaced_by_a_neutral_fifty():
+    """A neutral score is not the absence of a claim — it is the claim that
+    this name is averagely liquid, which is exactly what nobody measured."""
+    from backend.services import liquidity_risk as LR
+
+    out = LR.compute_liquidity_score(
+        amihud_illiq=0.05, roll_spread=0.0030,
+        avg_dollar_volume_mm=500.0, turnover_pct=0.4)
+    assert all(c["score"] != 50 or k != "roll_spread"
+               for k, c in out["components"].items())
+
+
+def test_the_declared_floor_matches_what_the_sweep_measures_at_that_window():
+    """The constant is a MEASUREMENT, and this asserts it still is. If the
+    estimator or the window changes, this fails rather than letting a stale
+    number keep gating a live score."""
+    from backend.services import liquidity_risk as LR
+
+    prof = IF.profile_instrument(IF.INSTRUMENTS["roll_spread"],
+                                 n=LR._ROLL_WINDOW, sims=80,
+                                 measure_stability=False)
+    # Generous band: the floor is a simulated quantity and the point is that
+    # the declared constant is the right ORDER, not a pinned decimal.
+    assert 0.5 * prof.detection_floor <= LR.ROLL_DETECTION_FLOOR_BPS <= 2.0 * prof.detection_floor, (
+        f"declared {LR.ROLL_DETECTION_FLOOR_BPS}bp vs measured "
+        f"{prof.detection_floor:.0f}bp at n={LR._ROLL_WINDOW}")
+
+
+def test_ABSENT_and_UNRESOLVABLE_are_kept_apart():
+    """Opposite remedies. ABSENT is fixed by getting data; UNRESOLVABLE is not
+    fixed by any amount of the same data. Collapsing them is how a permanent
+    blindness gets logged as a transient gap."""
+    from backend.services import liquidity_risk as LR
+
+    absent = LR.compute_liquidity_score(
+        amihud_illiq=0.05, roll_spread=None,
+        avg_dollar_volume_mm=500.0, turnover_pct=0.4)
+    assert absent["roll_spread_absent"] is True
+    assert absent["roll_spread_unresolvable"] is False
+
+    blind = LR.compute_liquidity_score(
+        amihud_illiq=0.05, roll_spread=0.0030,
+        avg_dollar_volume_mm=500.0, turnover_pct=0.4)
+    assert blind["roll_spread_absent"] is False
+    assert blind["roll_spread_unresolvable"] is True

@@ -169,10 +169,22 @@ class TestLiquidityScore:
             avg_dollar_volume_mm=10000.0,
             turnover_pct=0.5,
         )
-        # amihud=0.0 means perfectly liquid → amihud score should be 100
+        # amihud=0.0 means perfectly liquid → amihud score should be 100.
+        # This is the original regression: 0.0 is a VALUE, not missing data.
         assert score["components"]["amihud"]["score"] == 100.0
-        # roll_spread=0.0 → spread score should be 100
-        assert score["components"]["roll_spread"]["score"] == 100.0
+
+        # roll_spread=0.0 no longer scores 100, and the change is deliberate.
+        # INSTRUMENT-FLOOR-SWEEP-1 measured Roll's detection floor at 265bp on
+        # this module's 21-day window, so a reading of 0.0 is not evidence of a
+        # zero spread — it is exactly what Roll returns on a tape with no
+        # spread information in it at all. Scoring it 100 read the estimator's
+        # noise floor as "perfectly liquid".
+        assert score["roll_spread_unresolvable"] is True
+        assert "roll_spread" not in score["components"]
+        # ...and the original intent survives: 0.0 is still handled as a value
+        # rather than as missing data, which is what put it below the floor
+        # rather than into the `is None` branch.
+        assert score["composite"] > 0
 
 
 class TestZeroValueDisplay:

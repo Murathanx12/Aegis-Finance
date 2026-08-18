@@ -48,6 +48,28 @@ _MIN_OBS = _LIQ_CFG.get("min_observations", 60)
 _AMIHUD_WINDOW = _LIQ_CFG.get("amihud_window", 21)  # Rolling window for Amihud
 _ROLL_WINDOW = _LIQ_CFG.get("roll_window", 21)       # Rolling window for Roll spread
 
+#: Roll's DETECTION FLOOR in basis points — what the estimator reads on a tape
+#: with NO spread at all. MEASURED by INSTRUMENT-FLOOR-SWEEP-1
+#: (`scripts/instrument_floor_sweep.py`, `docs/INSTRUMENT_FLOORS.md`) at this
+#: module's own `_ROLL_WINDOW`, not quoted from a paper:
+#:
+#:      n=21 (production)  null median  52bp   floor 265bp
+#:      n=60               null median  88bp   floor 238bp
+#:      n=250              null median  92bp   floor 301bp
+#:
+#: THE CONSEQUENCE, AND IT IS NOT SUBTLE. The Roll component of the liquidity
+#: score maps "<5bps = 100, 100bps+ = 0" — a band that lies ENTIRELY BELOW the
+#: estimator's own floor. Every Roll reading a normally-liquid name produces is
+#: therefore indistinguishable from a zero-spread tape, and it was carrying 20%
+#: of the composite. That is not a small effect measured badly; it is noise
+#: with a weight.
+#:
+#: Order 18 §4: an instrument's floor is part of the instrument. Below it the
+#: component is DROPPED and the remaining weights renormalise — never replaced
+#: by the floor value, and never by a neutral 50, because a neutral score is a
+#: claim that the name is averagely liquid.
+ROLL_DETECTION_FLOOR_BPS = 265.0
+
 
 def compute_amihud_illiquidity(
     returns: pd.Series,
@@ -284,6 +306,10 @@ def compute_liquidity_metrics(
         "metrics": {
             "amihud_illiquidity": round(current_amihud, 4) if current_amihud is not None else None,
             "roll_spread_bps": round(current_roll * 10000, 1) if current_roll is not None else None,
+            "roll_spread_resolvable": (
+                bool(current_roll * 10000 >= ROLL_DETECTION_FLOOR_BPS)
+                if current_roll is not None else None),
+            "roll_detection_floor_bps": ROLL_DETECTION_FLOOR_BPS,
             "avg_dollar_volume_mm": round(avg_dollar_vol, 1),
             "daily_turnover_pct": round(turnover, 3) if turnover is not None else None,
             "shares_outstanding_mm": round(shares_out / 1e6, 1) if shares_out > 0 else None,
@@ -332,12 +358,27 @@ def compute_liquidity_score(
 
     # Roll spread score (lower spread = higher score)
     # <5bps = 100, 10bps = 80, 50bps = 40, 100bps+ = 0
+    #
+    # ...and that entire band sits BELOW Roll's own detection floor
+    # (ROLL_DETECTION_FLOOR_BPS, measured at this module's window). A reading
+    # under the floor is not a small spread — it is a spread the estimator
+    # cannot see, so the component is DROPPED rather than scored.
+    # Two different absences, kept apart because the remedies are opposite:
+    # ABSENT means no reading at all (fetch failed, too little history) and is
+    # fixed by getting data. UNRESOLVABLE means there IS a reading and the
+    # instrument cannot see the quantity, which no amount of the same data
+    # fixes. Collapsing them into one "roll missing" flag is how a permanent
+    # blindness gets logged as a transient gap.
+    roll_unresolvable = False
+    roll_absent = roll_spread is None
     if roll_spread is not None:
         spread_bps = roll_spread * 10000
-        spread_score = max(0, min(100, 100 - spread_bps))
-    else:
-        spread_score = 50
-    scores["roll_spread"] = {"score": round(spread_score, 0), "weight": 0.20}
+        if spread_bps < ROLL_DETECTION_FLOOR_BPS:
+            roll_unresolvable = True
+        else:
+            spread_score = max(0, min(100, 100 - spread_bps))
+            scores["roll_spread"] = {"score": round(spread_score, 0),
+                                     "weight": 0.20}
 
     # Turnover score
     if turnover_pct is not None and turnover_pct > 0:
@@ -346,8 +387,12 @@ def compute_liquidity_score(
         turn_score = 50
     scores["turnover"] = {"score": round(turn_score, 0), "weight": 0.10}
 
-    # Weighted composite
-    composite = sum(s["score"] * s["weight"] for s in scores.values())
+    # Weighted composite over whatever components SURVIVED, renormalised.
+    # Renormalised rather than scored-at-50, because a neutral score is not the
+    # absence of a claim — it is the claim that this name is averagely liquid.
+    total_w = sum(s["weight"] for s in scores.values())
+    composite = (sum(s["score"] * s["weight"] for s in scores.values()) / total_w
+                 if total_w > 0 else 50.0)
 
     # Classification
     if composite >= 80:
@@ -365,6 +410,19 @@ def compute_liquidity_score(
         "composite": round(composite, 0),
         "tier": tier,
         "components": scores,
+        # Named, never silent: a composite computed over three components
+        # instead of four is a different number, and a reader who is not told
+        # will compare it with one that was not.
+        "roll_spread_unresolvable": roll_unresolvable,
+        "roll_spread_absent": roll_absent,
+        "roll_spread_note": (
+            f"Roll's estimate was below its own measured detection floor of "
+            f"{ROLL_DETECTION_FLOOR_BPS:.0f}bp, so the component was DROPPED "
+            f"and the remaining weights renormalised. This does NOT mean the "
+            f"spread is small — it means daily returns over a "
+            f"{_ROLL_WINDOW}-day window cannot resolve it."
+            if roll_unresolvable else ""),
+        "weights_used": {k: v["weight"] for k, v in scores.items()},
     }
 
 

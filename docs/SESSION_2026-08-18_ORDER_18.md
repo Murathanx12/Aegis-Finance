@@ -75,6 +75,41 @@ what is the bias inside the range · how much data before it stabilises.
 the floor, and refuses a profile measured at a different `n` rather than
 interpolating.
 
+### The refusal is wired in, and the first thing it caught was live
+
+Order 18 §2 asked for the refusal to be installed in any instrument found
+reporting outside its range. Roll is that instrument, and re-profiling it at
+the window production actually uses made it worse:
+
+| n | null median | detection floor |
+|---:|---:|---:|
+| **21 (production `_ROLL_WINDOW`)** | 52bp | **265bp** |
+| 60 | 88bp | 238bp |
+| 250 | 92bp | 301bp |
+
+**The liquidity score maps Roll as `<5bps = 100, 100bps+ = 0` — a band lying
+entirely below the estimator's own floor**, carrying **20% of the composite**.
+Every Roll reading a normally-liquid name produced was indistinguishable from a
+zero-spread tape. That is not a small effect measured badly; it is noise with a
+weight.
+
+The component is now **dropped when unresolvable and the surviving weights
+renormalise** — never replaced by the floor value, and never by a neutral 50,
+because a neutral score is not the absence of a claim but the claim that the
+name is averagely liquid. `roll_spread_unresolvable` and `weights_used` are on
+the response, because a composite over three components instead of four is a
+different number and a reader who is not told will compare it against one that
+was not.
+
+One existing test changed, deliberately: it asserted `roll_spread=0.0` scores
+100. That encoded the inference this work invalidates — a Roll reading of zero
+is exactly what the estimator returns on a tape with no spread information in
+it. Its original regression intent (0.0 is a value, not missing data) is
+preserved.
+
+`ROLL_DETECTION_FLOOR_BPS` is pinned by a test that re-measures it at
+`_ROLL_WINDOW`, so a stale constant cannot keep gating a live score.
+
 **The harness corrected me while it was being built.** I wrote a test asserting
 that an instrument reading `truth + 3` has a detection floor of 3. It does not:
 a deterministic offset is **bias**, which you can subtract. A floor comes from
@@ -237,6 +272,13 @@ inert one, which is the only reason to believe the other 167.
 
 **Still open in code:**
 - The 167 write-only fields each need wire-up-or-delete.
-- Roll's 280bp floor is not yet wired to a refusal at its call sites in
-  `liquidity_risk`; the sweep names it, the guard is not yet installed there.
 - The lane replay has not been reconciled against production `paper_nav`.
+- **Amihud, Kyle and the copula tail estimator have measured floors and no
+  guard at their call sites yet.** Roll was done because its band sat wholly
+  below its floor; the other three need the same read before wiring, since a
+  refusal installed without checking where the live inputs actually fall would
+  be a guess wearing a rule.
+
+**Deployed:** the liquidity-score change alters a served endpoint
+(`/api/liquidity`), so unlike the rest of this session it is not
+Railway-skippable and needs prod verification after the build.
