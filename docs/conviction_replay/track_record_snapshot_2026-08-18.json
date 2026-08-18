@@ -1,0 +1,442 @@
+{
+ "note": "READ-ONLY snapshot of the authoritative paper_nav for the two book lanes. Prod remains authoritative; this file exists so the cross-arm replay can reconcile offline (Order 20 SS5) without a network call per run.",
+ "source": "GET https://aegis-finance-production.up.railway.app/api/pi/track-record",
+ "fetched_at": "2026-08-18T13:57:36+00:00",
+ "payload_sha256": "ef179cf913d64bc6430b2a6f023842cb865afd94f74b736a4c1d1dd522614771",
+ "lanes": {
+  "mirror": [
+   {
+    "date": "2026-06-16",
+    "value": 100041.38,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-17",
+    "value": 97653.83,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-18",
+    "value": 93150.78,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-19",
+    "value": 96262.14,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-22",
+    "value": 96262.14,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-23",
+    "value": 93747.14,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-24",
+    "value": 91648.52,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-25",
+    "value": 88989.96,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-26",
+    "value": 85805.47,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-29",
+    "value": 90140.46,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-30",
+    "value": 90489.83,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-01",
+    "value": 89377.08,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-02",
+    "value": 90261.91,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-03",
+    "value": 89238.96,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-06",
+    "value": 89238.96,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-07",
+    "value": 91552.91,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-08",
+    "value": 89073.96,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-09",
+    "value": 88997.41,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-10",
+    "value": 87822.41,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-13",
+    "value": 86736.35,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-14",
+    "value": 85110.09,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-15",
+    "value": 85782.65,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-16",
+    "value": 86801.11,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-17",
+    "value": 84805.75,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-20",
+    "value": 84203.35,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-21",
+    "value": 83205.88,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-22",
+    "value": 83403.85,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-23",
+    "value": 81190.4,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-24",
+    "value": 77723.45,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-27",
+    "value": 77723.45,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-07-28",
+    "value": 79624.08,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-07-29",
+    "value": 79872.11,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-07-30",
+    "value": 77660.46,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-07-31",
+    "value": 77565.49,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-03",
+    "value": 77015.96,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-04",
+    "value": 78862.98,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-07",
+    "value": 77811.73,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-10",
+    "value": 81375.2,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-11",
+    "value": 81118.63,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-12",
+    "value": 82250.19,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-13",
+    "value": 81683.2,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-14",
+    "value": 83213.58,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-17",
+    "value": 83202.94,
+    "config_version": "d0d0eaf42936bde5"
+   }
+  ],
+  "conviction": [
+   {
+    "date": "2026-06-16",
+    "value": 100041.38,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-17",
+    "value": 97355.99,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-18",
+    "value": 99166.7,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-19",
+    "value": 100822.34,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-22",
+    "value": 101102.44,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-23",
+    "value": 102932.51,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-24",
+    "value": 99793.87,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-25",
+    "value": 103782.48,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-26",
+    "value": 102628.98,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-29",
+    "value": 105340.59,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-06-30",
+    "value": 106620.13,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-01",
+    "value": 101811.09,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-02",
+    "value": 104117.07,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-03",
+    "value": 104572.87,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-06",
+    "value": 104572.87,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-07",
+    "value": 105526.98,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-08",
+    "value": 103451.96,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-09",
+    "value": 103140.54,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-10",
+    "value": 102595.11,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-13",
+    "value": 102593.88,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-14",
+    "value": 96135.42,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-15",
+    "value": 97023.25,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-16",
+    "value": 96655.39,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-17",
+    "value": 91528.54,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-20",
+    "value": 91476.9,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-21",
+    "value": 88903.69,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-22",
+    "value": 91624.91,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-23",
+    "value": 90429.41,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-24",
+    "value": 89276.51,
+    "config_version": "628456e40c2de26e"
+   },
+   {
+    "date": "2026-07-27",
+    "value": 89276.51,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-07-28",
+    "value": 90407.36,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-07-29",
+    "value": 88077.29,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-07-30",
+    "value": 84302.52,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-07-31",
+    "value": 90132.14,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-03",
+    "value": 91733.91,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-04",
+    "value": 93994.61,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-07",
+    "value": 94869.93,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-10",
+    "value": 99500.96,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-11",
+    "value": 98954.98,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-12",
+    "value": 99426.89,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-13",
+    "value": 96863.22,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-14",
+    "value": 97069.82,
+    "config_version": "d0d0eaf42936bde5"
+   },
+   {
+    "date": "2026-08-17",
+    "value": 97364.12,
+    "config_version": "d0d0eaf42936bde5"
+   }
+  ]
+ }
+}
