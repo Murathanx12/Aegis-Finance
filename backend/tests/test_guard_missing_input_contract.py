@@ -326,8 +326,34 @@ def _case_lane_autopsy():
             ReplayRefused, "a replay over a name with no prices")
 
 
+def _case_net_panel():
+    from pathlib import Path
+
+    from backend.services.net_panel import PanelRefused, load_price_panel
+    # The missing input is the SOURCE ITSELF. A materializer that defaults an
+    # absent price file to an empty panel hands the tournament a dataset that
+    # looks like a dataset — every downstream number would be a fact about
+    # nothing, formatted like a fact about the market.
+    return (lambda: load_price_panel(Path("Z:/does/not/exist.parquet")),
+            PanelRefused, "a panel materialized from an absent price source")
+
+
+def _case_net_tournament():
+    from pathlib import Path
+
+    from backend.services.net_tournament import (TournamentRefused,
+                                                 assert_signed)
+    # The missing input is the AUTHORIZATION. The tournament runs a declared,
+    # signed protocol or it does not run (canon §6) — an absent prereg read as
+    # permission would be the most permissive answer a missing input can give.
+    return (lambda: assert_signed(Path("Z:/does/not/exist.md")),
+            TournamentRefused, "a tournament run with no pre-registration")
+
+
 CASES = {
     "lane_autopsy": _case_lane_autopsy,
+    "net_panel": _case_net_panel,
+    "net_tournament": _case_net_tournament,
     "instrument_floor": _case_instrument_floor,
     "taq_calibration": _case_taq_calibration,
     "cost_model": _case_cost_model,
