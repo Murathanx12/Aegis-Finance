@@ -1,0 +1,83 @@
+{
+  "daemon": "AEGIS-RESEARCH-DAEMON-1",
+  "generated_at": "2026-08-18T13:54:33+00:00",
+  "submitted": 13,
+  "tests_run": 0,
+  "multiplicity_m": 0,
+  "m_basis": "COUNTED_BY_THE_DAEMON_THAT_RAN_THEM",
+  "by_state": {
+    "REJECTED": 0,
+    "SHELF": 0,
+    "PROMISING": 0,
+    "NEED_MORE_DATA": 13
+  },
+  "shelved_underpowered": 0,
+  "queue_depth": 13,
+  "next_up": [
+    {
+      "hypothesis_id": "HJ-EFFECTIVE-SPREAD-1",
+      "priority": 0.09,
+      "powered": true,
+      "question": "Effective spreads on the TAQ calibration overlap are materially inside quoted (d"
+    },
+    {
+      "hypothesis_id": "EVENT-RESOLUTION-CURVE-1",
+      "priority": 0.07,
+      "powered": true,
+      "question": "For earnings/FDA/M&A/guidance, the tradable fraction of the announcement move (a"
+    },
+    {
+      "hypothesis_id": "CONVEXITY-PRESERVATION-1",
+      "priority": 0.068,
+      "powered": true,
+      "question": "Trim/stop rules destroy right-tail terminal wealth vs hold on +20/+40/+75/+100 c"
+    },
+    {
+      "hypothesis_id": "INFORMATION-HALF-LIFE-1",
+      "priority": 0.0525,
+      "powered": true,
+      "question": "Edge from delayed disclosures (PTR, 13D/G, Form 4, revisions) decays measurably "
+    },
+    {
+      "hypothesis_id": "INFORMATION-PROCESSING-GAP-1",
+      "priority": 0.035,
+      "powered": true,
+      "question": "Identical fundamental surprise resolves differently by the attention/processing "
+    },
+    {
+      "hypothesis_id": "REACTION-GAP-1",
+      "priority": 0.033,
+      "powered": true,
+      "question": "After a large shock to A, economically-exposed B reprices with measurable delay "
+    },
+    {
+      "hypothesis_id": "OPTIONS-EQUITY-DISLOCATION-1",
+      "priority": 0.025,
+      "powered": true,
+      "question": "Event-conditioned disagreement between option-implied expectations and equity re"
+    },
+    {
+      "hypothesis_id": "MODEL-DISAGREEMENT-1",
+      "priority": 0.022,
+      "powered": true,
+      "question": "Disagreement TOPOLOGY across model families (numeric vs options vs event/LLM) pr"
+    },
+    {
+      "hypothesis_id": "CROSS-ENTITY-LAG-1",
+      "priority": 0.020625,
+      "powered": true,
+      "question": "Supplier/customer/competitor shocks propagate with measurable lag on a FROZEN PI"
+    },
+    {
+      "hypothesis_id": "SEQUENCE-OF-EVIDENCE-1",
+      "priority": 0.015,
+      "powered": true,
+      "question": "The ARRIVAL ORDER of evidence (insider -> revision -> skew -> event vs permuted "
+    }
+  ],
+  "reserved_windows": [
+    "EXPORT:M4-SELECTOR:crsp_us|2020-06-01..2026-07-17|portfolio_utility_net",
+    "EXPORT:IV-ORACLE-GAP-1:wm0_18_etfs|2020-06-01..2026-07-17|tail_pinball_h20"
+  ],
+  "note": "SHELF is not a graveyard: an underpowered job keeps the states in which it appeared and returns when more date blocks exist. Underpowered is not false (\u00a719/\u00a764)."
+}

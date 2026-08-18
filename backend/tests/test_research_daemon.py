@@ -84,8 +84,73 @@ def test_unreadable_reserved_windows_refuse_rather_than_reading_as_none(tmp_path
 
 
 def test_an_absent_reserved_file_is_an_empty_list_not_a_refusal(tmp_path):
-    """Absent is a legitimate starting state; unreadable is not."""
+    """Absent is a legitimate starting state FOR THE SUPPLEMENT FILE — the
+    source of record is the budget ledger, whose absence refuses (below)."""
     assert RD.load_reserved_windows(tmp_path / "nope.json") == []
+
+
+# ── 1b. reserved windows are DERIVED from the budget ledger ────────────────
+# Until 2026-08-18 the only source was the hand-authored JSON above, which no
+# producer writes — so in the live tree nothing was reserved and every job was
+# submittable. The guard now derives what it checks from data it can see.
+
+def test_an_absent_budget_ledger_refuses_derivation(tmp_path):
+    """The ledger cannot be legitimately absent where submitting research jobs
+    makes sense; 'nothing reserved' from a missing ledger is the permissive
+    answer a missing input must never produce."""
+    with pytest.raises(RD.JobRefused, match="most permissive"):
+        RD.derive_reserved_windows(tmp_path / "nope.jsonl")
+
+
+def test_export_budgets_derive_windows_and_screen_budgets_do_not(tmp_path):
+    p = tmp_path / "ledger.jsonl"
+    rows = [
+        {"kind": "budget", "window_id": "u1|2020-01-01..2021-01-01|dd",
+         "purpose": "EXPORT", "declared_by": "T1"},
+        {"kind": "budget", "window_id": "u2|2020-01-01..2021-01-01|dd",
+         "purpose": "SCREEN", "declared_by": "T2"},
+        {"kind": "reservation",
+         "window_id": "u1|2020-01-01..2021-01-01|dd"},
+    ]
+    p.write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")
+    ws = RD.derive_reserved_windows(p)
+    assert [w.universe for w in ws] == ["u1"], \
+        "SCREEN budgets are m-counting for screens, not reserved evidence"
+    assert ws[0].start == "2020-01-01" and ws[0].end == "2021-01-01"
+    assert ws[0].outcome == "dd"
+
+
+def test_a_malformed_export_window_id_refuses_rather_than_dropping(tmp_path):
+    """A malformed reservation dropped silently is a reservation that does
+    not bind — the failure is loud or the guard is decorative."""
+    p = tmp_path / "ledger.jsonl"
+    p.write_text(json.dumps({"kind": "budget", "window_id": "not-a-window",
+                             "purpose": "EXPORT"}), encoding="utf-8")
+    with pytest.raises(RD.JobRefused, match="does not parse"):
+        RD.derive_reserved_windows(p)
+
+
+def test_the_default_daemon_sees_the_LIVE_ledgers_reservations():
+    """BOTH WORLDS: asserted against the real ledger the repo ships, not only
+    constructed inputs. The M4-SELECTOR confirmation window (crsp_us /
+    portfolio_utility_net / 2020-06-01..2026-07-17) has been declared since
+    2026-08-16 and a default daemon must refuse a job that would read it."""
+    d = RD.ResearchDaemon()
+    assert any(w.universe == "crsp_us" and w.outcome == "portfolio_utility_net"
+               for w in d.reserved), \
+        "the live confirmation_budget.jsonl no longer yields the M4 window"
+    with pytest.raises(RD.JobRefused, match="RESERVED"):
+        d.submit(_job(universe="crsp_us", outcome="portfolio_utility_net",
+                      start="2021-01-01", end="2022-01-01"))
+
+
+def test_an_explicit_empty_reservation_is_a_declaration_not_a_default():
+    """`reserved=[]` is a written statement at the call site; `reserved=None`
+    means 'look at the world'. Conflating them was the original defect."""
+    d = RD.ResearchDaemon(reserved=[])
+    assert d.reserved == []
+    assert d.submit(_job(universe="crsp_us", outcome="portfolio_utility_net",
+                         start="2021-01-01", end="2022-01-01"))
 
 
 # ── 2. priority is frozen at submission ────────────────────────────────────
