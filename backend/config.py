@@ -1001,7 +1001,10 @@ config: dict = {
             ],
             "Communications": [
                 "META", "GOOGL", "NFLX", "DIS", "CMCSA", "TMUS", "VZ", "T",
-                "RBLX", "SPOT", "EA", "TTWO", "WBD", "CHTR",
+                # EA delisted 2026-08-04 (PIF-led $55B buyout completed;
+                # quotes ghosted on for days after trades stopped — found by
+                # the trades-vs-quotes count in the effective-spread pull).
+                "RBLX", "SPOT", "TTWO", "WBD", "CHTR",
             ],
             "Consumer Staples": [
                 "COST", "PG", "KO", "WMT", "PEP", "PM", "MO", "CL",

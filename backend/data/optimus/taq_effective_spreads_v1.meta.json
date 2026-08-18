@@ -1,0 +1,20 @@
+{
+ "dataset": "TAQ-EFFECTIVE-SPREADS-1 (v1)",
+ "generated_at": "2026-08-18T15:16:45+00:00",
+ "n_rows": 4224,
+ "n_names": 184,
+ "n_days": 23,
+ "basis": "wct prevailing-NBBO; 09:45-15:45; nbo>nbb>0; eff<=2000bp; NO tr_scond/odd-lot/venue filtering",
+ "verdict_status": "DEFERRED - HJ-EFFECTIVE-SPREAD-1 verdict is NOT recorded from v1; trade-condition conventions (external review Q3) decide the refined computation. The unfiltered ratio includes midpoint/dark prints (eff=0 at mid), which drag the ratio BELOW the marketable-flow ratio by construction.",
+ "headline_sensitivities": {
+  "effective_over_quoted_median_of_names": 0.369,
+  "note": "below the documented 0.5-0.9 for marketable flow, as expected when midpoint executions are included; segmentation by venue/condition is the refinement",
+  "effective_one_way_bps_median": 1.076,
+  "vs_declared_band_EFFECTIVE_basis": {
+   "below": 84,
+   "inside": 98,
+   "above": 2
+  }
+ },
+ "ea_delisting_found": "EA trades end 2026-08-04 (buyout completed); 8 quote-ghost days in the quoted panel flagged in its meta amendment_3"
+}

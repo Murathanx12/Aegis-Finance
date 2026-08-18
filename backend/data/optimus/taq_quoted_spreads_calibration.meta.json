@@ -217,7 +217,7 @@
   "20260813",
   "20260814"
  ],
- "amended_at_utc": "2026-08-18T14:33:37.576521+00:00",
+ "amended_at_utc": "2026-08-18T15:16:45.106549+00:00",
  "amendment": "sym_root is capped at 4 chars: GOOGL=GOOG+L, CMCSA=CMCS+A were never queried by the hyphen-only mapping and returned SILENCE, not an error. Re-pulled and appended.",
  "recorded_absences": {
   "PXD": "delisted 2024 (dead universe entry) - DELIBERATE, no re-pull exists"
@@ -226,5 +226,6 @@
  "resolved_absences": {
   "MMC": "renamed MRSH 2026-01-14; re-pulled 2026-08-18 night under MRSH (23 days)",
   "SQ": "trades as XYZ; re-pulled 2026-08-18 night under XYZ (23 days)"
- }
+ },
+ "amendment_3": "EA DELISTED 2026-08-04 (PIF-led buyout completed; $210/share cash). Its quoted rows for 20260805-20260814 are QUOTE-GHOSTS: NBBO quotes persisted after trading ceased, so 8 of its 23 days measure market-maker placeholders, not a tradable spread. Found by the effective-spread pull (trades vanish exactly 08-05). EA quoted-cost row should be read as measured-through-08-04 only; universe entry is now DEAD."
 }
