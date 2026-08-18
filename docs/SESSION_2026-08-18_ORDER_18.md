@@ -110,6 +110,29 @@ preserved.
 `ROLL_DETECTION_FLOOR_BPS` is pinned by a test that re-measures it at
 `_ROLL_WINDOW`, so a stale constant cannot keep gating a live score.
 
+### Verified in production, all three branches
+
+`0ef7692` deployed; CI green, commit flipped, `nav.all_fresh` true. The changed
+surface was exercised live at `/api/analytics/liquidity/{ticker}`:
+
+| ticker | Roll reads | resolvable | new composite | under the old rule | Δ |
+|---|---:|:--:|---:|---:|---:|
+| AAPL | **0.0bp** | no | 96.0 | 97.1 | −1.1 |
+| PLUG | 357.3bp | **yes** | 71.0 | 71.0 | 0.0 |
+| SOC | 123.5bp | no | **82.0** | 65.3 | **+16.7** |
+
+- **AAPL reads 0.0bp.** Apple's true spread is ~1bp; Roll returns literally
+  zero. The old rule read that as "perfectly liquid" and handed it a free 100
+  at weight 0.2.
+- **PLUG is unchanged** — 357bp is above the floor, so the component is kept.
+  The refusal does not swallow the readings the estimator can actually see,
+  which is what stops it being a deletion wearing a rule.
+- **SOC moves 16.7 points**, from `liquid` to `highly_liquid`. The old rule
+  scored its 123.5bp noise reading as `100 − 123.5 → 0` and charged it a fifth
+  of the composite. **The error was not symmetric or small**: names whose noise
+  read low got flattered, names whose noise read high got punished, and both
+  were reading the same nothing.
+
 **The harness corrected me while it was being built.** I wrote a test asserting
 that an instrument reading `truth + 3` has a detection floor of 3. It does not:
 a deterministic offset is **bias**, which you can subtract. A floor comes from
