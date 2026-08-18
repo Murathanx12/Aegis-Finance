@@ -156,14 +156,39 @@ def test_an_unresolvable_name_gets_a_band_and_NOT_the_floor_value():
     assert band.provenance == CM.DECLARED_CONSERVATIVE
 
 
-# ── TAQ: unverified is not absent ──────────────────────────────────────────
-def test_taq_calibration_refuses_on_NOT_RUN_rather_than_NOT_AVAILABLE():
-    """The WRDS lesson with a receipt: the route was declared dead for weeks
-    when the blocker was port filtering. The refusal has to say which of the
-    two it is, because the remedies are opposite."""
-    with pytest.raises(CM.CostRefused, match="nobody has tried"):
-        CM.calibrate_agk_against_taq()
-    assert CM.TAQ_ENTITLEMENT == "UNVERIFIED"
+# ── TAQ: the check that ran ────────────────────────────────────────────────
+def test_the_taq_refusal_was_discharged_by_running_the_check_not_by_waiting():
+    """This test used to assert a refusal reading "nobody has tried".
+
+    It is inverted deliberately, and the inversion is the finding: the WRDS
+    entitlement record listed TAQ as absent, the standing lesson said a
+    catalogue read is not an entitlement check, the check ran on 2026-08-18 and
+    returned entitled. A refusal grounded in NOT-RUN is discharged by running,
+    which is the whole reason it was worded that way rather than as "we do not
+    have TAQ".
+    """
+    assert CM.TAQ_ENTITLEMENT == "VERIFIED_2026-08-18"
+    assert CM.MEASURED_TAQ_QUOTED in CM._PROVENANCES
+
+
+def test_entitlement_alone_retires_no_band():
+    """The distinction the flip above is most likely to erase.
+
+    Entitlement is a fact about a subscription. A retired band is a fact about
+    a NAME, and it needs a measurement of that name. A verified entitlement with
+    no panel must still refuse.
+    """
+    from backend.services import taq_calibration as TC
+    with pytest.raises(TC.TaqRefused, match="no TAQ panel"):
+        TC.load_panel(path="does-not-exist.csv")
+
+
+def test_quoted_and_effective_taq_are_different_provenances():
+    """A quoted spread and an effective spread are different quantities, and
+    the name is the only thing still carrying that distinction three call sites
+    downstream. Both count as measured; neither is the other."""
+    assert CM.MEASURED_TAQ != CM.MEASURED_TAQ_QUOTED
+    assert CM.OneWayBps(1.0, CM.MEASURED_TAQ_QUOTED).measured
 
 
 # ── the split is the reportable fact ───────────────────────────────────────
@@ -172,7 +197,7 @@ def test_the_segmentation_summary_reports_the_declared_fraction():
             + [{"branch": CM.DECLARED_CONSERVATIVE}] * 7)
     s = CM.summarise_segmentation(rows)
     assert s["n_names"] == 10 and s["fraction_declared"] == 0.7
-    assert s["taq_entitlement"] == "UNVERIFIED"
+    assert s["taq_entitlement"] == CM.TAQ_ENTITLEMENT
 
 
 def test_an_empty_segmentation_is_refused_not_reported_as_full_coverage():

@@ -320,6 +320,82 @@ def test_acceptance_needs_three_consecutive_trading_dates(launches):
     assert acc["n_consecutive"] == 3
 
 
+def test_an_unsatisfiable_criterion_is_a_DIFFERENT_verdict_from_not_yet(
+        launches):
+    """The defect the first real scheduled receipt exposed, 2026-08-18.
+
+    `AegisIIF1NightLauncher` is registered `LogonType=Interactive`, so it runs
+    inside the logged-on session with a console and its stdin IS a terminal.
+    Every genuine firing therefore records `contradicted: true` and counts for
+    nothing. Waiting produces `n_consecutive: 0` on Wednesday, Thursday and
+    Friday, and the discovery lands on the morning arming was meant to happen.
+
+    A refusing guard and a dead job produce identical silence. This test pins
+    the two apart: the scheduler HAS fired, so "not yet" is the wrong story.
+    """
+    now = datetime(2026, 8, 20, 9, 0, tzinfo=timezone.utc)
+    for d in ("2026-08-18", "2026-08-19", "2026-08-20"):
+        _write_receipt(launches, d, contradicted=True)
+    acc = L.acceptance_report(launch_dir=launches, now=now)
+    assert acc["accepted"] is False, "an unsatisfiable criterion never arms"
+    assert acc["verdict"] == "UNSATISFIABLE_IN_THIS_ENVIRONMENT"
+    assert acc["unsatisfiable"] is True
+    assert acc["n_scheduled_receipts"] == 3
+    assert acc["n_scheduled_contradicted"] == 3
+    assert "LogonType=Interactive" in acc["diagnosis"]
+    assert "Do NOT relax" in acc["diagnosis"], (
+        "the remedy must point at the confounded input, not at the test that "
+        "is reading it correctly")
+
+
+def test_no_scheduled_receipts_at_all_is_NOT_ACCEPTED_not_unsatisfiable(
+        launches):
+    """The discrimination the new verdict must not blur.
+
+    Nothing has fired yet, so waiting IS the remedy. Reporting that as
+    unsatisfiable would send someone to change a registration that works.
+    """
+    now = datetime(2026, 8, 20, 9, 0, tzinfo=timezone.utc)
+    _write_receipt(launches, "2026-08-20", invocation=L.INVOCATION_MANUAL)
+    acc = L.acceptance_report(launch_dir=launches, now=now)
+    assert acc["verdict"] == "NOT_ACCEPTED"
+    assert acc["unsatisfiable"] is False and acc["diagnosis"] is None
+    assert acc["n_scheduled_receipts"] == 0
+
+
+def test_every_acceptance_verdict_is_REACHABLE(launches):
+    """A threshold that makes a branch unenterable is a dead branch.
+
+    The new verdict was added because one branch was unreachable in practice;
+    adding a third that is unreachable in code would be the same mistake with
+    fresh paint. All three are constructed here from receipts alone.
+    """
+    now = datetime(2026, 8, 20, 9, 0, tzinfo=timezone.utc)
+    seen = set()
+
+    seen.add(L.acceptance_report(launch_dir=launches, now=now)["verdict"])
+    for d in ("2026-08-18", "2026-08-19", "2026-08-20"):
+        _write_receipt(launches, d, contradicted=True)
+    seen.add(L.acceptance_report(launch_dir=launches, now=now)["verdict"])
+    for d in ("2026-08-18", "2026-08-19", "2026-08-20"):
+        _write_receipt(launches, d, contradicted=False)
+    seen.add(L.acceptance_report(launch_dir=launches, now=now)["verdict"])
+
+    assert seen == {"NOT_ACCEPTED", "UNSATISFIABLE_IN_THIS_ENVIRONMENT",
+                    "ACCEPTED"}
+
+
+def test_one_good_receipt_among_contradicted_ones_is_NOT_unsatisfiable(
+        launches):
+    """Unsatisfiable means the environment disqualifies EVERYTHING. One clean
+    receipt proves it does not, so the remedy is waiting again."""
+    now = datetime(2026, 8, 20, 9, 0, tzinfo=timezone.utc)
+    _write_receipt(launches, "2026-08-18", contradicted=True)
+    _write_receipt(launches, "2026-08-20", contradicted=False)
+    acc = L.acceptance_report(launch_dir=launches, now=now)
+    assert acc["verdict"] == "NOT_ACCEPTED" and acc["unsatisfiable"] is False
+
+
 def test_a_gap_breaks_the_streak(launches):
     now = datetime(2026, 8, 20, 9, 0, tzinfo=timezone.utc)
     for d in ("2026-08-18", "2026-08-20"):          # 08-19 missing

@@ -109,13 +109,24 @@ def _changed_python(repo: Path) -> list[Path]:
     return [repo / f for f in sorted(out) if (repo / f).is_file()]
 
 
-def _competing_python() -> list[str]:
-    """Other python processes, so an 83-minute suite has a named cause."""
+def _competing_python() -> list[str] | None:
+    """Other python processes, so an 83-minute suite has a named cause.
+
+    RETURNS `None` WHEN IT COULD NOT LOOK, never an empty list. This check ran
+    for weeks printing "competing python processes: 0" on a machine with no
+    `psutil` installed — so it printed the all-clear without ever looking, which
+    is the one output a diagnostic must never fake. Found 2026-08-18 while an
+    IIF-1 night run and four MCP servers were demonstrably alive and the gate
+    still said 0.
+
+    Same rule as `observe_invocation`'s `stdin_isatty`: "we did not look" must
+    not read the same as "we looked and there was nothing".
+    """
     me = str(__import__("os").getpid())
     try:
         import psutil                                          # type: ignore
     except ImportError:
-        return []
+        return _competing_python_fallback(me)
     out = []
     for pr in psutil.process_iter(["pid", "name", "cmdline"]):
         try:
@@ -128,6 +139,30 @@ def _competing_python() -> list[str]:
                 out.append(f"pid {pr.info['pid']}: {cmd}")
         except Exception:                                      # noqa: BLE001
             continue
+    return out
+
+
+def _competing_python_fallback(me: str) -> list[str] | None:
+    """No psutil: ask Windows directly rather than reporting a clean machine."""
+    if sys.platform != "win32":
+        return None
+    try:
+        p = subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command",
+             "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | "
+             "ForEach-Object { \"$($_.ProcessId)`t$($_.CommandLine)\" }"],
+            capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if p.returncode != 0:
+        return None
+    out = []
+    for line in p.stdout.splitlines():
+        pid, _, cmd = line.partition("\t")
+        pid = pid.strip()
+        if not pid.isdigit() or pid == me:
+            continue
+        out.append(f"pid {pid}: {cmd.strip()[:110]}")
     return out
 
 
@@ -168,11 +203,17 @@ def main(argv: list[str] | None = None) -> int:
 
     # ── 2. name the competition before blaming the machine ──────────────────
     others = _competing_python()
-    print(f"\n[2/5] competing python processes: {len(others)}")
-    for o in others[:6]:
-        print(f"  {o}")
-    if others:
-        print("  (not a refusal — but if this run takes an hour, that is why)")
+    if others is None:
+        print("\n[2/5] competing python processes: UNKNOWN — could not look "
+              "(no psutil, and the platform query failed)")
+        print("  (this used to print '0' here, which is what a clean machine "
+              "looks like. It is not a refusal, but do not read it as clear.)")
+    else:
+        print(f"\n[2/5] competing python processes: {len(others)}")
+        for o in others[:6]:
+            print(f"  {o}")
+        if others:
+            print("  (not a refusal — but if this run takes an hour, that is why)")
 
     # ── 3. the suite, in CI's world, with the tree pinned ───────────────────
     before = _tree_hash(ROOT)

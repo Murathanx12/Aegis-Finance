@@ -74,15 +74,25 @@ class CostRefused(RuntimeError):
 #: volatility. A measurement.
 MEASURED_AGK = "MEASURED_AGK"
 
-#: An effective spread from TAQ. Not reachable today: the WRDS entitlement
-#: record lists CRSP / Compustat / IBES / OptionMetrics and TAQ is NOT on it.
+#: An EFFECTIVE spread from TAQ — the trade-quote join, Holden-Jacobsen. Still
+#: not reachable: the tables are entitled but the join has not been built, so
+#: nothing may carry this label yet. It is kept distinct from the quoted
+#: provenance below because the two are different quantities and a shared name
+#: would erase the difference at the first call site that stores one.
 MEASURED_TAQ = "MEASURED_TAQ"
+
+#: A QUOTED NBBO spread from TAQ. Reachable as of 2026-08-18. Quoted is not
+#: effective — see `taq_calibration.bias_ledger()` for the three biases and
+#: their signs, two of which point DOWN, so this is an anchor and not a
+#: conservative bound.
+MEASURED_TAQ_QUOTED = "MEASURED_TAQ_QUOTED"
 
 #: No instrument resolved this segment, so the cost is a DECLARED range chosen
 #: to bracket the truth conservatively. Never a measurement, and it says so.
 DECLARED_CONSERVATIVE = "DECLARED_CONSERVATIVE"
 
-_PROVENANCES = (MEASURED_AGK, MEASURED_TAQ, DECLARED_CONSERVATIVE)
+_PROVENANCES = (MEASURED_AGK, MEASURED_TAQ, MEASURED_TAQ_QUOTED,
+                DECLARED_CONSERVATIVE)
 
 #: The declared band for the segment AGK cannot resolve, in ONE-WAY basis
 #: points. Declared before seeing which verdicts it permits, per the standing
@@ -91,12 +101,18 @@ _PROVENANCES = (MEASURED_AGK, MEASURED_TAQ, DECLARED_CONSERVATIVE)
 #: covers a stressed tape. A verdict that survives BOTH is a verdict.
 LIQUID_BAND_ONE_WAY_BPS = (1.0, 5.0)
 
-#: TAQ entitlement is UNVERIFIED, which is not the same as absent. The WRDS
-#: lesson (`reference_wrds_access`) is exactly this: the blocker there was PORT
-#: FILTERING, not the route, and the route was declared dead for weeks on the
-#: strength of a catalogue read. Checking is a ten-minute attended item; until
-#: it runs, this value stays "UNVERIFIED" and no code may read it as "no".
-TAQ_ENTITLEMENT = "UNVERIFIED"
+#: TAQ entitlement, CHECKED 2026-08-18 by SELECT probes rather than a catalogue
+#: read: `taqm_2003`..`taqm_2026` + `taqmsec` are readable, per-day
+#: `complete_nbbo_*` NBBO tables current through T-2. The check was on the
+#: standing queue precisely because the WRDS record listed it as absent and the
+#: record was wrong — the same shape as the port-filtering lesson, where the
+#: route was declared dead for weeks and worked. It resolved the way the lesson
+#: says these resolve.
+#:
+#: This value licenses NOTHING on its own. Entitlement is a fact about a
+#: subscription; a retired band is a fact about a NAME. `taq_calibration`
+#: retires it one name at a time, against a measurement.
+TAQ_ENTITLEMENT = "VERIFIED_2026-08-18"
 
 #: The verdict a repricing returns when the answer depends on where inside the
 #: declared band the cost is assumed to sit.
@@ -133,7 +149,8 @@ class OneWayBps:
 
     @property
     def measured(self) -> bool:
-        return self.provenance in (MEASURED_AGK, MEASURED_TAQ)
+        return self.provenance in (MEASURED_AGK, MEASURED_TAQ,
+                                   MEASURED_TAQ_QUOTED)
 
 
 @dataclass(frozen=True)
@@ -262,22 +279,20 @@ def resolve_band_by_picking(band: CostBand, end: str = "low"):
         f"a number today.")
 
 
-def calibrate_agk_against_taq(*_args, **_kwargs):
-    """Also a refusal, and for a reason with a receipt attached.
+def calibrate_agk_against_taq(panel, agk_one_way_bps: dict[str, float]) -> dict:
+    """The refusal that became a build, which is what a check that runs is for.
 
-    Order 18 §1: TAQ is not on the WRDS entitlement record, and it has NOT been
-    tested. `reference_wrds_access` is the standing lesson — WRDS was declared
-    unreachable for weeks when the actual blocker was port filtering, and the
-    route worked. So this refuses on the ground that the check has not RUN,
-    which is a different statement from "we do not have it", and flips to a
-    build the moment the attended check returns.
+    This function spent Order 18 raising `CostRefused` on the ground that the
+    entitlement check had not RUN — deliberately a different statement from "we
+    do not have TAQ". The check ran on 2026-08-18 and returned entitled, so the
+    refusal is discharged and the work happens in `taq_calibration`.
+
+    Imported lazily because `taq_calibration` imports this module for its types;
+    the dependency points one way at import time and the other at call time,
+    which is the ordinary shape and not worth a third module to avoid.
     """
-    raise CostRefused(
-        f"TAQ entitlement is {TAQ_ENTITLEMENT}. This is not a claim that TAQ "
-        f"is unavailable — it is a claim that nobody has tried. A check that "
-        f"did not run is not a check that failed. Run the attended entitlement "
-        f"check first; if it resolves, calibrate AGK on the overlap and the "
-        f"declared band retires.")
+    from backend.services import taq_calibration as TC
+    return TC.calibrate_against_agk(panel, agk_one_way_bps)
 
 
 def summarise_segmentation(results: Sequence[dict]) -> dict:

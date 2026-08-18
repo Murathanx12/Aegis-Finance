@@ -480,9 +480,8 @@ def observe_invocation(declared: str) -> dict:
     says something that actually did, and a disagreement is detectable after
     the fact instead of being an assumption.
 
-    The observation is `sys.stdin.isatty()`. A Windows scheduled task runs with
-    no console attached, so its stdin is not a terminal; a person running the
-    command in a shell has one. Its limits, stated rather than implied:
+    The observation is `sys.stdin.isatty()`. Its limits, stated rather than
+    implied:
 
       * it catches a human in a TERMINAL claiming `--scheduled`. That is the
         realistic mistake — someone rehearsing by hand and copying the full
@@ -490,6 +489,22 @@ def observe_invocation(declared: str) -> dict:
       * it does NOT catch a human redirecting stdin, or running under CI, or
         anything else that detaches the console deliberately. Nothing stdlib
         does, and a check that claimed to would be worse than one that says so.
+      * **AND IT HAS A FALSE POSITIVE, FOUND BY ITS OWN FIRST REAL RECEIPT
+        (2026-08-18, `iif1_launches/2026-08-18.2.json`).** This docstring used
+        to assert "a Windows scheduled task runs with no console attached, so
+        its stdin is not a terminal". That is true of a task registered
+        S4U / "run whether user is logged on or not", and FALSE of one
+        registered `LogonType=Interactive`, which runs inside the logged-on
+        session with a console. `AegisIIF1NightLauncher` is registered the
+        second way, so a genuine 17:00:01 firing recorded `contradicted: true`.
+
+    The observation is still correct as an observation — stdin really was a
+    terminal — so it is not relaxed here. What it means is environment-
+    dependent, which is why `acceptance_report` now names the environment as
+    the fault rather than counting zero forever. An assumption about the world,
+    written into a docstring, was falsified by the first receipt that tested
+    it; recording the evidence is what made that visible in one day instead of
+    on the morning of arming.
 
     Returns the pair plus `contradicted`, which `acceptance_report` treats as
     disqualifying — an ambiguous receipt is not evidence.
@@ -628,9 +643,49 @@ def acceptance_report(*, launch_dir: Path | None = None,
             break
 
     accepted = len(streak) >= n_required
+
+    # A CRITERION THAT CANNOT BE MET LOOKS EXACTLY LIKE ONE THAT HAS NOT BEEN
+    # MET YET. Both print `n_consecutive: 0` and both wait. That is the refusing
+    # guard / dead job shape: identical silence, opposite remedies — one needs
+    # another day, the other needs a change, and nobody finds out which until
+    # the day arming was supposed to happen.
+    #
+    # So: if unattended firings HAVE left receipts and every one of them was
+    # disqualified, say that. It is a different verdict from "not yet", and it
+    # is the one that carries a remedy. Note this is still computed from
+    # receipt FILES — the evidence that something fired is the receipt it
+    # wrote, never a liveness flag consulted from here.
+    contradicted = [e for e in excluded
+                    if e["why"].startswith("declared scheduled")]
+    n_scheduled = len(counted) + len(contradicted)
+    unsatisfiable = bool(n_scheduled > 0 and not counted)
+    diagnosis = None
+    if unsatisfiable:
+        diagnosis = (
+            f"{n_scheduled} unattended firing(s) left receipts and EVERY one "
+            f"was disqualified, so this criterion cannot currently be satisfied "
+            f"by waiting. The known cause on Windows is a task registered with "
+            f"LogonType=Interactive: it runs inside the logged-on session with "
+            f"a console attached, so stdin IS a terminal and "
+            f"`observe_invocation` reads a genuinely scheduled firing as "
+            f"contradicted. The docstring there asserts the opposite ('a "
+            f"Windows scheduled task runs with no console attached') and that "
+            f"assertion is false for this registration. Remedies, both "
+            f"attended: redirect the task action's stdin (`cmd /c ... < NUL`), "
+            f"or re-register with LogonType=S4U / 'run whether user is logged "
+            f"on or not'. Do NOT relax the contradiction test — it is reading "
+            f"its input correctly; its input is confounded.")
+
+    verdict = ("ACCEPTED" if accepted
+               else "UNSATISFIABLE_IN_THIS_ENVIRONMENT" if unsatisfiable
+               else "NOT_ACCEPTED")
     return {
         "accepted": accepted,
-        "verdict": "ACCEPTED" if accepted else "NOT_ACCEPTED",
+        "verdict": verdict,
+        "unsatisfiable": unsatisfiable,
+        "diagnosis": diagnosis,
+        "n_scheduled_receipts": n_scheduled,
+        "n_scheduled_contradicted": len(contradicted),
         "n_required": n_required,
         "consecutive_session_dates": list(reversed(streak)),
         "n_consecutive": len(streak),

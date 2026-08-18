@@ -281,6 +281,19 @@ def _case_cost_model():
             CostRefused, "a verdict priced off a bare float with no provenance")
 
 
+def _case_taq_calibration():
+    from backend.services.taq_calibration import TaqRefused, reading_for
+    # The missing input is COVERAGE of the NAME. Entitlement is a fact about a
+    # subscription; a retired band is a fact about a name. A panel that never
+    # covered this ticker must not fall back to a panel-wide average, because
+    # the fallback would retire a declared band on the strength of other
+    # people's liquidity.
+    return (lambda: reading_for([{"ticker": "AAPL", "date": "2026-08-14",
+                                  "n_quotes": 500_000, "mean_bps": 1.0,
+                                  "median_bps": 1.0, "mid": 230.0}], "PLUG"),
+            TaqRefused, "a TAQ cost for a name the panel never covered")
+
+
 def _case_instrument_floor():
     from backend.services.instrument_floor import (Instrument,
                                                    InstrumentUnresolvable,
@@ -316,6 +329,7 @@ def _case_lane_autopsy():
 CASES = {
     "lane_autopsy": _case_lane_autopsy,
     "instrument_floor": _case_instrument_floor,
+    "taq_calibration": _case_taq_calibration,
     "cost_model": _case_cost_model,
     "net_dataset": _case_net_dataset,
     "research_daemon": _case_research_daemon,
