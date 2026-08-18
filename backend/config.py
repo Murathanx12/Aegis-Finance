@@ -978,11 +978,15 @@ config: dict = {
             ],
             "Financials": [
                 "JPM", "V", "MA", "BAC", "WFC", "GS", "MS", "BLK",
-                "SPGI", "C", "AXP", "SCHW", "CB", "MMC", "ICE",
-                "PGR", "CME", "AON", "COIN", "SQ",
+                # MRSH was MMC until 2026-01-14 (Marsh rebrand); XYZ was SQ
+                # (Block). Stale entries fetched nothing and read as quiet.
+                "SPGI", "C", "AXP", "SCHW", "CB", "MRSH", "ICE",
+                "PGR", "CME", "AON", "COIN", "XYZ",
             ],
             "Energy": [
-                "XOM", "CVX", "COP", "SLB", "EOG", "PXD", "MPC", "OKE",
+                # PXD delisted 2024 (ExxonMobil acquisition) — removed, not
+                # renamed; a dead ticker in a sector list reads as a calm one.
+                "XOM", "CVX", "COP", "SLB", "EOG", "MPC", "OKE",
                 "PSX", "VLO", "WMB", "KMI", "FSLR", "ENPH", "HAL",
             ],
             "Consumer Disc.": [

@@ -191,7 +191,7 @@
   "YUM",
   "ZTS"
  ],
- "n_rows": 4180,
+ "n_rows": 4226,
  "days": [
   "20260715",
   "20260716",
@@ -217,11 +217,14 @@
   "20260813",
   "20260814"
  ],
- "amended_at_utc": "2026-08-18T10:41:17.912177+00:00",
+ "amended_at_utc": "2026-08-18T14:33:37.576521+00:00",
  "amendment": "sym_root is capped at 4 chars: GOOGL=GOOG+L, CMCSA=CMCS+A were never queried by the hyphen-only mapping and returned SILENCE, not an error. Re-pulled and appended.",
  "recorded_absences": {
-  "PXD": "delisted 2024 (dead universe entry)",
-  "SQ": "renamed - trades as XYZ in TAQ; universe entry is STALE (flagged, not remapped here)",
-  "MMC": "absent from TAQ and 404s at yfinance - unexplained, needs follow-up"
+  "PXD": "delisted 2024 (dead universe entry) - DELIBERATE, no re-pull exists"
+ },
+ "amendment_2": "MMC renamed MRSH on NYSE 2026-01-14 (Marsh rebrand) - the calibration window is entirely post-rename, so sym_root=MMC was the right company at the wrong symbol. SQ trades as XYZ. Both re-pulled under their CURRENT roots (ticker column keeps the universe entry, sym_root carries the live symbol, the GOOGL pattern). Same measure: 09:45-15:45, crossed/locked excluded, >2000bp excluded.",
+ "resolved_absences": {
+  "MMC": "renamed MRSH 2026-01-14; re-pulled 2026-08-18 night under MRSH (23 days)",
+  "SQ": "trades as XYZ; re-pulled 2026-08-18 night under XYZ (23 days)"
  }
 }

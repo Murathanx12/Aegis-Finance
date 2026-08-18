@@ -1,17 +1,13 @@
 {
  "coverage": {
   "n_universe": 185,
-  "n_in_panel": 182,
+  "n_in_panel": 184,
   "absent": [
-   "MMC",
-   "PXD",
-   "SQ"
+   "PXD"
   ],
   "actionable": [],
   "deliberate_or_unknown": [
-   "MMC",
-   "PXD",
-   "SQ"
+   "PXD"
   ],
   "rule": "a ticker longer than 4 characters with no hyphen is stored in TAQ as root=first 4 chars + suffix=the rest; a pull that queries the whole ticker as the root finds nothing"
  },
@@ -208,7 +204,7 @@
    "YUM",
    "ZTS"
   ],
-  "n_rows": 4180,
+  "n_rows": 4226,
   "days": [
    "20260715",
    "20260716",
@@ -234,15 +230,18 @@
    "20260813",
    "20260814"
   ],
-  "amended_at_utc": "2026-08-18T10:41:17.912177+00:00",
+  "amended_at_utc": "2026-08-18T14:33:37.576521+00:00",
   "amendment": "sym_root is capped at 4 chars: GOOGL=GOOG+L, CMCSA=CMCS+A were never queried by the hyphen-only mapping and returned SILENCE, not an error. Re-pulled and appended.",
   "recorded_absences": {
-   "PXD": "delisted 2024 (dead universe entry)",
-   "SQ": "renamed - trades as XYZ in TAQ; universe entry is STALE (flagged, not remapped here)",
-   "MMC": "absent from TAQ and 404s at yfinance - unexplained, needs follow-up"
+   "PXD": "delisted 2024 (dead universe entry) - DELIBERATE, no re-pull exists"
+  },
+  "amendment_2": "MMC renamed MRSH on NYSE 2026-01-14 (Marsh rebrand) - the calibration window is entirely post-rename, so sym_root=MMC was the right company at the wrong symbol. SQ trades as XYZ. Both re-pulled under their CURRENT roots (ticker column keeps the universe entry, sym_root carries the live symbol, the GOOGL pattern). Same measure: 09:45-15:45, crossed/locked excluded, >2000bp excluded.",
+  "resolved_absences": {
+   "MMC": "renamed MRSH 2026-01-14; re-pulled 2026-08-18 night under MRSH (23 days)",
+   "SQ": "trades as XYZ; re-pulled 2026-08-18 night under XYZ (23 days)"
   }
  },
- "n_panel_rows": 4180,
+ "n_panel_rows": 4226,
  "declared_band_one_way_bps": [
   1.0,
   5.0
@@ -274,7 +273,7 @@
  "sensitivity": {
   "reference_name": "WEC",
   "reference_rank": "median of retired names",
-  "n_retired": 182,
+  "n_retired": 184,
   "below_band_high": {
    "measured_one_way_bps": 2.7256,
    "inflated_one_way_bps": 10.9024,
@@ -304,14 +303,14 @@
    "one_way_bps": 23.31
   },
   "below_band": 16,
-  "inside_band": 137,
+  "inside_band": 139,
   "above_band": 29
  },
  "summary": {
   "n_names": 185,
-  "n_band_retired": 182,
-  "n_band_stays": 3,
-  "fraction_retired": 0.9838,
+  "n_band_retired": 184,
+  "n_band_stays": 1,
+  "fraction_retired": 0.9946,
   "n_at_tick_floor": 28,
   "provenance": "MEASURED_TAQ_QUOTED",
   "net_bias_sign": "NOT_ESTABLISHED",
@@ -1885,18 +1884,18 @@
   },
   {
    "ticker": "MMC",
-   "retired": false,
-   "one_way_bps": null,
-   "full_bps": null,
-   "day_low": null,
-   "day_high": null,
-   "n_days": 0,
-   "mid": null,
-   "tick_floor_bps": null,
-   "ticks_wide": null,
+   "retired": true,
+   "one_way_bps": 4.225,
+   "full_bps": 8.45,
+   "day_low": 6.0695,
+   "day_high": 13.681,
+   "n_days": 23,
+   "mid": 188.87,
+   "tick_floor_bps": 0.5295,
+   "ticks_wide": 15.96,
    "at_tick_floor": false,
    "notes": [],
-   "reason": "MMC is not in the TAQ panel. Its declared band STAYS. An absent name is not a cheap name."
+   "reason": null
   },
   {
    "ticker": "MNST",
@@ -2638,18 +2637,18 @@
   },
   {
    "ticker": "SQ",
-   "retired": false,
-   "one_way_bps": null,
-   "full_bps": null,
-   "day_low": null,
-   "day_high": null,
-   "n_days": 0,
-   "mid": null,
-   "tick_floor_bps": null,
-   "ticks_wide": null,
+   "retired": true,
+   "one_way_bps": 2.6205,
+   "full_bps": 5.2411,
+   "day_low": 3.7953,
+   "day_high": 7.3019,
+   "n_days": 23,
+   "mid": 80.4,
+   "tick_floor_bps": 1.2438,
+   "ticks_wide": 4.21,
    "at_tick_floor": false,
    "notes": [],
-   "reason": "SQ is not in the TAQ panel. Its declared band STAYS. An absent name is not a cheap name."
+   "reason": null
   },
   {
    "ticker": "SRE",

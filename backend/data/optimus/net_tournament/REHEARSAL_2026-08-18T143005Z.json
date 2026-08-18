@@ -1,0 +1,162 @@
+{
+  "tournament": "AEGIS-NET-TOURNAMENT-1",
+  "mode": "REHEARSAL_SYNTHETIC",
+  "started_at": "2026-08-18T14:30:05+00:00",
+  "heads": {
+    "cs_rank": {
+      "tournament": "AEGIS-NET-TOURNAMENT-1",
+      "head": "cs_rank",
+      "baseline_arm": "linear_ridge",
+      "n_rows_scored": 17340,
+      "n_rows_dropped_missing_target": 0,
+      "folds": [
+        {
+          "train_end": "2017-11-30",
+          "test_start": "2018-01-31",
+          "test_end": "2018-12-31",
+          "n_train": 7140,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2018-11-30",
+          "test_start": "2019-01-31",
+          "test_end": "2019-12-31",
+          "n_train": 9180,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2019-11-30",
+          "test_start": "2020-01-31",
+          "test_end": "2020-12-31",
+          "n_train": 11220,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2020-11-30",
+          "test_start": "2021-01-31",
+          "test_end": "2021-12-31",
+          "n_train": 13260,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2021-11-30",
+          "test_start": "2022-01-31",
+          "test_end": "2022-12-31",
+          "n_train": 15300,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2022-11-30",
+          "test_start": "2023-01-31",
+          "test_end": "2023-12-31",
+          "n_train": 17340,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2023-11-30",
+          "test_start": "2024-01-31",
+          "test_end": "2024-12-31",
+          "n_train": 19380,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2024-11-30",
+          "test_start": "2025-01-31",
+          "test_end": "2025-12-31",
+          "n_train": 21420,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2025-11-30",
+          "test_start": "2026-01-31",
+          "test_end": "2026-06-30",
+          "n_train": 23460,
+          "n_test": 1020
+        }
+      ],
+      "arms": {
+        "linear_ridge": {
+          "ic_mean": 0.05889465171086846,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "lightgbm": {
+          "ic_mean": 0.020618138988058997,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "mlp_1": {
+          "ic_mean": 0.023068984678891798,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "mlp_2": {
+          "ic_mean": 0.030012053673149446,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "mlp_3": {
+          "ic_mean": 0.01702289479491334,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        }
+      },
+      "loss_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": 0.0025793128111210265,
+          "ci_lo": 0.0018808566404438399,
+          "ci_hi": 0.003258964860455113,
+          "se": 0.00041823434295680165,
+          "mde_80pct_power": 0.0011717191531386583,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 5.1,
+          "block_days": 20,
+          "dependence_unit": "contiguous 20-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": 0.0015257520662844586,
+          "ci_lo": 0.0011870582938409454,
+          "ci_hi": 0.0022078819972375222,
+          "se": 0.0003109216623364254,
+          "mde_80pct_power": 0.0008710735333442697,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 5.1,
+          "block_days": 20,
+          "dependence_unit": "contiguous 20-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": 0.001087192775271776,
+          "ci_lo": 0.0008260498937434444,
+          "ci_hi": 0.0013827911098726615,
+          "se": 0.0001695699202707,
+          "mde_80pct_power": 0.0004750645821495736,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 5.1,
+          "block_days": 20,
+          "dependence_unit": "contiguous 20-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": 0.0022077474329839962,
+          "ci_lo": 0.0017210968709792385,
+          "ci_hi": 0.00251807663158783,
+          "se": 0.0002383736317671621,
+          "mde_80pct_power": 0.0006678240432628807,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 5.1,
+          "block_days": 20,
+          "dependence_unit": "contiguous 20-trading-day block of the whole cross-section"
+        }
+      },
+      "contrast_note": "negative mean = arm beats baseline on squared loss; the deciding comparison and its criterion live in the pre-registration, not here",
+      "elapsed_s": 23.1
+    }
+  }
+}
