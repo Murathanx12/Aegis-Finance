@@ -15,6 +15,11 @@ get re-imported). Handoff boundary: the corrections commit that follows
    2.726bp one-way). The stale 15/136/29 (n=180) is never again paired with
    n=182. Fixed in the external brief and the handoff, with an erratum in
    the handoff's failure ledger.
+   *(Superseded 08-18 late night, grind: MMC was renamed MRSH on
+   2026-01-14 and SQ trades as XYZ; both re-pulled under their current
+   roots — the panel is now **16/139/29 of 184**, with only dead PXD
+   keeping the declared band. Every doc quoting 182 was correct at its
+   write time.)*
 
 ## §1 Standing rule (from Order 17, now enforceable)
 

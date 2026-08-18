@@ -117,5 +117,37 @@ Baseline at session start: **4,949 passed / 11 skipped, 3m48s** (fast suite).
   (b) carry the disclosure onto the receipt. Either changes a registered
   selection rule ⇒ attended; pinned as-is by test meanwhile.
 
+### Cycle H (`140125f` + follow-ups) — MMC solved; TAQ panel 184/185; runner rehearsal
+- **The "unexplained" MMC absence was a RENAME**: Marsh McLennan switched
+  NYSE ticker MMC → MRSH on 2026-01-14 (rebrand to Marsh) — verified live
+  in TAQ (MRSH: 10,583 quotes on 08-14) and by news search. The calibration
+  window is entirely post-rename, so `sym_root='MMC'` was the right company
+  at the wrong symbol; yfinance 404s for the same reason. The absence trio
+  is now FULLY explained: PXD delisted · SQ→XYZ · MMC→MRSH.
+- Re-pulled both renamed names for all 23 sessions (direct WRDS psycopg2 —
+  port 9737 was open, no tunnel needed; same declared measure).
+  `taq_calibrate`: **184/185 retired, 16/139/29, canary exit 0** — only the
+  genuinely dead name keeps its band. MMC ≈ 4.5bp one-way, SQ ≈ 2.4bp.
+- Dated addenda added to the external brief and Order 20 §0 (the brief is
+  already in reviewers' hands — annotate, don't rewrite). config.py sector
+  lists: MMC→MRSH, SQ→XYZ, PXD removed (deploys only on attended merge).
+- Tournament runner + full-shape synthetic REHEARSAL: green in 23s
+  (9 folds, 17,340 rows; ridge recovers the planted linear IC, nonlinear
+  arms recover less of a purely-linear world). Signed path refuses.
+
+### Cycle I (in progress at log time) — EFFECTIVE spreads, the daemon's #1 job
+- Discovery: `taqm_2026.wct_*` (WRDS computed trades) carries every trade
+  with the PREVAILING NBBO already matched — the trade-quote alignment is
+  server-side, so effective spreads are one GROUP BY per day (~78s), not a
+  hand-rolled Holden–Jacobsen join.
+- Probe receipt: **AAPL 08-14 — effective 0.471bp full median vs
+  quoted-at-trade 0.656bp: ratio 0.719**, inside the documented 0.5–0.9.
+  Marginal costs are ~28% inside even the measured quoted numbers.
+- `scripts/wrds_taq_effective_pull.py`: resumable per-day JSONL, v1
+  DELIBERATELY without tr_scond/odd-lot conventions — those are what
+  external review Q3 is out asking; **the daemon job's verdict is NOT
+  recorded from v1**; the dataset is kept for the refined computation to
+  re-derive against (a moved number would itself be a conventions finding).
+
 Note for next attended session: `gh` CLI is not installed on this machine —
 the prod-monitor ≥19:00 firing check needs the Actions UI or a token.

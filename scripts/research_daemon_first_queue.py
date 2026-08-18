@@ -54,7 +54,7 @@ FIRST_QUEUE: tuple[RD.HypothesisJob, ...] = (
       question=("Effective spreads on the TAQ calibration overlap are "
                 "materially inside quoted (documented 0.5-0.9x quoted; "
                 "adjudication B7 adds a regime-drift cadence to the join)"),
-      universe="taq_calibration_2026_182", outcome="effective_to_quoted_ratio",
+      universe="taq_calibration_2026_184", outcome="effective_to_quoted_ratio",
       start="2026-07-15", end="2026-08-14",
       n_date_blocks=23, se_per_block=0.04, expected_effect=0.25,
       effect_units="ratio_departure_from_1",
