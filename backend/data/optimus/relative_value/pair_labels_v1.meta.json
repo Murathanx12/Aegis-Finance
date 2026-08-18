@@ -1,0 +1,18 @@
+{
+  "trial": "NEURAL-RELATIVE-VALUE-1",
+  "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\net_panel\\net_panel_v1.parquet",
+  "pairs_per_date": 500,
+  "seed": 20260819,
+  "n_date_blocks": 145,
+  "unit_note": "\u00a758: 72495 pairs on 145 dates is 145 \u2014 the pair count is a fact about sampling, not about information",
+  "n_pairs_labelled": 72495,
+  "n_cost_model_sensitive": 5,
+  "n_refused_no_cost": 0,
+  "beats_net_balance": {
+    "false": 36554,
+    "true": 35941
+  },
+  "cost_basis": "per-name TAQ measured one-way where retired; the declared 1-5bp band otherwise; COST_MODEL_SENSITIVE pairs excluded from training and counted here",
+  "g5_note": "the registration that evaluates any model on these labels must confront G5 by name; the distinct claim is pairwise capital substitution",
+  "generated_at": "2026-08-18T14:19:51+00:00"
+}

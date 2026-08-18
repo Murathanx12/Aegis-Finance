@@ -350,10 +350,41 @@ def _case_net_tournament():
             TournamentRefused, "a tournament run with no pre-registration")
 
 
+def _case_convexity_episodes():
+    import numpy as np
+
+    from backend.services.convexity_episodes import (EpisodeRefused,
+                                                     arm_outcome)
+    # The missing input is the OUTCOME WINDOW. An arm scored on a single
+    # price has no path to manage; returning $1.00 for it would report
+    # every management rule as exactly break-even — plausible, green, and
+    # about nothing.
+    return (lambda: arm_outcome(np.array([100.0]), "hold",
+                                cost_one_way_bps=3.0,
+                                ann_vol_at_crossing=0.3),
+            EpisodeRefused, "an arm scored on a one-price outcome window")
+
+
+def _case_relative_value_labels():
+    from backend.services.cost_model import MEASURED_TAQ_QUOTED, OneWayBps
+    from backend.services.relative_value_labels import (PairRefused,
+                                                        pair_label)
+    # The missing input is the RETURN. A pair labelled with an invented
+    # forward return is a training row about nothing; the network cannot
+    # tell it from a market fact, which is precisely why it must refuse
+    # here rather than impute there.
+    c = OneWayBps(1.0, MEASURED_TAQ_QUOTED, basis="test")
+    return (lambda: pair_label(fwd_a=float("nan"), fwd_b=0.01, dd_a=None,
+                               dd_b=None, cost_a=c, cost_b=c),
+            PairRefused, "a pair labelled from an invented return")
+
+
 CASES = {
     "lane_autopsy": _case_lane_autopsy,
     "net_panel": _case_net_panel,
     "net_tournament": _case_net_tournament,
+    "convexity_episodes": _case_convexity_episodes,
+    "relative_value_labels": _case_relative_value_labels,
     "instrument_floor": _case_instrument_floor,
     "taq_calibration": _case_taq_calibration,
     "cost_model": _case_cost_model,
