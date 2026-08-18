@@ -1,6 +1,65 @@
 # Grind session 2026-08-18 night → 2026-08-19 (12h unattended, Order 20)
 
-SESSION SUMMARY — (written at end; placeholder until then)
+## SESSION SUMMARY
+
+**RESULTS PRODUCED** (the Order 20 standing rule, honored in the ordering):
+
+1. **The 14-point mirror gap is UNRECONCILED** — authoritative conviction
+   NAV diverges from YAML-seed buy-and-hold by up to 11.2% in discrete
+   jumps; the live mirror sits ~27 points below its own rules replayed.
+   Neither circulating reading survives. What stands: on this book,
+   EW-at-seed carries +3.3pp, monthly re-equalisation only +1.3pp.
+   **Blocked on the attended positions read.** Erratum filed on my own
+   adjudication sentence (B1).
+2. **The daemon's guard was permissive in the live tree its whole life**
+   (absent reservations file → `[]`); it now DERIVES windows from the
+   confirmation-budget ledger and refuses absent inputs. First real queue
+   loaded (13 declared jobs), first nightly receipt written.
+3. **MMC solved (renamed MRSH 2026-01-14), SQ/XYZ re-pulled → TAQ quoted
+   panel 184/185 (16/139/29), canary exit 0.** Only dead PXD keeps a band.
+4. **EA is DELISTED (2026-08-04, PIF buyout)** — caught because trades
+   vanish while quotes ghost on for 8 days; its quoted row is flagged as
+   measured-through-08-04. A quotes panel cannot see death; a trades panel
+   can.
+5. **Effective spreads measured for the whole panel** (4,224 name-days via
+   wct prevailing-NBBO): median effective/quoted 0.369, median effective
+   one-way 1.076bp, 84/98/2 vs the band on an EFFECTIVE basis — stated as
+   SENSITIVITIES; the daemon verdict is DEFERRED to the trade-condition
+   conventions (external review Q3).
+6. **Three datasets materialized for the registered trials**: NET panel
+   (24,911 rows × 145 monthly blocks, PIT-tested), convexity episodes
+   (23,011 with matched non-winners, no aggregates), relative-value pair
+   labels (72,495 pairs, cost-gated, 5 sensitive).
+7. **Tournament harness + UNSIGNED prereg draft**; full-shape synthetic
+   rehearsal green in 23s; the signed path refuses until Murat signs.
+8. Night-sequence fault injection: transport death and corrupted feeds
+   halt cleanly; one registered-semantics tightening proposed (below).
+   Fragility fix: survival_model's broken-model path now announces its
+   substitution.
+
+**INFRASTRUCTURE BUILT:** 6 new services/scripts modules, 5 new test files.
+
+**Measured deltas:** fast suite 4,949 → **5,010 passed** (+61 tests, closing
+run 2026-08-19, 3m42s, 0 failures); ruff clean on every new file; 0
+regressions; 11 commits on `lab/autonomous-rd`, pushed.
+
+**Needs Murat specifically:**
+1. Attended positions read (`paper_positions`/`rebalance_events` for the
+   book lanes, prod volume DB, under lane-integrity-check) — the ONLY
+   thing that resolves the 14-point contradiction.
+2. NET tournament prereg signature (draft at
+   `docs/TRIALS/PREREG_AEGIS_NET_TOURNAMENT_1.md`; the runner refuses
+   until signed; delete the pins-unsigned test on signing).
+3. Trigger-eligibility tightening decision (registered rule; cycle G).
+4. Wednesday 17:00 Night 3 attended + Brier-bar signature; the schtask
+   `< NUL` fix remains the arming blocker.
+5. Merge review of this branch to main (docs addenda included — the TAQ
+   split superseded to 16/139/29 of 184 while the brief sits with
+   reviewers).
+
+**Top 3 recommended next actions:** the positions read · sign + run the
+tournament (2 min of compute per head) · refine the effective-spread
+computation with the conventions the external reviews return.
 
 Branch: `lab/autonomous-rd`, fast-forwarded to main @ `9be7e4d` at session
 start (it was 498 commits behind, 0 ahead — clean ff). Nothing lands on main
