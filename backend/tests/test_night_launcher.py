@@ -435,6 +435,145 @@ def test_acceptance_never_consults_a_running_flag():
             f"jobs registered and running while every tick refused)")
 
 
+# ── the launch manifest and equivalence pinning (Order 16 §1) ──────────────
+def test_the_manifest_carries_the_bytes_that_define_the_night():
+    man = L.launch_manifest()
+    for f in ("prereg_hash", "module_hashes", "implementation_version",
+              "arm_implementation_fingerprint", "git_commit", "git_dirty",
+              "frozen_surface"):
+        assert f in man, f"manifest is missing {f}"
+    assert set(man["module_hashes"]) == set(L.NIGHT_MODULES)
+
+
+def _manifest(**overrides) -> dict:
+    """A COMPLETE synthetic manifest, built rather than captured.
+
+    The first version of these tests called `launch_manifest()` and mutated the
+    result. That passed on this machine and failed all four in the CI-simulated
+    world, because CI has no `Aegis module` sibling, so `prereg_hash` and
+    `frozen_surface` come back UNAVAILABLE and equivalence correctly refuses
+    before it ever reaches the field under test. The code was right; the tests
+    were measuring a different world — the exact defect `ci_env_sim` exists for,
+    reproduced inside tests written the same afternoon.
+
+    What is under test here is the COMPARISON, so the inputs are constructed.
+    The real `launch_manifest()` is exercised separately, in a way that holds in
+    both worlds.
+    """
+    man = {
+        "manifest_version": 1,
+        "prereg_hash": "441d098c1f8074ea",
+        "frozen_surface": {"ARMS": ["A_snapshot", "B_tools"],
+                           "TRIGGERS_PER_NIGHT": 40},
+        "module_hashes": {m: f"hash{i:02d}" for i, m in
+                          enumerate(L.NIGHT_MODULES)},
+        "implementation_version": 2,
+        "arm_implementation_fingerprint": "abc123def456",
+        "git_commit": "a" * 40,
+        "git_dirty": False,
+    }
+    man.update(overrides)
+    return man
+
+
+def test_identical_manifests_are_equivalent():
+    man = _manifest()
+    assert L.assert_invocation_equivalent(man, _manifest())["equivalent"] is True
+
+
+def test_a_changed_module_breaks_the_pinning():
+    """The claim a rehearsal makes, made checkable. Main changes all day; the
+    rehearsal only licenses the launch if the two run the same experiment."""
+    a = _manifest()
+    b = json.loads(json.dumps(a))
+    b["module_hashes"]["backend.services.investigator_agent"] = "deadbeefdeadbeef"
+    with pytest.raises(L.LaunchRefused, match="NOT the one that was rehearsed"):
+        L.assert_invocation_equivalent(a, b)
+
+
+def test_a_changed_frozen_surface_breaks_the_pinning():
+    a = _manifest()
+    b = _manifest(frozen_surface={"ARMS": ["A_snapshot"],
+                                  "TRIGGERS_PER_NIGHT": 40})
+    with pytest.raises(L.LaunchRefused, match="frozen_surface"):
+        L.assert_invocation_equivalent(a, b)
+
+
+def test_a_changed_commit_alone_does_not_break_the_pinning():
+    """A docs-only commit moves the SHA and changes nothing that runs. Refusing
+    on it would train the operator to re-rehearse for no reason, which is how a
+    guard gets routed around. The module hashes carry the real claim."""
+    a = _manifest()
+    b = _manifest(git_commit="0" * 40)
+    assert L.assert_invocation_equivalent(a, b)["equivalent"] is True
+
+
+def test_two_unavailable_hashes_are_not_agreement():
+    """The failure this whole manifest exists to catch: a missing input passing
+    for equality because both sides are equally missing."""
+    a = _manifest(prereg_hash="UNAVAILABLE: FileNotFoundError: nope")
+    b = _manifest(prereg_hash="UNAVAILABLE: FileNotFoundError: nope")
+    with pytest.raises(L.LaunchRefused, match="missing input passing for"):
+        L.assert_invocation_equivalent(a, b)
+
+
+def test_an_unhashable_module_refuses_even_when_both_sides_match():
+    hashes = dict(_manifest()["module_hashes"])
+    hashes["backend.services.iif1_run"] = "UNAVAILABLE: OSError"
+    a, b = _manifest(module_hashes=hashes), _manifest(module_hashes=dict(hashes))
+    with pytest.raises(L.LaunchRefused, match="could not hash"):
+        L.assert_invocation_equivalent(a, b)
+
+
+def test_the_real_manifest_pins_itself_or_refuses_and_never_in_between():
+    """Exercised on the REAL manifest, and it holds in both worlds.
+
+    With the `Aegis module` sibling present the manifest is complete and pins
+    itself. Without it — CI, the prod image, any context that cannot read the
+    registered rule — `prereg_hash` is UNAVAILABLE and equivalence REFUSES.
+    Both are correct and they are the only two outcomes: a context that cannot
+    read the registration cannot certify that a launch runs it.
+    """
+    man = L.launch_manifest()
+    readable = not str(man["prereg_hash"]).startswith("UNAVAILABLE")
+    if readable:
+        assert L.assert_invocation_equivalent(man, L.launch_manifest())[
+            "equivalent"] is True
+    else:
+        with pytest.raises(L.LaunchRefused, match="missing input passing for"):
+            L.assert_invocation_equivalent(man, L.launch_manifest())
+
+
+def test_every_receipt_carries_a_manifest_including_refusals(receipts, launches):
+    """A manifest attached only to launches would leave the REHEARSAL — the one
+    receipt whose entire purpose is to pin a later launch — with nothing to
+    compare against."""
+    sat = datetime(2026, 8, 22, 9, 0, tzinfo=timezone.utc)
+    rep = L.evaluate_launch(now=sat, receipts_dir=receipts, launch_dir=launches)
+    p = L.write_launch_receipt(rep, verdict=L.VERDICT_REFUSED,
+                               launch_dir=launches)
+    r = json.loads(p.read_text(encoding="utf-8"))
+    assert isinstance(r["launch_manifest"], dict)
+    assert "module_hashes" in r["launch_manifest"]
+
+
+def test_the_latest_rehearsal_manifest_is_found_and_refusals_are_not(launches):
+    now = datetime(2026, 8, 20, 9, 0, tzinfo=timezone.utc)
+    (launches / "2026-08-19.json").write_text(json.dumps(
+        {"session_date": "2026-08-19", "verdict": L.VERDICT_REFUSED,
+         "written_at_utc": "2026-08-19T09:00:00+00:00",
+         "launch_manifest": {"prereg_hash": "refusal"}}), encoding="utf-8")
+    assert L.latest_rehearsal_manifest(launches) is None, (
+        "a REFUSED receipt must not be mistaken for a rehearsal that pins a "
+        "launch — the night it describes never ran")
+    (launches / "2026-08-20.json").write_text(json.dumps(
+        {"session_date": "2026-08-20", "verdict": L.VERDICT_REHEARSAL,
+         "written_at_utc": "2026-08-20T09:00:00+00:00",
+         "launch_manifest": {"prereg_hash": "abc"}}), encoding="utf-8")
+    assert L.latest_rehearsal_manifest(launches) == {"prereg_hash": "abc"}
+    assert now  # fixture time is not consulted; recency comes from the receipt
+
+
 # ── arming is attended ─────────────────────────────────────────────────────
 def test_arming_is_env_gated_and_off_by_default(monkeypatch):
     monkeypatch.delenv("AEGIS_IIF1_LAUNCHER_ARMED", raising=False)

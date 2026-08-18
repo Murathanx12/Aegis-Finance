@@ -37,6 +37,7 @@ run at any hour.
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import subprocess
 import sys
@@ -150,6 +151,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--at", default=None,
                     help="evaluate as if it were this UTC time (ISO), for "
                          "rehearsing the refusal branches")
+    ap.add_argument("--require-rehearsal", action="store_true",
+                    help="refuse to launch unless a prior REHEARSAL receipt "
+                         "pins this exact invocation (Order 16 §1). The "
+                         "comparison runs and is recorded either way; this "
+                         "makes it binding. Night 3+ should set it.")
+    ap.add_argument("--manifest", action="store_true",
+                    help="print the launch manifest and exit")
     ap.add_argument("--scheduled", action="store_true",
                     help="declare that the scheduled task invoked this. ONLY "
                          "receipts carrying it count toward acceptance — a "
@@ -166,6 +174,19 @@ def main(argv: list[str] | None = None) -> int:
     if a.acceptance:
         print_acceptance(L.acceptance_report())
         return 0
+
+    if a.manifest:
+        man = L.launch_manifest()
+        print(json.dumps(man, indent=2, default=str))
+        prior = L.latest_rehearsal_manifest()
+        if prior is None:
+            print("\nno prior REHEARSAL manifest to compare against")
+            return 0
+        diffs = L.manifest_differences(prior, man)
+        print("\nvs the last rehearsal: "
+              + ("IDENTICAL invocation" if not diffs
+                 else "DRIFTED —\n  " + "\n  ".join(diffs)))
+        return 0 if not diffs else 1
 
     if a.schtasks:
         return _print_schtasks()
@@ -216,10 +237,54 @@ def main(argv: list[str] | None = None) -> int:
         print("Arm with:  set AEGIS_IIF1_LAUNCHER_ARMED=1")
         return 0
 
+    # ── equivalence: is this the invocation that was rehearsed? ─────────────
+    # Order 16 §1. An unattended night is licensed by a rehearsal, and that
+    # licence is only worth anything if the two run the same experiment — on a
+    # repository where main changes all day, that is a claim about the last few
+    # hours rather than a property of the code. `--require-rehearsal` makes it
+    # binding; without it the comparison is still made and REPORTED, so the
+    # difference is visible in the receipt either way.
+    equivalence: dict = {"checked": False,
+                         "why": "no prior REHEARSAL receipt carrying a manifest"}
+    prior = L.latest_rehearsal_manifest()
+    if prior is not None:
+        try:
+            equivalence = L.assert_invocation_equivalent(prior,
+                                                         L.launch_manifest())
+            print("\nequivalence   the live invocation matches the rehearsed one")
+        except L.LaunchRefused as e:
+            equivalence = {"checked": True, "equivalent": False,
+                           "detail": str(e)}
+            print(f"\n*** INVOCATION DRIFT since the rehearsal:\n{e}")
+            if a.require_rehearsal:
+                rep = dict(rep)
+                rep["refusals"] = [{"code": "INVOCATION_DRIFT",
+                                    "detail": str(e)}]
+                rep["may_launch"] = False
+                p = L.write_launch_receipt(rep, verdict=L.VERDICT_REFUSED,
+                                           invocation=invocation,
+                                           extra={"equivalence": equivalence})
+                print(f"receipt -> {p}")
+                return 0
+    elif a.require_rehearsal:
+        rep = dict(rep)
+        rep["refusals"] = [{"code": "NO_REHEARSAL",
+                            "detail": "--require-rehearsal was set and no "
+                                      "REHEARSAL receipt carrying a launch "
+                                      "manifest exists to pin this invocation "
+                                      "against."}]
+        rep["may_launch"] = False
+        p = L.write_launch_receipt(rep, verdict=L.VERDICT_REFUSED,
+                                   invocation=invocation,
+                                   extra={"equivalence": equivalence})
+        print(f"\nNO REHEARSAL to pin against.  receipt -> {p}")
+        return 0
+
     # ── the receipt goes down BEFORE the night starts ────────────────────────
     path = L.write_launch_receipt(
         rep, verdict=L.VERDICT_LAUNCHED, invocation=invocation,
-        extra={"note": "written before the night began, so a night that dies "
+        extra={"equivalence": equivalence,
+               "note": "written before the night began, so a night that dies "
                        "mid-run still proves the launcher decided to run it"})
     print(f"\nLAUNCHED receipt -> {path}")
     print("Handing off to the night. One attempt.\n")

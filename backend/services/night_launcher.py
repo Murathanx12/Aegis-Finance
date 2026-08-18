@@ -529,6 +529,10 @@ def write_launch_receipt(report: dict, *, verdict: str,
         timespec="seconds")
     payload.update(N.git_provenance())
     payload.update(observe_invocation(invocation))
+    # ON EVERY RECEIPT, including refusals. A manifest attached only to
+    # launches would leave the rehearsal — the one receipt whose whole purpose
+    # is to pin a later launch — as the one with nothing to compare against.
+    payload["launch_manifest"] = launch_manifest()
     payload["implementation_version"] = N.IMPLEMENTATION_VERSION
     payload["arm_implementation_fingerprint"] = N.arm_implementation_fingerprint()
     if extra:
@@ -639,6 +643,166 @@ def acceptance_report(*, launch_dir: Path | None = None,
                  "it is not a flag anything sets, and a hand-run rehearsal "
                  "does not count toward it."),
     }
+
+
+# ── the launch manifest and equivalence pinning (Order 16 §1) ──────────────
+#: The modules whose BYTES define what a night does. Order 16 supersedes Order
+#: 15 §1 here: a rehearsal only pins a real launch if the two demonstrably ran
+#: the same code, and "the same commit" is not that claim — an uncommitted edit
+#: changes behaviour without moving the SHA, which is precisely why
+#: `arm_implementation_fingerprint` exists alongside `git_commit` already.
+NIGHT_MODULES = (
+    "backend.services.investigator_night",
+    "backend.services.investigator_agent",
+    "backend.services.investigator_tools",
+    "backend.services.investigator_triggers",
+    "backend.services.iif1_features",
+    "backend.services.iif1_run",
+    "backend.services.iif1_prereg",
+)
+
+#: Manifest fields whose disagreement means the rehearsal did NOT pin the
+#: launch. Deliberately excludes `git_commit`: a docs-only commit between the
+#: rehearsal and the launch changes the SHA and changes nothing that runs, and
+#: refusing on it would train the operator to re-rehearse for no reason — which
+#: is how a guard gets routed around. The module hashes carry the real claim.
+EQUIVALENCE_FIELDS = ("prereg_hash", "module_hashes", "implementation_version",
+                      "arm_implementation_fingerprint", "frozen_surface")
+
+
+def _sha256_file(path: Path) -> str:
+    import hashlib
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()[:16]
+
+
+def launch_manifest() -> dict:
+    """Everything needed to say WHICH EXPERIMENT this launch is about to run.
+
+    Order 16 §1, adopted verbatim from the GPT plan: prereg hash, module
+    hashes, version + fingerprint, SHA and dirty state. The point is not
+    provenance for its own sake — it is that a rehearsal can only pin a real
+    launch if the two are demonstrably the same invocation, and until this
+    existed "we rehearsed it" was a statement about the operator's memory.
+
+    Unreadable inputs are recorded as `UNAVAILABLE: <reason>`, never omitted
+    and never defaulted. An absent hash that compares equal to another absent
+    hash would make two different worlds look identical, which is the exact
+    failure this manifest is built to catch.
+    """
+    import sys
+
+    m: dict = {"manifest_version": 1,
+               "built_at_utc": datetime.now(timezone.utc).isoformat(
+                   timespec="seconds"),
+               "python": sys.version.split()[0]}
+
+    try:
+        from backend.services import iif1_prereg as P
+        m["prereg_path"] = str(P.CONFIG_PATH)
+        m["prereg_hash"] = _sha256_file(P.CONFIG_PATH)
+    except Exception as e:                                        # noqa: BLE001
+        m["prereg_path"] = "UNAVAILABLE"
+        m["prereg_hash"] = f"UNAVAILABLE: {type(e).__name__}: {e}"
+
+    # The FROZEN SURFACE ITSELF, not only a hash of the file that holds it.
+    # A hash says "something changed"; the surface says what the night is
+    # actually about to run, and the two answer different questions on the
+    # morning somebody has to decide whether a rehearsal still counts.
+    try:
+        from backend.services.iif1_prereg import verify_or_refuse
+        frozen = verify_or_refuse()
+        m["frozen_surface"] = {k: (list(v) if isinstance(v, (list, tuple)) else v)
+                               for k, v in sorted(frozen.items())}
+    except Exception as e:                                        # noqa: BLE001
+        m["frozen_surface"] = f"UNAVAILABLE: {type(e).__name__}: {e}"
+
+    hashes: dict[str, str] = {}
+    for name in NIGHT_MODULES:
+        try:
+            import importlib
+            mod = importlib.import_module(name)
+            hashes[name] = _sha256_file(Path(mod.__file__))
+        except Exception as e:                                    # noqa: BLE001
+            hashes[name] = f"UNAVAILABLE: {type(e).__name__}: {e}"
+    m["module_hashes"] = hashes
+
+    m["implementation_version"] = N.IMPLEMENTATION_VERSION
+    m["arm_implementation_fingerprint"] = N.arm_implementation_fingerprint()
+    m.update(N.git_provenance())
+    return m
+
+
+def manifest_differences(rehearsal: dict, live: dict) -> list[str]:
+    """Human-readable list of equivalence-significant disagreements."""
+    out: list[str] = []
+    for f in EQUIVALENCE_FIELDS:
+        a, b = rehearsal.get(f), live.get(f)
+        if f == "module_hashes" and isinstance(a, dict) and isinstance(b, dict):
+            for name in sorted(set(a) | set(b)):
+                if a.get(name) != b.get(name):
+                    out.append(f"{f}[{name}]: rehearsed {a.get(name)!r} -> "
+                               f"live {b.get(name)!r}")
+            continue
+        if a != b:
+            out.append(f"{f}: rehearsed {a!r} -> live {b!r}")
+    return out
+
+
+def assert_invocation_equivalent(rehearsal: dict, live: dict) -> dict:
+    """Refuse a launch whose effective invocation differs from its rehearsal.
+
+    THE CLAIM A REHEARSAL MAKES, made checkable. "We rehearsed the launcher"
+    only licenses an unattended night if the launcher then runs the same
+    experiment — and on a repository where main changes all day, that is a
+    claim about the last few hours, not a property of the code.
+
+    An `UNAVAILABLE` value on EITHER side refuses even when the two strings
+    match, because two unreadable hashes comparing equal is exactly how a
+    missing input passes for agreement.
+    """
+    for side, man in (("rehearsal", rehearsal), ("live", live)):
+        for f in EQUIVALENCE_FIELDS:
+            v = man.get(f)
+            if isinstance(v, str) and v.startswith("UNAVAILABLE"):
+                raise LaunchRefused(
+                    f"{side} manifest field {f!r} is {v}. Two unreadable "
+                    f"values comparing equal is not equivalence — it is a "
+                    f"missing input passing for agreement.")
+            if f == "module_hashes" and isinstance(v, dict):
+                bad = sorted(k for k, h in v.items()
+                             if str(h).startswith("UNAVAILABLE"))
+                if bad:
+                    raise LaunchRefused(
+                        f"{side} manifest could not hash {bad}. A module whose "
+                        f"bytes cannot be read cannot be shown to be the same "
+                        f"bytes the rehearsal ran.")
+    diffs = manifest_differences(rehearsal, live)
+    if diffs:
+        raise LaunchRefused(
+            "the live invocation is NOT the one that was rehearsed:\n  "
+            + "\n  ".join(diffs)
+            + "\n\nA rehearsal pins a launch only if the two run the same "
+              "experiment. Re-rehearse, or launch from the frozen worktree so "
+              "main can change without changing the night.")
+    return {"equivalent": True, "fields_compared": list(EQUIVALENCE_FIELDS),
+            "note": ("git_commit is deliberately NOT compared: a docs-only "
+                     "commit moves the SHA and changes nothing that runs, and "
+                     "refusing on it would train the operator to re-rehearse "
+                     "for no reason. The module hashes carry the real claim.")}
+
+
+def latest_rehearsal_manifest(launch_dir: Path | None = None) -> dict | None:
+    """The manifest from the most recent REHEARSAL receipt, if there is one."""
+    best = None
+    for r in read_launch_receipts(launch_dir):
+        if r.get("verdict") != VERDICT_REHEARSAL:
+            continue
+        man = r.get("launch_manifest")
+        if isinstance(man, dict):
+            if best is None or str(r.get("written_at_utc", "")) >= str(
+                    best[0]):
+                best = (r.get("written_at_utc", ""), man)
+    return best[1] if best else None
 
 
 def is_armed() -> bool:
