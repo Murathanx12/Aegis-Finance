@@ -16,5 +16,23 @@
    "above": 2
   }
  },
- "ea_delisting_found": "EA trades end 2026-08-04 (buyout completed); 8 quote-ghost days in the quoted panel flagged in its meta amendment_3"
+ "ea_delisting_found": "EA trades end 2026-08-04 (buyout completed); 8 quote-ghost days in the quoted panel flagged in its meta amendment_3",
+ "venue_sensitivity_probe": {
+  "basis": "AAPL 2026-08-14, one day, one name",
+  "off_exchange_TRF": {
+   "n": 341830,
+   "eff_med_bps": 0.472,
+   "quoted_at_trade_med_bps": 0.981,
+   "ratio": 0.482,
+   "frac_at_midpoint": 0.195
+  },
+  "on_exchange": {
+   "n": 165844,
+   "eff_med_bps": 0.328,
+   "quoted_at_trade_med_bps": 0.655,
+   "ratio": 0.5,
+   "frac_at_midpoint": 0.231
+  },
+  "reading": "venue does NOT drive the low panel ratio (0.48 vs 0.50); ~20% of prints execute at exact midpoint on BOTH venues; off-exchange prints match WIDER prevailing quotes (0.98 vs 0.66bp) - the TRF timestamp-lag signature, i.e. the matched quote may be stale for TRF prints. This is exactly the H-J convention question Q3 asks; the refinement must handle TRF report latency before any verdict."
+ }
 }
