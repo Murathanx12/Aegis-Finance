@@ -271,7 +271,38 @@ def _case_net_dataset():
             "a cross-sectional rank with no cross-section")
 
 
+def _case_cost_model():
+    from backend.services.cost_model import CostRefused, verdict_across_band
+    # The missing input is the PROVENANCE. A bare float carries no record of
+    # whether it was measured or declared, and one call downstream the two are
+    # indistinguishable — which is the whole failure Order 18 §1 rules on: the
+    # floor value used as a cost looks exactly like a measured cost.
+    return (lambda: verdict_across_band(lambda bps: bps > 3.0, 5.0),
+            CostRefused, "a verdict priced off a bare float with no provenance")
+
+
+def _case_instrument_floor():
+    from backend.services.instrument_floor import (Instrument,
+                                                   InstrumentUnresolvable,
+                                                   profile_instrument)
+    # The missing input is RESOLUTION. An instrument that cannot produce a
+    # finite reading on null data has no measurable floor, and profiling it
+    # anyway would emit a null band derived from a handful of survivors — which
+    # licenses every reading above it as a detection.
+    def _always_broken(_d):
+        raise ValueError("no reading")
+
+    inst = Instrument(name="broken", read=_always_broken,
+                      generate=lambda t, n, rng: (t, n, rng),
+                      null_truth=0.0, units="u", truths=(1.0,), n_default=20,
+                      basis="constructed", consumers=("test",))
+    return (lambda: profile_instrument(inst, sims=40),
+            InstrumentUnresolvable, "a floor profiled with no finite reading")
+
+
 CASES = {
+    "instrument_floor": _case_instrument_floor,
+    "cost_model": _case_cost_model,
     "net_dataset": _case_net_dataset,
     "research_daemon": _case_research_daemon,
     "spread_estimators": _case_spread_estimators,

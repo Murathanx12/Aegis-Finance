@@ -54,7 +54,7 @@ START, END = "2006-01-01", "2019-12-31"
 LOOKBACK_DAYS = 60
 TARGET_VOL = 0.15
 CAPS = (1.0, 1.5)
-COST_BPS = 10.0
+COST_BPS_ONE_WAY = 10.0
 N_BOOT = 2000
 BLOCK_DAYS = 21              # one month of trading days
 SEED = 20260817
@@ -103,7 +103,7 @@ def run(ret: pd.Series, cap: float) -> dict:
     w = pd.Series(w_month.reindex(month).to_numpy(), index=ret.index)
     w = w.ffill().fillna(0.0)
     traded = w.groupby(month).first().diff().abs().fillna(0.0)
-    cost_by_month = traded * COST_BPS / 1e4
+    cost_by_month = traded * COST_BPS_ONE_WAY / 1e4
     strat = w * ret
     # Charge the rebalance on the first day of each month it happens.
     firsts = pd.Series(ret.index).groupby(month.to_numpy()).first()
@@ -260,7 +260,7 @@ def main() -> int:
                       "lookback_days": LOOKBACK_DAYS, "caps": list(CAPS),
                       "rebalance": "monthly, weight set from data through the "
                                    "last day of the prior month",
-                      "cost_bps": COST_BPS, "block_days": BLOCK_DAYS},
+                      "cost_bps": COST_BPS_ONE_WAY, "block_days": BLOCK_DAYS},
          "results": results, "months_reserved": MONTHS_RESERVED},
         indent=1, default=float), encoding="utf-8")
     print(f"\nwrote {out}")

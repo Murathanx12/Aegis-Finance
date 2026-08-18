@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from typing import Sequence
 
 from backend.services.research_gym import episode as EP
-from backend.services.research_gym.policies import (DEFAULT_COST_BPS,
+from backend.services.research_gym.policies import (DEFAULT_COST_BPS_ONE_WAY,
                                                     POLICY_MENU, PolicyResult,
                                                     run_policy)
 
@@ -60,7 +60,7 @@ class ResponseSurface:
     horizon_days: int
     taken_policy: str
     results: dict[str, PolicyResult] = field(default_factory=dict)
-    cost_bps: float = DEFAULT_COST_BPS
+    cost_bps: float = DEFAULT_COST_BPS_ONE_WAY
 
     @property
     def taken(self) -> PolicyResult | None:
@@ -220,7 +220,7 @@ def taken_policy_name(ep: EP.DecisionEpisode) -> str:
 
 def replay(ep: EP.DecisionEpisode, daily_returns: Sequence[float], *,
            policies: Sequence[str] | None = None,
-           cost_bps: float = DEFAULT_COST_BPS) -> ResponseSurface:
+           cost_bps: float = DEFAULT_COST_BPS_ONE_WAY) -> ResponseSurface:
     """One episode against the whole policy menu."""
     names = list(policies or POLICY_MENU.keys())
     taken = taken_policy_name(ep)

@@ -51,7 +51,7 @@ OUTDIR = Path(r"C:\Users\mrthn\Aegis module\data\library")
 
 START, END = "2006-01-01", "2019-12-31"
 LOOKBACK_DAYS = 60
-COST_BPS = 10.0
+COST_BPS_ONE_WAY = 10.0
 N_BOOT = 2000
 BLOCK_DAYS = 21
 SEED = 20260817
@@ -79,7 +79,7 @@ def apply_weights(ret: pd.Series, w: pd.Series, cash: pd.Series) -> pd.Series:
     charge = pd.Series(0.0, index=ret.index)
     for m, d in first.items():
         if m in traded.index:
-            charge.loc[d] = traded.loc[m] * COST_BPS / 1e4
+            charge.loc[d] = traded.loc[m] * COST_BPS_ONE_WAY / 1e4
     return w * ret + (1.0 - w) * cash - charge
 
 

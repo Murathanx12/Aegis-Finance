@@ -27,7 +27,7 @@ from backend.services.research_gym import tensor as T
 OUT = _config.OPTIMUS_LEDGER_DIR / "research_gym" / "regret_tensor_v1.json"
 
 UNIVERSE = ["SPY", "QQQ", "IWM", "XLF", "XLE", "XLK"]
-COST_BPS = 10.0
+COST_BPS_ONE_WAY = 10.0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -82,9 +82,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     print(f"\nbuilding tensor: {len(series)} securities x {len(horizons)} "
-          f"horizons, stride {a.stride}d, cost {COST_BPS}bps")
+          f"horizons, stride {a.stride}d, cost {COST_BPS_ONE_WAY}bps")
     tens = T.build_regret_tensor(
-        series, horizons=horizons, cost_bps=COST_BPS, stride_days=a.stride,
+        series, horizons=horizons, cost_bps=COST_BPS_ONE_WAY, stride_days=a.stride,
         sample_start=a.start, sample_end=a.end,
         progress=lambda tkr, H: print(f"    {tkr} H={H}d done"))
 

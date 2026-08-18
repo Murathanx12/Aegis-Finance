@@ -87,14 +87,14 @@ from backend.services.research_gym.episode import (ACTION_MAPPING_FAILURE,
                                                    TIMING_FAILURE,
                                                    UNCLASSIFIED, Beliefs,
                                                    DecisionEpisode, Outcome)
-from backend.services.research_gym.policies import (DEFAULT_COST_BPS,
+from backend.services.research_gym.policies import (DEFAULT_COST_BPS_ONE_WAY,
                                                     POLICY_MENU, PolicyResult,
                                                     run_policy)
 
 __all__ = [
     "CAMPAIGN", "GYM", "CERTIFICATION",
     "DecisionEpisode", "Beliefs", "Outcome",
-    "POLICY_MENU", "PolicyResult", "run_policy", "DEFAULT_COST_BPS",
+    "POLICY_MENU", "PolicyResult", "run_policy", "DEFAULT_COST_BPS_ONE_WAY",
     "ResponseSurface", "replay", "attribute", "attribute_in_place",
     "taken_policy_name", "MATERIAL_EDGE_PCT", "MATERIAL_COST_GAP_PCT",
     "Attribution",

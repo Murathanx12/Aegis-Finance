@@ -37,7 +37,7 @@ from pathlib import Path
 
 import numpy as np
 
-from scripts.library_measure_2006_2019 import COST_BPS, OUT
+from scripts.library_measure_2006_2019 import COST_BPS_ONE_WAY, OUT
 
 # ── THE SELECTION RULE, DECLARED. ──────────────────────────────────────────
 # Frozen before it was applied. Every clause is a policy statement rather than
@@ -50,7 +50,7 @@ RULE = {
                             "is not a strategy",
     "3_detectable_in_liquid": "|net annual| >= its own 80%-power MDE in that "
                               "tercile, tested on NET because net is the claim",
-    "4_cost_margin": f"break-even >= 3x the assumed {COST_BPS:.0f}bp/crossing, "
+    "4_cost_margin": f"break-even >= 3x the assumed {COST_BPS_ONE_WAY:.0f}bp/crossing, "
                      f"so the choice does not hinge on the cost model being "
                      f"right",
     "5_sign_intact": "the sign agrees with the publication; an inverted sign "
@@ -94,7 +94,7 @@ def main() -> int:
         if not t["liquid_detectable"]:
             why.append("below its own MDE in the liquid tercile")
         be = m.get("breakeven_bps")
-        if be is None or not np.isfinite(be) or be < 3 * COST_BPS:
+        if be is None or not np.isfinite(be) or be < 3 * COST_BPS_ONE_WAY:
             why.append(f"break-even {be:.1f}bp < 3x cost" if be is not None
                        else "no break-even")
         if (m.get("net_annual") or 0) < 0:

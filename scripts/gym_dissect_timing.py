@@ -470,7 +470,7 @@ def main(argv: list[str] | None = None) -> int:
                        "action-mapping, not forecast, failures",
             params={"start": a.start, "end": a.end,
                     "horizon_days": HORIZON_DAYS,
-                    "cost_bps": G.DEFAULT_COST_BPS},
+                    "cost_bps": G.DEFAULT_COST_BPS_ONE_WAY},
             n_episodes=len(episodes)))
         print(f"\nwritten             {p}")
         print("lineage             row appended (R2 wall 2)")

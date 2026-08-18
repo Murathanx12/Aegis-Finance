@@ -42,7 +42,7 @@ OUT = _config.OPTIMUS_LEDGER_DIR / "research_gym" / "matched_null_v1.json"
 #: which is why they are constants here and not conveniences on the CLI.
 UNIVERSE = "^GSPC"
 HORIZON_DAYS = 63
-COST_BPS = 10.0
+COST_BPS_ONE_WAY = 10.0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -79,11 +79,11 @@ def main(argv: list[str] | None = None) -> int:
     states = [BR.vix_bucket(float(v)) for v in vix_prev.to_numpy()]
     print(f"{UNIVERSE} {rets.index[0].date()} -> {rets.index[-1].date()}  "
           f"{len(rets)} daily returns, horizon {HORIZON_DAYS}d, "
-          f"cost {COST_BPS}bps")
+          f"cost {COST_BPS_ONE_WAY}bps")
 
     mn = RG.build_matched_null(
         [float(x) for x in rets.to_numpy()], states,
-        universe=UNIVERSE, horizon_days=HORIZON_DAYS, cost_bps=COST_BPS,
+        universe=UNIVERSE, horizon_days=HORIZON_DAYS, cost_bps=COST_BPS_ONE_WAY,
         sample_start=str(rets.index[0].date()),
         sample_end=str(rets.index[-1].date()))
 

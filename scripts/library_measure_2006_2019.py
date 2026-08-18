@@ -85,10 +85,19 @@ MIN_DVOL_PCTILE = 20.0
 MIN_NAMES = 100
 N_DECILES = 10
 
-#: Cost per unit of notional CROSSED, in basis points. Charged against
+#: Cost per unit of notional CROSSED ONCE, in basis points. Charged against
 #: `sum |w_t - w_{t-1}|`, so a full rotation of a long-short book pays four
 #: times this. Illustrative, and the break-even is what actually decides.
-COST_BPS = 10.0
+#:
+#: THE UNIT IS IN THE NAME (Order 18 §1). `sum(|dw|)` counts BOTH legs of a
+#: rotation, so the rate charged against it is the ONE-WAY cost — the HALF
+#: spread. Every spread estimator in `backend/services/spread_estimators.py`
+#: returns the FULL spread, so plugging one in here raw charges TWICE the
+#: truth, and this panel's survivor count moves 4 -> 3 -> 1 -> 0 across
+#: 0/5/10/20bp: a factor of two moves a verdict two whole steps. Convert at the
+#: boundary with `SpreadEstimate.as_one_way_bps()`, which is the only place the
+#: halving happens.
+COST_BPS_ONE_WAY = 10.0
 
 #: 12-month circular blocks. Anomaly returns are autocorrelated and their
 #: crashes cluster (momentum's do, violently), so an iid bootstrap over months
@@ -203,7 +212,7 @@ def score(rets: np.ndarray, turn: np.ndarray, rng) -> dict:
     mean_m = float(r.mean())
     se_m = block_bootstrap_se(r, rng)
     turn_m = float(tr.mean()) if len(tr) else float("nan")
-    cost_m = turn_m * COST_BPS / 1e4
+    cost_m = turn_m * COST_BPS_ONE_WAY / 1e4
     gross_a = mean_m * 12.0
     net_a = (mean_m - cost_m) * 12.0
     se_a = se_m * 12.0
@@ -217,7 +226,7 @@ def score(rets: np.ndarray, turn: np.ndarray, rng) -> dict:
         "z": float(mean_m / se_m) if se_m and np.isfinite(se_m) else float("nan"),
         "sharpe": float(mean_m / r.std(ddof=1) * np.sqrt(12)),
         "monthly_turnover": turn_m,
-        # The break-even is the fact; COST_BPS is the assumption. A reader who
+        # The break-even is the fact; COST_BPS_ONE_WAY is the assumption. A reader who
         # disputes the schedule reads this column instead.
         "breakeven_bps": float(1e4 * mean_m / turn_m) if turn_m else float("nan"),
         # DETECTABILITY IS A PROPERTY OF THE QUANTITY BEING CLAIMED.
@@ -399,7 +408,7 @@ def main() -> int:
         "pairing": "signal labelled m -> return of m+1 (uniform PIT-safe rule)",
         "screens": {"min_price": MIN_PRICE, "min_dvol_pctile": MIN_DVOL_PCTILE,
                     "min_names": MIN_NAMES, "deciles": N_DECILES,
-                    "weighting": "equal", "cost_bps_per_crossing": COST_BPS},
+                    "weighting": "equal", "cost_bps_per_crossing": COST_BPS_ONE_WAY},
         "alignment_verified": {
             "Mom12m": "label m == cum return m-11..m-1, corr 1.0, maxdiff 0.0",
             "Mom6m": "label m == cum return m-5..m-1, corr 1.0, maxdiff 0.0",

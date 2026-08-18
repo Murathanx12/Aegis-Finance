@@ -37,7 +37,7 @@ from typing import Callable, Sequence
 #: One-way cost per unit of exposure changed. 10 bps is deliberately not
 #: generous: G7 in this project already established that turnover assumptions
 #: decide outcomes, and a Gym that flatters its own policies teaches nothing.
-DEFAULT_COST_BPS = 10.0
+DEFAULT_COST_BPS_ONE_WAY = 10.0
 
 
 @dataclass(frozen=True)
@@ -224,7 +224,7 @@ POLICY_MENU: dict[str, Callable] = {
 def run_policy(name: str, daily_returns: Sequence[float], *,
                start_exposure: float = 1.0,
                taken_exposure_path: Sequence[float] | None = None,
-               cost_bps: float = DEFAULT_COST_BPS,
+               cost_bps: float = DEFAULT_COST_BPS_ONE_WAY,
                ctx: dict | None = None) -> PolicyResult:
     """One policy over one forward path."""
     if name not in POLICY_MENU:

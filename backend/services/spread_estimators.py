@@ -30,7 +30,7 @@ WHAT AEGIS'S COST MODEL ACTUALLY EXPECTS — AUDITED, NOT ASSUMED
 is charged, and the two lines that decide it are:
 
     turn[t] = float(np.abs(w - w_prev).sum())        # line 191
-    cost_m  = turn_m * COST_BPS / 1e4                # line 206
+    cost_m  = turn_m * COST_BPS_ONE_WAY / 1e4        # line 206
 
 `sum(|Δw|)` counts BOTH LEGS of a rotation: selling A and buying B on equal
 weights contributes 1.0 + 1.0 = 2.0. So the notional in `turn` is total notional

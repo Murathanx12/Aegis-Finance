@@ -1,0 +1,873 @@
+{
+  "trial": "INSTRUMENT-FLOOR-SWEEP-1",
+  "generated_by": "scripts/instrument_floor_sweep.py",
+  "sims": 200,
+  "seed": 20260818,
+  "null_quantile": 0.95,
+  "stability_tolerance": 0.5,
+  "elapsed_sec": 158.9,
+  "basis": "every floor measured on a DECLARED synthetic microstructure that is kinder than the market in every direction it simplifies; each floor is therefore a LOWER BOUND",
+  "instruments": [
+    {
+      "instrument": "agk_edge_spread",
+      "units": "bps (full spread)",
+      "n_obs": 250,
+      "null_truth": 0.0,
+      "null_median": 19.67836,
+      "detection_floor": 32.219231,
+      "null_band": [
+        7.246667,
+        32.219231
+      ],
+      "smallest_resolvable_truth": 50.0,
+      "bias_at_smallest_resolvable": 1.0079,
+      "stabilisation_n": 60,
+      "consumers": [
+        "library panel repricing",
+        "NEURAL-RELATIVE-VALUE-1 labels",
+        "cost_model.cost_for_bars"
+      ],
+      "basis": "bid/ask bounce, 60 prints/day, sigma=2%/day, no gaps",
+      "notes": "",
+      "verdict": "resolves from 50",
+      "ladder": [
+        {
+          "truth": 1.0,
+          "median_read": 18.811687,
+          "p05": 5.941787,
+          "p95": 31.583202,
+          "read_over_truth": 18.8117,
+          "excess_ratio": -0.8667,
+          "resolved": false
+        },
+        {
+          "truth": 2.0,
+          "median_read": 18.957527,
+          "p05": 6.328571,
+          "p95": 32.524969,
+          "read_over_truth": 9.4788,
+          "excess_ratio": -0.3604,
+          "resolved": false
+        },
+        {
+          "truth": 5.0,
+          "median_read": 18.939758,
+          "p05": 7.320022,
+          "p95": 31.294207,
+          "read_over_truth": 3.788,
+          "excess_ratio": -0.1477,
+          "resolved": false
+        },
+        {
+          "truth": 10.0,
+          "median_read": 19.465004,
+          "p05": 7.135692,
+          "p95": 32.853766,
+          "read_over_truth": 1.9465,
+          "excess_ratio": -0.0213,
+          "resolved": false
+        },
+        {
+          "truth": 25.0,
+          "median_read": 26.089945,
+          "p05": 9.957897,
+          "p95": 41.605385,
+          "read_over_truth": 1.0436,
+          "excess_ratio": 0.2565,
+          "resolved": false
+        },
+        {
+          "truth": 50.0,
+          "median_read": 50.393502,
+          "p05": 30.517249,
+          "p95": 62.514546,
+          "read_over_truth": 1.0079,
+          "excess_ratio": 0.6143,
+          "resolved": true
+        },
+        {
+          "truth": 100.0,
+          "median_read": 101.179644,
+          "p05": 87.645978,
+          "p95": 112.353186,
+          "read_over_truth": 1.0118,
+          "excess_ratio": 0.815,
+          "resolved": true
+        },
+        {
+          "truth": 200.0,
+          "median_read": 203.035417,
+          "p05": 190.675403,
+          "p95": 214.878962,
+          "read_over_truth": 1.0152,
+          "excess_ratio": 0.9168,
+          "resolved": true
+        },
+        {
+          "truth": 400.0,
+          "median_read": 408.057642,
+          "p05": 393.746517,
+          "p95": 421.183547,
+          "read_over_truth": 1.0201,
+          "excess_ratio": 0.9709,
+          "resolved": true
+        }
+      ],
+      "bias_comparable": true
+    },
+    {
+      "instrument": "corwin_schultz_spread",
+      "units": "bps (full spread)",
+      "n_obs": 250,
+      "null_truth": 0.0,
+      "null_median": 69.930522,
+      "detection_floor": 78.618481,
+      "null_band": [
+        62.020475,
+        78.618481
+      ],
+      "smallest_resolvable_truth": 50.0,
+      "bias_at_smallest_resolvable": 1.7441,
+      "stabilisation_n": 60,
+      "consumers": [
+        "spread comparator"
+      ],
+      "basis": "same tape as AGK \u2014 the comparator, so disagreement is measured",
+      "notes": "",
+      "verdict": "resolves from 50, but reads 1.74x truth there",
+      "ladder": [
+        {
+          "truth": 1.0,
+          "median_read": 69.340136,
+          "p05": 60.891157,
+          "p95": 78.28473,
+          "read_over_truth": 69.3401,
+          "excess_ratio": -0.5904,
+          "resolved": false
+        },
+        {
+          "truth": 2.0,
+          "median_read": 69.806188,
+          "p05": 61.85092,
+          "p95": 78.223756,
+          "read_over_truth": 34.9031,
+          "excess_ratio": -0.0622,
+          "resolved": false
+        },
+        {
+          "truth": 5.0,
+          "median_read": 69.992754,
+          "p05": 61.224923,
+          "p95": 78.892606,
+          "read_over_truth": 13.9986,
+          "excess_ratio": 0.0124,
+          "resolved": false
+        },
+        {
+          "truth": 10.0,
+          "median_read": 71.035391,
+          "p05": 62.729154,
+          "p95": 79.186263,
+          "read_over_truth": 7.1035,
+          "excess_ratio": 0.1105,
+          "resolved": false
+        },
+        {
+          "truth": 25.0,
+          "median_read": 75.490779,
+          "p05": 65.71587,
+          "p95": 84.542409,
+          "read_over_truth": 3.0196,
+          "excess_ratio": 0.2224,
+          "resolved": false
+        },
+        {
+          "truth": 50.0,
+          "median_read": 87.206643,
+          "p05": 76.526187,
+          "p95": 95.434775,
+          "read_over_truth": 1.7441,
+          "excess_ratio": 0.3455,
+          "resolved": true
+        },
+        {
+          "truth": 100.0,
+          "median_read": 116.956507,
+          "p05": 105.404909,
+          "p95": 128.134713,
+          "read_over_truth": 1.1696,
+          "excess_ratio": 0.4703,
+          "resolved": true
+        },
+        {
+          "truth": 200.0,
+          "median_read": 188.497479,
+          "p05": 173.139362,
+          "p95": 203.231599,
+          "read_over_truth": 0.9425,
+          "excess_ratio": 0.5928,
+          "resolved": true
+        },
+        {
+          "truth": 400.0,
+          "median_read": 360.622761,
+          "p05": 343.53204,
+          "p95": 378.503652,
+          "read_over_truth": 0.9016,
+          "excess_ratio": 0.7267,
+          "resolved": true
+        }
+      ],
+      "bias_comparable": true
+    },
+    {
+      "instrument": "abdi_ranaldo_spread",
+      "units": "bps (full spread)",
+      "n_obs": 250,
+      "null_truth": 0.0,
+      "null_median": 0.0,
+      "detection_floor": 66.411164,
+      "null_band": [
+        0.0,
+        66.411164
+      ],
+      "smallest_resolvable_truth": 100.0,
+      "bias_at_smallest_resolvable": 0.9704,
+      "stabilisation_n": 125,
+      "consumers": [
+        "spread comparator"
+      ],
+      "basis": "same tape as AGK",
+      "notes": "",
+      "verdict": "resolves from 100",
+      "ladder": [
+        {
+          "truth": 1.0,
+          "median_read": 0.0,
+          "p05": 0.0,
+          "p95": 66.172801,
+          "read_over_truth": 0.0,
+          "excess_ratio": 0.0,
+          "resolved": false
+        },
+        {
+          "truth": 2.0,
+          "median_read": 23.762113,
+          "p05": 0.0,
+          "p95": 73.91829,
+          "read_over_truth": 11.8811,
+          "excess_ratio": 11.8811,
+          "resolved": false
+        },
+        {
+          "truth": 5.0,
+          "median_read": 3.722936,
+          "p05": 0.0,
+          "p95": 65.84468,
+          "read_over_truth": 0.7446,
+          "excess_ratio": 0.7446,
+          "resolved": false
+        },
+        {
+          "truth": 10.0,
+          "median_read": 14.782208,
+          "p05": 0.0,
+          "p95": 71.924173,
+          "read_over_truth": 1.4782,
+          "excess_ratio": 1.4782,
+          "resolved": false
+        },
+        {
+          "truth": 25.0,
+          "median_read": 23.256735,
+          "p05": 0.0,
+          "p95": 68.762952,
+          "read_over_truth": 0.9303,
+          "excess_ratio": 0.9303,
+          "resolved": false
+        },
+        {
+          "truth": 50.0,
+          "median_read": 52.169077,
+          "p05": 0.0,
+          "p95": 90.956103,
+          "read_over_truth": 1.0434,
+          "excess_ratio": 1.0434,
+          "resolved": false
+        },
+        {
+          "truth": 100.0,
+          "median_read": 97.035239,
+          "p05": 59.68125,
+          "p95": 128.455269,
+          "read_over_truth": 0.9704,
+          "excess_ratio": 0.9704,
+          "resolved": true
+        },
+        {
+          "truth": 200.0,
+          "median_read": 199.163926,
+          "p05": 177.522205,
+          "p95": 219.78712,
+          "read_over_truth": 0.9958,
+          "excess_ratio": 0.9958,
+          "resolved": true
+        },
+        {
+          "truth": 400.0,
+          "median_read": 397.672545,
+          "p05": 380.513685,
+          "p95": 417.857606,
+          "read_over_truth": 0.9942,
+          "excess_ratio": 0.9942,
+          "resolved": true
+        }
+      ],
+      "bias_comparable": true
+    },
+    {
+      "instrument": "roll_spread",
+      "units": "bps (full spread)",
+      "n_obs": 250,
+      "null_truth": 0.0,
+      "null_median": 89.921715,
+      "detection_floor": 280.25281,
+      "null_band": [
+        0.0,
+        280.25281
+      ],
+      "smallest_resolvable_truth": 400.0,
+      "bias_at_smallest_resolvable": 0.9771,
+      "stabilisation_n": 60,
+      "consumers": [
+        "liquidity_risk.compute_liquidity_metrics",
+        "liquidity score"
+      ],
+      "basis": "pure bounce + efficient-price innovations, sigma=2%/day",
+      "notes": "",
+      "verdict": "resolves from 400",
+      "ladder": [
+        {
+          "truth": 1.0,
+          "median_read": 103.607952,
+          "p05": 0.0,
+          "p95": 250.407083,
+          "read_over_truth": 103.608,
+          "excess_ratio": 13.6862,
+          "resolved": false
+        },
+        {
+          "truth": 2.0,
+          "median_read": 91.636533,
+          "p05": 0.0,
+          "p95": 275.280709,
+          "read_over_truth": 45.8183,
+          "excess_ratio": 0.8574,
+          "resolved": false
+        },
+        {
+          "truth": 5.0,
+          "median_read": 108.940467,
+          "p05": 0.0,
+          "p95": 257.242712,
+          "read_over_truth": 21.7881,
+          "excess_ratio": 3.8038,
+          "resolved": false
+        },
+        {
+          "truth": 10.0,
+          "median_read": 111.667139,
+          "p05": 0.0,
+          "p95": 262.602272,
+          "read_over_truth": 11.1667,
+          "excess_ratio": 2.1745,
+          "resolved": false
+        },
+        {
+          "truth": 25.0,
+          "median_read": 67.593772,
+          "p05": 0.0,
+          "p95": 271.520587,
+          "read_over_truth": 2.7038,
+          "excess_ratio": -0.8931,
+          "resolved": false
+        },
+        {
+          "truth": 50.0,
+          "median_read": 103.704554,
+          "p05": 0.0,
+          "p95": 274.524593,
+          "read_over_truth": 2.0741,
+          "excess_ratio": 0.2757,
+          "resolved": false
+        },
+        {
+          "truth": 100.0,
+          "median_read": 154.727366,
+          "p05": 0.0,
+          "p95": 295.365271,
+          "read_over_truth": 1.5473,
+          "excess_ratio": 0.6481,
+          "resolved": false
+        },
+        {
+          "truth": 200.0,
+          "median_read": 225.267316,
+          "p05": 0.0,
+          "p95": 381.42916,
+          "read_over_truth": 1.1263,
+          "excess_ratio": 0.6767,
+          "resolved": false
+        },
+        {
+          "truth": 400.0,
+          "median_read": 390.843381,
+          "p05": 68.570844,
+          "p95": 597.704373,
+          "read_over_truth": 0.9771,
+          "excess_ratio": 0.7523,
+          "resolved": true
+        }
+      ],
+      "bias_comparable": true
+    },
+    {
+      "instrument": "amihud_illiquidity",
+      "units": "|r|/$vol x1e6",
+      "n_obs": 250,
+      "null_truth": 0.0,
+      "null_median": 0.000186,
+      "detection_floor": 0.000333,
+      "null_band": [
+        9.6e-05,
+        0.000333
+      ],
+      "smallest_resolvable_truth": 0.0001,
+      "bias_at_smallest_resolvable": null,
+      "stabilisation_n": null,
+      "consumers": [
+        "liquidity score",
+        "LVaR"
+      ],
+      "basis": "linear impact channel, lognormal volume, sigma=2%/day baseline",
+      "notes": "",
+      "verdict": "resolves from 1.00e-04",
+      "ladder": [
+        {
+          "truth": 1e-09,
+          "median_read": 0.000172,
+          "p05": 9.6e-05,
+          "p95": 0.000331,
+          "read_over_truth": null,
+          "excess_ratio": -14136.9776,
+          "resolved": false
+        },
+        {
+          "truth": 1e-08,
+          "median_read": 0.000176,
+          "p05": 8.7e-05,
+          "p95": 0.000325,
+          "read_over_truth": null,
+          "excess_ratio": -1015.6636,
+          "resolved": false
+        },
+        {
+          "truth": 1e-07,
+          "median_read": 0.000168,
+          "p05": 9.8e-05,
+          "p95": 0.000345,
+          "read_over_truth": null,
+          "excess_ratio": -179.925,
+          "resolved": false
+        },
+        {
+          "truth": 1e-06,
+          "median_read": 0.000191,
+          "p05": 0.0001,
+          "p95": 0.000368,
+          "read_over_truth": null,
+          "excess_ratio": 5.1378,
+          "resolved": false
+        },
+        {
+          "truth": 1e-05,
+          "median_read": 0.000275,
+          "p05": 0.000131,
+          "p95": 0.000628,
+          "read_over_truth": null,
+          "excess_ratio": 8.916,
+          "resolved": false
+        },
+        {
+          "truth": 0.0001,
+          "median_read": 0.001043,
+          "p05": 6.3e-05,
+          "p95": 0.025321,
+          "read_over_truth": null,
+          "excess_ratio": 8.5694,
+          "resolved": true
+        }
+      ],
+      "bias_comparable": false
+    },
+    {
+      "instrument": "kyle_lambda",
+      "units": "return per sqrt(share)",
+      "n_obs": 250,
+      "null_truth": 0.0,
+      "null_median": 0.0,
+      "detection_floor": 8e-06,
+      "null_band": [
+        0.0,
+        8e-06
+      ],
+      "smallest_resolvable_truth": 1e-05,
+      "bias_at_smallest_resolvable": 0.9876,
+      "stabilisation_n": null,
+      "consumers": [
+        "liquidity score"
+      ],
+      "basis": "the estimator's OWN specification is the generator \u2014 the kindest possible test, and it still has a floor",
+      "notes": "",
+      "verdict": "resolves from 1.00e-05",
+      "ladder": [
+        {
+          "truth": 1e-09,
+          "median_read": 0.0,
+          "p05": 0.0,
+          "p95": 9e-06,
+          "read_over_truth": 0.0,
+          "excess_ratio": 0.0,
+          "resolved": false
+        },
+        {
+          "truth": 1e-08,
+          "median_read": 0.0,
+          "p05": 0.0,
+          "p95": 9e-06,
+          "read_over_truth": 0.0,
+          "excess_ratio": 0.0,
+          "resolved": false
+        },
+        {
+          "truth": 1e-07,
+          "median_read": 1e-06,
+          "p05": 0.0,
+          "p95": 1e-05,
+          "read_over_truth": 5.1662,
+          "excess_ratio": 5.1662,
+          "resolved": false
+        },
+        {
+          "truth": 1e-06,
+          "median_read": 1e-06,
+          "p05": 0.0,
+          "p95": 9e-06,
+          "read_over_truth": 1.2669,
+          "excess_ratio": 1.2669,
+          "resolved": false
+        },
+        {
+          "truth": 1e-05,
+          "median_read": 1e-05,
+          "p05": 1e-06,
+          "p95": 1.9e-05,
+          "read_over_truth": 0.9876,
+          "excess_ratio": 0.9876,
+          "resolved": true
+        },
+        {
+          "truth": 0.0001,
+          "median_read": 9.9e-05,
+          "p05": 8.9e-05,
+          "p95": 0.000109,
+          "read_over_truth": 0.9906,
+          "excess_ratio": 0.9906,
+          "resolved": true
+        }
+      ],
+      "bias_comparable": true
+    },
+    {
+      "instrument": "absorption_ratio",
+      "units": "variance share in top-k",
+      "n_obs": 300,
+      "null_truth": 0.0,
+      "null_median": 0.421047,
+      "detection_floor": 0.434006,
+      "null_band": [
+        0.409721,
+        0.434006
+      ],
+      "smallest_resolvable_truth": 0.05,
+      "bias_at_smallest_resolvable": null,
+      "stabilisation_n": 500,
+      "consumers": [
+        "systemic risk composite",
+        "regime detection"
+      ],
+      "basis": "12 assets, one common factor of declared variance share",
+      "notes": "",
+      "verdict": "resolves from 0.05",
+      "ladder": [
+        {
+          "truth": 0.05,
+          "median_read": 0.438577,
+          "p05": 0.422606,
+          "p95": 0.452084,
+          "read_over_truth": null,
+          "excess_ratio": 0.3506,
+          "resolved": true
+        },
+        {
+          "truth": 0.1,
+          "median_read": 0.466492,
+          "p05": 0.452986,
+          "p95": 0.484575,
+          "read_over_truth": null,
+          "excess_ratio": 0.4545,
+          "resolved": true
+        },
+        {
+          "truth": 0.2,
+          "median_read": 0.524586,
+          "p05": 0.502787,
+          "p95": 0.545336,
+          "read_over_truth": null,
+          "excess_ratio": 0.5177,
+          "resolved": true
+        },
+        {
+          "truth": 0.35,
+          "median_read": 0.614697,
+          "p05": 0.590808,
+          "p95": 0.638865,
+          "read_over_truth": null,
+          "excess_ratio": 0.5533,
+          "resolved": true
+        },
+        {
+          "truth": 0.5,
+          "median_read": 0.7028,
+          "p05": 0.675776,
+          "p95": 0.728417,
+          "read_over_truth": null,
+          "excess_ratio": 0.5635,
+          "resolved": true
+        },
+        {
+          "truth": 0.7,
+          "median_read": 0.821733,
+          "p05": 0.804023,
+          "p95": 0.839828,
+          "read_over_truth": null,
+          "excess_ratio": 0.5724,
+          "resolved": true
+        }
+      ],
+      "bias_comparable": false
+    },
+    {
+      "instrument": "mp_factor_count",
+      "units": "eigenvalues above MP bound",
+      "n_obs": 250,
+      "null_truth": 0.0,
+      "null_median": 0.0,
+      "detection_floor": 0.0,
+      "null_band": [
+        0.0,
+        0.0
+      ],
+      "smallest_resolvable_truth": 1.0,
+      "bias_at_smallest_resolvable": null,
+      "stabilisation_n": 60,
+      "consumers": [
+        "denoised covariance",
+        "portfolio optimiser inputs"
+      ],
+      "basis": "30 assets, each injected factor carrying 15% of variance",
+      "notes": "",
+      "verdict": "resolves from 1",
+      "ladder": [
+        {
+          "truth": 1.0,
+          "median_read": 1.0,
+          "p05": 1.0,
+          "p95": 1.0,
+          "read_over_truth": null,
+          "excess_ratio": 1.0,
+          "resolved": true
+        },
+        {
+          "truth": 2.0,
+          "median_read": 1.0,
+          "p05": 1.0,
+          "p95": 1.0,
+          "read_over_truth": null,
+          "excess_ratio": 0.5,
+          "resolved": true
+        },
+        {
+          "truth": 3.0,
+          "median_read": 1.0,
+          "p05": 1.0,
+          "p95": 1.0,
+          "read_over_truth": null,
+          "excess_ratio": 0.3333,
+          "resolved": true
+        },
+        {
+          "truth": 5.0,
+          "median_read": 1.0,
+          "p05": 1.0,
+          "p95": 1.0,
+          "read_over_truth": null,
+          "excess_ratio": 0.2,
+          "resolved": true
+        }
+      ],
+      "bias_comparable": false
+    },
+    {
+      "instrument": "copula_lower_tail",
+      "units": "lambda_lower",
+      "n_obs": 500,
+      "null_truth": 0.0,
+      "null_median": 0.0,
+      "detection_floor": 0.00096,
+      "null_band": [
+        0.0,
+        0.00096
+      ],
+      "smallest_resolvable_truth": 0.05,
+      "bias_at_smallest_resolvable": 1.124,
+      "stabilisation_n": null,
+      "consumers": [
+        "tail dependence report",
+        "contagion analysis"
+      ],
+      "basis": "Clayton with analytic lambda_L = 2^(-1/theta); null is independence, which has zero asymptotic tail dependence",
+      "notes": "",
+      "verdict": "resolves from 0.05",
+      "ladder": [
+        {
+          "truth": 0.05,
+          "median_read": 0.0562,
+          "p05": 0.0,
+          "p95": 0.12592,
+          "read_over_truth": 1.124,
+          "excess_ratio": 1.124,
+          "resolved": true
+        },
+        {
+          "truth": 0.1,
+          "median_read": 0.109,
+          "p05": 0.008505,
+          "p95": 0.19068,
+          "read_over_truth": 1.09,
+          "excess_ratio": 1.09,
+          "resolved": true
+        },
+        {
+          "truth": 0.2,
+          "median_read": 0.214,
+          "p05": 0.103255,
+          "p95": 0.30247,
+          "read_over_truth": 1.07,
+          "excess_ratio": 1.07,
+          "resolved": true
+        },
+        {
+          "truth": 0.35,
+          "median_read": 0.35845,
+          "p05": 0.266595,
+          "p95": 0.42524,
+          "read_over_truth": 1.0241,
+          "excess_ratio": 1.0241,
+          "resolved": true
+        },
+        {
+          "truth": 0.5,
+          "median_read": 0.50645,
+          "p05": 0.438445,
+          "p95": 0.55104,
+          "read_over_truth": 1.0129,
+          "excess_ratio": 1.0129,
+          "resolved": true
+        }
+      ],
+      "bias_comparable": true
+    },
+    {
+      "instrument": "realized_vol",
+      "units": "annualised vol",
+      "n_obs": 250,
+      "null_truth": 0.02,
+      "null_median": 0.019963,
+      "detection_floor": 0.021343,
+      "null_band": [
+        0.018712,
+        0.021343
+      ],
+      "smallest_resolvable_truth": 0.05,
+      "bias_at_smallest_resolvable": 0.994,
+      "stabilisation_n": 60,
+      "consumers": [
+        "vol cone",
+        "GARCH forecast baseline",
+        "risk number"
+      ],
+      "basis": "iid normal returns at a constant annualised vol \u2014 INCLUDED AS THE CONTROL: an instrument with no floor problem, so the table reports a shelf rather than an indictment",
+      "notes": "",
+      "verdict": "resolves from 0.05",
+      "ladder": [
+        {
+          "truth": 0.05,
+          "median_read": 0.049702,
+          "p05": 0.04631,
+          "p95": 0.05321,
+          "read_over_truth": 0.994,
+          "excess_ratio": 0.9913,
+          "resolved": true
+        },
+        {
+          "truth": 0.1,
+          "median_read": 0.100374,
+          "p05": 0.092705,
+          "p95": 0.107042,
+          "read_over_truth": 1.0037,
+          "excess_ratio": 1.0051,
+          "resolved": true
+        },
+        {
+          "truth": 0.15,
+          "median_read": 0.149509,
+          "p05": 0.140246,
+          "p95": 0.1605,
+          "read_over_truth": 0.9967,
+          "excess_ratio": 0.9965,
+          "resolved": true
+        },
+        {
+          "truth": 0.25,
+          "median_read": 0.248169,
+          "p05": 0.22974,
+          "p95": 0.268583,
+          "read_over_truth": 0.9927,
+          "excess_ratio": 0.9922,
+          "resolved": true
+        },
+        {
+          "truth": 0.4,
+          "median_read": 0.399473,
+          "p05": 0.366395,
+          "p95": 0.428822,
+          "read_over_truth": 0.9987,
+          "excess_ratio": 0.9987,
+          "resolved": true
+        }
+      ],
+      "bias_comparable": true
+    }
+  ]
+}

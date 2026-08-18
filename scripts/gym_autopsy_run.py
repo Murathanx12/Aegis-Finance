@@ -292,7 +292,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     slices = build_transfer_slices(
-        records[0][1].cost_bps if records else G.DEFAULT_COST_BPS)
+        records[0][1].cost_bps if records else G.DEFAULT_COST_BPS_ONE_WAY)
 
     reused: dict[str, dict] = {}
     if a.reuse_autopsies:

@@ -32,7 +32,7 @@ from backend.services.research_gym import utility_tensor as UT
 
 OUT = _config.OPTIMUS_LEDGER_DIR / "research_gym" / "utility_tensor_v1.json"
 UNIVERSE = ["SPY", "QQQ", "IWM", "XLF", "XLE", "XLK"]
-COST_BPS = 10.0
+COST_BPS_ONE_WAY = 10.0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -86,9 +86,9 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"\nbuilding utility tensor: {len(series)} securities x "
           f"{len(horizons)} horizons x {len(UT.DEFAULT_OBJECTIVES)} objectives, "
-          f"stride {a.stride}d, cost {COST_BPS}bps")
+          f"stride {a.stride}d, cost {COST_BPS_ONE_WAY}bps")
     t = UT.build_utility_tensor(
-        series, horizons=horizons, cost_bps=COST_BPS, stride_days=a.stride,
+        series, horizons=horizons, cost_bps=COST_BPS_ONE_WAY, stride_days=a.stride,
         sample_start=a.start, sample_end=a.end,
         progress=lambda tkr, H: print(f"    {tkr} H={H}d done"))
 
