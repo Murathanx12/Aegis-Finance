@@ -300,7 +300,10 @@
   "widest": {
    "ticker": "PLUG",
    "one_way_bps": 23.31
-  }
+  },
+  "below_band": 15,
+  "inside_band": 136,
+  "above_band": 29
  },
  "summary": {
   "n_names": 185,

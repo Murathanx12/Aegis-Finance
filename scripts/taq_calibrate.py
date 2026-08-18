@@ -115,6 +115,14 @@ def build() -> dict:
                          "one_way_bps": ordered[0]["one_way_bps"]},
             "widest": {"ticker": ordered[-1]["ticker"],
                        "one_way_bps": ordered[-1]["one_way_bps"]},
+            # Where the panel actually sits RELATIVE TO THE BAND. This is the
+            # number the whole page turns on and it was missing: every claim
+            # above is a tail statement, and a tail statement invites the
+            # reader to supply the middle themselves.
+            "below_band": sum(1 for r in retired if r["one_way_bps"] < lo),
+            "inside_band": sum(1 for r in retired
+                               if lo <= r["one_way_bps"] <= hi),
+            "above_band": sum(1 for r in retired if r["one_way_bps"] > hi),
         }
 
     # ── coverage: an absence is not one thing ──────────────────────────────
@@ -209,6 +217,17 @@ def _findings(d: dict) -> list[str]:
         lo, hi = d["declared_band_one_way_bps"]
         mid_band = (lo + hi) / 2
         med = sens["below_band_high"]["measured_one_way_bps"]
+        out.append(
+            f"**{sens['inside_band']} of {sens['n_retired']} retired names "
+            f"land INSIDE the declared {lo}-{hi}bp one-way band** "
+            f"({sens['inside_band'] / sens['n_retired']:.0%}); "
+            f"{sens['below_band']} sit below it and {sens['above_band']} above. "
+            f"**Beware the unit here**: {lo}-{hi}bp ONE-WAY is {lo * 2}-{hi * 2}bp "
+            f"FULL spread, so a name quoted at '5bp' on the tape is at "
+            f"{5 / 2}bp one-way — the lower-middle of the band, not below it. "
+            f"That is the same full-vs-one-way confusion the "
+            f"`COST_BPS_ONE_WAY` type was introduced to stop, arriving in the "
+            f"INTERPRETATION rather than the code.")
         out.append(
             f"**So the declared band was a GOOD DECLARATION, not an "
             f"over-charge.** Its midpoint is {mid_band}bp one-way and the "

@@ -113,10 +113,24 @@ Carrying it to a megacap is the original error wearing a correction.
 `docs/TAQ_COST_CALIBRATION.md`. **180 of 185 universe names retired their
 declared band.**
 
-**The band was a GOOD DECLARATION, not an over-charge.** Its midpoint is 3.0bp
-one-way; the panel's **median** retired name is **2.739bp** — within **9%**.
-Order 18 declared 1–5bp before any of this was measurable and the measurement
-lands inside it.
+**The band was a GOOD DECLARATION, not an over-charge.**
+
+| where the panel sits vs the declared 1–5bp one-way band | names |
+|---|---:|
+| below it | 15 |
+| **inside it** | **136** |
+| above it | 29 |
+
+Its midpoint is 3.0bp one-way; the panel's **median** retired name is
+**2.732bp** — within **9%**. Order 18 declared 1–5bp before any of this was
+measurable and **76% of the panel lands inside it**.
+
+**Watch the unit.** 1–5bp *one-way* is **2–10bp full spread**. So "81 of 180
+names sit below 5bp median spread" is a statement about the *full* spread —
+2.5bp one-way, the lower-middle of the band, **not below it**. The panel's
+p50 of 5.46bp full is 2.73bp one-way: dead centre. This is the same
+full-vs-one-way confusion the `COST_BPS_ONE_WAY` type was introduced to stop,
+arriving this time in the *interpretation* rather than the code.
 
 My earlier framing on this page, and the framing in the handoff, both said the
 band over-charges. That is true of the tight end and false of the typical name:
