@@ -319,11 +319,27 @@ Two properties before this is pasted:
   * The task runs the LAUNCHER, which decides. It does not run a night.
     Whether a night happens is `evaluate_launch`'s verdict plus the
     arming flag, both recomputed at 17:00.
+
+  * `< NUL` IS LOAD-BEARING — DO NOT DROP IT. A task registered with
+    LogonType=Interactive runs inside the logged-on session WITH a
+    console, so `sys.stdin.isatty()` is True and `observe_invocation`
+    marks every genuine firing `contradicted`. Those receipts then count
+    for nothing and acceptance can never reach 3/3. This is not a
+    hypothetical: the first real firing, 2026-08-18 17:00:01, was
+    disqualified exactly this way. Redirecting stdin removes the
+    confound and leaves the check able to do the job it was built for —
+    catching a human in a terminal who typed `--scheduled`.
 """)
     print(f'  schtasks /Create /TN "AegisIIF1NightLauncher" /SC WEEKLY '
           f'/D MON,TUE,WED,THU,FRI /ST 17:00 /TR '
           f'"cmd /c cd /d {root} && '
-          f'python -m scripts.run_night_launcher --scheduled >> '
+          f'python -m scripts.run_night_launcher --scheduled < NUL >> '
+          f'{root}\\backend\\data\\optimus\\launcher.log 2>&1"')
+    print("\n  Already registered? Change it in place rather than "
+          "re-registering:\n")
+    print(f'  schtasks /Change /TN "AegisIIF1NightLauncher" /TR '
+          f'"cmd /c cd /d {root} && '
+          f'python -m scripts.run_night_launcher --scheduled < NUL >> '
           f'{root}\\backend\\data\\optimus\\launcher.log 2>&1"')
     print("""
   WEEKLY/MON-FRI rather than DAILY is a coarse pre-filter only. It is not
@@ -338,6 +354,12 @@ Two properties before this is pasted:
     acc = L.acceptance_report()
     print(f"  current acceptance: {acc['verdict']} "
           f"({acc['n_consecutive']}/{acc['n_required']} consecutive)")
+    # The diagnosis is the whole reason the third verdict exists. Computing it
+    # and then printing only the count would leave the one field that says
+    # WHAT TO DO unread — the write-only-telemetry shape, in the one place a
+    # human is standing at the keyboard about to paste a registration.
+    if acc.get("diagnosis"):
+        print(f"\n  !! {acc['diagnosis']}")
     return 0
 
 
