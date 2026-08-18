@@ -534,7 +534,14 @@ def _newey_west_se(x: Sequence[float]) -> float:
 #: Normal quantiles, hardcoded rather than pulled from scipy: this is a power
 #: check that must run in the offline fast suite, and a power gate that silently
 #: skips when a dependency is missing is a gate that passes by not running.
-_Z = {0.80: 0.8416, 0.90: 1.2816, 0.95: 1.6449, 0.975: 1.9600, 0.99: 2.3263}
+#:
+#: PUBLIC because the research daemon's power screen uses the same table. A
+#: second copy would be a second thing that can drift, and two power gates
+#: disagreeing about z_{0.975} is the kind of difference that never shows up as
+#: an error — only as two modules quietly disagreeing about what is detectable.
+Z_STD_NORMAL = {0.80: 0.8416, 0.90: 1.2816, 0.95: 1.6449, 0.975: 1.9600,
+                0.99: 2.3263}
+_Z = Z_STD_NORMAL
 
 
 def forward_mde_paired(*, deltas_by_night: dict[str, Sequence[float]],

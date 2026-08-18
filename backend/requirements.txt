@@ -82,3 +82,11 @@ sqlalchemy>=2.0      # required by APScheduler's SQLAlchemyJobStore (persistent 
 # Test infra (hard per-test timeout backstop — a non-slow test can never hang the
 # suite again; the fast suite is also network-blocked offline, see backend/tests/conftest.py)
 pytest-timeout>=2.1.0
+
+# Transaction costs (Order 17 P0-R2). The AUTHORS' implementation of the
+# Ardia-Guidotti-Kroencke (2024) EDGE estimator, deliberately rather than a
+# reimplementation: a hand-rolled GMM estimator that is subtly wrong produces a
+# plausible spread and nothing downstream would notice. Absence is a REFUSAL in
+# backend/services/spread_estimators.py, never a silent fallback to the
+# Corwin-Schultz estimator AGK was adopted to replace.
+bidask>=2.1.0

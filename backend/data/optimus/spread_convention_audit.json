@@ -1,0 +1,172 @@
+{
+  "q1_cost_model_expects": {
+    "expects": "one_way_cost",
+    "evidence": "turnover = sum(|dw|) counts both legs; cost = turnover * COST_BPS",
+    "sites": [
+      "scripts/library_measure_2006_2019.py:191",
+      "scripts/library_measure_2006_2019.py:206"
+    ]
+  },
+  "q2_estimators_return": {
+    "returns": "proportional_effective_spread",
+    "recovery": [
+      {
+        "true_full_spread_bps": 20.0,
+        "agk": 29.253,
+        "corwin_schultz": 72.126,
+        "abdi_ranaldo": 0.0
+      },
+      {
+        "true_full_spread_bps": 50.0,
+        "agk": 55.66,
+        "corwin_schultz": 87.497,
+        "abdi_ranaldo": 29.126
+      },
+      {
+        "true_full_spread_bps": 100.0,
+        "agk": 100.883,
+        "corwin_schultz": 130.677,
+        "abdi_ranaldo": 119.401
+      },
+      {
+        "true_full_spread_bps": 200.0,
+        "agk": 199.071,
+        "corwin_schultz": 185.713,
+        "abdi_ranaldo": 187.765
+      }
+    ]
+  },
+  "q3_detection_floor": {
+    "floors": [
+      {
+        "floor_full_spread_bps": 32.53,
+        "median_full_spread_bps": 18.804,
+        "quantile": 0.95,
+        "sims": 60,
+        "n_obs": 250,
+        "sigma_daily": 0.02,
+        "basis": "SIMULATED_ZERO_SPREAD_AT_THIS_N_AND_VOLATILITY"
+      },
+      {
+        "floor_full_spread_bps": 48.795,
+        "median_full_spread_bps": 28.206,
+        "quantile": 0.95,
+        "sims": 60,
+        "n_obs": 250,
+        "sigma_daily": 0.03,
+        "basis": "SIMULATED_ZERO_SPREAD_AT_THIS_N_AND_VOLATILITY"
+      },
+      {
+        "floor_full_spread_bps": 26.318,
+        "median_full_spread_bps": 16.881,
+        "quantile": 0.95,
+        "sims": 60,
+        "n_obs": 500,
+        "sigma_daily": 0.02,
+        "basis": "SIMULATED_ZERO_SPREAD_AT_THIS_N_AND_VOLATILITY"
+      },
+      {
+        "floor_full_spread_bps": 39.478,
+        "median_full_spread_bps": 25.321,
+        "quantile": 0.95,
+        "sims": 60,
+        "n_obs": 500,
+        "sigma_daily": 0.03,
+        "basis": "SIMULATED_ZERO_SPREAD_AT_THIS_N_AND_VOLATILITY"
+      },
+      {
+        "floor_full_spread_bps": 23.476,
+        "median_full_spread_bps": 12.997,
+        "quantile": 0.95,
+        "sims": 60,
+        "n_obs": 1000,
+        "sigma_daily": 0.02,
+        "basis": "SIMULATED_ZERO_SPREAD_AT_THIS_N_AND_VOLATILITY"
+      },
+      {
+        "floor_full_spread_bps": 35.215,
+        "median_full_spread_bps": 19.495,
+        "quantile": 0.95,
+        "sims": 60,
+        "n_obs": 1000,
+        "sigma_daily": 0.03,
+        "basis": "SIMULATED_ZERO_SPREAD_AT_THIS_N_AND_VOLATILITY"
+      }
+    ],
+    "reads": [
+      {
+        "true_full_spread_bps": 1.0,
+        "estimator": "agk_edge",
+        "convention": "proportional_effective_spread",
+        "full_spread_bps": 9.54,
+        "one_way_bps": 4.77,
+        "floor": {
+          "floor_full_spread_bps": 26.127,
+          "median_full_spread_bps": 16.758,
+          "quantile": 0.95,
+          "sims": 60,
+          "n_obs": 500,
+          "sigma_daily": 0.019854540500499878,
+          "basis": "SIMULATED_ZERO_SPREAD_AT_THIS_N_AND_VOLATILITY"
+        },
+        "resolvable": false,
+        "interpretation": "AT OR BELOW the estimator's own floor: daily OHLC cannot resolve this spread. Use it as an UPPER BOUND, not a cost. This is the expected state for megacaps, whose true spreads are 1-2bp."
+      },
+      {
+        "true_full_spread_bps": 10.0,
+        "estimator": "agk_edge",
+        "convention": "proportional_effective_spread",
+        "full_spread_bps": 21.158,
+        "one_way_bps": 10.579,
+        "floor": {
+          "floor_full_spread_bps": 27.746,
+          "median_full_spread_bps": 17.796,
+          "quantile": 0.95,
+          "sims": 60,
+          "n_obs": 500,
+          "sigma_daily": 0.021084838798425768,
+          "basis": "SIMULATED_ZERO_SPREAD_AT_THIS_N_AND_VOLATILITY"
+        },
+        "resolvable": false,
+        "interpretation": "AT OR BELOW the estimator's own floor: daily OHLC cannot resolve this spread. Use it as an UPPER BOUND, not a cost. This is the expected state for megacaps, whose true spreads are 1-2bp."
+      },
+      {
+        "true_full_spread_bps": 50.0,
+        "estimator": "agk_edge",
+        "convention": "proportional_effective_spread",
+        "full_spread_bps": 57.415,
+        "one_way_bps": 28.708,
+        "floor": {
+          "floor_full_spread_bps": 27.565,
+          "median_full_spread_bps": 17.68,
+          "quantile": 0.95,
+          "sims": 60,
+          "n_obs": 500,
+          "sigma_daily": 0.020947610727442088,
+          "basis": "SIMULATED_ZERO_SPREAD_AT_THIS_N_AND_VOLATILITY"
+        },
+        "resolvable": true,
+        "interpretation": "above the estimator's zero-spread floor \u2014 usable as a measurement"
+      },
+      {
+        "true_full_spread_bps": 200.0,
+        "estimator": "agk_edge",
+        "convention": "proportional_effective_spread",
+        "full_spread_bps": 197.361,
+        "one_way_bps": 98.68,
+        "floor": {
+          "floor_full_spread_bps": 31.428,
+          "median_full_spread_bps": 20.158,
+          "quantile": 0.95,
+          "sims": 60,
+          "n_obs": 500,
+          "sigma_daily": 0.023882930022385444,
+          "basis": "SIMULATED_ZERO_SPREAD_AT_THIS_N_AND_VOLATILITY"
+        },
+        "resolvable": true,
+        "interpretation": "above the estimator's zero-spread floor \u2014 usable as a measurement"
+      }
+    ]
+  },
+  "convention_audit_pass": true
+}

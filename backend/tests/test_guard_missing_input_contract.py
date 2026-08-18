@@ -234,7 +234,47 @@ def _case_iif1_grader():
             GradeRefused, "a Brier over a sample with no positive outcomes")
 
 
+def _case_spread_estimators():
+    from backend.services.spread_estimators import (SpreadConventionError,
+                                                    SpreadEstimate)
+    # The missing input is the CONVENTION, and it is the one whose absence
+    # looks exactly like agreement: every convention yields a positive number
+    # of basis points, so a wrong one produces a plausible cost, a plausible
+    # net return and a plausible survivor count, and nothing downstream can
+    # tell. A spread and the convention it is quoted in are one object here.
+    return (lambda: SpreadEstimate(value=0.001, convention="", estimator="t",
+                                   n_obs=100),
+            SpreadConventionError, "a spread with no declared convention")
+
+
+def _case_research_daemon():
+    from backend.services.research_daemon import (HypothesisJob, JobRefused,
+                                                  power_screen)
+    # A job with no standard error. Without one there is no MDE, and without an
+    # MDE a null result is a statement about the instrument rather than the
+    # world (§19) — and the job cannot be prioritised either, because expected
+    # value is meaningless without knowing whether it can resolve at all.
+    job = HypothesisJob(
+        hypothesis_id="H", question="q", universe="u", outcome="o",
+        start="2010-01-01", end="2015-01-01", n_date_blocks=60,
+        se_per_block=0.0, expected_effect=0.02, effect_units="annualised")
+    return (lambda: power_screen(job), JobRefused,
+            "a job power-screened with no standard error")
+
+
+def _case_net_dataset():
+    from backend.services.net_dataset import LabelRefused, cross_sectional_rank
+    # A cross-sectional rank over ONE name. It is 0.5 by construction — a fact
+    # about the arithmetic rather than about the security — and a panel that
+    # quietly emits it teaches a network that thin dates are average.
+    return (lambda: cross_sectional_rank({"ONLY": 0.1}), LabelRefused,
+            "a cross-sectional rank with no cross-section")
+
+
 CASES = {
+    "net_dataset": _case_net_dataset,
+    "research_daemon": _case_research_daemon,
+    "spread_estimators": _case_spread_estimators,
     "iif1_grader": _case_iif1_grader,
     "night_launcher": _case_night_launcher,
     "population": _case_population,
