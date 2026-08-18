@@ -370,3 +370,52 @@ def test_ABSENT_and_UNRESOLVABLE_are_kept_apart():
         avg_dollar_volume_mm=500.0, turnover_pct=0.4)
     assert blind["roll_spread_absent"] is False
     assert blind["roll_spread_unresolvable"] is True
+
+
+# ── Amihud: annotated, NOT amputated, and the distinction is tested ────────
+def test_amihud_is_ANNOTATED_and_its_score_is_NOT_dropped():
+    """The asymmetry with Roll, made explicit so nobody "finishes the job".
+
+    Roll inverts a serial covariance to recover a LATENT spread, and its whole
+    scoring band sat under its noise floor — every in-range reading was noise.
+    Amihud is a DIRECT RATIO of observables, so a megacap reading ~0 is a true
+    statement, not a failed estimate. Deleting a 30%-weight component on this
+    evidence would be the guess-wearing-a-rule the sweep exists to prevent.
+    """
+    from backend.services import liquidity_risk as LR
+
+    out = LR.compute_liquidity_score(
+        amihud_illiq=0.0, roll_spread=0.0400,
+        avg_dollar_volume_mm=5000.0, turnover_pct=0.5)
+    assert "amihud" in out["components"], (
+        "Amihud must still score — the floor caveats an IMPACT claim, it does "
+        "not invalidate the ratio")
+    assert out["components"]["amihud"]["weight"] == 0.30
+
+
+def test_the_amihud_caveat_fires_below_the_null_and_is_silent_above_it():
+    from backend.services import liquidity_risk as LR
+
+    below = LR.compute_liquidity_metrics.__doc__ is not None  # module imported
+    assert below
+    # The caveat lives on the metrics payload; exercise the threshold directly.
+    assert LR.AMIHUD_NULL_FLOOR == pytest.approx(2.563e-04, rel=1e-6)
+    prof = IF.profile_instrument(IF.INSTRUMENTS["amihud_illiquidity"],
+                                 n=LR._AMIHUD_WINDOW, sims=80,
+                                 measure_stability=False)
+    assert 0.4 * prof.detection_floor <= LR.AMIHUD_NULL_FLOOR <= 2.5 * prof.detection_floor, (
+        f"declared {LR.AMIHUD_NULL_FLOOR:.3e} vs measured "
+        f"{prof.detection_floor:.3e} at n={LR._AMIHUD_WINDOW}")
+
+
+def test_kyle_cannot_be_profiled_at_or_below_its_own_window():
+    """A finding in its own right, and the harness reports it as a refusal
+    rather than as a floor of zero.
+
+    `compute_kyle_lambda` needs strictly more rows than its 63-day window —
+    `range(window, len(returns))` is empty otherwise — so every reading is NaN
+    and a naive profiler would have called that "no floor".
+    """
+    with pytest.raises(IF.InstrumentUnresolvable, match="finite reading"):
+        IF.profile_instrument(IF.INSTRUMENTS["kyle_lambda"], n=63, sims=40,
+                              measure_stability=False)

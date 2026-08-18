@@ -70,6 +70,34 @@ _ROLL_WINDOW = _LIQ_CFG.get("roll_window", 21)       # Rolling window for Roll s
 #: claim that the name is averagely liquid.
 ROLL_DETECTION_FLOOR_BPS = 265.0
 
+#: Amihud's null reading — what `|r| / $volume` returns when there is NO price
+#: impact at all, only ordinary volatility. MEASURED by INSTRUMENT-FLOOR-SWEEP-1
+#: at this module's own `_AMIHUD_WINDOW`:
+#:
+#:      n=21 (production)  null median 1.81e-04   floor 2.56e-04
+#:      n=250              null median 1.79e-04   floor 3.42e-04
+#:
+#: AMIHUD IS ANNOTATED, NOT AMPUTATED — AND THE DIFFERENCE FROM ROLL IS THE
+#: WHOLE POINT.
+#:
+#: Roll estimates a LATENT quantity (a spread nobody observes) by inverting a
+#: serial covariance, and its entire scoring band sat below its own noise
+#: floor, so every reading in range was noise. Amihud is not an inversion: it
+#: is a DIRECT RATIO OF OBSERVABLES. A megacap reading ~0 is not a failed
+#: estimate, it is a true statement that its price barely moves per dollar
+#: traded.
+#:
+#: What the floor DOES say is narrower and still worth printing: below it, the
+#: reading is consistent with pure volatility and NO price impact whatsoever,
+#: so it cannot support a causal impact claim. That is a caveat on
+#: interpretation, not grounds for deleting a 30%-weight component — and
+#: deleting it on this evidence would be exactly the "refusal installed without
+#: checking where the live inputs fall" this sweep exists to prevent.
+#:
+#: Live readings at the time of measurement: AAPL 0.0 (below), PLUG 3.0e-04
+#: (1.17x the floor — marginal), SOC 1.6e-03 (6x — genuinely resolvable).
+AMIHUD_NULL_FLOOR = 2.563e-04
+
 
 def compute_amihud_illiquidity(
     returns: pd.Series,
@@ -310,6 +338,21 @@ def compute_liquidity_metrics(
                 bool(current_roll * 10000 >= ROLL_DETECTION_FLOOR_BPS)
                 if current_roll is not None else None),
             "roll_detection_floor_bps": ROLL_DETECTION_FLOOR_BPS,
+            # Reported, and deliberately NOT acted on — see AMIHUD_NULL_FLOOR.
+            # Below this the reading is consistent with pure volatility and no
+            # price impact, which caveats an IMPACT reading without making the
+            # ratio itself wrong.
+            "amihud_above_null_floor": (
+                bool(current_amihud >= AMIHUD_NULL_FLOOR)
+                if current_amihud is not None else None),
+            "amihud_null_floor": AMIHUD_NULL_FLOOR,
+            "amihud_caveat": (
+                "at or below the no-impact null: this name's |r|/$volume is "
+                "what ordinary volatility alone would produce, so the number "
+                "does not evidence price impact. The ratio is still correctly "
+                "computed and still scores."
+                if (current_amihud is not None
+                    and current_amihud < AMIHUD_NULL_FLOOR) else ""),
             "avg_dollar_volume_mm": round(avg_dollar_vol, 1),
             "daily_turnover_pct": round(turnover, 3) if turnover is not None else None,
             "shares_outstanding_mm": round(shares_out / 1e6, 1) if shares_out > 0 else None,
