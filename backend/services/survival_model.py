@@ -101,6 +101,10 @@ class CrashSurvivalModel:
         self._fill_values = None
         self._available_features: list[str] = []
         self._base_rate = config.get("ml", {}).get("crash_base_rate_fallback", 0.12)
+        #: Why the last predict_proba substituted the base rate ("" = it
+        #: didn't). A constant that cannot be told apart from a prediction
+        #: is the silent-fragility shape; this field is the tell.
+        self.last_predict_degraded = ""
 
     def train(
         self,
@@ -175,6 +179,7 @@ class CrashSurvivalModel:
     def predict_proba(self, features: pd.DataFrame, horizon: str = "12m") -> np.ndarray:
         """Predict crash probability at the given horizon."""
         if not self.is_trained:
+            self.last_predict_degraded = "model not trained"
             return np.full(len(features), self._base_rate)
 
         horizon_days = HORIZON_DAYS.get(horizon, 252)
@@ -198,8 +203,22 @@ class CrashSurvivalModel:
                 t_lo, t_hi = times[left], times[right]
                 frac = (horizon_days - t_lo) / (t_hi - t_lo) if t_hi != t_lo else 0.0
                 s_t = surv_func.iloc[left].values * (1 - frac) + surv_func.iloc[right].values * frac
+            self.last_predict_degraded = ""
             return np.clip(1.0 - s_t, 0.02, 0.98)
-        except Exception:
+        except Exception as e:
+            # The fallback VALUE stays (a serving router must not 500 on a
+            # broken model), but a trained model failing to predict is a
+            # defect, and until 2026-08-19 this branch returned a plausible
+            # constant with no trace — the silent-fragility shape exactly.
+            # The reason is logged AND kept on the instance so a caller (or
+            # a health canary) can distinguish "model says base rate" from
+            # "model is broken and we substituted the base rate".
+            self.last_predict_degraded = f"{type(e).__name__}: {e}"
+            logger.warning(
+                "survival_model.predict_proba DEGRADED to constant base rate "
+                "%.3f for %d rows (horizon=%s): %s — this is a substitution, "
+                "not a prediction", self._base_rate, len(X), horizon,
+                self.last_predict_degraded)
             return np.full(len(X), self._base_rate)
 
     def get_top_features(self, n: int = 5) -> list[tuple]:

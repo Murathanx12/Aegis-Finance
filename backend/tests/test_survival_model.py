@@ -126,3 +126,42 @@ def test_train_and_predict_end_to_end():
         assert len(model.get_top_features(3)) == 3
     else:
         assert "reason" in result
+
+
+def test_a_degraded_prediction_carries_its_tell_and_logs(caplog):
+    """The 2026-08-19 fragility-audit fix: a broken trained model still
+    returns the base-rate fallback (a serving router must not 500), but the
+    substitution is now LOUD — `last_predict_degraded` names the exception
+    and a WARNING is logged. A constant that cannot be told apart from a
+    prediction is the silent-fragility shape; this pins the tell."""
+    import logging
+
+    model = CrashSurvivalModel()
+    features = pd.DataFrame({f: np.zeros(4) for f in COX_FEATURES})
+
+    # untrained: fallback with the documented reason, no warning spam
+    out = model.predict_proba(features)
+    assert np.allclose(out, model._base_rate)
+    assert model.last_predict_degraded == "model not trained"
+
+    # "trained" but broken: fallback with the exception named, WARNING logged
+    model.is_trained = True
+    model._available_features = list(COX_FEATURES)
+    model._fill_values = {f: 0.0 for f in COX_FEATURES}
+
+    class _Broken:
+        def transform(self, X):
+            return X.values
+
+    class _BrokenModel:
+        def predict_survival_function(self, X):
+            raise RuntimeError("simulated lifelines failure")
+
+    model._scaler = _Broken()
+    model._model = _BrokenModel()
+    with caplog.at_level(logging.WARNING):
+        out = model.predict_proba(features)
+    assert np.allclose(out, model._base_rate)
+    assert "RuntimeError" in model.last_predict_degraded
+    assert any("substitution, not a prediction" in r.message
+               for r in caplog.records)
