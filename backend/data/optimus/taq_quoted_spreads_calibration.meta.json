@@ -191,7 +191,7 @@
   "YUM",
   "ZTS"
  ],
- "n_rows": 4132,
+ "n_rows": 4180,
  "days": [
   "20260715",
   "20260716",
@@ -216,5 +216,12 @@
   "20260812",
   "20260813",
   "20260814"
- ]
+ ],
+ "amended_at_utc": "2026-08-18T10:41:17.912177+00:00",
+ "amendment": "sym_root is capped at 4 chars: GOOGL=GOOG+L, CMCSA=CMCS+A were never queried by the hyphen-only mapping and returned SILENCE, not an error. Re-pulled and appended.",
+ "recorded_absences": {
+  "PXD": "delisted 2024 (dead universe entry)",
+  "SQ": "renamed - trades as XYZ in TAQ; universe entry is STALE (flagged, not remapped here)",
+  "MMC": "absent from TAQ and 404s at yfinance - unexplained, needs follow-up"
+ }
 }
