@@ -293,14 +293,53 @@ inert one, which is the only reason to believe the other 167.
 - Thursday: the real resolve run, ~396 records.
 - Friday: arm the launcher after 3/3 scheduled receipts.
 
+### Amihud: annotated, not amputated — the measurement changed the answer
+
+I expected to repeat the Roll fix across the shelf. Measuring at the
+**production** windows said otherwise, and the asymmetry is the finding:
+
+| instrument | window | floor | live | verdict |
+|---|---|---:|---|---|
+| Roll | 21d | 265bp | scoring band is 0–100bp | **refuse** |
+| Amihud | 21d | 2.56e-04 | AAPL 0.0 · PLUG 3.0e-04 · SOC 1.6e-03 | **annotate** |
+| Kyle | 63d | — | not called in the live score | no action |
+
+**Roll inverts a serial covariance to recover a latent spread**, and its entire
+band sat under its own noise floor — every in-range reading was noise.
+**Amihud is a direct ratio of observables.** AAPL reading ~0 is a *true*
+statement that its price barely moves per dollar traded, not a failed estimate.
+
+What Amihud's floor does say is narrower and still worth printing: below it the
+reading is consistent with pure volatility and no price impact, so it cannot
+support a *causal impact* claim. That caveats an interpretation. It is not
+grounds for deleting a 30%-weight component — and doing so would have been
+exactly the "refusal installed without checking where the live inputs actually
+fall" this section warned against one paragraph earlier.
+
+So the payload gains `amihud_above_null_floor`, `amihud_null_floor` and a
+caveat string, and **the score is untouched**. A test asserts Amihud still
+scores at weight 0.30, so nobody later "finishes the job".
+
+**Verified live at `cace49e`, and the proof is the composites NOT moving:**
+AAPL 96.0 and SOC 82.0, identical before and after — annotation-only is a
+measurement here, not a claim about what the diff does.
+
+Two by-products:
+- **PLUG sits at 1.17× the floor** — marginal, and reported as marginal rather
+  than rounded up to "resolvable".
+- **Kyle cannot be profiled at n ≤ its own 63-day window at all**:
+  `range(window, len(returns))` is empty, so every reading is NaN. The harness
+  returns a *refusal*; a naive profiler would have recorded "no floor" and
+  moved on.
+
 **Still open in code:**
-- The 167 write-only fields each need wire-up-or-delete.
+- The 167 write-only fields each need wire-up-or-delete. The most pointed is
+  `finished_before_open` — a safety property recorded and checked by nothing.
+  The honest version reads receipts after the fact; wiring it into
+  `run_night()` on the afternoon of a launch is the change you do not make.
 - The lane replay has not been reconciled against production `paper_nav`.
-- **Amihud, Kyle and the copula tail estimator have measured floors and no
-  guard at their call sites yet.** Roll was done because its band sat wholly
-  below its floor; the other three need the same read before wiring, since a
-  refusal installed without checking where the live inputs actually fall would
-  be a guess wearing a rule.
+- The copula tail estimator has a measured floor and has not been read against
+  live inputs.
 
 **Deployed:** the liquidity-score change alters a served endpoint
 (`/api/liquidity`), so unlike the rest of this session it is not
