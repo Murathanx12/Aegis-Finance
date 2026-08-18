@@ -110,12 +110,26 @@ def test_the_ORDERED_start_time_would_have_spanned_the_open():
 def test_a_start_with_room_is_allowed_and_reports_its_headroom():
     rep = N.assert_night_fits_before_open(k=40, n_arms=5, now=_at(9, 0))
     assert rep["minutes_of_headroom"] > 0
-    # 1417, not 960. 960 was 40 x 5 x the DECLARED 4.8 calls/cell; 1417 is the
-    # number Night 1 actually made (40 x 5 x 7.085), which the guard now derives
-    # from that night's own receipt. The literal is kept rather than computed
-    # because this is the one place the measured total should be readable.
-    assert rep["n_calls_projected"] == 1417
+    # This assertion used to be the literal 1417 — Night 1's actual call count,
+    # 40 x 5 x 7.085 — kept as a literal "because this is the one place the
+    # measured total should be readable". Night 2 made 1418, the guard's basis
+    # is MEASURED_MAX_OVER_COMPLETED_NIGHTS, and the suite went red the morning
+    # after a night that succeeded. A number designed to move cannot be pinned
+    # to a literal: that is a test reporting a DATE rather than a CHANGE, and a
+    # suite that reddens after every good night teaches people to ignore it.
+    #
+    # So: track the derivation, and keep the thing the literal was actually
+    # guarding — that the projection comes from MEASURED nights and not from
+    # the DECLARED 4.8 calls/cell, which would read 960.
+    derived = N.derive_calls_per_cell()["value"]
+    assert rep["n_calls_projected"] == pytest.approx(40 * 5 * derived, abs=1)
     assert rep["calls_per_cell_basis"] == "MEASURED_MAX_OVER_COMPLETED_NIGHTS"
+    assert rep["n_calls_projected"] != 960, (
+        "960 is 40 x 5 x the DECLARED 4.8 calls/cell — the value this guard "
+        "exists to stop being used")
+    # A readable band, so the number stays sanity-checkable by eye and a
+    # five-fold drift still fails loudly instead of tracking itself silently.
+    assert 1200 <= rep["n_calls_projected"] <= 1800
     assert rep["next_open_utc"].startswith("2026-08-17T13:30")
     assert rep["calendar"] == "XNYS"
 
@@ -454,7 +468,12 @@ def test_the_receipt_records_the_headroom_the_night_actually_had():
     assert res.timing == {}
     res.timing = N.assert_night_fits_before_open(k=40, n_arms=5, now=_at(9, 0))
     d = res.as_dict()
-    assert "timing" in d and d["timing"]["n_calls_projected"] == 1417
+    # Derived, not pinned — same reason as above: the basis is
+    # MEASURED_MAX_OVER_COMPLETED_NIGHTS and it moves with every night.
+    derived = N.derive_calls_per_cell()["value"]
+    assert "timing" in d
+    assert d["timing"]["n_calls_projected"] == pytest.approx(40 * 5 * derived,
+                                                            abs=1)
     # Value-free: a projection and a clock, no trial statistics.
     for leak in ("posterior", "probability", "brier", "contrast"):
         assert leak not in str(d["timing"])

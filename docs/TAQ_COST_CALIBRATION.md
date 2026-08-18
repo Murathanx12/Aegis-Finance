@@ -6,14 +6,14 @@ Order 18 §1 gave names AGK could not resolve a DECLARED band of 1.0-5.0bp one-w
 
 ## Findings
 
-1. **180 of 185 names retired their declared band** (97%); 5 keep it and each keeps it for a recorded reason, not for lack of a row.
-2. **27 name(s) sit at the one-tick quantisation floor.** Their readings are hard UPPER bounds — the tape cannot express a narrower spread — so they are flagged and still used, which is the difference between quantisation and blindness.
-3. **The declared band's TOP over-charges the typical name**: the MEDIAN retired name (CB) at 2.739bp one-way stays under 5.0bp inflated 4.0x — FAILS, breaks at 1.83x, inside the 4.0x. **31 of 180** retired names survive that test. The cheapest is IWM at 0.1698bp and the widest PLUG at 23.31bp — the median is quoted here because the cheapest is the name most flattering to every claim on this page.
-4. **Against the band's 1.0bp FLOOR the answer is different and much thinner**: the median name FAILS (breaks at 0.37x, inside the 4.0x), and only **1 of 180** retired names survive it. So 'TAQ shows the band over-charges' is one sentence covering two claims of very different strength, and only the first is established across the panel.
-5. **136 of 180 retired names land INSIDE the declared 1.0-5.0bp one-way band** (76%); 15 sit below it and 29 above. **Beware the unit here**: 1.0-5.0bp ONE-WAY is 2.0-10.0bp FULL spread, so a name quoted at '5bp' on the tape is at 2.5bp one-way — the lower-middle of the band, not below it. That is the same full-vs-one-way confusion the `COST_BPS_ONE_WAY` type was introduced to stop, arriving in the INTERPRETATION rather than the code.
-6. **So the declared band was a GOOD DECLARATION, not an over-charge.** Its midpoint is 3.0bp one-way and the panel's median retired name is 2.739bp — within 9% of it. Order 18 declared 1.0-5.0bp before any of this was measurable and the measurement lands inside it. The headline is not that the stopgap was wrong; it is that a stopgap is now a measurement for 180 names.
+1. **182 of 185 names retired their declared band** (98%); 3 keep it and each keeps it for a recorded reason, not for lack of a row.
+2. **28 name(s) sit at the one-tick quantisation floor.** Their readings are hard UPPER bounds — the tape cannot express a narrower spread — so they are flagged and still used, which is the difference between quantisation and blindness.
+3. **The declared band's TOP over-charges the typical name**: the MEDIAN retired name (WEC) at 2.726bp one-way stays under 5.0bp inflated 4.0x — FAILS, breaks at 1.83x, inside the 4.0x. **32 of 182** retired names survive that test. The cheapest is IWM at 0.1698bp and the widest PLUG at 23.31bp — the median is quoted here because the cheapest is the name most flattering to every claim on this page.
+4. **Against the band's 1.0bp FLOOR the answer is different and much thinner**: the median name FAILS (breaks at 0.37x, inside the 4.0x), and only **1 of 182** retired names survive it. So 'TAQ shows the band over-charges' is one sentence covering two claims of very different strength, and only the first is established across the panel.
+5. **137 of 182 retired names land INSIDE the declared 1.0-5.0bp one-way band** (75%); 16 sit below it and 29 above. **Beware the unit here**: 1.0-5.0bp ONE-WAY is 2.0-10.0bp FULL spread, so a name quoted at '5bp' on the tape is at 2.5bp one-way — the lower-middle of the band, not below it. That is the same full-vs-one-way confusion the `COST_BPS_ONE_WAY` type was introduced to stop, arriving in the INTERPRETATION rather than the code.
+6. **So the declared band was a GOOD DECLARATION, not an over-charge.** Its midpoint is 3.0bp one-way and the panel's median retired name is 2.726bp — within 9% of it. Order 18 declared 1.0-5.0bp before any of this was measurable and the measurement lands inside it. The headline is not that the stopgap was wrong; it is that a stopgap is now a measurement for 182 names.
 7. **DENOMINATOR WARNING, and it is the one that could flip this page.** The band was declared for the names AGK CANNOT RESOLVE — the tight end — and the figures above are computed over the WHOLE panel, because no per-name AGK reading is joined here. The two populations are not the same and the tight end is exactly where 'below the band' is most likely to hold. Read every count above as 'of all panel names', never as 'of the segment the band was for'. Computing the correct denominator needs the AGK overlap, which is the next run and is not done.
-8. **5 universe names are absent from the panel, and absence is not one thing.** **ACTIONABLE (2): CMCSA, GOOGL** — TAQ stores a symbol as a root of at most 4 characters plus a suffix, so GOOGL is `GOOG`+`L` and CMCSA is `CMCS`+`A`. The pull mapped only the hyphen form, asked for a root that does not exist, and got silence; the quotes are there (GOOGL 381,220 and CMCSA 161,730 on 2026-08-14, probed directly). Re-pull fixes these. **DELIBERATE/UNKNOWN (3): MMC, PXD, SQ** — dead or renamed universe entries (PXD delisted 2024; SQ now trades as XYZ, present in TAQ under that ticker), which no re-pull fixes and which are a universe-staleness item instead.
+8. **3 universe names are absent from the panel, and absence is not one thing.** **ACTIONABLE (0): none** — TAQ stores a symbol as a root of at most 4 characters plus a suffix, so GOOGL is `GOOG`+`L` and CMCSA is `CMCS`+`A`. The pull mapped only the hyphen form, asked for a root that does not exist, and got silence; the quotes are there (GOOGL 381,220 and CMCSA 161,730 on 2026-08-14, probed directly). Re-pull fixes these. **DELIBERATE/UNKNOWN (3): MMC, PXD, SQ** — dead or renamed universe entries (PXD delisted 2024; SQ now trades as XYZ, present in TAQ under that ticker), which no re-pull fixes and which are a universe-staleness item instead.
 9. **Net bias sign is NOT_ESTABLISHED.** Two of the three known biases point DOWN and one points UP; a conclusion drawn from the point estimate is drawn from a number of unknown direction, which is why every headline above is stated as a sensitivity instead.
 
 ## The bias ledger — all three, with signs
@@ -67,6 +67,7 @@ Net sign: **NOT_ESTABLISHED**. Declared sensitivity factor: **4.0x**.
 | CHTR | RETIRED | 8.1606 | 16.3212 | 12.8279-24.1315 | 23 | 143.51 | 0.6968 | 23.42 |  |
 | CI | RETIRED | 4.2439 | 8.4878 | 6.2318-15.3696 | 23 | 284.14 | 0.3519 | 24.12 |  |
 | CL | RETIRED | 2.1265 | 4.2531 | 2.2121-5.4798 | 23 | 92.09 | 1.0859 | 3.92 |  |
+| CMCSA | RETIRED | 2.0591 | 4.1182 | 3.7958-4.4873 | 24 | 24.29 | 4.1176 | 1.0 | AT TICK FLOOR |
 | CME | RETIRED | 2.4442 | 4.8884 | 3.6556-7.2144 | 23 | 261.74 | 0.3821 | 12.8 |  |
 | CMG | RETIRED | 1.4936 | 2.9873 | 2.614-3.1333 | 23 | 33.46 | 2.9884 | 1.0 | AT TICK FLOOR |
 | COIN | RETIRED | 5.3323 | 10.6645 | 7.367-18.5644 | 23 | 157.14 | 0.6364 | 16.76 |  |
@@ -107,6 +108,7 @@ Net sign: **NOT_ESTABLISHED**. Declared sensitivity factor: **4.0x**.
 | GILD | RETIRED | 1.8908 | 3.7817 | 2.9433-6.8784 | 23 | 131.97 | 0.7577 | 4.99 |  |
 | GIS | RETIRED | 1.3494 | 2.6987 | 2.5585-2.796 | 23 | 37.08 | 2.6968 | 1.0 | AT TICK FLOOR |
 | GM | RETIRED | 1.8163 | 3.6326 | 3.3585-6.3 | 23 | 87.36 | 1.1447 | 3.17 |  |
+| GOOGL | RETIRED | 0.6168 | 1.2336 | 1.0618-2.1939 | 24 | 347.82 | 0.2875 | 4.29 |  |
 | GS | RETIRED | 4.0109 | 8.0218 | 6.0395-11.7821 | 23 | 1048.58 | 0.0954 | 84.11 |  |
 | HAL | RETIRED | 1.5177 | 3.0354 | 2.8054-3.1985 | 23 | 33.03 | 3.0277 | 1.0 | AT TICK FLOOR |
 | HCA | RETIRED | 4.5093 | 9.0186 | 6.8136-17.1491 | 23 | 398.96 | 0.2507 | 35.98 |  |
@@ -214,8 +216,6 @@ Net sign: **NOT_ESTABLISHED**. Declared sensitivity factor: **4.0x**.
 | XOM | RETIRED | 1.0081 | 2.0162 | 1.865-2.6295 | 23 | 154.1 | 0.6489 | 3.11 |  |
 | YUM | RETIRED | 5.3872 | 10.7744 | 7.8828-15.3984 | 23 | 150.35 | 0.6651 | 16.2 |  |
 | ZTS | RETIRED | 3.278 | 6.5561 | 5.1184-9.0844 | 23 | 75.33 | 1.3276 | 4.94 |  |
-| CMCSA | **stays** | — | — | — | 0 | — | — | — | CMCSA is not in the TAQ panel |
-| GOOGL | **stays** | — | — | — | 0 | — | — | — | GOOGL is not in the TAQ panel |
 | MMC | **stays** | — | — | — | 0 | — | — | — | MMC is not in the TAQ panel |
 | PXD | **stays** | — | — | — | 0 | — | — | — | PXD is not in the TAQ panel |
 | SQ | **stays** | — | — | — | 0 | — | — | — | SQ is not in the TAQ panel |

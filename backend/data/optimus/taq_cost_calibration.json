@@ -1,18 +1,13 @@
 {
  "coverage": {
   "n_universe": 185,
-  "n_in_panel": 180,
+  "n_in_panel": 182,
   "absent": [
-   "CMCSA",
-   "GOOGL",
    "MMC",
    "PXD",
    "SQ"
   ],
-  "actionable": [
-   "CMCSA",
-   "GOOGL"
-  ],
+  "actionable": [],
   "deliberate_or_unknown": [
    "MMC",
    "PXD",
@@ -213,7 +208,7 @@
    "YUM",
    "ZTS"
   ],
-  "n_rows": 4132,
+  "n_rows": 4180,
   "days": [
    "20260715",
    "20260716",
@@ -238,9 +233,16 @@
    "20260812",
    "20260813",
    "20260814"
-  ]
+  ],
+  "amended_at_utc": "2026-08-18T10:41:17.912177+00:00",
+  "amendment": "sym_root is capped at 4 chars: GOOGL=GOOG+L, CMCSA=CMCS+A were never queried by the hyphen-only mapping and returned SILENCE, not an error. Re-pulled and appended.",
+  "recorded_absences": {
+   "PXD": "delisted 2024 (dead universe entry)",
+   "SQ": "renamed - trades as XYZ in TAQ; universe entry is STALE (flagged, not remapped here)",
+   "MMC": "absent from TAQ and 404s at yfinance - unexplained, needs follow-up"
+  }
  },
- "n_panel_rows": 4132,
+ "n_panel_rows": 4180,
  "declared_band_one_way_bps": [
   1.0,
   5.0
@@ -270,28 +272,28 @@
  "net_bias_sign": "NOT_ESTABLISHED",
  "bias_sensitivity_factor": 4.0,
  "sensitivity": {
-  "reference_name": "CB",
+  "reference_name": "WEC",
   "reference_rank": "median of retired names",
-  "n_retired": 180,
+  "n_retired": 182,
   "below_band_high": {
-   "measured_one_way_bps": 2.739,
-   "inflated_one_way_bps": 10.956,
+   "measured_one_way_bps": 2.7256,
+   "inflated_one_way_bps": 10.9024,
    "threshold_one_way_bps": 5.0,
    "factor": 4.0,
    "survives": false,
-   "breaks_at_factor": 1.8254837531945967,
+   "breaks_at_factor": 1.8344584678602875,
    "net_bias_sign": "NOT_ESTABLISHED"
   },
   "below_band_low": {
-   "measured_one_way_bps": 2.739,
-   "inflated_one_way_bps": 10.956,
+   "measured_one_way_bps": 2.7256,
+   "inflated_one_way_bps": 10.9024,
    "threshold_one_way_bps": 1.0,
    "factor": 4.0,
    "survives": false,
-   "breaks_at_factor": 0.36509675063891933,
+   "breaks_at_factor": 0.36689169357205753,
    "net_bias_sign": "NOT_ESTABLISHED"
   },
-  "n_survive_below_high": 31,
+  "n_survive_below_high": 32,
   "n_survive_below_low": 1,
   "cheapest": {
    "ticker": "IWM",
@@ -301,16 +303,16 @@
    "ticker": "PLUG",
    "one_way_bps": 23.31
   },
-  "below_band": 15,
-  "inside_band": 136,
+  "below_band": 16,
+  "inside_band": 137,
   "above_band": 29
  },
  "summary": {
   "n_names": 185,
-  "n_band_retired": 180,
-  "n_band_stays": 5,
-  "fraction_retired": 0.973,
-  "n_at_tick_floor": 27,
+  "n_band_retired": 182,
+  "n_band_stays": 3,
+  "fraction_retired": 0.9838,
+  "n_at_tick_floor": 28,
   "provenance": "MEASURED_TAQ_QUOTED",
   "net_bias_sign": "NOT_ESTABLISHED",
   "note": "names whose band did NOT retire carry no measured cost; their verdicts are still reported across the declared band"
@@ -817,18 +819,20 @@
   },
   {
    "ticker": "CMCSA",
-   "retired": false,
-   "one_way_bps": null,
-   "full_bps": null,
-   "day_low": null,
-   "day_high": null,
-   "n_days": 0,
-   "mid": null,
-   "tick_floor_bps": null,
-   "ticks_wide": null,
-   "at_tick_floor": false,
-   "notes": [],
-   "reason": "CMCSA is not in the TAQ panel. Its declared band STAYS. An absent name is not a cheap name."
+   "retired": true,
+   "one_way_bps": 2.0591,
+   "full_bps": 4.1182,
+   "day_low": 3.7958,
+   "day_high": 4.4873,
+   "n_days": 24,
+   "mid": 24.29,
+   "tick_floor_bps": 4.1176,
+   "ticks_wide": 1.0,
+   "at_tick_floor": true,
+   "notes": [
+    "at the one-tick quantisation floor: this reading is an UPPER bound on the true spread and cannot be tightened by more data"
+   ],
+   "reason": null
   },
   {
    "ticker": "CME",
@@ -1449,18 +1453,18 @@
   },
   {
    "ticker": "GOOGL",
-   "retired": false,
-   "one_way_bps": null,
-   "full_bps": null,
-   "day_low": null,
-   "day_high": null,
-   "n_days": 0,
-   "mid": null,
-   "tick_floor_bps": null,
-   "ticks_wide": null,
+   "retired": true,
+   "one_way_bps": 0.6168,
+   "full_bps": 1.2336,
+   "day_low": 1.0618,
+   "day_high": 2.1939,
+   "n_days": 24,
+   "mid": 347.82,
+   "tick_floor_bps": 0.2875,
+   "ticks_wide": 4.29,
    "at_tick_floor": false,
    "notes": [],
-   "reason": "GOOGL is not in the TAQ panel. Its declared band STAYS. An absent name is not a cheap name."
+   "reason": null
   },
   {
    "ticker": "GS",

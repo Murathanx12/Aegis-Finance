@@ -27,11 +27,33 @@ failures would have been laundered into shell noise. Killed ~20s in, **verified
 no snapshot and no receipt had been written**, relaunched with file redirection.
 The check is the verification, not the intention.
 
-Assembly completed and the arms are running (51 DeepSeek calls at 17:18, all
-200, no refusals or tracebacks). Two universe names 404 at yfinance — `MMC`,
-`PXD` (the latter genuinely delisted, acquired 2024). Neither can pass the
-frozen `MIN_DOLLAR_VOLUME_20D` filter without data, so the eligible population
-is unchanged by their absence; noted as data quality, not a defect.
+**Finished 19:09 local, `status: ok`**, in 6,809s (113 min) against a 231-min
+bound — 2,836 ledger calls, **600 records**, **120/120 cells paired, 0 dropped**,
+0 cell failures on any of the five arms.
+
+| | |
+|---|---|
+| spend | **$0.918462** (Night 1: $0.919725 — 0.14% apart, and both confirmed against the ledger directly rather than taken from the receipt) |
+| decision lag | 18.61 min |
+| tool-call drops | 2, all in `D_all`, reason `args_not_a_mapping` — recorded, not silently dropped |
+| provenance | `9b2979b`, **`git_dirty: True`** |
+
+The dirty stamp is expected and not a contamination: Order 19 ruled that the
+freeze applies to the **frozen surface**, not the repo — main works through the
+night, and the binding artefacts are the frozen feature snapshot, the 15
+verified pre-registration fields, and the manifest's module hashes, none of
+which moved. Both Fable and I were committing to main while it ran, which is
+exactly the case that ruling anticipated.
+
+**Naming defect, small but real:** `budget.measured_cost_night_1` holds
+**tonight's** cost, not Night 1's — it is the latest measured night used as the
+per-night planning rate, under a name that says otherwise. `projected_40_night_cost`
+is that number × 40. Rename to carry the night it came from.
+
+Two universe names 404 at yfinance — `MMC`, `PXD` (the latter genuinely
+delisted, acquired 2024). Neither can pass the frozen `MIN_DOLLAR_VOLUME_20D`
+filter without data, so the eligible population is unchanged by their absence;
+noted as data quality, not a defect.
 
 `llm_telemetry` warns of **2 unreadable ledger lines** on every read. This is
 known, documented damage from LLM-SWARM-1 (two rows torn by interleaved appends
@@ -169,6 +191,18 @@ exist, and **got silence rather than an error**.
 
 `taq_calibrate.py` exits **3** with a named canary while any actionable absence
 remains, because the table is complete-*looking* either way.
+
+**Resolved the same evening.** Fable re-pulled both (`9b2979b`), the canary
+cleared to exit 0, and the numbers moved the way they should:
+
+| | before | after |
+|---|---:|---:|
+| retired | 180 / 185 | **182 / 185** |
+| below / **inside** / above the band | 15 / **136** / 29 | 16 / **137** / 29 |
+
+`GOOGL` 1.234bp full (0.617 one-way, 4.29 ticks); `CMCSA` 4.118bp full
+(2.059 one-way) and **exactly 1.00 ticks** — another quantisation-floor name.
+Only the three genuinely dead tickers remain absent.
 
 ---
 
