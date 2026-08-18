@@ -1,9 +1,9 @@
 {
   "audit": "WRITE-ONLY TELEMETRY",
   "min_occurrences": 1,
-  "n_examined": 806,
-  "n_write_only": 167,
-  "n_test_only": 31,
+  "n_examined": 918,
+  "n_write_only": 187,
+  "n_test_only": 33,
   "n_excluded_by_threshold": 0,
   "excluded_by_threshold": [],
   "canary_field": "decision_lag_minutes",
@@ -40,6 +40,26 @@
       ]
     },
     {
+      "field": "2026-06-08",
+      "times_written": 1,
+      "prod_mentions": 9,
+      "test_mentions": 21,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
+      "field": "2026-06-16",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 15,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
       "field": "2026-07-11",
       "times_written": 20,
       "prod_mentions": 21,
@@ -62,8 +82,8 @@
     {
       "field": "7",
       "times_written": 20,
-      "prod_mentions": 296,
-      "test_mentions": 239,
+      "prod_mentions": 301,
+      "test_mentions": 244,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/transaction_ensemble_members_checkpoint.json"
@@ -72,8 +92,8 @@
     {
       "field": "8",
       "times_written": 20,
-      "prod_mentions": 736,
-      "test_mentions": 564,
+      "prod_mentions": 765,
+      "test_mentions": 582,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/transaction_ensemble_members_checkpoint.json"
@@ -82,8 +102,8 @@
     {
       "field": "9",
       "times_written": 20,
-      "prod_mentions": 218,
-      "test_mentions": 274,
+      "prod_mentions": 224,
+      "test_mentions": 282,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/transaction_ensemble_members_checkpoint.json"
@@ -112,29 +132,31 @@
     },
     {
       "field": "ARMS",
-      "times_written": 1,
-      "prod_mentions": 25,
-      "test_mentions": 34,
+      "times_written": 2,
+      "prod_mentions": 32,
+      "test_mentions": 35,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "A_snapshot",
-      "times_written": 4,
+      "times_written": 8,
       "prod_mentions": 17,
       "test_mentions": 43,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "B1",
       "times_written": 2,
-      "prod_mentions": 58,
+      "prod_mentions": 59,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
@@ -155,7 +177,7 @@
       "field": "B3",
       "times_written": 1,
       "prod_mentions": 22,
-      "test_mentions": 3,
+      "test_mentions": 4,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json"
@@ -173,43 +195,47 @@
     },
     {
       "field": "BENCHMARK",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 10,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "B_anon",
-      "times_written": 3,
+      "times_written": 7,
       "prod_mentions": 5,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "B_tools",
-      "times_written": 4,
+      "times_written": 8,
       "prod_mentions": 17,
       "test_mentions": 48,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "C_tools_only",
-      "times_written": 3,
+      "times_written": 7,
       "prod_mentions": 5,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -225,32 +251,35 @@
     },
     {
       "field": "DECLARED_CONCURRENCY_EFFICIENCY",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 10,
       "test_mentions": 9,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "D_all",
-      "times_written": 3,
+      "times_written": 7,
       "prod_mentions": 4,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "EXECUTION_MODE",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 6,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
@@ -278,7 +307,7 @@
     {
       "field": "IWM",
       "times_written": 1,
-      "prod_mentions": 36,
+      "prod_mentions": 37,
       "test_mentions": 9,
       "verdict": "read",
       "files": [
@@ -340,8 +369,8 @@
     {
       "field": "M4",
       "times_written": 6,
-      "prod_mentions": 77,
-      "test_mentions": 2,
+      "prod_mentions": 78,
+      "test_mentions": 4,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json"
@@ -349,72 +378,101 @@
     },
     {
       "field": "MAX_ARM_CONCURRENCY",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 11,
       "test_mentions": 5,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "MAX_PREOPEN_LEAD_HOURS",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 8,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "MAX_TOKENS",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 16,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "MIN_DOLLAR_VOLUME_20D",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 6,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "MIN_PRICE",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 24,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
+      ]
+    },
+    {
+      "field": "MMC",
+      "times_written": 2,
+      "prod_mentions": 4,
+      "test_mentions": 2,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
       ]
     },
     {
       "field": "NIGHTLY_MAX_CALLS",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 8,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "NIGHTLY_MAX_USD",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 15,
       "test_mentions": 5,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
+      ]
+    },
+    {
+      "field": "PXD",
+      "times_written": 2,
+      "prod_mentions": 8,
+      "test_mentions": 2,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
       ]
     },
     {
@@ -440,7 +498,7 @@
     {
       "field": "Q3",
       "times_written": 1,
-      "prod_mentions": 9,
+      "prod_mentions": 10,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
@@ -469,12 +527,13 @@
     },
     {
       "field": "REQUEST_MODEL",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 10,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
@@ -519,9 +578,20 @@
       ]
     },
     {
+      "field": "SQ",
+      "times_written": 2,
+      "prod_mentions": 7,
+      "test_mentions": 1,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
+      ]
+    },
+    {
       "field": "SYNTHETIC",
       "times_written": 22,
-      "prod_mentions": 19,
+      "prod_mentions": 20,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
@@ -531,12 +601,13 @@
     },
     {
       "field": "TEMPERATURE",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 6,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
@@ -561,22 +632,24 @@
     },
     {
       "field": "TRIGGERS_PER_NIGHT",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 17,
       "test_mentions": 9,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "TRIGGER_WEIGHTS",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 9,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
@@ -611,15 +684,36 @@
       ]
     },
     {
+      "field": "above_band",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "abs_resid_return_z_1d",
-      "times_written": 3,
+      "times_written": 5,
       "prod_mentions": 4,
-      "test_mentions": 17,
+      "test_mentions": 19,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_nights/2026-08-14.json",
         "backend/data/optimus/iif1_nights/2026-08-17.json"
+      ]
+    },
+    {
+      "field": "absent",
+      "times_written": 1,
+      "prod_mentions": 119,
+      "test_mentions": 53,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -634,33 +728,56 @@
       ]
     },
     {
-      "field": "actual_finish_utc",
+      "field": "actionable",
       "times_written": 1,
+      "prod_mentions": 34,
+      "test_mentions": 16,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
+      "field": "actual_finish_utc",
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 0,
       "verdict": "WRITE_ONLY",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "actual_headroom_minutes",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 2,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "actual_minutes",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 5,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "actual_start_utc",
+      "times_written": 1,
+      "prod_mentions": 4,
+      "test_mentions": 2,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -697,7 +814,7 @@
     {
       "field": "agk",
       "times_written": 4,
-      "prod_mentions": 9,
+      "prod_mentions": 12,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
@@ -732,6 +849,39 @@
       "verdict": "TEST_ONLY",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json"
+      ]
+    },
+    {
+      "field": "amended_at_utc",
+      "times_written": 2,
+      "prod_mentions": 0,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
+      ]
+    },
+    {
+      "field": "amendment",
+      "times_written": 2,
+      "prod_mentions": 29,
+      "test_mentions": 11,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
+      ]
+    },
+    {
+      "field": "amendment_2",
+      "times_written": 2,
+      "prod_mentions": 0,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
       ]
     },
     {
@@ -825,82 +975,110 @@
       ]
     },
     {
+      "field": "args_not_a_mapping",
+      "times_written": 2,
+      "prod_mentions": 1,
+      "test_mentions": 1,
+      "verdict": "TEST_ONLY",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
       "field": "arm",
-      "times_written": 130,
-      "prod_mentions": 478,
-      "test_mentions": 202,
+      "times_written": 230,
+      "prod_mentions": 519,
+      "test_mentions": 210,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "arm_concurrency",
-      "times_written": 2,
+      "times_written": 4,
       "prod_mentions": 38,
       "test_mentions": 30,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
-      "field": "arm_finished_at",
-      "times_written": 100,
-      "prod_mentions": 5,
-      "test_mentions": 2,
-      "verdict": "read",
-      "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
-      ]
-    },
-    {
-      "field": "arm_implementation_fingerprint",
-      "times_written": 3,
-      "prod_mentions": 15,
-      "test_mentions": 9,
-      "verdict": "read",
-      "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
-      ]
-    },
-    {
-      "field": "arm_seconds",
-      "times_written": 100,
-      "prod_mentions": 2,
-      "test_mentions": 1,
-      "verdict": "read",
-      "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
-      ]
-    },
-    {
-      "field": "arm_start_skew_ms",
+      "field": "arm_failures",
       "times_written": 1,
       "prod_mentions": 2,
       "test_mentions": 6,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "arm_finished_at",
+      "times_written": 200,
+      "prod_mentions": 5,
+      "test_mentions": 2,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "arm_implementation_fingerprint",
+      "times_written": 6,
+      "prod_mentions": 15,
+      "test_mentions": 9,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "arm_seconds",
+      "times_written": 200,
+      "prod_mentions": 2,
+      "test_mentions": 1,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "arm_start_skew_ms",
+      "times_written": 2,
+      "prod_mentions": 2,
+      "test_mentions": 6,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "arm_started_at",
-      "times_written": 100,
+      "times_written": 200,
       "prod_mentions": 6,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "arms",
       "times_written": 2,
-      "prod_mentions": 250,
-      "test_mentions": 74,
+      "prod_mentions": 268,
+      "test_mentions": 80,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json",
@@ -919,15 +1097,15 @@
     },
     {
       "field": "as_of",
-      "times_written": 6,
+      "times_written": 7,
       "prod_mentions": 431,
       "test_mentions": 150,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
         "backend/data/optimus/iif1_nights/2026-08-17.json",
-        "docs/conviction_replay/why_moved_2026-08-10.json",
-        "docs/conviction_replay/why_moved_2026-08-10_geopolitical_rerun.json"
+        "backend/data/optimus/iif1_nights/2026-08-18.json",
+        "docs/conviction_replay/why_moved_2026-08-10.json"
       ]
     },
     {
@@ -953,23 +1131,25 @@
     },
     {
       "field": "assembly_allowance",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
     {
       "field": "assembly_minutes",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 2,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
@@ -987,11 +1167,21 @@
     {
       "field": "at",
       "times_written": 1,
-      "prod_mentions": 1421,
-      "test_mentions": 423,
+      "prod_mentions": 1516,
+      "test_mentions": 447,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json"
+      ]
+    },
+    {
+      "field": "at_tick_floor",
+      "times_written": 20,
+      "prod_mentions": 12,
+      "test_mentions": 2,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -1009,11 +1199,21 @@
     {
       "field": "audit",
       "times_written": 1,
-      "prod_mentions": 90,
-      "test_mentions": 43,
+      "prod_mentions": 94,
+      "test_mentions": 44,
       "verdict": "read",
       "files": [
         "backend/data/optimus/write_only_telemetry.json"
+      ]
+    },
+    {
+      "field": "authoritative",
+      "times_written": 21,
+      "prod_mentions": 23,
+      "test_mentions": 6,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
       ]
     },
     {
@@ -1078,90 +1278,98 @@
     },
     {
       "field": "backend.services.iif1_features",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 1,
       "verdict": "TEST_ONLY",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "backend.services.iif1_prereg",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 6,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "backend.services.iif1_run",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 6,
       "test_mentions": 6,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "backend.services.investigator_agent",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 3,
       "test_mentions": 10,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "backend.services.investigator_night",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 4,
       "verdict": "TEST_ONLY",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "backend.services.investigator_tools",
-      "times_written": 1,
-      "prod_mentions": 1,
-      "test_mentions": 0,
-      "verdict": "WRITE_ONLY",
-      "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
-      ]
-    },
-    {
-      "field": "backend.services.investigator_triggers",
-      "times_written": 1,
-      "prod_mentions": 1,
-      "test_mentions": 0,
-      "verdict": "WRITE_ONLY",
-      "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
-      ]
-    },
-    {
-      "field": "balance_as_of",
       "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 0,
       "verdict": "WRITE_ONLY",
       "files": [
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
+      ]
+    },
+    {
+      "field": "backend.services.investigator_triggers",
+      "times_written": 2,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
+      ]
+    },
+    {
+      "field": "balance_as_of",
+      "times_written": 3,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "base",
       "times_written": 1,
-      "prod_mentions": 512,
-      "test_mentions": 318,
+      "prod_mentions": 517,
+      "test_mentions": 319,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/lane_autopsy_1pp.json"
@@ -1187,6 +1395,36 @@
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
         "docs/conviction_replay/why_moved_2026-08-10_geopolitical_rerun.json"
+      ]
+    },
+    {
+      "field": "below_band",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
+      "field": "below_band_high",
+      "times_written": 1,
+      "prod_mentions": 3,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
+      "field": "below_band_low",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -1318,6 +1556,26 @@
       ]
     },
     {
+      "field": "bias_ledger",
+      "times_written": 1,
+      "prod_mentions": 8,
+      "test_mentions": 1,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
+      "field": "bias_sensitivity_factor",
+      "times_written": 1,
+      "prod_mentions": 3,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "book_beta",
       "times_written": 2,
       "prod_mentions": 8,
@@ -1384,7 +1642,7 @@
     {
       "field": "bounds",
       "times_written": 44,
-      "prod_mentions": 75,
+      "prod_mentions": 76,
       "test_mentions": 9,
       "verdict": "read",
       "files": [
@@ -1402,6 +1660,16 @@
       ]
     },
     {
+      "field": "breaks_at_factor",
+      "times_written": 2,
+      "prod_mentions": 3,
+      "test_mentions": 2,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "brier",
       "times_written": 24,
       "prod_mentions": 59,
@@ -1414,20 +1682,21 @@
     },
     {
       "field": "budget",
-      "times_written": 2,
-      "prod_mentions": 172,
-      "test_mentions": 103,
+      "times_written": 3,
+      "prod_mentions": 182,
+      "test_mentions": 109,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "budgets",
       "times_written": 1,
       "prod_mentions": 12,
-      "test_mentions": 1,
+      "test_mentions": 2,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/exposure_controller_v0.json"
@@ -1435,61 +1704,126 @@
     },
     {
       "field": "built_at_utc",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 0,
       "verdict": "WRITE_ONLY",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "calendar",
-      "times_written": 1,
-      "prod_mentions": 231,
-      "test_mentions": 60,
+      "times_written": 2,
+      "prod_mentions": 233,
+      "test_mentions": 61,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "call_seconds_assumed",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 0,
       "verdict": "WRITE_ONLY",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "calls",
-      "times_written": 2,
-      "prod_mentions": 233,
-      "test_mentions": 192,
+      "times_written": 3,
+      "prod_mentions": 235,
+      "test_mentions": 197,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "calls_per_cell",
-      "times_written": 4,
+      "times_written": 6,
       "prod_mentions": 20,
       "test_mentions": 6,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "calls_per_cell_assumed",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 2,
+      "verdict": "TEST_ONLY",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "calls_per_cell_basis",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 2,
+      "verdict": "TEST_ONLY",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "calls_per_cell_declared",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "calls_per_cell_nights_measured",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "canary_field",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/write_only_telemetry.json"
+      ]
+    },
+    {
+      "field": "canary_visible",
+      "times_written": 1,
+      "prod_mentions": 4,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/write_only_telemetry.json"
       ]
     },
     {
       "field": "canon",
       "times_written": 1,
-      "prod_mentions": 18,
-      "test_mentions": 4,
+      "prod_mentions": 20,
+      "test_mentions": 5,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json"
@@ -1497,12 +1831,13 @@
     },
     {
       "field": "cap",
-      "times_written": 2,
-      "prod_mentions": 304,
+      "times_written": 3,
+      "prod_mentions": 306,
       "test_mentions": 74,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
@@ -1619,31 +1954,43 @@
     },
     {
       "field": "cell_pairing",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 4,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "chain_yield",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 2,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "cheapest",
+      "times_written": 1,
+      "prod_mentions": 11,
+      "test_mentions": 3,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
       "field": "claim",
       "times_written": 48,
-      "prod_mentions": 258,
-      "test_mentions": 77,
+      "prod_mentions": 271,
+      "test_mentions": 81,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
@@ -1652,13 +1999,25 @@
     },
     {
       "field": "clock",
-      "times_written": 2,
-      "prod_mentions": 75,
-      "test_mentions": 33,
+      "times_written": 4,
+      "prod_mentions": 76,
+      "test_mentions": 34,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "code",
+      "times_written": 1,
+      "prod_mentions": 201,
+      "test_mentions": 92,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
@@ -1684,8 +2043,8 @@
     {
       "field": "components",
       "times_written": 2,
-      "prod_mentions": 214,
-      "test_mentions": 267,
+      "prod_mentions": 216,
+      "test_mentions": 274,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
@@ -1703,13 +2062,24 @@
       ]
     },
     {
-      "field": "concurrency_efficiency_declared",
+      "field": "concurrency_basis",
       "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 1,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "concurrency_efficiency_declared",
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 0,
       "verdict": "WRITE_ONLY",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -1721,6 +2091,16 @@
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
         "docs/conviction_replay/why_moved_2026-08-10_geopolitical_rerun.json"
+      ]
+    },
+    {
+      "field": "config_version",
+      "times_written": 40,
+      "prod_mentions": 80,
+      "test_mentions": 69,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/track_record_snapshot_2026-08-18.json"
       ]
     },
     {
@@ -1736,7 +2116,7 @@
     {
       "field": "consumer",
       "times_written": 1,
-      "prod_mentions": 19,
+      "prod_mentions": 20,
       "test_mentions": 5,
       "verdict": "read",
       "files": [
@@ -1755,12 +2135,13 @@
     },
     {
       "field": "contradicted",
-      "times_written": 2,
-      "prod_mentions": 13,
-      "test_mentions": 9,
+      "times_written": 3,
+      "prod_mentions": 19,
+      "test_mentions": 15,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
@@ -1789,7 +2170,7 @@
     {
       "field": "convention",
       "times_written": 4,
-      "prod_mentions": 60,
+      "prod_mentions": 62,
       "test_mentions": 24,
       "verdict": "read",
       "files": [
@@ -1804,6 +2185,17 @@
       "verdict": "WRITE_ONLY",
       "files": [
         "backend/data/optimus/spread_convention_audit.json"
+      ]
+    },
+    {
+      "field": "conviction",
+      "times_written": 2,
+      "prod_mentions": 141,
+      "test_mentions": 99,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json",
+        "docs/conviction_replay/track_record_snapshot_2026-08-18.json"
       ]
     },
     {
@@ -2010,11 +2402,12 @@
     },
     {
       "field": "cost_drag",
-      "times_written": 2,
-      "prod_mentions": 1,
+      "times_written": 12,
+      "prod_mentions": 2,
       "test_mentions": 3,
-      "verdict": "TEST_ONLY",
+      "verdict": "read",
       "files": [
+        "docs/conviction_replay/cross_arms_1.json",
         "docs/conviction_replay/lane_autopsy_1pp.json"
       ]
     },
@@ -2071,6 +2464,16 @@
       ]
     },
     {
+      "field": "coverage",
+      "times_written": 1,
+      "prod_mentions": 159,
+      "test_mentions": 26,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "crisis",
       "times_written": 1,
       "prod_mentions": 48,
@@ -2092,20 +2495,21 @@
     },
     {
       "field": "current_balance",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "cutoff",
       "times_written": 2,
       "prod_mentions": 117,
-      "test_mentions": 40,
+      "test_mentions": 42,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json"
@@ -2123,12 +2527,45 @@
     },
     {
       "field": "date",
-      "times_written": 2,
-      "prod_mentions": 1124,
-      "test_mentions": 365,
+      "times_written": 66,
+      "prod_mentions": 1181,
+      "test_mentions": 379,
       "verdict": "read",
       "files": [
-        "docs/conviction_replay/conviction_replay_1.json"
+        "docs/conviction_replay/conviction_replay_1.json",
+        "docs/conviction_replay/cross_arms_1.json",
+        "docs/conviction_replay/track_record_snapshot_2026-08-18.json"
+      ]
+    },
+    {
+      "field": "day_high",
+      "times_written": 20,
+      "prod_mentions": 10,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
+      "field": "day_low",
+      "times_written": 20,
+      "prod_mentions": 10,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
+      "field": "days",
+      "times_written": 2,
+      "prod_mentions": 701,
+      "test_mentions": 220,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
       ]
     },
     {
@@ -2143,31 +2580,44 @@
     },
     {
       "field": "decision_basis",
-      "times_written": 2,
+      "times_written": 4,
       "prod_mentions": 6,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "decision_clock",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 2,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "decision_date_ny",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 2,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
     {
       "field": "decision_dates",
       "times_written": 1,
-      "prod_mentions": 5,
-      "test_mentions": 0,
+      "prod_mentions": 8,
+      "test_mentions": 1,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/counterfactual_exits.json"
@@ -2175,32 +2625,35 @@
     },
     {
       "field": "decision_lag_minutes",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 16,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "decision_lag_minutes_at_end",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 5,
       "test_mentions": 7,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "decision_minutes",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 5,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
@@ -2216,24 +2669,36 @@
     },
     {
       "field": "declared",
-      "times_written": 22,
-      "prod_mentions": 331,
-      "test_mentions": 72,
+      "times_written": 23,
+      "prod_mentions": 366,
+      "test_mentions": 82,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json",
         "docs/conviction_replay/transaction_ensemble_members_checkpoint.json"
       ]
     },
     {
-      "field": "declared_efficiency",
+      "field": "declared_band_one_way_bps",
       "times_written": 1,
+      "prod_mentions": 4,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
+      "field": "declared_efficiency",
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 1,
       "verdict": "TEST_ONLY",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -2249,7 +2714,7 @@
     {
       "field": "definition",
       "times_written": 2,
-      "prod_mentions": 22,
+      "prod_mentions": 23,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
@@ -2266,6 +2731,16 @@
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
         "docs/conviction_replay/why_moved_2026-08-10_geopolitical_rerun.json"
+      ]
+    },
+    {
+      "field": "deliberate_or_unknown",
+      "times_written": 1,
+      "prod_mentions": 3,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -2301,12 +2776,13 @@
     },
     {
       "field": "derived",
-      "times_written": 2,
-      "prod_mentions": 119,
-      "test_mentions": 26,
+      "times_written": 3,
+      "prod_mentions": 120,
+      "test_mentions": 30,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
@@ -2334,7 +2810,7 @@
     {
       "field": "design",
       "times_written": 1,
-      "prod_mentions": 114,
+      "prod_mentions": 117,
       "test_mentions": 17,
       "verdict": "read",
       "files": [
@@ -2353,6 +2829,17 @@
       ]
     },
     {
+      "field": "detail",
+      "times_written": 4,
+      "prod_mentions": 465,
+      "test_mentions": 43,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "detectable",
       "times_written": 6,
       "prod_mentions": 129,
@@ -2366,7 +2853,7 @@
       "field": "detection_floor",
       "times_written": 10,
       "prod_mentions": 11,
-      "test_mentions": 6,
+      "test_mentions": 12,
       "verdict": "read",
       "files": [
         "backend/data/optimus/instrument_floors.json"
@@ -2385,7 +2872,7 @@
     {
       "field": "difference",
       "times_written": 1,
-      "prod_mentions": 196,
+      "prod_mentions": 203,
       "test_mentions": 35,
       "verdict": "read",
       "files": [
@@ -2421,6 +2908,16 @@
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
         "docs/conviction_replay/why_moved_2026-08-10_geopolitical_rerun.json"
+      ]
+    },
+    {
+      "field": "divergence",
+      "times_written": 21,
+      "prod_mentions": 43,
+      "test_mentions": 12,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
       ]
     },
     {
@@ -2476,19 +2973,20 @@
     },
     {
       "field": "drop_reasons",
-      "times_written": 5,
+      "times_written": 10,
       "prod_mentions": 1,
       "test_mentions": 0,
       "verdict": "WRITE_ONLY",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "dropped",
       "times_written": 1,
-      "prod_mentions": 151,
-      "test_mentions": 42,
+      "prod_mentions": 158,
+      "test_mentions": 43,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json"
@@ -2496,33 +2994,36 @@
     },
     {
       "field": "dropped_cells",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 2,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "duration_bound",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
     {
       "field": "earnings_within_5d",
-      "times_written": 3,
+      "times_written": 5,
       "prod_mentions": 3,
-      "test_mentions": 13,
+      "test_mentions": 14,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_nights/2026-08-14.json",
         "backend/data/optimus/iif1_nights/2026-08-17.json"
       ]
@@ -2540,8 +3041,8 @@
     {
       "field": "effective",
       "times_written": 2,
-      "prod_mentions": 76,
-      "test_mentions": 24,
+      "prod_mentions": 86,
+      "test_mentions": 25,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json"
@@ -2580,13 +3081,14 @@
     },
     {
       "field": "elapsed_s",
-      "times_written": 2,
-      "prod_mentions": 14,
+      "times_written": 3,
+      "prod_mentions": 16,
       "test_mentions": 15,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -2602,8 +3104,8 @@
     {
       "field": "end",
       "times_written": 2,
-      "prod_mentions": 560,
-      "test_mentions": 165,
+      "prod_mentions": 610,
+      "test_mentions": 177,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json",
@@ -2631,6 +3133,17 @@
       ]
     },
     {
+      "field": "entitlement_verified",
+      "times_written": 2,
+      "prod_mentions": 0,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
+      ]
+    },
+    {
       "field": "epistemics",
       "times_written": 2,
       "prod_mentions": 1,
@@ -2643,20 +3156,21 @@
     },
     {
       "field": "error",
-      "times_written": 130,
-      "prod_mentions": 803,
-      "test_mentions": 140,
+      "times_written": 230,
+      "prod_mentions": 807,
+      "test_mentions": 144,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "estimator",
       "times_written": 4,
-      "prod_mentions": 84,
-      "test_mentions": 25,
+      "prod_mentions": 87,
+      "test_mentions": 29,
       "verdict": "read",
       "files": [
         "backend/data/optimus/spread_convention_audit.json"
@@ -2664,20 +3178,21 @@
     },
     {
       "field": "evaluated_at_utc",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
     {
       "field": "evidence",
       "times_written": 25,
-      "prod_mentions": 349,
-      "test_mentions": 111,
+      "prod_mentions": 358,
+      "test_mentions": 116,
       "verdict": "read",
       "files": [
         "backend/data/optimus/spread_convention_audit.json",
@@ -2694,6 +3209,26 @@
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
         "docs/conviction_replay/why_moved_2026-08-10_geopolitical_rerun.json"
+      ]
+    },
+    {
+      "field": "ew-at-seed-hold",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
+      "field": "ew-monthly",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
       ]
     },
     {
@@ -2718,6 +3253,16 @@
       ]
     },
     {
+      "field": "excluded_by_threshold",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/write_only_telemetry.json"
+      ]
+    },
+    {
       "field": "excluding_reconstructed_names",
       "times_written": 1,
       "prod_mentions": 1,
@@ -2729,12 +3274,13 @@
     },
     {
       "field": "execution_mode",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 2,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -2810,6 +3356,16 @@
       ]
     },
     {
+      "field": "factor",
+      "times_written": 2,
+      "prod_mentions": 245,
+      "test_mentions": 76,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "falsification_condition",
       "times_written": 24,
       "prod_mentions": 10,
@@ -2823,17 +3379,27 @@
     {
       "field": "feature",
       "times_written": 6,
-      "prod_mentions": 183,
-      "test_mentions": 70,
+      "prod_mentions": 190,
+      "test_mentions": 73,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/counterfactual_exits.json"
       ]
     },
     {
+      "field": "fetched_at",
+      "times_written": 1,
+      "prod_mentions": 44,
+      "test_mentions": 9,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/track_record_snapshot_2026-08-18.json"
+      ]
+    },
+    {
       "field": "field",
       "times_written": 21,
-      "prod_mentions": 291,
+      "prod_mentions": 295,
       "test_mentions": 60,
       "verdict": "read",
       "files": [
@@ -2853,12 +3419,13 @@
     },
     {
       "field": "filing_within_2d",
-      "times_written": 3,
+      "times_written": 5,
       "prod_mentions": 3,
-      "test_mentions": 12,
+      "test_mentions": 13,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_nights/2026-08-14.json",
         "backend/data/optimus/iif1_nights/2026-08-17.json"
       ]
@@ -2875,22 +3442,24 @@
     },
     {
       "field": "finish_reasons",
-      "times_written": 100,
+      "times_written": 200,
       "prod_mentions": 3,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "finished_before_open",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 0,
       "verdict": "WRITE_ONLY",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -2907,8 +3476,8 @@
     {
       "field": "floor",
       "times_written": 4,
-      "prod_mentions": 186,
-      "test_mentions": 79,
+      "prod_mentions": 228,
+      "test_mentions": 98,
       "verdict": "read",
       "files": [
         "backend/data/optimus/spread_convention_audit.json"
@@ -2947,19 +3516,20 @@
     },
     {
       "field": "forecast_drops",
-      "times_written": 100,
+      "times_written": 200,
       "prod_mentions": 12,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "forward",
       "times_written": 24,
-      "prod_mentions": 480,
-      "test_mentions": 90,
+      "prod_mentions": 488,
+      "test_mentions": 91,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
@@ -2987,10 +3557,20 @@
       ]
     },
     {
+      "field": "fraction_retired",
+      "times_written": 1,
+      "prod_mentions": 3,
+      "test_mentions": 1,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "from",
       "times_written": 1,
-      "prod_mentions": 4209,
-      "test_mentions": 1938,
+      "prod_mentions": 4336,
+      "test_mentions": 1984,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json"
@@ -2998,12 +3578,23 @@
     },
     {
       "field": "frozen_surface",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 6,
       "test_mentions": 5,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
+      ]
+    },
+    {
+      "field": "full_bps",
+      "times_written": 20,
+      "prod_mentions": 8,
+      "test_mentions": 1,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -3018,35 +3609,38 @@
     },
     {
       "field": "fundable_nights_at_this_rate",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 2,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "funding_average_per_night",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 4,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "funding_gap_or_surplus",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 5,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -3083,7 +3677,7 @@
     {
       "field": "generated_at",
       "times_written": 4,
-      "prod_mentions": 24,
+      "prod_mentions": 27,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
@@ -3091,6 +3685,17 @@
         "docs/conviction_replay/transaction_ensemble_members_checkpoint.json",
         "docs/conviction_replay/why_moved_2026-08-10.json",
         "docs/conviction_replay/why_moved_2026-08-10_geopolitical_rerun.json"
+      ]
+    },
+    {
+      "field": "generated_at_utc",
+      "times_written": 2,
+      "prod_mentions": 0,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
       ]
     },
     {
@@ -3106,45 +3711,51 @@
     },
     {
       "field": "git_commit",
-      "times_written": 3,
+      "times_written": 6,
       "prod_mentions": 9,
       "test_mentions": 8,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "git_dirty",
-      "times_written": 3,
+      "times_written": 6,
       "prod_mentions": 9,
       "test_mentions": 7,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "graded_nights_completed",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 2,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
     {
       "field": "graded_nights_required",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 2,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
@@ -3161,8 +3772,8 @@
     {
       "field": "grid",
       "times_written": 1,
-      "prod_mentions": 108,
-      "test_mentions": 16,
+      "prod_mentions": 116,
+      "test_mentions": 17,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json"
@@ -3201,8 +3812,8 @@
     {
       "field": "headline",
       "times_written": 2,
-      "prod_mentions": 73,
-      "test_mentions": 20,
+      "prod_mentions": 78,
+      "test_mentions": 21,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
@@ -3275,8 +3886,8 @@
     {
       "field": "hold",
       "times_written": 2,
-      "prod_mentions": 194,
-      "test_mentions": 113,
+      "prod_mentions": 205,
+      "test_mentions": 121,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/counterfactual_exits.json"
@@ -3295,8 +3906,8 @@
     {
       "field": "horizon_days",
       "times_written": 52,
-      "prod_mentions": 381,
-      "test_mentions": 135,
+      "prod_mentions": 413,
+      "test_mentions": 148,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_climatology_h1_t3.json",
@@ -3307,12 +3918,13 @@
     },
     {
       "field": "hours_until_open",
-      "times_written": 3,
+      "times_written": 5,
       "prod_mentions": 6,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json",
         "backend/data/optimus/iif1_nights/2026-08-17.json"
       ]
@@ -3329,11 +3941,12 @@
     },
     {
       "field": "hrp_fallback",
-      "times_written": 2,
+      "times_written": 12,
       "prod_mentions": 3,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
+        "docs/conviction_replay/cross_arms_1.json",
         "docs/conviction_replay/lane_autopsy_1pp.json"
       ]
     },
@@ -3361,7 +3974,7 @@
     {
       "field": "hypothesis",
       "times_written": 1,
-      "prod_mentions": 157,
+      "prod_mentions": 158,
       "test_mentions": 82,
       "verdict": "read",
       "files": [
@@ -3371,7 +3984,7 @@
     {
       "field": "hypothesis_id",
       "times_written": 28,
-      "prod_mentions": 42,
+      "prod_mentions": 57,
       "test_mentions": 15,
       "verdict": "read",
       "files": [
@@ -3413,19 +4026,21 @@
     },
     {
       "field": "implementation_version",
-      "times_written": 3,
+      "times_written": 6,
       "prod_mentions": 22,
       "test_mentions": 12,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "inception",
       "times_written": 1,
-      "prod_mentions": 84,
+      "prod_mentions": 87,
       "test_mentions": 23,
       "verdict": "read",
       "files": [
@@ -3435,8 +4050,8 @@
     {
       "field": "index",
       "times_written": 20,
-      "prod_mentions": 955,
-      "test_mentions": 475,
+      "prod_mentions": 982,
+      "test_mentions": 490,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/transaction_ensemble_members_checkpoint.json"
@@ -3463,6 +4078,16 @@
       ]
     },
     {
+      "field": "inflated_one_way_bps",
+      "times_written": 2,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "input_snapshot_hash",
       "times_written": 24,
       "prod_mentions": 4,
@@ -3474,9 +4099,19 @@
       ]
     },
     {
+      "field": "inside_band",
+      "times_written": 1,
+      "prod_mentions": 3,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "instrument",
       "times_written": 10,
-      "prod_mentions": 118,
+      "prod_mentions": 126,
       "test_mentions": 21,
       "verdict": "read",
       "files": [
@@ -3486,8 +4121,8 @@
     {
       "field": "instruments",
       "times_written": 1,
-      "prod_mentions": 23,
-      "test_mentions": 2,
+      "prod_mentions": 26,
+      "test_mentions": 3,
       "verdict": "read",
       "files": [
         "backend/data/optimus/instrument_floors.json"
@@ -3505,12 +4140,13 @@
     },
     {
       "field": "invocation_mode",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 4,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
@@ -3545,42 +4181,55 @@
       ]
     },
     {
+      "field": "jump",
+      "times_written": 3,
+      "prod_mentions": 36,
+      "test_mentions": 21,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
       "field": "k",
-      "times_written": 2,
-      "prod_mentions": 1252,
-      "test_mentions": 348,
+      "times_written": 3,
+      "prod_mentions": 1283,
+      "test_mentions": 357,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
     {
       "field": "k_requested",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 1,
       "test_mentions": 0,
       "verdict": "WRITE_ONLY",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "key",
-      "times_written": 1,
-      "prod_mentions": 768,
+      "times_written": 2,
+      "prod_mentions": 772,
       "test_mentions": 212,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "kind",
       "times_written": 56,
-      "prod_mentions": 155,
-      "test_mentions": 47,
+      "prod_mentions": 158,
+      "test_mentions": 51,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
@@ -3602,8 +4251,8 @@
     {
       "field": "ladder",
       "times_written": 10,
-      "prod_mentions": 35,
-      "test_mentions": 11,
+      "prod_mentions": 39,
+      "test_mentions": 12,
       "verdict": "read",
       "files": [
         "backend/data/optimus/instrument_floors.json"
@@ -3620,45 +4269,69 @@
       ]
     },
     {
+      "field": "lanes",
+      "times_written": 1,
+      "prod_mentions": 196,
+      "test_mentions": 97,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/track_record_snapshot_2026-08-18.json"
+      ]
+    },
+    {
+      "field": "largest_divergence_jumps",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
       "field": "latest_safe_launch_utc",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
     {
       "field": "latest_safe_run_start_utc",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
     {
       "field": "launch_manifest",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 6,
       "test_mentions": 10,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "launch_margin_minutes",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
@@ -3718,8 +4391,8 @@
     {
       "field": "lower",
       "times_written": 4,
-      "prod_mentions": 216,
-      "test_mentions": 161,
+      "prod_mentions": 217,
+      "test_mentions": 163,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json"
@@ -3799,8 +4472,8 @@
     {
       "field": "management",
       "times_written": 9,
-      "prod_mentions": 38,
-      "test_mentions": 5,
+      "prod_mentions": 42,
+      "test_mentions": 7,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json"
@@ -3808,12 +4481,13 @@
     },
     {
       "field": "manifest_version",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 1,
       "verdict": "TEST_ONLY",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
@@ -3873,11 +4547,21 @@
     {
       "field": "max",
       "times_written": 58,
-      "prod_mentions": 692,
+      "prod_mentions": 704,
       "test_mentions": 100,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/transaction_ensemble_1.json"
+      ]
+    },
+    {
+      "field": "max_abs_divergence",
+      "times_written": 1,
+      "prod_mentions": 3,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
       ]
     },
     {
@@ -3934,12 +4618,13 @@
     },
     {
       "field": "may_launch",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 8,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
@@ -4016,31 +4701,43 @@
     {
       "field": "mean",
       "times_written": 3,
-      "prod_mentions": 875,
-      "test_mentions": 159,
+      "prod_mentions": 889,
+      "test_mentions": 164,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json"
       ]
     },
     {
-      "field": "mean_cell_serial_seconds",
+      "field": "mean_abs_divergence",
       "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
+      "field": "mean_cell_serial_seconds",
+      "times_written": 2,
       "prod_mentions": 3,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "mean_cell_wall_seconds",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 2,
       "test_mentions": 6,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -4105,52 +4802,87 @@
       ]
     },
     {
-      "field": "measured",
+      "field": "measure",
       "times_written": 2,
-      "prod_mentions": 329,
-      "test_mentions": 108,
+      "prod_mentions": 55,
+      "test_mentions": 13,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
+      ]
+    },
+    {
+      "field": "measured",
+      "times_written": 3,
+      "prod_mentions": 356,
+      "test_mentions": 123,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "measured_cost_night_1",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 5,
       "test_mentions": 6,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "measured_cost_status",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 2,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "measured_duration_bound",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 1,
+      "verdict": "TEST_ONLY",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "measured_efficiency",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 5,
       "verdict": "TEST_ONLY",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "measured_one_way_bps",
+      "times_written": 2,
+      "prod_mentions": 8,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
       "field": "mechanism",
       "times_written": 4,
-      "prod_mentions": 161,
+      "prod_mentions": 163,
       "test_mentions": 40,
       "verdict": "read",
       "files": [
@@ -4170,7 +4902,7 @@
     {
       "field": "median",
       "times_written": 54,
-      "prod_mentions": 263,
+      "prod_mentions": 283,
       "test_mentions": 78,
       "verdict": "read",
       "files": [
@@ -4290,9 +5022,19 @@
       ]
     },
     {
+      "field": "mid",
+      "times_written": 20,
+      "prod_mentions": 141,
+      "test_mentions": 39,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "min",
       "times_written": 58,
-      "prod_mentions": 528,
+      "prod_mentions": 535,
       "test_mentions": 66,
       "verdict": "read",
       "files": [
@@ -4362,30 +5104,44 @@
     },
     {
       "field": "minutes",
-      "times_written": 2,
+      "times_written": 4,
       "prod_mentions": 80,
       "test_mentions": 49,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "minutes_of_headroom",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 3,
       "test_mentions": 5,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "mirror",
+      "times_written": 2,
+      "prod_mentions": 84,
+      "test_mentions": 76,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json",
+        "docs/conviction_replay/track_record_snapshot_2026-08-18.json"
       ]
     },
     {
       "field": "model",
       "times_written": 24,
-      "prod_mentions": 811,
-      "test_mentions": 238,
+      "prod_mentions": 834,
+      "test_mentions": 253,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
@@ -4405,23 +5161,26 @@
     },
     {
       "field": "modelled_serial_minutes",
-      "times_written": 2,
+      "times_written": 4,
       "prod_mentions": 3,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "module_hashes",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 4,
       "test_mentions": 8,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
@@ -4438,8 +5197,8 @@
     {
       "field": "n",
       "times_written": 6,
-      "prod_mentions": 2174,
-      "test_mentions": 924,
+      "prod_mentions": 2213,
+      "test_mentions": 960,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json",
@@ -4458,13 +5217,24 @@
     },
     {
       "field": "n_arms",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 30,
       "test_mentions": 54,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "n_at_tick_floor",
+      "times_written": 1,
+      "prod_mentions": 4,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -4485,6 +5255,26 @@
       "verdict": "WRITE_ONLY",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json"
+      ]
+    },
+    {
+      "field": "n_band_retired",
+      "times_written": 1,
+      "prod_mentions": 3,
+      "test_mentions": 1,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
+      "field": "n_band_stays",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 1,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -4509,128 +5299,150 @@
     },
     {
       "field": "n_calls",
-      "times_written": 130,
+      "times_written": 230,
       "prod_mentions": 43,
       "test_mentions": 35,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_calls_in_barren_chains",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 1,
       "test_mentions": 1,
       "verdict": "TEST_ONLY",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_calls_projected",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 2,
-      "test_mentions": 2,
+      "test_mentions": 4,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_calls_resolved",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 1,
       "test_mentions": 1,
       "verdict": "TEST_ONLY",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_cells",
-      "times_written": 13,
+      "times_written": 29,
       "prod_mentions": 22,
       "test_mentions": 14,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_cells_dropped_unpaired",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 5,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "n_cells_failed",
+      "times_written": 10,
+      "prod_mentions": 3,
+      "test_mentions": 4,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_cells_measured",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 3,
       "verdict": "TEST_ONLY",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_cells_paired",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 5,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_cells_truncated",
-      "times_written": 6,
+      "times_written": 12,
       "prod_mentions": 4,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_cells_union",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 5,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_chains",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 6,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_chains_minted_nothing",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 2,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -4647,7 +5459,7 @@
       "field": "n_dates",
       "times_written": 3,
       "prod_mentions": 37,
-      "test_mentions": 16,
+      "test_mentions": 18,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_rho_h1_t3.json",
@@ -4657,14 +5469,15 @@
     },
     {
       "field": "n_days",
-      "times_written": 9,
-      "prod_mentions": 47,
-      "test_mentions": 150,
+      "times_written": 39,
+      "prod_mentions": 55,
+      "test_mentions": 160,
       "verdict": "read",
       "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
         "docs/conviction_replay/conviction_replay_1.json",
-        "docs/conviction_replay/exposure_controller_v0.json",
-        "docs/conviction_replay/lane_autopsy_1pp.json"
+        "docs/conviction_replay/cross_arms_1.json",
+        "docs/conviction_replay/exposure_controller_v0.json"
       ]
     },
     {
@@ -4699,23 +5512,25 @@
     },
     {
       "field": "n_dropped_for_pairing",
-      "times_written": 5,
+      "times_written": 10,
       "prod_mentions": 2,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_eligible",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -4730,13 +5545,24 @@
     },
     {
       "field": "n_excluded",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "n_excluded_by_threshold",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/write_only_telemetry.json"
       ]
     },
     {
@@ -4751,13 +5577,14 @@
     },
     {
       "field": "n_forecasts",
-      "times_written": 130,
+      "times_written": 230,
       "prod_mentions": 27,
       "test_mentions": 7,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -4783,6 +5610,16 @@
       ]
     },
     {
+      "field": "n_in_panel",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "n_measured",
       "times_written": 2,
       "prod_mentions": 4,
@@ -4805,26 +5642,28 @@
     },
     {
       "field": "n_names",
-      "times_written": 16,
-      "prod_mentions": 19,
-      "test_mentions": 7,
+      "times_written": 27,
+      "prod_mentions": 22,
+      "test_mentions": 15,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_rho_h1_t3.json",
         "backend/data/optimus/iif1_rho_h5_t5.json",
-        "docs/conviction_replay/counterfactual_exits.json",
-        "docs/conviction_replay/factorial_pm_1.json"
+        "backend/data/optimus/taq_cost_calibration.json",
+        "docs/conviction_replay/counterfactual_exits.json"
       ]
     },
     {
       "field": "n_nights",
-      "times_written": 6,
+      "times_written": 10,
       "prod_mentions": 14,
       "test_mentions": 10,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -4846,6 +5685,16 @@
       "files": [
         "backend/data/optimus/instrument_floors.json",
         "backend/data/optimus/spread_convention_audit.json"
+      ]
+    },
+    {
+      "field": "n_panel_rows",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -4921,11 +5770,12 @@
     },
     {
       "field": "n_rebalances",
-      "times_written": 4,
-      "prod_mentions": 7,
+      "times_written": 14,
+      "prod_mentions": 8,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
+        "docs/conviction_replay/cross_arms_1.json",
         "docs/conviction_replay/factorial_pm_1.json",
         "docs/conviction_replay/lane_autopsy_1pp.json"
       ]
@@ -4952,24 +5802,47 @@
       ]
     },
     {
+      "field": "n_retired",
+      "times_written": 1,
+      "prod_mentions": 5,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "n_rows",
-      "times_written": 8,
-      "prod_mentions": 20,
+      "times_written": 10,
+      "prod_mentions": 22,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json",
         "docs/conviction_replay/counterfactual_exits.json"
       ]
     },
     {
       "field": "n_selected",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 8,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "n_shared_dates",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
       ]
     },
     {
@@ -5003,6 +5876,26 @@
       ]
     },
     {
+      "field": "n_survive_below_high",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
+      "field": "n_survive_below_low",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "n_test_only",
       "times_written": 1,
       "prod_mentions": 2,
@@ -5013,35 +5906,49 @@
       ]
     },
     {
+      "field": "n_tool_call_drops",
+      "times_written": 110,
+      "prod_mentions": 5,
+      "test_mentions": 8,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
       "field": "n_tool_calls",
-      "times_written": 137,
+      "times_written": 242,
       "prod_mentions": 5,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_truncated_calls",
-      "times_written": 100,
+      "times_written": 200,
       "prod_mentions": 3,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "n_universe",
-      "times_written": 2,
-      "prod_mentions": 5,
+      "times_written": 4,
+      "prod_mentions": 6,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json",
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -5077,13 +5984,14 @@
     },
     {
       "field": "n_with_forecasts",
-      "times_written": 7,
+      "times_written": 12,
       "prod_mentions": 1,
       "test_mentions": 1,
       "verdict": "TEST_ONLY",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -5094,6 +6002,16 @@
       "verdict": "read",
       "files": [
         "backend/data/optimus/write_only_telemetry.json"
+      ]
+    },
+    {
+      "field": "name",
+      "times_written": 3,
+      "prod_mentions": 1528,
+      "test_mentions": 457,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -5119,7 +6037,7 @@
     {
       "field": "nav",
       "times_written": 22,
-      "prod_mentions": 181,
+      "prod_mentions": 185,
       "test_mentions": 70,
       "verdict": "read",
       "files": [
@@ -5128,10 +6046,20 @@
       ]
     },
     {
+      "field": "net_bias_sign",
+      "times_written": 4,
+      "prod_mentions": 10,
+      "test_mentions": 2,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "neutral",
       "times_written": 1,
-      "prod_mentions": 111,
-      "test_mentions": 70,
+      "prod_mentions": 114,
+      "test_mentions": 71,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/exposure_controller_v0.json"
@@ -5150,59 +6078,63 @@
     },
     {
       "field": "next_open_utc",
-      "times_written": 3,
+      "times_written": 5,
       "prod_mentions": 4,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json",
         "backend/data/optimus/iif1_nights/2026-08-17.json"
       ]
     },
     {
       "field": "next_session",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 5,
       "test_mentions": 5,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "night",
-      "times_written": 8,
-      "prod_mentions": 431,
-      "test_mentions": 188,
+      "times_written": 13,
+      "prod_mentions": 434,
+      "test_mentions": 201,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json",
-        "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-14.json"
       ]
     },
     {
       "field": "nights_attempted",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 2,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
     {
       "field": "nights_required",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 2,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -5277,12 +6209,13 @@
     },
     {
       "field": "now_utc",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 1,
       "test_mentions": 0,
       "verdict": "WRITE_ONLY",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
@@ -5379,15 +6312,15 @@
     },
     {
       "field": "observed",
-      "times_written": 58,
-      "prod_mentions": 96,
+      "times_written": 62,
+      "prod_mentions": 97,
       "test_mentions": 13,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json",
-        "docs/conviction_replay/why_moved_2026-08-10.json",
-        "docs/conviction_replay/why_moved_2026-08-10_geopolitical_rerun.json"
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -5402,12 +6335,13 @@
     },
     {
       "field": "one_way_bps",
-      "times_written": 4,
-      "prod_mentions": 5,
+      "times_written": 26,
+      "prod_mentions": 25,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/spread_convention_audit.json"
+        "backend/data/optimus/spread_convention_audit.json",
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -5433,8 +6367,8 @@
     {
       "field": "outcome",
       "times_written": 24,
-      "prod_mentions": 310,
-      "test_mentions": 105,
+      "prod_mentions": 333,
+      "test_mentions": 114,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
@@ -5537,6 +6471,16 @@
       ]
     },
     {
+      "field": "panel_meta",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "params",
       "times_written": 4,
       "prod_mentions": 133,
@@ -5558,34 +6502,47 @@
       ]
     },
     {
-      "field": "peak_calls_in_flight",
+      "field": "payload_sha256",
       "times_written": 1,
+      "prod_mentions": 8,
+      "test_mentions": 1,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/track_record_snapshot_2026-08-18.json"
+      ]
+    },
+    {
+      "field": "peak_calls_in_flight",
+      "times_written": 2,
       "prod_mentions": 2,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "per_arm",
-      "times_written": 3,
+      "times_written": 5,
       "prod_mentions": 18,
       "test_mentions": 29,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "per_arm_rate",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 1,
       "verdict": "TEST_ONLY",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -5601,7 +6558,7 @@
     {
       "field": "picks",
       "times_written": 1,
-      "prod_mentions": 78,
+      "prod_mentions": 79,
       "test_mentions": 13,
       "verdict": "read",
       "files": [
@@ -5630,10 +6587,20 @@
       ]
     },
     {
+      "field": "planned_start_utc",
+      "times_written": 1,
+      "prod_mentions": 3,
+      "test_mentions": 2,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
       "field": "planted",
       "times_written": 9,
-      "prod_mentions": 17,
-      "test_mentions": 1,
+      "prod_mentions": 20,
+      "test_mentions": 4,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json"
@@ -5693,12 +6660,13 @@
     },
     {
       "field": "pooled_rate",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 1,
       "verdict": "TEST_ONLY",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -5714,7 +6682,7 @@
     {
       "field": "positions",
       "times_written": 2,
-      "prod_mentions": 262,
+      "prod_mentions": 267,
       "test_mentions": 136,
       "verdict": "read",
       "files": [
@@ -5725,7 +6693,7 @@
     {
       "field": "power",
       "times_written": 25,
-      "prod_mentions": 218,
+      "prod_mentions": 219,
       "test_mentions": 46,
       "verdict": "read",
       "files": [
@@ -5757,7 +6725,7 @@
     {
       "field": "predictions",
       "times_written": 2,
-      "prod_mentions": 77,
+      "prod_mentions": 78,
       "test_mentions": 63,
       "verdict": "read",
       "files": [
@@ -5768,8 +6736,8 @@
     {
       "field": "prereg",
       "times_written": 3,
-      "prod_mentions": 66,
-      "test_mentions": 7,
+      "prod_mentions": 68,
+      "test_mentions": 11,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json",
@@ -5789,33 +6757,36 @@
     },
     {
       "field": "prereg_fields_verified",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
     {
       "field": "prereg_hash",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 3,
       "test_mentions": 10,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
       "field": "prereg_path",
-      "times_written": 1,
-      "prod_mentions": 2,
+      "times_written": 2,
+      "prod_mentions": 4,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
@@ -5832,8 +6803,8 @@
     {
       "field": "price",
       "times_written": 2,
-      "prod_mentions": 867,
-      "test_mentions": 306,
+      "prod_mentions": 892,
+      "test_mentions": 314,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json"
@@ -5872,6 +6843,16 @@
       ]
     },
     {
+      "field": "prices",
+      "times_written": 1,
+      "prod_mentions": 777,
+      "test_mentions": 518,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
       "field": "primary",
       "times_written": 1,
       "prod_mentions": 72,
@@ -5885,7 +6866,7 @@
       "field": "probability",
       "times_written": 48,
       "prod_mentions": 242,
-      "test_mentions": 129,
+      "test_mentions": 130,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
@@ -5904,57 +6885,74 @@
     },
     {
       "field": "projected_40_night_cost",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 6,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "projected_finish_utc",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 1,
       "test_mentions": 0,
       "verdict": "WRITE_ONLY",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "projected_minutes",
-      "times_written": 3,
+      "times_written": 6,
       "prod_mentions": 7,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json",
         "backend/data/optimus/iif1_nights/2026-08-17.json"
       ]
     },
     {
+      "field": "projected_minutes_at_runner_concurrency",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 3,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
       "field": "projection_error_minutes",
-      "times_written": 2,
+      "times_written": 4,
       "prod_mentions": 2,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "projection_ratio",
-      "times_written": 2,
+      "times_written": 4,
       "prod_mentions": 3,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -5989,13 +6987,35 @@
       ]
     },
     {
+      "field": "provenance",
+      "times_written": 2,
+      "prod_mentions": 113,
+      "test_mentions": 41,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
+      "field": "purpose",
+      "times_written": 2,
+      "prod_mentions": 210,
+      "test_mentions": 66,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
+      ]
+    },
+    {
       "field": "python",
-      "times_written": 1,
-      "prod_mentions": 201,
+      "times_written": 2,
+      "prod_mentions": 218,
       "test_mentions": 25,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_launches/2026-08-18.1.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json"
       ]
     },
     {
@@ -6051,8 +7071,8 @@
     {
       "field": "range",
       "times_written": 14,
-      "prod_mentions": 356,
-      "test_mentions": 372,
+      "prod_mentions": 367,
+      "test_mentions": 384,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/transaction_ensemble_1.json"
@@ -6081,8 +7101,8 @@
     {
       "field": "ratio",
       "times_written": 2,
-      "prod_mentions": 260,
-      "test_mentions": 58,
+      "prod_mentions": 271,
+      "test_mentions": 61,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
@@ -6112,8 +7132,8 @@
     {
       "field": "reading",
       "times_written": 12,
-      "prod_mentions": 212,
-      "test_mentions": 55,
+      "prod_mentions": 281,
+      "test_mentions": 65,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json",
@@ -6125,8 +7145,8 @@
     {
       "field": "reads",
       "times_written": 1,
-      "prod_mentions": 182,
-      "test_mentions": 73,
+      "prod_mentions": 193,
+      "test_mentions": 75,
       "verdict": "read",
       "files": [
         "backend/data/optimus/spread_convention_audit.json"
@@ -6154,11 +7174,12 @@
     },
     {
       "field": "rebalance_dates",
-      "times_written": 2,
+      "times_written": 12,
       "prod_mentions": 6,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
+        "docs/conviction_replay/cross_arms_1.json",
         "docs/conviction_replay/lane_autopsy_1pp.json"
       ]
     },
@@ -6183,6 +7204,56 @@
       ]
     },
     {
+      "field": "reconcile_tolerance",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
+      "field": "reconciled",
+      "times_written": 1,
+      "prod_mentions": 9,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
+      "field": "reconciliation",
+      "times_written": 1,
+      "prod_mentions": 8,
+      "test_mentions": 4,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
+      "field": "reconciliation_rows",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
+      "field": "reconstructed",
+      "times_written": 21,
+      "prod_mentions": 34,
+      "test_mentions": 23,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
       "field": "reconstructed_entry_prices",
       "times_written": 1,
       "prod_mentions": 1,
@@ -6193,21 +7264,33 @@
       ]
     },
     {
-      "field": "records_written",
+      "field": "recorded_absences",
       "times_written": 2,
+      "prod_mentions": 0,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
+      ]
+    },
+    {
+      "field": "records_written",
+      "times_written": 3,
       "prod_mentions": 4,
       "test_mentions": 4,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "recovery",
       "times_written": 1,
       "prod_mentions": 29,
-      "test_mentions": 10,
+      "test_mentions": 11,
       "verdict": "read",
       "files": [
         "backend/data/optimus/spread_convention_audit.json"
@@ -6234,10 +7317,30 @@
       ]
     },
     {
+      "field": "reference_name",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
+      "field": "reference_rank",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "refusal",
       "times_written": 25,
-      "prod_mentions": 113,
-      "test_mentions": 63,
+      "prod_mentions": 120,
+      "test_mentions": 70,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json",
@@ -6247,20 +7350,21 @@
     },
     {
       "field": "refusals",
-      "times_written": 2,
-      "prod_mentions": 63,
-      "test_mentions": 38,
+      "times_written": 3,
+      "prod_mentions": 64,
+      "test_mentions": 40,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
     {
       "field": "registered",
       "times_written": 1,
-      "prod_mentions": 156,
-      "test_mentions": 36,
+      "prod_mentions": 168,
+      "test_mentions": 40,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json"
@@ -6309,8 +7413,8 @@
     {
       "field": "rehearsal",
       "times_written": 2,
-      "prod_mentions": 61,
-      "test_mentions": 20,
+      "prod_mentions": 67,
+      "test_mentions": 21,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
@@ -6383,7 +7487,7 @@
     {
       "field": "residual",
       "times_written": 1,
-      "prod_mentions": 36,
+      "prod_mentions": 37,
       "test_mentions": 7,
       "verdict": "read",
       "files": [
@@ -6414,21 +7518,42 @@
     {
       "field": "resolvable",
       "times_written": 4,
-      "prod_mentions": 35,
-      "test_mentions": 2,
+      "prod_mentions": 37,
+      "test_mentions": 3,
       "verdict": "read",
       "files": [
         "backend/data/optimus/spread_convention_audit.json"
       ]
     },
     {
+      "field": "resolvable_by",
+      "times_written": 3,
+      "prod_mentions": 4,
+      "test_mentions": 1,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "resolved",
       "times_written": 68,
-      "prod_mentions": 99,
-      "test_mentions": 30,
+      "prod_mentions": 102,
+      "test_mentions": 31,
       "verdict": "read",
       "files": [
         "backend/data/optimus/instrument_floors.json"
+      ]
+    },
+    {
+      "field": "resolved_absences",
+      "times_written": 2,
+      "prod_mentions": 0,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
       ]
     },
     {
@@ -6456,11 +7581,21 @@
     {
       "field": "result",
       "times_written": 1,
-      "prod_mentions": 1409,
+      "prod_mentions": 1421,
       "test_mentions": 2680,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/lane_autopsy_1pp.json"
+      ]
+    },
+    {
+      "field": "retired",
+      "times_written": 20,
+      "prod_mentions": 38,
+      "test_mentions": 5,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -6487,8 +7622,8 @@
     {
       "field": "returns",
       "times_written": 1,
-      "prod_mentions": 993,
-      "test_mentions": 462,
+      "prod_mentions": 994,
+      "test_mentions": 465,
       "verdict": "read",
       "files": [
         "backend/data/optimus/spread_convention_audit.json"
@@ -6497,7 +7632,7 @@
     {
       "field": "revisions",
       "times_written": 1,
-      "prod_mentions": 42,
+      "prod_mentions": 45,
       "test_mentions": 18,
       "verdict": "read",
       "files": [
@@ -6558,25 +7693,36 @@
     },
     {
       "field": "rows",
-      "times_written": 10,
-      "prod_mentions": 1074,
-      "test_mentions": 351,
+      "times_written": 16,
+      "prod_mentions": 1154,
+      "test_mentions": 385,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
         "backend/data/optimus/iif1_nights/2026-08-17.json",
-        "backend/data/optimus/write_only_telemetry.json",
-        "docs/conviction_replay/conviction_replay_1.json"
+        "backend/data/optimus/iif1_nights/2026-08-18.json",
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
       "field": "rule",
-      "times_written": 1,
-      "prod_mentions": 376,
-      "test_mentions": 90,
+      "times_written": 2,
+      "prod_mentions": 383,
+      "test_mentions": 94,
       "verdict": "read",
       "files": [
+        "backend/data/optimus/taq_cost_calibration.json",
         "docs/conviction_replay/factorial_pm_1.json"
+      ]
+    },
+    {
+      "field": "runner_concurrency_derived",
+      "times_written": 1,
+      "prod_mentions": 2,
+      "test_mentions": 2,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -6594,41 +7740,45 @@
     },
     {
       "field": "safety_ceiling_per_night",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "safety_factor",
-      "times_written": 4,
+      "times_written": 7,
       "prod_mentions": 6,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "sandbox",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 71,
-      "test_mentions": 73,
+      "test_mentions": 77,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "satisfied",
       "times_written": 20,
-      "prod_mentions": 15,
+      "prod_mentions": 16,
       "test_mentions": 5,
       "verdict": "read",
       "files": [
@@ -6637,12 +7787,13 @@
     },
     {
       "field": "scaled_minutes",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 1,
       "test_mentions": 1,
       "verdict": "TEST_ONLY",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
@@ -6660,8 +7811,8 @@
     {
       "field": "score",
       "times_written": 24,
-      "prod_mentions": 714,
-      "test_mentions": 350,
+      "prod_mentions": 717,
+      "test_mentions": 359,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
@@ -6681,7 +7832,7 @@
     {
       "field": "sector",
       "times_written": 24,
-      "prod_mentions": 385,
+      "prod_mentions": 387,
       "test_mentions": 126,
       "verdict": "read",
       "files": [
@@ -6767,13 +7918,23 @@
     {
       "field": "seed",
       "times_written": 22,
-      "prod_mentions": 235,
-      "test_mentions": 284,
+      "prod_mentions": 262,
+      "test_mentions": 297,
       "verdict": "read",
       "files": [
         "backend/data/optimus/instrument_floors.json",
         "docs/conviction_replay/factorial_pm_1.json",
         "docs/conviction_replay/transaction_ensemble_members_checkpoint.json"
+      ]
+    },
+    {
+      "field": "seed-weights-monthly",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
       ]
     },
     {
@@ -6805,6 +7966,16 @@
       "verdict": "read",
       "files": [
         "docs/conviction_replay/counterfactual_exits.json"
+      ]
+    },
+    {
+      "field": "sensitivity",
+      "times_written": 1,
+      "prod_mentions": 48,
+      "test_mentions": 2,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -6849,30 +8020,32 @@
     },
     {
       "field": "served_models",
-      "times_written": 132,
+      "times_written": 233,
       "prod_mentions": 14,
       "test_mentions": 5,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "session_date",
-      "times_written": 4,
+      "times_written": 6,
       "prod_mentions": 21,
       "test_mentions": 7,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
     {
       "field": "shares",
       "times_written": 24,
-      "prod_mentions": 349,
+      "prod_mentions": 361,
       "test_mentions": 233,
       "verdict": "read",
       "files": [
@@ -6902,13 +8075,14 @@
     },
     {
       "field": "short_of_k",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 2,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -6929,6 +8103,16 @@
       "verdict": "WRITE_ONLY",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json"
+      ]
+    },
+    {
+      "field": "sign",
+      "times_written": 3,
+      "prod_mentions": 80,
+      "test_mentions": 16,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -6966,7 +8150,7 @@
       "field": "sims",
       "times_written": 11,
       "prod_mentions": 36,
-      "test_mentions": 31,
+      "test_mentions": 34,
       "verdict": "read",
       "files": [
         "backend/data/optimus/instrument_floors.json",
@@ -6976,8 +8160,8 @@
     {
       "field": "sites",
       "times_written": 1,
-      "prod_mentions": 5,
-      "test_mentions": 1,
+      "prod_mentions": 6,
+      "test_mentions": 2,
       "verdict": "read",
       "files": [
         "backend/data/optimus/spread_convention_audit.json"
@@ -7014,6 +8198,16 @@
       ]
     },
     {
+      "field": "snapshot",
+      "times_written": 1,
+      "prod_mentions": 356,
+      "test_mentions": 120,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
       "field": "sold_at",
       "times_written": 3,
       "prod_mentions": 11,
@@ -7025,15 +8219,15 @@
     },
     {
       "field": "source",
-      "times_written": 35,
-      "prod_mentions": 427,
-      "test_mentions": 203,
+      "times_written": 38,
+      "prod_mentions": 437,
+      "test_mentions": 207,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "docs/conviction_replay/conviction_replay_1.json",
-        "docs/conviction_replay/why_moved_2026-08-10.json",
-        "docs/conviction_replay/why_moved_2026-08-10_geopolitical_rerun.json"
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json",
+        "docs/conviction_replay/conviction_replay_1.json"
       ]
     },
     {
@@ -7049,23 +8243,25 @@
     },
     {
       "field": "spend_usd",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 5,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "spread",
-      "times_written": 1,
-      "prod_mentions": 253,
-      "test_mentions": 106,
+      "times_written": 2,
+      "prod_mentions": 283,
+      "test_mentions": 114,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -7101,12 +8297,22 @@
     {
       "field": "start",
       "times_written": 3,
-      "prod_mentions": 558,
-      "test_mentions": 143,
+      "prod_mentions": 579,
+      "test_mentions": 148,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json",
         "docs/conviction_replay/lane_autopsy_1pp.json"
+      ]
+    },
+    {
+      "field": "start_delay_minutes",
+      "times_written": 1,
+      "prod_mentions": 5,
+      "test_mentions": 3,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -7117,6 +8323,16 @@
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json"
+      ]
+    },
+    {
+      "field": "start_shift_effect",
+      "times_written": 1,
+      "prod_mentions": 1,
+      "test_mentions": 0,
+      "verdict": "WRITE_ONLY",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
       ]
     },
     {
@@ -7131,15 +8347,15 @@
     },
     {
       "field": "status",
-      "times_written": 212,
-      "prod_mentions": 857,
-      "test_mentions": 515,
+      "times_written": 313,
+      "prod_mentions": 859,
+      "test_mentions": 520,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
         "backend/data/optimus/iif1_nights/2026-08-17.json",
-        "docs/conviction_replay/conviction_replay_1.json",
-        "docs/conviction_replay/counterfactual_exits.json"
+        "backend/data/optimus/iif1_nights/2026-08-18.json",
+        "docs/conviction_replay/conviction_replay_1.json"
       ]
     },
     {
@@ -7155,12 +8371,13 @@
     },
     {
       "field": "stdin_isatty",
-      "times_written": 2,
-      "prod_mentions": 1,
+      "times_written": 3,
+      "prod_mentions": 2,
       "test_mentions": 2,
-      "verdict": "TEST_ONLY",
+      "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
@@ -7182,6 +8399,16 @@
       "verdict": "read",
       "files": [
         "docs/conviction_replay/lane_autopsy_1pp.json"
+      ]
+    },
+    {
+      "field": "survives",
+      "times_written": 2,
+      "prod_mentions": 56,
+      "test_mentions": 30,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -7245,9 +8472,19 @@
       ]
     },
     {
+      "field": "taq_entitlement",
+      "times_written": 1,
+      "prod_mentions": 3,
+      "test_mentions": 1,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "target",
       "times_written": 1,
-      "prod_mentions": 426,
+      "prod_mentions": 431,
       "test_mentions": 117,
       "verdict": "read",
       "files": [
@@ -7266,19 +8503,20 @@
     },
     {
       "field": "terminal_drop_reason",
-      "times_written": 100,
+      "times_written": 200,
       "prod_mentions": 4,
       "test_mentions": 9,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "terminal_wealth",
       "times_written": 6,
-      "prod_mentions": 33,
-      "test_mentions": 12,
+      "prod_mentions": 38,
+      "test_mentions": 18,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json"
@@ -7318,8 +8556,8 @@
     {
       "field": "test",
       "times_written": 2,
-      "prod_mentions": 294,
-      "test_mentions": 353,
+      "prod_mentions": 300,
+      "test_mentions": 366,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json"
@@ -7359,8 +8597,8 @@
     {
       "field": "threshold",
       "times_written": 52,
-      "prod_mentions": 303,
-      "test_mentions": 155,
+      "prod_mentions": 318,
+      "test_mentions": 159,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_climatology_h1_t3.json",
@@ -7370,27 +8608,58 @@
       ]
     },
     {
+      "field": "threshold_one_way_bps",
+      "times_written": 2,
+      "prod_mentions": 5,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
+      "field": "tick_floor_bps",
+      "times_written": 20,
+      "prod_mentions": 4,
+      "test_mentions": 4,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "ticker",
-      "times_written": 268,
-      "prod_mentions": 2595,
-      "test_mentions": 884,
+      "times_written": 390,
+      "prod_mentions": 2663,
+      "test_mentions": 899,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
         "backend/data/optimus/iif1_nights/2026-08-17.json",
-        "docs/conviction_replay/conviction_replay_1.json",
-        "docs/conviction_replay/why_moved_2026-08-10.json"
+        "backend/data/optimus/iif1_nights/2026-08-18.json",
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
       "field": "tickers",
-      "times_written": 4,
-      "prod_mentions": 748,
-      "test_mentions": 280,
+      "times_written": 6,
+      "prod_mentions": 750,
+      "test_mentions": 281,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "ticks_wide",
+      "times_written": 20,
+      "prod_mentions": 5,
+      "test_mentions": 1,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
       ]
     },
     {
@@ -7445,40 +8714,63 @@
     },
     {
       "field": "timing",
-      "times_written": 1,
-      "prod_mentions": 90,
+      "times_written": 2,
+      "prod_mentions": 93,
       "test_mentions": 29,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "tokens_in",
-      "times_written": 130,
+      "times_written": 230,
       "prod_mentions": 55,
       "test_mentions": 27,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "tokens_out",
-      "times_written": 130,
+      "times_written": 230,
       "prod_mentions": 58,
       "test_mentions": 30,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "tool_call_drop_reasons",
+      "times_written": 10,
+      "prod_mentions": 3,
+      "test_mentions": 2,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
+      ]
+    },
+    {
+      "field": "tool_call_drops",
+      "times_written": 100,
+      "prod_mentions": 8,
+      "test_mentions": 10,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "total",
       "times_written": 1,
-      "prod_mentions": 345,
+      "prod_mentions": 349,
       "test_mentions": 85,
       "verdict": "read",
       "files": [
@@ -7507,15 +8799,15 @@
     },
     {
       "field": "total_return",
-      "times_written": 33,
-      "prod_mentions": 68,
+      "times_written": 43,
+      "prod_mentions": 71,
       "test_mentions": 49,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/conviction_replay_1.json",
+        "docs/conviction_replay/cross_arms_1.json",
         "docs/conviction_replay/exposure_controller_v0.json",
-        "docs/conviction_replay/lane_autopsy_1pp.json",
-        "docs/conviction_replay/transaction_ensemble_1.json"
+        "docs/conviction_replay/lane_autopsy_1pp.json"
       ]
     },
     {
@@ -7560,20 +8852,21 @@
     },
     {
       "field": "trigger_report",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 2,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "trim_25",
       "times_written": 1,
-      "prod_mentions": 3,
-      "test_mentions": 0,
+      "prod_mentions": 5,
+      "test_mentions": 1,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/counterfactual_exits.json"
@@ -7582,7 +8875,7 @@
     {
       "field": "trim_50",
       "times_written": 1,
-      "prod_mentions": 3,
+      "prod_mentions": 5,
       "test_mentions": 0,
       "verdict": "read",
       "files": [
@@ -7601,19 +8894,20 @@
     },
     {
       "field": "truncation",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 14,
       "test_mentions": 5,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "truth",
       "times_written": 68,
-      "prod_mentions": 65,
-      "test_mentions": 24,
+      "prod_mentions": 70,
+      "test_mentions": 26,
       "verdict": "read",
       "files": [
         "backend/data/optimus/instrument_floors.json"
@@ -7631,11 +8925,12 @@
     },
     {
       "field": "turnover_total",
-      "times_written": 2,
-      "prod_mentions": 8,
+      "times_written": 12,
+      "prod_mentions": 9,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
+        "docs/conviction_replay/cross_arms_1.json",
         "docs/conviction_replay/lane_autopsy_1pp.json"
       ]
     },
@@ -7662,7 +8957,7 @@
     {
       "field": "unit",
       "times_written": 14,
-      "prod_mentions": 107,
+      "prod_mentions": 115,
       "test_mentions": 33,
       "verdict": "read",
       "files": [
@@ -7672,7 +8967,7 @@
     {
       "field": "units",
       "times_written": 10,
-      "prod_mentions": 87,
+      "prod_mentions": 89,
       "test_mentions": 17,
       "verdict": "read",
       "files": [
@@ -7681,13 +8976,15 @@
     },
     {
       "field": "universe",
-      "times_written": 2,
-      "prod_mentions": 362,
-      "test_mentions": 119,
+      "times_written": 4,
+      "prod_mentions": 387,
+      "test_mentions": 123,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_climatology_h1_t3.json",
-        "backend/data/optimus/iif1_climatology_h5_t5.json"
+        "backend/data/optimus/iif1_climatology_h5_t5.json",
+        "backend/data/optimus/taq_cost_calibration.json",
+        "backend/data/optimus/taq_quoted_spreads_calibration.meta.json"
       ]
     },
     {
@@ -7714,8 +9011,8 @@
     {
       "field": "upper",
       "times_written": 4,
-      "prod_mentions": 318,
-      "test_mentions": 28,
+      "prod_mentions": 322,
+      "test_mentions": 29,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json"
@@ -7723,13 +9020,15 @@
     },
     {
       "field": "value",
-      "times_written": 6,
-      "prod_mentions": 703,
-      "test_mentions": 416,
+      "times_written": 50,
+      "prod_mentions": 719,
+      "test_mentions": 426,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -7756,15 +9055,15 @@
     },
     {
       "field": "verdict",
-      "times_written": 48,
-      "prod_mentions": 460,
-      "test_mentions": 176,
+      "times_written": 49,
+      "prod_mentions": 478,
+      "test_mentions": 186,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json",
-        "backend/data/optimus/instrument_floors.json",
-        "backend/data/optimus/write_only_telemetry.json"
+        "backend/data/optimus/instrument_floors.json"
       ]
     },
     {
@@ -7790,15 +9089,15 @@
     },
     {
       "field": "void_reason",
-      "times_written": 26,
+      "times_written": 27,
       "prod_mentions": 29,
-      "test_mentions": 20,
+      "test_mentions": 22,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
         "backend/data/optimus/iif1_nights/2026-08-17.json",
-        "docs/conviction_replay/why_moved_2026-08-10.json",
-        "docs/conviction_replay/why_moved_2026-08-10_geopolitical_rerun.json"
+        "backend/data/optimus/iif1_nights/2026-08-18.json",
+        "docs/conviction_replay/why_moved_2026-08-10.json"
       ]
     },
     {
@@ -7853,12 +9152,13 @@
     },
     {
       "field": "volume_z_20d",
-      "times_written": 3,
+      "times_written": 5,
       "prod_mentions": 6,
-      "test_mentions": 15,
+      "test_mentions": 19,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_nights/2026-08-14.json",
         "backend/data/optimus/iif1_nights/2026-08-17.json"
       ]
@@ -7928,20 +9228,21 @@
     },
     {
       "field": "weights",
-      "times_written": 2,
-      "prod_mentions": 634,
-      "test_mentions": 342,
+      "times_written": 3,
+      "prod_mentions": 641,
+      "test_mentions": 343,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_nights/2026-08-14.json",
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "what",
       "times_written": 32,
-      "prod_mentions": 757,
-      "test_mentions": 172,
+      "prod_mentions": 779,
+      "test_mentions": 182,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/why_moved_2026-08-10.json",
@@ -8014,8 +9315,8 @@
     {
       "field": "why",
       "times_written": 5,
-      "prod_mentions": 268,
-      "test_mentions": 97,
+      "prod_mentions": 276,
+      "test_mentions": 98,
       "verdict": "read",
       "files": [
         "backend/data/optimus/write_only_telemetry.json",
@@ -8044,6 +9345,16 @@
       ]
     },
     {
+      "field": "widest",
+      "times_written": 1,
+      "prod_mentions": 8,
+      "test_mentions": 0,
+      "verdict": "read",
+      "files": [
+        "backend/data/optimus/taq_cost_calibration.json"
+      ]
+    },
+    {
       "field": "win_counts_omitted_for",
       "times_written": 1,
       "prod_mentions": 1,
@@ -8056,8 +9367,8 @@
     {
       "field": "window",
       "times_written": 7,
-      "prod_mentions": 813,
-      "test_mentions": 178,
+      "prod_mentions": 830,
+      "test_mentions": 188,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_climatology_h1_t3.json",
@@ -8087,6 +9398,16 @@
       ]
     },
     {
+      "field": "windows",
+      "times_written": 1,
+      "prod_mentions": 121,
+      "test_mentions": 47,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
       "field": "with_overlay",
       "times_written": 2,
       "prod_mentions": 2,
@@ -8107,34 +9428,48 @@
       ]
     },
     {
-      "field": "worst_arm",
+      "field": "worst",
       "times_written": 1,
+      "prod_mentions": 115,
+      "test_mentions": 14,
+      "verdict": "read",
+      "files": [
+        "docs/conviction_replay/cross_arms_1.json"
+      ]
+    },
+    {
+      "field": "worst_arm",
+      "times_written": 2,
       "prod_mentions": 2,
       "test_mentions": 1,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "worst_arm_rate",
-      "times_written": 1,
+      "times_written": 2,
       "prod_mentions": 4,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
-        "backend/data/optimus/iif1_nights/2026-08-17.json"
+        "backend/data/optimus/iif1_nights/2026-08-17.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
       "field": "worst_minutes",
-      "times_written": 4,
+      "times_written": 7,
       "prod_mentions": 5,
       "test_mentions": 3,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
-        "backend/data/optimus/iif1_launches/2026-08-18.json"
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.json",
+        "backend/data/optimus/iif1_nights/2026-08-18.json"
       ]
     },
     {
@@ -8149,20 +9484,21 @@
     },
     {
       "field": "written_at_utc",
-      "times_written": 2,
+      "times_written": 3,
       "prod_mentions": 3,
       "test_mentions": 2,
       "verdict": "read",
       "files": [
         "backend/data/optimus/iif1_launches/2026-08-18.1.json",
+        "backend/data/optimus/iif1_launches/2026-08-18.2.json",
         "backend/data/optimus/iif1_launches/2026-08-18.json"
       ]
     },
     {
       "field": "z",
       "times_written": 6,
-      "prod_mentions": 198,
-      "test_mentions": 86,
+      "prod_mentions": 200,
+      "test_mentions": 87,
       "verdict": "read",
       "files": [
         "docs/conviction_replay/factorial_pm_1.json"

@@ -13,12 +13,12 @@ Each row below needs a decision: **wire it up, or delete it.** Leaving
 it is the only wrong answer, because inert telemetry looks exactly like
 working telemetry.
 
-- fields examined: **806**
-- WRITE_ONLY: **167**
+- fields examined: **918**
+- WRITE_ONLY: **187**
 - excluded by threshold: **0** (named in
   the JSON — a silent exclusion is how this audit first hid its own
   motivating case, `decision_lag_minutes`)
-- TEST_ONLY: **31** — a test asserting the field was
+- TEST_ONLY: **33** — a test asserting the field was
   written proves the WRITER works, not that anything consumes it.
   `decision_lag_minutes` had exactly this shape.
 
@@ -53,6 +53,7 @@ working telemetry.
 | `{9}` | 14 | 0 | 0 | `docs/conviction_replay/transaction_ensemble_1.json` |
 | `required_gap_anchor7` | 12 | 0 | 0 | `docs/conviction_replay/transaction_ensemble_1.json` |
 | `{}` | 11 | 0 | 0 | `docs/conviction_replay/transaction_ensemble_1.json` |
+| `drop_reasons` | 10 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
 | `median_full_spread_bps` | 10 | 1 | 0 | `backend/data/optimus/spread_convention_audit.json` |
 | `null_band` | 10 | 1 | 0 | `backend/data/optimus/instrument_floors.json` |
 | `anchor8_gap_bounds` | 8 | 0 | 0 | `docs/conviction_replay/transaction_ensemble_1.json` |
@@ -60,14 +61,16 @@ working telemetry.
 | `end_price` | 6 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `mae_date` | 6 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `mfe_date` | 6 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
-| `drop_reasons` | 5 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
 | `n_rebalances_marginal` | 4 | 1 | 0 | `docs/conviction_replay/lane_autopsy_1pp.json` |
 | `turnover_marginal` | 4 | 1 | 0 | `docs/conviction_replay/lane_autopsy_1pp.json` |
+| `balance_as_of` | 3 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
 | `benchmark_vol_annual` | 3 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `book_total` | 3 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `book_vol_annual` | 3 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
+| `k_requested` | 3 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
 | `n_down_days` | 3 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `n_up_days` | 3 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
+| `now_utc` | 3 | 1 | 0 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
 | `price_at_end` | 3 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `realised_return_vs_sheet_price` | 3 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `return_if_held_to_end` | 3 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
@@ -80,16 +83,26 @@ working telemetry.
 | `{7,9}|QUBT300` | 3 | 0 | 0 | `docs/conviction_replay/transaction_ensemble_1.json` |
 | `{7}|QUBT200` | 3 | 0 | 0 | `docs/conviction_replay/transaction_ensemble_1.json` |
 | `{7}|QUBT300` | 3 | 0 | 0 | `docs/conviction_replay/transaction_ensemble_1.json` |
-| `balance_as_of` | 2 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
+| `actual_finish_utc` | 2 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
+| `amended_at_utc` | 2 | 0 | 0 | `backend/data/optimus/taq_cost_calibration.json` |
+| `amendment_2` | 2 | 0 | 0 | `backend/data/optimus/taq_cost_calibration.json` |
+| `backend.services.investigator_tools` | 2 | 1 | 0 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
+| `backend.services.investigator_triggers` | 2 | 1 | 0 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
+| `built_at_utc` | 2 | 1 | 0 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
+| `call_seconds_assumed` | 2 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
 | `cash_earns` | 2 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
+| `concurrency_efficiency_declared` | 2 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
 | `cost_bps_oneway` | 2 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
 | `days_below_full` | 2 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
 | `diff_vs_fallback_M1_pts` | 2 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
 | `distinct_lenses` | 2 | 1 | 0 | `docs/conviction_replay/why_moved_2026-08-10.json` |
 | `ensemble_label` | 2 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
+| `entitlement_verified` | 2 | 0 | 0 | `backend/data/optimus/taq_cost_calibration.json` |
 | `exceedance_rate` | 2 | 1 | 0 | `backend/data/optimus/iif1_rho_h1_t3.json` |
+| `finished_before_open` | 2 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
+| `generated_at_utc` | 2 | 0 | 0 | `backend/data/optimus/taq_cost_calibration.json` |
 | `his_picks_minus_this_rule` | 2 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
-| `k_requested` | 2 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
+| `inflated_one_way_bps` | 2 | 1 | 0 | `backend/data/optimus/taq_cost_calibration.json` |
 | `lag_days` | 2 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
 | `max_pts` | 2 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
 | `min_exposure` | 2 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
@@ -103,12 +116,14 @@ working telemetry.
 | `n_slots_filled_from_the_tie` | 2 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `n_strictly_above_cutoff` | 2 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `n_unmeasurable_vol_days` | 2 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
-| `now_utc` | 2 | 1 | 0 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
 | `null_p05` | 2 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `null_p95` | 2 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `overlap_with_his_picks` | 2 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `pit_note` | 2 | 0 | 0 | `backend/data/optimus/iif1_climatology_h1_t3.json` |
+| `projected_finish_utc` | 2 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
+| `recorded_absences` | 2 | 0 | 0 | `backend/data/optimus/taq_cost_calibration.json` |
 | `registered_expectation` | 2 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
+| `resolved_absences` | 2 | 0 | 0 | `backend/data/optimus/taq_cost_calibration.json` |
 | `sigma_estimated_on` | 2 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
 | `synthetic_included_via_step_path` | 2 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
 | `synthetic_note` | 2 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
@@ -127,27 +142,25 @@ working telemetry.
 | `{}|QUBT300` | 2 | 0 | 0 | `docs/conviction_replay/transaction_ensemble_1.json` |
 | `THE_CAVEAT` | 1 | 1 | 0 | `docs/conviction_replay/exposure_controller_v0.json` |
 | `THE_FINDING` | 1 | 1 | 0 | `docs/conviction_replay/exposure_controller_v0.json` |
-| `actual_finish_utc` | 1 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
 | `agree_within_0p5` | 1 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
 | `alternative_rankings` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
-| `backend.services.investigator_tools` | 1 | 1 | 0 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
-| `backend.services.investigator_triggers` | 1 | 1 | 0 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
 | `best_three_held` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
-| `built_at_utc` | 1 | 1 | 0 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
-| `call_seconds_assumed` | 1 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
+| `calls_per_cell_declared` | 1 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-18.json` |
+| `calls_per_cell_nights_measured` | 1 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-18.json` |
 | `capture_h4` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
-| `concurrency_efficiency_declared` | 1 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
 | `convention_audit_pass` | 1 | 1 | 0 | `backend/data/optimus/spread_convention_audit.json` |
 | `conviction_replay_1_picks_pts` | 1 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
 | `cross_check` | 1 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
 | `data_note` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `demoted_mean` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `descriptive_n1` | 1 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
+| `ew-at-seed-hold` | 1 | 1 | 0 | `docs/conviction_replay/cross_arms_1.json` |
+| `ew-monthly` | 1 | 1 | 0 | `docs/conviction_replay/cross_arms_1.json` |
+| `excluded_by_threshold` | 1 | 1 | 0 | `backend/data/optimus/write_only_telemetry.json` |
 | `excluding_reconstructed_names` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `exit_fill_tolerances` | 1 | 1 | 0 | `docs/conviction_replay/transaction_ensemble_1.json` |
 | `exits_h2` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `finalized_at` | 1 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
-| `finished_before_open` | 1 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
 | `grading_rule` | 1 | 1 | 0 | `docs/conviction_replay/transaction_ensemble_1.json` |
 | `lower_bound_reason` | 1 | 0 | 0 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
 | `magnitude_class_edges_pts` | 1 | 1 | 0 | `docs/conviction_replay/transaction_ensemble_1.json` |
@@ -158,7 +171,9 @@ working telemetry.
 | `mean_terminal_value_per_dollar` | 1 | 1 | 0 | `docs/conviction_replay/counterfactual_exits.json` |
 | `median_capture_of_best_move` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `n_features_that_separate` | 1 | 1 | 0 | `docs/conviction_replay/counterfactual_exits.json` |
+| `n_in_panel` | 1 | 1 | 0 | `backend/data/optimus/taq_cost_calibration.json` |
 | `n_non_picks` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
+| `n_panel_rows` | 1 | 1 | 0 | `backend/data/optimus/taq_cost_calibration.json` |
 | `n_price_rows` | 1 | 1 | 0 | `docs/conviction_replay/lane_autopsy_1pp.json` |
 | `n_priced_calls` | 1 | 0 | 0 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
 | `names_missing` | 1 | 1 | 0 | `docs/conviction_replay/lane_autopsy_1pp.json` |
@@ -169,24 +184,29 @@ working telemetry.
 | `not_a_crash_model` | 1 | 1 | 0 | `docs/conviction_replay/exposure_controller_v0.json` |
 | `original_fields_untouched` | 1 | 0 | 0 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
 | `overlay_is_lagged_one_day` | 1 | 1 | 0 | `docs/conviction_replay/exposure_controller_v0.json` |
+| `panel_meta` | 1 | 1 | 0 | `backend/data/optimus/taq_cost_calibration.json` |
 | `picks_mean` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `pool_n` | 1 | 1 | 0 | `docs/conviction_replay/factorial_pm_1.json` |
 | `position_paths` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `prediction_held` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `prereg_commit` | 1 | 1 | 0 | `docs/conviction_replay/transaction_ensemble_1.json` |
-| `projected_finish_utc` | 1 | 1 | 0 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
 | `promoted_mean` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `q1_cost_model_expects` | 1 | 1 | 0 | `backend/data/optimus/spread_convention_audit.json` |
 | `q2_estimators_return` | 1 | 1 | 0 | `backend/data/optimus/spread_convention_audit.json` |
 | `q3_detection_floor` | 1 | 1 | 0 | `backend/data/optimus/spread_convention_audit.json` |
 | `re_entry_is_mandatory` | 1 | 1 | 0 | `docs/conviction_replay/exposure_controller_v0.json` |
 | `rebalance_h3` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
+| `reconcile_tolerance` | 1 | 1 | 0 | `docs/conviction_replay/cross_arms_1.json` |
+| `reconciliation_rows` | 1 | 1 | 0 | `docs/conviction_replay/cross_arms_1.json` |
 | `reconstructed_entry_prices` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
+| `reference_rank` | 1 | 1 | 0 | `backend/data/optimus/taq_cost_calibration.json` |
 | `registered_prediction` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
+| `seed-weights-monthly` | 1 | 1 | 0 | `docs/conviction_replay/cross_arms_1.json` |
 | `sensitivity_to_reconstructed_names` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `separating_features` | 1 | 1 | 0 | `docs/conviction_replay/counterfactual_exits.json` |
 | `sign_is_uniform` | 1 | 1 | 0 | `docs/conviction_replay/conviction_replay_1.json` |
 | `stability_tolerance` | 1 | 1 | 0 | `backend/data/optimus/instrument_floors.json` |
+| `start_shift_effect` | 1 | 1 | 0 | `docs/conviction_replay/cross_arms_1.json` |
 | `state_days` | 1 | 1 | 0 | `docs/conviction_replay/exposure_controller_v0.json` |
 | `the_soc_question` | 1 | 1 | 0 | `docs/conviction_replay/counterfactual_exits.json` |
 | `times_each_branch_was_best` | 1 | 1 | 0 | `docs/conviction_replay/counterfactual_exits.json` |
@@ -203,32 +223,34 @@ working telemetry.
 | `corroboration_hit_rate_combined` | 34 | 1 | 1 | `docs/conviction_replay/why_moved_2026-08-10.json` |
 | `corroboration_hits` | 34 | 1 | 2 | `docs/conviction_replay/why_moved_2026-08-10.json` |
 | `corroboration_misses` | 34 | 1 | 2 | `docs/conviction_replay/why_moved_2026-08-10.json` |
-| `n_with_forecasts` | 7 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
+| `n_with_forecasts` | 12 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
 | `fraction_checkable` | 3 | 1 | 1 | `docs/conviction_replay/factorial_pm_1.json` |
-| `cost_drag` | 2 | 1 | 3 | `docs/conviction_replay/lane_autopsy_1pp.json` |
+| `n_calls_in_barren_chains` | 3 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
+| `n_calls_resolved` | 3 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
+| `scaled_minutes` | 3 | 1 | 1 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
+| `args_not_a_mapping` | 2 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-18.json` |
+| `backend.services.iif1_features` | 2 | 1 | 1 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
+| `backend.services.investigator_night` | 2 | 1 | 4 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
+| `declared_efficiency` | 2 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
 | `design_effect_at_m` | 2 | 1 | 1 | `backend/data/optimus/iif1_rho_h1_t3.json` |
 | `epistemics` | 2 | 1 | 1 | `docs/conviction_replay/why_moved_2026-08-10.json` |
 | `floored_at_zero` | 2 | 1 | 1 | `backend/data/optimus/iif1_rho_h1_t3.json` |
 | `hrp_ever_passed_its_gate` | 2 | 1 | 1 | `docs/conviction_replay/factorial_pm_1.json` |
-| `n_calls_in_barren_chains` | 2 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
-| `n_calls_resolved` | 2 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
+| `manifest_version` | 2 | 1 | 1 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
+| `measured_efficiency` | 2 | 1 | 5 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
+| `n_cells_measured` | 2 | 1 | 3 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
+| `per_arm_rate` | 2 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
+| `pooled_rate` | 2 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
 | `rho_for_use` | 2 | 1 | 3 | `backend/data/optimus/iif1_rho_h1_t3.json` |
 | `rho_measured` | 2 | 1 | 4 | `backend/data/optimus/iif1_rho_h1_t3.json` |
-| `scaled_minutes` | 2 | 1 | 1 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
-| `stdin_isatty` | 2 | 1 | 2 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
 | `amended_at` | 1 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
 | `as_written` | 1 | 0 | 1 | `backend/data/optimus/iif1_nights/2026-08-14.json` |
-| `backend.services.iif1_features` | 1 | 1 | 1 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
-| `backend.services.investigator_night` | 1 | 1 | 4 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
+| `calls_per_cell_assumed` | 1 | 1 | 2 | `backend/data/optimus/iif1_nights/2026-08-18.json` |
+| `calls_per_cell_basis` | 1 | 1 | 2 | `backend/data/optimus/iif1_nights/2026-08-18.json` |
 | `company_news` | 1 | 1 | 3 | `docs/conviction_replay/why_moved_2026-08-10.json` |
-| `declared_efficiency` | 1 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
-| `manifest_version` | 1 | 1 | 1 | `backend/data/optimus/iif1_launches/2026-08-18.1.json` |
-| `measured_efficiency` | 1 | 1 | 5 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
-| `n_cells_measured` | 1 | 1 | 3 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
+| `measured_duration_bound` | 1 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-18.json` |
 | `no_records_minted` | 1 | 1 | 1 | `docs/conviction_replay/why_moved_2026-08-10.json` |
 | `options_vol` | 1 | 1 | 3 | `docs/conviction_replay/why_moved_2026-08-10.json` |
-| `per_arm_rate` | 1 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
-| `pooled_rate` | 1 | 1 | 1 | `backend/data/optimus/iif1_nights/2026-08-17.json` |
 | `regrades` | 1 | 1 | 1 | `docs/conviction_replay/why_moved_2026-08-10.json` |
 | `sector_factor` | 1 | 1 | 2 | `docs/conviction_replay/why_moved_2026-08-10.json` |
 
