@@ -1,0 +1,11 @@
+{
+  "base_rate": 0.19634228187919464,
+  "n_windows": 29800,
+  "n_hits": 5851,
+  "horizon_days": 5,
+  "threshold": 0.05,
+  "basis": "MEASURED_FROM_SUPPLIED_RETURNS_PANEL",
+  "universe": "Night 1 receipt tickers",
+  "window": "3y daily ending 2026-08-18",
+  "pit_note": "computed AFTER the decision date but strictly BEFORE the outcomes being scored (which resolve 08-21 / 08-27), so it is not an answer key. Recompute as of the decision date at read time if the reference is to be exactly PIT."
+}

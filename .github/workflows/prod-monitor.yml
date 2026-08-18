@@ -8,6 +8,40 @@
 # Also verifies /api/health/full (status + NAV freshness): failure opens a
 # "PROD ALERT" issue (idempotent), recovery closes it. No silent outages,
 # no silently-skipped collector jobs.
+#
+# TWO DEFECTS FIXED 2026-08-18, BOTH FOUND BY READING WHY THE INBOX WAS FULL
+# =========================================================================
+# On 2026-08-17 this workflow sent ~14 notifications in one day and failed
+# three of its own runs. Neither had anything to do with prod being broken.
+#
+#  1. THE ALERTER'S OWN LOOKUP COULD KILL THE ALERT. `gh issue list --search`
+#     goes through GitHub's SEARCH API, which is separately rate-limited and
+#     transiently 5xx's. GitHub Actions runs `run:` blocks under `bash -e`, so
+#     a failing command substitution (`open_issue=$(gh issue list ...)`) aborts
+#     the step *before* the alert is written. Runs 131/136/137 all failed at
+#     that exact step with the health check itself reported success. So the
+#     failure mode was: prod is degraded, the lookup flakes, no issue comment
+#     is written, and the only signal is a red workflow — an alerter that goes
+#     quiet precisely when it is needed. Now: the plain REST issue list (no
+#     search index), filtered client-side, retried, and a lookup that still
+#     fails after retries FAILS LOUD rather than being swallowed.
+#
+#  2. ONE CONDITION, NINE EMAILS. A single continuous DEGRADED state produced
+#     one comment per tick for five hours. Every comment is a notification and
+#     none of them carried new information — the state had not changed since
+#     the first. Repeated identical alerts are how a monitor trains its reader
+#     to filter it, which is the same outcome as not having one. Now the
+#     condition carries a SIGNATURE (status|ledger|fresh); a new signature
+#     comments (it is genuinely new information), an unchanged one silently
+#     EDITS the issue body with a tick counter and last-seen time. Editing an
+#     issue body sends no notification, so the state stays visible and the
+#     inbox stays readable.
+#
+# What the flood was actually reporting, for the record: `prediction_ledger`
+# read DEGRADED because 25 forecasts were past due while QUARANTINED — the
+# resolver refusing them on purpose. That is the canon's actionable-vs-
+# deliberate split, and it was fixed in the app (4545d48/18506c8), not here.
+# The monitor was right to be loud once and wrong to be loud nine times.
 
 name: Prod monitor
 
@@ -18,6 +52,13 @@ on:
 
 permissions:
   issues: write
+
+# A slow prod wake can outlast the gap to the next tick. Two overlapping runs
+# both see "no open issue" and both create one, which is how a monitor
+# duplicates its own alert.
+concurrency:
+  group: prod-monitor
+  cancel-in-progress: false
 
 jobs:
   check:
@@ -33,10 +74,21 @@ jobs:
           status=$(echo "$body" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('status','missing'))" 2>/dev/null || echo "unparseable")
           fresh=$(echo "$body" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('scheduler',{}).get('nav',{}).get('all_fresh','missing'))" 2>/dev/null || echo "unparseable")
           ledger=$(echo "$body" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('prediction_ledger',{}).get('status','missing'))" 2>/dev/null || echo "unparseable")
+          # The REASONS, not just the verdict. A "status=DEGRADED" alert that
+          # does not say why makes the reader open the endpoint by hand every
+          # time, and the reasons are what distinguish a new condition from
+          # the same one ticking again.
+          # ONE LINE, ALWAYS: a multi-line value silently corrupts
+          # $GITHUB_OUTPUT (everything past the first newline is read as a new
+          # key), and a literal '-->' would terminate the HTML comment the
+          # signature is stored in. Both are collapsed here, at the source.
+          why=$(echo "$body" | python3 -c "import json,re,sys; d=json.load(sys.stdin); p=list(d.get('degraded_reasons') or [])+list((d.get('prediction_ledger') or {}).get('problems') or []); s=re.sub(r'\s+',' ','; '.join(map(str,p))).replace('-->','--').strip(); print(s[:400] or 'no reasons reported')" 2>/dev/null || echo "unparseable")
           echo "status=$status fresh=$fresh ledger=$ledger"
+          echo "why=$why"
           echo "status=$status" >> "$GITHUB_OUTPUT"
           echo "fresh=$fresh" >> "$GITHUB_OUTPUT"
           echo "ledger=$ledger" >> "$GITHUB_OUTPUT"
+          echo "why=$why" >> "$GITHUB_OUTPUT"
           # prediction_ledger checked EXPLICITLY as well as via top-level
           # status: belt-and-suspenders, so a regression that re-hardcodes the
           # top-level "ok" cannot silence the ledger canary again.
@@ -53,20 +105,117 @@ jobs:
           STATUS: ${{ steps.health.outputs.status }}
           FRESH: ${{ steps.health.outputs.fresh }}
           LEDGER: ${{ steps.health.outputs.ledger }}
+          WHY: ${{ steps.health.outputs.why }}
         run: |
-          open_issue=$(gh issue list --repo "$GITHUB_REPOSITORY" \
-            --state open --search "PROD ALERT in:title" \
-            --json number --jq '.[0].number // empty')
-          if [ "$HEALTHY" != "true" ]; then
-            msg="Health check failed at $(date -u +'%F %T UTC'): status=\`$STATUS\`, nav all_fresh=\`$FRESH\`, prediction_ledger=\`$LEDGER\`. https://aegis-finance-production.up.railway.app/api/health/full"
-            if [ -n "$open_issue" ]; then
-              gh issue comment "$open_issue" --repo "$GITHUB_REPOSITORY" --body "$msg"
-            else
-              gh issue create --repo "$GITHUB_REPOSITORY" \
-                --title "PROD ALERT: health check failing" --body "$msg"
+          set -uo pipefail
+          TITLE="PROD ALERT: health check failing"
+          NOW="$(date -u +'%F %T UTC')"
+          SIG="status=${STATUS}|ledger=${LEDGER}|fresh=${FRESH}|why=${WHY}"
+
+          # ── the lookup ───────────────────────────────────────────────────
+          # `gh issue list` WITHOUT --search hits the plain REST issues
+          # endpoint. The previous version used --search, which routes through
+          # the search index and is the flake that killed three runs. Filtering
+          # by title client-side costs one jq expression and removes the whole
+          # dependency.
+          lookup() {
+            gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 \
+              --json number,title,body \
+              --jq "[.[] | select(.title == \"$TITLE\")][0] // empty"
+          }
+          issue_json=""
+          lookup_ok=0
+          for attempt in 1 2 3; do
+            # The empty string is a VALID result (no open alert), so the exit
+            # code is the only thing that distinguishes "nothing open" from
+            # "could not ask". Reading emptiness as an answer is how a broken
+            # lookup silently becomes "prod is fine".
+            if issue_json=$(lookup); then
+              lookup_ok=1
+              break
             fi
-          elif [ -n "$open_issue" ]; then
-            gh issue comment "$open_issue" --repo "$GITHUB_REPOSITORY" \
-              --body "Recovered at $(date -u +'%F %T UTC') — status ok, nav all_fresh=$FRESH, prediction_ledger=$LEDGER."
-            gh issue close "$open_issue" --repo "$GITHUB_REPOSITORY"
+            echo "::warning::issue lookup attempt $attempt failed; retrying"
+            issue_json=""
+            sleep $((attempt * 5))
+          done
+          if [ "$lookup_ok" != "1" ]; then
+            # Three failures is not a flake. Fail LOUD: an alerter that cannot
+            # read its own state must not report success. This is the one case
+            # where a red run is the correct output.
+            echo "::error::could not list issues after 3 attempts — the alerter cannot verify its own state"
+            exit 1
+          fi
+
+          # python3 rather than jq+sed. Not a style preference: `jq` is
+          # preinstalled on ubuntu-latest but absent from the dev machine, so a
+          # jq-based body could only ever be tested by pushing it and watching
+          # the inbox — which is how this workflow got into the state it was in.
+          # python3 is already a dependency of the step above and runs both
+          # places, so the branches below are exercisable before they ship.
+          read_state=$(printf '%s' "${issue_json:-}" | python3 -c "import json,re,sys; raw=sys.stdin.read().strip(); d=(json.loads(raw) if raw else {}); b=d.get('body') or ''; ms=re.search(r'<!-- sig: (.*?) -->',b); mt=re.search(r'<!-- ticks: (\d+) -->',b); print(d.get('number') or ''); print(ms.group(1) if ms else ''); print(mt.group(1) if mt else 0)") \
+            || { echo "::error::could not parse the alert issue state"; exit 1; }
+          number=$(echo "$read_state" | sed -n 1p)
+          prev_sig=$(echo "$read_state" | sed -n 2p)
+          prev_ticks=$(echo "$read_state" | sed -n 3p)
+          [ -z "$prev_ticks" ] && prev_ticks=0
+
+          URL="https://aegis-finance-production.up.railway.app/api/health/full"
+
+          if [ "$HEALTHY" != "true" ]; then
+            ticks=$((prev_ticks + 1))
+            # printf rather than a multi-line shell string: every line of this
+            # file has to stay indented inside the YAML block scalar, and a
+            # heredoc would carry its own indentation into the issue body.
+            body=$(printf '%s\n' \
+              "Health check failing." \
+              "" \
+              "| field | value |" \
+              "|---|---|" \
+              "| status | \`$STATUS\` |" \
+              "| prediction_ledger | \`$LEDGER\` |" \
+              "| nav all_fresh | \`$FRESH\` |" \
+              "| reasons | $WHY |" \
+              "" \
+              "Episode opened when this issue was created. Last seen: **$NOW**." \
+              "Consecutive failing checks: **$ticks**." \
+              "" \
+              "$URL" \
+              "" \
+              "<!-- sig: $SIG -->" \
+              "<!-- ticks: $ticks -->")
+
+            if [ -z "$number" ]; then
+              gh issue create --repo "$GITHUB_REPOSITORY" \
+                --title "$TITLE" --body "$body" || {
+                  echo "::error::failed to create the alert issue"; exit 1; }
+              echo "opened a new PROD ALERT issue"
+            elif [ "$SIG" != "$prev_sig" ]; then
+              # The CONDITION CHANGED. That is new information and earns a
+              # notification — a degraded ledger becoming a stale NAV is a
+              # different outage wearing the same issue.
+              note=$(printf '%s\n' \
+                "Condition changed at $NOW: status=\`$STATUS\`, prediction_ledger=\`$LEDGER\`, nav all_fresh=\`$FRESH\`." \
+                "Reasons: $WHY" \
+                "$URL")
+              gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$note" \
+                || { echo "::error::failed to comment"; exit 1; }
+              gh issue edit "$number" --repo "$GITHUB_REPOSITORY" --body "$body" || true
+              echo "condition changed — commented and updated #$number"
+            else
+              # SAME condition, still failing. Editing the body updates the
+              # visible state and sends no notification. Nine identical
+              # comments taught the reader to ignore the tenth.
+              gh issue edit "$number" --repo "$GITHUB_REPOSITORY" --body "$body" || {
+                  echo "::error::failed to update the alert issue"; exit 1; }
+              echo "unchanged condition (tick $ticks) — issue #$number updated silently"
+            fi
+          elif [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" \
+              --body "Recovered at $NOW — status ok, prediction_ledger=ok, nav all_fresh=$FRESH. The episode lasted $prev_ticks failing check(s)." \
+              || { echo "::error::failed to post recovery comment"; exit 1; }
+            gh issue close "$number" --repo "$GITHUB_REPOSITORY" \
+              || { echo "::error::failed to close the alert issue"; exit 1; }
+            echo "recovered — closed #$number"
+          else
+            echo "healthy, no open alert"
           fi

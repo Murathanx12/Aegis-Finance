@@ -208,7 +208,35 @@ def _case_population():
             NoPopulationInScope, "a population claimed with no counts behind it")
 
 
+def _case_night_launcher():
+    import tempfile, pathlib
+    from backend.services.night_launcher import LaunchRefused, evaluate_launch
+    # A launch-receipt directory that CANNOT EXIST: its parent is a file. The
+    # missing input is the launcher's own evidence channel, and the refusal
+    # matters because every other property of this launcher — acceptance, the
+    # morning check, telling a refusing launcher from a dead task — is read
+    # back out of those receipts. A run whose evidence may not exist is worse
+    # than a night not run.
+    d = pathlib.Path(tempfile.mkdtemp())
+    (d / "blocker").write_text("not a directory", encoding="utf-8")
+    return (lambda: evaluate_launch(launch_dir=d / "blocker" / "receipts"),
+            LaunchRefused, "a launcher whose receipts cannot be written")
+
+
+def _case_iif1_grader():
+    from backend.services.iif1_grader import GradeRefused, brier_with_base_rate
+    # A Brier over a sample whose base rate is 0. `p(1-p)` is zero, no skill
+    # score is defined and the MDE is infinite — the score computed anyway is a
+    # fact about the sample's degeneracy that reads as one about the forecaster.
+    # This is the rare-event trap in its purest form, and the grader exists to
+    # print a base rate beside every Brier precisely so it cannot be missed.
+    return (lambda: brier_with_base_rate([0.1, 0.2, 0.3], [0, 0, 0]),
+            GradeRefused, "a Brier over a sample with no positive outcomes")
+
+
 CASES = {
+    "iif1_grader": _case_iif1_grader,
+    "night_launcher": _case_night_launcher,
     "population": _case_population,
     "execution_boundary": _case_execution_boundary,
     "multiplicity": _case_multiplicity,

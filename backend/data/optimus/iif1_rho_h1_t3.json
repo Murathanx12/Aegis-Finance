@@ -1,0 +1,13 @@
+{
+  "rho_measured": 0.073727,
+  "rho_for_use": 0.073727,
+  "basis": "MEASURED_INTRACLASS_FROM_DAILY_EXCEEDANCE_COUNTS",
+  "floored_at_zero": false,
+  "n_names": 40,
+  "n_dates": 749,
+  "exceedance_rate": 0.097196,
+  "design_effect_at_m": 3.8754,
+  "horizon_days": 1,
+  "threshold": 0.03,
+  "note": "a caller may DECLARE a larger rho; it may never declare a smaller one, because a measurement is only allowed to make this guard more conservative"
+}

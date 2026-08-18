@@ -1,0 +1,81 @@
+{
+  "trial": "INTERNET-INVESTIGATOR-FWD-1",
+  "session_date": "2026-08-18",
+  "evaluated_at_utc": "2026-08-18T04:00:55+00:00",
+  "may_launch": true,
+  "refusals": [],
+  "derived": {
+    "now_utc": "2026-08-18T04:00:55+00:00",
+    "next_open_utc": "2026-08-18T13:30+00:00",
+    "session_date": "2026-08-18",
+    "hours_until_open": 9.48,
+    "decision_date_ny": "2026-08-18",
+    "k": 40,
+    "n_arms": 5,
+    "calls_per_cell": {
+      "value": 7.085,
+      "basis": "MEASURED_MAX_OVER_COMPLETED_NIGHTS",
+      "n_nights": 1,
+      "observed": [
+        {
+          "night": "2026-08-17",
+          "calls_per_cell": 7.085
+        }
+      ],
+      "declared": 4.8
+    },
+    "duration_bound": {
+      "value": 230.7,
+      "basis": "MEASURED_WORST_COMPLETED_NIGHT_X_DECLARED_FACTOR",
+      "n_nights": 1,
+      "observed": [
+        {
+          "night": "2026-08-17",
+          "minutes": 115.36,
+          "projected_minutes": 69.6,
+          "projection_error_minutes": 45.8,
+          "projection_ratio": 1.658
+        }
+      ],
+      "worst_minutes": 115.36,
+      "safety_factor": 2.0,
+      "clock": "run_night_elapsed"
+    },
+    "assembly_allowance": {
+      "value": 36.4,
+      "basis": "MEASURED_WORST_ASSEMBLY_X_DECLARED_FACTOR",
+      "cap": 45.0,
+      "worst_minutes": 18.22,
+      "scaled_minutes": 36.4,
+      "n_nights": 1,
+      "observed": [
+        {
+          "night": "2026-08-17",
+          "assembly_minutes": 18.22
+        }
+      ],
+      "safety_factor": 2.0
+    },
+    "decision_minutes": 230.7,
+    "decision_basis": "MEASURED_DURATION_BOUND",
+    "modelled_serial_minutes": 205.5,
+    "latest_safe_run_start_utc": "2026-08-18T09:39:18+00:00",
+    "latest_safe_launch_utc": "2026-08-18T09:02:54+00:00",
+    "launch_margin_minutes": 302.0,
+    "nights_attempted": 2,
+    "graded_nights_completed": 1,
+    "graded_nights_required": 40,
+    "prereg_fields_verified": 15
+  },
+  "verdict": "REHEARSAL",
+  "written_at_utc": "2026-08-18T04:00:57+00:00",
+  "git_commit": "0530817ee9de6011087c4289559f092e4309503a",
+  "git_dirty": true,
+  "invocation_mode": "manual",
+  "stdin_isatty": true,
+  "contradicted": false,
+  "implementation_version": 2,
+  "arm_implementation_fingerprint": "19461700cec485a6",
+  "rehearsal": true,
+  "note": "the launcher woke, recomputed readiness and recorded its verdict; it did not launch"
+}
