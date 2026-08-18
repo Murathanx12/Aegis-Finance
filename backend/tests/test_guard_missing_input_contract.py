@@ -300,7 +300,21 @@ def _case_instrument_floor():
             InstrumentUnresolvable, "a floor profiled with no finite reading")
 
 
+def _case_lane_autopsy():
+    from backend.services.lane_autopsy import (CONVICTION_RULES, ReplayRefused,
+                                               replay)
+    import pandas as pd
+    # The missing input is a PRICE COLUMN. A name with no prices lets the
+    # remaining weights re-normalise, which shows up as a return rather than as
+    # an error — survivorship arriving through the back door.
+    px = pd.DataFrame({"A": [100.0, 101.0, 102.0]},
+                      index=pd.bdate_range("2026-06-08", periods=3))
+    return (lambda: replay(px, {"A": 1, "GONE": 1}, CONVICTION_RULES),
+            ReplayRefused, "a replay over a name with no prices")
+
+
 CASES = {
+    "lane_autopsy": _case_lane_autopsy,
     "instrument_floor": _case_instrument_floor,
     "cost_model": _case_cost_model,
     "net_dataset": _case_net_dataset,
