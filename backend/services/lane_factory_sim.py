@@ -110,7 +110,7 @@ def inv_vol_63_at(panel: Panel, asof: pd.Timestamp) -> pd.Series:
     return 1.0 / sd
 
 
-def prepare_extras(panel: Panel) -> dict:
+def prepare_extras(panel: Panel, finratio_path=None) -> dict:
     """One-time precomputation for the MEGA-SWEEP signal set.
 
     finratio pivots are indexed by PUBLIC_DATE (the WRDS availability
@@ -119,7 +119,8 @@ def prepare_extras(panel: Panel) -> dict:
     definition verbatim.
     """
     from backend.services.streak_evidence import _streak_matrix
-    fr = pd.read_parquet(WRDS_DIR / "finratio_monthly.parquet",
+    fr = pd.read_parquet(finratio_path or
+                         WRDS_DIR / "finratio_monthly.parquet",
                          columns=["permno", "public_date", "bm", "roe"])
     fr["public_date"] = pd.to_datetime(fr["public_date"])
     piv = {c: fr.pivot_table(index="public_date", columns="permno",

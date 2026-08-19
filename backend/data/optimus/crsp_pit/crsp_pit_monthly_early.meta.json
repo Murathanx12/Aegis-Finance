@@ -1,0 +1,18 @@
+{
+  "dataset": "CRSP-PIT-MONTHLY-EARLY (held-out confirmation era)",
+  "window": [
+    "1990-01-01",
+    "2012-12-31"
+  ],
+  "filters_frozen": "byte-identical to crsp_pit_monthly_v1; NOMINAL cuts are a stricter real screen in 1990 \u2014 disclosed, never re-tuned",
+  "purpose": "out-of-era confirmation slice for 2013-24-generated screen survivors; untouched before this pull",
+  "n_rows": 1532185,
+  "ever_eligible_permnos": 6988,
+  "monthly_membership": {
+    "min": 243,
+    "median": 1332.5,
+    "max": 2149
+  },
+  "delistings_of_eligible": 1463,
+  "generated_at": "2026-08-19T13:21:12+00:00"
+}
