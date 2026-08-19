@@ -1,0 +1,59 @@
+{
+  "trial": "FACTOR-CHASE-FOREIGN-1",
+  "mode": "REGISTERED",
+  "signed_by": "Murat Abdullaev \u2014 recorded overnight order 2026-08-19",
+  "at": "2026-08-19T14:57:35+00:00",
+  "countries": [
+    "jpn",
+    "gbr",
+    "deu",
+    "fra",
+    "can"
+  ],
+  "primary": {
+    "pooled_contrast": {
+      "mean": -0.002025778190613227,
+      "ci_lo": -0.0029081545668125015,
+      "ci_hi": -0.0011104230902489326,
+      "se": 0.0005480719698365343,
+      "mde_80pct_power": 0.0015354703294230194,
+      "n_rows": 2332,
+      "n_dates": 524,
+      "n_securities": 4,
+      "n_effective": 524.0,
+      "block_days": 1,
+      "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+      "block_days_derived": 1
+    },
+    "ann_mean_diff": -0.02431,
+    "p_two_sided": 0.000219,
+    "verdict": "CHASING_HARMFUL_CONFIRMED"
+  },
+  "screen_per_country": {
+    "jpn": {
+      "ann_diff": -0.0259,
+      "n_months": 478,
+      "sha": "96d3ee7684bc"
+    },
+    "gbr": {
+      "ann_diff": -0.01977,
+      "n_months": 478,
+      "sha": "193a58c3bad4"
+    },
+    "deu": {
+      "ann_diff": -0.02717,
+      "n_months": 426,
+      "sha": "65b9ff62e6a2"
+    },
+    "fra": {
+      "ann_diff": -0.03583,
+      "n_months": 426,
+      "sha": "f2456c8274a8"
+    },
+    "can": {
+      "ann_diff": -0.0153,
+      "n_months": 524,
+      "sha": "0742b78ea074"
+    }
+  }
+}

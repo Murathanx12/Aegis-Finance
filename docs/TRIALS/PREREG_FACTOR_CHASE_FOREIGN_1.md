@@ -48,3 +48,21 @@ after this commit; promote a screen cell; feed any lane. §61 cap.
 Backfill-methodology note carried as in FACTOR-MOMENTUM-1.
 
 — frozen 2026-08-19 night, pre-download
+
+---
+
+## RESULTS (registered run 2026-08-19 night, appended post-run)
+
+Receipt `jkp/foreign_chase_trial_2026-08-19.json`; §64 audit written
+first. 2,332 country-months over 524 unique months.
+
+**Verdict: CHASING_HARMFUL_CONFIRMED.** Pooled momentum-tercile book −
+static book = **−2.43%/yr net** (p 0.00022, |mean| ≥ run-time MDE).
+Per-country screen: jpn −2.6%, gbr −2.0%, deu −2.7%, fra −3.6%, can
+−1.5% — **negative in all five**, matching the barred US parent
+(−2.1%/yr). CHASING_HARMLESS was not answerable at this n (declared
+at audit). Combined with the US screen: chasing last-month factor
+winners is harmful in six markets independently. §61 cap — this
+licenses a NEGATIVE rule candidate (never reallocate toward
+last-month strategy winners), to be transported through its own
+prereg; it is not a trading signal.

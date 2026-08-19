@@ -1,0 +1,11 @@
+{
+  "audit": "FOREIGN-CHASE \u00a764 (mean masked here)",
+  "n_country_months": 2332,
+  "n_unique_months": 524,
+  "block_days": 1,
+  "n_effective": 524.0,
+  "se": 0.000548,
+  "mde_80pct_power": 0.001535,
+  "bar_monthly": 0.0004166666666666667,
+  "harmless_limb_answerable": false
+}
