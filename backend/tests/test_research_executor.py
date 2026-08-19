@@ -147,6 +147,17 @@ def test_max_jobs_bounds_a_run_but_not_the_bookkeeping():
 
 
 # ── the convexity power audit, on the real episode file ────────────────────
+from backend import config as _config
+
+_EPISODES = _config.OPTIMUS_LEDGER_DIR / "convexity" / "episodes_v1.parquet"
+
+
+@pytest.mark.skipif(
+    not _EPISODES.exists(),
+    reason="episodes_v1.parquet is a gitignored DATA artifact — absent in "
+           "CI's checkout (this exact test turned CI red on 947624e; the "
+           "audit's refusal path is covered by ExecutorRefused in the "
+           "audit itself and runs in both worlds)")
 def test_convexity_power_audit_reads_real_episodes_and_states_its_basis():
     out = RE.convexity_power_audit()
     assert out["n_episodes"] > 20_000

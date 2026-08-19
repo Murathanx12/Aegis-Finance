@@ -1,6 +1,6 @@
 # PREREG — AEGIS-NET-TOURNAMENT-1
 
-SIGNED-BY: (unsigned)
+SIGNED-BY: Murat Abdullaev — verbal in-session approval 2026-08-19 ("I approve everything on my queue", given in response to the session summary that described AMENDMENT 1 including the changed primary metric); recorded by the working session
 
 **Status: DRAFT awaiting Murat's signature. The harness
 (`backend/services/net_tournament.py`) refuses to touch the registered panel
@@ -217,3 +217,37 @@ Also added: the universe-selection limitation clause and the
 (`--world linear|nonlinear|null|barrier`) are part of the harness
 acceptance: nonlinear world → a nonlinear arm must win; null world → no
 COMPLEX_WINS; barrier world → survival must beat timing-blind, held out.
+
+## RESULTS — first registered run, 2026-08-19 (receipt `tournament_2026-08-19T040624Z.json`)
+
+Recorded after the fact; nothing above this section changed post-run.
+
+**Primary (cs_rank, deciding):** ridge IC +0.0004. ΔIC vs ridge: LightGBM
++0.0124 · MLP-1 +0.0112 · MLP-2 +0.0134 · MLP-3 +0.0064, each against a
+run-time bootstrap MDE ≈ 0.051–0.055 (126 monthly test dates, block=1).
+**Verdict, all four arms: NOT_ESTABLISHED.** The registered power warning
+fired exactly as written: measured per-date IC dispersion (se·√126 ≈ 0.21)
+is ~2× the declared σ≈0.10, so the economic bar (ΔIC 0.01) was not
+resolvable at this n. Per amendment 1 this is NOT a linearity finding —
+LINEAR_NONINFERIOR was unreachable (MDE > bar) and is recorded as such.
+SCREEN-grade observation, reported not deciding: all four complex arms
+carry the same positive sign, mean ΔIC ≈ +0.011 ≈ the economic bar.
+
+**Reported heads (never deciding):** forward_realised_vol — ridge 0.652
+beats every NN (0.540–0.627). forward_max_drawdown — ridge 0.415 beats
+every NN (0.331–0.372). The §59 learnability ordering (risk ≫ return)
+reproduces on this panel, and the G5 shape-negative extends to these risk
+heads on numeric-price features: **the linear map wins the heads that are
+learnable at all.**
+
+**Competing-risks barrier (up20_down10):** held-out concordance, 11/11
+folds scored, 0 refusals — Cox 0.849 vs multinomial 0.854 (up), 0.664 vs
+0.663 (down). Up-barrier risk is strongly rankable; the timing information
+adds nothing beyond incidence at this horizon (SCREEN, n = folds).
+
+**What this licenses (§61 cap applies):** spend the next dollar on scale,
+coverage and cost — as a DECISION under uncertainty, with the return-shape
+question honestly unresolved at this n. The ablation ladder's next rungs
+(+options, +expectations) run as amendments naming this document as parent
+when their PIT stores materialize. UNIVERSE-SURVIVAL-STRESS-1 remains the
+declared robustness check on the universe selection.

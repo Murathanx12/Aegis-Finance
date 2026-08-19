@@ -1747,9 +1747,12 @@ def run_night(features_by_ticker: dict[str, dict], *,
                 "guard DID NOT RUN. The tool arms read live data; if this "
                 "snapshot is hours old they are forecasting with hindsight.")
 
+    # AMENDMENT 1 (2026-08-19): `selected` rows are CARRIED on the receipt —
+    # each row's reason holds the per-name missing-components disclosure that
+    # this line used to strip (cycle G's finding). `excluded` stays capped at
+    # 50 by select_triggers itself.
     sel = TR.select_triggers(features_by_ticker, k=k)
-    res.trigger_report = {kk: vv for kk, vv in sel.items()
-                          if kk not in ("selected", "excluded")}
+    res.trigger_report = dict(sel)
     res.tickers = list(sel["tickers"])
     if not res.tickers:
         res.status = "void"

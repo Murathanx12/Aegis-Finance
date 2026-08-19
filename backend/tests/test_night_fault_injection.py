@@ -82,28 +82,46 @@ def test_a_connection_death_on_the_first_call_is_equally_clean(monkeypatch):
 
 
 # ── corrupted feed ─────────────────────────────────────────────────────────
-def test_nan_zscores_are_missing_not_measurements_and_are_disclosed():
-    """Pins the REGISTERED semantics found by injecting NaN (2026-08-18):
-    `_num` refuses NaN so a NaN z-score becomes a MISSING component, and a
-    name whose booleans are still measured stays ELIGIBLE at score 0 with
-    the missing components disclosed in its reason. That admission (a
-    score-0 name enters the night when k >= eligible) is a registered
-    selection rule — tightening it is an ATTENDED amendment, logged in the
-    grind session notes, not something a test may quietly re-legislate."""
+def test_nan_zscores_are_missing_and_amendment_1_refuses_boolean_only_names():
+    """AMENDMENT 1 (2026-08-19, Murat-approved, attended): the pre-amendment
+    rule let a name with both z-scores unmeasured stay eligible at score 0
+    on its booleans alone — the registered loophole cycle G found. Now a
+    name needs >=1 measured CONTINUOUS component; the refusal discloses
+    which components were missing."""
     bad = _feats(float("nan"))
     bad["volume_z_20d"] = float("nan")
     c = N.TR.score_candidate("CORRUPT", bad)
-    assert c.eligible
-    assert c.score == 0.0
-    assert "missing" in c.reason
+    assert not c.eligible
+    assert "no continuous trigger component" in c.reason
     assert "abs_resid_return_z_1d" in c.reason
     assert "volume_z_20d" in c.reason
+
+    # ONE measured continuous component keeps a name eligible — the
+    # amendment tightens the boolean-only case, not ordinary missingness.
+    one = _feats(2.5)
+    one["volume_z_20d"] = float("nan")
+    c1 = N.TR.score_candidate("HALFMEASURED", one)
+    assert c1.eligible
+    assert "missing: volume_z_20d" in c1.reason
 
     # And the limiting case stays a refusal: nothing measured is not calm.
     nothing = {"price": 100.0, "dollar_volume_20d": 1e9}
     c2 = N.TR.score_candidate("UNMEASURED", nothing)
     assert not c2.eligible
     assert "no trigger features" in c2.reason
+
+
+def test_amendment_1_disclosure_is_carried_on_the_night_receipt():
+    """Cycle G's second finding: run_night stripped `selected` rows, so the
+    per-name missing-components disclosure never reached the receipt. It
+    must now be carried, with the amendment stamped beside the weights."""
+    feats = {f"T{i}": _feats(1.0 + i) for i in range(4)}
+    res = N.run_night(feats, k=3, llm_call=good_llm, tool_runner=no_tools,
+                      dry_run=True, sandbox=True)
+    tr = res.trigger_report
+    assert "selected" in tr and len(tr["selected"]) == 3
+    assert all("reason" in row for row in tr["selected"])
+    assert "amendment-1" in tr["amendment"]
 
 
 def test_a_wholly_corrupted_feed_voids_the_night(monkeypatch):

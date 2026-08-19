@@ -118,7 +118,11 @@ def test_nan_and_junk_are_treated_as_missing_not_as_numbers():
                                  "price": 100.0, "dollar_volume_20d": 1e9})
     assert "abs_resid_return_z_1d" not in c.components
     assert "volume_z_20d" not in c.components
-    assert c.eligible          # the two boolean components still measured
+    # AMENDMENT 1 (2026-08-19, attended): both continuous components
+    # unmeasured now REFUSES rather than admitting the name on booleans —
+    # the parsing claim above is unchanged, the admission rule tightened.
+    assert not c.eligible
+    assert "no continuous trigger component" in c.reason
 
 
 # ── liquidity floors ────────────────────────────────────────────────────────

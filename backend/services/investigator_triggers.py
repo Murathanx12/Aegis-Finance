@@ -55,6 +55,19 @@ TRIGGERS_PER_NIGHT = 40
 MIN_PRICE = 5.0
 MIN_DOLLAR_VOLUME_20D = 5_000_000.0
 
+#: AMENDMENT 1 (2026-08-19, Murat-approved, effective Night 3): the two
+#: z-score components are the CONTINUOUS half of the trigger; a name with
+#: neither measured has no unusualness reading at all, only calendar
+#: booleans, and fault injection (2026-08-18 cycle G) showed such a name
+#: could enter a night at score 0 whenever k >= eligible. Eligibility now
+#: requires at least one measured continuous component. Nights 1–2 ran
+#: under the pre-amendment rule; the receipt's `weights`+`amendment` block
+#: says which rule produced each night.
+CONTINUOUS_COMPONENTS = ("abs_resid_return_z_1d", "volume_z_20d")
+ELIGIBILITY_AMENDMENT = ("amendment-1 2026-08-19: >=1 measured continuous "
+                         "component required; selected rows carried on the "
+                         "night receipt")
+
 #: A z-score is clipped before it enters the composite. One security with a
 #: 40-sigma print (a bad tick, a split not yet adjusted) would otherwise take
 #: every slot on the list and the night would investigate one data error.
@@ -148,6 +161,14 @@ def score_candidate(ticker: str, feats: dict) -> TriggerCandidate:
         # one, and ranking it at zero would quietly park it at the bottom of
         # the list forever.
         eligible, reason = False, "no trigger features available"
+    elif all(c in missing for c in CONTINUOUS_COMPONENTS):
+        # AMENDMENT 1: booleans alone say "an event is scheduled", not "this
+        # security is behaving unusually" — with both z-scores unmeasured
+        # there is no unusualness reading to rank, and a score-0 admission
+        # on thin nights was the registered loophole this closes.
+        eligible, reason = False, (
+            f"no continuous trigger component measured "
+            f"(missing: {','.join(missing)}) — amendment 1")
     elif missing:
         reason = f"missing: {','.join(missing)}"
 
@@ -184,6 +205,7 @@ def select_triggers(features_by_ticker: dict[str, dict], *,
         "selected": [c.as_row() for c in chosen],
         "excluded": [c.as_row() for c in cands if not c.eligible][:50],
         "weights": dict(TRIGGER_WEIGHTS),
+        "amendment": ELIGIBILITY_AMENDMENT,
     }
 
 

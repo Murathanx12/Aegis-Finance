@@ -1,0 +1,1235 @@
+{
+  "tournament": "AEGIS-NET-TOURNAMENT-1",
+  "mode": "REGISTERED",
+  "first_test_year": 2016,
+  "started_at": "2026-08-19T04:06:25+00:00",
+  "heads": {
+    "cs_rank": {
+      "tournament": "AEGIS-NET-TOURNAMENT-1",
+      "head": "cs_rank",
+      "baseline_arm": "linear_ridge",
+      "n_rows_scored": 21776,
+      "n_rows_dropped_missing_target": 0,
+      "bootstrap_block_dates": 1,
+      "folds": [
+        {
+          "train_end": "2015-11-30",
+          "test_start": "2016-01-29",
+          "test_end": "2016-12-30",
+          "n_train": 2970,
+          "n_test": 1986
+        },
+        {
+          "train_end": "2016-11-30",
+          "test_start": "2017-01-31",
+          "test_end": "2017-12-29",
+          "n_train": 4955,
+          "n_test": 1995
+        },
+        {
+          "train_end": "2017-11-30",
+          "test_start": "2018-01-31",
+          "test_end": "2018-12-31",
+          "n_train": 6949,
+          "n_test": 2004
+        },
+        {
+          "train_end": "2018-11-30",
+          "test_start": "2019-01-31",
+          "test_end": "2019-12-31",
+          "n_train": 8953,
+          "n_test": 2025
+        },
+        {
+          "train_end": "2019-11-29",
+          "test_start": "2020-01-31",
+          "test_end": "2020-12-31",
+          "n_train": 10976,
+          "n_test": 2059
+        },
+        {
+          "train_end": "2020-11-30",
+          "test_start": "2021-01-29",
+          "test_end": "2021-12-31",
+          "n_train": 13031,
+          "n_test": 2081
+        },
+        {
+          "train_end": "2021-11-30",
+          "test_start": "2022-01-31",
+          "test_end": "2022-12-30",
+          "n_train": 15110,
+          "n_test": 2119
+        },
+        {
+          "train_end": "2022-11-30",
+          "test_start": "2023-01-31",
+          "test_end": "2023-12-29",
+          "n_train": 17227,
+          "n_test": 2137
+        },
+        {
+          "train_end": "2023-11-30",
+          "test_start": "2024-01-31",
+          "test_end": "2024-12-31",
+          "n_train": 19362,
+          "n_test": 2148
+        },
+        {
+          "train_end": "2024-11-29",
+          "test_start": "2025-01-31",
+          "test_end": "2025-12-31",
+          "n_train": 21510,
+          "n_test": 2148
+        },
+        {
+          "train_end": "2025-11-28",
+          "test_start": "2026-01-30",
+          "test_end": "2026-06-30",
+          "n_train": 23658,
+          "n_test": 1074
+        }
+      ],
+      "arms": {
+        "linear_ridge": {
+          "ic_mean": 0.0003542444790733877,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "lightgbm": {
+          "ic_mean": 0.012783502537417994,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "mlp_1": {
+          "ic_mean": 0.011568666705714083,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "mlp_2": {
+          "ic_mean": 0.013774175790783248,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "mlp_3": {
+          "ic_mean": 0.006728476934310686,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        }
+      },
+      "ic_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": 0.012429258058344606,
+          "ci_lo": -0.02059707471017797,
+          "ci_hi": 0.04276890611468458,
+          "se": 0.018883131692585122,
+          "mde_80pct_power": 0.052902702630823674,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": 0.011214422226640692,
+          "ci_lo": -0.02015673011217296,
+          "ci_hi": 0.04179849326422503,
+          "se": 0.018769049332228532,
+          "mde_80pct_power": 0.05258309117634565,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": 0.013419931311709859,
+          "ci_lo": -0.0202689916608085,
+          "ci_hi": 0.04486659121644497,
+          "se": 0.019645651661359412,
+          "mde_80pct_power": 0.05503896730422905,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": 0.006374232455237299,
+          "ci_lo": -0.024096794263066535,
+          "ci_hi": 0.03655942889076441,
+          "se": 0.018296330961203786,
+          "mde_80pct_power": 0.05125873037552205,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "loss_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": 0.004998467682838237,
+          "ci_lo": 0.004312174624943096,
+          "ci_hi": 0.005748200123105301,
+          "se": 0.00043819900924637413,
+          "mde_80pct_power": 0.0012276518671098064,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": 0.0024180343345627147,
+          "ci_lo": 0.0017186484345473503,
+          "ci_hi": 0.002986950349607248,
+          "se": 0.0003891144906599989,
+          "mde_80pct_power": 0.0010901374053761204,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": 0.0020954368361081575,
+          "ci_lo": 0.0015289141126722144,
+          "ci_hi": 0.0027161218068045643,
+          "se": 0.0003522305350456937,
+          "mde_80pct_power": 0.0009868038605235848,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": 0.0037884311382394144,
+          "ci_lo": 0.002754729450961856,
+          "ci_hi": 0.004745587298641495,
+          "se": 0.0005980856982191896,
+          "mde_80pct_power": 0.001675588051586942,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "contrast_note": "PRIMARY: per-date rank-IC difference, positive mean = arm beats baseline; squared loss is a diagnostic. Criterion lives in the pre-registration, not here",
+      "elapsed_s": 36.1,
+      "verdicts": {
+        "lightgbm": {
+          "verdict": "NOT_ESTABLISHED",
+          "mean_dIC": 0.012429258058344606,
+          "mde": 0.052902702630823674,
+          "ci_90": [
+            -0.02059707471017797,
+            0.04276890611468458
+          ],
+          "p_normal_approx": 0.5103966691084971,
+          "holm_pass": false,
+          "economic_bar": 0.01
+        },
+        "mlp_1": {
+          "verdict": "NOT_ESTABLISHED",
+          "mean_dIC": 0.011214422226640692,
+          "mde": 0.05258309117634565,
+          "ci_90": [
+            -0.02015673011217296,
+            0.04179849326422503
+          ],
+          "p_normal_approx": 0.5501766207768994,
+          "holm_pass": false,
+          "economic_bar": 0.01
+        },
+        "mlp_2": {
+          "verdict": "NOT_ESTABLISHED",
+          "mean_dIC": 0.013419931311709859,
+          "mde": 0.05503896730422905,
+          "ci_90": [
+            -0.0202689916608085,
+            0.04486659121644497
+          ],
+          "p_normal_approx": 0.4945440844228228,
+          "holm_pass": false,
+          "economic_bar": 0.01
+        },
+        "mlp_3": {
+          "verdict": "NOT_ESTABLISHED",
+          "mean_dIC": 0.006374232455237299,
+          "mde": 0.05125873037552205,
+          "ci_90": [
+            -0.024096794263066535,
+            0.03655942889076441
+          ],
+          "p_normal_approx": 0.7275483904429711,
+          "holm_pass": false,
+          "economic_bar": 0.01
+        }
+      }
+    },
+    "forward_return": {
+      "tournament": "AEGIS-NET-TOURNAMENT-1",
+      "head": "forward_return",
+      "baseline_arm": "linear_ridge",
+      "n_rows_scored": 21776,
+      "n_rows_dropped_missing_target": 0,
+      "bootstrap_block_dates": 1,
+      "folds": [
+        {
+          "train_end": "2015-11-30",
+          "test_start": "2016-01-29",
+          "test_end": "2016-12-30",
+          "n_train": 2970,
+          "n_test": 1986
+        },
+        {
+          "train_end": "2016-11-30",
+          "test_start": "2017-01-31",
+          "test_end": "2017-12-29",
+          "n_train": 4955,
+          "n_test": 1995
+        },
+        {
+          "train_end": "2017-11-30",
+          "test_start": "2018-01-31",
+          "test_end": "2018-12-31",
+          "n_train": 6949,
+          "n_test": 2004
+        },
+        {
+          "train_end": "2018-11-30",
+          "test_start": "2019-01-31",
+          "test_end": "2019-12-31",
+          "n_train": 8953,
+          "n_test": 2025
+        },
+        {
+          "train_end": "2019-11-29",
+          "test_start": "2020-01-31",
+          "test_end": "2020-12-31",
+          "n_train": 10976,
+          "n_test": 2059
+        },
+        {
+          "train_end": "2020-11-30",
+          "test_start": "2021-01-29",
+          "test_end": "2021-12-31",
+          "n_train": 13031,
+          "n_test": 2081
+        },
+        {
+          "train_end": "2021-11-30",
+          "test_start": "2022-01-31",
+          "test_end": "2022-12-30",
+          "n_train": 15110,
+          "n_test": 2119
+        },
+        {
+          "train_end": "2022-11-30",
+          "test_start": "2023-01-31",
+          "test_end": "2023-12-29",
+          "n_train": 17227,
+          "n_test": 2137
+        },
+        {
+          "train_end": "2023-11-30",
+          "test_start": "2024-01-31",
+          "test_end": "2024-12-31",
+          "n_train": 19362,
+          "n_test": 2148
+        },
+        {
+          "train_end": "2024-11-29",
+          "test_start": "2025-01-31",
+          "test_end": "2025-12-31",
+          "n_train": 21510,
+          "n_test": 2148
+        },
+        {
+          "train_end": "2025-11-28",
+          "test_start": "2026-01-30",
+          "test_end": "2026-06-30",
+          "n_train": 23658,
+          "n_test": 1074
+        }
+      ],
+      "arms": {
+        "linear_ridge": {
+          "ic_mean": 0.008827114541207286,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "lightgbm": {
+          "ic_mean": 0.014249963916455579,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "mlp_1": {
+          "ic_mean": 0.00022096970374197637,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "mlp_2": {
+          "ic_mean": 0.004102354475614353,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "mlp_3": {
+          "ic_mean": 0.01545879271053487,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        }
+      },
+      "ic_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": 0.005422849375248299,
+          "ci_lo": -0.020622220167889796,
+          "ci_hi": 0.030990374095796767,
+          "se": 0.015786760731328495,
+          "mde_80pct_power": 0.04422795551446483,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": -0.008606144837465307,
+          "ci_lo": -0.033175788197112706,
+          "ci_hi": 0.019683114624036737,
+          "se": 0.01623235620467023,
+          "mde_80pct_power": 0.0454763292060541,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": -0.004724760065592931,
+          "ci_lo": -0.03399065383417663,
+          "ci_hi": 0.023532701999267772,
+          "se": 0.017644969063268175,
+          "mde_80pct_power": 0.0494338845103064,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": 0.006631678169327586,
+          "ci_lo": -0.018602525798504313,
+          "ci_hi": 0.035425784397086865,
+          "se": 0.01657240188169046,
+          "mde_80pct_power": 0.046428996148442814,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "loss_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": 0.0005267014252915375,
+          "ci_lo": 0.00042190127119763626,
+          "ci_hi": 0.0006381408750508157,
+          "se": 6.640317186759658e-05,
+          "mde_80pct_power": 0.0001860341447724139,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": 0.0009669116455980878,
+          "ci_lo": 0.0006597700204496792,
+          "ci_hi": 0.0012424562356471286,
+          "se": 0.000180982444651733,
+          "mde_80pct_power": 0.0005070377417623877,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": 0.0007874721613261618,
+          "ci_lo": 0.000605460068240379,
+          "ci_hi": 0.0009749418194150916,
+          "se": 0.0001117224629641064,
+          "mde_80pct_power": 0.0003130000008258264,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": 0.0010757287687259926,
+          "ci_lo": 0.00045632927235197024,
+          "ci_hi": 0.0020130599308442717,
+          "se": 0.0005092789790008992,
+          "mde_80pct_power": 0.0014267884597126187,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "contrast_note": "PRIMARY: per-date rank-IC difference, positive mean = arm beats baseline; squared loss is a diagnostic. Criterion lives in the pre-registration, not here",
+      "elapsed_s": 47.8
+    },
+    "forward_realised_vol": {
+      "tournament": "AEGIS-NET-TOURNAMENT-1",
+      "head": "forward_realised_vol",
+      "baseline_arm": "linear_ridge",
+      "n_rows_scored": 21776,
+      "n_rows_dropped_missing_target": 0,
+      "bootstrap_block_dates": 1,
+      "folds": [
+        {
+          "train_end": "2015-11-30",
+          "test_start": "2016-01-29",
+          "test_end": "2016-12-30",
+          "n_train": 2970,
+          "n_test": 1986
+        },
+        {
+          "train_end": "2016-11-30",
+          "test_start": "2017-01-31",
+          "test_end": "2017-12-29",
+          "n_train": 4955,
+          "n_test": 1995
+        },
+        {
+          "train_end": "2017-11-30",
+          "test_start": "2018-01-31",
+          "test_end": "2018-12-31",
+          "n_train": 6949,
+          "n_test": 2004
+        },
+        {
+          "train_end": "2018-11-30",
+          "test_start": "2019-01-31",
+          "test_end": "2019-12-31",
+          "n_train": 8953,
+          "n_test": 2025
+        },
+        {
+          "train_end": "2019-11-29",
+          "test_start": "2020-01-31",
+          "test_end": "2020-12-31",
+          "n_train": 10976,
+          "n_test": 2059
+        },
+        {
+          "train_end": "2020-11-30",
+          "test_start": "2021-01-29",
+          "test_end": "2021-12-31",
+          "n_train": 13031,
+          "n_test": 2081
+        },
+        {
+          "train_end": "2021-11-30",
+          "test_start": "2022-01-31",
+          "test_end": "2022-12-30",
+          "n_train": 15110,
+          "n_test": 2119
+        },
+        {
+          "train_end": "2022-11-30",
+          "test_start": "2023-01-31",
+          "test_end": "2023-12-29",
+          "n_train": 17227,
+          "n_test": 2137
+        },
+        {
+          "train_end": "2023-11-30",
+          "test_start": "2024-01-31",
+          "test_end": "2024-12-31",
+          "n_train": 19362,
+          "n_test": 2148
+        },
+        {
+          "train_end": "2024-11-29",
+          "test_start": "2025-01-31",
+          "test_end": "2025-12-31",
+          "n_train": 21510,
+          "n_test": 2148
+        },
+        {
+          "train_end": "2025-11-28",
+          "test_start": "2026-01-30",
+          "test_end": "2026-06-30",
+          "n_train": 23658,
+          "n_test": 1074
+        }
+      ],
+      "arms": {
+        "linear_ridge": {
+          "ic_mean": 0.6519169592045578,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "lightgbm": {
+          "ic_mean": 0.6273741135431342,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "mlp_1": {
+          "ic_mean": 0.5466112483123089,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "mlp_2": {
+          "ic_mean": 0.5428803056305407,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "mlp_3": {
+          "ic_mean": 0.5397911937296626,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        }
+      },
+      "ic_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": -0.024542845661423465,
+          "ci_lo": -0.03156557172328388,
+          "ci_hi": -0.017618327478441696,
+          "se": 0.004226472002994166,
+          "mde_80pct_power": 0.011840821490415189,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": -0.10530571089224881,
+          "ci_lo": -0.12161415354215357,
+          "ci_hi": -0.09106686264497832,
+          "se": 0.009362398376823622,
+          "mde_80pct_power": 0.02622955690315369,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": -0.10903665357401689,
+          "ci_lo": -0.12624746541230983,
+          "ci_hi": -0.09470394777293951,
+          "se": 0.009785849507259357,
+          "mde_80pct_power": 0.027415891330981906,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": -0.1121257654748952,
+          "ci_lo": -0.13446846090693643,
+          "ci_hi": -0.09158914882168581,
+          "se": 0.013280740855474548,
+          "mde_80pct_power": 0.03720712727275461,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "loss_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": 5.4956705266857754e-06,
+          "ci_lo": 3.873072540842769e-06,
+          "ci_hi": 7.301431092530924e-06,
+          "se": 1.0578757844369094e-06,
+          "mde_80pct_power": 2.963729160793325e-06,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": 3.7497928376255046e-05,
+          "ci_lo": 2.7083901376208724e-05,
+          "ci_hi": 5.103531113366832e-05,
+          "se": 7.378903844635453e-06,
+          "mde_80pct_power": 2.0672627940601394e-05,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": 2.4793277809292123e-05,
+          "ci_lo": 1.8968596846413714e-05,
+          "ci_hi": 3.266940771672781e-05,
+          "se": 4.198505335183459e-06,
+          "mde_80pct_power": 1.1762470487263215e-05,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": 2.926454227416882e-05,
+          "ci_lo": 1.9196332256105604e-05,
+          "ci_hi": 4.4803754272312114e-05,
+          "se": 7.92529840235256e-06,
+          "mde_80pct_power": 2.2203398857025127e-05,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "contrast_note": "PRIMARY: per-date rank-IC difference, positive mean = arm beats baseline; squared loss is a diagnostic. Criterion lives in the pre-registration, not here",
+      "elapsed_s": 107.9
+    },
+    "forward_max_drawdown": {
+      "tournament": "AEGIS-NET-TOURNAMENT-1",
+      "head": "forward_max_drawdown",
+      "baseline_arm": "linear_ridge",
+      "n_rows_scored": 21776,
+      "n_rows_dropped_missing_target": 0,
+      "bootstrap_block_dates": 1,
+      "folds": [
+        {
+          "train_end": "2015-11-30",
+          "test_start": "2016-01-29",
+          "test_end": "2016-12-30",
+          "n_train": 2970,
+          "n_test": 1986
+        },
+        {
+          "train_end": "2016-11-30",
+          "test_start": "2017-01-31",
+          "test_end": "2017-12-29",
+          "n_train": 4955,
+          "n_test": 1995
+        },
+        {
+          "train_end": "2017-11-30",
+          "test_start": "2018-01-31",
+          "test_end": "2018-12-31",
+          "n_train": 6949,
+          "n_test": 2004
+        },
+        {
+          "train_end": "2018-11-30",
+          "test_start": "2019-01-31",
+          "test_end": "2019-12-31",
+          "n_train": 8953,
+          "n_test": 2025
+        },
+        {
+          "train_end": "2019-11-29",
+          "test_start": "2020-01-31",
+          "test_end": "2020-12-31",
+          "n_train": 10976,
+          "n_test": 2059
+        },
+        {
+          "train_end": "2020-11-30",
+          "test_start": "2021-01-29",
+          "test_end": "2021-12-31",
+          "n_train": 13031,
+          "n_test": 2081
+        },
+        {
+          "train_end": "2021-11-30",
+          "test_start": "2022-01-31",
+          "test_end": "2022-12-30",
+          "n_train": 15110,
+          "n_test": 2119
+        },
+        {
+          "train_end": "2022-11-30",
+          "test_start": "2023-01-31",
+          "test_end": "2023-12-29",
+          "n_train": 17227,
+          "n_test": 2137
+        },
+        {
+          "train_end": "2023-11-30",
+          "test_start": "2024-01-31",
+          "test_end": "2024-12-31",
+          "n_train": 19362,
+          "n_test": 2148
+        },
+        {
+          "train_end": "2024-11-29",
+          "test_start": "2025-01-31",
+          "test_end": "2025-12-31",
+          "n_train": 21510,
+          "n_test": 2148
+        },
+        {
+          "train_end": "2025-11-28",
+          "test_start": "2026-01-30",
+          "test_end": "2026-06-30",
+          "n_train": 23658,
+          "n_test": 1074
+        }
+      ],
+      "arms": {
+        "linear_ridge": {
+          "ic_mean": 0.4154176457246254,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "lightgbm": {
+          "ic_mean": 0.36749098168638655,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "mlp_1": {
+          "ic_mean": 0.3310445848650826,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "mlp_2": {
+          "ic_mean": 0.3437509922311512,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        },
+        "mlp_3": {
+          "ic_mean": 0.37199410708399006,
+          "ic_n_dates": 126,
+          "thin_dates_dropped": 0
+        }
+      },
+      "ic_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": -0.0479266640382388,
+          "ci_lo": -0.05746165616088469,
+          "ci_hi": -0.03802896433609643,
+          "se": 0.005950885546859286,
+          "mde_80pct_power": 0.01667191298566135,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": -0.08437306085954283,
+          "ci_lo": -0.09858722184103935,
+          "ci_hi": -0.07102017225036245,
+          "se": 0.008478393528901736,
+          "mde_80pct_power": 0.023752941988044993,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": -0.07166665349347418,
+          "ci_lo": -0.08513112145239511,
+          "ci_hi": -0.058851016382017805,
+          "se": 0.008169877456203636,
+          "mde_80pct_power": 0.022888607919073475,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": -0.04342353864063532,
+          "ci_lo": -0.054468096793646725,
+          "ci_hi": -0.03180018500486745,
+          "se": 0.006840741725874962,
+          "mde_80pct_power": 0.019164920903471543,
+          "n_rows": 126,
+          "n_dates": 126,
+          "n_securities": 1,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "loss_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": 0.0001865823674767094,
+          "ci_lo": 0.00013365422770160595,
+          "ci_hi": 0.00023226929564500732,
+          "se": 2.9907558278994218e-05,
+          "mde_80pct_power": 8.378857319884824e-05,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": 0.0003034970035364063,
+          "ci_lo": 0.0002338150027878775,
+          "ci_hi": 0.00036858757967928274,
+          "se": 4.1174443740158797e-05,
+          "mde_80pct_power": 0.00011535371296650616,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": 0.0003946287040555564,
+          "ci_lo": 0.00028841331305490666,
+          "ci_hi": 0.000513864386439892,
+          "se": 6.898613535819731e-05,
+          "mde_80pct_power": 0.0001932705371078644,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": 0.00033325455883228536,
+          "ci_lo": 0.00023977310097288742,
+          "ci_hi": 0.00042429726351138515,
+          "se": 5.721505736356801e-05,
+          "mde_80pct_power": 0.00016029285899112322,
+          "n_rows": 21776,
+          "n_dates": 126,
+          "n_securities": 173,
+          "n_effective": 126.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "contrast_note": "PRIMARY: per-date rank-IC difference, positive mean = arm beats baseline; squared loss is a diagnostic. Criterion lives in the pre-registration, not here",
+      "elapsed_s": 99.5
+    },
+    "barrier_up20_down10": {
+      "tournament": "AEGIS-NET-TOURNAMENT-1",
+      "head": "barrier_up20_down10",
+      "barrier": "up20_down10",
+      "horizon_days": 20,
+      "per_fold": [
+        {
+          "fold": {
+            "train_end": "2015-11-30",
+            "test_start": "2016-01-29",
+            "test_end": "2016-12-30",
+            "n_train": 2970,
+            "n_test": 1986
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 53,
+              "n_events_test": 46,
+              "concordance_holdout_cox": 0.8518548405690176,
+              "concordance_holdout_multinomial": 0.8753487192493026
+            },
+            "down": {
+              "n_events_train": 312,
+              "n_events_test": 137,
+              "concordance_holdout_cox": 0.7627708933550857,
+              "concordance_holdout_multinomial": 0.7590799171555185
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2016-11-30",
+            "test_start": "2017-01-31",
+            "test_end": "2017-12-29",
+            "n_train": 4955,
+            "n_test": 1995
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 94,
+              "n_events_test": 31,
+              "concordance_holdout_cox": 0.8385828730656317,
+              "concordance_holdout_multinomial": 0.8835481249274353
+            },
+            "down": {
+              "n_events_train": 528,
+              "n_events_test": 56,
+              "concordance_holdout_cox": 0.7662521585790383,
+              "concordance_holdout_multinomial": 0.7587782214222409
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2017-11-30",
+            "test_start": "2018-01-31",
+            "test_end": "2018-12-31",
+            "n_train": 6949,
+            "n_test": 2004
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 123,
+              "n_events_test": 46,
+              "concordance_holdout_cox": 0.8897801652692582,
+              "concordance_holdout_multinomial": 0.898648566900173
+            },
+            "down": {
+              "n_events_train": 586,
+              "n_events_test": 362,
+              "concordance_holdout_cox": 0.5815008962923425,
+              "concordance_holdout_multinomial": 0.5826764122389414
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2018-11-30",
+            "test_start": "2019-01-31",
+            "test_end": "2019-12-31",
+            "n_train": 8953,
+            "n_test": 2025
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 158,
+              "n_events_test": 38,
+              "concordance_holdout_cox": 0.9094593675620537,
+              "concordance_holdout_multinomial": 0.9109554573274397
+            },
+            "down": {
+              "n_events_train": 942,
+              "n_events_test": 136,
+              "concordance_holdout_cox": 0.7002328222385118,
+              "concordance_holdout_multinomial": 0.702940852516797
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2019-11-29",
+            "test_start": "2020-01-31",
+            "test_end": "2020-12-31",
+            "n_train": 10976,
+            "n_test": 2059
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 210,
+              "n_events_test": 185,
+              "concordance_holdout_cox": 0.7467940214026709,
+              "concordance_holdout_multinomial": 0.7434302217424056
+            },
+            "down": {
+              "n_events_train": 1075,
+              "n_events_test": 374,
+              "concordance_holdout_cox": 0.55644432781822,
+              "concordance_holdout_multinomial": 0.5420993022031799
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2020-11-30",
+            "test_start": "2021-01-29",
+            "test_end": "2021-12-31",
+            "n_train": 13031,
+            "n_test": 2081
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 384,
+              "n_events_test": 80,
+              "concordance_holdout_cox": 0.8587346640412515,
+              "concordance_holdout_multinomial": 0.8592088192875817
+            },
+            "down": {
+              "n_events_train": 1451,
+              "n_events_test": 213,
+              "concordance_holdout_cox": 0.6335301861043682,
+              "concordance_holdout_multinomial": 0.6502904484137049
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2021-11-30",
+            "test_start": "2022-01-31",
+            "test_end": "2022-12-30",
+            "n_train": 15110,
+            "n_test": 2119
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 470,
+              "n_events_test": 97,
+              "concordance_holdout_cox": 0.8527356134114709,
+              "concordance_holdout_multinomial": 0.8584818426361802
+            },
+            "down": {
+              "n_events_train": 1591,
+              "n_events_test": 527,
+              "concordance_holdout_cox": 0.6560029008684789,
+              "concordance_holdout_multinomial": 0.6470016149704935
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2022-11-30",
+            "test_start": "2023-01-31",
+            "test_end": "2023-12-29",
+            "n_train": 17227,
+            "n_test": 2137
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 554,
+              "n_events_test": 59,
+              "concordance_holdout_cox": 0.8756256214084697,
+              "concordance_holdout_multinomial": 0.8670902074451055
+            },
+            "down": {
+              "n_events_train": 2191,
+              "n_events_test": 228,
+              "concordance_holdout_cox": 0.6662090007627766,
+              "concordance_holdout_multinomial": 0.6702859859162714
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2023-11-30",
+            "test_start": "2024-01-31",
+            "test_end": "2024-12-31",
+            "n_train": 19362,
+            "n_test": 2148
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 633,
+              "n_events_test": 75,
+              "concordance_holdout_cox": 0.8624997477244748,
+              "concordance_holdout_multinomial": 0.8730213189637194
+            },
+            "down": {
+              "n_events_train": 2415,
+              "n_events_test": 245,
+              "concordance_holdout_cox": 0.6789895471099805,
+              "concordance_holdout_multinomial": 0.672476798203493
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2024-11-29",
+            "test_start": "2025-01-31",
+            "test_end": "2025-12-31",
+            "n_train": 21510,
+            "n_test": 2148
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 702,
+              "n_events_test": 70,
+              "concordance_holdout_cox": 0.8369942458772202,
+              "concordance_holdout_multinomial": 0.8268167829841289
+            },
+            "down": {
+              "n_events_train": 2661,
+              "n_events_test": 331,
+              "concordance_holdout_cox": 0.651306200942768,
+              "concordance_holdout_multinomial": 0.6562963215903818
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2025-11-28",
+            "test_start": "2026-01-30",
+            "test_end": "2026-06-30",
+            "n_train": 23658,
+            "n_test": 1074
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 767,
+              "n_events_test": 60,
+              "concordance_holdout_cox": 0.8116402505096513,
+              "concordance_holdout_multinomial": 0.7984352329703025
+            },
+            "down": {
+              "n_events_train": 2981,
+              "n_events_test": 222,
+              "concordance_holdout_cox": 0.6527840651878678,
+              "concordance_holdout_multinomial": 0.6509492116390395
+            }
+          }
+        }
+      ],
+      "summary": {
+        "up": {
+          "n_folds_scored": 11,
+          "n_folds_refused": 0,
+          "mean_holdout_cox": 0.8486092191673791,
+          "mean_holdout_multinomial": 0.8540895722212521,
+          "mean_paired_diff_cox_minus_mn": -0.0054803530538730764,
+          "screen_note": "n is FOLDS (~single digits) \u2014 SCREEN-grade by construction, never deciding"
+        },
+        "down": {
+          "n_folds_scored": 11,
+          "n_folds_refused": 0,
+          "mean_holdout_cox": 0.6641839090235853,
+          "mean_holdout_multinomial": 0.6629886442063694,
+          "mean_paired_diff_cox_minus_mn": 0.001195264817216031,
+          "screen_note": "n is FOLDS (~single digits) \u2014 SCREEN-grade by construction, never deciding"
+        }
+      },
+      "elapsed_s": 2.3
+    }
+  },
+  "signed_by": "Murat Abdullaev \u2014 verbal in-session approval 2026-08-19 (\"I approve everything on my queue\", given in response to the session summary that described AMENDMENT 1 including the changed primary metric); recorded by the working session"
+}

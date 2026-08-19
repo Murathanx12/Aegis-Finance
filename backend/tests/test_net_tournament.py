@@ -41,12 +41,12 @@ def test_a_signed_prereg_returns_the_signer(tmp_path):
     assert "Murat" in NT.assert_signed(p)
 
 
-def test_the_LIVE_draft_is_currently_unsigned():
-    """Both worlds: the draft this repo ships must refuse until Murat signs.
-    If this test fails because the draft was signed, DELETE the test —
-    that is the designed lifecycle, not a defect."""
-    with pytest.raises(NT.TournamentRefused, match="UNSIGNED"):
-        NT.assert_signed()
+def test_the_LIVE_draft_is_signed_and_names_a_human():
+    """Lifecycle successor to test_the_LIVE_draft_is_currently_unsigned
+    (deleted 2026-08-19 on signature, as its own docstring instructed).
+    The live prereg must now name a human, and the recorded signer is
+    pinned so a silent un-signing or re-signing is a test failure."""
+    assert "Murat" in NT.assert_signed()
 
 
 # ── arms ───────────────────────────────────────────────────────────────────

@@ -1,6 +1,10 @@
 # DECLARATION — the minimum meaningful paired Brier difference (IIF-1)
 
-**Status: DRAFT FOR SIGNATURE. Unsigned.**
+**Status: SIGNED.**
+SIGNED-BY: Murat Abdullaev — verbal in-session approval 2026-08-19
+("I approve everything on my queue"), recorded by the working session.
+BAR = 0.10 of each cell's own p(1-p); the NOT_ANSWERABLE_AT_N sentence for
+`h=1|thr=0.03` at 40 nights REMAINS IN and is part of what was signed.
 Drafted 2026-08-18, before the first licensed read (40 nights). Required signed
 before 2026-08-21.
 
