@@ -347,10 +347,7 @@ DATASETS = {"links": pull_links, "finratio": pull_finratio,
             "dsf": pull_dsf, "optionm": pull_optionm_surface,
             "iid": pull_iid, "s13f": pull_13f,
             "dsf_early": pull_dsf_early,
-            "finratio_early": pull_finratio_early,
-            "optionm_early": pull_optionm_early,
-            "ibes_early": pull_ibes_early,
-            "s13f_early": pull_13f_early}
+            "finratio_early": pull_finratio_early}
 
 
 def pull_optionm_early(conn, permnos):
@@ -427,6 +424,11 @@ def pull_13f_early(conn, permnos):
         _write(name, df, sql_note=sql,
                pit="fdate (vintage); early-era manager-behavior slice",
                extra={"n_cusips": len(cusips)})
+
+
+DATASETS.update({"optionm_early": pull_optionm_early,
+                 "ibes_early": pull_ibes_early,
+                 "s13f_early": pull_13f_early})
 
 
 def main(argv: list[str] | None = None) -> int:
