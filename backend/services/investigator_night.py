@@ -1707,6 +1707,12 @@ def run_night(features_by_ticker: dict[str, dict], *,
     night = night or str(date.today())
     since_iso = datetime.now(timezone.utc).isoformat(timespec="seconds")
     res = NightResult(night=night)
+    # Provenance is captured AT RUN START, not at receipt-write. N3
+    # (2026-08-19) ran fba292f but its receipt said 235c22a: two commits
+    # landed DURING the ~110-min run, and the end-of-run stamp named code
+    # the night never executed. The snapshot below is what "which code
+    # ran" honestly means for a process that imports everything up front.
+    _gp_at_start = git_provenance()
     # WHEN THE RUN ACTUALLY BEGAN, and how late that was.
     #
     # Night 1 was ordered for 17:05 local and launched at 17:44 — 39 minutes
@@ -2009,9 +2015,10 @@ def run_night(features_by_ticker: dict[str, dict], *,
     res.truncation = truncation_report(res.per_arm)
     res.implementation_version = IMPLEMENTATION_VERSION
     res.arm_implementation_fingerprint = arm_implementation_fingerprint()
-    _gp = git_provenance()
-    res.git_commit = _gp["git_commit"]
-    res.git_dirty = _gp["git_dirty"]
+    # The START-of-run snapshot (see t0 above): the receipt names the code
+    # that ran, not the code the repo drifted to during the run.
+    res.git_commit = _gp_at_start["git_commit"]
+    res.git_dirty = _gp_at_start["git_dirty"]
     # Lifted out of per_arm so a clean night still shows the shape of its
     # failures. `tool_only` is the number that matters: malformed tool calls can
     # only be recorded by arms that use tools, so any nonzero value there is a
