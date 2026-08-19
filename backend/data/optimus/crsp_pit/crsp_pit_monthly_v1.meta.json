@@ -1,0 +1,39 @@
+{
+  "dataset": "CRSP-PIT-MONTHLY-1 (construction)",
+  "window": [
+    "2013-01-01",
+    "2024-11-30"
+  ],
+  "filters_frozen": {
+    "shrcd": [
+      10,
+      11
+    ],
+    "exchcd": [
+      1,
+      2,
+      3
+    ],
+    "min_price": 5.0,
+    "min_dollar_vol_month": 100000000.0,
+    "vol_units": "CRSP msf.vol is HUNDREDS of shares; dollar_vol = prc*vol*100"
+  },
+  "delist_returns": "dlret compounded into the delisting month",
+  "vintage_limit": "entitled crsp vintage ends 2024-12-31",
+  "n_rows": 545478,
+  "comparison_vs_2026_panel": {
+    "pit_permnos_ever_eligible": 4796,
+    "monthly_membership": {
+      "min": 1505,
+      "median": 1792.0,
+      "max": 2356
+    },
+    "delistings_of_ever_eligible_names": 218,
+    "panel_182_tickers_seen_in_pit": 168,
+    "panel_182_total": 185,
+    "monthly_ret_dispersion_pit": 0.14138,
+    "note": "the 2026 panel names appear under their HISTORICAL tickers in CRSP (MRSH was MMC, XYZ was SQ) \u2014 the overlap count via ticker alone UNDERSTATES; PERMNO join is the tournament-sensitivity build's job"
+  },
+  "no_verdicts_note": "membership + returns construction only; the tournament sensitivity runs under UNIVERSE-SURVIVAL-STRESS-1's own protocol",
+  "generated_at": "2026-08-19T04:33:19+00:00"
+}
