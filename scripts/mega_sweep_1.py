@@ -60,6 +60,10 @@ def key(c: dict) -> str:
            f"{c['top_n']}"
 
 
+def _fname(k: str) -> str:
+    return k.replace("|", "~") + ".json"     # '|' is illegal on Windows
+
+
 def run(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="mega_sweep_1")
     ap.add_argument("--report", action="store_true")
@@ -96,7 +100,7 @@ def run(argv=None) -> int:
                 fh.flush()
                 print(f"[{i+1}/{len(cells)}] {k}  ERROR {e}")
                 continue
-            b["monthly_returns"].to_json(RETS_DIR / f"{k}.json")
+            b["monthly_returns"].to_json(RETS_DIR / _fname(k))
             row = {"key": k, **{kk: vv for kk, vv in b.items()
                                 if kk not in ("monthly_returns", "nav")}}
             fh.write(json.dumps(row) + "\n")
@@ -114,13 +118,13 @@ def report() -> int:
     base = {}
     for h in HANDLINGS:
         k = f"none|equal|{h}|None"
-        base[h] = pd.read_json(RETS_DIR / f"{k}.json", typ="series")
+        base[h] = pd.read_json(RETS_DIR / _fname(k), typ="series")
 
     stats = []
     for r in ok:
         if r["signal"] == "none":
             continue
-        mret = pd.read_json(RETS_DIR / f"{r['key']}.json", typ="series")
+        mret = pd.read_json(RETS_DIR / _fname(r["key"]), typ="series")
         b = base[r["winner_handling"]]
         ix = mret.index.intersection(b.index)
         d = (mret.loc[ix] - b.loc[ix]).to_numpy(float)
