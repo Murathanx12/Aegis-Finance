@@ -80,3 +80,22 @@ book (the §59 risk read).
 
 — design registered 2026-08-19; priors: MODERATE for gross effect
 (literature), UNKNOWN net of costs at our bar
+
+---
+
+## RESULTS (registered run 2026-08-19 night, appended post-run)
+
+Receipt `jkp/fm1_trial_2026-08-19.json`. 877 months, 73 effective
+12-month blocks, 20bp effective one-way cost per unit factor notional.
+
+**Verdict: NOT_ESTABLISHED.** Momentum book − static book =
+**+0.078%/month net (+0.94%/yr)**, run-time MDE 0.143%/month
+(1.71%/yr), 90% CI [−0.001%, +0.167%]/month. The sign is positive and
+the CI barely brushes zero — a SCREEN-level lean consistent with the
+published gross effect being real but roughly two-thirds consumed by
+reallocation costs at tercile churn. STATIC_NONINFERIOR was declared
+NOT_ANSWERABLE_AT_N before the run; nothing here licenses reallocation
+in any lane. Descendant worth registering before any re-run: slower
+formation/holding variants that cut turnover (the cost channel is what
+ate the effect) — declared here so it is a design choice, not a §37
+promotion after peeking.
