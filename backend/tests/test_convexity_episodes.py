@@ -166,3 +166,32 @@ def test_materialize_is_deterministic():
     a = CE.materialize(px)["rows"]
     b = CE.materialize(px)["rows"]
     pd.testing.assert_frame_equal(a, b)
+
+
+# ── amendment 2026-08-19: the capture-metric outcome family ────────────────
+def test_path_metrics_on_a_declared_path():
+    import numpy as np
+    from backend.services.convexity_episodes import path_metrics
+    # up 30%, crash to -10%, recover to +8%: every metric hand-checkable
+    path = np.array([100.0, 110.0, 130.0, 90.0, 95.0, 108.0])
+    m = path_metrics(path)
+    assert abs(m["mfe"] - 0.30) < 1e-9
+    assert abs(m["mae"] - (-0.10)) < 1e-9
+    assert abs(m["peak_giveback_hold"] - (1.30 - 1.08) / 1.30) < 1e-9
+    assert m["days_underwater"] == 2          # the 90 and 95 sessions
+    assert m["near_peak_at_end"] is False
+
+
+def test_mfe_captured_refuses_a_zero_denominator():
+    from backend.services.convexity_episodes import mfe_captured
+    assert mfe_captured(1.05, 0.0) is None    # no excursion -> no ratio
+    assert mfe_captured(1.15, 0.30) == pytest.approx(0.5)
+    assert mfe_captured(0.94, 0.30) == pytest.approx(-0.2)
+
+
+def test_path_metrics_refuses_a_one_price_window():
+    import numpy as np
+    from backend.services.convexity_episodes import (EpisodeRefused,
+                                                     path_metrics)
+    with pytest.raises(EpisodeRefused):
+        path_metrics(np.array([100.0]))

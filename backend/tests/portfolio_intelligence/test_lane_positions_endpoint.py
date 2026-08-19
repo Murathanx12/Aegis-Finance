@@ -46,9 +46,36 @@ def test_positions_returns_verbatim_rows(tmp_path, monkeypatch):
     assert body["read_only"] is True
     assert body["positions"], "seeded mirror lane must expose its positions"
     for p in body["positions"]:
-        assert set(p) == {"ticker", "shares", "cost_basis"}
+        assert set(p) == {"ticker", "shares", "cost_basis", "opened_at"}
         assert p["shares"] > 0
     assert isinstance(body["rebalance_events"], list)
+
+
+def test_closed_lots_are_split_out_not_mixed_in(tmp_path, monkeypatch):
+    """The first live read of this endpoint returned closed historical lots
+    as if open — every name looked duplicated and the books valued at 2-4x
+    NAV. The closed_at IS NULL filter is the MTM's own liveness semantics;
+    this pins open vs closed as SEPARATE keys."""
+    from backend import db as db_module
+    fresh = _seeded_db(tmp_path, monkeypatch)
+    conn = db_module.get_connection(fresh)
+    try:
+        first = conn.execute(
+            "SELECT id, ticker FROM paper_positions WHERE portfolio_id = "
+            "'mirror' ORDER BY id LIMIT 1").fetchone()
+        conn.execute(
+            "UPDATE paper_positions SET closed_at = '2026-08-01T00:00:00' "
+            "WHERE id = ?", (first["id"],))
+        conn.commit()
+    finally:
+        conn.close()
+    body = client.get("/api/pi/lane/mirror/positions").json()
+    open_tk = [p["ticker"] for p in body["positions"]]
+    assert first["ticker"] not in open_tk or open_tk.count(
+        first["ticker"]) == 0
+    closed = body["closed_positions"]
+    assert len(closed) == 1 and closed[0]["ticker"] == first["ticker"]
+    assert closed[0]["closed_at"] == "2026-08-01T00:00:00"
 
 
 def test_positions_covers_reference_lanes_too(tmp_path, monkeypatch):

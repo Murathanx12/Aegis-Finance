@@ -639,9 +639,22 @@ async def get_lane_positions(lane_id: str):
     def _read() -> dict:
         conn = get_connection()
         try:
+            # closed_at IS NULL is the table's liveness semantics (the MTM
+            # engine reads the same filter). The first version of this
+            # endpoint omitted it and returned closed historical lots as if
+            # open — every name looked duplicated. A property of the
+            # extraction, not the data; found on first live read 2026-08-19.
             pos = conn.execute(
-                "SELECT ticker, shares, cost_basis FROM paper_positions "
-                "WHERE portfolio_id = ? ORDER BY ticker", (lane_id,),
+                "SELECT ticker, shares, cost_basis, opened_at "
+                "FROM paper_positions "
+                "WHERE portfolio_id = ? AND closed_at IS NULL "
+                "ORDER BY ticker", (lane_id,),
+            ).fetchall()
+            closed = conn.execute(
+                "SELECT ticker, shares, cost_basis, opened_at, closed_at "
+                "FROM paper_positions "
+                "WHERE portfolio_id = ? AND closed_at IS NOT NULL "
+                "ORDER BY ticker, closed_at", (lane_id,),
             ).fetchall()
             ev = conn.execute(
                 "SELECT triggered_at, trigger_reason, post_weights, "
@@ -657,11 +670,14 @@ async def get_lane_positions(lane_id: str):
         return {
             "lane_id": lane_id,
             "positions": [dict(r) for r in pos],
+            "closed_positions": [dict(r) for r in closed],
             "rebalance_events": [dict(r) for r in ev],
             "inception_date": meta["inception_date"] if meta else None,
             "inception_value": meta["inception_value"] if meta else None,
             "read_only": True,
-            "basis": "verbatim volume-DB rows; no computation, no marking",
+            "basis": ("verbatim volume-DB rows; `positions` = open lots "
+                      "(closed_at IS NULL, the MTM's own filter); "
+                      "`closed_positions` = the audit trail"),
         }
 
     try:

@@ -25,6 +25,7 @@ from backend.services import net_panel as NP                # noqa: E402
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="convexity_episodes_materialize")
     ap.add_argument("--write", action="store_true")
+    ap.add_argument("--version", default="v1")
     a = ap.parse_args(argv)
     for s in (sys.stdout, sys.stderr):
         try:
@@ -49,7 +50,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"\nuniverse note: {m['universe_note']}")
 
     if a.write:
-        paths = CE.write(res)
+        paths = CE.write(res, version=a.version)
         for k, p in paths.items():
             print(f"wrote {k}: {p}")
     else:

@@ -131,6 +131,43 @@ def arm_outcome(path: np.ndarray, arm: str, *, cost_one_way_bps: float,
             "fired_day": fired}
 
 
+def path_metrics(path: np.ndarray) -> dict:
+    """Arm-independent capture metrics of the post-crossing path (amendment
+    2026-08-19, P-grind-2026-08-19e, Murat-approved): the outcome family the
+    trim-vs-hold question actually cares about, computed per episode BEFORE
+    any verdict exists so adding them later would never be §37.
+
+    All on rel = path / path[0]:
+      mfe                 max favorable excursion, max(rel) - 1
+      mae                 max adverse excursion,   min(rel) - 1
+      peak_giveback_hold  (peak - rel[-1]) / peak — how much of the peak a
+                          holder handed back by the window's end
+      days_underwater     sessions strictly below the crossing price
+      near_peak_at_end    rel[-1] within 1% of the window peak
+    """
+    if len(path) < 2:
+        raise EpisodeRefused("path metrics need at least two prices")
+    rel = path / path[0]
+    peak = float(np.max(rel))
+    return {
+        "mfe": float(peak - 1.0),
+        "mae": float(np.min(rel) - 1.0),
+        "peak_giveback_hold": float((peak - rel[-1]) / peak) if peak > 0
+        else None,
+        "days_underwater": int(np.sum(rel[1:] < 1.0)),
+        "near_peak_at_end": bool(rel[-1] >= 0.99 * peak),
+    }
+
+
+def mfe_captured(tw: float, mfe: float) -> float | None:
+    """Fraction of the window's best excursion an arm banked. None when the
+    window had no favorable excursion to capture — a ratio whose denominator
+    is ~0 is not a small number, it is no number (§62's denominator rule)."""
+    if mfe is None or mfe < 0.005:
+        return None
+    return float((tw - 1.0) / mfe)
+
+
 # ── detection ──────────────────────────────────────────────────────────────
 @dataclass(frozen=True)
 class Episode:
@@ -273,11 +310,15 @@ def materialize(px: pd.DataFrame, *, cost_lookup=None) -> dict:
                "days_to_crossing": ep.days_to_crossing,
                "gain_at_crossing": ep.gain_at_crossing,
                **{f"pit_{k}": v for k, v in f.items()}}
+        pm = path_metrics(path)
+        row.update(pm)
         for arm in ARMS:
             o = arm_outcome(path, arm, cost_one_way_bps=cost(ep.ticker),
                             ann_vol_at_crossing=f["vol_63"])
             row[f"tw_{arm}"] = o["terminal_wealth"]
             row[f"fired_{arm}"] = o["fired_day"]
+            row[f"mfe_captured_{arm}"] = mfe_captured(
+                o["terminal_wealth"], pm["mfe"])
         m = match_control(ep, feats_by_month, crossers)
         row["control"] = m.get("control")
         row["control_z_distance"] = m.get("z_distance")
@@ -315,6 +356,13 @@ def materialize(px: pd.DataFrame, *, cost_lookup=None) -> dict:
         "no_aggregates_note": "per-episode outcomes only. The trim-vs-hold "
                               "comparison is CONVEXITY-PRESERVATION-1's "
                               "question and runs under its registration.",
+        "outcome_family_amendment": "2026-08-19 (P-grind-2026-08-19e, "
+                                    "Murat-approved, pre-verdict): capture "
+                                    "metrics added per episode — mfe, mae, "
+                                    "peak_giveback_hold, days_underwater, "
+                                    "near_peak_at_end, mfe_captured_<arm>. "
+                                    "REENTRY-OPTION-VALUE-1 stays a distinct "
+                                    "descendant registration.",
         "generated_at": datetime.now(timezone.utc).isoformat(
             timespec="seconds"),
     }
