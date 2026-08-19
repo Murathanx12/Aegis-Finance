@@ -1,0 +1,273 @@
+{
+  "trial": "CONVEXITY-PRESERVATION-1",
+  "mode": "REGISTERED",
+  "started_at": "2026-08-19T07:05:10+00:00",
+  "n_episodes": 23011,
+  "cost_basis": "per-name measured TAQ one-way where retired; 3bp band midpoint else (baked at materialize)",
+  "primary": {
+    "cell": "trail_stop_20 vs hold @ +40",
+    "n_episodes": 6198,
+    "contrasts_arm_minus_hold": {
+      "trim_25": {
+        "mean": NaN,
+        "ci_lo": -0.017029800953794923,
+        "ci_hi": -0.008372156405195242,
+        "se": 0.002603020185988052,
+        "mde_80pct_power": 0.007292582876781548,
+        "n_rows": 6198,
+        "n_dates": 1831,
+        "n_securities": 3,
+        "n_effective": 21.797619047619047,
+        "block_days": 84,
+        "dependence_unit": "contiguous 84-trading-day block of the whole cross-section",
+        "block_days_derived": 84
+      },
+      "trim_50": {
+        "mean": NaN,
+        "ci_lo": -0.03405960190758983,
+        "ci_hi": -0.016744312810390488,
+        "se": 0.005206040371976105,
+        "mde_80pct_power": 0.0145851657535631,
+        "n_rows": 6198,
+        "n_dates": 1831,
+        "n_securities": 3,
+        "n_effective": 21.797619047619047,
+        "block_days": 84,
+        "dependence_unit": "contiguous 84-trading-day block of the whole cross-section",
+        "block_days_derived": 84
+      },
+      "exit_full": {
+        "mean": NaN,
+        "ci_lo": -0.06811920381517966,
+        "ci_hi": -0.033488625620780976,
+        "se": 0.01041208074395221,
+        "mde_80pct_power": 0.0291703315071262,
+        "n_rows": 6198,
+        "n_dates": 1831,
+        "n_securities": 3,
+        "n_effective": 21.797619047619047,
+        "block_days": 84,
+        "dependence_unit": "contiguous 84-trading-day block of the whole cross-section",
+        "block_days_derived": 84
+      },
+      "trail_stop_20": {
+        "mean": NaN,
+        "ci_lo": -0.009892806071678464,
+        "ci_hi": -0.0017288389852408667,
+        "se": 0.002529307122927083,
+        "mde_80pct_power": 0.0070860694488922085,
+        "n_rows": 6198,
+        "n_dates": 1831,
+        "n_securities": 3,
+        "n_effective": 21.797619047619047,
+        "block_days": 84,
+        "dependence_unit": "contiguous 84-trading-day block of the whole cross-section",
+        "block_days_derived": 84
+      },
+      "stop_vol_1_5": {
+        "mean": NaN,
+        "ci_lo": -0.01319144738624758,
+        "ci_hi": -0.0023707918794439614,
+        "se": 0.0032848619026280145,
+        "mde_80pct_power": 0.009202820551544916,
+        "n_rows": 6198,
+        "n_dates": 1831,
+        "n_securities": 3,
+        "n_effective": 21.797619047619047,
+        "block_days": 84,
+        "dependence_unit": "contiguous 84-trading-day block of the whole cross-section",
+        "block_days_derived": 84
+      }
+    },
+    "verdicts": {
+      "exit_full": {
+        "verdict": "NOT_ESTABLISHED",
+        "mean_dIC": NaN,
+        "mde": 0.0291703315071262,
+        "ci_90": [
+          0.033488625620780976,
+          0.06811920381517966
+        ],
+        "p_normal_approx": NaN,
+        "holm_pass": false,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": NaN
+      },
+      "stop_vol_1_5": {
+        "verdict": "NOT_ESTABLISHED",
+        "mean_dIC": NaN,
+        "mde": 0.009202820551544916,
+        "ci_90": [
+          0.0023707918794439614,
+          0.01319144738624758
+        ],
+        "p_normal_approx": NaN,
+        "holm_pass": false,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": NaN
+      },
+      "trail_stop_20": {
+        "verdict": "NOT_ESTABLISHED",
+        "mean_dIC": NaN,
+        "mde": 0.0070860694488922085,
+        "ci_90": [
+          0.0017288389852408667,
+          0.009892806071678464
+        ],
+        "p_normal_approx": NaN,
+        "holm_pass": false,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": NaN
+      },
+      "trim_25": {
+        "verdict": "NOT_ESTABLISHED",
+        "mean_dIC": NaN,
+        "mde": 0.007292582876781548,
+        "ci_90": [
+          0.008372156405195242,
+          0.017029800953794923
+        ],
+        "p_normal_approx": NaN,
+        "holm_pass": false,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": NaN
+      },
+      "trim_50": {
+        "verdict": "NOT_ESTABLISHED",
+        "mean_dIC": NaN,
+        "mde": 0.0145851657535631,
+        "ci_90": [
+          0.016744312810390488,
+          0.03405960190758983
+        ],
+        "p_normal_approx": NaN,
+        "holm_pass": false,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": NaN
+      }
+    },
+    "deciding_arm": "trail_stop_20"
+  },
+  "screen_grid": {
+    "thr_0.2": {
+      "n": 13956,
+      "hold": {
+        "mean_tw_diff": 0.0,
+        "median_mfe_captured": 0.4923
+      },
+      "trim_25": {
+        "mean_tw_diff": -0.0092,
+        "median_mfe_captured": 0.3681
+      },
+      "trim_50": {
+        "mean_tw_diff": -0.0184,
+        "median_mfe_captured": 0.244
+      },
+      "exit_full": {
+        "mean_tw_diff": -0.0368,
+        "median_mfe_captured": -0.0032
+      },
+      "trail_stop_20": {
+        "mean_tw_diff": -0.00421,
+        "median_mfe_captured": 0.4666
+      },
+      "stop_vol_1_5": {
+        "mean_tw_diff": -0.00588,
+        "median_mfe_captured": 0.2488
+      }
+    },
+    "thr_0.4": {
+      "n": 6198,
+      "hold": {
+        "mean_tw_diff": 0.0,
+        "median_mfe_captured": 0.4866
+      },
+      "trim_25": {
+        "mean_tw_diff": -0.01291,
+        "median_mfe_captured": 0.363
+      },
+      "trim_50": {
+        "mean_tw_diff": -0.02582,
+        "median_mfe_captured": 0.2415
+      },
+      "exit_full": {
+        "mean_tw_diff": -0.05165,
+        "median_mfe_captured": -0.0028
+      },
+      "trail_stop_20": {
+        "mean_tw_diff": -0.00553,
+        "median_mfe_captured": 0.4618
+      },
+      "stop_vol_1_5": {
+        "mean_tw_diff": -0.00802,
+        "median_mfe_captured": 0.2791
+      }
+    },
+    "thr_0.75": {
+      "n": 1845,
+      "hold": {
+        "mean_tw_diff": 0.0,
+        "median_mfe_captured": 0.4454
+      },
+      "trim_25": {
+        "mean_tw_diff": -0.02008,
+        "median_mfe_captured": 0.3336
+      },
+      "trim_50": {
+        "mean_tw_diff": -0.04017,
+        "median_mfe_captured": 0.2213
+      },
+      "exit_full": {
+        "mean_tw_diff": -0.08033,
+        "median_mfe_captured": -0.0019
+      },
+      "trail_stop_20": {
+        "mean_tw_diff": -0.01115,
+        "median_mfe_captured": 0.375
+      },
+      "stop_vol_1_5": {
+        "mean_tw_diff": -0.01361,
+        "median_mfe_captured": 0.2693
+      }
+    },
+    "thr_1.0": {
+      "n": 1012,
+      "hold": {
+        "mean_tw_diff": 0.0,
+        "median_mfe_captured": 0.3788
+      },
+      "trim_25": {
+        "mean_tw_diff": -0.02131,
+        "median_mfe_captured": 0.2832
+      },
+      "trim_50": {
+        "mean_tw_diff": -0.04262,
+        "median_mfe_captured": 0.1883
+      },
+      "exit_full": {
+        "mean_tw_diff": -0.08525,
+        "median_mfe_captured": -0.0017
+      },
+      "trail_stop_20": {
+        "mean_tw_diff": -0.02331,
+        "median_mfe_captured": 0.2627
+      },
+      "stop_vol_1_5": {
+        "mean_tw_diff": -0.01953,
+        "median_mfe_captured": 0.249
+      }
+    }
+  },
+  "screen_winner_vs_control": {
+    "n_matched": 19790,
+    "mean_tw_hold": 1.03625,
+    "mean_control_tw_hold": 1.01295,
+    "note": "\u00a716 leg \u2014 crossers vs matched non-winners, SCREEN only"
+  },
+  "capture_family_hold": {
+    "median_mfe": 0.0908,
+    "median_peak_giveback_hold": 0.0536,
+    "near_peak_at_end_rate": 0.1988
+  },
+  "signed_by": "Murat"
+}

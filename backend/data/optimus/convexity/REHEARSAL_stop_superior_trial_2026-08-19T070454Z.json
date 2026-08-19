@@ -1,0 +1,277 @@
+{
+  "trial": "CONVEXITY-PRESERVATION-1",
+  "mode": "REHEARSAL_SYNTHETIC_stop_superior",
+  "started_at": "2026-08-19T07:04:54+00:00",
+  "n_episodes": 4000,
+  "cost_basis": "per-name measured TAQ one-way where retired; 3bp band midpoint else (baked at materialize)",
+  "primary": {
+    "cell": "trail_stop_20 vs hold @ +40",
+    "n_episodes": 1014,
+    "contrasts_arm_minus_hold": {
+      "trim_25": {
+        "mean": 0.010667889188369303,
+        "ci_lo": 0.009787968901087895,
+        "ci_hi": 0.011798443216596993,
+        "se": 0.0006135630339960672,
+        "mde_80pct_power": 0.0017189491267227508,
+        "n_rows": 1014,
+        "n_dates": 904,
+        "n_securities": 1,
+        "n_effective": 32.285714285714285,
+        "block_days": 28,
+        "dependence_unit": "contiguous 28-trading-day block of the whole cross-section",
+        "block_days_derived": 28
+      },
+      "trim_50": {
+        "mean": 0.010072917039543739,
+        "ci_lo": 0.009188991938885872,
+        "ci_hi": 0.011158439910034113,
+        "se": 0.0006046580653635824,
+        "mde_80pct_power": 0.0016940010982298848,
+        "n_rows": 1014,
+        "n_dates": 904,
+        "n_securities": 1,
+        "n_effective": 32.285714285714285,
+        "block_days": 28,
+        "dependence_unit": "contiguous 28-trading-day block of the whole cross-section",
+        "block_days_derived": 28
+      },
+      "exit_full": {
+        "mean": 0.01046724045971721,
+        "ci_lo": 0.009294416322129889,
+        "ci_hi": 0.011392292061850896,
+        "se": 0.0006304252678968914,
+        "mde_80pct_power": 0.001766190111971876,
+        "n_rows": 1014,
+        "n_dates": 904,
+        "n_securities": 1,
+        "n_effective": 32.285714285714285,
+        "block_days": 28,
+        "dependence_unit": "contiguous 28-trading-day block of the whole cross-section",
+        "block_days_derived": 28
+      },
+      "trail_stop_20": {
+        "mean": 0.009543360915683082,
+        "ci_lo": 0.008255769788629243,
+        "ci_hi": 0.010616862868705768,
+        "se": 0.0007192990899972537,
+        "mde_80pct_power": 0.002015177698288737,
+        "n_rows": 1014,
+        "n_dates": 904,
+        "n_securities": 1,
+        "n_effective": 32.285714285714285,
+        "block_days": 28,
+        "dependence_unit": "contiguous 28-trading-day block of the whole cross-section",
+        "block_days_derived": 28
+      },
+      "stop_vol_1_5": {
+        "mean": 0.010869036564134125,
+        "ci_lo": 0.010007011897566895,
+        "ci_hi": 0.011665274799919008,
+        "se": 0.0005062535976659902,
+        "mde_80pct_power": 0.0014183125960841093,
+        "n_rows": 1014,
+        "n_dates": 904,
+        "n_securities": 1,
+        "n_effective": 32.285714285714285,
+        "block_days": 28,
+        "dependence_unit": "contiguous 28-trading-day block of the whole cross-section",
+        "block_days_derived": 28
+      }
+    },
+    "verdicts": {
+      "exit_full": {
+        "verdict": "STOP_NONINFERIOR",
+        "mean_dIC": -0.01046724045971721,
+        "mde": 0.001766190111971876,
+        "ci_90": [
+          -0.011392292061850896,
+          -0.009294416322129889
+        ],
+        "p_normal_approx": 1e-12,
+        "holm_pass": true,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": 0.01046724045971721
+      },
+      "stop_vol_1_5": {
+        "verdict": "STOP_NONINFERIOR",
+        "mean_dIC": -0.010869036564134125,
+        "mde": 0.0014183125960841093,
+        "ci_90": [
+          -0.011665274799919008,
+          -0.010007011897566895
+        ],
+        "p_normal_approx": 1e-12,
+        "holm_pass": true,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": 0.010869036564134125
+      },
+      "trail_stop_20": {
+        "verdict": "STOP_NONINFERIOR",
+        "mean_dIC": -0.009543360915683082,
+        "mde": 0.002015177698288737,
+        "ci_90": [
+          -0.010616862868705768,
+          -0.008255769788629243
+        ],
+        "p_normal_approx": 1e-12,
+        "holm_pass": true,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": 0.009543360915683082
+      },
+      "trim_25": {
+        "verdict": "STOP_NONINFERIOR",
+        "mean_dIC": -0.010667889188369303,
+        "mde": 0.0017189491267227508,
+        "ci_90": [
+          -0.011798443216596993,
+          -0.009787968901087895
+        ],
+        "p_normal_approx": 1e-12,
+        "holm_pass": true,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": 0.010667889188369303
+      },
+      "trim_50": {
+        "verdict": "STOP_NONINFERIOR",
+        "mean_dIC": -0.010072917039543739,
+        "mde": 0.0016940010982298848,
+        "ci_90": [
+          -0.011158439910034113,
+          -0.009188991938885872
+        ],
+        "p_normal_approx": 1e-12,
+        "holm_pass": true,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": 0.010072917039543739
+      }
+    },
+    "deciding_arm": "trail_stop_20"
+  },
+  "screen_grid": {
+    "thr_0.2": {
+      "n": 1009,
+      "hold": {
+        "mean_tw_diff": 0.0,
+        "median_mfe_captured": 0.4796
+      },
+      "trim_25": {
+        "mean_tw_diff": 0.01051,
+        "median_mfe_captured": 0.496
+      },
+      "trim_50": {
+        "mean_tw_diff": 0.01074,
+        "median_mfe_captured": 0.5077
+      },
+      "exit_full": {
+        "mean_tw_diff": 0.0104,
+        "median_mfe_captured": 0.5213
+      },
+      "trail_stop_20": {
+        "mean_tw_diff": 0.00926,
+        "median_mfe_captured": 0.4941
+      },
+      "stop_vol_1_5": {
+        "mean_tw_diff": 0.00976,
+        "median_mfe_captured": 0.4901
+      }
+    },
+    "thr_0.4": {
+      "n": 1014,
+      "hold": {
+        "mean_tw_diff": 0.0,
+        "median_mfe_captured": 0.5218
+      },
+      "trim_25": {
+        "mean_tw_diff": 0.01067,
+        "median_mfe_captured": 0.5102
+      },
+      "trim_50": {
+        "mean_tw_diff": 0.01007,
+        "median_mfe_captured": 0.5243
+      },
+      "exit_full": {
+        "mean_tw_diff": 0.01047,
+        "median_mfe_captured": 0.4898
+      },
+      "trail_stop_20": {
+        "mean_tw_diff": 0.00954,
+        "median_mfe_captured": 0.4832
+      },
+      "stop_vol_1_5": {
+        "mean_tw_diff": 0.01087,
+        "median_mfe_captured": 0.4823
+      }
+    },
+    "thr_0.75": {
+      "n": 998,
+      "hold": {
+        "mean_tw_diff": 0.0,
+        "median_mfe_captured": 0.523
+      },
+      "trim_25": {
+        "mean_tw_diff": 0.01003,
+        "median_mfe_captured": 0.5018
+      },
+      "trim_50": {
+        "mean_tw_diff": 0.00923,
+        "median_mfe_captured": 0.4716
+      },
+      "exit_full": {
+        "mean_tw_diff": 0.01084,
+        "median_mfe_captured": 0.4748
+      },
+      "trail_stop_20": {
+        "mean_tw_diff": 0.01046,
+        "median_mfe_captured": 0.5071
+      },
+      "stop_vol_1_5": {
+        "mean_tw_diff": 0.01003,
+        "median_mfe_captured": 0.4995
+      }
+    },
+    "thr_1.0": {
+      "n": 979,
+      "hold": {
+        "mean_tw_diff": 0.0,
+        "median_mfe_captured": 0.4956
+      },
+      "trim_25": {
+        "mean_tw_diff": 0.00995,
+        "median_mfe_captured": 0.5042
+      },
+      "trim_50": {
+        "mean_tw_diff": 0.00972,
+        "median_mfe_captured": 0.5036
+      },
+      "exit_full": {
+        "mean_tw_diff": 0.00996,
+        "median_mfe_captured": 0.5049
+      },
+      "trail_stop_20": {
+        "mean_tw_diff": 0.00942,
+        "median_mfe_captured": 0.4803
+      },
+      "stop_vol_1_5": {
+        "mean_tw_diff": 0.00949,
+        "median_mfe_captured": 0.4935
+      }
+    }
+  },
+  "screen_winner_vs_control": {
+    "n_matched": 4000,
+    "mean_tw_hold": 1.01744,
+    "mean_control_tw_hold": 0.99775,
+    "note": "\u00a716 leg \u2014 crossers vs matched non-winners, SCREEN only"
+  },
+  "capture_family_hold": {
+    "median_mfe": 0.0989,
+    "median_peak_giveback_hold": 0.2492,
+    "near_peak_at_end_rate": 0.3005
+  },
+  "world": {
+    "name": "stop_superior",
+    "planted_delta": 0.01,
+    "expected_verdict": "NOT_ESTABLISHED"
+  }
+}

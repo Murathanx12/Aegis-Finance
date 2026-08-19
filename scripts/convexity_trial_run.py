@@ -48,6 +48,16 @@ def paired_contrast(df: pd.DataFrame, arm: str) -> dict:
     d = (df[f"tw_{arm}"] - df["tw_hold"]).to_numpy(float)
     dates = pd.to_datetime(df["crossing_date"]).to_numpy(
         dtype="datetime64[D]")
+    # A paired contrast needs BOTH legs. A missing leg is dropped WITH the
+    # count on the receipt, never averaged in as NaN (which poisons the
+    # full-sample mean while the bootstrap silently skips it — the shape
+    # the first registered run caught, 2026-08-19: 1 of 6198 primary rows).
+    ok = np.isfinite(d)
+    n_dropped = int((~ok).sum())
+    if n_dropped > 0.01 * len(d):
+        raise RuntimeError(f"{arm}: {n_dropped}/{len(d)} pairs missing a "
+                           "leg — that is a dataset defect, not a drop")
+    d, dates = d[ok], dates[ok]
     # Amendment 1: the dependence unit is the OUTCOME OVERLAP — two episodes
     # whose 60-trading-day windows intersect share most of their path. The
     # block must span the horizon, derived from this panel's own crossing-date
@@ -56,6 +66,7 @@ def paired_contrast(df: pd.DataFrame, arm: str) -> dict:
     out = block_bootstrap_paired(d, dates, block_days=block,
                                  seed=20260819).as_dict()
     out["block_days_derived"] = block
+    out["n_pairs_dropped_missing_leg"] = n_dropped
     return out
 
 

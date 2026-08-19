@@ -156,3 +156,36 @@ final runner; STOP_DESTROYS must fire only in `destruction`, and
 `stop_superior` must never yield STOP_DESTROYS.
 
 — drafted 2026-08-19 day session; the daemon's declared priors predate it
+
+---
+
+## RESULTS (registered run 2026-08-19T070720Z, appended post-run)
+
+Receipt: `backend/data/optimus/convexity/trial_2026-08-19T070720Z.json`.
+First run (070510Z) refused itself with NaN means — 1 of 6198 primary
+pairs had a missing leg (ENPH 2026-05-14); pair-integrity repair (drop
+WITH count, refuse if >1%) applied before any finite aggregate existed.
+
+Paired tw diff (arm − hold), +40 threshold, 22 effective 84-day blocks,
+Holm FWER 0.05 across the 5 declared arms:
+
+| arm | mean tw diff | MDE(80%) | verdict |
+|---|---|---|---|
+| `trail_stop_20` (DECIDING) | −0.0055 | 0.0071 | **NOT_ESTABLISHED** |
+| `stop_vol_1_5` | −0.0080 | 0.0092 | NOT_ESTABLISHED |
+| `trim_25` | −0.0129 | 0.0073 | **STOP_DESTROYS** |
+| `trim_50` | −0.0258 | 0.0146 | **STOP_DESTROYS** |
+| `exit_full` | −0.0516 | 0.0292 | **STOP_DESTROYS** |
+
+**Verdict sentences (scope-aware, §60):** On 2019–2026 US large caps
+(182-name contemporary panel, TAQ-measured costs), immediately trimming
+25%/50% or fully exiting a +40% winner destroyed 60-day terminal wealth
+— per-dollar drags of 1.3%/2.6%/5.2%, each clearing its MDE under Holm.
+The **daily-close 20% trailing exit** shows the same sign (−0.55%) but
+below its 0.71% MDE: NOT_ESTABLISHED, and noninferiority was
+prospectively NOT_ANSWERABLE_AT_N. H1's direction (the right tail pays)
+is confirmed for mechanical de-risking arms; the trailing-stop question
+is reserved for CONVEXITY-CRSP-REPLICATION-1 (design frozen BEFORE this
+table was read). §61 cap: ADAPTIVE_HISTORICAL_VALIDATION — this is
+evidence about Murat's management question on historical episodes, not
+production policy and not a skill claim.
