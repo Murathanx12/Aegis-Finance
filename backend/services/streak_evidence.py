@@ -61,8 +61,10 @@ def build_events(panel: Panel, *, streak_len: int = STREAK_LEN,
     is_event = (streak == streak_len)
 
     # forward 21d compounded return, shifted so row t holds t+1..t+21
-    fwd = ((1.0 + ret).rolling(forward_days).apply(np.prod, raw=True)
-           .shift(-forward_days) - 1.0)
+    # (log1p-sum == windowed product, NaN-propagating, ~100x faster than
+    # rolling.apply(np.prod) on wide panels)
+    fwd = np.expm1(np.log1p(ret).rolling(forward_days).sum()
+                   .shift(-forward_days))
 
     # features at t, all vectorized
     mom = px.shift(21) / px.shift(252) - 1.0

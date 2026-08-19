@@ -1,0 +1,19 @@
+{
+  "dataset": "crsp_dsf_2007",
+  "pulled_at": "2026-08-19T13:34:16+00:00",
+  "rows": 1207165,
+  "cols": [
+    "permno",
+    "date",
+    "prc",
+    "ret",
+    "vol"
+  ],
+  "window": [
+    "2013-01-01",
+    "2024-12-31"
+  ],
+  "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
+  "pit_knowledge_column": "date (daily bar); early-era confirmation slice",
+  "sql_note": "SELECT permno, date, prc, ret, vol FROM crsp.dsf WHERE permno = ANY(%(p)s) AND date BETWEEN %(s)s AND %(e)s"
+}
