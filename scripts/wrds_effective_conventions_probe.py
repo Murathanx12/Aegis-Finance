@@ -32,10 +32,16 @@ REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-DAY = "20260814"
+DAY = os.environ.get("PROBE_DAY", "20260814")
+#: Three names per tier when PROBE_WIDE=1; the original trio otherwise.
 NAMES = {"NVDA": "liquid_sub1bp", "DXCM": "mid_5bp", "PLUG": "illiquid_47bp"}
+if os.environ.get("PROBE_WIDE"):
+    NAMES = {"NVDA": "liquid", "AAPL": "liquid", "MSFT": "liquid",
+             "DXCM": "mid", "WEC": "mid", "ZBH": "mid",
+             "PLUG": "illiquid", "SOC": "illiquid", "FSLR": "illiquid"}
+_TAG = "_wide" if os.environ.get("PROBE_WIDE") else ""
 OUT = REPO / "backend" / "data" / "optimus" / \
-    f"effective_conventions_probe_{DAY}.json"
+    f"effective_conventions_probe_{DAY}{_TAG}.json"
 
 #: Holden–Jacobsen-style exclusion set, declared here once.
 HJ_EXCLUDE = "OZBTLGWKJ"

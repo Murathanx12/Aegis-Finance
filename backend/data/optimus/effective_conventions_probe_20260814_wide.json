@@ -1,0 +1,683 @@
+{
+  "day": "20260814",
+  "hj_exclude_set": "OZBTLGWKJ",
+  "generated_at": "2026-08-19T03:01:24+00:00",
+  "status": "SENSITIVITY \u2014 not a verdict; evidence for the conventions ruling (review Q3)",
+  "names": {
+    "NVDA": {
+      "tier": "liquid",
+      "grid": [
+        {
+          "convention": "v1_all",
+          "n_prints": 1470387,
+          "med_eff_bps": 0.636,
+          "med_quoted_bps": 0.8883,
+          "ratio": 0.716
+        },
+        {
+          "convention": "no_midpoint",
+          "n_prints": 1246339,
+          "med_eff_bps": 0.6401,
+          "med_quoted_bps": 0.8883,
+          "ratio": 0.7206
+        },
+        {
+          "convention": "hj_conditions",
+          "n_prints": 1467747,
+          "med_eff_bps": 0.6358,
+          "med_quoted_bps": 0.8883,
+          "ratio": 0.7158
+        },
+        {
+          "convention": "round_lots_only",
+          "n_prints": 150825,
+          "med_eff_bps": 0.4438,
+          "med_quoted_bps": 0.8871,
+          "ratio": 0.5003
+        },
+        {
+          "convention": "exchange_only",
+          "n_prints": 387870,
+          "med_eff_bps": 0.444,
+          "med_quoted_bps": 0.8871,
+          "ratio": 0.5005
+        },
+        {
+          "convention": "trf_only",
+          "n_prints": 1082517,
+          "med_eff_bps": 0.6388,
+          "med_quoted_bps": 0.8887,
+          "ratio": 0.7188
+        },
+        {
+          "convention": "lag_le_50ms",
+          "n_prints": 870612,
+          "med_eff_bps": 0.5336,
+          "med_quoted_bps": 0.8883,
+          "ratio": 0.6007
+        },
+        {
+          "convention": "lag_50_500ms",
+          "n_prints": 558826,
+          "med_eff_bps": 0.6381,
+          "med_quoted_bps": 0.8884,
+          "ratio": 0.7183
+        },
+        {
+          "convention": "lag_gt_500ms",
+          "n_prints": 40949,
+          "med_eff_bps": 0.5321,
+          "med_quoted_bps": 0.8875,
+          "ratio": 0.5995
+        },
+        {
+          "convention": "composed_hj_rounds_nomid",
+          "n_prints": 99824,
+          "med_eff_bps": 0.4446,
+          "med_quoted_bps": 0.8834,
+          "ratio": 0.5032
+        }
+      ]
+    },
+    "AAPL": {
+      "tier": "liquid",
+      "grid": [
+        {
+          "convention": "v1_all",
+          "n_prints": 507674,
+          "med_eff_bps": 0.4711,
+          "med_quoted_bps": 0.6556,
+          "ratio": 0.7185
+        },
+        {
+          "convention": "no_midpoint",
+          "n_prints": 404975,
+          "med_eff_bps": 0.6215,
+          "med_quoted_bps": 0.656,
+          "ratio": 0.9474
+        },
+        {
+          "convention": "hj_conditions",
+          "n_prints": 502491,
+          "med_eff_bps": 0.471,
+          "med_quoted_bps": 0.6556,
+          "ratio": 0.7185
+        },
+        {
+          "convention": "round_lots_only",
+          "n_prints": 31048,
+          "med_eff_bps": 0.3271,
+          "med_quoted_bps": 0.6552,
+          "ratio": 0.4992
+        },
+        {
+          "convention": "exchange_only",
+          "n_prints": 165844,
+          "med_eff_bps": 0.3275,
+          "med_quoted_bps": 0.6545,
+          "ratio": 0.5004
+        },
+        {
+          "convention": "trf_only",
+          "n_prints": 341830,
+          "med_eff_bps": 0.4724,
+          "med_quoted_bps": 0.9808,
+          "ratio": 0.4817
+        },
+        {
+          "convention": "lag_le_50ms",
+          "n_prints": 232366,
+          "med_eff_bps": 0.3279,
+          "med_quoted_bps": 0.6552,
+          "ratio": 0.5005
+        },
+        {
+          "convention": "lag_50_500ms",
+          "n_prints": 196807,
+          "med_eff_bps": 0.4973,
+          "med_quoted_bps": 0.981,
+          "ratio": 0.5069
+        },
+        {
+          "convention": "lag_gt_500ms",
+          "n_prints": 78501,
+          "med_eff_bps": 0.4709,
+          "med_quoted_bps": 0.6552,
+          "ratio": 0.7188
+        },
+        {
+          "convention": "composed_hj_rounds_nomid",
+          "n_prints": 18815,
+          "med_eff_bps": 0.6536,
+          "med_quoted_bps": 0.6549,
+          "ratio": 0.998
+        }
+      ]
+    },
+    "MSFT": {
+      "tier": "liquid",
+      "grid": [
+        {
+          "convention": "v1_all",
+          "n_prints": 298264,
+          "med_eff_bps": 0.8622,
+          "med_quoted_bps": 1.8066,
+          "ratio": 0.4773
+        },
+        {
+          "convention": "no_midpoint",
+          "n_prints": 228099,
+          "med_eff_bps": 1.2068,
+          "med_quoted_bps": 1.8043,
+          "ratio": 0.6688
+        },
+        {
+          "convention": "hj_conditions",
+          "n_prints": 292484,
+          "med_eff_bps": 0.8479,
+          "med_quoted_bps": 1.8064,
+          "ratio": 0.4694
+        },
+        {
+          "convention": "round_lots_only",
+          "n_prints": 19816,
+          "med_eff_bps": 0.4034,
+          "med_quoted_bps": 1.8036,
+          "ratio": 0.2237
+        },
+        {
+          "convention": "exchange_only",
+          "n_prints": 106536,
+          "med_eff_bps": 0.8044,
+          "med_quoted_bps": 1.4116,
+          "ratio": 0.5699
+        },
+        {
+          "convention": "trf_only",
+          "n_prints": 191728,
+          "med_eff_bps": 1.0053,
+          "med_quoted_bps": 2.0044,
+          "ratio": 0.5015
+        },
+        {
+          "convention": "lag_le_50ms",
+          "n_prints": 121751,
+          "med_eff_bps": 0.803,
+          "med_quoted_bps": 1.4137,
+          "ratio": 0.568
+        },
+        {
+          "convention": "lag_50_500ms",
+          "n_prints": 81675,
+          "med_eff_bps": 1.0086,
+          "med_quoted_bps": 2.0168,
+          "ratio": 0.5001
+        },
+        {
+          "convention": "lag_gt_500ms",
+          "n_prints": 94838,
+          "med_eff_bps": 1.0062,
+          "med_quoted_bps": 1.8143,
+          "ratio": 0.5546
+        },
+        {
+          "convention": "composed_hj_rounds_nomid",
+          "n_prints": 11914,
+          "med_eff_bps": 1.0055,
+          "med_quoted_bps": 1.6048,
+          "ratio": 0.6266
+        }
+      ]
+    },
+    "DXCM": {
+      "tier": "mid",
+      "grid": [
+        {
+          "convention": "v1_all",
+          "n_prints": 35110,
+          "med_eff_bps": 1.3372,
+          "med_quoted_bps": 4.4538,
+          "ratio": 0.3002
+        },
+        {
+          "convention": "no_midpoint",
+          "n_prints": 24596,
+          "med_eff_bps": 3.2897,
+          "med_quoted_bps": 4.4499,
+          "ratio": 0.7393
+        },
+        {
+          "convention": "hj_conditions",
+          "n_prints": 34307,
+          "med_eff_bps": 1.1159,
+          "med_quoted_bps": 4.4534,
+          "ratio": 0.2506
+        },
+        {
+          "convention": "round_lots_only",
+          "n_prints": 8455,
+          "med_eff_bps": 1.1138,
+          "med_quoted_bps": 4.4038,
+          "ratio": 0.2529
+        },
+        {
+          "convention": "exchange_only",
+          "n_prints": 17585,
+          "med_eff_bps": 1.1153,
+          "med_quoted_bps": 3.3428,
+          "ratio": 0.3336
+        },
+        {
+          "convention": "trf_only",
+          "n_prints": 17525,
+          "med_eff_bps": 1.509,
+          "med_quoted_bps": 5.559,
+          "ratio": 0.2715
+        },
+        {
+          "convention": "lag_le_50ms",
+          "n_prints": 16341,
+          "med_eff_bps": 1.1143,
+          "med_quoted_bps": 3.3376,
+          "ratio": 0.3339
+        },
+        {
+          "convention": "lag_50_500ms",
+          "n_prints": 3420,
+          "med_eff_bps": 1.1926,
+          "med_quoted_bps": 5.559,
+          "ratio": 0.2145
+        },
+        {
+          "convention": "lag_gt_500ms",
+          "n_prints": 15349,
+          "med_eff_bps": 2.1304,
+          "med_quoted_bps": 5.5658,
+          "ratio": 0.3828
+        },
+        {
+          "convention": "composed_hj_rounds_nomid",
+          "n_prints": 4797,
+          "med_eff_bps": 2.2264,
+          "med_quoted_bps": 3.3294,
+          "ratio": 0.6687
+        }
+      ]
+    },
+    "WEC": {
+      "tier": "mid",
+      "grid": [
+        {
+          "convention": "v1_all",
+          "n_prints": 26489,
+          "med_eff_bps": 0.912,
+          "med_quoted_bps": 3.64,
+          "ratio": 0.2506
+        },
+        {
+          "convention": "no_midpoint",
+          "n_prints": 17184,
+          "med_eff_bps": 2.7192,
+          "med_quoted_bps": 3.6413,
+          "ratio": 0.7468
+        },
+        {
+          "convention": "hj_conditions",
+          "n_prints": 26275,
+          "med_eff_bps": 0.9116,
+          "med_quoted_bps": 3.64,
+          "ratio": 0.2504
+        },
+        {
+          "convention": "round_lots_only",
+          "n_prints": 3056,
+          "med_eff_bps": 1.6057,
+          "med_quoted_bps": 3.6337,
+          "ratio": 0.4419
+        },
+        {
+          "convention": "exchange_only",
+          "n_prints": 13197,
+          "med_eff_bps": 1.8132,
+          "med_quoted_bps": 3.6377,
+          "ratio": 0.4985
+        },
+        {
+          "convention": "trf_only",
+          "n_prints": 13292,
+          "med_eff_bps": 0.908,
+          "med_quoted_bps": 3.6463,
+          "ratio": 0.249
+        },
+        {
+          "convention": "lag_le_50ms",
+          "n_prints": 8979,
+          "med_eff_bps": 1.8127,
+          "med_quoted_bps": 3.6347,
+          "ratio": 0.4987
+        },
+        {
+          "convention": "lag_50_500ms",
+          "n_prints": 3087,
+          "med_eff_bps": 0.9066,
+          "med_quoted_bps": 4.5358,
+          "ratio": 0.1999
+        },
+        {
+          "convention": "lag_gt_500ms",
+          "n_prints": 14423,
+          "med_eff_bps": 0.9342,
+          "med_quoted_bps": 3.6453,
+          "ratio": 0.2563
+        },
+        {
+          "convention": "composed_hj_rounds_nomid",
+          "n_prints": 1766,
+          "med_eff_bps": 2.7224,
+          "med_quoted_bps": 3.6326,
+          "ratio": 0.7495
+        }
+      ]
+    },
+    "ZBH": {
+      "tier": "mid",
+      "grid": [
+        {
+          "convention": "v1_all",
+          "n_prints": 26467,
+          "med_eff_bps": 1.997,
+          "med_quoted_bps": 5.9856,
+          "ratio": 0.3336
+        },
+        {
+          "convention": "no_midpoint",
+          "n_prints": 17745,
+          "med_eff_bps": 3.9904,
+          "med_quoted_bps": 5.9809,
+          "ratio": 0.6672
+        },
+        {
+          "convention": "hj_conditions",
+          "n_prints": 25970,
+          "med_eff_bps": 1.9948,
+          "med_quoted_bps": 5.9856,
+          "ratio": 0.3333
+        },
+        {
+          "convention": "round_lots_only",
+          "n_prints": 5821,
+          "med_eff_bps": 1.9912,
+          "med_quoted_bps": 5.9761,
+          "ratio": 0.3332
+        },
+        {
+          "convention": "exchange_only",
+          "n_prints": 12900,
+          "med_eff_bps": 2.9873,
+          "med_quoted_bps": 5.9761,
+          "ratio": 0.4999
+        },
+        {
+          "convention": "trf_only",
+          "n_prints": 13567,
+          "med_eff_bps": 0.9988,
+          "med_quoted_bps": 5.9976,
+          "ratio": 0.1665
+        },
+        {
+          "convention": "lag_le_50ms",
+          "n_prints": 10499,
+          "med_eff_bps": 2.9678,
+          "med_quoted_bps": 5.9731,
+          "ratio": 0.4969
+        },
+        {
+          "convention": "lag_50_500ms",
+          "n_prints": 2359,
+          "med_eff_bps": 1.4386,
+          "med_quoted_bps": 6.9441,
+          "ratio": 0.2072
+        },
+        {
+          "convention": "lag_gt_500ms",
+          "n_prints": 13609,
+          "med_eff_bps": 1.9912,
+          "med_quoted_bps": 5.9958,
+          "ratio": 0.3321
+        },
+        {
+          "convention": "composed_hj_rounds_nomid",
+          "n_prints": 3212,
+          "med_eff_bps": 3.9829,
+          "med_quoted_bps": 5.95,
+          "ratio": 0.6694
+        }
+      ]
+    },
+    "PLUG": {
+      "tier": "illiquid",
+      "grid": [
+        {
+          "convention": "v1_all",
+          "n_prints": 80232,
+          "med_eff_bps": 42.8266,
+          "med_quoted_bps": 43.0108,
+          "ratio": 0.9957
+        },
+        {
+          "convention": "no_midpoint",
+          "n_prints": 61930,
+          "med_eff_bps": 43.0108,
+          "med_quoted_bps": 43.0108,
+          "ratio": 1.0
+        },
+        {
+          "convention": "hj_conditions",
+          "n_prints": 78275,
+          "med_eff_bps": 42.8266,
+          "med_quoted_bps": 43.0108,
+          "ratio": 0.9957
+        },
+        {
+          "convention": "round_lots_only",
+          "n_prints": 23425,
+          "med_eff_bps": 42.2833,
+          "med_quoted_bps": 43.0108,
+          "ratio": 0.9831
+        },
+        {
+          "convention": "exchange_only",
+          "n_prints": 30172,
+          "med_eff_bps": 43.0108,
+          "med_quoted_bps": 43.1965,
+          "ratio": 0.9957
+        },
+        {
+          "convention": "trf_only",
+          "n_prints": 50060,
+          "med_eff_bps": 42.4628,
+          "med_quoted_bps": 43.0108,
+          "ratio": 0.9873
+        },
+        {
+          "convention": "lag_le_50ms",
+          "n_prints": 14920,
+          "med_eff_bps": 42.8266,
+          "med_quoted_bps": 43.1965,
+          "ratio": 0.9914
+        },
+        {
+          "convention": "lag_50_500ms",
+          "n_prints": 20998,
+          "med_eff_bps": 42.6439,
+          "med_quoted_bps": 43.0108,
+          "ratio": 0.9915
+        },
+        {
+          "convention": "lag_gt_500ms",
+          "n_prints": 44314,
+          "med_eff_bps": 42.7015,
+          "med_quoted_bps": 43.0108,
+          "ratio": 0.9928
+        },
+        {
+          "convention": "composed_hj_rounds_nomid",
+          "n_prints": 14198,
+          "med_eff_bps": 43.0108,
+          "med_quoted_bps": 43.0108,
+          "ratio": 1.0
+        }
+      ]
+    },
+    "SOC": {
+      "tier": "illiquid",
+      "grid": [
+        {
+          "convention": "v1_all",
+          "n_prints": 36077,
+          "med_eff_bps": 14.1636,
+          "med_quoted_bps": 24.2424,
+          "ratio": 0.5842
+        },
+        {
+          "convention": "no_midpoint",
+          "n_prints": 20001,
+          "med_eff_bps": 24.1838,
+          "med_quoted_bps": 24.2424,
+          "ratio": 0.9976
+        },
+        {
+          "convention": "hj_conditions",
+          "n_prints": 34539,
+          "med_eff_bps": 12.7921,
+          "med_quoted_bps": 24.2424,
+          "ratio": 0.5277
+        },
+        {
+          "convention": "round_lots_only",
+          "n_prints": 20163,
+          "med_eff_bps": 0.0,
+          "med_quoted_bps": 24.2424,
+          "ratio": 0.0
+        },
+        {
+          "convention": "exchange_only",
+          "n_prints": 24204,
+          "med_eff_bps": 23.7812,
+          "med_quoted_bps": 24.2424,
+          "ratio": 0.981
+        },
+        {
+          "convention": "trf_only",
+          "n_prints": 11873,
+          "med_eff_bps": 0.0,
+          "med_quoted_bps": 24.3013,
+          "ratio": 0.0
+        },
+        {
+          "convention": "lag_le_50ms",
+          "n_prints": 17453,
+          "med_eff_bps": 23.8379,
+          "med_quoted_bps": 24.2424,
+          "ratio": 0.9833
+        },
+        {
+          "convention": "lag_50_500ms",
+          "n_prints": 3089,
+          "med_eff_bps": 0.0,
+          "med_quoted_bps": 24.2424,
+          "ratio": 0.0
+        },
+        {
+          "convention": "lag_gt_500ms",
+          "n_prints": 15535,
+          "med_eff_bps": 1.444,
+          "med_quoted_bps": 24.2424,
+          "ratio": 0.0596
+        },
+        {
+          "convention": "composed_hj_rounds_nomid",
+          "n_prints": 7683,
+          "med_eff_bps": 24.2424,
+          "med_quoted_bps": 24.2424,
+          "ratio": 1.0
+        }
+      ]
+    },
+    "FSLR": {
+      "tier": "illiquid",
+      "grid": [
+        {
+          "convention": "v1_all",
+          "n_prints": 33246,
+          "med_eff_bps": 4.7783,
+          "med_quoted_bps": 16.6656,
+          "ratio": 0.2867
+        },
+        {
+          "convention": "no_midpoint",
+          "n_prints": 25296,
+          "med_eff_bps": 7.4517,
+          "med_quoted_bps": 16.0705,
+          "ratio": 0.4637
+        },
+        {
+          "convention": "hj_conditions",
+          "n_prints": 33058,
+          "med_eff_bps": 4.6403,
+          "med_quoted_bps": 16.6528,
+          "ratio": 0.2786
+        },
+        {
+          "convention": "round_lots_only",
+          "n_prints": 5737,
+          "med_eff_bps": 3.9492,
+          "med_quoted_bps": 16.227,
+          "ratio": 0.2434
+        },
+        {
+          "convention": "exchange_only",
+          "n_prints": 15027,
+          "med_eff_bps": 5.7046,
+          "med_quoted_bps": 14.6137,
+          "ratio": 0.3904
+        },
+        {
+          "convention": "trf_only",
+          "n_prints": 18219,
+          "med_eff_bps": 3.1952,
+          "med_quoted_bps": 18.2776,
+          "ratio": 0.1748
+        },
+        {
+          "convention": "lag_le_50ms",
+          "n_prints": 12447,
+          "med_eff_bps": 4.9108,
+          "med_quoted_bps": 13.1683,
+          "ratio": 0.3729
+        },
+        {
+          "convention": "lag_50_500ms",
+          "n_prints": 2960,
+          "med_eff_bps": 5.339,
+          "med_quoted_bps": 19.3262,
+          "ratio": 0.2763
+        },
+        {
+          "convention": "lag_gt_500ms",
+          "n_prints": 17839,
+          "med_eff_bps": 3.9715,
+          "med_quoted_bps": 18.3072,
+          "ratio": 0.2169
+        },
+        {
+          "convention": "composed_hj_rounds_nomid",
+          "n_prints": 3795,
+          "med_eff_bps": 7.4371,
+          "med_quoted_bps": 13.1683,
+          "ratio": 0.5648
+        }
+      ]
+    }
+  }
+}
