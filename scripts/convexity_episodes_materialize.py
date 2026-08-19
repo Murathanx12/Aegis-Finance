@@ -26,6 +26,10 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="convexity_episodes_materialize")
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--version", default="v1")
+    ap.add_argument("--taq-costs", action="store_true",
+                    help="per-name measured TAQ one-way where retired; "
+                         "declared 3bp band midpoint otherwise (the "
+                         "prereg's registered cost basis)")
     a = ap.parse_args(argv)
     for s in (sys.stdout, sys.stderr):
         try:
@@ -37,7 +41,20 @@ def main(argv: list[str] | None = None) -> int:
     print("=" * 74)
     print(f"{CE.LIBRARY} — episode construction (no aggregates)")
     print("=" * 74)
-    res = CE.materialize(px)
+    cost_lookup = None
+    if a.taq_costs:
+        import json as _json
+        cal = _json.load(open(REPO / "backend" / "data" / "optimus"
+                              / "taq_cost_calibration.json",
+                              encoding="utf-8"))
+        measured = {r["ticker"]: float(r["one_way_bps"])
+                    for r in cal["rows"] if r.get("retired")}
+
+        def cost_lookup(t, _m=measured):
+            return _m.get(t, 3.0)
+        print(f"TAQ cost lookup: {len(measured)} measured names; "
+              f"3.0bp band midpoint for the rest")
+    res = CE.materialize(px, cost_lookup=cost_lookup)
     m = res["meta"]
     print(f"episodes          {m['n_episodes']}")
     print(f"by threshold      {m['episodes_by_threshold']}")

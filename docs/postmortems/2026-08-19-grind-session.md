@@ -269,3 +269,61 @@ Ruff clean on every new file. Prod untouched; nothing signed; nothing armed.
   the proxy numbers. The attended act is now producing one JSON file.
 - **MEMORY.md index compacted 20.4KB → 8.8KB**; full canon moved verbatim
   to memory/project_canon_standing_rules.md (linked from the index).
+
+---
+
+# APPROVED-QUEUE SESSION 2026-08-19 afternoon (Murat present, blanket approval)
+
+Murat: "I approve everything on my queue... full freedom... make sure we
+are not killing good ideas, the NN is built well, nights and paper
+accounts work well." Executed in order:
+
+## RESULTS
+1. **THE 14-POINT GAP IS RESOLVED** (`docs/conviction_replay/
+   GAP_RESOLUTION_2026-08-19.md`): books CORRECT (open lots reprice to NAV
+   within cash: mirror −3.2%, conviction −4.3%); **NAV rows lag closes by
+   ONE DAY** (corr(NAV_t, close_{t−1}) = +0.974) — `_get_current_prices`
+   serves the last completed daily bar while `mark_lane_to_market` stamps
+   `date.today()`. Uniform across lanes ⇒ invisible to every relative
+   check for 72 days. Mirror's −17% is its book's REAL performance; the
+   "+13.9% replay" was the YAML-seed book — never like-for-like. Fix is
+   attended (P-day-2026-08-19a, sacred path).
+2. **FIRST REGISTERED NET TOURNAMENT RAN** (prereg signed per Murat's
+   verbal approval, recorded): primary — all four complex arms
+   NOT_ESTABLISHED (ΔIC +0.006..+0.013 vs run-time MDE ~0.053; the §64
+   warning fired as registered; 4/4 positive signs is SCREEN-grade only).
+   Risk heads: ridge 0.652 vol / 0.415 drawdown BEATS every NN. Barrier
+   held-out: 0.849, Cox ≈ multinomial (timing adds nothing).
+3. **VERDICT-BATTERY-1** (are we killing good ideas?): **false-kill rate
+   0.000** at the economic bar (door stays open as NOT_ESTABLISHED, 99%);
+   null-world false positives 0.3%; found the honest caveat — at nominal
+   MDE the win rate is ~53%, not 80 (Holm + dual condition eat power; the
+   "mde_80pct_power" label is optimistic in the CONSERVATIVE direction).
+4. Endpoint first-read defect found + fixed same hour: missing
+   `closed_at IS NULL` returned closed lots as open (books looked 2–4×) —
+   a property of MY extraction; open/closed now split, test-pinned.
+5. Trigger-eligibility AMENDMENT 1 live (≥1 measured continuous component;
+   disclosure carried on receipts) — effective Night 3; Brier declaration
+   SIGNED (BAR 0.10, NOT_ANSWERABLE sentence retained).
+6. schtask `< NUL` remedy found ALREADY APPLIED in the task XML; tonight's
+   17:00 firing is its first test; the 3/3 clock starts on a clean receipt.
+7. Convexity: v2 episodes with capture family + TAQ measured costs;
+   UNSIGNED prereg drafted (primary trail_stop_20 vs hold @+40, margin
+   0.005 vs MDE ~0.0045 = ANSWERABLE); runner rehearsed green (recovers
+   planted 1% destruction) and refuses unsigned — awaiting Murat's read.
+8. CI went RED on the merge (one test read a gitignored parquet — green
+   locally, red in CI's checkout); fixed as a visible skip; deploy landed
+   and verified (466ebd0, canaries green, endpoint exercised live).
+
+## LESSONS
+- **A uniform error is invisible to relative checks**: every lane lagged
+  together, so 72 days of freshness canaries and cross-lane comparisons
+  saw nothing; only SAME-DAY external comparisons (replays) could see it,
+  and they reported it as "unreconcilable" rather than as a lag. The
+  discriminating test was corr at lag −1 — cheap, and nobody had asked.
+- **Two artifact-classes stacked** (my endpoint's missing liveness filter
+  + the stamp-vs-bar-date lag) and the first masked the second for an
+  hour. Unstack before concluding.
+- The referee's conservatism has a measured shape: zero false kills, paid
+  for with ~53% power at nominal MDE. That trade is the right side of
+  Murat's "don't kill good ideas" — and now it is a NUMBER, not a vibe.
