@@ -210,6 +210,44 @@ def pull_global_factor(conn, permnos):
                             "contrib_global_factor (WRDS contributed)"})
 
 
+def pull_finratio_early(conn, permnos):
+    """finratio for the HELD-OUT early era; universe = early PIT screen."""
+    if _done("finratio_monthly_early"):
+        return
+    early = pd.read_parquet(_config.OPTIMUS_LEDGER_DIR / "crsp_pit" /
+                            "crsp_pit_monthly_early.parquet",
+                            columns=["permno"])
+    pn = sorted(int(p) for p in early["permno"].unique())
+    sql = ("SELECT gvkey, permno, public_date, bm, roe "
+           "FROM wrdsapps_finratio.firm_ratio "
+           "WHERE permno = ANY(%(p)s) "
+           "AND public_date BETWEEN '1990-01-01' AND '2012-12-31'")
+    df = pd.read_sql(sql, conn, params={"p": pn})
+    _write("finratio_monthly_early", df, sql_note=sql,
+           pit="public_date; early-era confirmation slice, columns "
+               "limited to the two signals the frozen grammar uses")
+
+
+def pull_dsf_early(conn, permnos):
+    """Daily prices for the HELD-OUT early era; own universe file."""
+    early = pd.read_parquet(_config.OPTIMUS_LEDGER_DIR / "crsp_pit" /
+                            "crsp_pit_monthly_early.parquet",
+                            columns=["permno"])
+    pn = sorted(int(p) for p in early["permno"].unique())
+    for yr in range(1990, 2013):
+        name = f"crsp_dsf_{yr}"
+        if _done(name):
+            continue
+        sql = ("SELECT permno, date, prc, ret, vol "
+               "FROM crsp.dsf WHERE permno = ANY(%(p)s) "
+               "AND date BETWEEN %(s)s AND %(e)s")
+        df = pd.read_sql(sql, conn, params={"p": pn,
+                                            "s": f"{yr}-01-01",
+                                            "e": f"{yr}-12-31"})
+        _write(name, df, sql_note=sql,
+               pit="date (daily bar); early-era confirmation slice")
+
+
 def pull_dsf(conn, permnos):
     for yr in range(2013, 2025):
         name = f"crsp_dsf_{yr}"
@@ -301,7 +339,9 @@ DATASETS = {"links": pull_links, "finratio": pull_finratio,
             "ibes": pull_ibes, "fundq": pull_fundq,
             "bondret": pull_bondret, "global_factor": pull_global_factor,
             "dsf": pull_dsf, "optionm": pull_optionm_surface,
-            "iid": pull_iid, "s13f": pull_13f}
+            "iid": pull_iid, "s13f": pull_13f,
+            "dsf_early": pull_dsf_early,
+            "finratio_early": pull_finratio_early}
 
 
 def main(argv: list[str] | None = None) -> int:
