@@ -249,8 +249,9 @@ adjudicated, not imported. Full handoff: docs/HANDOFF_2026-08-19_DAY_FACTORY.md.
   in the pass count alone; -rs on skips is part of validation.
 
 ## Deltas
-Suite 5,007→5,113 expected green (new: 15 tournament-repair, 15 identity,
-11 executor, 4 positions-endpoint tests; verify final count in gate run).
+Suite 5,007 → **5,064 passed / 14 skipped / 0 failures** (final gate
+3m32s; new: 15 tournament-repair, 15 identity, 11 executor, 4
+positions-endpoint, 9 expectation-store, 3 guard enrollments).
 Commits this session: f33b5b2 (NET repair) · identity layer · executor ·
 gap-narrowing + endpoint · proposals · operating model + handoff.
 Ruff clean on every new file. Prod untouched; nothing signed; nothing armed.
