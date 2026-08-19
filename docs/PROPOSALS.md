@@ -166,3 +166,11 @@ have side effects, two are item-3's intent gaps).
 **Cost:** Registration text now; runnable only after proposal b ships.
 **Risk to guardrails:** None; all enter through pre-register-trial with corpses named.
 **Recommendation:** Approve registrations; sequencing after EXPECTATION-BACKFILL-1.
+
+## P-day-2026-08-19a — NAV date-stamp semantics (write-path, the gap's root cause)
+**What:** `mark_lane_to_market` stamps NAV rows `date.today()` while `_get_current_prices` serves the last completed DAILY bar (usually the previous session's close at the 16:30 ET mark, behind a 15min–1hr cache). Fix: stamp the row with the price bar's own date (`series.index[-1]`); freshness canary moves to bar-date semantics. No rewrite of historical rows — the offset is uniform; annotate, don't rewrite.
+**Why now:** This is THE mechanism behind the "unreconcilable" 14-point gap (corr(NAV_t, close_{t−1}) = 0.974). Every same-day comparison against market data is silently off by one day; `all_fresh` certifies one day more freshness than the data has.
+**Evidence:** `docs/conviction_replay/GAP_RESOLUTION_2026-08-19.md` (mechanism located in code + measured).
+**Cost:** Small diff, but on the SACRED write path — needs your explicit go + a config_version note so the semantics change is a documented boundary, not a silent restatement.
+**Risk to guardrails:** CANON §5 — this is exactly the class that must not ship unattended; that is why it is a proposal.
+**Recommendation:** Approve for the next attended session with lane-integrity-check before/after; until then all replays align NAV_t ↔ close_{t−1} (scripts updated).
