@@ -1,0 +1,19 @@
+{
+  "dataset": "manager_actions_quarterly_v1 (construction)",
+  "at": "2026-08-19T20:26:56+00:00",
+  "rows": 249424,
+  "n_managers": 11313,
+  "quarters": [
+    "2012Q2",
+    "2024Q4"
+  ],
+  "thresholds": {
+    "add_trim": 0.1
+  },
+  "known_limits": [
+    "share-count based (splits inflate ADD/TRIM; cfacshr v2 declared)",
+    "universe-restricted holdings only (our 6,894 PERMNOs' cusips)"
+  ],
+  "pit": "downstream features key on fdate, never rdate",
+  "no_verdicts": "construction; behavioral trials need their own preregs"
+}
