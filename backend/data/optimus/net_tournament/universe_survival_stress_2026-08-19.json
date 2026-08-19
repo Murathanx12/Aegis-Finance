@@ -1,0 +1,45 @@
+{
+  "sensitivity": "UNIVERSE-SURVIVAL-STRESS-1 (SCREEN, parent = PREREG_AEGIS_NET_TOURNAMENT_1 universe clause)",
+  "at": "2026-08-19T13:11:50+00:00",
+  "n_rows": 229571,
+  "n_months": 131,
+  "n_names": 4298,
+  "features": [
+    "mom_21",
+    "mom_63",
+    "mom_126",
+    "mom_252_21",
+    "vol_21",
+    "vol_63",
+    "dd_252"
+  ],
+  "architectures": "tournament-frozen hyperparams, no tuning",
+  "fwd_ret": {
+    "ridge": {
+      "mean_ic": -0.0472,
+      "n_dates": 95
+    },
+    "lgbm": {
+      "mean_ic": -0.0129,
+      "n_dates": 95
+    },
+    "mlp_2x64": {
+      "mean_ic": -0.0072,
+      "n_dates": 95
+    }
+  },
+  "fwd_vol": {
+    "ridge": {
+      "mean_ic": 0.68,
+      "n_dates": 95
+    },
+    "lgbm": {
+      "mean_ic": 0.7466,
+      "n_dates": 95
+    },
+    "mlp_2x64": {
+      "mean_ic": 0.7189,
+      "n_dates": 95
+    }
+  }
+}
