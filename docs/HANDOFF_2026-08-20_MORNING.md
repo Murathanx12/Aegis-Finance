@@ -1,6 +1,33 @@
 # HANDOFF — 2026-08-20 morning (overnight session, Murat asleep)
 
-## NEW INFORMATION ACQUIRED overnight
+## SECOND WAVE (post-21:00 "mega test" order) — THE NIGHT'S HEADLINE
+
+Three independent, pre-declared tests converged on ONE lesson:
+**short-horizon winner-chasing is an ANTI-signal net of costs.**
+
+1. **MEGA-SWEEP-1** (84 books, grammar frozen pre-run at m=84, 0
+   errors): the ONLY BH-FDR survivor is NEGATIVE — concentrated
+   rank-weighted 3-month-momentum books lost **−26%/yr vs the plain
+   equal-weight baseline** (p 0.0005, maxDD −92%); the whole mom_63
+   family fills the worst cells. Positive leans (value_bm + winner-
+   exempt, +6–12%/yr) do NOT survive the charge — leads only. Receipt
+   `lane_factory/mega_sweep_1_screen_2026-08-19.json`.
+2. **Factor-momentum registered screens**: chasing LAST MONTH's factor
+   winners = **−2.1/−2.6%/yr net, p≈0.001, survives BH-FDR** — the
+   quantified case for the no-bandit rule. 12-month formation +1.2%/yr
+   ns (consistent with the primary's NOT_ESTABLISHED).
+3. **Streak registered screens**: every cell negative-leaning (up5
+   −0.15%/21d p 0.066 at 78,762 events; up10, down7 ns) — no
+   survivors, same direction as the primary's reversal lean.
+
+Candidate registrations queued (screen survivors ⇒ registrations,
+never promotions): **FACTOR-REVERSAL-AVOID-1** (is avoiding
+recently-hot factors/stocks a usable NEGATIVE rule?) and
+**VALUE-EXEMPT-BOOK-1** (the value+winner-exempt lead, fresh
+formulation + mean-masked §64). UNIVERSE-SURVIVAL-STRESS-1 running at
+handoff time — its receipt lands in `net_tournament/`.
+
+## NEW INFORMATION ACQUIRED overnight (first wave)
 
 1. **FACTOR-MOMENTUM-1 RESOLVED: NOT_ESTABLISHED.** On the JKP set (153
    US long-short factors, 1926–2025, sha-pinned, free-with-citation),
