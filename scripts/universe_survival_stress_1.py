@@ -42,8 +42,9 @@ from backend.services.net_tournament import rank_ic_by_date  # noqa: E402
 OUT = _config.OPTIMUS_LEDGER_DIR / "net_tournament"
 
 
-def build_monthly_dataset() -> pd.DataFrame:
-    panel = load_panel()
+def build_monthly_dataset(years=(2013, 2024), univ_path=None
+                          ) -> pd.DataFrame:
+    panel = load_panel(years=years, univ_path=univ_path)
     px, ret = panel.px, panel.ret
     month_ends = px.groupby(px.index.to_period("M")).tail(1).index
     feats = {}
