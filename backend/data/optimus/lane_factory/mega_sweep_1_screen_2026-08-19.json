@@ -1,0 +1,197 @@
+{
+  "sweep": "MEGA-SWEEP-1 (SIMULATION, SCREEN, BH-FDR 0.10)",
+  "at": "2026-08-19T13:11:08+00:00",
+  "m_declared": 84,
+  "m_run": 84,
+  "n_errors": 0,
+  "errors": [],
+  "bh_fdr_survivors": [
+    "mom_63|rank|trim|50"
+  ],
+  "bh_threshold_p": 0.0011904761904761906,
+  "top_15_by_p": [
+    {
+      "key": "mom_63|rank|trim|50",
+      "ann_diff_vs_baseline": -0.26026,
+      "p": 0.00049,
+      "mde_monthly": 0.01743,
+      "ann_vol": 0.3205114038687516,
+      "max_drawdown": -0.919263535620876,
+      "total_return": -0.8807715868474417
+    },
+    {
+      "key": "mom_63|rank|trim|100",
+      "ann_diff_vs_baseline": -0.13218,
+      "p": 0.02909,
+      "mde_monthly": 0.01414,
+      "ann_vol": 0.2791640480432972,
+      "max_drawdown": -0.790019378344893,
+      "total_return": -0.47257397171730664
+    },
+    {
+      "key": "mom_63|equal|trim|50",
+      "ann_diff_vs_baseline": -0.13523,
+      "p": 0.044,
+      "mde_monthly": 0.01567,
+      "ann_vol": 0.30000481721986627,
+      "max_drawdown": -0.8231251573459057,
+      "total_return": -0.5203613885042799
+    },
+    {
+      "key": "mom_63|rank|exempt|50",
+      "ann_diff_vs_baseline": -0.16247,
+      "p": 0.05679,
+      "mde_monthly": 0.01991,
+      "ann_vol": 0.342341993715572,
+      "max_drawdown": -0.8491095867637776,
+      "total_return": -0.7088725181480151
+    },
+    {
+      "key": "value_bm|inverse_vol|exempt|50",
+      "ann_diff_vs_baseline": 0.06469,
+      "p": 0.20745,
+      "mde_monthly": 0.01198,
+      "ann_vol": 0.3016199000183067,
+      "max_drawdown": -0.6253736985093743,
+      "total_return": 2.531750160664026
+    },
+    {
+      "key": "value_bm|rank|exempt|100",
+      "ann_diff_vs_baseline": 0.10682,
+      "p": 0.22974,
+      "mde_monthly": 0.02077,
+      "ann_vol": 0.41220269425004485,
+      "max_drawdown": -0.6389306126488741,
+      "total_return": 3.1974863818307613
+    },
+    {
+      "key": "value_bm|rank|exempt|50",
+      "ann_diff_vs_baseline": 0.12147,
+      "p": 0.24861,
+      "mde_monthly": 0.02458,
+      "ann_vol": 0.4611176345715687,
+      "max_drawdown": -0.6615530620236105,
+      "total_return": 3.2023381434266343
+    },
+    {
+      "key": "value_bm|equal|exempt|100",
+      "ann_diff_vs_baseline": 0.07244,
+      "p": 0.25171,
+      "mde_monthly": 0.01475,
+      "ann_vol": 0.3398907542538753,
+      "max_drawdown": -0.627114638890693,
+      "total_return": 2.503816604376057
+    },
+    {
+      "key": "mom_63|equal|trim|100",
+      "ann_diff_vs_baseline": -0.061,
+      "p": 0.25301,
+      "mde_monthly": 0.01246,
+      "ann_vol": 0.25936018252254717,
+      "max_drawdown": -0.6894077211364869,
+      "total_return": 0.17586420040206163
+    },
+    {
+      "key": "value_bm|inverse_vol|trim|50",
+      "ann_diff_vs_baseline": 0.05736,
+      "p": 0.26183,
+      "mde_monthly": 0.01194,
+      "ann_vol": 0.3101323697686574,
+      "max_drawdown": -0.646016232065753,
+      "total_return": 2.5403301836622827
+    },
+    {
+      "key": "value_bm|equal|exempt|50",
+      "ann_diff_vs_baseline": 0.135,
+      "p": 0.26495,
+      "mde_monthly": 0.02827,
+      "ann_vol": 0.5035885620651381,
+      "max_drawdown": -0.6481467010534138,
+      "total_return": 3.5190098601891524
+    },
+    {
+      "key": "value_bm|equal|trim|100",
+      "ann_diff_vs_baseline": 0.06841,
+      "p": 0.28529,
+      "mde_monthly": 0.01495,
+      "ann_vol": 0.3502698705560699,
+      "max_drawdown": -0.6401244098601591,
+      "total_return": 2.6201518291764656
+    },
+    {
+      "key": "value_bm|rank|trim|100",
+      "ann_diff_vs_baseline": 0.10062,
+      "p": 0.28627,
+      "mde_monthly": 0.02203,
+      "ann_vol": 0.4333417136183451,
+      "max_drawdown": -0.661779618992225,
+      "total_return": 3.1330757438632517
+    },
+    {
+      "key": "value_bm|equal|trim|50",
+      "ann_diff_vs_baseline": 0.14006,
+      "p": 0.29859,
+      "mde_monthly": 0.03146,
+      "ann_vol": 0.5486292298239713,
+      "max_drawdown": -0.6781648143230044,
+      "total_return": 3.7356811696874246
+    },
+    {
+      "key": "value_bm|rank|trim|50",
+      "ann_diff_vs_baseline": 0.12409,
+      "p": 0.30109,
+      "mde_monthly": 0.02802,
+      "ann_vol": 0.5088219012309864,
+      "max_drawdown": -0.6904181553875399,
+      "total_return": 3.208662637836081
+    }
+  ],
+  "bottom_5_by_ann_diff": [
+    {
+      "key": "mom_63|rank|trim|50",
+      "ann_diff_vs_baseline": -0.26026,
+      "p": 0.00049,
+      "mde_monthly": 0.01743,
+      "ann_vol": 0.3205114038687516,
+      "max_drawdown": -0.919263535620876,
+      "total_return": -0.8807715868474417
+    },
+    {
+      "key": "mom_63|rank|exempt|50",
+      "ann_diff_vs_baseline": -0.16247,
+      "p": 0.05679,
+      "mde_monthly": 0.01991,
+      "ann_vol": 0.342341993715572,
+      "max_drawdown": -0.8491095867637776,
+      "total_return": -0.7088725181480151
+    },
+    {
+      "key": "mom_63|equal|trim|50",
+      "ann_diff_vs_baseline": -0.13523,
+      "p": 0.044,
+      "mde_monthly": 0.01567,
+      "ann_vol": 0.30000481721986627,
+      "max_drawdown": -0.8231251573459057,
+      "total_return": -0.5203613885042799
+    },
+    {
+      "key": "mom_63|rank|trim|100",
+      "ann_diff_vs_baseline": -0.13218,
+      "p": 0.02909,
+      "mde_monthly": 0.01414,
+      "ann_vol": 0.2791640480432972,
+      "max_drawdown": -0.790019378344893,
+      "total_return": -0.47257397171730664
+    },
+    {
+      "key": "mom_12_1|rank|trim|50",
+      "ann_diff_vs_baseline": -0.07014,
+      "p": 0.35371,
+      "mde_monthly": 0.01766,
+      "ann_vol": 0.32841520679869174,
+      "max_drawdown": -0.6841469123993023,
+      "total_return": -0.12997472447931557
+    }
+  ],
+  "note": "screen only; survivors need their own registrations with mean-masked audits \u2014 \u00a737 applies"
+}
