@@ -340,8 +340,10 @@ def materialize(px: pd.DataFrame, *, cost_lookup=None) -> dict:
         "arms": list(ARMS),
         "match_features": list(MATCH_FEATURES),
         "caliper_sd": CALIPER_SD,
-        "cost_basis": "flat 3.0bp one-way unless a lookup was supplied; "
-                      "the per-name TAQ join is the trial's refinement",
+        "cost_basis": ("per-name lookup SUPPLIED (measured TAQ one-way "
+                       "where retired; 3.0bp band midpoint else)"
+                       if cost_lookup is not None else
+                       "flat 3.0bp one-way (no lookup supplied)"),
         "universe_note": "182 large-caps (the in-repo panel). A large-cap "
                          "universe UNDER-samples +75/+100 crossings by "
                          "construction; the CRSP extension is the registered "

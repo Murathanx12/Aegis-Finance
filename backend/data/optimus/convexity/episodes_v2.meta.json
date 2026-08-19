@@ -22,7 +22,7 @@
     "drawdown_252"
   ],
   "caliper_sd": 0.5,
-  "cost_basis": "flat 3.0bp one-way unless a lookup was supplied; the per-name TAQ join is the trial's refinement",
+  "cost_basis": "per-name lookup SUPPLIED (measured TAQ one-way where retired; 3.0bp band midpoint else) \u2014 verified against AAPL tw_exit_full=0.999941 (0.59bp) vs v1's 0.9997 (3bp); the original static meta string mis-stated this",
   "universe_note": "182 large-caps (the in-repo panel). A large-cap universe UNDER-samples +75/+100 crossings by construction; the CRSP extension is the registered trial's substrate, and headline counts here must not be quoted as base rates for the market.",
   "skipped": {
     "outcome_window_truncated": 573,
@@ -41,5 +41,5 @@
   },
   "no_aggregates_note": "per-episode outcomes only. The trim-vs-hold comparison is CONVEXITY-PRESERVATION-1's question and runs under its registration.",
   "outcome_family_amendment": "2026-08-19 (P-grind-2026-08-19e, Murat-approved, pre-verdict): capture metrics added per episode \u2014 mfe, mae, peak_giveback_hold, days_underwater, near_peak_at_end, mfe_captured_<arm>. REENTRY-OPTION-VALUE-1 stays a distinct descendant registration.",
-  "generated_at": "2026-08-19T04:20:06+00:00"
+  "generated_at": "2026-08-19T04:28:00+00:00"
 }
