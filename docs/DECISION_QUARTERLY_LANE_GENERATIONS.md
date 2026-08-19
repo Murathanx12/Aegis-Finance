@@ -55,5 +55,41 @@ comparison is the product.
 Designs go to full pre-registration (hypothesis, rules as YAML, §64
 power note on the 90-day read) before 2026-09-08; Murat signs and flips.
 
+## Considered alternatives (2026-08-19, before adoption)
+
+- **Continuous per-finding launches — rejected:** fleet sprawl is a
+  multiplicity machine (with enough lanes one always shines by luck);
+  the quarterly batch is the natural filter and keeps comparisons
+  legible.
+- **Adaptive capital-shifting toward "what's working" — rejected
+  explicitly:** at ≤90-day horizons return differences between sane
+  strategies are noise (§58/§59); a bandit here chases luck and calls it
+  learning. Sizing evolves through registered generations only.
+- **Shadow books — ADOPTED as a complement:** for each G2 rule, a daily
+  PIT shadow computation of what the rule would have done on the live
+  control twin. Paired same-day differences cancel market noise and
+  answer faster than independent accounts; clearly labeled SIMULATION,
+  read-only on sacred paths, SCREEN discipline. Real lanes remain the
+  receipts; shadows are the speed.
+
+## Read discipline for generation reviews (amended before first use)
+
+A 90-day read compares **risk and behavior first**: realized vol,
+max drawdown, turnover, cost drag, and rule-firing receipts (did the
+winner-exemption trigger; what did it hold that the control trimmed).
+Return differences are REPORTED next to the minimum difference the
+read could even detect at that n — which at 90 days is large, and
+printing it is the guard against crowning noise. Deciding return reads
+happen on the year-plus clock, per lane, per the standing rules.
+
+## Paper accounts → brain (scope note)
+
+Lane telemetry feeds the brain as OPERATIONS evidence (bugs, costs,
+rule-firing behavior) and as the exam bench for generations. It is NOT
+NN training data — 10 lanes × months is noise-sized. The NN trains on
+the historical panels (CRSP/WRDS) and, as they grade, the nightly
+prediction records (~590/night, first grades 2026-08-21) — the forward
+supervised set the nights exist to accumulate.
+
 — recorded 2026-08-19 evening; generation-2 preregs are the next
 day-session deliverable
