@@ -415,7 +415,18 @@ def _case_research_executor():
     return (_go, ExecutorRefused, "a result recorded without a statistic")
 
 
+def _case_expectation_store():
+    from backend.services.expectation_store import (ExpectationStoreRefused,
+                                                    to_expectation_records)
+    # The missing input is the FETCH ITSELF. None means "not fetched"
+    # (budget/keys/error) — mapping it as if it were an empty result would
+    # turn a data outage into "no expectations existed".
+    return (lambda: to_expectation_records(None),
+            ExpectationStoreRefused, "a missing fetch mapped as empty")
+
+
 CASES = {
+    "expectation_store": _case_expectation_store,
     "research_executor": _case_research_executor,
     "security_identity": _case_security_identity,
     "lane_autopsy": _case_lane_autopsy,
