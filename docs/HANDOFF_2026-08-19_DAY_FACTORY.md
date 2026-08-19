@@ -54,6 +54,17 @@ it alone.
    ghost signature, PXD dead) are regression fixtures; `quote_ghost_scan`
    catches the EA class; unknown names pass through stamped ASSUMED_STABLE.
 
+6. **The conventions probe answered its own first question** (3 tiers × 10
+   conventions, 2026-08-14, `effective_conventions_probe_20260814.json`):
+   the effective-inside-quoted discount is a LIQUID-name phenomenon — NVDA
+   ratio 0.50–0.72 under every convention, DXCM swings 0.30→0.74 on the
+   midpoint-print filter alone (v1's unfiltered panel ratio is confirmed
+   uninterpretable for mid-tier names), and PLUG sits at ~1.00 under ALL
+   conventions: illiquid names pay full quoted, so no effective discount
+   exists to apply to the band-retired illiquid tier. TRF quote-lag scales
+   with illiquidity (>500ms bucket: 3% of NVDA prints, 55% of PLUG).
+   SENSITIVITY, not a verdict — but the ruling now has tier structure.
+
 ## CLAIMS KILLED
 - "The conviction lane's divergence is explained by the late-entered
   decision log" — killed by measurement (corr +0.19 clean days).
