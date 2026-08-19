@@ -172,3 +172,8 @@ Final gate after everything: **5,090 passed / 0 failures.**
   vol IC now 0.787; +expectations adds ~nothing; NO rung helps return
   ranking in this era. The information ladder pays for risk, exactly
   where the program already lives (S59).
+- **OPTIONS-RUNG-CONFIRM-1: CONFIRMED out-of-era** (2001-2012: dIC
+  +0.028 p~0, vol IC 0.791) - the options-augmented LGBM risk head is
+  confirmed in BOTH eras; 4th out-of-sample confirmation, 6th
+  referee-surviving finding. Manager action-state library built
+  (249k mgr-quarters, 11,313 managers). 14 JKP country files local.

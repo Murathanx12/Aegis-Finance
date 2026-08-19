@@ -41,3 +41,18 @@ promote screen cells; quote as alpha (IV is a market vol forecast —
 the caveat rides every sentence). §61 cap.
 
 — frozen 2026-08-20 ~01:05 HKT, pre-download of the confirmation slice
+
+---
+
+## RESULTS (registered run 2026-08-20 ~01:45, appended post-run)
+
+Receipt `net_tournament/options_rung_trial_2026-08-20.json`; S64 audit
+first. Coverage 0.835; 142 test dates 2001-2012.
+
+**Verdict: OPTIONS_RUNG_CONFIRMED.** dIC +0.0281 (MDE 0.0039, p~0);
+vol IC 0.762 -> 0.791. Both independent eras now agree: the
+options-augmented LGBM risk head is the program's best-confirmed
+machinery (modern: 0.787, early: 0.791). The IV-is-a-forecast caveat
+rides every sentence; the licensed consequence is a better RISK
+engine for G2's risk-sized lane (transport prereg required), never an
+alpha claim.

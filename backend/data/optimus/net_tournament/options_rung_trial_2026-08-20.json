@@ -1,0 +1,33 @@
+{
+  "trial": "OPTIONS-RUNG-CONFIRM-1",
+  "mode": "REGISTERED",
+  "signed_by": "Murat Abdullaev \u2014 recorded overnight order 2026-08-20",
+  "at": "2026-08-19T20:44:27+00:00",
+  "coverage": {
+    "opt_iv_atm": 0.835,
+    "opt_skew": 0.835,
+    "opt_pc50": 0.835
+  },
+  "mean_ics": {
+    "numeric": 0.7624,
+    "plus_options": 0.7905
+  },
+  "primary": {
+    "d_ic": 0.02811,
+    "p": 0.0,
+    "contrast": {
+      "mean": 0.028110575645735294,
+      "ci_lo": 0.02560813301851878,
+      "ci_hi": 0.030201448735826836,
+      "se": 0.0013861536916428467,
+      "mde_80pct_power": 0.0038834276932144213,
+      "n_rows": 142,
+      "n_dates": 142,
+      "n_securities": 1,
+      "n_effective": 142.0,
+      "block_days": 1,
+      "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+    },
+    "verdict": "OPTIONS_RUNG_CONFIRMED"
+  }
+}
