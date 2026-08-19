@@ -1,0 +1,53 @@
+{
+  "script": "conviction_decision_reconstruction",
+  "generated_on": "2026-08-19",
+  "decision_log": {
+    "n": 12,
+    "all_entered": "2026-07-11T05:52..05:57",
+    "late_entry_flags": 4
+  },
+  "book": {
+    "AARD": 1000.0,
+    "ABSI": 600.0,
+    "AMSC": 50.0,
+    "BHVN": 300.0,
+    "DKNG": 150.0,
+    "HUBS": 10.0,
+    "KYTX": 250.0,
+    "NTLA": 250.0,
+    "PRCH": 200.0,
+    "QUBT": 300.0,
+    "SLDP": 600.0,
+    "SOC": 700.0
+  },
+  "excluded_no_prices": [],
+  "comparison_basis": "RETURNS with fitted scale \u2014 cash declared UNRECOVERABLE, so levels are not comparable",
+  "verdict": {
+    "post_rebook_daily_corr": -0.0292,
+    "post_rebook_beta_nav_on_book": -0.028,
+    "tracking_error_ann": 0.4451,
+    "n_shared_days_post_0715": 22,
+    "explained": false
+  },
+  "nav_jumps_without_book_moves": [
+    {
+      "date": "2026-07-14",
+      "nav_move": -0.063,
+      "book_move": 0.0095,
+      "reading": "NAV moved without the book \u2014 accounting event, not the market"
+    },
+    {
+      "date": "2026-07-17",
+      "nav_move": -0.053,
+      "book_move": -0.0003,
+      "reading": "NAV moved without the book \u2014 accounting event, not the market"
+    },
+    {
+      "date": "2026-08-10",
+      "nav_move": 0.0488,
+      "book_move": -0.0057,
+      "reading": "NAV moved without the book \u2014 accounting event, not the market"
+    }
+  ],
+  "scope": "mechanism attribution for the conviction lane's NAV path ONLY; no economics, no skill claim, mirror lane still needs its rebalance_events (attended or the branch's read-only endpoint after merge)"
+}

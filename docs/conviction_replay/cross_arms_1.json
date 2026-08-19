@@ -1,6 +1,6 @@
 {
   "trial": "LANE-AUTOPSY-CROSS-ARMS-1",
-  "run_at": "2026-08-18T13:58:27+00:00",
+  "run_at": "2026-08-19T02:03:09+00:00",
   "prices": "backend/data/conviction_prices.csv (hermetic)",
   "snapshot": "track_record_snapshot_2026-08-18.json",
   "reconcile_tolerance": 0.02,

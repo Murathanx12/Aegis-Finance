@@ -617,6 +617,61 @@ async def get_lane_tearsheet(lane_id: str):
     return HTMLResponse(content=html)
 
 
+@router.get("/lane/{lane_id}/positions")
+async def get_lane_positions(lane_id: str):
+    """READ-ONLY: a lane's paper_positions rows + rebalance_events with
+    post_weights, verbatim from the volume DB.
+
+    Built 2026-08-19 for the 14-point-gap reconciliation: the conviction
+    lane's NAV tracks neither the YAML seed (cross-arms, level jumps) nor
+    the prod decision log (daily-return corr +0.19 on clean days vs +0.60
+    with balanced-ew-control) — only the positions table says what the lane
+    is actually marking. Until this deploys, that read stays attended; the
+    endpoint makes it one GET afterward. SELECTs only; the write path is
+    untouched (CANON §5 is a write-path concern, not a read one — same
+    argument as /track-record's book-lane surfacing).
+    """
+    if lane_id not in _record_lanes():
+        raise HTTPException(status_code=404, detail=f"Unknown lane: {lane_id}")
+
+    from backend.db import get_connection
+
+    def _read() -> dict:
+        conn = get_connection()
+        try:
+            pos = conn.execute(
+                "SELECT ticker, shares, cost_basis FROM paper_positions "
+                "WHERE portfolio_id = ? ORDER BY ticker", (lane_id,),
+            ).fetchall()
+            ev = conn.execute(
+                "SELECT triggered_at, trigger_reason, post_weights, "
+                "explanation FROM rebalance_events WHERE portfolio_id = ? "
+                "ORDER BY id ASC", (lane_id,),
+            ).fetchall()
+            meta = conn.execute(
+                "SELECT inception_date, inception_value FROM "
+                "paper_portfolios WHERE id = ?", (lane_id,),
+            ).fetchone()
+        finally:
+            conn.close()
+        return {
+            "lane_id": lane_id,
+            "positions": [dict(r) for r in pos],
+            "rebalance_events": [dict(r) for r in ev],
+            "inception_date": meta["inception_date"] if meta else None,
+            "inception_value": meta["inception_value"] if meta else None,
+            "read_only": True,
+            "basis": "verbatim volume-DB rows; no computation, no marking",
+        }
+
+    try:
+        return await asyncio.to_thread(_read)
+    except Exception as e:
+        logger.error("positions read failed for %s: %s", lane_id, e,
+                     exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/reference/{lane_id}/explain", response_model=ExplainResponse)
 async def get_reference_explain(lane_id: str):
     """Most recent rebalance explanation. Shape consistent whether events exist or not."""
