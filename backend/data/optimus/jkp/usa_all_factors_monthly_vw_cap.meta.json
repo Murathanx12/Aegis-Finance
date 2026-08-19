@@ -1,0 +1,15 @@
+{
+  "dataset": "jkp_usa_factor_returns_monthly",
+  "source_url": "https://jkpfactors-data.s3.amazonaws.com/public/%5Busa%5D_%5Ball_factors%5D_%5Bmonthly%5D_%5Bvw_cap%5D.zip",
+  "pulled_at": "2026-08-19T12:55:00+00:00",
+  "sha256": "b47dcdb54d208e45",
+  "rows": 146457,
+  "factors": 153,
+  "window": [
+    "1926-01-31",
+    "2025-12-31"
+  ],
+  "license": "free with citation - Jensen, Kelly, Pedersen (2023), jkpfactors.com",
+  "convention": "long-short capped-value-weighted, direction column already applied to ret per JKP docs",
+  "pit_note": "modern-methodology BACKFILL - legitimate for FACTOR-MOMENTUM-1 (fixed strategy set reallocation question), NOT for factor-discovery claims"
+}

@@ -1,9 +1,25 @@
-# PREREG — FACTOR-MOMENTUM-1 (DRAFT — not signed, no data evaluated)
+# PREREG — FACTOR-MOMENTUM-1
 
-**Status: DESIGN registered 2026-08-19 evening. May not evaluate any
-outcome until (a) the §64 power audit runs mean-masked on the assembled
-dataset, (b) the SIGNED-BY line names a human. Runner must reuse
-`net_tournament.assert_signed` against this path.**
+SIGNED-BY: Murat Abdullaev — recorded overnight handoff approval
+2026-08-19 ("I want you to run these tests ... I handoff to you"),
+given AFTER the design was registered and BEFORE any outcome existed;
+recorded by the working session.
+
+**Status: SIGNED. §64 audit complete (below), run follows. Dataset:
+`jkp/usa_all_factors_monthly_vw_cap.csv` (sha b47dcdb54d208e45, 153
+factors, 1926–2025, provenance in the meta).**
+
+**§64 power (mean-masked, receipt `fm1_power_audit_2026-08-19.json`,
+run before any mean was seen):** 877 usable months (310 thin months
+dropped — the pre-fundamentals era), 73 effective 12-month blocks,
+monthly MDE 0.00143 (≈1.71%/yr). The 0.5%/yr economic bar is BELOW the
+MDE, therefore declared prospectively: **STATIC_NONINFERIOR is
+NOT_ANSWERABLE_AT_N** — reachable verdicts are MOMENTUM_WINS (a net
+effect ≥ its run-time MDE; the literature's gross claim of 2–4%/yr
+would clear it if real and cost-surviving) and NOT_ESTABLISHED. The
+bar is not shrunk. Rehearsal gate passed pre-run: persistent ⇒
+MOMENTUM_WINS, null ⇒ STATIC_NONINFERIOR, reverting ⇒ never a win
+(receipt in the run log).**
 
 Origin: Murat's question ("why can't we make capital-shifting toward
 winners work?"). The LIVE-fleet version stays rejected

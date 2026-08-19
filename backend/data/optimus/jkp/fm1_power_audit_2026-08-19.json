@@ -1,0 +1,11 @@
+{
+  "audit": "FACTOR-MOMENTUM-PRIMARY-POWER-1 (mean-masked)",
+  "n_months": 877,
+  "n_thin_months_dropped": 310,
+  "block_days_derived": 12,
+  "n_effective_blocks": 73.08333333333333,
+  "bootstrap_se_monthly": 0.00051,
+  "mde_80pct_power_monthly": 0.001429,
+  "economic_bar_monthly": 0.0004166666666666667,
+  "answerable_at_bar": false
+}
