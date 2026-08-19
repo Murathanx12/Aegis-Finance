@@ -1,0 +1,26 @@
+{
+  "dataset": "crsp_dsf_2020",
+  "pulled_at": "2026-08-19T08:00:36+00:00",
+  "rows": 939339,
+  "cols": [
+    "permno",
+    "date",
+    "prc",
+    "ret",
+    "retx",
+    "vol",
+    "shrout",
+    "askhi",
+    "bidlo",
+    "openprc",
+    "cfacpr",
+    "cfacshr"
+  ],
+  "window": [
+    "2013-01-01",
+    "2024-12-31"
+  ],
+  "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
+  "pit_knowledge_column": "date (daily bar, public at close); |prc| convention: negative = bid/ask midpoint on no-trade days; vol in SHARES on dsf (not hundreds \u2014 that is msf)",
+  "sql_note": "SELECT permno, date, prc, ret, retx, vol, shrout, askhi, bidlo, openprc, cfacpr, cfacshr FROM crsp.dsf WHERE permno = ANY(%(p)s) AND date BETWEEN %(s)s AND %(e)s"
+}
