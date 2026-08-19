@@ -1,0 +1,43 @@
+{
+  "decision_mde_80": 0.07023402719756917,
+  "statistical_mde_80": 0.052882091066405026,
+  "ratio_decision_over_statistical": 1.328125,
+  "target_power": 0.8,
+  "n_sims_per_point": 250,
+  "n_arms_holm": 4,
+  "economic_bar": 0.01,
+  "trace": [
+    {
+      "true_delta": 0.158646,
+      "p_complex_wins": 1.0
+    },
+    {
+      "true_delta": 0.105764,
+      "p_complex_wins": 1.0
+    },
+    {
+      "true_delta": 0.079323,
+      "p_complex_wins": 0.924
+    },
+    {
+      "true_delta": 0.066103,
+      "p_complex_wins": 0.748
+    },
+    {
+      "true_delta": 0.072713,
+      "p_complex_wins": 0.852
+    },
+    {
+      "true_delta": 0.069408,
+      "p_complex_wins": 0.792
+    },
+    {
+      "true_delta": 0.07106,
+      "p_complex_wins": 0.824
+    },
+    {
+      "true_delta": 0.070234,
+      "p_complex_wins": 0.8
+    }
+  ]
+}

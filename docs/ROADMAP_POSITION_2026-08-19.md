@@ -9,8 +9,12 @@
 > historical evidence, not edge. (2) **G1 status refined**: false-kill
 > rate measured 0.000, null FP 0.4%, but the z-based MDE label is
 > miscalibrated for the full Holm judge (~50% not 80% win rate at nominal
-> MDE) — `DECISION_MDE_80` solver added; G1 flips when both rates are
-> declared AND the power label is honest. (3) **WRDS entitlement map**
+> MDE) — `DECISION_MDE_80` solved by simulation through the complete
+> judge: **0.0702 vs STATISTICAL_MDE_80 0.0529 at the tournament's n
+> (ratio 1.33×)** — receipt
+> `verdict_battery_decision_mde_2026-08-19.json`. G1 flips when both
+> error rates are declared AND the power label quotes the decision
+> number, not the z number. (3) **WRDS entitlement map**
 > (500 usable schemas) + training substrate pulls: the "information over
 > architecture" path the NET tournament prescribed is now materially
 > unblocked (finratio, JKP chars, IBES, fundq, options surface, iid,

@@ -35,12 +35,17 @@
    resumable, PIT column named in every meta; universe = 4,796
    ever-eligible PERMNOs, 2013–2024): links ✓, finratio/ibes/fundq/
    bondret/global_factor/dsf in flight as of 15:52 HKT.
-6. **DECISION_MDE_80 solver built** (`verdict_battery.decision_mde_80`):
-   bisects the true effect giving 80% COMPLEX_WINS through the FULL
-   four-arm Holm + economic-bar judge. Receipt
-   `verdict_battery_decision_mde_2026-08-19.json` when the background run
-   lands. The z-based number is renamed conceptually: STATISTICAL_MDE_80.
-   Every future prereg quotes BOTH.
+6. **DECISION_MDE_80 SOLVED = 0.0702** at the tournament's n (126 monthly
+   dates, measured dispersion) vs STATISTICAL_MDE_80 = 0.0529 — the full
+   four-arm Holm + economic-bar judge needs a **1.33× larger true effect**
+   than the z-label claims for 80% power. Receipt
+   `verdict_battery_decision_mde_2026-08-19.json`. Every future prereg
+   quotes BOTH numbers; PROSPECTIVE power/answerability declarations use
+   the DECISION number. Scope note: the haircut is about planning, not
+   about achieved verdicts — today's convexity STOP_DESTROYS cells passed
+   the actual Holm test (FWER control intact); what the ratio changes is
+   how large an effect a future trial must expect before declaring a
+   cell answerable.
 
 ## Standing orders adjudicated today
 
