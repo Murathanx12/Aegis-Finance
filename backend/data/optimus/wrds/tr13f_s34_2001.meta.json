@@ -1,0 +1,22 @@
+{
+  "dataset": "tr13f_s34_2001",
+  "pulled_at": "2026-08-19T20:34:54+00:00",
+  "rows": 1926796,
+  "cols": [
+    "fdate",
+    "rdate",
+    "mgrno",
+    "typecode",
+    "cusip",
+    "shares",
+    "change"
+  ],
+  "window": [
+    "2013-01-01",
+    "2024-12-31"
+  ],
+  "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
+  "pit_knowledge_column": "fdate (vintage); early-era manager-behavior slice",
+  "sql_note": "SELECT fdate, rdate, mgrno, typecode, cusip, shares, change FROM tr_13f.s34 WHERE cusip = ANY(%(c)s) AND fdate BETWEEN %(s)s AND %(e)s",
+  "n_cusips": 24114
+}

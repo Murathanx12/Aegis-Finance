@@ -1,0 +1,28 @@
+{
+  "dataset": "ibes_consensus_monthly_early",
+  "pulled_at": "2026-08-19T20:28:34+00:00",
+  "rows": 3682004,
+  "cols": [
+    "ticker",
+    "permno",
+    "statpers",
+    "measure",
+    "fpi",
+    "numest",
+    "numup",
+    "numdown",
+    "medest",
+    "meanest",
+    "stdev",
+    "fpedats",
+    "actual",
+    "anndats_act"
+  ],
+  "window": [
+    "2013-01-01",
+    "2024-12-31"
+  ],
+  "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
+  "pit_knowledge_column": "statpers; anndats_act gates actuals",
+  "sql_note": "SELECT s.ticker, l.permno, s.statpers, s.measure, s.fpi, s.numest, s.numup, s.numdown, s.medest, s.meanest, s.stdev, s.fpedats, s.actual, s.anndats_act FROM ibes.statsum_epsus s JOIN wrdsapps_link_crsp_ibes.ibcrsphist l ON s.ticker = l.ticker AND s.statpers BETWEEN l.sdate AND COALESCE(l.edate, %(e)s) WHERE l.permno = ANY(%(p)s) AND l.score <= 2 AND s.measure = 'EPS' AND s.fpi IN ('0','1','2','6') AND s.statpers BETWEEN %(s)s AND %(e)s"
+}

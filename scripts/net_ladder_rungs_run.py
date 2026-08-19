@@ -40,13 +40,13 @@ RUNGS = {"numeric": list(FEATURES),
                                + list(EXP_FEATS))}
 
 
-def options_monthly() -> pd.DataFrame:
+def options_monthly(years=(2013, 2024)) -> pd.DataFrame:
     """permno-month options features per the frozen definitions."""
     link = pd.read_parquet(WRDS / "link_optionm_crsp.parquet")
     link["sdate"] = pd.to_datetime(link["sdate"])
     link["edate"] = pd.to_datetime(link["edate"])
     parts = []
-    for yr in range(2013, 2025):
+    for yr in range(years[0], years[1] + 1):
         s = pd.read_parquet(WRDS / f"optionm_surface30d_{yr}.parquet")
         s["date"] = pd.to_datetime(s["date"])
         s["adelta"] = s["delta"].abs()
