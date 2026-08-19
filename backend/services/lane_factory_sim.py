@@ -26,6 +26,7 @@ Known v1 approximations, declared:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -59,7 +60,10 @@ class Panel:
     last_day: pd.Series          # permno -> last trading date
 
 
-def load_panel(years: tuple[int, int] = (2013, 2024)) -> Panel:
+def load_panel(years: tuple[int, int] = (2013, 2024),
+               univ_path=None) -> Panel:
+    """`univ_path` overrides the PIT universe file — the early-era
+    confirmation slice passes `crsp_pit_monthly_early.parquet`."""
     parts = []
     for yr in range(years[0], years[1] + 1):
         p = WRDS_DIR / f"crsp_dsf_{yr}.parquet"
@@ -76,9 +80,10 @@ def load_panel(years: tuple[int, int] = (2013, 2024)) -> Panel:
     ret = df.pivot_table(index="date", columns="permno", values="ret",
                          aggfunc="last").sort_index()
 
-    if not PIT_PATH.exists():
-        raise SimRefused(f"{PIT_PATH} missing")
-    u = pd.read_parquet(PIT_PATH)
+    upath = Path(univ_path) if univ_path else PIT_PATH
+    if not upath.exists():
+        raise SimRefused(f"{upath} missing")
+    u = pd.read_parquet(upath)
     u["date"] = pd.to_datetime(u["date"])
     u["permno"] = u["permno"].astype(int)
     elig = {per: set(g.loc[g["eligible"], "permno"])
