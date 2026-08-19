@@ -1,0 +1,85 @@
+{
+  "screens": "registered SCREEN grids, 2026-08-19 night",
+  "at": "2026-08-19T13:03:56+00:00",
+  "factor_momentum": {
+    "cells": [
+      {
+        "cell": "form1_tercile",
+        "ann_diff": -0.02069,
+        "p": 0.00091,
+        "n_months": 888
+      },
+      {
+        "cell": "form1_quintile",
+        "ann_diff": -0.02576,
+        "p": 0.00097,
+        "n_months": 888
+      },
+      {
+        "cell": "form3_tercile",
+        "ann_diff": -0.00892,
+        "p": 0.11693,
+        "n_months": 886
+      },
+      {
+        "cell": "form3_quintile",
+        "ann_diff": -0.0109,
+        "p": 0.13748,
+        "n_months": 886
+      },
+      {
+        "cell": "form6_tercile",
+        "ann_diff": 0.00496,
+        "p": 0.48395,
+        "n_months": 883
+      },
+      {
+        "cell": "form6_quintile",
+        "ann_diff": 0.00514,
+        "p": 0.56732,
+        "n_months": 883
+      },
+      {
+        "cell": "form12_quintile",
+        "ann_diff": 0.01234,
+        "p": 0.11507,
+        "n_months": 877
+      }
+    ],
+    "bh_fdr_survivors": [
+      "form1_tercile",
+      "form1_quintile"
+    ],
+    "not_run": [
+      "theme-level (no theme mapping in downloaded series)"
+    ]
+  },
+  "streak": {
+    "cells": [
+      {
+        "cell": "up5",
+        "n_events": 78762,
+        "diff_21d": -0.00152,
+        "p": 0.06616
+      },
+      {
+        "cell": "up10",
+        "n_events": 2393,
+        "diff_21d": -0.00246,
+        "p": 0.44267
+      },
+      {
+        "cell": "down7",
+        "n_events": 13190,
+        "diff_21d": -0.00178,
+        "p": 0.44285,
+        "note": "sign convention: event-minus-control on the REAL forward return"
+      }
+    ],
+    "bh_fdr_survivors": [],
+    "not_run": [
+      "volume-confirmed (volume not loaded)"
+    ]
+  },
+  "discipline": "SCREEN \u00a763; survivors are leads, never verdicts"
+}
