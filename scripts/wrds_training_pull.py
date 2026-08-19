@@ -347,7 +347,86 @@ DATASETS = {"links": pull_links, "finratio": pull_finratio,
             "dsf": pull_dsf, "optionm": pull_optionm_surface,
             "iid": pull_iid, "s13f": pull_13f,
             "dsf_early": pull_dsf_early,
-            "finratio_early": pull_finratio_early}
+            "finratio_early": pull_finratio_early,
+            "optionm_early": pull_optionm_early,
+            "ibes_early": pull_ibes_early,
+            "s13f_early": pull_13f_early}
+
+
+def pull_optionm_early(conn, permnos):
+    """1996–2012 surfaces for the early universe — the OPTIONS-RUNG
+    confirmation slice (prereg frozen before this function first ran)."""
+    early = pd.read_parquet(_config.OPTIMUS_LEDGER_DIR / "crsp_pit" /
+                            "crsp_pit_monthly_early.parquet",
+                            columns=["permno"])
+    pn = sorted(int(p) for p in early["permno"].unique())
+    link = pd.read_parquet(OUT / "link_optionm_crsp.parquet")
+    secids = sorted(int(s) for s in
+                    link[link["permno"].isin(pn)]["secid"].unique())
+    for yr in range(1996, 2013):
+        name = f"optionm_surface30d_{yr}"
+        if _done(name):
+            continue
+        sql = (f"SELECT secid, date, days, delta, impl_volatility, "
+               f"cp_flag, dispersion FROM optionm.vsurfd{yr} "
+               "WHERE secid = ANY(%(sec)s) AND days = 30 "
+               "AND abs(delta) IN (25, 50)")
+        df = pd.read_sql(sql, conn, params={"sec": secids})
+        _write(name, df, sql_note=sql,
+               pit="date (EOD surface); early-era confirmation slice",
+               extra={"n_secids": len(secids)})
+
+
+def pull_ibes_early(conn, permnos):
+    if _done("ibes_consensus_monthly_early"):
+        return
+    early = pd.read_parquet(_config.OPTIMUS_LEDGER_DIR / "crsp_pit" /
+                            "crsp_pit_monthly_early.parquet",
+                            columns=["permno"])
+    pn = sorted(int(p) for p in early["permno"].unique())
+    sql = ("SELECT s.ticker, l.permno, s.statpers, s.measure, s.fpi, "
+           "s.numest, s.numup, s.numdown, s.medest, s.meanest, s.stdev, "
+           "s.fpedats, s.actual, s.anndats_act "
+           "FROM ibes.statsum_epsus s "
+           "JOIN wrdsapps_link_crsp_ibes.ibcrsphist l "
+           "ON s.ticker = l.ticker "
+           "AND s.statpers BETWEEN l.sdate AND COALESCE(l.edate, %(e)s) "
+           "WHERE l.permno = ANY(%(p)s) AND l.score <= 2 "
+           "AND s.measure = 'EPS' AND s.fpi IN ('0','1','2','6') "
+           "AND s.statpers BETWEEN %(s)s AND %(e)s")
+    df = pd.read_sql(sql, conn, params={"p": pn, "s": "1990-01-01",
+                                        "e": "2012-12-31"})
+    _write("ibes_consensus_monthly_early", df, sql_note=sql,
+           pit="statpers; anndats_act gates actuals")
+
+
+def pull_13f_early(conn, permnos):
+    early = pd.read_parquet(_config.OPTIMUS_LEDGER_DIR / "crsp_pit" /
+                            "crsp_pit_monthly_early.parquet",
+                            columns=["permno"])
+    pn = sorted(int(p) for p in early["permno"].unique())
+    cus = pd.read_sql(
+        "SELECT DISTINCT permno, ncusip FROM crsp.stocknames "
+        "WHERE permno = ANY(%(p)s) AND ncusip IS NOT NULL",
+        conn, params={"p": pn})
+    cusips = sorted(cus["ncusip"].unique().tolist())
+    if not (OUT / "link_cusip_permno_early.parquet").exists():
+        _write("link_cusip_permno_early", cus,
+               sql_note="crsp.stocknames early ncusip map",
+               pit="dated names")
+    for yr in range(1996, 2013):
+        name = f"tr13f_s34_{yr}"
+        if _done(name):
+            continue
+        sql = ("SELECT fdate, rdate, mgrno, typecode, cusip, shares, "
+               "change FROM tr_13f.s34 "
+               "WHERE cusip = ANY(%(c)s) AND fdate BETWEEN %(s)s AND %(e)s")
+        df = pd.read_sql(sql, conn, params={"c": cusips,
+                                            "s": f"{yr}-01-01",
+                                            "e": f"{yr}-12-31"})
+        _write(name, df, sql_note=sql,
+               pit="fdate (vintage); early-era manager-behavior slice",
+               extra={"n_cusips": len(cusips)})
 
 
 def main(argv: list[str] | None = None) -> int:
