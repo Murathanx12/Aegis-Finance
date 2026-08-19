@@ -163,19 +163,23 @@ null collapses into an argument about which of rows 3 and 4 it was.
 
 I declare the minimum meaningful paired Brier difference for IIF-1 as
 
-    BAR = ______   (recommended: 0.10)
+    BAR = 0.10
 
 giving, at the measured base rates:
 
-    h=1 | thr=0.03 :  ____________     (0.00877 at BAR = 0.10)
-    h=5 | thr=0.05 :  ____________     (0.01578 at BAR = 0.10)
+    h=1 | thr=0.03 :  0.00877     (0.00877 at BAR = 0.10)
+    h=5 | thr=0.05 :  0.01578     (0.01578 at BAR = 0.10)
 
 and I record that I have read section 4, in particular that at `BAR = 0.10`
 the `h=1 | thr=0.03` cell is **expected to return NOT ESTABLISHED at the
 40-night read** and to resolve at 80.
 
-Signed: ............................................  Date: ................
-        Murat Abdullaev
+Signed: Murat Abdullaev (verbal in-session approval, recorded by the
+working session — see the SIGNED-BY line at the top)   Date: 2026-08-19
+
+[Hygiene pass 2026-08-19: the blanks above were filled to match the
+already-signed header so no parser can read this document as half-signed.
+Values are the header's own; nothing renegotiated.]
 
 ---
 

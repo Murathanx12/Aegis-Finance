@@ -78,6 +78,52 @@ def simulate_verdicts(*, true_delta: float, n_dates: int = 126,
     return out
 
 
+def decision_mde_80(*, target_power: float = 0.80, n_sims: int = 300,
+                    n_dates: int = 126,
+                    per_date_sd: float = MEASURED_PER_DATE_SD,
+                    economic_bar: float = 0.01, n_arms: int = 4,
+                    tol: float = 0.02, seed: int = 20260819,
+                    n_boot: int = 400) -> dict:
+    """The effect size at which the FULL judge reaches `target_power`.
+
+    The z-based `mde_80pct_power` prices only the bootstrap interval; the
+    complete decision procedure also charges Holm across the sibling arms
+    and the economic-bar condition, so its true 80%-power point sits
+    HIGHER (VERDICT-BATTERY-1 measured ~50% win rate at the nominal MDE).
+    This solver bisects true_delta through `simulate_verdicts` until
+    P(COMPLEX_WINS) crosses `target_power`. Keep both numbers, named:
+    STATISTICAL_MDE_80 (z-based) vs DECISION_MDE_80 (this).
+    """
+    stat_mde = float(2.8 * per_date_sd / np.sqrt(n_dates))
+    lo, hi = stat_mde, 3.0 * stat_mde   # battery: 50% at 1x, ~100% at 2x
+    trace = []
+
+    def power(delta: float) -> float:
+        r = simulate_verdicts(true_delta=delta, n_sims=n_sims,
+                              n_dates=n_dates, per_date_sd=per_date_sd,
+                              economic_bar=economic_bar, n_arms=n_arms,
+                              seed=seed, n_boot=n_boot)
+        trace.append({"true_delta": round(delta, 6),
+                      "p_complex_wins": r["COMPLEX_WINS"]})
+        return r["COMPLEX_WINS"]
+
+    if power(hi) < target_power:
+        return {"decision_mde_80": None, "statistical_mde_80": stat_mde,
+                "note": f"not reached below {hi:.4f}", "trace": trace}
+    while hi - lo > tol * stat_mde:
+        mid = 0.5 * (lo + hi)
+        if power(mid) >= target_power:
+            hi = mid
+        else:
+            lo = mid
+    return {"decision_mde_80": float(hi),
+            "statistical_mde_80": stat_mde,
+            "ratio_decision_over_statistical": float(hi / stat_mde),
+            "target_power": target_power, "n_sims_per_point": n_sims,
+            "n_arms_holm": n_arms, "economic_bar": economic_bar,
+            "trace": trace}
+
+
 def run_battery(n_sims: int = 1000, *, per_date_sd: float =
                 MEASURED_PER_DATE_SD, n_dates: int = 126) -> dict:
     """The declared grid, with each cell's PASS criterion beside it."""

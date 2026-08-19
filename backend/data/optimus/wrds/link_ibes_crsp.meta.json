@@ -1,0 +1,20 @@
+{
+  "dataset": "link_ibes_crsp",
+  "pulled_at": "2026-08-19T07:14:22+00:00",
+  "rows": 37662,
+  "cols": [
+    "ticker",
+    "permno",
+    "ncusip",
+    "sdate",
+    "edate",
+    "score"
+  ],
+  "window": [
+    "2013-01-01",
+    "2024-12-31"
+  ],
+  "universe": "crsp_pit_monthly_v1 ever-eligible PERMNOs",
+  "pit_knowledge_column": "sdate..edate validity",
+  "sql_note": "SELECT ticker, permno, ncusip, sdate, edate, score FROM wrdsapps_link_crsp_ibes.ibcrsphist"
+}

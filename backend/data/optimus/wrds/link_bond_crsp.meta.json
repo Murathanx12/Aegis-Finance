@@ -1,0 +1,23 @@
+{
+  "dataset": "link_bond_crsp",
+  "pulled_at": "2026-08-19T07:15:14+00:00",
+  "rows": 358312,
+  "cols": [
+    "cusip",
+    "permno",
+    "permco",
+    "trace_startdt",
+    "trace_enddt",
+    "crsp_startdt",
+    "crsp_enddt",
+    "link_startdt",
+    "link_enddt"
+  ],
+  "window": [
+    "2013-01-01",
+    "2024-12-31"
+  ],
+  "universe": "crsp_pit_monthly_v1 ever-eligible PERMNOs",
+  "pit_knowledge_column": "link validity range",
+  "sql_note": "SELECT * FROM wrdsapps_link_crsp_bond.bondcrsp_link"
+}

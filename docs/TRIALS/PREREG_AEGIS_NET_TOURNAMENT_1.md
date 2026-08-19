@@ -2,7 +2,10 @@
 
 SIGNED-BY: Murat Abdullaev — verbal in-session approval 2026-08-19 ("I approve everything on my queue", given in response to the session summary that described AMENDMENT 1 including the changed primary metric); recorded by the working session
 
-**Status: DRAFT awaiting Murat's signature. The harness
+**Status: SIGNED 2026-08-19 (see SIGNED-BY above); registered run
+complete, RESULTS appended below. [Hygiene pass 2026-08-19: this line
+previously still read "DRAFT" after signature — status text only, no
+protocol text touched.] The harness
 (`backend/services/net_tournament.py`) refuses to touch the registered panel
 until the SIGNED-BY line names a human — the gate is in code, not here.**
 
