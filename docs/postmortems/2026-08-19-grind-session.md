@@ -254,3 +254,17 @@ Suite 5,007→5,113 expected green (new: 15 tournament-repair, 15 identity,
 Commits this session: f33b5b2 (NET repair) · identity layer · executor ·
 gap-narrowing + endpoint · proposals · operating model + handoff.
 Ruff clean on every new file. Prod untouched; nothing signed; nothing armed.
+
+### Day-factory late additions (after the handoff was first written)
+- **Wide conventions probe (9 names × 3 tiers × 10 conventions, 08-14):**
+  the tier finding survives and SHARPENS — composed HJ conventions lift
+  mid-tier ratios 0.25-0.33 → 0.67-0.75 (midpoint artifact) and put
+  illiquid + AAPL at ~1.0. Direction: strict conventions RAISE the ratio
+  toward 1 ⇒ v1 UNDERSTATED effective costs. FSLR (0.56 composed) is the
+  noted outlier. Sensitivity, no verdict.
+- **lane_positions_reconcile.py** — the one-command attended reader:
+  --from-prod (post-merge) or --from-file (Murat's export); schema verify,
+  reprice-vs-NAV with declared 2% tolerance, daily-return correlation vs
+  the proxy numbers. The attended act is now producing one JSON file.
+- **MEMORY.md index compacted 20.4KB → 8.8KB**; full canon moved verbatim
+  to memory/project_canon_standing_rules.md (linked from the index).
