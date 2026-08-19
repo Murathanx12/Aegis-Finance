@@ -1,7 +1,7 @@
 {
-  "dataset": "crsp_dsf_2014",
-  "pulled_at": "2026-08-19T07:33:48+00:00",
-  "rows": 964000,
+  "dataset": "crsp_dsf_2015",
+  "pulled_at": "2026-08-19T07:37:51+00:00",
+  "rows": 974223,
   "cols": [
     "permno",
     "date",

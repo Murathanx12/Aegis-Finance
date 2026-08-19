@@ -1,0 +1,27 @@
+{
+  "dataset": "bondret_monthly",
+  "pulled_at": "2026-08-19T07:43:40+00:00",
+  "rows": 2151468,
+  "cols": [
+    "date",
+    "cusip",
+    "company_symbol",
+    "permno",
+    "maturity",
+    "coupon",
+    "ret_eom",
+    "ret_ldm",
+    "price_eom",
+    "t_spread",
+    "yield",
+    "rating_num",
+    "amount_outstanding"
+  ],
+  "window": [
+    "2013-01-01",
+    "2024-12-31"
+  ],
+  "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
+  "pit_knowledge_column": "date (month-end trade-based return; TRACE-derived, public at month end)",
+  "sql_note": "SELECT b.date, b.cusip, b.company_symbol, l.permno, b.maturity, b.coupon, b.ret_eom, b.ret_ldm, b.price_eom, b.t_spread, b.yield, b.rating_num, b.amount_outstanding FROM wrdsapps_bondret.bondret b JOIN wrdsapps_link_crsp_bond.bondcrsp_link l ON b.cusip = l.cusip WHERE l.permno = ANY(%(p)s) AND b.date BETWEEN %(s)s AND %(e)s"
+}
