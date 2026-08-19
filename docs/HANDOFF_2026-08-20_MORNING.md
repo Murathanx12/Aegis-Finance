@@ -126,3 +126,20 @@ Final gate after everything: **5,090 passed / 0 failures.**
 - WRDS access offer: current entitlements covered everything tonight;
   the wishlist if HKU can add: SEC filings text (wrdssec), CIQ Key
   Developments, insiders. None block the current queue.
+
+## FOURTH WAVE (post-22:30 "dont wait" order)
+
+- **FACTOR-CHASE-FOREIGN-1: CHASING_HARMFUL_CONFIRMED** — US parent
+  barred; pooled jpn/gbr/deu/fra/can = −2.43%/yr net (p 0.0002),
+  negative in ALL FIVE countries. Six markets agree: never reallocate
+  toward last-month strategy winners. Third registered effect, second
+  out-of-sample confirmation.
+- **STREAK-AVOID-RULE-1 (SCREEN, m=4): no survivors — the rule barely
+  BINDS at monthly cadence** (48–158 blocked buys per decade). The
+  confirmed event-level reversal belongs to the ENTRY-TIMING layer
+  (daily buy decisions), not monthly allocation. G3 lane transport
+  killed cheaply; candidate redirected: STREAK-ENTRY-TIMING-1 (defer
+  actual purchase execution after streaks — an execution-layer rule
+  for whenever real execution exists).
+- RISK-HEAD-AT-SCALE-1 (LGBM vs ridge vol ordering, 1994–2012,
+  prereg frozen pre-computation) running at handoff-write time.

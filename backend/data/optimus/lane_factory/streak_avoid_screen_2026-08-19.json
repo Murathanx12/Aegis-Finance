@@ -1,0 +1,40 @@
+{
+  "screen": "STREAK-AVOID-RULE-1 (SCREEN, m=4 declared)",
+  "at": "2026-08-19T15:00:21+00:00",
+  "cells": [
+    {
+      "cell": "value_bm|inverse_vol|exempt|modern",
+      "ann_diff_filtered_minus_plain": 0.02151,
+      "p": 0.26417,
+      "mde_monthly": 0.0045,
+      "n_blocked_buys": 48,
+      "n_months": 125
+    },
+    {
+      "cell": "mom_12_1|equal|trim|modern",
+      "ann_diff_filtered_minus_plain": 0.00292,
+      "p": 0.35288,
+      "mde_monthly": 0.00073,
+      "n_blocked_buys": 67,
+      "n_months": 125
+    },
+    {
+      "cell": "value_bm|inverse_vol|exempt|early",
+      "ann_diff_filtered_minus_plain": 0.00136,
+      "p": 0.11444,
+      "mde_monthly": 0.0002,
+      "n_blocked_buys": 105,
+      "n_months": 256
+    },
+    {
+      "cell": "mom_12_1|equal|trim|early",
+      "ann_diff_filtered_minus_plain": -0.0018,
+      "p": 0.31927,
+      "mde_monthly": 0.00042,
+      "n_blocked_buys": 158,
+      "n_months": 256
+    }
+  ],
+  "bh_fdr_survivors": [],
+  "note": "no untouched slice remains for this family; the forward transport is the confirmation path"
+}
