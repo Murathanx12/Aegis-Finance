@@ -345,3 +345,30 @@ accounts work well." Executed in order:
   each — the contract is earning its keep · concurrent pytest runs
   corrupt a shared .pytest_cache (lastfailed became a merged history) —
   never diagnose from a cache two suites fought over.
+
+## Late-afternoon session (post-approval, Fable) — lessons
+
+- **An answerability declaration transfers across NOTHING.** The draft
+  prereg claimed MDE 0.0045 from the trim_25 arm under month blocks; the
+  exact primary (trail_stop_20 @ +40) under outcome-overlap blocks
+  measures 0.0071 — the answerable/not-answerable verdict flipped. Rule:
+  §64 audits run on the exact declared cell under the trial's own
+  dependence structure, mean-masked. Caught by the external GPT audit;
+  adjudicated CONFIRMED.
+- **Synthetic rehearsals cannot catch missing-data shapes.** All four
+  planted worlds passed; the first registered run produced NaN means from
+  ONE missing pair in 6,198. A paired contrast now drops-with-count and
+  refuses >1%. The NaN run revealed no finite aggregate, so the repair
+  predates any read — that ordering is what made it legal.
+- **block_days is in UNIQUE PANEL DATES, not calendar days.** My own pin
+  test asserted the wrong unit and failed against correct code. The
+  invariant worth pinning: block × median spacing ≥ outcome horizon.
+- **Catalogue ≠ entitlement, receipt edition.** The WRDS product page
+  lists ~90 vendors; the probe found the real boundary in 3 minutes
+  (wrdssec/CIQ/Trucost/insiders denied, everything else needed is
+  SELECT-OK). `entitlement_map_2026-08-19.json` is the only citable
+  authority; pull scripts must not cite the catalogue.
+- **The z-based MDE is not the decision power.** At the nominal
+  "80%-power" effect the full Holm judge wins ~50% of the time.
+  STATISTICAL_MDE_80 and DECISION_MDE_80 are now distinct named numbers;
+  preregs quote both.

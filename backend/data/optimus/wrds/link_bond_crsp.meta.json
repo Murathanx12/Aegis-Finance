@@ -17,7 +17,7 @@
     "2013-01-01",
     "2024-12-31"
   ],
-  "universe": "crsp_pit_monthly_v1 ever-eligible PERMNOs",
+  "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
   "pit_knowledge_column": "link validity range",
   "sql_note": "SELECT * FROM wrdsapps_link_crsp_bond.bondcrsp_link"
 }

@@ -1,5 +1,22 @@
 # ROADMAP POSITION — 2026-08-19 (day session, unattended)
 
+> **LATE-DAY DELTA (appended ~15:35 HKT):** the evidence column moved for
+> the first time. (1) **CONVEXITY-PRESERVATION-1 resolved** — the
+> program's first Holm-surviving registered positive: mechanical
+> trims/full exits at +40 destroy 60-day terminal wealth (−1.3/−2.6/−5.2%
+> per dollar); the deciding daily-close trailing exit is NOT_ESTABLISHED
+> at n (CRSP replication protocol frozen pre-read). §61-capped: adaptive
+> historical evidence, not edge. (2) **G1 status refined**: false-kill
+> rate measured 0.000, null FP 0.4%, but the z-based MDE label is
+> miscalibrated for the full Holm judge (~50% not 80% win rate at nominal
+> MDE) — `DECISION_MDE_80` solver added; G1 flips when both rates are
+> declared AND the power label is honest. (3) **WRDS entitlement map**
+> (500 usable schemas) + training substrate pulls: the "information over
+> architecture" path the NET tournament prescribed is now materially
+> unblocked (finratio, JKP chars, IBES, fundq, options surface, iid,
+> 13F). (4) Research executor: first end-to-end hypothesis result
+> (executed=1/blocked=12-with-reasons).
+
 Written to answer Murat's direct question: *where are we on the roadmap, how
 close are we to reaching our goals?* Everything below is grounded in code,
 artifacts, or the live deploy as verified this morning — file paths given so
