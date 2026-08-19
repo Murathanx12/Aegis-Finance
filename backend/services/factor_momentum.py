@@ -52,13 +52,19 @@ def build_books(wide: pd.DataFrame, *,
                 skip: int = SKIP_MONTHS,
                 top_fraction: float = TOP_FRACTION,
                 cost_one_way_bps: float = EFFECTIVE_COST_ONE_WAY_BPS,
-                min_factors: int = MIN_FACTORS_PER_MONTH) -> pd.DataFrame:
+                min_factors: int = MIN_FACTORS_PER_MONTH,
+                rebalance_every: int = 1) -> pd.DataFrame:
     """Monthly returns of the momentum book and the static book, net.
 
     Formation at month t uses factor returns t-formation .. t-skip-1
     inclusive — strictly before the held month t. A factor is eligible
     at t only with a complete formation history and a return at t.
     Months with < min_factors eligible are dropped AND counted.
+
+    `rebalance_every=k`: the momentum book RE-FORMS only every k months;
+    between formations weights stay constant with zero interim turnover
+    charged (declared approximation, slightly favourable to slow books —
+    disclosed wherever a slow contrast is quoted).
     """
     rate = cost_one_way_bps / 1e4
     dates = wide.index
@@ -66,6 +72,8 @@ def build_books(wide: pd.DataFrame, *,
     prev_w_mom: pd.Series | None = None
     prev_w_stat: pd.Series | None = None
     n_thin = 0
+    months_since_form = None
+    held_w_mom: pd.Series | None = None
     for i in range(formation + skip, len(dates)):
         t = dates[i]
         form = wide.iloc[i - formation - skip: i - skip]
@@ -75,12 +83,22 @@ def build_books(wide: pd.DataFrame, *,
         if len(names) < min_factors:
             n_thin += 1
             continue
-        score = form[names].sum(axis=0)
-        k = max(1, int(round(len(names) * top_fraction)))
-        top = score.sort_values(ascending=False).index[:k]
-
-        w_mom = pd.Series(0.0, index=names)
-        w_mom[top] = 1.0 / k
+        reform = (months_since_form is None
+                  or months_since_form >= rebalance_every)
+        if reform:
+            score = form[names].sum(axis=0)
+            k = max(1, int(round(len(names) * top_fraction)))
+            top = score.sort_values(ascending=False).index[:k]
+            w_mom = pd.Series(0.0, index=names)
+            w_mom[top] = 1.0 / k
+            held_w_mom = w_mom
+            months_since_form = 0
+        else:
+            w_mom = held_w_mom.reindex(names, fill_value=0.0)
+            s = w_mom.sum()
+            w_mom = w_mom / s if s > 0 else pd.Series(
+                1.0 / len(names), index=names)
+        months_since_form += 1
         w_stat = pd.Series(1.0 / len(names), index=names)
 
         def _net(w, prev):
