@@ -17,9 +17,14 @@ PIT universe build (UNIVERSE-SURVIVAL-STRESS-1) replaces the curated table
 with PERMNO-keyed history; the API is written so only the table changes.
 
 Dates carry their evidence grade: MMC→MRSH and EA's delisting are DATED
-(verified in TAQ + news during the 08-18 grind); SQ→XYZ is UNRECORDED in
-this repo and stays None rather than invented — resolving it is the CRSP
-build's job, and a wrong date would be worse than a declared absence.
+(verified in TAQ + news during the 08-18 grind); SQ→XYZ is UNRECORDED and
+stays None rather than invented. Probed 2026-08-19: the ENTITLED CRSP
+vintage (crsp.stocknames) ends 2024-12-31 and the monthly/quarterly
+schemas are permission-denied, so CRSP cannot date the 2025–26 renames on
+this subscription either — PERMNOs and PXD's delist (dsedelist, dlstcd
+231, successor PERMNO 11850) came from it, and the rename dates wait for a
+fresher vintage or an exchange-notice source. A wrong date would be worse
+than a declared absence.
 """
 
 from __future__ import annotations
@@ -42,11 +47,19 @@ class SecurityDead(RuntimeError):
 
 @dataclass(frozen=True)
 class SecurityRecord:
-    aegis_id: str                       # stable internal key; PERMNO later
+    aegis_id: str                       # stable internal key
     company: str
     aliases: tuple[tuple[str, str | None, str | None], ...]  # (tkr, from, to)
     terminal_date: str | None = None    # ISO date of delist/acquisition
     terminal_reason: str | None = None
+    #: CRSP permanent number where verified (2026-08-19, crsp.stocknames /
+    #: dsedelist via WRDS). The entitled CRSP vintage ends 2024-12-31, so
+    #: 2025–26 renames (SQ→XYZ, MMC→MRSH) and EA's 2026 death stay
+    #: TAQ/news-observed until a fresher vintage lands.
+    permno: int | None = None
+    #: PERMNO of the acquirer/successor when the terminal event is a merger
+    #: (CRSP dsedelist nwperm) — the M&A-PROPAGATION hook.
+    merged_into_permno: int | None = None
     notes: tuple[str, ...] = field(default_factory=tuple)
 
     def ticker_on(self, on: date) -> str | None:
@@ -67,26 +80,34 @@ _MASTER: tuple[SecurityRecord, ...] = (
     SecurityRecord(
         aegis_id="AEGIS-MARSH", company="Marsh (Marsh & McLennan until 2026)",
         aliases=(("MMC", None, "2026-01-14"), ("MRSH", "2026-01-14", None)),
+        permno=45751,
         notes=("NYSE rebrand verified live in TAQ (MRSH quotes 2026-08-14) "
                "and by news search, 08-18 grind cycle H",)),
     SecurityRecord(
         aegis_id="AEGIS-BLOCK", company="Block Inc",
         aliases=(("SQ", None, None), ("XYZ", None, None)),
+        permno=15826,
         notes=("rename date UNRECORDED in this repo — both aliases open; "
                "resolve from CRSP names file, do not invent",)),
     SecurityRecord(
         aegis_id="AEGIS-EA", company="Electronic Arts",
         aliases=(("EA", None, "2026-08-04"),),
+        permno=75828,
         terminal_date="2026-08-04",
         terminal_reason="PIF-led buyout completed ($210/share cash); trades "
                         "end 08-04, quotes ghosted 8 further days",
         notes=("the case that proved a quotes panel cannot see death",)),
     SecurityRecord(
         aegis_id="AEGIS-PXD", company="Pioneer Natural Resources",
-        aliases=(("PXD", None, "2024-05-03"),),
-        terminal_date="2024-05-03",
-        terminal_reason="acquired by ExxonMobil (merger closed May 2024)",
-        notes=("only name whose TAQ cost band did not retire — it is dead",)),
+        aliases=(("PXD", None, "2024-05-02"),),
+        permno=75241, merged_into_permno=11850,
+        terminal_date="2024-05-02",
+        terminal_reason="acquired by ExxonMobil (CRSP dsedelist: dlstdt "
+                        "2024-05-02, dlstcd 231, successor PERMNO 11850)",
+        notes=("only name whose TAQ cost band did not retire — it is dead",
+               "curated guess 2024-05-03 corrected by CRSP on 2026-08-19 — "
+               "a curated date is a hypothesis until an authoritative "
+               "source dates it",)),
 )
 
 _BY_TICKER: dict[str, SecurityRecord] = {}
