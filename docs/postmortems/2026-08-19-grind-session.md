@@ -210,3 +210,47 @@ Baseline at session start: **4,949 passed / 11 skipped, 3m48s** (fast suite).
 
 Note for next attended session: `gh` CLI is not installed on this machine —
 the prod-monitor ≥19:00 firing check needs the Actions UI or a token.
+
+---
+
+# DAY-FACTORY SESSION 2026-08-19 (Fable, unattended, Murat away ~3h)
+
+Follows the overnight grind above; external review round 3 (GPT audit)
+adjudicated, not imported. Full handoff: docs/HANDOFF_2026-08-19_DAY_FACTORY.md.
+
+## RESULTS (one line each; receipts linked in the handoff)
+1. 14-pt gap NARROWED from allowed prod GETs: conviction NAV tracks neither
+   seed nor decision log (clean-day corr +0.19) but balanced-ew-control
+   (+0.60); 3 NEW accounting-jump days (07-14/07-17/08-10); decision log =
+   12 retro-entries all logged 07-11. Positions read is one GET after merge.
+2. NET prereg AMENDMENT 1 pre-signature: units aligned (primary now
+   per-date ΔIC), three-way verdicts, barrier head executable held-out,
+   frozen params — plus the bootstrap was blocking 20 MONTHS not 20 days
+   (found in-house; neither external review saw it).
+3. G1 known-answer battery v0 passes: nonlinear world caught by nonlinear
+   arms only; null world earns zero wins; planted hazard recovered held-out.
+4. Executor: 13 jobs → 1 audited / 12 BLOCKED-with-reasons / 0 silent;
+   convexity contrast measured 7x-powered (MDE 0.0045 vs declared 0.030).
+5. SECURITY-IDENTITY-LAYER-1 + guard enrollment (scanner caught it same-day).
+
+## LESSONS
+- A bootstrap's block unit is a property of the PANEL, not the horizon —
+  block size must be DERIVED from date spacing or it silently disagrees
+  with the registered power basis (same family as §58/§65).
+- An external review is evidence to ADJUDICATE: 4 of its 5 code claims
+  confirmed, 1 overstated (the TRF wording was already hedged), and the
+  repair surfaced a defect the review missed. Verify, then fix, then say
+  which was which.
+- "Attended" can shrink: the positions read was attended because no
+  read-only surface existed — building the endpoint converts an attended
+  session into one GET. Attended is a property of an ACTION; sometimes the
+  right move is to change the action.
+- The suite's passed→skipped drift (3 cached-fixture skips) is invisible
+  in the pass count alone; -rs on skips is part of validation.
+
+## Deltas
+Suite 5,007→5,113 expected green (new: 15 tournament-repair, 15 identity,
+11 executor, 4 positions-endpoint tests; verify final count in gate run).
+Commits this session: f33b5b2 (NET repair) · identity layer · executor ·
+gap-narrowing + endpoint · proposals · operating model + handoff.
+Ruff clean on every new file. Prod untouched; nothing signed; nothing armed.
