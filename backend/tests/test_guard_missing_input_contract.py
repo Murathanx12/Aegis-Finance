@@ -425,7 +425,18 @@ def _case_expectation_store():
             ExpectationStoreRefused, "a missing fetch mapped as empty")
 
 
+def _case_verdict_battery():
+    from backend.services.verdict_battery import (BatteryRefused,
+                                                  simulate_verdicts)
+    # The missing input is the DECLARED WORLD. A battery run without a
+    # finite true effect measures nothing and would report error rates
+    # for a world nobody specified.
+    return (lambda: simulate_verdicts(true_delta=float("nan"), n_sims=10),
+            BatteryRefused, "a battery over an undeclared world")
+
+
 CASES = {
+    "verdict_battery": _case_verdict_battery,
     "expectation_store": _case_expectation_store,
     "research_executor": _case_research_executor,
     "security_identity": _case_security_identity,
