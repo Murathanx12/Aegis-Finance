@@ -26,8 +26,10 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from backend import config as _config                        # noqa: E402
-from backend.services.convexity_episodes import ARMS         # noqa: E402
+from backend.services.convexity_episodes import (ARMS,       # noqa: E402
+                                                 OUTCOME_DAYS)
 from backend.services.net_tournament import (assert_signed,  # noqa: E402
+                                             bootstrap_block_dates,
                                              head_verdicts)
 from backend.services.world_model import (block_bootstrap_paired,  # noqa: E402
                                           )
@@ -46,10 +48,15 @@ def paired_contrast(df: pd.DataFrame, arm: str) -> dict:
     d = (df[f"tw_{arm}"] - df["tw_hold"]).to_numpy(float)
     dates = pd.to_datetime(df["crossing_date"]).to_numpy(
         dtype="datetime64[D]")
-    # crossing months are the §58 unit; a block of ~21 calendar days of
-    # crossings covers the within-month clustering
-    return block_bootstrap_paired(d, dates, block_days=21,
-                                  seed=20260819).as_dict()
+    # Amendment 1: the dependence unit is the OUTCOME OVERLAP — two episodes
+    # whose 60-trading-day windows intersect share most of their path. The
+    # block must span the horizon, derived from this panel's own crossing-date
+    # spacing (never a hardcoded month).
+    block = bootstrap_block_dates(dates, OUTCOME_DAYS)
+    out = block_bootstrap_paired(d, dates, block_days=block,
+                                 seed=20260819).as_dict()
+    out["block_days_derived"] = block
+    return out
 
 
 def run(df: pd.DataFrame, *, tag: str) -> dict:
@@ -114,17 +121,31 @@ def run(df: pd.DataFrame, *, tag: str) -> dict:
     return out
 
 
-def synthetic(seed: int = 7) -> pd.DataFrame:
+#: Rehearsal worlds with DECLARED answers (Amendment 1: every deciding
+#: verdict must be shown reachable before the registered run).
+WORLDS = {
+    "destruction": (-0.010, "STOP_DESTROYS"),      # arms destroy 1%
+    "null": (0.0, "STOP_NONINFERIOR"),             # true zero, well-powered
+    "stop_superior": (+0.010, "NOT_ESTABLISHED"),  # stop HELPS 1% — the
+    # destruction hypothesis must NOT fire; noninferiority holds trivially
+    # so STOP_NONINFERIOR is also acceptable here
+    "near_margin": (-0.005, None),                 # at the margin: any
+    # verdict is legitimate; recorded to see which way the judge leans
+}
+
+
+def synthetic(seed: int = 7, *, world: str = "destruction") -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     n = 4000
+    delta, _ = WORLDS[world]
     dates = pd.to_datetime("2015-01-15") + pd.to_timedelta(
         rng.integers(0, 3600, n), unit="D")
     df = pd.DataFrame({"crossing_date": dates.astype(str),
                        "threshold": rng.choice([0.2, 0.4, 0.75, 1.0], n),
                        "tw_hold": rng.lognormal(0.01, 0.15, n)})
     for arm in NON_HOLD:
-        df[f"tw_{arm}"] = df["tw_hold"] * (1 - 0.01) + rng.normal(
-            0, 0.02, n)                       # planted: arms destroy ~1%
+        df[f"tw_{arm}"] = df["tw_hold"] * (1 + delta) + rng.normal(
+            0, 0.02, n)
         df[f"mfe_captured_{arm}"] = rng.uniform(0, 1, n)
     df["mfe_captured_hold"] = rng.uniform(0, 1, n)
     df["control_tw_hold"] = df["tw_hold"] * rng.normal(0.98, 0.05, n)
@@ -137,6 +158,8 @@ def synthetic(seed: int = 7) -> pd.DataFrame:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="convexity_trial_run")
     ap.add_argument("--rehearsal", action="store_true")
+    ap.add_argument("--world", default="destruction",
+                    choices=sorted(WORLDS))
     a = ap.parse_args(argv)
     for s in (sys.stdout, sys.stderr):
         try:
@@ -146,10 +169,15 @@ def main(argv: list[str] | None = None) -> int:
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
 
     if a.rehearsal:
-        print("REHEARSAL — synthetic episodes, planted 1% destruction. "
-              "Nothing here is evidence about the world.")
-        out = run(synthetic(), tag="REHEARSAL_SYNTHETIC")
-        p = OUT_DIR / f"REHEARSAL_trial_{stamp}.json"
+        delta, expect = WORLDS[a.world]
+        print(f"REHEARSAL world={a.world} (planted delta {delta:+.3f}, "
+              f"expected verdict {expect or 'any'}). Nothing here is "
+              "evidence about the world.")
+        out = run(synthetic(world=a.world),
+                  tag=f"REHEARSAL_SYNTHETIC_{a.world}")
+        out["world"] = {"name": a.world, "planted_delta": delta,
+                        "expected_verdict": expect}
+        p = OUT_DIR / f"REHEARSAL_{a.world}_trial_{stamp}.json"
     else:
         signer = assert_signed(PREREG)      # raises while unsigned
         print(f"signed by: {signer}")

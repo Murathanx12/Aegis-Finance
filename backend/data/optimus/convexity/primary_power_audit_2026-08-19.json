@@ -1,0 +1,13 @@
+{
+  "audit": "CONVEXITY-PRIMARY-POWER-1 (mean-masked)",
+  "at": "2026-08-19T07:03:09+00:00",
+  "cell": "trail_stop_20 vs hold @ +40, 60-trading-day outcome",
+  "n_episodes": 6198,
+  "n_unique_crossing_dates": 1831,
+  "block_days_derived": 84,
+  "n_effective_blocks": 22,
+  "bootstrap_se": 0.002529,
+  "mde_80pct_power": 0.007086,
+  "economic_margin": 0.005,
+  "answerable_at_margin": false
+}

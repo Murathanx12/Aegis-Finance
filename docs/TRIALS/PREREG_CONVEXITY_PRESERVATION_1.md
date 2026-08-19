@@ -1,10 +1,13 @@
 # PREREG — CONVEXITY-PRESERVATION-1
 
-SIGNED-BY: (unsigned)
+SIGNED-BY: Murat
 
-**Status: DRAFT awaiting Murat's signature. The runner
-(`scripts/convexity_trial_run.py`) refuses the registered basis until the
-SIGNED-BY line names a human — same gate as the NET tournament, same code
+**Status: SIGNED 2026-08-19 (Murat, in-session). Amendment 1 applied
+2026-08-19 under the same in-session approval, BEFORE any aggregate
+outcome of the registered basis was read — see §Amendment 1 below for
+what changed and why. The runner (`scripts/convexity_trial_run.py`)
+refuses the registered basis until the SIGNED-BY line names a human —
+same gate as the NET tournament, same code
 (`net_tournament.assert_signed` with this path).**
 
 Registered basis: `backend/data/optimus/convexity/episodes_v2.parquet`
@@ -45,23 +48,47 @@ Cell: **`trail_stop_20` vs `hold` at threshold +40**, the classic
 protect-your-gains rule at a meaningful winner threshold.
 Deciding number: the **paired per-episode terminal-wealth difference**
 `tw_trail_stop_20 − tw_hold`, negative = the stop destroys wealth, with
-date-block bootstrap over CROSSING MONTHS (§58; the v1 audit measured 143
-blocks and a per-block SE of 0.0016 on the trim25 contrast — the executor
-receipt of 2026-08-19 is the §64 power check, run before this
-registration's signature).
+date-block bootstrap whose blocks SPAN THE 60-TRADING-DAY OUTCOME OVERLAP
+(§58; Amendment 1 — block length derived from the panel's own
+crossing-date spacing via `bootstrap_block_dates(dates, OUTCOME_DAYS)`,
+measured 84 calendar days ⇒ **n_effective = 22 blocks**, superseding the
+crossing-month unit).
+
+**Execution semantics, frozen (Amendment 1):** `trail_stop_20` is a
+**daily-CLOSE trailing rule** (alias `close_trail_20`): trailing peak =
+max of adjusted closes through day i−1; the position exits AT the close
+of the first day i whose close ≤ peak × 0.80, charged one one-way cost.
+It is NOT an intraday high/low broker stop. Any verdict sentence must
+say "20% trailing exits evaluated on daily closes", never "20% trailing
+stops" unqualified.
 
 Decision rule, committed before any number exists:
 - **STOP_DESTROYS** iff mean < 0 AND |mean| ≥ its bootstrap MDE(80%) AND
   Holm at FWER 0.05 across the m = 5 declared non-hold arms.
-- **STOP_NONINFERIOR** iff run-time MDE ≤ the economic margin AND the 90%
-  CI is bounded inside ±margin.
+- **STOP_NONINFERIOR** iff run-time MDE ≤ the economic margin AND the
+  **one-sided** bound holds: lower edge of the 90% CI of (stop − hold)
+  > −margin (Amendment 1: the management question is "does the stop COST
+  more than the margin", so a stop that beats hold passes; the previous
+  two-sided "CI inside ±margin" wording contradicted the runner and is
+  superseded).
 - **NOT_ESTABLISHED** otherwise. An underpowered miss licenses nothing.
 
 **Economic margin: 0.005 terminal-wealth fraction over the 60-day window**
 (≈3%/yr drag — the smallest management effect worth acting on given the
-+3%/yr execution standard). The v1 audit's measured MDE ≈ 0.0045 < 0.005,
-so this cell is ANSWERABLE at the declared margin — recorded at
-registration, per §64.
++3%/yr execution standard). **The margin is never shrunk.**
+
+**§64 power check (Amendment 1, superseding the v1 figure):** the draft's
+"MDE ≈ 0.0045 < 0.005, ANSWERABLE" was measured on the WRONG ARM
+(trim_25) under the WRONG DEPENDENCE UNIT (month blocks). The
+mean-masked audit of the exact primary cell under 84-day blocks
+(`scripts/convexity_primary_power_audit.py`, receipt
+`primary_power_audit_2026-08-19.json`, run before any aggregate read)
+measures **MDE = 0.0071 > 0.005**. Therefore, declared PROSPECTIVELY:
+**STOP_NONINFERIOR is NOT_ANSWERABLE_AT_N on this panel** — the trial
+can still establish STOP_DESTROYS (a destruction ≥ its run-time MDE) or
+return NOT_ESTABLISHED, and the noninferiority question is reserved for
+the CRSP-PIT extension where n grows. A NOT_ESTABLISHED here is a
+power statement, not evidence of safety.
 
 ## Reported, never deciding (SCREEN, BH-FDR 0.10, m = tests run)
 
@@ -78,8 +105,11 @@ registration, per §64.
 ## Costs
 
 Per-name measured TAQ one-way where retired (`taq_cost_calibration.json`),
-the declared band otherwise; v2's builder default (flat 3bp) is superseded
-by the lookup at run time and the receipt says which basis each name used.
+the declared band otherwise. **Amendment 1 wording fix:** the per-name
+costs are **baked into `episodes_v2.parquet` at materialization**
+(`scripts/convexity_episodes_materialize.py --taq-costs`), not looked up
+at run time; the v2 metadata records which basis each name used
+(verified: AAPL one-way 0.59 bp).
 Conventions caveat: the 2026-08-19 probe showed the effective-inside-quoted
 discount is liquid-name-only; costs here use QUOTED-basis numbers, which
 is the conservative side for a trial about NOT trading.
@@ -100,5 +130,29 @@ is the conservative side for a trial about NOT trading.
 - `REENTRY-OPTION-VALUE-1`: exit + systematic re-entry arms. Distinct
   registration naming this document as parent.
 - CRSP-universe re-run under UNIVERSE-SURVIVAL-STRESS-1's panel.
+
+## Amendment 1 (2026-08-19, applied pre-run, before any aggregate read)
+
+Adjudicated from the external GPT audit of 2026-08-19 (4/4 confirmed on
+this document) under Murat's recorded in-session approval. No score of
+the registered basis existed when these were applied; the only prior
+computation on real episodes was the mean-masked power audit above.
+
+1. **Dependence unit repaired:** bootstrap blocks now span the 60-day
+   outcome overlap (84 calendar days derived from panel spacing), not a
+   hardcoded 21-day month. n_effective: 22 blocks, not 143.
+2. **Power re-measured on the exact primary cell**, mean-masked. Result:
+   MDE 0.0071 > margin 0.005 ⇒ STOP_NONINFERIOR declared
+   NOT_ANSWERABLE_AT_N prospectively. The margin was NOT shrunk.
+3. **Noninferiority criterion made one-sided** (matches the runner; the
+   drafted two-sided equivalence wording is superseded).
+4. **Execution semantics frozen:** daily-close trailing rule
+   (`close_trail_20` alias), never described as a broker intraday stop.
+5. **Cost wording corrected:** TAQ costs baked at materialization.
+
+Rehearsal gate (run before the registered command): all four declared
+worlds — destruction / null / stop_superior / near_margin — through the
+final runner; STOP_DESTROYS must fire only in `destruction`, and
+`stop_superior` must never yield STOP_DESTROYS.
 
 — drafted 2026-08-19 day session; the daemon's declared priors predate it

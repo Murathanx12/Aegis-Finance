@@ -1,0 +1,267 @@
+{
+  "trial": "CONVEXITY-PRESERVATION-1",
+  "mode": "REHEARSAL_SYNTHETIC",
+  "started_at": "2026-08-19T04:27:35+00:00",
+  "n_episodes": 4000,
+  "cost_basis": "per-name measured TAQ one-way where retired; 3bp band midpoint else (baked at materialize)",
+  "primary": {
+    "cell": "trail_stop_20 vs hold @ +40",
+    "n_episodes": 1014,
+    "contrasts_arm_minus_hold": {
+      "trim_25": {
+        "mean": -0.009753336043027533,
+        "ci_lo": -0.010640770089477296,
+        "ci_hi": -0.008559309820361648,
+        "se": 0.0006415308420847802,
+        "mde_80pct_power": 0.001797303324460731,
+        "n_rows": 1014,
+        "n_dates": 904,
+        "n_securities": 1,
+        "n_effective": 43.04761904761905,
+        "block_days": 21,
+        "dependence_unit": "contiguous 21-trading-day block of the whole cross-section"
+      },
+      "trim_50": {
+        "mean": -0.010348308191853096,
+        "ci_lo": -0.01125920575362374,
+        "ci_hi": -0.009252323194838772,
+        "se": 0.000609798110905423,
+        "mde_80pct_power": 0.0017084013738428365,
+        "n_rows": 1014,
+        "n_dates": 904,
+        "n_securities": 1,
+        "n_effective": 43.04761904761905,
+        "block_days": 21,
+        "dependence_unit": "contiguous 21-trading-day block of the whole cross-section"
+      },
+      "exit_full": {
+        "mean": -0.009953984771679627,
+        "ci_lo": -0.01116854206354629,
+        "ci_hi": -0.009037758526006048,
+        "se": 0.0006497555011286175,
+        "mde_80pct_power": 0.0018203454076659701,
+        "n_rows": 1014,
+        "n_dates": 904,
+        "n_securities": 1,
+        "n_effective": 43.04761904761905,
+        "block_days": 21,
+        "dependence_unit": "contiguous 21-trading-day block of the whole cross-section"
+      },
+      "trail_stop_20": {
+        "mean": -0.010877864315713751,
+        "ci_lo": -0.0122530595791724,
+        "ci_hi": -0.009701897127754325,
+        "se": 0.0007566432637296006,
+        "mde_80pct_power": 0.0021198005834181105,
+        "n_rows": 1014,
+        "n_dates": 904,
+        "n_securities": 1,
+        "n_effective": 43.04761904761905,
+        "block_days": 21,
+        "dependence_unit": "contiguous 21-trading-day block of the whole cross-section"
+      },
+      "stop_vol_1_5": {
+        "mean": -0.009552188667262708,
+        "ci_lo": -0.010406129621119656,
+        "ci_hi": -0.008737058263490994,
+        "se": 0.0004972308393660674,
+        "mde_80pct_power": 0.0013930345698000453,
+        "n_rows": 1014,
+        "n_dates": 904,
+        "n_securities": 1,
+        "n_effective": 43.04761904761905,
+        "block_days": 21,
+        "dependence_unit": "contiguous 21-trading-day block of the whole cross-section"
+      }
+    },
+    "verdicts": {
+      "exit_full": {
+        "verdict": "STOP_DESTROYS",
+        "mean_dIC": 0.009953984771679627,
+        "mde": 0.0018203454076659701,
+        "ci_90": [
+          0.009037758526006048,
+          0.01116854206354629
+        ],
+        "p_normal_approx": 1e-12,
+        "holm_pass": true,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": -0.009953984771679627
+      },
+      "stop_vol_1_5": {
+        "verdict": "STOP_DESTROYS",
+        "mean_dIC": 0.009552188667262708,
+        "mde": 0.0013930345698000453,
+        "ci_90": [
+          0.008737058263490994,
+          0.010406129621119656
+        ],
+        "p_normal_approx": 1e-12,
+        "holm_pass": true,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": -0.009552188667262708
+      },
+      "trail_stop_20": {
+        "verdict": "STOP_DESTROYS",
+        "mean_dIC": 0.010877864315713751,
+        "mde": 0.0021198005834181105,
+        "ci_90": [
+          0.009701897127754325,
+          0.0122530595791724
+        ],
+        "p_normal_approx": 1e-12,
+        "holm_pass": true,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": -0.010877864315713751
+      },
+      "trim_25": {
+        "verdict": "STOP_DESTROYS",
+        "mean_dIC": 0.009753336043027533,
+        "mde": 0.001797303324460731,
+        "ci_90": [
+          0.008559309820361648,
+          0.010640770089477296
+        ],
+        "p_normal_approx": 1e-12,
+        "holm_pass": true,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": -0.009753336043027533
+      },
+      "trim_50": {
+        "verdict": "STOP_DESTROYS",
+        "mean_dIC": 0.010348308191853096,
+        "mde": 0.0017084013738428365,
+        "ci_90": [
+          0.009252323194838772,
+          0.01125920575362374
+        ],
+        "p_normal_approx": 1e-12,
+        "holm_pass": true,
+        "economic_bar": 0.005,
+        "mean_tw_diff_arm_minus_hold": -0.010348308191853096
+      }
+    },
+    "deciding_arm": "trail_stop_20"
+  },
+  "screen_grid": {
+    "thr_0.2": {
+      "n": 1009,
+      "hold": {
+        "mean_tw_diff": 0.0,
+        "median_mfe_captured": 0.4796
+      },
+      "trim_25": {
+        "mean_tw_diff": -0.0099,
+        "median_mfe_captured": 0.496
+      },
+      "trim_50": {
+        "mean_tw_diff": -0.00967,
+        "median_mfe_captured": 0.5077
+      },
+      "exit_full": {
+        "mean_tw_diff": -0.01001,
+        "median_mfe_captured": 0.5213
+      },
+      "trail_stop_20": {
+        "mean_tw_diff": -0.01115,
+        "median_mfe_captured": 0.4941
+      },
+      "stop_vol_1_5": {
+        "mean_tw_diff": -0.01065,
+        "median_mfe_captured": 0.4901
+      }
+    },
+    "thr_0.4": {
+      "n": 1014,
+      "hold": {
+        "mean_tw_diff": 0.0,
+        "median_mfe_captured": 0.5218
+      },
+      "trim_25": {
+        "mean_tw_diff": -0.00975,
+        "median_mfe_captured": 0.5102
+      },
+      "trim_50": {
+        "mean_tw_diff": -0.01035,
+        "median_mfe_captured": 0.5243
+      },
+      "exit_full": {
+        "mean_tw_diff": -0.00995,
+        "median_mfe_captured": 0.4898
+      },
+      "trail_stop_20": {
+        "mean_tw_diff": -0.01088,
+        "median_mfe_captured": 0.4832
+      },
+      "stop_vol_1_5": {
+        "mean_tw_diff": -0.00955,
+        "median_mfe_captured": 0.4823
+      }
+    },
+    "thr_0.75": {
+      "n": 998,
+      "hold": {
+        "mean_tw_diff": 0.0,
+        "median_mfe_captured": 0.523
+      },
+      "trim_25": {
+        "mean_tw_diff": -0.0104,
+        "median_mfe_captured": 0.5018
+      },
+      "trim_50": {
+        "mean_tw_diff": -0.0112,
+        "median_mfe_captured": 0.4716
+      },
+      "exit_full": {
+        "mean_tw_diff": -0.00959,
+        "median_mfe_captured": 0.4748
+      },
+      "trail_stop_20": {
+        "mean_tw_diff": -0.00997,
+        "median_mfe_captured": 0.5071
+      },
+      "stop_vol_1_5": {
+        "mean_tw_diff": -0.0104,
+        "median_mfe_captured": 0.4995
+      }
+    },
+    "thr_1.0": {
+      "n": 979,
+      "hold": {
+        "mean_tw_diff": 0.0,
+        "median_mfe_captured": 0.4956
+      },
+      "trim_25": {
+        "mean_tw_diff": -0.01018,
+        "median_mfe_captured": 0.5042
+      },
+      "trim_50": {
+        "mean_tw_diff": -0.01041,
+        "median_mfe_captured": 0.5036
+      },
+      "exit_full": {
+        "mean_tw_diff": -0.01017,
+        "median_mfe_captured": 0.5049
+      },
+      "trail_stop_20": {
+        "mean_tw_diff": -0.01071,
+        "median_mfe_captured": 0.4803
+      },
+      "stop_vol_1_5": {
+        "mean_tw_diff": -0.01063,
+        "median_mfe_captured": 0.4935
+      }
+    }
+  },
+  "screen_winner_vs_control": {
+    "n_matched": 4000,
+    "mean_tw_hold": 1.01744,
+    "mean_control_tw_hold": 0.99775,
+    "note": "\u00a716 leg \u2014 crossers vs matched non-winners, SCREEN only"
+  },
+  "capture_family_hold": {
+    "median_mfe": 0.0989,
+    "median_peak_giveback_hold": 0.2492,
+    "near_peak_at_end_rate": 0.3005
+  }
+}
