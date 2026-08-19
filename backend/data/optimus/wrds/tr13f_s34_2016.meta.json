@@ -1,0 +1,22 @@
+{
+  "dataset": "tr13f_s34_2016",
+  "pulled_at": "2026-08-19T16:28:27+00:00",
+  "rows": 3013289,
+  "cols": [
+    "fdate",
+    "rdate",
+    "mgrno",
+    "typecode",
+    "cusip",
+    "shares",
+    "change"
+  ],
+  "window": [
+    "2013-01-01",
+    "2024-12-31"
+  ],
+  "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
+  "pit_knowledge_column": "fdate (vintage = when holdings became public); rdate is the described quarter-end \u2014 never the knowledge date",
+  "sql_note": "SELECT fdate, rdate, mgrno, typecode, cusip, shares, change FROM tr_13f.s34 WHERE cusip = ANY(%(c)s) AND fdate BETWEEN %(s)s AND %(e)s",
+  "n_cusips": 11603
+}
