@@ -5,8 +5,9 @@
     python -m scripts.wrds_training_pull dsf          # per-year, resumable
     python -m scripts.wrds_training_pull --list
 
-Scope: the CRSP PIT ever-eligible universe (4,796 PERMNOs), 2013-01-01 ..
-2024-12-31 (the entitled CRSP vintage ends 2024-12-31). Every dataset
+Scope: every PERMNO in the CRSP PIT screen (6,894 — the SUPERSET of the
+4,796 ever-eligible; eligibility is a formation-time filter downstream),
+2013-01-01 .. 2024-12-31 (the entitled CRSP vintage ends 2024-12-31). Every dataset
 writes `<name>.parquet` + `<name>.meta.json` under
 backend/data/optimus/wrds/ and is SKIPPED if the parquet already exists
 (delete to re-pull). Parquets are gitignored; metas are committed.
@@ -69,7 +70,10 @@ def _write(name: str, df: pd.DataFrame, *, sql_note: str, pit: str,
                 timespec="seconds"),
             "rows": int(len(df)), "cols": list(df.columns),
             "window": [START, END],
-            "universe": "crsp_pit_monthly_v1 ever-eligible PERMNOs",
+            "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 "
+                        "superset; the 4,796 ever-ELIGIBLE subset is a "
+                        "downstream formation-time filter, never a pull "
+                        "filter)",
             "pit_knowledge_column": pit,
             "sql_note": sql_note, **(extra or {})}
     (OUT / f"{name}.meta.json").write_text(json.dumps(meta, indent=2),
@@ -165,7 +169,7 @@ def pull_bondret(conn, permnos):
     if _done("bondret_monthly"):
         return
     sql = ("SELECT b.date, b.cusip, b.company_symbol, l.permno, "
-           "b.maturity, b.coupon, b.ret_eom, b.ret_ld, b.price_eom, "
+           "b.maturity, b.coupon, b.ret_eom, b.ret_ldm, b.price_eom, "
            "b.t_spread, b.yield, b.rating_num, b.amount_outstanding "
            "FROM wrdsapps_bondret.bondret b "
            "JOIN wrdsapps_link_crsp_bond.bondcrsp_link l "
@@ -224,10 +228,80 @@ def pull_dsf(conn, permnos):
                    "SHARES on dsf (not hundreds — that is msf)")
 
 
+def pull_optionm_surface(conn, permnos):
+    """30-day surface IVs at |delta| 25/50, calls+puts, per year."""
+    link = pd.read_parquet(OUT / "link_optionm_crsp.parquet")
+    secids = sorted(int(s) for s in
+                    link[link["permno"].isin(permnos)]["secid"].unique())
+    for yr in range(2013, 2025):
+        name = f"optionm_surface30d_{yr}"
+        if _done(name):
+            continue
+        sql = (f"SELECT secid, date, days, delta, impl_volatility, "
+               f"cp_flag, dispersion FROM optionm.vsurfd{yr} "
+               "WHERE secid = ANY(%(sec)s) AND days = 30 "
+               "AND abs(delta) IN (25, 50)")
+        df = pd.read_sql(sql, conn, params={"sec": secids})
+        _write(name, df, sql_note=sql,
+               pit="date (end-of-day surface, public next morning; treat "
+                   "as known at t+1 open to be conservative)",
+               extra={"n_secids": len(secids),
+                      "join": "opcrsphist sdate..edate validity applies "
+                              "downstream"})
+
+
+def pull_iid(conn, permnos):
+    """WRDS Intraday Indicators (taqmsec), daily per symbol, per year."""
+    link = pd.read_sql(
+        "SELECT permno, symbol, date, score FROM "
+        "wrdsapps_link_crsp_taq.tclink WHERE permno = ANY(%(p)s)",
+        conn, params={"p": permnos})
+    syms = sorted(link["symbol"].dropna().unique().tolist())
+    for yr in range(2013, 2025):
+        name = f"taq_iid_{yr}"
+        if _done(name):
+            continue
+        sql = (f"SELECT * FROM taqmsec.wrds_iid_{yr} "
+               "WHERE sym_root = ANY(%(sy)s) AND sym_suffix IS NULL")
+        df = pd.read_sql(sql, conn, params={"sy": syms})
+        _write(name, df, sql_note=sql,
+               pit="date (intraday aggregates final after close); join to "
+                   "permno via tclink DATED validity — symbols are reused "
+                   "across time (canon: sym_suffix IS NULL, never = '')")
+    if not (OUT / "link_taq_crsp.parquet").exists():
+        _write("link_taq_crsp", link,
+               sql_note="tclink for universe permnos", pit="date validity")
+
+
+def pull_13f(conn, permnos):
+    """Thomson 13F holdings restricted to universe CUSIPs, quarterly."""
+    if _done("tr13f_s34_universe"):
+        return
+    cus = pd.read_sql(
+        "SELECT DISTINCT permno, ncusip FROM crsp.stocknames "
+        "WHERE permno = ANY(%(p)s) AND ncusip IS NOT NULL",
+        conn, params={"p": permnos})
+    cusips = sorted(cus["ncusip"].unique().tolist())
+    sql = ("SELECT fdate, rdate, mgrno, mgrname, typecode, cusip, shares, "
+           "change, prc, shrout1 FROM tr_13f.s34 "
+           "WHERE cusip = ANY(%(c)s) AND fdate BETWEEN %(s)s AND %(e)s")
+    df = pd.read_sql(sql, conn,
+                     params={"c": cusips, "s": START, "e": END})
+    _write("tr13f_s34_universe", df, sql_note=sql,
+           pit="fdate (vintage/file date = when holdings became public); "
+               "rdate is the quarter-end the holdings DESCRIBE — features "
+               "may never use rdate as the knowledge date",
+           extra={"n_cusips": len(cusips)})
+    if not (OUT / "link_cusip_permno.parquet").exists():
+        _write("link_cusip_permno", cus,
+               sql_note="crsp.stocknames ncusip map", pit="dated names")
+
+
 DATASETS = {"links": pull_links, "finratio": pull_finratio,
             "ibes": pull_ibes, "fundq": pull_fundq,
             "bondret": pull_bondret, "global_factor": pull_global_factor,
-            "dsf": pull_dsf}
+            "dsf": pull_dsf, "optionm": pull_optionm_surface,
+            "iid": pull_iid, "s13f": pull_13f}
 
 
 def main(argv: list[str] | None = None) -> int:
