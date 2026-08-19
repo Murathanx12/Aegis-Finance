@@ -1,0 +1,77 @@
+{
+  "executor": "AEGIS-RESEARCH-EXECUTOR-1",
+  "started_at": "2026-08-19T02:30:46+00:00",
+  "executed": [],
+  "audited": [
+    {
+      "hypothesis_id": "CONVEXITY-PRESERVATION-1",
+      "elapsed_s": 0.4,
+      "audit": {
+        "n_episodes": 23011,
+        "by_threshold": {
+          "0.2": 13956,
+          "0.4": 6198,
+          "0.75": 1845,
+          "1.0": 1012
+        },
+        "n_date_blocks": 143,
+        "audit_basis": "descriptive + power only; the trim-vs-hold verdict runs under the signed registration"
+      },
+      "note": "INSTRUMENT_AUDIT \u2014 measures the instrument, not the hypothesis; the trial's result slot is untouched"
+    }
+  ],
+  "failed": [],
+  "blocked": [
+    {
+      "hypothesis_id": "HJ-EFFECTIVE-SPREAD-1",
+      "reason": "verdict deferred to trade-condition conventions (external review Q3: tr_scond/odd-lot/TRF-latency); v1 dataset exists as immutable sensitivity"
+    },
+    {
+      "hypothesis_id": "EVENT-RESOLUTION-CURVE-1",
+      "reason": "needs the PIT event store with announcement timestamps \u2014 specced in the day-factory handoff, not yet materialized"
+    },
+    {
+      "hypothesis_id": "INFORMATION-HALF-LIFE-1",
+      "reason": "needs disclosure-delay event data (PTR/13D/Form 4) with filing timestamps materialized"
+    },
+    {
+      "hypothesis_id": "INFORMATION-PROCESSING-GAP-1",
+      "reason": "needs the PIT event store (as above)"
+    },
+    {
+      "hypothesis_id": "REACTION-GAP-1",
+      "reason": "needs the PIT event store (as above)"
+    },
+    {
+      "hypothesis_id": "OPTIONS-EQUITY-DISLOCATION-1",
+      "reason": "needs the OptionMetrics PIT store + OPTION-PIT-AUDIT-1 look-ahead controls first"
+    },
+    {
+      "hypothesis_id": "MODEL-DISAGREEMENT-1",
+      "reason": "needs at least two additional PIT modality stores before disagreement exists to measure"
+    },
+    {
+      "hypothesis_id": "CROSS-ENTITY-LAG-1",
+      "reason": "needs dated relation-graph snapshots (no static present-day graph applied backward)"
+    },
+    {
+      "hypothesis_id": "SEQUENCE-OF-EVIDENCE-1",
+      "reason": "needs the PIT event store (as above)"
+    },
+    {
+      "hypothesis_id": "PURE-NEWS-RESIDUAL-1",
+      "reason": "needs the expected-news model trained strictly pre-article \u2014 PIT text store absent"
+    },
+    {
+      "hypothesis_id": "NEWS-X-FLOW-1",
+      "reason": "no credible PIT retail-flow proxy on hand \u2014 SHELF"
+    },
+    {
+      "hypothesis_id": "IMPLIED-REVISION-1",
+      "reason": "SHELF by design: PIT analyst-report text entitlement unverified (probe, not catalogue)"
+    }
+  ],
+  "no_adapter": [],
+  "finished_at": "2026-08-19T02:30:46+00:00",
+  "tests_run_total": 0
+}

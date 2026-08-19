@@ -389,7 +389,34 @@ def _case_security_identity():
             IdentityUnknown, "an identity resolved without an as-of date")
 
 
+def _case_research_executor():
+    from backend.services.research_daemon import (HypothesisJob,
+                                                  ResearchDaemon)
+    from backend.services.research_executor import (ExecutorRefused,
+                                                    JobAdapter, KIND_RESULT)
+    # The missing input is the RESULT STATISTIC. A RESULT adapter that
+    # returns no JobOutcome has run an experiment and produced nothing
+    # recordable; recording anyway would put an empty test into m.
+    d = ResearchDaemon(reserved=[])
+    d.submit(HypothesisJob(
+        hypothesis_id="CASE-EXEC", question="q", universe="u", outcome="o",
+        start="2020-01-01", end="2024-12-31", n_date_blocks=10,
+        se_per_block=0.1, expected_effect=0.5, effect_units="x"))
+    a = JobAdapter(hypothesis_id="CASE-EXEC", kind=KIND_RESULT,
+                   reads_universe="u", reads_start="2020-01-01",
+                   reads_end="2024-12-31", run=lambda: None)
+
+    def _go():
+        a.assert_matches(d.get("CASE-EXEC"))
+        out = a.run()
+        if not hasattr(out, "p_value"):
+            raise ExecutorRefused("RESULT adapter returned no JobOutcome")
+        return out
+    return (_go, ExecutorRefused, "a result recorded without a statistic")
+
+
 CASES = {
+    "research_executor": _case_research_executor,
     "security_identity": _case_security_identity,
     "lane_autopsy": _case_lane_autopsy,
     "net_panel": _case_net_panel,
