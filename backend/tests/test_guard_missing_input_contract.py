@@ -379,7 +379,18 @@ def _case_relative_value_labels():
             PairRefused, "a pair labelled from an invented return")
 
 
+def _case_security_identity():
+    from backend.services.security_identity import (IdentityUnknown,
+                                                    resolve)
+    # The missing input is the AS-OF DATE. An undated resolve is how MMC
+    # stayed "unexplained" for a session: identity without a date silently
+    # answers for whichever era the caller wasn't thinking about.
+    return (lambda: resolve("MMC", None),
+            IdentityUnknown, "an identity resolved without an as-of date")
+
+
 CASES = {
+    "security_identity": _case_security_identity,
     "lane_autopsy": _case_lane_autopsy,
     "net_panel": _case_net_panel,
     "net_tournament": _case_net_tournament,
