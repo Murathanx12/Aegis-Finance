@@ -315,27 +315,30 @@ def pull_iid(conn, permnos):
 
 
 def pull_13f(conn, permnos):
-    """Thomson 13F holdings restricted to universe CUSIPs, quarterly."""
-    if _done("tr13f_s34_universe"):
-        return
+    """Thomson 13F holdings restricted to universe CUSIPs, PER YEAR —
+    the single-query version was killed three times at ~50M rows."""
     cus = pd.read_sql(
         "SELECT DISTINCT permno, ncusip FROM crsp.stocknames "
         "WHERE permno = ANY(%(p)s) AND ncusip IS NOT NULL",
         conn, params={"p": permnos})
-    cusips = sorted(cus["ncusip"].unique().tolist())
-    sql = ("SELECT fdate, rdate, mgrno, mgrname, typecode, cusip, shares, "
-           "change, prc, shrout1 FROM tr_13f.s34 "
-           "WHERE cusip = ANY(%(c)s) AND fdate BETWEEN %(s)s AND %(e)s")
-    df = pd.read_sql(sql, conn,
-                     params={"c": cusips, "s": START, "e": END})
-    _write("tr13f_s34_universe", df, sql_note=sql,
-           pit="fdate (vintage/file date = when holdings became public); "
-               "rdate is the quarter-end the holdings DESCRIBE — features "
-               "may never use rdate as the knowledge date",
-           extra={"n_cusips": len(cusips)})
     if not (OUT / "link_cusip_permno.parquet").exists():
         _write("link_cusip_permno", cus,
                sql_note="crsp.stocknames ncusip map", pit="dated names")
+    cusips = sorted(cus["ncusip"].unique().tolist())
+    for yr in range(2013, 2025):
+        name = f"tr13f_s34_{yr}"
+        if _done(name):
+            continue
+        sql = ("SELECT fdate, rdate, mgrno, typecode, cusip, shares, "
+               "change FROM tr_13f.s34 "
+               "WHERE cusip = ANY(%(c)s) AND fdate BETWEEN %(s)s AND %(e)s")
+        df = pd.read_sql(sql, conn, params={"c": cusips,
+                                            "s": f"{yr}-01-01",
+                                            "e": f"{yr}-12-31"})
+        _write(name, df, sql_note=sql,
+               pit="fdate (vintage = when holdings became public); rdate "
+                   "is the described quarter-end — never the knowledge "
+                   "date", extra={"n_cusips": len(cusips)})
 
 
 DATASETS = {"links": pull_links, "finratio": pull_finratio,
