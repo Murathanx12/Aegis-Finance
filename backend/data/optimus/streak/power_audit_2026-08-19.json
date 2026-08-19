@@ -1,0 +1,11 @@
+{
+  "audit": "STREAK-PRIMARY-POWER-1 (mean-masked)",
+  "n_events": 19726,
+  "n_event_dates": 2155,
+  "block_days_derived": 30,
+  "n_effective_blocks": 71.83333333333333,
+  "bootstrap_se": 0.001452,
+  "mde_80pct_power": 0.004068,
+  "economic_bar_21d": 0.0025,
+  "answerable_at_bar": false
+}

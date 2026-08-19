@@ -1,10 +1,24 @@
-# PREREG — STREAK-EVIDENCE-1 (DRAFT — design registered, not signed)
+# PREREG — STREAK-EVIDENCE-1
 
-**Status: DESIGN registered 2026-08-19 night (Murat's coin-flip
+SIGNED-BY: Murat Abdullaev — recorded overnight handoff approval
+2026-08-19 ("come up with novel tests if data approves ... I handoff to
+you"), given before any outcome existed; recorded by the working
+session.
+
+**Status: SIGNED. Design registered 2026-08-19 night (Murat's coin-flip
 directive: "99 heads in a row is evidence about the coin, not a reason
-to recite 50-50"). No outcome evaluated. §64 mean-masked power audit
-before signature; `assert_signed` against this path before any
-registered run.**
+to recite 50-50").**
+
+**§64 power (mean-masked, receipt `streak/power_audit_2026-08-19.json`,
+run before any mean was seen):** 19,726 matched events on 2,155 event
+dates, 72 effective 30-date blocks, MDE 0.00407 per 21 days. The
+0.0025 bar is BELOW the MDE ⇒ declared prospectively:
+**STREAK_UNINFORMATIVE is NOT_ANSWERABLE_AT_N** — reachable verdicts
+are STREAK_INFORMATIVE (|effect| ≥ run-time MDE, either declared
+direction, Holm m=2) and NOT_ESTABLISHED. Bar not shrunk. Rehearsal
+gate passed pre-run: persistence/reversal/null all recovered. Dropped
+events disclosed on the receipt (11,283 not-PIT-eligible is the large
+bucket — small-cap streaks outside the eligible universe).**
 
 ## The question, stated the way the parable states it
 
