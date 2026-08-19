@@ -1,0 +1,23 @@
+{
+  "dataset": "optionm_surface30d_2021",
+  "pulled_at": "2026-08-19T15:22:12+00:00",
+  "rows": 3050124,
+  "cols": [
+    "secid",
+    "date",
+    "days",
+    "delta",
+    "impl_volatility",
+    "cp_flag",
+    "dispersion"
+  ],
+  "window": [
+    "2013-01-01",
+    "2024-12-31"
+  ],
+  "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
+  "pit_knowledge_column": "date (end-of-day surface, public next morning; treat as known at t+1 open to be conservative)",
+  "sql_note": "SELECT secid, date, days, delta, impl_volatility, cp_flag, dispersion FROM optionm.vsurfd2021 WHERE secid = ANY(%(sec)s) AND days = 30 AND abs(delta) IN (25, 50)",
+  "n_secids": 7734,
+  "join": "opcrsphist sdate..edate validity applies downstream"
+}
