@@ -327,3 +327,21 @@ accounts work well." Executed in order:
 - The referee's conservatism has a measured shape: zero false kills, paid
   for with ~53% power at nominal MDE. That trade is the right side of
   Murat's "don't kill good ideas" — and now it is a NUMBER, not a vibe.
+
+### CI saga postscript (same afternoon)
+- CI went red twice more after 466ebd0. Diagnosis was blocked by GitHub's
+  unauthenticated rate limit (my own 30s watchers burned it) ⇒ reproduced
+  in an ISOLATED WORKTREE instead — which surfaced 12 failures, 11 of them
+  the absent `Aegis module` sibling (FrozenPreregMissing BY DESIGN; CI
+  excuses it via AEGIS_IIF1_PREREG_ABSENT_OK=1). Under CI's exact env the
+  worktree showed the ONE real failure: verdict_battery's BatteryRefused
+  unenrolled in the guard contract — also the local gate's single red.
+  One defect, three surfaces.
+- Lessons: **a clean worktree + the CI env is the honest CI reproduction**
+  (the live checkout's artifacts and sibling repos mask both directions) ·
+  **poll rate-limited APIs at the cadence the data changes** (30s watchers
+  on a 60/hr quota blind the diagnosis exactly when needed) · the
+  enrolment scanner caught its third new guard today within one cycle
+  each — the contract is earning its keep · concurrent pytest runs
+  corrupt a shared .pytest_cache (lastfailed became a merged history) —
+  never diagnose from a cache two suites fought over.
