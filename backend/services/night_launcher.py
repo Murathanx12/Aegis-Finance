@@ -670,11 +670,18 @@ def acceptance_report(*, launch_dir: Path | None = None,
             f"`observe_invocation` reads a genuinely scheduled firing as "
             f"contradicted. The docstring there asserts the opposite ('a "
             f"Windows scheduled task runs with no console attached') and that "
-            f"assertion is false for this registration. Remedies, both "
-            f"attended: redirect the task action's stdin (`cmd /c ... < NUL`), "
-            f"or re-register with LogonType=S4U / 'run whether user is logged "
-            f"on or not'. Do NOT relax the contradiction test — it is reading "
-            f"its input correctly; its input is confounded.")
+            f"assertion is false for this registration. Remedy, attended: "
+            f"redirect the task action's stdin from an EMPTY REGULAR FILE "
+            f"(`cmd /c ... < backend\\data\\optimus\\empty_stdin.txt`), applied "
+            f"in place with `schtasks /Change /TR`. NOT `< NUL`: that was "
+            f"registered 2026-08-18 and the 2026-08-19 firing was disqualified "
+            f"identically, because the Windows CRT `_isatty()` returns true for "
+            f"any CHARACTER DEVICE and NUL is one. A disk file is not, so "
+            f"isatty reads false (verified through `observe_invocation` itself, "
+            f"2026-08-19). Re-registering with LogonType=S4U / 'run whether "
+            f"user is logged on or not' also works and is a heavier change. Do "
+            f"NOT relax the contradiction test — it is reading its input "
+            f"correctly; its input is confounded.")
 
     verdict = ("ACCEPTED" if accepted
                else "UNSATISFIABLE_IN_THIS_ENVIRONMENT" if unsatisfiable

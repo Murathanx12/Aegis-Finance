@@ -1,0 +1,148 @@
+{
+  "trial": "INTERNET-INVESTIGATOR-FWD-1",
+  "session_date": "2026-08-19",
+  "evaluated_at_utc": "2026-08-19T09:01:06+00:00",
+  "may_launch": true,
+  "refusals": [],
+  "derived": {
+    "now_utc": "2026-08-19T09:01:06+00:00",
+    "next_open_utc": "2026-08-19T13:30+00:00",
+    "session_date": "2026-08-19",
+    "hours_until_open": 4.48,
+    "decision_date_ny": "2026-08-19",
+    "k": 40,
+    "n_arms": 5,
+    "calls_per_cell": {
+      "value": 7.09,
+      "basis": "MEASURED_MAX_OVER_COMPLETED_NIGHTS",
+      "n_nights": 2,
+      "observed": [
+        {
+          "night": "2026-08-17",
+          "calls_per_cell": 7.085
+        },
+        {
+          "night": "2026-08-18",
+          "calls_per_cell": 7.09
+        }
+      ],
+      "declared": 4.8
+    },
+    "duration_bound": {
+      "value": 230.7,
+      "basis": "MEASURED_WORST_COMPLETED_NIGHT_X_DECLARED_FACTOR",
+      "n_nights": 2,
+      "observed": [
+        {
+          "night": "2026-08-17",
+          "minutes": 115.36,
+          "projected_minutes": 69.6,
+          "projection_error_minutes": 45.8,
+          "projection_ratio": 1.658
+        },
+        {
+          "night": "2026-08-18",
+          "minutes": 113.48,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -117.2,
+          "projection_ratio": 0.492
+        }
+      ],
+      "worst_minutes": 115.36,
+      "safety_factor": 2.0,
+      "clock": "run_night_elapsed"
+    },
+    "assembly_allowance": {
+      "value": 37.2,
+      "basis": "MEASURED_WORST_ASSEMBLY_X_DECLARED_FACTOR",
+      "cap": 45.0,
+      "worst_minutes": 18.61,
+      "scaled_minutes": 37.2,
+      "n_nights": 2,
+      "observed": [
+        {
+          "night": "2026-08-17",
+          "assembly_minutes": 18.22
+        },
+        {
+          "night": "2026-08-18",
+          "assembly_minutes": 18.61
+        }
+      ],
+      "safety_factor": 2.0
+    },
+    "decision_minutes": 230.7,
+    "decision_basis": "MEASURED_DURATION_BOUND",
+    "modelled_serial_minutes": 205.6,
+    "latest_safe_run_start_utc": "2026-08-19T09:39:18+00:00",
+    "latest_safe_launch_utc": "2026-08-19T09:02:06+00:00",
+    "launch_margin_minutes": 1.0,
+    "nights_attempted": 3,
+    "graded_nights_completed": 2,
+    "graded_nights_required": 40,
+    "prereg_fields_verified": 15
+  },
+  "verdict": "LAUNCHED",
+  "written_at_utc": "2026-08-19T09:01:11+00:00",
+  "git_commit": "fba292f6125aed0284b9d5c1d5b745daaa3b41db",
+  "git_dirty": true,
+  "invocation_mode": "manual",
+  "stdin_isatty": true,
+  "contradicted": false,
+  "launch_manifest": {
+    "manifest_version": 1,
+    "built_at_utc": "2026-08-19T09:01:11+00:00",
+    "python": "3.12.10",
+    "prereg_path": "C:\\Users\\mrthn\\Aegis module\\scripts\\iif1_config.py",
+    "prereg_hash": "441d098c1f8074ea",
+    "frozen_surface": {
+      "ARMS": [
+        "A_snapshot",
+        "B_tools",
+        "C_tools_only",
+        "D_all",
+        "B_anon"
+      ],
+      "BENCHMARK": "SPY",
+      "DECLARED_CONCURRENCY_EFFICIENCY": 2.0,
+      "EXECUTION_MODE": "cells_sequential_arms_concurrent",
+      "MAX_ARM_CONCURRENCY": 5,
+      "MAX_PREOPEN_LEAD_HOURS": 18,
+      "MAX_TOKENS": 12000,
+      "MIN_DOLLAR_VOLUME_20D": 5000000.0,
+      "MIN_PRICE": 5.0,
+      "NIGHTLY_MAX_CALLS": 3000,
+      "NIGHTLY_MAX_USD": 12.0,
+      "REQUEST_MODEL": "deepseek-v4-flash",
+      "TEMPERATURE": 0.0,
+      "TRIGGERS_PER_NIGHT": 40,
+      "TRIGGER_WEIGHTS": {
+        "abs_resid_return_z_1d": 1.0,
+        "volume_z_20d": 1.0,
+        "earnings_within_5d": 1.5,
+        "filing_within_2d": 1.0
+      }
+    },
+    "module_hashes": {
+      "backend.services.investigator_night": "3f4d7acf0e338f7c",
+      "backend.services.investigator_agent": "19461700cec485a6",
+      "backend.services.investigator_tools": "61781b971f2e3c0a",
+      "backend.services.investigator_triggers": "7445d8823ab0977a",
+      "backend.services.iif1_features": "071baa380dbf35d1",
+      "backend.services.iif1_run": "e37318faa17bc200",
+      "backend.services.iif1_prereg": "619ecc3266b95c0a"
+    },
+    "implementation_version": 2,
+    "arm_implementation_fingerprint": "19461700cec485a6",
+    "git_commit": "fba292f6125aed0284b9d5c1d5b745daaa3b41db",
+    "git_dirty": true
+  },
+  "implementation_version": 2,
+  "arm_implementation_fingerprint": "19461700cec485a6",
+  "equivalence": {
+    "checked": true,
+    "equivalent": false,
+    "detail": "the live invocation is NOT the one that was rehearsed:\n  module_hashes[backend.services.iif1_features]: rehearsed 'd57b9e7b8bdee584' -> live '071baa380dbf35d1'\n  module_hashes[backend.services.iif1_prereg]: rehearsed '4ffde5980f402e3c' -> live '619ecc3266b95c0a'\n  module_hashes[backend.services.iif1_run]: rehearsed '69423e5c625f6c4d' -> live 'e37318faa17bc200'\n  module_hashes[backend.services.investigator_night]: rehearsed 'bfd02c915a1a16d8' -> live '3f4d7acf0e338f7c'\n  module_hashes[backend.services.investigator_tools]: rehearsed 'd0d8acab2a4e7b0c' -> live '61781b971f2e3c0a'\n  module_hashes[backend.services.investigator_triggers]: rehearsed 'b36a365eafa8bb95' -> live '7445d8823ab0977a'\n\nA rehearsal pins a launch only if the two run the same experiment. Re-rehearse, or launch from the frozen worktree so main can change without changing the night."
+  },
+  "note": "written before the night began, so a night that dies mid-run still proves the launcher decided to run it"
+}

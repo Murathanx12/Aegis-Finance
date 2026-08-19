@@ -592,26 +592,48 @@ def git_provenance() -> dict:
     except Exception as e:                                        # noqa: BLE001
         logger.warning("git provenance: commit unreadable (%s)", e)
 
+    # The night writes its own receipts/telemetry into TRACKED paths, so a
+    # whole-tree dirty check flags the very invocation it describes
+    # (N3 2026-08-19: `git_dirty: true` caused by the 17:00 firing's own
+    # receipt). `git_dirty` therefore answers "does the CODE match the
+    # commit" — the reproducibility question — with the night's own output
+    # paths excluded and DISCLOSED; the whole-tree answer is kept beside it
+    # rather than replaced. None still means "we could not look", never
+    # clean.
+    self_written = ("backend/data/optimus/iif1_launches",
+                    "backend/data/optimus/iif1_features",
+                    "backend/data/optimus/iif1_nights",
+                    "backend/data/optimus/llm_calls.jsonl")
     dirty: bool | None = None
+    dirty_incl: bool | None = None
     try:
         import subprocess
-        out = subprocess.run(
-            ["git", "status", "--porcelain"],
-            cwd=str(_config.PROJECT_ROOT), capture_output=True, text=True,
-            timeout=20, check=False)
-        # A nonzero exit means we do not KNOW, so it stays None. Reading `dirty`
-        # off a failed command would be the same class of error as trusting an
-        # exit code through a pipe.
-        if out.returncode == 0:
-            dirty = bool(out.stdout.strip())
-        else:
-            logger.warning("git provenance: `git status --porcelain` exited %s "
-                           "— dirty state recorded as UNKNOWN rather than clean",
-                           out.returncode)
+
+        def _porcelain(args: list[str]) -> bool | None:
+            out = subprocess.run(
+                ["git", "status", "--porcelain", *args],
+                cwd=str(_config.PROJECT_ROOT), capture_output=True,
+                text=True, timeout=20, check=False)
+            # A nonzero exit means we do not KNOW, so it stays None.
+            # Reading `dirty` off a failed command would be the same class
+            # of error as trusting an exit code through a pipe.
+            if out.returncode != 0:
+                logger.warning(
+                    "git provenance: `git status --porcelain` exited %s — "
+                    "dirty state recorded as UNKNOWN rather than clean",
+                    out.returncode)
+                return None
+            return bool(out.stdout.strip())
+
+        dirty_incl = _porcelain([])
+        dirty = _porcelain(
+            ["--", ".", *(f":(exclude){p}" for p in self_written)])
     except Exception as e:                                        # noqa: BLE001
         logger.warning("git provenance: dirty state UNKNOWN (%s) — recorded as "
                        "None, never as clean", e)
-    return {"git_commit": commit, "git_dirty": dirty}
+    return {"git_commit": commit, "git_dirty": dirty,
+            "git_dirty_including_night_outputs": dirty_incl,
+            "git_dirty_excluded_paths": list(self_written)}
 
 
 def decision_minutes(*, k: int, n_arms: int,

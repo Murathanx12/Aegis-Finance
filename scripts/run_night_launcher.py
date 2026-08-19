@@ -320,26 +320,56 @@ Two properties before this is pasted:
     Whether a night happens is `evaluate_launch`'s verdict plus the
     arming flag, both recomputed at 17:00.
 
-  * `< NUL` IS LOAD-BEARING — DO NOT DROP IT. A task registered with
-    LogonType=Interactive runs inside the logged-on session WITH a
-    console, so `sys.stdin.isatty()` is True and `observe_invocation`
-    marks every genuine firing `contradicted`. Those receipts then count
-    for nothing and acceptance can never reach 3/3. This is not a
-    hypothetical: the first real firing, 2026-08-18 17:00:01, was
-    disqualified exactly this way. Redirecting stdin removes the
-    confound and leaves the check able to do the job it was built for —
-    catching a human in a terminal who typed `--scheduled`.
+  * THE STDIN REDIRECT IS LOAD-BEARING — DO NOT DROP IT, AND DO NOT
+    REDIRECT FROM `NUL`. A task registered with LogonType=Interactive
+    runs inside the logged-on session WITH a console, so
+    `sys.stdin.isatty()` is True and `observe_invocation` marks every
+    genuine firing `contradicted`. Those receipts count for nothing and
+    acceptance can never reach 3/3. The first real firing,
+    2026-08-18 17:00:01, was disqualified exactly this way.
+
+    `< NUL` WAS TRIED AND DOES NOT WORK ON WINDOWS. It was registered on
+    2026-08-18 and the 2026-08-19 17:00:01 firing recorded
+    `stdin_isatty: true, contradicted: true` all the same — a second
+    wasted receipt. The reason is the Windows CRT: `_isatty()` returns
+    true for ANY CHARACTER DEVICE, and `NUL` is a character device. So
+    the redirect happens and changes nothing observable. Measured
+    directly, same shell, same interpreter:
+
+        python -c "...isatty()"                  -> True
+        python -c "...isatty()" < NUL            -> True   (the trap)
+        python -c "...isatty()" < empty_stdin.txt -> False
+
+    Redirect from an EMPTY REGULAR FILE (`backend/data/optimus/
+    empty_stdin.txt`, tracked and zero-length). A disk file is not a
+    character device, so isatty is False and the check can do the job it
+    was built for — catching a human in a terminal who typed
+    `--scheduled`. Verified 2026-08-19 through `observe_invocation`
+    itself, not through a proxy: `contradicted: false`.
+
+    A pipe (`echo. | python ...`) also yields False and is NOT used: it
+    would read the launcher's exit code through a pipeline, and the exit
+    code IS the guard.
+
+    RESIDUAL WEAKNESS, STATED RATHER THAN IMPLIED: a human who copies
+    this registered command line verbatim now redirects stdin too, and
+    so evades the check. That hole is inherent to putting the redirect in
+    the registered line and was equally true of the `< NUL` intent; the
+    check catches the careless terminal `--scheduled`, not a determined
+    copy-paste.
 """)
     print(f'  schtasks /Create /TN "AegisIIF1NightLauncher" /SC WEEKLY '
           f'/D MON,TUE,WED,THU,FRI /ST 17:00 /TR '
           f'"cmd /c cd /d {root} && '
-          f'python -m scripts.run_night_launcher --scheduled < NUL >> '
+          f'python -m scripts.run_night_launcher --scheduled < '
+          f'{root}\\backend\\data\\optimus\\empty_stdin.txt >> '
           f'{root}\\backend\\data\\optimus\\launcher.log 2>&1"')
     print("\n  Already registered? Change it in place rather than "
           "re-registering:\n")
     print(f'  schtasks /Change /TN "AegisIIF1NightLauncher" /TR '
           f'"cmd /c cd /d {root} && '
-          f'python -m scripts.run_night_launcher --scheduled < NUL >> '
+          f'python -m scripts.run_night_launcher --scheduled < '
+          f'{root}\\backend\\data\\optimus\\empty_stdin.txt >> '
           f'{root}\\backend\\data\\optimus\\launcher.log 2>&1"')
     print("""
   WEEKLY/MON-FRI rather than DAILY is a coarse pre-filter only. It is not
