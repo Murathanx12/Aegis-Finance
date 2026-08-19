@@ -299,7 +299,10 @@ def pull_iid(conn, permnos):
         name = f"taq_iid_{yr}"
         if _done(name):
             continue
-        sql = (f"SELECT * FROM taqmsec.wrds_iid_{yr} "
+        sql = (f"SELECT date, sym_root, total_trade, total_vol, "
+               f"total_dv_lr, buyvol_lr, sellvol_lr, buynumtrades_lr, "
+               f"sellnumtrades_lr, cprc, oprc "
+               f"FROM taqmsec.wrds_iid_{yr} "
                "WHERE sym_root = ANY(%(sy)s) AND sym_suffix IS NULL")
         df = pd.read_sql(sql, conn, params={"sy": syms})
         _write(name, df, sql_note=sql,
