@@ -20,12 +20,22 @@ Three independent, pre-declared tests converged on ONE lesson:
    −0.15%/21d p 0.066 at 78,762 events; up10, down7 ns) — no
    survivors, same direction as the primary's reversal lean.
 
+4. **UNIVERSE-SURVIVAL-STRESS-1 (SCREEN)**: the tournament ordering did
+   NOT fully survive the PIT universe (229,571 stock-months, 4,298
+   names). Returns: ALL arms negative (ridge WORST at −0.047 — the
+   linear model inherits the era's anti-momentum hardest). Vol:
+   **LGBM 0.747 beats ridge 0.680** — a flip vs the 182-name result;
+   breadth gives nonlinearity room on risk. Receipt
+   `net_tournament/universe_survival_stress_2026-08-19.json`.
+
 Candidate registrations queued (screen survivors ⇒ registrations,
-never promotions): **FACTOR-REVERSAL-AVOID-1** (is avoiding
-recently-hot factors/stocks a usable NEGATIVE rule?) and
-**VALUE-EXEMPT-BOOK-1** (the value+winner-exempt lead, fresh
-formulation + mean-masked §64). UNIVERSE-SURVIVAL-STRESS-1 running at
-handoff time — its receipt lands in `net_tournament/`.
+never promotions): **FACTOR-REVERSAL-AVOID-1** (avoiding recently-hot
+factors/stocks as a NEGATIVE rule), **VALUE-EXEMPT-BOOK-1** (the
+value+winner-exempt lead, fresh formulation + mean-masked §64), and
+**RISK-HEAD-AT-SCALE-1** (confirm LGBM>ridge on vol at universe scale —
+feeds the G2 risk-sized lane's v2 model choice).
+
+Final gate after everything: **5,090 passed / 0 failures.**
 
 ## NEW INFORMATION ACQUIRED overnight (first wave)
 
