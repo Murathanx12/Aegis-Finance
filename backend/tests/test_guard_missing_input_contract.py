@@ -435,7 +435,52 @@ def _case_verdict_battery():
             BatteryRefused, "a battery over an undeclared world")
 
 
+def _case_lane_factory_sim():
+    import numpy as np
+    import pandas as pd
+
+    from backend.services.lane_factory_sim import (Panel, SimRefused,
+                                                   run_book)
+    # The missing input is a DECLARED RULE. An unknown weighting silently
+    # defaulted to equal would run a different experiment than the sweep
+    # registered — the grammar is enumerable precisely so m is honest.
+    d = pd.bdate_range("2020-01-02", periods=30)
+    px = pd.DataFrame({0: 100.0 * np.ones(len(d))}, index=d)
+    pn = Panel(px=px, ret=px.pct_change(), elig_by_month={},
+               dlret=pd.Series(dtype=float),
+               last_day=pd.Series({0: d[-1]}))
+    return (lambda: run_book(pn, weighting="market_cap",
+                             winner_handling="trim"),
+            SimRefused, "a simulated book under an undeclared rule")
+
+
+def _case_factor_momentum():
+    from backend.services.factor_momentum import (FactorMomentumRefused,
+                                                  synthetic_panel)
+    # The missing input is the DECLARED WORLD: a rehearsal over a world
+    # nobody specified would rehearse nothing.
+    return (lambda: synthetic_panel("bull_market"),
+            FactorMomentumRefused, "a rehearsal over an undeclared world")
+
+
+def _case_streak_evidence():
+    import pandas as pd
+
+    from backend.services.streak_evidence import StreakRefused, verdict
+    # The missing input is the SAMPLE ITSELF: a verdict on a handful of
+    # matched events would print an MDE nobody can stand behind.
+    thin = pd.DataFrame({"date": ["2020-01-02"] * 3,
+                         "permno": [1, 2, 3], "control": [4, 5, 6],
+                         "fwd_event": [0.01, 0.0, -0.01],
+                         "fwd_control": [0.0, 0.0, 0.0]})
+    return (lambda: verdict(thin),
+            StreakRefused, "a streak verdict on a threadbare sample")
+
+
 CASES = {
+    "lane_factory_sim": _case_lane_factory_sim,
+    "factor_momentum": _case_factor_momentum,
+    "streak_evidence": _case_streak_evidence,
     "verdict_battery": _case_verdict_battery,
     "expectation_store": _case_expectation_store,
     "research_executor": _case_research_executor,

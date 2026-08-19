@@ -1,0 +1,49 @@
+{
+  "trial": "STREAK-EVIDENCE-1",
+  "mode": "REGISTERED",
+  "signed_by": "Murat Abdullaev \u2014 recorded overnight handoff approval",
+  "at": "2026-08-19T12:27:16+00:00",
+  "verdict": "NOT_ESTABLISHED",
+  "direction": null,
+  "n_events": 19726,
+  "contrast": {
+    "mean": -0.0025352551756071453,
+    "ci_lo": -0.004228420542855236,
+    "ci_hi": 0.00045870918395450974,
+    "se": 0.0014521248225692785,
+    "mde_80pct_power": 0.004068251438472238,
+    "n_rows": 19726,
+    "n_dates": 2155,
+    "n_securities": 9,
+    "n_effective": 71.83333333333333,
+    "block_days": 30,
+    "dependence_unit": "contiguous 30-trading-day block of the whole cross-section",
+    "block_days_derived": 30
+  },
+  "arms": {
+    "persistence": {
+      "verdict": "NOT_ESTABLISHED",
+      "mean_dIC": -0.0025352551756071453,
+      "mde": 0.004068251438472238,
+      "ci_90": [
+        -0.004228420542855236,
+        0.00045870918395450974
+      ],
+      "p_normal_approx": 0.08082947313280542,
+      "holm_pass": false,
+      "economic_bar": 0.0025
+    },
+    "reversal": {
+      "verdict": "NOT_ESTABLISHED",
+      "mean_dIC": 0.0025352551756071453,
+      "mde": 0.004068251438472238,
+      "ci_90": [
+        -0.00045870918395450974,
+        0.004228420542855236
+      ],
+      "p_normal_approx": 0.08082947313280542,
+      "holm_pass": false,
+      "economic_bar": 0.0025
+    }
+  }
+}

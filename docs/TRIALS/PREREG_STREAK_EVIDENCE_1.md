@@ -78,3 +78,21 @@ the descendant); feed any lane before a generation prereg transports it.
 
 — registered 2026-08-19 night; prior: GENUINELY UNKNOWN direction,
 which is the point
+
+---
+
+## RESULTS (registered run 2026-08-19 night, appended post-run)
+
+Receipt `streak/trial_2026-08-19.json`. 19,726 matched events, 72
+effective blocks.
+
+**Verdict: NOT_ESTABLISHED.** Streak names minus matched controls =
+**−0.254% per 21 days** (90% CI [−0.42%, +0.05%]) vs MDE 0.41%. The
+lean is REVERSAL — the opposite of the naive biased-coin reading:
+after ≥7 up-closes, large-cap-eligible names tended to give a little
+back relative to momentum/vol-matched twins, consistent with the
+short-term-reversal and lottery literatures, but below establishment.
+STREAK_UNINFORMATIVE was NOT_ANSWERABLE_AT_N by prior declaration.
+Nothing licenses a signal. The CRSP full-history re-run (more eras,
+more names) is the declared descendant; the screen grid (lengths 5/10,
+down-streaks, volume confirmation) remains unrun and unpeeked.
