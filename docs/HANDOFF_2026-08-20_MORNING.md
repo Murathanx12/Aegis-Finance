@@ -143,3 +143,11 @@ Final gate after everything: **5,090 passed / 0 failures.**
   for whenever real execution exists).
 - RISK-HEAD-AT-SCALE-1 (LGBM vs ridge vol ordering, 1994–2012,
   prereg frozen pre-computation) running at handoff-write time.
+- **RISK-HEAD-AT-SCALE-1 RESOLVED: LGBM_WINS** — early-era walk-forward
+  (226 dates): LGBM−ridge vol ΔIC +0.0315 (MDE 0.0042, bar 0.01).
+  Ordering holds in BOTH eras ⇒ **G2 risk lane v2 model = LGBM**
+  (drafted into the G2 prereg pre-signature). SCREEN gem: early-era
+  RETURN ICs are POSITIVE for all arms (+0.012..+0.017) vs all-negative
+  2017–24 — the price-only return signal is ERA-DEPENDENT; a
+  regime-conditional return question is a NEW registration candidate
+  (REGIME-CONDITIONAL-RETURN-1), not a revival.

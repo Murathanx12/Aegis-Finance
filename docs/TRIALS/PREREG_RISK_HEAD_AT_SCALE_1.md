@@ -47,3 +47,21 @@ screen cell; feed any lane. §61 cap. Verdict sentences carry the
 nominal-screen drift note.
 
 — frozen 2026-08-19 night, pre-computation on the declared slice
+
+---
+
+## RESULTS (registered run 2026-08-19 night, appended post-run)
+
+Receipt `net_tournament/risk_head_trial_2026-08-19.json`; §64 audit
+written first. 312,766 stock-months, 6,087 names, 226 test dates.
+
+**Verdict: LGBM_WINS.** Paired per-date vol-IC difference LGBM − ridge
+= **+0.0315** (MDE 0.0042, bar 0.01 — clears both). Mean vol ICs:
+LGBM 0.776, ridge 0.744, MLP 0.732. Combined with the modern-era
+screen (0.747 vs 0.680), the ordering holds in BOTH independent eras:
+**the G2 risk-sized lane's model is LGBM, not ridge** (drafted into
+the G2 prereg pre-signature). SCREEN note (hypothesis-generating
+only): early-era RETURN ICs are POSITIVE for all arms (ridge +0.017,
+LGBM +0.014, MLP +0.012) vs all-negative 2017–2024 — the price-only
+return signal is ERA-DEPENDENT, not absent; a regime-conditional
+return question is a new registration, not a revival of the old one.

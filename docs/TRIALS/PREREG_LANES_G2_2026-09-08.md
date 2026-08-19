@@ -9,9 +9,12 @@ SCREEN — quoted for power, never as a verdict).**
 
 - `g2_equal_weight_control`: mom_12_1 top-50 of the PIT-eligible
   universe, equal weight, monthly rebalance, 3bp declared cost basis.
-- `g2_inverse_vol`: identical except weights ∝ 1/vol_63. (The frozen
-  ridge risk head is the v2 upgrade; v1 uses realized vol so the lane
-  rule is fully deterministic and auditable.)
+- `g2_inverse_vol`: identical except weights ∝ 1/vol_63. (v1 uses
+  realized vol so the lane rule is fully deterministic and auditable;
+  the v2 model upgrade is the **LGBM vol head** — ordering LGBM >
+  ridge confirmed in BOTH eras by RISK-HEAD-AT-SCALE-1, 2026-08-19,
+  superseding this draft's earlier ridge note. Draft edit made
+  pre-signature = drafting, not tampering.)
 - **Primary (deciding, readable):** realized-vol difference at the
   6-month read — §59's fast clock. Sim basis: 0.309 vs 0.284 ann vol
   (trim books) and maxDD −0.636 vs −0.478. Bar: the inverse-vol lane's

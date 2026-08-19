@@ -1,0 +1,48 @@
+{
+  "trial": "RISK-HEAD-AT-SCALE-1",
+  "mode": "REGISTERED",
+  "signed_by": "Murat Abdullaev \u2014 recorded overnight order 2026-08-19",
+  "at": "2026-08-19T15:01:15+00:00",
+  "era": "1994-2012 walk-forward on 1990-2012 panel",
+  "primary": {
+    "cell": "LGBM - ridge, 21d fwd vol IC",
+    "contrast": {
+      "mean": 0.03152867932918439,
+      "ci_lo": 0.02900212681707345,
+      "ci_hi": 0.03388002135067425,
+      "se": 0.001494774204282187,
+      "mde_80pct_power": 0.004187737315861552,
+      "n_rows": 226,
+      "n_dates": 226,
+      "n_securities": 1,
+      "n_effective": 226.0,
+      "block_days": 1,
+      "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+      "block_days_derived": 1
+    },
+    "verdict": {
+      "verdict": "LGBM_WINS",
+      "mean_dIC": 0.03152867932918439,
+      "mde": 0.004187737315861552,
+      "ci_90": [
+        0.02900212681707345,
+        0.03388002135067425
+      ],
+      "p_normal_approx": 1e-12,
+      "holm_pass": true,
+      "economic_bar": 0.01
+    }
+  },
+  "screen": {
+    "vol_mean_ic": {
+      "ridge": 0.7443,
+      "lgbm": 0.7758,
+      "mlp_2x64": 0.7316
+    },
+    "ret_mean_ic": {
+      "ridge": 0.0166,
+      "lgbm": 0.0141,
+      "mlp_2x64": 0.0124
+    }
+  }
+}
