@@ -1,0 +1,151 @@
+{
+  "sweep": "LANE-FACTORY-G2-SWEEP-1 (SIMULATION, SCREEN)",
+  "at": "2026-08-19T12:19:09+00:00",
+  "grid": [
+    "equal|exempt",
+    "equal|trim",
+    "inverse_vol|exempt",
+    "inverse_vol|trim"
+  ],
+  "window": "2014-06-30..2024-11-30",
+  "cost_basis": "flat 3bp one-way (declared v1)",
+  "summary": {
+    "equal|trim": {
+      "weighting": "equal",
+      "winner_handling": "trim",
+      "total_return": 0.41838865400836256,
+      "ann_vol": 0.30936093909159196,
+      "max_drawdown": -0.6360655092817584,
+      "turnover_oneway_total": 98.18052070652628,
+      "cost_paid_frac": 0.034630216220151215,
+      "n_delist_exits": 77,
+      "n_winner_exemptions": 0,
+      "label": "SIMULATION \u2014 LANE-FACTORY-SIM-1, never a track record"
+    },
+    "equal|exempt": {
+      "weighting": "equal",
+      "winner_handling": "exempt",
+      "total_return": 0.6712295724683492,
+      "ann_vol": 0.2841627452692519,
+      "max_drawdown": -0.5868136166338648,
+      "turnover_oneway_total": 81.15328668778703,
+      "cost_paid_frac": 0.03097671903265254,
+      "n_delist_exits": 81,
+      "n_winner_exemptions": 283,
+      "label": "SIMULATION \u2014 LANE-FACTORY-SIM-1, never a track record"
+    },
+    "inverse_vol|trim": {
+      "weighting": "inverse_vol",
+      "winner_handling": "trim",
+      "total_return": 1.6422251713506597,
+      "ann_vol": 0.28402179254259313,
+      "max_drawdown": -0.47841130902500384,
+      "turnover_oneway_total": 105.90683733937244,
+      "cost_paid_frac": 0.04461746320335529,
+      "n_delist_exits": 77,
+      "n_winner_exemptions": 0,
+      "label": "SIMULATION \u2014 LANE-FACTORY-SIM-1, never a track record"
+    },
+    "inverse_vol|exempt": {
+      "weighting": "inverse_vol",
+      "winner_handling": "exempt",
+      "total_return": 1.5579758433670259,
+      "ann_vol": 0.2622680163693725,
+      "max_drawdown": -0.4541961342996862,
+      "turnover_oneway_total": 89.06555353635203,
+      "cost_paid_frac": 0.0372159734563197,
+      "n_delist_exits": 81,
+      "n_winner_exemptions": 283,
+      "label": "SIMULATION \u2014 LANE-FACTORY-SIM-1, never a track record"
+    }
+  },
+  "paired_contrasts_monthly": {
+    "exempt_minus_trim@equal": {
+      "mean": 0.0006971486937564241,
+      "ci_lo": -0.0006859877055225938,
+      "ci_hi": 0.0027022397442040794,
+      "se": 0.0010258713659721758,
+      "mde_80pct_power": 0.002874066055092638,
+      "n_rows": 125,
+      "n_dates": 125,
+      "n_securities": 1,
+      "n_effective": 125.0,
+      "block_days": 1,
+      "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+      "block_days_derived": 1,
+      "ann_mean_diff": 0.00837
+    },
+    "exempt_minus_trim@inverse_vol": {
+      "mean": -0.0007322235773117507,
+      "ci_lo": -0.002120260137067767,
+      "ci_hi": 0.0009738755858593785,
+      "se": 0.0009304022324939299,
+      "mde_80pct_power": 0.002606601141907434,
+      "n_rows": 125,
+      "n_dates": 125,
+      "n_securities": 1,
+      "n_effective": 125.0,
+      "block_days": 1,
+      "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+      "block_days_derived": 1,
+      "ann_mean_diff": -0.00879
+    },
+    "inverse_vol_minus_equal@trim": {
+      "mean": 0.004342044315527907,
+      "ci_lo": 0.0017651290399959183,
+      "ci_hi": 0.007133852606711675,
+      "se": 0.0016391047255905396,
+      "mde_80pct_power": 0.004592091570951864,
+      "n_rows": 125,
+      "n_dates": 125,
+      "n_securities": 1,
+      "n_effective": 125.0,
+      "block_days": 1,
+      "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+      "block_days_derived": 1,
+      "ann_mean_diff": 0.0521
+    },
+    "inverse_vol_minus_equal@exempt": {
+      "mean": 0.0029126720444597326,
+      "ci_lo": 0.000616087196942026,
+      "ci_hi": 0.005193253581261088,
+      "se": 0.001401735509327269,
+      "mde_80pct_power": 0.003927081483318019,
+      "n_rows": 125,
+      "n_dates": 125,
+      "n_securities": 1,
+      "n_effective": 125.0,
+      "block_days": 1,
+      "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+      "block_days_derived": 1,
+      "ann_mean_diff": 0.03495
+    }
+  },
+  "risk_view": {
+    "equal|trim": {
+      "ann_vol": 0.30936093909159196,
+      "max_drawdown": -0.6360655092817584,
+      "turnover": 98.18052070652628,
+      "cost_paid_frac": 0.034630216220151215
+    },
+    "equal|exempt": {
+      "ann_vol": 0.2841627452692519,
+      "max_drawdown": -0.5868136166338648,
+      "turnover": 81.15328668778703,
+      "cost_paid_frac": 0.03097671903265254
+    },
+    "inverse_vol|trim": {
+      "ann_vol": 0.28402179254259313,
+      "max_drawdown": -0.47841130902500384,
+      "turnover": 105.90683733937244,
+      "cost_paid_frac": 0.04461746320335529
+    },
+    "inverse_vol|exempt": {
+      "ann_vol": 0.2622680163693725,
+      "max_drawdown": -0.4541961342996862,
+      "turnover": 89.06555353635203,
+      "cost_paid_frac": 0.0372159734563197
+    }
+  },
+  "purpose": "\u00a764 power basis for the G2 lane preregs; nothing here is a verdict"
+}
