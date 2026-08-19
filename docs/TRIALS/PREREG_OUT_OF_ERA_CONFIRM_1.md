@@ -62,3 +62,33 @@ confirmation or refutation.
 
 — frozen 2026-08-19 ~21:30 HKT, early-era pull in flight, no early-era
 byte read by any Aegis computation at freeze time
+
+---
+
+## RESULTS (registered run 2026-08-19 night, appended post-run)
+
+Receipt `lane_factory/out_of_era_trial_2026-08-19.json`; §64 audit
+written first (`out_of_era_audit_2026-08-19.json`).
+
+| cell | declared | mean | MDE | p | verdict |
+|---|---|---|---|---|---|
+| `streak_up5` | NEG | **−0.366%/21d** | 0.246% | ~0.0000 | **CONFIRMED** |
+| `streak_up7` | NEG | −0.345%/21d | 0.372% | 0.0093 | NOT_ESTABLISHED (misses MDE by 0.03%) |
+| `mom63_book` | NEG | −10.2%/yr | ~16%/yr | 0.0706 | NOT_ESTABLISHED |
+| `value_exempt_book` | POS | +3.1%/yr | ~9.5%/yr | 0.3562 | NOT_ESTABLISHED |
+
+**The confirmed sentence (scope-aware):** on 1990–2012 US
+PIT-eligible names under the frozen nominal screen, a stock that
+closed up ≥5 consecutive days went on to LAG its momentum/vol-matched
+same-date twin by 0.37% over the next 21 trading days — same sign as
+the 2013–2024 generating screen (−0.15%), larger in the early era,
+surviving Holm at m=4 and clearing the 0.25% economic bar. This is a
+short-horizon REVERSAL/avoidance regularity, the program's second
+Holm-surviving effect (after CONVEXITY-PRESERVATION-1) and its first
+OUT-OF-ERA confirmation. §61 cap: ADAPTIVE_HISTORICAL_VALIDATION — a
+candidate negative rule (avoid buying right after streaks; defer
+entries), never a standalone trading signal. SCREEN note: 4/4 cells
+matched their declared signs (P = 1/16 under independence).
+Descendants: STREAK-AVOID-RULE-1 (does deferring entries after
+streaks improve a real book net of costs?) and the G3-generation
+transport, each with fresh preregistration.

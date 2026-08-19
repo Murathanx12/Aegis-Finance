@@ -1,0 +1,120 @@
+{
+  "trial": "OUT-OF-ERA-CONFIRM-1",
+  "mode": "REGISTERED",
+  "signed_by": "Murat Abdullaev \u2014 recorded overnight handoff approval",
+  "at": "2026-08-19T13:39:35+00:00",
+  "era": [
+    "1991-06-30",
+    "2012-11-30"
+  ],
+  "m": 4,
+  "verdicts": {
+    "mom63_book": {
+      "verdict": "NOT_ESTABLISHED",
+      "mean": -0.008536,
+      "mde": 0.013228,
+      "p": 0.07064,
+      "holm_pass": false,
+      "declared_sign": -1
+    },
+    "value_exempt_book": {
+      "verdict": "NOT_ESTABLISHED",
+      "mean": 0.002616,
+      "mde": 0.007944,
+      "p": 0.35615,
+      "holm_pass": false,
+      "declared_sign": 1
+    },
+    "streak_up7": {
+      "verdict": "NOT_ESTABLISHED",
+      "mean": -0.003449,
+      "mde": 0.003717,
+      "p": 0.00932,
+      "holm_pass": true,
+      "declared_sign": -1
+    },
+    "streak_up5": {
+      "verdict": "CONFIRMED",
+      "mean": -0.003664,
+      "mde": 0.002465,
+      "p": 3e-05,
+      "holm_pass": true,
+      "declared_sign": -1
+    }
+  },
+  "contrasts": {
+    "mom63_book": {
+      "mean": -0.008535888903341775,
+      "ci_lo": -0.01597984104542854,
+      "ci_hi": -0.0007357720774827703,
+      "se": 0.004721741699649666,
+      "mde_80pct_power": 0.013228361751785744,
+      "n_rows": 256,
+      "n_dates": 256,
+      "n_securities": 1,
+      "n_effective": 256.0,
+      "block_days": 1,
+      "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+      "block_days_derived": 1,
+      "ann_diff": -0.10243,
+      "book_risk": {
+        "ann_vol": 0.3781471300205248,
+        "max_drawdown": -0.9695451881840917,
+        "n_delist_exits": 248,
+        "n_winner_exemptions": 0
+      }
+    },
+    "value_exempt_book": {
+      "mean": 0.002616299490717257,
+      "ci_lo": -0.00203550893266473,
+      "ci_hi": 0.007273249654675766,
+      "se": 0.002835420759381961,
+      "mde_80pct_power": 0.007943672887996089,
+      "n_rows": 256,
+      "n_dates": 256,
+      "n_securities": 1,
+      "n_effective": 256.0,
+      "block_days": 1,
+      "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+      "block_days_derived": 1,
+      "ann_diff": 0.0314,
+      "book_risk": {
+        "ann_vol": 0.19256171161725208,
+        "max_drawdown": -0.7814744638865366,
+        "n_delist_exits": 41,
+        "n_winner_exemptions": 315
+      }
+    },
+    "streak_up7": {
+      "mean": -0.003449340541894987,
+      "ci_lo": -0.005511151606807408,
+      "ci_hi": -0.0011509374819431751,
+      "se": 0.0013265782905936441,
+      "mde_80pct_power": 0.003716522130242808,
+      "n_rows": 20651,
+      "n_dates": 3718,
+      "n_securities": 6,
+      "n_effective": 123.93333333333334,
+      "block_days": 30,
+      "dependence_unit": "contiguous 30-trading-day block of the whole cross-section",
+      "block_days_derived": 30,
+      "n_events": 20651
+    },
+    "streak_up5": {
+      "mean": -0.0036644599216982053,
+      "ci_lo": -0.005102183838937647,
+      "ci_hi": -0.0021988661408875293,
+      "se": 0.0008797471925948425,
+      "mde_80pct_power": 0.0024646867308785575,
+      "n_rows": 93196,
+      "n_dates": 5108,
+      "n_securities": 18,
+      "n_effective": 170.26666666666668,
+      "block_days": 30,
+      "dependence_unit": "contiguous 30-trading-day block of the whole cross-section",
+      "block_days_derived": 30,
+      "n_events": 93196
+    }
+  },
+  "scope_note": "nominal screen drift disclosed (frozen cuts are stricter in real terms in 1990)"
+}

@@ -1,0 +1,46 @@
+{
+  "audit": "OUT-OF-ERA \u00a764 (means masked in this file)",
+  "at": "2026-08-19T13:39:35+00:00",
+  "cells": {
+    "mom63_book": {
+      "se": 0.004722,
+      "mde": 0.013228,
+      "n_effective": 256.0,
+      "block_days": 1,
+      "bar": 0.0004166666666666667,
+      "declared_sign": -1,
+      "informative_limb_answerable": true,
+      "equivalence_limb_answerable": false
+    },
+    "value_exempt_book": {
+      "se": 0.002835,
+      "mde": 0.007944,
+      "n_effective": 256.0,
+      "block_days": 1,
+      "bar": 0.0004166666666666667,
+      "declared_sign": 1,
+      "informative_limb_answerable": true,
+      "equivalence_limb_answerable": false
+    },
+    "streak_up7": {
+      "se": 0.001327,
+      "mde": 0.003717,
+      "n_effective": 123.93333333333334,
+      "block_days": 30,
+      "bar": 0.0025,
+      "declared_sign": -1,
+      "informative_limb_answerable": true,
+      "equivalence_limb_answerable": false
+    },
+    "streak_up5": {
+      "se": 0.00088,
+      "mde": 0.002465,
+      "n_effective": 170.26666666666668,
+      "block_days": 30,
+      "bar": 0.0025,
+      "declared_sign": -1,
+      "informative_limb_answerable": true,
+      "equivalence_limb_answerable": true
+    }
+  }
+}

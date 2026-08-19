@@ -1,6 +1,22 @@
 # HANDOFF — 2026-08-20 morning (overnight session, Murat asleep)
 
-## SECOND WAVE (post-21:00 "mega test" order) — THE NIGHT'S HEADLINE
+## THIRD WAVE — THE NIGHT'S ACTUAL HEADLINE (came after the second)
+
+**OUT-OF-ERA-CONFIRM-1: the program's first out-of-era CONFIRMATION.**
+The 1990–2012 era was pulled fresh (6,988 eligible names, 1,463
+delistings — 3× the modern rate), the protocol frozen while the pull
+was in flight, §64 audits written before verdicts. Result:
+**streak_up5 CONFIRMED** — a stock up ≥5 straight days lags its
+matched twin by −0.37%/21d (p≈0.0000, clears MDE and the 0.25% bar,
+Holm m=4). Same sign as the generating era, LARGER out of era. The
+other three cells: all same-signed as declared (4/4; P=1/16),
+up7 misses its MDE by 0.03%. Second Holm-surviving effect of the
+program; candidate negative rule STREAK-AVOID-RULE-1 (defer entries
+after streaks) queued for registration. Receipts in `lane_factory/`.
+Substrate bonus: the early era (1990–2012 universe + 33M daily rows +
+1.4M finratio rows) is now permanent local infrastructure.
+
+## SECOND WAVE (post-21:00 "mega test" order)
 
 Three independent, pre-declared tests converged on ONE lesson:
 **short-horizon winner-chasing is an ANTI-signal net of costs.**
