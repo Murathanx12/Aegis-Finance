@@ -36,8 +36,20 @@ fourth receipt and the linear verdict below is adopted, not argued with.
 At least one of {LightGBM, MLP-1, MLP-2, MLP-3} beats `linear_ridge` on the
 primary head by more than its own measured MDE. Prior is LOW: Gu–Kelly–Xiu
 found shallow ≥ deep in this signal regime, and our own G5 receipts point
-the same way. **The second declared outcome is a finding, verbatim: "the
-shape is linear; spend the next dollar on scale, coverage and cost."**
+the same way.
+
+**Verdicts are THREE-WAY per arm (amendment 1 — an underpowered miss is not
+evidence of linearity; canon: a null owes both its MDE and an equivalence
+test):**
+
+- `COMPLEX_WINS` — the arm clears the decision rule below.
+- `LINEAR_NONINFERIOR` — the instrument could see the economic bar
+  (run-time MDE ≤ ΔIC 0.01) AND the 90% CI's upper edge sits below it. Only
+  this outcome licenses the finding *"the shape is linear on these features;
+  spend the next dollar on scale, coverage and cost."*
+- `NOT_ESTABLISHED` — everything else, including every underpowered cell.
+  The next-dollar DECISION may still favour scale (prior + G5 receipts),
+  but it is a decision under uncertainty, not a finding.
 
 ## Arms — FROZEN (hyperparameters are part of this registration)
 
@@ -60,16 +72,25 @@ detectable in numeric-price features," and the report must say which.**
 ## Primary metric — the ONE deciding number
 
 Head: `cs_rank` (cross-sectional rank of 20-day forward return).
-Deciding number: the **paired per-row squared-loss difference** of each
-complex arm against `linear_ridge`, pooled over all walk-forward test
-periods, with date-block bootstrap (block = 20 trading days,
-`block_bootstrap_paired`; the §58 unit is the DATE BLOCK, n_effective ≈
-145 monthly blocks / block overlap). Negative mean = the arm beats linear.
+Deciding number (amendment 1 — one unit end to end): the **paired per-date
+Spearman rank-IC difference** of each complex arm against `linear_ridge`
+(ΔIC, positive = the arm beats linear), over all walk-forward test dates,
+with date-block bootstrap (`block_bootstrap_paired`). The block size is
+**derived from the panel's own date spacing** so one block spans the 20-day
+outcome overlap — on this month-end panel that is ~1–2 panel dates, and the
+§58 n_effective is ~145 monthly blocks, matching the power basis below.
+(The original draft blocked 20 *panel dates* — 20 months — which silently
+tripled the run-time MDE against the registered power basis; found and
+fixed 2026-08-19, `net_tournament.bootstrap_block_dates`.)
 
 Decision rule, committed before any number exists:
-- An arm WINS iff mean < 0 AND |mean| ≥ its own bootstrap MDE(80%) AND it
-  survives **Holm at FWER 0.05 across the m = 4 declared complex arms**.
-- Anything else — including "close" — adopts the linear verdict.
+- An arm earns `COMPLEX_WINS` iff mean ΔIC > 0 AND |mean| ≥ its own
+  bootstrap MDE(80%) AND it survives **Holm at FWER 0.05 across the m = 4
+  declared complex arms**.
+- `LINEAR_NONINFERIOR` requires run-time MDE ≤ ΔIC 0.01 AND 90% CI upper
+  edge < 0.01. Anything else is `NOT_ESTABLISHED` (see Hypothesis).
+- The paired per-row squared-loss difference is retained as a **diagnostic**
+  (reported beside the primary, never deciding).
 - Rank IC per arm, the other heads (magnitude, realised vol, drawdown,
   barriers), and all ablations are **reported, never deciding** (SCREEN,
   BH-FDR at 0.10, m = tests actually run, counted by the daemon).
@@ -77,15 +98,45 @@ Decision rule, committed before any number exists:
 ## Power declaration (§64, run forwards — before any outcome is read)
 
 At a declared per-month IC dispersion σ≈0.10 and 145 monthly blocks, the
-80%-power MDE on a ΔIC-shaped contrast is ≈ 2.8·σ/√145 ≈ **0.023**. The
+80%-power MDE on the ΔIC primary is ≈ 2.8·σ/√145 ≈ **0.023**. The
 economically meaningful bar declared here is **ΔIC 0.01** (what plausibly
 survives measured TAQ costs at monthly turnover). 0.023 > 0.01, therefore:
 **at the economic bar this panel's primary contrast is NOT_ANSWERABLE_AT_N
 unless the measured dispersion comes in materially under the declared σ —
 recorded NOW, at registration, not discovered after** (Order 19 §2: the bar
-is never shrunk to rescue a cell). The loss-contrast MDE is measured by its
-own bootstrap at run time; the trial reports "which effects were resolvable"
-alongside every verdict.
+is never shrunk to rescue a cell). Amendment 1 makes this power basis and
+the deciding statistic the SAME unit measured on the SAME dependence
+structure (~monthly blocks); the run-time bootstrap MDE is the operative
+number and the trial reports "which effects were resolvable" alongside
+every verdict. If run-time MDE > 0.01, the honest ceiling is
+`NOT_ESTABLISHED` for any arm that fails to win — never "linear".
+
+## Frozen protocol parameters (amendment 1 — nothing deciding lives only in code)
+
+- `first_test_year = 2016`; expanding-window annual refits
+  (`world_model.walk_forward_folds`), 2H-day embargo at each boundary,
+  `min_train = 1000`, `horizon_days = 20`.
+- Seed `20260819` everywhere; LightGBM deterministic single-thread.
+- Missingness: features median-imputed on TRAIN only; rows with a missing
+  TARGET dropped and counted (a missing target imputed is a label invented).
+- Bootstrap: `block_bootstrap_paired`, 2000 resamples, block size from
+  `bootstrap_block_dates` (panel-spacing-derived; see Primary metric).
+- Multiplicity: Holm FWER 0.05, m = 4 declared complex arms (primary);
+  BH-FDR 0.10 for everything reported-not-deciding.
+- Software versions are recorded in the run receipt at run time.
+
+## The competing-risks barrier head (amendment 1 — now executable as declared)
+
+Registered on `barrier_up20_down10` ONLY at this horizon. Protocol
+(`net_tournament.run_barrier_head`): the SAME walk-forward folds as every
+other head; per fold, cause-specific Cox (up- and down-hazard; the other
+cause and `neither` censor) and a timing-blind multinomial logistic on
+{up, down, neither} are fit on train and scored on the HELD-OUT test rows —
+per-cause concordance of each model's risk score against the test
+(duration, event) pairs. Sub-30-event causes refuse per fold and are
+counted. The pooled paired difference (Cox − multinomial) has n = FOLDS and
+is SCREEN-grade by construction. `fit_cause_specific`'s in-sample
+concordance is a diagnostic and decides nothing.
 
 ## Cells recorded NOT_ANSWERABLE at registration
 
@@ -94,6 +145,19 @@ alongside every verdict.
 - `barrier_up40_down20` at h=20: 2.7% — pooled fit only; per-fold thin.
 - The competing-risk comparison (cause-specific Cox vs multinomial) is
   therefore registered on `barrier_up20_down10` ONLY at this horizon.
+
+## Universe-selection limitation (amendment 1 — declared, and it caps claims)
+
+The panel's universe is the 2026 TAQ-calibration 182 applied back to 2013 —
+a **current-universe selection**, tilted toward names that survived to 2026
+(EA, MMC→MRSH, SQ→XYZ and PXD are this week's proof identity is not
+static). That is acceptable for a hermetic ARCHITECTURAL comparison on "the
+features this machine actually has," and is exactly why every claim here is
+§61-capped; it is NOT a basis for historical cross-sectional economics. The
+companion registration `UNIVERSE-SURVIVAL-STRESS-1` (CRSP PIT universe via
+permanent identifiers; same arms; primary output = does the arm RANKING
+move) is the declared robustness check, and any material rank movement
+there files an erratum against this trial's interpretation section.
 
 ## Costs
 
@@ -122,3 +186,34 @@ which future data systems get built (it is designed to), those systems'
 trials must name this document as `hypothesis_source`.
 
 — drafted by grind session 2026-08-18 night, awaiting signature
+
+## AMENDMENT 1 — 2026-08-19 day session, PRE-SIGNATURE (drafting, not tampering)
+
+No score has ever been computed on the registered panel (the gate refuses
+unsigned; verified again today). The draft was repaired before signature on
+four defects raised by external review round 3 and verified against the
+code, plus one found during the repair:
+
+1. **Units:** the deciding statistic was squared loss while the economic
+   bar and power basis were ΔIC. Primary is now the per-date rank-IC
+   difference; squared loss demoted to diagnostic.
+2. **Verdict:** "anything else adopts the linear verdict" conflated
+   NOT_ESTABLISHED with noninferiority. Three-way verdicts now; an
+   underpowered miss is never evidence of linearity.
+3. **Executability:** the registered competing-risks comparison existed in
+   code but was never called by the runner, and its concordance was
+   in-sample. `run_barrier_head` now runs it walk-forward, held-out, with
+   the multinomial comparator on identical rows/folds.
+4. **Frozen params:** `first_test_year=2016`, folds, seed, imputation and
+   bootstrap config were hard-coded in the runner but unregistered. Now in
+   the Frozen-protocol section.
+5. **(Found during repair)** the bootstrap blocked 20 *panel dates*
+   (= 20 months) instead of the 20-trading-day overlap — the run-time MDE
+   silently disagreed with the registered power basis by ~√20. Block size
+   is now derived from panel spacing (`bootstrap_block_dates`).
+
+Also added: the universe-selection limitation clause and the
+`UNIVERSE-SURVIVAL-STRESS-1` companion. Synthetic known-answer worlds
+(`--world linear|nonlinear|null|barrier`) are part of the harness
+acceptance: nonlinear world → a nonlinear arm must win; null world → no
+COMPLEX_WINS; barrier world → survival must beat timing-blind, held out.
