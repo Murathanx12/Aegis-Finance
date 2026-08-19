@@ -132,11 +132,14 @@ class ReservedWindow:
 
 
 def load_reserved_windows(path: Path | str | None = None) -> list[ReservedWindow]:
-    """Reserved windows from disk. An unreadable file REFUSES, never returns [].
+    """HAND-DECLARED supplement windows from disk. Absent is a legitimate state.
 
-    An empty list means "nothing is reserved", which would make every job
-    submittable. That is the most permissive possible answer and it must never
-    be what a missing file produces.
+    This file is for reservations that exist nowhere machine-readable yet —
+    a supplement, not the source of record. The source of record is the
+    confirmation-budget ledger, and `derive_reserved_windows` reads it. An
+    absent supplement is fine; an absent LEDGER is not (see the derivation).
+    An unreadable file still REFUSES: unreadable and absent are different
+    states and only one of them is a legitimate way to have declared nothing.
     """
     p = Path(path or (DAEMON_DIR / "reserved_windows.json"))
     if not p.exists():
@@ -150,6 +153,81 @@ def load_reserved_windows(path: Path | str | None = None) -> list[ReservedWindow
             f"which is the most permissive answer available and the one a "
             f"missing input must never produce.") from e
     return [ReservedWindow(**r) for r in raw]
+
+
+def derive_reserved_windows(
+        ledger_path: Path | str | None = None) -> list[ReservedWindow]:
+    """DERIVE reserved windows from the confirmation-budget ledger.
+
+    The programme's actual reservations live in
+    `research_gym/confirmation_budget.jsonl` (every declared EXPORT budget is
+    a confirmation window whose evidence is unspent). Until 2026-08-18 this
+    module read only its own hand-authored JSON file, which no producer
+    writes — so the guard at the "most important line in this module" passed
+    every job unconditionally, in the live tree, for as long as the daemon
+    existed. A guard must derive what it checks from data it can see, or
+    refuse; this is the derivation.
+
+    An ABSENT ledger refuses. Unlike the supplement file, the ledger cannot
+    be legitimately absent in any environment where submitting research jobs
+    makes sense — its absence means "wrong machine or wrong path", and the
+    permissive reading of that state is exactly the failure this function
+    exists to close. Callers who genuinely have no reservations declare it:
+    `ResearchDaemon(reserved=[])`, in writing, at the call site.
+
+    Windows stay reserved after their campaign decides — conservative on
+    purpose. Post-decision reanalysis is a REANALYSIS purpose in the slice
+    register, not an unmarked exploration through the daemon.
+    """
+    if ledger_path is None:
+        from backend.services.research_gym import multiplicity as _mp
+        ledger_path = _mp.LEDGER_PATH
+    p = Path(ledger_path)
+    if not p.exists():
+        raise JobRefused(
+            f"confirmation-budget ledger absent at {p}. Deriving 'nothing is "
+            f"reserved' from a missing ledger is the most permissive answer "
+            f"available and the one a missing input must never produce. If "
+            f"nothing is genuinely reserved, say so at the call site: "
+            f"ResearchDaemon(reserved=[]).")
+    out: list[ReservedWindow] = []
+    seen: set[str] = set()
+    for i, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
+            rec = json.loads(line)
+        except ValueError as e:
+            raise JobRefused(
+                f"confirmation-budget ledger line {i} is unreadable ({e}); a "
+                f"reservation that cannot be parsed cannot be skipped, because "
+                f"skipping is the permissive direction.") from e
+        if rec.get("kind") != "budget" or rec.get("purpose") != "EXPORT":
+            continue
+        wid = rec.get("window_id", "")
+        if wid in seen:
+            continue
+        parts = wid.split("|")
+        period = parts[1].split("..") if len(parts) == 3 else []
+        if len(parts) != 3 or len(period) != 2:
+            raise JobRefused(
+                f"EXPORT budget window_id {wid!r} (ledger line {i}) does not "
+                f"parse as universe|start..end|outcome. A malformed "
+                f"reservation dropped silently is a reservation that does not "
+                f"bind.")
+        seen.add(wid)
+        out.append(ReservedWindow(
+            name=f"EXPORT:{rec.get('declared_by', '?')}:{wid}",
+            universe=parts[0], outcome=parts[2],
+            start=period[0], end=period[1]))
+    return out
+
+
+def default_reserved_windows() -> list[ReservedWindow]:
+    """What `ResearchDaemon()` reserves when the caller does not say:
+    everything the budget ledger declares, plus the hand-declared supplement.
+    """
+    return derive_reserved_windows() + load_reserved_windows()
 
 
 @dataclass
@@ -346,7 +424,14 @@ class ResearchDaemon:
 
     def __init__(self, *, reserved: Sequence[ReservedWindow] | None = None,
                  window_id: str | None = None, budget=None) -> None:
-        self.reserved = list(reserved or [])
+        # `None` means "look at the world": derive from the budget ledger.
+        # An explicit `[]` is a written declaration that nothing is reserved,
+        # made at the call site where a reviewer can see it. The two are
+        # different statements and conflating them (`reserved or []`) was how
+        # the guard ran permissive in the live tree for its whole life.
+        if reserved is None:
+            reserved = default_reserved_windows()
+        self.reserved = list(reserved)
         self._subs: dict[str, Submission] = {}
         self._window_id = window_id
         self._budget = budget

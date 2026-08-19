@@ -326,8 +326,114 @@ def _case_lane_autopsy():
             ReplayRefused, "a replay over a name with no prices")
 
 
+def _case_net_panel():
+    from pathlib import Path
+
+    from backend.services.net_panel import PanelRefused, load_price_panel
+    # The missing input is the SOURCE ITSELF. A materializer that defaults an
+    # absent price file to an empty panel hands the tournament a dataset that
+    # looks like a dataset — every downstream number would be a fact about
+    # nothing, formatted like a fact about the market.
+    return (lambda: load_price_panel(Path("Z:/does/not/exist.parquet")),
+            PanelRefused, "a panel materialized from an absent price source")
+
+
+def _case_net_tournament():
+    from pathlib import Path
+
+    from backend.services.net_tournament import (TournamentRefused,
+                                                 assert_signed)
+    # The missing input is the AUTHORIZATION. The tournament runs a declared,
+    # signed protocol or it does not run (canon §6) — an absent prereg read as
+    # permission would be the most permissive answer a missing input can give.
+    return (lambda: assert_signed(Path("Z:/does/not/exist.md")),
+            TournamentRefused, "a tournament run with no pre-registration")
+
+
+def _case_convexity_episodes():
+    import numpy as np
+
+    from backend.services.convexity_episodes import (EpisodeRefused,
+                                                     arm_outcome)
+    # The missing input is the OUTCOME WINDOW. An arm scored on a single
+    # price has no path to manage; returning $1.00 for it would report
+    # every management rule as exactly break-even — plausible, green, and
+    # about nothing.
+    return (lambda: arm_outcome(np.array([100.0]), "hold",
+                                cost_one_way_bps=3.0,
+                                ann_vol_at_crossing=0.3),
+            EpisodeRefused, "an arm scored on a one-price outcome window")
+
+
+def _case_relative_value_labels():
+    from backend.services.cost_model import MEASURED_TAQ_QUOTED, OneWayBps
+    from backend.services.relative_value_labels import (PairRefused,
+                                                        pair_label)
+    # The missing input is the RETURN. A pair labelled with an invented
+    # forward return is a training row about nothing; the network cannot
+    # tell it from a market fact, which is precisely why it must refuse
+    # here rather than impute there.
+    c = OneWayBps(1.0, MEASURED_TAQ_QUOTED, basis="test")
+    return (lambda: pair_label(fwd_a=float("nan"), fwd_b=0.01, dd_a=None,
+                               dd_b=None, cost_a=c, cost_b=c),
+            PairRefused, "a pair labelled from an invented return")
+
+
+def _case_security_identity():
+    from backend.services.security_identity import (IdentityUnknown,
+                                                    resolve)
+    # The missing input is the AS-OF DATE. An undated resolve is how MMC
+    # stayed "unexplained" for a session: identity without a date silently
+    # answers for whichever era the caller wasn't thinking about.
+    return (lambda: resolve("MMC", None),
+            IdentityUnknown, "an identity resolved without an as-of date")
+
+
+def _case_research_executor():
+    from backend.services.research_daemon import (HypothesisJob,
+                                                  ResearchDaemon)
+    from backend.services.research_executor import (ExecutorRefused,
+                                                    JobAdapter, KIND_RESULT)
+    # The missing input is the RESULT STATISTIC. A RESULT adapter that
+    # returns no JobOutcome has run an experiment and produced nothing
+    # recordable; recording anyway would put an empty test into m.
+    d = ResearchDaemon(reserved=[])
+    d.submit(HypothesisJob(
+        hypothesis_id="CASE-EXEC", question="q", universe="u", outcome="o",
+        start="2020-01-01", end="2024-12-31", n_date_blocks=10,
+        se_per_block=0.1, expected_effect=0.5, effect_units="x"))
+    a = JobAdapter(hypothesis_id="CASE-EXEC", kind=KIND_RESULT,
+                   reads_universe="u", reads_start="2020-01-01",
+                   reads_end="2024-12-31", run=lambda: None)
+
+    def _go():
+        a.assert_matches(d.get("CASE-EXEC"))
+        out = a.run()
+        if not hasattr(out, "p_value"):
+            raise ExecutorRefused("RESULT adapter returned no JobOutcome")
+        return out
+    return (_go, ExecutorRefused, "a result recorded without a statistic")
+
+
+def _case_expectation_store():
+    from backend.services.expectation_store import (ExpectationStoreRefused,
+                                                    to_expectation_records)
+    # The missing input is the FETCH ITSELF. None means "not fetched"
+    # (budget/keys/error) — mapping it as if it were an empty result would
+    # turn a data outage into "no expectations existed".
+    return (lambda: to_expectation_records(None),
+            ExpectationStoreRefused, "a missing fetch mapped as empty")
+
+
 CASES = {
+    "expectation_store": _case_expectation_store,
+    "research_executor": _case_research_executor,
+    "security_identity": _case_security_identity,
     "lane_autopsy": _case_lane_autopsy,
+    "net_panel": _case_net_panel,
+    "net_tournament": _case_net_tournament,
+    "convexity_episodes": _case_convexity_episodes,
+    "relative_value_labels": _case_relative_value_labels,
     "instrument_floor": _case_instrument_floor,
     "taq_calibration": _case_taq_calibration,
     "cost_model": _case_cost_model,

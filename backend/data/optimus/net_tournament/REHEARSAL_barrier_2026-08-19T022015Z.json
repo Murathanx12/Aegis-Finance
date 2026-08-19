@@ -1,0 +1,503 @@
+{
+  "tournament": "AEGIS-NET-TOURNAMENT-1",
+  "mode": "REHEARSAL_SYNTHETIC_BARRIER",
+  "first_test_year": 2018,
+  "started_at": "2026-08-19T02:20:15+00:00",
+  "heads": {
+    "cs_rank": {
+      "tournament": "AEGIS-NET-TOURNAMENT-1",
+      "head": "cs_rank",
+      "baseline_arm": "linear_ridge",
+      "n_rows_scored": 17340,
+      "n_rows_dropped_missing_target": 0,
+      "bootstrap_block_dates": 1,
+      "folds": [
+        {
+          "train_end": "2017-11-30",
+          "test_start": "2018-01-31",
+          "test_end": "2018-12-31",
+          "n_train": 7140,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2018-11-30",
+          "test_start": "2019-01-31",
+          "test_end": "2019-12-31",
+          "n_train": 9180,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2019-11-30",
+          "test_start": "2020-01-31",
+          "test_end": "2020-12-31",
+          "n_train": 11220,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2020-11-30",
+          "test_start": "2021-01-31",
+          "test_end": "2021-12-31",
+          "n_train": 13260,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2021-11-30",
+          "test_start": "2022-01-31",
+          "test_end": "2022-12-31",
+          "n_train": 15300,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2022-11-30",
+          "test_start": "2023-01-31",
+          "test_end": "2023-12-31",
+          "n_train": 17340,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2023-11-30",
+          "test_start": "2024-01-31",
+          "test_end": "2024-12-31",
+          "n_train": 19380,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2024-11-30",
+          "test_start": "2025-01-31",
+          "test_end": "2025-12-31",
+          "n_train": 21420,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2025-11-30",
+          "test_start": "2026-01-31",
+          "test_end": "2026-06-30",
+          "n_train": 23460,
+          "n_test": 1020
+        }
+      ],
+      "arms": {
+        "linear_ridge": {
+          "ic_mean": 0.0058066687572312144,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "lightgbm": {
+          "ic_mean": -0.004266260335632595,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "mlp_1": {
+          "ic_mean": 0.0024509175315389686,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "mlp_2": {
+          "ic_mean": 0.0021281611856398576,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "mlp_3": {
+          "ic_mean": -0.001412531964624201,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        }
+      },
+      "ic_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": -0.010072929092863813,
+          "ci_lo": -0.02657560497956671,
+          "ci_hi": 0.009176036191432011,
+          "se": 0.010739818154948398,
+          "mde_80pct_power": 0.030088515793355353,
+          "n_rows": 102,
+          "n_dates": 102,
+          "n_securities": 1,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": -0.0033557512256922497,
+          "ci_lo": -0.020718137659005934,
+          "ci_hi": 0.010736284621383319,
+          "se": 0.009510536476059367,
+          "mde_80pct_power": 0.026644578412284053,
+          "n_rows": 102,
+          "n_dates": 102,
+          "n_securities": 1,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": -0.003678507571591359,
+          "ci_lo": -0.02060270640702957,
+          "ci_hi": 0.012999859551419447,
+          "se": 0.01023850100694248,
+          "mde_80pct_power": 0.028684033081671265,
+          "n_rows": 102,
+          "n_dates": 102,
+          "n_securities": 1,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": -0.007219200721855419,
+          "ci_lo": -0.02400232237056131,
+          "ci_hi": 0.011125730694815773,
+          "se": 0.010597201993861534,
+          "mde_80pct_power": 0.029688964464520917,
+          "n_rows": 102,
+          "n_dates": 102,
+          "n_securities": 1,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "loss_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": 0.002908799974782165,
+          "ci_lo": 0.0024806899942262177,
+          "ci_hi": 0.0032760141752503085,
+          "se": 0.00024144941468586925,
+          "mde_80pct_power": 0.000676441111223553,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": 0.0014668575814653331,
+          "ci_lo": 0.001217315136779098,
+          "ci_hi": 0.0017577036325135801,
+          "se": 0.0001657372616584092,
+          "mde_80pct_power": 0.00046432706243343966,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": 0.0014201230418380217,
+          "ci_lo": 0.0011459361683800317,
+          "ci_hi": 0.0017071573311546486,
+          "se": 0.00017160278042147774,
+          "mde_80pct_power": 0.0004807598130994735,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": 0.0021448498021841215,
+          "ci_lo": 0.0017978329229759538,
+          "ci_hi": 0.002492926996846712,
+          "se": 0.00021240153351975689,
+          "mde_80pct_power": 0.0005950609967169232,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "contrast_note": "PRIMARY: per-date rank-IC difference, positive mean = arm beats baseline; squared loss is a diagnostic. Criterion lives in the pre-registration, not here",
+      "elapsed_s": 26.6,
+      "verdicts": {
+        "lightgbm": {
+          "verdict": "NOT_ESTABLISHED",
+          "mean_dIC": -0.010072929092863813,
+          "mde": 0.030088515793355353,
+          "ci_90": [
+            -0.02657560497956671,
+            0.009176036191432011
+          ],
+          "p_normal_approx": 0.34829323600030637,
+          "holm_pass": false,
+          "economic_bar": 0.01
+        },
+        "mlp_1": {
+          "verdict": "NOT_ESTABLISHED",
+          "mean_dIC": -0.0033557512256922497,
+          "mde": 0.026644578412284053,
+          "ci_90": [
+            -0.020718137659005934,
+            0.010736284621383319
+          ],
+          "p_normal_approx": 0.7242041739884766,
+          "holm_pass": false,
+          "economic_bar": 0.01
+        },
+        "mlp_2": {
+          "verdict": "NOT_ESTABLISHED",
+          "mean_dIC": -0.003678507571591359,
+          "mde": 0.028684033081671265,
+          "ci_90": [
+            -0.02060270640702957,
+            0.012999859551419447
+          ],
+          "p_normal_approx": 0.7193842515824729,
+          "holm_pass": false,
+          "economic_bar": 0.01
+        },
+        "mlp_3": {
+          "verdict": "NOT_ESTABLISHED",
+          "mean_dIC": -0.007219200721855419,
+          "mde": 0.029688964464520917,
+          "ci_90": [
+            -0.02400232237056131,
+            0.011125730694815773
+          ],
+          "p_normal_approx": 0.49572186033879495,
+          "holm_pass": false,
+          "economic_bar": 0.01
+        }
+      }
+    },
+    "barrier_up20_down10": {
+      "tournament": "AEGIS-NET-TOURNAMENT-1",
+      "head": "barrier_up20_down10",
+      "barrier": "up20_down10",
+      "horizon_days": 20,
+      "per_fold": [
+        {
+          "fold": {
+            "train_end": "2017-11-30",
+            "test_start": "2018-01-31",
+            "test_end": "2018-12-31",
+            "n_train": 7140,
+            "n_test": 2040
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 1298,
+              "n_events_test": 347,
+              "concordance_holdout_cox": 0.6598007971442598,
+              "concordance_holdout_multinomial": 0.6597858194859335
+            },
+            "down": {
+              "n_events_train": 851,
+              "n_events_test": 258,
+              "concordance_holdout_cox": 0.5001466751412303,
+              "concordance_holdout_multinomial": 0.504784720894985
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2018-11-30",
+            "test_start": "2019-01-31",
+            "test_end": "2019-12-31",
+            "n_train": 9180,
+            "n_test": 2040
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 1657,
+              "n_events_test": 354,
+              "concordance_holdout_cox": 0.6445895110622832,
+              "concordance_holdout_multinomial": 0.6444096764120698
+            },
+            "down": {
+              "n_events_train": 1105,
+              "n_events_test": 259,
+              "concordance_holdout_cox": 0.525086737536543,
+              "concordance_holdout_multinomial": 0.5289247209193402
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2019-11-30",
+            "test_start": "2020-01-31",
+            "test_end": "2020-12-31",
+            "n_train": 11220,
+            "n_test": 2040
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 2011,
+              "n_events_test": 425,
+              "concordance_holdout_cox": 0.636983973904801,
+              "concordance_holdout_multinomial": 0.6368876715042573
+            },
+            "down": {
+              "n_events_train": 1369,
+              "n_events_test": 232,
+              "concordance_holdout_cox": 0.5021290120778552,
+              "concordance_holdout_multinomial": 0.49870089902832293
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2020-11-30",
+            "test_start": "2021-01-31",
+            "test_end": "2021-12-31",
+            "n_train": 13260,
+            "n_test": 2040
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 2439,
+              "n_events_test": 380,
+              "concordance_holdout_cox": 0.668385241301908,
+              "concordance_holdout_multinomial": 0.6687161469770165
+            },
+            "down": {
+              "n_events_train": 1595,
+              "n_events_test": 236,
+              "concordance_holdout_cox": 0.5063576207362995,
+              "concordance_holdout_multinomial": 0.5068036412824919
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2021-11-30",
+            "test_start": "2022-01-31",
+            "test_end": "2022-12-31",
+            "n_train": 15300,
+            "n_test": 2040
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 2817,
+              "n_events_test": 383,
+              "concordance_holdout_cox": 0.6358060146962257,
+              "concordance_holdout_multinomial": 0.6357603080021756
+            },
+            "down": {
+              "n_events_train": 1839,
+              "n_events_test": 262,
+              "concordance_holdout_cox": 0.5529913828113384,
+              "concordance_holdout_multinomial": 0.5573765398536653
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2022-11-30",
+            "test_start": "2023-01-31",
+            "test_end": "2023-12-31",
+            "n_train": 17340,
+            "n_test": 2040
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 3191,
+              "n_events_test": 383,
+              "concordance_holdout_cox": 0.6455777380368454,
+              "concordance_holdout_multinomial": 0.6454848173728129
+            },
+            "down": {
+              "n_events_train": 2104,
+              "n_events_test": 254,
+              "concordance_holdout_cox": 0.5142112160760116,
+              "concordance_holdout_multinomial": 0.5128938459018184
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2023-11-30",
+            "test_start": "2024-01-31",
+            "test_end": "2024-12-31",
+            "n_train": 19380,
+            "n_test": 2040
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 3584,
+              "n_events_test": 386,
+              "concordance_holdout_cox": 0.6417972138207764,
+              "concordance_holdout_multinomial": 0.6416976535453264
+            },
+            "down": {
+              "n_events_train": 2355,
+              "n_events_test": 254,
+              "concordance_holdout_cox": 0.5162057686589355,
+              "concordance_holdout_multinomial": 0.5251149385850545
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2024-11-30",
+            "test_start": "2025-01-31",
+            "test_end": "2025-12-31",
+            "n_train": 21420,
+            "n_test": 2040
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 3967,
+              "n_events_test": 360,
+              "concordance_holdout_cox": 0.651678547492841,
+              "concordance_holdout_multinomial": 0.6512969501069434
+            },
+            "down": {
+              "n_events_train": 2607,
+              "n_events_test": 231,
+              "concordance_holdout_cox": 0.4924718277644698,
+              "concordance_holdout_multinomial": 0.49969749585593914
+            }
+          }
+        },
+        {
+          "fold": {
+            "train_end": "2025-11-30",
+            "test_start": "2026-01-31",
+            "test_end": "2026-06-30",
+            "n_train": 23460,
+            "n_test": 1020
+          },
+          "causes": {
+            "up": {
+              "n_events_train": 4328,
+              "n_events_test": 194,
+              "concordance_holdout_cox": 0.6540594188859108,
+              "concordance_holdout_multinomial": 0.6541901665844541
+            },
+            "down": {
+              "n_events_train": 2838,
+              "n_events_test": 105,
+              "concordance_holdout_cox": 0.48085894920427297,
+              "concordance_holdout_multinomial": 0.4777850446915195
+            }
+          }
+        }
+      ],
+      "summary": {
+        "up": {
+          "n_folds_scored": 9,
+          "n_folds_refused": 0,
+          "mean_holdout_cox": 0.6487420507050946,
+          "mean_holdout_multinomial": 0.6486921344434433,
+          "mean_paired_diff_cox_minus_mn": 4.9916261651294924e-05,
+          "screen_note": "n is FOLDS (~single digits) \u2014 SCREEN-grade by construction, never deciding"
+        },
+        "down": {
+          "n_folds_scored": 9,
+          "n_folds_refused": 0,
+          "mean_holdout_cox": 0.510051021111884,
+          "mean_holdout_multinomial": 0.5124535385570153,
+          "mean_paired_diff_cox_minus_mn": -0.002402517445131172,
+          "screen_note": "n is FOLDS (~single digits) \u2014 SCREEN-grade by construction, never deciding"
+        }
+      },
+      "elapsed_s": 1.0
+    }
+  },
+  "world": "barrier"
+}

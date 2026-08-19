@@ -1,0 +1,395 @@
+{
+  "trial": "LANE-AUTOPSY-CROSS-ARMS-1",
+  "run_at": "2026-08-19T02:03:09+00:00",
+  "prices": "backend/data/conviction_prices.csv (hermetic)",
+  "snapshot": "track_record_snapshot_2026-08-18.json",
+  "reconcile_tolerance": 0.02,
+  "reconciliation": {
+    "n_shared_dates": 36,
+    "max_abs_divergence": 0.11231,
+    "mean_abs_divergence": 0.037531388888888885,
+    "worst": {
+      "date": "2026-07-30",
+      "reconstructed": 93770.55,
+      "authoritative": 84302.52,
+      "divergence": 0.11231
+    },
+    "largest_divergence_jumps": [
+      {
+        "date": "2026-07-30",
+        "jump": 0.116821
+      },
+      {
+        "date": "2026-07-14",
+        "jump": 0.075374
+      },
+      {
+        "date": "2026-06-24",
+        "jump": 0.069336
+      }
+    ]
+  },
+  "reconciliation_rows": [
+    {
+      "date": "2026-06-16",
+      "reconstructed": 100041.38,
+      "authoritative": 100041.38,
+      "divergence": 0.0
+    },
+    {
+      "date": "2026-06-17",
+      "reconstructed": 101764.84,
+      "authoritative": 97355.99,
+      "divergence": 0.045286
+    },
+    {
+      "date": "2026-06-18",
+      "reconstructed": 103955.04,
+      "authoritative": 99166.7,
+      "divergence": 0.048286
+    },
+    {
+      "date": "2026-06-22",
+      "reconstructed": 105731.01,
+      "authoritative": 101102.44,
+      "divergence": 0.045781
+    },
+    {
+      "date": "2026-06-23",
+      "reconstructed": 102576.22,
+      "authoritative": 102932.51,
+      "divergence": -0.003461
+    },
+    {
+      "date": "2026-06-24",
+      "reconstructed": 106367.78,
+      "authoritative": 99793.87,
+      "divergence": 0.065875
+    },
+    {
+      "date": "2026-06-25",
+      "reconstructed": 105057.53,
+      "authoritative": 103782.48,
+      "divergence": 0.012286
+    },
+    {
+      "date": "2026-06-26",
+      "reconstructed": 107795.03,
+      "authoritative": 102628.98,
+      "divergence": 0.050337
+    },
+    {
+      "date": "2026-06-29",
+      "reconstructed": 109264.6,
+      "authoritative": 105340.59,
+      "divergence": 0.037251
+    },
+    {
+      "date": "2026-06-30",
+      "reconstructed": 104394.25,
+      "authoritative": 106620.13,
+      "divergence": -0.020877
+    },
+    {
+      "date": "2026-07-01",
+      "reconstructed": 106633.91,
+      "authoritative": 101811.09,
+      "divergence": 0.04737
+    },
+    {
+      "date": "2026-07-02",
+      "reconstructed": 106993.33,
+      "authoritative": 104117.07,
+      "divergence": 0.027625
+    },
+    {
+      "date": "2026-07-06",
+      "reconstructed": 108030.06,
+      "authoritative": 104572.87,
+      "divergence": 0.03306
+    },
+    {
+      "date": "2026-07-07",
+      "reconstructed": 105779.44,
+      "authoritative": 105526.98,
+      "divergence": 0.002392
+    },
+    {
+      "date": "2026-07-08",
+      "reconstructed": 105482.98,
+      "authoritative": 103451.96,
+      "divergence": 0.019633
+    },
+    {
+      "date": "2026-07-09",
+      "reconstructed": 105038.93,
+      "authoritative": 103140.54,
+      "divergence": 0.018406
+    },
+    {
+      "date": "2026-07-10",
+      "reconstructed": 106675.59,
+      "authoritative": 102595.11,
+      "divergence": 0.039773
+    },
+    {
+      "date": "2026-07-13",
+      "reconstructed": 99945.53,
+      "authoritative": 102593.88,
+      "divergence": -0.025814
+    },
+    {
+      "date": "2026-07-14",
+      "reconstructed": 100899.92,
+      "authoritative": 96135.42,
+      "divergence": 0.04956
+    },
+    {
+      "date": "2026-07-15",
+      "reconstructed": 100485.69,
+      "authoritative": 97023.25,
+      "divergence": 0.035687
+    },
+    {
+      "date": "2026-07-16",
+      "reconstructed": 95159.05,
+      "authoritative": 96655.39,
+      "divergence": -0.015481
+    },
+    {
+      "date": "2026-07-17",
+      "reconstructed": 95126.3,
+      "authoritative": 91528.54,
+      "divergence": 0.039308
+    },
+    {
+      "date": "2026-07-20",
+      "reconstructed": 92493.7,
+      "authoritative": 91476.9,
+      "divergence": 0.011115
+    },
+    {
+      "date": "2026-07-21",
+      "reconstructed": 95332.14,
+      "authoritative": 88903.69,
+      "divergence": 0.072308
+    },
+    {
+      "date": "2026-07-22",
+      "reconstructed": 94062.43,
+      "authoritative": 91624.91,
+      "divergence": 0.026603
+    },
+    {
+      "date": "2026-07-23",
+      "reconstructed": 92869.69,
+      "authoritative": 90429.41,
+      "divergence": 0.026985
+    },
+    {
+      "date": "2026-07-24",
+      "reconstructed": 91399.62,
+      "authoritative": 89276.51,
+      "divergence": 0.023781
+    },
+    {
+      "date": "2026-07-27",
+      "reconstructed": 94046.11,
+      "authoritative": 89276.51,
+      "divergence": 0.053425
+    },
+    {
+      "date": "2026-07-28",
+      "reconstructed": 91617.82,
+      "authoritative": 90407.36,
+      "divergence": 0.013389
+    },
+    {
+      "date": "2026-07-29",
+      "reconstructed": 87679.95,
+      "authoritative": 88077.29,
+      "divergence": -0.004511
+    },
+    {
+      "date": "2026-07-30",
+      "reconstructed": 93770.55,
+      "authoritative": 84302.52,
+      "divergence": 0.11231
+    },
+    {
+      "date": "2026-07-31",
+      "reconstructed": 95429.01,
+      "authoritative": 90132.14,
+      "divergence": 0.058768
+    },
+    {
+      "date": "2026-08-03",
+      "reconstructed": 97836.9,
+      "authoritative": 91733.91,
+      "divergence": 0.066529
+    },
+    {
+      "date": "2026-08-04",
+      "reconstructed": 100710.27,
+      "authoritative": 93994.61,
+      "divergence": 0.071447
+    },
+    {
+      "date": "2026-08-07",
+      "reconstructed": 103559.16,
+      "authoritative": 94869.93,
+      "divergence": 0.091591
+    },
+    {
+      "date": "2026-08-10",
+      "reconstructed": 102965.47,
+      "authoritative": 99500.96,
+      "divergence": 0.034819
+    }
+  ],
+  "reconciled": false,
+  "windows": {
+    "2026-06-08": [
+      {
+        "label": "conviction",
+        "total_return": 0.006814709052543444,
+        "n_rebalances": 0,
+        "rebalance_dates": [],
+        "turnover_total": 0.0,
+        "cost_drag": 0.0,
+        "hrp_fallback": "",
+        "n_days": 44,
+        "n_names": 12
+      },
+      {
+        "label": "ew-at-seed-hold",
+        "total_return": 0.09077810490415072,
+        "n_rebalances": 0,
+        "rebalance_dates": [],
+        "turnover_total": 0.352807,
+        "cost_drag": 0.000212,
+        "hrp_fallback": "",
+        "n_days": 44,
+        "n_names": 12
+      },
+      {
+        "label": "seed-weights-monthly",
+        "total_return": 0.04195241344214251,
+        "n_rebalances": 2,
+        "rebalance_dates": [
+          "2026-07-01",
+          "2026-08-03"
+        ],
+        "turnover_total": 0.544233,
+        "cost_drag": 0.000327,
+        "hrp_fallback": "",
+        "n_days": 44,
+        "n_names": 12
+      },
+      {
+        "label": "ew-monthly",
+        "total_return": 0.10805950731566982,
+        "n_rebalances": 2,
+        "rebalance_dates": [
+          "2026-07-01",
+          "2026-08-03"
+        ],
+        "turnover_total": 0.798629,
+        "cost_drag": 0.000479,
+        "hrp_fallback": "",
+        "n_days": 44,
+        "n_names": 12
+      },
+      {
+        "label": "mirror",
+        "total_return": 0.13863899533913382,
+        "n_rebalances": 3,
+        "rebalance_dates": [
+          "2026-06-30",
+          "2026-07-01",
+          "2026-08-03"
+        ],
+        "turnover_total": 0.869121,
+        "cost_drag": 0.000521,
+        "hrp_fallback": "EQUAL_WEIGHT_HRP_HISTORY_GATE_NOT_MET",
+        "n_days": 44,
+        "n_names": 12
+      }
+    ],
+    "2026-06-16": [
+      {
+        "label": "conviction",
+        "total_return": 0.029228842091659102,
+        "n_rebalances": 0,
+        "rebalance_dates": [],
+        "turnover_total": 0.0,
+        "cost_drag": 0.0,
+        "hrp_fallback": "",
+        "n_days": 38,
+        "n_names": 12
+      },
+      {
+        "label": "ew-at-seed-hold",
+        "total_return": 0.06190283114278183,
+        "n_rebalances": 0,
+        "rebalance_dates": [],
+        "turnover_total": 0.348129,
+        "cost_drag": 0.000209,
+        "hrp_fallback": "",
+        "n_days": 38,
+        "n_names": 12
+      },
+      {
+        "label": "seed-weights-monthly",
+        "total_return": 0.05190897169977582,
+        "n_rebalances": 2,
+        "rebalance_dates": [
+          "2026-07-01",
+          "2026-08-03"
+        ],
+        "turnover_total": 0.451593,
+        "cost_drag": 0.000271,
+        "hrp_fallback": "",
+        "n_days": 38,
+        "n_names": 12
+      },
+      {
+        "label": "ew-monthly",
+        "total_return": 0.07437275545759214,
+        "n_rebalances": 2,
+        "rebalance_dates": [
+          "2026-07-01",
+          "2026-08-03"
+        ],
+        "turnover_total": 0.731756,
+        "cost_drag": 0.000439,
+        "hrp_fallback": "",
+        "n_days": 38,
+        "n_names": 12
+      },
+      {
+        "label": "mirror",
+        "total_return": 0.10270679823326767,
+        "n_rebalances": 3,
+        "rebalance_dates": [
+          "2026-06-30",
+          "2026-07-01",
+          "2026-08-03"
+        ],
+        "turnover_total": 0.806224,
+        "cost_drag": 0.000484,
+        "hrp_fallback": "EQUAL_WEIGHT_HRP_HISTORY_GATE_NOT_MET",
+        "n_days": 38,
+        "n_names": 12
+      }
+    ]
+  },
+  "start_shift_effect": {
+    "conviction": 0.022414133039115658,
+    "ew-at-seed-hold": -0.02887527376136889,
+    "seed-weights-monthly": 0.009956558257633308,
+    "ew-monthly": -0.03368675185807768,
+    "mirror": -0.03593219710586615
+  },
+  "basis": "RECONSTRUCTION on cached adjusted closes; paper_nav is authoritative. Cells are statements about RULES ON THESE PRICES; live-lane sentences require reconciled=true."
+}

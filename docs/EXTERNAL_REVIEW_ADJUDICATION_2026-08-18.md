@@ -249,4 +249,18 @@ trade alignment conventions).
    replay outranks every other autopsy: two competent reviewers read the
    same 14-point gap in opposite directions; only the replay settles it.
 
+---
+
+**ERRATUM (added 2026-08-18 late night, grind session).** B1's supporting
+sentence — "the equal-weighted arm is the one 14 points behind" — quoted the
+live lanes as if the gap's mechanism attribution were settled. The cross-arm
+replay (`docs/conviction_replay/LANE_AUTOPSY_CROSS_ARMS.md`) found the
+authoritative conviction NAV diverges from YAML-seed buy-and-hold by up to
+11.2% in discrete jumps, and the live mirror lane sits ~27 points below its
+own rules replayed on the current book — so NEITHER circulating reading of
+the 14-point gap (A6's or B1's) is reconciled. The B1 rejection stands on
+its other leg (no covariance estimate ever ran; HRP fell back to equal
+weight at the 252-day gate). The positions read (attended,
+lane-integrity-check) decides the rest.
+
 — brain, 2026-08-18 night

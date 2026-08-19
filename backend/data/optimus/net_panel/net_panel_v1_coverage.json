@@ -1,0 +1,37 @@
+{
+  "panel": "AEGIS-NET-PANEL-1",
+  "feature_families": {
+    "numeric_price": "AVAILABLE \u2014 computed here from the price panel",
+    "options": "ABSENT \u2014 no PIT options store in this repo",
+    "expectations": "ABSENT \u2014 no PIT estimate/revision store in this repo",
+    "event_llm": "ABSENT \u2014 no PIT event/LLM feature store in this repo",
+    "semantic_graph": "ABSENT \u2014 graph lives in the sibling repo, not PIT here"
+  },
+  "n_feature_columns_numeric_price": 7,
+  "n_decision_dates": 145,
+  "n_rows": 24911,
+  "unit_note": "\u00a758: the inference unit is the DATE BLOCK (145 monthly blocks), never the 24911 rows",
+  "n_names_source": 182,
+  "dead_names": {
+    "MMC": "all-NaN in source (PXD delisted, SQ renamed XYZ, MMC unexplained \u2014 same trio as TAQ)",
+    "PXD": "all-NaN in source (PXD delisted, SQ renamed XYZ, MMC unexplained \u2014 same trio as TAQ)",
+    "SQ": "all-NaN in source (PXD delisted, SQ renamed XYZ, MMC unexplained \u2014 same trio as TAQ)"
+  },
+  "excluded_name_dates": {
+    "no_price_at_t": 1315,
+    "insufficient_history": 168
+  },
+  "dropped_at_horizon_end": 0,
+  "dates_unlabelable_at_horizon": [
+    "2026-07-31"
+  ],
+  "names_per_date": {
+    "min": 165,
+    "max": 179
+  },
+  "date_range": [
+    "2014-06-30",
+    "2026-06-30"
+  ],
+  "missingness_in_output": 0.11214644133113887
+}

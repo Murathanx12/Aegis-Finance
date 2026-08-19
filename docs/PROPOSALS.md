@@ -118,3 +118,51 @@ have side effects, two are item-3's intent gaps).
 **Cost:** 1 cycle to audit markers; pure test-metadata, no runtime code change.
 **Risk to guardrails:** None (test-only).
 **Recommendation:** Approve; restores a trustworthy fast gate. CLAUDE.md's test-timing note should be corrected too.
+
+## P-grind-2026-08-19a — UNIVERSE-SURVIVAL-STRESS-1: CRSP PIT universe as the NET robustness axis
+**What:** Second canonical panel from CRSP permanent identifiers (PERMNO): historical eligibility decided only from information at t, delisted names included, ticker as dated alias, frozen liquidity/exchange filters. Then the declared sensitivity: does the tournament's ARM RANKING move between the 2026-selected 182 and the PIT universe?
+**Why now:** The NET panel's universe is a 2026 selection applied to 2013+ (declared in the amended prereg, which caps interpretation until this runs). EA/MRSH/XYZ/PXD proved identity is not static. External review round 3's top structural point.
+**Evidence:** Amended prereg §Universe-selection limitation; WRDS CRSP entitled and psycopg2 route proven (port 9737 open).
+**Cost:** 1–2 sessions (CRSP pull + panel build + sensitivity dataset; no tournament verdict — that stays signature-gated).
+**Risk to guardrails:** None; new data, new registration, §61-capped.
+**Recommendation:** Approve. If the arm ranking flips, "architecture alpha" was sample construction — a major finding either way.
+
+## P-grind-2026-08-19b — EXPECTATION-BACKFILL-1: populate G4 so the tournament's +expectations rung exists
+**What:** PIT expectations store: analyst estimate level/dispersion/revision direction+acceleration/staleness keyed on PUBLICATION timestamp (not period-end), earnings consensus-vs-actual, econ surprise. Feeds `g4_expectation.ExpectationRecord` at scale and materializes the NET ablation ladder's declared-ABSENT "+expectations" family.
+**Why now:** G4 V1 is built but empty; the coverage audit says the ladder's floor is the data's. This is the highest-leverage data build in the queue — 4 of 13 daemon jobs block on event/expectation stores.
+**Evidence:** `net_panel_v1_coverage.json` declares the family absent; daemon classification receipt names it as the blocker for EVENT-RESOLUTION-CURVE-1, INFORMATION-PROCESSING-GAP-1, REACTION-GAP-1, SEQUENCE-OF-EVIDENCE-1.
+**Cost:** 1 session for earnings/estimates (yfinance/FMP/SEC already integrated); IBES via WRDS as the deeper rung.
+**Risk to guardrails:** None; collector + store + PIT future-mutation test per house rule.
+**Recommendation:** Approve — first build after the merge.
+
+## P-grind-2026-08-19c — HISTORICAL-COST-REGIME-1: TAQ 2003+ regime-conditional spread curves
+**What:** Pull quoted/effective spreads for the panel names across historical vol regimes (2008, 2020, calm years) from entitled taqm_2003..2026; fit spread-vs-VIX-regime curves per liquidity tier. Every NET verdict gains a stress-cost sensitivity instead of assuming today's 23 calm days price all history.
+**Why now:** The current cost calibration is 23 days of ONE regime; adjudication B7 asked for regime-drift checks. "A count of survivors is a fact about the cost rate until it carries one" — and the rate is regime-dependent.
+**Evidence:** Entitlement probe: taqm_2003..taqm_2026 SELECT OK. wct_* server-side NBBO join makes each year ~30 min.
+**Cost:** ~1 session of WRDS queries, $0.
+**Risk to guardrails:** None.
+**Recommendation:** Approve.
+
+## P-grind-2026-08-19d — NAV-RULES-DRIFT-MONITOR: daily replay reconciliation on the lanes
+**What:** Read-only daily job: replay each lane's declared rules on its current positions/prices, diff vs authoritative paper_nav, alert when divergence exceeds a declared tolerance or jumps discretely. The 06-24/07-14/07-17/07-30/08-10 conviction jumps would each have been flagged the morning after instead of discovered in a forensic session eight weeks later.
+**Why now:** The 14-pt gap investigation found FIVE accounting-jump days; every one aged silently.
+**Evidence:** `decision_reconstruction_2026-08-19.json` (jump table); cross_arms_1.json (level divergence).
+**Cost:** Small — the replay machinery exists (`lane_autopsy_cross_arms.py`); this is a daily thin wrapper + one health field.
+**Risk to guardrails:** Read-only; needs the positions endpoint (on this branch) deployed.
+**Recommendation:** Approve after merge.
+
+## P-grind-2026-08-19e — Convexity outcome-family extension (CONVEXITY-CAPTURE + REENTRY-OPTION-VALUE)
+**What:** Extend the episode outcome family before the trial runs: fraction of max favorable excursion captured, peak giveback, time underwater, recovery probability, right-tail truncation per arm; and a distinct REENTRY-OPTION-VALUE-1 descendant (trim-and-reenter on renewed confirmation) so exit experiments stop understating the option to return.
+**Why now:** The episodes exist (23,011) and the executor's power audit says the contrast is answerable ~7× over (MDE 0.0045 vs declared 0.030) — the registration should ask richer questions while it's being signed anyway. Adding outcomes AFTER results would be §37.
+**Evidence:** executor receipt 2026-08-19 (audit block); external review round 3 §9–10.
+**Cost:** Half a session on the episode builder + registration text.
+**Risk to guardrails:** None if amended pre-signature; forbidden after.
+**Recommendation:** Approve — fold into the prereg draft before signing.
+
+## P-grind-2026-08-19f — Four new research families from review round 3 (daemon `hypothesis_source` entries)
+**What:** BELIEF-SHOCK-DECOMPOSITION-1 (LLM decomposes announcements into revenue/margin/guidance/... shock VECTOR; market prices each component — vs scalar sentiment) · LLM-PERCEPTION-vs-ALPHA-1 (every LLM feature scored twice: explains the immediate reaction vs predicts the post-first-executable-price residual) · DAY-NIGHT-INFORMATION-1 (decompose event paths: overnight gap/auction/first-30m/rest/d1-5/d6-20 — where does the learnable fraction live) · REACTION-RESIDUAL-1 (predict the JUSTIFIED immediate move; the gap is the candidate — extends REACTION-GAP-1, names it as parent).
+**Why now:** Each has a 2025–26 literature seed (NBER w35093, RFS hhag062/hhag036, Mgmt Sci Siano), imports as `hypothesis_source` (§61 cap), and none collides with a corpse — checked against NEGATIVE_RESULTS and the queue (MODEL-DISAGREEMENT-TOPOLOGY folds into existing MODEL-DISAGREEMENT-1 as its state design, not a new trial).
+**Evidence:** Review round 3 §research-directions; all four block on the same PIT event/expectation stores as proposal b.
+**Cost:** Registration text now; runnable only after proposal b ships.
+**Risk to guardrails:** None; all enter through pre-register-trial with corpses named.
+**Recommendation:** Approve registrations; sequencing after EXPECTATION-BACKFILL-1.

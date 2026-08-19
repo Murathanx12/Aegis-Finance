@@ -1,0 +1,10 @@
+{
+  "generated_from": [
+    "taq_quoted_spreads_calibration.csv",
+    "taq_effective_spreads_v1.jsonl"
+  ],
+  "n_names": 184,
+  "last_day": "2026-08-17",
+  "flags": [],
+  "canary": "ok"
+}

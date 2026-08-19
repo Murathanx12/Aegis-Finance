@@ -1,0 +1,269 @@
+{
+  "tournament": "AEGIS-NET-TOURNAMENT-1",
+  "mode": "REHEARSAL_SYNTHETIC_NONLINEAR",
+  "first_test_year": 2018,
+  "started_at": "2026-08-19T02:20:13+00:00",
+  "heads": {
+    "cs_rank": {
+      "tournament": "AEGIS-NET-TOURNAMENT-1",
+      "head": "cs_rank",
+      "baseline_arm": "linear_ridge",
+      "n_rows_scored": 17340,
+      "n_rows_dropped_missing_target": 0,
+      "bootstrap_block_dates": 1,
+      "folds": [
+        {
+          "train_end": "2017-11-30",
+          "test_start": "2018-01-31",
+          "test_end": "2018-12-31",
+          "n_train": 7140,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2018-11-30",
+          "test_start": "2019-01-31",
+          "test_end": "2019-12-31",
+          "n_train": 9180,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2019-11-30",
+          "test_start": "2020-01-31",
+          "test_end": "2020-12-31",
+          "n_train": 11220,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2020-11-30",
+          "test_start": "2021-01-31",
+          "test_end": "2021-12-31",
+          "n_train": 13260,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2021-11-30",
+          "test_start": "2022-01-31",
+          "test_end": "2022-12-31",
+          "n_train": 15300,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2022-11-30",
+          "test_start": "2023-01-31",
+          "test_end": "2023-12-31",
+          "n_train": 17340,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2023-11-30",
+          "test_start": "2024-01-31",
+          "test_end": "2024-12-31",
+          "n_train": 19380,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2024-11-30",
+          "test_start": "2025-01-31",
+          "test_end": "2025-12-31",
+          "n_train": 21420,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2025-11-30",
+          "test_start": "2026-01-31",
+          "test_end": "2026-06-30",
+          "n_train": 23460,
+          "n_test": 1020
+        }
+      ],
+      "arms": {
+        "linear_ridge": {
+          "ic_mean": 0.0037940513740073846,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "lightgbm": {
+          "ic_mean": 0.24436185157925633,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "mlp_1": {
+          "ic_mean": 0.26314139532132613,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "mlp_2": {
+          "ic_mean": 0.2599569602329364,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "mlp_3": {
+          "ic_mean": 0.2546271940301331,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        }
+      },
+      "ic_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": 0.2405678002052489,
+          "ci_lo": 0.22555462881044605,
+          "ci_hi": 0.25898809012799734,
+          "se": 0.010097901460391688,
+          "mde_80pct_power": 0.0282901314703127,
+          "n_rows": 102,
+          "n_dates": 102,
+          "n_securities": 1,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": 0.2593473439473188,
+          "ci_lo": 0.24378453128309535,
+          "ci_hi": 0.2772606480199325,
+          "se": 0.010095640788693815,
+          "mde_80pct_power": 0.028283798005899835,
+          "n_rows": 102,
+          "n_dates": 102,
+          "n_securities": 1,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": 0.256162908858929,
+          "ci_lo": 0.24053230012029722,
+          "ci_hi": 0.2750037734330913,
+          "se": 0.0104517896157919,
+          "mde_80pct_power": 0.029281579295519555,
+          "n_rows": 102,
+          "n_dates": 102,
+          "n_securities": 1,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": 0.2508331426561257,
+          "ci_lo": 0.2353173389579817,
+          "ci_hi": 0.26931041183762416,
+          "se": 0.010442651409102489,
+          "mde_80pct_power": 0.02925597783073399,
+          "n_rows": 102,
+          "n_dates": 102,
+          "n_securities": 1,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "loss_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": -0.0053083976733516005,
+          "ci_lo": -0.006018497737325952,
+          "ci_hi": -0.0047111402419360736,
+          "se": 0.0004045857567967972,
+          "mde_80pct_power": 0.0011334814758980013,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": -0.006585154253337267,
+          "ci_lo": -0.007246963319344722,
+          "ci_hi": -0.006068043401126791,
+          "se": 0.000361778575915402,
+          "mde_80pct_power": 0.001013553510690748,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": -0.006348743631296744,
+          "ci_lo": -0.007035704883404467,
+          "ci_hi": -0.005777411011191507,
+          "se": 0.0003812800042242316,
+          "mde_80pct_power": 0.0010681884239823526,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": -0.005877549424088576,
+          "ci_lo": -0.0066001768276811095,
+          "ci_hi": -0.005288550081838548,
+          "se": 0.0004001753991999668,
+          "mde_80pct_power": 0.0011211254832459812,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "contrast_note": "PRIMARY: per-date rank-IC difference, positive mean = arm beats baseline; squared loss is a diagnostic. Criterion lives in the pre-registration, not here",
+      "elapsed_s": 29.2,
+      "verdicts": {
+        "lightgbm": {
+          "verdict": "COMPLEX_WINS",
+          "mean_dIC": 0.2405678002052489,
+          "mde": 0.0282901314703127,
+          "ci_90": [
+            0.22555462881044605,
+            0.25898809012799734
+          ],
+          "p_normal_approx": 1e-12,
+          "holm_pass": true,
+          "economic_bar": 0.01
+        },
+        "mlp_1": {
+          "verdict": "COMPLEX_WINS",
+          "mean_dIC": 0.2593473439473188,
+          "mde": 0.028283798005899835,
+          "ci_90": [
+            0.24378453128309535,
+            0.2772606480199325
+          ],
+          "p_normal_approx": 1e-12,
+          "holm_pass": true,
+          "economic_bar": 0.01
+        },
+        "mlp_2": {
+          "verdict": "COMPLEX_WINS",
+          "mean_dIC": 0.256162908858929,
+          "mde": 0.029281579295519555,
+          "ci_90": [
+            0.24053230012029722,
+            0.2750037734330913
+          ],
+          "p_normal_approx": 1e-12,
+          "holm_pass": true,
+          "economic_bar": 0.01
+        },
+        "mlp_3": {
+          "verdict": "COMPLEX_WINS",
+          "mean_dIC": 0.2508331426561257,
+          "mde": 0.02925597783073399,
+          "ci_90": [
+            0.2353173389579817,
+            0.26931041183762416
+          ],
+          "p_normal_approx": 1e-12,
+          "holm_pass": true,
+          "economic_bar": 0.01
+        }
+      }
+    }
+  },
+  "world": "nonlinear"
+}

@@ -1,0 +1,269 @@
+{
+  "tournament": "AEGIS-NET-TOURNAMENT-1",
+  "mode": "REHEARSAL_SYNTHETIC_NULL",
+  "first_test_year": 2018,
+  "started_at": "2026-08-19T02:20:14+00:00",
+  "heads": {
+    "cs_rank": {
+      "tournament": "AEGIS-NET-TOURNAMENT-1",
+      "head": "cs_rank",
+      "baseline_arm": "linear_ridge",
+      "n_rows_scored": 17340,
+      "n_rows_dropped_missing_target": 0,
+      "bootstrap_block_dates": 1,
+      "folds": [
+        {
+          "train_end": "2017-11-30",
+          "test_start": "2018-01-31",
+          "test_end": "2018-12-31",
+          "n_train": 7140,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2018-11-30",
+          "test_start": "2019-01-31",
+          "test_end": "2019-12-31",
+          "n_train": 9180,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2019-11-30",
+          "test_start": "2020-01-31",
+          "test_end": "2020-12-31",
+          "n_train": 11220,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2020-11-30",
+          "test_start": "2021-01-31",
+          "test_end": "2021-12-31",
+          "n_train": 13260,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2021-11-30",
+          "test_start": "2022-01-31",
+          "test_end": "2022-12-31",
+          "n_train": 15300,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2022-11-30",
+          "test_start": "2023-01-31",
+          "test_end": "2023-12-31",
+          "n_train": 17340,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2023-11-30",
+          "test_start": "2024-01-31",
+          "test_end": "2024-12-31",
+          "n_train": 19380,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2024-11-30",
+          "test_start": "2025-01-31",
+          "test_end": "2025-12-31",
+          "n_train": 21420,
+          "n_test": 2040
+        },
+        {
+          "train_end": "2025-11-30",
+          "test_start": "2026-01-31",
+          "test_end": "2026-06-30",
+          "n_train": 23460,
+          "n_test": 1020
+        }
+      ],
+      "arms": {
+        "linear_ridge": {
+          "ic_mean": 0.0058066687572312144,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "lightgbm": {
+          "ic_mean": -0.004266260335632595,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "mlp_1": {
+          "ic_mean": 0.0024509175315389686,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "mlp_2": {
+          "ic_mean": 0.0021281611856398576,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        },
+        "mlp_3": {
+          "ic_mean": -0.001412531964624201,
+          "ic_n_dates": 102,
+          "thin_dates_dropped": 0
+        }
+      },
+      "ic_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": -0.010072929092863813,
+          "ci_lo": -0.02657560497956671,
+          "ci_hi": 0.009176036191432011,
+          "se": 0.010739818154948398,
+          "mde_80pct_power": 0.030088515793355353,
+          "n_rows": 102,
+          "n_dates": 102,
+          "n_securities": 1,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": -0.0033557512256922497,
+          "ci_lo": -0.020718137659005934,
+          "ci_hi": 0.010736284621383319,
+          "se": 0.009510536476059367,
+          "mde_80pct_power": 0.026644578412284053,
+          "n_rows": 102,
+          "n_dates": 102,
+          "n_securities": 1,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": -0.003678507571591359,
+          "ci_lo": -0.02060270640702957,
+          "ci_hi": 0.012999859551419447,
+          "se": 0.01023850100694248,
+          "mde_80pct_power": 0.028684033081671265,
+          "n_rows": 102,
+          "n_dates": 102,
+          "n_securities": 1,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": -0.007219200721855419,
+          "ci_lo": -0.02400232237056131,
+          "ci_hi": 0.011125730694815773,
+          "se": 0.010597201993861534,
+          "mde_80pct_power": 0.029688964464520917,
+          "n_rows": 102,
+          "n_dates": 102,
+          "n_securities": 1,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "loss_contrast_vs_baseline": {
+        "lightgbm": {
+          "mean": 0.002908799974782165,
+          "ci_lo": 0.0024806899942262177,
+          "ci_hi": 0.0032760141752503085,
+          "se": 0.00024144941468586925,
+          "mde_80pct_power": 0.000676441111223553,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_1": {
+          "mean": 0.0014668575814653331,
+          "ci_lo": 0.001217315136779098,
+          "ci_hi": 0.0017577036325135801,
+          "se": 0.0001657372616584092,
+          "mde_80pct_power": 0.00046432706243343966,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_2": {
+          "mean": 0.0014201230418380217,
+          "ci_lo": 0.0011459361683800317,
+          "ci_hi": 0.0017071573311546486,
+          "se": 0.00017160278042147774,
+          "mde_80pct_power": 0.0004807598130994735,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        },
+        "mlp_3": {
+          "mean": 0.0021448498021841215,
+          "ci_lo": 0.0017978329229759538,
+          "ci_hi": 0.002492926996846712,
+          "se": 0.00021240153351975689,
+          "mde_80pct_power": 0.0005950609967169232,
+          "n_rows": 17340,
+          "n_dates": 102,
+          "n_securities": 170,
+          "n_effective": 102.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section"
+        }
+      },
+      "contrast_note": "PRIMARY: per-date rank-IC difference, positive mean = arm beats baseline; squared loss is a diagnostic. Criterion lives in the pre-registration, not here",
+      "elapsed_s": 26.6,
+      "verdicts": {
+        "lightgbm": {
+          "verdict": "NOT_ESTABLISHED",
+          "mean_dIC": -0.010072929092863813,
+          "mde": 0.030088515793355353,
+          "ci_90": [
+            -0.02657560497956671,
+            0.009176036191432011
+          ],
+          "p_normal_approx": 0.34829323600030637,
+          "holm_pass": false,
+          "economic_bar": 0.01
+        },
+        "mlp_1": {
+          "verdict": "NOT_ESTABLISHED",
+          "mean_dIC": -0.0033557512256922497,
+          "mde": 0.026644578412284053,
+          "ci_90": [
+            -0.020718137659005934,
+            0.010736284621383319
+          ],
+          "p_normal_approx": 0.7242041739884766,
+          "holm_pass": false,
+          "economic_bar": 0.01
+        },
+        "mlp_2": {
+          "verdict": "NOT_ESTABLISHED",
+          "mean_dIC": -0.003678507571591359,
+          "mde": 0.028684033081671265,
+          "ci_90": [
+            -0.02060270640702957,
+            0.012999859551419447
+          ],
+          "p_normal_approx": 0.7193842515824729,
+          "holm_pass": false,
+          "economic_bar": 0.01
+        },
+        "mlp_3": {
+          "verdict": "NOT_ESTABLISHED",
+          "mean_dIC": -0.007219200721855419,
+          "mde": 0.029688964464520917,
+          "ci_90": [
+            -0.02400232237056131,
+            0.011125730694815773
+          ],
+          "p_normal_approx": 0.49572186033879495,
+          "holm_pass": false,
+          "economic_bar": 0.01
+        }
+      }
+    }
+  },
+  "world": "null"
+}

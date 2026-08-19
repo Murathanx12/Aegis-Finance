@@ -1,0 +1,233 @@
+{
+  "day": "20260814",
+  "hj_exclude_set": "OZBTLGWKJ",
+  "generated_at": "2026-08-19T02:57:35+00:00",
+  "status": "SENSITIVITY \u2014 not a verdict; evidence for the conventions ruling (review Q3)",
+  "names": {
+    "NVDA": {
+      "tier": "liquid_sub1bp",
+      "grid": [
+        {
+          "convention": "v1_all",
+          "n_prints": 1470387,
+          "med_eff_bps": 0.636,
+          "med_quoted_bps": 0.8883,
+          "ratio": 0.716
+        },
+        {
+          "convention": "no_midpoint",
+          "n_prints": 1246339,
+          "med_eff_bps": 0.6401,
+          "med_quoted_bps": 0.8883,
+          "ratio": 0.7206
+        },
+        {
+          "convention": "hj_conditions",
+          "n_prints": 1467747,
+          "med_eff_bps": 0.6358,
+          "med_quoted_bps": 0.8883,
+          "ratio": 0.7158
+        },
+        {
+          "convention": "round_lots_only",
+          "n_prints": 150825,
+          "med_eff_bps": 0.4438,
+          "med_quoted_bps": 0.8871,
+          "ratio": 0.5003
+        },
+        {
+          "convention": "exchange_only",
+          "n_prints": 387870,
+          "med_eff_bps": 0.444,
+          "med_quoted_bps": 0.8871,
+          "ratio": 0.5005
+        },
+        {
+          "convention": "trf_only",
+          "n_prints": 1082517,
+          "med_eff_bps": 0.6388,
+          "med_quoted_bps": 0.8887,
+          "ratio": 0.7188
+        },
+        {
+          "convention": "lag_le_50ms",
+          "n_prints": 870612,
+          "med_eff_bps": 0.5336,
+          "med_quoted_bps": 0.8883,
+          "ratio": 0.6007
+        },
+        {
+          "convention": "lag_50_500ms",
+          "n_prints": 558826,
+          "med_eff_bps": 0.6381,
+          "med_quoted_bps": 0.8884,
+          "ratio": 0.7183
+        },
+        {
+          "convention": "lag_gt_500ms",
+          "n_prints": 40949,
+          "med_eff_bps": 0.5321,
+          "med_quoted_bps": 0.8875,
+          "ratio": 0.5995
+        },
+        {
+          "convention": "composed_hj_rounds_nomid",
+          "n_prints": 99824,
+          "med_eff_bps": 0.4446,
+          "med_quoted_bps": 0.8834,
+          "ratio": 0.5032
+        }
+      ]
+    },
+    "DXCM": {
+      "tier": "mid_5bp",
+      "grid": [
+        {
+          "convention": "v1_all",
+          "n_prints": 35110,
+          "med_eff_bps": 1.3372,
+          "med_quoted_bps": 4.4538,
+          "ratio": 0.3002
+        },
+        {
+          "convention": "no_midpoint",
+          "n_prints": 24596,
+          "med_eff_bps": 3.2897,
+          "med_quoted_bps": 4.4499,
+          "ratio": 0.7393
+        },
+        {
+          "convention": "hj_conditions",
+          "n_prints": 34307,
+          "med_eff_bps": 1.1159,
+          "med_quoted_bps": 4.4534,
+          "ratio": 0.2506
+        },
+        {
+          "convention": "round_lots_only",
+          "n_prints": 8455,
+          "med_eff_bps": 1.1138,
+          "med_quoted_bps": 4.4038,
+          "ratio": 0.2529
+        },
+        {
+          "convention": "exchange_only",
+          "n_prints": 17585,
+          "med_eff_bps": 1.1153,
+          "med_quoted_bps": 3.3428,
+          "ratio": 0.3336
+        },
+        {
+          "convention": "trf_only",
+          "n_prints": 17525,
+          "med_eff_bps": 1.509,
+          "med_quoted_bps": 5.559,
+          "ratio": 0.2715
+        },
+        {
+          "convention": "lag_le_50ms",
+          "n_prints": 16341,
+          "med_eff_bps": 1.1143,
+          "med_quoted_bps": 3.3376,
+          "ratio": 0.3339
+        },
+        {
+          "convention": "lag_50_500ms",
+          "n_prints": 3420,
+          "med_eff_bps": 1.1926,
+          "med_quoted_bps": 5.559,
+          "ratio": 0.2145
+        },
+        {
+          "convention": "lag_gt_500ms",
+          "n_prints": 15349,
+          "med_eff_bps": 2.1304,
+          "med_quoted_bps": 5.5658,
+          "ratio": 0.3828
+        },
+        {
+          "convention": "composed_hj_rounds_nomid",
+          "n_prints": 4797,
+          "med_eff_bps": 2.2264,
+          "med_quoted_bps": 3.3294,
+          "ratio": 0.6687
+        }
+      ]
+    },
+    "PLUG": {
+      "tier": "illiquid_47bp",
+      "grid": [
+        {
+          "convention": "v1_all",
+          "n_prints": 80232,
+          "med_eff_bps": 42.8266,
+          "med_quoted_bps": 43.0108,
+          "ratio": 0.9957
+        },
+        {
+          "convention": "no_midpoint",
+          "n_prints": 61930,
+          "med_eff_bps": 43.0108,
+          "med_quoted_bps": 43.0108,
+          "ratio": 1.0
+        },
+        {
+          "convention": "hj_conditions",
+          "n_prints": 78275,
+          "med_eff_bps": 42.8266,
+          "med_quoted_bps": 43.0108,
+          "ratio": 0.9957
+        },
+        {
+          "convention": "round_lots_only",
+          "n_prints": 23425,
+          "med_eff_bps": 42.2833,
+          "med_quoted_bps": 43.0108,
+          "ratio": 0.9831
+        },
+        {
+          "convention": "exchange_only",
+          "n_prints": 30172,
+          "med_eff_bps": 43.0108,
+          "med_quoted_bps": 43.1965,
+          "ratio": 0.9957
+        },
+        {
+          "convention": "trf_only",
+          "n_prints": 50060,
+          "med_eff_bps": 42.4628,
+          "med_quoted_bps": 43.0108,
+          "ratio": 0.9873
+        },
+        {
+          "convention": "lag_le_50ms",
+          "n_prints": 14920,
+          "med_eff_bps": 42.8266,
+          "med_quoted_bps": 43.1965,
+          "ratio": 0.9914
+        },
+        {
+          "convention": "lag_50_500ms",
+          "n_prints": 20998,
+          "med_eff_bps": 42.6439,
+          "med_quoted_bps": 43.0108,
+          "ratio": 0.9915
+        },
+        {
+          "convention": "lag_gt_500ms",
+          "n_prints": 44314,
+          "med_eff_bps": 42.7015,
+          "med_quoted_bps": 43.0108,
+          "ratio": 0.9928
+        },
+        {
+          "convention": "composed_hj_rounds_nomid",
+          "n_prints": 14198,
+          "med_eff_bps": 43.0108,
+          "med_quoted_bps": 43.0108,
+          "ratio": 1.0
+        }
+      ]
+    }
+  }
+}
