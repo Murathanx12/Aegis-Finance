@@ -50,3 +50,20 @@ verdict about the parent's primary (different basis — disclosed);
 promote screen cells. §61 cap.
 
 — frozen pre-computation
+
+---
+
+## RESULTS (run 2026-08-20 ~01:00, appended post-run)
+
+Receipt `net_tournament/ladder_rungs_2026-08-20.json`. Coverage:
+options features ~0.6-0.7 of panel rows, expectations ~0.8.
+
+**BH-FDR survivors (m=8): the +options rung on BOTH vol arms.**
+ridge vol +0.0735 dIC (p~0), LGBM vol +0.0402 (p~0) - best vol IC now
+LGBM 0.787. +expectations adds ~nothing beyond options for vol
+(+0.00005) and ns for returns. Return-ranking: NO rung helps (era
+consistent with the anti-momentum finding). Honest caveat carried:
+opt_iv_atm is itself a market vol forecast - the survivors mean the
+risk head ABSORBS the options market's information, not that alpha was
+found. Consequence drafted into the G2 risk lane notes: v2 model =
+LGBM WITH the options rung, pending its own transport prereg.

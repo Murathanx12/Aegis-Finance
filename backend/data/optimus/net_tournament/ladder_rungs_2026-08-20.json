@@ -1,0 +1,90 @@
+{
+  "amendment": "NET AMENDMENT 2 ladder rungs (SCREEN)",
+  "at": "2026-08-19T16:44:22+00:00",
+  "basis": "PIT monthly panel (declared basis change, disclosed)",
+  "coverage": {
+    "opt_iv_atm": 0.985,
+    "opt_skew": 0.985,
+    "opt_pc50": 0.985,
+    "exp_breadth": 0.987,
+    "exp_disp": 0.967,
+    "exp_chg": 0.986
+  },
+  "mean_ics": {
+    "ridge|fwd_ret": {
+      "numeric": -0.0472,
+      "plus_options": -0.0434,
+      "plus_expectations": -0.0375
+    },
+    "lgbm|fwd_ret": {
+      "numeric": -0.0123,
+      "plus_options": -0.012,
+      "plus_expectations": -0.0087
+    },
+    "ridge|fwd_vol": {
+      "numeric": 0.68,
+      "plus_options": 0.7535,
+      "plus_expectations": 0.7536
+    },
+    "lgbm|fwd_vol": {
+      "numeric": 0.7465,
+      "plus_options": 0.7867,
+      "plus_expectations": 0.7868
+    }
+  },
+  "rung_increments": [
+    {
+      "cell": "ridge|fwd_ret|numeric->plus_options",
+      "d_ic": 0.00375,
+      "p": 0.40952,
+      "mde": 0.01275
+    },
+    {
+      "cell": "ridge|fwd_ret|plus_options->plus_expectations",
+      "d_ic": 0.00596,
+      "p": 0.06624,
+      "mde": 0.00909
+    },
+    {
+      "cell": "lgbm|fwd_ret|numeric->plus_options",
+      "d_ic": 0.00023,
+      "p": 0.9522,
+      "mde": 0.01063
+    },
+    {
+      "cell": "lgbm|fwd_ret|plus_options->plus_expectations",
+      "d_ic": 0.00329,
+      "p": 0.34327,
+      "mde": 0.00972
+    },
+    {
+      "cell": "ridge|fwd_vol|numeric->plus_options",
+      "d_ic": 0.07349,
+      "p": 0.0,
+      "mde": 0.01121
+    },
+    {
+      "cell": "ridge|fwd_vol|plus_options->plus_expectations",
+      "d_ic": 5e-05,
+      "p": 0.68488,
+      "mde": 0.00031
+    },
+    {
+      "cell": "lgbm|fwd_vol|numeric->plus_options",
+      "d_ic": 0.04017,
+      "p": 0.0,
+      "mde": 0.00891
+    },
+    {
+      "cell": "lgbm|fwd_vol|plus_options->plus_expectations",
+      "d_ic": 6e-05,
+      "p": 0.84294,
+      "mde": 0.00089
+    }
+  ],
+  "bh_fdr_survivors": [
+    "ridge|fwd_vol|numeric->plus_options",
+    "lgbm|fwd_vol|numeric->plus_options"
+  ],
+  "m": 8
+}

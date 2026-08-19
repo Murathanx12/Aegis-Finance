@@ -167,3 +167,8 @@ Final gate after everything: **5,090 passed / 0 failures.**
   (return ICs flipped sign between eras; conditioning must use
   OBSERVABLE trailing proxies only — design carefully, the ex-post
   regime label is the classic trap).
+- **NET AMENDMENT 2 (ladder rungs, SCREEN): +options SURVIVES for
+  RISK** - vol dIC +0.073/+0.040 (p~0, both arms, BH-survive), best
+  vol IC now 0.787; +expectations adds ~nothing; NO rung helps return
+  ranking in this era. The information ladder pays for risk, exactly
+  where the program already lives (S59).
