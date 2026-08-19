@@ -1,0 +1,10 @@
+{
+  "n_country_months": 3154,
+  "n_unique_months": 877,
+  "block_days": 12,
+  "n_effective": 73.08333333333333,
+  "se": 0.000442,
+  "mde": 0.001237,
+  "bar": 0.0004166666666666667,
+  "noninferior_limb_answerable": false
+}

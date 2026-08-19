@@ -1,0 +1,58 @@
+{
+  "trial": "FACTOR-MOMENTUM-SLOW-1",
+  "mode": "REGISTERED",
+  "signed_by": "Murat Abdullaev \u2014 recorded overnight order 2026-08-19",
+  "at": "2026-08-19T15:13:55+00:00",
+  "primary": {
+    "pooled": {
+      "mean": 0.00031322383644135894,
+      "ci_lo": -0.00046691950248065506,
+      "ci_hi": 0.0009522309347460926,
+      "se": 0.00044157002550155813,
+      "mde_80pct_power": 0.0012370960564219902,
+      "n_rows": 3154,
+      "n_dates": 877,
+      "n_securities": 4,
+      "n_effective": 73.08333333333333,
+      "block_days": 12,
+      "dependence_unit": "contiguous 12-trading-day block of the whole cross-section",
+      "block_days_derived": 12
+    },
+    "ann_mean_diff": 0.00376,
+    "p_two_sided": 0.478113,
+    "verdict": "NOT_ESTABLISHED"
+  },
+  "screen_per_market": {
+    "usa": {
+      "ann_diff": 0.00162,
+      "n_months": 877,
+      "turn_mom_mean": 0.1033
+    },
+    "jpn": {
+      "ann_diff": 0.00329,
+      "n_months": 467,
+      "turn_mom_mean": 0.106
+    },
+    "gbr": {
+      "ann_diff": 0.00869,
+      "n_months": 467,
+      "turn_mom_mean": 0.1015
+    },
+    "deu": {
+      "ann_diff": 0.00257,
+      "n_months": 415,
+      "turn_mom_mean": 0.1089
+    },
+    "fra": {
+      "ann_diff": 0.00868,
+      "n_months": 415,
+      "turn_mom_mean": 0.1037
+    },
+    "can": {
+      "ann_diff": 0.00032,
+      "n_months": 513,
+      "turn_mom_mean": 0.1082
+    }
+  },
+  "approximation": "zero interim turnover between annual re-formations (favourable to slow book)"
+}

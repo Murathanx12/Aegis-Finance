@@ -44,3 +44,21 @@ Re-tune formation/fraction; promote screen cells; quote as tradable
 (§61 cap); hide the interim-turnover approximation.
 
 — frozen 2026-08-19 ~23:20 HKT, before any slow contrast existed
+
+---
+
+## RESULTS (registered run 2026-08-19 night, appended post-run)
+
+Receipt `jkp/fm_slow_trial_2026-08-19.json`; §64 audit first; slow-book
+rehearsal on the persistent world passed pre-run (+5.1%/yr).
+
+**Verdict: NOT_ESTABLISHED.** Pooled 6-market slow momentum − static =
+**+0.38%/yr** (p 0.478) vs monthly MDE 0.124% (~1.5%/yr). Per-market:
+all six positive but tiny (usa +0.16%, jpn +0.33%, gbr +0.87%, deu
++0.26%, fra +0.87%, can +0.03%). Turnover fell ~10× as designed
+(0.10/mo), so the parent's cost channel is NOT hiding a large effect —
+the 12-month factor-momentum premium is simply small net. Family
+closed honestly: FAST chasing is HARMFUL (confirmed, 6 markets), SLOW
+tilting is noise at detectable size. No further factor-momentum
+variants without a genuinely new mechanism (declared to prevent grid
+drift).

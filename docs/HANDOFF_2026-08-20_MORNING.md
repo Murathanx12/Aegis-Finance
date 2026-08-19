@@ -151,3 +151,19 @@ Final gate after everything: **5,090 passed / 0 failures.**
   2017–24 — the price-only return signal is ERA-DEPENDENT; a
   regime-conditional return question is a NEW registration candidate
   (REGIME-CONDITIONAL-RETURN-1), not a revival.
+- **FACTOR-MOMENTUM-SLOW-1 RESOLVED: NOT_ESTABLISHED** — annual
+  re-formation cut turnover 10x yet pooled 6 markets = +0.38%/yr
+  (p 0.48); all six positive but tiny. The family is CLOSED: fast
+  chasing harmful (confirmed), slow tilting noise; no further variants
+  without a new mechanism (declared).
+- **VALUE-EXEMPT combined-evidence note (meta-analytic, both eras
+  already seen):** inverse-variance combination of the two cell reads
+  gives ~+4.2%/yr, p~0.14 — a persistent positive lean that still does
+  not establish. The honest path remains the G2 lane pair + more
+  simulated grammar around value+exemption, not a re-read.
+- Overnight pulls in flight at handoff time: OptionMetrics 30d
+  surfaces (per-year), TAQ intraday indicators, 13F holdings.
+- Candidate design for the day session: REGIME-CONDITIONAL-RETURN-1
+  (return ICs flipped sign between eras; conditioning must use
+  OBSERVABLE trailing proxies only — design carefully, the ex-post
+  regime label is the classic trap).
