@@ -33,9 +33,9 @@ BLOCKED_REASONS = {
         "verdict deferred to trade-condition conventions (external review "
         "Q3: tr_scond/odd-lot/TRF-latency); v1 dataset exists as immutable "
         "sensitivity"),
-    "CONVEXITY-PRESERVATION-1": (
-        "trim-vs-hold verdict needs its signed pre-registration (canon §6); "
-        "the INSTRUMENT_AUDIT below runs meanwhile"),
+    # CONVEXITY-PRESERVATION-1: UNBLOCKED 2026-08-19 — prereg signed,
+    # Amendment 1 applied pre-read, registered run resolved. Its RESULT
+    # adapter below transports the registered receipt into the ledger.
     "EVENT-RESOLUTION-CURVE-1": (
         "needs the PIT event store with announcement timestamps — specced "
         "in the day-factory handoff, not yet materialized"),
@@ -72,11 +72,10 @@ def build() -> tuple[RD.ResearchDaemon, RE.Executor]:
     for job in FIRST_QUEUE:
         hid = job.hypothesis_id
         if hid == "CONVEXITY-PRESERVATION-1":
-            # the audit reads the job's own declared period/universe
             ex.register(RE.JobAdapter(
-                hypothesis_id=hid, kind=RE.KIND_INSTRUMENT_AUDIT,
+                hypothesis_id=hid, kind=RE.KIND_RESULT,
                 reads_universe=job.universe, reads_start=job.start,
-                reads_end=job.end, run=RE.convexity_power_audit))
+                reads_end=job.end, run=_convexity_registered_result))
         elif hid in BLOCKED_REASONS:
             ex.register(RE.JobAdapter(
                 hypothesis_id=hid, kind=RE.KIND_RESULT,
@@ -84,6 +83,37 @@ def build() -> tuple[RD.ResearchDaemon, RE.Executor]:
                 reads_end=job.end, run=lambda: None,
                 blocked_reason=BLOCKED_REASONS[hid]))
     return d, ex
+
+
+def _convexity_registered_result() -> RE.JobOutcome:
+    """Transport the REGISTERED trial receipt into the daemon ledger.
+
+    The registered run (signed, Amendment 1 pre-read) is the result; the
+    adapter never recomputes it. Reads the deciding arm from the receipt
+    the runner wrote and refuses if it is a rehearsal or unsigned.
+    """
+    from backend import config as _config
+    out_dir = _config.OPTIMUS_LEDGER_DIR / "convexity"
+    receipts = sorted(out_dir.glob("trial_*.json"))
+    if not receipts:
+        raise RE.ExecutorRefused("no registered convexity trial receipt "
+                                 "on disk — run the signed runner first")
+    rec = json.loads(receipts[-1].read_text(encoding="utf-8"))
+    if rec.get("mode") != "REGISTERED" or "signed_by" not in rec:
+        raise RE.ExecutorRefused(f"{receipts[-1].name} is not a signed "
+                                 "REGISTERED receipt")
+    arm = rec["primary"]["deciding_arm"]
+    v = rec["primary"]["verdicts"][arm]
+    return RE.JobOutcome(
+        p_value=float(v["p_normal_approx"]),
+        observed_effect=float(v["mean_tw_diff_arm_minus_hold"]),
+        artifacts={"receipt": receipts[-1].name,
+                   "deciding_arm": arm, "verdict": v["verdict"],
+                   "non_deciding_verdicts": {
+                       a: w["verdict"] for a, w in
+                       rec["primary"]["verdicts"].items() if a != arm},
+                   "note": "transported from the registered receipt, "
+                           "never recomputed"})
 
 
 def main(argv: list[str] | None = None) -> int:
