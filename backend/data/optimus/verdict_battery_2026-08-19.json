@@ -1,0 +1,55 @@
+{
+  "battery": "VERDICT-BATTERY-1",
+  "mde_at_this_n": 0.052882091066405026,
+  "cells": {
+    "null_world": {
+      "COMPLEX_WINS": 0.004,
+      "LINEAR_NONINFERIOR": 0.0,
+      "NOT_ESTABLISHED": 0.996,
+      "true_delta": 0.0,
+      "n_dates": 126,
+      "per_date_sd": 0.212,
+      "n_sims": 500,
+      "economic_bar": 0.01,
+      "n_arms": 4
+    },
+    "at_economic_bar": {
+      "COMPLEX_WINS": 0.008,
+      "LINEAR_NONINFERIOR": 0.0,
+      "NOT_ESTABLISHED": 0.992,
+      "true_delta": 0.01,
+      "n_dates": 126,
+      "per_date_sd": 0.212,
+      "n_sims": 500,
+      "economic_bar": 0.01,
+      "n_arms": 4
+    },
+    "at_mde": {
+      "COMPLEX_WINS": 0.502,
+      "LINEAR_NONINFERIOR": 0.0,
+      "NOT_ESTABLISHED": 0.498,
+      "true_delta": 0.052882091066405026,
+      "n_dates": 126,
+      "per_date_sd": 0.212,
+      "n_sims": 500,
+      "economic_bar": 0.01,
+      "n_arms": 4
+    },
+    "twice_mde": {
+      "COMPLEX_WINS": 0.996,
+      "LINEAR_NONINFERIOR": 0.0,
+      "NOT_ESTABLISHED": 0.004,
+      "true_delta": 0.10576418213281005,
+      "n_dates": 126,
+      "per_date_sd": 0.212,
+      "n_sims": 500,
+      "economic_bar": 0.01,
+      "n_arms": 4
+    }
+  },
+  "declared_criteria": {
+    "false_positive_rate": "null_world COMPLEX_WINS \u2264 0.05 \u2014 the Holm FWER doing its job",
+    "false_kill_rate": "at_economic_bar + at_mde LINEAR_NONINFERIOR \u2248 0 \u2014 a true effect at/above the bar must essentially never be declared noninferior; NOT_ESTABLISHED is the honest under-powered answer and does NOT count as a kill",
+    "power": "twice_mde COMPLEX_WINS \u2265 ~0.8 per its construction"
+  }
+}
