@@ -168,7 +168,7 @@ class _Lot:
 def run_book(panel: Panel, *, weighting: str, winner_handling: str,
              start: str = "2014-06-30", end: str = "2024-11-30",
              top_n: int | None = 50, signal: str = "mom_12_1",
-             extras: dict | None = None,
+             extras: dict | None = None, avoid_streak: int | None = None,
              cost_one_way_bps: float = COST_ONE_WAY_BPS) -> dict:
     """One simulated lane book: `signal` top-N, monthly rebalance, daily
     NAV. `weighting`: 'equal'|'inverse_vol'|'rank'. `winner_handling`:
@@ -183,6 +183,10 @@ def run_book(panel: Panel, *, weighting: str, winner_handling: str,
             and extras is None:
         raise SimRefused(f"{signal} needs prepared extras (finratio/"
                          "streak) — refusing to run without its inputs")
+    if avoid_streak is not None and (extras is None
+                                     or "streak" not in extras):
+        raise SimRefused("avoid_streak needs the prepared streak matrix "
+                         "— refusing to run without its input")
     if weighting not in ("equal", "inverse_vol", "rank"):
         raise SimRefused(f"unknown weighting {weighting!r}")
     if winner_handling not in ("trim", "exempt"):
@@ -196,6 +200,7 @@ def run_book(panel: Panel, *, weighting: str, winner_handling: str,
     cash, lots = 1.0, {}
     nav_rows: list[tuple] = []
     turnover, cost_paid, n_delist_exits, n_exemptions = 0.0, 0.0, 0, 0
+    n_filter_blocked = 0
     row_of = {d: i for i, d in enumerate(dates)}
 
     def mark(d) -> float:
@@ -236,6 +241,13 @@ def run_book(panel: Panel, *, weighting: str, winner_handling: str,
                 sig = sig[sig.index.isin(elig)].sort_values(
                     ascending=False)
                 picks = list(sig.index[:top_n] if top_n else sig.index)
+            if avoid_streak is not None and picks:
+                srow = extras["streak"].loc[:asof].iloc[-1]
+                blocked = [p for p in picks
+                           if p not in lots
+                           and srow.get(p, 0) >= avoid_streak]
+                n_filter_blocked += len(blocked)
+                picks = [p for p in picks if p not in blocked]
             if not picks:
                 nav_rows.append((d, mark(d)))
                 continue
@@ -307,4 +319,5 @@ def run_book(panel: Panel, *, weighting: str, winner_handling: str,
             "cost_paid_frac": float(cost_paid),
             "n_delist_exits": int(n_delist_exits),
             "n_winner_exemptions": int(n_exemptions),
+            "n_filter_blocked_buys": int(n_filter_blocked),
             "label": "SIMULATION — LANE-FACTORY-SIM-1, never a track record"}

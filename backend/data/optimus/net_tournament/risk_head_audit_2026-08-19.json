@@ -1,0 +1,11 @@
+{
+  "audit": "RISK-HEAD-AT-SCALE \u00a764 (mean masked here)",
+  "n_dates": 226,
+  "block_days": 1,
+  "n_effective": 226.0,
+  "se": 0.001495,
+  "mde_80pct_power": 0.004188,
+  "economic_bar": 0.01,
+  "win_limb_answerable": true,
+  "noninferior_limb_answerable": true
+}
