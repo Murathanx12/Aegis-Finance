@@ -115,11 +115,19 @@ def reconcile(payload: dict) -> dict:
                         equity.pct_change().rename("book")],
                        axis=1, join="inner").dropna()
     if len(joined) > 5:
-        out["daily_return_corr"] = round(
+        out["daily_return_corr_lag0"] = round(
             float(joined["nav"].corr(joined["book"])), 4)
-        out["corr_note"] = ("vs +0.19 (decision log) and +0.60 "
-                            "(balanced-ew-control) from the 08-19 proxy "
-                            "run — this number is the real book's")
+        # GAP_RESOLUTION_2026-08-19: NAV rows lag closes by one day
+        # (stamp=today, price=last completed daily bar). Until
+        # P-day-2026-08-19a lands, the ALIGNED comparison is lag −1.
+        out["daily_return_corr_lag1_aligned"] = round(
+            float(joined["nav"].corr(joined["book"].shift(1))), 4)
+        out["corr_note"] = ("lag1_aligned is the meaningful number while "
+                            "the NAV date-stamp offset stands (measured "
+                            "0.974 conviction / 0.78 mirror on 08-19); "
+                            "lag0 retained as the drift canary — if lag0 "
+                            "ever exceeds lag1, the stamp semantics "
+                            "changed and this script must be revisited")
     out["within_declared_tolerance"] = bool(abs(gap_pct) <= TOL_PCT)
     return out
 
