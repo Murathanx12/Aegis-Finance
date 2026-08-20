@@ -168,6 +168,18 @@ def main() -> int:
         (terminal if verdict == "TERMINAL" else retry).append(
             {**f, "verdict": verdict, "reason": reason})
 
+    # RESEARCH PRIORITY, not alphabetical. The first catch-up run iterated
+    # sorted-by-name and therefore spent its opening ten minutes on
+    # `audit.*` and `boardex.*` — tier 2, the least useful tables in the
+    # plan — while crsp/comp/ibes/optionm waited. `wrds_pull_everything`
+    # already sorts its plan (tier, est_rows) for exactly this reason; a
+    # catch-up that drops the ordering re-introduces the problem it exists
+    # to solve, because a run that is interrupted keeps whatever it banked
+    # first. Small-first inside a tier banks many cheap tables before
+    # risking an expensive one.
+    retry.sort(key=lambda p: (p.get("tier", 9), p.get("est_rows") or 0,
+                              p["name"]))
+
     from collections import Counter
     print(f"manifest: {len(man.get('pulled', [])):,} pulled, "
           f"{len(man.get('failed', [])):,} failure rows "
