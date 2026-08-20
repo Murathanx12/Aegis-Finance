@@ -134,3 +134,4 @@ backend/data/optimus/wrds/pull_terminal_failures.json
 # launcher's git_dirty check reads. Railway's volume is the authoritative store.
 backend/data/optimus/arena/
 backend/data/optimus/wrds/truncated_quarantine.json
+backend/data/optimus/wrds/substrate_verification.json
