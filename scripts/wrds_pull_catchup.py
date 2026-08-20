@@ -338,6 +338,19 @@ def classify(error: str) -> tuple[str, str]:
     return "RETRYABLE", "UNCLASSIFIED"
 
 
+def _planned_names() -> set:
+    """Names the CURRENT plan intends to pull. Empty set if unreadable, and
+    an empty set disables the filter rather than silently dropping the whole
+    retry list — refusing everything is not the safe default here."""
+    from scripts.wrds_pull_everything import PLAN_CACHE
+    try:
+        plan = json.loads(PLAN_CACHE.read_text(encoding="utf-8"))
+        return {p["name"] for p in plan.get("plan", [])}
+    except Exception as exc:                                    # noqa: BLE001
+        print(f"  (plan cache unreadable: {exc}; out-of-plan filter OFF)")
+        return set()
+
+
 def _load_manifest() -> dict:
     if not MANIFEST.exists():
         raise SystemExit(f"no manifest at {MANIFEST}; run wrds_pull_everything "
@@ -377,12 +390,24 @@ def main() -> int:
     for f in man.get("failed", []):
         by_name[f["name"]] = f
 
-    terminal, retry = [], []
+    # THE MANIFEST OUTLIVES THE PLAN. `failed` accumulates across runs, and
+    # the first run of 2026-08-20 predates the NON_US exclusion — so the
+    # failure list still names 24 Compustat GLOBAL tables (`comp.g_*`) that
+    # the CURRENT plan deliberately excludes because they cannot join a US
+    # CRSP PERMNO universe. They are 539 columns wide, ~2 GB each, and the
+    # catch-up was about to spend the night on them. A retry list is only
+    # meaningful against the plan in force NOW.
+    planned = _planned_names()
+    terminal, retry, unplanned = [], [], []
     for name, f in sorted(by_name.items()):
         stem = f"{f['schema']}__{f['table']}"
         if stem in have:
             continue                       # landed on a later attempt already
         verdict, reason = classify(str(f.get("error", "")))
+        if verdict != "TERMINAL" and planned and name not in planned:
+            unplanned.append({**f, "verdict": "OUT_OF_PLAN",
+                              "reason": "not in the current plan"})
+            continue
         (terminal if verdict == "TERMINAL" else retry).append(
             {**f, "verdict": verdict, "reason": reason})
 
@@ -413,6 +438,10 @@ def main() -> int:
     print(f"\nTERMINAL (never retried): {len(terminal):,}")
     for k, v in Counter(t["reason"] for t in terminal).most_common():
         print(f"    {v:>6,}  {k}")
+    if unplanned:
+        print(f"OUT OF PLAN (not retried): {len(unplanned):,} — in the failure "
+              f"list from an earlier plan, excluded by the current one")
+        print(f"    e.g. {[u['name'] for u in unplanned[:5]]}")
     print(f"RETRYABLE:                {len(retry):,}")
     for k, v in Counter(t["reason"] for t in retry).most_common():
         print(f"    {v:>6,}  {k}")
@@ -425,6 +454,8 @@ def main() -> int:
                  "the transport were at fault, and the catalogue is not "
                  "entitlement (canon)."),
         "n_terminal": len(terminal),
+        "n_out_of_plan": len(unplanned),
+        "out_of_plan": unplanned,
         "by_reason": dict(Counter(t["reason"] for t in terminal)),
         "tables": terminal,
     }, indent=2, default=str), encoding="utf-8")
