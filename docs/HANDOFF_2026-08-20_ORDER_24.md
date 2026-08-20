@@ -517,7 +517,54 @@ counterproductive.* Deferring Order 22 is still reasonable — but on the
 grounds that we cannot yet spend the information we own, not on the
 grounds that we know how to fix the layer.
 
-### 13. Every grammar decision is a risk decision, not a return decision
+### 13. The sources SHARE latent factors — the unifying result
+
+`CROSS-SOURCE-STRUCTURE-1`. Ordered directly: *is there an underlying
+correlation between everything?* This is **not** the question §7 answered
+— that one asked whether a source produces a new portfolio BEHAVIOUR
+after passing through a book grammar, and a book grammar is a lossy
+channel (§12: 36 books → ~1.3 behaviours). A book-level negative says
+nothing about whether the structure exists in the FEATURES. It does.
+
+28 features × 171,442 security-months × 131 dates, four sources, each
+joined as-of its own availability stamp. Noise removed **analytically**
+by Marchenko-Pastur — the largest eigenvalue attributable to estimation
+noise — rather than by a chosen threshold. Reported as a bracket, because
+a panel's effective sample size is not its row count:
+
+| bound | λ+ | signal factors | variance |
+|---|---|---|---|
+| conservative (each date = 1 obs) | 2.138 | **3** | 45% |
+| anti-conservative (every row independent) | 1.026 | **7** | 67% |
+
+Top eigenvalues: 6.47, 3.35, 2.70, 2.10, 1.69, 1.24, 1.14, 1.02.
+
+**Every signal factor is a blend. No source owns one:**
+
+| factor | λ | composition |
+|---|---|---|
+| 1 | 6.47 | fundamentals 38%, price 37%, options 16%, expectations 9% |
+| 2 | 3.35 | fundamentals 60%, price 33%, expectations 5%, options 2% |
+| 3 | 2.70 | fundamentals 50%, price 39%, expectations 8%, options 4% |
+
+**This explains the earlier negatives rather than contradicting them.**
+The sources are not independent information channels; they are different
+measurements of the same 3–7 latent factors. That is exactly why adding
+one never added a dimension (incremental signal factors, conservative
+bound: options +0, expectations +0, fundamentals +1). "Everything is
+correlated" and "adding a source buys nothing" are the same fact.
+
+Two errors were caught before this was believed. The `q` ratio was passed
+inverted into the MP variance fit (the bound came out 5.23 on a matrix
+whose mean eigenvalue is 1.0 by construction — every factor count in that
+run was an artifact); and 57,778 stock-months were treated as 57,778
+independent observations, which is Order 24's own rule #2 one level down.
+The fitted-bulk noise variance is also unreliable when a few factors
+dominate — it returned a bound of 0.324, *below* the theoretical mean —
+so unit variance (exact under the null for a correlation matrix) leads
+and the fitted value is reported beside it.
+
+### 14. Every grammar decision is a risk decision, not a return decision
 
 `RULE-INTERVENTION-1`, matched paired contrasts (each pair differs in
 exactly one coordinate, so signal/universe/dates/costs cancel; unit of
@@ -669,11 +716,18 @@ options market better than the options market reads itself — but only for
 decision were tested and none beats a trailing 63-day standard deviation.
 Meanwhile the portfolio grammar collapses every information class we own
 into ~3 behaviours — and the obvious fix for that (drop the top-N cut)
-makes it dramatically worse, collapsing them to ~1. **We have a real,
-replicated, era-invariant risk signal, no demonstrated way to spend it,
-and no demonstrated construction that would let us. Closing that gap is
-the programme's next problem, and this run narrowed where it is without
-solving it.**
+makes it dramatically worse, collapsing them to ~1.
+
+And §13 explains why every "does this source add anything" test kept
+coming back negative: **the sources are not independent channels, they
+are different measurements of the same 3–7 latent factors.** Everything
+IS correlated, which is precisely why adding a feed buys no new
+dimension.
+
+**We have a real, replicated, era-invariant risk signal, no demonstrated
+way to spend it, and no demonstrated construction that would let us.
+Closing that gap is the programme's next problem, and this run narrowed
+where it is without solving it.**
 
 ## FOR MURAT (three minutes)
 

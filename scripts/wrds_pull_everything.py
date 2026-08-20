@@ -78,7 +78,28 @@ DATE_HINTS = ("date", "dat", "eom", "public", "statpers", "rdq", "year",
 
 MAX_ROWS = 8_000_000
 DISK_BUDGET_GB = 60.0
-PER_TABLE_TIMEOUT_S = 900
+#: Measured 2026-08-20: boardex.na_board_characteristics took 374s for
+#: 515k rows. At that throughput 1,380 tables is 3-6 DAYS on one
+#: connection, so the plan is not executable serially. Two changes make
+#: it executable: a worker pool, and a per-table timeout short enough
+#: that one pathological table cannot eat an hour.
+PER_TABLE_TIMEOUT_S = 300
+N_WORKERS = 6
+
+#: Research priority. The catalogue is entitled but not equally useful:
+#: a table keyed to our securities beats a Canadian audit-fee feed, and
+#: at ~1 table/minute the ordering decides what actually lands. Ranked
+#: rather than filtered, so nothing is silently excluded — a lower tier
+#: is pulled too if the run gets that far.
+PRIORITY = (
+    ("crsp", "comp", "comp_na_daily_all", "ibes", "tr_ibes", "optionm",
+     "optionm_all", "tr_13f", "tfn", "crsp_a_stock"),          # tier 0
+    ("wrdsapps", "wrdsapps_finratio", "wrdsapps_finratio_ibes",
+     "wrdsapps_bondret", "wrdsapps_windices", "wrdsapps_subsidiary",
+     "wrdsapps_patents", "ff", "ff_all", "frb", "macrofin",
+     "contrib", "contrib_general", "compseg", "comph"),        # tier 1
+    ("fisd", "boardex", "eventus", "audit", "compsamp", "public"),
+)                                                              # tier 2
 
 
 def _classify(cols: list[str]) -> tuple[str | None, str | None]:
@@ -129,10 +150,14 @@ def build_plan(conn) -> tuple[list[dict], list[dict]]:
                                            f"date={dtc}) — cannot "
                                            f"correlate with the panel"})
             continue
+        tier = next((i for i, t in enumerate(PRIORITY) if sch in t),
+                    len(PRIORITY))
         plan.append({"schema": sch, "table": tab, "name": key,
                      "est_rows": n, "n_cols": len(cols),
-                     "id_col": idc, "date_col": dtc})
-    plan.sort(key=lambda p: p["est_rows"])
+                     "id_col": idc, "date_col": dtc, "tier": tier})
+    # priority tier first, then small-to-large inside a tier so the run
+    # banks many cheap tables before risking an expensive one
+    plan.sort(key=lambda p: (p["tier"], p["est_rows"]))
     return plan, skipped
 
 
@@ -145,6 +170,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--probe-only", action="store_true")
     ap.add_argument("--max-tables", type=int, default=100000)
+    ap.add_argument("--workers", type=int, default=N_WORKERS)
     a = ap.parse_args()
 
     BULK.mkdir(parents=True, exist_ok=True)
@@ -172,59 +198,107 @@ def main() -> int:
         print(f"\nprobe only -> {MANIFEST}")
         return 0
 
-    permnos = set(_all_permnos())
-    used_gb = sum(f.stat().st_size for f in BULK.rglob("*.parquet")) / 2**30
-    done = 0
-    for p in plan[:a.max_tables]:
-        fn = BULK / f"{p['schema']}__{p['table']}.parquet"
-        if fn.exists():
-            continue
-        if used_gb >= DISK_BUDGET_GB:
-            man["failed"].append({**p, "error": "disk budget reached"})
-            print(f"DISK BUDGET {DISK_BUDGET_GB} GB reached — stopping")
-            break
-        # universe filter only where the id is one we hold a universe for
-        where, params = "", {}
-        if p["id_col"] in ("permno", "lpermno", "permco"):
-            where = f' WHERE "{p["id_col"]}" = ANY(%(p)s)'
-            params = {"p": sorted(permnos)}
-        sql = (f'SELECT * FROM {p["schema"]}.{p["table"]}{where} '
-               f'LIMIT {MAX_ROWS}')
-        t0 = time.time()
-        try:
-            conn.cursor().execute(f"SET statement_timeout = "
-                                  f"{PER_TABLE_TIMEOUT_S * 1000}")
-            df = pd.read_sql(sql, conn, params=params or None)
-        except Exception as e:                                 # noqa: BLE001
-            man["failed"].append({**p, "error":
-                                  f"{type(e).__name__}: {str(e)[:200]}"})
+    conn.close()
+    permnos = sorted(_all_permnos())
+    todo = [p for p in plan[:a.max_tables]
+            if not (BULK / f"{p['schema']}__{p['table']}.parquet").exists()]
+    print(f"\n{len(todo):,} tables to pull with {a.workers} workers "
+          f"(tiers: "
+          f"{ {t: sum(1 for p in todo if p['tier'] == t) for t in sorted({q['tier'] for q in todo})} })")
+
+    import queue
+    import threading
+    work: "queue.Queue[dict]" = queue.Queue()
+    for p in todo:
+        work.put(p)
+    lock = threading.Lock()
+    state = {"gb": sum(f.stat().st_size
+                       for f in BULK.rglob("*.parquet")) / 2**30,
+             "done": 0, "stop": False}
+
+    def worker(wid: int):
+        c = None
+        while not state["stop"]:
             try:
-                conn.close()
+                p = work.get_nowait()
+            except queue.Empty:
+                break
+            fn = BULK / f"{p['schema']}__{p['table']}.parquet"
+            if fn.exists():
+                continue
+            with lock:
+                if state["gb"] >= DISK_BUDGET_GB:
+                    state["stop"] = True
+                    return
+            where, params = "", {}
+            if p["id_col"] in ("permno", "lpermno", "permco"):
+                where = f' WHERE "{p["id_col"]}" = ANY(%(p)s)'
+                params = {"p": permnos}
+            sql = (f'SELECT * FROM {p["schema"]}.{p["table"]}{where} '
+                   f'LIMIT {MAX_ROWS}')
+            t0 = time.time()
+            try:
+                if c is None:
+                    c = _conn()
+                cur = c.cursor()
+                cur.execute(f"SET statement_timeout = "
+                            f"{PER_TABLE_TIMEOUT_S * 1000}")
+                df = pd.read_sql(sql, c, params=params or None)
+            except Exception as e:                             # noqa: BLE001
+                msg = f"{type(e).__name__}: {str(e)[:180]}"
+                with lock:
+                    man["failed"].append({**p, "error": msg})
+                # a permission or timeout error leaves the transaction
+                # aborted; roll back rather than paying for a reconnect
+                try:
+                    c.rollback()
+                except Exception:                              # noqa: BLE001
+                    try:
+                        c.close()
+                    except Exception:                          # noqa: BLE001
+                        pass
+                    c = None
+                continue
+            if not len(df):
+                with lock:
+                    man["skipped"].append({**p, "reason": "0 rows"})
+                continue
+            try:
+                df.to_parquet(fn, index=False)
+            except Exception as e:                             # noqa: BLE001
+                with lock:
+                    man["failed"].append({**p, "error": f"write: {e}"})
+                continue
+            sz = fn.stat().st_size / 2**30
+            with lock:
+                state["gb"] += sz
+                state["done"] += 1
+                man["pulled"].append({
+                    **p, "rows": int(len(df)), "gb": round(sz, 4),
+                    "date_ranges": _date_ranges(df),
+                    "seconds": round(time.time() - t0, 1),
+                    "universe_filtered": bool(where)})
+                d = state["done"]
+                if d % 10 == 0:
+                    MANIFEST.write_text(
+                        json.dumps(man, indent=2, default=str),
+                        encoding="utf-8")
+                    print(f"  [{d}/{len(todo)}] {p['name']:<46s} "
+                          f"{len(df):>9,} rows  {state['gb']:.1f} GB  "
+                          f"({len(man['failed'])} failed)", flush=True)
+        if c is not None:
+            try:
+                c.close()
             except Exception:                                  # noqa: BLE001
                 pass
-            conn = _conn()
-            print(f"  FAIL {p['name']}: {type(e).__name__}")
-            MANIFEST.write_text(json.dumps(man, indent=2), encoding="utf-8")
-            continue
-        if not len(df):
-            man["skipped"].append({**p, "reason": "returned 0 rows "
-                                                  "(empty or filtered out)"})
-            continue
-        df.to_parquet(fn, index=False)
-        sz = fn.stat().st_size / 2**30
-        used_gb += sz
-        rec = {**p, "rows": int(len(df)), "gb": round(sz, 4),
-               "date_ranges": _date_ranges(df),
-               "seconds": round(time.time() - t0, 1),
-               "universe_filtered": bool(where)}
-        man["pulled"].append(rec)
-        done += 1
-        if done % 10 == 0:
-            MANIFEST.write_text(json.dumps(man, indent=2, default=str),
-                                encoding="utf-8")
-            print(f"  [{done}] {p['name']:<52s} {len(df):>10,} rows  "
-                  f"{used_gb:.1f} GB used")
-    conn.close()
+
+    threads = [threading.Thread(target=worker, args=(i,), daemon=True)
+               for i in range(a.workers)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    used_gb = state["gb"]
     man["completed_at"] = datetime.now(timezone.utc).isoformat(
         timespec="seconds")
     man["disk_used_gb"] = round(used_gb, 3)
