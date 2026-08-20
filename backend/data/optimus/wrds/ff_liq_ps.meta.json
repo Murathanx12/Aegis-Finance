@@ -1,0 +1,28 @@
+{
+  "dataset": "ff_liq_ps",
+  "pulled_at": "2026-08-20T05:58:28+00:00",
+  "rows": 761,
+  "cols": [
+    "yearmm",
+    "date",
+    "ps_level",
+    "ps_innov",
+    "ps_vwf"
+  ],
+  "window": [
+    "1962-08-31",
+    "2025-12-31"
+  ],
+  "window_source": "date",
+  "date_ranges_observed": {
+    "date": [
+      "1962-08-31",
+      "2025-12-31"
+    ]
+  },
+  "universe": "market-wide factor series; no security universe",
+  "pit_knowledge_column": "date",
+  "sql_note": "SELECT * FROM ff.liq_ps",
+  "source": "Kenneth French / WRDS ff schema",
+  "use": "FF5+MOM residual-alpha gate (Order 24 standing rule) \u2014 replaces the JKP proxy set"
+}

@@ -1,0 +1,38 @@
+{
+  "dataset": "ff_fivefactors_monthly",
+  "pulled_at": "2026-08-20T05:58:26+00:00",
+  "rows": 756,
+  "cols": [
+    "date",
+    "mktrf",
+    "smb",
+    "hml",
+    "rmw",
+    "cma",
+    "rf",
+    "year",
+    "month",
+    "umd",
+    "dateff"
+  ],
+  "window": [
+    "1963-07-01",
+    "2026-06-01"
+  ],
+  "window_source": "date",
+  "date_ranges_observed": {
+    "date": [
+      "1963-07-01",
+      "2026-06-01"
+    ],
+    "dateff": [
+      "1963-07-31",
+      "2026-06-30"
+    ]
+  },
+  "universe": "market-wide factor series; no security universe",
+  "pit_knowledge_column": "date",
+  "sql_note": "SELECT * FROM ff.fivefactors_monthly",
+  "source": "Kenneth French / WRDS ff schema",
+  "use": "FF5+MOM residual-alpha gate (Order 24 standing rule) \u2014 replaces the JKP proxy set"
+}

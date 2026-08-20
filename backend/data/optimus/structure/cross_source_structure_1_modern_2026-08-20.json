@@ -1,0 +1,168 @@
+{
+  "trial": "CROSS-SOURCE-STRUCTURE-1",
+  "mode": "SCREEN",
+  "era": "modern",
+  "at": "2026-08-20T06:16:24+00:00",
+  "question": "is there latent structure ACROSS sources at the FEATURE level, before any portfolio construction?",
+  "distinct_from": "INFORMATION-DIMENSION-1 asked the same question at BOOK level and answered no; a book grammar is a lossy channel (CONSTRUCTION-CUT-1: 36 books -> ~1.3 effective behaviours), so a book-level negative does not close the feature level",
+  "noise_removal": "Marchenko-Pastur upper bound with FITTED noise variance \u2014 the cutoff is analytic, not chosen",
+  "sources": {
+    "price": [
+      "mom_21",
+      "mom_63",
+      "mom_126",
+      "mom_252_21",
+      "dd_252",
+      "log_rv_d",
+      "log_rv_w",
+      "log_rv_m",
+      "log_rv_q"
+    ],
+    "options": [
+      "opt_iv_atm",
+      "opt_skew",
+      "opt_pc50",
+      "log_iv_var"
+    ],
+    "expectations": [
+      "exp_breadth",
+      "exp_disp",
+      "exp_n"
+    ],
+    "fundamentals": [
+      "bm",
+      "roe",
+      "pe_inc",
+      "ps",
+      "de_ratio",
+      "curr_ratio",
+      "npm",
+      "roa",
+      "at_turn",
+      "debt_at",
+      "cash_ratio",
+      "gpm"
+    ]
+  },
+  "n_rows_complete_case": 171442,
+  "n_dates_complete_case": 131,
+  "sources_dropped_for_coverage": {
+    "ownership": 0.336
+  },
+  "min_coverage": 0.6,
+  "pooled_spectrum": {
+    "N": 28,
+    "T_rows": 171442,
+    "eigenvalues_top": [
+      6.4659,
+      3.3524,
+      2.6982,
+      2.1048,
+      1.6899,
+      1.2393,
+      1.1377,
+      1.0182,
+      0.9677,
+      0.8881,
+      0.7948,
+      0.7666
+    ],
+    "bound_rows": {
+      "T": 171442,
+      "q_T_over_N": 6122.9286,
+      "mp_upper_bound": 1.0257,
+      "n_signal_factors": 7,
+      "signal_variance_share": 0.6674,
+      "fitted_noise_variance": 1.0,
+      "mp_upper_bound_fitted_var": 1.0257,
+      "n_signal_factors_fitted_var": 7,
+      "fitted_var_note": "fitted-bulk variance is unreliable when a few factors dominate; unit variance is exact under the null"
+    },
+    "bound_dates": {
+      "T": 131,
+      "q_T_over_N": 4.6786,
+      "mp_upper_bound": 2.1384,
+      "n_signal_factors": 3,
+      "signal_variance_share": 0.447,
+      "fitted_noise_variance": 0.1516,
+      "mp_upper_bound_fitted_var": 0.3243,
+      "n_signal_factors_fitted_var": 18,
+      "fitted_var_note": "fitted-bulk variance is unreliable when a few factors dominate; unit variance is exact under the null"
+    },
+    "n_signal_factors": 3
+  },
+  "factor_source_loadings": [
+    {
+      "factor": 1,
+      "eigenvalue": 6.4659,
+      "source_share": {
+        "fundamentals": 0.378,
+        "price": 0.366,
+        "options": 0.165,
+        "expectations": 0.092
+      },
+      "top_features": {
+        "opt_iv_atm": 0.345,
+        "log_iv_var": 0.345,
+        "log_rv_q": 0.333,
+        "log_rv_m": 0.316,
+        "log_rv_w": 0.264
+      }
+    },
+    {
+      "factor": 2,
+      "eigenvalue": 3.3524,
+      "source_share": {
+        "fundamentals": 0.598,
+        "price": 0.331,
+        "expectations": 0.046,
+        "options": 0.024
+      },
+      "top_features": {
+        "ps": 0.399,
+        "cash_ratio": 0.337,
+        "mom_126": 0.305,
+        "de_ratio": 0.291,
+        "curr_ratio": 0.289
+      }
+    },
+    {
+      "factor": 3,
+      "eigenvalue": 2.6982,
+      "source_share": {
+        "fundamentals": 0.499,
+        "price": 0.387,
+        "expectations": 0.079,
+        "options": 0.035
+      },
+      "top_features": {
+        "mom_63": 0.381,
+        "mom_126": 0.381,
+        "dd_252": 0.303,
+        "mom_21": 0.277,
+        "npm": 0.272
+      }
+    }
+  ],
+  "incremental_signal_factors": {
+    "options": {
+      "n_features_added": 4,
+      "signal_factors_base": 2,
+      "signal_factors_with": 2,
+      "increment": 0
+    },
+    "expectations": {
+      "n_features_added": 3,
+      "signal_factors_base": 2,
+      "signal_factors_with": 2,
+      "increment": 0
+    },
+    "fundamentals": {
+      "n_features_added": 12,
+      "signal_factors_base": 2,
+      "signal_factors_with": 3,
+      "increment": 1
+    }
+  },
+  "label": "descriptive structure; no return is predicted"
+}

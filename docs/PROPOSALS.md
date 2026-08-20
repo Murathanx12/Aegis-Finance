@@ -174,8 +174,24 @@ have side effects, two are item-3's intent gaps).
 **Cost:** Small diff, but on the SACRED write path — needs your explicit go + a config_version note so the semantics change is a documented boundary, not a silent restatement.
 **Risk to guardrails:** CANON §5 — this is exactly the class that must not ship unattended; that is why it is a proposal.
 **Recommendation:** Approve for the next attended session with lane-integrity-check before/after; until then all replays align NAV_t ↔ close_{t−1} (scripts updated).
-**ADDED 2026-08-20 (external review) — BENCHMARK RESTAMP IS PART OF THE FIX, not a follow-up.** The proposal moves *lane NAV* rows onto bar-date semantics. If the SPY/benchmark comparison series is not moved by the identical rule in the same change, the fix converts a *uniform, documented, cancelling* offset into a *one-sided* one: today every lane and the benchmark are shifted together, so lane-vs-lane cancels and lane-vs-SPY is off by one day in a known direction; after a half-fix, lane-vs-SPY would be off by one day in the *opposite* direction with no annotation saying so, and every chart in the README would silently change meaning. Acceptance criteria to add before shipping:
-1. Enumerate every series joined to lane NAV for display or attribution (SPY/benchmark, RSP control, any lane-vs-market chart) and state, per series, whether its stamp is bar-date or calendar-date **after** the change.
-2. A regression asserting `corr(NAV_t, benchmark_t)` rises and `corr(NAV_t, benchmark_{t−1})` falls — the alignment must move in the direction claimed, measured, not asserted.
-3. The `config_version` note records the boundary date so pre-fix and post-fix chart segments are never silently concatenated.
-Rationale: this is the third temporal-alignment defect the programme has paid for (FRED publication-vs-reference date, collectors writing zeros, NAV stamping). Three independent instances make it systemic, and a partial fix to a systemic class is how the fourth one gets created.
+**ADDED 2026-08-20 — DECIDED, and the first version of this note was WRONG.**
+
+The note first written here claimed lane NAV and the benchmark were shifted together, so that lane-vs-SPY currently cancels and a partial fix would break it. That was an assumption, and it does not survive contact with the code. The facts, each checkable:
+
+1. `mark_lane_to_market` stamps the NAV row `date.today()` while `_get_current_prices` serves the last COMPLETED daily bar — so NAV_t carries price_{t−1}.
+2. `mark_lane_to_market` persists **only** the lane's NAV. No benchmark value is stored beside it (pinned by `test_benchmark_is_not_persisted_with_nav`).
+3. `comparator._fetch_benchmark_returns` pulls SPY from yfinance indexed by **true bar date**. It does not share the lane's offset.
+4. `real_analyzer._compute_beta_tracking` joins portfolio and benchmark on the **date index**.
+
+**Therefore lane-vs-benchmark is ALREADY misaligned by one day, and the fix repairs it.** Lane-vs-lane cancels (every lane carries the same stamp); beta, tracking error and information ratio vs SPY do not. Measured on a known-answer world where true beta is exactly 1.5 (`test_nav_benchmark_alignment.py`): aligned recovers 1.5; a one-day offset collapses the measured beta below 0.3.
+
+**DECISION: ship the lane-NAV stamp fix, and do NOT touch the benchmark fetch.** The danger runs opposite to the original note — the failure mode to guard against is someone "helpfully" shifting the benchmark to match, which reintroduces the misalignment the fix just removed (pinned by `test_shifting_the_benchmark_too_does_not_fix_it`).
+
+Acceptance criteria before shipping:
+1. `backend/tests/portfolio_intelligence/test_nav_benchmark_alignment.py` green (it is, 4/4) — it fails if a benchmark is ever persisted into `paper_nav`, which would change this whole analysis.
+2. Enumerate every series joined to lane NAV for display or attribution and confirm each is bar-date stamped **after** the change; the benchmark already is.
+3. Re-run beta/TE/IR on a lane before and after; beta vs SPY should move toward a plausible equity value and away from ~0. Measured, not asserted.
+4. The `config_version` note records the boundary date so pre-fix and post-fix chart segments are never silently concatenated.
+5. `lane-integrity-check` both sides; historical rows are annotated, never rewritten.
+
+Rationale unchanged, and now better supported: this is the third temporal-alignment defect the programme has paid for (FRED publication-vs-reference date, collectors writing zeros, NAV stamping), and the first version of this very note was a *fourth* instance of the same reasoning error — assuming an alignment instead of measuring it.

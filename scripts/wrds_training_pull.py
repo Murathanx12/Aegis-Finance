@@ -482,6 +482,150 @@ DATASETS.update({"optionm_early": pull_optionm_early,
                  "s13f_early": pull_13f_early})
 
 
+# ── round 2: entitled schemas the first pass never touched ─────────────────
+# The entitlement probe found 46 SELECT-OK schemas; the first pass drew on
+# nine. These are the remainder that bear on questions Order 24 left open,
+# not a sweep for its own sake:
+#   ff       the REAL Fama-French factors — Order 24 demanded an FF5+MOM
+#            residual-alpha gate and it has been running on JKP proxies
+#   frb      83 rate/term-structure series — candidate observables for the
+#            LEVEL ceiling REGIME-RISK-CONDITIONING-1 could not reach
+#   boardex  governance: a genuinely new information class, and
+#            INFORMATION-DIMENSION-1 found none of the ones we own separate
+#   compseg  business segments — another untried information class
+#   patents  innovation — another untried information class
+#   finratio_ibes  ratio set keyed on permno + public_date, PIT-stamped
+
+def _all_permnos() -> list[int]:
+    """Both eras' universes. Round-2 sources are era-agnostic."""
+    out = set()
+    for f in ("crsp_pit_monthly_v1.parquet", "crsp_pit_monthly_early.parquet"):
+        p = _config.OPTIMUS_LEDGER_DIR / "crsp_pit" / f
+        if p.exists():
+            out |= {int(x) for x in
+                    pd.read_parquet(p, columns=["permno"])["permno"].unique()}
+    return sorted(out)
+
+
+def pull_ff(conn, permnos):
+    """Fama-French factors + Pastor-Stambaugh liquidity. Small, and the
+    thing every residual-alpha gate in the programme should have used."""
+    for name, sql, pit in [
+        ("ff_fivefactors_daily",
+         "SELECT * FROM ff.fivefactors_daily", "date"),
+        ("ff_fivefactors_monthly",
+         "SELECT * FROM ff.fivefactors_monthly", "date"),
+        ("ff_factors_daily", "SELECT * FROM ff.factors_daily", "date"),
+        ("ff_factors_monthly", "SELECT * FROM ff.factors_monthly", "date"),
+        ("ff_liq_ps", "SELECT * FROM ff.liq_ps", "date"),
+    ]:
+        if _done(name):
+            continue
+        _write(name, pd.read_sql(sql, conn), sql_note=sql, pit=pit,
+               universe="market-wide factor series; no security universe",
+               extra={"source": "Kenneth French / WRDS ff schema",
+                      "use": "FF5+MOM residual-alpha gate (Order 24 "
+                             "standing rule) — replaces the JKP proxy set"})
+
+
+def pull_frb(conn, permnos):
+    """Fed rates and FX. Term structure and credit spreads are the
+    classic market-wide LEVEL observables, which is precisely what
+    REGIME-RISK-CONDITIONING-1 found missing."""
+    for name, sql, pit in [
+        ("frb_rates_daily", "SELECT * FROM frb.rates_daily", "date"),
+        ("frb_rates_monthly", "SELECT * FROM frb.rates_monthly", "date"),
+    ]:
+        if _done(name):
+            continue
+        _write(name, pd.read_sql(sql, conn), sql_note=sql, pit=pit,
+               universe="market-wide rate series; no security universe",
+               extra={"use": "candidate observables for the level ceiling "
+                             "REGIME-RISK-CONDITIONING-1 could not reach"})
+
+
+def pull_finratio_ibes(conn, permnos):
+    if _done("finratio_ibes_monthly"):
+        return
+    pn = _all_permnos()
+    sql = ("SELECT * FROM wrdsapps_finratio_ibes.firm_ratio_ibes "
+           "WHERE permno = ANY(%(p)s)")
+    df = pd.read_sql(sql, conn, params={"p": pn})
+    _write("finratio_ibes_monthly", df, sql_note=sql,
+           pit="public_date (WRDS availability stamp)",
+           universe="both eras' PIT universes, union",
+           extra={"n_permnos_requested": len(pn)})
+
+
+def pull_boardex(conn, permnos):
+    """Governance. A NEW information class — the ones already owned
+    (options, expectations, liquidity) did not separate."""
+    for name, sql, pit in [
+        ("boardex_na_board_characteristics",
+         "SELECT * FROM boardex.na_board_characteristics", "annualreportdate"),
+        ("boardex_na_company_profile_stocks",
+         "SELECT * FROM boardex.na_company_profile_stocks", "isin/ticker map"),
+    ]:
+        if _done(name):
+            continue
+        try:
+            df = pd.read_sql(sql, conn)
+        except Exception as e:                                 # noqa: BLE001
+            print(f"  {name}: REFUSED/failed -> {type(e).__name__}: {e}")
+            conn.rollback() if hasattr(conn, "rollback") else None
+            continue
+        _write(name, df, sql_note=sql, pit=pit,
+               universe="BoardEx North America; links to CRSP via ticker/"
+                        "ISIN and is NOT yet linked — linkage is a "
+                        "downstream job, not a pull filter",
+               extra={"caveat": "no permno on these rows; any trial using "
+                                "them must build and audit the link first"})
+
+
+def pull_compseg(conn, permnos):
+    if _done("compseg_segmerged"):
+        return
+    sql = ("SELECT * FROM compseg.wrds_segmerged WHERE gvkey IN "
+           "(SELECT gvkey FROM crsp.ccmxpf_lnkhist WHERE lpermno = ANY(%(p)s)"
+           " AND linktype IN ('LU','LC'))")
+    df = pd.read_sql(sql, conn, params={"p": _all_permnos()})
+    _write("compseg_segmerged", df, sql_note=sql,
+           pit="datadate/srcdate — segment data is as-reported; gate on "
+               "the parent filing's rdq before any feature use",
+           universe="gvkeys linked to both eras' PIT permnos")
+
+
+def pull_patents(conn, permnos):
+    """Innovation, as a gvkey-year aggregate rather than raw patents —
+    the aggregate is the feature; the 10M-row raw table is not."""
+    if _done("patents_gvkey_year"):
+        return
+    sql = ("SELECT l.gvkey, EXTRACT(YEAR FROM m.grantdate)::int AS year, "
+           "COUNT(*) AS n_patents, "
+           "SUM(m.forward_cites) AS forward_cites, "
+           "SUM(m.backward_cites) AS backward_cites "
+           "FROM wrdsapps_patents.uspatents_meta m "
+           "JOIN wrdsapps_patents.uspatents_gvkey_linking l "
+           "ON m.patnum = l.patnum "
+           "WHERE m.grantdate IS NOT NULL "
+           "GROUP BY l.gvkey, EXTRACT(YEAR FROM m.grantdate)")
+    df = pd.read_sql(sql, conn)
+    _write("patents_gvkey_year", df, sql_note=sql,
+           pit="grantdate year — a patent is public at GRANT, never at "
+               "application; forward_cites accumulate AFTER the grant and "
+               "are NOT point-in-time (using them at t is lookahead)",
+           universe="all linked gvkeys (filter downstream)",
+           extra={"warning": "forward_cites is a FUTURE quantity by "
+                             "construction — the single most common "
+                             "lookahead in the patent literature"})
+
+
+DATASETS.update({"ff": pull_ff, "frb": pull_frb,
+                 "finratio_ibes": pull_finratio_ibes,
+                 "boardex": pull_boardex, "compseg": pull_compseg,
+                 "patents": pull_patents})
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="wrds_training_pull")
     ap.add_argument("datasets", nargs="*", choices=[*DATASETS, []])
