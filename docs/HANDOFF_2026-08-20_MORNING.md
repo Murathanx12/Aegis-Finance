@@ -177,3 +177,11 @@ Final gate after everything: **5,090 passed / 0 failures.**
   confirmed in BOTH eras; 4th out-of-sample confirmation, 6th
   referee-surviving finding. Manager action-state library built
   (249k mgr-quarters, 11,313 managers). 14 JKP country files local.
+
+## 08:01 backfill attempt (recorded)
+
+Fired on schedule; **0 fetched** - first live call drew a 402 at 00:01
+UTC (FMP quota not yet rolled, or prod consumed it), guard fast-failed
+the remaining 183 with zero waste. Store is resumable:
+`python -c "from backend.services import expectation_store"` route -
+retry mid-morning; 2 tickers already present from yesterday.
