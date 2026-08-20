@@ -470,13 +470,24 @@ grammar itself.
   degrades worst under lag, and blows up in the tail.
 - **Expectations/liquidity/options as sources of new portfolio-behaviour
   diversity** *under this grammar*. Not as sources of information.
+- **Every tested route from the risk head to a portfolio decision**
+  (§8, §9, §11): cross-sectional sizing, shrinkage-corrected sizing,
+  covariance-aware construction, exposure targeting. The head's ranking
+  is real; none of these converts it into a decision that beats a
+  trailing 63-day standard deviation.
 
 ## WHAT REMAINS NOT ESTABLISHED
 
 - Whether the options-augmented head's advantage survives to a forward
   lane. Nothing here is forward evidence.
-- Whether a better construction layer recovers the information §6 shows
-  is being destroyed. That is now the top open question.
+- Whether a better construction layer recovers the information §7 shows
+  is being destroyed. That is the top open question, and CONSTRUCTION-CUT-1
+  (running at handoff-write time) tests its load-bearing implication
+  directly: remove the top-N cut and see whether any information class
+  separates that could not before. If none does under either grammar, the
+  "fix construction before buying feeds" redirect needs rewriting and the
+  honest conclusion becomes that these families genuinely carry the same
+  portfolio information.
 - Whether any OBSERVABLE state variable reaches the level-calibration
   ceiling §10 found (the six trailing market-state features tested make
   things significantly worse).
