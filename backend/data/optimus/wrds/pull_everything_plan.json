@@ -1,5 +1,5 @@
 {
-  "built_at": "2026-08-20T08:15:52+00:00",
+  "built_at": "2026-08-20T08:32:01+00:00",
   "plan": [
     {
       "schema": "comp",
@@ -219,16 +219,6 @@
       "n_cols": 16,
       "id_col": "gvkey",
       "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "adsprate",
-      "name": "comp.adsprate",
-      "est_rows": 0,
-      "n_cols": 5,
-      "id_col": "gvkey",
-      "date_col": "datadate",
       "tier": 0
     },
     {
@@ -849,516 +839,6 @@
       "n_cols": 778,
       "id_col": "gvkey",
       "date_col": "datadate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_chars",
-      "name": "comp.g_chars",
-      "est_rows": 0,
-      "n_cols": 44,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_aaudit",
-      "name": "comp.g_co_aaudit",
-      "est_rows": 0,
-      "n_cols": 12,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_adesind",
-      "name": "comp.g_co_adesind",
-      "est_rows": 0,
-      "n_cols": 33,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_afnd1",
-      "name": "comp.g_co_afnd1",
-      "est_rows": 0,
-      "n_cols": 512,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_afnd2",
-      "name": "comp.g_co_afnd2",
-      "est_rows": 0,
-      "n_cols": 465,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_afnddc1",
-      "name": "comp.g_co_afnddc1",
-      "est_rows": 0,
-      "n_cols": 512,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_afnddc2",
-      "name": "comp.g_co_afnddc2",
-      "est_rows": 0,
-      "n_cols": 465,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_afntind1",
-      "name": "comp.g_co_afntind1",
-      "est_rows": 0,
-      "n_cols": 512,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_afntind2",
-      "name": "comp.g_co_afntind2",
-      "est_rows": 0,
-      "n_cols": 465,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_ainvval",
-      "name": "comp.g_co_ainvval",
-      "est_rows": 0,
-      "n_cols": 8,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_gsuppl",
-      "name": "comp.g_co_gsuppl",
-      "est_rows": 0,
-      "n_cols": 153,
-      "id_col": "gvkey",
-      "date_col": "ddta",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_hgic",
-      "name": "comp.g_co_hgic",
-      "est_rows": 0,
-      "n_cols": 8,
-      "id_col": "gvkey",
-      "date_col": "indtype",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_iaudit",
-      "name": "comp.g_co_iaudit",
-      "est_rows": 0,
-      "n_cols": 10,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_idesind",
-      "name": "comp.g_co_idesind",
-      "est_rows": 0,
-      "n_cols": 36,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_ifndq",
-      "name": "comp.g_co_ifndq",
-      "est_rows": 0,
-      "n_cols": 879,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_ifndsa",
-      "name": "comp.g_co_ifndsa",
-      "est_rows": 0,
-      "n_cols": 453,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_ifndytd",
-      "name": "comp.g_co_ifndytd",
-      "est_rows": 0,
-      "n_cols": 731,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_ifntq",
-      "name": "comp.g_co_ifntq",
-      "est_rows": 0,
-      "n_cols": 444,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_ifntsa",
-      "name": "comp.g_co_ifntsa",
-      "est_rows": 0,
-      "n_cols": 231,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_ifntytd",
-      "name": "comp.g_co_ifntytd",
-      "est_rows": 0,
-      "n_cols": 379,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_industry",
-      "name": "comp.g_co_industry",
-      "est_rows": 0,
-      "n_cols": 8,
-      "id_col": "gvkey",
-      "date_col": "year",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_co_ipcd",
-      "name": "comp.g_co_ipcd",
-      "est_rows": 0,
-      "n_cols": 5,
-      "id_col": "gvkey",
-      "date_col": "datadate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_company",
-      "name": "comp.g_company",
-      "est_rows": 0,
-      "n_cols": 39,
-      "id_col": "gvkey",
-      "date_col": "dldte",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_funda",
-      "name": "comp.g_funda",
-      "est_rows": 0,
-      "n_cols": 444,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_funda_fncd",
-      "name": "comp.g_funda_fncd",
-      "est_rows": 0,
-      "n_cols": 360,
-      "id_col": "gvkey",
-      "date_col": "datadate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_fundq",
-      "name": "comp.g_fundq",
-      "est_rows": 0,
-      "n_cols": 381,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_fundq_fncd",
-      "name": "comp.g_fundq_fncd",
-      "est_rows": 0,
-      "n_cols": 355,
-      "id_col": "gvkey",
-      "date_col": "datadate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_indexcst_his",
-      "name": "comp.g_indexcst_his",
-      "est_rows": 0,
-      "n_cols": 5,
-      "id_col": "gvkey",
-      "date_col": "fromdate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_names",
-      "name": "comp.g_names",
-      "est_rows": 0,
-      "n_cols": 12,
-      "id_col": "gvkey",
-      "date_col": "year1",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_namesq",
-      "name": "comp.g_namesq",
-      "est_rows": 0,
-      "n_cols": 12,
-      "id_col": "gvkey",
-      "date_col": "year1",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_adesind",
-      "name": "comp.g_sec_adesind",
-      "est_rows": 0,
-      "n_cols": 10,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_adjfact",
-      "name": "comp.g_sec_adjfact",
-      "est_rows": 0,
-      "n_cols": 6,
-      "id_col": "gvkey",
-      "date_col": "effdate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_afnd",
-      "name": "comp.g_sec_afnd",
-      "est_rows": 0,
-      "n_cols": 21,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_afnddc",
-      "name": "comp.g_sec_afnddc",
-      "est_rows": 0,
-      "n_cols": 21,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_afnt",
-      "name": "comp.g_sec_afnt",
-      "est_rows": 0,
-      "n_cols": 21,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_divid",
-      "name": "comp.g_sec_divid",
-      "est_rows": 0,
-      "n_cols": 35,
-      "id_col": "gvkey",
-      "date_col": "divdpaydateind",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_dprc",
-      "name": "comp.g_sec_dprc",
-      "est_rows": 0,
-      "n_cols": 17,
-      "id_col": "gvkey",
-      "date_col": "datadate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_dtrt",
-      "name": "comp.g_sec_dtrt",
-      "est_rows": 0,
-      "n_cols": 6,
-      "id_col": "gvkey",
-      "date_col": "datadate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_gmdivfn",
-      "name": "comp.g_sec_gmdivfn",
-      "est_rows": 0,
-      "n_cols": 5,
-      "id_col": "gvkey",
-      "date_col": "datadate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_gmth",
-      "name": "comp.g_sec_gmth",
-      "est_rows": 0,
-      "n_cols": 6,
-      "id_col": "gvkey",
-      "date_col": "datadate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_gmthdiv",
-      "name": "comp.g_sec_gmthdiv",
-      "est_rows": 0,
-      "n_cols": 6,
-      "id_col": "gvkey",
-      "date_col": "datadate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_gmthprc",
-      "name": "comp.g_sec_gmthprc",
-      "est_rows": 0,
-      "n_cols": 8,
-      "id_col": "gvkey",
-      "date_col": "datadate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_history",
-      "name": "comp.g_sec_history",
-      "est_rows": 0,
-      "n_cols": 6,
-      "id_col": "gvkey",
-      "date_col": "effdate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_idesind",
-      "name": "comp.g_sec_idesind",
-      "est_rows": 0,
-      "n_cols": 10,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_ifnd",
-      "name": "comp.g_sec_ifnd",
-      "est_rows": 0,
-      "n_cols": 62,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_ifnt",
-      "name": "comp.g_sec_ifnt",
-      "est_rows": 0,
-      "n_cols": 35,
-      "id_col": "gvkey",
-      "date_col": "datafmt",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_sec_split",
-      "name": "comp.g_sec_split",
-      "est_rows": 0,
-      "n_cols": 5,
-      "id_col": "gvkey",
-      "date_col": "datadate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_secd",
-      "name": "comp.g_secd",
-      "est_rows": 0,
-      "n_cols": 54,
-      "id_col": "gvkey",
-      "date_col": "datadate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_secm",
-      "name": "comp.g_secm",
-      "est_rows": 0,
-      "n_cols": 25,
-      "id_col": "gvkey",
-      "date_col": "datadate",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_security",
-      "name": "comp.g_security",
-      "est_rows": 0,
-      "n_cols": 15,
-      "id_col": "gvkey",
-      "date_col": "dldtei",
-      "tier": 0
-    },
-    {
-      "schema": "comp",
-      "table": "g_tmptable_pkg6775_tbl5551",
-      "name": "comp.g_tmptable_pkg6775_tbl5551",
-      "est_rows": 0,
-      "n_cols": 6,
-      "id_col": "gvkey",
-      "date_col": "fromdate",
       "tier": 0
     },
     {
@@ -10229,16 +9709,6 @@
       "n_cols": 11,
       "id_col": "permno",
       "date_col": "shrsdt",
-      "tier": 0
-    },
-    {
-      "schema": "comp_na_daily_all",
-      "table": "adsprate",
-      "name": "comp_na_daily_all.adsprate",
-      "est_rows": 3023652,
-      "n_cols": 5,
-      "id_col": "gvkey",
-      "date_col": "datadate",
       "tier": 0
     },
     {
@@ -28868,6 +28338,13 @@
       "reason": "not joinable (id=None, date=date) \u2014 cannot correlate with the panel"
     },
     {
+      "schema": "comp_na_daily_all",
+      "table": "adsprate",
+      "est_rows": 3023652,
+      "n_cols": 5,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
       "schema": "crsp_a_stock",
       "table": "saz_shr",
       "est_rows": 2938356,
@@ -29019,7 +28496,7 @@
       "table": "exrt_dly",
       "est_rows": 2226124,
       "n_cols": 5,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "optionm_all",
@@ -29369,7 +28846,7 @@
       "table": "exrt_mth",
       "est_rows": 75990,
       "n_cols": 22,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "optionm_all",
@@ -34693,6 +34170,13 @@
     },
     {
       "schema": "comp",
+      "table": "adsprate",
+      "est_rows": 0,
+      "n_cols": 5,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
       "table": "co_busdescl",
       "est_rows": 0,
       "n_cols": 2,
@@ -34759,112 +34243,469 @@
       "table": "exrt_dly",
       "est_rows": 0,
       "n_cols": 5,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "exrt_mth",
       "est_rows": 0,
       "n_cols": 22,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_chars",
+      "est_rows": 0,
+      "n_cols": 44,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_aaudit",
+      "est_rows": 0,
+      "n_cols": 12,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_adesind",
+      "est_rows": 0,
+      "n_cols": 33,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afnd1",
+      "est_rows": 0,
+      "n_cols": 512,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afnd2",
+      "est_rows": 0,
+      "n_cols": 465,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afnddc1",
+      "est_rows": 0,
+      "n_cols": 512,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afnddc2",
+      "est_rows": 0,
+      "n_cols": 465,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afntind1",
+      "est_rows": 0,
+      "n_cols": 512,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afntind2",
+      "est_rows": 0,
+      "n_cols": 465,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ainvval",
+      "est_rows": 0,
+      "n_cols": 8,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_gsuppl",
+      "est_rows": 0,
+      "n_cols": 153,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_hgic",
+      "est_rows": 0,
+      "n_cols": 8,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_iaudit",
+      "est_rows": 0,
+      "n_cols": 10,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_idesind",
+      "est_rows": 0,
+      "n_cols": 36,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ifndq",
+      "est_rows": 0,
+      "n_cols": 879,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ifndsa",
+      "est_rows": 0,
+      "n_cols": 453,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ifndytd",
+      "est_rows": 0,
+      "n_cols": 731,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ifntq",
+      "est_rows": 0,
+      "n_cols": 444,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ifntsa",
+      "est_rows": 0,
+      "n_cols": 231,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ifntytd",
+      "est_rows": 0,
+      "n_cols": 379,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_industry",
+      "est_rows": 0,
+      "n_cols": 8,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ipcd",
+      "est_rows": 0,
+      "n_cols": 5,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_co_offtitl",
       "est_rows": 0,
       "n_cols": 4,
-      "reason": "not joinable (id=gvkey, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_company",
+      "est_rows": 0,
+      "n_cols": 39,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_currency",
       "est_rows": 0,
       "n_cols": 6,
-      "reason": "not joinable (id=None, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_ecind_desc",
       "est_rows": 0,
       "n_cols": 8,
-      "reason": "not joinable (id=None, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_ecind_mth",
       "est_rows": 0,
       "n_cols": 55,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_exrt_dly",
       "est_rows": 0,
       "n_cols": 5,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_exrt_mth",
       "est_rows": 0,
       "n_cols": 22,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_funda",
+      "est_rows": 0,
+      "n_cols": 444,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_funda_fncd",
+      "est_rows": 0,
+      "n_cols": 360,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_fundq",
+      "est_rows": 0,
+      "n_cols": 381,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_fundq_fncd",
+      "est_rows": 0,
+      "n_cols": 355,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_idx_daily",
       "est_rows": 0,
       "n_cols": 10,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_idx_index",
       "est_rows": 0,
       "n_cols": 14,
-      "reason": "not joinable (id=tic, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_idx_mth",
       "est_rows": 0,
       "n_cols": 21,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_idxcst_his",
       "est_rows": 0,
       "n_cols": 5,
-      "reason": "not joinable (id=gvkey, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_indexcst_his",
+      "est_rows": 0,
+      "n_cols": 5,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_names",
+      "est_rows": 0,
+      "n_cols": 12,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_names_ix",
       "est_rows": 0,
       "n_cols": 7,
-      "reason": "not joinable (id=tic, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_names_ix_cst",
       "est_rows": 0,
       "n_cols": 15,
-      "reason": "not joinable (id=gvkey, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_namesq",
+      "est_rows": 0,
+      "n_cols": 12,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_adesind",
+      "est_rows": 0,
+      "n_cols": 10,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_adjfact",
+      "est_rows": 0,
+      "n_cols": 6,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_afnd",
+      "est_rows": 0,
+      "n_cols": 21,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_afnddc",
+      "est_rows": 0,
+      "n_cols": 21,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_afnt",
+      "est_rows": 0,
+      "n_cols": 21,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_divid",
+      "est_rows": 0,
+      "n_cols": 35,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_dprc",
+      "est_rows": 0,
+      "n_cols": 17,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_dtrt",
+      "est_rows": 0,
+      "n_cols": 6,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_gmdivfn",
+      "est_rows": 0,
+      "n_cols": 5,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_gmth",
+      "est_rows": 0,
+      "n_cols": 6,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_gmthdiv",
+      "est_rows": 0,
+      "n_cols": 6,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_gmthprc",
+      "est_rows": 0,
+      "n_cols": 8,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_history",
+      "est_rows": 0,
+      "n_cols": 6,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_idesind",
+      "est_rows": 0,
+      "n_cols": 10,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_ifnd",
+      "est_rows": 0,
+      "n_cols": 62,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_ifnt",
+      "est_rows": 0,
+      "n_cols": 35,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_split",
+      "est_rows": 0,
+      "n_cols": 5,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_secd",
+      "est_rows": 0,
+      "n_cols": 54,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_secm",
+      "est_rows": 0,
+      "n_cols": 25,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_secnamesd",
       "est_rows": 0,
       "n_cols": 8,
-      "reason": "not joinable (id=gvkey, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_security",
+      "est_rows": 0,
+      "n_cols": 15,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_sedolgvkey",
       "est_rows": 0,
       "n_cols": 3,
-      "reason": "not joinable (id=gvkey, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_tmptable_pkg6775_tbl5551",
+      "est_rows": 0,
+      "n_cols": 6,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",

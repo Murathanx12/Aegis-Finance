@@ -1,13 +1,14 @@
 {
   "pull": "WRDS-PULL-EVERYTHING",
-  "at": "2026-08-20T08:15:52+00:00",
+  "at": "2026-08-20T08:32:02+00:00",
   "runs": [
-    "2026-08-20T08:15:52+00:00"
+    "2026-08-20T08:15:52+00:00",
+    "2026-08-20T08:32:02+00:00"
   ],
   "catalogue": {
     "n_tables_total": 42167,
-    "n_planned": 1380,
-    "n_skipped": 40787
+    "n_planned": 1327,
+    "n_skipped": 40840
   },
   "caps": {
     "max_rows_per_table": 8000000,
@@ -15079,6 +15080,13 @@
       "reason": "not joinable (id=None, date=date) \u2014 cannot correlate with the panel"
     },
     {
+      "schema": "comp_na_daily_all",
+      "table": "adsprate",
+      "est_rows": 3023652,
+      "n_cols": 5,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
       "schema": "crsp_a_stock",
       "table": "saz_shr",
       "est_rows": 2938356,
@@ -15230,7 +15238,7 @@
       "table": "exrt_dly",
       "est_rows": 2226124,
       "n_cols": 5,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "optionm_all",
@@ -15580,7 +15588,7 @@
       "table": "exrt_mth",
       "est_rows": 75990,
       "n_cols": 22,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "optionm_all",
@@ -20904,6 +20912,13 @@
     },
     {
       "schema": "comp",
+      "table": "adsprate",
+      "est_rows": 0,
+      "n_cols": 5,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
       "table": "co_busdescl",
       "est_rows": 0,
       "n_cols": 2,
@@ -20970,112 +20985,469 @@
       "table": "exrt_dly",
       "est_rows": 0,
       "n_cols": 5,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "exrt_mth",
       "est_rows": 0,
       "n_cols": 22,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_chars",
+      "est_rows": 0,
+      "n_cols": 44,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_aaudit",
+      "est_rows": 0,
+      "n_cols": 12,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_adesind",
+      "est_rows": 0,
+      "n_cols": 33,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afnd1",
+      "est_rows": 0,
+      "n_cols": 512,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afnd2",
+      "est_rows": 0,
+      "n_cols": 465,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afnddc1",
+      "est_rows": 0,
+      "n_cols": 512,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afnddc2",
+      "est_rows": 0,
+      "n_cols": 465,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afntind1",
+      "est_rows": 0,
+      "n_cols": 512,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afntind2",
+      "est_rows": 0,
+      "n_cols": 465,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ainvval",
+      "est_rows": 0,
+      "n_cols": 8,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_gsuppl",
+      "est_rows": 0,
+      "n_cols": 153,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_hgic",
+      "est_rows": 0,
+      "n_cols": 8,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_iaudit",
+      "est_rows": 0,
+      "n_cols": 10,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_idesind",
+      "est_rows": 0,
+      "n_cols": 36,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ifndq",
+      "est_rows": 0,
+      "n_cols": 879,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ifndsa",
+      "est_rows": 0,
+      "n_cols": 453,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ifndytd",
+      "est_rows": 0,
+      "n_cols": 731,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ifntq",
+      "est_rows": 0,
+      "n_cols": 444,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ifntsa",
+      "est_rows": 0,
+      "n_cols": 231,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ifntytd",
+      "est_rows": 0,
+      "n_cols": 379,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_industry",
+      "est_rows": 0,
+      "n_cols": 8,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_ipcd",
+      "est_rows": 0,
+      "n_cols": 5,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_co_offtitl",
       "est_rows": 0,
       "n_cols": 4,
-      "reason": "not joinable (id=gvkey, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_company",
+      "est_rows": 0,
+      "n_cols": 39,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_currency",
       "est_rows": 0,
       "n_cols": 6,
-      "reason": "not joinable (id=None, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_ecind_desc",
       "est_rows": 0,
       "n_cols": 8,
-      "reason": "not joinable (id=None, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_ecind_mth",
       "est_rows": 0,
       "n_cols": 55,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_exrt_dly",
       "est_rows": 0,
       "n_cols": 5,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_exrt_mth",
       "est_rows": 0,
       "n_cols": 22,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_funda",
+      "est_rows": 0,
+      "n_cols": 444,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_funda_fncd",
+      "est_rows": 0,
+      "n_cols": 360,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_fundq",
+      "est_rows": 0,
+      "n_cols": 381,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_fundq_fncd",
+      "est_rows": 0,
+      "n_cols": 355,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_idx_daily",
       "est_rows": 0,
       "n_cols": 10,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_idx_index",
       "est_rows": 0,
       "n_cols": 14,
-      "reason": "not joinable (id=tic, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_idx_mth",
       "est_rows": 0,
       "n_cols": 21,
-      "reason": "not joinable (id=None, date=datadate) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_idxcst_his",
       "est_rows": 0,
       "n_cols": 5,
-      "reason": "not joinable (id=gvkey, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_indexcst_his",
+      "est_rows": 0,
+      "n_cols": 5,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_names",
+      "est_rows": 0,
+      "n_cols": 12,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_names_ix",
       "est_rows": 0,
       "n_cols": 7,
-      "reason": "not joinable (id=tic, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_names_ix_cst",
       "est_rows": 0,
       "n_cols": 15,
-      "reason": "not joinable (id=gvkey, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_namesq",
+      "est_rows": 0,
+      "n_cols": 12,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_adesind",
+      "est_rows": 0,
+      "n_cols": 10,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_adjfact",
+      "est_rows": 0,
+      "n_cols": 6,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_afnd",
+      "est_rows": 0,
+      "n_cols": 21,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_afnddc",
+      "est_rows": 0,
+      "n_cols": 21,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_afnt",
+      "est_rows": 0,
+      "n_cols": 21,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_divid",
+      "est_rows": 0,
+      "n_cols": 35,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_dprc",
+      "est_rows": 0,
+      "n_cols": 17,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_dtrt",
+      "est_rows": 0,
+      "n_cols": 6,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_gmdivfn",
+      "est_rows": 0,
+      "n_cols": 5,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_gmth",
+      "est_rows": 0,
+      "n_cols": 6,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_gmthdiv",
+      "est_rows": 0,
+      "n_cols": 6,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_gmthprc",
+      "est_rows": 0,
+      "n_cols": 8,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_history",
+      "est_rows": 0,
+      "n_cols": 6,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_idesind",
+      "est_rows": 0,
+      "n_cols": 10,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_ifnd",
+      "est_rows": 0,
+      "n_cols": 62,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_ifnt",
+      "est_rows": 0,
+      "n_cols": 35,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_sec_split",
+      "est_rows": 0,
+      "n_cols": 5,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_secd",
+      "est_rows": 0,
+      "n_cols": 54,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_secm",
+      "est_rows": 0,
+      "n_cols": 25,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_secnamesd",
       "est_rows": 0,
       "n_cols": 8,
-      "reason": "not joinable (id=gvkey, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_security",
+      "est_rows": 0,
+      "n_cols": 15,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
       "table": "g_sedolgvkey",
       "est_rows": 0,
       "n_cols": 3,
-      "reason": "not joinable (id=gvkey, date=None) \u2014 cannot correlate with the panel"
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
+    },
+    {
+      "schema": "comp",
+      "table": "g_tmptable_pkg6775_tbl5551",
+      "est_rows": 0,
+      "n_cols": 6,
+      "reason": "non-US panel (Compustat Global etc.) \u2014 cannot join a US CRSP PERMNO universe"
     },
     {
       "schema": "comp",
@@ -285522,6 +285894,28 @@
       "est_rows": 0,
       "n_cols": 17,
       "reason": "not joinable (id=None, date=grantdate) \u2014 cannot correlate with the panel"
+    },
+    {
+      "schema": "comp",
+      "table": "asec_amda",
+      "name": "comp.asec_amda",
+      "est_rows": 0,
+      "n_cols": 12,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "reason": "0 rows"
+    },
+    {
+      "schema": "comp",
+      "table": "chars",
+      "name": "comp.chars",
+      "est_rows": 0,
+      "n_cols": 39,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "reason": "0 rows"
     }
   ],
   "pulled": [
@@ -286323,6 +286717,298 @@
         ]
       },
       "seconds": 310.9,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "gsecnamesm",
+      "name": "comp.gsecnamesm",
+      "est_rows": 0,
+      "n_cols": 10,
+      "id_col": "gvkey",
+      "date_col": "year1",
+      "tier": 0,
+      "rows": 81161,
+      "gb": 0.0018,
+      "date_ranges": {},
+      "seconds": 20.7,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "indexcst_his",
+      "name": "comp.indexcst_his",
+      "est_rows": 0,
+      "n_cols": 5,
+      "id_col": "gvkey",
+      "date_col": "fromdate",
+      "tier": 0,
+      "rows": 23683,
+      "gb": 0.0001,
+      "date_ranges": {
+        "fromdate": [
+          "1964-03-31",
+          "2026-08-20"
+        ],
+        "thrudate": [
+          "1982-01-31",
+          "2026-08-04"
+        ]
+      },
+      "seconds": 3.0,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "io_qfloatadj",
+      "name": "comp.io_qfloatadj",
+      "est_rows": 0,
+      "n_cols": 7,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "rows": 35830,
+      "gb": 0.0004,
+      "date_ranges": {
+        "datadate": [
+          "2004-03-31",
+          "2026-03-31"
+        ]
+      },
+      "seconds": 9.6,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "io_qaggregate",
+      "name": "comp.io_qaggregate",
+      "est_rows": 0,
+      "n_cols": 13,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "rows": 154527,
+      "gb": 0.005,
+      "date_ranges": {
+        "datadate": [
+          "2004-03-31",
+          "2026-03-31"
+        ]
+      },
+      "seconds": 57.4,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "it_msummary",
+      "name": "comp.it_msummary",
+      "est_rows": 0,
+      "n_cols": 21,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "rows": 21205,
+      "gb": 0.0007,
+      "date_ranges": {
+        "datadate": [
+          "2026-08-11",
+          "2026-08-11"
+        ]
+      },
+      "seconds": 15.8,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "names",
+      "name": "comp.names",
+      "est_rows": 0,
+      "n_cols": 11,
+      "id_col": "gvkey",
+      "date_col": "year1",
+      "tier": 0,
+      "rows": 47197,
+      "gb": 0.0022,
+      "date_ranges": {},
+      "seconds": 23.8,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "namesm",
+      "name": "comp.namesm",
+      "est_rows": 0,
+      "n_cols": 12,
+      "id_col": "gvkey",
+      "date_col": "year1",
+      "tier": 0,
+      "rows": 63757,
+      "gb": 0.0028,
+      "date_ranges": {},
+      "seconds": 30.5,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "namesq",
+      "name": "comp.namesq",
+      "est_rows": 0,
+      "n_cols": 11,
+      "id_col": "gvkey",
+      "date_col": "year1",
+      "tier": 0,
+      "rows": 46526,
+      "gb": 0.0022,
+      "date_ranges": {},
+      "seconds": 16.0,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "sec_adjfact",
+      "name": "comp.sec_adjfact",
+      "est_rows": 0,
+      "n_cols": 6,
+      "id_col": "gvkey",
+      "date_col": "effdate",
+      "tier": 0,
+      "rows": 120875,
+      "gb": 0.001,
+      "date_ranges": {
+        "effdate": [
+          "1900-01-01",
+          "2026-08-19"
+        ],
+        "thrudate": [
+          "1969-05-20",
+          "2026-08-18"
+        ]
+      },
+      "seconds": 19.7,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "it_mbuysell",
+      "name": "comp.it_mbuysell",
+      "est_rows": 0,
+      "n_cols": 16,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "rows": 160577,
+      "gb": 0.0045,
+      "date_ranges": {
+        "datadate": [
+          "2025-08-31",
+          "2026-08-31"
+        ]
+      },
+      "seconds": 102.5,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "sec_afnt",
+      "name": "comp.sec_afnt",
+      "est_rows": 0,
+      "n_cols": 21,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "rows": 547,
+      "gb": 0.0,
+      "date_ranges": {
+        "datadate": [
+          "1998-06-30",
+          "2026-06-30"
+        ]
+      },
+      "seconds": 1.2,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "sec_ifnt",
+      "name": "comp.sec_ifnt",
+      "est_rows": 0,
+      "n_cols": 35,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "rows": 33112,
+      "gb": 0.0001,
+      "date_ranges": {
+        "datadate": [
+          "2005-09-30",
+          "2026-07-31"
+        ]
+      },
+      "seconds": 12.4,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "sec_history",
+      "name": "comp.sec_history",
+      "est_rows": 0,
+      "n_cols": 6,
+      "id_col": "gvkey",
+      "date_col": "effdate",
+      "tier": 0,
+      "rows": 332398,
+      "gb": 0.0017,
+      "date_ranges": {
+        "effdate": [
+          "1900-01-01",
+          "2026-08-18"
+        ],
+        "thrudate": [
+          "1980-01-01",
+          "2026-08-19"
+        ]
+      },
+      "seconds": 77.9,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "sec_mdivfn",
+      "name": "comp.sec_mdivfn",
+      "est_rows": 0,
+      "n_cols": 14,
+      "id_col": "gvkey",
+      "date_col": "dataitem",
+      "tier": 0,
+      "rows": 89877,
+      "gb": 0.0003,
+      "date_ranges": {
+        "datadate": [
+          "1968-07-31",
+          "2026-08-31"
+        ]
+      },
+      "seconds": 32.8,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "sec_msptfn",
+      "name": "comp.sec_msptfn",
+      "est_rows": 0,
+      "n_cols": 14,
+      "id_col": "gvkey",
+      "date_col": "dataitem",
+      "tier": 0,
+      "rows": 5940,
+      "gb": 0.0,
+      "date_ranges": {
+        "datadate": [
+          "1982-04-30",
+          "2016-07-31"
+        ]
+      },
+      "seconds": 1.7,
       "universe_filtered": false
     }
   ],
@@ -287217,6 +287903,688 @@
       "date_col": "divdpaydateind",
       "tier": 0,
       "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.g_sec_divid LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "aco_indsta",
+      "name": "comp.aco_indsta",
+      "est_rows": 0,
+      "n_cols": 886,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.aco_indsta LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "aco_notesa",
+      "name": "comp.aco_notesa",
+      "est_rows": 0,
+      "n_cols": 12,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.aco_notesa LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "aco_indstq",
+      "name": "comp.aco_indstq",
+      "est_rows": 0,
+      "n_cols": 541,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.aco_indstq LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "aco_notesq",
+      "name": "comp.aco_notesq",
+      "est_rows": 0,
+      "n_cols": 13,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.aco_notesq LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "aco_indstytd",
+      "name": "comp.aco_indstytd",
+      "est_rows": 0,
+      "n_cols": 337,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.aco_indstytd LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "aco_transq",
+      "name": "comp.aco_transq",
+      "est_rows": 0,
+      "n_cols": 16,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.aco_transq LIMIT 8000000': canceling statement due to conflict with recovery\nDETAIL:  User was holding a relation lock for too long.\n"
+    },
+    {
+      "schema": "comp",
+      "table": "aco_notessa",
+      "name": "comp.aco_notessa",
+      "est_rows": 0,
+      "n_cols": 13,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.aco_notessa LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "aco_transa",
+      "name": "comp.aco_transa",
+      "est_rows": 0,
+      "n_cols": 15,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.aco_transa LIMIT 8000000': canceling statement due to conflict with recovery\nDETAIL:  User was holding a relation lock for too long.\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_aacctchg",
+      "name": "comp.bank_aacctchg",
+      "est_rows": 0,
+      "n_cols": 8,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_aacctchg LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "aco_pnfnda",
+      "name": "comp.aco_pnfnda",
+      "est_rows": 0,
+      "n_cols": 164,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.aco_pnfnda LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_adesind",
+      "name": "comp.bank_adesind",
+      "est_rows": 0,
+      "n_cols": 29,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_adesind LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_afnd1",
+      "name": "comp.bank_afnd1",
+      "est_rows": 0,
+      "n_cols": 235,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_afnd1 LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_afnd2",
+      "name": "comp.bank_afnd2",
+      "est_rows": 0,
+      "n_cols": 200,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_afnd2 LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "aco_notesytd",
+      "name": "comp.aco_notesytd",
+      "est_rows": 0,
+      "n_cols": 13,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.aco_notesytd LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_afnddc1",
+      "name": "comp.bank_afnddc1",
+      "est_rows": 0,
+      "n_cols": 235,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_afnddc1 LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_afnddc2",
+      "name": "comp.bank_afnddc2",
+      "est_rows": 0,
+      "n_cols": 200,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_afnddc2 LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_afntind",
+      "name": "comp.bank_afntind",
+      "est_rows": 0,
+      "n_cols": 430,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_afntind LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_funda",
+      "name": "comp.bank_funda",
+      "est_rows": 0,
+      "n_cols": 465,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_funda LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_funda_fncd",
+      "name": "comp.bank_funda_fncd",
+      "est_rows": 0,
+      "n_cols": 409,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_funda_fncd LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_fundq",
+      "name": "comp.bank_fundq",
+      "est_rows": 0,
+      "n_cols": 559,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_fundq LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_fundq_fncd",
+      "name": "comp.bank_fundq_fncd",
+      "est_rows": 0,
+      "n_cols": 629,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_fundq_fncd LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_iacctchg",
+      "name": "comp.bank_iacctchg",
+      "est_rows": 0,
+      "n_cols": 9,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_iacctchg LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_idesind",
+      "name": "comp.bank_idesind",
+      "est_rows": 0,
+      "n_cols": 35,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_idesind LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_ifndq",
+      "name": "comp.bank_ifndq",
+      "est_rows": 0,
+      "n_cols": 613,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_ifndq LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_ifndytd",
+      "name": "comp.bank_ifndytd",
+      "est_rows": 0,
+      "n_cols": 423,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_ifndytd LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_ifntq",
+      "name": "comp.bank_ifntq",
+      "est_rows": 0,
+      "n_cols": 310,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_ifntq LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_ifntytd",
+      "name": "comp.bank_ifntytd",
+      "est_rows": 0,
+      "n_cols": 215,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_ifntytd LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_names",
+      "name": "comp.bank_names",
+      "est_rows": 0,
+      "n_cols": 11,
+      "id_col": "gvkey",
+      "date_col": "year1",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_names LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "bank_namesq",
+      "name": "comp.bank_namesq",
+      "est_rows": 0,
+      "n_cols": 11,
+      "id_col": "gvkey",
+      "date_col": "year1",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.bank_namesq LIMIT 8000000': permission denied for schema comp_bank_daily\n"
+    },
+    {
+      "schema": "comp",
+      "table": "aco_transytd",
+      "name": "comp.aco_transytd",
+      "est_rows": 0,
+      "n_cols": 16,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.aco_transytd LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "aco_transsa",
+      "name": "comp.aco_transsa",
+      "est_rows": 0,
+      "n_cols": 16,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.aco_transsa LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_adesind",
+      "name": "comp.co_adesind",
+      "est_rows": 0,
+      "n_cols": 33,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_adesind LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_afnd1",
+      "name": "comp.co_afnd1",
+      "est_rows": 0,
+      "n_cols": 539,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_afnd1 LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_afnd2",
+      "name": "comp.co_afnd2",
+      "est_rows": 0,
+      "n_cols": 468,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_afnd2 LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_afnddc1",
+      "name": "comp.co_afnddc1",
+      "est_rows": 0,
+      "n_cols": 539,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_afnddc1 LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_afntind1",
+      "name": "comp.co_afntind1",
+      "est_rows": 0,
+      "n_cols": 539,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_afntind1 LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_afntind2",
+      "name": "comp.co_afntind2",
+      "est_rows": 0,
+      "n_cols": 468,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_afntind2 LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_amkt",
+      "name": "comp.co_amkt",
+      "est_rows": 0,
+      "n_cols": 14,
+      "id_col": "gvkey",
+      "date_col": "year",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_amkt LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_afnddc2",
+      "name": "comp.co_afnddc2",
+      "est_rows": 0,
+      "n_cols": 468,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_afnddc2 LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_filedate",
+      "name": "comp.co_filedate",
+      "est_rows": 0,
+      "n_cols": 7,
+      "id_col": "gvkey",
+      "date_col": "filedatetime",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_filedate LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_ifndq",
+      "name": "comp.co_ifndq",
+      "est_rows": 0,
+      "n_cols": 937,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_ifndq LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_idesind",
+      "name": "comp.co_idesind",
+      "est_rows": 0,
+      "n_cols": 36,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_idesind LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_ifndsa",
+      "name": "comp.co_ifndsa",
+      "est_rows": 0,
+      "n_cols": 463,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_ifndsa LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_ifndytd",
+      "name": "comp.co_ifndytd",
+      "est_rows": 0,
+      "n_cols": 741,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_ifndytd LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_ifntsa",
+      "name": "comp.co_ifntsa",
+      "est_rows": 0,
+      "n_cols": 236,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_ifntsa LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_ifntq",
+      "name": "comp.co_ifntq",
+      "est_rows": 0,
+      "n_cols": 473,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_ifntq LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_ifntytd",
+      "name": "comp.co_ifntytd",
+      "est_rows": 0,
+      "n_cols": 384,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_ifntytd LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_imkt",
+      "name": "comp.co_imkt",
+      "est_rows": 0,
+      "n_cols": 15,
+      "id_col": "gvkey",
+      "date_col": "year",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_imkt LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_mthly",
+      "name": "comp.co_mthly",
+      "est_rows": 0,
+      "n_cols": 4,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_mthly LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "filings",
+      "name": "comp.filings",
+      "est_rows": 0,
+      "n_cols": 13,
+      "id_col": "gvkey",
+      "date_col": "date",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.filings LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "funda",
+      "name": "comp.funda",
+      "est_rows": 0,
+      "n_cols": 949,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.funda LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "funda_fncd",
+      "name": "comp.funda_fncd",
+      "est_rows": 0,
+      "n_cols": 888,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.funda_fncd LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "fundq",
+      "name": "comp.fundq",
+      "est_rows": 0,
+      "n_cols": 648,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.fundq LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "fundq_fncd",
+      "name": "comp.fundq_fncd",
+      "est_rows": 0,
+      "n_cols": 778,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.fundq_fncd LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "io_qbuysell",
+      "name": "comp.io_qbuysell",
+      "est_rows": 0,
+      "n_cols": 15,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.io_qbuysell LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "io_qchanges",
+      "name": "comp.io_qchanges",
+      "est_rows": 0,
+      "n_cols": 13,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.io_qchanges LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "io_qholders",
+      "name": "comp.io_qholders",
+      "est_rows": 0,
+      "n_cols": 10,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.io_qholders LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "sec_adesind",
+      "name": "comp.sec_adesind",
+      "est_rows": 0,
+      "n_cols": 10,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.sec_adesind LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "sec_afnd",
+      "name": "comp.sec_afnd",
+      "est_rows": 0,
+      "n_cols": 21,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.sec_afnd LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "sec_divid",
+      "name": "comp.sec_divid",
+      "est_rows": 0,
+      "n_cols": 35,
+      "id_col": "gvkey",
+      "date_col": "divdpaydateind",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.sec_divid LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "sec_afnddc",
+      "name": "comp.sec_afnddc",
+      "est_rows": 0,
+      "n_cols": 21,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.sec_afnddc LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "sec_dprc",
+      "name": "comp.sec_dprc",
+      "est_rows": 0,
+      "n_cols": 17,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.sec_dprc LIMIT 8000000': canceling statement due to statement timeout\n"
     }
   ]
 }

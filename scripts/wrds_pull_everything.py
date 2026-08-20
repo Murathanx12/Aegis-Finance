@@ -67,6 +67,12 @@ PLAN_CACHE = OUT / "pull_everything_plan.json"
 BULK = OUT / "bulk"
 
 FIREHOSE = ("taqm_", "taqmsec", "issm", "otc", "phlx", "msrb", "trace")
+#: Non-US panels. Our universe is US CRSP PERMNOs, so Compustat Global
+#: (`comp.g_*`), the global daily/index schemas and the country-specific
+#: sets can never join it — they are entitled, enormous, and irrelevant.
+#: Excluded by NAME rather than by size because their row estimates are 0
+#: (never ANALYZEd), which is exactly how they slipped past the size cap.
+NON_US = ("g_", "adsprate", "exrt_", "g_co", "g_sec", "g_fund", "g_idx")
 DATEPART = re.compile(r"(_(19|20)\d{2}(\d{2}\d{2})?$)|(\d{8}$)")
 
 ID_COLS = ("permno", "permco", "lpermno", "gvkey", "cusip", "ncusip",
@@ -79,12 +85,12 @@ DATE_HINTS = ("date", "dat", "eom", "public", "statpers", "rdq", "year",
 
 MAX_ROWS = 8_000_000
 DISK_BUDGET_GB = 60.0
-#: Measured 2026-08-20: boardex.na_board_characteristics took 374s for
-#: 515k rows. At that throughput 1,380 tables is 3-6 DAYS on one
-#: connection, so the plan is not executable serially. Two changes make
-#: it executable: a worker pool, and a per-table timeout short enough
-#: that one pathological table cannot eat an hour.
-PER_TABLE_TIMEOUT_S = 300
+#: A table that cannot deliver in 90s is not worth 90 more seconds of a
+#: connection there are only 7 of. Was 300s, which let a handful of
+#: Compustat GLOBAL tables (whose est_rows was 0 because they had never
+#: been ANALYZEd, so the size cap missed them) eat five workers for
+#: minutes at a time.
+PER_TABLE_TIMEOUT_S = 90
 #: WRDS enforces a per-role connection cap. MEASURED from a clean slate
 #: 2026-08-20: exactly **7** concurrent connections, failing on the 8th
 #: with `FATAL: too many connections for role`.
@@ -148,6 +154,11 @@ def build_plan(conn) -> tuple[list[dict], list[dict]]:
             continue
         if DATEPART.search(tab):
             skipped.append({**r, "reason": "date-partitioned sibling"})
+            continue
+        if tab.startswith(NON_US):
+            skipped.append({**r, "reason": "non-US panel (Compustat "
+                                           "Global etc.) — cannot join a "
+                                           "US CRSP PERMNO universe"})
             continue
         if n > MAX_ROWS:
             skipped.append({**r, "reason": f"est_rows > cap {MAX_ROWS:,}"})
