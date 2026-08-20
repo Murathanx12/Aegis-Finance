@@ -75,8 +75,34 @@ def main() -> int:
 
     import pyarrow.parquet as pq
 
-    man = json.loads(MANIFEST.read_text(encoding="utf-8")) if MANIFEST.exists() else {}
+    # THE FILTER DECISION COMES FROM THE PLAN, NOT THE MANIFEST.
+    #
+    # The first version read `universe_filtered` out of the manifest's
+    # `pulled` rows. The manifest is BOOKKEEPING that a running pull appends
+    # to, so a verifier that snapshots it at startup races the pull: three
+    # tables pulled minutes earlier were not yet in the snapshot, read as
+    # unfiltered, and were reported as having lost half their rows —
+    #     crsp.erdport5   6,112,111 in file vs 12,324,256 unfiltered = 49.6%
+    # A re-count WITH the permno filter returned 6,112,111 exactly. All three
+    # were false alarms raised by the tool written to stop false assurance,
+    # which is the same error in the other direction.
+    #
+    # The PLAN is static and is what the pull itself keys on
+    # (`id_col in permno/lpermno/permco` -> WHERE permno = ANY(...)), so
+    # deriving the filter from it cannot race anything.
+    from scripts.wrds_pull_everything import PLAN_CACHE
+    try:
+        plan = json.loads(PLAN_CACHE.read_text(encoding="utf-8"))
+        pmap = {p["name"]: p for p in plan.get("plan", [])}
+    except Exception as exc:                                    # noqa: BLE001
+        print(f"  (plan cache unreadable: {exc}) — cannot derive filters")
+        pmap = {}
+    man = (json.loads(MANIFEST.read_text(encoding="utf-8"))
+           if MANIFEST.exists() else {})
     meta = {p.get("name"): p for p in (man.get("pulled") or [])}
+
+    #: The exact predicate `wrds_pull_catchup` / `wrds_pull_everything` apply.
+    PERMNO_COLS = ("permno", "lpermno", "permco")
 
     files = sorted(BULK.glob("*.parquet"))[: a.limit]
     print(f"verifying {len(files)} parquet(s) against the server\n")
@@ -96,11 +122,11 @@ def main() -> int:
             print(f"  CORRUPT    {name}")
             continue
 
-        m = meta.get(name) or {}
-        filtered = bool(m.get("universe_filtered"))
-        id_col = m.get("id_col")
+        pl = pmap.get(name) or meta.get(name) or {}
+        id_col = pl.get("id_col")
+        filtered = id_col in PERMNO_COLS
         where, params = "", None
-        if filtered and id_col:
+        if filtered:
             if permnos is None:
                 permnos = sorted(_all_permnos())
             where = f' WHERE "{id_col}" = ANY(%(p)s)'
