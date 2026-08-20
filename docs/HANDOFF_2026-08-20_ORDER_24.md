@@ -346,7 +346,49 @@ arm on 4 of 6 signals yet does not beat trailing pooled**, because the
 pooled average is dominated by value_bm. Per-signal and pooled disagree
 here for a reason that is now understood rather than averaged over.
 
-### 10. Every grammar decision is a risk decision, not a return decision
+### 10. Regime conditioning for RISK: the ceiling is in the level, not the ordering
+
+`REGIME-RISK-CONDITIONING-1`. §5 closed regime-conditional factor
+*selection* and explicitly left risk conditioning open. Same oracle-first
+discipline, applied to the risk head — with an arm that cannot exist in
+practice, because that is the ceiling no predictor can beat.
+
+| arm | rank IC | MSE(log var) | QLIKE |
+|---|---|---|---|
+| baseline | 0.7978 | 0.49908 | 0.5003 |
+| + trailing state (observable) | 0.8006 | 0.52204 | 0.5062 |
+| + **oracle** state | 0.7991 | 0.48447 | **0.4336** |
+| + both | 0.7991 | **0.45210** | 0.4376 |
+
+| contrast (MSE log var) | Δ | MDE | verdict |
+|---|---|---|---|
+| + trailing − baseline | **−0.02296** | 0.03662 | significant (**worse**) |
+| + oracle − baseline | +0.01461 | 0.06176 | ns |
+| + both − baseline | **+0.04698** | 0.05829 | significant |
+
+**Verdict: `CEILING_IS_IN_THE_LEVEL_ONLY`.** Rank IC barely moves
+(+0.0013 for the oracle) — a perfectly-known market-variance state adds
+essentially nothing to the *ordering*. But QLIKE falls 0.500 → 0.434, a
+13% improvement in the calibrated level, which makes sense: market-wide
+variance rescales everything at once. And the observable trailing state
+does not reach any of it — six market-state features make MSE log
+variance significantly **worse**, adding variance without signal.
+
+So regime conditioning of risk is not dead, but it is not what it was
+hoped to be: it is a **level/calibration** lever, not an ordering lever,
+and the observable proxies tested here do not capture it. That is the
+same ordering-vs-level split as §1, §2, §8 and §9.
+
+**A decision rule was corrected mid-trial and the correction is
+disclosed.** The rule as first written tested only the `plus_oracle_state`
+arm and would have printed
+`REGIME_CONDITIONING_CLOSED_FOR_RISK` — it ignored `plus_both`, an arm
+this same script deliberately runs and which *is* significant, and it
+conflated ordering with level. A rule that cannot see an arm the design
+includes is an incomplete rule, not a verdict. Both the corrected rule
+and what the original would have said are recorded in the receipt.
+
+### 11. Every grammar decision is a risk decision, not a return decision
 
 `RULE-INTERVENTION-1`, matched paired contrasts (each pair differs in
 exactly one coordinate, so signal/universe/dates/costs cancel; unit of
@@ -384,8 +426,9 @@ grammar itself.
   lane. Nothing here is forward evidence.
 - Whether a better construction layer recovers the information §6 shows
   is being destroyed. That is now the top open question.
-- Whether regime conditioning helps **risk/sizing** (untested; §59 says
-  it resolves ~30× faster than the selection question that just closed).
+- Whether any OBSERVABLE state variable reaches the level-calibration
+  ceiling §10 found (the six trailing market-state features tested make
+  things significantly worse).
 - Any return claim about the new signal families. INFORMATION-DIMENSION-1
   measured structure only and deliberately printed no leaderboard.
 
@@ -515,9 +558,12 @@ spend it.**
    sizing optimises each name's marginal variance while ignoring
    covariance entirely — which is also the leading unexplained candidate
    for the `value_bm` anomaly in §8.
-2. `REGIME-RISK-CONDITIONING-1` — the surviving half of the regime
-   question, on the §59 clock: does state conditioning improve **vol/
-   drawdown** prediction, where the oracle ceiling was never measured?
+2. Reach the §10 ceiling, or close it: the oracle market-variance state
+   cuts QLIKE 13% while leaving rank IC flat, and six trailing proxies
+   made MSE log variance significantly WORSE. Either find an observable
+   that captures a market-wide variance level shift (implied index vol,
+   term structure, dispersion of IV rather than of returns), or declare
+   the level ceiling unreachable and stop.
 3. Manager library **v2**: `rdate + 45d` knowledge gate, `cfacshr`
    split adjustment, v1-vs-v2 transition matrix diff. Unblocks four
    MANAGER-* trials.
