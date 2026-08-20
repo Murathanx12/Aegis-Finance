@@ -117,6 +117,56 @@ def inv_vol_63_at(panel: Panel, asof: pd.Timestamp) -> pd.Series:
     return 1.0 / sd
 
 
+#: trailing window for the min-variance covariance estimate
+MIN_VAR_LOOKBACK = 252
+
+
+def _min_var_weights(panel: Panel, asof: pd.Timestamp,
+                     picks: list) -> dict:
+    """Long-only minimum-variance weights over `picks`.
+
+    Uses the programme's own denoised covariance (Marchenko-Pastur) —
+    with ~50 names and 252 observations the sample covariance is badly
+    conditioned and its inverse would be dominated by noise eigenvalues,
+    which is exactly the failure the denoiser exists to prevent.
+
+    Long-only is imposed by clipping the analytic solution and
+    renormalising rather than by a QP. That is an approximation and is
+    declared as one: it is enough to answer "does covariance awareness
+    change the book", which is the question, and it is not a claim to
+    have found the optimal long-only portfolio.
+    """
+    hist = panel.ret.loc[:asof].iloc[-MIN_VAR_LOOKBACK:]
+    cols = [p for p in picks if p in hist.columns]
+    sub = hist[cols].dropna(axis=1, thresh=int(0.8 * len(hist)))
+    sub = sub.dropna(axis=0, how="any")
+    if sub.shape[1] < 5 or sub.shape[0] < 60:
+        return {p: 1.0 / len(picks) for p in picks}
+    try:
+        from backend.services.covariance import estimate_covariance
+        cov = estimate_covariance(sub, method="denoised").to_numpy(float)
+    except Exception:                                          # noqa: BLE001
+        cov = sub.cov().to_numpy(float)
+    n = cov.shape[0]
+    cov = cov + np.eye(n) * 1e-10
+    try:
+        inv1 = np.linalg.solve(cov, np.ones(n))
+    except np.linalg.LinAlgError:
+        return {p: 1.0 / len(picks) for p in picks}
+    w = np.clip(inv1, 0.0, None)
+    if w.sum() <= 0:
+        return {p: 1.0 / len(picks) for p in picks}
+    w = w / w.sum()
+    out = {p: float(x) for p, x in zip(sub.columns, w)}
+    # names dropped for insufficient history keep an equal-weight share
+    miss = [p for p in picks if p not in out]
+    if miss:
+        share = len(miss) / len(picks)
+        out = {p: v * (1 - share) for p, v in out.items()}
+        out.update({p: share / len(miss) for p in miss})
+    return out
+
+
 def prepare_extras(panel: Panel, finratio_path=None) -> dict:
     """One-time precomputation for the MEGA-SWEEP signal set.
 
@@ -195,7 +245,8 @@ def run_book(panel: Panel, *, weighting: str, winner_handling: str,
                                      or "streak" not in extras):
         raise SimRefused("avoid_streak needs the prepared streak matrix "
                          "— refusing to run without its input")
-    if weighting not in ("equal", "inverse_vol", "rank", "model_vol"):
+    if weighting not in ("equal", "inverse_vol", "rank", "model_vol",
+                         "min_var"):
         raise SimRefused(f"unknown weighting {weighting!r}")
     if weighting == "model_vol" and MODEL_PRED_VAR is None:
         raise SimRefused(
@@ -266,7 +317,16 @@ def run_book(panel: Panel, *, weighting: str, winner_handling: str,
             if not picks:
                 nav_rows.append((d, mark(d)))
                 continue
-            if weighting == "model_vol":
+            if weighting == "min_var":
+                # Covariance-AWARE sizing. Inverse-vol weighting of any
+                # flavour optimises each name's MARGINAL variance and is
+                # blind to how the names co-move, so it can concentrate a
+                # book into one correlated cluster while every individual
+                # forecast is good. This arm is the control for that:
+                # long-only minimum variance on a denoised covariance of
+                # the picks' trailing daily returns.
+                w = _min_var_weights(panel, asof, picks)
+            elif weighting == "model_vol":
                 # inverse PREDICTED vol, as-of: only predictions stamped
                 # on or before the rebalance date are visible
                 hist = MODEL_PRED_VAR.loc[:asof]
