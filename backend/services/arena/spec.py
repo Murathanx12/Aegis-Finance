@@ -33,6 +33,45 @@ VALIDATION_STATUS = "PRODUCT_EXPERIMENT"
 KNOWN_SCREENS = frozenset({"streak_up_5", "top_decile_ret21"})
 KNOWN_SIZING = frozenset({"equal_weight", "inverse_trailing_vol"})
 
+#: Defaults the engine actually READS. Changing one of these changes what the
+#: books do.
+CONSUMED_DEFAULTS = frozenset({
+    "notional_usd", "benchmark", "transaction_cost_bps", "slippage_bps",
+    "select_top_k", "max_single_name", "min_price", "selection_signal",
+    "min_priced_fraction",
+})
+
+#: Defaults that DESCRIBE behaviour implemented elsewhere in code. Each names
+#: where, because the alternative is what this file used to be: a document
+#: that reads like the source of truth while the behaviour lives in Python and
+#: can diverge from it without anything failing. Editing one of these changes
+#: NOTHING — that is the point of listing it here rather than leaving it to be
+#: discovered by someone editing it and waiting for an effect.
+DESCRIPTIVE_DEFAULTS: dict[str, str] = {
+    "rebalance": "implemented in engine._decision_due (calendar month)",
+    "execution": "implemented in policies.orders_from_targets + "
+                 "engine._fill_pending (queue at close, fill at next open)",
+    "secondary_benchmark": "engine.run_daily adds QQQ to the panel; nothing "
+                           "grades against it yet",
+    "vol_lookback_days": "implemented in discovery._trailing_features (63)",
+}
+
+#: Per-book keys, same contract.
+CONSUMED_BOOK_KEYS = frozenset({
+    "purpose", "policy_version", "sizing", "screens", "llm_perception", "llm",
+    "winner_exemption", "substitution",
+})
+
+DESCRIPTIVE_BOOK_KEYS: dict[str, str] = {
+    "selection": "every book uses composite_top_k; policies.select implements "
+                 "it and reads defaults.selection_signal, not this field",
+}
+
+#: Keys inside the per-book `llm` and `substitution` blocks.
+KNOWN_LLM_KEYS = frozenset({"max_names_per_day", "daily_call_cap", "tilt_cap",
+                            "tilt_scale", "horizon_days", "observable"})
+KNOWN_SUBSTITUTION_KEYS = frozenset({"margin_z", "max_swaps_per_day"})
+
 
 class SpecError(RuntimeError):
     """The YAML asks for something the engine does not implement."""
@@ -133,10 +172,31 @@ def load_specs(path: Path | None = None) -> dict[str, BookSpec]:
     fp = policy_fingerprint(p)
     defaults = dict(raw.get("defaults") or {})
     books = raw.get("books") or {}
+    unknown_defaults = (set(defaults) - CONSUMED_DEFAULTS
+                        - set(DESCRIPTIVE_DEFAULTS))
+    if unknown_defaults:
+        raise SpecError(
+            f"defaults key(s) {sorted(unknown_defaults)} are neither read by "
+            f"the engine nor listed as descriptive. A YAML key that changes "
+            f"nothing reads as a control and is not one — add it to "
+            f"CONSUMED_DEFAULTS and wire it, or to DESCRIPTIVE_DEFAULTS with "
+            f"the code location that actually implements it.")
     out: dict[str, BookSpec] = {}
     for book_id, b in books.items():
         if not isinstance(b, dict):
             continue
+        unknown_keys = (set(b) - CONSUMED_BOOK_KEYS
+                        - set(DESCRIPTIVE_BOOK_KEYS))
+        if unknown_keys:
+            raise SpecError(f"{book_id}: key(s) {sorted(unknown_keys)} are "
+                            f"neither consumed nor declared descriptive")
+        for block, known in (("llm", KNOWN_LLM_KEYS),
+                             ("substitution", KNOWN_SUBSTITUTION_KEYS)):
+            extra = set(b.get(block) or {}) - known
+            if extra:
+                raise SpecError(f"{book_id}.{block}: unknown key(s) "
+                                f"{sorted(extra)} — a setting the engine never "
+                                f"reads must not sit in the file looking live")
         screens = tuple(b.get("screens") or ())
         unknown = set(screens) - KNOWN_SCREENS
         if unknown:

@@ -812,3 +812,32 @@ def test_priced_fraction_is_frozen_into_the_state(panel_free_state=None):
         "2026-08-19T23:59:59+00:00")
     assert state["priced_n"] == 2
     assert state["priced_fraction"] == pytest.approx(0.5)
+
+
+def test_a_yaml_key_the_engine_never_reads_refuses_at_load(tmp_path):
+    """A setting that changes nothing must not sit in the file looking live."""
+    from backend.services.arena.spec import SpecError, load_specs
+
+    p = tmp_path / "books.yaml"
+    p.write_text("schema: arena-v1\ndefaults:\n  invented_knob: 7\n"
+                 "books:\n  X_v1:\n    sizing: equal_weight\n",
+                 encoding="utf-8")
+    with pytest.raises(SpecError, match="neither read by the engine"):
+        load_specs(p)
+
+
+def test_an_unknown_llm_block_key_refuses_at_load(tmp_path):
+    from backend.services.arena.spec import SpecError, load_specs
+
+    p = tmp_path / "books.yaml"
+    p.write_text("schema: arena-v1\ndefaults: {}\nbooks:\n  X_v1:\n"
+                 "    sizing: equal_weight\n    llm:\n      temperature: 0.9\n",
+                 encoding="utf-8")
+    with pytest.raises(SpecError, match="looking live"):
+        load_specs(p)
+
+
+def test_the_shipped_yaml_declares_every_key_it_carries():
+    """The real file must satisfy the contract it just imposed."""
+    from backend.services.arena import spec as spec_mod
+    assert spec_mod.active_specs()
