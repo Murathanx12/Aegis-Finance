@@ -127,6 +127,22 @@ def _decide(spec, book: dict, day_state: dict, is_hash: str, *,
     together is what made the model's only look at a name the same call that
     traded it.
     """
+    # A degraded fetch is not a thin day. Cross-sectional z-scores computed
+    # over 20 of 180 names are correct arithmetic against the wrong world, and
+    # `insufficient_breadth` would not catch it — 20 priced names still yield
+    # 12 chosen. The book HOLDS and says why; the snapshot stays frozen as the
+    # record of what was actually fetched.
+    priced = day_state.get("priced_fraction")
+    floor = spec.min_priced_fraction
+    if priced is not None and priced < floor:
+        return {"status": "degraded_information_state",
+                "priced_fraction": priced, "min_priced_fraction": floor,
+                "priced_n": day_state.get("priced_n"),
+                "universe_n": day_state.get("universe_n"),
+                "note": ("the cross-section this state's z-scores were "
+                         "computed over is not the declared universe — "
+                         "holding rather than ranking a different world")}
+
     sel = sel if sel is not None else _select(spec, day_state)
     min_breadth = max(5, spec.top_k // 2)
     if len(sel.chosen) < min_breadth:

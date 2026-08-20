@@ -38,6 +38,12 @@ defaults:
   execution: next_session_open # decisions freeze after close; fills at next open
   max_single_name: 0.15
   min_price: 5.0
+  # Every score in the day state is a z-score over the names that got priced.
+  # If a fetch returns 20 of 180 names, the ranking is over a DIFFERENT
+  # universe wearing the same name — and snapshots are write-once, so that
+  # would be permanent. Below this share, books hold and say
+  # `degraded_information_state`; they still mark NAV.
+  min_priced_fraction: 0.80
   # The arena's OWN composite over the arena's OWN universe: 12-1 momentum
   # (last month EXCLUDED — the anti-chase findings) blended with whatever PIT
   # score families a name has (multifactor/revisions/insider/pead/quality on

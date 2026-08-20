@@ -740,3 +740,75 @@ def test_review_runs_on_a_session_with_no_decision(root, tmp_path, monkeypatch):
     assert seen["calls"] == 1
     assert r["decision"]["status"] == "insufficient_breadth"
     assert r["belief_review"]["status"] == "ok"
+
+
+# ── a degraded fetch is a different universe, not a thin day ───────────────
+def test_a_partial_price_fetch_holds_instead_of_ranking_a_smaller_world(root):
+    """20 of 180 names priced still yields 12 chosen, so insufficient_breadth
+    never fires — but those 12 were ranked by z-scores over a cross-section
+    that is not the declared universe."""
+    from backend.services.arena import engine
+    from backend.services.arena import spec as spec_mod
+
+    spec = spec_mod.active_specs()["ENGINE_BASELINE_v1"]
+    ds = _day_state([f"T{i:02d}" for i in range(20)])
+    ds["universe_n"] = 180
+    ds["priced_n"] = 20
+    ds["priced_fraction"] = 20 / 180
+    for i, t in enumerate(ds["names"]):
+        ds["names"][t]["scores"]["arena_composite"] = float(20 - i)
+        ds["names"][t]["vol63"] = 0.02
+
+    book = {"cash": 100000.0, "positions": {}, "pending": [],
+            "session_index": 0, "last_rebalance_month": None,
+            "last_marked": None}
+    dec = engine._decide(spec, book, ds, "hash", root=root)
+    assert dec["status"] == "degraded_information_state"
+    assert dec["priced_fraction"] == pytest.approx(20 / 180)
+    assert book["pending"] == []          # nothing was queued
+
+
+def test_a_full_fetch_decides_normally(root):
+    from backend.services.arena import engine
+    from backend.services.arena import spec as spec_mod
+
+    spec = spec_mod.active_specs()["ENGINE_BASELINE_v1"]
+    ds = _day_state([f"T{i:02d}" for i in range(20)])
+    ds["universe_n"] = 20
+    ds["priced_n"] = 20
+    ds["priced_fraction"] = 1.0
+    for i, t in enumerate(ds["names"]):
+        ds["names"][t]["scores"]["arena_composite"] = float(20 - i)
+        ds["names"][t]["vol63"] = 0.02
+    book = {"cash": 100000.0, "positions": {}, "pending": [],
+            "session_index": 0, "last_rebalance_month": None,
+            "last_marked": None}
+    dec = engine._decide(spec, book, ds, "hash", root=root)
+    assert dec["status"] == "decided" and dec["orders_queued"] > 0
+
+
+def test_priced_fraction_is_frozen_into_the_state(panel_free_state=None):
+    from backend.services.arena import discovery
+
+    class _P:
+        def sessions(self):
+            return [date(2026, 8, 19)]
+
+        def close_price(self, t, d):
+            return 100.0 if t in ("A", "B") else None
+
+        def open_price(self, t, d):
+            return 100.0
+
+        def close_history(self, t, d, n):
+            return [100.0] * 300 if t in ("A", "B") else []
+
+    class _Conn:
+        def close(self):
+            pass
+
+    state = discovery._build_day_state_with_conn(
+        date(2026, 8, 19), _P(), ["A", "B", "C", "D"], _Conn(),
+        "2026-08-19T23:59:59+00:00")
+    assert state["priced_n"] == 2
+    assert state["priced_fraction"] == pytest.approx(0.5)

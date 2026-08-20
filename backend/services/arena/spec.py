@@ -90,6 +90,12 @@ class BookSpec:
         return int(self.defaults.get("vol_lookback_days", 63))
 
     @property
+    def min_priced_fraction(self) -> float:
+        """Below this share of the universe priced, the day's cross-section is
+        a different universe and no decision may be taken from it."""
+        return float(self.defaults.get("min_priced_fraction", 0.80))
+
+    @property
     def selection_signal(self) -> str:
         return str(self.defaults.get("selection_signal", "multifactor_score"))
 

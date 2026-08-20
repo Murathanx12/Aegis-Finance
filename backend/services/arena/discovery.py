@@ -223,9 +223,18 @@ def _build_day_state_with_conn(day, panel, universe, conn,
         k = v.get("scores", {}).get("coverage_n")
         if k is not None:
             hist[str(k)] = hist.get(str(k), 0) + 1
+    n_priced = sum(1 for v in names.values() if v.get("status") == "ok")
+    priced_fraction = (n_priced / len(universe)) if universe else 0.0
     return {"date": str(day), "as_of_ts": as_of_ts, "universe_n": len(universe),
             "scored_n": n_scored, "composite_version": COMPOSITE_VERSION,
-            "coverage_histogram": hist, "names": names}
+            "coverage_histogram": hist,
+            # The cross-section IS the estimator: every score in this state is
+            # a z-score over whatever got priced. A day that fetched 20 of 180
+            # names is not a thin day, it is a DIFFERENT universe wearing the
+            # same name, and the snapshot is write-once so that mistake would
+            # be permanent. Carried here so the decision path can refuse it.
+            "priced_n": n_priced, "priced_fraction": round(priced_fraction, 4),
+            "names": names}
 
 
 #: The arena's OWN composite over the arena's OWN universe. The registered
