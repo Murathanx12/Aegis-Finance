@@ -133,3 +133,4 @@ backend/data/optimus/wrds/pull_terminal_failures.json
 # ARENA (ORDER 25): local ledger writes must never dirty the tree the night
 # launcher's git_dirty check reads. Railway's volume is the authoritative store.
 backend/data/optimus/arena/
+backend/data/optimus/wrds/truncated_quarantine.json

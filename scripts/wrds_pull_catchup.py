@@ -292,6 +292,29 @@ def _stream_to_parquet(conn, sql, params, fn, *, chunk: int,
             conn.autocommit = was_auto
 
 
+#: A table whose MEASURED row count exceeds MAX_ROWS is not pulled at all.
+#:
+#: `SELECT * FROM t LIMIT 8000000` with no ORDER BY returns an ARBITRARY
+#: 8,000,000 rows — not a prefix, not a sample with a definition, and not the
+#: same set twice. The original pull never met this because every large table
+#: died on the 90-second timeout; fixing the timeout made the big tables
+#: succeed for the first time and exposed it. Measured:
+#:
+#:   crsp.daily_nav_ret  186,442,964 true rows -> 8,000,000 kept =  4.3%
+#:   comp.aco_transa      47,158,539 true rows -> 8,000,000 kept = 17.0%
+#:   optionm.hvold2013    12,853,308 true rows -> 8,000,000 kept = 62.2%
+#:
+#: A file named `crsp__daily_nav_ret.parquet` holding 4.3% of the table, with
+#: nothing recording that, is worse than an absent file: it joins cleanly and
+#: silently drops 96% of the data. The plan already skips tables whose
+#: est_rows exceed the cap — that rule simply never fired, because est_rows is
+#: 0 for anything WRDS has not ANALYZEd. This applies the SAME rule to the
+#: measured count, and records the true size so the cap can be revisited as a
+#: declared decision rather than discovered as a hole.
+OVER_CAP_REASON = "measured rows > MAX_ROWS; an unordered LIMIT is an " \
+                  "arbitrary subset, so nothing is written"
+
+
 def _row_count(conn, p: dict, where: str, params) -> int | None:
     """Rows this pull will actually move, or None if counting failed.
 
@@ -349,6 +372,30 @@ def _planned_names() -> set:
     except Exception as exc:                                    # noqa: BLE001
         print(f"  (plan cache unreadable: {exc}; out-of-plan filter OFF)")
         return set()
+
+
+def _flush_manifest(new_pulled, new_failed, new_over_cap, terminal, *,
+                    partial: bool, extra: dict | None = None) -> None:
+    """Merge this run's results into the manifest. Idempotent by name, so a
+    periodic flush and the final one cannot double-count the same table."""
+    man = _load_manifest()
+    seen_p = {p.get("name") for p in man.get("pulled") or []}
+    seen_f = {(f.get("name"), f.get("error")) for f in man.get("failed") or []}
+    seen_o = {o.get("name") for o in man.get("over_cap") or []}
+    man["pulled"] = (man.get("pulled") or []) + [
+        r for r in new_pulled if r["name"] not in seen_p]
+    man["failed"] = (man.get("failed") or []) + [
+        r for r in new_failed if (r["name"], r.get("error")) not in seen_f]
+    man["over_cap"] = (man.get("over_cap") or []) + [
+        r for r in new_over_cap if r["name"] not in seen_o]
+    man["n_terminal_not_entitled"] = len(terminal)
+    if partial:
+        man.pop("completed_at", None)
+        man["partial_at"] = datetime.now(timezone.utc).isoformat(
+            timespec="seconds")
+    man.update(extra or {})
+    MANIFEST.write_text(json.dumps(man, indent=2, default=str),
+                        encoding="utf-8")
 
 
 def _load_manifest() -> dict:
@@ -476,8 +523,8 @@ def main() -> int:
     lock = threading.Lock()
     t_start = time.time()
     state = {"gb": sum(f.stat().st_size for f in BULK.rglob("*.parquet")) / 2**30,
-             "done": 0, "failed": 0, "stop": False}
-    new_pulled, new_failed = [], []
+             "done": 0, "failed": 0, "over_cap": 0, "stop": False}
+    new_pulled, new_failed, new_over_cap = [], [], []
     print(f"\npulling {len(todo):,} tables · {a.workers} workers · "
           f"timeout {a.timeout_s}s · disk now {state['gb']:.1f} GB")
 
@@ -506,7 +553,7 @@ def main() -> int:
             sql = (f'SELECT * FROM {p["schema"]}.{p["table"]}{where} '
                    f'LIMIT {MAX_ROWS}')
 
-            n_rows, ranges, err = None, {}, None
+            n_rows, ranges, err, over_cap = None, {}, None, None
             for attempt in range(1, MAX_ATTEMPTS + 1):
                 t0 = time.time()
                 try:
@@ -524,6 +571,13 @@ def main() -> int:
                     cc = c.cursor()
                     cc.execute(f"SET statement_timeout = {a.timeout_s * 1000}")
                     cc.close()
+                    if n_est is not None and n_est > MAX_ROWS:
+                        over_cap = {**p, "true_rows": int(n_est),
+                                    "cap": MAX_ROWS,
+                                    "would_have_kept_pct": round(
+                                        100.0 * MAX_ROWS / n_est, 2),
+                                    "reason": OVER_CAP_REASON}
+                        break
                     if _use_buffered(n_est, p.get("n_cols")):
                         df = pd.read_sql(sql, c, params=params)
                         n_rows = len(df)
@@ -564,6 +618,20 @@ def main() -> int:
                         print(f"  retry {attempt + 1}/{MAX_ATTEMPTS} "
                               f"{p['name']} ({reason}, "
                               f"{time.time() - t0:.0f}s)", flush=True)
+            if over_cap is not None:
+                with lock:
+                    state["over_cap"] += 1
+                    new_over_cap.append(over_cap)
+                    print(f"  OVER-CAP {p['name']:<38s} "
+                          f"{over_cap['true_rows']:>13,} rows > "
+                          f"{MAX_ROWS:,} — NOT written "
+                          f"({over_cap['would_have_kept_pct']}% would have "
+                          f"been an arbitrary subset)", flush=True)
+                _log([{"ts": datetime.now(timezone.utc).isoformat(
+                    timespec="seconds"), "name": p["name"],
+                    "result": "over_cap",
+                    "true_rows": over_cap["true_rows"]}])
+                continue
             if err is not None or n_rows is None:
                 with lock:
                     state["failed"] += 1
@@ -606,6 +674,15 @@ def main() -> int:
                 new_pulled.append(row)
                 el = time.time() - t_start
                 rate = state["done"] / el * 3600 if el > 0 else 0
+                # Flush the manifest as we go. Writing it only at the end
+                # means a killed run loses ALL of its bookkeeping: the
+                # parquets survive (resumability keys off file existence) but
+                # nothing records what they are, their row counts, or their
+                # date ranges. `wrds_pull_everything` carries a comment about
+                # learning this exact lesson; this file had to learn it too.
+                if state["done"] % 5 == 0:
+                    _flush_manifest(new_pulled, new_failed, new_over_cap,
+                                    terminal, partial=True)
                 print(f"  [{state['done']}/{len(todo)}] {p['name']:<44s} "
                       f"{n_rows:>9,} rows {time.time() - t0:>6.1f}s "
                       f"{state['gb']:.1f}GB  {rate:>5.0f}/h "
@@ -626,18 +703,18 @@ def main() -> int:
     for t in threads:
         t.join()
 
+    _flush_manifest(new_pulled, new_failed, new_over_cap, terminal,
+                    partial=True)
     man = _load_manifest()          # re-read: another pass may have appended
-    man["pulled"] = (man.get("pulled") or []) + new_pulled
-    man["failed"] = (man.get("failed") or []) + new_failed
     man["catchup_runs"] = (man.get("catchup_runs") or []) + [{
         "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "workers": a.workers, "timeout_s": a.timeout_s,
         "attempted": len(todo), "pulled": len(new_pulled),
         "failed": len(new_failed),
         "seconds": round(time.time() - t_start, 1)}]
-    man["n_terminal_not_entitled"] = len(terminal)
 
-    remaining = len(todo) - state["done"] - state["failed"]
+    remaining = (len(todo) - state["done"] - state["failed"]
+                 - state["over_cap"])
     stamp = "completed_at" if remaining <= 0 else "partial_at"
     if remaining > 0:
         # Refuse to say "completed" while work is outstanding. This is the
@@ -652,6 +729,7 @@ def main() -> int:
                         encoding="utf-8")
 
     print(f"\ncatchup: {state['done']:,} pulled, {state['failed']:,} failed, "
+          f"{state['over_cap']:,} over-cap (NOT written), "
           f"{remaining:,} not attempted · {state['gb']:.1f} GB")
     print(f"manifest -> {MANIFEST}   ({stamp})")
     return 0
