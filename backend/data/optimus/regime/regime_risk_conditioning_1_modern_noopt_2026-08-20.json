@@ -1,0 +1,89 @@
+{
+  "trial": "REGIME-RISK-CONDITIONING-1",
+  "mode": "SCREEN",
+  "era": "modern",
+  "at": "2026-08-20T07:35:23+00:00",
+  "n_rows": 226228,
+  "n_dates": 95,
+  "options_in_baseline": false,
+  "trailing_features": [
+    "mkt_rv_21",
+    "mkt_rv_63",
+    "mkt_ret_21",
+    "mkt_breadth",
+    "mkt_disp",
+    "mkt_corr"
+  ],
+  "oracle_features": [
+    "mkt_rv_fwd21"
+  ],
+  "oracle_definition": "realized market variance over t+1..t+21 \u2014 the same window the target spans, knowable only afterwards",
+  "summary": {
+    "baseline": {
+      "mean_rank_ic": 0.7587,
+      "mse_log_var": 0.61229,
+      "mean_qlike": 0.70931
+    },
+    "plus_trailing_state": {
+      "mean_rank_ic": 0.7537,
+      "mse_log_var": 0.64601,
+      "mean_qlike": 0.72696
+    },
+    "plus_oracle_state": {
+      "mean_rank_ic": 0.7604,
+      "mse_log_var": 0.58679,
+      "mean_qlike": 0.61663
+    },
+    "plus_both": {
+      "mean_rank_ic": 0.7636,
+      "mse_log_var": 0.54084,
+      "mean_qlike": 0.62934
+    }
+  },
+  "contrasts": {
+    "plus_trailing_state_vs_baseline": {
+      "d_mse_log_var": -0.033715,
+      "arm_better": false,
+      "ci": [
+        -0.06331,
+        -0.00024
+      ],
+      "mde_80": 0.054232,
+      "significant": true,
+      "clears_mde": false,
+      "n_effective": 95.0
+    },
+    "plus_oracle_state_vs_baseline": {
+      "d_mse_log_var": 0.025501,
+      "arm_better": true,
+      "ci": [
+        -0.019014,
+        0.083903
+      ],
+      "mde_80": 0.089453,
+      "significant": false,
+      "clears_mde": false,
+      "n_effective": 95.0
+    },
+    "plus_both_vs_baseline": {
+      "d_mse_log_var": 0.071448,
+      "arm_better": true,
+      "ci": [
+        0.031561,
+        0.124439
+      ],
+      "mde_80": 0.081262,
+      "significant": true,
+      "clears_mde": false,
+      "n_effective": 95.0
+    }
+  },
+  "verdict": "CEILING_IS_IN_THE_LEVEL_ONLY \u2014 a perfectly-known market-variance state improves CALIBRATION but not ORDERING, and the observable trailing state does not reach it (it is significantly WORSE on MSE log variance). Same ordering-vs-level split as the rest of Order 24.",
+  "d_rank_ic_oracle_vs_baseline": 0.0017,
+  "decision_rule_correction": {
+    "original_rule": "tested only plus_oracle_state's significance on MSE log variance",
+    "original_rule_would_have_said": "REGIME_CONDITIONING_CLOSED_FOR_RISK",
+    "why_corrected": "the original ignored plus_both, an arm this design runs and which IS significant, and it conflated ORDERING with LEVEL \u2014 rank IC is flat (+0.0013) while QLIKE falls 0.500 -> 0.434",
+    "disclosed": "correction applied before the verdict was reported, and recorded here rather than silently"
+  }
+}

@@ -114,6 +114,12 @@ def main() -> int:
             pass
     ap = argparse.ArgumentParser()
     ap.add_argument("--era", default="modern", choices=list(ERAS))
+    ap.add_argument("--no-options", action="store_true",
+                    help="drop the options block from the baseline. Tests "
+                         "whether the oracle's LEVEL gain is larger when "
+                         "implied variance is absent — i.e. whether the "
+                         "market level was already carried by log_iv_var "
+                         "rather than being unreachable (MARKET-SCALING-1)")
     a = ap.parse_args()
     cfg = ERAS[a.era]
 
@@ -126,11 +132,16 @@ def main() -> int:
     df = df.dropna(subset=list(TRAIL_FEATS) + list(ORACLE_FEATS))
     print(f"rows {len(df):,}  dates {df['date'].nunique()}")
 
+    base_feats = [c for c in WITH_OPT
+                  if not (a.no_options
+                          and (c.startswith("opt_") or c == "log_iv_var"))]
+    print(f"baseline features: {len(base_feats)}"
+          + ("  (OPTIONS REMOVED)" if a.no_options else ""))
     arms = {
-        "baseline": list(WITH_OPT),
-        "plus_trailing_state": list(WITH_OPT) + list(TRAIL_FEATS),
-        "plus_oracle_state": list(WITH_OPT) + list(ORACLE_FEATS),
-        "plus_both": list(WITH_OPT) + list(TRAIL_FEATS)
+        "baseline": list(base_feats),
+        "plus_trailing_state": list(base_feats) + list(TRAIL_FEATS),
+        "plus_oracle_state": list(base_feats) + list(ORACLE_FEATS),
+        "plus_both": list(base_feats) + list(TRAIL_FEATS)
                      + list(ORACLE_FEATS),
     }
     from lightgbm import LGBMRegressor
@@ -228,6 +239,7 @@ def main() -> int:
            "era": a.era,
            "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "n_rows": int(len(df)), "n_dates": int(len(ix)),
+           "options_in_baseline": bool(not a.no_options),
            "trailing_features": list(TRAIL_FEATS),
            "oracle_features": list(ORACLE_FEATS),
            "oracle_definition": "realized market variance over t+1..t+21 "
@@ -249,7 +261,8 @@ def main() -> int:
                             "reported, and recorded here rather than "
                             "silently"}}
     OUT.mkdir(parents=True, exist_ok=True)
-    p = OUT / f"regime_risk_conditioning_1_{a.era}_2026-08-20.json"
+    tag = f"{a.era}" + ("_noopt" if a.no_options else "")
+    p = OUT / f"regime_risk_conditioning_1_{tag}_2026-08-20.json"
     p.write_text(json.dumps(res, indent=2, default=str), encoding="utf-8")
 
     print(f"\n{'arm':22s} {'rankIC':>8s} {'MSElogV':>9s} {'QLIKE':>9s}")
