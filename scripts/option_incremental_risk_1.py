@@ -271,10 +271,22 @@ def run(era: str, shift: int = 0) -> dict:
     dates = np.array(sorted(ix), dtype="datetime64[D]")
     blk = bootstrap_block_dates(dates, 21)
 
+    # QLIKE is dominated by its right tail: one severe UNDER-forecast
+    # costs more than a thousand mild ones, which is correct for sizing
+    # (being short of risk is the expensive error) but means a mean can
+    # be wrecked by a handful of rows. Carry the tail explicitly so
+    # "arm X has QLIKE 581" is readable as "X blows up occasionally"
+    # rather than "X is uniformly terrible".
+    ql_raw = {a: pd.concat(v) for a, v in ql_rows.items()}
     summary = {}
     for a in ARMS:
         lr = lr_all[a]
+        q = ql_raw[a]
         summary[a] = {
+            "qlike_p99": round(float(q.quantile(0.99)), 4),
+            "qlike_max": round(float(q.max()), 2),
+            "n_rows_qlike_gt_10": int((q > 10).sum()),
+            "pct_rows_qlike_gt_10": round(float(100 * (q > 10).mean()), 4),
             "mean_rank_ic": round(float(ic[a].reindex(ix).mean()), 4),
             "mean_qlike": round(float(ql[a].loc[ix].mean()), 5),
             "median_qlike": round(float(ql[a].loc[ix].median()), 5),

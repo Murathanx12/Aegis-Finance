@@ -1,0 +1,7 @@
+{
+  "kind": "additive offset in log-variance space",
+  "offset": 0.10298309426001571,
+  "fitted_on": "a DISJOINT calibration span (2020..2021), never the fit span \u2014 an offset fitted where the booster already minimised squared error is ~0 by construction and calibrates nothing",
+  "why": "predicting log variance and exponentiating is biased in levels; ordering is the evidence, level is a correction",
+  "apply": "var_hat = exp(booster.predict(X) + offset)"
+}

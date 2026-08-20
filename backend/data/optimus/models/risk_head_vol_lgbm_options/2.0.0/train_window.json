@@ -1,0 +1,27 @@
+{
+  "era": "modern",
+  "universe": "crsp_pit_monthly_v1",
+  "fit_years": [
+    2013,
+    2019
+  ],
+  "calibration_years": [
+    2020,
+    2021
+  ],
+  "holdout_years": [
+    2022,
+    2024
+  ],
+  "n_fit_rows": 119094,
+  "n_holdout_rows": 63682,
+  "embargo": "none needed at this cadence: features are month-end and the target spans the FOLLOWING 21 trading days, so train and holdout share no outcome days across the year boundary except at most one month, which the year split already excludes",
+  "seed": 20260820,
+  "library_versions": {
+    "lightgbm": "4.6.0",
+    "numpy": "2.4.3",
+    "pandas": "2.2.3",
+    "scikit-learn": "1.8.0",
+    "python": "3.12.10"
+  }
+}

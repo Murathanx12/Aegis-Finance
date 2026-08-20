@@ -1,0 +1,194 @@
+{
+  "trial": "STRATEGY-EFFECTIVE-DIMENSION-1 + SELECTION-OVERFIT-BATTERY-1",
+  "mode": "SCREEN",
+  "corpus": "mega_sweep_1",
+  "at": "2026-08-20T03:57:07+00:00",
+  "n_books": 86,
+  "n_months": 125,
+  "views_computed": [
+    "return",
+    "residual",
+    "tail"
+  ],
+  "views_unavailable": {
+    "holdings_overlap": "mega-sweep-1 persisted aggregate turnover only, not per-month holdings",
+    "action_turnover_correlation": "same \u2014 turnover totals are stored, not the path"
+  },
+  "next_sweep_requirement": "MEGA-SWEEP-2 must persist per-book per-month holdings and turnover or two of the five similarity views stay unanswerable",
+  "effective_dimension": {
+    "return": {
+      "participation_ratio": 2.361,
+      "effective_rank": 3.526,
+      "top_eigval_share": 0.6097,
+      "n_eig_for_90pct": 3
+    },
+    "residual": {
+      "participation_ratio": 2.407,
+      "effective_rank": 3.634,
+      "top_eigval_share": 0.5975,
+      "n_eig_for_90pct": 3
+    },
+    "tail": {
+      "participation_ratio": 2.665,
+      "effective_rank": 4.814,
+      "top_eigval_share": 0.59,
+      "n_eig_for_90pct": 6
+    }
+  },
+  "consensus_clusters_by_cut": {
+    "0.2": {
+      "n_clusters": 6,
+      "sizes": [
+        24,
+        14,
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    "0.3": {
+      "n_clusters": 3,
+      "sizes": [
+        36,
+        26,
+        24
+      ]
+    },
+    "0.4": {
+      "n_clusters": 3,
+      "sizes": [
+        36,
+        26,
+        24
+      ]
+    },
+    "0.5": {
+      "n_clusters": 2,
+      "sizes": [
+        62,
+        24
+      ]
+    }
+  },
+  "cluster_stability_pairwise_agreement": {
+    "mean": 0.9032,
+    "p05": 0.7712,
+    "n_bootstraps": 40
+  },
+  "selection_overfit": {
+    "best_book": "low_vol|inverse_vol|trim|50",
+    "observed_max_sharpe": 0.9177,
+    "matched_null": {
+      "null_max_sharpe_mean": 0.277,
+      "null_max_sharpe_p95": 0.6825,
+      "null_max_sharpe_p99": 0.868
+    },
+    "p_value_vs_matched_null": 0.005,
+    "deflated_sharpe": {
+      "best_sharpe_ann": 0.9177,
+      "n_trials": 86,
+      "expected_max_sharpe_ann_under_null": 0.6009,
+      "skew": -0.104,
+      "kurtosis": 3.838,
+      "deflated_sharpe_prob": 0.8367,
+      "passes_at_0.95": false
+    },
+    "pbo_cscv": {
+      "n_combinations": 924,
+      "n_blocks": 12,
+      "pbo": 0.2197,
+      "median_oos_rank_of_is_winner": 0.8678,
+      "interpretation": "PBO is the probability that the book selected as best in-sample performs below median out-of-sample; 0.5 == selection carries no information"
+    }
+  },
+  "breakeven_cost_bps_vs_baseline": {
+    "low_vol|equal|trim|50": -21.26,
+    "low_vol|equal|trim|100": -22.6,
+    "low_vol|equal|exempt|50": -24.52,
+    "low_vol|equal|exempt|100": -27.17,
+    "low_vol|inverse_vol|trim|50": -51.33,
+    "low_vol|inverse_vol|trim|100": -40.88,
+    "low_vol|inverse_vol|exempt|50": -56.65,
+    "low_vol|inverse_vol|exempt|100": -47.29,
+    "low_vol|rank|trim|50": -46.75,
+    "low_vol|rank|trim|100": -35.35,
+    "low_vol|rank|exempt|50": -52.24,
+    "low_vol|rank|exempt|100": -41.76,
+    "mom_12_1|equal|trim|50": -127.76,
+    "mom_12_1|equal|trim|100": -82.83,
+    "mom_12_1|equal|exempt|50": -114.57,
+    "mom_12_1|equal|exempt|100": -97.44,
+    "mom_12_1|inverse_vol|trim|50": 14.74,
+    "mom_12_1|inverse_vol|trim|100": -15.67,
+    "mom_12_1|inverse_vol|exempt|50": 8.72,
+    "mom_12_1|inverse_vol|exempt|100": -40.64,
+    "mom_12_1|rank|trim|50": -238.81,
+    "mom_12_1|rank|trim|100": -133.88,
+    "mom_12_1|rank|exempt|50": -238.62,
+    "mom_12_1|rank|exempt|100": -129.36,
+    "mom_63|equal|trim|50": -207.06,
+    "mom_63|equal|trim|100": -98.13,
+    "mom_63|equal|exempt|50": -127.18,
+    "mom_63|equal|exempt|100": -70.48,
+    "mom_63|inverse_vol|trim|50": -91.64,
+    "mom_63|inverse_vol|trim|100": -14.14,
+    "mom_63|inverse_vol|exempt|50": -72.7,
+    "mom_63|inverse_vol|exempt|100": -24.08,
+    "mom_63|rank|trim|50": -429.36,
+    "mom_63|rank|trim|100": -212.55,
+    "mom_63|rank|exempt|50": -360.77,
+    "mom_63|rank|exempt|100": -164.0,
+    "quality_roe|equal|trim|50": 76.24,
+    "quality_roe|equal|trim|100": -26.25,
+    "quality_roe|equal|exempt|50": 43.84,
+    "quality_roe|equal|exempt|100": -80.66,
+    "quality_roe|inverse_vol|trim|50": 76.67,
+    "quality_roe|inverse_vol|trim|100": 63.43,
+    "quality_roe|inverse_vol|exempt|50": 31.92,
+    "quality_roe|inverse_vol|exempt|100": 25.45,
+    "quality_roe|rank|trim|50": 181.46,
+    "quality_roe|rank|trim|100": 68.02,
+    "quality_roe|rank|exempt|50": 119.33,
+    "quality_roe|rank|exempt|100": 7.54,
+    "rev_21|equal|trim|50": 160.63,
+    "rev_21|equal|trim|100": 99.83,
+    "rev_21|equal|exempt|50": 39.98,
+    "rev_21|equal|exempt|100": 3.39,
+    "rev_21|inverse_vol|trim|50": 117.65,
+    "rev_21|inverse_vol|trim|100": 63.9,
+    "rev_21|inverse_vol|exempt|50": 29.83,
+    "rev_21|inverse_vol|exempt|100": -3.85,
+    "rev_21|rank|trim|50": 240.25,
+    "rev_21|rank|trim|100": 165.9,
+    "rev_21|rank|exempt|50": 74.82,
+    "rev_21|rank|exempt|100": 33.19,
+    "streak_7_avoid|equal|trim|50": -122.26,
+    "streak_7_avoid|equal|trim|100": -75.6,
+    "streak_7_avoid|equal|exempt|50": -109.62,
+    "streak_7_avoid|equal|exempt|100": -96.85,
+    "streak_7_avoid|inverse_vol|trim|50": 16.14,
+    "streak_7_avoid|inverse_vol|trim|100": -9.93,
+    "streak_7_avoid|inverse_vol|exempt|50": 10.43,
+    "streak_7_avoid|inverse_vol|exempt|100": -38.41,
+    "streak_7_avoid|rank|trim|50": -228.81,
+    "streak_7_avoid|rank|trim|100": -126.31,
+    "streak_7_avoid|rank|exempt|50": -232.38,
+    "streak_7_avoid|rank|exempt|100": -129.28,
+    "value_bm|equal|trim|50": 443.01,
+    "value_bm|equal|trim|100": 316.17,
+    "value_bm|equal|exempt|50": 488.47,
+    "value_bm|equal|exempt|100": 352.39,
+    "value_bm|inverse_vol|trim|50": 191.31,
+    "value_bm|inverse_vol|trim|100": 129.14,
+    "value_bm|inverse_vol|exempt|50": 228.41,
+    "value_bm|inverse_vol|exempt|100": 129.22,
+    "value_bm|rank|trim|50": 354.07,
+    "value_bm|rank|trim|100": 406.17,
+    "value_bm|rank|exempt|50": 392.08,
+    "value_bm|rank|exempt|100": 482.59,
+    "none|equal|exempt|None": 923.11
+  },
+  "baseline_key": "none|equal|trim|None",
+  "label": "SIMULATION \u2014 descriptive structure, no promotions"
+}
