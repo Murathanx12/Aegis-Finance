@@ -1,0 +1,84 @@
+{
+  "trial": "CONSTRUCTION-CUT-1",
+  "mode": "SCREEN",
+  "at": "2026-08-20T05:37:08+00:00",
+  "grammars": {
+    "cut": {
+      "top_n": "50",
+      "weighting": "rank"
+    },
+    "continuous": {
+      "top_n": "None",
+      "weighting": "rank"
+    }
+  },
+  "results": {
+    "cut": {
+      "n_books": 36,
+      "n_months": 125,
+      "dim_owned": 3.721,
+      "classes": {
+        "price_extra": {
+          "n_books": 8,
+          "increment": 0.398
+        },
+        "options": {
+          "n_books": 6,
+          "increment": 0.475,
+          "control_mean": 0.346,
+          "p_value": 0.0,
+          "beats_control": true
+        },
+        "expectations": {
+          "n_books": 6,
+          "increment": 0.01,
+          "control_mean": 0.349,
+          "p_value": 1.0,
+          "beats_control": false
+        },
+        "liquidity": {
+          "n_books": 4,
+          "increment": 0.288,
+          "control_mean": 0.268,
+          "p_value": 0.5075,
+          "beats_control": false
+        }
+      }
+    },
+    "continuous": {
+      "n_books": 36,
+      "n_months": 125,
+      "dim_owned": 1.313,
+      "classes": {
+        "price_extra": {
+          "n_books": 8,
+          "increment": 0.037
+        },
+        "options": {
+          "n_books": 6,
+          "increment": -0.044,
+          "control_mean": 0.028,
+          "p_value": 0.9625,
+          "beats_control": false
+        },
+        "expectations": {
+          "n_books": 6,
+          "increment": -0.046,
+          "control_mean": 0.03,
+          "p_value": 0.965,
+          "beats_control": false
+        },
+        "liquidity": {
+          "n_books": 4,
+          "increment": -0.035,
+          "control_mean": 0.019,
+          "p_value": 0.95,
+          "beats_control": false
+        }
+      }
+    }
+  },
+  "errors": [],
+  "verdict": "MIXED \u2014 see per-class detail",
+  "label": "SIMULATION \u2014 LANE-FACTORY-SIM-1, never a track record"
+}

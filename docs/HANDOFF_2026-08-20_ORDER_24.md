@@ -210,18 +210,20 @@ produced fewer distinct behaviours than mega-sweep-1's own 86 books did
 (which gave 3 at the same cut). Adding information classes did not add
 behaviours.
 
-**Put §1 and §7 together and you get the most useful thing learned
-today.** Options carry real, replicated information at the security-risk
-level (+0.113 / +0.064 MSE log var, CLEARS in both eras). The same
-options carry **no new behavioural direction** once poured through a
-top-N long-only monthly-rebalance grammar. The information is real; the
-portfolio construction destroys it. **The binding constraint is the
-construction layer, not the data feed.**
+**Put §1 and §7 together.** Options carry real, replicated information at
+the security-risk level (+0.113 / +0.064 MSE log var, CLEARS in both
+eras). The same options carry **no new behavioural direction** once
+poured through a top-N long-only monthly-rebalance grammar.
 
-That is a direct argument for *deferring* Order 22's world-sensor
-expansion. Adding ACLED, FIRMS, shipping and prediction markets buys more
-information classes; this run says our construction layer cannot express
-the ones we already bought.
+> ⚠️ **The obvious interpretation of that — "the construction layer
+> destroys the information" — was tested in §12 and REFUTED.** Removing
+> the top-N cut collapses effective rank from 3.72 to 1.31 rather than
+> raising it. §12 also found options *beating* its control under a
+> narrower rank-only grammar, disagreeing with the table above. Read §7
+> as a measurement under one grammar, not as a diagnosis. The surviving
+> claim is narrower: the space of long-only monthly top-N books is
+> intrinsically low-dimensional, and we have no demonstrated construction
+> that raises it.
 
 ### 8. The risk head's ranking edge does NOT convert into sizing value
 
@@ -439,7 +441,57 @@ of that has yet been converted into a portfolio decision that beats a
 trailing 63-day standard deviation.** That is the honest state, and it is
 a far more useful thing to know than another leaderboard.
 
-### 12. Every grammar decision is a risk decision, not a return decision
+### 12. The cut is NOT the culprit — §7's interpretation is refuted
+
+`CONSTRUCTION-CUT-1`. §7 reported a measurement (no information class
+beats a size-matched control) and then offered an *interpretation*: that
+the top-N long-only monthly grammar is what collapses them, because a cut
+is a coarse quantisation that discards everything the signal says about
+the other ~2,000 names. That interpretation had a falsifiable
+implication — remove the cut and the classes should separate — and it was
+the basis for the "defer Order 22, fix construction first" redirect. So
+it was tested.
+
+Two grammars, same signals, same handlings, same costs, same dates:
+
+| grammar | owned effective rank | options | expectations | liquidity |
+|---|---|---|---|---|
+| **cut** (top-50, rank-weighted) | **3.721** | +0.475 vs ctrl +0.346, p=0.000 **BEATS** | +0.010, p=1.000 | +0.288, p=0.507 |
+| **continuous** (no cut, full cross-section tilt) | **1.313** | −0.044, p=0.963 | −0.046, p=0.965 | −0.035, p=0.950 |
+
+**Removing the cut destroys diversity rather than creating it.** Effective
+rank falls from 3.72 to **1.31** — under a diffuse tilt across every
+eligible name, all 36 books collapse into essentially one behaviour,
+because a rank tilt over ~2,000 names is dominated by market beta. No
+class separates, and every increment goes negative.
+
+The prediction was refuted, and in the opposite direction from the one
+anticipated. **The top-N cut is not what collapses the information; it is
+what creates what little behavioural diversity exists.** Concentration is
+what differentiates books.
+
+**One disagreement to carry, not to resolve by picking the convenient
+result.** Under this narrower grammar (rank weighting only, 6 books per
+class), options *does* beat its size-matched control (+0.475 vs +0.346,
+p=0.000). Under §7's fuller grammar (3 weightings × 2 handlings × 2
+top-N, 36 books per class) it did not (−0.124, p=1.000). The two runs
+disagree, and the difference is grammar coverage and book count, not a
+bug. With 6 books per class the effective-rank increment is noisy. The
+honest position is that **whether options adds a behavioural direction is
+grammar-dependent and currently unresolved**, not that one of these runs
+is the answer.
+
+**What this does to the §7 redirect.** It weakens it. The evidence no
+longer supports "the construction layer is destroying the information"
+as a confident claim — the one obvious construction fix makes things far
+worse. The defensible statement is narrower: *the space of long-only
+monthly top-N books is intrinsically low-dimensional, we have no
+demonstrated construction that raises it, and the obvious candidate is
+counterproductive.* Deferring Order 22 is still reasonable — but on the
+grounds that we cannot yet spend the information we own, not on the
+grounds that we know how to fix the layer.
+
+### 13. Every grammar decision is a risk decision, not a return decision
 
 `RULE-INTERVENTION-1`, matched paired contrasts (each pair differs in
 exactly one coordinate, so signal/universe/dates/costs cancel; unit of
@@ -576,10 +628,12 @@ options market better than the options market reads itself — but only for
 *ordering*. Five separate routes from that ordering to a portfolio
 decision were tested and none beats a trailing 63-day standard deviation.
 Meanwhile the portfolio grammar collapses every information class we own
-into ~3 behaviours. **We have a real, replicated, era-invariant risk
-signal and no demonstrated way to spend it. Closing that gap is the
-programme's next problem, and it is a construction problem, not a data
-problem.**
+into ~3 behaviours — and the obvious fix for that (drop the top-N cut)
+makes it dramatically worse, collapsing them to ~1. **We have a real,
+replicated, era-invariant risk signal, no demonstrated way to spend it,
+and no demonstrated construction that would let us. Closing that gap is
+the programme's next problem, and this run narrowed where it is without
+solving it.**
 
 ## FOR MURAT (three minutes)
 
@@ -596,10 +650,17 @@ problem.**
    sizing value over a nearly-free trailing estimator. Risk *sizing*
    works; the *estimator choice* is a wash. The cheap estimator is
    defensible and easier to defend.
-2. **Order 22's world-sensor arc should wait.** Not because the idea is
-   wrong, but because §7 says our construction layer cannot express the
-   information classes we already bought. Buying more feeds before fixing
-   that spends money on a bottleneck we have now measured.
+2. **Order 22's world-sensor arc should still wait — but the argument
+   for waiting got weaker during the run, and you should have the weaker
+   version.** The original reasoning was §7: our construction layer
+   cannot express the information classes we already bought. §12 then
+   tested that reasoning's own implication and **refuted it** — removing
+   the top-N cut collapses behavioural diversity from 3.72 to 1.31 rather
+   than freeing it, and options actually *beat* its control under a
+   narrower grammar. So we cannot claim to have located a fixable
+   bottleneck. What we can claim: we own information we have not managed
+   to spend, through five tested routes, and buying more feeds does not
+   address that. That is a reason to wait, not a diagnosis.
 3. **The manager/teacher library needs a v2 before any behaviour claim.**
    Its PIT column does not exist in the artifact and would not be a
    knowledge date if it did.
@@ -613,15 +674,19 @@ problem.**
 
 ## NEXT 10 MACHINE JOBS
 
-1. `CONSTRUCTION-BOTTLENECK-1` — the top open question, now sharper.
-   §8 already tested the simplest bridge (sizing by predicted vol) and it
-   was a wash, so the remaining candidates are **covariance-aware**
-   construction (the repo already has Marchenko-Pastur denoised
-   covariance and riskfolio-lib) and continuous tilts rather than a
-   top-N cut. Effective dimension is the readout. Note that inverse-vol
-   sizing optimises each name's marginal variance while ignoring
-   covariance entirely — which is also the leading unexplained candidate
-   for the `value_bm` anomaly in §8.
+1. **Resolve the §7-vs-§12 disagreement on options.** The two runs
+   disagree on whether the options class adds a behavioural direction
+   (§7: no, 36 books, full grammar; §12: yes, p=0.000, 6 books, rank-only
+   grammar). Same question, different grammar coverage and book count.
+   Run it at matched book counts across several grammars before either
+   number is quoted again — this is currently the least settled claim in
+   the handoff, and it is cheap to settle.
+1b. `CONSTRUCTION-BOTTLENECK-1`, now much narrower. §8 tested sizing by
+   predicted vol (wash), §9 tested covariance-aware construction (worse
+   pooled, better only on the value book), §12 tested removing the cut
+   (much worse). What has NOT been tested: concentration *between* 50 and
+   the full cross-section, long-short constructions, and sector/factor
+   neutralisation. Effective dimension is the readout.
 2. Reach the §10 ceiling, or close it: the oracle market-variance state
    cuts QLIKE 13% while leaving rank IC flat, and six trailing proxies
    made MSE log variance significantly WORSE. Either find an observable
