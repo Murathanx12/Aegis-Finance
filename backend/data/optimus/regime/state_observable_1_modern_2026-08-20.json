@@ -1,0 +1,82 @@
+{
+  "trial": "STATE-OBSERVABLE-1",
+  "mode": "SCREEN",
+  "era": "modern",
+  "at": "2026-08-20T07:29:04+00:00",
+  "question": "can an OBSERVABLE macro state reach the LEVEL ceiling REGIME-RISK-CONDITIONING-1 measured?",
+  "macro_features": [
+    "credit_spread",
+    "credit_spread_chg21",
+    "yield_level",
+    "term_spread",
+    "ted_spread",
+    "ff_mkt_21",
+    "ff_mktvol_21",
+    "ff_umd_21"
+  ],
+  "pit": {
+    "rates": "published same day; read at t",
+    "ff_factors": "lagged 5 business days \u2014 French posts them late, and not lagging them would manufacture the level information under test"
+  },
+  "n_rows": 226228,
+  "n_dates": 95,
+  "summary": {
+    "baseline": {
+      "mean_rank_ic": 0.7978,
+      "mse_log_var": 0.49918,
+      "mean_qlike": 0.50087
+    },
+    "plus_macro": {
+      "mean_rank_ic": 0.7909,
+      "mse_log_var": 0.57311,
+      "mean_qlike": 0.56216
+    },
+    "plus_oracle": {
+      "mean_rank_ic": 0.7991,
+      "mse_log_var": 0.48468,
+      "mean_qlike": 0.43373
+    },
+    "plus_macro_oracle": {
+      "mean_rank_ic": 0.7976,
+      "mse_log_var": 0.49219,
+      "mean_qlike": 0.45409
+    }
+  },
+  "contrasts": {
+    "plus_macro_vs_baseline": {
+      "d_mse_log_var": -0.073934,
+      "arm_better": false,
+      "ci": [
+        -0.109645,
+        -0.042977
+      ],
+      "mde_80": 0.057664,
+      "significant": true,
+      "clears_mde": true
+    },
+    "plus_oracle_vs_baseline": {
+      "d_mse_log_var": 0.014499,
+      "arm_better": true,
+      "ci": [
+        -0.017513,
+        0.053664
+      ],
+      "mde_80": 0.06178,
+      "significant": false,
+      "clears_mde": false
+    },
+    "plus_macro_oracle_vs_baseline": {
+      "d_mse_log_var": 0.006985,
+      "arm_better": true,
+      "ci": [
+        -0.037205,
+        0.049998
+      ],
+      "mde_80": 0.074138,
+      "significant": false,
+      "clears_mde": false
+    }
+  },
+  "qlike_gain_vs_oracle_gain": -0.9129,
+  "verdict": "OBSERVABLE_DOES_NOT_REACH_IT \u2014 the credit spread and term structure do not recover the level headroom a perfectly-known market variance provides"
+}

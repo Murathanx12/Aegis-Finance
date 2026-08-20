@@ -63,6 +63,7 @@ from scripts.wrds_training_pull import (OUT, _conn,          # noqa: E402
 
 CAT = OUT / "catalogue_probe_2026-08-20.json"
 MANIFEST = OUT / "pull_everything_manifest.json"
+PLAN_CACHE = OUT / "pull_everything_plan.json"
 BULK = OUT / "bulk"
 
 FIREHOSE = ("taqm_", "taqmsec", "issm", "otc", "phlx", "msrb", "trace")
@@ -84,7 +85,15 @@ DISK_BUDGET_GB = 60.0
 #: it executable: a worker pool, and a per-table timeout short enough
 #: that one pathological table cannot eat an hour.
 PER_TABLE_TIMEOUT_S = 300
-N_WORKERS = 6
+#: ONE connection. WRDS enforces a per-role connection cap and refuses
+#: with `FATAL: too many connections for role` — measured 2026-08-20
+#: after a 6-worker pool plus orphaned connections from reaped processes
+#: exhausted it, at which point even the plan build could not connect and
+#: the run produced no output at all (which looked like slowness and was
+#: actually refusal). Parallel pulling is NOT available on this account,
+#: so throughput is fixed and the only lever is PRIORITY: pull the most
+#: useful tables first and accept that the tail will not land.
+N_WORKERS = 1
 
 #: Research priority. The catalogue is entitled but not equally useful:
 #: a table keyed to our securities beats a Canadian audit-fee feed, and
@@ -169,14 +178,36 @@ def main() -> int:
             pass
     ap = argparse.ArgumentParser()
     ap.add_argument("--probe-only", action="store_true")
+    ap.add_argument("--rebuild-plan", action="store_true")
     ap.add_argument("--max-tables", type=int, default=100000)
     ap.add_argument("--workers", type=int, default=N_WORKERS)
+    ap.add_argument("--max-seconds", type=float, default=0.0,
+                    help="stop cleanly after this many seconds; the run "
+                         "is resumable, so chunking it costs nothing and "
+                         "survives an environment that reaps long-lived "
+                         "child processes")
     a = ap.parse_args()
 
     BULK.mkdir(parents=True, exist_ok=True)
-    conn = _conn()
-    print("building plan...")
-    plan, skipped = build_plan(conn)
+    # Cache the plan. Building it queries information_schema.columns for
+    # ~40 schemas, several with 400+ tables, and takes minutes — which on
+    # a CHUNKED run consumed the entire time budget before a single table
+    # was pulled. That is why the first bounded chunks produced no output
+    # at all: they were not slow at pulling, they never got there.
+    if PLAN_CACHE.exists() and not a.rebuild_plan:
+        cached = json.loads(PLAN_CACHE.read_text(encoding="utf-8"))
+        plan, skipped = cached["plan"], cached["skipped"]
+        print(f"plan from cache: {len(plan):,} tables "
+              f"({PLAN_CACHE.name})")
+        conn = None
+    else:
+        conn = _conn()
+        print("building plan (uncached, minutes)...")
+        plan, skipped = build_plan(conn)
+        PLAN_CACHE.write_text(json.dumps(
+            {"built_at": datetime.now(timezone.utc).isoformat(
+                timespec="seconds"), "plan": plan, "skipped": skipped},
+            indent=2), encoding="utf-8")
     print(f"plan: {len(plan):,} joinable tables   "
           f"skipped: {len(skipped):,}")
     reasons = {}
@@ -186,19 +217,35 @@ def main() -> int:
     for k, v in sorted(reasons.items(), key=lambda kv: -kv[1]):
         print(f"  skip: {k:52s} {v:>6,}")
 
+    # APPEND to any prior manifest. The first version rewrote it at the
+    # start of every run, so a chunked run erased its own record of what
+    # it had already pulled — the parquets survived (resumability keys
+    # off file existence) but the bookkeeping did not, which is exactly
+    # the kind of silent loss this project treats as a defect.
+    prior = {}
+    if MANIFEST.exists():
+        try:
+            prior = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        except Exception:                                      # noqa: BLE001
+            prior = {}
     man = {"pull": "WRDS-PULL-EVERYTHING",
            "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+           "runs": (prior.get("runs") or []) + [
+               datetime.now(timezone.utc).isoformat(timespec="seconds")],
            "catalogue": {"n_tables_total": len(plan) + len(skipped),
                          "n_planned": len(plan), "n_skipped": len(skipped)},
            "caps": {"max_rows_per_table": MAX_ROWS,
                     "disk_budget_gb": DISK_BUDGET_GB},
-           "skipped": skipped, "pulled": [], "failed": []}
+           "skipped": skipped,
+           "pulled": prior.get("pulled", []),
+           "failed": prior.get("failed", [])}
     MANIFEST.write_text(json.dumps(man, indent=2), encoding="utf-8")
     if a.probe_only:
         print(f"\nprobe only -> {MANIFEST}")
         return 0
 
-    conn.close()
+    if conn is not None:
+        conn.close()
     permnos = sorted(_all_permnos())
     todo = [p for p in plan[:a.max_tables]
             if not (BULK / f"{p['schema']}__{p['table']}.parquet").exists()]
@@ -212,6 +259,7 @@ def main() -> int:
     for p in todo:
         work.put(p)
     lock = threading.Lock()
+    t_start = time.time()
     state = {"gb": sum(f.stat().st_size
                        for f in BULK.rglob("*.parquet")) / 2**30,
              "done": 0, "stop": False}
@@ -226,6 +274,9 @@ def main() -> int:
             fn = BULK / f"{p['schema']}__{p['table']}.parquet"
             if fn.exists():
                 continue
+            if a.max_seconds and (time.time() - t_start) > a.max_seconds:
+                state["stop"] = True
+                return
             with lock:
                 if state["gb"] >= DISK_BUDGET_GB:
                     state["stop"] = True
@@ -246,6 +297,11 @@ def main() -> int:
                 df = pd.read_sql(sql, c, params=params or None)
             except Exception as e:                             # noqa: BLE001
                 msg = f"{type(e).__name__}: {str(e)[:180]}"
+                short = ("timeout" if "timeout" in msg
+                         else "denied" if "permission denied" in msg
+                         else type(e).__name__)
+                print(f"  FAIL {p['name']:<46s} {short:>9s} "
+                      f"{time.time() - t0:>5.0f}s", flush=True)
                 with lock:
                     man["failed"].append({**p, "error": msg})
                 # a permission or timeout error leaves the transaction
@@ -279,13 +335,14 @@ def main() -> int:
                     "seconds": round(time.time() - t0, 1),
                     "universe_filtered": bool(where)})
                 d = state["done"]
-                if d % 10 == 0:
+                print(f"  [{d}/{len(todo)}] {p['name']:<46s} "
+                      f"{len(df):>9,} rows {time.time() - t0:>5.0f}s "
+                      f"{state['gb']:.1f} GB ({len(man['failed'])} fail)",
+                      flush=True)
+                if d % 5 == 0:
                     MANIFEST.write_text(
                         json.dumps(man, indent=2, default=str),
                         encoding="utf-8")
-                    print(f"  [{d}/{len(todo)}] {p['name']:<46s} "
-                          f"{len(df):>9,} rows  {state['gb']:.1f} GB  "
-                          f"({len(man['failed'])} failed)", flush=True)
         if c is not None:
             try:
                 c.close()
