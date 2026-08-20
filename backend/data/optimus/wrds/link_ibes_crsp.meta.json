@@ -11,10 +11,31 @@
     "score"
   ],
   "window": [
-    "2013-01-01",
-    "2024-12-31"
+    "1976-01-15",
+    "2026-01-31"
   ],
   "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
   "pit_knowledge_column": "sdate..edate validity",
-  "sql_note": "SELECT ticker, permno, ncusip, sdate, edate, score FROM wrdsapps_link_crsp_ibes.ibcrsphist"
+  "sql_note": "SELECT ticker, permno, ncusip, sdate, edate, score FROM wrdsapps_link_crsp_ibes.ibcrsphist",
+  "metadata_correction": {
+    "corrected_at": "2026-08-20T03:09:38+00:00",
+    "by": "scripts/wrds_meta_audit.py --repair",
+    "reason": "_write() stamped module constants START/END and a fixed universe string for every dataset; the parquets were correct, the labels were not",
+    "window_declared_stale": [
+      "2013-01-01",
+      "2024-12-31"
+    ],
+    "universe_declared_stale": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)"
+  },
+  "window_source": "union:edate,sdate",
+  "date_ranges_observed": {
+    "sdate": [
+      "1976-01-15",
+      "2025-12-18"
+    ],
+    "edate": [
+      "1976-03-14",
+      "2026-01-31"
+    ]
+  }
 }

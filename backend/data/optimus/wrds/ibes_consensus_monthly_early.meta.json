@@ -19,10 +19,35 @@
     "anndats_act"
   ],
   "window": [
-    "2013-01-01",
-    "2024-12-31"
+    "1990-01-18",
+    "2012-12-20"
   ],
-  "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
+  "universe": "crsp_pit_monthly_early screened PERMNOs (early-era held-out confirmation slice)",
   "pit_knowledge_column": "statpers; anndats_act gates actuals",
-  "sql_note": "SELECT s.ticker, l.permno, s.statpers, s.measure, s.fpi, s.numest, s.numup, s.numdown, s.medest, s.meanest, s.stdev, s.fpedats, s.actual, s.anndats_act FROM ibes.statsum_epsus s JOIN wrdsapps_link_crsp_ibes.ibcrsphist l ON s.ticker = l.ticker AND s.statpers BETWEEN l.sdate AND COALESCE(l.edate, %(e)s) WHERE l.permno = ANY(%(p)s) AND l.score <= 2 AND s.measure = 'EPS' AND s.fpi IN ('0','1','2','6') AND s.statpers BETWEEN %(s)s AND %(e)s"
+  "sql_note": "SELECT s.ticker, l.permno, s.statpers, s.measure, s.fpi, s.numest, s.numup, s.numdown, s.medest, s.meanest, s.stdev, s.fpedats, s.actual, s.anndats_act FROM ibes.statsum_epsus s JOIN wrdsapps_link_crsp_ibes.ibcrsphist l ON s.ticker = l.ticker AND s.statpers BETWEEN l.sdate AND COALESCE(l.edate, %(e)s) WHERE l.permno = ANY(%(p)s) AND l.score <= 2 AND s.measure = 'EPS' AND s.fpi IN ('0','1','2','6') AND s.statpers BETWEEN %(s)s AND %(e)s",
+  "metadata_correction": {
+    "corrected_at": "2026-08-20T03:09:35+00:00",
+    "by": "scripts/wrds_meta_audit.py --repair",
+    "reason": "_write() stamped module constants START/END and a fixed universe string for every dataset; the parquets were correct, the labels were not",
+    "window_declared_stale": [
+      "2013-01-01",
+      "2024-12-31"
+    ],
+    "universe_declared_stale": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)"
+  },
+  "window_source": "statpers",
+  "date_ranges_observed": {
+    "statpers": [
+      "1990-01-18",
+      "2012-12-20"
+    ],
+    "fpedats": [
+      "1988-12-31",
+      "2014-11-30"
+    ],
+    "anndats_act": [
+      "1989-05-13",
+      "2017-03-31"
+    ]
+  }
 }

@@ -55,6 +55,16 @@ def main() -> int:
     opt = options_monthly(years=(1996, 2012))
     full = df.merge(opt, on=["permno", "month"], how="left")
     lag = (full["date"] - full["opt_date"]).dt.days
+    # `lag > 14` is a STALENESS guard and is one-sided: a negative lag is
+    # an option observed AFTER formation, i.e. lookahead, and would sail
+    # through it. Measured clean (CHRONOLOGY-AUDIT-1 C1: n=307,924,
+    # min lag 0, zero negatives) — assert it so it cannot rot silently.
+    neg = int((lag < 0).sum())
+    if neg:
+        raise SystemExit(
+            f"REFUSED: {neg} option observations postdate their formation "
+            f"date (min lag {lag.min()}d) — that is lookahead, not "
+            f"staleness, and the `lag > 14` filter does not catch it.")
     for c in OPT_FEATS:
         full.loc[lag > 14, c] = np.nan
     cov = {c: round(float(full[c].notna().mean()), 3) for c in OPT_FEATS}

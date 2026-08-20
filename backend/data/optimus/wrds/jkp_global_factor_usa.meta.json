@@ -449,11 +449,32 @@
     "me_lag1"
   ],
   "window": [
-    "2013-01-01",
+    "2013-01-31",
     "2024-12-31"
   ],
   "universe": "crsp_pit_monthly_v1 ever-eligible PERMNOs",
   "pit_knowledge_column": "eom (JKP characteristics are formation-date stamped; each char derives from data public by then per JKP construction \u2014 spot-audit before first trial use)",
   "sql_note": "SELECT * FROM contrib_global_factor.global_factor WHERE excntry = 'USA' AND permno = ANY(%(p)s) AND eom BETWEEN %(s)s AND %(e)s",
-  "source": "Jensen-Kelly-Pedersen via contrib_global_factor (WRDS contributed)"
+  "source": "Jensen-Kelly-Pedersen via contrib_global_factor (WRDS contributed)",
+  "metadata_correction": {
+    "corrected_at": "2026-08-20T03:09:37+00:00",
+    "by": "scripts/wrds_meta_audit.py --repair",
+    "reason": "_write() stamped module constants START/END and a fixed universe string for every dataset; the parquets were correct, the labels were not",
+    "window_declared_stale": [
+      "2013-01-01",
+      "2024-12-31"
+    ],
+    "universe_declared_stale": "crsp_pit_monthly_v1 ever-eligible PERMNOs"
+  },
+  "window_source": "eom",
+  "date_ranges_observed": {
+    "date": [
+      "2013-01-31",
+      "2024-12-31"
+    ],
+    "eom": [
+      "2013-01-31",
+      "2024-12-31"
+    ]
+  }
 }

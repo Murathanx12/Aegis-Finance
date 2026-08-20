@@ -42,6 +42,12 @@ OUT = _config.OPTIMUS_LEDGER_DIR / "wrds"
 UNIVERSE = (_config.OPTIMUS_LEDGER_DIR / "crsp_pit" /
             "crsp_pit_monthly_v1.parquet")
 START, END = "2013-01-01", "2024-12-31"
+EARLY_START, EARLY_END = "1990-01-01", "2012-12-31"
+EARLY_UNIVERSE = ("crsp_pit_monthly_early ALL screened PERMNOs (6,988 "
+                  "eligible, 1,463 delistings); the HELD-OUT early-era "
+                  "confirmation slice — a different universe file from "
+                  "the modern pulls, which is exactly why the window and "
+                  "universe fields must derive from the data")
 
 
 def _conn():
@@ -60,20 +66,59 @@ def _permnos() -> list[int]:
     return sorted(int(p) for p in u["permno"].unique())
 
 
+def _date_ranges(df: pd.DataFrame) -> dict:
+    """Observed min/max for every date-like column, from the DATA.
+
+    Never trust a module constant to describe a pull: the early-era
+    functions override the window inline, so a hardcoded [START, END]
+    silently mislabels them (found 2026-08-20 — every meta.json on disk
+    claimed 2013-2024, including the 1990-2012 slices).
+    """
+    out = {}
+    for c in df.columns:
+        lc = c.lower()
+        if not any(k in lc for k in ("date", "dat", "eom", "public",
+                                     "statpers", "rdq")):
+            continue
+        try:
+            s = pd.to_datetime(df[c], errors="coerce").dropna()
+        except Exception:
+            continue
+        if len(s):
+            out[c] = [str(s.min())[:10], str(s.max())[:10]]
+    return out
+
+
 def _write(name: str, df: pd.DataFrame, *, sql_note: str, pit: str,
+           universe: str | None = None,
            extra: dict | None = None) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / f"{name}.parquet"
     df.to_parquet(p, index=False)
+    ranges = _date_ranges(df)
+    # the window is whatever the PIT knowledge column actually spans;
+    # fall back to the union of all date columns, never to a constant.
+    pit_col = pit.split(";")[0].split()[0].strip().lower()
+    if pit_col in ranges:
+        window, wsrc = ranges[pit_col], pit_col
+    elif ranges:
+        window = [min(v[0] for v in ranges.values()),
+                  max(v[1] for v in ranges.values())]
+        wsrc = "union:" + ",".join(sorted(ranges))
+    else:
+        window, wsrc = None, "no date column"
     meta = {"dataset": name,
             "pulled_at": datetime.now(timezone.utc).isoformat(
                 timespec="seconds"),
             "rows": int(len(df)), "cols": list(df.columns),
-            "window": [START, END],
-            "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 "
-                        "superset; the 4,796 ever-ELIGIBLE subset is a "
-                        "downstream formation-time filter, never a pull "
-                        "filter)",
+            "window": window,
+            "window_source": wsrc,
+            "date_ranges_observed": ranges,
+            "universe": universe or (
+                "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 "
+                "superset; the 4,796 ever-ELIGIBLE subset is a "
+                "downstream formation-time filter, never a pull "
+                "filter)"),
             "pit_knowledge_column": pit,
             "sql_note": sql_note, **(extra or {})}
     (OUT / f"{name}.meta.json").write_text(json.dumps(meta, indent=2),
@@ -224,6 +269,7 @@ def pull_finratio_early(conn, permnos):
            "AND public_date BETWEEN '1990-01-01' AND '2012-12-31'")
     df = pd.read_sql(sql, conn, params={"p": pn})
     _write("finratio_monthly_early", df, sql_note=sql,
+           universe=EARLY_UNIVERSE,
            pit="public_date; early-era confirmation slice, columns "
                "limited to the two signals the frozen grammar uses")
 
@@ -245,7 +291,8 @@ def pull_dsf_early(conn, permnos):
                                             "s": f"{yr}-01-01",
                                             "e": f"{yr}-12-31"})
         _write(name, df, sql_note=sql,
-               pit="date (daily bar); early-era confirmation slice")
+               pit="date (daily bar); early-era confirmation slice",
+               universe=EARLY_UNIVERSE,)
 
 
 def pull_dsf(conn, permnos):
@@ -371,6 +418,7 @@ def pull_optionm_early(conn, permnos):
         df = pd.read_sql(sql, conn, params={"sec": secids})
         _write(name, df, sql_note=sql,
                pit="date (EOD surface); early-era confirmation slice",
+               universe=EARLY_UNIVERSE,
                extra={"n_secids": len(secids)})
 
 
@@ -394,6 +442,7 @@ def pull_ibes_early(conn, permnos):
     df = pd.read_sql(sql, conn, params={"p": pn, "s": "1990-01-01",
                                         "e": "2012-12-31"})
     _write("ibes_consensus_monthly_early", df, sql_note=sql,
+           universe=EARLY_UNIVERSE,
            pit="statpers; anndats_act gates actuals")
 
 
@@ -410,6 +459,7 @@ def pull_13f_early(conn, permnos):
     if not (OUT / "link_cusip_permno_early.parquet").exists():
         _write("link_cusip_permno_early", cus,
                sql_note="crsp.stocknames early ncusip map",
+           universe=EARLY_UNIVERSE,
                pit="dated names")
     for yr in range(1996, 2013):
         name = f"tr13f_s34_{yr}"
@@ -423,6 +473,7 @@ def pull_13f_early(conn, permnos):
                                             "e": f"{yr}-12-31"})
         _write(name, df, sql_note=sql,
                pit="fdate (vintage); early-era manager-behavior slice",
+               universe=EARLY_UNIVERSE,
                extra={"n_cusips": len(cusips)})
 
 

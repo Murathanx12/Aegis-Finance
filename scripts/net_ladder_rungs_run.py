@@ -101,8 +101,16 @@ def main() -> int:
     print("options features...")
     opt = options_monthly()
     stale = (df.merge(opt, on=["permno", "month"], how="left"))
-    # staleness cap: options obs within 10 trading days (~14 calendar)
+    # staleness cap: options obs within 10 trading days (~14 calendar).
+    # One-sided by construction — a NEGATIVE lag is an option observed
+    # after formation (lookahead), which this filter cannot catch, so
+    # assert the sign separately (CHRONOLOGY-AUDIT-1 C1).
     lag = (stale["date"] - stale["opt_date"]).dt.days
+    neg = int((lag < 0).sum())
+    if neg:
+        raise SystemExit(
+            f"REFUSED: {neg} option observations postdate their formation "
+            f"date (min lag {lag.min()}d) — lookahead, not staleness.")
     for c in OPT_FEATS:
         stale.loc[lag > 14, c] = np.nan
     print("expectations features...")

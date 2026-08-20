@@ -10,11 +10,20 @@
     "linkdt",
     "linkenddt"
   ],
-  "window": [
-    "2013-01-01",
-    "2024-12-31"
-  ],
+  "window": null,
   "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
   "pit_knowledge_column": "linkdt..linkenddt validity",
-  "sql_note": "SELECT gvkey, lpermno AS permno, linktype, linkprim, linkdt, linkenddt FROM crsp.ccmxpf_lnkhist WHERE linktype IN ('LU','LC') AND linkprim IN ('P','C')"
+  "sql_note": "SELECT gvkey, lpermno AS permno, linktype, linkprim, linkdt, linkenddt FROM crsp.ccmxpf_lnkhist WHERE linktype IN ('LU','LC') AND linkprim IN ('P','C')",
+  "metadata_correction": {
+    "corrected_at": "2026-08-20T03:09:38+00:00",
+    "by": "scripts/wrds_meta_audit.py --repair",
+    "reason": "_write() stamped module constants START/END and a fixed universe string for every dataset; the parquets were correct, the labels were not",
+    "window_declared_stale": [
+      "2013-01-01",
+      "2024-12-31"
+    ],
+    "universe_declared_stale": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)"
+  },
+  "window_source": "no date column",
+  "date_ranges_observed": {}
 }

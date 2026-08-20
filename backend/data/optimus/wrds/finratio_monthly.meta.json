@@ -103,10 +103,35 @@
     "cusip"
   ],
   "window": [
-    "2013-01-01",
+    "2013-01-31",
     "2024-12-31"
   ],
   "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
   "pit_knowledge_column": "public_date (WRDS's own availability stamp)",
-  "sql_note": "SELECT * FROM wrdsapps_finratio.firm_ratio WHERE permno = ANY(%(p)s) AND public_date BETWEEN %(s)s AND %(e)s"
+  "sql_note": "SELECT * FROM wrdsapps_finratio.firm_ratio WHERE permno = ANY(%(p)s) AND public_date BETWEEN %(s)s AND %(e)s",
+  "metadata_correction": {
+    "corrected_at": "2026-08-20T03:09:33+00:00",
+    "by": "scripts/wrds_meta_audit.py --repair",
+    "reason": "_write() stamped module constants START/END and a fixed universe string for every dataset; the parquets were correct, the labels were not",
+    "window_declared_stale": [
+      "2013-01-01",
+      "2024-12-31"
+    ],
+    "universe_declared_stale": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)"
+  },
+  "window_source": "public_date",
+  "date_ranges_observed": {
+    "adate": [
+      "2011-12-31",
+      "2024-10-31"
+    ],
+    "qdate": [
+      "2011-12-31",
+      "2024-10-31"
+    ],
+    "public_date": [
+      "2013-01-31",
+      "2024-12-31"
+    ]
+  }
 }

@@ -16,10 +16,27 @@
     "oprc"
   ],
   "window": [
-    "2013-01-01",
+    "2024-01-02",
     "2024-12-31"
   ],
   "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
   "pit_knowledge_column": "date (intraday aggregates final after close); join to permno via tclink DATED validity \u2014 symbols are reused across time (canon: sym_suffix IS NULL, never = '')",
-  "sql_note": "SELECT date, sym_root, total_trade, total_vol, total_dv_lr, buyvol_lr, sellvol_lr, buynumtrades_lr, sellnumtrades_lr, cprc, oprc FROM taqmsec.wrds_iid_2024 WHERE sym_root = ANY(%(sy)s) AND sym_suffix IS NULL"
+  "sql_note": "SELECT date, sym_root, total_trade, total_vol, total_dv_lr, buyvol_lr, sellvol_lr, buynumtrades_lr, sellnumtrades_lr, cprc, oprc FROM taqmsec.wrds_iid_2024 WHERE sym_root = ANY(%(sy)s) AND sym_suffix IS NULL",
+  "metadata_correction": {
+    "corrected_at": "2026-08-20T03:09:49+00:00",
+    "by": "scripts/wrds_meta_audit.py --repair",
+    "reason": "_write() stamped module constants START/END and a fixed universe string for every dataset; the parquets were correct, the labels were not",
+    "window_declared_stale": [
+      "2013-01-01",
+      "2024-12-31"
+    ],
+    "universe_declared_stale": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)"
+  },
+  "window_source": "date",
+  "date_ranges_observed": {
+    "date": [
+      "2024-01-02",
+      "2024-12-31"
+    ]
+  }
 }

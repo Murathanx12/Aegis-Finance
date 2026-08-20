@@ -12,12 +12,29 @@
     "dispersion"
   ],
   "window": [
-    "2013-01-01",
-    "2024-12-31"
+    "2023-01-03",
+    "2023-12-29"
   ],
   "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
   "pit_knowledge_column": "date (end-of-day surface, public next morning; treat as known at t+1 open to be conservative)",
   "sql_note": "SELECT secid, date, days, delta, impl_volatility, cp_flag, dispersion FROM optionm.vsurfd2023 WHERE secid = ANY(%(sec)s) AND days = 30 AND abs(delta) IN (25, 50)",
   "n_secids": 7734,
-  "join": "opcrsphist sdate..edate validity applies downstream"
+  "join": "opcrsphist sdate..edate validity applies downstream",
+  "metadata_correction": {
+    "corrected_at": "2026-08-20T03:09:47+00:00",
+    "by": "scripts/wrds_meta_audit.py --repair",
+    "reason": "_write() stamped module constants START/END and a fixed universe string for every dataset; the parquets were correct, the labels were not",
+    "window_declared_stale": [
+      "2013-01-01",
+      "2024-12-31"
+    ],
+    "universe_declared_stale": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)"
+  },
+  "window_source": "date",
+  "date_ranges_observed": {
+    "date": [
+      "2023-01-03",
+      "2023-12-29"
+    ]
+  }
 }

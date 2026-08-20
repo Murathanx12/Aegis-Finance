@@ -1,0 +1,3225 @@
+{
+  "audit": "WRDS-META-INTEGRITY-1",
+  "run_at": "2026-08-20T03:10:38+00:00",
+  "repaired": false,
+  "n_datasets": 119,
+  "n_mislabelled": 0,
+  "n_corrected": 0,
+  "verdict": "LABELS_ONLY \u2014 every parquet's row count and date content is internally consistent; the defect was confined to the meta.json window/universe fields",
+  "datasets": [
+    {
+      "dataset": "bondret_monthly",
+      "status": "OK",
+      "rows_declared": 2151468,
+      "rows_actual": 2151468,
+      "rows_match": true,
+      "window_declared": [
+        "2013-01-31",
+        "2024-12-31"
+      ],
+      "window_actual": [
+        "2013-01-31",
+        "2024-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2013-01-31",
+          "2024-12-31"
+        ],
+        "ret_eom": [
+          "1970-01-01",
+          "1970-01-01"
+        ],
+        "price_eom": [
+          "1970-01-01",
+          "1970-01-01"
+        ]
+      },
+      "parquet_sha256_head": "d949e09e2dc6a3d3"
+    },
+    {
+      "dataset": "compustat_fundq",
+      "status": "OK",
+      "rows_declared": 208603,
+      "rows_actual": 208603,
+      "rows_match": true,
+      "window_declared": [
+        "2013-02-12",
+        "2026-03-26"
+      ],
+      "window_actual": [
+        "2013-02-12",
+        "2026-03-26"
+      ],
+      "window_source": "rdq",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "datadate": [
+          "2013-01-31",
+          "2024-12-31"
+        ],
+        "rdq": [
+          "2013-02-12",
+          "2026-03-26"
+        ]
+      },
+      "parquet_sha256_head": "9398b46bce83b647"
+    },
+    {
+      "dataset": "crsp_dsf_1990",
+      "status": "OK",
+      "rows_declared": 1500899,
+      "rows_actual": 1500899,
+      "rows_match": true,
+      "window_declared": [
+        "1990-01-02",
+        "1990-12-31"
+      ],
+      "window_actual": [
+        "1990-01-02",
+        "1990-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1990-01-02",
+          "1990-12-31"
+        ]
+      },
+      "parquet_sha256_head": "ae63984f5ed2d8e0"
+    },
+    {
+      "dataset": "crsp_dsf_1991",
+      "status": "OK",
+      "rows_declared": 1475929,
+      "rows_actual": 1475929,
+      "rows_match": true,
+      "window_declared": [
+        "1991-01-02",
+        "1991-12-31"
+      ],
+      "window_actual": [
+        "1991-01-02",
+        "1991-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1991-01-02",
+          "1991-12-31"
+        ]
+      },
+      "parquet_sha256_head": "50cc1785f50fb405"
+    },
+    {
+      "dataset": "crsp_dsf_1992",
+      "status": "OK",
+      "rows_declared": 1515782,
+      "rows_actual": 1515782,
+      "rows_match": true,
+      "window_declared": [
+        "1992-01-02",
+        "1992-12-31"
+      ],
+      "window_actual": [
+        "1992-01-02",
+        "1992-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1992-01-02",
+          "1992-12-31"
+        ]
+      },
+      "parquet_sha256_head": "184d392a34b839cc"
+    },
+    {
+      "dataset": "crsp_dsf_1993",
+      "status": "OK",
+      "rows_declared": 1580038,
+      "rows_actual": 1580038,
+      "rows_match": true,
+      "window_declared": [
+        "1993-01-04",
+        "1993-12-31"
+      ],
+      "window_actual": [
+        "1993-01-04",
+        "1993-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1993-01-04",
+          "1993-12-31"
+        ]
+      },
+      "parquet_sha256_head": "09a0b039e7637756"
+    },
+    {
+      "dataset": "crsp_dsf_1994",
+      "status": "OK",
+      "rows_declared": 1707024,
+      "rows_actual": 1707024,
+      "rows_match": true,
+      "window_declared": [
+        "1994-01-03",
+        "1994-12-30"
+      ],
+      "window_actual": [
+        "1994-01-03",
+        "1994-12-30"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1994-01-03",
+          "1994-12-30"
+        ]
+      },
+      "parquet_sha256_head": "c5617f20d0a9977a"
+    },
+    {
+      "dataset": "crsp_dsf_1995",
+      "status": "OK",
+      "rows_declared": 1750653,
+      "rows_actual": 1750653,
+      "rows_match": true,
+      "window_declared": [
+        "1995-01-03",
+        "1995-12-29"
+      ],
+      "window_actual": [
+        "1995-01-03",
+        "1995-12-29"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1995-01-03",
+          "1995-12-29"
+        ]
+      },
+      "parquet_sha256_head": "c513e78139dfc129"
+    },
+    {
+      "dataset": "crsp_dsf_1996",
+      "status": "OK",
+      "rows_declared": 1859040,
+      "rows_actual": 1859040,
+      "rows_match": true,
+      "window_declared": [
+        "1996-01-02",
+        "1996-12-31"
+      ],
+      "window_actual": [
+        "1996-01-02",
+        "1996-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1996-01-02",
+          "1996-12-31"
+        ]
+      },
+      "parquet_sha256_head": "7b5d4ab255e8755a"
+    },
+    {
+      "dataset": "crsp_dsf_1997",
+      "status": "OK",
+      "rows_declared": 1915433,
+      "rows_actual": 1915433,
+      "rows_match": true,
+      "window_declared": [
+        "1997-01-02",
+        "1997-12-31"
+      ],
+      "window_actual": [
+        "1997-01-02",
+        "1997-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1997-01-02",
+          "1997-12-31"
+        ]
+      },
+      "parquet_sha256_head": "59af8d4f324faf3f"
+    },
+    {
+      "dataset": "crsp_dsf_1998",
+      "status": "OK",
+      "rows_declared": 1867916,
+      "rows_actual": 1867916,
+      "rows_match": true,
+      "window_declared": [
+        "1998-01-02",
+        "1998-12-31"
+      ],
+      "window_actual": [
+        "1998-01-02",
+        "1998-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1998-01-02",
+          "1998-12-31"
+        ]
+      },
+      "parquet_sha256_head": "4c608c5a8676ac10"
+    },
+    {
+      "dataset": "crsp_dsf_1999",
+      "status": "OK",
+      "rows_declared": 1755075,
+      "rows_actual": 1755075,
+      "rows_match": true,
+      "window_declared": [
+        "1999-01-04",
+        "1999-12-31"
+      ],
+      "window_actual": [
+        "1999-01-04",
+        "1999-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1999-01-04",
+          "1999-12-31"
+        ]
+      },
+      "parquet_sha256_head": "9e9e0bfb9f36cff8"
+    },
+    {
+      "dataset": "crsp_dsf_2000",
+      "status": "OK",
+      "rows_declared": 1700382,
+      "rows_actual": 1700382,
+      "rows_match": true,
+      "window_declared": [
+        "2000-01-03",
+        "2000-12-29"
+      ],
+      "window_actual": [
+        "2000-01-03",
+        "2000-12-29"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2000-01-03",
+          "2000-12-29"
+        ]
+      },
+      "parquet_sha256_head": "3a3b0deb47a47bc0"
+    },
+    {
+      "dataset": "crsp_dsf_2001",
+      "status": "OK",
+      "rows_declared": 1532778,
+      "rows_actual": 1532778,
+      "rows_match": true,
+      "window_declared": [
+        "2001-01-02",
+        "2001-12-31"
+      ],
+      "window_actual": [
+        "2001-01-02",
+        "2001-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2001-01-02",
+          "2001-12-31"
+        ]
+      },
+      "parquet_sha256_head": "6336d6484df8b684"
+    },
+    {
+      "dataset": "crsp_dsf_2002",
+      "status": "OK",
+      "rows_declared": 1420353,
+      "rows_actual": 1420353,
+      "rows_match": true,
+      "window_declared": [
+        "2002-01-02",
+        "2002-12-31"
+      ],
+      "window_actual": [
+        "2002-01-02",
+        "2002-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2002-01-02",
+          "2002-12-31"
+        ]
+      },
+      "parquet_sha256_head": "b234e81cbfd77781"
+    },
+    {
+      "dataset": "crsp_dsf_2003",
+      "status": "OK",
+      "rows_declared": 1322895,
+      "rows_actual": 1322895,
+      "rows_match": true,
+      "window_declared": [
+        "2003-01-02",
+        "2003-12-31"
+      ],
+      "window_actual": [
+        "2003-01-02",
+        "2003-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2003-01-02",
+          "2003-12-31"
+        ]
+      },
+      "parquet_sha256_head": "0aa3ebb049bf044b"
+    },
+    {
+      "dataset": "crsp_dsf_2004",
+      "status": "OK",
+      "rows_declared": 1279388,
+      "rows_actual": 1279388,
+      "rows_match": true,
+      "window_declared": [
+        "2004-01-02",
+        "2004-12-31"
+      ],
+      "window_actual": [
+        "2004-01-02",
+        "2004-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2004-01-02",
+          "2004-12-31"
+        ]
+      },
+      "parquet_sha256_head": "052a08b888c3fee2"
+    },
+    {
+      "dataset": "crsp_dsf_2005",
+      "status": "OK",
+      "rows_declared": 1258321,
+      "rows_actual": 1258321,
+      "rows_match": true,
+      "window_declared": [
+        "2005-01-03",
+        "2005-12-30"
+      ],
+      "window_actual": [
+        "2005-01-03",
+        "2005-12-30"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2005-01-03",
+          "2005-12-30"
+        ]
+      },
+      "parquet_sha256_head": "34ac8b9308be10bd"
+    },
+    {
+      "dataset": "crsp_dsf_2006",
+      "status": "OK",
+      "rows_declared": 1231145,
+      "rows_actual": 1231145,
+      "rows_match": true,
+      "window_declared": [
+        "2006-01-03",
+        "2006-12-29"
+      ],
+      "window_actual": [
+        "2006-01-03",
+        "2006-12-29"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2006-01-03",
+          "2006-12-29"
+        ]
+      },
+      "parquet_sha256_head": "be61b52e3993764d"
+    },
+    {
+      "dataset": "crsp_dsf_2007",
+      "status": "OK",
+      "rows_declared": 1207165,
+      "rows_actual": 1207165,
+      "rows_match": true,
+      "window_declared": [
+        "2007-01-03",
+        "2007-12-31"
+      ],
+      "window_actual": [
+        "2007-01-03",
+        "2007-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2007-01-03",
+          "2007-12-31"
+        ]
+      },
+      "parquet_sha256_head": "4fce54e1f70d3f34"
+    },
+    {
+      "dataset": "crsp_dsf_2008",
+      "status": "OK",
+      "rows_declared": 1171449,
+      "rows_actual": 1171449,
+      "rows_match": true,
+      "window_declared": [
+        "2008-01-02",
+        "2008-12-31"
+      ],
+      "window_actual": [
+        "2008-01-02",
+        "2008-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2008-01-02",
+          "2008-12-31"
+        ]
+      },
+      "parquet_sha256_head": "5ee75bf3f2de05b6"
+    },
+    {
+      "dataset": "crsp_dsf_2009",
+      "status": "OK",
+      "rows_declared": 1089576,
+      "rows_actual": 1089576,
+      "rows_match": true,
+      "window_declared": [
+        "2009-01-02",
+        "2009-12-31"
+      ],
+      "window_actual": [
+        "2009-01-02",
+        "2009-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2009-01-02",
+          "2009-12-31"
+        ]
+      },
+      "parquet_sha256_head": "6095356ec842ca08"
+    },
+    {
+      "dataset": "crsp_dsf_2010",
+      "status": "OK",
+      "rows_declared": 1045848,
+      "rows_actual": 1045848,
+      "rows_match": true,
+      "window_declared": [
+        "2010-01-04",
+        "2010-12-31"
+      ],
+      "window_actual": [
+        "2010-01-04",
+        "2010-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2010-01-04",
+          "2010-12-31"
+        ]
+      },
+      "parquet_sha256_head": "20599b52aece9bff"
+    },
+    {
+      "dataset": "crsp_dsf_2011",
+      "status": "OK",
+      "rows_declared": 1004618,
+      "rows_actual": 1004618,
+      "rows_match": true,
+      "window_declared": [
+        "2011-01-03",
+        "2011-12-30"
+      ],
+      "window_actual": [
+        "2011-01-03",
+        "2011-12-30"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2011-01-03",
+          "2011-12-30"
+        ]
+      },
+      "parquet_sha256_head": "ed50ff12a79b5e55"
+    },
+    {
+      "dataset": "crsp_dsf_2012",
+      "status": "OK",
+      "rows_declared": 963303,
+      "rows_actual": 963303,
+      "rows_match": true,
+      "window_declared": [
+        "2012-01-03",
+        "2012-12-31"
+      ],
+      "window_actual": [
+        "2012-01-03",
+        "2012-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2012-01-03",
+          "2012-12-31"
+        ]
+      },
+      "parquet_sha256_head": "f22b7b640fed087d"
+    },
+    {
+      "dataset": "crsp_dsf_2013",
+      "status": "OK",
+      "rows_declared": 945529,
+      "rows_actual": 945529,
+      "rows_match": true,
+      "window_declared": [
+        "2013-01-02",
+        "2013-12-31"
+      ],
+      "window_actual": [
+        "2013-01-02",
+        "2013-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2013-01-02",
+          "2013-12-31"
+        ]
+      },
+      "parquet_sha256_head": "c8a896a2643d3fe1"
+    },
+    {
+      "dataset": "crsp_dsf_2014",
+      "status": "OK",
+      "rows_declared": 964000,
+      "rows_actual": 964000,
+      "rows_match": true,
+      "window_declared": [
+        "2014-01-02",
+        "2014-12-31"
+      ],
+      "window_actual": [
+        "2014-01-02",
+        "2014-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2014-01-02",
+          "2014-12-31"
+        ]
+      },
+      "parquet_sha256_head": "9272d88cc6c20e8d"
+    },
+    {
+      "dataset": "crsp_dsf_2015",
+      "status": "OK",
+      "rows_declared": 974223,
+      "rows_actual": 974223,
+      "rows_match": true,
+      "window_declared": [
+        "2015-01-02",
+        "2015-12-31"
+      ],
+      "window_actual": [
+        "2015-01-02",
+        "2015-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2015-01-02",
+          "2015-12-31"
+        ]
+      },
+      "parquet_sha256_head": "2d05ec93c4abb5f6"
+    },
+    {
+      "dataset": "crsp_dsf_2016",
+      "status": "OK",
+      "rows_declared": 950131,
+      "rows_actual": 950131,
+      "rows_match": true,
+      "window_declared": [
+        "2016-01-04",
+        "2016-12-30"
+      ],
+      "window_actual": [
+        "2016-01-04",
+        "2016-12-30"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2016-01-04",
+          "2016-12-30"
+        ]
+      },
+      "parquet_sha256_head": "2ef77f78f3cb37e4"
+    },
+    {
+      "dataset": "crsp_dsf_2017",
+      "status": "OK",
+      "rows_declared": 930380,
+      "rows_actual": 930380,
+      "rows_match": true,
+      "window_declared": [
+        "2017-01-03",
+        "2017-12-29"
+      ],
+      "window_actual": [
+        "2017-01-03",
+        "2017-12-29"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2017-01-03",
+          "2017-12-29"
+        ]
+      },
+      "parquet_sha256_head": "016e52053fe41542"
+    },
+    {
+      "dataset": "crsp_dsf_2018",
+      "status": "OK",
+      "rows_declared": 930152,
+      "rows_actual": 930152,
+      "rows_match": true,
+      "window_declared": [
+        "2018-01-02",
+        "2018-12-31"
+      ],
+      "window_actual": [
+        "2018-01-02",
+        "2018-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2018-01-02",
+          "2018-12-31"
+        ]
+      },
+      "parquet_sha256_head": "7ab0f9c48f6a8a8f"
+    },
+    {
+      "dataset": "crsp_dsf_2019",
+      "status": "OK",
+      "rows_declared": 932809,
+      "rows_actual": 932809,
+      "rows_match": true,
+      "window_declared": [
+        "2019-01-02",
+        "2019-12-31"
+      ],
+      "window_actual": [
+        "2019-01-02",
+        "2019-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2019-01-02",
+          "2019-12-31"
+        ]
+      },
+      "parquet_sha256_head": "383e0172cf443762"
+    },
+    {
+      "dataset": "crsp_dsf_2020",
+      "status": "OK",
+      "rows_declared": 939339,
+      "rows_actual": 939339,
+      "rows_match": true,
+      "window_declared": [
+        "2020-01-02",
+        "2020-12-31"
+      ],
+      "window_actual": [
+        "2020-01-02",
+        "2020-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2020-01-02",
+          "2020-12-31"
+        ]
+      },
+      "parquet_sha256_head": "bf1068698d2b875e"
+    },
+    {
+      "dataset": "crsp_dsf_2021",
+      "status": "OK",
+      "rows_declared": 1060296,
+      "rows_actual": 1060296,
+      "rows_match": true,
+      "window_declared": [
+        "2021-01-04",
+        "2021-12-31"
+      ],
+      "window_actual": [
+        "2021-01-04",
+        "2021-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2021-01-04",
+          "2021-12-31"
+        ]
+      },
+      "parquet_sha256_head": "68176d6fdbd03426"
+    },
+    {
+      "dataset": "crsp_dsf_2022",
+      "status": "OK",
+      "rows_declared": 1130412,
+      "rows_actual": 1130412,
+      "rows_match": true,
+      "window_declared": [
+        "2022-01-03",
+        "2022-12-30"
+      ],
+      "window_actual": [
+        "2022-01-03",
+        "2022-12-30"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2022-01-03",
+          "2022-12-30"
+        ]
+      },
+      "parquet_sha256_head": "beb01b2c2cb2d065"
+    },
+    {
+      "dataset": "crsp_dsf_2023",
+      "status": "OK",
+      "rows_declared": 1058667,
+      "rows_actual": 1058667,
+      "rows_match": true,
+      "window_declared": [
+        "2023-01-03",
+        "2023-12-29"
+      ],
+      "window_actual": [
+        "2023-01-03",
+        "2023-12-29"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2023-01-03",
+          "2023-12-29"
+        ]
+      },
+      "parquet_sha256_head": "95350634d8e02a2c"
+    },
+    {
+      "dataset": "crsp_dsf_2024",
+      "status": "OK",
+      "rows_declared": 998535,
+      "rows_actual": 998535,
+      "rows_match": true,
+      "window_declared": [
+        "2024-01-02",
+        "2024-12-31"
+      ],
+      "window_actual": [
+        "2024-01-02",
+        "2024-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2024-01-02",
+          "2024-12-31"
+        ]
+      },
+      "parquet_sha256_head": "1d6dfaf633ae5f09"
+    },
+    {
+      "dataset": "finratio_monthly",
+      "status": "OK",
+      "rows_declared": 534110,
+      "rows_actual": 534110,
+      "rows_match": true,
+      "window_declared": [
+        "2013-01-31",
+        "2024-12-31"
+      ],
+      "window_actual": [
+        "2013-01-31",
+        "2024-12-31"
+      ],
+      "window_source": "public_date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "adate": [
+          "2011-12-31",
+          "2024-10-31"
+        ],
+        "qdate": [
+          "2011-12-31",
+          "2024-10-31"
+        ],
+        "public_date": [
+          "2013-01-31",
+          "2024-12-31"
+        ]
+      },
+      "parquet_sha256_head": "e225e6bf8be29fbf"
+    },
+    {
+      "dataset": "finratio_monthly_early",
+      "status": "OK",
+      "rows_declared": 1420021,
+      "rows_actual": 1420021,
+      "rows_match": true,
+      "window_declared": [
+        "1990-01-31",
+        "2012-12-31"
+      ],
+      "window_actual": [
+        "1990-01-31",
+        "2012-12-31"
+      ],
+      "window_source": "public_date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "public_date": [
+          "1990-01-31",
+          "2012-12-31"
+        ]
+      },
+      "parquet_sha256_head": "51672ab7363507da"
+    },
+    {
+      "dataset": "ibes_consensus_monthly",
+      "status": "OK",
+      "rows_declared": 1554570,
+      "rows_actual": 1554570,
+      "rows_match": true,
+      "window_declared": [
+        "2013-01-17",
+        "2024-12-19"
+      ],
+      "window_actual": [
+        "2013-01-17",
+        "2024-12-19"
+      ],
+      "window_source": "statpers",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "statpers": [
+          "2013-01-17",
+          "2024-12-19"
+        ],
+        "fpedats": [
+          "2011-12-31",
+          "2026-11-30"
+        ],
+        "anndats_act": [
+          "2012-05-02",
+          "2026-05-14"
+        ]
+      },
+      "parquet_sha256_head": "bfceef44534d0a75"
+    },
+    {
+      "dataset": "ibes_consensus_monthly_early",
+      "status": "OK",
+      "rows_declared": 3682004,
+      "rows_actual": 3682004,
+      "rows_match": true,
+      "window_declared": [
+        "1990-01-18",
+        "2012-12-20"
+      ],
+      "window_actual": [
+        "1990-01-18",
+        "2012-12-20"
+      ],
+      "window_source": "statpers",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "statpers": [
+          "1990-01-18",
+          "2012-12-20"
+        ],
+        "fpedats": [
+          "1988-12-31",
+          "2014-11-30"
+        ],
+        "anndats_act": [
+          "1989-05-13",
+          "2017-03-31"
+        ]
+      },
+      "parquet_sha256_head": "3c813c4fe71f8c1a"
+    },
+    {
+      "dataset": "jkp_global_factor_usa",
+      "status": "OK",
+      "rows_declared": 558369,
+      "rows_actual": 558369,
+      "rows_match": true,
+      "window_declared": [
+        "2013-01-31",
+        "2024-12-31"
+      ],
+      "window_actual": [
+        "2013-01-31",
+        "2024-12-31"
+      ],
+      "window_source": "eom",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2013-01-31",
+          "2024-12-31"
+        ],
+        "eom": [
+          "2013-01-31",
+          "2024-12-31"
+        ]
+      },
+      "parquet_sha256_head": "f11acaa09a4bfbd5"
+    },
+    {
+      "dataset": "link_bond_crsp",
+      "status": "OK",
+      "rows_declared": 358312,
+      "rows_actual": 358312,
+      "rows_match": true,
+      "window_declared": null,
+      "window_actual": null,
+      "window_source": "no date column",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {},
+      "parquet_sha256_head": "feeedfa39e259503"
+    },
+    {
+      "dataset": "link_ccm",
+      "status": "OK",
+      "rows_declared": 33324,
+      "rows_actual": 33324,
+      "rows_match": true,
+      "window_declared": null,
+      "window_actual": null,
+      "window_source": "no date column",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {},
+      "parquet_sha256_head": "e1aa77a4d4452b98"
+    },
+    {
+      "dataset": "link_cusip_permno",
+      "status": "OK",
+      "rows_declared": 11603,
+      "rows_actual": 11603,
+      "rows_match": true,
+      "window_declared": null,
+      "window_actual": null,
+      "window_source": "no date column",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {},
+      "parquet_sha256_head": "f19c4d2720c02873"
+    },
+    {
+      "dataset": "link_cusip_permno_early",
+      "status": "OK",
+      "rows_declared": 24114,
+      "rows_actual": 24114,
+      "rows_match": true,
+      "window_declared": null,
+      "window_actual": null,
+      "window_source": "no date column",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {},
+      "parquet_sha256_head": "dcc4406d233248da"
+    },
+    {
+      "dataset": "link_ibes_crsp",
+      "status": "OK",
+      "rows_declared": 37662,
+      "rows_actual": 37662,
+      "rows_match": true,
+      "window_declared": [
+        "1976-01-15",
+        "2026-01-31"
+      ],
+      "window_actual": [
+        "1976-01-15",
+        "2026-01-31"
+      ],
+      "window_source": "union:edate,sdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "sdate": [
+          "1976-01-15",
+          "2025-12-18"
+        ],
+        "edate": [
+          "1976-03-14",
+          "2026-01-31"
+        ]
+      },
+      "parquet_sha256_head": "6e413e8161b6516d"
+    },
+    {
+      "dataset": "link_optionm_crsp",
+      "status": "OK",
+      "rows_declared": 121773,
+      "rows_actual": 121773,
+      "rows_match": true,
+      "window_declared": [
+        "1994-09-01",
+        "2025-12-31"
+      ],
+      "window_actual": [
+        "1994-09-01",
+        "2025-12-31"
+      ],
+      "window_source": "union:edate,sdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "sdate": [
+          "1994-09-01",
+          "2025-12-30"
+        ],
+        "edate": [
+          "1996-01-02",
+          "2025-12-31"
+        ]
+      },
+      "parquet_sha256_head": "5e151cd50291d374"
+    },
+    {
+      "dataset": "link_taq_crsp",
+      "status": "OK",
+      "rows_declared": 685811,
+      "rows_actual": 685811,
+      "rows_match": true,
+      "window_declared": [
+        "1993-01-31",
+        "2014-12-31"
+      ],
+      "window_actual": [
+        "1993-01-31",
+        "2014-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1993-01-31",
+          "2014-12-31"
+        ]
+      },
+      "parquet_sha256_head": "555f3683b4d46425"
+    },
+    {
+      "dataset": "optionm_surface30d_1996",
+      "status": "OK",
+      "rows_declared": 1721352,
+      "rows_actual": 1721352,
+      "rows_match": true,
+      "window_declared": [
+        "1996-01-04",
+        "1996-12-31"
+      ],
+      "window_actual": [
+        "1996-01-04",
+        "1996-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1996-01-04",
+          "1996-12-31"
+        ]
+      },
+      "parquet_sha256_head": "4adc1d827ce05d10"
+    },
+    {
+      "dataset": "optionm_surface30d_1997",
+      "status": "OK",
+      "rows_declared": 2062816,
+      "rows_actual": 2062816,
+      "rows_match": true,
+      "window_declared": [
+        "1997-01-02",
+        "1997-12-31"
+      ],
+      "window_actual": [
+        "1997-01-02",
+        "1997-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1997-01-02",
+          "1997-12-31"
+        ]
+      },
+      "parquet_sha256_head": "c92099d55a11f1e0"
+    },
+    {
+      "dataset": "optionm_surface30d_1998",
+      "status": "OK",
+      "rows_declared": 2308800,
+      "rows_actual": 2308800,
+      "rows_match": true,
+      "window_declared": [
+        "1998-01-02",
+        "1998-12-31"
+      ],
+      "window_actual": [
+        "1998-01-02",
+        "1998-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1998-01-02",
+          "1998-12-31"
+        ]
+      },
+      "parquet_sha256_head": "1b45072d1c442236"
+    },
+    {
+      "dataset": "optionm_surface30d_1999",
+      "status": "OK",
+      "rows_declared": 2369760,
+      "rows_actual": 2369760,
+      "rows_match": true,
+      "window_declared": [
+        "1999-01-04",
+        "1999-12-31"
+      ],
+      "window_actual": [
+        "1999-01-04",
+        "1999-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "1999-01-04",
+          "1999-12-31"
+        ]
+      },
+      "parquet_sha256_head": "20720b450d86fb97"
+    },
+    {
+      "dataset": "optionm_surface30d_2000",
+      "status": "OK",
+      "rows_declared": 2163796,
+      "rows_actual": 2163796,
+      "rows_match": true,
+      "window_declared": [
+        "2000-01-03",
+        "2000-12-29"
+      ],
+      "window_actual": [
+        "2000-01-03",
+        "2000-12-29"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2000-01-03",
+          "2000-12-29"
+        ]
+      },
+      "parquet_sha256_head": "bf200b6ec515040e"
+    },
+    {
+      "dataset": "optionm_surface30d_2001",
+      "status": "OK",
+      "rows_declared": 1980552,
+      "rows_actual": 1980552,
+      "rows_match": true,
+      "window_declared": [
+        "2001-01-02",
+        "2001-12-31"
+      ],
+      "window_actual": [
+        "2001-01-02",
+        "2001-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2001-01-02",
+          "2001-12-31"
+        ]
+      },
+      "parquet_sha256_head": "62584a6169544a47"
+    },
+    {
+      "dataset": "optionm_surface30d_2002",
+      "status": "OK",
+      "rows_declared": 2004460,
+      "rows_actual": 2004460,
+      "rows_match": true,
+      "window_declared": [
+        "2002-01-02",
+        "2002-12-31"
+      ],
+      "window_actual": [
+        "2002-01-02",
+        "2002-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2002-01-02",
+          "2002-12-31"
+        ]
+      },
+      "parquet_sha256_head": "c86cbb7b0bbfea51"
+    },
+    {
+      "dataset": "optionm_surface30d_2003",
+      "status": "OK",
+      "rows_declared": 1853784,
+      "rows_actual": 1853784,
+      "rows_match": true,
+      "window_declared": [
+        "2003-01-02",
+        "2003-12-31"
+      ],
+      "window_actual": [
+        "2003-01-02",
+        "2003-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2003-01-02",
+          "2003-12-31"
+        ]
+      },
+      "parquet_sha256_head": "bb27b0521aef940c"
+    },
+    {
+      "dataset": "optionm_surface30d_2004",
+      "status": "OK",
+      "rows_declared": 1951776,
+      "rows_actual": 1951776,
+      "rows_match": true,
+      "window_declared": [
+        "2004-01-02",
+        "2004-12-31"
+      ],
+      "window_actual": [
+        "2004-01-02",
+        "2004-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2004-01-02",
+          "2004-12-31"
+        ]
+      },
+      "parquet_sha256_head": "fbd653ca154a8fed"
+    },
+    {
+      "dataset": "optionm_surface30d_2005",
+      "status": "OK",
+      "rows_declared": 2085108,
+      "rows_actual": 2085108,
+      "rows_match": true,
+      "window_declared": [
+        "2005-01-03",
+        "2005-12-30"
+      ],
+      "window_actual": [
+        "2005-01-03",
+        "2005-12-30"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2005-01-03",
+          "2005-12-30"
+        ]
+      },
+      "parquet_sha256_head": "59f0ac564ddf05f7"
+    },
+    {
+      "dataset": "optionm_surface30d_2006",
+      "status": "OK",
+      "rows_declared": 2171344,
+      "rows_actual": 2171344,
+      "rows_match": true,
+      "window_declared": [
+        "2006-01-03",
+        "2006-12-29"
+      ],
+      "window_actual": [
+        "2006-01-03",
+        "2006-12-29"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2006-01-03",
+          "2006-12-29"
+        ]
+      },
+      "parquet_sha256_head": "bb1215f254464bb4"
+    },
+    {
+      "dataset": "optionm_surface30d_2007",
+      "status": "OK",
+      "rows_declared": 2293332,
+      "rows_actual": 2293332,
+      "rows_match": true,
+      "window_declared": [
+        "2007-01-03",
+        "2007-12-31"
+      ],
+      "window_actual": [
+        "2007-01-03",
+        "2007-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2007-01-03",
+          "2007-12-31"
+        ]
+      },
+      "parquet_sha256_head": "58cf87972cd993e7"
+    },
+    {
+      "dataset": "optionm_surface30d_2008",
+      "status": "OK",
+      "rows_declared": 2325648,
+      "rows_actual": 2325648,
+      "rows_match": true,
+      "window_declared": [
+        "2008-01-02",
+        "2008-12-31"
+      ],
+      "window_actual": [
+        "2008-01-02",
+        "2008-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2008-01-02",
+          "2008-12-31"
+        ]
+      },
+      "parquet_sha256_head": "78b198006513cd34"
+    },
+    {
+      "dataset": "optionm_surface30d_2009",
+      "status": "OK",
+      "rows_declared": 2282400,
+      "rows_actual": 2282400,
+      "rows_match": true,
+      "window_declared": [
+        "2009-01-02",
+        "2009-12-31"
+      ],
+      "window_actual": [
+        "2009-01-02",
+        "2009-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2009-01-02",
+          "2009-12-31"
+        ]
+      },
+      "parquet_sha256_head": "5712a27282873fbe"
+    },
+    {
+      "dataset": "optionm_surface30d_2010",
+      "status": "OK",
+      "rows_declared": 2316736,
+      "rows_actual": 2316736,
+      "rows_match": true,
+      "window_declared": [
+        "2010-01-04",
+        "2010-12-31"
+      ],
+      "window_actual": [
+        "2010-01-04",
+        "2010-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2010-01-04",
+          "2010-12-31"
+        ]
+      },
+      "parquet_sha256_head": "21231fbee63c8877"
+    },
+    {
+      "dataset": "optionm_surface30d_2011",
+      "status": "OK",
+      "rows_declared": 2447192,
+      "rows_actual": 2447192,
+      "rows_match": true,
+      "window_declared": [
+        "2011-01-03",
+        "2011-12-30"
+      ],
+      "window_actual": [
+        "2011-01-03",
+        "2011-12-30"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2011-01-03",
+          "2011-12-30"
+        ]
+      },
+      "parquet_sha256_head": "78ba675a7018b4be"
+    },
+    {
+      "dataset": "optionm_surface30d_2012",
+      "status": "OK",
+      "rows_declared": 2487580,
+      "rows_actual": 2487580,
+      "rows_match": true,
+      "window_declared": [
+        "2012-01-03",
+        "2012-12-31"
+      ],
+      "window_actual": [
+        "2012-01-03",
+        "2012-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2012-01-03",
+          "2012-12-31"
+        ]
+      },
+      "parquet_sha256_head": "71f538506f5856ba"
+    },
+    {
+      "dataset": "optionm_surface30d_2013",
+      "status": "OK",
+      "rows_declared": 2582048,
+      "rows_actual": 2582048,
+      "rows_match": true,
+      "window_declared": [
+        "2013-01-02",
+        "2013-12-31"
+      ],
+      "window_actual": [
+        "2013-01-02",
+        "2013-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2013-01-02",
+          "2013-12-31"
+        ]
+      },
+      "parquet_sha256_head": "c0276c9f005edf11"
+    },
+    {
+      "dataset": "optionm_surface30d_2014",
+      "status": "OK",
+      "rows_declared": 2697620,
+      "rows_actual": 2697620,
+      "rows_match": true,
+      "window_declared": [
+        "2014-01-02",
+        "2014-12-31"
+      ],
+      "window_actual": [
+        "2014-01-02",
+        "2014-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2014-01-02",
+          "2014-12-31"
+        ]
+      },
+      "parquet_sha256_head": "042872aa6d68b5a1"
+    },
+    {
+      "dataset": "optionm_surface30d_2015",
+      "status": "OK",
+      "rows_declared": 2766272,
+      "rows_actual": 2766272,
+      "rows_match": true,
+      "window_declared": [
+        "2015-01-02",
+        "2015-12-31"
+      ],
+      "window_actual": [
+        "2015-01-02",
+        "2015-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2015-01-02",
+          "2015-12-31"
+        ]
+      },
+      "parquet_sha256_head": "fbff38dc59017535"
+    },
+    {
+      "dataset": "optionm_surface30d_2016",
+      "status": "OK",
+      "rows_declared": 2840536,
+      "rows_actual": 2840536,
+      "rows_match": true,
+      "window_declared": [
+        "2016-01-04",
+        "2016-12-30"
+      ],
+      "window_actual": [
+        "2016-01-04",
+        "2016-12-30"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2016-01-04",
+          "2016-12-30"
+        ]
+      },
+      "parquet_sha256_head": "e96352364f99b2fe"
+    },
+    {
+      "dataset": "optionm_surface30d_2017",
+      "status": "OK",
+      "rows_declared": 2737184,
+      "rows_actual": 2737184,
+      "rows_match": true,
+      "window_declared": [
+        "2017-01-03",
+        "2017-12-29"
+      ],
+      "window_actual": [
+        "2017-01-03",
+        "2017-12-29"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2017-01-03",
+          "2017-12-29"
+        ]
+      },
+      "parquet_sha256_head": "21751a825c4ed0a9"
+    },
+    {
+      "dataset": "optionm_surface30d_2018",
+      "status": "OK",
+      "rows_declared": 2704072,
+      "rows_actual": 2704072,
+      "rows_match": true,
+      "window_declared": [
+        "2018-01-02",
+        "2018-12-31"
+      ],
+      "window_actual": [
+        "2018-01-02",
+        "2018-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2018-01-02",
+          "2018-12-31"
+        ]
+      },
+      "parquet_sha256_head": "a479e9ebd814537c"
+    },
+    {
+      "dataset": "optionm_surface30d_2019",
+      "status": "OK",
+      "rows_declared": 2668172,
+      "rows_actual": 2668172,
+      "rows_match": true,
+      "window_declared": [
+        "2019-01-02",
+        "2019-12-31"
+      ],
+      "window_actual": [
+        "2019-01-02",
+        "2019-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2019-01-02",
+          "2019-12-31"
+        ]
+      },
+      "parquet_sha256_head": "0241abf6f0560453"
+    },
+    {
+      "dataset": "optionm_surface30d_2020",
+      "status": "OK",
+      "rows_declared": 2676936,
+      "rows_actual": 2676936,
+      "rows_match": true,
+      "window_declared": [
+        "2020-01-02",
+        "2020-12-31"
+      ],
+      "window_actual": [
+        "2020-01-02",
+        "2020-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2020-01-02",
+          "2020-12-31"
+        ]
+      },
+      "parquet_sha256_head": "b35181f5f5dd43eb"
+    },
+    {
+      "dataset": "optionm_surface30d_2021",
+      "status": "OK",
+      "rows_declared": 3050124,
+      "rows_actual": 3050124,
+      "rows_match": true,
+      "window_declared": [
+        "2021-01-04",
+        "2021-12-31"
+      ],
+      "window_actual": [
+        "2021-01-04",
+        "2021-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2021-01-04",
+          "2021-12-31"
+        ]
+      },
+      "parquet_sha256_head": "a9238da712f7deae"
+    },
+    {
+      "dataset": "optionm_surface30d_2022",
+      "status": "OK",
+      "rows_declared": 3321236,
+      "rows_actual": 3321236,
+      "rows_match": true,
+      "window_declared": [
+        "2022-01-03",
+        "2022-12-30"
+      ],
+      "window_actual": [
+        "2022-01-03",
+        "2022-12-30"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2022-01-03",
+          "2022-12-30"
+        ]
+      },
+      "parquet_sha256_head": "7ab916cd231e963f"
+    },
+    {
+      "dataset": "optionm_surface30d_2023",
+      "status": "OK",
+      "rows_declared": 3227168,
+      "rows_actual": 3227168,
+      "rows_match": true,
+      "window_declared": [
+        "2023-01-03",
+        "2023-12-29"
+      ],
+      "window_actual": [
+        "2023-01-03",
+        "2023-12-29"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2023-01-03",
+          "2023-12-29"
+        ]
+      },
+      "parquet_sha256_head": "897ac66587791a8d"
+    },
+    {
+      "dataset": "optionm_surface30d_2024",
+      "status": "OK",
+      "rows_declared": 3034580,
+      "rows_actual": 3034580,
+      "rows_match": true,
+      "window_declared": [
+        "2024-01-02",
+        "2024-12-31"
+      ],
+      "window_actual": [
+        "2024-01-02",
+        "2024-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2024-01-02",
+          "2024-12-31"
+        ]
+      },
+      "parquet_sha256_head": "9f11a2c6a033a12f"
+    },
+    {
+      "dataset": "taq_iid_2013",
+      "status": "OK",
+      "rows_declared": 911069,
+      "rows_actual": 911069,
+      "rows_match": true,
+      "window_declared": [
+        "2013-01-02",
+        "2013-12-31"
+      ],
+      "window_actual": [
+        "2013-01-02",
+        "2013-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2013-01-02",
+          "2013-12-31"
+        ]
+      },
+      "parquet_sha256_head": "c1a5ba3dd97912ee"
+    },
+    {
+      "dataset": "taq_iid_2014",
+      "status": "OK",
+      "rows_declared": 937356,
+      "rows_actual": 937356,
+      "rows_match": true,
+      "window_declared": [
+        "2014-01-02",
+        "2014-12-31"
+      ],
+      "window_actual": [
+        "2014-01-02",
+        "2014-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2014-01-02",
+          "2014-12-31"
+        ]
+      },
+      "parquet_sha256_head": "2789df5af9adb562"
+    },
+    {
+      "dataset": "taq_iid_2015",
+      "status": "OK",
+      "rows_declared": 920382,
+      "rows_actual": 920382,
+      "rows_match": true,
+      "window_declared": [
+        "2015-01-02",
+        "2015-12-31"
+      ],
+      "window_actual": [
+        "2015-01-02",
+        "2015-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2015-01-02",
+          "2015-12-31"
+        ]
+      },
+      "parquet_sha256_head": "c8110058fb759c95"
+    },
+    {
+      "dataset": "taq_iid_2016",
+      "status": "OK",
+      "rows_declared": 850700,
+      "rows_actual": 850700,
+      "rows_match": true,
+      "window_declared": [
+        "2016-01-04",
+        "2016-12-30"
+      ],
+      "window_actual": [
+        "2016-01-04",
+        "2016-12-30"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2016-01-04",
+          "2016-12-30"
+        ]
+      },
+      "parquet_sha256_head": "78b50235cbe5224b"
+    },
+    {
+      "dataset": "taq_iid_2017",
+      "status": "OK",
+      "rows_declared": 782178,
+      "rows_actual": 782178,
+      "rows_match": true,
+      "window_declared": [
+        "2017-01-03",
+        "2017-12-29"
+      ],
+      "window_actual": [
+        "2017-01-03",
+        "2017-12-29"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2017-01-03",
+          "2017-12-29"
+        ]
+      },
+      "parquet_sha256_head": "27cc966e574bdd3b"
+    },
+    {
+      "dataset": "taq_iid_2018",
+      "status": "OK",
+      "rows_declared": 732092,
+      "rows_actual": 732092,
+      "rows_match": true,
+      "window_declared": [
+        "2018-01-02",
+        "2018-12-31"
+      ],
+      "window_actual": [
+        "2018-01-02",
+        "2018-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2018-01-02",
+          "2018-12-31"
+        ]
+      },
+      "parquet_sha256_head": "90eaa2c0cd4df720"
+    },
+    {
+      "dataset": "taq_iid_2019",
+      "status": "OK",
+      "rows_declared": 687482,
+      "rows_actual": 687482,
+      "rows_match": true,
+      "window_declared": [
+        "2019-01-02",
+        "2019-12-31"
+      ],
+      "window_actual": [
+        "2019-01-02",
+        "2019-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2019-01-02",
+          "2019-12-31"
+        ]
+      },
+      "parquet_sha256_head": "e9da201dcb421176"
+    },
+    {
+      "dataset": "taq_iid_2020",
+      "status": "OK",
+      "rows_declared": 646093,
+      "rows_actual": 646093,
+      "rows_match": true,
+      "window_declared": [
+        "2020-01-02",
+        "2020-12-31"
+      ],
+      "window_actual": [
+        "2020-01-02",
+        "2020-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2020-01-02",
+          "2020-12-31"
+        ]
+      },
+      "parquet_sha256_head": "941cedb3f4f4125e"
+    },
+    {
+      "dataset": "taq_iid_2021",
+      "status": "OK",
+      "rows_declared": 624460,
+      "rows_actual": 624460,
+      "rows_match": true,
+      "window_declared": [
+        "2021-01-04",
+        "2021-12-31"
+      ],
+      "window_actual": [
+        "2021-01-04",
+        "2021-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2021-01-04",
+          "2021-12-31"
+        ]
+      },
+      "parquet_sha256_head": "b2b4956d72fc9309"
+    },
+    {
+      "dataset": "taq_iid_2022",
+      "status": "OK",
+      "rows_declared": 597959,
+      "rows_actual": 597959,
+      "rows_match": true,
+      "window_declared": [
+        "2022-01-03",
+        "2022-12-30"
+      ],
+      "window_actual": [
+        "2022-01-03",
+        "2022-12-30"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2022-01-03",
+          "2022-12-30"
+        ]
+      },
+      "parquet_sha256_head": "4505afb9cc8024a7"
+    },
+    {
+      "dataset": "taq_iid_2023",
+      "status": "OK",
+      "rows_declared": 566581,
+      "rows_actual": 566581,
+      "rows_match": true,
+      "window_declared": [
+        "2023-01-03",
+        "2023-12-29"
+      ],
+      "window_actual": [
+        "2023-01-03",
+        "2023-12-29"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2023-01-03",
+          "2023-12-29"
+        ]
+      },
+      "parquet_sha256_head": "acdde9e4e1dc3c76"
+    },
+    {
+      "dataset": "taq_iid_2024",
+      "status": "OK",
+      "rows_declared": 546755,
+      "rows_actual": 546755,
+      "rows_match": true,
+      "window_declared": [
+        "2024-01-02",
+        "2024-12-31"
+      ],
+      "window_actual": [
+        "2024-01-02",
+        "2024-12-31"
+      ],
+      "window_source": "date",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "date": [
+          "2024-01-02",
+          "2024-12-31"
+        ]
+      },
+      "parquet_sha256_head": "2dcb4f44e09133f7"
+    },
+    {
+      "dataset": "tr13f_s34_1996",
+      "status": "OK",
+      "rows_declared": 1376529,
+      "rows_actual": 1376529,
+      "rows_match": true,
+      "window_declared": [
+        "1996-03-31",
+        "1996-12-31"
+      ],
+      "window_actual": [
+        "1996-03-31",
+        "1996-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "1996-03-31",
+          "1996-12-31"
+        ],
+        "rdate": [
+          "1995-06-30",
+          "1996-12-31"
+        ]
+      },
+      "parquet_sha256_head": "0e016f9a4839b7d8"
+    },
+    {
+      "dataset": "tr13f_s34_1997",
+      "status": "OK",
+      "rows_declared": 1510090,
+      "rows_actual": 1510090,
+      "rows_match": true,
+      "window_declared": [
+        "1997-03-31",
+        "1997-12-31"
+      ],
+      "window_actual": [
+        "1997-03-31",
+        "1997-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "1997-03-31",
+          "1997-12-31"
+        ],
+        "rdate": [
+          "1996-06-30",
+          "1997-12-31"
+        ]
+      },
+      "parquet_sha256_head": "a4e45e3eea01c3f2"
+    },
+    {
+      "dataset": "tr13f_s34_1998",
+      "status": "OK",
+      "rows_declared": 1681689,
+      "rows_actual": 1681689,
+      "rows_match": true,
+      "window_declared": [
+        "1998-03-31",
+        "1998-12-31"
+      ],
+      "window_actual": [
+        "1998-03-31",
+        "1998-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "1998-03-31",
+          "1998-12-31"
+        ],
+        "rdate": [
+          "1997-06-30",
+          "1998-12-31"
+        ]
+      },
+      "parquet_sha256_head": "89bd8a36e3abd8d5"
+    },
+    {
+      "dataset": "tr13f_s34_1999",
+      "status": "OK",
+      "rows_declared": 1779793,
+      "rows_actual": 1779793,
+      "rows_match": true,
+      "window_declared": [
+        "1999-03-31",
+        "1999-12-31"
+      ],
+      "window_actual": [
+        "1999-03-31",
+        "1999-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "1999-03-31",
+          "1999-12-31"
+        ],
+        "rdate": [
+          "1997-06-30",
+          "1999-12-31"
+        ]
+      },
+      "parquet_sha256_head": "d9a57227ef68cdcf"
+    },
+    {
+      "dataset": "tr13f_s34_2000",
+      "status": "OK",
+      "rows_declared": 1885818,
+      "rows_actual": 1885818,
+      "rows_match": true,
+      "window_declared": [
+        "2000-03-31",
+        "2000-12-31"
+      ],
+      "window_actual": [
+        "2000-03-31",
+        "2000-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2000-03-31",
+          "2000-12-31"
+        ],
+        "rdate": [
+          "1999-06-30",
+          "2000-12-31"
+        ]
+      },
+      "parquet_sha256_head": "41985127452422b5"
+    },
+    {
+      "dataset": "tr13f_s34_2001",
+      "status": "OK",
+      "rows_declared": 1926796,
+      "rows_actual": 1926796,
+      "rows_match": true,
+      "window_declared": [
+        "2001-03-31",
+        "2001-12-31"
+      ],
+      "window_actual": [
+        "2001-03-31",
+        "2001-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2001-03-31",
+          "2001-12-31"
+        ],
+        "rdate": [
+          "2000-06-30",
+          "2001-12-31"
+        ]
+      },
+      "parquet_sha256_head": "476e58b3fdc30808"
+    },
+    {
+      "dataset": "tr13f_s34_2002",
+      "status": "OK",
+      "rows_declared": 1898050,
+      "rows_actual": 1898050,
+      "rows_match": true,
+      "window_declared": [
+        "2002-03-31",
+        "2002-12-31"
+      ],
+      "window_actual": [
+        "2002-03-31",
+        "2002-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2002-03-31",
+          "2002-12-31"
+        ],
+        "rdate": [
+          "2001-06-30",
+          "2002-12-31"
+        ]
+      },
+      "parquet_sha256_head": "17e071d773631ac1"
+    },
+    {
+      "dataset": "tr13f_s34_2003",
+      "status": "OK",
+      "rows_declared": 1956120,
+      "rows_actual": 1956120,
+      "rows_match": true,
+      "window_declared": [
+        "2003-03-31",
+        "2003-12-31"
+      ],
+      "window_actual": [
+        "2003-03-31",
+        "2003-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2003-03-31",
+          "2003-12-31"
+        ],
+        "rdate": [
+          "2002-06-30",
+          "2003-12-31"
+        ]
+      },
+      "parquet_sha256_head": "49c929dc8c99d3c6"
+    },
+    {
+      "dataset": "tr13f_s34_2004",
+      "status": "OK",
+      "rows_declared": 2156910,
+      "rows_actual": 2156910,
+      "rows_match": true,
+      "window_declared": [
+        "2004-03-31",
+        "2004-12-31"
+      ],
+      "window_actual": [
+        "2004-03-31",
+        "2004-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2004-03-31",
+          "2004-12-31"
+        ],
+        "rdate": [
+          "2003-06-30",
+          "2004-12-31"
+        ]
+      },
+      "parquet_sha256_head": "5c96c4433ec678a8"
+    },
+    {
+      "dataset": "tr13f_s34_2005",
+      "status": "OK",
+      "rows_declared": 2247248,
+      "rows_actual": 2247248,
+      "rows_match": true,
+      "window_declared": [
+        "2005-03-31",
+        "2005-12-31"
+      ],
+      "window_actual": [
+        "2005-03-31",
+        "2005-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2005-03-31",
+          "2005-12-31"
+        ],
+        "rdate": [
+          "2004-06-30",
+          "2005-12-31"
+        ]
+      },
+      "parquet_sha256_head": "77504f119d8c0cde"
+    },
+    {
+      "dataset": "tr13f_s34_2006",
+      "status": "OK",
+      "rows_declared": 2312190,
+      "rows_actual": 2312190,
+      "rows_match": true,
+      "window_declared": [
+        "2006-03-31",
+        "2006-12-31"
+      ],
+      "window_actual": [
+        "2006-03-31",
+        "2006-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2006-03-31",
+          "2006-12-31"
+        ],
+        "rdate": [
+          "2005-06-30",
+          "2006-12-31"
+        ]
+      },
+      "parquet_sha256_head": "61f3e35322cddbe8"
+    },
+    {
+      "dataset": "tr13f_s34_2007",
+      "status": "OK",
+      "rows_declared": 2411244,
+      "rows_actual": 2411244,
+      "rows_match": true,
+      "window_declared": [
+        "2007-03-31",
+        "2007-12-31"
+      ],
+      "window_actual": [
+        "2007-03-31",
+        "2007-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2007-03-31",
+          "2007-12-31"
+        ],
+        "rdate": [
+          "2006-06-30",
+          "2007-12-31"
+        ]
+      },
+      "parquet_sha256_head": "c9b74442b26aff53"
+    },
+    {
+      "dataset": "tr13f_s34_2008",
+      "status": "OK",
+      "rows_declared": 2308573,
+      "rows_actual": 2308573,
+      "rows_match": true,
+      "window_declared": [
+        "2008-03-31",
+        "2008-12-31"
+      ],
+      "window_actual": [
+        "2008-03-31",
+        "2008-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2008-03-31",
+          "2008-12-31"
+        ],
+        "rdate": [
+          "2007-06-30",
+          "2008-12-31"
+        ]
+      },
+      "parquet_sha256_head": "c81b9c373df00a5e"
+    },
+    {
+      "dataset": "tr13f_s34_2009",
+      "status": "OK",
+      "rows_declared": 2184809,
+      "rows_actual": 2184809,
+      "rows_match": true,
+      "window_declared": [
+        "2009-03-31",
+        "2009-12-31"
+      ],
+      "window_actual": [
+        "2009-03-31",
+        "2009-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2009-03-31",
+          "2009-12-31"
+        ],
+        "rdate": [
+          "2008-06-30",
+          "2009-12-31"
+        ]
+      },
+      "parquet_sha256_head": "4503ef99a4fb012a"
+    },
+    {
+      "dataset": "tr13f_s34_2010",
+      "status": "OK",
+      "rows_declared": 2212306,
+      "rows_actual": 2212306,
+      "rows_match": true,
+      "window_declared": [
+        "2010-03-31",
+        "2010-12-31"
+      ],
+      "window_actual": [
+        "2010-03-31",
+        "2010-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2010-03-31",
+          "2010-12-31"
+        ],
+        "rdate": [
+          "2009-06-30",
+          "2010-12-31"
+        ]
+      },
+      "parquet_sha256_head": "3b1e9965d54846f1"
+    },
+    {
+      "dataset": "tr13f_s34_2011",
+      "status": "OK",
+      "rows_declared": 2128324,
+      "rows_actual": 2128324,
+      "rows_match": true,
+      "window_declared": [
+        "2011-03-31",
+        "2011-12-31"
+      ],
+      "window_actual": [
+        "2011-03-31",
+        "2011-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2011-03-31",
+          "2011-12-31"
+        ],
+        "rdate": [
+          "2010-06-30",
+          "2011-12-31"
+        ]
+      },
+      "parquet_sha256_head": "811e04eba5cb95cb"
+    },
+    {
+      "dataset": "tr13f_s34_2012",
+      "status": "OK",
+      "rows_declared": 2229978,
+      "rows_actual": 2229978,
+      "rows_match": true,
+      "window_declared": [
+        "2012-03-31",
+        "2012-12-31"
+      ],
+      "window_actual": [
+        "2012-03-31",
+        "2012-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": true,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2012-03-31",
+          "2012-12-31"
+        ],
+        "rdate": [
+          "2011-06-30",
+          "2012-12-31"
+        ]
+      },
+      "parquet_sha256_head": "17c2be6af93d5318"
+    },
+    {
+      "dataset": "tr13f_s34_2013",
+      "status": "OK",
+      "rows_declared": 2410571,
+      "rows_actual": 2410571,
+      "rows_match": true,
+      "window_declared": [
+        "2013-03-31",
+        "2013-12-31"
+      ],
+      "window_actual": [
+        "2013-03-31",
+        "2013-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2013-03-31",
+          "2013-12-31"
+        ],
+        "rdate": [
+          "2012-06-30",
+          "2013-12-31"
+        ]
+      },
+      "parquet_sha256_head": "c14a5adb8816efbc"
+    },
+    {
+      "dataset": "tr13f_s34_2014",
+      "status": "OK",
+      "rows_declared": 2685675,
+      "rows_actual": 2685675,
+      "rows_match": true,
+      "window_declared": [
+        "2014-03-31",
+        "2014-12-31"
+      ],
+      "window_actual": [
+        "2014-03-31",
+        "2014-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2014-03-31",
+          "2014-12-31"
+        ],
+        "rdate": [
+          "2013-06-30",
+          "2014-12-31"
+        ]
+      },
+      "parquet_sha256_head": "6c38591d89dfa6bd"
+    },
+    {
+      "dataset": "tr13f_s34_2015",
+      "status": "OK",
+      "rows_declared": 2889915,
+      "rows_actual": 2889915,
+      "rows_match": true,
+      "window_declared": [
+        "2015-03-31",
+        "2015-12-31"
+      ],
+      "window_actual": [
+        "2015-03-31",
+        "2015-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2015-03-31",
+          "2015-12-31"
+        ],
+        "rdate": [
+          "2014-06-30",
+          "2015-12-31"
+        ]
+      },
+      "parquet_sha256_head": "78132a2cdef9461b"
+    },
+    {
+      "dataset": "tr13f_s34_2016",
+      "status": "OK",
+      "rows_declared": 3013289,
+      "rows_actual": 3013289,
+      "rows_match": true,
+      "window_declared": [
+        "2016-03-31",
+        "2016-12-31"
+      ],
+      "window_actual": [
+        "2016-03-31",
+        "2016-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2016-03-31",
+          "2016-12-31"
+        ],
+        "rdate": [
+          "2015-06-30",
+          "2016-12-31"
+        ]
+      },
+      "parquet_sha256_head": "5595c233a01456bf"
+    },
+    {
+      "dataset": "tr13f_s34_2017",
+      "status": "OK",
+      "rows_declared": 3197857,
+      "rows_actual": 3197857,
+      "rows_match": true,
+      "window_declared": [
+        "2017-03-31",
+        "2017-12-31"
+      ],
+      "window_actual": [
+        "2017-03-31",
+        "2017-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2017-03-31",
+          "2017-12-31"
+        ],
+        "rdate": [
+          "2016-06-30",
+          "2017-12-31"
+        ]
+      },
+      "parquet_sha256_head": "3cf85acfc0a77049"
+    },
+    {
+      "dataset": "tr13f_s34_2018",
+      "status": "OK",
+      "rows_declared": 3452081,
+      "rows_actual": 3452081,
+      "rows_match": true,
+      "window_declared": [
+        "2018-03-31",
+        "2018-12-31"
+      ],
+      "window_actual": [
+        "2018-03-31",
+        "2018-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2018-03-31",
+          "2018-12-31"
+        ],
+        "rdate": [
+          "2018-03-31",
+          "2018-12-31"
+        ]
+      },
+      "parquet_sha256_head": "4f0c162bb0881a0a"
+    },
+    {
+      "dataset": "tr13f_s34_2019",
+      "status": "OK",
+      "rows_declared": 3533127,
+      "rows_actual": 3533127,
+      "rows_match": true,
+      "window_declared": [
+        "2019-03-31",
+        "2019-12-31"
+      ],
+      "window_actual": [
+        "2019-03-31",
+        "2019-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2019-03-31",
+          "2019-12-31"
+        ],
+        "rdate": [
+          "2019-03-31",
+          "2019-12-31"
+        ]
+      },
+      "parquet_sha256_head": "2e3f416d26d6c7d7"
+    },
+    {
+      "dataset": "tr13f_s34_2020",
+      "status": "OK",
+      "rows_declared": 3609386,
+      "rows_actual": 3609386,
+      "rows_match": true,
+      "window_declared": [
+        "2020-03-31",
+        "2020-12-31"
+      ],
+      "window_actual": [
+        "2020-03-31",
+        "2020-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2020-03-31",
+          "2020-12-31"
+        ],
+        "rdate": [
+          "2020-03-31",
+          "2020-12-31"
+        ]
+      },
+      "parquet_sha256_head": "1231f88874a2c437"
+    },
+    {
+      "dataset": "tr13f_s34_2021",
+      "status": "OK",
+      "rows_declared": 4240382,
+      "rows_actual": 4240382,
+      "rows_match": true,
+      "window_declared": [
+        "2021-03-31",
+        "2021-12-31"
+      ],
+      "window_actual": [
+        "2021-03-31",
+        "2021-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2021-03-31",
+          "2021-12-31"
+        ],
+        "rdate": [
+          "2021-03-31",
+          "2021-12-31"
+        ]
+      },
+      "parquet_sha256_head": "5c3bbc38489dbe32"
+    },
+    {
+      "dataset": "tr13f_s34_2022",
+      "status": "OK",
+      "rows_declared": 4398869,
+      "rows_actual": 4398869,
+      "rows_match": true,
+      "window_declared": [
+        "2022-03-31",
+        "2022-12-31"
+      ],
+      "window_actual": [
+        "2022-03-31",
+        "2022-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2022-03-31",
+          "2022-12-31"
+        ],
+        "rdate": [
+          "2022-03-31",
+          "2022-12-31"
+        ]
+      },
+      "parquet_sha256_head": "ec5482b779f07a6e"
+    },
+    {
+      "dataset": "tr13f_s34_2023",
+      "status": "OK",
+      "rows_declared": 4420092,
+      "rows_actual": 4420092,
+      "rows_match": true,
+      "window_declared": [
+        "2023-03-31",
+        "2023-12-31"
+      ],
+      "window_actual": [
+        "2023-03-31",
+        "2023-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2023-03-31",
+          "2023-12-31"
+        ],
+        "rdate": [
+          "2023-03-31",
+          "2023-12-31"
+        ]
+      },
+      "parquet_sha256_head": "c42c9d7399715764"
+    },
+    {
+      "dataset": "tr13f_s34_2024",
+      "status": "OK",
+      "rows_declared": 4839107,
+      "rows_actual": 4839107,
+      "rows_match": true,
+      "window_declared": [
+        "2024-03-31",
+        "2024-12-31"
+      ],
+      "window_actual": [
+        "2024-03-31",
+        "2024-12-31"
+      ],
+      "window_source": "fdate",
+      "window_match": true,
+      "is_early_era": false,
+      "universe_label_ok": true,
+      "date_ranges_observed": {
+        "fdate": [
+          "2024-03-31",
+          "2024-12-31"
+        ],
+        "rdate": [
+          "2024-03-31",
+          "2024-12-31"
+        ]
+      },
+      "parquet_sha256_head": "27dab05e00e5dce6"
+    }
+  ]
+}

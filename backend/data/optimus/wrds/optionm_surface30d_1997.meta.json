@@ -12,11 +12,28 @@
     "dispersion"
   ],
   "window": [
-    "2013-01-01",
-    "2024-12-31"
+    "1997-01-02",
+    "1997-12-31"
   ],
-  "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
+  "universe": "crsp_pit_monthly_early screened PERMNOs (early-era held-out confirmation slice)",
   "pit_knowledge_column": "date (EOD surface); early-era confirmation slice",
   "sql_note": "SELECT secid, date, days, delta, impl_volatility, cp_flag, dispersion FROM optionm.vsurfd1997 WHERE secid = ANY(%(sec)s) AND days = 30 AND abs(delta) IN (25, 50)",
-  "n_secids": 12946
+  "n_secids": 12946,
+  "metadata_correction": {
+    "corrected_at": "2026-08-20T03:09:39+00:00",
+    "by": "scripts/wrds_meta_audit.py --repair",
+    "reason": "_write() stamped module constants START/END and a fixed universe string for every dataset; the parquets were correct, the labels were not",
+    "window_declared_stale": [
+      "2013-01-01",
+      "2024-12-31"
+    ],
+    "universe_declared_stale": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)"
+  },
+  "window_source": "date",
+  "date_ranges_observed": {
+    "date": [
+      "1997-01-02",
+      "1997-12-31"
+    ]
+  }
 }

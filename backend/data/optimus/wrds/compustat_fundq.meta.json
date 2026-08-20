@@ -36,10 +36,31 @@
     "prccq"
   ],
   "window": [
-    "2013-01-01",
-    "2024-12-31"
+    "2013-02-12",
+    "2026-03-26"
   ],
   "universe": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)",
   "pit_knowledge_column": "rdq (report date = first public availability; rows with NULL rdq have no honest knowledge date \u2014 exclude from features)",
-  "sql_note": "SELECT gvkey, datadate, rdq, fyearq, fqtr, saleq, revtq, cogsq, xsgaq, oibdpq, ibq, niq, epspxq, epsfxq, atq, actq, cheq, rectq, invtq, lctq, ltq, dlttq, dlcq, ceqq, seqq, txditcq, oancfy, capxy, dvy, cshoq, prccq FROM comp.fundq WHERE gvkey IN (SELECT gvkey FROM crsp.ccmxpf_lnkhist   WHERE lpermno = ANY(%(p)s) AND linktype IN ('LU','LC')) AND indfmt = 'INDL' AND datafmt = 'STD' AND popsrc = 'D' AND consol = 'C' AND datadate BETWEEN %(s)s AND %(e)s"
+  "sql_note": "SELECT gvkey, datadate, rdq, fyearq, fqtr, saleq, revtq, cogsq, xsgaq, oibdpq, ibq, niq, epspxq, epsfxq, atq, actq, cheq, rectq, invtq, lctq, ltq, dlttq, dlcq, ceqq, seqq, txditcq, oancfy, capxy, dvy, cshoq, prccq FROM comp.fundq WHERE gvkey IN (SELECT gvkey FROM crsp.ccmxpf_lnkhist   WHERE lpermno = ANY(%(p)s) AND linktype IN ('LU','LC')) AND indfmt = 'INDL' AND datafmt = 'STD' AND popsrc = 'D' AND consol = 'C' AND datadate BETWEEN %(s)s AND %(e)s",
+  "metadata_correction": {
+    "corrected_at": "2026-08-20T03:09:28+00:00",
+    "by": "scripts/wrds_meta_audit.py --repair",
+    "reason": "_write() stamped module constants START/END and a fixed universe string for every dataset; the parquets were correct, the labels were not",
+    "window_declared_stale": [
+      "2013-01-01",
+      "2024-12-31"
+    ],
+    "universe_declared_stale": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)"
+  },
+  "window_source": "rdq",
+  "date_ranges_observed": {
+    "datadate": [
+      "2013-01-31",
+      "2024-12-31"
+    ],
+    "rdq": [
+      "2013-02-12",
+      "2026-03-26"
+    ]
+  }
 }
