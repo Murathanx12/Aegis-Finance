@@ -564,7 +564,72 @@ dominate — it returned a bound of 0.324, *below* the theoretical mean —
 so unit variance (exact under the null for a correlation matrix) leads
 and the fitted value is reported beside it.
 
-### 14. Every grammar decision is a risk decision, not a return decision
+### 14. The level ceiling is unreachable in three shapes — the family closes
+
+Follow-on to §10, which found the risk head's remaining headroom is in
+the LEVEL (a perfectly-known market variance cuts QLIKE 13% while rank IC
+does not move). Three different ways of trying to reach it with something
+observable, all of which this run's new WRDS pass made possible:
+
+| trial | shape | result |
+|---|---|---|
+| `REGIME-RISK-CONDITIONING-1` | 6 price-derived state features → stock model | −0.0337 MSE, significantly **worse** |
+| `STATE-OBSERVABLE-1` | 8 macro features (credit spread, term, TED, FF) → stock model | −0.0739 MSE, **POWERED** worse |
+| `MARKET-SCALING-1` | same macro, but a date-level model + within-date log shift | −0.0309 MSE, significantly **worse** |
+
+Three shapes, three refusals. `MARKET-SCALING-1` is the informative one:
+its stage-1 date-level model *does* forecast market variance in sample
+(R² 0.26–0.45, stable positive coefficient +0.09..+0.20), and its design
+invariant held exactly — the rank-IC change was **0.00e+00** to the bit,
+as a within-date constant must produce. The information is real and the
+shape was right; it still did not pay.
+
+**Why, tested rather than asserted.** Hypothesis: the head already
+carries the market level through `log_iv_var`. Decisive test — rerun the
+oracle contrast with the options block removed:
+
+| baseline | QLIKE base → oracle | absolute gain | relative |
+|---|---|---|---|
+| with options | 0.5003 → 0.4336 | 0.0667 | 13.3% |
+| without options | 0.7093 → 0.6166 | **0.0927** | 13.1% |
+
+**Partially confirmed.** The oracle's *absolute* gain is 1.4–1.8× larger
+without implied variance, so IV genuinely substitutes for part of the
+market level. But the *relative* gain is unchanged (13.1% vs 13.3%),
+which is not what "IV already carries the level" predicts. So: IV carries
+**some** of it, and a proportionally similar slice of level headroom
+survives — and that residual is what no observable tested here reaches.
+
+### 15. Denoising the features HURTS — the two noise floors are different
+
+`DENOISED-REPRESENTATION-1`, the consequence of §13 and the check on it.
+If 21 of 28 feature dimensions are estimation noise, a model given only
+the 7-dimensional signal subspace should match one given everything.
+Declared expectation: match, not beat. **Refuted, and by a powered
+margin.** Eigenbasis fit on the training fold only:
+
+| arm | rank IC | MSE(log var) | vs raw |
+|---|---|---|---|
+| raw | 0.8018 | 0.76075 | — |
+| mp_denoised (k=7) | 0.7676 | 0.89189 | −0.131 (MDE 0.023) **POWERED** |
+| pca_half_k (k=3) | 0.7323 | 0.96142 | −0.201 **POWERED** |
+| random_k (k=7) | 0.6695 | 1.01375 | −0.253 **POWERED** |
+
+Read the last two rows together and the result is precise rather than
+merely negative: the top-7 subspace beats 7 *random* orthogonal
+directions by a wide margin, so the eigen-**ordering** is genuinely
+informative. What fails is the **cutoff**. Marchenko-Pastur separates
+signal from noise in a *covariance*; it never saw the target, and a
+direction can carry little cross-sectional variance while still
+predicting forward variance.
+
+> **The correlation-noise floor is not the prediction-relevance floor.**
+
+Practical consequence: the repo's denoiser belongs where it already is —
+covariance estimation for portfolio construction, where the covariance
+*is* the target — and not in feature selection for a supervised head.
+
+### 16. Every grammar decision is a risk decision, not a return decision
 
 `RULE-INTERVENTION-1`, matched paired contrasts (each pair differs in
 exactly one coordinate, so signal/universe/dates/costs cancel; unit of
@@ -613,9 +678,11 @@ grammar itself.
   "fix construction before buying feeds" redirect needs rewriting and the
   honest conclusion becomes that these families genuinely carry the same
   portfolio information.
-- Whether any OBSERVABLE state variable reaches the level-calibration
-  ceiling §10 found (the six trailing market-state features tested make
-  things significantly worse).
+- ~~Whether any OBSERVABLE state variable reaches the level ceiling.~~
+  **CLOSED in session (§14)** — three shapes tried (price state, macro
+  features, date-level two-stage scaling), all significantly worse. IV
+  carries part of the level; the residual is not reachable by anything
+  tested.
 - Any return claim about the new signal families. INFORMATION-DIMENSION-1
   measured structure only and deliberately printed no leaderboard.
 
@@ -781,12 +848,12 @@ where it is without solving it.**
    (much worse). What has NOT been tested: concentration *between* 50 and
    the full cross-section, long-short constructions, and sector/factor
    neutralisation. Effective dimension is the readout.
-2. Reach the §10 ceiling, or close it: the oracle market-variance state
-   cuts QLIKE 13% while leaving rank IC flat, and six trailing proxies
-   made MSE log variance significantly WORSE. Either find an observable
-   that captures a market-wide variance level shift (implied index vol,
-   term structure, dispersion of IV rather than of returns), or declare
-   the level ceiling unreachable and stop.
+2. ~~Reach the §10 ceiling, or close it.~~ **CLOSED in session (§14).**
+   Successor: the remaining level headroom is a *forecasting* problem
+   about the market's own variance, not a feature problem. The only route
+   not tried is a genuinely better market-variance forecast (index
+   options / VIX term structure rather than macro proxies) — and it must
+   clear the bar that three shapes already failed.
 3. Manager library **v2**: `rdate + 45d` knowledge gate, `cfacshr`
    split adjustment, v1-vs-v2 transition matrix diff. Unblocks four
    MANAGER-* trials.
