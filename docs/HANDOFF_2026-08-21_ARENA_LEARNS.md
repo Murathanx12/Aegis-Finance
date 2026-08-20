@@ -76,23 +76,34 @@ day 1).
 | | |
 |---|---|
 | planned | 1,327 |
-| on disk at handoff | ~305 parquet files |
+| on disk when this was written | ~317 parquet files, growing |
 | TERMINAL (never retry) | **134** — 106 not entitled, 28 absent from server |
-| RETRYABLE outstanding | ~920 |
+| OUT OF PLAN (never retry) | **24** — Compustat GLOBAL, in the failure list from an earlier plan |
+| RETRYABLE, in plan | **891** |
 
-TERMINAL is written to `backend/data/optimus/wrds/pull_terminal_failures.json`
-as an entitlement addendum. Those are facts about the account, not bugs.
+TERMINAL and OUT_OF_PLAN are written to
+`backend/data/optimus/wrds/pull_terminal_failures.json`. TERMINAL rows are
+facts about the account, not bugs.
 
-**Known open defect in the catch-up**: a handful of wide Compustat tables
-fail with `ArrowNotImplementedError: Unsupported cast from double to null`
-and `ArrowInvalid: Decimal value does not fit in precision 6`. Root cause is
-per-chunk type inference; the fix (`_pg_types` + `_coerce`, taking dtypes
-from `information_schema` instead of from the first chunk) is committed and
-was being verified when the session ended. **Re-run the dry-run first: if
-those tables are still listed, the fix needs its verification finished before
-another long run.**
+**A 12-hour run was launched at the end of the session** (4 workers, 3600s
+timeout). At the last check: 4 tables in, 0 failures, RSS ~330 MB, pulling
+8-million-row tables cleanly. It is resumable — just re-run the command.
 
-Throughput is bandwidth-bound: 6 workers was WORSE than 4. Do not raise it.
+**Verification still owed.** The Arrow dtype fix (`_pg_types` + `_coerce`)
+is committed and the run is clean so far, but the ordering is narrow-first
+and **the 539-column Compustat tables that produced those errors come LATER
+in the list**. Before trusting the fix, either wait for the run to reach them
+or check the log for `ArrowNotImplementedError` / `ArrowInvalid`. If they
+recur, the remaining option is an explicit Arrow schema built from
+`information_schema` rather than pandas-dtype coercion.
+
+**Do not raise the worker count.** Throughput is bandwidth-bound and 6
+workers measured WORSE than 4. Width, not row count, is the cost: a 539-column
+table is ~2 GB on the wire; `cells` and `mb_per_s` are now recorded per pulled
+table so the expensive tail can be decided on evidence — the honest open
+question is whether the wide Compustat footnote/descriptor tables are worth
+their egress at all. Decide it explicitly; do not let it be decided by a
+timeout.
 
 ## 3. THE QUEUE, IN ORDER
 
