@@ -564,6 +564,42 @@ dominate — it returned a bound of 0.324, *below* the theoretical mean —
 so unit variance (exact under the null for a correlation matrix) leads
 and the fitted value is reported beside it.
 
+### 13b. …and that structure is STABLE — §13 survives its own check
+
+`FACTOR-STABILITY-1`. §13's claim was computed on the pooled 2013–2024
+panel, and a pooled spectrum can be the *average* of two different
+structures rather than one persistent structure. If the loadings rotate,
+"the sources share factors" describes an average, not the market, and
+must not be carried forward as a reason for anything. So it was checked.
+
+Four consecutive periods, top-7 subspaces compared by the principal
+angles between them (SVD of AᵀB — subspace comparison, not
+eigenvector-by-eigenvector, which reports spurious instability whenever
+two eigenvalues are close and the pair is only defined up to a rotation):
+
+| | alignment |
+|---|---|
+| mean, all pairs | **0.962** |
+| adjacent periods | 0.969 |
+| distant periods | 0.955 |
+| **two random 7-subspaces of R²⁸** | **0.249** (p95 0.310) |
+
+Excess over random: **+0.713**. And the leading factor's source
+composition is near-constant in every period, COVID included:
+
+| period | fundamentals | price | options | expectations |
+|---|---|---|---|---|
+| 2014-01..2016-09 | 0.344 | 0.391 | 0.170 | 0.096 |
+| 2016-10..2019-06 | 0.380 | 0.354 | 0.169 | 0.097 |
+| 2019-07..2022-03 | 0.391 | 0.341 | 0.171 | 0.098 |
+| 2022-04..2024-11 | 0.391 | 0.371 | 0.162 | 0.075 |
+
+**STABLE.** Distant pairs align almost as well as adjacent ones, so there
+is no drift to speak of. The random baseline is why this is worth
+stating: two arbitrary 7-subspaces of a 28-dimensional space already
+overlap at 0.25, so 0.96 is a strong result rather than an unsurprising
+one. §13's composition claim holds period by period, not just on average.
+
 ### 14. The level ceiling is unreachable in three shapes — the family closes
 
 Follow-on to §10, which found the risk head's remaining headroom is in

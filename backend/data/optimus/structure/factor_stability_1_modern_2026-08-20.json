@@ -1,0 +1,90 @@
+{
+  "trial": "FACTOR-STABILITY-1",
+  "mode": "SCREEN",
+  "era": "modern",
+  "at": "2026-08-20T07:49:22+00:00",
+  "checks": "a robustness check on CROSS-SOURCE-STRUCTURE-1's own headline, not a new claim",
+  "k": 7,
+  "n_features": 28,
+  "n_dates": 131,
+  "periods": [
+    "2014-01..2016-09",
+    "2016-10..2019-06",
+    "2019-07..2022-03",
+    "2022-04..2024-11"
+  ],
+  "factor1_source_composition_by_period": [
+    {
+      "price": 0.391,
+      "fundamentals": 0.344,
+      "options": 0.17,
+      "expectations": 0.096
+    },
+    {
+      "fundamentals": 0.38,
+      "price": 0.354,
+      "options": 0.169,
+      "expectations": 0.097
+    },
+    {
+      "fundamentals": 0.391,
+      "price": 0.341,
+      "options": 0.171,
+      "expectations": 0.098
+    },
+    {
+      "fundamentals": 0.391,
+      "price": 0.371,
+      "options": 0.162,
+      "expectations": 0.075
+    }
+  ],
+  "pairwise_alignment": [
+    {
+      "a": "2014-01..2016-09",
+      "b": "2016-10..2019-06",
+      "alignment": 0.9814,
+      "adjacent": true
+    },
+    {
+      "a": "2014-01..2016-09",
+      "b": "2019-07..2022-03",
+      "alignment": 0.9607,
+      "adjacent": false
+    },
+    {
+      "a": "2014-01..2016-09",
+      "b": "2022-04..2024-11",
+      "alignment": 0.9424,
+      "adjacent": false
+    },
+    {
+      "a": "2016-10..2019-06",
+      "b": "2019-07..2022-03",
+      "alignment": 0.9649,
+      "adjacent": true
+    },
+    {
+      "a": "2016-10..2019-06",
+      "b": "2022-04..2024-11",
+      "alignment": 0.9632,
+      "adjacent": false
+    },
+    {
+      "a": "2019-07..2022-03",
+      "b": "2022-04..2024-11",
+      "alignment": 0.9608,
+      "adjacent": true
+    }
+  ],
+  "mean_alignment": 0.9622,
+  "adjacent_mean": 0.969,
+  "distant_mean": 0.9554,
+  "random_subspace_baseline": {
+    "mean": 0.2495,
+    "p95": 0.3101
+  },
+  "excess_over_random": 0.7127,
+  "method": "mean cos^2 of principal angles (SVD of A^T B) \u2014 subspace comparison, not eigenvector-by-eigenvector, which would report spurious instability under near-degenerate eigenvalues",
+  "verdict": "STABLE \u2014 the same subspace persists across periods; the pooled spectrum describes one structure"
+}

@@ -285530,6 +285530,28 @@
       "date_col": "datafmt",
       "tier": 0,
       "reason": "0 rows"
+    },
+    {
+      "schema": "comp",
+      "table": "g_chars",
+      "name": "comp.g_chars",
+      "est_rows": 0,
+      "n_cols": 44,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "reason": "0 rows"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_iaudit",
+      "name": "comp.g_co_iaudit",
+      "est_rows": 0,
+      "n_cols": 10,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "reason": "0 rows"
     }
   ],
   "pulled": [
@@ -285935,6 +285957,200 @@
         ]
       },
       "seconds": 96.2,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "co_cotype",
+      "name": "comp.co_cotype",
+      "est_rows": 0,
+      "n_cols": 4,
+      "id_col": "gvkey",
+      "date_col": "effdate",
+      "tier": 0,
+      "rows": 46567,
+      "gb": 0.0004,
+      "date_ranges": {
+        "effdate": [
+          "1900-01-01",
+          "2026-08-18"
+        ],
+        "thrudate": [
+          "1964-11-30",
+          "2026-08-17"
+        ]
+      },
+      "seconds": 5.2,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "co_fortune",
+      "name": "comp.co_fortune",
+      "est_rows": 0,
+      "n_cols": 5,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "rows": 34667,
+      "gb": 0.0001,
+      "date_ranges": {
+        "datadate": [
+          "1982-12-31",
+          "2024-12-31"
+        ]
+      },
+      "seconds": 5.5,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "co_hgic",
+      "name": "comp.co_hgic",
+      "est_rows": 0,
+      "n_cols": 8,
+      "id_col": "gvkey",
+      "date_col": "indtype",
+      "tier": 0,
+      "rows": 45807,
+      "gb": 0.0005,
+      "date_ranges": {},
+      "seconds": 17.2,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "co_iacctchg",
+      "name": "comp.co_iacctchg",
+      "est_rows": 0,
+      "n_cols": 9,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "rows": 22641,
+      "gb": 0.0001,
+      "date_ranges": {
+        "datadate": [
+          "2007-02-28",
+          "2026-03-31"
+        ]
+      },
+      "seconds": 7.5,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "co_iaudit",
+      "name": "comp.co_iaudit",
+      "est_rows": 0,
+      "n_cols": 10,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "rows": 835603,
+      "gb": 0.0005,
+      "date_ranges": {
+        "datadate": [
+          "2002-03-31",
+          "2026-07-31"
+        ]
+      },
+      "seconds": 170.7,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "co_ipcd",
+      "name": "comp.co_ipcd",
+      "est_rows": 0,
+      "n_cols": 5,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "rows": 52883,
+      "gb": 0.0001,
+      "date_ranges": {
+        "datadate": [
+          "1955-12-31",
+          "2026-06-30"
+        ]
+      },
+      "seconds": 7.7,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "co_industry",
+      "name": "comp.co_industry",
+      "est_rows": 0,
+      "n_cols": 8,
+      "id_col": "gvkey",
+      "date_col": "year",
+      "tier": 0,
+      "rows": 372753,
+      "gb": 0.0011,
+      "date_ranges": {
+        "datadate": [
+          "1950-12-31",
+          "2026-06-30"
+        ]
+      },
+      "seconds": 103.0,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "company",
+      "name": "comp.company",
+      "est_rows": 0,
+      "n_cols": 40,
+      "id_col": "gvkey",
+      "date_col": "dldte",
+      "tier": 0,
+      "rows": 58282,
+      "gb": 0.0101,
+      "date_ranges": {
+        "ipodate": [
+          "1946-01-14",
+          "2026-08-18"
+        ]
+      },
+      "seconds": 88.9,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_aaudit",
+      "name": "comp.g_co_aaudit",
+      "est_rows": 0,
+      "n_cols": 12,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "rows": 1097203,
+      "gb": 0.0015,
+      "date_ranges": {
+        "datadate": [
+          "1987-06-30",
+          "2026-06-30"
+        ]
+      },
+      "seconds": 317.0,
+      "universe_filtered": false
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_hgic",
+      "name": "comp.g_co_hgic",
+      "est_rows": 0,
+      "n_cols": 8,
+      "id_col": "gvkey",
+      "date_col": "indtype",
+      "tier": 0,
+      "rows": 89515,
+      "gb": 0.0009,
+      "date_ranges": {},
+      "seconds": 27.5,
       "universe_filtered": false
     }
   ],
@@ -286345,6 +286561,270 @@
       "date_col": "datafmt",
       "tier": 0,
       "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_afnddc1 LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_afnddc2",
+      "name": "comp.co_afnddc2",
+      "est_rows": 0,
+      "n_cols": 468,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_afnddc2 LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_afntind1",
+      "name": "comp.co_afntind1",
+      "est_rows": 0,
+      "n_cols": 539,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_afntind1 LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_afntind2",
+      "name": "comp.co_afntind2",
+      "est_rows": 0,
+      "n_cols": 468,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_afntind2 LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_amkt",
+      "name": "comp.co_amkt",
+      "est_rows": 0,
+      "n_cols": 14,
+      "id_col": "gvkey",
+      "date_col": "year",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_amkt LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_filedate",
+      "name": "comp.co_filedate",
+      "est_rows": 0,
+      "n_cols": 7,
+      "id_col": "gvkey",
+      "date_col": "filedatetime",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_filedate LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_idesind",
+      "name": "comp.co_idesind",
+      "est_rows": 0,
+      "n_cols": 36,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_idesind LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_ifndq",
+      "name": "comp.co_ifndq",
+      "est_rows": 0,
+      "n_cols": 937,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_ifndq LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_ifndsa",
+      "name": "comp.co_ifndsa",
+      "est_rows": 0,
+      "n_cols": 463,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_ifndsa LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_ifndytd",
+      "name": "comp.co_ifndytd",
+      "est_rows": 0,
+      "n_cols": 741,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_ifndytd LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_ifntq",
+      "name": "comp.co_ifntq",
+      "est_rows": 0,
+      "n_cols": 473,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_ifntq LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_ifntsa",
+      "name": "comp.co_ifntsa",
+      "est_rows": 0,
+      "n_cols": 236,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_ifntsa LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_ifntytd",
+      "name": "comp.co_ifntytd",
+      "est_rows": 0,
+      "n_cols": 384,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_ifntytd LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_imkt",
+      "name": "comp.co_imkt",
+      "est_rows": 0,
+      "n_cols": 15,
+      "id_col": "gvkey",
+      "date_col": "year",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_imkt LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "co_mthly",
+      "name": "comp.co_mthly",
+      "est_rows": 0,
+      "n_cols": 4,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.co_mthly LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "filings",
+      "name": "comp.filings",
+      "est_rows": 0,
+      "n_cols": 13,
+      "id_col": "gvkey",
+      "date_col": "date",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.filings LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "funda",
+      "name": "comp.funda",
+      "est_rows": 0,
+      "n_cols": 949,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.funda LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "funda_fncd",
+      "name": "comp.funda_fncd",
+      "est_rows": 0,
+      "n_cols": 888,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.funda_fncd LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "fundq",
+      "name": "comp.fundq",
+      "est_rows": 0,
+      "n_cols": 648,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.fundq LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "fundq_fncd",
+      "name": "comp.fundq_fncd",
+      "est_rows": 0,
+      "n_cols": 778,
+      "id_col": "gvkey",
+      "date_col": "datadate",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.fundq_fncd LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_adesind",
+      "name": "comp.g_co_adesind",
+      "est_rows": 0,
+      "n_cols": 33,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.g_co_adesind LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afnd1",
+      "name": "comp.g_co_afnd1",
+      "est_rows": 0,
+      "n_cols": 512,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.g_co_afnd1 LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afnd2",
+      "name": "comp.g_co_afnd2",
+      "est_rows": 0,
+      "n_cols": 465,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.g_co_afnd2 LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afnddc1",
+      "name": "comp.g_co_afnddc1",
+      "est_rows": 0,
+      "n_cols": 512,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.g_co_afnddc1 LIMIT 8000000': canceling statement due to statement timeout\n"
+    },
+    {
+      "schema": "comp",
+      "table": "g_co_afnddc2",
+      "name": "comp.g_co_afnddc2",
+      "est_rows": 0,
+      "n_cols": 465,
+      "id_col": "gvkey",
+      "date_col": "datafmt",
+      "tier": 0,
+      "error": "DatabaseError: Execution failed on sql 'SELECT * FROM comp.g_co_afnddc2 LIMIT 8000000': canceling statement due to statement timeout\n"
     }
   ]
 }
