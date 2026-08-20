@@ -1,7 +1,7 @@
 {
   "trial": "REGIME-ORACLE-CEILING-1",
   "mode": "SCREEN",
-  "at": "2026-08-20T03:47:49+00:00",
+  "at": "2026-08-20T03:51:56+00:00",
   "zoo": {
     "n_factors": 153,
     "n_months": 420,
@@ -18,25 +18,35 @@
     "oracle": 0.1766,
     "oracle_loo": 0.1202
   },
-  "gap_vs_static": {
+  "switch_cost_per_switch": 0.008,
+  "switch_drag_annual": {
+    "oracle": 0.0363,
+    "oracle_loo": 0.0409
+  },
+  "gap_vs_static_gross": {
     "oracle": 0.0997,
     "oracle_loo": 0.0433
   },
+  "gap_vs_static": {
+    "oracle": 0.0634,
+    "oracle_loo": 0.0024
+  },
+  "economic_bar": 0.03,
   "null_gap": {
-    "oracle_mean": 0.0446,
-    "oracle_p95": 0.0737,
-    "oracle_loo_mean": -0.0369,
-    "oracle_loo_p95": 0.0413
+    "oracle_mean": -0.0012,
+    "oracle_p95": 0.0287,
+    "oracle_loo_mean": -0.0896,
+    "oracle_loo_p95": -0.0077
   },
   "p_value_vs_null": {
     "oracle": 0.0,
-    "oracle_loo": 0.042
+    "oracle_loo": 0.032
   },
   "excess_over_null_p95": {
-    "oracle": 0.026,
-    "oracle_loo": 0.002
+    "oracle": 0.0346,
+    "oracle_loo": 0.01
   },
-  "verdict": "CEILING_REAL",
+  "verdict": "CEILING_STATISTICALLY_PRESENT_BUT_ECONOMICALLY_NEGLIGIBLE",
   "decision_rule": "if the LOO oracle gap does not exceed the matched-transition null's 95th percentile, perfect state knowledge buys nothing this zoo can use, and REGIME-CONDITIONAL-RETURN-1 does not justify a predictor on this strategy set",
   "scope_limits": [
     "gross of the switching cost a regime-conditional policy would actually pay \u2014 a CEILING, deliberately generous",

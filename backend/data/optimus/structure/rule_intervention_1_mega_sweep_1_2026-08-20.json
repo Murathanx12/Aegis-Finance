@@ -1,0 +1,273 @@
+{
+  "trial": "RULE-INTERVENTION-1",
+  "mode": "SCREEN",
+  "corpus": "mega_sweep_1",
+  "at": "2026-08-20T03:56:04+00:00",
+  "unit_of_evidence": "date block (monthly outcomes overlap and the cross-section co-moves); never the book, never the book-month row",
+  "n_books": 86,
+  "n_months": 125,
+  "contrasts": {
+    "weighting: inverse_vol - equal": {
+      "n_matched_pairs": 28,
+      "d_ann_return": -0.0124,
+      "mde_80_ann": 0.088,
+      "clears_mde": false,
+      "ci_ann": [
+        -0.0725,
+        0.0275
+      ],
+      "return_significant": false,
+      "n_effective_date_blocks": 125.0,
+      "d_ann_vol": -0.0693,
+      "mde_80_ann_vol": 0.1115,
+      "vol_significant": true,
+      "vol_clears_mde": false,
+      "ci_ann_vol": [
+        -0.1412,
+        -0.0165
+      ],
+      "d_max_drawdown": 0.061,
+      "mde_80_max_drawdown": 0.0782,
+      "maxdd_significant": true,
+      "maxdd_clears_mde": false,
+      "ci_max_drawdown": [
+        0.0151,
+        0.1208
+      ],
+      "_risk_inference_note": "vol and maxDD are PATH statistics; the statistic itself is recomputed on each date-block resample rather than testing mean(r^2), which is heavy-tailed and badly powered",
+      "level_ann_return": {
+        "inverse_vol": 0.1324,
+        "equal": 0.1448
+      },
+      "level_ann_vol": {
+        "inverse_vol": 0.29,
+        "equal": 0.3909
+      },
+      "level_max_dd": {
+        "inverse_vol": -0.389,
+        "equal": -0.4724
+      },
+      "heterogeneity_by_signal_d_ann_return": {
+        "rev_21": -0.1246,
+        "value_bm": -0.0574,
+        "low_vol": -0.0118,
+        "quality_roe": 0.0003,
+        "streak_7_avoid": 0.0281,
+        "mom_12_1": 0.0286,
+        "mom_63": 0.05
+      },
+      "n_signals_positive": 4,
+      "n_signals": 7
+    },
+    "weighting: rank - equal": {
+      "n_matched_pairs": 28,
+      "d_ann_return": 0.0147,
+      "mde_80_ann": 0.0975,
+      "clears_mde": false,
+      "ci_ann": [
+        -0.0255,
+        0.0835
+      ],
+      "return_significant": false,
+      "n_effective_date_blocks": 125.0,
+      "d_ann_vol": 0.0826,
+      "mde_80_ann_vol": 0.1593,
+      "vol_significant": true,
+      "vol_clears_mde": false,
+      "ci_ann_vol": [
+        0.0005,
+        0.1717
+      ],
+      "d_max_drawdown": -0.0394,
+      "mde_80_max_drawdown": 0.0659,
+      "maxdd_significant": false,
+      "maxdd_clears_mde": false,
+      "ci_max_drawdown": [
+        -0.0791,
+        0.0126
+      ],
+      "_risk_inference_note": "vol and maxDD are PATH statistics; the statistic itself is recomputed on each date-block resample rather than testing mean(r^2), which is heavy-tailed and badly powered",
+      "level_ann_return": {
+        "rank": 0.1594,
+        "equal": 0.1448
+      },
+      "level_ann_vol": {
+        "rank": 0.5009,
+        "equal": 0.3909
+      },
+      "level_max_dd": {
+        "rank": -0.4975,
+        "equal": -0.4724
+      },
+      "heterogeneity_by_signal_d_ann_return": {
+        "mom_63": -0.0895,
+        "mom_12_1": -0.0235,
+        "streak_7_avoid": -0.0227,
+        "low_vol": -0.0098,
+        "quality_roe": 0.0088,
+        "value_bm": 0.0093,
+        "rev_21": 0.23
+      },
+      "n_signals_positive": 3,
+      "n_signals": 7
+    },
+    "weighting: rank - inverse_vol": {
+      "n_matched_pairs": 28,
+      "d_ann_return": 0.027,
+      "mde_80_ann": 0.1839,
+      "clears_mde": false,
+      "ci_ann": [
+        -0.0509,
+        0.1568
+      ],
+      "return_significant": false,
+      "n_effective_date_blocks": 125.0,
+      "d_ann_vol": 0.1519,
+      "mde_80_ann_vol": 0.2706,
+      "vol_significant": true,
+      "vol_clears_mde": false,
+      "ci_ann_vol": [
+        0.0179,
+        0.3125
+      ],
+      "d_max_drawdown": -0.1004,
+      "mde_80_max_drawdown": 0.1287,
+      "maxdd_significant": true,
+      "maxdd_clears_mde": false,
+      "ci_max_drawdown": [
+        -0.1827,
+        -0.0123
+      ],
+      "_risk_inference_note": "vol and maxDD are PATH statistics; the statistic itself is recomputed on each date-block resample rather than testing mean(r^2), which is heavy-tailed and badly powered",
+      "level_ann_return": {
+        "rank": 0.1594,
+        "inverse_vol": 0.1324
+      },
+      "level_ann_vol": {
+        "rank": 0.5009,
+        "inverse_vol": 0.29
+      },
+      "level_max_dd": {
+        "rank": -0.4975,
+        "inverse_vol": -0.389
+      },
+      "heterogeneity_by_signal_d_ann_return": {
+        "mom_63": -0.1395,
+        "mom_12_1": -0.0521,
+        "streak_7_avoid": -0.0508,
+        "low_vol": 0.002,
+        "quality_roe": 0.0085,
+        "value_bm": 0.0667,
+        "rev_21": 0.3546
+      },
+      "n_signals_positive": 4,
+      "n_signals": 7
+    },
+    "winner_handling: exempt - trim": {
+      "n_matched_pairs": 43,
+      "d_ann_return": -0.0166,
+      "mde_80_ann": 0.0498,
+      "clears_mde": false,
+      "ci_ann": [
+        -0.048,
+        0.0102
+      ],
+      "return_significant": false,
+      "n_effective_date_blocks": 125.0,
+      "d_ann_vol": -0.0378,
+      "mde_80_ann_vol": 0.0647,
+      "vol_significant": true,
+      "vol_clears_mde": false,
+      "ci_ann_vol": [
+        -0.0755,
+        -0.004
+      ],
+      "d_max_drawdown": 0.0208,
+      "mde_80_max_drawdown": 0.0632,
+      "maxdd_significant": false,
+      "maxdd_clears_mde": false,
+      "ci_max_drawdown": [
+        -0.0401,
+        0.0545
+      ],
+      "_risk_inference_note": "vol and maxDD are PATH statistics; the statistic itself is recomputed on each date-block resample rather than testing mean(r^2), which is heavy-tailed and badly powered",
+      "level_ann_return": {
+        "exempt": 0.1363,
+        "trim": 0.1529
+      },
+      "level_ann_vol": {
+        "exempt": 0.3649,
+        "trim": 0.4142
+      },
+      "level_max_dd": {
+        "exempt": -0.4414,
+        "trim": -0.4587
+      },
+      "heterogeneity_by_signal_d_ann_return": {
+        "rev_21": -0.1457,
+        "none": -0.0098,
+        "value_bm": -0.0071,
+        "quality_roe": -0.0063,
+        "low_vol": -0.0019,
+        "streak_7_avoid": -0.001,
+        "mom_12_1": 0.0005,
+        "mom_63": 0.0443
+      },
+      "n_signals_positive": 2,
+      "n_signals": 8
+    },
+    "top_n: 50 - 100": {
+      "n_matched_pairs": 42,
+      "d_ann_return": 0.0244,
+      "mde_80_ann": 0.0977,
+      "clears_mde": false,
+      "ci_ann": [
+        -0.0187,
+        0.0926
+      ],
+      "return_significant": false,
+      "n_effective_date_blocks": 125.0,
+      "d_ann_vol": 0.0801,
+      "mde_80_ann_vol": 0.1426,
+      "vol_significant": true,
+      "vol_clears_mde": false,
+      "ci_ann_vol": [
+        0.0079,
+        0.165
+      ],
+      "d_max_drawdown": -0.046,
+      "mde_80_max_drawdown": 0.0758,
+      "maxdd_significant": false,
+      "maxdd_clears_mde": false,
+      "ci_max_drawdown": [
+        -0.0917,
+        0.0139
+      ],
+      "_risk_inference_note": "vol and maxDD are PATH statistics; the statistic itself is recomputed on each date-block resample rather than testing mean(r^2), which is heavy-tailed and badly powered",
+      "level_ann_return": {
+        "50": 0.1577,
+        "100": 0.1333
+      },
+      "level_ann_vol": {
+        "50": 0.4519,
+        "100": 0.3359
+      },
+      "level_max_dd": {
+        "50": -0.4734,
+        "100": -0.4325
+      },
+      "heterogeneity_by_signal_d_ann_return": {
+        "mom_63": -0.0632,
+        "low_vol": -0.0063,
+        "mom_12_1": -0.0034,
+        "streak_7_avoid": -0.0025,
+        "quality_roe": 0.0094,
+        "value_bm": 0.0384,
+        "rev_21": 0.1985
+      },
+      "n_signals_positive": 3,
+      "n_signals": 7
+    }
+  },
+  "label": "SIMULATION \u2014 LANE-FACTORY-SIM-1, never a track record"
+}
