@@ -50,6 +50,8 @@ EXPECTED_JOB_IDS: frozenset[str] = frozenset({
     "pi_ledger_resolve",
     "pi_why_moved",
     "pi_ownership_collect",
+    "pi_copy_lab_run",
+    "pi_arena_daily",
 })
 
 
@@ -183,6 +185,37 @@ def setup_scheduler():
         CronTrigger(hour=17, minute=15, timezone="America/New_York"),
         id="pi_why_moved",
         name="WHY-MOVED nightly attribution + lens hypotheses",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
+
+    # COPY-LAB engine pass (ORDER 25 audit finding: lanes were seeded
+    # 2026-08-14 and the engine had run exactly ONCE, because the only driver
+    # was a script nobody scheduled). 10:00 ET: after pi_ownership_collect
+    # (06:00) has landed yesterday's Forms 3/4/5, well before the close so
+    # next-open fills queue against a full session. Seeding stays attended;
+    # this job only advances lanes that are already seeded.
+    _scheduler.add_job(
+        _copy_lab_run,
+        CronTrigger(hour=10, minute=0, day_of_week="mon-fri",
+                    timezone="US/Eastern"),
+        id="pi_copy_lab_run",
+        name="COPY-LAB engine pass (PRODUCT_EXPERIMENT)",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
+
+    # ARENA daily pass (ORDER 25). 17:45 ET — after the 16:30 close mark and
+    # collectors and the 17:15 WHY-MOVED, so the frozen snapshot reads a fully
+    # collected day. Decisions freeze tonight; fills happen at the NEXT open.
+    # Everything it writes is PRODUCT_EXPERIMENT / SIMULATION in the arena
+    # namespace — never paper_nav, never a lane YAML, never the order path.
+    _scheduler.add_job(
+        _arena_daily,
+        CronTrigger(hour=17, minute=45, day_of_week="mon-fri",
+                    timezone="US/Eastern"),
+        id="pi_arena_daily",
+        name="ARENA Gen-1 daily pass (PRODUCT_EXPERIMENT)",
         replace_existing=True,
         misfire_grace_time=3600,
     )
@@ -1077,6 +1110,57 @@ async def _weekly_aggressive_check():
             logger.info("Aggressive lane rebalanced: %s", result.latest_rebalance.trigger_reason)
     except Exception as e:
         logger.error("Weekly aggressive check failed: %s", e, exc_info=True)
+
+
+async def _copy_lab_run():
+    """Scheduled COPY-LAB engine pass over seeded active lanes.
+
+    The count is the log line: a pass that considered zero events or filled
+    nothing must say so, because a seeded lane doing nothing while looking
+    green is exactly the failure this job was created to end (ORDER 25 audit:
+    one engine pass in six seeded days).
+    """
+    import asyncio
+
+    try:
+        from backend.services.copy_lab.runner import run_active_lanes
+
+        receipts = await asyncio.to_thread(run_active_lanes)
+        errors = [r for r in receipts if r.get("status") == "error"]
+        msg = ("COPY-LAB scheduled pass: %d lane(s), %d error(s), "
+               "signals_new=%s fills=%s")
+        args = (len(receipts), len(errors),
+                sum(int(r.get("signals_new") or 0) for r in receipts),
+                sum(int(r.get("fills") or 0) for r in receipts))
+        (logger.warning if errors or not receipts else logger.info)(msg, *args)
+    except Exception as e:
+        logger.error("COPY-LAB scheduled pass failed: %s", e, exc_info=True)
+
+
+async def _arena_daily():
+    """Scheduled ARENA Gen-1 daily pass (ORDER 25). PRODUCT_EXPERIMENT.
+
+    Own namespace, own ledger; never paper_nav. A pass over zero seeded books
+    logs WARNING, not silence — the arena existing but never advancing would
+    be COPY-LAB's six quiet days all over again.
+    """
+    import asyncio
+
+    try:
+        from backend.services.arena import engine as arena_engine
+
+        summary = await asyncio.to_thread(arena_engine.run_daily)
+        receipts = summary.get("receipts", [])
+        errors = [r for r in receipts if r.get("status") == "error"]
+        msg = ("ARENA daily pass: status=%s session=%s books=%d error(s)=%d "
+               "scored_names=%s matured=%s")
+        args = (summary.get("status"), summary.get("session"), len(receipts),
+                len(errors), summary.get("scored_n"),
+                (summary.get("maturation") or {}).get("resolved"))
+        degraded = (errors or summary.get("status") != "ok")
+        (logger.warning if degraded else logger.info)(msg, *args)
+    except Exception as e:
+        logger.error("ARENA daily pass failed: %s", e, exc_info=True)
 
 
 async def manual_trigger(lane_id: str | None = None) -> dict:

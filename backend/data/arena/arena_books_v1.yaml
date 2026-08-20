@@ -1,0 +1,134 @@
+# ARENA — Generation-1 product-experiment books (ORDER 25, adopted 2026-08-20)
+#
+# READ THIS BEFORE EDITING
+# ========================
+# * Every book here is a PRODUCT_EXPERIMENT SIMULATION. It is forward paper in
+#   its own namespace (`<OPTIMUS_LEDGER_DIR>/arena/`). It NEVER writes
+#   `paper_nav`, never touches a lane YAML, never enters the order path, and
+#   nothing it produces may be cited as evidence of skill by any verdict,
+#   research document, or product surface. (Same sentence copy_lab carries.)
+# * The SHA-256 of this file's raw bytes is segment identity for every book in
+#   it. An edit to ANY book is a config change for ALL of them: a changed book
+#   is a NEW book id (`_v2`) in a NEW file version, never an in-place edit.
+#   Books are seeded against this hash and refuse to run under a different one.
+# * Books are the CHALLENGER tier of the 2026-08-19 quarterly-generations
+#   decision: challengers live here (next-day, unlimited, SIMULATION);
+#   promotion to a real lane happens only at a generation window through
+#   `seed-a-lane` (pre-registered, env-gated, Murat flips the flag).
+# * Rules transported from referee-verified findings cite their trial. Rules
+#   that are NOT verified (LLM perception) are here precisely to MEASURE their
+#   marginal value against the control twin — that is what the arena is for.
+#
+# Factorial shape: ENGINE_BASELINE_v1 is the control twin; each book differs
+# from it by EXACTLY ONE rule, except CURRENT_BEST_v1 which is the composition.
+
+schema: arena-v1
+namespace: arena
+label: SHADOW_BOOK
+validation_status: PRODUCT_EXPERIMENT
+
+defaults:
+  notional_usd: 100000.0
+  benchmark: SPY
+  secondary_benchmark: QQQ
+  transaction_cost_bps: 5      # one-way, the live-lane standard
+  slippage_bps: 1
+  select_top_k: 12
+  rebalance: monthly_calendar  # selection refresh on the first session of month
+  execution: next_session_open # decisions freeze after close; fills at next open
+  max_single_name: 0.15
+  min_price: 5.0
+  # The arena's OWN composite over the arena's OWN universe: 12-1 momentum
+  # (last month EXCLUDED — the anti-chase findings) blended with whatever PIT
+  # score families a name has (multifactor/revisions/insider/pead/quality on
+  # the book cross-section). Weights in discovery.COMPOSITE_WEIGHTS. The
+  # registered collectors' cross-sections are NOT widened — that would change
+  # their z-scores mid-trial.
+  selection_signal: arena_composite
+  vol_lookback_days: 63
+
+books:
+  ENGINE_BASELINE_v1:
+    purpose: arena-control-twin
+    policy_version: 1
+    selection: composite_top_k
+    sizing: equal_weight
+    screens: []
+    llm_perception: false
+
+  RISK_SIZED_v1:
+    purpose: arena-isolate-inverse-vol-sizing
+    policy_version: 1
+    selection: composite_top_k
+    sizing: inverse_trailing_vol    # weights ∝ 1 / trailing 63d stdev.
+    # Transported finding: trailing vol beat the model on ALL FIVE spend
+    # routes (Order 24). The estimator here is the CHEAP TRAILING one — the
+    # receipt must never claim a model is why this works.
+    screens: []
+    llm_perception: false
+
+  WINNER_EXEMPT_v1:
+    purpose: arena-isolate-convexity-preservation
+    policy_version: 1
+    selection: composite_top_k
+    sizing: equal_weight
+    screens: []
+    winner_exemption:               # CONVEXITY-PRESERVATION-1 (Holm-surviving)
+      gain_threshold_pct: 40.0
+      exempt_trading_days: 60
+    llm_perception: false
+
+  ANTI_SIGNAL_v1:
+    purpose: arena-isolate-anti-chase-screens
+    policy_version: 1
+    selection: composite_top_k
+    sizing: equal_weight
+    screens:                        # both Holm-surviving anti-signals, 08-19
+      - streak_up_5                 # exclude candidates on >=5 consecutive up closes
+      - top_decile_ret21            # exclude last-month winner-chase leaders
+    llm_perception: false
+
+  LLM_PERCEPTION_v1:
+    purpose: arena-isolate-llm-perception
+    policy_version: 1
+    selection: composite_top_k
+    sizing: equal_weight
+    screens: []
+    llm_perception: true            # NOT a verified signal — measured here.
+    llm:
+      max_names_per_day: 10
+      daily_call_cap: 25
+      tilt_cap: 0.20                # |multiplicative tilt| <= 20%, deterministic
+      horizon_days: 20
+      observable: beats_benchmark
+    # The LLM proposes a belief revision (prior -> posterior) per name; a
+    # DETERMINISTIC mapper converts belief_change into a bounded weight tilt.
+    # The LLM never sizes. Every revision is minted as a gradeable
+    # PredictionRecord in the arena's OWN ledger (never predictions.jsonl).
+
+  CURRENT_BEST_v1:
+    purpose: arena-composed-product-candidate
+    policy_version: 1
+    selection: composite_top_k
+    sizing: inverse_trailing_vol
+    screens: [streak_up_5, top_decile_ret21]
+    winner_exemption:
+      gain_threshold_pct: 40.0
+      exempt_trading_days: 60
+    llm_perception: true
+    llm:
+      max_names_per_day: 10
+      daily_call_cap: 25
+      tilt_cap: 0.20
+      horizon_days: 20
+      observable: beats_benchmark
+    substitution:                   # daily capital-substitution check
+      margin_z: 0.5                 # candidate must beat weakest holding by this
+      max_swaps_per_day: 1          # composite-score margin, net of round-trip cost
+
+seeding:
+  authorised: "Murat, 2026-08-20 (verbatim: 'this is your sandbox... lets start
+    building the platform') — recorded in docs/ORDER_25_LIVE_ARENA_GEN1.md.
+    Arena books are SIMULATION ledgers (class of lane_factory_sim /
+    shadow_portfolios), not lanes; seed-a-lane governs real lanes only."
+  script: python -m scripts.arena_run --seed

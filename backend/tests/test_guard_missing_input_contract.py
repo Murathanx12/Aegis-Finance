@@ -477,7 +477,35 @@ def _case_streak_evidence():
             StreakRefused, "a streak verdict on a threadbare sample")
 
 
+def _case_arena_spec():
+    import tempfile, pathlib
+    from backend.services.arena.spec import SpecError, load_specs
+    # The missing input is the IMPLEMENTATION of a declared screen. A YAML
+    # screen the engine cannot apply must refuse at load — silently passing
+    # every name would run a different book than the one the hash commits to.
+    p = pathlib.Path(tempfile.mkdtemp()) / "books.yaml"
+    p.write_text("schema: arena-v1\ndefaults: {}\nbooks:\n  X_v1:\n"
+                 "    screens: [not_a_screen]\n", encoding="utf-8")
+    return (lambda: load_specs(p), SpecError,
+            "a book whose declared screen has no implementation")
+
+
+def _case_arena_experience():
+    from backend.services.arena.experience import (ExperienceInvalid,
+                                                   make_experience)
+    # The missing input is the INFORMATION STATE. An experience without the
+    # hash of what was knowable cannot be replayed later, only rationalized —
+    # which is the exact corpus poison the EXPERIENCE design exists to stop.
+    return (lambda: make_experience(
+        book_id="B", policy_version=1, ticker="AAA", action="ENTER",
+        decision_date="2026-01-05", information_state_hash="",
+        model_id="m", thesis="t"),
+        ExperienceInvalid, "an experience with no information state")
+
+
 CASES = {
+    "spec": _case_arena_spec,
+    "experience": _case_arena_experience,
     "lane_factory_sim": _case_lane_factory_sim,
     "factor_momentum": _case_factor_momentum,
     "streak_evidence": _case_streak_evidence,

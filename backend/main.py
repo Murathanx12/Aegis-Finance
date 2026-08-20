@@ -21,7 +21,7 @@ from backend.cache import cache_clear, set_cache_status, cache_ready, cache_stat
 from backend.config import config
 from backend.middleware import add_timing_middleware
 from backend.observability import install_log_buffer
-from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer
+from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer, arena
 
 logging.basicConfig(
     level=logging.INFO,
@@ -417,6 +417,20 @@ async def lifespan(app: FastAPI):
                 logger.warning("ALPACA-MIRROR SEEDING (AEGIS_SEED_ALPACA_MIRROR=1): %s", res)
             except Exception as e:
                 logger.error("Alpaca-mirror seeding failed: %s", e, exc_info=True)
+        # ARENA Gen-1 seeding (ORDER 25) — env-gated, one boot, idempotent.
+        # These are PRODUCT_EXPERIMENT SIMULATION books in the arena namespace
+        # (never paper_nav), but the seed still goes through a flag so the
+        # inception is a recorded decision, not a session that felt confident.
+        # Set AEGIS_SEED_ARENA=1 on Railway for ONE boot, confirm via
+        # /api/arena/status, then unset.
+        if os.environ.get("AEGIS_SEED_ARENA") == "1":
+            try:
+                from backend.services.arena.engine import seed_all as _arena_seed
+                res = await asyncio.to_thread(_arena_seed)
+                logger.warning("ARENA SEEDING (AEGIS_SEED_ARENA=1): %d book(s) "
+                               "seeded/confirmed", len(res))
+            except Exception as e:
+                logger.error("Arena seeding failed: %s", e, exc_info=True)
     asyncio.create_task(_init_lanes())
 
     try:
@@ -487,6 +501,7 @@ app.include_router(pm.router)
 app.include_router(investment_committee.router)
 app.include_router(why_moved.router)
 app.include_router(risk_layer.router)
+app.include_router(arena.router)
 
 
 @app.get("/")

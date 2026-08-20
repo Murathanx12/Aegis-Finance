@@ -125,3 +125,7 @@ backend/data/swarm/*.log
 # is better practice than committing a file mid-rewrite.
 backend/data/optimus/wrds/pull_everything_manifest.json
 backend/data/optimus/wrds/pull_everything_plan.json
+
+# ARENA (ORDER 25): local ledger writes must never dirty the tree the night
+# launcher's git_dirty check reads. Railway's volume is the authoritative store.
+backend/data/optimus/arena/

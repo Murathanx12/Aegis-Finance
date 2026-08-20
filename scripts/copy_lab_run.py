@@ -72,33 +72,19 @@ def seed(authorised_only: bool = True) -> dict:
 
 
 def run(as_of: str | None = None, lookback_days: int = 180) -> list[dict]:
-    lanes = {k: v for k, v in L.load_lanes().items()
-             if v.active and S.is_seeded(k)}
-    if not lanes:
+    # The pass itself lives in backend.services.copy_lab.runner so the
+    # scheduler job `pi_copy_lab_run` and this script execute the SAME code.
+    from backend.services.copy_lab.runner import run_active_lanes
+
+    receipts = run_active_lanes(as_of, lookback_days=lookback_days)
+    if not receipts:
         print("no seeded active lane — nothing to run")
         return []
-
-    as_of_d = date.fromisoformat(as_of) if as_of else date.today()
-    receipts = []
-    for name, spec in lanes.items():
-        seed_rec = S.read_seed(name) or {}
-        # Only events the lane could ever act on: public at or before now, and
-        # after its inception. `events_asof` is the point-in-time read; the
-        # inception filter is applied again inside the engine, on purpose.
-        events = TL.events_asof(f"{as_of_d}T23:59:59+00:00",
-                                actor_types=([spec.actor_type]
-                                             if spec.actor_type else None))
-        events = [e for e in events
-                  if not spec.action_types or e.action_type in spec.action_types]
-        tickers = sorted({(e.ticker_at_event or "").upper() for e in events
-                          if e.ticker_at_event})
-        start = str(min(date.fromisoformat(str(seed_rec["seeded_at"])[:10]),
-                        as_of_d) - timedelta(days=lookback_days))
-        prices = YFinancePanel(tickers, start=start,
-                               benchmark=spec.benchmark)
-        r = E.run_lane(spec, prices=prices, events=events, as_of=as_of_d)
-        receipts.append(r)
-        print(f"\n{name}")
+    for r in receipts:
+        if r.get("status") == "error":
+            print(f"\n{r.get('lane_id')}\n  ERROR  {r.get('error')}")
+            continue
+        print(f"\n{r.get('lane_id', '?')}")
         print(f"  events considered  {r['events_considered']}")
         print(f"  new signals        {r['signals_new']} "
               f"({r['signals_ineligible']} ineligible)")

@@ -61,3 +61,14 @@ skill on any public surface (24-month rule per lane).
 
 — drafted 2026-08-19 night from the first factory sweep; awaiting
 signature in the 09-08 window
+
+## Drafting note 2026-08-20 (pre-signature = drafting, not tampering)
+
+ORDER 25 launched the ARENA (PRODUCT_EXPERIMENT simulation namespace,
+`docs/ORDER_25_LIVE_ARENA_GEN1.md`). Two arena books run these same rules
+forward daily from 2026-08-20: `RISK_SIZED_v1` (inverse trailing-63d vol)
+and `WINNER_EXEMPT_v1` (+40%/60td exemption). By 09-08 they will carry
+~12 sessions of operational receipts (does the exemption fire; does the
+sizing behave; costs; turnover) — usable as pre-launch operational
+validation for this prereg's Pair B primary. Arena receipts are
+SIMULATION and may never enter a deciding statistic for these lanes.
