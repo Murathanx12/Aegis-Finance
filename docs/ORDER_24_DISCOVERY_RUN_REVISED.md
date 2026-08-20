@@ -190,8 +190,20 @@ registrations and never promotions.
 
 ## Execution log
 
+Full results: `docs/HANDOFF_2026-08-20_ORDER_24.md`.
+
 | Phase | Status | Receipt |
 |---|---|---|
 | 0 — WRDS metadata integrity | **DONE** — 119/119 mislabelled, LABELS_ONLY, repaired | `wrds/meta_audit_2026-08-20.json` |
 | 0 — chronology audit | **DONE** — 9 checks, 2 FAIL (13F knowledge date; manager library PIT claim) | `audits/chronology_audit_2026-08-20.json` |
+| 0 — shift-invariance (B2) | **DONE** — PASS, graceful degradation, all conclusions hold | `risk_ladder/..._modern_shift1_*.json` |
+| 1 — MEGA-SWEEP-2 | **CANCELLED ON EVIDENCE** — 86 books = ~3.5 behaviours; more combinations of the same signals cannot raise an exhausted dimensionality | superseded by Phase 3 + INFORMATION-DIMENSION-1 |
+| 2 — selection-overfit battery | **DONE** — matched null p=0.005, DSR 0.837 FAILS@0.95, PBO 0.220 | `structure/strategy_structure_1_*.json` |
+| 3 — STRATEGY-EFFECTIVE-DIMENSION-1 | **DONE** — effective rank 3.53 / 3.63 / 4.81 across three views | `structure/strategy_structure_1_*.json` |
+| 4 — RULE-INTERVENTION-1 | **DONE** — 0/5 decisions move return, 5/5 move volatility | `structure/rule_intervention_1_*.json` |
+| 5 — regime | **ORACLE FIRST, FAMILY CLOSED** — perfect foresight nets +0.24%/yr, excess over null +1.00%/yr vs 3%/yr bar | `regime/regime_oracle_ceiling_1_*.json` |
 | 6 — OPTION-INCREMENTAL-RISK-1 | **DONE** (modern + early + shift probe) | `risk_ladder/option_incremental_risk_1_*.json` |
+| 7 — training material | **DONE** — two datasets, date-block and cluster weighting, Tier PRIVATE + public stubs | `docs/datasets/*.stub.json` |
+| — | **NEW: INFORMATION-DIMENSION-1** — no new information class beats a size-matched control; the bottleneck is construction, not data | `structure/information_dimension_1_*.json` |
+| — | risk-head artifact v2.0.0, model layer pinned by `name@semver@sha256` | `models/risk_head_vol_lgbm_options/2.0.0/` |
+| 8–11 | **NOT RUN** — superseded by what Phases 3/5/6 found; the router and LLM-scientist phases now have better-posed questions (see handoff "NEXT 10 MACHINE JOBS") | — |

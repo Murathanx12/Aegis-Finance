@@ -1,0 +1,50 @@
+{
+  "dataset": "STOCK_RISK_DATASET_V1_modern",
+  "tier": "PRIVATE",
+  "reason": "per-security series derived from WRDS-entitled sources (CRSP, OptionMetrics); not redistributable",
+  "sha256": "2c2b3cd59ed8bfa85c856cfaff65122c533bd782c34fd7f560b566ec2451dece",
+  "rows": 226228,
+  "columns": {
+    "permno": "int64",
+    "date": "datetime64[ns]",
+    "date_weight": "float64",
+    "mom_21": "float64",
+    "mom_63": "float64",
+    "mom_126": "float64",
+    "mom_252_21": "float64",
+    "dd_252": "float64",
+    "log_rv_d": "float64",
+    "log_rv_w": "float64",
+    "log_rv_m": "float64",
+    "log_rv_q": "float64",
+    "opt_iv_atm": "float64",
+    "opt_skew": "float64",
+    "opt_pc50": "float64",
+    "log_iv_var": "float64",
+    "fwd_var": "float64"
+  },
+  "built_at": "2026-08-20T04:14:45+00:00",
+  "local_path_relative": "datasets\\STOCK_RISK_DATASET_V1_modern.parquet",
+  "entitlement_required": [
+    "WRDS: CRSP",
+    "WRDS: OptionMetrics"
+  ],
+  "reproducibility": "regenerable by scripts/build_training_datasets.py given the same entitlement; NOT openly reproducible",
+  "unit": "security x month-end formation date",
+  "era": "modern",
+  "universe": "crsp_pit_monthly_v1",
+  "window": [
+    "2014-01-31",
+    "2024-11-29"
+  ],
+  "n_dates": 131,
+  "n_securities": 3954,
+  "target": "fwd_var = annualized realized variance over t+1..t+21",
+  "weighting": "date_weight sums to 1.0 within each date; a date is the evidence unit, a row is not",
+  "pit": "features at the month-end close of t; target strictly t+1..t+21 (CHRONOLOGY-AUDIT-1 C2 PASS); options joined with sign-asserted non-negative lag (C1 PASS)",
+  "missing": "rows lacking any feature are DROPPED, never imputed",
+  "known_limits": [
+    "options coverage gates the population (~98.5% modern, ~83.5% early) \u2014 names without listed options are absent, which is a real and unmodelled selection",
+    "the entitled CRSP vintage ends 2024-12-31"
+  ]
+}

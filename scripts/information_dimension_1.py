@@ -207,43 +207,57 @@ def main() -> int:
     rng = np.random.default_rng(SEED)
 
     base_dim = eff_rank(R[owned_cols])
+    ctrl_pool = cols_by_class["price_extra"]
+
+    def control_increment_distribution(k: int, n_draws: int) -> np.ndarray:
+        """Increment from adding k RANDOM control books.
+
+        Size matching is mandatory, not cosmetic: effective rank rises
+        mechanically with the number of series added, so a 48-book
+        control against a 24-book candidate would hand the control the
+        result. Each draw takes a random size-k subset of the control
+        pool, so the candidate is compared against the same DOSE of a
+        class we already own.
+        """
+        out = np.empty(n_draws)
+        for i in range(n_draws):
+            pick = list(rng.choice(ctrl_pool, size=min(k, len(ctrl_pool)),
+                                   replace=False))
+            out[i] = (eff_rank(R[owned_cols + pick])["effective_rank"]
+                      - base_dim["effective_rank"])
+        return out
+
     results = {}
-    ctrl_draws = None
     for cls in CANDIDATES:
         cols = cols_by_class[cls]
         if not cols:
             continue
         both = eff_rank(R[owned_cols + cols])
         draws = _boot_increment(R, owned_cols, cols, blk, a.n_boot, rng)
-        inc = both["effective_rank"] - base_dim["effective_rank"]
-        results[cls] = {
-            "n_books": len(cols),
-            "dim_owned": round(base_dim["effective_rank"], 3),
-            "dim_owned_plus_class": round(both["effective_rank"], 3),
-            "increment": round(float(inc), 3),
-            "increment_ci": [round(float(np.percentile(draws, 2.5)), 3),
-                             round(float(np.percentile(draws, 97.5)), 3)],
-            "participation_ratio_owned_plus_class": round(
-                both["participation_ratio"], 3),
-            "_draws": draws}
-        if cls == "price_extra":
-            ctrl_draws = draws
-
-    # the comparison that makes this an experiment
-    for cls, r in results.items():
-        if cls == "price_extra" or ctrl_draws is None:
-            r["vs_control"] = None
+        inc = float(both["effective_rank"] - base_dim["effective_rank"])
+        r = {"n_books": len(cols),
+             "dim_owned": round(base_dim["effective_rank"], 3),
+             "dim_owned_plus_class": round(both["effective_rank"], 3),
+             "increment": round(inc, 3),
+             "increment_ci": [round(float(np.percentile(draws, 2.5)), 3),
+                              round(float(np.percentile(draws, 97.5)), 3)],
+             "participation_ratio_owned_plus_class": round(
+                 both["participation_ratio"], 3)}
+        if cls != "price_extra":
+            ctrl = control_increment_distribution(len(cols), a.n_boot)
+            p = float((ctrl >= inc).mean())
+            r["vs_size_matched_control"] = {
+                "control_books_drawn": len(cols),
+                "control_increment_mean": round(float(ctrl.mean()), 3),
+                "control_increment_p95": round(
+                    float(np.percentile(ctrl, 95)), 3),
+                "excess_over_control_mean": round(
+                    float(inc - ctrl.mean()), 3),
+                "p_value": round(p, 4),
+                "beats_control": bool(inc > np.percentile(ctrl, 95))}
         else:
-            d = r["_draws"] - ctrl_draws
-            r["vs_control"] = {
-                "excess_increment_over_price_extra": round(
-                    float(r["increment"] - results["price_extra"]
-                          ["increment"]), 3),
-                "ci": [round(float(np.percentile(d, 2.5)), 3),
-                       round(float(np.percentile(d, 97.5)), 3)],
-                "beats_control": bool(np.percentile(d, 2.5) > 0)}
-        r.pop("_draws", None)
-    results.get("price_extra", {}).pop("_draws", None)
+            r["vs_size_matched_control"] = None
+        results[cls] = r
 
     res = {"trial": "INFORMATION-DIMENSION-1", "mode": "SCREEN",
            "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -253,9 +267,14 @@ def main() -> int:
            "not_a_return_claim": "this measures structure only; "
                                  "profitability of any family here needs "
                                  "its own pre-registration",
-           "control": "price_extra — an equal dose of a class already "
-                      "owned, because adding ANY signals raises effective "
-                      "rank and a vs-nothing comparison always 'works'",
+           "control": "price_extra — a SIZE-MATCHED dose of a class "
+                      "already owned. Adding any signals raises effective "
+                      "rank, so a vs-nothing comparison always 'works'; "
+                      "and rank rises with the NUMBER added, so an "
+                      "unmatched 48-book control against a 24-book "
+                      "candidate would hand the control the result. Each "
+                      "candidate is compared against random subsets of "
+                      "the control pool of its OWN size.",
            "n_books": int(R.shape[1]), "n_months": int(R.shape[0]),
            "owned_classes": list(OWNED),
            "dim_owned": base_dim,
@@ -267,17 +286,19 @@ def main() -> int:
 
     print(f"\nowned ({len(owned_cols)} books) effective rank: "
           f"{base_dim['effective_rank']:.3f}")
-    print(f"\n{'class':14s} {'books':>5s} {'dim(owned+C)':>13s} "
-          f"{'increment':>10s} {'95% CI':>18s} {'vs control':>12s}")
+    print(f"\n{'class':14s} {'books':>5s} {'increment':>10s} "
+          f"{'ctrl(same n)':>13s} {'excess':>8s} {'p':>7s} {'verdict':>14s}")
     for cls, r in results.items():
-        vc = r.get("vs_control")
-        tag = ("CONTROL" if cls == "price_extra"
-               else ("BEATS CONTROL" if vc and vc["beats_control"]
-                     else "no"))
-        print(f"{cls:14s} {r['n_books']:>5d} "
-              f"{r['dim_owned_plus_class']:>13.3f} "
-              f"{r['increment']:>10.3f} "
-              f"{str(r['increment_ci']):>18s} {tag:>12s}")
+        vc = r.get("vs_size_matched_control")
+        if vc is None:
+            print(f"{cls:14s} {r['n_books']:>5d} {r['increment']:>10.3f} "
+                  f"{'—':>13s} {'—':>8s} {'—':>7s} {'CONTROL POOL':>14s}")
+            continue
+        tag = "BEATS CONTROL" if vc["beats_control"] else "no new direction"
+        print(f"{cls:14s} {r['n_books']:>5d} {r['increment']:>10.3f} "
+              f"{vc['control_increment_mean']:>13.3f} "
+              f"{vc['excess_over_control_mean']:>8.3f} "
+              f"{vc['p_value']:>7.3f} {tag:>14s}")
     print(f"\nreceipt -> {p}")
     return 0
 

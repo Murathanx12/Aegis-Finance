@@ -1,0 +1,33 @@
+{
+  "dataset": "STRATEGY_STATE_DATASET_V1",
+  "tier": "PRIVATE",
+  "reason": "per-security series derived from WRDS-entitled sources (CRSP, OptionMetrics); not redistributable",
+  "sha256": "1ae295877c5e6218255ad9809b9d0ea721c1b7a752fec0da7d97a3c362ef23aa",
+  "rows": 27000,
+  "columns": {
+    "date": "datetime64[ns]",
+    "book": "object",
+    "ret": "float64",
+    "cluster": "int32",
+    "date_weight": "float64"
+  },
+  "built_at": "2026-08-20T04:14:46+00:00",
+  "local_path_relative": "datasets\\STRATEGY_STATE_DATASET_V1.parquet",
+  "entitlement_required": [
+    "WRDS: CRSP",
+    "WRDS: OptionMetrics"
+  ],
+  "reproducibility": "regenerable by scripts/build_training_datasets.py given the same entitlement; NOT openly reproducible",
+  "unit": "book x month, weighted to cluster x date",
+  "n_books": 216,
+  "n_clusters": 3,
+  "window": [
+    "2014-07-31",
+    "2024-11-30"
+  ],
+  "weighting": "each DATE sums to 1.0; within a date each CLUSTER gets an equal share and its books split that share \u2014 216 books spanning ~4 behaviours must not vote 216 times",
+  "clustering": "average-linkage on 1 - return correlation, cut at 0.3; descriptive, computed on the full window and therefore NOT valid as a prospective label",
+  "known_limits": [
+    "holdings and per-month turnover paths were not persisted by the sweep, so holdings-overlap and action-correlation views are unavailable and the clustering rests on returns alone"
+  ]
+}

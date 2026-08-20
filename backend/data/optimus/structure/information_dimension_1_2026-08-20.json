@@ -1,0 +1,91 @@
+{
+  "trial": "INFORMATION-DIMENSION-1",
+  "mode": "SCREEN",
+  "at": "2026-08-20T04:13:30+00:00",
+  "question": "does a new information class buy a new DIRECTION in portfolio-behaviour space, or re-express one we already own?",
+  "not_a_return_claim": "this measures structure only; profitability of any family here needs its own pre-registration",
+  "control": "price_extra \u2014 a SIZE-MATCHED dose of a class already owned. Adding any signals raises effective rank, so a vs-nothing comparison always 'works'; and rank rises with the NUMBER added, so an unmatched 48-book control against a 24-book candidate would hand the control the result. Each candidate is compared against random subsets of the control pool of its OWN size.",
+  "n_books": 216,
+  "n_months": 125,
+  "owned_classes": [
+    "price_base",
+    "fundamental"
+  ],
+  "dim_owned": {
+    "participation_ratio": 2.533389825968851,
+    "effective_rank": 3.694147829387309
+  },
+  "classes": {
+    "price_extra": {
+      "n_books": 48,
+      "dim_owned": 3.694,
+      "dim_owned_plus_class": 3.994,
+      "increment": 0.299,
+      "increment_ci": [
+        0.167,
+        0.394
+      ],
+      "participation_ratio_owned_plus_class": 2.604,
+      "vs_size_matched_control": null
+    },
+    "options": {
+      "n_books": 36,
+      "dim_owned": 3.694,
+      "dim_owned_plus_class": 3.854,
+      "increment": 0.159,
+      "increment_ci": [
+        -0.009,
+        0.372
+      ],
+      "participation_ratio_owned_plus_class": 2.384,
+      "vs_size_matched_control": {
+        "control_books_drawn": 36,
+        "control_increment_mean": 0.283,
+        "control_increment_p95": 0.326,
+        "excess_over_control_mean": -0.124,
+        "p_value": 1.0,
+        "beats_control": false
+      }
+    },
+    "expectations": {
+      "n_books": 36,
+      "dim_owned": 3.694,
+      "dim_owned_plus_class": 3.447,
+      "increment": -0.247,
+      "increment_ci": [
+        -0.318,
+        -0.087
+      ],
+      "participation_ratio_owned_plus_class": 2.121,
+      "vs_size_matched_control": {
+        "control_books_drawn": 36,
+        "control_increment_mean": 0.283,
+        "control_increment_p95": 0.321,
+        "excess_over_control_mean": -0.53,
+        "p_value": 1.0,
+        "beats_control": false
+      }
+    },
+    "liquidity": {
+      "n_books": 24,
+      "dim_owned": 3.694,
+      "dim_owned_plus_class": 3.885,
+      "increment": 0.191,
+      "increment_ci": [
+        0.053,
+        0.326
+      ],
+      "participation_ratio_owned_plus_class": 2.45,
+      "vs_size_matched_control": {
+        "control_books_drawn": 24,
+        "control_increment_mean": 0.245,
+        "control_increment_p95": 0.299,
+        "excess_over_control_mean": -0.054,
+        "p_value": 0.925,
+        "beats_control": false
+      }
+    }
+  },
+  "errors": [],
+  "label": "SIMULATION \u2014 LANE-FACTORY-SIM-1, never a track record"
+}
