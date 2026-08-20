@@ -97,6 +97,23 @@ or check the log for `ArrowNotImplementedError` / `ArrowInvalid`. If they
 recur, the remaining option is an explicit Arrow schema built from
 `information_schema` rather than pandas-dtype coercion.
 
+### VERIFIED BASELINE (2026-08-21, 333 files on disk)
+
+```
+317  COMPLETE
+ 16  SHORT_MINOR   all <0.1% — live-table drift, not loss
+  0  BROKEN        (truncated / short / extra / corrupt)
+  0  UNVERIFIED
+```
+
+Every file then on disk is complete or within measurable Compustat drift.
+The 16 are `comp.*` tables pulled ~18 hours before the count;
+`comp.aco_amda` is short by **one row** of 70,344. The 23 genuinely truncated
+files were quarantined before this ran, so they are not in the denominator —
+`bulk/_quarantine_truncated/` and `truncated_quarantine.json` hold them.
+
+**This is a baseline, not a warranty.** Re-run after every pull.
+
 ### RUN THE VERIFIER BEFORE TRUSTING ANY OF IT
 
 ```bash
