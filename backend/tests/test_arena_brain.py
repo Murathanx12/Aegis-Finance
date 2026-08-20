@@ -444,3 +444,110 @@ def test_a_full_day_runs_decision_to_reliability_to_regret(root, tmp_path,
         "a two-day-old arena must not be reporting rates"
     reg = regret.summary(root=root)
     assert "cells" in reg and "unpaired" in reg
+
+
+# ── FEATURE-COVERAGE-AUDIT-1: coverage must not decide the ranking ─────────
+def test_coverage_normalization_stops_thin_names_owning_the_tail():
+    """Two names with identical evidence STRENGTH must score identically,
+    whether that evidence arrived as one factor or as six.
+
+    Under the plain weighted mean, a name at +2z on its single factor scores
+    +2.0 while a name at +2z on all six scores +2.0 too — but only because
+    every factor agrees. Give the six-factor name mixed signals of the same
+    average and averaging shrinks it, which is the defect. What must hold is
+    that a fully-covered name at the SAME per-factor level is not penalised
+    for having been measured more.
+    """
+    from backend.services.arena import discovery
+
+    names = {}
+    # 30 background names with momentum only, spread across the z range
+    for i in range(30):
+        names[f"BG{i:02d}"] = {"status": "ok", "close": 100.0,
+                               "scores": {"mom_12_1": 0.001 * (i - 15)}}
+    # THIN and FULL sit at the same place in every factor they have
+    names["THIN"] = {"status": "ok", "close": 100.0,
+                     "scores": {"mom_12_1": 0.05}}
+    full = {"mom_12_1": 0.05}
+    for f in ("multifactor", "revisions", "insider_opp", "pead", "quality"):
+        full[f] = 0.05
+        for i in range(30):
+            names[f"BG{i:02d}"]["scores"][f] = 0.001 * (i - 15)
+    names["FULL"] = {"status": "ok", "close": 100.0, "scores": full}
+
+    discovery._add_arena_composite(names)
+    thin = names["THIN"]["scores"]
+    fullr = names["FULL"]["scores"]
+    assert thin["coverage_n"] == 1 and fullr["coverage_n"] == 6
+    # the well-measured name is NOT below the thin one at equal evidence
+    assert fullr["arena_composite"] >= thin["arena_composite"]
+    # both readings are kept so the change stays auditable
+    assert fullr["arena_composite_raw_mean"] is not None
+
+
+def test_coverage_vector_and_histogram_are_frozen_into_the_state():
+    from backend.services.arena import discovery
+
+    names = {"A": {"status": "ok", "close": 10.0,
+                   "scores": {"mom_12_1": 0.1, "quality": 0.2}},
+             "B": {"status": "ok", "close": 10.0, "scores": {"mom_12_1": -0.1}},
+             "C": {"status": "no_price"}}
+    discovery._add_arena_composite(names)
+    assert names["A"]["scores"]["coverage"] == ["mom_12_1", "quality"]
+    assert names["B"]["scores"]["coverage_n"] == 1
+    assert "coverage" not in names["C"].get("scores", {})
+
+
+def test_a_name_with_no_factors_scores_none_not_zero():
+    from backend.services.arena import discovery
+
+    names = {"A": {"status": "ok", "close": 10.0, "scores": {"mom_12_1": 0.1}},
+             "DARK": {"status": "ok", "close": 10.0,
+                      "scores": {"mom_12_1": None}}}
+    discovery._add_arena_composite(names)
+    assert names["DARK"]["scores"]["arena_composite"] is None
+    assert names["DARK"]["scores"]["coverage_n"] == 0
+
+
+def test_correlation_shrinks_to_the_predecessor_when_there_is_no_evidence():
+    """With <3 shared observations the correlation is 1.0, and rho=1 makes the
+    normalized composite identical to the plain weighted mean. The estimator
+    degrades to what it replaced, never to a third thing."""
+    from backend.services.arena import discovery
+
+    z = {"mom_12_1": {"A": 1.0, "B": -1.0}, "quality": {"A": 0.5}}
+    corr = discovery._pairwise_corr(z, list(discovery.COMPOSITE_WEIGHTS))
+    assert corr[0][1] == 1.0
+
+
+# ── segment identity covers the estimator, not just the YAML ───────────────
+def test_policy_fingerprint_covers_the_composite_not_only_the_yaml(monkeypatch):
+    from backend.services.arena import discovery
+    from backend.services.arena import spec as spec_mod
+
+    before = spec_mod.policy_fingerprint()
+    monkeypatch.setattr(discovery, "COMPOSITE_VERSION", "something_else@9")
+    after = spec_mod.policy_fingerprint()
+    assert before != after
+    assert spec_mod.config_hash() == spec_mod.config_hash()  # YAML untouched
+
+
+def test_a_changed_estimator_refuses_to_run_under_the_old_seed(root,
+                                                               monkeypatch):
+    from backend.services.arena import discovery, engine
+    from backend.services.arena import spec as spec_mod
+
+    engine.seed_all(root=root)
+    monkeypatch.setattr(discovery, "COMPOSITE_VERSION", "changed@9")
+    spec = spec_mod.active_specs()["ENGINE_BASELINE_v1"]
+    with pytest.raises(store.ConfigDrift, match="SELECTION ESTIMATOR"):
+        store.assert_config_current(spec, root=root)
+
+
+def test_seed_records_the_policy_fingerprint(root):
+    from backend.services.arena import engine
+    from backend.services.arena import spec as spec_mod
+
+    engine.seed_all(root=root)
+    seed = store.read_seed("ENGINE_BASELINE_v1", root)
+    assert seed["policy_fingerprint"] == spec_mod.policy_fingerprint()

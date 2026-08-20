@@ -1,0 +1,53 @@
+{
+  "n_trials": 4000,
+  "n_names": 180,
+  "n_enriched": 12,
+  "top_k": 12,
+  "factor_rho": 0.4,
+  "factors": [
+    "mom_12_1",
+    "multifactor",
+    "revisions",
+    "insider_opp",
+    "pead",
+    "quality"
+  ],
+  "weights": [
+    1.0,
+    1.0,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+  ],
+  "enriched_share_if_coverage_were_irrelevant": 0.8,
+  "rules": {
+    "current": {
+      "mean_enriched_names_in_top_k": 0.429,
+      "mean_latent_skill_of_selection": 1.1562
+    },
+    "coverage_normalized": {
+      "mean_enriched_names_in_top_k": 1.139,
+      "mean_latent_skill_of_selection": 1.1682
+    },
+    "oracle": {
+      "mean_enriched_names_in_top_k": 0.774,
+      "mean_latent_skill_of_selection": 1.9161
+    }
+  },
+  "verdict": {
+    "selection_quality_gain_from_normalizing": 0.012,
+    "share_of_oracle_gap_closed": 0.0158,
+    "reading": "under the current rule the better-measured names are shrunk toward the middle and are structurally scarce in a top-k tail; the collectors feed the snapshot without being able to reach the selection"
+  },
+  "coverage_value": {
+    "momentum_only": 1.1501,
+    "current_split": 1.1698,
+    "full_coverage": 1.3889,
+    "oracle": 1.9194,
+    "value_of_full_coverage": 0.2388,
+    "value_of_current_split": 0.0197,
+    "share_of_oracle_gap_full_coverage_closes": 0.3104,
+    "reading": "the aggregation defect is worth a fraction of what the coverage hole is worth; enriching 12 names of 180 buys almost nothing whatever the aggregation rule, and enriching all 180 is the experiment that has a number attached"
+  }
+}

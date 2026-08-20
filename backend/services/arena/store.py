@@ -86,12 +86,22 @@ def seed_book(spec, *, root: Path | None = None,
                     f"the current config is {spec.config_hash[:12]}. A changed "
                     f"configuration is a NEW book with its own id, never a new "
                     f"start date for this one.")
+            if (existing.get("policy_fingerprint")
+                    and existing.get("policy_fingerprint")
+                    != spec.policy_fingerprint):
+                raise SeedRefused(
+                    f"{spec.book_id}'s YAML is unchanged but its selection "
+                    f"ESTIMATOR is not: seeded under policy "
+                    f"{str(existing.get('policy_fingerprint'))[:12]}, code now "
+                    f"fingerprints {spec.policy_fingerprint[:12]}. Same rules, "
+                    f"different meaning — that is a new book, not a new day.")
             return existing
         rec = {
             "book_id": spec.book_id,
             "seeded_at": seeded_at or _now(),
             "config_version": spec.config_version,
             "config_hash": spec.config_hash,
+            "policy_fingerprint": spec.policy_fingerprint,
             "policy_version": spec.policy_version,
             "purpose": spec.purpose,
             "notional_usd": spec.notional_usd,
@@ -124,6 +134,16 @@ def assert_config_current(spec, *, root: Path | None = None) -> dict:
             f"{str(rec.get('config_hash'))[:12]} but the file on disk hashes "
             f"to {spec.config_hash[:12]} — refusing to run. Segment identity "
             f"IS the configuration.")
+    # A seed written before policy fingerprints existed has no claim to check;
+    # once it has one, it binds. Absent is absent, never "matches".
+    seeded_fp = rec.get("policy_fingerprint")
+    if seeded_fp and seeded_fp != spec.policy_fingerprint:
+        raise ConfigDrift(
+            f"{spec.book_id} was seeded under policy {str(seeded_fp)[:12]} but "
+            f"the running code fingerprints {spec.policy_fingerprint[:12]} — "
+            f"the YAML is unchanged and the SELECTION ESTIMATOR is not. "
+            f"Refusing to run: a book whose scores changed meaning mid-segment "
+            f"has one NAV series describing two policies.")
     return rec
 
 

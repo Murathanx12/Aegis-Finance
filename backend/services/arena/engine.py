@@ -231,6 +231,9 @@ def run_book(spec, panel, day: date, day_state: dict, is_hash: str, *,
     book = store.read_positions(spec.book_id, root) or _init_positions(spec)
     receipt: dict = {"book_id": spec.book_id, "run_at": _now(),
                      "session": str(day), "config_hash": spec.config_hash,
+                     "policy_fingerprint": spec.policy_fingerprint,
+                     "composite_version": day_state.get("composite_version"),
+                     "coverage_histogram": day_state.get("coverage_histogram"),
                      "policy_version": spec.policy_version,
                      "validation_status": spec.validation_status,
                      "simulation": True, "seeded_at": seed["seeded_at"]}
@@ -363,6 +366,11 @@ def run_daily(as_of=None, *, panel=None, root=None, db_path=None) -> dict:
     is_hash = snap["information_state_hash"]
     summary["information_state_hash"] = is_hash
     summary["scored_n"] = day_state.get("scored_n")
+    summary["composite_version"] = day_state.get("composite_version")
+    # How many names were ranked on how many factors. FEATURE-COVERAGE-AUDIT-1
+    # measured the arena ranking ~93% of its universe on 12-1 momentum alone;
+    # printing it every pass is what stops that from going quiet again.
+    summary["coverage_histogram"] = day_state.get("coverage_histogram")
 
     for book_id, s in seeded.items():
         try:

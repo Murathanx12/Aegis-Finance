@@ -214,8 +214,18 @@ def _build_day_state_with_conn(day, panel, universe, conn,
     _add_arena_composite(names)
     n_scored = sum(1 for v in names.values()
                    if v.get("scores", {}).get("arena_composite") is not None)
+    # Coverage histogram in the frozen state itself: "how many names were
+    # ranked on how many factors" is the question FEATURE-COVERAGE-AUDIT-1
+    # had to reconstruct, and a state that does not carry it makes every
+    # later reader reconstruct it too.
+    hist: dict[str, int] = {}
+    for v in names.values():
+        k = v.get("scores", {}).get("coverage_n")
+        if k is not None:
+            hist[str(k)] = hist.get(str(k), 0) + 1
     return {"date": str(day), "as_of_ts": as_of_ts, "universe_n": len(universe),
-            "scored_n": n_scored, "names": names}
+            "scored_n": n_scored, "composite_version": COMPOSITE_VERSION,
+            "coverage_histogram": hist, "names": names}
 
 
 #: The arena's OWN composite over the arena's OWN universe. The registered
@@ -233,23 +243,119 @@ COMPOSITE_WEIGHTS: dict[str, float] = {
     "quality": 0.5,
 }
 
+#: Estimator identity. The YAML's SHA-256 is segment identity for the BOOKS,
+#: but the composite they select on lives here in Python, so a code edit could
+#: change every book's policy without changing a single config hash. This
+#: string is carried into the seed and the daily receipt and is checked on
+#: every run — see `spec.policy_fingerprint` and `store.assert_config_current`.
+COMPOSITE_VERSION = "arena_composite@2-coverage_normalized"
+
+#: Pairwise sample size at which the empirical factor correlation is trusted
+#: 90% of the way. Below it the estimate is shrunk toward rho=1.
+CORR_SHRINK_K = 20.0
+
+
+def _pairwise_corr(cols: dict[str, dict[str, float]],
+                   factors: list[str]) -> list[list[float]]:
+    """Correlation between factor z-scores over names that have BOTH, shrunk
+    toward 1.0 by pairwise sample size.
+
+    Shrinking toward 1 (not toward 0) is deliberate: rho = 1 reproduces the
+    plain weighted MEAN exactly, which is what this composite did before. So
+    with no evidence the estimator degrades to its own predecessor rather than
+    to a third behaviour, and every departure from it is paid for by pairwise
+    observations. Order 24 measured 3–7 shared latent factors across all
+    sources — high correlation is the prior, and 1.0 is its conservative edge.
+    """
+    k = len(factors)
+    corr = [[1.0] * k for _ in range(k)]
+    for a in range(k):
+        for b in range(a + 1, k):
+            xa, xb = cols.get(factors[a], {}), cols.get(factors[b], {})
+            shared = sorted(set(xa) & set(xb))
+            n = len(shared)
+            r = 1.0
+            if n >= 3:
+                va = [xa[t] for t in shared]
+                vb = [xb[t] for t in shared]
+                ma, mb = sum(va) / n, sum(vb) / n
+                sa = (sum((v - ma) ** 2 for v in va) / (n - 1)) ** 0.5
+                sb = (sum((v - mb) ** 2 for v in vb) / (n - 1)) ** 0.5
+                if sa > 0 and sb > 0:
+                    cov = sum((va[i] - ma) * (vb[i] - mb)
+                              for i in range(n)) / (n - 1)
+                    lam = n / (n + CORR_SHRINK_K)
+                    r = lam * max(-0.99, min(0.99, cov / (sa * sb))) + (1 - lam)
+            corr[a][b] = corr[b][a] = r
+    return corr
+
+
+def _zscore_col(col: dict[str, float]) -> dict[str, float]:
+    n = len(col)
+    if n < 2:
+        return {t: 0.0 for t in col}
+    m = sum(col.values()) / n
+    sd = (sum((v - m) ** 2 for v in col.values()) / (n - 1)) ** 0.5
+    return {t: ((v - m) / sd if sd > 0 else 0.0) for t, v in col.items()}
+
 
 def _add_arena_composite(names: dict) -> None:
-    from backend.services.portfolio_intelligence.multifactor import (
-        compute_multifactor_scores,  # pure function — no IO, no NAV path
-    )
+    """Coverage-normalized composite, plus the raw mean and the coverage
+    vector beside it.
 
-    components: dict[str, dict[str, float]] = {}
-    for factor in COMPOSITE_WEIGHTS:
+    FEATURE-COVERAGE-AUDIT-1 (`scripts/arena_coverage_audit.py`): the plain
+    weighted mean of available z-scores shrinks well-measured names toward the
+    middle, so under the live coverage split (~12 of ~180 names carry the PIT
+    families) the enriched names appear in a top-12 selection 0.43 times on
+    average against the 0.80 that coverage-blindness would give — they are
+    structurally scarce in the tail the selection reads. Dividing the weighted
+    SUM by the standard deviation implied by each name's OWN available set
+    removes that; a name's composite then has unit variance whatever it was
+    scored on.
+
+    Two numbers are kept for every name so the change is auditable rather than
+    asserted: `arena_composite` (normalized, what selection uses) and
+    `arena_composite_raw_mean` (the predecessor). `coverage_n` and
+    `coverage` record WHICH factors were present, so a later reader can ask
+    whether missingness was doing the ranking without re-deriving the state.
+
+    Honest sizing, from the same audit: normalizing is worth +0.012 in latent
+    -skill units (1.6% of the oracle gap) while widening coverage from 12
+    names to all 180 is worth +0.239 (31%). This fixes a defect; it does not
+    fix the arena's real coverage hole, and it must not be reported as if it
+    did.
+    """
+    factors = [f for f in COMPOSITE_WEIGHTS]
+    cols_raw: dict[str, dict[str, float]] = {}
+    for factor in factors:
         col = {t: row["scores"][factor] for t, row in names.items()
                if row.get("status") == "ok"
                and row.get("scores", {}).get(factor) is not None}
         if col:
-            components[factor] = col
-    composite = compute_multifactor_scores(components, COMPOSITE_WEIGHTS)
+            cols_raw[factor] = col
+    z = {f: _zscore_col(col) for f, col in cols_raw.items()}
+    corr = _pairwise_corr(z, factors)
+
     for t, row in names.items():
-        if row.get("status") == "ok":
-            row["scores"]["arena_composite"] = composite.get(t)
+        if row.get("status") != "ok":
+            continue
+        present = [i for i, f in enumerate(factors) if t in z.get(f, {})]
+        row["scores"]["coverage"] = [factors[i] for i in present]
+        row["scores"]["coverage_n"] = len(present)
+        if not present:
+            row["scores"]["arena_composite"] = None
+            row["scores"]["arena_composite_raw_mean"] = None
+            continue
+        w = [COMPOSITE_WEIGHTS[factors[i]] for i in present]
+        vals = [z[factors[i]][t] for i in present]
+        num = sum(wi * v for wi, v in zip(w, vals))
+        den = sum(w)
+        var = sum(w[a] * w[b] * corr[present[a]][present[b]]
+                  for a in range(len(present)) for b in range(len(present)))
+        row["scores"]["arena_composite"] = (
+            round(num / var ** 0.5, 4) if var > 0 else 0.0)
+        row["scores"]["arena_composite_raw_mean"] = (
+            round(num / den, 4) if den else 0.0)
 
 
 def freeze_day_state(day: date, panel: PricePanel, universe: list[str],

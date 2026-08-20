@@ -52,6 +52,7 @@ class BookSpec:
     substitution: dict = field(default_factory=dict)
     defaults: dict = field(default_factory=dict)
     config_hash: str = ""
+    policy_fingerprint: str = ""
     config_version: str = "arena-v1"
     label: str = "SHADOW_BOOK"
     validation_status: str = VALIDATION_STATUS
@@ -101,11 +102,29 @@ def config_hash(path: Path | None = None) -> str:
     return hashlib.sha256(config_bytes(path)).hexdigest()
 
 
+def policy_fingerprint(path: Path | None = None) -> str:
+    """Segment identity for what the book ACTUALLY does, not just what the
+    YAML says.
+
+    The YAML hash covers the declared rules. It does not cover the selection
+    estimator, which lives in `discovery.py` — so before this existed, editing
+    the composite changed every book's policy while every config hash stayed
+    byte-identical and every seed still verified. That is the silent-drift
+    shape the lane machinery was built to refuse, reproduced one directory
+    over. Bump `discovery.COMPOSITE_VERSION` for any change to what the
+    composite MEANS and the books will refuse to run under their old seed.
+    """
+    from backend.services.arena.discovery import COMPOSITE_VERSION
+    payload = f"{config_hash(path)}|{COMPOSITE_VERSION}"
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
 def load_specs(path: Path | None = None) -> dict[str, BookSpec]:
     """Every book in the YAML, validated. Raises SpecError on the unknown."""
     p = path or CONFIG_PATH
     raw = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
     h = config_hash(p)
+    fp = policy_fingerprint(p)
     defaults = dict(raw.get("defaults") or {})
     books = raw.get("books") or {}
     out: dict[str, BookSpec] = {}
@@ -134,6 +153,7 @@ def load_specs(path: Path | None = None) -> dict[str, BookSpec]:
             substitution=dict(b.get("substitution") or {}),
             defaults=defaults,
             config_hash=h,
+            policy_fingerprint=fp,
             config_version=str(raw.get("schema") or "arena-v1"),
             label=str(raw.get("label") or "SHADOW_BOOK"),
             validation_status=str(raw.get("validation_status")

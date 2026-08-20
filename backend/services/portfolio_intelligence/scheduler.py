@@ -1153,10 +1153,14 @@ async def _arena_daily():
         receipts = summary.get("receipts", [])
         errors = [r for r in receipts if r.get("status") == "error"]
         msg = ("ARENA daily pass: status=%s session=%s books=%d error(s)=%d "
-               "scored_names=%s matured=%s")
+               "scored_names=%s coverage=%s matured=%s graded_forecasts=%s "
+               "reliability=%s")
         args = (summary.get("status"), summary.get("session"), len(receipts),
                 len(errors), summary.get("scored_n"),
-                (summary.get("maturation") or {}).get("resolved"))
+                summary.get("coverage_histogram"),
+                (summary.get("maturation") or {}).get("resolved"),
+                (summary.get("perception_grading") or {}).get("newly_resolved"),
+                (summary.get("reliability") or {}).get("status"))
         degraded = (errors or summary.get("status") != "ok")
         (logger.warning if degraded else logger.info)(msg, *args)
     except Exception as e:
