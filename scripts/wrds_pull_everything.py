@@ -85,15 +85,18 @@ DISK_BUDGET_GB = 60.0
 #: it executable: a worker pool, and a per-table timeout short enough
 #: that one pathological table cannot eat an hour.
 PER_TABLE_TIMEOUT_S = 300
-#: ONE connection. WRDS enforces a per-role connection cap and refuses
-#: with `FATAL: too many connections for role` — measured 2026-08-20
-#: after a 6-worker pool plus orphaned connections from reaped processes
-#: exhausted it, at which point even the plan build could not connect and
-#: the run produced no output at all (which looked like slowness and was
-#: actually refusal). Parallel pulling is NOT available on this account,
-#: so throughput is fixed and the only lever is PRIORITY: pull the most
-#: useful tables first and accept that the tail will not land.
-N_WORKERS = 1
+#: WRDS enforces a per-role connection cap. MEASURED from a clean slate
+#: 2026-08-20: exactly **7** concurrent connections, failing on the 8th
+#: with `FATAL: too many connections for role`.
+#:
+#: The earlier conclusion that "parallel pulling is not available" was
+#: WRONG and self-inflicted: three separate processes (a worker pool, a
+#: second targeted pull, and a polling loop started to check on them)
+#: were competing for the same 7 slots, so each looked broken. One
+#: process at a time is the rule; a pool inside it is fine.
+#:
+#: 5 leaves 2 slots free for diagnostics — never run a second puller.
+N_WORKERS = 5
 
 #: Research priority. The catalogue is entitled but not equally useful:
 #: a table keyed to our securities beats a Canadian audit-fee feed, and

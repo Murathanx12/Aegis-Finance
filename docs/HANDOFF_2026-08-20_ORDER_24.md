@@ -547,6 +547,17 @@ Top eigenvalues: 6.47, 3.35, 2.70, 2.10, 1.69, 1.24, 1.14, 1.02.
 | 2 | 3.35 | fundamentals 60%, price 33%, expectations 5%, options 2% |
 | 3 | 2.70 | fundamentals 50%, price 39%, expectations 8%, options 4% |
 
+> ⚠️ **Correction — those percentages are feature-count artifacts, the
+> blend claim is not.** This panel gives fundamentals 12 features and
+> options 4, so fundamentals load higher partly by arithmetic. Re-running
+> the modern era restricted to the early era's 18-feature set (2
+> fundamental ratios, not 12) moves factor 1 to **price 58%, options 23%,
+> expectations 13%, fundamentals 7%**. Read the composition table as
+> "every factor draws on every source", never as a ranking of which
+> source matters most — that ranking is a property of the feature count.
+> §13c compares eras with the counts matched, which is the only way the
+> comparison means anything.
+
 **This explains the earlier negatives rather than contradicting them.**
 The sources are not independent information channels; they are different
 measurements of the same 3–7 latent factors. That is exactly why adding
@@ -599,6 +610,34 @@ is no drift to speak of. The random baseline is why this is worth
 stating: two arbitrary 7-subspaces of a 28-dimensional space already
 overlap at 0.25, so 0.96 is a strong result rather than an unsurprising
 one. §13's composition claim holds period by period, not just on average.
+
+### 13c. …and the SAME structure appears in 1990–2012
+
+The out-of-era check on §13, with feature counts matched so the
+comparison is not an arithmetic artifact (the early finratio slice
+carries only `bm` and `roe`, so an unmatched comparison would "find" that
+fundamentals matter less in the past — an artifact of the pull, not of
+the market).
+
+Modern restricted to the early era's 18 features, against the early era:
+
+| factor | modern (matched) | early (1990–2012) |
+|---|---|---|
+| 1 | price 58%, options 23%, exp 13%, fund 7% | price 57%, options 27%, exp 12%, fund 5% |
+| 2 | price 72%, exp 12%, options 12%, fund 5% | price 74%, exp 13%, options 10%, fund 3% |
+
+Signal-factor counts also agree (2–5 modern matched, 3–5 early across the
+conservative/anti-conservative bracket), and the incremental result is
+identical in both eras: **options +0, expectations +0, fundamentals +0**.
+
+So the cross-source structure is not a feature of the modern market. The
+same few blended factors, in the same proportions, describe 1990–2012 and
+2013–2024 — 241,542 early security-months over 202 dates, and 206,197
+modern over 131. Combined with §13b's within-modern stability (0.962
+subspace alignment), this is now the most replicated structural claim in
+the programme, and it sits alongside `ERA-TRANSFER-1`: **both of the
+run's strongest results are about structure being stable, and neither is
+about a tradable edge.**
 
 ### 14. The level ceiling is unreachable in three shapes — the family closes
 

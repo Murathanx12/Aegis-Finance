@@ -299,6 +299,13 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--era", default="modern")
     ap.add_argument("--n-draws", type=int, default=200)
+    ap.add_argument("--match-features", default="",
+                    help="comma-separated feature whitelist. Era "
+                         "comparison of factor COMPOSITION is confounded "
+                         "unless the feature COUNTS match: the early "
+                         "finratio slice carries only bm and roe, so "
+                         "fundamentals load less there mechanically, "
+                         "whichever era is actually different.")
     ap.add_argument("--min-coverage", type=float, default=0.60,
                     help="drop a source below this complete-case coverage; "
                          "a sparse source shrinks the whole panel")
@@ -330,6 +337,12 @@ def main() -> int:
         print(f"  dropped for coverage < {a.min_coverage}: {dropped}")
 
     feats = [c for v in src.values() for c in v if c in df.columns]
+    if a.match_features:
+        keep = {x.strip() for x in a.match_features.split(",") if x.strip()}
+        feats = [c for c in feats if c in keep]
+        src = {k: [c for c in v if c in keep] for k, v in src.items()}
+        src = {k: v for k, v in src.items() if v}
+        print(f"  matched to {len(feats)} features for era comparison")
     # cross-sectionally rank-normalise within each date: structure ACROSS
     # features, not the market factor everything shares
     sub = df[["date"] + feats].dropna()

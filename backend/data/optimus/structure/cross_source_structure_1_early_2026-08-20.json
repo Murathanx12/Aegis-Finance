@@ -1,8 +1,8 @@
 {
   "trial": "CROSS-SOURCE-STRUCTURE-1",
   "mode": "SCREEN",
-  "era": "modern",
-  "at": "2026-08-20T08:13:35+00:00",
+  "era": "early",
+  "at": "2026-08-20T08:12:06+00:00",
   "question": "is there latent structure ACROSS sources at the FEATURE level, before any portfolio construction?",
   "distinct_from": "INFORMATION-DIMENSION-1 asked the same question at BOOK level and answered no; a book grammar is a lossy channel (CONSTRUCTION-CUT-1: 36 books -> ~1.3 effective behaviours), so a book-level negative does not close the feature level",
   "noise_removal": "Marchenko-Pastur upper bound with FITTED noise variance \u2014 the cutoff is analytic, not chosen",
@@ -34,86 +34,103 @@
       "roe"
     ]
   },
-  "n_rows_complete_case": 206197,
-  "n_dates_complete_case": 131,
+  "n_rows_complete_case": 241542,
+  "n_dates_complete_case": 202,
   "sources_dropped_for_coverage": {
-    "ownership": 0.336
+    "ownership": 0.295
   },
   "min_coverage": 0.6,
   "pooled_spectrum": {
     "N": 18,
-    "T_rows": 206197,
+    "T_rows": 241542,
     "eigenvalues_top": [
-      5.2247,
-      2.7733,
-      1.3827,
-      1.2418,
-      1.0428,
-      0.948,
-      0.8875,
-      0.8776,
-      0.7636,
-      0.5998,
-      0.5781,
-      0.4681
+      5.0207,
+      2.9177,
+      1.6917,
+      1.3679,
+      1.0965,
+      0.9363,
+      0.889,
+      0.8222,
+      0.612,
+      0.5702,
+      0.4898,
+      0.4274
     ],
     "bound_rows": {
-      "T": 206197,
-      "q_T_over_N": 11455.3889,
-      "mp_upper_bound": 1.0188,
+      "T": 241542,
+      "q_T_over_N": 13419.0,
+      "mp_upper_bound": 1.0173,
       "n_signal_factors": 5,
-      "signal_variance_share": 0.6481,
+      "signal_variance_share": 0.6719,
       "fitted_noise_variance": 1.0,
-      "mp_upper_bound_fitted_var": 1.0188,
+      "mp_upper_bound_fitted_var": 1.0173,
       "n_signal_factors_fitted_var": 5,
       "fitted_var_note": "fitted-bulk variance is unreliable when a few factors dominate; unit variance is exact under the null"
     },
     "bound_dates": {
-      "T": 131,
-      "q_T_over_N": 7.2778,
-      "mp_upper_bound": 1.8788,
-      "n_signal_factors": 2,
-      "signal_variance_share": 0.4443,
-      "fitted_noise_variance": 0.5046,
-      "mp_upper_bound_fitted_var": 0.948,
+      "T": 202,
+      "q_T_over_N": 11.2222,
+      "mp_upper_bound": 1.6861,
+      "n_signal_factors": 3,
+      "signal_variance_share": 0.535,
+      "fitted_noise_variance": 0.5717,
+      "mp_upper_bound_fitted_var": 0.964,
       "n_signal_factors_fitted_var": 5,
       "fitted_var_note": "fitted-bulk variance is unreliable when a few factors dominate; unit variance is exact under the null"
     },
-    "n_signal_factors": 2
+    "n_signal_factors": 3
   },
   "factor_source_loadings": [
     {
       "factor": 1,
-      "eigenvalue": 5.2247,
+      "eigenvalue": 5.0207,
       "source_share": {
-        "price": 0.577,
-        "options": 0.229,
-        "expectations": 0.127,
-        "fundamentals": 0.067
+        "price": 0.568,
+        "options": 0.271,
+        "expectations": 0.115,
+        "fundamentals": 0.046
       },
       "top_features": {
-        "log_iv_var": 0.387,
-        "opt_iv_atm": 0.387,
-        "log_rv_q": 0.381,
-        "log_rv_m": 0.368,
-        "log_rv_w": 0.314
+        "opt_iv_atm": 0.412,
+        "log_iv_var": 0.412,
+        "log_rv_q": 0.401,
+        "log_rv_m": 0.392,
+        "log_rv_w": 0.338
       }
     },
     {
       "factor": 2,
-      "eigenvalue": 2.7733,
+      "eigenvalue": 2.9177,
       "source_share": {
-        "price": 0.717,
-        "expectations": 0.121,
-        "options": 0.115,
-        "fundamentals": 0.047
+        "price": 0.736,
+        "expectations": 0.128,
+        "options": 0.104,
+        "fundamentals": 0.032
       },
       "top_features": {
-        "mom_126": 0.49,
-        "mom_63": 0.465,
-        "dd_252": 0.35,
-        "mom_252_21": 0.349,
-        "mom_21": 0.326
+        "mom_126": 0.491,
+        "mom_63": 0.459,
+        "dd_252": 0.386,
+        "mom_252_21": 0.364,
+        "mom_21": 0.313
+      }
+    },
+    {
+      "factor": 3,
+      "eigenvalue": 1.6917,
+      "source_share": {
+        "fundamentals": 0.424,
+        "price": 0.28,
+        "expectations": 0.24,
+        "options": 0.056
+      },
+      "top_features": {
+        "bm": 0.612,
+        "roe": 0.576,
+        "exp_disp": 0.407,
+        "exp_breadth": 0.176,
+        "mom_252_21": 0.149
       }
     }
   ],
