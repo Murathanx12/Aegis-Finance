@@ -218,10 +218,12 @@ poured through a top-N long-only monthly-rebalance grammar.
 > ⚠️ **The obvious interpretation of that — "the construction layer
 > destroys the information" — was tested in §12 and REFUTED.** Removing
 > the top-N cut collapses effective rank from 3.72 to 1.31 rather than
-> raising it. §12 also found options *beating* its control under a
-> narrower rank-only grammar, disagreeing with the table above. Read §7
-> as a measurement under one grammar, not as a diagnosis. The surviving
-> claim is narrower: the space of long-only monthly top-N books is
+> raising it. §12's apparent counter-example (options beating control
+> under a rank-only grammar) was itself withdrawn the same day: it
+> reproduces in exactly one of eight cells and vanishes in every superset.
+> Read §7 as the measurement that survives — now across the full
+> factorial, not one setting. The surviving claim is narrower than the
+> original interpretation: the space of long-only monthly top-N books is
 > intrinsically low-dimensional, and we have no demonstrated construction
 > that raises it.
 
@@ -470,16 +472,40 @@ anticipated. **The top-N cut is not what collapses the information; it is
 what creates what little behavioural diversity exists.** Concentration is
 what differentiates books.
 
-**One disagreement to carry, not to resolve by picking the convenient
-result.** Under this narrower grammar (rank weighting only, 6 books per
-class), options *does* beat its size-matched control (+0.475 vs +0.346,
-p=0.000). Under §7's fuller grammar (3 weightings × 2 handlings × 2
-top-N, 36 books per class) it did not (−0.124, p=1.000). The two runs
-disagree, and the difference is grammar coverage and book count, not a
-bug. With 6 books per class the effective-rank increment is noisy. The
-honest position is that **whether options adds a behavioural direction is
-grammar-dependent and currently unresolved**, not that one of these runs
-is the answer.
+**The disagreement was resolved the same day, and it killed this run's
+own positive.** Under this narrower grammar options appeared to beat its
+size-matched control (+0.475 vs +0.346, p=0.000), disagreeing with §7.
+`INFORMATION-DIMENSION-RECONCILE` re-analysed the existing 216-book
+corpus — no new simulation, complete factorial of cells, candidate *and*
+control subsampled to the same k:
+
+| cell | k | increment | control | excess | p | |
+|---|---|---|---|---|---|---|
+| ALL (full grammar) | 36 | 0.159 | 0.281 | −0.121 | 1.000 | no |
+| ALL, matched to 6 | 6 | 0.141 | 0.096 | +0.045 | 0.182 | no |
+| weighting = equal | 12 | 0.166 | 0.189 | −0.023 | 0.758 | no |
+| weighting = inverse_vol | 12 | 0.109 | 0.275 | −0.166 | 1.000 | no |
+| weighting = rank | 12 | 0.294 | 0.287 | +0.007 | 0.445 | no |
+| top_n = 50 | 18 | 0.337 | 0.352 | −0.015 | 0.697 | no |
+| top_n = 100 | 18 | 0.054 | 0.181 | −0.126 | 1.000 | no |
+| **rank & top_n=50** (§12's exact cell) | 6 | 0.475 | 0.344 | **+0.131** | 0.000 | **BEATS** |
+
+Options beats its control in **exactly one of eight cells — the precise
+cell §12 happened to use** — and the effect vanishes in every superset of
+it. Widen to all rank-weighted books and it is +0.007 (p=0.445); widen to
+all top-50 books and it is −0.015. Matching book count alone does not
+reproduce it (+0.045, p=0.182).
+
+That is the signature of a cell-specific artifact, not a finding.
+**§12's positive is withdrawn.** §7's negative stands, and it now stands
+across the full factorial rather than at one setting.
+
+Worth naming plainly: this run's own machinery killed this run's own
+result, which is what the selection-overfit discipline is for. It also
+shows how the artifact was produced without anyone p-hacking — §12 chose
+rank & top-50 for a principled reason (it was the natural "cut" grammar
+for testing the cut), and a principled choice of one cell is still one
+cell.
 
 **What this does to the §7 redirect.** It weakens it. The evidence no
 longer supports "the construction layer is destroying the information"
@@ -674,13 +700,10 @@ solving it.**
 
 ## NEXT 10 MACHINE JOBS
 
-1. **Resolve the §7-vs-§12 disagreement on options.** The two runs
-   disagree on whether the options class adds a behavioural direction
-   (§7: no, 36 books, full grammar; §12: yes, p=0.000, 6 books, rank-only
-   grammar). Same question, different grammar coverage and book count.
-   Run it at matched book counts across several grammars before either
-   number is quoted again — this is currently the least settled claim in
-   the handoff, and it is cheap to settle.
+1. ~~Resolve the §7-vs-§12 disagreement on options.~~ **DONE in
+   session** — `INFORMATION-DIMENSION-RECONCILE` settled it by
+   re-analysis: §12's positive appears in one of eight cells and is
+   withdrawn. §7's negative stands across the full factorial.
 1b. `CONSTRUCTION-BOTTLENECK-1`, now much narrower. §8 tested sizing by
    predicted vol (wash), §9 tested covariance-aware construction (worse
    pooled, better only on the value book), §12 tested removing the cut

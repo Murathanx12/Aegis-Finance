@@ -1,0 +1,397 @@
+{
+  "trial": "INFORMATION-DIMENSION-RECONCILE",
+  "mode": "SCREEN",
+  "at": "2026-08-20T05:40:50+00:00",
+  "question": "do INFORMATION-DIMENSION-1 and CONSTRUCTION-CUT-1 disagree because of BOOK COUNT or because of GRAMMAR?",
+  "method": "re-analysis of the existing 216-book corpus; both candidate and control subsampled to the same k, complete factorial of cells reported",
+  "n_draws": 600,
+  "cells": [
+    {
+      "cell": "ALL (full grammar)",
+      "class": "options",
+      "n_owned_books": 72,
+      "n_matched": 36,
+      "dim_owned": 3.694,
+      "increment_mean": 0.159,
+      "control_mean": 0.281,
+      "excess": -0.121,
+      "excess_ci": [
+        -0.169,
+        -0.07
+      ],
+      "p_value": 1.0,
+      "beats_control": false
+    },
+    {
+      "cell": "ALL (full grammar)",
+      "class": "expectations",
+      "n_owned_books": 72,
+      "n_matched": 36,
+      "dim_owned": 3.694,
+      "increment_mean": -0.247,
+      "control_mean": 0.283,
+      "excess": -0.53,
+      "excess_ci": [
+        -0.579,
+        -0.475
+      ],
+      "p_value": 1.0,
+      "beats_control": false
+    },
+    {
+      "cell": "ALL (full grammar)",
+      "class": "liquidity",
+      "n_owned_books": 72,
+      "n_matched": 24,
+      "dim_owned": 3.694,
+      "increment_mean": 0.191,
+      "control_mean": 0.244,
+      "excess": -0.053,
+      "excess_ci": [
+        -0.123,
+        0.022
+      ],
+      "p_value": 0.9133,
+      "beats_control": false
+    },
+    {
+      "cell": "ALL, matched to 6",
+      "class": "options",
+      "n_owned_books": 72,
+      "n_matched": 6,
+      "dim_owned": 3.694,
+      "increment_mean": 0.141,
+      "control_mean": 0.096,
+      "excess": 0.045,
+      "excess_ci": [
+        -0.047,
+        0.145
+      ],
+      "p_value": 0.1817,
+      "beats_control": false
+    },
+    {
+      "cell": "ALL, matched to 6",
+      "class": "expectations",
+      "n_owned_books": 72,
+      "n_matched": 6,
+      "dim_owned": 3.694,
+      "increment_mean": 0.025,
+      "control_mean": 0.098,
+      "excess": -0.073,
+      "excess_ci": [
+        -0.149,
+        0.003
+      ],
+      "p_value": 0.97,
+      "beats_control": false
+    },
+    {
+      "cell": "ALL, matched to 6",
+      "class": "liquidity",
+      "n_owned_books": 72,
+      "n_matched": 6,
+      "dim_owned": 3.694,
+      "increment_mean": 0.126,
+      "control_mean": 0.1,
+      "excess": 0.026,
+      "excess_ci": [
+        -0.058,
+        0.113
+      ],
+      "p_value": 0.2883,
+      "beats_control": false
+    },
+    {
+      "cell": "weighting=equal",
+      "class": "options",
+      "n_owned_books": 24,
+      "n_matched": 12,
+      "dim_owned": 3.441,
+      "increment_mean": 0.166,
+      "control_mean": 0.189,
+      "excess": -0.023,
+      "excess_ci": [
+        -0.084,
+        0.039
+      ],
+      "p_value": 0.7583,
+      "beats_control": false
+    },
+    {
+      "cell": "weighting=equal",
+      "class": "expectations",
+      "n_owned_books": 24,
+      "n_matched": 12,
+      "dim_owned": 3.441,
+      "increment_mean": -0.178,
+      "control_mean": 0.189,
+      "excess": -0.367,
+      "excess_ci": [
+        -0.421,
+        -0.303
+      ],
+      "p_value": 1.0,
+      "beats_control": false
+    },
+    {
+      "cell": "weighting=equal",
+      "class": "liquidity",
+      "n_owned_books": 24,
+      "n_matched": 8,
+      "dim_owned": 3.441,
+      "increment_mean": 0.148,
+      "control_mean": 0.158,
+      "excess": -0.01,
+      "excess_ci": [
+        -0.09,
+        0.079
+      ],
+      "p_value": 0.5933,
+      "beats_control": false
+    },
+    {
+      "cell": "weighting=inverse_vol",
+      "class": "options",
+      "n_owned_books": 24,
+      "n_matched": 12,
+      "dim_owned": 3.36,
+      "increment_mean": 0.109,
+      "control_mean": 0.275,
+      "excess": -0.166,
+      "excess_ci": [
+        -0.248,
+        -0.075
+      ],
+      "p_value": 1.0,
+      "beats_control": false
+    },
+    {
+      "cell": "weighting=inverse_vol",
+      "class": "expectations",
+      "n_owned_books": 24,
+      "n_matched": 12,
+      "dim_owned": 3.36,
+      "increment_mean": -0.28,
+      "control_mean": 0.274,
+      "excess": -0.554,
+      "excess_ci": [
+        -0.63,
+        -0.463
+      ],
+      "p_value": 1.0,
+      "beats_control": false
+    },
+    {
+      "cell": "weighting=inverse_vol",
+      "class": "liquidity",
+      "n_owned_books": 24,
+      "n_matched": 8,
+      "dim_owned": 3.36,
+      "increment_mean": 0.122,
+      "control_mean": 0.226,
+      "excess": -0.104,
+      "excess_ci": [
+        -0.209,
+        0.027
+      ],
+      "p_value": 0.935,
+      "beats_control": false
+    },
+    {
+      "cell": "weighting=rank",
+      "class": "options",
+      "n_owned_books": 24,
+      "n_matched": 12,
+      "dim_owned": 3.666,
+      "increment_mean": 0.294,
+      "control_mean": 0.287,
+      "excess": 0.007,
+      "excess_ci": [
+        -0.065,
+        0.094
+      ],
+      "p_value": 0.445,
+      "beats_control": false
+    },
+    {
+      "cell": "weighting=rank",
+      "class": "expectations",
+      "n_owned_books": 24,
+      "n_matched": 12,
+      "dim_owned": 3.666,
+      "increment_mean": -0.112,
+      "control_mean": 0.289,
+      "excess": -0.4,
+      "excess_ci": [
+        -0.471,
+        -0.313
+      ],
+      "p_value": 1.0,
+      "beats_control": false
+    },
+    {
+      "cell": "weighting=rank",
+      "class": "liquidity",
+      "n_owned_books": 24,
+      "n_matched": 8,
+      "dim_owned": 3.666,
+      "increment_mean": 0.217,
+      "control_mean": 0.239,
+      "excess": -0.022,
+      "excess_ci": [
+        -0.126,
+        0.11
+      ],
+      "p_value": 0.645,
+      "beats_control": false
+    },
+    {
+      "cell": "top_n=50",
+      "class": "options",
+      "n_owned_books": 36,
+      "n_matched": 18,
+      "dim_owned": 3.876,
+      "increment_mean": 0.337,
+      "control_mean": 0.352,
+      "excess": -0.015,
+      "excess_ci": [
+        -0.07,
+        0.065
+      ],
+      "p_value": 0.6967,
+      "beats_control": false
+    },
+    {
+      "cell": "top_n=50",
+      "class": "expectations",
+      "n_owned_books": 36,
+      "n_matched": 18,
+      "dim_owned": 3.876,
+      "increment_mean": -0.171,
+      "control_mean": 0.35,
+      "excess": -0.521,
+      "excess_ci": [
+        -0.583,
+        -0.447
+      ],
+      "p_value": 1.0,
+      "beats_control": false
+    },
+    {
+      "cell": "top_n=50",
+      "class": "liquidity",
+      "n_owned_books": 36,
+      "n_matched": 12,
+      "dim_owned": 3.876,
+      "increment_mean": 0.283,
+      "control_mean": 0.297,
+      "excess": -0.014,
+      "excess_ci": [
+        -0.101,
+        0.1
+      ],
+      "p_value": 0.635,
+      "beats_control": false
+    },
+    {
+      "cell": "top_n=100",
+      "class": "options",
+      "n_owned_books": 36,
+      "n_matched": 18,
+      "dim_owned": 3.249,
+      "increment_mean": 0.054,
+      "control_mean": 0.181,
+      "excess": -0.126,
+      "excess_ci": [
+        -0.17,
+        -0.073
+      ],
+      "p_value": 1.0,
+      "beats_control": false
+    },
+    {
+      "cell": "top_n=100",
+      "class": "expectations",
+      "n_owned_books": 36,
+      "n_matched": 18,
+      "dim_owned": 3.249,
+      "increment_mean": -0.25,
+      "control_mean": 0.182,
+      "excess": -0.431,
+      "excess_ci": [
+        -0.477,
+        -0.378
+      ],
+      "p_value": 1.0,
+      "beats_control": false
+    },
+    {
+      "cell": "top_n=100",
+      "class": "liquidity",
+      "n_owned_books": 36,
+      "n_matched": 12,
+      "dim_owned": 3.249,
+      "increment_mean": 0.097,
+      "control_mean": 0.159,
+      "excess": -0.063,
+      "excess_ci": [
+        -0.127,
+        0.018
+      ],
+      "p_value": 0.9483,
+      "beats_control": false
+    },
+    {
+      "cell": "rank & top_n=50 (CONSTRUCTION-CUT-1's cell)",
+      "class": "options",
+      "n_owned_books": 12,
+      "n_matched": 6,
+      "dim_owned": 3.721,
+      "increment_mean": 0.475,
+      "control_mean": 0.344,
+      "excess": 0.131,
+      "excess_ci": [
+        0.053,
+        0.306
+      ],
+      "p_value": 0.0,
+      "beats_control": true
+    },
+    {
+      "cell": "rank & top_n=50 (CONSTRUCTION-CUT-1's cell)",
+      "class": "expectations",
+      "n_owned_books": 12,
+      "n_matched": 6,
+      "dim_owned": 3.721,
+      "increment_mean": 0.01,
+      "control_mean": 0.347,
+      "excess": -0.337,
+      "excess_ci": [
+        -0.412,
+        -0.159
+      ],
+      "p_value": 1.0,
+      "beats_control": false
+    },
+    {
+      "cell": "rank & top_n=50 (CONSTRUCTION-CUT-1's cell)",
+      "class": "liquidity",
+      "n_owned_books": 12,
+      "n_matched": 4,
+      "dim_owned": 3.721,
+      "increment_mean": 0.288,
+      "control_mean": 0.273,
+      "excess": 0.015,
+      "excess_ci": [
+        -0.123,
+        0.204
+      ],
+      "p_value": 0.5317,
+      "beats_control": false
+    }
+  ],
+  "verdicts": {
+    "options": "NEITHER \u2014 options does not separate at matched book counts in any cell; CONSTRUCTION-CUT-1's positive was not reproducible under matching"
+  }
+}
