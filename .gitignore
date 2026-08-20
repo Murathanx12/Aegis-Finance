@@ -113,3 +113,15 @@ backend/data/funnel_cache/
 # checkpoint, run metadata) are committed beside them; the raw stdout of a run
 # is not an artifact, and yfinance's per-ticker noise is not evidence.
 backend/data/swarm/*.log
+
+# WRDS bulk-pull operational state. These are rewritten every few tables
+# while a multi-hour pull runs, and they are TRACKED, so a running pull
+# made `git status` dirty continuously — which on 2026-08-20 flipped the
+# 17:00 launcher receipt's `git_dirty` from False to True and would have
+# contaminated the arming pre-flight. A day session's data churn must
+# never be able to do that.
+# The evidential content (what was pulled, what was skipped and why) is
+# preserved by committing a STABLE snapshot when a pull completes, which
+# is better practice than committing a file mid-rewrite.
+backend/data/optimus/wrds/pull_everything_manifest.json
+backend/data/optimus/wrds/pull_everything_plan.json
