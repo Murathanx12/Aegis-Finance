@@ -175,7 +175,77 @@ expansion. Adding ACLED, FIRMS, shipping and prediction markets buys more
 information classes; this run says our construction layer cannot express
 the ones we already bought.
 
-### 7. Every grammar decision is a risk decision, not a return decision
+### 7. The risk head's ranking edge does NOT convert into sizing value
+
+`RISK-SIZING-VALUE-1` / `RISK-SIZING-DISPERSION-1`. The bridge from the
+programme's best asset to an actual portfolio, and it does not carry the
+weight the security-level result suggested.
+
+Same signal, same picks, same dates, same costs — only the weighting
+differs: `1/sqrt(trailing 63d var)` vs `1/sqrt(model predicted var)`,
+predictions strictly walk-forward. Declared direction: the model should
+reduce realised book volatility.
+
+Pooled over 12 matched pairs, 94 months: **d_ann_vol +0.0103, ns**. The
+wrong sign, and not significant.
+
+Three explanations tested and **killed**:
+
+| hypothesis | test | result |
+|---|---|---|
+| weight concentration | 5× cap on any weighting | contrast moved +0.0103 → +0.0109. Cap does not bind. |
+| prediction coverage | coverage of each signal's picks | value_bm 93.3% — *higher* than mom_12_1 90.8%, low_vol 89.9% |
+| model is wrong on those names | rank IC / QLIKE restricted to picks | model is **most** accurate on value picks (IC 0.764, QLIKE 0.381), **least** on opt_iv_low (0.499) — the reverse of where sizing helped |
+
+The fourth survives and is measurable. Cross-sectional dispersion of log
+predicted variance:
+
+| signal | sd log pred | sd log trailing | ratio | sd log realized |
+|---|---|---|---|---|
+| value_bm | 0.847 | 1.056 | 0.80 | 1.093 |
+| opt_iv_low | 0.922 | 1.131 | 0.82 | 1.300 |
+| mom_12_1 | 0.717 | 1.062 | **0.67** | 1.112 |
+| low_vol | 1.029 | 1.007 | 1.02 | 1.441 |
+
+**The model is shrunk.** A regularised learner minimising squared error
+on log variance is rewarded for pulling toward the mean, so it orders the
+cross-section well while understating its spread. **Inverse-vol weights
+are driven by the SPREAD of the estimator, not its ordering** — a shrunk
+estimator produces near-equal weights and cannot reduce book volatility
+however well it ranks. On the value book, model-sized realised vol was
+0.596 against **0.608 for plain equal weight**: it was barely sizing.
+
+The fix, and its honest result: a per-date **rank-preserving quantile
+map** onto the trailing-variance distribution (Spearman preserved at
+exactly 1.000; sd log 0.828 → 1.254).
+
+| contrast | d_ann_vol | MDE | verdict |
+|---|---|---|---|
+| corrected − uncorrected model | **−0.0084** | 0.0083 | **POWERED** |
+| corrected − trailing (primary) | +0.0019 | 0.0453 | ns |
+| uncorrected − trailing | +0.0103 | 0.0392 | ns |
+
+The correction is a real, powered improvement over the uncorrected model
+— the shrinkage diagnosis is confirmed — and it wins on 3 of 6 signals
+(mom_12_1, quality_roe, exp_breadth, the last two with *higher* return
+too). **But it still does not beat trailing inverse-vol.**
+`RISK-SIZING-VALUE-1` stands as **NOT_ESTABLISHED**.
+
+One residual anomaly, named rather than explained away: `value_bm`
+survives every correction (trailing 0.331 vs corrected model 0.589 vs
+equal 0.608). Ordering is good there, dispersion is now matched, and
+coverage is high — so the mechanism is still unidentified. Queued, not
+hand-waved.
+
+**What this means for G2.** Note what is *not* being said. Risk sizing
+itself works: both estimators beat equal weight substantially (value_bm
+0.331/0.589 vs 0.608; opt_iv_low 0.091/0.077 vs 0.105). So the G2 lane
+pair — equal-weight vs risk-sized — remains well posed and should show a
+real effect. What is a wash is **which estimator**. The lane can use the
+cheap trailing estimator; if it uses the model, the receipt must not
+claim the model is *why* it works.
+
+### 8. Every grammar decision is a risk decision, not a return decision
 
 `RULE-INTERVENTION-1`, matched paired contrasts (each pair differs in
 exactly one coordinate, so signal/universe/dates/costs cancel; unit of
@@ -295,14 +365,19 @@ first, so 216 books spanning ~4 behaviours cannot vote 216 times.
 
 ## FOR MURAT (three minutes)
 
-1. **The G2 risk lane hold is resolved by measurement.** The review asked
-   to hold it because the options head was unbenchmarked against HAR-RV
-   and unaudited for the timestamp bug class. Both are now done: it beats
-   the baseline that actually threatens it (IV, not HAR), in both eras,
-   and the chronology audit passes with zero negative lags. **One
-   condition:** anything consuming the LEVEL must use the calibrated
-   prediction, not the raw one. Pin
-   `risk_head_vol_lgbm_options@2.0.0@31b9b8d62c777e97`.
+1. **The G2 risk lane hold is resolved by measurement — but the reason
+   to run it changed.** The review asked to hold it because the options
+   head was unbenchmarked against HAR-RV and unaudited for the timestamp
+   bug class. Both are now done: it beats the baseline that actually
+   threatens it (IV, not HAR), in both eras, and the chronology audit
+   passes with zero negative lags. Pin
+   `risk_head_vol_lgbm_options@2.0.0@31b9b8d62c777e97`, and note **two**
+   conditions: anything consuming the LEVEL must use the calibrated
+   prediction; and the receipt must not claim the model is why the lane
+   works. §7 found the model's ranking edge does **not** convert into
+   sizing value over a nearly-free trailing estimator. Risk *sizing*
+   works; the *estimator choice* is a wash. The cheap estimator is
+   defensible and easier to defend.
 2. **Order 22's world-sensor arc should wait.** Not because the idea is
    wrong, but because §6 says our construction layer cannot express the
    information classes we already bought. Buying more feeds before fixing
@@ -320,12 +395,15 @@ first, so 216 books spanning ~4 behaviours cannot vote 216 times.
 
 ## NEXT 10 MACHINE JOBS
 
-1. `CONSTRUCTION-BOTTLENECK-1` — the top open question. Does a
-   construction layer that can express security-level risk information
-   (sizing by predicted vol, continuous tilts rather than top-N,
-   risk-parity over signal blocks) recover the direction §6 shows being
-   destroyed? Same signals, different grammar, effective dimension as the
-   readout.
+1. `CONSTRUCTION-BOTTLENECK-1` — the top open question, now sharper.
+   §7 already tested the simplest bridge (sizing by predicted vol) and it
+   was a wash, so the remaining candidates are **covariance-aware**
+   construction (the repo already has Marchenko-Pastur denoised
+   covariance and riskfolio-lib) and continuous tilts rather than a
+   top-N cut. Effective dimension is the readout. Note that inverse-vol
+   sizing optimises each name's marginal variance while ignoring
+   covariance entirely — which is also the leading unexplained candidate
+   for the `value_bm` anomaly in §7.
 2. `REGIME-RISK-CONDITIONING-1` — the surviving half of the regime
    question, on the §59 clock: does state conditioning improve **vol/
    drawdown** prediction, where the oracle ceiling was never measured?

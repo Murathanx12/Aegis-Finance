@@ -296,6 +296,19 @@ fitted on train rows only.
    with no listed options, which is a real and unmodelled selection.
 5. **The entitled CRSP vintage ends 2024-12-31.** Nothing in training
    knows anything after that date.
+6. **Its ranking edge does NOT convert into position-sizing value.**
+   `RISK-SIZING-VALUE-1` sized books by `1/sqrt(predicted var)` against
+   `1/sqrt(trailing 63d var)`, holding selection fixed: pooled
+   d_ann_vol **+0.0103, ns** — the wrong sign. Cause measured: the
+   model is **shrunk**, with cross-sectional dispersion of log predicted
+   variance only 0.67-0.82x trailing (and below realized). Inverse-vol
+   weights are driven by an estimator's SPREAD, not its ordering, so a
+   well-ranked but shrunk forecast produces near-equal weights. A
+   rank-preserving quantile map fixes the shrinkage (POWERED, -0.0084
+   vol vs uncorrected) and still does not beat trailing. **Anyone using
+   this model for weights, rather than for ranking or for a level
+   estimate, must apply a dispersion correction and should expect no
+   advantage over trailing vol.**
 
 ## Provenance and PIT
 

@@ -44,6 +44,13 @@ COST_ONE_WAY_BPS = 3.0
 WINNER_THRESHOLD = 0.40
 WINNER_EXEMPT_DAYS = 60
 
+#: permno x formation-date table of PREDICTED variance, installed by a
+#: caller that has out-of-sample predictions (RISK-SIZING-VALUE-1). Left
+#: None so `weighting='model_vol'` REFUSES rather than quietly degrading
+#: to trailing vol — a silent fallback would make the challenger
+#: identical to the incumbent and report the null as a result.
+MODEL_PRED_VAR = None
+
 
 class SimRefused(RuntimeError):
     """A required input is missing or unusable. Refused, not defaulted."""
@@ -169,6 +176,7 @@ def run_book(panel: Panel, *, weighting: str, winner_handling: str,
              start: str = "2014-06-30", end: str = "2024-11-30",
              top_n: int | None = 50, signal: str = "mom_12_1",
              extras: dict | None = None, avoid_streak: int | None = None,
+             weight_cap: float | None = None,
              cost_one_way_bps: float = COST_ONE_WAY_BPS) -> dict:
     """One simulated lane book: `signal` top-N, monthly rebalance, daily
     NAV. `weighting`: 'equal'|'inverse_vol'|'rank'. `winner_handling`:
@@ -187,8 +195,15 @@ def run_book(panel: Panel, *, weighting: str, winner_handling: str,
                                      or "streak" not in extras):
         raise SimRefused("avoid_streak needs the prepared streak matrix "
                          "— refusing to run without its input")
-    if weighting not in ("equal", "inverse_vol", "rank"):
+    if weighting not in ("equal", "inverse_vol", "rank", "model_vol"):
         raise SimRefused(f"unknown weighting {weighting!r}")
+    if weighting == "model_vol" and MODEL_PRED_VAR is None:
+        raise SimRefused(
+            "weighting='model_vol' needs MODEL_PRED_VAR — a permno x "
+            "formation-date table of PREDICTED variance. Refusing rather "
+            "than silently falling back to trailing vol, which would make "
+            "the challenger and the incumbent the same book and report a "
+            "null difference as a finding.")
     if winner_handling not in ("trim", "exempt"):
         raise SimRefused(f"unknown winner_handling {winner_handling!r}")
     rate = cost_one_way_bps / 1e4
@@ -251,7 +266,26 @@ def run_book(panel: Panel, *, weighting: str, winner_handling: str,
             if not picks:
                 nav_rows.append((d, mark(d)))
                 continue
-            if weighting == "equal":
+            if weighting == "model_vol":
+                # inverse PREDICTED vol, as-of: only predictions stamped
+                # on or before the rebalance date are visible
+                hist = MODEL_PRED_VAR.loc[:asof]
+                pv = (hist.iloc[-1] if len(hist)
+                      else pd.Series(dtype=float))
+                pv = pv[pv.index.isin(picks)].dropna()
+                pv = pv[pv > 0]
+                if len(pv):
+                    iv = 1.0 / np.sqrt(pv)
+                    w = {p: float(x / iv.sum()) for p, x in iv.items()}
+                    # names the model has no view on keep equal weight
+                    miss = [p for p in picks if p not in w]
+                    if miss:
+                        share = len(miss) / len(picks)
+                        w = {p: v * (1 - share) for p, v in w.items()}
+                        w.update({p: share / len(miss) for p in miss})
+                else:
+                    w = {p: 1.0 / len(picks) for p in picks}
+            elif weighting == "equal":
                 w = {p: 1.0 / len(picks) for p in picks}
             elif weighting == "rank":
                 ranks = np.arange(len(picks), 0, -1, dtype=float)
@@ -263,6 +297,30 @@ def run_book(panel: Panel, *, weighting: str, winner_handling: str,
                 w = ({p: float(x / iv.sum()) for p, x in iv.items()}
                      if len(iv) and iv.sum() > 0
                      else {p: 1.0 / len(picks) for p in picks})
+
+            # Optional concentration cap, applied to ANY weighting so the
+            # cap and the estimator can be varied independently. Inverse-
+            # volatility sizing is unbounded by construction: a name the
+            # estimator thinks is very quiet attracts arbitrarily large
+            # weight, and a MODEL can output a far smaller variance than
+            # a 63-day trailing window ever will. Excess is redistributed
+            # pro-rata over the uncapped names, iterating to a fixed
+            # point so redistribution cannot push a name back over.
+            if weight_cap is not None and w:
+                cap = float(weight_cap) / len(w)
+                for _ in range(50):
+                    over = {p: v for p, v in w.items() if v > cap}
+                    if not over:
+                        break
+                    excess = sum(v - cap for v in over.values())
+                    rest = {p: v for p, v in w.items() if v <= cap}
+                    if not rest or sum(rest.values()) <= 0:
+                        w = {p: 1.0 / len(w) for p in w}
+                        break
+                    tot = sum(rest.values())
+                    w = {**{p: cap for p in over},
+                         **{p: v + excess * v / tot
+                            for p, v in rest.items()}}
 
             nav = mark(d)
             frozen = {}
