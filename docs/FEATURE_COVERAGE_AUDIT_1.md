@@ -71,6 +71,35 @@ descriptive collectors never had". Under the live coverage split that is true
 for 12 names out of 180. For the other 168 the arena is a 12-1 momentum
 ranker, and no aggregation rule changes that.
 
+## 3b. Cheap coverage is not the same buy as diverse coverage
+
+The +0.239 above assumes the five added factors are views correlated at
+ρ = 0.4. Five more **price-derived** features — momentum over other windows,
+drawdown, 52-week state, gap, volume z — are not that. They are near-copies of
+the momentum already there. Order 24 measured 3–7 shared latent factors across
+*all* sources, which is precisely the warning that adding a feed need not add
+a dimension. So the build decision turns on ρ, and ρ is worth a number before
+spending:
+
+| ρ between added features | gain from full coverage | share of oracle gap |
+|---|---|---|
+| 0.2 (genuinely diverse) | +0.355 | 47% |
+| 0.4 (headline assumption) | +0.237 | 31% |
+| 0.6 | +0.140 | 18% |
+| **0.75 (price-derived trackers)** | **+0.086** | **11%** |
+| 0.9 (near-copies) | +0.034 | 4% |
+
+**Both widen coverage; only one buys a dimension.** Universe-wide price
+trackers are still worth 3–7× the aggregation fix, and they remain cheap. But
+the large prize is universe-wide **fundamentals / options / expectations** —
+which is exactly what the WRDS substrate is for, and why finishing that pull
+(`docs/FINDINGS_2026-08-20_SESSION_AUDIT.md` §A) is on the critical path to
+this number rather than beside it.
+
+One axis this audit does **not** measure: it holds the universe fixed at 180
+names. The value of trackers that pull in names the watchlist never contained
+is a different quantity, and nothing here prices it.
+
 ## 4. What was changed
 
 * `discovery._add_arena_composite` now divides each name's weighted **sum** by

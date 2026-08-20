@@ -841,3 +841,155 @@ def test_the_shipped_yaml_declares_every_key_it_carries():
     """The real file must satisfy the contract it just imposed."""
     from backend.services.arena import spec as spec_mod
     assert spec_mod.active_specs()
+
+
+# ── trackers: discovery and context, never a score ─────────────────────────
+class _TrackPanel(DictPanel):
+    def __init__(self, sessions, closes, opens=None, volumes=None):
+        super().__init__(sessions, closes, opens)
+        self._volumes = volumes or {}
+
+    def volume_history(self, ticker, day, n):
+        v = self._volumes.get(ticker.upper(), {})
+        return [v[s] for s in self._sessions if s <= day and s in v][-n:]
+
+
+def _flat_panel(tickers, n=300, spike=None):
+    ss = _weekdays(n)
+    closes, vols = {}, {}
+    for i, t in enumerate(tickers):
+        closes[t] = {s: 100.0 + 0.01 * i * j for j, s in enumerate(ss)}
+        vols[t] = {s: 1_000_000.0 for s in ss}
+    closes["SPY"] = {s: 100.0 for s in ss}
+    vols["SPY"] = {s: 1_000_000.0 for s in ss}
+    if spike:
+        t = spike
+        vols[t][ss[-1]] = 50_000_000.0        # a 50x volume day
+        closes[t][ss[-1]] = closes[t][ss[-2]] * 1.30
+    return _TrackPanel(ss, closes, volumes=vols), ss
+
+
+def test_tracker_features_are_none_when_absent_never_zero():
+    from backend.services.arena import trackers
+
+    f = trackers.name_features([], [], None)
+    assert set(f) == set(trackers.CONTEXT_FEATURES)
+    assert all(v is None for v in f.values())
+
+
+def test_no_tracker_feature_is_ever_a_composite_factor():
+    """The contract that keeps a Holm-surviving ANTI-signal out of the score."""
+    from backend.services.arena import discovery, trackers
+
+    assert not (set(trackers.CONTEXT_FEATURES)
+                & set(discovery.COMPOSITE_WEIGHTS))
+
+
+def test_volume_spike_and_abnormal_move_fire_observations():
+    from backend.services.arena import trackers
+
+    names = [f"N{i:02d}" for i in range(20)]
+    panel, ss = _flat_panel(names, spike="N07")
+    out = trackers.observe(ss[-1], panel, names)
+    kinds = {o["kind"] for o in out["observations"] if o["ticker"] == "N07"}
+    assert "VOLUME_SPIKE" in kinds
+    assert "ABNORMAL_MOVE_UP" in kinds
+    assert out["scanned_n"] == 20 and out["priced_n"] == 20
+
+
+def test_a_name_outside_the_core_universe_can_be_nominated():
+    """The acceptance test for DISCOVERY: a tracker event must be able to pull
+    a ticker the watchlist never contained into the candidate set."""
+    from backend.services.arena import trackers
+
+    names = [f"N{i:02d}" for i in range(20)]
+    panel, ss = _flat_panel(names, spike="N07")
+    out = trackers.observe(ss[-1], panel, names)
+    core = {n for n in names if n != "N07"}     # N07 is NOT in the core
+    noms = trackers.nominations(out["observations"], core=core)
+    assert [n["ticker"] for n in noms] == ["N07"]
+    assert noms[0]["reason"] in trackers.OBSERVATION_KINDS
+    assert noms[0]["observation"]["ticker"] == "N07"   # the reason is attached
+
+
+def test_nominations_never_re_nominate_a_core_name():
+    from backend.services.arena import trackers
+
+    names = [f"N{i:02d}" for i in range(20)]
+    panel, ss = _flat_panel(names, spike="N07")
+    out = trackers.observe(ss[-1], panel, names)
+    noms = trackers.nominations(out["observations"], core=set(names))
+    assert noms == []
+
+
+def test_nomination_cap_truncates_the_weakest_not_the_alphabet():
+    from backend.services.arena import trackers
+
+    obs = [{"kind": "VOLUME_SPIKE", "ticker": "AAA", "value": 1.1,
+            "threshold": 1.0},
+           {"kind": "VOLUME_SPIKE", "ticker": "ZZZ", "value": 9.9,
+            "threshold": 1.0}]
+    noms = trackers.nominations(obs, core=set(), max_new=1)
+    assert [n["ticker"] for n in noms] == ["ZZZ"]
+
+
+def test_priced_fraction_uses_the_CORE_universe_not_the_scan():
+    """A scan full of tickers renamed since the CRSP vintage must not be able
+    to trip the degraded-fetch guard for names the books actually trade."""
+    from backend.services.arena import discovery
+
+    class _P:
+        def sessions(self): return [date(2026, 8, 19)]
+        def close_price(self, t, d): return 100.0 if t.startswith("CORE") else None
+        def open_price(self, t, d): return 100.0
+        def close_history(self, t, d, n):
+            return [100.0] * 300 if t.startswith("CORE") else []
+        def volume_history(self, t, d, n): return []
+
+    class _Conn:
+        def close(self): pass
+
+    core = ["CORE1", "CORE2", "CORE3", "CORE4"]
+    dead = [f"DEAD{i}" for i in range(40)]
+    state = discovery._build_day_state_with_conn(
+        date(2026, 8, 19), _P(), core + dead, _Conn(),
+        "2026-08-19T23:59:59+00:00", core=core, scan=dead)
+    assert state["core_n"] == 4 and state["core_priced_n"] == 4
+    assert state["priced_fraction"] == 1.0      # NOT 4/44
+    assert state["priced_n"] == 4               # the honest whole-set count
+
+
+def test_tracker_failure_freezes_the_state_without_context_and_says_so(
+        monkeypatch):
+    from backend.services.arena import discovery, trackers
+
+    def _boom(*a, **k):
+        raise RuntimeError("tracker exploded")
+
+    monkeypatch.setattr(trackers, "observe", _boom)
+
+    class _P:
+        def sessions(self): return [date(2026, 8, 19)]
+        def close_price(self, t, d): return 100.0
+        def open_price(self, t, d): return 100.0
+        def close_history(self, t, d, n): return [100.0] * 300
+        def volume_history(self, t, d, n): return []
+
+    class _Conn:
+        def close(self): pass
+
+    state = discovery._build_day_state_with_conn(
+        date(2026, 8, 19), _P(), ["A", "B"], _Conn(),
+        "2026-08-19T23:59:59+00:00", core=["A", "B"], scan=[])
+    assert "error" in state["trackers"]
+    assert state["trackers"]["observations"] == []
+
+
+def test_scan_universe_absent_source_is_loud_and_empty(monkeypatch, tmp_path):
+    from backend import config as _c
+    from backend.services.arena import discovery
+
+    discovery._SCAN_CACHE.clear()
+    monkeypatch.setattr(_c, "OPTIMUS_LEDGER_DIR", tmp_path)
+    assert discovery.scan_universe(50) == []
+    discovery._SCAN_CACHE.clear()

@@ -49,5 +49,38 @@
     "value_of_current_split": 0.0197,
     "share_of_oracle_gap_full_coverage_closes": 0.3104,
     "reading": "the aggregation defect is worth a fraction of what the coverage hole is worth; enriching 12 names of 180 buys almost nothing whatever the aggregation rule, and enriching all 180 is the experiment that has a number attached"
+  },
+  "redundancy_sensitivity": {
+    "rho_0.2": {
+      "momentum_only": 1.164,
+      "full_coverage": 1.519,
+      "gain": 0.355,
+      "share_of_oracle_gap": 0.4682
+    },
+    "rho_0.4": {
+      "momentum_only": 1.1665,
+      "full_coverage": 1.4033,
+      "gain": 0.2369,
+      "share_of_oracle_gap": 0.3105
+    },
+    "rho_0.6": {
+      "momentum_only": 1.1534,
+      "full_coverage": 1.2931,
+      "gain": 0.1397,
+      "share_of_oracle_gap": 0.1831
+    },
+    "rho_0.75": {
+      "momentum_only": 1.1514,
+      "full_coverage": 1.2371,
+      "gain": 0.0857,
+      "share_of_oracle_gap": 0.1108
+    },
+    "rho_0.9": {
+      "momentum_only": 1.1549,
+      "full_coverage": 1.1885,
+      "gain": 0.0336,
+      "share_of_oracle_gap": 0.0439
+    },
+    "reading": "gain from widening coverage falls steeply as the added features become copies of the one already there. Price-derived trackers sit at the high-rho end; fundamentals/options/expectations sit at the low-rho end. Both widen coverage; only one buys a dimension."
   }
 }

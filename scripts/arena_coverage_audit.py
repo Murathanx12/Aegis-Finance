@@ -194,9 +194,63 @@ def coverage_value(n_trials: int = N_TRIALS) -> dict:
     return out
 
 
+def redundancy_sensitivity(n_trials: int = 1500) -> dict:
+    """Is CHEAP coverage worth as much as DIVERSE coverage?
+
+    The headline `value_of_full_coverage` assumes the five added factors are
+    views correlated at rho=0.4. Five more PRICE-derived features (momentum
+    over other windows, drawdown, 52-week state, gap, volume z) are not that:
+    they are near-copies of the momentum the arena already has. Order 24
+    measured 3–7 shared latent factors across ALL sources, which is exactly
+    the warning that adding a feed need not add a dimension.
+
+    So the build decision — cheap price trackers vs. buying fundamental /
+    options / expectations coverage across the whole universe — turns on rho,
+    and rho is the thing to put a number on before spending.
+    """
+    rng = np.random.default_rng(SEED + 2)
+    factors = list(COMPOSITE_WEIGHTS)
+    w = np.array([COMPOSITE_WEIGHTS[f] for f in factors], dtype=float)
+    k = len(factors)
+    thin = np.zeros((N_NAMES, k)); thin[:, 0] = 1.0
+    full = np.ones((N_NAMES, k))
+
+    out = {}
+    for rho in (0.2, 0.4, 0.6, 0.75, 0.9):
+        corr = np.full((k, k), rho)
+        np.fill_diagonal(corr, 1.0)
+        chol = np.linalg.cholesky(corr)
+        a, b, orc = [], [], []
+        for _ in range(n_trials):
+            skill = rng.standard_normal(N_NAMES)
+            noise = rng.standard_normal((N_NAMES, k)) @ chol.T
+            raw = 0.6 * skill[:, None] + 0.8 * noise
+            zs = np.column_stack([_z(raw[:, j]) for j in range(k)])
+            a.append(float(skill[np.argsort(
+                -_coverage_normalized(zs, thin, w, corr))[:TOP_K]].mean()))
+            b.append(float(skill[np.argsort(
+                -_coverage_normalized(zs, full, w, corr))[:TOP_K]].mean()))
+            orc.append(float(skill[np.argsort(-skill)[:TOP_K]].mean()))
+        gain = float(np.mean(b) - np.mean(a))
+        gap = float(np.mean(orc) - np.mean(a))
+        out[f"rho_{rho}"] = {
+            "momentum_only": round(float(np.mean(a)), 4),
+            "full_coverage": round(float(np.mean(b)), 4),
+            "gain": round(gain, 4),
+            "share_of_oracle_gap": round(gain / gap, 4) if gap > 0 else None,
+        }
+    out["reading"] = (
+        "gain from widening coverage falls steeply as the added features "
+        "become copies of the one already there. Price-derived trackers sit "
+        "at the high-rho end; fundamentals/options/expectations sit at the "
+        "low-rho end. Both widen coverage; only one buys a dimension.")
+    return out
+
+
 def main() -> None:
     res = run()
     res["coverage_value"] = coverage_value()
+    res["redundancy_sensitivity"] = redundancy_sensitivity()
     print(json.dumps(res, indent=2))
     dest = Path("docs") / "FEATURE_COVERAGE_AUDIT_1.json"
     if dest.parent.exists():

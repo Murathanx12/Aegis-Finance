@@ -38,7 +38,7 @@ KNOWN_SIZING = frozenset({"equal_weight", "inverse_trailing_vol"})
 CONSUMED_DEFAULTS = frozenset({
     "notional_usd", "benchmark", "transaction_cost_bps", "slippage_bps",
     "select_top_k", "max_single_name", "min_price", "selection_signal",
-    "min_priced_fraction",
+    "min_priced_fraction", "scan_universe_n",
 })
 
 #: Defaults that DESCRIBE behaviour implemented elsewhere in code. Each names
@@ -127,6 +127,14 @@ class BookSpec:
     @property
     def vol_lookback_days(self) -> int:
         return int(self.defaults.get("vol_lookback_days", 63))
+
+    @property
+    def scan_universe_n(self) -> int:
+        """How many of the most liquid CRSP-eligible names the daily tracker
+        scan covers, beyond the declared core universe. 0 disables discovery
+        entirely — and then no name outside the watchlist can ever enter a
+        book, which is the state the arena shipped in."""
+        return int(self.defaults.get("scan_universe_n", 0))
 
     @property
     def min_priced_fraction(self) -> float:

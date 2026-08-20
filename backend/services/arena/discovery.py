@@ -39,6 +39,8 @@ class PricePanel(Protocol):
     def close_price(self, ticker: str, day: date) -> float | None: ...
     def close_history(self, ticker: str, day: date,
                       n: int) -> list[float]: ...
+    def volume_history(self, ticker: str, day: date,
+                       n: int) -> list[float]: ...
 
 
 class ArenaPanel:
@@ -57,6 +59,7 @@ class ArenaPanel:
         end = end or str(date.today() + timedelta(days=1))
         self._open: dict = {}
         self._close: dict = {}
+        self._vol: dict = {}
         try:
             df = yf.download(names, start=start, end=end, auto_adjust=True,
                              progress=False, group_by="ticker", timeout=30)
@@ -69,12 +72,15 @@ class ArenaPanel:
                 sub = df[t] if isinstance(df.columns, pd.MultiIndex) else df
                 o = pd.to_numeric(sub["Open"], errors="coerce").dropna()
                 c = pd.to_numeric(sub["Close"], errors="coerce").dropna()
+                v = pd.to_numeric(sub.get("Volume"), errors="coerce").dropna()
             except Exception:  # noqa: BLE001
                 continue
             if c.empty:
                 continue
             self._open[t] = o
             self._close[t] = c
+            if v is not None and not v.empty:
+                self._vol[t] = v
 
     def sessions(self) -> list[date]:
         import pandas as pd
@@ -112,6 +118,15 @@ class ArenaPanel:
         upto = s[idx.date <= day]
         return [float(v) for v in upto.tail(n).tolist() if v == v]
 
+    def volume_history(self, ticker: str, day: date, n: int) -> list[float]:
+        import pandas as pd
+        s = self._vol.get(ticker.upper())
+        if s is None or s.empty:
+            return []
+        idx = pd.to_datetime(s.index)
+        upto = s[idx.date <= day]
+        return [float(x) for x in upto.tail(n).tolist() if x == x]
+
     def close_frame_fast(self, tickers, *, today: date | None = None):
         """Wide close panel straight from the stored series — the generic
         builder in `experience.close_frame` would call `close_price` once per
@@ -130,13 +145,64 @@ class ArenaPanel:
 
 # ── universe ────────────────────────────────────────────────────────────────
 def candidate_universe(extra: list[str] | None = None) -> list[str]:
-    """Watchlist + sector names + whatever the books currently hold."""
+    """The CORE universe: watchlist + sector names + whatever books hold.
+
+    This is the declared population. `priced_fraction` — the degraded-fetch
+    guard — is measured against THIS, never against the scan extension, or a
+    scan full of tickers that have since been renamed would drag the fraction
+    under the floor and stop the books from deciding for a reason that has
+    nothing to do with the names they trade.
+    """
     su = _config.config.get("stock_universe", {})
     names: set[str] = {t.upper() for t in su.get("default_watchlist", [])}
     for sect in (su.get("sector_stocks") or {}).values():
         names.update(t.upper() for t in sect)
     names.update(t.upper() for t in (extra or []))
     return sorted(names)
+
+
+#: Where the broad scan list comes from. CRSP's own PIT monthly panel, which
+#: is already on disk with `ticker`, `dollar_vol` and an `eligible` screen —
+#: a real, data-derived US common-stock universe rather than a list typed from
+#: memory. Its vintage ends 2024-12-31, so some tickers have since been
+#: renamed or delisted; those simply read `no_price` and drop out, which is
+#: the honest failure mode and the reason the scan is kept OUT of the
+#: `priced_fraction` denominator.
+SCAN_SOURCE = "crsp_pit_monthly_v1.parquet"
+_SCAN_CACHE: dict[int, list[str]] = {}
+
+
+def scan_universe(limit: int = 400) -> list[str]:
+    """The `limit` most liquid eligible names in the CRSP PIT panel's last
+    month. Cached per limit — this reads a 545k-row parquet."""
+    if limit in _SCAN_CACHE:
+        return _SCAN_CACHE[limit]
+    path = _config.OPTIMUS_LEDGER_DIR / "crsp_pit" / SCAN_SOURCE
+    if not path.exists():
+        logger.warning("ARENA: no scan source at %s — DISCOVERY runs over the "
+                       "core universe only, which means no name outside the "
+                       "watchlist can ever be found", path)
+        _SCAN_CACHE[limit] = []
+        return []
+    try:
+        import pandas as pd
+        df = pd.read_parquet(path, columns=["date", "ticker", "dollar_vol",
+                                            "eligible"])
+        last = df["date"].max()
+        recent = df[(df["date"] == last) & df["eligible"].astype(bool)]
+        recent = recent.dropna(subset=["ticker", "dollar_vol"])
+        top = (recent.sort_values("dollar_vol", ascending=False)
+               .head(limit)["ticker"].astype(str).str.upper().tolist())
+    except Exception as exc:  # noqa: BLE001
+        logger.error("ARENA: scan universe unreadable (%s) — core only", exc)
+        top = []
+    # Tickers CRSP writes with a share-class suffix that yfinance spells with
+    # a dash (BRK.B -> BRK-B). Left alone if already clean.
+    out = sorted({t.replace(".", "-") for t in top if t and t.isascii()})
+    _SCAN_CACHE[limit] = out
+    logger.info("ARENA scan universe: %d names from %s (as of %s)",
+                len(out), SCAN_SOURCE, last if 'last' in dir() else "?")
+    return out
 
 
 # ── feature computation (pure given inputs) ─────────────────────────────────
@@ -177,19 +243,27 @@ def _trailing_features(closes: list[float]) -> dict:
 
 
 def build_day_state(day: date, panel: PricePanel,
-                    universe: list[str], *, db_path=None) -> dict:
-    """One frozen information state: per-name prices, trailing state, and the
-    latest PIT score of every family, read leak-free as of end of ``day``."""
+                    universe: list[str], *, db_path=None,
+                    core: list[str] | None = None,
+                    scan: list[str] | None = None,
+                    tracker_block: dict | None = None,
+                    nominations: list[dict] | None = None) -> dict:
+    """One frozen information state: per-name prices, trailing state, the
+    latest PIT score of every family (leak-free as of end of ``day``), and
+    the tracker observations over the wider scan universe."""
     as_of_ts = f"{day}T23:59:59+00:00"
     conn = get_connection(db_path) if db_path is not None else get_connection()
     try:
-        return _build_day_state_with_conn(day, panel, universe, conn, as_of_ts)
+        return _build_day_state_with_conn(
+            day, panel, universe, conn, as_of_ts, core=core, scan=scan,
+            tracker_block=tracker_block, nominations=nominations)
     finally:
         conn.close()
 
 
 def _build_day_state_with_conn(day, panel, universe, conn,
-                               as_of_ts: str) -> dict:
+                               as_of_ts: str, core=None, scan=None,
+                               tracker_block=None, nominations=None) -> dict:
     names: dict[str, dict] = {}
     for t in universe:
         close = panel.close_price(t, day)
@@ -223,9 +297,39 @@ def _build_day_state_with_conn(day, panel, universe, conn,
         k = v.get("scores", {}).get("coverage_n")
         if k is not None:
             hist[str(k)] = hist.get(str(k), 0) + 1
+    # DEGRADED-FETCH GUARD denominator: the CORE universe only. See
+    # `candidate_universe` — a scan full of tickers renamed since the CRSP
+    # vintage would otherwise drag the fraction under the floor and stop the
+    # books deciding for a reason unrelated to the names they trade.
+    core_names = [t for t in (core or universe)]
+    n_core_priced = sum(1 for t in core_names
+                        if names.get(t, {}).get("status") == "ok")
+    priced_fraction = (n_core_priced / len(core_names)) if core_names else 0.0
     n_priced = sum(1 for v in names.values() if v.get("status") == "ok")
-    priced_fraction = (n_priced / len(universe)) if universe else 0.0
+
+    # TRACKER CONTEXT over the wider scanned set. Never a score — see
+    # `trackers.py` for the two reasons.
+    if tracker_block is None:
+        try:
+            from backend.services.arena import trackers as _tr
+            tracker_block = _tr.observe(day, panel,
+                                        sorted(set(scan or []) | set(names)))
+        except Exception as exc:  # noqa: BLE001
+            logger.error("ARENA: tracker pass failed (%s) — the state is "
+                         "frozen WITHOUT context; discovery finds nothing "
+                         "today and the receipt says so", exc)
+            tracker_block = {"scanned_n": 0, "observations": [],
+                             "by_kind": {},
+                             "error": f"{type(exc).__name__}: {exc}"}
+    tracker_block = dict(tracker_block)
+    for t, f in (tracker_block.pop("features", None) or {}).items():
+        if t in names and names[t].get("status") == "ok":
+            names[t]["context"] = f
+    tracker_block["nominations"] = list(nominations or [])
+
     return {"date": str(day), "as_of_ts": as_of_ts, "universe_n": len(universe),
+            "core_n": len(core_names), "core_priced_n": n_core_priced,
+            "trackers": tracker_block,
             "scored_n": n_scored, "composite_version": COMPOSITE_VERSION,
             "coverage_histogram": hist,
             # The cross-section IS the estimator: every score in this state is
@@ -368,11 +472,15 @@ def _add_arena_composite(names: dict) -> None:
 
 
 def freeze_day_state(day: date, panel: PricePanel, universe: list[str],
-                     *, root=None, db_path=None) -> dict:
+                     *, root=None, db_path=None, core=None, scan=None,
+                     tracker_block=None, nominations=None) -> dict:
     existing = store.read_snapshot(str(day), root)
     if existing is not None:
         return existing
-    state = build_day_state(day, panel, universe, db_path=db_path)
+    state = build_day_state(day, panel, universe, db_path=db_path,
+                            core=core, scan=scan,
+                            tracker_block=tracker_block,
+                            nominations=nominations)
     if state["scored_n"] == 0:
         # A snapshot with zero scores would make every book silently hold
         # forever while looking scheduled and green. Freeze it anyway (it IS

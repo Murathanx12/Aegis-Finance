@@ -44,6 +44,14 @@ defaults:
   # would be permanent. Below this share, books hold and say
   # `degraded_information_state`; they still mark NAV.
   min_priced_fraction: 0.80
+  # DISCOVERY (stage A). The N most liquid CRSP-eligible names, scanned daily
+  # by the trackers so a ticker the watchlist never contained can be nominated
+  # into the candidate set. Tracker output is CONTEXT and DISCOVERY only — it
+  # never enters arena_composite, because short-horizon winner-chasing is a
+  # Holm-surviving ANTI-signal and because price features are near-copies of
+  # the momentum already in the score (FEATURE_COVERAGE_AUDIT_1 §3b).
+  # 0 disables discovery: the arena shipped that way.
+  scan_universe_n: 400
   # The arena's OWN composite over the arena's OWN universe: 12-1 momentum
   # (last month EXCLUDED — the anti-chase findings) blended with whatever PIT
   # score families a name has (multifactor/revisions/insider/pead/quality on

@@ -19,7 +19,7 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 
 from backend.services.arena import (
-    beliefs, discovery, experience, policies, reliability,
+    beliefs, discovery, experience, policies, reliability, trackers,
 )
 from backend.services.arena import spec as spec_mod
 from backend.services.arena import store
@@ -390,11 +390,16 @@ def run_daily(as_of=None, *, panel=None, root=None, db_path=None) -> dict:
     for b in seeded:
         held.update((store.read_positions(b, root).get("positions")
                      or {}).keys())
-    universe = discovery.candidate_universe(extra=sorted(held))
+    core = discovery.candidate_universe(extra=sorted(held))
+    scan_n = max((s.scan_universe_n for s in seeded.values()), default=0)
+    scan = discovery.scan_universe(scan_n) if scan_n else []
 
     if panel is None:
         start = str(date.today() - timedelta(days=430))
-        panel = discovery.ArenaPanel(universe + ["QQQ"], start=start)
+        # ONE fetch over core + scan. The scan is the only route by which a
+        # name the watchlist never contained can reach a book.
+        panel = discovery.ArenaPanel(
+            sorted(set(core) | set(scan) | {"QQQ"}), start=start)
     as_of_d = _iso_date(as_of) or date.today()
     sessions = [s for s in panel.sessions() if s <= as_of_d]
     if not sessions:
@@ -403,8 +408,33 @@ def run_daily(as_of=None, *, panel=None, root=None, db_path=None) -> dict:
     day = sessions[-1]
     summary["session"] = str(day)
 
+    # STAGE A — cheap scan over everything, before anything expensive.
+    # Observations are CONTEXT and DISCOVERY, never a score (trackers.py).
+    try:
+        obs = trackers.observe(day, panel, sorted(set(scan) | set(core)))
+        noms = trackers.nominations(obs["observations"], core=set(core))
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("ARENA: tracker scan failed")
+        obs = {"scanned_n": 0, "observations": [], "by_kind": {},
+               "error": f"{type(exc).__name__}: {exc}"}
+        noms = []
+    # STAGE B — the core universe PLUS whatever the scan nominated.
+    universe = sorted(set(core) | {n["ticker"] for n in noms})
+    summary["discovery"] = {
+        "core_n": len(core), "scan_n": len(scan),
+        "scanned_n": obs.get("scanned_n"), "priced_n": obs.get("priced_n"),
+        "observations_n": len(obs.get("observations") or []),
+        "by_kind": obs.get("by_kind"),
+        "nominated_n": len(noms),
+        "nominated": [{"ticker": n["ticker"], "reason": n["reason"]}
+                      for n in noms],
+        "error": obs.get("error"),
+    }
+
     snap = discovery.freeze_day_state(day, panel, universe,
-                                      root=root, db_path=db_path)
+                                      root=root, db_path=db_path,
+                                      core=core, scan=scan,
+                                      tracker_block=obs, nominations=noms)
     day_state = snap["state"]
     is_hash = snap["information_state_hash"]
     summary["information_state_hash"] = is_hash
