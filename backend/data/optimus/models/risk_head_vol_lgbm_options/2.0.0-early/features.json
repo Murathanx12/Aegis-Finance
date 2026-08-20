@@ -1,0 +1,26 @@
+{
+  "features": [
+    "mom_21",
+    "mom_63",
+    "mom_126",
+    "mom_252_21",
+    "dd_252",
+    "log_rv_d",
+    "log_rv_w",
+    "log_rv_m",
+    "log_rv_q",
+    "opt_iv_atm",
+    "opt_skew",
+    "opt_pc50",
+    "log_iv_var"
+  ],
+  "target": "log(annualized realized variance over t+1..t+21)",
+  "prediction_units": "annualized realized VARIANCE (not vol, not a probability); take sqrt for vol",
+  "transforms": {
+    "log_rv_d/w/m/q": "log of mean(ret^2) over 1/5/21/63 days, annualized x252, floored at 1e-8",
+    "log_iv_var": "log(ATM implied vol ^ 2), floored at 1e-8",
+    "opt_*": "OptionMetrics 30d surface, last obs of month, staleness-capped at 14 calendar days"
+  },
+  "formation_convention": "features read at the month-end CLOSE of t; target spans t+1..t+21 and never includes t (CHRONOLOGY-AUDIT-1 C2)",
+  "missing_data": "rows lacking any feature are DROPPED, never imputed \u2014 the ladder compared arms on identical rows and the artifact keeps that rule"
+}

@@ -1,6 +1,6 @@
-# Model card — risk_head_vol_lgbm_options v2.0.0
+# Model card — risk_head_vol_lgbm_options v2.0.0-early
 
-Built 2026-08-20T05:46:04+00:00 by
+Built 2026-08-20T05:45:28+00:00 by
 `scripts/build_risk_head_artifact.py`. **SIMULATION / research artifact.**
 It has no track record and marking a lane with it does not create one.
 
@@ -30,15 +30,15 @@ The classical challenger, HAR-RV (Corsi), is *not* the strongest
 baseline here — implied variance is. HAR beats only the trailing-realized
 -variance arm.
 
-## Held-out performance (this artifact, years > 2021)
+## Held-out performance (this artifact, years > 2009)
 
 | arm | QLIKE | MSE(log var) | rank IC | bias |
 |---|---|---|---|---|
-| model (raw) | 0.55802 | 0.39635 | 0.814 | +0.08704 |
-| model (calibrated) | 0.50002 | 0.38903 | 0.814 | -0.01595 |
-| IV-only baseline | 0.2668 | 0.73727 | 0.753 | -0.31506 |
+| model (raw) | 0.32154 | 0.44344 | 0.8046 | -0.03598 |
+| model (calibrated) | 0.30224 | 0.45618 | 0.8046 | -0.11845 |
+| IV-only baseline | 0.30592 | 0.63931 | 0.762 | -0.29102 |
 
-Calibration is an additive offset of +0.1030 in log-variance space,
+Calibration is an additive offset of +0.0825 in log-variance space,
 fitted on train rows only.
 
 ## Known failure modes
@@ -98,7 +98,7 @@ fitted on train rows only.
   rather than relying on the one-sided staleness filter.
 - Shift-invariance: with every feature lagged one extra month the model
   degrades gracefully and all comparative conclusions hold.
-- Train rows 119,094; holdout rows 63,682; features 13.
+- Train rows 177,942; holdout rows 48,934; features 13.
 
 ## Licence
 

@@ -130,6 +130,28 @@ def main() -> int:
                            - cal_pred_log))
     tr = fit
 
+    # A single-window level offset is HOSTAGE TO THAT WINDOW'S REGIME.
+    # Found building the early-era twin, whose calibration span landed on
+    # 2008-2009: the offset fitted there over-corrects for the calmer
+    # 2010-2012 holdout and makes bias WORSE (-0.036 -> -0.118). The
+    # modern artifact's span (2020-21) contains COVID and got away with
+    # it, which is luck, not design. Measure and record how unusual the
+    # calibration window was, so a consumer can see the exposure.
+    fit_lv = float(np.mean(np.log(fit["fwd_var"].to_numpy())))
+    cal_lv = float(np.mean(np.log(cal["fwd_var"].to_numpy())))
+    fit_sd = float(np.std(np.log(fit["fwd_var"].to_numpy())))
+    calib_regime = {
+        "fit_mean_log_fwd_var": round(fit_lv, 4),
+        "calib_mean_log_fwd_var": round(cal_lv, 4),
+        "calib_z_vs_fit": round((cal_lv - fit_lv) / fit_sd, 4),
+        "warning": ("the calibration window is a volatility OUTLIER "
+                    "relative to the fit span; the level offset it "
+                    "produces will not generalise to a calmer or wilder "
+                    "holdout" if abs((cal_lv - fit_lv) / fit_sd) > 0.15
+                    else "calibration window is regime-typical")}
+    print(f"calibration regime check: z={calib_regime['calib_z_vs_fit']} "
+          f"— {calib_regime['warning']}")
+
     def predict_var(frame):
         return np.exp(m.predict(frame[feats].to_numpy()) + offset)
 
@@ -181,7 +203,11 @@ def main() -> int:
                      f"error is ~0 by construction and calibrates nothing",
         "why": "predicting log variance and exponentiating is biased in "
                "levels; ordering is the evidence, level is a correction",
-        "apply": "var_hat = exp(booster.predict(X) + offset)"},
+        "apply": "var_hat = exp(booster.predict(X) + offset)",
+        "regime_check": calib_regime,
+        "known_failure": "a single-window offset is hostage to that "
+                         "window's regime — the early-era twin's span "
+                         "(2008-09) made bias WORSE on a calmer holdout"},
         indent=2), encoding="utf-8")
     (d / "train_window.json").write_text(json.dumps({
         "era": a.era,
@@ -296,7 +322,16 @@ fitted on train rows only.
    with no listed options, which is a real and unmodelled selection.
 5. **The entitled CRSP vintage ends 2024-12-31.** Nothing in training
    knows anything after that date.
-6. **Its ranking edge does NOT convert into position-sizing value.**
+6. **The level calibration is regime-hostage.** It is a single additive
+   offset fitted on one contiguous span. Building the early-era twin
+   exposed this: with a calibration span of 2008-09, the offset
+   over-corrects for the calmer 2010-12 holdout and makes bias WORSE
+   (-0.036 -> -0.118) even while QLIKE improves. This artifact's own
+   calibration window contains its era's volatility spike. See
+   `calibration.json -> regime_check` for the measured z-score of the
+   calibration window against the fit span, and treat a large one as a
+   reason to recalibrate on a longer or rolling window.
+7. **Its ranking edge does NOT convert into position-sizing value.**
    `RISK-SIZING-VALUE-1` sized books by `1/sqrt(predicted var)` against
    `1/sqrt(trailing 63d var)`, holding selection fixed: pooled
    d_ann_vol **+0.0103, ns** — the wrong sign. Cause measured: the

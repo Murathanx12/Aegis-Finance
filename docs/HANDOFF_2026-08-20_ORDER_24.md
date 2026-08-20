@@ -639,6 +639,20 @@ byte-identical while still printing a calibrated column. Green and empty,
 the house failure mode. Three disjoint spans in time order fixed it; the
 offset is +0.1030 and does real work.
 
+**And then the early-era twin caught the fix's own limitation.** Built as
+`risk_head_vol_lgbm_options@2.0.0-early@9b414af5b2d8dfb0` (fit <2008,
+calibrate 2008–09, holdout 2010–12), its calibration span landed on the
+GFC — and the offset fitted there **makes bias worse** on the calmer
+holdout (−0.036 → −0.118) even while QLIKE improves. A single additive
+offset on one contiguous span is **hostage to that span's regime**.
+
+Both artifacts now compute and record a regime check, and **both fail
+it**: the calibration window is a volatility outlier against its fit span
+at z = **0.74** (modern, contains COVID) and z = **0.45** (early,
+contains the GFC). The modern artifact's calibration happened to help;
+that is luck, not design. Anything consuming the level should either
+recalibrate on a rolling window or treat the offset as provisional.
+
 **Datasets** (Tier PRIVATE per the new receipt policy, each with a public
 stub in `docs/datasets/`): `STOCK_RISK_DATASET_V1_modern`,
 `STRATEGY_STATE_DATASET_V1`. Every row carries a `date_weight` summing to
@@ -671,8 +685,11 @@ solving it.**
    passes with zero negative lags. Pin
    `risk_head_vol_lgbm_options@2.0.0@31b9b8d62c777e97`, and note **two**
    conditions: anything consuming the LEVEL must use the calibrated
-   prediction; and the receipt must not claim the model is why the lane
-   works. §8 found the model's ranking edge does **not** convert into
+   prediction **and know that the calibration is provisional** — its
+   offset is fitted on 2020–21, a volatility outlier at z=0.74 against
+   the fit span, and the early-era twin shows exactly this design making
+   bias worse when its window was the GFC; and the receipt must not claim
+   the model is why the lane works. §8 found the model's ranking edge does **not** convert into
    sizing value over a nearly-free trailing estimator. Risk *sizing*
    works; the *estimator choice* is a wash. The cheap estimator is
    defensible and easier to defend.

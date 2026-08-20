@@ -1,13 +1,13 @@
 {
   "kind": "additive offset in log-variance space",
-  "offset": 0.10298309426001571,
-  "fitted_on": "a DISJOINT calibration span (2020..2021), never the fit span \u2014 an offset fitted where the booster already minimised squared error is ~0 by construction and calibrates nothing",
+  "offset": 0.08246897295580248,
+  "fitted_on": "a DISJOINT calibration span (2008..2009), never the fit span \u2014 an offset fitted where the booster already minimised squared error is ~0 by construction and calibrates nothing",
   "why": "predicting log variance and exponentiating is biased in levels; ordering is the evidence, level is a correction",
   "apply": "var_hat = exp(booster.predict(X) + offset)",
   "regime_check": {
-    "fit_mean_log_fwd_var": -2.5979,
-    "calib_mean_log_fwd_var": -1.7866,
-    "calib_z_vs_fit": 0.7378,
+    "fit_mean_log_fwd_var": -2.081,
+    "calib_mean_log_fwd_var": -1.5469,
+    "calib_z_vs_fit": 0.4459,
     "warning": "the calibration window is a volatility OUTLIER relative to the fit span; the level offset it produces will not generalise to a calmer or wilder holdout"
   },
   "known_failure": "a single-window offset is hostage to that window's regime \u2014 the early-era twin's span (2008-09) made bias WORSE on a calmer holdout"
