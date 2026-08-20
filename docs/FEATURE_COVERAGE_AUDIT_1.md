@@ -71,6 +71,28 @@ descriptive collectors never had". Under the live coverage split that is true
 for 12 names out of 180. For the other 168 the arena is a 12-1 momentum
 ranker, and no aggregation rule changes that.
 
+## 3a. MEASURED LIVE, 2026-08-20 — it is worse than the model assumed
+
+The sections above model 12 enriched names of 180. A full end-to-end pass
+against live prices and the real PIT store that evening produced this
+coverage histogram, now frozen into every day state:
+
+```
+coverage_histogram: {"1": 206, "6": 1}
+scored_n: 207   composite: arena_composite@2-coverage_normalized
+```
+
+**206 names ranked on one factor. One name on six.** Not 12 of 180 — one of
+207. The composite is 12-1 momentum for 99.5% of the cross-section, and the
+five PIT families reach a single security.
+
+Same pass, for the record that the rest of the machine works: 149-name scan →
+232 names observed → 125 tracker observations → **28 nominations** of names
+the watchlist never contained (TEAM, SNOW, MARA, UPST, DELL, WDAY, TPL, HIMS,
+RKLB, MSTR …), `priced_fraction` 0.9944 measured over CORE (three scan
+tickers were dead and correctly did not drag it), 7 books decided, 105
+experiences written, 0 reliability cells — correct on day one.
+
 ## 3b. Cheap coverage is not the same buy as diverse coverage
 
 The +0.239 above assumes the five added factors are views correlated at

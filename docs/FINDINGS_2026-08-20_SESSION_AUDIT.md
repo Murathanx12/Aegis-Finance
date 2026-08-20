@@ -190,6 +190,66 @@ cross-section to be widened.
 
 ---
 
+### C1. Measured live, not modelled: 206 names on one factor, one name on six
+
+A full end-to-end pass against live prices that evening froze this into the
+day state:
+
+```
+coverage_histogram: {"1": 206, "6": 1}
+```
+
+The audit above modelled 12 enriched names of 180. Reality is **one of 207**.
+`arena_composite` is 12-1 momentum for 99.5% of the cross-section. Everything
+else in the same pass worked — 28 names nominated from outside the watchlist,
+`priced_fraction` 0.9944 over core, 7 books decided, 105 experiences written —
+which is what makes the histogram the finding rather than a symptom.
+
+---
+
+## C2. `event_intel` — the seventeenth collector with no caller
+
+**Severity: HIGH. Status: FIXED (wired into the arena).**
+
+`backend/services/event_intel.py` builds a typed event feed over yfinance
+news, EDGAR 8-Ks and earnings, with per-feed degradation already disclosed.
+Its only caller is `daily_brief.py`, which nothing schedules. Live prod:
+
+```
+"event_intel": {"events_extracted": 0, "by_tier": {}, "last_extraction_at": null}
+```
+
+Built, tested, never run. Meanwhile the arena's LLM was being asked to revise
+a belief about a company while being shown nothing about the company. Now
+wired through `arena/events.py`, frozen into the decision's input snapshot
+(the feed is fetched live and would otherwise be unreplayable), with
+`LLM_EVENTS_v1` as the ablation twin.
+
+---
+
+## C3. Two memory defects in my own catch-up puller, found by running it
+
+Recorded because "I wrote it this session" is not a reason to leave it out.
+
+1. **`pd.read_sql` buffers everything.** Its `chunksize` argument does not
+   bound memory on psycopg2 — the default cursor is client-side, so the whole
+   result arrives before the first chunk. Four workers on wide Compustat
+   tables took the process to **4 GB and climbing** with `MAX_ROWS` at 8
+   million. Fixed with a server-side named cursor.
+2. **A server-side cursor was not enough.** The cursor bounds what the
+   *server* sends per round trip, not what pandas/Arrow *materialise* per
+   chunk. A 200,000-row chunk is 2.2 MB of an 11-column table and ~1.4 GB of
+   an 886-column one, and Compustat is full of the latter — the process
+   reached **10 GB**. Chunks are now sized in CELLS (`CHUNK_CELLS / n_cols`),
+   and the buffered-vs-stream routing tests both axes rather than rows alone.
+   Measured after: **470 MB**.
+
+Both would have OOM'd overnight, and a killed pull leaves partial parquets
+that resumability reads forever as completed tables. That third hazard is
+also fixed: a failed attempt deletes its partial file before retrying.
+
+---
+
 ## D. Process findings
 
 ### D1. The attended queue was carried forward without being checked

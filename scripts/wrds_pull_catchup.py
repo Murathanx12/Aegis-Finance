@@ -113,9 +113,9 @@ MAX_ATTEMPTS = 3
 #: the server-side cursor already in place, because the cursor bounds what the
 #: SERVER sends per round trip and not what pandas/Arrow materialise per
 #: chunk. Rows per chunk are therefore derived from the table's own width.
-CHUNK_CELLS = 4_000_000
+CHUNK_CELLS = 16_000_000
 CHUNK_ROWS_MAX = 200_000
-CHUNK_ROWS_MIN = 2_000
+CHUNK_ROWS_MIN = 5_000
 
 
 def _chunk_rows(n_cols: int | None) -> int:
@@ -153,7 +153,71 @@ def _use_buffered(n_rows: int | None, n_cols: int | None) -> bool:
 COUNT_TIMEOUT_MS = 60_000
 
 
-def _stream_to_parquet(conn, sql, params, fn, *, chunk: int) -> tuple:
+#: Postgres data_type -> the pandas dtype we coerce to before handing a chunk
+#: to Arrow. Inferring per chunk does not work: a column that is entirely NULL
+#: in chunk 1 becomes Arrow type `null`, and chunk 5 arriving with doubles then
+#: fails "Unsupported cast from double to null". Deriving the type from the
+#: DATABASE instead of from the first 4,514 rows makes every chunk agree by
+#: construction. It also fixes "Decimal value does not fit in precision 6",
+#: because Compustat `numeric` columns become float64 rather than Arrow
+#: decimals with a width guessed from one chunk.
+_PG_TO_PANDAS = {
+    "numeric": "float64", "decimal": "float64", "double precision": "float64",
+    "real": "float64", "money": "float64",
+    "integer": "Int64", "bigint": "Int64", "smallint": "Int64",
+    "boolean": "boolean",
+    "date": "datetime64[ns]", "timestamp without time zone": "datetime64[ns]",
+    "timestamp with time zone": "datetime64[ns]",
+}
+
+
+def _pg_types(conn, schema: str, table: str) -> dict:
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT column_name, data_type FROM information_schema.columns "
+            "WHERE table_schema = %s AND table_name = %s "
+            "ORDER BY ordinal_position", (schema, table))
+        out = {c: t for c, t in cur.fetchall()}
+        cur.close()
+        return out
+    except Exception:                                           # noqa: BLE001
+        try:
+            conn.rollback()
+        except Exception:                                       # noqa: BLE001
+            pass
+        return {}
+
+
+def _coerce(df, pgtypes: dict):
+    """Force each column to the dtype its POSTGRES type implies.
+
+    Anything not in the map (text, varchar, char, and every exotic type) goes
+    to pandas `string`, whose all-NA case is still Arrow `string` rather than
+    Arrow `null` — which is the whole point.
+    """
+    for col in df.columns:
+        want = _PG_TO_PANDAS.get(str(pgtypes.get(col, "")).lower())
+        try:
+            if want in ("float64",):
+                df[col] = pd.to_numeric(df[col], errors="coerce").astype(
+                    "float64")
+            elif want == "Int64":
+                df[col] = pd.to_numeric(df[col], errors="coerce").astype(
+                    "Int64")
+            elif want == "boolean":
+                df[col] = df[col].astype("boolean")
+            elif want == "datetime64[ns]":
+                df[col] = pd.to_datetime(df[col], errors="coerce")
+            else:
+                df[col] = df[col].astype("string")
+        except Exception:                                       # noqa: BLE001
+            df[col] = df[col].astype("string")
+    return df
+
+
+def _stream_to_parquet(conn, sql, params, fn, *, chunk: int,
+                       pgtypes: dict | None = None) -> tuple:
     """Server-side cursor -> parquet, a chunk at a time. Returns (rows, ranges).
 
     `pd.read_sql(..., chunksize=)` does NOT bound memory on psycopg2: the
@@ -188,6 +252,8 @@ def _stream_to_parquet(conn, sql, params, fn, *, chunk: int) -> tuple:
             if cols is None:
                 cols = [d[0] for d in cur.description]
             df = pd.DataFrame(rows, columns=cols)
+            if pgtypes:
+                df = _coerce(df, pgtypes)
             for c in df.columns:
                 lc = c.lower()
                 if not any(k in lc for k in ("date", "dat", "eom", "public",
@@ -207,11 +273,11 @@ def _stream_to_parquet(conn, sql, params, fn, *, chunk: int) -> tuple:
                 schema = tbl.schema
                 writer = pq.ParquetWriter(fn, schema)
             elif not tbl.schema.equals(schema):
-                # A later chunk inferred different types (a column that was
-                # all-NULL in chunk 1 and numeric in chunk 5). Cast to the
-                # committed schema; if that is impossible the table is not
-                # streamable and the caller falls back rather than writing
-                # a file whose columns mean two different things.
+                # With _coerce driving dtypes from the database this should
+                # not happen; if it still does, casting is the last resort
+                # before failing the table, and failing is correct — a
+                # parquet whose columns mean two different things is worse
+                # than an absent one.
                 tbl = tbl.cast(schema)
             writer.write_table(tbl)
             total += len(df)
@@ -329,8 +395,15 @@ def main() -> int:
     # to solve, because a run that is interrupted keeps whatever it banked
     # first. Small-first inside a tier banks many cheap tables before
     # risking an expensive one.
-    retry.sort(key=lambda p: (p.get("tier", 9), p.get("est_rows") or 0,
-                              p["name"]))
+    # Within a tier, NARROW tables first. est_rows is 0 for most of the plan
+    # (never ANALYZEd), so it cannot order anything — but n_cols is known and
+    # is what actually drives cost here: comp.co_afnddc1 is 494,873 rows x 539
+    # columns = 267M cells, about 2 GB on the wire, while a 7-column table of
+    # 2.6M rows is 18M cells. Sorting by width banks hundreds of cheap tier-0
+    # tables before the run spends hours on Compustat footnote descriptors,
+    # which matters because an interrupted run keeps whatever it banked first.
+    retry.sort(key=lambda p: (p.get("tier", 9), p.get("n_cols") or 9999,
+                              p.get("est_rows") or 0, p["name"]))
 
     from collections import Counter
     print(f"manifest: {len(man.get('pulled', [])):,} pulled, "
@@ -414,6 +487,7 @@ def main() -> int:
                         cc.execute(f"SET statement_timeout = "
                                    f"{a.timeout_s * 1000}")
                     n_est = _row_count(c, p, where, params)
+                    pgt = _pg_types(c, p["schema"], p["table"])
                     # _row_count set its own (shorter) timeout on this
                     # connection; put the pull's back before the real query.
                     cc = c.cursor()
@@ -423,13 +497,13 @@ def main() -> int:
                         df = pd.read_sql(sql, c, params=params)
                         n_rows = len(df)
                         if n_rows:
-                            _write_frame(df, fn)
                             ranges = _date_ranges(df)
+                            _write_frame(_coerce(df, pgt) if pgt else df, fn)
                         del df
                     else:
                         n_rows, ranges = _stream_to_parquet(
                             c, sql, params, fn,
-                            chunk=_chunk_rows(p.get("n_cols")))
+                            chunk=_chunk_rows(p.get("n_cols")), pgtypes=pgt)
                     err = None
                     break
                 except Exception as e:                          # noqa: BLE001
@@ -491,6 +565,9 @@ def main() -> int:
                 state["gb"] += sz
                 state["done"] += 1
                 row = {**p, "rows": int(n_rows), "gb": round(sz, 4),
+                       "cells": int(n_rows) * int(p.get("n_cols") or 1),
+                       "mb_per_s": round(
+                           (sz * 1024) / max(time.time() - t0, 0.001), 2),
                        "date_ranges": ranges,
                        "seconds": round(time.time() - t0, 1),
                        "universe_filtered": bool(where),
