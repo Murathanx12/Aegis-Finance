@@ -205,5 +205,8 @@ Full results: `docs/HANDOFF_2026-08-20_ORDER_24.md`.
 | 6 — OPTION-INCREMENTAL-RISK-1 | **DONE** (modern + early + shift probe) | `risk_ladder/option_incremental_risk_1_*.json` |
 | 7 — training material | **DONE** — two datasets, date-block and cluster weighting, Tier PRIVATE + public stubs | `docs/datasets/*.stub.json` |
 | — | **NEW: INFORMATION-DIMENSION-1** — no new information class beats a size-matched control; the bottleneck is construction, not data | `structure/information_dimension_1_*.json` |
+| — | **NEW: ERA-TRANSFER-1** — risk relationship is era-invariant (transfer ratios 1.001 / 0.992) where the return signal flips sign | `risk_ladder/era_transfer_1_*.json` |
+| — | **NEW: RISK-SIZING-VALUE-1 / -DISPERSION-1** — NOT_ESTABLISHED; model is shrunk, correction is POWERED but still does not beat trailing | `structure/risk_sizing_*.json` |
+| — | **NEW: CONSTRUCTION-SIZING-1** — covariance explains the value anomaly, is worse in general; inverse-vol beats equal weight | `structure/construction_sizing_1_*.json` |
 | — | risk-head artifact v2.0.0, model layer pinned by `name@semver@sha256` | `models/risk_head_vol_lgbm_options/2.0.0/` |
 | 8–11 | **NOT RUN** — superseded by what Phases 3/5/6 found; the router and LLM-scientist phases now have better-posed questions (see handoff "NEXT 10 MACHINE JOBS") | — |

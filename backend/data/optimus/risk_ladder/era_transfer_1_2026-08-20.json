@@ -1,0 +1,67 @@
+{
+  "trial": "ERA-TRANSFER-1",
+  "mode": "SCREEN",
+  "at": "2026-08-20T05:05:30+00:00",
+  "features": [
+    "mom_21",
+    "mom_63",
+    "mom_126",
+    "mom_252_21",
+    "dd_252",
+    "log_rv_d",
+    "log_rv_w",
+    "log_rv_m",
+    "log_rv_q",
+    "opt_iv_atm",
+    "opt_skew",
+    "opt_pc50",
+    "log_iv_var"
+  ],
+  "target": "log annualized realized variance over t+1..t+21",
+  "protocol": "each era's model trained on its first 60% of dates; BOTH within and transfer cells are out-of-sample, so the ratio compares like with like (an in-sample denominator would inflate the within cell and flatter no one)",
+  "splits": {
+    "early_cut": "2006-02-28",
+    "modern_cut": "2020-07-31"
+  },
+  "cells": {
+    "early_to_early": {
+      "n_rows": 120335,
+      "mean_rank_ic": 0.7903,
+      "mse_log_var": 0.47089,
+      "mean_qlike": 0.35253,
+      "bias_mean_log_ratio": 0.02011
+    },
+    "early_to_modern": {
+      "n_rows": 97182,
+      "mean_rank_ic": 0.8161,
+      "mse_log_var": 0.43933,
+      "mean_qlike": 0.33495,
+      "bias_mean_log_ratio": -0.05346
+    },
+    "modern_to_modern": {
+      "n_rows": 97182,
+      "mean_rank_ic": 0.8155,
+      "mse_log_var": 0.40456,
+      "mean_qlike": 0.36155,
+      "bias_mean_log_ratio": -0.00287
+    },
+    "modern_to_early": {
+      "n_rows": 120335,
+      "mean_rank_ic": 0.7836,
+      "mse_log_var": 0.47127,
+      "mean_qlike": 0.39991,
+      "bias_mean_log_ratio": 0.04079
+    }
+  },
+  "transfer_ratios": {
+    "early_model_transfer_ratio": {
+      "rank_ic": 1.001,
+      "mse_log_var": 0.921
+    },
+    "modern_model_transfer_ratio": {
+      "rank_ic": 0.992,
+      "mse_log_var": 0.999
+    }
+  },
+  "contrast_with_return_side": "the price-only RETURN signal flips sign between these eras; this asks whether the RISK relationship does the same"
+}

@@ -59,7 +59,53 @@ Two corrections to the standing story:
 Reproduced out of era: the entire ladder repeats on 1990–2012
 (261,158 rows, folds 2001-2012).
 
-### 2. Shift-invariance PASSES — the risk finding is not living on same-instant information
+### 2. Risk is era-invariant where return is not — the session's strongest result
+
+`ERA-TRANSFER-1`. Era transfer became a first-class metric under this
+order, run in both directions with the ratio reported. Rank IC ~0.80
+*within* each era is compatible with two very different worlds: one
+relationship stable across three decades, or two era-specific
+relationships each memorised separately. Only a cross-era fit separates
+them, and the answer decides how much a model trained today should be
+trusted forward.
+
+Both within- and transfer cells are out-of-sample (each era's model
+trained on its own first 60% of dates), so the ratio compares like with
+like — an in-sample denominator would have inflated the within cell and
+flattered nobody.
+
+| cell | rank IC | MSE(log var) | QLIKE | bias | n |
+|---|---|---|---|---|---|
+| early → early | 0.7903 | 0.4709 | 0.3525 | +0.0201 | 120,335 |
+| **early → modern** | **0.8161** | 0.4393 | 0.3350 | −0.0535 | 97,182 |
+| modern → modern | 0.8155 | 0.4046 | 0.3615 | −0.0029 | 97,182 |
+| **modern → early** | **0.7836** | 0.4713 | 0.3999 | +0.0408 | 120,335 |
+
+| transfer ratio | rank IC | MSE(log var) |
+|---|---|---|
+| early-trained model | **1.001** | 0.921 |
+| modern-trained model | **0.992** | 0.999 |
+
+**A model trained on 1990–2006 ranks 2020–2024 variance as well as a
+model trained on 2013–2020 does** — slightly better, in fact. The risk
+relationship is essentially era-invariant.
+
+Set that against the return side, which flips **sign** between the same
+two eras (price-only return ICs positive 1990–2012, negative 2017–2024).
+Same panel, same universe, same features, same three decades:
+
+> **Risk is stationary where return is not.**
+
+That is the strongest structural justification the programme has for the
+RISK product framing (§59), and it is the kind of result the mission
+asks for — a property of the world, not of a fitted model.
+
+One caveat, consistent with everything else today: what transfers is the
+**ordering**. The bias differs across cells (−0.0535 vs −0.0029), so the
+LEVEL still needs era-local recalibration. Ordering travels; calibration
+does not.
+
+### 3. Shift-invariance PASSES — the risk finding is not living on same-instant information
 
 Every feature lagged one extra month. All arms degrade **gracefully**
 (rank IC −0.04, no collapse) and every comparative conclusion holds:
@@ -67,7 +113,7 @@ lgbm_options still beats iv_scaled (+0.110 CLEARS) and its numeric twin
 (+0.050 CLEARS). A result that collapsed here would have been living on
 information it should not have had.
 
-### 3. A single stock-month is 70% of ridge's entire loss
+### 4. A single stock-month is 70% of ridge's entire loss
 
 Early era, per-arm QLIKE tail:
 
@@ -84,7 +130,7 @@ sizing actually cares about.** This is why the shipped artifact is LGBM
 despite the MLP's competitive rank IC — and it is a general warning about
 judging risk models by average losses.
 
-### 4. Perfect regime foresight is worth +0.24%/yr — the family closes
+### 5. Perfect regime foresight is worth +0.24%/yr — the family closes
 
 `REGIME-ORACLE-CEILING-1`. Lead with the oracle instead of building a
 predictor and discovering the ceiling afterwards. 153 JKP US factors ×
@@ -110,7 +156,7 @@ is imperfect and pays the same costs.
 zoo. It does not close regime conditioning of **risk/sizing**, where §59
 says the clock runs ~30× faster. That is the surviving redirect.
 
-### 5. 86 books are 3.5 behaviours — so MEGA-SWEEP-2 was replaced
+### 6. 86 books are 3.5 behaviours — so MEGA-SWEEP-2 was replaced
 
 `STRATEGY-EFFECTIVE-DIMENSION-1`, on the existing corpus at zero new
 simulation cost:
@@ -137,7 +183,7 @@ effective n (~3.5), DSR charges nearer the nominal 86. Honest reading: a
 *family* is showing, not a book, and one family out of ~3.5 independent
 behaviours is weak evidence. Note the winner is a **low-vol** book.
 
-### 6. No new information class opens a new direction — the bottleneck is construction, not data
+### 7. No new information class opens a new direction — the bottleneck is construction, not data
 
 `INFORMATION-DIMENSION-1`, 216 books over 18 signals in 6 classes.
 Owned (price + fundamental, 72 books) effective rank **3.694**. Each
@@ -162,7 +208,7 @@ produced fewer distinct behaviours than mega-sweep-1's own 86 books did
 (which gave 3 at the same cut). Adding information classes did not add
 behaviours.
 
-**Put §1 and §6 together and you get the most useful thing learned
+**Put §1 and §7 together and you get the most useful thing learned
 today.** Options carry real, replicated information at the security-risk
 level (+0.113 / +0.064 MSE log var, CLEARS in both eras). The same
 options carry **no new behavioural direction** once poured through a
@@ -175,7 +221,7 @@ expansion. Adding ACLED, FIRMS, shipping and prediction markets buys more
 information classes; this run says our construction layer cannot express
 the ones we already bought.
 
-### 7. The risk head's ranking edge does NOT convert into sizing value
+### 8. The risk head's ranking edge does NOT convert into sizing value
 
 `RISK-SIZING-VALUE-1` / `RISK-SIZING-DISPERSION-1`. The bridge from the
 programme's best asset to an actual portfolio, and it does not carry the
@@ -245,7 +291,62 @@ real effect. What is a wash is **which estimator**. The lane can use the
 cheap trailing estimator; if it uses the model, the receipt must not
 claim the model is *why* it works.
 
-### 8. Every grammar decision is a risk decision, not a return decision
+### 9. Covariance explains the value anomaly — and is not a free upgrade
+
+`CONSTRUCTION-SIZING-1`. The loose end §8 refused to hand-wave, tested.
+
+Every property of the *estimator* checked out on the value book, so the
+suspect was never the estimator: **every inverse-volatility rule
+optimises each name's marginal variance and is blind to how the names
+co-move.** A book can be assembled entirely from individually quiet names
+that all fall together. Added a covariance-aware arm — long-only minimum
+variance on the programme's own Marchenko-Pastur **denoised** covariance
+of the picks' trailing 252-day returns.
+
+Realised annualised volatility, trim handling:
+
+| signal | equal | inverse_vol | model_vol_ds | min_var | best |
+|---|---|---|---|---|---|
+| mom_12_1 | 0.320 | 0.293 | **0.276** | 0.315 | model_vol_ds |
+| low_vol | 0.104 | **0.078** | 0.081 | 0.116 | inverse_vol |
+| value_bm | 0.608 | 0.331 | 0.589 | **0.289** | **min_var** |
+| quality_roe | 0.207 | 0.187 | **0.164** | 0.195 | model_vol_ds |
+| exp_breadth | 0.208 | 0.188 | **0.176** | 0.194 | model_vol_ds |
+| opt_iv_low | 0.105 | 0.091 | **0.088** | 0.121 | model_vol_ds |
+
+**Supported where it was raised, refuted in general.** `min_var` is the
+only arm that fixes the value book (0.289, beating even trailing's
+0.331) — covariance-blindness *was* the mechanism. But pooled it is
+significantly **worse** than the incumbent:
+
+| contrast | d_ann_vol | MDE | verdict |
+|---|---|---|---|
+| min_var − inverse_vol | **+0.0150** | 0.0078 | **POWERED** (worse) |
+| min_var − model_vol_ds | +0.0131 | 0.0475 | ns |
+| min_var − equal | −0.0138 | 0.0330 | ns |
+
+Inverting a 50×50 covariance estimated from 252 observations costs more
+in estimation error than it gains in diversification for most books —
+min-variance concentrates on exactly that error. The declared direction
+was refuted, and the refutation is the finding.
+
+**The positive result, and the one that matters for G2:**
+
+| contrast | observed | CI | verdict |
+|---|---|---|---|
+| inverse_vol − equal, ann vol | **−0.0288** | [−0.0529, −0.0134] | significant |
+| inverse_vol − equal, max DD | **+0.0348** | [+0.0073, +0.0929] | significant |
+
+**Risk sizing itself works.** The G2 lane pair (equal-weight vs
+risk-sized) is well posed and should show a real effect using the cheap
+trailing estimator.
+
+One reading rule this run kept re-teaching: **`model_vol_ds` is the best
+arm on 4 of 6 signals yet does not beat trailing pooled**, because the
+pooled average is dominated by value_bm. Per-signal and pooled disagree
+here for a reason that is now understood rather than averaged over.
+
+### 10. Every grammar decision is a risk decision, not a return decision
 
 `RULE-INTERVENTION-1`, matched paired contrasts (each pair differs in
 exactly one coordinate, so signal/universe/dates/costs cancel; unit of
@@ -363,6 +464,16 @@ first, so 216 books spanning ~4 behaviours cannot vote 216 times.
 
 ---
 
+## THE ONE-LINE VERSION
+
+Risk is stationary where return is not; the risk head reads the options
+market better than the options market reads itself, but only for
+*ordering*, and that ordering advantage does not survive translation into
+portfolio weights. Meanwhile the portfolio grammar collapses every
+information class we own into ~3 behaviours. **The evidence keeps
+pointing at the same place: we have a real risk signal and no way to
+spend it.**
+
 ## FOR MURAT (three minutes)
 
 1. **The G2 risk lane hold is resolved by measurement — but the reason
@@ -374,12 +485,12 @@ first, so 216 books spanning ~4 behaviours cannot vote 216 times.
    `risk_head_vol_lgbm_options@2.0.0@31b9b8d62c777e97`, and note **two**
    conditions: anything consuming the LEVEL must use the calibrated
    prediction; and the receipt must not claim the model is why the lane
-   works. §7 found the model's ranking edge does **not** convert into
+   works. §8 found the model's ranking edge does **not** convert into
    sizing value over a nearly-free trailing estimator. Risk *sizing*
    works; the *estimator choice* is a wash. The cheap estimator is
    defensible and easier to defend.
 2. **Order 22's world-sensor arc should wait.** Not because the idea is
-   wrong, but because §6 says our construction layer cannot express the
+   wrong, but because §7 says our construction layer cannot express the
    information classes we already bought. Buying more feeds before fixing
    that spends money on a bottleneck we have now measured.
 3. **The manager/teacher library needs a v2 before any behaviour claim.**
@@ -396,14 +507,14 @@ first, so 216 books spanning ~4 behaviours cannot vote 216 times.
 ## NEXT 10 MACHINE JOBS
 
 1. `CONSTRUCTION-BOTTLENECK-1` — the top open question, now sharper.
-   §7 already tested the simplest bridge (sizing by predicted vol) and it
+   §8 already tested the simplest bridge (sizing by predicted vol) and it
    was a wash, so the remaining candidates are **covariance-aware**
    construction (the repo already has Marchenko-Pastur denoised
    covariance and riskfolio-lib) and continuous tilts rather than a
    top-N cut. Effective dimension is the readout. Note that inverse-vol
    sizing optimises each name's marginal variance while ignoring
    covariance entirely — which is also the leading unexplained candidate
-   for the `value_bm` anomaly in §7.
+   for the `value_bm` anomaly in §8.
 2. `REGIME-RISK-CONDITIONING-1` — the surviving half of the regime
    question, on the §59 clock: does state conditioning improve **vol/
    drawdown** prediction, where the oracle ceiling was never measured?
