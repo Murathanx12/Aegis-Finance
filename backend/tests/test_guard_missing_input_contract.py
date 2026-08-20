@@ -503,9 +503,22 @@ def _case_arena_experience():
         ExperienceInvalid, "an experience with no information state")
 
 
+def _case_arena_reliability():
+    from backend.services.arena.reliability import (ReliabilityRefused,
+                                                    decision_cells)
+    # The missing input is the STATE DIMENSION being conditioned on. Asked to
+    # slice reliability by a key the join does not carry, the counting brain
+    # must refuse — silently collapsing an absent dimension would report one
+    # pooled rate under the label of a conditional one, which is how a cell
+    # that was never measured comes to look like a cell that was.
+    return (lambda: decision_cells(by=("book_id", "regime_nobody_recorded")),
+            ReliabilityRefused, "a reliability slice by a state nobody stored")
+
+
 CASES = {
     "spec": _case_arena_spec,
     "experience": _case_arena_experience,
+    "reliability": _case_arena_reliability,
     "lane_factory_sim": _case_lane_factory_sim,
     "factor_momentum": _case_factor_momentum,
     "streak_evidence": _case_streak_evidence,

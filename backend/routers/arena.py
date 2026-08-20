@@ -86,6 +86,37 @@ def experiences_summary() -> dict:
             "by_action": by_action, "by_outcome_class": by_class}
 
 
+@router.get("/beliefs")
+def arena_beliefs(book_id: str | None = None, ticker: str | None = None,
+                  limit: int = 200) -> dict:
+    """The persistent belief ledger — every daily review, prior included.
+
+    `prior_source` says where each prior came from: LEDGER (yesterday's
+    posterior, read from disk) or DECLARED_OPENING_PRIOR (a first look). The
+    distinction is the whole point of this layer, so it is served, not implied.
+    """
+    try:
+        rows = store.read_beliefs()
+        if book_id:
+            rows = [r for r in rows if r.get("book_id") == book_id]
+        if ticker:
+            rows = [r for r in rows if r.get("ticker") == ticker.upper()]
+        initiations = sum(1 for r in rows if r.get("is_initiation"))
+        unchanged = sum(1 for r in rows
+                        if r.get("belief_change") == 0)
+        return {**_BANNER, "n_total": len(rows),
+                "n_initiations": initiations,
+                "n_no_update": unchanged,
+                "n_revisions": len(rows) - initiations,
+                "note": ("an INITIATION is an opening LEVEL, not a belief "
+                         "change; it never tilts a weight and must not be "
+                         "counted as evidence the model updated on anything"),
+                "beliefs": rows[-max(0, min(limit, 1000)):]}
+    except Exception as e:  # noqa: BLE001
+        logger.error("arena beliefs failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/reliability")
 def arena_reliability(leg: str = "forecast", min_n: int = reliability.MIN_CELL_N,
                       live: bool = False) -> dict:

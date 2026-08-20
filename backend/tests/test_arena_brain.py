@@ -7,6 +7,7 @@ yfinance happened to return.
 
 from __future__ import annotations
 
+import json
 from datetime import date, timedelta
 
 import pytest
@@ -402,10 +403,10 @@ def test_a_full_day_runs_decision_to_reliability_to_regret(root, tmp_path,
     monkeypatch.setattr(discovery, "candidate_universe",
                         lambda extra=None: sorted(set(tickers) | set(extra or [])))
     monkeypatch.setattr(
-        "backend.services.arena.perception.perceive",
-        lambda day_state, tickers, *, llm_cfg, root=None: {
-            "tilts": {}, "minted": [], "status": "stubbed_offline",
-            "attempted": 0, "failed": 0})
+        "backend.services.arena.beliefs.daily_review",
+        lambda day_state, *, book_id, holdings, challengers, llm_cfg,
+        root=None: {"tilts": {}, "reviewed": [], "status": "stubbed_offline",
+                    "attempted": 0, "failed": 0})
     engine.seed_all(root=root)
 
     # A perception minted on an earlier session, exactly as the live path does.
@@ -551,3 +552,191 @@ def test_seed_records_the_policy_fingerprint(root):
     engine.seed_all(root=root)
     seed = store.read_seed("ENGINE_BASELINE_v1", root)
     assert seed["policy_fingerprint"] == spec_mod.policy_fingerprint()
+
+
+# ── P1: the daily belief review, and where the prior comes from ────────────
+class _FakeLLM:
+    """A model that answers with whatever posterior the test hands it, and
+    records every prompt it saw."""
+
+    def __init__(self, posteriors, thesis_status="INTACT"):
+        self.posteriors = list(posteriors)
+        self.prompts = []
+        self.status = thesis_status
+
+    def available(self):
+        return True, "ok"
+
+    def ask(self, prompt, **kw):
+        self.prompts.append(prompt)
+        self.kwargs = kw
+        p = self.posteriors.pop(0) if self.posteriors else 0.5
+        return {"text": json.dumps({
+            "posterior": p, "evidence": "e", "interpretation": "i",
+            "thesis": "t", "thesis_status": self.status,
+            "invalidation": "inv", "next_observable": "next"}),
+            "call": {"model": "fake"}}
+
+    @staticmethod
+    def parse_json_block(text):
+        return json.loads(text)
+
+
+def _install_llm(monkeypatch, fake):
+    import sys
+    import types
+    mod = types.ModuleType("backend.services.llm_research")
+    mod.available = fake.available
+    mod.ask = fake.ask
+    mod.parse_json_block = fake.parse_json_block
+    monkeypatch.setitem(sys.modules, "backend.services.llm_research", mod)
+
+
+def _day_state(tickers, day="2026-08-20", score=1.0):
+    return {"date": day, "names": {
+        t: {"status": "ok", "close": 100.0, "ret21": 0.01, "vol63": 0.02,
+            "streak_up": 1, "scores": {"arena_composite": score,
+                                       "coverage": ["mom_12_1"]}}
+        for t in tickers}}
+
+
+def test_first_look_opens_at_the_declared_prior_and_is_an_initiation(
+        root, monkeypatch):
+    from backend.services.arena import beliefs
+
+    fake = _FakeLLM([0.7])
+    _install_llm(monkeypatch, fake)
+    out = beliefs.daily_review(_day_state(["AAA"]), book_id="B",
+                               holdings={"AAA"}, challengers=[],
+                               llm_cfg={"max_names_per_day": 5}, root=root)
+    assert out["status"] == "ok" and out["initiations"] == 1
+    row = store.read_beliefs(root)[0]
+    assert row["prior"] == beliefs.OPENING_PRIOR
+    assert row["prior_source"] == "DECLARED_OPENING_PRIOR"
+    assert row["is_initiation"] is True
+    # an opening LEVEL is not a belief CHANGE, so it may not tilt anything
+    assert out["tilts"] == {}
+
+
+def test_the_prior_comes_from_the_ledger_not_from_the_model(root, monkeypatch):
+    """Day 2's prompt must contain day 1's posterior, and the minted record's
+    prior must equal it. The model is never asked what it used to think."""
+    from backend.services.arena import beliefs
+
+    fake = _FakeLLM([0.7, 0.4])
+    _install_llm(monkeypatch, fake)
+    cfg = {"max_names_per_day": 5}
+    beliefs.daily_review(_day_state(["AAA"], day="2026-08-19"), book_id="B",
+                         holdings={"AAA"}, challengers=[], llm_cfg=cfg,
+                         root=root)
+    out = beliefs.daily_review(_day_state(["AAA"], day="2026-08-20"),
+                               book_id="B", holdings={"AAA"}, challengers=[],
+                               llm_cfg=cfg, root=root)
+
+    rows = store.read_beliefs(root)
+    assert len(rows) == 2
+    assert rows[1]["prior"] == pytest.approx(0.7)      # yesterday's posterior
+    assert rows[1]["prior_source"] == "LEDGER"
+    assert rows[1]["belief_change"] == pytest.approx(-0.3)
+    assert '"prior": 0.7' in fake.prompts[1]
+    assert "from the ledger, not from you" in fake.prompts[1]
+    # and the model is instructed it may not revise what it was handed
+    assert "PRIOR IS GIVEN TO YOU" in fake.kwargs["schema_hint"]
+    assert "may not restate, revise" in fake.kwargs["schema_hint"]
+    # a real belief change tilts; its sign follows the change
+    assert out["tilts"]["AAA"] < 1.0
+
+    minted = store._read_jsonl(store.predictions_path(root))
+    assert minted[1]["prior"] == pytest.approx(0.7)
+    assert minted[1]["posterior"] == pytest.approx(0.4)
+    assert minted[1]["probability"] == pytest.approx(0.4)
+
+
+def test_holdings_are_reviewed_before_challengers_and_never_dropped(root):
+    from backend.services.arena import beliefs
+
+    ds = _day_state([f"T{i}" for i in range(10)])
+    todo = beliefs.review_list(ds, holdings={"T7", "T8"},
+                               challengers=["T0", "T1", "T2"],
+                               beliefs={}, book_id="B", max_names=3)
+    assert [x["ticker"] for x in todo][:2] == ["T7", "T8"]
+    assert todo[0]["reason"] == "HOLDING"
+    assert todo[2]["reason"] == "CHALLENGER"
+
+
+def test_a_moved_score_earns_a_review_even_when_not_held_or_ranked(root):
+    from backend.services.arena import beliefs
+
+    ds = _day_state(["AAA", "BBB"])
+    ds["names"]["BBB"]["scores"]["arena_composite"] = 3.0
+    prior_rows = {("B", "BBB"): {"score_at_review": 0.1, "posterior": 0.5}}
+    todo = beliefs.review_list(ds, holdings=set(), challengers=[],
+                               beliefs=prior_rows, book_id="B", max_names=5)
+    assert [x["ticker"] for x in todo] == ["BBB"]
+    assert todo[0]["reason"] == "STATE_CHANGE"
+
+
+def test_no_llm_is_a_status_never_a_silent_skip(root, monkeypatch):
+    import sys
+    import types
+
+    from backend.services.arena import beliefs
+    mod = types.ModuleType("backend.services.llm_research")
+    mod.available = lambda: (False, "no api key")
+    mod.ask = None
+    mod.parse_json_block = None
+    monkeypatch.setitem(sys.modules, "backend.services.llm_research", mod)
+    out = beliefs.daily_review(_day_state(["AAA"]), book_id="B",
+                               holdings={"AAA"}, challengers=[],
+                               llm_cfg={}, root=root)
+    assert out["status"].startswith("llm_unavailable")
+    assert store.read_beliefs(root) == []
+
+
+def test_an_unparseable_reply_fails_one_name_not_the_pass(root, monkeypatch):
+    from backend.services.arena import beliefs
+
+    fake = _FakeLLM([0.7])
+
+    def _bad_then_good(prompt, **kw):
+        if "AAA" in prompt:
+            return {"text": "not json at all", "call": {"model": "fake"}}
+        return _FakeLLM.ask(fake, prompt, **kw)
+
+    _install_llm(monkeypatch, fake)
+    import sys
+    sys.modules["backend.services.llm_research"].ask = _bad_then_good
+    sys.modules["backend.services.llm_research"].parse_json_block = (
+        lambda t: None if t == "not json at all" else json.loads(t))
+
+    out = beliefs.daily_review(_day_state(["AAA", "BBB"]), book_id="B",
+                               holdings={"AAA", "BBB"}, challengers=[],
+                               llm_cfg={"max_names_per_day": 5}, root=root)
+    assert out["failed"] == 1 and out["written"] == 1
+    assert [r["ticker"] for r in store.read_beliefs(root)] == ["BBB"]
+
+
+def test_review_runs_on_a_session_with_no_decision(root, tmp_path, monkeypatch):
+    """The point of P1: the book thinks on days it does not trade."""
+    from backend.services.arena import beliefs, engine
+
+    seen = {"calls": 0}
+
+    def _spy(day_state, *, book_id, holdings, challengers, llm_cfg, root=None):
+        seen["calls"] += 1
+        return {"tilts": {}, "reviewed": [], "status": "ok", "attempted": 0,
+                "failed": 0}
+
+    monkeypatch.setattr(beliefs, "daily_review", _spy)
+    spec = __import__("backend.services.arena.spec",
+                      fromlist=["x"]).active_specs()["LLM_PERCEPTION_v1"]
+    ss = _weekdays(10)
+    closes = {"SPY": {s: 100.0 for s in ss}}
+    panel = DictPanel(ss, closes)
+    engine.seed_all(root=root)
+    ds = _day_state(["AAA"], day=str(ss[-1]))
+    # a state too thin to decide from: the decision refuses, the review runs
+    r = engine.run_book(spec, panel, ss[-1], ds, "hash", root=root)
+    assert seen["calls"] == 1
+    assert r["decision"]["status"] == "insufficient_breadth"
+    assert r["belief_review"]["status"] == "ok"

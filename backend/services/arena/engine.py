@@ -19,7 +19,7 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 
 from backend.services.arena import (
-    discovery, experience, perception, policies, reliability,
+    beliefs, discovery, experience, policies, reliability,
 )
 from backend.services.arena import spec as spec_mod
 from backend.services.arena import store
@@ -111,12 +111,23 @@ def _decision_due(book: dict, day: date) -> str | None:
     return None
 
 
+def _select(spec, day_state: dict) -> policies.Selection:
+    return policies.select(day_state, top_k=spec.top_k,
+                           min_price=spec.min_price, screens=spec.screens,
+                           signal=spec.selection_signal)
+
+
 def _decide(spec, book: dict, day_state: dict, is_hash: str, *,
-            root=None) -> dict:
-    """Compute targets and queue orders. Returns the decision receipt."""
-    sel = policies.select(day_state, top_k=spec.top_k,
-                          min_price=spec.min_price, screens=spec.screens,
-                          signal=spec.selection_signal)
+            llm_tilts: dict | None = None, sel=None, root=None) -> dict:
+    """Compute targets and queue orders. Returns the decision receipt.
+
+    `llm_tilts` arrive already computed by the DAILY belief review — this
+    function no longer calls an LLM. That separation is the point: the review
+    runs on every session and the decision runs on ~1 in 20, so binding them
+    together is what made the model's only look at a name the same call that
+    traded it.
+    """
+    sel = sel if sel is not None else _select(spec, day_state)
     min_breadth = max(5, spec.top_k // 2)
     if len(sel.chosen) < min_breadth:
         # The rehearsal case: a thin PIT store scored 1 of 180 names and every
@@ -137,16 +148,12 @@ def _decide(spec, book: dict, day_state: dict, is_hash: str, *,
                 spec.winner_exemption.get("gain_threshold_pct", 40.0)),
             exempt_trading_days=int(
                 spec.winner_exemption.get("exempt_trading_days", 60)))
-    llm_result = {"tilts": {}, "status": "disabled"}
-    if spec.llm_perception:
-        llm_result = perception.perceive(
-            day_state, [c["ticker"] for c in sel.chosen],
-            llm_cfg=spec.llm, root=root)
-        if llm_result["tilts"]:
-            weights = policies.apply_llm_tilts(
-                weights, llm_result["tilts"],
-                tilt_cap=float(spec.llm.get("tilt_cap", 0.20)),
-                max_single_name=spec.max_single_name)
+    tilts = {t: f for t, f in (llm_tilts or {}).items() if t in weights}
+    if tilts:
+        weights = policies.apply_llm_tilts(
+            weights, tilts,
+            tilt_cap=float(spec.llm.get("tilt_cap", 0.20)),
+            max_single_name=spec.max_single_name)
     orders = policies.orders_from_targets(
         book, weights, day_state,
         cost_bps=spec.cost_bps, slippage_bps=spec.slippage_bps)
@@ -157,20 +164,18 @@ def _decide(spec, book: dict, day_state: dict, is_hash: str, *,
     day = day_state["date"]
     book["last_rebalance_month"] = f"{day[:4]}-{day[5:7]}"
     return {"status": "decided", "selection": sel, "weights": weights,
-            "orders_queued": len(orders), "llm": {k: v for k, v in
-                                                  llm_result.items()
-                                                  if k != "tilts"},
-            "llm_tilts": llm_result["tilts"],
-            "exemptions": exemption_receipts}
+            "orders_queued": len(orders),
+            "llm_tilts": tilts, "exemptions": exemption_receipts}
 
 
 def _experiences_from_decision(spec, dec: dict, book_before: set[str],
-                               day: str, is_hash: str) -> tuple[list[dict], list[dict]]:
+                               day: str, is_hash: str,
+                               prediction_ids: dict | None = None
+                               ) -> tuple[list[dict], list[dict]]:
     """Decision rows + experience rows, chosen AND rejected."""
     sel: policies.Selection = dec["selection"]
     weights: dict = dec["weights"]
-    llm_by_ticker = {m["ticker"]: m for m in
-                     dec.get("llm", {}).get("minted", [])} if dec.get("llm") else {}
+    prediction_ids = prediction_ids or {}
     model_id = RULES_MODEL_ID if not dec.get("llm_tilts") else (
         RULES_MODEL_ID + "+llm_tilt")
     decisions, experiences = [], []
@@ -190,7 +195,7 @@ def _experiences_from_decision(spec, dec: dict, book_before: set[str],
             thesis=thesis, confidence=conf,
             invalidation="drops below rank cutoff at next rebalance",
             weight=weights.get(t), rank=c["rank"], score=c["score"],
-            llm_prediction_id=(llm_by_ticker.get(t) or {}).get("prediction_id"))
+            llm_prediction_id=prediction_ids.get(t))
         experiences.append(rec)
         decisions.append({"date": day, "ticker": t, "action": action,
                           "rank": c["rank"], "score": c["score"],
@@ -264,22 +269,44 @@ def run_book(spec, panel, day: date, day_state: dict, is_hash: str, *,
 
     book_before = set(book["positions"].keys())
     due = _decision_due(book, day)
+
+    # ── the DAILY belief review: every session, decision or not ─────────────
+    # Thinking daily and trading daily are different things, and only the
+    # second one costs money. Before this, the LLM's only look at a name was
+    # the call that also traded it — roughly one session in twenty — and it
+    # supplied its own prior in that same call.
+    sel = _select(spec, day_state)
+    review = {"status": "disabled", "tilts": {}}
+    if spec.llm_perception:
+        try:
+            review = beliefs.daily_review(
+                day_state, book_id=spec.book_id, holdings=book_before,
+                challengers=[c["ticker"] for c in sel.chosen],
+                llm_cfg=spec.llm, root=root)
+        except Exception as exc:  # noqa: BLE001 — review never kills the book
+            logger.exception("ARENA: belief review failed for %s", spec.book_id)
+            review = {"status": f"error: {type(exc).__name__}: {exc}",
+                      "tilts": {}}
+    receipt["belief_review"] = {k: v for k, v in review.items()
+                                if k != "tilts"}
+    prediction_ids = {r["ticker"]: r.get("prediction_id")
+                      for r in review.get("reviewed", [])
+                      if isinstance(r, dict)}
+
     substitution = None
     if due:
-        dec = _decide(spec, book, day_state, is_hash, root=root)
+        dec = _decide(spec, book, day_state, is_hash, sel=sel,
+                      llm_tilts=review.get("tilts"), root=root)
         receipt["decision"] = {k: v for k, v in dec.items()
                                if k not in ("selection", "weights")}
         receipt["decision_reason"] = due
         if dec["status"] == "decided":
             decisions, experiences = _experiences_from_decision(
-                spec, dec, book_before, str(day), is_hash)
+                spec, dec, book_before, str(day), is_hash, prediction_ids)
             store.append_decisions(spec.book_id, decisions, root)
             store.append_experiences(experiences, root)
             receipt["experiences_written"] = len(experiences)
     elif spec.substitution:
-        sel = policies.select(day_state, top_k=spec.top_k,
-                              min_price=spec.min_price, screens=spec.screens,
-                              signal=spec.selection_signal)
         rate = 2 * (spec.cost_bps + spec.slippage_bps) / 10_000.0
         substitution = policies.substitution_check(
             book, sel, day_state,

@@ -99,12 +99,21 @@ books:
       max_names_per_day: 10
       daily_call_cap: 25
       tilt_cap: 0.20                # |multiplicative tilt| <= 20%, deterministic
+      tilt_scale: 2.0               # tilt = 1 + scale * (posterior - prior)
       horizon_days: 20
       observable: beats_benchmark
-    # The LLM proposes a belief revision (prior -> posterior) per name; a
-    # DETERMINISTIC mapper converts belief_change into a bounded weight tilt.
-    # The LLM never sizes. Every revision is minted as a gradeable
-    # PredictionRecord in the arena's OWN ledger (never predictions.jsonl).
+    # DAILY BELIEF REVIEW (beliefs.py), not a one-shot at rebalance. It runs on
+    # EVERY session — holdings first, then challengers, then names whose score
+    # moved — because thinking daily and trading daily are different things.
+    # The PRIOR IS READ FROM THE LEDGER (the last posterior recorded for this
+    # book x name); the model is shown it and forbidden to revise it, and is
+    # asked only for the posterior. A first-ever look opens at the declared
+    # OPENING_PRIOR and is stamped INITIATION — an opening LEVEL is not a
+    # belief CHANGE and never tilts anything. A DETERMINISTIC mapper converts
+    # belief_change into a bounded weight tilt at the next decision. The LLM
+    # never sizes. Every review is minted as a gradeable PredictionRecord in
+    # the arena's OWN ledger (never predictions.jsonl) and is resolved by the
+    # daily pass itself.
 
   CURRENT_BEST_v1:
     purpose: arena-composed-product-candidate
@@ -120,6 +129,7 @@ books:
       max_names_per_day: 10
       daily_call_cap: 25
       tilt_cap: 0.20
+      tilt_scale: 2.0
       horizon_days: 20
       observable: beats_benchmark
     substitution:                   # daily capital-substitution check

@@ -107,12 +107,13 @@ def root(tmp_path):
 
 @pytest.fixture(autouse=True)
 def _no_llm(monkeypatch):
-    """Perception is stubbed off in engine tests — its own tests cover it."""
+    """The daily belief review is stubbed off in engine tests — beliefs.py has
+    its own tests in test_arena_brain.py."""
     monkeypatch.setattr(
-        "backend.services.arena.perception.perceive",
-        lambda day_state, tickers, *, llm_cfg, root=None: {
-            "tilts": {}, "minted": [], "status": "stubbed_offline",
-            "attempted": 0, "failed": 0})
+        "backend.services.arena.beliefs.daily_review",
+        lambda day_state, *, book_id, holdings, challengers, llm_cfg,
+        root=None: {"tilts": {}, "reviewed": [], "status": "stubbed_offline",
+                    "attempted": 0, "failed": 0})
 
 
 def _state(day, panel, pit_db, universe=None):

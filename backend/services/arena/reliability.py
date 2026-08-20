@@ -53,9 +53,29 @@ LEGS = {
     "execution": ("execution_excess_return", "execution_outcome_class"),
 }
 
+#: The dimensions a decision cell can be conditioned on. Declared here rather
+#: than discovered from whatever the first row happened to carry, because an
+#: empty ledger must refuse an unknown slice exactly as loudly as a full one —
+#: otherwise "no data yet" and "that state was never recorded" produce the same
+#: clean empty report, and only one of them is a fact about the data.
+DECISION_KEYS = frozenset({"book_id", "model_id", "action", "horizon_days",
+                           "vol_state", "policy_version"})
+
+FORECAST_KEYS = frozenset({"specialist", "model", "observable",
+                           "horizon_days", "vol_state"})
+
 
 class ReliabilityRefused(RuntimeError):
     """The join this statistic needs does not exist."""
+
+
+def _check_keys(by: tuple[str, ...], known: frozenset, what: str) -> None:
+    missing = [k for k in by if k not in known]
+    if missing:
+        raise ReliabilityRefused(
+            f"cannot group {what} by {missing} — this ledger records "
+            f"{sorted(known)}. Slicing by a state nobody stored would report a "
+            f"pooled rate under the label of a conditional one.")
 
 
 def _now() -> str:
@@ -144,6 +164,7 @@ def decision_cells(*, root=None, leg: str = "forecast",
     """
     if leg not in LEGS:
         raise ReliabilityRefused(f"unknown leg {leg!r}; expected {sorted(LEGS)}")
+    _check_keys(by, DECISION_KEYS, "decisions")
     excess_key, class_key = LEGS[leg]
     labels = state_labels(root)
     exps = {e["experience_id"]: e for e in store.read_experiences(root)}
@@ -183,10 +204,6 @@ def decision_cells(*, root=None, leg: str = "forecast",
                           .get(o.get("entity_key"), "UNKNOWN_VOL")),
             "policy_version": e.get("policy_version"),
         }
-        missing = [k for k in by if k not in ctx]
-        if missing:
-            raise ReliabilityRefused(
-                f"cannot group by {missing} — available keys: {sorted(ctx)}")
         cells.setdefault(tuple(str(ctx[k]) for k in by), []).append(row)
 
     reported = {}
@@ -227,6 +244,7 @@ def forecast_cells(*, root=None, min_n: int = MIN_CELL_N,
     """
     from backend.services.iif1_grader import GradeRefused, brier_with_base_rate
 
+    _check_keys(by, FORECAST_KEYS, "forecasts")
     labels = state_labels(root)
     rows = [r for r in store._read_jsonl(store.predictions_path(root))
             if r.get("outcome") is not None and not r.get("void_reason")]
@@ -243,10 +261,6 @@ def forecast_cells(*, root=None, min_n: int = MIN_CELL_N,
             "vol_state": labels.get(day, {}).get(r.get("ticker"),
                                                  "UNKNOWN_VOL"),
         }
-        missing = [k for k in by if k not in ctx]
-        if missing:
-            raise ReliabilityRefused(
-                f"cannot group by {missing} — available keys: {sorted(ctx)}")
         cells.setdefault(tuple(str(ctx[k]) for k in by), []).append(r)
 
     reported = {}
