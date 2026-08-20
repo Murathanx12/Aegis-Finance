@@ -153,8 +153,10 @@ gross gap. **Perfect** state knowledge nets +0.24%/yr; a real predictor
 is imperfect and pays the same costs.
 
 **Scope:** this closes regime-conditional **factor selection** on this
-zoo. It does not close regime conditioning of **risk/sizing**, where §59
-says the clock runs ~30× faster. That is the surviving redirect.
+zoo. It does not close regime conditioning of **risk**, where §59 says
+the clock runs ~30× faster — that half was taken up separately and
+answered in §10 (the ceiling exists, but it is in the *level*, not the
+ordering, and the observable proxies tested do not reach it).
 
 ### 6. 86 books are 3.5 behaviours — so MEGA-SWEEP-2 was replaced
 
@@ -388,7 +390,56 @@ conflated ordering with level. A rule that cannot see an arm the design
 includes is an incomplete rule, not a verdict. Both the corrected rule
 and what the original would have said are recorded in the receipt.
 
-### 11. Every grammar decision is a risk decision, not a return decision
+### 11. Exposure targeting — the last untested route, and it also does not pay
+
+`VOL-TARGET-VALUE-1`. §8 tried the model's *ordering* inside the book and
+it failed; §10 found the remaining ceiling is in the **level**. Exposure
+targeting is the one use that consumes a level rather than an ordering,
+so it is the last route this run could test: scale the book's total
+exposure so its predicted volatility hits a 15% target. Leverage known at
+the start of each month, capped [0.25, 2.0]; predicted portfolio variance
+is `w' S w` with the model supplying the diagonal and a trailing window
+the correlations.
+
+| arm | mean \|vol − target\| | sd(realized vol) | ann vol | ann ret | maxDD |
+|---|---|---|---|---|---|
+| none | 0.1079 | 0.1054 | 0.2511 | 0.1349 | −0.3529 |
+| trailing | 0.0558 | 0.0750 | 0.1949 | 0.0820 | −0.3339 |
+| model | **0.0548** | 0.0790 | 0.2081 | 0.0917 | −0.3541 |
+
+| contrast (tracking error; negative = first arm better) | Δ | MDE | verdict |
+|---|---|---|---|
+| model − trailing | −0.00211 | 0.01215 | ns |
+| model − none | −0.01516 | 0.03414 | ns |
+| trailing − none | −0.01305 | 0.03797 | ns |
+
+The model tracks the target marginally better than trailing (0.0548 vs
+0.0558) and it is nowhere near significant. **NOT_ESTABLISHED.**
+
+Note the second and third rows honestly: vol targeting *itself* roughly
+halves tracking error (0.108 → ~0.055) and cuts realised vol from 0.251
+to ~0.20, but at 12 pairs over 94 months the MDE is 0.034–0.038 against
+an observed 0.013–0.015. Those two contrasts are **NOT_ANSWERABLE_AT_N**,
+not "no effect" — a distinction this programme pays for when it is
+skipped.
+
+**This closes the loop.** Every route from the risk head to a portfolio
+decision that Order 24 could test has now been tested:
+
+| route | what it consumes | result |
+|---|---|---|
+| cross-sectional sizing (§8) | ordering | NOT_ESTABLISHED |
+| …with shrinkage corrected (§8) | ordering | POWERED vs itself, still loses to trailing |
+| covariance-aware construction (§9) | ordering + covariance | significantly worse pooled |
+| regime conditioning (§10) | level | ceiling exists, observables do not reach it |
+| exposure targeting (§11) | level | NOT_ESTABLISHED |
+
+The head is genuinely good at ranking variance, era-invariantly. **None
+of that has yet been converted into a portfolio decision that beats a
+trailing 63-day standard deviation.** That is the honest state, and it is
+a far more useful thing to know than another leaderboard.
+
+### 12. Every grammar decision is a risk decision, not a return decision
 
 `RULE-INTERVENTION-1`, matched paired contrasts (each pair differs in
 exactly one coordinate, so signal/universe/dates/costs cancel; unit of
@@ -509,13 +560,15 @@ first, so 216 books spanning ~4 behaviours cannot vote 216 times.
 
 ## THE ONE-LINE VERSION
 
-Risk is stationary where return is not; the risk head reads the options
-market better than the options market reads itself, but only for
-*ordering*, and that ordering advantage does not survive translation into
-portfolio weights. Meanwhile the portfolio grammar collapses every
-information class we own into ~3 behaviours. **The evidence keeps
-pointing at the same place: we have a real risk signal and no way to
-spend it.**
+Risk is stationary where return is not, and the risk head reads the
+options market better than the options market reads itself — but only for
+*ordering*. Five separate routes from that ordering to a portfolio
+decision were tested and none beats a trailing 63-day standard deviation.
+Meanwhile the portfolio grammar collapses every information class we own
+into ~3 behaviours. **We have a real, replicated, era-invariant risk
+signal and no demonstrated way to spend it. Closing that gap is the
+programme's next problem, and it is a construction problem, not a data
+problem.**
 
 ## FOR MURAT (three minutes)
 
@@ -569,6 +622,11 @@ spend it.**
    MANAGER-* trials.
 4. Persist per-book **holdings and turnover paths** in the next sweep —
    two of the five similarity views are currently unanswerable.
+4b. Re-run §11's targeting contrasts at the n they need. `trailing − none`
+   and `model − none` are NOT_ANSWERABLE_AT_N (MDE 0.034-0.038 vs
+   observed 0.013-0.015); more signals or a longer window would settle
+   whether vol targeting pays at all, which is a cheaper and more
+   important question than which estimator drives it.
 5. Early-era artifact twin of the risk head + era-transfer both
    directions with the ratio reported.
 6. `REENTRY-OPTION-VALUE-1` design (hold / trim / exit / exit+confirmation

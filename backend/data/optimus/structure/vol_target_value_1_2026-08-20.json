@@ -1,0 +1,499 @@
+{
+  "trial": "VOL-TARGET-VALUE-1",
+  "mode": "SCREEN",
+  "at": "2026-08-20T05:14:05+00:00",
+  "target_vol": 0.15,
+  "leverage_cap": [
+    0.25,
+    2.0
+  ],
+  "primary": "mean |rolling-12m realized ann vol - target|; a vol target is a promise about VOLATILITY, so return and drawdown are reported but secondary",
+  "declared_direction": "the model arm should track the target more tightly than the trailing arm",
+  "n_months": 94,
+  "predicted_portfolio_vol": "S = D^(1/2) R D^(1/2); model supplies the diagonal, trailing window supplies correlations",
+  "contrasts": {
+    "model_vs_trailing": {
+      "n_pairs": 12,
+      "d_tracking_error": {
+        "observed": -0.0021120075130461463,
+        "se": 0.0043360326220678105,
+        "ci": [
+          -0.00784407924859878,
+          0.008886426000702186
+        ],
+        "mde_80": 0.012149563407034006,
+        "significant_ci_excludes_zero": false,
+        "clears_mde": false
+      },
+      "per_pair_d_tracking": {
+        "mom_12_1|trim": 0.0089,
+        "mom_12_1|exempt": -0.0026,
+        "low_vol|trim": 0.0029,
+        "low_vol|exempt": 0.0036,
+        "value_bm|trim": 0.0047,
+        "value_bm|exempt": 0.0002,
+        "quality_roe|trim": -0.0019,
+        "quality_roe|exempt": -0.0063,
+        "exp_breadth|trim": -0.0057,
+        "exp_breadth|exempt": -0.0043,
+        "opt_iv_low|trim": -0.0045,
+        "opt_iv_low|exempt": -0.0061
+      }
+    },
+    "model_vs_none": {
+      "n_pairs": 12,
+      "d_tracking_error": {
+        "observed": -0.015164570429739427,
+        "se": 0.012182987642516454,
+        "ci": [
+          -0.035844976542035,
+          0.011990652387219858
+        ],
+        "mde_80": 0.034136731374331104,
+        "significant_ci_excludes_zero": false,
+        "clears_mde": false
+      },
+      "per_pair_d_tracking": {
+        "mom_12_1|trim": -0.1145,
+        "mom_12_1|exempt": -0.1,
+        "low_vol|trim": -0.0179,
+        "low_vol|exempt": -0.0183,
+        "value_bm|trim": -0.1368,
+        "value_bm|exempt": -0.1204,
+        "quality_roe|trim": -0.0207,
+        "quality_roe|exempt": -0.0203,
+        "exp_breadth|trim": -0.0308,
+        "exp_breadth|exempt": -0.0276,
+        "opt_iv_low|trim": -0.0137,
+        "opt_iv_low|exempt": -0.0158
+      }
+    },
+    "trailing_vs_none": {
+      "n_pairs": 12,
+      "d_tracking_error": {
+        "observed": -0.01305256291669328,
+        "se": 0.013549468012871978,
+        "ci": [
+          -0.038859180630877954,
+          0.014489105530547183
+        ],
+        "mde_80": 0.037965609372067284,
+        "significant_ci_excludes_zero": false,
+        "clears_mde": false
+      },
+      "per_pair_d_tracking": {
+        "mom_12_1|trim": -0.1234,
+        "mom_12_1|exempt": -0.0974,
+        "low_vol|trim": -0.0208,
+        "low_vol|exempt": -0.0218,
+        "value_bm|trim": -0.1415,
+        "value_bm|exempt": -0.1206,
+        "quality_roe|trim": -0.0189,
+        "quality_roe|exempt": -0.014,
+        "exp_breadth|trim": -0.0251,
+        "exp_breadth|exempt": -0.0233,
+        "opt_iv_low|trim": -0.0093,
+        "opt_iv_low|exempt": -0.0097
+      }
+    }
+  },
+  "books": [
+    {
+      "key": "mom_12_1|none|trim",
+      "signal": "mom_12_1",
+      "arm": "none",
+      "handling": "trim",
+      "ann_vol": 0.3204,
+      "mean_abs_dev_from_target": 0.1751,
+      "sd_of_realized_vol": 0.0972,
+      "ann_return": 0.0943,
+      "max_drawdown": -0.538
+    },
+    {
+      "key": "mom_12_1|trailing|trim",
+      "signal": "mom_12_1",
+      "arm": "trailing",
+      "handling": "trim",
+      "ann_vol": 0.1797,
+      "mean_abs_dev_from_target": 0.0518,
+      "sd_of_realized_vol": 0.0562,
+      "ann_return": 0.0472,
+      "max_drawdown": -0.3015
+    },
+    {
+      "key": "mom_12_1|model|trim",
+      "signal": "mom_12_1",
+      "arm": "model",
+      "handling": "trim",
+      "ann_vol": 0.1945,
+      "mean_abs_dev_from_target": 0.0607,
+      "sd_of_realized_vol": 0.0546,
+      "ann_return": 0.0443,
+      "max_drawdown": -0.3416
+    },
+    {
+      "key": "mom_12_1|none|exempt",
+      "signal": "mom_12_1",
+      "arm": "none",
+      "handling": "exempt",
+      "ann_vol": 0.2913,
+      "mean_abs_dev_from_target": 0.1476,
+      "sd_of_realized_vol": 0.0865,
+      "ann_return": 0.1004,
+      "max_drawdown": -0.5055
+    },
+    {
+      "key": "mom_12_1|trailing|exempt",
+      "signal": "mom_12_1",
+      "arm": "trailing",
+      "handling": "exempt",
+      "ann_vol": 0.1774,
+      "mean_abs_dev_from_target": 0.0501,
+      "sd_of_realized_vol": 0.0547,
+      "ann_return": 0.0569,
+      "max_drawdown": -0.2969
+    },
+    {
+      "key": "mom_12_1|model|exempt",
+      "signal": "mom_12_1",
+      "arm": "model",
+      "handling": "exempt",
+      "ann_vol": 0.1762,
+      "mean_abs_dev_from_target": 0.0476,
+      "sd_of_realized_vol": 0.0479,
+      "ann_return": 0.0508,
+      "max_drawdown": -0.3173
+    },
+    {
+      "key": "low_vol|none|trim",
+      "signal": "low_vol",
+      "arm": "none",
+      "handling": "trim",
+      "ann_vol": 0.1043,
+      "mean_abs_dev_from_target": 0.0516,
+      "sd_of_realized_vol": 0.0299,
+      "ann_return": 0.0807,
+      "max_drawdown": -0.1573
+    },
+    {
+      "key": "low_vol|trailing|trim",
+      "signal": "low_vol",
+      "arm": "trailing",
+      "handling": "trim",
+      "ann_vol": 0.157,
+      "mean_abs_dev_from_target": 0.0308,
+      "sd_of_realized_vol": 0.0452,
+      "ann_return": 0.0849,
+      "max_drawdown": -0.2646
+    },
+    {
+      "key": "low_vol|model|trim",
+      "signal": "low_vol",
+      "arm": "model",
+      "handling": "trim",
+      "ann_vol": 0.168,
+      "mean_abs_dev_from_target": 0.0337,
+      "sd_of_realized_vol": 0.0463,
+      "ann_return": 0.0902,
+      "max_drawdown": -0.3013
+    },
+    {
+      "key": "low_vol|none|exempt",
+      "signal": "low_vol",
+      "arm": "none",
+      "handling": "exempt",
+      "ann_vol": 0.1029,
+      "mean_abs_dev_from_target": 0.0534,
+      "sd_of_realized_vol": 0.0306,
+      "ann_return": 0.0786,
+      "max_drawdown": -0.1573
+    },
+    {
+      "key": "low_vol|trailing|exempt",
+      "signal": "low_vol",
+      "arm": "trailing",
+      "handling": "exempt",
+      "ann_vol": 0.1582,
+      "mean_abs_dev_from_target": 0.0316,
+      "sd_of_realized_vol": 0.0461,
+      "ann_return": 0.0829,
+      "max_drawdown": -0.2646
+    },
+    {
+      "key": "low_vol|model|exempt",
+      "signal": "low_vol",
+      "arm": "model",
+      "handling": "exempt",
+      "ann_vol": 0.1668,
+      "mean_abs_dev_from_target": 0.0352,
+      "sd_of_realized_vol": 0.0484,
+      "ann_return": 0.0876,
+      "max_drawdown": -0.3013
+    },
+    {
+      "key": "value_bm|none|trim",
+      "signal": "value_bm",
+      "arm": "none",
+      "handling": "trim",
+      "ann_vol": 0.6077,
+      "mean_abs_dev_from_target": 0.2614,
+      "sd_of_realized_vol": 0.3715,
+      "ann_return": 0.3277,
+      "max_drawdown": -0.6289
+    },
+    {
+      "key": "value_bm|trailing|trim",
+      "signal": "value_bm",
+      "arm": "trailing",
+      "handling": "trim",
+      "ann_vol": 0.3511,
+      "mean_abs_dev_from_target": 0.1199,
+      "sd_of_realized_vol": 0.2068,
+      "ann_return": 0.1402,
+      "max_drawdown": -0.5018
+    },
+    {
+      "key": "value_bm|model|trim",
+      "signal": "value_bm",
+      "arm": "model",
+      "handling": "trim",
+      "ann_vol": 0.3926,
+      "mean_abs_dev_from_target": 0.1246,
+      "sd_of_realized_vol": 0.2462,
+      "ann_return": 0.1715,
+      "max_drawdown": -0.4824
+    },
+    {
+      "key": "value_bm|none|exempt",
+      "signal": "value_bm",
+      "arm": "none",
+      "handling": "exempt",
+      "ann_vol": 0.5545,
+      "mean_abs_dev_from_target": 0.2349,
+      "sd_of_realized_vol": 0.3297,
+      "ann_return": 0.3066,
+      "max_drawdown": -0.6019
+    },
+    {
+      "key": "value_bm|trailing|exempt",
+      "signal": "value_bm",
+      "arm": "trailing",
+      "handling": "exempt",
+      "ann_vol": 0.3214,
+      "mean_abs_dev_from_target": 0.1143,
+      "sd_of_realized_vol": 0.1795,
+      "ann_return": 0.1262,
+      "max_drawdown": -0.5108
+    },
+    {
+      "key": "value_bm|model|exempt",
+      "signal": "value_bm",
+      "arm": "model",
+      "handling": "exempt",
+      "ann_vol": 0.3593,
+      "mean_abs_dev_from_target": 0.1145,
+      "sd_of_realized_vol": 0.2191,
+      "ann_return": 0.1595,
+      "max_drawdown": -0.4615
+    },
+    {
+      "key": "quality_roe|none|trim",
+      "signal": "quality_roe",
+      "arm": "none",
+      "handling": "trim",
+      "ann_vol": 0.2066,
+      "mean_abs_dev_from_target": 0.0728,
+      "sd_of_realized_vol": 0.0737,
+      "ann_return": 0.1407,
+      "max_drawdown": -0.3133
+    },
+    {
+      "key": "quality_roe|trailing|trim",
+      "signal": "quality_roe",
+      "arm": "trailing",
+      "handling": "trim",
+      "ann_vol": 0.1741,
+      "mean_abs_dev_from_target": 0.0539,
+      "sd_of_realized_vol": 0.0569,
+      "ann_return": 0.0733,
+      "max_drawdown": -0.3029
+    },
+    {
+      "key": "quality_roe|model|trim",
+      "signal": "quality_roe",
+      "arm": "model",
+      "handling": "trim",
+      "ann_vol": 0.1847,
+      "mean_abs_dev_from_target": 0.052,
+      "sd_of_realized_vol": 0.0551,
+      "ann_return": 0.0919,
+      "max_drawdown": -0.3325
+    },
+    {
+      "key": "quality_roe|none|exempt",
+      "signal": "quality_roe",
+      "arm": "none",
+      "handling": "exempt",
+      "ann_vol": 0.2011,
+      "mean_abs_dev_from_target": 0.0714,
+      "sd_of_realized_vol": 0.0737,
+      "ann_return": 0.1359,
+      "max_drawdown": -0.3091
+    },
+    {
+      "key": "quality_roe|trailing|exempt",
+      "signal": "quality_roe",
+      "arm": "trailing",
+      "handling": "exempt",
+      "ann_vol": 0.1759,
+      "mean_abs_dev_from_target": 0.0574,
+      "sd_of_realized_vol": 0.0607,
+      "ann_return": 0.0755,
+      "max_drawdown": -0.3054
+    },
+    {
+      "key": "quality_roe|model|exempt",
+      "signal": "quality_roe",
+      "arm": "model",
+      "handling": "exempt",
+      "ann_vol": 0.1792,
+      "mean_abs_dev_from_target": 0.051,
+      "sd_of_realized_vol": 0.0543,
+      "ann_return": 0.089,
+      "max_drawdown": -0.3188
+    },
+    {
+      "key": "exp_breadth|none|trim",
+      "signal": "exp_breadth",
+      "arm": "none",
+      "handling": "trim",
+      "ann_vol": 0.2081,
+      "mean_abs_dev_from_target": 0.0679,
+      "sd_of_realized_vol": 0.0539,
+      "ann_return": 0.1134,
+      "max_drawdown": -0.3559
+    },
+    {
+      "key": "exp_breadth|trailing|trim",
+      "signal": "exp_breadth",
+      "arm": "trailing",
+      "handling": "trim",
+      "ann_vol": 0.1699,
+      "mean_abs_dev_from_target": 0.0428,
+      "sd_of_realized_vol": 0.0495,
+      "ann_return": 0.06,
+      "max_drawdown": -0.3686
+    },
+    {
+      "key": "exp_breadth|model|trim",
+      "signal": "exp_breadth",
+      "arm": "model",
+      "handling": "trim",
+      "ann_vol": 0.1725,
+      "mean_abs_dev_from_target": 0.0371,
+      "sd_of_realized_vol": 0.0445,
+      "ann_return": 0.0645,
+      "max_drawdown": -0.4093
+    },
+    {
+      "key": "exp_breadth|none|exempt",
+      "signal": "exp_breadth",
+      "arm": "none",
+      "handling": "exempt",
+      "ann_vol": 0.2072,
+      "mean_abs_dev_from_target": 0.0664,
+      "sd_of_realized_vol": 0.0542,
+      "ann_return": 0.0987,
+      "max_drawdown": -0.3531
+    },
+    {
+      "key": "exp_breadth|trailing|exempt",
+      "signal": "exp_breadth",
+      "arm": "trailing",
+      "handling": "exempt",
+      "ann_vol": 0.1698,
+      "mean_abs_dev_from_target": 0.0431,
+      "sd_of_realized_vol": 0.0497,
+      "ann_return": 0.0466,
+      "max_drawdown": -0.3666
+    },
+    {
+      "key": "exp_breadth|model|exempt",
+      "signal": "exp_breadth",
+      "arm": "model",
+      "handling": "exempt",
+      "ann_vol": 0.1726,
+      "mean_abs_dev_from_target": 0.0388,
+      "sd_of_realized_vol": 0.0461,
+      "ann_return": 0.0554,
+      "max_drawdown": -0.4067
+    },
+    {
+      "key": "opt_iv_low|none|trim",
+      "signal": "opt_iv_low",
+      "arm": "none",
+      "handling": "trim",
+      "ann_vol": 0.1055,
+      "mean_abs_dev_from_target": 0.0461,
+      "sd_of_realized_vol": 0.0326,
+      "ann_return": 0.0718,
+      "max_drawdown": -0.1609
+    },
+    {
+      "key": "opt_iv_low|trailing|trim",
+      "signal": "opt_iv_low",
+      "arm": "trailing",
+      "handling": "trim",
+      "ann_vol": 0.1524,
+      "mean_abs_dev_from_target": 0.0369,
+      "sd_of_realized_vol": 0.0483,
+      "ann_return": 0.0947,
+      "max_drawdown": -0.266
+    },
+    {
+      "key": "opt_iv_low|model|trim",
+      "signal": "opt_iv_low",
+      "arm": "model",
+      "handling": "trim",
+      "ann_vol": 0.1667,
+      "mean_abs_dev_from_target": 0.0324,
+      "sd_of_realized_vol": 0.0441,
+      "ann_return": 0.0981,
+      "max_drawdown": -0.295
+    },
+    {
+      "key": "opt_iv_low|none|exempt",
+      "signal": "opt_iv_low",
+      "arm": "none",
+      "handling": "exempt",
+      "ann_vol": 0.1042,
+      "mean_abs_dev_from_target": 0.0461,
+      "sd_of_realized_vol": 0.0315,
+      "ann_return": 0.0705,
+      "max_drawdown": -0.1532
+    },
+    {
+      "key": "opt_iv_low|trailing|exempt",
+      "signal": "opt_iv_low",
+      "arm": "trailing",
+      "handling": "exempt",
+      "ann_vol": 0.1515,
+      "mean_abs_dev_from_target": 0.0364,
+      "sd_of_realized_vol": 0.0468,
+      "ann_return": 0.095,
+      "max_drawdown": -0.2577
+    },
+    {
+      "key": "opt_iv_low|model|exempt",
+      "signal": "opt_iv_low",
+      "arm": "model",
+      "handling": "exempt",
+      "ann_vol": 0.1643,
+      "mean_abs_dev_from_target": 0.0303,
+      "sd_of_realized_vol": 0.041,
+      "ann_return": 0.098,
+      "max_drawdown": -0.2814
+    }
+  ],
+  "label": "SIMULATION \u2014 LANE-FACTORY-SIM-1, never a track record"
+}
