@@ -48,6 +48,18 @@ from scripts.wrds_training_pull import OUT, _conn                  # noqa: E402
 QUARANTINE = BULK / "_quarantine_truncated"
 RECORD = OUT / "truncated_quarantine.json"
 
+#: A parquet being STREAMED has no footer until the writer closes it, so it
+#: reads as corrupt while it is being written. This tool DELETES files it
+#: judges corrupt — so run against a live pull, it would destroy the table
+#: currently landing. Caught 2026-08-21: `tr_ibes__pansum.parquet` and
+#: `comp__sec_mshare.parquet` both read as unreadable and both had been
+#: touched within 15 seconds; one had logged `pulled` 13 seconds earlier.
+#:
+#: Files modified inside this window are SKIPPED, not judged. The earlier
+#: deletions were safe only because the pull had been killed first — which
+#: was luck, not a property of the tool.
+IN_FLIGHT_SECONDS = 900
+
 
 def main() -> int:
     ap = argparse.ArgumentParser()
@@ -56,8 +68,14 @@ def main() -> int:
 
     import pyarrow.parquet as pq
 
-    suspects, corrupt = [], []
+    import time as _time
+    now = _time.time()
+    suspects, corrupt, in_flight = [], [], []
     for f in sorted(BULK.glob("*.parquet")):
+        if now - f.stat().st_mtime < IN_FLIGHT_SECONDS:
+            # Possibly being written RIGHT NOW. Never judged, never deleted.
+            in_flight.append(f.name)
+            continue
         try:
             n = pq.ParquetFile(f).metadata.num_rows
         except Exception as exc:                                # noqa: BLE001
@@ -73,6 +91,12 @@ def main() -> int:
 
     print(f"{len(suspects)} parquet(s) sit exactly at the {MAX_ROWS:,} cap")
     print(f"{len(corrupt)} parquet(s) are UNREADABLE (killed mid-write)")
+    if in_flight:
+        print(f"{len(in_flight)} parquet(s) SKIPPED — modified in the last "
+              f"{IN_FLIGHT_SECONDS}s, possibly being written by a running "
+              f"pull. Re-run when no pull is active to judge them.")
+        for x in in_flight[:8]:
+            print(f"  IN-FLIGHT {x}")
     for f, why in corrupt:
         print(f"  CORRUPT   {f.name}: {why}")
     if not a.dry_run:
@@ -134,6 +158,8 @@ def main() -> int:
                 "must not be joined as if they were the table."),
         "n_quarantined": len(truncated),
         "n_corrupt_deleted": len(corrupt),
+        "n_skipped_in_flight": len(in_flight),
+        "skipped_in_flight": in_flight,
         "corrupt_deleted": [f.name for f, _ in corrupt],
         "tables": rows,
     }, indent=2), encoding="utf-8")

@@ -104,6 +104,13 @@ def main() -> int:
     #: The exact predicate `wrds_pull_catchup` / `wrds_pull_everything` apply.
     PERMNO_COLS = ("permno", "lpermno", "permco")
 
+    import time as _time
+    now = _time.time()
+    #: Same guard as the quarantine tool: a streaming parquet has no footer
+    #: until it closes, so a file the pull is writing right now reads as
+    #: corrupt. Reporting that as CORRUPT is a false alarm, and this tool has
+    #: already raised one set of those.
+    IN_FLIGHT_SECONDS = 900
     files = sorted(BULK.glob("*.parquet"))[: a.limit]
     print(f"verifying {len(files)} parquet(s) against the server\n")
 
@@ -114,6 +121,10 @@ def main() -> int:
     for f in files:
         schema, _, table = f.stem.partition("__")
         name = f"{schema}.{table}"
+        if now - f.stat().st_mtime < IN_FLIGHT_SECONDS:
+            rows.append({"name": name, "file": f.name, "verdict": "IN_FLIGHT"})
+            print(f"  IN_FLIGHT  {name} (modified <{IN_FLIGHT_SECONDS}s ago)")
+            continue
         try:
             n_file = pq.ParquetFile(f).metadata.num_rows
         except Exception as exc:                                # noqa: BLE001
@@ -169,7 +180,7 @@ def main() -> int:
                   f"server={n_srv:>12,}  kept={rows[-1]['kept_pct']}%")
     conn.close()
 
-    for v in ("CORRUPT", "UNVERIFIED"):
+    for v in ("CORRUPT", "UNVERIFIED", "IN_FLIGHT"):
         counts[v] = sum(1 for r in rows if r["verdict"] == v)
     print("\n=== VERDICTS ===")
     for k in sorted(counts):
@@ -179,11 +190,13 @@ def main() -> int:
     broken = [r for r in rows
               if r["verdict"] in ("TRUNCATED", "SHORT_MAJOR", "EXTRA",
                                   "CORRUPT")]
-    unknown = [r for r in rows if r["verdict"] == "UNVERIFIED"]
+    unknown = [r for r in rows
+               if r["verdict"] in ("UNVERIFIED", "IN_FLIGHT")]
     print(f"\n{len(clean):,} of {len(rows):,} files are complete or within "
           f"{DRIFT_TOLERANCE:.1%} drift")
     print(f"{len(broken):,} are BROKEN (truncated / short / extra / corrupt)")
-    print(f"{len(unknown):,} are UNVERIFIED — status unknown, NOT a pass")
+    print(f"{len(unknown):,} are UNVERIFIED / IN_FLIGHT — status unknown, "
+          f"NOT a pass")
 
     REPORT.write_text(json.dumps({
         "verified_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
