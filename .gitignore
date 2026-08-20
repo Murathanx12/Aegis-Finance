@@ -125,6 +125,10 @@ backend/data/swarm/*.log
 # is better practice than committing a file mid-rewrite.
 backend/data/optimus/wrds/pull_everything_manifest.json
 backend/data/optimus/wrds/pull_everything_plan.json
+# Same rule for the catch-up pass (wrds_pull_catchup): a multi-hour run that
+# appends a progress log must not be able to flip git_dirty at 17:00 either.
+backend/data/optimus/wrds/pull_catchup_log.jsonl
+backend/data/optimus/wrds/pull_terminal_failures.json
 
 # ARENA (ORDER 25): local ledger writes must never dirty the tree the night
 # launcher's git_dirty check reads. Railway's volume is the authoritative store.

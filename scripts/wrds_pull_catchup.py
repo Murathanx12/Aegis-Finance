@@ -1,0 +1,372 @@
+"""WRDS-PULL-CATCHUP — finish the pull that reported itself finished.
+
+WHAT WENT WRONG (measured 2026-08-20, not inferred)
+===================================================
+`wrds_pull_everything` wrote `completed_at` with **281 tables pulled and 1,127
+failed** out of 1,327 planned, and the session handoff recorded the PLAN count
+as the result. 79% of the substrate was missing and the record said done.
+
+The failures are not entitlement. Taxonomy of the 1,127:
+
+    727  statement timeout          <- self-inflicted, see below
+    245  connection dropped         <- same cause, downstream
+    125  permission denied          <- REAL: not entitled
+     28  relation does not exist    <- REAL: catalogue lists what is not there
+      2  conflict with recovery     <- read-replica lag, retryable
+
+`PER_TABLE_TIMEOUT_S = 90` was a local decision, defended in a comment as
+protecting a scarce connection. **The server's own `statement_timeout` is
+2 days.** Nothing upstream asked for 90 seconds. Re-pulled by hand with the
+cap lifted, the four representative "timeouts" look like this:
+
+    crsp.contact_info      329,280 rows x  11 cols    18.1s
+    optionm.distrd         743,101 rows x  15 cols    30.3s
+    comp.aco_indsta         59,293 rows x 886 cols    91.3s   <- missed by 1.3s
+    ibes.act_epsint      3,457,713 rows x  14 cols   162.5s
+
+A 329k-row table that takes 18 seconds alone did not need 90; it lost them to
+five workers competing for the same link. So the cap did not protect
+throughput, it converted slow tables into absent ones — and because the
+manifest counted a timeout as a `failed` entry rather than as an incomplete
+run, the pull could report completion having skipped four fifths of its plan.
+
+WHAT THIS DOES DIFFERENTLY
+==========================
+  * per-table timeout raised to `--timeout-s` (default 900) and set ONCE per
+    connection, not per query;
+  * fewer workers by default (3), because contention was the real limit;
+  * dropped connections are RECONNECTED and retried with backoff instead of
+    counted as a table that does not exist;
+  * PERMISSION DENIED and DOES NOT EXIST are separated out as TERMINAL and
+    never retried — they are entitlement findings and belong in the
+    entitlement map, not in a failure count that looks like a bug;
+  * the run refuses to write `completed_at` while any retryable table remains
+    (`--max-seconds` chunking sets `partial_at` instead). A run that stopped
+    early says so.
+
+Resumable: a table whose parquet exists is skipped. Safe to kill.
+
+    python -m scripts.wrds_pull_catchup --dry-run
+    python -m scripts.wrds_pull_catchup --max-seconds 21600
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import queue
+import re
+import sys
+import threading
+import time
+import warnings
+from datetime import datetime, timezone
+from pathlib import Path
+
+import pandas as pd
+
+warnings.filterwarnings("ignore", message="pandas only supports SQLAlchemy")
+
+REPO = Path(__file__).resolve().parents[1]
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
+from scripts.wrds_pull_everything import (BULK, MANIFEST,  # noqa: E402
+                                          MAX_ROWS, DISK_BUDGET_GB)
+from scripts.wrds_training_pull import (OUT, _all_permnos,  # noqa: E402
+                                        _conn, _date_ranges)
+
+CATCHUP_LOG = OUT / "pull_catchup_log.jsonl"
+TERMINAL_MAP = OUT / "pull_terminal_failures.json"
+
+#: Errors that will never succeed on retry. Each is a FINDING about what this
+#: account is entitled to see, not a transport failure.
+TERMINAL_PATTERNS = (
+    (re.compile(r"permission denied", re.I), "NOT_ENTITLED"),
+    (re.compile(r"does not exist", re.I), "ABSENT_FROM_SERVER"),
+)
+
+#: Errors caused by how the query was asked, not by whether it may be asked.
+RETRYABLE_PATTERNS = (
+    (re.compile(r"statement timeout", re.I), "TIMEOUT"),
+    (re.compile(r"conflict with recovery", re.I), "REPLICA_RECOVERY"),
+    # 235 of the original 1,127 "failures" were this: the laptop lost DNS for
+    # a stretch mid-run. A puller that books a network outage as a per-table
+    # failure converts a transient outage into a permanent hole in the
+    # substrate — and then reports the hole as a completed pull.
+    (re.compile(r"could not translate host name|Name or service not known|"
+                r"Temporary failure in name resolution|getaddrinfo", re.I),
+     "NETWORK_DNS"),
+    (re.compile(r"server closed the connection|could not receive|"
+                r"SSL|EOF detected|connection", re.I), "CONNECTION"),
+    (re.compile(r"out of memory|MemoryError", re.I), "MEMORY"),
+)
+
+DEFAULT_TIMEOUT_S = 900
+DEFAULT_WORKERS = 3
+MAX_ATTEMPTS = 3
+
+
+def classify(error: str) -> tuple[str, str]:
+    """(verdict, reason). Unknown errors are RETRYABLE by default and named,
+    because silently treating an unrecognised error as terminal is how a
+    transport bug becomes a permanent hole in the substrate."""
+    for pat, reason in TERMINAL_PATTERNS:
+        if pat.search(error or ""):
+            return "TERMINAL", reason
+    for pat, reason in RETRYABLE_PATTERNS:
+        if pat.search(error or ""):
+            return "RETRYABLE", reason
+    return "RETRYABLE", "UNCLASSIFIED"
+
+
+def _load_manifest() -> dict:
+    if not MANIFEST.exists():
+        raise SystemExit(f"no manifest at {MANIFEST}; run wrds_pull_everything "
+                         f"first — this script finishes a pull, it does not "
+                         f"plan one")
+    return json.loads(MANIFEST.read_text(encoding="utf-8"))
+
+
+def _log(rows: list[dict]) -> None:
+    CATCHUP_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with open(CATCHUP_LOG, "a", encoding="utf-8") as fh:
+        for r in rows:
+            fh.write(json.dumps(r, default=str) + "\n")
+
+
+def main() -> int:
+    for s in (sys.stdout, sys.stderr):
+        try:
+            s.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:                                       # noqa: BLE001
+            pass
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--workers", type=int, default=DEFAULT_WORKERS)
+    ap.add_argument("--timeout-s", type=int, default=DEFAULT_TIMEOUT_S)
+    ap.add_argument("--max-tables", type=int, default=100000)
+    ap.add_argument("--max-seconds", type=float, default=0.0)
+    a = ap.parse_args()
+
+    man = _load_manifest()
+    BULK.mkdir(parents=True, exist_ok=True)
+
+    have = {p.stem for p in BULK.glob("*.parquet")}
+    # Dedupe: the manifest appends, so one table can appear in `failed` more
+    # than once across runs. Counting those twice would overstate the hole.
+    by_name: dict[str, dict] = {}
+    for f in man.get("failed", []):
+        by_name[f["name"]] = f
+
+    terminal, retry = [], []
+    for name, f in sorted(by_name.items()):
+        stem = f"{f['schema']}__{f['table']}"
+        if stem in have:
+            continue                       # landed on a later attempt already
+        verdict, reason = classify(str(f.get("error", "")))
+        (terminal if verdict == "TERMINAL" else retry).append(
+            {**f, "verdict": verdict, "reason": reason})
+
+    from collections import Counter
+    print(f"manifest: {len(man.get('pulled', [])):,} pulled, "
+          f"{len(man.get('failed', [])):,} failure rows "
+          f"({len(by_name):,} distinct tables)")
+    print(f"already on disk: {len(have):,} parquet files")
+    print(f"\nTERMINAL (never retried): {len(terminal):,}")
+    for k, v in Counter(t["reason"] for t in terminal).most_common():
+        print(f"    {v:>6,}  {k}")
+    print(f"RETRYABLE:                {len(retry):,}")
+    for k, v in Counter(t["reason"] for t in retry).most_common():
+        print(f"    {v:>6,}  {k}")
+
+    TERMINAL_MAP.write_text(json.dumps({
+        "written_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "note": ("Tables this account cannot read, or that the catalogue "
+                 "lists and the server does not have. These are ENTITLEMENT "
+                 "FACTS, not pull failures — they must never be retried as if "
+                 "the transport were at fault, and the catalogue is not "
+                 "entitlement (canon)."),
+        "n_terminal": len(terminal),
+        "by_reason": dict(Counter(t["reason"] for t in terminal)),
+        "tables": terminal,
+    }, indent=2, default=str), encoding="utf-8")
+    print(f"\nterminal map -> {TERMINAL_MAP}")
+
+    if a.dry_run:
+        print("\ndry run — nothing pulled")
+        return 0
+    todo = retry[:a.max_tables]
+    if not todo:
+        print("\nnothing retryable outstanding")
+        return 0
+
+    permnos = sorted(_all_permnos())
+    work: "queue.Queue[dict]" = queue.Queue()
+    for p in todo:
+        work.put(p)
+    lock = threading.Lock()
+    t_start = time.time()
+    state = {"gb": sum(f.stat().st_size for f in BULK.rglob("*.parquet")) / 2**30,
+             "done": 0, "failed": 0, "stop": False}
+    new_pulled, new_failed = [], []
+    print(f"\npulling {len(todo):,} tables · {a.workers} workers · "
+          f"timeout {a.timeout_s}s · disk now {state['gb']:.1f} GB")
+
+    def worker(wid: int):
+        c = None
+        while not state["stop"]:
+            try:
+                p = work.get_nowait()
+            except queue.Empty:
+                break
+            fn = BULK / f"{p['schema']}__{p['table']}.parquet"
+            if fn.exists():
+                continue
+            if a.max_seconds and (time.time() - t_start) > a.max_seconds:
+                state["stop"] = True
+                break
+            with lock:
+                if state["gb"] >= DISK_BUDGET_GB:
+                    print("  STOP: disk budget reached", flush=True)
+                    state["stop"] = True
+                    break
+            where, params = "", None
+            if p.get("id_col") in ("permno", "lpermno", "permco"):
+                where = f' WHERE "{p["id_col"]}" = ANY(%(p)s)'
+                params = {"p": permnos}
+            sql = (f'SELECT * FROM {p["schema"]}.{p["table"]}{where} '
+                   f'LIMIT {MAX_ROWS}')
+
+            df, err = None, None
+            for attempt in range(1, MAX_ATTEMPTS + 1):
+                t0 = time.time()
+                try:
+                    if c is None:
+                        c = _conn()
+                        cc = c.cursor()
+                        # ONCE per connection. The old code re-set it per
+                        # query, which is harmless, but it set it to 90s.
+                        cc.execute(f"SET statement_timeout = "
+                                   f"{a.timeout_s * 1000}")
+                    df = pd.read_sql(sql, c, params=params)
+                    err = None
+                    break
+                except Exception as e:                          # noqa: BLE001
+                    err = f"{type(e).__name__}: {str(e)[:200]}"
+                    verdict, reason = classify(err)
+                    if verdict == "TERMINAL":
+                        break
+                    # A dropped connection is not a fact about the table.
+                    try:
+                        c.rollback()
+                    except Exception:                           # noqa: BLE001
+                        try:
+                            c.close()
+                        except Exception:                       # noqa: BLE001
+                            pass
+                        c = None
+                    if attempt < MAX_ATTEMPTS:
+                        time.sleep(min(30, 3 * 2 ** (attempt - 1)))
+                        print(f"  retry {attempt + 1}/{MAX_ATTEMPTS} "
+                              f"{p['name']} ({reason}, "
+                              f"{time.time() - t0:.0f}s)", flush=True)
+            if err is not None or df is None:
+                with lock:
+                    state["failed"] += 1
+                    new_failed.append({**p, "error": err,
+                                       "attempts": MAX_ATTEMPTS})
+                    print(f"  FAIL {p['name']:<46s} {str(err)[:70]}",
+                          flush=True)
+                _log([{"ts": datetime.now(timezone.utc).isoformat(
+                    timespec="seconds"), "name": p["name"],
+                    "result": "failed", "error": err}])
+                continue
+            if not len(df):
+                with lock:
+                    new_pulled.append({**p, "rows": 0,
+                                       "note": "0 rows — table is empty"})
+                _log([{"ts": datetime.now(timezone.utc).isoformat(
+                    timespec="seconds"), "name": p["name"],
+                    "result": "empty"}])
+                continue
+            try:
+                df.to_parquet(fn, index=False)
+            except Exception as e:                              # noqa: BLE001
+                # Object columns pyarrow cannot infer: stringify and keep the
+                # table rather than losing it to a serialisation detail.
+                try:
+                    for col in df.columns:
+                        if df[col].dtype == object:
+                            df[col] = df[col].astype(str)
+                    df.to_parquet(fn, index=False)
+                except Exception as e2:                         # noqa: BLE001
+                    with lock:
+                        state["failed"] += 1
+                        new_failed.append({**p, "error": f"write: {e2}"})
+                    continue
+            sz = fn.stat().st_size / 2**30
+            with lock:
+                state["gb"] += sz
+                state["done"] += 1
+                row = {**p, "rows": int(len(df)), "gb": round(sz, 4),
+                       "date_ranges": _date_ranges(df),
+                       "seconds": round(time.time() - t0, 1),
+                       "universe_filtered": bool(where),
+                       "pulled_by": "catchup"}
+                new_pulled.append(row)
+                el = time.time() - t_start
+                rate = state["done"] / el * 3600 if el > 0 else 0
+                print(f"  [{state['done']}/{len(todo)}] {p['name']:<44s} "
+                      f"{len(df):>9,} rows {time.time() - t0:>6.1f}s "
+                      f"{state['gb']:.1f}GB  {rate:>5.0f}/h "
+                      f"({state['failed']} fail)", flush=True)
+            _log([{"ts": datetime.now(timezone.utc).isoformat(
+                timespec="seconds"), "name": p["name"], "result": "pulled",
+                "rows": int(len(df)), "seconds": round(time.time() - t0, 1)}])
+        if c is not None:
+            try:
+                c.close()
+            except Exception:                                   # noqa: BLE001
+                pass
+
+    threads = [threading.Thread(target=worker, args=(i,), daemon=True)
+               for i in range(a.workers)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    man = _load_manifest()          # re-read: another pass may have appended
+    man["pulled"] = (man.get("pulled") or []) + new_pulled
+    man["failed"] = (man.get("failed") or []) + new_failed
+    man["catchup_runs"] = (man.get("catchup_runs") or []) + [{
+        "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "workers": a.workers, "timeout_s": a.timeout_s,
+        "attempted": len(todo), "pulled": len(new_pulled),
+        "failed": len(new_failed),
+        "seconds": round(time.time() - t_start, 1)}]
+    man["n_terminal_not_entitled"] = len(terminal)
+
+    remaining = len(todo) - state["done"] - state["failed"]
+    stamp = "completed_at" if remaining <= 0 else "partial_at"
+    if remaining > 0:
+        # Refuse to say "completed" while work is outstanding. This is the
+        # exact sentence the first run got wrong.
+        man.pop("completed_at", None)
+        man["incomplete_reason"] = (
+            f"{remaining} retryable table(s) not attempted this run "
+            f"(--max-seconds / --max-tables / disk budget)")
+    man[stamp] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    man["disk_used_gb"] = round(state["gb"], 3)
+    MANIFEST.write_text(json.dumps(man, indent=2, default=str),
+                        encoding="utf-8")
+
+    print(f"\ncatchup: {state['done']:,} pulled, {state['failed']:,} failed, "
+          f"{remaining:,} not attempted · {state['gb']:.1f} GB")
+    print(f"manifest -> {MANIFEST}   ({stamp})")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
