@@ -107,8 +107,21 @@ DEFAULT_WORKERS = 3
 MAX_ATTEMPTS = 3
 
 
-#: Rows fetched per round trip on the streaming path.
-CHUNK_ROWS = 200_000
+#: Streaming is chunked by CELLS, not rows. A 200,000-row chunk is 2.2 MB of
+#: an 11-column table and ~1.4 GB of an 886-column one, and Compustat is full
+#: of the latter — four workers on wide tables took the process to 10 GB with
+#: the server-side cursor already in place, because the cursor bounds what the
+#: SERVER sends per round trip and not what pandas/Arrow materialise per
+#: chunk. Rows per chunk are therefore derived from the table's own width.
+CHUNK_CELLS = 4_000_000
+CHUNK_ROWS_MAX = 200_000
+CHUNK_ROWS_MIN = 2_000
+
+
+def _chunk_rows(n_cols: int | None) -> int:
+    if not n_cols or n_cols < 1:
+        return CHUNK_ROWS_MIN     # unknown width: assume the expensive case
+    return max(CHUNK_ROWS_MIN, min(CHUNK_ROWS_MAX, CHUNK_CELLS // n_cols))
 
 #: Above this row count a table is STREAMED through a server-side cursor
 #: (bounded memory, ~2x slower); at or below it the plain client-side read is
@@ -120,6 +133,19 @@ CHUNK_ROWS = 200_000
 #: nothing on the many that cannot, is the trade this threshold makes.
 STREAM_ABOVE_ROWS = 500_000
 
+#: ...and the same correction as the chunk size: 500,000 rows is a small read
+#: at 11 columns and a 3.5 GB one at 886. A table goes down the buffered path
+#: only if it is small on BOTH axes.
+BUFFER_MAX_CELLS = 8_000_000
+
+
+def _use_buffered(n_rows: int | None, n_cols: int | None) -> bool:
+    if n_rows is None:
+        return False              # unknown size -> stream, never buffer
+    if n_rows > STREAM_ABOVE_ROWS:
+        return False
+    return n_rows * max(int(n_cols or 1), 1) <= BUFFER_MAX_CELLS
+
 #: `count(*)` costs ~0.5s and is the only honest way to route: est_rows is 0
 #: for every table WRDS has never ANALYZEd, which is most of the plan — that
 #: same stale estimate is why Compustat GLOBAL tables slipped past the
@@ -127,7 +153,7 @@ STREAM_ABOVE_ROWS = 500_000
 COUNT_TIMEOUT_MS = 60_000
 
 
-def _stream_to_parquet(conn, sql, params, fn, *, chunk=CHUNK_ROWS) -> tuple:
+def _stream_to_parquet(conn, sql, params, fn, *, chunk: int) -> tuple:
     """Server-side cursor -> parquet, a chunk at a time. Returns (rows, ranges).
 
     `pd.read_sql(..., chunksize=)` does NOT bound memory on psycopg2: the
@@ -393,7 +419,7 @@ def main() -> int:
                     cc = c.cursor()
                     cc.execute(f"SET statement_timeout = {a.timeout_s * 1000}")
                     cc.close()
-                    if n_est is not None and n_est <= STREAM_ABOVE_ROWS:
+                    if _use_buffered(n_est, p.get("n_cols")):
                         df = pd.read_sql(sql, c, params=params)
                         n_rows = len(df)
                         if n_rows:
@@ -401,7 +427,9 @@ def main() -> int:
                             ranges = _date_ranges(df)
                         del df
                     else:
-                        n_rows, ranges = _stream_to_parquet(c, sql, params, fn)
+                        n_rows, ranges = _stream_to_parquet(
+                            c, sql, params, fn,
+                            chunk=_chunk_rows(p.get("n_cols")))
                     err = None
                     break
                 except Exception as e:                          # noqa: BLE001

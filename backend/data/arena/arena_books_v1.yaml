@@ -129,6 +129,31 @@ books:
     # the arena's OWN ledger (never predictions.jsonl) and is resolved by the
     # daily pass itself.
 
+  LLM_EVENTS_v1:
+    purpose: arena-isolate-event-context      # the ABLATION twin
+    policy_version: 1
+    selection: composite_top_k
+    sizing: equal_weight
+    screens: []
+    llm_perception: true
+    event_context: true             # <- the ONLY difference from LLM_PERCEPTION_v1
+    llm:
+      max_names_per_day: 10
+      daily_call_cap: 25
+      tilt_cap: 0.20
+      tilt_scale: 2.0
+      horizon_days: 20
+      observable: beats_benchmark
+    # NUMERIC_ONLY vs NUMERIC_PLUS_EVENTS. LLM_PERCEPTION_v1 sees a numeric
+    # snapshot; this book additionally sees the typed event feed (yfinance
+    # news, EDGAR 8-K, earnings) that `event_intel.py` has produced for nobody
+    # since it was built — its only caller, daily_brief.py, is not scheduled,
+    # which is why live prod reports events_extracted: 0.
+    # The context is FROZEN into each minted PredictionRecord's input_snapshot
+    # (so the hash covers it) because the feed is fetched live and would
+    # otherwise be unreplayable. Every belief row records `event_coverage`, so
+    # the ablation is a filter on the ledger, not a reconstruction.
+
   CURRENT_BEST_v1:
     purpose: arena-composed-product-candidate
     policy_version: 1

@@ -112,8 +112,9 @@ def _no_llm(monkeypatch):
     monkeypatch.setattr(
         "backend.services.arena.beliefs.daily_review",
         lambda day_state, *, book_id, holdings, challengers, llm_cfg,
-        root=None: {"tilts": {}, "reviewed": [], "status": "stubbed_offline",
-                    "attempted": 0, "failed": 0})
+        root=None, event_context=None: {
+            "tilts": {}, "reviewed": [], "status": "stubbed_offline",
+            "attempted": 0, "failed": 0})
 
 
 def _state(day, panel, pit_db, universe=None):

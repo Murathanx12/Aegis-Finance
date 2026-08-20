@@ -23,6 +23,7 @@ AUTHORISED_ACTIVE: tuple[str, ...] = (
     "WINNER_EXEMPT_v1",
     "ANTI_SIGNAL_v1",
     "LLM_PERCEPTION_v1",
+    "LLM_EVENTS_v1",
     "CURRENT_BEST_v1",
 )
 
@@ -59,7 +60,7 @@ DESCRIPTIVE_DEFAULTS: dict[str, str] = {
 #: Per-book keys, same contract.
 CONSUMED_BOOK_KEYS = frozenset({
     "purpose", "policy_version", "sizing", "screens", "llm_perception", "llm",
-    "winner_exemption", "substitution",
+    "winner_exemption", "substitution", "event_context",
 })
 
 DESCRIPTIVE_BOOK_KEYS: dict[str, str] = {
@@ -86,6 +87,7 @@ class BookSpec:
     sizing: str
     screens: tuple[str, ...]
     llm_perception: bool
+    event_context: bool = False
     llm: dict = field(default_factory=dict)
     winner_exemption: dict = field(default_factory=dict)
     substitution: dict = field(default_factory=dict)
@@ -222,6 +224,7 @@ def load_specs(path: Path | None = None) -> dict[str, BookSpec]:
             sizing=sizing,
             screens=screens,
             llm_perception=bool(b.get("llm_perception")),
+            event_context=bool(b.get("event_context")),
             llm=dict(b.get("llm") or {}),
             winner_exemption=dict(b.get("winner_exemption") or {}),
             substitution=dict(b.get("substitution") or {}),

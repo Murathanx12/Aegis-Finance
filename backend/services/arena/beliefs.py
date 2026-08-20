@@ -133,7 +133,8 @@ def review_list(day_state: dict, *, holdings: set[str], challengers: list[str],
 
 # ── the review ──────────────────────────────────────────────────────────────
 def daily_review(day_state: dict, *, book_id: str, holdings: set[str],
-                 challengers: list[str], llm_cfg: dict, root=None) -> dict:
+                 challengers: list[str], llm_cfg: dict, root=None,
+                 event_context: dict | None = None) -> dict:
     """One belief-update pass. Returns tilts + what it wrote + why it stopped.
 
     A refusal is a finding: no LLM, over budget or an unparseable reply all
@@ -144,7 +145,10 @@ def daily_review(day_state: dict, *, book_id: str, holdings: set[str],
     horizon = int(llm_cfg.get("horizon_days", 20))
     tilt_scale = float(llm_cfg.get("tilt_scale", 2.0))
     result = {"status": "ok", "book_id": book_id, "tilts": {}, "reviewed": [],
-              "attempted": 0, "failed": 0, "initiations": 0, "unchanged": 0}
+              "attempted": 0, "failed": 0, "initiations": 0, "unchanged": 0,
+              "event_context": ("none" if event_context is None
+                                else event_context.get("status", "?")),
+              "names_with_events": 0}
 
     try:
         from backend.services import belief_state as B
@@ -193,6 +197,12 @@ def daily_review(day_state: dict, *, book_id: str, holdings: set[str],
             "previous_invalidation": (prev or {}).get("invalidation", ""),
             "previous_next_observable": (prev or {}).get("next_observable", ""),
         }
+        ev: dict = {}
+        if event_context is not None:
+            from backend.services.arena import events as _ev
+            ev = _ev.for_name(event_context, t)
+            if ev.get("coverage") == "FETCHED":
+                result["names_with_events"] += 1
         prompt = (
             "You are the daily belief-review layer of a PAPER-TRADING "
             "experiment (PRODUCT_EXPERIMENT — no real capital, no advice). "
@@ -201,7 +211,10 @@ def daily_review(day_state: dict, *, book_id: str, holdings: set[str],
             f"the next {horizon} trading days).\n\n"
             f"YOUR PRIOR (from the ledger, not from you):\n"
             f"{json.dumps(prior_block, default=str)}\n\n"
-            f"TODAY'S FROZEN STATE:\n{json.dumps(state, default=str)}")
+            f"TODAY'S FROZEN STATE:\n{json.dumps(state, default=str)}"
+            + (f"\n\nEVENT CONTEXT (news / 8-K filings / earnings, as of this "
+               f"session's close):\n{json.dumps(ev, default=str)}"
+               if event_context is not None else ""))
         result["attempted"] += 1
         try:
             reply = R.ask(prompt, purpose="arena_belief_review",
@@ -223,7 +236,8 @@ def daily_review(day_state: dict, *, book_id: str, holdings: set[str],
                 next_observable=str(parsed.get("next_observable", ""))[:200],
                 model=reply["call"].get("model", "unknown"),
                 model_version=MODEL_VERSION, prompt=prompt,
-                input_snapshot={"state": state, "prior_block": prior_block},
+                input_snapshot={"state": state, "prior_block": prior_block,
+                                "event_context": ev},
                 prior=prior, posterior=posterior, arm="arena_belief_review")
             records.append(rec)
             belief_row = {
@@ -241,6 +255,11 @@ def daily_review(day_state: dict, *, book_id: str, holdings: set[str],
                 "invalidation": str(parsed.get("invalidation", ""))[:300],
                 "next_observable": str(parsed.get("next_observable", ""))[:200],
                 "score_at_review": (row.get("scores") or {}).get("arena_composite"),
+                # Which arm this row belongs to, recorded per row so the
+                # NUMERIC_ONLY vs NUMERIC_PLUS_EVENTS ablation is a filter on
+                # the ledger rather than a reconstruction from book config.
+                "event_coverage": ev.get("coverage", "NOT_REQUESTED"),
+                "n_events_shown": len(ev.get("events") or []),
                 "prediction_id": rec.prediction_id,
                 "horizon_days": horizon,
                 "validation_status": "PRODUCT_EXPERIMENT", "simulation": True,

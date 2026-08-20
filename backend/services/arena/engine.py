@@ -19,7 +19,8 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 
 from backend.services.arena import (
-    beliefs, discovery, experience, policies, reliability, trackers,
+    beliefs, discovery, events, experience, policies, reliability,
+    trackers,
 )
 from backend.services.arena import spec as spec_mod
 from backend.services.arena import store
@@ -295,10 +296,21 @@ def run_book(spec, panel, day: date, day_state: dict, is_hash: str, *,
     review = {"status": "disabled", "tilts": {}}
     if spec.llm_perception:
         try:
+            ev_ctx = None
+            if spec.event_context:
+                # Bounded by construction: only the names this book will
+                # actually review get fetched. An unbounded fetch over a
+                # 400-name scan inside the 17:45 pass is a different outage.
+                want = ([t for t in sorted(book_before)]
+                        + [c["ticker"] for c in sel.chosen])
+                ev_ctx = events.fetch(
+                    list(dict.fromkeys(want)),
+                    max_names=int(spec.llm.get("max_names_per_day", 10)),
+                    as_of=day_state.get("as_of_ts"))
             review = beliefs.daily_review(
                 day_state, book_id=spec.book_id, holdings=book_before,
                 challengers=[c["ticker"] for c in sel.chosen],
-                llm_cfg=spec.llm, root=root)
+                llm_cfg=spec.llm, root=root, event_context=ev_ctx)
         except Exception as exc:  # noqa: BLE001 — review never kills the book
             logger.exception("ARENA: belief review failed for %s", spec.book_id)
             review = {"status": f"error: {type(exc).__name__}: {exc}",

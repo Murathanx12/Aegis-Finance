@@ -405,8 +405,9 @@ def test_a_full_day_runs_decision_to_reliability_to_regret(root, tmp_path,
     monkeypatch.setattr(
         "backend.services.arena.beliefs.daily_review",
         lambda day_state, *, book_id, holdings, challengers, llm_cfg,
-        root=None: {"tilts": {}, "reviewed": [], "status": "stubbed_offline",
-                    "attempted": 0, "failed": 0})
+        root=None, event_context=None: {
+            "tilts": {}, "reviewed": [], "status": "stubbed_offline",
+            "attempted": 0, "failed": 0})
     engine.seed_all(root=root)
 
     # A perception minted on an earlier session, exactly as the live path does.
@@ -722,8 +723,10 @@ def test_review_runs_on_a_session_with_no_decision(root, tmp_path, monkeypatch):
 
     seen = {"calls": 0}
 
-    def _spy(day_state, *, book_id, holdings, challengers, llm_cfg, root=None):
+    def _spy(day_state, *, book_id, holdings, challengers, llm_cfg, root=None,
+             event_context=None):
         seen["calls"] += 1
+        seen["event_context"] = event_context
         return {"tilts": {}, "reviewed": [], "status": "ok", "attempted": 0,
                 "failed": 0}
 
@@ -993,3 +996,89 @@ def test_scan_universe_absent_source_is_loud_and_empty(monkeypatch, tmp_path):
     monkeypatch.setattr(_c, "OPTIMUS_LEDGER_DIR", tmp_path)
     assert discovery.scan_universe(50) == []
     discovery._SCAN_CACHE.clear()
+
+
+# ── P2: the event context, and the ablation it makes possible ──────────────
+def test_the_ablation_twin_differs_by_exactly_one_rule():
+    from backend.services.arena import spec as spec_mod
+
+    specs = spec_mod.active_specs()
+    a, b = specs["LLM_PERCEPTION_v1"], specs["LLM_EVENTS_v1"]
+    assert a.llm_perception and b.llm_perception
+    assert a.event_context is False and b.event_context is True
+    for field in ("sizing", "screens", "winner_exemption", "substitution",
+                  "policy_version", "llm"):
+        assert getattr(a, field) == getattr(b, field), field
+
+
+def test_event_context_distinguishes_no_events_from_never_looked():
+    from backend.services.arena import events
+
+    ctx = {"names": {"HAS": {"events": [{"title": "x"}], "n_events": 1,
+                             "unavailable_feeds": []},
+                     "QUIET": {"events": [], "n_events": 0,
+                               "unavailable_feeds": ["edgar_8k"]}}}
+    assert events.for_name(ctx, "HAS")["coverage"] == "FETCHED"
+    quiet = events.for_name(ctx, "QUIET")
+    assert quiet["coverage"] == "FETCHED_NO_EVENTS"
+    assert quiet["unavailable_feeds"] == ["edgar_8k"]
+    assert events.for_name(ctx, "NEVER")["coverage"] == "NOT_FETCHED"
+
+
+def test_event_fetch_never_raises_and_reports_an_empty_result(monkeypatch):
+    import sys
+    import types
+
+    from backend.services.arena import events
+    mod = types.ModuleType("backend.services.event_intel")
+
+    def _boom(t):
+        raise RuntimeError("feed down")
+
+    mod.get_ticker_events = _boom
+    monkeypatch.setitem(sys.modules, "backend.services.event_intel", mod)
+    out = events.fetch(["AAA", "BBB"])
+    assert out["status"] == "empty" and out["fetched_n"] == 0
+    assert set(out["errors"]) == {"AAA", "BBB"}
+
+
+def test_event_context_reaches_the_prompt_and_the_frozen_snapshot(root,
+                                                                  monkeypatch):
+    """What the model saw must be a fact on disk: the feed is fetched live, so
+    without freezing it the day could never be replayed."""
+    from backend.services.arena import beliefs
+
+    fake = _FakeLLM([0.7])
+    _install_llm(monkeypatch, fake)
+    ctx = {"status": "ok", "names": {
+        "AAA": {"events": [{"title": "AAA announces a recall",
+                            "timestamp": "2026-08-20T18:00:00+00:00",
+                            "direction": "negative", "category": "legal",
+                            "source": "yfinance_news", "tier": "HIGH"}],
+                "n_events": 1, "unavailable_feeds": []}}}
+    out = beliefs.daily_review(_day_state(["AAA"]), book_id="B",
+                               holdings={"AAA"}, challengers=[],
+                               llm_cfg={"max_names_per_day": 5}, root=root,
+                               event_context=ctx)
+    assert out["names_with_events"] == 1
+    assert "EVENT CONTEXT" in fake.prompts[0]
+    assert "announces a recall" in fake.prompts[0]
+
+    row = store.read_beliefs(root)[0]
+    assert row["event_coverage"] == "FETCHED" and row["n_events_shown"] == 1
+    # ...and the minted prediction's input_snapshot hash covers it
+    minted = store._read_jsonl(store.predictions_path(root))[0]
+    assert minted["input_snapshot_hash"]
+
+
+def test_numeric_only_arm_carries_no_event_block(root, monkeypatch):
+    from backend.services.arena import beliefs
+
+    fake = _FakeLLM([0.7])
+    _install_llm(monkeypatch, fake)
+    beliefs.daily_review(_day_state(["AAA"]), book_id="B", holdings={"AAA"},
+                         challengers=[], llm_cfg={"max_names_per_day": 5},
+                         root=root, event_context=None)
+    assert "EVENT CONTEXT" not in fake.prompts[0]
+    row = store.read_beliefs(root)[0]
+    assert row["event_coverage"] == "NOT_REQUESTED"
