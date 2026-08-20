@@ -1,0 +1,46 @@
+{
+  "trial": "REGIME-ORACLE-CEILING-1",
+  "mode": "SCREEN",
+  "at": "2026-08-20T03:47:49+00:00",
+  "zoo": {
+    "n_factors": 153,
+    "n_months": 420,
+    "start": "1990-01",
+    "end": "2024-12",
+    "source": "JKP usa_all_factors_monthly_vw_cap"
+  },
+  "k_regimes": 4,
+  "n_null": 500,
+  "regime_definition": "contemporaneous quartile of realized EW-market volatility (CRSP PIT daily panel)",
+  "static_best_factor": "fcf_me",
+  "ann_return": {
+    "static": 0.0769,
+    "oracle": 0.1766,
+    "oracle_loo": 0.1202
+  },
+  "gap_vs_static": {
+    "oracle": 0.0997,
+    "oracle_loo": 0.0433
+  },
+  "null_gap": {
+    "oracle_mean": 0.0446,
+    "oracle_p95": 0.0737,
+    "oracle_loo_mean": -0.0369,
+    "oracle_loo_p95": 0.0413
+  },
+  "p_value_vs_null": {
+    "oracle": 0.0,
+    "oracle_loo": 0.042
+  },
+  "excess_over_null_p95": {
+    "oracle": 0.026,
+    "oracle_loo": 0.002
+  },
+  "verdict": "CEILING_REAL",
+  "decision_rule": "if the LOO oracle gap does not exceed the matched-transition null's 95th percentile, perfect state knowledge buys nothing this zoo can use, and REGIME-CONDITIONAL-RETURN-1 does not justify a predictor on this strategy set",
+  "scope_limits": [
+    "gross of the switching cost a regime-conditional policy would actually pay \u2014 a CEILING, deliberately generous",
+    "regime defined on market volatility only; a different state variable is a different (unasked) question",
+    "the zoo is JKP long-short factors, not the mega-sweep books"
+  ]
+}

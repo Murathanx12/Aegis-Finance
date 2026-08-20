@@ -76,6 +76,40 @@ validated by **forward information coefficient + paper-lane NAV**, never by a
 historical backtest. Risk overlays (vol-management, ATR exits) are
 universe-independent and unaffected.
 
+### AMENDMENT 2026-08-20 — closed on free data, REOPENED on institutional data
+
+The finding above is scoped to *free* data and remains true there. It is
+no longer the operative constraint on the programme, and leaving it
+unqualified would make this corpus lie by omission — which is the one
+thing a negative-results corpus may never do.
+
+Via WRDS (HKU entitlement) the programme now holds a genuine PIT,
+delisting-inclusive CRSP universe in **both** eras: 1990–2012 (6,988
+eligible names, **1,463 delistings** — ~3× the modern delisting rate) and
+2013–2024 (4,796 ever-eligible of a 6,894 screened superset), plus
+Compustat, IBES, OptionMetrics, TAQ and 13F. Delisting returns (`dlret`)
+are carried on the universe file and **charged** in the simulator; the
+known-answer world test confirms a −95% delisting actually hits the book.
+
+What changes: historical backtests on the CRSP PIT panel are no longer
+disqualified by universe bias, and the modern 182-name current-universe
+result is now known to have been *survivor-biased in a way that changed
+model ordering* — moving to the PIT universe flipped LGBM vs ridge on
+volatility ranking.
+
+What does **not** change:
+- Survivorship was never the only reason absolute-alpha numbers were
+  untrustworthy. Selection overfitting is untouched by a better
+  universe, and DSR/PBO still guard only multiple testing.
+- The free-data layer (yfinance) is still forbidden for any PIT claim.
+- Forward IC + paper-lane NAV remain the certification path. A clean
+  historical universe licenses *research*, not a track record.
+- The entitled CRSP vintage ends **2024-12-31**; nothing after that date
+  exists in this substrate.
+
+Cross-references: `docs/ORDER_24_DISCOVERY_RUN_REVISED.md`,
+`backend/data/optimus/audits/chronology_audit_2026-08-20.json`.
+
 ## 5. The insider collector "ran" but fetched nothing in prod (silent-fragility catch)
 Not a strategy result — a process result, and the most important kind. The T9
 insider forward-IC collector passed all 12 offline tests and worked on the dev
