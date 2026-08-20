@@ -227,6 +227,57 @@ wired through `arena/events.py`, frozen into the decision's input snapshot
 
 ---
 
+## A4. THE WORST ONE — 23 parquets held an arbitrary 4–80% of their table
+
+**Severity: CRITICAL. Status: FIXED (refused going forward, 23 quarantined).**
+
+`SELECT * FROM t LIMIT 8000000` with **no `ORDER BY`** returns an unspecified
+8,000,000 rows. Not a prefix. Not a sample with a definition. Not the same set
+on a re-run.
+
+`wrds_pull_everything` has always had this and it **never fired**, because
+every table big enough to hit the cap died on the 90-second timeout first.
+Fixing the timeout (§A1) made the big tables succeed for the first time — and
+the latent defect landed 23 files that look like complete tables:
+
+| table | true rows | kept | share |
+|---|---|---|---|
+| `crsp.daily_nav_ret` | 186,442,964 | 8,000,000 | **4.3%** |
+| `comp.aco_transq` | 75,590,661 | 8,000,000 | 10.6% |
+| `comp.aco_transa` | 47,158,539 | 8,000,000 | 17.0% |
+| `optionm.hvold2016` | 14,466,338 | 8,000,000 | 55.3% |
+| `crsp.monthly_tna` | 10,011,987 | 8,000,000 | 79.9% |
+
+**23 at the cap, 0 genuinely complete.** A file named
+`crsp__daily_nav_ret.parquet` holding 4.3% of the table joins cleanly and
+silently drops 96% of the data — worse than an absent file, and the house
+failure mode with a parquet extension. It would have poisoned P3/Q4
+(supervised learning on the substrate) invisibly.
+
+**Fixed three ways:** the catch-up now refuses any table whose *measured*
+count exceeds the cap and records `true_rows` (the plan's existing
+`est_rows > cap` rule never fired because `est_rows` is 0 for anything
+un-ANALYZEd); `scripts/wrds_quarantine_truncated.py` moved all 23 out with
+their true sizes; and the cap is now a **declared decision** to revisit —
+raise it, partition, or do without — rather than a hole.
+
+### A5. Three corrupt parquets, from my own killed runs
+Found by the quarantine sweep: `optionm__hvold2021/2022/2023.parquet` were
+unreadable ("magic bytes not found in footer") — half-written when I killed a
+run. The streaming writer deletes on **exception**, and SIGKILL is not an
+exception, so the file survives and resumability (which keys off existence)
+reads it as a completed table forever. Deleted, not quarantined: there is
+nothing in them to keep.
+
+### A6. A killed run lost all of its manifest bookkeeping
+The catch-up wrote the manifest only at the end, so killing it left the
+parquets on disk with **no record** of what they were, their row counts or
+their date ranges. `wrds_pull_everything` carries a comment about learning
+this exact lesson; this file had to learn it too. Now flushed every 5
+completions, idempotently by name.
+
+---
+
 ## C3. Two memory defects in my own catch-up puller, found by running it
 
 Recorded because "I wrote it this session" is not a reason to leave it out.

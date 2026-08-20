@@ -97,6 +97,35 @@ or check the log for `ArrowNotImplementedError` / `ArrowInvalid`. If they
 recur, the remaining option is an explicit Arrow schema built from
 `information_schema` rather than pandas-dtype coercion.
 
+### THE ONE DECISION THIS PULL NEEDS FROM A HUMAN
+
+`MAX_ROWS = 8,000,000` is now enforced as a **refusal** (nothing is written)
+rather than a silent unordered `LIMIT`. That is correct but it leaves ~28+
+tables unpulled, and the measured sizes say the cap is simply in the wrong
+place:
+
+| table | true rows | over by |
+|---|---|---|
+| `optionm.hvold2000` | 8,149,635 | 2% |
+| `crsp.monthly_tna` / `monthly_nav` / `monthly_returns` | ~10.0M | 25% |
+| `comp.aco_notesq` | 11,488,579 | 44% |
+| `optionm.hvold2016` | 14,466,338 | 81% |
+| `comp.aco_transa` | 47,158,539 | 5.9× |
+| `comp.aco_transq` | 75,590,661 | 9.4× |
+| `crsp.daily_nav_ret` | 186,442,964 | **23×** |
+
+**A row cap is the wrong unit — the same lesson as the chunk size.** 8M rows
+of a 4-column table is 32M cells (~256 MB); 8M rows of an 886-column table is
+7 billion cells. Memory is now bounded by streaming, so row count is no
+longer the binding constraint.
+
+Recommended, but it is a declared decision and not mine to take: **raise the
+cap to ~20M rows (or move it to a cell budget)**, which recovers every
+`hvold*` year, all three `crsp.monthly_*`, and `comp.aco_notesq` **complete**.
+The genuinely huge four (`aco_transa`, `aco_transq`, `daily_nav_ret`, and
+anything like them) need either date/PERMNO partitioning or an explicit
+"out of scope, here is why" — not a silent 4% sample.
+
 **Do not raise the worker count.** Throughput is bandwidth-bound and 6
 workers measured WORSE than 4. Width, not row count, is the cost: a 539-column
 table is ~2 GB on the wire; `cells` and `mb_per_s` are now recorded per pulled
