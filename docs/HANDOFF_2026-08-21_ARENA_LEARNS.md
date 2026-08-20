@@ -97,6 +97,26 @@ or check the log for `ArrowNotImplementedError` / `ArrowInvalid`. If they
 recur, the remaining option is an explicit Arrow schema built from
 `information_schema` rather than pandas-dtype coercion.
 
+### RUN THE VERIFIER BEFORE TRUSTING ANY OF IT
+
+```bash
+python -m scripts.wrds_verify_substrate      # -> substrate_verification.json
+```
+
+Compares every parquet's row count against the server, using the **same
+universe filter** the pull used. This is the check that did not exist, and its
+absence is why 23 arbitrary-subset files sat on disk looking complete while
+the run reported "0 failures".
+
+Read the verdicts at their stated strength: `TRUNCATED` is provable,
+`SHORT_MINOR` means within 0.5% and is **not** a clean bill of health (these
+tables are live and grow — `comp.aco_amda` was short by one row), and
+`UNVERIFIED` means the count timed out, which is never a pass.
+
+**Make this a gate on P3/Q4.** Nothing should be trained on the substrate
+until it has been verified, because a 4%-of-table parquet joins cleanly and
+fails silently.
+
 ### THE ONE DECISION THIS PULL NEEDS FROM A HUMAN
 
 `MAX_ROWS = 8,000,000` is now enforced as a **refusal** (nothing is written)
