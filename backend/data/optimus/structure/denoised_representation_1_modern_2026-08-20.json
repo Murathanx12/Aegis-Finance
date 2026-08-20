@@ -1,0 +1,172 @@
+{
+  "trial": "DENOISED-REPRESENTATION-1",
+  "mode": "SCREEN",
+  "era": "modern",
+  "at": "2026-08-20T07:10:06+00:00",
+  "n_features": 28,
+  "features": [
+    "mom_21",
+    "mom_63",
+    "mom_126",
+    "mom_252_21",
+    "dd_252",
+    "log_rv_d",
+    "log_rv_w",
+    "log_rv_m",
+    "log_rv_q",
+    "opt_iv_atm",
+    "opt_skew",
+    "opt_pc50",
+    "log_iv_var",
+    "exp_breadth",
+    "exp_disp",
+    "exp_n",
+    "bm",
+    "roe",
+    "pe_inc",
+    "ps",
+    "de_ratio",
+    "curr_ratio",
+    "npm",
+    "roa",
+    "at_turn",
+    "debt_at",
+    "cash_ratio",
+    "gpm"
+  ],
+  "sources": {
+    "price": [
+      "mom_21",
+      "mom_63",
+      "mom_126",
+      "mom_252_21",
+      "dd_252",
+      "log_rv_d",
+      "log_rv_w",
+      "log_rv_m",
+      "log_rv_q"
+    ],
+    "options": [
+      "opt_iv_atm",
+      "opt_skew",
+      "opt_pc50",
+      "log_iv_var"
+    ],
+    "expectations": [
+      "exp_breadth",
+      "exp_disp",
+      "exp_n"
+    ],
+    "fundamentals": [
+      "bm",
+      "roe",
+      "pe_inc",
+      "ps",
+      "de_ratio",
+      "curr_ratio",
+      "npm",
+      "roa",
+      "at_turn",
+      "debt_at",
+      "cash_ratio",
+      "gpm"
+    ]
+  },
+  "k_by_fold": [
+    {
+      "year": 2018,
+      "k": 7,
+      "n_features": 28
+    },
+    {
+      "year": 2019,
+      "k": 7,
+      "n_features": 28
+    },
+    {
+      "year": 2020,
+      "k": 7,
+      "n_features": 28
+    },
+    {
+      "year": 2021,
+      "k": 7,
+      "n_features": 28
+    },
+    {
+      "year": 2022,
+      "k": 7,
+      "n_features": 28
+    },
+    {
+      "year": 2023,
+      "k": 7,
+      "n_features": 28
+    },
+    {
+      "year": 2024,
+      "k": 7,
+      "n_features": 28
+    }
+  ],
+  "mean_k": 7.0,
+  "leak_control": "the eigenbasis is estimated on the TRAINING fold only and applied to the test fold; fitting it on the pooled panel would let the test fold choose its own representation",
+  "summary": {
+    "raw": {
+      "mean_rank_ic": 0.8018,
+      "mse_log_var": 0.76075,
+      "mean_qlike": 0.85835
+    },
+    "mp_denoised": {
+      "mean_rank_ic": 0.7676,
+      "mse_log_var": 0.89189,
+      "mean_qlike": 0.91393
+    },
+    "random_k": {
+      "mean_rank_ic": 0.6695,
+      "mse_log_var": 1.01375,
+      "mean_qlike": 1.03444
+    },
+    "pca_half_k": {
+      "mean_rank_ic": 0.7323,
+      "mse_log_var": 0.96142,
+      "mean_qlike": 0.95463
+    }
+  },
+  "contrasts": {
+    "mp_denoised_vs_raw": {
+      "d_mse_log_var": -0.13114,
+      "arm_better": false,
+      "ci": [
+        -0.143917,
+        -0.118082
+      ],
+      "mde_80": 0.022586,
+      "significant": true,
+      "clears_mde": true
+    },
+    "random_k_vs_raw": {
+      "d_mse_log_var": -0.253,
+      "arm_better": false,
+      "ci": [
+        -0.27007,
+        -0.230372
+      ],
+      "mde_80": 0.03416,
+      "significant": true,
+      "clears_mde": true
+    },
+    "pca_half_k_vs_raw": {
+      "d_mse_log_var": -0.200674,
+      "arm_better": false,
+      "ci": [
+        -0.215267,
+        -0.184256
+      ],
+      "mde_80": 0.027536,
+      "significant": true,
+      "clears_mde": true
+    }
+  },
+  "verdict": "DENOISING_HURTS \u2014 the discarded dimensions carried information the correlation spectrum could not see. Marchenko-Pastur separates signal from noise in a COVARIANCE, which is not the same as separating useful from useless for predicting a TARGET: a low-variance direction can still be predictive, and the decomposition never saw the target. The top-k subspace does still beat k random directions, so the ordering is real \u2014 it is the TRUNCATION that costs."
+}
