@@ -273,3 +273,34 @@ def append_outcomes(rows: list[dict], root: Path | None = None) -> None:
 
 def read_outcomes(root: Path | None = None) -> list[dict]:
     return _read_jsonl(outcomes_path(root))
+
+
+def reliability_path(root: Path | None = None) -> Path:
+    return (root or ROOT) / "reliability.jsonl"
+
+
+def append_reliability(rows: list[dict], root: Path | None = None) -> None:
+    _append_jsonl(reliability_path(root), rows)
+
+
+def read_reliability(root: Path | None = None) -> list[dict]:
+    return _read_jsonl(reliability_path(root))
+
+
+def snapshot_dates(root: Path | None = None) -> list[str]:
+    d = (root or ROOT) / "snapshots"
+    if not d.exists():
+        return []
+    return sorted(p.stem for p in d.glob("*.json"))
+
+
+def beliefs_path(root: Path | None = None) -> Path:
+    return (root or ROOT) / "beliefs.jsonl"
+
+
+def append_beliefs(rows: list[dict], root: Path | None = None) -> None:
+    _append_jsonl(beliefs_path(root), rows)
+
+
+def read_beliefs(root: Path | None = None) -> list[dict]:
+    return _read_jsonl(beliefs_path(root))

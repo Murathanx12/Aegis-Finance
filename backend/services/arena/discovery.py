@@ -112,6 +112,21 @@ class ArenaPanel:
         upto = s[idx.date <= day]
         return [float(v) for v in upto.tail(n).tolist() if v == v]
 
+    def close_frame_fast(self, tickers, *, today: date | None = None):
+        """Wide close panel straight from the stored series — the generic
+        builder in `experience.close_frame` would call `close_price` once per
+        (ticker, session) and each of those rebuilds a DatetimeIndex."""
+        import pandas as pd
+        cols = {t: s for t in sorted(set(str(x).upper() for x in tickers))
+                if (s := self._close.get(t)) is not None and not s.empty}
+        if not cols:
+            return pd.DataFrame()
+        df = pd.DataFrame(cols)
+        df.index = pd.to_datetime(df.index)
+        if today is not None:
+            df = df[df.index.date <= today]
+        return df
+
 
 # ── universe ────────────────────────────────────────────────────────────────
 def candidate_universe(extra: list[str] | None = None) -> list[str]:

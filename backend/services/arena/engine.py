@@ -18,7 +18,9 @@ from __future__ import annotations
 import logging
 from datetime import date, datetime, timedelta, timezone
 
-from backend.services.arena import discovery, experience, perception, policies
+from backend.services.arena import (
+    discovery, experience, perception, policies, reliability,
+)
 from backend.services.arena import spec as spec_mod
 from backend.services.arena import store
 
@@ -379,6 +381,24 @@ def run_daily(as_of=None, *, panel=None, root=None, db_path=None) -> dict:
         logger.exception("ARENA: maturation failed")
         summary["maturation"] = {"status": "error",
                                  "error": f"{type(exc).__name__}: {exc}"}
+
+    # Grading the LLM's own forecasts is a SEPARATE step from maturing the
+    # rules decisions: they live in different files, answer different
+    # questions, and one failing must not silence the other.
+    try:
+        summary["perception_grading"] = experience.resolve_perceptions(
+            panel, today=day, root=root)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("ARENA: perception grading failed")
+        summary["perception_grading"] = {"status": "error",
+                                         "error": f"{type(exc).__name__}: {exc}"}
+
+    try:
+        summary["reliability"] = reliability.snapshot(today=day, root=root)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("ARENA: reliability snapshot failed")
+        summary["reliability"] = {"status": "error",
+                                  "error": f"{type(exc).__name__}: {exc}"}
     summary["status"] = "ok"
     return summary
 
