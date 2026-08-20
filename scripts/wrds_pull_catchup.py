@@ -107,6 +107,132 @@ DEFAULT_WORKERS = 3
 MAX_ATTEMPTS = 3
 
 
+#: Rows fetched per round trip on the streaming path.
+CHUNK_ROWS = 200_000
+
+#: Above this row count a table is STREAMED through a server-side cursor
+#: (bounded memory, ~2x slower); at or below it the plain client-side read is
+#: used (fast, buffers the whole result). Measured 2026-08-20:
+#:   ibes.act_epsint  3.46M rows   162s buffered / 301s streamed, RSS 79 MB
+#:   crsp.contact_info  329k rows    18s buffered /  28s streamed
+#: Six workers each buffering a multi-million-row wide frame is how a night's
+#: pull becomes an OOM; paying 2x on the few tables that can cause that, and
+#: nothing on the many that cannot, is the trade this threshold makes.
+STREAM_ABOVE_ROWS = 500_000
+
+#: `count(*)` costs ~0.5s and is the only honest way to route: est_rows is 0
+#: for every table WRDS has never ANALYZEd, which is most of the plan — that
+#: same stale estimate is why Compustat GLOBAL tables slipped past the
+#: original size cap.
+COUNT_TIMEOUT_MS = 60_000
+
+
+def _stream_to_parquet(conn, sql, params, fn, *, chunk=CHUNK_ROWS) -> tuple:
+    """Server-side cursor -> parquet, a chunk at a time. Returns (rows, ranges).
+
+    `pd.read_sql(..., chunksize=)` does NOT bound memory on psycopg2: the
+    default cursor is CLIENT-side, so the whole result is buffered before the
+    first chunk is yielded. Six workers each holding a multi-million-row wide
+    frame is how a night's pull turns into an OOM. A NAMED cursor is
+    server-side and streams — but psycopg2 refuses one in autocommit mode, so
+    the connection is taken out of autocommit for the duration and put back.
+
+    Date ranges are accumulated across chunks rather than computed from a
+    whole frame, because there is no whole frame any more.
+    """
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    was_auto = conn.autocommit
+    conn.autocommit = False
+    writer = None
+    schema = None
+    total = 0
+    ranges: dict[str, list] = {}
+    name = f"arena_catchup_{abs(hash(fn.name)) % 10**9}"
+    try:
+        cur = conn.cursor(name=name)
+        cur.itersize = chunk
+        cur.execute(sql, params)
+        cols = None
+        while True:
+            rows = cur.fetchmany(chunk)
+            if not rows:
+                break
+            if cols is None:
+                cols = [d[0] for d in cur.description]
+            df = pd.DataFrame(rows, columns=cols)
+            for c in df.columns:
+                lc = c.lower()
+                if not any(k in lc for k in ("date", "dat", "eom", "public",
+                                             "statpers", "rdq")):
+                    continue
+                try:
+                    s = pd.to_datetime(df[c], errors="coerce").dropna()
+                except Exception:                               # noqa: BLE001
+                    continue
+                if len(s):
+                    lo, hi = str(s.min())[:10], str(s.max())[:10]
+                    cur_r = ranges.get(c)
+                    ranges[c] = ([min(cur_r[0], lo), max(cur_r[1], hi)]
+                                 if cur_r else [lo, hi])
+            tbl = pa.Table.from_pandas(df, preserve_index=False)
+            if writer is None:
+                schema = tbl.schema
+                writer = pq.ParquetWriter(fn, schema)
+            elif not tbl.schema.equals(schema):
+                # A later chunk inferred different types (a column that was
+                # all-NULL in chunk 1 and numeric in chunk 5). Cast to the
+                # committed schema; if that is impossible the table is not
+                # streamable and the caller falls back rather than writing
+                # a file whose columns mean two different things.
+                tbl = tbl.cast(schema)
+            writer.write_table(tbl)
+            total += len(df)
+        cur.close()
+        return total, ranges
+    finally:
+        if writer is not None:
+            writer.close()
+        try:
+            conn.rollback()
+        finally:
+            conn.autocommit = was_auto
+
+
+def _row_count(conn, p: dict, where: str, params) -> int | None:
+    """Rows this pull will actually move, or None if counting failed.
+
+    None routes to the STREAMING path: not knowing the size is exactly the
+    case where an unbounded buffered read is the dangerous choice.
+    """
+    try:
+        cur = conn.cursor()
+        cur.execute(f"SET statement_timeout = {COUNT_TIMEOUT_MS}")
+        cur.execute(f'SELECT count(*) FROM {p["schema"]}.{p["table"]}{where}',
+                    params)
+        n = int(cur.fetchone()[0])
+        cur.close()
+        return n
+    except Exception:                                           # noqa: BLE001
+        try:
+            conn.rollback()
+        except Exception:                                       # noqa: BLE001
+            pass
+        return None
+
+
+def _write_frame(df, fn) -> None:
+    """Parquet, with the object-column fallback the buffered path needs."""
+    try:
+        df.to_parquet(fn, index=False)
+    except Exception:                                           # noqa: BLE001
+        for col in df.columns:
+            if df[col].dtype == object:
+                df[col] = df[col].astype(str)
+        df.to_parquet(fn, index=False)
+
+
 def classify(error: str) -> tuple[str, str]:
     """(verdict, reason). Unknown errors are RETRYABLE by default and named,
     because silently treating an unrecognised error as terminal is how a
@@ -250,7 +376,7 @@ def main() -> int:
             sql = (f'SELECT * FROM {p["schema"]}.{p["table"]}{where} '
                    f'LIMIT {MAX_ROWS}')
 
-            df, err = None, None
+            n_rows, ranges, err = None, {}, None
             for attempt in range(1, MAX_ATTEMPTS + 1):
                 t0 = time.time()
                 try:
@@ -261,10 +387,32 @@ def main() -> int:
                         # query, which is harmless, but it set it to 90s.
                         cc.execute(f"SET statement_timeout = "
                                    f"{a.timeout_s * 1000}")
-                    df = pd.read_sql(sql, c, params=params)
+                    n_est = _row_count(c, p, where, params)
+                    # _row_count set its own (shorter) timeout on this
+                    # connection; put the pull's back before the real query.
+                    cc = c.cursor()
+                    cc.execute(f"SET statement_timeout = {a.timeout_s * 1000}")
+                    cc.close()
+                    if n_est is not None and n_est <= STREAM_ABOVE_ROWS:
+                        df = pd.read_sql(sql, c, params=params)
+                        n_rows = len(df)
+                        if n_rows:
+                            _write_frame(df, fn)
+                            ranges = _date_ranges(df)
+                        del df
+                    else:
+                        n_rows, ranges = _stream_to_parquet(c, sql, params, fn)
                     err = None
                     break
                 except Exception as e:                          # noqa: BLE001
+                    # A partial parquet is worse than none: resumability keys
+                    # off file existence, so a truncated file would be read
+                    # forever as a completed table.
+                    if fn.exists():
+                        try:
+                            fn.unlink()
+                        except OSError:
+                            pass
                     err = f"{type(e).__name__}: {str(e)[:200]}"
                     verdict, reason = classify(err)
                     if verdict == "TERMINAL":
@@ -283,7 +431,7 @@ def main() -> int:
                         print(f"  retry {attempt + 1}/{MAX_ATTEMPTS} "
                               f"{p['name']} ({reason}, "
                               f"{time.time() - t0:.0f}s)", flush=True)
-            if err is not None or df is None:
+            if err is not None or n_rows is None:
                 with lock:
                     state["failed"] += 1
                     new_failed.append({**p, "error": err,
@@ -294,7 +442,15 @@ def main() -> int:
                     timespec="seconds"), "name": p["name"],
                     "result": "failed", "error": err}])
                 continue
-            if not len(df):
+            if not n_rows:
+                # An empty table writes no parquet at all (the writer never
+                # opened), so record it as pulled-and-empty rather than
+                # leaving it to look outstanding on the next pass.
+                if fn.exists():
+                    try:
+                        fn.unlink()
+                    except OSError:
+                        pass
                 with lock:
                     new_pulled.append({**p, "rows": 0,
                                        "note": "0 rows — table is empty"})
@@ -302,40 +458,25 @@ def main() -> int:
                     timespec="seconds"), "name": p["name"],
                     "result": "empty"}])
                 continue
-            try:
-                df.to_parquet(fn, index=False)
-            except Exception as e:                              # noqa: BLE001
-                # Object columns pyarrow cannot infer: stringify and keep the
-                # table rather than losing it to a serialisation detail.
-                try:
-                    for col in df.columns:
-                        if df[col].dtype == object:
-                            df[col] = df[col].astype(str)
-                    df.to_parquet(fn, index=False)
-                except Exception as e2:                         # noqa: BLE001
-                    with lock:
-                        state["failed"] += 1
-                        new_failed.append({**p, "error": f"write: {e2}"})
-                    continue
-            sz = fn.stat().st_size / 2**30
+            sz = fn.stat().st_size / 2**30 if fn.exists() else 0.0
             with lock:
                 state["gb"] += sz
                 state["done"] += 1
-                row = {**p, "rows": int(len(df)), "gb": round(sz, 4),
-                       "date_ranges": _date_ranges(df),
+                row = {**p, "rows": int(n_rows), "gb": round(sz, 4),
+                       "date_ranges": ranges,
                        "seconds": round(time.time() - t0, 1),
                        "universe_filtered": bool(where),
-                       "pulled_by": "catchup"}
+                       "pulled_by": "catchup_streamed"}
                 new_pulled.append(row)
                 el = time.time() - t_start
                 rate = state["done"] / el * 3600 if el > 0 else 0
                 print(f"  [{state['done']}/{len(todo)}] {p['name']:<44s} "
-                      f"{len(df):>9,} rows {time.time() - t0:>6.1f}s "
+                      f"{n_rows:>9,} rows {time.time() - t0:>6.1f}s "
                       f"{state['gb']:.1f}GB  {rate:>5.0f}/h "
                       f"({state['failed']} fail)", flush=True)
             _log([{"ts": datetime.now(timezone.utc).isoformat(
                 timespec="seconds"), "name": p["name"], "result": "pulled",
-                "rows": int(len(df)), "seconds": round(time.time() - t0, 1)}])
+                "rows": int(n_rows), "seconds": round(time.time() - t0, 1)}])
         if c is not None:
             try:
                 c.close()
