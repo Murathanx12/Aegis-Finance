@@ -1,0 +1,104 @@
+{
+  "trial": "MARKET-SCALING-1",
+  "mode": "SCREEN",
+  "era": "modern",
+  "at": "2026-08-20T07:32:45+00:00",
+  "design": "stage 1 date-level linear market-variance forecast; stage 2 constant-within-date log shift of the stock-level prediction, coefficient fit on train dates only (beta=0 recovers baseline exactly)",
+  "macro_features": [
+    "credit_spread",
+    "credit_spread_chg21",
+    "yield_level",
+    "term_spread",
+    "ted_spread",
+    "ff_mkt_21",
+    "ff_mktvol_21",
+    "ff_umd_21"
+  ],
+  "folds": [
+    {
+      "year": 2017,
+      "stage1_train_r2": 0.3515,
+      "beta2_scaling": 0.2001,
+      "n_train_dates": 48
+    },
+    {
+      "year": 2018,
+      "stage1_train_r2": 0.4189,
+      "beta2_scaling": 0.187,
+      "n_train_dates": 60
+    },
+    {
+      "year": 2019,
+      "stage1_train_r2": 0.3299,
+      "beta2_scaling": 0.1638,
+      "n_train_dates": 72
+    },
+    {
+      "year": 2020,
+      "stage1_train_r2": 0.2617,
+      "beta2_scaling": 0.1557,
+      "n_train_dates": 84
+    },
+    {
+      "year": 2021,
+      "stage1_train_r2": 0.3746,
+      "beta2_scaling": 0.1056,
+      "n_train_dates": 96
+    },
+    {
+      "year": 2022,
+      "stage1_train_r2": 0.3885,
+      "beta2_scaling": 0.1066,
+      "n_train_dates": 108
+    },
+    {
+      "year": 2023,
+      "stage1_train_r2": 0.4479,
+      "beta2_scaling": 0.1038,
+      "n_train_dates": 120
+    },
+    {
+      "year": 2024,
+      "stage1_train_r2": 0.4412,
+      "beta2_scaling": 0.0923,
+      "n_train_dates": 132
+    }
+  ],
+  "summary": {
+    "baseline": {
+      "mean_qlike": 0.50032,
+      "mse_log_var": 0.49908,
+      "mean_rank_ic": 0.7978
+    },
+    "scaled": {
+      "mean_qlike": 0.5687,
+      "mse_log_var": 0.52992,
+      "mean_rank_ic": 0.7978
+    }
+  },
+  "qlike_contrast": {
+    "delta": -0.068381,
+    "scaled_better": false,
+    "ci": [
+      -0.151997,
+      -0.016072
+    ],
+    "mde_80": 0.120054,
+    "significant": true,
+    "clears_mde": false
+  },
+  "mse_contrast": {
+    "delta": -0.030845,
+    "scaled_better": false,
+    "ci": [
+      -0.057058,
+      -0.009526
+    ],
+    "mde_80": 0.041191,
+    "significant": true,
+    "clears_mde": false
+  },
+  "d_rank_ic": 0.0,
+  "ordering_preserved": true,
+  "verdict": "MARKET_SCALING_DOES_NOT_HELP \u2014 the level ceiling is not reachable from macro state in EITHER shape, so the observable-state family closes"
+}
