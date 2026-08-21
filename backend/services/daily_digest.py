@@ -47,7 +47,8 @@ SCHEMA_VERSION = 1
 #: Sections build_digest() always emits, in order. A consumer can rely on
 #: every key existing with a `status` — absence of a section is a bug, not a
 #: quiet day.
-SECTIONS = ("arena", "ledger", "lanes", "collections", "iif")
+SECTIONS = ("arena", "ledger", "lanes", "collections", "iif",
+            "prediction_markets")
 
 
 def digests_dir(ledger_dir: Path | None = None) -> Path:
@@ -267,6 +268,42 @@ def _iif_section(day: str, ledger_dir: Path) -> dict:
 
 # ── assembly ────────────────────────────────────────────────────────────────
 
+def _prediction_markets_section(day: str) -> dict:
+    """TRIAL-PREDMARKET-1/-2: what the crowd priced today, and whether the
+    two venues disagreed. Documentation of a measurement, never a signal —
+    and the 17:55 ET snapshot precedes the 18:15 digest by design."""
+    try:
+        from backend.services import prediction_market_matching as mm
+        from backend.services.prediction_markets import (SOURCES,
+                                                         _receipt_path)
+
+        out: dict = {"status": "ok_empty",
+                     "note": "no snapshot receipts for this day"}
+        receipts = {}
+        for source in SOURCES:
+            p = _receipt_path(day, source)
+            if p.exists():
+                r = json.loads(p.read_text(encoding="utf-8"))
+                receipts[source] = {"status": r.get("status"),
+                                    "rows": r.get("rows_written"),
+                                    "truncated": r.get("pages_truncated")}
+        if receipts:
+            out = {"status": "ok", "receipts": receipts}
+        div = mm.match_day(day)
+        if div.get("status") == "ok":
+            out["status"] = "ok"
+            out["divergence"] = {
+                "n_measured": div.get("n_measured"),
+                "n_above_cost_bar": div.get("n_above_cost_bar"),
+                "cost_bar": div.get("cost_bar"),
+                "spec": div.get("spec"),
+            }
+        return out
+    except Exception as exc:  # noqa: BLE001 — a section never kills the digest
+        return {"status": "unavailable",
+                "reason": f"{type(exc).__name__}: {exc}"}
+
+
 def build_digest(day: str | None = None, *,
                  ledger_dir: Path | None = None,
                  arena_root: Path | None = None) -> dict:
@@ -280,6 +317,7 @@ def build_digest(day: str | None = None, *,
         "lanes": _lanes_section(),
         "collections": _collections_section(day, ldir),
         "iif": _iif_section(day, ldir),
+        "prediction_markets": _prediction_markets_section(day),
     }
     statuses = {name: s.get("status") for name, s in sections.items()}
     return {

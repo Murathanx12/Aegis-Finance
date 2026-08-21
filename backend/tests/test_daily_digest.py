@@ -54,6 +54,40 @@ def test_arena_section_records_the_router_trail(roots):
     assert tr["weights"] is None  # never weights without a RECOMMENDED verdict
 
 
+def test_prediction_markets_section_reads_receipts_and_divergence(
+        roots, tmp_path, monkeypatch):
+    """TRIAL-PREDMARKET context rides the digest: per-venue receipts plus
+    the matched-pair divergence counts. Bare disk -> ok_empty, named."""
+    from backend import config as cfg
+
+    ledger, arena = roots
+    pmd = tmp_path / "pmkt"
+    monkeypatch.setattr(cfg, "PREDICTION_MARKET_DIR", pmd)
+
+    bare = dd.build_digest(DAY, ledger_dir=ledger, arena_root=arena)
+    assert bare["sections"]["prediction_markets"]["status"] == "ok_empty"
+
+    (pmd / "receipts").mkdir(parents=True)
+    (pmd / "receipts" / f"{DAY}.kalshi.json").write_text(json.dumps(
+        {"status": "ok", "rows_written": 6640, "pages_truncated": False}),
+        encoding="utf-8")
+    (pmd / "snapshots").mkdir()
+    (pmd / "snapshots" / f"{DAY}.kalshi.jsonl").write_text(json.dumps(
+        {"source": "kalshi", "ticker": "KXFEDDECISION-26SEP-H0",
+         "title": "t", "mid": 0.70}) + "\n", encoding="utf-8")
+    (pmd / "snapshots" / f"{DAY}.polymarket.jsonl").write_text(json.dumps(
+        {"source": "polymarket", "ticker": "s",
+         "title": ("Will there be no change in Fed interest rates after "
+                   "the September 2026 meeting?"), "mid": 0.62}) + "\n",
+        encoding="utf-8")
+    digest = dd.build_digest(DAY, ledger_dir=ledger, arena_root=arena)
+    s = digest["sections"]["prediction_markets"]
+    assert s["status"] == "ok"
+    assert s["receipts"]["kalshi"]["rows"] == 6640
+    assert s["divergence"]["n_measured"] == 1
+    assert s["divergence"]["n_above_cost_bar"] == 1  # 0.08 > 0.05
+
+
 def test_absent_directory_is_unavailable_not_empty(roots):
     """No resolver_receipts dir means the resolver has never left evidence —
     that is a different fact from 'the directory is there and empty'."""
