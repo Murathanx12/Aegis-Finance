@@ -1995,3 +1995,22 @@ PREDICTION_MARKET_DIR = OPTIMUS_LEDGER_DIR / "prediction_markets"
 POLYMARKET_API_BASE = "https://gamma-api.polymarket.com"
 #: FROZEN in PREREG_PREDMARKET_2: liquidity floor (USDC) for collection.
 POLYMARKET_MIN_LIQUIDITY = 1000.0
+
+
+# ── Arena personality grading read (OPTIMUS_OBJECTIVE §0.9) ──────────────────
+#: DECLARED 2026-08-22, at a moment when ZERO arena NAV rows existed — these
+#: are preferences, and preferences are never tuned against history (mission
+#: rule 3 / roadmap). Standard CRRA brackets: log utility (rho=1) IS the
+#: extreme-growth "maximise expected log wealth" personality; 8 is deep
+#: capital preservation. Changing any value is an ATTENDED declaration
+#: change, and test_arena_personality_read pins them so it cannot happen
+#: silently.
+ARENA_PERSONALITY_RHO = {
+    "preservation": 8.0,
+    "balanced": 4.0,
+    "aggressive": 2.0,
+    "extreme_growth": 1.0,
+}
+#: Below this many NAV days a book's CE is four events wearing a statistic —
+#: the read refuses it (REFUSED_THIN), mirroring reliability.MIN_CELL_N.
+ARENA_PERSONALITY_MIN_DAYS = 60

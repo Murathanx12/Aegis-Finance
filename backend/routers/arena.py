@@ -171,6 +171,23 @@ def arena_trust_router(leg: str = "forecast") -> dict:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/personalities")
+def arena_personalities() -> dict:
+    """The four declared utilities read the arena (OPTIMUS_OBJECTIVE §0.9).
+
+    A GRADING READ: declared preferences (never tuned), every ranking names
+    its objective, no promotion authority. On a young arena every
+    personality ABSTAINs — printed, not implied.
+    """
+    from backend.services.arena import personality_read
+
+    try:
+        return personality_read.report()
+    except Exception as e:  # noqa: BLE001
+        logger.error("arena personality read failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/regret")
 def arena_regret(leg: str = "forecast", min_n: int = 20,
                  worst_k: int = 10) -> dict:
