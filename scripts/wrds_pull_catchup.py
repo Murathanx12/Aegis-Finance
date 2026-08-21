@@ -445,12 +445,25 @@ def main() -> int:
     # catch-up was about to spend the night on them. A retry list is only
     # meaningful against the plan in force NOW.
     planned = _planned_names()
-    terminal, retry, unplanned = [], [], []
+    # Tables already measured as over-cap. Re-counting them costs ~0.5s each
+    # at the head of EVERY run — 221 of them is two minutes of every session
+    # spent rediscovering the same fact.
+    #
+    # Keyed on the CAP THEY WERE MEASURED AGAINST. If MAX_ROWS is raised (the
+    # open decision in the handoff), a table recorded over-cap at 8,000,000 is
+    # no longer known to be over-cap, and it must go back in the queue rather
+    # than inherit a skip from a rule that no longer applies.
+    known_over_cap = {o["name"]: o for o in (man.get("over_cap") or [])
+                      if o.get("cap") == MAX_ROWS}
+    terminal, retry, unplanned, skipped_over_cap = [], [], [], []
     for name, f in sorted(by_name.items()):
         stem = f"{f['schema']}__{f['table']}"
         if stem in have:
             continue                       # landed on a later attempt already
         verdict, reason = classify(str(f.get("error", "")))
+        if verdict != "TERMINAL" and name in known_over_cap:
+            skipped_over_cap.append(known_over_cap[name])
+            continue
         if verdict != "TERMINAL" and planned and name not in planned:
             unplanned.append({**f, "verdict": "OUT_OF_PLAN",
                               "reason": "not in the current plan"})
@@ -489,6 +502,11 @@ def main() -> int:
         print(f"OUT OF PLAN (not retried): {len(unplanned):,} — in the failure "
               f"list from an earlier plan, excluded by the current one")
         print(f"    e.g. {[u['name'] for u in unplanned[:5]]}")
+    if skipped_over_cap:
+        print(f"OVER CAP (already measured, not re-counted): "
+              f"{len(skipped_over_cap):,} at cap {MAX_ROWS:,}")
+        print(f"    raising MAX_ROWS puts these back in the queue "
+              f"automatically")
     print(f"RETRYABLE:                {len(retry):,}")
     for k, v in Counter(t["reason"] for t in retry).most_common():
         print(f"    {v:>6,}  {k}")
