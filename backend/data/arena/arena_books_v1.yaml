@@ -208,6 +208,34 @@ books:
     overrides:
       select_top_k: 20          # breadth twin: same signal, 4x the names
 
+  # CAPITAL ENGINE (2026-08-21, Order 26 adjudicated: "where is the profit
+  # maximization?"). The first book whose mechanism is the ALLOCATION, not the
+  # selection: fractional-Kelly weights from a declared edge mapping
+  # (Grinold mu = IC*z*sigma, IC_PRIOR DECLARED never estimated), per-name
+  # conviction that scales with edge/variance, and — first in the arena —
+  # CASH: gross exposure rises and falls with conviction instead of being a
+  # constant 1.0. It is also the first CONSUMER of RELIABILITY_ROUTER_v1:
+  # until the matured ledger can vouch for the models (verdict RECOMMENDED),
+  # the book runs at abstain_kelly_factor of its declared aggression. The
+  # alpha input is the SAME composite every book sees — this experiment
+  # cannot manufacture alpha; it measures whether the capital layer adds
+  # wealth at fixed alpha, against ENGINE_BASELINE_v1.
+  PROFIT_ALLOCATOR_v1:
+    purpose: arena-capital-engine-ce-kelly
+    policy_version: 1
+    selection: composite_top_k
+    sizing: ce_kelly
+    screens: []
+    llm_perception: false
+    allocator:
+      ic_prior: 0.05            # DECLARED: upper range of published momentum
+                                # ICs; the receipt prints it on every decision
+      kelly_fraction: 0.5       # half-Kelly at full trust
+      abstain_kelly_factor: 0.5 # quarter-Kelly effective until the router
+                                # can vouch (RECOMMENDED) — conservative by
+                                # construction, not by mood
+      max_gross: 1.0            # long-only, no leverage; cash is the residual
+
 seeding:
   authorised: "Murat, 2026-08-20 (verbatim: 'this is your sandbox... lets start
     building the platform') — recorded in docs/ORDER_25_LIVE_ARENA_GEN1.md.

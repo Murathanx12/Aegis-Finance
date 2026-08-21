@@ -155,8 +155,38 @@ def _decide(spec, book: dict, day_state: dict, is_hash: str, *,
                 "chosen_n": len(sel.chosen), "min_breadth": min_breadth,
                 "excluded_n": len(sel.excluded),
                 "note": "selection too narrow — book holds; loud, not silent"}
-    weights = policies.size(sel.chosen, day_state, sizing=spec.sizing,
-                            max_single_name=spec.max_single_name)
+    allocator_receipt = None
+    if spec.sizing == "ce_kelly":
+        # The first CONSUMER of RELIABILITY_ROUTER_v1: while the ledger
+        # cannot vouch for the models (ABSTAIN/NO_EDGE), the book runs at
+        # `abstain_kelly_factor` of its declared aggression. This is the
+        # causal path new-information -> router verdict -> capital, live from
+        # day one and conservative until evidence accrues. The verdict is
+        # recorded on the decision so the effect is a ledger filter later.
+        from backend.services.arena import trust_router
+        try:
+            router_verdict = (trust_router.recommend(root=root)
+                              .get("global") or {}).get("verdict", "ABSTAIN")
+        except Exception as e:  # noqa: BLE001 - a dead router must not halt a book
+            logger.warning("trust router unreadable, treating as ABSTAIN: %s", e)
+            router_verdict = "UNAVAILABLE"
+        alloc = spec.allocator
+        kelly = float(alloc.get("kelly_fraction", 0.5))
+        if router_verdict != "RECOMMENDED":
+            kelly *= float(alloc.get("abstain_kelly_factor", 0.5))
+        weights, allocator_receipt = policies.size_ce_kelly(
+            sel.chosen, day_state,
+            ic_prior=float(alloc.get("ic_prior", 0.05)),
+            kelly_fraction=kelly,
+            max_single_name=spec.max_single_name,
+            max_gross=float(alloc.get("max_gross", 1.0)))
+        allocator_receipt["router_verdict"] = router_verdict
+        allocator_receipt["kelly_declared"] = float(
+            alloc.get("kelly_fraction", 0.5))
+        allocator_receipt["kelly_used"] = kelly
+    else:
+        weights = policies.size(sel.chosen, day_state, sizing=spec.sizing,
+                                max_single_name=spec.max_single_name)
     exemption_receipts: list[dict] = []
     if spec.winner_exemption:
         weights, exemption_receipts = policies.apply_winner_exemption(
@@ -182,7 +212,8 @@ def _decide(spec, book: dict, day_state: dict, is_hash: str, *,
     book["last_rebalance_month"] = f"{day[:4]}-{day[5:7]}"
     return {"status": "decided", "selection": sel, "weights": weights,
             "orders_queued": len(orders),
-            "llm_tilts": tilts, "exemptions": exemption_receipts}
+            "llm_tilts": tilts, "exemptions": exemption_receipts,
+            **({"allocator": allocator_receipt} if allocator_receipt else {})}
 
 
 def _experiences_from_decision(spec, dec: dict, book_before: set[str],

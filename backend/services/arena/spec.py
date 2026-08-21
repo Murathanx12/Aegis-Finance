@@ -27,6 +27,7 @@ AUTHORISED_ACTIVE: tuple[str, ...] = (
     "CURRENT_BEST_v1",
     "AGGRESSIVE_TOP5_v1",
     "DIVERSIFIED_TOP20_v1",
+    "PROFIT_ALLOCATOR_v1",
 )
 
 VALIDATION_STATUS = "PRODUCT_EXPERIMENT"
@@ -34,7 +35,7 @@ VALIDATION_STATUS = "PRODUCT_EXPERIMENT"
 #: Screens the policy layer implements. A YAML screen not in this set is a
 #: refusal at load time, not a silent no-op.
 KNOWN_SCREENS = frozenset({"streak_up_5", "top_decile_ret21"})
-KNOWN_SIZING = frozenset({"equal_weight", "inverse_trailing_vol"})
+KNOWN_SIZING = frozenset({"equal_weight", "inverse_trailing_vol", "ce_kelly"})
 
 #: Defaults the engine actually READS. Changing one of these changes what the
 #: books do.
@@ -63,6 +64,7 @@ DESCRIPTIVE_DEFAULTS: dict[str, str] = {
 CONSUMED_BOOK_KEYS = frozenset({
     "purpose", "policy_version", "sizing", "screens", "llm_perception", "llm",
     "winner_exemption", "substitution", "event_context", "overrides",
+    "allocator",
 })
 
 #: The ONLY file-level defaults a book may override (2026-08-21, Murat's
@@ -78,10 +80,15 @@ DESCRIPTIVE_BOOK_KEYS: dict[str, str] = {
                  "it and reads defaults.selection_signal, not this field",
 }
 
-#: Keys inside the per-book `llm` and `substitution` blocks.
+#: Keys inside the per-book `llm`, `substitution` and `allocator` blocks.
 KNOWN_LLM_KEYS = frozenset({"max_names_per_day", "daily_call_cap", "tilt_cap",
                             "tilt_scale", "horizon_days", "observable"})
 KNOWN_SUBSTITUTION_KEYS = frozenset({"margin_z", "max_swaps_per_day"})
+#: ce_kelly parameters. `ic_prior` is a DECLARED prior, never estimated from
+#: the book's own history; `abstain_kelly_factor` scales aggression down while
+#: the trust router cannot yet vouch for the models (ABSTAIN/NO_EDGE).
+KNOWN_ALLOCATOR_KEYS = frozenset({"ic_prior", "kelly_fraction",
+                                  "abstain_kelly_factor", "max_gross"})
 
 
 class SpecError(RuntimeError):
@@ -101,6 +108,7 @@ class BookSpec:
     llm: dict = field(default_factory=dict)
     winner_exemption: dict = field(default_factory=dict)
     substitution: dict = field(default_factory=dict)
+    allocator: dict = field(default_factory=dict)
     defaults: dict = field(default_factory=dict)
     config_hash: str = ""
     policy_fingerprint: str = ""
@@ -211,7 +219,8 @@ def load_specs(path: Path | None = None) -> dict[str, BookSpec]:
             raise SpecError(f"{book_id}: key(s) {sorted(unknown_keys)} are "
                             f"neither consumed nor declared descriptive")
         for block, known in (("llm", KNOWN_LLM_KEYS),
-                             ("substitution", KNOWN_SUBSTITUTION_KEYS)):
+                             ("substitution", KNOWN_SUBSTITUTION_KEYS),
+                             ("allocator", KNOWN_ALLOCATOR_KEYS)):
             extra = set(b.get(block) or {}) - known
             if extra:
                 raise SpecError(f"{book_id}.{block}: unknown key(s) "
@@ -226,6 +235,24 @@ def load_specs(path: Path | None = None) -> dict[str, BookSpec]:
         sizing = str(b.get("sizing") or "equal_weight")
         if sizing not in KNOWN_SIZING:
             raise SpecError(f"{book_id}: unknown sizing '{sizing}'")
+        has_allocator = bool(b.get("allocator"))
+        if sizing == "ce_kelly" and not has_allocator:
+            raise SpecError(f"{book_id}: ce_kelly sizing requires a declared "
+                            f"`allocator` block — Kelly parameters that fall "
+                            f"back to code defaults are undeclared parameters")
+        if has_allocator and sizing != "ce_kelly":
+            raise SpecError(f"{book_id}: `allocator` block under sizing "
+                            f"'{sizing}' changes nothing — a setting the "
+                            f"engine never reads must not sit in the file "
+                            f"looking live")
+        if sizing == "ce_kelly" and (b.get("winner_exemption")
+                                     or b.get("llm_perception")):
+            raise SpecError(
+                f"{book_id}: ce_kelly cannot compose with winner_exemption "
+                f"or llm tilts in v1 — both renormalise weights to full "
+                f"investment, which silently destroys the cash position the "
+                f"allocator holds by design. A composed version is a new "
+                f"sizing, declared and tested, not a YAML combination.")
         overrides = dict(b.get("overrides") or {})
         bad_overrides = set(overrides) - KNOWN_OVERRIDE_KEYS
         if bad_overrides:
@@ -246,6 +273,7 @@ def load_specs(path: Path | None = None) -> dict[str, BookSpec]:
             llm=dict(b.get("llm") or {}),
             winner_exemption=dict(b.get("winner_exemption") or {}),
             substitution=dict(b.get("substitution") or {}),
+            allocator=dict(b.get("allocator") or {}),
             defaults={**defaults, **overrides},
             config_hash=h,
             policy_fingerprint=fp,

@@ -112,6 +112,75 @@ def size(chosen: list[dict], day_state: dict, *, sizing: str,
     return _cap_and_renorm(weights, max_single_name)
 
 
+def size_ce_kelly(chosen: list[dict], day_state: dict, *, ic_prior: float,
+                  kelly_fraction: float, max_single_name: float,
+                  max_gross: float = 1.0) -> tuple[dict[str, float], dict]:
+    """Fractional-Kelly weights from a DECLARED edge mapping. The first sizing
+    that can hold cash: weights are NOT renormalised to full investment —
+    whatever the edges do not justify stays uninvested, and gross exposure
+    rises and falls with conviction instead of being a constant 1.0.
+
+    The mapping is Grinold's rule, mu = IC * z * sigma, with `ic_prior` a
+    DECLARED prior (never estimated from this book's own history — that would
+    be tuning a personality against itself). Kelly then gives
+        w = kelly_fraction * mu / sigma^2 = kelly_fraction * IC * z / sigma
+    so a high score in a calm name earns more capital than the same score in
+    a wild one, and z <= 0 earns nothing. This CANNOT manufacture alpha: the
+    z is the same composite every book sees. What it tests is whether the
+    CAPITAL layer adds wealth at fixed alpha — judged against the equal-weight
+    control twin.
+
+    Missing vol makes a name ineligible for this sizing (missing is missing,
+    never 'average'). Per-name cap truncates WITHOUT redistributing — capped
+    conviction becomes cash, not a forced bet on the next name. Returns
+    (weights, receipt); the receipt carries the per-name arithmetic so the
+    decision can be audited without rerunning it.
+    """
+    names = day_state.get("names", {})
+    raw: dict[str, float] = {}
+    rows: list[dict] = []
+    for c in chosen:
+        t = c["ticker"]
+        sigma = names.get(t, {}).get("vol63")
+        z = c.get("score")
+        if not sigma or sigma <= 0:
+            rows.append({"ticker": t, "weight": 0.0,
+                         "reason": "no_vol63_under_ce_kelly"})
+            continue
+        if z is None or z <= 0:
+            rows.append({"ticker": t, "weight": 0.0, "z": z,
+                         "reason": "non_positive_edge"})
+            continue
+        w = kelly_fraction * ic_prior * float(z) / float(sigma)
+        capped = min(w, max_single_name)
+        raw[t] = capped
+        rows.append({"ticker": t, "z": round(float(z), 4),
+                     "sigma": round(float(sigma), 4),
+                     "kelly_raw": round(w, 4), "weight": round(capped, 4),
+                     **({"capped_at": max_single_name}
+                        if w > max_single_name else {})})
+    gross = sum(raw.values())
+    scale = 1.0
+    if gross > max_gross > 0:
+        scale = max_gross / gross
+        raw = {t: v * scale for t, v in raw.items()}
+    receipt = {
+        "sizing": "ce_kelly",
+        "ic_prior": ic_prior,
+        "kelly_fraction": kelly_fraction,
+        "max_gross": max_gross,
+        "gross_before_cap": round(gross, 4),
+        "gross": round(sum(raw.values()), 4),
+        "cash_weight": round(max(0.0, 1.0 - sum(raw.values())), 4),
+        "scale_applied": round(scale, 4),
+        "names": rows,
+        "note": ("ic_prior is DECLARED, not estimated; the edge input is the "
+                 "same composite every book sees — this experiment is about "
+                 "the capital layer, not the alpha"),
+    }
+    return raw, receipt
+
+
 def _cap_and_renorm(weights: dict[str, float], cap: float) -> dict[str, float]:
     if not weights:
         return {}
