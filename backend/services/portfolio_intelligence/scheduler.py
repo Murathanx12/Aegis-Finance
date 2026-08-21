@@ -53,6 +53,7 @@ EXPECTED_JOB_IDS: frozenset[str] = frozenset({
     "pi_copy_lab_run",
     "pi_arena_daily",
     "pi_daily_digest",
+    "pi_prediction_markets",
 })
 
 
@@ -233,6 +234,20 @@ def setup_scheduler():
         CronTrigger(hour=18, minute=15, timezone="US/Eastern"),
         id="pi_daily_digest",
         name="Daily digest (what happened vs what we thought)",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
+
+    # PREDICTION MARKETS (TRIAL-PREDMARKET-1, registered 2026-08-21). One PIT
+    # snapshot of Kalshi macro-event probabilities per UTC day, 17:55 ET all
+    # seven days — Kalshi trades weekends, and a Sunday row costs one fetch.
+    # Descriptive context + the substrate for the registered model-vs-market
+    # Brier comparison. NEVER a signal; nothing in a scoring path reads it.
+    _scheduler.add_job(
+        _prediction_markets_collect,
+        CronTrigger(hour=17, minute=55, timezone="US/Eastern"),
+        id="pi_prediction_markets",
+        name="Prediction-market daily PIT snapshot (Kalshi, descriptive)",
         replace_existing=True,
         misfire_grace_time=3600,
     )
@@ -1201,6 +1216,30 @@ async def _daily_digest():
         (logger.warning if res.get("n_ok", 0) == 0 else logger.info)(msg, *args)
     except Exception as e:
         logger.error("Daily digest failed: %s", e, exc_info=True)
+
+
+async def _prediction_markets_collect():
+    """Daily Kalshi PIT snapshot (TRIAL-PREDMARKET-1). The counts are the log
+    line; a fetch failure raises inside the collector BEFORE any write, so a
+    broken feed logs loudly and never lands a false-zero snapshot. `ok_empty`
+    is a WARNING — zero in-scope macro markets would be surprising and worth
+    a look, not a quiet success."""
+    import asyncio
+
+    try:
+        from backend.services.prediction_markets import snapshot_daily
+
+        res = await asyncio.to_thread(snapshot_daily)
+        msg = ("Prediction-market snapshot %s: status=%s rows=%s events_seen=%s "
+               "pages=%s truncated=%s (descriptive)")
+        args = (res.get("day"), res.get("status"),
+                res.get("rows_written", res.get("rows")),
+                res.get("events_seen"), res.get("pages"),
+                res.get("pages_truncated"))
+        loud = res.get("status") == "ok_empty" or res.get("pages_truncated")
+        (logger.warning if loud else logger.info)(msg, *args)
+    except Exception as e:
+        logger.error("Prediction-market snapshot failed: %s", e, exc_info=True)
 
 
 async def manual_trigger(lane_id: str | None = None) -> dict:

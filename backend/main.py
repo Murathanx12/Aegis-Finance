@@ -564,8 +564,10 @@ async def root():
 # Registered here (not in the block above) deliberately: the ledger router is
 # health-adjacent, and this keeps the edit clear of the primary router block.
 from backend.routers import optimus_ledger as _optimus_ledger  # noqa: E402
+from backend.routers import prediction_markets as _prediction_markets  # noqa: E402
 
 app.include_router(_optimus_ledger.router)
+app.include_router(_prediction_markets.router)
 
 
 @app.get("/api/health")

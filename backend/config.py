@@ -1965,3 +1965,26 @@ SWARM_LEDGER_BATCH = 200
 #: records could never resolve — the failure would look exactly like a growing
 #: pending backlog (belief_state warns about that case for a reason).
 SWARM_MIN_HISTORY_BARS = 252
+
+
+# ── Prediction markets (TRIAL-PREDMARKET-1, registered 2026-08-21) ────────────
+#: Kalshi public market-data API. No key, no account, NO EXECUTION — R1
+#: (docs/research/R1_LLM_FORECAST_CALIBRATION_2026-08-08.md) recorded 6/6 LLM
+#: forecasters losing real capital on Kalshi at crowd-matching Brier, which is
+#: why this integration is a measurement feed and can never become an order
+#: path. The corpus is DESCRIPTIVE CONTEXT: nothing in any scoring path may
+#: read it before a successor trial passes (prereg:
+#: "Aegis module"/TRIALS/PREREG_PREDMARKET_1.md).
+KALSHI_API_BASE = "https://api.elections.kalshi.com/trade-api/v2"
+#: FROZEN in the prereg. Widening the watched categories mid-trial is a
+#: parameter change (successor trial), not a config tweak.
+PREDICTION_MARKET_CATEGORIES = frozenset({"Economics", "Financials", "Companies"})
+#: Collection scope, declared not tuned: contracts closing within this many
+#: days (the trial grades <=12mo; the margin covers month boundaries) and with
+#: nonzero open interest. Both filters are printed in every receipt.
+PREDICTION_MARKET_MAX_CLOSE_DAYS = 400
+#: Pagination cap — a runaway cursor loop is an outage, not a bigger snapshot.
+#: Hitting it sets pages_truncated in the receipt, which the prereg's
+#: contamination clause excludes from grading.
+PREDICTION_MARKET_MAX_PAGES = 60
+PREDICTION_MARKET_DIR = OPTIMUS_LEDGER_DIR / "prediction_markets"
