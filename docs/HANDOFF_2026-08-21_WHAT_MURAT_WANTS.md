@@ -79,3 +79,52 @@ adjudication in `docs/ROADMAP_POSITION_2026-08-21.md` §7.
 the edge resets bare urllib, measured today), teacher/investor-behaviour
 engine on SEC as-filed timestamps, sector books (PIT sector source),
 CURRENT_BEST_v2 challenger.
+
+## 6. Order 26 round 2 (late afternoon) — the profit standard, and the allocator
+
+**STANDING SENTENCE, adopted into every future handoff and review:**
+
+> A component does not count as part of the profit engine until it can trace
+> a causal path from new information → changed forecast → changed capital
+> allocation → executed paper decision → graded outcome.
+
+By that standard, as of `5235f14`:
+- **PROFIT_ALLOCATOR_v1 built** — 10th book, the first whose mechanism is
+  the ALLOCATION: declared Grinold/Kelly mapping, first book that can hold
+  cash, gross exposure follows conviction, and it CONSUMES the trust router
+  (quarter-Kelly until the ledger vouches). The causal path above is closed
+  for this book from its first seeded day.
+- RELIABILITY_ROUTER_v1: now consumed (by the allocator book only).
+- Everything else GPT''s table lists as missing stays honestly missing:
+  return-forecast layer (WRDS-gated), marginal-wealth substitution,
+  conditional winner/re-entry model, independent alpha books,
+  router v2 (independence-aware), pm_engine full integration.
+
+**Murat''s new asks (this turn), adjudicated:**
+- *"NN continuously learning from news"* — gated on substrate verify + the
+  event corpus the arena is now accruing; the digest + experience ledgers
+  ARE the training-row factory he is asking for. Queue: after WRDS Q1.
+- *"LLM websearch for news without APIs"* — for FORWARD paper (arena) this
+  is legitimate (forward = PIT by construction). Route: widen the typed
+  event feed (event_intel) + LLM_EVENTS ablation measures its value. Raw
+  websearch inside prod DeepSeek calls does not exist; a search-capable
+  reviewer is a cost/API decision that is Murat''s.
+- *"LLM improves the code itself"* — `lab/rd_loop.py` already does exactly
+  this with Claude sessions (his "or i can just use this terminal");
+  running it nightly is HIS call (subscription usage). DeepSeek stays out
+  of code-modification, agreed.
+- *"backtests + paper accounts as training data"* — that is the experience/
+  outcome ledger design (arena) + the WRDS substrate (historical). The
+  novel part he wants is exactly the closed loop now being assembled:
+  graded forward experience feeding a learner that reallocates capital.
+
+**Next sessions, revised order (GPT''s sequence, adjudicated):**
+1. (Murat) seed — now seeds 10 books including the allocator.
+2. After WRDS verify: return + risk forecast layer (return gets equal
+   priority to risk now), universe-wide features, new COMPOSITE_VERSION.
+3. Marginal-expected-wealth substitution (replaces z-margin) as a
+   PROFIT_ALLOCATOR_v2 descendant — needs the return/risk distributions.
+4. Conditional winner/re-entry model (P(continue), thesis-break detection).
+5. Independent alpha books (revisions/event/teacher/sector) — each with its
+   own selection signal so distinct_selection_signals finally rises.
+6. RELIABILITY_ROUTER_v2 = reliability × effective independence × state.
