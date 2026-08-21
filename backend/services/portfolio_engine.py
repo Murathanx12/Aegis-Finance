@@ -1027,10 +1027,17 @@ class PortfolioEngine:
             if monthly_add > 0 and (t + 1) % 21 == 0:
                 paths[t + 1] += monthly_add
 
-        # Apply return cap
+        # Apply the return cap to RETURNS, not to wealth: the ceiling must
+        # grow with the capital actually invested by day t. A fixed
+        # total_value * (1+cap) ceiling is saturated by steady DCA
+        # contributions alone — measured 2026-08-22 (slow suite): with
+        # $500/mo every path collapsed to exactly 4x initial
+        # (p10 = median = p90, prob_gain 0.0).
         max_return = sim_cfg.get("max_5y_return", 3.0)
-        max_price = total_value * (1 + max_return)
-        paths = np.clip(paths, 0.01, max_price)
+        day_idx = np.arange(trading_days + 1)
+        invested_by_day = total_value + monthly_add * (day_idx // 21)
+        paths = np.clip(paths, 0.01,
+                        invested_by_day[:, None] * (1 + max_return))
 
         final = paths[-1]
 

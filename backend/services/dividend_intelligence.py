@@ -235,9 +235,14 @@ def _annual_dividends(dividends: pd.Series) -> pd.Series:
     if dividends.empty:
         return pd.Series(dtype=float)
     annual = dividends.groupby(dividends.index.year).sum()
-    # Drop current year if it's incomplete (less than 6 months of data)
+    # The current calendar year is ALWAYS incomplete: in August a quarterly
+    # payer has paid at most 3 of 4 dividends, so the old "month < 7"
+    # heuristic compared a partial year against last year's full sum and
+    # read every grower as a cutter (JNJ scored consecutive_growth_years=0
+    # on 2026-08-22 — caught by the slow suite). A year can only be judged
+    # once it is over.
     now = pd.Timestamp.now()
-    if now.month < 7 and len(annual) > 1 and annual.index[-1] == now.year:
+    if len(annual) > 1 and annual.index[-1] == now.year:
         annual = annual.iloc[:-1]
     return annual
 
