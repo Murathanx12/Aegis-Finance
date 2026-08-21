@@ -532,4 +532,14 @@ def status(root=None) -> dict:
         }
     out["experiences"] = len(store.read_experiences(root))
     out["experience_outcomes"] = len(store.read_outcomes(root))
+    # The honest dimensionality: N books sharing one selection signal are N
+    # TREATMENTS of one strategy, not N strategies. Served so the book count
+    # can never quietly inflate into a diversity claim.
+    out["diversity"] = {
+        "n_books": len(specs),
+        "distinct_selection_signals": len({s.selection_signal
+                                           for s in specs.values()}),
+        "note": ("books sharing a selection signal differ by treatment "
+                 "(sizing/screens/LLM/concentration), not by strategy"),
+    }
     return out

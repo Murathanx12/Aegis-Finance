@@ -508,3 +508,14 @@ def test_arena_never_touches_paper_nav_tables():
         text = f.read_text(encoding="utf-8")
         for needle in forbidden:
             assert needle not in text, f"{f.name} references {needle}"
+
+
+def test_status_reports_honest_diversity(tmp_path):
+    """9 books sharing one selection signal are 9 TREATMENTS, not 9
+    strategies. The status surface must say so with a number, so the book
+    count can never quietly inflate into a diversity claim."""
+    st = engine.status(tmp_path)
+    div = st["diversity"]
+    assert div["n_books"] == len(spec_mod.AUTHORISED_ACTIVE)
+    assert div["distinct_selection_signals"] == 1
+    assert "treatment" in div["note"]
