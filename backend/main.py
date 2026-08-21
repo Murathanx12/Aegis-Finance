@@ -582,6 +582,18 @@ async def health():
     }
 
 
+def _process_rss_mb() -> float | None:
+    """Resident set size in MB from /proc/self/status. None off-Linux."""
+    try:
+        with open("/proc/self/status", encoding="ascii", errors="ignore") as fh:
+            for line in fh:
+                if line.startswith("VmRSS:"):
+                    return round(int(line.split()[1]) / 1024.0, 1)
+    except OSError:
+        return None
+    return None
+
+
 @app.get("/api/health/full")
 async def health_full():
     """One-call session status: everything /go Phase 0 needs.
@@ -753,6 +765,11 @@ async def health_full():
                 (datetime.now(timezone.utc) - _PROCESS_START).total_seconds()
             ),
             "cache_status": cs["status"],
+            # The app restarted 4x in 71 min on 2026-08-21 evening with no
+            # traceback — the OOM signature. RSS here makes memory a
+            # measurable instead of a post-mortem guess (stdlib /proc read;
+            # None on non-Linux dev machines, printed not hidden).
+            "process_rss_mb": _process_rss_mb(),
         },
         "scheduler": sched,
         "track_record": track_record,
