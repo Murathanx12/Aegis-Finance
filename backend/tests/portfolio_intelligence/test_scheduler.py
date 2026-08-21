@@ -173,3 +173,37 @@ class TestManualTrigger:
         ):
             result = asyncio.run(manual_trigger(None))
         assert len(result) == 3
+
+
+class TestWhyMovedNightly:
+    def test_nightly_call_satisfies_the_real_signature(self, monkeypatch):
+        """The wrapper shipped calling run_why_moved() with no arguments and
+        crashed with a TypeError EVERY night until 2026-08-22 — the exact
+        green-and-empty failure its own docstring warns about, surviving
+        because nothing ever exercised the call. This test binds the wrapper
+        to the REAL function's signature: the fake below enforces the same
+        required parameters, so a future drift fails here, offline, not in
+        prod at 17:15 ET."""
+        from backend.services import why_moved as wm
+        from backend.services.portfolio_intelligence import scheduler as sched
+
+        seen: dict = {}
+
+        def fake_run_why_moved(positions, requested_date, *,
+                               with_hypotheses=True, write_ledger=False,
+                               **kw):
+            seen["positions"] = positions
+            seen["requested_date"] = requested_date
+            seen["write_ledger"] = write_ledger
+            return {"status": "ok", "as_of": requested_date,
+                    "n_predictions_minted": 1, "hypotheses": [],
+                    "lenses": [], "attribution": {"pnl_usd": 0.0,
+                                                  "pnl_pct": 0.0}}
+
+        monkeypatch.setattr(wm, "run_why_moved", fake_run_why_moved)
+        monkeypatch.setattr(wm, "book_positions",
+                            lambda: [("AAPL", 10.0)])
+        asyncio.run(sched._why_moved_nightly())
+        assert seen["positions"] == [("AAPL", 10.0)]
+        assert seen["requested_date"]  # a date string, derived not defaulted
+        assert seen["write_ledger"] is True  # minting is the point of the job

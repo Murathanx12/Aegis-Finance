@@ -1985,8 +1985,12 @@ PREDICTION_MARKET_CATEGORIES = frozenset({"Economics", "Financials", "Companies"
 PREDICTION_MARKET_MAX_CLOSE_DAYS = 400
 #: Pagination cap — a runaway cursor loop is an outage, not a bigger snapshot.
 #: Hitting it sets pages_truncated in the receipt, which the prereg's
-#: contamination clause excludes from grading.
-PREDICTION_MARKET_MAX_PAGES = 60
+#: contamination clause excludes from grading. 60 was calibrated on a dev
+#: smoke that used 57 pages; the FIRST prod snapshot (2026-08-21 17:55 ET)
+#: hit the cap and contaminated the day — the open-event universe is larger
+#: at the evening snapshot hour. 120 leaves ~2x headroom over the measured
+#: 60-page day.
+PREDICTION_MARKET_MAX_PAGES = 120
 PREDICTION_MARKET_DIR = OPTIMUS_LEDGER_DIR / "prediction_markets"
 #: Polymarket Gamma public API (TRIAL-PREDMARKET-2, registered 2026-08-21).
 #: Same contract as Kalshi: measurement feed, never an order path. The

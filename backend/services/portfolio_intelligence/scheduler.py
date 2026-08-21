@@ -1109,7 +1109,16 @@ async def _why_moved_nightly():
     try:
         from backend.services import why_moved as wm
 
-        result = await asyncio.to_thread(wm.run_why_moved, with_hypotheses=True)
+        # The wrapper shipped calling run_why_moved() with NO arguments and
+        # crashed with a TypeError every single night until 2026-08-22 —
+        # loudly, in a log nobody read. Same call the router makes: the
+        # book's positions, today (run_why_moved walks back to the last
+        # priceable session itself), and write_ledger=True because minting
+        # gradeable records is what makes this a loop rather than a tool.
+        result = await asyncio.to_thread(
+            wm.run_why_moved, wm.book_positions(),
+            str(datetime.now().date()),
+            with_hypotheses=True, write_ledger=True)
         minted = result.get("n_predictions_minted", 0)
         n_hyp = len(result.get("hypotheses") or [])
         rejected = sum(len(l.get("rejections") or [])
