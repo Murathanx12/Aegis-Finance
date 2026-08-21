@@ -1,0 +1,145 @@
+"""INSTR-PREDMARKET-MATCHING V1 — parsers, refusals, and the divergence math.
+
+The matcher's job is to be NARROW: mechanical pairs only, refusals recorded,
+nothing approximated. These tests pin the parsers to the live formats both
+venues actually used on 2026-08-21 and every refusal path to its reason.
+"""
+
+from __future__ import annotations
+
+import json
+
+import pytest
+
+from backend import config
+from backend.services import prediction_market_matching as mm
+
+
+def _k(ticker, mid=0.5, title="t"):
+    return {"source": "kalshi", "ticker": ticker, "title": title, "mid": mid}
+
+
+def _p(title, mid=0.5, ticker="slug-1"):
+    return {"source": "polymarket", "ticker": ticker, "title": title,
+            "mid": mid}
+
+
+class TestParsers:
+    def test_kalshi_fed_ticker_grammar(self):
+        assert mm.parse_kalshi(_k("KXFEDDECISION-26SEP-H0")) == \
+            ("FED_DECISION", "2026-09", "maintain")
+        assert mm.parse_kalshi(_k("KXFEDDECISION-27JAN-H26")) == \
+            ("FED_DECISION", "2027-01", "hike_50plus")
+        assert mm.parse_kalshi(_k("KXFEDDECISION-26DEC-C25")) == \
+            ("FED_DECISION", "2026-12", "cut_25")
+        # not the family, or a strike V1 does not know -> None, never a guess
+        assert mm.parse_kalshi(_k("KXCPI-26SEP-T3.0")) is None
+        assert mm.parse_kalshi(_k("KXFEDDECISION-26SEP-C50")) is None
+
+    def test_polymarket_title_grammar(self):
+        assert mm.parse_polymarket(_p(
+            "Will the Fed increase interest rates by 25 bps after the "
+            "September 2026 meeting?")) == \
+            ("FED_DECISION", "2026-09", "hike_25")
+        assert mm.parse_polymarket(_p(
+            "Will the Fed decrease interest rates by 50+ bps after the "
+            "December 2026 meeting?")) == \
+            ("FED_DECISION", "2026-12", "cut_50plus")
+        assert mm.parse_polymarket(_p(
+            "Will there be no change in Fed interest rates after the "
+            "October 2026 meeting?")) == \
+            ("FED_DECISION", "2026-10", "maintain")
+        # "50 bps" exact (no plus) has no Kalshi twin in V1 -> unparsed
+        assert mm.parse_polymarket(_p(
+            "Will the Fed increase interest rates by 50 bps after the "
+            "September 2026 meeting?")) is None
+        assert mm.parse_polymarket(_p("Will 4 Fed rate cuts happen in "
+                                      "2026?")) is None
+
+
+@pytest.fixture
+def pm_dir(tmp_path, monkeypatch):
+    d = tmp_path / "pmkt"
+    monkeypatch.setattr(config, "PREDICTION_MARKET_DIR", d)
+    return d
+
+
+def _write_day(pm_dir, day, source, rows):
+    p = pm_dir / "snapshots" / f"{day}.{source}.jsonl"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("\n".join(json.dumps(r) for r in rows) + "\n",
+                 encoding="utf-8")
+
+
+class TestMatchDay:
+    def test_pairs_measure_divergence_against_the_cost_bar(self, pm_dir):
+        _write_day(pm_dir, "2026-08-21", "kalshi", [
+            _k("KXFEDDECISION-26SEP-H0", mid=0.70),
+            _k("KXFEDDECISION-26SEP-H25", mid=0.29),
+        ])
+        _write_day(pm_dir, "2026-08-21", "polymarket", [
+            _p("Will there be no change in Fed interest rates after the "
+               "September 2026 meeting?", mid=0.62),   # d=0.08 > bar
+            _p("Will the Fed increase interest rates by 25 bps after the "
+               "September 2026 meeting?", mid=0.32),   # d=0.03 < bar
+        ])
+        out = mm.match_day("2026-08-21")
+        assert out["status"] == "ok"
+        assert out["n_measured"] == 2
+        assert out["n_above_cost_bar"] == 1
+        by_class = {p["action_class"]: p for p in out["pairs"]}
+        assert by_class["maintain"]["above_cost_bar"] is True
+        assert by_class["hike_25"]["above_cost_bar"] is False
+        assert by_class["maintain"]["abs_divergence"] == pytest.approx(0.08)
+        assert "persistence" in out["note"]
+
+    def test_ambiguous_key_is_refused_not_chosen(self, pm_dir):
+        _write_day(pm_dir, "2026-08-21", "kalshi", [
+            _k("KXFEDDECISION-26SEP-H0", mid=0.70)])
+        _write_day(pm_dir, "2026-08-21", "polymarket", [
+            _p("Will there be no change in Fed interest rates after the "
+               "September 2026 meeting?", mid=0.62, ticker="a"),
+            _p("Will there be no change in Fed interest rates after the "
+               "September 2026 meeting?", mid=0.99, ticker="b"),
+        ])
+        out = mm.match_day("2026-08-21")
+        assert out["n_pairs"] == 0
+        assert len(out["refused"]) == 1
+        assert out["refused"][0]["tickers"] == ["a", "b"]
+        assert "ambiguous" in out["refused"][0]["reason"]
+
+    def test_one_sided_book_is_a_named_refusal(self, pm_dir):
+        _write_day(pm_dir, "2026-08-21", "kalshi", [
+            _k("KXFEDDECISION-26SEP-H0", mid=None)])
+        _write_day(pm_dir, "2026-08-21", "polymarket", [
+            _p("Will there be no change in Fed interest rates after the "
+               "September 2026 meeting?", mid=0.62)])
+        out = mm.match_day("2026-08-21")
+        assert out["pairs"][0]["verdict"] == "REFUSED_NO_MID"
+        assert out["n_measured"] == 0
+
+    def test_a_day_with_one_venue_is_ok_empty(self, pm_dir):
+        _write_day(pm_dir, "2026-08-21", "kalshi", [
+            _k("KXFEDDECISION-26SEP-H0", mid=0.7)])
+        out = mm.match_day("2026-08-21")
+        assert out["status"] == "OK_EMPTY"
+        assert "both" in out["reason"]
+
+    def test_latest_divergence_picks_the_newest_complete_day(self, pm_dir):
+        for day in ("2026-08-20", "2026-08-21"):
+            _write_day(pm_dir, day, "kalshi",
+                       [_k("KXFEDDECISION-26SEP-H0", mid=0.7)])
+            _write_day(pm_dir, day, "polymarket", [
+                _p("Will there be no change in Fed interest rates after "
+                   "the September 2026 meeting?", mid=0.68)])
+        # 08-22 exists on ONE venue only -> the complete day still wins
+        _write_day(pm_dir, "2026-08-22", "kalshi",
+                   [_k("KXFEDDECISION-26SEP-H0", mid=0.7)])
+        out = mm.latest_divergence()
+        assert out["status"] == "ok"
+        assert out["day"] == "2026-08-21"
+
+    def test_route_is_registered(self):
+        from backend.routers.prediction_markets import router
+        assert any(r.path == "/api/prediction-markets/divergence"
+                   for r in router.routes)

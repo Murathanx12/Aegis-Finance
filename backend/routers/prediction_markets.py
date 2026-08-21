@@ -29,3 +29,20 @@ async def prediction_markets_summary():
         logger.error("prediction-market summary failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500,
                             detail=f"prediction-market summary failed: {e}")
+
+
+@router.get("/divergence")
+async def prediction_markets_divergence():
+    """Cross-venue divergence on the newest day both venues snapshotted.
+
+    Same-day measurement only (TRIAL-PREDMARKET-2's deciding metric also
+    needs persistence to the next snapshot). Disk only, no fetch.
+    """
+    from backend.services import prediction_market_matching
+
+    try:
+        return prediction_market_matching.latest_divergence()
+    except Exception as e:  # noqa: BLE001
+        logger.error("divergence report failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500,
+                            detail=f"divergence report failed: {e}")
