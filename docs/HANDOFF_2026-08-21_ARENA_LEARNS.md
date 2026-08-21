@@ -73,13 +73,24 @@ day 1).
 
 ## 2. THE STATE OF THE PULL
 
+**State at 2026-08-21 ~11:00** (first catch-up run closed, second running):
+
 | | |
 |---|---|
 | planned | 1,327 |
-| on disk when this was written | ~317 parquet files, growing |
+| **on disk** | **738 parquet files · 25.4 GB** |
+| recorded pulled | 714 |
 | TERMINAL (never retry) | **134** — 106 not entitled, 28 absent from server |
-| OUT OF PLAN (never retry) | **24** — Compustat GLOBAL, in the failure list from an earlier plan |
-| RETRYABLE, in plan | **891** |
+| OUT OF PLAN (never retry) | **24** — Compustat GLOBAL, from an earlier plan |
+| OVER CAP (not written) | **221** — see the decision below |
+| **RETRYABLE, in plan** | **241** — 220 of them the original DNS batch |
+
+First run closed honestly: `433 pulled, 8 failed, 221 over-cap (NOT written),
+233 not attempted, 25.4 GB`, and the manifest wrote **`partial_at` with
+`incomplete_reason`, not `completed_at`**.
+
+The 8 failures were DNS/connection blips and are auto-retryable — one of them
+is **`comp.funda`**, a core Compustat annual table, so confirm it lands.
 
 TERMINAL and OUT_OF_PLAN are written to
 `backend/data/optimus/wrds/pull_terminal_failures.json`. TERMINAL rows are
