@@ -1230,13 +1230,23 @@ async def _prediction_markets_collect():
         from backend.services.prediction_markets import snapshot_daily
 
         res = await asyncio.to_thread(snapshot_daily)
-        msg = ("Prediction-market snapshot %s: status=%s rows=%s events_seen=%s "
-               "pages=%s truncated=%s (descriptive)")
-        args = (res.get("day"), res.get("status"),
-                res.get("rows_written", res.get("rows")),
-                res.get("events_seen"), res.get("pages"),
-                res.get("pages_truncated"))
-        loud = res.get("status") == "ok_empty" or res.get("pages_truncated")
+        parts = []
+        loud = bool(res.get("any_error"))
+        for source, s in (res.get("sources") or {}).items():
+            parts.append(
+                f"{source}: status={s.get('status')} "
+                f"rows={s.get('rows_written', s.get('rows'))} "
+                f"truncated={s.get('pages_truncated')}")
+            # Polymarket truncation is STRUCTURAL (the API refuses deep
+            # offsets; pages are liquidity-ordered so the cap trims the
+            # least liquid tail) — a daily WARNING for an expected state
+            # would train everyone to ignore the log line. Kalshi
+            # truncation is unexpected and stays loud.
+            if s.get("status") in ("ok_empty", "error") or (
+                    s.get("pages_truncated") and source == "kalshi"):
+                loud = True
+        msg = "Prediction-market snapshot %s: %s (descriptive)"
+        args = (res.get("day"), " | ".join(parts) or "NO SOURCES RAN")
         (logger.warning if loud else logger.info)(msg, *args)
     except Exception as e:
         logger.error("Prediction-market snapshot failed: %s", e, exc_info=True)

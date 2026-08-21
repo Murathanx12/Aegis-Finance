@@ -1988,3 +1988,10 @@ PREDICTION_MARKET_MAX_CLOSE_DAYS = 400
 #: contamination clause excludes from grading.
 PREDICTION_MARKET_MAX_PAGES = 60
 PREDICTION_MARKET_DIR = OPTIMUS_LEDGER_DIR / "prediction_markets"
+#: Polymarket Gamma public API (TRIAL-PREDMARKET-2, registered 2026-08-21).
+#: Same contract as Kalshi: measurement feed, never an order path. The
+#: divergence trial's ESCALATE branch produces a WRITTEN proposal for Murat,
+#: never execution.
+POLYMARKET_API_BASE = "https://gamma-api.polymarket.com"
+#: FROZEN in PREREG_PREDMARKET_2: liquidity floor (USDC) for collection.
+POLYMARKET_MIN_LIQUIDITY = 1000.0

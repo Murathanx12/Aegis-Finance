@@ -168,3 +168,31 @@ outage); 141 terminal (113 not entitled, 28 absent); 224 over the MAX_ROWS cap
 channel (CPI/FOMC/payrolls resolve in weeks, not lane-years) and a live
 opponent for calibration claims — "our crash model beats climatology" can
 become "vs the market" with receipts.
+
+## 8. Late evening — ARENA SEEDED, second venue, the adjudication Murat asked for
+
+- **THE ARENA IS SEEDED: 10/10 books, confirmed live** (`/api/arena/status`).
+  Murat flipped the flag (~23:00 HKT). First decide pass: tonight 17:45 ET.
+  Seeding verified idempotent (re-seed under same config returns existing;
+  moved inceptions refuse) so redeploys with the flag still set are safe —
+  but the flag should still be UNSET after confirmation, and the arena YAML
+  is now FROZEN (a changed book = new id in a new file version).
+- **Murat asked for the rejection reasons to be re-examined** ("these are
+  great for quant finance"): `docs/ADJUDICATION_2026-08-21_PREDICTION_MARKETS.md`
+  — execution-arbitrage stays rejected on four named grounds (no execution,
+  measured fee economics, daily-vs-streaming speed, R1's real-capital
+  receipt), but the rejection is now MEASURED, not asserted:
+  **TRIAL-PREDMARKET-2** (prereg PASS, "Aegis module") snapshots Polymarket
+  beside Kalshi daily; ≥5% persistent above-cost divergence over ≥150
+  matched contract-days → written execution proposal for Murat; below →
+  rejection with receipts.
+- **Polymarket leg built** into `prediction_markets.py`: per-source day
+  files (`<day>.<source>.jsonl`), independent per-source failure (one
+  venue's outage cannot cost the other's day), liquidity-ordered pagination.
+  TWO API facts measured live and now load-bearing: Gamma caps pages at 100
+  rows regardless of requested limit (ending on a short page silently
+  dropped everything after page 1 — caught by smoke, 2 rows vs 1,251), and
+  Gamma 422s past offset ~2000 (so pages are liquidity-DESC ordered and the
+  cap is declared structural truncation; absence claims forbidden on
+  truncated days, captured prices valid).
+- WRDS pull healthy through the evening (14+ tables re-landed, 38 GB).
