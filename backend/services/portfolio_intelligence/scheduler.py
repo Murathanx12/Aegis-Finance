@@ -52,6 +52,7 @@ EXPECTED_JOB_IDS: frozenset[str] = frozenset({
     "pi_ownership_collect",
     "pi_copy_lab_run",
     "pi_arena_daily",
+    "pi_daily_digest",
 })
 
 
@@ -216,6 +217,22 @@ def setup_scheduler():
                     timezone="US/Eastern"),
         id="pi_arena_daily",
         name="ARENA Gen-1 daily pass (PRODUCT_EXPERIMENT)",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
+
+    # DAILY DIGEST (2026-08-21, Murat's standing instruction: log every day
+    # what happened vs what we thought — the corpus that six months of
+    # sessions never accrued because no job owned it). 18:15 ET, after the
+    # 17:45 arena pass has frozen its snapshot and every collector above has
+    # landed, so the digest reads a finished day. Runs ALL seven days — a
+    # non-trading day's digest recording "nothing accrued" is a row of the
+    # corpus, not a wasted run. Documentation only, never a signal.
+    _scheduler.add_job(
+        _daily_digest,
+        CronTrigger(hour=18, minute=15, timezone="US/Eastern"),
+        id="pi_daily_digest",
+        name="Daily digest (what happened vs what we thought)",
         replace_existing=True,
         misfire_grace_time=3600,
     )
@@ -1165,6 +1182,25 @@ async def _arena_daily():
         (logger.warning if degraded else logger.info)(msg, *args)
     except Exception as e:
         logger.error("ARENA daily pass failed: %s", e, exc_info=True)
+
+
+async def _daily_digest():
+    """Scheduled daily digest. The counts ARE the log line: a digest whose
+    every section is empty must say so — a corpus quietly accruing blank rows
+    is the house failure mode wearing a new hat."""
+    import asyncio
+
+    try:
+        from backend.services.daily_digest import run_daily_digest
+
+        res = await asyncio.to_thread(run_daily_digest)
+        msg = ("Daily digest %s: ok=%d ok_empty=%d unavailable=%s "
+               "corpus_appended=%s")
+        args = (res.get("day"), res.get("n_ok", 0), res.get("n_ok_empty", 0),
+                res.get("unavailable"), res.get("corpus_appended"))
+        (logger.warning if res.get("n_ok", 0) == 0 else logger.info)(msg, *args)
+    except Exception as e:
+        logger.error("Daily digest failed: %s", e, exc_info=True)
 
 
 async def manual_trigger(lane_id: str | None = None) -> dict:

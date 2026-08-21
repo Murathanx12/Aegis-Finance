@@ -6,6 +6,8 @@ GET /api/optimus/calibration — specialist × observable × horizon cross-tab
     (honest counts: sparse cells print n and None; pending never scored)
 GET /api/optimus/job_receipts — dated receipts left by the scheduled jobs, so
     "it ran and had nothing to do" is distinguishable from "it never fired"
+GET /api/optimus/digest — the day's assembled digest (what happened vs what
+    we thought), latest by default or ?day=YYYY-MM-DD
 """
 
 import asyncio
@@ -83,3 +85,28 @@ async def get_job_receipts(limit: int = 10):
                  "run and cannot, by itself, distinguish that from a job that "
                  "never fired — the receipt is what does."),
     }
+
+
+@router.get("/digest")
+async def get_digest(day: str | None = None):
+    """The daily digest: one dated record of what the system decided, graded,
+    collected, and marked, assembled from durable state by `pi_daily_digest`.
+
+    Documentation only — nothing in any scoring or decision path reads this.
+    404 when no digest exists yet (a fact, not an error to hide)."""
+    from backend.services.daily_digest import latest_digest, read_digest
+
+    try:
+        if day is not None:
+            body = await asyncio.to_thread(read_digest, day)
+        else:
+            body = await asyncio.to_thread(latest_digest)
+    except Exception as e:
+        logger.error("digest read failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+    if body is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(f"no digest for {day}" if day else
+                    "no digests written yet — pi_daily_digest runs 18:15 ET"))
+    return body
