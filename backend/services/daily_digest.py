@@ -147,6 +147,25 @@ def _arena_section(day: str, arena_root: Path | None) -> dict:
     except Exception as exc:  # noqa: BLE001
         out["regret_error"] = f"{type(exc).__name__}: {exc}"
 
+    # What RELIABILITY_ROUTER_v1 would have recommended today — recorded so
+    # the learner has a longitudinal trail from its first day, BEFORE anything
+    # is allowed to act on it. Global verdict + weights only; the full
+    # per-state receipt is one recompute away at /api/arena/router.
+    try:
+        from backend.services.arena import trust_router as arena_trust
+        rec = arena_trust.recommend(root=arena_root)
+        g = rec.get("global") or {}
+        out["trust_router"] = {
+            "router_version": rec.get("router_version"),
+            "verdict": g.get("verdict"),
+            "n_reported_cells": rec.get("n_reported_cells"),
+            "weights": ({a: v.get("weight")
+                         for a, v in (g.get("actors") or {}).items()}
+                        if g.get("verdict") == "RECOMMENDED" else None),
+        }
+    except Exception as exc:  # noqa: BLE001
+        out["trust_router_error"] = f"{type(exc).__name__}: {exc}"
+
     if out.get("books_seeded", 0) == 0 and not snap:
         out["status"] = "ok_empty"  # arena present but nothing accrued today
     return out

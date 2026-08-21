@@ -42,6 +42,18 @@ def test_build_never_raises_on_bare_disk(roots):
         assert section.get("status") in ALLOWED, (name, section)
 
 
+def test_arena_section_records_the_router_trail(roots):
+    """The digest carries what RELIABILITY_ROUTER_v1 would recommend today.
+    On a bare arena that is an honest ABSTAIN — the trail starts truthful."""
+    ledger, arena = roots
+    digest = dd.build_digest(DAY, ledger_dir=ledger, arena_root=arena)
+    tr = digest["sections"]["arena"].get("trust_router")
+    assert tr is not None, digest["sections"]["arena"]
+    assert tr["router_version"] == "RELIABILITY_ROUTER_v1"
+    assert tr["verdict"] == "ABSTAIN"
+    assert tr["weights"] is None  # never weights without a RECOMMENDED verdict
+
+
 def test_absent_directory_is_unavailable_not_empty(roots):
     """No resolver_receipts dir means the resolver has never left evidence —
     that is a different fact from 'the directory is there and empty'."""
