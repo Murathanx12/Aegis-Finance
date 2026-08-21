@@ -128,3 +128,43 @@ By that standard, as of `5235f14`:
 5. Independent alpha books (revisions/event/teacher/sector) — each with its
    own selection signal so distinct_selection_signals finally rises.
 6. RELIABILITY_ROUTER_v2 = reliability × effective independence × state.
+
+## 7. Evening session (Murat: "kalshi mispricing and arbitrage, probability models, information diffusion; continue the wrds pull")
+
+**WRDS pull RESTARTED 19:50** (2h early, via `schtasks /Run` on the registered
+one-shot; `MultipleInstancesPolicy: IgnoreNew` makes the 22:00 firing a no-op
+while this instance runs). Manifest at restart: 770 parquets on disk, 26.9 GB;
+199 retryable tables queued (189 were NETWORK_DNS from the original run's
+outage); 141 terminal (113 not entitled, 28 absent); 224 over the MAX_ROWS cap
+(Murat's decision re-queues them automatically). Budget 12h → ends well before
+10:00.
+
+**The Kalshi ask, adjudicated (not imported):**
+- **Arbitrage/mispricing ENGINE: rejected.** Arbitrage needs execution on the
+  contracts; this platform does not execute, and R1 (2026-08-08) is the
+  standing receipt: 6/6 LLM forecasters lost real capital on Kalshi at
+  crowd-matching Brier, and Economics/Business is the widest published
+  LLM-vs-crowd gap. Racing market makers on their own book is not our edge.
+- **Probability models: already deep** (crash LGBM/LR + conformal, Cox,
+  BOCPD, HMM). What was missing: grading ANY of them against a market.
+- **Information diffusion: no model exists** (nearest kin: PEAD collector,
+  GDELT, event_intel). The prediction-market feed covers the "current and
+  future events" half of that ask; a lead-lag diffusion model is a later,
+  bigger build — queue it behind the WRDS-fed features.
+- **BUILT: TRIAL-PREDMARKET-1** (`9e6499c`, prereg committed FIRST at
+  "Aegis module" `bb0b86f`, linter PASS, powered n_required 31 / window 36):
+  `pi_prediction_markets` (11th job, 17:55 ET daily) snapshots every open
+  Kalshi macro contract (Economics/Financials/Companies, ≤400d, OI>0) to a
+  PIT corpus on the volume; `GET /api/prediction-markets` reads it. Live
+  smoke on dev: **6,640 markets** (Fed Sept decision, Nasdaq year-end
+  strikes). Fetch-fails-raises-before-write; ok_empty is a named receipt.
+  DESCRIPTIVE CONTEXT ONLY — the registered trial (paired Brier, house model
+  vs market mid, decision ≥36 resolved paired events, earliest 2026-11-21)
+  is the only path by which this may ever touch a scoring surface, and the
+  pairing spec must be committed as INSTR-PREDMARKET-PAIRING.md before the
+  first pair is graded.
+
+**What this buys the profit engine:** a fast-resolving graded forecast
+channel (CPI/FOMC/payrolls resolve in weeks, not lane-years) and a live
+opponent for calibration claims — "our crash model beats climatology" can
+become "vs the market" with receipts.
