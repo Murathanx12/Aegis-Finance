@@ -12,7 +12,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 
 from backend.services.arena import (
-    engine, experience, regret, reliability, store,
+    engine, experience, regret, reliability, store, trust_router,
 )
 from backend.services.arena import spec as spec_mod
 
@@ -149,6 +149,25 @@ def arena_reliability(leg: str = "forecast", min_n: int = reliability.MIN_CELL_N
                 **_HORIZON_NOTE}
     except Exception as e:  # noqa: BLE001
         logger.error("arena reliability failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/router")
+def arena_trust_router(leg: str = "forecast") -> dict:
+    """RELIABILITY_ROUTER_v1 — recommended trust per model from matured cells.
+
+    A RECOMMENDATION RECEIPT and nothing else: no book consumes it, it never
+    mutates a policy, and on a young ledger it says ABSTAIN rather than rank.
+    It exists so the first learned layer is visible and auditable before
+    anything is allowed to act on it.
+    """
+    if leg not in reliability.LEGS:
+        raise HTTPException(status_code=422,
+                            detail=f"leg must be one of {sorted(reliability.LEGS)}")
+    try:
+        return {**_BANNER, **trust_router.recommend(leg=leg)}
+    except Exception as e:  # noqa: BLE001
+        logger.error("arena trust router failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
