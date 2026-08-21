@@ -196,3 +196,38 @@ become "vs the market" with receipts.
   cap is declared structural truncation; absence claims forbidden on
   truncated days, captured prices valid).
 - WRDS pull healthy through the evening (14+ tables re-landed, 38 GB).
+
+## 9. Overnight session 08-21→22 (Murat: "night is urs... build and run tests")
+
+Four units, each tested before the next began:
+
+1. **G1 KNOWN-ANSWER BATTERY built — and it caught a real defect on its
+   first run.** `test_arena_known_answer_battery.py` (end-to-end: synthetic
+   experiences → real mature_outcomes → real decision_cells → real
+   trust_router.recommend, fixed seeds) measured RELIABILITY_ROUTER_v1
+   recommending COIN FLIPS in 27.5% of null worlds. Cause: one decision
+   matures at all five horizons, so pooled horizon cells count rows as if
+   independent (~5× inflation) and SE is understated ~sqrt(5). Fix:
+   effective n = per-vol-state MAX across horizon cells; ABSTAIN floor
+   priced in decisions; banner now says `correlation_adjusted:
+   "horizon-dedup only"` (cross-name correlation still undjusted —
+   disclosed). **MEASURED G1 rates (deterministic): FP 4/40 = 10.0%
+   (declared ≤12.5%) · recovery 19/20 = 95% at true 0.65 (false-kill 5%,
+   declared ≤30%) · harmful leak 0/20 (declared 0).** These are the
+   declared rates the G1 flip condition asked for. Live behaviour tonight
+   unchanged (router ABSTAINs until 30+ matured effective decisions).
+2. **INSTR-PREDMARKET-MATCHING V1 committed (frozen)** + matcher +
+   `GET /api/prediction-markets/divergence`. FED_DECISION family only,
+   mechanical keys, ambiguity refused. First live reading (dev smoke,
+   excluded from grading): **16 matched contracts / 4 FOMC meetings / 0
+   above the 5¢ cost bar** (max 2¢) — first receipt for the honest prior.
+3. **Personality grading read** (`GET /api/arena/personalities`): CRRA
+   rho 8/4/2/1 DECLARED while zero NAV rows existed (provably untuned),
+   pinned by test; every ranking names its objective; young arena ABSTAINs.
+4. **Digest `prediction_markets` section**: receipts + divergence counts
+   ride the 18:15 corpus.
+
+Morning gates (verified by the session before Murat returns, ~06:20 HKT):
+arena FIRST decide pass (17:45 ET), first two-venue prod snapshots
+(17:55 ET), digest with new section (18:15 ET), WRDS pull completion →
+`wrds_verify_substrate`.
