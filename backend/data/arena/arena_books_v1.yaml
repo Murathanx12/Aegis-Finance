@@ -175,6 +175,39 @@ books:
       margin_z: 0.5                 # candidate must beat weakest holding by this
       max_swaps_per_day: 1          # composite-score margin, net of round-trip cost
 
+  # PERSONALITY PAIR (2026-08-21, Murat: "we can do sector focused, strategy
+  # focused, very high risk, aggressive etc"). Concentration is the first
+  # personality axis the engine can already express; each book differs from
+  # ENGINE_BASELINE_v1 by that ONE axis via the whitelisted `overrides` block.
+  # Costs, benchmark, gates stay file-level — the common world of the
+  # factorial. Sector-focused books need a PIT sector source first (in the
+  # 2026-08-21 handoff queue), and utility-personality GRADING (preservation /
+  # balanced / aggressive / extreme growth) is a read on the ledger, not a
+  # book: declared preferences are never tuned against history.
+
+  AGGRESSIVE_TOP5_v1:
+    purpose: arena-personality-aggressive-concentrated
+    policy_version: 1
+    selection: composite_top_k
+    sizing: equal_weight
+    screens: []
+    llm_perception: false
+    overrides:
+      select_top_k: 5           # conviction-concentrated: 5 names
+      max_single_name: 0.25     # 5 equal-weight names = 20%; the file cap of
+                                # 15% would silently reshape the book, so the
+                                # cap moves WITH the declared concentration
+
+  DIVERSIFIED_TOP20_v1:
+    purpose: arena-personality-diversified-wide
+    policy_version: 1
+    selection: composite_top_k
+    sizing: equal_weight
+    screens: []
+    llm_perception: false
+    overrides:
+      select_top_k: 20          # breadth twin: same signal, 4x the names
+
 seeding:
   authorised: "Murat, 2026-08-20 (verbatim: 'this is your sandbox... lets start
     building the platform') — recorded in docs/ORDER_25_LIVE_ARENA_GEN1.md.

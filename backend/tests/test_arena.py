@@ -146,6 +146,45 @@ def test_control_twin_differs_by_exactly_one_rule():
     assert specs["LLM_PERCEPTION_v1"].sizing == "equal_weight"
 
 
+def test_personality_overrides_apply_to_their_book_only():
+    """The 2026-08-21 personality pair: concentration is a declared per-book
+    axis. The override must land on its book and must NOT leak into any other
+    book's view of the shared defaults."""
+    specs = spec_mod.active_specs()
+    assert specs["AGGRESSIVE_TOP5_v1"].top_k == 5
+    assert specs["AGGRESSIVE_TOP5_v1"].max_single_name == 0.25
+    assert specs["DIVERSIFIED_TOP20_v1"].top_k == 20
+    # the wide book keeps the file-level cap — it only declared breadth
+    assert specs["DIVERSIFIED_TOP20_v1"].max_single_name == 0.15
+    # no leakage: the control twin still reads the file defaults
+    assert specs["ENGINE_BASELINE_v1"].top_k == 12
+    assert specs["ENGINE_BASELINE_v1"].max_single_name == 0.15
+
+
+def test_personality_books_share_the_common_world():
+    """Costs and benchmark are NOT overridable, so every book is judged in
+    the same market. If this ever fails, the factorial is broken."""
+    specs = spec_mod.active_specs()
+    base = specs["ENGINE_BASELINE_v1"]
+    for book_id in ("AGGRESSIVE_TOP5_v1", "DIVERSIFIED_TOP20_v1"):
+        s = specs[book_id]
+        assert s.cost_bps == base.cost_bps
+        assert s.slippage_bps == base.slippage_bps
+        assert s.benchmark == base.benchmark
+        assert s.min_priced_fraction == base.min_priced_fraction
+
+
+def test_non_whitelisted_override_refuses_at_load(tmp_path):
+    """A book that quietly ran on cheaper fills would make the factorial
+    incomparable while every hash still verified — refuse at load."""
+    bad = tmp_path / "bad.yaml"
+    bad.write_text(
+        "schema: arena-v1\ndefaults: {}\nbooks:\n  X_v1:\n"
+        "    overrides: {transaction_cost_bps: 0}\n", encoding="utf-8")
+    with pytest.raises(spec_mod.SpecError):
+        spec_mod.load_specs(bad)
+
+
 def test_unknown_screen_refuses_at_load(tmp_path):
     bad = tmp_path / "bad.yaml"
     bad.write_text(

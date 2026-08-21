@@ -25,6 +25,8 @@ AUTHORISED_ACTIVE: tuple[str, ...] = (
     "LLM_PERCEPTION_v1",
     "LLM_EVENTS_v1",
     "CURRENT_BEST_v1",
+    "AGGRESSIVE_TOP5_v1",
+    "DIVERSIFIED_TOP20_v1",
 )
 
 VALIDATION_STATUS = "PRODUCT_EXPERIMENT"
@@ -60,8 +62,16 @@ DESCRIPTIVE_DEFAULTS: dict[str, str] = {
 #: Per-book keys, same contract.
 CONSUMED_BOOK_KEYS = frozenset({
     "purpose", "policy_version", "sizing", "screens", "llm_perception", "llm",
-    "winner_exemption", "substitution", "event_context",
+    "winner_exemption", "substitution", "event_context", "overrides",
 })
+
+#: The ONLY file-level defaults a book may override (2026-08-21, Murat's
+#: personality-spread ask). Deliberately narrow: concentration is a declared
+#: personality axis; cost, slippage, benchmark and the information-state
+#: gates are the COMMON WORLD every book is judged in, and a book that
+#: quietly ran on cheaper fills would make the factorial incomparable while
+#: every hash still verified.
+KNOWN_OVERRIDE_KEYS = frozenset({"select_top_k", "max_single_name"})
 
 DESCRIPTIVE_BOOK_KEYS: dict[str, str] = {
     "selection": "every book uses composite_top_k; policies.select implements "
@@ -216,6 +226,14 @@ def load_specs(path: Path | None = None) -> dict[str, BookSpec]:
         sizing = str(b.get("sizing") or "equal_weight")
         if sizing not in KNOWN_SIZING:
             raise SpecError(f"{book_id}: unknown sizing '{sizing}'")
+        overrides = dict(b.get("overrides") or {})
+        bad_overrides = set(overrides) - KNOWN_OVERRIDE_KEYS
+        if bad_overrides:
+            raise SpecError(
+                f"{book_id}: override key(s) {sorted(bad_overrides)} are not "
+                f"overridable — only {sorted(KNOWN_OVERRIDE_KEYS)} are. Costs, "
+                f"benchmark and information-state gates are the common world "
+                f"of the factorial and stay file-level.")
         out[book_id] = BookSpec(
             book_id=book_id,
             purpose=str(b.get("purpose") or ""),
@@ -228,7 +246,7 @@ def load_specs(path: Path | None = None) -> dict[str, BookSpec]:
             llm=dict(b.get("llm") or {}),
             winner_exemption=dict(b.get("winner_exemption") or {}),
             substitution=dict(b.get("substitution") or {}),
-            defaults=defaults,
+            defaults={**defaults, **overrides},
             config_hash=h,
             policy_fingerprint=fp,
             config_version=str(raw.get("schema") or "arena-v1"),
