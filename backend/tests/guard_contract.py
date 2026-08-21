@@ -60,6 +60,10 @@ NOT_INPUT_GUARDS: dict[str, str] = {
     "data_integrity": "raised on data that arrived wrong, not on data absent",
     "base": "ProviderUnavailable/ProviderError — transport failures",
     "pm_catalysts": "CatalystFetchError — fetch failure",
+    "prediction_markets": ("PredictionMarketFetchError — fetch failure, "
+                           "raised BEFORE any write; the no-write contract "
+                           "is exercised directly in "
+                           "test_prediction_markets.py"),
     "why_moved": "PricingError — a price lookup failed",
     "llm_research": "LLMUnavailable/BudgetExhausted — service and spend",
     "autopsy_llm": "AutopsyReplyUnusable — a model returned unparseable text",
