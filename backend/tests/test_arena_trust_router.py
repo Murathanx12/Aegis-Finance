@@ -164,7 +164,10 @@ class TestRecommendLive:
         out = tr.recommend(root=tmp_path)
         assert out["router_version"] == "RELIABILITY_ROUTER_v1"
         assert out["may_mutate_books"] is False
-        assert out["correlation_adjusted"] is False
+        # Cross-horizon dedup shipped with the G1 battery fix (2026-08-21);
+        # the banner must still DISCLOSE that cross-name correlation is not
+        # adjusted — a bare True would overclaim.
+        assert out["correlation_adjusted"] == "horizon-dedup only"
         assert out["n_reported_cells"] == 0
         assert out["global"]["verdict"] == "ABSTAIN"
 

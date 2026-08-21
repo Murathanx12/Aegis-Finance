@@ -83,7 +83,10 @@ _BANNER = {
     "simulation": True,
     "consumed_by": "nothing — recommendation surface only; no book reads this",
     "may_mutate_books": False,
-    "correlation_adjusted": False,
+    # Cross-horizon correlation IS adjusted (effective n = per-state max
+    # across horizons — the G1 battery fix, 2026-08-21). Cross-NAME
+    # correlation within a day is still not.
+    "correlation_adjusted": "horizon-dedup only",
     "trains_on": "matured resolved outcomes only (reliability cells)",
 }
 
@@ -101,28 +104,34 @@ def shrunk_rate(successes: float, n: float, parent: float,
     return (successes + k * parent) / (n + k)
 
 
-def backoff_estimate(levels: list[tuple[float, float]], *,
+def backoff_estimate(levels: list[tuple], *,
                      prior: float = POPULATION_PRIOR,
                      k: float = SHRINK_K) -> dict:
     """Shrink through a hierarchy, least-specific first.
 
-    `levels` is [(successes, n), ...] ordered ROOT -> LEAF (global first, the
-    exact cell last). Each level's estimate becomes the next level's parent, so
-    a thin leaf inherits its lineage instead of shouting alone.
+    `levels` is [(successes, n[, n_effective]), ...] ordered ROOT -> LEAF
+    (global first, the exact cell last). Each level's estimate becomes the
+    next level's parent, so a thin leaf inherits its lineage instead of
+    shouting alone.
 
-    `evidence_n` is the n at the DEEPEST level that had any observations —
-    the sample the uncertainty of this estimate should be priced off. A
-    context-free query leaves the conditional levels empty; pricing those
-    zeros as the evidence would make every global estimate look unknowable.
+    `evidence_n` is the EFFECTIVE n at the DEEPEST level that had any
+    observations — the sample the uncertainty of this estimate should be
+    priced off. Effective, because the same decision matures at every
+    horizon: pooling horizon cells multiplies ROWS ~5x without adding a
+    single independent decision, and pricing SE off rows is how the G1
+    known-answer battery caught this router recommending coin flips in
+    27.5% of null worlds (2026-08-21). A two-tuple level prices its own n.
     """
     est = prior
     leaf_n = 0.0
     evidence_n = 0.0
-    for successes, n in levels:
+    for lvl in levels:
+        successes, n = float(lvl[0]), float(lvl[1])
+        n_eff = float(lvl[2]) if len(lvl) > 2 else n
         est = shrunk_rate(successes, n, est, k)
         leaf_n = n
         if n > 0:
-            evidence_n = n
+            evidence_n = n_eff
     return {"estimate": est, "leaf_n": leaf_n, "evidence_n": evidence_n,
             "prior": prior, "k": k}
 
@@ -146,6 +155,7 @@ def _hierarchy(cells: list[dict], actor: str,
     out = []
     for keys in keys_by_level:
         s = n = 0.0
+        matching: list[dict] = []
         for c in cells:
             if c.get("actor") != actor:
                 continue
@@ -153,8 +163,28 @@ def _hierarchy(cells: list[dict], actor: str,
                 continue
             s += c["successes"]
             n += c["n"]
-        out.append((s, n))
+            matching.append(c)
+        out.append((s, n, _effective_n(matching)))
     return out
+
+
+def _effective_n(matching: list[dict]) -> float:
+    """DECISIONS, not rows: per vol_state, the max n across horizon cells.
+
+    The same decision produces one row per horizon (experience.HORIZONS is
+    five deep), and by construction those rows share the decision's fate far
+    more often than not. Cells in different vol_states come from different
+    decision days and are counted in full; cells that differ only by horizon
+    are near-copies, so the largest of them bounds the independent sample.
+    This is the conservative end of n_eff ∈ [max_h, sum_h] — chosen after
+    the G1 battery measured a 27.5% null-world false-positive rate under
+    the sum (rows-as-independent) assumption.
+    """
+    by_state: dict[str, float] = {}
+    for c in matching:
+        key = str(c.get("vol_state"))
+        by_state[key] = max(by_state.get(key, 0.0), float(c["n"]))
+    return sum(by_state.values())
 
 
 def trust_weights(cells: list[dict], *, context: dict | None = None,
@@ -176,11 +206,15 @@ def trust_weights(cells: list[dict], *, context: dict | None = None,
     """
     context = context or {}
     actors = sorted({c["actor"] for c in cells})
-    total_n = sum(c["n"] for c in cells)
+    # The floor is priced in DECISIONS, not rows — five horizon rows of one
+    # decision are not five observations (see _effective_n).
+    total_n = sum(_effective_n([c for c in cells if c["actor"] == a])
+                  for a in actors)
     if not actors or total_n < evidence_floor_n:
         return {
             "verdict": "ABSTAIN",
-            "reason": (f"matured n={int(total_n)} < floor={evidence_floor_n}; "
+            "reason": (f"matured effective n={int(total_n)} < "
+                       f"floor={evidence_floor_n}; "
                        f"uniform weights are ignorance, not measurement"),
             "context": context,
             "actors": {a: {"weight": (1.0 / len(actors)) if actors else None,
