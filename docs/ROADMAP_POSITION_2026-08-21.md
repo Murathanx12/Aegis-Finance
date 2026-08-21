@@ -152,3 +152,47 @@ path, and it closes this week).
 5. Free-API inventory (public-apis repo) + MCP wiring for live sources —
    *after* the arena is live; new feeds enter as registered trials, never
    straight into the composite.
+
+## 7. Order 26 adjudication (afternoon 08-21 — external GPT review, ADJUDICATED not imported)
+
+The review's framing is accepted: Aegis has a nervous system (perceive,
+remember, grade); the adaptive cortex (grades → better future decisions) was
+the missing layer. Its P0–P10 order was adjudicated against the standing
+rules and the 17:00 clock:
+
+**Built this afternoon (both validated):**
+- **P1 → `RELIABILITY_ROUTER_v1`** (`backend/services/arena/trust_router.py`,
+  `GET /api/arena/router`): empirical-Bayes backoff over reliability cells,
+  weight = shrunk excess beyond `prior + 1.5·SE(own evidence)`. 21-test
+  known-answer battery: null world stays null, useful actor recovered,
+  harmful actor silenced (never negative), 8-for-8 lucky streak bounded under
+  400 sustained observations, sign-flip recovered per state and null
+  globally, thin cells back off, ABSTAIN below 30 matured outcomes.
+  **Consumed by nothing** — recommendation receipt only; CURRENT_BEST_v1
+  untouched; `correlation_adjusted: false` printed on the receipt. The
+  learning staircase stands: counting → shrunk routing (HERE) → supervised
+  challenger → NN challenger, each gated on beating the last.
+- **P0 (Aegis half) → `scripts/session_state.py` + SessionStart hook**
+  (`.claude/settings.json`, now tracked): every session starts by MEASURING
+  state (git, prod, arena, digest, newest docs) instead of trusting a
+  remembered handoff. Live validation fixed 3 defects incl. the Railway edge
+  resetting bare python-urllib — the probable cause of the Optimus MCP
+  `aegis_verified_state` connection resets (fix Optimus-side: send a UA).
+
+**Adjudicated queue positions for the rest of Order 26:**
+- P0 (Optimus half — MCP surfaces `aegis_session_brief` etc., SessionEnd
+  distillation): next Optimus-repo session; do NOT build a second memory
+  system in Aegis.
+- P2 (SOURCE_CATALOG from public-apis repos): accepted with its own gate —
+  inventory first, adapters only with a real consumer. After Q1.
+- P4 (teacher/investor-behaviour engine on SEC as-filed 13F/N-PORT
+  timestamps): accepted — this un-blocks MANAGER-* the right way (the WRDS
+  `fdate` defect stands). Substantial; own session.
+- P7/P9 (genuinely different decision mechanisms, sector books): accepted
+  with the honest label — 9 books ≈ one selector under 9 treatments; report
+  effective dimensionality beside book count. Needs PIT sector source first.
+- P8 (CURRENT_BEST_v2 challenger): only after event plumbing + router pass
+  known-answer; new book id, never a mutation.
+- REJECTED: same-day P&L learning, NAV rows as training data, any local job
+  loading the machine 16:45–17:05, touching AegisIIF1NightLauncher, binary
+  inter-Claude payloads (re-affirmed §5).

@@ -53,3 +53,29 @@ telling him it is the thing he asked for.
 4. G2 prereg signatures before 2026-09-08.
 5. NAV stamp fix P-day-2026-08-19a · positions read · LOSS amendment ·
    Track E prereg.
+
+## 5. Late-afternoon update (Order 26 session, Murat away)
+
+Built and pushed (`e4df73c`, `dd46dca`, `346b9f9`): **RELIABILITY_ROUTER_v1**
+(the first grades→trust layer; known-answer battery 21/21; recommendation
+receipt at `/api/arena/router`, consumed by nothing) and the **session-state
+layer** (`scripts/session_state.py` + SessionStart hook — sessions now
+measure state at start instead of trusting remembered handoffs). Order 26
+adjudication in `docs/ROADMAP_POSITION_2026-08-21.md` §7.
+
+**Postponed until after tonight''s night run (17:00 → ~21:30):**
+- machine-loading local work (quiet window 16:45–17:05 is absolute)
+- reading N4''s receipt — the FIRST SELF-LAUNCH receipt — at ~21:35
+- WRDS catchup continuation (AegisWRDSPullNight fires 22:00 by design)
+
+**Postponed until the WRDS pull closes (~10:00 tomorrow) AND
+`wrds_verify_substrate` passes:**
+- Q1 universe-wide diverse features → new `COMPOSITE_VERSION` (this is what
+  fixes "sees potential = 99.5% momentum")
+- Q4 / any NN or supervised training (risk heads first, §59)
+- P2 source-catalog activation of anything feeding the composite
+
+**Postponed to their own sessions:** Optimus MCP upgrade (send a User-Agent —
+the edge resets bare urllib, measured today), teacher/investor-behaviour
+engine on SEC as-filed timestamps, sector books (PIT sector source),
+CURRENT_BEST_v2 challenger.
