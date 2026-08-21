@@ -231,3 +231,16 @@ Morning gates (verified by the session before Murat returns, ~06:20 HKT):
 arena FIRST decide pass (17:45 ET), first two-venue prod snapshots
 (17:55 ET), digest with new section (18:15 ET), WRDS pull completion →
 `wrds_verify_substrate`.
+
+**Overnight addendum — the slow suite paid for itself twice** (`cd1fe3f`):
+running the network tests (usually skipped) surfaced two LIVE product bugs:
+(1) dividend intelligence has read every dividend GROWER as a cutter since
+July 1 — the "month < 7" partial-year heuristic compared August's 3-of-4
+payments against last year's full sum (JNJ: consecutive_growth_years 0);
+(2) portfolio projection with DCA collapsed every path to exactly 4× initial
+(prob_gain 0.0) — the max-return sanity cap was applied to a wealth path
+that includes contributions, so steady contributions saturated it. Both
+fixed at the cause; cap now grows with invested-capital-by-day. Lesson: the
+slow suite catches calendar- and regime-dependent breakage the offline
+suite structurally cannot — worth a scheduled run, not just an occasional
+one.
