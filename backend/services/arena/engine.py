@@ -19,8 +19,8 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 
 from backend.services.arena import (
-    beliefs, discovery, events, experience, policies, reliability,
-    trackers,
+    beliefs, discovery, events, experience, fundamentals, policies,
+    reliability, trackers,
 )
 from backend.services.arena import spec as spec_mod
 from backend.services.arena import store
@@ -420,6 +420,15 @@ def run_daily(as_of=None, *, panel=None, root=None, db_path=None) -> dict:
     day = sessions[-1]
     summary["session"] = str(day)
 
+    # Universe-wide QUALITY, budgeted. Fundamentals move quarterly, so this
+    # refreshes a slice per pass and the coverage fills in over a working
+    # week rather than spending minutes of every session relearning it.
+    try:
+        summary["fundamentals"] = fundamentals.refresh(core, root=root)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("ARENA: fundamentals refresh failed")
+        summary["fundamentals"] = {"status": f"error: {type(exc).__name__}"}
+
     # STAGE A — cheap scan over everything, before anything expensive.
     # Observations are CONTEXT and DISCOVERY, never a score (trackers.py).
     try:
@@ -456,6 +465,10 @@ def run_daily(as_of=None, *, panel=None, root=None, db_path=None) -> dict:
     # measured the arena ranking ~93% of its universe on 12-1 momentum alone;
     # printing it every pass is what stops that from going quiet again.
     summary["coverage_histogram"] = day_state.get("coverage_histogram")
+    try:
+        summary["quality_coverage"] = fundamentals.coverage(core, root=root)
+    except Exception:  # noqa: BLE001
+        summary["quality_coverage"] = None
 
     for book_id, s in seeded.items():
         try:

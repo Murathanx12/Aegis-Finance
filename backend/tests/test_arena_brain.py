@@ -1082,3 +1082,93 @@ def test_numeric_only_arm_carries_no_event_block(root, monkeypatch):
     assert "EVENT CONTEXT" not in fake.prompts[0]
     row = store.read_beliefs(root)[0]
     assert row["event_coverage"] == "NOT_REQUESTED"
+
+
+# ── universe-wide quality: filling the factor the composite already declared ─
+def _fake_quality(value=0.4, status="ok"):
+    def _score(inputs):
+        return {"quality_score": value, "status": status,
+                "fiscal_period": "2025", "n_checks_passed": 5}
+    return _score
+
+
+def test_quality_refresh_is_budgeted_and_oldest_first(root):
+    from backend.services.arena import fundamentals as F
+
+    universe = [f"N{i:02d}" for i in range(10)]
+    out = F.refresh(universe, budget=3, root=root,
+                    fetch=lambda t: {}, score=_fake_quality())
+    assert out["attempted"] == 3 and out["written"] == 3
+    assert out["stale_remaining"] == 7
+    assert len(F.scores(root)) == 3
+
+    # a second pass takes the NEXT three, not the same three
+    out2 = F.refresh(universe, budget=3, root=root,
+                     fetch=lambda t: {}, score=_fake_quality())
+    assert out2["attempted"] == 3
+    assert len(F.scores(root)) == 6
+
+
+def test_an_unscorable_name_stores_null_not_zero(root):
+    """The scorer returns quality_score 0.0 alongside its failure status. 0.0
+    is a real, mid-pack value in a z-score — the C6 lesson."""
+    from backend.services.arena import fundamentals as F
+
+    F.refresh(["BAD"], budget=5, root=root, fetch=lambda t: {},
+              score=_fake_quality(0.0, "insufficient_fundamentals"))
+    rec = F.cache(root)["BAD"]
+    assert rec["quality_score"] is None
+    assert rec["status"] == "insufficient_fundamentals"
+    assert "BAD" not in F.scores(root)
+
+
+def test_a_stale_quality_score_is_dropped_not_served(root):
+    from backend.services.arena import fundamentals as F
+
+    F.refresh(["OLD"], budget=1, root=root, today=date(2020, 1, 1),
+              fetch=lambda t: {}, score=_fake_quality())
+    assert F.scores(root, today=date(2020, 2, 1)) == {"OLD": 0.4}
+    assert F.scores(root, today=date(2026, 8, 21)) == {}
+
+
+def test_one_bad_name_never_kills_the_refresh(root):
+    from backend.services.arena import fundamentals as F
+
+    def _boom(t):
+        if t == "BOOM":
+            raise RuntimeError("yfinance exploded")
+        return {}
+
+    out = F.refresh(["AAA", "BOOM", "CCC"], budget=5, root=root,
+                    fetch=_boom, score=_fake_quality())
+    assert out["failed"] == 1 and out["scored"] == 2
+    assert set(F.scores(root)) == {"AAA", "CCC"}
+
+
+def test_quality_is_not_read_from_the_registered_pit_cross_section():
+    """TRIAL-QUALITY-IC's cross-section must stay untouched: two populations
+    inside one z-score is the error the coverage work exists to remove."""
+    from backend.services.arena import discovery
+
+    assert "quality" not in discovery.SCORE_PREFIXES
+    assert "quality" in discovery.COMPOSITE_WEIGHTS
+
+
+def test_universe_quality_raises_coverage_for_every_name(root, monkeypatch):
+    from backend.services.arena import discovery, fundamentals as F
+
+    tickers = [f"T{i:02d}" for i in range(12)]
+    F.refresh(tickers, budget=99, root=root, fetch=lambda t: {},
+              score=_fake_quality())
+    monkeypatch.setattr(F, "scores", lambda *a, **k: F.scores.__wrapped__(root)
+                        if hasattr(F.scores, "__wrapped__")
+                        else {t: 0.4 for t in tickers})
+
+    names = {t: {"status": "ok", "close": 100.0,
+                 "scores": {"mom_12_1": 0.01 * i}}
+             for i, t in enumerate(tickers)}
+    for t, v in {t: 0.4 + 0.01 * i for i, t in enumerate(tickers)}.items():
+        names[t]["scores"]["quality"] = v
+    discovery._add_arena_composite(names)
+    assert all(names[t]["scores"]["coverage_n"] == 2 for t in tickers)
+    assert F.coverage(tickers, root)["coverage_pct"] == 100.0

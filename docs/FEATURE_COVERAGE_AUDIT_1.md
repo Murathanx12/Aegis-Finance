@@ -113,10 +113,19 @@ spending:
 
 **Both widen coverage; only one buys a dimension.** Universe-wide price
 trackers are still worth 3–7× the aggregation fix, and they remain cheap. But
-the large prize is universe-wide **fundamentals / options / expectations** —
-which is exactly what the WRDS substrate is for, and why finishing that pull
-(`docs/FINDINGS_2026-08-20_SESSION_AUDIT.md` §A) is on the critical path to
-this number rather than beside it.
+the large prize is universe-wide **fundamentals / options / expectations**.
+
+**CORRECTION (2026-08-21).** An earlier version of this section said that was
+"exactly what the WRDS substrate is for". That conflates two different jobs.
+WRDS is HISTORICAL — the CRSP vintage ends 2024-12-31 — so it can establish
+which diverse features carry information, but it **cannot feed the live
+forward arena**, whose composite has to score names today. The live coverage
+hole needs LIVE sources. Both matter; only one of them is the pull.
+
+First live fill shipped the same day: `arena/fundamentals.py` runs the
+registered trial's own pure quality scorer over the arena's whole universe
+(arena-local storage, PIT cross-section untouched), which takes the declared
+`quality` factor from 1 name to all of them.
 
 One axis this audit does **not** measure: it holds the universe fixed at 180
 names. The value of trackers that pull in names the watchlist never contained

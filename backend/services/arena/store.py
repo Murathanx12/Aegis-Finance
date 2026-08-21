@@ -314,6 +314,18 @@ def snapshot_dates(root: Path | None = None) -> list[str]:
     return sorted(p.stem for p in d.glob("*.json"))
 
 
+def fundamentals_path(root: Path | None = None) -> Path:
+    return (root or ROOT) / "fundamentals.jsonl"
+
+
+def append_fundamentals(rows: list[dict], root: Path | None = None) -> None:
+    _append_jsonl(fundamentals_path(root), rows)
+
+
+def read_fundamentals(root: Path | None = None) -> list[dict]:
+    return _read_jsonl(fundamentals_path(root))
+
+
 def beliefs_path(root: Path | None = None) -> Path:
     return (root or ROOT) / "beliefs.jsonl"
 

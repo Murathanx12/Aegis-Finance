@@ -27,8 +27,16 @@ SCORE_PREFIXES: dict[str, str] = {
     "insider_cmp": "insider_cmp:",
     "revisions": "revisions_score:",
     "pead": "pead_score:",
-    "quality": "quality_score:",
 }
+
+#: `quality` is deliberately ABSENT above. The PIT store carries
+#: `quality_score:` for the ~12-name registered cross-section only
+#: (TRIAL-QUALITY-IC), and mixing that with the arena's own universe-wide
+#: quality would put two populations inside one cross-sectional z-score — the
+#: exact error the coverage work exists to remove. The arena computes quality
+#: for its WHOLE universe in `arena/fundamentals.py`, using the same pure
+#: scorer the registered collector uses, and that is the only source of the
+#: `quality` factor here.
 
 
 class PricePanel(Protocol):
@@ -285,6 +293,19 @@ def _build_day_state_with_conn(day, panel, universe, conn,
                              else None)
         names[t] = {"status": "ok", "close": close, **feats,
                     "scores": scores}
+    # Universe-wide quality, arena-owned. This is the factor the composite
+    # already declared and could only populate for one name in 207.
+    try:
+        from backend.services.arena import fundamentals as _fund
+        q = _fund.scores()
+        for t, v in q.items():
+            if names.get(t, {}).get("status") == "ok":
+                names[t]["scores"]["quality"] = v
+    except Exception as exc:  # noqa: BLE001
+        logger.error("ARENA: universe quality unavailable (%s) — the "
+                     "composite falls back to whatever else a name has, and "
+                     "the coverage histogram will show it", exc)
+
     _add_arena_composite(names)
     n_scored = sum(1 for v in names.values()
                    if v.get("scores", {}).get("arena_composite") is not None)
@@ -361,7 +382,7 @@ COMPOSITE_WEIGHTS: dict[str, float] = {
 #: change every book's policy without changing a single config hash. This
 #: string is carried into the seed and the daily receipt and is checked on
 #: every run — see `spec.policy_fingerprint` and `store.assert_config_current`.
-COMPOSITE_VERSION = "arena_composite@2-coverage_normalized"
+COMPOSITE_VERSION = "arena_composite@3-universe_quality"
 
 #: Pairwise sample size at which the empirical factor correlation is trusted
 #: 90% of the way. Below it the estimate is shrunk toward rho=1.
