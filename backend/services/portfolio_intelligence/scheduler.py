@@ -212,12 +212,16 @@ def setup_scheduler():
     # collected day. Decisions freeze tonight; fills happen at the NEXT open.
     # Everything it writes is PRODUCT_EXPERIMENT / SIMULATION in the arena
     # namespace — never paper_nav, never a lane YAML, never the order path.
+    # 18:45/19:45 are catch-up retries (the MTM pattern): the FIRST pass of
+    # the seeded arena (2026-08-21) died with the process mid-run and the
+    # day left zero trace — engine.run_daily is idempotent per session
+    # (already_marked), so a clean 17:45 makes the retries cheap no-ops.
     _scheduler.add_job(
         _arena_daily,
-        CronTrigger(hour=17, minute=45, day_of_week="mon-fri",
+        CronTrigger(hour="17-19", minute=45, day_of_week="mon-fri",
                     timezone="US/Eastern"),
         id="pi_arena_daily",
-        name="ARENA Gen-1 daily pass (PRODUCT_EXPERIMENT)",
+        name="ARENA Gen-1 daily pass (+catch-up retries)",
         replace_existing=True,
         misfire_grace_time=3600,
     )
@@ -243,11 +247,13 @@ def setup_scheduler():
     # seven days — Kalshi trades weekends, and a Sunday row costs one fetch.
     # Descriptive context + the substrate for the registered model-vs-market
     # Brier comparison. NEVER a signal; nothing in a scoring path reads it.
+    # 18:55/19:55 are catch-up retries (idempotent per day per source:
+    # already_written) — same restart-resilience rationale as the arena pass.
     _scheduler.add_job(
         _prediction_markets_collect,
-        CronTrigger(hour=17, minute=55, timezone="US/Eastern"),
+        CronTrigger(hour="17-19", minute=55, timezone="US/Eastern"),
         id="pi_prediction_markets",
-        name="Prediction-market daily PIT snapshot (Kalshi, descriptive)",
+        name="Prediction-market daily PIT snapshot (+catch-up retries)",
         replace_existing=True,
         misfire_grace_time=3600,
     )
