@@ -173,6 +173,25 @@ timeout.
 
 ## 3. THE QUEUE, IN ORDER
 
+### Q0 — the quality factor is filling in, and it starts at ZERO on Railway
+
+`arena/fundamentals.py` (shipped 2026-08-21) runs the registered trial's own
+pure quality scorer over the arena's **whole** universe, arena-local, so the
+declared `quality` factor goes from 1 name to all of them. Measured live: 60
+names in 104s, 53 scored / 7 unscorable / 0 failed, local coverage 0% → 29.4%,
+score range 0.026–0.750.
+
+**On Railway this starts at 0% and climbs over the first working week** — the
+cache lives on the volume and the pass refreshes 40 names oldest-first. Do not
+read a low `quality_coverage` in the first few receipts as a fault; read it
+after five sessions. It is in the run summary as `quality_coverage` and in
+`coverage_histogram`, which should move from `{"1": ...}` toward `{"2": ...}`
+as it fills.
+
+That is one factor of the five. The remaining four (revisions, PEAD, insider,
+multifactor) are still ~12-name PIT families, so the coverage work is started,
+not finished.
+
 ### Q1 — the coverage hole (the +0.239 item)
 Universe-wide **diverse** features. The trackers built this session are
 price-derived and deliberately excluded from the score; they buy discovery,

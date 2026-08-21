@@ -50,9 +50,16 @@ logger = logging.getLogger(__name__)
 #: move faster than this and the fetch is the expensive part.
 MAX_AGE_DAYS = 45
 
-#: Names refreshed per pass. 180 names at a few seconds each would dominate
-#: the 17:45 session; at 25/day the universe is warm inside a working week.
-DEFAULT_BUDGET = 25
+#: Names refreshed per pass. MEASURED 2026-08-21 against the live 180-name
+#: universe: 60 names took 104s (~1.7s each), 53 scored, 7 unscorable, 0
+#: failed. 40 is ~70s inside the 17:45 pass and fills 180 names in four or
+#: five sessions.
+#:
+#: The budget only governs the INITIAL fill. At a 45-day refresh the steady
+#: state is 180/45 = ~4 names a day, so this is a warm-up cost, not a running
+#: one — and on a fresh volume (Railway) coverage starts at 0% and climbs over
+#: the first working week rather than appearing on day one.
+DEFAULT_BUDGET = 40
 
 #: Statuses `compute_quality_score` returns when it could not score. Stored so
 #: "we looked and there was nothing" stays distinct from "we never looked".
