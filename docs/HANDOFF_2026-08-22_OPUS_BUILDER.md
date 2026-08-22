@@ -74,11 +74,36 @@ all-cap use of the own-construction risk family** — attenuation is
 measured (fully-traded median 0.845 vs 0.118 with ≥10 zero-trade days),
 not hypothetical.
 
-**3. Detectability FIRST, registration SECOND.** Run the planted worlds
-at panel-2 scale (port the `--planted-world` machinery from
-`scripts/return_panel_tournament_run.py`; the `linear_hetero` world is
-required by name — it is the world that refuted the z-label variant).
-Then the gate:
+**3. Detectability FIRST, registration SECOND. — DONE 2026-08-23,
+`docs/PANEL2_DETECTABILITY_2026-08-23.md` (`e1bf6cb`).** All three worlds
+run at panel-2 scale; receipts in
+`backend/data/optimus/aegis_panel/panel2_detectability/`, panel hash
+`2812090a3ecbd1f5`, instrument hash `d58b6d0310008713`.
+
+**Every panel-1 world's best arm contained zero; every panel-2 world's
+excludes it.** Sparse recovers 45.4%, dense and hetero 12.6%. **The gate
+reduces to one declared number: PASS iff `min_recovery ≤ 0.126`** — and
+that number must NOT be picked because it passes. Declare it from what a
+null must rule out (bound ≈ MDE/recovery): a sparse null bounds the truth
+at 0.011 (the economic bar), a diffuse null at 0.042 (4× the bar).
+
+**The z-label finding, which panel-1 could not reach:** per-date
+z-scoring maps the hetero world EXACTLY onto the dense one (bit-identical
+across all 18 fold series — the hetero label's `sd_month` divides out), so
+all of the hetero world's extra difficulty is the TRAINING OBJECTIVE, not
+the data. Recovery 4.8% → 12.6%, interval off zero. Panel-1 measured
++0.00008 here; its 2013+ window was too short.
+
+**Before registering, do (a):** panel-1's best arm in BOTH dense worlds
+was `full_ridge`, and no ridge fits beside a 6.9 GB panel in float64 on
+this machine — so panel-2's best-of-arms is a CONSERVATIVE FLOOR in
+exactly the diffuse worlds that matter. A memory-feasible linear arm
+(ridge via a 412×412 Gram matrix accumulated in chunks) is the
+highest-value work before TOURNAMENT-2. Also note the panel-2 price floor
+is now declared and frozen (`backend/services/aegis_panel2_spec.py`) —
+**the prereg must CITE `spec_hash d58b6d0310008713`, not restate the set.**
+
+The gate call, unchanged:
 
 ```python
 from backend.services.detectability_gate import assert_detectable
