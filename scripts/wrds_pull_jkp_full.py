@@ -48,7 +48,12 @@ OUT = _config.OPTIMUS_LEDGER_DIR / "wrds" / "jkp_full"
 CHUNK_CAP = 2_000_000
 TABLE = "contrib_global_factor.global_factor"
 
-USA_CHUNKS = [(a, min(a + 4, 2012)) for a in range(1926, 2013, 5)]
+#: 5-year chunks through 1965 (thin decades), then 2-year: the 1961-65
+#: chunk measured 600s at 130k rows — a 5-year 1990s chunk would blow
+#: even a generous statement timeout. Filenames are the resume key, so
+#: the already-pulled 5-year files keep their names.
+USA_CHUNKS = ([(a, a + 4) for a in range(1926, 1966, 5)]
+              + [(a, min(a + 1, 2012)) for a in range(1966, 2013, 2)])
 
 FOREIGN = ("AUS", "CAN", "CHE", "DEU", "ESP", "FRA", "GBR",
            "ITA", "JPN", "KOR", "NLD", "SWE", "TWN")
@@ -101,7 +106,7 @@ def main(argv: list[str] | None = None) -> int:
     t0 = time.time()
     conn = _conn()
     with conn.cursor() as cur:
-        cur.execute("SET statement_timeout = 900000")
+        cur.execute("SET statement_timeout = 3600000")
     done = pending = 0
 
     for lo, hi in USA_CHUNKS:
