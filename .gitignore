@@ -138,3 +138,10 @@ backend/data/optimus/wrds/truncated_quarantine.json
 backend/data/optimus/wrds/substrate_verification.json
 backend/data/optimus/prediction_markets/
 backend/data/optimus/aegis_panel/screen_cache/
+# panel-2 planted-world run artifacts: per-(world, arm, fold) IC cache and run
+# logs. Regenerable from the panel, and the RECEIPTS (panel2_detectability/)
+# are the committed output — the cache is scaffolding, not evidence.
+backend/data/optimus/aegis_panel/panel2_planted_cache/
+backend/data/optimus/aegis_panel/panel2_planted.log
+backend/data/optimus/aegis_panel/panel2_planted.err
+backend/data/optimus/aegis_panel/panel2_planted.done

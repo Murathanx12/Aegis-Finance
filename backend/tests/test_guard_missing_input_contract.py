@@ -564,6 +564,19 @@ def _case_detectability_gate():
             "a detectability verdict with no planted-world receipts")
 
 
+def _case_aegis_panel2_spec():
+    from backend.services.aegis_panel2_spec import (Panel2SpecRefused,
+                                                    resolve)
+    # The missing input is a FLOOR column. Every arm in TOURNAMENT-2 is
+    # contrasted against the floor, so a panel silently short one of those
+    # seven would move every number in the receipt while the arm names stayed
+    # identical — a wrong answer wearing the right label.
+    return (lambda: resolve(columns=["ret_1_0", "ret_exc_lead1m", "date",
+                                     "eom", "permno"]),
+            Panel2SpecRefused,
+            "a panel-2 instrument missing declared floor columns")
+
+
 def _case_router_capital_gate():
     from pathlib import Path
 
@@ -627,6 +640,7 @@ CASES = {
     "risk_layer": _case_risk_layer,
     "detectability_gate": _case_detectability_gate,
     "router_capital_gate": _case_router_capital_gate,
+    "aegis_panel2_spec": _case_aegis_panel2_spec,
 }
 
 

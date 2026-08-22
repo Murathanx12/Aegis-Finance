@@ -1,0 +1,70 @@
+{
+  "trial": "RETURN-PANEL-TOURNAMENT-2",
+  "mode": "SENSITIVITY_WORLD",
+  "world": "linear_dense",
+  "at": "2026-08-22T22:21:43+00:00",
+  "panel": "AEGIS-PANEL-2",
+  "panel_hash": "2812090a3ecbd1f5",
+  "spec_hash": "d58b6d0310008713",
+  "seed": 20260823,
+  "planted": {
+    "carrier": "mean z of 82 QUALITY columns (dense)",
+    "target_ic": 0.03
+  },
+  "arms_run": [
+    "floor_lgbm",
+    "full_lgbm",
+    "floor_lgbm_zlabel",
+    "full_lgbm_zlabel"
+  ],
+  "arms_omitted": [
+    "full_ridge",
+    "full_mlp"
+  ],
+  "arms_omitted_reason": "float64 scaling of a 4.16M x 412 training matrix does not fit beside the panel on this machine; full_lgbm is the arm that recovered most of panel-1's dense world",
+  "differs_from_panel1_by": "scale (18x rows), universe (floored -> all-cap), training era (2013+ -> 1926+), floor construction (own daily-price features disjoint from JKP -> seven JKP price columns that are a SUBSET of the 412). The result belongs to the bundle, not to scale.",
+  "zlabel_collapses_hetero_onto_dense": "EXPECTED IDENTITY, not a duplicated run: the hetero label is sd_month * (0.03*zc + noise), and per-date z-scoring divides by that same within-month sd, so z(y_hetero) == z(y_dense) exactly. Identical training target -> identical model, and per-date Spearman is invariant to the positive within-date scalar, so the scored IC coincides too. All 18 cached zlabel fold series are bit-identical between the two worlds. The consequence is the finding: every bit of the hetero world's extra difficulty is attributable to the TRAINING OBJECTIVE, and z-labelling removes it exactly.",
+  "hetero_is_not_the_same_world_across_panels": "not applicable: this world's carrier is panel-independent",
+  "pooled_ic": {
+    "floor_lgbm": 0.01199,
+    "full_lgbm": 0.01538,
+    "floor_lgbm_zlabel": 0.01178,
+    "full_lgbm_zlabel": 0.01557
+  },
+  "contrasts": {
+    "full_lgbm_minus_floor": {
+      "contrast": {
+        "mean": 0.003391893727649811,
+        "ci_lo": 0.00041037645524905905,
+        "ci_hi": 0.006187092903097952,
+        "se": 0.0017228939759819256,
+        "mde_80pct_power": 0.004826834296325946,
+        "n_rows": 108,
+        "n_dates": 108,
+        "n_securities": 1,
+        "n_effective": 108.0,
+        "block_days": 1,
+        "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+        "block_days_derived": 1
+      },
+      "verdict": "LINEAR_NONINFERIOR"
+    },
+    "full_lgbm_zlabel_minus_floor": {
+      "contrast": {
+        "mean": 0.0037855397590564267,
+        "ci_lo": 0.000523950339587991,
+        "ci_hi": 0.006831448310621398,
+        "se": 0.0018937841603443918,
+        "mde_80pct_power": 0.005305597710839659,
+        "n_rows": 108,
+        "n_dates": 108,
+        "n_securities": 1,
+        "n_effective": 108.0,
+        "block_days": 1,
+        "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+        "block_days_derived": 1
+      },
+      "verdict": "LINEAR_NONINFERIOR"
+    }
+  }
+}
