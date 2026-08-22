@@ -43,10 +43,12 @@ def test_a_record_without_the_contract_still_writes_and_carries_nulls():
 
 def test_schema_version_advanced_so_the_generations_are_distinguishable():
     # 1.1.0 added the belief-change contract; 1.2.0 added the evidence
-    # population. Both are additive, and the version is what lets a reader tell
-    # a record that COULD have carried a field from one that could not.
-    assert SCHEMA_VERSION == "1.2.0"
-    assert _base().schema_version == "1.2.0"
+    # population; 1.3.0 added `session_as_of` (the session a record is ABOUT,
+    # vs `made_at` = when it was written — the catch-up-slot idempotency key).
+    # All additive, and the version is what lets a reader tell a record that
+    # COULD have carried a field from one that could not.
+    assert SCHEMA_VERSION == "1.3.0"
+    assert _base().schema_version == "1.3.0"
 
 
 def test_the_new_fields_are_the_only_thing_added():
@@ -57,8 +59,17 @@ def test_the_new_fields_are_the_only_thing_added():
                      "made_at", "resolves_after", "model", "model_version",
                      "resolved_at", "outcome", "brier", "void_reason"):
         assert required in names
-    for added in ("prior", "posterior", "belief_change", "arm"):
+    for added in ("prior", "posterior", "belief_change", "arm",
+                  "session_as_of"):
         assert added in names
+
+
+def test_session_as_of_is_optional_and_stamped_when_given():
+    # 1.3.0 contract: absent by default (a record not about a specific
+    # session), carried verbatim when supplied, and never derived from
+    # made_at — a Saturday catch-up run writes ABOUT Friday.
+    assert _base().session_as_of is None
+    assert _base(session_as_of="2026-08-21").session_as_of == "2026-08-21"
 
 
 # ── the contract itself ─────────────────────────────────────────────────────

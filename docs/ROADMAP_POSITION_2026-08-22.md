@@ -110,6 +110,51 @@ Completion census appended below when it lands.
    window for IIF · Monday: arena fills first positions; first bar-dated
    NAV rows under P-day-2026-08-19a semantics.
 
+## ADDENDUM — same day, second session (while the JKP pull runs)
+
+Two queue items moved from "declared" to "enforced", both ungated by the
+pull; fast suite 5,322/0 (+19 tests):
+
+1. **The planted-world detectability gate now EXISTS as code**
+   (`backend/services/detectability_gate.py`, next-sessions item 3).
+   TOURNAMENT-1 wrote sensitivity receipts that NOTHING read — a
+   TOURNAMENT-2 could have been registered over a demonstrably blind
+   instrument with the blindness receipt sitting next to its panel.
+   `assert_detectable(receipt_dir, panel_hash=…, declared_ic=…,
+   min_recovery=…)` refuses on a missing receipt, a foreign panel_hash
+   (panel-1 evidence licenses nothing about panel-2), a planted effect
+   larger than the declared one, or failed recovery (best full-arm mean ≥
+   min_recovery × planted IC AND ci_lo > 0, per world, hetero world
+   required by name). `declared_ic`/`min_recovery` have NO defaults — the
+   TOURNAMENT-2 prereg declares them. A live pin test asserts the shipped
+   panel-1 receipts FAIL the gate at their own hash (the true state); if
+   that test ever passes green-side-up, the gate has inverted. Enrolled in
+   the guard contract (`DetectabilityRefused`). **The TOURNAMENT-2 runner
+   must call `assert_detectable` before its registered run counts — this
+   is now buildable as a refusal, not a memory.**
+2. **why_moved day-guard + catch-up retries SHIPPED** (ORDER 27 carry-over,
+   item 6, and it was urgent: the TypeError fix landed 2026-08-22, so
+   TOMORROW (Saturday) would have been the first weekend firing to walk
+   back to Friday and mint Friday's records a SECOND time). The trigger is
+   now mon-fri 17:15/18:15/19:15 ET (the arena/MTM restart-resilience
+   pattern); retries are idempotent via `skip_if_minted`, which derives
+   from the ledger itself. That required making the ledger able to answer
+   "was this session already minted?" — the snapshot carrying `as_of` is
+   stored only as a hash — so **belief-state schema 1.3.0** adds
+   `session_as_of` (optional, purely additive, the session a record is
+   ABOUT vs `made_at` = when written), stamped by why_moved's mint path.
+   Pre-1.3.0 records carry None and never match: the worst that buys is
+   one legitimate re-ask of a pre-stamp day, never a suppressed first ask.
+
+Also this session: `DESIGN_REVIEW_2026-08-22_NEWS_ENGINE_AND_RULES.md`
+stands as the ORDER 29 candidate (event store → sensor → playbook loops;
+ingestion-24/7, decisions event-conditional, trading NOT continuous) and
+the rules audit awaiting Murat's read; the optimus MCP `brain_query` tool
+is erroring server-side (a path-repetition bug in the aegis-health page
+name — optimus repo, not this one); prediction-ledger quarantine (25
+overdue campaign copies) remains the standing attended item degrading
+health.
+
 ## THE POSITION IN ONE PARAGRAPH
 
 The acquisition phase is closed with receipts, the canonical panel exists

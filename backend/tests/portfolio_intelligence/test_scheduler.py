@@ -191,10 +191,11 @@ class TestWhyMovedNightly:
 
         def fake_run_why_moved(positions, requested_date, *,
                                with_hypotheses=True, write_ledger=False,
-                               **kw):
+                               skip_if_minted=False, **kw):
             seen["positions"] = positions
             seen["requested_date"] = requested_date
             seen["write_ledger"] = write_ledger
+            seen["skip_if_minted"] = skip_if_minted
             return {"status": "ok", "as_of": requested_date,
                     "n_predictions_minted": 1, "hypotheses": [],
                     "lenses": [], "attribution": {"pnl_usd": 0.0,
@@ -207,6 +208,49 @@ class TestWhyMovedNightly:
         assert seen["positions"] == [("AAPL", 10.0)]
         assert seen["requested_date"]  # a date string, derived not defaulted
         assert seen["write_ledger"] is True  # minting is the point of the job
+        assert seen["skip_if_minted"] is True  # catch-up slots must not re-mint
+
+    def test_already_written_retry_is_a_quiet_no_op(self, monkeypatch, caplog):
+        """A catch-up firing on a minted day logs INFO, never the
+        NOTHING-GRADEABLE warning — the loud path is reserved for a FIRST
+        pass that bought nothing, and a nightly false alarm trains the
+        reader to ignore the real one."""
+        import logging
+
+        from backend.services import why_moved as wm
+        from backend.services.portfolio_intelligence import scheduler as sched
+
+        def fake_run_why_moved(positions, requested_date, **kw):
+            return {"status": "already_written", "as_of": requested_date,
+                    "n_predictions_minted": 0, "hypotheses": [], "lenses": [],
+                    "attribution": {"pnl_usd": 0.0, "pnl_pct": 0.0}}
+
+        monkeypatch.setattr(wm, "run_why_moved", fake_run_why_moved)
+        monkeypatch.setattr(wm, "book_positions", lambda: [("AAPL", 10.0)])
+        with caplog.at_level(logging.INFO,
+                             logger=sched.logger.name):
+            asyncio.run(sched._why_moved_nightly())
+        assert not any(r.levelno >= logging.WARNING for r in caplog.records)
+        assert any("already minted" in r.getMessage() for r in caplog.records)
+
+    def test_trigger_has_day_guard_and_catch_up_slots(self):
+        """ORDER 27 carry-over, pinned: without mon-fri a weekend firing
+        walks back to Friday and re-mints Friday's records; without the
+        17-19 slots a process restart at 17:15 erases the night (the
+        2026-08-21 arena lesson, 4 restarts in 71 minutes)."""
+        from backend.services.portfolio_intelligence.scheduler import (
+            setup_scheduler, shutdown_scheduler,
+        )
+
+        async def _run():
+            scheduler = setup_scheduler()
+            trigger = str(scheduler.get_job("pi_why_moved").trigger)
+            assert "day_of_week='mon-fri'" in trigger, trigger
+            assert "hour='17-19'" in trigger, trigger
+            assert "minute='15'" in trigger, trigger
+            shutdown_scheduler()
+
+        asyncio.run(_run())
 
 
 class TestEveryJobIsInvocableAndGated:

@@ -108,7 +108,13 @@ _MIGRATION_ATTEMPTED = False
 #: and also purely additive. Until it existed, a record could not say which of
 #: the two forward ledgers it belonged to, and a report that read "the forward
 #: ledger" was reading one of two different populations with no way to tell.
-SCHEMA_VERSION = "1.2.0"
+#: 1.3.0 (2026-08-22) adds `session_as_of`, OPTIONAL and purely additive: the
+#: trading session a record is ABOUT, as distinct from `made_at` (when it was
+#: written). Until it existed the ledger could not answer "was this session
+#: already minted?" — the snapshot carrying `as_of` is stored only as a hash —
+#: and the why_moved catch-up slots need exactly that question answered before
+#: they re-ask seven lenses about a day the ledger already holds.
+SCHEMA_VERSION = "1.3.0"
 
 #: Horizons, in trading days. Frozen: a horizon invented after the fact is a
 #: degree of freedom, and the resolution date is what makes a record honest.
@@ -241,6 +247,12 @@ class PredictionRecord:
     #: has arms. Recorded on the record rather than inferred from `specialist`,
     #: because an arm label reconstructed after the fact is not evidence.
     arm: str | None = None
+    #: The trading session this record is ABOUT (schema 1.3.0) — e.g. the
+    #: why_moved attribution's `as_of`. Distinct from `made_at`, which is when
+    #: the record was written; a Saturday catch-up run writes ABOUT Friday.
+    #: None on records written before 2026-08-22 and on records that are not
+    #: about a specific session.
+    session_as_of: str | None = None
     #: Which body of forward evidence this record belongs to (schema 1.2.0).
     #: There are two — the campaign's ~20,073-record history and the deployed
     #: product's own accrual — and they were read as one for a month because
@@ -279,7 +291,8 @@ def make_prediction(*, ticker: str, specialist: str, observable: Observable,
                     made_at: str | None = None,
                     prior: float | None = None,
                     posterior: float | None = None,
-                    arm: str | None = None) -> PredictionRecord:
+                    arm: str | None = None,
+                    session_as_of: str | None = None) -> PredictionRecord:
     """Build a record, refusing the ones that cannot be graded."""
     if horizon_days not in HORIZONS:
         raise ValueError(f"horizon {horizon_days} is not one of {HORIZONS}; a "
@@ -342,7 +355,7 @@ def make_prediction(*, ticker: str, specialist: str, observable: Observable,
         model_version=model_version, prompt_hash=ph, input_snapshot_hash=snap,
         prior=(float(prior) if prior is not None else None),
         posterior=(float(posterior) if posterior is not None else None),
-        belief_change=belief_change, arm=arm)
+        belief_change=belief_change, arm=arm, session_as_of=session_as_of)
 
 
 # ── persistence: getting the history onto the volume, exactly once ──────────

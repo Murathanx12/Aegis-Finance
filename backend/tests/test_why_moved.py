@@ -539,6 +539,36 @@ def test_ledger_write_is_opt_in(panel, positions, tmp_path):
     assert "ledger_written" not in quiet
 
 
+def test_catch_up_slot_skips_a_day_already_minted(panel, positions, tmp_path):
+    """The retry-slot idempotency key: a second firing on a session whose
+    first pass minted must spend NO lens call and append NO second batch —
+    two batches about one session would count one night twice in every
+    calibration table. Key derived from the ledger itself, not a marker."""
+    ledger = tmp_path / "predictions.jsonl"
+    first = wm.run_why_moved(positions, "2026-08-10", panel=panel,
+                             lenses=["macro_rates"], llm_call=_fake_llm(
+                                 {"hypotheses": [_hyp()]}),
+                             write_ledger=True, ledger_path=ledger)
+    assert first["n_predictions_minted"] == 1
+    assert wm.ledger_has_minted(first["as_of"], ledger) is True
+
+    def boom(system, user):                     # pragma: no cover - must not run
+        raise AssertionError("a skipped catch-up slot must not call the model")
+
+    retry = wm.run_why_moved(positions, "2026-08-10", panel=panel,
+                             lenses=["macro_rates"], llm_call=boom,
+                             write_ledger=True, ledger_path=ledger,
+                             skip_if_minted=True)
+    assert retry["status"] == "already_written"
+    assert retry["n_predictions_minted"] == 0
+    rows = [x for x in ledger.read_text().splitlines() if x.strip()]
+    assert len(rows) == 1                       # nothing appended twice
+
+    # A fresh ledger is a first run, not a skip: the key is permissive by
+    # DESIGN here — there is nothing to duplicate yet.
+    assert wm.ledger_has_minted(first["as_of"], tmp_path / "absent.jsonl") is False
+
+
 def test_output_never_claims_a_cause(panel, positions):
     out = wm.run_why_moved(positions, "2026-08-10", panel=panel, lenses=[],
                            llm_call=_fake_llm({"hypotheses": []}))

@@ -1108,7 +1108,11 @@ def mint_predictions(hypotheses: Sequence[Hypothesis], *, attribution: Attributi
                                 "book_return_pct": attribution.pnl_pct,
                                 "benchmark_return_pct": attribution.benchmark_return_pct,
                                 "hypothesis": h.claim},
-                made_at=made_at)
+                made_at=made_at,
+                # The session this record is ABOUT — the snapshot above is
+                # stored only as a hash, so without this stamp the ledger
+                # cannot answer "was this session already minted?"
+                session_as_of=attribution.as_of)
         except Exception as exc:                     # noqa: BLE001
             f.refusal = f"{type(exc).__name__}: {exc}"
             refusals.append({"lens": h.lens, "hypothesis_id": h.hypothesis_id,
@@ -1226,6 +1230,28 @@ def run_lens(lens: str, attribution: Attribution, *, allowed_assets: set[str],
                       rejections=rejected, raw_text=reply.text[:4000]), system + user
 
 
+def ledger_has_minted(as_of: str, ledger_path: Path | None = None) -> bool:
+    """True if the belief ledger already carries why_moved records for `as_of`.
+
+    The catch-up-slot idempotency key (the arena's `already_marked`, for this
+    job): a retry firing on a day whose first pass already minted must not ask
+    the lenses again — the second answer would be a second set of gradeable
+    records for the same session, and the calibration table would count one
+    night twice. The check DERIVES from the ledger itself, never from a
+    marker file that could drift from what was actually written.
+
+    Matches on `session_as_of` (schema 1.3.0) — the session a record is
+    ABOUT. Records written before the stamp existed carry None and never
+    match; the worst that buys is one legitimate re-ask of a pre-stamp day,
+    never a suppressed first ask.
+    """
+    from backend.services.belief_state import read_predictions
+    return any(
+        str(r.get("specialist", "")).startswith("why_moved:")
+        and r.get("session_as_of") == as_of
+        for r in read_predictions(ledger_path))
+
+
 def run_why_moved(positions: Sequence[tuple[str, float]], requested_date: str | date,
                   *, price_fetch: PriceFetch | None = None,
                   panel: pd.DataFrame | None = None,
@@ -1236,6 +1262,7 @@ def run_why_moved(positions: Sequence[tuple[str, float]], requested_date: str | 
                   context: dict | None = None,
                   ledger_path: Path | None = None,
                   write_ledger: bool = False,
+                  skip_if_minted: bool = False,
                   benchmark: str = WHY_MOVED_BENCHMARK) -> dict:
     """The whole thing: attribution always, hypotheses when they can be graded.
 
@@ -1244,6 +1271,9 @@ def run_why_moved(positions: Sequence[tuple[str, float]], requested_date: str | 
 
       "ok"                     — attribution and at least one lens answered
       "degraded_no_hypotheses" — attribution stands, every lens went dark
+      "attribution_only"       — hypotheses not requested
+      "already_written"        — `skip_if_minted` and the ledger already holds
+                                 this session's records (catch-up slots only)
 
     There is no status in which an explanation is invented, and none in which
     the attribution is skipped because the language layer failed.
@@ -1291,6 +1321,21 @@ def run_why_moved(positions: Sequence[tuple[str, float]], requested_date: str | 
                                  "one is refused"),
         },
     }
+
+    if skip_if_minted and write_ledger and ledger_has_minted(attribution.as_of,
+                                                             ledger_path):
+        # Cheap by construction: attribution (prices only) has run, no lens
+        # has spoken, no LLM call has been spent, nothing will be appended.
+        out["status"] = "already_written"
+        out["status_detail"] = (
+            f"the ledger already holds why_moved records for "
+            f"{attribution.as_of} — catch-up slot skipped before any lens "
+            f"spent a call")
+        out["lenses"] = []
+        out["hypotheses"] = []
+        out["predictions"] = []
+        out["n_predictions_minted"] = 0
+        return out
 
     if not with_hypotheses:
         out["status"] = "attribution_only"

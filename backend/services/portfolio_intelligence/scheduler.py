@@ -201,11 +201,20 @@ def setup_scheduler():
     # whether any lens was ever worth listening to. Murat's instruction was
     # explicit — "make it test and learn at my absence" — and a subsystem that
     # only runs when someone remembers to run it does neither.
+    #
+    # mon-fri (ORDER 27 carry-over): a weekend firing walks back to Friday's
+    # session and — now that the TypeError is fixed — would have MINTED
+    # Friday's records a second and third time. 18:15/19:15 are catch-up
+    # retries (the arena/MTM pattern: this process restarted 4x in 71 minutes
+    # on 2026-08-21); idempotent per session via `skip_if_minted`, which reads
+    # the ledger itself, so a clean 17:15 makes them attribution-priced no-ops
+    # that spend zero LLM calls.
     _scheduler.add_job(
         _why_moved_nightly,
-        CronTrigger(hour=17, minute=15, timezone="America/New_York"),
+        CronTrigger(hour="17-19", minute=15, day_of_week="mon-fri",
+                    timezone="America/New_York"),
         id="pi_why_moved",
-        name="WHY-MOVED nightly attribution + lens hypotheses",
+        name="WHY-MOVED nightly attribution + lens hypotheses (+catch-up retries)",
         replace_existing=True,
         misfire_grace_time=3600,
     )
@@ -1149,7 +1158,14 @@ async def _why_moved_nightly():
         result = await asyncio.to_thread(
             wm.run_why_moved, wm.book_positions(),
             str(datetime.now().date()),
-            with_hypotheses=True, write_ledger=True)
+            with_hypotheses=True, write_ledger=True, skip_if_minted=True)
+        if result.get("status") == "already_written":
+            # A catch-up slot on a day whose first pass already minted; the
+            # quiet INFO is correct here — the loud path is reserved for a
+            # FIRST pass that bought nothing gradeable.
+            logger.info("WHY-MOVED %s: already minted — catch-up slot no-op",
+                        result.get("as_of"))
+            return
         minted = result.get("n_predictions_minted", 0)
         n_hyp = len(result.get("hypotheses") or [])
         rejected = sum(len(l.get("rejections") or [])

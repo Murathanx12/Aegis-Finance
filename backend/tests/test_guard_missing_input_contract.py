@@ -547,6 +547,23 @@ def _case_risk_price_features():
             "a risk-price family over years with no price files")
 
 
+def _case_detectability_gate():
+    from pathlib import Path
+
+    from backend.services.detectability_gate import (DetectabilityRefused,
+                                                     evaluate_detectability)
+    # The missing input is the SENSITIVITY RUN ITSELF. TOURNAMENT-1 wrote
+    # planted receipts nobody read; a gate that answered "detectable" over an
+    # absent receipt directory would license a registered run on an
+    # instrument whose blindness is already on disk.
+    return (lambda: evaluate_detectability(Path("Z:/no/such/receipts"),
+                                           panel_hash="deadbeef",
+                                           declared_ic=0.03,
+                                           min_recovery=0.5),
+            DetectabilityRefused,
+            "a detectability verdict with no planted-world receipts")
+
+
 CASES = {
     "aegis_panel": _case_aegis_panel,
     "risk_price_features": _case_risk_price_features,
@@ -594,6 +611,7 @@ CASES = {
     "iif1_features": _case_iif1_features,
     "ex_post": _case_ex_post,
     "risk_layer": _case_risk_layer,
+    "detectability_gate": _case_detectability_gate,
 }
 
 
