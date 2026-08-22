@@ -121,10 +121,67 @@ def _mean(xs: list[float]) -> float:
     return sum(xs) / len(xs)
 
 
+def design_effect(hits_by_day: dict[str, list[int]]) -> dict:
+    """How much less information a cell carries than its row count claims.
+
+    Decisions are not drawn one per day: a morning enters ten names, and those
+    ten share the day. The textbook cluster estimator for a proportion
+    (clusters j of size m_j with y_j hits, M rows total, n_c clusters) compares
+    the between-cluster variance of the ratio estimator
+
+        var_cluster = n_c / ((n_c - 1) * M^2) * SUM (y_j - m_j * p)^2
+
+    against the variance the same rows would have had if independent,
+    p(1-p)/M. Their ratio is the Kish design effect, and n / deff is the count
+    of independent decisions the cell actually holds.
+
+    Two deliberate floors:
+
+    * `deff` floors at 1.0. A measured deff below 1 says the clusters came out
+      anti-correlated, which would license claiming MORE information than rows
+      — not a claim a capital router gets to make from sampling noise.
+    * a single cluster returns deff = n (n_eff = 1). One day is one draw of the
+      day factor; that is the honest answer and it is loud, whereas dividing by
+      an undefined between-cluster variance would be silently permissive.
+
+    A degenerate cell (every row a hit, or none) has no measurable clustering,
+    so deff is 1.0 and `estimated: False` says the number is a default rather
+    than a measurement — the two must never read alike.
+    """
+    days = {d: v for d, v in hits_by_day.items() if v}
+    n_c = len(days)
+    M = sum(len(v) for v in days.values())
+    if M == 0:
+        return {"n_clusters": 0, "deff": 1.0, "n_effective": 0,
+                "estimated": False, "note": "no rows"}
+    if n_c < 2:
+        return {"n_clusters": n_c, "deff": float(M), "n_effective": 1,
+                "estimated": False,
+                "note": "one decision date — one draw of the day factor"}
+    p = sum(sum(v) for v in days.values()) / M
+    if p in (0.0, 1.0):
+        return {"n_clusters": n_c, "deff": 1.0, "n_effective": M,
+                "estimated": False,
+                "note": "degenerate rate — clustering not measurable"}
+    ss = sum((sum(v) - len(v) * p) ** 2 for v in days.values())
+    var_cluster = n_c / ((n_c - 1) * M * M) * ss
+    var_binomial = p * (1.0 - p) / M
+    deff = max(1.0, var_cluster / var_binomial)
+    return {"n_clusters": n_c, "deff": round(deff, 4),
+            "n_effective": max(1, int(M / deff)), "estimated": True}
+
+
 def _cell_stats(rows: list[dict], *, min_n: int) -> dict:
     """One decision cell. `signed_excess` is the decision-quality unit: excess
     for an action that took the position, MINUS excess for one that passed on
-    it, so a positive mean means the decision added value either way."""
+    it, so a positive mean means the decision added value either way.
+
+    The cell also reports the CLUSTERING of its rows by decision date. The
+    counting brain can see that structure and the router cannot (it receives
+    cells, not rows), so the count of independent decisions has to be measured
+    here or it is never measured at all — which is how a router priced its
+    standard errors off ten names that shared one morning.
+    """
     n = len(rows)
     base = {"n": n, "min_n": min_n}
     if n < min_n:
@@ -133,6 +190,10 @@ def _cell_stats(rows: list[dict], *, min_n: int) -> dict:
                 "note": f"n={n} < min_n={min_n}; no rate computed"}
     signed = [r["_signed"] for r in rows]
     hits = [1 if r["_class"] in ("GOOD_CALL", "GOOD_PASS") else 0 for r in rows]
+    by_day: dict[str, list[int]] = {}
+    for r, h in zip(rows, hits):
+        by_day.setdefault(str(r.get("_day")), []).append(h)
+    base["clustering"] = design_effect(by_day)
     excess = [r["_excess"] for r in rows]
     took = [r for r in rows if r["_took"]]
     passed = [r for r in rows if not r["_took"]]
@@ -149,6 +210,42 @@ def _cell_stats(rows: list[dict], *, min_n: int) -> dict:
         "mean_excess_when_passed": (round(_mean([r["_excess"] for r in passed]), 6)
                                     if passed else None),
     }
+
+
+def _actor_clustering(rows: list[dict]) -> dict:
+    """Per-actor design effect over its DECISIONS, pooled across every cell.
+
+    Measured here and not by combining the per-cell blocks, because those
+    blocks cannot be combined: a (horizon, vol_state) cell holds a handful of
+    the names decided on each day, so each cell measures only the sliver of
+    the day factor its own slice caught, and the three vol_state cells of one
+    actor are three views of THE SAME MORNINGS. Summing their effective counts
+    counts each morning three times — which is exactly how a cluster-corrected
+    router still recommended coin flips in a quarter of null worlds.
+
+    Rows are first deduplicated to one per decision (an experience's five
+    horizon rows are one decision, graded at its shortest matured horizon), so
+    the count that comes out is decisions, then design-effect-corrected to
+    independent decisions.
+    """
+    by_actor: dict[str, dict[str, dict]] = {}
+    for r in rows:
+        actor = str(r.get("_actor"))
+        eid = str(r.get("_experience_id"))
+        h = r.get("_horizon")
+        seen = by_actor.setdefault(actor, {})
+        prev = seen.get(eid)
+        if prev is None or (h is not None and prev["_horizon"] is not None
+                            and float(h) < float(prev["_horizon"])):
+            seen[eid] = r
+    out = {}
+    for actor, per_exp in by_actor.items():
+        by_day: dict[str, list[int]] = {}
+        for r in per_exp.values():
+            hit = 1 if r["_class"] in ("GOOD_CALL", "GOOD_PASS") else 0
+            by_day.setdefault(str(r.get("_day")), []).append(hit)
+        out[actor] = {**design_effect(by_day), "n_decisions": len(per_exp)}
+    return out
 
 
 def decision_cells(*, root=None, leg: str = "forecast",
@@ -176,6 +273,7 @@ def decision_cells(*, root=None, leg: str = "forecast",
               if int(o.get("schema_version") or 1) >= exp_mod.OUTCOME_SCHEMA_VERSION]
 
     cells: dict[tuple, list[dict]] = {}
+    all_rows: list[dict] = []
     unmatched = 0
     unresolved = 0
     for o in usable:
@@ -194,6 +292,11 @@ def decision_cells(*, root=None, leg: str = "forecast",
             "_signed": float(ex) if took else -float(ex),
             "_class": o.get(class_key) or "UNRESOLVED",
             "_took": took,
+            # the cluster key: decisions made the same day share that day
+            "_day": o.get("decision_date"),
+            "_experience_id": o.get("experience_id"),
+            "_horizon": o.get("horizon_days"),
+            "_actor": e.get("model_id"),
         }
         ctx = {
             "book_id": o.get("book_id") or e.get("book_id"),
@@ -205,6 +308,7 @@ def decision_cells(*, root=None, leg: str = "forecast",
             "policy_version": e.get("policy_version"),
         }
         cells.setdefault(tuple(str(ctx[k]) for k in by), []).append(row)
+        all_rows.append(row)
 
     reported = {}
     for key, rows in sorted(cells.items()):
@@ -216,6 +320,7 @@ def decision_cells(*, root=None, leg: str = "forecast",
                      if c.get("verdict") == "REPORTED")
     return {
         "leg": leg,
+        "actor_clustering": _actor_clustering(all_rows),
         "basis": (exp_mod.FORECAST_BASIS if leg == "forecast"
                   else exp_mod.EXECUTION_BASIS),
         "grouped_by": list(by),

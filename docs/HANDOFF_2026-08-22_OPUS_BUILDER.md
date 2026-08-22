@@ -109,8 +109,16 @@ Corpse-check lineage first: RISK-PRICE-EARLY-1 (era-transfer refuted),
 ORDER 24 era-transfer receipts. This is the licensed follow-up — never
 another US backtest.
 
-**6. ORDER 27 carry-overs still open:** G1 correlated-worlds battery
-(before any router capital authority) · EVENT_IMPACT bridge ·
+**6. ORDER 27 carry-overs still open:** ~~G1 correlated-worlds battery~~
+**DONE 2026-08-23 — `docs/ORDER_27_P2_ROUTER_CAPITAL_GATE_2026-08-23.md`.**
+The gate is built and enforced; the live router **FAILS** it (29% null
+recommendation, 100% capital exposure behind it) and is not licensed. The
+corrected v1.1 estimator holds 3.0% out-of-sample but has no power at the
+arena's current breadth (recovery 0.19 at 16 decision days; the 70% crossing
+is 32–64 days ≈ six months of live arena). **ATTENDED: flip
+`trust_router.CLUSTER_ADJUST_DEFAULT` to True** — recommended; it moves a
+live book's sizing, which is why a session did not take it.
+· EVENT_IMPACT bridge ·
 PROFIT_ALLOCATOR_v2 (gated on true OOS forecasts) · P9 alpha-diversity
 books (gated on a surviving signal — none yet). The why_moved item is
 **DONE** (this evening).

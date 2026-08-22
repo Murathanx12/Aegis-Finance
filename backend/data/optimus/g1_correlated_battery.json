@@ -1,0 +1,121 @@
+{
+  "mode": "KNOWN_ANSWER_BATTERY",
+  "gate": "ROUTER_CAPITAL_AUTHORITY",
+  "battery": {
+    "battery_version": "G1_CORRELATED_BATTERY_v2",
+    "n_actors": 3,
+    "n_decision_days": 16,
+    "names_per_actor_per_day": 8,
+    "rho": 0.6,
+    "regime_block_days": 4,
+    "storm_factor_scale": 1.6,
+    "null_p": 0.5,
+    "edge_p": 0.62,
+    "harmful_p": 0.35
+  },
+  "router": {
+    "router_version": "RELIABILITY_ROUTER_v1",
+    "shrink_k": 12.0,
+    "prior": 0.5,
+    "edge_z": 1.5,
+    "edge_alpha": 0.05,
+    "evidence_floor_n": 30,
+    "cluster_adjust": false,
+    "cluster_adjust_default": false,
+    "correlation_adjusted": "horizon-dedup only",
+    "estimator_source_sha": "d882b0edbcde1912"
+  },
+  "seed": 77771111,
+  "arms": {
+    "null": {
+      "kind": "null",
+      "p_hits": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "n_worlds": 300,
+      "n_recommended": 88,
+      "recommendation_rate": 0.2933,
+      "recommendation_rate_ci95": [
+        0.2447,
+        0.3472
+      ],
+      "verdicts": {
+        "NO_EDGE": 212,
+        "RECOMMENDED": 88
+      },
+      "mean_exposure_deployed": 0.2933,
+      "mean_exposure_given_deployed": 1.0,
+      "mean_exposure_fallback": 0.6033,
+      "n_worlds_leaking_harmful_weight": 0,
+      "max_harmful_weight": 0,
+      "elapsed_s": 47.7
+    },
+    "edge": {
+      "kind": "edge",
+      "p_hits": [
+        0.62,
+        0.5,
+        0.5
+      ],
+      "n_worlds": 80,
+      "n_recommended": 63,
+      "recommendation_rate": 0.7875,
+      "recommendation_rate_ci95": [
+        0.6858,
+        0.8629
+      ],
+      "verdicts": {
+        "NO_EDGE": 17,
+        "RECOMMENDED": 63
+      },
+      "mean_exposure_deployed": 0.0814,
+      "mean_exposure_given_deployed": 0.1034,
+      "mean_exposure_fallback": 0.0771,
+      "n_worlds_leaking_harmful_weight": 0,
+      "max_harmful_weight": 0,
+      "elapsed_s": 12.9
+    },
+    "harmful": {
+      "kind": "harmful",
+      "p_hits": [
+        0.35,
+        0.5,
+        0.5
+      ],
+      "n_worlds": 80,
+      "n_recommended": 22,
+      "recommendation_rate": 0.275,
+      "recommendation_rate_ci95": [
+        0.1892,
+        0.3814
+      ],
+      "verdicts": {
+        "NO_EDGE": 58,
+        "RECOMMENDED": 22
+      },
+      "mean_exposure_deployed": 0.275,
+      "mean_exposure_given_deployed": 1.0,
+      "mean_exposure_fallback": 0.5625,
+      "n_worlds_leaking_harmful_weight": 6,
+      "max_harmful_weight": 0.3333,
+      "elapsed_s": 12.9
+    }
+  },
+  "n_null_worlds": 300,
+  "null_recommendation_rate": 0.2933,
+  "null_recommendation_rate_ci95": [
+    0.2447,
+    0.3472
+  ],
+  "null_capital_exposure_deployed": 0.2933,
+  "null_capital_exposure_given_deployed": 1.0,
+  "null_capital_exposure_fallback": 0.6033,
+  "edge_recovery_rate": 0.7875,
+  "edge_misallocated_weight_given_deployed": 0.1034,
+  "harmful_leak_worlds": 6,
+  "harmful_max_weight": 0.3333,
+  "computed_at": "2026-08-22T16:28:39+00:00",
+  "note": "SENSITIVITY/KNOWN-ANSWER artifact \u2014 synthetic worlds with a planted truth. Nothing here is market evidence and no return claim may cite it."
+}

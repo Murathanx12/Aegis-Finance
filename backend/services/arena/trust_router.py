@@ -48,12 +48,15 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timezone
+from statistics import NormalDist
 
 from backend.services.arena import reliability
 
 logger = logging.getLogger(__name__)
 
 ROUTER_VERSION = "RELIABILITY_ROUTER_v1"
+
+_NORM = NormalDist()
 
 #: Pseudo-observations pulling every estimate toward its parent. At n == K
 #: the data and the parent split the estimate evenly.
@@ -77,18 +80,73 @@ EVIDENCE_FLOOR_N = 30
 #: against 400 sustained observations: its SE is 5x larger.
 EDGE_Z = 1.5
 
+#: The per-WORLD false-trust rate the corrected bar is built to hold: the
+#: probability that ANY actor earns weight when no actor has edge. ORDER 27
+#: P2 declared 5% and the G1 correlated battery measures whether it is
+#: delivered — a nominal rate is a claim, not a property.
+EDGE_ALPHA = 0.05
+
+
+def edge_z(n_actors: int, *, cluster_adjust: bool,
+           alpha: float = EDGE_ALPHA) -> float:
+    """Standard errors an actor must clear the prior by to earn weight.
+
+    v1 (cluster_adjust off) keeps its declared EDGE_Z untouched: ORDER 27 says
+    the v1 bars stand for v1, and this function must not quietly restate them.
+
+    With the correction on, the bar is Bonferroni over the actors being ranked.
+    The router's whole job is to pick the best of m, and a per-comparison bar
+    applied to a best-of-m choice is the multiplicity error the canon (§63)
+    refuses everywhere else in this codebase; m is the number of actors in the
+    run, exactly as `m = run` reads for a screen. It scales itself: the day the
+    arena carries eight model_ids the bar rises without anyone remembering to
+    raise it.
+    """
+    if not cluster_adjust:
+        return EDGE_Z
+    m = max(1, int(n_actors))
+    return _NORM.inv_cdf(1.0 - alpha / m)
+
+#: Divide each cell's row count by the design effect its own decision-date
+#: clustering measures (`reliability.design_effect`), instead of counting ten
+#: names entered on one morning as ten independent observations.
+#:
+#: DEFAULT OFF, and that default is an ATTENDED decision rather than a
+#: judgement that OFF is right. The G1 correlated-worlds battery
+#: (`scripts/g1_correlated_battery.py`, 2026-08-23) measures the two settings:
+#:
+#:     OFF  null-world recommendation rate 38.7% [33.3, 44.3]
+#:     ON   see the committed receipt
+#:
+#: against ORDER 27's <=5% bar — so OFF is measurably broken and ON is the
+#: fix. It ships off because this router's verdict is already in a live causal
+#: path (`engine.py` sizes `ce_kelly` books at `abstain_kelly_factor` unless
+#: the verdict is RECOMMENDED), and flipping it silently would leave one live
+#: NAV series describing two policies mid-segment. That flip is Murat's, and
+#: `router_capital_gate` refuses to license the OFF setting in the meantime.
+CLUSTER_ADJUST_DEFAULT = False
+
 _BANNER = {
     "router_version": ROUTER_VERSION,
     "validation_status": "PRODUCT_EXPERIMENT",
     "simulation": True,
-    "consumed_by": "nothing — recommendation surface only; no book reads this",
+    "consumed_by": ("arena engine ce_kelly sizing — verdict != RECOMMENDED "
+                    "halves declared aggression (v1 knob only)"),
     "may_mutate_books": False,
-    # Cross-horizon correlation IS adjusted (effective n = per-state max
-    # across horizons — the G1 battery fix, 2026-08-21). Cross-NAME
-    # correlation within a day is still not.
-    "correlation_adjusted": "horizon-dedup only",
     "trains_on": "matured resolved outcomes only (reliability cells)",
 }
+
+
+def _banner(cluster_adjust: bool) -> dict:
+    return {
+        **_BANNER,
+        # Cross-horizon correlation IS adjusted (effective n = per-state max
+        # across horizons — the G1 battery fix, 2026-08-21). Cross-NAME
+        # correlation within a day is adjusted only when cluster_adjust is on.
+        "correlation_adjusted": ("horizon-dedup + decision-date design effect"
+                                 if cluster_adjust else "horizon-dedup only"),
+        "cluster_adjust": cluster_adjust,
+    }
 
 
 def _now() -> str:
@@ -144,8 +202,10 @@ def _standard_error(evidence_n: float, *, prior: float = POPULATION_PRIOR,
 
 
 # ── cells -> trust ──────────────────────────────────────────────────────────
-def _hierarchy(cells: list[dict], actor: str,
-               context: dict) -> list[tuple[float, float]]:
+def _hierarchy(cells: list[dict], actor: str, context: dict, *,
+               cluster_adjust: bool,
+               actor_clustering: dict | None = None,
+               ) -> list[tuple[float, float, float]]:
     """Aggregate an actor's cells at each backoff level, root -> leaf.
 
     A cell matches a level if it agrees with `context` on every key the level
@@ -164,11 +224,53 @@ def _hierarchy(cells: list[dict], actor: str,
             s += c["successes"]
             n += c["n"]
             matching.append(c)
-        out.append((s, n, _effective_n(matching)))
+        n_eff = _effective_n(matching, cluster_adjust=cluster_adjust)
+        if cluster_adjust and not keys:
+            # The unconditional level pools every cell, so its cells are
+            # different views of the same mornings and cannot have their
+            # effective counts added. The counting brain measured this actor's
+            # clustering once, over its deduplicated decisions; that number is
+            # the only one entitled to speak for the pooled level.
+            pooled = (actor_clustering or {}).get(actor) or {}
+            pooled_n = pooled.get("n_effective")
+            if isinstance(pooled_n, (int, float)) and pooled_n > 0:
+                n_eff = min(n_eff, float(pooled_n))
+        if cluster_adjust and n > 0:
+            # ONE sample size, used everywhere. Shrinking a rate with `n` while
+            # pricing its standard error off `n_eff` is not conservative — it
+            # is incoherent, and it is why the first cluster-corrected run
+            # still recommended coin flips in 30% of null worlds: 12 pseudo-
+            # observations shrink nothing against 675 rows, while the SE beside
+            # them was already claiming only 15 independent decisions existed.
+            # The ratio estimate is unbiased at either weight; carrying it at
+            # n_eff makes the prior bite exactly as hard as the evidence is
+            # thin.
+            s, n = (s / n) * n_eff, n_eff
+        out.append((s, n, n_eff))
     return out
 
 
-def _effective_n(matching: list[dict]) -> float:
+def _cell_n_eff(cell: dict, *, cluster_adjust: bool) -> float:
+    """One cell's independent-decision count.
+
+    Without the adjustment this is the row count, which assumes every row was
+    a separate draw. With it, the count is the one the counting brain measured
+    from the cell's own decision-date clustering — a cell whose rows came from
+    four mornings carries four mornings of information however many names each
+    morning held. A cell that never reported its clustering (an older row, a
+    reader that predates the field) falls back to its row count, and that
+    fallback is the permissive direction, so `recommend` records whether the
+    adjustment was actually available rather than merely requested.
+    """
+    n = float(cell["n"])
+    if not cluster_adjust:
+        return n
+    clustering = cell.get("clustering") or {}
+    n_eff = clustering.get("n_effective")
+    return float(n_eff) if isinstance(n_eff, (int, float)) and n_eff > 0 else n
+
+
+def _effective_n(matching: list[dict], *, cluster_adjust: bool = False) -> float:
     """DECISIONS, not rows: per vol_state, the max n across horizon cells.
 
     The same decision produces one row per horizon (experience.HORIZONS is
@@ -179,17 +281,26 @@ def _effective_n(matching: list[dict]) -> float:
     This is the conservative end of n_eff ∈ [max_h, sum_h] — chosen after
     the G1 battery measured a 27.5% null-world false-positive rate under
     the sum (rows-as-independent) assumption.
+
+    That fix deduplicated the five horizon rows of one decision and nothing
+    else. `cluster_adjust` deduplicates the OTHER axis — the names that shared
+    a morning — by taking each cell's measured independent-decision count
+    before the same per-state max. The G1 correlated-worlds battery measures
+    what each setting is worth; see CLUSTER_ADJUST_DEFAULT.
     """
     by_state: dict[str, float] = {}
     for c in matching:
         key = str(c.get("vol_state"))
-        by_state[key] = max(by_state.get(key, 0.0), float(c["n"]))
+        by_state[key] = max(by_state.get(key, 0.0),
+                            _cell_n_eff(c, cluster_adjust=cluster_adjust))
     return sum(by_state.values())
 
 
 def trust_weights(cells: list[dict], *, context: dict | None = None,
                   prior: float = POPULATION_PRIOR, k: float = SHRINK_K,
-                  evidence_floor_n: int = EVIDENCE_FLOOR_N) -> dict:
+                  evidence_floor_n: int = EVIDENCE_FLOOR_N,
+                  cluster_adjust: bool | None = None,
+                  actor_clustering: dict | None = None) -> dict:
     """Recommended relative trust per actor from matured cells.
 
     `cells`: [{actor, successes, n, horizon_days?, vol_state?}, ...] — matured
@@ -205,10 +316,13 @@ def trust_weights(cells: list[dict], *, context: dict | None = None,
     fallback, because "we cannot rank the rest" is not a reason to fund it.
     """
     context = context or {}
+    if cluster_adjust is None:
+        cluster_adjust = CLUSTER_ADJUST_DEFAULT
     actors = sorted({c["actor"] for c in cells})
     # The floor is priced in DECISIONS, not rows — five horizon rows of one
     # decision are not five observations (see _effective_n).
-    total_n = sum(_effective_n([c for c in cells if c["actor"] == a])
+    total_n = sum(_hierarchy(cells, a, {}, cluster_adjust=cluster_adjust,
+                             actor_clustering=actor_clustering)[0][2]
                   for a in actors)
     if not actors or total_n < evidence_floor_n:
         return {
@@ -221,18 +335,21 @@ def trust_weights(cells: list[dict], *, context: dict | None = None,
                            "estimate": None, "leaf_n": 0}
                        for a in actors},
             "total_matured_n": int(total_n),
+            "cluster_adjusted": cluster_adjust,
         }
 
     est = {}
     for a in actors:
-        levels = _hierarchy(cells, a, context)
+        levels = _hierarchy(cells, a, context, cluster_adjust=cluster_adjust,
+                            actor_clustering=actor_clustering)
         e = backoff_estimate(levels, prior=prior, k=k)
         e["se"] = _standard_error(e["evidence_n"], prior=prior, k=k)
         est[a] = e
 
     # lower-confidence-bound excess: what the evidence supports, not what the
     # point estimate flatters
-    lcb = {a: max(0.0, e["estimate"] - prior - EDGE_Z * e["se"])
+    z_trust = edge_z(len(actors), cluster_adjust=cluster_adjust)
+    lcb = {a: max(0.0, e["estimate"] - prior - z_trust * e["se"])
            for a, e in est.items()}
 
     def _row(a: str, weight: float) -> dict:
@@ -243,20 +360,44 @@ def trust_weights(cells: list[dict], *, context: dict | None = None,
                 "evidence_n": int(est[a]["evidence_n"])}
 
     if all(x == 0.0 for x in lcb.values()):
+        # DELIBERATELY uncorrected, and asymmetric with the trust bar above.
+        # Multiplicity control exists to stop us funding noise; applying it
+        # here would make a harmful actor HARDER to exclude, which is the
+        # opposite of what the correction is for. Wrongly excluding an actor
+        # costs an equal share of a fallback; wrongly funding a measurably
+        # harmful one costs capital.
         harmful = {a for a, e in est.items()
                    if e["estimate"] < prior - EDGE_Z * e["se"]}
-        kept = [a for a in actors if a not in harmful]
+        # The fallback funds an actor only if its own shrunk estimate is at
+        # least the no-skill prior — NOT merely "not proven harmful". Failing
+        # to reject harm is not evidence of safety, and the G1 correlated
+        # battery priced that confusion: under a significance-tested exclusion
+        # a truly harmful actor (0.35 against a 0.50 prior) still collected a
+        # third of the fallback in HALF of all harmful worlds, because its
+        # shrunk estimate sat just inside the threshold. Among actors we
+        # cannot rank, the one that looks worst has no claim on capital.
+        #
+        # Rides on `cluster_adjust` with every other v1.1 change, so that ONE
+        # attended flip moves the router from its declared v1 semantics to the
+        # measured ones. A fix that arrived on its own schedule would leave the
+        # OFF receipt describing a router that is neither v1 nor v1.1.
+        below = ({a for a, e in est.items() if e["estimate"] < prior}
+                 if cluster_adjust else harmful)
+        kept = [a for a in actors if a not in below]
         share = (1.0 / len(kept)) if kept else 0.0
         return {
             "verdict": "NO_EDGE",
-            "reason": ("no actor clears prior + EDGE_Z*SE at these sample "
-                       "sizes — the honest null; uniform by fallback over "
-                       "non-harmful actors"),
+            "reason": ("no actor clears the trust bar at these sample sizes — "
+                       "the honest null; uniform by fallback over actors whose "
+                       "own estimate is at or above the prior, and no capital "
+                       "at all if none is"),
             "context": context,
-            "actors": {a: _row(a, 0.0 if a in harmful else share)
+            "actors": {a: _row(a, 0.0 if a in below else share)
                        for a in actors},
             "excluded_as_harmful": sorted(harmful),
+            "excluded_below_prior": sorted(below),
             "total_matured_n": int(total_n),
+            "cluster_adjusted": cluster_adjust,
         }
 
     z = sum(lcb.values())
@@ -265,6 +406,7 @@ def trust_weights(cells: list[dict], *, context: dict | None = None,
         "context": context,
         "actors": {a: _row(a, lcb[a] / z) for a in actors},
         "total_matured_n": int(total_n),
+        "cluster_adjusted": cluster_adjust,
     }
 
 
@@ -288,35 +430,53 @@ def _decision_cells_as_router_input(report: dict) -> list[dict]:
             "n": n,
             "horizon_days": c.get("horizon_days"),
             "vol_state": c.get("vol_state"),
+            # measured by the counting brain; absent on pre-2026-08-23 rows
+            "clustering": c.get("clustering"),
         })
     return out
 
 
 def recommend(*, root=None, leg: str = "forecast",
-              context: dict | None = None) -> dict:
+              context: dict | None = None,
+              cluster_adjust: bool | None = None) -> dict:
     """The live receipt: trust over model_ids from the arena's matured cells.
 
     On the unseeded/young arena this returns ABSTAIN with zero cells — which
     is the correct answer, printed rather than implied.
     """
+    if cluster_adjust is None:
+        cluster_adjust = CLUSTER_ADJUST_DEFAULT
     report = reliability.decision_cells(
         root=root, leg=leg,
         by=("model_id", "horizon_days", "vol_state"))
     cells = _decision_cells_as_router_input(report)
+    actor_clustering = report.get("actor_clustering") or {}
     per_state = {}
     for vol_state in reliability.VOL_STATES:
         per_state[vol_state] = trust_weights(
-            cells, context={**(context or {}), "vol_state": vol_state})
+            cells, context={**(context or {}), "vol_state": vol_state},
+            cluster_adjust=cluster_adjust, actor_clustering=actor_clustering)
+    # Requested is not the same as applied: a ledger of cells that carry no
+    # clustering block silently falls back to row counts, and a receipt that
+    # said "adjusted" over that would be the permissive lie this whole battery
+    # exists to catch.
+    n_with_clustering = sum(1 for c in cells
+                            if (c.get("clustering") or {}).get("n_effective"))
     return {
-        **_BANNER,
+        **_banner(cluster_adjust),
         "computed_at": _now(),
         "leg": leg,
         "n_reported_cells": len(cells),
         "n_cells_seen": report.get("n_cells", 0),
-        "global": trust_weights(cells, context=context),
+        "n_cells_with_clustering": n_with_clustering,
+        "cluster_adjust_effective": bool(cluster_adjust and n_with_clustering),
+        "global": trust_weights(cells, context=context,
+                                cluster_adjust=cluster_adjust,
+                                actor_clustering=actor_clustering),
         "by_vol_state": per_state,
         "params": {"shrink_k": SHRINK_K, "prior": POPULATION_PRIOR,
-                   "edge_z": EDGE_Z, "evidence_floor_n": EVIDENCE_FLOOR_N},
+                   "edge_z": EDGE_Z, "evidence_floor_n": EVIDENCE_FLOOR_N,
+                   "cluster_adjust": cluster_adjust},
     }
 
 

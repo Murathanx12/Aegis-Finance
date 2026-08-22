@@ -564,6 +564,20 @@ def _case_detectability_gate():
             "a detectability verdict with no planted-world receipts")
 
 
+def _case_router_capital_gate():
+    from pathlib import Path
+
+    from backend.services.router_capital_gate import (RouterCapitalRefused,
+                                                      evaluate_router_license)
+    # The missing input is the CORRELATED-WORLDS BATTERY itself. ORDER 27 P2
+    # withholds capital authority until that battery passes; a gate that
+    # answered PASS over an absent receipt would hand the authority back on
+    # the strength of a file nobody wrote.
+    return (lambda: evaluate_router_license(Path("Z:/no/such/battery.json")),
+            RouterCapitalRefused,
+            "a router capital licence with no battery receipt")
+
+
 CASES = {
     "aegis_panel": _case_aegis_panel,
     "risk_price_features": _case_risk_price_features,
@@ -612,6 +626,7 @@ CASES = {
     "ex_post": _case_ex_post,
     "risk_layer": _case_risk_layer,
     "detectability_gate": _case_detectability_gate,
+    "router_capital_gate": _case_router_capital_gate,
 }
 
 
