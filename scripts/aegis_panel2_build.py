@@ -65,21 +65,37 @@ def _load_all() -> pd.DataFrame:
             f"is refused, never built.")
     if not MODERN.exists():
         raise PanelRefused(f"{MODERN} missing")
-    parts = [pd.read_parquet(CHUNK_DIR / f"jkp_usa_{lo}_{hi}.parquet")
+
+    n_raw = 0
+
+    def _one(p: Path) -> pd.DataFrame:
+        nonlocal n_raw
+        d = pd.read_parquet(p)
+        n_raw += len(d)
+        # filter per chunk BEFORE concat, downcast features to float32 —
+        # 4.2M rows × 440 float64 would peak ~15 GB at the join otherwise
+        for col, want in (("common", 1), ("obs_main", 1),
+                          ("primary_sec", 1)):
+            if col in d.columns:
+                d = d[d[col] == want]
+        if "crsp_shrcd" in d.columns:
+            d = d[d["crsp_shrcd"].isin((10, 11))
+                  | d["crsp_shrcd"].isna()]
+        keep64 = {"permno", "gvkey", "eom", "date", LABEL}
+        for c in d.columns:
+            if d[c].dtype == "float64" and c not in keep64:
+                d[c] = d[c].astype("float32")
+        return d
+
+    parts = [_one(CHUNK_DIR / f"jkp_usa_{lo}_{hi}.parquet")
              for lo, hi in USA_CHUNKS]
-    parts.append(pd.read_parquet(MODERN))
+    parts.append(_one(MODERN))
     df = pd.concat(parts, ignore_index=True)
-    return df
+    return df, n_raw
 
 
 def build() -> tuple[pd.DataFrame, dict]:
-    df = _load_all()
-    n_raw = len(df)
-    for col, want in (("common", 1), ("obs_main", 1), ("primary_sec", 1)):
-        if col in df.columns:
-            df = df[df[col] == want]
-    if "crsp_shrcd" in df.columns:
-        df = df[df["crsp_shrcd"].isin((10, 11)) | df["crsp_shrcd"].isna()]
+    df, n_raw = _load_all()
     df["eom"] = pd.to_datetime(df["eom"])
     df = df.sort_values(["eom", "permno"], na_position="last")
     dup = df.duplicated(["permno", "eom"], keep=False) & df["permno"].notna()
