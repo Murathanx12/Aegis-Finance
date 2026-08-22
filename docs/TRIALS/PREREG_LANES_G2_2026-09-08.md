@@ -1,9 +1,14 @@
-# PREREG — GENERATION-2 LANES (launch window 2026-09-08) — DRAFT
+# PREREG — GENERATION-2 LANES (launch window 2026-09-08) — SIGNED
 
-**Status: DRAFT for Murat's signature before the window. Lanes ship per
-`seed-a-lane` (own YAML, own hash, own inception, env-gated, Murat
-flips). §64 basis: `lane_factory/g2_sweep_2026-08-19.json` (SIMULATION,
-SCREEN — quoted for power, never as a verdict).**
+**Status: SIGNED. SIGNED-BY: Murat Abdullaev — in-session approval
+2026-08-22 ("All three now" on the signature question), recorded by the
+working session. Signed 17 days before the 09-08 window; every parameter
+below is FROZEN from this line on — post-signature changes are amendments,
+never edits. Lanes still ship per `seed-a-lane` (own YAML, own hash, own
+inception, env-gated, Murat flips the flags in the window — the signature
+registers the design, it does not seed a lane). §64 basis:
+`lane_factory/g2_sweep_2026-08-19.json` (SIMULATION, SCREEN — quoted for
+power, never as a verdict).**
 
 ## Pair A — risk-sized (transports the NET tournament risk result)
 

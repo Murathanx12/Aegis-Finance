@@ -1,11 +1,11 @@
 # DECLARATION — the registered loss of IIF-1 (closing the LOSS registration gap)
 
-**Status: DRAFT FOR SIGNATURE — UNSIGNED.**
-SIGNED-BY: *(awaiting Murat — signing is his act; this draft is a session's
-work per `HANDOFF_2026-08-18_BRAIN_ORDER_15.md` §5)*
+**Status: SIGNED.**
+SIGNED-BY: Murat Abdullaev — in-session approval 2026-08-22 ("All three
+now" on the signature question), recorded by the working session.
 Drafted 2026-08-22, before any licensed read (the read gate opens at 40 graded
-nights; nights 1–4 are `ok`, so the gate is weeks away). **Required signed
-before the 40-night read.**
+nights; nights 1–4 are `ok`, so the gate is weeks away). Signed the same day,
+well before the 40-night read.
 
 ## 1. The gap being closed
 
