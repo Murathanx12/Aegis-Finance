@@ -518,6 +518,37 @@ def _get_current_prices(tickers: list[str]) -> dict[str, float]:
     return prices
 
 
+def _get_latest_bar_date(tickers: list[str]) -> date | None:
+    """Date of the newest daily bar across tickers, or None if unknowable.
+
+    Served from the same cached fetch as _get_current_prices (1h TTL), so the
+    marginal cost is a cache hit. None — offline, every fetch failed, or a
+    test that patched only _get_current_prices — makes the caller fall back
+    to run-date stamping rather than refusing to mark: the bar date is an
+    UPGRADE to the stamp, never a new way to lose a close mark.
+    """
+    latest: date | None = None
+    try:
+        from backend.services.data_fetcher import fetch_safe
+        end = datetime.now().strftime("%Y-%m-%d")
+        start = (datetime.now() - timedelta(days=10)).strftime("%Y-%m-%d")
+    except Exception as e:                                      # noqa: BLE001
+        logger.warning("Bar-date fetch unavailable: %s", e)
+        return None
+    for ticker in tickers:
+        try:
+            series = fetch_safe(ticker, start, end, name=ticker)
+            if series is None or len(series) == 0:
+                continue
+            d = series.index[-1]
+            d = d.date() if hasattr(d, "date") else d
+            if latest is None or d > latest:
+                latest = d
+        except Exception:                                       # noqa: BLE001
+            continue
+    return latest
+
+
 def _get_price_panel(tickers: list[str], lookback_days: int = 504):
     """As-of wide close-price panel for the optimizer (live path: ends at the
     latest bar). Batch-fetched, cached for the day — the optimizer itself
@@ -906,9 +937,6 @@ def mark_lane_to_market(
     from backend.db import get_config_hash, insert_nav
     from backend.services.portfolio_intelligence.nav import mark_to_market
 
-    if as_of_date is None:
-        as_of_date = date.today()
-
     _ensure_lane_initialized(lane_id, db_path)
     conn = get_connection(db_path)
     try:
@@ -921,8 +949,32 @@ def mark_lane_to_market(
             return None
 
         tickers = [r["ticker"] for r in rows]
+        live_fetch = prices is None
         if prices is None:
             prices = _get_current_prices(tickers)
+
+        # P-day-2026-08-19a: on the live path, stamp the row with the date of
+        # the bar that PRICED it, so NAV_t means close_t by construction (the
+        # old run-date stamp priced the previous close: corr(NAV_t,
+        # close_{t-1}) = 0.974). Explicit as_of_date (replays, tests) is
+        # respected; an unknowable bar date falls back to the run date. A
+        # bar-dated stamp BEFORE the flip is refused: INSERT OR REPLACE would
+        # rewrite a pre-flip row under new semantics — the lag now delays a
+        # row (the next mark lands it) instead of mis-dating it.
+        if as_of_date is None and live_fetch:
+            bar_date = _get_latest_bar_date(tickers)
+            if bar_date is not None:
+                from backend.config import PI_NAV_PRICED_DATE_FROM
+                if bar_date < date.fromisoformat(PI_NAV_PRICED_DATE_FROM):
+                    logger.warning(
+                        "MTM %s: latest bar %s predates the stamp-semantics "
+                        "flip (%s) — NAV row NOT persisted this pass; a "
+                        "later mark writes it under the correct date",
+                        lane_id, bar_date, PI_NAV_PRICED_DATE_FROM)
+                    return None
+                as_of_date = bar_date
+        if as_of_date is None:
+            as_of_date = date.today()
 
         # Total price failure must NOT persist a NAV row: marking every position
         # at cost_basis would write a flat line indistinguishable from real data.

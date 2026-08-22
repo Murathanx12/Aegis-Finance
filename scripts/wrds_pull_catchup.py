@@ -654,14 +654,34 @@ def main() -> int:
                         print(f"  retry {attempt + 1}/{MAX_ATTEMPTS} "
                               f"{p['name']} ({reason}, "
                               f"{time.time() - t0:.0f}s)", flush=True)
+            # A pull that fills its own LIMIT is truncated by construction —
+            # this happens when the server-side COUNT times out (n_est None)
+            # so the over-cap check never ran. boardex.na_wrds_individual_
+            # networks was written at exactly 8,000,000 rows TWICE this way.
+            if n_rows == MAX_ROWS and over_cap is None:
+                if fn.exists():
+                    try:
+                        fn.unlink()
+                    except OSError:
+                        pass
+                over_cap = {**p, "true_rows": None, "cap": MAX_ROWS,
+                            "would_have_kept_pct": None,
+                            "reason": OVER_CAP_REASON + " (count timed out; "
+                            "pull filled the cap exactly)"}
             if over_cap is not None:
                 with lock:
                     state["over_cap"] += 1
                     new_over_cap.append(over_cap)
+                    true_s = (f"{over_cap['true_rows']:,}"
+                              if over_cap.get("true_rows") is not None
+                              else ">= cap (count timed out)")
+                    kept_s = (f"{over_cap['would_have_kept_pct']}%"
+                              if over_cap.get("would_have_kept_pct") is not None
+                              else "an unknown fraction")
                     print(f"  OVER-CAP {p['name']:<38s} "
-                          f"{over_cap['true_rows']:>13,} rows > "
+                          f"{true_s:>13s} rows > "
                           f"{MAX_ROWS:,} — NOT written "
-                          f"({over_cap['would_have_kept_pct']}% would have "
+                          f"({kept_s} would have "
                           f"been an arbitrary subset)", flush=True)
                 _log([{"ts": datetime.now(timezone.utc).isoformat(
                     timespec="seconds"), "name": p["name"],

@@ -68,3 +68,81 @@ def test_mark_lane_with_no_positions_returns_none(tmp_path):
     conn.close()
     assert mark_lane_to_market("conservative", prices=_universe_prices(100.0),
                                as_of_date=date(2026, 6, 3), db_path=db) is None
+
+
+class TestNavStampSemantics:
+    """P-day-2026-08-19a: on the live path the NAV row is stamped with the
+    date of the bar that priced it — NAV_t means close_t by construction.
+    Pre-flip history is protected: a bar-dated stamp before
+    config.PI_NAV_PRICED_DATE_FROM is refused, because INSERT OR REPLACE
+    would silently rewrite a row recorded under the old semantics."""
+
+    def _seeded(self, tmp_path):
+        db = tmp_path / "pi.db"
+        init_db(db)
+        p = _universe_prices(100.0)
+        initialize_lane("balanced", notional=100_000.0, db_path=db, prices=p)
+        return db, p
+
+    def test_live_path_stamps_the_bar_date(self, tmp_path, monkeypatch):
+        import backend.services.portfolio_intelligence.reference_engine as re_
+
+        db, p = self._seeded(tmp_path)
+        bar = date(2026, 9, 15)
+        monkeypatch.setattr(re_, "_get_current_prices", lambda tickers: dict(p))
+        monkeypatch.setattr(re_, "_get_latest_bar_date", lambda tickers: bar)
+        nav = mark_lane_to_market("balanced", db_path=db)
+        assert nav is not None
+        conn = get_connection(db)
+        try:
+            series = get_nav_series(conn, "balanced")
+        finally:
+            conn.close()
+        assert [r["date"] for r in series] == ["2026-09-15"], (
+            "the live mark must stamp the PRICED bar date, not the run date")
+
+    def test_pre_flip_bar_date_is_refused(self, tmp_path, monkeypatch):
+        import backend.services.portfolio_intelligence.reference_engine as re_
+
+        db, p = self._seeded(tmp_path)
+        monkeypatch.setattr(re_, "_get_current_prices", lambda tickers: dict(p))
+        monkeypatch.setattr(re_, "_get_latest_bar_date",
+                            lambda tickers: date(2026, 8, 21))  # pre-flip
+        nav = mark_lane_to_market("balanced", db_path=db)
+        assert nav is None, (
+            "a bar predating the stamp flip must refuse the row — writing it "
+            "would rewrite pre-flip history under new semantics")
+        conn = get_connection(db)
+        try:
+            assert get_nav_series(conn, "balanced") == []
+        finally:
+            conn.close()
+
+    def test_unknown_bar_date_falls_back_to_run_date(self, tmp_path, monkeypatch):
+        import backend.services.portfolio_intelligence.reference_engine as re_
+
+        db, p = self._seeded(tmp_path)
+        monkeypatch.setattr(re_, "_get_current_prices", lambda tickers: dict(p))
+        monkeypatch.setattr(re_, "_get_latest_bar_date", lambda tickers: None)
+        nav = mark_lane_to_market("balanced", db_path=db)
+        assert nav is not None
+        conn = get_connection(db)
+        try:
+            series = get_nav_series(conn, "balanced")
+        finally:
+            conn.close()
+        assert [r["date"] for r in series] == [date.today().isoformat()], (
+            "an unknowable bar date degrades to the old run-date stamp — "
+            "never to a lost close mark")
+
+    def test_explicit_as_of_date_is_respected_unchanged(self, tmp_path):
+        db, p = self._seeded(tmp_path)
+        nav = mark_lane_to_market("balanced", prices=p,
+                                  as_of_date=date(2026, 6, 1), db_path=db)
+        assert nav is not None
+        conn = get_connection(db)
+        try:
+            series = get_nav_series(conn, "balanced")
+        finally:
+            conn.close()
+        assert [r["date"] for r in series] == ["2026-06-01"]

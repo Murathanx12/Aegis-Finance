@@ -117,17 +117,23 @@ def reconcile(payload: dict) -> dict:
     if len(joined) > 5:
         out["daily_return_corr_lag0"] = round(
             float(joined["nav"].corr(joined["book"])), 4)
-        # GAP_RESOLUTION_2026-08-19: NAV rows lag closes by one day
-        # (stamp=today, price=last completed daily bar). Until
-        # P-day-2026-08-19a lands, the ALIGNED comparison is lag −1.
+        # GAP_RESOLUTION_2026-08-19: NAV rows before the stamp-semantics flip
+        # lag closes by one day (stamp=run date, price=last completed bar).
+        # P-day-2026-08-19a SHIPPED 2026-08-22 (config.PI_NAV_PRICED_DATE_FROM
+        # = 2026-08-23): rows from that date are stamped with the bar that
+        # priced them, so the aligned comparison is lag-1 BEFORE the flip and
+        # lag-0 FROM it. While the history is mostly pre-flip rows, lag1 stays
+        # the headline; as post-flip rows accumulate, lag0 overtaking lag1 is
+        # the fix WORKING, not drift.
         out["daily_return_corr_lag1_aligned"] = round(
             float(joined["nav"].corr(joined["book"].shift(1))), 4)
-        out["corr_note"] = ("lag1_aligned is the meaningful number while "
-                            "the NAV date-stamp offset stands (measured "
-                            "0.974 conviction / 0.78 mirror on 08-19); "
-                            "lag0 retained as the drift canary — if lag0 "
-                            "ever exceeds lag1, the stamp semantics "
-                            "changed and this script must be revisited")
+        out["nav_stamp_flip_date"] = "2026-08-23"
+        out["corr_note"] = ("rows before 2026-08-23 lag closes one day "
+                            "(lag1 is their aligned read, measured 0.974 "
+                            "conviction / 0.78 mirror on 08-19); rows from "
+                            "2026-08-23 are bar-dated (lag0 aligned) — "
+                            "expect lag0 to overtake lag1 as post-flip "
+                            "history accumulates")
     out["within_declared_tolerance"] = bool(abs(gap_pct) <= TOL_PCT)
     return out
 

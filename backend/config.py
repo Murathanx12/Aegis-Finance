@@ -2018,3 +2018,13 @@ ARENA_PERSONALITY_RHO = {
 #: Below this many NAV days a book's CE is four events wearing a statistic —
 #: the read refuses it (REFUSED_THIN), mirroring reliability.MIN_CELL_N.
 ARENA_PERSONALITY_MIN_DAYS = 60
+
+#: P-day-2026-08-19a (shipped 2026-08-22). From this date, paper_nav rows are
+#: stamped with the DATE OF THE PRICE BAR THAT VALUED THEM. Rows BEFORE this
+#: date were stamped with the run date while pricing the previous close
+#: (measured corr(NAV_t, close_{t-1}) = 0.974 — the 14-pt-gap investigation).
+#: Consumers aligning NAV to benchmark closes must use lag-1 for rows before
+#: this date and lag-0 from it onward. The mark REFUSES to write a bar-dated
+#: row before this date: INSERT OR REPLACE would silently rewrite pre-flip
+#: history under the new semantics.
+PI_NAV_PRICED_DATE_FROM = "2026-08-23"
