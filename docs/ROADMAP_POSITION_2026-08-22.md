@@ -93,7 +93,8 @@ complete. To resume: relaunch the two detached loops
 `jkp_full/pull_foreign.ps1` for the ~1 h foreign subset) or invoke
 `python -m scripts.wrds_pull_jkp_full` repeatedly.
 
-## NEXT SESSIONS (ordered)
+## NEXT SESSIONS (ordered — build detail per step in
+`docs/HANDOFF_2026-08-22_OPUS_BUILDER.md`)
 
 1. **Verify the JKP chunks** (row sanity, no at-cap fills, meta audit) and
    extend TRAINING_SUBSTRATE receipt to v1.1 with the new families.
@@ -108,8 +109,9 @@ complete. To resume: relaunch the two detached loops
 4. **RETURN-PANEL-TOURNAMENT-2** registration + run on panel-2.
 5. **RISK-PRICE-FOREIGN-CONFIRM-1** registration + run (13 countries,
    same era, §64 from measured foreign n).
-6. **ORDER 27 carry-overs, unchanged:** why_moved day-guard then retry
-   slots · G1 correlated-worlds battery before router capital authority ·
+6. **ORDER 27 carry-overs:** why_moved day-guard + retry slots **DONE
+   2026-08-22 evening (see addendum)** · G1 correlated-worlds battery
+   before router capital authority ·
    P9 alpha-diversity books (gated on a surviving signal — none yet) ·
    PROFIT_ALLOCATOR_v2 (gated on true OOS forecasts) · EVENT_IMPACT
    bridge · diffusion baselines behind their corpse check.
