@@ -1,0 +1,161 @@
+{
+  "verified": {
+    "AUS": {
+      "rows_raw": 244276,
+      "rows_filtered": 244276,
+      "labeled": 240093,
+      "n_months": 144,
+      "names_per_month_med": 1675,
+      "risk_cov": 0.697,
+      "window": [
+        "2013-01",
+        "2024-12"
+      ]
+    },
+    "CAN": {
+      "rows_raw": 342695,
+      "rows_filtered": 342695,
+      "labeled": 142471,
+      "n_months": 144,
+      "names_per_month_med": 2322,
+      "risk_cov": 0.303,
+      "window": [
+        "2013-01",
+        "2024-12"
+      ]
+    },
+    "CHE": {
+      "rows_raw": 33337,
+      "rows_filtered": 33337,
+      "labeled": 33029,
+      "n_months": 144,
+      "names_per_month_med": 232,
+      "risk_cov": 0.873,
+      "window": [
+        "2013-01",
+        "2024-12"
+      ]
+    },
+    "DEU": {
+      "rows_raw": 112168,
+      "rows_filtered": 112168,
+      "labeled": 110570,
+      "n_months": 144,
+      "names_per_month_med": 753,
+      "risk_cov": 0.744,
+      "window": [
+        "2013-01",
+        "2024-12"
+      ]
+    },
+    "ESP": {
+      "rows_raw": 28458,
+      "rows_filtered": 28458,
+      "labeled": 28090,
+      "n_months": 144,
+      "names_per_month_med": 216,
+      "risk_cov": 0.615,
+      "window": [
+        "2013-01",
+        "2024-12"
+      ]
+    },
+    "FRA": {
+      "rows_raw": 103907,
+      "rows_filtered": 103907,
+      "labeled": 101626,
+      "n_months": 144,
+      "names_per_month_med": 721,
+      "risk_cov": 0.744,
+      "window": [
+        "2013-01",
+        "2024-12"
+      ]
+    },
+    "GBR": {
+      "rows_raw": 218718,
+      "rows_filtered": 218718,
+      "labeled": 216026,
+      "n_months": 144,
+      "names_per_month_med": 1528,
+      "risk_cov": 0.612,
+      "window": [
+        "2013-01",
+        "2024-12"
+      ]
+    },
+    "ITA": {
+      "rows_raw": 49342,
+      "rows_filtered": 49342,
+      "labeled": 49040,
+      "n_months": 144,
+      "names_per_month_med": 345,
+      "risk_cov": 0.884,
+      "window": [
+        "2013-01",
+        "2024-12"
+      ]
+    },
+    "JPN": {
+      "rows_raw": 547221,
+      "rows_filtered": 547221,
+      "labeled": 546143,
+      "n_months": 144,
+      "names_per_month_med": 3802,
+      "risk_cov": 0.967,
+      "window": [
+        "2013-01",
+        "2024-12"
+      ]
+    },
+    "KOR": {
+      "rows_raw": 309425,
+      "rows_filtered": 309425,
+      "labeled": 307994,
+      "n_months": 144,
+      "names_per_month_med": 2186,
+      "risk_cov": 0.972,
+      "window": [
+        "2013-01",
+        "2024-12"
+      ]
+    },
+    "NLD": {
+      "rows_raw": 15490,
+      "rows_filtered": 15490,
+      "labeled": 15371,
+      "n_months": 144,
+      "names_per_month_med": 108,
+      "risk_cov": 0.89,
+      "window": [
+        "2013-01",
+        "2024-12"
+      ]
+    },
+    "SWE": {
+      "rows_raw": 99595,
+      "rows_filtered": 99595,
+      "labeled": 98955,
+      "n_months": 144,
+      "names_per_month_med": 667,
+      "risk_cov": 0.932,
+      "window": [
+        "2013-01",
+        "2024-12"
+      ]
+    },
+    "TWN": {
+      "rows_raw": 279629,
+      "rows_filtered": 279629,
+      "labeled": 279105,
+      "n_months": 144,
+      "names_per_month_med": 1936,
+      "risk_cov": 0.931,
+      "window": [
+        "2013-01",
+        "2024-12"
+      ]
+    }
+  },
+  "total_rows": 2384261
+}
