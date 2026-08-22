@@ -537,8 +537,19 @@ def _case_aegis_panel():
     return (call, AP.PanelRefused, "a panel spine that does not exist")
 
 
+def _case_risk_price_features():
+    from backend.services.risk_price_features import (RiskPriceRefused,
+                                                      build)
+    # The missing input is the DAILY PRICE STORE for a requested year. A
+    # family built over a silently absent year would hand the trial a
+    # panel with a hole wearing the full window's label.
+    return (lambda: build((1888, 1889)), RiskPriceRefused,
+            "a risk-price family over years with no price files")
+
+
 CASES = {
     "aegis_panel": _case_aegis_panel,
+    "risk_price_features": _case_risk_price_features,
     "spec": _case_arena_spec,
     "experience": _case_arena_experience,
     "reliability": _case_arena_reliability,
