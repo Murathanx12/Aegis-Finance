@@ -1,0 +1,313 @@
+{
+  "trial": "RETURN-PANEL-TOURNAMENT-1",
+  "mode": "REGISTERED",
+  "stage": "screen",
+  "at": "2026-08-22T08:53:33+00:00",
+  "signed_by": "Murat Abdullaev \u2014 recorded order 2026-08-22 (\"we should run",
+  "panel_hash": "34f7cb98ad147785",
+  "primary_receipt_at": "2026-08-22T08:25:11+00:00",
+  "pooled_ic": {
+    "floor_lgbm": 0.00175,
+    "full_lgbm": -0.00072,
+    "full_ridge": -0.00022,
+    "full_lgbm_rank": -0.04125,
+    "full_mlp": 0.00995
+  },
+  "ic_by_year": {
+    "floor_lgbm": {
+      "2016": 0.0076,
+      "2017": -0.0102,
+      "2018": 0.0299,
+      "2019": 0.0341,
+      "2020": -0.006,
+      "2021": -0.0111,
+      "2022": -0.0192,
+      "2023": 0.0107,
+      "2024": -0.0244
+    },
+    "full_lgbm": {
+      "2016": -0.0122,
+      "2017": -0.0189,
+      "2018": 0.0318,
+      "2019": 0.0443,
+      "2020": -0.0442,
+      "2021": -0.0068,
+      "2022": -0.0001,
+      "2023": 0.0136,
+      "2024": -0.0167
+    },
+    "full_ridge": {
+      "2016": -0.0087,
+      "2017": -0.0267,
+      "2018": 0.035,
+      "2019": 0.0492,
+      "2020": -0.0134,
+      "2021": -0.0242,
+      "2022": -0.0293,
+      "2023": 0.0207,
+      "2024": -0.0055
+    },
+    "full_lgbm_rank": {
+      "2016": -0.0106,
+      "2017": -0.0395,
+      "2018": -0.0051,
+      "2019": -0.0484,
+      "2020": 0.0929,
+      "2021": -0.1621,
+      "2022": -0.0684,
+      "2023": -0.0652,
+      "2024": -0.0695
+    },
+    "full_mlp": {
+      "2016": -0.0154,
+      "2017": -0.002,
+      "2018": 0.0098,
+      "2019": 0.0571,
+      "2020": 0.0061,
+      "2021": 0.0003,
+      "2022": 0.0043,
+      "2023": 0.0195,
+      "2024": 0.01
+    }
+  },
+  "screen": {
+    "model_ordering": {
+      "full_ridge_minus_full_lgbm": {
+        "mean": 0.0004956039755700998,
+        "ci_lo": -0.01036346603204003,
+        "ci_hi": 0.011060322014240082,
+        "se": 0.006465739574557242,
+        "mde_80pct_power": 0.018114320419396618,
+        "n_rows": 106,
+        "n_dates": 106,
+        "n_securities": 1,
+        "n_effective": 106.0,
+        "block_days": 1,
+        "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+        "block_days_derived": 1
+      },
+      "full_mlp_minus_full_lgbm": {
+        "mean": 0.010667276429025301,
+        "ci_lo": 7.758719117118092e-05,
+        "ci_hi": 0.02035447416668403,
+        "se": 0.006251298420347797,
+        "mde_80pct_power": 0.017513545251503917,
+        "n_rows": 106,
+        "n_dates": 106,
+        "n_securities": 1,
+        "n_effective": 106.0,
+        "block_days": 1,
+        "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+        "block_days_derived": 1
+      },
+      "full_lgbm_rank_minus_full_lgbm": {
+        "mean": -0.04053432934069506,
+        "ci_lo": -0.07015857303649761,
+        "ci_hi": -0.014855666116338337,
+        "se": 0.016795758381195153,
+        "mde_80pct_power": 0.0470547484159334,
+        "n_rows": 106,
+        "n_dates": 106,
+        "n_securities": 1,
+        "n_effective": 106.0,
+        "block_days": 1,
+        "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+        "block_days_derived": 1
+      }
+    },
+    "family_alone_vs_floor": {
+      "ACCRUALS": {
+        "pooled_ic": -0.00018,
+        "contrast_vs_floor": {
+          "mean": -0.0019302883544241997,
+          "ci_lo": -0.009148050693160577,
+          "ci_hi": 0.005472520735039764,
+          "se": 0.00437005274888703,
+          "mde_80pct_power": 0.012243075185784198,
+          "n_rows": 106,
+          "n_dates": 106,
+          "n_securities": 1,
+          "n_effective": 106.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+          "block_days_derived": 1
+        }
+      },
+      "BALANCE_SHEET": {
+        "pooled_ic": -0.00178,
+        "contrast_vs_floor": {
+          "mean": -0.003526517809952382,
+          "ci_lo": -0.014411098011838696,
+          "ci_hi": 0.006711749338942471,
+          "se": 0.006469232493501707,
+          "mde_80pct_power": 0.0181241061294812,
+          "n_rows": 106,
+          "n_dates": 106,
+          "n_securities": 1,
+          "n_effective": 106.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+          "block_days_derived": 1
+        }
+      },
+      "EARNINGS_MOMENTUM": {
+        "pooled_ic": 0.00324,
+        "contrast_vs_floor": {
+          "mean": 0.0014924898942081715,
+          "ci_lo": -0.004780413004742794,
+          "ci_hi": 0.007498237418691476,
+          "se": 0.0037643888622675664,
+          "mde_80pct_power": 0.010546256193591284,
+          "n_rows": 106,
+          "n_dates": 106,
+          "n_securities": 1,
+          "n_effective": 106.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+          "block_days_derived": 1
+        }
+      },
+      "GROWTH_INVESTMENT": {
+        "pooled_ic": -0.00174,
+        "contrast_vs_floor": {
+          "mean": -0.003489912570530905,
+          "ci_lo": -0.01374491030560721,
+          "ci_hi": 0.0077270309419890815,
+          "se": 0.006669710393130561,
+          "mde_80pct_power": 0.018685762049737372,
+          "n_rows": 106,
+          "n_dates": 106,
+          "n_securities": 1,
+          "n_effective": 106.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+          "block_days_derived": 1
+        }
+      },
+      "ISSUANCE_PAYOUT": {
+        "pooled_ic": 0.00253,
+        "contrast_vs_floor": {
+          "mean": 0.0007771394221250367,
+          "ci_lo": -0.007763585081772082,
+          "ci_hi": 0.008441881897366976,
+          "se": 0.004989882875476875,
+          "mde_80pct_power": 0.013979582106481276,
+          "n_rows": 106,
+          "n_dates": 106,
+          "n_securities": 1,
+          "n_effective": 106.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+          "block_days_derived": 1
+        }
+      },
+      "LIQUIDITY": {
+        "pooled_ic": -0.00813,
+        "contrast_vs_floor": {
+          "mean": -0.009876273376566493,
+          "ci_lo": -0.018150329420052038,
+          "ci_hi": -0.002964765645724547,
+          "se": 0.0045465541600558145,
+          "mde_80pct_power": 0.012737558930376707,
+          "n_rows": 106,
+          "n_dates": 106,
+          "n_securities": 1,
+          "n_effective": 106.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+          "block_days_derived": 1
+        }
+      },
+      "PRICE_MOMENTUM": {
+        "pooled_ic": 0.00617,
+        "contrast_vs_floor": {
+          "mean": 0.004423017205967509,
+          "ci_lo": -0.006415716637742918,
+          "ci_hi": 0.013545827468104232,
+          "se": 0.006059360228094173,
+          "mde_80pct_power": 0.016975814049201357,
+          "n_rows": 106,
+          "n_dates": 106,
+          "n_securities": 1,
+          "n_effective": 106.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+          "block_days_derived": 1
+        }
+      },
+      "QUALITY_PROFITABILITY": {
+        "pooled_ic": -0.00437,
+        "contrast_vs_floor": {
+          "mean": -0.006124692896646566,
+          "ci_lo": -0.01670150405513389,
+          "ci_hi": 0.004145338707443501,
+          "se": 0.006330081883289189,
+          "mde_80pct_power": 0.017734263836750638,
+          "n_rows": 106,
+          "n_dates": 106,
+          "n_securities": 1,
+          "n_effective": 106.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+          "block_days_derived": 1
+        }
+      },
+      "RISK_PRICE": {
+        "pooled_ic": 0.01574,
+        "contrast_vs_floor": {
+          "mean": 0.013992962880097104,
+          "ci_lo": 0.000912760114850548,
+          "ci_hi": 0.02811727074793764,
+          "se": 0.008161263196905529,
+          "mde_80pct_power": 0.022864474337554706,
+          "n_rows": 106,
+          "n_dates": 106,
+          "n_securities": 1,
+          "n_effective": 106.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+          "block_days_derived": 1
+        }
+      },
+      "SIZE_SCALE": {
+        "pooled_ic": -0.00491,
+        "contrast_vs_floor": {
+          "mean": -0.006656876191663221,
+          "ci_lo": -0.014389083390651867,
+          "ci_hi": 0.0007397841898654997,
+          "se": 0.004610252583940264,
+          "mde_80pct_power": 0.012916015493179497,
+          "n_rows": 106,
+          "n_dates": 106,
+          "n_securities": 1,
+          "n_effective": 106.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+          "block_days_derived": 1
+        }
+      },
+      "VALUE": {
+        "pooled_ic": -0.00488,
+        "contrast_vs_floor": {
+          "mean": -0.00663018660072698,
+          "ci_lo": -0.017113193690822506,
+          "ci_hi": 0.003649715604251157,
+          "se": 0.006282529369133217,
+          "mde_80pct_power": 0.017601041415984002,
+          "n_rows": 106,
+          "n_dates": 106,
+          "n_securities": 1,
+          "n_effective": 106.0,
+          "block_days": 1,
+          "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+          "block_days_derived": 1
+        }
+      }
+    },
+    "vol_cross_check": {
+      "floor_lgbm": 0.7442,
+      "full_lgbm": 0.7788
+    }
+  },
+  "discipline": "SCREEN = BH-FDR(m=run) per \u00a763; nothing here decides; export claims go through Holm on a successor registration"
+}

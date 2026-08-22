@@ -515,7 +515,30 @@ def _case_arena_reliability():
             ReliabilityRefused, "a reliability slice by a state nobody stored")
 
 
+def _case_aegis_panel():
+    import pathlib
+    import tempfile
+
+    from backend.services import aegis_panel as AP
+    # The missing input is the SPINE ITSELF. A panel built without the PIT
+    # membership file would fall back to whatever securities happen to have
+    # prices — survivorship re-entering through the join it was built to
+    # prevent.
+    absent = pathlib.Path(tempfile.mkdtemp()) / "absent.parquet"
+    orig = AP.PIT_PATH
+
+    def call():
+        AP.PIT_PATH = absent
+        try:
+            return AP._spine_labels()
+        finally:
+            AP.PIT_PATH = orig
+
+    return (call, AP.PanelRefused, "a panel spine that does not exist")
+
+
 CASES = {
+    "aegis_panel": _case_aegis_panel,
     "spec": _case_arena_spec,
     "experience": _case_arena_experience,
     "reliability": _case_arena_reliability,

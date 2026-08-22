@@ -137,3 +137,4 @@ backend/data/optimus/arena/
 backend/data/optimus/wrds/truncated_quarantine.json
 backend/data/optimus/wrds/substrate_verification.json
 backend/data/optimus/prediction_markets/
+backend/data/optimus/aegis_panel/screen_cache/

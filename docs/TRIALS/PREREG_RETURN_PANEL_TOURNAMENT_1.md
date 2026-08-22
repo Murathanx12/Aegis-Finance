@@ -165,3 +165,52 @@ buy/sell language (an IC is not money) · treat the 3 late-filer JKP edge
 cases as retired (they are recorded, bounded, and carried in the receipt).
 
 — frozen 2026-08-22, before any model saw the panel
+
+---
+
+## RESULTS (registered run 2026-08-22, appended post-run)
+
+Receipts: `aegis_panel/tournament_null_world.json`,
+`tournament_primary_audit.json` (§64, mean masked, written first),
+`tournament_primary.json`, `tournament_screen.json`. Panel hash
+`34f7cb98ad147785`, 106 paired test dates 2016–2024.
+
+**NULL WORLD (ran first):** dIC +0.0009 inside MDE 0.0082, no win on
+noise — and it caught this prereg's own §5 verdict-literal
+mis-specification before the registered panel was opened (erratum above).
+
+**PRIMARY: NOT_ESTABLISHED.** Paired dIC (full_lgbm − floor_lgbm) =
+**−0.0025**, SE 0.0075, **MDE 0.0210** against the 0.01 bar — the
+noninferiority limb was NOT answerable (realized per-date dIC dispersion
+~0.077 vs the declared 0.03; the §64 audit said so before the verdict).
+Full-arm pooled IC **−0.0007**. At this instrument's resolution, 412
+characteristics did not buy a return-ranking signal over the price floor
+on 2016–2024. adopt_grade=False. No portfolio-stage registration is
+licensed.
+
+**SCREEN (BH-FDR discipline; every cell inside its MDE — leads, not
+results):**
+
+- Model ordering: ridge ≈ LGBM (dIC +0.0005); MLP +0.0107 vs LGBM (MDE
+  0.0175 — inside noise, but MLP's own pooled IC +0.0100 was the only
+  arm that touched the bar); **LambdaRank −0.0405 — the ranking
+  objective actively hurt**, with per-year swings (−0.16..+0.09) that
+  look like decile-label overfit.
+- Family ablation (each family alone + floor, vs floor): **RISK_PRICE
+  (+0.0157 own IC, dIC +0.0140) is the ONLY family with a
+  positive-looking lead** — the return-flavored shadow of the standing
+  "risk is stationary" result. Every fundamental family (VALUE −0.0066,
+  QUALITY −0.0061, GROWTH −0.0035, ACCRUALS −0.0019, LIQUIDITY −0.0099
+  vs floor) is flat-to-negative in this era. And the FULL panel
+  (−0.0007) is WORSE than RISK_PRICE alone — 400 flat columns dilute
+  the one family with a pulse.
+- Vol cross-check: floor 0.744 → full 0.779 forward-vol IC — the panel
+  join restates RISK-HEAD-AT-SCALE-1 (a diagnostic pass; the risk claim
+  belongs to that trial, not this one).
+
+**What follows (successor registrations, not this trial's authority):**
+a RISK_PRICE-family-only return screen with its own §64 (the lead's MDE
+here was 0.0229 — a confirmatory design needs more dates or a paired
+construction with tighter dispersion), and the portfolio-stage question
+stays unlicensed. The 4mo-late-filer JKP edge and the era scope (§7)
+carry into any successor.

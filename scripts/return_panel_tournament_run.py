@@ -113,10 +113,11 @@ def _arm_factories():
     }
 
 
-def _fit_predict(arm: str, mk, cols, tr, te) -> np.ndarray:
+def _fit_predict(arm: str, mk, cols, tr, te, label: str = LABEL
+                 ) -> np.ndarray:
     Xtr, Xte = tr[cols].to_numpy(), te[cols].to_numpy()
     if arm == "full_lgbm_rank":
-        rel = (tr.groupby("month")[LABEL]
+        rel = (tr.groupby("month")[label]
                .transform(lambda s: pd.qcut(s.rank(method="first"), 10,
                                             labels=False)))
         order = tr["month"].argsort(kind="stable").to_numpy()
@@ -127,19 +128,54 @@ def _fit_predict(arm: str, mk, cols, tr, te) -> np.ndarray:
               group=srt.groupby("month", sort=True).size().to_list())
         return m.predict(Xte)
     m = mk()
-    m.fit(Xtr, tr[LABEL].to_numpy())
+    m.fit(Xtr, tr[label].to_numpy())
     return m.predict(Xte)
+
+
+CACHE_DIR = OUT / "screen_cache"
+
+
+def _cache_load(key: str) -> pd.Series | None:
+    p = CACHE_DIR / f"{key}.json"
+    if not p.exists():
+        return None
+    d = json.loads(p.read_text(encoding="utf-8"))
+    s = pd.Series(d["ic"], index=pd.to_datetime(d["dates"]))
+    return s
+
+
+def _cache_save(key: str, s: pd.Series) -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    (CACHE_DIR / f"{key}.json").write_text(json.dumps(
+        {"dates": [str(d.date()) for d in s.index],
+         "ic": [float(v) for v in s.to_numpy()]}), encoding="utf-8")
+
+
+def cached_arm(key: str, fn) -> pd.Series:
+    """Per-arm IC series cache so a wall-clock-bounded screen run resumes
+    instead of restarting. The cache is keyed by arm/label only — the
+    panel hash is stamped into the receipt, and the cache dir is deleted
+    whenever the panel is rebuilt (build stamps a new hash)."""
+    s = _cache_load(key)
+    if s is not None:
+        print(f"  [cache] {key}  ic {float(s.mean()):+.4f}")
+        return s
+    s = fn()
+    _cache_save(key, s)
+    return s
 
 
 def run_arms(df, floor, full, arms: list[str], label=LABEL) -> dict:
     facs = _arm_factories()
     ics: dict[str, list] = {a: [] for a in arms}
     for y, tr, te in _folds(df):
+        tr = tr[tr[label].notna()]
+        te = te[te[label].notna()]
         for a in arms:
             kind, mk = facs[a]
             cols = floor if kind == "floor" else full
             t0 = time.perf_counter()
-            pred = _fit_predict(a, mk, cols, tr, te)
+            pred = _fit_predict(a, mk, cols, tr, te, label=label)
             s = rank_ic_by_date(pred, te[label].to_numpy(),
                                 te["date"].to_numpy())
             ics[a].append(s)
@@ -287,9 +323,10 @@ def main(argv: list[str] | None = None) -> int:
                          "primary, never precede it.")
     prim = json.loads((OUT / "tournament_primary.json")
                       .read_text(encoding="utf-8"))
-    ics = run_arms(df, floor, full,
-                   ["floor_lgbm", "full_lgbm", "full_ridge",
-                    "full_lgbm_rank", "full_mlp"])
+    ics = {a: cached_arm(f"arm_{a}", lambda a=a: run_arms(
+               df, floor, full, [a])[a])
+           for a in ("floor_lgbm", "full_lgbm", "full_ridge",
+                     "full_lgbm_rank", "full_mlp")}
     screen = {"model_ordering": {}}
     for arm in ("full_ridge", "full_mlp", "full_lgbm_rank"):
         if arm in ics:
@@ -299,16 +336,17 @@ def main(argv: list[str] | None = None) -> int:
     screen["family_alone_vs_floor"] = {}
     for f in fams:
         cols = floor + [c for c, ff in fam.items() if ff == f]
-        fi = run_arms(df, floor, cols, ["full_lgbm"])
+        fic = cached_arm(f"family_{f}", lambda cols=cols: run_arms(
+            df, floor, cols, ["full_lgbm"])["full_lgbm"])
         screen["family_alone_vs_floor"][f] = {
-            "pooled_ic": round(float(fi["full_lgbm"].mean()), 5),
-            "contrast_vs_floor": paired_contrast(
-                fi["full_lgbm"],
-                ics["floor_lgbm"])}
+            "pooled_ic": round(float(fic.mean()), 5),
+            "contrast_vs_floor": paired_contrast(fic,
+                                                 ics["floor_lgbm"])}
         print(f"  family {f:24s} ic "
               f"{screen['family_alone_vs_floor'][f]['pooled_ic']:+.4f}")
-    vol_ics = run_arms(df, floor, full, ["floor_lgbm", "full_lgbm"],
-                       label="fwd_vol_21d")
+    vol_ics = {a: cached_arm(f"vol_{a}", lambda a=a: run_arms(
+                   df, floor, full, [a], label="fwd_vol_21d")[a])
+               for a in ("floor_lgbm", "full_lgbm")}
     screen["vol_cross_check"] = {k: round(float(s.mean()), 4)
                                  for k, s in vol_ics.items()}
     receipt = {"trial": TRIAL, "mode": "REGISTERED", "stage": "screen",
