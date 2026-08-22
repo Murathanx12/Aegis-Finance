@@ -95,6 +95,11 @@ def _pull(conn, sql: str, params: dict, dest: Path, meta: dict) -> int:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="wrds_pull_jkp_full")
     ap.add_argument("--max-seconds", type=int, default=480)
+    ap.add_argument("--foreign-only", action="store_true",
+                    help="pull only the 13-country risk subset (cheap "
+                         "chunks; lets the foreign confirm unblock ahead "
+                         "of the multi-hour USA history)")
+    ap.add_argument("--usa-only", action="store_true")
     a = ap.parse_args(argv)
     for s in (sys.stdout, sys.stderr):
         try:
@@ -109,7 +114,9 @@ def main(argv: list[str] | None = None) -> int:
         cur.execute("SET statement_timeout = 3600000")
     done = pending = 0
 
-    for lo, hi in USA_CHUNKS:
+    usa_plan = [] if a.foreign_only else USA_CHUNKS
+    foreign_plan = () if a.usa_only else FOREIGN
+    for lo, hi in usa_plan:
         dest = OUT / f"jkp_usa_{lo}_{hi}.parquet"
         if dest.exists():
             done += 1
@@ -134,7 +141,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  usa {lo}-{hi}: {n:,} rows "
               f"({time.time() - t0:5.0f}s elapsed)", flush=True)
 
-    for ctry in FOREIGN:
+    for ctry in foreign_plan:
         dest = OUT / f"jkp_risk_{ctry.lower()}_2013_2024.parquet"
         if dest.exists():
             done += 1
@@ -160,10 +167,12 @@ def main(argv: list[str] | None = None) -> int:
               flush=True)
 
     conn.close()
-    total = len(USA_CHUNKS) + len(FOREIGN)
-    print(f"\n{done}/{total} chunks on disk, {pending} deferred by the "
+    total = len(usa_plan) + len(foreign_plan)
+    scope = ("foreign subset" if a.foreign_only
+             else "usa history" if a.usa_only else "chunks")
+    print(f"\n{done}/{total} {scope} on disk, {pending} deferred by the "
           f"time budget — re-invoke to continue." if pending
-          else f"\nALL {total} chunks on disk.")
+          else f"\nALL {total} {scope} on disk.")
     return 0
 
 
