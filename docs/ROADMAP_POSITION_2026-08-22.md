@@ -1,0 +1,125 @@
+# ROADMAP POSITION — 2026-08-22 (the training gate opened, and told the truth)
+
+Successor to `docs/ROADMAP_POSITION_2026-08-21.md`. Covers the ORDER 28
+adjudication and the two sessions that executed it. HEAD at writing:
+`0786731`; all receipts referenced live in `backend/data/optimus/aegis_panel/`
+and `backend/data/optimus/wrds/`.
+
+## WHAT AEGIS LEARNED FROM 45+ GB THAT IT COULD NOT KNOW YESTERDAY
+
+1. **The characteristics do not rank returns at this scale and era.** 412
+   JKP characteristics vs the 7-feature price floor, LGBM, 2016–2024,
+   230,640 PIT stock-months with delistings: paired dIC **−0.0025** (MDE
+   0.021), full-arm pooled IC **−0.0007**. Registered
+   (RETURN-PANEL-TOURNAMENT-1), null-world-first, §64-audited.
+2. **…and the instrument itself can only see large signals.** Planted
+   sensitivity worlds (a factor of IC 0.03, sparse AND dense) are
+   recovered at dIC +0.001..+0.003 — the arithmetic (R² ~0.001 vs 419
+   features on ~10⁵ rows) makes the tournament blind at realistic effect
+   sizes. **The null above bounds only unrealistically large signals.**
+   The panels where supervised return ML demonstrably resolves
+   (GKX-class) are ~100× ours: all caps, 60 years. Scale is the
+   successor instrument, and it is one named-consumer pull (in flight).
+3. **The one family with a pulse is risk, and it is era-bound.**
+   RISK_PRICE alone: +0.0157 IC modern (and +0.0299 with own-construction
+   features — above that cell's MDE, still SCREEN) — while 1994–2012,
+   same definitions, gives a **tight zero** (−0.0005, SE 0.0051, 215
+   dates). Registered (RISK-PRICE-EARLY-1, TRANSFER). If real, it is a
+   2016–2024 regime fact. Licensed follow-up: the SAME-ERA foreign
+   cross-section confirm — never another US backtest.
+4. **The panel and its stamping are sound.** JKP PIT spot-audit PASS
+   (2,479 accounting-change events: the 4-month availability rule holds
+   exactly; 3 late-filer edge cases are JKP's own uniform rule; 0 genuine
+   lookahead). Label agrees with JKP's independent construction at corr
+   0.99987. Vol cross-check 0.744→0.779 restates RISK-HEAD-AT-SCALE-1
+   through the new join.
+5. **Model ordering on returns: nothing.** ridge ≈ LGBM ≈ 0; MLP the only
+   arm touching the bar (+0.0100, inside noise); **LambdaRank actively
+   hurts** (−0.0405). The risk head remains LGBM (unchanged, both eras).
+
+## ACCEPTED from ORDER 28 (executed)
+
+Substrate receipt (§1) · canonical panel as a JOIN (§2) · labels declared
+before tuning (§3) · null + sensitivity worlds (§5, extended beyond the
+order) · economic promotion standard (§6 — already canon, restated) ·
+staged sequencing: NN/Transformer only after baselines (§10–11) ·
+allocator/router gating (§13–14) · "don't wait" (§15).
+
+## REJECTED / CORRECTED from ORDER 28
+
+"Build MODEL_TOURNAMENT_V1" — it existed; we registered a successor on
+the frozen machinery instead · "no data problems" — semantics remain, owned
+by named consumers · LLM factorial — already registered as ABLATION-1 with
+contamination discipline · unsupervised challengers now — corpse-checked
+(MP-denoising hurts; latents must beat raw features), deferred behind the
+supervised baseline · CatBoost/XGB/Transformer arms now — deferred by the
+order's own logic · new validation framework — reuse, not reinvent.
+
+## VERDICTS REGISTERED TODAY (all receipts committed)
+
+| trial | verdict | scope note |
+|---|---|---|
+| RETURN-PANEL-TOURNAMENT-1 primary | NOT_ESTABLISHED (dIC −0.0025, MDE 0.021) | bounds only signals ≫ realistic scale (see calibration annotation) |
+| — null world | clean (no win on noise) | also caught the prereg's own verdict-literal bug pre-run |
+| — sensitivity worlds | instrument blind ≤ planted 0.03 | TOURNAMENT-2 must show planted detectability BEFORE its registered run counts |
+| RISK-PRICE-EARLY-1 primary (1994–2012) | NOT_ESTABLISHED, point ≈ 0 (−0.0005 ± 0.0051) | the modern lead did not transfer |
+| — modern consistency cell | +0.0299 (MDE 0.0248), SCREEN | own-construction reproduces the JKP lead; the ERA is the difference |
+
+Portfolio stage: **UNLICENSED** (correctly — no IC survived).
+Demonstrated edge: **still 0%.** The risk product remains the validated
+asset; the return question now has honest instruments and honest nulls.
+
+## HARDENING SHIPPED (fragility audit on the new modules)
+
+A failed JKP join REFUSES (all-NaN full arm would run as "no signal") ·
+screen-cache entries carry the panel hash (claimed delete-on-rebuild never
+existed) · substrate-receipt families that glob zero files REFUSE · two
+guard-contract enrollments (the contract caught its own author twice in
+one day — working as designed) · resumable screen stage (background shells
+die at ~10 min; bounded runs converge).
+
+## IN FLIGHT
+
+`scripts/wrds_pull_jkp_full.py` (detached loop, log-monitored): USA JKP
+1926–2012 all columns (consumer **AEGIS-PANEL-2**) + 13 developed markets
+2013–2024 risk-family subset (consumer **RISK-PRICE-FOREIGN-CONFIRM-1**).
+Completion census appended below when it lands.
+
+## NEXT SESSIONS (ordered)
+
+1. **Verify the JKP chunks** (row sanity, no at-cap fills, meta audit) and
+   extend TRAINING_SUBSTRATE receipt to v1.1 with the new families.
+2. **AEGIS-PANEL-2**: full-history all-cap US panel (~3M stock-months,
+   1926/1963–2024), delistings, floor features recomputed full-history.
+3. **Planted-world detectability gate at panel-2 scale** — the declared
+   precondition: no TOURNAMENT-2 registered run counts until the
+   instrument demonstrably recovers its declared effect size in synthetic
+   worlds (including a heteroskedastic-noise world, which is the right
+   place to test the z-label training variant that today's homoskedastic
+   worlds could not).
+4. **RETURN-PANEL-TOURNAMENT-2** registration + run on panel-2.
+5. **RISK-PRICE-FOREIGN-CONFIRM-1** registration + run (13 countries,
+   same era, §64 from measured foreign n).
+6. **ORDER 27 carry-overs, unchanged:** why_moved day-guard then retry
+   slots · G1 correlated-worlds battery before router capital authority ·
+   P9 alpha-diversity books (gated on a surviving signal — none yet) ·
+   PROFIT_ALLOCATOR_v2 (gated on true OOS forecasts) · EVENT_IMPACT
+   bridge · diffusion baselines behind their corpse check.
+7. **Murat's calendar (his keyboard only):** 08-27 resolve run · 09-08 G2
+   lane-flag flips (design SIGNED+FROZEN) · weekday 16:55–17:05 laptop
+   window for IIF · Monday: arena fills first positions; first bar-dated
+   NAV rows under P-day-2026-08-19a semantics.
+
+## THE POSITION IN ONE PARAGRAPH
+
+The acquisition phase is closed with receipts, the canonical panel exists
+and is PIT-verified, and the supervised return question has been asked
+properly twice — both answers are nulls, and for the first time the
+programme can say exactly *how much* null they are: the instrument sees
+nothing because at this scale nothing of realistic size is visible. The
+risk result keeps replicating through every new join. The road forward is
+not a cleverer model; it is the ~100× panel now downloading, a
+detectability gate that must pass before any new verdict is read, and a
+same-era foreign confirm for the one era-bound lead. Everything else —
+books, allocator, router authority — stays correctly gated behind a
+signal that has not yet earned it.
