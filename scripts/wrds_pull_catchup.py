@@ -455,9 +455,18 @@ def main() -> int:
     # than inherit a skip from a rule that no longer applies.
     known_over_cap = {o["name"]: o for o in (man.get("over_cap") or [])
                       if o.get("cap") == MAX_ROWS}
+    # Empty tables write NO parquet (the writer never opens), so `have` cannot
+    # see them — without this set they are re-pulled empty on EVERY pass and
+    # reported "not attempted", which kept the manifest stamped partial_at
+    # after the pull was actually finished (passes 2/3/4 each re-pulled
+    # wrdsapps.chars + wrdsapps_subsidiary.chars empty).
+    known_empty = {p["name"] for p in (man.get("pulled") or [])
+                   if p.get("rows") == 0}
     terminal, retry, unplanned, skipped_over_cap = [], [], [], []
     for name, f in sorted(by_name.items()):
         stem = f"{f['schema']}__{f['table']}"
+        if name in known_empty:
+            continue                       # pulled on a later attempt: 0 rows
         if stem in have:
             continue                       # landed on a later attempt already
         verdict, reason = classify(str(f.get("error", "")))
@@ -531,7 +540,16 @@ def main() -> int:
         return 0
     todo = retry[:a.max_tables]
     if not todo:
-        print("\nnothing retryable outstanding")
+        # Nothing outstanding IS completion — without this stamp the manifest
+        # stays partial_at forever once the last retryable table lands.
+        man = _load_manifest()
+        man.pop("incomplete_reason", None)
+        man.pop("partial_at", None)
+        man["completed_at"] = datetime.now(timezone.utc).isoformat(
+            timespec="seconds")
+        MANIFEST.write_text(json.dumps(man, indent=2, default=str),
+                            encoding="utf-8")
+        print("\nnothing retryable outstanding — manifest stamped completed_at")
         return 0
 
     permnos = sorted(_all_permnos())
@@ -671,7 +689,8 @@ def main() -> int:
                     except OSError:
                         pass
                 with lock:
-                    new_pulled.append({**p, "rows": 0,
+                    state["done"] += 1     # counts toward `remaining` — an
+                    new_pulled.append({**p, "rows": 0,   # empty pull is DONE
                                        "note": "0 rows — table is empty"})
                 _log([{"ts": datetime.now(timezone.utc).isoformat(
                     timespec="seconds"), "name": p["name"],
