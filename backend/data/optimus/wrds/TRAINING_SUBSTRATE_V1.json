@@ -1,0 +1,705 @@
+{
+  "receipt": "TRAINING_SUBSTRATE_V1",
+  "at": "2026-08-22T08:27:12+00:00",
+  "claim": "all inputs required by TRAINING_SUBSTRATE_V1 are verified \u2014 NOT 'all WRDS data'",
+  "verification": {
+    "verified_at": "2026-08-22T08:25:29+00:00",
+    "n_files": 857,
+    "by_verdict": {
+      "COMPLETE": 716,
+      "SHORT_MINOR": 137,
+      "EXTRA": 4,
+      "CORRUPT": 0,
+      "UNVERIFIED": 0,
+      "IN_FLIGHT": 0
+    },
+    "n_broken": 0,
+    "unknown_status": [],
+    "unknown_note": "UNVERIFIED/IN_FLIGHT files are status-unknown and are NOT consumed by any family below"
+  },
+  "consumed_families": {
+    "SPINE": [
+      {
+        "file": "crsp_pit_monthly_v1.parquet",
+        "bytes": 14036809,
+        "sha256_16": "e6ca936ea791f8ab"
+      },
+      {
+        "file": "crsp_pit_monthly_early.parquet",
+        "bytes": 31218662,
+        "sha256_16": "38fcaaebf07a1058"
+      }
+    ],
+    "PRICES_DAILY": [
+      {
+        "file": "crsp_dsf_1990.parquet",
+        "bytes": 10879146,
+        "sha256_16": "ae63984f5ed2d8e0"
+      },
+      {
+        "file": "crsp_dsf_1991.parquet",
+        "bytes": 11022810,
+        "sha256_16": "50cc1785f50fb405"
+      },
+      {
+        "file": "crsp_dsf_1992.parquet",
+        "bytes": 11558515,
+        "sha256_16": "184d392a34b839cc"
+      },
+      {
+        "file": "crsp_dsf_1993.parquet",
+        "bytes": 12502698,
+        "sha256_16": "09a0b039e7637756"
+      },
+      {
+        "file": "crsp_dsf_1994.parquet",
+        "bytes": 13589683,
+        "sha256_16": "c5617f20d0a9977a"
+      },
+      {
+        "file": "crsp_dsf_1995.parquet",
+        "bytes": 14535021,
+        "sha256_16": "c513e78139dfc129"
+      },
+      {
+        "file": "crsp_dsf_1996.parquet",
+        "bytes": 16196271,
+        "sha256_16": "7b5d4ab255e8755a"
+      },
+      {
+        "file": "crsp_dsf_1997.parquet",
+        "bytes": 17467837,
+        "sha256_16": "59af8d4f324faf3f"
+      },
+      {
+        "file": "crsp_dsf_1998.parquet",
+        "bytes": 17669177,
+        "sha256_16": "4c608c5a8676ac10"
+      },
+      {
+        "file": "crsp_dsf_1999.parquet",
+        "bytes": 17127834,
+        "sha256_16": "9e9e0bfb9f36cff8"
+      },
+      {
+        "file": "crsp_dsf_2000.parquet",
+        "bytes": 17593594,
+        "sha256_16": "3a3b0deb47a47bc0"
+      },
+      {
+        "file": "crsp_dsf_2001.parquet",
+        "bytes": 16830437,
+        "sha256_16": "6336d6484df8b684"
+      },
+      {
+        "file": "crsp_dsf_2002.parquet",
+        "bytes": 16794792,
+        "sha256_16": "b234e81cbfd77781"
+      },
+      {
+        "file": "crsp_dsf_2003.parquet",
+        "bytes": 14861006,
+        "sha256_16": "0aa3ebb049bf044b"
+      },
+      {
+        "file": "crsp_dsf_2004.parquet",
+        "bytes": 14670246,
+        "sha256_16": "052a08b888c3fee2"
+      },
+      {
+        "file": "crsp_dsf_2005.parquet",
+        "bytes": 14634562,
+        "sha256_16": "34ac8b9308be10bd"
+      },
+      {
+        "file": "crsp_dsf_2006.parquet",
+        "bytes": 14538204,
+        "sha256_16": "be61b52e3993764d"
+      },
+      {
+        "file": "crsp_dsf_2007.parquet",
+        "bytes": 14665102,
+        "sha256_16": "4fce54e1f70d3f34"
+      },
+      {
+        "file": "crsp_dsf_2008.parquet",
+        "bytes": 16163663,
+        "sha256_16": "5ee75bf3f2de05b6"
+      },
+      {
+        "file": "crsp_dsf_2009.parquet",
+        "bytes": 15862971,
+        "sha256_16": "6095356ec842ca08"
+      },
+      {
+        "file": "crsp_dsf_2010.parquet",
+        "bytes": 13041341,
+        "sha256_16": "20599b52aece9bff"
+      },
+      {
+        "file": "crsp_dsf_2011.parquet",
+        "bytes": 12936441,
+        "sha256_16": "ed50ff12a79b5e55"
+      },
+      {
+        "file": "crsp_dsf_2012.parquet",
+        "bytes": 11123909,
+        "sha256_16": "f22b7b640fed087d"
+      },
+      {
+        "file": "crsp_dsf_2013.parquet",
+        "bytes": 19112319,
+        "sha256_16": "c8a896a2643d3fe1"
+      },
+      {
+        "file": "crsp_dsf_2014.parquet",
+        "bytes": 20275363,
+        "sha256_16": "9272d88cc6c20e8d"
+      },
+      {
+        "file": "crsp_dsf_2015.parquet",
+        "bytes": 20912617,
+        "sha256_16": "2d05ec93c4abb5f6"
+      },
+      {
+        "file": "crsp_dsf_2016.parquet",
+        "bytes": 20838365,
+        "sha256_16": "2ef77f78f3cb37e4"
+      },
+      {
+        "file": "crsp_dsf_2017.parquet",
+        "bytes": 19913134,
+        "sha256_16": "016e52053fe41542"
+      },
+      {
+        "file": "crsp_dsf_2018.parquet",
+        "bytes": 20489167,
+        "sha256_16": "7ab0f9c48f6a8a8f"
+      },
+      {
+        "file": "crsp_dsf_2019.parquet",
+        "bytes": 21229996,
+        "sha256_16": "383e0172cf443762"
+      },
+      {
+        "file": "crsp_dsf_2020.parquet",
+        "bytes": 27050813,
+        "sha256_16": "bf1068698d2b875e"
+      },
+      {
+        "file": "crsp_dsf_2021.parquet",
+        "bytes": 29321920,
+        "sha256_16": "68176d6fdbd03426"
+      },
+      {
+        "file": "crsp_dsf_2022.parquet",
+        "bytes": 31631474,
+        "sha256_16": "beb01b2c2cb2d065"
+      },
+      {
+        "file": "crsp_dsf_2023.parquet",
+        "bytes": 28767589,
+        "sha256_16": "95350634d8e02a2c"
+      },
+      {
+        "file": "crsp_dsf_2024.parquet",
+        "bytes": 27868531,
+        "sha256_16": "1d6dfaf633ae5f09"
+      }
+    ],
+    "CHARACTERISTICS": [
+      {
+        "file": "jkp_global_factor_usa.parquet",
+        "bytes": 1077030940,
+        "sha256_16": "b47b6d41df8aeeb8"
+      }
+    ],
+    "PANEL": [
+      {
+        "file": "aegis_panel_v1.parquet",
+        "bytes": 543451815,
+        "sha256_16": "34f7cb98ad147785"
+      }
+    ],
+    "LINKS": [
+      {
+        "file": "link_bond_crsp.parquet",
+        "bytes": 4633920,
+        "sha256_16": "feeedfa39e259503"
+      },
+      {
+        "file": "link_ccm.parquet",
+        "bytes": 577260,
+        "sha256_16": "e1aa77a4d4452b98"
+      },
+      {
+        "file": "link_cusip_permno.parquet",
+        "bytes": 146931,
+        "sha256_16": "f19c4d2720c02873"
+      },
+      {
+        "file": "link_cusip_permno_early.parquet",
+        "bytes": 311127,
+        "sha256_16": "dcc4406d233248da"
+      },
+      {
+        "file": "link_ibes_crsp.parquet",
+        "bytes": 771712,
+        "sha256_16": "6e413e8161b6516d"
+      },
+      {
+        "file": "link_optionm_crsp.parquet",
+        "bytes": 1110989,
+        "sha256_16": "5e151cd50291d374"
+      },
+      {
+        "file": "link_taq_crsp.parquet",
+        "bytes": 292658,
+        "sha256_16": "555f3683b4d46425"
+      }
+    ],
+    "FUNDAMENTALS_RATIOS": [
+      {
+        "file": "finratio_monthly.parquet",
+        "bytes": 161579169,
+        "sha256_16": "7a8d096b1aaaf759"
+      },
+      {
+        "file": "finratio_monthly_early.parquet",
+        "bytes": 12406449,
+        "sha256_16": "51672ab7363507da"
+      },
+      {
+        "file": "compustat_fundq.parquet",
+        "bytes": 23910558,
+        "sha256_16": "9398b46bce83b647"
+      }
+    ],
+    "ANALYSTS": [
+      {
+        "file": "ibes_consensus_monthly.parquet",
+        "bytes": 17486002,
+        "sha256_16": "bfceef44534d0a75"
+      },
+      {
+        "file": "ibes_consensus_monthly_early.parquet",
+        "bytes": 27718326,
+        "sha256_16": "3c813c4fe71f8c1a"
+      }
+    ],
+    "OPTIONS": [
+      {
+        "file": "optionm_surface30d_1996.parquet",
+        "bytes": 19208292,
+        "sha256_16": "4adc1d827ce05d10"
+      },
+      {
+        "file": "optionm_surface30d_1997.parquet",
+        "bytes": 22792605,
+        "sha256_16": "c92099d55a11f1e0"
+      },
+      {
+        "file": "optionm_surface30d_1998.parquet",
+        "bytes": 26030945,
+        "sha256_16": "1b45072d1c442236"
+      },
+      {
+        "file": "optionm_surface30d_1999.parquet",
+        "bytes": 26538218,
+        "sha256_16": "20720b450d86fb97"
+      },
+      {
+        "file": "optionm_surface30d_2000.parquet",
+        "bytes": 24027771,
+        "sha256_16": "bf200b6ec515040e"
+      },
+      {
+        "file": "optionm_surface30d_2001.parquet",
+        "bytes": 21444607,
+        "sha256_16": "62584a6169544a47"
+      },
+      {
+        "file": "optionm_surface30d_2002.parquet",
+        "bytes": 21804242,
+        "sha256_16": "c86cbb7b0bbfea51"
+      },
+      {
+        "file": "optionm_surface30d_2003.parquet",
+        "bytes": 20820767,
+        "sha256_16": "bb27b0521aef940c"
+      },
+      {
+        "file": "optionm_surface30d_2004.parquet",
+        "bytes": 21963551,
+        "sha256_16": "fbd653ca154a8fed"
+      },
+      {
+        "file": "optionm_surface30d_2005.parquet",
+        "bytes": 23492194,
+        "sha256_16": "59f0ac564ddf05f7"
+      },
+      {
+        "file": "optionm_surface30d_2006.parquet",
+        "bytes": 24542899,
+        "sha256_16": "bb1215f254464bb4"
+      },
+      {
+        "file": "optionm_surface30d_2007.parquet",
+        "bytes": 25594877,
+        "sha256_16": "58cf87972cd993e7"
+      },
+      {
+        "file": "optionm_surface30d_2008.parquet",
+        "bytes": 25812465,
+        "sha256_16": "78b198006513cd34"
+      },
+      {
+        "file": "optionm_surface30d_2009.parquet",
+        "bytes": 24611777,
+        "sha256_16": "5712a27282873fbe"
+      },
+      {
+        "file": "optionm_surface30d_2010.parquet",
+        "bytes": 25907364,
+        "sha256_16": "21231fbee63c8877"
+      },
+      {
+        "file": "optionm_surface30d_2011.parquet",
+        "bytes": 29694687,
+        "sha256_16": "78ba675a7018b4be"
+      },
+      {
+        "file": "optionm_surface30d_2012.parquet",
+        "bytes": 31091830,
+        "sha256_16": "71f538506f5856ba"
+      },
+      {
+        "file": "optionm_surface30d_2013.parquet",
+        "bytes": 31895737,
+        "sha256_16": "c0276c9f005edf11"
+      },
+      {
+        "file": "optionm_surface30d_2014.parquet",
+        "bytes": 37572983,
+        "sha256_16": "042872aa6d68b5a1"
+      },
+      {
+        "file": "optionm_surface30d_2015.parquet",
+        "bytes": 38443171,
+        "sha256_16": "fbff38dc59017535"
+      },
+      {
+        "file": "optionm_surface30d_2016.parquet",
+        "bytes": 39414218,
+        "sha256_16": "e96352364f99b2fe"
+      },
+      {
+        "file": "optionm_surface30d_2017.parquet",
+        "bytes": 37028849,
+        "sha256_16": "21751a825c4ed0a9"
+      },
+      {
+        "file": "optionm_surface30d_2018.parquet",
+        "bytes": 37455401,
+        "sha256_16": "a479e9ebd814537c"
+      },
+      {
+        "file": "optionm_surface30d_2019.parquet",
+        "bytes": 37130505,
+        "sha256_16": "0241abf6f0560453"
+      },
+      {
+        "file": "optionm_surface30d_2020.parquet",
+        "bytes": 36527871,
+        "sha256_16": "b35181f5f5dd43eb"
+      },
+      {
+        "file": "optionm_surface30d_2021.parquet",
+        "bytes": 47064899,
+        "sha256_16": "a9238da712f7deae"
+      },
+      {
+        "file": "optionm_surface30d_2022.parquet",
+        "bytes": 47826522,
+        "sha256_16": "7ab916cd231e963f"
+      },
+      {
+        "file": "optionm_surface30d_2023.parquet",
+        "bytes": 44467065,
+        "sha256_16": "897ac66587791a8d"
+      },
+      {
+        "file": "optionm_surface30d_2024.parquet",
+        "bytes": 43709966,
+        "sha256_16": "9f11a2c6a033a12f"
+      }
+    ],
+    "MICROSTRUCTURE": [
+      {
+        "file": "taq_iid_2013.parquet",
+        "bytes": 32380960,
+        "sha256_16": "c1a5ba3dd97912ee"
+      },
+      {
+        "file": "taq_iid_2014.parquet",
+        "bytes": 33980100,
+        "sha256_16": "2789df5af9adb562"
+      },
+      {
+        "file": "taq_iid_2015.parquet",
+        "bytes": 33498448,
+        "sha256_16": "c8110058fb759c95"
+      },
+      {
+        "file": "taq_iid_2016.parquet",
+        "bytes": 31201533,
+        "sha256_16": "78b50235cbe5224b"
+      },
+      {
+        "file": "taq_iid_2017.parquet",
+        "bytes": 27259668,
+        "sha256_16": "27cc966e574bdd3b"
+      },
+      {
+        "file": "taq_iid_2018.parquet",
+        "bytes": 27050639,
+        "sha256_16": "90eaa2c0cd4df720"
+      },
+      {
+        "file": "taq_iid_2019.parquet",
+        "bytes": 25559877,
+        "sha256_16": "e9da201dcb421176"
+      },
+      {
+        "file": "taq_iid_2020.parquet",
+        "bytes": 23565323,
+        "sha256_16": "941cedb3f4f4125e"
+      },
+      {
+        "file": "taq_iid_2021.parquet",
+        "bytes": 23898954,
+        "sha256_16": "b2b4956d72fc9309"
+      },
+      {
+        "file": "taq_iid_2022.parquet",
+        "bytes": 23025146,
+        "sha256_16": "4505afb9cc8024a7"
+      },
+      {
+        "file": "taq_iid_2023.parquet",
+        "bytes": 21826399,
+        "sha256_16": "acdde9e4e1dc3c76"
+      },
+      {
+        "file": "taq_iid_2024.parquet",
+        "bytes": 21205623,
+        "sha256_16": "2dcb4f44e09133f7"
+      }
+    ],
+    "OWNERSHIP_13F": [
+      {
+        "file": "tr13f_s34_1996.parquet",
+        "bytes": 11977077,
+        "sha256_16": "0e016f9a4839b7d8"
+      },
+      {
+        "file": "tr13f_s34_1997.parquet",
+        "bytes": 13347087,
+        "sha256_16": "a4e45e3eea01c3f2"
+      },
+      {
+        "file": "tr13f_s34_1998.parquet",
+        "bytes": 15153789,
+        "sha256_16": "89bd8a36e3abd8d5"
+      },
+      {
+        "file": "tr13f_s34_1999.parquet",
+        "bytes": 16503841,
+        "sha256_16": "d9a57227ef68cdcf"
+      },
+      {
+        "file": "tr13f_s34_2000.parquet",
+        "bytes": 18258776,
+        "sha256_16": "41985127452422b5"
+      },
+      {
+        "file": "tr13f_s34_2001.parquet",
+        "bytes": 19146545,
+        "sha256_16": "476e58b3fdc30808"
+      },
+      {
+        "file": "tr13f_s34_2002.parquet",
+        "bytes": 19396504,
+        "sha256_16": "17e071d773631ac1"
+      },
+      {
+        "file": "tr13f_s34_2003.parquet",
+        "bytes": 20162390,
+        "sha256_16": "49c929dc8c99d3c6"
+      },
+      {
+        "file": "tr13f_s34_2004.parquet",
+        "bytes": 22411852,
+        "sha256_16": "5c96c4433ec678a8"
+      },
+      {
+        "file": "tr13f_s34_2005.parquet",
+        "bytes": 23686084,
+        "sha256_16": "77504f119d8c0cde"
+      },
+      {
+        "file": "tr13f_s34_2006.parquet",
+        "bytes": 25360809,
+        "sha256_16": "61f3e35322cddbe8"
+      },
+      {
+        "file": "tr13f_s34_2007.parquet",
+        "bytes": 26253756,
+        "sha256_16": "c9b74442b26aff53"
+      },
+      {
+        "file": "tr13f_s34_2008.parquet",
+        "bytes": 25191723,
+        "sha256_16": "c81b9c373df00a5e"
+      },
+      {
+        "file": "tr13f_s34_2009.parquet",
+        "bytes": 24003248,
+        "sha256_16": "4503ef99a4fb012a"
+      },
+      {
+        "file": "tr13f_s34_2010.parquet",
+        "bytes": 24258651,
+        "sha256_16": "3b1e9965d54846f1"
+      },
+      {
+        "file": "tr13f_s34_2011.parquet",
+        "bytes": 21995367,
+        "sha256_16": "811e04eba5cb95cb"
+      },
+      {
+        "file": "tr13f_s34_2012.parquet",
+        "bytes": 23487668,
+        "sha256_16": "17c2be6af93d5318"
+      },
+      {
+        "file": "tr13f_s34_2013.parquet",
+        "bytes": 22755420,
+        "sha256_16": "c14a5adb8816efbc"
+      },
+      {
+        "file": "tr13f_s34_2014.parquet",
+        "bytes": 26745205,
+        "sha256_16": "6c38591d89dfa6bd"
+      },
+      {
+        "file": "tr13f_s34_2015.parquet",
+        "bytes": 28264020,
+        "sha256_16": "78132a2cdef9461b"
+      },
+      {
+        "file": "tr13f_s34_2016.parquet",
+        "bytes": 28673475,
+        "sha256_16": "5595c233a01456bf"
+      },
+      {
+        "file": "tr13f_s34_2017.parquet",
+        "bytes": 30906754,
+        "sha256_16": "3cf85acfc0a77049"
+      },
+      {
+        "file": "tr13f_s34_2018.parquet",
+        "bytes": 35516272,
+        "sha256_16": "4f0c162bb0881a0a"
+      },
+      {
+        "file": "tr13f_s34_2019.parquet",
+        "bytes": 36061044,
+        "sha256_16": "2e3f416d26d6c7d7"
+      },
+      {
+        "file": "tr13f_s34_2020.parquet",
+        "bytes": 37147752,
+        "sha256_16": "1231f88874a2c437"
+      },
+      {
+        "file": "tr13f_s34_2021.parquet",
+        "bytes": 42683502,
+        "sha256_16": "5c3bbc38489dbe32"
+      },
+      {
+        "file": "tr13f_s34_2022.parquet",
+        "bytes": 44130322,
+        "sha256_16": "ec5482b779f07a6e"
+      },
+      {
+        "file": "tr13f_s34_2023.parquet",
+        "bytes": 44006408,
+        "sha256_16": "c42c9d7399715764"
+      },
+      {
+        "file": "tr13f_s34_2024.parquet",
+        "bytes": 47323861,
+        "sha256_16": "27dab05e00e5dce6"
+      }
+    ],
+    "FACTORS": [
+      {
+        "file": "ff_factors_daily.parquet",
+        "bytes": 305819,
+        "sha256_16": "f30ff27c807f3f47"
+      },
+      {
+        "file": "ff_factors_monthly.parquet",
+        "bytes": 43766,
+        "sha256_16": "0021af846c9f0703"
+      },
+      {
+        "file": "ff_fivefactors_daily.parquet",
+        "bytes": 225470,
+        "sha256_16": "61e1f62ec993db37"
+      },
+      {
+        "file": "ff_fivefactors_monthly.parquet",
+        "bytes": 39650,
+        "sha256_16": "150c400a8f4bc948"
+      },
+      {
+        "file": "ff_liq_ps.parquet",
+        "bytes": 32087,
+        "sha256_16": "8b7e89c1e105a263"
+      },
+      {
+        "file": "bondret_monthly.parquet",
+        "bytes": 55212643,
+        "sha256_16": "d949e09e2dc6a3d3"
+      },
+      {
+        "file": "frb_rates_daily.parquet",
+        "bytes": 1237336,
+        "sha256_16": "ff894747e7df1d2e"
+      },
+      {
+        "file": "frb_rates_monthly.parquet",
+        "bytes": 195365,
+        "sha256_16": "b350a1425898d986"
+      }
+    ]
+  },
+  "catalogue_at_large": {
+    "n_tables_pulled": 833,
+    "n_over_cap": 235,
+    "over_cap_rule": "a large table earns partitioned ingestion through a NAMED CONSUMER, never by existing",
+    "n_terminal_not_entitled": 240,
+    "terminal_note": "entitlement facts (permission denied / absent from server), recorded not retried",
+    "completed_at": "2026-08-22T04:40:44+00:00"
+  },
+  "vintage": {
+    "crsp_ends": "2024-12-31",
+    "jkp_window": "2013-01-31..2024-12-31",
+    "panel_window": "2014-01-31..2024-11-29"
+  },
+  "pit_receipts": {
+    "jkp_spot_audit": "aegis_panel/jkp_pit_audit_2026-08-22.json = PASS"
+  }
+}

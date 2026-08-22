@@ -1,0 +1,27 @@
+{
+  "trial": "RETURN-PANEL-TOURNAMENT-1",
+  "mode": "NULL_WORLD",
+  "at": "2026-08-22T08:22:31+00:00",
+  "panel_hash": "34f7cb98ad147785",
+  "seed": 20260822,
+  "contrast": {
+    "mean": 0.000845348861254267,
+    "ci_lo": -0.004053822850910398,
+    "ci_hi": 0.005717923722090422,
+    "se": 0.0029131071645781795,
+    "mde_80pct_power": 0.008161317972479985,
+    "n_rows": 106,
+    "n_dates": 106,
+    "n_securities": 1,
+    "n_effective": 106.0,
+    "block_days": 1,
+    "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+    "block_days_derived": 1
+  },
+  "verdict": "LINEAR_NONINFERIOR",
+  "within_mde": true,
+  "pooled_ic": {
+    "floor_lgbm": -0.00054,
+    "full_lgbm": 0.00031
+  }
+}

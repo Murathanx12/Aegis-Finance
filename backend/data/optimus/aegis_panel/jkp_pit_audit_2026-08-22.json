@@ -1,0 +1,22 @@
+{
+  "audit": "AEGIS-PANEL-1 JKP PIT spot-audit (assets vs comp.funda)",
+  "at": "2026-08-22T08:17:29+00:00",
+  "seed": 20260822,
+  "n_names_sampled": 60,
+  "n_change_events": 2479,
+  "by_status": {
+    "OK_QUARTERLY": 1836,
+    "OK_ANNUAL": 621,
+    "UNMATCHED": 19,
+    "JKP_4MO_RULE_LATE_FILER": 3
+  },
+  "lag_months": {
+    "min": 4,
+    "median": 4.0,
+    "max": 7
+  },
+  "min_lag_rule": 4,
+  "verdict": "PASS",
+  "violations": [],
+  "scope": "one characteristic (assets), sampled names \u2014 a spot audit of the stamping convention, not a proof over all ~400 columns"
+}

@@ -1,0 +1,18 @@
+{
+  "audit": "RETURN-PANEL-TOURNAMENT-1 \u00a764 (mean masked here)",
+  "at": "2026-08-22T08:25:11+00:00",
+  "ci_lo": -0.015005706487110717,
+  "ci_hi": 0.009998387576296399,
+  "se": 0.007504409294691572,
+  "mde_80pct_power": 0.021024242154332354,
+  "n_rows": 106,
+  "n_dates": 106,
+  "n_securities": 1,
+  "n_effective": 106.0,
+  "block_days": 1,
+  "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+  "block_days_derived": 1,
+  "economic_bar": 0.01,
+  "win_limb_answerable": true,
+  "noninferior_limb_answerable": false
+}
