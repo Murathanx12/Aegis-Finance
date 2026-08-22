@@ -1,0 +1,23 @@
+{
+  "audit": "RISK-PRICE-FOREIGN-1 \u00a764 (mean masked here)",
+  "at": "2026-08-22T16:26:30+00:00",
+  "ci_lo": 0.011227315132269893,
+  "ci_hi": 0.0322842223428015,
+  "se": 0.0065476471023216045,
+  "mde_80pct_power": 0.018343791338473327,
+  "n_rows": 108,
+  "n_dates": 108,
+  "n_securities": 1,
+  "n_effective": 108.0,
+  "block_days": 1,
+  "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+  "block_days_derived": 1,
+  "n_months": 108,
+  "economic_bar": 0.01,
+  "country_months_refused_thin": 80,
+  "cross_country_mean_rho": 0.27,
+  "effective_independent_markets": 3.07,
+  "declared_assumption_was": "k_eff ~ 4",
+  "win_limb_answerable": true,
+  "noninferior_limb_answerable": false
+}

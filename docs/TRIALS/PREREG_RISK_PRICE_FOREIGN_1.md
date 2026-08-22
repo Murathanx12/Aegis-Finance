@@ -135,3 +135,37 @@ excluded small-cap half as a robustness check · treat
 significance read, per the standing two-test rule).
 
 — frozen 2026-08-23, before any model IC on any foreign row
+
+---
+
+## RESULTS (registered run 2026-08-23, appended post-run)
+
+Receipts: `aegis_panel/risk_price_foreign_audit.json` (§64, mean masked,
+written first — measured cross-country rho 0.27 ⇒ 3.07 effective
+independent markets vs the declared ~4; SE 0.0065, MDE 0.0183),
+`risk_price_foreign_trial.json`.
+
+**PRIMARY: `NOT_US_ONLY`.** Cross-country mean paired dIC (riskprice −
+floor) = **+0.0215** over 108 months — clears its MDE (0.0183) and the
+economic bar (0.01). Positive in **12 of 13 markets** (AUS +0.011 … CHE
++0.046, TWN +0.039, GBR +0.027, JPN +0.024; only NLD −0.018, the
+thinnest market at ~108 names/month). Positive in 7 of 9 years.
+
+**Context the screen also surfaced (reported, never deciding):** the
+price FLOOR itself carries +0.023 pooled IC abroad — cross-sectional
+predictability at large is ALIVE in foreign markets in the exact era
+where the US is dead (US floor ≈ 0, US full panel ≈ 0). Risk-price
+roughly doubles the foreign floor to +0.045. Combined with the early-US
+positive / modern-US zero receipts, the coherent pattern is:
+**modern US large-caps are the anomaly — the efficient, crowded slice —
+and every instrument pointed only at them was asking the hardest market
+in history to show a signal.**
+
+**What this licenses (exactly one forward registration, per §0):** a
+forward instrument for the risk-price family. Recommended shape for the
+next session's registration decision: a new-ID arena book ranking by the
+risk-price family (engine-computable ivol/beta/skew), which would also
+be the second distinct selection signal P9 has been waiting for; a
+foreign forward accrual is the stronger design but needs a
+vintage-honest foreign data path first. NO backtest may be cited as this
+result's confirmation — forward only.
