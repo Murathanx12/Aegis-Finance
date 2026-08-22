@@ -85,6 +85,14 @@ die at ~10 min; bounded runs converge).
 2013–2024 risk-family subset (consumer **RISK-PRICE-FOREIGN-CONFIRM-1**).
 Completion census appended below when it lands.
 
+**PAUSED by Murat 2026-08-22 ~21:40 HKT at 16/45 chunks** (USA complete
+through 1980-81; foreign not started). Fully resumable — chunk filenames
+are the resume key; the panel-2 builder REFUSES until the plan is
+complete. To resume: relaunch the two detached loops
+(`jkp_full/pull_loop.ps1` for USA ~6 h remaining;
+`jkp_full/pull_foreign.ps1` for the ~1 h foreign subset) or invoke
+`python -m scripts.wrds_pull_jkp_full` repeatedly.
+
 ## NEXT SESSIONS (ordered)
 
 1. **Verify the JKP chunks** (row sanity, no at-cap fills, meta audit) and
@@ -133,9 +141,11 @@ pull; fast suite 5,322/0 (+19 tests):
    must call `assert_detectable` before its registered run counts — this
    is now buildable as a refusal, not a memory.**
 2. **why_moved day-guard + catch-up retries SHIPPED** (ORDER 27 carry-over,
-   item 6, and it was urgent: the TypeError fix landed 2026-08-22, so
-   TOMORROW (Saturday) would have been the first weekend firing to walk
-   back to Friday and mint Friday's records a SECOND time). The trigger is
+   item 6, and it was urgent: the TypeError fix landed this morning and
+   2026-08-22 IS a Saturday — TONIGHT's 17:15 firing would have been the
+   first weekend run to walk back to Friday and mint Friday's records a
+   SECOND time. Verified live post-deploy: pi_why_moved's next run moved
+   from 2026-08-22T17:15 to 2026-08-24T17:15 ET). The trigger is
    now mon-fri 17:15/18:15/19:15 ET (the arena/MTM restart-resilience
    pattern); retries are idempotent via `skip_if_minted`, which derives
    from the ledger itself. That required making the ledger able to answer
