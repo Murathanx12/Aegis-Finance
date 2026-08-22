@@ -46,3 +46,19 @@ async def prediction_markets_divergence():
         logger.error("divergence report failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500,
                             detail=f"divergence report failed: {e}")
+
+
+@router.get("/surface")
+async def prediction_markets_surface():
+    """EVENT_PROBABILITY_SURFACE v0 — coherence of the market-implied event
+    distributions on the newest snapshot day (basket sums, sanity checks).
+    One meeting = one statistical unit. Disk only, no fetch.
+    """
+    from backend.services import event_probability_surface
+
+    try:
+        return event_probability_surface.latest_surface()
+    except Exception as e:  # noqa: BLE001
+        logger.error("surface report failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500,
+                            detail=f"surface report failed: {e}")

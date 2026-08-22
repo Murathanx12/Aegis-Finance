@@ -32,6 +32,17 @@ MATCHING_SPEC_VERSION = "INSTR-PREDMARKET-MATCHING-V1"
 #: money (Polymarket taker 0.04 + Kalshi ~0.07*p*(1-p) round trip + spreads).
 COST_BAR = 0.05
 
+#: Executable-edge fee model (REPORTED metric only — the trial's deciding
+#: metric stays the frozen mid-divergence above). Declared approximations:
+#: Kalshi general taker fee ~= 0.07 * p * (1-p) per contract at executed
+#: price p (per the published schedule, ignoring per-order rounding-up to
+#: the cent, which UNDERSTATES cost slightly for small orders); Polymarket
+#: taker fee ~= rate * min(p, 1-p) (fee on winnings; makers pay zero). The
+#: Polymarket rate comes from the row's snapshot (`fee_rate`, measured live
+#: from feeSchedule) with 0.05 as the conservative fallback.
+KALSHI_TAKER_COEF = 0.07
+POLYMARKET_TAKER_FALLBACK = 0.05
+
 BANNER = ("MEASUREMENT ONLY — same-day cross-venue divergence; persistence "
           "(T vs T+1) and grading run under the committed matching spec; "
           "never a signal, never an order")
@@ -136,6 +147,89 @@ def _index(rows: list[dict], parse) -> tuple[dict, list[dict]]:
     return by_key, refusals
 
 
+def _days_locked(day: str, *close_times: str | None) -> int | None:
+    """Calendar days from the snapshot day to the LATEST leg close (capital
+    stays committed until the last leg resolves). None if no close is known."""
+    from datetime import date, datetime
+
+    latest = None
+    for ct in close_times:
+        if not ct:
+            continue
+        try:
+            d = datetime.fromisoformat(str(ct).replace("Z", "+00:00")).date()
+        except ValueError:
+            continue
+        latest = d if latest is None or d > latest else latest
+    if latest is None:
+        return None
+    try:
+        held = (latest - date.fromisoformat(day)).days
+    except ValueError:
+        return None
+    return max(held, 1)
+
+
+def _kalshi_fee(p: float) -> float:
+    return KALSHI_TAKER_COEF * p * (1.0 - p)
+
+
+def _poly_fee(p: float, rate: float | None) -> float:
+    r = rate if rate is not None else POLYMARKET_TAKER_FALLBACK
+    return r * min(p, 1.0 - p)
+
+
+def executable_edge(kr: dict, pr: dict, day: str) -> dict:
+    """Locked-profit arithmetic for one matched pair, TOP-OF-BOOK ONLY.
+
+    GPT-review correction adopted (ADJUDICATION 2026-08-22): |mid−mid| is
+    price disagreement, not arbitrage. The executable quantity is: buy YES at
+    the cheap venue's ask + buy NO at the expensive venue (= 1 − its bid),
+    pocket $1 at resolution. Gross locked edge = bid_high − ask_low; net
+    subtracts both venues' declared taker fees; ROIC annualizes over the
+    capital-lock period. Reported, never deciding; depth is NOT captured, so
+    fillability beyond one top-of-book contract is UNKNOWN — this measures
+    whether edge exists, not capacity.
+    """
+    kb, ka = kr.get("yes_bid"), kr.get("yes_ask")
+    pb, pa = pr.get("yes_bid"), pr.get("yes_ask")
+    if None in (kb, ka, pb, pa):
+        return {"verdict": "REFUSED_NO_BOOK",
+                "reason": "need two-sided books on BOTH venues"}
+    # Direction 1: YES on Kalshi at ka, NO on Polymarket at (1 − pb).
+    # Direction 2: YES on Polymarket at pa, NO on Kalshi at (1 − kb).
+    candidates = []
+    rate = pr.get("fee_rate")
+    d1_gross = pb - ka
+    candidates.append({
+        "direction": "yes_kalshi/no_polymarket", "gross": d1_gross,
+        "capital": ka + (1.0 - pb),
+        "fees": _kalshi_fee(ka) + _poly_fee(1.0 - pb, rate)})
+    d2_gross = kb - pa
+    candidates.append({
+        "direction": "yes_polymarket/no_kalshi", "gross": d2_gross,
+        "capital": pa + (1.0 - kb),
+        "fees": _kalshi_fee(1.0 - kb) + _poly_fee(pa, rate)})
+    best = max(candidates, key=lambda c: c["gross"] - c["fees"])
+    net = best["gross"] - best["fees"]
+    out = {
+        "verdict": "MEASURED",
+        "direction": best["direction"],
+        "gross_locked": round(best["gross"], 4),
+        "fees": round(best["fees"], 4),
+        "net_locked": round(net, 4),
+        "capital_per_dollar_payout": round(best["capital"], 4),
+        "note": "top-of-book only — no depth, fillability unknown",
+    }
+    days = _days_locked(day, kr.get("close_time"), pr.get("close_time"))
+    if days is not None:
+        out["days_locked"] = days
+        if net > 0 and best["capital"] > 0:
+            out["annualized_roic"] = round(
+                (net / best["capital"]) * (365.0 / days), 4)
+    return out
+
+
 def match_day(day: str) -> dict:
     """Pair the two venues' snapshots for one day. Reads disk only."""
     kalshi = _load_rows(day, "kalshi")
@@ -165,6 +259,8 @@ def match_day(day: str) -> dict:
             row["abs_divergence"] = d
             row["above_cost_bar"] = d > COST_BAR
             row["verdict"] = "MEASURED"
+        # Reported beside the frozen trial metric, never deciding it.
+        row["executable"] = executable_edge(kr, pr, day)
         pairs.append(row)
     for key in sorted(set(k_idx) ^ set(p_idx)):
         unpaired.append({"key": list(key),
@@ -180,6 +276,10 @@ def match_day(day: str) -> dict:
         "n_pairs": len(pairs),
         "n_measured": len(measured),
         "n_above_cost_bar": sum(p["above_cost_bar"] for p in measured),
+        "n_executable_net_positive": sum(
+            1 for p in pairs
+            if p.get("executable", {}).get("verdict") == "MEASURED"
+            and p["executable"]["net_locked"] > 0),
         "note": ("same-day divergence only — the trial's deciding metric "
                  "additionally requires persistence to the NEXT daily "
                  "snapshot, not assessed here"),

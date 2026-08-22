@@ -112,11 +112,23 @@ def report(root=None) -> dict:
 
     personalities = {}
     scored = [b for b, v in books.items() if v["verdict"] == "SCORED"]
+
+    def _objective(rho: float) -> str:
+        # ANNOTATION (2026-08-22 adjudication) — the declared rhos are FROZEN;
+        # this names what rho=1 mathematically IS. "Extreme growth" at rho=1
+        # is log utility, the Kelly growth-optimal objective — a raw
+        # expected-terminal-wealth personality (rho→0, ruin-constrained)
+        # would be a NEW declaration, forward-only, never a rename.
+        base = f"CE annual log growth under CRRA(rho={rho})"
+        if rho == 1.0:
+            return base + " [= log utility, the Kelly growth-optimal objective]"
+        return base
+
     for p, rho in config.ARENA_PERSONALITY_RHO.items():
         if not scored:
             personalities[p] = {
                 "verdict": "ABSTAIN", "rho": rho,
-                "objective": f"CE annual log growth under CRRA(rho={rho})",
+                "objective": _objective(rho),
                 "reason": (f"no book has {min_days}+ NAV days yet — a "
                            f"ranking would be noise wearing a podium")}
             continue
@@ -125,7 +137,7 @@ def report(root=None) -> dict:
             reverse=True)
         personalities[p] = {
             "verdict": "RANKED", "rho": rho,
-            "objective": f"CE annual log growth under CRRA(rho={rho})",
+            "objective": _objective(rho),
             "ranking": [{"book_id": b,
                          "ce": books[b]["ce_by_personality"][p]}
                         for b in ranking]}

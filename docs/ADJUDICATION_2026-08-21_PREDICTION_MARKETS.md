@@ -82,3 +82,16 @@ features — with the corpse check run before a line of code.
 engine until it traces new information → changed forecast → changed capital →
 executed paper decision → graded outcome. The trials above are how each
 piece earns (or is refused) that path.
+
+## ANNOTATION 2026-08-22 (ground-4 correction — see ADJUDICATION_2026-08-22_ORDER_27.md)
+
+Ground 4 of the execution-arb rejection ("R1: 6/6 LLM forecasters lost real
+capital on Kalshi") is hereby narrowed: that result is evidence about LLM
+*directional forecasting* on prediction markets, not about *structural
+arbitrage* (locked complementary positions need no directional view). The
+rejection of live execution stands on the remaining grounds — no execution
+path, fee economics, daily cadence. Correspondingly, `match_day` now reports
+an `executable` block per pair (top-of-book locked profit net of declared
+venue fees, capital-lock-aware annualized ROIC) — REPORTED beside the frozen
+TRIAL-PREDMARKET-2 metric, never deciding it, and blind to depth (fillability
+beyond one contract is unknown until a streaming design lands).

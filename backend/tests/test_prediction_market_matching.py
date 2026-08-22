@@ -71,6 +71,57 @@ def _write_day(pm_dir, day, source, rows):
                  encoding="utf-8")
 
 
+class TestExecutableEdge:
+    """ADJUDICATION 2026-08-22: |mid−mid| is price disagreement, not
+    arbitrage. These pin the locked-profit arithmetic — reported beside the
+    frozen trial metric, never deciding it."""
+
+    def test_real_cross_computes_net_and_roic(self):
+        kr = {"yes_bid": 0.38, "yes_ask": 0.40, "mid": 0.39,
+              "close_time": "2026-09-17T18:00:00Z"}
+        pr = {"yes_bid": 0.50, "yes_ask": 0.52, "mid": 0.51,
+              "fee_rate": 0.04, "close_time": "2026-09-17T12:00:00Z"}
+        out = mm.executable_edge(kr, pr, "2026-08-22")
+        assert out["verdict"] == "MEASURED"
+        assert out["direction"] == "yes_kalshi/no_polymarket"
+        assert out["gross_locked"] == pytest.approx(0.10)
+        # kalshi taker at p=0.40: 0.07*0.40*0.60 = 0.0168
+        # polymarket taker at p=0.50, rate 0.04: 0.04*0.50 = 0.02
+        assert out["fees"] == pytest.approx(0.0368)
+        assert out["net_locked"] == pytest.approx(0.0632)
+        assert out["capital_per_dollar_payout"] == pytest.approx(0.90)
+        assert out["days_locked"] == 26
+        assert out["annualized_roic"] == pytest.approx(
+            (0.0632 / 0.90) * (365 / 26), abs=1e-3)
+
+    def test_no_cross_is_net_negative_not_hidden(self):
+        # bids strictly inside the other venue's ask: no locked profit exists
+        kr = {"yes_bid": 0.48, "yes_ask": 0.52, "mid": 0.50,
+              "close_time": None}
+        pr = {"yes_bid": 0.49, "yes_ask": 0.53, "mid": 0.51,
+              "fee_rate": 0.04, "close_time": None}
+        out = mm.executable_edge(kr, pr, "2026-08-22")
+        assert out["verdict"] == "MEASURED"
+        assert out["net_locked"] < 0
+        assert "annualized_roic" not in out
+        assert "days_locked" not in out
+
+    def test_one_sided_book_is_refused(self):
+        kr = {"yes_bid": None, "yes_ask": 0.40, "mid": None}
+        pr = {"yes_bid": 0.50, "yes_ask": 0.52, "mid": 0.51}
+        out = mm.executable_edge(kr, pr, "2026-08-22")
+        assert out["verdict"] == "REFUSED_NO_BOOK"
+
+    def test_missing_fee_rate_falls_back_conservatively(self):
+        kr = {"yes_bid": 0.38, "yes_ask": 0.40, "mid": 0.39,
+              "close_time": None}
+        pr = {"yes_bid": 0.50, "yes_ask": 0.52, "mid": 0.51,
+              "fee_rate": None, "close_time": None}
+        out = mm.executable_edge(kr, pr, "2026-08-22")
+        # fallback 0.05 > measured 0.04 — missing data must cost MORE
+        assert out["fees"] == pytest.approx(0.0168 + 0.05 * 0.50)
+
+
 class TestMatchDay:
     def test_pairs_measure_divergence_against_the_cost_bar(self, pm_dir):
         _write_day(pm_dir, "2026-08-21", "kalshi", [
