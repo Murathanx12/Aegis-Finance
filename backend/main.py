@@ -169,7 +169,11 @@ async def _warm_endpoint_caches_loop():
                 _, age = cache_peek(key, max_stale=10 ** 9)
                 if age is not None and age <= ttl_s * ttl_mult:
                     continue  # still fresh
-                result = await asyncio.to_thread(compute)
+                # One heavy compute at a time, process-wide — the 2026-08-21
+                # OOM restart loop was background computes stacking.
+                from backend.services.heavy_work import heavy
+                async with heavy(f"warm:{key}"):
+                    result = await asyncio.to_thread(compute)
                 if result is not None:
                     cache_set(key, result)
                     logger.info("Endpoint warm: %s refreshed", key)
@@ -207,6 +211,7 @@ async def _prewarm_pi_fast_lanes():
         # Cover the most-clicked periods. ALL/3Y/5Y warm on first user request.
         period_days = {"1M": 30, "3M": 90, "6M": 180, "1Y": 365}
 
+        from backend.services.heavy_work import heavy
         from backend.services.portfolio_intelligence.rules import REFERENCE_LANES
         jobs = []
         for days in period_days.values():
@@ -214,7 +219,10 @@ async def _prewarm_pi_fast_lanes():
             for lane in REFERENCE_LANES:
                 jobs.append(asyncio.to_thread(_compute_lane_metrics_fast, lane, start_d, end_d))
 
-        results = await asyncio.gather(*jobs, return_exceptions=True)
+        # Individually small, but they fire at boot — exactly when the warm
+        # loop's first pass runs. The gate keeps boot single-file.
+        async with heavy("prewarm:pi_fast_lanes"):
+            results = await asyncio.gather(*jobs, return_exceptions=True)
         ok = sum(1 for r in results if not isinstance(r, Exception) and r is not None)
         logger.info("PI fast-lane prewarm: %d/%d succeeded", ok, len(jobs))
     except Exception as e:
@@ -227,6 +235,13 @@ async def lifespan(app: FastAPI):
     import asyncio
 
     logger.info("Aegis Finance API starting")
+    # RSS high-water sampler first, so the very first prewarm spike is on the
+    # record with the name of what was running.
+    try:
+        from backend.services.heavy_work import start_sampler
+        start_sampler()
+    except Exception as e:
+        logger.warning("RSS sampler failed to start (non-fatal): %s", e)
     # Fire-and-forget: prewarm cache in background so the server starts
     # accepting requests (including health checks) immediately.
     asyncio.create_task(_prewarm_cache())
@@ -594,6 +609,15 @@ def _process_rss_mb() -> float | None:
     return None
 
 
+def _rss_high_water() -> dict | None:
+    """Peak RSS + attribution from the heavy-work gate. None if unavailable."""
+    try:
+        from backend.services.heavy_work import high_water
+        return high_water()
+    except Exception:                                           # noqa: BLE001
+        return None
+
+
 @app.get("/api/health/full")
 async def health_full():
     """One-call session status: everything /go Phase 0 needs.
@@ -770,6 +794,10 @@ async def health_full():
             # measurable instead of a post-mortem guess (stdlib /proc read;
             # None on non-Linux dev machines, printed not hidden).
             "process_rss_mb": _process_rss_mb(),
+            # Peak RSS this process lifetime + what held the heavy-work gate
+            # at that moment. `during: None` at a high peak means the spike
+            # came from something UNGATED — itself the next lead.
+            "process_rss_high_water": _rss_high_water(),
         },
         "scheduler": sched,
         "track_record": track_record,

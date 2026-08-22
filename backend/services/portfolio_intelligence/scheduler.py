@@ -17,12 +17,31 @@ Usage:
     )
 """
 
+import functools
 import logging
 from datetime import datetime, timedelta
 
 from backend.config import DATA_DIR
 
 logger = logging.getLogger(__name__)
+
+
+def _gated(fn):
+    """Run this job behind the process-wide heavy-work gate (heavy_work.py).
+
+    The 2026-08-21 restart loop (4 restarts / 71 min, no traceback, 3.66 GB
+    RSS spike) came from background computes STACKING in one process. The
+    gate serializes every scheduled job against the endpoint warm loop and
+    the other jobs; on gate timeout the job still runs — a skipped close
+    mark is worse than one unserialized pass. functools.wraps keeps the
+    module-level qualname so the persistent jobstore resolves the reference.
+    """
+    @functools.wraps(fn)
+    async def run(*args, **kwargs):
+        from backend.services.heavy_work import heavy
+        async with heavy(f"job:{fn.__name__}"):
+            return await fn(*args, **kwargs)
+    return run
 
 _scheduler = None
 _last_mtm_timestamp: datetime | None = None
@@ -558,6 +577,7 @@ def shutdown_scheduler():
         logger.info("Portfolio Intelligence scheduler stopped")
 
 
+@_gated
 async def _hourly_mtm():
     """Hourly mark-to-market during market hours.
 
@@ -638,6 +658,7 @@ async def _hourly_mtm():
         logger.error("Hourly MTM failed: %s", e, exc_info=True)
 
 
+@_gated
 async def _daily_check():
     """Run daily rebalance check for all lanes (reference + book)."""
     import asyncio
@@ -911,6 +932,7 @@ async def _daily_check():
         logger.error("Smartgrowth collection failed: %s", e, exc_info=True)
 
 
+@_gated
 async def _congress_morning_collect():
     """TRIAL-CONGRESS-IC collection at 07:30 ET, when the shared FMP daily
     quota is fresh (the 16:30 ET slot inside _daily_check stays as the
@@ -930,6 +952,7 @@ async def _congress_morning_collect():
         logger.error("Congress-IC morning collection failed: %s", e, exc_info=True)
 
 
+@_gated
 async def _ownership_collect():
     """Daily Teacher Library collection: yesterday's Forms 3/4/5.
 
@@ -1051,6 +1074,7 @@ def _write_resolver_receipt(report: dict) -> None:
                      "happened", type(exc).__name__, exc)
 
 
+@_gated
 async def _ledger_resolve():
     """Daily prediction-ledger resolution (the caller resolve_all never had).
 
@@ -1094,6 +1118,7 @@ async def _ledger_resolve():
         logger.error("Ledger resolve failed: %s", e, exc_info=True)
 
 
+@_gated
 async def _why_moved_nightly():
     """Nightly WHY-MOVED: explain the day, and mint forecasts that can be wrong.
 
@@ -1145,6 +1170,7 @@ async def _why_moved_nightly():
         logger.error("Nightly WHY-MOVED failed: %s", e, exc_info=True)
 
 
+@_gated
 async def _weekly_aggressive_check():
     """Additional weekly check for aggressive lane."""
     import asyncio
@@ -1159,6 +1185,7 @@ async def _weekly_aggressive_check():
         logger.error("Weekly aggressive check failed: %s", e, exc_info=True)
 
 
+@_gated
 async def _copy_lab_run():
     """Scheduled COPY-LAB engine pass over seeded active lanes.
 
@@ -1184,6 +1211,7 @@ async def _copy_lab_run():
         logger.error("COPY-LAB scheduled pass failed: %s", e, exc_info=True)
 
 
+@_gated
 async def _arena_daily():
     """Scheduled ARENA Gen-1 daily pass (ORDER 25). PRODUCT_EXPERIMENT.
 
@@ -1214,6 +1242,7 @@ async def _arena_daily():
         logger.error("ARENA daily pass failed: %s", e, exc_info=True)
 
 
+@_gated
 async def _daily_digest():
     """Scheduled daily digest. The counts ARE the log line: a digest whose
     every section is empty must say so — a corpus quietly accruing blank rows
@@ -1233,6 +1262,7 @@ async def _daily_digest():
         logger.error("Daily digest failed: %s", e, exc_info=True)
 
 
+@_gated
 async def _prediction_markets_collect():
     """Daily Kalshi PIT snapshot (TRIAL-PREDMARKET-1). The counts are the log
     line; a fetch failure raises inside the collector BEFORE any write, so a

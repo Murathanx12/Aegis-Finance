@@ -207,3 +207,46 @@ class TestWhyMovedNightly:
         assert seen["positions"] == [("AAPL", 10.0)]
         assert seen["requested_date"]  # a date string, derived not defaulted
         assert seen["write_ledger"] is True  # minting is the point of the job
+
+
+class TestEveryJobIsInvocableAndGated:
+    """The why_moved lesson, generalized: a scheduled job that cannot even be
+    CALLED the way APScheduler calls it (zero arguments) is a bug that ships
+    silently — the TypeError lands in a log nobody reads at 17:15 ET. This
+    walks the REAL registrations, so a job added tomorrow is covered the day
+    it is added, with no edit here."""
+
+    def test_registered_funcs_are_async_zero_arg_and_gated(self):
+        import inspect
+
+        from backend.services.portfolio_intelligence.scheduler import (
+            EXPECTED_JOB_IDS, setup_scheduler, shutdown_scheduler,
+        )
+
+        async def _run():
+            scheduler = setup_scheduler()
+            assert scheduler is not None
+            jobs = {j.id: j for j in scheduler.get_jobs()}
+            assert set(jobs) == set(EXPECTED_JOB_IDS)
+            for job_id, job in jobs.items():
+                fn = job.func
+                assert inspect.iscoroutinefunction(fn), (
+                    f"{job_id}: scheduled func must be async "
+                    f"(AsyncIOScheduler), got {fn!r}")
+                # APScheduler fires with the job's args/kwargs — ours are
+                # empty, so the signature must bind with nothing.
+                try:
+                    inspect.signature(fn).bind(*job.args or (),
+                                               **job.kwargs or {})
+                except TypeError as e:
+                    raise AssertionError(
+                        f"{job_id}: registered call does not satisfy the "
+                        f"function signature — the why_moved bug shape: {e}")
+                # Every job runs behind the heavy-work gate (the 2026-08-21
+                # OOM lesson). functools.wraps leaves __wrapped__ behind.
+                assert hasattr(fn, "__wrapped__"), (
+                    f"{job_id}: job is not @_gated — background computes "
+                    f"may stack and OOM the process")
+            shutdown_scheduler()
+
+        asyncio.run(_run())
