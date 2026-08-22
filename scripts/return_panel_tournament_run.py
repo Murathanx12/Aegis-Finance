@@ -135,33 +135,37 @@ def _fit_predict(arm: str, mk, cols, tr, te, label: str = LABEL
 CACHE_DIR = OUT / "screen_cache"
 
 
-def _cache_load(key: str) -> pd.Series | None:
+def _cache_load(key: str, panel_hash: str) -> pd.Series | None:
     p = CACHE_DIR / f"{key}.json"
     if not p.exists():
         return None
     d = json.loads(p.read_text(encoding="utf-8"))
-    s = pd.Series(d["ic"], index=pd.to_datetime(d["dates"]))
-    return s
+    if d.get("panel_hash") != panel_hash:
+        # a rebuilt panel invalidates every cached arm — a stale entry
+        # merged into a fresh run would silently mix result eras
+        print(f"  [cache] {key} STALE (panel hash changed) — recomputing")
+        return None
+    return pd.Series(d["ic"], index=pd.to_datetime(d["dates"]))
 
 
-def _cache_save(key: str, s: pd.Series) -> None:
+def _cache_save(key: str, s: pd.Series, panel_hash: str) -> None:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     (CACHE_DIR / f"{key}.json").write_text(json.dumps(
-        {"dates": [str(d.date()) for d in s.index],
+        {"panel_hash": panel_hash,
+         "dates": [str(d.date()) for d in s.index],
          "ic": [float(v) for v in s.to_numpy()]}), encoding="utf-8")
 
 
-def cached_arm(key: str, fn) -> pd.Series:
+def cached_arm(key: str, fn, panel_hash: str) -> pd.Series:
     """Per-arm IC series cache so a wall-clock-bounded screen run resumes
-    instead of restarting. The cache is keyed by arm/label only — the
-    panel hash is stamped into the receipt, and the cache dir is deleted
-    whenever the panel is rebuilt (build stamps a new hash)."""
-    s = _cache_load(key)
+    instead of restarting. Every entry is stamped with the panel hash and
+    a mismatch recomputes — never merges."""
+    s = _cache_load(key, panel_hash)
     if s is not None:
         print(f"  [cache] {key}  ic {float(s.mean()):+.4f}")
         return s
     s = fn()
-    _cache_save(key, s)
+    _cache_save(key, s, panel_hash)
     return s
 
 
@@ -211,6 +215,12 @@ def _null_world_ok() -> dict | None:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="return_panel_tournament_run")
     ap.add_argument("--null-world", action="store_true")
+    ap.add_argument("--planted-world",
+                    choices=("linear", "linear_dense", "nonlinear"),
+                    default="", help="sensitivity validation: replace the "
+                    "label with a synthetic one of DECLARED size built "
+                    "from real features; measures what the instrument "
+                    "can FIND (sparse single-column vs dense family)")
     ap.add_argument("--stage", choices=("primary", "screen"),
                     default="primary")
     a = ap.parse_args(argv)
@@ -230,6 +240,88 @@ def main(argv: list[str] | None = None) -> int:
     stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     print(f"{TRIAL}  signer: {signer[:40]}  panel {phash}  "
           f"rows {len(df):,}")
+
+    if a.planted_world:
+        # SENSITIVITY WORLD — the complement of the null world. The null
+        # proved the pipeline refuses noise; this proves it can DETECT a
+        # planted signal of roughly the declared economic size, carried by
+        # JKP columns the floor cannot see. Nothing here is market
+        # evidence; the receipt says so.
+        rng = np.random.default_rng(20260823)
+        df = df.copy()
+
+        def _z(col):
+            z = df.groupby("month")[col].transform(
+                lambda s: (s - s.mean()) / (s.std(ddof=0) or 1.0))
+            return z.fillna(0.0).to_numpy()
+
+        noise = rng.standard_normal(len(df))
+        if a.planted_world == "linear":
+            planted_ic, carrier = 0.03, "qmj (sparse: ONE column of 419)"
+            df[LABEL] = 0.03 * _z("qmj") + noise
+            expect = ("sparse needle: planted R^2 0.0009 sits near the "
+                      "419/200k selection-noise floor — partial recovery "
+                      "at best; the point is to MEASURE it")
+        elif a.planted_world == "linear_dense":
+            fam_map = json.loads(
+                (OUT / "aegis_panel_v1.meta.json").read_text(
+                    encoding="utf-8"))["family_map"]
+            qcols = [c for c, f in fam_map.items()
+                     if f == "QUALITY_PROFITABILITY"]
+            planted_ic = 0.03
+            carrier = f"mean z of {len(qcols)} QUALITY columns (dense)"
+            zsum = np.zeros(len(df))
+            for c in qcols:
+                zsum += _z(c)
+            zc = zsum / np.std(zsum)
+            df[LABEL] = 0.03 * zc + noise
+            expect = ("dense family carrier — the realistic shape of "
+                      "factor signal; full_lgbm should recover most of "
+                      "0.03 and clear the verdict")
+        else:
+            planted_ic, carrier = 0.05, "qmj*be_me (pure interaction)"
+            df[LABEL] = 0.05 * _z("qmj") * _z("be_me") + noise
+            expect = ("full_lgbm recovers part of the interaction; "
+                      "full_ridge sees ~nothing (zero linear projection)")
+        arms = (["floor_lgbm", "full_lgbm"]
+                if a.planted_world == "linear"
+                else ["floor_lgbm", "full_lgbm", "full_ridge"])
+        ics = run_arms(df, floor, full, arms)
+        # z-label variant: train on the per-date z-scored label. Per-date
+        # Spearman is invariant to per-date monotone transforms, so this
+        # changes ONLY the training objective — the hypothesis under test
+        # is that pooled MSE on RAW returns drowns cross-sectional signal
+        # in cross-date vol dispersion. An instrument finding here earns a
+        # successor registration; it never touches real labels directly.
+        dfz = df.copy()
+        dfz[LABEL] = dfz.groupby("month")[LABEL].transform(
+            lambda s: (s - s.mean()) / (s.std(ddof=0) or 1.0))
+        for k, s in run_arms(dfz, floor, full,
+                             ["floor_lgbm", "full_lgbm"]).items():
+            ics[f"{k}_zlabel"] = s
+        out = {"trial": TRIAL, "mode": "SENSITIVITY_WORLD",
+               "world": a.planted_world, "at": stamp,
+               "panel_hash": phash, "seed": 20260823,
+               "planted": {"carrier": carrier, "target_ic": planted_ic},
+               "expectation": expect,
+               "pooled_ic": {k: round(float(s.mean()), 5)
+                             for k, s in ics.items()},
+               "contrasts": {}}
+        for arm in [x for x in ics if x != "floor_lgbm"]:
+            base = ("floor_lgbm_zlabel" if arm.endswith("_zlabel")
+                    and arm != "floor_lgbm_zlabel" else "floor_lgbm")
+            inf = paired_contrast(ics[arm], ics[base])
+            v = head_verdicts({"c": inf}, economic_bar=ECONOMIC_BAR)["c"]
+            out["contrasts"][f"{arm}_minus_floor"] = {
+                "contrast": inf, "verdict": v["verdict"]}
+            print(f"  {arm}: dIC {inf['mean']:+.4f} "
+                  f"(mde {inf['mde_80pct_power']:.4f}) -> {v['verdict']}")
+        p = OUT / f"tournament_planted_{a.planted_world}.json"
+        p.write_text(json.dumps(out, indent=2, default=str),
+                     encoding="utf-8")
+        print(f"receipt: {p.name} (SENSITIVITY_WORLD — not market "
+              f"evidence)")
+        return 0
 
     if a.null_world:
         rng = np.random.default_rng(NULL_SEED)
@@ -324,7 +416,7 @@ def main(argv: list[str] | None = None) -> int:
     prim = json.loads((OUT / "tournament_primary.json")
                       .read_text(encoding="utf-8"))
     ics = {a: cached_arm(f"arm_{a}", lambda a=a: run_arms(
-               df, floor, full, [a])[a])
+               df, floor, full, [a])[a], phash)
            for a in ("floor_lgbm", "full_lgbm", "full_ridge",
                      "full_lgbm_rank", "full_mlp")}
     screen = {"model_ordering": {}}
@@ -337,7 +429,7 @@ def main(argv: list[str] | None = None) -> int:
     for f in fams:
         cols = floor + [c for c, ff in fam.items() if ff == f]
         fic = cached_arm(f"family_{f}", lambda cols=cols: run_arms(
-            df, floor, cols, ["full_lgbm"])["full_lgbm"])
+            df, floor, cols, ["full_lgbm"])["full_lgbm"], phash)
         screen["family_alone_vs_floor"][f] = {
             "pooled_ic": round(float(fic.mean()), 5),
             "contrast_vs_floor": paired_contrast(fic,
@@ -345,7 +437,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  family {f:24s} ic "
               f"{screen['family_alone_vs_floor'][f]['pooled_ic']:+.4f}")
     vol_ics = {a: cached_arm(f"vol_{a}", lambda a=a: run_arms(
-                   df, floor, full, [a], label="fwd_vol_21d")[a])
+                   df, floor, full, [a], label="fwd_vol_21d")[a], phash)
                for a in ("floor_lgbm", "full_lgbm")}
     screen["vol_cross_check"] = {k: round(float(s.mean()), 4)
                                  for k, s in vol_ics.items()}

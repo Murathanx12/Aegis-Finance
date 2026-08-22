@@ -93,6 +93,12 @@ def main() -> int:
     missing = {k: v for k, v in missing.items() if v}
     if missing:
         raise SystemExit(f"REFUSED: consumed inputs missing: {missing}")
+    # a glob that matches nothing has no paths to fail the check above —
+    # an EMPTY family is a rename or a deleted store, never a pass
+    empty = [fam for fam, paths in CONSUMED.items() if not paths]
+    if empty:
+        raise SystemExit(f"REFUSED: consumed families matched ZERO files "
+                         f"(rename/typo/deleted store?): {empty}")
 
     families = {}
     for fam, paths in CONSUMED.items():

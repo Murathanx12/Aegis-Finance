@@ -208,6 +208,26 @@ results):**
   join restates RISK-HEAD-AT-SCALE-1 (a diagnostic pass; the risk claim
   belongs to that trial, not this one).
 
+**ANNOTATION 2026-08-22 (instrument calibration — documents an engine
+property, changes no frozen parameter):** the sensitivity worlds
+(`tournament_planted_linear.json`, `tournament_planted_linear_dense.json`,
+SENSITIVITY_WORLD, run after the registered result) measured what this
+instrument can DETECT: a planted linear factor of IC 0.03 — sparse
+(one column) or dense (82-column family carrier) — is recovered at only
+dIC +0.001..+0.003, far inside the MDE. A per-date z-scored training
+label changes nothing in these worlds (their noise is homoskedastic by
+construction, so they cannot test the vol-dispersion hypothesis). The
+arithmetic: planted R² ~0.001 against 419 features on ~10^5 training
+rows leaves even the optimal estimator with a fraction of the signal,
+and the MDE sits at that recovered scale. **Therefore this trial's
+NOT_ESTABLISHED bounds only signals well above realistic single-name
+IC scale; it is close to uninformative for effects ≤0.03.** The panels
+where supervised return prediction demonstrably resolves (GKX-class)
+are ~100× larger (all caps, 60 years). The successor instrument is
+scale — a full-history all-cap panel — and any TOURNAMENT-2 must show
+planted-world detectability at its declared effect size BEFORE its
+registered run is interpreted.
+
 **What follows (successor registrations, not this trial's authority):**
 a RISK_PRICE-family-only return screen with its own §64 (the lead's MDE
 here was 0.0229 — a confirmatory design needs more dates or a paired

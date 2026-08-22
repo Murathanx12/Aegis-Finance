@@ -1,0 +1,36 @@
+{
+  "trial": "RETURN-PANEL-TOURNAMENT-1",
+  "mode": "SENSITIVITY_WORLD",
+  "world": "linear",
+  "at": "2026-08-22T09:59:19+00:00",
+  "panel_hash": "34f7cb98ad147785",
+  "seed": 20260823,
+  "planted": {
+    "carrier": "qmj",
+    "target_ic": 0.03
+  },
+  "expectation": "full_lgbm and full_ridge both recover ~0.03 dIC over the floor; verdict should be the win",
+  "pooled_ic": {
+    "floor_lgbm": 0.00469,
+    "full_lgbm": 0.00649
+  },
+  "contrasts": {
+    "full_lgbm_minus_floor": {
+      "contrast": {
+        "mean": 0.0018015694388881151,
+        "ci_lo": -0.003927043601576805,
+        "ci_hi": 0.0061729775004664795,
+        "se": 0.0029983731288242515,
+        "mde_80pct_power": 0.008400197837561456,
+        "n_rows": 107,
+        "n_dates": 107,
+        "n_securities": 1,
+        "n_effective": 107.0,
+        "block_days": 1,
+        "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+        "block_days_derived": 1
+      },
+      "verdict": "LINEAR_NONINFERIOR"
+    }
+  }
+}

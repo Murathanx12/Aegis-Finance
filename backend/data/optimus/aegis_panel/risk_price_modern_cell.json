@@ -1,0 +1,49 @@
+{
+  "trial": "RISK-PRICE-EARLY-1",
+  "mode": "SCREEN_MODERN_CELL",
+  "at": "2026-08-22T10:19:49+00:00",
+  "signed_by": "Murat Abdullaev \u2014 recorded order 2026-08-22 (\"continue with",
+  "contrast": {
+    "mean": 0.02986397123365842,
+    "ci_lo": 0.016080214837328924,
+    "ci_hi": 0.04513369103866927,
+    "se": 0.008840282031924855,
+    "mde_80pct_power": 0.024766803468895843,
+    "n_rows": 106,
+    "n_dates": 106,
+    "n_securities": 1,
+    "n_effective": 106.0,
+    "block_days": 1,
+    "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+    "block_days_derived": 1
+  },
+  "pooled_ic": {
+    "floor_lgbm": 0.00175,
+    "riskprice_lgbm": 0.03161
+  },
+  "ic_by_year": {
+    "floor_lgbm": {
+      "2016": 0.0076,
+      "2017": -0.0102,
+      "2018": 0.0299,
+      "2019": 0.0341,
+      "2020": -0.006,
+      "2021": -0.0111,
+      "2022": -0.0192,
+      "2023": 0.0107,
+      "2024": -0.0244
+    },
+    "riskprice_lgbm": {
+      "2016": 0.026,
+      "2017": 0.0013,
+      "2018": 0.041,
+      "2019": 0.051,
+      "2020": 0.0415,
+      "2021": 0.0794,
+      "2022": -0.0092,
+      "2023": 0.0205,
+      "2024": 0.0334
+    }
+  },
+  "note": "SCREEN \u2014 consistency of own-construction features with the JKP-based parent lead; never deciding, never pooled"
+}

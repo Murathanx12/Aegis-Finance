@@ -149,12 +149,14 @@ def _floor_frame(panel: Panel) -> pd.DataFrame:
     return pd.concat(rows, ignore_index=True)
 
 
-def _spine_labels() -> pd.DataFrame:
+def _spine_labels(spine_path: Path | None = None) -> pd.DataFrame:
     """(permno, month) -> next calendar month's ret_incl_delist. A month
-    gap yields NaN — the lead must be month+1, never 'next observed'."""
-    if not PIT_PATH.exists():
-        raise PanelRefused(f"{PIT_PATH} missing")
-    u = pd.read_parquet(PIT_PATH,
+    gap yields NaN — the lead must be month+1, never 'next observed'.
+    `spine_path` overrides for the early-era spine; default is v1."""
+    p = Path(spine_path) if spine_path is not None else PIT_PATH
+    if not p.exists():
+        raise PanelRefused(f"{p} missing")
+    u = pd.read_parquet(p,
                         columns=["permno", "date", "ret_incl_delist"])
     u["month"] = pd.to_datetime(u["date"]).dt.to_period("M")
     u = u.sort_values(["permno", "month"])
@@ -208,6 +210,15 @@ def build(years: tuple[int, int] = (2013, 2024)) -> BuildResult:
     df = base.merge(jkp, on=["permno", "month"], how="left")
 
     jkp_cols = [c for c in jkp.columns if c not in ("permno", "month")]
+    # a broken join (dtype drift, month-convention drift) yields all-NaN
+    # characteristics that would RUN as "no signal" — refuse instead
+    match_rate = (float(df[jkp_cols[0]].notna().mean()) if jkp_cols
+                  else 0.0)
+    if match_rate < 0.90:
+        raise PanelRefused(
+            f"JKP join matched only {match_rate:.1%} of rows (≥90% "
+            f"expected — measured 100% at v1). A quiet all-NaN join would "
+            f"run the tournament against nothing.")
     fam_full = dict(fam)
     fam_full.update({c: "PRICE_FLOOR" for c in FLOOR_FEATURES})
 

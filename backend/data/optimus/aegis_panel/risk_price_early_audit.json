@@ -1,0 +1,18 @@
+{
+  "audit": "RISK-PRICE-EARLY-1 \u00a764 (mean masked here)",
+  "at": "2026-08-22T10:06:23+00:00",
+  "ci_lo": -0.009287450413478181,
+  "ci_hi": 0.007087208083833055,
+  "se": 0.0050801154220172715,
+  "mde_80pct_power": 0.014232376275105487,
+  "n_rows": 215,
+  "n_dates": 215,
+  "n_securities": 1,
+  "n_effective": 215.0,
+  "block_days": 1,
+  "dependence_unit": "contiguous 1-trading-day block of the whole cross-section",
+  "block_days_derived": 1,
+  "economic_bar": 0.01,
+  "win_limb_answerable": true,
+  "noninferior_limb_answerable": false
+}
