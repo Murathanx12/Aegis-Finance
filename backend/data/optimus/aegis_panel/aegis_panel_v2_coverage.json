@@ -1,0 +1,32 @@
+{
+  "panel": "AEGIS-PANEL-2",
+  "n_rows": 4157680,
+  "n_rows_raw": 4157680,
+  "n_months": 1188,
+  "n_permnos": 28159,
+  "window": [
+    "1926-01-31",
+    "2024-12-31"
+  ],
+  "n_rows_with_label": 4053138,
+  "rows_per_year_quartiles": {
+    "q25": 12028,
+    "median": 43938,
+    "q75": 65240
+  },
+  "coverage_by_family": {
+    "ACCRUALS": 0.7178,
+    "BALANCE_SHEET": 0.7031,
+    "EARNINGS_MOMENTUM": 0.6305,
+    "GROWTH_INVESTMENT": 0.6694,
+    "ISSUANCE_PAYOUT": 0.6919,
+    "LIQUIDITY": 0.8738,
+    "PRICE_MOMENTUM": 0.7266,
+    "QUALITY_PROFITABILITY": 0.7129,
+    "RISK_PRICE": 0.7807,
+    "SIZE_SCALE": 0.8908,
+    "VALUE": 0.7834
+  },
+  "unmapped_columns": [],
+  "universe_note": "ALL-CAP: size/liquidity are columns, not gates; thin-name beta attenuation applies to price-risk columns (Dimson correction is a TOURNAMENT-2 concern, measured 2026-08-22)"
+}

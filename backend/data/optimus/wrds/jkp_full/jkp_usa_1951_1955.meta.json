@@ -1,0 +1,13 @@
+{
+  "dataset": "jkp_usa_1951_1955",
+  "consumer": "AEGIS-PANEL-2",
+  "universe": "ALL US securities in contrib_global_factor (no permno filter \u2014 full-cap panel is the point; common/obs_main filtered downstream)",
+  "window": [
+    "1951-01-01",
+    "1955-12-31"
+  ],
+  "pit_knowledge_column": "eom (JKP formation stamping; spot-audit PASS 2026-08-22)",
+  "sql_note": "SELECT * WHERE excntry='USA' AND eom BETWEEN chunk bounds",
+  "rows": 61861,
+  "pulled_at": "2026-08-22T10:43:23+00:00"
+}

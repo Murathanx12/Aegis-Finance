@@ -1,0 +1,13 @@
+{
+  "dataset": "jkp_risk_ita_2013_2024",
+  "consumer": "RISK-PRICE-FOREIGN-CONFIRM-1",
+  "universe": "ALL ITA securities (filtered downstream)",
+  "window": [
+    "2013-01-01",
+    "2024-12-31"
+  ],
+  "pit_knowledge_column": "eom",
+  "sql_note": "risk-family column subset, see FOREIGN_COLS in the puller",
+  "rows": 49342,
+  "pulled_at": "2026-08-22T16:11:20+00:00"
+}

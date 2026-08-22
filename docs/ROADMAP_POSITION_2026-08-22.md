@@ -85,13 +85,16 @@ die at ~10 min; bounded runs converge).
 2013–2024 risk-family subset (consumer **RISK-PRICE-FOREIGN-CONFIRM-1**).
 Completion census appended below when it lands.
 
-**PAUSED by Murat 2026-08-22 ~21:40 HKT at 16/45 chunks** (USA complete
-through 1980-81; foreign not started). Fully resumable — chunk filenames
-are the resume key; the panel-2 builder REFUSES until the plan is
-complete. To resume: relaunch the two detached loops
-(`jkp_full/pull_loop.ps1` for USA ~6 h remaining;
-`jkp_full/pull_foreign.ps1` for the ~1 h foreign subset) or invoke
-`python -m scripts.wrds_pull_jkp_full` repeatedly.
+**COMPLETE 2026-08-23** (paused by Murat overnight at 16/45, resumed on
+his order). Census (`jkp_full/pull_census_2026-08-23.json`): **USA 32
+chunks / 3,599,311 rows (1926–2012) + foreign 13 chunks / 2,384,261 rows
+(2013–2024) = 6.3 GB, ZERO at-cap fills.** The foreign consumer already
+ran and returned the programme's first positive family result
+(RISK-PRICE-FOREIGN-1 → `NOT_US_ONLY`, +0.0215 dIC, 12/13 markets; the
+foreign price floor alone carries +0.023 IC in the era where the US
+floor is zero — modern US large-caps are the crowded anomaly). AEGIS-
+PANEL-2 built from the USA history + modern file; TOURNAMENT-2 remains
+behind the enforced detectability gate.
 
 ## NEXT SESSIONS (ordered — build detail per step in
 `docs/HANDOFF_2026-08-22_OPUS_BUILDER.md`)

@@ -1,0 +1,13 @@
+{
+  "dataset": "jkp_risk_esp_2013_2024",
+  "consumer": "RISK-PRICE-FOREIGN-CONFIRM-1",
+  "universe": "ALL ESP securities (filtered downstream)",
+  "window": [
+    "2013-01-01",
+    "2024-12-31"
+  ],
+  "pit_knowledge_column": "eom",
+  "sql_note": "risk-family column subset, see FOREIGN_COLS in the puller",
+  "rows": 28458,
+  "pulled_at": "2026-08-22T16:07:51+00:00"
+}

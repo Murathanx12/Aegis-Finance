@@ -1,0 +1,10 @@
+{
+  "dataset": "AEGIS-PANEL-2",
+  "built_at": "2026-08-22T17:49:00+00:00",
+  "sources": [
+    "jkp_full/jkp_usa_*.parquet",
+    "jkp_global_factor_usa.parquet"
+  ],
+  "label": "ret_exc_lead1m (JKP delisting-aware; corr 0.99987 vs the v1 spine construction on the overlap)",
+  "consumer_of": "TRAINING gate \u2014 TOURNAMENT-2 (prereg owns folds/arms/detectability gate)"
+}

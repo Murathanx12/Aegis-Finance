@@ -157,3 +157,41 @@ labels) · ORDER 29 verdict · 08-27 resolve run · G2 signatures before
 - 2026-08-22 is a SATURDAY; NAV expected date on weekends is Friday's.
   Weekend firings that walk back to Friday must be idempotent — that is
   what `session_as_of` (schema 1.3.0) now exists to answer.
+
+
+---
+
+## SUNDAY 2026-08-23 UPDATE (appended by the pull-completion session)
+
+**The pull finished and both consumers are fed.** Census
+(`jkp_full/pull_census_2026-08-23.json`): USA 32 chunks / 3,599,311 rows
+(1926-2012) + foreign 13 chunks / 2,384,261 rows = 6.3 GB, zero at-cap
+fills, loops exited cleanly.
+
+**RISK-PRICE-FOREIGN-1 ran REGISTERED and returned the programme's first
+positive family result: `NOT_US_ONLY`** (+0.0215 cross-country dIC vs
+MDE 0.0183 and the 0.01 bar; 12/13 markets, 7/9 years; measured rho 0.27
+=> 3.07 effective markets). Context cell: the price FLOOR alone carries
++0.023 IC abroad in the era where the US floor is zero - modern US
+large-caps are the crowded anomaly. The linter downgraded the trial from
+CONFIRM to FOREIGN grade pre-run (N9: same-era foreign co-moves; an
+era-bound claim confirms FORWARD only). **It licenses exactly ONE
+forward registration** - recommended: a new-ID arena book on the
+risk-price family (also P9's second distinct selection signal). That
+registration is the next session's first decision.
+
+**AEGIS-PANEL-2 is BUILT**: `aegis_panel/aegis_panel_v2.parquet` -
+4,157,680 stock-months, 1,188 months (1926-01..2024-12), 28,159 permnos,
+4,053,138 labeled (JKP ret_exc_lead1m), 4.18 GB, all columns
+family-mapped, family coverage 63-89%. Label is float64, features
+float32 (memory: the build peaked ~16 GB). **TOURNAMENT-2 remains behind
+the enforced detectability gate** (`detectability_gate.assert_detectable`
+- the T2 runner must show planted-world recovery at panel-2 hash and its
+declared effect BEFORE any registered read counts).
+
+**Next session order (updated):** (1) risk-price forward registration
+decision (the licensed one); (2) planted worlds on panel-2 + declare
+detectability bars; (3) TOURNAMENT-2 prereg + run; (4) session-(b)
+attended item stands: flip `trust_router.CLUSTER_ADJUST_DEFAULT` -> True
+(the capital gate refuses the v1.1 receipt while off); (5) ORDER 29
+(event engine) awaits Murat's read of the design review.
