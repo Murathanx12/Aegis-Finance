@@ -216,7 +216,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="return_panel_tournament_run")
     ap.add_argument("--null-world", action="store_true")
     ap.add_argument("--planted-world",
-                    choices=("linear", "linear_dense", "nonlinear"),
+                    choices=("linear", "linear_dense", "linear_hetero",
+                             "nonlinear"),
                     default="", help="sensitivity validation: replace the "
                     "label with a synthetic one of DECLARED size built "
                     "from real features; measures what the instrument "
@@ -262,6 +263,32 @@ def main(argv: list[str] | None = None) -> int:
             expect = ("sparse needle: planted R^2 0.0009 sits near the "
                       "419/200k selection-noise floor — partial recovery "
                       "at best; the point is to MEASURE it")
+        elif a.planted_world == "linear_hetero":
+            # dense quality carrier as in linear_dense, but signal AND
+            # noise scale together with each month's REAL cross-sectional
+            # return dispersion: per-date IC stays 0.03 while pooled raw
+            # MSE is dominated by high-dispersion months — the world the
+            # homoskedastic variants could not build, and the right one
+            # to test the z-label training hypothesis in.
+            fam_map = json.loads(
+                (OUT / "aegis_panel_v1.meta.json").read_text(
+                    encoding="utf-8"))["family_map"]
+            qcols = [c for c, f in fam_map.items()
+                     if f == "QUALITY_PROFITABILITY"]
+            planted_ic = 0.03
+            carrier = (f"mean z of {len(qcols)} QUALITY columns, "
+                       f"REAL per-month dispersion on both terms")
+            zsum = np.zeros(len(df))
+            for c in qcols:
+                zsum += _z(c)
+            zc = zsum / np.std(zsum)
+            real_sd = df.groupby("month")[LABEL].transform(
+                lambda s: s.std(ddof=0))
+            real_sd = real_sd.fillna(real_sd.median()).to_numpy()
+            df[LABEL] = real_sd * (0.03 * zc + noise)
+            expect = ("if pooled raw-MSE is the binding constraint, the "
+                      "zlabel arms recover materially more than the raw "
+                      "arms; if not, scale is the whole story")
         elif a.planted_world == "linear_dense":
             fam_map = json.loads(
                 (OUT / "aegis_panel_v1.meta.json").read_text(

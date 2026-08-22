@@ -215,8 +215,12 @@ SENSITIVITY_WORLD, run after the registered result) measured what this
 instrument can DETECT: a planted linear factor of IC 0.03 — sparse
 (one column) or dense (82-column family carrier) — is recovered at only
 dIC +0.001..+0.003, far inside the MDE. A per-date z-scored training
-label changes nothing in these worlds (their noise is homoskedastic by
-construction, so they cannot test the vol-dispersion hypothesis). The
+label changes nothing in these worlds — including the heteroskedastic
+world built for exactly that question
+(`tournament_planted_linear_hetero.json`: signal AND noise scaled by each
+month's REAL cross-sectional dispersion; raw-label LGBM recovers +0.0021,
+z-label +0.0001). The objective-mismatch hypothesis is refuted at this
+scale; the binding constraint is sample size, full stop. The
 arithmetic: planted R² ~0.001 against 419 features on ~10^5 training
 rows leaves even the optimal estimator with a fraction of the signal,
 and the MDE sits at that recovered scale. **Therefore this trial's
