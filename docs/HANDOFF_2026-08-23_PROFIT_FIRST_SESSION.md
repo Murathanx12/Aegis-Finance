@@ -291,6 +291,17 @@ The container **restarts and comes back on the same commit**. CI later went
 incarnation peaked at **345 MB RSS**, so this is *not* the known OOM signature
 (3.3 GB during `warm:stock_screener`) — at least not this time.
 
+**DECISIVE, added at end of session:** CI subsequently went green on **four
+consecutive commits** — `dbe7170`, `39cae3e`, `f14c852`, `ac08de7` — and prod
+still reported `61aa63e`. Green CI is demonstrably not producing a deploy, so
+this is a **Railway-side problem, not a code problem.** Nothing in this
+session's diff can explain it.
+
+Also ruled out as a cause: `/api/health` — the path `railway.json` actually
+healthchecks — measures **0.003 s** and was not touched. (`/api/health/full`
+*was* briefly made 15 s slower by this session's registry row; that is fixed
+and it is not the healthcheck path either way.)
+
 `railway.json` sets `healthcheckPath: /api/health`, `healthcheckTimeout: 30`,
 `restartPolicyType: ON_FAILURE`, `restartPolicyMaxRetries: 3`. A slow boot
 (cache prewarm) failing a 30-second healthcheck would produce exactly this
