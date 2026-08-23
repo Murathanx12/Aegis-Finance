@@ -683,11 +683,31 @@ def _case_feature_leakage_guard():
             "a leakage probe with no scoreable block")
 
 
+def _case_graph_propagation():
+    """Ask the co-coverage graph to rank a universe whose coverage mostly did
+    not arrive. A peer signal computed over a decimated cross-section is not a
+    thinner version of this signal -- it is a different one, and it would be
+    recorded under GRAPH_PROPAGATION_v1's name."""
+    from backend.services.graph_propagation import (
+        CoverageRow, GraphUnavailable, build_signal)
+
+    def _nothing_arrived(ticker, as_of, window_months=None):
+        return CoverageRow(ticker, frozenset(), None, None, "EMPTY",
+                           "vendor returned nothing")
+
+    uni = [f"T{i}" for i in range(10)]
+    return (lambda: build_signal(uni, {t: 0.0 for t in uni}, "2026-08-21",
+                                 coverage_reader=_nothing_arrived),
+            GraphUnavailable,
+            "a co-coverage graph with almost no coverage")
+
+
 CASES = {
     "aegis_panel": _case_aegis_panel,
     "signal_reachability": _case_signal_reachability,
     "execution_ledger": _case_execution_ledger,
     "feature_leakage_guard": _case_feature_leakage_guard,
+    "graph_propagation": _case_graph_propagation,
     "risk_price_features": _case_risk_price_features,
     "spec": _case_arena_spec,
     "experience": _case_arena_experience,

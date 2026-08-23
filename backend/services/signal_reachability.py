@@ -162,6 +162,15 @@ CLASSIFIED: dict[str, str] = {
     "backend.services.expectation_store": (
         "AWAITS — EXPECTATION-BACKFILL-1, the first rows G4 holds. Consumer "
         "is EVENT_RESPONSE_v1 (ROADMAP_2026-08-24 §3.1)."),
+    "backend.services.graph_propagation": (
+        "AWAITS — GRAPH_PROPAGATION_v1, the one mechanism "
+        "ANALYST-COCOVERAGE-GRAPH-1 licensed. Its consumer is a separate "
+        "PRODUCT_EXPERIMENT book in arena_books_v1.yaml, and that book cannot "
+        "be added until the ten seeds written 2026-08-21 migrate to per-book "
+        "identity on their next arena pass: they are still verified against "
+        "the WHOLE-FILE config_hash, so adding a book first makes "
+        "assert_config_current refuse to run AND refuse to migrate, for all "
+        "ten. This is a SEQUENCING wait with a date, not a missing consumer."),
     "backend.services.theme_baskets": (
         "AWAITS — point-in-time secular theme baskets; the narrative work "
         "that would consume them is LOGGED, not queued (roadmap §5)."),

@@ -185,7 +185,26 @@ class BookSpec:
 
 
 def config_bytes(path: Path | None = None) -> bytes:
-    return (path or CONFIG_PATH).read_bytes()
+    """The config's raw bytes, with line endings NORMALISED to LF.
+
+    WHY THE NORMALISATION. `config_hash` is seed identity for every legacy
+    book, and it is a hash of BYTES -- so it silently depended on the platform
+    that wrote the working copy. Measured 2026-08-24: the same commit hashes to
+    641adafc on Linux (LF) and 5ae0eccc on this Windows checkout (CRLF, via
+    `core.autocrlf=true`). Only git's own text normalisation kept the committed
+    blob LF and prod therefore agreeing with its seeds; a contributor with
+    `core.autocrlf=false` would commit CRLF, prod's hash would move, and all
+    ten seeded books would refuse to run behind a diff showing NOTHING.
+
+    Normalising is hash-STABLE for production, which is already LF: this is a
+    no-op there and cannot re-identify a seeded book. It only makes non-LF
+    checkouts agree with the value those books were sealed under.
+
+    Per-book identity ("book-v1") never had this problem -- it hashes the
+    PARSED config, and a YAML parser eats the line ending.
+    """
+    raw = (path or CONFIG_PATH).read_bytes()
+    return raw.replace(b"\r\n", b"\n")
 
 
 def book_config_payload(book_id: str, raw: dict) -> str:

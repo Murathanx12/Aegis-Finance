@@ -1,0 +1,1669 @@
+{
+ "measurement_id": "GRAPH-PROPAGATION-VENDOR-DEPTH-1",
+ "measured_at": "2026-08-24",
+ "licence": "PRODUCT_EXPERIMENT (data availability, not a result)",
+ "question": "Can yfinance's firm-attributed upgrades/downgrades feed supply the trailing-12-month co-coverage graph GRAPH_PROPAGATION_v1 needs? This was the last untested link: AMENDMENT-3 and -4 settled that the signal survives firm granularity and actions-only, but not whether THIS VENDOR carries enough history to build the graph at all.",
+ "as_of": "2026-08-21",
+ "window_days": 365,
+ "universe": {
+  "source": "backend/config.py stock_universe.sector_stocks",
+  "n": 179,
+  "vendor_has_data": 179,
+  "coverage_rate": 1.0
+ },
+ "depth": {
+  "verdict": "NOT THE CONSTRAINT",
+  "median_span_years": 14.4,
+  "note": "measured on a 20-name mega-cap probe: median 5,250 days of history, oldest row 2011-12-08"
+ },
+ "graph_inputs": {
+  "median_firms_per_name_in_window": 17,
+  "ibes_median_for_comparison": 14,
+  "names_with_usable_row": 176,
+  "usable_fraction": 0.9832,
+  "min_peers_required": 3
+ },
+ "staleness": {
+  "median_days_since_last_action": 10,
+  "silent_over_30d": 9,
+  "silent_over_90d": 3,
+  "silent_over_365d": 3
+ },
+ "the_defect": {
+  "finding": "Three names return an EMPTY trailing window and NO error, because their action history is truncated in the vendor's data. This is not coverage ceasing.",
+  "names": [
+   {
+    "ticker": "META",
+    "newest": "2024-09-30",
+    "stale_days": 689
+   },
+   {
+    "ticker": "WELL",
+    "newest": "2024-10-01",
+    "stale_days": 688
+   },
+   {
+    "ticker": "CAT",
+    "newest": "2024-10-14",
+    "stale_days": 675
+   }
+  ],
+  "proof_it_is_truncation_not_cessation": "yfinance's own `recommendations` summary for META reports 62 analysts rating it in the current month (8 strongBuy, 47 buy, 7 hold) while `upgrades_downgrades` stops at 2024-09-30. WELL and CAT show the same split. Prices are current for all three.",
+  "why_it_matters": "A graph that trusts the empty window drops META, WELL and CAT out of the ranking in silence. Nothing raises, nothing logs, and the book's universe quietly differs from its declared one.",
+  "mitigation": "graph_propagation.STALE_FEED_DAYS = 120. The threshold does no delicate work: genuine silence tops out near 49 days in this universe and the truncated names sit at 675-689, so the two populations are three weeks and two years apart."
+ },
+ "verdict": "VIABLE. 176/179 names (98.3%) carry a usable graph row at a median of 17 covering firms, denser than the IBES graph the screen validated on. The live path is not the blocker; the remaining blocker is a SEQUENCING one \u2014 the book cannot be registered until the ten arena seeds migrate to per-book identity.",
+ "per_ticker": [
+  {
+   "ticker": "AAPL",
+   "status": "OK",
+   "n_all": 970,
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "n_win": 116,
+   "n_firms_win": 31
+  },
+  {
+   "ticker": "ABBV",
+   "status": "OK",
+   "n_all": 407,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 60,
+   "n_firms_win": 20
+  },
+  {
+   "ticker": "ABNB",
+   "status": "OK",
+   "n_all": 454,
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "n_win": 74,
+   "n_firms_win": 29
+  },
+  {
+   "ticker": "ABT",
+   "status": "OK",
+   "n_all": 423,
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "n_win": 50,
+   "n_firms_win": 20
+  },
+  {
+   "ticker": "ACN",
+   "status": "OK",
+   "n_all": 576,
+   "newest": "2026-07-20",
+   "stale_days": 31,
+   "n_win": 58,
+   "n_firms_win": 18
+  },
+  {
+   "ticker": "ADBE",
+   "status": "OK",
+   "n_all": 719,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 91,
+   "n_firms_win": 28
+  },
+  {
+   "ticker": "AEP",
+   "status": "OK",
+   "n_all": 419,
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "n_win": 54,
+   "n_firms_win": 18
+  },
+  {
+   "ticker": "AMAT",
+   "status": "OK",
+   "n_all": 653,
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "n_win": 113,
+   "n_firms_win": 26
+  },
+  {
+   "ticker": "AMD",
+   "status": "OK",
+   "n_all": 760,
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "n_win": 149,
+   "n_firms_win": 37
+  },
+  {
+   "ticker": "AMGN",
+   "status": "OK",
+   "n_all": 413,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 58,
+   "n_firms_win": 22
+  },
+  {
+   "ticker": "AMT",
+   "status": "OK",
+   "n_all": 362,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 37,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "AMZN",
+   "status": "OK",
+   "n_all": 989,
+   "newest": "2026-07-31",
+   "stale_days": 20,
+   "n_win": 150,
+   "n_firms_win": 36
+  },
+  {
+   "ticker": "AON",
+   "status": "OK",
+   "n_all": 276,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 51,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "APD",
+   "status": "OK",
+   "n_all": 377,
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "n_win": 40,
+   "n_firms_win": 13
+  },
+  {
+   "ticker": "AVB",
+   "status": "OK",
+   "n_all": 377,
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "n_win": 44,
+   "n_firms_win": 13
+  },
+  {
+   "ticker": "AVGO",
+   "status": "OK",
+   "n_all": 615,
+   "newest": "2026-07-07",
+   "stale_days": 44,
+   "n_win": 101,
+   "n_firms_win": 28
+  },
+  {
+   "ticker": "AXON",
+   "status": "OK",
+   "n_all": 174,
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "n_win": 31,
+   "n_firms_win": 11
+  },
+  {
+   "ticker": "AXP",
+   "status": "OK",
+   "n_all": 61,
+   "newest": "2026-08-12",
+   "stale_days": 8,
+   "n_win": 40,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "BA",
+   "status": "OK",
+   "n_all": 440,
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "n_win": 30,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "BAC",
+   "status": "OK",
+   "n_all": 423,
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "n_win": 67,
+   "n_firms_win": 19
+  },
+  {
+   "ticker": "BKNG",
+   "status": "OK",
+   "n_all": 491,
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "n_win": 87,
+   "n_firms_win": 30
+  },
+  {
+   "ticker": "BLK",
+   "status": "OK",
+   "n_all": 416,
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "n_win": 53,
+   "n_firms_win": 12
+  },
+  {
+   "ticker": "BMY",
+   "status": "OK",
+   "n_all": 297,
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "n_win": 33,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "C",
+   "status": "OK",
+   "n_all": 238,
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "n_win": 57,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "CAT",
+   "status": "OK",
+   "n_all": 355,
+   "newest": "2024-10-14",
+   "stale_days": 675,
+   "n_win": 0,
+   "n_firms_win": 0
+  },
+  {
+   "ticker": "CB",
+   "status": "OK",
+   "n_all": 359,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 53,
+   "n_firms_win": 21
+  },
+  {
+   "ticker": "CCI",
+   "status": "OK",
+   "n_all": 320,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 35,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "CDNS",
+   "status": "OK",
+   "n_all": 234,
+   "newest": "2026-07-28",
+   "stale_days": 23,
+   "n_win": 35,
+   "n_firms_win": 13
+  },
+  {
+   "ticker": "CEG",
+   "status": "OK",
+   "n_all": 175,
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "n_win": 35,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "CHTR",
+   "status": "OK",
+   "n_all": 402,
+   "newest": "2026-07-29",
+   "stale_days": 22,
+   "n_win": 36,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "CI",
+   "status": "OK",
+   "n_all": 353,
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "n_win": 37,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "CL",
+   "status": "OK",
+   "n_all": 324,
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "n_win": 57,
+   "n_firms_win": 18
+  },
+  {
+   "ticker": "CMCSA",
+   "status": "OK",
+   "n_all": 383,
+   "newest": "2026-07-24",
+   "stale_days": 27,
+   "n_win": 45,
+   "n_firms_win": 19
+  },
+  {
+   "ticker": "CME",
+   "status": "OK",
+   "n_all": 382,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 43,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "CMG",
+   "status": "OK",
+   "n_all": 915,
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "n_win": 88,
+   "n_firms_win": 28
+  },
+  {
+   "ticker": "COIN",
+   "status": "OK",
+   "n_all": 425,
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "n_win": 85,
+   "n_firms_win": 24
+  },
+  {
+   "ticker": "COP",
+   "status": "OK",
+   "n_all": 445,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 53,
+   "n_firms_win": 20
+  },
+  {
+   "ticker": "COST",
+   "status": "OK",
+   "n_all": 628,
+   "newest": "2026-07-09",
+   "stale_days": 42,
+   "n_win": 59,
+   "n_firms_win": 20
+  },
+  {
+   "ticker": "CRM",
+   "status": "OK",
+   "n_all": 932,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 119,
+   "n_firms_win": 35
+  },
+  {
+   "ticker": "CRWD",
+   "status": "OK",
+   "n_all": 801,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 194,
+   "n_firms_win": 46
+  },
+  {
+   "ticker": "CSCO",
+   "status": "OK",
+   "n_all": 508,
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "n_win": 44,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "CSX",
+   "status": "OK",
+   "n_all": 486,
+   "newest": "2026-07-24",
+   "stale_days": 27,
+   "n_win": 59,
+   "n_firms_win": 19
+  },
+  {
+   "ticker": "CVX",
+   "status": "OK",
+   "n_all": 442,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 51,
+   "n_firms_win": 19
+  },
+  {
+   "ticker": "D",
+   "status": "OK",
+   "n_all": 284,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 31,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "DD",
+   "status": "OK",
+   "n_all": 307,
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "n_win": 33,
+   "n_firms_win": 12
+  },
+  {
+   "ticker": "DE",
+   "status": "OK",
+   "n_all": 434,
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "n_win": 39,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "DHI",
+   "status": "OK",
+   "n_all": 385,
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "n_win": 37,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "DIS",
+   "status": "OK",
+   "n_all": 535,
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "n_win": 43,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "DKNG",
+   "status": "OK",
+   "n_all": 358,
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "n_win": 97,
+   "n_firms_win": 31
+  },
+  {
+   "ticker": "DLR",
+   "status": "OK",
+   "n_all": 346,
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "n_win": 43,
+   "n_firms_win": 23
+  },
+  {
+   "ticker": "DOW",
+   "status": "OK",
+   "n_all": 367,
+   "newest": "2026-07-25",
+   "stale_days": 26,
+   "n_win": 50,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "DUK",
+   "status": "OK",
+   "n_all": 355,
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "n_win": 33,
+   "n_firms_win": 12
+  },
+  {
+   "ticker": "DXCM",
+   "status": "OK",
+   "n_all": 355,
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "n_win": 61,
+   "n_firms_win": 22
+  },
+  {
+   "ticker": "ECL",
+   "status": "OK",
+   "n_all": 350,
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "n_win": 46,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "ELV",
+   "status": "OK",
+   "n_all": 324,
+   "newest": "2026-07-17",
+   "stale_days": 34,
+   "n_win": 59,
+   "n_firms_win": 20
+  },
+  {
+   "ticker": "EMR",
+   "status": "OK",
+   "n_all": 339,
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "n_win": 31,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "ENPH",
+   "status": "OK",
+   "n_all": 451,
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "n_win": 58,
+   "n_firms_win": 20
+  },
+  {
+   "ticker": "EOG",
+   "status": "OK",
+   "n_all": 612,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 58,
+   "n_firms_win": 18
+  },
+  {
+   "ticker": "EQIX",
+   "status": "OK",
+   "n_all": 397,
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "n_win": 46,
+   "n_firms_win": 21
+  },
+  {
+   "ticker": "ETN",
+   "status": "OK",
+   "n_all": 401,
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "n_win": 37,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "EXC",
+   "status": "OK",
+   "n_all": 359,
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "n_win": 35,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "F",
+   "status": "OK",
+   "n_all": 335,
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "n_win": 44,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "FCX",
+   "status": "OK",
+   "n_all": 336,
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "n_win": 50,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "FDX",
+   "status": "OK",
+   "n_all": 599,
+   "newest": "2026-07-15",
+   "stale_days": 36,
+   "n_win": 76,
+   "n_firms_win": 19
+  },
+  {
+   "ticker": "FSLR",
+   "status": "OK",
+   "n_all": 518,
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "n_win": 61,
+   "n_firms_win": 24
+  },
+  {
+   "ticker": "FTNT",
+   "status": "OK",
+   "n_all": 656,
+   "newest": "2026-07-31",
+   "stale_days": 20,
+   "n_win": 76,
+   "n_firms_win": 27
+  },
+  {
+   "ticker": "GD",
+   "status": "OK",
+   "n_all": 276,
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "n_win": 32,
+   "n_firms_win": 13
+  },
+  {
+   "ticker": "GE",
+   "status": "OK",
+   "n_all": 174,
+   "newest": "2026-07-23",
+   "stale_days": 28,
+   "n_win": 29,
+   "n_firms_win": 13
+  },
+  {
+   "ticker": "GEHC",
+   "status": "OK",
+   "n_all": 96,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 45,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "GILD",
+   "status": "OK",
+   "n_all": 430,
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "n_win": 44,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "GIS",
+   "status": "OK",
+   "n_all": 333,
+   "newest": "2026-07-02",
+   "stale_days": 49,
+   "n_win": 53,
+   "n_firms_win": 19
+  },
+  {
+   "ticker": "GM",
+   "status": "OK",
+   "n_all": 430,
+   "newest": "2026-07-28",
+   "stale_days": 23,
+   "n_win": 68,
+   "n_firms_win": 19
+  },
+  {
+   "ticker": "GOOGL",
+   "status": "OK",
+   "n_all": 992,
+   "newest": "2026-07-23",
+   "stale_days": 28,
+   "n_win": 164,
+   "n_firms_win": 40
+  },
+  {
+   "ticker": "GS",
+   "status": "OK",
+   "n_all": 436,
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "n_win": 48,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "HAL",
+   "status": "OK",
+   "n_all": 456,
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "n_win": 54,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "HCA",
+   "status": "OK",
+   "n_all": 423,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 67,
+   "n_firms_win": 20
+  },
+  {
+   "ticker": "HD",
+   "status": "OK",
+   "n_all": 564,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 81,
+   "n_firms_win": 25
+  },
+  {
+   "ticker": "HON",
+   "status": "OK",
+   "n_all": 345,
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "n_win": 53,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "ICE",
+   "status": "OK",
+   "n_all": 336,
+   "newest": "2026-07-31",
+   "stale_days": 20,
+   "n_win": 30,
+   "n_firms_win": 8
+  },
+  {
+   "ticker": "INTC",
+   "status": "OK",
+   "n_all": 748,
+   "newest": "2026-08-12",
+   "stale_days": 8,
+   "n_win": 107,
+   "n_firms_win": 33
+  },
+  {
+   "ticker": "INTU",
+   "status": "OK",
+   "n_all": 512,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 55,
+   "n_firms_win": 23
+  },
+  {
+   "ticker": "ISRG",
+   "status": "OK",
+   "n_all": 436,
+   "newest": "2026-08-12",
+   "stale_days": 8,
+   "n_win": 63,
+   "n_firms_win": 24
+  },
+  {
+   "ticker": "JNJ",
+   "status": "OK",
+   "n_all": 379,
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "n_win": 60,
+   "n_firms_win": 19
+  },
+  {
+   "ticker": "JPM",
+   "status": "OK",
+   "n_all": 443,
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "n_win": 43,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "KHC",
+   "status": "OK",
+   "n_all": 246,
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "n_win": 39,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "KMI",
+   "status": "OK",
+   "n_all": 230,
+   "newest": "2026-07-23",
+   "stale_days": 28,
+   "n_win": 25,
+   "n_firms_win": 12
+  },
+  {
+   "ticker": "KO",
+   "status": "OK",
+   "n_all": 299,
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "n_win": 42,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "KR",
+   "status": "OK",
+   "n_all": 354,
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "n_win": 33,
+   "n_firms_win": 11
+  },
+  {
+   "ticker": "LIN",
+   "status": "OK",
+   "n_all": 44,
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "n_win": 29,
+   "n_firms_win": 10
+  },
+  {
+   "ticker": "LLY",
+   "status": "OK",
+   "n_all": 451,
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "n_win": 56,
+   "n_firms_win": 20
+  },
+  {
+   "ticker": "LMT",
+   "status": "OK",
+   "n_all": 304,
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "n_win": 33,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "LOW",
+   "status": "OK",
+   "n_all": 582,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 93,
+   "n_firms_win": 23
+  },
+  {
+   "ticker": "LULU",
+   "status": "OK",
+   "n_all": 827,
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "n_win": 96,
+   "n_firms_win": 25
+  },
+  {
+   "ticker": "MA",
+   "status": "OK",
+   "n_all": 513,
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "n_win": 49,
+   "n_firms_win": 24
+  },
+  {
+   "ticker": "MCD",
+   "status": "OK",
+   "n_all": 668,
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "n_win": 64,
+   "n_firms_win": 23
+  },
+  {
+   "ticker": "MDLZ",
+   "status": "OK",
+   "n_all": 291,
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "n_win": 48,
+   "n_firms_win": 18
+  },
+  {
+   "ticker": "MDT",
+   "status": "OK",
+   "n_all": 406,
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "n_win": 52,
+   "n_firms_win": 21
+  },
+  {
+   "ticker": "META",
+   "status": "OK",
+   "n_all": 413,
+   "newest": "2024-09-30",
+   "stale_days": 689,
+   "n_win": 0,
+   "n_firms_win": 0
+  },
+  {
+   "ticker": "MLM",
+   "status": "OK",
+   "n_all": 247,
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "n_win": 41,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "MNST",
+   "status": "OK",
+   "n_all": 377,
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "n_win": 58,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "MO",
+   "status": "OK",
+   "n_all": 162,
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "n_win": 14,
+   "n_firms_win": 5
+  },
+  {
+   "ticker": "MPC",
+   "status": "OK",
+   "n_all": 383,
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "n_win": 52,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "MRK",
+   "status": "OK",
+   "n_all": 362,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 45,
+   "n_firms_win": 21
+  },
+  {
+   "ticker": "MRSH",
+   "status": "OK",
+   "n_all": 56,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 52,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "MS",
+   "status": "OK",
+   "n_all": 368,
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "n_win": 50,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "MSFT",
+   "status": "OK",
+   "n_all": 929,
+   "newest": "2026-08-12",
+   "stale_days": 8,
+   "n_win": 100,
+   "n_firms_win": 33
+  },
+  {
+   "ticker": "MU",
+   "status": "OK",
+   "n_all": 879,
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "n_win": 170,
+   "n_firms_win": 31
+  },
+  {
+   "ticker": "NEE",
+   "status": "OK",
+   "n_all": 345,
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "n_win": 35,
+   "n_firms_win": 13
+  },
+  {
+   "ticker": "NEM",
+   "status": "OK",
+   "n_all": 265,
+   "newest": "2026-08-12",
+   "stale_days": 8,
+   "n_win": 28,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "NFLX",
+   "status": "OK",
+   "n_all": 952,
+   "newest": "2026-07-22",
+   "stale_days": 29,
+   "n_win": 95,
+   "n_firms_win": 35
+  },
+  {
+   "ticker": "NKE",
+   "status": "OK",
+   "n_all": 856,
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "n_win": 89,
+   "n_firms_win": 26
+  },
+  {
+   "ticker": "NOC",
+   "status": "OK",
+   "n_all": 287,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 40,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "NOW",
+   "status": "OK",
+   "n_all": 744,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 106,
+   "n_firms_win": 32
+  },
+  {
+   "ticker": "NSC",
+   "status": "OK",
+   "n_all": 481,
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "n_win": 40,
+   "n_firms_win": 13
+  },
+  {
+   "ticker": "NUE",
+   "status": "OK",
+   "n_all": 263,
+   "newest": "2026-07-29",
+   "stale_days": 22,
+   "n_win": 40,
+   "n_firms_win": 10
+  },
+  {
+   "ticker": "NVDA",
+   "status": "OK",
+   "n_all": 983,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 151,
+   "n_firms_win": 35
+  },
+  {
+   "ticker": "O",
+   "status": "OK",
+   "n_all": 207,
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "n_win": 34,
+   "n_firms_win": 12
+  },
+  {
+   "ticker": "OKE",
+   "status": "OK",
+   "n_all": 331,
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "n_win": 36,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "ORCL",
+   "status": "OK",
+   "n_all": 648,
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "n_win": 125,
+   "n_firms_win": 34
+  },
+  {
+   "ticker": "ORLY",
+   "status": "OK",
+   "n_all": 45,
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "n_win": 26,
+   "n_firms_win": 12
+  },
+  {
+   "ticker": "PANW",
+   "status": "OK",
+   "n_all": 909,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 121,
+   "n_firms_win": 38
+  },
+  {
+   "ticker": "PCG",
+   "status": "OK",
+   "n_all": 291,
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "n_win": 23,
+   "n_firms_win": 8
+  },
+  {
+   "ticker": "PEP",
+   "status": "OK",
+   "n_all": 331,
+   "newest": "2026-07-21",
+   "stale_days": 30,
+   "n_win": 46,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "PFE",
+   "status": "OK",
+   "n_all": 301,
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "n_win": 28,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "PG",
+   "status": "OK",
+   "n_all": 342,
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "n_win": 35,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "PGR",
+   "status": "OK",
+   "n_all": 476,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 91,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "PLD",
+   "status": "OK",
+   "n_all": 322,
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "n_win": 43,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "PLTR",
+   "status": "OK",
+   "n_all": 226,
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "n_win": 56,
+   "n_firms_win": 21
+  },
+  {
+   "ticker": "PM",
+   "status": "OK",
+   "n_all": 203,
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "n_win": 18,
+   "n_firms_win": 8
+  },
+  {
+   "ticker": "PPG",
+   "status": "OK",
+   "n_all": 380,
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "n_win": 38,
+   "n_firms_win": 11
+  },
+  {
+   "ticker": "PSA",
+   "status": "OK",
+   "n_all": 267,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 38,
+   "n_firms_win": 11
+  },
+  {
+   "ticker": "PSX",
+   "status": "OK",
+   "n_all": 383,
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "n_win": 59,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "QCOM",
+   "status": "OK",
+   "n_all": 558,
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "n_win": 74,
+   "n_firms_win": 23
+  },
+  {
+   "ticker": "RBLX",
+   "status": "OK",
+   "n_all": 336,
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "n_win": 80,
+   "n_firms_win": 26
+  },
+  {
+   "ticker": "ROST",
+   "status": "OK",
+   "n_all": 429,
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "n_win": 53,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "RTX",
+   "status": "OK",
+   "n_all": 165,
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "n_win": 26,
+   "n_firms_win": 12
+  },
+  {
+   "ticker": "SBUX",
+   "status": "OK",
+   "n_all": 635,
+   "newest": "2026-07-31",
+   "stale_days": 20,
+   "n_win": 67,
+   "n_firms_win": 23
+  },
+  {
+   "ticker": "SCHW",
+   "status": "OK",
+   "n_all": 498,
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "n_win": 47,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "SHW",
+   "status": "OK",
+   "n_all": 402,
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "n_win": 35,
+   "n_firms_win": 11
+  },
+  {
+   "ticker": "SLB",
+   "status": "OK",
+   "n_all": 433,
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "n_win": 57,
+   "n_firms_win": 19
+  },
+  {
+   "ticker": "SNPS",
+   "status": "OK",
+   "n_all": 272,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 50,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "SO",
+   "status": "OK",
+   "n_all": 330,
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "n_win": 36,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "SPG",
+   "status": "OK",
+   "n_all": 277,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 47,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "SPGI",
+   "status": "OK",
+   "n_all": 281,
+   "newest": "2026-07-29",
+   "stale_days": 22,
+   "n_win": 40,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "SPOT",
+   "status": "OK",
+   "n_all": 458,
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "n_win": 58,
+   "n_firms_win": 18
+  },
+  {
+   "ticker": "SRE",
+   "status": "OK",
+   "n_all": 275,
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "n_win": 34,
+   "n_firms_win": 14
+  },
+  {
+   "ticker": "STZ",
+   "status": "OK",
+   "n_all": 460,
+   "newest": "2026-07-21",
+   "stale_days": 30,
+   "n_win": 67,
+   "n_firms_win": 18
+  },
+  {
+   "ticker": "SYK",
+   "status": "OK",
+   "n_all": 386,
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "n_win": 45,
+   "n_firms_win": 19
+  },
+  {
+   "ticker": "SYY",
+   "status": "OK",
+   "n_all": 300,
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "n_win": 32,
+   "n_firms_win": 11
+  },
+  {
+   "ticker": "T",
+   "status": "OK",
+   "n_all": 339,
+   "newest": "2026-07-23",
+   "stale_days": 28,
+   "n_win": 36,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "TJX",
+   "status": "OK",
+   "n_all": 473,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 61,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "TMO",
+   "status": "OK",
+   "n_all": 374,
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "n_win": 35,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "TMUS",
+   "status": "OK",
+   "n_all": 403,
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "n_win": 43,
+   "n_firms_win": 20
+  },
+  {
+   "ticker": "TSLA",
+   "status": "OK",
+   "n_all": 983,
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "n_win": 101,
+   "n_firms_win": 26
+  },
+  {
+   "ticker": "TT",
+   "status": "OK",
+   "n_all": 325,
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "n_win": 32,
+   "n_firms_win": 13
+  },
+  {
+   "ticker": "TTWO",
+   "status": "OK",
+   "n_all": 527,
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "n_win": 36,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "TXN",
+   "status": "OK",
+   "n_all": 652,
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "n_win": 84,
+   "n_firms_win": 23
+  },
+  {
+   "ticker": "UBER",
+   "status": "OK",
+   "n_all": 536,
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "n_win": 76,
+   "n_firms_win": 30
+  },
+  {
+   "ticker": "UNH",
+   "status": "OK",
+   "n_all": 545,
+   "newest": "2026-07-21",
+   "stale_days": 30,
+   "n_win": 73,
+   "n_firms_win": 22
+  },
+  {
+   "ticker": "UPS",
+   "status": "OK",
+   "n_all": 530,
+   "newest": "2026-07-29",
+   "stale_days": 22,
+   "n_win": 51,
+   "n_firms_win": 18
+  },
+  {
+   "ticker": "V",
+   "status": "OK",
+   "n_all": 600,
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "n_win": 45,
+   "n_firms_win": 22
+  },
+  {
+   "ticker": "VICI",
+   "status": "OK",
+   "n_all": 136,
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "n_win": 26,
+   "n_firms_win": 12
+  },
+  {
+   "ticker": "VLO",
+   "status": "OK",
+   "n_all": 479,
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "n_win": 54,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "VMC",
+   "status": "OK",
+   "n_all": 276,
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "n_win": 33,
+   "n_firms_win": 13
+  },
+  {
+   "ticker": "VRTX",
+   "status": "OK",
+   "n_all": 552,
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "n_win": 52,
+   "n_firms_win": 24
+  },
+  {
+   "ticker": "VST",
+   "status": "OK",
+   "n_all": 136,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 27,
+   "n_firms_win": 12
+  },
+  {
+   "ticker": "VZ",
+   "status": "OK",
+   "n_all": 306,
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "n_win": 34,
+   "n_firms_win": 13
+  },
+  {
+   "ticker": "WBD",
+   "status": "OK",
+   "n_all": 194,
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "n_win": 34,
+   "n_firms_win": 17
+  },
+  {
+   "ticker": "WEC",
+   "status": "OK",
+   "n_all": 250,
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "n_win": 30,
+   "n_firms_win": 12
+  },
+  {
+   "ticker": "WELL",
+   "status": "OK",
+   "n_all": 269,
+   "newest": "2024-10-01",
+   "stale_days": 688,
+   "n_win": 0,
+   "n_firms_win": 0
+  },
+  {
+   "ticker": "WFC",
+   "status": "OK",
+   "n_all": 539,
+   "newest": "2026-07-29",
+   "stale_days": 22,
+   "n_win": 47,
+   "n_firms_win": 18
+  },
+  {
+   "ticker": "WM",
+   "status": "OK",
+   "n_all": 351,
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "n_win": 46,
+   "n_firms_win": 16
+  },
+  {
+   "ticker": "WMB",
+   "status": "OK",
+   "n_all": 284,
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "n_win": 43,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "WMT",
+   "status": "OK",
+   "n_all": 737,
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "n_win": 88,
+   "n_firms_win": 29
+  },
+  {
+   "ticker": "XEL",
+   "status": "OK",
+   "n_all": 283,
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "n_win": 36,
+   "n_firms_win": 12
+  },
+  {
+   "ticker": "XOM",
+   "status": "OK",
+   "n_all": 411,
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "n_win": 59,
+   "n_firms_win": 18
+  },
+  {
+   "ticker": "XYZ",
+   "status": "OK",
+   "n_all": 172,
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "n_win": 76,
+   "n_firms_win": 30
+  },
+  {
+   "ticker": "YUM",
+   "status": "OK",
+   "n_all": 474,
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "n_win": 34,
+   "n_firms_win": 15
+  },
+  {
+   "ticker": "ZTS",
+   "status": "OK",
+   "n_all": 229,
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "n_win": 32,
+   "n_firms_win": 15
+  }
+ ]
+}

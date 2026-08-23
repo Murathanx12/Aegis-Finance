@@ -198,3 +198,47 @@ def test_reseeding_a_changed_book_is_still_refused(tmp_path, monkeypatch):
     with pytest.raises(store.SeedRefused):
         store.seed_book(spec.load_specs()["PROFIT_ALLOCATOR_v1"],
                         root=tmp_path)
+
+
+# ── legacy identity must not depend on the platform that wrote the file ──
+#
+# `config_hash` is seed identity for every book still on the legacy scheme, and
+# it hashes BYTES. Measured 2026-08-24: this repo's arena config hashes to
+# 641adafc on Linux (LF) and 5ae0eccc on a Windows checkout (CRLF, via
+# `core.autocrlf=true`). The ten books seeded 2026-08-21 sealed the LF value,
+# so a CRLF checkout disagreed with production about what the config IS.
+#
+# Nothing broke only because git's own text normalisation happened to keep the
+# committed blob LF. Turn `core.autocrlf` off on a Windows machine, commit, and
+# production's hash moves behind a diff that shows NOTHING — every legacy seed
+# refuses to run and, worse, refuses to migrate.
+#
+# The seeded value is asserted literally because that is the number the live
+# books are sealed under. If a deliberate config change moves it, this test is
+# supposed to fail and force the attended migration decision.
+
+SEEDED_CONFIG_HASH = (
+    "641adafc38703b5c3c898103639cd9e7c1f3608275757b2c93ac74f5f71ef7db")
+
+
+def test_config_hash_is_invariant_to_line_endings(tmp_path):
+    lf = spec.CONFIG_PATH.read_bytes().replace(b"\r\n", b"\n")
+    crlf = lf.replace(b"\n", b"\r\n")
+    assert lf != crlf, "fixture is not exercising the difference"
+
+    a, b = tmp_path / "lf.yaml", tmp_path / "crlf.yaml"
+    a.write_bytes(lf)
+    b.write_bytes(crlf)
+    assert spec.config_hash(a) == spec.config_hash(b)
+
+
+def test_the_live_books_still_hash_to_what_they_were_seeded_under():
+    assert spec.config_hash() == SEEDED_CONFIG_HASH
+
+
+def test_a_crlf_checkout_agrees_with_production(tmp_path):
+    crlf = tmp_path / "crlf.yaml"
+    crlf.write_bytes(
+        spec.CONFIG_PATH.read_bytes().replace(b"\r\n", b"\n")
+                                     .replace(b"\n", b"\r\n"))
+    assert spec.config_hash(crlf) == SEEDED_CONFIG_HASH
