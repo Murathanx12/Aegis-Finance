@@ -44,6 +44,29 @@ Adding more collectors to that picture is the failure mode, not the fix.
 
 ---
 
+## 0.5. Where this roadmap actually stands
+
+Three denominators, because they answer different questions and only one of them
+is the mission.
+
+| Measure | Done | Left |
+|---|---|---|
+| **Items shipped** — 7 available (router and GNN are gated, not available) | **2 / 7 ≈ 29%** | 5 |
+| **Weighted by effort** — the two shipped are the two cheapest | **≈ 14%** | ≈ 86% |
+| **Demonstrated edge** | **0%** | 100% |
+
+The gap between 29% and 14% is the honest part. `P0.1` (the reachability audit)
+and `P0.3` (the review defects) were a day's work each. The five that remain —
+the information bus, three alpha brains and the options surface — are each
+multi-day research builds, and **none of the seven has produced a single paper
+outcome yet.**
+
+By this roadmap's own standard, we are at the start of the part that counts.
+The infrastructure is materially ahead of the forecasting intelligence, which is
+the imbalance §0 exists to correct.
+
+---
+
 ## 1. What this roadmap does NOT do
 
 * **It does not add a factor to `arena_composite`.** New mechanisms arrive as
@@ -245,6 +268,67 @@ distribution` is the disagreement that makes an event interesting.
 
 ---
 
+## 4.5. Adjudicated from the second external review (2026-08-24)
+
+Same standing rule: a review is adjudicated, not imported. Accepted here, with
+what changed:
+
+| Proposal | Ruling |
+|---|---|
+| Make the analyst graph **directional** (leader → laggard) | **Accepted and BUILT** into `ANALYST-COCOVERAGE-GRAPH-1`. Result in §4.6 — the asymmetry does not replicate. |
+| Add **52-week-high** conditioning | **Accepted and BUILT.** Result in §4.6 — it adds nothing. |
+| Test **revision propagation** as a second target | **Deferred to `REVISION_FORECASTER_v1`**, where it is the primary target rather than a secondary one. Bolting it on here would have doubled the arm count and the multiplicity bar with it. |
+| `OPTIONS_BORROW_CONFOUND_v1` before believing option-implied predictability | **Accepted, and promoted to a PRECONDITION of §4** rather than a follow-up. If IV skew is largely a borrow-fee proxy, the surface work should know that before it is built, not after. |
+| `MANAGEMENT_EVASION_DELTA_v1` — evasion relative to the executive's OWN baseline | **Accepted; queued after `EVENT_RESPONSE_v1`**, which supplies the event scaffolding it needs. |
+| `ACTOR_DIALOGUE_EPISODE_v1` — questioner skill × evasion × subsequent revision | **Accepted; after the two above.** It is the strongest actor × event × LLM connection available, and it is also the one that needs both of them to exist first. |
+| `REVISION_FORECASTER_v1` — event → analyst revision → price | **Accepted into P2.** Decomposing the causal chain is likely easier to learn than mapping news text to returns in one hop. |
+| `DISAGREEMENT_LAB_v1` | **Accepted, gated** on ≥3 independent selectors, same gate as the router. |
+| **Failure attribution** in the nightly critic (discovery / data / perception / graph / forecast / routing / selection / sizing / exit / execution) | **Accepted into P0.** "The trade lost" teaches nothing about what to fix. |
+| **`OUTCOME_CORRECT` separate from `MECHANISM_CORRECT`** | **Accepted into P0, and it is the more important half.** A win for the wrong reason must not reinforce the thesis that was wrong. |
+| **Order-level execution ledger** — decision→intent→submit→fill→slippage, so captured edge is measurable | **Accepted into P0 and it is now urgent**: the arena's first external fills arrive this week, and what is not recorded then cannot be reconstructed later. |
+
+---
+
+## 4.6. `ANALYST-COCOVERAGE-GRAPH-1` — RUN, and it answered
+
+Full result: `docs/FINDING_2026-08-24_ANALYST_COCOVERAGE_GRAPH.md`.
+Verdict **CONTINUE** under the rule frozen before the run (`spec_hash
+0e1578bd0410653b`), on 131 months.
+
+**Replicates, past both obvious confounds:** equal-weighted co-coverage peer
+return, IC **+0.0227** (t 2.35). Paired, it beats own momentum by +0.0155
+(t 2.57) and plain SIC2 industry momentum by **+0.0088 (t 2.24)** — and the
+graph restricted to **cross-industry links only** still clears the bar at
++0.0159 (p 0.043). It is not sector momentum in disguise.
+
+**All three refinements measured zero:**
+
+| hoped-for | measured (paired) |
+|---|---|
+| reliability-weighted edges | **−0.00008 ± 0.00052 (t −0.15)** |
+| leader → laggard asymmetry | +0.0025 ± 0.0037 (t 0.68) |
+| 52-week-high conditioning | −0.0006 (t −0.05) |
+
+The reliability arm nearly produced a **false negative**: its first form
+(`max(0, edge)`) left 0.1% of 2014 coverage weighted, so it was starved rather
+than tested. Re-posed as a tilt around an intact graph it is a precisely
+measured zero. Reliability grades *claims* well and says nothing about
+*relationships* — different questions, and only one is answered.
+
+**Consequences for this roadmap:**
+
+1. `GRAPH_PROPAGATION_v1` is licensed as its own book, using the plain
+   equal-weighted signal. Nothing fancier earned its place.
+2. **The GNN gate is NOT met in spirit and the GNN stays unbuilt.** It was
+   gated on simple graph features paying. They pay — but the three kinds of
+   structure a GNN exists to exploit each measured zero. A model whose
+   advantage is learning richer edge structure has just been told the richer
+   edge structure is not there.
+3. The result is **under-powered by its own design**: every passing arm's IC
+   sits below its own 80%-power MDE. It licenses building, not believing.
+
+---
+
 ## 5. Logged, not queued
 
 Good ideas with no owner and no date. Recorded so they are not re-derived, and
@@ -269,7 +353,7 @@ from this list displaces something in §3, and says what it displaces.
 | When | What | Blocks on |
 |---|---|---|
 | ~~Now~~ | ~~P0.1 reachability audit~~ — **DONE**, and it found a live gap | — |
-| Now | P1.3 co-coverage graph probe | nothing (IBES on disk) |
+| ~~Now~~ | ~~P1.3 co-coverage graph probe~~ — **DONE**, verdict CONTINUE; all three refinements measured zero (§4.6) | — |
 | Next | P1.1 `EVENT_RESPONSE_v1` | nothing (g4 + TAQ on disk) |
 | Next | P1.2 `RELATIVE_VALUE_NN_v1` | nothing (corpus on disk) |
 | After P0.1 | P0.2 information bus | knowing which orphans are worth admitting |
