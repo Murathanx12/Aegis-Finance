@@ -172,11 +172,17 @@ it is cheap.
    that fed it, or explicitly supersede it with `arena_forward` as G7's
    declared population. **Do not backfill.** *Attended: which population G7
    counts.*
-4. **Generalise the Alpaca paper adapter** beyond the legacy `mirror` lane so a
-   declared arena book can be mirrored to the external paper account.
-   PAPER-only host refusal, next-open fills, immutable book id, cost
-   accounting, idempotent orders, loud partial-fill receipts. New paper
-   identity — never redirect `mirror`.
+4. ~~**Generalise the Alpaca paper adapter**~~ — **DONE.** Targets, liquidation
+   guards, and **per-target credentials**: an arena book resolving to the same
+   Alpaca account as `lane:mirror` is REFUSED. One account has one equity
+   curve, and executing a second strategy into the mirror lane's
+   third-party-verified history would destroy the only independent check this
+   project has on its own NAV maths.
+
+   **Remaining is one human action:** create a second Alpaca PAPER account, set
+   `ALPACA_ARENA_API_KEY_ID` / `ALPACA_ARENA_API_SECRET_KEY`, then
+   `AEGIS_PAPER_BROKER_TARGET=arena:<BOOK>` and one boot with
+   `AEGIS_SEED_ALPACA_MIRROR=1`.
 
 ### P1 — perception
 5. **Persistent event store** built on the existing `event_intel.py` /
@@ -261,8 +267,24 @@ Flipping the flag now makes `PROFIT_ALLOCATOR_v1` raise `ConfigDrift` under its
 old seed and demand relaunch as a new immutable version. The correction ships
 without rewriting history.
 
-**Attended, and now unblocked:** flip the flag and launch
-`PROFIT_ALLOCATOR_v2`. The old v1 history remains exactly what it was.
+**DONE 2026-08-23 (evening), on Murat's confirmation.** The flag is flipped.
+
+It needed a prerequisite nobody had spotted: `config_hash` hashed the WHOLE
+YAML, so a comment typed anywhere drifted all ten seeded books, and the arena
+could not gain a challenger without destroying every NAV history it had. Fixed
+first — identity is now **per book** (`fingerprint_scheme: "book-v1"`), strictly
+more precise, with the ten live seeds migrating on first contact and the
+migration REFUSING on an already-drifted config.
+
+`PROFIT_ALLOCATOR_v1` is **retired** (`spec.RETIRED`): it correctly refuses its
+own seed under the corrected router. History untouched.
+
+**Two things the flip did NOT do, and must not be read as doing:**
+- it did not license capital. The v1.1 receipt clears the false-positive bar
+  (0.03) and still FAILS `edge_recovery_rate` (0.19 against a 0.7 bar). That is
+  a POWER problem; only decision days buy it — roughly six months of live arena.
+- it did not preserve the v1 receipt's authority. That receipt now describes a
+  router nobody runs and is refused on fingerprint.
 
 ---
 
