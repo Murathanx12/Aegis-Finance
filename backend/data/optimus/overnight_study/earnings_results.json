@@ -1,0 +1,86 @@
+{
+  "n_stock_days": 11297614,
+  "n_earnings_gap_stock_days": 344329,
+  "share_earnings_gap": 0.03048,
+  "definition": "an overnight gap is flagged when a Compustat rdq maps to that session or the one before it; rdq has no time of day, so both readings are kept",
+  "all": {
+    "earnings_gap": {
+      "overnight": {
+        "label": "on|earnings",
+        "n_days": 2984,
+        "mean_bps_per_day": 23.413,
+        "t_stat_nw": 7.32,
+        "ann_geometric_pct": 74.58,
+        "daily_vol_bps": 162.9
+      },
+      "intraday": {
+        "label": "id|earnings",
+        "n_days": 2984,
+        "mean_bps_per_day": -15.176,
+        "t_stat_nw": -4.41,
+        "ann_geometric_pct": -34.51,
+        "daily_vol_bps": 180.1
+      },
+      "n_stock_days": 344329
+    },
+    "no_earnings": {
+      "overnight": {
+        "label": "on|no earnings",
+        "n_days": 3019,
+        "mean_bps_per_day": 10.556,
+        "t_stat_nw": 8.58,
+        "ann_geometric_pct": 29.68,
+        "daily_vol_bps": 68.6
+      },
+      "intraday": {
+        "label": "id|no earnings",
+        "n_days": 3019,
+        "mean_bps_per_day": 0.738,
+        "t_stat_nw": 0.13,
+        "ann_geometric_pct": -4.79,
+        "daily_vol_bps": 313.4
+      },
+      "n_stock_days": 10953285
+    }
+  },
+  "price_ge_5": {
+    "earnings_gap": {
+      "overnight": {
+        "label": "on|earnings",
+        "n_days": 2972,
+        "mean_bps_per_day": 9.699,
+        "t_stat_nw": 3.15,
+        "ann_geometric_pct": 23.73,
+        "daily_vol_bps": 164.6
+      },
+      "intraday": {
+        "label": "id|earnings",
+        "n_days": 2972,
+        "mean_bps_per_day": -5.894,
+        "t_stat_nw": -1.98,
+        "ann_geometric_pct": -16.64,
+        "daily_vol_bps": 162.2
+      },
+      "n_stock_days": 269841
+    },
+    "no_earnings": {
+      "overnight": {
+        "label": "on|no earnings",
+        "n_days": 3019,
+        "mean_bps_per_day": 4.301,
+        "t_stat_nw": 3.44,
+        "ann_geometric_pct": 10.74,
+        "daily_vol_bps": 70.8
+      },
+      "intraday": {
+        "label": "id|no earnings",
+        "n_days": 3019,
+        "mean_bps_per_day": -0.089,
+        "t_stat_nw": -0.05,
+        "ann_geometric_pct": -1.33,
+        "daily_vol_bps": 94.1
+      },
+      "n_stock_days": 8606202
+    }
+  }
+}

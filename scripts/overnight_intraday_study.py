@@ -448,14 +448,110 @@ def analyse() -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stage", choices=["panel", "analyse", "both"],
+    ap.add_argument("--stage",
+                    choices=["panel", "analyse", "earnings", "both"],
                     default="both")
     a = ap.parse_args()
     if a.stage in ("panel", "both"):
         build_panel()
     if a.stage in ("analyse", "both"):
         analyse()
+    if a.stage == "earnings":
+        analyse_earnings()
 
+
+
+
+# ------------------------------------------------- the earnings-gap slice
+
+
+def _earnings_gap_dates() -> pd.DataFrame:
+    """(permno, date) pairs whose OVERNIGHT gap could contain an earnings call.
+
+    `rdq` is Compustat's report date with no time of day, so a report stamped
+    day D was announced either before D's open or after D's close. Both
+    readings are kept: the gaps that could contain it are D's overnight and
+    D+1's overnight (mapped to the next trading session in each case). Being
+    deliberately generous here is the conservative choice -- it can only DILUTE
+    a real earnings effect toward the non-earnings baseline, never manufacture
+    one.
+    """
+    fundq = pd.read_parquet(WRDS / "compustat_fundq.parquet",
+                            columns=["gvkey", "rdq"]).dropna(subset=["rdq"])
+    fundq["rdq"] = pd.to_datetime(fundq["rdq"])
+    fundq = fundq.drop_duplicates()
+
+    link = pd.read_parquet(WRDS / "bulk" / "crsp__ccmxpf_lnkhist.parquet")
+    # LC/LU are the researched, unambiguous links; P/C are primary issues.
+    link = link[link["linktype"].isin(["LC", "LU"])
+                & link["linkprim"].isin(["P", "C"])].copy()
+    link["linkdt"] = pd.to_datetime(link["linkdt"])
+    link["linkenddt"] = pd.to_datetime(link["linkenddt"]).fillna(
+        pd.Timestamp("2099-12-31"))
+
+    m = fundq.merge(link, on="gvkey", how="inner")
+    m = m[(m["rdq"] >= m["linkdt"]) & (m["rdq"] <= m["linkenddt"])]
+    m = m[["lpermno", "rdq"]].rename(columns={"lpermno": "permno"})
+    m["permno"] = m["permno"].astype("int64")
+    return m.dropna().drop_duplicates()
+
+
+def analyse_earnings() -> None:
+    df = _load_panel()
+    df["date"] = pd.to_datetime(df["date"])
+    ann = _earnings_gap_dates()
+
+    sessions = pd.Index(sorted(df["date"].unique()))
+    # Map each rdq to the NEXT trading session (>= rdq): that session's
+    # overnight gap is the first one that could carry the news.
+    pos = sessions.searchsorted(ann["rdq"].to_numpy(), side="left")
+    ok = pos < len(sessions)
+    ann = ann[ok].copy()
+    ann["s0"] = sessions[pos[ok]]
+    # ...and the session after it, for a report released after that close.
+    pos1 = np.minimum(pos[ok] + 1, len(sessions) - 1)
+    ann["s1"] = sessions[pos1]
+
+    flag = pd.concat([
+        ann[["permno", "s0"]].rename(columns={"s0": "date"}),
+        ann[["permno", "s1"]].rename(columns={"s1": "date"}),
+    ]).drop_duplicates()
+    flag["is_earnings_gap"] = True
+
+    df = df.merge(flag, on=["permno", "date"], how="left")
+    df["is_earnings_gap"] = df["is_earnings_gap"].fillna(False)
+
+    liquid = df[df["prev_prc"] >= 5.0]
+
+    def ew(frame, col):
+        return frame.groupby("date")[col].mean()
+
+    res = {
+        "n_stock_days": int(len(df)),
+        "n_earnings_gap_stock_days": int(df["is_earnings_gap"].sum()),
+        "share_earnings_gap": round(float(df["is_earnings_gap"].mean()), 5),
+        "definition": ("an overnight gap is flagged when a Compustat rdq maps "
+                       "to that session or the one before it; rdq has no time "
+                       "of day, so both readings are kept"),
+    }
+    for label, frame in (("all", df), ("price_ge_5", liquid)):
+        e = frame[frame["is_earnings_gap"]]
+        n = frame[~frame["is_earnings_gap"]]
+        res[label] = {
+            "earnings_gap": {
+                "overnight": _series_stats(ew(e, "r_on"), "on|earnings"),
+                "intraday": _series_stats(ew(e, "r_id"), "id|earnings"),
+                "n_stock_days": int(len(e)),
+            },
+            "no_earnings": {
+                "overnight": _series_stats(ew(n, "r_on"), "on|no earnings"),
+                "intraday": _series_stats(ew(n, "r_id"), "id|no earnings"),
+                "n_stock_days": int(len(n)),
+            },
+        }
+    OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / "earnings_results.json").write_text(json.dumps(res, indent=2))
+    print(json.dumps(res, indent=2))
 
 if __name__ == "__main__":
     main()

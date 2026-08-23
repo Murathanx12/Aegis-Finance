@@ -153,6 +153,63 @@ needing a new evidence clock.
 version (long overnight, short intraday) is worse still: the q5 spread is
 8.25 − 6.30 ≈ 1.95 bps/session against two round trips.
 
+## 7b. The earnings-conditioned slice — mechanism CONFIRMED, trade still not
+
+The claim's *mechanism* is specific: news lands out of hours, thin pre-market
+liquidity inflates the price into the open, and it reverts once real liquidity
+returns. That predicts something the unconditional test cannot see — the
+reversal should appear **on earnings gaps and not otherwise**.
+
+Tested directly. Compustat `rdq` linked to permno through `ccmxpf_lnkhist`
+(LC/LU links, P/C primary issues, date-range matched). `rdq` carries no time of
+day, so a report stamped day D was announced either before D's open or after
+D's close; **both** readings are kept and both candidate gaps are flagged.
+Being generous here can only *dilute* a real effect toward the baseline, never
+manufacture one. 344,329 flagged stock-days = **3.05%** of the panel.
+
+Price ≥ $5:
+
+| session type | overnight | t | intraday | t |
+|---|---|---|---|---|
+| **earnings gap** | **+9.70 bps** | 3.15 | **−5.89 bps** | **−1.98** |
+| no earnings | +4.30 bps | 3.44 | −0.09 bps | −0.05 |
+
+**This is the mechanism, and it is there.** On earnings gaps the overnight jump
+is 2.3× larger *and* the intraday leg flips from statistically zero to
+significantly negative. Prices really do gap up out of hours and give some of
+it back during the session — but **only** when there is an announcement in the
+gap. The unconditional intraday return is flat precisely because this small,
+real effect is diluted by the 97% of sessions with no news.
+
+**And it still does not produce a trade, for a reason worth stating plainly:**
+
+| | overnight mean | overnight vol | **Sharpe** |
+|---|---|---|---|
+| earnings gap | 9.70 bps | 164.6 bps | **0.94** |
+| no earnings | 4.30 bps | 70.8 bps | **0.96** |
+
+Conditioning on earnings **more than doubles the mean and doubles the
+volatility**, leaving the risk-adjusted return indistinguishable. You are not
+finding a better trade; you are finding a bigger one. The mechanism explains
+*where the variance is*, not where an edge is.
+
+The genuinely tradable-looking leg is the intraday **short** on earnings-gap
+sessions (−5.89 bps). It does not survive scrutiny either:
+
+- **t = −1.98 is p ≈ 0.048**, and this session ran roughly 20 slice
+  comparisons (3 universes × 2 legs, 5 size quintiles, 5 dollar-volume
+  quintiles, 2 eras, 2 earnings conditions). Under CANON §63 screening
+  (BH-FDR, m = run) it does not survive.
+- it requires **shorting**, whose borrow cost is not modelled anywhere above and
+  is worst on exactly the high-attention names that gap hardest;
+- it trades 3% of the panel, so the book is thin and concentrated in whichever
+  names happened to report.
+
+**Verdict unchanged: `ANOMALY_CONFIRMED / STRATEGY_REJECTED`** — now with the
+mechanism confirmed rather than assumed. The right follow-up is *not* a bigger
+version of this test; it is intraday timestamps (was the reversal in the first
+30 minutes?), which needs TAQ, which is on disk.
+
 ## 8. What would change this verdict
 
 - **The missing window.** 1990–2012 open prices are one narrow WRDS pull away.
