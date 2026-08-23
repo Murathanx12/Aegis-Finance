@@ -480,9 +480,14 @@ def test_config_drift_refuses_to_run(root, panel, pit_db, sessions,
                                      monkeypatch):
     engine.seed_all(root=root)
     seed_p = store.seed_path("ENGINE_BASELINE_v1", root)
-    rec = seed_p.read_text(encoding="utf-8").replace(
-        spec_mod.config_hash()[:8], "deadbeef")
-    seed_p.write_text(rec, encoding="utf-8")
+    # Tamper with the VERIFICATION KEY. Since 2026-08-23 that is the per-book
+    # fingerprint, not the whole-file config_hash — the file hash moves every
+    # time an unrelated challenger is added, which is exactly why it stopped
+    # being the key. config_hash remains on the seed as an inception record.
+    import json as _json
+    _rec = _json.loads(seed_p.read_text(encoding="utf-8"))
+    _rec["book_fingerprint"] = "deadbeef" * 8
+    seed_p.write_text(_json.dumps(_rec, indent=2), encoding="utf-8")
     monkeypatch.setattr(discovery, "candidate_universe",
                         lambda extra=None: TICKERS)
     s = engine.run_daily(sessions[-1], panel=panel, root=root,

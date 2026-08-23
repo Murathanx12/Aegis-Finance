@@ -61,18 +61,28 @@ ANNOTATION = {
 }
 
 
-def _keys() -> tuple[str, str] | None:
-    k = os.getenv("ALPACA_API_KEY_ID", "").strip()
-    s = os.getenv("ALPACA_API_SECRET_KEY", "").strip()
-    return (k, s) if k and s else None
+def _keys(target=None) -> tuple[str, str] | None:
+    """Credentials for the DECLARED target, never a shared fallback.
+
+    An arena book must not resolve to the lane's account: one Alpaca account
+    has one equity curve, and executing a second strategy into the mirror
+    lane's third-party-verified history would destroy the only independent
+    check this project has on its own NAV maths. `paper_broker_targets`
+    refuses that case loudly rather than falling back.
+    """
+    return _targets.credentials(_resolve(target))
 
 
 def _base() -> str:
     return os.getenv("ALPACA_PAPER_BASE", "https://paper-api.alpaca.markets").rstrip("/")
 
 
-def alpaca_available() -> bool:
-    return _keys() is not None
+def alpaca_available(target=None) -> bool:
+    try:
+        return _keys(target) is not None
+    except _targets.SharedAccountRefused:
+        logger.error("Alpaca credentials REFUSED", exc_info=True)
+        return False
 
 
 def _request(method: str, path: str, payload: dict | None = None):

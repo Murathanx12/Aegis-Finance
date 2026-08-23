@@ -542,6 +542,10 @@ def test_a_changed_estimator_refuses_to_run_under_the_old_seed(root,
     engine.seed_all(root=root)
     monkeypatch.setattr(discovery, "COMPOSITE_VERSION", "changed@9")
     spec = spec_mod.active_specs()["ENGINE_BASELINE_v1"]
+    # Identity moved to per-book (scheme book-v1, 2026-08-23), so the refusal
+    # comes from the book fingerprint rather than the whole-file one. The
+    # composite version is recorded on the seed precisely so the message can
+    # still NAME the estimator — the YAML is byte-identical when it moves.
     with pytest.raises(store.ConfigDrift, match="SELECTION ESTIMATOR"):
         store.assert_config_current(spec, root=root)
 

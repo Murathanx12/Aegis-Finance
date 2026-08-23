@@ -76,6 +76,66 @@ def test_env_declares_the_target(monkeypatch):
     assert T.parse_target().source_id == "LLM_EVENTS_v1"
 
 
+# ------------------------------------------------- per-target credentials
+
+
+def test_the_legacy_lane_keeps_its_original_env_vars(monkeypatch):
+    """Renaming these would silently unconfigure a live integration."""
+    assert T.parse_target("lane:mirror").key_env == (
+        "ALPACA_API_KEY_ID", "ALPACA_API_SECRET_KEY")
+
+
+def test_an_arena_book_needs_its_OWN_credentials():
+    assert T.parse_target("arena:CURRENT_BEST_v1").key_env == (
+        "ALPACA_ARENA_API_KEY_ID", "ALPACA_ARENA_API_SECRET_KEY")
+
+
+def test_an_arena_book_sharing_the_lanes_ACCOUNT_is_refused(monkeypatch):
+    """THE guard. One Alpaca account has one equity curve.
+
+    Pointing an arena book at the mirror lane's account would execute its
+    orders into a third-party-verified history going back to inception — the
+    only independent check this project has on its own NAV maths — and destroy
+    it irreversibly. Falling back to the lane's keys is the permissive
+    direction, and the permissive direction here is unrecoverable.
+    """
+    monkeypatch.setenv("ALPACA_API_KEY_ID", "SHARED")
+    monkeypatch.setenv("ALPACA_API_SECRET_KEY", "s")
+    monkeypatch.setenv("ALPACA_ARENA_API_KEY_ID", "SHARED")
+    monkeypatch.setenv("ALPACA_ARENA_API_SECRET_KEY", "s")
+    with pytest.raises(T.SharedAccountRefused):
+        T.credentials(T.parse_target("arena:CURRENT_BEST_v1"))
+
+
+def test_distinct_accounts_are_accepted(monkeypatch):
+    monkeypatch.setenv("ALPACA_API_KEY_ID", "LANEKEY")
+    monkeypatch.setenv("ALPACA_API_SECRET_KEY", "s")
+    monkeypatch.setenv("ALPACA_ARENA_API_KEY_ID", "ARENAKEY")
+    monkeypatch.setenv("ALPACA_ARENA_API_SECRET_KEY", "s2")
+    assert T.credentials(T.parse_target("arena:CURRENT_BEST_v1")) == (
+        "ARENAKEY", "s2")
+
+
+def test_an_arena_book_does_NOT_inherit_the_lanes_keys(monkeypatch):
+    """Absent arena keys means unconfigured, never 'use the lane's'."""
+    monkeypatch.setenv("ALPACA_API_KEY_ID", "LANEKEY")
+    monkeypatch.setenv("ALPACA_API_SECRET_KEY", "s")
+    monkeypatch.delenv("ALPACA_ARENA_API_KEY_ID", raising=False)
+    monkeypatch.delenv("ALPACA_ARENA_API_SECRET_KEY", raising=False)
+    assert T.credentials(T.parse_target("arena:CURRENT_BEST_v1")) is None
+
+
+def test_describe_surfaces_a_shared_account_as_REFUSED(monkeypatch):
+    monkeypatch.setenv(T.TARGET_ENV, "arena:CURRENT_BEST_v1")
+    monkeypatch.setenv("ALPACA_API_KEY_ID", "SHARED")
+    monkeypatch.setenv("ALPACA_API_SECRET_KEY", "s")
+    monkeypatch.setenv("ALPACA_ARENA_API_KEY_ID", "SHARED")
+    monkeypatch.setenv("ALPACA_ARENA_API_SECRET_KEY", "s")
+    d = T.describe()
+    assert d["status"] == "REFUSED"
+    assert "one equity curve" in d["credential_error"]
+
+
 def test_annotation_marks_paper_only():
     a = T.annotation(T.parse_target("arena:CURRENT_BEST_v1"))
     assert a["paper_only"] is True

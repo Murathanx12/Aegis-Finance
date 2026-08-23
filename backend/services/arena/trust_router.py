@@ -124,7 +124,17 @@ def edge_z(n_actors: int, *, cluster_adjust: bool,
 #: the verdict is RECOMMENDED), and flipping it silently would leave one live
 #: NAV series describing two policies mid-segment. That flip is Murat's, and
 #: `router_capital_gate` refuses to license the OFF setting in the meantime.
-CLUSTER_ADJUST_DEFAULT = False
+#: FLIPPED TO TRUE 2026-08-23 on Murat's confirmation. The G1 correlated-worlds
+#: battery measures OFF at a 38.7% null-world recommendation rate against ORDER
+#: 27's <=5% bar, so OFF was measurably broken and this is the correction.
+#:
+#: It was safe to flip only because the setting is now part of the POLICY
+#: IDENTITY of the books that consume it (`spec.book_fingerprint`), so the flip
+#: is self-refusing rather than silent: PROFIT_ALLOCATOR_v1, the only ce_kelly
+#: book, cannot run under its old seed. It is RETIRED from AUTHORISED_ACTIVE
+#: rather than left to fail nightly; its NAV history is preserved untouched and
+#: a v2 succeeds it, seeded under cluster adjustment from birth.
+CLUSTER_ADJUST_DEFAULT = True
 
 _BANNER = {
     "router_version": ROUTER_VERSION,

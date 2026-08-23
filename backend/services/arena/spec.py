@@ -27,8 +27,21 @@ AUTHORISED_ACTIVE: tuple[str, ...] = (
     "CURRENT_BEST_v1",
     "AGGRESSIVE_TOP5_v1",
     "DIVERSIFIED_TOP20_v1",
-    "PROFIT_ALLOCATOR_v1",
 )
+
+#: Books that RAN and have been stood down. Their ledgers, seeds and NAV rows
+#: stay on disk exactly as they are -- retiring a book is not deleting it, and
+#: nothing here may ever be re-authorised under the same id.
+RETIRED: dict[str, str] = {
+    "PROFIT_ALLOCATOR_v1": (
+        "retired 2026-08-23. Seeded 2026-08-21 with the trust router's cluster "
+        "adjustment OFF, which the G1 correlated-worlds battery measures at a "
+        "38.7% null-world recommendation rate against ORDER 27's <=5% bar. The "
+        "setting was corrected to ON, and because it is part of this book's "
+        "policy identity the book correctly refuses to continue under its own "
+        "seed. Succeeded by PROFIT_ALLOCATOR_v2, seeded under the corrected "
+        "router from birth. 1 NAV row; nothing of substance is lost."),
+}
 
 VALIDATION_STATUS = "PRODUCT_EXPERIMENT"
 
@@ -111,7 +124,11 @@ class BookSpec:
     allocator: dict = field(default_factory=dict)
     defaults: dict = field(default_factory=dict)
     config_hash: str = ""
+    #: LEGACY whole-file identity. Retained on receipts and for migrating the
+    #: ten books seeded under it; no longer the verification key.
     policy_fingerprint: str = ""
+    #: Per-book identity — what this book's OWN rules hash to.
+    book_fingerprint: str = ""
     config_version: str = "arena-v1"
     label: str = "SHADOW_BOOK"
     validation_status: str = VALIDATION_STATUS
@@ -169,6 +186,60 @@ class BookSpec:
 
 def config_bytes(path: Path | None = None) -> bytes:
     return (path or CONFIG_PATH).read_bytes()
+
+
+def book_config_payload(book_id: str, raw: dict) -> str:
+    """Canonical JSON of everything that decides what THIS book does.
+
+    WHY THIS EXISTS
+    ===============
+    `config_hash` hashes the whole YAML file, so a comment typed anywhere --
+    or a NEW book added for a different experiment -- changes every seeded
+    book's identity and makes all ten refuse to run under their own
+    inceptions. Measured 2026-08-23: a comment-only edit drifted 10 of 10.
+
+    That makes the arena unable to gain a challenger without destroying every
+    NAV history it has, which is a direct blocker on the profit-first
+    roadmap's whole premise (generate challengers fast).
+
+    A book's identity should depend on ITS OWN rules. This payload is exactly
+    the config that book consumes -- its block, the file-level defaults it
+    inherits, and the file-level facts that define the common world (costs,
+    benchmark, schema, label, validation status). Anything outside that is
+    another experiment's business.
+
+    Strictly MORE precise than the file hash, never weaker: every input that
+    could change this book's behaviour is still in here.
+    """
+    import json
+
+    books = (raw.get("books") or {})
+    if book_id not in books:
+        raise SpecError(f"{book_id} is not in the config being fingerprinted")
+    payload = {
+        "book_id": book_id,
+        "book": books[book_id],
+        "defaults": raw.get("defaults") or {},
+        "schema": raw.get("schema"),
+        "label": raw.get("label"),
+        "validation_status": raw.get("validation_status"),
+    }
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"),
+                      default=str)
+
+
+def book_fingerprint(book_id: str, raw: dict, *,
+                     sizing: str | None = None) -> str:
+    """Per-book policy identity. See `book_config_payload`."""
+    from backend.services.arena.discovery import COMPOSITE_VERSION
+    parts = [book_config_payload(book_id, raw), COMPOSITE_VERSION]
+    # Same two-axis scoping as before: only a router-CONSUMING book carries the
+    # router's settings, and only when they differ from what the live books
+    # were seeded under.
+    if (sizing in ROUTER_CONSUMING_SIZINGS
+            and router_policy_id() != ROUTER_FINGERPRINT_BASELINE):
+        parts.append(f"router:{router_policy_id()}")
+    return hashlib.sha256("|".join(parts).encode()).hexdigest()
 
 
 def config_hash(path: Path | None = None) -> str:
@@ -327,6 +398,7 @@ def load_specs(path: Path | None = None) -> dict[str, BookSpec]:
             defaults={**defaults, **overrides},
             config_hash=h,
             policy_fingerprint=policy_fingerprint(p, sizing=sizing),
+            book_fingerprint=book_fingerprint(book_id, raw, sizing=sizing),
             config_version=str(raw.get("schema") or "arena-v1"),
             label=str(raw.get("label") or "SHADOW_BOOK"),
             validation_status=str(raw.get("validation_status")

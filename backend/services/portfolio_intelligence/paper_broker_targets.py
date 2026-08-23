@@ -53,6 +53,13 @@ TARGET_ENV = "AEGIS_PAPER_BROKER_TARGET"
 DEFAULT_TARGET = "lane:mirror"
 
 
+#: Per-target credential prefixes. An Alpaca paper account is ONE account with
+#: ONE equity curve, so two targets cannot share one set of keys without
+#: writing two strategies into a single track record. The legacy lane keeps the
+#: unprefixed variables it has always used; anything else needs its own.
+CREDENTIAL_PREFIX = {"lane": "ALPACA", "arena": "ALPACA_ARENA"}
+
+
 class UnknownTarget(ValueError):
     """A declared mirror target that cannot be resolved. Never defaulted."""
 
@@ -78,6 +85,12 @@ class MirrorTarget:
     @property
     def is_legacy_lane(self) -> bool:
         return self.target_id == DEFAULT_TARGET
+
+    @property
+    def key_env(self) -> tuple[str, str]:
+        """The env vars holding THIS target's Alpaca credentials."""
+        pre = CREDENTIAL_PREFIX.get(self.kind, "ALPACA")
+        return f"{pre}_API_KEY_ID", f"{pre}_API_SECRET_KEY"
 
 
 def _lane_target(lane: str) -> MirrorTarget:
@@ -189,6 +202,40 @@ def nav(target: MirrorTarget, *, db_path=None, root=None) -> float | None:
     return float(value) if value is not None else None
 
 
+class SharedAccountRefused(RuntimeError):
+    """Two targets would trade the same Alpaca account."""
+
+
+def credentials(target: MirrorTarget) -> tuple[str, str] | None:
+    """This target's keys, refusing a set shared with the legacy lane.
+
+    THE HAZARD THIS REFUSES. `lane:mirror` has a live, third-party-verified
+    equity curve going back to inception. If an arena book were pointed at the
+    same account, the arena's orders would execute into that history and the
+    mirror lane's verification -- the entire reason the integration exists --
+    would silently become a record of two different strategies.
+
+    So a non-legacy target must carry its OWN credentials. Falling back to the
+    lane's would be the permissive direction, and the permissive direction here
+    destroys a track record irreversibly.
+    """
+    kid, ksec = target.key_env
+    k, s = os.getenv(kid, "").strip(), os.getenv(ksec, "").strip()
+    if not (k and s):
+        return None
+    if not target.is_legacy_lane:
+        lane_k = os.getenv("ALPACA_API_KEY_ID", "").strip()
+        if lane_k and k == lane_k:
+            raise SharedAccountRefused(
+                f"{target.target_id} resolves to the SAME Alpaca account as "
+                f"lane:mirror ({kid} matches ALPACA_API_KEY_ID). One account "
+                f"has one equity curve: running both would execute this book's "
+                f"orders into the mirror lane's third-party-verified history "
+                f"and destroy it. Create a separate Alpaca PAPER account and "
+                f"set {kid} / {ksec}.")
+    return (k, s)
+
+
 def annotation(target: MirrorTarget) -> dict:
     """The registry row, so the lane-adjacent ledger stays complete."""
     return {
@@ -211,9 +258,18 @@ def describe(target: MirrorTarget | None = None) -> dict:
     except UnknownTarget as e:
         return {"status": "REFUSED", "declared": os.getenv(TARGET_ENV),
                 "error": str(e)}
+    try:
+        creds = credentials(t)
+        cred_state = "present" if creds else "absent"
+        cred_error = None
+    except SharedAccountRefused as e:
+        cred_state, cred_error = "REFUSED", str(e)
     return {
-        "status": "ok",
+        "status": "ok" if cred_state != "REFUSED" else "REFUSED",
         "target_id": t.target_id,
+        "credentials": cred_state,
+        "credential_env": list(t.key_env),
+        "credential_error": cred_error,
         "kind": t.kind,
         "source_id": t.source_id,
         "is_legacy_lane": t.is_legacy_lane,

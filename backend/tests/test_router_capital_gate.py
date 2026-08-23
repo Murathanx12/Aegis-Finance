@@ -88,10 +88,20 @@ class TestV1PathIsUnchanged:
             assert trust_router.edge_z(m, cluster_adjust=False) == \
                 trust_router.EDGE_Z
 
-    def test_module_default_is_off(self):
-        """The flip is attended. If this ever fails, a session changed a live
-        book's sizing without the decision being taken."""
-        assert trust_router.CLUSTER_ADJUST_DEFAULT is False
+    def test_module_default_is_ON_since_the_attended_flip(self):
+        """Flipped 2026-08-23 on Murat's explicit confirmation.
+
+        The G1 correlated-worlds battery measured OFF at a 38.7% null-world
+        recommendation rate against ORDER 27's bar, so OFF was measurably
+        broken. It was safe to flip only because the setting had become part of
+        the POLICY IDENTITY of the books that consume it, making the flip
+        self-refusing rather than silent: PROFIT_ALLOCATOR_v1 could not
+        continue under its own seed and was retired, history untouched.
+
+        Still an attendance guard — it now pins that nobody flips it BACK
+        without the decision being taken.
+        """
+        assert trust_router.CLUSTER_ADJUST_DEFAULT is True
 
     def test_cells_without_clustering_are_counted_as_rows(self):
         cells = _cells("a", 0.5, 40)
@@ -259,30 +269,58 @@ class TestGateVerdictsAreReachable:
 class TestTheLivePin:
     """The shipped receipts, read exactly as a caller would read them.
 
-    These pin the CURRENT state of the programme, not a hypothetical: the
-    router in production fails its own governing battery, and the corrected
-    router's evidence does not license anything until the flip is taken.
-    If either of these turns green without that work being done, the gate
-    has inverted and every refusal above is decoration.
+    These pin the CURRENT state of the programme, not a hypothetical. Since
+    the 2026-08-23 flip that state is:
+
+      * the v1 receipt describes a router nobody runs -> refused on fingerprint;
+      * the v1.1 receipt clears ORDER 27's false-positive bar (0.03 <= 0.05);
+      * capital is STILL unlicensed, because the router cannot RECOVER a real
+        edge at the arena's current breadth. That is a POWER problem, and only
+        decision days buy it.
+
+    If the last one turns green without those days accruing, the gate has
+    inverted and every refusal above is decoration.
     """
 
-    def test_the_live_router_is_not_licensed(self):
+    def test_the_v1_receipt_no_longer_describes_the_running_router(self):
+        """Since the flip, the v1 receipt measures a setting nobody runs.
+
+        Refused on FINGERPRINT, not on its numbers: a battery passed under a
+        configuration that is switched off is a description of a different
+        router.
+        """
         assert G.DEFAULT_RECEIPT.exists(), (
             "the governing battery receipt is missing — the gate would refuse "
             "every caller, which is safe but tells nobody why")
-        out = G.evaluate_router_license()
-        assert out["status"] == "FAIL"
-        assert out["checks"]["null_recommendation_rate"]["value"] > 0.05
-        with pytest.raises(G.RouterCapitalRefused):
-            G.assert_router_licensed()
+        with pytest.raises(G.RouterCapitalRefused, match="cluster_adjust"):
+            G.evaluate_router_license()
 
-    def test_the_corrected_receipt_licenses_nothing_until_the_flip(self):
+    def test_the_flip_bought_the_false_positive_fix(self):
+        """What the flip actually purchased, and the only thing it purchased."""
         p = G.DEFAULT_RECEIPT.parent / \
             "g1_correlated_battery_v1_1_cluster_adjust.json"
         assert p.exists()
         rec = json.loads(p.read_text(encoding="utf-8"))
-        # It clears the bar ORDER 27 set...
-        assert rec["null_recommendation_rate"] <= 0.05
-        # ...and is still refused, because it measures a setting that is off.
-        with pytest.raises(G.RouterCapitalRefused, match="attended"):
-            G.evaluate_router_license(p)
+        assert rec["null_recommendation_rate"] <= 0.05, (
+            "the corrected router no longer clears ORDER 27's bar — that bar "
+            "is the whole reason the flip was taken")
+
+    def test_capital_is_STILL_unlicensed_and_the_reason_is_POWER(self):
+        """The flip must not be read as licensing capital. It does not.
+
+        Clearing the false-positive bar is necessary and not sufficient. The
+        router still fails `edge_recovery_rate`: it cannot RECOVER a real edge
+        at the arena's current breadth (~0.19 against a 0.7 bar). Only DECISION
+        DAYS buy that — roughly six months of live arena — and no amount of
+        configuration substitutes for them.
+
+        If this turns green without those days accruing, the gate has inverted
+        and every refusal above is decoration.
+        """
+        p = G.DEFAULT_RECEIPT.parent / \
+            "g1_correlated_battery_v1_1_cluster_adjust.json"
+        out = G.evaluate_router_license(p)
+        assert out["status"] == "FAIL"
+        assert out["checks"]["edge_recovery_rate"]["value"] < 0.7
+        with pytest.raises(G.RouterCapitalRefused, match="edge_recovery_rate"):
+            G.assert_router_licensed(p)

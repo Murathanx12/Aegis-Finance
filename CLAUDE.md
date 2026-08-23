@@ -370,17 +370,17 @@ When the engine is working correctly:
 - Ang et al. (2006) — Downside Risk (beta, volatility, drawdown as stock-level risk factors)
 - Fama-French (1993, 2015) — Multi-factor models for return attribution
 
-## Autonomous R&D Lab
+## Autonomous R&D Lab — **RETIRED 2026-08-23**
 
-The `lab/` directory contains an autonomous research loop that runs Claude Code sessions
-to improve the engine overnight. See `lab/README.md` for details.
+`lab/rd_loop.py` is **not scheduled, not run, and not maintained**. Decision and
+reasoning: `docs/DECISION_2026-08-23_RETIRE_LAB.md`. Nothing was deleted; the
+abandoned v5 rewrite lives on branch `lab-v5-abandoned`.
 
-```bash
-# Run overnight (45 min per cycle, auto-commits to lab/autonomous-rd branch)
-python lab/rd_loop.py --cycles 60 --model opus
+**Do not start it.** It last ran 2026-04-17, it auto-commits from autonomous
+sessions, and its working tree carried a half-finished rewrite that removed 23
+of 27 collectors.
 
-# Cheaper/faster cycles
-python lab/rd_loop.py --cycles 60 --model sonnet
-```
-
-Each cycle: generates engine data (16 collectors including factor model + economic surprise) → builds prompt with competitive intelligence → Claude session (45 min) → targeted tests → before/after comparison → auto-commit. Results in `lab/experiments/cycle_NNN/`.
+**The arena replaced it** and does the same job with a licence, a seeded
+identity, self-grading against matured outcomes, and a daily production run.
+The nightly critic loop in `docs/ROADMAP_2026-08-23_PROFIT_FIRST.md` is the
+successor to the *idea*.

@@ -1,4 +1,11 @@
-"""PROFIT_ALLOCATOR_v1 — the capital engine book and its refusals.
+"""The ce_kelly capital-engine book and its refusals.
+
+PROFIT_ALLOCATOR_v1 was RETIRED 2026-08-23 (`spec.RETIRED`): it was seeded with
+the trust router's cluster adjustment OFF, that setting is part of its policy
+identity, and the setting was corrected to ON. It therefore no longer appears in
+`active_specs()` — but its SPEC is still in the YAML and still the definition of
+the ce_kelly mechanism a successor will use, so these tests read it through
+`load_specs()`. They test the allocator, not the roster.
 
 The claim under test is narrow and honest: at FIXED alpha (the same composite
 every book sees), does a declared Kelly/CE capital layer behave correctly —
@@ -103,9 +110,12 @@ class TestSizeCeKelly:
 # ── spec refusals ───────────────────────────────────────────────────────────
 class TestSpecRefusals:
     def test_ten_books_load_and_allocator_is_declared(self):
-        specs = spec_mod.active_specs()
-        assert len(specs) == 10
-        pa = specs["PROFIT_ALLOCATOR_v1"]
+        assert len(spec_mod.active_specs()) == 9, (
+            "nine ACTIVE books since PROFIT_ALLOCATOR_v1 was retired; its "
+            "ledger and seed are untouched on disk")
+        specs = spec_mod.load_specs()
+        assert "PROFIT_ALLOCATOR_v1" in spec_mod.RETIRED
+        pa = spec_mod.load_specs()["PROFIT_ALLOCATOR_v1"]
         assert pa.sizing == "ce_kelly"
         assert pa.allocator["ic_prior"] == 0.05
         assert pa.allocator["kelly_fraction"] == 0.5
@@ -151,7 +161,7 @@ class TestSpecRefusals:
             spec_mod.load_specs(bad)
 
     def test_allocator_shares_the_common_world(self):
-        specs = spec_mod.active_specs()
+        specs = spec_mod.load_specs()
         base = specs["ENGINE_BASELINE_v1"]
         pa = specs["PROFIT_ALLOCATOR_v1"]
         assert pa.cost_bps == base.cost_bps
@@ -173,7 +183,7 @@ class TestDecideWiring:
         return _state(names)
 
     def test_decision_records_router_verdict_and_throttled_kelly(self, tmp_path):
-        spec = spec_mod.active_specs()["PROFIT_ALLOCATOR_v1"]
+        spec = spec_mod.load_specs()["PROFIT_ALLOCATOR_v1"]
         dec = engine._decide(spec, self._book(), self._rich_state(),
                              "hash123", root=tmp_path)
         assert dec["status"] == "decided"
@@ -186,7 +196,7 @@ class TestDecideWiring:
         assert rec["cash_weight"] >= 0.0
 
     def test_orders_leave_the_cash_uninvested(self, tmp_path):
-        spec = spec_mod.active_specs()["PROFIT_ALLOCATOR_v1"]
+        spec = spec_mod.load_specs()["PROFIT_ALLOCATOR_v1"]
         book = self._book()
         dec = engine._decide(spec, book, self._rich_state(), "hash123",
                              root=tmp_path)

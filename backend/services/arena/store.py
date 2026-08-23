@@ -86,7 +86,18 @@ def seed_book(spec, *, root: Path | None = None,
                     f"the current config is {spec.config_hash[:12]}. A changed "
                     f"configuration is a NEW book with its own id, never a new "
                     f"start date for this one.")
-            if (existing.get("policy_fingerprint")
+            if (existing.get("fingerprint_scheme") == "book-v1"
+                    and existing.get("book_fingerprint")
+                    and existing.get("book_fingerprint")
+                    != spec.book_fingerprint):
+                raise SeedRefused(
+                    f"{spec.book_id} was seeded under book policy "
+                    f"{str(existing.get('book_fingerprint'))[:12]} and its "
+                    f"rules now fingerprint {spec.book_fingerprint[:12]}. A "
+                    f"changed rule is a NEW book with its own id, never a new "
+                    f"start date for this one.")
+            if (existing.get("fingerprint_scheme") != "book-v1"
+                    and existing.get("policy_fingerprint")
                     and existing.get("policy_fingerprint")
                     != spec.policy_fingerprint):
                 raise SeedRefused(
@@ -102,6 +113,9 @@ def seed_book(spec, *, root: Path | None = None,
             "config_version": spec.config_version,
             "config_hash": spec.config_hash,
             "policy_fingerprint": spec.policy_fingerprint,
+            "book_fingerprint": spec.book_fingerprint,
+            "fingerprint_scheme": "book-v1",
+            "composite_version": _composite_version(),
             "policy_version": spec.policy_version,
             "purpose": spec.purpose,
             "notional_usd": spec.notional_usd,
@@ -125,17 +139,51 @@ def seed_book(spec, *, root: Path | None = None,
 
 
 def assert_config_current(spec, *, root: Path | None = None) -> dict:
+    """Verify a book is running the rules it was seeded with.
+
+    IDENTITY IS PER BOOK (scheme "book-v1", 2026-08-23). The original scheme
+    hashed the WHOLE YAML, which meant a comment typed anywhere -- or a new
+    challenger added for a different experiment -- drifted every seeded book at
+    once. Measured: a comment-only edit drifted 10 of 10. That made the arena
+    unable to gain a book without destroying every NAV history it had.
+
+    The per-book payload is strictly MORE precise, never weaker: this book's
+    own block, plus the file-level defaults it inherits and the common-world
+    facts (costs, benchmark, schema) that make the factorial comparable. A
+    change to a shared cost still drifts all ten, correctly.
+
+    MIGRATION. The ten books seeded 2026-08-21 carry only the legacy whole-file
+    fingerprint. They are migrated on first contact, and ONLY while that legacy
+    value still verifies -- so the stamp is taken from a config proven
+    unchanged, never from whatever happens to be on disk later. The inception
+    itself (seeded_at, config_hash) is never touched.
+    """
     rec = read_seed(spec.book_id, root)
     if rec is None:
         raise ConfigDrift(f"{spec.book_id} is not seeded")
+
+    scheme = rec.get("fingerprint_scheme")
+    seeded_bfp = rec.get("book_fingerprint")
+
+    if scheme == "book-v1" and seeded_bfp:
+        if seeded_bfp != spec.book_fingerprint:
+            raise ConfigDrift(
+                f"{spec.book_id} was seeded under book policy "
+                f"{str(seeded_bfp)[:12]} but its rules now fingerprint "
+                f"{spec.book_fingerprint[:12]} — refusing to run. A book whose "
+                f"rules changed mid-segment has one NAV series describing two "
+                f"policies. {_drift_cause(rec)}")
+        return rec
+
+    # ── legacy seed: verify under the OLD scheme, then migrate ─────────────
     if rec.get("config_hash") != spec.config_hash:
         raise ConfigDrift(
             f"{spec.book_id} was seeded under config "
             f"{str(rec.get('config_hash'))[:12]} but the file on disk hashes "
-            f"to {spec.config_hash[:12]} — refusing to run. Segment identity "
-            f"IS the configuration.")
-    # A seed written before policy fingerprints existed has no claim to check;
-    # once it has one, it binds. Absent is absent, never "matches".
+            f"to {spec.config_hash[:12]} — refusing to run, and refusing to "
+            f"migrate this seed to per-book identity from a configuration that "
+            f"has already changed. Restore the seeded config, let the "
+            f"migration take its stamp, then make the edit.")
     seeded_fp = rec.get("policy_fingerprint")
     if seeded_fp and seeded_fp != spec.policy_fingerprint:
         raise ConfigDrift(
@@ -144,7 +192,67 @@ def assert_config_current(spec, *, root: Path | None = None) -> dict:
             f"the YAML is unchanged and the SELECTION ESTIMATOR is not. "
             f"Refusing to run: a book whose scores changed meaning mid-segment "
             f"has one NAV series describing two policies.")
+
+    rec = _migrate_seed_to_book_identity(spec, rec, root=root)
     return rec
+
+
+def _composite_version() -> str:
+    from backend.services.arena.discovery import COMPOSITE_VERSION
+    return str(COMPOSITE_VERSION)
+
+
+def _drift_cause(rec: dict) -> str:
+    """Name the input that moved, when we can.
+
+    A bare "the fingerprint changed" sends the next reader diffing a YAML. The
+    SELECTION ESTIMATOR is the case that costs the most time to find, because
+    the YAML is byte-identical when it moves — so it is recorded on the seed
+    and named here.
+    """
+    try:
+        from backend.services.arena.discovery import COMPOSITE_VERSION
+    except Exception:                                          # noqa: BLE001
+        return ""
+    seeded_cv = rec.get("composite_version")
+    if seeded_cv and seeded_cv != COMPOSITE_VERSION:
+        return (f"CAUSE: the SELECTION ESTIMATOR changed — seeded under "
+                f"composite {seeded_cv}, running {COMPOSITE_VERSION}. The "
+                f"YAML is unchanged; what the scores MEAN is not.")
+    if seeded_cv:
+        return ("CAUSE: not the selection estimator (composite version "
+                f"{seeded_cv} unchanged) — so it is this book's own rules or "
+                "the shared cost/benchmark world.")
+    return ""
+
+
+def _migrate_seed_to_book_identity(spec, rec: dict, *,
+                                   root: Path | None = None) -> dict:
+    """Stamp per-book identity onto a legacy seed. Additive only.
+
+    Called only after the legacy fingerprint has VERIFIED, so the value stamped
+    describes the configuration the book was actually seeded under. Inception
+    fields are left exactly as they are -- this adds a second, sharper claim
+    beside the original, it does not restate the original.
+    """
+    p = seed_path(spec.book_id, root)
+    with _LOCK:
+        current = json.loads(p.read_text(encoding="utf-8"))
+        if current.get("fingerprint_scheme") == "book-v1":
+            return current                       # another worker got there
+        current["book_fingerprint"] = spec.book_fingerprint
+        current["fingerprint_scheme"] = "book-v1"
+        current.setdefault("composite_version", _composite_version())
+        current["fingerprint_migrated_at"] = _now()
+        current["fingerprint_migration_note"] = (
+            "identity moved from whole-file to per-book on 2026-08-23. The "
+            "legacy policy_fingerprint above verified at migration time, so "
+            "this stamp describes the seeded configuration. Inception "
+            "unchanged.")
+        p.write_text(json.dumps(current, indent=2), encoding="utf-8")
+    logger.warning("arena seed %s migrated to per-book identity %s",
+                   spec.book_id, spec.book_fingerprint[:12])
+    return current
 
 
 # ── generic JSONL ───────────────────────────────────────────────────────────

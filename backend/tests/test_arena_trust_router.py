@@ -62,8 +62,25 @@ class TestNullWorld:
                        ("C", 99, 200, 21, "MID_VOL"))
         out = tr.trust_weights(cells)
         assert out["verdict"] == "NO_EDGE"
+        # v1.1 (live since the 2026-08-23 cluster-adjust flip): the fallback
+        # funds an actor only if its OWN shrunk estimate is at or above the
+        # prior. C at 99/200 = 0.495 sits below it and gets nothing — "not
+        # proven harmful" is not evidence of safety, and the G1 battery priced
+        # that confusion at a third of the fallback to a truly harmful actor in
+        # half of all harmful worlds.
+        w = {a: r["weight"] for a, r in out["actors"].items()}
+        assert w["C"] == 0.0, w
+        assert w["A"] == pytest.approx(w["B"]), w      # the kept ones are uniform
+        assert sum(w.values()) == pytest.approx(1.0), w
+
+    def test_v1_semantics_are_still_available_and_still_uniform(self):
+        """The OFF path is unchanged — v1 receipts must stay reproducible."""
+        cells = _cells(("A", 100, 200, 21, "MID_VOL"),
+                       ("B", 101, 200, 21, "MID_VOL"),
+                       ("C", 99, 200, 21, "MID_VOL"))
+        out = tr.trust_weights(cells, cluster_adjust=False)
         ws = [a["weight"] for a in out["actors"].values()]
-        assert max(ws) - min(ws) < 1e-9  # uniform by fallback, exactly
+        assert max(ws) - min(ws) < 1e-9
 
     def test_null_world_never_manufactures_an_edge(self):
         # exact coin-flip records at healthy n: nothing to recommend
@@ -164,10 +181,13 @@ class TestRecommendLive:
         out = tr.recommend(root=tmp_path)
         assert out["router_version"] == "RELIABILITY_ROUTER_v1"
         assert out["may_mutate_books"] is False
-        # Cross-horizon dedup shipped with the G1 battery fix (2026-08-21);
-        # the banner must still DISCLOSE that cross-name correlation is not
-        # adjusted — a bare True would overclaim.
-        assert out["correlation_adjusted"] == "horizon-dedup only"
+        # Cross-horizon dedup shipped with the G1 battery fix (2026-08-21).
+        # Cross-NAME correlation is adjusted too since the 2026-08-23 flip, so
+        # the banner now discloses BOTH. It must never read a bare True: the
+        # point of this string is that it says exactly which correlations were
+        # taken out.
+        assert out["correlation_adjusted"] == (
+            "horizon-dedup + decision-date design effect")
         assert out["n_reported_cells"] == 0
         assert out["global"]["verdict"] == "ABSTAIN"
 
