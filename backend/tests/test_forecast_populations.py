@@ -75,6 +75,28 @@ def test_every_population_declares_producer_consumers_and_purpose():
         assert pop.purpose, f"{pop.population_id} has no purpose"
 
 
+def test_campaign_reads_the_REPO_ledger_not_the_volume():
+    """Caught only by thinking about prod: locally the two bases coincide.
+
+    The campaign's history is a REPOSITORY artifact and must not follow a
+    volume mount around (`evidence_population.ledger_dir`). A registry that
+    hard-coded one base would report the volume's file as the campaign's in
+    production while looking perfectly correct on every dev machine.
+    """
+    assert FP.get("campaign_forward").base == "legacy"
+    assert FP.get("live_forward").base == "ledger"
+    assert FP.get("arena_forward").base == "ledger"
+
+
+def test_population_paths_match_evidence_population():
+    """The two modules must not disagree about where a ledger lives."""
+    from backend.services import evidence_population as EP
+    assert FP.get("campaign_forward").path() == EP.ledger_path(
+        EP.EvidencePopulation.CAMPAIGN_FORWARD)
+    assert FP.get("live_forward").path() == EP.ledger_path(
+        EP.EvidencePopulation.LIVE_FORWARD)
+
+
 def test_unknown_population_is_refused_not_guessed():
     with pytest.raises(FP.UnknownPopulation):
         FP.get("some_ledger_someone_invented")

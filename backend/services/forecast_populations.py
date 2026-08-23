@@ -75,13 +75,23 @@ class Population:
     purpose: str
     producer: str
     consumers: tuple[str, ...]
-    #: Path relative to OPTIMUS_LEDGER_DIR. Resolved late so tests and the
-    #: local machine (where AEGIS_DATA_DIR is unset) see their own root.
+    #: Path relative to this population's BASE dir. Resolved late so tests and
+    #: the local machine (where AEGIS_DATA_DIR is unset) see their own root.
     relative_path: str
     #: Days of silence before the population is considered to have gone dark.
     #: Not one number for all three: the arena writes only on trading days, the
     #: campaign is attended and bursty, and live accrual should be steady.
+    #:
+    #: `base` = which base directory the population lives under. NOT one base
+    #: for all three: the campaign's history is a REPOSITORY artifact and must
+    #: not follow a volume mount around, while the live and arena ledgers are
+    #: the deployment's own and sit on the volume. On a dev machine the two
+    #: bases coincide -- which is exactly why hard-coding one base looked
+    #: correct here and would have reported the volume's file as the
+    #: campaign's in production.
     max_quiet_days: int
+    base: str = "ledger"          # "ledger" -> OPTIMUS_LEDGER_DIR
+                                  # "legacy" -> OPTIMUS_LEDGER_LEGACY_DIR
     #: True when silence is a fault. A population that is DECLARED dormant
     #: (superseded, or awaiting an attended decision) is reported, not alarmed
     #: on -- but it must say so out loud rather than being dropped.
@@ -89,8 +99,16 @@ class Population:
     dormant_reason: str | None = None
     notes: tuple[str, ...] = field(default_factory=tuple)
 
+    def base_dir(self) -> Path:
+        if self.base == "legacy":
+            return _config.OPTIMUS_LEDGER_LEGACY_DIR
+        return _config.OPTIMUS_LEDGER_DIR
+
     def path(self, root: Path | None = None) -> Path:
-        return (root or _config.OPTIMUS_LEDGER_DIR) / self.relative_path
+        # An explicit `root` collapses every base into one directory. That is
+        # the dev-machine case by construction (no volume), and it is what
+        # tests want; production passes no root and gets the real split.
+        return (root or self.base_dir()) / self.relative_path
 
 
 #: THE PLAN. Every population that exists, whether or not it is healthy, and
@@ -105,6 +123,7 @@ _POPULATIONS: tuple[Population, ...] = (
         consumers=("scripts/resolve_campaign_ledger.py",
                    "ABLATION_FWD certification"),
         relative_path="predictions.jsonl",
+        base="legacy",
         max_quiet_days=90,
         quiet_is_a_fault=False,
         dormant_reason=("attended and bursty by design: it grows when a "
