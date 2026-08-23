@@ -243,8 +243,22 @@ def build_records(df, calendar: list[str], prices: dict) -> tuple[list, dict]:
                 return d
         return None
 
+    n_unknown_time = 0
     for row in df.itertuples(index=False):
-        ann_d, ann_t = str(row.anndats)[:10], str(row.anntims or "00:00:00")[:8]
+        ann_d = str(row.anndats)[:10]
+        raw_t = row.anntims
+        ann_t = str(raw_t)[:8] if raw_t is not None else ""
+        # AN UNKNOWN TIME IS NOT MIDNIGHT. `str(x or "00:00:00")` turned a
+        # missing stamp into 00:00, which reads as PRE-MARKET and made the
+        # announcement tradable at that same session's open — a price that may
+        # precede the information. 807 rows from 2006 carry exactly 00:00:00,
+        # which is not a time anyone announces earnings at; it is the field's
+        # placeholder. Unknown takes the NEXT session, at a cost of 0.13% of
+        # rows losing one session of precision.
+        time_unknown = (not ann_t) or ann_t in ("None", "NaT", "nan", "<NA>") \
+            or ann_t == "00:00:00"
+        if time_unknown:
+            n_unknown_time += 1
         pub = _iso(row.anndats, row.anntims)
         obs = _iso(row.actdats, row.acttims)
 
@@ -256,7 +270,7 @@ def build_records(df, calendar: list[str], prices: dict) -> tuple[list, dict]:
         # letting a negative reaction window through, which is the guard doing
         # the job — a same-session announcement is exactly the case where an
         # off-by-one buys you the move you are trying to predict.
-        if ann_t >= AFTER_HOURS_FROM or ann_d not in cal:
+        if time_unknown or ann_t >= AFTER_HOURS_FROM or ann_d not in cal:
             trd_day, trd_t = next_session(ann_d), SESSION_OPEN     # after hours
         elif ann_t <= SESSION_OPEN:
             trd_day, trd_t = ann_d, SESSION_OPEN                   # pre-market
@@ -392,7 +406,13 @@ def build_records(df, calendar: list[str], prices: dict) -> tuple[list, dict]:
                 reasons[key] = reasons.get(key, 0) + 1
             continue
         recs.append(rec)
-    return recs, {"n_refused": refused, "refusal_reasons": reasons}
+    return recs, {"n_refused": refused, "refusal_reasons": reasons,
+                  "n_unknown_announcement_time": n_unknown_time,
+                  "unknown_time_rule": (
+                      "`anntims` missing or exactly 00:00:00 -> the NEXT "
+                      "session's open. Read as a time, midnight means "
+                      "pre-market and would make the announcement tradable at "
+                      "a price that may precede it.")}
 
 
 def cmd_collect(y0: int, y1: int, *, overwrite: bool = False) -> int:

@@ -17,6 +17,8 @@
   "link_rate_within_us": 0.7379,
   "link_rate_floor": 0.6,
   "n_with_open_date": 102637,
+  "n_unknown_announcement_time": 1234,
+  "unknown_time_rule": "`anntims` unreadable OR exactly 00:00:00 -> the NEXT session's open, never the same one. Exact midnight is a legacy placeholder (its share falls 5.5% of 2013 -> 0.1% of 2024 while the rest of hour 0 spreads across the minute field like real stamps); read as a time it would make an unknown-time release tradable at a price that may precede it.",
   "n_unresolvable_no_forward_window": 3865,
   "n_graded": 98772,
   "n_analysts": 5793,

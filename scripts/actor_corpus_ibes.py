@@ -219,12 +219,34 @@ def build() -> None:
 
     # A rec announced AFTER the close is not actionable at that close. Open at
     # the next session STRICTLY after the announcement instant.
+    #
+    # AN UNKNOWN TIME IS NOT MIDNIGHT. The first version wrote
+    # `.astype(str).fillna("00:00:00")` -- which fills nothing, because
+    # `astype(str)` has already turned NaT into the string "NaT" -- and then
+    # coerced the unparseable hour to 0. A missing announcement time therefore
+    # became 00:00, i.e. PRE-MARKET, i.e. tradable at that same session's open.
+    # For any recommendation actually released after that close, the grade was
+    # then computed from a price that PRECEDED the information. Unknown times
+    # now take the next session, which is the only reading that cannot buy the
+    # move it is trying to predict, and the count is reported so the choice is
+    # visible rather than assumed to be rare.
     ann = m["anndats"].to_numpy()
-    tim = m["anntims"].astype(str).fillna("00:00:00")
-    after_close = tim.str.slice(0, 2).astype(str).str.isdigit()
-    hh = pd.to_numeric(tim.str.slice(0, 2), errors="coerce").fillna(0)
-    # 16:00 ET close; anything at or after it lands on the following session.
-    same_day_ok = (hh < 16).to_numpy()
+    tim = m["anntims"].astype(str)
+    hh = pd.to_numeric(tim.str.slice(0, 2), errors="coerce")
+    # EXACTLY MIDNIGHT IS A PLACEHOLDER, NOT A TIME. 3,168 US rows in this
+    # window carry `00:00:00` while the rest of hour 0 is spread across the
+    # minute field (00:16, 00:17, 00:02 ...) exactly as real stamps are, and
+    # the midnight share falls monotonically from 5.5% of 2013 to 0.1% of
+    # 2024 -- the signature of a legacy default being retired, not of analysts
+    # who published at midnight. Read as a time it means pre-market, which
+    # would make an unknown-time release tradable at a price that may precede
+    # it; read as unknown it costs one session of precision on 1.3% of claims.
+    # Only one of those two errors can buy the move it is predicting.
+    unknown = hh.isna() | (tim.str.slice(0, 8) == "00:00:00")
+    n_unknown_time = int(unknown.sum())
+    # 16:00 ET close; anything at or after it — and anything we cannot read —
+    # lands on the following session.
+    same_day_ok = ((hh < 16) & ~unknown).fillna(False).to_numpy()
     pos = sessions.searchsorted(ann, side="left")
     pos = np.where(same_day_ok, pos, pos + 1)
     ok = pos < len(sessions)
@@ -274,6 +296,15 @@ def build() -> None:
         "link_rate_within_us": round(link_rate, 4),
         "link_rate_floor": MIN_LINK_RATE,
         "n_with_open_date": n_dated,
+        "n_unknown_announcement_time": n_unknown_time,
+        "unknown_time_rule": ("`anntims` unreadable OR exactly 00:00:00 -> "
+                              "the NEXT session's open, never the same one. "
+                              "Exact midnight is a legacy placeholder (its "
+                              "share falls 5.5% of 2013 -> 0.1% of 2024 while "
+                              "the rest of hour 0 spreads across the minute "
+                              "field like real stamps); read as a time it "
+                              "would make an unknown-time release tradable at "
+                              "a price that may precede it."),
         "n_unresolvable_no_forward_window": n_unresolvable,
         "n_graded": int(len(keep)),
         "n_analysts": int(keep["amaskcd"].nunique()),
@@ -351,6 +382,70 @@ def score() -> None:
 
     lic = AI.inverse_license(skills, holdout=holds)
 
+    # PERSISTENCE IS THE PREMISE, SO IT BELONGS IN THE RECEIPT.
+    # `corr(train edge, holdout edge) = 0.516` is the number the entire actor
+    # layer rests on -- if a track record does not predict the next call, the
+    # statistics around it are decoration. It was computed ad hoc and written
+    # into prose, which means it could not be re-checked after any change to
+    # the corpus without re-deriving it by hand. It is now an artefact.
+    #
+    # Fisher-z interval, and the unit is the ANALYST: each analyst contributes
+    # one (train, holdout) pair, so the pairs are independent in the way the
+    # interval assumes. It is NOT a walk-forward -- one split, one estimate.
+    #
+    # AND THE WHOLE LADDER, NOT ONE RUNG. The first report of this number was
+    # "0.516 over n = 50 analysts" without naming the rule that produced 50 of
+    # 222: a minimum of 30 graded claims in the HOLDOUT. Unrestricted the same
+    # split gives 0.25. Neither is wrong -- an analyst whose holdout edge rests
+    # on 6 calls contributes a very noisy y, and noise in y attenuates r toward
+    # zero -- but reporting only the filtered rung leaves the reader unable to
+    # tell attenuation from selection. The ladder is monotone in holdout
+    # evidence, which is the signature of attenuation; every rung is reported
+    # so no single threshold has to be believed.
+    #
+    # The filter is on holdout PRECISION, never on holdout OUTCOME, so it does
+    # not select analysts for having persisted. That distinction is the only
+    # thing keeping this from being circular.
+    hold_by_actor = {h["actor"]: h for h in holds}
+    rows = [(s["edge"], hold_by_actor[s["actor"]]) for s in skills
+            if s["actor"] in hold_by_actor]
+    hold_claims = {f"analyst:{a}": int(n)
+                   for a, n in hold.groupby("amaskcd").size().items()}
+
+    def _corr(pairs: list[tuple[float, float]]) -> dict | None:
+        if len(pairs) < 4:
+            return None
+        xs = np.array([a for a, _ in pairs], dtype=float)
+        ys = np.array([b for _, b in pairs], dtype=float)
+        if xs.std() == 0 or ys.std() == 0:
+            return None
+        r = float(np.corrcoef(xs, ys)[0, 1])
+        z = np.arctanh(np.clip(r, -0.999999, 0.999999))
+        se = 1.0 / np.sqrt(len(pairs) - 3)
+        lo, hi = np.tanh(z - 1.96 * se), np.tanh(z + 1.96 * se)
+        return {"n_analysts": len(pairs), "corr": round(r, 4),
+                "ci95": [round(float(lo), 4), round(float(hi), 4)],
+                "holds_above_zero": bool(lo > 0)}
+
+    ladder = {}
+    for thr in (0, 10, 20, 30, 40, 50):
+        pairs = [(te, h["edge"]) for te, h in rows
+                 if hold_claims.get(h["actor"], 0) >= thr]
+        got = _corr(pairs)
+        if got:
+            ladder[f"min_holdout_claims_{thr}"] = got
+    persistence = {
+        "unit": "analyst — one (train edge, holdout edge) pair each",
+        "interval": "Fisher-z",
+        "headline": ladder.get("min_holdout_claims_0"),
+        "by_min_holdout_claims": ladder,
+        "note": ("ONE time split, not a walk-forward. The threshold is on "
+                 "holdout PRECISION, never on holdout outcome; r rising with "
+                 "it is the signature of attenuation from measurement error "
+                 "in y, not of selecting analysts who persisted."),
+    }
+    print(f"persistence: {persistence}", flush=True)
+
     ranked = sorted(skills, key=lambda s: s["edge"])
     res = {
         "benchmark": "equal-weighted SIC2 sector over the same window",
@@ -363,6 +458,7 @@ def score() -> None:
                               for k, v in null_by_dir.items()},
         "n_graded_claims": int(len(g)),
         "n_analysts_scored": len(skills),
+        "persistence": persistence,
         "train_window": [int(train["year"].min()), cut - 1],
         "holdout_window": [cut, int(g["year"].max())],
         "worst_5": [{k: s[k] for k in

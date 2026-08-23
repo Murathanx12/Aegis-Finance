@@ -1,13 +1,83 @@
 {
   "benchmark": "equal-weighted SIC2 sector over the same window",
-  "null_overall": 0.5513,
+  "null_overall": 0.5515,
   "null_note": "each analyst is graded against their OWN direction mix, not the pooled rate \u2014 a pure-buy analyst scored against a blended null is credited with the buy/sell base-rate gap as if it were skill",
   "null_by_direction": {
-    "-1": 0.4472,
-    "1": 0.5666
+    "-1": 0.4473,
+    "1": 0.5668
   },
   "n_graded_claims": 98772,
   "n_analysts_scored": 254,
+  "persistence": {
+    "unit": "analyst \u2014 one (train edge, holdout edge) pair each",
+    "interval": "Fisher-z",
+    "headline": {
+      "n_analysts": 222,
+      "corr": 0.2526,
+      "ci95": [
+        0.1251,
+        0.3719
+      ],
+      "holds_above_zero": true
+    },
+    "by_min_holdout_claims": {
+      "min_holdout_claims_0": {
+        "n_analysts": 222,
+        "corr": 0.2526,
+        "ci95": [
+          0.1251,
+          0.3719
+        ],
+        "holds_above_zero": true
+      },
+      "min_holdout_claims_10": {
+        "n_analysts": 171,
+        "corr": 0.3291,
+        "ci95": [
+          0.1883,
+          0.4566
+        ],
+        "holds_above_zero": true
+      },
+      "min_holdout_claims_20": {
+        "n_analysts": 105,
+        "corr": 0.4003,
+        "ci95": [
+          0.226,
+          0.5498
+        ],
+        "holds_above_zero": true
+      },
+      "min_holdout_claims_30": {
+        "n_analysts": 50,
+        "corr": 0.5125,
+        "ci95": [
+          0.2731,
+          0.6921
+        ],
+        "holds_above_zero": true
+      },
+      "min_holdout_claims_40": {
+        "n_analysts": 20,
+        "corr": 0.4533,
+        "ci95": [
+          0.0135,
+          0.7462
+        ],
+        "holds_above_zero": true
+      },
+      "min_holdout_claims_50": {
+        "n_analysts": 10,
+        "corr": 0.7392,
+        "ci95": [
+          0.2049,
+          0.9341
+        ],
+        "holds_above_zero": true
+      }
+    },
+    "note": "ONE time split, not a walk-forward. The threshold is on holdout PRECISION, never on holdout outcome; r rising with it is the signature of attenuation from measurement error in y, not of selecting analysts who persisted."
+  },
   "train_window": [
     2013,
     2020
@@ -19,36 +89,36 @@
   "worst_5": [
     {
       "actor": "analyst:126224",
-      "edge": -0.2602,
-      "z": -3.929,
+      "edge": -0.2603,
+      "z": -3.932,
       "n_decision_days": 44,
       "shrunk_hit_rate": 0.3064
     },
     {
       "actor": "analyst:115619",
-      "edge": -0.2034,
-      "z": -3.958,
+      "edge": -0.2036,
+      "z": -3.961,
       "n_decision_days": 81,
       "shrunk_hit_rate": 0.3632
     },
     {
       "actor": "analyst:72849",
-      "edge": -0.2022,
-      "z": -2.998,
+      "edge": -0.2023,
+      "z": -3.001,
       "n_decision_days": 42,
       "shrunk_hit_rate": 0.3644
     },
     {
       "actor": "analyst:126150",
-      "edge": -0.2,
-      "z": -5.072,
+      "edge": -0.2002,
+      "z": -5.076,
       "n_decision_days": 146,
       "shrunk_hit_rate": 0.3659
     },
     {
       "actor": "analyst:82492",
-      "edge": -0.1937,
-      "z": -3.247,
+      "edge": -0.1939,
+      "z": -3.25,
       "n_decision_days": 57,
       "shrunk_hit_rate": 0.3729
     }
@@ -56,36 +126,36 @@
   "best_5": [
     {
       "actor": "analyst:86602",
-      "edge": 0.1394,
-      "z": 1.818,
+      "edge": 0.1392,
+      "z": 1.816,
       "n_decision_days": 30,
-      "shrunk_hit_rate": 0.6967
-    },
-    {
-      "actor": "analyst:78506",
-      "edge": 0.1478,
-      "z": 2.114,
-      "n_decision_days": 39,
-      "shrunk_hit_rate": 0.6765
+      "shrunk_hit_rate": 0.6968
     },
     {
       "actor": "analyst:149615",
-      "edge": 0.1478,
-      "z": 2.678,
+      "edge": 0.1476,
+      "z": 2.675,
       "n_decision_days": 69,
       "shrunk_hit_rate": 0.7059
     },
     {
+      "actor": "analyst:78506",
+      "edge": 0.1477,
+      "z": 2.112,
+      "n_decision_days": 39,
+      "shrunk_hit_rate": 0.6765
+    },
+    {
       "actor": "analyst:81820",
-      "edge": 0.1484,
-      "z": 2.33,
+      "edge": 0.1482,
+      "z": 2.328,
       "n_decision_days": 49,
       "shrunk_hit_rate": 0.7014
     },
     {
       "actor": "analyst:109116",
-      "edge": 0.1522,
-      "z": 2.724,
+      "edge": 0.1521,
+      "z": 2.722,
       "n_decision_days": 68,
       "shrunk_hit_rate": 0.6659
     }
@@ -95,71 +165,71 @@
     "licensed": [
       {
         "actor": "analyst:126150",
-        "edge": -0.2,
-        "z": -5.072,
+        "edge": -0.2002,
+        "z": -5.076,
         "p_one_sided": 0.0,
         "n_decision_days": 146,
-        "holdout_edge": -0.1023,
+        "holdout_edge": -0.1024,
         "mapping": "INVERSE",
         "note": "licensed on measured, multiplicity-corrected, holdout-confirmed evidence \u2014 never on reputation"
       },
       {
         "actor": "analyst:126224",
-        "edge": -0.2602,
-        "z": -3.929,
+        "edge": -0.2603,
+        "z": -3.932,
         "p_one_sided": 4e-05,
         "n_decision_days": 44,
-        "holdout_edge": -0.1598,
+        "holdout_edge": -0.1599,
         "mapping": "INVERSE",
         "note": "licensed on measured, multiplicity-corrected, holdout-confirmed evidence \u2014 never on reputation"
       },
       {
         "actor": "analyst:82492",
-        "edge": -0.1937,
-        "z": -3.247,
+        "edge": -0.1939,
+        "z": -3.25,
         "p_one_sided": 0.00058,
         "n_decision_days": 57,
-        "holdout_edge": -0.1053,
+        "holdout_edge": -0.1055,
         "mapping": "INVERSE",
         "note": "licensed on measured, multiplicity-corrected, holdout-confirmed evidence \u2014 never on reputation"
       },
       {
         "actor": "analyst:72849",
-        "edge": -0.2022,
-        "z": -2.998,
-        "p_one_sided": 0.00136,
+        "edge": -0.2023,
+        "z": -3.001,
+        "p_one_sided": 0.00135,
         "n_decision_days": 42,
-        "holdout_edge": -0.1294,
+        "holdout_edge": -0.1296,
         "mapping": "INVERSE",
         "note": "licensed on measured, multiplicity-corrected, holdout-confirmed evidence \u2014 never on reputation"
       },
       {
         "actor": "analyst:106458",
-        "edge": -0.1921,
-        "z": -2.978,
-        "p_one_sided": 0.00145,
+        "edge": -0.1923,
+        "z": -2.98,
+        "p_one_sided": 0.00144,
         "n_decision_days": 47,
-        "holdout_edge": -0.0868,
+        "holdout_edge": -0.0869,
         "mapping": "INVERSE",
         "note": "licensed on measured, multiplicity-corrected, holdout-confirmed evidence \u2014 never on reputation"
       },
       {
         "actor": "analyst:181594",
-        "edge": -0.1717,
-        "z": -2.94,
-        "p_one_sided": 0.00164,
+        "edge": -0.1718,
+        "z": -2.942,
+        "p_one_sided": 0.00163,
         "n_decision_days": 60,
-        "holdout_edge": -0.0827,
+        "holdout_edge": -0.0828,
         "mapping": "INVERSE",
         "note": "licensed on measured, multiplicity-corrected, holdout-confirmed evidence \u2014 never on reputation"
       },
       {
         "actor": "analyst:183227",
-        "edge": -0.1456,
-        "z": -2.708,
-        "p_one_sided": 0.00338,
+        "edge": -0.1458,
+        "z": -2.711,
+        "p_one_sided": 0.00335,
         "n_decision_days": 73,
-        "holdout_edge": -0.2008,
+        "holdout_edge": -0.2009,
         "mapping": "INVERSE",
         "note": "licensed on measured, multiplicity-corrected, holdout-confirmed evidence \u2014 never on reputation"
       }
