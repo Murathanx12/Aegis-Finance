@@ -172,13 +172,36 @@ def test_campaign_quiet_is_dormant_by_design_not_degraded(tmp_path):
     assert row["dormant_reason"]
 
 
-def test_campaign_dormancy_does_NOT_hide_a_real_problem(tmp_path):
-    """Dormant-by-design downgrades quiet, and nothing else."""
+def test_campaign_overdue_is_excused_but_still_COUNTED(tmp_path):
+    """The campaign's resolver is ATTENDED, so nobody running it today is a
+    TODO, not an outage. The count must survive the downgrade — this changes
+    the alarm, never the number."""
     _write(tmp_path / "predictions.jsonl",
            [_rec("c1", "2026-01-01T00:00:00+00:00", outcome=None)])
     row = FP.health("campaign_forward", root=tmp_path, today=date(2026, 8, 23))
-    # Overdue-and-unresolved is a genuine fault; it must survive the downgrade.
+    assert row["status"] == "DORMANT_BY_DESIGN", row
+    assert row["n_overdue"] == 1, "the overdue count was hidden, not excused"
+    assert row["problems"], "the problem text was dropped"
+
+
+def test_the_SAME_data_still_alarms_on_live_forward(tmp_path):
+    """The discriminating case: live_forward's resolver is SCHEDULED, so the
+    identical record is a genuine fault there."""
+    _write(tmp_path / "predictions.jsonl",
+           [_rec("l1", "2026-01-01T00:00:00+00:00", outcome=None)])
+    row = FP.health("live_forward", root=tmp_path, today=date(2026, 8, 23))
     assert row["status"] == "DEGRADED", row
+    assert row["overdue_is_a_fault"] is True
+
+
+def test_dormancy_excuses_only_the_declared_problems():
+    """A population excuses what it is DECLARED dormant about, not everything."""
+    campaign = FP.get("campaign_forward")
+    assert FP._excused("5325 forecast(s) past due and unresolved", campaign)
+    assert FP._excused("no new forecast in 200 days", campaign)
+    assert not FP._excused("the ledger is corrupt", campaign)
+    live = FP.get("live_forward")
+    assert not FP._excused("5325 forecast(s) past due and unresolved", live)
 
 
 def test_live_forward_quiet_IS_a_fault(tmp_path):

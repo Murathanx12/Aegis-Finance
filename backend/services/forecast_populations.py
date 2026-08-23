@@ -96,6 +96,13 @@ class Population:
     #: (superseded, or awaiting an attended decision) is reported, not alarmed
     #: on -- but it must say so out loud rather than being dropped.
     quiet_is_a_fault: bool = True
+    #: True when an OVERDUE-and-unresolved record is a fault. False for a
+    #: population whose resolver is ATTENDED rather than scheduled: nobody
+    #: running the resolver today is a TODO, not an outage, and reporting it as
+    #: an outage buries the populations whose resolvers really are supposed to
+    #: run on their own. The count is REPORTED either way -- this changes the
+    #: alarm, never the number.
+    overdue_is_a_fault: bool = True
     dormant_reason: str | None = None
     notes: tuple[str, ...] = field(default_factory=tuple)
 
@@ -126,6 +133,7 @@ _POPULATIONS: tuple[Population, ...] = (
         base="legacy",
         max_quiet_days=90,
         quiet_is_a_fault=False,
+        overdue_is_a_fault=False,
         dormant_reason=("attended and bursty by design: it grows when a "
                         "campaign runs, not on a schedule. Silence here is "
                         "not evidence of a fault."),
@@ -208,6 +216,7 @@ def health(population_id: str, *, root: Path | None = None,
         "purpose": pop.purpose,
         "max_quiet_days": pop.max_quiet_days,
         "quiet_is_a_fault": pop.quiet_is_a_fault,
+        "overdue_is_a_fault": pop.overdue_is_a_fault,
         "notes": list(pop.notes),
     }
     if pop.dormant_reason:
@@ -244,20 +253,32 @@ def health(population_id: str, *, root: Path | None = None,
     row["exists"] = True
     row["quarantine_split_available"] = quarantined is not None
 
-    # A DECLARED-dormant population that is merely quiet is not a fault. It
-    # still reports its quiet clock -- it just does not drag the deploy red.
-    if (not pop.quiet_is_a_fault and row.get("status") == "DEGRADED"
-            and _only_problem_is_quiet(row)):
-        row["status"] = "DORMANT_BY_DESIGN"
-        row["downgraded_from"] = "DEGRADED"
+    # A DECLARED-dormant population is not a fault for the things it is
+    # declared dormant ABOUT. It still reports every count -- it just does not
+    # drag the deploy red for a resolver that was never scheduled to run.
+    if row.get("status") == "DEGRADED":
+        unexplained = [p for p in (row.get("problems") or [])
+                       if not _excused(p, pop)]
+        empty_only = (not row.get("problems")
+                      and str(row.get("reason", "")).startswith(
+                          "the ledger is empty"))
+        if not unexplained and (row.get("problems") or empty_only):
+            row["status"] = "DORMANT_BY_DESIGN"
+            row["downgraded_from"] = "DEGRADED"
+            row["downgrade_reason"] = (
+                "every problem on this row is one this population is DECLARED "
+                "dormant about; the counts are unchanged")
     return row
 
 
-def _only_problem_is_quiet(row: dict) -> bool:
-    problems = row.get("problems") or []
-    if not problems:
-        return bool(row.get("reason", "").startswith("the ledger is empty"))
-    return all("quiet" in p or "no new forecast" in p for p in problems)
+def _excused(problem: str, pop: Population) -> bool:
+    """Is this specific problem one the population is declared dormant about?"""
+    p = str(problem).lower()
+    if not pop.quiet_is_a_fault and ("quiet" in p or "no new forecast" in p):
+        return True
+    if not pop.overdue_is_a_fault and ("past due" in p or "overdue" in p):
+        return True
+    return False
 
 
 def registry_health(*, root: Path | None = None,
