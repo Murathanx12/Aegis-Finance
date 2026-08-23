@@ -55,6 +55,11 @@ from backend import config as _config
 logger = logging.getLogger(__name__)
 
 
+#: Distinguishes "caller passed no quarantine set" from "caller passed None
+#: meaning genuinely no quarantine".
+_SENTINEL = object()
+
+
 class UnknownPopulation(KeyError):
     """A population id that is not in the registry."""
 
@@ -201,8 +206,29 @@ def known_ids() -> list[str]:
     return sorted(BY_ID)
 
 
+def _quarantine_set():
+    """The quarantine hash set, computed at most once per call tree.
+
+    Measured 2026-08-23: recomputing this per population made `registry_health`
+    take **15.2 s** against `ledger_health`'s 0.23 s, because it hashes ~22k
+    campaign records and two populations each asked for it. `/api/health/full`
+    is polled by the prod monitor and sits next to a 30 s Railway healthcheck,
+    so a 15 s health row is not a cosmetic problem.
+
+    Returns (set_or_None, available_flag) so a caller can still tell "no
+    quarantine applied" from "quarantine unavailable".
+    """
+    try:
+        from backend.services.evidence_population import quarantined_hashes
+        return quarantined_hashes(), True
+    except Exception as e:                                      # noqa: BLE001
+        logger.warning("forecast populations: quarantine set unavailable "
+                       "(%s) -- overdue counts reported UNSPLIT", e)
+        return None, False
+
+
 def health(population_id: str, *, root: Path | None = None,
-           today: date | None = None) -> dict:
+           today: date | None = None, _quarantine=_SENTINEL) -> dict:
     """Health of ONE named population. Never "the ledger"."""
     pop = get(population_id)
     from backend.services.belief_state import ledger_health
@@ -234,13 +260,10 @@ def health(population_id: str, *, root: Path | None = None,
 
     quarantined = None
     if pop.population_id in ("live_forward", "campaign_forward"):
-        try:
-            from backend.services.evidence_population import quarantined_hashes
-            quarantined = quarantined_hashes()
-        except Exception as e:                                  # noqa: BLE001
-            logger.warning("population %s: quarantine set unavailable (%s) -- "
-                           "overdue counts reported UNSPLIT",
-                           pop.population_id, e)
+        if _quarantine is _SENTINEL:
+            quarantined, _ = _quarantine_set()
+        else:
+            quarantined = _quarantine
 
     try:
         h = ledger_health(path, max_quiet_days=pop.max_quiet_days,
@@ -282,14 +305,22 @@ def _excused(problem: str, pop: Population) -> bool:
 
 
 def registry_health(*, root: Path | None = None,
-                    today: date | None = None) -> dict:
+                    today: date | None = None,
+                    quarantine=_SENTINEL) -> dict:
     """Every population, each with its own row, and a status that says WHICH.
 
     The top-level status is deliberately NOT a pooled judgement. It names the
     populations that are unhealthy, so a reader can never again mistake one
     population's silence for the system's.
     """
-    rows = [health(p.population_id, root=root, today=today)
+    # Computed ONCE and threaded through: see `_quarantine_set`. A caller that
+    # already has the set (main.py builds it for the live_forward row) passes
+    # it in, so /api/health/full pays for it exactly once rather than three
+    # times.
+    if quarantine is _SENTINEL:
+        quarantine, _avail = _quarantine_set()
+    rows = [health(p.population_id, root=root, today=today,
+                   _quarantine=quarantine)
             for p in _POPULATIONS]
     bad = [r["population_id"] for r in rows
            if r.get("status") not in ("ok", "OK", "DORMANT_BY_DESIGN")]

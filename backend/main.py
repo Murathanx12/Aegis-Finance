@@ -760,7 +760,10 @@ async def health_full():
     # the arena's ledger had never appeared on any health surface.
     try:
         from backend.services.forecast_populations import registry_health
-        forecast_populations = registry_health()
+        # Reuse the quarantine set already computed above: hashing ~22k
+        # campaign records is the expensive part of this row and it must not
+        # be paid once per population.
+        forecast_populations = registry_health(quarantine=_quarantined)
     except Exception as e:                                     # noqa: BLE001
         forecast_populations = {"status": "DEGRADED", "error": str(e)}
 
