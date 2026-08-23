@@ -8,17 +8,14 @@ Monday verification events survive here in §4. Read this first, then
 
 ## 1. Where we are, in one paragraph
 
-An external review was adjudicated rather than imported
-(`ADJUDICATION_2026-08-24_EXTERNAL_REVIEW.md`). Four of its five claimed defects
-were real and are fixed; the fifth was real in mechanism, inert in fact, and a
-different defect underneath it was live. A sixth, which the review could not
-have seen, was found while fixing the first. Its central *architectural* claim —
-that the arena's ten books share one alpha source and differ only in portfolio
-treatment — was verified against the YAML and the composite weights, and is now
-the organising diagnosis of the roadmap. Demonstrated edge is still **0%**, and
-only matured decisions move that.
-
----
+An external review was adjudicated rather than imported, six defects were fixed,
+and then **four alpha mechanisms were attempted in one night and all four now
+carry receipts**: the analyst co-coverage graph is licensed AND buildable, two
+screens returned STOP, and one returned a genuinely strong number (+0.0315,
+t 3.19, surviving BH-FDR) that was **refused** because a precondition test
+showed the edge is borrow fees. Demonstrated edge is still **0%**. What changed
+is that the remaining directions are the ones that survived being attacked, and
+three expensive ones are closed on evidence rather than open on hope.
 
 ## 2. What changed this session
 
@@ -155,45 +152,53 @@ before the stamp took: restore it, let it migrate, then re-edit.
 
 ## 5. Do these next, in order
 
-Full reasoning in `ROADMAP_2026-08-24_CONNECT_THE_BRAIN.md`. **All three items
-that were here have run.** Their receipts, and what replaced them:
+**Every roadmap item now carries a receipt.** Four alpha mechanisms were
+attempted in one night; this is what they returned:
 
-| was queued | verdict | where |
+| trial | verdict | why it matters |
 |---|---|---|
-| `ANALYST_COCOVERAGE_GRAPH_v1` | **CONTINUE** — but all three refinements measured zero, and the GNN is un-licensed | roadmap §4.6 |
-| `EVENT_RESPONSE_v1` | **STOP** — PEAD real at 7bps; nothing ranks which events drift | §4.8 |
-| `RELATIVE_VALUE_NN_v1` | **STOP** — MLP worst of three; the NN question is closed | §4.10 |
+| `ANALYST-COCOVERAGE-GRAPH-1` | **CONTINUE + BUILDABLE** | the only positive. Survives own-momentum, industry momentum, firm granularity and actions-only — every reduction a live feed forces |
+| `EVENT-RESPONSE-1` | STOP | PEAD real at 7bps; nothing ranked which events drift. Named its own successor |
+| `RELATIVE-VALUE-NN-1` | STOP | MLP worst of three; the neural question is closed with a receipt |
+| `EVENT-RESPONSE-2` | **NOT LICENSED** | hypothesis correct (+0.0315, t 3.19) and the edge is **borrow fees** |
 
-### 1. `EVENT-RESPONSE-2` — the one experiment the night pointed at
+### 1. `GRAPH_PROPAGATION_v1` — the one thing licensed AND buildable
 
-`EVENT-RESPONSE-1`'s own diagnosis names why it failed: `options_implied_move`
-is `None` through the whole g4 corpus, so "surprise" was measured against
-analyst consensus when the tradable quantity is **`surprise − what was already
-priced`**.
+Plain equal-weighted co-coverage peer return. Nothing fancier earned its place:
+reliability weighting, edge direction and 52-week-high conditioning each
+measured **zero**.
 
-The data for it is being pulled now (`scripts/wrds_pull_stdopd_events.py`,
-manifest at `backend/data/optimus/wrds/stdopd_events/`). Check the manifest
-first: **a year marked `EMPTY` is a finding, not an empty year** — those secids
-demonstrably had earnings.
+It is a **separate PRODUCT_EXPERIMENT book**, never a weight in
+`arena_composite`. Seeding stays attended (§3, `seed-a-lane`).
 
-Then: join ATM implied vol at 30 days to each event's day before, form the
-implied move, and re-run the same nine-arm design with
-`surprise − implied_move` as the central feature. **Declare the spec before the
-first number**, as the previous three did.
+**Check first, because it is the only untested link in the chain:** yfinance's
+upgrade/downgrade history depth. Granularity is settled — firm-level and
+actions-only both clear the bar — but whether *that vendor* supplies enough
+history to build the trailing-12-month graph is a data-availability question
+nobody has asked.
 
-### 2. `GRAPH_PROPAGATION_v1` — licensed, not built
+### 2. `EVENT-RESPONSE-3` — condition on borrow rather than ignore it
 
-The co-coverage screen licensed a selector using the **plain equal-weighted**
-peer return. Nothing fancier earned its place. It is a book, not a composite
-weight.
+v2 established that the implied move genuinely adds information and that the
+resulting edge is not separable from borrow. That is not "the feature is
+useless"; it is "this version is untradeable". A version that models the borrow
+fee as a COST, or trades only where the effect survives its exclusion, is a
+different experiment and **owes its own declaration**.
+
+Do not reuse v2's spec_hash for it.
 
 ### 3. P0.2 the information bus
 
-The only original roadmap item never started. It now has what it was waiting
+The only original roadmap item never started, and it now has what it was waiting
 for: `signal_reachability` has named the orphans.
 
-**Every one of these must call `feature_leakage_guard.assert_no_target_leakage`
-before fitting anything.** See §6.
+### Standing rules for any of the above
+
+* **`feature_leakage_guard.assert_no_target_leakage` before fitting anything.**
+* **Declare confound tests as PRECONDITIONS, not follow-ups.** Twice in one
+  session that ordering was the difference between a refusal and a retraction.
+* **Every screen so far has been under-powered except v2.** State nulls as "no
+  effect larger than X", never "no effect".
 
 ---
 
@@ -312,21 +317,31 @@ leaves the machine without its keys.
 
 ## 7. The standard
 
-Six of the seven roadmap items now carry receipts; only the information bus is
-untouched. **Demonstrated edge is still 0%**, and the honest reading of one
-night of building alpha is:
+**Every roadmap item now carries a receipt.** Four alpha mechanisms attempted in
+one night: one licensed and buildable, two STOP, one strong number correctly
+refused.
 
-> three attempts at new alpha SOURCES returned one plain published effect and
-> two nulls.
+**Demonstrated edge is still 0%**, and that is the honest reading. But the night
+closed three expensive directions on evidence rather than leaving them open on
+hope — including the GNN, closed by measuring that the structure it exists to
+exploit is not there — and it refused a BUILD that would otherwise have shipped
+at t 3.19.
 
-That is the roadmap's premise being **tested** rather than assumed, which is
-what the previous five months did not do. It also says the cheap-and-on-disk
-ideas are largely spent: the next ones need **data that is not yet extracted**
-(options-conditioned events, actor magnitude, management language), not another
-model on the same panel.
+### The two things worth carrying forward
 
-The machinery keeps getting better and the edge keeps not moving, because only
-matured decisions move it. What changed tonight is that three expensive
-directions were closed with evidence instead of remaining open on hope — and one
-of them, the GNN, was closed by measuring that the structure it exists to
-exploit is not there.
+**Order of operations, twice.** `feature_leakage_guard` exists because an IC of
+0.99 was caught by luck rather than method. `EVENT-RESPONSE-2` was refused
+rather than retracted because its confound test was a PRECONDITION. Both times
+the difference was *when* the check ran, not whether it existed.
+
+**A description is not a measurement.** Six times in one session a property of
+data or code was asserted from its name or its docs and was wrong: `stdopd`
+"standardized options" (ATM-only), a daily return "excluding" the gap (CRSP is
+close-to-close), `cs_rank` (the rank of the outcome), a module global restored
+after every fit, the ET/local clock, and the standing-vs-actions gap (87.1%
+already actions). Five were caught by reading or measuring. One was caught by
+luck.
+
+The machinery keeps improving and the edge keeps not moving, because only
+matured decisions move it. What changed is that the next thing to build is
+finally something that survived being attacked.
