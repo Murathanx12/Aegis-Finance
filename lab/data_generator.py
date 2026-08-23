@@ -1,7 +1,7 @@
 """
 Aegis Finance - Lab Data Generator v4
-Calls ACTUAL backend services with correct signatures.
-Gracefully handles services that need DataFrame inputs by fetching data first.
+Calls REAL backend services + runs stress tests + finds inconsistencies.
+Acts as a quant analyst desk review — catches what manual review misses.
 """
 
 import argparse
@@ -19,1288 +19,712 @@ REPO_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 
-def _save(output_dir, filename, data):
-    os.makedirs(output_dir, exist_ok=True)
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def safe_float(v):
+    if v is None:
+        return None
+    try:
+        f = float(v)
+        return None if (np.isnan(f) or np.isinf(f)) else round(f, 4)
+    except (TypeError, ValueError):
+        return None
+
+
+def safe_json(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, (np.integer,)):
+        return int(obj)
+    if isinstance(obj, (np.floating,)):
+        return None if np.isnan(obj) else round(float(obj), 4)
+    if isinstance(obj, pd.Timestamp):
+        return str(obj)
+    if isinstance(obj, dict):
+        return {k: safe_json(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [safe_json(v) for v in obj]
+    return obj
+
+
+def save_json(data, output_dir, filename):
     with open(os.path.join(output_dir, filename), "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, default=str)
+        json.dump(safe_json(data), f, indent=2, default=str)
 
 
-def _random_tickers(n_mega=4, n_mid=4, seed=None):
-    """Pick a mix of mega-cap + mid/small-cap tickers each run."""
-    import random
-    rng = random.Random(seed)
-
-    mega = ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "TSLA", "BRK-B",
-            "JPM", "V", "UNH", "JNJ", "XOM", "MA", "PG", "HD", "COST", "ABBV"]
-    mid_small = [
-        "CRWD", "DDOG", "NET", "SNOW", "PLTR", "ABNB", "DASH", "COIN",
-        "RBLX", "U", "SOFI", "HOOD", "RIVN", "LCID", "MARA", "RIOT",
-        "ENPH", "SEDG", "FSLR", "RUN",  # Energy
-        "DKNG", "PENN", "MGM", "LVS",  # Gaming
-        "ROKU", "TTD", "ZS", "OKTA",  # Tech mid
-        "SMCI", "ARM", "MRVL", "ON",  # Semis
-        "SQ", "AFRM", "UPST", "NU",  # Fintech
-        "CELH", "MNST", "ELF", "BIRK",  # Consumer
-        "HIMS", "OSCR", "DOCS", "TDOC",  # Health
-        "UAL", "DAL", "LUV", "CCL",  # Travel
-        "CLF", "FCX", "NEM", "GOLD",  # Materials/Mining
-    ]
-
-    picked_mega = rng.sample(mega, min(n_mega, len(mega)))
-    picked_mid = rng.sample(mid_small, min(n_mid, len(mid_small)))
-    return picked_mega + picked_mid
+FULL_UNIVERSE = [
+    "AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA",
+    "JPM", "BAC", "GS", "V", "MA",
+    "XOM", "CVX", "COP",
+    "JNJ", "UNH", "PFE", "LLY",
+    "WMT", "PG", "KO", "PEP",
+    "BA", "CAT", "HON", "UPS",
+    "NEE", "DUK",
+    "AMT", "PLD",
+    "CRM", "ADBE",
+]
 
 
-def _get_sp500_data(period="5y"):
-    """Shared helper: fetch SP500 history (cached within a run)."""
-    import yfinance as yf
-    sp = yf.Ticker("^GSPC")
-    return sp.history(period=period)
-
-
-# Cache the market signal within a single run (used by both stock_analysis
-# and signal_quality collectors to avoid redundant data fetches).
-_cached_market_signal = None
-
-
-def _compute_market_signal_for_lab() -> dict:
-    """Compute market signal with REAL context — mirrors routers/stock.py logic.
-
-    Wires: regime, risk score, crash model, momentum, drawdown, VIX,
-    yield curve, external consensus, and HMM data for MC conditioning.
-    """
-    global _cached_market_signal
-    if _cached_market_signal is not None:
-        return _cached_market_signal
-
-    import logging
-    from backend.services.signal_engine import get_market_signal, compute_drawdown_pct
-    from backend.services.data_fetcher import DataFetcher
-    from backend.services.risk_scorer import build_risk_score
-    from backend.services.regime_detector import detect_regimes, fit_hmm_for_mc
-
-    logger = logging.getLogger(__name__)
-
-    fetcher = DataFetcher()
-    data, _ = fetcher.fetch_market_data()
-    data["Risk_Score"] = build_risk_score(data)
-    _, regime = detect_regimes(data)
-
-    vix = float(data["VIX"].iloc[-1]) if "VIX" in data.columns else 20.0
-    sp500_1m = float(data["SP500"].pct_change(21).iloc[-1]) * 100
-    sp500_3m = float(data["SP500"].pct_change(63).iloc[-1]) * 100
-
-    # YTD return
-    sp500_ytd = 0.0
-    try:
-        sp500_series = data["SP500"].dropna()
-        now = sp500_series.index[-1]
-        year_start = pd.Timestamp(year=now.year, month=1, day=1)
-        prev_year_prices = sp500_series[sp500_series.index < year_start]
-        if len(prev_year_prices) > 0:
-            sp500_ytd = float((sp500_series.iloc[-1] / prev_year_prices.iloc[-1] - 1) * 100)
-    except (KeyError, IndexError, ValueError, TypeError):
-        pass
-
-    yield_curve = None
-    if "T10Y" in data.columns and "T3M" in data.columns:
-        yield_curve = float(data["T10Y"].iloc[-1] - data["T3M"].iloc[-1])
-
-    # Drawdown from 52-week high
-    sp500_drawdown = None
-    if "SP500" in data.columns:
-        sp500_drawdown = compute_drawdown_pct(data["SP500"])
-
-    # Crash model predictions + drift severity (share feature matrix)
-    crash_3m = None
-    crash_12m = None
-    _drift_severity = None
-    try:
-        from backend.services.crash_model import CrashPredictor
-        from backend.config import MODEL_DIR
-        model_path = MODEL_DIR / "crash_model.pkl"
-        if model_path.exists():
-            from engine.training.features import build_feature_matrix
-            predictor = CrashPredictor()
-            predictor.load_model(str(model_path))
-            fred_data = fetcher.fetch_fred_data()
-            _feature_matrix = build_feature_matrix(data, fred_data=fred_data)
-            available = [f for f in predictor.feature_names if f in _feature_matrix.columns]
-            latest = _feature_matrix[available].iloc[[-1]]
-            for h in predictor.lgb_models:
-                prob = float(predictor.predict_proba(latest, h)[0]) * 100
-                if h == "3m":
-                    crash_3m = prob
-                elif h == "12m":
-                    crash_12m = prob
-            # Drift detection (reuses feature matrix)
-            try:
-                from backend.services.drift_detector import DriftDetector
-                _drift_report = DriftDetector.from_multi_scale(_feature_matrix)
-                _drift_severity = _drift_report.get("severity")
-            except Exception as e:
-                logger.debug("Drift detection unavailable in lab: %s", e)
-    except (ImportError, FileNotFoundError, ValueError, KeyError) as e:
-        logger.debug("Crash model unavailable in lab signal: %s", e)
-
-    # External consensus
-    external = None
-    try:
-        from backend.services.external_validator import validate_external
-        fred_data_ext = fetcher.fetch_fred_data()
-        ext = validate_external(fred_data_ext, crash_12m / 100 if crash_12m else None, regime)
-        external = ext.consensus_direction
-    except (ImportError, KeyError, TypeError, ValueError) as e:
-        logger.debug("External validation unavailable in lab: %s", e)
-
-    # Systemic risk signal (turbulence + absorption ratio)
-    _systemic_score = None
-    try:
-        from backend.services.systemic_risk import get_systemic_risk_signal
-        _systemic_score = get_systemic_risk_signal(data)
-    except Exception as e:
-        logger.debug("Systemic risk signal unavailable in lab: %s", e)
-
-    # VIX term structure signal
-    _vts_signal = None
-    try:
-        from backend.services.regime_detector import get_vix_term_structure_state
-        vts = get_vix_term_structure_state(data)
-        if vts.get("available"):
-            _vts_signal = vts.get("signal")
-    except Exception as e:
-        logger.debug("VIX term structure unavailable in lab: %s", e)
-
-    sig = get_market_signal(
-        crash_prob_3m=crash_3m,
-        crash_prob_12m=crash_12m,
-        regime=regime,
-        risk_score=float(data["Risk_Score"].iloc[-1]),
-        sp500_1m_return=sp500_1m,
-        sp500_3m_return=sp500_3m,
-        sp500_ytd_return=sp500_ytd,
-        vix=vix,
-        yield_curve=yield_curve,
-        external_consensus=external,
-        drawdown_pct=sp500_drawdown,
-        drift_severity=_drift_severity,
-        systemic_risk_score=_systemic_score,
-        vix_term_structure_signal=_vts_signal,
-    )
-    # Attach raw values for downstream use by stock analysis / MC
-    sig["_crash_3m_pct"] = crash_3m
-
-    # Fit HMM for per-stock MC conditioning
-    hmm_data = fit_hmm_for_mc(data)
-    sig["_hmm_state_means"] = hmm_data["state_means"]
-    sig["_hmm_regime_probs"] = hmm_data["regime_probs"]
-    sig["_hmm_state_vols"] = hmm_data["state_vols"]
-
-    _cached_market_signal = sig
-    return sig
+def pick_random_tickers(n=8, seed=None):
+    rng = np.random.default_rng(seed)
+    return list(rng.choice(FULL_UNIVERSE, size=min(n, len(FULL_UNIVERSE)), replace=False))
 
 
 # ---------------------------------------------------------------------------
-# 1. Market snapshot
+# SECTION 1: Real backend service calls
 # ---------------------------------------------------------------------------
-def collect_market_snapshot(output_dir):
-    import yfinance as yf
 
-    indices = {
-        "sp500": "^GSPC", "nasdaq": "^IXIC", "dow": "^DJI",
-        "vix": "^VIX", "treasury_10y": "^TNX", "gold": "GC=F",
-        "oil": "CL=F", "usd_index": "DX-Y.NYB",
-    }
-
-    snapshot = {}
-    for name, symbol in indices.items():
-        try:
-            ticker = yf.Ticker(symbol)
-            hist = ticker.history(period="5d")
-            if len(hist) > 0:
-                current = float(hist["Close"].iloc[-1])
-                prev = float(hist["Close"].iloc[-2]) if len(hist) > 1 else current
-                snapshot[name] = {
-                    "symbol": symbol,
-                    "price": round(current, 2),
-                    "change_1d_pct": round(((current - prev) / prev) * 100, 3),
-                }
-        except Exception as e:
-            snapshot[name] = {"error": str(e)}
-
-    _save(output_dir, "market_snapshot.json", snapshot)
-    ok = len([v for v in snapshot.values() if "error" not in v])
-    print(f"    [OK] {ok} indices fetched")
-    return snapshot
-
-
-# ---------------------------------------------------------------------------
-# 2. Stock analysis — calls REAL analyze_stock(ticker) + signal wiring
-# ---------------------------------------------------------------------------
-def collect_stock_analysis(output_dir, cycle=1):
-    TICKERS = _random_tickers(n_mega=4, n_mid=4, seed=cycle)
-    results = {}
-    errors = []
-
+def collect_stock_analysis(tickers, results, output_dir):
+    """Call real stock_analyzer.analyze_stock() for each ticker."""
+    print("  [1/10] Stock analysis (real backend)...")
+    stock_data = {}
     try:
         from backend.services.stock_analyzer import analyze_stock
-        from backend.services.signal_engine import get_stock_signal
+        for ticker in tickers:
+            try:
+                r = analyze_stock(ticker, forecast_days=1260)
+                if r:
+                    stock_data[ticker] = {
+                        "ticker": ticker,
+                        "sector": r.get("sector"),
+                        "current_price": safe_float(r.get("current_price")),
+                        "market_cap": safe_float(r.get("market_cap")),
+                        "cap_tier": r.get("cap_tier"),
+                        "beta": safe_float(r.get("beta")),
+                        "pe_ratio": safe_float(r.get("pe_ratio")),
+                        "analyst_target": safe_float(r.get("analyst_target")),
+                        "hist_drift": safe_float(r.get("hist_drift")),
+                        "capped_drift": safe_float(r.get("capped_drift")),
+                        "volatility": safe_float(r.get("volatility")),
+                        "expected_return_pct": safe_float(r.get("expected_return")),
+                        "median_return_pct": safe_float(r.get("median_return")),
+                        "p05_price": safe_float(r.get("p05_price")),
+                        "p95_price": safe_float(r.get("p95_price")),
+                        "sharpe": safe_float(r.get("sharpe")),
+                        "prob_loss_5y": safe_float(r.get("prob_loss_5y")),
+                        "max_drawdown": safe_float(r.get("avg_max_drawdown")),
+                    }
+                    print(f"    [OK] {ticker}: ${r.get('current_price',0):.0f}, "
+                          f"exp_ret={r.get('expected_return','?')}, beta={r.get('beta')}")
+            except Exception as e:
+                results["errors"].append(f"Stock {ticker}: {e}")
+                print(f"    [FAIL] {ticker}: {e}")
+        save_json(stock_data, output_dir, "stock_analysis.json")
+        results["data_sources"].append("stock_analysis")
     except ImportError as e:
-        print(f"    [FAIL] Cannot import analyze_stock: {e}")
-        return {}, [str(e)]
-
-    # Compute market signal once (shared across all stock signals)
-    market_sig = _compute_market_signal_for_lab()
-
-    # Extract crash prob for MC modulation
-    crash_3m_pct = market_sig.get("_crash_3m_pct")
-    crash_prob_for_mc = crash_3m_pct / 100.0 if crash_3m_pct is not None else None
-
-    for ticker in TICKERS:
-        try:
-            data = analyze_stock(
-                ticker,
-                ml_crash_prob=crash_prob_for_mc,
-                hmm_state_means=market_sig.get("_hmm_state_means"),
-                hmm_regime_probs=market_sig.get("_hmm_regime_probs"),
-                hmm_state_vols=market_sig.get("_hmm_state_vols"),
-            )
-            if data is None:
-                errors.append(f"{ticker}: returned None")
-                print(f"    [FAIL] {ticker}: returned None")
-                continue
-
-            # Compute per-stock signal (mirrors routers/stock.py logic)
-            fwd_pe = None
-            key_stats = data.get("key_stats")
-            if key_stats and "pe_forward" in key_stats:
-                fwd_pe = key_stats["pe_forward"]
-
-            # Per-stock risk factors for crash prob adjustment and signal
-            stock_vol = data.get("volatility", 20.0) / 100.0
-            stock_dd = None
-            stock_mom_1m = None
-            stock_mom_3m = None
-            price_hist = data.get("price_history")
-            if price_hist and len(price_hist) > 10:
-                prices_arr = [p["price"] for p in price_hist]
-                peak = max(prices_arr)
-                current = prices_arr[-1]
-                stock_dd = (current / peak - 1) * 100 if peak > 0 else 0.0
-                if len(prices_arr) >= 22 and prices_arr[-22] > 0:
-                    stock_mom_1m = (current / prices_arr[-22] - 1) * 100
-                if len(prices_arr) >= 64 and prices_arr[-64] > 0:
-                    stock_mom_3m = (current / prices_arr[-64] - 1) * 100
-
-            # Per-stock crash probability
-            from backend.services.signal_engine import adjust_crash_prob_for_stock
-            stock_crash_prob = None
-            if crash_prob_for_mc is not None:
-                stock_crash_prob = adjust_crash_prob_for_stock(
-                    crash_prob_for_mc, data.get("beta", 1.0), stock_vol,
-                    stock_dd if stock_dd is not None else 0.0,
-                )
-
-            stock_sig = get_stock_signal(
-                market_signal=market_sig,
-                beta=data.get("beta", 1.0),
-                analyst_target=data.get("analyst_target"),
-                current_price=data.get("current_price", 0),
-                pe_ratio=data.get("pe_ratio"),
-                forward_pe=fwd_pe,
-                stock_vol=stock_vol,
-                drawdown_from_peak=stock_dd,
-                stock_momentum_1m=stock_mom_1m,
-                stock_momentum_3m=stock_mom_3m,
-            )
-
-            results[ticker] = {
-                "ticker": ticker,
-                "current_price": data.get("current_price"),
-                "mc_median_5y": data.get("mc_median_5y_return"),
-                "mc_p10_5y": data.get("mc_p10_5y_return"),
-                "mc_p90_5y": data.get("mc_p90_5y_return"),
-                "garch_vol": data.get("garch_annual_vol"),
-                "garch_nu": data.get("garch_nu"),
-                "crash_prob_3m": round(stock_crash_prob * 100, 2) if stock_crash_prob else crash_3m_pct,
-                "signal_action": stock_sig["action"],
-                "signal_score": stock_sig["composite_score"],
-                "beta": data.get("beta"),
-                "sector": data.get("sector"),
-                "all_keys": list(data.keys()),
-            }
-            print(f"    [OK] {ticker}: ${data.get('current_price', '?')}, "
-                  f"median_5y={data.get('mc_median_5y_return', '?')}%, "
-                  f"signal={stock_sig['action']}")
-
-        except Exception as e:
-            errors.append(f"{ticker}: {type(e).__name__}: {e}")
-            print(f"    [FAIL] {ticker}: {e}")
-
-    _save(output_dir, "stock_analysis.json", results)
-    return results, errors
+        results["errors"].append(f"stock_analyzer import: {e}")
+        print(f"    [FAIL] import: {e}")
+    return stock_data
 
 
-# ---------------------------------------------------------------------------
-# 3. SP500 Monte Carlo — calls run_monte_carlo with required args
-# ---------------------------------------------------------------------------
-def collect_sp500_mc(output_dir):
+def collect_sp500_mc(results, output_dir, cycle_seed):
+    """Call real monte_carlo.run_monte_carlo() for S&P 500."""
+    print("  [2/10] S&P 500 Monte Carlo (real backend)...")
+    sp500_data = {}
     try:
         import yfinance as yf
         from backend.services.monte_carlo import run_monte_carlo
 
-        # Gather required inputs
-        sp_hist = _get_sp500_data("5y")
-        current_price = float(sp_hist["Close"].iloc[-1])
+        sp_hist = yf.Ticker("^GSPC").history(period="2y")
+        sp_price = float(sp_hist["Close"].iloc[-1])
+        vix_price = float(yf.Ticker("^VIX").history(period="5d")["Close"].iloc[-1])
+        t10y = float(yf.Ticker("^TNX").history(period="5d")["Close"].iloc[-1])
+        t3m = float(yf.Ticker("^IRX").history(period="5d")["Close"].iloc[-1])
 
-        # Get VIX
-        vix_val = 20.0
+        regime, risk_score, crash_prob = "Neutral", 0.0, None
+
         try:
-            vix = yf.Ticker("^VIX").history(period="5d")
-            if len(vix) > 0:
-                vix_val = float(vix["Close"].iloc[-1])
-        except (KeyError, IndexError, ValueError, TypeError):
-            pass
+            from backend.services.regime_detector import detect_regimes
+            sp_df = pd.DataFrame({"SP500": sp_hist["Close"].values}, index=sp_hist.index)
+            sp_df.index = sp_df.index.normalize().tz_localize(None)
+            vix_hist = yf.Ticker("^VIX").history(period="2y")
+            vix_s = vix_hist["Close"].copy()
+            vix_s.index = vix_s.index.normalize().tz_localize(None)
+            sp_df["VIX"] = vix_s.reindex(sp_df.index, method="nearest")
+            _, regime = detect_regimes(sp_df, window=252)
+        except Exception as e:
+            print(f"    [WARN] Regime: {e}")
 
-        # Get yield curve (10Y-3M spread)
-        yield_curve = 0.0
         try:
-            tnx = yf.Ticker("^TNX").history(period="5d")
-            irx = yf.Ticker("^IRX").history(period="5d")
-            if len(tnx) > 0 and len(irx) > 0:
-                yield_curve = float(tnx["Close"].iloc[-1]) - float(irx["Close"].iloc[-1])
-        except (KeyError, IndexError, ValueError, TypeError):
-            pass
+            from backend.services.crash_model import CrashPredictor
+            from engine.training.features import build_feature_matrix
+            from backend.services.data_fetcher import DataFetcher
+            from backend.config import MODEL_DIR
+            predictor = CrashPredictor()
+            predictor.load_model(str(MODEL_DIR / "crash_model.pkl"))
+            fetcher = DataFetcher()
+            data, _ = fetcher.fetch_market_data()
+            fred = fetcher.fetch_fred_data()
+            features = build_feature_matrix(data, fred_data=fred)
+            probs = predictor.predict_all_horizons(features)
+            crash_prob = float(probs.get("3m", [0.15])[-1]) if "3m" in probs else None
+        except Exception as e:
+            print(f"    [WARN] Crash model: {e}")
 
-        result = run_monte_carlo(
-            current_price=current_price,
-            current_regime="Neutral",
-            risk_score=0.0,
-            crash_freq=0.07,
-            current_vix=vix_val,
-            yield_curve=yield_curve,
-            val_penalty=0.0,
+        mc = run_monte_carlo(
+            current_price=sp_price, current_regime=regime, risk_score=risk_score,
+            crash_freq=0.08, current_vix=vix_price, yield_curve=t10y - t3m,
+            val_penalty=0.02, ml_crash_prob=crash_prob, seed=cycle_seed,
         )
 
-        if result is None:
-            print("    [FAIL] run_monte_carlo returned None")
-            return {"status": "failed"}
-
-        summary = {
-            "status": "ok",
-            "result_keys": list(result.keys()),
-            "current_price": current_price,
+        sp500_data = {
+            "start_price": round(sp_price, 2), "regime": regime,
+            "risk_score": safe_float(risk_score), "crash_prob_3m": safe_float(crash_prob),
+            "vix": safe_float(vix_price), "yield_curve": safe_float(t10y - t3m),
+            "mc_results": {k: safe_float(v) if isinstance(v, (int, float, np.floating)) else v
+                           for k, v in mc.items() if k not in ("paths", "daily_paths")},
         }
-        # Copy all numeric results
-        for k, v in result.items():
-            if isinstance(v, (int, float)):
-                summary[k] = v
-
-        _save(output_dir, "sp500_monte_carlo.json", summary)
-        print(f"    [OK] SP500 MC: {len(result)} keys returned")
-        return summary
-
+        print(f"    [OK] regime={regime}, vix={vix_price:.1f}, crash_3m={crash_prob}")
+        save_json(sp500_data, output_dir, "sp500_monte_carlo.json")
+        results["data_sources"].append("sp500_monte_carlo")
     except Exception as e:
-        print(f"    [FAIL] SP500 MC: {e}")
-        traceback.print_exc()
-        return {"status": "error", "error": str(e)}
+        results["errors"].append(f"SP500 MC: {e}")
+        print(f"    [FAIL] {e}")
+    return sp500_data
 
 
-# ---------------------------------------------------------------------------
-# 4. Crash model — CrashPredictor.predict_all_horizons(features_df)
-# ---------------------------------------------------------------------------
-def collect_crash_calibration(output_dir):
+def collect_signals(stock_data, sp500_data, results, output_dir):
+    """Call real signal engine for market + stock signals."""
+    print("  [3/10] Signal engine (real backend)...")
+    signal_results = {}
+    try:
+        from backend.services.signal_engine import get_market_signal, get_stock_signal
+        import yfinance as yf
+
+        sp = yf.Ticker("^GSPC").history(period="6mo")
+        sp_1m = float((sp["Close"].iloc[-1] / sp["Close"].iloc[-22] - 1) * 100) if len(sp) > 22 else 0
+        sp_3m = float((sp["Close"].iloc[-1] / sp["Close"].iloc[-63] - 1) * 100) if len(sp) > 63 else 0
+
+        market_sig = get_market_signal(
+            crash_prob_3m=sp500_data.get("crash_prob_3m"),
+            vix=sp500_data.get("vix", 20),
+            sp500_1m_return=sp_1m, sp500_3m_return=sp_3m,
+            regime=sp500_data.get("regime", "Neutral"),
+        )
+        signal_results["market_signal"] = {
+            "action": market_sig.get("action"),
+            "confidence": safe_float(market_sig.get("confidence")),
+            "composite_score": safe_float(market_sig.get("composite_score")),
+            "components": market_sig.get("components"),
+        }
+        print(f"    [OK] Market: {market_sig.get('action')} ({market_sig.get('confidence',0):.0f}%)")
+
+        stock_signals = {}
+        for ticker, sd in stock_data.items():
+            try:
+                ss = get_stock_signal(
+                    market_signal=market_sig, beta=sd.get("beta", 1.0) or 1.0,
+                    analyst_target=sd.get("analyst_target"),
+                    current_price=sd.get("current_price", 0) or 0,
+                    pe_ratio=sd.get("pe_ratio"),
+                )
+                stock_signals[ticker] = {
+                    "action": ss.get("action"),
+                    "composite_score": safe_float(ss.get("composite_score")),
+                    "confidence": safe_float(ss.get("confidence")),
+                }
+            except Exception as e:
+                results["errors"].append(f"Stock signal {ticker}: {e}")
+        signal_results["stock_signals"] = stock_signals
+        actions = list(set(s["action"] for s in stock_signals.values()))
+        print(f"    [OK] Stocks: {len(stock_signals)} tickers, actions={actions}")
+
+        save_json(signal_results, output_dir, "signal_results.json")
+        results["data_sources"].append("signal_results")
+    except Exception as e:
+        results["errors"].append(f"Signal engine: {e}")
+        print(f"    [FAIL] {e}")
+    return signal_results
+
+
+def collect_portfolios(results, output_dir, cycle_seed):
+    """Test portfolio engine with different profiles."""
+    print("  [4/10] Portfolio engine (real backend)...")
+    portfolio_results = []
+    try:
+        from backend.services.portfolio_engine import PortfolioEngine
+        for profile in ["conservative", "moderate", "aggressive"]:
+            try:
+                built = PortfolioEngine.build_portfolio(
+                    risk_tolerance=profile, investment_amount=100000,
+                    method="template", goal="growth",
+                )
+                portfolio_results.append({
+                    "type": "build", "profile": profile,
+                    "n_holdings": len(built.get("holdings", [])),
+                    "holdings_preview": [
+                        {"ticker": h.get("ticker"), "weight": safe_float(h.get("weight"))}
+                        for h in built.get("holdings", [])[:5]
+                    ],
+                })
+                print(f"    [OK] Build {profile}: {len(built.get('holdings',[]))} holdings")
+            except Exception as e:
+                results["errors"].append(f"Portfolio build {profile}: {e}")
+                print(f"    [FAIL] Build {profile}: {e}")
+
+        save_json(portfolio_results, output_dir, "portfolio_results.json")
+        results["data_sources"].append("portfolio_results")
+    except ImportError as e:
+        print(f"    [FAIL] import: {e}")
+    return portfolio_results
+
+
+def collect_crash_model(results, output_dir):
+    """Run real crash model predictions."""
+    print("  [5/10] Crash model (real backend)...")
+    crash_results = {}
     try:
         from backend.services.crash_model import CrashPredictor
         from engine.training.features import build_feature_matrix
+        from backend.services.data_fetcher import DataFetcher
+        from backend.config import MODEL_DIR
 
         predictor = CrashPredictor()
+        predictor.load_model(str(MODEL_DIR / "crash_model.pkl"))
+        fetcher = DataFetcher()
+        data, _ = fetcher.fetch_market_data()
+        fred = fetcher.fetch_fred_data()
+        features = build_feature_matrix(data, fred_data=fred)
 
-        # Build current features
-        try:
-            features = build_feature_matrix()
-            if features is not None and len(features) > 0:
-                latest = features.iloc[[-1]]
-                preds = predictor.predict_all_horizons(latest)
-            else:
-                print("    [SKIP] Could not build features for crash model")
-                return {"status": "no_features"}
-        except Exception as feat_err:
-            # Fallback: try to get predictions via the router's approach
-            print(f"    [WARN] Feature build failed ({feat_err}), trying simpler approach")
-            return {"status": "feature_build_failed", "error": str(feat_err)}
+        if features is not None and len(features) > 0:
+            probs = predictor.predict_all_horizons(features)
+            for h, p in probs.items():
+                latest = float(p[-1]) if len(p) > 0 else None
+                crash_results[h] = {"latest_prob": safe_float(latest)}
 
-        if preds is None:
-            print("    [FAIL] predict_all_horizons returned None")
-            return {"status": "predict_failed"}
-
-        result = {
-            "prob_3m": preds.get("crash_prob_3m"),
-            "prob_6m": preds.get("crash_prob_6m"),
-            "prob_12m": preds.get("crash_prob_12m"),
-            "monotonic": (
-                (preds.get("crash_prob_3m") or 0) <=
-                (preds.get("crash_prob_6m") or 0) <=
-                (preds.get("crash_prob_12m") or 1)
-            ),
-            "all_keys": list(preds.keys()),
-        }
-
-        _save(output_dir, "crash_calibration.json", result)
-        p3 = preds.get("crash_prob_3m")
-        p6 = preds.get("crash_prob_6m")
-        p12 = preds.get("crash_prob_12m")
-        if all(x is not None for x in [p3, p6, p12]):
-            print(f"    [OK] Crash probs: 3m={p3:.1%}, 6m={p6:.1%}, 12m={p12:.1%}")
-        else:
-            print(f"    [OK] Crash preds returned (some horizons may be missing)")
-        return result
-
-    except Exception as e:
-        print(f"    [FAIL] Crash calibration: {e}")
-        traceback.print_exc()
-        return {"status": "error", "error": str(e)}
-
-
-# ---------------------------------------------------------------------------
-# 5. Signal engine — full market context, then per-stock signals
-# ---------------------------------------------------------------------------
-def collect_signal_quality(output_dir, cycle=1):
-    try:
-        from backend.services.signal_engine import get_stock_signal
-        import yfinance as yf
-
-        # Market-level signal with REAL market context (not defaults)
-        market_signal = _compute_market_signal_for_lab()
-
-        # Per-stock signals need market_signal + stock-specific params
-        TICKERS = _random_tickers(n_mega=6, n_mid=6, seed=cycle if 'cycle' in dir() else 1)
-        stock_signals = {}
-        actions = []
-        scores = []
-
-        for ticker_str in TICKERS:
-            try:
-                t = yf.Ticker(ticker_str)
-                info = t.info or {}
-                hist = t.history(period="1y")
-
-                current_price = float(hist["Close"].iloc[-1]) if len(hist) > 0 else 0
-
-                # Compute stock-level technical signals from price history
-                _stock_dd = None
-                _stock_mom_1m = None
-                _stock_mom_3m = None
-                if len(hist) > 10:
-                    closes = hist["Close"].values
-                    _peak = float(closes.max())
-                    _curr = float(closes[-1])
-                    _stock_dd = (_curr / _peak - 1) * 100 if _peak > 0 else 0.0
-                    if len(closes) >= 22 and closes[-22] > 0:
-                        _stock_mom_1m = (_curr / float(closes[-22]) - 1) * 100
-                    if len(closes) >= 64 and closes[-64] > 0:
-                        _stock_mom_3m = (_curr / float(closes[-64]) - 1) * 100
-
-                sig = get_stock_signal(
-                    market_signal=market_signal,
-                    beta=float(info.get("beta", 1.0) or 1.0),
-                    analyst_target=info.get("targetMeanPrice"),
-                    current_price=current_price,
-                    pe_ratio=info.get("trailingPE"),
-                    forward_pe=info.get("forwardPE"),
-                    drawdown_from_peak=_stock_dd,
-                    stock_momentum_1m=_stock_mom_1m,
-                    stock_momentum_3m=_stock_mom_3m,
-                )
-                if sig:
-                    stock_signals[ticker_str] = {
-                        "action": sig.get("action"),
-                        "composite_score": sig.get("composite_score"),
-                        "confidence": sig.get("confidence"),
-                    }
-                    actions.append(sig.get("action", "Hold"))
-                    if sig.get("composite_score") is not None:
-                        scores.append(sig["composite_score"])
-            except Exception as e:
-                stock_signals[ticker_str] = {"error": str(e)}
-
-        action_counts = {}
-        for a in actions:
-            action_counts[a] = action_counts.get(a, 0) + 1
-
-        score_spread = max(scores) - min(scores) if len(scores) >= 2 else 0
-
-        # Strip internal keys before saving (not serializable / not useful)
-        saveable_signal = {
-            k: v for k, v in market_signal.items()
-            if not k.startswith("_")
-        }
-
-        result = {
-            "market_signal": saveable_signal,
-            "stock_signals": stock_signals,
-            "diversity": {
-                "action_distribution": action_counts,
-                "n_unique_actions": len(set(actions)),
-                "score_spread": round(score_spread, 3),
-                "score_std": round(float(np.std(scores)), 3) if scores else 0,
-                "all_same_action": len(set(actions)) <= 1,
-            },
-            "n_tickers_with_signal": len([s for s in stock_signals.values() if "action" in s]),
-            "n_tickers_failed": len([s for s in stock_signals.values() if "error" in s]),
-        }
-
-        _save(output_dir, "signal_quality.json", result)
-        print(f"    [OK] Signals: {action_counts}, spread={score_spread:.2f}, "
-              f"{result['n_tickers_with_signal']}/{len(TICKERS)} tickers")
-        return result
-
-    except Exception as e:
-        print(f"    [FAIL] Signal quality: {e}")
-        traceback.print_exc()
-        return {"status": "error", "error": str(e)}
-
-
-# ---------------------------------------------------------------------------
-# 6. Regime + risk score — need SP500 DataFrame
-# ---------------------------------------------------------------------------
-def collect_regime_risk(output_dir):
-    results = {}
-
-    try:
-        sp_hist = _get_sp500_data("5y")
-        # Services expect a DataFrame with 'SP500' column (not 'Close')
-        sp_df = pd.DataFrame({"SP500": sp_hist["Close"]})
-        # Add VIX if available
-        try:
-            import yfinance as yf
-            vix_hist = yf.Ticker("^VIX").history(period="5y")
-            sp_df["VIX"] = vix_hist["Close"].reindex(sp_df.index, method="ffill")
-        except (KeyError, IndexError, ValueError, TypeError):
-            pass
-    except Exception as e:
-        print(f"    [FAIL] Cannot fetch SP500 data: {e}")
-        _save(output_dir, "regime_risk.json", {"error": str(e)})
-        return {"error": str(e)}
-
-    try:
-        from backend.services.regime_detector import detect_regimes
-        regime_result = detect_regimes(sp_df)
-        # Returns (pd.Series, str) tuple
-        if isinstance(regime_result, tuple):
-            regime_series, current_regime = regime_result
-            results["regime"] = {
-                "current": current_regime,
-                "type": "tuple(Series, str)",
+            p3 = crash_results.get("3m", {}).get("latest_prob", 0) or 0
+            p6 = crash_results.get("6m", {}).get("latest_prob", 0) or 0
+            p12 = crash_results.get("12m", {}).get("latest_prob", 0) or 0
+            crash_results["monotonicity"] = {
+                "3m_le_6m": p3 <= p6 + 0.001,
+                "6m_le_12m": p6 <= p12 + 0.001,
+                "passes": p3 <= p6 + 0.001 and p6 <= p12 + 0.001,
             }
-            print(f"    [OK] Regime: {current_regime}")
-        elif isinstance(regime_result, dict):
-            results["regime"] = regime_result
-            print(f"    [OK] Regime: {regime_result.get('regime', '?')}")
-        else:
-            results["regime"] = {"value": str(regime_result)[:200]}
-            print(f"    [OK] Regime returned: {type(regime_result).__name__}")
-    except Exception as e:
-        results["regime"] = {"error": str(e)}
-        print(f"    [FAIL] Regime: {e}")
+            print(f"    [OK] 3m={p3:.1%}, 6m={p6:.1%}, 12m={p12:.1%}, mono={crash_results['monotonicity']['passes']}")
 
-    try:
-        from backend.services.risk_scorer import build_risk_score
-        risk_result = build_risk_score(sp_df)
-        if isinstance(risk_result, pd.Series):
-            latest = float(risk_result.iloc[-1])
-            results["risk_score"] = {
-                "current": round(latest, 3),
-                "mean": round(float(risk_result.mean()), 3),
-                "max": round(float(risk_result.max()), 3),
-                "type": "Series",
-            }
-            print(f"    [OK] Risk score: {latest:.3f}")
-        elif isinstance(risk_result, dict):
-            results["risk_score"] = risk_result
-            print(f"    [OK] Risk score: {risk_result}")
-        else:
-            results["risk_score"] = {"value": str(risk_result)[:200]}
-            print(f"    [OK] Risk score returned: {type(risk_result).__name__}")
+        save_json(crash_results, output_dir, "crash_predictions.json")
+        results["data_sources"].append("crash_predictions")
     except Exception as e:
-        results["risk_score"] = {"error": str(e)}
-        print(f"    [FAIL] Risk score: {e}")
-
-    _save(output_dir, "regime_risk.json", results)
-    return results
+        results["errors"].append(f"Crash model: {e}")
+        print(f"    [FAIL] {e}")
+    return crash_results
 
 
 # ---------------------------------------------------------------------------
-# 7. Sector analysis
+# SECTION 2: Stress tests & edge cases — the quant debugging machine
 # ---------------------------------------------------------------------------
-def collect_sector_analysis(output_dir):
+
+def run_stress_tests(stock_data, results, output_dir):
+    """Stress test the engine with extreme/adversarial inputs."""
+    print("  [6/10] Stress tests (edge cases)...")
+    stress_results = []
+
+    # Test 1: Zero-beta stock signal
     try:
-        import yfinance as yf
-        from backend.services.sector_analyzer import analyze_sectors
-        from backend import config
-
-        raw_hist = _get_sp500_data("5y")
-        # analyze_sectors expects DataFrame with 'SP500' column
-        sp_hist = pd.DataFrame({"SP500": raw_hist["Close"]})
-
-        # Get sector ETFs from config
-        sector_etfs = config.config.get("data", {}).get("sectors", {
-            "Technology": "XLK", "Healthcare": "XLV", "Financials": "XLF",
-            "Energy": "XLE", "Industrials": "XLI", "Consumer Staples": "XLP",
-            "Utilities": "XLU", "Materials": "XLB",
+        from backend.services.signal_engine import get_market_signal, get_stock_signal
+        market_sig = get_market_signal(vix=20, sp500_1m_return=0, sp500_3m_return=0)
+        zero_beta = get_stock_signal(market_signal=market_sig, beta=0.0, current_price=100)
+        high_beta = get_stock_signal(market_signal=market_sig, beta=3.0, current_price=100)
+        stress_results.append({
+            "test": "beta_differentiation",
+            "pass": zero_beta.get("composite_score") != high_beta.get("composite_score"),
+            "detail": f"beta=0 score={zero_beta.get('composite_score')}, beta=3 score={high_beta.get('composite_score')}",
         })
-
-        sector_data = {}
-        for sector_name, etf_ticker in sector_etfs.items():
-            try:
-                h = yf.Ticker(etf_ticker).history(period="5y")
-                if len(h) > 100:
-                    sector_data[sector_name] = h["Close"]
-            except (KeyError, IndexError, ValueError, TypeError):
-                pass
-
-        sectors = analyze_sectors(
-            data=sp_hist, sector_data=sector_data, forecast_days=1260
-        )
-
-        if not sectors:
-            print("    [FAIL] analyze_sectors returned empty")
-            return {"status": "empty"}
-
-        result = {
-            "return_type": type(sectors).__name__,
-            "n_sectors": len(sector_data),
-        }
-
-        # Extract summary depending on return type
-        if isinstance(sectors, dict):
-            result["keys"] = list(sectors.keys())[:20]
-            # Try to find return values
-            for key in ["sectors", "results", "data"]:
-                if key in sectors and isinstance(sectors[key], (list, dict)):
-                    result["inner_type"] = type(sectors[key]).__name__
-                    break
-
-        _save(output_dir, "sector_analysis.json", result)
-        print(f"    [OK] Sector analysis: {type(sectors).__name__}, {len(sector_data)} sectors")
-        return result
-
     except Exception as e:
-        print(f"    [FAIL] Sector analysis: {e}")
-        traceback.print_exc()
-        return {"status": "error", "error": str(e)}
+        stress_results.append({"test": "beta_differentiation", "pass": False, "error": str(e)})
 
+    # Test 2: Extreme VIX values
+    try:
+        from backend.services.signal_engine import get_market_signal
+        calm = get_market_signal(vix=10, sp500_1m_return=5, sp500_3m_return=15)
+        panic = get_market_signal(vix=80, sp500_1m_return=-20, sp500_3m_return=-30)
+        stress_results.append({
+            "test": "extreme_vix_differentiation",
+            "pass": calm.get("composite_score", 0) > panic.get("composite_score", 0),
+            "detail": f"VIX=10 score={calm.get('composite_score')}, VIX=80 score={panic.get('composite_score')}",
+        })
+    except Exception as e:
+        stress_results.append({"test": "extreme_vix_differentiation", "pass": False, "error": str(e)})
 
-# ---------------------------------------------------------------------------
-# 8. Portfolio engine
-# ---------------------------------------------------------------------------
-def collect_portfolio_test(output_dir):
+    # Test 3: MC with extreme volatility
+    try:
+        from backend.services.monte_carlo import simulate_paths
+        from backend.config import config
+        base_scenario = config["scenarios"].get("base", config["scenarios"].get("Base Case", list(config["scenarios"].values())[0]))
+        paths = simulate_paths(
+            start_price=100, historical_mu=0.0003, historical_sigma=0.05,
+            days=252, n_sims=500, crash_freq=0.08, risk_score=0.0,
+            scenario=base_scenario, seed=42,
+        )
+        terminal = paths[-1, :]
+        mean_ret = float(np.mean(terminal / 100 - 1))
+        stress_results.append({
+            "test": "high_vol_mc_bounded",
+            "pass": -0.9 < mean_ret < 5.0,
+            "detail": f"sigma=0.05 (5% daily!), mean_terminal_return={mean_ret:.2%}",
+        })
+    except Exception as e:
+        stress_results.append({"test": "high_vol_mc_bounded", "pass": False, "error": str(e)})
+
+    # Test 4: MC reproducibility
+    try:
+        from backend.services.monte_carlo import simulate_paths
+        from backend.config import config
+        base_scenario = config["scenarios"].get("base", config["scenarios"].get("Base Case", list(config["scenarios"].values())[0]))
+        p1 = simulate_paths(start_price=100, historical_mu=0.0003, historical_sigma=0.01,
+                            days=252, n_sims=100, crash_freq=0.08, risk_score=0.0,
+                            scenario=base_scenario, seed=999)
+        p2 = simulate_paths(start_price=100, historical_mu=0.0003, historical_sigma=0.01,
+                            days=252, n_sims=100, crash_freq=0.08, risk_score=0.0,
+                            scenario=base_scenario, seed=999)
+        stress_results.append({
+            "test": "mc_reproducibility",
+            "pass": np.array_equal(p1, p2),
+            "detail": f"same seed → same paths: {np.array_equal(p1, p2)}",
+        })
+    except Exception as e:
+        stress_results.append({"test": "mc_reproducibility", "pass": False, "error": str(e)})
+
+    # Test 5: Signal with all-None inputs (robustness)
+    try:
+        from backend.services.signal_engine import get_market_signal
+        sig = get_market_signal()  # all defaults
+        stress_results.append({
+            "test": "signal_default_robustness",
+            "pass": sig.get("action") is not None and sig.get("composite_score") is not None,
+            "detail": f"default signal: action={sig.get('action')}, score={sig.get('composite_score')}",
+        })
+    except Exception as e:
+        stress_results.append({"test": "signal_default_robustness", "pass": False, "error": str(e)})
+
+    # Test 6: Portfolio with single stock (edge case)
     try:
         from backend.services.portfolio_engine import PortfolioEngine
-        engine = PortfolioEngine()
-        results = {}
+        import yfinance as yf
+        price = float(yf.Ticker("AAPL").history(period="5d")["Close"].iloc[-1])
+        r = PortfolioEngine.analyze_portfolio([{"ticker": "AAPL", "shares": 100, "current_price": price}])
+        stress_results.append({
+            "test": "single_stock_portfolio",
+            "pass": r is not None and "total_value" in str(r).lower() or len(r) > 0,
+            "detail": f"single stock analyze returned: {list(r.keys()) if isinstance(r, dict) else type(r)}",
+        })
+    except Exception as e:
+        stress_results.append({"test": "single_stock_portfolio", "pass": False, "error": str(e)})
 
-        # Test build (no holdings needed)
-        for profile in ["conservative", "moderate", "aggressive"]:
+    # Test 7: Cross-service consistency — stock MC vs standalone MC
+    try:
+        if stock_data:
+            first_ticker = list(stock_data.keys())[0]
+            sd = stock_data[first_ticker]
+            stock_exp = sd.get("expected_return_pct")
+            if stock_exp is not None:
+                # Check if expected return is in a sane range
+                stress_results.append({
+                    "test": "stock_return_range",
+                    "pass": -50 < stock_exp < 300,
+                    "detail": f"{first_ticker} expected 5Y return: {stock_exp}%",
+                })
+    except Exception as e:
+        stress_results.append({"test": "stock_return_range", "pass": False, "error": str(e)})
+
+    # Test 8: Crash prob differentiation across stocks
+    try:
+        from backend.services.stock_analyzer import analyze_stock
+        safe = analyze_stock("JNJ", forecast_days=252)  # low beta defensive
+        risky = analyze_stock("TSLA", forecast_days=252)  # high beta growth
+        if safe and risky:
+            safe_ret = safe.get("expected_return", 0)
+            risky_ret = risky.get("expected_return", 0)
+            safe_vol = safe.get("volatility", 0)
+            risky_vol = risky.get("volatility", 0)
+            stress_results.append({
+                "test": "risk_return_ordering",
+                "pass": (risky_vol or 0) > (safe_vol or 0),
+                "detail": f"JNJ vol={safe_vol}, TSLA vol={risky_vol}. Higher risk should mean higher vol.",
+            })
+    except Exception as e:
+        stress_results.append({"test": "risk_return_ordering", "pass": False, "error": str(e)})
+
+    passed = sum(1 for t in stress_results if t.get("pass"))
+    total = len(stress_results)
+    print(f"    [{'OK' if passed == total else 'WARN'}] {passed}/{total} stress tests passed")
+    for t in stress_results:
+        if not t.get("pass"):
+            print(f"      [FAIL] {t['test']}: {t.get('detail', t.get('error', '?'))}")
+
+    save_json(stress_results, output_dir, "stress_tests.json")
+    results["data_sources"].append("stress_tests")
+    return stress_results
+
+
+def run_consistency_checks(stock_data, signal_results, results, output_dir):
+    """Cross-service consistency checks — find contradictions."""
+    print("  [7/10] Consistency checks...")
+    checks = []
+
+    # Check 1: All signals should span more than just "Hold"
+    if signal_results:
+        stock_sigs = signal_results.get("stock_signals", {})
+        actions = set(s.get("action") for s in stock_sigs.values())
+        checks.append({
+            "check": "signal_diversity",
+            "pass": len(actions) >= 2,
+            "detail": f"Unique actions: {sorted(actions)}. Only 1 type = broken differentiation.",
+        })
+
+    # Check 2: High-beta stocks should have wider MC fans than low-beta
+    if len(stock_data) >= 2:
+        betas = [(t, sd.get("beta", 1)) for t, sd in stock_data.items() if sd.get("beta")]
+        if len(betas) >= 2:
+            betas.sort(key=lambda x: x[1] or 0)
+            low_t, low_beta = betas[0]
+            high_t, high_beta = betas[-1]
+            low_p95 = stock_data[low_t].get("p95_price") or 0
+            low_p05 = stock_data[low_t].get("p05_price") or 0
+            low_price = stock_data[low_t].get("current_price") or 1
+            high_p95 = stock_data[high_t].get("p95_price") or 0
+            high_p05 = stock_data[high_t].get("p05_price") or 0
+            high_price = stock_data[high_t].get("current_price") or 1
+            low_spread = (low_p95 - low_p05) / low_price if low_price else 0
+            high_spread = (high_p95 - high_p05) / high_price if high_price else 0
+            checks.append({
+                "check": "beta_mc_fan_width",
+                "pass": high_spread > low_spread * 0.8,
+                "detail": f"{low_t}(beta={low_beta}) fan={low_spread:.1%}, {high_t}(beta={high_beta}) fan={high_spread:.1%}",
+            })
+
+    # Check 3: Expected returns should loosely correlate with risk
+    if len(stock_data) >= 3:
+        items = [(t, sd.get("volatility", 0) or 0, sd.get("expected_return_pct", 0) or 0)
+                 for t, sd in stock_data.items()]
+        vols = [x[1] for x in items]
+        rets = [x[2] for x in items]
+        if len(set(vols)) > 1:
+            corr = float(np.corrcoef(vols, rets)[0, 1])
+            checks.append({
+                "check": "risk_return_correlation",
+                "pass": corr > -0.5,  # shouldn't be strongly negative
+                "detail": f"Vol-return correlation: {corr:.3f}. Strongly negative = broken risk premium.",
+            })
+
+    passed = sum(1 for c in checks if c.get("pass"))
+    total = len(checks)
+    print(f"    [{'OK' if passed == total else 'WARN'}] {passed}/{total} consistency checks passed")
+    for c in checks:
+        if not c.get("pass"):
+            print(f"      [FAIL] {c['check']}: {c.get('detail', '?')}")
+
+    save_json(checks, output_dir, "consistency_checks.json")
+    results["data_sources"].append("consistency_checks")
+    return checks
+
+
+def run_backtest(results, output_dir):
+    """Historical signal backtest."""
+    print("  [8/10] Signal backtest...")
+    try:
+        import yfinance as yf
+        from backend.services.signal_engine import get_market_signal
+
+        sp_hist = yf.Ticker("^GSPC").history(period="2y")
+        vix_hist = yf.Ticker("^VIX").history(period="2y")
+        vix_series = vix_hist["Close"].copy()
+        vix_series.index = vix_series.index.normalize().tz_localize(None)
+        sp_dates = sp_hist.index.normalize().tz_localize(None)
+
+        tests = []
+        for start_idx in range(378, 125, -21):
+            if start_idx + 63 > len(sp_hist):
+                continue
             try:
-                r = engine.build_portfolio(risk_tolerance=profile)
-                results[f"build_{profile}"] = {
-                    "success": r is not None,
-                    "keys": list(r.keys()) if isinstance(r, dict) else [],
-                }
-                print(f"    [OK] Build {profile}")
-            except Exception as e:
-                results[f"build_{profile}"] = {"error": str(e)}
-                print(f"    [FAIL] Build {profile}: {e}")
+                test_price = float(sp_hist["Close"].iloc[-start_idx])
+                actual_price = float(sp_hist["Close"].iloc[-(start_idx - 63)])
+                actual_return = (actual_price / test_price - 1) * 100
+                test_date = sp_dates[-start_idx]
 
-        _save(output_dir, "portfolio_test.json", results)
-        return results
+                vix_at = 20.0
+                try:
+                    vi = vix_series.index.get_indexer([test_date], method="nearest")[0]
+                    if 0 <= vi < len(vix_series):
+                        vix_at = float(vix_series.iloc[vi])
+                except:
+                    pass
 
+                sp_1m = (test_price / float(sp_hist["Close"].iloc[-(start_idx + 21)]) - 1) * 100 if start_idx + 21 < len(sp_hist) else 0
+                sp_3m = (test_price / float(sp_hist["Close"].iloc[-(start_idx + 63)]) - 1) * 100 if start_idx + 63 < len(sp_hist) else 0
+
+                sig = get_market_signal(vix=vix_at, sp500_1m_return=sp_1m, sp500_3m_return=sp_3m)
+                score = sig.get("composite_score", 0)
+                tests.append({
+                    "date": str(test_date.date()),
+                    "signal_score": safe_float(score),
+                    "signal_action": sig.get("action"),
+                    "actual_3m_return_pct": round(actual_return, 2),
+                    "direction_correct": (score > 0 and actual_return > 0) or (score < 0 and actual_return < 0) or score == 0,
+                    "vix": round(vix_at, 1),
+                })
+            except:
+                pass
+
+        if tests:
+            dir_acc = sum(1 for t in tests if t["direction_correct"]) / len(tests) * 100
+            scores = [t["signal_score"] or 0 for t in tests]
+            rets = [t["actual_3m_return_pct"] for t in tests]
+            corr = float(np.corrcoef(scores, rets)[0, 1]) if len(scores) > 2 else 0
+            actions = list(set(t["signal_action"] for t in tests))
+
+            bt = {"n_tests": len(tests), "direction_accuracy_pct": round(dir_acc, 1),
+                  "signal_return_correlation": round(corr, 3), "actions_seen": actions, "tests": tests}
+            save_json(bt, output_dir, "backtest_accuracy.json")
+            results["data_sources"].append("backtest_accuracy")
+            print(f"    [OK] {len(tests)} tests, acc={dir_acc:.0f}%, corr={corr:.3f}, actions={actions}")
     except Exception as e:
-        print(f"    [FAIL] Portfolio engine: {e}")
-        return {"status": "error", "error": str(e)}
+        results["errors"].append(f"Backtest: {e}")
+        print(f"    [FAIL] {e}")
 
 
-# ---------------------------------------------------------------------------
-# 9. Service health — import checks + safe callable checks
-# ---------------------------------------------------------------------------
-def collect_api_health(output_dir):
-    health = {}
-
-    # Import checks (safe — no execution)
-    imports = [
-        "backend.services.monte_carlo",
-        "backend.services.stock_analyzer",
-        "backend.services.sector_analyzer",
-        "backend.services.portfolio_engine",
-        "backend.services.crash_model",
-        "backend.services.signal_engine",
-        "backend.services.regime_detector",
-        "backend.services.risk_scorer",
-        "backend.services.shap_explainer",
-        "backend.services.news_intelligence",
-        "backend.services.sentiment_analyzer",
-        "backend.services.data_quality",
-        "backend.services.net_liquidity",
-        "backend.services.return_model",
-        "backend.services.external_validator",
-        "backend.services.regime_validator",
-        "backend.services.drift_detector",
-        "backend.services.llm_analyzer",
-        "backend.services.savings_calculator",
-        "backend.services.factor_model",
-        "backend.services.stress_testing",
-        "backend.services.cross_sectional_momentum",
-        "backend.services.economic_surprise",
-        # v9 services
-        "backend.services.liquidity_risk",
-        "backend.services.copula_tail",
-        "backend.services.covariance",
-        "backend.services.portfolio_optimizer",
-        "backend.services.insider_trading",
-        "backend.services.trends_sentiment",
-        "backend.services.survival_model",
-        "backend.services.anomaly_detector",
-        "backend.services.crash_timeline",
-        "backend.services.attribution",
-    ]
-
-    for mod_path in imports:
-        name = mod_path.split(".")[-1]
-        try:
-            __import__(mod_path)
-            health[name] = {"status": "ok"}
-        except Exception as e:
-            health[name] = {"status": "error", "error": str(e)}
-
-    ok = len([v for v in health.values() if v["status"] == "ok"])
-    fail = len([v for v in health.values() if v["status"] == "error"])
-
-    _save(output_dir, "api_health.json", health)
-    print(f"    [OK] {ok} importable, {fail} failing")
-    return health
-
-
-# ---------------------------------------------------------------------------
-# 10. Model validation metadata
-# ---------------------------------------------------------------------------
-def collect_validation_metrics(output_dir):
-    model_path = REPO_ROOT / "backend" / "models" / "crash_model.pkl"
-    if not model_path.exists():
-        print("    [SKIP] No crash_model.pkl")
-        return {"status": "no_model"}
-
+def collect_correlations(results, output_dir):
+    """Cross-asset correlation matrix."""
+    print("  [9/10] Cross-asset correlations...")
     try:
-        import pickle
-        with open(model_path, "rb") as f:
-            model_data = pickle.load(f)
-
-        result = {
-            "model_exists": True,
-            "model_type": type(model_data).__name__,
-        }
-        if isinstance(model_data, dict):
-            result["keys"] = list(model_data.keys())
-            result["train_date"] = model_data.get("train_date")
-            result["walk_forward_auc"] = model_data.get("walk_forward_auc")
-
-        _save(output_dir, "validation_metrics.json", result)
-        print(f"    [OK] Model metadata collected")
-        return result
-    except Exception as e:
-        print(f"    [SKIP] {e}")
-        return {"status": "error", "error": str(e)}
-
-
-# ---------------------------------------------------------------------------
-# 11. Drift detection — checks feature distribution shift since training
-# ---------------------------------------------------------------------------
-def collect_drift_check(output_dir):
-    try:
-        from backend.services.drift_detector import DriftDetector
-        from backend.services.data_fetcher import DataFetcher
-        from engine.training.features import build_feature_matrix
-
-        fetcher = DataFetcher()
-        data, _ = fetcher.fetch_market_data()
-        fred_data = fetcher.fetch_fred_data()
-        features = build_feature_matrix(data, fred_data=fred_data)
-
-        if features is None or len(features) < 504:
-            print("    [SKIP] Not enough data for drift check")
-            return {"status": "insufficient_data"}
-
-        # Rolling window: compare last 252 days against prior 504 days.
-        # This detects *recent* distribution shifts, not "2000 vs 2020" drift
-        # which is guaranteed on financial time series.
-        report = DriftDetector.from_multi_scale(features)
-
-        result = {
-            "drift_detected": report["drift_detected"],
-            "n_features_checked": report["n_features_checked"],
-            "n_drifted": report["n_drifted"],
-            "drift_pct": report["drift_pct"],
-            "severity": report.get("effective_severity", report.get("severity", "unknown")),
-            "reference_window": report.get("reference_window"),
-            "inference_window": report.get("inference_window"),
-            "drifted_features": report["drifted_features"][:10],
-            "recent_stability": report.get("recent_stability"),
-            "scale_used": report.get("scale_used"),
-        }
-        if "multi_scale" in report:
-            result["multi_scale"] = report["multi_scale"]
-
-        _save(output_dir, "drift_check.json", result)
-        severity = report.get("severity", "unknown")
-        status = severity.upper() if report["drift_detected"] else "OK"
-        print(f"    [{status}] {report['n_drifted']}/{report['n_features_checked']} "
-              f"features drifted ({report['drift_pct']:.0f}%) — severity: {severity}")
-        return result
-
-    except Exception as e:
-        print(f"    [FAIL] Drift check: {e}")
-        traceback.print_exc()
-        return {"status": "error", "error": str(e)}
-
-
-# ---------------------------------------------------------------------------
-# 12. Options intelligence snapshot
-# ---------------------------------------------------------------------------
-def collect_options_intelligence(output_dir, cycle):
-    """Collect options-implied signals for a few tickers to benchmark the new service."""
-    try:
-        from backend.services.options_intelligence import get_vix_term_structure
-
-        result = {}
-
-        # VIX term structure
-        vix_ts = get_vix_term_structure()
-        result["vix_term_structure"] = vix_ts
-        if "error" not in vix_ts:
-            print(f"    [OK] VIX term: {vix_ts.get('structure', '?')}")
-        else:
-            print(f"    [WARN] VIX term: {vix_ts.get('error')}")
-
-        # Options summary for a couple of tickers (lightweight)
-        tickers_to_check = ["SPY", "AAPL"]
-        from backend.services.options_intelligence import get_options_summary
-        for ticker in tickers_to_check:
+        import yfinance as yf
+        assets = {"SP500": "^GSPC", "VIX": "^VIX", "10Y": "^TNX", "Gold": "GC=F", "Oil": "CL=F"}
+        dfs = {}
+        for name, sym in assets.items():
             try:
-                summary = get_options_summary(ticker)
-                sig = summary.get("signal", {})
-                result[f"options_{ticker}"] = {
-                    "iv_skew": summary.get("iv_skew"),
-                    "put_call_ratio": summary.get("put_call_volume_ratio"),
-                    "iv_rank": summary.get("iv_rank"),
-                    "signal_score": sig.get("score"),
-                    "signal_sentiment": sig.get("sentiment"),
-                }
-                print(f"    [OK] {ticker} options: skew={summary.get('iv_skew', '?')}, "
-                      f"P/C={summary.get('put_call_volume_ratio', '?')}, "
-                      f"signal={sig.get('sentiment', '?')}")
-            except Exception as e:
-                result[f"options_{ticker}"] = {"error": str(e)}
-                print(f"    [WARN] {ticker} options: {e}")
-
-        _save(output_dir, "options_intelligence.json", result)
-        return result
-
+                h = yf.Ticker(sym).history(period="1y")
+                if len(h) > 0:
+                    s = h["Close"].copy()
+                    s.index = s.index.normalize().tz_localize(None)
+                    dfs[name] = s.pct_change().dropna()
+            except:
+                pass
+        if len(dfs) >= 3:
+            combined = pd.DataFrame(dfs).dropna()
+            corr = combined.corr()
+            save_json({
+                "matrix": {k: {k2: round(v2, 3) for k2, v2 in v.items()} for k, v in corr.to_dict().items()},
+                "n_observations": len(combined),
+            }, output_dir, "cross_asset_correlations.json")
+            results["data_sources"].append("cross_asset_correlations")
+            print(f"    [OK] {len(dfs)} assets, {len(combined)} observations")
     except Exception as e:
-        print(f"    [FAIL] Options intelligence: {e}")
-        return {"status": "error", "error": str(e)}
+        results["errors"].append(f"Correlations: {e}")
+        print(f"    [FAIL] {e}")
 
 
-# ---------------------------------------------------------------------------
-# 13. Code quality metrics
-# ---------------------------------------------------------------------------
-def collect_systemic_risk(output_dir):
-    """Collect turbulence index and absorption ratio."""
+def run_reality_checks(stock_data, sp500_data, results, output_dir):
+    """Compare engine predictions to analyst consensus — catches overfitting."""
+    print("  [10/11] Reality checks (engine vs analysts)...")
+    checks = []
+
     try:
-        from backend.services.data_fetcher import DataFetcher
-        from backend.services.systemic_risk import compute_systemic_risk
+        import yfinance as yf
 
-        fetcher = DataFetcher()
-        data, _ = fetcher.fetch_market_data()
-        result = compute_systemic_risk(data)
-        _save(output_dir, "systemic_risk.json", result)
-        turb = result.get("turbulence_current")
-        ar = result.get("absorption_ratio_current")
-        stress = result.get("systemic_stress")
-        print(f"    [OK] turbulence={turb}, AR={ar}, stress={stress}")
-        return result
-    except Exception as e:
-        _save(output_dir, "systemic_risk.json", {"error": str(e)})
-        print(f"    [ERR] {e}")
-        return {"error": str(e)}
-
-
-# ---------------------------------------------------------------------------
-# 14. Factor model snapshot
-# ---------------------------------------------------------------------------
-def collect_factor_model(output_dir):
-    """Collect factor decomposition for a few key tickers."""
-    try:
-        from backend.services.factor_model import decompose_stock
-        results = {}
-        for ticker in ["AAPL", "JPM", "XOM"]:
+        for ticker, sd in stock_data.items():
             try:
-                decomp = decompose_stock(ticker, lookback_days=504)
-                if decomp:
-                    results[ticker] = {
-                        "r_squared": decomp["r_squared"],
-                        "alpha_annual": decomp["alpha_annual"],
-                        "market_beta": decomp["factors"]["Mkt-RF"]["loading"],
-                        "style": decomp["style"],
-                    }
-                    print(f"    [OK] {ticker}: R2={decomp['r_squared']:.2f}, "
-                          f"beta={decomp['factors']['Mkt-RF']['loading']:.2f}, "
-                          f"alpha={decomp['alpha_annual']:.1%}")
-                else:
-                    results[ticker] = {"status": "no_data"}
-            except Exception as e:
-                results[ticker] = {"error": str(e)}
-                print(f"    [WARN] {ticker} factors: {e}")
+                info = yf.Ticker(ticker).info or {}
+                analyst_target = info.get("targetMeanPrice")
+                current_price = sd.get("current_price", 0) or 0
+                engine_exp_ret = sd.get("expected_return_pct")  # 5Y return
 
-        _save(output_dir, "factor_model.json", results)
-        return results
+                if analyst_target and current_price > 0 and engine_exp_ret is not None:
+                    analyst_1y_upside = (analyst_target / current_price - 1) * 100
+                    # Engine gives 5Y return, annualize for comparison
+                    engine_annual = ((1 + engine_exp_ret / 100) ** 0.2 - 1) * 100
+
+                    # Flag if engine annual return is >3x analyst 1Y target
+                    gap = abs(engine_annual - analyst_1y_upside)
+                    reasonable = gap < 40  # within 40pp
+
+                    checks.append({
+                        "ticker": ticker,
+                        "current_price": round(current_price, 2),
+                        "analyst_1y_target": round(analyst_target, 2),
+                        "analyst_1y_upside_pct": round(analyst_1y_upside, 1),
+                        "engine_5y_return_pct": round(engine_exp_ret, 1),
+                        "engine_annualized_pct": round(engine_annual, 1),
+                        "gap_pct": round(gap, 1),
+                        "reasonable": reasonable,
+                        "verdict": "OK" if reasonable else f"ENGINE {'OVER' if engine_annual > analyst_1y_upside else 'UNDER'}ESTIMATES vs analysts",
+                    })
+            except Exception:
+                pass
+
+        # SP500 institutional consensus check (~5.9% annual)
+        sp_mc = sp500_data.get("mc_results", {})
+        sp_annual = sp_mc.get("annualized_return_pct") or sp_mc.get("expected_annual_return")
+        if sp_annual is not None:
+            institutional_consensus = 5.9  # average of major firms
+            gap = abs(float(sp_annual) - institutional_consensus)
+            checks.append({
+                "ticker": "SP500",
+                "engine_annual_pct": round(float(sp_annual), 1),
+                "institutional_consensus_pct": institutional_consensus,
+                "gap_pct": round(gap, 1),
+                "reasonable": gap < 8,
+                "verdict": "OK" if gap < 8 else f"SP500 projection {float(sp_annual):.1f}% vs consensus {institutional_consensus}%",
+            })
+
+        if checks:
+            n_reasonable = sum(1 for c in checks if c.get("reasonable"))
+            print(f"    [{'OK' if n_reasonable == len(checks) else 'WARN'}] {n_reasonable}/{len(checks)} predictions align with analyst consensus")
+            for c in checks:
+                if not c.get("reasonable"):
+                    print(f"      [GAP] {c['ticker']}: engine={c.get('engine_annualized_pct', c.get('engine_annual_pct'))}% vs analyst={c.get('analyst_1y_upside_pct', c.get('institutional_consensus_pct'))}%")
+
+            save_json(checks, output_dir, "reality_checks.json")
+            results["data_sources"].append("reality_checks")
+
     except Exception as e:
-        print(f"    [FAIL] Factor model: {e}")
-        return {"status": "error", "error": str(e)}
-
-
-# ---------------------------------------------------------------------------
-# 15. Economic surprise index
-# ---------------------------------------------------------------------------
-def collect_economic_surprise(output_dir):
-    """Collect economic surprise index."""
-    try:
-        from backend.services.economic_surprise import compute_surprise_index
-        result = compute_surprise_index()
-        if result:
-            _save(output_dir, "economic_surprise.json", result)
-            print(f"    [OK] Eco surprise: {result['composite_score']:.3f} ({result['signal']}), "
-                  f"trend={result['trend']}")
-            return result
-        else:
-            print("    [SKIP] Economic surprise returned None")
-            return {"status": "no_data"}
-    except Exception as e:
-        print(f"    [FAIL] Economic surprise: {e}")
-        return {"status": "error", "error": str(e)}
-
-
-# ---------------------------------------------------------------------------
-# 16. Liquidity risk snapshot
-# ---------------------------------------------------------------------------
-def collect_liquidity_snapshot(output_dir):
-    """Collect liquidity metrics for a few key tickers."""
-    try:
-        from backend.services.liquidity_risk import compute_liquidity_metrics
-        results = {}
-        for ticker in ["AAPL", "NVDA", "COIN"]:
-            try:
-                metrics = compute_liquidity_metrics(ticker)
-                if metrics:
-                    results[ticker] = {
-                        "score": metrics["score"]["composite"],
-                        "tier": metrics["score"]["tier"],
-                        "amihud": metrics["metrics"]["amihud_illiquidity"],
-                        "avg_dv_mm": metrics["metrics"]["avg_dollar_volume_mm"],
-                    }
-                    print(f"    [OK] {ticker}: score={metrics['score']['composite']:.0f} "
-                          f"({metrics['score']['tier']})")
-            except Exception as e:
-                results[ticker] = {"error": str(e)}
-                print(f"    [WARN] {ticker}: {e}")
-
-        _save(output_dir, "liquidity_snapshot.json", results)
-        return results
-    except Exception as e:
-        print(f"    [FAIL] Liquidity: {e}")
-        return {"status": "error", "error": str(e)}
-
-
-# ---------------------------------------------------------------------------
-# 17. Copula tail dependence
-# ---------------------------------------------------------------------------
-def collect_copula_snapshot(output_dir):
-    """Fit copulas to key asset pairs."""
-    try:
-        from backend.services.copula_tail import analyze_pair_copula
-        pairs = [("AAPL", "MSFT"), ("SPY", "GLD")]
-        results = {}
-        for a, b in pairs:
-            try:
-                result = analyze_pair_copula(a, b, lookback_days=504)
-                if result:
-                    td = result.get("tail_dependence", {})
-                    results[f"{a}_{b}"] = {
-                        "best_copula": result["copula"]["selection"],
-                        "tail_lower": td.get("lower"),
-                        "pearson": result["correlation"]["pearson"],
-                    }
-                    print(f"    [OK] {a}/{b}: {result['copula']['selection']}, "
-                          f"tail_L={td.get('lower', '?'):.3f}")
-            except Exception as e:
-                results[f"{a}_{b}"] = {"error": str(e)}
-                print(f"    [WARN] {a}/{b}: {e}")
-
-        _save(output_dir, "copula_snapshot.json", results)
-        return results
-    except Exception as e:
-        print(f"    [FAIL] Copula: {e}")
-        return {"status": "error", "error": str(e)}
-
-
-def collect_code_metrics(output_dir):
-    import subprocess as sp
-    result = {}
-
-    # Count tests
-    try:
-        test_dir = REPO_ROOT / "backend" / "tests"
-        test_files = list(test_dir.glob("test_*.py"))
-        total = sum(f.read_text(encoding="utf-8").count("def test_") for f in test_files)
-        result["test_count"] = {"files": len(test_files), "functions": total}
-    except Exception as e:
-        result["test_count"] = {"error": str(e)}
-
-    # Code smells
-    smells = []
-    for py_file in (REPO_ROOT / "backend" / "services").glob("*.py"):
-        try:
-            content = py_file.read_text(encoding="utf-8")
-            lines = content.split("\n")
-            n_broad = sum(1 for l in lines if "except:" in l or "except Exception:" in l)
-            if n_broad > 3:
-                smells.append(f"{py_file.name}: {n_broad} broad excepts")
-            n_fillna = sum(1 for l in lines if "fillna(0)" in l)
-            if n_fillna > 0:
-                smells.append(f"{py_file.name}: {n_fillna} fillna(0) (banned)")
-            n_seed = sum(1 for l in lines if "np.random.seed" in l)
-            if n_seed > 0:
-                smells.append(f"{py_file.name}: {n_seed} legacy np.random.seed()")
-        except (OSError, UnicodeDecodeError):
-            pass
-
-    result["code_smells"] = smells
-    result["n_smells"] = len(smells)
-
-    _save(output_dir, "code_metrics.json", result)
-    tests = result.get("test_count", {}).get("functions", "?")
-    print(f"    [OK] {tests} tests, {len(smells)} code smells")
-    return result
-
-
-# ---------------------------------------------------------------------------
-# v13 collectors — bond / events / esg / fx / commodities / crypto / portfolio_currency
-# ---------------------------------------------------------------------------
-
-
-def collect_bond_lab(output_dir):
-    """Snapshot: Treasury par curve + a 10Y benchmark bond + 3-rung ladder."""
-    result = {"timestamp": datetime.now().isoformat()}
-    try:
-        from backend.services.bond_analytics import (
-            Bond, bond_analytics, key_rate_durations, ladder_analytics, treasury_curve,
-        )
-        # Treasury curve from FRED (best-effort)
-        try:
-            curve = treasury_curve()
-            result["treasury_curve"] = curve
-        except Exception as e:
-            result["treasury_curve_error"] = str(e)
-
-        # 10y benchmark @ par
-        bench = Bond(face=100, coupon_rate=0.045, maturity_years=10, freq=2)
-        result["benchmark_10y_4_5"] = bond_analytics(bench, 100.0)
-        result["benchmark_10y_4_5_krd"] = key_rate_durations(bench, 100.0)
-
-        # Three-rung ladder (2y/5y/10y, equal weight)
-        positions = [
-            {"maturity_years": 2, "coupon_rate": 0.04},
-            {"maturity_years": 5, "coupon_rate": 0.04},
-            {"maturity_years": 10, "coupon_rate": 0.04},
-        ]
-        result["ladder_2_5_10"] = ladder_analytics(positions)
-    except Exception as e:
-        result["error"] = f"{type(e).__name__}: {e}"
-    _save(output_dir, "bond_lab.json", result)
-    print(f"    [OK] bond_lab snapshot")
-    return result
-
-
-def collect_edgar_events(output_dir, cycle=1):
-    """Pull last 30 days of high-materiality 8-Ks for a small ticker probe set."""
-    result = {"timestamp": datetime.now().isoformat()}
-    try:
-        from backend.services.edgar_events import (
-            fetch_events_for_ticker, event_summary,
-        )
-        # Keep this very light to stay under SEC's 10 req/s rate ceiling
-        probes = ["AAPL", "MSFT", "JPM"]
-        all_events = []
-        per_ticker = {}
-        for t in probes:
-            try:
-                evts = fetch_events_for_ticker(t, days_back=60, high_materiality_only=True)
-                per_ticker[t] = len(evts)
-                all_events.extend(evts)
-            except Exception as e:
-                per_ticker[t] = f"error: {e}"
-        result["per_ticker_count"] = per_ticker
-        result["summary"] = event_summary(all_events)
-        result["sample_event"] = all_events[0].to_dict() if all_events else None
-    except Exception as e:
-        result["error"] = f"{type(e).__name__}: {e}"
-    _save(output_dir, "edgar_events.json", result)
-    print(f"    [OK] edgar_events snapshot")
-    return result
-
-
-def collect_esg(output_dir):
-    """Sample ESG scores for 3 representative tickers (best-effort, may be empty without keys)."""
-    result = {"timestamp": datetime.now().isoformat(), "scores": {}}
-    try:
-        from backend.services.esg import compute_esg_score
-        for t in ("AAPL", "MSFT", "TSLA"):
-            try:
-                result["scores"][t] = compute_esg_score(t)
-            except Exception as e:
-                result["scores"][t] = {"error": f"{type(e).__name__}: {e}"}
-    except Exception as e:
-        result["error"] = f"{type(e).__name__}: {e}"
-    _save(output_dir, "esg.json", result)
-    print(f"    [OK] esg snapshot")
-    return result
-
-
-def collect_fx_dashboard(output_dir):
-    result = {"timestamp": datetime.now().isoformat()}
-    try:
-        from backend.services.fx_curves import fx_dashboard
-        # Limit to 6 pairs to keep yfinance + FRED fan-out modest
-        from backend.services.fx_curves import DEFAULT_PAIRS
-        result["fx"] = fx_dashboard(pairs=DEFAULT_PAIRS[:6])
-    except Exception as e:
-        result["error"] = f"{type(e).__name__}: {e}"
-    _save(output_dir, "fx_dashboard.json", result)
-    print(f"    [OK] fx_dashboard snapshot")
-    return result
-
-
-def collect_commodities_dashboard(output_dir):
-    result = {"timestamp": datetime.now().isoformat()}
-    try:
-        from backend.services.commodity_curves import commodity_dashboard
-        # Pull 6 markets only to stay snappy in the lab
-        result["commodities"] = commodity_dashboard(
-            symbols=["WTI", "BRENT", "NATGAS", "GOLD", "COPPER", "CORN"], n_months=6
-        )
-    except Exception as e:
-        result["error"] = f"{type(e).__name__}: {e}"
-    _save(output_dir, "commodities_dashboard.json", result)
-    print(f"    [OK] commodities_dashboard snapshot")
-    return result
-
-
-def collect_crypto_defi(output_dir):
-    result = {"timestamp": datetime.now().isoformat()}
-    try:
-        from backend.services.crypto_market import crypto_dashboard
-        result["crypto"] = crypto_dashboard(top_n=10)
-    except Exception as e:
-        result["crypto_error"] = f"{type(e).__name__}: {e}"
-    try:
-        from backend.services.defi_metrics import defi_dashboard
-        result["defi"] = defi_dashboard()
-    except Exception as e:
-        result["defi_error"] = f"{type(e).__name__}: {e}"
-    _save(output_dir, "crypto_defi.json", result)
-    print(f"    [OK] crypto_defi snapshot")
-    return result
-
-
-def collect_portfolio_currency(output_dir):
-    """Mixed-currency probe portfolio — exercises FX translation logic."""
-    result = {"timestamp": datetime.now().isoformat()}
-    try:
-        from backend.services.portfolio_currency import portfolio_currency_report
-        positions = [
-            {"ticker": "AAPL", "shares": 50, "current_price": 200.0},     # USD
-            {"ticker": "ASML.AS", "shares": 4, "current_price": 800.0},   # EUR
-            {"ticker": "7203.T", "shares": 100, "current_price": 2500.0}, # JPY
-            {"ticker": "RIO.L", "shares": 30, "current_price": 50.0},     # GBP
-        ]
-        result["report"] = portfolio_currency_report(positions, base="USD")
-    except Exception as e:
-        result["error"] = f"{type(e).__name__}: {e}"
-    _save(output_dir, "portfolio_currency.json", result)
-    print(f"    [OK] portfolio_currency snapshot")
-    return result
+        results["errors"].append(f"Reality checks: {e}")
+        print(f"    [FAIL] {e}")
+    return checks
 
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 def run_engine_data_collection(output_dir, cycle):
-    global _cached_market_signal
-    _cached_market_signal = None  # Fresh signal each cycle
-
-    results = {
-        "cycle": cycle,
-        "timestamp": datetime.now().isoformat(),
-        "data_sources": [],
-        "errors": [],
-    }
+    results = {"cycle": cycle, "timestamp": datetime.now().isoformat(),
+               "data_sources": [], "errors": []}
     os.makedirs(output_dir, exist_ok=True)
+    cycle_seed = 42 + cycle * 137
 
-    collectors = [
-        ("market_snapshot", "Fetching market data", lambda d: collect_market_snapshot(d)),
-        ("stock_analysis", "Running REAL stock analysis", lambda d: collect_stock_analysis(d, cycle)),
-        ("sp500_mc", "Running REAL SP500 Monte Carlo", lambda d: collect_sp500_mc(d)),
-        ("crash_calibration", "Measuring crash model calibration", lambda d: collect_crash_calibration(d)),
-        ("signal_quality", "Measuring signal differentiation", lambda d: collect_signal_quality(d, cycle)),
-        ("regime_risk", "Checking regime + risk score", lambda d: collect_regime_risk(d)),
-        ("sector_analysis", "Running REAL sector analysis", lambda d: collect_sector_analysis(d)),
-        ("portfolio_test", "Testing portfolio engine", lambda d: collect_portfolio_test(d)),
-        ("api_health", "Checking service health", lambda d: collect_api_health(d)),
-        ("validation_metrics", "Collecting model metadata", lambda d: collect_validation_metrics(d)),
-        ("drift_check", "Checking feature drift", lambda d: collect_drift_check(d)),
-        ("options_intelligence", "Checking options signals", lambda d: collect_options_intelligence(d, cycle)),
-        ("systemic_risk", "Computing systemic risk indicators", lambda d: collect_systemic_risk(d)),
-        ("factor_model", "Running factor decomposition", lambda d: collect_factor_model(d)),
-        ("economic_surprise", "Computing economic surprise index", lambda d: collect_economic_surprise(d)),
-        ("liquidity_snapshot", "Measuring liquidity risk", lambda d: collect_liquidity_snapshot(d)),
-        ("copula_snapshot", "Fitting copula tail models", lambda d: collect_copula_snapshot(d)),
-        # ── v13 ──
-        ("bond_lab", "Sampling bond analytics + Treasury curve", lambda d: collect_bond_lab(d)),
-        ("edgar_events", "Pulling SEC 8-K materiality stream", lambda d: collect_edgar_events(d, cycle)),
-        ("esg", "Probing ESG provider blends", lambda d: collect_esg(d)),
-        ("fx_dashboard", "Sampling G10 FX forwards", lambda d: collect_fx_dashboard(d)),
-        ("commodities_dashboard", "Sampling commodity curves", lambda d: collect_commodities_dashboard(d)),
-        ("crypto_defi", "Snapping crypto + DeFi TVL", lambda d: collect_crypto_defi(d)),
-        ("portfolio_currency", "Probing multi-currency portfolio", lambda d: collect_portfolio_currency(d)),
-        ("code_metrics", "Measuring code quality", lambda d: collect_code_metrics(d)),
-    ]
+    tickers = pick_random_tickers(n=8, seed=cycle_seed)
+    print(f"  Tickers for this cycle: {tickers}")
 
-    for i, (name, label, collector) in enumerate(collectors, 1):
-        print(f"  [{i}/{len(collectors)}] {label}...")
-        try:
-            result = collector(output_dir)
-            if isinstance(result, tuple):
-                data, errs = result
-                results["errors"].extend(errs)
-            results["data_sources"].append(name)
-        except Exception as e:
-            results["errors"].append(f"{name}: {type(e).__name__}: {e}")
-            print(f"    [FAIL] {name}: {e}")
+    stock_data = collect_stock_analysis(tickers, results, output_dir)
+    sp500_data = collect_sp500_mc(results, output_dir, cycle_seed)
+    signal_results = collect_signals(stock_data, sp500_data, results, output_dir)
+    collect_portfolios(results, output_dir, cycle_seed)
+    collect_crash_model(results, output_dir)
+    stress_tests = run_stress_tests(stock_data, results, output_dir)
+    consistency = run_consistency_checks(stock_data, signal_results, results, output_dir)
+    run_backtest(results, output_dir)
+    collect_correlations(results, output_dir)
+    reality = run_reality_checks(stock_data, sp500_data, results, output_dir)
 
-    with open(os.path.join(output_dir, "run_metadata.json"), "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=2, default=str)
-
-    print(f"\n  Data generation complete: {len(results['data_sources'])} sources, "
-          f"{len(results['errors'])} errors")
+    # Summary
+    print("  [11/11] Summary...")
+    stress_passed = sum(1 for t in stress_tests if t.get("pass"))
+    consist_passed = sum(1 for c in consistency if c.get("pass"))
+    reality_ok = sum(1 for r in reality if r.get("reasonable"))
+    results["summary"] = {
+        "data_sources": len(results["data_sources"]),
+        "errors": len(results["errors"]),
+        "stress_tests": f"{stress_passed}/{len(stress_tests)}",
+        "consistency_checks": f"{consist_passed}/{len(consistency)}",
+        "reality_checks": f"{reality_ok}/{len(reality)}",
+        "tickers_tested": tickers,
+    }
+    save_json(results, output_dir, "run_metadata.json")
+    print(f"\n  Complete: {len(results['data_sources'])} sources, {len(results['errors'])} errors, "
+          f"stress={stress_passed}/{len(stress_tests)}, consistency={consist_passed}/{len(consistency)}, "
+          f"reality={reality_ok}/{len(reality)}")
     return results
 
 
