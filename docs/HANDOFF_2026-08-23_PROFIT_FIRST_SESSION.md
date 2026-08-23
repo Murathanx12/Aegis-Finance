@@ -23,7 +23,7 @@ book needs a frozen strategy contract, not a preregistration.
 
 ## 2. LIVE vs BUILT vs ACCRUING
 
-### LIVE (deployed and verified)
+### MERGED to main, NOT yet deployed (see §10 — Railway is CI-gated)
 - Population-aware forecast health (`/api/health/full` → `forecast_populations`).
 - Router policy identity: flipping `CLUSTER_ADJUST_DEFAULT` is now self-refusing.
 - Paper-broker targets: an arena book **can** be mirrored; default unchanged.
@@ -109,11 +109,17 @@ everything"*. An unreadable source and a genuinely flat source are
 indistinguishable, and the code picked the destructive reading. Any dev
 machine, fresh container or wiped volume would have done the same on contact.
 
-Now guarded, with tests that drive a fake transport:
+Now guarded, with tests that drive a fake transport. Both guards key on
+**ending up flat**, never on how many positions close — a first version keyed on
+the fraction closed and blocked a legitimate rotation (selling the only held
+name to buy another closes 100%), which the existing suite caught:
 - empty internal source + non-empty account → **refuse**, log ERROR, record
   equity only;
-- a pass that would close **>50%** of the book → **refuse** (a rebalance is
-  incremental; "close almost everything" is what a broken source looks like);
+- every target resolving to zero shares while the account holds positions →
+  **refuse**. `_target_share_counts` silently drops any name it has no price
+  for, so a price-feed outage empties the target book with a perfectly readable
+  source, and the account would be liquidated by a data failure rather than a
+  decision;
 - `AEGIS_ALPACA_ALLOW_FULL_LIQUIDATION=1` re-permits a genuine liquidation, so
   a book that really went to cash can still say so.
 
