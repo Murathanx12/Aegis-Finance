@@ -42,12 +42,6 @@ from backend.services.portfolio_intelligence import (
 #: about the existing third-party-verified history changes.
 MIRRORED_LANE = "mirror"
 
-#: A sync that closes more than this fraction of the account in one pass is
-#: treated as a liquidation signal and refused. Rebalances are incremental;
-#: "close almost everything" is what a broken source looks like.
-MAX_CLOSE_FRACTION = 0.5
-
-
 def _resolve(target=None):
     """The declared mirror target, or the legacy lane when none is set."""
     return target if target is not None else _targets.parse_target()
@@ -178,7 +172,7 @@ def seed_alpaca_mirror(db_path=None, target=None) -> dict:
         return {"status": "not_enabled"}
     if not alpaca_available():
         return {"status": "no_keys"}
-    t = _resolve(target)
+    tgt = _resolve(target)
 
     existing = _request("GET", "/v2/positions") or []
     # Positions alone are NOT enough: while the market is closed, seed orders
@@ -190,34 +184,34 @@ def seed_alpaca_mirror(db_path=None, target=None) -> dict:
         return {"status": "already_seeded", "n_positions": len(existing),
                 "n_open_orders": len(open_orders)}
 
-    internal = _internal_positions(db_path, target=t)
-    nav = _internal_nav(db_path, target=t)
+    internal = _internal_positions(db_path, target=tgt)
+    nav = _internal_nav(db_path, target=tgt)
     if not internal or not nav:
         return {"status": "no_internal_positions",
-                "target_id": t.target_id,
-                "detail": f"{t.target_id} has no open positions/nav here"}
+                "target_id": tgt.target_id,
+                "detail": f"{tgt.target_id} has no open positions/nav here"}
 
     acct = _request("GET", "/v2/account")
     equity = float(acct["equity"])
     prices = _latest_prices(sorted(internal))
     targets = _target_share_counts(internal, equity, nav, prices)
     placed = []
-    for t, qty in sorted(targets.items()):
+    for sym, qty in sorted(targets.items()):
         _request("POST", "/v2/orders", {
-            "symbol": t, "qty": str(qty), "side": "buy",
+            "symbol": sym, "qty": str(qty), "side": "buy",
             "type": "market", "time_in_force": "day",
         })
-        placed.append({"symbol": t, "qty": qty})
+        placed.append({"symbol": sym, "qty": qty})
     # Registry annotation — the lane-adjacent ledger stays complete.
     from backend.services.portfolio_intelligence.trial_registry import (
         ensure_trial_registered,
     )
-    ensure_trial_registered(t.trial_param, _targets.annotation(t),
+    ensure_trial_registered(tgt.trial_param, _targets.annotation(tgt),
                             db_path=db_path)
-    _record_equity(divergence_pct=None, db_path=db_path, target=t)
+    _record_equity(divergence_pct=None, db_path=db_path, target=tgt)
     logger.info("Alpaca paper SEEDED for %s: %d orders placed (queue at next "
-                "open if market closed)", t.target_id, len(placed))
-    return {"status": "seeded", "target_id": t.target_id, "orders": placed}
+                "open if market closed)", tgt.target_id, len(placed))
+    return {"status": "seeded", "target_id": tgt.target_id, "orders": placed}
 
 
 def sync_alpaca_mirror(db_path=None, target=None) -> dict:
@@ -290,17 +284,25 @@ def sync_alpaca_mirror(db_path=None, target=None) -> dict:
 
     trades = []
     if set(want) != set(held):  # the mirrored source rebalanced — follow it
-        # A rebalance that closes most of the book is the same ambiguous
-        # signal in weaker form. Bound it rather than trusting it blind.
-        closing = set(held) - set(want)
-        if held and len(closing) / len(held) > MAX_CLOSE_FRACTION and                 os.getenv("AEGIS_ALPACA_ALLOW_FULL_LIQUIDATION") != "1":
+        # The hazard is ending up FLAT, not the number of closes. A rotation
+        # out of one name and into another closes 100% of a one-name book and
+        # is perfectly legitimate, so a fraction-based rule would block real
+        # rebalances (it did — caught by the existing suite).
+        #
+        # What must never pass silently is `want` coming back EMPTY while the
+        # account holds positions. `_target_share_counts` drops any name it has
+        # no price for, so a price-feed outage empties `want` with a perfectly
+        # readable internal book — and the account gets liquidated by a data
+        # failure rather than a decision.
+        if held and not want:
             _record_equity(divergence, db_path=db_path, target=tgt)
-            logger.error("Alpaca sync REFUSED for %s: would close %d of %d "
-                         "positions (>%.0f%%), which is a liquidation, not a "
-                         "rebalance.", tgt.target_id, len(closing), len(held),
-                         MAX_CLOSE_FRACTION * 100)
-            return {"status": "refused_mass_close", "target_id": tgt.target_id,
-                    "n_would_close": len(closing), "n_held": len(held)}
+            logger.error("Alpaca sync REFUSED for %s: the internal book holds "
+                         "%d name(s) but every target resolved to zero shares "
+                         "(likely a price outage). Refusing to go flat on a "
+                         "data failure.", tgt.target_id, len(internal))
+            return {"status": "refused_targets_empty",
+                    "target_id": tgt.target_id,
+                    "n_held": len(held), "n_internal": len(internal)}
         for sym in sorted(set(held) - set(want)):
             _request("DELETE", f"/v2/positions/{sym}")
             trades.append({"symbol": sym, "action": "close"})

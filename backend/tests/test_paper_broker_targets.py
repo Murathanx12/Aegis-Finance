@@ -168,14 +168,41 @@ def test_explicit_flag_re_permits_a_genuine_liquidation(fake, monkeypatch):
     assert out["status"] != "refused_source_empty"
 
 
-def test_mass_close_is_refused_even_with_a_readable_source(fake, monkeypatch):
-    """Closing most of the book is the same ambiguous signal, weaker."""
-    monkeypatch.setattr(AM, "_internal_positions", lambda *a, **k: {"AAPL": 10.0})
+def test_going_flat_on_a_price_outage_is_refused(fake, monkeypatch):
+    """`_target_share_counts` drops any name it has no price for.
+
+    A price-feed outage therefore empties the target book while the internal
+    book is perfectly readable — and the account would be liquidated by a data
+    failure rather than a decision.
+    """
+    monkeypatch.setattr(AM, "_internal_positions",
+                        lambda *a, **k: {"AAPL": 10.0, "MSFT": 5.0})
     monkeypatch.setattr(AM, "_internal_nav", lambda *a, **k: 100_000.0)
+    monkeypatch.setattr(AM, "_latest_prices", lambda syms: {})   # outage
+    monkeypatch.setattr(AM, "_target_share_counts",
+                        lambda *a, **k: {})
 
     out = AM.sync_alpaca_mirror()
-    assert out["status"] == "refused_mass_close", out
+    assert out["status"] == "refused_targets_empty", out
     assert fake.destructive == []
+
+
+def test_a_rotation_is_NOT_treated_as_a_liquidation(fake, monkeypatch):
+    """Closing 100% of a one-name book to open another is a real rebalance.
+
+    An earlier version of this guard keyed on the FRACTION closed and blocked
+    exactly this; the existing alpaca_mirror suite caught it. The rule is
+    "never end up flat", not "never close a lot".
+    """
+    fake.positions = {"AAPL": 100}
+    monkeypatch.setattr(AM, "_internal_positions", lambda *a, **k: {"MSFT": 5.0})
+    monkeypatch.setattr(AM, "_internal_nav", lambda *a, **k: 100_000.0)
+    monkeypatch.setattr(AM, "_latest_prices", lambda syms: {"MSFT": 400.0})
+
+    out = AM.sync_alpaca_mirror()
+    assert out["status"] == "synced", out
+    actions = {(t["symbol"], t["action"]) for t in out["trades"]}
+    assert ("AAPL", "close") in actions and ("MSFT", "open") in actions
 
 
 def test_ordinary_rebalance_still_trades(fake, monkeypatch):
@@ -188,6 +215,39 @@ def test_ordinary_rebalance_still_trades(fake, monkeypatch):
     out = AM.sync_alpaca_mirror()
     assert out["status"] == "synced", out
     assert fake.destructive, "a genuine rebalance placed no orders at all"
+
+
+def test_seed_resolves_its_target_after_the_order_loop(fake, monkeypatch,
+                                                       tmp_path):
+    """Regression: `t` was both the resolved target AND the per-ticker loop
+    variable in `seed`, so the loop clobbered it and the registry annotation
+    blew up with `'str' object has no attribute 'trial_param'`.
+
+    The bug survived my own tests because they only exercised `sync`, and the
+    full suite I checked before pushing had been launched BEFORE these changes
+    existed. CI caught it on a clean checkout. Seed is covered now.
+    """
+    monkeypatch.setenv("AEGIS_SEED_ALPACA_MIRROR", "1")
+    monkeypatch.setattr(AM, "_internal_positions",
+                        lambda *a, **k: {"AAPL": 10.0, "MSFT": 5.0})
+    monkeypatch.setattr(AM, "_internal_nav", lambda *a, **k: 100_000.0)
+    monkeypatch.setattr(AM, "_latest_prices",
+                        lambda syms: {s: 10.0 for s in syms})
+    registered = {}
+    monkeypatch.setattr(
+        "backend.services.portfolio_intelligence.trial_registry"
+        ".ensure_trial_registered",
+        lambda param, ann, db_path=None: registered.update(
+            {"param": param, "ann": ann}))
+    # An account with no positions and no open orders is "not yet seeded".
+    fake.positions = {}
+
+    out = AM.seed_alpaca_mirror()
+
+    assert out["status"] == "seeded", out
+    assert out["target_id"] == "lane:mirror"
+    assert registered["param"] == "alpaca-mirror-verification"
+    assert registered["ann"]["paper_only"] is True
 
 
 def test_sync_reports_which_target_it_acted_on(fake, monkeypatch):
