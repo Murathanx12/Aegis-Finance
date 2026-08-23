@@ -668,10 +668,26 @@ def _case_execution_ledger():
             "captured edge over a ledger with no orders in it")
 
 
+def _case_feature_leakage_guard():
+    """Hand the leakage probe a frame it cannot score. A probe that saw nothing
+    has not cleared a feature set, and certifying one on an empty scan would be
+    this guard committing the bug it exists to catch."""
+    import pandas as pd
+
+    from backend.services.feature_leakage_guard import (
+        LeakageUnknowable, assert_no_target_leakage)
+    empty = pd.DataFrame({"date": [], "f": [], "y": []})
+    return (lambda: assert_no_target_leakage(empty, features=["f"],
+                                             target="y", block="date"),
+            LeakageUnknowable,
+            "a leakage probe with no scoreable block")
+
+
 CASES = {
     "aegis_panel": _case_aegis_panel,
     "signal_reachability": _case_signal_reachability,
     "execution_ledger": _case_execution_ledger,
+    "feature_leakage_guard": _case_feature_leakage_guard,
     "risk_price_features": _case_risk_price_features,
     "spec": _case_arena_spec,
     "experience": _case_arena_experience,

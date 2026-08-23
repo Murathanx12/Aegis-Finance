@@ -1,0 +1,245 @@
+{
+  "trial_id": "RELATIVE-VALUE-NN-1",
+  "spec_hash": "294b0203bf75c9a7",
+  "spec": {
+    "trial_id": "RELATIVE-VALUE-NN-1",
+    "licence": "PRODUCT_EXPERIMENT (screen \u2014 licenses building, never a claim)",
+    "questions": [
+      "Q1 is pairwise capital substitution predictable out of block at all?",
+      "Q2 does a NEURAL model add anything a tree or a line does not?"
+    ],
+    "corpus": "relative_value/pair_labels_v1 x net_panel/net_panel_v1",
+    "n_effective": "145 DATE BLOCKS \u2014 never 72,495 pairs (CANON \u00a758)",
+    "target": "improvement_net = fwd_B - fwd_A - both one-way switch costs",
+    "excluded": "COST_MODEL_SENSITIVE pairs (verdict flips inside the cost band)",
+    "features": "per name: mom_21/63/252, mom_12_1, vol_21/63, drawdown_252 \u2014 taken for A, for B, and as B-A. Nothing forward, and explicitly NOT cs_rank/cs_decile, which are ranks OF the forward return (measured IC +1.0000 / +0.9950 against it).",
+    "leakage_guard": "every feature is screened by `feature_leakage_guard.assert_no_target_leakage` before any model is fitted; the run REFUSES rather than reporting if any feature ranks the target beyond 0.5",
+    "split": "expanding by DATE: train on all dates < d, test on date d",
+    "min_train_dates": 40,
+    "models": [
+      "ridge",
+      "lightgbm",
+      "mlp"
+    ],
+    "primary_metric": "rank IC of predicted vs realised improvement_net, computed WITHIN each test date then averaged over dates",
+    "decision_rule_q1": "The pairwise SIGNAL is licensed iff the best model's mean rank IC survives BH-FDR at q<=0.10 across every arm in this run.",
+    "decision_rule_q2": "A NEURAL challenger is licensed iff the MLP beats LightGBM on the SAME test dates by more than one paired SE. If it does not, NEURAL-RELATIVE-VALUE closes as a v1 question WITH A RECEIPT and is not retried with a bigger network \u2014 an MLP that cannot beat a tree on 24 tabular features is not going to be rescued by depth.",
+    "g5_note": "Order 20 \u00a74: any registration on these labels must confront G5 by name. The distinct claim is pairwise capital SUBSTITUTION, a quantity none of G5's single-name conditional shapes contained. This screen does not make that claim \u2014 it decides whether one is worth preparing."
+  },
+  "n_pairs": 71647,
+  "n_date_blocks": 145,
+  "leakage_guard": {
+    "status": "ok",
+    "n_blocks": 145,
+    "bar": 0.5,
+    "warned": [],
+    "features": {
+      "mom_21_a": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.003204,
+        "abs": 0.003204
+      },
+      "mom_63_a": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.004411,
+        "abs": 0.004411
+      },
+      "mom_252_a": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": -0.012087,
+        "abs": 0.012087
+      },
+      "mom_12_1_a": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": -0.010319,
+        "abs": 0.010319
+      },
+      "vol_21_a": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": -0.022839,
+        "abs": 0.022839
+      },
+      "vol_63_a": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": -0.026305,
+        "abs": 0.026305
+      },
+      "drawdown_252_a": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.012322,
+        "abs": 0.012322
+      },
+      "mom_21_b": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.007676,
+        "abs": 0.007676
+      },
+      "mom_63_b": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.003791,
+        "abs": 0.003791
+      },
+      "mom_252_b": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.014526,
+        "abs": 0.014526
+      },
+      "mom_12_1_b": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.011083,
+        "abs": 0.011083
+      },
+      "vol_21_b": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.017525,
+        "abs": 0.017525
+      },
+      "vol_63_b": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.020664,
+        "abs": 0.020664
+      },
+      "drawdown_252_b": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": -0.004242,
+        "abs": 0.004242
+      },
+      "mom_21_d": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.004679,
+        "abs": 0.004679
+      },
+      "mom_63_d": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": -0.000822,
+        "abs": 0.000822
+      },
+      "mom_252_d": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.020014,
+        "abs": 0.020014
+      },
+      "mom_12_1_d": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.016929,
+        "abs": 0.016929
+      },
+      "vol_21_d": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.025185,
+        "abs": 0.025185
+      },
+      "vol_63_d": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": 0.031822,
+        "abs": 0.031822
+      },
+      "drawdown_252_d": {
+        "status": "ok",
+        "n_blocks": 145,
+        "mean_rank_ic": -0.010036,
+        "abs": 0.010036
+      }
+    },
+    "ranked": [
+      [
+        0.031822,
+        "vol_63_d"
+      ],
+      [
+        0.026305,
+        "vol_63_a"
+      ],
+      [
+        0.025185,
+        "vol_21_d"
+      ],
+      [
+        0.022839,
+        "vol_21_a"
+      ],
+      [
+        0.020664,
+        "vol_63_b"
+      ]
+    ]
+  },
+  "n_effective": 145,
+  "results": {
+    "ridge": {
+      "n_dates": 105,
+      "mean_ic": 0.02331,
+      "se": 0.02212,
+      "t": 1.054,
+      "p_two_sided": 0.2943,
+      "mde_80pct_power": 0.06193,
+      "bh_fdr_survives": false
+    },
+    "lightgbm": {
+      "n_dates": 105,
+      "mean_ic": 0.0117,
+      "se": 0.01188,
+      "t": 0.985,
+      "p_two_sided": 0.32703,
+      "mde_80pct_power": 0.03326,
+      "bh_fdr_survives": false
+    },
+    "mlp": {
+      "n_dates": 105,
+      "mean_ic": 0.00339,
+      "se": 0.01136,
+      "t": 0.299,
+      "p_two_sided": 0.76587,
+      "mde_80pct_power": 0.0318,
+      "bh_fdr_survives": false
+    }
+  },
+  "paired_comparisons": {
+    "mlp_vs_lightgbm": {
+      "n_dates": 105,
+      "mean_diff": -0.008306,
+      "se": 0.011174,
+      "t": -0.743,
+      "beats_by_more_than_1se": false
+    },
+    "mlp_vs_ridge": {
+      "n_dates": 105,
+      "mean_diff": -0.019921,
+      "se": 0.020477,
+      "t": -0.973,
+      "beats_by_more_than_1se": false
+    },
+    "lightgbm_vs_ridge": {
+      "n_dates": 105,
+      "mean_diff": -0.011615,
+      "se": 0.017807,
+      "t": -0.652,
+      "beats_by_more_than_1se": false
+    }
+  },
+  "q1_signal_licensed": false,
+  "q1_arms_passing": [],
+  "q2_neural_licensed": false,
+  "verdict": "STOP",
+  "verdict_meaning": "nothing survived out of block; no selector is licensed"
+}

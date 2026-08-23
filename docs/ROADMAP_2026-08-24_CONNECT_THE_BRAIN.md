@@ -488,6 +488,65 @@ feature.**
 
 ---
 
+## 4.10. `RELATIVE-VALUE-NN-1` — RAN: STOP, and the NN question is closed
+
+Full result: `docs/FINDING_2026-08-24_RELATIVE_VALUE_NN.md`. 71,647 pairs,
+**n_effective 145 date blocks**, 105 test dates.
+
+| model | IC | t | BH-FDR |
+|---|---|---|---|
+| ridge | +0.0233 | 1.05 | ✗ |
+| lightgbm | +0.0117 | 0.98 | ✗ |
+| mlp | +0.0034 | 0.30 | ✗ |
+
+Nothing survives. The MLP is **worst of the three** — behind both the tree
+(−0.008 paired) and the line (−0.020 paired). Per the rule declared before the
+run, **`NEURAL-RELATIVE-VALUE` closes as a v1 question with a receipt**, and the
+multi-head torch model this roadmap described is **not built**.
+
+Under-powered as usual: MDE₈₀ 0.033–0.062 against observed 0.003–0.023.
+
+**AND THE FIRST RUN WAS A LEAK.** It returned IC 0.97–0.99 with t over 1,000 and
+declared the signal licensed. `cs_rank` — in the feature list — is the
+cross-sectional rank **of the forward return** (measured IC +1.0000). The
+script's own docstring already said forward quantities are the answer, not
+features; the column *name* was trusted over the column.
+
+That is the **third instance in one session** of asserting a property of data
+from its description rather than measuring it (`stdopd` skew, the event-response
+gap, `cs_rank`). Two were caught by reading. This one was caught only because
+the number was absurd — **which is not a method**, since a leak yielding 0.15
+would have shipped.
+
+**So it is now structural:** `backend/services/feature_leakage_guard.py` refuses
+any feature whose within-block rank IC against the target exceeds 0.5, **before
+any model is fitted**. Verified against the real leak. Every future screen calls
+it. `0.99 → 0.023` is the guard's value in one number.
+
+---
+
+## 4.11. Scoreboard after one night of building alpha
+
+Three alpha mechanisms attempted, all three now have receipts:
+
+| item | verdict | what it cost to learn |
+|---|---|---|
+| `ANALYST-COCOVERAGE-GRAPH-1` | **CONTINUE** — effect replicates past own- and industry-momentum; all three refinements measured zero | one groupby |
+| `EVENT-RESPONSE-1` | **STOP** — PEAD real at 7bps, nothing ranks which events drift | one evening |
+| `RELATIVE-VALUE-NN-1` | **STOP** — nothing out of block; the neural question closes | one evening |
+
+**Demonstrated edge remains 0%**, and that is the honest reading: the roadmap's
+premise was that alpha-source diversity is the bottleneck, and the first three
+attempts at new sources returned one plain published effect and two nulls.
+
+That is not a reason to abandon the premise — it is the premise being *tested*
+instead of assumed, which is what the previous five months did not do. What it
+does say is that the cheap-and-on-disk ideas are now mostly spent, and the next
+ones (options-conditioned events, actor magnitude, management language) need
+**data that is not yet extracted** rather than another model on the same panel.
+
+---
+
 ## 5. Logged, not queued
 
 Good ideas with no owner and no date. Recorded so they are not re-derived, and
@@ -514,7 +573,7 @@ from this list displaces something in §3, and says what it displaces.
 | ~~Now~~ | ~~P0.1 reachability audit~~ — **DONE**, and it found a live gap | — |
 | ~~Now~~ | ~~P1.3 co-coverage graph probe~~ — **DONE**, verdict CONTINUE; all three refinements measured zero (§4.6) | — |
 | ~~Next~~ | ~~P1.1 `EVENT_RESPONSE_v1`~~ — **RAN: STOP** (§4.8). The daily options-blind spec is refuted; the successor is the options surface, which now has a named consumer | — |
-| Next | P1.2 `RELATIVE_VALUE_NN_v1` | nothing (corpus on disk) |
+| ~~Next~~ | ~~P1.2 `RELATIVE_VALUE_NN_v1`~~ — **RAN: STOP** (§4.10); the NN question is closed with a receipt | — |
 | After P0.1 | P0.2 information bus | knowing which orphans are worth admitting |
 | **NOW** | P2 options surface — **promoted**: §4.8 gave it the consumer it was waiting for | — |
 | After ≥3 independent selectors have live output | `META_ROUTER_v1` | independence, measured not assumed |

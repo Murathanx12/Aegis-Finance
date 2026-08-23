@@ -53,8 +53,20 @@ OUT = _config.OPTIMUS_LEDGER_DIR / "relative_value"
 
 #: Per-name state at the decision date. Everything else in the panel is a
 #: FORWARD quantity and would be the answer, not a feature.
+#:
+#: `cs_rank` AND `cs_decile` ARE DELIBERATELY ABSENT, and the first version of
+#: this file had `cs_rank` in the list. The name reads like a cross-sectional
+#: rank of some state variable; it is the cross-sectional rank OF THE FORWARD
+#: RETURN. Measured: mean within-date rank IC against `forward_return` of
+#: +1.0000 for `cs_rank` and +0.9950 for `cs_decile`, against +0.0115 for the
+#: strongest honest feature here. The screen returned IC 0.97-0.99 with
+#: t-statistics over 1,000 and declared the signal licensed.
+#:
+#: The docstring two lines above was already correct. It was the column NAME
+#: that was trusted instead of the column. `feature_leakage_guard` now refuses
+#: this class before it can become a result.
 NAME_FEATURES = ["mom_21", "mom_63", "mom_252", "mom_12_1",
-                 "vol_21", "vol_63", "drawdown_252", "cs_rank"]
+                 "vol_21", "vol_63", "drawdown_252"]
 
 SPEC: dict = {
     "trial_id": "RELATIVE-VALUE-NN-1",
@@ -67,8 +79,14 @@ SPEC: dict = {
     "n_effective": "145 DATE BLOCKS — never 72,495 pairs (CANON §58)",
     "target": "improvement_net = fwd_B - fwd_A - both one-way switch costs",
     "excluded": "COST_MODEL_SENSITIVE pairs (verdict flips inside the cost band)",
-    "features": ("per name: mom_21/63/252, mom_12_1, vol_21/63, drawdown_252, "
-                 "cs_rank — taken for A, for B, and as B-A. Nothing forward."),
+    "features": ("per name: mom_21/63/252, mom_12_1, vol_21/63, drawdown_252 "
+                 "— taken for A, for B, and as B-A. Nothing forward, and "
+                 "explicitly NOT cs_rank/cs_decile, which are ranks OF the "
+                 "forward return (measured IC +1.0000 / +0.9950 against it)."),
+    "leakage_guard": ("every feature is screened by "
+                      "`feature_leakage_guard.assert_no_target_leakage` before "
+                      "any model is fitted; the run REFUSES rather than "
+                      "reporting if any feature ranks the target beyond 0.5"),
     "split": "expanding by DATE: train on all dates < d, test on date d",
     "min_train_dates": 40,
     "models": ["ridge", "lightgbm", "mlp"],
@@ -185,6 +203,16 @@ def run() -> dict:
     d = build()
     dates = sorted(d["date"].unique())
     feats = feature_cols()
+
+    # BEFORE ANY MODEL IS FITTED. A leak found after the numbers exist is a
+    # result that has to be retracted; found here it is a refusal nobody ever
+    # had to believe.
+    from backend.services import feature_leakage_guard as FLG
+
+    leak = FLG.assert_no_target_leakage(
+        d, features=feats, target="improvement_net", block="date")
+    print(f"  leakage guard: PASS over {leak['n_blocks']} blocks | "
+          f"strongest {leak['ranked'][:3]}", flush=True)
     print(f"  {len(d):,} pairs over {len(dates)} date blocks, "
           f"{len(feats)} features", flush=True)
 
@@ -255,6 +283,7 @@ def run() -> dict:
     receipt = {
         "trial_id": SPEC["trial_id"], "spec_hash": spec_hash(), "spec": SPEC,
         "n_pairs": int(len(d)), "n_date_blocks": int(len(dates)),
+        "leakage_guard": leak,
         "n_effective": int(len(dates)),
         "results": results, "paired_comparisons": comps,
         "q1_signal_licensed": bool(q1), "q1_arms_passing": q1,
