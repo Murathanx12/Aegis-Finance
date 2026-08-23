@@ -1,5 +1,20 @@
 # HANDOFF 2026-08-23 → next builder session (Opus)
 
+> **SUPERSEDED for ORDERING by
+> `docs/HANDOFF_2026-08-23_PROFIT_FIRST_SESSION.md` (evening).** Its research
+> state below is unchanged and still correct — the WRDS reconciliation, the
+> panel-2 detectability gate, the `signals_raw_plus` find. What changed is the
+> QUEUE: Murat's ruling of 2026-08-23 established three licences, and research
+> work no longer blocks paper experimentation. Read the evening handoff and
+> `docs/ROADMAP_2026-08-23_PROFIT_FIRST.md` first.
+>
+> Two items below are also now ANSWERED rather than open:
+> * "no forecast in 11 days" was `live_forward`, not the arena — the arena was
+>   writing normally. Producer diagnosed (`why_moved`, fixed 2026-08-22, next
+>   run Mon 08-24).
+> * the `CLUSTER_ADJUST_DEFAULT` flip is no longer blocked on a policy-identity
+>   problem; it is self-refusing now and just needs the attended flip.
+
 Supersedes `HANDOFF_2026-08-22_OPUS_BUILDER.md`, which stays readable for its
 trap list. Read this first, then `docs/ROADMAP_POSITION_2026-08-21.md` §7 for
 the older attended queue.
