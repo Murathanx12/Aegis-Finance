@@ -418,20 +418,28 @@ async def lifespan(app: FastAPI):
                                res.get("status"))
             except Exception as e:
                 logger.error("NAV reconstruction failed: %s", e, exc_info=True)
-        # Alpaca paper mirror seeding — ATTENDED, env-gated, same pattern.
-        # Needs ALPACA_API_KEY_ID + ALPACA_API_SECRET_KEY set on Railway.
-        # Set AEGIS_SEED_ALPACA_MIRROR=1 for ONE boot to replicate the mirror
-        # lane's positions into the paper account (idempotent — an account
-        # already holding positions never re-seeds), then unset the flag.
+        # Alpaca paper broker seeding — ATTENDED, env-gated, same pattern.
+        # Set AEGIS_SEED_ALPACA_MIRROR=1 for ONE boot, then unset the flag.
+        #
+        # EVERY declared target, not just the lane. This used to call
+        # `seed_alpaca_mirror()` with no argument, which resolves to the LANE —
+        # seeded since inception — so with an arena book declared the boot
+        # returned `already_seeded`, logged a success, and left the arena
+        # account empty forever. Needs ALPACA_API_KEY_ID + ALPACA_API_SECRET_KEY
+        # for the lane, and ALPACA_ARENA_* for the arena book.
+        #
+        # Seeding replicates SETTLED positions, so a book that is all cash
+        # seeds to nothing and says so (`no_internal_positions`). That is not a
+        # failure — it means the book has not filled anything yet.
         if os.environ.get("AEGIS_SEED_ALPACA_MIRROR") == "1":
             try:
                 from backend.services.portfolio_intelligence.alpaca_mirror import (
-                    seed_alpaca_mirror,
+                    seed_all_paper_brokers,
                 )
-                res = await asyncio.to_thread(seed_alpaca_mirror)
-                logger.warning("ALPACA-MIRROR SEEDING (AEGIS_SEED_ALPACA_MIRROR=1): %s", res)
+                res = await asyncio.to_thread(seed_all_paper_brokers)
+                logger.warning("ALPACA SEEDING (AEGIS_SEED_ALPACA_MIRROR=1): %s", res)
             except Exception as e:
-                logger.error("Alpaca-mirror seeding failed: %s", e, exc_info=True)
+                logger.error("Alpaca seeding failed: %s", e, exc_info=True)
         # ARENA Gen-1 seeding (ORDER 25) — env-gated, one boot, idempotent.
         # These are PRODUCT_EXPERIMENT SIMULATION books in the arena namespace
         # (never paper_nav), but the seed still goes through a flag so the
@@ -755,6 +763,17 @@ async def health_full():
     except Exception as e:                                     # noqa: BLE001
         event_store = {"status": "DEGRADED", "error": str(e)}
 
+    # External PAPER execution. Added 2026-08-24 with the arena mirror: the one
+    # place a third party computes our equity curve had no health surface at
+    # all, which is the same shape as the arena ledger nobody could see.
+    try:
+        from backend.services.portfolio_intelligence.paper_broker_targets import (
+            health as _paper_broker_health,
+        )
+        paper_broker = _paper_broker_health()
+    except Exception as e:                                     # noqa: BLE001
+        paper_broker = {"status": "DEGRADED", "error": str(e)}
+
     # Every forecast population, each with its own health row. Added 2026-08-23
     # because a population nobody registered is invisible rather than refused:
     # the arena's ledger had never appeared on any health surface.
@@ -855,6 +874,7 @@ async def health_full():
         "prediction_ledger": prediction_ledger,
         "forecast_populations": forecast_populations,
         "event_store": event_store,
+        "paper_broker": paper_broker,
         "investment_committee": investment_committee_health,
         "data_sources": source_health(),
         "fred_health": fred_source_health,

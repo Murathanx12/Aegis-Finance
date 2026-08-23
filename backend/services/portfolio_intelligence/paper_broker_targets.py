@@ -30,10 +30,22 @@ WHAT IS DELIBERATELY REFUSED
   than falling back to a default, because a typo that silently mirrors the
   wrong book would corrupt a track record with no error anywhere.
 
+THE ONE-ACCOUNT CONSTRAINT IS PER ACCOUNT, NOT GLOBAL (amended 2026-08-24)
+==========================================================================
+The first version made the mirror a single global CHOICE, so naming an arena
+book silently stopped mirroring `lane:mirror` -- trading a third-party-verified
+curve for an unverified one. There are now two credential namespaces, hence two
+accounts, hence two books mirrored at once and at most two:
+
+    AEGIS_PAPER_BROKER_TARGET   the LANE  -> ALPACA_*        -> 16:30 job
+    AEGIS_ARENA_BROKER_TARGET   the BOOK  -> ALPACA_ARENA_*  -> 17:45 arena pass
+
 ACTIVATION
 ==========
-Set `AEGIS_PAPER_BROKER_TARGET=arena:CURRENT_BEST_v1` (or any seeded book id).
-Seeding remains attended and env-gated exactly as before.
+Set `AEGIS_ARENA_BROKER_TARGET=CURRENT_BEST_v1` (any seeded book id; the
+qualified `arena:` form is accepted too). Seeding remains attended and
+env-gated exactly as before, and it requires the book to actually hold
+positions -- a book that is all cash seeds to nothing.
 """
 
 from __future__ import annotations
@@ -45,12 +57,29 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
-#: The environment variable that declares the single mirrored target.
+#: The environment variable that declares the mirrored LANE target.
 TARGET_ENV = "AEGIS_PAPER_BROKER_TARGET"
 
 #: Unset means the legacy behaviour, unchanged. This default is load-bearing:
 #: the `mirror` lane has a live third-party-verified history and must keep it.
 DEFAULT_TARGET = "lane:mirror"
+
+#: The environment variable that declares the mirrored ARENA book, INDEPENDENTLY
+#: of the lane.
+#:
+#: WHY TWO DECLARATIONS AND NOT ONE CHOICE. `TARGET_ENV` was written when there
+#: was one Alpaca account, so it made the mirror a single global selection and
+#: pointing it at an arena book silently STOPPED mirroring `lane:mirror` -- the
+#: lane whose third-party-verified equity curve is, in this module's own words,
+#: the only independent check this project has on its own NAV maths. Trading
+#: that away to gain the arena would have been a strictly worse position.
+#:
+#: The real invariant was never "one target". It is **one Alpaca ACCOUNT, one
+#: equity curve**, and credentials are namespaced per kind (`ALPACA_*` for the
+#: lane, `ALPACA_ARENA_*` for the arena). Two namespaces means two accounts
+#: means two books can be mirrored at once -- and at most two, which the
+#: credential namespaces enforce on their own.
+ARENA_TARGET_ENV = "AEGIS_ARENA_BROKER_TARGET"
 
 
 #: Per-target credential prefixes. An Alpaca paper account is ONE account with
@@ -124,6 +153,35 @@ def _arena_target(book_id: str) -> MirrorTarget:
                  "book decided, so execution assumptions are measured rather "
                  "than assumed. PRODUCT_EXPERIMENT -- never validated alpha."),
     )
+
+
+def parse_arena_target(raw: str | None = None) -> MirrorTarget | None:
+    """The declared arena book, or None when none is declared.
+
+    Accepts a bare book id (`CURRENT_BEST_v1`) or the qualified form
+    (`arena:CURRENT_BEST_v1`); a `lane:` value here is a refusal rather than a
+    silent no-op, because "I set the variable and nothing happened" is how a
+    configuration mistake becomes a month of missing data.
+
+    Falls back to `TARGET_ENV` when that names an arena book, so the older
+    single-target configuration keeps working exactly as it did.
+    """
+    value = (raw if raw is not None
+             else os.getenv(ARENA_TARGET_ENV, "")).strip()
+    if not value:
+        legacy = parse_target()
+        return legacy if legacy.kind == "arena" else None
+    if ":" in value:
+        kind, _, source = value.partition(":")
+        if kind.strip().lower() != "arena":
+            raise UnknownTarget(
+                f"{ARENA_TARGET_ENV}={value!r} names a {kind!r} target. This "
+                f"variable declares the ARENA book only; the lane is declared "
+                f"by {TARGET_ENV}. Refusing rather than ignoring it.")
+        value = source.strip()
+    if not value:
+        raise UnknownTarget(f"{ARENA_TARGET_ENV} names no book id")
+    return _arena_target(value)
 
 
 def parse_target(raw: str | None = None) -> MirrorTarget:
@@ -364,4 +422,60 @@ def describe(target: MirrorTarget | None = None) -> dict:
         "equity_key": t.equity_key,
         "declared_via": (TARGET_ENV if os.getenv(TARGET_ENV)
                          else f"default ({DEFAULT_TARGET})"),
+    }
+
+
+def health() -> dict:
+    """Every declared paper-broker target, and whether it can actually trade.
+
+    WHY THIS IS A HEALTH ROW. `alpaca_mirror_status` existed and no surface
+    called it, so the external paper execution — the one place a third party
+    computes our equity curve — was invisible to every health check. This is
+    the shape that produced "11 days quiet" on the wrong subsystem and
+    `arena/predictions.jsonl` never appearing anywhere: a component nobody can
+    see does not fail loudly, it just stops.
+
+    Reports, never alarms, on an UNDECLARED arena target: not declaring one is
+    a legitimate configuration. It DOES alarm when a target is declared and
+    cannot trade, because that is a stated intention silently not happening.
+    """
+    rows: dict = {}
+    status = "ok"
+
+    try:
+        rows["lane"] = describe(parse_target())
+    except UnknownTarget as e:                                  # noqa: BLE001
+        rows["lane"] = {"status": "REFUSED", "error": str(e)}
+
+    try:
+        arena = parse_arena_target()
+    except UnknownTarget as e:                                  # noqa: BLE001
+        rows["arena"] = {"status": "REFUSED", "error": str(e)}
+        arena = None
+    else:
+        rows["arena"] = (describe(arena) if arena is not None else
+                         {"status": "not_declared",
+                          "note": (f"no arena book mirrored; set "
+                                   f"{ARENA_TARGET_ENV} to declare one")})
+
+    for key, row in rows.items():
+        if row.get("status") == "REFUSED":
+            status = "DEGRADED"
+        elif (row.get("status") == "ok"
+              and row.get("credentials") == "absent"):
+            # Declared and unable to trade. For the lane that is the legacy
+            # unconfigured state; for a DECLARED arena book it is an intention
+            # that is silently not happening.
+            row["note"] = (f"{key} target is declared but its credentials "
+                           f"({', '.join(row.get('credential_env') or [])}) "
+                           f"are absent — it cannot trade")
+            if key == "arena":
+                status = "DEGRADED"
+
+    return {
+        "status": status,
+        "targets": rows,
+        "note": ("one Alpaca account per target: the lane and the arena book "
+                 "have separate credential namespaces and separate equity "
+                 "curves, so both are mirrored at once"),
     }

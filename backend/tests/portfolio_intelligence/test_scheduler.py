@@ -311,6 +311,7 @@ class TestPaperBrokerExecutionClock:
             alpaca_mirror, paper_broker_targets, scheduler as sched,
         )
         monkeypatch.setenv("AEGIS_PAPER_BROKER_TARGET", target_id)
+        monkeypatch.delenv("AEGIS_ARENA_BROKER_TARGET", raising=False)
         monkeypatch.setattr(
             alpaca_mirror, "sync_alpaca_mirror",
             lambda db_path=None, target=None: (
@@ -335,6 +336,18 @@ class TestPaperBrokerExecutionClock:
         assert calls == [], (
             "the mirror lane was traded twice a day — once from the 16:30 "
             "job and once from the arena pass")
+
+    def test_the_arena_book_is_declared_independently_of_the_lane(
+            self, monkeypatch):
+        """Both mirrors run: the lane keeps its verified account and its 16:30
+        sync, the arena book gets its own account and this submit."""
+        calls = []
+        sched, _ = self._stub(monkeypatch, "lane:mirror", calls)
+        monkeypatch.setenv("AEGIS_ARENA_BROKER_TARGET", "CURRENT_BEST_v1")
+        asyncio.run(sched._submit_arena_broker_intent())
+        assert calls == ["arena:CURRENT_BEST_v1"], (
+            "declaring an arena book did not reach the submit, or it "
+            "hijacked the lane's declaration")
 
     def test_an_unresolvable_target_does_not_kill_the_arena_pass(
             self, monkeypatch):

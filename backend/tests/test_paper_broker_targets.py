@@ -419,3 +419,140 @@ def test_an_explicit_arena_target_cannot_borrow_the_lanes_account(monkeypatch):
 
     monkeypatch.setattr(AM, "_request", _explode)
     assert AM.sync_alpaca_mirror(target=arena)["status"] == "not_configured"
+
+
+# ── Two accounts, two books, and the lane keeps its curve ──────────────────
+# `AEGIS_PAPER_BROKER_TARGET` was a single global CHOICE, written when there was
+# one Alpaca account. Pointing it at an arena book silently stopped mirroring
+# `lane:mirror` — whose third-party-verified equity curve this module calls the
+# only independent check the project has on its own NAV maths. Two credential
+# namespaces means two accounts means both can run; the invariant was never
+# "one target", it was "one ACCOUNT, one equity curve".
+
+
+def test_declaring_an_arena_book_does_not_unmirror_the_lane(monkeypatch):
+    monkeypatch.delenv("AEGIS_PAPER_BROKER_TARGET", raising=False)
+    monkeypatch.setenv("AEGIS_ARENA_BROKER_TARGET", "CURRENT_BEST_v1")
+    assert T.parse_target().target_id == "lane:mirror", (
+        "the lane stopped being mirrored the moment an arena book was named — "
+        "that trades a verified curve for an unverified one")
+    assert T.parse_arena_target().target_id == "arena:CURRENT_BEST_v1"
+
+
+def test_no_arena_declaration_means_no_arena_mirror(monkeypatch):
+    monkeypatch.delenv("AEGIS_PAPER_BROKER_TARGET", raising=False)
+    monkeypatch.delenv("AEGIS_ARENA_BROKER_TARGET", raising=False)
+    assert T.parse_arena_target() is None
+
+
+def test_the_arena_variable_accepts_a_bare_book_id(monkeypatch):
+    monkeypatch.setenv("AEGIS_ARENA_BROKER_TARGET", "arena:LLM_EVENTS_v1")
+    assert T.parse_arena_target().target_id == "arena:LLM_EVENTS_v1"
+    monkeypatch.setenv("AEGIS_ARENA_BROKER_TARGET", "LLM_EVENTS_v1")
+    assert T.parse_arena_target().target_id == "arena:LLM_EVENTS_v1"
+
+
+def test_a_lane_in_the_arena_variable_is_refused_not_ignored(monkeypatch):
+    """'I set the variable and nothing happened' is how a config mistake
+    becomes a month of missing data."""
+    monkeypatch.setenv("AEGIS_ARENA_BROKER_TARGET", "lane:mirror")
+    with pytest.raises(T.UnknownTarget):
+        T.parse_arena_target()
+
+
+def test_the_legacy_single_target_configuration_still_works(monkeypatch):
+    monkeypatch.delenv("AEGIS_ARENA_BROKER_TARGET", raising=False)
+    monkeypatch.setenv("AEGIS_PAPER_BROKER_TARGET", "arena:CURRENT_BEST_v1")
+    assert T.parse_arena_target().target_id == "arena:CURRENT_BEST_v1"
+
+
+def test_the_two_mirrors_use_different_accounts(monkeypatch):
+    """The whole reason both can run at once."""
+    monkeypatch.setenv("AEGIS_ARENA_BROKER_TARGET", "CURRENT_BEST_v1")
+    lane, arena = T.parse_target(), T.parse_arena_target()
+    assert lane.key_env == ("ALPACA_API_KEY_ID", "ALPACA_API_SECRET_KEY")
+    assert arena.key_env == ("ALPACA_ARENA_API_KEY_ID",
+                            "ALPACA_ARENA_API_SECRET_KEY")
+    assert lane.equity_key != arena.equity_key
+
+
+def test_the_boot_seeder_reaches_the_arena_account_not_just_the_lane(
+        monkeypatch):
+    """The silent no-op: `seed_alpaca_mirror()` with no target resolves to the
+    LANE, which has been seeded since inception. With an arena book declared,
+    the boot would have logged `already_seeded` and left the arena account
+    empty forever — and every later sync would report `not_seeded` with no
+    explanation anywhere."""
+    monkeypatch.delenv("AEGIS_PAPER_BROKER_TARGET", raising=False)
+    monkeypatch.setenv("AEGIS_ARENA_BROKER_TARGET", "CURRENT_BEST_v1")
+    seen = []
+    monkeypatch.setattr(
+        AM, "seed_alpaca_mirror",
+        lambda db_path=None, target=None: (
+            seen.append(target.target_id) or {"status": "seeded"}))
+
+    out = AM.seed_all_paper_brokers()
+    assert seen == ["lane:mirror", "arena:CURRENT_BEST_v1"], (
+        f"the boot seeder visited {seen} — the arena account never gets a "
+        f"first position unless the seeder reaches it")
+    assert set(out) == {"lane:mirror", "arena:CURRENT_BEST_v1"}
+
+
+def test_one_targets_seeding_failure_does_not_block_the_other(monkeypatch):
+    monkeypatch.delenv("AEGIS_PAPER_BROKER_TARGET", raising=False)
+    monkeypatch.setenv("AEGIS_ARENA_BROKER_TARGET", "CURRENT_BEST_v1")
+
+    def _seed(db_path=None, target=None):
+        if target.kind == "lane":
+            raise RuntimeError("lane account unreachable")
+        return {"status": "seeded"}
+
+    monkeypatch.setattr(AM, "seed_alpaca_mirror", _seed)
+    out = AM.seed_all_paper_brokers()
+    assert out["lane:mirror"]["status"] == "error"
+    assert out["arena:CURRENT_BEST_v1"]["status"] == "seeded"
+
+
+# ── The mirror must be visible to health ───────────────────────────────────
+# `alpaca_mirror_status` existed and nothing called it, so external paper
+# execution — the one place a third party computes our equity curve — was
+# invisible to every health surface. Same shape as the arena ledger that had
+# never appeared on one.
+
+
+def test_health_reports_both_targets(monkeypatch):
+    monkeypatch.setenv("ALPACA_API_KEY_ID", "LANEKEY")
+    monkeypatch.setenv("ALPACA_API_SECRET_KEY", "s1")
+    monkeypatch.setenv("ALPACA_ARENA_API_KEY_ID", "ARENAKEY")
+    monkeypatch.setenv("ALPACA_ARENA_API_SECRET_KEY", "s2")
+    monkeypatch.setenv("AEGIS_ARENA_BROKER_TARGET", "CURRENT_BEST_v1")
+    h = T.health()
+    assert h["status"] == "ok"
+    assert h["targets"]["lane"]["target_id"] == "lane:mirror"
+    assert h["targets"]["arena"]["target_id"] == "arena:CURRENT_BEST_v1"
+    assert h["targets"]["arena"]["credentials"] == "present"
+
+
+def test_an_undeclared_arena_target_is_reported_not_alarmed(monkeypatch):
+    monkeypatch.delenv("AEGIS_ARENA_BROKER_TARGET", raising=False)
+    monkeypatch.delenv("AEGIS_PAPER_BROKER_TARGET", raising=False)
+    h = T.health()
+    assert h["targets"]["arena"]["status"] == "not_declared"
+    assert h["status"] == "ok", "not declaring an arena book is a valid config"
+
+
+def test_a_declared_arena_target_with_no_keys_is_DEGRADED(monkeypatch):
+    """A stated intention that is silently not happening."""
+    monkeypatch.setenv("AEGIS_ARENA_BROKER_TARGET", "CURRENT_BEST_v1")
+    monkeypatch.delenv("ALPACA_ARENA_API_KEY_ID", raising=False)
+    monkeypatch.delenv("ALPACA_ARENA_API_SECRET_KEY", raising=False)
+    h = T.health()
+    assert h["status"] == "DEGRADED"
+    assert "cannot trade" in h["targets"]["arena"]["note"]
+
+
+def test_a_malformed_arena_declaration_is_DEGRADED_not_silent(monkeypatch):
+    monkeypatch.setenv("AEGIS_ARENA_BROKER_TARGET", "lane:mirror")
+    h = T.health()
+    assert h["status"] == "DEGRADED"
+    assert h["targets"]["arena"]["status"] == "REFUSED"

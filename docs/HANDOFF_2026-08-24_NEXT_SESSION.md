@@ -79,9 +79,10 @@ only matured decisions move that.
   the shared-account guard passes (the arena key differs from the lane key).
   **Two things remain, and both are deliberately attended:**
   1. set the same two variables **on Railway** — `.env` is local only;
-  2. decide `AEGIS_PAPER_BROKER_TARGET=arena:<BOOK_ID>` and do one boot with
-     `AEGIS_SEED_ALPACA_MIRROR=1`, then unset the seed flag. Left commented in
-     `.env`, because pointing the broker at a book is a policy event.
+  2. **DONE on Railway 2026-08-24**: `AEGIS_ARENA_BROKER_TARGET=CURRENT_BEST_v1`.
+     Note the variable — declaring an arena book no longer un-mirrors the lane
+     (§8). Still outstanding: **the seed boot**, which cannot happen until the
+     book holds positions. See §8.
   **Rotate the arena secret when convenient** — it was pasted in plain text into
   a chat session before being written to `.env`.
 * Which population G7 counts (`live_forward` vs `arena_forward`).
@@ -159,3 +160,60 @@ The machinery got materially better again and the edge did not move, because
 only decision days move it. What is different after this session is that the
 next thing to build is finally the thing that could: **mechanisms whose errors
 are different errors, competing where the outcome is recorded.**
+
+---
+
+## 8. The arena paper account: what is done, and the ONE step left
+
+Set on Railway 2026-08-24 (production, service `Aegis-Finance`):
+
+```
+ALPACA_ARENA_API_KEY_ID       = PKLL…2LN4      (second paper account)
+ALPACA_ARENA_API_SECRET_KEY   = ****
+AEGIS_ARENA_BROKER_TARGET     = CURRENT_BEST_v1
+AEGIS_SEED_ALPACA_MIRROR      = 0              (unchanged — deliberately)
+AEGIS_PAPER_BROKER_TARGET     — still unset, so lane:mirror keeps its account,
+                                its 16:30 sync and its verified curve
+```
+
+**Why `CURRENT_BEST_v1`.** One arena account, one equity curve, so it is one
+book. It is the only book combining every rule the programme currently believes
+in — inverse-trailing-vol sizing, LLM perception, substitution — which makes it
+the one whose curve would ever be worth third-party verification. Substitution
+also means it trades *between* monthly rebalances, so it accrues execution
+observations fastest, and execution divergence is the thing the account exists
+to measure. `ANTI_SIGNAL_v1` is the inverse control and `AGGRESSIVE_TOP5_v1`
+would show larger slippage, but neither is a book anyone would promote.
+
+### The step that is left, and why it could not be done now
+
+**Every arena book holds `positions: 0`.** The arena has run exactly once
+(Fri 2026-08-21); it decided 12 ENTERs for `CURRENT_BEST_v1` and queued them,
+and nothing has filled yet because the next pass is Monday. `seed_alpaca_mirror`
+replicates *settled positions*, so seeding today returns
+`no_internal_positions` and does nothing.
+
+Sequence, therefore:
+
+| When | What happens | Expected |
+|---|---|---|
+| Mon 17:45 | arena fills Friday's 12 orders at Monday's open, decides, then submits | `Paper broker submit: target=arena:CURRENT_BEST_v1 status=not_seeded` — **no trades**, the Alpaca account is empty and `sync` will not open the first position |
+| **Then, attended** | `railway variables --set AEGIS_SEED_ALPACA_MIRROR=1` → wait for the redeploy → **set it back to `0`** | boot seeds the account to the book's ~12 settled positions |
+| Tue 17:45 | first real intent submit | trades, `basis=intent`, `decided_for=<Tue>` |
+
+**The boot seeder now visits BOTH targets.** It used to call
+`seed_alpaca_mirror()` with no argument, which resolves to the LANE — seeded
+since inception — so with an arena book declared it would have returned
+`already_seeded`, logged that as a success, and left the arena account empty
+forever while every later sync reported `not_seeded` with no explanation
+anywhere. Caught before the flag was ever flipped; one log line per target now,
+so the lane's `already_seeded` cannot be read as the arena being done.
+
+**Do not leave the seed flag armed.** It only fires at boot, Railway boots are
+unpredictable, and an armed seed flag is what produced the duplicate DKNG order
+on 2026-07-18. The `already_seeded` guard (open orders count as seeded) now
+catches that case, but the doctrine stands: arm it, watch it fire, disarm it.
+
+**If the seed reports `no_internal_positions` on Tuesday**, Monday's pass did
+not fill — that is the finding, and the arena is the thing to look at, not the
+broker.

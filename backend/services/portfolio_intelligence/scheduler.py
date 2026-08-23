@@ -824,6 +824,7 @@ async def _daily_check():
         )
         _tgt = _pbt.parse_target()
         if _tgt.kind == "arena":
+            # Legacy single-target configuration: the arena job owns it.
             logger.info("Alpaca mirror: %s is an arena target — submitted "
                         "after the 17:45 pass, not here", _tgt.target_id)
         else:
@@ -1289,11 +1290,14 @@ async def _arena_daily():
 
 
 async def _submit_arena_broker_intent():
-    """Mirror the arena target's queued intent into the external paper account.
+    """Mirror the declared arena book's queued intent into ITS paper account.
 
-    Silent no-op for a lane target (the 16:30 job owns that) and for an
-    unconfigured account. Every other outcome is logged: a paper broker that
-    quietly stops submitting is indistinguishable from one with nothing to do.
+    Independent of the lane: `AEGIS_ARENA_BROKER_TARGET` names the book, and it
+    trades the `ALPACA_ARENA_*` account, so the mirror lane keeps its own
+    account and its own 16:30 sync. Silent no-op when no arena book is declared
+    or its credentials are absent. Every other outcome is logged: a paper
+    broker that quietly stops submitting is indistinguishable from one with
+    nothing to do.
     """
     import asyncio
 
@@ -1305,8 +1309,8 @@ async def _submit_arena_broker_intent():
             sync_alpaca_mirror,
         )
 
-        tgt = _pbt.parse_target()
-        if tgt.kind != "arena":
+        tgt = _pbt.parse_arena_target()
+        if tgt is None:
             return
         res = await asyncio.to_thread(sync_alpaca_mirror, None, tgt)
         logger.info(

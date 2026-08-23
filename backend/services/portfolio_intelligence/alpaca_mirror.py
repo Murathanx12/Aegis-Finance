@@ -251,6 +251,51 @@ def seed_alpaca_mirror(db_path=None, target=None) -> dict:
     return {"status": "seeded", "target_id": tgt.target_id, "orders": placed}
 
 
+def seed_all_paper_brokers(db_path=None) -> dict:
+    """Seed EVERY declared paper-broker target that still needs it.
+
+    THE SILENT NO-OP THIS REPLACES. The boot seeder called
+    `seed_alpaca_mirror()` with no target, which resolves to the ENV-declared
+    LANE -- `lane:mirror` by default. That lane has been seeded since
+    inception, so with an arena book declared the boot would have returned
+    `already_seeded`, logged it as a success, and never touched the arena
+    account at all. Nothing would have failed; the account would simply have
+    stayed empty, and every later sync would have reported `not_seeded` with
+    no explanation anywhere.
+
+    One flag, every target, one log line each -- so `already_seeded` for the
+    lane can never be read as the arena being done.
+    """
+    out: dict = {}
+    targets = []
+    try:
+        targets.append(_targets.parse_target())
+    except _targets.UnknownTarget as e:                         # noqa: BLE001
+        out["_lane_error"] = str(e)
+        logger.error("Alpaca seeding: lane target unresolvable: %s", e)
+    try:
+        arena = _targets.parse_arena_target()
+        if arena is not None:
+            targets.append(arena)
+    except _targets.UnknownTarget as e:                         # noqa: BLE001
+        out["_arena_error"] = str(e)
+        logger.error("Alpaca seeding: arena target unresolvable: %s", e)
+
+    for t in targets:
+        try:
+            res = seed_alpaca_mirror(db_path=db_path, target=t)
+        except Exception as e:                                  # noqa: BLE001
+            res = {"status": "error", "error": f"{type(e).__name__}: {e}"}
+            logger.error("Alpaca seeding failed for %s: %s", t.target_id, e,
+                         exc_info=True)
+        out[t.target_id] = res
+        logger.warning("ALPACA SEEDING %s: %s", t.target_id, res.get("status"))
+    if not targets:
+        logger.error("Alpaca seeding: NO target resolved — the flag was set "
+                     "and nothing was seeded")
+    return out
+
+
 def sync_alpaca_mirror(db_path=None, target=None) -> dict:
     """Daily: record third-party equity + divergence; trade ONLY when the
     mirrored source's INTENT changed. No-op until keys + seed exist.
