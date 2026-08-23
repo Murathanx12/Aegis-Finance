@@ -19,6 +19,25 @@ UTC = timezone.utc
 TARGET = T.parse_target("arena:CURRENT_BEST_v1")
 
 
+@pytest.fixture(autouse=True)
+def _configured(monkeypatch):
+    """Treat the account as configured, without depending on a secrets file.
+
+    THIS FILE PASSED LOCALLY AND FAILED IN CI, and the reason is worth keeping:
+    `reconcile` short-circuits to `not_configured` when the target has no
+    credentials, and this developer machine has a `.env` that `backend.config`
+    loads at import — so eleven tests were passing because a secret happened to
+    exist on disk. CI has no `.env`, and caught it.
+
+    No test here ever reaches a broker (they all stub `_broker_orders`), so
+    what is being removed is a dependency on ambient machine state, not a real
+    check. The one test that asserts the UNconfigured path overrides this
+    afterwards, and a later monkeypatch wins.
+    """
+    from backend.services.portfolio_intelligence import alpaca_mirror as AM
+    monkeypatch.setattr(AM, "alpaca_available", lambda *a, **k: True)
+
+
 def _submit(tmp_path, trades, decided_for="2026-08-24", when=None):
     return EL.record_submission(
         TARGET, trades, decided_for=decided_for, basis="intent",

@@ -117,8 +117,22 @@ def _sandbox_telemetry_to_tmp(tmp_path_factory, monkeypatch):
     yield
 
 
+@pytest.fixture(scope="session")
+def _exec_ledger_dir(tmp_path_factory):
+    """ONE directory for the whole run, not one per test.
+
+    `mktemp` inside a function-scoped autouse fixture runs for every test in
+    the suite — 5,570 directories, and measurably: the full fast suite went
+    from 8:46 to 14:37 when this fixture was added per-test. Redirecting a
+    module constant needs a fresh patch per test, but it does not need a fresh
+    directory, and nothing here reads what another test wrote (every test
+    passes its own `root=`).
+    """
+    return tmp_path_factory.mktemp("exec_ledger")
+
+
 @pytest.fixture(autouse=True)
-def _execution_ledger_to_tmp(tmp_path_factory, monkeypatch):
+def _execution_ledger_to_tmp(_exec_ledger_dir, monkeypatch):
     """Keep the suite's fake broker orders out of the real execution ledger.
 
     FOUND THE SAME WAY AS THE ONE ABOVE — by reading `git status` after a run.
@@ -135,8 +149,8 @@ def _execution_ledger_to_tmp(tmp_path_factory, monkeypatch):
     """
     try:
         from backend.services.portfolio_intelligence import execution_ledger
-        d = tmp_path_factory.mktemp("exec_ledger")
-        monkeypatch.setattr(execution_ledger, "ROOT", d, raising=False)
+        monkeypatch.setattr(execution_ledger, "ROOT", _exec_ledger_dir,
+                            raising=False)
     except Exception:                                            # noqa: BLE001
         pass
     yield

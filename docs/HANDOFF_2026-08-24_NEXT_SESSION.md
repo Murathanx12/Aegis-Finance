@@ -170,6 +170,63 @@ which is whether their errors are different errors.
 
 ---
 
+## 5.5. RAILWAY WILL NOT DEPLOY WHILE CI IS RED — and nothing said so
+
+**Found 2026-08-24 the hard way.** Two pushes (`67c26ff`, `a7c4448`) were
+reported as successful `git push`es and never reached production. The service
+kept serving `1e2dda0` while the working tree was three commits ahead.
+
+```
+railway deployment list --json
+  -> 'status': 'SKIPPED', 'skippedReason': 'CI check suite failed'
+```
+
+Railway is wired to the GitHub check suite and **skips the deploy entirely when
+CI fails** — no build, no error, nothing in the service logs. `railway status`
+still says the service is healthy, because the OLD deployment is healthy. That
+setting is correct and should stay; what was missing is that anyone knew.
+
+**So a green local suite is not evidence that anything shipped.** The deploy
+verification for any push must read `deploy.commit` from
+`/api/health/full` and compare it to the pushed SHA. It already did — which is
+the only reason this was caught at all.
+
+### How to read CI without the `gh` CLI (not installed on this machine)
+
+GitHub's check-runs endpoint is readable **unauthenticated** for this repo:
+
+```bash
+curl -s -H "Accept: application/vnd.github+json" \
+  "https://api.github.com/repos/Murathanx12/Aegis-Finance/commits/<SHA>/check-runs" \
+  | python -c "import json,sys; [print(r['name'], r['status'], r['conclusion'])
+                for r in json.load(sys.stdin)['check_runs']]"
+```
+
+Job LOGS need auth; the pass/fail per job does not, and that is enough to know
+which of the two jobs (`backend pytest` / `frontend next build`) broke.
+
+### The CI-mimic recipe, because local and CI differ in one load-bearing way
+
+`backend/config.py` calls `load_dotenv(PROJECT_ROOT / ".env")` **at import**, so
+every local test run sees whatever secrets are on this machine. CI has no
+`.env`. That is exactly how the 2026-08-24 failure happened: `execution_ledger.
+reconcile` short-circuits to `not_configured` without credentials, so eleven
+tests passed locally **because a secrets file existed** and failed in CI.
+
+To reproduce CI before pushing:
+
+```bash
+( trap 'mv -f .env.hidden .env 2>/dev/null' EXIT
+  mv .env .env.hidden
+  AEGIS_IIF1_PREREG_ABSENT_OK=1 python -m pytest backend/tests/ -m "not slow" -q
+  mv -f .env.hidden .env )
+```
+
+**Always inside a subshell with the trap.** A run that dies with `.env` moved
+leaves the machine without its keys.
+
+---
+
 ## 6. Traps
 
 * **A new custom exception under `services/` fails the suite** until it is
@@ -180,6 +237,16 @@ which is whether their errors are different errors.
   `Secret` as bare lines). `python-dotenv` logs "could not parse statement at
   line N" and carries on, so the keys were simply absent with no error anywhere.
   If credentials appear to be unset, read the file before reading the code.
+* **A test can pass because of a file on your machine.** `backend/config.py`
+  loads `.env` at import, so the suite sees local secrets CI never has. If a
+  code path branches on "are credentials configured", its tests must stub that
+  branch rather than inherit the answer from disk. See §5.5 for the recipe that
+  reproduces CI locally.
+* **`git push` succeeding does not mean anything deployed** (§5.5). Railway
+  skips the deploy when the GitHub check suite fails, silently.
+* **An autouse fixture calling `tmp_path_factory.mktemp` runs per TEST.** Added
+  once here it took the fast suite from 8:46 to 14:37 — 5,570 directories.
+  Session-scope the directory; only the monkeypatch needs to be per-test.
 * **The suite writes into real ledger paths unless something stops it.** Found
   by reading `git status` after a run — twice now, by two different sessions.
   `test_paper_broker_targets` drives `sync_alpaca_mirror` against a fake
