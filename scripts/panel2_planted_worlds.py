@@ -403,6 +403,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-seconds", type=float, default=0)
     ap.add_argument("--calibrate", action="store_true")
     ap.add_argument("--subsample", type=int, default=0)
+    # THE GATE IS NOW CALLED, NOT CITED. `detectability_gate` was named three
+    # times in this file's comments and imported by nothing: "the T2 runner
+    # MUST call assert_detectable" was true as a sentence and false as a fact.
+    # Found by `signal_reachability` on its first run.
+    #
+    # No default. The bar comes from the prereg or the receipts are written
+    # and left UNADJUDICATED, because a bar this script picked would be a bar
+    # chosen by whoever wanted the run to pass.
+    ap.add_argument("--min-recovery", type=float, default=None,
+                    help="declared detectability bar from the prereg. Without "
+                         "it the receipts are written and NOT adjudicated.")
     a = ap.parse_args(argv)
     for s in (sys.stdout, sys.stderr):
         try:
@@ -450,6 +461,39 @@ def main(argv: list[str] | None = None) -> int:
         print(f"receipt: {write_receipt(w, res, spec, phash).name} "
               f"(SENSITIVITY_WORLD - not market evidence)", flush=True)
     print("COMPLETE" if all_done else "PARTIAL - relaunch to resume")
+    if not all_done:
+        return 0
+    return _adjudicate(phash, a.min_recovery)
+
+
+def _adjudicate(phash: str, min_recovery: float | None) -> int:
+    """Read the receipts back through the GATE, not through a second reader.
+
+    Two readers of one receipt is how a gate and a script come to disagree
+    about what passed, so the adjudication goes through
+    `detectability_gate` even when there is no bar to adjudicate against.
+    """
+    from backend.services import detectability_gate as GATE
+
+    if min_recovery is None:
+        print("\nNOT ADJUDICATED — the gate needs a min_recovery declared by "
+              "the prereg. Re-run with --min-recovery, or:\n"
+              f"  python -m backend.services.detectability_gate "
+              f"--receipt-dir {RECEIPT_DIR} --panel-hash {phash} "
+              f"--declared-ic {TARGET_IC} --min-recovery <declared>")
+        return 0
+    try:
+        res = GATE.assert_detectable(RECEIPT_DIR, panel_hash=phash,
+                                     declared_ic=TARGET_IC,
+                                     min_recovery=min_recovery)
+    except GATE.DetectabilityRefused as e:
+        print(f"\nDETECTABILITY GATE: REFUSED\n  {e}")
+        return 2
+    print(f"\nDETECTABILITY GATE: {res['status']} at min_recovery="
+          f"{min_recovery} against planted IC {TARGET_IC}")
+    for w in res["worlds"]:
+        print(f"  {w['world']:14s} best {w['best_arm']:11s} "
+              f"recovered {w['recovered_mean']:+.4f}")
     return 0
 
 

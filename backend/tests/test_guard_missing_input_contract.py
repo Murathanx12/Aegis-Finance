@@ -638,8 +638,24 @@ def _case_router_capital_gate():
             "a router capital licence with no battery receipt")
 
 
+def _case_signal_reachability():
+    """Point the reachability audit at an empty directory. An empty scan has no
+    orphans, so answering 'all clear' would be the audit committing the exact
+    bug it exists to find: a guard handed nothing, and answering anyway."""
+    from pathlib import Path as _P
+    import tempfile
+
+    from backend.services.signal_reachability import (
+        ReachabilityUnknowable, assert_no_unclassified_orphans)
+    empty = _P(tempfile.mkdtemp())
+    return (lambda: assert_no_unclassified_orphans(empty),
+            ReachabilityUnknowable,
+            "a codebase scan that read no modules at all")
+
+
 CASES = {
     "aegis_panel": _case_aegis_panel,
+    "signal_reachability": _case_signal_reachability,
     "risk_price_features": _case_risk_price_features,
     "spec": _case_arena_spec,
     "experience": _case_arena_experience,
