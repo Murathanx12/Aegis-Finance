@@ -1,0 +1,46 @@
+{
+  "dataset": "optionm/stdopd_events_v1",
+  "plan": {
+    "consumer": "EVENT-RESPONSE-1 successor (surprise - implied move)",
+    "n_events_linked": 52604,
+    "n_secids": 2418,
+    "maturities_days": [
+      30,
+      60
+    ],
+    "cp_flags": [
+      "C",
+      "P"
+    ],
+    "years": [
+      2006,
+      2019
+    ],
+    "bound_rationale": "bounded by the consumer's event set, not by a table family; the bound is declared so a narrow extraction is never mistaken for missing data",
+    "cannot_provide": "skew / 25-delta / risk reversal / butterfly \u2014 stdopd is ATM-only (median 30d call delta +0.523, put -0.482). Those need vsurfd."
+  },
+  "years": {
+    "2006": {
+      "status": "ok",
+      "rows": 1408092,
+      "secids_returned": 1498,
+      "dates": 251,
+      "impl_vol_non_null": 0.9985,
+      "sha256": "490cf12688c9b5fd44c8b98ed3fec9bf0ab3935de8062a13bb459a48219d9f37",
+      "queried_at": "2026-08-23T16:18:54+00:00",
+      "seconds": 64.4,
+      "sql": "select secid, date, days, cp_flag, impl_volatility, delta, vega, forward_price, strike_price, premium from optionm.stdopd2006 where days in (30,60) and secid in (5007,5284,5505,5519,6030,6426,6514,6632,7019,7067,7086,7087,7112,7526,7527,7559,7964,8083,8648,8692,8986,9182,9205,9222,9242,9399,9534,100567,100862,100871,100892,100896,100903,100917,100951,100958,100966,100967,100971,100972,100974,10097 -- [2418 secids]"
+    },
+    "2007": {
+      "status": "ok",
+      "rows": 1475698,
+      "secids_returned": 1571,
+      "dates": 251,
+      "impl_vol_non_null": 0.9978,
+      "sha256": "3fe478e16d102b54d0f68c6510b6b66e104ba8362f506018a73d6d227172002c",
+      "queried_at": "2026-08-23T16:19:59+00:00",
+      "seconds": 56.0,
+      "sql": "select secid, date, days, cp_flag, impl_volatility, delta, vega, forward_price, strike_price, premium from optionm.stdopd2007 where days in (30,60) and secid in (5007,5284,5505,5519,6030,6426,6514,6632,7019,7067,7086,7087,7112,7526,7527,7559,7964,8083,8648,8692,8986,9182,9205,9222,9242,9399,9534,100567,100862,100871,100892,100896,100903,100917,100951,100958,100966,100967,100971,100972,100974,10097 -- [2418 secids]"
+    }
+  }
+}
