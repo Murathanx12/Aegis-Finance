@@ -253,9 +253,8 @@ contrarian) become descriptive features; nothing routes capital on a hand-signed
 mapping.
 
 **The source is `optionm.stdopd`, not `opprcd`** — corrected from the review.
-Standardized options at fixed maturities and deltas carry `impl_volatility`,
-`delta`, `gamma`, `vega`; ATM IV, term structure, 25Δ skew and risk reversals
-all derive from them. **1996 is already on disk (6.7M rows).**
+**And then corrected again, against the data rather than against the catalogue
+(see §4.9.1): `stdopd` cannot produce skew.**
 
 * `stdopd` gets a **named consumer** and comes off the deferred list — the same
   rule that released `vsurfd`, working as designed.
@@ -397,6 +396,95 @@ was measured against analyst consensus only, when the tradable quantity is
 `surprise − what was already priced`. The successor is one experiment:
 `OPTIONS_EXPECTATION_SURFACE_v1` from `stdopd`, re-asking this question with the
 implied move as the central feature. `opprcd`'s 4.31B rows remain unneeded.
+
+---
+
+## 4.9. The options pull is FEASIBLE and small — measured, not assumed
+
+`OPTIONS_EXPECTATION_SURFACE_v1` was deferred behind "OptionMetrics is 4.31B
+rows". §4.8 gave it a named consumer; this measures what it would actually cost,
+before anybody pulls anything.
+
+**Linkage (the thing that could have blocked it entirely):**
+`wrdsapps__opcrsphist` maps permno → secid with validity windows, and it is on
+disk.
+
+| | |
+|---|---|
+| earnings events linked to a permno | **52,604** |
+| with a **date-valid** secid link | **52,604 — 100.0%** |
+| distinct secids needed | **2,418** |
+| event years | 2006–2019 |
+
+**Bounded pull size**, `stdopd` restricted to those secids on the sessions
+around each event. Corrected after reading the grid (§4.9.1): the real density
+is **14.0 rows per secid-date** — 11 maturities × 2 sides, some absent — not the
+4 coordinates first assumed.
+
+| window | rows |
+|---|---|
+| ±1 session | ~2.2M |
+| ±3 sessions | ~5.2M |
+| **±5 sessions** | **~8.1M** |
+
+**~8.1M rows, against the 4,310M of `opprcd` that caused the deferral.** The deferral was about `opprcd` and about pulling a
+whole family blind; a pull bounded by a named consumer's actual event set is
+three orders of magnitude smaller and follows the pattern
+`wrds_pull_vsurfd_daily` already established — bounded by design, declared in the
+manifest so a later reader cannot mistake a narrow extraction for missing data.
+
+**And the file already carries the lesson**: `vsurfd`'s docstring records that
+month-end coverage was reported twice as a property of OptionMetrics when it was
+a property of our own `WHERE` clause. A property of your extraction is not a
+property of the data.
+
+Remaining before pulling: a link-quality check on `score` (the link table
+carries a match-confidence column that this count ignored), and confirming
+`stdopd`'s coordinate grid actually contains the maturities an earnings window
+needs.
+
+---
+
+### 4.9.1 CORRECTION — `stdopd` is ATM-only, so it cannot produce skew
+
+Earlier today §4 asserted that "ATM IV, term structure, 25Δ skew and risk
+reversals all derive from" `stdopd`. **Half of that is false**, and reading the
+file rather than the table description is what showed it.
+
+`optionm__stdopd1996` holds exactly **one row per (secid, date, maturity,
+side)** — 6.7M rows, 2,222 secids, 252 dates, 11 maturities (10/30/60/91/122/
+152/182/273/365/547/730 days). The delta is not a coordinate; it is whatever the
+at-the-money strike happens to give:
+
+| 30-day | min | median | max |
+|---|---|---|---|
+| calls | +0.501 | **+0.523** | +0.900 |
+| puts | −0.787 | **−0.482** | −0.122 |
+
+Both sides sit on the money. **There are no OTM wings, so there is no 25Δ, no
+risk reversal and no butterfly.** A "skew" computed from this file would be a
+number produced by code that ran green and measured something else.
+
+| feature | source |
+|---|---|
+| ATM implied vol | **`stdopd`** ✓ |
+| term structure (11 maturities) | **`stdopd`** ✓ |
+| implied MOVE around an event | **`stdopd`** ✓ — the one §4.8 actually needs |
+| 25Δ skew, risk reversal, butterfly | **`vsurfd`** — the standardized-DELTA surface |
+| open interest, volume, max pain | `opprcd` — **still not needed** |
+
+**This does not block §4.8's successor.** What that experiment needs is
+`surprise − implied move`, and the implied move is an ATM quantity: `stdopd`
+supplies it. Skew is a second question, and `vsurfd` already has a named
+consumer, so bounding it the same way (2,418 secids × event windows) is the same
+small pull rather than the 10.07B-row family.
+
+**This is the third time on this dataset.** `wrds_pull_vsurfd_daily`'s docstring
+records that month-end coverage was twice reported as a property of
+OptionMetrics when it was a property of our own `WHERE` clause. Here the
+catalogue said "standardized options" and the reasonable inference — standardized
+on delta as well as maturity — was wrong. **Read the grid before promising the
+feature.**
 
 ---
 
