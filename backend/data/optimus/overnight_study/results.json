@@ -1,0 +1,406 @@
+{
+  "panel": {
+    "n_stock_days": 11297614,
+    "n_sessions": 3019,
+    "n_permnos": 6894,
+    "first_date": "2013-01-03",
+    "last_date": "2024-12-31"
+  },
+  "mu_case": {
+    "permno": 53613,
+    "ticker": "MU",
+    "n_days": 3019,
+    "first_date": "2013-01-03",
+    "last_date": "2024-12-31",
+    "overnight_log10_growth": 1.532,
+    "intraday_log10_growth": -0.429,
+    "close_to_close_log10_growth": 1.104,
+    "overnight_total_pct": 3305.7,
+    "intraday_total_pct": -62.7274,
+    "overnight_mean_bps": 13.24,
+    "intraday_mean_bps": -0.8,
+    "overnight_t_nw": 4.15,
+    "intraday_t_nw": -0.21
+  },
+  "universe_all": {
+    "overnight": {
+      "label": "EW overnight, all",
+      "n_days": 3019,
+      "mean_bps_per_day": 10.733,
+      "t_stat_nw": 8.71,
+      "ann_geometric_pct": 30.26,
+      "daily_vol_bps": 68.7
+    },
+    "intraday": {
+      "label": "EW intraday, all",
+      "n_days": 3019,
+      "mean_bps_per_day": 0.058,
+      "t_stat_nw": 0.01,
+      "ann_geometric_pct": -5.85,
+      "daily_vol_bps": 293.2
+    },
+    "spread": {
+      "label": "EW overnight minus intraday, all",
+      "n_days": 3019,
+      "mean_bps_per_day": 10.675,
+      "t_stat_nw": 1.96,
+      "ann_geometric_pct": NaN,
+      "daily_vol_bps": 300.0
+    }
+  },
+  "universe_price_ge_5": {
+    "n_stock_days": 8876043,
+    "overnight": {
+      "label": "EW overnight, >=$5",
+      "n_days": 3019,
+      "mean_bps_per_day": 4.468,
+      "t_stat_nw": 3.57,
+      "ann_geometric_pct": 11.21,
+      "daily_vol_bps": 70.8
+    },
+    "intraday": {
+      "label": "EW intraday, >=$5",
+      "n_days": 3019,
+      "mean_bps_per_day": -0.083,
+      "t_stat_nw": -0.05,
+      "ann_geometric_pct": -1.32,
+      "daily_vol_bps": 94.3
+    },
+    "spread": {
+      "label": "EW spread, >=$5",
+      "n_days": 3019,
+      "mean_bps_per_day": 4.552,
+      "t_stat_nw": 2.49,
+      "ann_geometric_pct": 10.37,
+      "daily_vol_bps": 112.5
+    }
+  },
+  "by_size_quintile_price_ge_5": {
+    "note": "q1 = smallest, q5 = largest, ranked cross-sectionally each session among price>=$5 names",
+    "quintiles": {
+      "q1": {
+        "overnight": {
+          "label": "on q1",
+          "n_days": 3019,
+          "mean_bps_per_day": 1.753,
+          "t_stat_nw": 1.92,
+          "ann_geometric_pct": 4.18,
+          "daily_vol_bps": 50.3
+        },
+        "intraday": {
+          "label": "id q1",
+          "n_days": 3019,
+          "mean_bps_per_day": -7.758,
+          "t_stat_nw": -5.13,
+          "ann_geometric_pct": -18.39,
+          "daily_vol_bps": 77.4
+        }
+      },
+      "q2": {
+        "overnight": {
+          "label": "on q2",
+          "n_days": 3019,
+          "mean_bps_per_day": 5.892,
+          "t_stat_nw": 4.42,
+          "ann_geometric_pct": 15.18,
+          "daily_vol_bps": 74.7
+        },
+        "intraday": {
+          "label": "id q2",
+          "n_days": 3019,
+          "mean_bps_per_day": -1.02,
+          "t_stat_nw": -0.52,
+          "ann_geometric_pct": -4.1,
+          "daily_vol_bps": 113.4
+        }
+      },
+      "q3": {
+        "overnight": {
+          "label": "on q3",
+          "n_days": 3019,
+          "mean_bps_per_day": 5.544,
+          "t_stat_nw": 3.79,
+          "ann_geometric_pct": 13.99,
+          "daily_vol_bps": 83.1
+        },
+        "intraday": {
+          "label": "id q3",
+          "n_days": 3019,
+          "mean_bps_per_day": 1.704,
+          "t_stat_nw": 0.88,
+          "ann_geometric_pct": 2.66,
+          "daily_vol_bps": 115.0
+        }
+      },
+      "q4": {
+        "overnight": {
+          "label": "on q4",
+          "n_days": 3019,
+          "mean_bps_per_day": 4.995,
+          "t_stat_nw": 3.5,
+          "ann_geometric_pct": 12.47,
+          "daily_vol_bps": 80.9
+        },
+        "intraday": {
+          "label": "id q4",
+          "n_days": 3019,
+          "mean_bps_per_day": 3.255,
+          "t_stat_nw": 1.88,
+          "ann_geometric_pct": 7.1,
+          "daily_vol_bps": 103.2
+        }
+      },
+      "q5": {
+        "overnight": {
+          "label": "on q5",
+          "n_days": 3019,
+          "mean_bps_per_day": 4.162,
+          "t_stat_nw": 3.34,
+          "ann_geometric_pct": 10.35,
+          "daily_vol_bps": 70.6
+        },
+        "intraday": {
+          "label": "id q5",
+          "n_days": 3019,
+          "mean_bps_per_day": 3.407,
+          "t_stat_nw": 2.41,
+          "ann_geometric_pct": 8.02,
+          "daily_vol_bps": 83.3
+        }
+      }
+    }
+  },
+  "by_dollar_volume_quintile": {
+    "note": "q1 = least traded, q5 = most traded",
+    "quintiles": {
+      "q1": {
+        "overnight": {
+          "label": "on dv1",
+          "n_days": 3019,
+          "mean_bps_per_day": 0.425,
+          "t_stat_nw": 0.51,
+          "ann_geometric_pct": 0.8,
+          "daily_vol_bps": 46.6
+        },
+        "intraday": {
+          "label": "id dv1",
+          "n_days": 3019,
+          "mean_bps_per_day": -6.372,
+          "t_stat_nw": -5.1,
+          "ann_geometric_pct": -15.34,
+          "daily_vol_bps": 68.6
+        }
+      },
+      "q2": {
+        "overnight": {
+          "label": "on dv2",
+          "n_days": 3019,
+          "mean_bps_per_day": 4.484,
+          "t_stat_nw": 3.46,
+          "ann_geometric_pct": 11.19,
+          "daily_vol_bps": 73.5
+        },
+        "intraday": {
+          "label": "id dv2",
+          "n_days": 3019,
+          "mean_bps_per_day": -4.414,
+          "t_stat_nw": -2.32,
+          "ann_geometric_pct": -11.88,
+          "daily_vol_bps": 109.9
+        }
+      },
+      "q3": {
+        "overnight": {
+          "label": "on dv3",
+          "n_days": 3019,
+          "mean_bps_per_day": 4.538,
+          "t_stat_nw": 3.19,
+          "ann_geometric_pct": 11.19,
+          "daily_vol_bps": 80.6
+        },
+        "intraday": {
+          "label": "id dv3",
+          "n_days": 3019,
+          "mean_bps_per_day": 0.88,
+          "t_stat_nw": 0.46,
+          "ann_geometric_pct": 0.61,
+          "daily_vol_bps": 112.8
+        }
+      },
+      "q4": {
+        "overnight": {
+          "label": "on dv4",
+          "n_days": 3019,
+          "mean_bps_per_day": 4.643,
+          "t_stat_nw": 3.22,
+          "ann_geometric_pct": 11.47,
+          "daily_vol_bps": 81.2
+        },
+        "intraday": {
+          "label": "id dv4",
+          "n_days": 3019,
+          "mean_bps_per_day": 3.19,
+          "t_stat_nw": 1.76,
+          "ann_geometric_pct": 6.83,
+          "daily_vol_bps": 106.6
+        }
+      },
+      "q5": {
+        "overnight": {
+          "label": "on dv5",
+          "n_days": 3019,
+          "mean_bps_per_day": 8.253,
+          "t_stat_nw": 5.94,
+          "ann_geometric_pct": 22.17,
+          "daily_vol_bps": 77.6
+        },
+        "intraday": {
+          "label": "id dv5",
+          "n_days": 3019,
+          "mean_bps_per_day": 6.301,
+          "t_stat_nw": 3.88,
+          "ann_geometric_pct": 15.91,
+          "daily_vol_bps": 93.9
+        }
+      }
+    }
+  },
+  "by_era_price_ge_5": {
+    "2010-2017": {
+      "overnight": {
+        "label": "on 2010-2017",
+        "n_days": 1258,
+        "mean_bps_per_day": 2.454,
+        "t_stat_nw": 2.22,
+        "ann_geometric_pct": 6.09,
+        "daily_vol_bps": 46.4
+      },
+      "intraday": {
+        "label": "id 2010-2017",
+        "n_days": 1258,
+        "mean_bps_per_day": 3.354,
+        "t_stat_nw": 1.62,
+        "ann_geometric_pct": 8.08,
+        "daily_vol_bps": 73.7
+      }
+    },
+    "2018-2024": {
+      "overnight": {
+        "label": "on 2018-2024",
+        "n_days": 1761,
+        "mean_bps_per_day": 5.908,
+        "t_stat_nw": 2.97,
+        "ann_geometric_pct": 15.01,
+        "daily_vol_bps": 84.0
+      },
+      "intraday": {
+        "label": "id 2018-2024",
+        "n_days": 1761,
+        "mean_bps_per_day": -2.539,
+        "t_stat_nw": -1.08,
+        "ann_geometric_pct": -7.53,
+        "daily_vol_bps": 106.5
+      }
+    }
+  },
+  "cost_verdict_most_liquid_quintile": {
+    "gross_mean_bps_per_session": 8.253,
+    "breakeven_one_way_cost_bps": 4.127,
+    "note": "two executions per session; the strategy is only live if realistic one-way cost (spread/2 + impact) is below this",
+    "n_sessions": 3019,
+    "t_stat_nw": 5.94
+  },
+  "strategy_net_of_costs_most_liquid_quintile": {
+    "n_sessions": 3019,
+    "universe": "top dollar-volume quintile among price>=$5 common stock",
+    "weighting": "equal weight, rebalanced every session",
+    "caveat": "EW over ~600 names rebalanced twice daily. Cost here is a flat per-execution bps and does NOT model the market impact of demanding that much liquidity in the opening auction, so every net number is an UPPER bound.",
+    "grid": {
+      "0bps_one_way": {
+        "overnight_only": {
+          "ann_geometric_pct": 22.17,
+          "sharpe": 1.69,
+          "mean_bps_per_session": 8.253
+        },
+        "intraday_only": {
+          "ann_geometric_pct": 15.91,
+          "sharpe": 1.07,
+          "mean_bps_per_session": 6.301
+        },
+        "buy_and_hold": {
+          "ann_geometric_pct": 41.61,
+          "sharpe": 1.86,
+          "mean_bps_per_session": 14.593
+        }
+      },
+      "1bps_one_way": {
+        "overnight_only": {
+          "ann_geometric_pct": 16.17,
+          "sharpe": 1.28,
+          "mean_bps_per_session": 6.253
+        },
+        "intraday_only": {
+          "ann_geometric_pct": 10.21,
+          "sharpe": 0.73,
+          "mean_bps_per_session": 4.301
+        },
+        "buy_and_hold": {
+          "ann_geometric_pct": 41.61,
+          "sharpe": 1.86,
+          "mean_bps_per_session": 14.593
+        }
+      },
+      "2bps_one_way": {
+        "overnight_only": {
+          "ann_geometric_pct": 10.46,
+          "sharpe": 0.87,
+          "mean_bps_per_session": 4.253
+        },
+        "intraday_only": {
+          "ann_geometric_pct": 4.8,
+          "sharpe": 0.39,
+          "mean_bps_per_session": 2.301
+        },
+        "buy_and_hold": {
+          "ann_geometric_pct": 41.61,
+          "sharpe": 1.86,
+          "mean_bps_per_session": 14.593
+        }
+      },
+      "5bps_one_way": {
+        "overnight_only": {
+          "ann_geometric_pct": -5.04,
+          "sharpe": -0.36,
+          "mean_bps_per_session": -1.747
+        },
+        "intraday_only": {
+          "ann_geometric_pct": -9.91,
+          "sharpe": -0.63,
+          "mean_bps_per_session": -3.699
+        },
+        "buy_and_hold": {
+          "ann_geometric_pct": 41.61,
+          "sharpe": 1.86,
+          "mean_bps_per_session": 14.593
+        }
+      },
+      "10bps_one_way": {
+        "overnight_only": {
+          "ann_geometric_pct": -26.2,
+          "sharpe": -2.4,
+          "mean_bps_per_session": -11.747
+        },
+        "intraday_only": {
+          "ann_geometric_pct": -29.99,
+          "sharpe": -2.32,
+          "mean_bps_per_session": -13.699
+        },
+        "buy_and_hold": {
+          "ann_geometric_pct": 41.61,
+          "sharpe": 1.86,
+          "mean_bps_per_session": 14.593
+        }
+      }
+    }
+  }
+}

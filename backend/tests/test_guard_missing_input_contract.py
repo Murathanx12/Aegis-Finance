@@ -107,6 +107,29 @@ def _case_evidence_population():
             PopulationPoolingRefused, "two populations pooled")
 
 
+def _case_forecast_populations():
+    from backend.services.forecast_populations import (PopulationNotNamed,
+                                                       assert_named)
+    # The missing input is WHICH POPULATION. There are three ledgers of
+    # forward forecasts with different producers and different resolvers, and
+    # on 2026-08-23 a health row that named none of them was read as the
+    # learning engine having stopped. A consumer that does not say which
+    # population it reads gets refused, not defaulted.
+    return (lambda: assert_named(None, consumer="G7 gate"),
+            PopulationNotNamed, "no population named")
+
+
+def _case_paper_broker_targets():
+    from backend.services.portfolio_intelligence.paper_broker_targets import (
+        UnknownTarget, parse_target)
+    # The missing input is a RESOLVABLE target. An unparseable target must
+    # refuse rather than fall back to the default lane: a typo that silently
+    # mirrored the wrong book into the external paper account would corrupt a
+    # track record with no error anywhere.
+    return (lambda: parse_target("arena:"),
+            UnknownTarget, "target names no source id")
+
+
 def _case_charter():
     from backend.services.research_gym.charter import (ExportRefused,
                                                        TransferTest,
@@ -628,6 +651,8 @@ CASES = {
     "lineage": _case_lineage,
     "slice_register": _case_slice_register,
     "evidence_population": _case_evidence_population,
+    "forecast_populations": _case_forecast_populations,
+    "paper_broker_targets": _case_paper_broker_targets,
     "charter": _case_charter,
     "portfolio_factory": _case_portfolio_factory,
     "store": _case_store,

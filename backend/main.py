@@ -732,8 +732,27 @@ async def health_full():
             _quarantined = None
         prediction_ledger = ledger_health(quarantined_hashes=_quarantined)
         prediction_ledger["quarantine_split_available"] = _quarantined is not None
+        # WHICH ledger. This row is `live_forward` and nothing else. It used to
+        # be labelled only "prediction_ledger", and on 2026-08-23 its "no new
+        # forecast in 11 days" was read as the learning engine having stopped —
+        # while the arena, a DIFFERENT population in a different file, was
+        # writing normally. The label is the fix.
+        prediction_ledger["population_id"] = "live_forward"
+        prediction_ledger["scope"] = (
+            "live_forward ONLY. Other forecast populations (arena_forward, "
+            "campaign_forward) have their own rows under forecast_populations "
+            "— this row says nothing about them.")
     except Exception as e:
         prediction_ledger = {"status": "DEGRADED", "error": str(e)}
+
+    # Every forecast population, each with its own health row. Added 2026-08-23
+    # because a population nobody registered is invisible rather than refused:
+    # the arena's ledger had never appeared on any health surface.
+    try:
+        from backend.services.forecast_populations import registry_health
+        forecast_populations = registry_health()
+    except Exception as e:                                     # noqa: BLE001
+        forecast_populations = {"status": "DEGRADED", "error": str(e)}
 
     # The IC page degrades to pure benchmark core when its funnel artifact is
     # missing — by design on the page, but invisible-in-prod is the insider-
@@ -760,8 +779,22 @@ async def health_full():
     # status check decorative: prediction_ledger could sit DEGRADED for weeks
     # and never page. Fold the canaries that must page into the top level.
     _degraded_reasons = []
-    if str(prediction_ledger.get("status", "")) != "ok":
-        _degraded_reasons.append("prediction_ledger not ok")
+    # NAME THE POPULATION. "prediction_ledger not ok" sent a reviewer and very
+    # nearly a session to rebuild the arena, which was working — the silence
+    # was live_forward's. A reason that does not say which population is a
+    # reason that gets misread.
+    for _pid, _row in ((forecast_populations.get("populations") or {})
+                       .items()):
+        _st = str(_row.get("status", ""))
+        if _st not in ("ok", "OK", "DORMANT_BY_DESIGN"):
+            _problems = _row.get("problems") or [_row.get("reason") or _st]
+            _degraded_reasons.append(
+                f"forecast population {_pid}: {'; '.join(str(p) for p in _problems)}")
+    if not forecast_populations.get("populations") and \
+            str(prediction_ledger.get("status", "")) != "ok":
+        # Registry unavailable — fall back to the single-ledger row rather than
+        # reporting green on a check that did not run.
+        _degraded_reasons.append("prediction_ledger (live_forward) not ok")
     if not (sched.get("nav") or {}).get("all_fresh"):
         _degraded_reasons.append("nav not fresh")
     if str(investment_committee_health.get("status", "")) != "ok":
@@ -807,6 +840,7 @@ async def health_full():
         "fmp_budget": fmp,
         "event_intel": event_intel_health,
         "prediction_ledger": prediction_ledger,
+        "forecast_populations": forecast_populations,
         "investment_committee": investment_committee_health,
         "data_sources": source_health(),
         "fred_health": fred_source_health,

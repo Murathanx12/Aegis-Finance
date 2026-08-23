@@ -36,6 +36,31 @@ result requires evidence just as a positive one does, and **a global negative
 does not answer a conditional question that was never asked** (scope-aware
 verdicts, `docs/HANDOFF_2026-08-16_BRAIN_TO_BUILDER.md` §2).
 
+## THREE LICENCES (adopted 2026-08-23 — `docs/ROADMAP_2026-08-23_PROFIT_FIRST.md`)
+
+> **Research rigour determines what Aegis is allowed to CLAIM. It must not
+> determine what Aegis is allowed to TEST in paper.**
+
+One evidence standard had drifted into governing everything, and five months in
+the demonstrated edge is 0% partly because every gate that *could* block work
+*was* blocking work. There are now three licences; every artefact names one.
+
+| Licence | Permits | Required first |
+|---|---|---|
+| `PRODUCT_EXPERIMENT` | internal simulation + external **PAPER** brokerage | a frozen strategy contract **before the first decision**: policy hash, timestamp, inputs, costs, fill convention, objective. **No significance gate, no 24-month floor, no preregistration.** |
+| `CAPITAL_CANDIDATE` | candidacy for real money | matured forward evidence, realistic costs, calibration, utility improvement, drawdown/ruin bounds. Promotion stays **attended**. |
+| `RESEARCH_CLAIM` | "this is alpha" — paper, public skill claim | full preregistration, MDE, multiplicity control, matched controls, holdout. Every standing evidence rule binds. |
+
+**Does NOT relax:** PIT discipline · frozen information states · realistic
+costs · immutable policy versions · outcome provenance · no training on future
+information · **no LLM authority over real capital** · no backfilled forward
+evidence · no mutation of seeded book histories.
+
+**Amended in scope, not repealed:** the 24-month skill floor and CANON §6
+("if it isn't pre-registered, it didn't happen") govern **claims**. A
+`PRODUCT_EXPERIMENT` needs a frozen strategy contract instead — weaker, still
+tamper-evident.
+
 ## Project Overview
 
 Aegis Finance is a free, open-source market intelligence web platform combining ML crash prediction, Monte Carlo simulation, portfolio construction, and macroeconomic analysis into a single web dashboard.
@@ -84,10 +109,24 @@ Aegis Finance is a free, open-source market intelligence web platform combining 
 - Real-time price snapshots via Polygon.io API
 - Conformal prediction intervals for crash probabilities
 
-**What it is NOT:**
-- Financial advice — educational tool with disclaimers everywhere
-- A trading bot — no execution, no position sizing, no live orders
-- Real-time — data refreshes hourly, not tick-by-tick
+**What it is NOT** *(scoped 2026-08-23 — the old wording described a system that
+no longer exists; see `docs/ROADMAP_2026-08-23_PROFIT_FIRST.md` §5)*:
+
+- **Financial advice** — educational tool, disclaimers everywhere. Unchanged.
+- **Not autonomous over anyone's real money.** The public product never controls
+  a user's brokerage capital, and no LLM has authority over real capital
+  anywhere in this system.
+
+What it emphatically *does* do internally, and what the old three bullets wrongly
+denied:
+
+- **Position sizing** — Kelly, CE-Kelly, inverse-trailing-vol, risk budgeting.
+- **Simulated execution** — ten paper books, daily decisions, next-open fills,
+  NAV series, transaction costs and slippage; plus an Alpaca **paper** broker
+  integration.
+- **Intraday perception** — event ingestion may run continuously. Ordinary
+  portfolio decisions remain event/decision-driven, not high-frequency; the
+  dashboard's own data still refreshes hourly.
 
 ## Tech Stack
 

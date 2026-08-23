@@ -1,0 +1,59 @@
+{
+  "n_stock_days": 11297614,
+  "recon_rows": 11297614,
+  "recon_fail": 173,
+  "recon_fail_frac": 1.5e-05,
+  "recon_max_abs_err": 0.967742,
+  "recon_tol": 0.0002,
+  "years": [
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "years_skipped_no_openprc": [
+    1990,
+    1991,
+    1992,
+    1993,
+    1994,
+    1995,
+    1996,
+    1997,
+    1998,
+    1999,
+    2000,
+    2001,
+    2002,
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012
+  ],
+  "window_limit": "The claim under test is stated 'since 1990'. This panel can only speak for the years holding open prices. Years listed in years_skipped_no_openprc are NOT evidence of absence -- they are absence of evidence, and any verdict must be scoped to the covered window.",
+  "universe": {
+    "shrcd": [
+      10,
+      11
+    ],
+    "exchcd": [
+      1,
+      2,
+      3
+    ]
+  }
+}

@@ -175,7 +175,43 @@ def config_hash(path: Path | None = None) -> str:
     return hashlib.sha256(config_bytes(path)).hexdigest()
 
 
-def policy_fingerprint(path: Path | None = None) -> str:
+#: Sizings whose weights are a FUNCTION of the trust router's verdict. For
+#: these books the router's own settings are part of what the book does, so
+#: they belong in its policy identity; for every other book the router is not
+#: in the causal path and its settings are irrelevant.
+ROUTER_CONSUMING_SIZINGS = frozenset({"ce_kelly"})
+
+#: The router setting the live books were SEEDED under (2026-08-21). It hashes
+#: to the legacy payload so existing seeds keep verifying; anything else is a
+#: policy change and gets its own identity. This constant records history and
+#: must not be "updated" to track the current default -- doing so would silently
+#: re-baseline the very drift this guards.
+ROUTER_FINGERPRINT_BASELINE = "cluster_adjust=0"
+
+
+def router_policy_id() -> str:
+    """The router settings that change what a consuming book DOES.
+
+    `trust_router.CLUSTER_ADJUST_DEFAULT` decides whether names that shared a
+    morning are counted as independent decisions. The G1 correlated-worlds
+    battery measures OFF at a 38.7% null-world recommendation rate against a
+    <=5% bar, so ON is the correction — but the verdict feeds `ce_kelly`
+    sizing directly (`engine.py`: a non-RECOMMENDED verdict halves declared
+    aggression). Flipping it in place would therefore leave ONE live NAV
+    series describing TWO policies, which is the exact silent-drift shape the
+    seed machinery exists to refuse.
+
+    Folding it into the consuming book's fingerprint makes the flip
+    self-refusing: the book raises ConfigDrift under its old seed and has to
+    be launched as a new immutable version. The correction ships without
+    rewriting history.
+    """
+    from backend.services.arena import trust_router
+    return f"cluster_adjust={int(bool(trust_router.CLUSTER_ADJUST_DEFAULT))}"
+
+
+def policy_fingerprint(path: Path | None = None,
+                       *, sizing: str | None = None) -> str:
     """Segment identity for what the book ACTUALLY does, not just what the
     YAML says.
 
@@ -189,6 +225,20 @@ def policy_fingerprint(path: Path | None = None) -> str:
     """
     from backend.services.arena.discovery import COMPOSITE_VERSION
     payload = f"{config_hash(path)}|{COMPOSITE_VERSION}"
+    # Scoped deliberately, on TWO axes.
+    #
+    # 1. Only books that CONSUME the router carry its settings. Folding the
+    #    router into every book's fingerprint would re-seed ten books that
+    #    never read it.
+    # 2. Only a setting that DIFFERS from the one the live seeds were written
+    #    under contributes at all. PROFIT_ALLOCATOR_v1 was seeded 2026-08-21
+    #    with cluster_adjust OFF, so OFF must keep hashing to the legacy
+    #    payload or this change would itself drift the book it is meant to
+    #    protect — breaking a live seeded book to install a safety mechanism.
+    #    ON is the deviation, and the deviation is what needs a new identity.
+    if (sizing in ROUTER_CONSUMING_SIZINGS
+            and router_policy_id() != ROUTER_FINGERPRINT_BASELINE):
+        payload = f"{payload}|router:{router_policy_id()}"
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
@@ -276,7 +326,7 @@ def load_specs(path: Path | None = None) -> dict[str, BookSpec]:
             allocator=dict(b.get("allocator") or {}),
             defaults={**defaults, **overrides},
             config_hash=h,
-            policy_fingerprint=fp,
+            policy_fingerprint=policy_fingerprint(p, sizing=sizing),
             config_version=str(raw.get("schema") or "arena-v1"),
             label=str(raw.get("label") or "SHADOW_BOOK"),
             validation_status=str(raw.get("validation_status")
