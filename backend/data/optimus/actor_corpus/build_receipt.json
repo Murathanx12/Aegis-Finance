@@ -1,0 +1,25 @@
+{
+  "horizon_trading_days": 63,
+  "window": [
+    2013,
+    2024
+  ],
+  "benchmark": "equal-weighted SIC2 sector, same window; falls back to the whole market where the sector has < 10 names, flagged per row",
+  "benchmark_rationale": "An EW-market benchmark made every analyst buy call underperform by 3.67% and licensed three analysts for INVERSE who turned out to be 37-56% concentrated in one SIC2. That measured sector and size exposure, not analyst skill.",
+  "n_raw_recommendations": 3261102,
+  "n_in_window": 1065102,
+  "n_non_us_dropped": 823747,
+  "n_us": 241355,
+  "scope": "US analyst coverage of US common stock. IBES covers international issuers and CRSP does not, so usfirm=0 is EXCLUDED by declaration rather than lost in the join (measured: usfirm=0 links at 0.1%, usfirm=1 at 74.0%).",
+  "n_hold_dropped": 101991,
+  "n_directional": 139088,
+  "n_linked_to_permno": 102637,
+  "link_rate_within_us": 0.7379,
+  "link_rate_floor": 0.6,
+  "n_with_open_date": 102637,
+  "n_unresolvable_no_forward_window": 3865,
+  "n_graded": 98772,
+  "n_analysts": 5793,
+  "hold_note": "`ireccd == 3` is NOT a weak buy. Scoring it would build a record out of declined calls, so it is dropped and counted.",
+  "unresolvable_note": "claims in the last 63 sessions have no forward window; EXCLUDED, never graded as misses"
+}
