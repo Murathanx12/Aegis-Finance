@@ -571,25 +571,49 @@ so survival was a real question.
 t, because a denser graph makes each month's estimate less noisy. The control
 stays flat, so this is not own-momentum leaking in.
 
-### What this does NOT establish, and the gap is real
+### The remaining gap — and it is SMALLER than first written here
 
-`estimid` is *every broker issuing a recommendation* — **standing coverage**.
-The live yfinance feed gives upgrade/downgrade **ACTIONS**, which is a subset:
-a bank covering a name quietly all year appears in IBES and not in an actions
-feed.
+This section first claimed that `estimid` is "standing coverage" while a live
+feed gives only actions, implying the live path loses a lot: *"a bank covering a
+name quietly all year appears in IBES and not in an actions feed"*.
 
-So the honest position is:
+**Measured, rather than asserted: 87.1% of IBES recommendation rows are already
+changes or initiations** (174,522 of 200,357, 2014–2024 US).
 
-* **granularity is not the blocker** — this is what the amendment tested and
-  answered;
-* **reconstructing standing coverage from an actions feed is untested**, and it
-  is the remaining executability question.
+The reason is that `ibes.recddet` rows are recommendation EVENTS, not daily
+snapshots of who covers what — and `coverage()` here defines coverage as
+*"issued a recommendation in the trailing 12 months"*. That was **already
+close to an actions feed**, not to standing coverage. The gap between what was
+validated and what an upgrade/downgrade feed supplies is ~13%, not a large hole.
 
-Cheapest next step, before building anything: take a month of live
-`analyst_intelligence` upgrades/downgrades, build the firm graph it implies, and
-compare its edge set against the IBES firm graph for the same month. If the live
-feed recovers most edges, the selector is buildable; if it recovers a third, the
-CONTINUE verdict is about a signal production cannot see.
+This was the same error as the night's others: describing what a dataset
+contains without measuring it. Recorded rather than quietly edited, because the
+correction is the interesting part.
+
+**AMENDMENT-4 RAN, and it clears.** A graph built ONLY from rows a live feed
+would report:
+
+| arm | standing | actions-only | bar | BH |
+|---|---|---|---|---|
+| `own_ret_1m` *(control)* | +0.0074 (t 0.81) | +0.0072 (t 0.77) | ✗ | ✗ |
+| **`peer_eq`** | +0.0218 (t 3.05) | **+0.0213 (t 3.00)** | ✓ | ✓ |
+| `peer_shared` | +0.0220 (t 2.77) | +0.0213 (t 2.76) | ✓ | ✓ |
+| `peer_leader` | +0.0181 (t 2.66) | +0.0182 (t 2.72) | ✓ | ✓ |
+
+**`GRAPH_PROPAGATION_v1` is licensed AND buildable.** The effect survives both
+reductions a production path forces — firm rather than analyst, and actions
+rather than standing coverage — with the control flat throughout.
+
+**What is still untested** is the vendor, not the granularity: yfinance's
+upgrade/downgrade history is not IBES, and its depth and history length are its
+own question. That is a data-availability check on one feed, not a question
+about whether the signal exists in a computable form.
+
+AMENDMENT-4's original text tested the strict version — a graph built ONLY from rows a live feed
+would report — offline, by reconstructing the actions feed from IBES's own
+recommendation levels. Comparing against yfinance directly would confound
+actions-vs-standing with that vendor's coverage differences; IBES has the level,
+so the reconstruction is exact and isolates the one question.
 
 ---
 

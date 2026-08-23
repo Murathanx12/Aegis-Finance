@@ -221,6 +221,46 @@ AMENDMENT_3: dict = {
 }
 
 
+#: AMENDMENT-4, declared 2026-08-24. POST-HOC, and it closes the executability
+#: question AMENDMENT-3 left open.
+#:
+#: A-3 showed granularity is not the blocker: the effect survives at FIRM level,
+#: which is what a live feed attributes to. But `estimid` in IBES is STANDING
+#: COVERAGE -- every broker issuing a recommendation -- while the live
+#: `analyst_intelligence` feed carries upgrade/downgrade ACTIONS. A bank
+#: covering a name quietly all year is in IBES and not in an actions feed.
+#:
+#: WHY THIS IS TESTED OFFLINE RATHER THAN AGAINST YFINANCE. Comparing against
+#: the live vendor would confound two things at once: the actions-vs-standing
+#: difference, and whatever else that vendor's coverage differs by. IBES carries
+#: the recommendation LEVEL, so an actions feed can be reconstructed from it
+#: exactly -- a rec is an ACTION when it differs from that firm's previous rec
+#: on that name. That isolates the question to the one thing being asked.
+AMENDMENT_4: dict = {
+    "amendment_id": "ANALYST-COCOVERAGE-GRAPH-1/AMENDMENT-4",
+    "status": "POST-HOC — declared after A-3",
+    "question": ("does a graph built only from upgrade/downgrade ACTIONS carry "
+                 "the signal that STANDING coverage does?"),
+    "why_offline": ("comparing against yfinance would confound "
+                    "actions-vs-standing with vendor coverage differences. "
+                    "IBES has the recommendation level, so the actions feed is "
+                    "reconstructible exactly."),
+    "action_definition": ("a recommendation whose `ireccd` differs from the "
+                          "SAME firm's previous `ireccd` on the SAME name; a "
+                          "firm's first-ever rec on a name is an initiation, "
+                          "which a live feed also reports, so it counts"),
+    "decision_rule": (
+        "The live path is VIABLE iff the actions-only arm clears the same 0.01 "
+        "bar. If it does not, GRAPH_PROPAGATION_v1 is licensed on a signal "
+        "production cannot reconstruct, and the roadmap must say so."),
+}
+
+
+def amendment_4_hash() -> str:
+    return hashlib.sha256(
+        json.dumps(AMENDMENT_4, sort_keys=True).encode()).hexdigest()[:16]
+
+
 def amendment_3_hash() -> str:
     return hashlib.sha256(
         json.dumps(AMENDMENT_3, sort_keys=True).encode()).hexdigest()[:16]
@@ -334,7 +374,8 @@ def monthly_panel(y0: int, y1: int) -> pd.DataFrame:
     return out
 
 
-def coverage(y0: int, y1: int, id_col: str = "amaskcd") -> pd.DataFrame:
+def coverage(y0: int, y1: int, id_col: str = "amaskcd",
+             actions_only: bool = False) -> pd.DataFrame:
     """(coverer, permno, month) — who covered what, using only the past.
 
     `id_col` is `amaskcd` (individual analyst, IBES-only) or `estimid` (the
@@ -343,13 +384,24 @@ def coverage(y0: int, y1: int, id_col: str = "amaskcd") -> pd.DataFrame:
     An analyst covers a firm in month `t` if they issued a recommendation on it
     in the `coverage_window_months` ending STRICTLY BEFORE `t`.
     """
+    cols = ["cusip", id_col, "anndats", "usfirm"]
+    if actions_only:
+        cols.append("ireccd")
     recs = pd.read_parquet(
-        WRDS / "bulk" / "ibes__recddet.parquet",
-        columns=["cusip", id_col, "anndats", "usfirm"])
+        WRDS / "bulk" / "ibes__recddet.parquet", columns=cols)
     recs["anndats"] = pd.to_datetime(recs["anndats"])
     recs = recs[(recs["usfirm"] == 1)
                 & (recs["anndats"].dt.year >= y0 - 2)
                 & (recs["anndats"].dt.year <= y1)]
+    if actions_only:
+        # AMENDMENT-4: keep only recs that a live upgrade/downgrade feed would
+        # actually report — a CHANGE from that firm's previous rating on that
+        # name, or its first rec on the name (an initiation, which live feeds
+        # also carry).
+        recs = recs.sort_values("anndats")
+        prev = recs.groupby([id_col, "cusip"])["ireccd"].shift(1)
+        recs = recs[prev.isna() | (recs["ireccd"] != prev)]
+
     link = _cusip_to_permno()
     m = recs.merge(link, left_on="cusip", right_on="ncusip", how="inner")
     m = m[(m["anndats"] >= m["namedt"]) & (m["anndats"] <= m["nameendt"])]
@@ -548,7 +600,7 @@ def _bh_fdr(pvals: dict[str, float], q: float) -> dict[str, bool]:
     return survives
 
 
-def run(id_col: str = "amaskcd") -> dict:
+def run(id_col: str = "amaskcd", actions_only: bool = False) -> dict:
     from scipy import stats
 
     y0, y1 = SPEC["eval_years"]
@@ -557,7 +609,7 @@ def run(id_col: str = "amaskcd") -> dict:
     panel = monthly_panel(y0, y1)
     print(f"  {len(panel):,} firm-months", flush=True)
     print("loading coverage...", flush=True)
-    cov = coverage(y0, y1, id_col)
+    cov = coverage(y0, y1, id_col, actions_only)
     print(f"  {len(cov):,} linked recommendations", flush=True)
     rel_by_year = reliability_by_year(SPEC["reliability"]["min_claims"])
     sic_names = sic2_map()
@@ -739,12 +791,17 @@ def run(id_col: str = "amaskcd") -> dict:
             else "see paired_comparisons"),
     }
     receipt["granularity"] = id_col
+    receipt["actions_only"] = actions_only
+    if actions_only:
+        receipt["amendment_4"] = AMENDMENT_4
+        receipt["amendment_4_hash"] = amendment_4_hash()
     if id_col != "amaskcd":
         receipt["amendment_3"] = AMENDMENT_3
         receipt["amendment_3_hash"] = amendment_3_hash()
     OUT.mkdir(parents=True, exist_ok=True)
-    name = ("cocoverage_receipt.json" if id_col == "amaskcd"
-            else f"cocoverage_receipt_{id_col}.json")
+    suffix = ("" if id_col == "amaskcd" else f"_{id_col}")
+    suffix += "_actions" if actions_only else ""
+    name = f"cocoverage_receipt{suffix}.json"
     (OUT / name).write_text(
         json.dumps(receipt, indent=2, default=str), encoding="utf-8")
     return receipt
@@ -753,6 +810,7 @@ def run(id_col: str = "amaskcd") -> dict:
 if __name__ == "__main__":
     import sys as _sys
     _by = "estimid" if "--by-firm" in _sys.argv else "amaskcd"
-    r = run(_by)
+    _act = "--actions-only" in _sys.argv
+    r = run(_by, _act)
     print(json.dumps({k: v for k, v in r.items() if k != "spec"},
                      indent=2, default=str))
