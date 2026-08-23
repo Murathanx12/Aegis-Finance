@@ -85,10 +85,21 @@ def alpaca_available(target=None) -> bool:
         return False
 
 
-def _request(method: str, path: str, payload: dict | None = None):
-    """Single choke point for ALL Alpaca calls (same doctrine as _sec_get)."""
+def _request(method: str, path: str, payload: dict | None = None,
+             target=None):
+    """Single choke point for ALL Alpaca calls (same doctrine as _sec_get).
+
+    THE TARGET IS THREADED THROUGH DELIBERATELY. This used to call `_keys()`
+    with no argument, so every request resolved the ENV-declared target's
+    credentials while the caller may have been reading a different book's
+    state. `sync_alpaca_mirror(target=arena_book)` with the env unset therefore
+    read the arena's positions and traded the LANE's account -- the exact
+    outcome `paper_broker_targets.credentials` exists to refuse, reached by
+    walking around it. One account, one equity curve, and the keys must come
+    from the same target the state did.
+    """
     import requests
-    keys = _keys()
+    keys = _keys(target)
     if keys is None:
         raise RuntimeError("Alpaca keys not configured")
     if "paper" not in _base():
@@ -128,22 +139,38 @@ def _target_share_counts(internal: dict[str, float], equity: float,
     return out
 
 
+def _internal_intent(db_path=None, target=None):
+    """What the mirrored source WILL hold at the next open.
+
+    Kept as a seam alongside `_internal_positions` for the same reason that one
+    exists: the read is the part that differs per target kind, and a lane --
+    which has no queued-order concept here -- must keep reporting exactly what
+    it always did.
+    """
+    t = _resolve(target)
+    if t.kind != "arena":
+        return _targets.Intent(shares=_internal_positions(db_path, target=t),
+                               basis="settled", decided_for=None, pending_n=0)
+    return _targets.intent(t, db_path=db_path)
+
+
 def _internal_nav(db_path=None, target=None) -> float | None:
     return _targets.nav(_resolve(target), db_path=db_path)
 
 
-def _latest_prices(tickers: list[str]) -> dict[str, float]:
+def _latest_prices(tickers: list[str], target=None) -> dict[str, float]:
     """Last trade prices from Alpaca itself (keeps the mirror self-contained)."""
     if not tickers:
         return {}
-    data = _request("GET", "/v2/positions") or []
+    data = _request("GET", "/v2/positions", target=target) or []
     known = {p["symbol"]: float(p["current_price"]) for p in data
              if p.get("current_price")}
     missing = [t for t in tickers if t not in known]
     prices = dict(known)
     for t in missing:
         try:
-            q = _request("GET", f"/v2/stocks/{t}/trades/latest")
+            q = _request("GET", f"/v2/stocks/{t}/trades/latest",
+                         target=target)
             # data API lives on another host for some plans; fall back to yf
             prices[t] = float(q["trade"]["p"])
         except Exception:
@@ -161,7 +188,7 @@ def _record_equity(divergence_pct: float | None, db_path=None,
                    target=None) -> None:
     from backend.db import get_connection, snapshot
     t = _resolve(target)
-    acct = _request("GET", "/v2/account")
+    acct = _request("GET", "/v2/account", target=t)
     conn = get_connection(db_path)
     try:
         snapshot(conn, t.equity_key, date.today().isoformat(),
@@ -180,16 +207,16 @@ def seed_alpaca_mirror(db_path=None, target=None) -> dict:
     already holds positions is treated as seeded and never re-seeded."""
     if os.getenv("AEGIS_SEED_ALPACA_MIRROR") != "1":
         return {"status": "not_enabled"}
-    if not alpaca_available():
-        return {"status": "no_keys"}
     tgt = _resolve(target)
+    if not alpaca_available(tgt):
+        return {"status": "no_keys"}
 
-    existing = _request("GET", "/v2/positions") or []
+    existing = _request("GET", "/v2/positions", target=tgt) or []
     # Positions alone are NOT enough: while the market is closed, seed orders
     # sit accepted-but-unfilled and positions stay empty — a second deploy
     # with the flag still set would double-order (happened live 2026-07-18,
     # duplicate DKNG canceled by hand). Open orders count as seeded.
-    open_orders = _request("GET", "/v2/orders?status=open") or []
+    open_orders = _request("GET", "/v2/orders?status=open", target=tgt) or []
     if existing or open_orders:
         return {"status": "already_seeded", "n_positions": len(existing),
                 "n_open_orders": len(open_orders)}
@@ -201,16 +228,16 @@ def seed_alpaca_mirror(db_path=None, target=None) -> dict:
                 "target_id": tgt.target_id,
                 "detail": f"{tgt.target_id} has no open positions/nav here"}
 
-    acct = _request("GET", "/v2/account")
+    acct = _request("GET", "/v2/account", target=tgt)
     equity = float(acct["equity"])
-    prices = _latest_prices(sorted(internal))
+    prices = _latest_prices(sorted(internal), target=tgt)
     targets = _target_share_counts(internal, equity, nav, prices)
     placed = []
     for sym, qty in sorted(targets.items()):
         _request("POST", "/v2/orders", {
             "symbol": sym, "qty": str(qty), "side": "buy",
             "type": "market", "time_in_force": "day",
-        })
+        }, target=tgt)
         placed.append({"symbol": sym, "qty": qty})
     # Registry annotation — the lane-adjacent ledger stays complete.
     from backend.services.portfolio_intelligence.trial_registry import (
@@ -226,17 +253,30 @@ def seed_alpaca_mirror(db_path=None, target=None) -> dict:
 
 def sync_alpaca_mirror(db_path=None, target=None) -> dict:
     """Daily: record third-party equity + divergence; trade ONLY when the
-    mirrored source's position set changed. No-op until keys + seed exist."""
-    if not alpaca_available():
-        return {"status": "not_configured"}
+    mirrored source's INTENT changed. No-op until keys + seed exist.
+
+    WHAT CHANGED 2026-08-24. This mirrored SETTLED positions, on a job that ran
+    at 16:30 ET -- before the 17:45 arena pass that produces the decision. An
+    arena book's decision therefore reached the external account roughly two
+    sessions after the internal book filled it, so every execution number
+    measured against that account was a number about the lag. It now mirrors
+    the queued ORDER INTENT and runs after the deciding pass, so the external
+    submission targets the SAME open the internal book fills at.
+
+    A lane target is unaffected: it has no queued-order concept here and
+    reports `basis="settled"`, which is what it always did.
+    """
     tgt = _resolve(target)
-    positions = _request("GET", "/v2/positions") or []
+    if not alpaca_available(tgt):
+        return {"status": "not_configured"}
+    positions = _request("GET", "/v2/positions", target=tgt) or []
+    want_intent = _internal_intent(db_path, target=tgt)
+    internal = want_intent.shares
     if not positions:
         # not seeded yet (or fully cash) — still record equity for the ledger
         _record_equity(divergence_pct=None, db_path=db_path, target=tgt)
         return {"status": "not_seeded", "target_id": tgt.target_id}
 
-    internal = _internal_positions(db_path, target=tgt)
     nav = _internal_nav(db_path, target=tgt)
 
     # REFUSE THE DESTRUCTIVE READING. An empty internal book and an UNREADABLE
@@ -275,7 +315,7 @@ def sync_alpaca_mirror(db_path=None, target=None) -> dict:
                                "paper account holds some; refusing to "
                                "liquidate on an ambiguous signal")}
 
-    acct = _request("GET", "/v2/account")
+    acct = _request("GET", "/v2/account", target=tgt)
     equity = float(acct["equity"])
 
     divergence = None
@@ -289,7 +329,8 @@ def sync_alpaca_mirror(db_path=None, target=None) -> dict:
     held = {p["symbol"]: int(float(p["qty"])) for p in positions}
     prices = {p["symbol"]: float(p["current_price"]) for p in positions
               if p.get("current_price")}
-    prices.update(_latest_prices([k for k in internal if k not in prices]))
+    prices.update(_latest_prices([k for k in internal if k not in prices],
+                                 target=tgt))
     want = _target_share_counts(internal, equity, nav or equity, prices)
 
     trades = []
@@ -314,19 +355,57 @@ def sync_alpaca_mirror(db_path=None, target=None) -> dict:
                     "target_id": tgt.target_id,
                     "n_held": len(held), "n_internal": len(internal)}
         for sym in sorted(set(held) - set(want)):
-            _request("DELETE", f"/v2/positions/{sym}")
+            _request("DELETE", f"/v2/positions/{sym}", target=tgt)
             trades.append({"symbol": sym, "action": "close"})
         for sym in sorted(set(want) - set(held)):
             _request("POST", "/v2/orders", {
                 "symbol": sym, "qty": str(want[sym]), "side": "buy",
                 "type": "market", "time_in_force": "day",
-            })
+            }, target=tgt)
             trades.append({"symbol": sym, "action": "open", "qty": want[sym]})
 
     _record_equity(divergence, db_path=db_path, target=tgt)
+    if trades:
+        _record_submission(tgt, trades, want_intent, db_path=db_path)
     return {"status": "synced", "target_id": tgt.target_id, "equity": equity,
             "divergence_pct": divergence, "trades": trades,
-            "n_positions": len(held)}
+            "n_positions": len(held),
+            # What the submission was BASED on, so a later execution study can
+            # tell an intent-mirroring day from a settled-mirroring one rather
+            # than assuming the whole history used one convention.
+            "basis": want_intent.basis,
+            "decided_for": want_intent.decided_for,
+            "pending_orders": want_intent.pending_n}
+
+
+def _record_submission(tgt, trades: list[dict], want_intent, db_path=None
+                       ) -> None:
+    """Persist WHAT was submitted and FOR WHICH open, so the external fill can
+    later be compared against the internal book's synthetic fill.
+
+    Without this the account's equity curve is the only external artefact, and
+    equity alone cannot answer the question the paper broker exists to ask:
+    what did the assumed fill cost us versus the real one?
+    """
+    try:
+        from backend.db import get_connection, snapshot
+        conn = get_connection(db_path)
+        try:
+            snapshot(conn, f"{tgt.equity_key}:submissions",
+                     date.today().isoformat(), float(len(trades)),
+                     source="alpaca_paper",
+                     observed_at=datetime.now(timezone.utc).isoformat(),
+                     payload={"target_id": tgt.target_id,
+                              "basis": want_intent.basis,
+                              "decided_for": want_intent.decided_for,
+                              "trades": trades})
+        finally:
+            conn.close()
+    except Exception as e:                                      # noqa: BLE001
+        # Visible, never silent: a submission ledger that quietly stops
+        # accruing is the failure mode this whole record exists to prevent.
+        logger.error("Alpaca submission ledger write FAILED for %s: %s",
+                     tgt.target_id, e)
 
 
 def alpaca_mirror_status(db_path=None, target=None) -> dict:

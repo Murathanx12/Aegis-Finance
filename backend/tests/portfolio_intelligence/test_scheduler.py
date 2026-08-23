@@ -294,3 +294,51 @@ class TestEveryJobIsInvocableAndGated:
             shutdown_scheduler()
 
         asyncio.run(_run())
+
+
+# ── The execution clock: submit in the pass that decided ───────────────────
+# An arena book decides at 17:45 for the next open. The Alpaca sync lived in
+# the 16:30 job, which runs BEFORE that — so the external account executed each
+# decision roughly two sessions late and was validating a delayed variant of
+# the strategy. Which job owns which target kind is therefore load-bearing, not
+# a scheduling detail.
+
+
+class TestPaperBrokerExecutionClock:
+
+    def _stub(self, monkeypatch, target_id, calls):
+        from backend.services.portfolio_intelligence import (
+            alpaca_mirror, paper_broker_targets, scheduler as sched,
+        )
+        monkeypatch.setenv("AEGIS_PAPER_BROKER_TARGET", target_id)
+        monkeypatch.setattr(
+            alpaca_mirror, "sync_alpaca_mirror",
+            lambda db_path=None, target=None: (
+                calls.append(getattr(target, "target_id", None))
+                or {"status": "synced", "trades": [], "basis": "intent"}))
+        return sched, paper_broker_targets
+
+    def test_an_arena_target_is_submitted_after_the_deciding_pass(
+            self, monkeypatch):
+        calls = []
+        sched, _ = self._stub(monkeypatch, "arena:CURRENT_BEST_v1", calls)
+        asyncio.run(sched._submit_arena_broker_intent())
+        assert calls == ["arena:CURRENT_BEST_v1"], (
+            "the arena's queued intent never reached the paper broker in the "
+            "pass that produced it")
+
+    def test_a_lane_target_is_NOT_submitted_from_the_arena_pass(
+            self, monkeypatch):
+        calls = []
+        sched, _ = self._stub(monkeypatch, "lane:mirror", calls)
+        asyncio.run(sched._submit_arena_broker_intent())
+        assert calls == [], (
+            "the mirror lane was traded twice a day — once from the 16:30 "
+            "job and once from the arena pass")
+
+    def test_an_unresolvable_target_does_not_kill_the_arena_pass(
+            self, monkeypatch):
+        calls = []
+        sched, _ = self._stub(monkeypatch, "nonsense", calls)
+        asyncio.run(sched._submit_arena_broker_intent())  # must not raise
+        assert calls == []

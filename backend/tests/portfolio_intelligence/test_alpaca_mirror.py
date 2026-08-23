@@ -78,7 +78,7 @@ class TestScaling:
 
 class TestSeedAndSync:
     def _mock_api(self, calls, positions=None, equity=100_000.0):
-        def fake(method, path, payload=None):
+        def fake(method, path, payload=None, target=None):
             calls.append((method, path, payload))
             if path == "/v2/positions" and method == "GET":
                 return positions or []
@@ -130,7 +130,7 @@ class TestSeedAndSync:
         _seed_internal(tmp_db, {"DKNG": 1897.0})
         calls = []
 
-        def fake(method, path, payload=None):
+        def fake(method, path, payload=None, target=None):
             calls.append((method, path, payload))
             if path == "/v2/positions" and method == "GET":
                 return []  # nothing filled yet

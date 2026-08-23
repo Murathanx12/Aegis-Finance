@@ -178,6 +178,94 @@ def positions(target: MirrorTarget, *, db_path=None,
     return out
 
 
+@dataclass(frozen=True)
+class Intent:
+    """What the internal book will hold at the NEXT open, and when it decided.
+
+    WHY THIS EXISTS AND `positions()` IS NOT ENOUGH
+    ----------------------------------------------
+    An arena book decides after the close and QUEUES orders for the next
+    session's open; `positions()` reports what is already settled, which is the
+    result of the PREVIOUS decision. Mirroring settled positions therefore
+    executed each decision one session late:
+
+        Mon 17:45  book decides BUY X, queued for Tue open
+        Tue 09:30  the internal book's declared fill
+        Tue 17:45  the internal book records that fill
+        Wed 16:30  the mirror finally SEES X and submits
+        Thu 09:30  the external account actually gets X
+
+    Two sessions of drift, silently. The external account was not validating
+    the strategy — it was validating a delayed variant of it, and every
+    execution number measured against it would have been about the delay.
+
+    So the broker mirrors ORDER INTENT: submitted after the decision, filling
+    at the same open the internal book fills at. `decided_for` names that open,
+    so a submission can be checked against the fill it was meant to catch.
+    """
+
+    shares: dict[str, float]
+    basis: str                  # "intent" | "settled"
+    decided_for: str | None     # decision date whose fill this intent targets
+    pending_n: int
+
+
+def intent(target: MirrorTarget, *, db_path=None, root=None) -> Intent:
+    """Target holdings for the next open: settled positions plus queued orders.
+
+    A lane has no queued-order concept in this adapter, so it reports its
+    settled book with `basis="settled"` -- unchanged behaviour, named honestly
+    rather than silently sharing a code path with something it is not.
+    """
+    settled = positions(target, db_path=db_path, root=root)
+    if target.kind != "arena":
+        return Intent(shares=settled, basis="settled", decided_for=None,
+                      pending_n=0)
+
+    from backend.services.arena import store
+    book = store.read_positions(target.source_id, root)
+    pending = list(book.get("pending") or [])
+    if not pending:
+        return Intent(shares=settled, basis="settled", decided_for=None,
+                      pending_n=0)
+
+    want = dict(settled)
+    decided_for = None
+    for o in pending:
+        t = o.get("ticker")
+        px = o.get("decision_close")
+        usd = o.get("usd")
+        decided_for = o.get("decision_date") or decided_for
+        if not t or not px or not usd:
+            # An order we cannot price is an order we cannot mirror. Carrying
+            # the settled line for that name is the conservative reading: it
+            # neither invents a position nor liquidates one on a missing field.
+            logger.warning(
+                "paper broker: pending order for %s on %s is unpriceable "
+                "(close=%r usd=%r) — carrying the settled position instead",
+                t, target.target_id, px, usd)
+            continue
+        delta = float(usd) / float(px)
+        if str(o.get("side")).lower() == "sell":
+            delta = -delta
+        after = want.get(t, 0.0) + delta
+        if after < -1e-9:
+            # A short is not something this book can express, so clamping is
+            # right — but a SILENT clamp is the house failure mode. If the
+            # internal book ever queues a sell larger than the position, the
+            # external account would go flat on that name while the internal
+            # one went short, and the divergence would be blamed on execution.
+            logger.error(
+                "paper broker: %s queues a sell of %s taking the position to "
+                "%.4f shares. Clamping to flat — the internal book and the "
+                "external account will DIVERGE on this name.",
+                target.target_id, t, after)
+        want[t] = max(0.0, after)
+    return Intent(shares={t: sh for t, sh in want.items() if sh > 0},
+                  basis="intent", decided_for=decided_for,
+                  pending_n=len(pending))
+
+
 def nav(target: MirrorTarget, *, db_path=None, root=None) -> float | None:
     """Latest internal NAV of the source, or None if it has never been marked."""
     if target.kind == "lane":

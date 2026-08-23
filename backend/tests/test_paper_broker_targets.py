@@ -177,7 +177,7 @@ class _FakeAlpaca:
         self.positions = positions
         self.calls: list[tuple] = []
 
-    def __call__(self, method, path, payload=None):
+    def __call__(self, method, path, payload=None, target=None):
         self.calls.append((method, path, payload))
         if path == "/v2/positions" and method == "GET":
             return [{"symbol": s, "qty": str(q), "current_price": "10.0"}
@@ -199,7 +199,7 @@ class _FakeAlpaca:
 def fake(monkeypatch):
     f = _FakeAlpaca({"AAPL": 10, "MSFT": 5, "NVDA": 3})
     monkeypatch.setattr(AM, "_request", f)
-    monkeypatch.setattr(AM, "alpaca_available", lambda: True)
+    monkeypatch.setattr(AM, "alpaca_available", lambda *a, **k: True)
     monkeypatch.setattr(AM, "_record_equity",
                         lambda *a, **k: None)
     monkeypatch.delenv("AEGIS_ALPACA_ALLOW_FULL_LIQUIDATION", raising=False)
@@ -238,7 +238,7 @@ def test_going_flat_on_a_price_outage_is_refused(fake, monkeypatch):
     monkeypatch.setattr(AM, "_internal_positions",
                         lambda *a, **k: {"AAPL": 10.0, "MSFT": 5.0})
     monkeypatch.setattr(AM, "_internal_nav", lambda *a, **k: 100_000.0)
-    monkeypatch.setattr(AM, "_latest_prices", lambda syms: {})   # outage
+    monkeypatch.setattr(AM, "_latest_prices", lambda syms, *a, **k: {})   # outage
     monkeypatch.setattr(AM, "_target_share_counts",
                         lambda *a, **k: {})
 
@@ -257,7 +257,7 @@ def test_a_rotation_is_NOT_treated_as_a_liquidation(fake, monkeypatch):
     fake.positions = {"AAPL": 100}
     monkeypatch.setattr(AM, "_internal_positions", lambda *a, **k: {"MSFT": 5.0})
     monkeypatch.setattr(AM, "_internal_nav", lambda *a, **k: 100_000.0)
-    monkeypatch.setattr(AM, "_latest_prices", lambda syms: {"MSFT": 400.0})
+    monkeypatch.setattr(AM, "_latest_prices", lambda syms, *a, **k: {"MSFT": 400.0})
 
     out = AM.sync_alpaca_mirror()
     assert out["status"] == "synced", out
@@ -292,7 +292,7 @@ def test_seed_resolves_its_target_after_the_order_loop(fake, monkeypatch,
                         lambda *a, **k: {"AAPL": 10.0, "MSFT": 5.0})
     monkeypatch.setattr(AM, "_internal_nav", lambda *a, **k: 100_000.0)
     monkeypatch.setattr(AM, "_latest_prices",
-                        lambda syms: {s: 10.0 for s in syms})
+                        lambda syms, *a, **k: {s: 10.0 for s in syms})
     registered = {}
     monkeypatch.setattr(
         "backend.services.portfolio_intelligence.trial_registry"
@@ -314,3 +314,108 @@ def test_sync_reports_which_target_it_acted_on(fake, monkeypatch):
     monkeypatch.setattr(AM, "_internal_positions", lambda *a, **k: {})
     monkeypatch.setattr(AM, "_internal_nav", lambda *a, **k: None)
     assert AM.sync_alpaca_mirror()["target_id"] == "lane:mirror"
+
+
+# ── ORDER INTENT: the external account must fill at the SAME open ───────────
+# The arena decides after the close and queues for the next open. Mirroring
+# SETTLED positions on a job that ran BEFORE the deciding pass put the external
+# account roughly two sessions behind the strategy it was supposed to be
+# executing — so it validated a delayed variant, and every execution number
+# measured against it was a number about the delay.
+
+
+def _arena_book(monkeypatch, book):
+    from backend.services.arena import store
+    monkeypatch.setattr(store, "read_positions", lambda bid, root=None: book)
+
+
+def test_intent_is_the_book_AFTER_the_queued_orders_fill(monkeypatch):
+    _arena_book(monkeypatch, {
+        "cash": 50_000.0,
+        "positions": {"AAPL": {"shares": 100.0}, "MSFT": {"shares": 50.0}},
+        "pending": [
+            {"ticker": "NVDA", "side": "buy", "usd": 10_000.0,
+             "decision_close": 100.0, "decision_date": "2026-08-24"},
+            {"ticker": "MSFT", "side": "sell", "usd": 4_000.0,
+             "decision_close": 400.0, "decision_date": "2026-08-24"},
+        ]})
+    t = T.parse_target("arena:CURRENT_BEST_v1")
+    got = T.intent(t)
+    assert got.basis == "intent"
+    assert got.decided_for == "2026-08-24"
+    assert got.shares["NVDA"] == 100.0, "a queued buy never reached the broker"
+    assert got.shares["MSFT"] == 40.0, "a queued sell never reached the broker"
+    assert got.shares["AAPL"] == 100.0, "an untraded holding was disturbed"
+
+
+def test_a_book_with_nothing_queued_reports_its_settled_shares(monkeypatch):
+    _arena_book(monkeypatch, {"cash": 0.0, "pending": [],
+                              "positions": {"AAPL": {"shares": 100.0}}})
+    got = T.intent(T.parse_target("arena:CURRENT_BEST_v1"))
+    assert got.basis == "settled" and got.pending_n == 0
+    assert got.shares == {"AAPL": 100.0}
+
+
+def test_an_unpriceable_queued_order_carries_the_settled_line(monkeypatch):
+    """Neither invent a position nor liquidate one on a missing field."""
+    _arena_book(monkeypatch, {
+        "cash": 0.0, "positions": {"AAPL": {"shares": 100.0}},
+        "pending": [{"ticker": "NVDA", "side": "buy", "usd": 10_000.0,
+                     "decision_close": None, "decision_date": "2026-08-24"}]})
+    got = T.intent(T.parse_target("arena:CURRENT_BEST_v1"))
+    assert "NVDA" not in got.shares
+    assert got.shares["AAPL"] == 100.0
+
+
+def test_a_lane_reports_settled_and_is_untouched_by_the_change(monkeypatch):
+    monkeypatch.setattr(T, "positions", lambda t, **k: {"AAPL": 10.0})
+    got = T.intent(T.parse_target("lane:mirror"))
+    assert got.basis == "settled" and got.decided_for is None
+    assert got.shares == {"AAPL": 10.0}
+
+
+def test_sync_submits_the_queued_decision_not_yesterdays_book(fake,
+                                                              monkeypatch):
+    """The end-to-end property: a name decided tonight is submitted tonight."""
+    monkeypatch.setenv("AEGIS_PAPER_BROKER_TARGET", "arena:CURRENT_BEST_v1")
+    _arena_book(monkeypatch, {
+        "cash": 0.0, "positions": {"AAPL": {"shares": 10.0}},
+        "pending": [{"ticker": "TSLA", "side": "buy", "usd": 30_000.0,
+                     "decision_close": 10.0, "decision_date": "2026-08-24"}]})
+    monkeypatch.setattr(AM, "_internal_nav", lambda *a, **k: 100_000.0)
+    monkeypatch.setattr(AM, "_latest_prices",
+                        lambda syms, *a, **k: {s: 10.0 for s in syms})
+    monkeypatch.setattr(AM, "_record_submission", lambda *a, **k: None)
+
+    out = AM.sync_alpaca_mirror()
+    assert out["status"] == "synced"
+    assert out["basis"] == "intent" and out["decided_for"] == "2026-08-24"
+    opened = {t["symbol"] for t in out["trades"] if t["action"] == "open"}
+    assert "TSLA" in opened, (
+        "the book decided TSLA tonight and the external account did not "
+        "submit it — that is the session-lag defect")
+
+
+# ── One account, one equity curve: the walk-around ─────────────────────────
+
+
+def test_an_explicit_arena_target_cannot_borrow_the_lanes_account(monkeypatch):
+    """`_request` used to resolve credentials from the ENV target while the
+    caller read a DIFFERENT book's state, so passing an arena target with the
+    env unset read the arena and traded the mirror lane's account."""
+    monkeypatch.delenv("AEGIS_PAPER_BROKER_TARGET", raising=False)
+    monkeypatch.setenv("ALPACA_API_KEY_ID", "LANEKEY")
+    monkeypatch.setenv("ALPACA_API_SECRET_KEY", "lanesecret")
+    monkeypatch.delenv("ALPACA_ARENA_API_KEY_ID", raising=False)
+    monkeypatch.delenv("ALPACA_ARENA_API_SECRET_KEY", raising=False)
+
+    arena = T.parse_target("arena:CURRENT_BEST_v1")
+    assert T.credentials(arena) is None
+    assert AM.alpaca_available(arena) is False, (
+        "an arena book resolved to credentials it does not own")
+
+    def _explode(*a, **k):
+        raise AssertionError("a request was made on borrowed credentials")
+
+    monkeypatch.setattr(AM, "_request", _explode)
+    assert AM.sync_alpaca_mirror(target=arena)["status"] == "not_configured"
