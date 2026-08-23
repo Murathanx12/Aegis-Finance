@@ -36,6 +36,21 @@ result requires evidence just as a positive one does, and **a global negative
 does not answer a conditional question that was never asked** (scope-aware
 verdicts, `docs/HANDOFF_2026-08-16_BRAIN_TO_BUILDER.md` §2).
 
+## THE BOTTLENECK (diagnosed 2026-08-24 — `docs/ROADMAP_2026-08-24_CONNECT_THE_BRAIN.md`)
+
+> All ten arena books declare `selection: composite_top_k` over ONE signal.
+> They differ in **portfolio treatment**, not in **alpha source**.
+
+`COMPOSITE_WEIGHTS` is momentum 1.0 + multifactor 1.0 (itself
+momentum+insider+revisions) + four 0.5s, and coverage is `{"1": 206, "6": 1}` —
+99.5% of names carry exactly one factor, 12-1 momentum. That is why five months
+of guardrails did not move the demonstrated edge off 0%.
+
+**So: a new mechanism arrives as its own `PRODUCT_EXPERIMENT` book, never as a
+weight in `arena_composite`.** Folding it in hides the only thing being tested —
+whether its errors are different errors. A learned router comes *after* several
+independent selectors exist, not before.
+
 ## THREE LICENCES (adopted 2026-08-23 — `docs/ROADMAP_2026-08-23_PROFIT_FIRST.md`)
 
 > **Research rigour determines what Aegis is allowed to CLAIM. It must not
@@ -306,6 +321,12 @@ them at their trigger points, don't re-derive the procedure:
 - Use walk-forward temporal splits (never random k-fold)
 - Use `SimpleImputer(strategy="median")` for sklearn pipelines that can't handle NaN
 - Enforce monotonicity on multi-horizon predictions (3m ≤ 6m ≤ 12m)
+- Give every new module a caller, or classify it in
+  `backend/services/signal_reachability.py` — the suite fails on an unreachable,
+  unclassified module. A collector that feeds nobody must be a red suite, not a
+  discovery three weeks later (`detectability_gate` was one for two days)
+- Put every headline number in a receipt. `corr = 0.516` lived in prose only and
+  turned out to be a filtered subset nobody had named
 
 ### DO NOT
 - Use `fillna(0)` on feature matrices — LightGBM handles NaN natively; sklearn paths use SimpleImputer

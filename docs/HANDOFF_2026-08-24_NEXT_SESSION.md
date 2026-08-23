@@ -1,116 +1,161 @@
-# HANDOFF — for the next session (written 2026-08-23 evening)
+# HANDOFF — for the next session (written 2026-08-24)
 
-**Read this first.** Supersedes `HANDOFF_2026-08-23_PROFIT_FIRST_SESSION.md`
-for ordering; that document keeps the detail of what was built and why.
-
-Governing docs: `docs/ROADMAP_2026-08-23_PROFIT_FIRST.md` (three licences,
-queue) · `CLAUDE.md` (canon).
+Rewritten in place; the version this replaces is in git at `264b1c2`. Its three
+Monday verification events survive here in §4. Read this first, then
+`docs/ROADMAP_2026-08-24_CONNECT_THE_BRAIN.md`.
 
 ---
 
 ## 1. Where we are, in one paragraph
 
-The programme spent five months building a disciplined research machine and
-0 months earning money with it. Murat's ruling of 2026-08-23 reordered that:
-**research rigour governs what Aegis CLAIMS, not what it TESTS in paper.**
-Three licences now exist. The arena — ten paper books, daily decisions, frozen
-information states, self-grading — is the product, and it is live. Demonstrated
-market edge remains **0%**, which is the honest number and the one to move.
+An external review was adjudicated rather than imported
+(`ADJUDICATION_2026-08-24_EXTERNAL_REVIEW.md`). Four of its five claimed defects
+were real and are fixed; the fifth was real in mechanism, inert in fact, and a
+different defect underneath it was live. A sixth, which the review could not
+have seen, was found while fixing the first. Its central *architectural* claim —
+that the arena's ten books share one alpha source and differ only in portfolio
+treatment — was verified against the YAML and the composite weights, and is now
+the organising diagnosis of the roadmap. Demonstrated edge is still **0%**, and
+only matured decisions move that.
 
-## 2. State of the machine
+---
 
-### LIVE in production
-| | |
-|---|---|
-| deploy | verify the tip is live; last verified `624b7fa` |
-| arena | **9 active books** (was 10 — see §3), daily 17:45 ET, trading days only |
-| forecast populations | 3, each with its own health row and quiet clock |
-| event store | wired to the arena's fetch; starts accruing on the next arena run |
-| paper broker | targets + liquidation guards + per-target credentials |
+## 2. What changed this session
 
-### Waiting on a human, and ONLY these
-1. **Create a second Alpaca PAPER account** and set `ALPACA_ARENA_API_KEY_ID`
-   / `ALPACA_ARENA_API_SECRET_KEY`, then `AEGIS_PAPER_BROKER_TARGET=arena:<BOOK>`
-   and one boot with `AEGIS_SEED_ALPACA_MIRROR=1`. The code refuses to reuse
-   the lane's account, so this cannot be shortcut — and must not be.
-2. Nothing else. The router flip, the lab decision and the identity fix are
-   done.
+### Fixed, with tests
 
-## 3. What changed this session that the next session must know
+1. **The arena's external paper execution was two sessions late.** It mirrored
+   *settled* positions from the 16:30 job, which runs before the 17:45 pass that
+   decides. It now mirrors queued **order intent** and submits inside the pass
+   that produced it. `paper_broker_targets.intent()` · `_submit_arena_broker_intent`.
+2. **Credentials and state could come from different Alpaca accounts.**
+   `_request` resolved keys from the ENV target regardless of the caller's
+   target, so `sync_alpaca_mirror(target=arena_book)` with the env unset read
+   the arena and traded the **mirror lane's account** — walking around the
+   refusal built to prevent exactly that. The target is threaded through now.
+3. **The event taxonomy was dropped between producer and model.**
+   `event_intel` emits `event_type`; the arena adapter read `category`, which no
+   producer emits. The LLM saw `category: null` on every event since event
+   context shipped. Fixed, with a three-hop contract test.
+4. **Event identity hashed the URL**, so five syndications of one story were
+   five events — while the docstring promised the opposite. Split into
+   `canonical_hash` (the event) and `observation_hash` (the sighting). Done now
+   because the store is empty everywhere; later would have meant a 30-day window
+   of everything reporting NEW.
+5. **Acceptance time was caller-controlled** and the arena passed the frozen
+   snapshot's simulated clock into it. Schema 1.1.0 has three clocks —
+   `source_timestamp` / `ingested_at` / `decision_asof` — availability computes
+   on `ingested_at` alone, a supplied stamp is marked `ingest_clock: supplied`,
+   and a future one is refused.
+6. **IBES exact-midnight announcement times were read as pre-market.** 3,168
+   rows; 1,234 claims moved by one session. Same fix in
+   `g4_collect_earnings.py` (807 rows).
 
-**`PROFIT_ALLOCATOR_v1` is RETIRED.** It was seeded with the trust router's
-cluster adjustment OFF; that setting is part of its policy identity; the
-setting was corrected to ON, so the book correctly refuses its own seed. Its
-ledger and NAV row are untouched on disk. `spec.RETIRED` records why.
+### Built
 
-**Book identity is now PER BOOK** (`fingerprint_scheme: "book-v1"`). Before
-this, a comment typed anywhere in the arena YAML drifted all ten books. Adding
-a challenger is now safe. **The ten live seeds migrate on first contact** — so
-watch the next arena run's logs for ten `migrated to per-book identity` lines.
-If a book instead raises `ConfigDrift` mentioning *"refusing to migrate"*, the
-YAML changed before the migration ran: restore it, let the stamp take, re-edit.
+7. **`signal_reachability.py`** — enumerate the PLAN for code. Three tiers
+   (reachable 250 / tooling-only 60 / orphan 20), every orphan classified with a
+   typed reason, derived from the import graph rather than a hand-maintained
+   list. **On its first run it found that `detectability_gate` — TOURNAMENT-2's
+   declared precondition — was imported by nothing**; that is now wired and the
+   gap is closed. Four gaps remain named.
 
-**The lab is retired** (`docs/DECISION_2026-08-23_RETIRE_LAB.md`). Do not start
-`rd_loop`. The abandoned v5 rewrite is on branch `lab-v5-abandoned`.
+### Measured
 
-## 4. Do these next, in order
+8. **The actor result survives the PIT fix.** Corpus rebuilt, same seven
+   analysts licensed for INVERSE, same holdout deficits to three decimals.
+9. **The persistence headline was a filtered subset.** `0.516, n = 50` was 50 of
+   **222**, selected by a rule nobody had written down (≥30 holdout claims).
+   Unrestricted it is **0.25**. Every rung of the ladder excludes zero, so the
+   premise holds; the magnitude depended on a threshold. The whole ladder is in
+   `score_receipt.json` now, and the finding doc is amended.
 
-### P0 — verify what is already running
-1. **Monday's `why_moved` run must break `live_forward`'s quiet clock.**
-   Falsifiable: if `forecast_populations.populations.live_forward.last_written`
-   still reads `2026-08-12` on Tuesday, the 2026-08-22 fix did not take and
-   that is the P0. **Never backfill.**
-2. **Confirm the ten seed migrations landed** (§3) and that nine books ran.
-3. **Confirm `event_store` moved off `ABSENT`** after the first arena pass.
+---
 
-### P1 — the first paper book with a real evidence clock
-4. **`PROFIT_ALLOCATOR_v2`.** Now unblocked: per-book identity means adding it
-   to the YAML cannot disturb the other nine. Same rules as v1, seeded under
-   the corrected router from birth. **It must NOT be given capital authority
-   beyond v1's aggression knob** — the router still fails `edge_recovery_rate`
-   (0.19 vs a 0.7 bar) and only decision days fix that.
-5. **Seed one arena book to external paper** once §2.1 is done.
+## 3. Waiting on a human — and it is smaller than it was
 
-### P2 — the actor layer, which now has a validated premise
-6. **Walk-forward the analyst persistence estimate.** One split is not an
-   evidence clock; n=50 is thin. Cheap and honest.
-7. **Grade on magnitude, not direction.** A hit-rate edge is not an economic
-   one, and a `RESEARCH_CLAIM` needs the size.
-8. **Extend the corpus** — Form 4 insiders, then 13F institutions, via the
-   existing collectors. `disclosure_lag_days` already exists on the record.
-   **Commentators last**: no clean timestamped feed exists, so that is an
-   ingestion problem, not a statistics one.
+* ~~A second Alpaca PAPER account~~ — **DONE.** The keys are in `.env` as
+  `ALPACA_ARENA_API_KEY_ID` / `ALPACA_ARENA_API_SECRET_KEY`, they resolve, and
+  the shared-account guard passes (the arena key differs from the lane key).
+  **Two things remain, and both are deliberately attended:**
+  1. set the same two variables **on Railway** — `.env` is local only;
+  2. decide `AEGIS_PAPER_BROKER_TARGET=arena:<BOOK_ID>` and do one boot with
+     `AEGIS_SEED_ALPACA_MIRROR=1`, then unset the seed flag. Left commented in
+     `.env`, because pointing the broker at a book is a policy event.
+  **Rotate the arena secret when convenient** — it was pasted in plain text into
+  a chat session before being written to `.env`.
+* Which population G7 counts (`live_forward` vs `arena_forward`).
+* The standing attended queue in `MEMORY.md` is otherwise unchanged.
 
-### P3 — research, in parallel, blocking nothing
-9. Memory-feasible linear arm · `signals_raw_plus` replication (a second
-   vendor's characteristics panel, zero pulls) · risk-price forward
-   registration · T2 prereg.
-10. `optionm.opprcd` (4.31B rows) stays deferred until a named consumer exists.
+---
 
-## 5. Traps that cost real time this session
+## 4. Monday's verification events — unchanged, plus one
 
-- **The local `.env` holds PROD Alpaca keys, loaded LAZILY.**
-  `alpaca_available()` reads False until something imports `backend.db`, then
-  True. A smoke-test `sync()` placed **12 real sell orders**. Never call
-  `sync`/`seed` interactively.
-- **Never push on a suite launched before your last edit.** CI caught two real
-  bugs that way. Re-run after the final edit.
-- **Verify in a clean clone** — but note `test_investigator_*` needs a sibling
-  `Aegis module/` directory and fails in a scratchpad clone for that reason
-  alone, not because anything is broken.
-- **Prod deploys can lag ~100 minutes** behind a green CI. Do not conclude the
-  deploy is broken until you have watched several CI runs go green with no
-  movement.
-- **`config_hash` is no longer the verification key.** A test that tampers with
-  it to provoke drift will now pass; tamper with `book_fingerprint`.
+The three from the previous handoff still apply to **Monday 2026-08-24 17:45 ET**:
 
-## 6. The standard to hold
+1. ten seed migrations to per-book identity appear in the logs;
+2. nine books run (not ten — `PROFIT_ALLOCATOR_v1` retired);
+3. `event_store` moves off `ABSENT`.
 
-Three confounds were caught this session *before* they became findings, and all
-three were the same shape — **correct arithmetic against the wrong world**:
-an EW-market benchmark that measured sector exposure and called it analyst
-skill; a blended null that credited pure-buy analysts with a base-rate gap; and
-a "broken join" that was a US/global universe mismatch.
+**And now a fourth, from this session's change:** the arena pass should log a
+`Paper broker submit:` line. With no arena target declared it must log
+**nothing** (lane targets are the 16:30 job's) — so *silence is the expected
+result until someone sets `AEGIS_PAPER_BROKER_TARGET`*, and a line appearing
+before that is the finding.
 
-That is the house failure mode. When a result appears, the first question is
-not "is the maths right" — it is **"is this the world the question was about."**
+Also still falsifiable: **`why_moved` runs 17:15 ET Monday.** If `live_forward`
+is still quiet on Tuesday, that is a P0, not a puzzle.
+
+If a book raises `ConfigDrift` saying "refusing to migrate", the YAML changed
+before the stamp took: restore it, let it migrate, then re-edit.
+
+---
+
+## 5. Do these next, in order
+
+Full reasoning in `ROADMAP_2026-08-24_CONNECT_THE_BRAIN.md`.
+
+1. **`ANALYST_COCOVERAGE_GRAPH_v1`** — one groupby over IBES, already on disk.
+   Which companies share analysts, with edges weighted by those analysts'
+   *measured* reliability (which is what §6 of the finding just built, and what
+   no published version of this can do). It is the "simple graph features before
+   a GNN" test: if reliability-weighted co-coverage carries nothing, the graph
+   programme stops for a groupby's worth of cost.
+2. **`EVENT_RESPONSE_v1`** — continuation vs overshoot after an event, from the
+   `g4/earnings_v1` corpus and TAQ. Not the event store: it has no history yet.
+3. **`RELATIVE_VALUE_NN_v1`** — the corpus exists. **The effective n is 145 date
+   blocks, not 72,495 pairs** (CANON §58); split by date block or the result is
+   about within-month interpolation. Decision rule declared in advance: if an
+   MLP does not beat LightGBM out of block, there is no neural challenger and
+   the line closes with a receipt.
+
+Each is a separate `PRODUCT_EXPERIMENT` book. **None of them goes into
+`arena_composite`** — folding them in would hide the only thing being tested,
+which is whether their errors are different errors.
+
+---
+
+## 6. Traps
+
+* **A new custom exception under `services/` fails the suite** until it is
+  enrolled in `backend/tests/test_guard_missing_input_contract.py` (`CASES`) or
+  exempted with a reason. Cost 6 minutes this session; it is working as
+  designed.
+* **`.env` had raw dashboard text pasted into it** (`SECOND ALPACA`, `Key`,
+  `Secret` as bare lines). `python-dotenv` logs "could not parse statement at
+  line N" and carries on, so the keys were simply absent with no error anywhere.
+  If credentials appear to be unset, read the file before reading the code.
+* **Fixture datetimes must be in the past.** `event_store.make_record` now
+  refuses a future ingestion stamp, and several tests used "today at 17:00",
+  which is a coin flip on the hour the suite runs.
+* `backend/routers/portfolio.py` carries a **BOM**. Python's importer strips it;
+  `ast.parse` does not. Read source with `utf-8-sig` in any tooling.
+
+---
+
+## 7. The standard
+
+The machinery got materially better again and the edge did not move, because
+only decision days move it. What is different after this session is that the
+next thing to build is finally the thing that could: **mechanisms whose errors
+are different errors, competing where the outcome is recorded.**
