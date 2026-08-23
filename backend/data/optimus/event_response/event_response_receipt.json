@@ -1,0 +1,192 @@
+{
+  "trial_id": "EVENT-RESPONSE-1",
+  "spec_hash": "9a54b0c3da4cfe56",
+  "spec": {
+    "trial_id": "EVENT-RESPONSE-1",
+    "licence": "PRODUCT_EXPERIMENT (screen \u2014 licenses building, never a claim)",
+    "question": "Conditional on an earnings event and the market's FIRST reaction to it, is the subsequent move continuation or reversal?",
+    "corpus": "g4/earnings_v1 (2006-2019) x CRSP daily",
+    "min_estimates": 3,
+    "horizons_sessions": [
+      1,
+      2,
+      5
+    ],
+    "first_move": "overnight_gap \u2014 prior close to the tradable open",
+    "target": "drift_k = sign(gap) * cumulative excess return over the k sessions STRICTLY AFTER the event session. POSITIVE = the first move continued, NEGATIVE = it reversed. Entry is the event day's CLOSE: CRSP daily returns are close-to-close, so including the event session would put the gap inside the target it is signed by and manufacture continuation.",
+    "entry_assumption": "the event day's close. The gap is observable at the open, but nobody fills at the open price they are still measuring.",
+    "excess_vs": "equal-weighted CRSP market over the same sessions",
+    "n_effective": "EVENT MONTHS (date blocks) \u2014 never events (CANON \u00a758)",
+    "splits": "expanding-window by year; train < Y, test = Y, Y from 2012",
+    "models": [
+      "surprise_only  the published PEAD prior: scaled surprise alone",
+      "ridge          all features, linear",
+      "lightgbm       all features, trees"
+    ],
+    "context_reported": "the UNCONDITIONAL mean drift per horizon \u2014 whether there is any continuation to predict at all. Reported, never an arm: a constant has no cross-sectional rank and cannot be scored by rank IC.",
+    "primary_metric": "out-of-sample rank IC of predicted vs realised drift, computed WITHIN each event month then averaged",
+    "decision_rule": "BUILD a selector iff the best model (a) has a mean monthly rank IC whose 95% interval over event months excludes zero after BH-FDR across every (model, horizon) arm in this run, AND (b) beats the RIDGE baseline on the same months by more than one paired SE. A model that cannot beat ridge is not evidence for the model, it is evidence for the features.",
+    "why_relative_not_absolute": "No absolute IC bar is declared because none is defensible at this unit \u2014 the co-coverage screen's 0.01 was a MONTHLY CROSS-SECTIONAL bar over ~4,000 names and this is a within-event-month rank over a few hundred. Inventing a number here and clearing it would be the bar chosen by whoever wanted to pass.",
+    "known_missing": {
+      "options_implied_move": "None throughout the corpus \u2014 never extracted",
+      "intraday": "TAQ is pulled but not extracted; 30m is deferred, not answered",
+      "guidance_state": "UNKNOWN throughout \u2014 ibes.det_guidance is not entitled"
+    }
+  },
+  "n_events_modelled": 50910,
+  "n_event_months": 168,
+  "n_effective": 168,
+  "context_unconditional_drift": {
+    "drift1": {
+      "n_events": 50910,
+      "mean_drift": 0.000734,
+      "mean_of_monthly_means": 0.000662,
+      "monthly_se": 0.000249,
+      "n_months": 168
+    },
+    "drift2": {
+      "n_events": 50906,
+      "mean_drift": 0.000986,
+      "mean_of_monthly_means": 0.00084,
+      "monthly_se": 0.000326,
+      "n_months": 168
+    },
+    "drift5": {
+      "n_events": 50896,
+      "mean_drift": 0.000836,
+      "mean_of_monthly_means": 0.000441,
+      "monthly_se": 0.000437,
+      "n_months": 168
+    }
+  },
+  "results": {
+    "surprise_only@1d": {
+      "n_months": 96,
+      "mean_ic": 0.0043,
+      "se": 0.00856,
+      "t": 0.502,
+      "p_two_sided": 0.6167,
+      "mde_80pct_power": 0.02396,
+      "bh_fdr_survives": false
+    },
+    "ridge@1d": {
+      "n_months": 96,
+      "mean_ic": 0.01143,
+      "se": 0.00918,
+      "t": 1.245,
+      "p_two_sided": 0.21633,
+      "mde_80pct_power": 0.02572,
+      "bh_fdr_survives": false
+    },
+    "lightgbm@1d": {
+      "n_months": 96,
+      "mean_ic": 0.01848,
+      "se": 0.0096,
+      "t": 1.925,
+      "p_two_sided": 0.05719,
+      "mde_80pct_power": 0.02687,
+      "bh_fdr_survives": false
+    },
+    "surprise_only@2d": {
+      "n_months": 96,
+      "mean_ic": -0.00184,
+      "se": 0.00842,
+      "t": -0.219,
+      "p_two_sided": 0.82732,
+      "mde_80pct_power": 0.02358,
+      "bh_fdr_survives": false
+    },
+    "ridge@2d": {
+      "n_months": 96,
+      "mean_ic": -0.00139,
+      "se": 0.01029,
+      "t": -0.135,
+      "p_two_sided": 0.89322,
+      "mde_80pct_power": 0.02881,
+      "bh_fdr_survives": false
+    },
+    "lightgbm@2d": {
+      "n_months": 96,
+      "mean_ic": 0.01928,
+      "se": 0.01081,
+      "t": 1.783,
+      "p_two_sided": 0.07774,
+      "mde_80pct_power": 0.03027,
+      "bh_fdr_survives": false
+    },
+    "surprise_only@5d": {
+      "n_months": 96,
+      "mean_ic": 0.00711,
+      "se": 0.00951,
+      "t": 0.748,
+      "p_two_sided": 0.45658,
+      "mde_80pct_power": 0.02664,
+      "bh_fdr_survives": false
+    },
+    "ridge@5d": {
+      "n_months": 96,
+      "mean_ic": -0.00286,
+      "se": 0.00892,
+      "t": -0.321,
+      "p_two_sided": 0.74889,
+      "mde_80pct_power": 0.02498,
+      "bh_fdr_survives": false
+    },
+    "lightgbm@5d": {
+      "n_months": 96,
+      "mean_ic": 0.01275,
+      "se": 0.01044,
+      "t": 1.222,
+      "p_two_sided": 0.22471,
+      "mde_80pct_power": 0.02922,
+      "bh_fdr_survives": false
+    }
+  },
+  "paired_comparisons": {
+    "lightgbm_vs_ridge@1d": {
+      "n_months": 96,
+      "mean_diff": 0.007047,
+      "se": 0.010729,
+      "t": 0.657,
+      "beats_by_more_than_1se": false
+    },
+    "ridge_vs_surprise_only@1d": {
+      "n_months": 96,
+      "mean_diff": 0.007134,
+      "se": 0.014055,
+      "t": 0.508,
+      "beats_by_more_than_1se": false
+    },
+    "lightgbm_vs_ridge@2d": {
+      "n_months": 96,
+      "mean_diff": 0.020665,
+      "se": 0.01349,
+      "t": 1.532,
+      "beats_by_more_than_1se": true
+    },
+    "ridge_vs_surprise_only@2d": {
+      "n_months": 96,
+      "mean_diff": 0.000457,
+      "se": 0.016802,
+      "t": 0.027,
+      "beats_by_more_than_1se": false
+    },
+    "lightgbm_vs_ridge@5d": {
+      "n_months": 96,
+      "mean_diff": 0.015619,
+      "se": 0.012766,
+      "t": 1.223,
+      "beats_by_more_than_1se": true
+    },
+    "ridge_vs_surprise_only@5d": {
+      "n_months": 96,
+      "mean_diff": -0.009976,
+      "se": 0.0162,
+      "t": -0.616,
+      "beats_by_more_than_1se": false
+    }
+  },
+  "arms_passing": [],
+  "verdict": "STOP",
+  "verdict_meaning": "nothing survived; earnings-response prediction is not licensed"
+}

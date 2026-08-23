@@ -369,6 +369,37 @@ are now derived by order identity, not row state.
 
 ---
 
+## 4.8. `EVENT-RESPONSE-1` — RAN, and it says STOP
+
+Full result: `docs/FINDING_2026-08-24_EVENT_RESPONSE.md`. 50,910 events, 168
+event months, `spec_hash 9a54b0c3da4cfe56` frozen before the first number.
+
+**PEAD is there and the pipeline proves it works**: unconditional drift +0.00066
+at 1 session (t 2.66), +0.00084 at 2 (t 2.58), gone by 5. Right sign, plausible
+magnitude, right decay — so the null below is about the question, not the
+plumbing. It is also ~7bps, which is economically nothing.
+
+**No model ranks WHICH events drift.** Nine arms, nothing survives BH-FDR.
+LightGBM at 1d/2d reaches p ≈ 0.06/0.08 — precisely the number that becomes a
+finding if you run nine arms and report the best. The published PEAD prior
+(surprise alone) is flat.
+
+**Under-powered again**: MDE₈₀ 0.024–0.030 against a best observed 0.019, so
+~50–60% power. The honest null is "no ranking of size ≥ 0.025 exists in these
+features", not "no effect".
+
+**What this changes:** do not build an earnings-response selector on daily bars
+without options data. That is the entire content of the STOP.
+
+**And it hands §4 its named consumer.** The most likely reason nothing appeared
+is that `options_implied_move` is `None` throughout the corpus — so "surprise"
+was measured against analyst consensus only, when the tradable quantity is
+`surprise − what was already priced`. The successor is one experiment:
+`OPTIONS_EXPECTATION_SURFACE_v1` from `stdopd`, re-asking this question with the
+implied move as the central feature. `opprcd`'s 4.31B rows remain unneeded.
+
+---
+
 ## 5. Logged, not queued
 
 Good ideas with no owner and no date. Recorded so they are not re-derived, and
@@ -394,10 +425,10 @@ from this list displaces something in §3, and says what it displaces.
 |---|---|---|
 | ~~Now~~ | ~~P0.1 reachability audit~~ — **DONE**, and it found a live gap | — |
 | ~~Now~~ | ~~P1.3 co-coverage graph probe~~ — **DONE**, verdict CONTINUE; all three refinements measured zero (§4.6) | — |
-| Next | P1.1 `EVENT_RESPONSE_v1` | nothing (g4 + TAQ on disk) |
+| ~~Next~~ | ~~P1.1 `EVENT_RESPONSE_v1`~~ — **RAN: STOP** (§4.8). The daily options-blind spec is refuted; the successor is the options surface, which now has a named consumer | — |
 | Next | P1.2 `RELATIVE_VALUE_NN_v1` | nothing (corpus on disk) |
 | After P0.1 | P0.2 information bus | knowing which orphans are worth admitting |
-| After P1.1 | P2 options surface | a consumer that needs it |
+| **NOW** | P2 options surface — **promoted**: §4.8 gave it the consumer it was waiting for | — |
 | After ≥3 independent selectors have live output | `META_ROUTER_v1` | independence, measured not assumed |
 | Only if graph features pay | GNN | P1.3 returning something |
 
