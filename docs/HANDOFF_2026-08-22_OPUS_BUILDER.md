@@ -1,5 +1,10 @@
 # HANDOFF 2026-08-22 → next builder session (Opus)
 
+> **SUPERSEDED 2026-08-23 by `docs/HANDOFF_2026-08-23_OPUS_BUILDER.md`.**
+> Read that one for state, the queue and the findings inventory. This file is
+> kept for its trap list and for the reasoning behind queue items 0–2, which
+> are now done.
+
 Written at the end of Saturday 2026-08-22 (two parallel sessions + the
 paused pull). Read order for a cold start: this file →
 `docs/ROADMAP_POSITION_2026-08-22.md` (position + addendum + pause state) →
