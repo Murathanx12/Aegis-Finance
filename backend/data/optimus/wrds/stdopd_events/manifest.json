@@ -151,6 +151,28 @@
       "queried_at": "2026-08-23T16:30:01+00:00",
       "seconds": 48.2,
       "sql": "select secid, date, days, cp_flag, impl_volatility, delta, vega, forward_price, strike_price, premium from optionm.stdopd2017 where days in (30,60) and secid in (5007,5284,5505,5519,6030,6426,6514,6632,7019,7067,7086,7087,7112,7526,7527,7559,7964,8083,8648,8692,8986,9182,9205,9222,9242,9399,9534,100567,100862,100871,100892,100896,100903,100917,100951,100958,100966,100967,100971,100972,100974,10097 -- [2418 secids]"
+    },
+    "2018": {
+      "status": "ok",
+      "rows": 1454076,
+      "secids_returned": 1506,
+      "dates": 251,
+      "impl_vol_non_null": 0.9879,
+      "sha256": "e590661df3fd0bcf5a622d2ecd4943c65b4a63d4c956408baae4166c6940a814",
+      "queried_at": "2026-08-23T16:30:50+00:00",
+      "seconds": 73.5,
+      "sql": "select secid, date, days, cp_flag, impl_volatility, delta, vega, forward_price, strike_price, premium from optionm.stdopd2018 where days in (30,60) and secid in (5007,5284,5505,5519,6030,6426,6514,6632,7019,7067,7086,7087,7112,7526,7527,7559,7964,8083,8648,8692,8986,9182,9205,9222,9242,9399,9534,100567,100862,100871,100892,100896,100903,100917,100951,100958,100966,100967,100971,100972,100974,10097 -- [2418 secids]"
+    },
+    "2019": {
+      "status": "ok",
+      "rows": 1408962,
+      "secids_returned": 1448,
+      "dates": 252,
+      "impl_vol_non_null": 0.9774,
+      "sha256": "bc06849a1eee99bf534597f6d33131c5fe61b078af36c50614ddaad40e8c82d6",
+      "queried_at": "2026-08-23T16:32:03+00:00",
+      "seconds": 54.6,
+      "sql": "select secid, date, days, cp_flag, impl_volatility, delta, vega, forward_price, strike_price, premium from optionm.stdopd2019 where days in (30,60) and secid in (5007,5284,5505,5519,6030,6426,6514,6632,7019,7067,7086,7087,7112,7526,7527,7559,7964,8083,8648,8692,8986,9182,9205,9222,9242,9399,9534,100567,100862,100871,100892,100896,100903,100917,100951,100958,100966,100967,100971,100972,100974,10097 -- [2418 secids]"
     }
   }
 }

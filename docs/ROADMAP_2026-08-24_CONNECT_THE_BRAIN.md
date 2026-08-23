@@ -617,6 +617,50 @@ so the reconstruction is exact and isolates the one question.
 
 ---
 
+## 4.13. `EVENT-RESPONSE-2` — the hypothesis was right, the edge is borrow fees
+
+Full result: `docs/FINDING_2026-08-24_EVENT_RESPONSE_V2.md`. 49,357 events,
+168 event months, 21.1M rows of `stdopd` pulled to make it possible.
+
+**v1's own diagnosis tested POSITIVE.** Adding the implied move takes the tree
+from +0.0105 (t 1.04) to **+0.0315 (t 3.19)**, surviving BH-FDR; paired on
+identical months, **options help by +0.0210 ± 0.0093 (t 2.27)**. Ridge gains
+nothing, so the relationship is non-linear — which is what "did it move more
+than priced" should be. And it was **adequately powered**, uniquely this
+session: MDE₈₀ 0.0276 against observed 0.0315.
+
+**Then the declared precondition killed it.**
+
+| | all | excl. high-borrow |
+|---|---|---|
+| `drift1` | +0.0315 (t 3.19) | +0.0151 (t **1.42**) |
+| `drift5` | +0.0288 (t 2.61) | +0.0113 (t **0.96**) |
+
+Removing the top borrow quintile — 20% of events — removes **52% / 61%** of the
+effect and all significance. The point estimate halved while MDE₈₀ moved only
+0.0276 → 0.0297, so this is not a power artefact.
+
+**Verdict: NOT LICENSED — borrow-confounded.** Downgraded from BUILD, with both
+verdicts kept in the receipt so the downgrade is visible.
+
+### The order of operations is the whole story
+
+`OPTIONS_BORROW_CONFOUND_v1` was promoted to a **PRECONDITION** of this work in
+§4.5 rather than left as a follow-up. Had it been a follow-up, this session
+would have shipped a BUILD on IC 0.0315 with t 3.19 — a genuinely strong
+number — and retracted it later.
+
+That is the **second time in one session** that ordering decided whether
+something became a refusal or a retraction. The first was
+`feature_leakage_guard`, built after an IC of 0.99 was caught by luck.
+
+**What is NOT concluded:** that the option feature is useless. It says this
+edge, on these names, at this horizon, is not separable from borrow. Conditioning
+on borrow explicitly — trading only where it survives, or modelling the fee as a
+cost — is a different experiment and needs its own declaration.
+
+---
+
 ## 5. Logged, not queued
 
 Good ideas with no owner and no date. Recorded so they are not re-derived, and
@@ -645,7 +689,7 @@ from this list displaces something in §3, and says what it displaces.
 | ~~Next~~ | ~~P1.1 `EVENT_RESPONSE_v1`~~ — **RAN: STOP** (§4.8). The daily options-blind spec is refuted; the successor is the options surface, which now has a named consumer | — |
 | ~~Next~~ | ~~P1.2 `RELATIVE_VALUE_NN_v1`~~ — **RAN: STOP** (§4.10); the NN question is closed with a receipt | — |
 | After P0.1 | P0.2 information bus | knowing which orphans are worth admitting |
-| **NOW** | P2 options surface — **promoted**: §4.8 gave it the consumer it was waiting for | — |
+| ~~NOW~~ | ~~P2 options surface~~ — **DONE**: 21.1M rows pulled, `EVENT-RESPONSE-2` run, verdict NOT LICENSED (borrow-confounded, §4.13) | — |
 | After ≥3 independent selectors have live output | `META_ROUTER_v1` | independence, measured not assumed |
 | Only if graph features pay | GNN | P1.3 returning something |
 

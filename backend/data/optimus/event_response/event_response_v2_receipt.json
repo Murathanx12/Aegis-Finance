@@ -1,0 +1,466 @@
+{
+  "trial_id": "EVENT-RESPONSE-2",
+  "spec_hash": "534124d8bd63f4f4",
+  "spec": {
+    "trial_id": "EVENT-RESPONSE-2",
+    "licence": "PRODUCT_EXPERIMENT (screen \u2014 licenses building, never a claim)",
+    "predecessor": "EVENT-RESPONSE-1 (STOP) \u2014 same target, same arms, new feature",
+    "question": "Does an earnings surprise measured against the OPTIONS market's own expectation rank post-event drift, where a surprise measured against analyst consensus did not?",
+    "central_feature": "gap_vs_implied = |overnight_gap| / implied_move_1d",
+    "implied_move_1d": "atm_iv_30 * sqrt(1/252), from the session BEFORE the event",
+    "borrow_confound": "iv_put_minus_call_30d \u2014 the ATM put-call IV residual, which by put-call parity is a borrow/hard-to-borrow proxy. Entered as a FEATURE and as a declared slice, because a 2025 JFE result holds that much of option-implied return predictability is borrow fees. The roadmap made this a PRECONDITION of this work, not a follow-up.",
+    "target": "unchanged from v1: sign(gap) * cumulative excess return over the k sessions STRICTLY AFTER the event session",
+    "horizons_sessions": [
+      1,
+      2,
+      5
+    ],
+    "n_effective": "EVENT MONTHS (date blocks) \u2014 never events (CANON \u00a758)",
+    "split": "expanding-window by year; train < Y, test = Y, Y from 2012",
+    "models": [
+      "surprise_only",
+      "ridge",
+      "lightgbm"
+    ],
+    "leakage_guard": "feature_leakage_guard.assert_no_target_leakage runs BEFORE any model is fitted",
+    "decision_rule": "BUILD a selector iff an arm's mean monthly rank IC survives BH-FDR at q<=0.10 across every (model, horizon) arm AND beats the RIDGE baseline by more than one paired SE \u2014 identical to v1, so the two runs are comparable and the ONLY difference is the feature set.",
+    "and_the_comparison_that_matters": "v1's arms are re-run here on the SAME events that have option data, so 'the options feature helped' is a paired difference on one sample rather than two runs on different populations.",
+    "cannot_provide": "skew / 25-delta / RR / butterfly \u2014 stdopd is ATM-only"
+  },
+  "n_events_with_option_state": 49357,
+  "n_event_months": 168,
+  "n_effective": 168,
+  "leakage_guard": {
+    "status": "ok",
+    "n_blocks": 168,
+    "bar": 0.5,
+    "warned": [],
+    "features": {
+      "numeric_surprise_pct": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": -0.00586,
+        "abs": 0.00586
+      },
+      "surprise_scaled": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": -0.017856,
+        "abs": 0.017856
+      },
+      "expectation_dispersion": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": 0.025576,
+        "abs": 0.025576
+      },
+      "n_estimates": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": 0.00044,
+        "abs": 0.00044
+      },
+      "pre_event_price_runup": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": 0.009423,
+        "abs": 0.009423
+      },
+      "overnight_gap": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": -0.041121,
+        "abs": 0.041121
+      },
+      "abs_gap": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": 0.019159,
+        "abs": 0.019159
+      },
+      "gap_vs_runup": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": -0.018923,
+        "abs": 0.018923
+      },
+      "dollar_volume_20d_log": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": -0.003177,
+        "abs": 0.003177
+      },
+      "hl_range_20d": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": 0.005733,
+        "abs": 0.005733
+      },
+      "amihud_20d_log": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": 0.004017,
+        "abs": 0.004017
+      },
+      "revision_up": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": -0.004671,
+        "abs": 0.004671
+      },
+      "revision_down": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": 0.00357,
+        "abs": 0.00357
+      },
+      "disclosure_delay_days": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": -0.00118,
+        "abs": 0.00118
+      },
+      "atm_iv_30": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": 0.001746,
+        "abs": 0.001746
+      },
+      "iv_term_slope": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": -0.013992,
+        "abs": 0.013992
+      },
+      "iv_put_minus_call_30d": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": 0.016278,
+        "abs": 0.016278
+      },
+      "implied_move_1d": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": 0.001746,
+        "abs": 0.001746
+      },
+      "gap_vs_implied": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": 0.022616,
+        "abs": 0.022616
+      },
+      "surprise_vs_implied": {
+        "status": "ok",
+        "n_blocks": 168,
+        "mean_rank_ic": -0.006345,
+        "abs": 0.006345
+      }
+    },
+    "ranked": [
+      [
+        0.041121,
+        "overnight_gap"
+      ],
+      [
+        0.025576,
+        "expectation_dispersion"
+      ],
+      [
+        0.022616,
+        "gap_vs_implied"
+      ],
+      [
+        0.019159,
+        "abs_gap"
+      ],
+      [
+        0.018923,
+        "gap_vs_runup"
+      ]
+    ]
+  },
+  "results": {
+    "surprise_only@1d[base]": {
+      "n_months": 96,
+      "mean_ic": 0.00584,
+      "se": 0.00839,
+      "t": 0.696,
+      "p_two_sided": 0.48791,
+      "mde_80pct_power": 0.02349,
+      "bh_fdr_survives": false
+    },
+    "ridge@1d[base]": {
+      "n_months": 96,
+      "mean_ic": 0.0061,
+      "se": 0.00938,
+      "t": 0.651,
+      "p_two_sided": 0.51692,
+      "mde_80pct_power": 0.02626,
+      "bh_fdr_survives": false
+    },
+    "lightgbm@1d[base]": {
+      "n_months": 96,
+      "mean_ic": 0.01048,
+      "se": 0.01003,
+      "t": 1.044,
+      "p_two_sided": 0.29896,
+      "mde_80pct_power": 0.02808,
+      "bh_fdr_survives": false
+    },
+    "surprise_only@1d[with_options]": {
+      "n_months": 96,
+      "mean_ic": 0.00584,
+      "se": 0.00839,
+      "t": 0.696,
+      "p_two_sided": 0.48791,
+      "mde_80pct_power": 0.02349,
+      "bh_fdr_survives": false
+    },
+    "ridge@1d[with_options]": {
+      "n_months": 96,
+      "mean_ic": 0.00944,
+      "se": 0.01033,
+      "t": 0.914,
+      "p_two_sided": 0.36305,
+      "mde_80pct_power": 0.02891,
+      "bh_fdr_survives": false
+    },
+    "lightgbm@1d[with_options]": {
+      "n_months": 96,
+      "mean_ic": 0.03147,
+      "se": 0.00985,
+      "t": 3.193,
+      "p_two_sided": 0.00191,
+      "mde_80pct_power": 0.02759,
+      "bh_fdr_survives": true
+    },
+    "surprise_only@2d[base]": {
+      "n_months": 96,
+      "mean_ic": -0.00186,
+      "se": 0.00818,
+      "t": -0.228,
+      "p_two_sided": 0.82013,
+      "mde_80pct_power": 0.02289,
+      "bh_fdr_survives": false
+    },
+    "ridge@2d[base]": {
+      "n_months": 96,
+      "mean_ic": 0.00036,
+      "se": 0.01062,
+      "t": 0.034,
+      "p_two_sided": 0.9728,
+      "mde_80pct_power": 0.02974,
+      "bh_fdr_survives": false
+    },
+    "lightgbm@2d[base]": {
+      "n_months": 96,
+      "mean_ic": 0.0164,
+      "se": 0.01133,
+      "t": 1.448,
+      "p_two_sided": 0.15102,
+      "mde_80pct_power": 0.03173,
+      "bh_fdr_survives": false
+    },
+    "surprise_only@2d[with_options]": {
+      "n_months": 96,
+      "mean_ic": -0.00186,
+      "se": 0.00818,
+      "t": -0.228,
+      "p_two_sided": 0.82013,
+      "mde_80pct_power": 0.02289,
+      "bh_fdr_survives": false
+    },
+    "ridge@2d[with_options]": {
+      "n_months": 96,
+      "mean_ic": -0.00208,
+      "se": 0.00979,
+      "t": -0.212,
+      "p_two_sided": 0.83223,
+      "mde_80pct_power": 0.02741,
+      "bh_fdr_survives": false
+    },
+    "lightgbm@2d[with_options]": {
+      "n_months": 96,
+      "mean_ic": 0.02204,
+      "se": 0.01064,
+      "t": 2.072,
+      "p_two_sided": 0.04102,
+      "mde_80pct_power": 0.02979,
+      "bh_fdr_survives": false
+    },
+    "surprise_only@5d[base]": {
+      "n_months": 96,
+      "mean_ic": 0.0087,
+      "se": 0.00963,
+      "t": 0.904,
+      "p_two_sided": 0.36846,
+      "mde_80pct_power": 0.02696,
+      "bh_fdr_survives": false
+    },
+    "ridge@5d[base]": {
+      "n_months": 96,
+      "mean_ic": 0.0019,
+      "se": 0.00894,
+      "t": 0.213,
+      "p_two_sided": 0.83199,
+      "mde_80pct_power": 0.02503,
+      "bh_fdr_survives": false
+    },
+    "lightgbm@5d[base]": {
+      "n_months": 96,
+      "mean_ic": 0.01576,
+      "se": 0.00904,
+      "t": 1.743,
+      "p_two_sided": 0.08457,
+      "mde_80pct_power": 0.02532,
+      "bh_fdr_survives": false
+    },
+    "surprise_only@5d[with_options]": {
+      "n_months": 96,
+      "mean_ic": 0.0087,
+      "se": 0.00963,
+      "t": 0.904,
+      "p_two_sided": 0.36846,
+      "mde_80pct_power": 0.02696,
+      "bh_fdr_survives": false
+    },
+    "ridge@5d[with_options]": {
+      "n_months": 96,
+      "mean_ic": 0.00386,
+      "se": 0.00942,
+      "t": 0.41,
+      "p_two_sided": 0.68283,
+      "mde_80pct_power": 0.02638,
+      "bh_fdr_survives": false
+    },
+    "lightgbm@5d[with_options]": {
+      "n_months": 96,
+      "mean_ic": 0.02883,
+      "se": 0.01105,
+      "t": 2.608,
+      "p_two_sided": 0.01058,
+      "mde_80pct_power": 0.03095,
+      "bh_fdr_survives": true
+    }
+  },
+  "paired_options_vs_base": {
+    "options_helps_surprise_only@1d": {
+      "n_months": 96,
+      "mean_diff": 0.0,
+      "se": 0.0,
+      "t": 0.0,
+      "beats_by_more_than_1se": false
+    },
+    "options_helps_ridge@1d": {
+      "n_months": 96,
+      "mean_diff": 0.003337,
+      "se": 0.005606,
+      "t": 0.595,
+      "beats_by_more_than_1se": false
+    },
+    "options_helps_lightgbm@1d": {
+      "n_months": 96,
+      "mean_diff": 0.02099,
+      "se": 0.00926,
+      "t": 2.267,
+      "beats_by_more_than_1se": true
+    },
+    "options_helps_surprise_only@2d": {
+      "n_months": 96,
+      "mean_diff": 0.0,
+      "se": 0.0,
+      "t": 0.0,
+      "beats_by_more_than_1se": false
+    },
+    "options_helps_ridge@2d": {
+      "n_months": 96,
+      "mean_diff": -0.002443,
+      "se": 0.006471,
+      "t": -0.378,
+      "beats_by_more_than_1se": false
+    },
+    "options_helps_lightgbm@2d": {
+      "n_months": 96,
+      "mean_diff": 0.00564,
+      "se": 0.008131,
+      "t": 0.694,
+      "beats_by_more_than_1se": false
+    },
+    "options_helps_surprise_only@5d": {
+      "n_months": 96,
+      "mean_diff": 0.0,
+      "se": 0.0,
+      "t": 0.0,
+      "beats_by_more_than_1se": false
+    },
+    "options_helps_ridge@5d": {
+      "n_months": 96,
+      "mean_diff": 0.001959,
+      "se": 0.003958,
+      "t": 0.495,
+      "beats_by_more_than_1se": false
+    },
+    "options_helps_lightgbm@5d": {
+      "n_months": 96,
+      "mean_diff": 0.013068,
+      "se": 0.007871,
+      "t": 1.66,
+      "beats_by_more_than_1se": true
+    }
+  },
+  "arms_passing": [
+    "lightgbm@1d[with_options]",
+    "lightgbm@5d[with_options]"
+  ],
+  "options_helped": [
+    "options_helps_lightgbm@1d",
+    "options_helps_lightgbm@5d"
+  ],
+  "verdict": "NOT_LICENSED_BORROW_CONFOUNDED",
+  "borrow_confound_slice": {
+    "declared_as": "a PRECONDITION of this work by the roadmap, not a follow-up",
+    "proxy": "iv_put_minus_call_30d (ATM put-call IV residual); top quintile = high borrow",
+    "cut": 0.0192,
+    "n_high_borrow": 9872,
+    "n_total": 49357,
+    "drift1": {
+      "all": {
+        "ic": 0.03147,
+        "t": 3.19,
+        "p": 0.0019
+      },
+      "excl_high_borrow": {
+        "ic": 0.01505,
+        "t": 1.42,
+        "p": 0.1587
+      },
+      "only_high_borrow": {
+        "ic": 0.0088,
+        "t": 0.46,
+        "p": 0.6468,
+        "note": "n=69 months, MDE80 0.054 \u2014 underpowered, cannot itself carry a claim"
+      }
+    },
+    "drift5": {
+      "all": {
+        "ic": 0.02883,
+        "t": 2.61,
+        "p": 0.0106
+      },
+      "excl_high_borrow": {
+        "ic": 0.01134,
+        "t": 0.96,
+        "p": 0.3371
+      },
+      "only_high_borrow": {
+        "ic": 0.0233,
+        "t": 1.23,
+        "p": 0.2225
+      }
+    },
+    "reading": "removing 20% of events removes >50% of the effect at 1d and 61% at 5d, and all significance. The IC POINT ESTIMATE halved, so this is not a power artefact \u2014 MDE80 moved only 0.0276 -> 0.0297."
+  },
+  "verdict_before_borrow_slice": "BUILD",
+  "verdict_meaning": "The options feature genuinely adds predictive information (paired +0.0210, t 2.27 at 1d). But the resulting predictability does not survive excluding hard-to-borrow names, which the roadmap made a PRECONDITION precisely so this would be found before a selector was built rather than after. A cheaper mechanism that explains the same number wins."
+}
