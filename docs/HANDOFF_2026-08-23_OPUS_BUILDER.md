@@ -74,6 +74,43 @@ is the single biggest unexploited data asset in the store, and the standing
 table has a disposition somebody chose. The catalogue-vs-entitlement rule still
 stands: 212 tables this account cannot read are facts about the account.
 
+### The ANALYSIS side — and a second characteristics panel nobody has touched
+
+The question was "everything we can, data *and analysis*." WRDS's own computed
+products came down with the rest, and three of them are more interesting than
+the raw tables:
+
+| product | shape | window | status |
+|---|---|---|---|
+| `wrdsapps.signals_raw_plus` | **128 signals** × 2,705,291 permno-months, 18,576 permnos | 1960-01 … 2024-12 | on disk, **unused** |
+| `wrdsapps.firm_ratio{,_ccm,_ibes,_ibes_ccm}` | 98 ratios, keyed `public_date` (PIT-friendly) | 1970-01 … 2025-12 | on disk, unused |
+| `wrdsapps.mastertable` | `dgtw_xret` + precomputed `b_mkt/b_smb/b_hml/b_umd` | 1960-01 … 2024-12 | on disk, unused |
+
+Also present: `contrib.{kpss_patents, patent_level, corp_culture, liva, bbd,
+marginal_tax, classified_boards, ceo_turnover, lawsuit_level, rq_data}` and the
+full linking suite.
+
+**Two consequences worth acting on.**
+
+1. **`signals_raw_plus` is a second, independent characteristics panel, already
+   on disk, PERMNO-keyed, back to 1960.** TOURNAMENT-1 asked "do 412 JKP
+   characteristics beat a 7-column price floor?" and the same question can be
+   asked of a different vendor's 128 signals at zero pull cost. That is the
+   cheapest available replication of the programme's central negative — and
+   §62 (provenance-as-selection) says a result that only exists in one
+   vendor's construction is a result about the vendor.
+2. **`mastertable` carries precomputed FF4 betas and DGTW excess returns.** The
+   08-22 handoff makes Dimson-adjusted betas a hard prerequisite for any
+   all-cap use of the own-construction risk family (attenuation measured:
+   fully-traded median 0.845 vs 0.118 at ≥10 zero-trade days). A
+   vendor-computed beta is not a Dimson beta and does not discharge that
+   requirement — but it is a free external check on our own, and disagreement
+   between them is itself informative.
+
+**Relevant to ORDER 29:** `wrdsapps.rpevts` — RavenPack events — is
+**NOT_ENTITLED**. The obvious WRDS route to a licensed event/news corpus is
+closed, so the news engine cannot be scoped as if it were available.
+
 ---
 
 ## 2. STATE SNAPSHOT
@@ -131,16 +168,22 @@ Cite `spec_hash d58b6d0310008713`. Null world FIRST, §64 power audit, every
 verdict literal asserted reachable, then the registered run whose runner calls
 `assert_detectable` as its opening act.
 
-**(d) `MAX_ROWS` decision — really an `optionm.opprcd` decision.** See §1.
+**(d) Cheap, high-value, unblocked: replicate the T1 question on
+`wrdsapps.signals_raw_plus`.** 128 signals, 2.7M permno-months, 1960+, already
+on disk, zero pull cost, different vendor's construction. §62 says a negative
+that exists only in JKP's construction is a negative about JKP. This can run
+while (a) is being built.
 
-**(e) ORDER 27 leftovers:** EVENT_IMPACT bridge · PROFIT_ALLOCATOR_v2 (gated on
+**(e) `MAX_ROWS` decision — really an `optionm.opprcd` decision.** See §1.
+
+**(f) ORDER 27 leftovers:** EVENT_IMPACT bridge · PROFIT_ALLOCATOR_v2 (gated on
 true OOS forecasts) · P9 alpha-diversity books (gated on a surviving signal —
 none yet).
 
-**(f) ORDER 29 (news/event engine) — do NOT start unattended.** Collectors
+**(g) ORDER 29 (news/event engine) — do NOT start unattended.** Collectors
 touch prod scheduling and LLM spend.
 
-**(g) `lab/rd_loop` retirement — blocked.** Committing the uncommitted `lab/`
+**(h) `lab/rd_loop` retirement — blocked.** Committing the uncommitted `lab/`
 v5 rewrite as-is turns CI red (14 tests). Either finish the rewrite or revert.
 
 ### ATTENDED (Murat's keyboard)
