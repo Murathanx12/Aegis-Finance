@@ -1,6 +1,7 @@
 {
   "receipt": "TRAINING_SUBSTRATE_V1",
-  "at": "2026-08-22T09:58:30+00:00",
+  "version": "1.1",
+  "at": "2026-08-23T04:16:20+00:00",
   "claim": "all inputs required by TRAINING_SUBSTRATE_V1 are verified \u2014 NOT 'all WRDS data'",
   "verification": {
     "verified_at": "2026-08-22T08:25:29+00:00",
@@ -214,11 +215,247 @@
         "sha256_16": "b47b6d41df8aeeb8"
       }
     ],
+    "CHARACTERISTICS_USA_FULL": [
+      {
+        "file": "jkp_usa_1926_1930.parquet",
+        "bytes": 18030476,
+        "sha256_16": "44dba741d9baade9"
+      },
+      {
+        "file": "jkp_usa_1931_1935.parquet",
+        "bytes": 23797016,
+        "sha256_16": "e2cc1ba83e2aa113"
+      },
+      {
+        "file": "jkp_usa_1936_1940.parquet",
+        "bytes": 27550550,
+        "sha256_16": "b446abddfe45897e"
+      },
+      {
+        "file": "jkp_usa_1941_1945.parquet",
+        "bytes": 30338634,
+        "sha256_16": "cfd824193f988307"
+      },
+      {
+        "file": "jkp_usa_1946_1950.parquet",
+        "bytes": 37213499,
+        "sha256_16": "80991cac720815c7"
+      },
+      {
+        "file": "jkp_usa_1951_1955.parquet",
+        "bytes": 56389183,
+        "sha256_16": "3a896678a3f0c4f1"
+      },
+      {
+        "file": "jkp_usa_1956_1960.parquet",
+        "bytes": 62911406,
+        "sha256_16": "7d695c32180004d9"
+      },
+      {
+        "file": "jkp_usa_1961_1965.parquet",
+        "bytes": 111649755,
+        "sha256_16": "fda6cb8237758a6d"
+      },
+      {
+        "file": "jkp_usa_1966_1967.parquet",
+        "bytes": 72571213,
+        "sha256_16": "ca332d253a483fea"
+      },
+      {
+        "file": "jkp_usa_1968_1969.parquet",
+        "bytes": 84283461,
+        "sha256_16": "f6b71cd16e409fea"
+      },
+      {
+        "file": "jkp_usa_1970_1971.parquet",
+        "bytes": 94654334,
+        "sha256_16": "964e71ad94883621"
+      },
+      {
+        "file": "jkp_usa_1972_1973.parquet",
+        "bytes": 125397242,
+        "sha256_16": "df5dbb5730c3eb1d"
+      },
+      {
+        "file": "jkp_usa_1974_1975.parquet",
+        "bytes": 146218396,
+        "sha256_16": "a256ae4736bcb200"
+      },
+      {
+        "file": "jkp_usa_1976_1977.parquet",
+        "bytes": 164133838,
+        "sha256_16": "c18e4c4d8b8290fb"
+      },
+      {
+        "file": "jkp_usa_1978_1979.parquet",
+        "bytes": 173025632,
+        "sha256_16": "396bc1653a50d240"
+      },
+      {
+        "file": "jkp_usa_1980_1981.parquet",
+        "bytes": 182357268,
+        "sha256_16": "c0f02675d979e741"
+      },
+      {
+        "file": "jkp_usa_1982_1983.parquet",
+        "bytes": 200870882,
+        "sha256_16": "3f67e9cc49e170bc"
+      },
+      {
+        "file": "jkp_usa_1984_1985.parquet",
+        "bytes": 232299217,
+        "sha256_16": "72956fbd98414dcc"
+      },
+      {
+        "file": "jkp_usa_1986_1987.parquet",
+        "bytes": 252036987,
+        "sha256_16": "4f65561d419d2df1"
+      },
+      {
+        "file": "jkp_usa_1988_1989.parquet",
+        "bytes": 260109616,
+        "sha256_16": "46e551878c6e561c"
+      },
+      {
+        "file": "jkp_usa_1990_1991.parquet",
+        "bytes": 255793712,
+        "sha256_16": "ce940a8a6cab4539"
+      },
+      {
+        "file": "jkp_usa_1992_1993.parquet",
+        "bytes": 272391645,
+        "sha256_16": "bfa2c8abcb416f30"
+      },
+      {
+        "file": "jkp_usa_1994_1995.parquet",
+        "bytes": 309388738,
+        "sha256_16": "b41b9d8815d26a34"
+      },
+      {
+        "file": "jkp_usa_1996_1997.parquet",
+        "bytes": 342003464,
+        "sha256_16": "fe1e63abf82fbd49"
+      },
+      {
+        "file": "jkp_usa_1998_1999.parquet",
+        "bytes": 345283090,
+        "sha256_16": "f1e890435335c011"
+      },
+      {
+        "file": "jkp_usa_2000_2001.parquet",
+        "bytes": 322621561,
+        "sha256_16": "bafc26464fd574c8"
+      },
+      {
+        "file": "jkp_usa_2002_2003.parquet",
+        "bytes": 289078406,
+        "sha256_16": "2dc888a11f4fdbda"
+      },
+      {
+        "file": "jkp_usa_2004_2005.parquet",
+        "bytes": 275072465,
+        "sha256_16": "4c8eb1af9cda1946"
+      },
+      {
+        "file": "jkp_usa_2006_2007.parquet",
+        "bytes": 270185399,
+        "sha256_16": "8e6a6a3e0e3571e2"
+      },
+      {
+        "file": "jkp_usa_2008_2009.parquet",
+        "bytes": 253581849,
+        "sha256_16": "86734a0794ba5103"
+      },
+      {
+        "file": "jkp_usa_2010_2011.parquet",
+        "bytes": 236998598,
+        "sha256_16": "2d8358a25ff7873e"
+      },
+      {
+        "file": "jkp_usa_2012_2012.parquet",
+        "bytes": 115295540,
+        "sha256_16": "20e1cf3b4b7eb588"
+      }
+    ],
+    "CHARACTERISTICS_FOREIGN": [
+      {
+        "file": "jkp_risk_aus_2013_2024.parquet",
+        "bytes": 65523780,
+        "sha256_16": "33d130150d475a30"
+      },
+      {
+        "file": "jkp_risk_can_2013_2024.parquet",
+        "bytes": 53239071,
+        "sha256_16": "ab78e74a8fc10bf9"
+      },
+      {
+        "file": "jkp_risk_che_2013_2024.parquet",
+        "bytes": 11155815,
+        "sha256_16": "75a125a798d7e10d"
+      },
+      {
+        "file": "jkp_risk_deu_2013_2024.parquet",
+        "bytes": 33528423,
+        "sha256_16": "10024b7d20f47244"
+      },
+      {
+        "file": "jkp_risk_esp_2013_2024.parquet",
+        "bytes": 7481973,
+        "sha256_16": "80e2b730036c6784"
+      },
+      {
+        "file": "jkp_risk_fra_2013_2024.parquet",
+        "bytes": 31654280,
+        "sha256_16": "d1b6cac6d1a85c20"
+      },
+      {
+        "file": "jkp_risk_gbr_2013_2024.parquet",
+        "bytes": 58300688,
+        "sha256_16": "ae00dc7263c91767"
+      },
+      {
+        "file": "jkp_risk_ita_2013_2024.parquet",
+        "bytes": 16467909,
+        "sha256_16": "e890fe10a4958ae4"
+      },
+      {
+        "file": "jkp_risk_jpn_2013_2024.parquet",
+        "bytes": 158972521,
+        "sha256_16": "f02e7aafb0dba4b3"
+      },
+      {
+        "file": "jkp_risk_kor_2013_2024.parquet",
+        "bytes": 98337392,
+        "sha256_16": "7a74337f780c9e98"
+      },
+      {
+        "file": "jkp_risk_nld_2013_2024.parquet",
+        "bytes": 5157002,
+        "sha256_16": "a834e10f71531318"
+      },
+      {
+        "file": "jkp_risk_swe_2013_2024.parquet",
+        "bytes": 34283036,
+        "sha256_16": "cebfcaaed671fc95"
+      },
+      {
+        "file": "jkp_risk_twn_2013_2024.parquet",
+        "bytes": 88121892,
+        "sha256_16": "bd27ae18c5c2b590"
+      }
+    ],
     "PANEL": [
       {
         "file": "aegis_panel_v1.parquet",
         "bytes": 543451815,
         "sha256_16": "34f7cb98ad147785"
+      }
+    ],
+    "PANEL_V2": [
+      {
+        "file": "aegis_panel_v2.parquet",
+        "bytes": 4485641132,
+        "sha256_16": "2812090a3ecbd1f5"
       }
     ],
     "LINKS": [
@@ -687,17 +924,30 @@
     ]
   },
   "catalogue_at_large": {
-    "n_tables_pulled": 833,
+    "n_tables_pulled": 840,
     "n_over_cap": 235,
     "over_cap_rule": "a large table earns partitioned ingestion through a NAMED CONSUMER, never by existing",
     "n_terminal_not_entitled": 240,
     "terminal_note": "entitlement facts (permission denied / absent from server), recorded not retried",
-    "completed_at": "2026-08-22T04:40:44+00:00"
+    "completed_at": "2026-08-23T04:13:27+00:00"
+  },
+  "plan_reconciliation": {
+    "n_planned": 1327,
+    "on_disk": 843,
+    "empty": 9,
+    "over_cap": 235,
+    "terminal": 240,
+    "n_outstanding": 0,
+    "note": "over_cap is a DECISION (deferred by the named-consumer rule, re-queued if MAX_ROWS rises) and terminal is an ENTITLEMENT FACT. Neither is a hole. An unaccounted table would be, and this receipt refuses on one."
   },
   "vintage": {
     "crsp_ends": "2024-12-31",
     "jkp_window": "2013-01-31..2024-12-31",
-    "panel_window": "2014-01-31..2024-11-29"
+    "panel_window": "2014-01-31..2024-11-29",
+    "jkp_usa_full_window": "1926-01-31..2024-12-31",
+    "jkp_foreign_window": "2013-01-31..2024-12-31",
+    "jkp_foreign_markets": 13,
+    "panel_v2_window": "1926-01-31..2024-12-31"
   },
   "pit_receipts": {
     "jkp_spot_audit": "aegis_panel/jkp_pit_audit_2026-08-22.json = PASS"

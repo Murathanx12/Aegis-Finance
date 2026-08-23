@@ -361,17 +361,32 @@ def classify(error: str) -> tuple[str, str]:
     return "RETRYABLE", "UNCLASSIFIED"
 
 
+def _planned_rows() -> list:
+    """The CURRENT plan's rows, each carrying the schema/table/tier/n_cols the
+    puller needs. Empty list if unreadable.
+
+    Read by TWO callers with opposite failure modes, which is why it returns
+    rows and not just names. `_planned_names` uses it to EXCLUDE out-of-plan
+    tables — there, an unreadable plan must disable the filter rather than
+    drop the whole retry list. The never-attempted reconciliation uses it to
+    INCLUDE missing tables — there, an unreadable plan means the gap check
+    silently finds nothing, so it says so out loud rather than reporting a
+    clean reconciliation it never performed."""
+    from scripts.wrds_pull_everything import PLAN_CACHE
+    try:
+        return list(json.loads(PLAN_CACHE.read_text(encoding="utf-8"))
+                    .get("plan", []))
+    except Exception as exc:                                    # noqa: BLE001
+        print(f"  (plan cache unreadable: {exc}; out-of-plan filter OFF and "
+              f"the never-attempted reconciliation CANNOT RUN)")
+        return []
+
+
 def _planned_names() -> set:
     """Names the CURRENT plan intends to pull. Empty set if unreadable, and
     an empty set disables the filter rather than silently dropping the whole
     retry list — refusing everything is not the safe default here."""
-    from scripts.wrds_pull_everything import PLAN_CACHE
-    try:
-        plan = json.loads(PLAN_CACHE.read_text(encoding="utf-8"))
-        return {p["name"] for p in plan.get("plan", [])}
-    except Exception as exc:                                    # noqa: BLE001
-        print(f"  (plan cache unreadable: {exc}; out-of-plan filter OFF)")
-        return set()
+    return {p["name"] for p in _planned_rows()}
 
 
 def _flush_manifest(new_pulled, new_failed, new_over_cap, terminal, *,
@@ -480,6 +495,29 @@ def main() -> int:
         (terminal if verdict == "TERMINAL" else retry).append(
             {**f, "verdict": verdict, "reason": reason})
 
+    # THE QUEUE ABOVE IS FAILURE-DRIVEN, AND THAT IS NOT THE SAME AS
+    # PLAN-DRIVEN. Every branch so far reads `by_name`, i.e. the manifest's
+    # `failed` list. A planned table that was never ATTEMPTED has no failure
+    # row, so it is invisible to all of it — no file, no error, no terminal
+    # verdict, no over-cap measurement, and therefore no retry. Measured
+    # 2026-08-23: seven tables sat in exactly that state (comp.asec_amda,
+    # comp.spidx_cst, comp_na_daily_all.{asec_amda,chars,spidx_cst},
+    # crsp.stock_qvards, crsp_a_stock.stock_qvards) while `--dry-run`
+    # printed `RETRYABLE: 0` and the manifest carried `completed_at`.
+    #
+    # This is the SAME failure this module exists to fix, one level up: the
+    # original pull reported completion by counting its failures instead of
+    # its plan. A catch-up that also counts failures inherits the bug it was
+    # written to remove. The queue is therefore reconciled against the plan,
+    # which is the only list that says what "everything" means.
+    accounted = (set(by_name) | known_empty | set(known_over_cap)
+                 | {t["name"] for t in terminal})
+    never = [p for p in _planned_rows()
+             if p["name"] not in accounted
+             and f"{p['schema']}__{p['table']}" not in have]
+    for p in never:
+        retry.append({**p, "verdict": "RETRYABLE", "reason": "NEVER_ATTEMPTED"})
+
     # RESEARCH PRIORITY, not alphabetical. The first catch-up run iterated
     # sorted-by-name and therefore spent its opening ten minutes on
     # `audit.*` and `boardex.*` — tier 2, the least useful tables in the
@@ -519,6 +557,14 @@ def main() -> int:
     print(f"RETRYABLE:                {len(retry):,}")
     for k, v in Counter(t["reason"] for t in retry).most_common():
         print(f"    {v:>6,}  {k}")
+    if never:
+        print(f"\n  ^ {len(never):,} of those are NEVER_ATTEMPTED — planned, "
+              f"absent from disk, and absent from every failure/terminal/"
+              f"over-cap record. A failure-driven queue cannot see these.")
+        print(f"    {[p['name'] for p in never]}")
+    elif not _planned_rows():
+        print("\n  (no plan on disk — the never-attempted reconciliation did "
+              "NOT run; 'nothing outstanding' below is unverified)")
 
     TERMINAL_MAP.write_text(json.dumps({
         "written_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
