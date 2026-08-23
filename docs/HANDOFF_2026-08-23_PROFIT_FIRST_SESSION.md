@@ -263,10 +263,24 @@ The v5 rewrite is left uncommitted and untouched.
 
 ### Deploy state at handoff — READ THIS
 
-**Prod was still on `61aa63e` when this session ended.** Not a deploy failure —
-**Railway is CI-gated**, and CI failed on `a363e2f`, `a2a38a6` and `baad5c0`
-because of the shadowed-variable bug. `2ed836f` fixes it and `dbe7170`/`39cae3e`
-carry the fix, so the deploy should flip once CI goes green on the tip.
+**Prod was still on `61aa63e` when this session ended, and I could not confirm
+why.** What is verified:
+
+- CI **failed** on `a363e2f`, `a2a38a6`, `baad5c0` (the shadowed-variable bug),
+  and **passed on `dbe7170`**, which carries the fix.
+- prod's process **restarted at 05:18 UTC** — the minute of the first push —
+  but came back up on the SAME commit `61aa63e`.
+
+What I did NOT verify, and deliberately do not assert: **whether Railway gates
+on CI.** No workflow in `.github/workflows/` deploys the backend, so Railway
+watches the repo through its own GitHub integration and its trigger settings
+are not visible from here (no Railway token in the environment). A same-commit
+restart is equally consistent with a failed build *or* with the known OOM
+restart signature (RSS high-water 3.3 GB during `warm:stock_screener`).
+
+**First thing to check on arrival:** the Railway dashboard's build log for
+`a363e2f` onward. If the builds are failing, that is a P0 and nothing in this
+session is live.
 
 **Verify on arrival** — the deploy is NOT confirmed by this session:
 ```
