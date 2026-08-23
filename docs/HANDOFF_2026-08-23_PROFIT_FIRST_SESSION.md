@@ -204,6 +204,44 @@ than NEW.
 
 ---
 
+## 7b. Actor intelligence — built AND validated on a real corpus
+
+`backend/services/actor_intelligence.py` extends `RELIABILITY_ROUTER_v1`'s
+shrinkage; an INVERSE requires four independent conditions (≥5pp deficit,
+BH-FDR across every actor considered, ≥20 independent decision days, a holdout
+that repeats the deficit). Nothing branches on a name.
+
+Then it was given a real corpus and the premise was tested —
+`docs/FINDING_2026-08-23_ANALYST_RELIABILITY.md`. IBES: 98,772 graded claims,
+5,793 analysts.
+
+**The premise holds: `corr(train edge, holdout edge) = 0.516, 95% CI
+[0.277, 0.694]`** across 50 analysts, split by TIME. Quintiles are monotone at
+the ends. **An actor's track record predicts their next call** — which is what
+the entire actor layer rests on.
+
+7 analysts licensed for INVERSE under the full gate; **0 on the mirror-image
+follow side**, and not because the distribution is skewed (it is symmetric:
+67 below −0.05, 62 above). Being reliably wrong persists harder than being
+reliably right.
+
+**Two confounds were caught before they became findings, both the same shape —
+correct arithmetic against the wrong world:**
+- benchmarking against the EW market made *every* analyst buy call underperform
+  (−3.67%) and licensed three analysts who were 37–56% concentrated in one
+  SIC2. Sector-relative grading flips the sign to **+1.43%**;
+- grading a pure-buy analyst against a blended null credits them with the
+  buy/sell base-rate gap as skill. Each analyst is now graded against their own
+  direction mix.
+
+Also declared rather than lost: `usfirm=0` links to CRSP at 0.1% (IBES is
+global, CRSP is US-only), so the corpus is US-scoped and the build **refuses**
+below a 60% link rate.
+
+**Not tradable, and the doc says so** — direction-only, one split not a
+walk-forward, n=50, no costs. Next: walk-forward, then magnitude, then Form 4 /
+13F. Commentators last.
+
 ## 8. The lab: do NOT run it — recommend retirement
 
 Murat asked for the lab to be run. I did not, and this is why:
