@@ -232,7 +232,8 @@ carrying forward; each has receipts in the repo.
 
 ### The honest summary
 
-Nine months in: **demonstrated market edge 0%.** One positive family result
+Five months in (first commit 2026-03-28, 989 commits): **demonstrated market
+edge 0%.** One positive family result
 (foreign risk-price), one instrument big enough to see a diffuse effect, and a
 methodology that has now caught its own errors four times — the under-powered
 null, the router's inflated confidence, the arena's fake diversity, and this
