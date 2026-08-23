@@ -143,6 +143,20 @@ coverage and the CRSP schema both become usable here.
 book, using plain equal-weighted co-coverage peer returns. Nothing more
 elaborate has earned its place.
 
+**And it can be computed at a granularity production could supply** —
+AMENDMENT-3 (`estimid`, the brokerage firm, rather than `amaskcd`, the
+individual analyst). 8,336 analysts vs 589 firms, median coverage 4 names vs
+14, so a firm graph is far denser and survival was a real question. It survives
+and is *better measured*: `peer_eq` +0.0218 at **t 3.05** against +0.0228 at
+t 2.35, with the control still flat.
+
+**The remaining executability gap, named:** `estimid` is *standing coverage*;
+the live yfinance feed gives upgrade/downgrade **actions**, a subset. A bank
+covering a name quietly all year is in IBES and not in an actions feed.
+Granularity is not the blocker — that is what this tested. Whether an actions
+feed reconstructs the coverage graph is untested, and it is the thing to check
+before building.
+
 **Not licensed:**
 
 * **the GNN.** The roadmap gated it on simple graph features paying. They pay —

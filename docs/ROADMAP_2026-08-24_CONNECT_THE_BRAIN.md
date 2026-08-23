@@ -547,6 +547,52 @@ ones (options-conditioned events, actor magnitude, management language) need
 
 ---
 
+## 4.12. AMENDMENT-3 — the licensed selector CAN be computed live (mostly)
+
+§4.6 licensed `GRAPH_PROPAGATION_v1` on a signal measured at **analyst**
+granularity (`amaskcd`) — which exists only in IBES, a WRDS research dataset.
+Production has firm-attributed upgrades/downgrades via yfinance. **A signal that
+cannot be computed live is not a selector**, so this was asked before anyone
+built it.
+
+Measured, 2014–2024 US recommendations: **8,336 analysts vs 589 firms**, median
+coverage **4 names vs 14**. A firm graph is far denser and far less selective,
+so survival was a real question.
+
+| arm | analyst IC (t) | firm IC (t) | bar | BH |
+|---|---|---|---|---|
+| `own_ret_1m` *(control)* | +0.0072 (0.77) | +0.0074 (0.81) | ✗ | ✗ |
+| **`peer_eq`** | +0.0228 (2.35) | **+0.0218 (3.05)** | ✓ | ✓ |
+| `peer_shared` | +0.0226 (2.31) | +0.0220 (2.77) | ✓ | ✓ |
+| `peer_leader` | +0.0186 (2.12) | +0.0181 (2.66) | ✓ | ✓ |
+| `peer_laggard` | +0.0160 (1.92) | +0.0109 (1.72) | ✓ | ✗ |
+
+**It survives, and is better measured at firm level** — slightly lower IC, higher
+t, because a denser graph makes each month's estimate less noisy. The control
+stays flat, so this is not own-momentum leaking in.
+
+### What this does NOT establish, and the gap is real
+
+`estimid` is *every broker issuing a recommendation* — **standing coverage**.
+The live yfinance feed gives upgrade/downgrade **ACTIONS**, which is a subset:
+a bank covering a name quietly all year appears in IBES and not in an actions
+feed.
+
+So the honest position is:
+
+* **granularity is not the blocker** — this is what the amendment tested and
+  answered;
+* **reconstructing standing coverage from an actions feed is untested**, and it
+  is the remaining executability question.
+
+Cheapest next step, before building anything: take a month of live
+`analyst_intelligence` upgrades/downgrades, build the firm graph it implies, and
+compare its edge set against the IBES firm graph for the same month. If the live
+feed recovers most edges, the selector is buildable; if it recovers a third, the
+CONTINUE verdict is about a signal production cannot see.
+
+---
+
 ## 5. Logged, not queued
 
 Good ideas with no owner and no date. Recorded so they are not re-derived, and

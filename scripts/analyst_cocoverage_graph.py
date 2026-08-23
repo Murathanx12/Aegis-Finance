@@ -185,6 +185,47 @@ AMENDMENT_2: dict = {
 }
 
 
+#: AMENDMENT-3, declared 2026-08-24. POST-HOC, and it asks the question that
+#: decides whether the CONTINUE verdict means anything in production.
+#:
+#: THE SCREEN VALIDATED A SIGNAL THAT MAY HAVE NO LIVE DATA PATH. Co-coverage
+#: was measured at ANALYST granularity (`amaskcd`), which exists only in IBES --
+#: a WRDS research dataset, not a production feed. What the live stack actually
+#: has is `analyst_intelligence`'s upgrades/downgrades feed, which attributes to
+#: the FIRM ("JP Morgan", "Goldman Sachs"), not the individual.
+#:
+#: Those are different graphs. Measured over 2014-2024 US recommendations:
+#: 8,336 distinct analysts against 589 distinct firms, and a median analyst
+#: follows 4 names where a median firm follows 14. A firm-level graph is far
+#: denser and far less selective, so an effect carried by "these two companies
+#: share an ANALYST" need not survive "these two companies share a BANK".
+#:
+#: A signal that cannot be computed live is not a selector. This measures
+#: whether the licensed one can be.
+AMENDMENT_3: dict = {
+    "amendment_id": "ANALYST-COCOVERAGE-GRAPH-1/AMENDMENT-3",
+    "status": "POST-HOC — declared after the primary run",
+    "question": ("does the co-coverage effect survive at the FIRM granularity "
+                 "a live feed can actually supply?"),
+    "why": ("the primary screen used `amaskcd` (individual analyst), which "
+            "exists only in IBES. Production has firm-attributed "
+            "upgrades/downgrades via yfinance. 8,336 analysts vs 589 firms; "
+            "median coverage 4 names vs 14."),
+    "arm": "peer_eq computed over a graph whose edges are SHARED FIRMS",
+    "decision_rule": (
+        "GRAPH_PROPAGATION_v1 is IMPLEMENTABLE iff the firm-level arm clears "
+        "the same 0.01 bar the primary declared. If it does not, the licensed "
+        "selector has no live data path at the granularity it was validated "
+        "at, and the CONTINUE verdict must say so rather than being handed to "
+        "a builder who discovers it afterwards."),
+}
+
+
+def amendment_3_hash() -> str:
+    return hashlib.sha256(
+        json.dumps(AMENDMENT_3, sort_keys=True).encode()).hexdigest()[:16]
+
+
 def amendment_2_hash() -> str:
     return hashlib.sha256(
         json.dumps(AMENDMENT_2, sort_keys=True).encode()).hexdigest()[:16]
@@ -293,15 +334,18 @@ def monthly_panel(y0: int, y1: int) -> pd.DataFrame:
     return out
 
 
-def coverage(y0: int, y1: int) -> pd.DataFrame:
-    """(analyst, permno, month) — who covered what, using only the past.
+def coverage(y0: int, y1: int, id_col: str = "amaskcd") -> pd.DataFrame:
+    """(coverer, permno, month) — who covered what, using only the past.
+
+    `id_col` is `amaskcd` (individual analyst, IBES-only) or `estimid` (the
+    brokerage firm, which a live feed can supply). AMENDMENT-3.
 
     An analyst covers a firm in month `t` if they issued a recommendation on it
     in the `coverage_window_months` ending STRICTLY BEFORE `t`.
     """
     recs = pd.read_parquet(
         WRDS / "bulk" / "ibes__recddet.parquet",
-        columns=["cusip", "amaskcd", "anndats", "usfirm"])
+        columns=["cusip", id_col, "anndats", "usfirm"])
     recs["anndats"] = pd.to_datetime(recs["anndats"])
     recs = recs[(recs["usfirm"] == 1)
                 & (recs["anndats"].dt.year >= y0 - 2)
@@ -309,9 +353,12 @@ def coverage(y0: int, y1: int) -> pd.DataFrame:
     link = _cusip_to_permno()
     m = recs.merge(link, left_on="cusip", right_on="ncusip", how="inner")
     m = m[(m["anndats"] >= m["namedt"]) & (m["anndats"] <= m["nameendt"])]
-    m = m[["amaskcd", "permno", "anndats"]].copy()
+    m = m[[id_col, "permno", "anndats"]].copy()
     m["permno"] = m["permno"].astype("int64")
-    m["amaskcd"] = m["amaskcd"].astype("int64")
+    # `estimid` is a broker code, not an integer; factorise so the sparse
+    # incidence matrix can index it either way.
+    m["amaskcd"] = (m[id_col].astype("int64") if id_col == "amaskcd"
+                    else pd.factorize(m[id_col])[0].astype("int64"))
     m["rec_month"] = m["anndats"].values.astype("datetime64[M]")
     return m
 
@@ -501,7 +548,7 @@ def _bh_fdr(pvals: dict[str, float], q: float) -> dict[str, bool]:
     return survives
 
 
-def run() -> dict:
+def run(id_col: str = "amaskcd") -> dict:
     from scipy import stats
 
     y0, y1 = SPEC["eval_years"]
@@ -510,7 +557,7 @@ def run() -> dict:
     panel = monthly_panel(y0, y1)
     print(f"  {len(panel):,} firm-months", flush=True)
     print("loading coverage...", flush=True)
-    cov = coverage(y0, y1)
+    cov = coverage(y0, y1, id_col)
     print(f"  {len(cov):,} linked recommendations", flush=True)
     rel_by_year = reliability_by_year(SPEC["reliability"]["min_claims"])
     sic_names = sic2_map()
@@ -691,13 +738,21 @@ def run() -> dict:
             .get("beats_by_more_than_1se") is False
             else "see paired_comparisons"),
     }
+    receipt["granularity"] = id_col
+    if id_col != "amaskcd":
+        receipt["amendment_3"] = AMENDMENT_3
+        receipt["amendment_3_hash"] = amendment_3_hash()
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "cocoverage_receipt.json").write_text(
+    name = ("cocoverage_receipt.json" if id_col == "amaskcd"
+            else f"cocoverage_receipt_{id_col}.json")
+    (OUT / name).write_text(
         json.dumps(receipt, indent=2, default=str), encoding="utf-8")
     return receipt
 
 
 if __name__ == "__main__":
-    r = run()
+    import sys as _sys
+    _by = "estimid" if "--by-firm" in _sys.argv else "amaskcd"
+    r = run(_by)
     print(json.dumps({k: v for k, v in r.items() if k != "spec"},
                      indent=2, default=str))
