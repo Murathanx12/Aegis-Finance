@@ -23,7 +23,7 @@ book needs a frozen strategy contract, not a preregistration.
 
 ## 2. LIVE vs BUILT vs ACCRUING
 
-### MERGED to main, NOT yet deployed (see §10 — Railway is CI-gated)
+### LIVE — deployed at `4a93420` and verified against prod
 - Population-aware forecast health (`/api/health/full` → `forecast_populations`).
 - Router policy identity: flipping `CLUSTER_ADJUST_DEFAULT` is now self-refusing.
 - Paper-broker targets: an arena book **can** be mirrored; default unchanged.
@@ -261,67 +261,38 @@ The v5 rewrite is left uncommitted and untouched.
   `2ed836f` (CI fix) · `dbe7170` (campaign base dir) · `39cae3e` (earnings
   slice).
 
-### Deploy state at handoff — READ THIS
+### Deploy state — RESOLVED, it landed
 
-**Prod was still on `61aa63e` when this session ended, and I could not confirm
-why.** What is verified:
+The deploy was stuck for roughly 100 minutes and then went through on its own.
+Prod flipped to `4a93420` at **06:13:01 UTC**. Sequence, for the record: CI
+failed on `a363e2f`/`a2a38a6`/`baad5c0` (the shadowed-variable bug), `2ed836f`
+fixed it, eight commits then went green, prod restarted three times on
+`61aa63e` (04:32, 05:18, 05:47) before finally taking the new build. Cause of
+the lag never established from this side — no Railway token here. If it recurs,
+that is worth a proper look; it is not worth chasing retroactively.
 
-- CI **failed** on `a363e2f`, `a2a38a6`, `baad5c0` (the shadowed-variable bug),
-  and **passed on `dbe7170`**, which carries the fix.
-- prod's process **restarted at 05:18 UTC** — the minute of the first push —
-  but came back up on the SAME commit `61aa63e`.
+**Verified live, and it vindicates the premise of the whole session:**
 
-What I did NOT verify, and deliberately do not assert: **whether Railway gates
-on CI.** No workflow in `.github/workflows/` deploys the backend, so Railway
-watches the repo through its own GitHub integration and its trigger settings
-are not visible from here (no Railway token in the environment). A same-commit
-restart is equally consistent with a failed build *or* with the known OOM
-restart signature (RSS high-water 3.3 GB during `warm:stock_screener`).
+| population | records | path | status |
+|---|---|---|---|
+| `campaign_forward` | 22,443 | `/app/backend/data/optimus/…` (in-image) | dormant by design |
+| `live_forward` | 112 | `/data/optimus/…` (volume) | **quiet 11 days — the real problem** |
+| `arena_forward` | **25** | `/data/optimus/arena/…` | **ok, last 2026-08-21** |
 
-**Observed, three times, over ~75 minutes:**
+The alarm that read as *"the continuously-learning engine has stopped"* was
+`live_forward`'s, and the arena was healthy the entire time. It is now visible
+on a health surface for the first time.
 
-| prod `started_at` (UTC) | reported commit |
-|---|---|
-| 04:32:34 | `61aa63e` |
-| 05:18:24 | `61aa63e` |
-| 05:47:30 | `61aa63e` |
+`event_store` reads `ABSENT` — correct. Its producer is the arena's 17:45 ET
+pass, so it starts accruing **Monday 2026-08-24**.
 
-The container **restarts and comes back on the same commit**. CI later went
-**green on `dbe7170` and `ac08de7`**, and prod still did not move. The last
-incarnation peaked at **345 MB RSS**, so this is *not* the known OOM signature
-(3.3 GB during `warm:stock_screener`) — at least not this time.
-
-**DECISIVE, added at end of session:** CI subsequently went green on **four
-consecutive commits** — `dbe7170`, `39cae3e`, `f14c852`, `ac08de7` — and prod
-still reported `61aa63e`. Green CI is demonstrably not producing a deploy, so
-this is a **Railway-side problem, not a code problem.** Nothing in this
-session's diff can explain it.
-
-Also ruled out as a cause: `/api/health` — the path `railway.json` actually
-healthchecks — measures **0.003 s** and was not touched. (`/api/health/full`
-*was* briefly made 15 s slower by this session's registry row; that is fixed
-and it is not the healthcheck path either way.)
-
-`railway.json` sets `healthcheckPath: /api/health`, `healthcheckTimeout: 30`,
-`restartPolicyType: ON_FAILURE`, `restartPolicyMaxRetries: 3`. A slow boot
-(cache prewarm) failing a 30-second healthcheck would produce exactly this
-restart pattern, but that is a HYPOTHESIS — I could not test it from here.
-
-**First thing to check on arrival — this is the P0, and it blocks everything
-else in this handoff:** the Railway dashboard's build/deploy log from
-`a363e2f` onward. Either the builds are failing, the GitHub integration has
-stopped triggering, or deploys are being rolled back by the healthcheck.
-**Until that is resolved, nothing in this session is live** — it is all merged
-to `main` and green in CI, and none of it is running.
-
-**Verify on arrival** — the deploy is NOT confirmed by this session:
-```
-curl -s .../api/health/full | python -c "import sys,json;d=json.load(sys.stdin);
-print(d['deploy']['commit'][:7], len(d.get('forecast_populations',{}).get('populations',{})),
-      d.get('event_store',{}).get('status'))"
-```
-Expect the tip commit, `3` populations, and an `event_store` row. If CI is red,
-read the failing test before anything else.
+**One false alarm found by verifying live, now fixed (`9c50225`):** with
+`campaign_forward` finally pointing at its true in-image path, the
+`ledger_persistence` off-volume warning fired on it. That check is right for
+the deployment's own accrual and wrong for a repository artifact that ships in
+the image on purpose. Excused for `base="legacy"` only; `live_forward` and
+`arena_forward` sitting off-volume must still alarm, and a test asserts both
+directions.
 
 **Process lesson, recorded because it cost real time:** I pushed on the strength
 of a full-suite run that had been **launched before the changes existed**, and
