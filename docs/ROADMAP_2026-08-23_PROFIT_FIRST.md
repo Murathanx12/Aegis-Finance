@@ -183,8 +183,25 @@ it is cheap.
    `arena/events.py` / `LLM_EVENTS_v1`, not a second stack. Append-only, with
    acceptance vs source timestamps, content hash, provenance, and
    was-this-available-to-a-decision.
-   *Note: `event_intel.events_extracted` currently reads **0** in prod — the
-   store is worth nothing until that is non-zero, so measure the feed first.*
+   **Measured 2026-08-23, and the feed is NOT the problem.** `/api/health/full`
+   reports `event_intel.events_extracted: 0`, which looks like a dead feed and
+   is not one — it is a per-process counter reset at boot, and the arena had
+   not run since the restart. Checked directly instead of inferred:
+
+   - `get_ticker_events("NVDA")` returns **10 events, all three feeds `ok`**
+     (yfinance news, EDGAR 8-K, earnings);
+   - in prod, all 10 of `LLM_EVENTS_v1`'s beliefs carry
+     `event_coverage: FETCHED` with `n_events_shown > 0`, while
+     `LLM_PERCEPTION_v1` and `CURRENT_BEST_v1` correctly show `NOT_REQUESTED`.
+
+   So the event arm is **live end-to-end**. What is missing is *persistence*:
+   events are fetched fresh into each day's frozen snapshot and never
+   accumulate, so nothing can learn across days which sources, event types or
+   horizons paid. That — not ingestion — is what the store must add.
+
+   *Secondary fix worth doing: make `events_extracted` a cumulative counter or
+   label it "since boot". A metric that reads 0 on a working subsystem is how
+   a session ends up rebuilding something that already works.*
 6. **Earnings as a first-class state**: session of release, pre/post-market,
    surprise, guidance delta, opening gap, opening liquidity.
 7. **Actor intelligence** — generalise `RELIABILITY_ROUTER_v1`'s hierarchical

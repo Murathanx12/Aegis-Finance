@@ -119,6 +119,17 @@ def _case_forecast_populations():
             PopulationNotNamed, "no population named")
 
 
+def _case_event_store():
+    from backend.services.event_store import EventRejected, make_record
+    # The missing input is TRACEABILITY. An event with neither a title nor a
+    # URL cannot be de-duplicated and cannot be traced back to a source, so it
+    # can never be evidence for or against anything — storing it would inflate
+    # the event count with rows no attribution could ever use.
+    return (lambda: make_record({"scope": "NVDA", "title": "",
+                                 "source": {"feed": "x", "url": None}}),
+            EventRejected, "event with no title and no url")
+
+
 def _case_paper_broker_targets():
     from backend.services.portfolio_intelligence.paper_broker_targets import (
         UnknownTarget, parse_target)
@@ -653,6 +664,7 @@ CASES = {
     "evidence_population": _case_evidence_population,
     "forecast_populations": _case_forecast_populations,
     "paper_broker_targets": _case_paper_broker_targets,
+    "event_store": _case_event_store,
     "charter": _case_charter,
     "portfolio_factory": _case_portfolio_factory,
     "store": _case_store,

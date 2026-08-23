@@ -745,6 +745,16 @@ async def health_full():
     except Exception as e:
         prediction_ledger = {"status": "DEGRADED", "error": str(e)}
 
+    # The event store fails by not accruing, and an empty store looks exactly
+    # like a quiet news day. `event_intel.events_extracted` already reads 0 on
+    # a working feed (it is a per-process counter), so this row reports the
+    # DURABLE history instead — the thing attribution and novelty depend on.
+    try:
+        from backend.services.event_store import health as _event_store_health
+        event_store = _event_store_health()
+    except Exception as e:                                     # noqa: BLE001
+        event_store = {"status": "DEGRADED", "error": str(e)}
+
     # Every forecast population, each with its own health row. Added 2026-08-23
     # because a population nobody registered is invisible rather than refused:
     # the arena's ledger had never appeared on any health surface.
@@ -841,6 +851,7 @@ async def health_full():
         "event_intel": event_intel_health,
         "prediction_ledger": prediction_ledger,
         "forecast_populations": forecast_populations,
+        "event_store": event_store,
         "investment_committee": investment_committee_health,
         "data_sources": source_health(),
         "fred_health": fred_source_health,
