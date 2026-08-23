@@ -119,6 +119,19 @@ def _case_forecast_populations():
             PopulationNotNamed, "no population named")
 
 
+def _case_actor_intelligence():
+    from backend.services.actor_intelligence import (ActorEvidenceRefused,
+                                                     make_claim)
+    # The missing input is a DIRECTION. An actor who said nothing directional
+    # cannot be right or wrong, and scoring silence as a miss would build a
+    # track record out of the times somebody declined to make a call.
+    return (lambda: make_claim(actor="a", actor_type="commentator",
+                               entity="AAPL", direction=0, claim_type="c",
+                               domain="tech", horizon_days=20,
+                               public_at="2026-01-05"),
+            ActorEvidenceRefused, "claim with no asserted direction")
+
+
 def _case_event_store():
     from backend.services.event_store import EventRejected, make_record
     # The missing input is TRACEABILITY. An event with neither a title nor a
@@ -665,6 +678,7 @@ CASES = {
     "forecast_populations": _case_forecast_populations,
     "paper_broker_targets": _case_paper_broker_targets,
     "event_store": _case_event_store,
+    "actor_intelligence": _case_actor_intelligence,
     "charter": _case_charter,
     "portfolio_factory": _case_portfolio_factory,
     "store": _case_store,
