@@ -278,9 +278,30 @@ are not visible from here (no Railway token in the environment). A same-commit
 restart is equally consistent with a failed build *or* with the known OOM
 restart signature (RSS high-water 3.3 GB during `warm:stock_screener`).
 
-**First thing to check on arrival:** the Railway dashboard's build log for
-`a363e2f` onward. If the builds are failing, that is a P0 and nothing in this
-session is live.
+**Observed, three times, over ~75 minutes:**
+
+| prod `started_at` (UTC) | reported commit |
+|---|---|
+| 04:32:34 | `61aa63e` |
+| 05:18:24 | `61aa63e` |
+| 05:47:30 | `61aa63e` |
+
+The container **restarts and comes back on the same commit**. CI later went
+**green on `dbe7170` and `ac08de7`**, and prod still did not move. The last
+incarnation peaked at **345 MB RSS**, so this is *not* the known OOM signature
+(3.3 GB during `warm:stock_screener`) — at least not this time.
+
+`railway.json` sets `healthcheckPath: /api/health`, `healthcheckTimeout: 30`,
+`restartPolicyType: ON_FAILURE`, `restartPolicyMaxRetries: 3`. A slow boot
+(cache prewarm) failing a 30-second healthcheck would produce exactly this
+restart pattern, but that is a HYPOTHESIS — I could not test it from here.
+
+**First thing to check on arrival — this is the P0, and it blocks everything
+else in this handoff:** the Railway dashboard's build/deploy log from
+`a363e2f` onward. Either the builds are failing, the GitHub integration has
+stopped triggering, or deploys are being rolled back by the healthcheck.
+**Until that is resolved, nothing in this session is live** — it is all merged
+to `main` and green in CI, and none of it is running.
 
 **Verify on arrival** — the deploy is NOT confirmed by this session:
 ```
