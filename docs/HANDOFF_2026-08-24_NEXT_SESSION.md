@@ -162,20 +162,54 @@ attempted in one night; this is what they returned:
 | `RELATIVE-VALUE-NN-1` | STOP | MLP worst of three; the neural question is closed with a receipt |
 | `EVENT-RESPONSE-2` | **NOT LICENSED** | hypothesis correct (+0.0315, t 3.19) and the edge is **borrow fees** |
 
-### 1. `GRAPH_PROPAGATION_v1` — the one thing licensed AND buildable
+### 1. `GRAPH_PROPAGATION_v1` — built, NOT registered, and the reason has a date
 
-Plain equal-weighted co-coverage peer return. Nothing fancier earned its place:
-reliability weighting, edge direction and 52-week-high conditioning each
-measured **zero**.
+**The module exists** (`backend/services/graph_propagation.py`, 15 tests) with
+its frozen contract (`contract_hash` `136240f859ca7e41`). What is missing is the
+arena book, and that wait is a hard ordering constraint, not a to-do.
 
-It is a **separate PRODUCT_EXPERIMENT book**, never a weight in
-`arena_composite`. Seeding stays attended (§3, `seed-a-lane`).
+**THE VENDOR QUESTION IS ANSWERED — VIABLE.** Measured 2026-08-24 over the real
+179-name universe, receipt in `backend/data/optimus/graph_propagation/`:
 
-**Check first, because it is the only untested link in the chain:** yfinance's
-upgrade/downgrade history depth. Granularity is settled — firm-level and
-actions-only both clear the bar — but whether *that vendor* supplies enough
-history to build the trailing-12-month graph is a data-availability question
-nobody has asked.
+| | |
+|---|---|
+| depth | **not the constraint** — median 14.4 years of history |
+| usable graph rows | **176/179 = 98.3%** |
+| median covering firms in window | **17** (the IBES graph the screen validated on had 14) |
+| median days since last action | 10 |
+
+**And the probe found a defect worth more than the answer.** META, WELL and CAT
+return an EMPTY trailing window and **no error** — their action history is
+truncated in yfinance's data. This is not coverage ceasing: yfinance's own
+`recommendations` summary reports **62 analysts rating META this month** while
+`upgrades_downgrades` stops at 2024-09-30. A graph that trusts the empty window
+drops a mega-cap out of the ranking in silence. Hence `STALE_FEED_DAYS = 120` is
+a **refusal**, not a log line. It does no delicate work: genuine silence tops out
+near 49 days in this universe and the truncated names sit at 675-689.
+
+> #### DO NOT ADD THE BOOK TO `arena_books_v1.yaml` UNTIL THE ARENA HAS RUN
+>
+> The ten books seeded 2026-08-21 still carry only the **legacy whole-file**
+> fingerprint. They migrate to per-book identity on their **next arena pass**,
+> and `assert_config_current` migrates *only while the legacy hash still
+> verifies*. Adding a book first changes that hash, so the migration branch
+> refuses to run **and refuses to migrate** — all ten, permanently, with their
+> NAV histories stranded.
+>
+> This is already pinned by
+> `test_migration_REFUSES_when_the_config_already_changed`; it was checked
+> against production before anything was edited, not reasoned about afterwards.
+>
+> **So Monday's pass is doing two jobs**, and the second one was invisible:
+> it queues the arena's decisions *and* it migrates the seeds. Confirm the
+> migration landed (`/api/arena/status`, books carrying `book-v1`) before
+> registering anything.
+
+Once registered, it is a **separate PRODUCT_EXPERIMENT book**, never a weight in
+`arena_composite`, and seeding stays attended (§3, `seed-a-lane`).
+
+Nothing fancier than plain equal-weighted peer return belongs in it: reliability
+weighting, edge direction and 52-week-high conditioning each measured **zero**.
 
 ### 2. `EVENT-RESPONSE-3` — condition on borrow rather than ignore it
 
