@@ -149,9 +149,30 @@ it:
 exposure during the session, not overnight* (overnight carries the premium at
 ~4× lower vol).
 
-Cheap follow-up worth doing: overnight **conditioned on an earnings release in
-the gap** is the version the mechanism story actually predicts, and it needs
-the earnings calendar the event store already touches.
+### 6b. The earnings-conditioned slice — DONE, and it settled the mechanism
+
+The follow-up got done this session (Compustat `rdq` → permno via
+`ccmxpf_lnkhist`; 344,329 flagged stock-days = 3.05% of the panel).
+
+| price ≥ $5 | overnight | t | intraday | t |
+|---|---|---|---|---|
+| **earnings gap** | +9.70 bps | 3.15 | **−5.89 bps** | **−1.98** |
+| no earnings | +4.30 bps | 3.44 | −0.09 bps | −0.05 |
+
+**The mechanism is real.** On earnings gaps the overnight jump is 2.3× larger
+*and* the intraday leg flips from statistically zero to significantly negative.
+The unconditional intraday is flat because this small real effect is diluted by
+the 97% of sessions with no news.
+
+**And it still is not a trade.** Conditioning doubles the mean *and* doubles
+the volatility (70.8 → 164.6 bps): Sharpe **0.96 vs 0.94** — indistinguishable.
+Not a better trade, a bigger one. The intraday short leg is p ≈ 0.048 against
+~20 slice comparisons this session, so CANON §63 (BH-FDR, m = run) kills it;
+borrow cost is unmodelled and worst on exactly the names that gap hardest.
+
+**Honest next step, if anyone wants it:** intraday timestamps — *was* the
+reversal in the first 30 minutes? That needs TAQ, which is already on disk with
+a named consumer. Not a blocker on anything.
 
 ---
 
@@ -227,5 +248,33 @@ The v5 rewrite is left uncommitted and untouched.
   guard enrolment for the new guards — now enrolled, 55 contract tests pass.
 - New tests: 18 population · 9 router identity · 19 paper broker · 22 event
   store = **68**.
+- New tests: 20 population · 9 router identity · 21 paper broker · 22 event
+  store = **72**.
 - Commits: `a363e2f` (licences, populations, router identity, paper broker,
-  overnight study) and `a2a38a6` (event store).
+  overnight study) · `a2a38a6` (event store) · `baad5c0` (handoff) ·
+  `2ed836f` (CI fix) · `dbe7170` (campaign base dir) · `39cae3e` (earnings
+  slice).
+
+### Deploy state at handoff — READ THIS
+
+**Prod was still on `61aa63e` when this session ended.** Not a deploy failure —
+**Railway is CI-gated**, and CI failed on `a363e2f`, `a2a38a6` and `baad5c0`
+because of the shadowed-variable bug. `2ed836f` fixes it and `dbe7170`/`39cae3e`
+carry the fix, so the deploy should flip once CI goes green on the tip.
+
+**Verify on arrival** — the deploy is NOT confirmed by this session:
+```
+curl -s .../api/health/full | python -c "import sys,json;d=json.load(sys.stdin);
+print(d['deploy']['commit'][:7], len(d.get('forecast_populations',{}).get('populations',{})),
+      d.get('event_store',{}).get('status'))"
+```
+Expect the tip commit, `3` populations, and an `event_store` row. If CI is red,
+read the failing test before anything else.
+
+**Process lesson, recorded because it cost real time:** I pushed on the strength
+of a full-suite run that had been **launched before the changes existed**, and
+CI caught two genuine bugs on a clean checkout. The working tree also carries
+uncommitted `lab/` breakage that masks signal. **Re-run the suite after the last
+edit, and verify in a clean clone** — `git clone --depth 1 file://<repo>` works,
+though note `test_investigator_*` needs a sibling `Aegis module/` directory and
+will fail in a scratchpad clone for that reason alone.
