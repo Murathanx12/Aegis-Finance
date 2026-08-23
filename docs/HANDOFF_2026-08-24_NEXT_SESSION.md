@@ -60,10 +60,36 @@ only matured decisions move that.
    declared precondition — was imported by nothing**; that is now wired and the
    gap is closed. Four gaps remain named.
 
+10. **Two Alpaca accounts, two books.** `AEGIS_PAPER_BROKER_TARGET` was a single
+    GLOBAL choice — naming an arena book would have silently stopped mirroring
+    `lane:mirror`, whose third-party-verified curve the code calls the only
+    independent check on our NAV maths. Two credential namespaces means two
+    accounts, so both mirror at once now: new `AEGIS_ARENA_BROKER_TARGET`.
+11. **The boot seeder was a silent no-op.** It called `seed_alpaca_mirror()`
+    with no argument, which resolves to the LANE — seeded since inception — so
+    with an arena book declared it would have logged `already_seeded` as a
+    success and left the arena account empty forever. `seed_all_paper_brokers`
+    visits every declared target now.
+12. **`execution_ledger.py`** — one row per intended order, written at
+    submission and resolved later, so the broker's real fill sits beside the
+    book's synthetic one. The first thing in this repository that checks the
+    `cost_bps + slippage_bps` every arena book assumes. Records what leaves no
+    fill behind: never-filled, partial, and broker-filled-with-no-internal-
+    match. `/api/health/full` gains `execution_ledger` and `paper_broker` rows.
+
 ### Measured
 
 8. **The actor result survives the PIT fix.** Corpus rebuilt, same seven
    analysts licensed for INVERSE, same holdout deficits to three decimals.
+13. **`ANALYST-COCOVERAGE-GRAPH-1` ran — verdict CONTINUE**, and the three
+    refinements we hoped for all measured zero. Full result:
+    `docs/FINDING_2026-08-24_ANALYST_COCOVERAGE_GRAPH.md`. The effect
+    replicates (+0.0228 IC) and survives own-momentum (+0.0156 paired) and
+    industry momentum (+0.0090 paired); reliability-weighted edges are a
+    precisely measured zero (−0.00008 ± 0.00052), direction shows no
+    asymmetry, 52-week-high conditioning adds nothing. **The GNN stays
+    unbuilt** — its gate was "simple graph features pay", and they do, but
+    every kind of structure a GNN exists to exploit measured zero.
 9. **The persistence headline was a filtered subset.** `0.516, n = 50` was 50 of
    **222**, selected by a rule nobody had written down (≥30 holdout claims).
    Unrestricted it is **0.25**. Every rung of the ladder excludes zero, so the
@@ -77,12 +103,13 @@ only matured decisions move that.
 * ~~A second Alpaca PAPER account~~ — **DONE.** The keys are in `.env` as
   `ALPACA_ARENA_API_KEY_ID` / `ALPACA_ARENA_API_SECRET_KEY`, they resolve, and
   the shared-account guard passes (the arena key differs from the lane key).
-  **Two things remain, and both are deliberately attended:**
-  1. set the same two variables **on Railway** — `.env` is local only;
-  2. **DONE on Railway 2026-08-24**: `AEGIS_ARENA_BROKER_TARGET=CURRENT_BEST_v1`.
-     Note the variable — declaring an arena book no longer un-mirrors the lane
-     (§8). Still outstanding: **the seed boot**, which cannot happen until the
-     book holds positions. See §8.
+  **Set on Railway 2026-08-24** (`railway variables --skip-deploys`):
+  `ALPACA_ARENA_API_KEY_ID`, `ALPACA_ARENA_API_SECRET_KEY`, and
+  `AEGIS_ARENA_BROKER_TARGET=CURRENT_BEST_v1`. Note the variable name —
+  declaring an arena book no longer un-mirrors the lane (§8).
+
+  **ONE thing remains, and it is deliberately attended: the seed boot**, which
+  cannot happen until the book holds positions. See §8.
   **Rotate the arena secret when convenient** — it was pasted in plain text into
   a chat session before being written to `.env`.
 * Which population G7 counts (`live_forward` vs `arena_forward`).
@@ -98,11 +125,19 @@ The three from the previous handoff still apply to **Monday 2026-08-24 17:45 ET*
 2. nine books run (not ten — `PROFIT_ALLOCATOR_v1` retired);
 3. `event_store` moves off `ABSENT`.
 
-**And now a fourth, from this session's change:** the arena pass should log a
-`Paper broker submit:` line. With no arena target declared it must log
-**nothing** (lane targets are the 16:30 job's) — so *silence is the expected
-result until someone sets `AEGIS_PAPER_BROKER_TARGET`*, and a line appearing
-before that is the finding.
+**And now two more, from this session's changes.** `AEGIS_ARENA_BROKER_TARGET
+= CURRENT_BEST_v1` IS set on Railway, so the pass will speak — and exactly what
+it should say is predictable:
+
+4. `Execution reconcile: target=arena:CURRENT_BEST_v1 status=nothing_pending`
+   — nothing has been submitted yet, so there is nothing to reconcile.
+5. `Paper broker submit: target=arena:CURRENT_BEST_v1 status=not_seeded
+   basis=... trades=0` — **zero trades is the CORRECT outcome.** The Alpaca
+   account is empty and `sync` deliberately will not open the first position;
+   only the attended seed does that (§8).
+
+**A `trades=N` with N > 0 on Monday would be the finding**, not the success:
+it would mean the account was seeded by something nobody authorised.
 
 Also still falsifiable: **`why_moved` runs 17:15 ET Monday.** If `live_forward`
 is still quiet on Tuesday, that is a P0, not a puzzle.
@@ -116,15 +151,14 @@ before the stamp took: restore it, let it migrate, then re-edit.
 
 Full reasoning in `ROADMAP_2026-08-24_CONNECT_THE_BRAIN.md`.
 
-1. **`ANALYST_COCOVERAGE_GRAPH_v1`** — one groupby over IBES, already on disk.
-   Which companies share analysts, with edges weighted by those analysts'
-   *measured* reliability (which is what §6 of the finding just built, and what
-   no published version of this can do). It is the "simple graph features before
-   a GNN" test: if reliability-weighted co-coverage carries nothing, the graph
-   programme stops for a groupby's worth of cost.
-2. **`EVENT_RESPONSE_v1`** — continuation vs overshoot after an event, from the
+~~1. `ANALYST_COCOVERAGE_GRAPH_v1`~~ — **DONE**, verdict CONTINUE. It licensed
+   `GRAPH_PROPAGATION_v1` (plain equal-weighted peer return, nothing fancier
+   earned its place) and it un-licensed the GNN. Build the selector when a
+   book slot is free; it is no longer the *blocking* item.
+
+1. **`EVENT_RESPONSE_v1`** — continuation vs overshoot after an event, from the
    `g4/earnings_v1` corpus and TAQ. Not the event store: it has no history yet.
-3. **`RELATIVE_VALUE_NN_v1`** — the corpus exists. **The effective n is 145 date
+2. **`RELATIVE_VALUE_NN_v1`** — the corpus exists. **The effective n is 145 date
    blocks, not 72,495 pairs** (CANON §58); split by date block or the result is
    about within-month interpolation. Decision rule declared in advance: if an
    MLP does not beat LightGBM out of block, there is no neural challenger and
@@ -146,6 +180,20 @@ which is whether their errors are different errors.
   `Secret` as bare lines). `python-dotenv` logs "could not parse statement at
   line N" and carries on, so the keys were simply absent with no error anywhere.
   If credentials appear to be unset, read the file before reading the code.
+* **The suite writes into real ledger paths unless something stops it.** Found
+  by reading `git status` after a run — twice now, by two different sessions.
+  `test_paper_broker_targets` drives `sync_alpaca_mirror` against a fake
+  broker, and the sync records submissions, so PENDING orders for AAPL/MSFT
+  landed in the real execution ledger and would have aged into `NEVER_FILLED`.
+  An autouse conftest fixture now redirects the root, matching
+  `_sandbox_telemetry_to_tmp` directly above it. **Read `git status` after a
+  suite run** whenever a service starts writing files.
+* **An append-only ledger cannot count open work by row state.** A resolved
+  order leaves a PENDING row *and* a resolution row, so counting rows-in-state
+  counted every resolved order forever. Derive by identity.
+* **CRSP schema drift**: `crsp_dsf_1990..2012` carry no `shrout`/`cfacpr`,
+  2013+ do. Refuse those years rather than defaulting the split factor — an
+  unadjusted price makes every split look like a crash against a 52-week high.
 * **Fixture datetimes must be in the past.** `event_store.make_record` now
   refuses a future ingestion stamp, and several tests used "today at 17:00",
   which is a coin flip on the hour the suite runs.
