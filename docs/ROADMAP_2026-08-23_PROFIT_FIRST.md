@@ -204,10 +204,29 @@ it is cheap.
    a session ends up rebuilding something that already works.*
 6. **Earnings as a first-class state**: session of release, pre/post-market,
    surprise, guidance delta, opening gap, opening liquidity.
-7. **Actor intelligence** — generalise `RELIABILITY_ROUTER_v1`'s hierarchical
-   shrinkage over `actor × domain × claim_type × horizon × regime`. An
-   `INVERSE` mapping is *earned* by holdout evidence, never assumed. Do not
-   hard-code any pundit.
+7. ~~**Actor intelligence**~~ — **CORE BUILT 2026-08-23**
+   (`backend/services/actor_intelligence.py`). Extends
+   `RELIABILITY_ROUTER_v1`'s shrinkage over
+   `actor × domain × claim_type × horizon × regime`; an `INVERSE` requires a
+   ≥5pp deficit, BH-FDR survival across every actor considered, ≥20
+   independent **decision days**, and a holdout that repeats the deficit.
+   Nothing branches on a name.
+
+   **What remains, and it is the expensive half: a CORPUS.** The estimator has
+   no claims to estimate from. Needed next, cheapest first:
+   - **analysts** — IBES recommendations are on disk and already carry actor,
+     entity, direction, date. This is the natural first corpus and needs no
+     new pull.
+   - **insiders / institutions** — the Form 4 and 13F collectors exist;
+     `disclosure_lag_days` is already a field because a 13F is public ~45 days
+     after the trade and grading from the trade date is lookahead.
+   - **commentators** — the actual "inverse Cramer" case, and the hardest:
+     there is no clean public feed of timestamped calls, so this is an
+     ingestion problem, not a statistics one. Do it last, if at all.
+
+   Grade against the DIRECTION'S OWN BASE RATE, not 0.50. A bullish call is
+   right ~53% of the time over most horizons, so 0.50 would hand every
+   permabull a free edge — `DEFAULT_NULL` is a fallback, not the answer.
 
 ### P2 — research, in parallel, non-blocking
 8. Memory-feasible linear arm · `signals_raw_plus` replication (a second
