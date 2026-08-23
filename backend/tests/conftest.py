@@ -117,6 +117,31 @@ def _sandbox_telemetry_to_tmp(tmp_path_factory, monkeypatch):
     yield
 
 
+@pytest.fixture(autouse=True)
+def _execution_ledger_to_tmp(tmp_path_factory, monkeypatch):
+    """Keep the suite's fake broker orders out of the real execution ledger.
+
+    FOUND THE SAME WAY AS THE ONE ABOVE — by reading `git status` after a run.
+    `test_paper_broker_targets` drives `sync_alpaca_mirror` against a fake
+    Alpaca, and the sync now records every submitted order. With no isolation
+    those rows landed in `backend/data/optimus/execution/lane_mirror.jsonl`:
+    PENDING orders for AAPL and MSFT that no broker will ever resolve, in the
+    file a real reconciliation reads.
+
+    That is worse than untidy. Those rows age past `UNRESOLVED_AFTER_DAYS` and
+    then reconcile as NEVER_FILLED — so a suite that never touched a market
+    would have written permanent evidence of failed executions into the ledger
+    whose entire job is to measure execution.
+    """
+    try:
+        from backend.services.portfolio_intelligence import execution_ledger
+        d = tmp_path_factory.mktemp("exec_ledger")
+        monkeypatch.setattr(execution_ledger, "ROOT", d, raising=False)
+    except Exception:                                            # noqa: BLE001
+        pass
+    yield
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _disk_cache_to_tmp(tmp_path_factory):
     """Give the suite its own disk cache instead of the repo's live one.

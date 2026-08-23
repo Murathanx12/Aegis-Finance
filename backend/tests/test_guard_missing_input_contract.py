@@ -653,9 +653,25 @@ def _case_signal_reachability():
             "a codebase scan that read no modules at all")
 
 
+def _case_execution_ledger():
+    """Ask for captured edge over an EMPTY execution ledger. A mean slippage
+    over zero fills is the absence of a measurement, not a measurement of zero
+    cost, and reporting it would flatter every backtest in the repository."""
+    from pathlib import Path as _P
+    import tempfile
+
+    from backend.services.portfolio_intelligence.execution_ledger import (
+        ExecutionLedgerRefused, assert_captured_edge_reportable)
+    empty = _P(tempfile.mkdtemp())
+    return (lambda: assert_captured_edge_reportable("arena:NOBODY", root=empty),
+            ExecutionLedgerRefused,
+            "captured edge over a ledger with no orders in it")
+
+
 CASES = {
     "aegis_panel": _case_aegis_panel,
     "signal_reachability": _case_signal_reachability,
+    "execution_ledger": _case_execution_ledger,
     "risk_price_features": _case_risk_price_features,
     "spec": _case_arena_spec,
     "experience": _case_arena_experience,

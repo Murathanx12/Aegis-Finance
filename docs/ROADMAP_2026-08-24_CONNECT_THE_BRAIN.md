@@ -285,7 +285,7 @@ what changed:
 | `DISAGREEMENT_LAB_v1` | **Accepted, gated** on ≥3 independent selectors, same gate as the router. |
 | **Failure attribution** in the nightly critic (discovery / data / perception / graph / forecast / routing / selection / sizing / exit / execution) | **Accepted into P0.** "The trade lost" teaches nothing about what to fix. |
 | **`OUTCOME_CORRECT` separate from `MECHANISM_CORRECT`** | **Accepted into P0, and it is the more important half.** A win for the wrong reason must not reinforce the thesis that was wrong. |
-| **Order-level execution ledger** — decision→intent→submit→fill→slippage, so captured edge is measurable | **Accepted into P0 and it is now urgent**: the arena's first external fills arrive this week, and what is not recorded then cannot be reconstructed later. |
+| **Order-level execution ledger** — decision→intent→submit→fill→slippage, so captured edge is measurable | **Accepted, and BUILT this session** (`execution_ledger.py`, §4.7). It was urgent: the arena's first external fills arrive this week, and what is not recorded then cannot be reconstructed later. |
 
 ---
 
@@ -326,6 +326,46 @@ measured zero. Reliability grades *claims* well and says nothing about
    edge structure is not there.
 3. The result is **under-powered by its own design**: every passing arm's IC
    sits below its own 80%-power MDE. It licenses building, not believing.
+
+---
+
+## 4.7. `execution_ledger` — BUILT this session
+
+`backend/services/portfolio_intelligence/execution_ledger.py`. One row per
+intended order, written at SUBMISSION time and resolved later, so the broker's
+real fill can be set beside the book's synthetic one.
+
+Two NAV curves diverging tells you the strategies differ. It cannot tell you
+whether the difference is slippage, a partial fill, or an order that never
+filled at all — and a fill nobody recorded cannot be reconstructed from an
+equity series a month later. This is the first thing in the repository that
+checks the `cost_bps + slippage_bps` every arena book assumes.
+
+**What it deliberately records rather than drops**, because omission is the
+failure mode here and every one of these leaves no fill behind:
+
+* the order that was **never filled** — the most expensive outcome there is;
+* the **partial** fill, with its fraction;
+* the broker filling something the book has no synthetic fill for — the two
+  sides disagreeing about what was traded;
+* a broker that could not be READ, kept as `PENDING` rather than written as
+  missing fills. A network outage must not read as an execution finding.
+
+`assert_captured_edge_reportable` refuses a summary while too much is
+unresolved. **Orders do not resolve at random** — the ones that hang are the
+illiquid, the wide-spread and the never-filled — so a summary taken too early
+describes the easy subset and reads as *good* execution precisely when
+execution was worst.
+
+Reconciliation runs inside the 17:45 pass, immediately BEFORE the next
+submission: that is the first moment both sides of the previous decision exist.
+
+**A bug worth recording**, caught by its own test: the ledger is append-only, so
+a resolved order leaves a `PENDING` row *and* a resolution row. Counting rows in
+state `PENDING` therefore counted every resolved order forever — `health` would
+have gone DEGRADED five days after the first successful reconciliation and
+stayed there, reporting a stuck pipeline that was working perfectly. Open orders
+are now derived by order identity, not row state.
 
 ---
 

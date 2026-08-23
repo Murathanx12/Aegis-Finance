@@ -452,6 +452,20 @@ def _record_submission(tgt, trades: list[dict], want_intent, db_path=None
         logger.error("Alpaca submission ledger write FAILED for %s: %s",
                      tgt.target_id, e)
 
+    # PER-ORDER, not just per-day. The PIT snapshot above records that a
+    # rebalance happened; the execution ledger records each intended order so
+    # the broker's real fill can later be set beside the book's synthetic one.
+    # An equity curve cannot separate slippage from a strategy difference.
+    try:
+        from backend.services.portfolio_intelligence import execution_ledger
+
+        execution_ledger.record_submission(
+            tgt, trades, decided_for=want_intent.decided_for,
+            basis=want_intent.basis)
+    except Exception as e:                                      # noqa: BLE001
+        logger.error("Execution ledger write FAILED for %s: %s",
+                     tgt.target_id, e)
+
 
 def alpaca_mirror_status(db_path=None, target=None) -> dict:
     """For /dev + health surfaces: last recorded third-party equity."""

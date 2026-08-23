@@ -199,7 +199,8 @@ Sequence, therefore:
 |---|---|---|
 | Mon 17:45 | arena fills Friday's 12 orders at Monday's open, decides, then submits | `Paper broker submit: target=arena:CURRENT_BEST_v1 status=not_seeded` — **no trades**, the Alpaca account is empty and `sync` will not open the first position |
 | **Then, attended** | `railway variables --set AEGIS_SEED_ALPACA_MIRROR=1` → wait for the redeploy → **set it back to `0`** | boot seeds the account to the book's ~12 settled positions |
-| Tue 17:45 | first real intent submit | trades, `basis=intent`, `decided_for=<Tue>` |
+| Tue 17:45 | first real intent submit | trades, `basis=intent`, `decided_for=<Tue>`, and an `execution ledger: N submission(s) recorded` line |
+| Wed 17:45 | first reconciliation | `Execution reconcile: … filled=N mean_slippage_bps=…` — the first time this project has ever compared an assumed fill to a real one |
 
 **The boot seeder now visits BOTH targets.** It used to call
 `seed_alpaca_mirror()` with no argument, which resolves to the LANE — seeded

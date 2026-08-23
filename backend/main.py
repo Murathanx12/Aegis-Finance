@@ -774,6 +774,17 @@ async def health_full():
     except Exception as e:                                     # noqa: BLE001
         paper_broker = {"status": "DEGRADED", "error": str(e)}
 
+    # Per-order execution. An equity curve cannot say whether a divergence is
+    # slippage, a partial fill, or an order that never filled at all, and a
+    # fill nobody recorded cannot be reconstructed later from a NAV series.
+    try:
+        from backend.services.portfolio_intelligence.execution_ledger import (
+            health as _exec_health,
+        )
+        execution = _exec_health()
+    except Exception as e:                                     # noqa: BLE001
+        execution = {"status": "DEGRADED", "error": str(e)}
+
     # Every forecast population, each with its own health row. Added 2026-08-23
     # because a population nobody registered is invisible rather than refused:
     # the arena's ledger had never appeared on any health surface.
@@ -875,6 +886,7 @@ async def health_full():
         "forecast_populations": forecast_populations,
         "event_store": event_store,
         "paper_broker": paper_broker,
+        "execution_ledger": execution,
         "investment_committee": investment_committee_health,
         "data_sources": source_health(),
         "fred_health": fred_source_health,

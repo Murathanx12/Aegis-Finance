@@ -1312,6 +1312,26 @@ async def _submit_arena_broker_intent():
         tgt = _pbt.parse_arena_target()
         if tgt is None:
             return
+
+        # RECONCILE FIRST. This is the first moment both sides of the previous
+        # decision exist: the arena pass that just ran recorded the book's
+        # synthetic fill at today's open, and the broker filled the same
+        # intended order at the same open this morning. Reconciling after the
+        # new submission would mix the two decisions together.
+        try:
+            from backend.services.portfolio_intelligence import (
+                execution_ledger,
+            )
+            rec = await asyncio.to_thread(execution_ledger.reconcile, tgt)
+            logger.info(
+                "Execution reconcile: target=%s status=%s resolved=%s "
+                "filled=%s never_filled=%s partial=%s mean_slippage_bps=%s",
+                tgt.target_id, rec.get("status"), rec.get("n_resolved"),
+                rec.get("n_filled"), rec.get("n_never_filled"),
+                rec.get("n_partial"), rec.get("mean_slippage_bps"))
+        except Exception as e:                                  # noqa: BLE001
+            logger.error("Execution reconcile failed: %s", e, exc_info=True)
+
         res = await asyncio.to_thread(sync_alpaca_mirror, None, tgt)
         logger.info(
             "Paper broker submit: target=%s status=%s basis=%s decided_for=%s "
