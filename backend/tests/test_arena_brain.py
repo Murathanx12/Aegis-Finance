@@ -1176,3 +1176,57 @@ def test_universe_quality_raises_coverage_for_every_name(root, monkeypatch):
     discovery._add_arena_composite(names)
     assert all(names[t]["scores"]["coverage_n"] == 2 for t in tickers)
     assert F.coverage(tickers, root)["coverage_pct"] == 100.0
+
+
+# ── The taxonomy contract: producer key == consumer key, end to end ─────────
+# `event_intel` emits `event_type`; the arena adapter read `category`, which no
+# producer has ever emitted. Nothing failed — the LLM was simply shown
+# `category: null` on every event since event context shipped. A renamed key
+# with no adapter is silent by construction, so it gets a contract test rather
+# than a comment.
+
+
+def test_event_intel_emits_event_type_not_category():
+    from backend.services import event_intel
+
+    ev = event_intel._make_event(
+        scope="NVDA", event_type="earnings", direction="positive",
+        basis="STATED", feed="yfinance_news", title="NVDA beats",
+        timestamp="2026-08-20T18:00:00+00:00", url="http://x/1",
+        publisher="Reuters")
+    assert ev["event_type"] == "earnings"
+    assert "category" not in ev, (
+        "the producer grew a `category` key — the adapter's alias is now "
+        "ambiguous and this contract needs re-deciding, not re-aliasing")
+
+
+def test_the_event_taxonomy_survives_the_arena_adapter():
+    from backend.services import event_intel
+    from backend.services.arena import events
+
+    ev = event_intel._make_event(
+        scope="NVDA", event_type="guidance", direction="negative",
+        basis="STATED", feed="edgar_8k", title="NVDA cuts guidance",
+        timestamp="2026-08-20T18:00:00+00:00", url="http://x/2",
+        publisher="EDGAR")
+    norm = events._norm_event(ev)
+    assert norm["event_type"] == "guidance", (
+        "the classification the perception layer exists to produce was "
+        "dropped between the producer and the model's prompt")
+    assert norm["category"] == "guidance", "the back-compat alias is empty"
+    assert norm["publisher"] == "EDGAR" and norm["url"] == "http://x/2"
+    assert norm["source"] == "edgar_8k", (
+        "`source` must be the feed name, not the whole provenance dict")
+
+
+def test_the_event_taxonomy_survives_into_the_durable_store():
+    from backend.services import event_intel, event_store
+
+    ev = event_intel._make_event(
+        scope="NVDA", event_type="ma", direction="positive", basis="STATED",
+        feed="yfinance_news", title="NVDA to acquire X",
+        timestamp="2026-08-20T18:00:00+00:00", url="http://x/3",
+        publisher="Reuters")
+    rec = event_store.make_record(ev, tickers=["NVDA"])
+    assert rec["event_type"] == "ma"
+    assert rec["source_publisher"] == "Reuters"

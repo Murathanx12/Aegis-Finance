@@ -42,20 +42,45 @@ logger = logging.getLogger(__name__)
 
 #: Fields kept per event. The raw feed carries more; this is what a belief
 #: review can act on, and trimming it here keeps the frozen state readable.
-EVENT_FIELDS = ("title", "timestamp", "direction", "category", "source",
-                "tier")
+EVENT_FIELDS = ("title", "timestamp", "direction", "direction_basis",
+                "event_type", "category", "source", "publisher", "url", "tier")
 
 MAX_EVENTS_PER_NAME = 6
 
 
 def _norm_event(ev: dict) -> dict:
+    """Normalise ONE `event_intel` event for the frozen state.
+
+    THE TAXONOMY USED TO BE DROPPED HERE. `event_intel` emits `event_type` --
+    the enum it classifies every item into, and the single most useful field
+    the perception layer produces. This function read `category`, which no
+    producer has ever emitted, so the LLM was shown `category: null` on every
+    event since the day event context shipped. Nothing failed; the field was
+    simply always empty, which is exactly why it survived: a renamed key with
+    no adapter is silent by construction.
+
+    `category` is kept as an alias of `event_type` so anything already reading
+    it keeps working and now gets a value.
+    """
     ext = ev.get("extraction") or {}
+    src = ev.get("source")
+    if isinstance(src, dict):
+        feed, publisher, url = (src.get("feed"), src.get("publisher"),
+                                src.get("url"))
+    else:
+        feed, publisher, url = (src or ev.get("feed")), None, ev.get("url")
+    etype = ev.get("event_type") or ev.get("category")
     return {
         "title": str(ev.get("title") or "")[:240],
         "timestamp": ev.get("timestamp"),
         "direction": ev.get("direction"),
-        "category": ev.get("category"),
-        "source": ev.get("source") or ev.get("feed"),
+        "direction_basis": ev.get("direction_basis"),
+        "event_type": etype,
+        #: Alias of `event_type`, kept for readers written against the old key.
+        "category": etype,
+        "source": feed,
+        "publisher": publisher,
+        "url": url,
         "tier": ext.get("tier"),
         "method": ext.get("method"),
     }
@@ -116,18 +141,24 @@ def fetch(tickers: list[str], *, max_names: int = 12,
         from backend.services import event_store
 
         records, seen = [], event_store.recent_hashes()
-        accepted = datetime.fromisoformat(out["fetched_at"])
+        # THE DECISION CLOCK IS NOT THE INGESTION CLOCK. This used to pass
+        # `fetched_at` -- which is the frozen snapshot's `as_of_ts` -- as the
+        # store's acceptance time. On a live pass the two coincide, so it
+        # looked right; on a replay the simulated past would have back-dated
+        # every event into decisions that never saw it. The store stamps its
+        # own wall clock now, and `decision_asof` records what this collection
+        # was FOR.
         for t, raw_events in _raw_by_ticker.items():
             block = out["names"].get(t) or {}
             health = "degraded" if block.get("unavailable_feeds") else "ok"
             for ev in raw_events:
                 try:
                     rec = event_store.make_record(
-                        ev, tickers=[t], accepted_at=accepted,
+                        ev, tickers=[t], decision_asof=out["fetched_at"],
                         feed_health=health, known=seen)
                 except event_store.EventRejected:
                     continue
-                seen.add(rec["content_hash"])
+                seen.add(rec["canonical_hash"])
                 records.append(rec)
         if records:
             written = event_store.append(records)

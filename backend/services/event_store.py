@@ -24,20 +24,60 @@ and they are exactly the three the learning loop needs:
                timestamp to be recorded separately from the source timestamp
                and never back-dated.
 
-WHY ACCEPTANCE TIME IS SEPARATE FROM SOURCE TIME
-================================================
-A feed can hand us an item stamped three days ago. Using that stamp to decide
-what a decision "knew" would silently backdate information into a past the
-model did not have -- lookahead, arriving through the timestamp rather than
-through the data. So every record carries BOTH, plus `available_to_decision`,
-which is computed from the acceptance clock alone.
+THREE CLOCKS, THREE JOBS (revised 2026-08-24)
+=============================================
+The first version had ONE timestamp doing three incompatible jobs, and its own
+docstring claimed a property the code did not have: `accepted_at` was
+documented as "stamped here, from the wall clock, never taken from the payload"
+while `make_record` accepted it as a parameter -- and the arena passed the
+frozen snapshot's simulated `as_of_ts` straight into it. On a live pass those
+are the same instant, so nothing looked wrong; on a REPLAY the simulated clock
+would have back-dated every event into a past that never saw it. The comment
+was the guard, and a comment is not a guard.
+
+  source_at      what the PUBLISHER says. May be absent, may be wrong, may be
+                 older than ingestion. NEVER used for availability.
+  ingested_at    when THIS system took delivery. The only clock availability is
+                 computed on. Defaults to the wall clock; a supplied value is
+                 recorded as such (`ingest_clock: "supplied"`) so a backfilled
+                 record can never pass as a live one, and a FUTURE value is
+                 refused outright.
+  decision_asof  the decision clock the record was collected for -- live or
+                 simulated. Recorded, never used to decide availability.
+
+`accepted_at` is retained as an alias of `ingested_at` so existing readers keep
+working.
+
+REPLAY AVAILABILITY IS DELIBERATELY NOT OFFERED. Answering "what could a
+decision on 2026-03-01 have known?" from this store would require a claim the
+store cannot make -- that the corpus was COMPLETE on that date. It was not: the
+store began accruing in August 2026. A function that answered anyway would be
+correct arithmetic against the wrong world.
+
+TWO IDENTITIES: THE EVENT AND THE SIGHTING
+==========================================
+One economic event is reported by many outlets. The first version hashed the
+URL into identity, so five syndications of one Reuters story were five events
+-- while the docstring asserted the opposite. Split, so both questions are
+answerable:
+
+  canonical_hash    the EVENT: scope + type + normalised title. Syndications
+                    collide. This is what novelty is measured against.
+  observation_hash  the SIGHTING: canonical + feed + publisher + URL. Distinct
+                    per outlet, so "five outlets repeating one story" is
+                    distinguishable from "five sources finding related facts".
+
+Deliberately NOT in the canonical hash: any time bucket. A bucket splits a
+story that crosses midnight, and the thing it would protect against -- an
+annual filing with an identical title -- is already handled by the 30-day
+novelty window.
 
 WHAT THIS MODULE REFUSES
 ========================
-* back-dating `accepted_at`; it is stamped here, from the wall clock, never
-  taken from the payload;
-* writing an event with no source and no content hash, because an event that
-  cannot be traced or de-duplicated is not evidence;
+* an `ingested_at` in the future, and any supplied one silently passing as the
+  system clock;
+* writing an event with no source and no title, because an event that cannot be
+  traced or de-duplicated is not evidence;
 * answering "is this novel?" against an unwritten history -- an empty store
   returns UNKNOWN, not "novel". The whole novelty concept is meaningless before
   a baseline exists, and reporting everything as novel on day one is how a
@@ -64,7 +104,7 @@ ROOT = _config.OPTIMUS_LEDGER_DIR / "events"
 
 _LOCK = threading.Lock()
 
-SCHEMA_VERSION = "event-store-1.0.0"
+SCHEMA_VERSION = "event-store-1.1.0"
 
 #: How far back a content hash is remembered for novelty. A month is long
 #: enough to catch re-syndication and short enough that an annual filing with
@@ -84,21 +124,48 @@ def _day_path(day: str, root: Path | None = None) -> Path:
     return (root or ROOT) / f"events_{day}.jsonl"
 
 
-def content_hash(event: dict) -> str:
-    """Identity of the CONTENT, deliberately excluding when we saw it.
+def _norm_title(title) -> str:
+    """Whitespace- and case-insensitive title, so formatting is not identity."""
+    return " ".join(str(title or "").split()).strip().lower()
 
-    Two feeds carrying the same headline about the same company must collide,
-    or novelty is meaningless. Acceptance time and feed are therefore NOT in
-    the hash -- they are what differs between duplicates.
+
+def canonical_hash(event: dict) -> str:
+    """Identity of the ECONOMIC EVENT: what happened, to whom.
+
+    Deliberately EXCLUDES url, feed, publisher and every timestamp. Two outlets
+    carrying the same headline about the same company are one event with two
+    sightings, and until 2026-08-24 they were not: the URL was in this hash, so
+    syndication inflated one story into five independent pieces of evidence
+    while this function's own docstring promised they would collide.
     """
-    src = event.get("source") or {}
     parts = [
         str(event.get("scope") or ""),
         str(event.get("event_type") or ""),
-        (str(event.get("title") or "").strip().lower()),
+        _norm_title(event.get("title")),
+    ]
+    return hashlib.sha256("|".join(parts).encode("utf-8")).hexdigest()[:16]
+
+
+def observation_hash(event: dict) -> str:
+    """Identity of ONE SIGHTING of an event: who reported it, and where.
+
+    This is what makes "five outlets repeating one Reuters story" separable
+    from "five sources independently finding related facts" -- two completely
+    different information states that a single hash cannot tell apart.
+    """
+    src = event.get("source") or {}
+    parts = [
+        canonical_hash(event),
+        str(src.get("feed") or ""),
+        str(src.get("publisher") or ""),
         str(src.get("url") or ""),
     ]
     return hashlib.sha256("|".join(parts).encode("utf-8")).hexdigest()[:16]
+
+
+def content_hash(event: dict) -> str:
+    """Alias of `canonical_hash`, kept for existing readers of the ledger."""
+    return canonical_hash(event)
 
 
 def _read_day(day: str, root: Path | None = None) -> list[dict]:
@@ -143,24 +210,42 @@ def novelty_of(event: dict, *, known: set[str] | None = None,
     of one.
     """
     known = recent_hashes(root=root, today=today) if known is None else known
-    h = content_hash(event)
+    h = canonical_hash(event)
     if not known:
-        return {"novelty": "UNKNOWN", "content_hash": h,
+        return {"novelty": "UNKNOWN", "content_hash": h, "canonical_hash": h,
                 "reason": ("no event history in the novelty window — novelty "
                            "is undefined against an empty baseline")}
     return {"novelty": "REPEAT" if h in known else "NEW",
-            "content_hash": h,
+            "content_hash": h, "canonical_hash": h,
             "reason": f"compared against {len(known)} hash(es) in the "
                       f"trailing {NOVELTY_WINDOW_DAYS} days"}
 
 
+class BackdatedIngestion(ValueError):
+    """An ingestion clock that could not have happened."""
+
+
 def make_record(event: dict, *, tickers: list[str] | None = None,
+                ingested_at: datetime | None = None,
                 accepted_at: datetime | None = None,
+                decision_asof: str | datetime | None = None,
                 horizon_days: int | None = None,
                 feed_health: str | None = None,
                 known: set[str] | None = None,
                 root: Path | None = None) -> dict:
-    """Turn one `event_intel` event into a durable, traceable record."""
+    """Turn one `event_intel` event into a durable, traceable record.
+
+    `ingested_at` defaults to the wall clock and that is the intended path. A
+    supplied value is permitted -- backfills and fixtures need it -- but it is
+    STAMPED as supplied rather than passed off as the system clock, and a value
+    in the future is refused. `accepted_at` is the old name for the same
+    argument, kept working.
+
+    `decision_asof` is the decision clock this record was collected for. It is
+    recorded and never used for availability, which is the whole point: on a
+    replay it is a SIMULATED past, and computing availability from it would
+    backdate every event into a decision that never saw it.
+    """
     src = event.get("source") or {}
     title = (event.get("title") or "").strip()
     if not title and not src.get("url"):
@@ -168,19 +253,37 @@ def make_record(event: dict, *, tickers: list[str] | None = None,
             "event has neither a title nor a URL — nothing to trace it to and "
             "nothing stable to de-duplicate on, so it cannot be evidence")
 
-    # ACCEPTANCE TIME IS OURS. Never taken from the payload: a feed stamp of
-    # three days ago would silently backdate information into a decision that
-    # did not have it.
-    accepted = accepted_at or _now()
-    nov = novelty_of(event, known=known, root=root,
-                     today=accepted.date())
+    supplied = ingested_at if ingested_at is not None else accepted_at
+    now = _now()
+    if supplied is None:
+        ingested, clock = now, "system"
+    else:
+        ingested, clock = supplied, "supplied"
+        ref = ingested if ingested.tzinfo else ingested.replace(tzinfo=timezone.utc)
+        if ref > now + timedelta(minutes=5):
+            # An event ingested in the future is not a clock skew story: it is
+            # a record that would be "available" to decisions that ran before
+            # it existed. There is no reading of that which is safe.
+            raise BackdatedIngestion(
+                f"ingested_at {ref.isoformat()} is in the future (now "
+                f"{now.isoformat()}). Refusing: a future ingestion stamp makes "
+                f"an event available to decisions that predate it.")
+
+    canonical = canonical_hash(event)
+    nov = novelty_of(event, known=known, root=root, today=ingested.date())
 
     return {
         "schema_version": SCHEMA_VERSION,
         "event_id": hashlib.sha256(
-            f"{nov['content_hash']}|{accepted.isoformat()}".encode()
+            f"{observation_hash(event)}|{ingested.isoformat()}".encode()
         ).hexdigest()[:20],
-        "content_hash": nov["content_hash"],
+        #: The ECONOMIC EVENT. Syndicated copies share it; novelty is measured
+        #: against it.
+        "canonical_hash": canonical,
+        #: This SIGHTING of it: feed + publisher + URL. Distinct per outlet.
+        "observation_hash": observation_hash(event),
+        #: Legacy name for `canonical_hash`; existing readers keep working.
+        "content_hash": canonical,
         "entities": sorted(set(tickers or ([event["scope"]]
                                            if event.get("scope") else []))),
         "scope": event.get("scope"),
@@ -191,10 +294,20 @@ def make_record(event: dict, *, tickers: list[str] | None = None,
         "source_url": src.get("url"),
         "source_publisher": src.get("publisher"),
         #: What the SOURCE said about when it happened. May be absent, may be
-        #: wrong, may be older than acceptance. Never used for availability.
+        #: wrong, may be older than ingestion. Never used for availability.
         "source_timestamp": event.get("timestamp"),
-        #: When AEGIS accepted it. The only clock availability is computed on.
-        "accepted_at": accepted.isoformat(timespec="seconds"),
+        #: When AEGIS took delivery. The only clock availability is computed on.
+        "ingested_at": ingested.isoformat(timespec="seconds"),
+        #: Was that our clock, or handed to us? A backfilled record must never
+        #: be indistinguishable from a live one.
+        "ingest_clock": clock,
+        #: Alias of `ingested_at`, kept for readers written against 1.0.0.
+        "accepted_at": ingested.isoformat(timespec="seconds"),
+        #: The decision clock this collection served. Live or simulated.
+        #: Recorded, never used for availability.
+        "decision_asof": (decision_asof.isoformat(timespec="seconds")
+                          if isinstance(decision_asof, datetime)
+                          else decision_asof),
         "title": title[:300],
         "extraction_method": (event.get("extraction") or {}).get("method"),
         "extraction_tier": (event.get("extraction") or {}).get("tier"),
@@ -222,7 +335,9 @@ def append(records: list[dict], *, root: Path | None = None,
 
 
 def ingest_for_tickers(tickers: list[str], *, root: Path | None = None,
-                       accepted_at: datetime | None = None) -> dict:
+                       ingested_at: datetime | None = None,
+                       accepted_at: datetime | None = None,
+                       decision_asof: str | None = None) -> dict:
     """Fetch today's events for `tickers` and persist them with provenance.
 
     Deliberately reuses `event_intel.get_ticker_events` rather than
@@ -231,7 +346,7 @@ def ingest_for_tickers(tickers: list[str], *, root: Path | None = None,
     """
     from backend.services.event_intel import get_ticker_events
 
-    accepted = accepted_at or _now()
+    accepted = ingested_at or accepted_at or _now()
     known = recent_hashes(root=root, today=accepted.date())
     records, per_ticker, failures = [], {}, {}
 
@@ -248,14 +363,16 @@ def ingest_for_tickers(tickers: list[str], *, root: Path | None = None,
         got = 0
         for ev in block.get("events") or []:
             try:
-                rec = make_record(ev, tickers=[t], accepted_at=accepted,
+                rec = make_record(ev, tickers=[t],
+                                  ingested_at=(ingested_at or accepted_at),
+                                  decision_asof=decision_asof,
                                   feed_health=health, known=known, root=root)
             except EventRejected as e:
                 logger.warning("event_store: rejected an event for %s: %s",
                                t, e)
                 continue
             records.append(rec)
-            known.add(rec["content_hash"])
+            known.add(rec["canonical_hash"])
             got += 1
         per_ticker[t] = got
 
@@ -294,8 +411,9 @@ def available_to_decision(decision_at: str, *, lookback_days: int = 7,
         d = (cutoff.date() - timedelta(days=i)).isoformat()
         for rec in _read_day(d, root):
             try:
-                acc = datetime.fromisoformat(rec["accepted_at"])
-            except (KeyError, ValueError):
+                acc = datetime.fromisoformat(
+                    rec.get("ingested_at") or rec["accepted_at"])
+            except (KeyError, ValueError, TypeError):
                 continue
             if acc.tzinfo is None:
                 acc = acc.replace(tzinfo=timezone.utc)
@@ -327,6 +445,7 @@ def health(*, root: Path | None = None, today: date | None = None) -> dict:
         "last_day": last,
         "days_quiet": quiet,
         "novelty_window_days": NOVELTY_WINDOW_DAYS,
-        "note": ("append-only; accepted_at is stamped on write and never "
-                 "back-dated, so availability is computable after the fact"),
+        "note": ("append-only; availability is computed on `ingested_at` "
+                 "alone (never the source clock), and a supplied ingestion "
+                 "stamp is recorded as `ingest_clock: supplied`"),
     }
