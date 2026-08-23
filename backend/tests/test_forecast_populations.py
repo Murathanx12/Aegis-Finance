@@ -194,6 +194,25 @@ def test_the_SAME_data_still_alarms_on_live_forward(tmp_path):
     assert row["overdue_is_a_fault"] is True
 
 
+def test_persistence_warning_is_excused_for_a_REPOSITORY_population():
+    """Caught live in prod, 2026-08-23.
+
+    `ledger_persistence` warns when a ledger sits outside the mounted volume,
+    because a LIVE ledger there is eaten by the next deploy. The campaign's
+    history ships in the image ON PURPOSE, so pointing campaign_forward at its
+    true legacy path made that warning fire for the first time — a real check
+    aimed at the wrong population.
+    """
+    msg = ("ledger persistence: AEGIS_DATA_DIR=/data is set, so a persistent "
+           "volume is mounted, but the ledger resolves to /app/backend/data/"
+           "optimus/predictions.jsonl, which is NOT under /data")
+    assert FP._excused(msg, FP.get("campaign_forward"))
+    assert not FP._excused(msg, FP.get("live_forward")), (
+        "the live ledger sitting off-volume is a REAL fault and must still "
+        "alarm — that is the F7 defect this check exists to catch")
+    assert not FP._excused(msg, FP.get("arena_forward"))
+
+
 def test_dormancy_excuses_only_the_declared_problems():
     """A population excuses what it is DECLARED dormant about, not everything."""
     campaign = FP.get("campaign_forward")

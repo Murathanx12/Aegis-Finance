@@ -301,6 +301,16 @@ def _excused(problem: str, pop: Population) -> bool:
         return True
     if not pop.overdue_is_a_fault and ("past due" in p or "overdue" in p):
         return True
+    # `ledger_persistence` warns when a ledger sits outside the mounted volume,
+    # because a live ledger there is destroyed by the next deploy. That check
+    # is right for the deployment's OWN accrual and wrong for a population that
+    # is a REPOSITORY artifact by design: the campaign's history ships in the
+    # image on purpose and must not follow a volume mount around
+    # (`evidence_population.ledger_dir`). Caught in prod on 2026-08-23, where
+    # pointing campaign_forward at its true legacy path made this fire for the
+    # first time.
+    if pop.base == "legacy" and "not under" in p:
+        return True
     return False
 
 
