@@ -1,5 +1,31 @@
 # FINDING 2026-08-24 — the holding-period question, and the three instrument defects that had to be fixed before the answer meant anything
 
+> **SUPERSEDED IN PART, 2026-08-25 — every dollar figure below was computed
+> before the split-adjustment fix.** `replay` carried SHARE COUNTS and marked
+> them at raw `abs(prc)`, so every split in the sample was booked as a return.
+> One reverse split (permno 85035, 2015-01-02, cfacpr 0.25 -> 1.00) was worth
+> +36.34% of single-day "excess" and was the largest session in the whole
+> series for both momentum signals. See
+> `docs/FINDING_2026-08-25_THE_SAMPLE_YOU_CAN_ACTUALLY_GET.md` and
+> `backend/tests/test_portfolio_farm_split_adjustment.py`.
+>
+> Re-measured on the same policy and window:
+>
+> | | before | after |
+> |---|---|---|
+> | terminal median (5 phases) | $77,002 | **$85,482** |
+> | market, same warmup | $38,960 | **$39,951** |
+> | 2013-2018 vs market | 1.01x | **1.00x** |
+> | 2019-2024 vs market | 1.75x | **2.07x** |
+> | phase spread | 3.75x (k=12 grid) | **2.12x** (this policy) |
+>
+> **Every CONCLUSION below survives, and the one-regime one is stronger.** The
+> bug was worth about -0.3%/yr net to this policy, because reverse splits gave
+> and forward splits took. What it did change is the RANKING of the signal grid
+> — `liquid` went from t=0.26 to t=2.55 — because forward splits are commonest
+> among large liquid names.
+
+
 **Licence:** `PRODUCT_EXPERIMENT`. Historical replay, post-hoc, one window,
 ~1,200 policies tried. **Not an alpha claim** and may not be cited as one.
 

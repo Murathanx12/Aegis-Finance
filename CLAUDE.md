@@ -124,31 +124,48 @@ replayed over one frozen CRSP history (`python -m scripts.portfolio_farm_run`).
 calendar day. Policies are identities, not brokerage accounts; a farm winner is
 a CANDIDATE for a frozen forward book and never evidence of alpha.
 
-Three things from it that govern what counts as progress
+Five things from it that govern what counts as progress
 (`docs/FINDING_2026-08-24_HOLDING_PERIOD.md`):
 
-- **the bar is $38,960** — the CRSP value-weighted market, buy and hold,
-  2013-2024 from $10,000. Ask "does it beat the market", not "is it
-  significant". The best policy found so far is
-  `mom_12_1 / hold 5d / k=10 / inverse_vol` at a **$77,002 median across five
-  rebalance phases** — but the sub-period split shows it is **1.01x the market
-  over 2013-2018** and 1.75x over 2019-2024, so it is a ONE-REGIME result and
+- **the bar is the market, buy and hold** — ~$39,951 over 2013-2024 from
+  $10,000 at the leading policy's warmup. Ask "does it beat the market", not
+  "is it significant". The best terminal-wealth policy found so far is
+  `mom_12_1 / hold 5d / k=10 / inverse_vol` at a **$85,482 median across five
+  rebalance phases** — but the sub-period split shows it is **1.00x the market
+  over 2013-2018** and 2.07x over 2019-2024, so it is a ONE-REGIME result and
   **must not be seeded as a forward book**. It also **loses to the market on
-  Sharpe (0.61 vs 0.72), Sortino and Calmar** in every phase, at a -60%
-  drawdown. So
-  **every ranked comparison names its objective**: under terminal wealth it is
-  2.08x the market, under any risk-adjusted objective it is worse. That is the
-  right answer for the DECLARED `extreme growth` personality and the wrong one
-  for `balanced` or `preservation`;
-- **the instrument moved the answer more than the strategy did, FOUR times.**
+  Sharpe, Sortino and Calmar** in every phase, at a ~-60% drawdown. So
+  **every ranked comparison names its objective**: under terminal wealth it
+  beats the market roughly two to one, under any risk-adjusted objective it is
+  worse. That is the right answer for the DECLARED `extreme growth`
+  personality and the wrong one for `balanced` or `preservation`;
+- **ASK WHETHER THE SAMPLE COULD HAVE ANSWERED, BEFORE ASKING WHAT IT SAID.**
+  `python -m scripts.portfolio_farm_signal_power` reports, per signal, the
+  effect this window could detect at 80% power. On 2013-2024, **zero of
+  thirteen non-null signals produced an effect it could resolve** — every
+  signals leaderboard the farm has printed is a rank without a resolution
+  behind it. The ordering by MDE is the useful part, and it is not the
+  terminal-wealth ordering: `liquid` carries t=2.55 at a third of momentum's
+  tracking error and needs **13 years** where momentum needs 47;
+- **an edge that does not survive BREADTH is not cross-sectional.**
+  `python -m scripts.portfolio_farm_breadth_power`. Grinold: `IR ~ IC *
+  sqrt(breadth)`, so a real signal spread over more names should show t
+  RISING. Measured over k=10..50, every signal falls and peaks at the
+  narrowest book — `mom_12_1` slope -0.40, `liquid` -2.37, `size_large` -1.24.
+  `liquid` has the best t on the board AND the steepest decay, and those are
+  the same fact: at k=10 out of 500 it is a ten-name mega-cap book;
+- **the instrument moved the answer more than the strategy did, FIVE times.**
   Rebalance PHASE is worth up to 3.75x (so every policy runs at multiple
   `phase_offset`s and is reported by its MEDIAN); the DELISTING assumption was
-  worth 18x until `crsp.dsedelist` was joined; and an implicit-leverage bug in
+  worth 18x until `crsp.dsedelist` was joined; an implicit-leverage bug in
   the fill step was silently buying with capital locked in unsellable
-  positions; and breadth read off one phase crowned k=50 when the optimum is
-  k=10. **Distrust a farm number before you distrust a farm result. And split
-  the window before believing any of them —
-  `python -m scripts.portfolio_farm_subperiod`;**
+  positions; breadth read off one phase crowned k=50 when the optimum is
+  k=10; and **the panel marked SHARE COUNTS at raw prices, so every split was
+  booked as a return** — one reverse split was +36.34% of a single day's
+  "excess" and the top session of twelve years for both momentum signals, and
+  fixing it moved `liquid` from t=0.26 to t=2.55. **Distrust a farm number
+  before you distrust a farm result. And split the window before believing any
+  of them — `python -m scripts.portfolio_farm_subperiod`;**
 - **`crsp.dsedelist` is joined and delisting returns are MEASURED** (97%+
   coverage). 2xx mergers return ~0.0, 5xx performance delists ~-0.20, and 60.5%
   of all events are at or above zero — the old blanket -30% was wrong for two
@@ -156,8 +173,24 @@ Three things from it that govern what counts as progress
   systematically selects acquisition targets. Every receipt carries
   `n_delist_measured` / `n_delist_assumed`.
 
-**Only CRSP 2013-2024 is replayable** — the 1990-2012 pull lacks
-`openprc`/`retx`/`shrout`, so the loader refuses those years by name.
+**The replayable window is 1993-2024** (32 years) after the 2026-08-25 re-pull
+(`python -m scripts.wrds_repull_dsf_early`, whose resume key is COLUMNS rather
+than file existence — an existence-keyed queue can never see a partially-pulled
+table). Two independent constraints stop at 1993 and neither is fixable:
+
+- CRSP began collecting open prices in **mid-1992**, so `openprc` is 0.0% in
+  1990-91 and ~46% in 1992. No open, no next-open fill. `replayable_years`
+  gates on COVERAGE, not on the column being present — **a column is not
+  data**, and the re-pull would otherwise have certified an empty 1990;
+- the early PIT universe carries **243-475 eligible names** in the 32 months
+  from 1990-01 to 1992-10, against a top-500 cut, so there the cut IS the
+  screen boundary.
+
+Panels longer than ~15 years must pass `reduce_for_universe_n=500`
+(`--reduce` on the scripts): the dense 1993-2024 panel is ~4.8 GB, only 28.5%
+of permnos ever reach the top 500, and the reduction was verified to produce
+**byte-identical NAVs** across four signals, three holding periods, two sizings
+and five phases.
 
 **Every farm run carries `n_delist_measured` vs `n_delist_assumed`.** A run
 that fell back on most of its exits still has an assumption for a headline; the
