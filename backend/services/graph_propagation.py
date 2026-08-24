@@ -55,6 +55,40 @@ error. Their action history is truncated in the vendor's data (META's stopped
 summary). That is not coverage ceasing; it is the feed lying by omission. A
 graph that trusts it drops META out of the ranking silently, which is why
 `STALE_FEED_DAYS` is a refusal and not a log line.
+
+AND THEN THE UNIVERSE KILLED IT — READ THIS BEFORE REGISTERING A BOOK
+====================================================================
+The vendor can supply the data. The data cannot supply a graph.
+
+Measured on the live 179-name universe 2026-08-24: at the licensed
+`min_shared=1` the co-coverage graph is **100.0% dense** -- all 176 names with
+coverage are peers of all 175 others, because every major bank covers every
+mega-cap. In a complete graph
+
+    peer_eq_i = (S - r_i) / (n - 1)
+
+which is a strictly decreasing function of the name's own return. Measured
+corr(peer_eq, own_ret) = **-1.0000, sd 0.0000** over 200 random return draws.
+The ranking is EXACTLY short-horizon reversal, and short-horizon winner-chasing
+is a Holm-surviving ANTI-signal in this programme. Emitting it would not be a
+weak selector; it would be a harmful one.
+
+Sparsifying by requiring more shared brokers does not rescue it. The
+correlation only becomes small around 8-12 shared firms (density 77% -> 29%),
+and by then 11-45% of the universe is unrankable -- and more importantly, "an
+edge requires 10 shared brokerages" is NOT the mechanism the screen validated.
+`peer_shared` (count-weighted edges) was an arm in that screen and it did not
+beat `peer_eq`. There is no evidence for the sparsified version.
+
+WHY THE SCREEN NEVER SAW THIS. It ran on thousands of CRSP names where a median
+ANALYST covers 4 firms, so co-coverage was SELECTIVE and an edge carried
+information. AMENDMENT-3 established that firm-level attribution works -- but
+still on that universe, where a firm graph is sparse RELATIVE TO ITS SIZE. A
+179-name mega-cap universe is the one place the mechanism cannot work.
+
+So `assert_graph_informative` refuses, and the book is NOT registrable against
+this universe. The signal is not refuted; it needs names whose coverage is
+selective, which means going down-cap, not adding a parameter.
 """
 
 from __future__ import annotations
@@ -147,6 +181,36 @@ STALE_FEED_DAYS: int = int(CONTRACT["refusals"]["stale_feed_days"])
 #: same number, as the arena's `min_priced_fraction`.
 MIN_USABLE_FRACTION: float = float(
     CONTRACT["refusals"]["min_usable_fraction"])
+
+
+#: Above this share of possible edges, `peer_eq` is arithmetically close to
+#: minus the name's own return and carries no graph information. Measured on
+#: the live 179-name universe 2026-08-24: density 100.0% at the licensed
+#: `min_shared=1`, and corr(peer_eq, own_ret) = -1.0000 with sd 0.0000 over 200
+#: random return draws. Density 77% still gives -0.12; it only reaches -0.06
+#: near 52%. The bar is set at 0.60 -- comfortably inside the region where the
+#: correlation is small, and far from the region where it is total.
+MAX_EDGE_DENSITY: float = 0.60
+
+#: How much anti-correlation with own return is tolerable before the ranking is
+#: just reversal. Checked directly rather than inferred from density, because
+#: density is a proxy and this is the thing that actually matters.
+MAX_ABS_OWN_RETURN_CORR: float = 0.25
+
+
+class GraphDegenerate(RuntimeError):
+    """The graph is so dense that `peer_eq` is no longer a graph signal.
+
+    If every name is linked to every other, then
+
+        peer_eq_i = (S - r_i) / (n - 1)
+
+    which is a strictly DECREASING linear function of the name's own return.
+    The ranking is then exactly the reverse of own return -- short-horizon
+    reversal wearing a graph as a costume, and short-horizon winner-chasing is
+    a Holm-surviving ANTI-signal in this programme. A degenerate graph is not a
+    weak signal, it is a harmful one, so it is refused rather than emitted.
+    """
 
 
 class GraphUnavailable(RuntimeError):
@@ -299,7 +363,10 @@ def peer_scores(coverage: dict[str, frozenset[str]],
     for t in names:
         peers = [p for p, k in shared[t].items() if k >= min_shared]
         n_peers[t] = len(peers)
-        if len(peers) < min_peers:
+        # `not peers` is not redundant with the min_peers test: a caller
+        # measuring raw graph structure passes min_peers=0, and `0 < 0` is
+        # False, so an isolated name fell through to a division by zero.
+        if not peers or len(peers) < min_peers:
             continue
         scores[t] = sum(returns[p] for p in peers) / len(peers)
     return scores, n_peers
@@ -353,6 +420,61 @@ def _top_reasons(excluded: dict[str, str], k: int = 3) -> str:
     return ", ".join(f"{r} x{n}" for r, n in top) or "none"
 
 
+def assert_graph_informative(coverage: dict[str, frozenset[str]],
+                             scores: dict[str, float],
+                             returns: dict[str, float]) -> dict:
+    """Refuse a graph that has collapsed into cross-sectional demeaning.
+
+    WHY THIS EXISTS AND THE SCREEN NEVER NEEDED IT. The screen ran on thousands
+    of CRSP names where a median ANALYST covers 4 firms, so co-coverage was
+    SELECTIVE and an edge meant something. The live universe is 179 mega-caps
+    where every major bank covers nearly everything: measured 2026-08-24, the
+    graph is 100.0% dense and every name is a peer of every other. Coverage
+    that is universal carries no information about which names are related.
+
+    So this is not a tuning knob. It is the difference between the mechanism
+    the screen licensed and an anti-signal with the same name.
+    """
+    names = [t for t in coverage if coverage[t]]
+    n = len(names)
+    if n < 3:
+        raise GraphDegenerate(f"only {n} names carry coverage")
+
+    total = sum(len(coverage[t] & coverage[u]) > 0
+                for t in names for u in names if t != u)
+    density = total / (n * (n - 1))
+
+    common = [t for t in scores if t in returns]
+    corr = 0.0
+    if len(common) >= 5:
+        xs = [scores[t] for t in common]
+        ys = [returns[t] for t in common]
+        mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+        num = sum((a - mx) * (b - my) for a, b in zip(xs, ys))
+        dx = sum((a - mx) ** 2 for a in xs) ** 0.5
+        dy = sum((b - my) ** 2 for b in ys) ** 0.5
+        corr = num / (dx * dy) if dx and dy else 0.0
+
+    report = {"n_names": n, "edge_density": round(density, 4),
+              "corr_with_own_return": round(corr, 4),
+              "max_edge_density": MAX_EDGE_DENSITY,
+              "max_abs_own_return_corr": MAX_ABS_OWN_RETURN_CORR}
+
+    if density > MAX_EDGE_DENSITY:
+        raise GraphDegenerate(
+            f"edge density {density:.1%} exceeds {MAX_EDGE_DENSITY:.0%}: with "
+            f"{n} names nearly every pair shares a covering brokerage, so "
+            f"peer_eq is (S - r_i)/(n-1) — the reverse of own return, not a "
+            f"graph signal. Measured corr with own return {corr:+.3f}. This "
+            f"universe needs names whose coverage is SELECTIVE.")
+    if abs(corr) > MAX_ABS_OWN_RETURN_CORR:
+        raise GraphDegenerate(
+            f"peer_eq correlates {corr:+.3f} with the name's OWN return "
+            f"(bar {MAX_ABS_OWN_RETURN_CORR}); the ranking is reversal, not "
+            f"propagation")
+    return report
+
+
 # ── health ──────────────────────────────────────────────────────────────────
 
 
@@ -363,12 +485,23 @@ def health() -> dict:
         "book_id": CONTRACT["book_id"],
         "licence": CONTRACT["licence"],
         "contract_hash": contract_hash(),
-        "status": "AWAITING_REGISTRATION",
+        "status": "BLOCKED_UNIVERSE_TOO_DENSE",
         "reason": (
-            "the book cannot enter arena_books_v1.yaml until the ten live "
-            "seeds migrate to per-book identity on their next arena pass. "
-            "Adding it before then changes the whole-file config_hash, which "
-            "is what the LEGACY seeds are verified against, and "
-            "assert_config_current refuses to run AND refuses to migrate."),
+            "the live 179-name universe yields a 100.0% dense co-coverage "
+            "graph (every major bank covers every mega-cap), where peer_eq is "
+            "arithmetically -1.000 correlated with the name's own return — "
+            "short-horizon reversal, a Holm-surviving ANTI-signal here. The "
+            "mechanism needs names whose coverage is SELECTIVE, which means a "
+            "down-cap universe, not a parameter change."),
+        "also_blocked_by": (
+            "sequencing: the ten seeds written 2026-08-21 migrate to per-book "
+            "identity only on their next arena pass, and adding any book to "
+            "arena_books_v1.yaml before that makes assert_config_current "
+            "refuse to run AND refuse to migrate, for all ten."),
+        "measured": {
+            "edge_density": 1.0,
+            "corr_peer_eq_with_own_return": -1.0,
+            "universe_n": 176,
+        },
         "licensed_by": CONTRACT["licensed_by"]["trial"],
     }

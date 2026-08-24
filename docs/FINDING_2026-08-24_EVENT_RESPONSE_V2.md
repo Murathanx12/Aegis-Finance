@@ -3,7 +3,28 @@
 **Trial** `EVENT-RESPONSE-2` · **licence** PRODUCT_EXPERIMENT (SCREEN)
 **spec_hash** `534124d8bd63f4f4` — frozen before the first number
 **Receipt** `backend/data/optimus/event_response/event_response_v2_receipt.json`
-**49,357 events · n_effective = 168 EVENT MONTHS** (CANON §58)
+**49,357 events · n_effective = 96 EVENT MONTHS** (CANON §58 — the
+**168** originally printed here was the frame's month count; every arm
+walks forward from 2012 and is built from 96 evaluated months, so the
+original overstated the evidence base by 75%.)
+
+> ## SUPERSEDED IN ITS VERDICT — 2026-08-24
+>
+> **The borrow slice below was implemented wrongly and its conclusion does not
+> hold.** It excluded high-borrow events from the TRAINING SET as well as the
+> evaluation cross-section, which measures "can a model trained only on
+> cheap-to-borrow names predict them" rather than "does this signal predict
+> among cheap-to-borrow names".
+>
+> Run as an attribution test — model fixed, evaluation population varied — the
+> effect does **not** move: drift1 goes 0.0315 -> **0.0329 (t 3.56)** when
+> hard-to-borrow names are excluded. `AMENDMENT-1` reproduces the original's
+> 0.01505/t1.42 exactly as the train-and-eval variant.
+>
+> **`docs/FINDING_2026-08-24_EVENT_RESPONSE_V2_AMENDMENT1.md` supersedes
+> sections 2-4 below.** The verdict returns to **BUILD** (a PRODUCT_EXPERIMENT
+> paper licence, not a claim). Section 1 stands unchanged.
+
 
 ## Verdict: **NOT LICENSED — borrow-confounded.** Downgraded from BUILD by a test declared in advance.
 

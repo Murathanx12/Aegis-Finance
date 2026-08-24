@@ -1,0 +1,84 @@
+{
+  "amendment_id": "EVENT-RESPONSE-2/AMENDMENT-1",
+  "amendment_hash": "e9e7622bd537999a",
+  "parent_spec_hash": "534124d8bd63f4f4",
+  "declared_before_any_number_existed": true,
+  "target": "drift1",
+  "model": "lightgbm",
+  "n_events": 29194,
+  "n_effective": 96,
+  "borrow_proxy": "iv_put_minus_call_30d",
+  "cuts": {
+    "top_quintile_at": 0.01659,
+    "bottom_quintile_at": -0.01627
+  },
+  "slices": {
+    "all": {
+      "n_months": 96,
+      "mean_ic": 0.03147,
+      "se": 0.00985,
+      "t": 3.193,
+      "mde_80pct_power": 0.02759
+    },
+    "excl_high_borrow": {
+      "n_months": 96,
+      "mean_ic": 0.03286,
+      "se": 0.00923,
+      "t": 3.561,
+      "mde_80pct_power": 0.02583
+    },
+    "excl_low_borrow": {
+      "n_months": 96,
+      "mean_ic": 0.02708,
+      "se": 0.01168,
+      "t": 2.318,
+      "mde_80pct_power": 0.0327
+    }
+  },
+  "excl_high_vs_excl_low": {
+    "n_months": 96,
+    "mean_diff": 0.005781,
+    "se": 0.008761,
+    "t": 0.66,
+    "p": 0.5109
+  },
+  "random_20pct_exclusions": {
+    "n_draws": 20,
+    "mean_ic_mean": 0.03195,
+    "mean_ic_p20": 0.02823,
+    "mean_ic_min": 0.02467
+  },
+  "placebo_top_quintile_exclusions": {
+    "pre_event_price_runup": {
+      "n_months": 96,
+      "mean_ic": 0.04188,
+      "se": 0.01057,
+      "t": 3.962,
+      "mde_80pct_power": 0.0296
+    },
+    "disclosure_delay_days": {
+      "n_months": 96,
+      "mean_ic": 0.03479,
+      "se": 0.01105,
+      "t": 3.149,
+      "mde_80pct_power": 0.03093
+    },
+    "expectation_dispersion": {
+      "n_months": 96,
+      "mean_ic": 0.02534,
+      "se": 0.01063,
+      "t": 2.385,
+      "mde_80pct_power": 0.02975
+    },
+    "iv_term_slope": {
+      "n_months": 96,
+      "mean_ic": 0.02879,
+      "se": 0.01059,
+      "t": 2.719,
+      "mde_80pct_power": 0.02964
+    }
+  },
+  "decision_rule": "The borrow attribution STANDS iff excluding the HIGH-borrow quintile costs materially more IC than excluding the LOW-borrow quintile \u2014 concretely, iff ic_excl_high < ic_excl_low by more than the paired SE of the difference, AND ic_excl_high sits below the placebo exclusions. Otherwise the drop is RANGE RESTRICTION, the verdict's REASON changes to UNDERPOWERED, and the successor changes with it.",
+  "verdict": "BORROW_ATTRIBUTION_NOT_ESTABLISHED",
+  "what_this_changes": "The REASON for v2's refusal, and therefore what v3 should be. It cannot restore a BUILD: the cheap-to-borrow arm needs ~654 event months to detect its own point estimate at 80% power and at most ~240 are obtainable."
+}

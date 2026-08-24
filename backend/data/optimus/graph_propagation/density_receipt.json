@@ -1,0 +1,122 @@
+{
+ "measurement_id": "GRAPH-PROPAGATION-DENSITY-1",
+ "measured_at": "2026-08-24",
+ "licence": "PRODUCT_EXPERIMENT (buildability, not a result)",
+ "question": "Is the LIVE co-coverage graph sparse enough for peer_eq to carry graph information, or has it collapsed into cross-sectional demeaning?",
+ "why_it_was_asked": "An end-to-end integration run on 23 real names returned corr(peer_eq, own_ret) = -1.000 exactly. That is the signature of a COMPLETE graph, where peer_eq_i = (S - r_i)/(n-1) is a strictly decreasing function of own return.",
+ "as_of": "2026-08-21",
+ "universe": {
+  "source": "backend/config.py stock_universe.sector_stocks",
+  "n_with_coverage": 176
+ },
+ "headline": {
+  "edge_density_at_licensed_min_shared_1": 1.0,
+  "corr_peer_eq_with_own_return": -1.0,
+  "corr_sd_over_200_random_return_draws": 0.0,
+  "names_that_are_peers_of_everything": 176
+ },
+ "min_shared_sweep": [
+  {
+   "min_shared": 1,
+   "median_peers": 175,
+   "edge_density": 1.0,
+   "corr_with_own_return": -1.0,
+   "names_ranked": 176,
+   "pct_universe_ranked": 1.0
+  },
+  {
+   "min_shared": 2,
+   "median_peers": 175,
+   "edge_density": 1.0,
+   "corr_with_own_return": -1.0,
+   "names_ranked": 176,
+   "pct_universe_ranked": 1.0
+  },
+  {
+   "min_shared": 3,
+   "median_peers": 175,
+   "edge_density": 0.9981,
+   "corr_with_own_return": -0.88,
+   "names_ranked": 176,
+   "pct_universe_ranked": 1.0
+  },
+  {
+   "min_shared": 4,
+   "median_peers": 175,
+   "edge_density": 0.9912,
+   "corr_with_own_return": -0.6527,
+   "names_ranked": 176,
+   "pct_universe_ranked": 1.0
+  },
+  {
+   "min_shared": 5,
+   "median_peers": 174,
+   "edge_density": 0.9725,
+   "corr_with_own_return": -0.3835,
+   "names_ranked": 176,
+   "pct_universe_ranked": 1.0
+  },
+  {
+   "min_shared": 6,
+   "median_peers": 170,
+   "edge_density": 0.9363,
+   "corr_with_own_return": -0.2949,
+   "names_ranked": 175,
+   "pct_universe_ranked": 0.9943
+  },
+  {
+   "min_shared": 8,
+   "median_peers": 149,
+   "edge_density": 0.7704,
+   "corr_with_own_return": -0.1176,
+   "names_ranked": 175,
+   "pct_universe_ranked": 0.9943
+  },
+  {
+   "min_shared": 10,
+   "median_peers": 93,
+   "edge_density": 0.5208,
+   "corr_with_own_return": -0.0581,
+   "names_ranked": 170,
+   "pct_universe_ranked": 0.9659
+  },
+  {
+   "min_shared": 12,
+   "median_peers": 43,
+   "edge_density": 0.2881,
+   "corr_with_own_return": -0.0538,
+   "names_ranked": 157,
+   "pct_universe_ranked": 0.892
+  },
+  {
+   "min_shared": 15,
+   "median_peers": 4,
+   "edge_density": 0.0973,
+   "corr_with_own_return": -0.0702,
+   "names_ranked": 96,
+   "pct_universe_ranked": 0.5455
+  },
+  {
+   "min_shared": 20,
+   "median_peers": 0,
+   "edge_density": 0.0207,
+   "corr_with_own_return": -0.0457,
+   "names_ranked": 39,
+   "pct_universe_ranked": 0.2216
+  },
+  {
+   "min_shared": 25,
+   "median_peers": 0,
+   "edge_density": 0.0046,
+   "corr_with_own_return": -0.3831,
+   "names_ranked": 14,
+   "pct_universe_ranked": 0.0795
+  }
+ ],
+ "verdict": "NOT BUILDABLE ON THIS UNIVERSE",
+ "reading": "Every major brokerage covers every mega-cap, so co-coverage is UNIVERSAL and therefore uninformative: it cannot say which names are related because it says all of them are. peer_eq then ranks names exactly in reverse order of their own return \u2014 short-horizon reversal, which this programme has Holm-surviving evidence AGAINST. The output is not a weak selector, it is a harmful one.",
+ "why_the_screen_could_not_see_it": "The screen ran on thousands of CRSP names where a median ANALYST covers 4 firms, so an edge was selective and meant something. AMENDMENT-3 showed firm-level attribution survives \u2014 but on that same large universe, where a firm graph is still sparse RELATIVE TO ITS SIZE. A 179-name mega-cap universe is the one setting where the mechanism cannot work.",
+ "why_sparsifying_does_not_rescue_it": "Requiring more shared brokerages reduces the correlation only around 8-12 shared firms, by which point 11-45% of the universe is unrankable. More decisively, 'an edge requires 10 shared brokerages' is NOT the mechanism the screen validated: `peer_shared` (count-weighted edges) was an arm there and did NOT beat `peer_eq`. There is no evidence for the sparsified variant.",
+ "what_would_make_it_work": "A universe whose coverage is SELECTIVE \u2014 mid and small caps, where a name is followed by a handful of brokers rather than all of them. That is a universe change, not a parameter change, and it needs its own declaration.",
+ "guard": "graph_propagation.assert_graph_informative refuses above 60% edge density or |corr with own return| > 0.25."
+}

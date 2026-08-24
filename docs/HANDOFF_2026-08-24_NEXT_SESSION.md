@@ -152,87 +152,94 @@ before the stamp took: restore it, let it migrate, then re-edit.
 
 ## 5. Do these next, in order
 
-**Every roadmap item now carries a receipt.** Four alpha mechanisms were
-attempted in one night; this is what they returned:
+**Two verdicts from the first pass were re-tested overnight and BOTH FLIPPED.**
+That is the state of the board:
 
-| trial | verdict | why it matters |
-|---|---|---|
-| `ANALYST-COCOVERAGE-GRAPH-1` | **CONTINUE + BUILDABLE** | the only positive. Survives own-momentum, industry momentum, firm granularity and actions-only — every reduction a live feed forces |
-| `EVENT-RESPONSE-1` | STOP | PEAD real at 7bps; nothing ranked which events drift. Named its own successor |
-| `RELATIVE-VALUE-NN-1` | STOP | MLP worst of three; the neural question is closed with a receipt |
-| `EVENT-RESPONSE-2` | **NOT LICENSED** | hypothesis correct (+0.0315, t 3.19) and the edge is **borrow fees** |
+| trial | was | is now | why |
+|---|---|---|---|
+| `EVENT-RESPONSE-2` | NOT LICENSED (borrow) | **BUILD** | the borrow slice had been implemented wrongly |
+| `ANALYST-COCOVERAGE-GRAPH-1` | licensed AND buildable | **not buildable here** | the live graph is 100% dense ⇒ the signal is reversal |
+| `EVENT-RESPONSE-1` | STOP | STOP | PEAD real at 7bps, unrankable |
+| `RELATIVE-VALUE-NN-1` | STOP | STOP | mlp worst of three |
 
-### 1. `GRAPH_PROPAGATION_v1` — built, NOT registered, and the reason has a date
+**Demonstrated edge remains 0%.** One mechanism is now licensed to build and
+has no blocking objection: the options-implied event response.
 
-**The module exists** (`backend/services/graph_propagation.py`, 15 tests) with
-its frozen contract (`contract_hash` `136240f859ca7e41`). What is missing is the
-arena book, and that wait is a hard ordering constraint, not a to-do.
+### 1. `EVENT_RESPONSE_v1` — the mechanism that survived scrutiny
 
-**THE VENDOR QUESTION IS ANSWERED — VIABLE.** Measured 2026-08-24 over the real
-179-name universe, receipt in `backend/data/optimus/graph_propagation/`:
+`docs/FINDING_2026-08-24_EVENT_RESPONSE_V2_AMENDMENT1.md`
 
-| | |
-|---|---|
-| depth | **not the constraint** — median 14.4 years of history |
-| usable graph rows | **176/179 = 98.3%** |
-| median covering firms in window | **17** (the IBES graph the screen validated on had 14) |
-| median days since last action | 10 |
+`lightgbm@1d[with_options]`: **IC +0.0315, t 3.19, survives BH-FDR, MDE₈₀
+0.0276** — the only adequately-powered result this programme has produced. The
+central feature is `gap_vs_implied` = |overnight gap| / implied daily move: did
+it move more than was priced. Ridge gains nothing, so the relationship is
+non-linear, which is what that feature *should* be.
 
-**And the probe found a defect worth more than the answer.** META, WELL and CAT
-return an EMPTY trailing window and **no error** — their action history is
-truncated in yfinance's data. This is not coverage ceasing: yfinance's own
-`recommendations` summary reports **62 analysts rating META this month** while
-`upgrades_downgrades` stops at 2024-09-30. A graph that trusts the empty window
-drops a mega-cap out of the ranking in silence. Hence `STALE_FEED_DAYS = 120` is
-a **refusal**, not a log line. It does no delicate work: genuine silence tops out
-near 49 days in this universe and the truncated names sit at 675-689.
+The borrow precondition does **not** fire. Excluding hard-to-borrow names from
+the EVALUATION leaves the effect intact (0.0329, t 3.56); the original's
+halving came from excluding them from **training** as well, which is a
+different experiment. Reproduced exactly (variant C = 0.01505, t 1.42).
 
-> #### DO NOT ADD THE BOOK TO `arena_books_v1.yaml` UNTIL THE ARENA HAS RUN
->
-> The ten books seeded 2026-08-21 still carry only the **legacy whole-file**
-> fingerprint. They migrate to per-book identity on their **next arena pass**,
-> and `assert_config_current` migrates *only while the legacy hash still
-> verifies*. Adding a book first changes that hash, so the migration branch
-> refuses to run **and refuses to migrate** — all ten, permanently, with their
-> NAV histories stranded.
->
-> This is already pinned by
-> `test_migration_REFUSES_when_the_config_already_changed`; it was checked
-> against production before anything was edited, not reasoned about afterwards.
->
-> **So Monday's pass is doing two jobs**, and the second one was invisible:
-> it queues the arena's decisions *and* it migrates the seeds. Confirm the
-> migration landed (`/api/arena/status`, books carrying `book-v1`) before
-> registering anything.
+**Build it as its own PRODUCT_EXPERIMENT book.** Not a composite weight — see
+§THE BOTTLENECK. Note the deployment question is still open: the signal is not
+*confined* to expensive-to-short names, but a live book still pays borrow where
+it trades them.
 
-Once registered, it is a **separate PRODUCT_EXPERIMENT book**, never a weight in
-`arena_composite`, and seeding stays attended (§3, `seed-a-lane`).
+### 2. `GRAPH_PROPAGATION_v1` — module exists, book must NOT be registered
 
-Nothing fancier than plain equal-weighted peer return belongs in it: reliability
-weighting, edge direction and 52-week-high conditioning each measured **zero**.
+`docs/FINDING_2026-08-24_GRAPH_PROPAGATION_DENSITY.md`
 
-### 2. `EVENT-RESPONSE-3` — condition on borrow rather than ignore it
+The vendor can supply the data (98.3% of names, median 17 covering firms, 14.4
+years). **The data cannot supply a graph.** At the licensed `min_shared=1` the
+live 179-name universe is **100.0% dense** — every major bank covers every
+mega-cap — so
 
-v2 established that the implied move genuinely adds information and that the
-resulting edge is not separable from borrow. That is not "the feature is
-useless"; it is "this version is untradeable". A version that models the borrow
-fee as a COST, or trades only where the effect survives its exclusion, is a
-different experiment and **owes its own declaration**.
+    peer_eq_i = (S − r_i)/(n − 1)
 
-Do not reuse v2's spec_hash for it.
+and corr(peer_eq, own return) = **−1.0000, sd 0.0000** over 200 draws. The
+ranking is exactly short-horizon reversal, a Holm-surviving **ANTI-signal**
+here. `assert_graph_informative` now refuses it.
+
+Sparsifying by shared-broker count only helps around k=8–12, costs 11–45% of
+the universe, and — decisively — **is not the mechanism the screen validated**
+(`peer_shared` was an arm there and did not beat `peer_eq`).
+
+**To revive it you need a universe whose coverage is SELECTIVE** — mid/small
+caps followed by a handful of brokers, which is what the screen's own graph
+looked like. That is a universe change with its own declaration, not a
+parameter change, and it needs the vendor-depth measurement re-run on thinner
+names.
 
 ### 3. P0.2 the information bus
 
-The only original roadmap item never started, and it now has what it was waiting
-for: `signal_reachability` has named the orphans.
+The only original roadmap item never started.
+
+> #### STILL TRUE: DO NOT ADD ANY BOOK TO `arena_books_v1.yaml` UNTIL THE ARENA RUNS
+>
+> The ten books seeded 2026-08-21 carry only the **legacy whole-file**
+> fingerprint and migrate to per-book identity on their **next arena pass**.
+> `assert_config_current` migrates only while the legacy hash still verifies, so
+> adding a book first makes it refuse to run **and** refuse to migrate — all
+> ten, permanently, NAV histories stranded. Pinned by
+> `test_migration_REFUSES_when_the_config_already_changed`.
+>
+> **Monday's pass therefore does two jobs**, and the second was invisible: it
+> queues decisions AND migrates the seeds. Confirm via `/api/arena/status`
+> before registering the EVENT_RESPONSE book.
 
 ### Standing rules for any of the above
 
 * **`feature_leakage_guard.assert_no_target_leakage` before fitting anything.**
-* **Declare confound tests as PRECONDITIONS, not follow-ups.** Twice in one
-  session that ordering was the difference between a refusal and a retraction.
-* **Every screen so far has been under-powered except v2.** State nulls as "no
-  effect larger than X", never "no effect".
+* **A slice that changes a verdict must say which side of the fit it changes.**
+  Training population and evaluation population are different experiments, and
+  the receipt must name which one ran. This cost a wrong verdict.
+* **A number that decides a verdict belongs in a runnable committed file**, not
+  a terminal. The original borrow slice's script was never committed, so the
+  verdict rested on numbers nobody could re-derive.
+* **Measuring an input's abundance is not measuring its information.** "Median
+  17 covering firms" read as a rich graph and was the symptom that destroyed
+  the signal.
+* **Nulls are still under-powered.** State them as "no effect larger than X".
 
 ---
 

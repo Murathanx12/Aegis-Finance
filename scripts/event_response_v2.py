@@ -377,8 +377,20 @@ def run() -> dict:
     receipt = {
         "trial_id": SPEC["trial_id"], "spec_hash": spec_hash(), "spec": SPEC,
         "n_events_with_option_state": int(len(fr)),
-        "n_event_months": int(fr["event_month"].nunique()),
-        "n_effective": int(fr["event_month"].nunique()),
+        # CANON 58: n_effective counts the DATE BLOCKS the estimate is actually
+        # made of. The first version reported the frame's month count (168),
+        # but every arm walks forward from 2012 and so is built from 96 months
+        # -- the frame's earlier months are TRAINING, and training months are
+        # not evidence. Reporting 168 overstated the evidence base by 75%.
+        # Both numbers are kept, with the roles named, because the frame count
+        # is still the right denominator for coverage questions.
+        "n_event_months_in_frame": int(fr["event_month"].nunique()),
+        "n_effective": int(min(
+            (r["n_months"] for r in results.values() if "n_months" in r),
+            default=0)),
+        "n_effective_basis": (
+            "evaluated months of the leanest arm; arms walk forward from 2012 "
+            "so months before that are training, not evidence"),
         "leakage_guard": leak,
         "results": results, "paired_options_vs_base": comps,
         "arms_passing": passing, "options_helped": helped,
@@ -390,7 +402,7 @@ def run() -> dict:
     return receipt
 
 
-def run_amendment_1() -> dict:
+def run_amendment_1(tgt: str = "drift1") -> dict:
     """Is the borrow drop BORROW, or is it tail-trimming?
 
     ONE MODEL, MANY EVALUATION POPULATIONS. The walk-forward fit is identical
@@ -408,7 +420,6 @@ def run_amendment_1() -> dict:
     fr = build_frame()
     fr = fr[fr["atm_iv_30"].notna()].copy()
     cols = BASE_FEATURES + OPTION_FEATURES
-    tgt = "drift1"
     model = "lightgbm"
 
     years = sorted(y for y in fr["event_date"].dt.year.unique() if y >= 2012)
@@ -529,14 +540,17 @@ def run_amendment_1() -> dict:
             "~240 are obtainable."),
     }
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "event_response_v2_amendment1_receipt.json").write_text(
+    suffix = "" if tgt == "drift1" else f"_{tgt}"
+    (OUT / f"event_response_v2_amendment1_receipt{suffix}.json").write_text(
         json.dumps(receipt, indent=2, default=str), encoding="utf-8")
     return receipt
 
 
 if __name__ == "__main__":
     if "--amendment-1" in sys.argv:
-        r = run_amendment_1()
+        _t = next((a.split("=", 1)[1] for a in sys.argv
+                   if a.startswith("--target=")), "drift1")
+        r = run_amendment_1(_t)
         print(json.dumps(r, indent=2, default=str))
         raise SystemExit(0)
     r = run()
