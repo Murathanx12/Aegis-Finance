@@ -140,57 +140,52 @@ backwards, as the review directed:
 
 ## THE CHUNKS, with what today changed about each
 
-**CHUNK A — `PORTFOLIO_FARM` + `ASOF_REPLAY`. BUILT.** ~1,000 policies over
-2013-2024 across three presets. Follow-ups, cheapest first:
+**CHUNK A — `PORTFOLIO_FARM` + `ASOF_REPLAY`. BUILT.** ~1,700 policies over
+2013-2024 across six presets. What ran, in the order it overturned things:
 
-* `--preset breadth` — **RUN, and it does not rescue the result.** k=3..50 at
-  h=21: momentum's best is k=50 at $26,804, the 85th percentile of chance, every
-  smaller k worse. Concentration was not what was missing. (k=3 and k=5 give
-  identical results under both sizings — a 20% cap makes those books
-  all-at-the-cap, so sizing has nothing left to decide.)
-* `--preset phase` — **RUN, and it changed the answer.** At k=12 the rebalance
-  PHASE moves terminal wealth 1.8x-3.8x, wider than any gap between the
-  strategies compared. The originally published `$38,815` was the MAX of a
-  distribution whose median is `$16,633`. **Never quote a farm result from one
-  phase again**; `farm.across_phases` reports the median with its spread beside
-  it, and the spread is itself the finding.
-* **The remaining multi-path work.** Phase medians rest on 5-7 offsets, not the
-  full cycle, and there is still only ONE price path. A block bootstrap over
-  formation dates would give a leaderboard row an interval rather than a number.
-  That is the difference between "this rule beat the market" and "this rule
-  would have beaten the market on the one history we have".
-* **`--preset delisting` — RUN, and it exposed that the whole board rested on a
-  guess.** With a declared -30% for every exit, the same rule returned
+* **`--preset phase` changed the answer.** At k=12 the rebalance PHASE moves
+  terminal wealth 1.8x-3.8x, wider than any gap between the strategies compared.
+  The originally published `$38,815` was the MAX of a distribution whose median
+  is `$16,633`. **Never quote a farm result from one phase**;
+  `farm.across_phases` reports the median with its spread beside it, and the
+  spread is itself the finding.
+* **`--preset delisting` exposed that the whole board rested on a guess.** With
+  a declared -30% for every exit the same rule returned
   **$4,290 / $35,228 / $83,649** at -1.0 / -0.30 / 0.0 — an 18x swing straddling
   the benchmark.
-* **`crsp.dsedelist` IS ALREADY ON DISK** — `wrds/bulk/crsp__dsedelist.parquet`,
+* **`crsp.dsedelist` WAS ALREADY ON DISK** — `wrds/bulk/crsp__dsedelist.parquet`,
   unjoined. I had written "the top data task is a WRDS pull" into this file
   before looking, which is exactly the failure
-  `feedback_test_before_declaring_blocked` names. It is joined now: 97%+ of
-  exits carry a MEASURED `dlret`, the fallback sensitivity collapsed from 18x to
-  **1.09x**, and the leader moved from $35,228 to **$80,943** against a $38,960
-  market.
-* **Breadth is SETTLED and every single-phase reading of it was wrong.**
-  `--preset breadth_phase` crosses k with the rebalance phase at h=5, 368
-  policies: there is an **interior optimum at k=10** — not k=5 (inside chance in
-  3 of 5 phases) and not k=50 (which the single-phase run had crowned). Phase
-  spread narrows monotonically with breadth, 3.06x at k=5 to 1.31x at k=50:
-  more names average the idiosyncratic variance down, and past k=20 they average
-  the signal away too.
-* **The remaining multi-path work, and it is the real gap.** Phase medians rest
-  on 5-7 offsets and there is still only ONE price path. A block bootstrap over
-  formation dates would give a leaderboard row an interval instead of a number —
-  the difference between "this rule beat the market" and "this rule would have
-  beaten the market on the one history we have". With ~1,600 policies tried,
-  that distinction is the whole ballgame.
-* **Audit the 6,894-PERMNO superset for forward-looking eligibility.** The daily
-  pull is scoped to names a monthly PIT screen selected. If that screen embeds
-  any "ever eligible" logic, the universe is mildly cleaner than reality and
-  every farm number inherits it. Unresolved, and the next thing I would attack.
-* **FIRST PRIORITY: re-pull `openprc`/`retx`/`shrout` for CRSP 1990-2012**
-  (`AegisWRDSPullNight` exists). The sub-period split makes this urgent rather
-  than merely nice: the candidate is 1.01x the market over 2013-2018 and 1.75x
-  over 2019-2024, so what is needed is REGIMES, not precision.
+  `feedback_test_before_declaring_blocked` names. Joined now: 97%+ of exits
+  carry a MEASURED `dlret`, the fallback sensitivity collapsed 18x -> **1.09x**,
+  and the leader moved $35,228 -> **$80,943** against a $38,960 market.
+* **`--preset breadth_phase` settled breadth, and every single-phase reading of
+  it had been wrong.** k crossed with the phase at h=5, 368 policies: an
+  **interior optimum at k=10** — not k=5 (inside chance in 3 of 5 phases) and
+  not k=50 (which the single-phase `--preset breadth` run had crowned). Phase
+  spread narrows monotonically with breadth, 3.06x at k=5 to 1.31x at k=50: more
+  names average the idiosyncratic variance down, and past k=20 they average the
+  signal away too.
+* **`scripts/portfolio_farm_subperiod.py` took most of the result back.** See
+  the candidate block below. This is the cheapest check on the board and it is
+  the one that matters.
+
+What has NOT been done, in priority order:
+
+1. **FIRST PRIORITY: re-pull `openprc`/`retx`/`shrout` for CRSP 1990-2012**
+   (`AegisWRDSPullNight` exists). The sub-period split makes this urgent rather
+   than merely nice — the candidate is 1.01x the market over 2013-2018 and 1.75x
+   over 2019-2024, so what is needed is REGIMES, not precision. Three more
+   decades hold the dot-com unwind, the GFC and the 2009 momentum crash.
+2. **A block bootstrap over formation dates.** Phase medians rest on 5-7 offsets
+   and there is still only ONE price path, so a leaderboard row is a number and
+   not an interval. That is the difference between "this rule beat the market"
+   and "this rule would have beaten the market on the one history we have", and
+   with ~1,700 policies tried it is the whole ballgame.
+3. **Audit the 6,894-PERMNO superset for forward-looking eligibility.** The daily
+   pull is scoped to names a monthly PIT screen selected. If that screen embeds
+   any "ever eligible" logic, the universe is mildly cleaner than reality and
+   every farm number inherits it. Unresolved.
 
 **THE CANDIDATE — AND THE CHECK THAT LARGELY TOOK IT BACK.**
 `mom_12_1 / hold 5d / k=10 / inverse_vol / top-500-liquid / 12 bps round trip`
