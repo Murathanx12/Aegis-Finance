@@ -1,0 +1,570 @@
+{
+ "trial_id": "REVISION-FORECASTER-1",
+ "prereg": "Aegis module/TRIALS/PREREG_REVISION_FORECASTER_1.md @ d81577e",
+ "licence": "PRODUCT_EXPERIMENT (screen \u2014 licenses BUILDING, never a claim)",
+ "frozen": {
+  "fpi": "1",
+  "measure": "EPS",
+  "t1_min_days_after_event": 5,
+  "t1_max_days_after_event": 45,
+  "primary_horizon_sessions": 21,
+  "reported_horizon_sessions": 5,
+  "first_test_year": 2012,
+  "models": [
+   "ridge",
+   "lightgbm"
+  ],
+  "min_estimates": 3,
+  "scaling": "revision / price at the session before the event",
+  "fpedats_must_match": true,
+  "n_effective": "EVENT MONTHS (date blocks) \u2014 CANON \u00a758",
+  "declared_effect_size": 0.025,
+  "paired_mde80_at_rho_0.8": 0.0158,
+  "one_se_screen_bar": true
+ },
+ "implementation_decisions_not_in_the_prereg": {
+  "sign_convention": "routed target is sign(gap) x revision, so it shares the evaluation target's convention. Forced by comparability, declared before running. Raw variant reported.",
+  "forward_returns": "computed here rather than by mutating v1's frozen SPEC; equivalence to v1's fwd5 is a test",
+  "fpedats_match": "t0 and t1 must describe the same fiscal period"
+ },
+ "coverage": {
+  "events_with_a_matched_revision": 38089,
+  "event_months": 168,
+  "t1_lag_days_median": 20.0,
+  "first_year": 2006,
+  "last_year": 2019
+ },
+ "leakage_guard": {
+  "revision_signed": {
+   "status": "ok",
+   "n_blocks": 162,
+   "bar": 0.5,
+   "warned": [],
+   "features": {
+    "numeric_surprise_pct": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.01655,
+     "abs": 0.01655
+    },
+    "surprise_scaled": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.019332,
+     "abs": 0.019332
+    },
+    "expectation_dispersion": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": -0.005168,
+     "abs": 0.005168
+    },
+    "n_estimates": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.017255,
+     "abs": 0.017255
+    },
+    "pre_event_price_runup": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.022762,
+     "abs": 0.022762
+    },
+    "overnight_gap": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.010018,
+     "abs": 0.010018
+    },
+    "abs_gap": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.004574,
+     "abs": 0.004574
+    },
+    "gap_vs_runup": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": -0.010237,
+     "abs": 0.010237
+    },
+    "dollar_volume_20d_log": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.00928,
+     "abs": 0.00928
+    },
+    "hl_range_20d": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": -0.00749,
+     "abs": 0.00749
+    },
+    "amihud_20d_log": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": -0.010207,
+     "abs": 0.010207
+    },
+    "revision_up": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.002751,
+     "abs": 0.002751
+    },
+    "revision_down": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": -0.008137,
+     "abs": 0.008137
+    },
+    "disclosure_delay_days": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": -0.015866,
+     "abs": 0.015866
+    },
+    "atm_iv_30": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": -0.004928,
+     "abs": 0.004928
+    },
+    "iv_term_slope": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": -0.004782,
+     "abs": 0.004782
+    },
+    "iv_put_minus_call_30d": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 0.006136,
+     "abs": 0.006136
+    },
+    "implied_move_1d": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": -0.004928,
+     "abs": 0.004928
+    },
+    "gap_vs_implied": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 0.003871,
+     "abs": 0.003871
+    },
+    "surprise_vs_implied": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 0.023356,
+     "abs": 0.023356
+    }
+   },
+   "ranked": [
+    [
+     0.023356,
+     "surprise_vs_implied"
+    ],
+    [
+     0.022762,
+     "pre_event_price_runup"
+    ],
+    [
+     0.019332,
+     "surprise_scaled"
+    ],
+    [
+     0.017255,
+     "n_estimates"
+    ],
+    [
+     0.01655,
+     "numeric_surprise_pct"
+    ]
+   ]
+  },
+  "drift21": {
+   "status": "ok",
+   "n_blocks": 162,
+   "bar": 0.5,
+   "warned": [],
+   "features": {
+    "numeric_surprise_pct": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": -0.009401,
+     "abs": 0.009401
+    },
+    "surprise_scaled": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": -0.01201,
+     "abs": 0.01201
+    },
+    "expectation_dispersion": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.011044,
+     "abs": 0.011044
+    },
+    "n_estimates": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.016428,
+     "abs": 0.016428
+    },
+    "pre_event_price_runup": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.001155,
+     "abs": 0.001155
+    },
+    "overnight_gap": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": -0.031646,
+     "abs": 0.031646
+    },
+    "abs_gap": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.00917,
+     "abs": 0.00917
+    },
+    "gap_vs_runup": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": -0.014833,
+     "abs": 0.014833
+    },
+    "dollar_volume_20d_log": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.009263,
+     "abs": 0.009263
+    },
+    "hl_range_20d": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.002966,
+     "abs": 0.002966
+    },
+    "amihud_20d_log": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": -0.00841,
+     "abs": 0.00841
+    },
+    "revision_up": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": 0.007277,
+     "abs": 0.007277
+    },
+    "revision_down": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": -0.015911,
+     "abs": 0.015911
+    },
+    "disclosure_delay_days": {
+     "status": "ok",
+     "n_blocks": 162,
+     "mean_rank_ic": -0.006841,
+     "abs": 0.006841
+    },
+    "atm_iv_30": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 0.000251,
+     "abs": 0.000251
+    },
+    "iv_term_slope": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 0.000765,
+     "abs": 0.000765
+    },
+    "iv_put_minus_call_30d": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 0.008695,
+     "abs": 0.008695
+    },
+    "implied_move_1d": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 0.000251,
+     "abs": 0.000251
+    },
+    "gap_vs_implied": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 0.007082,
+     "abs": 0.007082
+    },
+    "surprise_vs_implied": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": -0.017576,
+     "abs": 0.017576
+    }
+   },
+   "ranked": [
+    [
+     0.031646,
+     "overnight_gap"
+    ],
+    [
+     0.017576,
+     "surprise_vs_implied"
+    ],
+    [
+     0.016428,
+     "n_estimates"
+    ],
+    [
+     0.015911,
+     "revision_down"
+    ],
+    [
+     0.014833,
+     "gap_vs_runup"
+    ]
+   ]
+  }
+ },
+ "Q1_realised_revision_ranks_returns": {
+  "contaminated_from_event_DO_NOT_CITE": {
+   "drift21": {
+    "n_blocks": 96,
+    "mean_ic": 0.00724,
+    "se": 0.01283,
+    "t": 0.564,
+    "p": 0.574,
+    "mde80": 0.03594,
+    "under_own_mde80": true
+   },
+   "drift5": {
+    "n_blocks": 96,
+    "mean_ic": 0.00065,
+    "se": 0.0111,
+    "t": 0.059,
+    "p": 0.95329,
+    "mde80": 0.03111,
+    "under_own_mde80": true
+   }
+  },
+  "from_t1": {
+   "n_events": 22410,
+   "t1_lag_days_median": 20.0,
+   "fwd5": {
+    "revision_raw": {
+     "n_blocks": 97,
+     "mean_ic": 0.00276,
+     "se": 0.01317,
+     "t": 0.209,
+     "p": 0.83452,
+     "mde80": 0.03689,
+     "under_own_mde80": true
+    },
+    "explained_by_surprise": {
+     "n_blocks": 97,
+     "mean_ic": -0.00329,
+     "se": 0.01338,
+     "t": -0.246,
+     "p": 0.80632,
+     "mde80": 0.0375,
+     "under_own_mde80": true
+    },
+    "surprise_orthogonal_residual": {
+     "n_blocks": 97,
+     "mean_ic": 0.01083,
+     "se": 0.01342,
+     "t": 0.807,
+     "p": 0.42146,
+     "mde80": 0.0376,
+     "under_own_mde80": true
+    }
+   },
+   "fwd21": {
+    "revision_raw": {
+     "n_blocks": 97,
+     "mean_ic": 0.00714,
+     "se": 0.0149,
+     "t": 0.479,
+     "p": 0.63309,
+     "mde80": 0.04175,
+     "under_own_mde80": true
+    },
+    "explained_by_surprise": {
+     "n_blocks": 97,
+     "mean_ic": 0.00559,
+     "se": 0.01312,
+     "t": 0.426,
+     "p": 0.671,
+     "mde80": 0.03675,
+     "under_own_mde80": true
+    },
+    "surprise_orthogonal_residual": {
+     "n_blocks": 97,
+     "mean_ic": 0.00407,
+     "se": 0.01535,
+     "t": 0.265,
+     "p": 0.79146,
+     "mde80": 0.04302,
+     "under_own_mde80": true
+    }
+   }
+  }
+ },
+ "Q2_revision_is_predictable": {
+  "ridge": {
+   "n_blocks": 96,
+   "mean_ic": -0.01,
+   "se": 0.01225,
+   "t": -0.817,
+   "p": 0.41623,
+   "mde80": 0.03432,
+   "under_own_mde80": true
+  },
+  "lightgbm": {
+   "n_blocks": 96,
+   "mean_ic": -0.00718,
+   "se": 0.01244,
+   "t": -0.577,
+   "p": 0.56518,
+   "mde80": 0.03484,
+   "under_own_mde80": true
+  }
+ },
+ "Q3_arms": {
+  "ridge__direct__h21": {
+   "n_blocks": 96,
+   "mean_ic": 0.00414,
+   "se": 0.01199,
+   "t": 0.345,
+   "p": 0.73053,
+   "mde80": 0.0336,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "ridge__routed__h21": {
+   "n_blocks": 96,
+   "mean_ic": 0.00927,
+   "se": 0.01145,
+   "t": 0.809,
+   "p": 0.42028,
+   "mde80": 0.03209,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "lightgbm__direct__h21": {
+   "n_blocks": 96,
+   "mean_ic": 0.00796,
+   "se": 0.01431,
+   "t": 0.557,
+   "p": 0.5791,
+   "mde80": 0.04009,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "lightgbm__routed__h21": {
+   "n_blocks": 96,
+   "mean_ic": 0.00749,
+   "se": 0.01289,
+   "t": 0.581,
+   "p": 0.56263,
+   "mde80": 0.03613,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "ridge__direct__h5": {
+   "n_blocks": 96,
+   "mean_ic": 0.00544,
+   "se": 0.01189,
+   "t": 0.457,
+   "p": 0.64839,
+   "mde80": 0.03331,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "ridge__routed__h5": {
+   "n_blocks": 96,
+   "mean_ic": 0.02003,
+   "se": 0.01228,
+   "t": 1.631,
+   "p": 0.10613,
+   "mde80": 0.0344,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "lightgbm__direct__h5": {
+   "n_blocks": 96,
+   "mean_ic": 0.03202,
+   "se": 0.01372,
+   "t": 2.333,
+   "p": 0.02175,
+   "mde80": 0.03845,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "lightgbm__routed__h5": {
+   "n_blocks": 96,
+   "mean_ic": -0.02019,
+   "se": 0.01224,
+   "t": -1.649,
+   "p": 0.1024,
+   "mde80": 0.0343,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  }
+ },
+ "Q3_paired_routed_minus_direct": {
+  "ridge__h21": {
+   "n_blocks": 96,
+   "mean_diff": 0.00513,
+   "paired_se": 0.01431,
+   "t": 0.358,
+   "realised_arm_correlation": 0.256,
+   "paired_mde80": 0.04008,
+   "exceeds_1_se": false,
+   "band": "STOP"
+  },
+  "lightgbm__h21": {
+   "n_blocks": 96,
+   "mean_diff": -0.00047,
+   "paired_se": 0.01955,
+   "t": -0.024,
+   "realised_arm_correlation": -0.0303,
+   "paired_mde80": 0.05477,
+   "exceeds_1_se": false,
+   "band": "STOP"
+  },
+  "ridge__h5": {
+   "n_blocks": 96,
+   "mean_diff": 0.01459,
+   "paired_se": 0.0138,
+   "t": 1.057,
+   "realised_arm_correlation": 0.3478,
+   "paired_mde80": 0.03868,
+   "exceeds_1_se": true,
+   "band": "BUILD_AND_WATCH_FORWARD"
+  },
+  "lightgbm__h5": {
+   "n_blocks": 96,
+   "mean_diff": -0.0522,
+   "paired_se": 0.0174,
+   "t": -3.001,
+   "realised_arm_correlation": 0.1055,
+   "paired_mde80": 0.04875,
+   "exceeds_1_se": false,
+   "band": "STOP"
+  }
+ },
+ "decisive_cell": "lightgbm__h21",
+ "verdict": "STOP",
+ "equivalence_note": "a STOP here bounds the effect, it does not refute the decomposition: the design's paired MDE80 is reported per cell and the pre-registration declares that a +0.010 difference is NOT resolvable by this sample."
+}

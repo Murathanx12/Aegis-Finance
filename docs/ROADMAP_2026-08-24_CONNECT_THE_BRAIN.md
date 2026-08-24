@@ -851,6 +851,49 @@ the degree-preserving null at a declared FDR", which carries no parameter. Any
 candidate mid/small-cap universe can now be screened for one coverage pull
 before a price is fetched.
 
+### Roadmap item C — `REVISION-FORECASTER-1`: **STOP**
+
+`docs/FINDING_2026-08-24_REVISION_FORECASTER.md` · pre-registered
+`PREREG_REVISION_FORECASTER_1.md` @ `d81577e` (corpse-linted PASS) before the
+target column existed · 8 tests.
+
+The proposal was to route through the mediator instead of predicting the return:
+`event state -> next analyst revision -> price response`. Measured link by link:
+
+| link | IC | t |
+|---|---|---|
+| event state -> revision | **+0.623** | +60.4 |
+| revision -> subsequent return (timed from `t1`) | +0.0028 (h5) / +0.0071 (h21) | 0.21 / 0.48 |
+| composition: event state -> return | −0.0005 | −0.04 |
+
+**Link 1 is nearly deterministic, link 2 is not there, the composition is zero.**
+The component of the revision a public numeric surprise explains is precisely
+the component the market has already priced. No paired cell cleared its MDE80;
+nothing survived BH-FDR. Equivalence: this design resolves no routed-minus-direct
+effect smaller than ≈0.04.
+
+**Two things to carry forward, both about the instrument rather than the idea.**
+
+* **The registered power calculation was 2-3x optimistic**, for two reasons that
+  will recur. The realised dispersion of a monthly rank IC exceeds its
+  theoretical null by ~45% (time-variation on top of sampling noise) — and a
+  comparable realised figure was already on hand in `EVENT-RESPONSE-2` and was
+  not used. And the paired arms turned out nearly uncorrelated (realised ρ −0.03
+  to +0.35 against an assumed 0.8), so pairing *raised* the SE instead of
+  cutting it. **Rule: derive `outcome_dispersion` from a realised prior on the
+  same panel, never from the null.**
+* **A t of 4.04 was an artifact and it took two minutes to find.** The first Q1
+  scored the revision against returns measured from the EVENT, but `t1` sits a
+  median of 20 calendar days later — inside both windows. Contaminated: residual
+  → fwd5 IC +0.0504, t 4.04. Correctly timed: +0.0108, t 0.81. The interpretation
+  was already written before the check. **When a mediator is observed at `t1`,
+  the only honest return window starts after `t1`.**
+
+Item B (`MANAGEMENT_EVASION_DELTA_v1`) is **blocked on data** — nothing in this
+repository holds earnings-call text — and this trial weakens rather than
+strengthens its case: a text model that merely predicts the revision would be
+predicting something already priced.
+
 ---
 
 ## 7. The scorecard, unchanged

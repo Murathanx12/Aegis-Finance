@@ -443,6 +443,35 @@ record history and must **never** be updated to track the current value.
 > queues decisions AND migrates the seeds. Confirm via `/api/arena/status`
 > before registering the EVENT_RESPONSE book.
 
+### 4. Roadmap item C ran and returned STOP — `REVISION-FORECASTER-1`
+
+`docs/FINDING_2026-08-24_REVISION_FORECASTER.md`. Pre-registered before the
+target column existed, corpse-linted PASS, verdict STOP on the registered rule.
+
+The chain `event state -> revision -> return` has a first link of **IC +0.623**
+(t 60) and a second link of **+0.003** — so the composition is zero. What a
+public numeric surprise predicts about the next revision is exactly what the
+market has already priced.
+
+**Two instrument lessons, and they are the reusable part:**
+
+* **Derive `outcome_dispersion` from a realised prior on the same panel, never
+  from the theoretical null.** The registered paired MDE80 was 0.0158; realised
+  was 0.039-0.055. The null understates monthly-IC dispersion by ~45%, and
+  `EVENT-RESPONSE-2`'s own 0.0276 on this same panel was available and unused.
+  Assumed arm correlation ρ = 0.8; realised −0.03 to +0.35, so pairing *raised*
+  the SE.
+* **When a mediator is observed at `t1`, the return window must start after
+  `t1`.** The first Q1 measured returns from the EVENT while `t1` sits a median
+  20 days later — inside both windows. It produced IC +0.0504 at **t 4.04** and
+  a written interpretation before the check. Correctly timed: +0.0108, t 0.81.
+
+Item **B (`MANAGEMENT_EVASION_DELTA_v1`) is blocked on data** — no earnings-call
+text exists anywhere in this repository, and FMP/Bigdata acquisition is unpriced.
+Transcripts are archival, so unlike the options collector there is no
+perishability urgency. This trial also weakens B's case: a text model that
+merely predicts the revision predicts something already priced.
+
 ### Standing rules for any of the above
 
 * **`feature_leakage_guard.assert_no_target_leakage` before fitting anything.**
