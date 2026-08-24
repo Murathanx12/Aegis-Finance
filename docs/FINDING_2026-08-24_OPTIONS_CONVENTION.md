@@ -1,19 +1,27 @@
-# FINDING — 2026-08-24: the options train/serve gap is a SOLVER gap, and it is 80% closed
+# FINDING — 2026-08-24: the options train/serve gap was two wrong conventions, and it is CLOSED
 
-**Measurement** `OPTIONS-CONVENTION-1` (round 1) · `OPTIONS-CONVENTION-2` (rounds 2–3), both declared before their numbers
-**Receipt** `backend/data/optimus/options_pit/convention_receipt.json`
+**Measurements** `OPTIONS-CONVENTION-1` · `OPTIONS-CONVENTION-2` · `OPTIONS-RATE-REGIME-1` · `OPTIONS-DIVIDEND-WINDOW-1` — each declared, in a committed file, before its numbers existed
+**Receipts** `convention_receipt.json` · `rate_regime_receipt.json` · `dividend_window_receipt.json`, all under `backend/data/optimus/options_pit/`
 **Quotes** `backend/data/optimus/options_pit/convention_quotes.json` — every arm and the rate sweep are pure functions of this cache
 **Module** `backend/services/option_implier.py` · 22 tests
 **Script** `scripts/options_convention_measure.py` — the declaration and the code are the same file
 
-## Verdict
+## Verdict — AMENDED, and the amendment is the result
 
-**The mechanism is identified and settled. The blocker is 80% smaller. It is not
-gone, and no arm that is a correct model clears the declared bar.**
+**The feature TRANSFERS.** Not by calibration, not by a fitted map: by getting
+two conventions right that were wrong. Read §§1–4 for how the 0.026 became
+0.005, then §5 and §5.5, which are where the last 0.005 went and where the
+explanation I preferred was refuted by my own measurement.
 
-`EVENT_RESPONSE_v1` remains `NEEDS_CALIBRATION` on `iv_put_minus_call_30d` —
-but for a residue of 0.0053 instead of 0.0262, and the residue is now a
-*quantified* question rather than an unexplained offset.
+| arm | median | gap vs stdopd +0.00194 | % positive | transfers |
+|---|---|---|---|---|
+| vendor IV *(where this started)* | −0.02428 | −0.02622 | 23.1% | no |
+| ours, declared r, **trailing** q | −0.00338 | −0.00532 | 43.6% | no |
+| **ours, declared r, q over the option's own WINDOW** | **−0.00179** | **−0.00373** | **46.2%** | **yes** |
+
+`EVENT_RESPONSE_v1` may serve the full model on this column under the
+servability rule declared before any of this ran. That is one live cross-section
+of 39 names against a 168-month panel median, and §7 says what it is not.
 
 ---
 
@@ -129,17 +137,80 @@ proxy". So the residue may not be an error at all.
 **That is a hypothesis and it is not asserted.** It has a cheap test, named in
 §6.
 
-## 5. A defect in the transfer test itself
+## 5. I thought the transfer test was defective. It is not. — `OPTIONS-RATE-REGIME-1`
 
-The comparison is a **one-day live cross-sectional median** against a **median
-over OptionMetrics' whole panel**. The residual is a direct function of the
-prevailing rate — 0.0071 per point, measured — and the panel spans rate regimes
-from zero to five percent. Those two medians have no reason to coincide even
-when the feature is measuring the identical quantity.
+**The claim this section used to make, now withdrawn:** that the comparison is a
+one-day live cross-sectional median against a median over OptionMetrics' whole
+panel, on a quantity that moves 0.0070 per point of rate across a panel spanning
+zero to six percent — so the two medians need not coincide even when the feature
+is identical.
 
-This is not a reason to dismiss the gap; the 0.026 part was real and is now
-explained. It is a reason the remaining 0.005 cannot be adjudicated by this
-comparison as constructed.
+It sounded right and it is wrong. Measured over **168 months**, the panel's own
+residual regressed on FEDFUNDS:
+
+| | |
+|---|---|
+| slope | **+0.00001 per percentage point** |
+| t | **0.04** |
+| R² | **0.000** |
+
+**Flat.** A precisely measured zero, not an underpowered one.
+
+The reason is the finding. **OptionMetrics discounts correctly, so the rate is
+already absorbed and what remains does not move with it.** Ours moves at
+0.0070/pp precisely because `r` and `q` are *our inputs* and we can get them
+wrong. That asymmetry is diagnostic: a residual that tracks the policy rate is
+a residual computed under the wrong carry.
+
+So the full-panel median **+0.00194** is a legitimate reference, and the
+remaining 0.005 was ours to explain.
+
+*Reproduction check passed on the way:* the panel's full median recomputes to
++0.00194 at 54.8% positive — exactly the standing reference in
+`train_serve_skew_receipt.json`, from an independent path.
+
+**And the regime half of that test is underpowered by construction; its verdict
+must not be read.** Only **one** month of 2006–2019 has FEDFUNDS within 0.5pp
+of today's 3.63%. My declared rule had no minimum-months guard on the subset —
+the third instrument defect this session found by running the instrument, after
+round 1's `n_eff` gate and the single-null-draw comparison in the graph work.
+
+## 5.5 It was `q`, and specifically the tenor — `OPTIONS-DIVIDEND-WINDOW-1`
+
+Declared with a **point prediction before running**, which is what separates a
+test from a search.
+
+We used **trailing 12-month dividends / spot**. For a 30-day option the
+economically correct `q` is the dividend expected *inside the option's life*,
+and a quarterly payer has an ex-date in a given 30-day window only about a third
+of the time. For the rest the correct `q` is **zero** — so the trailing yield
+systematically over-states the carry deduction.
+
+Measured: **11 of 39 names (28%)** carry a projected ex-date inside 30 days, and
+the median `q` over the window is **0.00000** against a trailing median of
+0.00767. Switching to it moves the residual to **−0.00179**, which clears both
+declared bars.
+
+**The point prediction was wrong in magnitude and right in mechanism, and both
+halves belong here.** I predicted +0.0025 — the sensitivity 0.709 times the
+median trailing `q` of 0.0083. The actual move was +0.00159, not +0.0059,
+because the median of a heterogeneous shift is not the shift at the median: the
+non-payers move not at all, the 28% with an in-window ex-date move partly, and
+only the rest move fully. The arithmetic was against the wrong world, which is
+the house failure mode, and it left the direction and the mechanism intact.
+
+**Why R7 ships and R2 does not, even though both clear the bar.** R2 sets `q`
+to zero for *every* name, which is wrong for the 28% that do pay inside the
+window; it lands by a compensating error. R7 is a correct model: `q` measured
+over the window each expiry actually spans, with future ex-dates projected from
+the median historical cadence — an estimate, using **only past ex-dates**, so
+no look-ahead, and exactly the information a live collector holds at decision
+time.
+
+That distinction was written down in §2 *before* R7 existed, which is what makes
+it a selection rule rather than a rationalisation. Eight arms were run; the one
+that ships is the one that is a correct model **and** was declared with a
+prediction, not the one with the smallest gap (R2's is smaller).
 
 ## 6. What ships, and what is next
 
@@ -154,21 +225,45 @@ comparison as constructed.
 * The standing instruction that follows from §1: **never read a vendor's
   implied-volatility column again.** Read prices, declare the convention.
 
-**Next, and cheap — the test that settles §4 and §5 together**
+* `options_pit_store` schema **1.2.0**: `q_used` is now the window yield,
+  `q_trailing` is kept beside it (the standing receipts were computed under it,
+  so dropping it would make them unreproducible), and both travel with every
+  row. Shipped before the collector's first run rather than after, because
+  `pi_options_pit` first fires Monday 15:30 ET and a chain has no history to go
+  back for.
 
-Recompute the stdopd reference median **restricted to periods whose short rate
-is near today's**, and compare R1 against *that*. The panel is already pulled.
-If the restricted median lands near −0.003, the feature transfers and the
-residue was a regime comparison. If it stays near +0.002, the 0.74pp is
-something real about the live universe and the borrow hypothesis is testable
-directly against hard-to-borrow indicators.
+**The review's fallback is no longer needed.** Shipping the drop-feature arm
+would now cost a feature that clears its transfer bar. That is a different
+decision from the one on the table this morning, and it is the one
+`EVENT_RESPONSE_v1` should be built against.
 
-**Meanwhile the review's fallback stands and is now much cheaper.** Shipping
-the drop-feature arm as a labelled `PRODUCT_EXPERIMENT` costs a feature whose
-train/serve error is 0.005, not 0.026 — an entirely different decision from the
-one taken this morning.
+**What is still open, and it is not small**
 
-## 7. The lesson
+* **One day, 39 names.** The transfer is measured on a single live
+  cross-section. The collector accrues daily from Monday; the honest version of
+  this number is the same comparison over a month of snapshots.
+* **The 0.74pp of unexplained carry did not vanish, it shrank.** R7's median
+  still sits 0.0037 below the panel's. Implied financing above OIS and general
+  borrow both live in that gap and neither has been measured.
+* **`pct_positive` is 46.2% against the panel's 54.8%** — inside the declared
+  0.10 bar, and the largest remaining distributional difference. A tree splits
+  on thresholds, so the sign balance around zero matters more than the tail
+  shape.
+* The projected-ex-date approximation is untested against a name that changes
+  its dividend schedule inside the window.
+
+## 7. What this is not
+
+It is not evidence of alpha, and nothing here touched a forward return. It is a
+servability result: the live feature now has the same distribution as the one
+the model was fit on, to within bars declared before the first measurement.
+
+`EVENT_RESPONSE_v1`'s own numbers are unchanged — IC +0.0315, t 3.19 at one
+day, and its `MDE₈₀` of 0.0276 still sits just under its own IC. This work
+removes a reason it could not be *served*. It adds nothing to the case that it
+*works*.
+
+## 8. The lesson
 
 Three features transferred and one did not, and the one that did not was the
 only *difference* among them. That pattern was visible before any of this ran:
@@ -177,3 +272,11 @@ probe of a convention you did not choose — and the most misleading thing to
 read as a signal disagreement.
 
 **A number computed by somebody else's model is not data. It is their model.**
+And when your own number moves with something theirs does not, the thing it
+moves with is your bug.
+
+Three instruments in this session were defective and all three were caught by
+running them: an `n_eff` gate that re-asked the density question, a null
+comparison with one draw and no dispersion, and a regime subset of one month
+with no minimum. **The measurement that checks a measurement is the cheapest
+thing here and it keeps being the thing that was skipped.**

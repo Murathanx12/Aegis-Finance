@@ -59,9 +59,11 @@ from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
-SCHEMA_VERSION = "options-pit-1.1.0"
-#: 1.1.0 (2026-08-24) adds `iv_put_minus_call_30d_own`, `r_used`, `q_used` and
-#: `price_basis`. `OPTIONS-CONVENTION-1` measured that yfinance's
+SCHEMA_VERSION = "options-pit-1.2.0"
+#: 1.2.0 (2026-08-24) makes `q_used` the dividend yield over the OPTION'S OWN
+#: WINDOW rather than the trailing 12 months (`OPTIONS-DIVIDEND-WINDOW-1`), and
+#: keeps the trailing figure beside it as `q_trailing`. 1.1.0 added
+#: `iv_put_minus_call_30d_own`, `r_used`, `q_used` and `price_basis`. `OPTIONS-CONVENTION-1` measured that yfinance's
 #: `impliedVolatility` column discounts NOTHING -- inverting our own prices at
 #: r = 0, q = 0 reproduces it to 0.0009 -- and that this is the whole 0.026
 #: train/serve gap on the put-call residual. So the vendor column is kept (a
@@ -130,7 +132,14 @@ class OptionState:
     #: point is that the two are different quantities.
     iv_put_minus_call_30d_own: Optional[float] = None
     r_used: Optional[float] = None
+    #: `q` measured over the OPTION'S OWN WINDOW, which is the one the
+    #: inversion used. Zero for the ~70% of names with no ex-date inside 30
+    #: days -- see `dividend_yield_over_window`.
     q_used: Optional[float] = None
+    #: Trailing-12m yield, kept BESIDE it. It is what the first version used
+    #: and what the standing receipts were computed under, so dropping it would
+    #: make those numbers unreproducible.
+    q_trailing: Optional[float] = None
     price_basis: Optional[str] = None
     schema_version: str = SCHEMA_VERSION
 
@@ -224,6 +233,66 @@ def _interp_constant_maturity(points: list[tuple[float, float]],
     return v
 
 
+def dividend_yield_over_window(ex_dates, amounts, spot: float, days: float,
+                               as_of) -> float:
+    """Annualised continuous `q` from dividends expected INSIDE [as_of, +days].
+
+    WHY NOT THE TRAILING YIELD, which is what this used first.
+    `OPTIONS-DIVIDEND-WINDOW-1`: for a 30-day option the economically correct
+    `q` is the dividend expected inside the option's life, and a quarterly
+    payer has an ex-date in a given 30-day window only about a third of the
+    time -- measured live, 11 of 39 names. For the other two thirds the correct
+    `q` is ZERO, so the trailing yield systematically over-states the carry
+    deduction and over-subtracts the put-call residual.
+
+    Measured: switching to this took the residual's median from -0.00338 to
+    -0.00179, inside the declared transfer bar for the first time from a model
+    that is actually right. (The `q = 0` arm also cleared the bar, but it is
+    wrong for the 28% of names that DO pay inside the window, and an arm that
+    passes by being wrong in a compensating direction is not shippable.)
+
+    FUTURE EX-DATES ARE PROJECTED from the median historical cadence,
+    extrapolated from the last observed one. That is an estimate and it uses
+    ONLY past ex-dates, so it is not a look-ahead: it is the same information a
+    live collector has at decision time, which is the property that matters.
+    """
+    import pandas as pd
+
+    if not ex_dates or not amounts or spot <= 0 or days <= 0:
+        return 0.0
+    idx = pd.to_datetime(pd.Index(ex_dates))
+    if getattr(idx, "tz", None) is not None:
+        idx = idx.tz_localize(None)
+    if len(idx) < 2:
+        return 0.0
+    gaps = [g.days for g in (idx[1:] - idx[:-1])]
+    cadence = float(sorted(gaps)[len(gaps) // 2]) if gaps else 0.0
+    if cadence <= 0:
+        return 0.0
+
+    start = pd.Timestamp(as_of).normalize()
+    if getattr(start, "tz", None) is not None:
+        start = start.tz_localize(None)
+    horizon = start + pd.Timedelta(days=float(days))
+    amt = float(amounts[-1])
+
+    nxt = idx[-1] + pd.Timedelta(days=cadence)
+    # Roll past projected dates already behind us: a stale history must not
+    # credit a dividend that has already been paid.
+    guard = 0
+    while nxt < start and guard < 64:
+        nxt = nxt + pd.Timedelta(days=cadence)
+        guard += 1
+    total, guard = 0.0, 0
+    while nxt <= horizon and guard < 64:
+        total += amt
+        nxt = nxt + pd.Timedelta(days=cadence)
+        guard += 1
+    if total <= 0:
+        return 0.0
+    return (total / spot) / (float(days) / 365.0)
+
+
 def risk_free_simple() -> tuple[float, str]:
     """The declared short rate, simple annual. FRED first, constant on refusal.
 
@@ -265,15 +334,21 @@ def build_state(ticker: str, as_of: Optional[str] = None,
         ticker_obj = yf.Ticker(ticker)
 
     q_simple = 0.0
+    div_dates: list = []
+    div_amounts: list = []
     try:
         # 1y with actions rather than 1d: the SAME single request yields the
-        # spot and the trailing dividends, and `q` is required by our own
+        # spot AND the dividend history, and `q` is required by our own
         # inversion. Asking twice would double the collector's vendor calls.
         hist = ticker_obj.history(period="1y", auto_adjust=False, actions=True)
         spot = float(hist["Close"].iloc[-1]) if not hist.empty else float("nan")
         if (not hist.empty and "Dividends" in hist.columns and spot
                 and math.isfinite(spot) and spot > 0):
             q_simple = float(hist["Dividends"].tail(252).sum()) / spot
+            paid = hist["Dividends"]
+            paid = paid[paid > 0]
+            div_dates = list(paid.index)
+            div_amounts = [float(v) for v in paid.values]
     except Exception as e:                                   # pragma: no cover
         raise OptionStateUnavailable(f"{ticker}: no spot — {e}") from e
     if not spot or not math.isfinite(spot) or spot <= 0:
@@ -291,7 +366,7 @@ def build_state(ticker: str, as_of: Optional[str] = None,
 
     from backend.services.option_implier import (imply_matched_strike,
                                                  to_continuous)
-    r_c, q_c = to_continuous(r_simple), to_continuous(q_simple)
+    r_c = to_continuous(r_simple)
 
     today = pd.Timestamp(as_of).normalize()
     calls: list[tuple[float, float]] = []
@@ -300,6 +375,7 @@ def build_state(ticker: str, as_of: Optional[str] = None,
     mputs: list[tuple[float, float]] = []
     own: list[tuple[float, float]] = []
     bases: list[str] = []
+    q_windows: list[float] = []
     used = 0
     for e in expiries:
         days = (pd.Timestamp(e).normalize() - today).days
@@ -323,9 +399,14 @@ def build_state(ticker: str, as_of: Optional[str] = None,
             mcalls.append((float(days), mc))
         if mp:
             mputs.append((float(days), mp))
-        # ...and the same strike inverted under OUR convention, off the mid.
+        # ...and the same strike inverted under OUR convention, off the mid,
+        # with `q` measured over THIS expiry's own window (see
+        # `dividend_yield_over_window`).
+        q_w = dividend_yield_over_window(div_dates, div_amounts, spot,
+                                         float(days), as_of)
+        q_windows.append(q_w)
         pt = imply_matched_strike(ch.calls, ch.puts, spot, float(days),
-                                  r_c, q_c)
+                                  r_c, to_continuous(q_w))
         if pt is not None and pt.iv_call and pt.iv_put:
             own.append((float(days), pt.iv_put - pt.iv_call))
             bases.append(pt.price_basis)
@@ -393,7 +474,9 @@ def build_state(ticker: str, as_of: Optional[str] = None,
         iv_put_minus_call_30d_own=(round(own30, 6) if own30 is not None
                                    else None),
         r_used=round(r_simple, 6),
-        q_used=round(q_simple, 6),
+        q_used=round(float(sum(q_windows) / len(q_windows)), 6)
+        if q_windows else 0.0,
+        q_trailing=round(q_simple, 6),
         price_basis=(max(set(bases), key=bases.count) if bases else None),
         implied_move_1d=round(atm30 * math.sqrt(1.0 / TRADING_DAYS), 6),
         method=("constant-maturity 30/60d, linear in total variance; ATM = "

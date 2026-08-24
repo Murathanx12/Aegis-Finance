@@ -244,7 +244,7 @@ def test_our_own_residual_is_recorded_BESIDE_the_vendors_not_instead_of_it():
     st = _build(tk)
     assert st.iv_put_minus_call_30d is not None
     assert st.iv_put_minus_call_30d_own is not None
-    assert st.schema_version == "options-pit-1.1.0"
+    assert st.schema_version == "options-pit-1.2.0"
 
 
 def test_the_convention_travels_with_the_row():
@@ -254,7 +254,55 @@ def test_the_convention_travels_with_the_row():
     st = _build(tk)
     assert st.r_used == pytest.approx(0.04)
     assert st.q_used == pytest.approx(0.0)
+    assert st.q_trailing == pytest.approx(0.0)
     assert st.price_basis == "mid"
+
+
+# ── q over the option's own window (OPTIONS-DIVIDEND-WINDOW-1) ──────────────
+
+
+def _quarterly(last="2026-07-15", n=4, amt=0.50):
+    """n quarterly ex-dates ending at `last`."""
+    end = pd.Timestamp(last)
+    dates = [end - pd.Timedelta(days=91 * i) for i in range(n)][::-1]
+    return dates, [amt] * n
+
+
+def test_a_window_with_NO_ex_date_gets_q_ZERO_not_the_trailing_yield():
+    """The whole finding in one assertion. A quarterly payer has an ex-date in
+    a given 30-day window about a third of the time; for the rest the trailing
+    yield over-states the carry deduction and over-subtracts the residual."""
+    dates, amts = _quarterly(last="2026-07-15")
+    # 2026-08-24 + 30d = 2026-09-23; the next projected ex-date is 2026-10-14.
+    q = ops.dividend_yield_over_window(dates, amts, 100.0, 30.0, "2026-08-24")
+    assert q == 0.0
+
+
+def test_a_window_CONTAINING_an_ex_date_gets_a_real_q():
+    dates, amts = _quarterly(last="2026-08-20")
+    # next projected ex-date 2026-11-19 is outside 30d but inside 120d.
+    assert ops.dividend_yield_over_window(dates, amts, 100.0, 30.0,
+                                          "2026-08-24") == 0.0
+    q120 = ops.dividend_yield_over_window(dates, amts, 100.0, 120.0,
+                                          "2026-08-24")
+    # one 0.50 dividend on a 100 spot over 120/365 of a year
+    assert q120 == pytest.approx((0.50 / 100.0) / (120 / 365), rel=1e-6)
+
+
+def test_a_dividend_already_PAID_is_not_credited_again():
+    """A stale history projects ex-dates that are already behind us. Crediting
+    one would inflate q for exactly the names whose data went quiet."""
+    dates, amts = _quarterly(last="2025-01-15")     # over a year stale
+    q = ops.dividend_yield_over_window(dates, amts, 100.0, 30.0, "2026-08-24")
+    assert q >= 0.0 and q < 0.05, "no runaway accumulation from a stale feed"
+
+
+def test_a_non_payer_gets_q_zero_without_raising():
+    assert ops.dividend_yield_over_window([], [], 100.0, 30.0,
+                                          "2026-08-24") == 0.0
+    dates, amts = _quarterly(n=1)
+    assert ops.dividend_yield_over_window(dates, amts, 100.0, 30.0,
+                                          "2026-08-24") == 0.0
 
 
 def test_our_residual_is_NOT_silently_filled_from_the_vendor():

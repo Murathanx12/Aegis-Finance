@@ -186,17 +186,34 @@ has no blocking objection: the options-implied event response.
 > around, and both moved. Neither verdict *flipped*; both reasons were replaced,
 > which is the more useful outcome.
 >
-> **`iv_put_minus_call_30d` — the train/serve gap is a SOLVER gap and it is 80%
-> closed.** `docs/FINDING_2026-08-24_OPTIONS_CONVENTION.md`. Inverting our own
-> prices with r = 0 and q = 0 reproduces yfinance's residual to **0.0009**:
-> Yahoo's `impliedVolatility` column discounts nothing. Both spent routes
-> (matched strike, cross-sectional rank) kept reading that column, which is why
-> neither touched it. Inverting the mid ourselves under a declared r and q takes
-> the gap from **0.0262 to 0.0053** — still outside the declared 0.005 bar, by
-> 0.0003. Early exercise is ruled out (moves it −0.0007, wrong direction);
-> solving the rate from cross-strike parity overshoots and is unusable.
-> `option_implier.py` ships, and the store records our residual from its first
-> row (schema 1.1.0) because a chain has no history to go back for.
+> **`iv_put_minus_call_30d` TRANSFERS.** Not by calibration and not by a fitted
+> map — by fixing two conventions that were wrong.
+> `docs/FINDING_2026-08-24_OPTIONS_CONVENTION.md`.
+>
+> | | median | gap vs stdopd +0.00194 | transfers |
+> |---|---|---|---|
+> | vendor IV *(where this started)* | −0.02428 | −0.02622 | no |
+> | ours, declared r, trailing q | −0.00338 | −0.00532 | no |
+> | **ours, declared r, q over the option's own WINDOW** | **−0.00179** | **−0.00373** | **yes** |
+>
+> 1. **Yahoo's `impliedVolatility` column discounts nothing** — our solver at
+>    r = 0, q = 0 reproduces it to 0.0009. That was the whole 0.026, and it is
+>    why both spent routes failed: matched-strike fixed which strikes, the rank
+>    fixed the scale, and both kept reading the disputed column.
+> 2. **The trailing dividend yield is the wrong `q` for a 30-day option.** Only
+>    11 of 39 names carry an ex-date inside the window; for the rest the correct
+>    `q` is zero and the trailing yield over-subtracts.
+>
+> Ruled out on the way: early exercise (−0.0007, wrong direction, via a
+> Bjerksund-Stensland arm), and — importantly — **my own preferred explanation.**
+> I claimed the transfer test was mis-specified because the panel spans rate
+> regimes; the panel's residual regressed on FEDFUNDS over 168 months gives
+> slope +0.00001, t 0.04, R² 0.000. Flat. OptionMetrics discounts correctly, so
+> the rate is already absorbed; ours moved with it because ours was wrong.
+>
+> `option_implier.py` ships (22 tests), and the store records our residual and
+> its conventions from its first row (schema 1.2.0) because `pi_options_pit`
+> first fires Monday 15:30 ET and a chain has no history to go back for.
 >
 > **The graph's density verdict was measuring the null.**
 > `docs/FINDING_2026-08-24_GRAPH_BACKBONE.md`. A degree-preserving null on the
@@ -298,31 +315,34 @@ needs no significance gate); or match the rate and dividend assumptions properly
 — the untried root-cause route, since the matched-strike fix moved the median
 only −0.0254 → −0.0237.
 
-> **THE THIRD ROUTE WAS TAKEN, 2026-08-24 evening, and it was the right one.**
+> **THE THIRD ROUTE WAS TAKEN, 2026-08-24 evening, and it closed the item.**
 > `docs/FINDING_2026-08-24_OPTIONS_CONVENTION.md`. It was never about matching
 > assumptions *to* the vendor — the vendor has none. yfinance's implied-vol
 > column is computed with **r = 0 and q = 0**, which our own solver reproduces
 > to 0.0009, and that is the entire 0.026. Inverting the prices ourselves cuts
 > the gap to **0.0053**, which misses the declared bar by 0.0003.
 >
-> What remains is worth **0.74 percentage points of net carry** — the residual
-> moves ≈0.0070 per point of (r − q), measured — and 0.74pp is the size of
-> general equity borrow, which is what this feature is *supposed* to measure.
-> That is a hypothesis, not a finding.
+> The last 0.005 was the **dividend tenor**: trailing-12m yield over-states `q`
+> for a 30-day option, because only ~a third of quarterly payers have an ex-date
+> inside the window (measured: 11 of 39). Fixing it lands at −0.00179, inside
+> both declared bars. `OPTIONS-DIVIDEND-WINDOW-1`, declared with a point
+> prediction before running — the prediction was right in mechanism and wrong in
+> magnitude (+0.00159 actual against +0.0059 predicted, because the median of a
+> heterogeneous shift is not the shift at the median).
 >
-> **And the transfer test itself has a defect:** it compares a one-day live
-> cross-sectional median against a median over OptionMetrics' whole panel, on a
-> quantity that is a direct function of the prevailing rate across regimes from
-> zero to five percent. Those two medians need not coincide even when the
-> feature is identical.
+> **The `q = 0` arm also clears the bar and must NOT be shipped**: it is wrong
+> for the 28% of names that do pay inside the window and lands by a compensating
+> error. That refusal was written down before the window arm existed.
 >
-> **The next step is cheap and settles both.** Recompute the stdopd reference
-> median restricted to periods whose short rate is near today's, and compare
-> against that. The panel is already pulled.
+> **The fallback (drop the feature) is no longer needed.** It would now cost a
+> feature that clears its transfer bar.
 >
-> Meanwhile the fallback (ship the drop-feature arm as a labelled
-> `PRODUCT_EXPERIMENT`) is now a much cheaper decision: it costs a feature whose
-> train/serve error is 0.005, not 0.026.
+> **Still open, and not small:** one day and 39 names; `pct_positive` 46.2% vs
+> the panel's 54.8% (inside the bar, the largest remaining difference, and a
+> tree splits on thresholds); and the residual median still sits 0.0037 below
+> the panel, where implied financing above OIS and general borrow both live
+> unmeasured. The collector accrues daily from Monday — the honest version of
+> this number is the same comparison over a month of snapshots.
 
 Build it as its own PRODUCT_EXPERIMENT book, never a composite weight — and
 note the collector needs lead time before the book has rows to decide on.

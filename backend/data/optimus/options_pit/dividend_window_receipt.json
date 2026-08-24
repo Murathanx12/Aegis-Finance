@@ -1,0 +1,295 @@
+{
+ "measurement_id": "OPTIONS-DIVIDEND-WINDOW-1",
+ "licence": "PRODUCT_EXPERIMENT (servability \u2014 no IC, no forward return, not evidence of alpha)",
+ "declared_in": "scripts/options_dividend_window_measure.py (this file)",
+ "hypothesis": "the 0.0053 residue is a wrong q: trailing-12m yield over-states the carry deduction for a 30-day option, because a quarterly payer has an ex-date in a given 30-day window only about a third of the time",
+ "point_prediction_made_before_running": 0.0025,
+ "prediction_basis": "0.709 sensitivity x median q_trailing 0.0083 = +0.0059 from R1's -0.00338",
+ "approximation": "future ex-dates PROJECTED from the median historical cadence; uses only past ex-dates, so no look-ahead, and it is the same information a live collector has",
+ "stdopd_reference": {
+  "median": 0.00194,
+  "pct_positive": 0.548,
+  "live_median_previously_measured": -0.0237,
+  "live_pct_positive_previously_measured": 0.25
+ },
+ "r_simple": 0.0363,
+ "r_source": "FRED:fed_funds=3.63",
+ "median_q_trailing": 0.00767,
+ "median_q_window": 0.0,
+ "n_names_with_dividend_in_window": 11,
+ "n_names": 39,
+ "R7": {
+  "median": -0.00179,
+  "pct_positive": 0.4615,
+  "median_gap_vs_stdopd": -0.00373,
+  "gate_median": true,
+  "gate_pct_positive": true,
+  "transfers": true
+ },
+ "prior_arms": {
+  "R0_vendor": {
+   "median": -0.02428,
+   "pct_positive": 0.2308
+  },
+  "R1_own_r_q": {
+   "median": -0.00338,
+   "pct_positive": 0.4359
+  },
+  "R2_own_r_only": {
+   "median": 0.0025,
+   "pct_positive": 0.5641
+  },
+  "R3_own_zero": {
+   "median": -0.02335,
+   "pct_positive": 0.1795
+  },
+  "R4_own_last": {
+   "median": 0.00272,
+   "pct_positive": 0.5128
+  },
+  "R5_own_parity_r": {
+   "median": 0.02307,
+   "pct_positive": 0.6364
+  },
+  "R6_own_american": {
+   "median": -0.00408,
+   "pct_positive": 0.4359
+  }
+ },
+ "per_name": [
+  {
+   "ticker": "AAPL",
+   "resid": -0.007022,
+   "q_trailing": 0.00343,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "ABBV",
+   "resid": -0.022626,
+   "q_trailing": 0.02578,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "ABNB",
+   "resid": -0.002331,
+   "q_trailing": 0.0,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "ABT",
+   "resid": 0.002515,
+   "q_trailing": 0.02126,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "ACN",
+   "resid": 0.002505,
+   "q_trailing": 0.01759,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "ADBE",
+   "resid": 0.00877,
+   "q_trailing": 0.0,
+   "q_window": 0.00034
+  },
+  {
+   "ticker": "AEP",
+   "resid": -0.010951,
+   "q_trailing": 0.03142,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "AMAT",
+   "resid": 0.008283,
+   "q_trailing": 0.00496,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "AMD",
+   "resid": 0.00308,
+   "q_trailing": 0.0,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "AMGN",
+   "resid": -0.009466,
+   "q_trailing": 0.02804,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "AMT",
+   "resid": -0.094259,
+   "q_trailing": 0.0397,
+   "q_window": 0.10939
+  },
+  {
+   "ticker": "AMZN",
+   "resid": -0.004823,
+   "q_trailing": 0.0,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "AON",
+   "resid": 0.014605,
+   "q_trailing": 0.00462,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "APD",
+   "resid": -0.039108,
+   "q_trailing": 0.0236,
+   "q_window": 0.02043
+  },
+  {
+   "ticker": "AVGO",
+   "resid": -0.001792,
+   "q_trailing": 0.00689,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "AXON",
+   "resid": 0.015582,
+   "q_trailing": 0.0,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "AXP",
+   "resid": -0.001404,
+   "q_trailing": 0.01054,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "BA",
+   "resid": -0.003381,
+   "q_trailing": 0.0,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "BAC",
+   "resid": 0.000394,
+   "q_trailing": 0.01816,
+   "q_window": 0.05177
+  },
+  {
+   "ticker": "BKNG",
+   "resid": -0.043013,
+   "q_trailing": 0.00767,
+   "q_window": 0.02285
+  },
+  {
+   "ticker": "BLK",
+   "resid": -0.00465,
+   "q_trailing": 0.01892,
+   "q_window": 0.06442
+  },
+  {
+   "ticker": "BMY",
+   "resid": 0.000812,
+   "q_trailing": 0.03746,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "C",
+   "resid": 0.0088,
+   "q_trailing": 0.01876,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "CAT",
+   "resid": -0.012197,
+   "q_trailing": 0.00744,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "CB",
+   "resid": -0.021967,
+   "q_trailing": 0.00584,
+   "q_window": 0.03214
+  },
+  {
+   "ticker": "CCI",
+   "resid": -0.026561,
+   "q_trailing": 0.05631,
+   "q_window": 0.15124
+  },
+  {
+   "ticker": "CDNS",
+   "resid": -0.002487,
+   "q_trailing": 0.0,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "CEG",
+   "resid": -0.021491,
+   "q_trailing": 0.00612,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "CHTR",
+   "resid": 0.004685,
+   "q_trailing": 0.0,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "CI",
+   "resid": 0.00665,
+   "q_trailing": 0.02213,
+   "q_window": 0.0731
+  },
+  {
+   "ticker": "CL",
+   "resid": 0.031891,
+   "q_trailing": 0.02306,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "CMCSA",
+   "resid": -0.035905,
+   "q_trailing": 0.04839,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "CME",
+   "resid": 0.011063,
+   "q_trailing": 0.04091,
+   "q_window": 0.04324
+  },
+  {
+   "ticker": "CMG",
+   "resid": 0.028318,
+   "q_trailing": 0.0,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "COIN",
+   "resid": 0.000837,
+   "q_trailing": 0.0,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "COP",
+   "resid": 0.004199,
+   "q_trailing": 0.02491,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "COST",
+   "resid": -0.007881,
+   "q_trailing": 0.00585,
+   "q_window": 0.0
+  },
+  {
+   "ticker": "CRM",
+   "resid": 0.003895,
+   "q_trailing": 0.00818,
+   "q_window": 0.01969
+  },
+  {
+   "ticker": "CRWD",
+   "resid": -0.022437,
+   "q_trailing": 0.0,
+   "q_window": 0.0
+  }
+ ]
+}

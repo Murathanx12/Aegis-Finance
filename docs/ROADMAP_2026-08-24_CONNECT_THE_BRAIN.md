@@ -780,7 +780,7 @@ frozen strategy contract before the first decision, paper only. A
 Neither verdict flipped. Both *reasons* were replaced, which is the more useful
 outcome: a wrong reason survives into the successor and a measured one does not.
 
-### `iv_put_minus_call_30d` — a SOLVER gap, 80% closed
+### `iv_put_minus_call_30d` — TRANSFERS. Two wrong conventions, both fixed.
 
 `docs/FINDING_2026-08-24_OPTIONS_CONVENTION.md` ·
 `backend/services/option_implier.py` · 22 tests
@@ -804,18 +804,34 @@ solving the rate from cross-strike parity overshoots to +0.023 on 22 of 39
 names, because the slope in K is contaminated by exactly the strike-dependent
 early-exercise term the other arm measured.
 
-What remains is worth **0.74pp of net carry** — the residual moves ≈0.0070 per
-percentage point of (r − q) — and 0.74pp is the size of general equity borrow,
-which is what this feature is *for*. Hypothesis, not finding; the cheap test is
-in the finding's §6.
+The last 0.005 was the **dividend tenor**. We used trailing-12m yield; for a
+30-day option the right `q` is the dividend expected inside the option's life,
+and only **11 of 39** names carry an ex-date in that window. Fixing it lands the
+median at **−0.00179**, inside both bars declared before any of this ran.
 
-**And the transfer test has its own defect**: it compares a one-day live
-cross-sectional median to a median over OptionMetrics' entire panel, on a
-quantity that is a direct function of the prevailing rate.
+**`EVENT_RESPONSE_v1` may serve the full model on this column.**
 
-The store records our residual from its first row (schema 1.1.0) rather than
-after the book exists, for the same reason the collector was built early: a
-chain has no history to go back for.
+Two things worth carrying forward more than the result:
+
+* **My preferred explanation was refuted by my own measurement.** I had written
+  that the transfer test was mis-specified because the panel spans rate regimes.
+  The panel's residual regressed on FEDFUNDS over 168 months: slope +0.00001,
+  t 0.04, R² 0.000. Flat. OptionMetrics discounts correctly so the rate is
+  already absorbed; ours moved with the rate *because ours was wrong*. A
+  residual that tracks the policy rate is a residual computed under the wrong
+  carry — that is a diagnostic worth keeping.
+* **The `q = 0` arm also clears the bar and is refused.** It is wrong for the
+  28% that pay inside the window and lands by a compensating error. The refusal
+  was written down before the window arm existed, which is what makes it a
+  selection rule instead of a rationalisation.
+
+Store schema 1.2.0 carries `q_used` (window), `q_trailing` and `r_used` on
+every row from the collector's first pass — `pi_options_pit` fires Monday 15:30
+ET and a chain has no history to go back for.
+
+**Still open:** one day, 39 names; `pct_positive` 46.2% against the panel's
+54.8%; and 0.0037 of median still unexplained, where implied financing above
+OIS and borrow both live.
 
 ### The graph's density verdict was measuring the null
 
