@@ -1,5 +1,29 @@
 # portfolio_farm receipts
 
+> **EVERY DOLLAR FIGURE BELOW PREDATES THE 2026-08-25 SPLIT-ADJUSTMENT FIX.**
+> The panel marked SHARE COUNTS at raw prices, so every corporate action was
+> booked as a return (`backend/tests/test_portfolio_farm_split_adjustment.py`).
+> Net it cost the leading policy ~0.3%/yr — but it re-ordered the signal grid,
+> moving `liquid` from t=0.26 to t=2.55. Re-measured on the same policy and
+> window: terminal median 77,002 -> **85,482**, 2013-2018 1.01x -> **1.00x**,
+> 2019-2024 1.75x -> **2.07x**. The one-regime conclusion is stronger, not
+> weaker. These receipts are kept because they are the record of what was
+> believed and why; the delta is the interesting part.
+>
+> **THREE QUESTIONS NOW COME BEFORE A LEADERBOARD**, and none of the files
+> below answers any of them:
+>
+> | | |
+> |---|---|
+> | could the sample resolve anything? | `portfolio_farm_signal_power` — **zero of thirteen** non-null signals on 2013-2024; White's reality check p=0.358; the null 5-95 band is ten points wide |
+> | does the edge survive breadth? | `portfolio_farm_breadth_power` — Grinold says t should RISE with k; every signal FALLS and peaks at the narrowest book |
+> | what did it actually buy? | `portfolio_farm_concentration` — the best row on the board (`liquid`) is a FAANG list |
+>
+> **The replayable window is 1993-2024** after the re-pull. Panels longer than
+> ~15 years need `--reduce`. The farm now also carries its first NON-PRICE
+> signals (`value_bm`, `profit_roe`) — the previous thirteen were thirteen
+> transformations of `crsp.dsf`.
+
 One JSON per run: every policy, every metric, every null draw, the panel window
 and the policy count. **A headline number belongs in a receipt, never in prose
 alone** — so anything quoted from the farm in a doc must be traceable to a file
