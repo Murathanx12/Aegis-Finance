@@ -99,6 +99,7 @@ from backend import config as _config                          # noqa: E402
 from scripts.wrds_training_pull import _conn, _date_ranges     # noqa: E402
 
 OUT = _config.OPTIMUS_LEDGER_DIR / "wrds"
+SUPERSEDED = OUT / "superseded"
 EARLY_UNIVERSE_PATH = (_config.OPTIMUS_LEDGER_DIR / "crsp_pit" /
                        "crsp_pit_monthly_early.parquet")
 
@@ -165,7 +166,13 @@ def pull_year(conn, year: int, permnos: list[int]) -> dict:
         raise RuntimeError(f"{year}: readback missing {sorted(REQUIRED-back)}")
 
     if final.exists():
-        keep = OUT / f"crsp_dsf_{year}.narrow-5col.parquet"
+        # A SUBDIRECTORY, not a sibling. `panel.available_years` and
+        # `wrds_column_completeness` both glob `crsp_dsf_*.parquet` in this
+        # directory, so a superseded copy left beside the real file is counted
+        # as a 24th partial year forever — the audit reported exactly that
+        # before this moved.
+        SUPERSEDED.mkdir(parents=True, exist_ok=True)
+        keep = SUPERSEDED / f"crsp_dsf_{year}.narrow-5col.parquet"
         keep.unlink(missing_ok=True)
         final.rename(keep)
     tmp.rename(final)
@@ -187,7 +194,7 @@ def pull_year(conn, year: int, permnos: list[int]) -> dict:
                           "openprc/retx/shrout are what portfolio_farm.panel "
                           "requires, and an existence-keyed catch-up queue "
                           "could never have noticed they were absent"),
-        "supersedes": f"crsp_dsf_{year}.narrow-5col.parquet",
+        "supersedes": f"superseded/crsp_dsf_{year}.narrow-5col.parquet",
         "universe_caveat": (
             "1990-01..1992-10 carry fewer than 500 eligible names per month "
             "(min 243); at universe_n=500 the farm's cut IS the screen "
