@@ -101,6 +101,70 @@ SPEC: dict = {
 }
 
 
+#: AMENDMENT-1, declared 2026-08-24, BEFORE any of its numbers existed.
+#: POST-HOC, in its own BH-FDR family, and it re-examines a verdict I already
+#: reached -- which is exactly when declaring first matters most.
+#:
+#: WHAT IT QUESTIONS. v2 downgraded BUILD -> NOT_LICENSED_BORROW_CONFOUNDED
+#: because excluding the top borrow quintile took drift1 from +0.0315 (t 3.19)
+#: to +0.0151 (t 1.42). The receipt argued this was not a POWER artefact, and
+#: that argument is sound: the point estimate halved while MDE80 moved only
+#: 0.0276 -> 0.0297.
+#:
+#: But "not a power artefact" does not establish "therefore borrow". A
+#: cross-sectional rank IC is not additive across subsamples, and trimming the
+#: top quintile of ANY variable correlated with the signal restricts the
+#: signal's own spread. That is RANGE RESTRICTION, and it was never ruled out.
+#: The whole downgrade rests on attributing the drop to the borrow variable
+#: specifically.
+#:
+#: THE DECISIVE CONTROL IS THE OPPOSITE TAIL. Excluding the LOWEST borrow
+#: quintile removes the same amount of data, from the same variable, at the
+#: other end. If the effect really lives in hard-to-borrow names, cutting the
+#: cheap ones should leave the IC intact or raise it. If cutting EITHER tail
+#: halves it, the drop is what tail-trimming does to a rank IC and the borrow
+#: attribution is unproven.
+#:
+#: WHAT IS AND IS NOT AT STAKE. This cannot restore a BUILD. The cheap-to-borrow
+#: arm needs 654 event months to detect its own point estimate at 80% power and
+#: at most ~240 exist, so it can never clear a RESEARCH_CLAIM bar on obtainable
+#: data. What is at stake is the REASON for the refusal, and the reason decides
+#: the successor: if borrow, v3 models the fee as a cost; if range restriction,
+#: the honest verdict is UNDERPOWERED and v3 is a forward paper book instead.
+AMENDMENT_1: dict = {
+    "amendment_id": "EVENT-RESPONSE-2/AMENDMENT-1",
+    "status": "POST-HOC — declared before any of its numbers existed",
+    "question": ("is the IC drop under top-borrow-quintile exclusion "
+                 "attributable to BORROW, or is it what excluding a tail does "
+                 "to a cross-sectional rank IC?"),
+    "primary_control": ("exclude the BOTTOM borrow quintile — same variable, "
+                        "same sample loss, opposite tail"),
+    "supporting_controls": [
+        "exclude a RANDOM 20% (isolates pure sample-size loss)",
+        "exclude the top quintile of placebo variables unrelated to borrow",
+    ],
+    "decision_rule": (
+        "The borrow attribution STANDS iff excluding the HIGH-borrow quintile "
+        "costs materially more IC than excluding the LOW-borrow quintile — "
+        "concretely, iff ic_excl_high < ic_excl_low by more than the paired SE "
+        "of the difference, AND ic_excl_high sits below the placebo "
+        "exclusions. Otherwise the drop is RANGE RESTRICTION, the verdict's "
+        "REASON changes to UNDERPOWERED, and the successor changes with it."),
+    "cannot_show": (
+        "That the signal is tradable. The power arithmetic forecloses a "
+        "RESEARCH_CLAIM either way; this decides the refusal's reason and "
+        "therefore what v3 should be."),
+    "placebos": ["pre_event_price_runup", "disclosure_delay_days",
+                 "expectation_dispersion", "iv_term_slope"],
+    "n_random_draws": 20,
+}
+
+
+def amendment_1_hash() -> str:
+    return hashlib.sha256(
+        json.dumps(AMENDMENT_1, sort_keys=True).encode()).hexdigest()[:16]
+
+
 def spec_hash() -> str:
     return hashlib.sha256(
         json.dumps(SPEC, sort_keys=True).encode()).hexdigest()[:16]
@@ -326,7 +390,155 @@ def run() -> dict:
     return receipt
 
 
+def run_amendment_1() -> dict:
+    """Is the borrow drop BORROW, or is it tail-trimming?
+
+    ONE MODEL, MANY EVALUATION POPULATIONS. The walk-forward fit is identical
+    to the primary run and is done ONCE; the slices then change only WHICH
+    events are in the cross-section when the monthly IC is taken. Re-fitting per
+    slice would confound "trained on less" with "evaluated on a different
+    population", and the question is entirely about the population.
+    """
+    from scipy import stats
+
+    from scripts.event_response_v1 import _rank_ic
+
+    print(f"spec_hash {spec_hash()}  amendment_1 {amendment_1_hash()}",
+          flush=True)
+    fr = build_frame()
+    fr = fr[fr["atm_iv_30"].notna()].copy()
+    cols = BASE_FEATURES + OPTION_FEATURES
+    tgt = "drift1"
+    model = "lightgbm"
+
+    years = sorted(y for y in fr["event_date"].dt.year.unique() if y >= 2012)
+    preds = []
+    for Y in years:
+        tr = fr[(fr["event_date"].dt.year < Y) & fr[tgt].notna()]
+        te = fr[(fr["event_date"].dt.year == Y) & fr[tgt].notna()]
+        if len(tr) < 2000 or len(te) < 200:
+            continue
+        pred = _fit(model, cols, tr[cols].to_numpy(float),
+                    tr[tgt].to_numpy(), te[cols].to_numpy(float))
+        preds.append(te.assign(_p=pred))
+    ev = pd.concat(preds, ignore_index=True)
+    print(f"  {len(ev):,} evaluated events over "
+          f"{ev['event_month'].nunique()} months", flush=True)
+
+    def monthly(frame) -> dict[str, float]:
+        out = {}
+        for m, g in frame.groupby("event_month"):
+            ic = _rank_ic(g["_p"].to_numpy(), g[tgt].to_numpy())
+            if ic is not None:
+                out[str(pd.Timestamp(m).date())] = ic
+        return out
+
+    def summarise(d: dict[str, float]) -> dict:
+        a = np.array(list(d.values()))
+        if len(a) < 12:
+            return {"n_months": len(a), "status": "TOO_FEW_MONTHS"}
+        se = float(a.std(ddof=1) / np.sqrt(len(a)))
+        mean = float(a.mean())
+        return {"n_months": len(a), "mean_ic": round(mean, 5),
+                "se": round(se, 5), "t": round(mean / se, 3) if se else 0.0,
+                "mde_80pct_power": round(2.80 * se, 5)}
+
+    b = "iv_put_minus_call_30d"
+    hi_cut = float(ev[b].quantile(0.80))
+    lo_cut = float(ev[b].quantile(0.20))
+
+    series = {"all": monthly(ev)}
+    # THE PRIMARY CONTROL: same variable, same 20%, opposite tail.
+    series["excl_high_borrow"] = monthly(ev[ev[b] <= hi_cut])
+    series["excl_low_borrow"] = monthly(ev[ev[b] >= lo_cut])
+
+    # Pure sample-size loss, no range restriction at all.
+    rng = np.random.default_rng(20260824)
+    rand_ics = []
+    for i in range(int(AMENDMENT_1["n_random_draws"])):
+        keep = rng.random(len(ev)) >= 0.20
+        rand_ics.append(summarise(monthly(ev[keep])).get("mean_ic"))
+    rand_ics = [x for x in rand_ics if x is not None]
+
+    # Other variables' top quintiles, to see what tail-trimming costs in
+    # general.
+    placebo = {}
+    for v in AMENDMENT_1["placebos"]:
+        if v not in ev.columns or ev[v].notna().sum() < 1000:
+            placebo[v] = {"status": "UNAVAILABLE"}
+            continue
+        cut = float(ev[v].quantile(0.80))
+        placebo[v] = summarise(monthly(ev[ev[v] <= cut]))
+
+    def paired(x, y) -> dict | None:
+        mx, my = series[x], series[y]
+        common = sorted(set(mx) & set(my))
+        if len(common) < 12:
+            return None
+        d = np.array([mx[m] - my[m] for m in common])
+        se = float(d.std(ddof=1) / np.sqrt(len(d)))
+        mean = float(d.mean())
+        return {"n_months": len(d), "mean_diff": round(mean, 6),
+                "se": round(se, 6), "t": round(mean / se, 3) if se else 0.0,
+                "p": round(float(2 * (1 - stats.t.cdf(abs(mean / se),
+                                                      df=len(d) - 1))), 4)
+                if se else 1.0}
+
+    summary = {k: summarise(v) for k, v in series.items()}
+    hi = summary["excl_high_borrow"].get("mean_ic")
+    lo = summary["excl_low_borrow"].get("mean_ic")
+    diff = paired("excl_high_borrow", "excl_low_borrow")
+
+    borrow_specific = bool(
+        diff and hi is not None and lo is not None
+        and (lo - hi) > diff["se"]
+        and (not rand_ics or hi < float(np.percentile(rand_ics, 20))))
+
+    verdict = ("BORROW_ATTRIBUTION_STANDS" if borrow_specific
+               else "BORROW_ATTRIBUTION_NOT_ESTABLISHED")
+
+    receipt = {
+        "amendment_id": AMENDMENT_1["amendment_id"],
+        "amendment_hash": amendment_1_hash(),
+        "parent_spec_hash": spec_hash(),
+        "declared_before_any_number_existed": True,
+        "target": tgt, "model": model,
+        "n_events": int(len(ev)),
+        "n_effective": int(ev["event_month"].nunique()),
+        "borrow_proxy": b,
+        "cuts": {"top_quintile_at": round(hi_cut, 5),
+                 "bottom_quintile_at": round(lo_cut, 5)},
+        "slices": summary,
+        "excl_high_vs_excl_low": diff,
+        "random_20pct_exclusions": {
+            "n_draws": len(rand_ics),
+            "mean_ic_mean": round(float(np.mean(rand_ics)), 5)
+            if rand_ics else None,
+            "mean_ic_p20": round(float(np.percentile(rand_ics, 20)), 5)
+            if rand_ics else None,
+            "mean_ic_min": round(float(np.min(rand_ics)), 5)
+            if rand_ics else None,
+        },
+        "placebo_top_quintile_exclusions": placebo,
+        "decision_rule": AMENDMENT_1["decision_rule"],
+        "verdict": verdict,
+        "what_this_changes": (
+            "The REASON for v2's refusal, and therefore what v3 should be. It "
+            "cannot restore a BUILD: the cheap-to-borrow arm needs ~654 event "
+            "months to detect its own point estimate at 80% power and at most "
+            "~240 are obtainable."),
+    }
+    OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / "event_response_v2_amendment1_receipt.json").write_text(
+        json.dumps(receipt, indent=2, default=str), encoding="utf-8")
+    return receipt
+
+
 if __name__ == "__main__":
+    if "--amendment-1" in sys.argv:
+        r = run_amendment_1()
+        print(json.dumps(r, indent=2, default=str))
+        raise SystemExit(0)
     r = run()
     print(json.dumps({k: v for k, v in r.items() if k != "spec"},
                      indent=2, default=str))
