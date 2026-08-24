@@ -1,0 +1,4135 @@
+{
+ "as_of": "2026-08-21",
+ "rank_band": [
+  700,
+  1600
+ ],
+ "sample_n": 300,
+ "seed": 20260824,
+ "n": 300,
+ "rows": {
+  "ABCB": {
+   "status": "OK",
+   "firms": [
+    "DA Davidson",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler",
+    "Raymond James",
+    "Stephens & Co.",
+    "Truist Securities"
+   ],
+   "newest": "2026-07-28",
+   "stale_days": 23,
+   "detail": ""
+  },
+  "ACA": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "DA Davidson"
+   ],
+   "newest": "2026-05-04",
+   "stale_days": 108,
+   "detail": ""
+  },
+  "ACI": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "Barclays",
+    "Citigroup",
+    "Evercore ISI Group",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Morgan Stanley",
+    "RBC Capital",
+    "Telsey Advisory Group",
+    "Tigress Financial",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-28",
+   "stale_days": 23,
+   "detail": ""
+  },
+  "ACIW": {
+   "status": "OK",
+   "firms": [
+    "DA Davidson",
+    "Seaport Global"
+   ],
+   "newest": "2026-08-08",
+   "stale_days": 12,
+   "detail": ""
+  },
+  "ACLS": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "B. Riley Securities",
+    "Benchmark",
+    "DA Davidson"
+   ],
+   "newest": "2026-06-23",
+   "stale_days": 58,
+   "detail": ""
+  },
+  "AEIS": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Baird",
+    "Benchmark",
+    "Cantor Fitzgerald",
+    "Citigroup",
+    "Keybanc",
+    "Morgan Stanley",
+    "Needham",
+    "Seaport Global",
+    "Stifel",
+    "Susquehanna",
+    "TD Cowen",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "detail": ""
+  },
+  "AEO": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BTIG",
+    "Barclays",
+    "Citigroup",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Jefferies",
+    "Morgan Stanley",
+    "Needham",
+    "TD Cowen",
+    "Telsey Advisory Group",
+    "UBS"
+   ],
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "detail": ""
+  },
+  "AESI": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citigroup",
+    "Goldman Sachs",
+    "Piper Sandler",
+    "RBC Capital",
+    "Raymond James",
+    "Stifel"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "AFG": {
+   "status": "OK",
+   "firms": [
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "detail": ""
+  },
+  "AGR": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "AGYS": {
+   "status": "OK",
+   "firms": [
+    "Needham",
+    "Oppenheimer",
+    "Piper Sandler"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "AIR": {
+   "status": "OK",
+   "firms": [
+    "Goldman Sachs",
+    "Jefferies",
+    "Keybanc",
+    "RBC Capital",
+    "Truist Securities"
+   ],
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "detail": ""
+  },
+  "AIT": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Baird",
+    "DA Davidson",
+    "Keybanc",
+    "Mizuho",
+    "Oppenheimer"
+   ],
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "detail": ""
+  },
+  "AL": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "ALGS": {
+   "status": "OK",
+   "firms": [
+    "Cantor Fitzgerald",
+    "HC Wainwright & Co.",
+    "Lake Street",
+    "UBS",
+    "WestPark Capital"
+   ],
+   "newest": "2026-05-28",
+   "stale_days": 84,
+   "detail": ""
+  },
+  "ALKT": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citizens",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Needham"
+   ],
+   "newest": "2026-06-22",
+   "stale_days": 59,
+   "detail": ""
+  },
+  "ALRM": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "JP Morgan"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "ALV": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Barclays",
+    "Deutsche Bank",
+    "Evercore ISI Group",
+    "JP Morgan",
+    "Jefferies",
+    "Mizuho",
+    "RBC Capital",
+    "TD Cowen",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-20",
+   "stale_days": 31,
+   "detail": ""
+  },
+  "AMG": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barrington Research",
+    "Goldman Sachs",
+    "TD Cowen"
+   ],
+   "newest": "2026-05-13",
+   "stale_days": 99,
+   "detail": ""
+  },
+  "AMN": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "Baird",
+    "Citizens",
+    "Truist Securities",
+    "UBS"
+   ],
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "detail": ""
+  },
+  "AMPH": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Jefferies",
+    "Needham",
+    "Piper Sandler",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "detail": ""
+  },
+  "AMR": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "Jefferies",
+    "Texas Capital Securities",
+    "UBS"
+   ],
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "detail": ""
+  },
+  "AMSC": {
+   "status": "OK",
+   "firms": [
+    "Clear Street",
+    "Roth Capital"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "AOS": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Citigroup",
+    "DA Davidson",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Oppenheimer",
+    "Stifel"
+   ],
+   "newest": "2026-07-31",
+   "stale_days": 20,
+   "detail": ""
+  },
+  "APAM": {
+   "status": "OK",
+   "firms": [
+    "Evercore ISI Group",
+    "Goldman Sachs",
+    "RBC Capital",
+    "TD Cowen"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "ARDX": {
+   "status": "OK",
+   "firms": [
+    "BTIG",
+    "Citigroup",
+    "HC Wainwright & Co.",
+    "Piper Sandler",
+    "TD Cowen",
+    "Wedbush"
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "ARVN": {
+   "status": "OK",
+   "firms": [
+    "BTIG",
+    "Barclays",
+    "Citigroup",
+    "Evercore ISI Group",
+    "Goldman Sachs",
+    "Piper Sandler",
+    "Stephens & Co.",
+    "Wedbush",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "ARWR": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "B. Riley Securities",
+    "Bernstein",
+    "Chardan Capital",
+    "Goldman Sachs",
+    "HC Wainwright & Co.",
+    "JP Morgan",
+    "Leerink Partners",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "RBC Capital",
+    "Stifel"
+   ],
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "detail": ""
+  },
+  "ATMU": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "JP Morgan",
+    "Wells Fargo"
+   ],
+   "newest": "2026-05-04",
+   "stale_days": 108,
+   "detail": ""
+  },
+  "ATR": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Keybanc",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "detail": ""
+  },
+  "ATRC": {
+   "status": "OK",
+   "firms": [
+    "BTIG",
+    "Canaccord Genuity",
+    "Citizens",
+    "JP Morgan",
+    "Needham",
+    "Oppenheimer",
+    "UBS"
+   ],
+   "newest": "2026-07-28",
+   "stale_days": 23,
+   "detail": ""
+  },
+  "AVAV": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BTIG",
+    "Baird",
+    "Canaccord Genuity",
+    "Cantor Fitzgerald",
+    "Citizens",
+    "Goldman Sachs",
+    "JMP Securities",
+    "JP Morgan",
+    "Jefferies",
+    "Keybanc",
+    "Needham",
+    "Piper Sandler",
+    "RBC Capital",
+    "Raymond James",
+    "Stifel",
+    "UBS",
+    "Wedbush"
+   ],
+   "newest": "2026-07-16",
+   "stale_days": 35,
+   "detail": ""
+  },
+  "AVDX": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "AVPT": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "Baird",
+    "Cantor Fitzgerald",
+    "Citigroup",
+    "DA Davidson",
+    "Evercore ISI Group",
+    "Jefferies",
+    "Scotiabank",
+    "Stephens & Co.",
+    "TD Cowen",
+    "William Blair"
+   ],
+   "newest": "2026-08-08",
+   "stale_days": 12,
+   "detail": ""
+  },
+  "AWR": {
+   "status": "OK",
+   "firms": [
+    "Freedom Broker"
+   ],
+   "newest": "2026-06-30",
+   "stale_days": 51,
+   "detail": ""
+  },
+  "AX": {
+   "status": "OK",
+   "firms": [
+    "Benchmark",
+    "DA Davidson",
+    "Jefferies",
+    "Keefe, Bruyette & Woods",
+    "Needham",
+    "Raymond James"
+   ],
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "detail": ""
+  },
+  "AZZ": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "Baird",
+    "Evercore ISI Group",
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-13",
+   "stale_days": 38,
+   "detail": ""
+  },
+  "B": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "CIBC",
+    "Canaccord Genuity",
+    "Citigroup",
+    "Freedom Broker",
+    "JP Morgan",
+    "RBC Capital",
+    "Raymond James",
+    "Scotiabank",
+    "UBS"
+   ],
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "detail": ""
+  },
+  "BANF": {
+   "status": "OK",
+   "firms": [
+    "DA Davidson",
+    "Keefe, Bruyette & Woods"
+   ],
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "detail": ""
+  },
+  "BGS": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Evercore ISI Group",
+    "TD Cowen"
+   ],
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "detail": ""
+  },
+  "BLND": {
+   "status": "OK",
+   "firms": [
+    "Canaccord Genuity",
+    "Citizens",
+    "Keefe, Bruyette & Woods",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "detail": ""
+  },
+  "BOH": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Benchmark",
+    "DA Davidson",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler",
+    "Stephens & Co."
+   ],
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "detail": ""
+  },
+  "BPMC": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "BSY": {
+   "status": "OK",
+   "firms": [
+    "BMO Capital",
+    "BNP Paribas",
+    "Baird",
+    "Barclays",
+    "JP Morgan",
+    "Mizuho",
+    "Oppenheimer",
+    "Piper Sandler",
+    "RBC Capital",
+    "Rosenblatt",
+    "UBS"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "BTSG": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "BTIG",
+    "Goldman Sachs",
+    "Guggenheim",
+    "Keybanc",
+    "Mizuho",
+    "Morgan Stanley",
+    "Raymond James",
+    "Stephens & Co.",
+    "TD Cowen",
+    "UBS",
+    "Wells Fargo",
+    "William Blair"
+   ],
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "detail": ""
+  },
+  "BWA": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Baird",
+    "Barclays",
+    "Deutsche Bank",
+    "Evercore ISI Group",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "TD Cowen",
+    "UBS",
+    "Wells Fargo",
+    "Wolfe Research"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "BYON": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "CACC": {
+   "status": "OK",
+   "firms": [
+    "Stephens & Co.",
+    "TD Cowen"
+   ],
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "detail": ""
+  },
+  "CAKE": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2026-04-21",
+   "stale_days": 121,
+   "detail": "action feed silent 121d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "CAL": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2026-03-19",
+   "stale_days": 154,
+   "detail": "action feed silent 154d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "CAPR": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "Cantor Fitzgerald",
+    "HC Wainwright & Co.",
+    "Jones Trading",
+    "Maxim Group",
+    "Oppenheimer",
+    "Piper Sandler",
+    "Roth Capital"
+   ],
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "detail": ""
+  },
+  "CARS": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "BTIG",
+    "Barrington Research",
+    "DA Davidson",
+    "JP Morgan",
+    "UBS"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "CATY": {
+   "status": "OK",
+   "firms": [
+    "DA Davidson",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler",
+    "Stephens & Co."
+   ],
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "detail": ""
+  },
+  "CBSH": {
+   "status": "OK",
+   "firms": [
+    "Hovde Group",
+    "Keefe, Bruyette & Woods",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "Stephens & Co.",
+    "TD Cowen",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "CBT": {
+   "status": "OK",
+   "firms": [
+    "JP Morgan",
+    "Mizuho",
+    "Truist Securities",
+    "UBS"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "CCOI": {
+   "status": "OK",
+   "firms": [
+    "Citigroup",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Keybanc",
+    "Oppenheimer",
+    "RBC Capital",
+    "TD Cowen",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "CGNX": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Barclays",
+    "Cantor Fitzgerald",
+    "Citigroup",
+    "DA Davidson",
+    "Goldman Sachs",
+    "HSBC",
+    "JP Morgan",
+    "Keybanc",
+    "Needham",
+    "Stephens & Co.",
+    "Truist Securities"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "CHDN": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citizens",
+    "JP Morgan",
+    "Macquarie",
+    "Mizuho",
+    "Susquehanna",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "detail": ""
+  },
+  "CHEF": {
+   "status": "OK",
+   "firms": [
+    "BTIG",
+    "Benchmark",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "TD Cowen",
+    "UBS"
+   ],
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "detail": ""
+  },
+  "CHX": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "CIVI": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "CLMT": {
+   "status": "OK",
+   "firms": [
+    "Goldman Sachs",
+    "HC Wainwright & Co.",
+    "TD Cowen"
+   ],
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "detail": ""
+  },
+  "CLW": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "RBC Capital",
+    "TD Cowen",
+    "Truist Securities"
+   ],
+   "newest": "2026-07-15",
+   "stale_days": 36,
+   "detail": ""
+  },
+  "CNMD": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "JP Morgan",
+    "Needham",
+    "Piper Sandler",
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "detail": ""
+  },
+  "CNO": {
+   "status": "OK",
+   "firms": [
+    "Evercore ISI Group",
+    "Jefferies",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler"
+   ],
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "detail": ""
+  },
+  "CNS": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Evercore ISI Group"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "CNXC": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Baird",
+    "Barrington Research",
+    "Canaccord Genuity"
+   ],
+   "newest": "2026-06-30",
+   "stale_days": 51,
+   "detail": ""
+  },
+  "COLM": {
+   "status": "OK",
+   "firms": [
+    "BTIG",
+    "Citigroup",
+    "Stifel",
+    "UBS"
+   ],
+   "newest": "2026-07-31",
+   "stale_days": 20,
+   "detail": ""
+  },
+  "COMP": {
+   "status": "OK",
+   "firms": [
+    "BTIG",
+    "Barclays",
+    "Benchmark",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Morgan Stanley",
+    "Needham",
+    "Oppenheimer",
+    "UBS",
+    "Wells Fargo",
+    "Zelman & Assoc"
+   ],
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "detail": ""
+  },
+  "COUR": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "Cantor Fitzgerald",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Keybanc",
+    "Needham",
+    "RBC Capital",
+    "Telsey Advisory Group",
+    "UBS"
+   ],
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "detail": ""
+  },
+  "CPRX": {
+   "status": "OK",
+   "firms": [
+    "Citigroup",
+    "HC Wainwright & Co.",
+    "Stephens & Co."
+   ],
+   "newest": "2026-05-28",
+   "stale_days": 84,
+   "detail": ""
+  },
+  "CR": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "DA Davidson",
+    "Stifel"
+   ],
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "detail": ""
+  },
+  "CRC": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Citigroup",
+    "JP Morgan",
+    "Mizuho",
+    "Stephens & Co.",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "detail": ""
+  },
+  "CSGS": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "CUBI": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "DA Davidson",
+    "JP Morgan",
+    "Keefe, Bruyette & Woods",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "Stephens & Co.",
+    "TD Cowen"
+   ],
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "detail": ""
+  },
+  "CVCO": {
+   "status": "OK",
+   "firms": [
+    "UBS"
+   ],
+   "newest": "2026-06-05",
+   "stale_days": 76,
+   "detail": ""
+  },
+  "DAN": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Deutsche Bank",
+    "JP Morgan",
+    "RBC Capital",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "detail": ""
+  },
+  "DAR": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2024-10-11",
+   "stale_days": 678,
+   "detail": "action feed silent 678d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "DAWN": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "DBX": {
+   "status": "OK",
+   "firms": [
+    "Citigroup",
+    "JP Morgan",
+    "RBC Capital",
+    "UBS",
+    "William Blair"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "DFH": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2026-01-07",
+   "stale_days": 225,
+   "detail": "action feed silent 225d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "DIOD": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Benchmark",
+    "Truist Securities"
+   ],
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "detail": ""
+  },
+  "DOCN": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Baird",
+    "Barclays",
+    "Canaccord Genuity",
+    "Cantor Fitzgerald",
+    "Citigroup",
+    "Citizens",
+    "Goldman Sachs",
+    "Keybanc",
+    "Morgan Stanley",
+    "Oppenheimer",
+    "Piper Sandler",
+    "Stifel",
+    "UBS"
+   ],
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "detail": ""
+  },
+  "DORM": {
+   "status": "OK",
+   "firms": [
+    "BMO Capital",
+    "Barrington Research",
+    "Freedom Broker",
+    "Jefferies",
+    "Roth Capital",
+    "Stephens & Co.",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "detail": ""
+  },
+  "DV": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Canaccord Genuity",
+    "Citizens",
+    "Goldman Sachs",
+    "JMP Securities",
+    "JP Morgan",
+    "Morgan Stanley",
+    "Needham",
+    "RBC Capital",
+    "Raymond James",
+    "Scotiabank",
+    "Stifel",
+    "Truist Securities",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "EBC": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "DA Davidson",
+    "Hovde Group",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler",
+    "Stephens & Co.",
+    "TD Cowen"
+   ],
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "detail": ""
+  },
+  "ECG": {
+   "status": "OK",
+   "firms": [
+    "Cantor Fitzgerald",
+    "DA Davidson",
+    "Freedom Broker",
+    "GLJ Research",
+    "Guggenheim",
+    "Oppenheimer",
+    "Stifel"
+   ],
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "detail": ""
+  },
+  "EHC": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Keybanc",
+    "TD Cowen",
+    "Truist Securities",
+    "UBS"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "ENR": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Canaccord Genuity",
+    "Evercore ISI Group",
+    "JP Morgan",
+    "Morgan Stanley",
+    "UBS"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "EPC": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Canaccord Genuity",
+    "Morgan Stanley",
+    "RBC Capital",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "EQX": {
+   "status": "OK",
+   "firms": [
+    "RBC Capital"
+   ],
+   "newest": "2026-07-09",
+   "stale_days": 42,
+   "detail": ""
+  },
+  "ESAB": {
+   "status": "OK",
+   "firms": [
+    "DA Davidson",
+    "Evercore ISI Group",
+    "JP Morgan",
+    "Loop Capital",
+    "Oppenheimer",
+    "Roth Capital",
+    "Stifel",
+    "UBS"
+   ],
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "detail": ""
+  },
+  "ESI": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "Fermium Research",
+    "Freedom Capital Markets",
+    "Keybanc",
+    "Mizuho",
+    "Truist Securities",
+    "UBS"
+   ],
+   "newest": "2026-07-15",
+   "stale_days": 36,
+   "detail": ""
+  },
+  "EVGO": {
+   "status": "OK",
+   "firms": [
+    "Cantor Fitzgerald",
+    "Evercore ISI Group",
+    "JP Morgan",
+    "Needham",
+    "RBC Capital",
+    "Stifel",
+    "UBS"
+   ],
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "detail": ""
+  },
+  "EXEL": {
+   "status": "OK",
+   "firms": [
+    "BMO Capital",
+    "Barclays",
+    "Citizens",
+    "Goldman Sachs",
+    "Guggenheim",
+    "HC Wainwright & Co.",
+    "Leerink Partners",
+    "Morgan Stanley",
+    "RBC Capital",
+    "Stifel",
+    "TD Cowen",
+    "Truist Securities",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "EXPO": {
+   "status": "OK",
+   "firms": [
+    "JP Morgan",
+    "UBS",
+    "William Blair"
+   ],
+   "newest": "2026-07-31",
+   "stale_days": 20,
+   "detail": ""
+  },
+  "FA": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citigroup",
+    "JP Morgan",
+    "Needham",
+    "RBC Capital"
+   ],
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "detail": ""
+  },
+  "FCFS": {
+   "status": "OK",
+   "firms": [
+    "Canaccord Genuity",
+    "Loop Capital",
+    "TD Cowen"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "FHI": {
+   "status": "OK",
+   "firms": [
+    "Evercore ISI Group",
+    "JP Morgan",
+    "RBC Capital",
+    "TD Cowen"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "FIGS": {
+   "status": "OK",
+   "firms": [
+    "BTIG",
+    "Barclays",
+    "Goldman Sachs",
+    "Keybanc",
+    "Morgan Stanley",
+    "Oppenheimer",
+    "Telsey Advisory Group"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "FLG": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Cantor Fitzgerald",
+    "Citigroup",
+    "DA Davidson",
+    "JP Morgan",
+    "Keefe, Bruyette & Woods",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "RBC Capital",
+    "TD Cowen",
+    "Truist Securities",
+    "UBS"
+   ],
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "detail": ""
+  },
+  "FLNC": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Canaccord Genuity",
+    "Citigroup",
+    "GLJ Research",
+    "Goldman Sachs",
+    "Guggenheim",
+    "HSBC",
+    "JP Morgan",
+    "Jefferies",
+    "Johnson Rice",
+    "Mizuho",
+    "Morgan Stanley",
+    "Needham",
+    "RBC Capital",
+    "Roth Capital",
+    "Susquehanna",
+    "Truist Securities",
+    "UBS"
+   ],
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "detail": ""
+  },
+  "FLO": {
+   "status": "OK",
+   "firms": [
+    "BNP Paribas",
+    "Deutsche Bank",
+    "Stephens & Co.",
+    "Truist Securities"
+   ],
+   "newest": "2026-05-18",
+   "stale_days": 94,
+   "detail": ""
+  },
+  "FLYW": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "BTIG",
+    "Citigroup",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Morgan Stanley",
+    "RBC Capital",
+    "Seaport Global",
+    "Stephens & Co.",
+    "Truist Securities",
+    "UBS",
+    "Wolfe Research"
+   ],
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "detail": ""
+  },
+  "FMC": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Citigroup",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Keybanc",
+    "Mizuho",
+    "Morgan Stanley",
+    "RBC Capital",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "detail": ""
+  },
+  "FOLD": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "FSLY": {
+   "status": "OK",
+   "firms": [
+    "Canaccord Genuity",
+    "Citigroup",
+    "DA Davidson",
+    "Evercore ISI Group",
+    "Freedom Broker",
+    "Keybanc",
+    "Oppenheimer",
+    "Piper Sandler",
+    "RBC Capital"
+   ],
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "detail": ""
+  },
+  "FTRE": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Barclays",
+    "Citigroup",
+    "Evercore ISI Group",
+    "Jefferies",
+    "Mizuho",
+    "TD Cowen",
+    "Truist Securities"
+   ],
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "detail": ""
+  },
+  "FULT": {
+   "status": "OK",
+   "firms": [
+    "DA Davidson",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler",
+    "Raymond James"
+   ],
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "detail": ""
+  },
+  "GATX": {
+   "status": "OK",
+   "firms": [
+    "Citigroup",
+    "Susquehanna"
+   ],
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "detail": ""
+  },
+  "GBCI": {
+   "status": "OK",
+   "firms": [
+    "DA Davidson",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler",
+    "Raymond James",
+    "Stephens & Co."
+   ],
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "detail": ""
+  },
+  "GL": {
+   "status": "OK",
+   "firms": [
+    "Evercore ISI Group",
+    "JP Morgan",
+    "Jefferies",
+    "Keefe, Bruyette & Woods",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "TD Cowen",
+    "Truist Securities",
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-24",
+   "stale_days": 27,
+   "detail": ""
+  },
+  "GMS": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "GNW": {
+   "status": "OK",
+   "firms": [
+    "Keefe, Bruyette & Woods"
+   ],
+   "newest": "2026-07-13",
+   "stale_days": 38,
+   "detail": ""
+  },
+  "GOLF": {
+   "status": "OK",
+   "firms": [
+    "JP Morgan",
+    "Keybanc",
+    "Morgan Stanley",
+    "Truist Securities"
+   ],
+   "newest": "2026-06-26",
+   "stale_days": 55,
+   "detail": ""
+  },
+  "GPI": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Benchmark",
+    "Citigroup",
+    "Evercore ISI Group",
+    "JP Morgan",
+    "Morgan Stanley",
+    "UBS"
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "GPK": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Citigroup",
+    "Deutsche Bank",
+    "JP Morgan",
+    "RBC Capital",
+    "Raymond James",
+    "Truist Securities",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "detail": ""
+  },
+  "GPRE": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "Oppenheimer",
+    "Roth Capital",
+    "Stephens & Co.",
+    "UBS"
+   ],
+   "newest": "2026-07-17",
+   "stale_days": 34,
+   "detail": ""
+  },
+  "GSHD": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "Cantor Fitzgerald",
+    "Citizens",
+    "JMP Securities",
+    "JP Morgan",
+    "Jefferies",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler",
+    "RBC Capital",
+    "Truist Securities",
+    "UBS"
+   ],
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "detail": ""
+  },
+  "GT": {
+   "status": "OK",
+   "firms": [
+    "Citigroup",
+    "Deutsche Bank",
+    "JP Morgan",
+    "Morgan Stanley",
+    "TD Cowen"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "GXO": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citigroup",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Morgan Stanley",
+    "Stephens & Co.",
+    "Stifel",
+    "Susquehanna",
+    "Truist Securities",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "detail": ""
+  },
+  "HESM": {
+   "status": "OK",
+   "firms": [
+    "Citigroup",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Morgan Stanley",
+    "Raymond James",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-06-10",
+   "stale_days": 71,
+   "detail": ""
+  },
+  "HGV": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citizens",
+    "Goldman Sachs",
+    "Jefferies",
+    "Mizuho",
+    "Morgan Stanley",
+    "Truist Securities",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "detail": ""
+  },
+  "HL": {
+   "status": "OK",
+   "firms": [
+    "BMO Capital",
+    "CIBC",
+    "Canaccord Genuity",
+    "HC Wainwright & Co.",
+    "Scotiabank"
+   ],
+   "newest": "2026-07-14",
+   "stale_days": 37,
+   "detail": ""
+  },
+  "HLX": {
+   "status": "OK",
+   "firms": [
+    "TD Cowen"
+   ],
+   "newest": "2026-04-24",
+   "stale_days": 118,
+   "detail": ""
+  },
+  "HNI": {
+   "status": "OK",
+   "firms": [
+    "Benchmark"
+   ],
+   "newest": "2026-05-07",
+   "stale_days": 105,
+   "detail": ""
+  },
+  "HOG": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Citigroup",
+    "DA Davidson",
+    "Loop Capital",
+    "Morgan Stanley",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "detail": ""
+  },
+  "HOMB": {
+   "status": "OK",
+   "firms": [
+    "Benchmark",
+    "Cantor Fitzgerald",
+    "Citigroup",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler",
+    "Stephens & Co."
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "HOV": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2026-04-09",
+   "stale_days": 133,
+   "detail": "action feed silent 133d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "HP": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citigroup",
+    "Evercore ISI Group",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "RBC Capital",
+    "Susquehanna",
+    "TD Cowen"
+   ],
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "detail": ""
+  },
+  "HRI": {
+   "status": "OK",
+   "firms": [
+    "BNP Paribas",
+    "Baird",
+    "Barclays",
+    "Citigroup",
+    "JP Morgan",
+    "Keybanc",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "detail": ""
+  },
+  "HRMY": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Deutsche Bank",
+    "HC Wainwright & Co.",
+    "Mizuho",
+    "Needham",
+    "Truist Securities",
+    "UBS"
+   ],
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "detail": ""
+  },
+  "HROW": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "BTIG",
+    "Cantor Fitzgerald",
+    "Craig-Hallum",
+    "HC Wainwright & Co.",
+    "Ladenburg Thalmann",
+    "Lake Street"
+   ],
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "detail": ""
+  },
+  "HWC": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Benchmark",
+    "Citigroup",
+    "DA Davidson",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler",
+    "Raymond James",
+    "Stephens & Co."
+   ],
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "detail": ""
+  },
+  "HWKN": {
+   "status": "OK",
+   "firms": [
+    "BWS Financial",
+    "Barclays"
+   ],
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "detail": ""
+  },
+  "IBOC": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2026-03-06",
+   "stale_days": 167,
+   "detail": "action feed silent 167d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "ICUI": {
+   "status": "OK",
+   "firms": [
+    "BTIG",
+    "Keybanc",
+    "Needham",
+    "Piper Sandler"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "IDCC": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2025-10-30",
+   "stale_days": 294,
+   "detail": "action feed silent 294d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "INDI": {
+   "status": "OK",
+   "firms": [
+    "TD Cowen",
+    "UBS"
+   ],
+   "newest": "2026-07-13",
+   "stale_days": 38,
+   "detail": ""
+  },
+  "IONS": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "Barclays",
+    "Canaccord Genuity",
+    "Citigroup",
+    "Goldman Sachs",
+    "Guggenheim",
+    "HC Wainwright & Co.",
+    "JP Morgan",
+    "Jefferies",
+    "Leerink Partners",
+    "Morgan Stanley",
+    "Needham",
+    "Oppenheimer",
+    "Piper Sandler",
+    "RBC Capital",
+    "Raymond James",
+    "Stifel",
+    "TD Cowen",
+    "Wells Fargo",
+    "Wolfe Research"
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "IPGP": {
+   "status": "OK",
+   "firms": [
+    "Citigroup",
+    "Needham",
+    "Raymond James",
+    "Roth Capital",
+    "Stifel"
+   ],
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "detail": ""
+  },
+  "IRDM": {
+   "status": "OK",
+   "firms": [
+    "BWS Financial",
+    "Barclays",
+    "Morgan Stanley",
+    "Oppenheimer",
+    "Raymond James"
+   ],
+   "newest": "2026-06-30",
+   "stale_days": 51,
+   "detail": ""
+  },
+  "IRTC": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BTIG",
+    "Baird",
+    "Canaccord Genuity",
+    "Citigroup",
+    "Evercore ISI Group",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Morgan Stanley",
+    "Needham",
+    "Stephens & Co.",
+    "Truist Securities",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "detail": ""
+  },
+  "ITGR": {
+   "status": "OK",
+   "firms": [
+    "Benchmark",
+    "Citigroup",
+    "Freedom Capital Markets",
+    "Keybanc",
+    "Oppenheimer",
+    "Piper Sandler",
+    "Raymond James",
+    "Truist Securities",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "detail": ""
+  },
+  "JANX": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Cantor Fitzgerald",
+    "Clear Street",
+    "Guggenheim",
+    "HC Wainwright & Co.",
+    "Jones Trading",
+    "Piper Sandler",
+    "Stifel",
+    "Truist Securities",
+    "UBS",
+    "Wedbush",
+    "Wolfe Research"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "JELD": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Goldman Sachs",
+    "Jefferies",
+    "UBS"
+   ],
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "detail": ""
+  },
+  "KAI": {
+   "status": "OK",
+   "firms": [
+    "Barrington Research",
+    "DA Davidson"
+   ],
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "detail": ""
+  },
+  "KEX": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BTIG",
+    "Citigroup",
+    "Evercore ISI Group"
+   ],
+   "newest": "2026-07-31",
+   "stale_days": 20,
+   "detail": ""
+  },
+  "KGS": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citigroup",
+    "Goldman Sachs",
+    "Jefferies",
+    "Mizuho",
+    "Piper Sandler",
+    "RBC Capital",
+    "Stifel",
+    "Wells Fargo",
+    "William Blair"
+   ],
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "detail": ""
+  },
+  "KLIC": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "DA Davidson",
+    "Needham"
+   ],
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "detail": ""
+  },
+  "KMPR": {
+   "status": "OK",
+   "firms": [
+    "Citizens",
+    "Piper Sandler",
+    "UBS",
+    "William Blair"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "KNSL": {
+   "status": "OK",
+   "firms": [
+    "Cantor Fitzgerald",
+    "JP Morgan",
+    "Jefferies",
+    "Morgan Stanley",
+    "RBC Capital",
+    "TD Cowen",
+    "Truist Securities",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "KODK": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "KRUS": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Benchmark",
+    "Citigroup",
+    "DA Davidson",
+    "Freedom Capital Markets",
+    "Lake Street",
+    "Piper Sandler",
+    "Roth Capital",
+    "TD Cowen"
+   ],
+   "newest": "2026-07-08",
+   "stale_days": 43,
+   "detail": ""
+  },
+  "KTOS": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "BNP Paribas",
+    "BTIG",
+    "Baird",
+    "Canaccord Genuity",
+    "Cantor Fitzgerald",
+    "Citizens",
+    "Goldman Sachs",
+    "JMP Securities",
+    "JP Morgan",
+    "Jefferies",
+    "Jones Trading",
+    "Keybanc",
+    "Piper Sandler",
+    "RBC Capital",
+    "Stifel",
+    "Truist Securities",
+    "UBS",
+    "Wedbush"
+   ],
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "detail": ""
+  },
+  "KYMR": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "B. Riley Securities",
+    "BTIG",
+    "Barclays",
+    "Canaccord Genuity",
+    "Citigroup",
+    "Deutsche Bank",
+    "Guggenheim",
+    "HC Wainwright & Co.",
+    "JP Morgan",
+    "Jefferies",
+    "Leerink Partners",
+    "Mizuho",
+    "Morgan Stanley",
+    "Oppenheimer",
+    "Piper Sandler",
+    "RBC Capital",
+    "Stephens & Co.",
+    "Truist Securities",
+    "UBS",
+    "Wells Fargo",
+    "Wolfe Research"
+   ],
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "detail": ""
+  },
+  "L": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2018-08-01",
+   "stale_days": 2941,
+   "detail": "action feed silent 2941d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having "
+  },
+  "LAZ": {
+   "status": "OK",
+   "firms": [
+    "Argus Research",
+    "BMO Capital",
+    "Citizens",
+    "Goldman Sachs",
+    "Keefe, Bruyette & Woods",
+    "Morgan Stanley",
+    "UBS"
+   ],
+   "newest": "2026-07-24",
+   "stale_days": 27,
+   "detail": ""
+  },
+  "LBPH": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "LEG": {
+   "status": "OK",
+   "firms": [
+    "Piper Sandler",
+    "Truist Securities"
+   ],
+   "newest": "2026-08-12",
+   "stale_days": 8,
+   "detail": ""
+  },
+  "LFST": {
+   "status": "OK",
+   "firms": [
+    "BMO Capital",
+    "BTIG",
+    "Barclays",
+    "Canaccord Genuity",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Keybanc",
+    "UBS"
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "LGIH": {
+   "status": "OK",
+   "firms": [
+    "Citizens",
+    "JMP Securities",
+    "JP Morgan",
+    "Wedbush"
+   ],
+   "newest": "2026-04-30",
+   "stale_days": 112,
+   "detail": ""
+  },
+  "LIF": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Canaccord Genuity",
+    "Citigroup",
+    "Citizens",
+    "DA Davidson",
+    "Evercore ISI Group",
+    "Stifel",
+    "UBS"
+   ],
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "detail": ""
+  },
+  "LINE": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Barclays",
+    "Citigroup",
+    "Compass Point",
+    "Evercore ISI Group",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Mizuho",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "RBC Capital",
+    "Scotiabank",
+    "Truist Securities",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "detail": ""
+  },
+  "LMB": {
+   "status": "OK",
+   "firms": [
+    "JP Morgan",
+    "Stifel"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "LNC": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Evercore ISI Group",
+    "JP Morgan",
+    "Jefferies",
+    "Keefe, Bruyette & Woods",
+    "Mizuho",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "TD Cowen",
+    "UBS",
+    "Wells Fargo",
+    "Wolfe Research"
+   ],
+   "newest": "2026-07-31",
+   "stale_days": 20,
+   "detail": ""
+  },
+  "LOPE": {
+   "status": "OK",
+   "firms": [
+    "BMO Capital",
+    "Barrington Research",
+    "Truist Securities"
+   ],
+   "newest": "2026-07-06",
+   "stale_days": 45,
+   "detail": ""
+  },
+  "LRN": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2026-04-16",
+   "stale_days": 126,
+   "detail": "action feed silent 126d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "LZB": {
+   "status": "OK",
+   "firms": [
+    "Keybanc",
+    "Sidoti & Co."
+   ],
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "detail": ""
+  },
+  "MAGN": {
+   "status": "OK",
+   "firms": [
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-15",
+   "stale_days": 36,
+   "detail": ""
+  },
+  "MATX": {
+   "status": "OK",
+   "firms": [
+    "JP Morgan",
+    "Stephens & Co.",
+    "Wolfe Research"
+   ],
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "detail": ""
+  },
+  "MBC": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2025-05-07",
+   "stale_days": 470,
+   "detail": "action feed silent 470d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "MHO": {
+   "status": "OK",
+   "firms": [
+    "Citizens",
+    "Freedom Broker",
+    "Raymond James",
+    "Seaport Global",
+    "Zelman & Assoc"
+   ],
+   "newest": "2026-07-07",
+   "stale_days": 44,
+   "detail": ""
+  },
+  "MIR": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "Baird",
+    "Citigroup",
+    "Evercore ISI Group",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Morgan Stanley",
+    "Northland Capital Markets"
+   ],
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "detail": ""
+  },
+  "ML": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "MNRO": {
+   "status": "OK",
+   "firms": [
+    "Stephens & Co.",
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "detail": ""
+  },
+  "MSGE": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BTIG",
+    "Goldman Sachs",
+    "Guggenheim",
+    "JP Morgan",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "Seaport Global",
+    "Susquehanna",
+    "Wolfe Research"
+   ],
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "detail": ""
+  },
+  "MSM": {
+   "status": "OK",
+   "firms": [
+    "DA Davidson",
+    "JP Morgan",
+    "Keybanc",
+    "Rothschild & Co",
+    "Wolfe Research"
+   ],
+   "newest": "2026-07-13",
+   "stale_days": 38,
+   "detail": ""
+  },
+  "MTDR": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "Citigroup",
+    "Keybanc",
+    "Mizuho",
+    "Morgan Stanley",
+    "RBC Capital",
+    "Raymond James",
+    "Roth Capital",
+    "Stephens & Co.",
+    "TD Cowen",
+    "Truist Securities",
+    "UBS",
+    "Wells Fargo",
+    "William Blair"
+   ],
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "detail": ""
+  },
+  "MTSI": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Benchmark",
+    "Evercore ISI Group",
+    "JP Morgan",
+    "Jefferies",
+    "Loop Capital",
+    "Needham",
+    "Stifel",
+    "Susquehanna",
+    "Truist Securities"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "MUSA": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2025-10-23",
+   "stale_days": 301,
+   "detail": "action feed silent 301d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "MXL": {
+   "status": "OK",
+   "firms": [
+    "Benchmark",
+    "Loop Capital",
+    "Needham",
+    "Roth Capital",
+    "Stifel",
+    "Susquehanna",
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-24",
+   "stale_days": 27,
+   "detail": ""
+  },
+  "MYGN": {
+   "status": "OK",
+   "firms": [
+    "Piper Sandler",
+    "Stephens & Co.",
+    "TD Cowen",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "detail": ""
+  },
+  "NAPA": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "NARI": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "NATL": {
+   "status": "OK",
+   "firms": [
+    "DA Davidson",
+    "Wedbush"
+   ],
+   "newest": "2026-05-11",
+   "stale_days": 101,
+   "detail": ""
+  },
+  "NEO": {
+   "status": "OK",
+   "firms": [
+    "Benchmark",
+    "Leerink Partners",
+    "Needham",
+    "Piper Sandler",
+    "Stephens & Co.",
+    "TD Cowen"
+   ],
+   "newest": "2026-07-29",
+   "stale_days": 22,
+   "detail": ""
+  },
+  "NGNE": {
+   "status": "OK",
+   "firms": [
+    "Canaccord Genuity",
+    "Guggenheim",
+    "HC Wainwright & Co.",
+    "LifeSci Capital"
+   ],
+   "newest": "2026-08-12",
+   "stale_days": 8,
+   "detail": ""
+  },
+  "NMRK": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citizens",
+    "Keefe, Bruyette & Woods"
+   ],
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "detail": ""
+  },
+  "NN": {
+   "status": "OK",
+   "firms": [
+    "Oppenheimer"
+   ],
+   "newest": "2026-06-03",
+   "stale_days": 78,
+   "detail": ""
+  },
+  "NOVA": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "NSP": {
+   "status": "OK",
+   "firms": [
+    "JP Morgan",
+    "Truist Securities"
+   ],
+   "newest": "2026-07-22",
+   "stale_days": 29,
+   "detail": ""
+  },
+  "NVAX": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "BTIG",
+    "Cantor Fitzgerald",
+    "HC Wainwright & Co.",
+    "JP Morgan",
+    "TD Cowen"
+   ],
+   "newest": "2026-06-11",
+   "stale_days": 70,
+   "detail": ""
+  },
+  "NWL": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Canaccord Genuity",
+    "Citigroup",
+    "Deutsche Bank",
+    "JP Morgan",
+    "Morgan Stanley",
+    "RBC Capital",
+    "UBS"
+   ],
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "detail": ""
+  },
+  "NWSA": {
+   "status": "OK",
+   "firms": [
+    "Citigroup",
+    "Guggenheim",
+    "JP Morgan",
+    "Macquarie"
+   ],
+   "newest": "2026-05-13",
+   "stale_days": 99,
+   "detail": ""
+  },
+  "NYT": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Citigroup",
+    "Evercore ISI Group",
+    "Guggenheim",
+    "JP Morgan",
+    "Morgan Stanley"
+   ],
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "detail": ""
+  },
+  "OGN": {
+   "status": "OK",
+   "firms": [
+    "BNP Paribas",
+    "Barclays",
+    "JP Morgan",
+    "Morgan Stanley",
+    "Piper Sandler"
+   ],
+   "newest": "2026-04-29",
+   "stale_days": 113,
+   "detail": ""
+  },
+  "OGS": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Jefferies",
+    "Ladenburg Thalmann",
+    "Mizuho",
+    "Morgan Stanley",
+    "Stifel",
+    "Truist Securities",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "detail": ""
+  },
+  "OII": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citigroup",
+    "TD Cowen"
+   ],
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "detail": ""
+  },
+  "OMER": {
+   "status": "OK",
+   "firms": [
+    "D. Boral Capital",
+    "HC Wainwright & Co.",
+    "Needham",
+    "WBB Securities"
+   ],
+   "newest": "2026-06-26",
+   "stale_days": 55,
+   "detail": ""
+  },
+  "ONB": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citigroup",
+    "Jefferies",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler",
+    "RBC Capital",
+    "Stephens & Co.",
+    "TD Cowen",
+    "Truist Securities",
+    "UBS"
+   ],
+   "newest": "2026-07-28",
+   "stale_days": 23,
+   "detail": ""
+  },
+  "OUT": {
+   "status": "OK",
+   "firms": [
+    "Barrington Research",
+    "Citigroup",
+    "JP Morgan",
+    "Morgan Stanley",
+    "TD Cowen",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "detail": ""
+  },
+  "OXM": {
+   "status": "OK",
+   "firms": [
+    "Citigroup",
+    "Telsey Advisory Group",
+    "Truist Securities",
+    "UBS"
+   ],
+   "newest": "2026-06-16",
+   "stale_days": 65,
+   "detail": ""
+  },
+  "PACS": {
+   "status": "OK",
+   "firms": [
+    "Oppenheimer",
+    "RBC Capital",
+    "Truist Securities",
+    "UBS"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "PAG": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Benchmark",
+    "Citigroup",
+    "JP Morgan",
+    "Morgan Stanley",
+    "Stephens & Co.",
+    "UBS"
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "PAR": {
+   "status": "OK",
+   "firms": [
+    "BTIG",
+    "Benchmark",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Needham",
+    "Stephens & Co."
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "PATK": {
+   "status": "OK",
+   "firms": [
+    "BMO Capital",
+    "Benchmark",
+    "Keybanc",
+    "Loop Capital",
+    "Roth Capital",
+    "Truist Securities"
+   ],
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "detail": ""
+  },
+  "PAY": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Freedom Capital Markets",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Wedbush"
+   ],
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "detail": ""
+  },
+  "PAYO": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Benchmark",
+    "Citigroup",
+    "Goldman Sachs",
+    "Keefe, Bruyette & Woods",
+    "Needham",
+    "William Blair"
+   ],
+   "newest": "2026-06-18",
+   "stale_days": 63,
+   "detail": ""
+  },
+  "PBF": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "Citigroup",
+    "Evercore ISI Group",
+    "Goldman Sachs",
+    "Mizuho",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "Scotiabank",
+    "TD Cowen",
+    "UBS",
+    "Wolfe Research"
+   ],
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "detail": ""
+  },
+  "PCT": {
+   "status": "OK",
+   "firms": [
+    "Cantor Fitzgerald",
+    "Northland Capital Markets",
+    "Seaport Global",
+    "TD Cowen"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "PDCO": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "PFSI": {
+   "status": "OK",
+   "firms": [
+    "BTIG",
+    "Barclays",
+    "Jefferies",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler",
+    "Stephens & Co.",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-31",
+   "stale_days": 20,
+   "detail": ""
+  },
+  "PGNY": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BTIG",
+    "Barclays",
+    "Canaccord Genuity",
+    "Citizens",
+    "JP Morgan",
+    "Keybanc",
+    "Truist Securities",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "detail": ""
+  },
+  "PII": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Citigroup",
+    "Loop Capital",
+    "Morgan Stanley",
+    "RBC Capital",
+    "Roth Capital",
+    "Seaport Global",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "detail": ""
+  },
+  "PLUS": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2024-05-23",
+   "stale_days": 819,
+   "detail": "action feed silent 819d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "PNFP": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Baird",
+    "Barclays",
+    "Benchmark",
+    "Citigroup",
+    "DA Davidson",
+    "Evercore ISI Group",
+    "Hovde Group",
+    "JP Morgan",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler",
+    "Stephens & Co.",
+    "TD Cowen",
+    "Truist Securities",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "PPBI": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "PRG": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "BTIG",
+    "Jefferies",
+    "Keybanc",
+    "Loop Capital",
+    "Stephens & Co.",
+    "TD Cowen"
+   ],
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "detail": ""
+  },
+  "PRGS": {
+   "status": "OK",
+   "firms": [
+    "Citigroup",
+    "DA Davidson",
+    "Guggenheim",
+    "Jefferies",
+    "Oppenheimer",
+    "Wedbush"
+   ],
+   "newest": "2026-08-12",
+   "stale_days": 8,
+   "detail": ""
+  },
+  "PRKS": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citigroup",
+    "Citizens",
+    "Deutsche Bank",
+    "Goldman Sachs",
+    "Guggenheim",
+    "JP Morgan",
+    "Mizuho",
+    "Stifel",
+    "Truist Securities"
+   ],
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "detail": ""
+  },
+  "PSTX": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "PYCR": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "QMCO": {
+   "status": "OK",
+   "firms": [
+    "Lake Street",
+    "Northland Capital Markets"
+   ],
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "detail": ""
+  },
+  "QXO": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Benchmark",
+    "Citigroup",
+    "Keybanc",
+    "Loop Capital",
+    "Morgan Stanley",
+    "Oppenheimer",
+    "RBC Capital",
+    "Raymond James",
+    "Stephens & Co.",
+    "Truist Securities"
+   ],
+   "newest": "2026-07-13",
+   "stale_days": 38,
+   "detail": ""
+  },
+  "RAMP": {
+   "status": "OK",
+   "firms": [
+    "Benchmark",
+    "DA Davidson",
+    "Morgan Stanley",
+    "Wells Fargo"
+   ],
+   "newest": "2026-05-18",
+   "stale_days": 94,
+   "detail": ""
+  },
+  "RBC": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Keybanc",
+    "Morgan Stanley",
+    "Raymond James",
+    "Truist Securities"
+   ],
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "detail": ""
+  },
+  "RDNT": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "Barclays",
+    "Keybanc",
+    "Truist Securities"
+   ],
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "detail": ""
+  },
+  "RMBS": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2025-04-29",
+   "stale_days": 478,
+   "detail": "action feed silent 478d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "ROOT": {
+   "status": "OK",
+   "firms": [
+    "Jefferies",
+    "Keefe, Bruyette & Woods",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "detail": ""
+  },
+  "RRR": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Benchmark",
+    "Citigroup",
+    "Citizens",
+    "Goldman Sachs",
+    "JMP Securities",
+    "JP Morgan",
+    "Jefferies",
+    "Macquarie",
+    "Mizuho",
+    "Morgan Stanley",
+    "Stifel",
+    "Susquehanna",
+    "Truist Securities",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-17",
+   "stale_days": 3,
+   "detail": ""
+  },
+  "RSI": {
+   "status": "OK",
+   "firms": [
+    "Benchmark",
+    "Citizens",
+    "Freedom Capital Markets",
+    "JP Morgan",
+    "Jefferies",
+    "Macquarie",
+    "Needham",
+    "Oppenheimer",
+    "Susquehanna",
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "detail": ""
+  },
+  "RUSHA": {
+   "status": "OK",
+   "firms": [
+    "Stephens & Co.",
+    "UBS",
+    "Wolfe Research"
+   ],
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "detail": ""
+  },
+  "RXO": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "Barclays",
+    "Citigroup",
+    "Citizens",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Morgan Stanley",
+    "Stifel",
+    "Susquehanna",
+    "TD Cowen",
+    "Truist Securities",
+    "UBS",
+    "Wells Fargo",
+    "Wolfe Research"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "RYAN": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "Barclays",
+    "Cantor Fitzgerald",
+    "Citigroup",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Jefferies",
+    "Keefe, Bruyette & Woods",
+    "Mizuho",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "RBC Capital",
+    "TD Cowen",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "RYTM": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Canaccord Genuity",
+    "Citigroup",
+    "Citizens",
+    "Goldman Sachs",
+    "Guggenheim",
+    "HC Wainwright & Co.",
+    "JMP Securities",
+    "JP Morgan",
+    "Morgan Stanley",
+    "Needham",
+    "RBC Capital",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "SAIC": {
+   "status": "OK",
+   "firms": [
+    "Citigroup",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Jefferies",
+    "Stifel",
+    "TD Cowen",
+    "Truist Securities",
+    "UBS"
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "SARO": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BTIG",
+    "Barclays",
+    "JP Morgan",
+    "Jefferies",
+    "Morgan Stanley",
+    "RBC Capital",
+    "Susquehanna",
+    "Truist Securities",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "SBH": {
+   "status": "OK",
+   "firms": [
+    "Canaccord Genuity",
+    "Jefferies",
+    "Morgan Stanley",
+    "Raymond James",
+    "TD Cowen"
+   ],
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "detail": ""
+  },
+  "SCI": {
+   "status": "OK",
+   "firms": [
+    "JP Morgan",
+    "Oppenheimer",
+    "UBS"
+   ],
+   "newest": "2026-07-31",
+   "stale_days": 20,
+   "detail": ""
+  },
+  "SDGR": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Goldman Sachs",
+    "Keybanc",
+    "Morgan Stanley",
+    "TD Cowen",
+    "UBS"
+   ],
+   "newest": "2026-05-14",
+   "stale_days": 98,
+   "detail": ""
+  },
+  "SEE": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "SEM": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Benchmark",
+    "Mizuho",
+    "RBC Capital"
+   ],
+   "newest": "2026-05-13",
+   "stale_days": 99,
+   "detail": ""
+  },
+  "SFNC": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "DA Davidson",
+    "Keefe, Bruyette & Woods",
+    "Morgan Stanley",
+    "Raymond James",
+    "Stephens & Co."
+   ],
+   "newest": "2026-07-20",
+   "stale_days": 31,
+   "detail": ""
+  },
+  "SGN": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "SITM": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Benchmark",
+    "Goldman Sachs",
+    "Needham",
+    "Raymond James",
+    "Stifel",
+    "UBS"
+   ],
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "detail": ""
+  },
+  "SLAB": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2026-02-06",
+   "stale_days": 195,
+   "detail": "action feed silent 195d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "SMLR": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "SMMT": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Bernstein",
+    "Cantor Fitzgerald",
+    "Citigroup",
+    "Citizens",
+    "Guggenheim",
+    "HC Wainwright & Co.",
+    "JMP Securities",
+    "Jefferies",
+    "Leerink Partners",
+    "Piper Sandler",
+    "Stifel",
+    "Wolfe Research"
+   ],
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "detail": ""
+  },
+  "SNEX": {
+   "status": "OK",
+   "firms": [
+    "Jefferies"
+   ],
+   "newest": "2026-07-20",
+   "stale_days": 31,
+   "detail": ""
+  },
+  "SON": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Baird",
+    "Citigroup",
+    "Deutsche Bank",
+    "Jefferies",
+    "Raymond James",
+    "Truist Securities",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-24",
+   "stale_days": 27,
+   "detail": ""
+  },
+  "SPSC": {
+   "status": "OK",
+   "firms": [
+    "Cantor Fitzgerald",
+    "Citigroup",
+    "DA Davidson",
+    "Morgan Stanley",
+    "Needham",
+    "Rothschild & Co",
+    "Stifel"
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "SPT": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Canaccord Genuity",
+    "Goldman Sachs",
+    "Jefferies",
+    "Keybanc",
+    "Morgan Stanley",
+    "Needham"
+   ],
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "detail": ""
+  },
+  "SRRK": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "Barclays",
+    "Canaccord Genuity",
+    "Citigroup",
+    "HC Wainwright & Co.",
+    "JP Morgan",
+    "Piper Sandler",
+    "Truist Securities",
+    "UBS",
+    "Wedbush",
+    "Wolfe Research"
+   ],
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "detail": ""
+  },
+  "STRA": {
+   "status": "OK",
+   "firms": [
+    "BMO Capital",
+    "Barrington Research",
+    "Truist Securities"
+   ],
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "detail": ""
+  },
+  "STRL": {
+   "status": "OK",
+   "firms": [
+    "Argus Research",
+    "Cantor Fitzgerald",
+    "DA Davidson",
+    "Keybanc",
+    "Oppenheimer",
+    "Texas Capital Securities"
+   ],
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "detail": ""
+  },
+  "SUPN": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Cantor Fitzgerald",
+    "Piper Sandler",
+    "Stifel",
+    "TD Cowen"
+   ],
+   "newest": "2026-07-09",
+   "stale_days": 42,
+   "detail": ""
+  },
+  "SWTX": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "SYM": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Barclays",
+    "Cantor Fitzgerald",
+    "Citigroup",
+    "Craig-Hallum",
+    "DA Davidson",
+    "Goldman Sachs",
+    "Keybanc",
+    "Needham",
+    "Northland Capital Markets",
+    "UBS"
+   ],
+   "newest": "2026-08-06",
+   "stale_days": 14,
+   "detail": ""
+  },
+  "SYNA": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Deutsche Bank",
+    "JP Morgan",
+    "Mizuho",
+    "Needham",
+    "Northland Capital Markets",
+    "Rosenblatt",
+    "Susquehanna",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "TBBK": {
+   "status": "OK",
+   "firms": [
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler"
+   ],
+   "newest": "2026-08-03",
+   "stale_days": 17,
+   "detail": ""
+  },
+  "TDC": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citigroup",
+    "Citizens",
+    "Evercore ISI Group",
+    "Morgan Stanley",
+    "RBC Capital",
+    "TD Cowen",
+    "UBS"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "TDS": {
+   "status": "OK",
+   "firms": [
+    "Citigroup",
+    "JP Morgan",
+    "Raymond James"
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "TGI": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "TGNA": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "THO": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BMO Capital",
+    "Baird",
+    "Citigroup",
+    "DA Davidson",
+    "Loop Capital",
+    "Raymond James",
+    "Roth Capital",
+    "Seaport Global",
+    "Truist Securities"
+   ],
+   "newest": "2026-07-24",
+   "stale_days": 27,
+   "detail": ""
+  },
+  "TILE": {
+   "status": "OK",
+   "firms": [
+    "Barrington Research",
+    "Benchmark"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "TNET": {
+   "status": "OK",
+   "firms": [
+    "JP Morgan",
+    "Stifel",
+    "TD Cowen",
+    "Truist Securities",
+    "UBS"
+   ],
+   "newest": "2026-07-31",
+   "stale_days": 20,
+   "detail": ""
+  },
+  "TPX": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "TRIP": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "B. Riley Securities",
+    "BTIG",
+    "Barclays",
+    "Cantor Fitzgerald",
+    "DA Davidson",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Jefferies",
+    "Mizuho",
+    "UBS",
+    "Wedbush"
+   ],
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "detail": ""
+  },
+  "TRMK": {
+   "status": "OK",
+   "firms": [
+    "DA Davidson",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler"
+   ],
+   "newest": "2026-07-30",
+   "stale_days": 21,
+   "detail": ""
+  },
+  "TTC": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "DA Davidson",
+    "Northland Capital Markets",
+    "Raymond James"
+   ],
+   "newest": "2026-06-05",
+   "stale_days": 76,
+   "detail": ""
+  },
+  "TVTX": {
+   "status": "OK",
+   "firms": [
+    "Canaccord Genuity",
+    "Citigroup",
+    "Evercore ISI Group",
+    "Guggenheim",
+    "HC Wainwright & Co.",
+    "JP Morgan",
+    "Piper Sandler",
+    "Stifel",
+    "TD Cowen",
+    "Wedbush",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-10",
+   "stale_days": 10,
+   "detail": ""
+  },
+  "UA": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2024-06-24",
+   "stale_days": 787,
+   "detail": "action feed silent 787d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "UCTT": {
+   "status": "OK",
+   "firms": [
+    "Needham",
+    "Oppenheimer",
+    "TD Cowen",
+    "UBS"
+   ],
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "detail": ""
+  },
+  "UFPI": {
+   "status": "OK",
+   "firms": [
+    "BMO Capital",
+    "Benchmark",
+    "DA Davidson",
+    "Stifel"
+   ],
+   "newest": "2026-05-11",
+   "stale_days": 101,
+   "detail": ""
+  },
+  "ULS": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Baird",
+    "Citigroup",
+    "Goldman Sachs",
+    "JP Morgan",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "detail": ""
+  },
+  "UPWK": {
+   "status": "OK",
+   "firms": [
+    "Canaccord Genuity",
+    "Citigroup",
+    "Citizens",
+    "Goldman Sachs",
+    "JMP Securities",
+    "Jefferies",
+    "Needham",
+    "RBC Capital",
+    "Roth Capital",
+    "Scotiabank",
+    "UBS"
+   ],
+   "newest": "2026-08-14",
+   "stale_days": 6,
+   "detail": ""
+  },
+  "VAC": {
+   "status": "OK",
+   "firms": [
+    "Barclays",
+    "Citizens",
+    "Deutsche Bank",
+    "Goldman Sachs",
+    "Jefferies",
+    "Mizuho",
+    "Morgan Stanley",
+    "Stifel",
+    "Truist Securities",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "VCEL": {
+   "status": "OK",
+   "firms": [
+    "BTIG",
+    "HC Wainwright & Co.",
+    "TD Cowen",
+    "Truist Securities"
+   ],
+   "newest": "2026-07-31",
+   "stale_days": 20,
+   "detail": ""
+  },
+  "VMEO": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "VMI": {
+   "status": "OK",
+   "firms": [
+    "DA Davidson",
+    "JP Morgan",
+    "Stifel"
+   ],
+   "newest": "2026-07-22",
+   "stale_days": 29,
+   "detail": ""
+  },
+  "VOYA": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Evercore ISI Group",
+    "JP Morgan",
+    "Jefferies",
+    "Keefe, Bruyette & Woods",
+    "Morgan Stanley",
+    "RBC Capital",
+    "Raymond James",
+    "TD Cowen",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-19",
+   "stale_days": 1,
+   "detail": ""
+  },
+  "VRNT": {
+   "status": "STALE",
+   "firms": [],
+   "newest": "2025-08-26",
+   "stale_days": 359,
+   "detail": "action feed silent 359d (> 120d); the vendor has stopped reporting this name, which is not the same as the name having n"
+  },
+  "VSAT": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "Barclays",
+    "Deutsche Bank",
+    "JP Morgan",
+    "Needham"
+   ],
+   "newest": "2026-08-05",
+   "stale_days": 15,
+   "detail": ""
+  },
+  "VSEC": {
+   "status": "OK",
+   "firms": [
+    "B. Riley Securities",
+    "Citigroup",
+    "Deutsche Bank",
+    "Morgan Stanley",
+    "RBC Capital",
+    "Stifel",
+    "Truist Securities",
+    "Wolfe Research"
+   ],
+   "newest": "2026-08-13",
+   "stale_days": 7,
+   "detail": ""
+  },
+  "VVV": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Barclays",
+    "Benchmark",
+    "Citigroup",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Mizuho",
+    "Piper Sandler",
+    "RBC Capital",
+    "Roth Capital",
+    "Stephens & Co.",
+    "Stifel",
+    "TD Cowen",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "detail": ""
+  },
+  "VVX": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BTIG",
+    "Baird",
+    "Citigroup",
+    "Citizens",
+    "Goldman Sachs",
+    "Morgan Stanley",
+    "RBC Capital",
+    "Raymond James",
+    "Stifel",
+    "Truist Securities"
+   ],
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "detail": ""
+  },
+  "VZIO": {
+   "status": "EMPTY",
+   "firms": [],
+   "newest": null,
+   "stale_days": null,
+   "detail": "vendor returned no upgrade/downgrade history"
+  },
+  "WAFD": {
+   "status": "OK",
+   "firms": [
+    "DA Davidson",
+    "Keefe, Bruyette & Woods",
+    "Piper Sandler"
+   ],
+   "newest": "2026-07-20",
+   "stale_days": 31,
+   "detail": ""
+  },
+  "WD": {
+   "status": "OK",
+   "firms": [
+    "Citizens",
+    "JMP Securities",
+    "Jefferies",
+    "Keefe, Bruyette & Woods",
+    "Stephens & Co."
+   ],
+   "newest": "2026-08-18",
+   "stale_days": 2,
+   "detail": ""
+  },
+  "WGS": {
+   "status": "OK",
+   "firms": [
+    "BTIG",
+    "Canaccord Genuity",
+    "Guggenheim",
+    "Piper Sandler",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-04",
+   "stale_days": 16,
+   "detail": ""
+  },
+  "WHD": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Barclays",
+    "Citigroup",
+    "Piper Sandler",
+    "Stifel"
+   ],
+   "newest": "2026-08-20",
+   "stale_days": 0,
+   "detail": ""
+  },
+  "WMG": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Bernstein",
+    "Citigroup",
+    "Evercore ISI Group",
+    "Guggenheim",
+    "JP Morgan",
+    "Jefferies",
+    "Morgan Stanley",
+    "Scotiabank",
+    "Tigress Financial",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-05-08",
+   "stale_days": 104,
+   "detail": ""
+  },
+  "WRB": {
+   "status": "OK",
+   "firms": [
+    "Argus Research",
+    "B of A Securities",
+    "BMO Capital",
+    "Barclays",
+    "Cantor Fitzgerald",
+    "Evercore ISI Group",
+    "Goldman Sachs",
+    "Jefferies",
+    "Keefe, Bruyette & Woods",
+    "Mizuho",
+    "Morgan Stanley",
+    "TD Cowen",
+    "Truist Securities",
+    "UBS",
+    "Wells Fargo",
+    "Wolfe Research"
+   ],
+   "newest": "2026-07-27",
+   "stale_days": 24,
+   "detail": ""
+  },
+  "WRBY": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "BTIG",
+    "Citigroup",
+    "Citizens",
+    "Goldman Sachs",
+    "Piper Sandler",
+    "Stifel",
+    "Telsey Advisory Group",
+    "UBS"
+   ],
+   "newest": "2026-08-07",
+   "stale_days": 13,
+   "detail": ""
+  },
+  "YELP": {
+   "status": "OK",
+   "firms": [
+    "Goldman Sachs",
+    "JP Morgan",
+    "Jefferies",
+    "Morgan Stanley"
+   ],
+   "newest": "2026-05-15",
+   "stale_days": 97,
+   "detail": ""
+  },
+  "YOU": {
+   "status": "OK",
+   "firms": [
+    "DA Davidson",
+    "Goldman Sachs",
+    "JP Morgan",
+    "Needham",
+    "Stifel",
+    "Telsey Advisory Group",
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-28",
+   "stale_days": 23,
+   "detail": ""
+  },
+  "ZG": {
+   "status": "OK",
+   "firms": [
+    "Baird",
+    "Barclays",
+    "Benchmark",
+    "Bernstein",
+    "Canaccord Genuity",
+    "Cantor Fitzgerald",
+    "Citigroup",
+    "Citizens",
+    "DA Davidson",
+    "Evercore ISI Group",
+    "Goldman Sachs",
+    "Gordon Haskett",
+    "JMP Securities",
+    "JP Morgan",
+    "Keybanc",
+    "Mizuho",
+    "Piper Sandler",
+    "RBC Capital",
+    "Susquehanna",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-08-11",
+   "stale_days": 9,
+   "detail": ""
+  },
+  "ZION": {
+   "status": "OK",
+   "firms": [
+    "B of A Securities",
+    "Baird",
+    "Barclays",
+    "Cantor Fitzgerald",
+    "Citigroup",
+    "DA Davidson",
+    "Evercore ISI Group",
+    "JP Morgan",
+    "Jefferies",
+    "Morgan Stanley",
+    "Piper Sandler",
+    "RBC Capital",
+    "Stephens & Co.",
+    "TD Cowen",
+    "Truist Securities",
+    "UBS",
+    "Wells Fargo"
+   ],
+   "newest": "2026-07-23",
+   "stale_days": 28,
+   "detail": ""
+  }
+ }
+}

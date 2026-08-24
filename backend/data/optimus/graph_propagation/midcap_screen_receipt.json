@@ -1,0 +1,45 @@
+{
+ "measurement_id": "GRAPH-MIDCAP-SCREEN-1",
+ "licence": "PRODUCT_EXPERIMENT (structure only \u2014 no returns, no IC, not evidence of alpha)",
+ "declared_in": "scripts/graph_midcap_screen.py (this file)",
+ "question": "is analyst co-coverage SELECTIVE in a mid/small-cap liquidity band, where it is not among mega-caps?",
+ "universe": {
+  "source": "crsp_pit_monthly_v1.parquet, eligible, last month",
+  "rank_band_by_dollar_volume": [
+   700,
+   1600
+  ],
+  "sample_n": 300,
+  "seed": 20260824,
+  "attempted": 300,
+  "usable": 254,
+  "by_status": {
+   "OK": 254,
+   "EMPTY": 30,
+   "STALE": 16
+  },
+  "firm_pool": 79,
+  "median_firms_per_name": 6.0
+ },
+ "bar": 0.8,
+ "bar_provenance": "graph_propagation.NEFF_RATIO_BAR, declared 2026-08-24 in GRAPH-BACKBONE-2 and NOT re-derived here",
+ "megacap_comparison": {
+  "n_eff_observed": 151.768,
+  "n_eff_null_mean": 156.178,
+  "ratio_to_null": 0.9718,
+  "verdict": "NEGLIGIBLE_VS_NULL",
+  "note": "absolute n_eff is not comparable across universes of different size; the RATIO is the statistic"
+ },
+ "result": {
+  "n_names": 254,
+  "n_eff_observed": 112.398,
+  "n_eff_null_mean": 121.646,
+  "n_eff_null_sd": 0.9219,
+  "z": -10.03,
+  "ratio_to_null": 0.924,
+  "bar": 0.8,
+  "verdict": "NEGLIGIBLE_VS_NULL",
+  "reading": "a significant z with a ratio near 1.0 means the structure is real and negligible -- detectable, and 97% of the way to a random graph. Significance is not size."
+ },
+ "licenses_a_midcap_prereg": false
+}

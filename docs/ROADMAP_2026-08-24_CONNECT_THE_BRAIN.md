@@ -851,6 +851,18 @@ the degree-preserving null at a declared FDR", which carries no parameter. Any
 candidate mid/small-cap universe can now be screened for one coverage pull
 before a price is fetched.
 
+**And that screen was then run, the same day — `GRAPH-MIDCAP-SCREEN-1`.**
+Dollar-volume rank 700–1600 (median $0.5–1.1bn against $15.8bn), 254 usable
+names. Coverage is genuinely three times thinner there — **median 6 covering
+firms against 17** — and the graph does concentrate more relative to its null:
+ratio **0.924** against the mega-cap **0.972**. The selectivity hypothesis
+points the right way and lands nowhere near the 0.80 bar.
+
+**So the mechanism is closed on live-tradeable US equities generally, not on
+mega-caps specifically, and `GRAPH_PROPAGATION_MIDCAP_v2` is retired before it
+was declared** — on a measurement costing one coverage pull rather than on a
+full trial.
+
 ### Roadmap item C — `REVISION-FORECASTER-1`: **STOP**
 
 `docs/FINDING_2026-08-24_REVISION_FORECASTER.md` · pre-registered

@@ -1,5 +1,13 @@
 # HANDOFF — for the next session (written 2026-08-24)
 
+> **START WITH THE EVENING PAIR, WHICH SUPERSEDES PARTS OF THIS FILE:**
+> `docs/SESSION_2026-08-24_WHAT_WAS_DONE.md` and
+> `docs/SESSION_2026-08-24_WHAT_IS_LEFT.md`.
+>
+> Tonight's gate is one command — `python -m scripts.monday_gate_check` — and it
+> computes both clocks itself. The jobs fire on the local TUESDAY (03:30 /
+> 05:15 / 05:45 HKT), not the local Monday evening.
+
 Rewritten in place; the version this replaces is in git at `264b1c2`. Its three
 Monday verification events survive here in §4. Read this first, then
 `docs/ROADMAP_2026-08-24_CONNECT_THE_BRAIN.md`.

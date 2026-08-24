@@ -142,7 +142,55 @@ somewhere. It is "overlap above the degree-preserving null at a declared FDR" �
 the same mechanism the screen validated, expressed so that it means the same
 thing on a universe it has not seen.
 
-## 8. The lesson, which is the density finding's own lesson pointed one level up
+## 8. The successor was run the same day, and it closes the mechanism
+
+**`GRAPH-MIDCAP-SCREEN-1`** · receipt `midcap_screen_receipt.json` · declared in
+`scripts/graph_midcap_screen.py` before its numbers existed.
+
+§7 said the successor needed a universe whose coverage is *selective*, and that
+`graph_beats_null()` could screen one for the cost of one coverage pull. That
+run happened.
+
+**Universe:** a liquidity BAND of the arena's own scan source — same parquet,
+same eligibility rule — at dollar-volume rank 700–1600, 300 names sampled at a
+fixed seed. 254 usable (30 EMPTY, 16 STALE — the panel is as of 2024-11-29 and
+delisted names drop out).
+
+**The selectivity hypothesis is confirmed as a description of the data:**
+
+| | mega-cap (rank 0–180) | mid-cap band (rank 700–1600) |
+|---|---|---|
+| median dollar volume | $15.8bn | **$0.5–1.1bn** |
+| median covering firms per name | 17 | **6** |
+| firm pool | 94 | 79 |
+| n_eff observed | 151.8 | 112.4 |
+| n_eff null mean ± sd | 156.4 ± 0.4 | 121.6 ± 0.9 |
+| z | −10.6 | −10.0 |
+| **ratio to null** | **0.972** | **0.924** |
+| verdict | NEGLIGIBLE_VS_NULL | **NEGLIGIBLE_VS_NULL** |
+
+Coverage really is three times thinner down there, and the graph really does
+concentrate more relative to its own null than the mega-cap graph did. **The
+hypothesis pointed the right way and it does not get remotely far enough.**
+0.924 against a bar of 0.80, with the ratio moving 0.048 for a roughly threefold
+drop in coverage breadth.
+
+**So the verdict is the stronger one: the mechanism is closed on live-tradeable
+US equities generally, not on mega-caps specifically.** That retires the
+successor the external review kept open, and it retires it on a measurement
+rather than on an argument.
+
+*Extrapolating that 0.048-per-threefold rate is not a result and is not offered
+as one* — but it does say the daylight is large, and that any universe thin
+enough to close it would be one where liquidity and borrow costs decide the
+outcome long before the graph does.
+
+**What survives**: `graph_beats_null()` itself. It screened a candidate universe
+end-to-end for one coverage pull and no price data, and returned a verdict that
+would otherwise have cost a full trial to reach. That is the transportable
+part, and it is the part §6 said it was.
+
+## 9. The lesson, which is the density finding's own lesson pointed one level up
 
 That finding closed with *"measuring an input's abundance is not measuring its
 information."* Correct — and it then used **abundance of edges** as its evidence
