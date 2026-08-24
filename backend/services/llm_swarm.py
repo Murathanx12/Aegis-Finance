@@ -60,6 +60,7 @@ ledger full of them looks productive on every count that matters and is not.
 """
 
 from __future__ import annotations
+from backend.services import llm_language as _lang
 
 import json
 import logging
@@ -724,7 +725,7 @@ def default_llm_call(system: str, user: str, *, client=None,
             resp = cli.chat.completions.create(
                 model=model, temperature=temperature, max_tokens=max_tokens,
                 response_format={"type": "json_object"},
-                messages=[{"role": "system", "content": system},
+                messages=[{"role": "system", "content": _lang.pin(system)},
                           {"role": "user", "content": user}])
         except Exception as exc:                               # noqa: BLE001
             last = exc

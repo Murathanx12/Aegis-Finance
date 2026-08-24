@@ -122,11 +122,30 @@ interpretation before checking. Correctly timed: t = 0.81. Pinned by test.
 `ANTHROPIC_API_KEY` falls through to DeepSeek, which has been live throughout.
 The Chinese replies were themselves proof the model was answering.
 
-**The Chinese glitch was our bug.** Exactly one prompt named an output language
-(`explain_move.py`); every other caller had none. `_LANGUAGE_PIN` is now central
-in `_call_llm`, and a reply >10% non-Latin script is **refused** — counted per
-provider, on the health surface. Refused rather than retried because the arena
-mints *gradeable* records from some of this output.
+**The Chinese glitch was our bug, and I made the same mistake fixing it.**
+Exactly one prompt named an output language (`explain_move.py`); every other
+caller had none. I fixed it centrally in `llm_analyzer._call_llm` — better, and
+**still wrong**: seven modules build their own client and call
+`chat.completions.create` directly, so a fix inside one protected one of seven.
+That is the identical per-call-site error one level up, made by the session that
+had just written the comment criticising it.
+
+The contract now lives once in **`llm_language.py`** and six of the seven call
+sites import it (`llm_analyzer`, `llm_swarm`, `optimus_specialists`,
+`leakage_probe`, `copilot`, `architecture_arena`). **`why_moved` is deliberately
+deferred with a dated reason** — it fires tonight and is the P0 being waited on;
+editing it hours before that run is risk with no upside.
+
+`test_llm_language_contract.py` walks the source tree **by AST** and asserts
+every direct call site applies the pin, so a new one that forgets is a red suite
+rather than a discovery when somebody notices Chinese in a dashboard. (The first
+version grepped the text and matched `llm_language` itself, because its
+docstring *names* the call it exists to discuss — a detector that cannot tell
+code from prose is the kind that gets an exemption added to silence it.)
+
+A reply >10% non-Latin script is **refused** — one program-wide counter, on the
+health surface. Refused rather than retried because the arena mints *gradeable*
+records from some of this output.
 
 `SOLE_PROVISIONED_PROVIDER = "deepseek"` + `provider_status()`, which reports
 `declared_but_empty` separately from `absent`. In `CLAUDE.md`, in memory, and
@@ -150,12 +169,13 @@ test-pinned.
 
 ## The through-line
 
-**Five instrument defects, all found by running the instrument and asking what
+**Six instrument defects, all found by running the instrument and asking what
 it actually measured**: an `n_eff` gate that re-asked the density question; a
 null comparison with one draw and no dispersion; a regime subset of one month
 with no minimum; a return window containing the mediator it was scoring; and a
 registered power calculation 2–3× optimistic because it used a theoretical null
-where a realised prior was already on hand.
+where a realised prior was already on hand; and a language-contract
+detector that matched its own docstring.
 
 The last one has a rule attached: **derive `outcome_dispersion` from a realised
 prior on the same panel, never from the theoretical null** — it understates by

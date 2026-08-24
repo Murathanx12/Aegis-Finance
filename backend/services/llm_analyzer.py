@@ -94,57 +94,21 @@ _DEEPSEEK_MODEL = _llm_cfg.get("model", "deepseek-chat")
 
 _MAX_TOKENS = _llm_cfg.get("max_tokens", 500)
 
-#: Appended to EVERY system prompt, whatever the provider.
-#:
-#: WHY THIS IS CENTRAL AND NOT PER-CALLER. `deepseek-chat` code-switches to
-#: Chinese on prompts that never name an output language -- reported live, and
-#: reproducible when the system prompt is terse. Somebody already hit it and
-#: fixed it in ONE place: `explain_move.py` carries "Always answer in English"
-#: inline. Every other call site -- the news summary, the daily brief, the
-#: two-sided argument, the stock outlook, the expectation generator, the
-#: portfolio commentary -- had no language instruction at all.
-#:
-#: A per-call-site fix for a provider-wide behaviour is how the next call site
-#: inherits the bug. It goes here.
-_LANGUAGE_PIN = " Respond in English only."
-
-#: Scripts that mean the reply is not the English the caller asked for. CJK,
-#: Hangul, Cyrillic, Arabic, Hebrew, Devanagari, Thai.
-_NON_LATIN = (
-    (0x0400, 0x04FF), (0x0590, 0x05FF), (0x0600, 0x06FF), (0x0900, 0x097F),
-    (0x0E00, 0x0E7F), (0x1100, 0x11FF), (0x3040, 0x30FF), (0x3400, 0x4DBF),
-    (0x4E00, 0x9FFF), (0xAC00, 0xD7AF), (0xF900, 0xFAFF),
+#: The output-language contract lives in `llm_language`, ONCE, because
+#: `llm_analyzer` is not the only path to the vendor — seven modules call
+#: `chat.completions.create` directly. Fixing it here alone protected one of
+#: seven, which is the same per-call-site mistake this module's own comment was
+#: criticising. These names are re-exported so existing callers and tests keep
+#: working, and `_LANGUAGE_REFUSALS` is THE SAME DICT every call site increments,
+#: so the counter is program-wide rather than per-module.
+from backend.services.llm_language import (  # noqa: E402,F401
+    LANGUAGE_PIN as _LANGUAGE_PIN,          # noqa: F401  re-export
+    NON_LATIN_BAR as _NON_LATIN_BAR,        # noqa: F401  re-export
+    REFUSALS as _LANGUAGE_REFUSALS,         # noqa: F401  re-export
+    non_latin_share as _non_latin_share,    # noqa: F401  re-export
+    refusals as language_refusals,          # noqa: F401  re-export
 )
 
-#: How many non-Latin-script replies have been refused, by provider. A counter
-#: rather than a log line only: a rate is the thing that decides whether the
-#: provider is fit for the arena's gradeable records, and a log nobody
-#: aggregates cannot produce one.
-_LANGUAGE_REFUSALS: dict[str, int] = {}
-
-
-def _non_latin_share(text: str) -> float:
-    """Fraction of letters that sit in a non-Latin script.
-
-    A share rather than "contains a CJK character", because a legitimate reply
-    may quote a ticker or a name. A reply that is MOSTLY another script is the
-    failure being caught.
-    """
-    letters = [c for c in (text or "") if c.isalpha()]
-    if not letters:
-        return 0.0
-    hits = sum(1 for c in letters
-               if any(lo <= ord(c) <= hi for lo, hi in _NON_LATIN))
-    return hits / len(letters)
-
-
-#: Above this share the reply is refused. Deliberately not zero.
-_NON_LATIN_BAR = 0.10
-
-
-def language_refusals() -> dict:
-    """Per-provider count of replies refused for not being English."""
-    return dict(_LANGUAGE_REFUSALS)
 
 _anthropic_client = None
 _openai_client = None
@@ -306,32 +270,11 @@ def _record(provider: str, model: str, purpose: str, *, system: str, user: str,
 def _refuse_non_english(provider: str, purpose: str, text: str) -> bool:
     """Refuse a reply that is mostly not English. Returns True if refused.
 
-    REFUSED, NOT REPAIRED, and not retried. Three reasons:
-
-    * the callers already handle `None` by falling back to their deterministic
-      path (keyword sentiment, templates), so a refusal degrades to the
-      behaviour that exists rather than to nothing;
-    * a retry doubles the spend on exactly the calls that are already failing,
-      against a small prepaid balance;
-    * the arena mints a GRADEABLE PredictionRecord from some of this output.
-      A reply nobody can read that is passed through anyway does not produce a
-      bad summary -- it produces a forward evidence row that cannot be
-      re-collected and cannot be graded.
-
-    The telemetry row is written BEFORE this runs, with the caller's own
-    `validate` verdict, so a refusal is visible in the ledger rather than
-    replacing the record with a silence.
+    Delegates to the shared contract so every call site increments one counter.
+    See `llm_language` for why it refuses rather than repairs or retries.
     """
-    share = _non_latin_share(text)
-    if share <= _NON_LATIN_BAR:
-        return False
-    _LANGUAGE_REFUSALS[provider] = _LANGUAGE_REFUSALS.get(provider, 0) + 1
-    logger.warning(
-        "LLM reply refused: %.0f%% non-Latin script from %s (purpose=%s). "
-        "The reply is discarded and the caller falls back. Count for this "
-        "provider: %d",
-        share * 100, provider, purpose, _LANGUAGE_REFUSALS[provider])
-    return True
+    from backend.services import llm_language as _lang
+    return _lang.refuse(provider, purpose, text)
 
 
 def _call_llm(

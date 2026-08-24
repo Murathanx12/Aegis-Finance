@@ -67,6 +67,7 @@ binds unchanged.
 """
 
 from __future__ import annotations
+from backend.services import llm_language as _lang
 
 import json
 import logging
@@ -186,7 +187,8 @@ def call_model(messages: list[dict], *, model: str = FLASH, arm: str,
         try:
             resp = cli.chat.completions.create(
                 model=model, temperature=temperature, max_tokens=max_tokens,
-                response_format={"type": "json_object"}, messages=messages)
+                response_format={"type": "json_object"},
+                messages=_lang.pin_messages(messages))
         except Exception as exc:                               # noqa: BLE001
             last = exc
             if attempt >= max_retries or not _is_retryable(exc):

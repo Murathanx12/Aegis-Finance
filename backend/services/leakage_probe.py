@@ -72,6 +72,7 @@ instrument the programme has. Every write path here takes an explicit `path`.
 """
 
 from __future__ import annotations
+from backend.services import llm_language as _lang
 
 import hashlib
 import json
@@ -803,7 +804,8 @@ def call_llm(system: str, user: str, *, client=None,
                                   "temperature": temperature,
                                   "response_format": {"type": "json_object"},
                                   "messages": [
-                                      {"role": "system", "content": system},
+                                      {"role": "system",
+                                       "content": _lang.pin(system)},
                                       {"role": "user", "content": user}]}
             if not thinking:
                 kw["extra_body"] = {"thinking": {"type": "disabled"}}

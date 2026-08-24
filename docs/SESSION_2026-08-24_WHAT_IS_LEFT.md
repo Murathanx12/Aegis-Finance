@@ -62,16 +62,27 @@ above OIS and general borrow both live unmeasured. The collector accrues daily
 from tonight — **the honest version of that number is the same comparison over a
 month of snapshots**, and it costs nothing but waiting.
 
-## 2. The DeepSeek reliability item I did not do
+## 2. Two DeepSeek items, one small and one already half-answered
 
-**DeepSeek supports `response_format={"type": "json_object"}` and the code does
-not use it.** The structured callers — arena beliefs, expectations, the daily
-brief — parse loose text today. With DeepSeek the *only* provider and the arena
-minting gradeable records from its output, this is the highest-value remaining
-reliability fix and it is small.
+**a. `why_moved` is the one call site not yet wired to the language contract.**
+`llm_language.DEFERRED` carries the dated reason: it fires tonight and is the P0
+being waited on. **Wire it once tonight's run is confirmed** — the edit is two
+lines and `test_llm_language_contract.py` will start enforcing it the moment the
+entry is removed from `DEFERRED`.
 
-Note DeepSeek requires the word "json" to appear in the prompt when that mode is
-set, so it is a per-caller opt-in rather than a global flag.
+**b. JSON mode is used in ONE module, not none.** `architecture_arena` already
+passes `response_format={"type": "json_object"}`; the other structured callers
+— arena beliefs, expectations, the daily brief — parse loose text. Extending it
+is the highest-value remaining reliability fix and it is small. DeepSeek
+requires the word "json" in the prompt when that mode is set, so it is a
+per-caller opt-in rather than a global flag.
+
+**And the empirical picture is better than the anecdote suggested.** The
+`INTERNET-INVESTIGATOR-FWD-1` job running during this session logged **303
+DeepSeek calls with `schema_valid` 303/303 and zero errors**. The Chinese
+code-switching is real but it is not a general reliability problem — which is
+what makes the pin plus the refusal counter the right response rather than a
+provider change.
 
 ## 3. Alpha, in the order the review set — with two lanes now closed
 

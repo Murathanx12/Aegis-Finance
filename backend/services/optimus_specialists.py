@@ -36,6 +36,7 @@ recorded on the batch.
 """
 
 from __future__ import annotations
+from backend.services import llm_language as _lang
 
 import json
 import logging
@@ -211,7 +212,7 @@ def run_specialist(specialist: str, candidates: list[dict], *,
     t0 = time.perf_counter()
     resp = cli.chat.completions.create(
         model=model, temperature=temperature,
-        messages=[{"role": "system", "content": system},
+        messages=[{"role": "system", "content": _lang.pin(system)},
                   {"role": "user", "content": user}])
     text = resp.choices[0].message.content or ""
     version = getattr(resp, "model", model)

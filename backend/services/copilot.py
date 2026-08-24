@@ -26,6 +26,7 @@ Design choices:
 """
 
 from __future__ import annotations
+from backend.services import llm_language as _lang
 
 import json
 import logging
@@ -327,7 +328,8 @@ def _chat_with_deepseek(messages: list[dict]) -> dict:
         base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
     )
     model = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
-    chat_history = [{"role": "system", "content": SYSTEM_PROMPT}] + list(messages)
+    chat_history = [{"role": "system",
+                     "content": _lang.pin(SYSTEM_PROMPT)}] + list(messages)
     tool_trace: list[dict] = []
 
     for _round in range(_MAX_TOOL_ROUNDS):
