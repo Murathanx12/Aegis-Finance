@@ -142,6 +142,30 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
     """
     T, N = panel.close.shape
     sig = SIG.matrix(panel, policy.signal) if sig is None else sig
+    # A liquidity-reduced panel is only valid for the universe it was reduced
+    # FOR. Running a deeper book on it would silently select from names that
+    # happened to survive the reduction, which is a different universe wearing
+    # the same policy hash — the failure class that has moved a farm answer
+    # more than a strategy did four times. So it refuses.
+    lim = getattr(panel, "universe_reduced_to", None)
+    if lim is not None:
+        if policy.universe_n and policy.universe_n > lim:
+            raise ValueError(
+                f"panel was liquidity-reduced to rank {lim}, but this policy "
+                f"asks for a universe of {policy.universe_n}. The names beyond "
+                f"rank {lim} are NOT in this panel, so the book would be drawn "
+                f"from a truncated universe. Rebuild with "
+                f"reduce_for_universe_n={policy.universe_n}, or load the full "
+                f"panel.")
+        floors = getattr(panel, "reduction_min_prices", ())
+        if floors and policy.min_price not in floors:
+            raise ValueError(
+                f"panel was liquidity-reduced at min_price {list(floors)}, but "
+                f"this policy uses {policy.min_price}. A different price floor "
+                f"changes which names are eligible and therefore how deep the "
+                f"top-{policy.universe_n} cut reaches, so the reduction is not "
+                f"valid for it.")
+
     if dolvol_ma is None:
         dolvol_ma = SIG._roll_mean(panel.dolvol.astype(np.float64), SIG.MONTH, 5)
     if vol is None:

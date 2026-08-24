@@ -43,6 +43,7 @@ from one that is silent.
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -62,6 +63,50 @@ _COLUMNS = ["permno", "date", "prc", "ret", "retx", "vol", "shrout", "openprc"]
 #: Without ALL of these the simulator is a different simulator. See
 #: `replayable_years` for what each one buys.
 REQUIRED_COLUMNS = frozenset(_COLUMNS)
+
+#: Minimum share of a year's CRSP rows that must carry a non-null `openprc`
+#: before that year is certified replayable.
+#:
+#: A COLUMN IS NOT DATA. The 2026-08-25 re-pull gave 1990-2012 the full schema,
+#: and that alone would have flipped `replayable_years` to certify all of them
+#: — while CRSP simply has no open prices before mid-1992. Measured on
+#: `crsp.dsf` at the source:
+#:
+#:     1990   0.0%      1993  82.6%      2013  93.2%
+#:     1991   0.0%      1994  82.9%      2018  97.4%
+#:     1992  41.6%      1996  86.4%      2024  99.4%
+#:
+#: CRSP began collecting opens in mid-1992, which is why 1992 is a half-year
+#: and 1990-91 are empty. The floor sits in the EMPTY GAP between 41.6% and
+#: 82.6% — no year in CRSP lands between them — so its exact placement inside
+#: that gap cannot change any verdict. It is declared, not fitted.
+#:
+#: The floor is measured over ALL rows in the file, which is deliberately
+#: harsher than the population that matters: coverage inside the liquid
+#: universe the farm actually trades is 100.00% in every year 2013-2024
+#: (measured 2026-08-25 over the top-500-by-dollar-volume cut). Big liquid
+#: names are exactly the ones CRSP has opens for. `Panel.open_coverage`
+#: reports the figure that governs a given run.
+OPEN_COVERAGE_FLOOR = 0.60
+
+#: How deep the liquidity reduction keeps names, as a multiple of the trading
+#: universe. The farm trades the top 500 by trailing dollar volume; keeping the
+#: top 1,000 leaves a full spare universe above anything it selects.
+UNIVERSE_KEEP_MULTIPLE = 2
+
+#: The `min_price` floors the reduction is computed for. A price floor SHRINKS
+#: the eligible set, so the top-500 of the survivors reaches DEEPER into the
+#: dollar-volume ranking than the top-500 of everything — a reduction computed
+#: at one floor is NOT valid at another, in either direction.
+#:
+#: Every `Policy` in the repo uses the 5.00 default and none of the presets
+#: override it, so that is what is computed. Adding 0.00 "for generality" was
+#: measured and dropped: it drags in penny stocks whose SHARE volume is huge
+#: and whose dollar volume is not, and it cost 31% of the saving while
+#: protecting a configuration nothing uses. A policy with any other floor is
+#: REFUSED by `replay` rather than replayed on the wrong universe — the
+#: assumption is enforced, not documented.
+REDUCTION_MIN_PRICES = (5.0,)
 
 
 class PanelUnavailable(RuntimeError):
@@ -93,6 +138,19 @@ class Panel:
     delist_ret: np.ndarray | None = None
     #: (N,) the delisting CODE, for auditing which population a run resolved.
     delist_code: np.ndarray | None = None
+    #: MEASURED share of tradeable cells (a real trade at the close) that also
+    #: carry a usable positive open. This is the fill convention's own coverage
+    #: on THIS window, and it belongs on the receipt: a run whose decisions
+    #: cannot be executed is not the strategy that was declared, it is
+    #: "hold whatever could not be sold". Negative opens count as MISSING —
+    #: CRSP's sign convention marks a bid/ask midpoint on a no-trade day, and
+    #: `replay` refuses to fill at one.
+    open_coverage: float = float("nan")
+    #: When the panel was built from a LIQUIDITY-REDUCED permno set, the
+    #: universe depth that reduction is valid for, and the price floors it was
+    #: computed at. None means every permno in the files is present.
+    universe_reduced_to: int | None = None
+    reduction_min_prices: tuple = ()
     source: str = "crsp_dsf"
 
     @property
@@ -144,6 +202,47 @@ def year_columns(year: int, dir_: Path | None = None) -> set[str]:
     return set(pq.ParquetFile(p).schema_arrow.names)
 
 
+def year_open_coverage(year: int, dir_: Path | None = None) -> float:
+    """Share of a year's rows carrying a non-null `openprc`, from PARQUET
+    STATISTICS rather than from the data.
+
+    Row-group `null_count` is exact and costs one metadata read, so this can
+    gate every year on every call without loading a column. It cannot see the
+    SIGN (CRSP writes a negative open for a bid/ask midpoint on a no-trade
+    day), so it is an upper bound on usable coverage — which is the right
+    direction for a gate whose job is to catch an EMPTY column, and why
+    `Panel.open_coverage` measures the signed truth on the loaded window.
+    """
+    try:
+        import pyarrow.parquet as pq
+    except ImportError as exc:                                 # noqa: BLE001
+        raise PanelUnavailable(
+            f"pyarrow is not installed, so `openprc` coverage cannot be "
+            f"measured and no year can be certified replayable ({exc})."
+        ) from exc
+    f = pq.ParquetFile((dir_ or WRDS_DIR) / f"crsp_dsf_{year}.parquet")
+    names = f.schema_arrow.names
+    if "openprc" not in names:
+        return 0.0
+    j = names.index("openprc")
+    total = nulls = 0
+    md = f.metadata
+    for g in range(md.num_row_groups):
+        col = md.row_group(g).column(j)
+        if not col.is_stats_set:
+            # No statistics is NOT "no nulls". Fall back to reading the one
+            # column rather than certifying a year on absent evidence.
+            arr = f.read(columns=["openprc"]).column("openprc")
+            return 1.0 - (arr.null_count / max(1, len(arr)))
+        # `num_values` on a column chunk ALREADY counts nulls. Adding
+        # null_count to it inflated the denominator and reported 66.7% for a
+        # column that was half empty — caught by this module's own test before
+        # it could certify a year it should have refused.
+        total += col.num_values
+        nulls += col.statistics.null_count
+    return 1.0 - (nulls / max(1, total))
+
+
 def replayable_years(dir_: Path | None = None) -> list[int]:
     """Years the SIMULATOR can actually use.
 
@@ -165,11 +264,143 @@ def replayable_years(dir_: Path | None = None) -> list[int]:
     re-pull of those three columns, not a code change.
     """
     return [y for y in available_years(dir_)
-            if REQUIRED_COLUMNS <= year_columns(y, dir_)]
+            if REQUIRED_COLUMNS <= year_columns(y, dir_)
+            and year_open_coverage(y, dir_) >= OPEN_COVERAGE_FLOOR]
+
+
+def liquid_permnos(start_year: int, end_year: int, *,
+                   universe_n: int = 500,
+                   keep_multiple: int = UNIVERSE_KEEP_MULTIPLE,
+                   dir_: Path | None = None,
+                   cache: bool = True) -> tuple[np.ndarray, dict]:
+    """PERMNOs that could ever enter a `universe_n` book, and the receipt.
+
+    WHY THIS EXISTS
+    ===============
+    The panel is dense: every matrix is (dates x permnos), so a permno that is
+    never traded still costs a full column. Over 2013-2024 that was tolerable.
+    Over 1993-2024 it is not — the two PIT universe files union to 18,691
+    permnos across 8,064 sessions, which is 0.6 GB per float32 matrix and
+    ~4.8 GB for the eight the `Panel` carries, before the pandas frame that
+    builds them.
+
+    And it is nearly all waste. Measured 2026-08-25 over 2013-2024: only
+    **1,967 of 6,894 permnos (28.5%) ever reach the top 500** by trailing
+    dollar volume, and 3,323 (48.2%) ever reach the top 1,000. The farm cannot
+    hold a name it never selects, so those columns are arithmetic on NaN.
+
+    WHY IT DOES NOT CHANGE AN ANSWER
+    ================================
+    The kept set is computed with the SAME criterion `replay` uses to build its
+    eligible set — `traded & finite(close) & close >= min_price & finite(
+    trailing 21-day mean dollar volume)`, ranked by that mean — at each
+    `REDUCTION_MIN_PRICES` floor, and kept to `universe_n * keep_multiple`
+    deep. A name outside it was never in the top `universe_n` on any date at
+    any of those floors, so no book could have contained it.
+
+    This is the same restriction `portfolio_farm_universe_audit` already
+    cleared, one step tighter and now EXACT rather than argued: that audit
+    showed the PIT superset's $100M/month bar could not bind because the
+    farm's 500th name trades 15.4x it. Here the cut is measured against the
+    farm's own criterion instead of a proxy for it.
+
+    WHAT IT IS NOT
+    ==============
+    It is not point-in-time. Deciding which columns to materialise uses the
+    whole window, exactly as the PIT superset's construction does. That is
+    sound for a MEMBERSHIP question and would not be sound for a signal: the
+    reduction can only ever remove names the policy provably would not have
+    held, and `universe_reduced_to` makes the assumption refuse rather than
+    hide when a later policy asks for a deeper universe.
+
+    Returns `(permnos, receipt)`. The receipt carries the deepest rank any
+    date's selection actually reached, which is the number that proves the
+    headroom was real rather than assumed.
+    """
+    d = dir_ or WRDS_DIR
+    keep_n = int(universe_n * keep_multiple)
+    tag = f"{start_year}_{end_year}_u{universe_n}x{keep_multiple}"
+    cache_path = d / f"farm_universe_{tag}.json"
+    if cache and cache_path.exists():
+        try:
+            blob = json.loads(cache_path.read_text(encoding="utf-8"))
+            return np.array(blob["permnos"], dtype=np.int64), blob["receipt"]
+        except Exception:                                      # noqa: BLE001
+            pass
+
+    from backend.services.portfolio_farm import signals as SIG
+
+    keep: set[int] = set()
+    deepest = 0
+    n_dates = 0
+    # One year at a time, with the PRIOR year's tail for the trailing window —
+    # a rolling mean computed per calendar year would reset every January and
+    # rank names by a partial window for the first month of each.
+    for y in range(int(start_year), int(end_year) + 1):
+        years = [y - 1, y] if (d / f"crsp_dsf_{y-1}.parquet").exists() else [y]
+        fr = [pd.read_parquet(d / f"crsp_dsf_{yy}.parquet",
+                              columns=["permno", "date", "prc", "vol"])
+              for yy in years]
+        df = pd.concat(fr, ignore_index=True)
+        df["date"] = df["date"].astype(str)
+        dates = np.array(sorted(df["date"].unique()), dtype=object)
+        permnos = np.array(sorted(df["permno"].unique()), dtype=np.int64)
+        di = pd.Series(np.arange(len(dates)), index=dates)
+        pi = pd.Series(np.arange(len(permnos)), index=permnos)
+        r = di.reindex(df["date"]).to_numpy()
+        c = pi.reindex(df["permno"]).to_numpy()
+        shape = (len(dates), len(permnos))
+        prc = df["prc"].to_numpy(dtype=np.float64)
+        close = np.full(shape, np.nan, dtype=np.float64)
+        close[r, c] = np.abs(prc)
+        traded = np.zeros(shape, dtype=bool)
+        traded[r, c] = prc > 0
+        dv = np.full(shape, np.nan, dtype=np.float64)
+        dv[r, c] = np.abs(prc) * df["vol"].to_numpy(dtype=np.float64)
+        del df, fr
+        liq = SIG._roll_mean(dv, SIG.MONTH, 5)
+
+        in_year = np.array([str(x)[:4] == str(y) for x in dates])
+        for i in np.flatnonzero(in_year):
+            n_dates += 1
+            for floor in REDUCTION_MIN_PRICES:
+                elig = (traded[i] & np.isfinite(close[i])
+                        & (close[i] >= floor) & np.isfinite(liq[i]))
+                cand = np.flatnonzero(elig)
+                if cand.size == 0:
+                    continue
+                order = cand[np.argsort(-liq[i][cand], kind="stable")]
+                keep.update(int(x) for x in permnos[order[:keep_n]])
+                deepest = max(deepest, min(cand.size, universe_n))
+        del close, traded, dv, liq
+
+    out = np.array(sorted(keep), dtype=np.int64)
+    receipt = {
+        "window": [int(start_year), int(end_year)],
+        "universe_n": int(universe_n),
+        "keep_multiple": int(keep_multiple),
+        "kept_to_rank": keep_n,
+        "deepest_selection_rank_observed": int(deepest),
+        "min_prices": list(REDUCTION_MIN_PRICES),
+        "n_permnos_kept": int(out.size),
+        "n_dates_scanned": int(n_dates),
+        "headroom": (f"selection never went deeper than rank {deepest}; the "
+                     f"panel keeps to rank {keep_n}"),
+    }
+    if cache:
+        try:
+            cache_path.write_text(json.dumps(
+                {"permnos": [int(x) for x in out], "receipt": receipt},
+                indent=1), encoding="utf-8")
+        except Exception:                                      # noqa: BLE001
+            pass
+    return out, receipt
 
 
 def load_panel(start_year: int, end_year: int, *,
-               dir_: Path | None = None) -> Panel:
+               dir_: Path | None = None,
+               restrict_to: np.ndarray | None = None,
+               reduce_for_universe_n: int | None = None) -> Panel:
     """Build the aligned panel for [start_year, end_year] inclusive.
 
     Refuses on a missing year rather than quietly replaying a shorter history:
@@ -200,8 +431,39 @@ def load_panel(start_year: int, end_year: int, *,
             f"market cap. Re-pull those columns for the missing years, or ask "
             f"for a window inside the replayable one.")
 
-    frames = [pd.read_parquet(d / f"crsp_dsf_{y}.parquet", columns=_COLUMNS)
-              for y in want]
+    # A column that exists and is empty is the failure the re-pull created and
+    # the schema check cannot see. Reported as its own refusal because the fix
+    # is different: an absent column is a re-pull, an empty one is a year CRSP
+    # does not have and never will.
+    empty = {y: round(c, 4) for y in want
+             for c in [year_open_coverage(y, d)] if c < OPEN_COVERAGE_FLOOR}
+    if empty:
+        raise PanelUnavailable(
+            f"these years carry an `openprc` COLUMN that is (nearly) empty, so "
+            f"the next-open fill convention is not executable in them: "
+            f"{empty} (floor {OPEN_COVERAGE_FLOOR:.0%}). CRSP began collecting "
+            f"open prices in mid-1992 — 1990 and 1991 have none at all and no "
+            f"pull can produce them. This is NOT the same refusal as a missing "
+            f"column: there is nothing to re-pull. Ask for a window starting "
+            f"at {min(replayable_years(d)) if replayable_years(d) else 1993}.")
+
+    reduced_to = None
+    if reduce_for_universe_n is not None and restrict_to is None:
+        restrict_to, _rec = liquid_permnos(
+            start_year, end_year, universe_n=reduce_for_universe_n, dir_=d)
+        reduced_to = _rec["kept_to_rank"]
+        logger.info("portfolio_farm.panel: liquidity reduction keeps %d "
+                    "permnos to rank %d (deepest selection observed: %d)",
+                    _rec["n_permnos_kept"], reduced_to,
+                    _rec["deepest_selection_rank_observed"])
+
+    keep = None if restrict_to is None else set(int(x) for x in restrict_to)
+    frames = []
+    for y in want:
+        f = pd.read_parquet(d / f"crsp_dsf_{y}.parquet", columns=_COLUMNS)
+        if keep is not None:
+            f = f[f["permno"].isin(keep)]
+        frames.append(f)
     df = pd.concat(frames, ignore_index=True)
     del frames
     df["date"] = df["date"].astype(str)
@@ -244,6 +506,14 @@ def load_panel(start_year: int, end_year: int, *,
     logger.info("portfolio_farm.panel: %d dates x %d permnos (%d-%d), "
                 "%.0f MB", len(dates), len(permnos), start_year, end_year,
                 (close.nbytes * 6) / 1e6)
+    # The fill convention's coverage on THIS window, over cells where a trade
+    # actually happened — the only population whose decisions could be filled.
+    _fillable = np.isfinite(open_) & (open_ > 0)
+    _n_trade = int(traded.sum())
+    open_cov = float(_fillable[traded].sum()) / max(1, _n_trade)
+    logger.info("portfolio_farm.panel: openprc usable on %.2f%% of traded "
+                "cells (%d-%d)", 100.0 * open_cov, start_year, end_year)
+
     dl_ret, dl_code = load_delisting(permnos)
     n_known = int(np.isfinite(dl_ret).sum())
     logger.info("portfolio_farm.panel: measured delisting returns for %d of %d "
@@ -253,7 +523,10 @@ def load_panel(start_year: int, end_year: int, *,
     return Panel(dates=dates, permnos=permnos, close=close, open_=open_,
                  ret=ret, retx=retx, traded=traded, dolvol=dolvol,
                  mktcap=mktcap, tri=tri, delist_ret=dl_ret,
-                 delist_code=dl_code)
+                 delist_code=dl_code, open_coverage=open_cov,
+                 universe_reduced_to=reduced_to,
+                 reduction_min_prices=(REDUCTION_MIN_PRICES
+                                       if reduced_to else ()))
 
 
 #: `crsp.dsedelist`, already on disk in the WRDS bulk pull. Nobody had joined
