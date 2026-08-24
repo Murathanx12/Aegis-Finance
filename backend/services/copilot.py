@@ -359,7 +359,7 @@ def _chat_with_deepseek(messages: list[dict]) -> dict:
         })
         if not msg.tool_calls:
             return {
-                "answer": (msg.content or "").strip(),
+                "answer": _guarded_answer(msg.content),
                 "tool_calls": tool_trace,
                 "provider": "deepseek",
             }
@@ -387,11 +387,29 @@ def _chat_with_deepseek(messages: list[dict]) -> dict:
                  schema_valid=bool((resp.choices[0].message.content or "").strip()),
                  round_=_MAX_TOOL_ROUNDS, final=True)
     return {
-        "answer": (resp.choices[0].message.content or "").strip(),
+        "answer": _guarded_answer(resp.choices[0].message.content),
         "tool_calls": tool_trace,
         "provider": "deepseek",
         "note": "max tool rounds reached",
     }
+
+
+#: A refused reply must not reach the user as a blank box. `llm_language.guard`
+#: returns "" so machine-consumed paths fall into their existing
+#: nothing-came-back branch; this is the ONE human-consumed direct call site,
+#: so it says what happened instead. Added 2026-08-24 (evening): until then the
+#: copilot pinned the language and displayed whatever came back regardless.
+_REFUSED_ANSWER = ("The model answered in a language other than English, so "
+                   "the reply was discarded rather than shown. Please ask "
+                   "again.")
+
+
+def _guarded_answer(raw: str | None) -> str:
+    text = (raw or "").strip()
+    kept = _lang.guard("deepseek", "copilot_answer", text)
+    if kept or not text:
+        return kept
+    return _REFUSED_ANSWER
 
 
 def _chat_with_claude(messages: list[dict]) -> dict:

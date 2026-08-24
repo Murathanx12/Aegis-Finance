@@ -1,5 +1,12 @@
 # HANDOFF — for the next session (written 2026-08-24)
 
+> **SUPERSEDED FOR SEQUENCING by `docs/HANDOFF_2026-08-25_AFTER_THE_FARM.md`** (written the same
+> night). Two things this file says are no longer true: the independent-selector
+> path is FIXED and proven end-to-end, and "there is no unblocked alpha item" is
+> obsolete — `PORTFOLIO_FARM` now tests strategies in minutes instead of
+> calendar days. See also `docs/SESSION_2026-08-24_NIGHT_PORTFOLIO_FARM.md`.
+
+
 > **START WITH THE EVENING PAIR, WHICH SUPERSEDES PARTS OF THIS FILE:**
 > `docs/SESSION_2026-08-24_WHAT_WAS_DONE.md` and
 > `docs/SESSION_2026-08-24_WHAT_IS_LEFT.md`.

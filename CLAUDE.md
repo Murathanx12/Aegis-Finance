@@ -76,6 +76,72 @@ evidence · no mutation of seeded book histories.
 `PRODUCT_EXPERIMENT` needs a frozen strategy contract instead — weaker, still
 tamper-evident.
 
+## EXPLORE DIRTY, PROMOTE CLEAN (adopted 2026-08-24 — Murat's review)
+
+The three licences stand. What changes is how the FIRST one is treated
+culturally. The default objective moves from *"produce a defensible research
+verdict"* to **"find, test and paper-trade mechanisms that increase terminal
+wealth."**
+
+`PRODUCT_EXPERIMENT` exploration **may** be post-hoc, may try twenty variants,
+may use LLM-generated hypotheses, may discover something after looking at the
+data, and needs **no** significance gate, MDE or multiplicity control. Four
+things never relax, and they are enforced in code rather than by intention:
+
+1. no information acted on before it was public;
+2. no target leakage;
+3. costs are never omitted (`portfolio_farm.Policy` REFUSES zero costs unless
+   `zero_cost_diagnostic=True`, and the flag travels onto every result row);
+4. once a candidate enters forward paper, its version is **frozen**.
+
+`CAPITAL_CANDIDATE` and `RESEARCH_CLAIM` keep every stricter gate.
+
+**Stop over-closing ideas.** The word `STOP` is retired from exploratory work:
+
+`FAILED_VARIANT` → `DEPRIORITIZED` → `RETIRED_FROM_CURRENT_SEARCH`
+
+and **`MECHANISM_REJECTED`** is reserved for genuinely broad evidence. A failed
+implementation closes that implementation. GRAPH-MIDCAP closed shared-broker
+co-coverage, not financial graphs. REVISION-FORECASTER closed the
+revision-mediated route, not management text. RELATIVE-VALUE-v1 closed seven
+features and a small MLP, not relative substitution.
+
+**Every handoff opens with a RESULTS SCOREBOARD**, before code or test counts:
+best historical net strategy vs the market · best forward paper strategy ·
+independent selector count · farm candidates tested/promoted · new actionable
+finding · external execution drag · LLM spend and cost per gradeable output. A
+session that ships thirty engineering changes and moves none of them says
+**RESULT IMPROVEMENT: NONE** in its first paragraph.
+
+**New guards are no longer roadmap work by default.** Add one when an actual
+failure shows it is necessary.
+
+## THE FARM IS HOW STRATEGIES GET TESTED NOW
+
+`backend/services/portfolio_farm/` — hundreds of virtual $10k portfolios
+replayed over one frozen CRSP history (`python -m scripts.portfolio_farm_run`).
+516 policies over 2013-2024 in ~7 minutes, versus the arena's one strategy per
+calendar day. Policies are identities, not brokerage accounts; a farm winner is
+a CANDIDATE for a frozen forward book and never evidence of alpha.
+
+Two numbers from it that govern what counts as progress
+(`docs/FINDING_2026-08-24_HOLDING_PERIOD.md`):
+
+- **the bar is $39,951** — the CRSP value-weighted market, buy and hold, over
+  2013-2024 from $10,000. The best net policy found so far is $38,815. Ask
+  "does it beat the market", not "is it significant";
+- **at k=12 the rebalance PHASE alone swings terminal wealth 3x**, and chance
+  spans $473-$85,419 across 492 draws. Terminal wealth on ONE path cannot rank
+  selectors at that breadth.
+
+Every farm run carries **two nulls** and must clear both: `random` (re-draws
+every formation date — maximum turnover) and `random_persistent` (one fixed
+basket — near-zero turnover). Beating only the churning null at a short holding
+period can mean nothing more than "traded less than a coin flip would".
+
+**Only CRSP 2013-2024 is replayable** — the 1990-2012 pull lacks
+`openprc`/`retx`/`shrout`, so the loader refuses those years by name.
+
 ## THE LLM PROVIDER IS DEEPSEEK, AND IT IS THE ONLY ONE
 
 **There is no Anthropic key, no OpenAI key, no other provider. Do not plan
@@ -264,7 +330,15 @@ aegis-finance/
 │   │   ├── sector_rotation.py # Multi-timeframe relative strength + business cycle
 │   │   ├── drawdown_analyzer.py # Drawdown recovery analysis + rolling returns
 │   │   ├── retirement_mc.py   # Monte Carlo retirement sim + safe withdrawal rate
-│   │   └── volatility_analytics.py # Bloomberg-style vol cone, GARCH forecast, regime
+│   │   ├── volatility_analytics.py # Bloomberg-style vol cone, GARCH forecast, regime
+│   │   ├── deepseek_balance.py  # the PROVIDER's own balance — the economic truth on LLM spend
+│   │   └── portfolio_farm/      # ASOF_REPLAY + policy farm over CRSP daily
+│   │       ├── panel.py         # CRSP dsf -> aligned (date x permno) matrices; refuses thin years
+│   │       ├── signals.py       # 16 PIT signals, scalar spec + vectorised twin, two nulls
+│   │       ├── policy.py        # frozen hashed strategy record; zero costs is a REFUSAL
+│   │       ├── replay.py        # decide at close, fill at next open, costs/dividends/delisting
+│   │       ├── metrics.py       # terminal wealth first, then the ratios
+│   │       └── farm.py          # run many, rank, attach the nulls to the leaderboard
 │   └── models/                  # GJR-GARCH, HMM, saved .pkl models
 ├── engine/                      # Offline research (not served by API)
 │   ├── training/                # features.py, feature_selection.py, labeling.py, fracdiff.py, sample_uniqueness.py
@@ -303,6 +377,14 @@ python -m pytest backend/tests/ -v -m "not slow"
 
 # Run ALL backend tests (~25 min, slow tests need network)
 python -m pytest backend/tests/ -v
+
+# Portfolio farm — hundreds of strategies over one replayed history (attended)
+python -m scripts.portfolio_farm_run --preset holding --start 2013 --end 2024
+python -m scripts.portfolio_farm_run --preset breadth    # k=3..50, the open question
+python -m scripts.portfolio_farm_run --preset signals    # every signal at one holding period
+
+# Reconcile LLM spend against the PROVIDER's balance (not our telemetry)
+python -m scripts.llm_cost_audit --snapshot
 
 # Run autonomous R&D lab (overnight, opus model)
 python lab/rd_loop.py --cycles 60 --model opus

@@ -214,7 +214,8 @@ def run_specialist(specialist: str, candidates: list[dict], *,
         model=model, temperature=temperature,
         messages=[{"role": "system", "content": _lang.pin(system)},
                   {"role": "user", "content": user}])
-    text = resp.choices[0].message.content or ""
+    text = _lang.guard("deepseek", "specialist_forecast",
+                       resp.choices[0].message.content or "")
     version = getattr(resp, "model", model)
     # Everything the telemetry row needs about the WIRE call is known now; what
     # it produced is not. The row is written once, at the end, so its

@@ -737,7 +737,8 @@ def default_llm_call(system: str, user: str, *, client=None,
             continue
         u = extract_usage(resp, "deepseek")
         return SwarmReply(
-            text=(resp.choices[0].message.content or ""),
+            text=_lang.guard("deepseek", campaign,
+                             resp.choices[0].message.content or ""),
             model_version=str(getattr(resp, "model", model)),
             # Defensive: `finish_reason` is the vendor's field, not ours, and a
             # provider that omits it must degrade to "unknown" rather than take

@@ -89,6 +89,58 @@ def test_every_direct_call_site_applies_the_language_pin(mod):
         f"language. Use llm_language.pin(system) or pin_messages(messages).")
 
 
+@pytest.mark.parametrize("mod", sorted(set(L.DIRECT_CALL_SITES)))
+def test_every_direct_call_site_GUARDS_THE_RETURNED_TEXT(mod):
+    """The half of the contract that was missing until 2026-08-24 (evening).
+
+    The pin is a REQUEST. A model that ignores it is the exact failure being
+    guarded, so a call site that pins and then trusts whatever came back has
+    implemented the polite half. Before this test, six of seven did precisely
+    that: only `llm_analyzer` ran its reply through `refuse()`, while the
+    commit message claimed one program-wide contract across all seven.
+
+    The AST test above proved the claim about PROMPTS and was read as proving
+    the claim about REPLIES. Enumerating the second half separately is what
+    stops the two being conflated again.
+    """
+    if mod in L.DEFERRED:
+        pytest.skip(f"deferred: {L.DEFERRED[mod][:80]}")
+    src = io.open(SERVICES / f"{mod}.py", encoding="utf-8").read()
+    guarded = ("_lang.guard(" in src or "_lang.refuse(" in src
+               or "_LANGUAGE_REFUSALS" in src)
+    assert guarded, (
+        f"{mod} pins the output language but passes the model's reply "
+        f"straight through. Wrap the text in llm_language.guard(provider, "
+        f"purpose, text) — it returns \"\" on refusal, which lands in the "
+        f"nothing-came-back branch {mod} already has.")
+
+
+def test_guard_blanks_a_refused_reply_and_counts_it_ONCE():
+    before = dict(L.REFUSALS)
+    try:
+        L.REFUSALS.clear()
+        assert L.guard("deepseek", "t", "苹果公司股价上涨因为需求强劲") == ""
+        assert L.guard("deepseek", "t", "Apple rose 3% today") ==             "Apple rose 3% today"
+        assert L.refusals() == {"deepseek": 1}
+    finally:
+        L.REFUSALS.clear()
+        L.REFUSALS.update(before)
+
+
+def test_guard_is_a_passthrough_for_an_empty_reply():
+    """An empty reply is a different failure (no answer) and must not be
+    counted as a language refusal — the rate has to mean one thing."""
+    before = dict(L.REFUSALS)
+    try:
+        L.REFUSALS.clear()
+        assert L.guard("deepseek", "t", "") == ""
+        assert L.guard("deepseek", "t", None) == ""
+        assert L.refusals() == {}
+    finally:
+        L.REFUSALS.clear()
+        L.REFUSALS.update(before)
+
+
 def test_a_deferred_call_site_carries_a_REASON_and_a_DATE():
     """An exemption with a reason is a decision; one without is a module
     somebody forgot. Empty is the goal."""

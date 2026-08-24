@@ -81,6 +81,25 @@ NOT_INPUT_GUARDS: dict[str, str] = {
     "signal_registry": "ClosedSignalError/RegistryError — registry lookups",
     "iif1_prereg": ("FrozenPreregMissing/Drifted — covered by the IIF-1 "
                     "preflight suite, which asserts both refusals directly"),
+    "panel": ("PanelUnavailable (portfolio_farm) — a CRSP year the replay "
+              "window needs is not on disk. Refuses rather than silently "
+              "replaying a shorter history, which would report a CAGR over a "
+              "period nobody declared. Asserted directly in "
+              "test_portfolio_farm_replay.py"),
+    "policy": ("PolicyError (portfolio_farm) — a policy asks for a signal or "
+               "sizing the engine does not implement, or zero costs without "
+               "declaring the frictionless diagnostic. Every branch is "
+               "exercised in test_portfolio_farm_policy.py; the missing-input "
+               "shape does not apply, because a Policy has no inputs to be "
+               "missing — it IS the declaration"),
+    "deepseek_balance": ("BalanceUnavailable — the PROVIDER could not be "
+                         "asked (no key, transport failure, or a payload with "
+                         "no USD row). Not a missing-input inference: this "
+                         "module infers nothing, it reports one number the "
+                         "vendor owns. The contract that matters here is the "
+                         "opposite one — that a failed read never degrades to "
+                         "0.0, which would read as 'the night was free' — and "
+                         "test_deepseek_balance.py asserts that directly"),
     "investigator_night": ("DecisionTimeStale/NightWouldSpanTheOpen/"
                            "SandboxRequired — covered by the night preflight "
                            "tests, which exercise each refusal on the real "

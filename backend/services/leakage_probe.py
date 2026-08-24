@@ -827,7 +827,9 @@ def call_llm(system: str, user: str, *, client=None,
             # silently redirected arm is discoverable from the logs as well as
             # from the stored field.
             logger.info("requested model %r was served by %r", model, served)
-        return Reply(text=(resp.choices[0].message.content or ""),
+        return Reply(text=_lang.guard(
+                         "deepseek", "leakage_probe",
+                         resp.choices[0].message.content or ""),
                      model_version=str(served or model),
                      served_model=(str(served) if served else None),
                      reasoning_tokens=_reasoning_tokens(resp),

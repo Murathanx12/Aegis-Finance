@@ -73,11 +73,34 @@ DESCRIPTIVE_DEFAULTS: dict[str, str] = {
     "vol_lookback_days": "implemented in discovery._trailing_features (63)",
 }
 
+#: The selector a book reads when neither the book nor the file names one.
+#: ONE constant, because the two places that resolve this used to disagree —
+#: `book_selection_signal` (identity) fell back to `arena_composite` while
+#: `BookSpec.selection_signal` (what the engine ranks by) fell back to
+#: `multifactor_score`. A file with no `selection_signal` would have been
+#: fingerprinted as one selector and executed on another, and nothing would
+#: have failed. Production always declares it, so this only ever bit tests —
+#: which is exactly where a divergence hides longest.
+DEFAULT_SELECTION_SIGNAL = "arena_composite"
+
 #: Per-book keys, same contract.
+#:
+#: `selection_signal` is here because THE ALPHA SOURCE IS THE ONE THING A BOOK
+#: MAY DIFFER ON. Costs, benchmark and the information-state gates are the
+#: common world of the factorial (see KNOWN_OVERRIDE_KEYS); the selector is
+#: the opposite — ten books selecting on one signal is the bottleneck the
+#: roadmap named, and the only way out is a book that points somewhere else.
+#: `book_selection_signal()` has honoured a per-book value since 2026-08-24,
+#: but the key was absent HERE, so `load_specs` refused the file before the
+#: engine ever saw it: the identity layer supported a book the loader could
+#: not load. Fixed 2026-08-24 (evening), proven end-to-end by
+#: `test_independent_selector_end_to_end.py` — which loads a real YAML rather
+#: than hand-building a dict, because a dict-built test is exactly what missed
+#: this.
 CONSUMED_BOOK_KEYS = frozenset({
     "purpose", "policy_version", "sizing", "screens", "llm_perception", "llm",
     "winner_exemption", "substitution", "event_context", "overrides",
-    "allocator",
+    "allocator", "selection_signal",
 })
 
 #: The ONLY file-level defaults a book may override (2026-08-21, Murat's
@@ -89,8 +112,11 @@ CONSUMED_BOOK_KEYS = frozenset({
 KNOWN_OVERRIDE_KEYS = frozenset({"select_top_k", "max_single_name"})
 
 DESCRIPTIVE_BOOK_KEYS: dict[str, str] = {
-    "selection": "every book uses composite_top_k; policies.select implements "
-                 "it and reads defaults.selection_signal, not this field",
+    "selection": "the RANKING RULE, and every book uses composite_top_k; "
+                 "policies.select implements it and reads the resolved "
+                 "`selection_signal` (book key, else file default), not this "
+                 "field. `selection` is the shape of the rule; "
+                 "`selection_signal` is WHAT IT RANKS — that one is consumed",
 }
 
 #: Keys inside the per-book `llm`, `substitution` and `allocator` blocks.
@@ -181,7 +207,16 @@ class BookSpec:
 
     @property
     def selection_signal(self) -> str:
-        return str(self.defaults.get("selection_signal", "multifactor_score"))
+        """What `policies.select` ranks by for THIS book.
+
+        `defaults` on a loaded spec is the RESOLVED world the book runs in —
+        file defaults, then per-book `overrides`, then the per-book
+        `selection_signal` if it declares one. So this property and
+        `book_selection_signal()` (which feeds the fingerprint) resolve to the
+        same string by construction, not by two functions agreeing.
+        """
+        return str(self.defaults.get("selection_signal")
+                   or DEFAULT_SELECTION_SIGNAL)
 
 
 def config_bytes(path: Path | None = None) -> bytes:
@@ -260,7 +295,8 @@ def book_selection_signal(book_id: str, raw: dict) -> str:
     book = (raw.get("books") or {}).get(book_id) or {}
     defaults = raw.get("defaults") or {}
     return str(book.get("selection_signal")
-               or defaults.get("selection_signal") or "arena_composite")
+               or defaults.get("selection_signal")
+               or DEFAULT_SELECTION_SIGNAL)
 
 
 def book_fingerprint(book_id: str, raw: dict, *,
@@ -427,6 +463,20 @@ def load_specs(path: Path | None = None) -> dict[str, BookSpec]:
                 f"investment, which silently destroys the cash position the "
                 f"allocator holds by design. A composed version is a new "
                 f"sizing, declared and tested, not a YAML combination.")
+        # The alpha source. Resolved HERE, into the same dict the engine reads,
+        # so `spec.selection_signal` and `book_selection_signal()` cannot
+        # diverge. Declared-selector check is explicit and names the book: the
+        # fingerprint call below would raise anyway, but with a message that
+        # does not say which book in a ten-book file is at fault.
+        book_signal = b.get("selection_signal")
+        if book_signal is not None:
+            book_signal = str(book_signal)
+            try:
+                from backend.services.arena.selector_identity import (
+                    assert_declared)
+                assert_declared(book_signal)
+            except Exception as exc:                          # noqa: BLE001
+                raise SpecError(f"{book_id}: {exc}") from exc
         overrides = dict(b.get("overrides") or {})
         bad_overrides = set(overrides) - KNOWN_OVERRIDE_KEYS
         if bad_overrides:
@@ -448,7 +498,9 @@ def load_specs(path: Path | None = None) -> dict[str, BookSpec]:
             winner_exemption=dict(b.get("winner_exemption") or {}),
             substitution=dict(b.get("substitution") or {}),
             allocator=dict(b.get("allocator") or {}),
-            defaults={**defaults, **overrides},
+            defaults={**defaults, **overrides,
+                      **({"selection_signal": book_signal}
+                         if book_signal else {})},
             config_hash=h,
             policy_fingerprint=policy_fingerprint(p, sizing=sizing),
             book_fingerprint=book_fingerprint(book_id, raw, sizing=sizing),

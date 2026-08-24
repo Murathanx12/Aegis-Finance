@@ -113,6 +113,29 @@ def refuse(provider: str, purpose: str, text: str) -> bool:
     return True
 
 
+def guard(provider: str, purpose: str, text: str) -> str:
+    """The reply text, or `""` when it must be discarded. THE RETURN PATH.
+
+    WHY THIS EXISTS SEPARATELY FROM `refuse`
+    ========================================
+    Until 2026-08-24 (evening) the contract was HALF wired and the test said so
+    in a way that read as whole: every direct call site applied `pin()`, and
+    exactly one of the seven — `llm_analyzer` — ran its reply through
+    `refuse()`. The AST test asserted the pin and nothing else, so a commit
+    claiming "one program-wide language contract" was true of the PROMPT and
+    false of the RESPONSE. A pin is a request; a model that ignores it is
+    precisely the failure being guarded, so a contract that only pins is a
+    contract that trusts the thing it does not trust.
+
+    The return form is `""` rather than an exception because every call site
+    already has a nothing-came-back path — JSON parse failure, empty answer,
+    abstain — and routing a refusal into the branch that already exists is
+    what makes this wirable in one line per site. A new bespoke error branch
+    per caller is how the first fix ended up living in one module.
+    """
+    return "" if (not text or refuse(provider, purpose, text)) else text
+
+
 def refusals() -> dict:
     """Per-provider count of replies refused for not being English."""
     return dict(REFUSALS)

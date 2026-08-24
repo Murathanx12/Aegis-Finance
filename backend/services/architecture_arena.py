@@ -211,7 +211,8 @@ def call_model(messages: list[dict], *, model: str = FLASH, arm: str,
                            "%s/%s/%s — served_model is UNKNOWN, not %s",
                            arm, item, step, model)
             served = "UNKNOWN"
-        reply = ArmReply(text=(resp.choices[0].message.content or ""),
+        reply = ArmReply(text=_lang.guard(
+            "deepseek", PURPOSE, resp.choices[0].message.content or ""),
                          served_model=served, requested_model=model,
                          reasoning_tokens=reasoning,
                          latency_ms=(time.perf_counter() - t0) * 1000.0,
