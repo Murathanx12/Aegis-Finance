@@ -138,6 +138,46 @@ backwards, as the review directed:
 
 ---
 
+## THE POWER CHECK CHANGES THE ORDER OF THE CHUNKS
+
+This is the strategic conclusion of the night and it argues against the obvious
+next move.
+
+The candidate's numbers were unresolvable at **t = 1.54** with an MDE of
+**30.3%/yr** against a 16.6%/yr effect. That is not a fact about momentum. It is
+a fact about **twelve years and a 35.7% tracking error**, and it applies to
+every concentrated long-only equity strategy the farm can express.
+
+So a new mechanism — `ACTIVIST_13D_v1`, `CONGRESS_FOLLOW`, `SELL_SIDE_BRAIN_v1`,
+`GLOBAL_PREMARKET_RELAY_v1` — tested on the same twelve years, at a similar
+tracking error, **arrives pre-doomed to the same t ≈ 1.5**. It will produce a
+plausible number, a wide band, a phase spread, and a sub-period disagreement,
+because that is what this sample size produces regardless of what is true.
+
+**Building more signals to test in an under-powered sample manufactures more
+unresolvable results.** That is the expensive version of doing nothing.
+
+The order that follows:
+
+1. **Get the sample.** CRSP 1990-2012 re-pull -> 35 years against the 36 the
+   effect needs. This is now the gating task for CHUNKS B, C, D and G, not just
+   for the momentum candidate.
+2. **Re-run what exists** on 35 years — holding, breadth x phase, sub-period,
+   confidence. Cheap; the machinery is built and tested.
+3. **THEN** build new mechanisms, into a farm that can actually resolve them.
+
+The exception, and it is a real one: a mechanism with a **much lower tracking
+error** is resolvable in twelve years, because the MDE scales with TE, not with
+cleverness. `power_check` reports `years_needed_for_observed_effect` — a design
+that comes in under twelve is worth testing now. A concentrated 12-name
+long-only book is not that design, and never was.
+
+**None of this blocks CHUNK A's launch path.** `EVENT_RESPONSE_v1` as an
+independent arena book is FORWARD paper accrual, which is a different evidence
+route from a historical replay and is not governed by this arithmetic.
+
+---
+
 ## THE CHUNKS, with what today changed about each
 
 **CHUNK A — `PORTFOLIO_FARM` + `ASOF_REPLAY`. BUILT.** ~1,700 policies over
