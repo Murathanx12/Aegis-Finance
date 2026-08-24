@@ -23,6 +23,30 @@ here**, and its position on a leaderboard is noise wearing a rank. That is a
 statement about the instrument, not about the signal, and it is knowable before
 looking at the outcome.
 
+MEASURED 2013-2024 (h=5, k=10, inverse_vol, median phase, AFTER the split fix)
+==============================================================================
+
+    signal        median$    te%   excess%      t   mde80%   yrs_need
+    liquid         98,059   12.6      9.76   2.55    10.72         13
+    mom_6_1        93,395   35.7     15.03   1.39    30.29         44
+    mom_12_1       85,482   33.6     13.72   1.35    28.46         47
+    trend_200      73,990   39.8     13.35   1.11    33.75         70
+    size_large     53,546    8.1      2.96   1.21     6.85         58
+    mom_12_0       52,438   37.2     10.05   0.89    31.57        108
+    ...
+    equal (null)   43,122    7.4      0.49   0.22     6.26       1793
+
+**ZERO of thirteen non-null signals produced an effect this window could
+resolve at 80% power.** Not the leader, not one.
+
+But the ORDERING is the useful part, and it is not the terminal-wealth
+ordering. `liquid` carries the highest t on the board (2.55) at a third of
+momentum's tracking error, and would need **13 years** rather than 47. It is
+the one row the widened window is likely to settle. Note also that `liquid` and
+`size_large` only look like this AFTER the split-adjustment fix — before it,
+`liquid` read t=0.26, because forward splits are commonest among large liquid
+names and the unadjusted P&L path taxed exactly that book.
+
 WHY THIS IS THE DIRECT ATTACK ON THE STATED BOTTLENECK
 =======================================================
 `CLAUDE.md`: *all ten arena books declare `selection: composite_top_k` over ONE

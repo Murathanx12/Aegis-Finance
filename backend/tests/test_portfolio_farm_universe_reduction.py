@@ -54,7 +54,8 @@ def _synthetic_year(dir_, year: int, n_liquid: int = 30, n_dust: int = 120,
             px *= 1.0 + rng.normal(0, 0.01)
             rows.append({"permno": 10000 + j, "date": d, "prc": px,
                          "ret": 0.0004, "retx": 0.0004, "vol": vol,
-                         "shrout": 1e5, "openprc": px})
+                         "shrout": 1e5, "openprc": px,
+                         "cfacpr": 1.0})
     pd.DataFrame(rows).to_parquet(dir_ / f"crsp_dsf_{year}.parquet",
                                   index=False)
 

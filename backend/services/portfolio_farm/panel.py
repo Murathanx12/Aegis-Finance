@@ -58,7 +58,8 @@ logger = logging.getLogger(__name__)
 WRDS_DIR = DATA_DIR / "optimus" / "wrds"
 FF_DAILY = DATA_DIR.parent / "data" / "ff_daily_pinned.csv.gz"
 
-_COLUMNS = ["permno", "date", "prc", "ret", "retx", "vol", "shrout", "openprc"]
+_COLUMNS = ["permno", "date", "prc", "ret", "retx", "vol", "shrout",
+            "openprc", "cfacpr"]
 
 #: Without ALL of these the simulator is a different simulator. See
 #: `replayable_years` for what each one buys.
@@ -123,8 +124,18 @@ class Panel:
     """
     dates: np.ndarray            # (T,) object, ISO date strings
     permnos: np.ndarray          # (N,) int64
-    close: np.ndarray            # abs(prc) — for MARKING
-    open_: np.ndarray            # openprc — for FILLING
+    #: SPLIT-ADJUSTED abs(prc)/cfacpr — for MARKING. `replay` carries SHARE
+    #: COUNTS, and a share count is not invariant across a split: on a 1-for-4
+    #: reverse split the raw price quadruples while CRSP's `ret` correctly
+    #: reads ~0, so a book marked on raw prices books a +300% day for a
+    #: corporate action. Measured on permno 85035, 2015-01-02: prc 16.59 ->
+    #: 70.40, cfacpr 0.25 -> 1.00, ret +6.09%. That one event was worth
+    #: +36.34% of single-day "excess" and a QUARTER of the 13.39%/yr headline
+    #: for `mom_12_1 / h5 / k10`. CRSP's own identity holds exactly:
+    #: (70.40/1.00) / (16.59/0.25) - 1 = +6.09% = ret.
+    close: np.ndarray
+    #: SPLIT-ADJUSTED openprc/cfacpr — for FILLING, same reason.
+    open_: np.ndarray
     ret: np.ndarray              # total return (incl. dividends)
     retx: np.ndarray             # capital-appreciation-only return
     traded: np.ndarray           # bool: prc > 0, i.e. a real trade happened
@@ -138,6 +149,12 @@ class Panel:
     delist_ret: np.ndarray | None = None
     #: (N,) the delisting CODE, for auditing which population a run resolved.
     delist_code: np.ndarray | None = None
+    #: RAW abs(prc), for the things that are about the ACTUAL traded price and
+    #: not about a position's value: the `min_price` penny-stock screen. A $5
+    #: floor is a statement about what really changes hands, so adjusting it
+    #: would let a name that trades at $0.40 today pass because it was $8
+    #: before three splits.
+    close_raw: np.ndarray | None = None
     #: MEASURED share of tradeable cells (a real trade at the close) that also
     #: carry a usable positive open. This is the fill convention's own coverage
     #: on THIS window, and it belongs on the receipt: a run whose decisions
@@ -428,7 +445,9 @@ def load_panel(start_year: int, end_year: int, *,
             f"convention silently becomes close-to-close (which books the "
             f"overnight gap that follows the signal); without `retx` a dividend "
             f"cannot be told from a price move; without `shrout` there is no "
-            f"market cap. Re-pull those columns for the missing years, or ask "
+            f"market cap; without `cfacpr` a share count is carried across a "
+            f"split and a corporate action is booked as a return. Re-pull "
+            f"those columns for the missing years, or ask "
             f"for a window inside the replayable one.")
 
     # A column that exists and is empty is the failure the re-pull created and
@@ -482,12 +501,21 @@ def load_panel(start_year: int, end_year: int, *,
         return m
 
     prc = df["prc"].to_numpy(dtype=np.float64)
-    close = _mat(np.abs(prc))
+    # CRSP convention: adjusted price = prc / cfacpr. A cfacpr of 0 or NaN is
+    # treated as 1.0 — no adjustment — rather than producing an infinite price;
+    # the alternative silently deletes the name from every book that held it.
+    cfac = df["cfacpr"].to_numpy(dtype=np.float64)
+    cfac = np.where(np.isfinite(cfac) & (cfac > 0), cfac, 1.0)
+    close_raw = _mat(np.abs(prc))
+    close = _mat(np.abs(prc) / cfac)
     traded = np.zeros(shape, dtype=bool)
     traded[r, c] = prc > 0
-    open_ = _mat(df["openprc"].to_numpy(dtype=np.float64))
+    open_ = _mat(df["openprc"].to_numpy(dtype=np.float64) / cfac)
     ret = _mat(df["ret"].to_numpy(dtype=np.float64))
     retx = _mat(df["retx"].to_numpy(dtype=np.float64))
+    # RAW price here on purpose: dollar volume and market cap are dollar
+    # amounts, already invariant to a split (price halves, shares double), and
+    # adjusting one side without the other would break that invariance.
     dolvol = _mat(np.abs(prc) * df["vol"].to_numpy(dtype=np.float64))
     mktcap = _mat(np.abs(prc) * df["shrout"].to_numpy(dtype=np.float64) * 1000.0)
 
@@ -522,7 +550,7 @@ def load_panel(start_year: int, end_year: int, *,
                 100.0 * n_known / max(1, len(permnos)))
     return Panel(dates=dates, permnos=permnos, close=close, open_=open_,
                  ret=ret, retx=retx, traded=traded, dolvol=dolvol,
-                 mktcap=mktcap, tri=tri, delist_ret=dl_ret,
+                 mktcap=mktcap, tri=tri, close_raw=close_raw, delist_ret=dl_ret,
                  delist_code=dl_code, open_coverage=open_cov,
                  universe_reduced_to=reduced_to,
                  reduction_min_prices=(REDUCTION_MIN_PRICES

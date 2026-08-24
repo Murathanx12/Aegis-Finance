@@ -22,26 +22,37 @@ cheap way to buy resolution that more history buys expensively.
 
 MEASURED 2013-2024, h=5, inverse_vol, median phase, universe 500
 ================================================================
+(after the 2026-08-25 split-adjustment fix — the pre-fix numbers differed and
+the pre-fix RANKING differed more)
 
     signal        k   median$    te%   excess%      t   mde80%
-    mom_12_1      5    33,548   46.7     10.27   0.73    39.58
-    mom_12_1     10    77,002   35.7     13.39   1.24    30.31   <- peak t
-    mom_12_1     20    47,597   26.1      5.91   0.75    22.17
-    mom_12_1     30    34,510   21.3      1.57   0.24    18.09
-    mom_12_1     50    39,054   16.8      1.54   0.30    14.25
-    mom_6_1      10    83,908   37.6     14.62   1.28    31.93   <- peak t
-    mom_6_1      50    37,285   15.4      0.60   0.13    13.04
+    mom_12_1     10    85,482   33.6     13.72   1.35    28.46   <- peak t
+    mom_12_1     20    60,638   25.4      7.96   1.03    21.54
+    mom_12_1     30    43,852   21.0      3.71   0.58    17.80
+    mom_12_1     50    51,280   16.4      4.00   0.81    13.89
+    liquid       10    98,059   12.6      9.76   2.55    10.72   <- peak t
+    liquid       20    48,785    7.4      2.49   1.11     6.29
+    liquid       50    34,560    3.5     -1.38  -1.29     2.98
+    size_large   10    53,546    8.1      2.96   1.21     6.85   <- peak t
+    size_large   50    35,748    5.0     -1.39  -0.91     4.28
 
-**The MDE collapses with breadth exactly as predicted — 30.3% at k=10 down to
-14.3% at k=50 — and the excess collapses FASTER.** The information ratio peaks
-at the most concentrated book the grid contains and decays from there, which is
-the opposite of what a real cross-sectional signal does.
+**The MDE collapses with breadth exactly as predicted — and the excess
+collapses FASTER.** The information ratio peaks at the most concentrated book
+the grid contains and decays from there, which is the opposite of what a real
+cross-sectional signal does.
 
-All three signals tested show the same shape, fitted over k=10..50:
+Every signal tested shows the same shape, fitted over k=10..50:
 
-    mom_12_1   t vs log(k) slope -0.63,  peak t at k=10
-    mom_6_1    t vs log(k) slope -0.73,  peak t at k=10
-    trend_200  t vs log(k) slope -0.47,  peak t at k=10
+    mom_12_1   t vs log(k) slope -0.40,  peak t at k=10
+    liquid     t vs log(k) slope -2.37,  peak t at k=10
+    size_large t vs log(k) slope -1.24,  peak t at k=10
+
+`liquid` is the sharpest case and the most instructive one. It has the best
+t on the whole signal grid (2.55) AND the steepest decay with breadth, and
+those are the same fact: at k=10 out of a 500-name liquid universe it is a
+ten-name mega-cap book, so its "edge" over 2013-2024 is a bet on mega-cap
+dominance in a mega-cap decade, not a cross-sectional signal. Whether that is
+a regime or an effect is precisely what 1993-2024 gets to answer.
 
 So breadth does NOT buy resolution here, and the reason it does not is itself
 the finding: **the k=10 result behaves like a small number of large winners

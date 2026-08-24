@@ -309,8 +309,14 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
         if (i >= first and (i - first) % policy.holding_days == 0
                 and i < T - 1):
             liq = dolvol_ma[i]
+            # `px_c` is SPLIT-ADJUSTED and is the right thing to mark with and
+            # the wrong thing to screen with: a $5 floor is about the price
+            # that actually changes hands. `close_raw` is that price.
+            screen_px = (panel.close_raw[i].astype(np.float64)
+                         if getattr(panel, "close_raw", None) is not None
+                         else px_c)
             eligible = (panel.traded[i] & np.isfinite(px_c)
-                        & (px_c >= policy.min_price) & np.isfinite(liq))
+                        & (screen_px >= policy.min_price) & np.isfinite(liq))
             if policy.universe_n and eligible.sum() > policy.universe_n:
                 cand = np.flatnonzero(eligible)
                 keep = cand[np.argsort(-liq[cand], kind="stable")[

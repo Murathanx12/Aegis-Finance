@@ -1,36 +1,37 @@
 {
   "dataset": "crsp_dsf_1996",
-  "pulled_at": "2026-08-19T13:27:50+00:00",
+  "pulled_at": "2026-08-24T16:55:35+00:00",
   "rows": 1859040,
   "cols": [
     "permno",
     "date",
     "prc",
     "ret",
-    "vol"
+    "retx",
+    "vol",
+    "shrout",
+    "askhi",
+    "bidlo",
+    "openprc",
+    "cfacpr",
+    "cfacshr"
   ],
   "window": [
     "1996-01-02",
     "1996-12-31"
   ],
-  "universe": "crsp_pit_monthly_early screened PERMNOs (early-era held-out confirmation slice)",
-  "pit_knowledge_column": "date (daily bar); early-era confirmation slice",
-  "sql_note": "SELECT permno, date, prc, ret, vol FROM crsp.dsf WHERE permno = ANY(%(p)s) AND date BETWEEN %(s)s AND %(e)s",
-  "metadata_correction": {
-    "corrected_at": "2026-08-20T03:09:29+00:00",
-    "by": "scripts/wrds_meta_audit.py --repair",
-    "reason": "_write() stamped module constants START/END and a fixed universe string for every dataset; the parquets were correct, the labels were not",
-    "window_declared_stale": [
-      "2013-01-01",
-      "2024-12-31"
-    ],
-    "universe_declared_stale": "crsp_pit_monthly_v1 ALL screened PERMNOs (6,894 superset; the 4,796 ever-ELIGIBLE subset is a downstream formation-time filter, never a pull filter)"
-  },
   "window_source": "date",
   "date_ranges_observed": {
     "date": [
       "1996-01-02",
       "1996-12-31"
     ]
-  }
+  },
+  "universe": "crsp_pit_monthly_early ALL screened PERMNOs \u2014 the early-era universe file, NOT crsp_pit_monthly_v1",
+  "pit_knowledge_column": "date (daily bar, public at close); |prc| convention: negative = bid/ask midpoint on no-trade days; vol in SHARES on dsf",
+  "sql_note": "SELECT permno, date, prc, ret, retx, vol, shrout, askhi, bidlo, openprc, cfacpr, cfacshr FROM crsp.dsf WHERE permno = ANY(%(p)s) AND date BETWEEN %(s)s AND %(e)s",
+  "repull_reason": "the original 1990-2012 pull requested 5 columns; openprc/retx/shrout are what portfolio_farm.panel requires, and an existence-keyed catch-up queue could never have noticed they were absent",
+  "supersedes": "crsp_dsf_1996.narrow-5col.parquet",
+  "universe_caveat": "membership clears universe_n=500 in every month of this year",
+  "pull_seconds": 312.1
 }
