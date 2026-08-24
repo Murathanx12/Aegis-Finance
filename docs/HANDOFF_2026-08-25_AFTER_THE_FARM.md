@@ -86,23 +86,30 @@ backwards, as the review directed:
 
 ## THE CHUNKS, with what today changed about each
 
-**CHUNK A — `PORTFOLIO_FARM` + `ASOF_REPLAY`. BUILT.** 516 policies over
-2013-2024 in 7 minutes. Immediate follow-ups, cheapest first:
+**CHUNK A — `PORTFOLIO_FARM` + `ASOF_REPLAY`. BUILT.** ~1,000 policies over
+2013-2024 across three presets. Follow-ups, cheapest first:
 
-* `--preset breadth`. **This is now the most interesting run on the board.** The
-  holding finding produced an unasked-for result: at k=12 the rebalance PHASE
-  alone swings terminal wealth 3x ($13,473 at h=21 vs $38,815 at h=63, same
-  signal), and chance spans $473-$85,419. **Terminal wealth on ONE path cannot
-  rank selectors at k=12.** The question is at what breadth selection becomes
-  measurable at all. One command.
+* `--preset breadth` — **RUN, and it does not rescue the result.** k=3..50 at
+  h=21: momentum's best is k=50 at $26,804, the 85th percentile of chance, every
+  smaller k worse. Concentration was not what was missing. (k=3 and k=5 give
+  identical results under both sizings — a 20% cap makes those books
+  all-at-the-cap, so sizing has nothing left to decide.)
+* `--preset phase` — **RUN, and it changed the answer.** At k=12 the rebalance
+  PHASE moves terminal wealth 1.8x-3.8x, wider than any gap between the
+  strategies compared. The originally published `$38,815` was the MAX of a
+  distribution whose median is `$16,633`. **Never quote a farm result from one
+  phase again**; `farm.across_phases` reports the median with its spread beside
+  it, and the spread is itself the finding.
+* **The remaining multi-path work.** Phase medians rest on 5-7 offsets, not the
+  full cycle, and there is still only ONE price path. A block bootstrap over
+  formation dates would give a leaderboard row an interval rather than a number.
+  That is the difference between "this rule beat the market" and "this rule
+  would have beaten the market on the one history we have".
 * Delisting sensitivity: re-run at `delisting_return` 0.0 and -1.0 to bound the
   assumption. One command, nobody has spent it.
 * Re-pull `openprc`/`retx`/`shrout` for CRSP 1990-2012 (`AegisWRDSPullNight`
   exists). That triples the window and lets a policy be tested across regimes
   instead of one.
-* Multi-path evaluation. Terminal wealth on one path is not a statistic. Block
-  bootstrap over formation dates, or average across rebalance phases, so a
-  leaderboard row has an interval rather than a number.
 
 **CHUNK B — HUMAN/TEACHER PORTFOLIOS.** Unchanged and unblocked. The repo already
 collects Congress (PIT, disclosure-date), ARK, Form 4, 13F and IBES; it measures
@@ -142,9 +149,11 @@ the BLOCKER to 2 was removed.
    (`--snapshot`), so every future delta is exact rather than measured against a
    hand-typed constant.
 2. **Momentum at 12 names does not beat the market over 2013-2024**, net of 12
-   bps. That is not a reason to stop; it is the calibration for everything the
-   farm will test next. Any new mechanism's first question is now "does it beat
-   $39,951", not "is it significant".
+   bps — best net median **$35,228** against **$39,951**. That is not a reason to
+   stop; it is the calibration for everything the farm tests next. Any new
+   mechanism's first question is now "does it beat $39,951", not "is it
+   significant". And the second question is "what is its phase spread" — a rule
+   whose spread is wider than its edge has not been shown to have one.
 3. **The IIF-1 read schedule stays frozen** at 40/80/120. Grading is continuous
    and automatic; READING the aggregate is what the gate blocks. A separate
    product surface showing yesterday's predictions vs outcomes is wanted and
