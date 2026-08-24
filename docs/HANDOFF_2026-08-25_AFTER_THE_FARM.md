@@ -23,9 +23,27 @@ IIF-1 alone still needs     $31.36
 balance                     $23.99   -> SHORT BY $7.37
 ```
 
+`investigator_night.project_funding(0.9224)` — the repo's own funding rule,
+which nobody had run against a measured balance — agrees by a second route:
+
+```
+fundable_nights_at_this_rate   26      (balance / measured cost)
+nights_required                40
+funding_gap_or_surplus     -$12.91     (against a fresh 40-night campaign)
+```
+
+**Six nights are already run, so the campaign reaches night 32 of 40** and voids
+there. Two numbers, and they answer different questions — quote the right one:
+**-$7.37** is the shortfall on the 34 nights REMAINING; **-$12.91** is the gap
+against a full 40-night campaign costing $36.90.
+
+Against the stale $57.12 the same call returns **61 fundable nights and a
++$20.22 surplus** — "FUNDED, proceed".
+
 That is IIF-1 in isolation. The same key carries production too — roughly
 $3/day unattributed — so the **combined runway is about six calendar days**,
-against the ~48 that 34 weekday nights need.
+against the ~48 that 34 weekday nights need. That second figure is softer: it
+is derived against the $57.12 baseline, whose provenance is a person.
 
 **The stale $57.12 constant would have said FUNDED.** `investigator_night.
 DEFAULT_BALANCE_USD` now carries the measured $23.99 with its provenance.
