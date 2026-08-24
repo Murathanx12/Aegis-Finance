@@ -172,20 +172,53 @@ backwards, as the review directed:
 
 What has NOT been done, in priority order:
 
-1. **FIRST PRIORITY: re-pull `openprc`/`retx`/`shrout` for CRSP 1990-2012**
-   (`AegisWRDSPullNight` exists). The sub-period split makes this urgent rather
-   than merely nice — the candidate is 1.01x the market over 2013-2018 and 1.75x
-   over 2019-2024, so what is needed is REGIMES, not precision. Three more
+1. **FIRST PRIORITY: re-pull `openprc`/`retx`/`shrout` for CRSP 1990-2012 —
+   AND THE EXISTING MACHINERY CANNOT DO IT.** `wrds_pull_catchup` resumes by
+   skipping "a table whose parquet exists", so twenty-three files that exist
+   with the wrong columns are permanently invisible to it. This is the sibling
+   of the 2026-08-23 finding that a failure-driven queue cannot see a
+   NEVER-ATTEMPTED item: **an existence-keyed queue cannot see a
+   PARTIALLY-PULLED item.** `python -m scripts.wrds_column_completeness` now
+   makes it visible and exits non-zero (23 partial, 12 complete, usable range
+   2013-2024). The pull spends a credentialed WRDS session against Murat's
+   institutional account, so triggering it is ATTENDED — `pgpass.conf` is
+   present, so it would run non-interactively. The sub-period split is what
+   makes it urgent: what is needed is REGIMES, not precision, and three more
    decades hold the dot-com unwind, the GFC and the 2009 momentum crash.
-2. **A block bootstrap over formation dates.** Phase medians rest on 5-7 offsets
-   and there is still only ONE price path, so a leaderboard row is a number and
-   not an interval. That is the difference between "this rule beat the market"
-   and "this rule would have beaten the market on the one history we have", and
-   with ~1,700 policies tried it is the whole ballgame.
-3. **Audit the 6,894-PERMNO superset for forward-looking eligibility.** The daily
-   pull is scoped to names a monthly PIT screen selected. If that screen embeds
-   any "ever eligible" logic, the universe is mildly cleaner than reality and
-   every farm number inherits it. Unresolved.
+
+   **And the power check prices it exactly: the effect needs 36 years to
+   resolve, and CRSP 1990-2024 is 35.** The re-pull is not a nice-to-have for
+   robustness — it is very nearly the precise amount of data this question
+   requires, and nothing else on the board substitutes for it. That is the
+   strongest argument this session produced for anything.
+2. ~~A block bootstrap over formation dates.~~ **DONE — and the POWER CHECK it
+   came with is the most important number of the night.**
+   `python -m scripts.portfolio_farm_confidence`:
+
+   ```
+   tracking error   35.7%/yr     implied t          1.54
+   excess           16.6%/yr     MDE at 80% power  30.3%/yr
+   bootstrap CI     contains zero in ALL FIVE phases (P(<=0) 0.07-0.17)
+   reality-check p  0.13 over 45 policies
+   years needed     36
+   ```
+
+   **The sample could never have resolved the effect.** Canon §64 requires a
+   power check before any confirmation and the farm ran ~1,700 policies without
+   one. Run it FIRST from now on: a row whose
+   `sample_can_resolve_observed_effect` is False answered nothing, whatever
+   terminal wealth it reported.
+
+   And it is the SAME fact as everything else — the 3.75x phase spread, the
+   1.01x-vs-1.75x sub-period disagreement and the wide CI are four faces of one
+   variance. None of them is a defect in the strategy or the simulator.
+3. ~~Audit the 6,894-PERMNO superset for forward-looking eligibility.~~
+   **DONE, and it cannot bind.** The superset admits any permno that ever
+   cleared $100M/month; the farm's 500th name trades $76M-$137M per DAY, a
+   **15.4x minimum margin** (median 20.4x), with 2,770-3,439 eligible per date
+   against a 500-name cut. `python -m scripts.portfolio_farm_universe_audit`
+   re-runs it and gates at 3x. The `shrcd`/`exchcd` restriction is untouched and
+   is a DECLARED universe choice, not lookahead.
 
 **THE CANDIDATE — AND THE CHECK THAT LARGELY TOOK IT BACK.**
 `mom_12_1 / hold 5d / k=10 / inverse_vol / top-500-liquid / 12 bps round trip`

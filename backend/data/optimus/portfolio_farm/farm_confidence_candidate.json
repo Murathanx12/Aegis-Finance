@@ -1,0 +1,34 @@
+{
+ "check": "confidence",
+ "candidate": {
+  "signal": "mom_12_1",
+  "holding_days": 5,
+  "top_k": 10,
+  "sizing": "inverse_vol"
+ },
+ "window": [
+  2013,
+  2024
+ ],
+ "power": {
+  "status": "ok",
+  "years": 10.9,
+  "tracking_error_annual_pct": 35.698,
+  "se_of_mean_excess_pct": 10.814,
+  "observed_excess_annual_pct": 16.643,
+  "implied_t": 1.539,
+  "mde_at_80pct_power_annual_pct": 30.28,
+  "years_needed_for_observed_effect": 36.1,
+  "sample_can_resolve_observed_effect": false
+ },
+ "reality_check": {
+  "status": "ok",
+  "n_policies": 45,
+  "n_obs": 2746,
+  "best_policy": "mom_12_1#0p2",
+  "best_excess_annual_pct": 16.643,
+  "reality_check_p": 0.13,
+  "n_boot": 500,
+  "note": "p is the share of resamples in which the BEST of all policies tried, under the null of no excess, beats the observed best. It prices the search. It does not price the fact that only one price path exists."
+ }
+}

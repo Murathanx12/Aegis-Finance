@@ -14,6 +14,7 @@ The format Murat's review asked every session to lead with, from now on.
 | **Best historical net strategy** | `mom_12_1 / hold 5d / k=10 / inverse_vol / u500`, **$77,002 median across 5 rebalance phases** (worst $58,411), from $10,000, 2013-2024, 12 bps round trip, next-open fills, MEASURED delisting returns |
 | **vs market** | CRSP VW buy & hold **$38,960** — ~2x on terminal wealth in every phase, and **WORSE on Sharpe (0.61 vs 0.72), Sortino and Calmar in every phase**, at -60% drawdown vs -34%. |
 | **AND THE SUB-PERIOD SPLIT** | **1.01x the market over 2013-2018** (2 of 5 phases clear their nulls) vs 1.75x over 2019-2024. **A one-regime result. Not seedable as a forward book.** |
+| **AND THE POWER CHECK** | **t = 1.54, MDE 30.3%/yr against a 16.6%/yr effect, 36 years needed.** The sample could never have resolved it. Bootstrap CI contains zero in all five phases; White reality-check p = 0.13. **CRSP 1990-2024 is 35 years — the re-pull is the precise fix.** |
 | **Phase spread** | **1.8x-3.8x** at k=12 — wider than any gap between the strategies compared. Every result is now a MEDIAN over rebalance phases |
 | **Best forward paper strategy** | unchanged: `conservative-atr` +6.38% since 2026-06-08 (77 days). No new forward book was launched. |
 | **Independent alpha selectors running** | **still 1** (`arena_composite`). The BLOCKER to a second one was removed today, not the second one itself. |

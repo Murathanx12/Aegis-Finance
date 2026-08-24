@@ -263,11 +263,60 @@ it is first now that the question is *whether there is anything here at all
 outside 2019-2024*. Three more decades contain the dot-com unwind, the GFC and
 the 2009 momentum crash — the regimes that would actually test this.
 
+## THE POWER CHECK, WHICH EXPLAINS EVERY OTHER RESULT AT ONCE
+
+Canon §64 requires a power check **before** any confirmation. The farm ran
+~1,700 policies without one. Done afterwards on the leading candidate:
+
+| | |
+|---|---:|
+| tracking error | **35.7%/yr** |
+| standard error of the mean excess | **10.81%/yr** over 10.9 years |
+| observed excess | 16.64%/yr |
+| **implied t** | **1.54** |
+| MDE at 80% power, 5% two-sided | **30.3%/yr** |
+| **years needed to resolve the observed effect** | **36** |
+
+**The sample cannot resolve the effect.** Not "the strategy is weak" — the
+question was unanswerable with twelve years at this tracking error, before a
+single number was computed.
+
+And that one fact IS all four of the other results:
+
+* the **3.75x rebalance-phase spread** — that variance, showing up as calendar
+  sensitivity;
+* the **1.01x vs 1.75x sub-period disagreement** — the same variance, split in
+  half;
+* the **bootstrap CI**, which contains zero in every phase (excess +10.9% to
+  +16.6%/yr, CIs spanning roughly -10% to +40%, P(excess<=0) = 0.07 to 0.16);
+* **White's Reality Check p = 0.126** across the 45 policies in that run — the
+  best one does not survive its own search.
+
+Four independent instruments, one underlying quantity. None of them is a defect
+in the strategy or in the simulator.
+
+### And it prices the fix exactly
+
+Thirty-six years is what this question needs. **CRSP 1990-2024 is thirty-five.**
+The pre-2013 re-pull is not "nice to have for regimes" — it is very nearly the
+precise amount of data required, which is why it is the first priority and why
+nothing else on the board substitutes for it.
+
+`backend/services/portfolio_farm/bootstrap.py` — `power_check`,
+`excess_interval` (stationary block bootstrap, Politis & Romano 1994) and
+`reality_check` (White 2000). Run the power check FIRST from now on; a farm row
+whose `sample_can_resolve_observed_effect` is False is a row that answered
+nothing, whatever it returned.
+
 ## What this is, and what it is not
 
 It **is** the first thing in this programme to beat a properly-costed benchmark
 on a replay with next-open fills, measured delisting returns and both nulls
-cleared in every rebalance phase of the full window.
+cleared in every rebalance phase of the full window. That is worth something: it
+is a plausible hypothesis, cheaply produced.
+
+It is **not a finding**, and the power check says why in one line: **t = 1.54,
+and the sample would need thirty-six years to resolve the effect it reports.**
 
 It is **NOT** ready for a forward book. The sub-period split above is the
 reason: 1.01x against the market over 2013-2018, clearing its nulls in two
@@ -279,8 +328,13 @@ It is **not** alpha:
 
 * **one window, one path, and the two halves DISAGREE.** See the sub-period
   section: 1.01x over 2013-2018, 1.75x over 2019-2024. The pre-2013 CRSP pull
-  lacks `openprc`/`retx`/`shrout` and the loader refuses it by name; widening it
-  is a WRDS re-pull and is now the FIRST priority.
+  lacks `openprc`/`retx`/`shrout` and the loader refuses it by name.
+  **And that gap is invisible to the machinery that would fix it:**
+  `wrds_pull_catchup` skips any table whose parquet EXISTS, so twenty-three
+  files that exist with the wrong columns will never be re-pulled by any number
+  of catch-up nights. `python -m scripts.wrds_column_completeness` makes it
+  visible and exits non-zero; the pull itself spends a credentialed WRDS session
+  and stays attended.
 * **~1,600 policies were tried.** The best of 1,600 is high because 1,600 is
   large, and nothing here controls for that. The partial defence is that the
   candidate is not a single best row: it clears both nulls in 5 of 5 phases and
@@ -290,9 +344,16 @@ It is **not** alpha:
   $473-$85,419 across 492 draws at k=12, and k=5 fails its own nulls in 3 of 5
   phases. The k=10 optimum sits close to that cliff.
 * **risk-adjusted it loses to the market**, on Sharpe, Sortino and Calmar alike.
-* **the universe rests on a 6,894-PERMNO screened superset.** If that screen
-  embeds any forward-looking eligibility, the universe is mildly cleaner than
-  reality. Unresolved, and it is the next thing I would attack.
+* **the universe rests on a 6,894-PERMNO screened superset — AUDITED, and it
+  cannot bind.** The superset admits any permno that ever cleared **$100M per
+  month** in 2013-2024. The farm's own 500th-ranked name trades **$76M-$137M
+  per DAY**, i.e. $1.6B-$2.9B per month — a **15.4x minimum margin** over the
+  inclusion bar (median 20.4x), with 2,770-3,439 names eligible per date against
+  a 500-name cut. A name excluded for missing that bar could not have ranked
+  into a book on any date. `python -m scripts.portfolio_farm_universe_audit`.
+  What this does NOT clear is the `shrcd`/`exchcd` restriction — common stocks
+  on NYSE/AMEX/NASDAQ is a DECLARED universe choice, and every farm result is a
+  result about that universe.
 * **long only, no shorts, no leverage, no borrow, flat costs, no market impact
   beyond 1 bp.** At $10,000 that impact assumption is realistic; at $1,000,000
   it is not.
