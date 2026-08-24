@@ -240,12 +240,21 @@ the BLOCKER to 2 was removed.
    programme-wide spend. Snapshotting is now automatic-capable
    (`--snapshot`), so every future delta is exact rather than measured against a
    hand-typed constant.
-2. **Momentum at 12 names does not beat the market over 2013-2024**, net of 12
-   bps — best net median **$35,228** against **$39,951**. That is not a reason to
-   stop; it is the calibration for everything the farm tests next. Any new
-   mechanism's first question is now "does it beat $39,951", not "is it
-   significant". And the second question is "what is its phase spread" — a rule
-   whose spread is wider than its edge has not been shown to have one.
+2. **The bar every new mechanism is measured against is $38,960** — the CRSP
+   value-weighted market, buy and hold, 2013-2024 from $10,000. The best rule the
+   farm has found clears it on the full window ($77,002 median) and is **1.01x
+   over 2013-2018**, so the calibration is not "beat $38,960 once". It is three
+   questions, in order:
+
+   1. **does it beat $38,960** — not "is it significant";
+   2. **what is its phase spread** — a rule whose spread is wider than its edge
+      has not been shown to have one;
+   3. **does it survive the window split** —
+      `python -m scripts.portfolio_farm_subperiod`. This is the one that killed
+      the current leader, and it is cheap.
+
+   Under which objective, always. Terminal wealth and Sharpe disagreed about
+   every result on this board.
 3. **The IIF-1 read schedule stays frozen** at 40/80/120. Grading is continuous
    and automatic; READING the aggregate is what the gate blocks. A separate
    product surface showing yesterday's predictions vs outcomes is wanted and
