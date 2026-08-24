@@ -230,10 +230,17 @@ def load_characteristic(name: str, dates: np.ndarray, permnos: np.ndarray, *,
     # dates) falls back to its row index, which makes the staleness bound inert
     # rather than wrong — the alternative is refusing to build a test panel.
     _sd = pd.to_datetime(pd.Series(dstr), errors="coerce")
+    _all_real_dates = bool(_sd.notna().all())
     sess_days = np.where(
         _sd.notna().to_numpy(),
         (_sd.astype("int64") // 86_400_000_000_000).to_numpy(),
         np.arange(T, dtype=np.int64))
+    # Search on INT64 day numbers when every panel date is a real date. The
+    # object-string search is a Python comparison per probe, which is fine for
+    # a two-year panel and is ~15 minutes of pure join cost across a battery of
+    # 1993-2024 runs. The string path stays for panels whose "dates" are
+    # ordering markers rather than dates — the synthetic test grid is one.
+    search_keys = sess_days if _all_real_dates else dstr
     col_of = {int(p): j for j, p in enumerate(permnos)}
 
     n_names = n_cells = 0
@@ -241,14 +248,15 @@ def load_characteristic(name: str, dates: np.ndarray, permnos: np.ndarray, *,
         j = col_of.get(int(permno))
         if j is None:
             continue
-        pd_dates = g["public_date"].to_numpy()
+        pd_dates = (g["_day"].to_numpy(dtype=np.int64) if _all_real_dates
+                    else g["public_date"].to_numpy())
         stamp_days = g["_day"].to_numpy(dtype=np.int64)
         vals = g[name].to_numpy(dtype=np.float64)
         # STRICTLY before: `searchsorted(..., side="left")` returns the count of
         # stamps < the session, so index-1 is the last one PUBLIC BEFORE it.
         # `side="right"` would include a stamp equal to the session date, which
         # is the off-by-one that turns a PIT join into a lookahead.
-        idx = np.searchsorted(pd_dates, dstr, side="left") - 1
+        idx = np.searchsorted(pd_dates, search_keys, side="left") - 1
         ok = idx >= 0
         if not ok.any():
             continue
