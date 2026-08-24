@@ -124,7 +124,7 @@ replayed over one frozen CRSP history (`python -m scripts.portfolio_farm_run`).
 calendar day. Policies are identities, not brokerage accounts; a farm winner is
 a CANDIDATE for a frozen forward book and never evidence of alpha.
 
-Five things from it that govern what counts as progress
+Six things from it that govern what counts as progress
 (`docs/FINDING_2026-08-24_HOLDING_PERIOD.md`):
 
 - **the bar is the market, buy and hold** — ~$39,951 over 2013-2024 from
@@ -147,6 +147,18 @@ Five things from it that govern what counts as progress
   behind it. The ordering by MDE is the useful part, and it is not the
   terminal-wealth ordering: `liquid` carries t=2.55 at a third of momentum's
   tracking error and needs **13 years** where momentum needs 47;
+- **THIRTEEN SIGNALS WERE THIRTEEN VIEWS OF ONE FILE.** Every non-null signal
+  in `portfolio_farm/signals.py` read from three quantities — past returns,
+  market cap, dollar volume — all columns of `crsp.dsf`. A library like that
+  cannot produce an INDEPENDENT selector however many entries it gains,
+  because independence is a property of the DATA and not of the formula.
+  `portfolio_farm/characteristics.py` (added 2026-08-25) joins WRDS `finratio`
+  PIT and registers `value_bm` and `profit_roe`, the first two that are not
+  transformations of price. `public_date` is the availability stamp and a
+  value may be used STRICTLY AFTER it — `searchsorted(side="right")` there
+  would be a lookahead that improves every number and raises nothing. **IBES
+  consensus (`numup`/`numdown`) is on disk for both eras and a revision signal
+  is the obvious next one**;
 - **an edge that does not survive BREADTH is not cross-sectional.**
   `python -m scripts.portfolio_farm_breadth_power`. Grinold: `IR ~ IC *
   sqrt(breadth)`, so a real signal spread over more names should show t

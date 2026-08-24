@@ -151,7 +151,54 @@ The contrast with momentum on the same measure is what makes it legible:
 
 Momentum is a rotating high-beta book; `liquid` is a static mega-cap one.
 
-## 5. What is left
+## 5. The bottleneck, stated one level deeper
+
+`CLAUDE.md` had it as *all ten arena books select on ONE signal — they differ in
+portfolio treatment, not in alpha source*. True, and one level short. Audited
+tonight, every one of the thirteen non-null farm signals reads from exactly
+three quantities, all columns of `crsp.dsf`:
+
+    past returns    mom_12_1, mom_6_1, mom_3_1, mom_12_0, reversal_1m,
+                    reversal_1w, low_vol, high_vol, trend_200
+    market cap      size_small, size_large
+    dollar volume   liquid, illiquid
+
+**Thirteen signals are thirteen transformations of one file.** Such a library
+cannot produce an independent selector however many entries it gains, because
+independence is a property of the DATA, not of the formula. Adding a fourteenth
+price transformation is the expensive way to do nothing — which the grid
+already demonstrated.
+
+So `backend/services/portfolio_farm/characteristics.py` joins WRDS `finratio`
+PIT onto the daily grid and registers **`value_bm`** and **`profit_roe`**, the
+first two farm signals that are not transformations of price. Both era files
+are on disk, so they span the whole replayable window.
+
+The join is the hard part and it is where a silent lookahead would live.
+`public_date` is WRDS's own availability stamp, so a value stamped `d` may be
+used **strictly after** `d` plus a declared one-session margin;
+`searchsorted(side="left") - 1` enforces it, and `side="right"` would make a
+ratio visible on its own publication date. That leak would *not* show up as an
+oracle correlation, because the characteristic really is a legitimate signal —
+just known too early. Tested three ways. Forward-fill is bounded at ~14 months,
+because a company that stops reporting would otherwise stay a value stock
+forever and the companies that stop reporting are not a random sample.
+
+Measured 2013-2024 (coverage 90.7% of traded cells for `bm`, 89.8% for `roe`):
+
+    profit_roe   te  8.7%   excess  0.41%   t  0.16   MDE  7.35   <- 2nd lowest
+    value_bm     te 19.0%   excess -2.73%   t -0.47   MDE 16.12
+
+Neither wins, and neither should — value had a famously bad decade after 2013
+and profitability was mediocre in a mega-cap growth regime. The point is that
+`profit_roe` carries the second-cheapest MDE on the whole board, and that
+**1993-2024 contains value's actual era**. Those two rows are where the widened
+window has the most to say.
+
+Next, and not built: **IBES consensus is on disk for both eras** with
+`numup`/`numdown`, so an estimate-revision signal is one join away.
+
+## 6. What is left
 
 - **The 32-year run.** Queued and running unattended; results land in the
   receipts under `backend/data/optimus/portfolio_farm/`. The single most
