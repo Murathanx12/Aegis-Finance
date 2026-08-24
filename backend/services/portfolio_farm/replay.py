@@ -170,7 +170,8 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
     diag = {"n_decisions": 0, "n_fills": 0, "n_unfilled_names": 0,
             "n_delistings": 0, "delisting_cash": 0.0, "total_cost_usd": 0.0,
             "traded_notional_usd": 0.0, "days_holding_nothing": 0,
-            "n_empty_selections": 0}
+            "n_empty_selections": 0, "stuck_capital_events": 0,
+            "stuck_capital_usd": 0.0, "min_cash_usd": 0.0}
     t0 = time.perf_counter()
 
     for i in range(w0, T):
@@ -205,17 +206,44 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
             pending = None
             o = open_[i].astype(np.float64)
             px = np.where(np.isfinite(o) & (o > 0), o, np.nan)
-            mark = np.where(np.isfinite(px), px, last_px)
-            equity = cash + float((shares * mark)[shares != 0].sum())
+            unpriceable = ~np.isfinite(px)
+
+            # ALLOCATABLE, not EQUITY. A held name with no open price today
+            # cannot be sold, so the capital sitting inside it cannot be
+            # redeployed — and allocating against total equity anyway buys the
+            # new book with money that is still in the old position. That is
+            # implicit LEVERAGE: cash goes negative by exactly the stuck value,
+            # silently, with no borrow cost.
+            #
+            # It is not a rare edge. `openprc` is missing on ~2.2% of CRSP daily
+            # rows, so a twelve-name book meets one roughly every fourth
+            # rebalance. Caught by self-review after the first leaderboard, and
+            # pinned by `test_cash_never_goes_negative_...`; `min_cash_usd` is
+            # on every receipt so the class cannot come back unnoticed.
+            stuck = shares != 0
+            stuck &= unpriceable
+            stuck_value = float((shares[stuck] * last_px[stuck]).sum())
+            live_value = float((shares * px)[np.isfinite(px) & (shares != 0)].sum())
+            # A book cannot be 100.00% invested AND pay its commission. The
+            # residual after the stuck-capital fix was exactly the fee: -$6.00
+            # on a $10,000 book at 6 bps, because the targets consumed every
+            # dollar and the fee then came out of nothing. Reserving the
+            # ROUND-TRIP rate covers the worst case (sell everything, buy
+            # everything) and costs 12 bps of deployment — smaller than the
+            # thing it prevents, which is silent leverage.
+            allocatable = (cash + live_value) * (1.0 - 2.0 * cost_rate)
+            if stuck_value:
+                diag["stuck_capital_events"] += 1
+                diag["stuck_capital_usd"] += stuck_value
+
             target_sh = np.zeros(N)
             if chosen.size:
                 ok = np.isfinite(px[chosen])
                 diag["n_unfilled_names"] += int((~ok).sum())
                 c_ok, w_ok = chosen[ok], weights[ok]
-                if c_ok.size:
-                    target_sh[c_ok] = (w_ok * equity) / px[c_ok]
+                if c_ok.size and allocatable > 0:
+                    target_sh[c_ok] = (w_ok * allocatable) / px[c_ok]
             # A name we cannot price cannot be traded either way: keep it.
-            unpriceable = ~np.isfinite(px)
             target_sh[unpriceable] = shares[unpriceable]
             delta = target_sh - shares
             tradable = np.isfinite(px) & (delta != 0)
@@ -235,11 +263,15 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
         last_px = np.where(fresh, px_c, last_px)
         pos = shares != 0
         nav[i] = cash + float((shares * last_px)[pos].sum())
+        if cash < diag["min_cash_usd"]:
+            diag["min_cash_usd"] = round(float(cash), 2)
         if not pos.any():
             diag["days_holding_nothing"] += 1
 
         # 5. DECIDE, at the close, for tomorrow's open.
-        if (i - w0) % policy.holding_days == 0 and i < T - 1:
+        first = w0 + (policy.phase_offset % policy.holding_days)
+        if (i >= first and (i - first) % policy.holding_days == 0
+                and i < T - 1):
             liq = dolvol_ma[i]
             eligible = (panel.traded[i] & np.isfinite(px_c)
                         & (px_c >= policy.min_price) & np.isfinite(liq))

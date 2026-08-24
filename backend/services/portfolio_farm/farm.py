@@ -162,7 +162,21 @@ def save(report: dict, name: str, *, dir_: Path | None = None) -> Path:
     return p
 
 
-def compare_within_groups(results: list["FarmResult"], keys=("holding_days",),
+#: The axes that define "the same settings". A real policy is scored against
+#: the nulls that share ALL of these; anything outside is a different game.
+#:
+#: THE DEFECT THIS REPLACED. The default used to be `("holding_days",)`, which
+#: is right for the `holding` preset and wrong for every other one. The
+#: `breadth` preset varies `top_k` from 3 to 50 and `sizing` across two values,
+#: so all ten real policies were scored against one pooled null spanning every
+#: breadth — and the printed table showed ten rows with IDENTICAL nullHi and
+#: nullLo columns, which is what "not actually a comparison" looks like when
+#: nothing raises. Grouping on the full tuple makes a mis-grouped run
+#: impossible rather than merely unlikely.
+GROUP_AXES = ("holding_days", "top_k", "sizing", "universe_n")
+
+
+def compare_within_groups(results: list["FarmResult"], keys=GROUP_AXES,
                           ) -> list[dict]:
     """Score every real policy against the nulls THAT RAN AT ITS OWN SETTINGS.
 
@@ -249,4 +263,49 @@ def compare_within_groups(results: list["FarmResult"], keys=("holding_days",),
                 "clears_BOTH_nulls": (None if p_hi is None or p_lo is None
                                       else bool(p_hi >= 90 and p_lo >= 90)),
             })
+    return out
+
+
+def across_phases(results: list["FarmResult"]) -> list[dict]:
+    """Collapse a phase sweep into one row per RULE, summarised by the median.
+
+    A single phase is one draw from an arbitrary calendar alignment. Measured
+    2013-2024 at k=12: 12-1 momentum returned $12,968 at a 21-session cycle and
+    $38,817 at a 63-session one, and the difference is which sessions happened
+    to be formation dates. Reporting one phase reports that coincidence.
+
+    The median across every offset in the cycle is a property of the RULE. The
+    spread (min..max) is reported beside it and is itself the finding — a rule
+    whose phase spread is wider than its edge has not been shown to have one.
+    """
+    groups: dict[tuple, list[dict]] = {}
+    for r in results:
+        if r.metrics.get("status") != "ok":
+            continue
+        row = r.as_row()
+        key = (row["signal"], row["signal_seed"], row["holding_days"],
+               row["top_k"], row["sizing"], row["universe_n"],
+               bool(row["zero_cost_diagnostic"]))
+        groups.setdefault(key, []).append(row)
+
+    out = []
+    for key, rows in groups.items():
+        t = np.asarray([x["terminal_usd"] for x in rows], dtype=float)
+        base = rows[0]
+        out.append({
+            "signal": key[0], "signal_seed": key[1], "holding_days": key[2],
+            "top_k": key[3], "sizing": key[4], "universe_n": key[5],
+            "zero_cost_diagnostic": key[6],
+            "is_null_control": base.get("is_null_control"),
+            "n_phases": len(rows),
+            "terminal_median_usd": round(float(np.median(t)), 2),
+            "terminal_min_usd": round(float(t.min()), 2),
+            "terminal_max_usd": round(float(t.max()), 2),
+            # How much of the answer is the calendar rather than the rule.
+            "phase_spread_ratio": (round(float(t.max() / t.min()), 2)
+                                   if t.min() > 0 else None),
+            "turnover_annual": base.get("turnover_annual"),
+            "label_phase0": base["label"],
+        })
+    out.sort(key=lambda r: (r["signal"], r["holding_days"], r["top_k"]))
     return out

@@ -128,11 +128,15 @@ Two numbers from it that govern what counts as progress
 (`docs/FINDING_2026-08-24_HOLDING_PERIOD.md`):
 
 - **the bar is $39,951** — the CRSP value-weighted market, buy and hold, over
-  2013-2024 from $10,000. The best net policy found so far is $38,815. Ask
-  "does it beat the market", not "is it significant";
-- **at k=12 the rebalance PHASE alone swings terminal wealth 3x**, and chance
-  spans $473-$85,419 across 492 draws. Terminal wealth on ONE path cannot rank
-  selectors at that breadth.
+  2013-2024 from $10,000. The best net policy found so far is **$35,228**
+  (12-1 momentum, daily rebalance, k=12). Ask "does it beat the market", not
+  "is it significant";
+- **at k=12 the rebalance PHASE alone moves terminal wealth 1.8x-3.8x** — more
+  than any difference between the strategies being compared — and chance spans
+  $473-$85,419 across 492 draws. **A single-phase result is a draw from that
+  spread, so every policy is run at multiple `phase_offset`s and reported by
+  its MEDIAN.** The first version of the holding finding led with $38,815,
+  which was the MAX of a distribution whose median is $16,633.
 
 Every farm run carries **two nulls** and must clear both: `random` (re-draws
 every formation date — maximum turnover) and `random_persistent` (one fixed

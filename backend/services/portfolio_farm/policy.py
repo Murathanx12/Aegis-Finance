@@ -55,6 +55,20 @@ class Policy:
     #: only way to find out is to make the holding period a searched axis and
     #: charge for it. 1, 5, 21, 63, 126, 252 span daily to annual.
     holding_days: int = 21
+    #: Which session inside the rebalance cycle the book trades on.
+    #:
+    #: THE MEASUREMENT THAT FORCED THIS FIELD. On 2013-2024 at k=12, 12-1
+    #: momentum returned $12,968 at `holding_days=21` and $38,817 at
+    #: `holding_days=63` — same signal, same universe, same costs, differing
+    #: only in WHICH sessions happened to be formation dates. A 3x swing from
+    #: an arbitrary alignment is not a property of the strategy, and a
+    #: leaderboard that reports one phase reports one draw from it.
+    #:
+    #: With the phase declared, a policy can be run at every offset in its
+    #: cycle and summarised by the MEDIAN — which is a property of the rule
+    #: rather than of the calendar. Part of `policy_id`, so a promoted book
+    #: carries the exact phase it was measured at.
+    phase_offset: int = 0
     top_k: int = 12
     sizing: str = "equal_weight"
     #: Formation-time liquidity screen: keep the N most liquid eligible names
@@ -91,6 +105,13 @@ class Policy:
                               f"declared: {list(KNOWN_SIZING)}")
         if self.holding_days < 1:
             raise PolicyError("holding_days must be >= 1")
+        if not 0 <= self.phase_offset < max(1, self.holding_days):
+            raise PolicyError(
+                f"phase_offset {self.phase_offset} is outside the rebalance "
+                f"cycle [0, {self.holding_days}). Phases wrap, so an offset "
+                f"of {self.holding_days} IS phase 0 wearing a different "
+                f"policy_id — two identities for one policy is worse than a "
+                f"refusal.")
         if self.top_k < 1:
             raise PolicyError("top_k must be >= 1")
         cost = float(self.transaction_cost_bps) + float(self.slippage_bps)
@@ -127,7 +148,8 @@ class Policy:
         """Human-readable, and deliberately NOT the identity."""
         cost = "FREE" if self.zero_cost_diagnostic else f"{self.round_trip_bps:.0f}bp"
         seed = f"#{self.signal_seed}" if self.signal_seed else ""
-        return (f"{self.signal}{seed}/h{self.holding_days}/k{self.top_k}/"
+        ph = f"p{self.phase_offset}" if self.phase_offset else ""
+        return (f"{self.signal}{seed}/h{self.holding_days}{ph}/k{self.top_k}/"
                 f"{self.sizing[:3]}/u{self.universe_n}/{cost}")
 
     def as_row(self) -> dict:

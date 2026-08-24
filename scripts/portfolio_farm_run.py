@@ -40,6 +40,11 @@ ALL_SIGNALS = ["mom_12_1", "mom_6_1", "mom_3_1", "mom_12_0", "reversal_1m",
                "random", "random_persistent", "equal"]
 HOLDINGS = [1, 5, 21, 63, 126, 252]
 
+#: Phases sampled per rebalance cycle in the `phase` preset. Seven is enough
+#: for a median to mean something and small enough that a 252-session cycle
+#: does not turn into 252 policies.
+MAX_PHASES = 7
+
 
 #: How many independent random draws accompany every run. Twenty is enough to
 #: place a real signal at a percentile with a straight face and cheap enough
@@ -79,10 +84,16 @@ def build(preset: str) -> list[Policy]:
         return (grid(signal=[s for s in ALL_SIGNALS if s not in ("random",)],
                      holding_days=[21]) + null_bench(holding_days=21))
     if preset == "breadth":
+        sizings = ["equal_weight", "inverse_vol"]
         out = grid(signal=["mom_12_1"], top_k=[3, 5, 10, 20, 50],
-                   sizing=["equal_weight", "inverse_vol"])
+                   sizing=sizings)
+        # A null bench per (top_k, sizing). The first version benched only the
+        # default sizing, so every inverse-vol policy was scored against
+        # nothing — invisible while the comparison pooled groups, and printed
+        # as `nan` the moment it stopped.
         for k in (3, 5, 10, 20, 50):
-            out += null_bench(top_k=k)
+            for sz in sizings:
+                out += null_bench(top_k=k, sizing=sz)
         return out
     if preset == "full":
         out = grid(signal=[s for s in ALL_SIGNALS
@@ -91,6 +102,18 @@ def build(preset: str) -> list[Policy]:
                    sizing=["equal_weight", "inverse_vol"])
         for h in (5, 21, 63):
             out += null_bench(holding_days=h, top_k=12)
+        return out
+    if preset == "phase":
+        # THE DE-CONFOUNDED MICRON ANSWER. Every offset inside each rebalance
+        # cycle (capped at MAX_PHASES so a 252-session cycle does not become
+        # 252 policies), so the answer is the MEDIAN over alignments instead of
+        # whichever one the loop happened to start on.
+        out = []
+        for h in HOLDINGS:
+            for ph in range(min(h, MAX_PHASES)):
+                out += grid(signal=["mom_12_1", "reversal_1m"],
+                            holding_days=[h], phase_offset=[ph])
+            out += null_bench(holding_days=h)
         return out
     raise SystemExit(f"unknown preset {preset!r}")
 
@@ -103,7 +126,8 @@ def main(argv=None) -> int:
     ap.add_argument("--start", type=int, default=2013)
     ap.add_argument("--end", type=int, default=2024)
     ap.add_argument("--preset", default="holding",
-                    choices=["holding", "signals", "breadth", "full"])
+                    choices=["holding", "signals", "breadth", "full",
+                             "phase"])
     ap.add_argument("--top", type=int, default=25)
     ap.add_argument("--name", default=None, help="output file stem")
     a = ap.parse_args(argv)
@@ -170,24 +194,25 @@ def main(argv=None) -> int:
     print(f"  policies tried                    : {rep['n_policies']}  "
           f"(the best of N is high because N is large — this is a RANKING, "
           f"not a finding)")
-    comp = farm.compare_within_groups(results)
+    comp = sorted(farm.compare_within_groups(results),
+                  key=lambda c: (c['group'].get('holding_days') or 0,
+                                 c['group'].get('top_k') or 0,
+                                 str(c['group'].get('sizing')),
+                                 -c['terminal_usd']))
     rep["per_policy_vs_own_null"] = comp
     farm.save(rep, a.name or f"farm_{a.preset}_{a.start}_{a.end}")
     if comp:
         print()
         print("EACH REAL POLICY vs THE NULLS AT ITS OWN SETTINGS")
-        h2 = (f"{'hold':>5} {'cost':>5} {'signal':<13} {'terminal$':>10} "
+        h2 = (f"{'policy':<40} {'terminal$':>10} "
               f"{'turn/yr':>8} {'nullHi$':>9} {'nullLo$':>9} "
               f"{'pctHi':>6} {'pctLo':>6} {'both':>5}")
         print(h2)
         print("-" * len(h2))
         for c in comp:
-            g = c["group"]
             ph = c["percentile_vs_hi_turnover_null"]
             pl = c["percentile_vs_lo_turnover_null"]
-            print(f"{g.get('holding_days', '?'):>5} "
-                  f"{'FREE' if g.get('zero_cost_diagnostic') else 'net':>5} "
-                  f"{c['signal']:<13} {c['terminal_usd']:>10,.0f} "
+            print(f"{c['label']:<40} {c['terminal_usd']:>10,.0f} "
                   f"{(c.get('turnover_annual') or 0):>8.1f} "
                   f"{(c['null_hi_turnover_median_usd'] or 0):>9,.0f} "
                   f"{(c['null_lo_turnover_median_usd'] or 0):>9,.0f} "
@@ -205,6 +230,31 @@ def main(argv=None) -> int:
               "flip would'.")
         print("  `both` = clears the 90th percentile of BOTH. That is the "
               "bar.")
+    ph = [r for r in farm.across_phases(results) if r["n_phases"] > 1]
+    if ph:
+        rep["across_phases"] = farm.across_phases(results)
+        farm.save(rep, a.name or f"farm_{a.preset}_{a.start}_{a.end}")
+        print()
+        print("ACROSS REBALANCE PHASES — the median is the RULE, the spread "
+              "is the CALENDAR")
+        h3 = (f"{'signal':<13} {'hold':>5} {'n':>3} {'median$':>10} "
+              f"{'min$':>10} {'max$':>10} {'max/min':>8}  {'cost':<5}")
+        print(h3)
+        print("-" * len(h3))
+        for r in sorted(ph, key=lambda x: (x["signal"], x["holding_days"])):
+            if r["is_null_control"]:
+                continue
+            print(f"{r['signal']:<13} {r['holding_days']:>5} "
+                  f"{r['n_phases']:>3} {r['terminal_median_usd']:>10,.0f} "
+                  f"{r['terminal_min_usd']:>10,.0f} "
+                  f"{r['terminal_max_usd']:>10,.0f} "
+                  f"{(r['phase_spread_ratio'] or 0):>8.2f}  "
+                  f"{'FREE' if r['zero_cost_diagnostic'] else 'net':<5}")
+        print()
+        print("  max/min is how much of the answer is the CALENDAR rather than "
+              "the rule. A rule")
+        print("  whose phase spread is wider than its edge has not been shown "
+              "to have one.")
     print(f"\n  written: {out}")
     return 0
 

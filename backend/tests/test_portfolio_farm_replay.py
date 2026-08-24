@@ -45,17 +45,29 @@ def _flat_panel(n_names: int = 8, ret: float = 0.0) -> Panel:
 
 
 def test_a_flat_market_LOSES_exactly_the_costs():
-    """Nothing moves, so the only thing that can change NAV is friction. The
-    first rebalance buys 100% of the book at 6 bps one way."""
+    """Nothing moves, so the only thing that can change NAV is friction — and
+    the whole arithmetic is checkable by hand, which is the point.
+
+    The book does NOT deploy 100% of $10,000: a real book cannot be fully
+    invested and also pay its commission, so `replay` reserves the ROUND-TRIP
+    rate (2 x 6 bps). So:
+
+        deployed = 10,000 x (1 - 0.0012)          = 9,988.00
+        cost     = 9,988.00 x 0.0006              =     5.9928
+        terminal = 10,000 - 5.9928                = 9,994.0072
+    """
     p = _flat_panel()
     res = replay.run(p, _pol(signal="equal", holding_days=1000), warmup=260)
-    start = 10_000.0
+    start, one_way = 10_000.0, 0.0006
     assert res.diagnostics["n_fills"] == 1
-    expected_cost = start * 6 / 10_000.0
+    deployed = start * (1.0 - 2.0 * one_way)
+    expected_cost = deployed * one_way
     assert res.diagnostics["total_cost_usd"] == pytest.approx(expected_cost,
                                                              rel=1e-6)
     assert res.metrics["terminal_usd"] == pytest.approx(start - expected_cost,
                                                         rel=1e-6)
+    assert res.diagnostics["min_cash_usd"] >= -1e-9, (
+        "the fee reserve exists precisely so cash cannot go negative here")
 
 
 def test_the_frictionless_twin_loses_NOTHING():
@@ -185,3 +197,77 @@ def test_an_infeasible_cap_actually_reduces_the_books_exposure_end_to_end():
                               holding_days=1000), warmup=260)
     assert tight.diagnostics["traded_notional_usd"] == pytest.approx(
         0.6 * full.diagnostics["traded_notional_usd"], rel=1e-6)
+
+
+# ── implicit leverage ───────────────────────────────────────────────────────
+
+
+def test_cash_never_goes_negative_when_a_HELD_name_cannot_be_PRICED():
+    """The leverage leak found by self-review, 2026-08-24.
+
+    A held name with no open price today cannot be sold, so its capital cannot
+    be redeployed. The first version allocated the new book against TOTAL
+    equity anyway — buying with money still locked in the old position, which
+    drives cash negative by exactly the stuck value. No borrow cost, no error,
+    just a quietly levered book. `openprc` is missing on ~2.2% of CRSP daily
+    rows, so a twelve-name book meets one roughly every fourth rebalance.
+    """
+    p = _flat_panel(n_names=6)
+    op = p.open_.copy()
+    # The FIRST fill (row 261) prices everything, so the book actually buys all
+    # six. From row 266 on, names 0-2 have no open price — so every later
+    # rebalance is asked to re-target while HOLDING three names it cannot sell.
+    # Blanking them from row 261 instead would mean they were never bought, and
+    # the fixture would prove nothing; the guard assertion below catches that.
+    op[266:, 0:3] = np.nan
+    p = Panel(**{**p.__dict__, "open_": op})
+    res = replay.run(p, _pol(signal="equal", top_k=6, holding_days=5,
+                             max_single_name=1.0), warmup=260)
+    assert res.diagnostics["stuck_capital_events"] > 0, (
+        "the fixture never produced a stuck position — the test proves nothing")
+    assert res.diagnostics["min_cash_usd"] >= -1e-6, (
+        f"cash went to {res.diagnostics['min_cash_usd']} — the book bought "
+        f"with capital still locked in a position it could not sell")
+
+
+def test_min_cash_is_on_every_receipt():
+    """A number, not a suspicion. The leverage class cannot recur unnoticed."""
+    res = replay.run(_flat_panel(), _pol(signal="equal"), warmup=260)
+    assert "min_cash_usd" in res.diagnostics
+    assert "stuck_capital_usd" in res.diagnostics
+
+
+# ── rebalance phase ─────────────────────────────────────────────────────────
+
+
+def test_the_phase_offset_MOVES_the_formation_dates():
+    """The confound the holding sweep exposed: at k=12 the same signal returned
+    $12,968 at a 21-session cycle and $38,817 at a 63-session one, purely from
+    which sessions were formation dates. A phase that changed nothing would
+    make `across_phases` a row of identical numbers wearing a median."""
+    p = synthetic()
+    a = replay.run(p, _pol(signal="mom_12_1", holding_days=21,
+                           phase_offset=0), warmup=260)
+    b = replay.run(p, _pol(signal="mom_12_1", holding_days=21,
+                           phase_offset=7), warmup=260)
+    assert a.metrics["terminal_usd"] != b.metrics["terminal_usd"]
+
+
+def test_every_phase_takes_the_SAME_NUMBER_of_decisions_give_or_take_one():
+    """A later phase starts later, so it may take one fewer decision. More
+    than one fewer would mean the schedule is drifting, and a phase sweep
+    would then be comparing books that traded different amounts."""
+    p = synthetic()
+    counts = [replay.run(p, _pol(signal="mom_12_1", holding_days=21,
+                                 phase_offset=ph), warmup=260
+                         ).diagnostics["n_decisions"] for ph in range(21)]
+    assert max(counts) - min(counts) <= 1, counts
+
+
+def test_phase_offset_outside_the_cycle_REFUSES():
+    """Phases wrap, so offset == holding_days IS phase 0 — with a different
+    policy_id. Two identities for one policy is worse than a refusal."""
+    from backend.services.portfolio_farm.policy import Policy, PolicyError
+    with pytest.raises(PolicyError):
+        Policy(holding_days=21, phase_offset=21)
+    assert Policy(holding_days=21, phase_offset=20).phase_offset == 20

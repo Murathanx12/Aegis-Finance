@@ -11,11 +11,12 @@ The format Murat's review asked every session to lead with, from now on.
 
 | | |
 |---|---|
-| **Best historical net strategy** | `mom_12_1 / hold 63d / k=12 / equal / u500`, **$38,815** from $10,000 (2013-2024, 12 bps round trip, next-open fills) |
-| **vs market** | CRSP VW buy & hold **$39,951** — **the strategy LOSES to the market by $1,136** |
+| **Best historical net strategy** | `mom_12_1 / hold 1d / k=12 / equal / u500`, **$35,228** from $10,000 (2013-2024, 12 bps round trip, next-open fills) |
+| **vs market** | CRSP VW buy & hold **$39,951** — **the strategy LOSES to the market by $4,723** |
+| **Phase spread** | **1.8x-3.8x** at k=12 — wider than any gap between the strategies compared. Every result is now a MEDIAN over rebalance phases |
 | **Best forward paper strategy** | unchanged: `conservative-atr` +6.38% since 2026-06-08 (77 days). No new forward book was launched. |
 | **Independent alpha selectors running** | **still 1** (`arena_composite`). The BLOCKER to a second one was removed today, not the second one itself. |
-| **Portfolio-farm candidates tested** | **516** policies over 3,020 sessions x 6,894 PERMNOs |
+| **Portfolio-farm candidates tested** | **~1,000** policies over 3,020 sessions x 6,894 PERMNOs (holding 516 + breadth 215 + phase sweep) |
 | **Promoted** | **0** — nothing cleared the market, so nothing earned a forward book |
 | **New actionable mechanism** | **none.** One mechanism DE-mystified (holding period), one measurement instrument built |
 | **External execution drag** | not measured this session (no external order submitted) |
@@ -24,10 +25,17 @@ The format Murat's review asked every session to lead with, from now on.
 
 ### RESULT IMPROVEMENT: NONE.
 
-Expected investment performance did not move. What moved is the ability to
-ASK — 516 policies in seven minutes against a fifteen-year replay, where
-yesterday the only way to test a strategy was to wait a calendar day. And one
-belief was corrected: daily rebalancing is a frictionless illusion.
+Expected investment performance did not move. What moved is the ability to ASK
+— hundreds of policies in minutes against a twelve-year replay, where yesterday
+the only way to test a strategy was to wait a calendar day.
+
+And two beliefs were corrected, the second one MINE. Daily rebalancing is
+frictionless-flattered (costs take 26%). And the number this session first
+published — `mom_12_1/h63` at $38,815 as the best net result — was the MAXIMUM
+of that rule's rebalance-phase distribution, whose median is $16,633. I built a
+number, then built the thing that showed the number was a draw. The finding doc
+was rewritten the same night; `Policy.phase_offset` and `farm.across_phases`
+exist because of it, and no farm result is quoted from a single phase again.
 
 ---
 
