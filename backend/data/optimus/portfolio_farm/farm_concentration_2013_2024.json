@@ -1,0 +1,271 @@
+{
+ "check": "concentration",
+ "window": [
+  2013,
+  2024
+ ],
+ "holding_days": 5,
+ "top_k": 10,
+ "sizing": "inverse_vol",
+ "reduced": false,
+ "signals": [
+  {
+   "signal": "mom_12_1",
+   "n_sessions": 2746,
+   "excess_annual_pct": 13.723,
+   "drops": [
+    {
+     "n": 1,
+     "excess_drop_best_pct": 12.374,
+     "excess_drop_worst_pct": 14.621,
+     "share_of_original": 0.902
+    },
+    {
+     "n": 3,
+     "excess_drop_best_pct": 10.134,
+     "excess_drop_worst_pct": 16.324,
+     "share_of_original": 0.738
+    },
+    {
+     "n": 5,
+     "excess_drop_best_pct": 8.351,
+     "excess_drop_worst_pct": 17.904,
+     "share_of_original": 0.609
+    },
+    {
+     "n": 10,
+     "excess_drop_best_pct": 4.462,
+     "excess_drop_worst_pct": 21.249,
+     "share_of_original": 0.325
+    },
+    {
+     "n": 20,
+     "excess_drop_best_pct": -2.496,
+     "excess_drop_worst_pct": 27.23,
+     "share_of_original": -0.182
+    },
+    {
+     "n": 40,
+     "excess_drop_best_pct": -14.323,
+     "excess_drop_worst_pct": 37.892,
+     "share_of_original": -1.044
+    }
+   ],
+   "top_dates": [
+    {
+     "date": "2020-03-23",
+     "excess_pct": 8.082
+    },
+    {
+     "date": "2020-09-14",
+     "excess_pct": 9.626
+    },
+    {
+     "date": "2021-01-07",
+     "excess_pct": 9.173
+    },
+    {
+     "date": "2021-01-29",
+     "excess_pct": 8.716
+    },
+    {
+     "date": "2021-02-08",
+     "excess_pct": 8.31
+    },
+    {
+     "date": "2021-03-01",
+     "excess_pct": 9.84
+    },
+    {
+     "date": "2021-03-09",
+     "excess_pct": 14.754
+    },
+    {
+     "date": "2021-03-11",
+     "excess_pct": 8.114
+    },
+    {
+     "date": "2021-03-31",
+     "excess_pct": 10.85
+    },
+    {
+     "date": "2021-04-26",
+     "excess_pct": 13.63
+    }
+   ]
+  },
+  {
+   "signal": "mom_6_1",
+   "n_sessions": 2746,
+   "excess_annual_pct": 15.029,
+   "drops": [
+    {
+     "n": 1,
+     "excess_drop_best_pct": 12.267,
+     "excess_drop_worst_pct": 16.021,
+     "share_of_original": 0.816
+    },
+    {
+     "n": 3,
+     "excess_drop_best_pct": 9.223,
+     "excess_drop_worst_pct": 17.955,
+     "share_of_original": 0.614
+    },
+    {
+     "n": 5,
+     "excess_drop_best_pct": 7.046,
+     "excess_drop_worst_pct": 19.832,
+     "share_of_original": 0.469
+    },
+    {
+     "n": 10,
+     "excess_drop_best_pct": 2.157,
+     "excess_drop_worst_pct": 23.597,
+     "share_of_original": 0.144
+    },
+    {
+     "n": 20,
+     "excess_drop_best_pct": -5.757,
+     "excess_drop_worst_pct": 30.327,
+     "share_of_original": -0.383
+    },
+    {
+     "n": 40,
+     "excess_drop_best_pct": -18.509,
+     "excess_drop_worst_pct": 41.711,
+     "share_of_original": -1.232
+    }
+   ],
+   "top_dates": [
+    {
+     "date": "2020-03-23",
+     "excess_pct": 10.676
+    },
+    {
+     "date": "2021-01-26",
+     "excess_pct": 16.095
+    },
+    {
+     "date": "2021-01-27",
+     "excess_pct": 30.137
+    },
+    {
+     "date": "2021-02-08",
+     "excess_pct": 11.271
+    },
+    {
+     "date": "2021-02-24",
+     "excess_pct": 12.221
+    },
+    {
+     "date": "2021-03-09",
+     "excess_pct": 17.139
+    },
+    {
+     "date": "2021-03-11",
+     "excess_pct": 10.051
+    },
+    {
+     "date": "2021-04-26",
+     "excess_pct": 11.489
+    },
+    {
+     "date": "2021-05-27",
+     "excess_pct": 9.726
+    },
+    {
+     "date": "2021-06-01",
+     "excess_pct": 11.538
+    }
+   ]
+  },
+  {
+   "signal": "liquid",
+   "n_sessions": 2746,
+   "excess_annual_pct": 9.76,
+   "drops": [
+    {
+     "n": 1,
+     "excess_drop_best_pct": 9.288,
+     "excess_drop_worst_pct": 10.14,
+     "share_of_original": 0.952
+    },
+    {
+     "n": 3,
+     "excess_drop_best_pct": 8.548,
+     "excess_drop_worst_pct": 10.859,
+     "share_of_original": 0.876
+    },
+    {
+     "n": 5,
+     "excess_drop_best_pct": 7.893,
+     "excess_drop_worst_pct": 11.459,
+     "share_of_original": 0.809
+    },
+    {
+     "n": 10,
+     "excess_drop_best_pct": 6.46,
+     "excess_drop_worst_pct": 12.857,
+     "share_of_original": 0.662
+    },
+    {
+     "n": 20,
+     "excess_drop_best_pct": 4.083,
+     "excess_drop_worst_pct": 15.287,
+     "share_of_original": 0.418
+    },
+    {
+     "n": 40,
+     "excess_drop_best_pct": 0.041,
+     "excess_drop_worst_pct": 19.245,
+     "share_of_original": 0.004
+    }
+   ],
+   "top_dates": [
+    {
+     "date": "2015-10-23",
+     "excess_pct": 3.429
+    },
+    {
+     "date": "2016-01-28",
+     "excess_pct": 3.653
+    },
+    {
+     "date": "2019-01-30",
+     "excess_pct": 2.657
+    },
+    {
+     "date": "2020-04-13",
+     "excess_pct": 3.536
+    },
+    {
+     "date": "2021-03-09",
+     "excess_pct": 4.2
+    },
+    {
+     "date": "2022-07-27",
+     "excess_pct": 3.349
+    },
+    {
+     "date": "2022-11-10",
+     "excess_pct": 3.929
+    },
+    {
+     "date": "2022-11-30",
+     "excess_pct": 3.308
+    },
+    {
+     "date": "2023-02-02",
+     "excess_pct": 5.176
+    },
+    {
+     "date": "2024-02-02",
+     "excess_pct": 2.975
+    }
+   ]
+  }
+ ],
+ "dates_shared_by_all": [
+  "2021-03-09"
+ ]
+}
