@@ -49,8 +49,9 @@ def policies() -> list[Policy]:
     return out
 
 
-def run_half(start: int, end: int) -> dict:
-    pan = P.load_panel(start, end)
+def run_half(start: int, end: int, reduce: bool = False) -> dict:
+    pan = P.load_panel(start, end,
+                       reduce_for_universe_n=(500 if reduce else None))
     res = farm.run_many(pan, policies(), progress=False)
     ph = [r for r in farm.across_phases(res) if not r["is_null_control"]]
     comp = farm.compare_within_groups(res)
@@ -81,6 +82,8 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--halves", default="2013:2018,2019:2024",
                     help="comma-separated start:end pairs")
+    ap.add_argument("--reduce", action="store_true",
+                    help="liquidity-reduced panel (identical NAVs, half the memory)")
     a = ap.parse_args(argv)
     label = "/".join(f"{k}={v}" for k, v in CANDIDATE.items())
     print(f"SUB-PERIOD CHECK — {label}\n")
@@ -91,7 +94,7 @@ def main(argv=None) -> int:
     out = []
     for pair in a.halves.split(","):
         s, e = (int(x) for x in pair.split(":"))
-        r = run_half(s, e)
+        r = run_half(s, e, reduce=a.reduce)
         out.append(r)
         print(f"{s}-{e:<7} {r['sessions']:>5} {(r['median_usd'] or 0):>10,.0f} "
               f"{(r['worst_phase_usd'] or 0):>10,.0f} "

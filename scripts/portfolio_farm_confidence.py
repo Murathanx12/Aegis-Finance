@@ -56,10 +56,14 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--start", type=int, default=2013)
     ap.add_argument("--end", type=int, default=2024)
+    ap.add_argument("--reduce", action="store_true",
+                    help="build the panel from the liquidity-reduced permno "
+                         "set (identical NAVs, ~half the memory; REQUIRED for "
+                         "windows longer than ~15 years)")
     ap.add_argument("--n-boot", type=int, default=1000)
     a = ap.parse_args(argv)
 
-    pan = P.load_panel(a.start, a.end)
+    pan = P.load_panel(a.start, a.end, reduce_for_universe_n=(500 if a.reduce else None))
     bench_all = P.market_benchmark(pan.dates)
     base = {k: v for k, v in CANDIDATE.items() if k != "signal"}
     pols = [Policy(**CANDIDATE, phase_offset=p)

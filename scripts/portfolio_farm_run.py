@@ -166,6 +166,10 @@ def main(argv=None) -> int:
     # so a wider default would refuse on every invocation.
     ap.add_argument("--start", type=int, default=2013)
     ap.add_argument("--end", type=int, default=2024)
+    ap.add_argument("--reduce", action="store_true",
+                    help="build the panel from the liquidity-reduced permno "
+                         "set (identical NAVs, ~half the memory; REQUIRED for "
+                         "windows longer than ~15 years)")
     ap.add_argument("--preset", default="holding",
                     choices=["holding", "signals", "breadth", "full",
                              "phase", "delisting", "breadth_phase"])
@@ -182,7 +186,7 @@ def main(argv=None) -> int:
     if usable:
         print(f"replayable CRSP window on this host: "
               f"{usable[0]}-{usable[-1]} ({len(usable)} years)")
-    pan = P.load_panel(a.start, a.end)
+    pan = P.load_panel(a.start, a.end, reduce_for_universe_n=(500 if a.reduce else None))
     print(f"panel: {pan.shape[0]} sessions x {pan.shape[1]} permnos "
           f"({pan.dates[0]} -> {pan.dates[-1]})")
 
