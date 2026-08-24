@@ -160,6 +160,72 @@ AMENDMENT_1: dict = {
 }
 
 
+#: AMENDMENT-2, declared 2026-08-24, BEFORE any of its numbers existed.
+#: POST-HOC, own BH-FDR family. It tries to REMOVE a deployment blocker rather
+#: than measure a claim.
+#:
+#: THE BLOCKER. The model is FIT on OptionMetrics `stdopd` and would be SERVED
+#: on yfinance chains. Measured over 60 live names, three of four option
+#: features transfer closely, but `iv_put_minus_call_30d` does not: live median
+#: -0.0237 against stdopd +0.0019, 25% positive against 55%, and only 15% of
+#: live names clear the screen's borrow cut instead of 20%. A gradient-boosted
+#: tree splits on ABSOLUTE thresholds, so a systematic offset moves every split
+#: rather than degrading gracefully. Dropping the column costs 0.0087 IC at 1d
+#: (more than one paired SE) and puts the model back under its own MDE80.
+#:
+#: THE IDEA. A CROSS-SECTIONAL RANK is invariant to any monotonic transform.
+#: If yfinance's residual is stdopd's residual shifted and rescaled -- which the
+#: measured shapes are consistent with (live p10..p90 spread 0.094 against
+#: 0.084, offset ~-0.026) -- then ranking removes the entire problem without
+#: fitting anything. A fitted calibration map would need its own validation and
+#: could drift; a rank cannot.
+#:
+#: THE RANK MUST BE PIT-SAFE, AND THE OBVIOUS CHOICE IS NOT. Ranking within the
+#: event MONTH would use events that have not happened yet at decision time.
+#: Ranking within the event's own DATE across every name carrying option state
+#: that day is PIT-safe, and it is exactly what the live store can compute: the
+#: collector snapshots the whole universe daily, so a same-day cross-section
+#: exists on day one and needs no accumulated history.
+#:
+#: WHAT THIS STILL CANNOT SHOW. A rank fixes a monotonic distortion. It does NOT
+#: fix a change in ORDERING -- if yfinance ranks names differently from
+#: OptionMetrics rather than just shifting them, this does not help. That is
+#: untestable here: stdopd ends 2019 and the live chains are 2026, so the two
+#: sources never observe the same name on the same day. The assumption must be
+#: stated, not buried.
+AMENDMENT_2: dict = {
+    "amendment_id": "EVENT-RESPONSE-2/AMENDMENT-2",
+    "status": "POST-HOC — declared before any of its numbers existed",
+    "question": ("does replacing the untransferable feature with a PIT-safe "
+                 "within-DATE cross-sectional rank preserve the result, and "
+                 "thereby make the model servable from yfinance?"),
+    "arms": {
+        "A_full_raw": "every feature as the screen used it — the baseline",
+        "B_servable_drop": "borrow column removed entirely",
+        "C_borrow_ranked": "borrow column -> within-date cross-sectional pct",
+        "D_all_option_ranked": "every option feature -> within-date pct",
+    },
+    "rank_definition": ("percentile of the feature within the set of ALL names "
+                        "carrying option state on that DATE; strictly "
+                        "same-day, so no future cross-section is used"),
+    "decision_rule": (
+        "The model is SERVABLE iff arm C or arm D lands within ONE paired SE "
+        "of arm A on the same months, at BOTH horizons. If neither does, the "
+        "rank idea is spent and the successor is either a fitted calibration "
+        "map or serving arm B under a stated power caveat."),
+    "cannot_show": (
+        "That the two vendors ORDER names the same way. A rank fixes a "
+        "monotonic distortion only, and stdopd (ends 2019) never overlaps the "
+        "live chains (2026), so the ordering assumption is untestable with "
+        "data that exists."),
+}
+
+
+def amendment_2_hash() -> str:
+    return hashlib.sha256(
+        json.dumps(AMENDMENT_2, sort_keys=True).encode()).hexdigest()[:16]
+
+
 def amendment_1_hash() -> str:
     return hashlib.sha256(
         json.dumps(AMENDMENT_1, sort_keys=True).encode()).hexdigest()[:16]
