@@ -162,3 +162,57 @@ def test_the_live_join_reaches_most_of_the_traded_panel():
             f"{name} reaches only {cov['share_of_traded_cells']:.1%} of traded "
             f"cells; a book built on it is a different universe from a "
             f"price-signal book and the comparison is not like-for-like")
+
+
+def test_implausible_values_are_DROPPED_not_clipped(tmp_path):
+    """A top-k book ranks by the characteristic and takes the EXTREME end, so
+    it does not merely tolerate an accounting artefact — it selects one, every
+    date, in preference to every real firm.
+
+    Measured on `finratio_monthly`: `bm` runs to 89,351 and `roe` from -21,992
+    to +5,304, against medians of 0.50 and 0.056. Those are book equities of
+    approximately zero, not companies.
+
+    DROPPED rather than winsorised: clipping makes every extreme value TIE at
+    the cap, and `top_k` then falls through to permno order — replacing "the
+    most extreme artefacts" with "the oldest listings among them", which is
+    worse because it looks deliberate.
+    """
+    _write(tmp_path, [
+        {"permno": 10001, "public_date": "2000-01-02", "bm": 1.0, "roe": 0.1},
+        {"permno": 10002, "public_date": "2000-01-02", "bm": 89351.0,
+         "roe": 5303.7},
+    ])
+    m = CH.load_characteristic("bm", DATES, PERMNOS, dir_=tmp_path,
+                               lag_sessions=0, stale_max_days=10_000)
+    assert m[10, 0] == pytest.approx(1.0)
+    assert np.isnan(m[10, 1]), (
+        "a book-to-market of 89,351 survived; a top-k book would hold it on "
+        "every date in preference to every real firm")
+    r = CH.load_characteristic("roe", DATES, PERMNOS, dir_=tmp_path,
+                               lag_sessions=0, stale_max_days=10_000)
+    assert np.isnan(r[10, 1])
+
+
+def test_non_positive_book_to_market_is_excluded(tmp_path):
+    """Zero or negative book equity is a distressed accounting state, not a
+    cheap stock. A bm of exactly 0 would sort as the most EXPENSIVE name in the
+    universe rather than the most broken."""
+    _write(tmp_path, [
+        {"permno": 10001, "public_date": "2000-01-02", "bm": 0.0, "roe": 0.1},
+        {"permno": 10002, "public_date": "2000-01-02", "bm": 0.5, "roe": 0.1},
+    ])
+    m = CH.load_characteristic("bm", DATES, PERMNOS, dir_=tmp_path,
+                               lag_sessions=0, stale_max_days=10_000)
+    assert np.isnan(m[10, 0])
+    assert m[10, 1] == pytest.approx(0.5)
+
+
+def test_the_bounds_sit_OUTSIDE_the_real_distribution():
+    """They must remove the arithmetic tail and leave the signal. Pinned
+    against a later edit that tightens them into the data — the 99.9th
+    percentiles are bm 11.7 and roe 8.9."""
+    assert CH.PLAUSIBLE["bm"] == (0.0, 20.0)
+    assert CH.PLAUSIBLE["roe"] == (-10.0, 10.0)
+    assert CH.PLAUSIBLE["bm"][1] > 11.7
+    assert CH.PLAUSIBLE["roe"][1] > 8.9

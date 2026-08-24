@@ -89,6 +89,40 @@ AVAILABLE = ("bm", "roe")
 #: the cost of being a day early is a result that cannot be believed.
 LAG_SESSIONS = 1
 
+#: Plausibility bounds. A value outside these is dropped to NaN, not clipped.
+#:
+#: Both ratios have a balance-sheet quantity in the denominator, and a
+#: denominator near zero produces arithmetic rather than economics. Measured on
+#: `finratio_monthly` (501,601 bm values, 492,654 roe):
+#:
+#:     bm    median 0.50   99.9th pct  11.7   MAX  89,351
+#:     roe   median 0.056  99.9th pct   8.9   MIN -21,992,  MAX 5,304
+#:
+#: A top-`k` book ranks by the characteristic and takes the EXTREME end, so it
+#: does not merely tolerate those values — it selects them, every date, in
+#: preference to every real firm. Book-to-market of 89,351 is not a company
+#: trading at a thousandth of book; it is a book equity of approximately zero.
+#:
+#: DROPPED, not winsorised. Clipping at a percentile makes every extreme value
+#: TIE at the cap, and `top_k` then falls through to the stable sort's
+#: tie-break, which is permno order — so winsorising would replace "the most
+#: extreme accounting artefacts" with "the oldest listings among them", which
+#: is worse because it looks deliberate.
+#:
+#: The bounds are economic, not percentile-fitted: 20x book is deep distress
+#: and 1,000% return on equity is not a business. They sit well outside the
+#: 99.9th percentile of both series, so they remove the tail that is arithmetic
+#: and leave the tail that is a real value or quality signal. `n_implausible`
+#: is logged so the cost is visible rather than assumed.
+PLAUSIBLE = {"bm": (0.0, 20.0), "roe": (-10.0, 10.0)}
+
+#: Characteristics whose lower bound is STRICT. `bm` must be positive: zero or
+#: negative book equity is a distressed accounting state, not a cheap stock,
+#: and a bm of exactly 0 would sort as the most expensive name in the universe
+#: rather than the most broken. Fama-French exclude negative book equity for
+#: the same reason.
+STRICT_LOWER = frozenset({"bm"})
+
 #: How long a monthly value may be carried forward, in CALENDAR DAYS. Fourteen
 #: months covers an annual filing plus a late quarter; beyond that the
 #: "characteristic" is a memory. Without a bound, a company that stopped
@@ -152,6 +186,11 @@ def load_characteristic(name: str, dates: np.ndarray, permnos: np.ndarray, *,
                                                   name]))
     df = pd.concat(frames, ignore_index=True)
     df = df.dropna(subset=["permno", "public_date", name])
+    lo, hi = PLAUSIBLE[name]
+    n_before = len(df)
+    low_ok = (df[name] > lo) if name in STRICT_LOWER else (df[name] >= lo)
+    df = df[low_ok & (df[name] <= hi)]
+    n_dropped = n_before - len(df)
     df["public_date"] = pd.to_datetime(df["public_date"]).dt.strftime("%Y-%m-%d")
     df = df.sort_values(["permno", "public_date"])
     # last value per (permno, public_date) — a duplicated stamp is a restated
@@ -214,8 +253,11 @@ def load_characteristic(name: str, dates: np.ndarray, permnos: np.ndarray, *,
         n_cells += rows.size
 
     logger.info("portfolio_farm.characteristics: %s joined for %d of %d "
-                "permnos, %.1f%% of cells populated", name, n_names, N,
-                100.0 * n_cells / max(1, T * N))
+                "permnos, %.1f%% of cells populated; %d of %d source rows "
+                "(%.3f%%) dropped as implausible (outside [%s, %s])",
+                name, n_names, N, 100.0 * n_cells / max(1, T * N),
+                n_dropped, n_before, 100.0 * n_dropped / max(1, n_before),
+                lo, hi)
     return out
 
 

@@ -40,16 +40,16 @@
   {
    "signal": "profit_roe",
    "is_null": false,
-   "terminal_median_usd": 42025.13,
-   "tracking_error_annual_pct": 8.662,
-   "observed_excess_annual_pct": 0.415,
-   "implied_t": 0.158,
-   "mde_at_80pct_power_annual_pct": 7.347,
-   "years_needed_for_observed_effect": 3417.6,
+   "terminal_median_usd": 44530.29,
+   "tracking_error_annual_pct": 8.696,
+   "observed_excess_annual_pct": 0.932,
+   "implied_t": 0.354,
+   "mde_at_80pct_power_annual_pct": 7.377,
+   "years_needed_for_observed_effect": 682.0,
    "sample_can_resolve_observed_effect": false,
    "years": 10.9,
    "null_baseline_excess_annual_pct": -3.655,
-   "excess_vs_null_annual_pct": 4.07
+   "excess_vs_null_annual_pct": 4.587
   },
   {
    "signal": "random",
@@ -110,16 +110,16 @@
   {
    "signal": "value_bm",
    "is_null": false,
-   "terminal_median_usd": 23328.69,
-   "tracking_error_annual_pct": 19.007,
-   "observed_excess_annual_pct": -2.727,
-   "implied_t": -0.474,
-   "mde_at_80pct_power_annual_pct": 16.122,
+   "terminal_median_usd": 23239.54,
+   "tracking_error_annual_pct": 19.008,
+   "observed_excess_annual_pct": -2.762,
+   "implied_t": -0.48,
+   "mde_at_80pct_power_annual_pct": 16.123,
    "years_needed_for_observed_effect": null,
    "sample_can_resolve_observed_effect": false,
    "years": 10.9,
    "null_baseline_excess_annual_pct": -3.655,
-   "excess_vs_null_annual_pct": 0.928
+   "excess_vs_null_annual_pct": 0.893
   },
   {
    "signal": "reversal_1w",
