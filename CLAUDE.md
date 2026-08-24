@@ -124,21 +124,35 @@ replayed over one frozen CRSP history (`python -m scripts.portfolio_farm_run`).
 calendar day. Policies are identities, not brokerage accounts; a farm winner is
 a CANDIDATE for a frozen forward book and never evidence of alpha.
 
-Six things from it that govern what counts as progress
+Seven things from it that govern what counts as progress
 (`docs/FINDING_2026-08-24_HOLDING_PERIOD.md`):
 
-- **the bar is the market, buy and hold** — ~$39,951 over 2013-2024 from
-  $10,000 at the leading policy's warmup. Ask "does it beat the market", not
-  "is it significant". The best terminal-wealth policy found so far is
-  `mom_12_1 / hold 5d / k=10 / inverse_vol` at a **$85,482 median across five
-  rebalance phases** — but the sub-period split shows it is **1.00x the market
-  over 2013-2018** and 2.07x over 2019-2024, so it is a ONE-REGIME result and
-  **must not be seeded as a forward book**. It also **loses to the market on
-  Sharpe, Sortino and Calmar** in every phase, at a ~-60% drawdown. So
-  **every ranked comparison names its objective**: under terminal wealth it
-  beats the market roughly two to one, under any risk-adjusted objective it is
-  worse. That is the right answer for the DECLARED `extreme growth`
-  personality and the wrong one for `balanced` or `preservation`;
+- **32 YEARS DID NOT RESOLVE IT, AND NO SAMPLE WILL**
+  (`docs/FINDING_2026-08-25_THIRTY_TWO_YEARS_DID_NOT_RESOLVE_IT.md`). The
+  re-pull tripled the window and the answer got *further* away:
+
+  | | 2013-2024 | 1993-2024 |
+  |---|---|---|
+  | tracking error | 35.7% | 34.4% |
+  | observed excess | 16.64% | **12.36%** |
+  | implied t | 1.54 | **2.00** |
+  | MDE at 80% power | 30.3% | **17.3%** |
+  | **years needed** | 36 | **60.7** |
+
+  `sqrt(T)` halved the standard error exactly as advertised; the effect
+  estimate shrank at the same time. The bootstrap 95% CI still contains zero
+  ([-0.12%, +25.13%]). **CRSP cannot supply 61 years** — the window starts in
+  1993 because there are no open prices before mid-1992. And by decade the
+  candidate reads **4.38x / 0.43x / 2.09x**: over 2003-2012 it turned $10,000
+  into **$6,813** while the market made 58%. A "years needed" figure computed
+  from a window that omits a regime is a lower bound dressed as a target;
+- **THE LEVER IS TRACKING ERROR, NOT HISTORY.** `MDE = z*te/sqrt(T)`, and te
+  barely moved between the two windows because it is a property of the
+  CONSTRUCTION, not the sample — ten names out of five hundred is what makes
+  it 34%. At k=50 te is 16.4%, which over 32 years implies an MDE near 8%/yr.
+  History is the expensive lever and it is exhausted; breadth is the cheap one
+  and it has never been pulled. Caveat, and it is the open question:
+  2013-2024 says the excess falls FASTER than te does;
 - **ASK WHETHER THE SAMPLE COULD HAVE ANSWERED, BEFORE ASKING WHAT IT SAID.**
   `python -m scripts.portfolio_farm_signal_power` reports, per signal, the
   effect this window could detect at 80% power. On 2013-2024, **zero of
