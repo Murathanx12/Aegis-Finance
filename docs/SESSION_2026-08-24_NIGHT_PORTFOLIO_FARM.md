@@ -11,31 +11,45 @@ The format Murat's review asked every session to lead with, from now on.
 
 | | |
 |---|---|
-| **Best historical net strategy** | `mom_12_1 / hold 1d / k=12 / equal / u500`, **$35,228** from $10,000 (2013-2024, 12 bps round trip, next-open fills) |
-| **vs market** | CRSP VW buy & hold **$39,951** — **the strategy LOSES to the market by $4,723** |
+| **Best historical net strategy** | `mom_12_1 / hold 5d / k=10 / inverse_vol / u500`, **$77,002 median across 5 rebalance phases** (worst $58,411), from $10,000, 2013-2024, 12 bps round trip, next-open fills, MEASURED delisting returns |
+| **vs market** | CRSP VW buy & hold **$38,960** — **~2x on terminal wealth in every phase**, and **WORSE on Sharpe (0.61 vs 0.72), Sortino and Calmar in every phase**, at -60% drawdown vs -34%. Under terminal wealth it wins; under any risk-adjusted objective it loses. Name the objective. |
 | **Phase spread** | **1.8x-3.8x** at k=12 — wider than any gap between the strategies compared. Every result is now a MEDIAN over rebalance phases |
 | **Best forward paper strategy** | unchanged: `conservative-atr` +6.38% since 2026-06-08 (77 days). No new forward book was launched. |
 | **Independent alpha selectors running** | **still 1** (`arena_composite`). The BLOCKER to a second one was removed today, not the second one itself. |
-| **Portfolio-farm candidates tested** | **~1,000** policies over 3,020 sessions x 6,894 PERMNOs (holding 516 + breadth 215 + phase sweep) |
-| **Promoted** | **0** — nothing cleared the market, so nothing earned a forward book |
-| **New actionable mechanism** | **none.** One mechanism DE-mystified (holding period), one measurement instrument built |
+| **Portfolio-farm candidates tested** | **~1,600** policies over 3,020 sessions x 6,894 PERMNOs (holding, breadth, phase, delisting, breadth x phase) |
+| **Promoted** | **0** — a CANDIDATE now exists and promotion is attended, so nothing was promoted unilaterally |
+| **New actionable mechanism** | **one candidate**, plus a mechanism worth naming: **12-1 momentum systematically selects acquisition targets** — which is why the delisting convention mattered so much |
 | **External execution drag** | not measured this session (no external order submitted) |
 | **LLM spend** | **$0.00 this session.** No LLM call was made by this work |
 | **LLM cost per useful decision** | n/a |
 
-### RESULT IMPROVEMENT: NONE.
+### RESULT IMPROVEMENT: A CANDIDATE, NOT AN EDGE.
 
-Expected investment performance did not move. What moved is the ability to ASK
-— hundreds of policies in minutes against a twelve-year replay, where yesterday
-the only way to test a strategy was to wait a calendar day.
+Nothing was promoted and no forward book was launched, so the demonstrated
+forward edge is unchanged. What exists now that did not this morning is a
+**candidate**: the first policy in this programme to beat a properly-costed
+benchmark on a replay with next-open fills, measured delisting returns and both
+nulls cleared at 100.0/100.0.
 
-And two beliefs were corrected, the second one MINE. Daily rebalancing is
-frictionless-flattered (costs take 26%). And the number this session first
-published — `mom_12_1/h63` at $38,815 as the best net result — was the MAXIMUM
-of that rule's rebalance-phase distribution, whose median is $16,633. I built a
-number, then built the thing that showed the number was a draw. The finding doc
-was rewritten the same night; `Policy.phase_offset` and `farm.across_phases`
-exist because of it, and no farm result is quoted from a single phase again.
+It is not an edge. It is post-hoc, one window, one path, ~1,200 policies tried,
+and it loses to the market on every risk-adjusted measure. What earns it the
+word "candidate" is that it survived three instrument corrections that each
+moved the answer more than the answer itself:
+
+1. **Phase.** The number first published — `mom_12_1/h63` at $38,815 — was the
+   MAXIMUM of a rebalance-phase distribution whose median is $16,633.
+2. **The delisting assumption.** A declared -30% for every exit was worth an
+   **18x** swing that straddled the benchmark.
+3. **The delisting DATA was already on disk.** `crsp__dsedelist.parquet`, in the
+   WRDS bulk pull, unjoined. I had written "the top data task is a WRDS pull"
+   into the handoff before looking. Joining it collapsed the sensitivity from
+   18x to **1.09x** — which is the proof the join worked — and moved the leader
+   from $35,228 to $80,943.
+
+I built a number, then built the thing that showed the number was a draw, then
+found the data that showed the correction itself rested on a guess. Every farm
+number in the repository now carries its phase spread and its
+measured-vs-assumed delisting split.
 
 ---
 

@@ -170,7 +170,8 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
     diag = {"n_decisions": 0, "n_fills": 0, "n_unfilled_names": 0,
             "n_delistings": 0, "delisting_cash": 0.0, "total_cost_usd": 0.0,
             "traded_notional_usd": 0.0, "days_holding_nothing": 0,
-            "n_empty_selections": 0, "stuck_capital_events": 0,
+            "n_empty_selections": 0, "n_delist_measured": 0,
+            "n_delist_assumed": 0, "stuck_capital_events": 0,
             "stuck_capital_usd": 0.0, "min_cash_usd": 0.0}
     t0 = time.perf_counter()
 
@@ -192,10 +193,21 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
         missing = np.where(gone, missing + 1, 0)
         dead = gone & (missing >= DELIST_AFTER_MISSING_SESSIONS)
         if dead.any():
-            proceeds = float((shares[dead] * last_px[dead]).sum()) * (
-                1.0 + policy.delisting_return)
+            # MEASURED where CRSP has it, DECLARED where it does not — and the
+            # split is counted, because the sensitivity sweep showed this one
+            # assumption is worth an 18x swing in terminal wealth. A run that
+            # fell back on most of its exits is a run whose headline is still
+            # an assumption, and the receipt must be able to say so.
+            j = np.flatnonzero(dead)
+            dl = (panel.delist_ret[j] if panel.delist_ret is not None
+                  else np.full(j.size, np.nan))
+            known = np.isfinite(dl)
+            rate = np.where(known, dl, policy.delisting_return)
+            proceeds = float((shares[j] * last_px[j] * (1.0 + rate)).sum())
             cash += proceeds
-            diag["n_delistings"] += int(dead.sum())
+            diag["n_delistings"] += int(j.size)
+            diag["n_delist_measured"] += int(known.sum())
+            diag["n_delist_assumed"] += int((~known).sum())
             diag["delisting_cash"] += proceeds
             shares[dead] = 0.0
             held = shares != 0

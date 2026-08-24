@@ -1,20 +1,31 @@
-# FINDING 2026-08-24 — the holding-period question, and what phase did to it
+# FINDING 2026-08-24 — the holding-period question, and the three instrument defects that had to be fixed before the answer meant anything
 
 **Licence:** `PRODUCT_EXPERIMENT`. Historical replay, post-hoc, one window,
-hundreds of policies tried. **Not an alpha claim** and may not be cited as one.
+~1,200 policies tried. **Not an alpha claim** and may not be cited as one.
 
-**Receipts:** `backend/data/optimus/portfolio_farm/farm_holding_2013_2024.json`
-(516 policies, phase 0) · `..._phase_2013_2024.json` (every rebalance phase) ·
-`..._breadth_2013_2024.json` (k = 3..50).
+**Receipts** (`backend/data/optimus/portfolio_farm/`):
+`farm_breadth_phase_2013_2024.json` — **the candidate, read this** ·
+`farm_phase_measured_delist.json` (holding period x phase) ·
+`farm_holding_2013_2024.json` · `farm_breadth_2013_2024.json` ·
+`farm_delisting_2013_2024.json`.
 **Engine:** `backend/services/portfolio_farm/` · **Runner:**
 `python -m scripts.portfolio_farm_run --preset phase --start 2013 --end 2024`
 
-> **THIS FILE WAS REWRITTEN THE SAME NIGHT.** Its first version reported
-> `mom_12_1 / hold 63d` at **$38,815** as the best net result. That number is
-> real and it is the **MAXIMUM of that rule's rebalance-phase distribution**,
-> whose median is **$16,633**. The first version was measuring the calendar and
-> reporting the strategy. What follows is the corrected reading; the correction
-> is the more useful finding.
+> **THIS FILE WAS REWRITTEN THREE TIMES IN ONE NIGHT.** Each rewrite was forced
+> by a measurement, and the sequence is the point:
+>
+> 1. **"$38,815, `hold=63` wins."** That was the MAXIMUM of the rule's
+>    rebalance-phase distribution, whose median is $16,633. The calendar,
+>    reported as the strategy.
+> 2. **"$35,228, loses to the market."** True under a **declared -30% delisting
+>    assumption** that had never been varied. Varying it moved the same rule
+>    across an 18x band that straddled the benchmark.
+> 3. **The delisting data was already on disk.** `crsp__dsedelist.parquet`, in
+>    the WRDS bulk pull, unjoined. With the ACTUAL delisting returns the answer
+>    is below — and it is not what any earlier version said.
+>
+> The instrument was wrong three times, and each error moved the result by more
+> than the result itself. That is the finding to remember.
 
 ---
 
@@ -29,119 +40,218 @@ Nobody had ever charged that intuition for its trading.
 
 | | |
 |---|---|
-| Data | CRSP daily (`crsp.dsf`), 2013-2024, 3,020 sessions x 6,894 PERMNOs |
-| Universe | 500 most liquid eligible names at each formation date, trailing dollar volume, price >= $5, real trade that day |
+| Data | CRSP daily (`crsp.dsf`) 2013-2024, 3,020 sessions x 6,894 PERMNOs, plus `crsp.dsedelist` |
+| Universe | 500 most liquid eligible names at each formation date (trailing dollar volume), price >= $5, real trade that day |
 | Book | 12 names, equal weight, 20% single-name cap, $10,000 start |
 | Execution | decide at the close of day `i`, **fill at the open of day `i+1`** |
-| Costs | 5 bps + 1 bp slippage one way (**12 bps round trip**), plus a round-trip cash reserve so the book cannot be 100% invested AND pay commission |
+| Costs | 5 bps + 1 bp slippage one way (**12 bps round trip**), plus a round-trip cash reserve so the book cannot be fully invested AND pay commission |
 | Dividends | credited as CASH (`ret - retx`), never free-reinvested |
-| Delisting | a holding gone 5 sessions is resolved at **-30%** (declared, variable) |
+| Delisting | **MEASURED** per event from `crsp.dsedelist` (97%+ coverage); the declared -30% is only the fallback |
 | Benchmark | CRSP value-weighted market, buy and hold, pinned Fama-French |
 
-## THE HEADLINE
+## THE ANSWER
 
-**At 12 names, the rebalance PHASE moves terminal wealth by 1.8x to 3.8x — more
-than any difference between the strategies being compared.** Every single-phase
-ranking on this board, including the one this document first published, is a
-draw from that spread.
+12-1 momentum, k=12, net of costs, delisting measured, median across rebalance
+phases:
 
-12-1 momentum, net of costs, across every offset in each rebalance cycle:
-
-| hold | phases | **median** | min | max | spread |
+| hold | phases | **median** | min | max | phase spread |
 |---:|---:|---:|---:|---:|---:|
-| 1 | 1 | **$35,228** | — | — | 1.00 |
-| 5 | 5 | **$34,948** | $20,275 | $41,197 | 2.03x |
-| 21 | 7 | $12,623 | $6,816 | $15,400 | 2.26x |
-| 63 | 7 | $16,633 | $10,352 | **$38,817** | **3.75x** |
-| 126 | 7 | $11,455 | $9,459 | $16,811 | 1.78x |
-| 252 | 7 | $21,270 | $20,043 | $35,661 | 1.78x |
+| **1** | 1 | **$80,943** | — | — | 1.00 |
+| **5** | 5 | **$80,825** | **$45,458** | $92,122 | 2.03x |
+| 21 | 7 | $23,601 | $15,190 | $33,465 | 2.20x |
+| 63 | 7 | $28,358 | $19,204 | $62,360 | 3.25x |
+| 126 | 7 | $15,343 | $12,436 | $22,042 | 1.77x |
+| 252 | 7 | $25,863 | $23,630 | $42,048 | 1.78x |
 
-**Market, buy and hold: $39,951.**
+**Market, buy and hold: $38,960.**
 
-That `$38,817` in the h=63 max column is the number this document originally
-led with.
+At `hold=5` **every phase beats the market** — the worst alignment returns
+$45,458. Both leaders clear the 90th percentile of BOTH nulls at 100.0/100.0.
 
-## The Micron question, answered
+### The Micron intuition is correct, and costs do not overturn it
 
-**Directionally, the intuition is right — and it does not survive costs.**
-
-| hold | frictionless | net | costs paid | turnover |
+| hold | frictionless | net | costs | turnover |
 |---:|---:|---:|---:|---:|
-| **1** | **$47,908** | **$35,228** | **$4,983 (26%)** | 45.5x/yr |
-| 5 | $44,051 | $38,191 | $2,819 | 21.0x/yr |
-| 63 | $40,083 | $38,817 | $584 | 4.8x/yr |
-| 252 | $32,425 | $32,029 | $163 | 1.8x/yr |
+| 1 | $92,349 | **$80,943** | $9,076 | 45.2x/yr |
+| 5 | $92,986 | **$85,975** | $5,062 | 20.8x/yr |
+| 63 | $63,772 | $62,360 | $1,412 | 4.8x/yr |
+| 252 | $37,164 | $36,766 | $391 | 1.8x/yr |
 
-* **Gross, faster IS better, monotonically.** $47,908 > $44,051 > $40,083 >
-  $32,425. The Micron intuition is a real property of the signal.
-* **Costs take a quarter of it at daily frequency** — $4,983 of a $47,908
-  frictionless result, at 45x annual turnover and 12 bps round trip.
-* **Net, daily and weekly are still the best medians** ($35,228 and $34,948),
-  and everything slower is worse. *This reverses what the first version of this
-  file said*, which ranked h=63 top on the strength of one lucky phase.
-* **And none of them beat simply owning the market.** $35,228 against $39,951.
+Faster is better gross AND net. Costs take ~12% of the frictionless result at
+daily frequency — real, and much smaller than the edge it buys. **Trading the
+signal fresh is worth more than the spread it costs**, at $10,000 and on the
+500 most liquid names.
 
-So: trade fast if you trade this signal — but the whole exercise is behind
-buy-and-hold at this breadth, and the honest programme headline is unchanged:
-**demonstrated independent edge remains 0%.**
+## AND NOW THE PART THAT MATTERS MORE THAN THE HEADLINE
 
-## Why "clears both nulls" is the column that matters
+(The k=12 book, which is where the holding-period sweep ran. The breadth sweep
+below finds a better one at k=10 and it tells exactly the same story.)
 
-The first leaderboard had ONE null — `random`, re-drawn at every formation date
-— and momentum sat at the 100th percentile of it at every holding period. That
-was mostly an artefact:
+| | `mom_12_1 / h=1 / k=12` | market |
+|---|---:|---:|
+| terminal wealth | **$80,943** | $38,960 |
+| CAGR | **21.15%** | 13.55% |
+| volatility | 41.8% | 17.8% |
+| **Sharpe** | **0.63** | **0.72** |
+| **Sortino** | **0.63** | **0.67** |
+| **Calmar** | **0.37** | **0.40** |
+| max drawdown | **-57.0%** | -34.2% |
+| longest underwater | **927 sessions (3.7 yrs)** | 530 (2.1 yrs) |
+| information ratio | 0.39 | — |
 
-* `random` re-ranks the universe daily, so at `hold=1` it turns over **492x/yr**
-  and pays **29.5%/yr** in costs. Its median terminal is **$1,070**.
-* 12-1 momentum's ranks barely move day to day: **45x/yr**, ~2.7%/yr.
+**It doubles terminal wealth and is WORSE on every risk-adjusted measure.**
+Sharpe, Sortino and Calmar all favour the market. This is not risk-adjusted
+alpha; it is more risk, taken deliberately, which paid over this window. It
+behaves roughly like a levered market position with a modest IR of 0.39.
 
-Beating that null at a short holding period can mean nothing more than "traded
-less than a coin flip would". `random_persistent` — ONE fixed random 12-name
-basket held for twelve years, near-zero turnover — brackets the other end, and
-the bar is now the 90th percentile of **both**. `reversal_1m` at `hold=1` clears
+Which is exactly why CLAUDE.md requires that **every ranked comparison names the
+objective it was computed under**:
+
+> **Under terminal wealth it is 2.08x the market. Under any risk-adjusted
+> objective it is worse than the market.**
+
+For the DECLARED `extreme growth` personality that is the right answer. For
+`balanced` or `preservation` it is not, and no amount of terminal wealth makes a
+57% drawdown and 3.7 years underwater the right answer for them.
+
+## The three instrument defects, each worth more than the strategy
+
+### 1. Rebalance phase — worth up to 3.75x
+
+Formation dates are set by an arbitrary alignment. `hold=63` returned $62,360 at
+one offset and $19,204 at another: same signal, same universe, same costs.
+`Policy.phase_offset` is now part of the identity and `farm.across_phases`
+reports the MEDIAN with the spread beside it. **A rule whose phase spread is
+wider than its edge has not been shown to have one.**
+
+### 2. The delisting assumption — worth 18x, and the data was already here
+
+`crsp.dsf` carries no delisting returns, so the simulator applied a declared
+-30%. The sensitivity sweep gave $4,290 / $35,228 / $83,649 at -1.0 / -0.30 /
+0.0 — straddling the benchmark. Then `crsp__dsedelist.parquet` turned out to be
+sitting in the WRDS bulk pull, unjoined. Measured over 3,089 real events in this
+window:
+
+| code family | n | `dlret` median | mean |
+|---|---:|---:|---:|
+| **2xx mergers** | 1,962 | **+0.0004** | +0.0089 |
+| 3xx exchange | 13 | +0.0053 | +0.0347 |
+| 4xx liquidation | 223 | +0.0005 | -0.0074 |
+| **5xx dropped / performance** | 891 | **-0.2000** | -0.2444 |
+| all | 3,089 | **0.0000** | -0.0636 |
+
+60.5% of delistings return at or above zero. A merged shareholder receives the
+deal consideration, so -30% was the wrong number for two thirds of the
+population — and momentum is *especially* exposed, because **12-1 momentum
+systematically selects acquisition targets** (a target runs up into its
+announcement). 35 exits over twelve years, each ~1/12 of the book: a wrongly
+imposed -30% compounds to destroying 57% of terminal wealth.
+
+`dlstcd = 100` means STILL ACTIVE and those rows are excluded — 3,866 of them
+against 3,089 real events, so that filter is not a detail.
+
+**With the measured returns the fallback stops mattering**: sweeping it from 0.0
+to -1.0 now moves `h=1` only from $83,047 to $76,032 — **1.09x instead of 18x.**
+That collapse is the proof the join worked.
+
+### 3. Implicit leverage — silent and recurring
+
+A held name with no open price cannot be sold, and the fill step allocated the
+new book against total equity anyway: buying with capital still locked in the
+old position, driving cash negative with no borrow cost. `openprc` is missing on
+~2.2% of rows, so a 12-name book met one roughly every fourth rebalance.
+`min_cash_usd` and `stuck_capital_usd` are now on every receipt.
+
+## Why "clears both nulls" is the column that decides
+
+`random` re-draws every formation date, so at `hold=1` it turns over **492x/yr**
+and pays **29.5%/yr** in costs; momentum's ranks barely move, so it turns over
+45x. Beating that null at a short holding period can mean nothing more than
+"traded less than a coin flip would". `random_persistent` — ONE fixed random
+12-name basket held twelve years, near-zero turnover — brackets the other end,
+and the bar is the 90th percentile of **both**. `reversal_1m` at `hold=1` clears
 the churning null (100.0) and fails the persistent one (0.0), which is exactly
 the distinction one null hid.
 
-## Breadth: it does not rescue the result
+## Breadth, settled: k=10 is the peak, and every single-phase reading was wrong
 
-`--preset breadth`, k = 3..50 at `hold=21`, each k benched against its own
-nulls in its own sizing: momentum's best is **k=50 at $26,804** (85th/80th
-percentile of chance) and every smaller k is worse. Concentration is not what
-was missing.
+Breadth was read three times and the first two were artefacts. `--preset
+breadth` sweeps k at ONE rebalance offset, and an offset is worth up to 3.75x,
+so a k-ranking read off one phase is a ranking of draws. `--preset
+breadth_phase` crosses k with the phase at `hold=5` (a strong alignment) and
+benches every (k, sizing) cell against its own nulls — 368 policies:
 
-Note k=3 and k=5 return identical results under both sizings: at a 20%
-single-name cap those books are all-at-the-cap, so the sizing rule has nothing
-left to decide. That is correct behaviour, not a bug — but it means "sizing" is
-not an independent axis at high concentration.
+| k | sizing | median | min across phases | phase spread | phases clearing BOTH nulls |
+|---:|---|---:|---:|---:|:--|
+| 5 | equal / inv | $33,548 | $14,681 | 3.06x | **2 of 5** |
+| **10** | equal | $76,727 | $40,812 | 2.19x | **5 of 5** |
+| **10** | **inverse vol** | **$77,002** | **$58,411** | **1.89x** | **5 of 5** |
+| 20 | equal / inv | $45,484 / $47,597 | $41,081 / $40,900 | 1.40x | 5 of 5 |
+| 50 | equal / inv | $40,615 / $39,054 | $33,367 / $31,038 | 1.31x | 4 of 5 |
 
-## Three defects the instrument had, found by looking at what it measured
+**There is an interior optimum at k=10.** Not k=5 (inside chance in 3 of 5
+phases) and not k=50 (which the single-phase run had crowned). And the phase
+spread narrows monotonically with breadth — 3.06x at k=5 down to 1.31x at k=50
+— which is the mechanism stated plainly: **more names average the idiosyncratic
+variance down, and past k=20 they also average the signal away.**
 
-1. **Implicit leverage.** A held name with no open price cannot be sold, and the
-   engine allocated the new book against total equity anyway — buying with money
-   still locked in the old position, driving cash negative with no borrow cost.
-   `openprc` is missing on ~2.2% of CRSP daily rows, so a 12-name book met one
-   about every fourth rebalance. `min_cash_usd` is now on every receipt.
-2. **The single-name cap silently stopped applying.** Cap-then-renormalise
-   converges to 1/n, so 3 names under a 20% cap came back at 33% each — over the
-   cap the receipt claimed to enforce.
-3. **The null comparison pooled incompatible groups.** The `breadth` sweep varied
-   `top_k` and `sizing`, and every real policy was scored against one pooled
-   null spanning all of them. Grouping on the full settings tuple made the
-   inverse-vol policies print `nan` — which is what "this has no control" looks
-   like when it stops being hidden.
+k=5 equal-weight and inverse-vol return identical numbers, because a 20% cap
+makes a five-name book all-at-the-cap and sizing has nothing left to decide.
 
-## Known limitations, stated rather than discovered later
+## THE CANDIDATE
 
-* **One window, 2013-2024.** The pre-2013 CRSP pull lacks
-  `openprc`/`retx`/`shrout`, so the next-open convention is not executable
-  there and the loader refuses those years by name. Widening it is a WRDS
-  re-pull.
-* **Long only.** No shorts, no leverage, no borrow. `reversal_1m` losing is a
-  statement about a long book of last month's losers.
-* **Delisting is an assumption** (-30%); re-run at 0.0 and -1.0 to bound it.
-  Nobody has.
-* **Costs are flat** — no market impact beyond 1 bp, which flatters the fast
-  policies, and they still did not beat the market.
-* **Hundreds of policies were tried.** The best of hundreds is high because
-  hundreds is large.
-* **Phase medians rest on 5-7 offsets**, not the full cycle, for h >= 21.
+`mom_12_1 / hold 5d / k=10 / inverse_vol / top-500-liquid / 12 bps round trip`,
+all five rebalance phases:
+
+| phase | terminal | CAGR | vol | Sharpe | maxDD | IR |
+|---:|---:|---:|---:|---:|---:|---:|
+| 0 | $58,411 | 17.57% | 42.8% | 0.55 | -60.9% | 0.30 |
+| 1 | $100,556 | 23.58% | 42.6% | 0.67 | -60.0% | 0.44 |
+| 2 | $110,419 | 24.65% | 42.4% | 0.69 | -59.9% | 0.47 |
+| 3 | $62,604 | 18.32% | 42.7% | 0.57 | -59.6% | 0.32 |
+| 4 | $77,002 | 20.59% | 42.6% | 0.61 | -55.9% | 0.38 |
+| **median** | **$77,002** | **20.59%** | 42.6% | **0.61** | **-59.9%** | 0.38 |
+| **market** | **$38,960** | **13.55%** | 17.8% | **0.72** | **-34.2%** | — |
+
+**Every phase beats the market on terminal wealth** — the worst is $58,411,
+still 1.5x — and **every phase is below the market's Sharpe.** The result is
+consistent, and so is its price: ~2.4x the market's volatility and a 60%
+drawdown.
+
+That is the same sentence the k=12 book gave, now robust across breadth, phase
+and holding period:
+
+> **Momentum at this breadth converts more risk into more wealth, at slightly
+> worse risk-adjusted efficiency.** Under terminal wealth it is ~2x the market.
+> Under Sharpe, Sortino or Calmar it is worse. Right for the DECLARED `extreme
+> growth` personality; wrong for `balanced` or `preservation`.
+
+## What this is, and what it is not
+
+It **is** the first thing in this programme to beat a properly-costed benchmark
+on a replay with next-open fills, measured delisting returns, both nulls cleared
+in EVERY rebalance phase, and a worst-phase result still 1.5x the market. That
+makes it a **candidate for a frozen forward book** — precisely what
+`PORTFOLIO_FARM` was built to produce. Promotion is attended: `seed-a-lane`,
+env-gated, Murat flips the flag.
+
+It is **not** alpha:
+
+* **one window, one path.** 2013-2024 is twelve years of one regime and one
+  realisation. The pre-2013 CRSP pull lacks `openprc`/`retx`/`shrout` and the
+  loader refuses it by name; widening it is a WRDS re-pull.
+* **~1,600 policies were tried.** The best of 1,600 is high because 1,600 is
+  large, and nothing here controls for that. The partial defence is that the
+  candidate is not a single best row: it clears both nulls in 5 of 5 phases and
+  its WORST phase still beats the market. That is a weaker claim than a
+  multiplicity correction and a stronger one than a maximum.
+* **small k is dominated by idiosyncratic variance** — chance spans
+  $473-$85,419 across 492 draws at k=12, and k=5 fails its own nulls in 3 of 5
+  phases. The k=10 optimum sits close to that cliff.
+* **risk-adjusted it loses to the market**, on Sharpe, Sortino and Calmar alike.
+* **the universe rests on a 6,894-PERMNO screened superset.** If that screen
+  embeds any forward-looking eligibility, the universe is mildly cleaner than
+  reality. Unresolved, and it is the next thing I would attack.
+* **long only, no shorts, no leverage, no borrow, flat costs, no market impact
+  beyond 1 bp.** At $10,000 that impact assumption is realistic; at $1,000,000
+  it is not.

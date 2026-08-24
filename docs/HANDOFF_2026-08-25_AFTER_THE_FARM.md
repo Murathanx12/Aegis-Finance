@@ -105,11 +105,55 @@ backwards, as the review directed:
   formation dates would give a leaderboard row an interval rather than a number.
   That is the difference between "this rule beat the market" and "this rule
   would have beaten the market on the one history we have".
-* Delisting sensitivity: re-run at `delisting_return` 0.0 and -1.0 to bound the
-  assumption. One command, nobody has spent it.
+* **`--preset delisting` — RUN, and it exposed that the whole board rested on a
+  guess.** With a declared -30% for every exit, the same rule returned
+  **$4,290 / $35,228 / $83,649** at -1.0 / -0.30 / 0.0 — an 18x swing straddling
+  the benchmark.
+* **`crsp.dsedelist` IS ALREADY ON DISK** — `wrds/bulk/crsp__dsedelist.parquet`,
+  unjoined. I had written "the top data task is a WRDS pull" into this file
+  before looking, which is exactly the failure
+  `feedback_test_before_declaring_blocked` names. It is joined now: 97%+ of
+  exits carry a MEASURED `dlret`, the fallback sensitivity collapsed from 18x to
+  **1.09x**, and the leader moved from $35,228 to **$80,943** against a $38,960
+  market.
+* **Breadth is SETTLED and every single-phase reading of it was wrong.**
+  `--preset breadth_phase` crosses k with the rebalance phase at h=5, 368
+  policies: there is an **interior optimum at k=10** — not k=5 (inside chance in
+  3 of 5 phases) and not k=50 (which the single-phase run had crowned). Phase
+  spread narrows monotonically with breadth, 3.06x at k=5 to 1.31x at k=50:
+  more names average the idiosyncratic variance down, and past k=20 they average
+  the signal away too.
+* **The remaining multi-path work, and it is the real gap.** Phase medians rest
+  on 5-7 offsets and there is still only ONE price path. A block bootstrap over
+  formation dates would give a leaderboard row an interval instead of a number —
+  the difference between "this rule beat the market" and "this rule would have
+  beaten the market on the one history we have". With ~1,600 policies tried,
+  that distinction is the whole ballgame.
+* **Audit the 6,894-PERMNO superset for forward-looking eligibility.** The daily
+  pull is scoped to names a monthly PIT screen selected. If that screen embeds
+  any "ever eligible" logic, the universe is mildly cleaner than reality and
+  every farm number inherits it. Unresolved, and the next thing I would attack.
 * Re-pull `openprc`/`retx`/`shrout` for CRSP 1990-2012 (`AegisWRDSPullNight`
-  exists). That triples the window and lets a policy be tested across regimes
-  instead of one.
+  exists). Triples the window and lets a policy be tested across regimes. SECOND
+  priority to the bootstrap — a wider window of un-intervalled numbers is still
+  un-intervalled.
+
+**THE CANDIDATE, AND WHAT IT IS NOT.**
+`mom_12_1 / hold 5d / k=10 / inverse_vol / top-500-liquid / 12 bps round trip`.
+Median across five rebalance phases: **$77,002** from $10,000 against the
+market's **$38,960**; worst phase **$58,411**, still 1.5x; **5 of 5 phases clear
+BOTH nulls**. CAGR 20.6% vs 13.5%.
+
+And in every one of those five phases it is **below the market's Sharpe** (0.55
+to 0.69 against 0.72), at ~2.4x the volatility and a **-60% drawdown** against
+-34%. Under terminal wealth it is ~2x the market; under Sharpe, Sortino or
+Calmar it is worse. Right for the DECLARED `extreme growth` personality, wrong
+for `balanced` or `preservation` — and naming the objective is a standing rule,
+not a caveat.
+
+If it graduates it graduates as a **frozen forward book** under
+`PRODUCT_EXPERIMENT`, seeded through `seed-a-lane`, env-gated, Murat flips the
+flag. Not as a claim.
 
 **CHUNK B — HUMAN/TEACHER PORTFOLIOS.** Unchanged and unblocked. The repo already
 collects Congress (PIT, disclosure-date), ARK, Form 4, 13F and IBES; it measures

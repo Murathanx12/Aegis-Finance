@@ -283,8 +283,14 @@ def across_phases(results: list["FarmResult"]) -> list[dict]:
         if r.metrics.get("status") != "ok":
             continue
         row = r.as_row()
+        # Everything EXCEPT phase_offset. A field left out here silently
+        # merges two different rules into one median — which is what would have
+        # happened to the delisting sensitivity arms, whose only difference is
+        # `delisting_return`.
         key = (row["signal"], row["signal_seed"], row["holding_days"],
                row["top_k"], row["sizing"], row["universe_n"],
+               row["delisting_return"], row["min_price"],
+               row["transaction_cost_bps"], row["slippage_bps"],
                bool(row["zero_cost_diagnostic"]))
         groups.setdefault(key, []).append(row)
 
@@ -295,7 +301,7 @@ def across_phases(results: list["FarmResult"]) -> list[dict]:
         out.append({
             "signal": key[0], "signal_seed": key[1], "holding_days": key[2],
             "top_k": key[3], "sizing": key[4], "universe_n": key[5],
-            "zero_cost_diagnostic": key[6],
+            "delisting_return": key[6], "zero_cost_diagnostic": key[10],
             "is_null_control": base.get("is_null_control"),
             "n_phases": len(rows),
             "terminal_median_usd": round(float(np.median(t)), 2),

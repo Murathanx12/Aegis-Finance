@@ -124,27 +124,39 @@ replayed over one frozen CRSP history (`python -m scripts.portfolio_farm_run`).
 calendar day. Policies are identities, not brokerage accounts; a farm winner is
 a CANDIDATE for a frozen forward book and never evidence of alpha.
 
-Two numbers from it that govern what counts as progress
+Three things from it that govern what counts as progress
 (`docs/FINDING_2026-08-24_HOLDING_PERIOD.md`):
 
-- **the bar is $39,951** — the CRSP value-weighted market, buy and hold, over
-  2013-2024 from $10,000. The best net policy found so far is **$35,228**
-  (12-1 momentum, daily rebalance, k=12). Ask "does it beat the market", not
-  "is it significant";
-- **at k=12 the rebalance PHASE alone moves terminal wealth 1.8x-3.8x** — more
-  than any difference between the strategies being compared — and chance spans
-  $473-$85,419 across 492 draws. **A single-phase result is a draw from that
-  spread, so every policy is run at multiple `phase_offset`s and reported by
-  its MEDIAN.** The first version of the holding finding led with $38,815,
-  which was the MAX of a distribution whose median is $16,633.
-
-Every farm run carries **two nulls** and must clear both: `random` (re-draws
-every formation date — maximum turnover) and `random_persistent` (one fixed
-basket — near-zero turnover). Beating only the churning null at a short holding
-period can mean nothing more than "traded less than a coin flip would".
+- **the bar is $38,960** — the CRSP value-weighted market, buy and hold,
+  2013-2024 from $10,000. Ask "does it beat the market", not "is it
+  significant". The best policy found so far is
+  `mom_12_1 / hold 5d / k=10 / inverse_vol` at a **$77,002 median across five
+  rebalance phases** (worst phase $58,411, 5/5 clear both nulls) — and it
+  **loses to the market on Sharpe (0.61 vs 0.72), Sortino and Calmar** in every
+  phase, at a -60% drawdown. So
+  **every ranked comparison names its objective**: under terminal wealth it is
+  2.08x the market, under any risk-adjusted objective it is worse. That is the
+  right answer for the DECLARED `extreme growth` personality and the wrong one
+  for `balanced` or `preservation`;
+- **the instrument moved the answer more than the strategy did, three times.**
+  Rebalance PHASE is worth up to 3.75x (so every policy runs at multiple
+  `phase_offset`s and is reported by its MEDIAN); the DELISTING assumption was
+  worth 18x until `crsp.dsedelist` was joined; and an implicit-leverage bug in
+  the fill step was silently buying with capital locked in unsellable
+  positions. **Distrust a farm number before you distrust a farm result;**
+- **`crsp.dsedelist` is joined and delisting returns are MEASURED** (97%+
+  coverage). 2xx mergers return ~0.0, 5xx performance delists ~-0.20, and 60.5%
+  of all events are at or above zero — the old blanket -30% was wrong for two
+  thirds of the population, and 12-1 momentum is especially exposed because it
+  systematically selects acquisition targets. Every receipt carries
+  `n_delist_measured` / `n_delist_assumed`.
 
 **Only CRSP 2013-2024 is replayable** — the 1990-2012 pull lacks
 `openprc`/`retx`/`shrout`, so the loader refuses those years by name.
+
+**Every farm run carries `n_delist_measured` vs `n_delist_assumed`.** A run
+that fell back on most of its exits still has an assumption for a headline; the
+receipt has to be able to say so.
 
 ## THE LLM PROVIDER IS DEEPSEEK, AND IT IS THE ONLY ONE
 

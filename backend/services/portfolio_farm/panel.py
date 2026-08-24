@@ -86,6 +86,13 @@ class Panel:
     dolvol: np.ndarray           # abs(prc) * vol, in dollars
     mktcap: np.ndarray           # abs(prc) * shrout * 1000, in dollars
     tri: np.ndarray              # total-return index, base 1.0 at first obs
+    #: (N,) MEASURED delisting return per permno from `crsp.dsedelist`, NaN
+    #: where CRSP has no event or no `dlret`. Applied by `replay` at the moment
+    #: a holding is resolved; the declared `policy.delisting_return` is the
+    #: fallback for the NaNs, and the split is counted on every receipt.
+    delist_ret: np.ndarray | None = None
+    #: (N,) the delisting CODE, for auditing which population a run resolved.
+    delist_code: np.ndarray | None = None
     source: str = "crsp_dsf"
 
     @property
@@ -237,9 +244,70 @@ def load_panel(start_year: int, end_year: int, *,
     logger.info("portfolio_farm.panel: %d dates x %d permnos (%d-%d), "
                 "%.0f MB", len(dates), len(permnos), start_year, end_year,
                 (close.nbytes * 6) / 1e6)
+    dl_ret, dl_code = load_delisting(permnos)
+    n_known = int(np.isfinite(dl_ret).sum())
+    logger.info("portfolio_farm.panel: measured delisting returns for %d of %d "
+                "permnos (%.1f%%); the rest fall back to the declared "
+                "assumption", n_known, len(permnos),
+                100.0 * n_known / max(1, len(permnos)))
     return Panel(dates=dates, permnos=permnos, close=close, open_=open_,
                  ret=ret, retx=retx, traded=traded, dolvol=dolvol,
-                 mktcap=mktcap, tri=tri)
+                 mktcap=mktcap, tri=tri, delist_ret=dl_ret,
+                 delist_code=dl_code)
+
+
+#: `crsp.dsedelist`, already on disk in the WRDS bulk pull. Nobody had joined
+#: it: the farm's first three presets ran with a DECLARED -30% for every exit,
+#: and the sensitivity sweep showed that assumption was worth an 18x swing in
+#: terminal wealth. It did not need a pull. It needed somebody to look.
+DELIST_PATH = DATA_DIR / "optimus" / "wrds" / "bulk" / "crsp__dsedelist.parquet"
+
+#: `dlstcd` 100 means the security is STILL ACTIVE — those rows are not
+#: delistings and joining them would resolve live positions. 2013-2024 holds
+#: 3,866 of them against 3,089 real events, so this filter is not a detail.
+DELIST_MIN_CODE = 200
+
+
+def load_delisting(permnos: np.ndarray, *, path: Path | None = None) -> tuple:
+    """(delist_ret, delist_code) aligned to `permnos`. NaN where CRSP is silent.
+
+    WHAT THE DATA SAYS, measured 2013-2024 over 3,089 real events:
+
+      * `2xx` MERGERS, 1,962 events — `dlret` median **+0.0004**, mean +0.0089.
+        A merged shareholder receives the deal consideration, so the return
+        from the last trade is ~zero. Applying -30% to these is simply wrong.
+      * `5xx` DROPPED / performance, 891 events — median **-0.20**, mean -0.244.
+        This is the population the -30% convention comes from.
+      * `4xx` liquidations, 223 — median +0.0005.
+      * Overall: median **0.0000**, mean **-0.0636**, 60.5% at or above zero.
+
+    So the blanket -30% default was far too harsh, and the correction is not a
+    tweak: it moves the same rule across the market benchmark.
+
+    NOT LOOKAHEAD. The value is keyed by permno and consumed only at the moment
+    a holding is resolved, which is at or after `dlstdt`. It is what the holder
+    receives, on the day they receive it.
+    """
+    n = len(permnos)
+    ret = np.full(n, np.nan, dtype=np.float64)
+    code = np.full(n, np.nan, dtype=np.float64)
+    p = path or DELIST_PATH
+    if not p.exists():
+        logger.warning(
+            "portfolio_farm.panel: %s absent — every exit will fall back to the "
+            "DECLARED policy.delisting_return, which the sensitivity sweep "
+            "showed is worth an 18x swing in terminal wealth. This is a lower "
+            "bound on fidelity, not a detail.", p)
+        return ret, code
+    df = pd.read_parquet(p, columns=["permno", "dlstcd", "dlret"])
+    df = df[df["dlstcd"] >= DELIST_MIN_CODE]
+    # A permno can appear more than once; keep the LAST event, which is the one
+    # that ends its life in the file.
+    df = df.drop_duplicates(subset="permno", keep="last").set_index("permno")
+    idx = pd.Index(permnos)
+    ret[:] = df["dlret"].reindex(idx).to_numpy(dtype=np.float64)
+    code[:] = df["dlstcd"].reindex(idx).to_numpy(dtype=np.float64)
+    return ret, code
 
 
 def market_benchmark(dates: np.ndarray, path: Path | None = None) -> np.ndarray:

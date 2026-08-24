@@ -12,7 +12,14 @@ PRESETS
              fast, and a 1-day book that wins frictionless and loses net has
              answered the question in the only way that matters.
 `signals`  — every registered signal at one holding period, with both nulls.
-`breadth`  — top_k from 3 to 50: concentration as a declared personality axis.
+`breadth`  — top_k from 3 to 50 at ONE rebalance offset. Fast, and its levels
+             are a draw; use `breadth_phase` to rank k for real.
+`breadth_phase` — k crossed with the rebalance PHASE. The run that settles
+             breadth, because a k-ranking read off one offset ranks draws.
+`phase`    — every offset in each rebalance cycle, reported by MEDIAN.
+`delisting` — the delisting FALLBACK swept 0.0 / -0.30 / -1.0. With
+             `crsp.dsedelist` joined this should move the answer barely at all;
+             if it moves a lot, the join has stopped working.
 `full`     — the cross product. Hundreds of policies; minutes, not hours.
 
 NOTHING HERE IS A CLAIM. See `farm.py` — the leaderboard prints its own nulls
@@ -103,6 +110,40 @@ def build(preset: str) -> list[Policy]:
         for h in (5, 21, 63):
             out += null_bench(holding_days=h, top_k=12)
         return out
+    if preset == "breadth_phase":
+        # THE RUN THAT SETTLES BREADTH. `breadth` sweeps k at ONE rebalance
+        # offset, and the phase sweep showed an offset is worth up to 3.75x —
+        # so a k-ranking read off one phase is a ranking of draws. This crosses
+        # k with the phase, at a holding period the phase sweep found strong
+        # (h=5), and benches every (k, sizing) cell against its own nulls.
+        ks, sizings, h = [5, 10, 20, 50], ["equal_weight", "inverse_vol"], 5
+        out = []
+        for k in ks:
+            for sz in sizings:
+                for ph in range(min(h, MAX_PHASES)):
+                    out += grid(signal=["mom_12_1"], holding_days=[h],
+                                top_k=[k], sizing=[sz], phase_offset=[ph])
+                out += null_bench(holding_days=h, top_k=k, sizing=sz)
+        return out
+    if preset == "delisting":
+        # BOUND THE ASSUMPTION. `crsp.dsf` carries no delisting returns, so the
+        # simulator applies a declared one (-0.30, the Shumway (1997) order of
+        # magnitude) to any holding that vanishes. An assumption nobody has
+        # varied is indistinguishable from a fact, so this runs the two best
+        # holding periods at the two ENDPOINTS as well: 0.0 (a delisting costs
+        # nothing — the naive, optimistic case every backtest that ignores the
+        # problem is silently running) and -1.0 (total loss).
+        #
+        # Phases are swept too, because at k=12 the phase spread is 1.8x-3.8x
+        # and a sensitivity read off one phase would be measuring the calendar.
+        out = []
+        for h in (1, 5, 63):
+            for dr in (0.0, -0.30, -1.0):
+                for ph in range(min(h, MAX_PHASES)):
+                    out += grid(signal=["mom_12_1"], holding_days=[h],
+                                phase_offset=[ph], delisting_return=[dr])
+            out += null_bench(holding_days=h)
+        return out
     if preset == "phase":
         # THE DE-CONFOUNDED MICRON ANSWER. Every offset inside each rebalance
         # cycle (capped at MAX_PHASES so a 252-session cycle does not become
@@ -127,7 +168,7 @@ def main(argv=None) -> int:
     ap.add_argument("--end", type=int, default=2024)
     ap.add_argument("--preset", default="holding",
                     choices=["holding", "signals", "breadth", "full",
-                             "phase"])
+                             "phase", "delisting", "breadth_phase"])
     ap.add_argument("--top", type=int, default=25)
     ap.add_argument("--name", default=None, help="output file stem")
     a = ap.parse_args(argv)
