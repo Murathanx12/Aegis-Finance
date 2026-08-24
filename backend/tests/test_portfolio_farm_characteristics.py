@@ -48,7 +48,7 @@ def test_a_value_is_NOT_visible_on_its_own_public_date(tmp_path):
     _write(tmp_path, [{"permno": 10001, "public_date": "2000-01-10",
                        "bm": 1.0, "roe": 0.5}])
     m = CH.load_characteristic("bm", DATES, PERMNOS, dir_=tmp_path,
-                               lag_sessions=0, stale_max=10_000)
+                               lag_sessions=0, stale_max_days=10_000)
     j = 0
     day10 = int(np.flatnonzero(DATES == "2000-01-10")[0])
     assert np.isnan(m[day10][j]), (
@@ -63,7 +63,7 @@ def test_nothing_is_visible_before_the_first_stamp(tmp_path):
     _write(tmp_path, [{"permno": 10001, "public_date": "2000-01-20",
                        "bm": 1.0, "roe": 0.5}])
     m = CH.load_characteristic("bm", DATES, PERMNOS, dir_=tmp_path,
-                               lag_sessions=0, stale_max=10_000)
+                               lag_sessions=0, stale_max_days=10_000)
     before = int(np.flatnonzero(DATES == "2000-01-20")[0])
     assert np.isnan(m[:before + 1, 0]).all()
     assert np.isfinite(m[before + 1:, 0]).all()
@@ -75,7 +75,7 @@ def test_the_declared_lag_is_applied_on_top(tmp_path):
     day10 = int(np.flatnonzero(DATES == "2000-01-10")[0])
     for lag in (0, 1, 3):
         m = CH.load_characteristic("bm", DATES, PERMNOS, dir_=tmp_path,
-                                   lag_sessions=lag, stale_max=10_000)
+                                   lag_sessions=lag, stale_max_days=10_000)
         first = day10 + 1 + lag
         assert np.isnan(m[first - 1, 0]), f"lag {lag} was not applied"
         assert m[first, 0] == pytest.approx(1.0), f"lag {lag} over-applied"
@@ -90,7 +90,7 @@ def test_the_latest_stamp_wins_and_earlier_ones_do_not_reappear(tmp_path):
         {"permno": 10001, "public_date": "2000-01-25", "bm": 3.0, "roe": 0.3},
     ])
     m = CH.load_characteristic("bm", DATES, PERMNOS, dir_=tmp_path,
-                               lag_sessions=0, stale_max=10_000)
+                               lag_sessions=0, stale_max_days=10_000)
     at = {d: int(np.flatnonzero(DATES == d)[0]) for d in
           ("2000-01-05", "2000-01-15", "2000-01-25")}
     assert m[at["2000-01-05"] + 1, 0] == pytest.approx(1.0)
@@ -106,16 +106,16 @@ def test_a_stale_value_stops_being_carried(tmp_path):
     _write(tmp_path, [{"permno": 10001, "public_date": "2000-01-02",
                        "bm": 1.0, "roe": 0.5}])
     m = CH.load_characteristic("bm", DATES, PERMNOS, dir_=tmp_path,
-                               lag_sessions=0, stale_max=5)
+                               lag_sessions=0, stale_max_days=5)
     assert np.isfinite(m[3, 0])
-    assert np.isnan(m[20, 0]), "a value from 18 sessions ago was still carried"
+    assert np.isnan(m[20, 0]), "a value from 18 calendar days ago was carried"
 
 
 def test_a_permno_absent_from_the_source_is_NaN_not_zero(tmp_path):
     _write(tmp_path, [{"permno": 10001, "public_date": "2000-01-02",
                        "bm": 1.0, "roe": 0.5}])
     m = CH.load_characteristic("bm", DATES, PERMNOS, dir_=tmp_path,
-                               lag_sessions=0, stale_max=10_000)
+                               lag_sessions=0, stale_max_days=10_000)
     assert np.isnan(m[:, 1]).all(), (
         "permno 10002 has no rows in the source and must be NaN — a zero would "
         "rank it as the cheapest name in the universe")

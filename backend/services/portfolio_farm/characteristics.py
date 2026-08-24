@@ -53,10 +53,12 @@ the sorted `public_date` list for each session and taking the last entry
 STRICTLY before it — and `test_portfolio_farm_characteristics.py` plants a
 value that jumps on a known date and asserts the panel cannot see it early.
 
-`STALE_MAX_SESSIONS` bounds how long a value may be carried. A ratio from a
-filing eighteen months ago is not a current characteristic, and forward-filling
-without a bound quietly turns a delisted-in-spirit company into an eternal
-value stock.
+`STALE_MAX_DAYS` bounds how long a value may be carried, in CALENDAR days. A
+ratio from a filing eighteen months ago is not a current characteristic, and
+forward-filling without a bound quietly turns a delisted-in-spirit company into
+an eternal value stock. Calendar days rather than panel rows because measuring
+age by row index clamps at the panel's left edge — exactly where a run's first
+decisions are taken.
 """
 
 from __future__ import annotations
@@ -87,11 +89,18 @@ AVAILABLE = ("bm", "roe")
 #: the cost of being a day early is a result that cannot be believed.
 LAG_SESSIONS = 1
 
-#: How long a monthly value may be carried forward. Fourteen months covers an
-#: annual filing plus a late quarter; beyond that the "characteristic" is a
-#: memory. Without a bound, a company that stopped reporting stays a value
-#: stock forever, and the names that stop reporting are not a random sample.
-STALE_MAX_SESSIONS = 294          # ~14 months of sessions
+#: How long a monthly value may be carried forward, in CALENDAR DAYS. Fourteen
+#: months covers an annual filing plus a late quarter; beyond that the
+#: "characteristic" is a memory. Without a bound, a company that stopped
+#: reporting stays a value stock forever, and the names that stop reporting are
+#: not a random sample.
+#:
+#: CALENDAR days, not panel rows. Measuring age as `row - searchsorted(stamp)`
+#: silently clamps at the panel's left edge: a value published five years
+#: before the window starts lands at row 0, so at row 300 it reads as 300
+#: sessions old instead of ~1,560. Every panel begins with a warmup, so that
+#: edge is exactly where a run's first decisions are taken.
+STALE_MAX_DAYS = 425              # ~14 months
 
 
 class CharacteristicUnavailable(RuntimeError):
@@ -117,11 +126,11 @@ def available_characteristics(dir_=None) -> tuple[str, ...]:
 
 def load_characteristic(name: str, dates: np.ndarray, permnos: np.ndarray, *,
                         dir_=None, lag_sessions: int = LAG_SESSIONS,
-                        stale_max: int = STALE_MAX_SESSIONS) -> np.ndarray:
+                        stale_max_days: int = STALE_MAX_DAYS) -> np.ndarray:
     """(T, N) matrix of `name`, forward-filled PIT onto the panel's grid.
 
     NaN wherever no value was public strictly before the session, or where the
-    last public value is older than `stale_max` sessions.
+    last public value is older than `stale_max_days` CALENDAR days.
     """
     if name not in AVAILABLE:
         raise CharacteristicUnavailable(
@@ -149,9 +158,21 @@ def load_characteristic(name: str, dates: np.ndarray, permnos: np.ndarray, *,
     # figure, and the later row is the one that was public at that stamp
     df = df.drop_duplicates(["permno", "public_date"], keep="last")
 
+    df["_day"] = (pd.to_datetime(df["public_date"]).astype("int64")
+                  // 86_400_000_000_000)
+
     T, N = len(dates), len(permnos)
     out = np.full((T, N), np.nan, dtype=np.float32)
     dstr = np.asarray([str(x) for x in dates])
+    # Session dates as day numbers, for the calendar-age comparison. A panel
+    # date that is not parseable (the synthetic test grids use markers, not
+    # dates) falls back to its row index, which makes the staleness bound inert
+    # rather than wrong — the alternative is refusing to build a test panel.
+    _sd = pd.to_datetime(pd.Series(dstr), errors="coerce")
+    sess_days = np.where(
+        _sd.notna().to_numpy(),
+        (_sd.astype("int64") // 86_400_000_000_000).to_numpy(),
+        np.arange(T, dtype=np.int64))
     col_of = {int(p): j for j, p in enumerate(permnos)}
 
     n_names = n_cells = 0
@@ -160,6 +181,7 @@ def load_characteristic(name: str, dates: np.ndarray, permnos: np.ndarray, *,
         if j is None:
             continue
         pd_dates = g["public_date"].to_numpy()
+        stamp_days = g["_day"].to_numpy(dtype=np.int64)
         vals = g[name].to_numpy(dtype=np.float64)
         # STRICTLY before: `searchsorted(..., side="left")` returns the count of
         # stamps < the session, so index-1 is the last one PUBLIC BEFORE it.
@@ -181,9 +203,9 @@ def load_characteristic(name: str, dates: np.ndarray, permnos: np.ndarray, *,
             take = idx[rows]
         if rows.size == 0:
             continue
-        # staleness, measured in SESSIONS of this panel
-        stamp_row = np.searchsorted(dstr, pd_dates[take], side="left")
-        fresh = (rows - stamp_row) <= stale_max
+        # staleness in CALENDAR days between the stamp and the session
+        age = (sess_days[rows] - stamp_days[take])
+        fresh = age <= stale_max_days
         rows, take = rows[fresh], take[fresh]
         if rows.size == 0:
             continue
