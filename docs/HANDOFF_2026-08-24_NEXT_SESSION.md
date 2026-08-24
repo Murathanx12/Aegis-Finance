@@ -142,11 +142,26 @@ it should say is predictable:
 **A `trades=N` with N > 0 on Monday would be the finding**, not the success:
 it would mean the account was seeded by something nobody authorised.
 
+6. **`options_pit` leaves `ABSENT`.** `pi_options_pit` first fires 15:30 ET
+   Monday. If `/api/health/full` still shows `ABSENT` on Tuesday, the collector
+   is not running — and unlike every other subsystem here that is not a delay,
+   it is **lost evidence**: option chains have no history, so the days it misses
+   cannot be recovered by fixing it later.
+
 Also still falsifiable: **`why_moved` runs 17:15 ET Monday.** If `live_forward`
 is still quiet on Tuesday, that is a P0, not a puzzle.
 
 If a book raises `ConfigDrift` saying "refusing to migrate", the YAML changed
 before the stamp took: restore it, let it migrate, then re-edit.
+
+> **Item 1 is not a formality — it is a one-way door.** Until those ten
+> migrations land, every seed is verified against the WHOLE-FILE `config_hash`,
+> and `assert_config_current` refuses to migrate from a config that has already
+> changed. So adding ANY book to `arena_books_v1.yaml` before Monday's pass
+> strands all ten NAV histories permanently. Two books are queued behind that
+> gate (`EVENT_RESPONSE_v1`, and `GRAPH_PROPAGATION_v1` if its universe problem
+> is ever solved). **Confirm the migration in `/api/arena/status` before
+> touching that file.**
 
 ---
 
