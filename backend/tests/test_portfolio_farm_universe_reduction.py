@@ -147,3 +147,44 @@ def test_the_cache_round_trips(tmp_path):
     b, rb = P.liquid_permnos(2000, 2001, universe_n=5, dir_=tmp_path)
     assert np.array_equal(a, b)
     assert ra == rb
+
+
+@pytest.mark.slow
+def test_the_reduction_is_exact_on_the_REAL_panel():
+    """The claim every 1993-2024 number rests on, checked on real CRSP.
+
+    The synthetic test above proves the mechanism. This proves it on the data,
+    across signals, holding periods, sizings and rebalance phases — and it is
+    load-bearing in a way the synthetic one is not: the dense 1993-2024 panel is
+    ~4.8 GB, so a 32-year run CANNOT be done without the reduction. Every
+    receipt from that window is a reduced-panel receipt.
+
+    Re-run and still exact after the split-adjustment fix, `close_raw`, and the
+    characteristic join were added — three changes to how the panel is built,
+    any of which could have made the two paths diverge.
+
+    Marked slow: it builds the real 2013-2024 panel twice.
+    """
+    try:
+        full = P.load_panel(2013, 2024, with_characteristics=False)
+        red = P.load_panel(2013, 2024, reduce_for_universe_n=500,
+                           with_characteristics=False)
+    except P.PanelUnavailable:
+        pytest.skip("CRSP parquets not present on this machine")
+
+    assert red.shape[1] < full.shape[1] * 0.9, (
+        "the reduction removed almost nothing, so this test proves nothing")
+
+    pols = [Policy(signal="mom_12_1", holding_days=5, top_k=10,
+                   sizing="inverse_vol", phase_offset=ph) for ph in range(5)]
+    pols += [Policy(signal=sig, holding_days=21, top_k=20,
+                    sizing="equal_weight")
+             for sig in ("mom_6_1", "low_vol", "reversal_1m")]
+
+    a = farm.run_many(full, pols, progress=False)
+    b = farm.run_many(red, pols, progress=False)
+    for x, y in zip(a, b):
+        assert np.allclose(x.nav, y.nav, rtol=0, atol=1e-6), (
+            f"{x.policy.label}: the reduced panel produced a different NAV. "
+            f"The reduction is supposed to remove only names no book could "
+            f"have held, so any difference means it removed one that could.")
