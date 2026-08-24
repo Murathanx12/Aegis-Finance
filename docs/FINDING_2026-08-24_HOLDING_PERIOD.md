@@ -4,7 +4,8 @@
 ~1,200 policies tried. **Not an alpha claim** and may not be cited as one.
 
 **Receipts** (`backend/data/optimus/portfolio_farm/`):
-`farm_breadth_phase_2013_2024.json` — **the candidate, read this** ·
+`farm_subperiod_candidate.json` — **read this one FIRST; it is the check that
+largely takes the candidate back** · `farm_breadth_phase_2013_2024.json` ·
 `farm_phase_measured_delist.json` (holding period x phase) ·
 `farm_holding_2013_2024.json` · `farm_breadth_2013_2024.json` ·
 `farm_delisting_2013_2024.json`.
@@ -24,8 +25,11 @@
 >    the WRDS bulk pull, unjoined. With the ACTUAL delisting returns the answer
 >    is below — and it is not what any earlier version said.
 >
-> The instrument was wrong three times, and each error moved the result by more
-> than the result itself. That is the finding to remember.
+> Then the sub-period check showed the whole thing is **1.01x against the market
+> over 2013-2018** and 1.75x over 2019-2024 — one regime, not an edge.
+>
+> The instrument was wrong four times, and each error moved the result by more
+> than the result itself. **That** is the finding to remember, not the number.
 
 ---
 
@@ -226,20 +230,57 @@ and holding period:
 > Under Sharpe, Sortino or Calmar it is worse. Right for the DECLARED `extreme
 > growth` personality; wrong for `balanced` or `preservation`.
 
+## AND THE SUB-PERIOD CHECK LARGELY TAKES IT BACK
+
+`python -m scripts.portfolio_farm_subperiod` runs the candidate — and its nulls
+— independently in each half of the replayable window, at every phase:
+
+| window | median | worst phase | market | ratio (median) | phases clearing BOTH nulls |
+|---|---:|---:|---:|---:|:--|
+| **2013-2018** | $15,737 | $15,107 | $15,613 | **1.01x** | **2 of 5** |
+| **2019-2024** | $33,844 | $26,676 | $19,330 | **1.75x** | **5 of 5** |
+
+**The edge lives almost entirely in the second half.** Over 2013-2018 the
+candidate is a coin-flip against buy-and-hold — 1.01x, worst phase BELOW the
+market, and inside its own nulls in three phases of five. Over 2019-2024 it is
+1.75x with every phase clearing.
+
+So the twelve-year headline is an average of a thing and a nothing, which is
+precisely the failure mode this check exists to catch. It does not kill the
+candidate — 2013-2018 contains the 2015-2016 momentum unwind and the Q4-2018
+drawdown, and six years is a small sample — but it does mean:
+
+> **This is a ONE-REGIME result. It has not been shown to work in a regime where
+> momentum was not paying.**
+
+This is NOT a holdout. The candidate was chosen after seeing the whole window,
+so neither half is out-of-sample and no significance may be read off the split.
+It answers only the cheapest question, and the answer was informative.
+
+**What this promotes to first priority:** re-pulling `openprc`/`retx`/`shrout`
+for CRSP **1990-2012**. It was second priority when the question was precision;
+it is first now that the question is *whether there is anything here at all
+outside 2019-2024*. Three more decades contain the dot-com unwind, the GFC and
+the 2009 momentum crash — the regimes that would actually test this.
+
 ## What this is, and what it is not
 
 It **is** the first thing in this programme to beat a properly-costed benchmark
-on a replay with next-open fills, measured delisting returns, both nulls cleared
-in EVERY rebalance phase, and a worst-phase result still 1.5x the market. That
-makes it a **candidate for a frozen forward book** — precisely what
-`PORTFOLIO_FARM` was built to produce. Promotion is attended: `seed-a-lane`,
-env-gated, Murat flips the flag.
+on a replay with next-open fills, measured delisting returns and both nulls
+cleared in every rebalance phase of the full window.
+
+It is **NOT** ready for a forward book. The sub-period split above is the
+reason: 1.01x against the market over 2013-2018, clearing its nulls in two
+phases of five. A rule that only works in the half of history where its factor
+paid is not a candidate; it is a hypothesis about regimes. **Do not seed a lane
+on this.** The next act is the 1990-2012 pull, not a promotion.
 
 It is **not** alpha:
 
-* **one window, one path.** 2013-2024 is twelve years of one regime and one
-  realisation. The pre-2013 CRSP pull lacks `openprc`/`retx`/`shrout` and the
-  loader refuses it by name; widening it is a WRDS re-pull.
+* **one window, one path, and the two halves DISAGREE.** See the sub-period
+  section: 1.01x over 2013-2018, 1.75x over 2019-2024. The pre-2013 CRSP pull
+  lacks `openprc`/`retx`/`shrout` and the loader refuses it by name; widening it
+  is a WRDS re-pull and is now the FIRST priority.
 * **~1,600 policies were tried.** The best of 1,600 is high because 1,600 is
   large, and nothing here controls for that. The partial defence is that the
   candidate is not a single best row: it clears both nulls in 5 of 5 phases and

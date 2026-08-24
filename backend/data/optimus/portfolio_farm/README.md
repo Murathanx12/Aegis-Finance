@@ -14,7 +14,8 @@ statement about turnover.
 
 | file | what it answers | cited by |
 |---|---|---|
-| **`farm_breadth_phase_2013_2024.json`** | **THE CANDIDATE.** k crossed with the rebalance phase at h=5, every cell benched against its own nulls | `docs/FINDING_2026-08-24_HOLDING_PERIOD.md` |
+| **`farm_subperiod_candidate.json`** | **READ FIRST.** The candidate in each half of the window: **1.01x the market over 2013-2018**, 1.75x over 2019-2024. One regime. | `docs/FINDING_2026-08-24_HOLDING_PERIOD.md` |
+| **`farm_breadth_phase_2013_2024.json`** | the candidate, and breadth crossed with phase. k crossed with the rebalance phase at h=5, every cell benched against its own nulls | `docs/FINDING_2026-08-24_HOLDING_PERIOD.md` |
 | **`farm_phase_measured_delist.json`** | holding period crossed with phase, MEASURED delisting returns from `crsp.dsedelist` | same |
 | `farm_holding_2013_2024.json` | 516 policies, phase 0, six holding periods x net/frictionless | same |
 | `farm_delisting_2013_2024.json` | the delisting FALLBACK swept 0.0 / -0.30 / -1.0 — now moves the answer only 1.09x, which is the proof the join works | same |
@@ -26,9 +27,14 @@ rule (phase alone is worth up to 3.75x), and `farm_breadth_*` is one phase per k
 — which crowned k=50 when the phase-crossed run shows the optimum is k=10. The
 corrections are the finding, not an embarrassment to tidy away.
 
-**The rule this directory exists to enforce:** a farm number read off ONE
-rebalance phase is a draw, not a result. Four separate readings were overturned
-that way in one night.
+**The two rules this directory exists to enforce:**
+
+1. A farm number read off ONE rebalance phase is a draw, not a result. Four
+   separate readings were overturned that way in one night.
+2. **A farm number read off ONE window is a regime, not an edge.** Split it
+   (`python -m scripts.portfolio_farm_subperiod`) before believing any of them.
+   The best rule on this board is 1.01x the market in the half of history where
+   its factor was not paying.
 
 Every row carries `n_delist_measured` / `n_delist_assumed`. A run that fell back
 on most of its exits still has an assumption for a headline, and the receipt has

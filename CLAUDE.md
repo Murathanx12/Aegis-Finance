@@ -131,19 +131,24 @@ Three things from it that govern what counts as progress
   2013-2024 from $10,000. Ask "does it beat the market", not "is it
   significant". The best policy found so far is
   `mom_12_1 / hold 5d / k=10 / inverse_vol` at a **$77,002 median across five
-  rebalance phases** (worst phase $58,411, 5/5 clear both nulls) — and it
-  **loses to the market on Sharpe (0.61 vs 0.72), Sortino and Calmar** in every
-  phase, at a -60% drawdown. So
+  rebalance phases** — but the sub-period split shows it is **1.01x the market
+  over 2013-2018** and 1.75x over 2019-2024, so it is a ONE-REGIME result and
+  **must not be seeded as a forward book**. It also **loses to the market on
+  Sharpe (0.61 vs 0.72), Sortino and Calmar** in every phase, at a -60%
+  drawdown. So
   **every ranked comparison names its objective**: under terminal wealth it is
   2.08x the market, under any risk-adjusted objective it is worse. That is the
   right answer for the DECLARED `extreme growth` personality and the wrong one
   for `balanced` or `preservation`;
-- **the instrument moved the answer more than the strategy did, three times.**
+- **the instrument moved the answer more than the strategy did, FOUR times.**
   Rebalance PHASE is worth up to 3.75x (so every policy runs at multiple
   `phase_offset`s and is reported by its MEDIAN); the DELISTING assumption was
   worth 18x until `crsp.dsedelist` was joined; and an implicit-leverage bug in
   the fill step was silently buying with capital locked in unsellable
-  positions. **Distrust a farm number before you distrust a farm result;**
+  positions; and breadth read off one phase crowned k=50 when the optimum is
+  k=10. **Distrust a farm number before you distrust a farm result. And split
+  the window before believing any of them —
+  `python -m scripts.portfolio_farm_subperiod`;**
 - **`crsp.dsedelist` is joined and delisting returns are MEASURED** (97%+
   coverage). 2xx mergers return ~0.0, 5xx performance delists ~-0.20, and 60.5%
   of all events are at or above zero — the old blanket -30% was wrong for two

@@ -133,27 +133,39 @@ backwards, as the review directed:
   pull is scoped to names a monthly PIT screen selected. If that screen embeds
   any "ever eligible" logic, the universe is mildly cleaner than reality and
   every farm number inherits it. Unresolved, and the next thing I would attack.
-* Re-pull `openprc`/`retx`/`shrout` for CRSP 1990-2012 (`AegisWRDSPullNight`
-  exists). Triples the window and lets a policy be tested across regimes. SECOND
-  priority to the bootstrap — a wider window of un-intervalled numbers is still
-  un-intervalled.
+* **FIRST PRIORITY: re-pull `openprc`/`retx`/`shrout` for CRSP 1990-2012**
+  (`AegisWRDSPullNight` exists). The sub-period split makes this urgent rather
+  than merely nice: the candidate is 1.01x the market over 2013-2018 and 1.75x
+  over 2019-2024, so what is needed is REGIMES, not precision.
 
-**THE CANDIDATE, AND WHAT IT IS NOT.**
-`mom_12_1 / hold 5d / k=10 / inverse_vol / top-500-liquid / 12 bps round trip`.
-Median across five rebalance phases: **$77,002** from $10,000 against the
-market's **$38,960**; worst phase **$58,411**, still 1.5x; **5 of 5 phases clear
-BOTH nulls**. CAGR 20.6% vs 13.5%.
+**THE CANDIDATE — AND THE CHECK THAT LARGELY TOOK IT BACK.**
+`mom_12_1 / hold 5d / k=10 / inverse_vol / top-500-liquid / 12 bps round trip`
+returns a $77,002 median across five phases against the market's $38,960 over
+2013-2024, clearing both nulls in 5 of 5 phases.
 
-And in every one of those five phases it is **below the market's Sharpe** (0.55
-to 0.69 against 0.72), at ~2.4x the volatility and a **-60% drawdown** against
--34%. Under terminal wealth it is ~2x the market; under Sharpe, Sortino or
-Calmar it is worse. Right for the DECLARED `extreme growth` personality, wrong
-for `balanced` or `preservation` — and naming the objective is a standing rule,
-not a caveat.
+Then `python -m scripts.portfolio_farm_subperiod` split the window:
 
-If it graduates it graduates as a **frozen forward book** under
-`PRODUCT_EXPERIMENT`, seeded through `seed-a-lane`, env-gated, Murat flips the
-flag. Not as a claim.
+| window | median | worst phase | market | ratio | clears both nulls |
+|---|---:|---:|---:|---:|:--|
+| **2013-2018** | $15,737 | $15,107 | $15,613 | **1.01x** | **2 of 5** |
+| **2019-2024** | $33,844 | $26,676 | $19,330 | 1.75x | 5 of 5 |
+
+**The edge lives almost entirely in the second half.** Over 2013-2018 it is a
+coin flip against buy-and-hold, worst phase BELOW the market, inside its own
+nulls in three phases of five. **This is a one-regime result and it must not be
+seeded as a forward book.** Not a holdout either — the candidate was picked
+after seeing the whole window, so no significance may be read off the split.
+
+It also loses to the market on Sharpe (0.61 vs 0.72), Sortino and Calmar in
+every phase of the full window, at ~2.4x the volatility and a -60% drawdown.
+Under terminal wealth it is ~2x the market; under any risk-adjusted objective it
+is worse. Naming the objective is a standing rule, not a caveat.
+
+**SO THE PRIORITY ORDER FLIPPED.** Re-pulling `openprc`/`retx`/`shrout` for CRSP
+**1990-2012** was second priority when the question was precision. It is FIRST
+now that the question is whether anything here exists outside 2019-2024. Three
+more decades contain the dot-com unwind, the GFC and the 2009 momentum crash —
+the regimes that would actually test this. `AegisWRDSPullNight` already exists.
 
 **CHUNK B — HUMAN/TEACHER PORTFOLIOS.** Unchanged and unblocked. The repo already
 collects Congress (PIT, disclosure-date), ARK, Form 4, 13F and IBES; it measures

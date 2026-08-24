@@ -1,0 +1,45 @@
+{
+ "check": "subperiod",
+ "candidate": {
+  "signal": "mom_12_1",
+  "holding_days": 5,
+  "top_k": 10,
+  "sizing": "inverse_vol"
+ },
+ "halves": [
+  {
+   "window": [
+    2013,
+    2018
+   ],
+   "sessions": 1510,
+   "benchmark_terminal_usd": 15613.28,
+   "median_usd": 15737.32,
+   "worst_phase_usd": 15106.75,
+   "best_phase_usd": 19365.53,
+   "phase_spread": 1.28,
+   "n_phases": 5,
+   "phases_clearing_both": 2,
+   "phases_total": 5,
+   "worst_phase_beats_market": false,
+   "median_beats_market": true
+  },
+  {
+   "window": [
+    2019,
+    2024
+   ],
+   "sessions": 1510,
+   "benchmark_terminal_usd": 19329.76,
+   "median_usd": 33844.07,
+   "worst_phase_usd": 26676.22,
+   "best_phase_usd": 40384.98,
+   "phase_spread": 1.51,
+   "n_phases": 5,
+   "phases_clearing_both": 5,
+   "phases_total": 5,
+   "worst_phase_beats_market": true,
+   "median_beats_market": true
+  }
+ ]
+}
