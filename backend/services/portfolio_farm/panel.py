@@ -45,7 +45,7 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
@@ -155,6 +155,11 @@ class Panel:
     #: would let a name that trades at $0.40 today pass because it was $8
     #: before three splits.
     close_raw: np.ndarray | None = None
+    #: Non-price characteristics joined PIT onto this grid, by name. Empty when
+    #: the finratio parquets are absent — which is not a failure for a
+    #: price-only run and IS a failure for a policy that names one, so the
+    #: refusal lives at the point of use in `signals`, not here.
+    chars: dict = field(default_factory=dict)
     #: MEASURED share of tradeable cells (a real trade at the close) that also
     #: carry a usable positive open. This is the fill convention's own coverage
     #: on THIS window, and it belongs on the receipt: a run whose decisions
@@ -417,7 +422,8 @@ def liquid_permnos(start_year: int, end_year: int, *,
 def load_panel(start_year: int, end_year: int, *,
                dir_: Path | None = None,
                restrict_to: np.ndarray | None = None,
-               reduce_for_universe_n: int | None = None) -> Panel:
+               reduce_for_universe_n: int | None = None,
+               with_characteristics: bool = True) -> Panel:
     """Build the aligned panel for [start_year, end_year] inclusive.
 
     Refuses on a missing year rather than quietly replaying a shorter history:
@@ -542,6 +548,16 @@ def load_panel(start_year: int, end_year: int, *,
     logger.info("portfolio_farm.panel: openprc usable on %.2f%% of traded "
                 "cells (%d-%d)", 100.0 * open_cov, start_year, end_year)
 
+    chars: dict = {}
+    if with_characteristics:
+        from backend.services.portfolio_farm import characteristics as CH
+        for cname in CH.available_characteristics():
+            try:
+                chars[cname] = CH.load_characteristic(cname, dates, permnos)
+            except CH.CharacteristicUnavailable as exc:        # noqa: BLE001
+                logger.warning("portfolio_farm.panel: %s not joined (%s)",
+                               cname, exc)
+
     dl_ret, dl_code = load_delisting(permnos)
     n_known = int(np.isfinite(dl_ret).sum())
     logger.info("portfolio_farm.panel: measured delisting returns for %d of %d "
@@ -554,7 +570,8 @@ def load_panel(start_year: int, end_year: int, *,
                  delist_code=dl_code, open_coverage=open_cov,
                  universe_reduced_to=reduced_to,
                  reduction_min_prices=(REDUCTION_MIN_PRICES
-                                       if reduced_to else ()))
+                                       if reduced_to else ()),
+                 chars=chars)
 
 
 #: `crsp.dsedelist`, already on disk in the WRDS bulk pull. Nobody had joined

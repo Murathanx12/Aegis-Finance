@@ -56,6 +56,13 @@ FIRST_VALID_ROW = {
     # Point-in-time by construction: no trailing window to fill.
     "size_small": 0, "size_large": 0, "equal": 0, "random": 0,
     "random_persistent": 0,
+    # The non-price pair. Their "window" is not a trailing count of sessions —
+    # it is whether a `public_date` exists strictly before the session — so the
+    # synthetic panel supplies a grid whose first row is deliberately NaN and
+    # whose second is not. Row 1 is therefore the declared first valid row, and
+    # the check still bites: a dispatcher that read row i instead of i-1 would
+    # produce a number on row 0.
+    "value_bm": 1, "profit_roe": 1,
 }
 
 

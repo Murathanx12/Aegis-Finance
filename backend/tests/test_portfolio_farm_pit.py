@@ -64,6 +64,22 @@ def synthetic(seed: int = 7, *, oracle_col: int | None = None) -> Panel:
         mktcap=np.full((T, N), 1e10, dtype=np.float32),
         tri=tri.astype(np.float32),
         source="synthetic",
+        close_raw=close.astype(np.float32),
+        # Non-price characteristics, supplied DIRECTLY rather than read from
+        # disk. The whole point of these signals is that they come from another
+        # file; a test that reached for that file would be testing the join and
+        # not the signal, and would pass or fail depending on what is pulled.
+        #
+        # They are built from a LAGGED slice of the panel's own returns so that
+        # a lookahead in the dispatcher is still detectable: if `value_bm`
+        # started reading row i+1, the PIT test's oracle correlation would
+        # catch it exactly as it does for a price signal.
+        chars={
+            "bm": np.vstack([np.full((1, N), np.nan, dtype=np.float32),
+                             tri[:-1].astype(np.float32)]),
+            "roe": np.vstack([np.full((1, N), np.nan, dtype=np.float32),
+                              -tri[:-1].astype(np.float32)]),
+        },
     )
 
 

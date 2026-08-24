@@ -81,7 +81,7 @@ def _year(dir_, year: int, *, split_on: int | None = None,
 def test_the_adjusted_series_reproduces_CRSPs_own_return(tmp_path):
     """The identity the fix rests on, on synthetic data with a known answer."""
     _year(tmp_path, 2000, split_on=40, split_factor=4.0)
-    pan = P.load_panel(2000, 2000, dir_=tmp_path)
+    pan = P.load_panel(2000, 2000, dir_=tmp_path, with_characteristics=False)
     j = int(np.flatnonzero(pan.permnos == 10000)[0])
     move = float(pan.close[40][j] / pan.close[39][j] - 1.0)
     assert move == pytest.approx(0.0, abs=1e-9), (
@@ -103,7 +103,7 @@ def test_a_split_does_not_move_the_NAV(tmp_path):
                  sizing="equal_weight", universe_n=12, min_price=5.0,
                  transaction_cost_bps=0.0, slippage_bps=0.0,
                  zero_cost_diagnostic=True)
-    res = R.run(P.load_panel(2000, 2000, dir_=tmp_path), pol, warmup=30)
+    res = R.run(P.load_panel(2000, 2000, dir_=tmp_path, with_characteristics=False), pol, warmup=30)
     # `liquid` ranks by dollar volume, and permno 10000 has the highest, so the
     # splitting name is guaranteed to be held across the event.
     nav = np.asarray(res.nav, dtype=float)
@@ -116,7 +116,7 @@ def test_a_FORWARD_split_is_not_a_loss_either(tmp_path):
     """The symmetric case, which is the common one among large liquid names and
     is why the bug read as a tax on exactly the book that turned out to matter."""
     _year(tmp_path, 2000, split_on=40, split_factor=0.5)
-    pan = P.load_panel(2000, 2000, dir_=tmp_path)
+    pan = P.load_panel(2000, 2000, dir_=tmp_path, with_characteristics=False)
     j = int(np.flatnonzero(pan.permnos == 10000)[0])
     assert float(pan.close[40][j] / pan.close[39][j] - 1.0) == pytest.approx(
         0.0, abs=1e-9)
@@ -150,7 +150,7 @@ def test_the_price_screen_uses_the_RAW_price(tmp_path):
                          "cfacpr": 0.0625 if cheap else 1.0})
     pd.DataFrame(rows).to_parquet(tmp_path / "crsp_dsf_2000.parquet",
                                   index=False)
-    pan = P.load_panel(2000, 2000, dir_=tmp_path)
+    pan = P.load_panel(2000, 2000, dir_=tmp_path, with_characteristics=False)
     j = int(np.flatnonzero(pan.permnos == 10000)[0])
     # day 0 is already one 2% step in, hence 2.04 raw / 32.64 adjusted
     assert pan.close[0][j] > 5.0                      # adjusted, above the floor
@@ -185,7 +185,7 @@ def test_a_missing_or_zero_cfacpr_does_not_delete_the_name(tmp_path):
             for i, d in enumerate(dates)]
     pd.DataFrame(rows).to_parquet(tmp_path / "crsp_dsf_2000.parquet",
                                   index=False)
-    pan = P.load_panel(2000, 2000, dir_=tmp_path)
+    pan = P.load_panel(2000, 2000, dir_=tmp_path, with_characteristics=False)
     assert np.isfinite(pan.close).all()
     assert float(np.nanmax(pan.close)) == pytest.approx(10.0)
 
@@ -201,14 +201,14 @@ def test_cfacpr_is_required_and_its_absence_is_named(tmp_path):
     assert "cfacpr" in P.REQUIRED_COLUMNS
     assert P.replayable_years(tmp_path) == []
     with pytest.raises(P.PanelUnavailable, match="cfacpr"):
-        P.load_panel(2000, 2000, dir_=tmp_path)
+        P.load_panel(2000, 2000, dir_=tmp_path, with_characteristics=False)
 
 
 def test_the_live_panel_matches_CRSP_ret_through_a_real_split():
     """The measured case, on the real files, so the fixture cannot drift from
     what CRSP actually contains."""
     try:
-        pan = P.load_panel(2014, 2015)
+        pan = P.load_panel(2014, 2015, with_characteristics=False)
     except P.PanelUnavailable:
         pytest.skip("CRSP parquets not present on this machine")
     d = np.asarray([str(x) for x in pan.dates])
@@ -238,7 +238,7 @@ def test_the_whole_panel_reproduces_CRSP_retx_not_just_the_audited_event():
     Any future change to how prices are built has to keep the second column.
     """
     try:
-        pan = P.load_panel(2021, 2021)
+        pan = P.load_panel(2021, 2021, with_characteristics=False)
     except P.PanelUnavailable:
         pytest.skip("CRSP parquets not present on this machine")
     # a handful of sessions spread through the year, not just one

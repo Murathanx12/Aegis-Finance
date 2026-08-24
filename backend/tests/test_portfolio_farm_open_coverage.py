@@ -83,7 +83,7 @@ def test_load_panel_refuses_the_empty_year_and_says_there_is_no_re_pull(tmp_path
     _write_year(tmp_path, 1990, open_frac=0.0)
     _write_year(tmp_path, 1991, open_frac=0.0)
     with pytest.raises(P.PanelUnavailable) as e:
-        P.load_panel(1990, 1991, dir_=tmp_path)
+        P.load_panel(1990, 1991, dir_=tmp_path, with_characteristics=False)
     msg = str(e.value)
     assert "nearly) empty" in msg or "empty" in msg
     assert "nothing to re-pull" in msg
@@ -122,7 +122,7 @@ def test_negative_opens_count_as_missing_in_the_panels_own_figure(tmp_path):
     # the cheap gate still sees a full column ...
     assert P.year_open_coverage(2005, tmp_path) == pytest.approx(1.0)
     # ... and the loaded panel reports the truth that governs the fills.
-    pan = P.load_panel(2005, 2005, dir_=tmp_path)
+    pan = P.load_panel(2005, 2005, dir_=tmp_path, with_characteristics=False)
     assert pan.open_coverage == pytest.approx(0.5, abs=0.02)
 
 
@@ -130,7 +130,7 @@ def test_the_live_window_is_reported_and_is_high(tmp_path):
     """Guard against the gate silently starting to pass everything: the real
     2013-2024 window must still report a coverage, and a high one."""
     try:
-        pan = P.load_panel(2023, 2023)
+        pan = P.load_panel(2023, 2023, with_characteristics=False)
     except P.PanelUnavailable:
         pytest.skip("CRSP parquets not present on this machine")
     assert 0.90 <= pan.open_coverage <= 1.0

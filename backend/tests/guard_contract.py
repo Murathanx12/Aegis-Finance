@@ -86,6 +86,14 @@ NOT_INPUT_GUARDS: dict[str, str] = {
               "replaying a shorter history, which would report a CAGR over a "
               "period nobody declared. Asserted directly in "
               "test_portfolio_farm_replay.py"),
+    "characteristics": (
+        "CharacteristicUnavailable (portfolio_farm) — the finratio parquets a "
+        "non-price signal needs are absent, or a caller named a characteristic "
+        "neither era file carries. Both are REFUSALS by design: an all-NaN "
+        "column would put a policy on the leaderboard as a signal that does "
+        "not work. It takes no user input and guards no request field, so it "
+        "is not a missing-input guard; the refusals are exercised in "
+        "test_portfolio_farm_characteristics.py"),
     "policy": ("PolicyError (portfolio_farm) — a policy asks for a signal or "
                "sizing the engine does not implement, or zero costs without "
                "declaring the frictionless diagnostic. Every branch is "

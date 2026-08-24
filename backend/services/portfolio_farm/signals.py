@@ -19,14 +19,28 @@ leaderboard whose top entry cannot be compared to a coin flip on the same
 universe, the same costs and the same holding period is a ranking of luck. The
 farm runs them as ordinary policies so they appear in the same table.
 
-WHAT IS DELIBERATELY ABSENT
-===========================
-Anything derived from a fundamental, an estimate revision, an insider filing or
-a news event. Those live in the arena's information bus and in the collectors,
-they are not in the CRSP daily file, and joining them here PIT-correctly is
-CHUNK B/C work. This module is the PRICE-ONLY baseline the later mechanisms
-have to beat — which is the right order, because the repo's own training gate
-already found that 412 characteristics did not beat a price floor.
+THIRTEEN SIGNALS WERE THIRTEEN VIEWS OF ONE FILE
+================================================
+Audited 2026-08-25. Every non-null signal below reads from exactly three
+quantities — past returns, market cap, dollar volume — all of them columns of
+`crsp.dsf`. A library like that cannot produce an INDEPENDENT selector however
+many entries it gains, because independence is a property of the DATA and not
+of the formula. The 2013-2024 grid showed what that looks like: zero of
+thirteen resolvable at 80% power, and a reality-check p of 0.358.
+
+So `value_bm` and `profit_roe` are here, sourced from `characteristics.py`
+(WRDS `finratio`, PIT-stamped by `public_date`, both eras). They are the first
+signals in this module that are not transformations of price. See that module
+for the join rule and its caveats — chiefly that `bm` has a price in its
+denominator and `roe` does not, which makes `roe` the cleaner test of whether a
+second data source buys anything.
+
+STILL DELIBERATELY ABSENT
+=========================
+Estimate revisions, insider filings, news events, options state. Those live in
+the arena's information bus and in the collectors. IBES consensus IS on disk
+for both eras (`ibes_consensus_monthly*`, with `numup`/`numdown`), so a
+revision signal is the obvious next one and it is not built yet.
 """
 
 from __future__ import annotations
@@ -211,6 +225,45 @@ def equal_universe(panel, i: int) -> np.ndarray:
     return np.zeros(panel.close.shape[1], dtype=np.float64)
 
 
+def _characteristic(panel, name: str) -> np.ndarray:
+    """The PIT-joined characteristic grid `load_panel` attached, or a REFUSAL.
+
+    Joined once when the panel is built, not lazily here: `run_many` calls
+    `matrix()` once per policy, and rebuilding a ~1.9M-row groupby eighty times
+    for one grid is the kind of cost that quietly makes a sweep un-runnable.
+
+    A missing characteristic is an error and not an all-NaN column. A policy
+    that names `value_bm` and silently holds nothing would appear on the
+    leaderboard as a signal that does not work, which is the most expensive
+    possible way to be wrong.
+    """
+    m = (panel.chars or {}).get(name)
+    if m is None:
+        raise KeyError(
+            f"characteristic {name!r} was not joined onto this panel. Either "
+            f"the finratio parquets are absent from backend/data/optimus/wrds/ "
+            f"or the panel was built with with_characteristics=False. This is "
+            f"a refusal rather than an all-NaN signal, because a book that "
+            f"silently holds nothing looks exactly like a signal that does not "
+            f"work.")
+    return m
+
+
+def value_bm(panel, i: int) -> np.ndarray:
+    """Book-to-market. HIGH is cheap, so high scores buy value.
+
+    Not a price transformation, though price IS in the denominator — which is
+    why `profit_roe` is the cleaner test of whether a second data source adds
+    anything the price file did not already contain.
+    """
+    return _characteristic(panel, "bm")[i].astype(np.float64)
+
+
+def profit_roe(panel, i: int) -> np.ndarray:
+    """Return on equity. HIGH is profitable. No price anywhere in it."""
+    return _characteristic(panel, "roe")[i].astype(np.float64)
+
+
 #: The registry the policy grid enumerates. A signal not in here cannot be
 #: named by a policy, so a typo is a refusal rather than an all-NaN run that
 #: silently holds nothing.
@@ -228,6 +281,9 @@ SIGNALS = {
     "size_large": size_large,
     "illiquid": illiquid,
     "liquid": liquid,
+    # the first two that are not transformations of price
+    "value_bm": value_bm,
+    "profit_roe": profit_roe,
     "random": random_signal,
     "random_persistent": random_persistent,
     "equal": equal_universe,
@@ -373,6 +429,10 @@ def matrix(panel, name: str, seed: int = 0) -> np.ndarray:
         with np.errstate(invalid="ignore", divide="ignore"):
             ratio = np.where(v > 0, r / v, np.nan)
         return _roll_mean(ratio, QUARTER, QUARTER // 2) * 1e6
+    if name == "value_bm":
+        return _characteristic(panel, "bm").astype(np.float64)
+    if name == "profit_roe":
+        return _characteristic(panel, "roe").astype(np.float64)
     if name == "liquid":
         return _roll_mean(panel.dolvol.astype(np.float64), MONTH, LIQ_MIN_OBS)
     if name == "random":

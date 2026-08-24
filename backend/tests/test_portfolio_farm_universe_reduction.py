@@ -83,8 +83,8 @@ def test_the_reduced_panel_replays_to_the_SAME_nav(tmp_path):
     pol = Policy(signal="mom_12_1", holding_days=5, top_k=3,
                  sizing="equal_weight", universe_n=10, min_price=5.0)
 
-    full = P.load_panel(2000, 2002, dir_=tmp_path)
-    red = P.load_panel(2000, 2002, dir_=tmp_path, reduce_for_universe_n=10)
+    full = P.load_panel(2000, 2002, dir_=tmp_path, with_characteristics=False)
+    red = P.load_panel(2000, 2002, dir_=tmp_path, reduce_for_universe_n=10, with_characteristics=False)
     assert red.shape[1] < full.shape[1], "reduction removed nothing"
 
     a = R.run(full, pol, warmup=30)
@@ -98,7 +98,7 @@ def test_a_deeper_universe_is_REFUSED_not_truncated(tmp_path):
     from a universe that no longer contains the names beyond the cut."""
     for y in (2000, 2001):
         _synthetic_year(tmp_path, y)
-    red = P.load_panel(2000, 2001, dir_=tmp_path, reduce_for_universe_n=5)
+    red = P.load_panel(2000, 2001, dir_=tmp_path, reduce_for_universe_n=5, with_characteristics=False)
     deep = Policy(signal="mom_12_1", holding_days=5, top_k=3,
                   sizing="equal_weight", universe_n=100)
     with pytest.raises(ValueError, match="liquidity-reduced to rank"):
@@ -111,7 +111,7 @@ def test_a_different_price_floor_is_REFUSED(tmp_path):
     """
     for y in (2000, 2001):
         _synthetic_year(tmp_path, y)
-    red = P.load_panel(2000, 2001, dir_=tmp_path, reduce_for_universe_n=5)
+    red = P.load_panel(2000, 2001, dir_=tmp_path, reduce_for_universe_n=5, with_characteristics=False)
     cheap = Policy(signal="mom_12_1", holding_days=5, top_k=3,
                    sizing="equal_weight", universe_n=5, min_price=0.0)
     with pytest.raises(ValueError, match="min_price"):
@@ -122,7 +122,7 @@ def test_an_unreduced_panel_refuses_nothing(tmp_path):
     """The guard must not fire on the full panel — it has every name."""
     for y in (2000, 2001):
         _synthetic_year(tmp_path, y, n_days=120)
-    full = P.load_panel(2000, 2001, dir_=tmp_path)
+    full = P.load_panel(2000, 2001, dir_=tmp_path, with_characteristics=False)
     assert full.universe_reduced_to is None
     R.run(full, Policy(signal="mom_12_1", holding_days=5, top_k=3,
                        sizing="equal_weight", universe_n=100, min_price=0.0),
