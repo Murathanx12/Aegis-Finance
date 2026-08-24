@@ -202,12 +202,22 @@ def test_health_names_the_REAL_blocker_first():
     """Two things block registration and they are not equally important.
 
     The sequencing wait (seeds migrate on the next arena pass) has a date and
-    resolves itself. The universe being too dense does not resolve with time —
-    it says the mechanism cannot work here at all. Health must lead with the
-    one that is not going to fix itself."""
+    resolves itself. The graph having nothing to say does not resolve with
+    time — it says the mechanism cannot work here at all. Health must lead with
+    the one that is not going to fix itself.
+
+    AMENDED 2026-08-24 (GRAPH-BACKBONE-2). The blocker used to be named
+    UNIVERSE_TOO_DENSE. That reason did not survive: a degree-preserving null
+    on the same coverage predicts 95.8% density against the observed 100.0%,
+    so density was a fact about `min_shared=1` rather than about the data.
+    The verdict is unchanged and the honest reason is the null comparison, so
+    health must carry BOTH — the current one and what it superseded, because a
+    reason that was quietly swapped is indistinguishable from one that was
+    always right."""
     h = gp.health()
-    assert h["status"] == "BLOCKED_UNIVERSE_TOO_DENSE"
-    assert "SELECTIVE" in h["reason"]
+    assert h["status"] == "BLOCKED_GRAPH_NEGLIGIBLE_VS_NULL"
+    assert "null" in h["reason"].lower()
+    assert "UNIVERSE_TOO_DENSE" in h["superseded_reason"]
     assert h["measured"]["corr_peer_eq_with_own_return"] == -1.0
     assert "assert_config_current" in h["also_blocked_by"]
 
@@ -295,3 +305,56 @@ def test_a_sparse_graph_PASSES_the_same_check():
 def test_the_guard_refuses_a_graph_too_small_to_judge():
     with pytest.raises(gp.GraphDegenerate):
         gp.assert_graph_informative({"A": frozenset({"f"})}, {}, {})
+
+
+# ── the null-referenced precondition (GRAPH-BACKBONE-2, 2026-08-24) ─────────
+
+
+def _selective_coverage(n_names=48, block=8, per_name=5, seed=7):
+    """Coverage that is genuinely SELECTIVE: each block of names is followed by
+    its own brokers, plus one generalist everyone shares.
+
+    This is what a mid/small-cap graph is HYPOTHESISED to look like, and the
+    precondition must be able to PASS on it. Note what is being adjusted here:
+    the FIXTURE, so that it is actually selective. The bar is untouched — a bar
+    moved until a fixture passes measures the person moving it."""
+    import random
+    rng = random.Random(seed)
+    cov = {}
+    for i in range(n_names):
+        b = i // block
+        pool = [f"F{b}_{j}" for j in range(6)] + ["G0"]
+        cov[f"T{i}"] = frozenset(rng.sample(pool, per_name))
+    return cov
+
+
+def _universal_coverage(n_names=40, n_firms=20, seed=7):
+    """Every broker covers every name -- the mega-cap limit."""
+    firms = frozenset(f"F{j}" for j in range(n_firms))
+    return {f"T{i}": firms for i in range(n_names)}
+
+
+def test_a_universal_graph_is_NEGLIGIBLE_against_its_own_null():
+    from backend.services.graph_propagation import graph_beats_null
+    rep = graph_beats_null(_universal_coverage(), n_draws=4)
+    assert rep["verdict"] == "NEGLIGIBLE_VS_NULL"
+    assert rep["ratio_to_null"] > 0.9
+
+
+def test_a_SELECTIVE_graph_discriminates():
+    """The precondition must be able to PASS, or it is a refusal wearing a
+    measurement's name. This is the property that makes it usable as a cheap
+    screen on a candidate mid-cap universe."""
+    from backend.services.graph_propagation import graph_beats_null
+    rep = graph_beats_null(_selective_coverage(), n_draws=6)
+    assert rep["verdict"] == "DISCRIMINATES", rep
+    assert rep["ratio_to_null"] <= 0.80
+
+
+def test_the_label_does_not_contradict_its_own_number():
+    """A z of -9 is not 'indistinguishable'. The verdict says NEGLIGIBLE,
+    which is what a ratio of 0.97 with a huge z actually means."""
+    from backend.services.graph_propagation import graph_beats_null
+    rep = graph_beats_null(_universal_coverage(), n_draws=4)
+    assert "INDISTINGUISHABLE" not in rep["verdict"]
+    assert "significance is not size" in rep["reading"].lower()

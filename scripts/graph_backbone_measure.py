@@ -161,6 +161,7 @@ NEFF_BAR = 0.5           # round 1: fraction of (n-1). MIS-SPECIFIED for
                          # binary arms, where n_eff IS the degree. Kept so
                          # round 1 stays reproducible.
 NEFF_VS_NULL_BAR = 0.80  # round 2: n_eff must beat the null graph's by this
+N_NULL_DRAWS = 10        # ensemble, so the comparison has an sd
 RANKABLE_BAR = 0.80
 FDR_Q = 0.01
 
@@ -259,6 +260,27 @@ def idf_weights(cov, shared, deg) -> dict[str, dict[str, float]]:
     return w
 
 
+def _pair_arrays(cov, shared):
+    """(pairs, k, Ka, Kb) for every unordered pair, once, for vectorised tails."""
+    names = sorted(cov)
+    pairs, ks, kas, kbs = [], [], [], []
+    for i, a in enumerate(names):
+        Ka = len(cov[a])
+        for b in names[i + 1:]:
+            pairs.append((a, b))
+            ks.append(shared[a].get(b, 0))
+            kas.append(Ka)
+            kbs.append(len(cov[b]))
+    return pairs, np.asarray(ks), np.asarray(kas), np.asarray(kbs)
+
+
+def _upper_tail(ks, kas, kbs, N):
+    """P(overlap >= k) under Hypergeometric(N, Ka, Kb), vectorised."""
+    from scipy.stats import hypergeom
+    p = hypergeom.sf(ks - 1, N, kas, kbs)
+    return np.where(ks > 0, p, 1.0)
+
+
 def svn_edges(cov, shared, q: float = FDR_Q) -> tuple[set[tuple[str, str]], dict]:
     """Hypergeometric backbone, BH-FDR corrected over all tested pairs.
 
@@ -266,20 +288,9 @@ def svn_edges(cov, shared, q: float = FDR_Q) -> tuple[set[tuple[str, str]], dict
     P(overlap >= k) is the upper tail of Hypergeometric(N, K_i, K_j). An edge
     survives when the observed overlap is larger than chance at q.
     """
-    from scipy.stats import hypergeom
-
-    names = sorted(cov)
     N = len(firm_degree(cov))
-    pairs, pvals = [], []
-    for i, a in enumerate(names):
-        for b in names[i + 1:]:
-            k = shared[a].get(b, 0)
-            Ka, Kb = len(cov[a]), len(cov[b])
-            # sf(k-1) = P(X >= k)
-            p = float(hypergeom.sf(k - 1, N, Ka, Kb)) if k > 0 else 1.0
-            pairs.append((a, b))
-            pvals.append(p)
-    pv = np.asarray(pvals)
+    pairs, ks, kas, kbs = _pair_arrays(cov, shared)
+    pv = _upper_tail(ks, kas, kbs, N)
     order = np.argsort(pv)
     m = len(pv)
     thresh = q * (np.arange(1, m + 1) / m)
@@ -288,26 +299,21 @@ def svn_edges(cov, shared, q: float = FDR_Q) -> tuple[set[tuple[str, str]], dict
     keep = {pairs[i] for i in order[:n_sig]}
     return keep, {"n_pairs_tested": m, "n_edges_kept": n_sig,
                   "n_firm_pool": N,
-                  "expected_overlap_median": float(np.median(
-                      [len(cov[a]) * len(cov[b]) / N for a, b in pairs[:5000]])),
+                  "expected_overlap_median": float(np.median(kas * kbs / N)),
                   "fdr_q": q}
 
 
 def pair_pvalues(cov, shared) -> dict[str, dict[str, float]]:
     """Upper-tail hypergeometric p for every pair, kept as a magnitude."""
-    from scipy.stats import hypergeom
-
-    names = sorted(cov)
     N = len(firm_degree(cov))
-    out: dict[str, dict[str, float]] = {t: {} for t in names}
-    for i, a in enumerate(names):
-        for b in names[i + 1:]:
-            k = shared[a].get(b, 0)
-            if k <= 0:
-                continue
-            p = float(hypergeom.sf(k - 1, N, len(cov[a]), len(cov[b])))
-            out[a][b] = p
-            out[b][a] = p
+    pairs, ks, kas, kbs = _pair_arrays(cov, shared)
+    pv = _upper_tail(ks, kas, kbs, N)
+    out: dict[str, dict[str, float]] = {t: {} for t in cov}
+    for (a, b), k, p in zip(pairs, ks, pv):
+        if k <= 0:
+            continue
+        out[a][b] = float(p)
+        out[b][a] = float(p)
     return out
 
 
@@ -444,30 +450,42 @@ def main() -> None:
             "A2_peer_svn": svn, "A3_peer_svn_idf": svn_idf,
             "A4_peer_sig": sig, "A5_peer_jaccard": jac}
 
-    # ROUND 2's gate 2: the same construction on a degree-preserving null.
-    print("building the degree-preserving null graph ...")
-    null_cov = randomised_coverage(cov, np.random.default_rng(SEED + 1))
-    null_shared = shared_counts(null_cov)
-    null_deg = firm_degree(null_cov)
-    null_keep, _ = svn_edges(null_cov, null_shared)
-    null_idf = idf_weights(null_cov, null_shared, null_deg)
-    null_svn: dict[str, dict[str, float]] = {t: {} for t in names}
-    for a, b in null_keep:
-        null_svn[a][b] = 1.0
-        null_svn[b][a] = 1.0
-    null_pvals = pair_pvalues(null_cov, null_shared)
-    null_arms = {
-        "A0_peer_eq": {t: {p: 1.0 for p in null_shared[t]} for t in names},
-        "A1_peer_idf": null_idf,
-        "A2_peer_svn": null_svn,
-        "A3_peer_svn_idf": {t: {p: null_idf[t][p] for p in null_svn[t]
-                                if p in null_idf[t]} for t in names},
-        "A4_peer_sig": sig_weights(null_pvals),
-        "A5_peer_jaccard": jaccard_weights(null_cov, null_shared),
-    }
-    null_neff = {a: float(np.median([v for v in n_eff(w).values() if v > 0])
-                          or 0.0) if any(n_eff(w).values()) else 0.0
-                 for a, w in null_arms.items()}
+    # ROUND 2's gate 2: the same constructions on a DEGREE-PRESERVING NULL,
+    # over an ENSEMBLE. One draw would give "162.00 vs 164.00" with no way to
+    # know whether two is a lot -- the failure mode this programme keeps
+    # catching itself on ("quote the cost rate or don't quote the count").
+    print(f"building {N_NULL_DRAWS} degree-preserving null graphs ...")
+    null_samples: dict[str, list[float]] = {a: [] for a in
+                                            ("A0_peer_eq", "A1_peer_idf",
+                                             "A2_peer_svn", "A3_peer_svn_idf",
+                                             "A4_peer_sig", "A5_peer_jaccard")}
+    for d in range(N_NULL_DRAWS):
+        ncov = randomised_coverage(cov, np.random.default_rng(SEED + 1 + d))
+        nsh = shared_counts(ncov)
+        ndeg = firm_degree(ncov)
+        nkeep, _ = svn_edges(ncov, nsh)
+        nidf = idf_weights(ncov, nsh, ndeg)
+        nsvn: dict[str, dict[str, float]] = {t: {} for t in names}
+        for a, b in nkeep:
+            nsvn[a][b] = 1.0
+            nsvn[b][a] = 1.0
+        npv = pair_pvalues(ncov, nsh)
+        draw = {
+            "A0_peer_eq": {t: {p: 1.0 for p in nsh[t]} for t in names},
+            "A1_peer_idf": nidf,
+            "A2_peer_svn": nsvn,
+            "A3_peer_svn_idf": {t: {p: nidf[t][p] for p in nsvn[t]
+                                    if p in nidf[t]} for t in names},
+            "A4_peer_sig": sig_weights(npv),
+            "A5_peer_jaccard": jaccard_weights(ncov, nsh),
+        }
+        for arm, w in draw.items():
+            vals = [v for v in n_eff(w).values() if v > 0]
+            null_samples[arm].append(float(np.median(vals)) if vals else 0.0)
+        print(f"  null draw {d + 1}/{N_NULL_DRAWS}")
+    null_neff = {a: float(np.mean(v)) for a, v in null_samples.items()}
+    null_neff_sd = {a: float(np.std(v, ddof=1)) if len(v) > 1 else 0.0
+                    for a, v in null_samples.items()}
 
     results = {}
     for arm, w in arms.items():
@@ -488,7 +506,10 @@ def main() -> None:
             "corr_with_own_return": round(corr, 4),
             "corr_sd": round(sd, 4),
             "median_n_eff": round(med_neff, 2),
-            "median_n_eff_under_null": round(nn, 2),
+            "median_n_eff_under_null_mean": round(nn, 2),
+            "median_n_eff_under_null_sd": round(null_neff_sd.get(arm, 0.0), 3),
+            "z_vs_null": (round((med_neff - nn) / null_neff_sd[arm], 2)
+                          if null_neff_sd.get(arm) else None),
             "n_eff_bar_round1_MISSPECIFIED": round(NEFF_BAR * (n - 1), 2),
             "n_eff_bar_round2_vs_null": round(NEFF_VS_NULL_BAR * nn, 2),
             "pct_universe_rankable": round(rank_frac, 4),
@@ -499,7 +520,8 @@ def main() -> None:
             "verdict": "STRUCTURALLY_VIABLE" if viable else "DEGENERATE",
         }
         print(f"{arm:16s} density {density:6.4f}  corr {corr:+.4f}  "
-              f"n_eff {med_neff:7.2f} vs null {nn:7.2f}  "
+              f"n_eff {med_neff:7.2f} vs null {nn:7.2f}"
+              f"+-{null_neff_sd.get(arm, 0.0):.2f}  "
               f"ranked {rank_frac:5.1%}  {results[arm]['verdict']}")
 
     receipt = {

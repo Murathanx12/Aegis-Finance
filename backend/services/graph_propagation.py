@@ -475,6 +475,131 @@ def assert_graph_informative(coverage: dict[str, frozenset[str]],
     return report
 
 
+def graph_beats_null(coverage: dict[str, frozenset[str]], *,
+                     n_draws: int = 10, seed: int = 20260824) -> dict:
+    """Does this coverage graph concentrate MORE than its own degree-preserving
+    null? The precondition that transports; density and own-return correlation
+    do not.
+
+    WHY THE OLD GATES ARE PROXIES
+    =============================
+    `assert_graph_informative` refuses above 60% density. Measured 2026-08-24
+    (`GRAPH-BACKBONE-1/2`), a degree-preserving null on this same coverage
+    predicts **95.8%** density against the observed 100.0% — so density near
+    1.0 is what RANDOM coverage looks like when 176 names each draw ~17 firms
+    from a pool of 94. The number that read as "the data cannot supply a graph"
+    was mostly a fact about `min_shared=1`, which on this universe admits pairs
+    whose overlap (median expected 3.43 shared brokers) is BELOW chance.
+
+    That also says why the licensed parameter does not travel. "At least one
+    shared broker" means something different where the median name has 4
+    covering firms than where it has 17. "More shared brokers than the null
+    predicts" means the same thing in both, and carries no parameter at all.
+
+    WHAT THIS MEASURES
+    ==================
+    The effective peer count n_eff = (sum w)^2 / sum w^2 under
+    significance-weighted edges (w = -log10 p from the same hypergeometric
+    test), against the same construction on graphs that preserve BOTH degree
+    sequences. A graph whose neighbourhoods are no more concentrated than
+    chance cannot discriminate between peers, however its edges are drawn.
+
+    THE LIVE ANSWER, and it is not the one density gave. The real graph IS
+    distinguishable from its null -- z = -10.6, which is not a near miss in
+    either direction -- and the effect is economically nil: n_eff 151.8 against
+    a null 156.4 out of 175 possible peers. Real, highly significant, and 97%
+    of the way to random. That is an equivalence result, not a failure to
+    reject, and it is a far stronger negative than the density heuristic it
+    replaces.
+
+    Cheap enough to run on any candidate universe BEFORE paying for it.
+    """
+    import numpy as np
+
+    names = sorted(t for t in coverage if coverage[t])
+    if len(names) < 10:
+        raise GraphDegenerate(f"only {len(names)} names carry coverage")
+    cov = {t: coverage[t] for t in names}
+
+    def _neff(c):
+        from scipy.stats import hypergeom
+        pool = {}
+        for t, firms in c.items():
+            for f in firms:
+                pool[f] = pool.get(f, 0) + 1
+        N = len(pool)
+        by_firm: dict[str, list[str]] = {}
+        for t in names:
+            for f in c[t]:
+                by_firm.setdefault(f, []).append(t)
+        shared: dict[str, dict[str, int]] = {t: {} for t in names}
+        for members in by_firm.values():
+            for i, a in enumerate(members):
+                for b in members[i + 1:]:
+                    shared[a][b] = shared[a].get(b, 0) + 1
+                    shared[b][a] = shared[b].get(a, 0) + 1
+        vals = []
+        for t in names:
+            ks = np.asarray([shared[t][u] for u in shared[t]])
+            if not ks.size:
+                continue
+            kb = np.asarray([len(c[u]) for u in shared[t]])
+            p = hypergeom.sf(ks - 1, N, len(c[t]), kb)
+            w = -np.log10(np.clip(p, 1e-300, None))
+            w = w[w > 0]
+            if w.size:
+                vals.append(float(w.sum() ** 2 / (w ** 2).sum()))
+        return float(np.median(vals)) if vals else 0.0
+
+    def _shuffle(c, rng):
+        sets = {t: set(f) for t, f in c.items()}
+        edges = [(t, f) for t, fs in sets.items() for f in fs]
+        m = len(edges)
+        for _ in range(10 * m):
+            i, j = int(rng.integers(0, m)), int(rng.integers(0, m))
+            (t1, f1), (t2, f2) = edges[i], edges[j]
+            if i == j or t1 == t2 or f1 == f2:
+                continue
+            if f2 in sets[t1] or f1 in sets[t2]:
+                continue
+            sets[t1].discard(f1); sets[t1].add(f2)
+            sets[t2].discard(f2); sets[t2].add(f1)
+            edges[i], edges[j] = (t1, f2), (t2, f1)
+        return {t: frozenset(v) for t, v in sets.items()}
+
+    import numpy as _np
+    obs = _neff(cov)
+    draws = [_neff(_shuffle(cov, _np.random.default_rng(seed + d)))
+             for d in range(n_draws)]
+    mean = float(_np.mean(draws))
+    sd = float(_np.std(draws, ddof=1)) if len(draws) > 1 else 0.0
+    ratio = obs / mean if mean else 1.0
+    return {
+        "n_names": len(names),
+        "n_eff_observed": round(obs, 3),
+        "n_eff_null_mean": round(mean, 3),
+        "n_eff_null_sd": round(sd, 4),
+        "z": round((obs - mean) / sd, 2) if sd else None,
+        "ratio_to_null": round(ratio, 4),
+        "bar": NEFF_RATIO_BAR,
+        # NOT "indistinguishable": the live z is -8.9, so the structure is
+        # emphatically distinguishable. It is NEGLIGIBLE. Labelling a z of -9
+        # "indistinguishable" would be the same error as reading 17 covering
+        # firms as a rich graph -- a word that contradicts its own number.
+        "verdict": ("DISCRIMINATES" if ratio <= NEFF_RATIO_BAR
+                    else "NEGLIGIBLE_VS_NULL"),
+        "reading": ("a significant z with a ratio near 1.0 means the structure "
+                    "is real and negligible -- detectable, and 97% of the way "
+                    "to a random graph. Significance is not size."),
+    }
+
+
+#: A graph must concentrate to at most this fraction of its own null's
+#: effective peer count. Measured live 2026-08-24: 0.97 -- nowhere near, so the
+#: verdict does not hinge on where this sits.
+NEFF_RATIO_BAR = 0.80
+
+
 # ── health ──────────────────────────────────────────────────────────────────
 
 
@@ -485,14 +610,25 @@ def health() -> dict:
         "book_id": CONTRACT["book_id"],
         "licence": CONTRACT["licence"],
         "contract_hash": contract_hash(),
-        "status": "BLOCKED_UNIVERSE_TOO_DENSE",
+        "status": "BLOCKED_GRAPH_NEGLIGIBLE_VS_NULL",
         "reason": (
-            "the live 179-name universe yields a 100.0% dense co-coverage "
-            "graph (every major bank covers every mega-cap), where peer_eq is "
-            "arithmetically -1.000 correlated with the name's own return — "
-            "short-horizon reversal, a Holm-surviving ANTI-signal here. The "
-            "mechanism needs names whose coverage is SELECTIVE, which means a "
-            "down-cap universe, not a parameter change."),
+            "the live 176-name graph concentrates 97% as much as its own "
+            "degree-preserving null (n_eff 151.8 vs 156.4 +- 0.5, z -10.6): "
+            "the structure is REAL and economically nil. Weighting does fix "
+            "the reversal identity that the first verdict measured -- "
+            "significance-weighted edges reach corr -0.234 with own return at "
+            "100% of the universe still rankable, which no min_shared value "
+            "achieved -- so the mechanism is not blocked by density. It is "
+            "blocked by the graph having nothing to say. "
+            "docs/FINDING_2026-08-24_GRAPH_BACKBONE.md"),
+        "superseded_reason": (
+            "BLOCKED_UNIVERSE_TOO_DENSE, 2026-08-24 morning. 100.0% density "
+            "read as proof of no graph; a degree-preserving null on the same "
+            "coverage predicts 95.8%, so that number was a fact about "
+            "min_shared=1 (which admits pairs whose overlap is BELOW chance on "
+            "a 94-firm pool) rather than about the data. The verdict was "
+            "right; its reason was a count reported without the question it "
+            "answers."),
         "also_blocked_by": (
             "sequencing: the ten seeds written 2026-08-21 migrate to per-book "
             "identity only on their next arena pass, and adding any book to "
