@@ -298,9 +298,35 @@ looked like. That is a universe change with its own declaration, not a
 parameter change, and it needs the vendor-depth measurement re-run on thinner
 names.
 
-### 3. P0.2 the information bus
+### 3. P0.2 the information bus — **DONE, both halves**
 
-The only original roadmap item never started.
+**Superseded 2026-08-24 evening.** This section previously read "the only
+original roadmap item never started", which was already false when written: the
+registry shipped in `bca1b99`. The external review then found that the registry
+was the *audit* half only — `spec.book_fingerprint` still ended with the bare
+global `discovery.COMPOSITE_VERSION`, so nothing consumed the fingerprint the
+bus computed.
+
+Both halves are now in:
+
+* `information_bus.py` — the declared family registry, `bus_version`,
+  `composite_fingerprint`, `family_fingerprint` (the generalisation: any
+  selector can print the identity of the set IT reads).
+* `selector_identity.py` — book identity that carries the selector this book
+  actually selects on, split into a hand-declared ALGORITHM version and DERIVED
+  dependency prints (families **and weights**). `SelectorNotDeclared` refuses an
+  undeclared selector rather than defaulting it to the composite's dependencies.
+* health key `selector_identity` on `/api/health/full`.
+* `test_selector_identity.py` — 10 tests, including the three properties the
+  review named and the migration pin below.
+
+**All ten live fingerprints are byte-identical to the legacy formula**, verified
+by test. That was mandatory: the books migrate to per-book identity on Monday's
+pass and `assert_config_current` migrates only while the legacy hash verifies,
+so a formula that moved would have stranded every NAV history. Dependency prints
+contribute only when they differ from their seed baselines
+(`COMPOSITE_FAMILIES_BASELINE`, `COMPOSITE_WEIGHTS_BASELINE`) — constants that
+record history and must **never** be updated to track the current value.
 
 > #### STILL TRUE: DO NOT ADD ANY BOOK TO `arena_books_v1.yaml` UNTIL THE ARENA RUNS
 >

@@ -806,6 +806,18 @@ async def health_full():
     except Exception as e:                                     # noqa: BLE001
         information_bus = {"status": "DEGRADED", "error": str(e)}
 
+    # WHICH selector each book depends on, and whether the composite's derived
+    # dependency prints still equal the values its seeds were sealed under.
+    # Separate row from the bus deliberately: the bus says what the state
+    # CARRIES, this says what each book CONSUMES, and P0.2 was only half done
+    # while the second had no surface and no consumer.
+    try:
+        from backend.services.arena.selector_identity import (
+            health as _sel_health)
+        selector_identity = _sel_health()
+    except Exception as e:                                     # noqa: BLE001
+        selector_identity = {"status": "DEGRADED", "error": str(e)}
+
     # Every forecast population, each with its own health row. Added 2026-08-23
     # because a population nobody registered is invisible rather than refused:
     # the arena's ledger had never appeared on any health surface.
@@ -910,6 +922,7 @@ async def health_full():
         "execution_ledger": execution,
         "options_pit": options_pit,
         "information_bus": information_bus,
+        "selector_identity": selector_identity,
         "investment_committee": investment_committee_health,
         "data_sources": source_health(),
         "fred_health": fred_source_health,

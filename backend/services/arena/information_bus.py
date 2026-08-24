@@ -138,6 +138,25 @@ def bus_version() -> str:
     return hashlib.sha256(_canonical().encode()).hexdigest()[:16]
 
 
+def family_fingerprint(names: list[str]) -> str:
+    """Identity of an arbitrary SET of information families.
+
+    The generalisation of `composite_fingerprint`, and the reason P0.2 scales
+    past one selector. A book's identity should carry the families IT reads;
+    the composite's set is just the first such set. An `EVENT_RESPONSE` book
+    hashing `["event_response"]` is unmoved by anything that happens to
+    `COMPOSITE_WEIGHTS`, which is the property that lets independent selectors
+    coexist in one arena without re-identifying each other.
+
+    Construction is deliberately identical to the one `composite_fingerprint`
+    shipped with (names only, compact JSON of the sorted list), because that
+    value is now a SEED BASELINE in `selector_identity` and changing how it is
+    computed would drift every composite book behind a diff showing nothing.
+    """
+    payload = json.dumps(sorted(names), separators=(",", ":"))
+    return hashlib.sha256(payload.encode()).hexdigest()[:16]
+
+
 def composite_fingerprint() -> str:
     """Identity of only what a composite book DECIDES on.
 
@@ -152,8 +171,7 @@ def composite_fingerprint() -> str:
     documentation; the SET of families is policy. Prose still moves
     `bus_version`, which is the audit record and drifts nothing.
     """
-    names = json.dumps(families(ADMITTED_TO_COMPOSITE), separators=(",", ":"))
-    return hashlib.sha256(names.encode()).hexdigest()[:16]
+    return family_fingerprint(families(ADMITTED_TO_COMPOSITE))
 
 
 def families(status: str | None = None) -> list[str]:

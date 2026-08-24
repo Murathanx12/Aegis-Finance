@@ -135,11 +135,20 @@ discovery rule that under-detects, which is the exact failure mode
 unclassified**, and one that fails when a gap closes — so a gap closes
 *visibly*.
 
-### P0.2 A versioned information bus into the frozen state — **DONE 2026-08-24**
+### P0.2 A versioned information bus into the frozen state — **DONE 2026-08-24** (registry) · **COMPLETED 2026-08-24 evening** (identity)
 
 `backend/services/arena/information_bus.py` · health key `information_bus` ·
 12 tests · bus_version `4846fb0f33912200`, composite_fingerprint
 `7418cb394c109879`.
+
+`backend/services/arena/selector_identity.py` · health key `selector_identity` ·
+10 tests (`test_selector_identity.py`).
+
+> **The first half shipped a fingerprint nothing consumed.** External review,
+> 2026-08-24: the bus was an *audit* surface — `spec.book_fingerprint` still
+> ended with the bare global `discovery.COMPOSITE_VERSION`, so the loop P0.2
+> claimed to close was open at both ends. Fixed below; the item is not
+> "done" in the earlier entry's sense and the scorecard now says so.
 
 The frozen state's inputs were a bare module-level dict (`SCORE_PREFIXES`).
 Adding a key silently widened every book's inputs mid-trial, and nothing
@@ -173,6 +182,45 @@ missing-input guard contract.
 **Found while writing it:** `insider_cmp` is read into the frozen state and
 carries **no composite weight** — the one already-existing state-only family,
 undocumented until now.
+
+#### The completion: identity that carries only what the book CONSUMES
+
+    book fingerprint = book config
+                     + SELECTOR IDENTITY      <- new
+                     + router identity, if consumed
+                     (+ execution-policy identity, when one exists)
+
+and selector identity separates the two things that must both bind:
+
+| component | what it covers | how it moves |
+|---|---|---|
+| ALGORITHM version | what the estimator *means* — `arena_composite@3-universe_quality` | hand-declared; "we changed how the z-scores blend" is not derivable from any input list |
+| DEPENDENCY prints | *which* families it reads (`information_bus.composite_fingerprint()`) and at *what weights* (`composite_weight_fingerprint()`) | **derived**, so it cannot be forgotten |
+
+Both are required, and the weights print is the one the review did not ask for:
+`mom_12_1: 1.0 -> 2.0` is a different policy with an identical family set, and
+before this the only thing that re-identified those books was whether the
+editor also remembered to bump a string.
+
+**Every live fingerprint is byte-identical today**, and that was mandatory, not
+lucky. The nine books are still on the LEGACY whole-file scheme and take their
+per-book stamp on Monday's pass; `assert_config_current` migrates only while the
+legacy hash verifies, so a formula that moved would have stranded ten NAV
+histories. Each dependency print therefore contributes **only when it differs
+from the value the live seeds were sealed under** — the same two-axis scoping
+`ROUTER_FINGERPRINT_BASELINE` already uses, with the same rule attached: those
+baselines record history and must never be "updated" to track the current value.
+
+`SelectorNotDeclared` refuses a book whose `selection_signal` has no dependency
+map, rather than defaulting it to the composite's. That refusal *is* the
+feature: the obvious fallback would have given `EVENT_RESPONSE_v1` momentum's
+dependencies and drifted it every time the composite moved, with every hash
+verifying. Enrolled in the missing-input guard contract.
+
+The three properties the review named are asserted directly: a real
+`ADMITTED_TO_STATE` family drifts **no** composite book; promoting it drifts
+**every** one; and changing the composite in both ways leaves an independent
+selector's book **byte-identical**.
 
 ### P0.3 — DONE this session
 
@@ -716,7 +764,7 @@ from this list displaces something in §3, and says what it displaces.
 | ~~Now~~ | ~~P1.3 co-coverage graph probe~~ — **DONE**, verdict CONTINUE; all three refinements measured zero (§4.6) | — |
 | ~~Next~~ | ~~P1.1 `EVENT_RESPONSE_v1`~~ — **RAN: STOP** (§4.8). The daily options-blind spec is refuted; the successor is the options surface, which now has a named consumer | — |
 | ~~Next~~ | ~~P1.2 `RELATIVE_VALUE_NN_v1`~~ — **RAN: STOP** (§4.10); the NN question is closed with a receipt | — |
-| After P0.1 | P0.2 information bus | knowing which orphans are worth admitting |
+| ~~After P0.1~~ | ~~P0.2 information bus~~ — **registry DONE**; **identity wiring DONE 2026-08-24 evening** (`selector_identity.py`), which is what the first half left open | — |
 | ~~NOW~~ | ~~P2 options surface~~ — **DONE**: 21.1M rows pulled, `EVENT-RESPONSE-2` run, verdict NOT LICENSED (borrow-confounded, §4.13) | — |
 | After ≥3 independent selectors have live output | `META_ROUTER_v1` | independence, measured not assumed |
 | Only if graph features pay | GNN | P1.3 returning something |

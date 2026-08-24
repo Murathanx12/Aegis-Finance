@@ -247,11 +247,45 @@ def book_config_payload(book_id: str, raw: dict) -> str:
                       default=str)
 
 
+def book_selection_signal(book_id: str, raw: dict) -> str:
+    """The selector THIS book actually reads.
+
+    `policies.select` reads `defaults.selection_signal`; the per-book
+    `selection:` key is descriptive (`DESCRIPTIVE_BOOK_KEYS`). A per-book
+    override is honoured here because that is how the first independent
+    selector arrives — one book pointing somewhere else — and the whole point
+    of dependency-aware identity is that such a book must not carry the
+    composite's dependencies.
+    """
+    book = (raw.get("books") or {}).get(book_id) or {}
+    defaults = raw.get("defaults") or {}
+    return str(book.get("selection_signal")
+               or defaults.get("selection_signal") or "arena_composite")
+
+
 def book_fingerprint(book_id: str, raw: dict, *,
                      sizing: str | None = None) -> str:
-    """Per-book policy identity. See `book_config_payload`."""
-    from backend.services.arena.discovery import COMPOSITE_VERSION
-    parts = [book_config_payload(book_id, raw), COMPOSITE_VERSION]
+    """Per-book policy identity — config, selector, dependencies, router.
+
+    DEPENDENCY-AWARE (2026-08-24). This used to end with the bare global
+    `COMPOSITE_VERSION`, which coupled every book in the arena to the momentum
+    composite whether it read it or not. It now carries
+    `selector_identity_parts(...)` for the selector THIS book selects on, so:
+
+      * admitting or re-weighting a composite family re-identifies the
+        composite books WITHOUT anyone remembering to bump a string;
+      * an `ADMITTED_TO_STATE` family moves nothing, which is the roadmap
+        constraint P0.2 exists to satisfy;
+      * a future independent selector is not re-identified when the composite
+        changes, which is what lets the arena hold more than one alpha source.
+
+    Byte-identical to the legacy value while the composite's dependency prints
+    equal their seed baselines — see `selector_identity`.
+    """
+    from backend.services.arena.selector_identity import (
+        selector_identity_parts)
+    parts = [book_config_payload(book_id, raw),
+             *selector_identity_parts(book_selection_signal(book_id, raw))]
     # Same two-axis scoping as before: only a router-CONSUMING book carries the
     # router's settings, and only when they differ from what the live books
     # were seeded under.

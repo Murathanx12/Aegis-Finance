@@ -714,6 +714,29 @@ def _case_options_pit_store():
             "an options capture over an empty universe")
 
 
+def _case_selector_identity():
+    """Fingerprint a book that selects on a signal nothing declares. The
+    dangerous default is "unknown selector -> use the composite's identity":
+    the book would then drift whenever a composite it never reads changed, and
+    every hash would verify while doing it."""
+    import yaml
+
+    from backend.services.arena import spec
+    from backend.services.arena.selector_identity import SelectorNotDeclared
+
+    def _run():
+        cfg = yaml.safe_load(spec.CONFIG_PATH.read_text(encoding="utf-8"))
+        cfg["books"]["UNDECLARED_SELECTOR_v1"] = {
+            "purpose": "x", "policy_version": 1, "selection": "mystery_top_k",
+            "selection_signal": "a_signal_nobody_declared",
+            "sizing": "equal_weight", "screens": [], "llm_perception": False,
+        }
+        spec.book_fingerprint("UNDECLARED_SELECTOR_v1", cfg)
+
+    return (_run, SelectorNotDeclared,
+            "a book whose selector has no declared dependency map")
+
+
 def _case_information_bus():
     """Point the bus at a state that reads a family nobody declared. An
     undeclared family widens every book's inputs mid-trial, and the whole
@@ -743,6 +766,7 @@ CASES = {
     "graph_propagation": _case_graph_propagation,
     "options_pit_store": _case_options_pit_store,
     "information_bus": _case_information_bus,
+    "selector_identity": _case_selector_identity,
     "risk_price_features": _case_risk_price_features,
     "spec": _case_arena_spec,
     "experience": _case_arena_experience,
