@@ -143,7 +143,22 @@ now come with "and the residual revision is worth IC 0.05". What survives:
 * B remains blocked on a transcript source in any case — nothing in this
   repository has earnings-call text, and FMP/Bigdata acquisition is unpriced.
 
-## 6. What was not done, and why
+## 6. Where a SCREEN gets registered, since the skill's step 2 does not apply
+
+`pre-register-trial` step 2 says to insert a row into `rule_experiments` and
+check `cumulative_trials` incremented. **That table is for forward-accruing lane
+trials** — insider, congress, ARK, fragility, LPPLS, smartgrowth — each with a
+live clock and an earliest-decision date. Checked: **no screen in this
+programme registers there.** `EVENT-RESPONSE-1`, `EVENT-RESPONSE-2`,
+`GRAPH-BACKBONE`, `RELATIVE-VALUE-NN` all live in the prereg folder alone.
+
+For a historical screen the register IS
+`Aegis module/TRIALS/PREREG_*.md`, and the corpse linter reads it: it scores
+against "148 graveyard rows, the trial registry **or the prereg folder**". This
+trial is in that corpus. Recorded here so the next session does not re-litigate
+it, or worse, write a forward-trial row for something with no forward clock.
+
+## 7. What was not done, and why
 
 The routed model was not re-run against the *residual* revision as a training
 target. That would be selecting a target after seeing which decomposition
@@ -151,7 +166,7 @@ looked good — and the decomposition that looked good was the contaminated one.
 Any successor needs its own pre-registration and a mediator whose timing is
 declared relative to the return window before a number exists.
 
-## 7. The lesson
+## 8. The lesson
 
 **Predicting a mediator well does not imply predicting the outcome well** — the
 pre-registration said so in its honest prior, and the measurement made it
