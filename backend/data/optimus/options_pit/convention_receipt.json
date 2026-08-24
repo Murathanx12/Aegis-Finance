@@ -86,6 +86,30 @@
    "gate_median": true,
    "gate_pct_positive": true,
    "transfers": true
+  },
+  "R5_own_parity_r": {
+   "n": 22,
+   "median": 0.02307,
+   "pct_positive": 0.6364,
+   "p10": -0.02367,
+   "p90": 0.12818,
+   "median_gap_vs_stdopd": 0.02113,
+   "pct_pos_gap_vs_stdopd": 0.0884,
+   "gate_median": false,
+   "gate_pct_positive": true,
+   "transfers": false
+  },
+  "R6_own_american": {
+   "n": 39,
+   "median": -0.00408,
+   "pct_positive": 0.4359,
+   "p10": -0.03366,
+   "p90": 0.02604,
+   "median_gap_vs_stdopd": -0.00602,
+   "pct_pos_gap_vs_stdopd": -0.1121,
+   "gate_median": false,
+   "gate_pct_positive": false,
+   "transfers": false
   }
  },
  "rate_sensitivity": [

@@ -22,8 +22,24 @@ from backend.services import options_pit_store as ops
 # ── fixtures that look like yfinance ────────────────────────────────────────
 
 
-def _chain(strikes, ivs):
-    return pd.DataFrame({"strike": strikes, "impliedVolatility": ivs})
+def _chain(strikes, ivs, spot=100.0, is_call=True, r=0.04, q=0.0):
+    """A chain carrying BOTH the vendor's IV column and consistent QUOTES.
+
+    The quotes are the Black-Scholes prices of the very IVs in the column, so
+    the fixture is internally consistent: our own inversion recovers exactly
+    what the vendor claims. That makes the fixture silent about the convention
+    gap -- which is right, because the gap is an empirical fact about Yahoo
+    (`OPTIONS-CONVENTION-1`), not something a unit test should assert into
+    existence.
+    """
+    from backend.services.option_implier import bsm_price, to_continuous
+
+    px = [bsm_price(spot, k, 30 / 365, to_continuous(r), to_continuous(q),
+                    iv, is_call) for k, iv in zip(strikes, ivs)]
+    return pd.DataFrame({"strike": strikes, "impliedVolatility": ivs,
+                         "bid": [max(v - 0.01, 0.01) for v in px],
+                         "ask": [v + 0.01 for v in px],
+                         "lastPrice": px})
 
 
 class FakeTicker:
@@ -35,8 +51,14 @@ class FakeTicker:
         self._expiries = expiries
         self.today = pd.Timestamp("2026-08-24")
 
-    def history(self, period="1d"):
-        return pd.DataFrame({"Close": [self.spot]})
+    def history(self, period="1d", auto_adjust=True, actions=False):
+        # Signature widened 2026-08-24: `build_state` now asks for 1y WITH
+        # actions, because the same single request must yield the spot and the
+        # trailing dividends that our own inversion needs for q.
+        df = pd.DataFrame({"Close": [self.spot]})
+        if actions:
+            df["Dividends"] = [0.0]
+        return df
 
     @property
     def options(self):
@@ -49,12 +71,16 @@ class FakeTicker:
         days = (pd.Timestamp(e).normalize() - self.today).days
         ivc, ivp = self.by_days[days]
         ks = [self.spot * 0.99, self.spot, self.spot * 1.01]
-        return SimpleNamespace(calls=_chain(ks, [ivc] * 3),
-                               puts=_chain(ks, [ivp] * 3))
+        return SimpleNamespace(
+            calls=_chain(ks, [ivc] * 3, self.spot, True),
+            puts=_chain(ks, [ivp] * 3, self.spot, False))
 
 
 def _build(tk, as_of="2026-08-24"):
-    return ops.build_state("X", as_of, ticker_obj=tk)
+    # r is passed explicitly so the unit suite never reaches FRED. The
+    # collector resolves it from FRED and LOGS the fallback; a test that
+    # silently used the fallback would be testing the fallback.
+    return ops.build_state("X", as_of, ticker_obj=tk, r_simple=0.04)
 
 
 # ── the definition the screen validated ─────────────────────────────────────
@@ -204,3 +230,72 @@ def test_health_DEGRADES_when_collection_stops(tmp_path):
     assert h["status"] == "DEGRADED"
     assert "PERISHABLE" in h["reason"]
     assert h["days_held"] == 1 and h["rows"] == 1
+
+
+# ── our own inversion, recorded from the first row (schema 1.1.0) ───────────
+
+
+def test_our_own_residual_is_recorded_BESIDE_the_vendors_not_instead_of_it():
+    """`OPTIONS-CONVENTION-1`: the vendor's implied-vol column discounts
+    nothing, which is the whole 0.026 train/serve gap. Both quantities are
+    kept -- the vendor's because every standing receipt is written against it,
+    ours because it is the one that means what the feature says it means."""
+    tk = FakeTicker(by_days={25: (0.30, 0.32), 45: (0.28, 0.29)})
+    st = _build(tk)
+    assert st.iv_put_minus_call_30d is not None
+    assert st.iv_put_minus_call_30d_own is not None
+    assert st.schema_version == "options-pit-1.1.0"
+
+
+def test_the_convention_travels_with_the_row():
+    """A residual without the r and q it was computed under is not
+    re-derivable, and it moves ~0.0070 per percentage point of rate."""
+    tk = FakeTicker(by_days={25: (0.30, 0.32), 45: (0.28, 0.29)})
+    st = _build(tk)
+    assert st.r_used == pytest.approx(0.04)
+    assert st.q_used == pytest.approx(0.0)
+    assert st.price_basis == "mid"
+
+
+def test_our_residual_is_NOT_silently_filled_from_the_vendor():
+    """A chain with no two-sided quotes must leave our column None. Copying the
+    vendor's number in would make the two indistinguishable in the store, which
+    is the one thing this schema change exists to prevent."""
+    tk = FakeTicker(by_days={25: (0.30, 0.32), 45: (0.28, 0.29)})
+    real = tk.option_chain
+
+    def stripped(e):
+        ch = real(e)
+        for df in (ch.calls, ch.puts):
+            df["bid"] = 0.0
+            df["ask"] = 0.0
+            df["lastPrice"] = 0.0
+        return ch
+
+    tk.option_chain = stripped
+    st = _build(tk)
+    assert st.iv_put_minus_call_30d is not None, "the vendor column survives"
+    assert st.iv_put_minus_call_30d_own is None
+    assert st.price_basis is None
+
+
+def test_capture_resolves_the_rate_ONCE_for_the_whole_pass(tmp_path):
+    """Per-name resolution would price two names in one snapshot off different
+    curves, and a cross-section computed under two conventions is not one."""
+    calls = []
+
+    def builder(ticker, as_of, r_simple=None):
+        calls.append(r_simple)
+        return ops.OptionState(
+            ticker=ticker, as_of=as_of, captured_at="2026-08-24T00:00:00+00:00",
+            spot=100.0, atm_iv_30=0.3, atm_iv_60=0.3, iv30_call=0.3,
+            iv30_put=0.3, iv_term_slope=0.0, iv_put_minus_call_30d=0.0,
+            implied_move_1d=0.02, parity_basis="matched_strike", method="t",
+            n_expiries_used=2)
+
+    rep = ops.capture(["A", "B", "C"], as_of="2026-08-24", root=tmp_path,
+                      builder=builder)
+    assert rep["stored"] == 3
+    assert len(set(calls)) == 1, f"rate resolved more than once: {calls}"
+    assert rep["r_simple"] == calls[0]
+    assert rep["r_source"]

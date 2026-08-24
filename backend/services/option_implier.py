@@ -66,6 +66,10 @@ from typing import Optional
 #: implies a vol beyond these, is refused rather than clamped — a clamped
 #: 500-vol print is indistinguishable from a real one downstream.
 IV_LO, IV_HI = 1e-4, 5.0
+#: The American approximation's exercise boundary degenerates as sigma -> 0
+#: (kappa = 2b/sigma^2), so its inversion uses a higher floor. Separate from
+#: IV_LO so the European path is unchanged.
+AM_SIGMA_FLOOR = 5e-3
 BISECT_ITERS = 100
 TOL = 1e-8
 
@@ -109,6 +113,171 @@ def bsm_price(spot: float, strike: float, t: float, r: float, q: float,
     if is_call:
         return df_s * _norm_cdf(d1) - df_k * _norm_cdf(d2)
     return df_k * _norm_cdf(-d2) - df_s * _norm_cdf(-d1)
+
+
+# ── American exercise (Bjerksund-Stensland 1993) ────────────────────────────
+#
+# WHY THIS IS HERE AND NOT A CAVEAT. `OPTIONS-CONVENTION-1` established that
+# yfinance's implied-vol column discounts NOTHING (r=0, q=0 reproduces it to
+# 0.0009), which is the whole 0.026 train/serve gap on the put-call residual.
+# Inverting the prices ourselves under a declared r and q closes 80% of it and
+# leaves ~0.005. Round 2 then tried to solve the rate from the cross-strike
+# parity slope and OVERSHOT to +0.023 while dropping 44% of names -- the
+# signature of a slope contaminated by a STRIKE-DEPENDENT term. American puts
+# carry an early-exercise premium that grows with strike, which steepens
+# (C - P) in K exactly that way.
+#
+# So the residue is not noise and not a vendor mystery: it is the one term this
+# module declared it did not model. OptionMetrics inverts a binomial American
+# model, so matching its convention means pricing American options.
+#
+# Bjerksund-Stensland rather than a binomial because it is closed form. A
+# 200-step lattice inside a bisection is ~20k lattice builds per name and this
+# runs over a daily universe. The approximation's error for near-ATM 30-day
+# options is well under a tenth of a vol point -- an order below the quantity
+# being measured -- and it is a LOWER bound on the true American price, so it
+# cannot manufacture an early-exercise premium that is not there.
+
+
+def _phi(spot: float, t: float, gamma: float, h: float, x: float,
+         r: float, b: float, sigma: float, log_prefactor: float = 0.0
+         ) -> float:
+    """The Bjerksund-Stensland phi, evaluated in LOG SPACE.
+
+    The textbook form is `exp(lam) * S**gamma * (N(d) - (X/S)**kappa * N(d2))`,
+    and it overflows in float as written: kappa = 2b/sigma^2 reaches ~3000 at
+    a 0.5% vol, so `(X/S)**kappa` blows up while `N(d2)` collapses to zero and
+    their product -- which is small and finite -- is never formed. The live
+    pass hit this on its first name, because the inversion's bisection
+    necessarily walks through tiny sigmas.
+
+    Each factor is therefore accumulated as a logarithm and exponentiated once.
+    """
+    v2 = sigma * sigma
+    lam = (-r + gamma * b + 0.5 * gamma * (gamma - 1.0) * v2) * t
+    kappa = 2.0 * b / v2 + (2.0 * gamma - 1.0)
+    sq = sigma * math.sqrt(t)
+    d = -(math.log(spot / h) + (b + (gamma - 0.5) * v2) * t) / sq
+    d2 = d - 2.0 * math.log(x / spot) / sq
+
+    # log(prefactor * exp(lam) * S**gamma). The prefactor is folded in HERE
+    # rather than multiplied afterwards because the two beta-power terms are
+    # always scaled by alpha = (X - K) * X**-beta, and beta reaches ~2265 for
+    # an American PUT at a 0.5% vol: S**beta overflows on its own while
+    # alpha * S**beta = (X - K) * (S/X)**beta is a perfectly ordinary number.
+    # Forming the two factors separately is what blew up; forming the product's
+    # logarithm does not.
+    head = log_prefactor + lam + gamma * math.log(spot)
+    n_d, n_d2 = _norm_cdf(d), _norm_cdf(d2)
+
+    def _safe_exp(z):
+        return math.exp(z) if z < 700.0 else math.inf
+
+    first = _safe_exp(head + math.log(n_d)) if n_d > 0.0 else 0.0
+    second = (_safe_exp(head + kappa * math.log(x / spot) + math.log(n_d2))
+              if n_d2 > 0.0 else 0.0)
+    if first == math.inf or second == math.inf:
+        raise _PhiDegenerate(f"phi overflowed at sigma={sigma:.5f}")
+    return first - second
+
+
+class _PhiDegenerate(ArithmeticError):
+    """The approximation's exercise boundary is not evaluable at this sigma.
+
+    Private and numerical, not a domain refusal: `american_call` answers with
+    the European price, which is a hard LOWER bound, so the fallback can never
+    invent an early-exercise premium. Counted, so a silent epidemic of it is
+    visible rather than inferred."""
+
+
+#: How often `_phi` degenerated. A numerical fallback nobody counts is
+#: indistinguishable from one that never fires.
+PHI_FALLBACKS = {"n": 0}
+
+
+def american_call(spot: float, strike: float, t: float, r: float, b: float,
+                  sigma: float) -> float:
+    """Bjerksund-Stensland 1993. `b` is the cost of carry (r - q)."""
+    if t <= 0 or sigma <= 0:
+        return max(spot - strike, 0.0)
+    if sigma < AM_SIGMA_FLOOR:
+        # kappa = 2b/sigma^2 diverges as sigma -> 0 and (x/spot)**kappa
+        # overflows. Below this floor the early-exercise boundary is not a
+        # meaningful object anyway: the option is worth its European value to
+        # within far less than a basis point. Found by the bisection walking
+        # into IV_LO = 1e-4 on the first live pass.
+        return max(bsm_price(spot, strike, t, r, r - b, sigma, True),
+                   spot - strike, 0.0)
+    if b >= r:
+        # No early exercise is ever optimal, so the American call IS European.
+        return bsm_price(spot, strike, t, r, r - b, sigma, True)
+    v2 = sigma * sigma
+    beta = (0.5 - b / v2) + math.sqrt((b / v2 - 0.5) ** 2 + 2.0 * r / v2)
+    if beta <= 1.0 + 1e-12:
+        return bsm_price(spot, strike, t, r, r - b, sigma, True)
+    b_inf = beta / (beta - 1.0) * strike
+    b_zero = max(strike, r / (r - b) * strike) if r != b else strike
+    if b_inf <= b_zero:
+        return bsm_price(spot, strike, t, r, r - b, sigma, True)
+    h_t = -(b * t + 2.0 * sigma * math.sqrt(t)) * b_zero / (b_inf - b_zero)
+    x = b_zero + (b_inf - b_zero) * (1.0 - math.exp(h_t))
+    if spot >= x:
+        return spot - strike
+    if x <= strike:
+        # The trigger price has collapsed to at or below the strike, so the
+        # approximation's alpha is non-positive and its logarithm is undefined.
+        # Nothing to exercise early into: answer with the European price, which
+        # is the hard lower bound this whole branch is bounded by.
+        return max(bsm_price(spot, strike, t, r, r - b, sigma, True),
+                   spot - strike, 0.0)
+    # alpha = (x - strike) * x**-beta, carried as a LOGARITHM so it can be
+    # folded into the beta-power terms before either factor is formed.
+    log_alpha = math.log(x - strike) - beta * math.log(x)
+    try:
+        val = ((x - strike) * (spot / x) ** beta
+               - _phi(spot, t, beta, x, x, r, b, sigma, log_alpha)
+               + _phi(spot, t, 1.0, x, x, r, b, sigma)
+               - _phi(spot, t, 1.0, strike, x, r, b, sigma)
+               - strike * _phi(spot, t, 0.0, x, x, r, b, sigma)
+               + strike * _phi(spot, t, 0.0, strike, x, r, b, sigma))
+    except (_PhiDegenerate, OverflowError, ValueError):
+        PHI_FALLBACKS["n"] += 1
+        val = -math.inf
+    # The approximation is a lower bound; never let it fall under European or
+    # under intrinsic, both of which are hard floors.
+    euro = bsm_price(spot, strike, t, r, r - b, sigma, True)
+    return max(val, euro, spot - strike, 0.0)
+
+
+def american_price(spot: float, strike: float, t: float, r: float, q: float,
+                   sigma: float, is_call: bool) -> float:
+    """American option price. The put uses the standard transformation
+    P(S,K,T,r,b) = C(K,S,T,r-b,-b), which is exact, not another approximation."""
+    b = r - q
+    if is_call:
+        return american_call(spot, strike, t, r, b, sigma)
+    return american_call(strike, spot, t, r - b, -b, sigma)
+
+
+def implied_vol_american(price: float, spot: float, strike: float, t: float,
+                         r: float, q: float, is_call: bool) -> Optional[float]:
+    if not (price and price > 0) or spot <= 0 or strike <= 0 or t <= 0:
+        return None
+    lo_p = american_price(spot, strike, t, r, q, AM_SIGMA_FLOOR, is_call)
+    hi_p = american_price(spot, strike, t, r, q, IV_HI, is_call)
+    if price <= lo_p or price >= hi_p:
+        return None
+    lo, hi = AM_SIGMA_FLOOR, IV_HI
+    for _ in range(BISECT_ITERS):
+        mid = 0.5 * (lo + hi)
+        pm = american_price(spot, strike, t, r, q, mid, is_call)
+        if abs(pm - price) < TOL:
+            return mid
+        if pm > price:
+            hi = mid
+        else:
+            lo = mid
+    return 0.5 * (lo + hi)
 
 
 def implied_vol(price: float, spot: float, strike: float, t: float,

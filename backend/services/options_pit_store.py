@@ -59,7 +59,19 @@ from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
-SCHEMA_VERSION = "options-pit-1.0.0"
+SCHEMA_VERSION = "options-pit-1.1.0"
+#: 1.1.0 (2026-08-24) adds `iv_put_minus_call_30d_own`, `r_used`, `q_used` and
+#: `price_basis`. `OPTIONS-CONVENTION-1` measured that yfinance's
+#: `impliedVolatility` column discounts NOTHING -- inverting our own prices at
+#: r = 0, q = 0 reproduces it to 0.0009 -- and that this is the whole 0.026
+#: train/serve gap on the put-call residual. So the vendor column is kept (a
+#: control, and the thing the standing receipts are written against) and OUR
+#: inversion is recorded beside it from the first row.
+#:
+#: Done NOW rather than after the book exists, for the same reason the
+#: collector was: the store is empty, `pi_options_pit` first fires Monday
+#: 2026-08-24 15:30 ET, and an option chain has no history to go back for. A
+#: day collected without our own residual is a day that can never have one.
 
 #: Constant maturities, in CALENDAR days, matching `stdopd`'s days IN (30, 60).
 TENORS = (30, 60)
@@ -112,6 +124,14 @@ class OptionState:
     parity_basis: str
     method: str
     n_expiries_used: int
+    #: OUR inversion of the same matched strike, under a declared convention.
+    #: See SCHEMA_VERSION. `None` when no strike carried a usable two-sided
+    #: quote -- never silently filled from the vendor column, because the whole
+    #: point is that the two are different quantities.
+    iv_put_minus_call_30d_own: Optional[float] = None
+    r_used: Optional[float] = None
+    q_used: Optional[float] = None
+    price_basis: Optional[str] = None
     schema_version: str = SCHEMA_VERSION
 
 
@@ -204,8 +224,36 @@ def _interp_constant_maturity(points: list[tuple[float, float]],
     return v
 
 
+def risk_free_simple() -> tuple[float, str]:
+    """The declared short rate, simple annual. FRED first, constant on refusal.
+
+    Sourced rather than assumed because the put-call residual moves ~0.0070 per
+    percentage point of it (`OPTIONS-CONVENTION-1`), which is larger than the
+    entire remaining train/serve gap. A rate nobody checked would decide the
+    feature.
+    """
+    try:
+        from backend.services.data_fetcher import DataFetcher
+        v = (DataFetcher().fetch_fred_data() or {}).get("fed_funds")
+        if v is not None:
+            val = float(v.iloc[-1]) if hasattr(v, "iloc") else float(v)
+            if math.isfinite(val):
+                return val / 100.0, f"FRED:fed_funds={val}"
+    except Exception as e:                                   # noqa: BLE001
+        logger.warning("options PIT: FRED rate unavailable (%s) — using the "
+                       "declared fallback %.4f", type(e).__name__, R_FALLBACK)
+    return R_FALLBACK, "declared fallback"
+
+
+#: Used only when FRED refuses, and LOGGED when it is. Round 1 of
+#: OPTIONS-CONVENTION-1 fell back to a constant in silence and reported a
+#: verdict the constant decided.
+R_FALLBACK = 0.0400
+
+
 def build_state(ticker: str, as_of: Optional[str] = None,
-                *, ticker_obj=None) -> OptionState:
+                *, ticker_obj=None, r_simple: Optional[float] = None
+                ) -> OptionState:
     """Today's option state for one name. `ticker_obj` is injected in tests."""
     import pandas as pd
 
@@ -216,9 +264,16 @@ def build_state(ticker: str, as_of: Optional[str] = None,
         import yfinance as yf
         ticker_obj = yf.Ticker(ticker)
 
+    q_simple = 0.0
     try:
-        hist = ticker_obj.history(period="1d")
+        # 1y with actions rather than 1d: the SAME single request yields the
+        # spot and the trailing dividends, and `q` is required by our own
+        # inversion. Asking twice would double the collector's vendor calls.
+        hist = ticker_obj.history(period="1y", auto_adjust=False, actions=True)
         spot = float(hist["Close"].iloc[-1]) if not hist.empty else float("nan")
+        if (not hist.empty and "Dividends" in hist.columns and spot
+                and math.isfinite(spot) and spot > 0):
+            q_simple = float(hist["Dividends"].tail(252).sum()) / spot
     except Exception as e:                                   # pragma: no cover
         raise OptionStateUnavailable(f"{ticker}: no spot — {e}") from e
     if not spot or not math.isfinite(spot) or spot <= 0:
@@ -231,11 +286,20 @@ def build_state(ticker: str, as_of: Optional[str] = None,
     if not expiries:
         raise OptionStateUnavailable(f"{ticker}: vendor lists no expirations")
 
+    if r_simple is None:
+        r_simple, _ = risk_free_simple()
+
+    from backend.services.option_implier import (imply_matched_strike,
+                                                 to_continuous)
+    r_c, q_c = to_continuous(r_simple), to_continuous(q_simple)
+
     today = pd.Timestamp(as_of).normalize()
     calls: list[tuple[float, float]] = []
     puts: list[tuple[float, float]] = []
     mcalls: list[tuple[float, float]] = []
     mputs: list[tuple[float, float]] = []
+    own: list[tuple[float, float]] = []
+    bases: list[str] = []
     used = 0
     for e in expiries:
         days = (pd.Timestamp(e).normalize() - today).days
@@ -259,6 +323,12 @@ def build_state(ticker: str, as_of: Optional[str] = None,
             mcalls.append((float(days), mc))
         if mp:
             mputs.append((float(days), mp))
+        # ...and the same strike inverted under OUR convention, off the mid.
+        pt = imply_matched_strike(ch.calls, ch.puts, spot, float(days),
+                                  r_c, q_c)
+        if pt is not None and pt.iv_call and pt.iv_put:
+            own.append((float(days), pt.iv_put - pt.iv_call))
+            bases.append(pt.price_basis)
 
     if used < 2:
         raise OptionStateUnavailable(
@@ -266,6 +336,22 @@ def build_state(ticker: str, as_of: Optional[str] = None,
             f"maturity surface cannot be interpolated from one point, and "
             f"reading a single expiry as '30-day' would be a different "
             f"feature under the validated one's name")
+
+    # A RESIDUAL interpolates linearly in time. The total-variance rule below
+    # is for IV LEVELS; applying it to a difference would be a third convention
+    # nobody declared.
+    own30 = None
+    if own:
+        pts = sorted(own)
+        lo = [p for p in pts if p[0] <= 30]
+        hi = [p for p in pts if p[0] >= 30]
+        if lo and hi:
+            d0, v0 = lo[-1]
+            d1, v1 = hi[0]
+            own30 = v0 if d0 == d1 else v0 + (v1 - v0) * (30 - d0) / (d1 - d0)
+        else:
+            d, v = (lo[-1] if lo else hi[0])
+            own30 = v if abs(d - 30) <= MAX_TENOR_GAP_DAYS else None
 
     c30 = _interp_constant_maturity(calls, 30)
     p30 = _interp_constant_maturity(puts, 30)
@@ -304,6 +390,11 @@ def build_state(ticker: str, as_of: Optional[str] = None,
         parity_basis=("matched_strike"
                       if (mc30 is not None and mp30 is not None)
                       else "band_average_fallback"),
+        iv_put_minus_call_30d_own=(round(own30, 6) if own30 is not None
+                                   else None),
+        r_used=round(r_simple, 6),
+        q_used=round(q_simple, 6),
+        price_basis=(max(set(bases), key=bases.count) if bases else None),
         implied_move_1d=round(atm30 * math.sqrt(1.0 / TRADING_DAYS), 6),
         method=("constant-maturity 30/60d, linear in total variance; ATM = "
                 "mean IV within 3% of spot. NOT bit-identical to "
@@ -362,11 +453,32 @@ def capture(tickers: list[str], as_of: Optional[str] = None,
             "capture over an empty universe — a pass that stored nothing and "
             "reported success is the lift-audit defect")
 
+    # ONE rate resolution for the whole pass. Per-name would be ~180 FRED
+    # lookups a day, and worse, would let two names in the same snapshot be
+    # priced off different curves -- a cross-sectional feature computed under
+    # two conventions is not a cross-section.
+    r_simple, r_src = risk_free_simple()
+    logger.info("options PIT: r = %.4f (%s)", r_simple, r_src)
+
     out = {"as_of": as_of, "requested": len(tickers), "stored": 0,
-           "already_present": 0, "unavailable": 0, "reasons": {}}
+           "already_present": 0, "unavailable": 0, "reasons": {},
+           "r_simple": r_simple, "r_source": r_src}
+    # Whether the injected builder takes the rate is decided ONCE, by looking
+    # at its signature. The first version wrapped the call in `except
+    # TypeError` and fell back to a rate-less call -- which would have swallowed
+    # any genuine TypeError raised INSIDE build_state and silently re-run the
+    # name with a per-name FRED lookup instead. Wrong math gets caught by
+    # tests; that would not have.
+    import inspect
+    try:
+        _takes_rate = "r_simple" in inspect.signature(builder).parameters
+    except (TypeError, ValueError):                          # pragma: no cover
+        _takes_rate = False
+
     for t in tickers:
         try:
-            st = builder(t, as_of)
+            st = (builder(t, as_of, r_simple=r_simple) if _takes_rate
+                  else builder(t, as_of))
         except OptionStateUnavailable as e:
             out["unavailable"] += 1
             out["reasons"][t] = str(e)[:200]

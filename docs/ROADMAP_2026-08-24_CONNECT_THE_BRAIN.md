@@ -775,6 +775,68 @@ frozen strategy contract before the first decision, paper only. A
 
 ---
 
+## 6.5 Evening session, 2026-08-24 — two blockers attacked at the root
+
+Neither verdict flipped. Both *reasons* were replaced, which is the more useful
+outcome: a wrong reason survives into the successor and a measured one does not.
+
+### `iv_put_minus_call_30d` — a SOLVER gap, 80% closed
+
+`docs/FINDING_2026-08-24_OPTIONS_CONVENTION.md` ·
+`backend/services/option_implier.py` · 22 tests
+
+yfinance's `impliedVolatility` column **discounts nothing**: our own inversion
+at r = 0, q = 0 reproduces it to 0.0009. That is the entire 0.026 train/serve
+gap, and it explains why both spent routes failed — the matched-strike fix
+corrected which strikes were compared, the rank corrected the scale, and both
+kept reading the disputed column.
+
+| | median | gap vs stdopd |
+|---|---|---|
+| vendor IV *(control)* | −0.02428 | −0.02622 |
+| ours, r = q = 0 | −0.02335 | −0.02529 |
+| **ours, declared r and q, on the mid** | **−0.00338** | **−0.00532** |
+
+The candidate misses the declared 0.005 bar by **0.0003**. Early exercise is
+ruled out (−0.0007, wrong direction, via a Bjerksund-Stensland arm declared
+*alongside* the rate arm so neither could be chosen after seeing the other);
+solving the rate from cross-strike parity overshoots to +0.023 on 22 of 39
+names, because the slope in K is contaminated by exactly the strike-dependent
+early-exercise term the other arm measured.
+
+What remains is worth **0.74pp of net carry** — the residual moves ≈0.0070 per
+percentage point of (r − q) — and 0.74pp is the size of general equity borrow,
+which is what this feature is *for*. Hypothesis, not finding; the cheap test is
+in the finding's §6.
+
+**And the transfer test has its own defect**: it compares a one-day live
+cross-sectional median to a median over OptionMetrics' entire panel, on a
+quantity that is a direct function of the prevailing rate.
+
+The store records our residual from its first row (schema 1.1.0) rather than
+after the book exists, for the same reason the collector was built early: a
+chain has no history to go back for.
+
+### The graph's density verdict was measuring the null
+
+`docs/FINDING_2026-08-24_GRAPH_BACKBONE.md` ·
+`graph_propagation.graph_beats_null()`
+
+A degree-preserving null on the same coverage predicts **95.8%** binary edge
+density against the observed 100.0%. `min_shared = 1` was admitting pairs whose
+overlap is *below* chance. Weighted edges reach corr −0.234 with own return at
+100% of the universe rankable — no `min_shared` value managed that. The graph
+then fails on the right question: it concentrates **97%** as much as its own
+null (151.8 vs 156.4 ± 0.4, z = −10.6). Real, and negligible.
+
+**The transportable form of the mechanism** is not `min_shared = k` — one shared
+broker means different things at 4 covering firms and at 17 — but "overlap above
+the degree-preserving null at a declared FDR", which carries no parameter. Any
+candidate mid/small-cap universe can now be screened for one coverage pull
+before a price is fetched.
+
+---
+
 ## 7. The scorecard, unchanged
 
 Demonstrated edge: **0%.** The machinery got better again this session and that

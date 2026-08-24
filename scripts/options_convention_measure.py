@@ -119,6 +119,12 @@ construction, which is why round 2 keeps q declared from trailing dividends.
 
   R5  own_parity_r    r solved from the cross-strike slope per expiry; q
                       declared as in R1; residual at the matched strike.
+  R6  own_american    R1's convention, priced with Bjerksund-Stensland 1993
+                      instead of European Black-Scholes. Declared in the same
+                      breath as R5 because they test the two candidate
+                      explanations for the same residue - a wrong rate, or the
+                      early-exercise premium - and running them one at a time
+                      would let the second be chosen after seeing the first.
 
 The bars and the reference are UNCHANGED and are not re-derived. R5 either
 clears them or it does not, and the rate is no longer anybody's choice.
@@ -338,7 +344,9 @@ def parity_implied_rate(point: dict, spot: float):
 
 def residual(cache_row: dict, arm: str, r_simple: float):
     """One arm's 30-day residual for one name, from the cached quotes."""
-    from backend.services.option_implier import implied_vol, to_continuous
+    from backend.services.option_implier import (implied_vol,
+                                                 implied_vol_american,
+                                                 to_continuous)
 
     spot = cache_row["spot"]
     q = to_continuous(cache_row["q_simple"])
@@ -349,6 +357,7 @@ def residual(cache_row: dict, arm: str, r_simple: float):
         "R3_own_zero": (0.0, 0.0, "mid"),
         "R4_own_last": (r, q, "last"),
         "R5_own_parity_r": (None, q, "mid"),      # r solved per expiry
+        "R6_own_american": (r, q, "mid"),
     }.get(arm, (None, None, None))
 
     pts = []
@@ -368,8 +377,10 @@ def residual(cache_row: dict, arm: str, r_simple: float):
             r_use = parity_implied_rate(p, spot)
             if r_use is None:
                 continue
-        ivc = implied_vol(pc, spot, p["strike"], t, r_use, qq, True)
-        ivp = implied_vol(pp, spot, p["strike"], t, r_use, qq, False)
+        invert = (implied_vol_american if arm == "R6_own_american"
+                  else implied_vol)
+        ivc = invert(pc, spot, p["strike"], t, r_use, qq, True)
+        ivp = invert(pp, spot, p["strike"], t, r_use, qq, False)
         if ivc and ivp:
             pts.append((p["days"], ivp - ivc))
     return _interp_resid(pts)
@@ -399,7 +410,7 @@ def summarise(cache, arm: str, r_simple: float, ref: dict) -> dict:
 
 
 ARMS = ["R0_vendor", "R1_own_r_q", "R2_own_r_only", "R3_own_zero",
-        "R4_own_last", "R5_own_parity_r"]
+        "R4_own_last", "R5_own_parity_r", "R6_own_american"]
 
 #: Rates the sweep reports R1 at. NOT a search for one that passes: the
 #: DECIDING rate is whatever `risk_free()` returns from FRED. The sweep exists

@@ -27,6 +27,12 @@ out/
 .env
 .env.local
 .env.production
+# The CI-mimic recipe in HANDOFF_2026-08-24 moves `.env` aside under this name
+# while it runs (CI has no .env, and eleven tests once passed locally BECAUSE a
+# secrets file existed). It was not ignored: a `git add -A` during that window
+# would have committed every key in the repository. Found 2026-08-24.
+.env.hidden
+.env.*.hidden
 
 # IDE
 .vscode/

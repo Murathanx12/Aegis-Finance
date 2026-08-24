@@ -505,10 +505,11 @@ def graph_beats_null(coverage: dict[str, frozenset[str]], *,
     chance cannot discriminate between peers, however its edges are drawn.
 
     THE LIVE ANSWER, and it is not the one density gave. The real graph IS
-    distinguishable from its null -- z = -10.6, which is not a near miss in
-    either direction -- and the effect is economically nil: n_eff 151.8 against
-    a null 156.4 out of 175 possible peers. Real, highly significant, and 97%
-    of the way to random. That is an equivalence result, not a failure to
+    distinguishable from its null -- z = -10.6 in `backbone_receipt.json`, and
+    -8.9 from this function's own draws at a different seed, so the sign and
+    the order are stable and the third digit is not -- and the effect is
+    economically nil either way: n_eff 151.8 against a null 156.4 out of 175
+    possible peers. Real, highly significant, and 97% of the way to random. That is an equivalence result, not a failure to
     reject, and it is a far stronger negative than the density heuristic it
     replaces.
 
@@ -613,7 +614,10 @@ def health() -> dict:
         "status": "BLOCKED_GRAPH_NEGLIGIBLE_VS_NULL",
         "reason": (
             "the live 176-name graph concentrates 97% as much as its own "
-            "degree-preserving null (n_eff 151.8 vs 156.4 +- 0.5, z -10.6): "
+            "degree-preserving null (n_eff 151.8 vs 156.4 +- 0.4, z -10.6 in "
+            "backbone_receipt.json; this module's own 10 draws at a different "
+            "seed give -8.9, which is the size of the seed-to-seed spread and "
+            "not a disagreement): "
             "the structure is REAL and economically nil. Weighting does fix "
             "the reversal identity that the first verdict measured -- "
             "significance-weighted edges reach corr -0.234 with own return at "

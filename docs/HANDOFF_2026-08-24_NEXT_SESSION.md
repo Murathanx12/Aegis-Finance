@@ -180,6 +180,34 @@ That is the state of the board:
 **Demonstrated edge remains 0%.** One mechanism is now licensed to build and
 has no blocking objection: the options-implied event response.
 
+> ### AMENDED 2026-08-24 EVENING — read this before §5.1 and §5.2
+>
+> Two of the three blockers below were attacked at the root rather than worked
+> around, and both moved. Neither verdict *flipped*; both reasons were replaced,
+> which is the more useful outcome.
+>
+> **`iv_put_minus_call_30d` — the train/serve gap is a SOLVER gap and it is 80%
+> closed.** `docs/FINDING_2026-08-24_OPTIONS_CONVENTION.md`. Inverting our own
+> prices with r = 0 and q = 0 reproduces yfinance's residual to **0.0009**:
+> Yahoo's `impliedVolatility` column discounts nothing. Both spent routes
+> (matched strike, cross-sectional rank) kept reading that column, which is why
+> neither touched it. Inverting the mid ourselves under a declared r and q takes
+> the gap from **0.0262 to 0.0053** — still outside the declared 0.005 bar, by
+> 0.0003. Early exercise is ruled out (moves it −0.0007, wrong direction);
+> solving the rate from cross-strike parity overshoots and is unusable.
+> `option_implier.py` ships, and the store records our residual from its first
+> row (schema 1.1.0) because a chain has no history to go back for.
+>
+> **The graph's density verdict was measuring the null.**
+> `docs/FINDING_2026-08-24_GRAPH_BACKBONE.md`. A degree-preserving null on the
+> same coverage predicts **95.8%** edge density against the observed 100.0%, so
+> `min_shared=1` was admitting pairs whose overlap is BELOW chance. Weighted
+> edges reach corr −0.234 with own return at 100% of the universe rankable,
+> which no `min_shared` value achieved. The graph then fails on the question
+> that matters: it concentrates 97% as much as its own null (z = −10.6 — real,
+> and negligible). Verdict unchanged; `graph_beats_null()` ships as a
+> precondition that TRANSPORTS to any candidate universe.
+
 ### 1. `EVENT_RESPONSE_v1` — the mechanism that survived scrutiny
 
 `docs/FINDING_2026-08-24_EVENT_RESPONSE_V2_AMENDMENT1.md`
@@ -270,6 +298,32 @@ needs no significance gate); or match the rate and dividend assumptions properly
 — the untried root-cause route, since the matched-strike fix moved the median
 only −0.0254 → −0.0237.
 
+> **THE THIRD ROUTE WAS TAKEN, 2026-08-24 evening, and it was the right one.**
+> `docs/FINDING_2026-08-24_OPTIONS_CONVENTION.md`. It was never about matching
+> assumptions *to* the vendor — the vendor has none. yfinance's implied-vol
+> column is computed with **r = 0 and q = 0**, which our own solver reproduces
+> to 0.0009, and that is the entire 0.026. Inverting the prices ourselves cuts
+> the gap to **0.0053**, which misses the declared bar by 0.0003.
+>
+> What remains is worth **0.74 percentage points of net carry** — the residual
+> moves ≈0.0070 per point of (r − q), measured — and 0.74pp is the size of
+> general equity borrow, which is what this feature is *supposed* to measure.
+> That is a hypothesis, not a finding.
+>
+> **And the transfer test itself has a defect:** it compares a one-day live
+> cross-sectional median against a median over OptionMetrics' whole panel, on a
+> quantity that is a direct function of the prevailing rate across regimes from
+> zero to five percent. Those two medians need not coincide even when the
+> feature is identical.
+>
+> **The next step is cheap and settles both.** Recompute the stdopd reference
+> median restricted to periods whose short rate is near today's, and compare
+> against that. The panel is already pulled.
+>
+> Meanwhile the fallback (ship the drop-feature arm as a labelled
+> `PRODUCT_EXPERIMENT`) is now a much cheaper decision: it costs a feature whose
+> train/serve error is 0.005, not 0.026.
+
 Build it as its own PRODUCT_EXPERIMENT book, never a composite weight — and
 note the collector needs lead time before the book has rows to decide on.
 
@@ -297,6 +351,34 @@ caps followed by a handful of brokers, which is what the screen's own graph
 looked like. That is a universe change with its own declaration, not a
 parameter change, and it needs the vendor-depth measurement re-run on thinner
 names.
+
+> **AMENDED 2026-08-24 evening — the verdict stands, the reason does not.**
+> `docs/FINDING_2026-08-24_GRAPH_BACKBONE.md`.
+>
+> A degree-preserving null on this same coverage predicts **95.8%** binary edge
+> density against the observed 100.0%. With 176 names drawing ~17 firms from a
+> pool of 94, "shares at least one broker" is a birthday-paradox certainty, and
+> the median EXPECTED overlap is 3.43 — so `min_shared = 1` was admitting pairs
+> connected *below* chance. The sweep's correlation starts moving at 3–4, which
+> is exactly where it crosses that. The density number was a fact about the
+> threshold.
+>
+> The identity also needs UNIFORM weights, not just completeness, and the sweep
+> never varied what an edge is worth. Significance-weighted edges reach corr
+> **−0.234** and the hypergeometric backbone **−0.198**, both inside the
+> borrowed 0.25 bar, at **100% of the universe rankable** — which `min_shared`
+> could never do.
+>
+> It fails anyway, on the right question: effective peer count **151.8 vs a null
+> 156.4 ± 0.4, z = −10.6, ratio 0.97**. The structure is real and negligible —
+> an equivalence result, far stronger than the density heuristic.
+>
+> **What that buys the successor:** `min_shared = k` does not transport (one
+> shared broker means different things at 4 covering firms and at 17), but
+> "overlap above the degree-preserving null at a declared FDR" does, and carries
+> no parameter. And `graph_propagation.graph_beats_null()` screens any candidate
+> mid-cap universe for the cost of one coverage pull, **before** a price is
+> fetched. Run it first.
 
 ### 3. P0.2 the information bus — **DONE, both halves**
 
@@ -411,6 +493,15 @@ To reproduce CI before pushing:
 
 **Always inside a subshell with the trap.** A run that dies with `.env` moved
 leaves the machine without its keys.
+
+> **AND `.env.hidden` WAS NOT GITIGNORED** (found 2026-08-24, fixed in
+> `.gitignore` along with `.env.*.hidden`). For the ~10 minutes this recipe
+> runs, the repository contains an untracked, unignored copy of every secret in
+> it, under a name `git status` shows and `git add -A` would happily stage.
+> Two commits went out this session with `git add -A` while a suite was
+> running; neither overlapped the window, which is luck rather than design.
+> The recipe was correct about the risk it was written for and created a
+> different one.
 
 ---
 
