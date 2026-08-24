@@ -1,0 +1,52 @@
+{
+ "measurement_id": "OPTIONS-RATE-REGIME-1",
+ "licence": "PRODUCT_EXPERIMENT (servability \u2014 no IC, no forward return, not evidence of alpha)",
+ "declared_in": "scripts/options_rate_regime_measure.py (this file)",
+ "question_1": "is the PANEL's own put-call residual a function of the prevailing short rate, at the slope measured live?",
+ "question_2": "restricted to today's rate regime, does the live residual match the panel's?",
+ "panel": {
+  "months_usable": 168,
+  "min_names_per_month": 50,
+  "full_median": 0.00194,
+  "full_pct_positive": 0.5477,
+  "atm_check": "events extract is delta ~ +/-0.5 (sd 0.015), so this is an ATM parity residual, not a skew measure"
+ },
+ "regression": {
+  "slope_per_pct_point": 1e-05,
+  "t": 0.04,
+  "r2": 0.0,
+  "band": [
+   0.004,
+   0.01
+  ],
+  "t_bar": 3.0,
+  "in_band": false,
+  "live_slope_for_comparison": 0.007
+ },
+ "regime": {
+  "today_rate_pct": 3.63,
+  "half_width_pct": 0.5,
+  "n_months": 1,
+  "months": [
+   "2008-01"
+  ],
+  "panel_median": 0.00058,
+  "panel_pct_positive": 0.5108
+ },
+ "live_R1": {
+  "median": -0.00338,
+  "pct_positive": 0.4359,
+  "n": 39,
+  "r_simple": 0.0363
+ },
+ "comparison": {
+  "median_difference": -0.00396,
+  "pct_positive_difference": -0.0749,
+  "bars": {
+   "median": 0.005,
+   "pct_positive": 0.1
+  },
+  "transfers_in_regime": true
+ },
+ "verdict": "TRANSFER_ONLY"
+}
