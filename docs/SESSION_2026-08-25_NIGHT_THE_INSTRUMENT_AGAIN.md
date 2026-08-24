@@ -195,6 +195,29 @@ and profitability was mediocre in a mega-cap growth regime. The point is that
 **1993-2024 contains value's actual era**. Those two rows are where the widened
 window has the most to say.
 
+**The strongest evidence the join is right is the holdings, not the coverage.**
+Census at k=10, quarterly:
+
+    profit_roe   CL 33, MHP 26, HD 24, ORLY 22, KMB 19, MCO 18, LMT 16,
+                 IDXX 16, CLX 15, UPS 13
+    value_bm     AIG 28, C 28, MET 27, CFG 21, KHC 18, X 17, PRU 17,
+                 CTL 13, WLL 12, MRO 11
+
+Colgate, McGraw-Hill, Home Depot, O'Reilly, Kimberly-Clark, Moody's, Lockheed —
+a textbook high-ROE quality book. AIG, Citigroup, MetLife, Kraft Heinz, US
+Steel, CenturyLink, Whiting, Marathon — a textbook deep value book. **Neither
+overlaps the momentum books (NVDA, AMD, CVNA, SMCI, MARA) or the `liquid` book
+(the FAANGs) at all.** That is what a second data source looks like, and it is
+visible in the holdings before it is visible in any statistic.
+
+One defect caught by the same discipline: both ratios have a balance-sheet
+quantity in the denominator, and `bm` runs to **89,351** in the raw file
+against a median of 0.50. A `top_k` book does not merely tolerate that, it
+SELECTS it, on every date, ahead of every real firm. Values outside declared
+economic bounds are dropped (not winsorised — clipping makes them tie at the
+cap and the tie-break is permno order). Cost: 0.029% of `bm` rows, 0.402% of
+`roe`.
+
 Next, and not built: **IBES consensus is on disk for both eras** with
 `numup`/`numdown`, so an estimate-revision signal is one join away.
 

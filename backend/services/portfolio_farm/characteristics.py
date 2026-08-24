@@ -39,6 +39,28 @@ so it is not fully orthogonal to the momentum family — that is a real caveat a
 it is the reason `roe`, which has no price in it at all, is the cleaner test of
 the proposition.
 
+DOES THE JOIN WORK? NAME WHAT IT BOUGHT
+=======================================
+The strongest available evidence that a PIT join is correct is not a coverage
+number — it is whether the resulting book is recognisable. Holdings census,
+k=10, quarterly, 2013-2024:
+
+    profit_roe   CL 33, MHP 26, HD 24, ORLY 22, KMB 19, MCO 18, LMT 16,
+                 IDXX 16, CLX 15, UPS 13
+    value_bm     AIG 28, C 28, MET 27, CFG 21, KHC 18, X 17, PRU 17,
+                 CTL 13, WLL 12, MRO 11
+
+Colgate, McGraw-Hill, Home Depot, O'Reilly, Kimberly-Clark, Moody's, Lockheed,
+IDEXX, Clorox — a textbook high-ROE quality book of asset-light consumer
+staples and franchise businesses. AIG, Citigroup, MetLife, Citizens, Kraft
+Heinz, US Steel, Prudential, CenturyLink, Whiting, Marathon — a textbook deep
+value book of banks, insurers, telecoms and energy.
+
+Neither list overlaps the momentum books (NVDA, AMD, CVNA, SMCI, MARA) or the
+`liquid` book (the FAANGs) at all. **That is the point of a second data
+source**, and it is visible in the holdings before it is visible in any
+statistic.
+
 THE PIT RULE, WHICH IS THE ONLY HARD PART
 ==========================================
 `public_date` is WRDS's own availability stamp: the date the ratio could first
