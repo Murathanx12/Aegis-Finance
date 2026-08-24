@@ -39,8 +39,50 @@ _llm_cfg = _cfg.get("llm", {})
 
 # ── Provider Detection ──────────────────────────────────────────────────────
 
-_ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-_DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+_ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
+_DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "").strip()
+
+#: THE ONLY PROVISIONED PROVIDER IS DEEPSEEK. Stated here because the code
+#: below reads as though Claude were the primary and DeepSeek the fallback, and
+#: a reader — human or model — who believes that will spend time on a path that
+#: has no key behind it. That happened on 2026-08-24.
+#:
+#: `.env` carries an `ANTHROPIC_API_KEY=` line with an EMPTY VALUE. That reads
+#: as configured and is not: `_get_provider` tests truthiness, so it has always
+#: returned "deepseek". **Nothing was broken and no call was lost** — DeepSeek
+#: has been the live provider throughout. The only cost was to whoever read the
+#: file and believed the first branch was live.
+#:
+#: The Claude branch stays. It costs nothing, it is tested, and it is the
+#: migration path if a key ever exists. But it is DORMANT, not primary, and
+#: `provider_status()` says so on the health surface rather than leaving the
+#: next session to work it out from an empty string.
+SOLE_PROVISIONED_PROVIDER = "deepseek"
+
+
+def provider_status() -> dict:
+    """Which providers are actually configured, and which only look it.
+
+    `declared_but_empty` is the row that matters: an env var present with an
+    empty value is the failure mode that reads as configured. Distinguishing it
+    from "absent" is the whole point — "absent" is a decision, "empty" is a
+    loose end.
+    """
+    keys = {"anthropic": ("ANTHROPIC_API_KEY", _ANTHROPIC_API_KEY),
+            "deepseek": ("DEEPSEEK_API_KEY", _DEEPSEEK_API_KEY)}
+    out: dict = {"active": _get_provider(),
+                 "sole_provisioned": SOLE_PROVISIONED_PROVIDER,
+                 "configured": [], "declared_but_empty": [], "absent": []}
+    for name, (env, val) in keys.items():
+        if val:
+            out["configured"].append(name)
+        elif os.getenv(env) is not None:
+            out["declared_but_empty"].append(name)
+        else:
+            out["absent"].append(name)
+    out["matches_declaration"] = bool(
+        out["active"] == SOLE_PROVISIONED_PROVIDER)
+    return out
 
 # Claude models (fast → quality)
 _CLAUDE_MODEL_FAST = _llm_cfg.get("claude_model_fast", "claude-haiku-4-5-20251001")
@@ -174,6 +216,7 @@ def llm_usage() -> dict:
             # the failure is SILENT otherwise: the caller falls back to its
             # template and the page still renders.
             "language_refusals": dict(_LANGUAGE_REFUSALS),
+            "providers": provider_status(),
         }
 
 

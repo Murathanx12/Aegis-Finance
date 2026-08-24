@@ -543,6 +543,16 @@ To reproduce CI before pushing:
 **Always inside a subshell with the trap.** A run that dies with `.env` moved
 leaves the machine without its keys.
 
+> **SUPERSEDED — DO NOT USE THE RECIPE ABOVE.** Use
+> `AEGIS_IGNORE_DOTENV=1 python -m pytest backend/tests/ -m "not slow"`.
+> `backend/config.py` gates `load_dotenv` on that variable, so nothing moves.
+>
+> The recipe fired later the same day: the subshell died before its EXIT trap
+> ran, `.env` stayed hidden, and the machine had no keys until it was noticed
+> ten minutes later. The warning below was written hours earlier by the same
+> session that then tripped over it. A footgun with a documented safety notice
+> is still a footgun.
+
 > **AND `.env.hidden` WAS NOT GITIGNORED** (found 2026-08-24, fixed in
 > `.gitignore` along with `.env.*.hidden`). For the ~10 minutes this recipe
 > runs, the repository contains an untracked, unignored copy of every secret in

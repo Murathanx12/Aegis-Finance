@@ -36,7 +36,24 @@ MODEL_DIR = BACKEND_DIR / "models"
 # (do not retrofit the live track record). See docs/TRIALS/TRIAL-001 note.
 DATA_DIR = Path(os.getenv("AEGIS_DATA_DIR", str(BACKEND_DIR / "data")))
 
-load_dotenv(PROJECT_ROOT / ".env")
+#: CI has no `.env`; this machine does, and that difference is load-bearing —
+#: eleven tests once passed locally BECAUSE a secrets file existed and failed in
+#: CI. The documented way to reproduce CI was to `mv .env .env.hidden` inside a
+#: subshell with an EXIT trap.
+#:
+#: THAT RECIPE FIRED ON 2026-08-24 AND LEFT THE MACHINE WITHOUT ITS KEYS. The
+#: subshell died before its trap ran, `.env` stayed hidden, and every key on the
+#: box was gone until someone noticed. The handoff warned about exactly this
+#: failure and the warning did not prevent it, because a warning cannot.
+#:
+#: So there is now a way to reproduce CI that never touches the file:
+#:
+#:     AEGIS_IGNORE_DOTENV=1 python -m pytest backend/tests/ -m "not slow"
+#:
+#: Read from the real environment rather than a config value, because config is
+#: what this decides.
+if os.getenv("AEGIS_IGNORE_DOTENV", "").strip().lower() not in ("1", "true", "yes"):
+    load_dotenv(PROJECT_ROOT / ".env")
 
 
 # ── US market calendar ────────────────────────────────────────────────────────

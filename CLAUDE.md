@@ -76,6 +76,48 @@ evidence · no mutation of seeded book histories.
 `PRODUCT_EXPERIMENT` needs a frozen strategy contract instead — weaker, still
 tamper-evident.
 
+## THE LLM PROVIDER IS DEEPSEEK, AND IT IS THE ONLY ONE
+
+**There is no Anthropic key, no OpenAI key, no other provider. Do not plan
+around one, do not propose migrating to one, and do not read
+`llm_analyzer._get_provider` as evidence that Claude is primary.**
+
+That function is written `if _ANTHROPIC_API_KEY: return "claude"` first, and
+`.env` carries an `ANTHROPIC_API_KEY=` line with an **empty value**. It reads as
+configured and is not — the branch tests truthiness — so it has always returned
+`deepseek`. **Nothing was ever broken by this and no call was lost**: DeepSeek
+has been the live provider throughout, `/api/health/full` reports it, and the
+occasional Chinese reply is itself proof the model was answering. The only cost
+was to a reader who believed the first branch was live. That cost was paid on
+2026-08-24; it does not need paying again.
+
+`llm_analyzer.SOLE_PROVISIONED_PROVIDER` and `provider_status()` now declare it,
+`llm_usage()["providers"]` surfaces it, and `test_llm_provider_declaration.py`
+fails if the resolved provider ever stops matching the declaration.
+
+**What follows from DeepSeek being the only provider:**
+
+- **Every guard belongs on the DeepSeek path.** A guard applied only to the
+  dormant Claude branch protects nothing. Pinned by test.
+- **`deepseek-chat` code-switches to Chinese** when the system prompt does not
+  name an output language. `_LANGUAGE_PIN` is appended centrally in `_call_llm`;
+  a reply that is >10% non-Latin script is **refused** (not repaired, not
+  retried), counted per provider, and surfaced on `llm_usage()`. Do not fix this
+  at a call site — `explain_move.py` did, and every other caller inherited the
+  bug for months.
+- **The Claude branch stays.** It is tested and costs nothing, and it is the
+  migration path if a key ever exists. It is DORMANT, not primary.
+
+## NEVER MOVE `.env` TO REPRODUCE CI
+
+Use `AEGIS_IGNORE_DOTENV=1 python -m pytest backend/tests/ -m "not slow"`.
+
+The old recipe moved `.env` aside inside a subshell with an EXIT trap. On
+2026-08-24 the subshell died before its trap ran and the machine lost every key
+on it until someone noticed. The handoff warned about exactly that failure in
+the same session, and the warning did not prevent it — because a warning cannot.
+`backend/config.py` now gates `load_dotenv` on the env var instead.
+
 ## Project Overview
 
 Aegis Finance is a free, open-source market intelligence web platform combining ML crash prediction, Monte Carlo simulation, portfolio construction, and macroeconomic analysis into a single web dashboard.
