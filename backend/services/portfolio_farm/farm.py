@@ -46,6 +46,12 @@ logger = logging.getLogger(__name__)
 RESULTS_DIR = DATA_DIR / "optimus" / "portfolio_farm"
 
 
+#: Above this, signal grids are streamed one at a time instead of cached. Set
+#: from the measured failure: the 1993-2024 panel is 285 MB a grid, twenty-one
+#: grids is 6 GB of mostly null draws, and the process was at 9.4 GB resident.
+GRID_CACHE_BUDGET_GB = 1.5
+
+
 def run_many(panel, policies: list[Policy], *, progress: bool = True
              ) -> list[FarmResult]:
     """Replay every policy. Grids are computed once per DISTINCT signal."""
@@ -55,36 +61,66 @@ def run_many(panel, policies: list[Policy], *, progress: bool = True
     dolvol_ma = SIG._roll_mean(panel.dolvol.astype(np.float64), SIG.MONTH,
                                5).astype(np.float32)
     vol = SIG._vol_matrix(panel).astype(np.float32)
-    grids: dict[tuple, np.ndarray] = {}
-    for p in policies:
-        key = (p.signal, p.signal_seed)
-        if key not in grids:
-            grids[key] = SIG.matrix(panel, p.signal,
-                                    p.signal_seed).astype(np.float32)
-    logger.info("portfolio_farm: %d grids for %d policies in %.1fs",
-                len(grids), len(policies), time.perf_counter() - t0)
+    # ONE GRID AT A TIME when the panel is large. Caching every distinct
+    # (signal, seed) is right for a twelve-year panel — 3,020 x 3,481 is 42 MB
+    # a grid, and twenty null seeds cost under a gigabyte. On the 1993-2024
+    # panel it is 8,057 x 8,827 = 285 MB a grid, so the same twenty-one grids
+    # are 6 GB of nothing but null draws, and the process was measured at
+    # 9.4 GB resident before this.
+    #
+    # So policies are GROUPED by (signal, seed) and each grid is built, used
+    # and dropped. Results are re-ordered back to the caller's order at the
+    # end, because `across_phases` and every receipt writer index by position.
+    key_of = [(p.signal, p.signal_seed) for p in policies]
+    n_grids = len(set(key_of))
+    est_gb = n_grids * panel.close.nbytes / 1e9
+    stream = est_gb > GRID_CACHE_BUDGET_GB
+    logger.info("portfolio_farm: %d grids for %d policies, ~%.1f GB if cached "
+                "-> %s", n_grids, len(policies), est_gb,
+                "streaming one at a time" if stream else "cached")
+
+    order: dict[tuple, list[int]] = {}
+    for i, k in enumerate(key_of):
+        order.setdefault(k, []).append(i)
 
     bench = market_benchmark(panel.dates)
-    out: list[FarmResult] = []
-    for n, p in enumerate(policies, 1):
-        res = replay.run(panel, p, sig=grids[(p.signal, p.signal_seed)],
-                         dolvol_ma=dolvol_ma, vol=vol)
-        nav = np.asarray(res.nav, dtype=float)
-        w0 = len(panel.dates) - len(res.dates)
-        res.metrics = summarise(res.dates, nav, panel, benchmark=bench[w0:])
-        finite = nav[np.isfinite(nav)]
-        res.metrics["turnover_annual"] = turnover_annual(
-            res.diagnostics["traded_notional_usd"],
-            float(finite.mean()) if finite.size else 0.0,
-            res.metrics.get("years") or 0.0)
-        res.metrics["total_cost_usd"] = round(
-            res.diagnostics["total_cost_usd"], 2)
-        res.metrics["is_null_control"] = p.signal in SIG.NULL_SIGNALS
-        out.append(res)
-        if progress and (n % 25 == 0 or n == len(policies)):
-            logger.info("portfolio_farm: %d/%d (%.0fs)", n, len(policies),
-                        time.perf_counter() - t0)
-    return out
+    slots: list = [None] * len(policies)
+    grids: dict[tuple, np.ndarray] = {}
+    if not stream:
+        for k in order:
+            grids[k] = SIG.matrix(panel, k[0], k[1]).astype(np.float32)
+        logger.info("portfolio_farm: grids built in %.1fs",
+                    time.perf_counter() - t0)
+
+    n = 0
+    for key, idxs in order.items():
+        grid = (grids[key] if not stream
+                else SIG.matrix(panel, key[0], key[1]).astype(np.float32))
+        for i in idxs:
+            p = policies[i]
+            n += 1
+            res = replay.run(panel, p, sig=grid,
+                             dolvol_ma=dolvol_ma, vol=vol)
+            nav = np.asarray(res.nav, dtype=float)
+            w0 = len(panel.dates) - len(res.dates)
+            res.metrics = summarise(res.dates, nav, panel,
+                                    benchmark=bench[w0:])
+            finite = nav[np.isfinite(nav)]
+            res.metrics["turnover_annual"] = turnover_annual(
+                res.diagnostics["traded_notional_usd"],
+                float(finite.mean()) if finite.size else 0.0,
+                res.metrics.get("years") or 0.0)
+            res.metrics["total_cost_usd"] = round(
+                res.diagnostics["total_cost_usd"], 2)
+            res.metrics["is_null_control"] = p.signal in SIG.NULL_SIGNALS
+            slots[i] = res
+            if progress and (n % 25 == 0 or n == len(policies)):
+                logger.info("portfolio_farm: %d/%d (%.0fs)", n, len(policies),
+                            time.perf_counter() - t0)
+        del grid
+    # back to the CALLER's order: `across_phases` and every receipt writer
+    # index by position, and grouping by signal reorders them.
+    return [r for r in slots if r is not None]
 
 
 def rank_report(results: list[FarmResult], *, by: str = "terminal_usd",

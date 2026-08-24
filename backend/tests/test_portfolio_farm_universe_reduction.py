@@ -188,3 +188,45 @@ def test_the_reduction_is_exact_on_the_REAL_panel():
             f"{x.policy.label}: the reduced panel produced a different NAV. "
             f"The reduction is supposed to remove only names no book could "
             f"have held, so any difference means it removed one that could.")
+
+
+def test_streaming_grids_preserves_order_and_values(tmp_path):
+    """`run_many` groups policies by (signal, seed) so it can build one signal
+    grid at a time. That REORDERS execution, and `across_phases` plus every
+    receipt writer index results by position — so the caller's order has to be
+    restored exactly, and the numbers must not move.
+
+    Why the streaming path exists: caching one grid per distinct (signal, seed)
+    is right for a twelve-year panel at 42 MB a grid. The 1993-2024 panel is
+    8,057 x 8,827 = 285 MB a grid, so twenty-one grids — mostly null draws —
+    are 6 GB, and the process was measured at 9.4 GB resident before this.
+    """
+    import backend.services.portfolio_farm.farm as F
+    for y in (2000, 2001, 2002):
+        _synthetic_year(tmp_path, y, n_days=120)
+    pan = P.load_panel(2000, 2002, dir_=tmp_path, with_characteristics=False)
+
+    # INTERLEAVED, so grouping genuinely changes the execution order
+    pols = []
+    for ph in range(3):
+        pols.append(Policy(signal="mom_12_1", holding_days=5, top_k=3,
+                           sizing="equal_weight", phase_offset=ph,
+                           universe_n=20))
+        pols.append(Policy(signal="random", signal_seed=ph, holding_days=5,
+                           top_k=3, sizing="equal_weight", universe_n=20))
+
+    saved = F.GRID_CACHE_BUDGET_GB
+    try:
+        F.GRID_CACHE_BUDGET_GB = 1e9          # cached
+        cached = F.run_many(pan, pols, progress=False)
+        F.GRID_CACHE_BUDGET_GB = 0.0          # streamed
+        streamed = F.run_many(pan, pols, progress=False)
+    finally:
+        F.GRID_CACHE_BUDGET_GB = saved
+
+    assert len(cached) == len(streamed) == len(pols)
+    for want, a, b in zip(pols, cached, streamed):
+        assert a.policy.policy_id == want.policy_id, "cached path reordered"
+        assert b.policy.policy_id == want.policy_id, "streamed path reordered"
+        assert np.allclose(a.nav, b.nav, rtol=0, atol=1e-9), (
+            f"{want.label}: streaming the grids changed the NAV")
