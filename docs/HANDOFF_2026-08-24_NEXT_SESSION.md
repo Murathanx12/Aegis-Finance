@@ -180,10 +180,65 @@ the EVALUATION leaves the effect intact (0.0329, t 3.56); the original's
 halving came from excluding them from **training** as well, which is a
 different experiment. Reproduced exactly (variant C = 0.01505, t 1.42).
 
-**Build it as its own PRODUCT_EXPERIMENT book.** Not a composite weight — see
-§THE BOTTLENECK. Note the deployment question is still open: the signal is not
-*confined* to expensive-to-short names, but a live book still pays borrow where
-it trades them.
+#### The input it needs now exists and is ACCRUING
+
+`backend/services/options_pit_store.py` — the store
+`expectation_store._V0_UNKNOWNS` has been naming as absent since G4 v0
+(`"options_implied_move": "options PIT store not built"`). Scheduled
+`pi_options_pit`, 15:30 ET weekdays, on the health surface as `options_pit`.
+
+**It was built before the book deliberately, and that is the opposite call from
+the one next door.** yfinance option chains are a snapshot with no history: an
+implied move not captured before its event is gone permanently. Every day
+without the collector is forward evidence destroyed. `GRAPH_PROPAGATION_v1` was
+built before its viability was measured and that was wrong; here the input is
+perishable, so building early is the only thing that works.
+
+It interpolates to **constant 30/60-day maturities, linear in total variance**,
+because `stdopd` is a *standardized* surface. Reading "the nearest expiry" would
+make the feature drift with the expiry cycle — rich before a monthly, cheap
+after — and that drift is a seasonal pattern the screen never validated wearing
+its name.
+
+#### BEFORE THE BOOK TRADES: one feature does not transfer
+
+`backend/data/optimus/options_pit/train_serve_skew_receipt.json`
+
+The model is FIT on OptionMetrics and would be SERVED on yfinance. Measured
+across 60 live names:
+
+| feature | live median | stdopd median | live %>0 | stdopd %>0 |
+|---|---|---|---|---|
+| `atm_iv_30` | 0.340 | 0.361 | 100% | 100% |
+| `implied_move_1d` | 0.0214 | 0.0227 | 100% | 100% |
+| `iv_term_slope` | +0.0019 | −0.0001 | 57% | 49% |
+| **`iv_put_minus_call_30d`** | **−0.0237** | **+0.0019** | **25%** | **55%** |
+
+**The central feature transfers. The put-call residual does not** — only 15% of
+live names clear the screen's borrow cut instead of 20%. A tree splits on
+absolute thresholds, so that column would split wrongly in production. A
+matched-strike parity residual (both legs at the SAME strike) was implemented
+and moved the median only −0.0254 → −0.0237: the strike-composition artefact
+was real but small, and the rest is a genuine solver/convention difference.
+
+Dropping it is not free. Declared rule was "servable iff within one paired SE at
+both horizons":
+
+* `drift1` full **0.0315 (t 3.19)** → servable **0.0228 (t 2.52)**, diff
+  −0.0087 ± 0.0074 — **outside one SE**
+* `drift5` full 0.0288 → servable 0.0249, diff −0.0040 ± 0.0063 — within
+
+⇒ **NEEDS_CALIBRATION.** The servable-only model still clears the 0.01
+economic bar, but its own MDE₈₀ is 0.0253 against an IC of 0.0228 — back under
+its own detectable threshold, like everything else here.
+
+**Three options, none of them free:** quantile-map the live residual onto the
+stdopd distribution (a fitted transform owing its own validation); serve the
+19-feature model and say plainly that it sits under its MDE₈₀; or match the rate
+and dividend assumptions properly.
+
+Build it as its own PRODUCT_EXPERIMENT book, never a composite weight — and
+note the collector needs lead time before the book has rows to decide on.
 
 ### 2. `GRAPH_PROPAGATION_v1` — module exists, book must NOT be registered
 

@@ -1,0 +1,99 @@
+{
+ "measurement_id": "EVENT-RESPONSE-TRAIN-SERVE-SKEW-1",
+ "measured_at": "2026-08-24",
+ "licence": "PRODUCT_EXPERIMENT (servability, not a result)",
+ "question": "EVENT_RESPONSE_v1 would be FIT on OptionMetrics stdopd and SERVED on yfinance option chains. Do the live features reproduce the ones the model is trained on?",
+ "why_it_matters": "a gradient-boosted tree splits on ABSOLUTE thresholds, so a systematic offset does not degrade gracefully \u2014 it moves every split that touches the column",
+ "n_live_names": 60,
+ "distributions": [
+  {
+   "feature": "atm_iv_30",
+   "live_median": 0.33958,
+   "stdopd_median": 0.36094,
+   "live_p10": 0.24917,
+   "stdopd_p10": 0.20304,
+   "live_p90": 0.5447,
+   "stdopd_p90": 0.68874,
+   "live_pct_positive": 1.0,
+   "stdopd_pct_positive": 1.0
+  },
+  {
+   "feature": "iv_put_minus_call_30d",
+   "live_median": -0.0237,
+   "stdopd_median": 0.00194,
+   "live_p10": -0.04853,
+   "stdopd_p10": -0.03484,
+   "live_p90": 0.04519,
+   "stdopd_p90": 0.04936,
+   "live_pct_positive": 0.25,
+   "stdopd_pct_positive": 0.548
+  },
+  {
+   "feature": "iv_term_slope",
+   "live_median": 0.00188,
+   "stdopd_median": -6e-05,
+   "live_p10": -0.02093,
+   "stdopd_p10": -0.02919,
+   "live_p90": 0.03667,
+   "stdopd_p90": 0.04046,
+   "live_pct_positive": 0.567,
+   "stdopd_pct_positive": 0.486
+  },
+  {
+   "feature": "implied_move_1d",
+   "live_median": 0.02139,
+   "stdopd_median": 0.02274,
+   "live_p10": 0.0157,
+   "stdopd_p10": 0.01279,
+   "live_p90": 0.03431,
+   "stdopd_p90": 0.04339,
+   "live_pct_positive": 1.0,
+   "stdopd_pct_positive": 1.0
+  }
+ ],
+ "transfers_cleanly": [
+  "atm_iv_30",
+  "implied_move_1d",
+  "iv_term_slope"
+ ],
+ "does_not_transfer": {
+  "feature": "iv_put_minus_call_30d",
+  "live_median": -0.0237,
+  "stdopd_median": 0.00194,
+  "live_pct_positive": 0.25,
+  "stdopd_pct_positive": 0.548,
+  "screen_high_borrow_cut": 0.021990999999999983,
+  "share_of_live_above_that_cut": 0.15,
+  "expected_if_comparable": 0.2,
+  "note": "a matched-strike parity residual (put and call at the SAME strike) was implemented after the first measurement and moved the median only -0.0254 -> -0.0237. The strike-composition artefact was real but small; the remainder is a genuine solver/convention difference (dividend and rate assumptions, American exercise, mid vs last)."
+ },
+ "servable_feature_set_check": {
+  "declared_rule": "SERVABLE iff the servable set's IC stays within ONE paired SE of the full set's, on the same months, at BOTH horizons",
+  "drift1": {
+   "full_ic": 0.03147,
+   "full_t": 3.193,
+   "servable_ic": 0.02275,
+   "servable_t": 2.52,
+   "paired_diff": -0.008719,
+   "paired_se": 0.007356,
+   "within_one_se": false
+  },
+  "drift5": {
+   "full_ic": 0.02883,
+   "full_t": 2.608,
+   "servable_ic": 0.02486,
+   "servable_t": 2.299,
+   "paired_diff": -0.003967,
+   "paired_se": 0.006327,
+   "within_one_se": true
+  },
+  "verdict": "NEEDS_CALIBRATION",
+  "reading": "dropping the one untransferable column costs 0.0087 IC at 1d \u2014 28% of the effect, and more than one paired SE. The servable-only model still clears the 0.01 economic bar at IC 0.0228 (t 2.52), but its own MDE80 is 0.0253, so it lands back UNDER its own detectable threshold like everything else in this programme."
+ },
+ "options_for_the_successor": [
+  "quantile-map the live residual onto the stdopd distribution \u2014 a fitted transform that owes its own validation",
+  "serve the servable-19 model and state plainly that it sits under its own MDE80",
+  "recompute the residual under matched rate/dividend assumptions (partially done: matched strike)"
+ ],
+ "verdict": "THE CENTRAL FEATURE TRANSFERS; ONE SUPPORTING FEATURE DOES NOT"
+}

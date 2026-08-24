@@ -785,6 +785,17 @@ async def health_full():
     except Exception as e:                                     # noqa: BLE001
         execution = {"status": "DEGRADED", "error": str(e)}
 
+    # OPTIONS PIT STORE. On a surface because this input is PERISHABLE:
+    # yfinance option chains are a snapshot with no history, so a capture that
+    # quietly stopped destroys evidence that no later work can recover. A
+    # collector nobody can see fail is the `alpaca_mirror_status` defect, which
+    # had no caller for a week.
+    try:
+        from backend.services.options_pit_store import health as _opt_health
+        options_pit = _opt_health()
+    except Exception as e:                                     # noqa: BLE001
+        options_pit = {"status": "DEGRADED", "error": str(e)}
+
     # Every forecast population, each with its own health row. Added 2026-08-23
     # because a population nobody registered is invisible rather than refused:
     # the arena's ledger had never appeared on any health surface.
@@ -887,6 +898,7 @@ async def health_full():
         "event_store": event_store,
         "paper_broker": paper_broker,
         "execution_ledger": execution,
+        "options_pit": options_pit,
         "investment_committee": investment_committee_health,
         "data_sources": source_health(),
         "fred_health": fred_source_health,

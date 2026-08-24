@@ -71,6 +71,7 @@ EXPECTED_JOB_IDS: frozenset[str] = frozenset({
     "pi_ownership_collect",
     "pi_copy_lab_run",
     "pi_arena_daily",
+    "pi_options_pit",
     "pi_daily_digest",
     "pi_prediction_markets",
 })
@@ -134,6 +135,22 @@ def setup_scheduler():
     )
 
     # Weekly aggressive lane check
+    # OPTIONS PIT CAPTURE. Runs BEFORE the close so the state it stores is the
+    # state a decision could actually have used, and every trading day because
+    # the input is PERISHABLE: yfinance option chains are a snapshot with no
+    # history, so a chain not captured before its event is gone permanently.
+    # 15:30 ET is late enough for a settled quote and early enough that the
+    # row precedes any after-close announcement it will later be joined to.
+    _scheduler.add_job(
+        _options_pit_capture,
+        CronTrigger(hour=15, minute=30, day_of_week="mon-fri",
+                    timezone="US/Eastern"),
+        id="pi_options_pit",
+        name="Options PIT capture (EVENT_RESPONSE_v1 input)",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
+
     _scheduler.add_job(
         _weekly_aggressive_check,
         CronTrigger(day_of_week="mon", hour=9, minute=0, timezone="US/Eastern"),
@@ -665,6 +682,28 @@ async def _hourly_mtm():
             )
     except Exception as e:
         logger.error("Hourly MTM failed: %s", e, exc_info=True)
+
+
+@_gated
+async def _options_pit_capture() -> None:
+    """Store today's option state for the event universe.
+
+    Failures are per-name and already counted by `capture`; this only has to
+    make sure a bad pass is visible rather than silent.
+    """
+    try:
+        from backend.config import config
+        from backend.services import options_pit_store as ops
+
+        su = (config.get("stock_universe") or {}).get("sector_stocks") or {}
+        tickers = sorted({t for v in su.values() for t in v})
+        out = ops.capture(tickers)
+        logger.info("options PIT capture: %s stored, %s already present, "
+                    "%s unavailable (coverage %.1f%%)",
+                    out["stored"], out["already_present"], out["unavailable"],
+                    100 * out["coverage"])
+    except Exception as e:                                   # noqa: BLE001
+        logger.error("options PIT capture failed: %s", e, exc_info=True)
 
 
 @_gated

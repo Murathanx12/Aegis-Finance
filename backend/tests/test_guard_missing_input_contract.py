@@ -702,12 +702,25 @@ def _case_graph_propagation():
             "a co-coverage graph with almost no coverage")
 
 
+def _case_options_pit_store():
+    """Ask the options PIT store to capture an empty universe. A pass that
+    stored nothing and reported success is the lift-audit defect, and this
+    input is PERISHABLE — a quiet no-op destroys evidence that cannot be
+    recovered later."""
+    from backend.services.options_pit_store import (OptionStateUnavailable,
+                                                    capture)
+    return (lambda: capture([]),
+            OptionStateUnavailable,
+            "an options capture over an empty universe")
+
+
 CASES = {
     "aegis_panel": _case_aegis_panel,
     "signal_reachability": _case_signal_reachability,
     "execution_ledger": _case_execution_ledger,
     "feature_leakage_guard": _case_feature_leakage_guard,
     "graph_propagation": _case_graph_propagation,
+    "options_pit_store": _case_options_pit_store,
     "risk_price_features": _case_risk_price_features,
     "spec": _case_arena_spec,
     "experience": _case_arena_experience,
