@@ -72,6 +72,46 @@ grid. Its one bad property is the breadth decay
 concentration. Both readings are consistent: a persistent, low-tracking-error
 bet on the largest names in a decade that rewarded them.
 
+NAME THE HOLDINGS. A NUMBER IS NOT A FINDING UNTIL YOU CAN SAY WHAT IT BOUGHT
+=============================================================================
+Same discipline as printing the dates, one level up. `liquid` finished the
+2013-2024 grid with the best t (2.55), the lowest tracking error, the widest
+temporal spread of its excess, and a stated requirement of only 13 years to
+resolve. On the statistics alone, "build it as the second independent selector"
+was a defensible-sounding recommendation.
+
+Then the census, sampled quarterly:
+
+    GOOG/GOOGL  48 of 44 samples       TSLA  36        BAC   17
+    AAPL        44                     NVDA  32        NFLX  14
+    FB          44                     AMD   24        BA     8
+    MSFT        44
+    AMZN        43
+
+(GOOG exceeds the sample count because GOOG and GOOGL are two permnos sharing a
+ticker prefix and the book often holds both — which is itself worth knowing
+about a rule that claims ten independent positions.)
+
+The contrast with momentum on the same measure is the useful part:
+
+    mom_12_1   NVDA 9, AMD 7, CVNA 6, SMCI 6, TSLA 5, SQ 5, MARA 5, PLUG 4
+    mom_6_1    NFLX 5, DXCM 5, NVDA 5, AMD 5, CVNA 5, MARA 5, W 4, TWLO 4
+
+Momentum is a ROTATING high-beta book that never holds anything for long;
+`liquid` is a STATIC mega-cap book. Their statistics differ because they are
+different kinds of thing, not because one signal is better than the other.
+
+**It is a hand-drawn FAANG portfolio**, rebalanced every five days, over the one
+decade in market history when that was the best trade available. Every statistic
+about it is true and it is not a signal — it is a description of 2013-2024. The
+reality-check p of 0.358 already said the grid had found nothing; this says
+WHAT the best row actually is, which is the part a person can act on.
+
+It also makes the widened window decisive for exactly this rule. In 1993-2000
+the most-traded names were entirely different ones, and 2000-2002 punished them
+hard. If `liquid` survives 1993-2024 it means something; if it collapses, it was
+FAANG.
+
 A SHARED DATE IS A FLAG, NOT A VERDICT
 ======================================
 The script prints the dates that appear in EVERY signal's top ten and tells you
@@ -94,14 +134,64 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import numpy as np  # noqa: E402
 
 from backend.services.portfolio_farm import (bootstrap as B, farm,  # noqa: E402
-                                             panel as P)
+                                             panel as P, signals as SIG)
 from backend.services.portfolio_farm.policy import Policy  # noqa: E402
+from backend.config import DATA_DIR  # noqa: E402
+
+#: Ticker maps, for turning a permno into something a person recognises. Both
+#: eras, because the early PIT file is a different universe from the modern one
+#: and a run over 1993-2024 spans both.
+_PIT = DATA_DIR / "optimus" / "crsp_pit"
+TICKER_SOURCES = ("crsp_pit_monthly_v1.parquet", "crsp_pit_monthly_early.parquet")
+
+#: Sessions between holdings samples. 63 is a quarter — often enough to see
+#: turnover, rare enough that the census is a summary and not a trade blotter.
+HOLDINGS_EVERY = 63
 
 HOLDING_DAYS = 5
 TOP_K = 10
 SIZING = "inverse_vol"
 DROPS = (1, 3, 5, 10, 20, 40)
 N_DATES_SHOWN = 10
+
+
+def _ticker_map() -> dict:
+    import pandas as pd
+    out = {}
+    for f in TICKER_SOURCES:
+        try:
+            df = pd.read_parquet(_PIT / f, columns=["permno", "ticker"])
+        except Exception:                                      # noqa: BLE001
+            continue
+        out.update(dict(zip(df["permno"], df["ticker"])))
+    return out
+
+
+def _census(pan, dm, signal: str, tick: dict) -> dict:
+    """Which names a `top_k` book of this signal actually held, sampled."""
+    sig = SIG.matrix(pan, signal, 0)
+    held, n = Counter(), 0
+    for i in range(300, pan.shape[0], HOLDINGS_EVERY):
+        px = (pan.close_raw[i] if pan.close_raw is not None
+              else pan.close[i]).astype(np.float64)
+        elig = (pan.traded[i] & np.isfinite(px) & (px >= 5.0)
+                & np.isfinite(dm[i]))
+        cand = np.flatnonzero(elig)
+        if cand.size < 500:
+            continue
+        u = cand[np.argsort(-dm[i][cand])[:500]]
+        sc = sig[i][u]
+        if not np.isfinite(sc).any():
+            continue
+        pick = u[np.argsort(-np.where(np.isfinite(sc), sc, -np.inf))[:TOP_K]]
+        n += 1
+        for j in pick:
+            held[str(tick.get(int(pan.permnos[j]), pan.permnos[j]))] += 1
+    if not n:
+        return {}
+    d = dict(held)
+    d["__n__"] = n
+    return d
 
 
 def main(argv=None) -> int:
@@ -111,6 +201,8 @@ def main(argv=None) -> int:
     ap.add_argument("--reduce", action="store_true")
     ap.add_argument("--signals", nargs="*",
                     default=["mom_12_1", "mom_6_1", "liquid"])
+    ap.add_argument("--no-holdings", action="store_true",
+                    help="skip the holdings census")
     a = ap.parse_args(argv)
 
     pan = P.load_panel(a.start, a.end,
@@ -175,6 +267,28 @@ def main(argv=None) -> int:
                     "top_dates": [{"date": str(dates[i]),
                                    "excess_pct": round(100*float(d_full[i]), 3)}
                                   for i in picked]})
+
+    # ── the holdings census ────────────────────────────────────────────────
+    if not a.no_holdings:
+        tick = _ticker_map()
+        dm = SIG._roll_mean(pan.dolvol.astype(np.float64), SIG.MONTH, 5)
+        for s in a.signals:
+            names = _census(pan, dm, s, tick)
+            if not names:
+                continue
+            n_samples = names.pop("__n__")
+            print(f"\n  {s} — most-held names, sampled every "
+                  f"{HOLDINGS_EVERY} sessions ({n_samples} samples)")
+            top = sorted(names.items(), key=lambda kv: -kv[1])[:12]
+            print("     " + ",  ".join(f"{t} {c}/{n_samples}" for t, c in top))
+            for row in out:
+                if row["signal"] == s:
+                    row["holdings_census"] = dict(top)
+                    row["holdings_samples"] = n_samples
+        print("\n     A number is not a finding until you can say what it "
+              "bought. `liquid`\n     carried the best t on the grid and is a "
+              "FAANG list; the statistic was\n     true and the rule was a "
+              "description of the decade.")
 
     # the check that found the bug, made automatic
     if len(top_dates) > 1:

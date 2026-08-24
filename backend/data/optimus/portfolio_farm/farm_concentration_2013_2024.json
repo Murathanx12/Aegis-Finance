@@ -92,7 +92,22 @@
      "date": "2021-04-26",
      "excess_pct": 13.63
     }
-   ]
+   ],
+   "holdings_census": {
+    "NVDA": 9,
+    "AMD": 7,
+    "CVNA": 6,
+    "SMCI": 6,
+    "TSLA": 5,
+    "SQ": 5,
+    "OSTK": 5,
+    "ENPH": 5,
+    "MARA": 5,
+    "ANF": 5,
+    "PLUG": 4,
+    "ICPT": 4
+   },
+   "holdings_samples": 44
   },
   {
    "signal": "mom_6_1",
@@ -177,7 +192,22 @@
      "date": "2021-06-01",
      "excess_pct": 11.538
     }
-   ]
+   ],
+   "holdings_census": {
+    "NFLX": 5,
+    "DXCM": 5,
+    "NVDA": 5,
+    "AMD": 5,
+    "APPY": 5,
+    "CVNA": 5,
+    "MARA": 5,
+    "ISIS": 4,
+    "X": 4,
+    "W": 4,
+    "RH": 4,
+    "TWLO": 4
+   },
+   "holdings_samples": 44
   },
   {
    "signal": "liquid",
@@ -262,7 +292,22 @@
      "date": "2024-02-02",
      "excess_pct": 2.975
     }
-   ]
+   ],
+   "holdings_census": {
+    "GOOG": 48,
+    "AAPL": 44,
+    "FB": 44,
+    "MSFT": 44,
+    "AMZN": 43,
+    "TSLA": 36,
+    "NVDA": 32,
+    "AMD": 24,
+    "BAC": 17,
+    "NFLX": 14,
+    "BA": 8,
+    "BRK": 6
+   },
+   "holdings_samples": 44
   }
  ],
  "dates_shared_by_all": [
