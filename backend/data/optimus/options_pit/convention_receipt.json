@@ -1,0 +1,142 @@
+{
+ "measurement_id": "OPTIONS-CONVENTION-1",
+ "licence": "PRODUCT_EXPERIMENT (servability - no IC, no forward return, not evidence of alpha)",
+ "declared_in": "scripts/options_convention_measure.py (this file)",
+ "question": "is the iv_put_minus_call_30d train/serve gap a SIGNAL difference or an artefact of inverting the vendor's implied-vol column instead of the prices?",
+ "stdopd_reference": {
+  "median": 0.00194,
+  "pct_positive": 0.548,
+  "live_median_previously_measured": -0.0237,
+  "live_pct_positive_previously_measured": 0.25
+ },
+ "conventions": {
+  "r_simple": 0.0363,
+  "r_source": "FRED:fed_funds=3.63",
+  "q": "trailing 12m dividends / spot, per name",
+  "model": "Black-Scholes-Merton, European",
+  "price": "bid/ask midpoint (R4 uses the last trade)",
+  "not_modelled": [
+   "American early exercise",
+   "discrete dividends"
+  ]
+ },
+ "bars": {
+  "median": 0.005,
+  "pct_positive": 0.1
+ },
+ "n_names_attempted": 40,
+ "n_names_measured": 39,
+ "arms": {
+  "R0_vendor": {
+   "n": 39,
+   "median": -0.02428,
+   "pct_positive": 0.2308,
+   "p10": -0.04599,
+   "p90": 0.02273,
+   "median_gap_vs_stdopd": -0.02622,
+   "pct_pos_gap_vs_stdopd": -0.3172,
+   "gate_median": false,
+   "gate_pct_positive": false,
+   "transfers": false
+  },
+  "R1_own_r_q": {
+   "n": 39,
+   "median": -0.00338,
+   "pct_positive": 0.4359,
+   "p10": -0.03363,
+   "p90": 0.0264,
+   "median_gap_vs_stdopd": -0.00532,
+   "pct_pos_gap_vs_stdopd": -0.1121,
+   "gate_median": false,
+   "gate_pct_positive": false,
+   "transfers": false
+  },
+  "R2_own_r_only": {
+   "n": 39,
+   "median": 0.0025,
+   "pct_positive": 0.5641,
+   "p10": -0.02247,
+   "p90": 0.03972,
+   "median_gap_vs_stdopd": 0.00056,
+   "pct_pos_gap_vs_stdopd": 0.0161,
+   "gate_median": true,
+   "gate_pct_positive": true,
+   "transfers": true
+  },
+  "R3_own_zero": {
+   "n": 39,
+   "median": -0.02335,
+   "pct_positive": 0.1795,
+   "p10": -0.04803,
+   "p90": 0.01353,
+   "median_gap_vs_stdopd": -0.02529,
+   "pct_pos_gap_vs_stdopd": -0.3685,
+   "gate_median": false,
+   "gate_pct_positive": false,
+   "transfers": false
+  },
+  "R4_own_last": {
+   "n": 39,
+   "median": 0.00272,
+   "pct_positive": 0.5128,
+   "p10": -0.05577,
+   "p90": 0.0784,
+   "median_gap_vs_stdopd": 0.00078,
+   "pct_pos_gap_vs_stdopd": -0.0352,
+   "gate_median": true,
+   "gate_pct_positive": true,
+   "transfers": true
+  }
+ },
+ "rate_sensitivity": [
+  {
+   "r": 0.0,
+   "median": -0.02902,
+   "pct_positive": 0.1026,
+   "transfers": false
+  },
+  {
+   "r": 0.02,
+   "median": -0.01478,
+   "pct_positive": 0.2308,
+   "transfers": false
+  },
+  {
+   "r": 0.03,
+   "median": -0.00776,
+   "pct_positive": 0.3333,
+   "transfers": false
+  },
+  {
+   "r": 0.0363,
+   "median": -0.00338,
+   "pct_positive": 0.4359,
+   "transfers": false
+  },
+  {
+   "r": 0.04,
+   "median": -0.00082,
+   "pct_positive": 0.4872,
+   "transfers": true
+  },
+  {
+   "r": 0.0425,
+   "median": 0.0009,
+   "pct_positive": 0.5128,
+   "transfers": true
+  },
+  {
+   "r": 0.045,
+   "median": 0.00263,
+   "pct_positive": 0.5641,
+   "transfers": true
+  },
+  {
+   "r": 0.05,
+   "median": 0.00606,
+   "pct_positive": 0.5897,
+   "transfers": true
+  }
+ ],
+ "quotes_cached_at": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\options_pit\\convention_quotes.json"
+}
