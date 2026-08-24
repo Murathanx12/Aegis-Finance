@@ -26,15 +26,41 @@ looking at the outcome.
 MEASURED 2013-2024 (h=5, k=10, inverse_vol, median phase, AFTER the split fix)
 ==============================================================================
 
-    signal        median$    te%   excess%      t   mde80%   yrs_need
-    liquid         98,059   12.6      9.76   2.55    10.72         13
-    mom_6_1        93,395   35.7     15.03   1.39    30.29         44
-    mom_12_1       85,482   33.6     13.72   1.35    28.46         47
-    trend_200      73,990   39.8     13.35   1.11    33.75         70
-    size_large     53,546    8.1      2.96   1.21     6.85         58
-    mom_12_0       52,438   37.2     10.05   0.89    31.57        108
+    signal        median$    te%  excess%  vs null      t   mde80%   yrs_need
+    liquid         98,059   12.6     9.76    13.41   2.55    10.72         13
+    mom_6_1        93,395   35.7    15.03    18.68   1.39    30.29         44
+    mom_12_1       85,482   33.6    13.72    17.38   1.35    28.46         47
+    trend_200      73,990   39.8    13.35    17.00   1.11    33.75         70
+    size_large     53,546    8.1     2.96     6.62   1.21     6.85         58
+    mom_12_0       52,438   37.2    10.05    13.70   0.89    31.57        108
     ...
-    equal (null)   43,122    7.4      0.49   0.22     6.26       1793
+    equal (null)   43,122    7.4     0.49     4.14   0.22     6.26       1793
+
+TWO BENCHMARKS, BOTH NAMED
+==========================
+`excess%` is against the CAP-WEIGHTED market — the question "should I hold this
+instead of an index fund". But a 10-name book drawn from a 500-name liquid
+universe is TILTED against that benchmark before any signal is applied, so the
+null signals' own excess is the other half of the picture:
+
+    NULL BASELINE over 125 draws (12 seeds x 5 phases x the null signals)
+    median -3.66%/yr,  5th-95th percentile [-9.77, +1.00]
+
+`vs null` is against that — the question "does the signal add information".
+They are different questions and a row that answers one does not answer the
+other.
+
+**The null SPREAD is the intuition behind every MDE in the table.** Ten points
+separate the 5th and 95th percentile of doing nothing at all: pick ten names at
+random instead of ten other names at random, and twelve years later you are
+anywhere in a ten-point-wide band. An "edge" narrower than that band cannot be
+told from which names you happened to pick — and every non-null row above is
+inside it.
+
+One draw is not a baseline. At seed 0 alone, `random` returned -11.00%/yr over
+2013-2018, which is near the 5th percentile — reading that single number as
+"the construction drag" would have inflated every signal's `vs null` by about
+seven points.
 
 **ZERO of thirteen non-null signals produced an effect this window could
 resolve at 80% power.** Not the leader, not one.
@@ -109,6 +135,13 @@ HOLDING_DAYS = 5
 TOP_K = 10
 SIZING = "inverse_vol"
 
+#: Seeds per NULL signal. One draw is not a baseline: `random` at seed 0
+#: returned -11.00%/yr over 2013-2018 and -2.99%/yr over 2013-2024, and the
+#: difference between those is mostly which ten names one seed happened to pick.
+#: The baseline is the median across seeds, and the spread across them is
+#: printed so a reader can see how much of it is draw noise.
+NULL_SEEDS = 12
+
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -128,7 +161,16 @@ def main(argv=None) -> int:
     names = [s for s in SIG.SIGNALS]
     pols = [Policy(signal=s, holding_days=HOLDING_DAYS, top_k=TOP_K,
                    sizing=SIZING, phase_offset=p)
-            for s in names for p in range(HOLDING_DAYS)]
+            for s in names if s not in SIG.NULL_SIGNALS
+            for p in range(HOLDING_DAYS)]
+    # every null gets several SEEDS as well as every phase — a null signal's
+    # whole job is to say what "no information" looks like, and one draw of ten
+    # names cannot do that.
+    pols += [Policy(signal=s, holding_days=HOLDING_DAYS, top_k=TOP_K,
+                    sizing=SIZING, phase_offset=p, signal_seed=k)
+             for s in names if s in SIG.NULL_SIGNALS
+             for p in range(HOLDING_DAYS)
+             for k in (range(NULL_SEEDS) if s != "equal" else (0,))]
     res = farm.run_many(pan, pols, progress=False)
 
     rows = []
@@ -174,9 +216,38 @@ def main(argv=None) -> int:
             np.isfinite(sr[:n]) & np.isfinite(bm[:n]), sr[:n] - bm[:n], np.nan)
     rc = B.reality_check(excess_by_signal)
 
+    # THE NULL BASELINE, and it is not zero. The benchmark is the CAP-WEIGHTED
+    # market, so any 10-name book drawn from a 500-name liquid universe carries
+    # a structural tilt against it before any signal is applied. Measured
+    # 2013-2018: a RANDOM top-10 book returns -11.00%/yr of "excess". Reporting
+    # a signal's excess against the market without that number beside it
+    # invites reading construction drag as signal, in either direction.
+    # median over EVERY null draw, not over the three null signals' medians
+    null_draws = []
+    for s, group in by_sig.items():
+        if s not in SIG.NULL_SIGNALS:
+            continue
+        for r in group:
+            w0 = len(pan.dates) - len(r.dates)
+            bm = bench_all[w0:]
+            sr = B.daily_returns(r.nav)
+            n = min(sr.size, bm.size)
+            ok2 = np.isfinite(sr[:n]) & np.isfinite(bm[:n])
+            if ok2.sum() > 252:
+                null_draws.append(float((sr[:n] - bm[:n])[ok2].mean()) * 252 * 100)
+    null_base = float(np.median(null_draws)) if null_draws else 0.0
+    null_lo, null_hi = ((float(np.percentile(null_draws, 5)),
+                         float(np.percentile(null_draws, 95)))
+                        if null_draws else (0.0, 0.0))
+    for r in rows:
+        r["null_baseline_excess_annual_pct"] = round(null_base, 3)
+        r["excess_vs_null_annual_pct"] = round(
+            r["observed_excess_annual_pct"] - null_base, 3)
+
     rows.sort(key=lambda r: r["mde_at_80pct_power_annual_pct"])
     hdr = (f"{'signal':<18} {'median$':>10} {'te%':>7} {'excess%':>8} "
-           f"{'t':>6} {'mde80%':>7} {'resolves':>9} {'yrs_need':>9}")
+           f"{'vs null':>8} {'t':>6} {'mde80%':>7} {'resolves':>9} "
+           f"{'yrs_need':>9}")
     print(hdr); print("-" * len(hdr))
     for r in rows:
         star = "  (null)" if r["is_null"] else ""
@@ -184,10 +255,25 @@ def main(argv=None) -> int:
         print(f"{r['signal']:<18} {r['terminal_median_usd']:>10,.0f} "
               f"{r['tracking_error_annual_pct']:>7.1f} "
               f"{r['observed_excess_annual_pct']:>8.2f} "
+              f"{r['excess_vs_null_annual_pct']:>8.2f} "
               f"{(r['implied_t'] or 0):>6.2f} "
               f"{r['mde_at_80pct_power_annual_pct']:>7.2f} "
               f"{str(r['sample_can_resolve_observed_effect']):>9} "
               f"{(f'{yn:.0f}' if yn else '-'):>9}{star}")
+
+    print("")
+    print(f"  NULL BASELINE over {len(null_draws)} null draws "
+          f"(seeds x phases): median {null_base:+.2f}%/yr, "
+          f"5-95pct [{null_lo:+.2f}, {null_hi:+.2f}]")
+    print("     The benchmark is the CAP-WEIGHTED market, so a 10-name book "
+          "from a 500-name")
+    print("     liquid universe is tilted against it before any signal is "
+          "applied.")
+    print("     `excess%` is vs the MARKET (should I hold this instead of an "
+          "index);")
+    print("     `vs null` is vs a random book of the SAME construction (does "
+          "the signal")
+    print("     add information). Different questions, both named.")
 
     real = [r for r in rows if not r["is_null"]]
     resolvable = [r for r in real if r["sample_can_resolve_observed_effect"]]
@@ -227,7 +313,11 @@ def main(argv=None) -> int:
     path = farm.save({"check": "signal_power", "window": [a.start, a.end],
                       "holding_days": HOLDING_DAYS, "top_k": TOP_K,
                       "sizing": SIZING, "reduced": bool(a.reduce),
-                      "rows": rows, "reality_check": rc},
+                      "rows": rows, "reality_check": rc,
+                      "null_baseline_pct": round(null_base, 3),
+                      "null_draws_5_95_pct": [round(null_lo, 3),
+                                             round(null_hi, 3)],
+                      "n_null_draws": len(null_draws)},
                      f"farm_signal_power_{a.start}_{a.end}")
     print(f"\n  written: {path}")
     return 0

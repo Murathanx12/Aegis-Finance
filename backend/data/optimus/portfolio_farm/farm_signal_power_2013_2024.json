@@ -19,7 +19,9 @@
    "mde_at_80pct_power_annual_pct": 6.257,
    "years_needed_for_observed_effect": 1792.9,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": 4.143
   },
   {
    "signal": "size_large",
@@ -31,31 +33,37 @@
    "mde_at_80pct_power_annual_pct": 6.852,
    "years_needed_for_observed_effect": 58.3,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": 6.618
   },
   {
    "signal": "random",
    "is_null": true,
-   "terminal_median_usd": 27988.98,
-   "tracking_error_annual_pct": 9.338,
-   "observed_excess_annual_pct": -2.987,
-   "implied_t": -1.056,
-   "mde_at_80pct_power_annual_pct": 7.92,
+   "terminal_median_usd": 18491.324999999997,
+   "tracking_error_annual_pct": 9.14,
+   "observed_excess_annual_pct": -6.716,
+   "implied_t": -2.426,
+   "mde_at_80pct_power_annual_pct": 7.752,
    "years_needed_for_observed_effect": null,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": -3.061
   },
   {
    "signal": "random_persistent",
    "is_null": true,
-   "terminal_median_usd": 33832.57,
-   "tracking_error_annual_pct": 9.671,
-   "observed_excess_annual_pct": -0.864,
-   "implied_t": -0.295,
-   "mde_at_80pct_power_annual_pct": 8.203,
+   "terminal_median_usd": 32433.165,
+   "tracking_error_annual_pct": 9.65,
+   "observed_excess_annual_pct": -1.24,
+   "implied_t": -0.424,
+   "mde_at_80pct_power_annual_pct": 8.185,
    "years_needed_for_observed_effect": null,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": 2.415
   },
   {
    "signal": "liquid",
@@ -67,7 +75,9 @@
    "mde_at_80pct_power_annual_pct": 10.723,
    "years_needed_for_observed_effect": 13.2,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": 13.415
   },
   {
    "signal": "low_vol",
@@ -79,7 +89,9 @@
    "mde_at_80pct_power_annual_pct": 11.512,
    "years_needed_for_observed_effect": null,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": -0.991
   },
   {
    "signal": "reversal_1w",
@@ -91,7 +103,9 @@
    "mde_at_80pct_power_annual_pct": 25.742,
    "years_needed_for_observed_effect": null,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": 1.085
   },
   {
    "signal": "mom_3_1",
@@ -103,7 +117,9 @@
    "mde_at_80pct_power_annual_pct": 26.488,
    "years_needed_for_observed_effect": null,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": 0.817
   },
   {
    "signal": "reversal_1m",
@@ -115,7 +131,9 @@
    "mde_at_80pct_power_annual_pct": 27.987,
    "years_needed_for_observed_effect": null,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": 3.589
   },
   {
    "signal": "mom_12_1",
@@ -127,7 +145,9 @@
    "mde_at_80pct_power_annual_pct": 28.461,
    "years_needed_for_observed_effect": 46.9,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": 17.378
   },
   {
    "signal": "illiquid",
@@ -139,7 +159,9 @@
    "mde_at_80pct_power_annual_pct": 28.848,
    "years_needed_for_observed_effect": null,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": -6.624
   },
   {
    "signal": "mom_6_1",
@@ -151,7 +173,9 @@
    "mde_at_80pct_power_annual_pct": 30.291,
    "years_needed_for_observed_effect": 44.3,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": 18.684
   },
   {
    "signal": "mom_12_0",
@@ -163,7 +187,9 @@
    "mde_at_80pct_power_annual_pct": 31.567,
    "years_needed_for_observed_effect": 107.6,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": 13.703
   },
   {
    "signal": "size_small",
@@ -175,7 +201,9 @@
    "mde_at_80pct_power_annual_pct": 33.564,
    "years_needed_for_observed_effect": null,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": -16.349
   },
   {
    "signal": "trend_200",
@@ -187,7 +215,9 @@
    "mde_at_80pct_power_annual_pct": 33.748,
    "years_needed_for_observed_effect": 69.7,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": 17.0
   },
   {
    "signal": "high_vol",
@@ -199,7 +229,9 @@
    "mde_at_80pct_power_annual_pct": 39.522,
    "years_needed_for_observed_effect": null,
    "sample_can_resolve_observed_effect": false,
-   "years": 10.9
+   "years": 10.9,
+   "null_baseline_excess_annual_pct": -3.655,
+   "excess_vs_null_annual_pct": -10.425
   }
  ],
  "reality_check": {
@@ -211,5 +243,11 @@
   "reality_check_p": 0.358,
   "n_boot": 2000,
   "note": "p is the share of resamples in which the BEST of all policies tried, under the null of no excess, beats the observed best. It prices the search. It does not price the fact that only one price path exists."
- }
+ },
+ "null_baseline_pct": -3.655,
+ "null_draws_5_95_pct": [
+  -9.769,
+  0.997
+ ],
+ "n_null_draws": 125
 }
