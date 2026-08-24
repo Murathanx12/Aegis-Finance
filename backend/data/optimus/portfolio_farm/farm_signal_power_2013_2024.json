@@ -201,5 +201,15 @@
    "sample_can_resolve_observed_effect": false,
    "years": 10.9
   }
- ]
+ ],
+ "reality_check": {
+  "status": "ok",
+  "n_policies": 16,
+  "n_obs": 2746,
+  "best_policy": "mom_6_1",
+  "best_excess_annual_pct": 15.029,
+  "reality_check_p": 0.358,
+  "n_boot": 2000,
+  "note": "p is the share of resamples in which the BEST of all policies tried, under the null of no excess, beats the observed best. It prices the search. It does not price the fact that only one price path exists."
+ }
 }

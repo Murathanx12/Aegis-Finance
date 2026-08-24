@@ -47,6 +47,20 @@ the one row the widened window is likely to settle. Note also that `liquid` and
 `liquid` read t=0.26, because forward splits are commonest among large liquid
 names and the unadjusted P&L path taxed exactly that book.
 
+AND THE MULTIPLICITY, WHICH NO PER-SIGNAL t CAN SEE
+====================================================
+White's Reality Check over all sixteen signals (nulls in the pool, because they
+are what "the best of N tries under no effect" looks like):
+
+    best of sixteen    mom_6_1 at 15.03%/yr
+    reality-check p    0.358
+
+**The best of sixteen signals is unremarkable against the search that found
+it.** A t of 2.55 read off the top row is a t that was selected for being the
+top row, and 0.358 is what that costs. This does not retire any signal — it
+says the grid has produced nothing a claim could rest on, which is the same
+answer the per-signal MDEs give, arrived at from the other direction.
+
 WHY THIS IS THE DIRECT ATTACK ON THE STATED BOTTLENECK
 =======================================================
 `CLAUDE.md`: *all ten arena books declare `selection: composite_top_k` over ONE
@@ -144,6 +158,22 @@ def main(argv=None) -> int:
                 "sample_can_resolve_observed_effect", "years")},
         })
 
+    # WHITE'S REALITY CHECK over the whole grid. A t read off the BEST of
+    # sixteen signals was selected for being the best of sixteen, and a
+    # per-signal power check cannot see that. The nulls stay in the pool on
+    # purpose: they are what 'the best of N tries under no effect' looks like.
+    excess_by_signal = {}
+    for s, group in by_sig.items():
+        group.sort(key=lambda r: r.metrics['terminal_usd'])
+        lead = group[len(group) // 2]
+        w0 = len(pan.dates) - len(lead.dates)
+        sr = B.daily_returns(lead.nav)
+        bm = bench_all[w0:]
+        n = min(sr.size, bm.size)
+        excess_by_signal[s] = np.where(
+            np.isfinite(sr[:n]) & np.isfinite(bm[:n]), sr[:n] - bm[:n], np.nan)
+    rc = B.reality_check(excess_by_signal)
+
     rows.sort(key=lambda r: r["mde_at_80pct_power_annual_pct"])
     hdr = (f"{'signal':<18} {'median$':>10} {'te%':>7} {'excess%':>8} "
            f"{'t':>6} {'mde80%':>7} {'resolves':>9} {'yrs_need':>9}")
@@ -179,6 +209,17 @@ def main(argv=None) -> int:
     print(f"  dearest to resolve:  {dear['signal']} "
           f"(MDE {dear['mde_at_80pct_power_annual_pct']:.1f}%/yr, "
           f"te {dear['tracking_error_annual_pct']:.0f}%)")
+    if rc.get("status") == "ok":
+        print("")
+        print(f"  WHITE'S REALITY CHECK over all "
+              f"{rc['n_policies']} signals (nulls included)")
+        print(f"     best              {rc['best_policy']} at "
+              f"{rc['best_excess_annual_pct']:.2f}%/yr")
+        print(f"     reality-check p   {rc['reality_check_p']}")
+        print("     This prices the SEARCH: the top row was selected for "
+              "being the top row.")
+        print("     A per-signal t cannot see that, and sixteen were tried.")
+
     print("\n  MDE falls with sqrt(T) and a real effect does not, so this table "
           "is the\n  thing to re-run when the window widens — the rows that "
           "move are the ones\n  the extra history bought.")
@@ -186,7 +227,7 @@ def main(argv=None) -> int:
     path = farm.save({"check": "signal_power", "window": [a.start, a.end],
                       "holding_days": HOLDING_DAYS, "top_k": TOP_K,
                       "sizing": SIZING, "reduced": bool(a.reduce),
-                      "rows": rows},
+                      "rows": rows, "reality_check": rc},
                      f"farm_signal_power_{a.start}_{a.end}")
     print(f"\n  written: {path}")
     return 0
