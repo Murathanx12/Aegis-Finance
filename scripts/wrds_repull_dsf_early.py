@@ -73,6 +73,18 @@ Delisting is NOT a second gap: `crsp__dsedelist.parquet` already spans
 early era resolves its exits from MEASURED returns exactly as the modern era
 does.
 
+PATCHING THIS FILE DOES NOT CHANGE A RUN ALREADY IN FLIGHT
+==========================================================
+Obvious, and it still cost something on 2026-08-25. The backup destination was
+changed from a sibling file to `superseded/` at 00:44, while the pull was on
+its fifth year — and the running interpreter kept the module it had already
+imported, so the remaining nineteen years wrote their backups beside the real
+files anyway. `wrds_column_completeness` then reported "54 files, 19 PARTIAL",
+which is true and is about the backups, not the pull.
+
+If a fix to this script matters for the run in progress, the run has to be
+restarted. It is resumable and safe to kill, which is why that is cheap.
+
 SAFETY
 ======
 The narrow file is MOVED to `<name>.narrow-5col.parquet`, never deleted, and
