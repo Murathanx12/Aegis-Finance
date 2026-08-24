@@ -361,8 +361,10 @@ def randomised_coverage(cov, rng) -> dict[str, frozenset[str]]:
             continue
         if f2 in sets[t1] or f1 in sets[t2]:
             continue                      # would duplicate an existing pair
-        sets[t1].discard(f1); sets[t1].add(f2)
-        sets[t2].discard(f2); sets[t2].add(f1)
+        sets[t1].discard(f1)
+        sets[t1].add(f2)
+        sets[t2].discard(f2)
+        sets[t2].add(f1)
         edges[i], edges[j] = (t1, f2), (t2, f1)
     return {t: frozenset(v) for t, v in sets.items()}
 
@@ -424,7 +426,6 @@ def main() -> None:
     n = len(names)
     deg = firm_degree(cov)
     shared = shared_counts(cov)
-    rng = np.random.default_rng(SEED)
 
     binary = {t: {p: 1.0 for p in shared[t]} for t in names}
     idf = idf_weights(cov, shared, deg)

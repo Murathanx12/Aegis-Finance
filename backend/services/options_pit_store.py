@@ -55,7 +55,7 @@ import math
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +181,9 @@ def _matched_strike_iv(calls, puts, spot: float
 
     ivc = float(c.loc[c["strike"] == k, "impliedVolatility"].mean())
     ivp = float(p_.loc[p_["strike"] == k, "impliedVolatility"].mean())
-    ok = (lambda v: v if 0.0 < v < 5.0 else None)
+    def ok(v):
+        return v if 0.0 < v < 5.0 else None
+
     return ok(ivc), ok(ivp)
 
 

@@ -563,8 +563,10 @@ def graph_beats_null(coverage: dict[str, frozenset[str]], *,
                 continue
             if f2 in sets[t1] or f1 in sets[t2]:
                 continue
-            sets[t1].discard(f1); sets[t1].add(f2)
-            sets[t2].discard(f2); sets[t2].add(f1)
+            sets[t1].discard(f1)
+            sets[t1].add(f2)
+            sets[t2].discard(f2)
+            sets[t2].add(f1)
             edges[i], edges[j] = (t1, f2), (t2, f1)
         return {t: frozenset(v) for t, v in sets.items()}
 
