@@ -1,0 +1,82 @@
+{
+ "measurement_id": "GRAPH-BACKBONE-1",
+ "licence": "PRODUCT_EXPERIMENT (buildability, structure only \u2014 no IC, no forward return, not evidence of alpha)",
+ "as_of": "2026-08-21",
+ "declared_in": "scripts/graph_backbone_measure.py (this file)",
+ "question": "Is the live co-coverage graph degenerate because it is DENSE, or because it is UNWEIGHTED and thresholded at min_shared=1?",
+ "universe": {
+  "n_with_coverage": 176,
+  "n_firm_pool": 94,
+  "median_firms_per_name": 17.0
+ },
+ "null_model": {
+  "expected_binary_edge_density_under_degree_preserving_null": 0.958,
+  "reading": "if this is ~1.0 then 100% observed density is what RANDOM coverage predicts, and the binary graph's completeness is a fact about min_shared=1 rather than about the data"
+ },
+ "svn": {
+  "n_pairs_tested": 15400,
+  "n_edges_kept": 13691,
+  "n_firm_pool": 94,
+  "expected_overlap_median": 3.425531914893617,
+  "fdr_q": 0.01
+ },
+ "bars": {
+  "corr": 0.25,
+  "n_eff_fraction_of_n_minus_1": 0.5,
+  "pct_rankable": 0.8,
+  "fdr_q": 0.01,
+  "n_random_return_draws": 200,
+  "seed": 20260824
+ },
+ "arms": {
+  "A0_peer_eq": {
+   "edge_density": 1.0,
+   "corr_with_own_return": -1.0,
+   "corr_sd": 0.0,
+   "median_n_eff": 175.0,
+   "n_eff_bar": 87.5,
+   "pct_universe_rankable": 1.0,
+   "gate_corr": false,
+   "gate_n_eff": false,
+   "gate_rankable": true,
+   "verdict": "DEGENERATE"
+  },
+  "A1_peer_idf": {
+   "edge_density": 1.0,
+   "corr_with_own_return": -0.4416,
+   "corr_sd": 0.1254,
+   "median_n_eff": 162.72,
+   "n_eff_bar": 87.5,
+   "pct_universe_rankable": 1.0,
+   "gate_corr": false,
+   "gate_n_eff": false,
+   "gate_rankable": true,
+   "verdict": "DEGENERATE"
+  },
+  "A2_peer_svn": {
+   "edge_density": 0.889,
+   "corr_with_own_return": -0.1976,
+   "corr_sd": 0.1057,
+   "median_n_eff": 162.0,
+   "n_eff_bar": 87.5,
+   "pct_universe_rankable": 1.0,
+   "gate_corr": true,
+   "gate_n_eff": false,
+   "gate_rankable": true,
+   "verdict": "DEGENERATE"
+  },
+  "A3_peer_svn_idf": {
+   "edge_density": 0.889,
+   "corr_with_own_return": -0.2001,
+   "corr_sd": 0.1095,
+   "median_n_eff": 152.29,
+   "n_eff_bar": 87.5,
+   "pct_universe_rankable": 1.0,
+   "gate_corr": true,
+   "gate_n_eff": false,
+   "gate_rankable": true,
+   "verdict": "DEGENERATE"
+  }
+ },
+ "any_viable": false
+}
