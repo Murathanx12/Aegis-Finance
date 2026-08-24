@@ -135,16 +135,44 @@ discovery rule that under-detects, which is the exact failure mode
 unclassified**, and one that fails when a gap closes — so a gap closes
 *visibly*.
 
-### P0.2 A versioned information bus into the frozen state
+### P0.2 A versioned information bus into the frozen state — **DONE 2026-08-24**
 
-Once P0.1 names the orphans, the frozen information state needs a declared way
-to admit them — versioned, so adding a family is a policy event with a hash and
-not a silent widening of every book's inputs mid-trial.
+`backend/services/arena/information_bus.py` · health key `information_bus` ·
+12 tests · bus_version `4846fb0f33912200`, composite_fingerprint
+`7418cb394c109879`.
 
-Constraint that makes this non-trivial and must not be skipped: **the seeded
-books' `policy_fingerprint` must not change when a field they do not consume is
-added.** Per-book identity (shipped 2026-08-23) is what makes this possible at
-all; it is the reason this is P0 now and was impossible last week.
+The frozen state's inputs were a bare module-level dict (`SCORE_PREFIXES`).
+Adding a key silently widened every book's inputs mid-trial, and nothing
+recorded that it happened, when, or why.
+
+**The constraint above is satisfied by separating two things that both get
+called "adding a factor":**
+
+| status | meaning | drifts books? |
+|---|---|---|
+| `ADMITTED_TO_COMPOSITE` | enters `COMPOSITE_WEIGHTS`; changes what books DECIDE | **yes, correctly** — a NAV series spanning the change describes two policies |
+| `ADMITTED_TO_STATE` | frozen into the state, consumed by NO book | **no** — nothing any book decides changed |
+| `CANDIDATE` | declared, not yet computed | no |
+
+`composite_fingerprint()` is blind to the second and third, so admitting a
+family nobody consumes is byte-identical and every seeded book keeps verifying
+under its own inception. That is what lets a mechanism **accrue PIT history
+before its book exists** — which matters precisely because history cannot be
+backfilled for anything a vendor does not keep (see the options PIT store).
+
+**It hashes the family NAMES, not the prose.** The first version hashed whole
+entries, so rewording a `why` re-identified every composite book — reintroducing
+the comment-only-edit defect that drifted 10 of 10 books on 2026-08-23. Caught
+by a test whose name contradicted its own assertion.
+
+`assert_registry_matches_code` refuses in **both** directions: a family in code
+but undeclared (an undeclared widening) and a family declared but absent from
+code (a book believing it decides on something it never sees). Enrolled in the
+missing-input guard contract.
+
+**Found while writing it:** `insider_cmp` is read into the frozen state and
+carries **no composite weight** — the one already-existing state-only family,
+undocumented until now.
 
 ### P0.3 — DONE this session
 

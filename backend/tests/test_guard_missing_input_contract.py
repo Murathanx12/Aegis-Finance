@@ -714,6 +714,27 @@ def _case_options_pit_store():
             "an options capture over an empty universe")
 
 
+def _case_information_bus():
+    """Point the bus at a state that reads a family nobody declared. An
+    undeclared family widens every book's inputs mid-trial, and the whole
+    reason this registry exists is that nothing else would say so."""
+    from backend.services.arena import discovery
+    from backend.services.arena.information_bus import (
+        BusDrift, assert_registry_matches_code)
+
+    original = dict(discovery.SCORE_PREFIXES)
+
+    def _run():
+        discovery.SCORE_PREFIXES["undeclared_family"] = "undeclared:"
+        try:
+            assert_registry_matches_code()
+        finally:
+            discovery.SCORE_PREFIXES.clear()
+            discovery.SCORE_PREFIXES.update(original)
+
+    return (_run, BusDrift, "a frozen state reading an undeclared family")
+
+
 CASES = {
     "aegis_panel": _case_aegis_panel,
     "signal_reachability": _case_signal_reachability,
@@ -721,6 +742,7 @@ CASES = {
     "feature_leakage_guard": _case_feature_leakage_guard,
     "graph_propagation": _case_graph_propagation,
     "options_pit_store": _case_options_pit_store,
+    "information_bus": _case_information_bus,
     "risk_price_features": _case_risk_price_features,
     "spec": _case_arena_spec,
     "experience": _case_arena_experience,

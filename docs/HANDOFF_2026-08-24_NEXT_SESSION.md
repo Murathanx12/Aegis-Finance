@@ -247,10 +247,28 @@ both horizons":
 economic bar, but its own MDE₈₀ is 0.0253 against an IC of 0.0228 — back under
 its own detectable threshold, like everything else here.
 
-**Three options, none of them free:** quantile-map the live residual onto the
-stdopd distribution (a fitted transform owing its own validation); serve the
-19-feature model and say plainly that it sits under its MDE₈₀; or match the rate
-and dividend assumptions properly.
+**The rank route was tried and is spent** (`AMENDMENT-2`, hash
+`3e4c2c744895a856`, `docs/FINDING_2026-08-24_EVENT_RESPONSE_V2_AMENDMENT2.md`).
+A cross-sectional rank is invariant to monotonic distortion, so it should have
+removed the problem without fitting anything. It did not:
+
+| arm | drift1 vs A | drift5 vs A |
+|---|---|---|
+| B drop the column | ✗ | **✓** |
+| C rank the column only | ✗ | ✗ *(worse than deleting it)* |
+| D rank ALL option features | **✓** | ✗ *(collapses, t 2.69 → 0.96)* |
+
+**Each candidate passes at exactly one horizon.** Declaring only `drift1` ships
+arm D; declaring only `drift5` ships arm B — two different models chosen by
+which horizon was written down first. The both-horizons rule, declared before
+the numbers existed, is the only thing that caught it.
+
+**Three routes remain, none free:** a fitted quantile map (owes its own
+validation, can drift — the thing the rank was chosen to avoid); serve arm B and
+say plainly it sits under its MDE₈₀ (defensible under PRODUCT_EXPERIMENT, which
+needs no significance gate); or match the rate and dividend assumptions properly
+— the untried root-cause route, since the matched-strike fix moved the median
+only −0.0254 → −0.0237.
 
 Build it as its own PRODUCT_EXPERIMENT book, never a composite weight — and
 note the collector needs lead time before the book has rows to decide on.

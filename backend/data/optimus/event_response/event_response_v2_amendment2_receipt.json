@@ -1,0 +1,129 @@
+{
+  "amendment_id": "EVENT-RESPONSE-2/AMENDMENT-2",
+  "amendment_hash": "3e4c2c744895a856",
+  "parent_spec_hash": "534124d8bd63f4f4",
+  "declared_before_any_number_existed": true,
+  "rank_join_coverage": 1.0,
+  "n_features": {
+    "A_full_raw": 20,
+    "B_servable_drop": 19,
+    "C_borrow_ranked": 20,
+    "D_all_option_ranked": 21
+  },
+  "horizons": {
+    "drift1": {
+      "arms": {
+        "A_full_raw": {
+          "n_months": 96,
+          "ic": 0.03147,
+          "se": 0.00985,
+          "t": 3.193,
+          "mde80": 0.02759
+        },
+        "B_servable_drop": {
+          "n_months": 96,
+          "ic": 0.02275,
+          "se": 0.00903,
+          "t": 2.52,
+          "mde80": 0.02527
+        },
+        "C_borrow_ranked": {
+          "n_months": 96,
+          "ic": 0.01974,
+          "se": 0.00898,
+          "t": 2.198,
+          "mde80": 0.02515
+        },
+        "D_all_option_ranked": {
+          "n_months": 96,
+          "ic": 0.02531,
+          "se": 0.00942,
+          "t": 2.686,
+          "mde80": 0.02639
+        }
+      },
+      "vs_A": {
+        "B_servable_drop": {
+          "n_months": 96,
+          "mean_diff": -0.008719,
+          "se": 0.007356,
+          "t": -1.185,
+          "within_one_se": false
+        },
+        "C_borrow_ranked": {
+          "n_months": 96,
+          "mean_diff": -0.011724,
+          "se": 0.007631,
+          "t": -1.536,
+          "within_one_se": false
+        },
+        "D_all_option_ranked": {
+          "n_months": 96,
+          "mean_diff": -0.006152,
+          "se": 0.008259,
+          "t": -0.745,
+          "within_one_se": true
+        }
+      }
+    },
+    "drift5": {
+      "arms": {
+        "A_full_raw": {
+          "n_months": 96,
+          "ic": 0.02883,
+          "se": 0.01105,
+          "t": 2.608,
+          "mde80": 0.03095
+        },
+        "B_servable_drop": {
+          "n_months": 96,
+          "ic": 0.02486,
+          "se": 0.01081,
+          "t": 2.299,
+          "mde80": 0.03028
+        },
+        "C_borrow_ranked": {
+          "n_months": 96,
+          "ic": 0.02246,
+          "se": 0.01104,
+          "t": 2.034,
+          "mde80": 0.03091
+        },
+        "D_all_option_ranked": {
+          "n_months": 96,
+          "ic": 0.01107,
+          "se": 0.01148,
+          "t": 0.964,
+          "mde80": 0.03213
+        }
+      },
+      "vs_A": {
+        "B_servable_drop": {
+          "n_months": 96,
+          "mean_diff": -0.003967,
+          "se": 0.006327,
+          "t": -0.627,
+          "within_one_se": true
+        },
+        "C_borrow_ranked": {
+          "n_months": 96,
+          "mean_diff": -0.006366,
+          "se": 0.006015,
+          "t": -1.058,
+          "within_one_se": false
+        },
+        "D_all_option_ranked": {
+          "n_months": 96,
+          "mean_diff": -0.017763,
+          "se": 0.009761,
+          "t": -1.82,
+          "within_one_se": false
+        }
+      }
+    }
+  },
+  "arms_within_one_se_of_A_at_both_horizons": [],
+  "verdict": "RANK_DOES_NOT_RESCUE_IT",
+  "decision_rule": "The model is SERVABLE iff arm C or arm D lands within ONE paired SE of arm A on the same months, at BOTH horizons. If neither does, the rank idea is spent and the successor is either a fitted calibration map or serving arm B under a stated power caveat.",
+  "cannot_show": "That the two vendors ORDER names the same way. A rank fixes a monotonic distortion only, and stdopd (ends 2019) never overlaps the live chains (2026), so the ordering assumption is untestable with data that exists."
+}

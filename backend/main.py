@@ -796,6 +796,16 @@ async def health_full():
     except Exception as e:                                     # noqa: BLE001
         options_pit = {"status": "DEGRADED", "error": str(e)}
 
+    # INFORMATION BUS (P0.2). The declared set of families the frozen state may
+    # carry. On a surface because the failure it guards is SILENT: a family
+    # added to the state without a declaration widens every book's inputs
+    # mid-trial and nothing else would say so.
+    try:
+        from backend.services.arena.information_bus import health as _bus_health
+        information_bus = _bus_health()
+    except Exception as e:                                     # noqa: BLE001
+        information_bus = {"status": "DEGRADED", "error": str(e)}
+
     # Every forecast population, each with its own health row. Added 2026-08-23
     # because a population nobody registered is invisible rather than refused:
     # the arena's ledger had never appeared on any health surface.
@@ -899,6 +909,7 @@ async def health_full():
         "paper_broker": paper_broker,
         "execution_ledger": execution,
         "options_pit": options_pit,
+        "information_bus": information_bus,
         "investment_committee": investment_committee_health,
         "data_sources": source_health(),
         "fred_health": fred_source_health,
