@@ -165,8 +165,36 @@ GRADED_NIGHTS_TO_FIRST_LOOK = 40
 #: against a real number. NOT part of the frozen pre-registration — checked
 #: before changing it, because a change to a frozen field would REFUSE the
 #: night rather than merely misreport it.
-DEFAULT_BALANCE_USD = 57.12
-BALANCE_AS_OF = "2026-08-15"
+#:
+#: **2026-08-24: $23.99, MEASURED — and the campaign is NOT FUNDED to its
+#: first read.** This is the first figure here that came from the provider
+#: rather than a person: `backend/services/deepseek_balance.py` reads
+#: DeepSeek's own `/user/balance`, and the snapshot is in
+#: `<DATA_DIR>/optimus/deepseek_balance.jsonl`.
+#:
+#: The arithmetic the funding rule exists to force, done against it:
+#:
+#:     nights run                      6
+#:     nights to the first read (40)  34
+#:     measured cost per night    $0.9224  (mean of five priced nights:
+#:                                          .9197 .9185 .9023 .9304 .9410)
+#:     IIF-1 alone still needs     $31.36
+#:     balance                     $23.99   -> SHORT BY $7.37
+#:
+#: And that is IIF-1 in isolation. The same key also carries production, which
+#: the cost audit puts at roughly $3/day unattributed, so the combined runway
+#: is about **six calendar days**, not the ~48 that 34 weekday nights need.
+#:
+#: **The stale $57.12 would have said FUNDED.** That is precisely the failure
+#: `deepseek_balance` was written to end, caught on the day it was written, and
+#: the reason this constant is a MEASUREMENT with a snapshot behind it rather
+#: than a number somebody typed. The decision — top up, or narrow the campaign
+#: — is Murat's and is ATTENDED; nothing here changes the frozen trial.
+DEFAULT_BALANCE_USD = 23.99
+BALANCE_AS_OF = "2026-08-24"
+#: Where the figure above came from, so a reader can re-derive it rather than
+#: trust it. `python -m scripts.llm_cost_audit --snapshot` refreshes both.
+BALANCE_SOURCE = "deepseek_balance.read_balance() — provider /user/balance"
 
 #: How many cells in a row may produce NO gradeable forecast before the night
 #: stops. This is the information guard the campaign governor's zero-yield rule

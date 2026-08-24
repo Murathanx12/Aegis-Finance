@@ -11,6 +11,42 @@ paragraph. This one did.
 
 ---
 
+## 0. THE ONE THING WITH A DEADLINE: IIF-1 IS NOT FUNDED TO ITS FIRST READ
+
+Measured 2026-08-24 from DeepSeek's own `/user/balance`, not from a constant:
+
+```
+nights run                      6
+nights to the first read (40)  34
+measured cost per night    $0.9224   (.9197 .9185 .9023 .9304 .9410)
+IIF-1 alone still needs     $31.36
+balance                     $23.99   -> SHORT BY $7.37
+```
+
+That is IIF-1 in isolation. The same key carries production too — roughly
+$3/day unattributed — so the **combined runway is about six calendar days**,
+against the ~48 that 34 weekday nights need.
+
+**The stale $57.12 constant would have said FUNDED.** `investigator_night.
+DEFAULT_BALANCE_USD` now carries the measured $23.99 with its provenance.
+
+**This is Murat's decision and it is ATTENDED.** The options, stated without a
+recommendation because the trade is his:
+
+* **top up.** 34 nights at $0.92 is ~$31 for IIF-1; add production and a
+  comfortable margin to the checkpoint is ~$60-80. Cheap against the value of a
+  clean 40-night forward record;
+* **narrow the campaign** — fewer cells per night lowers $/night but changes
+  the treatment mid-trial, which is exactly what the frozen pre-registration
+  forbids. Effectively this means terminating and re-registering;
+* **let it run dry**, which voids the campaign somewhere around night 32 and
+  wastes the six clean nights already banked.
+
+Nothing in this session changed the trial. `python -m scripts.llm_cost_audit
+--snapshot` refreshes the measurement any time.
+
+---
+
 ## FIRST ACTS, in order, before anything new
 
 1. **Confirm the migration gate.** `python -m scripts.monday_gate_check`. The

@@ -23,6 +23,7 @@ The format Murat's review asked every session to lead with, from now on.
 | **External execution drag** | not measured this session (no external order submitted) |
 | **LLM spend** | **$0.00 this session.** No LLM call was made by this work |
 | **LLM cost per useful decision** | n/a |
+| **FUNDING** | **IIF-1 is NOT funded to its 40-night read.** Balance $23.99 (measured); 34 nights left at $0.9224 needs $31.36. **Short by $7.37 on IIF alone**, ~6 days of combined runway. Attended decision. |
 
 ### RESULT IMPROVEMENT: NONE — AND NOW WE KNOW WHY, WHICH IS WORTH MORE.
 
