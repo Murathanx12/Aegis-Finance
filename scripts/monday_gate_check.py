@@ -11,9 +11,14 @@ IT COMPUTES THE CLOCK ITSELF, AND THAT IS THE POINT. The scheduler runs on
 US/Eastern and this machine is UTC+8. A Hong Kong Monday EVENING is Eastern
 Monday PRE-DAWN, so the jobs fire on the local TUESDAY:
 
-    pi_options_pit   15:30 ET  =  03:30 HKT Tuesday
-    pi_why_moved     17:15 ET  =  05:15 HKT Tuesday
-    pi_arena_daily   17:45 ET  =  05:45 HKT Tuesday
+    pi_options_pit   15:30 ET        = 03:30 HKT Tue   (INSIDE the session,
+                                                      30 min before the close,
+                                                      one shot, no retry)
+    pi_why_moved     17:15-19:15 ET  = 05:15-07:15 HKT Tue  (after the close)
+    pi_arena_daily   17:45-19:45 ET  = 05:45-07:45 HKT Tue  (after the close)
+
+The 18:xx and 19:xx firings are idempotent catch-up retries, so the honest
+deadline for "still ABSENT means a fault" is after the LAST one.
 
 A session already got this wrong once, and the handoff's warning did not stop it
 being got wrong again. So a check whose job has not had a chance to run yet
@@ -28,6 +33,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 import urllib.request
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -36,26 +42,78 @@ BASE = "https://aegis-finance-production.up.railway.app"
 ET = ZoneInfo("US/Eastern")
 HK = ZoneInfo("Asia/Hong_Kong")
 
-#: (job, hour, minute) in ET. The times the gate's checks become meaningful.
-FIRES = {"pi_options_pit": (15, 30),
-         "pi_why_moved": (17, 15),
-         "pi_arena_daily": (17, 45)}
+#: When each job's checks become meaningful, in ET, read off the CronTriggers in
+#: `portfolio_intelligence/scheduler.py` rather than remembered.
+#:
+#: TWO THINGS THE FIRST VERSION GOT WRONG, both by quoting only the first fire:
+#:
+#: 1. `pi_why_moved` and `pi_arena_daily` are `hour="17-19"`, so each has two
+#:    CATCH-UP RETRIES (18:15/19:15 and 18:45/19:45). They exist because this
+#:    process restarted four times in 71 minutes on 2026-08-21, and they are
+#:    idempotent no-ops once the first pass succeeds. So the honest "still
+#:    ABSENT means a fault" deadline is after the LAST retry, not the first —
+#:    07:45 HKT Tuesday, not 05:45. Calling a fault an hour and a half early is
+#:    how somebody ends up debugging a job that was about to run.
+#:
+#: 2. `pi_options_pit` is a single 15:30 fire with NO retry, and 15:30 ET is
+#:    INSIDE the session — half an hour before the close, not after it. That is
+#:    deliberate: the row has to precede the after-close announcement it will
+#:    later be joined to, and the chain is perishable. One shot per day.
+#:
+#: (first_h, first_m, last_h, last_m)
+FIRES = {"pi_options_pit": (15, 30, 15, 30),
+         "pi_why_moved": (17, 15, 19, 15),
+         "pi_arena_daily": (17, 45, 19, 45)}
 
 PASS, FAIL, PEND, INFO = "PASS", "FAIL", "PENDING", "INFO"
 _ICON = {PASS: "[ok]  ", FAIL: "[FAIL]", PEND: "[wait]", INFO: "[--]  "}
 
 
-def _get(path: str) -> dict:
-    with urllib.request.urlopen(BASE + path, timeout=60) as r:
-        return json.loads(r.read().decode("utf-8"))
+def _get(path: str, attempts: int = 4) -> dict:
+    """Fetch with retries, because a dropped connection is not a finding.
+
+    Railway resets the connection on the large health payload often enough that
+    a single attempt turned this gate red twice while nothing was wrong. A
+    transient blip reading as FAIL is precisely the false alarm the script
+    exists to prevent — it would send somebody to debug a healthy deploy at
+    05:00.
+    """
+    last = None
+    for i in range(attempts):
+        try:
+            with urllib.request.urlopen(BASE + path, timeout=90) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except Exception as e:                               # noqa: BLE001
+            last = e
+            if i < attempts - 1:
+                time.sleep(5 * (i + 1))
+    raise RuntimeError(f"{type(last).__name__}: {last} (after {attempts} tries)")
+
+
+def _last_chance(job: str, now_et: datetime) -> datetime:
+    """TODAY's last scheduled firing, retries included."""
+    _, _, h, m = FIRES[job]
+    return now_et.replace(hour=h, minute=m, second=0, microsecond=0)
 
 
 def _has_fired(job: str, now_et: datetime) -> bool:
-    """Has this job had a chance to run TODAY? Weekends never fire."""
-    h, m = FIRES[job]
+    """Has this job had every chance TODAY, retries included?
+
+    Deliberately today-only, with no walk-back to the previous weekday. A first
+    attempt walked back so that a 06:00 HKT Tuesday run (= 18:00 ET Monday)
+    would not read Monday's completed pass as pending — and it made `fired`
+    return True off LAST FRIDAY's slot, which reports a job as having had its
+    chance hours before it does. That over-claims, and over-claiming here means
+    calling a working collector broken.
+
+    The residual cost of today-only is the opposite and cheaper error: run this
+    at 02:00 ET Tuesday and Monday evening's completed pass reads PENDING rather
+    than PASS. It UNDER-claims, the underlying checks still show their real
+    values, and the summary line says which slot to wait for.
+    """
     if now_et.weekday() >= 5:
         return False
-    return (now_et.hour, now_et.minute) >= (h, m)
+    return now_et >= _last_chance(job, now_et)
 
 
 def main() -> None:
@@ -63,11 +121,17 @@ def main() -> None:
     now_hk = now_et.astimezone(HK)
     print(f"ET  {now_et:%a %Y-%m-%d %H:%M}      "
           f"HKT {now_hk:%a %Y-%m-%d %H:%M}")
-    for job, (h, m) in FIRES.items():
+    for job, (h, m, lh, lm) in FIRES.items():
         tgt = now_et.replace(hour=h, minute=m, second=0, microsecond=0)
-        state = "fired" if _has_fired(job, now_et) else (
-            f"in {(tgt - now_et).total_seconds() / 3600:.1f}h")
-        print(f"  {job:17s} {h:02d}:{m:02d} ET  {state}")
+        window = (f"{h:02d}:{m:02d}" if (h, m) == (lh, lm)
+                  else f"{h:02d}:{m:02d}-{lh:02d}:{lm:02d}")
+        if _has_fired(job, now_et):
+            state = "every firing done"
+        elif now_et.weekday() >= 5:
+            state = "weekend - does not run"
+        else:
+            state = f"first firing in {(tgt - now_et).total_seconds() / 3600:.1f}h"
+        print(f"  {job:17s} {window:>11s} ET  {state}")
     print()
 
     try:
@@ -192,7 +256,8 @@ def main() -> None:
         print(f"{n_fail} FAILED, {n_pend} pending - read the FAIL lines above.")
     elif n_pend:
         print(f"nothing failed; {n_pend} check(s) still waiting on a job that "
-              f"has not fired yet. Re-run after 17:45 ET (05:45 HKT Tue).")
+              f"has not fired yet. Re-run after 19:45 ET - the LAST "
+              f"catch-up retry - which is 07:45 HKT Tuesday.")
     else:
         print("gate clear.")
     sys.exit(1 if n_fail else 0)
