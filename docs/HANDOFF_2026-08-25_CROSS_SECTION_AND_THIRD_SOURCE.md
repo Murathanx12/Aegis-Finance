@@ -92,7 +92,16 @@ instrument's own calibration and should be read first, every time.**
 
 ## 4. TWO CLOCK-GATED CHECKS STILL PENDING
 
-Both were correct-but-not-yet-fired when read at 02:14 ET:
+Both were correct-but-not-yet-fired at 03:13 ET Tue, ~12–13 hours ahead of
+their firing. They will have fired by the next session.
+
+**One thing checked before pushing, because it would have been easy to ruin:**
+`_last_mtm_timestamp` is a module global reset to `None` on restart, and the
+suspect skip path is guarded by it. A deploy shortly BEFORE 16:30 ET would make
+the first post-restart run mark unconditionally and produce a clean receipt —
+masking the very defect it was built to catch. At 13 hours out, ~13 hourly runs
+re-establish the state first, so this push is safe. **A deploy inside the hour
+before 16:30 ET is not** — hold it if that is where the clock sits.
 
 - **15:30 ET** — `options_pit days_held` must climb past **1**. It never has in
   this system's history. If it is still 1 after a capture, the `/data` fix did
