@@ -161,6 +161,45 @@ that *guards derive their inputs or refuse*.
 A red line that cannot go green is worse than a missing check, because it
 teaches the reader to skim red lines — and there were nine real checks beside it.
 
+## THE OTHER ONE TO READ: options_pit was never on the volume
+
+Found by watching the gate across my own deploy, which is the only reason it
+was visible at all:
+
+    10:27 local   options_pit accruing: ok rows=179 days=1
+    10:59 local   options_pit accruing: ABSENT rows=0 days=0
+
+`options_pit_store._root()` read `os.environ["OPTIMUS_LEDGER_DIR"]` — a
+variable nothing sets — and fell through to
+`Path(__file__).parents[1]/"data"/"optimus"`, **a path inside the container
+image**. Railway sets `AEGIS_DATA_DIR=/data` and mounts the volume there;
+`config.OPTIMUS_LEDGER_DIR` honours that, and **every other ledger-writing
+service in the codebase imports that constant.** This module was the only one
+reading an env var.
+
+**`days_held` has never once exceeded 1.** That is the same fact seen from the
+other side: the store could not accumulate, because every deploy reset it.
+`monday_gate_check` states the cost in its own words — *"option chains have NO
+history; a missed day is gone."* Every day it ever collected is gone. That is
+not recoverable; what is fixed is that it stops.
+
+It also hid from the suite: the rest of the tests override storage by
+monkeypatching `config.OPTIMUS_LEDGER_DIR`, which this module never consulted,
+so its tests exercised a resolution path production never used.
+
+**The control that makes the diagnosis certain:** arena seeds and `event_store`
+persisted across the very same deploy. They resolve through config; they
+survived. options_pit did not.
+
+Guard added — `backend/tests/test_ledger_dir_resolution.py` refuses any service
+that rebuilds a ledger path from `__file__` or reads the env var without a
+config fallback. Verified it bites: reverting `_root()` fails 4 of its 9 tests.
+
+**Not yet verified in production:** the fix is deployed, but `pi_options_pit`
+fires at 15:30 ET, so the first accrual onto the volume lands then. **Check
+`options_pit accruing` on the next session and confirm `days_held` climbs past
+1 — that number has never been above 1 in this system's history.**
+
 ## What is left
 
 ### Unblocked and ordered
@@ -191,9 +230,16 @@ teaches the reader to skim red lines — and there were nine real checks beside 
 
 - `python -m scripts.monday_gate_check` — the seed-migration line should now
   read either a real count or CANNOT DETERMINE, never a bare 0/9 FAIL.
-- Deploy verification for `e6308f9` was in flight at handoff; confirm
-  `/api/arena/status` serves `fingerprint_scheme` in production and record what
-  the nine books actually say. **That number has never been observed.**
+- **DONE and verified live:** `/api/arena/status` serves `fingerprint_scheme`
+  for 9/9 books, and all nine read `book-v1`. The migration had completed long
+  ago — the gate was reading a field that was never served. The gate line now
+  reads `9/9 stamped [ok]`.
+- **`options_pit accruing` — the one to actually check.** `days_held` must climb
+  past 1 after the next 15:30 ET firing. It never has.
+- `nav.all_fresh` was **false** at handoff: all ten lanes sit at 2026-08-21
+  against an expected 2026-08-24. `pi_daily_check` last fired 16:30 ET Monday,
+  six hours BEFORE my deploy, so this predates the session's changes. Not
+  diagnosed — it is the first thing to look at.
 
 ## What this session says about the method
 
