@@ -560,6 +560,15 @@ def status(root=None) -> dict:
             "positions": len((store.read_positions(b, root).get("positions")
                               or {})),
             "validation_status": s.validation_status,
+            # Identity, served because the arena's central discipline is that
+            # a changed rule is a NEW book. A reader who cannot see which
+            # scheme a book carries cannot check that discipline from outside,
+            # and `monday_gate_check` spent weeks reporting 0/9 migrated
+            # because it was reading a key this payload never contained.
+            "fingerprint_scheme": (seed or {}).get("fingerprint_scheme"),
+            "book_fingerprint": ((seed or {}).get("book_fingerprint")
+                                 or "")[:12] or None,
+            "composite_version": (seed or {}).get("composite_version"),
         }
     out["experiences"] = len(store.read_experiences(root))
     out["experience_outcomes"] = len(store.read_outcomes(root))

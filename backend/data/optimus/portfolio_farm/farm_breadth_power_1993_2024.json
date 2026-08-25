@@ -900,7 +900,9 @@
     10,
     50
    ],
-   "scales_with_breadth": true
+   "median_excess_annual_pct": -2.204,
+   "excess_positive_over_grid": false,
+   "scales_with_breadth": false
   },
   "value_bm": {
    "t_vs_log_k_slope": 0.131,
@@ -909,7 +911,9 @@
     10,
     50
    ],
-   "scales_with_breadth": true
+   "median_excess_annual_pct": -1.226,
+   "excess_positive_over_grid": false,
+   "scales_with_breadth": false
   },
   "profit_roe": {
    "t_vs_log_k_slope": 0.693,
@@ -918,6 +922,8 @@
     10,
     50
    ],
+   "median_excess_annual_pct": 2.375,
+   "excess_positive_over_grid": true,
    "scales_with_breadth": true
   },
   "mom_12_1": {
@@ -927,6 +933,8 @@
     10,
     50
    ],
+   "median_excess_annual_pct": 8.914,
+   "excess_positive_over_grid": true,
    "scales_with_breadth": true
   },
   "liquid": {
@@ -936,6 +944,8 @@
     10,
     50
    ],
+   "median_excess_annual_pct": 0.162,
+   "excess_positive_over_grid": true,
    "scales_with_breadth": false
   },
   "size_large": {
@@ -945,6 +955,8 @@
     10,
     50
    ],
+   "median_excess_annual_pct": -0.217,
+   "excess_positive_over_grid": false,
    "scales_with_breadth": false
   },
   "equal": {
@@ -954,6 +966,8 @@
     10,
     50
    ],
+   "median_excess_annual_pct": 0.892,
+   "excess_positive_over_grid": true,
    "scales_with_breadth": false
   },
   "random": {
@@ -963,6 +977,8 @@
     10,
     50
    ],
+   "median_excess_annual_pct": -4.675,
+   "excess_positive_over_grid": false,
    "scales_with_breadth": false
   },
   "random_persistent": {
@@ -972,7 +988,10 @@
     10,
     50
    ],
+   "median_excess_annual_pct": 0.446,
+   "excess_positive_over_grid": true,
    "scales_with_breadth": false
   }
- }
+ },
+ "verdicts_recomputed_2026_08_25": "The 'scales_with_breadth' rule gained a positive-excess condition after it labelled two loss-making signals as scaling. Verdicts recomputed from the rows already in this receipt via breadth_verdict(); the rows themselves are untouched, because the verdict is a function of (k, t, excess) alone."
 }

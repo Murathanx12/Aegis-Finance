@@ -46,10 +46,16 @@ READING IT
   `mde80`     the difference this window could have detected at 80% power
   `resolves`  excess > mde80
 
-`resolves=False` here is a stronger negative than `resolves=False` against the
-market, because a paired comparison cancels the shared construction drag and
-should therefore be the EASIER test. A signal that cannot clear its benchmark
-book after that cancellation has not been shown to be about its own quantity.
+`te_vs_market` is printed beside the paired `te` because pairing is NOT
+automatically the easier test, and the first three runs of this script said so:
+`profit_roe` at k=100 tracks the market at 5.10% and the age book at 6.11%.
+Pairing cancels the shared market exposure and ADDS the difference in holdings,
+and for two books drawn from one 500-name universe the second term can be the
+larger. Which way it goes is an empirical quantity about overlap, so it is
+measured and reported rather than assumed.
+
+What `resolves=False` here does mean, either way: the signal has not been shown
+to beat that particular alternative explanation on this sample.
 
 This is a diagnostic under the `PRODUCT_EXPERIMENT` licence. It prices one
 alternative explanation; it does not license a claim.
@@ -152,7 +158,9 @@ def main(argv=None) -> int:
     print(f"  {a.signal}  vs  {a.benchmark}   "
           f"(same construction, phase matched pairwise)\n")
 
-    mkt_all = P.market_benchmark(pan.dates) if a.benchmark == "market" else None
+    # always computed, even when the benchmark is another book: the paired
+    # tracking error means little without the number it is being compared to.
+    mkt_all = P.market_benchmark(pan.dates)
 
     per_phase = []
     for phase in sorted(sig_by_phase):
@@ -161,9 +169,13 @@ def main(argv=None) -> int:
             continue
         s_dates, s_nav = np.asarray(lead.dates), np.asarray(lead.nav, float)
         sr = B.daily_returns(s_nav)
+        w0 = len(pan.dates) - len(lead.dates)
+        mkt = np.where(np.isfinite(mkt_all[w0:]), mkt_all[w0:], np.nan)
+        vs_mkt = B.power_check(sr, mkt)
+        te_mkt = (vs_mkt.get("tracking_error_annual_pct")
+                  if vs_mkt.get("status") == "ok" else None)
         if a.benchmark == "market":
-            w0 = len(pan.dates) - len(lead.dates)
-            br = np.where(np.isfinite(mkt_all[w0:]), mkt_all[w0:], np.nan)
+            br = mkt
             ben_terminal = float("nan")
         else:
             bl = _median_run(ben_by_phase.get(phase, []))
@@ -183,19 +195,21 @@ def main(argv=None) -> int:
         per_phase.append({"phase": phase,
                           "signal_terminal_usd": float(lead.metrics["terminal_usd"]),
                           "benchmark_terminal_usd": ben_terminal,
+                          "tracking_error_vs_market_annual_pct": te_mkt,
                           **pw})
 
     if not per_phase:
         raise SystemExit("no phase produced a comparable pair")
 
     hdr = (f"{'phase':>5} {'signal$':>12} {'bench$':>12} {'te%':>7} "
-           f"{'excess%':>8} {'t':>6} {'mde80%':>7}  resolves")
+           f"{'teMkt%':>7} {'excess%':>8} {'t':>6} {'mde80%':>7}  resolves")
     print(hdr)
     print("-" * len(hdr))
     for r in per_phase:
         print(f"{r['phase']:>5} {r['signal_terminal_usd']:>12,.0f} "
               f"{r['benchmark_terminal_usd']:>12,.0f} "
               f"{r['tracking_error_annual_pct']:>7.2f} "
+              f"{(r['tracking_error_vs_market_annual_pct'] or 0):>7.2f} "
               f"{r['observed_excess_annual_pct']:>8.2f} "
               f"{r['implied_t']:>6.2f} "
               f"{r['mde_at_80pct_power_annual_pct']:>7.2f}  "
@@ -219,13 +233,21 @@ def main(argv=None) -> int:
           f"[{min(exc):+.2f}, {max(exc):+.2f}]%/yr, t [{min(ts):+.2f}, "
           f"{max(ts):+.2f}], {n_res}/{len(per_phase)} resolve")
 
+    te_p = med["tracking_error_annual_pct"]
+    te_m = med.get("tracking_error_vs_market_annual_pct")
+    if te_m:
+        harder = "HARDER" if te_p > te_m else "easier"
+        print(f"\n  Pairing was the {harder} test here: tracking error "
+              f"{te_p:.2f}% vs the\n  benchmark book against {te_m:.2f}% vs "
+              f"the market. Pairing cancels the shared\n  market exposure and "
+              f"adds the difference in holdings; which term wins is\n  a fact "
+              f"about overlap, not a property of pairing.")
     if n_res == 0:
         print(f"\n  NOT RESOLVED. `{a.signal}` has not been shown to beat "
-              f"`{a.benchmark}` at this\n  construction, and a paired test is "
-              f"the EASIER one — it cancels the drag\n  both books share. An "
-              f"excess over the market that does not survive this\n  is not "
-              f"evidence about {a.signal}; it is evidence about the two books "
-              f"together.")
+              f"`{a.benchmark}` at this\n  construction on this sample. An "
+              f"excess over the market that does not\n  survive this is not "
+              f"evidence about {a.signal} alone; it is consistent with "
+              f"whatever\n  the two books share.")
     elif n_res == len(per_phase):
         print(f"\n  RESOLVED AT EVERY PHASE. `{a.signal}` clears `{a.benchmark}` "
               f"by more than this\n  window's detection threshold regardless of "

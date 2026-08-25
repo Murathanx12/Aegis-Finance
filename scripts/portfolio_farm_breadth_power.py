@@ -156,6 +156,46 @@ def merge_prior(payload: dict, name: str) -> int:
     return len(carried)
 
 
+def breadth_verdict(ts) -> dict:
+    """Score one signal's (k, t, excess) triples for Grinold's shape.
+
+    TWO conditions, because either alone can be produced by one noisy point:
+    the fitted trend must RISE and the best information ratio must not sit at
+    the narrowest book in the clean range.
+
+    And a THIRD, added 2026-08-25 after the verdict line said "SCALES with
+    breadth" about two signals that lose money at every breadth. A rising `t`
+    on a NEGATIVE excess is a loss being diluted, not an edge being
+    diversified, and the two produce an identical slope. `value_bm` ran
+    t -0.77 -> -0.39 and `low_vol` -1.09 -> -0.84; both climb toward zero from
+    below and both passed. Grinold's law is about an information ratio
+    GROWING, so require the quantity to be positive before scoring how it
+    grows.
+    """
+    kk = np.array([x[0] for x in ts], dtype=float)
+    tt = np.array([x[1] for x in ts], dtype=float)
+    ee = np.array([x[2] for x in ts], dtype=float)
+    slope = float(np.polyfit(np.log(kk), tt, 1)[0])
+    peak_k = int(ts[int(np.argmax(tt))][0])
+    positive = bool(np.median(ee) > 0)
+    return {"t_vs_log_k_slope": round(slope, 3),
+            "peak_t_at_k": peak_k,
+            "fitted_over_k": [int(kk[0]), int(kk[-1])],
+            "median_excess_annual_pct": round(float(np.median(ee)), 3),
+            "excess_positive_over_grid": positive,
+            "scales_with_breadth": bool(positive and slope > 0
+                                        and peak_k > CLEAN_MIN_K)}
+
+
+def verdict_text(v: dict) -> str:
+    if v["scales_with_breadth"]:
+        return "SCALES with breadth"
+    if not v["excess_positive_over_grid"]:
+        return ("excess NEGATIVE across the grid - breadth test N/A, "
+                "the loss merely dilutes")
+    return "does NOT scale - concentrated, not cross-sectional"
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--start", type=int, default=2013)
@@ -206,7 +246,8 @@ def main(argv=None) -> int:
             med = float(np.median([x.metrics["terminal_usd"] for x in g]))
             rows.append({"signal": s, "top_k": k, "median_usd": med, **pw})
             if CLEAN_MIN_K <= k <= CLEAN_MAX_K:
-                ts.append((k, pw["implied_t"] or 0.0))
+                ts.append((k, pw["implied_t"] or 0.0,
+                           pw["observed_excess_annual_pct"] or 0.0))
             mark = "" if k <= CLEAN_MAX_K else "   (>40% of universe)"
             print(f"{s:<12} {k:>4} {med:>11,.0f} "
                   f"{pw['tracking_error_annual_pct']:>7.1f} "
@@ -215,23 +256,15 @@ def main(argv=None) -> int:
                   f"{pw['mde_at_80pct_power_annual_pct']:>7.2f} "
                   f"{str(pw['sample_can_resolve_observed_effect']):>9}{mark}")
         if len(ts) >= 3:
-            kk = np.array([x[0] for x in ts], dtype=float)
-            tt = np.array([x[1] for x in ts], dtype=float)
-            slope = float(np.polyfit(np.log(kk), tt, 1)[0])
-            peak_k = int(ts[int(np.argmax(tt))][0])
             # BOTH conditions, because either alone can be produced by one
             # noisy point: the fitted trend must rise AND the best information
             # ratio must not sit at the narrowest book in the clean range.
-            scales = bool(slope > 0 and peak_k > CLEAN_MIN_K)
-            verdicts[s] = {"t_vs_log_k_slope": round(slope, 3),
-                           "peak_t_at_k": peak_k,
-                           "fitted_over_k": [int(kk[0]), int(kk[-1])],
-                           "scales_with_breadth": scales}
-            verdict = ("SCALES with breadth" if scales else
-                       "does NOT scale - concentrated, not cross-sectional")
-            print(f"  -> t vs log(k) slope {slope:+.2f} over k="
-                  f"{int(kk[0])}..{int(kk[-1])}, peak t at k={peak_k}: "
-                  f"{verdict}" + chr(10))
+            verdicts[s] = breadth_verdict(ts)
+            verdict = verdict_text(verdicts[s])
+            v = verdicts[s]
+            print(f"  -> t vs log(k) slope {v['t_vs_log_k_slope']:+.2f} over "
+                  f"k={v['fitted_over_k'][0]}..{v['fitted_over_k'][1]}, peak t "
+                  f"at k={v['peak_t_at_k']}: {verdict}" + chr(10))
 
     print("  A negative slope means the edge lives in the extreme tail of the "
           "ranking\n  and dilutes faster than it diversifies. Grinold says a "

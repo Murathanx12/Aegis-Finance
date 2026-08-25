@@ -242,3 +242,34 @@ def test_a_crlf_checkout_agrees_with_production(tmp_path):
         spec.CONFIG_PATH.read_bytes().replace(b"\r\n", b"\n")
                                      .replace(b"\n", b"\r\n"))
     assert spec.config_hash(crlf) == SEEDED_CONFIG_HASH
+
+
+# --------------------------------------------------------------------------
+# The status endpoint has to SERVE identity, because a gate that reads a key
+# the payload never contains reports a failure no state of the system can
+# clear. `monday_gate_check` printed "seed migration -> book-v1  0/9 stamped
+# [FAIL]" for weeks against seeds whose real state was simply invisible.
+# --------------------------------------------------------------------------
+def test_status_serves_book_identity_fields(tmp_path, monkeypatch):
+    from backend.services.arena import engine
+
+    st = engine.status()
+    assert "books" in st
+    for book_id, v in st["books"].items():
+        assert "fingerprint_scheme" in v, (
+            f"{book_id}: status must SERVE fingerprint_scheme even when it is "
+            f"None — monday_gate_check reads it, and a missing key reads as "
+            f"'not migrated' rather than 'not served'")
+        assert "book_fingerprint" in v
+        assert "composite_version" in v
+
+
+def test_status_book_fingerprint_is_truncated_not_whole():
+    """A status endpoint is a public surface; the fingerprint identifies a
+    book there, it does not have to be the whole digest."""
+    from backend.services.arena import engine
+
+    for v in engine.status()["books"].values():
+        bfp = v.get("book_fingerprint")
+        if bfp is not None:
+            assert len(bfp) <= 12

@@ -8,7 +8,7 @@
 | best forward paper strategy | unchanged — none promoted |
 | independent selector count | **1** (unchanged — `profit_roe` is a CANDIDATE, one test short: §3) |
 | farm candidates tested / promoted | 18 signals x 7 breadths x 4 windows / **0 promoted** |
-| new actionable finding | **`profit_roe` at k=100 needs 31.2 years and the window is 30.88** — misses by four months. First time anything in the farm has come within a year of its own detection threshold, and it survived the null-breadth test that was run to kill it |
+| new actionable finding | **Nothing in the farm beats a book of the hundred oldest listings, resolvably.** `profit_roe` clears it by +1.53%/yr and needs 126 years; `mom_12_1` at k=20 clears it by +9.23%/yr and needs 72. The near-miss against the MARKET (31.2 vs 30.88 years) does not survive the sharper question |
 | external execution drag | n/a — nothing seeded |
 | LLM spend | $0 this batch (farm is numerical) |
 
@@ -69,7 +69,7 @@ So the test works as a discriminator, and that is worth as much as any single
 verdict it produced: **breadth is now the cheap first screen on every farm
 candidate, run before the holdings census rather than after it.**
 
-## 3. `profit_roe` — the first thing to reach its own detection threshold
+## 3. `profit_roe` — reached its detection threshold against the market, and not against the right benchmark
 
     signal          k     median$     te%  excess%      t  mde80%  yrs_need
     profit_roe      5     122,639    17.4    -0.60  -0.19    8.75        -
@@ -124,27 +124,63 @@ book. Against that control `profit_roe` adds **+2.31%/yr**.
 
 So the near-resolvable result is not "wide books beat a cap-weighted index".
 
-### The confound that remains, and it is not small
+### The confound was measured, and it takes most of the result
 
 `equal` at k=100 returns **+1.12%/yr** — and `equal` is not equal-weighting, it
 is *the hundred lowest permnos*, i.e. the hundred oldest surviving listings.
-**Roughly 44% of `profit_roe`'s k=100 excess is matched by a book selected on
-listing age alone.**
+High-ROE names in a large-cap universe **are** old names: CL, CLX, AVP, LMT,
+UST and MHP are among the most venerable listings in CRSP. Quality and listing
+age are correlated by how the industry is built, not by accident.
 
-That is a live alternative explanation rather than a technicality, because
-high-ROE names in a large-cap universe *are* old names: CL, CLX, AVP, LMT, UST,
-MHP are among the most venerable listings in CRSP. Quality and age are
-correlated by construction of the industry, not by accident.
+Comparing each book's excess-over-market cannot settle that, because the two
+excesses are not independent — they share the market, the construction, and
+some holdings. The quantity that decides it is the tracking error of the
+DIFFERENCE, and nothing in the farm computed one, because every power check
+compared to the cap-weighted market. So `scripts/portfolio_farm_paired_power.py`
+was written and run:
 
-The incremental piece over `equal` is ~1.4%/yr, and this grid cannot say
-whether that resolves, because the tracking error of the *difference*
-`profit_roe - equal` was never computed — only each one's tracking error
-against the market. **A signal that resolves against a random book and has not
-been measured against an age-matched book is one test short**, and that test is
-the first item in the handoff.
+    1993-2024, same construction, phase matched pairwise, median phase
 
-`profit_roe` is therefore a **candidate for a second independent selector**,
-promoted from "curiosity" and not to "selector".
+    comparison                              te%   excess%     t   mde80%  yrs   resolves
+    profit_roe vs equal        k=100       6.11     +1.53  1.39     3.08  126   0/5
+    profit_roe vs random_pers. k=100       5.33     +2.22  2.32     2.68   45   0/5
+    mom_12_1   vs equal        k= 20      27.92     +9.23  1.84    14.07   72   0/5
+
+**`profit_roe` beats the age book, and cannot be shown to.** The sign is stable
+across all five rebalance phases (+1.10% to +1.56%), so it is not a calendar
+artefact — but at 1.53%/yr against a 3.08%/yr detection threshold it needs 126
+years. Against the market it needed 31.2 and the window is 30.88; against the
+age book the target moves back out by a factor of four.
+
+Roughly **40% of the k=100 excess over the market is matched by a book selected
+on listing age alone**, and the remainder is not resolvable on the data that
+exists.
+
+**The incumbent is in exactly the same position.** `mom_12_1` at its best
+breadth clears the age book by +9.23%/yr and needs 72 years. So this is not a
+verdict about characteristics versus price — it is the same verdict twice, and
+the age book is a harder benchmark than the farm has ever used.
+
+`profit_roe` is a **candidate for a second selector**, promoted from
+"curiosity" and not to "selector".
+
+### Pairing was the HARDER test, which was not the expectation
+
+The script was written asserting that a paired comparison cancels the drag both
+books share and is therefore easier. Its own first three runs refute that:
+
+    profit_roe k=100    te vs market  5.10%    te vs equal   6.11%
+    mom_12_1   k= 20    te vs market 27.50%    te vs equal  27.92%
+
+Pairing cancels the shared market exposure and **adds the difference in
+holdings**, and for two books drawn from one 500-name universe the second term
+is the larger. Which way it goes is a fact about overlap, not a property of
+pairing — so the script now measures both tracking errors and prints them side
+by side instead of asserting which is easier.
+
+The claim survived from writing the docstring to reading the output, which is
+the same distance every other unmeasured claim in this project has travelled
+before being caught.
 
 ## 4. Split-half stability: every price signal flips or halves; two do not
 
@@ -196,48 +232,80 @@ value premium being earned.
 "top-10 by raw book-to-market in a top-500 liquid universe". Book-to-market as
 a *sorted quantile* has never been tested here and is a different object.
 
-## 6. What the null run settled, and what it did not
+## 6. What is settled and what is not
 
-Run: `portfolio_farm_breadth_power --start 1993 --end 2024 --reduce --signals
-equal random random_persistent`. Receipt:
-`backend/data/optimus/portfolio_farm/farm_breadth_power_1993_2024.json`.
+**Settled — the breadth-monotone shape belongs to `profit_roe`, not to wide
+books.** All three nulls have NEGATIVE slope and peak at k=10 (`random` -1.45,
+`random_persistent` -0.80, `equal` -0.38). The construction produces the
+opposite shape from the one `profit_roe` has.
 
-**Settled:** the breadth-monotone shape is a property of `profit_roe` and not of
-wide books. All three nulls have negative slope and peak at k=10.
+**Settled — the construction has a measured cost floor.** The `random` null is
+significantly negative at every breadth (-4.35%/yr, t=-5.45 at k=100). Every
+`excess%` in every farm table should be read against that floor rather than
+against zero.
 
-**Settled:** the `random` null is significantly NEGATIVE at every breadth
-(-4.35%/yr, t=-5.45 at k=100). A random top-k book of this construction loses
-to the cap-weighted market persistently, which is the cost of the construction
-itself and is now measured rather than assumed. Every `excess%` in every farm
-table should be read against that floor, not against zero.
+**Settled — neither `profit_roe` nor `mom_12_1` beats an age-selected book
+resolvably.** 126 years and 72 years respectively. See §3.
 
-**Not settled:** whether `profit_roe` beats an AGE-matched book. See §3.
+**Not settled — whether the residual over age is real.** +1.53%/yr with the
+sign stable across five phases is suggestive and is not evidence.
 
-**Not settled:** whether any of this survives out of sample. Nothing here is a
-holdout — `profit_roe` was registered on 2026-08-25 and evaluated on the same
-32 years that were pulled to evaluate it.
+**Not settled — anything out of sample.** Nothing here is a holdout.
+`profit_roe` was registered on 2026-08-25 and evaluated on the same 32 years
+that were pulled in order to evaluate it. `value_bm` and `profit_roe` are two
+characteristics tried, and the breadth grid adds 63 cells of search that no
+multiplicity control here has priced.
 
 ## 7. What this licenses
 
 - `PRODUCT_EXPERIMENT`: `profit_roe` at k=50-100 may be built and paper-traded
-  under a frozen contract, subject to §6. No significance gate applies.
-- `CAPITAL_CANDIDATE`: nothing. Not `mom_12_1` at k=20 (61 years), not
-  `profit_roe` (31.2 vs 30.88 is a tie, not a pass, and §6 is unanswered).
+  under a frozen contract. No significance gate applies, and the exploration
+  licence is the whole point — 126 years to demonstrate does not forbid
+  running it in paper, it forbids calling the result alpha.
+- `CAPITAL_CANDIDATE`: nothing. Not `mom_12_1` at k=20 (61 years vs market, 72
+  vs the age book), not `profit_roe` (126 years vs the age book).
 - `RESEARCH_CLAIM`: nothing. White's reality check over the 18-signal table
   gives p=0.168 for the best row on 32 years, and the breadth grid adds
   14 more cells of search that no multiplicity control here has priced.
 
-## 8. A defect this session created and fixed
+## 8. Four defects found and fixed while doing this
 
-`farm_breadth_power_{start}_{end}.json` was keyed on the window alone, so a
-run with `--signals a b` silently deleted the rows a previous run had written
-for `--signals c d`. Two batteries ran last night and only the second one's
-signals survived in the receipt; the first four existed only in a log file.
+**1. The breadth receipt clobbered itself.**
+`farm_breadth_power_{start}_{end}.json` was keyed on the window alone, so a run
+with `--signals a b` silently deleted rows a previous run had written for
+`--signals c d`. Two batteries ran overnight and only the second one's signals
+survived in the receipt; the first four existed solely in a log file. Now
+merges on `(signal, top_k)` and REFUSES to merge across a different holding
+period, sizing, reduction or `clean_max_k` — a table that mixes constructions
+is worse than one that is visibly partial. **This is the standing rule (*a
+headline number belongs in a receipt, never prose alone*) failing through the
+receipt rather than through the prose.**
 
-Fixed by merging on `(signal, top_k)` — and refusing to merge when the
-holding period, sizing, reduction or `clean_max_k` differ, because a table that
-mixes constructions is worse than one that is visibly partial.
+**2. The breadth verdict called two loss-making signals "SCALES with breadth".**
+`value_bm` runs `t` -0.77 → -0.39 over k=10..50 and `low_vol` -1.09 → -0.84.
+Both slopes are positive, both peaks sit away from the narrowest book, so both
+passed — while losing to the market at every breadth on the grid. A rising `t`
+on a NEGATIVE excess is a loss being diluted, not an edge being diversified,
+and the two produce an identical slope. The verdict now requires a positive
+excess to be applicable at all. **Exactly two signals are scored as scaling
+after the fix: `profit_roe` and `mom_12_1`.**
 
-**This is the exact failure the standing rule names** — *a headline number
-belongs in a receipt, never prose alone* — arriving through the receipt rather
-than through the prose.
+**3. The paired script asserted pairing is the easier test.** It is not — see
+§3. Written into the docstring and into the conclusion line, refuted by the
+script's own first three runs. Now measured and printed rather than assumed.
+
+**4. `monday_gate_check` reported a FAIL that no state of the system could
+clear.** "seed migration → book-v1: 0/9 stamped" has been red for weeks.
+`engine.status()` never emitted `fingerprint_scheme`; the gate reads it off
+that payload, so the count could only ever be 0/N. Verified against production
+2026-08-25 — the keys served per book were `last_nav, nav_rows, positions,
+seeded, seeded_at, validation_status`, and nothing else.
+
+The seeds' actual migration state was never failing. It was **invisible**, and
+a check with no input reported the absence as a failure.
+
+Fixed on both sides, and the second matters more: `status()` now serves
+`fingerprint_scheme`, `book_fingerprint` and `composite_version`; and the gate
+now reports **CANNOT DETERMINE** when no book carries the key, per the standing
+rule that *guards derive their inputs or refuse*. A red line that cannot go
+green teaches a reader to skim red lines, which is worse than the missing check.

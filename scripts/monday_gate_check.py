@@ -155,7 +155,17 @@ def main() -> None:
     books = arena.get("books", {})
     stamped = [b for b, v in books.items()
                if v.get("fingerprint_scheme") == "book-v1"]
-    if _has_fired("pi_arena_daily", now_et):
+    # DERIVE OR REFUSE. If not one book carries the key, the endpoint is not
+    # serving it and this check has no input — which is "cannot determine",
+    # never FAIL. Reported 0/9 as a hard failure until 2026-08-25 while the
+    # seeds' actual state was simply invisible, and a red line that no state
+    # of the system can clear teaches a reader to skim red lines.
+    served = any("fingerprint_scheme" in v for v in books.values())
+    if books and not served:
+        add(INFO, "seed migration -> book-v1",
+            "CANNOT DETERMINE - /api/arena/status does not serve "
+            "fingerprint_scheme (deploy the identity fields, then re-check)")
+    elif _has_fired("pi_arena_daily", now_et):
         add(PASS if len(stamped) == len(books) else FAIL,
             "seed migration -> book-v1",
             f"{len(stamped)}/{len(books)} stamped")
