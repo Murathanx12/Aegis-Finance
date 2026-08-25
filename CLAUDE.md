@@ -215,8 +215,20 @@ Seven things from it that govern what counts as progress
   `(2.8*6.11/1.53)^2 = 125`. **So the real tension is CONSTRUCTION: the
   strongest cross-sectional evidence in the project (ic_t 4.18, monotone 0.90,
   32y) produces a WEAK BOOK, and a long-only top-k slice is capturing almost
-  none of it.** That is the question to work, and it is invisible to any
-  pipeline that reports only terminal wealth. **`value_bm` fails monotonically in the WRONG
+  none of it.** **The DECILES answer why, and each candidate needs a DIFFERENT
+  construction:** `profit_roe` is a STEP (~9%/yr below median, a PLATEAU at
+  14.3-14.8 across deciles 7-10), so a top-4% book sits on its flattest part —
+  **build it WIDE**; `mom_12_1` (14.1 -> 19.2) and `rev_dispersion`
+  (10.6 -> 19.0) are TAILS — **build them NARROW**. That is also the measured
+  MECHANISM for "breadth is the cheap lever": flat return across the top
+  deciles means widening k cuts te in `MDE = z*te/sqrt(T)` at no cost to the
+  numerator. **Ranking signals by ic_t alone gets this backwards** — momentum
+  clears the age book by +9.23%/yr on a WEAKER ic_t than ROE.
+  **AND A COMPOSITE CAN DILUTE ITS OWN BEST COMPONENT:** top-decile lift is
+  `rev_dispersion` +7.6 against `sell_side_state` +2.3, because equal-weight
+  z-averaging of a TAIL signal with GRADIENT signals washes the tail out. Check
+  any fixed stack against its own best component, not only against the market.
+  **`value_bm` fails monotonically in the WRONG
   DIRECTION** (-0.90), so extreme top-k value in a mega-liquid universe selects
   distress and the REVERSED signal is the one to test; and **`size_large`
   carries ic_t 2.35 on 3.6 distinct names per slot**, which only the census can

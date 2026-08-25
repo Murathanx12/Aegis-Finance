@@ -138,15 +138,36 @@ diagnosis to remove a duplication. Migrate it *after* the receipt is read;
    Under `PRODUCT_EXPERIMENT` neither needs a significance gate — it needs a
    frozen strategy contract before the first decision. Promotion is
    **attended**: Murat flips the flags (`seed-a-lane`).
-1b. **THE QUESTION FINDING (a) OPENS, and it is now the most interesting one
-   on the board: why does a strong signal make a weak book?** `profit_roe`
-   orders the cross section at `ic_t 4.18` over 32 years and its top-k long-only
-   book clears a named alternative by only +1.53%/yr. Things to try, cheapest
-   first: wider `k` (the census says turnover is only 12.5% at k=100, so cost
-   is not the culprit); quantile-spread weighting instead of top-k; and
-   neutralising the book's residual size tilt (54.3 at k=100). **This is a
-   CONSTRUCTION search, not a signal search** — the signal is the best-evidenced
-   thing the project has.
+1b. **ANSWERED — and it gives each candidate a DIFFERENT construction.** The
+   decile curves say why a strong signal makes a weak book:
+
+   | signal | shape | build |
+   |---|---|---|
+   | `profit_roe` | **STEP** — ~9%/yr below median, plateau 14.3–14.8 across deciles 7–10 | **WIDE** (top 30–40%) |
+   | `mom_12_1` | **TAIL** — decile 10 jumps 14.1 → 19.2 | **NARROW** (top decile) |
+   | `rev_dispersion` | **TAIL** — flat middle, 10.6 → 19.0 | **NARROW** |
+
+   A top-k=20 book of 500 is the **top 4%**, buried inside `profit_roe`'s
+   flattest decile. That is the whole +1.53%/yr, and it is fixable by widening
+   `k` — turnover at k=100 is 12.5%, so cost is not the constraint. It is also
+   the missing MECHANISM for "breadth is the cheap lever": if return is flat
+   across the top four deciles, widening `k` cuts `te` in `MDE = z·te/√T` at no
+   cost to the numerator.
+
+   **The next runs are concrete:** `profit_roe` at k=100/150/200 against
+   `oldest_listing` via `paired_power`, and `rev_dispersion` at k=10/20 net of
+   costs.
+
+1c. **A WARNING FOR `ALPHA_STACK_EQUAL_RISK_v1` (item 10), found early.**
+   Top-decile lift, %/yr: `mom_12_1` +7.9 · `rev_dispersion` +7.6 ·
+   `profit_roe` +2.5 · **`sell_side_state` +2.3**. The equal-weight z-composite
+   has **a third of its own best component's lift** — averaging a
+   tail-concentrated signal against two gradient signals washes the tail out.
+
+   **Equal-risk combination is not free when the components have different
+   SHAPES.** The fixed stack must be checked against its own best component,
+   not only against the market, or it will look like diversification while
+   being dilution. Ship `rev_dispersion`, not `sell_side_state`.
 
 2. **Measure `sell_side_state` and `rev_breadth` NET OF COSTS.** ~95%/month
    turnover; their top-minus-bottom figures are gross and could be eaten
