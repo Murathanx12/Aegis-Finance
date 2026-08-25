@@ -48,15 +48,23 @@ applied to 11 jobs.
 
 ## 2. The three findings
 
-**(a) The ROE age confound LOOKS like a `k=100` fact rather than a property of
-ROE — measured at k=20, INFERRED at k=100.** At `k=20` `profit_roe` reads
-`ic_t 4.18`, monotone 0.90, **age% 51.1 / size% 52.8** — neutral on both
-confound axes, and the strongest cross-sectional evidence in the project's
-history. The 126-year result against the age book was measured at `k=100`.
+**(a) I HYPOTHESISED AN AGE CONFOUND AT `k=100`. THE TEST REFUTED IT.**
 
-**I did not measure the age exposure AT k=100**, so this is a hypothesis with
-one supporting measurement, not a finding. The discriminating run is one command
-and is item 0 below.
+`profit_roe` age% by book size: **51.1 at k=20, 49.5 at k=100**, against
+`oldest_listing`'s 1.9 and 9.9. It does not become an age book as `k` rises —
+the prediction I wrote down before running it said that outcome kills the
+explanation, and it did. **Withdrawn.**
+
+The 126 years is **power arithmetic on a small excess**, not a confound:
++1.53%/yr over the age book against a 6.11% paired tracking error, and
+`(2.8 × 6.11 / 1.53)² = 125`.
+
+**The real tension, which is sharper:** `profit_roe` has the strongest
+cross-sectional evidence in the project's history (`ic_t 4.18`, monotone 0.90,
+32 years) and a **weak book** (+1.53%/yr over a named alternative). Those are
+compatible, and every previous farm result collapsed them into one number.
+**The open question is CONSTRUCTION — a long-only top-k slice captures very
+little of a signal that demonstrably orders the whole cross section.**
 
 **(b) `value_bm` fails monotonically in the WRONG direction** (−0.90 over 32
 years). Not weak — consistent, and pointing the other way. Extreme top-k value
@@ -102,17 +110,9 @@ diagnosis to remove a duplication. Migrate it *after* the receipt is read;
 
 ## 5. What is left, in order
 
-0. **The one-command check that decides whether raw ROE is alive.** Cheap, and
-   it either confirms or kills finding (a):
-
-   ```
-   python -m scripts.portfolio_farm_diagnose --start 1993 --end 2024 --reduce \
-       --top-k 100 --signals profit_roe oldest_listing
-   ```
-
-   `age%` falling toward `oldest_listing`'s as `k` rises ⇒ the confound is a
-   construction fact and ROE is not dead. `age%` staying near 50 at `k=100` ⇒
-   the 126-year result has another cause and my explanation is wrong.
+0. **DONE — and it refuted my hypothesis.** `profit_roe` age% is 49.5 at
+   `k=100`, not falling toward the age book. See finding (a). The follow-on
+   question it opens is item 1b.
 
    **Also re-run the published tables**: `diagnostics` was corrected late in the
    session to build its trailing-dollar-volume series with the SAME `min_obs=5`
@@ -129,6 +129,16 @@ diagnosis to remove a duplication. Migrate it *after* the receipt is read;
    Under `PRODUCT_EXPERIMENT` neither needs a significance gate — it needs a
    frozen strategy contract before the first decision. Promotion is
    **attended**: Murat flips the flags (`seed-a-lane`).
+1b. **THE QUESTION FINDING (a) OPENS, and it is now the most interesting one
+   on the board: why does a strong signal make a weak book?** `profit_roe`
+   orders the cross section at `ic_t 4.18` over 32 years and its top-k long-only
+   book clears a named alternative by only +1.53%/yr. Things to try, cheapest
+   first: wider `k` (the census says turnover is only 12.5% at k=100, so cost
+   is not the culprit); quantile-spread weighting instead of top-k; and
+   neutralising the book's residual size tilt (54.3 at k=100). **This is a
+   CONSTRUCTION search, not a signal search** — the signal is the best-evidenced
+   thing the project has.
+
 2. **Measure `sell_side_state` and `rev_breadth` NET OF COSTS.** ~95%/month
    turnover; their top-minus-bottom figures are gross and could be eaten
    entirely. This is the open question about them, not their IC.

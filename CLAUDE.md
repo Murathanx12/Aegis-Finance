@@ -208,12 +208,15 @@ Seven things from it that govern what counts as progress
   holdings census whose age/size percentiles are measured **against the
   eligible set on each date** (against the panel they would report a book of
   ancient mega-caps as "average age"). First run, three results:
-  **the ROE age confound looks like a k=100 fact rather than a property of ROE**
-  — at k=20 `profit_roe` reads ic_t 4.18, monotone 0.90, age% 51.1 and size%
-  52.8, i.e. neutral on both confound axes. **The age exposure AT k=100 has not
-  been measured**, so that is a hypothesis with one supporting measurement, not
-  a finding; the discriminating run is `--top-k 100 --signals profit_roe
-  oldest_listing`. **`value_bm` fails monotonically in the WRONG
+  **`profit_roe` is NOT confounded by listing age — I hypothesised it was and
+  the test refuted me.** age% is 51.1 at k=20 and **49.5 at k=100**, against the
+  age book's 1.9 and 9.9; it never becomes an age book. The 126 years is POWER
+  ARITHMETIC on a small excess — +1.53%/yr over a 6.11% paired te, and
+  `(2.8*6.11/1.53)^2 = 125`. **So the real tension is CONSTRUCTION: the
+  strongest cross-sectional evidence in the project (ic_t 4.18, monotone 0.90,
+  32y) produces a WEAK BOOK, and a long-only top-k slice is capturing almost
+  none of it.** That is the question to work, and it is invisible to any
+  pipeline that reports only terminal wealth. **`value_bm` fails monotonically in the WRONG
   DIRECTION** (-0.90), so extreme top-k value in a mega-liquid universe selects
   distress and the REVERSED signal is the one to test; and **`size_large`
   carries ic_t 2.35 on 3.6 distinct names per slot**, which only the census can

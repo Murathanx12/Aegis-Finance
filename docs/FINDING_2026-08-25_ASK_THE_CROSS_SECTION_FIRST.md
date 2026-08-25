@@ -115,31 +115,44 @@ The baselines validate the instrument: `oldest_listing` reads age% 1.9 and
 
 **Three findings.**
 
-**(a) The age confound looks like a `k=100` fact rather than a property of ROE
-— MEASURED AT k=20, INFERRED AT k=100.** At `k=20` `profit_roe` holds names of
-*typical age and typical size for the eligible set* (51.1 / 52.8) and carries
-the strongest cross-sectional evidence in the project's history — `ic_t = 4.18`,
-monotone at 0.90, over 32 years of non-overlapping dates. The 126-year result
-against the age book stands and was measured at `k=100`.
+**(a) I HYPOTHESISED AN AGE CONFOUND AT `k=100` AND THE TEST REFUTED IT.**
 
-**State the gap plainly: I have not measured `profit_roe`'s age exposure AT
-`k=100`.** The k=20 book being age-neutral does not by itself prove the k=100
-book is not — it is consistent with that, and the mechanism is plausible (a
-100-name book out of a 500-name universe necessarily reaches deep into the
-large-old corner), but plausible-and-consistent is how this project has been
-wrong before. The discriminating run is one command and it is the first thing
-queued:
+The hypothesis was: `profit_roe` is age-neutral at `k=20` (age% 51.1), so the
+126-year requirement against the age book must come from the `k=100` book
+reaching deep into the large-old corner of a 500-name universe. I wrote down
+the discriminating prediction before running it — *"if it stays near 50 at
+k=100, then the 126-year result has some other cause and this explanation is
+wrong"* — and ran it:
 
-```
-python -m scripts.portfolio_farm_diagnose --start 1993 --end 2024 --reduce \
-    --top-k 100 --signals profit_roe oldest_listing
-```
+| k | `profit_roe` age% | `oldest_listing` age% |
+|---|---|---|
+| 20 | 51.1 | 1.9 |
+| **100** | **49.5** | 9.9 |
 
-If `profit_roe`'s `age%` falls toward `oldest_listing`'s as `k` rises, the
-confound is a construction fact and **raw ROE is not dead**. If it stays near
-50 at `k=100`, then the 126-year result has some other cause and this
-explanation is wrong. Until that runs, (a) is a hypothesis with one supporting
-measurement, not a finding.
+**It stayed at 49.5. The explanation is wrong and is withdrawn.** At `k=100`
+`profit_roe` holds names of almost exactly median age for its eligible set,
+nowhere near the age book's 9.9. The two books hold genuinely different names.
+
+**What the 126 years actually is.** It is power arithmetic on a small excess,
+not evidence of a confound. `paired_power` measured `profit_roe` at `k=100`
+clearing the age book by **+1.53%/yr** against a **6.11%** paired tracking
+error, and `(2.8 × 6.11 / 1.53)² = 125`. The figure says *this sample cannot
+resolve a difference that small*, which is a statement about the size of the
+edge and the length of the record — not about what the book is made of.
+
+**So the real tension is sharper, and it is the whole reason this module
+exists:** `profit_roe` has the strongest cross-sectional evidence in the
+project's history (`ic_t = 4.18`, monotone 0.90, 32 years of non-overlapping
+dates) and a **weak book** (+1.53%/yr over a named alternative). A strong
+signal and a weak long-only top-k implementation of it are entirely
+compatible, and every previous farm result collapsed them into one number.
+**The open question is construction, not confounding** — a long-only top-k
+slice is capturing very little of a signal that demonstrably orders the whole
+cross section.
+
+*(Note: `ic_t`, `mono` and `t−b` are identical at k=20 and k=100 by
+construction — they are cross-sectional and do not depend on `top_k`. Only the
+census columns move with `k`. That is correct behaviour, not a null result.)*
 
 **(b) `value_bm` fails monotonically in the WRONG DIRECTION** (−0.90). That is
 not a weak signal — it is a consistent one pointing the other way.
