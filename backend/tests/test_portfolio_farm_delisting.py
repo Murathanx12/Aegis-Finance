@@ -102,7 +102,7 @@ def test_the_MEASURED_return_is_used_in_preference_to_the_declared_one():
     """A merger at 0.0 must not be booked at the -30% fallback."""
     merged = _panel_that_delists([0.0, 0.0, 0.0, 0.0])
     assumed = _panel_that_delists([np.nan] * 4)
-    pol = _pol(signal="equal", holding_days=1000, delisting_return=-0.30)
+    pol = _pol(signal="oldest_listing", holding_days=1000, delisting_return=-0.30)
     a = replay.run(merged, pol, warmup=260)
     b = replay.run(assumed, pol, warmup=260)
     assert a.metrics["terminal_usd"] > b.metrics["terminal_usd"] * 1.3
@@ -116,7 +116,7 @@ def test_the_split_is_COUNTED_so_a_receipt_can_say_how_much_is_assumed():
     """A run that fell back on most of its exits still has an assumption for a
     headline. The only way a reader can tell is if the counts are on the row."""
     mixed = _panel_that_delists([0.0, np.nan, -0.2, np.nan])
-    res = replay.run(mixed, _pol(signal="equal", holding_days=1000), warmup=260)
+    res = replay.run(mixed, _pol(signal="oldest_listing", holding_days=1000), warmup=260)
     d = res.diagnostics
     assert d["n_delist_measured"] == 2
     assert d["n_delist_assumed"] == 2
@@ -128,7 +128,7 @@ def test_a_panel_with_no_delisting_data_still_runs_on_the_declared_value():
     receipt to SAY the join did not exist."""
     p = _panel_that_delists([np.nan] * 4)
     p = Panel(**{**p.__dict__, "delist_ret": None})
-    res = replay.run(p, _pol(signal="equal", holding_days=1000,
+    res = replay.run(p, _pol(signal="oldest_listing", holding_days=1000,
                              delisting_return=-1.0), warmup=260)
     assert res.diagnostics["n_delist_assumed"] == res.diagnostics["n_delistings"]
     assert res.diagnostics["n_delist_measured"] == 0

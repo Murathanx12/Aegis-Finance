@@ -1,0 +1,2801 @@
+{
+  "generated_at": "2026-08-25T07:05:33+00:00",
+  "window": [
+    1993,
+    2024
+  ],
+  "holding_days": 21,
+  "top_k": 20,
+  "n_quantiles": 5,
+  "reduced": true,
+  "panel": {
+    "sessions": 8057,
+    "permnos": 8827,
+    "open_coverage": 0.9987111772538827
+  },
+  "reports": [
+    {
+      "signal": "mom_12_1",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.02409,
+        "ic_std": 0.21319,
+        "ic_t": 2.173,
+        "ic_ir": 0.113,
+        "hit_rate_pct": 59.5,
+        "mean_names_per_date": 484.2
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.6056,
+          0.7822,
+          0.972,
+          1.1062,
+          1.2908
+        ],
+        "annualised_pct_by_quantile": [
+          7.51,
+          9.8,
+          12.31,
+          14.11,
+          16.64
+        ],
+        "top_minus_bottom_annual_pct": 8.54,
+        "top_minus_bottom_t": 1.645,
+        "monotonicity_spearman": 1.0,
+        "is_monotone": true
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 1462,
+        "top_names_by_selection_count": [
+          {
+            "permno": 89393,
+            "dates_held": 62,
+            "pct_of_dates": 16.8
+          },
+          {
+            "permno": 86580,
+            "dates_held": 58,
+            "pct_of_dates": 15.7
+          },
+          {
+            "permno": 53613,
+            "dates_held": 40,
+            "pct_of_dates": 10.8
+          },
+          {
+            "permno": 61241,
+            "dates_held": 40,
+            "pct_of_dates": 10.8
+          },
+          {
+            "permno": 84788,
+            "dates_held": 39,
+            "pct_of_dates": 10.5
+          },
+          {
+            "permno": 88031,
+            "dates_held": 34,
+            "pct_of_dates": 9.2
+          },
+          {
+            "permno": 27422,
+            "dates_held": 33,
+            "pct_of_dates": 8.9
+          },
+          {
+            "permno": 80432,
+            "dates_held": 29,
+            "pct_of_dates": 7.8
+          },
+          {
+            "permno": 91611,
+            "dates_held": 29,
+            "pct_of_dates": 7.8
+          },
+          {
+            "permno": 87299,
+            "dates_held": 27,
+            "pct_of_dates": 7.3
+          },
+          {
+            "permno": 79588,
+            "dates_held": 27,
+            "pct_of_dates": 7.3
+          },
+          {
+            "permno": 11081,
+            "dates_held": 26,
+            "pct_of_dates": 7.0
+          }
+        ],
+        "distinct_names_per_slot": 73.1,
+        "mean_turnover_pct": 40.2,
+        "mean_size_percentile_of_holdings": 25.9,
+        "mean_permno_percentile_of_holdings": 61.9,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": true,
+        "failed": [],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "mom_6_1",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.00878,
+        "ic_std": 0.19416,
+        "ic_t": 0.87,
+        "ic_ir": 0.045,
+        "hit_rate_pct": 53.2,
+        "mean_names_per_date": 489.8
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.8029,
+          0.8349,
+          1.015,
+          0.9643,
+          1.1188
+        ],
+        "annualised_pct_by_quantile": [
+          10.07,
+          10.49,
+          12.88,
+          12.21,
+          14.28
+        ],
+        "top_minus_bottom_annual_pct": 3.86,
+        "top_minus_bottom_t": 0.809,
+        "monotonicity_spearman": 0.9,
+        "is_monotone": true
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 1807,
+        "top_names_by_selection_count": [
+          {
+            "permno": 86580,
+            "dates_held": 53,
+            "pct_of_dates": 14.3
+          },
+          {
+            "permno": 61241,
+            "dates_held": 47,
+            "pct_of_dates": 12.7
+          },
+          {
+            "permno": 89393,
+            "dates_held": 45,
+            "pct_of_dates": 12.2
+          },
+          {
+            "permno": 53613,
+            "dates_held": 35,
+            "pct_of_dates": 9.5
+          },
+          {
+            "permno": 82618,
+            "dates_held": 35,
+            "pct_of_dates": 9.5
+          },
+          {
+            "permno": 76644,
+            "dates_held": 35,
+            "pct_of_dates": 9.5
+          },
+          {
+            "permno": 91611,
+            "dates_held": 35,
+            "pct_of_dates": 9.5
+          },
+          {
+            "permno": 84788,
+            "dates_held": 29,
+            "pct_of_dates": 7.8
+          },
+          {
+            "permno": 93436,
+            "dates_held": 27,
+            "pct_of_dates": 7.3
+          },
+          {
+            "permno": 88031,
+            "dates_held": 25,
+            "pct_of_dates": 6.8
+          },
+          {
+            "permno": 66384,
+            "dates_held": 24,
+            "pct_of_dates": 6.5
+          },
+          {
+            "permno": 76744,
+            "dates_held": 24,
+            "pct_of_dates": 6.5
+          }
+        ],
+        "distinct_names_per_slot": 90.35,
+        "mean_turnover_pct": 53.7,
+        "mean_size_percentile_of_holdings": 25.6,
+        "mean_permno_percentile_of_holdings": 60.3,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=0.87 below 2"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "mom_3_1",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": -0.00025,
+        "ic_std": 0.17335,
+        "ic_t": -0.028,
+        "ic_ir": -0.001,
+        "hit_rate_pct": 50.3,
+        "mean_names_per_date": 492.2
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.8649,
+          1.032,
+          0.8006,
+          1.0202,
+          0.9636
+        ],
+        "annualised_pct_by_quantile": [
+          10.89,
+          13.11,
+          10.04,
+          12.95,
+          12.2
+        ],
+        "top_minus_bottom_annual_pct": 1.19,
+        "top_minus_bottom_t": 0.274,
+        "monotonicity_spearman": 0.1,
+        "is_monotone": false
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 2087,
+        "top_names_by_selection_count": [
+          {
+            "permno": 86580,
+            "dates_held": 41,
+            "pct_of_dates": 11.1
+          },
+          {
+            "permno": 61241,
+            "dates_held": 40,
+            "pct_of_dates": 10.8
+          },
+          {
+            "permno": 89393,
+            "dates_held": 35,
+            "pct_of_dates": 9.5
+          },
+          {
+            "permno": 91611,
+            "dates_held": 34,
+            "pct_of_dates": 9.2
+          },
+          {
+            "permno": 82618,
+            "dates_held": 29,
+            "pct_of_dates": 7.8
+          },
+          {
+            "permno": 53613,
+            "dates_held": 28,
+            "pct_of_dates": 7.6
+          },
+          {
+            "permno": 93436,
+            "dates_held": 27,
+            "pct_of_dates": 7.3
+          },
+          {
+            "permno": 76644,
+            "dates_held": 26,
+            "pct_of_dates": 7.0
+          },
+          {
+            "permno": 16655,
+            "dates_held": 24,
+            "pct_of_dates": 6.5
+          },
+          {
+            "permno": 66384,
+            "dates_held": 23,
+            "pct_of_dates": 6.2
+          },
+          {
+            "permno": 78875,
+            "dates_held": 23,
+            "pct_of_dates": 6.2
+          },
+          {
+            "permno": 84788,
+            "dates_held": 23,
+            "pct_of_dates": 6.2
+          }
+        ],
+        "distinct_names_per_slot": 104.35,
+        "mean_turnover_pct": 72.0,
+        "mean_size_percentile_of_holdings": 26.0,
+        "mean_permno_percentile_of_holdings": 59.0,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=-0.028 below 2",
+          "quantiles not monotone (spearman=0.1)"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "mom_12_0",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.02054,
+        "ic_std": 0.22328,
+        "ic_t": 1.77,
+        "ic_ir": 0.092,
+        "hit_rate_pct": 57.6,
+        "mean_names_per_date": 484.2
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.6261,
+          0.8234,
+          0.9455,
+          1.1196,
+          1.2419
+        ],
+        "annualised_pct_by_quantile": [
+          7.78,
+          10.34,
+          11.95,
+          14.29,
+          15.96
+        ],
+        "top_minus_bottom_annual_pct": 7.64,
+        "top_minus_bottom_t": 1.367,
+        "monotonicity_spearman": 1.0,
+        "is_monotone": true
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 1499,
+        "top_names_by_selection_count": [
+          {
+            "permno": 86580,
+            "dates_held": 64,
+            "pct_of_dates": 17.3
+          },
+          {
+            "permno": 89393,
+            "dates_held": 60,
+            "pct_of_dates": 16.2
+          },
+          {
+            "permno": 53613,
+            "dates_held": 45,
+            "pct_of_dates": 12.2
+          },
+          {
+            "permno": 84788,
+            "dates_held": 43,
+            "pct_of_dates": 11.6
+          },
+          {
+            "permno": 61241,
+            "dates_held": 38,
+            "pct_of_dates": 10.3
+          },
+          {
+            "permno": 88031,
+            "dates_held": 31,
+            "pct_of_dates": 8.4
+          },
+          {
+            "permno": 77418,
+            "dates_held": 29,
+            "pct_of_dates": 7.8
+          },
+          {
+            "permno": 27422,
+            "dates_held": 29,
+            "pct_of_dates": 7.8
+          },
+          {
+            "permno": 91611,
+            "dates_held": 28,
+            "pct_of_dates": 7.6
+          },
+          {
+            "permno": 11081,
+            "dates_held": 27,
+            "pct_of_dates": 7.3
+          },
+          {
+            "permno": 80432,
+            "dates_held": 27,
+            "pct_of_dates": 7.3
+          },
+          {
+            "permno": 87299,
+            "dates_held": 27,
+            "pct_of_dates": 7.3
+          }
+        ],
+        "distinct_names_per_slot": 74.95,
+        "mean_turnover_pct": 40.2,
+        "mean_size_percentile_of_holdings": 25.9,
+        "mean_permno_percentile_of_holdings": 62.0,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=1.77 below 2"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "reversal_1m",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.00655,
+        "ic_std": 0.17199,
+        "ic_t": 0.733,
+        "ic_ir": 0.038,
+        "hit_rate_pct": 51.1,
+        "mean_names_per_date": 493.8
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.9397,
+          0.8842,
+          1.008,
+          1.1218,
+          0.7234
+        ],
+        "annualised_pct_by_quantile": [
+          11.88,
+          11.14,
+          12.79,
+          14.32,
+          9.03
+        ],
+        "top_minus_bottom_annual_pct": -2.57,
+        "top_minus_bottom_t": -0.619,
+        "monotonicity_spearman": -0.1,
+        "is_monotone": false
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 2107,
+        "top_names_by_selection_count": [
+          {
+            "permno": 76644,
+            "dates_held": 37,
+            "pct_of_dates": 10.0
+          },
+          {
+            "permno": 78875,
+            "dates_held": 31,
+            "pct_of_dates": 8.4
+          },
+          {
+            "permno": 27422,
+            "dates_held": 28,
+            "pct_of_dates": 7.6
+          },
+          {
+            "permno": 61241,
+            "dates_held": 27,
+            "pct_of_dates": 7.3
+          },
+          {
+            "permno": 21207,
+            "dates_held": 26,
+            "pct_of_dates": 7.0
+          },
+          {
+            "permno": 21020,
+            "dates_held": 26,
+            "pct_of_dates": 7.0
+          },
+          {
+            "permno": 91611,
+            "dates_held": 24,
+            "pct_of_dates": 6.5
+          },
+          {
+            "permno": 66384,
+            "dates_held": 20,
+            "pct_of_dates": 5.4
+          },
+          {
+            "permno": 53613,
+            "dates_held": 20,
+            "pct_of_dates": 5.4
+          },
+          {
+            "permno": 76744,
+            "dates_held": 20,
+            "pct_of_dates": 5.4
+          },
+          {
+            "permno": 91103,
+            "dates_held": 20,
+            "pct_of_dates": 5.4
+          },
+          {
+            "permno": 84519,
+            "dates_held": 19,
+            "pct_of_dates": 5.1
+          }
+        ],
+        "distinct_names_per_slot": 105.35,
+        "mean_turnover_pct": 91.9,
+        "mean_size_percentile_of_holdings": 22.4,
+        "mean_permno_percentile_of_holdings": 58.0,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=0.733 below 2",
+          "quantiles not monotone (spearman=-0.1)"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "reversal_1w",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.01366,
+        "ic_std": 0.15451,
+        "ic_t": 1.7,
+        "ic_ir": 0.088,
+        "hit_rate_pct": 54.3,
+        "mean_names_per_date": 496.3
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.5689,
+          0.9124,
+          1.1123,
+          1.074,
+          1.0249
+        ],
+        "annualised_pct_by_quantile": [
+          7.04,
+          11.52,
+          14.2,
+          13.68,
+          13.02
+        ],
+        "top_minus_bottom_annual_pct": 5.61,
+        "top_minus_bottom_t": 1.552,
+        "monotonicity_spearman": 0.6,
+        "is_monotone": true
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 2068,
+        "top_names_by_selection_count": [
+          {
+            "permno": 76644,
+            "dates_held": 27,
+            "pct_of_dates": 7.3
+          },
+          {
+            "permno": 91611,
+            "dates_held": 26,
+            "pct_of_dates": 7.0
+          },
+          {
+            "permno": 53613,
+            "dates_held": 25,
+            "pct_of_dates": 6.8
+          },
+          {
+            "permno": 21207,
+            "dates_held": 24,
+            "pct_of_dates": 6.5
+          },
+          {
+            "permno": 84519,
+            "dates_held": 22,
+            "pct_of_dates": 5.9
+          },
+          {
+            "permno": 77606,
+            "dates_held": 22,
+            "pct_of_dates": 5.9
+          },
+          {
+            "permno": 18403,
+            "dates_held": 22,
+            "pct_of_dates": 5.9
+          },
+          {
+            "permno": 80432,
+            "dates_held": 22,
+            "pct_of_dates": 5.9
+          },
+          {
+            "permno": 64282,
+            "dates_held": 19,
+            "pct_of_dates": 5.1
+          },
+          {
+            "permno": 89533,
+            "dates_held": 19,
+            "pct_of_dates": 5.1
+          },
+          {
+            "permno": 91103,
+            "dates_held": 19,
+            "pct_of_dates": 5.1
+          },
+          {
+            "permno": 79879,
+            "dates_held": 18,
+            "pct_of_dates": 4.9
+          }
+        ],
+        "distinct_names_per_slot": 103.4,
+        "mean_turnover_pct": 92.4,
+        "mean_size_percentile_of_holdings": 26.7,
+        "mean_permno_percentile_of_holdings": 57.4,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=1.7 below 2"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "low_vol",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.02515,
+        "ic_std": 0.2583,
+        "ic_t": 1.873,
+        "ic_ir": 0.097,
+        "hit_rate_pct": 55.7,
+        "mean_names_per_date": 493.3
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.5558,
+          1.0903,
+          1.0748,
+          1.0401,
+          0.9077
+        ],
+        "annualised_pct_by_quantile": [
+          6.88,
+          13.9,
+          13.69,
+          13.22,
+          11.45
+        ],
+        "top_minus_bottom_annual_pct": 4.31,
+        "top_minus_bottom_t": 0.666,
+        "monotonicity_spearman": 0.0,
+        "is_monotone": false
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 617,
+        "top_names_by_selection_count": [
+          {
+            "permno": 13856,
+            "dates_held": 178,
+            "pct_of_dates": 48.1
+          },
+          {
+            "permno": 18411,
+            "dates_held": 175,
+            "pct_of_dates": 47.3
+          },
+          {
+            "permno": 22111,
+            "dates_held": 172,
+            "pct_of_dates": 46.5
+          },
+          {
+            "permno": 17144,
+            "dates_held": 160,
+            "pct_of_dates": 43.2
+          },
+          {
+            "permno": 27959,
+            "dates_held": 158,
+            "pct_of_dates": 42.7
+          },
+          {
+            "permno": 18163,
+            "dates_held": 156,
+            "pct_of_dates": 42.2
+          },
+          {
+            "permno": 11308,
+            "dates_held": 150,
+            "pct_of_dates": 40.5
+          },
+          {
+            "permno": 11404,
+            "dates_held": 145,
+            "pct_of_dates": 39.2
+          },
+          {
+            "permno": 64936,
+            "dates_held": 133,
+            "pct_of_dates": 35.9
+          },
+          {
+            "permno": 17750,
+            "dates_held": 122,
+            "pct_of_dates": 33.0
+          },
+          {
+            "permno": 26825,
+            "dates_held": 120,
+            "pct_of_dates": 32.4
+          },
+          {
+            "permno": 24205,
+            "dates_held": 114,
+            "pct_of_dates": 30.8
+          }
+        ],
+        "distinct_names_per_slot": 30.85,
+        "mean_turnover_pct": 38.6,
+        "mean_size_percentile_of_holdings": 71.8,
+        "mean_permno_percentile_of_holdings": 34.4,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=1.873 below 2",
+          "quantiles not monotone (spearman=0.0)"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "high_vol",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": -0.02515,
+        "ic_std": 0.2583,
+        "ic_t": -1.873,
+        "ic_ir": -0.097,
+        "hit_rate_pct": 44.3,
+        "mean_names_per_date": 493.3
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.9041,
+          1.0464,
+          1.0714,
+          1.0977,
+          0.5459
+        ],
+        "annualised_pct_by_quantile": [
+          11.41,
+          13.31,
+          13.64,
+          14.0,
+          6.75
+        ],
+        "top_minus_bottom_annual_pct": -4.21,
+        "top_minus_bottom_t": -0.676,
+        "monotonicity_spearman": 0.0,
+        "is_monotone": false
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 1838,
+        "top_names_by_selection_count": [
+          {
+            "permno": 84827,
+            "dates_held": 46,
+            "pct_of_dates": 12.4
+          },
+          {
+            "permno": 89901,
+            "dates_held": 45,
+            "pct_of_dates": 12.2
+          },
+          {
+            "permno": 14813,
+            "dates_held": 42,
+            "pct_of_dates": 11.4
+          },
+          {
+            "permno": 91611,
+            "dates_held": 40,
+            "pct_of_dates": 10.8
+          },
+          {
+            "permno": 16655,
+            "dates_held": 38,
+            "pct_of_dates": 10.3
+          },
+          {
+            "permno": 76644,
+            "dates_held": 37,
+            "pct_of_dates": 10.0
+          },
+          {
+            "permno": 86211,
+            "dates_held": 35,
+            "pct_of_dates": 9.5
+          },
+          {
+            "permno": 27422,
+            "dates_held": 35,
+            "pct_of_dates": 9.5
+          },
+          {
+            "permno": 89393,
+            "dates_held": 34,
+            "pct_of_dates": 9.2
+          },
+          {
+            "permno": 20339,
+            "dates_held": 33,
+            "pct_of_dates": 8.9
+          },
+          {
+            "permno": 61241,
+            "dates_held": 32,
+            "pct_of_dates": 8.6
+          },
+          {
+            "permno": 16932,
+            "dates_held": 32,
+            "pct_of_dates": 8.6
+          }
+        ],
+        "distinct_names_per_slot": 91.9,
+        "mean_turnover_pct": 49.0,
+        "mean_size_percentile_of_holdings": 12.3,
+        "mean_permno_percentile_of_holdings": 61.3,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=-1.873 below 2",
+          "quantiles not monotone (spearman=0.0)"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "trend_200",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.01251,
+        "ic_std": 0.21437,
+        "ic_t": 1.123,
+        "ic_ir": 0.058,
+        "hit_rate_pct": 54.1,
+        "mean_names_per_date": 490.9
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.6856,
+          0.8381,
+          0.9418,
+          1.0379,
+          1.1875
+        ],
+        "annualised_pct_by_quantile": [
+          8.54,
+          10.53,
+          11.91,
+          13.19,
+          15.22
+        ],
+        "top_minus_bottom_annual_pct": 6.19,
+        "top_minus_bottom_t": 1.143,
+        "monotonicity_spearman": 1.0,
+        "is_monotone": true
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 1920,
+        "top_names_by_selection_count": [
+          {
+            "permno": 86580,
+            "dates_held": 57,
+            "pct_of_dates": 15.4
+          },
+          {
+            "permno": 89393,
+            "dates_held": 50,
+            "pct_of_dates": 13.5
+          },
+          {
+            "permno": 53613,
+            "dates_held": 39,
+            "pct_of_dates": 10.5
+          },
+          {
+            "permno": 91611,
+            "dates_held": 37,
+            "pct_of_dates": 10.0
+          },
+          {
+            "permno": 84788,
+            "dates_held": 36,
+            "pct_of_dates": 9.7
+          },
+          {
+            "permno": 61241,
+            "dates_held": 35,
+            "pct_of_dates": 9.5
+          },
+          {
+            "permno": 76644,
+            "dates_held": 27,
+            "pct_of_dates": 7.3
+          },
+          {
+            "permno": 88031,
+            "dates_held": 27,
+            "pct_of_dates": 7.3
+          },
+          {
+            "permno": 93436,
+            "dates_held": 26,
+            "pct_of_dates": 7.0
+          },
+          {
+            "permno": 83435,
+            "dates_held": 25,
+            "pct_of_dates": 6.8
+          },
+          {
+            "permno": 79588,
+            "dates_held": 25,
+            "pct_of_dates": 6.8
+          },
+          {
+            "permno": 11081,
+            "dates_held": 24,
+            "pct_of_dates": 6.5
+          }
+        ],
+        "distinct_names_per_slot": 96.0,
+        "mean_turnover_pct": 53.1,
+        "mean_size_percentile_of_holdings": 24.9,
+        "mean_permno_percentile_of_holdings": 60.2,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=1.123 below 2"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "size_small",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": -0.01956,
+        "ic_std": 0.16335,
+        "ic_t": -2.303,
+        "ic_ir": -0.12,
+        "hit_rate_pct": 45.7,
+        "mean_names_per_date": 496.6
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.9349,
+          0.9424,
+          1.0519,
+          0.9692,
+          0.8153
+        ],
+        "annualised_pct_by_quantile": [
+          11.81,
+          11.91,
+          13.38,
+          12.27,
+          10.23
+        ],
+        "top_minus_bottom_annual_pct": -1.43,
+        "top_minus_bottom_t": -0.344,
+        "monotonicity_spearman": -0.1,
+        "is_monotone": false
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 2093,
+        "top_names_by_selection_count": [
+          {
+            "permno": 84519,
+            "dates_held": 64,
+            "pct_of_dates": 17.3
+          },
+          {
+            "permno": 70092,
+            "dates_held": 62,
+            "pct_of_dates": 16.8
+          },
+          {
+            "permno": 80303,
+            "dates_held": 54,
+            "pct_of_dates": 14.6
+          },
+          {
+            "permno": 13687,
+            "dates_held": 50,
+            "pct_of_dates": 13.5
+          },
+          {
+            "permno": 27422,
+            "dates_held": 49,
+            "pct_of_dates": 13.2
+          },
+          {
+            "permno": 79686,
+            "dates_held": 47,
+            "pct_of_dates": 12.7
+          },
+          {
+            "permno": 88458,
+            "dates_held": 40,
+            "pct_of_dates": 10.8
+          },
+          {
+            "permno": 76644,
+            "dates_held": 39,
+            "pct_of_dates": 10.5
+          },
+          {
+            "permno": 89901,
+            "dates_held": 38,
+            "pct_of_dates": 10.3
+          },
+          {
+            "permno": 18403,
+            "dates_held": 38,
+            "pct_of_dates": 10.3
+          },
+          {
+            "permno": 85035,
+            "dates_held": 37,
+            "pct_of_dates": 10.0
+          },
+          {
+            "permno": 87800,
+            "dates_held": 37,
+            "pct_of_dates": 10.0
+          }
+        ],
+        "distinct_names_per_slot": 104.65,
+        "mean_turnover_pct": 62.7,
+        "mean_size_percentile_of_holdings": 1.9,
+        "mean_permno_percentile_of_holdings": 62.8,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "quantiles not monotone (spearman=-0.1)"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "size_large",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.01956,
+        "ic_std": 0.16335,
+        "ic_t": 2.303,
+        "ic_ir": 0.12,
+        "hit_rate_pct": 54.3,
+        "mean_names_per_date": 496.6
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.8208,
+          0.9648,
+          1.0537,
+          0.9385,
+          0.9371
+        ],
+        "annualised_pct_by_quantile": [
+          10.31,
+          12.21,
+          13.4,
+          11.86,
+          11.84
+        ],
+        "top_minus_bottom_annual_pct": 1.41,
+        "top_minus_bottom_t": 0.336,
+        "monotonicity_spearman": 0.1,
+        "is_monotone": false
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 73,
+        "top_names_by_selection_count": [
+          {
+            "permno": 55976,
+            "dates_held": 370,
+            "pct_of_dates": 100.0
+          },
+          {
+            "permno": 10107,
+            "dates_held": 366,
+            "pct_of_dates": 98.9
+          },
+          {
+            "permno": 22111,
+            "dates_held": 358,
+            "pct_of_dates": 96.8
+          },
+          {
+            "permno": 11850,
+            "dates_held": 346,
+            "pct_of_dates": 93.5
+          },
+          {
+            "permno": 18163,
+            "dates_held": 340,
+            "pct_of_dates": 91.9
+          },
+          {
+            "permno": 12060,
+            "dates_held": 285,
+            "pct_of_dates": 77.0
+          },
+          {
+            "permno": 21936,
+            "dates_held": 282,
+            "pct_of_dates": 76.2
+          },
+          {
+            "permno": 11308,
+            "dates_held": 269,
+            "pct_of_dates": 72.7
+          },
+          {
+            "permno": 12490,
+            "dates_held": 249,
+            "pct_of_dates": 67.3
+          },
+          {
+            "permno": 47896,
+            "dates_held": 245,
+            "pct_of_dates": 66.2
+          },
+          {
+            "permno": 59328,
+            "dates_held": 222,
+            "pct_of_dates": 60.0
+          },
+          {
+            "permno": 66093,
+            "dates_held": 218,
+            "pct_of_dates": 58.9
+          }
+        ],
+        "distinct_names_per_slot": 3.65,
+        "mean_turnover_pct": 5.1,
+        "mean_size_percentile_of_holdings": 97.9,
+        "mean_permno_percentile_of_holdings": 31.2,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "quantiles not monotone (spearman=0.1)"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "illiquid",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": -0.01867,
+        "ic_std": 0.1362,
+        "ic_t": -2.637,
+        "ic_ir": -0.137,
+        "hit_rate_pct": 45.4,
+        "mean_names_per_date": 493.3
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.9567,
+          1.0379,
+          0.9787,
+          0.9854,
+          0.7072
+        ],
+        "annualised_pct_by_quantile": [
+          12.1,
+          13.19,
+          12.4,
+          12.49,
+          8.82
+        ],
+        "top_minus_bottom_annual_pct": -2.95,
+        "top_minus_bottom_t": -0.888,
+        "monotonicity_spearman": -0.3,
+        "is_monotone": false
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 2600,
+        "top_names_by_selection_count": [
+          {
+            "permno": 93420,
+            "dates_held": 26,
+            "pct_of_dates": 7.0
+          },
+          {
+            "permno": 78170,
+            "dates_held": 25,
+            "pct_of_dates": 6.8
+          },
+          {
+            "permno": 78875,
+            "dates_held": 24,
+            "pct_of_dates": 6.5
+          },
+          {
+            "permno": 85002,
+            "dates_held": 24,
+            "pct_of_dates": 6.5
+          },
+          {
+            "permno": 76661,
+            "dates_held": 24,
+            "pct_of_dates": 6.5
+          },
+          {
+            "permno": 80303,
+            "dates_held": 23,
+            "pct_of_dates": 6.2
+          },
+          {
+            "permno": 87390,
+            "dates_held": 22,
+            "pct_of_dates": 5.9
+          },
+          {
+            "permno": 27422,
+            "dates_held": 22,
+            "pct_of_dates": 5.9
+          },
+          {
+            "permno": 90893,
+            "dates_held": 20,
+            "pct_of_dates": 5.4
+          },
+          {
+            "permno": 92346,
+            "dates_held": 20,
+            "pct_of_dates": 5.4
+          },
+          {
+            "permno": 58318,
+            "dates_held": 20,
+            "pct_of_dates": 5.4
+          },
+          {
+            "permno": 88863,
+            "dates_held": 20,
+            "pct_of_dates": 5.4
+          }
+        ],
+        "distinct_names_per_slot": 130.0,
+        "mean_turnover_pct": 75.9,
+        "mean_size_percentile_of_holdings": 6.0,
+        "mean_permno_percentile_of_holdings": 62.0,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "quantiles not monotone (spearman=-0.3)"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "liquid",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.00047,
+        "ic_std": 0.07728,
+        "ic_t": 0.118,
+        "ic_ir": 0.006,
+        "hit_rate_pct": 48.4,
+        "mean_names_per_date": 496.6
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          1.0085,
+          0.9566,
+          0.8756,
+          0.9468,
+          0.9264
+        ],
+        "annualised_pct_by_quantile": [
+          12.8,
+          12.1,
+          11.03,
+          11.97,
+          11.7
+        ],
+        "top_minus_bottom_annual_pct": -0.98,
+        "top_minus_bottom_t": -0.612,
+        "monotonicity_spearman": -0.7,
+        "is_monotone": false
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 275,
+        "top_names_by_selection_count": [
+          {
+            "permno": 10107,
+            "dates_held": 370,
+            "pct_of_dates": 100.0
+          },
+          {
+            "permno": 59328,
+            "dates_held": 314,
+            "pct_of_dates": 84.9
+          },
+          {
+            "permno": 12060,
+            "dates_held": 271,
+            "pct_of_dates": 73.2
+          },
+          {
+            "permno": 14593,
+            "dates_held": 249,
+            "pct_of_dates": 67.3
+          },
+          {
+            "permno": 76076,
+            "dates_held": 249,
+            "pct_of_dates": 67.3
+          },
+          {
+            "permno": 90319,
+            "dates_held": 243,
+            "pct_of_dates": 65.7
+          },
+          {
+            "permno": 59408,
+            "dates_held": 231,
+            "pct_of_dates": 62.4
+          },
+          {
+            "permno": 11850,
+            "dates_held": 226,
+            "pct_of_dates": 61.1
+          },
+          {
+            "permno": 47896,
+            "dates_held": 208,
+            "pct_of_dates": 56.2
+          },
+          {
+            "permno": 84788,
+            "dates_held": 208,
+            "pct_of_dates": 56.2
+          },
+          {
+            "permno": 70519,
+            "dates_held": 198,
+            "pct_of_dates": 53.5
+          },
+          {
+            "permno": 12490,
+            "dates_held": 188,
+            "pct_of_dates": 50.8
+          }
+        ],
+        "distinct_names_per_slot": 13.75,
+        "mean_turnover_pct": 18.9,
+        "mean_size_percentile_of_holdings": 90.7,
+        "mean_permno_percentile_of_holdings": 40.0,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=0.118 below 2",
+          "quantiles not monotone (spearman=-0.7)"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "value_bm",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": -0.01051,
+        "ic_std": 0.16553,
+        "ic_t": -1.221,
+        "ic_ir": -0.063,
+        "hit_rate_pct": 44.9,
+        "mean_names_per_date": 460.7
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          1.0978,
+          0.9431,
+          0.915,
+          0.8796,
+          0.9058
+        ],
+        "annualised_pct_by_quantile": [
+          14.0,
+          11.92,
+          11.55,
+          11.08,
+          11.43
+        ],
+        "top_minus_bottom_annual_pct": -2.28,
+        "top_minus_bottom_t": -0.586,
+        "monotonicity_spearman": -0.9,
+        "is_monotone": false
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 520,
+        "top_names_by_selection_count": [
+          {
+            "permno": 24010,
+            "dates_held": 185,
+            "pct_of_dates": 50.0
+          },
+          {
+            "permno": 70519,
+            "dates_held": 152,
+            "pct_of_dates": 41.1
+          },
+          {
+            "permno": 87842,
+            "dates_held": 146,
+            "pct_of_dates": 39.5
+          },
+          {
+            "permno": 66800,
+            "dates_held": 146,
+            "pct_of_dates": 39.5
+          },
+          {
+            "permno": 11404,
+            "dates_held": 129,
+            "pct_of_dates": 34.9
+          },
+          {
+            "permno": 81055,
+            "dates_held": 128,
+            "pct_of_dates": 34.6
+          },
+          {
+            "permno": 13688,
+            "dates_held": 122,
+            "pct_of_dates": 33.0
+          },
+          {
+            "permno": 21776,
+            "dates_held": 121,
+            "pct_of_dates": 32.7
+          },
+          {
+            "permno": 15720,
+            "dates_held": 120,
+            "pct_of_dates": 32.4
+          },
+          {
+            "permno": 48725,
+            "dates_held": 113,
+            "pct_of_dates": 30.5
+          },
+          {
+            "permno": 14889,
+            "dates_held": 108,
+            "pct_of_dates": 29.2
+          },
+          {
+            "permno": 49015,
+            "dates_held": 103,
+            "pct_of_dates": 27.8
+          }
+        ],
+        "distinct_names_per_slot": 26.0,
+        "mean_turnover_pct": 25.1,
+        "mean_size_percentile_of_holdings": 45.1,
+        "mean_permno_percentile_of_holdings": 45.6,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=-1.221 below 2",
+          "quantiles not monotone (spearman=-0.9)"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "profit_roe",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.02742,
+        "ic_std": 0.12621,
+        "ic_t": 4.179,
+        "ic_ir": 0.217,
+        "hit_rate_pct": 59.2,
+        "mean_names_per_date": 459.8
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.7124,
+          0.7475,
+          1.0404,
+          1.163,
+          1.1241
+        ],
+        "annualised_pct_by_quantile": [
+          8.89,
+          9.35,
+          13.22,
+          14.88,
+          14.36
+        ],
+        "top_minus_bottom_annual_pct": 5.05,
+        "top_minus_bottom_t": 1.465,
+        "monotonicity_spearman": 0.9,
+        "is_monotone": true
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 503,
+        "top_names_by_selection_count": [
+          {
+            "permno": 18729,
+            "dates_held": 258,
+            "pct_of_dates": 69.7
+          },
+          {
+            "permno": 40416,
+            "dates_held": 178,
+            "pct_of_dates": 48.1
+          },
+          {
+            "permno": 85348,
+            "dates_held": 166,
+            "pct_of_dates": 44.9
+          },
+          {
+            "permno": 46578,
+            "dates_held": 157,
+            "pct_of_dates": 42.4
+          },
+          {
+            "permno": 21178,
+            "dates_held": 144,
+            "pct_of_dates": 38.9
+          },
+          {
+            "permno": 48506,
+            "dates_held": 126,
+            "pct_of_dates": 34.1
+          },
+          {
+            "permno": 11081,
+            "dates_held": 113,
+            "pct_of_dates": 30.5
+          },
+          {
+            "permno": 66181,
+            "dates_held": 106,
+            "pct_of_dates": 28.6
+          },
+          {
+            "permno": 17750,
+            "dates_held": 100,
+            "pct_of_dates": 27.0
+          },
+          {
+            "permno": 91461,
+            "dates_held": 99,
+            "pct_of_dates": 26.8
+          },
+          {
+            "permno": 17478,
+            "dates_held": 97,
+            "pct_of_dates": 26.2
+          },
+          {
+            "permno": 76605,
+            "dates_held": 94,
+            "pct_of_dates": 25.4
+          }
+        ],
+        "distinct_names_per_slot": 25.15,
+        "mean_turnover_pct": 16.7,
+        "mean_size_percentile_of_holdings": 52.8,
+        "mean_permno_percentile_of_holdings": 51.1,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": true,
+        "failed": [],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "rev_breadth",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.01199,
+        "ic_std": 0.11344,
+        "ic_t": 2.033,
+        "ic_ir": 0.106,
+        "hit_rate_pct": 55.7,
+        "mean_names_per_date": 488.3
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.8188,
+          0.9609,
+          0.9738,
+          1.0083,
+          1.0471
+        ],
+        "annualised_pct_by_quantile": [
+          10.28,
+          12.16,
+          12.33,
+          12.79,
+          13.31
+        ],
+        "top_minus_bottom_annual_pct": 2.77,
+        "top_minus_bottom_t": 1.163,
+        "monotonicity_spearman": 1.0,
+        "is_monotone": true
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 1450,
+        "top_names_by_selection_count": [
+          {
+            "permno": 85914,
+            "dates_held": 53,
+            "pct_of_dates": 14.3
+          },
+          {
+            "permno": 91556,
+            "dates_held": 51,
+            "pct_of_dates": 13.8
+          },
+          {
+            "permno": 75510,
+            "dates_held": 47,
+            "pct_of_dates": 12.7
+          },
+          {
+            "permno": 53613,
+            "dates_held": 42,
+            "pct_of_dates": 11.4
+          },
+          {
+            "permno": 10104,
+            "dates_held": 41,
+            "pct_of_dates": 11.1
+          },
+          {
+            "permno": 40539,
+            "dates_held": 40,
+            "pct_of_dates": 10.8
+          },
+          {
+            "permno": 80432,
+            "dates_held": 40,
+            "pct_of_dates": 10.8
+          },
+          {
+            "permno": 59010,
+            "dates_held": 38,
+            "pct_of_dates": 10.3
+          },
+          {
+            "permno": 78987,
+            "dates_held": 38,
+            "pct_of_dates": 10.3
+          },
+          {
+            "permno": 57665,
+            "dates_held": 38,
+            "pct_of_dates": 10.3
+          },
+          {
+            "permno": 69032,
+            "dates_held": 38,
+            "pct_of_dates": 10.3
+          },
+          {
+            "permno": 59328,
+            "dates_held": 36,
+            "pct_of_dates": 9.7
+          }
+        ],
+        "distinct_names_per_slot": 72.5,
+        "mean_turnover_pct": 94.7,
+        "mean_size_percentile_of_holdings": 45.0,
+        "mean_permno_percentile_of_holdings": 53.4,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": true,
+        "failed": [],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "rev_magnitude",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.00633,
+        "ic_std": 0.10893,
+        "ic_t": 1.117,
+        "ic_ir": 0.058,
+        "hit_rate_pct": 55.4,
+        "mean_names_per_date": 487.2
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.8459,
+          1.0015,
+          1.0118,
+          1.0609,
+          0.9099
+        ],
+        "annualised_pct_by_quantile": [
+          10.64,
+          12.7,
+          12.84,
+          13.5,
+          11.48
+        ],
+        "top_minus_bottom_annual_pct": 0.77,
+        "top_minus_bottom_t": 0.324,
+        "monotonicity_spearman": 0.4,
+        "is_monotone": false
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 1566,
+        "top_names_by_selection_count": [
+          {
+            "permno": 53613,
+            "dates_held": 56,
+            "pct_of_dates": 15.1
+          },
+          {
+            "permno": 85269,
+            "dates_held": 40,
+            "pct_of_dates": 10.8
+          },
+          {
+            "permno": 28484,
+            "dates_held": 39,
+            "pct_of_dates": 10.5
+          },
+          {
+            "permno": 21020,
+            "dates_held": 37,
+            "pct_of_dates": 10.0
+          },
+          {
+            "permno": 91103,
+            "dates_held": 37,
+            "pct_of_dates": 10.0
+          },
+          {
+            "permno": 37284,
+            "dates_held": 36,
+            "pct_of_dates": 9.7
+          },
+          {
+            "permno": 52708,
+            "dates_held": 34,
+            "pct_of_dates": 9.2
+          },
+          {
+            "permno": 90071,
+            "dates_held": 33,
+            "pct_of_dates": 8.9
+          },
+          {
+            "permno": 76644,
+            "dates_held": 31,
+            "pct_of_dates": 8.4
+          },
+          {
+            "permno": 61241,
+            "dates_held": 31,
+            "pct_of_dates": 8.4
+          },
+          {
+            "permno": 15069,
+            "dates_held": 31,
+            "pct_of_dates": 8.4
+          },
+          {
+            "permno": 60628,
+            "dates_held": 30,
+            "pct_of_dates": 8.1
+          }
+        ],
+        "distinct_names_per_slot": 78.3,
+        "mean_turnover_pct": 88.9,
+        "mean_size_percentile_of_holdings": 37.2,
+        "mean_permno_percentile_of_holdings": 54.5,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=1.117 below 2",
+          "quantiles not monotone (spearman=0.4)"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "rev_dispersion",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.02696,
+        "ic_std": 0.16502,
+        "ic_t": 3.143,
+        "ic_ir": 0.163,
+        "hit_rate_pct": 57.8,
+        "mean_names_per_date": 488.3
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.8377,
+          1.0194,
+          0.9456,
+          0.8552,
+          1.1539
+        ],
+        "annualised_pct_by_quantile": [
+          10.53,
+          12.94,
+          11.96,
+          10.76,
+          14.76
+        ],
+        "top_minus_bottom_annual_pct": 3.86,
+        "top_minus_bottom_t": 1.056,
+        "monotonicity_spearman": 0.6,
+        "is_monotone": true
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 581,
+        "top_names_by_selection_count": [
+          {
+            "permno": 86580,
+            "dates_held": 197,
+            "pct_of_dates": 53.2
+          },
+          {
+            "permno": 14593,
+            "dates_held": 160,
+            "pct_of_dates": 43.2
+          },
+          {
+            "permno": 73139,
+            "dates_held": 159,
+            "pct_of_dates": 43.0
+          },
+          {
+            "permno": 39642,
+            "dates_held": 122,
+            "pct_of_dates": 33.0
+          },
+          {
+            "permno": 77702,
+            "dates_held": 115,
+            "pct_of_dates": 31.1
+          },
+          {
+            "permno": 60097,
+            "dates_held": 114,
+            "pct_of_dates": 30.8
+          },
+          {
+            "permno": 10696,
+            "dates_held": 107,
+            "pct_of_dates": 28.9
+          },
+          {
+            "permno": 22111,
+            "dates_held": 105,
+            "pct_of_dates": 28.4
+          },
+          {
+            "permno": 40539,
+            "dates_held": 103,
+            "pct_of_dates": 27.8
+          },
+          {
+            "permno": 84788,
+            "dates_held": 87,
+            "pct_of_dates": 23.5
+          },
+          {
+            "permno": 11618,
+            "dates_held": 84,
+            "pct_of_dates": 22.7
+          },
+          {
+            "permno": 89393,
+            "dates_held": 84,
+            "pct_of_dates": 22.7
+          }
+        ],
+        "distinct_names_per_slot": 29.05,
+        "mean_turnover_pct": 41.4,
+        "mean_size_percentile_of_holdings": 54.0,
+        "mean_permno_percentile_of_holdings": 47.1,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": true,
+        "failed": [],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "sell_side_state",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": false,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.01671,
+        "ic_std": 0.12172,
+        "ic_t": 2.641,
+        "ic_ir": 0.137,
+        "hit_rate_pct": 58.1,
+        "mean_names_per_date": 487.1
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.8196,
+          0.8529,
+          1.0466,
+          1.0476,
+          1.0693
+        ],
+        "annualised_pct_by_quantile": [
+          10.29,
+          10.73,
+          13.31,
+          13.32,
+          13.61
+        ],
+        "top_minus_bottom_annual_pct": 3.04,
+        "top_minus_bottom_t": 1.166,
+        "monotonicity_spearman": 1.0,
+        "is_monotone": true
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 1578,
+        "top_names_by_selection_count": [
+          {
+            "permno": 75510,
+            "dates_held": 47,
+            "pct_of_dates": 12.7
+          },
+          {
+            "permno": 53613,
+            "dates_held": 45,
+            "pct_of_dates": 12.2
+          },
+          {
+            "permno": 85914,
+            "dates_held": 43,
+            "pct_of_dates": 11.6
+          },
+          {
+            "permno": 91556,
+            "dates_held": 41,
+            "pct_of_dates": 11.1
+          },
+          {
+            "permno": 86868,
+            "dates_held": 38,
+            "pct_of_dates": 10.3
+          },
+          {
+            "permno": 57665,
+            "dates_held": 36,
+            "pct_of_dates": 9.7
+          },
+          {
+            "permno": 10104,
+            "dates_held": 36,
+            "pct_of_dates": 9.7
+          },
+          {
+            "permno": 80432,
+            "dates_held": 36,
+            "pct_of_dates": 9.7
+          },
+          {
+            "permno": 52708,
+            "dates_held": 35,
+            "pct_of_dates": 9.5
+          },
+          {
+            "permno": 66384,
+            "dates_held": 34,
+            "pct_of_dates": 9.2
+          },
+          {
+            "permno": 59328,
+            "dates_held": 34,
+            "pct_of_dates": 9.2
+          },
+          {
+            "permno": 69032,
+            "dates_held": 32,
+            "pct_of_dates": 8.6
+          }
+        ],
+        "distinct_names_per_slot": 78.9,
+        "mean_turnover_pct": 95.3,
+        "mean_size_percentile_of_holdings": 41.4,
+        "mean_permno_percentile_of_holdings": 55.0,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": true,
+        "failed": [],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "random",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": true,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": -0.00019,
+        "ic_std": 0.04614,
+        "ic_t": -0.079,
+        "ic_ir": -0.004,
+        "hit_rate_pct": 50.8,
+        "mean_names_per_date": 496.6
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.9891,
+          0.9126,
+          0.9197,
+          0.9894,
+          0.9032
+        ],
+        "annualised_pct_by_quantile": [
+          12.54,
+          11.52,
+          11.61,
+          12.54,
+          11.39
+        ],
+        "top_minus_bottom_annual_pct": -1.03,
+        "top_minus_bottom_t": -1.019,
+        "monotonicity_spearman": -0.3,
+        "is_monotone": false
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 1674,
+        "top_names_by_selection_count": [
+          {
+            "permno": 66157,
+            "dates_held": 27,
+            "pct_of_dates": 7.3
+          },
+          {
+            "permno": 20482,
+            "dates_held": 24,
+            "pct_of_dates": 6.5
+          },
+          {
+            "permno": 18729,
+            "dates_held": 24,
+            "pct_of_dates": 6.5
+          },
+          {
+            "permno": 77178,
+            "dates_held": 23,
+            "pct_of_dates": 6.2
+          },
+          {
+            "permno": 57665,
+            "dates_held": 23,
+            "pct_of_dates": 6.2
+          },
+          {
+            "permno": 39642,
+            "dates_held": 23,
+            "pct_of_dates": 6.2
+          },
+          {
+            "permno": 13856,
+            "dates_held": 23,
+            "pct_of_dates": 6.2
+          },
+          {
+            "permno": 19502,
+            "dates_held": 23,
+            "pct_of_dates": 6.2
+          },
+          {
+            "permno": 15579,
+            "dates_held": 22,
+            "pct_of_dates": 5.9
+          },
+          {
+            "permno": 60097,
+            "dates_held": 22,
+            "pct_of_dates": 5.9
+          },
+          {
+            "permno": 60442,
+            "dates_held": 22,
+            "pct_of_dates": 5.9
+          },
+          {
+            "permno": 81055,
+            "dates_held": 22,
+            "pct_of_dates": 5.9
+          }
+        ],
+        "distinct_names_per_slot": 83.7,
+        "mean_turnover_pct": 96.5,
+        "mean_size_percentile_of_holdings": 50.5,
+        "mean_permno_percentile_of_holdings": 50.2,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=-0.079 below 2",
+          "quantiles not monotone (spearman=-0.3)"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "random_persistent",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": true,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.00014,
+        "ic_std": 0.04457,
+        "ic_t": 0.062,
+        "ic_ir": 0.003,
+        "hit_rate_pct": 51.6,
+        "mean_names_per_date": 496.6
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.8305,
+          1.0028,
+          0.9473,
+          0.9549,
+          0.9789
+        ],
+        "annualised_pct_by_quantile": [
+          10.43,
+          12.72,
+          11.98,
+          12.08,
+          12.4
+        ],
+        "top_minus_bottom_annual_pct": 1.8,
+        "top_minus_bottom_t": 1.918,
+        "monotonicity_spearman": 0.4,
+        "is_monotone": false
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 222,
+        "top_names_by_selection_count": [
+          {
+            "permno": 77702,
+            "dates_held": 369,
+            "pct_of_dates": 99.7
+          },
+          {
+            "permno": 19350,
+            "dates_held": 367,
+            "pct_of_dates": 99.2
+          },
+          {
+            "permno": 79323,
+            "dates_held": 364,
+            "pct_of_dates": 98.4
+          },
+          {
+            "permno": 64282,
+            "dates_held": 331,
+            "pct_of_dates": 89.5
+          },
+          {
+            "permno": 64311,
+            "dates_held": 324,
+            "pct_of_dates": 87.6
+          },
+          {
+            "permno": 82598,
+            "dates_held": 303,
+            "pct_of_dates": 81.9
+          },
+          {
+            "permno": 76644,
+            "dates_held": 290,
+            "pct_of_dates": 78.4
+          },
+          {
+            "permno": 52708,
+            "dates_held": 282,
+            "pct_of_dates": 76.2
+          },
+          {
+            "permno": 81774,
+            "dates_held": 268,
+            "pct_of_dates": 72.4
+          },
+          {
+            "permno": 81696,
+            "dates_held": 237,
+            "pct_of_dates": 64.1
+          },
+          {
+            "permno": 45911,
+            "dates_held": 220,
+            "pct_of_dates": 59.5
+          },
+          {
+            "permno": 86964,
+            "dates_held": 212,
+            "pct_of_dates": 57.3
+          }
+        ],
+        "distinct_names_per_slot": 11.1,
+        "mean_turnover_pct": 15.4,
+        "mean_size_percentile_of_holdings": 39.3,
+        "mean_permno_percentile_of_holdings": 58.1,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=0.062 below 2",
+          "quantiles not monotone (spearman=0.4)"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "oldest_listing",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": true,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": 0.00402,
+        "ic_std": 0.11601,
+        "ic_t": 0.667,
+        "ic_ir": 0.035,
+        "hit_rate_pct": 44.1,
+        "mean_names_per_date": 496.6
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          0.8672,
+          0.9548,
+          0.9492,
+          0.9257,
+          1.017
+        ],
+        "annualised_pct_by_quantile": [
+          10.92,
+          12.08,
+          12.0,
+          11.69,
+          12.91
+        ],
+        "top_minus_bottom_annual_pct": 1.81,
+        "top_minus_bottom_t": 0.537,
+        "monotonicity_spearman": 0.6,
+        "is_monotone": true
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 124,
+        "top_names_by_selection_count": [
+          {
+            "permno": 10145,
+            "dates_held": 370,
+            "pct_of_dates": 100.0
+          },
+          {
+            "permno": 10104,
+            "dates_held": 370,
+            "pct_of_dates": 100.0
+          },
+          {
+            "permno": 10107,
+            "dates_held": 370,
+            "pct_of_dates": 100.0
+          },
+          {
+            "permno": 10516,
+            "dates_held": 307,
+            "pct_of_dates": 83.0
+          },
+          {
+            "permno": 11308,
+            "dates_held": 294,
+            "pct_of_dates": 79.5
+          },
+          {
+            "permno": 10696,
+            "dates_held": 282,
+            "pct_of_dates": 76.2
+          },
+          {
+            "permno": 10299,
+            "dates_held": 276,
+            "pct_of_dates": 74.6
+          },
+          {
+            "permno": 10147,
+            "dates_held": 270,
+            "pct_of_dates": 73.0
+          },
+          {
+            "permno": 10138,
+            "dates_held": 260,
+            "pct_of_dates": 70.3
+          },
+          {
+            "permno": 11404,
+            "dates_held": 258,
+            "pct_of_dates": 69.7
+          },
+          {
+            "permno": 10324,
+            "dates_held": 198,
+            "pct_of_dates": 53.5
+          },
+          {
+            "permno": 11618,
+            "dates_held": 197,
+            "pct_of_dates": 53.2
+          }
+        ],
+        "distinct_names_per_slot": 6.2,
+        "mean_turnover_pct": 11.0,
+        "mean_size_percentile_of_holdings": 60.3,
+        "mean_permno_percentile_of_holdings": 1.9,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=0.667 below 2"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    },
+    {
+      "signal": "newest_listing",
+      "window": [
+        "1994-01-31",
+        "2024-11-11"
+      ],
+      "holding_days": 21,
+      "top_k": 20,
+      "universe_n": 500,
+      "is_null": true,
+      "rank_ic": {
+        "n_dates": 370,
+        "ic_mean": -0.00402,
+        "ic_std": 0.11601,
+        "ic_t": -0.667,
+        "ic_ir": -0.035,
+        "hit_rate_pct": 55.9,
+        "mean_names_per_date": 496.6
+      },
+      "quantiles": {
+        "n_dates": 370,
+        "n_quantiles": 5,
+        "mean_return_pct_by_quantile": [
+          1.0177,
+          0.919,
+          0.9551,
+          0.9547,
+          0.8682
+        ],
+        "annualised_pct_by_quantile": [
+          12.92,
+          11.6,
+          12.08,
+          12.08,
+          10.93
+        ],
+        "top_minus_bottom_annual_pct": -1.78,
+        "top_minus_bottom_t": -0.533,
+        "monotonicity_spearman": -0.7,
+        "is_monotone": false
+      },
+      "census": {
+        "n_formation_dates": 370,
+        "n_distinct_names_ever_held": 973,
+        "top_names_by_selection_count": [
+          {
+            "permno": 92655,
+            "dates_held": 369,
+            "pct_of_dates": 99.7
+          },
+          {
+            "permno": 92602,
+            "dates_held": 200,
+            "pct_of_dates": 54.1
+          },
+          {
+            "permno": 92611,
+            "dates_held": 200,
+            "pct_of_dates": 54.1
+          },
+          {
+            "permno": 92257,
+            "dates_held": 188,
+            "pct_of_dates": 50.8
+          },
+          {
+            "permno": 92121,
+            "dates_held": 166,
+            "pct_of_dates": 44.9
+          },
+          {
+            "permno": 93096,
+            "dates_held": 161,
+            "pct_of_dates": 43.5
+          },
+          {
+            "permno": 92322,
+            "dates_held": 153,
+            "pct_of_dates": 41.4
+          },
+          {
+            "permno": 92203,
+            "dates_held": 150,
+            "pct_of_dates": 40.5
+          },
+          {
+            "permno": 93436,
+            "dates_held": 142,
+            "pct_of_dates": 38.4
+          },
+          {
+            "permno": 93002,
+            "dates_held": 142,
+            "pct_of_dates": 38.4
+          },
+          {
+            "permno": 92221,
+            "dates_held": 116,
+            "pct_of_dates": 31.4
+          },
+          {
+            "permno": 92239,
+            "dates_held": 116,
+            "pct_of_dates": 31.4
+          }
+        ],
+        "distinct_names_per_slot": 48.65,
+        "mean_turnover_pct": 27.4,
+        "mean_size_percentile_of_holdings": 41.0,
+        "mean_permno_percentile_of_holdings": 97.9,
+        "permno_percentile_note": "permno is assigned in listing order, so a LOW percentile means OLD listings. Measured against the ELIGIBLE set on each date, so 50 means 'typical age for a name this book could have bought' \u2014 NOT typical for the panel, which is much younger. This is the axis on which raw profit_roe was confounded.",
+        "percentile_baseline": "eligible set on each formation date"
+      },
+      "verdict": {
+        "cross_section_supports_a_book": false,
+        "failed": [
+          "IC t=-0.667 below 2",
+          "quantiles not monotone (spearman=-0.7)"
+        ],
+        "note": "advisory, not a gate: this governs what may be CLAIMED and what deserves the next hour of work, never what may be tested in paper (three-licence rule)"
+      }
+    }
+  ]
+}

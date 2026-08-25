@@ -143,6 +143,9 @@ backend/data/optimus/arena/
 # Runtime receipts written by pi_hourly_mtm on the prod volume; local test
 # runs of the scheduler job write real ones here too. Runtime state, not source.
 backend/data/optimus/mtm_receipts/
+# Generic scheduled-job receipts (services/job_receipts.py). Runtime
+# evidence, per-deploy, pruned per job — not source.
+backend/data/optimus/job_receipts/
 backend/data/optimus/wrds/truncated_quarantine.json
 backend/data/optimus/wrds/substrate_verification.json
 backend/data/optimus/prediction_markets/

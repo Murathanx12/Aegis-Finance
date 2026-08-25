@@ -54,8 +54,13 @@ FIRST_VALID_ROW = {
     "illiquid": SIG.QUARTER // 2 - 1, "trend_200": 99,
     "liquid": SIG.LIQ_MIN_OBS - 1,
     # Point-in-time by construction: no trailing window to fill.
-    "size_small": 0, "size_large": 0, "equal": 0, "random": 0,
+    "size_small": 0, "size_large": 0, "random": 0,
     "random_persistent": 0,
+    # The EXPLICIT baselines. `-permno` / `+permno` need no history at all,
+    # which is precisely what makes them baselines. They replaced `equal`,
+    # whose constant score had no holdings of its own — it inherited the
+    # sort's tie-break, which is permno order, i.e. listing age.
+    "oldest_listing": 0, "newest_listing": 0,
     # The non-price pair. Their "window" is not a trailing count of sessions —
     # it is whether a `public_date` exists strictly before the session — so the
     # synthetic panel supplies a grid whose first row is deliberately NaN and
@@ -63,6 +68,12 @@ FIRST_VALID_ROW = {
     # the check still bites: a dispatcher that read row i instead of i-1 would
     # produce a number on row 0.
     "value_bm": 1, "profit_roe": 1,
+    # The analyst-revision channels and their composite. Same construction as
+    # the non-price pair: availability is a `statpers` strictly before the
+    # session, not a trailing window, so row 1 is the first valid row and a
+    # dispatcher reading row i instead of i-1 would produce a number on row 0.
+    "rev_breadth": 1, "rev_magnitude": 1, "rev_dispersion": 1,
+    "sell_side_state": 1,
 }
 
 
@@ -116,7 +127,16 @@ def test_an_unregistered_signal_raises_rather_than_returning_zeros():
 
 
 def test_the_null_signals_are_declared_as_nulls():
-    """`random` and `equal` must be flagged, or the leaderboard ranks a coin
-    flip as a strategy."""
+    """A baseline must be flagged, or the leaderboard ranks it as a strategy.
+
+    `equal` was retired on 2026-08-25: scoring every name identically produces
+    no book of its own, only whatever the sort's tie-break produces, and that
+    tie-break is permno order — i.e. listing age. It is now `oldest_listing`,
+    with `newest_listing` as the opposite-tail control the canon requires.
+    """
     assert SIG.NULL_SIGNALS <= set(SIG.SIGNALS)
-    assert "random" in SIG.NULL_SIGNALS and "equal" in SIG.NULL_SIGNALS
+    assert "random" in SIG.NULL_SIGNALS
+    assert {"oldest_listing", "newest_listing"} <= SIG.NULL_SIGNALS
+    assert SIG.EXPLICIT_BASELINES <= SIG.NULL_SIGNALS
+    # the retired name must not silently reappear as a registry entry
+    assert "equal" not in SIG.SIGNALS

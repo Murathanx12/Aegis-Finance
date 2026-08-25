@@ -26,6 +26,9 @@ from backend.config import DATA_DIR
 logger = logging.getLogger(__name__)
 
 
+from backend.services.job_receipts import note, receipted   # noqa: F401
+
+
 def _gated(fn):
     """Run this job behind the process-wide heavy-work gate (heavy_work.py).
 
@@ -748,6 +751,7 @@ async def _hourly_mtm():
         _write_mtm_receipt("raised", f"{type(e).__name__}: {e}")
 
 
+@receipted()
 @_gated
 async def _options_pit_capture() -> None:
     """Store today's option state for the event universe.
@@ -779,6 +783,7 @@ async def _options_pit_capture() -> None:
         logger.error("options PIT capture failed: %s", e, exc_info=True)
 
 
+@receipted()
 @_gated
 async def _daily_check():
     """Run daily rebalance check for all lanes (reference + book)."""
@@ -1070,6 +1075,7 @@ async def _daily_check():
         logger.error("Smartgrowth collection failed: %s", e, exc_info=True)
 
 
+@receipted()
 @_gated
 async def _congress_morning_collect():
     """TRIAL-CONGRESS-IC collection at 07:30 ET, when the shared FMP daily
@@ -1090,6 +1096,7 @@ async def _congress_morning_collect():
         logger.error("Congress-IC morning collection failed: %s", e, exc_info=True)
 
 
+@receipted()
 @_gated
 async def _ownership_collect():
     """Daily Teacher Library collection: yesterday's Forms 3/4/5.
@@ -1212,6 +1219,7 @@ def _write_resolver_receipt(report: dict) -> None:
                      "happened", type(exc).__name__, exc)
 
 
+@receipted()
 @_gated
 async def _ledger_resolve():
     """Daily prediction-ledger resolution (the caller resolve_all never had).
@@ -1256,6 +1264,7 @@ async def _ledger_resolve():
         logger.error("Ledger resolve failed: %s", e, exc_info=True)
 
 
+@receipted()
 @_gated
 async def _why_moved_nightly():
     """Nightly WHY-MOVED: explain the day, and mint forecasts that can be wrong.
@@ -1315,6 +1324,7 @@ async def _why_moved_nightly():
         logger.error("Nightly WHY-MOVED failed: %s", e, exc_info=True)
 
 
+@receipted()
 @_gated
 async def _weekly_aggressive_check():
     """Additional weekly check for aggressive lane."""
@@ -1330,6 +1340,7 @@ async def _weekly_aggressive_check():
         logger.error("Weekly aggressive check failed: %s", e, exc_info=True)
 
 
+@receipted()
 @_gated
 async def _copy_lab_run():
     """Scheduled COPY-LAB engine pass over seeded active lanes.
@@ -1356,6 +1367,7 @@ async def _copy_lab_run():
         logger.error("COPY-LAB scheduled pass failed: %s", e, exc_info=True)
 
 
+@receipted()
 @_gated
 async def _arena_daily():
     """Scheduled ARENA Gen-1 daily pass (ORDER 25). PRODUCT_EXPERIMENT.
@@ -1455,6 +1467,7 @@ async def _submit_arena_broker_intent():
         logger.error("Paper broker submit failed: %s", e, exc_info=True)
 
 
+@receipted()
 @_gated
 async def _daily_digest():
     """Scheduled daily digest. The counts ARE the log line: a digest whose
@@ -1475,6 +1488,7 @@ async def _daily_digest():
         logger.error("Daily digest failed: %s", e, exc_info=True)
 
 
+@receipted()
 @_gated
 async def _prediction_markets_collect():
     """Daily Kalshi PIT snapshot (TRIAL-PREDMARKET-1). The counts are the log

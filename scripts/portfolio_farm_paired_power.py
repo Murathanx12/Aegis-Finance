@@ -137,7 +137,8 @@ def main(argv=None) -> int:
 
     def build(name: str) -> list[Policy]:
         seeds = (range(NULL_SEEDS)
-                 if name in SIG.NULL_SIGNALS and name != "equal" else (0,))
+                 if name in SIG.NULL_SIGNALS
+                 and name not in SIG.EXPLICIT_BASELINES else (0,))
         return [Policy(signal=name, holding_days=h, top_k=a.top_k,
                        sizing=SIZING, phase_offset=p, signal_seed=k)
                 for p in range(h) for k in seeds]

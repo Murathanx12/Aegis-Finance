@@ -557,6 +557,19 @@ def load_panel(start_year: int, end_year: int, *,
             except CH.CharacteristicUnavailable as exc:        # noqa: BLE001
                 logger.warning("portfolio_farm.panel: %s not joined (%s)",
                                cname, exc)
+        # THE THIRD DATA SOURCE. Analyst state is neither a price nor a
+        # filing, so it is the one join that can move `independent selector
+        # count` off 1. Joined here for the same reason the accounting ratios
+        # are: `run_many` calls `matrix()` once per policy, and re-reading 5M
+        # IBES rows inside a sweep is the difference between a runnable
+        # battery and an unrunnable one.
+        from backend.services.portfolio_farm import revisions as RV
+        if RV.available():
+            try:
+                chars.update(RV.load_all(dates, permnos))
+            except RV.RevisionsUnavailable as exc:             # noqa: BLE001
+                logger.warning("portfolio_farm.panel: revisions not joined "
+                               "(%s)", exc)
 
     dl_ret, dl_code = load_delisting(permnos)
     n_known = int(np.isfinite(dl_ret).sum())

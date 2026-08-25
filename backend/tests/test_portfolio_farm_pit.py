@@ -79,6 +79,20 @@ def synthetic(seed: int = 7, *, oracle_col: int | None = None) -> Panel:
                              tri[:-1].astype(np.float32)]),
             "roe": np.vstack([np.full((1, N), np.nan, dtype=np.float32),
                               -tri[:-1].astype(np.float32)]),
+            # The analyst-revision channels, on the same lagged-slice
+            # construction and for the same reason. Each is a DIFFERENT
+            # transform of the lagged panel so `sell_side_state` cannot pass
+            # by having three identical components — a composite of one thing
+            # repeated is exactly the `arena_composite` failure.
+            "rev_breadth": np.vstack([
+                np.full((1, N), np.nan, dtype=np.float32),
+                np.tanh(tri[:-1]).astype(np.float32)]),
+            "rev_magnitude": np.vstack([
+                np.full((1, N), np.nan, dtype=np.float32),
+                (0.5 * tri[:-1]).astype(np.float32)]),
+            "rev_dispersion": np.vstack([
+                np.full((1, N), np.nan, dtype=np.float32),
+                (-0.25 * tri[:-1]).astype(np.float32)]),
         },
     )
 

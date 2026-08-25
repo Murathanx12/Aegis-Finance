@@ -24,7 +24,7 @@ from scripts import portfolio_farm_paired_power as PP  # noqa: E402
 
 
 def _result(dates, nav) -> FarmResult:
-    return FarmResult(policy=Policy(signal="equal", holding_days=5, top_k=10),
+    return FarmResult(policy=Policy(signal="oldest_listing", holding_days=5, top_k=10),
                       dates=list(dates), nav=[float(x) for x in nav],
                       metrics={"status": "ok", "terminal_usd": float(nav[-1])})
 

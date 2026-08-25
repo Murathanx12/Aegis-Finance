@@ -104,6 +104,39 @@ def _cap_weights(w: np.ndarray, cap: float) -> np.ndarray:
     return np.minimum(w, cap)
 
 
+def eligible_at(panel, i: int, policy, liq: np.ndarray,
+                px_c: np.ndarray | None = None) -> np.ndarray:
+    """The universe a decision at row `i` may choose from. (N,) bool.
+
+    THE ONE DEFINITION. `diagnostics` scores signals on exactly this set, and
+    it has to be this set: a rank IC computed over every name in the panel,
+    reported next to a book drawn from the top-500 by dollar volume, describes
+    a universe the book never traded. Neither number would look wrong.
+
+    `liq` is the trailing dollar-volume mean at row `i` — passed in rather than
+    recomputed, because the caller has already built the whole matrix and the
+    rolling window is the expensive part.
+    """
+    import numpy as _np
+
+    if px_c is None:
+        px_c = panel.close[i].astype(_np.float64)
+    # `px_c` is SPLIT-ADJUSTED and is the right thing to mark with and the
+    # wrong thing to screen with: a $5 floor is about the price that actually
+    # changes hands. `close_raw` is that price.
+    screen_px = (panel.close_raw[i].astype(_np.float64)
+                 if getattr(panel, "close_raw", None) is not None else px_c)
+    eligible = (panel.traded[i] & _np.isfinite(px_c)
+                & (screen_px >= policy.min_price) & _np.isfinite(liq))
+    if policy.universe_n and eligible.sum() > policy.universe_n:
+        cand = _np.flatnonzero(eligible)
+        keep = cand[_np.argsort(-liq[cand], kind="stable")[:policy.universe_n]]
+        m = _np.zeros(panel.close.shape[1], dtype=bool)
+        m[keep] = True
+        eligible = m
+    return eligible
+
+
 def _targets(sig_row: np.ndarray, eligible: np.ndarray, policy: Policy,
              vol_row: np.ndarray, cap_row: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """(indices, weights) for one formation date. Empty when nothing qualifies."""
@@ -308,22 +341,7 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
         first = w0 + (policy.phase_offset % policy.holding_days)
         if (i >= first and (i - first) % policy.holding_days == 0
                 and i < T - 1):
-            liq = dolvol_ma[i]
-            # `px_c` is SPLIT-ADJUSTED and is the right thing to mark with and
-            # the wrong thing to screen with: a $5 floor is about the price
-            # that actually changes hands. `close_raw` is that price.
-            screen_px = (panel.close_raw[i].astype(np.float64)
-                         if getattr(panel, "close_raw", None) is not None
-                         else px_c)
-            eligible = (panel.traded[i] & np.isfinite(px_c)
-                        & (screen_px >= policy.min_price) & np.isfinite(liq))
-            if policy.universe_n and eligible.sum() > policy.universe_n:
-                cand = np.flatnonzero(eligible)
-                keep = cand[np.argsort(-liq[cand], kind="stable")[
-                    :policy.universe_n]]
-                m = np.zeros(N, dtype=bool)
-                m[keep] = True
-                eligible = m
+            eligible = eligible_at(panel, i, policy, dolvol_ma[i], px_c)
             chosen, weights = _targets(sig[i], eligible, policy, vol[i],
                                        panel.mktcap[i].astype(np.float64))
             diag["n_decisions"] += 1

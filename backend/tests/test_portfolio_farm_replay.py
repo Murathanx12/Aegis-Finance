@@ -57,7 +57,7 @@ def test_a_flat_market_LOSES_exactly_the_costs():
         terminal = 10,000 - 5.9928                = 9,994.0072
     """
     p = _flat_panel()
-    res = replay.run(p, _pol(signal="equal", holding_days=1000), warmup=260)
+    res = replay.run(p, _pol(signal="oldest_listing", holding_days=1000), warmup=260)
     start, one_way = 10_000.0, 0.0006
     assert res.diagnostics["n_fills"] == 1
     deployed = start * (1.0 - 2.0 * one_way)
@@ -72,7 +72,7 @@ def test_a_flat_market_LOSES_exactly_the_costs():
 
 def test_the_frictionless_twin_loses_NOTHING():
     p = _flat_panel()
-    res = replay.run(p, _pol(signal="equal", holding_days=1000,
+    res = replay.run(p, _pol(signal="oldest_listing", holding_days=1000,
                              transaction_cost_bps=0.0, slippage_bps=0.0,
                              zero_cost_diagnostic=True), warmup=260)
     assert res.diagnostics["total_cost_usd"] == 0.0
@@ -101,7 +101,7 @@ def test_dividends_arrive_as_CASH_and_are_counted_once():
     # 1% dividend every session: total return 1%, price return 0%.
     ret = np.full(p.ret.shape, 0.01, dtype=np.float32)
     p = Panel(**{**p.__dict__, "ret": ret})
-    res = replay.run(p, _pol(signal="equal", holding_days=1000), warmup=260)
+    res = replay.run(p, _pol(signal="oldest_listing", holding_days=1000), warmup=260)
     n_days = T - 260
     # Price never moves, so the whole gain is dividend cash on a ~$10k book.
     gain = res.metrics["terminal_usd"] - 10_000.0
@@ -118,9 +118,9 @@ def test_a_vanished_holding_is_resolved_at_the_DECLARED_delisting_return():
     close[300:, :] = np.nan                     # the whole universe disappears
     p = Panel(**{**p.__dict__, "close": close,
                  "traded": np.isfinite(close)})
-    harsh = replay.run(p, _pol(signal="equal", holding_days=1000,
+    harsh = replay.run(p, _pol(signal="oldest_listing", holding_days=1000,
                                delisting_return=-1.0), warmup=260)
-    mild = replay.run(p, _pol(signal="equal", holding_days=1000,
+    mild = replay.run(p, _pol(signal="oldest_listing", holding_days=1000,
                               delisting_return=0.0), warmup=260)
     assert harsh.diagnostics["n_delistings"] > 0
     assert harsh.metrics["terminal_usd"] < mild.metrics["terminal_usd"], (
@@ -135,7 +135,7 @@ def test_a_SHORT_gap_is_not_treated_as_a_delisting():
     close = p.close.copy()
     close[300:302, :] = np.nan
     p = Panel(**{**p.__dict__, "close": close, "traded": np.isfinite(close)})
-    res = replay.run(p, _pol(signal="equal", holding_days=1000), warmup=260)
+    res = replay.run(p, _pol(signal="oldest_listing", holding_days=1000), warmup=260)
     assert res.diagnostics["n_delistings"] == 0
 
 
@@ -153,7 +153,7 @@ def test_load_panel_REFUSES_a_missing_year_rather_than_shortening(tmp_path):
 def test_replay_refuses_a_panel_shorter_than_its_warmup():
     p = _flat_panel()
     with pytest.raises(ValueError):
-        replay.run(p, _pol(signal="equal"), warmup=T + 10)
+        replay.run(p, _pol(signal="oldest_listing"), warmup=T + 10)
 
 
 # ── weights ─────────────────────────────────────────────────────────────────
@@ -191,9 +191,9 @@ def test_an_infeasible_cap_actually_reduces_the_books_exposure_end_to_end():
     cash, so a flat market leaves it with more than a fully invested twin
     after costs."""
     p = _flat_panel(n_names=8)
-    tight = replay.run(p, _pol(signal="equal", top_k=3, max_single_name=0.2,
+    tight = replay.run(p, _pol(signal="oldest_listing", top_k=3, max_single_name=0.2,
                                holding_days=1000), warmup=260)
-    full = replay.run(p, _pol(signal="equal", top_k=3, max_single_name=1.0,
+    full = replay.run(p, _pol(signal="oldest_listing", top_k=3, max_single_name=1.0,
                               holding_days=1000), warmup=260)
     assert tight.diagnostics["traded_notional_usd"] == pytest.approx(
         0.6 * full.diagnostics["traded_notional_usd"], rel=1e-6)
@@ -221,7 +221,7 @@ def test_cash_never_goes_negative_when_a_HELD_name_cannot_be_PRICED():
     # the fixture would prove nothing; the guard assertion below catches that.
     op[266:, 0:3] = np.nan
     p = Panel(**{**p.__dict__, "open_": op})
-    res = replay.run(p, _pol(signal="equal", top_k=6, holding_days=5,
+    res = replay.run(p, _pol(signal="oldest_listing", top_k=6, holding_days=5,
                              max_single_name=1.0), warmup=260)
     assert res.diagnostics["stuck_capital_events"] > 0, (
         "the fixture never produced a stuck position — the test proves nothing")
@@ -232,7 +232,7 @@ def test_cash_never_goes_negative_when_a_HELD_name_cannot_be_PRICED():
 
 def test_min_cash_is_on_every_receipt():
     """A number, not a suspicion. The leverage class cannot recur unnoticed."""
-    res = replay.run(_flat_panel(), _pol(signal="equal"), warmup=260)
+    res = replay.run(_flat_panel(), _pol(signal="oldest_listing"), warmup=260)
     assert "min_cash_usd" in res.diagnostics
     assert "stuck_capital_usd" in res.diagnostics
 

@@ -170,7 +170,8 @@ def main(argv=None) -> int:
                     sizing=SIZING, phase_offset=p, signal_seed=k)
              for s in names if s in SIG.NULL_SIGNALS
              for p in range(HOLDING_DAYS)
-             for k in (range(NULL_SEEDS) if s != "equal" else (0,))]
+             for k in (range(NULL_SEEDS)
+                       if s not in SIG.EXPLICIT_BASELINES else (0,))]
     res = farm.run_many(pan, pols, progress=False)
 
     rows = []

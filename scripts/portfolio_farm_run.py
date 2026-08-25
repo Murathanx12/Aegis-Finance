@@ -44,7 +44,8 @@ from backend.services.portfolio_farm.policy import Policy, grid  # noqa: E402
 ALL_SIGNALS = ["mom_12_1", "mom_6_1", "mom_3_1", "mom_12_0", "reversal_1m",
                "reversal_1w", "low_vol", "high_vol", "trend_200", "size_small",
                "size_large", "illiquid", "liquid",
-               "random", "random_persistent", "equal"]
+               "random", "random_persistent", "oldest_listing",
+               "newest_listing"]
 HOLDINGS = [1, 5, 21, 63, 126, 252]
 
 #: Phases sampled per rebalance cycle in the `phase` preset. Seven is enough
@@ -67,7 +68,8 @@ def null_bench(**kw) -> list[Policy]:
             + [Policy(signal="random_persistent", signal_seed=s,
                       note="null control — chance, NEAR-ZERO turnover", **kw)
                for s in range(NULL_SEEDS)]
-            + [Policy(signal="equal", **kw)])
+            + [Policy(signal=s, **kw)
+               for s in ("oldest_listing", "newest_listing")])
 
 
 def build(preset: str) -> list[Policy]:

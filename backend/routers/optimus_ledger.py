@@ -16,6 +16,8 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
+from backend.services import job_receipts as JR
+
 router = APIRouter(prefix="/api/optimus", tags=["optimus"])
 logger = logging.getLogger(__name__)
 
@@ -84,6 +86,10 @@ async def get_job_receipts(limit: int = 10):
         # to tell a skipped mark from a failed one, because both of
         # `_hourly_mtm`'s early returns logged at DEBUG and wrote nothing.
         "pi_hourly_mtm": _read("pi_hourly_mtm", base / "mtm_receipts"),
+        # Every OTHER scheduled job, through the generic wrapper added
+        # 2026-08-25. `pi_hourly_mtm` keeps its bespoke receipt until the
+        # 16:30 ET firing it was built to diagnose has been read.
+        "scheduled_jobs": {j: JR.read(j, limit=5) for j in JR.known_jobs()},
         "note": ("A run that had nothing to do still writes a receipt. An "
                  "unchanged ledger is the expected result of a healthy quiet "
                  "run and cannot, by itself, distinguish that from a job that "

@@ -95,6 +95,23 @@ class Policy:
 
     def __post_init__(self):
         if self.signal not in SIGNALS:
+            from .signals import DEPRECATED_ALIASES
+            renamed = DEPRECATED_ALIASES.get(self.signal)
+            if renamed:
+                # REFUSED, not silently resolved. A Policy is a frozen hashed
+                # strategy record, so rewriting its signal field here would
+                # produce a policy whose hash does not match the receipt it
+                # came from — a reproducibility problem wearing a convenience.
+                # Naming the replacement makes the fix one edit long.
+                raise PolicyError(
+                    f"signal {self.signal!r} was RENAMED to {renamed!r} on "
+                    f"2026-08-25 and is no longer a policy-declarable name. "
+                    f"Scoring every name equally does not produce an "
+                    f"equal-weight book — it produces the sort's tie-break, "
+                    f"and that tie-break is permno order, i.e. LISTING AGE. "
+                    f"The holdings are unchanged; the name now says what they "
+                    f"are. Use {renamed!r}, and see `newest_listing` for the "
+                    f"opposite-tail control.")
             raise PolicyError(
                 f"unknown signal {self.signal!r}; declared: {sorted(SIGNALS)}. "
                 f"A signal the library cannot compute would rank every name "

@@ -45,7 +45,11 @@ revision signal is the obvious next one and it is not built yet.
 
 from __future__ import annotations
 
+import logging
+
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 #: Trading days. Named constants because "252" appearing in four functions is
 #: four places to disagree about what a year is.
@@ -208,21 +212,58 @@ def random_persistent(panel, i: int) -> np.ndarray:
 
 
 
-def equal_universe(panel, i: int) -> np.ndarray:
-    """No ranking at all — every eligible name scores the same.
+def oldest_listing(panel, i: int) -> np.ndarray:
+    """The k OLDEST surviving eligible listings. Formerly, and wrongly, `equal`.
 
-    READ THE TIE-BREAK BEFORE USING THIS AS A CONTROL. With every score equal,
-    `top_k` falls through to the stable sort's tie-break, which is **permno
-    order**, and CRSP permnos are assigned roughly in listing order. So this is
-    not a neutral null: it is "the twelve OLDEST surviving eligible listings",
-    a real and quite specific strategy with a survivorship flavour.
+    THIS IS WHAT `equal` ALWAYS WAS. Scoring every name 0.0 does not produce a
+    neutral book — it produces whatever the tie-break produces, and `top_k`
+    breaks ties in permno order, which CRSP assigns roughly in listing order.
+    The holdings are unchanged by this rename; only the honesty is.
 
-    It stays in the library because "did the SELECTION do anything, or was it
-    the universe and the costs?" is worth asking, and because a single
-    deterministic reference line is useful. It is NOT the neutral null —
-    `random_persistent` is, and unlike this one it comes with a distribution.
+    Scored EXPLICITLY as `-permno` so the selection is declared rather than
+    inherited from sort stability. A baseline whose holdings depend on the
+    stability of a sort is one refactor away from silently becoming a different
+    baseline, and nothing would print differently when it did.
+
+    IT IS A CONFOUND DETECTOR, NOT A NULL. It is the hardest benchmark the farm
+    has: high-ROE large caps ARE old listings, so `profit_roe` measured against
+    the cap-weighted market needed 31 years and measured against THIS needed
+    126 (`portfolio_farm_paired_power`, 2026-08-25). Use it to ask "is my
+    signal distinguishable from listing age?", never to ask "did I beat
+    chance" — `random_persistent` answers that and comes with a distribution.
     """
-    return np.zeros(panel.close.shape[1], dtype=np.float64)
+    return -panel.permnos.astype(np.float64)
+
+
+def newest_listing(panel, i: int) -> np.ndarray:
+    """The k NEWEST eligible listings — the opposite tail of `oldest_listing`.
+
+    The canon requires an opposite-tail control, and on 2026-08-24 that
+    requirement caught a wrong ship (AMENDMENT-1). Age is a real exposure only
+    if its two ends behave differently: if both the oldest and the newest books
+    beat the market, the story is the universe and the costs, and "age" was
+    never the mechanism.
+    """
+    return panel.permnos.astype(np.float64)
+
+
+#: The old name, kept resolvable because receipts already on disk carry it and
+#: a receipt that no longer parses is a mutated history. Every lookup goes
+#: through `resolve_alias`, so nothing reads `SIGNALS["equal"]` directly.
+DEPRECATED_ALIASES = {"equal": "oldest_listing"}
+
+
+def resolve_alias(name: str) -> str:
+    """Map a retired signal name onto its current one, loudly."""
+    new = DEPRECATED_ALIASES.get(name)
+    if new is None:
+        return name
+    logger.warning(
+        "signal %r was renamed to %r on 2026-08-25: scoring every name equally "
+        "does not produce an equal-weight book, it produces the tie-break, and "
+        "the tie-break is permno order (= listing age). Same holdings, honest "
+        "name.", name, new)
+    return new
 
 
 def _characteristic(panel, name: str) -> np.ndarray:
@@ -264,6 +305,60 @@ def profit_roe(panel, i: int) -> np.ndarray:
     return _characteristic(panel, "roe")[i].astype(np.float64)
 
 
+def rev_breadth(panel, i: int) -> np.ndarray:
+    """Net share of analysts revising UP. (numup - numdown) / numest.
+
+    Bounded in [-1, 1] by construction, so no denominator can blow it up —
+    which is why it is the component to trust when `rev_magnitude` and the
+    census disagree.
+    """
+    return _characteristic(panel, "rev_breadth")[i].astype(np.float64)
+
+
+def rev_magnitude(panel, i: int) -> np.ndarray:
+    """How far the FY1 consensus moved this month, floored to kill rounding.
+
+    Two analysts nudging by a cent is not one analyst halving their number,
+    and `rev_breadth` scores those identically. Carries the IBES split-restate
+    caveat (`revisions.py` docstring) — it is the component to distrust first.
+    """
+    return _characteristic(panel, "rev_magnitude")[i].astype(np.float64)
+
+
+def rev_dispersion(panel, i: int) -> np.ndarray:
+    """NEGATED analyst disagreement, so HIGH means analysts agree.
+
+    The sign is declared here rather than discovered from a result: forecast
+    dispersion is a documented NEGATIVE return predictor, so agreement scores
+    high and the direction is on the record before any number is computed.
+    """
+    return _characteristic(panel, "rev_dispersion")[i].astype(np.float64)
+
+
+def sell_side_state(panel, i: int) -> np.ndarray:
+    """SELL_SIDE_STATE_v1 — the three analyst channels, equally weighted.
+
+    Cross-sectional z-score of each component on the date, then a plain sum.
+    Equal weights, not fitted ones: a weight learned on the same history that
+    is about to be scored is the leakage this project has already paid for,
+    and the fixed-combination baseline has to exist BEFORE any learned router
+    can be said to beat something.
+
+    A name missing any component is NaN and therefore not selectable. Missing
+    is missing, never "average" — the same rule `replay` applies to volatility
+    for inverse-vol sizing.
+    """
+    raw = [f(panel, i) for f in (rev_breadth, rev_magnitude, rev_dispersion)]
+    valid = np.isfinite(raw[0]) & np.isfinite(raw[1]) & np.isfinite(raw[2])
+    parts = [zscore(r) for r in raw]
+    out = parts[0] + parts[1] + parts[2]
+    # A name missing ANY channel is not selectable. Requiring all three is
+    # what makes this a state rather than "whichever channel happened to have
+    # data" — and it keeps the composite's universe identical to the universe
+    # its components are diagnosed on.
+    return np.where(valid, out, np.nan)
+
+
 #: The registry the policy grid enumerates. A signal not in here cannot be
 #: named by a policy, so a typo is a refusal rather than an all-NaN run that
 #: silently holds nothing.
@@ -284,9 +379,18 @@ SIGNALS = {
     # the first two that are not transformations of price
     "value_bm": value_bm,
     "profit_roe": profit_roe,
+    # THE THIRD DATA SOURCE: what analysts SAID, not what prices did.
+    # Components and composite both registered — see `sell_side_state`.
+    "rev_breadth": rev_breadth,
+    "rev_magnitude": rev_magnitude,
+    "rev_dispersion": rev_dispersion,
+    "sell_side_state": sell_side_state,
     "random": random_signal,
     "random_persistent": random_persistent,
-    "equal": equal_universe,
+    # EXPLICIT BASELINES. Each states what it selects; none of them relies on
+    # a tie-break to decide its holdings. See `test_explicit_baselines.py`.
+    "oldest_listing": oldest_listing,
+    "newest_listing": newest_listing,
 }
 
 #: Signals that exist to be BEATEN, not to win. Reported separately on the
@@ -295,23 +399,52 @@ SIGNALS = {
 #: They are NOT interchangeable and `farm.compare_within_groups` does not pool
 #: them: `random` re-draws every formation date (MAXIMUM turnover — 492x/yr at
 #: a 1-session holding period, 29.5%/yr of cost at 6 bps), `random_persistent`
-#: is one fixed basket (near-zero turnover), and `equal` is a deterministic
-#: reference line whose tie-break makes it "the oldest surviving listings"
-#: rather than a neutral draw. The bar a real signal must clear is the 90th
+#: is one fixed basket (near-zero turnover), and `oldest_listing` /
+#: `newest_listing` are deterministic reference lines that state what they
+#: select. The bar a real signal must clear against CHANCE is the 90th
 #: percentile of the two RANDOM families — chance at both ends of the
-#: trading-cost axis.
-NULL_SIGNALS = frozenset({"random", "random_persistent", "equal"})
+#: trading-cost axis. The age books are a different and harder question:
+#: "is this distinguishable from listing age?", which is the one raw
+#: `profit_roe` failed.
+NULL_SIGNALS = frozenset({"random", "random_persistent",
+                          "oldest_listing", "newest_listing"})
+
+#: Baselines that are DELIBERATE STRATEGIES rather than draws from chance.
+#: They are reported separately from the random family because beating them
+#: means something different: `random*` asks "better than luck", these ask
+#: "distinguishable from a named alternative explanation".
+EXPLICIT_BASELINES = frozenset({"oldest_listing", "newest_listing"})
 
 
 def zscore(x: np.ndarray) -> np.ndarray:
     """Cross-sectional z, NaN-safe. Used to combine signals; never to rank a
     single one (ranking is scale-free, and z-ing first would only add a way to
-    be wrong about the dispersion)."""
-    m = np.nanmean(x)
-    s = np.nanstd(x)
+    be wrong about the dispersion).
+
+    A ROW WITH NOTHING TO STANDARDISE RETURNS NaN, NOT ZEROS. Returning zeros
+    was the original behaviour and it is a silent tie: every name scores the
+    same, `top_k` falls through to the permno tie-break, and the book quietly
+    becomes `oldest_listing` on exactly the dates where the signal had no data.
+    That is the same defect the `equal` rename fixed one level up, and here it
+    would appear only on the dates with no coverage — the hardest place to
+    notice it. `sell_side_state` has no IBES coverage before 1990 and thin
+    coverage at the edges of the window, so this is a live path and not a
+    hypothetical.
+
+    NaN means "not selectable", which `replay` already handles: `_targets`
+    filters on `np.isfinite(sig_row)` and counts an empty selection.
+    """
+    a = np.asarray(x, dtype=np.float64)
+    if not np.isfinite(a).any():
+        # An all-NaN row is an EXPECTED state, not an anomaly: IBES has no
+        # coverage at the edges of the window. Answer it directly rather than
+        # letting nanmean warn its way to the same result.
+        return np.full_like(a, np.nan)
+    m = np.nanmean(a)
+    s = np.nanstd(a)
     if not np.isfinite(s) or s == 0:
-        return np.zeros_like(x)
-    return (x - m) / s
+        return np.full_like(a, np.nan)
+    return (a - m) / s
 
 
 # ── the vectorised twin, and why there are two of everything ────────────────
@@ -393,6 +526,7 @@ def matrix(panel, name: str, seed: int = 0) -> np.ndarray:
     is a coin toss dressed as a comparison. The farm runs a BENCH of seeds and
     reports the null's distribution — see `farm.rank_report`.
     """
+    name = resolve_alias(name)
     T, N = panel.close.shape
     if name == "mom_12_1":
         return _tri_ret_matrix(panel.tri, YEAR, MONTH)
@@ -429,12 +563,29 @@ def matrix(panel, name: str, seed: int = 0) -> np.ndarray:
         with np.errstate(invalid="ignore", divide="ignore"):
             ratio = np.where(v > 0, r / v, np.nan)
         return _roll_mean(ratio, QUARTER, QUARTER // 2) * 1e6
+    if name in ("rev_breadth", "rev_magnitude", "rev_dispersion"):
+        return _characteristic(panel, name).astype(np.float64)
+    if name == "sell_side_state":
+        parts = [_characteristic(panel, n).astype(np.float64)
+                 for n in ("rev_breadth", "rev_magnitude", "rev_dispersion")]
+        # z-score ROW BY ROW: a cross-sectional z is a statement about the
+        # names available on that date, and pooling across dates would let a
+        # later date's dispersion set an earlier date's scale — a lookahead
+        # that no PIT join would catch because it happens after the join.
+        zs = [np.apply_along_axis(zscore, 1, m) for m in parts]
+        valid = (np.isfinite(parts[0]) & np.isfinite(parts[1])
+                 & np.isfinite(parts[2]))
+        return np.where(valid, zs[0] + zs[1] + zs[2], np.nan)
     if name == "value_bm":
         return _characteristic(panel, "bm").astype(np.float64)
     if name == "profit_roe":
         return _characteristic(panel, "roe").astype(np.float64)
     if name == "liquid":
         return _roll_mean(panel.dolvol.astype(np.float64), MONTH, LIQ_MIN_OBS)
+    if name == "oldest_listing":
+        return np.tile(-panel.permnos.astype(np.float64), (T, 1))
+    if name == "newest_listing":
+        return np.tile(panel.permnos.astype(np.float64), (T, 1))
     if name == "random":
         out = np.empty((T, N), dtype=np.float64)
         base = 1_000_003 + 7_919 * int(seed)
@@ -445,6 +596,4 @@ def matrix(panel, name: str, seed: int = 0) -> np.ndarray:
         row = np.random.default_rng(500_009 + 7_919 * int(seed)
                                     ).standard_normal(N)
         return np.repeat(row[None, :], T, axis=0)
-    if name == "equal":
-        return np.zeros((T, N), dtype=np.float64)
     raise KeyError(f"no matrix implementation for signal {name!r}")

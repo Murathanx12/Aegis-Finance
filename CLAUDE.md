@@ -170,9 +170,54 @@ Seven things from it that govern what counts as progress
   PIT and registers `value_bm` and `profit_roe`, the first two that are not
   transformations of price. `public_date` is the availability stamp and a
   value may be used STRICTLY AFTER it — `searchsorted(side="right")` there
-  would be a lookahead that improves every number and raises nothing. **IBES
-  consensus (`numup`/`numdown`) is on disk for both eras and a revision signal
-  is the obvious next one**;
+  would be a lookahead that improves every number and raises nothing.
+  **`portfolio_farm/revisions.py` (added 2026-08-25) is the THIRD source and
+  the first behavioural one**: IBES consensus for both eras, 5.2M rows, permno
+  already joined, registering `rev_breadth` / `rev_magnitude` /
+  `rev_dispersion` and the `sell_side_state` composite — components ALWAYS
+  registered beside the composite, which is the `arena_composite` lesson as
+  code. Both non-price joins go through ONE function,
+  `characteristics.join_pit_series`, so there is exactly one place the
+  `side="left"` lookahead can be typed wrong;
+
+- **REPRODUCE A KNOWN FACT BEFORE TRUSTING A NOVEL ONE**
+  (`python -m scripts.portfolio_farm_calibrate`). Not exact factor returns —
+  universes and conventions differ — but the coarse facts a correct join cannot
+  violate: high book-to-market must skew SMALLER and be full of banks while the
+  low end is biotech and software; high ROE must skew LARGER; net analyst
+  breadth must be balanced around zero. **It failed on its first run and the
+  bug was mine**: `rev_breadth` was bounded at |1| reasoning that
+  `numup + numdown` cannot exceed `numest`. They are a FLOW and a STOCK — an
+  analyst may revise twice, revisers may drop coverage — so the bound was
+  silently dropping 16,024 rows, 1.52%, and precisely the MOST-REVISED names.
+  The signal still "worked" and its leaderboard row looked ordinary. **A bound
+  asserted from a formula rather than measured from the data is a filter, and a
+  filter on the informative tail is invisible.** A failure here invalidates
+  every downstream result from that characteristic, including ones already
+  written down;
+
+- **ASK THE CROSS SECTION BEFORE THE PORTFOLIO**
+  (`python -m scripts.portfolio_farm_diagnose`,
+  `docs/FINDING_2026-08-25_ASK_THE_CROSS_SECTION_FIRST.md`). Every farm result
+  before this was `characteristic -> rank -> top-k -> benchmark`, read as a
+  statement about the CHARACTERISTIC. It is not one — it entangles signal
+  quality, construction, factor exposure and benchmark choice, and when the
+  answer disappoints nothing says which ate it. `diagnostics.py` asks first
+  whether return moves MONOTONICALLY with the score: rank IC over
+  NON-OVERLAPPING dates, a quantile curve, top-minus-bottom, turnover, and a
+  holdings census whose age/size percentiles are measured **against the
+  eligible set on each date** (against the panel they would report a book of
+  ancient mega-caps as "average age"). First run, three results:
+  **the ROE age confound looks like a k=100 fact rather than a property of ROE**
+  — at k=20 `profit_roe` reads ic_t 4.18, monotone 0.90, age% 51.1 and size%
+  52.8, i.e. neutral on both confound axes. **The age exposure AT k=100 has not
+  been measured**, so that is a hypothesis with one supporting measurement, not
+  a finding; the discriminating run is `--top-k 100 --signals profit_roe
+  oldest_listing`. **`value_bm` fails monotonically in the WRONG
+  DIRECTION** (-0.90), so extreme top-k value in a mega-liquid universe selects
+  distress and the REVERSED signal is the one to test; and **`size_large`
+  carries ic_t 2.35 on 3.6 distinct names per slot**, which only the census can
+  say. A high t with a flat quantile curve is one bucket, not an edge;
 - **BREADTH is the first screen on a candidate, and the 12-year reading of it
   was itself a regime** (`python -m scripts.portfolio_farm_breadth_power`,
   `docs/FINDING_2026-08-25_BREADTH_WAS_THE_LEVER.md`). Grinold: `IR ~ IC *
@@ -198,11 +243,20 @@ Seven things from it that govern what counts as progress
   `python -m scripts.portfolio_farm_paired_power` compares a book to ANOTHER
   BOOK at the same construction with phases matched pairwise. The first time it
   ran, **both candidates failed the hardest available benchmark**: `profit_roe`
-  at k=100 clears `equal` by +1.53%/yr and needs **126 years**; `mom_12_1` at
-  k=20 clears it by +9.23%/yr and needs **72**. And `equal` is not
-  equal-weighting — with every score tied, `top_k` falls through to permno
-  order, so it is **the hundred oldest surviving listings**, which is a real
-  alternative explanation because high-ROE large caps ARE old listings.
+  at k=100 clears the age book by +1.53%/yr and needs **126 years**; `mom_12_1`
+  at k=20 clears it by +9.23%/yr and needs **72**.
+
+  **A BASELINE MUST STATE WHAT IT SELECTS.** `equal` was never equal-weighting:
+  with every score tied, `top_k` fell through to permno order, so it was **the
+  k oldest surviving listings** — a real alternative explanation, because
+  high-ROE large caps ARE old listings. It is now `oldest_listing`, scored
+  explicitly as `-permno`, with `newest_listing` as the opposite-tail control;
+  `Policy(signal="equal")` is REFUSED and names its replacement (refused, not
+  silently resolved — a Policy is a frozen hashed record and rewriting its
+  signal would break the hash on its own receipt). The rename is
+  holdings-identical ONLY because `Panel.permnos` is ascending, which is
+  precisely the argument for declaring a score instead of inheriting one.
+  **Never let a tie-break decide a research baseline**;
   **Pairing is not automatically the easier test** — it cancels shared market
   exposure and ADDS the difference in holdings (te 5.10% vs market against
   6.11% vs the age book). Which term wins is a fact about overlap, so it is
