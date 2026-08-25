@@ -200,6 +200,58 @@ fires at 15:30 ET, so the first accrual onto the volume lands then. **Check
 `options_pit accruing` on the next session and confirm `days_held` climbs past
 1 — that number has never been above 1 in this system's history.**
 
+## THE THIRD ONE: paper NAV has been dropping days, and nothing recorded why
+
+`nav.all_fresh` was false at handoff, and it is not a Monday event.
+
+    lane           inception    last        n    missing
+    conservative   2026-06-08   2026-08-21  52   2026-08-05, 08-06, 08-19
+    balanced       2026-06-08   2026-08-21  52   2026-08-05, 08-06, 08-19
+    aggressive     2026-06-08   2026-08-21  52   2026-08-05, 08-06, 08-19
+
+**The same three dates on every reference lane**, plus 2026-08-24 now — four
+gaps in a 53-trading-day series, about one a fortnight and sometimes
+consecutive. Identical dates across lanes makes this **job-level, not
+per-lane**: one MTM run marks all of them.
+
+`pi_daily_check` and `pi_hourly_mtm` last fired 16:30 ET Monday, six hours
+BEFORE this session's deploy, so nothing here was caused by it.
+
+**Why it could not be diagnosed.** `_hourly_mtm` has two early returns that
+logged at `DEBUG` — below production log level — and wrote no receipt on any
+path. A job that skipped and a job that ran and failed left identical evidence,
+which is to say none. `nav_freshness()` could see the hole; nothing could see
+the cause.
+
+**The leading suspect**, now logged at WARNING and receipted rather than
+silent:
+
+    cached_ts = cache_get("market_data_timestamp")
+    if cached_dt <= _last_mtm_timestamp:
+        return          # <- was logger.debug, wrote nothing
+
+It consults a **cached** market-data stamp, so a stale cache entry suppresses
+the day's mark entirely. That fits an otherwise-complete series with occasional
+holes better than any other path in the job.
+
+**What was done:** `_write_mtm_receipt` writes a dated record on every outcome
+— `marked`, both `skipped` reasons, `all_lanes_failed`, `raised` — carrying
+`expected_nav_date`, the lanes marked and failed, and `did_not_mark`. Exposed
+at `GET /api/optimus/job_receipts` under `pi_hourly_mtm`. This mirrors
+`pi_ledger_resolve`, whose own docstring already stated the principle: *a
+result, written down, not an inference from silence.*
+
+**This does not fix the gaps.** It makes the next one attributable to a day and
+a reason, which is the precondition for fixing it. **Check
+`/api/optimus/job_receipts` after the next 16:30 ET run** — if the receipt says
+`skipped / cached market_data_timestamp ... <= last mark ...`, the suspect is
+confirmed and the fix is to mark off the trading date rather than a cache
+timestamp.
+
+**A missed mark may not be recoverable** under *no backfilled forward
+evidence*, so the four missing days are probably permanent holes in the only
+forward track record this project has.
+
 ## What is left
 
 ### Unblocked and ordered
@@ -236,10 +288,8 @@ fires at 15:30 ET, so the first accrual onto the volume lands then. **Check
   reads `9/9 stamped [ok]`.
 - **`options_pit accruing` — the one to actually check.** `days_held` must climb
   past 1 after the next 15:30 ET firing. It never has.
-- `nav.all_fresh` was **false** at handoff: all ten lanes sit at 2026-08-21
-  against an expected 2026-08-24. `pi_daily_check` last fired 16:30 ET Monday,
-  six hours BEFORE my deploy, so this predates the session's changes. Not
-  diagnosed — it is the first thing to look at.
+- `nav.all_fresh` false — **investigated, see below. Cause not fixed; the
+  next occurrence is now diagnosable.**
 
 ## What this session says about the method
 

@@ -603,6 +603,54 @@ def shutdown_scheduler():
         logger.info("Portfolio Intelligence scheduler stopped")
 
 
+def _write_mtm_receipt(status: str, reason: str = "",
+                       results: dict | None = None) -> None:
+    """One dated record per MTM attempt, including the ones that did nothing.
+
+    THE DEFECT THIS EXISTS FOR. `paper_nav` had four missing trading days by
+    2026-08-25 — 08-05, 08-06, 08-19 and 08-24, the SAME dates on each of the
+    three reference lanes that carry NAV, which is what makes it a job-level
+    fault rather than a lane one. There was no way to tell a job that skipped
+    from a job that ran and failed: both
+    of MTM's early returns log at DEBUG, which production does not emit, and
+    neither wrote anything down. `nav_freshness()` could see the hole and
+    nothing could see the cause.
+
+    Mirrors `_write_resolver_receipt`. Never raises — a receipt failure must
+    not take down the marking it describes.
+    """
+    try:
+        import json
+        from datetime import datetime, timezone
+
+        from backend import config as _config
+        d = _config.OPTIMUS_LEDGER_DIR / "mtm_receipts"
+        d.mkdir(parents=True, exist_ok=True)
+        now = datetime.now(timezone.utc)
+        marked = sorted(k for k, v in (results or {}).items() if v is not None)
+        failed = sorted(k for k, v in (results or {}).items() if v is None)
+        body = {
+            "job": "pi_hourly_mtm",
+            "ran_at": now.isoformat(timespec="seconds"),
+            "status": status,
+            "reason": reason,
+            "expected_nav_date": _expected_nav_date(),
+            "n_marked": len(marked),
+            "n_failed": len(failed),
+            "marked": marked,
+            "failed": failed,
+            "last_mtm_timestamp": (_last_mtm_timestamp.isoformat()
+                                   if _last_mtm_timestamp else None),
+            # A skip is a RESULT, not an absence. Written down for the same
+            # reason `pi_ledger_resolve` writes `nothing_was_due`.
+            "did_not_mark": status != "marked",
+        }
+        (d / f"{now.strftime('%Y-%m-%dT%H%M%SZ')}.json").write_text(
+            json.dumps(body, indent=2, default=str), encoding="utf-8")
+    except Exception as exc:                                   # noqa: BLE001
+        logger.warning("MTM receipt not written: %s", exc)
+
+
 @_gated
 async def _hourly_mtm():
     """Hourly mark-to-market during market hours.
@@ -614,7 +662,8 @@ async def _hourly_mtm():
 
     now = datetime.now()
     if _last_mtm_timestamp and (now - _last_mtm_timestamp) < timedelta(minutes=50):
-        logger.debug("Hourly MTM: skipping, last run was %s", _last_mtm_timestamp)
+        logger.info("Hourly MTM: skipping, last run was %s", _last_mtm_timestamp)
+        _write_mtm_receipt("skipped", "within 50 minutes of the last mark")
         return
 
     # Check if market data has been updated since last MTM
@@ -627,7 +676,18 @@ async def _hourly_mtm():
             else:
                 cached_dt = cached_ts
             if cached_dt <= _last_mtm_timestamp:
-                logger.debug("Hourly MTM: no new market data since %s", _last_mtm_timestamp)
+                # SUSPECT PATH. This consults a CACHED market-data stamp, so a
+                # stale cache entry suppresses the day's mark silently. It is
+                # the leading candidate for the paper_nav gaps, and it used to
+                # log at DEBUG and write nothing at all.
+                logger.warning(
+                    "Hourly MTM: NOT marking — cached market_data_timestamp "
+                    "%s is not newer than last mark %s", cached_dt,
+                    _last_mtm_timestamp)
+                _write_mtm_receipt(
+                    "skipped",
+                    f"cached market_data_timestamp {cached_dt} <= "
+                    f"last mark {_last_mtm_timestamp}")
                 return
     except Exception:
         pass  # If cache check fails, proceed with MTM
@@ -672,6 +732,7 @@ async def _hourly_mtm():
             logger.error("TSMOM MTM failed: %s", e, exc_info=True)
         if any(v is not None for v in results.values()):
             _last_mtm_timestamp = now
+            _write_mtm_receipt("marked", results=results)
         else:
             # Stamping here would turn the canary green over zero persisted
             # rows — the silent-flat-line failure mode. Leave it stale so the
@@ -680,8 +741,11 @@ async def _hourly_mtm():
                 "Hourly MTM: every lane failed to mark (%s) — last_mtm NOT stamped",
                 results,
             )
+            _write_mtm_receipt("all_lanes_failed",
+                               "no lane returned a NAV", results=results)
     except Exception as e:
         logger.error("Hourly MTM failed: %s", e, exc_info=True)
+        _write_mtm_receipt("raised", f"{type(e).__name__}: {e}")
 
 
 @_gated
@@ -694,6 +758,15 @@ async def _options_pit_capture() -> None:
     try:
         from backend.config import config
         from backend.services import options_pit_store as ops
+
+        # Rescue anything the pre-2026-08-25 path left inside the container
+        # image before capturing more. WRITE-ONCE, so this is a no-op on every
+        # run after the first, and an option chain taken before its event
+        # cannot be recreated if it is abandoned instead.
+        mig = ops.migrate_legacy()
+        if mig.get("rows_migrated"):
+            logger.warning("options PIT: rescued %s legacy row(s) from %s",
+                           mig["rows_migrated"], mig["legacy_root"])
 
         su = (config.get("stock_universe") or {}).get("sector_stocks") or {}
         tickers = sorted({t for v in su.values() for t in v})

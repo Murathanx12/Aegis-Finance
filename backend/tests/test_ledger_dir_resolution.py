@@ -44,20 +44,71 @@ def _service_files() -> list[Path]:
                   if "__pycache__" not in p.parts)
 
 
-def test_no_service_derives_the_ledger_dir_from_dunder_file():
+#: A function may rebuild the old image path when its whole job is to migrate
+#: OFF it. Rows there cannot be recreated, so the path has to stay reachable.
+_LEGACY_OK = ("legacy",)
+
+
+def _functions_matching(src: str, pattern) -> list[str]:
+    """Names of the functions whose source contains `pattern`.
+
+    AST rather than a whole-file scan, because the file-level answer cannot
+    distinguish the live root resolution from a named legacy path kept for
+    migration — and on 2026-08-25 the whole-file version failed the very
+    module that had just been fixed.
+    """
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return []
+    lines = src.splitlines()
+    out = []
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        body = "\n".join(lines[node.lineno - 1:(node.end_lineno or node.lineno)])
+        if pattern.search(body):
+            out.append(node.name)
+    return out
+
+
+def test_the_active_root_resolution_never_comes_from_dunder_file():
     """THE REGRESSION. A ledger path rebuilt from `__file__` points into the
-    deployed image, which on Railway is wiped by every deploy."""
+    deployed image, which on Railway is wiped by every deploy.
+
+    Scoped to the function that resolves the ACTIVE root: `_legacy_root()` is
+    allowed to name the old path precisely so `migrate_legacy()` can rescue
+    what is stranded there."""
     offenders = []
     for p in _service_files():
         src = p.read_text(encoding="utf-8", errors="replace")
         if "OPTIMUS_LEDGER_DIR" not in src:
             continue
-        if _FROM_FILE.search(src):
-            offenders.append(p.relative_to(SERVICES).as_posix())
+        for fn in _functions_matching(src, _FROM_FILE):
+            if any(tok in fn.lower() for tok in _LEGACY_OK):
+                continue
+            offenders.append(f"{p.relative_to(SERVICES).as_posix()}::{fn}")
     assert not offenders, (
         f"these resolve a ledger path from __file__ instead of "
         f"config.OPTIMUS_LEDGER_DIR, so they write inside the container image "
         f"and every deploy destroys them: {offenders}")
+
+
+def test_the_guard_still_catches_the_original_defect():
+    """A guard narrowed to fix a false positive must still fail the true one."""
+    buggy = (
+        "OPTIMUS_LEDGER_DIR\n"
+        "def _root():\n"
+        "    env = os.environ.get('OPTIMUS_LEDGER_DIR')\n"
+        "    base = Path(env) if env else "
+        "Path(__file__).resolve().parents[1] / 'data' / 'optimus'\n"
+        "    return base / 'options_pit'\n")
+    assert _functions_matching(buggy, _FROM_FILE) == ["_root"]
+
+    allowed = buggy.replace("def _root():", "def _legacy_root():")
+    names = _functions_matching(allowed, _FROM_FILE)
+    assert names == ["_legacy_root"]
+    assert all(any(t in n.lower() for t in _LEGACY_OK) for n in names)
 
 
 def test_env_read_of_ledger_dir_always_has_a_config_fallback():
@@ -126,7 +177,7 @@ def test_neighbouring_stores_already_resolve_through_config(mod, attr):
     m = importlib.import_module(mod)
     src = Path(m.__file__).read_text(encoding="utf-8", errors="replace")
     assert "OPTIMUS_LEDGER_DIR" in src
-    assert not _FROM_FILE.search(src)
+    assert not _functions_matching(src, _FROM_FILE)
 
 
 def test_guard_scans_a_plausible_number_of_services():
@@ -150,3 +201,66 @@ def test_every_scanned_service_parses():
             ast.parse(src)
         except SyntaxError as e:                     # pragma: no cover
             pytest.fail(f"{p.name} does not parse: {e}")
+
+
+# --------------------------------------------------------------------------
+# Moving a store is only half the job. Rows left at the OLD path have to be
+# rescued, because an option chain taken before its event cannot be recreated.
+# --------------------------------------------------------------------------
+def test_migrate_legacy_is_a_noop_when_paths_coincide(monkeypatch, tmp_path):
+    """Locally AEGIS_DATA_DIR is unset, so root == legacy_root. Copying a file
+    onto itself must not happen."""
+    from backend.services import options_pit_store as ops
+
+    monkeypatch.delenv("OPTIMUS_LEDGER_DIR", raising=False)
+    monkeypatch.setattr(ops, "_legacy_root", lambda: tmp_path / "same")
+    out = ops.migrate_legacy(root=tmp_path / "same")
+    assert out["status"] == "nothing to do"
+    assert out["rows_migrated"] == 0
+
+
+def test_migrate_legacy_rescues_rows_onto_the_volume(monkeypatch, tmp_path):
+    import json as _json
+    from dataclasses import asdict
+
+    from backend.services import options_pit_store as ops
+
+    legacy, dest = tmp_path / "image", tmp_path / "volume"
+    legacy.mkdir()
+    fields = {f: 0.0 for f in ops.OptionState.__dataclass_fields__}
+    fields.update(ticker="AAPL", as_of="2026-08-24")
+    state = ops.OptionState(**{k: v for k, v in fields.items()})
+    (legacy / "option_state_2026-08.jsonl").write_text(
+        _json.dumps(asdict(state), default=str) + "\n", encoding="utf-8")
+
+    monkeypatch.setattr(ops, "_legacy_root", lambda: legacy)
+    out = ops.migrate_legacy(root=dest)
+    assert out["rows_migrated"] == 1, out
+    assert (dest / "option_state_2026-08.jsonl").exists()
+
+    # WRITE-ONCE: a second run rescues nothing and replaces nothing
+    again = ops.migrate_legacy(root=dest)
+    assert again["rows_migrated"] == 0
+    assert again["skipped"] == 1
+
+
+def test_health_names_the_directory_it_looked_in(tmp_path):
+    """ABSENT without a path is what made this take an hour to diagnose."""
+    from backend.services import options_pit_store as ops
+
+    h = ops.health(root=tmp_path / "nothing-here")
+    assert h["status"] == "ABSENT"
+    assert "root" in h and str(tmp_path) in h["root"]
+    assert "legacy_root" in h and "legacy_files" in h
+
+
+def test_capture_job_rescues_before_it_captures():
+    """The migration has to run somewhere that actually executes in prod."""
+    from pathlib import Path as _P
+
+    src = _P("backend/services/portfolio_intelligence/scheduler.py").read_text(
+        encoding="utf-8")
+    i = src.index("async def _options_pit_capture")
+    body = src[i:i + 2000]
+    assert "migrate_legacy" in body
+    assert body.index("migrate_legacy") < body.index("ops.capture")

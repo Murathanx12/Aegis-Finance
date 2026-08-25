@@ -80,6 +80,10 @@ async def get_job_receipts(limit: int = 10):
         "pi_ownership_collect": _read("pi_ownership_collect",
                                       base / "teacher_library"
                                       / "collection_receipts"),
+        # Added 2026-08-25. paper_nav had four missing trading days and no way
+        # to tell a skipped mark from a failed one, because both of
+        # `_hourly_mtm`'s early returns logged at DEBUG and wrote nothing.
+        "pi_hourly_mtm": _read("pi_hourly_mtm", base / "mtm_receipts"),
         "note": ("A run that had nothing to do still writes a receipt. An "
                  "unchanged ledger is the expected result of a healthy quiet "
                  "run and cannot, by itself, distinguish that from a job that "

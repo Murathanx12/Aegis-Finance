@@ -508,6 +508,57 @@ def build_state(ticker: str, as_of: Optional[str] = None,
 # ── the store ───────────────────────────────────────────────────────────────
 
 
+def _legacy_root() -> Path:
+    """Where this store used to write: inside the container image.
+
+    Kept as a named function, not a comment, because rows here cannot be
+    recreated — an option chain has no history — so the path has to stay
+    reachable long enough to be migrated off.
+    """
+    return Path(__file__).resolve().parents[1] / "data" / "optimus" / "options_pit"
+
+
+def migrate_legacy(root: Optional[Path] = None) -> dict:
+    """Move any option state left at the legacy image path onto the volume.
+
+    WRITE-ONCE per (ticker, as_of) via `record`, so re-running is safe and a
+    row already on the volume is never replaced by an image copy of itself.
+    Returns a receipt rather than logging only — a migration nobody can audit
+    is the thing this codebase keeps paying for.
+    """
+    legacy = _legacy_root()
+    dest = root or _root()
+    out = {"legacy_root": str(legacy), "dest_root": str(dest),
+           "files": 0, "rows_seen": 0, "rows_migrated": 0, "skipped": 0}
+    if not legacy.exists() or legacy.resolve() == Path(dest).resolve():
+        out["status"] = "nothing to do"
+        return out
+    for f in sorted(legacy.glob("option_state_*.jsonl")):
+        out["files"] += 1
+        for line in f.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            out["rows_seen"] += 1
+            try:
+                state = OptionState(**rec)
+            except TypeError:
+                out["skipped"] += 1
+                continue
+            if record(state, dest):
+                out["rows_migrated"] += 1
+            else:
+                out["skipped"] += 1
+    out["status"] = "ok"
+    if out["rows_migrated"]:
+        logger.warning("options_pit: migrated %s row(s) off the legacy image "
+                       "path %s onto %s", out["rows_migrated"], legacy, dest)
+    return out
+
+
 def _path(as_of: str, root: Optional[Path] = None) -> Path:
     r = root or _root()
     return r / f"option_state_{as_of[:7]}.jsonl"
@@ -598,6 +649,19 @@ def capture(tickers: list[str], as_of: Optional[str] = None,
     return out
 
 
+def _legacy_file_count() -> int:
+    """How many option-state files sit at the OLD image path, if any.
+
+    Non-zero here means rows were orphaned by the 2026-08-25 path fix and
+    `migrate_legacy()` has not run (or ran on a different container).
+    """
+    lr = _legacy_root()
+    try:
+        return len(list(lr.glob("option_state_*.jsonl"))) if lr.exists() else 0
+    except OSError:
+        return -1
+
+
 def health(root: Optional[Path] = None) -> dict:
     """Days held, and whether the store is still accruing.
 
@@ -609,6 +673,12 @@ def health(root: Optional[Path] = None) -> dict:
     if not files:
         return {"status": "ABSENT", "reason": "no option-state file yet",
                 "days_held": 0, "rows": 0,
+                # WHERE it looked. This store spent an hour of 2026-08-25
+                # being diagnosed from inference because its health said
+                # ABSENT without naming a directory.
+                "root": str(r),
+                "legacy_root": str(_legacy_root()),
+                "legacy_files": _legacy_file_count(),
                 "consumer": "EVENT_RESPONSE_v1 (not yet registered)"}
 
     dates, rows = set(), 0
