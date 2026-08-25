@@ -94,6 +94,15 @@ NOT_INPUT_GUARDS: dict[str, str] = {
         "not work. It takes no user input and guards no request field, so it "
         "is not a missing-input guard; the refusals are exercised in "
         "test_portfolio_farm_characteristics.py"),
+    "revisions": (
+        "RevisionsUnavailable (portfolio_farm) — the IBES consensus parquets "
+        "the analyst-state signals need are absent, or a caller named a "
+        "revision series this module does not serve. Same shape and same "
+        "reasoning as `characteristics` above: both are REFUSALS by design, "
+        "because a run that silently dropped its only BEHAVIOURAL signal would "
+        "read as a result ABOUT that signal. It takes no user input and guards "
+        "no request field, so it is not a missing-input guard; the refusals "
+        "are exercised in test_portfolio_farm_revisions.py"),
     "policy": ("PolicyError (portfolio_farm) — a policy asks for a signal or "
                "sizing the engine does not implement, or zero costs without "
                "declaring the frictionless diagnostic. Every branch is "
