@@ -56,6 +56,28 @@ window the project has already established cannot resolve anything (0 of 15
 signals, and a mega-cap decade whose breadth verdict REVERSED on 32 years).
 With it, the composite is testable on the full replayable window.
 
+STATUS 2026-08-25: **THIS PULL HAS NOT COMPLETED.** Run it again.
+
+It was attempted three times and landed nothing. What was measured, so the next
+attempt does not re-derive it:
+
+  * one `SELECT *` over 15,519 permnos x 23 years ran **1h40m and wrote zero
+    bytes** before being killed. An un-resumable query producing no partial
+    output is worth exactly as much as no query, and the cost of learning that
+    is the whole 1h40m;
+  * chunked to one query per year, still no year landed in ~9 minutes;
+  * narrowed to 36 columns, still none;
+  * **without the permno predicate at all**, a single year did not return in
+    4.5 minutes — so the constraint is WRDS-side throughput, not the query
+    shape. The 2026-08-19 five-column pull DID succeed, and 36 columns is
+    roughly seven times the payload.
+
+The script is now resumable by year: each year is a part file under
+`_finratio_early_parts/`, a kill costs one year rather than all of them, and a
+re-run skips what already landed. **Run it attended, with hours available, and
+check the part count rather than watching for a final file.** Nothing it has
+done so far has touched the existing 5-column parquet.
+
 WHAT IT DOES NOT FIX
 ====================
 Nothing here touches the 1990-1992 problem. `panel.py` still refuses those
@@ -183,22 +205,69 @@ def main() -> int:
 
     if args.dry_run:
         pn = _universe()
-        print(f"  would pull {len(pn)} permnos, {START}..{END}, SELECT *")
+        print(f"  would pull {len(pn)} permnos, {START}..{END}, {len(REQUIRED)} columns, one query per year")
         return 0
 
     pn = _universe()
     print(f"  connecting; universe = {len(pn)} permnos")
     conn = _connect()
 
-    # SELECT * rather than a column list: the modern file was pulled that way,
-    # and matching it exactly is the only way to guarantee the two eras have no
-    # seam. A narrower list here would recreate the very problem being fixed.
-    sql = ("SELECT * FROM wrdsapps_finratio.firm_ratio "
+    # ONE QUERY PER YEAR, WRITTEN AS IT LANDS.
+    #
+    # MEASURED 2026-08-25: the single-query version ran 1h40m over 15,519
+    # permnos x 23 years x ~100 columns, wrote NOTHING, and was killed. An
+    # un-resumable query that produces no partial output has the same value as
+    # no query at all, and the cost of finding that out is the whole 1h40m.
+    #
+    # `wrds_repull_dsf_early` already chunks by year for exactly this reason;
+    # this is the same shape. Each year is a part file, so a kill costs one
+    # year rather than all of them, and a re-run skips what already landed.
+    #
+    # AN EXPLICIT COLUMN LIST, NOT `SELECT *`.
+    #
+    # I first wrote this as `SELECT *`, reasoning that matching the modern
+    # file exactly was the only way to guarantee the two eras have no seam.
+    # That reasoning was wrong in its practical consequence, and the cost of
+    # believing it was measured: `SELECT *` did not land a SINGLE YEAR in nine
+    # minutes. `firm_ratio` carries 98 columns of which 13 are text, including
+    # EIGHT industry description strings (`ffi5_desc` ... `ffi49_desc`) that
+    # duplicate the compact numeric codes this pull actually needs.
+    #
+    # The seam it was guarding against cannot happen anyway:
+    # `characteristics.available_characteristics()` takes the INTERSECTION of
+    # the columns present in both era files, so a column that exists only in
+    # the modern file is already excluded from every run. Narrowing here makes
+    # the pull feasible and changes nothing about which characteristics a
+    # 1993-2024 run may use.
+    cols = ", ".join(REQUIRED)
+    parts_dir = _path().parent / "_finratio_early_parts"
+    parts_dir.mkdir(parents=True, exist_ok=True)
+    sql = (f"SELECT {cols} FROM wrdsapps_finratio.firm_ratio "
            "WHERE permno = ANY(%(p)s) "
            "AND public_date BETWEEN %(s)s AND %(e)s")
-    print("  querying (this is the slow part) ...")
-    df = pd.read_sql(sql, conn, params={"p": pn, "s": START, "e": END})
-    print(f"  {len(df):,} rows, {len(df.columns)} columns")
+
+    years = list(range(int(START[:4]), int(END[:4]) + 1))
+    for yr in years:
+        part = parts_dir / f"{yr}.parquet"
+        if part.exists():
+            print(f"  {yr}: already pulled, skipping")
+            continue
+        t0 = datetime.now(timezone.utc)
+        chunk = pd.read_sql(sql, conn, params={
+            "p": pn, "s": f"{yr}-01-01", "e": f"{yr}-12-31"})
+        chunk.to_parquet(part, index=False)
+        secs = (datetime.now(timezone.utc) - t0).total_seconds()
+        print(f"  {yr}: {len(chunk):,} rows, {len(chunk.columns)} cols "
+              f"({secs:.0f}s)")
+
+    frames = [pd.read_parquet(parts_dir / f"{yr}.parquet") for yr in years
+              if (parts_dir / f"{yr}.parquet").exists()]
+    if not frames:
+        print("  ! no year landed; nothing to write")
+        return 2
+    df = pd.concat(frames, ignore_index=True)
+    print(f"  {len(df):,} rows, {len(df.columns)} columns across "
+          f"{len(frames)} year(s)")
 
     still = [c for c in REQUIRED if c not in set(df.columns)]
     if still:

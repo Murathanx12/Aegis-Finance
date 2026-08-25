@@ -284,6 +284,15 @@ h=21:
 | `sell_side_state` | 8.6 12.0 8.8 12.5 13.8 13.0 **14.7** 12.0 12.9 14.4 | noisy |
 | `oldest_listing` *(baseline)* | 10.9 12.1 12.0 11.7 12.9 *(quintiles)* | flat |
 
+> **THE PREDICTION THIS SECTION MAKES IS NOT YET TESTED.** "Build it WIDE"
+> implies that widening `k` holds the excess roughly flat while tracking error
+> falls, so years-needed should drop well below 126. That run
+> (`paired_power --signal profit_roe --benchmark oldest_listing --top-k
+> 20/100/200`) was launched and killed before its first case finished. Until
+> it lands, §3b is a mechanism inferred from a curve, not a demonstrated
+> improvement — and the age-confound hypothesis is a live reminder of what
+> happens to those.
+
 **`profit_roe`'s information is a STEP, not a gradient.** Below the median it
 earns ~9%/yr; above it, a **plateau at 14.3–14.8** that is flat from decile 7 to
 decile 10. Deciles 7 and 8 (14.8) are *better* than decile 10 (14.4).

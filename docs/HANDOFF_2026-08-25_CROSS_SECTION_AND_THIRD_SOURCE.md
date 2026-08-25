@@ -138,6 +138,24 @@ diagnosis to remove a duplication. Migrate it *after* the receipt is read;
    Under `PRODUCT_EXPERIMENT` neither needs a significance gate — it needs a
    frozen strategy contract before the first decision. Promotion is
    **attended**: Murat flips the flags (`seed-a-lane`).
+1a. **THE ONE MEASUREMENT THIS SESSION OWED AND DID NOT GET.** The construction
+   claim in 1b predicts that widening `k` holds `profit_roe`'s excess roughly
+   flat while tracking error falls, so **years-needed should drop well below
+   126**. The run was launched and **killed before its first case finished**:
+
+   ```
+   for K in 20 100 200; do
+     python -m scripts.portfolio_farm_paired_power --start 1993 --end 2024 \
+       --reduce --signal profit_roe --benchmark oldest_listing \
+       --top-k $K --holding-days 21
+   done
+   ```
+
+   Each invocation reloads the 32-year panel, so run them one at a time.
+   **If years-needed does not fall as `k` rises, the "build it WIDE"
+   conclusion is wrong** — the same way the age-confound hypothesis was wrong,
+   and it should be withdrawn as plainly.
+
 1b. **ANSWERED — and it gives each candidate a DIFFERENT construction.** The
    decile curves say why a strong signal makes a weak book:
 
@@ -172,11 +190,29 @@ diagnosis to remove a duplication. Migrate it *after* the receipt is read;
 2. **Measure `sell_side_state` and `rev_breadth` NET OF COSTS.** ~95%/month
    turnover; their top-minus-bottom figures are gross and could be eaten
    entirely. This is the open question about them, not their IC.
-3. **`QUALITY_RESIDUAL_v1`.** `scripts/wrds_repull_finratio_early.py` was
-   running at handoff — check it landed (`--dry-run` reports missing columns).
-   It widens the early era from 5 columns to ~100, including `gsector`/`ffi48`
-   industry codes and `mktcap`, which is what makes age/size/industry
-   neutralisation testable before 2013 at all.
+3. **`QUALITY_RESIDUAL_v1` — BLOCKED ON A PULL THAT DID NOT COMPLETE.**
+   `scripts/wrds_repull_finratio_early.py` was attempted three times and landed
+   **nothing**. Measured, so it is not re-derived:
+
+   | attempt | result |
+   |---|---|
+   | one `SELECT *`, 15,519 permnos × 23 years | **1h40m, zero bytes written**, killed |
+   | chunked to one query per year | no year in ~9 min |
+   | narrowed to 36 columns | no year in ~9 min |
+   | **no permno predicate at all**, one year | no return in 4.5 min |
+
+   The constraint is **WRDS-side throughput**, not the query shape — the
+   2026-08-19 five-column pull succeeded, and 36 columns is ~7× the payload.
+
+   The script is now **resumable by year** (part files under
+   `_finratio_early_parts/`), so a kill costs one year rather than all of them.
+   **Run it attended with hours available, and watch the part count rather than
+   waiting for a final file.** It has never touched the existing 5-column
+   parquet.
+
+   Until it lands, `QUALITY_RESIDUAL_v1` is testable on **2013–2024 only** —
+   which is the window that has already reversed four verdicts, so a result
+   from it should not close anything.
 4. **Re-run the holding-period and breadth grids at `k=20`** with the renamed
    baselines. Every replay number on record is at `k=10` and pre-rename.
 5. **Reverse `value_bm` and diagnose it.** −0.90 monotonicity is a result.
