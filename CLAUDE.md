@@ -173,14 +173,41 @@ Seven things from it that govern what counts as progress
   would be a lookahead that improves every number and raises nothing. **IBES
   consensus (`numup`/`numdown`) is on disk for both eras and a revision signal
   is the obvious next one**;
-- **an edge that does not survive BREADTH is not cross-sectional.**
-  `python -m scripts.portfolio_farm_breadth_power`. Grinold: `IR ~ IC *
-  sqrt(breadth)`, so a real signal spread over more names should show t
-  RISING. Measured over k=10..50, every signal falls and peaks at the
-  narrowest book — `mom_12_1` slope -0.40, `liquid` -2.37, `size_large` -1.24.
-  `liquid` has the best t on the board AND the steepest decay, and those are
-  the same fact: at k=10 out of 500 it is a ten-name mega-cap book;
-- **the instrument moved the answer more than the strategy did, FIVE times.**
+- **BREADTH is the first screen on a candidate, and the 12-year reading of it
+  was itself a regime** (`python -m scripts.portfolio_farm_breadth_power`,
+  `docs/FINDING_2026-08-25_BREADTH_WAS_THE_LEVER.md`). Grinold: `IR ~ IC *
+  sqrt(breadth)`, so a real cross-sectional signal spread over more names
+  should show t RISING. On 2013-2024 every signal fell and peaked at the
+  narrowest book. **On 1993-2024 `mom_12_1` reverses** — slope -0.40 becomes
+  +0.02, peak t at k=20, which is ALSO its best book by terminal wealth
+  ($971k vs $614k at k=10). 2013-2024 was a mega-cap decade in which
+  concentration paid. **Every holding-period result on record was computed at
+  k=10 and is due a re-run at k=20.**
+
+  It still separates a signal from a description of a decade, which is what it
+  is for: `liquid` runs slope -1.11, gone by k=20, negative by k=30 — its whole
+  edge is ten names (MSFT 123/124 samples, GOOG 87, AAPL 81). Exactly two
+  signals score as scaling on 32 years: `profit_roe` (+0.69) and `mom_12_1`.
+  **A rising t on a NEGATIVE excess is not scaling** — it is a loss diluting,
+  and it produces an identical slope; the verdict refuses to score it;
+- **ASK "BETTER THAN WHAT?" BEFORE "HOW MUCH BETTER?"** Every power check in
+  this project compared to the CAP-WEIGHTED MARKET for five months. That asks
+  "should I hold this instead of an index" — right for a product, wrong for a
+  claim about a signal, because two books can beat the market for the same
+  reason and neither of them be the reason.
+  `python -m scripts.portfolio_farm_paired_power` compares a book to ANOTHER
+  BOOK at the same construction with phases matched pairwise. The first time it
+  ran, **both candidates failed the hardest available benchmark**: `profit_roe`
+  at k=100 clears `equal` by +1.53%/yr and needs **126 years**; `mom_12_1` at
+  k=20 clears it by +9.23%/yr and needs **72**. And `equal` is not
+  equal-weighting — with every score tied, `top_k` falls through to permno
+  order, so it is **the hundred oldest surviving listings**, which is a real
+  alternative explanation because high-ROE large caps ARE old listings.
+  **Pairing is not automatically the easier test** — it cancels shared market
+  exposure and ADDS the difference in holdings (te 5.10% vs market against
+  6.11% vs the age book). Which term wins is a fact about overlap, so it is
+  measured and printed, never assumed;
+- **the instrument moved the answer more than the strategy did, SIX times.**
   Rebalance PHASE is worth up to 3.75x (so every policy runs at multiple
   `phase_offset`s and is reported by its MEDIAN); the DELISTING assumption was
   worth 18x until `crsp.dsedelist` was joined; an implicit-leverage bug in
@@ -189,9 +216,12 @@ Seven things from it that govern what counts as progress
   k=10; and **the panel marked SHARE COUNTS at raw prices, so every split was
   booked as a return** — one reverse split was +36.34% of a single day's
   "excess" and the top session of twelve years for both momentum signals, and
-  fixing it moved `liquid` from t=0.26 to t=2.55. **Distrust a farm number
-  before you distrust a farm result. And split the window before believing any
-  of them — `python -m scripts.portfolio_farm_subperiod`;**
+  fixing it moved `liquid` from t=0.26 to t=2.55; and SIXTH, the BENCHMARK —
+  five months of power checks against the cap-weighted market said `profit_roe`
+  was four months short of resolvable, and one run against an age-matched book
+  moved that to 126 years. **Distrust a farm number before you distrust a farm
+  result. And split the window before believing any of them —
+  `python -m scripts.portfolio_farm_subperiod`;**
 - **`crsp.dsedelist` is joined and delisting returns are MEASURED** (97%+
   coverage). 2xx mergers return ~0.0, 5xx performance delists ~-0.20, and 60.5%
   of all events are at or above zero — the old blanket -30% was wrong for two
@@ -531,6 +561,14 @@ them at their trigger points, don't re-derive the procedure:
   discovery three weeks later (`detectability_gate` was one for two days)
 - Put every headline number in a receipt. `corr = 0.516` lived in prose only and
   turned out to be a filtered subset nobody had named
+
+- A GATE THAT CANNOT GO GREEN IS A BROKEN GATE, not a strict one.
+  `monday_gate_check` reported `seed migration -> book-v1: 0/9 stamped [FAIL]`
+  for weeks because `engine.status()` never emitted `fingerprint_scheme` — the
+  count could only ever be 0/N, and the seeds' real state was invisible rather
+  than failing. A guard DERIVES its inputs or REFUSES: when no book carries the
+  key it now reports CANNOT DETERMINE. A permanent red line beside nine real
+  checks teaches the reader to skim red lines
 
 ### DO NOT
 - Use `fillna(0)` on feature matrices — LightGBM handles NaN natively; sklearn paths use SimpleImputer
