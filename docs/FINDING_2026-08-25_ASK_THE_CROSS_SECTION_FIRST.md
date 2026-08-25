@@ -325,6 +325,35 @@ direct warning for `ALPHA_STACK_EQUAL_RISK_v1`: equal-risk combination is not
 free when the components have different SHAPES, and the fixed-weight stack has
 to be checked against its own best component, not only against the market.
 
+### The shape classifier across all 23 signals
+
+Run over the whole registry at deciles (receipt
+`signal_diagnostics_1993_2024_..T073954Z.json`), one structural pattern falls
+out that no single-signal reading would have shown:
+
+| family | shape | signals |
+|---|---|---|
+| **price momentum** | **TAIL**, every member | `mom_12_1` (+7.9) · `mom_12_0` (+6.2) · `trend_200` (+5.5) · `mom_6_1` (+4.4) |
+| **fundamental / analyst level** | **STEP or GRADIENT** | `profit_roe` (step) · `rev_breadth` (gradient) · `sell_side_state` (gradient) |
+| **analyst disagreement** | **TAIL** | `rev_dispersion` (+7.6) |
+| reversed / absent | **flat** | `value_bm` · `illiquid` · `size_small` · `high_vol` · `liquid` · `size_large` |
+
+**Price momentum pays in the extreme tail; fundamental level pays as a step.**
+That is a construction rule for a whole family rather than one signal, and it
+says the two kinds of selector should not be built the same way — which is
+exactly what a fixed equal-risk stack would do to them.
+
+**The instrument calibrates itself again: all four baselines read `flat`**
+(`random`, `random_persistent`, `oldest_listing`, `newest_listing`). A shape
+classifier that assigned a shape to a coin flip would be worthless, and this is
+the cheapest possible check that it does not.
+
+**SHAPE IS NOT STRENGTH.** `rev_magnitude` classifies `tail` on a lift of
+**+0.94%/yr** — the curve's *form* is tail-like and there is almost nothing in
+it. `shape` says how to build a book *if* the signal is worth building;
+`ic_t` and `lift` say whether it is. Quoting shape alone would be the
+`arena_composite` mistake in a new costume.
+
 **2. My monotonicity criterion penalises tail signals, and that is my bug.**
 `rev_dispersion` reads monotonicity **0.236** at ten buckets — which prints as
 "no signal" — while carrying the second-largest lift on the board. Monotonicity
