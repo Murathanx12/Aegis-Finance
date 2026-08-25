@@ -270,6 +270,71 @@ That is the **precondition** for `ALPHA_STACK_EQUAL_RISK_v1`, not the delivery
 of it. None of the three is trading paper money, and the cross-section check is
 not a licence — it is evidence that the next hour is worth spending.
 
+## 3b. WHY A STRONG SIGNAL MAKES A WEAK BOOK — the deciles answer it
+
+Finding (a) left the question *why does `ic_t 4.18` produce +1.53%/yr?* The
+quantile curve answers it directly. Annualised %/yr by decile, 1993–2024,
+h=21:
+
+| signal | d1 … d10 | shape |
+|---|---|---|
+| `profit_roe` | 9.5 8.2 9.3 9.3 **13.2 13.6 14.8 14.8 14.3 14.4** | **STEP** |
+| `mom_12_1` | 6.7 8.3 10.0 9.6 12.1 12.6 14.0 14.3 14.1 **19.2** | **TAIL** |
+| `rev_dispersion` | 10.2 10.9 12.0 14.1 11.5 12.3 11.1 10.4 10.6 **19.0** | **TAIL** |
+| `sell_side_state` | 8.6 12.0 8.8 12.5 13.8 13.0 **14.7** 12.0 12.9 14.4 | noisy |
+| `oldest_listing` *(baseline)* | 10.9 12.1 12.0 11.7 12.9 *(quintiles)* | flat |
+
+**`profit_roe`'s information is a STEP, not a gradient.** Below the median it
+earns ~9%/yr; above it, a **plateau at 14.3–14.8** that is flat from decile 7 to
+decile 10. Deciles 7 and 8 (14.8) are *better* than decile 10 (14.4).
+
+A top-k=20 book out of 500 is the **top 4%** — buried inside decile 10, on the
+flattest part of the curve. **Concentrating buys tracking error and no
+return.** That is the whole explanation for a 4.18 signal producing a +1.53%/yr
+book, and it is a construction fact with a concrete fix: **build `profit_roe`
+WIDE** — the top 30–40%, not the top 4%.
+
+This also supplies the missing MECHANISM for the standing "breadth is the cheap
+lever" finding. `MDE = z·te/√T`, te falls from 34% at k=10 to 16.4% at k=50, and
+if return is *flat* across the top four deciles then widening `k` cuts the
+denominator of the t-statistic **at no cost to the numerator**. Breadth was
+argued from Grinold; here it is measured.
+
+**Momentum is the control that makes this legible.** Its decile 10 jumps to
+19.2 from 14.1 — its money *is* the extreme tail, so a narrow book is correct
+for it, which is why it clears the age book by +9.23%/yr on a *weaker* `ic_t`
+(2.17 vs 4.18). **Ranking signals by `ic_t` alone would have got this exactly
+backwards.** Signal strength and correct construction are different axes.
+
+### Two consequences I did not expect
+
+**1. `sell_side_state` DILUTES the one channel that pays.** Top-decile lift over
+the mean of the other nine:
+
+| | top decile | other nine | **lift** |
+|---|---|---|---|
+| `mom_12_1` | 19.2 | 11.3 | **+7.9** |
+| `rev_dispersion` | 19.0 | 11.4 | **+7.6** |
+| `profit_roe` | 14.4 | 11.9 | +2.5 |
+| **`sell_side_state`** | 14.4 | 12.0 | **+2.3** |
+
+The equal-weight z-composite has **a third of `rev_dispersion`'s lift**.
+Averaging a tail-concentrated signal against two gradient signals washes the
+tail out. **Ship `rev_dispersion`, not the composite** — and treat this as a
+direct warning for `ALPHA_STACK_EQUAL_RISK_v1`: equal-risk combination is not
+free when the components have different SHAPES, and the fixed-weight stack has
+to be checked against its own best component, not only against the market.
+
+**2. My monotonicity criterion penalises tail signals, and that is my bug.**
+`rev_dispersion` reads monotonicity **0.236** at ten buckets — which prints as
+"no signal" — while carrying the second-largest lift on the board. Monotonicity
+answers *does the score order the whole cross section*; it cannot see a payoff
+that lives entirely in the last bucket. `diagnostics` now reports
+`top_bucket_lift_annual_pct` and a `shape` (`tail` / `gradient` / `flat`)
+beside it, the verdict no longer fails a tail signal for lacking monotonicity,
+and `implied_construction` states narrow-vs-wide directly. Pinned by
+`test_a_TAIL_signal_is_not_failed_for_lacking_monotonicity`.
+
 ## 4b. The calibration battery, and the second bug it found in my own work
 
 `python -m scripts.portfolio_farm_calibrate` — reproduce known facts about

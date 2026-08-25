@@ -327,6 +327,82 @@ def test_signal_report_refuses_a_panel_too_short_to_diagnose():
     assert "error" in rep and "formation dates" in rep["error"]
 
 
+#: Per-year effect size for the SHAPE fixtures. Deliberately small.
+#:
+#: `_planted(strength=3.0)` is fine for detection tests and useless for shape
+#: ones: it compounds to +1045%/yr in the top bucket, so ANY rising curve turns
+#: exponential and every shape reads as "tail". Real farm buckets span roughly
+#: 7-19%/yr, where compounding is mild and the shape survives annualisation.
+#: The fixture has to live in the regime the classifier is used in.
+_SHAPE_STRENGTH = 0.12
+
+
+def _gradient_panel(seed: int = 31):
+    """Return rises LINEARLY across the cross section, at a realistic size."""
+    rng = np.random.default_rng(seed)
+    score = np.linspace(-1, 1, N)
+    r = rng.normal(0, 0.004, (T, N)) + _SHAPE_STRENGTH * score / 252.0
+    return _panel(r), score
+
+
+def _tail_only_panel(seed: int = 21):
+    """A panel where ONLY the top bucket earns anything extra."""
+    rng = np.random.default_rng(seed)
+    score = np.linspace(-1, 1, N)
+    bonus = np.where(score >= 0.6, _SHAPE_STRENGTH, 0.0) / 252.0   # top ~20%
+    r = rng.normal(0, 0.004, (T, N)) + bonus
+    return _panel(r), score
+
+
+def test_a_TAIL_signal_is_not_failed_for_lacking_monotonicity():
+    """MY OWN INSTRUMENT FLAW, found by the data.
+
+    Monotonicity PENALISES a signal whose whole payoff is in its extreme tail,
+    and that is a real and common shape rather than a defect. Measured
+    1993-2024 at ten buckets, `rev_dispersion` runs a flat middle and a
+    +7.6%/yr jump in the last decile: monotonicity 0.24, which reads as "no
+    signal", and a lift second only to momentum's. It implies a NARROW book,
+    not no book.
+    """
+    p, score = _tail_only_panel()
+    rows = D.formation_rows(p, 21, warmup=260)
+    sig = np.repeat(score[None, :], len(rows), axis=0)
+    fwd = D.forward_returns(p, rows, 21)
+    elig = np.ones_like(sig, dtype=bool)
+
+    qp = D.quantile_profile(sig, fwd, elig, n_q=5, holding_days=21)
+    assert qp["top_bucket_lift_annual_pct"] > 0
+    assert qp["shape"] == "tail", qp
+    v = D._verdict(D.rank_ic(sig, fwd, elig), qp,
+                   {"distinct_names_per_slot": 5.0})
+    assert "NARROW" in v["implied_construction"].upper()
+    assert not any("not monotone" in r for r in v["failed"]), (
+        "a tail-concentrated signal was failed for the one statistic that "
+        "cannot describe it")
+
+
+def test_lift_and_monotonicity_answer_DIFFERENT_questions():
+    """A gradient signal has monotonicity and little tail lift; a tail signal
+    has lift and little monotonicity. Reporting only one loses half the
+    signals, and they imply OPPOSITE constructions."""
+    grad_p, grad_score = _gradient_panel()
+    rows = D.formation_rows(grad_p, 21, warmup=260)
+    g_sig = np.repeat(grad_score[None, :], len(rows), axis=0)
+    g_qp = D.quantile_profile(g_sig, D.forward_returns(grad_p, rows, 21),
+                              np.ones_like(g_sig, dtype=bool), n_q=5,
+                              holding_days=21)
+
+    tail_p, tail_score = _tail_only_panel()
+    t_sig = np.repeat(tail_score[None, :], len(rows), axis=0)
+    t_qp = D.quantile_profile(t_sig, D.forward_returns(tail_p, rows, 21),
+                              np.ones_like(t_sig, dtype=bool), n_q=5,
+                              holding_days=21)
+
+    assert g_qp["monotonicity_spearman"] > t_qp["monotonicity_spearman"]
+    assert g_qp["shape"] != "tail"
+    assert t_qp["shape"] == "tail"
+
+
 def test_a_REVERSED_signal_is_reported_as_reversed_not_as_absent():
     """`value_bm` reads monotonicity -0.90 over 32 years. That is a signal
     pointing the other way, not an absent one, and reporting it as "not

@@ -226,6 +226,63 @@ def quantile_profile(sig: np.ndarray, fwd: np.ndarray, elig: np.ndarray,
 
     # Spearman of bucket index against bucket mean: +1 is perfectly increasing.
     mono = _spearman(np.arange(n_q, dtype=np.float64), means)
+
+    # TOP-BUCKET LIFT. Monotonicity PENALISES a signal whose whole payoff is in
+    # its extreme tail, and that is a real and common shape rather than a
+    # defect. Measured 1993-2024 at 10 buckets: `rev_dispersion` runs
+    # [10.2, 10.9, 12.0, 14.1, 11.5, 12.3, 11.1, 10.4, 10.6, 19.0] — a flat
+    # middle and a +7.6%/yr jump in the last decile. Its monotonicity is 0.24,
+    # which reads as "no signal", and its lift is second only to momentum's.
+    #
+    # So report BOTH. Monotonicity answers "does the score order the whole
+    # cross section"; lift answers "does the tail this book actually buys pay".
+    # A signal can be worth trading on either, and they imply DIFFERENT
+    # constructions — wide for a gradient, narrow for a tail.
+    rest = float(np.mean(ann[:-1])) if n_q > 1 else float("nan")
+    lift = float(ann[-1]) - rest
+
+    # SHAPE. Which construction the curve implies, which is a different
+    # question from whether the signal is real.
+    #
+    # `lift` (top bucket vs the mean of the rest) is the wrong discriminator on
+    # its own — it is inflated by a low BOTTOM, so `profit_roe`'s plateau scored
+    # a "tail" lift of +2.49 while its last two deciles differ by 0.1. The
+    # statistic that separates them is the JUMP INTO THE LAST BUCKET.
+    #
+    #   profit_roe      9.5 8.2 9.3 9.3 13.2 13.6 14.8 14.8 14.3 14.4
+    #                   jump 0.1 of a 4.9 spread   -> STEP, build WIDE
+    #   mom_12_1        6.7 8.3 ... 14.3 14.1 19.2
+    #                   jump 5.1 of a 12.5 spread  -> TAIL, build NARROW
+    #   rev_dispersion 10.2 ... 10.4 10.6 19.0
+    #                   jump 8.4 of an 8.8 spread  -> TAIL, build NARROW
+    span = float(ann[-1] - ann[0])
+    jump = float(ann[-1] - ann[-2]) if n_q >= 2 else float("nan")
+    top_half = ann[n_q // 2:]
+    plateau = float(np.max(top_half) - np.min(top_half)) if len(top_half) else np.nan
+    # THE THRESHOLD MUST SCALE WITH THE BUCKET COUNT. A perfectly LINEAR curve
+    # steps by `span / (n_q - 1)` into every bucket including the last, so a
+    # fixed share-of-span cutoff means different things at 5 buckets and at 10:
+    # at deciles a linear step is 11% of span, at quintiles it is 25% — and
+    # annualising is convex, which pushes the quintile figure to ~38%. A fixed
+    # 0.35 cutoff therefore called a straight line a tail at 5 buckets and read
+    # correctly at 10. Measured, not guessed.
+    #
+    # `2.5x the linear step` is the bar: the last bucket has to jump by well
+    # more than an evenly-spaced curve would.
+    linear_step = span / max(n_q - 1, 1)
+    if not np.isfinite(span) or span <= 0:
+        # A non-positive span is no signal or a REVERSED one; either way the
+        # tail rules below would divide by it and call a loss a tail.
+        shape = "flat"
+    elif np.isfinite(jump) and jump >= 2.5 * linear_step and jump >= 1.5:
+        shape = "tail"
+    elif (np.isfinite(plateau) and plateau <= 0.35 * span
+          and np.isfinite(mono) and mono >= 0.5):
+        shape = "step"
+    elif np.isfinite(mono) and mono >= 0.6:
+        shape = "gradient"
+    else:
+        shape = "flat"
     tb = np.array([np.array(per_q[-1]) - np.array(per_q[0])]).ravel()
     tb_t = (float(tb.mean()) / (float(tb.std(ddof=1)) / np.sqrt(len(tb)))
             if len(tb) > 2 and tb.std(ddof=1) > 0 else None)
@@ -239,6 +296,25 @@ def quantile_profile(sig: np.ndarray, fwd: np.ndarray, elig: np.ndarray,
         "top_minus_bottom_annual_pct": round(float(spread_ann), 2),
         "top_minus_bottom_t": round(tb_t, 3) if tb_t is not None else None,
         "monotonicity_spearman": round(float(mono), 3),
+        "top_bucket_annual_pct": round(float(ann[-1]), 2),
+        "rest_of_book_annual_pct": round(rest, 2),
+        #: Top bucket minus the mean of every other bucket, %/yr. This is what
+        #: a NARROW book buys, and it is the number monotonicity cannot see.
+        "top_bucket_lift_annual_pct": round(lift, 2),
+        #: The jump into the LAST bucket, %/yr, and its share of the whole
+        #: span. This is the tail statistic; `lift` above is the headline one.
+        "top_bucket_jump_annual_pct": (round(float(jump), 2)
+                                       if np.isfinite(jump) else None),
+        "top_half_range_annual_pct": (round(float(plateau), 2)
+                                      if np.isfinite(plateau) else None),
+        #: Shape, which decides CONSTRUCTION rather than whether to trade:
+        #:   "tail"     — payoff concentrated in the last bucket   -> narrow k
+        #:   "step"     — a plateau above some cut, flat within it -> WIDE k
+        #:   "gradient" — return rises across the cross section    -> either
+        #:   "flat"     — no ordering, or a reversed one
+        #: `profit_roe` is the STEP case and it is exactly why its top-k book
+        #: is weak: the top 4% sits on the flattest part of its own curve.
+        "shape": shape,
         # The bar is deliberately not 1.0: real signals are noisy at the
         # bucket level. It is high enough that "one bucket did everything"
         # fails it — which is what it is for, and it is ALL it is for.
@@ -426,13 +502,38 @@ def _verdict(ic: dict, qp: dict, cen: dict) -> dict:
             f"a signal pointing the other way, not an absent one; diagnose "
             f"the negated signal")
     elif not qp.get("is_monotone"):
-        reasons.append(f"quantiles not monotone (spearman={mono})")
+        lift = qp.get("top_bucket_lift_annual_pct")
+        spread = qp.get("top_minus_bottom_annual_pct")
+        tail = (lift is not None and spread not in (None, 0)
+                and lift >= 0.6 * abs(spread))
+        if tail:
+            # NOT a failure. A signal whose whole payoff sits in its extreme
+            # tail is a real and common shape, and monotonicity is the wrong
+            # statistic for it — `rev_dispersion` reads mono 0.24 at ten
+            # buckets with a +7.6%/yr top-decile lift. It implies a NARROW
+            # book rather than no book.
+            pass
+        else:
+            reasons.append(f"quantiles not monotone (spearman={mono}) and no "
+                           f"top-bucket lift either (lift={lift})")
     dps = cen.get("distinct_names_per_slot")
     if dps is not None and dps < 2.0:
         reasons.append(f"only {dps} distinct names per slot — a static list")
     return {
         "cross_section_supports_a_book": not reasons,
         "reversed_signal_worth_testing": bool(reversed_),
+        # What the quantile SHAPE implies about how to build the book. This is
+        # the question the farm could not previously ask, and the answer
+        # differs by signal: `profit_roe` saturates above its median (build
+        # WIDE), `mom_12_1` and `rev_dispersion` pay in the last decile
+        # (build NARROW).
+        "implied_construction": {
+            "tail": "NARROW — the payoff is the extreme bucket",
+            "step": ("WIDE — return plateaus above the cut, so concentrating "
+                     "buys tracking error and no return"),
+            "gradient": "either — return rises across the cross section",
+            "flat": "none — no usable ordering",
+        }.get(qp.get("shape"), "unclear"),
         "failed": reasons,
         "note": "advisory, not a gate: this governs what may be CLAIMED and "
                 "what deserves the next hour of work, never what may be "
