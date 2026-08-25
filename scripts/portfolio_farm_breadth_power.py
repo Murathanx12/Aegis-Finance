@@ -114,6 +114,48 @@ CLEAN_MIN_K = 10
 SIGNALS = ("mom_12_1", "mom_6_1", "trend_200")
 
 
+# The receipt name keys on the WINDOW only. A run with `--signals` covers part
+# of the grid, so writing it whole would delete every other signal's rows — and
+# a partial table that reads as complete is worse than no table.
+_CONSTRUCTION = ("window", "holding_days", "sizing", "clean_max_k", "reduced")
+
+
+def merge_prior(payload: dict, name: str) -> int:
+    """Fold in rows from a previous receipt at the SAME construction.
+
+    Returns the number of rows carried forward. Refuses to merge across a
+    different holding period / sizing / reduction: those rows are not
+    comparable, and a mixed table would hide that.
+    """
+    import json
+    from backend.services.portfolio_farm import farm as _farm
+
+    path = Path(_farm.RESULTS_DIR) / f"{name}.json"
+    if not path.exists():
+        return 0
+    try:
+        prior = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return 0
+    if any(prior.get(k) != payload.get(k) for k in _CONSTRUCTION):
+        print(f"  NOT merging {path.name}: different construction "
+              f"({ {k: prior.get(k) for k in _CONSTRUCTION} })")
+        return 0
+
+    have = {(r["signal"], r["top_k"]) for r in payload["rows"]}
+    carried = [r for r in prior.get("rows", ())
+               if (r.get("signal"), r.get("top_k")) not in have]
+    if not carried:
+        return 0
+    payload["rows"] = payload["rows"] + carried
+    fresh = {r["signal"] for r in payload["rows"] if (r["signal"], r["top_k"]) in have}
+    for sig, v in (prior.get("verdicts") or {}).items():
+        if sig not in fresh:
+            payload["verdicts"].setdefault(sig, v)
+    payload["rows"].sort(key=lambda r: (r["signal"], r["top_k"]))
+    return len(carried)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--start", type=int, default=2013)
@@ -196,11 +238,18 @@ def main(argv=None) -> int:
           "real signal does the\n  opposite. This is a diagnostic, not a "
           "verdict: it licenses what to build\n  next, never a claim.")
 
-    path = farm.save({"check": "breadth_power", "window": [a.start, a.end],
-                      "holding_days": HOLDING_DAYS, "sizing": SIZING,
-                      "clean_max_k": CLEAN_MAX_K, "reduced": bool(a.reduce),
-                      "rows": rows, "verdicts": verdicts},
-                     f"farm_breadth_power_{a.start}_{a.end}")
+    payload = {"check": "breadth_power", "window": [a.start, a.end],
+               "holding_days": HOLDING_DAYS, "sizing": SIZING,
+               "clean_max_k": CLEAN_MAX_K, "reduced": bool(a.reduce),
+               "rows": rows, "verdicts": verdicts}
+    name = f"farm_breadth_power_{a.start}_{a.end}"
+    fresh_signals = {r["signal"] for r in rows}
+    kept = merge_prior(payload, name)
+    path = farm.save(payload, name)
+    if kept:
+        carried = sorted({r["signal"] for r in payload["rows"]} - fresh_signals)
+        print(f"\n  merged {kept} row(s) for {len(carried)} signal(s) "
+              f"({', '.join(carried)}) from the previous receipt")
     print(f"\n  written: {path}")
     return 0
 

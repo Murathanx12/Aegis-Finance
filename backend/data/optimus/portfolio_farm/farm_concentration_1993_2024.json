@@ -1,0 +1,314 @@
+{
+ "check": "concentration",
+ "window": [
+  1993,
+  2024
+ ],
+ "holding_days": 5,
+ "top_k": 10,
+ "sizing": "inverse_vol",
+ "reduced": true,
+ "signals": [
+  {
+   "signal": "value_bm",
+   "n_sessions": 7783,
+   "excess_annual_pct": -2.843,
+   "drops": [
+    {
+     "n": 1,
+     "excess_drop_best_pct": -3.532,
+     "excess_drop_worst_pct": -2.153,
+     "share_of_original": 1.242
+    },
+    {
+     "n": 3,
+     "excess_drop_best_pct": -4.581,
+     "excess_drop_worst_pct": -1.536,
+     "share_of_original": 1.611
+    },
+    {
+     "n": 5,
+     "excess_drop_best_pct": -5.178,
+     "excess_drop_worst_pct": -1.026,
+     "share_of_original": 1.821
+    },
+    {
+     "n": 10,
+     "excess_drop_best_pct": -6.412,
+     "excess_drop_worst_pct": 0.143,
+     "share_of_original": 2.255
+    },
+    {
+     "n": 20,
+     "excess_drop_best_pct": -8.464,
+     "excess_drop_worst_pct": 2.177,
+     "share_of_original": 2.977
+    },
+    {
+     "n": 40,
+     "excess_drop_best_pct": -11.827,
+     "excess_drop_worst_pct": 5.534,
+     "share_of_original": 4.16
+    }
+   ],
+   "top_dates": [
+    {
+     "date": "2008-09-16",
+     "excess_pct": 7.937
+    },
+    {
+     "date": "2008-09-18",
+     "excess_pct": 21.272
+    },
+    {
+     "date": "2008-09-30",
+     "excess_pct": 7.519
+    },
+    {
+     "date": "2008-10-01",
+     "excess_pct": 17.102
+    },
+    {
+     "date": "2008-10-10",
+     "excess_pct": 8.585
+    },
+    {
+     "date": "2008-10-14",
+     "excess_pct": 15.257
+    },
+    {
+     "date": "2008-11-24",
+     "excess_pct": 9.787
+    },
+    {
+     "date": "2009-03-23",
+     "excess_pct": 7.249
+    },
+    {
+     "date": "2009-08-05",
+     "excess_pct": 7.185
+    },
+    {
+     "date": "2020-11-09",
+     "excess_pct": 8.087
+    }
+   ],
+   "holdings_census": {
+    "ETR": 41,
+    "AIG": 37,
+    "MET": 34,
+    "C": 32,
+    "EIX": 26,
+    "GNW": 24,
+    "EXC": 23,
+    "NGH": 22,
+    "UNP": 21,
+    "X": 21,
+    "BAC": 21,
+    "CFG": 20
+   },
+   "holdings_samples": 124
+  },
+  {
+   "signal": "profit_roe",
+   "n_sessions": 7783,
+   "excess_annual_pct": 2.243,
+   "drops": [
+    {
+     "n": 1,
+     "excess_drop_best_pct": 2.036,
+     "excess_drop_worst_pct": 2.466,
+     "share_of_original": 0.908
+    },
+    {
+     "n": 3,
+     "excess_drop_best_pct": 1.711,
+     "excess_drop_worst_pct": 2.784,
+     "share_of_original": 0.763
+    },
+    {
+     "n": 5,
+     "excess_drop_best_pct": 1.423,
+     "excess_drop_worst_pct": 3.047,
+     "share_of_original": 0.635
+    },
+    {
+     "n": 10,
+     "excess_drop_best_pct": 0.85,
+     "excess_drop_worst_pct": 3.638,
+     "share_of_original": 0.379
+    },
+    {
+     "n": 20,
+     "excess_drop_best_pct": -0.14,
+     "excess_drop_worst_pct": 4.603,
+     "share_of_original": -0.063
+    },
+    {
+     "n": 40,
+     "excess_drop_best_pct": -1.79,
+     "excess_drop_worst_pct": 6.298,
+     "share_of_original": -0.798
+    }
+   ],
+   "top_dates": [
+    {
+     "date": "1997-10-28",
+     "excess_pct": 3.383
+    },
+    {
+     "date": "2000-03-01",
+     "excess_pct": 3.771
+    },
+    {
+     "date": "2000-03-27",
+     "excess_pct": 5.113
+    },
+    {
+     "date": "2000-04-04",
+     "excess_pct": 3.7
+    },
+    {
+     "date": "2000-04-18",
+     "excess_pct": 4.064
+    },
+    {
+     "date": "2000-05-03",
+     "excess_pct": 6.383
+    },
+    {
+     "date": "2000-07-12",
+     "excess_pct": 4.823
+    },
+    {
+     "date": "2002-07-23",
+     "excess_pct": 3.342
+    },
+    {
+     "date": "2011-04-05",
+     "excess_pct": 4.958
+    },
+    {
+     "date": "2020-03-25",
+     "excess_pct": 3.5
+    }
+   ],
+   "holdings_census": {
+    "CL": 67,
+    "AVP": 45,
+    "MCO": 39,
+    "CLX": 37,
+    "AZO": 28,
+    "LMT": 28,
+    "UST": 27,
+    "MHP": 26,
+    "YUM": 25,
+    "HD": 24,
+    "ORLY": 22,
+    "WU": 21
+   },
+   "holdings_samples": 124
+  },
+  {
+   "signal": "liquid",
+   "n_sessions": 7783,
+   "excess_annual_pct": 4.71,
+   "drops": [
+    {
+     "n": 1,
+     "excess_drop_best_pct": 4.148,
+     "excess_drop_worst_pct": 5.003,
+     "share_of_original": 0.881
+    },
+    {
+     "n": 3,
+     "excess_drop_best_pct": 3.585,
+     "excess_drop_worst_pct": 5.418,
+     "share_of_original": 0.761
+    },
+    {
+     "n": 5,
+     "excess_drop_best_pct": 3.087,
+     "excess_drop_worst_pct": 5.822,
+     "share_of_original": 0.655
+    },
+    {
+     "n": 10,
+     "excess_drop_best_pct": 1.99,
+     "excess_drop_worst_pct": 6.735,
+     "share_of_original": 0.423
+    },
+    {
+     "n": 20,
+     "excess_drop_best_pct": 0.165,
+     "excess_drop_worst_pct": 8.347,
+     "share_of_original": 0.035
+    },
+    {
+     "n": 40,
+     "excess_drop_best_pct": -2.568,
+     "excess_drop_worst_pct": 11.055,
+     "share_of_original": -0.545
+    }
+   ],
+   "top_dates": [
+    {
+     "date": "2000-04-17",
+     "excess_pct": 7.713
+    },
+    {
+     "date": "2000-10-19",
+     "excess_pct": 7.317
+    },
+    {
+     "date": "2000-10-31",
+     "excess_pct": 6.57
+    },
+    {
+     "date": "2000-11-14",
+     "excess_pct": 6.09
+    },
+    {
+     "date": "2000-12-05",
+     "excess_pct": 9.015
+    },
+    {
+     "date": "2000-12-22",
+     "excess_pct": 8.383
+    },
+    {
+     "date": "2001-01-03",
+     "excess_pct": 17.393
+    },
+    {
+     "date": "2001-03-13",
+     "excess_pct": 7.706
+    },
+    {
+     "date": "2001-03-22",
+     "excess_pct": 7.26
+    },
+    {
+     "date": "2002-05-08",
+     "excess_pct": 6.647
+    }
+   ],
+   "holdings_census": {
+    "MSFT": 123,
+    "GOOG": 87,
+    "AAPL": 81,
+    "INTC": 68,
+    "CSCO": 66,
+    "AMZN": 55,
+    "FB": 50,
+    "XOM": 44,
+    "GE": 43,
+    "BAC": 43,
+    "TSLA": 39,
+    "DELL": 35
+   },
+   "holdings_samples": 124
+  }
+ ],
+ "dates_shared_by_all": []
+}

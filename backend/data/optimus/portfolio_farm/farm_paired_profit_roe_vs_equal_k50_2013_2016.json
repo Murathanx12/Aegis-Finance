@@ -1,0 +1,100 @@
+{
+ "check": "paired_power",
+ "window": [
+  2013,
+  2016
+ ],
+ "signal": "profit_roe",
+ "benchmark": "equal",
+ "top_k": 50,
+ "holding_days": 5,
+ "sizing": "inverse_vol",
+ "reduced": false,
+ "phases": [
+  {
+   "phase": 0,
+   "signal_terminal_usd": 12826.7,
+   "benchmark_terminal_usd": 13047.33,
+   "status": "ok",
+   "years": 2.91,
+   "tracking_error_annual_pct": 5.483,
+   "se_of_mean_excess_pct": 3.213,
+   "observed_excess_annual_pct": -0.728,
+   "implied_t": -0.227,
+   "mde_at_80pct_power_annual_pct": 8.996,
+   "years_needed_for_observed_effect": null,
+   "sample_can_resolve_observed_effect": false
+  },
+  {
+   "phase": 2,
+   "signal_terminal_usd": 13090.71,
+   "benchmark_terminal_usd": 13218.95,
+   "status": "ok",
+   "years": 2.91,
+   "tracking_error_annual_pct": 5.472,
+   "se_of_mean_excess_pct": 3.206,
+   "observed_excess_annual_pct": -0.493,
+   "implied_t": -0.154,
+   "mde_at_80pct_power_annual_pct": 8.978,
+   "years_needed_for_observed_effect": null,
+   "sample_can_resolve_observed_effect": false
+  },
+  {
+   "phase": 1,
+   "signal_terminal_usd": 13072.14,
+   "benchmark_terminal_usd": 13074.07,
+   "status": "ok",
+   "years": 2.91,
+   "tracking_error_annual_pct": 5.5,
+   "se_of_mean_excess_pct": 3.222,
+   "observed_excess_annual_pct": -0.168,
+   "implied_t": -0.052,
+   "mde_at_80pct_power_annual_pct": 9.023,
+   "years_needed_for_observed_effect": null,
+   "sample_can_resolve_observed_effect": false
+  },
+  {
+   "phase": 3,
+   "signal_terminal_usd": 12760.5,
+   "benchmark_terminal_usd": 12705.23,
+   "status": "ok",
+   "years": 2.91,
+   "tracking_error_annual_pct": 5.478,
+   "se_of_mean_excess_pct": 3.21,
+   "observed_excess_annual_pct": -0.003,
+   "implied_t": -0.001,
+   "mde_at_80pct_power_annual_pct": 8.988,
+   "years_needed_for_observed_effect": null,
+   "sample_can_resolve_observed_effect": false
+  },
+  {
+   "phase": 4,
+   "signal_terminal_usd": 12625.41,
+   "benchmark_terminal_usd": 12530.77,
+   "status": "ok",
+   "years": 2.91,
+   "tracking_error_annual_pct": 5.504,
+   "se_of_mean_excess_pct": 3.225,
+   "observed_excess_annual_pct": 0.109,
+   "implied_t": 0.034,
+   "mde_at_80pct_power_annual_pct": 9.03,
+   "years_needed_for_observed_effect": 19853.3,
+   "sample_can_resolve_observed_effect": false
+  }
+ ],
+ "median_phase": {
+  "phase": 1,
+  "signal_terminal_usd": 13072.14,
+  "benchmark_terminal_usd": 13074.07,
+  "status": "ok",
+  "years": 2.91,
+  "tracking_error_annual_pct": 5.5,
+  "se_of_mean_excess_pct": 3.222,
+  "observed_excess_annual_pct": -0.168,
+  "implied_t": -0.052,
+  "mde_at_80pct_power_annual_pct": 9.023,
+  "years_needed_for_observed_effect": null,
+  "sample_can_resolve_observed_effect": false
+ },
+ "n_phases_resolving": 0
+}

@@ -9,32 +9,66 @@
  "halves": [
   {
    "window": [
-    2013,
-    2018
+    1993,
+    2000
    ],
-   "sessions": 1510,
-   "benchmark_terminal_usd": 15613.28,
-   "median_usd": 15677.81,
-   "worst_phase_usd": 12888.65,
-   "best_phase_usd": 18779.95,
-   "phase_spread": 1.46,
+   "sessions": 2020,
+   "benchmark_terminal_usd": 28978.92,
+   "median_usd": 156398.55,
+   "worst_phase_usd": 109172.16,
+   "best_phase_usd": 198072.68,
+   "phase_spread": 1.81,
    "n_phases": 5,
-   "phases_clearing_both": 1,
+   "phases_clearing_both": 5,
    "phases_total": 5,
-   "worst_phase_beats_market": false,
+   "worst_phase_beats_market": true,
    "median_beats_market": true
   },
   {
    "window": [
-    2019,
+    2001,
+    2008
+   ],
+   "sessions": 2011,
+   "benchmark_terminal_usd": 10132.04,
+   "median_usd": 6410.95,
+   "worst_phase_usd": 5174.48,
+   "best_phase_usd": 8129.1,
+   "phase_spread": 1.57,
+   "n_phases": 5,
+   "phases_clearing_both": 0,
+   "phases_total": 5,
+   "worst_phase_beats_market": false,
+   "median_beats_market": false
+  },
+  {
+   "window": [
+    2009,
+    2016
+   ],
+   "sessions": 2014,
+   "benchmark_terminal_usd": 23830.71,
+   "median_usd": 17229.6,
+   "worst_phase_usd": 14448.51,
+   "best_phase_usd": 23743.81,
+   "phase_spread": 1.64,
+   "n_phases": 5,
+   "phases_clearing_both": 0,
+   "phases_total": 5,
+   "worst_phase_beats_market": false,
+   "median_beats_market": false
+  },
+  {
+   "window": [
+    2017,
     2024
    ],
-   "sessions": 1510,
-   "benchmark_terminal_usd": 19329.76,
-   "median_usd": 40088.72,
-   "worst_phase_usd": 32573.77,
-   "best_phase_usd": 47710.31,
-   "phase_spread": 1.46,
+   "sessions": 2012,
+   "benchmark_terminal_usd": 23614.06,
+   "median_usd": 48067.53,
+   "worst_phase_usd": 32034.91,
+   "best_phase_usd": 59228.46,
+   "phase_spread": 1.85,
    "n_phases": 5,
    "phases_clearing_both": 5,
    "phases_total": 5,
