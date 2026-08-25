@@ -94,9 +94,26 @@ MAX_TENOR_GAP_DAYS = 25
 
 
 def _root() -> Path:
+    """Where option state is written.
+
+    MUST resolve through `config.OPTIMUS_LEDGER_DIR`, like every other
+    ledger-writing service. This module used to read an `OPTIMUS_LEDGER_DIR`
+    ENVIRONMENT VARIABLE that nothing sets, and fell through to a path inside
+    the container image — so on Railway (which sets `AEGIS_DATA_DIR=/data` and
+    mounts the volume there) **every deploy destroyed the store**. It never
+    held more than one day, and `monday_gate_check` is right that a missed day
+    of option chains is gone for good.
+
+    Reading the module attribute at call time, not at import, is deliberate:
+    the suite overrides storage by monkeypatching `config.OPTIMUS_LEDGER_DIR`,
+    and binding it at import would silently ignore that.
+    """
     import os
+
+    from backend import config as _config
+
     env = os.environ.get("OPTIMUS_LEDGER_DIR")
-    base = Path(env) if env else Path(__file__).resolve().parents[1] / "data" / "optimus"
+    base = Path(env) if env else Path(_config.OPTIMUS_LEDGER_DIR)
     return base / "options_pit"
 
 
