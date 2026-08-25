@@ -195,10 +195,33 @@ Guard added — `backend/tests/test_ledger_dir_resolution.py` refuses any servic
 that rebuilds a ledger path from `__file__` or reads the env var without a
 config fallback. Verified it bites: reverting `_root()` fails 4 of its 9 tests.
 
-**Not yet verified in production:** the fix is deployed, but `pi_options_pit`
-fires at 15:30 ET, so the first accrual onto the volume lands then. **Check
-`options_pit accruing` on the next session and confirm `days_held` climbs past
-1 — that number has never been above 1 in this system's history.**
+**CONFIRMED IN PRODUCTION**, by making the store name its own inputs:
+
+    "root":         "/data/optimus/options_pit"              <- the volume
+    "legacy_root":  "/app/backend/data/optimus/options_pit"  <- the image
+    "legacy_files": 0
+
+The two paths were genuinely different, and `legacy_files: 0` says nothing
+survives at the image path — the 179 rows really are gone. That is evidence
+rather than inference, which is the whole reason `health()` now reports where
+it looked.
+
+**One fact still does not fit and is recorded rather than explained away:** at
+02:27 UTC the gate read `rows=179 days=1` **four seconds after a container
+start**, and nothing in the codebase writes option state at startup —
+`_options_pit_capture` is only ever called by the 15:30 ET job. Either
+something undocumented writes it, or that container was not as new as
+`uptime_seconds` said. `health()` now carries `legacy_root`/`legacy_files` so
+the next occurrence is evidenced instead of argued about.
+
+`migrate_legacy()` runs ahead of every capture and rescues anything stranded at
+the old path using the store's own write-once `(ticker, as_of)` rule, so it is
+a no-op after the first run and can never overwrite a volume row with an image
+copy of itself. It found nothing to rescue, which matches `legacy_files: 0`.
+
+**Still to verify:** `pi_options_pit` fires at 15:30 ET, so the first accrual
+onto the volume lands then. **Confirm `days_held` climbs past 1 — that number
+has never been above 1 in this system's history.**
 
 ## THE THIRD ONE: paper NAV has been dropping days, and nothing recorded why
 
@@ -241,12 +264,26 @@ at `GET /api/optimus/job_receipts` under `pi_hourly_mtm`. This mirrors
 `pi_ledger_resolve`, whose own docstring already stated the principle: *a
 result, written down, not an inference from silence.*
 
-**This does not fix the gaps.** It makes the next one attributable to a day and
-a reason, which is the precondition for fixing it. **Check
-`/api/optimus/job_receipts` after the next 16:30 ET run** — if the receipt says
+**This does not fix the gaps, deliberately.** The suspect is inferred, and
+building a fix for an inferred cause is the failure this repo names as its own
+— correct arithmetic against the wrong world. The receipt settles it at the
+next run, which costs one day.
+
+Live now: `GET /api/optimus/job_receipts` carries `pi_hourly_mtm`, currently
+`exists: false — no run has written one yet`, which is the correct reading
+before the 16:30 ET firing.
+
+**Check it after the next 16:30 ET run.** If the receipt says
 `skipped / cached market_data_timestamp ... <= last mark ...`, the suspect is
-confirmed and the fix is to mark off the trading date rather than a cache
-timestamp.
+confirmed, and the fix is to gate on **whether a row already exists for
+`expected_nav_date`** rather than on a cache timestamp — idempotent, and it
+would have prevented all four gaps.
+
+Two cautions on that fix, which is why it is not in this session:
+`lane-integrity-check` covers changes near NAV tables and should be run; and a
+self-healing variant that marks a MISSED past date would price it with today's
+quotes, which *no backfilled forward evidence* forbids outright. The guard must
+only ever mark today.
 
 **A missed mark may not be recoverable** under *no backfilled forward
 evidence*, so the four missing days are probably permanent holes in the only
