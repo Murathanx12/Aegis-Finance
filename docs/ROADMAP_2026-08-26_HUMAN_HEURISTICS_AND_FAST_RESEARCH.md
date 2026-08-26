@@ -436,7 +436,7 @@ needs no new data, and could change the candidate funnel today.
 
 ## 0.5 P0 — protect the forward record (competition-affecting)
 
-- **`LOOP_LIVENESS_v1`.** A DNS blip killed both loops on 26 Aug and the same
+- **`LOOP_LIVENESS_v1`: DONE** (`alpha/liveness.py`, `scripts/liveness.py`, dashboard panel). A DNS blip killed both loops on 26 Aug and the same
   cause silently killed session 9's. Transport conversion and a supervisor are
   in; they are necessary, not sufficient. **Correcting the review's design:** an
   external watchdog process on this machine can also die, reproducing the
@@ -451,7 +451,7 @@ needs no new data, and could change the candidate funnel today.
 - **`REPEATED_INVARIANT_ESCALATION`.** The chain warning printed 53+ times over
   two days unread. A warning that no action can clear stops carrying
   information.
-- **Defect 4 — option structures have no venue stop.** Not leg-level stops:
+- **Defect 4: CLOSED, and it was mis-sized.** The "up to 1500s" exposure was a configured constant; ten measured passes run median 368s / max 439s. And 7 of 9 live structures are LONG-ONLY, whose max loss is the premium already charged at entry, so a late exit cannot breach a budgeted loss. **Slippage, not ruin.** Ceiling cut to 600s, and an exit pass now runs immediately after every entry pass. Venue-side option stops REFUSED for the original reason: not leg-level stops,
   stopping one leg of a spread can leave a naked short option. Structure-level
   only, and it depends on loop liveness because a software-side stop is only as
   alive as the loop.
