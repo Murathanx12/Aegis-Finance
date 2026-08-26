@@ -434,6 +434,51 @@ without moving.
 explicitly after.** The exception is `FAME_BIAS`, which is cheap, night-safe,
 needs no new data, and could change the candidate funnel today.
 
+## 0.6 STATUS AFTER THE 2026-08-26 UNATTENDED BLOCK
+
+**Every P0 item is closed.** Receipts in the hackathon repo.
+
+| lane | status |
+|---|---|
+| `LOOP_LIVENESS_v1` | **DONE** — heartbeat, process scan, PRE-BEAT. The PID probe is MEASURED, because `os.kill(pid,0)` reports a *dead* process as ALIVE on Windows and would have certified a dead loop |
+| ledger chain break | **DONE** — six breaks, CONCURRENT_WRITE confirmed, epoch-declared not repaired |
+| `REPEATED_INVARIANT_ESCALATION` | **DONE** — WARN/ELEVATED/FAIL, no acknowledge verb, its absence asserted by test |
+| defect 4 | **CLOSED, and I had mis-sized it** — 1500s was a constant, measured median 368s; 7 of 9 structures are long-only so a late exit cannot breach a budgeted loss |
+| refusal decomposition | **DONE** — `already_held=32, evidence=12, execution=4, risk=0`: **saturated**, not barren and not over-strict |
+| `LEVERAGE_WITH_SURVIVAL_v1` | **UNBLOCKED, phase 1 DONE** — 13F verified from SEC EDGAR; see below |
+| `FAME_BIAS_v1` | **RUN. NOT DETECTED** — drift −0.36p vs a 2.64p noise floor, MDE 3.53p, NOT PROMOTABLE |
+| `ANALYST_DISLOCATION_FUNNEL_v1` | **PARTIALLY UNBLOCKED** — see below |
+| `CAUSAL_CONTAGION_NVDA_v1` | **baseline fitted BEFORE the print**, event path refuses until the session exists |
+| P0.5 competition admission | **PROPOSAL written, nothing enforced** |
+
+### The finding that transfers: effective N by RISK
+
+Situational Awareness LP's Q2 2026 book — every figure verified from the filings
+themselves — measured **5.34 by weight and 1.43 by RISK**, and on its worst July
+session **20 of 21 names fell together**. Marked through the drawdown its
+**unlevered return was −23.3% and it survived**; margin broke at 2.0x on 16 July.
+Carrying its reported +439% in, 1.0x ends at **+313%**. *The thesis was right and
+the financing killed it.*
+
+Our own books, same code, weighted by true max loss: **dev 1.51, exp1 1.27** —
+exp1 below the fund's value at forced liquidation. This is the measurement
+`MAX_THESIS_CLUSTER` needed, with a threshold argued from a real liquidation
+rather than picked round.
+
+### What is still genuinely blocked, and why
+
+**The target-gap leg of the analyst funnel.** Finnhub's free tier refuses
+`stock/price-target` (HTTP 403), so Murat's literal ">50% analyst upside" screen
+**cannot be reproduced from this source**. Recorded as `UNAVAILABLE_FREE_TIER`
+and never approximated — a fabricated column in a PIT panel is worse than a
+missing one. What IS available is the **revision-direction leg**: recommendation
+counts by period, hence net breadth and its monthly change.
+
+`scripts/analyst_panel.py` now captures that daily at 17:30 ET, stratified across
+dollar-volume buckets so it is not another mega-cap list. **We cannot recover
+vintages we never recorded, so the only way to unblock this lane is to start the
+clock — and every day it does not run is a day permanently missing.**
+
 ## 0.5 P0 — protect the forward record (competition-affecting)
 
 - **`LOOP_LIVENESS_v1`: DONE** (`alpha/liveness.py`, `scripts/liveness.py`, dashboard panel). A DNS blip killed both loops on 26 Aug and the same
