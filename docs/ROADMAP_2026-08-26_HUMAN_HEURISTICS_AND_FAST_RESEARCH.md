@@ -487,6 +487,17 @@ each — exactly where a mega-cap-anchored search never looks, and exactly where
 breadth is least trustworthy. That tension is the lane's real problem.
 Receipt: `FINDING_2026-08-26_BREADTH_IS_FLAT_ACROSS_DRAWDOWN.md` (hackathon repo).
 
+### Every other lane now has code (2026-08-26, unattended)
+
+| lane | status |
+|---|---|
+| `STATE_CHANGE_ELASTICITY` | **DONE.** shock/revenue. $1bn is **328% for CORZ, 0.4% for NVDA** — 578x. Ranking by market cap puts NVDA first. Non-USD reporters excluded and NAMED (TSM reports in TWD; P/S survived the error, which is why the row looked shippable). |
+| `ANCHOR_TO_TORQUE_v1` | **DONE, shadow only.** betas x torque x coverage x residual. First run: **not one of ten names cleared its own one-event MDE** (6.1–16.6% vs a ~5% anchor move). Prints its own limit every run. |
+| `AI_DEPRECIATION_REALITY_GAP_v1` | **PHASE 1 DONE, and the control spoils the story.** Implied life rises AMZN +92%, **AAPL +85%**, ORCL +61%, MSFT +54%; **NVDA −7%**. Apple is not a hyperscaler, so this is large-cap tech generally or a mix shift — **not cleanly AI**. A lead, not a finding. |
+| `CONTINUOUS_REUNDERWRITING` | **DONE.** And it found that `EVENT_NODE_CAP` counts tags no brain writes. |
+| Marginal Alpha Contribution | **DONE** as marginal contribution to concentration. On exp1, removing NVDA makes the book *worse* — cutting by size cuts the wrong name. |
+| `NEEDS_GRAPH_v1` | **not started** — but its two inputs (the contagion chain and elasticity) now both exist. |
+
 ### What is still genuinely blocked, and why
 
 **The target-gap leg of the analyst funnel.** Finnhub's free tier refuses
