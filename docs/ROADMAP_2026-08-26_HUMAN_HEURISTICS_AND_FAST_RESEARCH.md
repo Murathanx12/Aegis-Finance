@@ -465,6 +465,28 @@ exp1 below the fund's value at forced liquidation. This is the measurement
 `MAX_THESIS_CLUSTER` needed, with a threshold argued from a real liquidation
 rather than picked round.
 
+### Day one of the panel already narrowed the funnel
+
+610 names captured, calibration passed on all six checks. The first
+cross-section is **negative and useful**: median net breadth by 52-week-drawdown
+quintile runs **+0.692, +0.750, +0.756, +0.714, +0.700** — **flat**. Analysts are
+as bullish on a name down 48% as on one down 2%, and **93% of covered names are
+net positive**.
+
+So *"large analyst upside × deep drawdown"* **cannot be built from
+recommendation breadth**. The conjunction selects 14.1% of the market, and it
+cannot be rare when one of its legs is true of nearly everything. The
+discriminating variable has to be the **target gap** or **target freshness**
+(both unavailable, HTTP 403) — or **revision direction**, which we do have:
+136 improving, 104 deteriorating, 366 flat.
+
+**Build the lane on revision direction until a source with targets exists.**
+
+And the cell the method points at is **45% small/micro** with 8–13 analysts
+each — exactly where a mega-cap-anchored search never looks, and exactly where
+breadth is least trustworthy. That tension is the lane's real problem.
+Receipt: `FINDING_2026-08-26_BREADTH_IS_FLAT_ACROSS_DRAWDOWN.md` (hackathon repo).
+
 ### What is still genuinely blocked, and why
 
 **The target-gap leg of the analyst funnel.** Finnhub's free tier refuses
