@@ -352,3 +352,119 @@ WORLD SENSORS
 -> learn which data sources, causal edges, behavioral templates, models, and strategy archetypes actually work.
 
 The LLM expands possibility space. The quantitative engine computes and falsifies. The market supplies reward. Optimus preserves the accumulated project memory and decision logic.
+
+---
+
+# SESSION-13 ADDENDUM (2026-08-26, Opus day) — validation, and what the sealed record already says
+
+Everything above is the original document, unchanged. This section is what was
+CHECKED against our own data and sealed records before any of it is acted on.
+
+## 0.1 A correction I owe, about this very document
+
+My first act was to report that the two documents above had never been
+committed: `git cat-file -t 174b6796` and `889a9ef5` both returned "not a valid
+object", and neither path was on disk.
+
+**That was wrong, and the error was mine.** I ran `cat-file` against stale local
+refs without fetching this repository first (I had fetched a different one), and
+I looked for `AEGIS_STRATEGIC_INVARIANTS.md` at the repo root when it lives at
+`docs/AEGIS_STRATEGIC_INVARIANTS.md`. Both commits exist and were pushed
+directly to GitHub.
+
+The rule this actually earns is the sharper one:
+
+> **Absence of a local object is not evidence of absence of a commit.** Fetch
+> first, then check, and check the real path. A confident "it does not exist"
+> from an unfetched repo is exactly the class of false negative that
+> `feedback_silence_is_not_evidence` is about — and I produced one while writing
+> a memory about producing them.
+
+## 0.2 What was validated against the sealed NVDA record
+
+| Claim | Verdict |
+|---|---|
+| Street Q3 FY2027 revenue ~$104.2bn | **CONFIRMED** — identical to the sealed vector, field rank 1 |
+| Q2 consensus ~$92.18bn | **CONSISTENT** — sealed record carries $92.05bn as of 25 Aug |
+| Company GM guide ~75% | **CONFIRMED** — sealed field rank 2 |
+| Options imply ~5.4% | **SUPERSEDED.** That is a *reported* preview figure. Our record already holds a reported 5.58% marked CROSS-CHECK ONLY, and our own measurement from our own chain is **5.10%**. Use 5.10%. |
+| S&P opened ~-0.14%, Nasdaq ~-0.20% | **CORROBORATED** — our own bars give SPY open gap -0.15%, QQQ -0.33% |
+| NVDA is ~7.99% of the S&P 500 | **UNVERIFIED** — plausible, not checked from a primary source |
+| Q1 FY2027 was $81.6bn / $1.87 adj vs $78.9bn / $1.75, and the stock still fell after hours | **UNVERIFIED**, and load-bearing for the "a beat is not enough" argument — verify before grading it |
+| Hyperscaler useful-life extension understates depreciation | **UNVERIFIED** as to magnitude. The *direction* of the correction in section 5 is accepted and is a real fix to the original recollection |
+| Situational Awareness: +439%, 13F ~28% SNDK / ~28% MU / ~9% BE / ~6% TSM / ~6% Nebius | **UNVERIFIED, AND BLOCKING** for section 12. Verify from the 13F filings themselves before writing reconstruction code. |
+
+**No lane may cite an UNVERIFIED row as evidence.** They are leads.
+
+## 0.3 Three of the proposed NVDA hypotheses are ALREADY SEALED — do not re-record them
+
+The sealed `NVDA_2026-08-27` vector already carries, and states more strongly:
+
+- "NVDA beats Q2 consensus" is field `revenue_surprise`, sealed at **rank 13 of
+  13** — deliberately the least important field;
+- "a headline beat does not guarantee a gain" is asserted by the ranking itself;
+- "the Q3 guide dominates the reaction" is sealed at **rank 1**.
+
+Re-recording them as a fresh human-hypothesis record would create two records of
+one claim and let us grade whichever wins. **Refused.** Genuinely new, and added
+as a separate shadow record that does not touch the seal: contagion beyond the
+mechanical index contribution, size torque after controlling NVDA and SMH beta,
+and attention lag in low-coverage names.
+
+**And the power verdict binds all three.**
+`FINDING_2026-08-26_THE_SHOCK_GRAPH_CANNOT_RESOLVE_ONE_EVENT`: per-node
+one-event MDE runs 5.9% (TSM) to 24.0% (AAOI) against a 5.10% implied move, and
+the residual is a sector factor, not idiosyncratic noise. Adding SMH cuts the
+capacity-edge MDE to 3.8% — the smallest detectable *abnormal* return, which is
+not comparable to NVDA's own move. **On one event, only a near-total
+non-response is resolvable.** These are recorded for CALIBRATION and to
+accumulate across repeated events. A session that reports them as a result
+tonight has misread the power arithmetic.
+
+## 0.4 The split section 16 does not make
+
+Section 16 mixes two programmes with different clocks: work that can change the
+**4 Sep competition outcome** — about six trading sessions — and the **Aegis
+research programme**, which is months. Items 2 through 8 and 10 are the second
+kind. An analyst funnel, a fame-bias study and a needs graph will not produce a
+gradeable edge in six sessions, and pretending otherwise is how a roadmap grows
+without moving.
+
+**Competition-affecting work is small and comes first. Everything else is
+explicitly after.** The exception is `FAME_BIAS`, which is cheap, night-safe,
+needs no new data, and could change the candidate funnel today.
+
+## 0.5 P0 — protect the forward record (competition-affecting)
+
+- **`LOOP_LIVENESS_v1`.** A DNS blip killed both loops on 26 Aug and the same
+  cause silently killed session 9's. Transport conversion and a supervisor are
+  in; they are necessary, not sufficient. **Correcting the review's design:** an
+  external watchdog process on this machine can also die, reproducing the
+  original bug one level up. Liveness must be **pull-based from somewhere
+  already being read** — a receipt the day session and the handoff consult —
+  never a second daemon nobody watches.
+- **Ledger chain break: DONE.** `docs/FINDING_LEDGER_CHAIN_BREAK_2026-08-25.md`
+  in the hackathon repo. Cause **CONFIRMED CONCURRENT_WRITE**; it was **six**
+  breaks, not one, because `verify_chain` returned at the first. Not repaired —
+  declared as an epoch, with a manifest hash so the accepted list cannot be
+  widened later to absorb a new break.
+- **`REPEATED_INVARIANT_ESCALATION`.** The chain warning printed 53+ times over
+  two days unread. A warning that no action can clear stops carrying
+  information.
+- **Defect 4 — option structures have no venue stop.** Not leg-level stops:
+  stopping one leg of a spread can leave a naked short option. Structure-level
+  only, and it depends on loop liveness because a software-side stop is only as
+  alive as the loop.
+- **The competition account starts CLEAN.** The rehearsal book carries 72.9% of
+  equity in true max loss. **Live observation motivating a thesis-cluster cap:**
+  on 26 Aug the dev book held AMD, AVGO, NVDA, QQQ, META and TSLA at once — one
+  causal cluster, on the eve of that cluster's event. Bounded contractual loss
+  per structure does not make that a diversified book.
+- **Refusal decomposition: DONE, and it answered a question we had been asking
+  wrong.** `48 refused` never distinguished a barren alpha layer from an
+  over-strict risk layer. Measured on live forecasts:
+  **`already_held=32  evidence=12  execution=4  risk=0`** — **neither. The
+  system is SATURATED.** Two thirds of refusals are "we already own it", and
+  admission never got to speak. The loop is spending forecast budget on names it
+  cannot act on. Direct evidence for a thesis-cluster cap and for starting the
+  competition account clean.

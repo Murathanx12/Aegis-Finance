@@ -36,6 +36,36 @@ result requires evidence just as a positive one does, and **a global negative
 does not answer a conditional question that was never asked** (scope-aware
 verdicts, `docs/HANDOFF_2026-08-16_BRAIN_TO_BUILDER.md` §2).
 
+## THE NORTH STAR IS A SEPARATE FILE (adopted 2026-08-26)
+
+`docs/AEGIS_STRATEGIC_INVARIANTS.md` — sixteen points, read it BEFORE this
+file's roadmap sections and before any handoff. It changes perhaps twice a year;
+the roadmap churns weekly, and mixing the two is how six months of strategic
+intent leaked between sessions while every individual commit stayed excellent.
+
+The lane list it governs is
+`docs/ROADMAP_2026-08-26_HUMAN_HEURISTICS_AND_FAST_RESEARCH.md`, and **gates
+outrank dates**: several agents can do a month of ordinary engineering in a
+session, so an item is blocked by its dependency and its evidence, never by a
+calendar. Exactly two things cannot be parallelised — time-dependent prospective
+evidence, and statistical information that does not exist yet.
+
+Three points overturn habits this file taught earlier:
+
+- **The mega-cap is a SENSOR, not the trade.** NVIDIA tells us what world we are
+  in; it is rarely the best instrument for monetising that world.
+- **Size does not bound the move.** Our own chain implied **5.10% in one
+  session** for a ~$5T company. The defensible version of "small companies have
+  more room" is `STATE_CHANGE_ELASTICITY`, not market cap.
+- **Human intuition GENERATES hypotheses; data ADJUDICATES them.** Every
+  intuition is owed one question — *what observation would separate this from
+  ordinary factor beta?* If nothing would, it is not a hypothesis yet.
+
+And a rule earned the hard way the same day, at my own expense: **absence of a
+local object is not evidence of absence.** I reported both of those documents as
+never committed, having run `git cat-file` against unfetched refs and looked at
+the wrong path. Fetch first, then check, and check the real path.
+
 ## THE BOTTLENECK (diagnosed 2026-08-24 — `docs/ROADMAP_2026-08-24_CONNECT_THE_BRAIN.md`)
 
 > All ten arena books declare `selection: composite_top_k` over ONE signal.

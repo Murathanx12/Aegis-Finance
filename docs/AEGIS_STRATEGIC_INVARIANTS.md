@@ -14,3 +14,13 @@ Read this before changing research priorities. This is intentionally short and s
 10. **Continuity:** every substantial session updates the handoff, roadmap state, killed/open hypotheses, exact next discriminating tests, and execution state. When Optimus Tier-2 project memory is available, ingest/distill these artifacts automatically so strategic intent is not lost between sessions.
 11. **Night safety:** night discovers; day reviews/promotes. Night research must not mutate broker/execution state or silently change live paper loops.
 12. **Long-term architecture:** WORLD SENSORS -> EVIDENCE -> PERSISTENT CAUSAL GRAPH -> MARKET EXPECTATIONS -> DIVERGENCE -> EXPRESSION -> ADMISSION -> REALITY -> LEARNING. The moat is accumulated evidence, causal calibration, execution discipline, and strategy allocation—not the LLM brand.
+
+13. **Expectation is the benchmark, not zero:** every surprise is `actual - expected`, never `actual - 0`. A company can be extraordinary and the stock still a bad buy at today's price. This is the same discipline as ASK "BETTER THAN WHAT?" applied to events instead of portfolios.
+14. **Size does not bound the move:** the intuition that mega-caps cannot move much is false as stated — our own option chain implied **5.10% in one session for a ~$5T company** on 2026-08-26. The defensible version is convexity to a state transition (`STATE_CHANGE_ELASTICITY`), and it replaces market cap as a ranking input rather than dressing it up.
+15. **Silence is never success:** every scheduled process emits a receipt even when it does nothing. A log that stops, a count that never grows, a gate that cannot go green, a warning printed fifty-three times — each has already cost this project real days. "No output" is not an accepted healthy state anywhere. Corollary, learned 2026-08-26: **absence of a local object is not evidence of absence** — fetch before concluding something was never committed.
+16. **Generation is free; promotion is rationed:** any agent that can produce five thousand variants will find a beautiful t-statistic in noise. Preregistration controls *editing* a hypothesis, not *how many were seen*. Every research family carries a persistent budget and is charged for every cell LOOKED AT, and family IDs must be enumerated so a new name cannot mint fresh budget.
+
+---
+
+*Points 13-16 added 2026-08-26 (session 13). Points 1-12 are the original file.
+The lane list this governs is `ROADMAP_2026-08-26_HUMAN_HEURISTICS_AND_FAST_RESEARCH.md`.*
