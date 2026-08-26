@@ -496,7 +496,7 @@ Receipt: `FINDING_2026-08-26_BREADTH_IS_FLAT_ACROSS_DRAWDOWN.md` (hackathon repo
 | `AI_DEPRECIATION_REALITY_GAP_v1` | **PHASE 1 DONE, and the control spoils the story.** Implied life rises AMZN +92%, **AAPL +85%**, ORCL +61%, MSFT +54%; **NVDA −7%**. Apple is not a hyperscaler, so this is large-cap tech generally or a mix shift — **not cleanly AI**. A lead, not a finding. |
 | `CONTINUOUS_REUNDERWRITING` | **DONE.** And it found that `EVENT_NODE_CAP` counts tags no brain writes. |
 | Marginal Alpha Contribution | **DONE** as marginal contribution to concentration. On exp1, removing NVDA makes the book *worse* — cutting by size cuts the wrong name. |
-| `NEEDS_GRAPH_v1` | **not started** — but its two inputs (the contagion chain and elasticity) now both exist. |
+| `NEEDS_GRAPH_v1` | **DONE, shadow only.** Constrained = growth AND margin expansion, jointly. **6 of 7 nodes qualify, so the binary discriminates nothing** — the analyst panel's failure again. The ORDERING survives: memory/HBM **+39.9pp** vs +7.3pp for the next node. The row that FAILS (servers/ODM, +47% growth on −4.6pp margin) is what validates the metric. And the node with the most pricing power has the LEAST torque, so diagnosis and expression point at different places. |
 
 ### What is still genuinely blocked, and why
 
