@@ -28,10 +28,15 @@ so the evidence can be gathered; the routing comes after.
 
 CONFIGURED IS NOT WORKING
 =========================
-`status()` distinguishes three states and never collapses them:
+`status()` distinguishes four states and never collapses them:
 
     absent      no env var at all
     configured  a key is present -- says NOTHING about whether it answers
+    unprobed    a KEYLESS provider (a local server). There is nothing to
+                configure, so a config read carries no information about it;
+                calling it "configured" would be a readiness claim with no
+                evidence -- the ANTHROPIC_API_KEY mistake with the sign flipped
+    down        keyless, probed, and nothing answered
     live        a real request came back
 
 That distinction is the whole point. An `ANTHROPIC_API_KEY=` line with an empty
@@ -83,6 +88,20 @@ PROVIDERS: dict[str, dict[str, str]] = {
         "key_env": "HF_TOKEN",
         "default_model": "meta-llama/Llama-3.3-70B-Instruct",
     },
+    "local": {
+        # llama.cpp's own OpenAI-compatible server:
+        #   C:\Users\mrthn\llama\bin\llama-server.exe -m <gguf> --port 8080 -ngl 99
+        # Verified 2026-08-27 that the CUDA 13.3 build sees the RTX 5060
+        # (Blackwell / sm_120). The CUDA 12.4 build does NOT and falls back to
+        # CPU silently -- fast enough to look like it worked.
+        #
+        # key_env is None: a local server needs no credential. That is NOT the
+        # same as being configured, and `status()` refuses to conflate them --
+        # see the `unprobed` state below.
+        "base_url": "http://127.0.0.1:8080/v1",
+        "key_env": None,
+        "default_model": "local",   # llama-server serves whatever it was given
+    },
 }
 
 #: Appended to every system prompt. `deepseek-chat` code-switches to Chinese when
@@ -118,7 +137,14 @@ def _key(name: str) -> str:
         raise ProviderRefusal(f"unknown provider {name!r}; have {sorted(PROVIDERS)}")
     # `.strip()` matters: an `X=` line with an empty value is ABSENT, not
     # configured. That exact shape made ANTHROPIC_API_KEY read as live.
+    if spec["key_env"] is None:
+        return ""          # keyless (a local server); see needs_key()
     return os.getenv(spec["key_env"], "").strip()
+
+
+def needs_key(name: str) -> bool:
+    """False for a local server, which has no credential to be missing."""
+    return PROVIDERS[name]["key_env"] is not None
 
 
 def configured(name: str) -> bool:
@@ -133,7 +159,7 @@ def complete(name: str, prompt: str, *, system: str = "You are a precise researc
     if spec is None:
         raise ProviderRefusal(f"unknown provider {name!r}; have {sorted(PROVIDERS)}")
     key = _key(name)
-    if not key:
+    if not key and needs_key(name):
         raise ProviderRefusal(
             f"{name} is not configured: set {spec['key_env']}. This is a REFUSAL and not a "
             "fallback to another provider -- silently answering from a different model is how "
@@ -145,10 +171,12 @@ def complete(name: str, prompt: str, *, system: str = "You are a precise researc
         "max_tokens": max_tokens,
         "temperature": temperature,
     }
+    headers = {"content-type": "application/json"}
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
     req = urllib.request.Request(
         spec["base_url"].rstrip("/") + "/chat/completions", method="POST",
-        data=json.dumps(body).encode(),
-        headers={"Authorization": f"Bearer {key}", "content-type": "application/json"})
+        data=json.dumps(body).encode(), headers=headers)
     t0 = time.monotonic()
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -193,6 +221,27 @@ def status(*, probe: bool = False, timeout: int = 30) -> dict[str, dict]:
     """
     out: dict[str, dict] = {}
     for name, spec in PROVIDERS.items():
+        if not needs_key(name):
+            # A KEYLESS provider is never "configured": there is nothing to
+            # configure, so a config read carries no information about it at all.
+            # Calling it configured would be the ANTHROPIC_API_KEY mistake with
+            # the sign flipped -- a claim of readiness with no evidence behind it.
+            row = {"state": "unprobed", "key_env": None,
+                   "base_url": spec["base_url"],
+                   "why": "no credential needed; only a probe can say whether the "
+                          "server is running"}
+            if probe:
+                try:
+                    rep = complete(name, "Reply with the single word: ready.",
+                                   max_tokens=64, timeout=timeout)
+                    row.update(state="live", latency_s=rep.latency_s, model=rep.model,
+                               reply=rep.text.strip()[:40], why="a real request came back")
+                except ProviderRefusal as exc:
+                    row.update(state="down", error=str(exc)[:200],
+                               why="nothing answered at the local endpoint -- "
+                                   "is llama-server running?")
+            out[name] = row
+            continue
         if not configured(name):
             out[name] = {"state": "absent", "key_env": spec["key_env"],
                          "why": f"{spec['key_env']} is unset or empty"}
