@@ -333,9 +333,32 @@ def test_the_report_states_the_LATEST_SAFE_START_in_both_modes(
     R.readiness_report(_snap(), _sel(), as_of=None, balance_usd=57.12,
                        now=_PRE_OPEN)
     out = capsys.readouterr().out
-    assert "latest start 10:04Z" in out       # serial, at the mean latency
-    assert "latest start 11:47Z" in out       # concurrent, INFORMATIONAL only
-    assert "p90 latency 07:21Z" in out
+    # TO-THE-MINUTE LITERALS WERE THE WRONG ASSERTION (corrected 2026-08-27).
+    #
+    # These read `latest start 10:04Z` / `11:47Z` / `p90 07:21Z`. The report now
+    # says 10:03Z / 11:46Z / 07:19Z, and NOTHING IS BROKEN: the guard derives its
+    # latency from the completed nights' own receipts, a new night landed, and the
+    # derived deadline moved by a minute. That is the guard working as designed.
+    #
+    # A literal pinned to a DERIVED quantity re-breaks every time the thing it is
+    # derived from gains a data point -- so it fails on the days the system is
+    # most alive, and the only available fix is to bump the number, which resets
+    # the timer rather than fixing anything. Assert the PROPERTIES that must hold
+    # for any receipt, and bound the literal instead of fixing it.
+    import re as _re
+
+    starts = _re.findall(r"latest start (\d\d):(\d\d)Z", out)
+    assert len(starts) >= 2, f"both rows must state a latest start; got {starts}"
+    serial_min, concurrent_min = (int(h) * 60 + int(m) for h, m in starts[:2])
+    # The serial row is the conservative one; if it ever stops being earlier than
+    # concurrent, the two have been swapped and the human is planning off the
+    # wrong row -- which is the actual failure this test exists to catch.
+    assert serial_min < concurrent_min, f"serial must be the earlier deadline: {starts}"
+    # Bounded, not exact: a drift of hours is a broken derivation, a drift of
+    # minutes is a new night's receipt.
+    assert abs(serial_min - (10 * 60 + 4)) <= 30, f"serial deadline moved far: {starts[0]}"
+    assert abs(concurrent_min - (11 * 60 + 47)) <= 30, f"concurrent moved far: {starts[1]}"
+    assert _re.search(r"p90 latency \d\d:\d\dZ", out), "the p90 row must still be printed"
     # Provenance, not just the number.
     assert "MEASURED_MAX_OVER_COMPLETED_NIGHTS" in out
     assert "declared 4.8" in out

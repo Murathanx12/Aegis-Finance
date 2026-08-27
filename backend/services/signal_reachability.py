@@ -127,6 +127,12 @@ CLASSIFIED: dict[str, str] = {
         "OK — the suite. It reaches the system, not the other way round."),
     "backend.services.copy_lab": (
         "OK — offline lane research; invoked by the attended lane tooling."),
+    "backend.services.model_provider": (
+        "OK -- attended CLI (`python -m backend.services.model_provider --probe`). "
+        "One OpenAI-compatible contract for DeepSeek/NVIDIA/HF so adding a model is a "
+        "row and not a client. Deliberately has NO caller in the request path: it has "
+        "no trading authority and the router that would use it needs benchmark "
+        "evidence that does not exist yet."),
     "backend.services.signal_reachability": (
         "OK — this module. It audits the graph it sits in; being inside its "
         "own answer is the one case where unreachable is correct."),

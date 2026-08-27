@@ -758,7 +758,34 @@ def _case_information_bus():
     return (_run, BusDrift, "a frozen state reading an undeclared family")
 
 
+def _case_model_provider():
+    """Ask an UNCONFIGURED provider for a completion.
+
+    The missing input is the credential. Refusing matters more here than in most
+    guards because the tempting alternative is a silent fallback to whichever
+    provider does have a key -- and a benchmark that quietly answers from a
+    different model is measuring the wrong one while looking healthy.
+
+    Offline by construction: the refusal happens before any request is built, so
+    this never touches the network.
+    """
+    import os
+
+    from backend.services.model_provider import ProviderRefusal, complete
+
+    def _run():
+        saved = os.environ.pop("HF_TOKEN", None)
+        try:
+            complete("huggingface", "this must never be sent")
+        finally:
+            if saved is not None:
+                os.environ["HF_TOKEN"] = saved
+
+    return (_run, ProviderRefusal, "a provider with no credential")
+
+
 CASES = {
+    "model_provider": _case_model_provider,
     "aegis_panel": _case_aegis_panel,
     "signal_reachability": _case_signal_reachability,
     "execution_ledger": _case_execution_ledger,
