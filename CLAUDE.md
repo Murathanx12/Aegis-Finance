@@ -66,6 +66,28 @@ local object is not evidence of absence.** I reported both of those documents as
 never committed, having run `git cat-file` against unfetched refs and looked at
 the wrong path. Fetch first, then check, and check the real path.
 
+## TWO REPOSITORIES, AND WHICH ONE HOLDS WHAT (2026-08-27)
+
+This repo is **Aegis-Finance** (`github.com/Murathanx12/Aegis-Finance`, public):
+the research programme, the farm, the website, the brain.
+
+The **Alpaca hackathon agent is a SEPARATE repo** — `aegis-alpha-terminal` locally,
+`github.com/Murathanx12/investing-bot-test-` on GitHub, also public. It holds the
+paper books, the ledger, the arms, the strategy contracts and
+**`docs/HANDOFF.md`**, which is the session-continuity file for competition work.
+
+`docs/HANDOFF.md` does NOT exist in Aegis-Finance and is not supposed to. A
+2026-08-27 reviewer looked for it here, 404'd, could not see the other repo
+through the connected account, and concluded the newest work was outside version
+control. It was not — it was one repo over, public, and pushed. The observation
+was accurate and the inference was wrong, which is the same shape as
+[[feedback-verify-the-persistence-claim]]: **absence of a local object is not
+evidence of absence.** The cheap fix is this paragraph, so nobody spends the
+hour again.
+
+Commits move between the two only by hand. A commit hash quoted in a handoff
+belongs to whichever repo that handoff lives in.
+
 ## THE BOTTLENECK (diagnosed 2026-08-24 — `docs/ROADMAP_2026-08-24_CONNECT_THE_BRAIN.md`)
 
 > All ten arena books declare `selection: composite_top_k` over ONE signal.
