@@ -76,7 +76,34 @@ def config_bytes(path: Path | None = None) -> bytes:
 
 
 def config_hash(path: Path | None = None) -> str:
-    return hashlib.sha256(config_bytes(path)).hexdigest()
+    """SHA-256 of the configuration, with LINE ENDINGS NORMALISED first.
+
+    THE HASH MUST IDENTIFY THE CONFIGURATION, NOT THE CHECKOUT.
+
+    Both copy-lab lanes were seeded on 2026-08-14 and every pass since then
+    refused with `ConfigDrift`:
+
+        seeded under 697ddd4e0005, file on disk hashes to 727963034563
+
+    The file had not changed — `git log` shows one commit, the seeding one.
+    Git's autocrlf had rewritten 247 line endings to CRLF on checkout, and this
+    function hashed raw bytes, so the identity of a strategy changed because of
+    a platform convention. Two paper books sat at `last_nav: null` for fourteen
+    days and nothing reported it, because nothing schedules these lanes and a
+    refusal nobody reads is indistinguishable from a lane with no events.
+
+    Normalising is not a weakening of the guard. A line ending is not a
+    configuration: no threshold, holding period, sizing rule or universe can
+    differ between two files that are equal after normalisation. Any real edit
+    still changes the hash and still stops the lane.
+
+    It is also backward compatible by construction — the seeded hashes were
+    computed when the working tree held LF, and LF-normalising an LF file is
+    the identity. So this revives the existing lanes rather than orphaning them,
+    which matters because a changed configuration is a NEW lane and re-seeding
+    would have thrown away the inception date.
+    """
+    return hashlib.sha256(config_bytes(path).replace(b"\r\n", b"\n")).hexdigest()
 
 
 def load_lanes(path: Path | None = None) -> dict[str, LaneSpec]:

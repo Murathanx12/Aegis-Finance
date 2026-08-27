@@ -483,3 +483,43 @@ def test_everything_is_written_inside_the_copy_lab_namespace(lane, tmp_path):
     written = {p.relative_to(root).parts[0]
                for p in root.rglob("*") if p.is_file()}
     assert written == {spec.lane_id}
+
+
+# --------------------------------------------------------------------------
+# CONFIG HASH IDENTIFIES THE CONFIGURATION, NOT THE CHECKOUT
+#
+# Both lanes were seeded 2026-08-14 and every pass afterwards refused with
+# ConfigDrift: seeded 697ddd4e0005, disk hashes to 727963034563. The file had
+# not changed -- git log shows one commit. Git's autocrlf had rewritten 247
+# line endings on checkout, and config_hash hashed raw bytes, so a strategy's
+# IDENTITY changed because of a platform convention. Two paper books sat at
+# last_nav=null for fourteen days and nothing reported it.
+# --------------------------------------------------------------------------
+def test_config_hash_is_insensitive_to_line_endings(tmp_path):
+    from backend.services.copy_lab import lanes as L
+
+    body = "defaults:\n  holding_days: 126\nlanes:\n  X:\n    active: false\n"
+    lf = tmp_path / "lf.yaml"
+    crlf = tmp_path / "crlf.yaml"
+    lf.write_bytes(body.encode())
+    crlf.write_bytes(body.replace("\n", "\r\n").encode())
+
+    assert crlf.read_bytes() != lf.read_bytes(), "the fixture must differ on disk"
+    assert L.config_hash(lf) == L.config_hash(crlf), (
+        "a line ending is not a configuration -- no threshold, holding period, "
+        "sizing rule or universe can differ between two files equal after "
+        "normalisation"
+    )
+
+
+def test_config_hash_still_changes_on_a_real_edit(tmp_path):
+    """Normalising must not weaken the guard it was protecting."""
+    from backend.services.copy_lab import lanes as L
+
+    a = tmp_path / "a.yaml"
+    b = tmp_path / "b.yaml"
+    a.write_bytes(b"defaults:\n  holding_days: 126\n")
+    b.write_bytes(b"defaults:\n  holding_days: 252\n")
+    assert L.config_hash(a) != L.config_hash(b), (
+        "changing a holding period must still make this a NEW lane"
+    )
