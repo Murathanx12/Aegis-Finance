@@ -122,6 +122,11 @@ def replay_symbol(symbol: str, *, hold: int, short_delta: float,
     close = u.set_index("date")["close"].astype(float)
     by_date = {d: g for d, g in q.groupby("date")}
 
+    # Trailing 20-session realised vol, annualised, known STRICTLY BEFORE the
+    # decision: shift(1) so the entry date's own return is not inside it.
+    _r = close.pct_change()
+    rv = (_r.rolling(20).std() * np.sqrt(252.0)).shift(1)
+
     rows, skipped = [], {}
 
     def skip(why):
@@ -185,6 +190,15 @@ def replay_symbol(symbol: str, *, hold: int, short_delta: float,
         rec["short_put_spread_risk"] = max_loss
         rec["credit_ratio"] = credit / width
         rec["short_delta"] = float(short["delta"])
+        # STATE at entry, for the conditional question. `short_iv` is what the
+        # market charged in vol terms; `rv20` is what the underlying had just
+        # delivered. Their difference is the variance risk premium actually on
+        # offer, and it is the only quantity that could make a globally
+        # unprofitable structure conditionally profitable.
+        rec["short_iv"] = (float(short["impl_volatility"])
+                           if pd.notna(short["impl_volatility"]) else np.nan)
+        rec["rv20"] = float(rv.get(d0, np.nan))
+        rec["vrp"] = rec["short_iv"] - rec["rv20"]
 
         # ---- 2. CALL DEBIT SPREAD: the convexity alternative ---------------
         ca = calls0.dropna(subset=["delta"])
