@@ -1,0 +1,36 @@
+{
+  "year": 2022,
+  "rows": 1577658,
+  "under_rows": 1004,
+  "secids": {
+    "SPY": 109820,
+    "QQQ": 107899,
+    "IWM": 106445,
+    "SMH": 151720
+  },
+  "filter": {
+    "dte": [
+      14,
+      45
+    ],
+    "moneyness": [
+      0.55,
+      1.45
+    ],
+    "why_not_delta": "delta moves with the underlying, so a delta filter drops the EXIT quotes of trades that went wrong and silently deletes the losing tail",
+    "best_bid": "> 0 -- excludes untradeable zero-bid options, which biases TOWARD tradeability by design"
+  },
+  "strike_units": "opprcd stores strike_price x1000; divided once here",
+  "pulled_at": "2026-08-27T20:46:57.239412+00:00",
+  "dates": [
+    "2022-01-03",
+    "2022-12-30"
+  ],
+  "by_secid": {
+    "SPY": 603811,
+    "QQQ": 503786,
+    "IWM": 351806,
+    "SMH": 118255
+  },
+  "delta_null_frac": 0.08197404000106487
+}

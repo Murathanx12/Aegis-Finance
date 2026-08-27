@@ -232,6 +232,27 @@ Seven things from it that govern what counts as progress
   `characteristics.join_pit_series`, so there is exactly one place the
   `side="left"` lookahead can be typed wrong;
 
+- **THE FOURTH SOURCE PRICES INSTRUMENTS, NOT STOCKS** (added 2026-08-28,
+  `scripts/wrds_pull_etf_option_quotes`, 11,859,415 rows in
+  `backend/data/optimus/wrds/optionm_etf_quotes/`). The first three sources all
+  describe COMPANIES. `optionm.opprcd` is listed best bid / best offer per
+  contract per day, 1996-2025, and it answers a question none of the others can:
+  **what did the market CHARGE for a payoff, and did the payoff beat the
+  charge?** A structure priced with Black-Scholes at an assumed sigma cannot
+  answer that, because the price is the input
+  (`docs/FINDING_2026-08-28_THE_CORE_WAS_NEVER_PRICED.md` — a 70%-of-risk
+  allocation refuted by this data before it was funded).
+
+  Three traps, all paid for:
+  **secids are verified by ROW COUNT, never by ticker match** — `optionm.securd`
+  returns four rows for 'SPY' and three carry almost no options (SPY=109820,
+  QQQ=107899, IWM=106445, SMH=151720); **`forward_price` is 100% NULL**, so join
+  `optionm.secprd` for spot; and **never filter the pull on `delta`** — delta
+  moves with the underlying, so a delta band drops the EXIT quotes of trades that
+  went wrong and silently deletes the losing tail. Filter on MONEYNESS, which
+  the outcome cannot move, and bound DTE by the whole lifecycle rather than by
+  the entry;
+
 - **REPRODUCE A KNOWN FACT BEFORE TRUSTING A NOVEL ONE**
   (`python -m scripts.portfolio_farm_calibrate`). Not exact factor returns —
   universes and conventions differ — but the coarse facts a correct join cannot

@@ -523,3 +523,79 @@ def test_config_hash_still_changes_on_a_real_edit(tmp_path):
     assert L.config_hash(a) != L.config_hash(b), (
         "changing a holding period must still make this a NEW lane"
     )
+
+
+# --------------------------------------------------------------------------
+# SILENT_CASH_SENTINEL_v1
+#
+# The 14-day stoppage was invisible because a lane that REFUSED and a lane that
+# RAN AND FOUND NOTHING wrote byte-identical state. These pin the distinction.
+# --------------------------------------------------------------------------
+def test_sentinel_dormant_lane_is_not_a_failure():
+    """A guard that cannot go green teaches the reader to skim red lines."""
+    from backend.services.copy_lab import sentinel as S
+
+    class Spec:
+        active = False
+
+    h = S.inspect_lane("ANYTHING", spec=Spec())
+    assert h.status == S.DORMANT, (
+        "12 of 14 lanes are deliberately inactive; reporting them FAIL puts "
+        "twelve permanent red lines beside two real ones"
+    )
+
+
+def test_sentinel_zero_positions_with_no_receipt_is_a_FAILURE(tmp_path):
+    """An empty book is only a decision if something says the engine ran."""
+    from backend.services.copy_lab import sentinel as S, store
+
+    lane = "L"
+    d = tmp_path / lane
+    d.mkdir(parents=True)
+    (d / "seed.json").write_text('{"lane_id": "L", "config_hash": "x"}')
+    store.write_positions(lane, {"cash": 100000, "positions": {}}, root=tmp_path)
+
+    h = S.inspect_lane(lane, root=tmp_path)
+    assert h.status == S.FAIL
+    assert any("NO RECEIPT" in r for r in h.reasons), h.reasons
+
+
+def test_sentinel_never_marked_nav_is_a_FAILURE(tmp_path):
+    """'Edge is 0%' meant NO EVIDENCE, and read as a measured zero."""
+    from backend.services.copy_lab import sentinel as S, store
+
+    lane = "M"
+    d = tmp_path / lane
+    d.mkdir(parents=True)
+    (d / "seed.json").write_text('{"lane_id": "M", "config_hash": "x"}')
+    store.write_positions(lane, {"cash": 1, "positions": {"AAPL": 1}},
+                          root=tmp_path)
+
+    h = S.inspect_lane(lane, root=tmp_path)
+    assert h.status == S.FAIL
+    assert any("NO NAV ROWS" in r for r in h.reasons), h.reasons
+
+
+def test_sentinel_stale_source_is_reported_as_stopped(tmp_path):
+    """A stale feed does not read as an error -- it reads as 'no events'."""
+    import json as _json
+    from datetime import datetime, timedelta, timezone
+
+    from backend.services.copy_lab import sentinel as S, store
+
+    lane = "N"
+    d = tmp_path / lane
+    (d / "receipts").mkdir(parents=True)
+    (d / "seed.json").write_text('{"lane_id": "N", "config_hash": "x"}')
+    store.write_positions(lane, {"cash": 1, "positions": {"AAPL": 1}},
+                          root=tmp_path)
+    store.append_nav(lane, [{"date": datetime.now(timezone.utc).isoformat(),
+                             "nav": 100000}], root=tmp_path)
+    old = (datetime.now(timezone.utc) - timedelta(days=16)).isoformat()
+    (d / "receipts" / "r.json").write_text(_json.dumps(
+        {"ran_at": datetime.now(timezone.utc).isoformat(),
+         "sources": {"form4": old}}))
+
+    h = S.inspect_lane(lane, root=tmp_path)
+    assert h.status == S.FAIL
+    assert any("SOURCE STALE" in r for r in h.reasons), h.reasons

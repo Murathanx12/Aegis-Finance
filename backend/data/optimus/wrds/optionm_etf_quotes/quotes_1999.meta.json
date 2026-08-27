@@ -1,0 +1,36 @@
+{
+  "year": 1999,
+  "rows": 13757,
+  "under_rows": 459,
+  "secids": {
+    "SPY": 109820,
+    "QQQ": 107899,
+    "IWM": 106445,
+    "SMH": 151720
+  },
+  "filter": {
+    "dte": [
+      14,
+      45
+    ],
+    "moneyness": [
+      0.55,
+      1.45
+    ],
+    "why_not_delta": "delta moves with the underlying, so a delta filter drops the EXIT quotes of trades that went wrong and silently deletes the losing tail",
+    "best_bid": "> 0 -- excludes untradeable zero-bid options, which biases TOWARD tradeability by design"
+  },
+  "strike_units": "opprcd stores strike_price x1000; divided once here",
+  "pulled_at": "2026-08-27T20:36:42.209472+00:00",
+  "dates": [
+    "1999-03-10",
+    "1999-12-31"
+  ],
+  "by_secid": {
+    "SPY": 0,
+    "QQQ": 13757,
+    "IWM": 0,
+    "SMH": 0
+  },
+  "delta_null_frac": 0.05473577088027913
+}
