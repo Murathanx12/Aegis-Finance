@@ -36,6 +36,17 @@ result requires evidence just as a positive one does, and **a global negative
 does not answer a conditional question that was never asked** (scope-aware
 verdicts, `docs/HANDOFF_2026-08-16_BRAIN_TO_BUILDER.md` §2).
 
+## READ `docs/INDEX.md` FIRST (2026-08-28) — and the VISION file
+
+268 docs, 69 roadmaps/handoffs. `docs/INDEX.md` tiers them; a session loads
+TIER 0 (`AEGIS_STRATEGIC_INVARIANTS.md`,
+`AEGIS_VISION_2026-08-28_MURAT_IN_HIS_OWN_WORDS.md`, `OPTIMUS_OBJECTIVE.md` §0)
+and the ONE current TIER 1 roadmap, and retrieves the rest by question. The
+VISION file holds Murat's intent verbatim — whole-market news, Asia first,
+coverage normalisation, situational not universal, instinct as a typed
+hypothesis, the pre-open prediction book and the discovery-failure autopsy —
+because it was said four times in a week and lost each time.
+
 ## THE NORTH STAR IS A SEPARATE FILE (adopted 2026-08-26)
 
 `docs/AEGIS_STRATEGIC_INVARIANTS.md` — sixteen points, read it BEFORE this
