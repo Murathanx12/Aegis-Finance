@@ -88,6 +88,13 @@ hour again.
 Commits move between the two only by hand. A commit hash quoted in a handoff
 belongs to whichever repo that handoff lives in.
 
+**Where the trading loop RUNS (2026-08-28):** Railway project `loving-elegance`,
+one service per account role (`aat-loop-<role>`), volume at `/app/state`,
+image from the terminal repo's `Dockerfile`. The laptop no longer has to be
+on. Railway project `selfless-courage` / `Aegis-Finance` is THIS repo's website
+backend and places no orders. `railway logs --service aat-loop-<role>` is the
+heartbeat; a laptop PID is not.
+
 ## THE BOTTLENECK (diagnosed 2026-08-24 — `docs/ROADMAP_2026-08-24_CONNECT_THE_BRAIN.md`)
 
 > All ten arena books declare `selection: composite_top_k` over ONE signal.
