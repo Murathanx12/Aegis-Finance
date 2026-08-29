@@ -11,7 +11,8 @@ retrieval and load TIER 0 + the current TIER 1 verbatim.
 - `../CLAUDE.md` — operating rules (licences, farm lessons, provider, traps).
 
 ## TIER 1 — CURRENT ROADMAP (one file; supersedes all dated roadmaps)
-- `ROADMAP_2026-08-26_HUMAN_HEURISTICS_AND_FAST_RESEARCH.md` — lanes, gates not dates.
+- `ROADMAP_2026-08-29_WEEKEND_TO_MONDAY.md` — Sat 29 Aug → Mon 31 Aug open: Friday attribution (LEVERAGE 300% gross, not only correlation), Murat's selection rule reconstructed, five Monday-safety patches, build order. Absorbs the unmerged `ACTIVE_ROADMAP.md` on branch `docs/canonical-integration-20260828`.
+- `ROADMAP_2026-08-26_HUMAN_HEURISTICS_AND_FAST_RESEARCH.md` — the standing lane list (gates not dates); paused behind the file above until 4 Sep.
   Amended by the VISION file §4: the priority is the artery
   `event mesh → causal graph → under-covered generator → conditional backtester → prediction ledger → portfolio → autopsy`.
 - Competition (28 Aug – 4 Sep) lives in the OTHER repo: `aegis-alpha-terminal/docs/HANDOFF.md`, `FLEET_2026-08-28.md`, `STRATEGY_REVIEW_2026-08-28.md`.
