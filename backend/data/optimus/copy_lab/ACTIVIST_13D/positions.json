@@ -3,6 +3,6 @@
   "cash": 100000.0,
   "positions": {},
   "closed": [],
-  "last_nav": null,
-  "last_marked": null
+  "last_nav": 100000.0,
+  "last_marked": "2026-08-27"
 }

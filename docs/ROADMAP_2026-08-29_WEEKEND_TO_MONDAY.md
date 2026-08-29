@@ -234,8 +234,13 @@ Murat lane at 3%/name under the gross cap, and the attended human thesis.
 - Local, Sat ~13:40 SGT: condensed digest on **Featherless**, 48h window,
   Murat's names appended (`--symbols SLDP DKNG HUBS BHVN AMSC KYTX PRCH NTLA
   ABSI QUBT AARD SOC TSM MU MRVL AMD SRRK OLMA SLNO BEAM`). Output:
-  `state/premarket/2026-08-29.json` (local copy) — see the session log for
-  the table; it is a SHADOW read, nothing trades on it.
+  `state/premarket/2026-08-29.json` (local). 156 names, 394 headlines, 67 East
+  articles, Featherless only. Top: RBRK +10%/3s (score 4.0), AFRM, HPQ, ESTC,
+  S, CRWD, NVDA (+5%, analysts to $400), AMD −5% (tariffs), MRVL −8% (already
+  priced 0.9). **Not one of Murat's twenty names received a bet** — none had an
+  Alpaca headline in 48h. That is the coverage gap in one line: the pipe only
+  sees what Benzinga wrote about, so it re-discovers this week's earnings
+  prints and never SLDP/KYTX/AARD. SHADOW; nothing trades on it.
 - `discovery_autopsy` for 28 Aug ran on Railway; the local receipt
   `state/autopsy/discovery_2026-08-28.json` exists and is unread by any
   consumer (Sunday item).
