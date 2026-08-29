@@ -138,6 +138,25 @@ named in the receipt.
 
 ## 4. MONDAY-SAFETY PATCHES — before 21:30 SGT Monday, in this order
 
+**STATUS 2026-08-29 ~23:30 SGT (Opus): ALL SIX SHIPPED, DEPLOYED, VERIFIED.**
+P0.4 (`alpha/drivers.py`: declared themes are the floor, measured correlation
+may only MERGE two drivers, never split one; cap 40% of the profile's own gross
+authority, so basket worst case at the 8% stop falls -8% -> -3.2%). P0.5
+(`alpha/protect.py`: `covered >= want_qty` called SIDE FLIP, SHRINK and STACKED
+"kept"; all three were live, all three now fail first). P0.2 remainder
+(`alpha/crossbook.py` + `scripts/fleet --overlap`, which found BE held by hack3
+in shares AND hack5 in calls RIGHT NOW). Plus, unplanned and larger than any of
+them: **the counterfactual was publishing +$62,687,334 on a $99,250 book and
+concluding "the gate is discarding edge -- loosen it or explain it"** -- the
+options x100 multiplier applied to share legs, a floor with no ceiling, and a
+pair priced from a hedge ratio nobody recorded. And Murat's rule conditions (a)
+and (b) are now MEASURED, not asked: (a) 0/20 -> 14/20 resolvable, which puts
+**BHVN (1.23) and SRRK (1.06) BELOW their own rule's upside bar** while MU
+(1.61) passes. Terminal commits 11e31eb..c3b83cc; suite 43 -> 48 suites / 1,946
+checks; deploys now carry `AAT_BUILD_COMMIT` and are verifiable from outside for
+the first time. Full receipt: `docs/SESSION_2026-08-29_OPUS_BUILD.md` in the
+terminal repo.
+
 **STATUS 2026-08-29 21:30 SGT (Fable):** P0.0, P0.1, P0.2 (DTE + break-even + 15% premium; NOT the cross-account basket-overlap refusal), P0.3 (as a no-entry window 09:30–09:45, not a stop-width change) **SHIPPED and DEPLOYED** — terminal commit 9e47576 + the per-profile notional cap (basket 10%/name). P0.4, P0.5 **open** for Opus. Opus's Saturday build (§5 information layer) was reviewed, five required fixes applied, and committed in the same push; Optimus repaired (84108c4).
 
 Murat's rule: fix and improve BEFORE the open, not never. These are small,
