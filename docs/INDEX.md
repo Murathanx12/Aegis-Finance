@@ -8,7 +8,7 @@ retrieval and load TIER 0 + the current TIER 1 verbatim.
 - `AEGIS_STRATEGIC_INVARIANTS.md` — the sixteen points.
 - `AEGIS_VISION_2026-08-28_MURAT_IN_HIS_OWN_WORDS.md` — the intent, verbatim, with corrections and the one missing artery.
 - `OPTIMUS_OBJECTIVE.md` §0 — mission, utility, four personalities.
-- `../CLAUDE.md` — operating rules (licences, farm lessons, provider, traps).
+- `../CLAUDE.md` — operating rules (335 lines since 2026-08-29) + `CLAUDE_LESSONS_2026-08.md` — the long form moved out of it verbatim (farm lessons, layout, tests).
 
 ## TIER 1 — CURRENT ROADMAP (one file; supersedes all dated roadmaps)
 - `ROADMAP_2026-08-29_WEEKEND_TO_MONDAY.md` — Sat 29 Aug → Mon 31 Aug open: Friday attribution (LEVERAGE 300% gross, not only correlation), Murat's selection rule reconstructed, five Monday-safety patches, build order. Absorbs the unmerged `ACTIVE_ROADMAP.md` on branch `docs/canonical-integration-20260828`.
@@ -27,7 +27,7 @@ retrieval and load TIER 0 + the current TIER 1 verbatim.
 - SUE × reaction quadrants (commit 7db0126): the REACTION carries the information.
 - Everything else `FINDING_*.md` / `DECISION_*.md` by date.
 
-## ARCHIVE — dated HANDOFF_* and ROADMAP_* files before 2026-08-26
+## ARCHIVE — `docs/archive/` (93 dated HANDOFF_/ROADMAP_/SESSION_/NIGHT files before 2026-08-23, moved 2026-08-29 with `git mv`, history intact)
 Digest-only. They record what was true when written; a fact from them must be
 re-verified against code or a receipt before it is acted on. Do not load into
 context; ask Optimus.
