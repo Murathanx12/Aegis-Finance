@@ -312,6 +312,8 @@ receipt under `state/`.
 | T9 | **Entry timing** | same signal filled at 09:45 / 10:30 / 15:50 (MOC): the overnight finding says MOC | shadow fills from minute bars | 09:45 | `runner.in_opening_range` is the first cut; T9 decides the rest |
 | T10 | **Asia lead** | do FXI/KWEB/EWJ/EWY moves and HK-listed supplier prints predict the US open gap of mapped names? | ETF closes + a hand-written edge table v0 (~200 edges) | unmapped names | premarket digest East pass gets a NUMBER, not a paragraph |
 
+**STATUS Sat 29 Aug 23:59 SGT:** items 1-3 SHIPPED (terminal commit "News becomes numbers…"): features panel + IC table (event counts carry; narrative does not), T1 blind tournament run = NO INFORMATION (receipt), sensors widened to 80,212 observations / 156 names / 149 with SEC filings. See `aegis-alpha-terminal/docs/FINDING_2026-08-29_BLINDED_NEWS_HAS_NO_DIRECTION_EVENT_COUNTS_DO.md`. T7 is now a CONTROL. Next: 4 → 5 → 6.
+
 Build order for Opus (Sun → Wed), gates not dates:
 1. `scripts/corpus_features.py` panel + IC table (news → numbers; this decides
    which features enter the sealed book) — **being built 29 Aug**.
