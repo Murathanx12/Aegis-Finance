@@ -138,6 +138,8 @@ named in the receipt.
 
 ## 4. MONDAY-SAFETY PATCHES — before 21:30 SGT Monday, in this order
 
+**STATUS 2026-08-29 21:30 SGT (Fable):** P0.0, P0.1, P0.2 (DTE + break-even + 15% premium; NOT the cross-account basket-overlap refusal), P0.3 (as a no-entry window 09:30–09:45, not a stop-width change) **SHIPPED and DEPLOYED** — terminal commit 9e47576 + the per-profile notional cap (basket 10%/name). P0.4, P0.5 **open** for Opus. Opus's Saturday build (§5 information layer) was reviewed, five required fixes applied, and committed in the same push; Optimus repaired (84108c4).
+
 Murat's rule: fix and improve BEFORE the open, not never. These are small,
 each is a refusal that Friday proved necessary, each ships with a test.
 
