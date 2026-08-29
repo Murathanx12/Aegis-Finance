@@ -287,3 +287,45 @@ Murat lane at 3%/name under the gross cap, and the attended human thesis.
 - Do not let the convex book buy what the basket book holds.
 - Do not read a Railway log line as a receipt; read the venue.
 - Do not build the NN before the prediction book has 5 sealed days.
+
+---
+
+## 10. THE WEEK OF 31 AUG — NOVEL TESTS ON THE CORPUS AND THE SIX BOOKS (added Sat 29 Aug 22:40 SGT)
+
+The corpus now holds 12 months of dated news and 6 months of dated future
+events for the names we trade, and six paper books run every session. That is
+enough to test STRATEGIES rather than stocks. Each test below names its
+question, its data, its null and where the paper book comes in. None gets
+order authority until it beats its null out of sample; every one writes a
+receipt under `state/`.
+
+| # | test | question | data / window | null | paper-book role |
+|---|---|---|---|---|---|
+| T1 | **Blind name-swapped LLM tournament** (`scripts/blind_tournament.py`) | once the name, ticker, products and prices are stripped, does 30 days of news carry direction for the next 21 sessions? | corpus 2025-09 → 2026-07, 20 names + SPY, Featherless | shuffled predictions ×200; canary identification rate must be < 5% | T7 runs the same protocol LIVE each pre-open at zero size |
+| T2 | **Refusal-ledger NAV** | what would the book be worth if every refused decision had been taken, by refusal class? | the ledger's counterfactual marks (fixed 29 Aug: units, ceiling, pair fields) | the taken book | the six books ARE the treatment; the refused worlds are the control |
+| T3 | **Sector-lead / laggard** (Murat's thesis) | when ≥3 names in one declared driver get positive attention+sentiment shocks in a week, does the driver's 20-day LAGGARD outperform over the next 21 sessions? | corpus features + `alpha/drivers.py` taxonomy + bars | same-driver leader; random name in the driver | hack6 shadow lane |
+| T4 | **Coverage shock** (the normalisation thesis) | does attention_z > 2 pay MORE for names whose baseline is < 0.5 items/day than for names at > 5/day? | `corpus_features` panel, 2025-09 → 2026-07 | matched z, high baseline | — |
+| T5 | **Catalyst approach / aftermath** | return in the 10 sessions before a dated catalyst vs 10 after, by sector and coverage | corpus `future` rows (earnings/PDUFA/readouts) observed PIT + bars | dates shifted ±30 days | informs whether the basket holds INTO a print |
+| T6 | **Murat's rule cells** | PIT target/price ≥ 1.5 AND drawdown ≥ 20% AND rating ≥ 4.1 → 21/63-day return vs same-sector names failing one condition | broker-note extraction (Opus 26c1d4a), panel ratings, bars | one condition dropped at a time | the THESIS book (hack3) is this rule's live arm |
+| T7 | **Live blind book** | prospectively: blinded pre-open predictions on the day's universe, sealed 09:15, graded at close, beside the NAMED digest | daily from Mon 31 Aug | the named digest's own hit rate — the difference is what the NAME adds | zero size; a prediction book only |
+| T8 | **Two-instrument A/B** | the same decision as shares (hack2) vs defined-risk option (hack4) vs long premium (hack5): P&L per unit of max loss | `alpha/crossbook.py` pairs by decision, fills from the venue | shares | already running; formalise the paired grade |
+| T9 | **Entry timing** | same signal filled at 09:45 / 10:30 / 15:50 (MOC): the overnight finding says MOC | shadow fills from minute bars | 09:45 | `runner.in_opening_range` is the first cut; T9 decides the rest |
+| T10 | **Asia lead** | do FXI/KWEB/EWJ/EWY moves and HK-listed supplier prints predict the US open gap of mapped names? | ETF closes + a hand-written edge table v0 (~200 edges) | unmapped names | premarket digest East pass gets a NUMBER, not a paragraph |
+
+Build order for Opus (Sun → Wed), gates not dates:
+1. `scripts/corpus_features.py` panel + IC table (news → numbers; this decides
+   which features enter the sealed book) — **being built 29 Aug**.
+2. T1 blind tournament, historical — **being built 29 Aug**; T7 is its live twin
+   and reuses the code.
+3. Wider sensors (EDGAR 8-K/4/13D, IR feeds, Alpaca news for the 160-name fleet
+   universe) — **being built 29 Aug**; T4 needs the breadth.
+4. T6 and T3 (one script, `scripts/rule_cells.py`), then T5.
+5. T2 as a nightly report from the existing counterfactual marks.
+6. T9/T10 after the book has a week of sealed predictions.
+
+What "the NVIDIA tools" are (Murat asked twice): the NVIDIA Build key serves
+**models** on an OpenAI-compatible endpoint — chat (kimi, minimax, gemma) and
+**embedding/rerank** models. There is no NVIDIA scraper. Fetching is code
+(Alpaca news, Finnhub, GDELT, SEC EDGAR, IR RSS); NVIDIA embeddings are used
+for novelty and source-independence in the features panel. That is the
+"embedding prototype" the 26 Aug roadmap allowed before 4 Sep.
