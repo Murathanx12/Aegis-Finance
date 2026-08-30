@@ -35,9 +35,10 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 # the composer. The strict contract is unchanged: build() RAISES when the
 # ranking gate is dirty, and this script refuses to print.
 from backend.services.investment_committee import build_page as build  # noqa: E402
+from backend import config as _config                        # noqa: E402
 
-DEFAULT_FUNNEL = ROOT / "docs" / "BUILD1" / "funnel_night10.json"
-DEFAULT_OUT = ROOT / "docs" / "BUILD1"
+DEFAULT_FUNNEL = _config.build1_path("funnel_night10.json")
+DEFAULT_OUT = DEFAULT_FUNNEL.parent
 
 HEADLINE_CAPITALS = (40_000.0, 1_000_000.0, 50_000_000.0)
 

@@ -44,10 +44,11 @@ import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Optional
+from backend import config as _config
 
 logger = logging.getLogger(__name__)
 
-LEDGER_PATH = Path(__file__).resolve().parents[2] / "docs" / "BUILD1" / "llm_ledger.jsonl"
+LEDGER_PATH = _config.build1_path("llm_ledger.jsonl")
 
 #: Hard campaign ceiling in USD (Murat's ruling). The client refuses to call
 #: once the ledger's running total reaches it — a budget that is not enforced

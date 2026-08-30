@@ -22,6 +22,47 @@ PROJECT_ROOT = Path(__file__).parent.parent
 BACKEND_DIR = Path(__file__).parent
 MODEL_DIR = BACKEND_DIR / "models"
 
+# ── BUILD1 artefacts: found, never assumed ────────────────────────────────────
+#
+# `docs/BUILD1/` holds fourteen artefacts that CODE reads and writes, not prose:
+# `llm_ledger.jsonl` (the spend ledger that enforces `CAMPAIGN_BUDGET_USD`),
+# `funnel_night10.json`, `mirror_challenge.json`, the analyst coverage matrix
+# and its probe receipts.
+#
+# On 2026-08-29 a documentation clean-up `git mv`-ed all 92 dated docs -- and
+# the whole of `docs/BUILD1/` with them -- into `docs/archive/`. Nothing in the
+# move was wrong; every consumer that hardcoded the old path was.
+#
+# The consequence was not a broken import. `llm_research.spent_usd()` returns
+# **0.0 when the ledger file is absent**, so the budget gate quietly forgot 71
+# recorded calls and would have re-authorised the full $30 campaign budget. The
+# only visible symptom was one red test out of 6,018, about a different file.
+#
+# The docstring on `llm_research._mirror` already warned that "re-pointing a
+# budget gate during an instrumentation change is how budgets stop being
+# enforced". It was right, and a comment cannot enforce itself -- which is why
+# the fix is a RESOLVER plus `test_build1_paths.py`, not a corrected constant.
+BUILD1_DIRS = (PROJECT_ROOT / "docs" / "BUILD1",
+               PROJECT_ROOT / "docs" / "archive" / "BUILD1")
+
+
+def build1_path(name: str) -> Path:
+    """Where BUILD1 artefact `name` actually is, searching live then archive.
+
+    An EXISTING file wins wherever it lives, so an append-only ledger keeps
+    appending to its own history instead of starting a fresh empty one beside
+    it. When the file does not exist yet, the first candidate DIRECTORY that
+    exists is used, falling back to the live path so a first write lands in the
+    live tree and an error message names somewhere a human recognises.
+    """
+    for d in BUILD1_DIRS:
+        if (d / name).exists():
+            return d / name
+    for d in BUILD1_DIRS:
+        if d.is_dir():
+            return d / name
+    return BUILD1_DIRS[0] / name
+
 # Mutable runtime state (the PI SQLite DB + APScheduler job store) lives here.
 # On Railway this MUST point at a persistent volume mounted at a path that does
 # NOT shadow the image: set AEGIS_DATA_DIR=/data and mount the volume at /data.

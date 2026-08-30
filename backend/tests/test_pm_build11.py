@@ -914,9 +914,14 @@ def test_18d_a_past_earnings_date_is_not_an_upcoming_catalyst(monkeypatch):
 
 def test_19_the_source_coverage_matrix_is_committed_with_receipts():
     """No "unavailable" claim without a printed status code."""
-    doc = Path(__file__).resolve().parents[2] / "docs" / "BUILD1" / \
-        "ANALYST_SOURCE_COVERAGE.md"
-    receipt = doc.parent / "analyst_source_probe_DKNG.json"
+    # RESOLVED, not hardcoded. This test failed for six consecutive CI runs
+    # after the 2026-08-29 docs clean-up `git mv`-ed docs/BUILD1 into
+    # docs/archive/. Nothing about the FACT under test changed -- the matrix and
+    # its receipts were still committed, still complete -- so a test that dies
+    # on a directory rename was testing the wrong thing.
+    from backend import config as _config
+    doc = _config.build1_path("ANALYST_SOURCE_COVERAGE.md")
+    receipt = _config.build1_path("analyst_source_probe_DKNG.json")
     assert doc.exists(), "the coverage matrix must be committed"
     assert receipt.exists(), "the raw probe output must be committed"
     data = json.loads(receipt.read_text(encoding="utf-8"))

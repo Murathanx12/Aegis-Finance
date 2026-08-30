@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+from backend import config as _config                        # noqa: E402
 from backend.config import book_lanes                        # noqa: E402
 from backend.services import pm_engine                       # noqa: E402
 from backend.services import portfolio_factory as PF         # noqa: E402
@@ -42,8 +43,8 @@ from backend.services import signal_registry as SR           # noqa: E402
 from backend.services.kill_conditions import (               # noqa: E402
     AUTO_ADOPTED_KILL_CONDITIONS, AUTO_ADOPTED_NOTE, NO_KILL_CONDITION_NAMES)
 
-FUNNEL = ROOT / "docs" / "BUILD1" / "funnel_night10.json"
-OUT = ROOT / "docs" / "BUILD1" / "mirror_challenge.json"
+FUNNEL = _config.build1_path("funnel_night10.json")
+OUT = _config.build1_path("mirror_challenge.json")
 
 #: Recorded discrepancies. Carried VISIBLY into every arm rather than resolved
 #: silently — a fork Murat has not ruled on is not a number.
