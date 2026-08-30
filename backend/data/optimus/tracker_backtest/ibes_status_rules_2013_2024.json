@@ -3,7 +3,7 @@
  "window": "2013-2024",
  "cost_bps_per_side": 10.0,
  "ibes_lag_days": 1,
- "tracker_py_sha256": "f75ce5348799b5fbbfd9a693d5d31cee76de0aad1d52062b529b4b5dc53dc766",
+ "tracker_py_sha256": "aaf2173fa18901b2dc1918842267cbdf973f65e74852b93c9cd9b36be129e693",
  "thresholds": {
   "BUY_UPSIDE": 0.3,
   "BUY_CONSENSUS": 4.0,
@@ -15,8 +15,8 @@
  "name_months": 434295,
  "status_histogram": {
   "SELL": 185636,
-  "WATCH": 174597,
-  "BUY": 59552,
+  "WATCH": 159528,
+  "BUY": 74621,
   "DROP": 14510
  },
  "market_equal_weighted": {
@@ -30,6 +30,132 @@
   "t_stat": 1.723
  },
  "buy_basket": {
+  "months": 143,
+  "terminal_wealth": 5.1381,
+  "cagr": 0.1472,
+  "mean_monthly": 0.01489,
+  "vol_monthly": 0.08003,
+  "hit_rate": 0.6154,
+  "worst_month": -0.4137,
+  "t_stat": 2.225,
+  "gross": {
+   "months": 143,
+   "terminal_wealth": 5.4551,
+   "cagr": 0.153,
+   "mean_monthly": 0.01531,
+   "vol_monthly": 0.08005,
+   "hit_rate": 0.6154,
+   "worst_month": -0.4131,
+   "t_stat": 2.288
+  },
+  "mean_names_per_month": 521.8,
+  "mean_turnover": 0.212,
+  "cost_bps_per_side": 10.0
+ },
+ "buy_basket_by_coverage_bucket": {
+  "1-3": {
+   "months": 143,
+   "terminal_wealth": 5.3505,
+   "cagr": 0.1511,
+   "mean_monthly": 0.01472,
+   "vol_monthly": 0.07474,
+   "hit_rate": 0.6364,
+   "worst_month": -0.3966,
+   "t_stat": 2.355,
+   "gross": {
+    "months": 143,
+    "terminal_wealth": 5.6831,
+    "cagr": 0.157,
+    "mean_monthly": 0.01514,
+    "vol_monthly": 0.07475,
+    "hit_rate": 0.6434,
+    "worst_month": -0.396,
+    "t_stat": 2.422
+   },
+   "mean_names_per_month": 198.0,
+   "mean_turnover": 0.213,
+   "cost_bps_per_side": 10.0,
+   "name_months": 28307
+  },
+  "4-10": {
+   "months": 143,
+   "terminal_wealth": 4.7579,
+   "cagr": 0.1398,
+   "mean_monthly": 0.01488,
+   "vol_monthly": 0.08638,
+   "hit_rate": 0.6014,
+   "worst_month": -0.4153,
+   "t_stat": 2.06,
+   "gross": {
+    "months": 143,
+    "terminal_wealth": 5.0658,
+    "cagr": 0.1459,
+    "mean_monthly": 0.01533,
+    "vol_monthly": 0.08641,
+    "hit_rate": 0.6014,
+    "worst_month": -0.4148,
+    "t_stat": 2.121
+   },
+   "mean_names_per_month": 257.2,
+   "mean_turnover": 0.222,
+   "cost_bps_per_side": 10.0,
+   "name_months": 36778
+  },
+  "11-25": {
+   "months": 143,
+   "terminal_wealth": 2.9362,
+   "cagr": 0.0946,
+   "mean_monthly": 0.01185,
+   "vol_monthly": 0.09005,
+   "hit_rate": 0.5664,
+   "worst_month": -0.4452,
+   "t_stat": 1.573,
+   "gross": {
+    "months": 143,
+    "terminal_wealth": 3.2365,
+    "cagr": 0.1036,
+    "mean_monthly": 0.01253,
+    "vol_monthly": 0.0901,
+    "hit_rate": 0.5734,
+    "worst_month": -0.4443,
+    "t_stat": 1.663
+   },
+   "mean_names_per_month": 59.4,
+   "mean_turnover": 0.343,
+   "cost_bps_per_side": 10.0,
+   "name_months": 8489
+  },
+  "26+": {
+   "months": 134,
+   "terminal_wealth": 0.4697,
+   "cagr": -0.0654,
+   "mean_monthly": 0.00184,
+   "vol_monthly": 0.11262,
+   "hit_rate": 0.5075,
+   "worst_month": -0.6241,
+   "t_stat": 0.189,
+   "gross": {
+    "months": 134,
+    "terminal_wealth": 0.525,
+    "cagr": -0.0561,
+    "mean_monthly": 0.00266,
+    "vol_monthly": 0.11272,
+    "hit_rate": 0.5075,
+    "worst_month": -0.6231,
+    "t_stat": 0.273
+   },
+   "mean_names_per_month": 7.8,
+   "mean_turnover": 0.414,
+   "cost_bps_per_side": 10.0,
+   "name_months": 1047
+  }
+ },
+ "arm_definitions": {
+  "buy_basket": "tracker status in (BUY, STRONG_BUY). Clause (f) NOT applied. This is the hack4 / hack6 universe, and it is what the previous receipt called `buy_without_clause_f`.",
+  "buy_with_clause_f": "the same, minus every name flagged `past_winner`. This is hack3's universe, and it is what the previous receipt called `buy_basket`.",
+  "past_winners_only": "the names clause (f) throws away, on their own."
+ },
+ "buy_with_clause_f": {
   "months": 143,
   "terminal_wealth": 4.1074,
   "cagr": 0.1259,
@@ -52,171 +178,73 @@
   "mean_turnover": 0.237,
   "cost_bps_per_side": 10.0
  },
- "buy_basket_by_coverage_bucket": {
-  "1-3": {
+ "past_winners_only": {
+  "months": 143,
+  "terminal_wealth": 17.9331,
+  "cagr": 0.2741,
+  "mean_monthly": 0.02532,
+  "vol_monthly": 0.09806,
+  "hit_rate": 0.6573,
+  "worst_month": -0.4144,
+  "t_stat": 3.088,
+  "gross": {
    "months": 143,
-   "terminal_wealth": 4.2135,
-   "cagr": 0.1283,
-   "mean_monthly": 0.01279,
-   "vol_monthly": 0.07121,
-   "hit_rate": 0.6294,
-   "worst_month": -0.3942,
-   "t_stat": 2.147,
-   "gross": {
-    "months": 143,
-    "terminal_wealth": 4.4968,
-    "cagr": 0.1345,
-    "mean_monthly": 0.01324,
-    "vol_monthly": 0.07122,
-    "hit_rate": 0.6294,
-    "worst_month": -0.3936,
-    "t_stat": 2.224
-   },
-   "mean_names_per_month": 159.7,
-   "mean_turnover": 0.23,
-   "cost_bps_per_side": 10.0,
-   "name_months": 22835
+   "terminal_wealth": 20.3138,
+   "cagr": 0.2875,
+   "mean_monthly": 0.02621,
+   "vol_monthly": 0.09809,
+   "hit_rate": 0.6573,
+   "worst_month": -0.4136,
+   "t_stat": 3.195
   },
-  "4-10": {
-   "months": 143,
-   "terminal_wealth": 3.8193,
-   "cagr": 0.119,
-   "mean_monthly": 0.01315,
-   "vol_monthly": 0.08397,
-   "hit_rate": 0.5734,
-   "worst_month": -0.429,
-   "t_stat": 1.873,
-   "gross": {
-    "months": 143,
-    "terminal_wealth": 4.096,
-    "cagr": 0.1256,
-    "mean_monthly": 0.01364,
-    "vol_monthly": 0.08399,
-    "hit_rate": 0.5804,
-    "worst_month": -0.4284,
-    "t_stat": 1.942
-   },
-   "mean_names_per_month": 198.7,
-   "mean_turnover": 0.247,
-   "cost_bps_per_side": 10.0,
-   "name_months": 28417
-  },
-  "11-25": {
-   "months": 143,
-   "terminal_wealth": 2.8368,
-   "cagr": 0.0914,
-   "mean_monthly": 0.01178,
-   "vol_monthly": 0.09156,
-   "hit_rate": 0.5455,
-   "worst_month": -0.4502,
-   "t_stat": 1.539,
-   "gross": {
-    "months": 143,
-    "terminal_wealth": 3.1498,
-    "cagr": 0.1011,
-    "mean_monthly": 0.01252,
-    "vol_monthly": 0.09159,
-    "hit_rate": 0.5455,
-    "worst_month": -0.4493,
-    "t_stat": 1.634
-   },
-   "mean_names_per_month": 51.2,
-   "mean_turnover": 0.368,
-   "cost_bps_per_side": 10.0,
-   "name_months": 7319
-  },
-  "26+": {
-   "months": 134,
-   "terminal_wealth": 0.3558,
-   "cagr": -0.0884,
-   "mean_monthly": -9e-05,
-   "vol_monthly": 0.11373,
-   "hit_rate": 0.5075,
-   "worst_month": -0.6241,
-   "t_stat": -0.009,
-   "gross": {
-    "months": 134,
-    "terminal_wealth": 0.3985,
-    "cagr": -0.0791,
-    "mean_monthly": 0.00076,
-    "vol_monthly": 0.11384,
-    "hit_rate": 0.5075,
-    "worst_month": -0.6231,
-    "t_stat": 0.077
-   },
-   "mean_names_per_month": 7.3,
-   "mean_turnover": 0.422,
-   "cost_bps_per_side": 10.0,
-   "name_months": 981
-  }
+  "mean_names_per_month": 55.5,
+  "mean_turnover": 0.444,
+  "cost_bps_per_side": 10.0
  },
  "buy_without_clause_f": {
   "months": 143,
-  "terminal_wealth": 5.5871,
-  "cagr": 0.1553,
-  "mean_monthly": 0.01551,
-  "vol_monthly": 0.08045,
+  "terminal_wealth": 5.1381,
+  "cagr": 0.1472,
+  "mean_monthly": 0.01489,
+  "vol_monthly": 0.08003,
   "hit_rate": 0.6154,
-  "worst_month": -0.4109,
-  "t_stat": 2.305,
+  "worst_month": -0.4137,
+  "t_stat": 2.225,
   "gross": {
    "months": 143,
-   "terminal_wealth": 5.9258,
-   "cagr": 0.161,
-   "mean_monthly": 0.01593,
-   "vol_monthly": 0.08047,
+   "terminal_wealth": 5.4551,
+   "cagr": 0.153,
+   "mean_monthly": 0.01531,
+   "vol_monthly": 0.08005,
    "hit_rate": 0.6154,
-   "worst_month": -0.4104,
-   "t_stat": 2.367
+   "worst_month": -0.4131,
+   "t_stat": 2.288
   },
-  "mean_names_per_month": 529.8,
-  "mean_turnover": 0.208,
-  "cost_bps_per_side": 10.0
- },
- "past_winners_only": {
-  "months": 143,
-  "terminal_wealth": 18.1744,
-  "cagr": 0.2755,
-  "mean_monthly": 0.02539,
-  "vol_monthly": 0.09774,
-  "hit_rate": 0.6573,
-  "worst_month": -0.4144,
-  "t_stat": 3.107,
-  "gross": {
-   "months": 143,
-   "terminal_wealth": 20.5851,
-   "cagr": 0.2889,
-   "mean_monthly": 0.02628,
-   "vol_monthly": 0.09777,
-   "hit_rate": 0.6573,
-   "worst_month": -0.4136,
-   "t_stat": 3.214
-  },
-  "mean_names_per_month": 55.8,
-  "mean_turnover": 0.444,
+  "mean_names_per_month": 521.8,
+  "mean_turnover": 0.212,
   "cost_bps_per_side": 10.0
  },
  "paired_vs_market": {
   "buy_basket": {
+   "months": 143,
+   "mean_monthly_excess": 0.005,
+   "annualised_excess": 0.06,
+   "t_stat_paired": 2.737,
+   "months_beating_market": 0.6154
+  },
+  "buy_with_clause_f": {
    "months": 143,
    "mean_monthly_excess": 0.00324,
    "annualised_excess": 0.0388,
    "t_stat_paired": 2.156,
    "months_beating_market": 0.5734
   },
-  "buy_without_clause_f": {
-   "months": 143,
-   "mean_monthly_excess": 0.00562,
-   "annualised_excess": 0.0674,
-   "t_stat_paired": 2.996,
-   "months_beating_market": 0.6224
-  },
   "past_winners_only": {
    "months": 143,
-   "mean_monthly_excess": 0.0155,
-   "annualised_excess": 0.186,
-   "t_stat_paired": 3.312,
-   "months_beating_market": 0.6224
+   "mean_monthly_excess": 0.01543,
+   "annualised_excess": 0.1852,
+   "t_stat_paired": 3.261,
+   "months_beating_market": 0.6154
   },
   "note": "terminal wealth alone compares two correlated single draws; the market's own t over this window is 1.72. The paired monthly spread removes the shared market factor and is the number that decides."
  },
@@ -336,188 +364,602 @@
  },
  "buy_basket_with_upside_cap": {
   "months": 143,
-  "terminal_wealth": 4.1074,
-  "cagr": 0.1259,
-  "mean_monthly": 0.01313,
-  "vol_monthly": 0.07756,
-  "hit_rate": 0.6224,
-  "worst_month": -0.4196,
-  "t_stat": 2.024,
+  "terminal_wealth": 5.1381,
+  "cagr": 0.1472,
+  "mean_monthly": 0.01489,
+  "vol_monthly": 0.08003,
+  "hit_rate": 0.6154,
+  "worst_month": -0.4137,
+  "t_stat": 2.225,
   "gross": {
    "months": 143,
-   "terminal_wealth": 4.3925,
-   "cagr": 0.1322,
-   "mean_monthly": 0.0136,
-   "vol_monthly": 0.07758,
-   "hit_rate": 0.6224,
-   "worst_month": -0.4191,
-   "t_stat": 2.096
+   "terminal_wealth": 5.4551,
+   "cagr": 0.153,
+   "mean_monthly": 0.01531,
+   "vol_monthly": 0.08005,
+   "hit_rate": 0.6154,
+   "worst_month": -0.4131,
+   "t_stat": 2.288
   },
-  "mean_names_per_month": 416.4,
-  "mean_turnover": 0.237,
+  "mean_names_per_month": 521.8,
+  "mean_turnover": 0.212,
   "cost_bps_per_side": 10.0
  },
  "paired_buy_with_upside_cap": {
   "months": 143,
-  "mean_monthly_excess": 0.00324,
-  "annualised_excess": 0.0388,
-  "t_stat_paired": 2.156,
-  "months_beating_market": 0.5734
+  "mean_monthly_excess": 0.005,
+  "annualised_excess": 0.06,
+  "t_stat_paired": 2.737,
+  "months_beating_market": 0.6154
  },
  "upside_cap_used": 4.0,
  "excluded_by_cap_name_months": 0,
  "upside_cap_sensitivity": {
   "<1x": {
-   "name_months": 41814,
+   "name_months": 52860,
    "months": 143,
-   "mean_monthly_excess": 0.00175,
-   "annualised_excess": 0.021,
-   "t_stat_paired": 1.37,
-   "months_beating_market": 0.5594
+   "mean_monthly_excess": 0.00281,
+   "annualised_excess": 0.0338,
+   "t_stat_paired": 1.891,
+   "months_beating_market": 0.5664
   },
   "<1.5x": {
-   "name_months": 49523,
+   "name_months": 62640,
    "months": 143,
-   "mean_monthly_excess": 0.00245,
-   "annualised_excess": 0.0294,
-   "t_stat_paired": 1.833,
-   "months_beating_market": 0.5734
+   "mean_monthly_excess": 0.00374,
+   "annualised_excess": 0.0449,
+   "t_stat_paired": 2.279,
+   "months_beating_market": 0.5385
   },
   "<2x": {
-   "name_months": 53498,
+   "name_months": 67507,
    "months": 143,
-   "mean_monthly_excess": 0.00301,
-   "annualised_excess": 0.0362,
-   "t_stat_paired": 2.19,
-   "months_beating_market": 0.5524
+   "mean_monthly_excess": 0.00455,
+   "annualised_excess": 0.0546,
+   "t_stat_paired": 2.672,
+   "months_beating_market": 0.5944
   },
   "<3x": {
-   "name_months": 57558,
+   "name_months": 72326,
    "months": 143,
-   "mean_monthly_excess": 0.00291,
-   "annualised_excess": 0.0349,
-   "t_stat_paired": 2.004,
-   "months_beating_market": 0.5315
+   "mean_monthly_excess": 0.00468,
+   "annualised_excess": 0.0562,
+   "t_stat_paired": 2.624,
+   "months_beating_market": 0.6084
   },
   "<4x": {
-   "name_months": 59552,
+   "name_months": 74621,
    "months": 143,
-   "mean_monthly_excess": 0.00324,
-   "annualised_excess": 0.0388,
-   "t_stat_paired": 2.156,
-   "months_beating_market": 0.5734
+   "mean_monthly_excess": 0.005,
+   "annualised_excess": 0.06,
+   "t_stat_paired": 2.737,
+   "months_beating_market": 0.6154
   },
   "<6x": {
-   "name_months": 59552,
+   "name_months": 74621,
    "months": 143,
-   "mean_monthly_excess": 0.00324,
-   "annualised_excess": 0.0388,
-   "t_stat_paired": 2.156,
-   "months_beating_market": 0.5734
+   "mean_monthly_excess": 0.005,
+   "annualised_excess": 0.06,
+   "t_stat_paired": 2.737,
+   "months_beating_market": 0.6154
   },
   "<10x": {
-   "name_months": 59552,
+   "name_months": 74621,
    "months": 143,
-   "mean_monthly_excess": 0.00324,
-   "annualised_excess": 0.0388,
-   "t_stat_paired": 2.156,
-   "months_beating_market": 0.5734
+   "mean_monthly_excess": 0.005,
+   "annualised_excess": 0.06,
+   "t_stat_paired": 2.737,
+   "months_beating_market": 0.6154
   },
   "<100x": {
-   "name_months": 59552,
+   "name_months": 74621,
    "months": 143,
-   "mean_monthly_excess": 0.00324,
-   "annualised_excess": 0.0388,
-   "t_stat_paired": 2.156,
-   "months_beating_market": 0.5734
+   "mean_monthly_excess": 0.005,
+   "annualised_excess": 0.06,
+   "t_stat_paired": 2.737,
+   "months_beating_market": 0.6154
   }
  },
  "capped_by_era": {
   "2013-2016": {
    "months": 48,
-   "mean_monthly_excess": 0.00388,
-   "annualised_excess": 0.0466,
-   "t_stat_paired": 1.443,
-   "months_beating_market": 0.6042
+   "mean_monthly_excess": 0.00553,
+   "annualised_excess": 0.0664,
+   "t_stat_paired": 1.561,
+   "months_beating_market": 0.5833
   },
   "2017-2020": {
    "months": 48,
-   "mean_monthly_excess": 0.00234,
-   "annualised_excess": 0.0281,
-   "t_stat_paired": 1.105,
-   "months_beating_market": 0.5417
+   "mean_monthly_excess": 0.00616,
+   "annualised_excess": 0.0739,
+   "t_stat_paired": 2.399,
+   "months_beating_market": 0.7083
   },
   "2021-2024": {
    "months": 47,
-   "mean_monthly_excess": 0.00342,
-   "annualised_excess": 0.0411,
-   "t_stat_paired": 1.158,
-   "months_beating_market": 0.5745
+   "mean_monthly_excess": 0.00321,
+   "annualised_excess": 0.0385,
+   "t_stat_paired": 0.962,
+   "months_beating_market": 0.5532
+  }
+ },
+ "cost_sensitivity": {
+  "10bps_per_side": {
+   "all_candidates": {
+    "wealth": 5.1381,
+    "cagr": 0.1472,
+    "months": 143,
+    "mean_monthly_excess": 0.005,
+    "annualised_excess": 0.06,
+    "t_stat_paired": 2.737,
+    "months_beating_market": 0.6154
+   },
+   "with_clause_f": {
+    "wealth": 4.1074,
+    "cagr": 0.1259,
+    "months": 143,
+    "mean_monthly_excess": 0.00324,
+    "annualised_excess": 0.0388,
+    "t_stat_paired": 2.156,
+    "months_beating_market": 0.5734
+   },
+   "by_coverage_bucket": {
+    "1-3": {
+     "name_months": 28307,
+     "wealth": 5.3505,
+     "cagr": 0.1511,
+     "mean_turnover": 0.213,
+     "months": 143,
+     "mean_monthly_excess": 0.00483,
+     "annualised_excess": 0.0579,
+     "t_stat_paired": 2.305,
+     "months_beating_market": 0.5804
+    },
+    "4-10": {
+     "name_months": 36778,
+     "wealth": 4.7579,
+     "cagr": 0.1398,
+     "mean_turnover": 0.222,
+     "months": 143,
+     "mean_monthly_excess": 0.00499,
+     "annualised_excess": 0.0599,
+     "t_stat_paired": 1.868,
+     "months_beating_market": 0.5594
+    },
+    "11-25": {
+     "name_months": 8489,
+     "wealth": 2.9362,
+     "cagr": 0.0946,
+     "mean_turnover": 0.343,
+     "months": 143,
+     "mean_monthly_excess": 0.00196,
+     "annualised_excess": 0.0235,
+     "t_stat_paired": 0.507,
+     "months_beating_market": 0.5035
+    },
+    "26+": {
+     "name_months": 1047,
+     "wealth": 0.4697,
+     "cagr": -0.0654,
+     "mean_turnover": 0.414,
+     "months": 134,
+     "mean_monthly_excess": -0.00688,
+     "annualised_excess": -0.0825,
+     "t_stat_paired": -1.05,
+     "months_beating_market": 0.4925
+    }
+   }
+  },
+  "25bps_per_side": {
+   "all_candidates": {
+    "wealth": 4.6965,
+    "cagr": 0.1386,
+    "months": 143,
+    "mean_monthly_excess": 0.00436,
+    "annualised_excess": 0.0524,
+    "t_stat_paired": 2.388,
+    "months_beating_market": 0.6014
+   },
+   "with_clause_f": {
+    "wealth": 3.7137,
+    "cagr": 0.1164,
+    "months": 143,
+    "mean_monthly_excess": 0.00253,
+    "annualised_excess": 0.0303,
+    "t_stat_paired": 1.682,
+    "months_beating_market": 0.5664
+   },
+   "by_coverage_bucket": {
+    "1-3": {
+     "name_months": 28307,
+     "wealth": 4.8875,
+     "cagr": 0.1424,
+     "mean_turnover": 0.213,
+     "months": 143,
+     "mean_monthly_excess": 0.00419,
+     "annualised_excess": 0.0502,
+     "t_stat_paired": 1.999,
+     "months_beating_market": 0.5664
+    },
+    "4-10": {
+     "name_months": 36778,
+     "wealth": 4.3304,
+     "cagr": 0.1309,
+     "mean_turnover": 0.222,
+     "months": 143,
+     "mean_monthly_excess": 0.00433,
+     "annualised_excess": 0.0519,
+     "t_stat_paired": 1.618,
+     "months_beating_market": 0.5455
+    },
+    "11-25": {
+     "name_months": 8489,
+     "wealth": 2.5369,
+     "cagr": 0.0813,
+     "mean_turnover": 0.343,
+     "months": 143,
+     "mean_monthly_excess": 0.00093,
+     "annualised_excess": 0.0111,
+     "t_stat_paired": 0.241,
+     "months_beating_market": 0.4965
+    },
+    "26+": {
+     "name_months": 1047,
+     "wealth": 0.3975,
+     "cagr": -0.0793,
+     "mean_turnover": 0.414,
+     "months": 134,
+     "mean_monthly_excess": -0.00812,
+     "annualised_excess": -0.0974,
+     "t_stat_paired": -1.242,
+     "months_beating_market": 0.4776
+    }
+   }
+  },
+  "50bps_per_side": {
+   "all_candidates": {
+    "wealth": 4.0427,
+    "cagr": 0.1244,
+    "months": 143,
+    "mean_monthly_excess": 0.00331,
+    "annualised_excess": 0.0397,
+    "t_stat_paired": 1.807,
+    "months_beating_market": 0.5804
+   },
+   "with_clause_f": {
+    "wealth": 3.1392,
+    "cagr": 0.1008,
+    "months": 143,
+    "mean_monthly_excess": 0.00134,
+    "annualised_excess": 0.0161,
+    "t_stat_paired": 0.893,
+    "months_beating_market": 0.5385
+   },
+   "by_coverage_bucket": {
+    "1-3": {
+     "name_months": 28307,
+     "wealth": 4.2025,
+     "cagr": 0.128,
+     "mean_turnover": 0.213,
+     "months": 143,
+     "mean_monthly_excess": 0.00312,
+     "annualised_excess": 0.0375,
+     "t_stat_paired": 1.488,
+     "months_beating_market": 0.5385
+    },
+    "4-10": {
+     "name_months": 36778,
+     "wealth": 3.7009,
+     "cagr": 0.1161,
+     "mean_turnover": 0.222,
+     "months": 143,
+     "mean_monthly_excess": 0.00322,
+     "annualised_excess": 0.0386,
+     "t_stat_paired": 1.203,
+     "months_beating_market": 0.5315
+    },
+    "11-25": {
+     "name_months": 8489,
+     "wealth": 1.9875,
+     "cagr": 0.0593,
+     "mean_turnover": 0.343,
+     "months": 143,
+     "mean_monthly_excess": -0.00079,
+     "annualised_excess": -0.0095,
+     "t_stat_paired": -0.205,
+     "months_beating_market": 0.4755
+    },
+    "26+": {
+     "name_months": 1047,
+     "wealth": 0.3006,
+     "cagr": -0.102,
+     "mean_turnover": 0.414,
+     "months": 134,
+     "mean_monthly_excess": -0.01019,
+     "annualised_excess": -0.1222,
+     "t_stat_paired": -1.564,
+     "months_beating_market": 0.4552
+    }
+   }
+  },
+  "100bps_per_side": {
+   "all_candidates": {
+    "wealth": 2.9936,
+    "cagr": 0.0964,
+    "months": 143,
+    "mean_monthly_excess": 0.00119,
+    "annualised_excess": 0.0143,
+    "t_stat_paired": 0.647,
+    "months_beating_market": 0.5175
+   },
+   "with_clause_f": {
+    "wealth": 2.2413,
+    "cagr": 0.0701,
+    "months": 143,
+    "mean_monthly_excess": -0.00103,
+    "annualised_excess": -0.0123,
+    "t_stat_paired": -0.681,
+    "months_beating_market": 0.4825
+   },
+   "by_coverage_bucket": {
+    "1-3": {
+     "name_months": 28307,
+     "wealth": 3.1053,
+     "cagr": 0.0998,
+     "mean_turnover": 0.213,
+     "months": 143,
+     "mean_monthly_excess": 0.00099,
+     "annualised_excess": 0.0119,
+     "t_stat_paired": 0.471,
+     "months_beating_market": 0.4545
+    },
+    "4-10": {
+     "name_months": 36778,
+     "wealth": 2.7014,
+     "cagr": 0.087,
+     "mean_turnover": 0.222,
+     "months": 143,
+     "mean_monthly_excess": 0.001,
+     "annualised_excess": 0.012,
+     "t_stat_paired": 0.374,
+     "months_beating_market": 0.4895
+    },
+    "11-25": {
+     "name_months": 8489,
+     "wealth": 1.2179,
+     "cagr": 0.0167,
+     "mean_turnover": 0.343,
+     "months": 143,
+     "mean_monthly_excess": -0.00422,
+     "annualised_excess": -0.0506,
+     "t_stat_paired": -1.102,
+     "months_beating_market": 0.4266
+    },
+    "26+": {
+     "name_months": 1047,
+     "wealth": 0.1715,
+     "cagr": -0.1461,
+     "mean_turnover": 0.414,
+     "months": 134,
+     "mean_monthly_excess": -0.01432,
+     "annualised_excess": -0.1719,
+     "t_stat_paired": -2.21,
+     "months_beating_market": 0.4254
+    }
+   }
+  }
+ },
+ "cost_sensitivity_note": "the SAME capped BUY rule, re-graded at four cost levels. 10bps is the headline number and is optimistic for the thin buckets; 25-50bps is a fairer read on a name four analysts follow. A bucket whose paired t crosses zero between two columns is a bucket whose edge is the spread, not the screen.",
+ "volume_units": {
+  "median_of_top_100_daily_vol": 785471595.0,
+  "read_as": "shares"
+ },
+ "capacity": {
+  "n_with_dollar_volume": 434269,
+  "n_without": 26,
+  "note": "20-session median dollar volume at entry, in the dollars of the day -- NOT inflation-adjusted, so the early years look thinner than they traded. Bands are absolute on purpose: a per-month quantile would call the thinnest decile of 2013 'liquid' merely because everything around it was thinner.",
+  "bands": {
+   "<$100k/day": {
+    "name_months": 6776,
+    "wealth": 3.3832,
+    "months": 143,
+    "mean_monthly_excess": 0.00173,
+    "annualised_excess": 0.0208,
+    "t_stat_paired": 0.506,
+    "months_beating_market": 0.4755
+   },
+   "$100k-1m": {
+    "name_months": 19295,
+    "wealth": 5.812,
+    "months": 143,
+    "mean_monthly_excess": 0.00582,
+    "annualised_excess": 0.0698,
+    "t_stat_paired": 2.222,
+    "months_beating_market": 0.6084
+   },
+   "$1m-10m": {
+    "name_months": 29315,
+    "wealth": 4.6913,
+    "months": 143,
+    "mean_monthly_excess": 0.00483,
+    "annualised_excess": 0.0579,
+    "t_stat_paired": 1.93,
+    "months_beating_market": 0.5594
+   },
+   "$10m-100m": {
+    "name_months": 16536,
+    "wealth": 1.9566,
+    "months": 143,
+    "mean_monthly_excess": -0.00165,
+    "annualised_excess": -0.0198,
+    "t_stat_paired": -0.692,
+    "months_beating_market": 0.5105
+   },
+   ">$100m": {
+    "name_months": 2690,
+    "wealth": 2.0854,
+    "months": 140,
+    "mean_monthly_excess": -0.0001,
+    "annualised_excess": -0.0012,
+    "t_stat_paired": -0.023,
+    "months_beating_market": 0.4857
+   }
+  },
+  "thin_coverage_by_liquidity_at_25bps": {
+   "1-3": {
+    "<$100k/day": {
+     "name_months": 5800,
+     "wealth": 3.3452,
+     "months": 143,
+     "mean_monthly_excess": 0.00148,
+     "annualised_excess": 0.0177,
+     "t_stat_paired": 0.446,
+     "months_beating_market": 0.4895
+    },
+    "$100k-1m": {
+     "name_months": 12148,
+     "wealth": 5.3804,
+     "months": 143,
+     "mean_monthly_excess": 0.00496,
+     "annualised_excess": 0.0595,
+     "t_stat_paired": 1.731,
+     "months_beating_market": 0.5804
+    },
+    "$1m-10m": {
+     "name_months": 8840,
+     "wealth": 5.299,
+     "months": 143,
+     "mean_monthly_excess": 0.00533,
+     "annualised_excess": 0.064,
+     "t_stat_paired": 2.103,
+     "months_beating_market": 0.5804
+    },
+    "$10m-100m": {
+     "name_months": 1466,
+     "wealth": 1.1871,
+     "months": 140,
+     "mean_monthly_excess": -0.00338,
+     "annualised_excess": -0.0405,
+     "t_stat_paired": -0.532,
+     "months_beating_market": 0.4214
+    },
+    ">$100m": {
+     "name_months": 44,
+     "note": "too few to grade"
+    }
+   },
+   "4-10": {
+    "<$100k/day": {
+     "name_months": 972,
+     "wealth": 1.2517,
+     "months": 140,
+     "mean_monthly_excess": 0.00141,
+     "annualised_excess": 0.0169,
+     "t_stat_paired": 0.129,
+     "months_beating_market": 0.4214
+    },
+    "$100k-1m": {
+     "name_months": 7086,
+     "wealth": 5.1614,
+     "months": 143,
+     "mean_monthly_excess": 0.00657,
+     "annualised_excess": 0.0788,
+     "t_stat_paired": 1.508,
+     "months_beating_market": 0.5105
+    },
+    "$1m-10m": {
+     "name_months": 19224,
+     "wealth": 4.0826,
+     "months": 143,
+     "mean_monthly_excess": 0.00418,
+     "annualised_excess": 0.0502,
+     "t_stat_paired": 1.386,
+     "months_beating_market": 0.5105
+    },
+    "$10m-100m": {
+     "name_months": 9274,
+     "wealth": 1.8444,
+     "months": 143,
+     "mean_monthly_excess": -0.00194,
+     "annualised_excess": -0.0232,
+     "t_stat_paired": -0.603,
+     "months_beating_market": 0.4895
+    },
+    ">$100m": {
+     "name_months": 222,
+     "wealth": 5.2456,
+     "months": 87,
+     "mean_monthly_excess": 0.02209,
+     "annualised_excess": 0.2651,
+     "t_stat_paired": 0.943,
+     "months_beating_market": 0.5057
+    }
+   }
   }
  },
  "top_k_by_upside": {
   "top5": {
    "name_months": 715,
-   "wealth": 3.0048,
+   "wealth": 6.7949,
    "months": 143,
-   "mean_monthly_excess": 0.01418,
-   "annualised_excess": 0.1701,
-   "t_stat_paired": 0.954,
-   "months_beating_market": 0.4615
+   "mean_monthly_excess": 0.02154,
+   "annualised_excess": 0.2585,
+   "t_stat_paired": 1.365,
+   "months_beating_market": 0.4755
   },
   "top10": {
    "name_months": 1430,
-   "wealth": 1.6987,
+   "wealth": 3.1321,
    "months": 143,
-   "mean_monthly_excess": 0.00362,
-   "annualised_excess": 0.0434,
-   "t_stat_paired": 0.373,
-   "months_beating_market": 0.4476
+   "mean_monthly_excess": 0.00843,
+   "annualised_excess": 0.1011,
+   "t_stat_paired": 0.849,
+   "months_beating_market": 0.4336
   },
   "top15": {
    "name_months": 2145,
-   "wealth": 2.1941,
+   "wealth": 4.1332,
    "months": 143,
-   "mean_monthly_excess": 0.00375,
-   "annualised_excess": 0.045,
-   "t_stat_paired": 0.45,
-   "months_beating_market": 0.4755
+   "mean_monthly_excess": 0.00865,
+   "annualised_excess": 0.1038,
+   "t_stat_paired": 1.043,
+   "months_beating_market": 0.4825
   },
   "top25": {
    "name_months": 3575,
-   "wealth": 3.1323,
+   "wealth": 6.962,
    "months": 143,
-   "mean_monthly_excess": 0.00523,
-   "annualised_excess": 0.0628,
-   "t_stat_paired": 0.783,
-   "months_beating_market": 0.5035
+   "mean_monthly_excess": 0.01171,
+   "annualised_excess": 0.1405,
+   "t_stat_paired": 1.617,
+   "months_beating_market": 0.5245
   },
   "top50": {
    "name_months": 7150,
-   "wealth": 3.2695,
+   "wealth": 7.3123,
    "months": 143,
-   "mean_monthly_excess": 0.00455,
-   "annualised_excess": 0.0547,
-   "t_stat_paired": 0.831,
-   "months_beating_market": 0.5105
+   "mean_monthly_excess": 0.01062,
+   "annualised_excess": 0.1274,
+   "t_stat_paired": 1.868,
+   "months_beating_market": 0.5455
   },
   "top100": {
    "name_months": 14300,
-   "wealth": 4.5142,
+   "wealth": 7.37,
    "months": 143,
-   "mean_monthly_excess": 0.00574,
-   "annualised_excess": 0.0689,
-   "t_stat_paired": 1.385,
-   "months_beating_market": 0.5245
+   "mean_monthly_excess": 0.00978,
+   "annualised_excess": 0.1174,
+   "t_stat_paired": 2.066,
+   "months_beating_market": 0.5385
   },
   "top250": {
-   "name_months": 34232,
-   "wealth": 4.2939,
+   "name_months": 35235,
+   "wealth": 5.4567,
    "months": 143,
-   "mean_monthly_excess": 0.00441,
-   "annualised_excess": 0.053,
-   "t_stat_paired": 1.762,
-   "months_beating_market": 0.5594
+   "mean_monthly_excess": 0.00654,
+   "annualised_excess": 0.0785,
+   "t_stat_paired": 2.104,
+   "months_beating_market": 0.5385
   }
  },
  "upside_bands": {
@@ -587,30 +1029,30 @@
   }
  },
  "upside_bands_note": "the quintiles say where the top of the column is; these say what the LIVE BAR buys. BUY_UPSIDE is 30% and STRONG_BUY_UPSIDE is 50%, so the rule lives entirely in the upper bands. `split_in_prior_year_share` separates 'the rule buys bad names' from 'the rule buys a stale target across a split'.",
- "buy_basket_note": "`buy_basket` applies clause (f); `buy_without_clause_f` is the same screen with the past-winner exclusion removed. The DIFFERENCE between them is what clause (f) bought or cost -- which is the only way to answer 'do not buy last year's winner' rather than assume it.",
+ "buy_basket_note": "`buy_basket` is the tracker status and does NOT apply clause (f) (hack4/hack6); `buy_with_clause_f` is the same screen minus past winners (hack3). The DIFFERENCE between them is what clause (f) bought or cost -- which is the only way to answer 'do not buy last year's winner' rather than assume it.",
  "by_era": {
   "2013-2016": {
    "buy": {
     "months": 48,
-    "terminal_wealth": 1.9079,
-    "cagr": 0.1753,
-    "mean_monthly": 0.01491,
-    "vol_monthly": 0.05267,
+    "terminal_wealth": 2.0357,
+    "cagr": 0.1945,
+    "mean_monthly": 0.01656,
+    "vol_monthly": 0.05788,
     "hit_rate": 0.6458,
-    "worst_month": -0.1268,
-    "t_stat": 1.961,
+    "worst_month": -0.1347,
+    "t_stat": 1.983,
     "gross": {
      "months": 48,
-     "terminal_wealth": 1.9584,
-     "cagr": 0.183,
-     "mean_monthly": 0.01546,
-     "vol_monthly": 0.05272,
+     "terminal_wealth": 2.0848,
+     "cagr": 0.2016,
+     "mean_monthly": 0.01707,
+     "vol_monthly": 0.05792,
      "hit_rate": 0.6458,
-     "worst_month": -0.1262,
-     "t_stat": 2.032
+     "worst_month": -0.1342,
+     "t_stat": 2.041
     },
-    "mean_names_per_month": 294.3,
-    "mean_turnover": 0.277,
+    "mean_names_per_month": 372.2,
+    "mean_turnover": 0.253,
     "cost_bps_per_side": 10.0
    },
    "market": {
@@ -627,25 +1069,25 @@
   "2017-2020": {
    "buy": {
     "months": 48,
-    "terminal_wealth": 2.0446,
-    "cagr": 0.1958,
-    "mean_monthly": 0.02059,
-    "vol_monthly": 0.10013,
-    "hit_rate": 0.6875,
-    "worst_month": -0.4196,
-    "t_stat": 1.425,
+    "terminal_wealth": 2.4382,
+    "cagr": 0.2496,
+    "mean_monthly": 0.02441,
+    "vol_monthly": 0.10126,
+    "hit_rate": 0.6667,
+    "worst_month": -0.4137,
+    "t_stat": 1.67,
     "gross": {
      "months": 48,
-     "terminal_wealth": 2.0915,
-     "cagr": 0.2026,
-     "mean_monthly": 0.02107,
-     "vol_monthly": 0.10017,
-     "hit_rate": 0.6875,
-     "worst_month": -0.4191,
-     "t_stat": 1.457
+     "terminal_wealth": 2.4898,
+     "cagr": 0.2561,
+     "mean_monthly": 0.02485,
+     "vol_monthly": 0.1013,
+     "hit_rate": 0.6667,
+     "worst_month": -0.4131,
+     "t_stat": 1.7
     },
-    "mean_names_per_month": 370.9,
-    "mean_turnover": 0.239,
+    "mean_names_per_month": 455.2,
+    "mean_turnover": 0.222,
     "cost_bps_per_side": 10.0
    },
    "market": {
@@ -662,25 +1104,25 @@
   "2021-2024": {
    "buy": {
     "months": 47,
-    "terminal_wealth": 1.05,
-    "cagr": 0.0125,
-    "mean_monthly": 0.00361,
-    "vol_monthly": 0.07293,
+    "terminal_wealth": 1.0323,
+    "cagr": 0.0081,
+    "mean_monthly": 0.0034,
+    "vol_monthly": 0.07497,
     "hit_rate": 0.5319,
-    "worst_month": -0.1286,
-    "t_stat": 0.34,
+    "worst_month": -0.1276,
+    "t_stat": 0.311,
     "gross": {
      "months": 47,
-     "terminal_wealth": 1.0724,
-     "cagr": 0.018,
-     "mean_monthly": 0.00407,
-     "vol_monthly": 0.07303,
+     "terminal_wealth": 1.0509,
+     "cagr": 0.0128,
+     "mean_monthly": 0.00378,
+     "vol_monthly": 0.07506,
      "hit_rate": 0.5319,
-     "worst_month": -0.1282,
-     "t_stat": 0.382
+     "worst_month": -0.1272,
+     "t_stat": 0.346
     },
-    "mean_names_per_month": 587.7,
-    "mean_turnover": 0.227,
+    "mean_names_per_month": 742.7,
+    "mean_turnover": 0.193,
     "cost_bps_per_side": 10.0
    },
    "market": {

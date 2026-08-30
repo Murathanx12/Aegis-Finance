@@ -193,6 +193,9 @@ def load_ibes(start: int, end: int) -> pd.DataFrame:
     return df[["cusip", "statpers", "meanptg", "numest", "consensus", "coverage"]]
 
 
+_VOLUME_UNITS: dict = {"read_as": "not checked"}
+
+
 def load_prices(start: int, end: int) -> pd.DataFrame:
     """Daily CRSP closes, one year per file. `prc` is negated for bid/ask means."""
     frames = []
@@ -200,7 +203,7 @@ def load_prices(start: int, end: int) -> pd.DataFrame:
         f = WRDS / f"crsp_dsf_{year}.parquet"
         if not f.exists():
             continue
-        d = pd.read_parquet(f, columns=["permno", "date", "prc", "ret", "cfacpr"])
+        d = pd.read_parquet(f, columns=["permno", "date", "prc", "ret", "cfacpr", "vol"])
         frames.append(d)
     if not frames:
         raise SystemExit("REFUSED: no CRSP daily files found for that range.")
@@ -256,10 +259,40 @@ def price_panel(px: pd.DataFrame) -> pd.DataFrame:
     # reported beside every upside band rather than cleaned out of it.
     cf252 = g["cfacpr"].transform(lambda s: s.shift(252))
     px["split_prior_year"] = (px["cfacpr"] != cf252) & cf252.notna()
+    # CAPACITY. A cost assumption in basis points answers "what does the spread
+    # take?"; it does not answer "could this position have been opened at all?".
+    # Those are different questions and a thin-coverage result needs both,
+    # because the names with one analyst are also the names with no volume.
+    #
+    # CRSP `vol` on the daily file is SHARES for the modern era (it was round
+    # lots on the very old tapes, before this window). `assert_volume_units`
+    # checks the magnitude against a mega-cap rather than trusting the doc.
+    px["dollar_vol"] = px["vol"] * px["prc"]
+    px["dollar_vol_20d"] = g["dollar_vol"].transform(
+        lambda s: s.rolling(20, min_periods=5).median())
     return px
 
 
 # ------------------------------------------------------------------ the run
+
+def assert_volume_units(px: "pd.DataFrame") -> dict:
+    """CRSP `vol` is shares or round lots depending on the era, and the whole
+    capacity split is off by 100x if that is assumed rather than checked.
+
+    The check is a magnitude one: over 2013-2024 the busiest name-days in the
+    universe are mega-caps trading tens of millions of shares. If the median of
+    the top 100 daily volumes lands near 1e6 instead, the file is in round lots
+    and every dollar-volume number below is 100x too small.
+    """
+    top = px["vol"].dropna().nlargest(100)
+    med = float(top.median()) if len(top) else 0.0
+    unit = "shares" if med > 5e6 else "ROUND LOTS OR UNKNOWN"
+    out = {"median_of_top_100_daily_vol": round(med, 1), "read_as": unit}
+    print(f"  volume units: median of the 100 busiest name-days = {med:,.0f} -> {unit}")
+    if unit != "shares":
+        print("  WARNING: dollar-volume buckets below are NOT trustworthy at this scale.")
+    return out
+
 
 def build_monthly(start: int, end: int, lag_days: int) -> pd.DataFrame:
     """One row per (name, month) with every column the status rules read."""
@@ -275,6 +308,8 @@ def build_monthly(start: int, end: int, lag_days: int) -> pd.DataFrame:
 
     px = price_panel(load_prices(start, end))
     print(f"  CRSP daily rows: {len(px):,}")
+    global _VOLUME_UNITS
+    _VOLUME_UNITS = assert_volume_units(px)
 
     # PIT: trade at the first close STRICTLY AFTER statpers + lag. The IBES cut
     # is dated statpers but is not on a desk that morning; using statpers itself
@@ -284,7 +319,7 @@ def build_monthly(start: int, end: int, lag_days: int) -> pd.DataFrame:
     px = px.sort_values("date")
     merged = pd.merge_asof(
         ibes, px[["permno", "date", "prc", "adj_prc", "high_60d", "ret_12m", "tri",
-                  "split_prior_year"]],
+                  "split_prior_year", "dollar_vol_20d"]],
         left_on="tradable_from", right_on="date", by="permno",
         direction="forward", tolerance=pd.Timedelta(days=7))
     merged = merged[merged["prc"].notna()]
@@ -326,6 +361,8 @@ def label(df: pd.DataFrame, T) -> pd.DataFrame:
             "tradable": True,
             "fwd_1m": float(r.fwd_1m), "month": month,
             "split_prior_year": bool(r.split_prior_year),
+            "dollar_vol_20d": (float(r.dollar_vol_20d)
+                               if pd.notna(r.dollar_vol_20d) else None),
         } for r in chunk.itertuples()]
         for row in rows:
             row["upside"] = T.upside(row["mean_target"], row["close"])
@@ -509,7 +546,11 @@ def run(start: int, end: int, cost_bps: float, lag_days: int) -> int:
     assert_scale_conversion(T)
     print(f"rules: {TRACKER_PY} sha256 {sha[:16]}")
     print(f"  BUY bar: upside >= {T.BUY_UPSIDE:.0%}, consensus >= {T.BUY_CONSENSUS} "
-          f"(IBES meanrec <= {6 - T.BUY_CONSENSUS:.1f}), not a past winner")
+          f"(IBES meanrec <= {6 - T.BUY_CONSENSUS:.1f}), upside < "
+          f"{T.UPSIDE_IMPLAUSIBLE_AT:.0f}x")
+    print("  clause (f) is NOT in the status any more -- it is a per-book preference, "
+          "so both arms are graded below. By book: "
+          + ", ".join(f"{x.book}={x.exclude_past_winners}" for x in T.PERSONALITIES))
 
     print(f"\nbuilding the monthly panel {start}-{end} ...")
     panel = build_monthly(start, end, lag_days)
@@ -521,7 +562,13 @@ def run(start: int, end: int, cost_bps: float, lag_days: int) -> int:
     print(f"  statuses: {hist}")
 
     market = lab.groupby("month")["fwd_1m"].mean()
+    # THE TWO ARMS, named for the books that run them. Since 2026-08-30 (e) the
+    # tracker STATUS no longer applies clause (f) -- it is a per-book preference
+    # -- so `is_cand` is the hack4/hack6 universe and `is_cand_f` is hack3's.
+    # Everything below that says "BUY basket" means the status, i.e. the arm two
+    # of the three books actually trade.
     is_cand = lab["status"].isin(T.CANDIDATE_STATUSES)
+    is_cand_f = is_cand & (lab["past_winner"] == False)          # noqa: E712
 
     report = {
         "generated": date.today().isoformat(),
@@ -552,23 +599,34 @@ def run(start: int, end: int, cost_bps: float, lag_days: int) -> int:
     report["buy_basket_by_coverage_bucket"] = by_cov
 
     # -- Murat's hypothesis 2: is excluding past winners the right call? ---
-    # The BUY rule already excludes them, so the counterfactual is the basket
-    # that would have been bought WITHOUT clause (f).
-    # ONE CHANGE AT A TIME. `relaxed` must carry the SAME upside cap as the live
-    # rule, otherwise the comparison confounds clause (f) with the cap and hands
-    # the cap's benefit to the past-winner exclusion. The only difference
-    # between `buy_basket` and this is `past_winner`.
-    relaxed = ((lab["upside"] >= T.BUY_UPSIDE)
-               & (lab["upside"] < T.UPSIDE_IMPLAUSIBLE_AT)
-               & (lab["consensus"] >= T.BUY_CONSENSUS))
-    report["buy_without_clause_f"] = basket(lab, relaxed, cost_bps)
-    report["past_winners_only"] = basket(lab, relaxed & (lab["past_winner"] == True), cost_bps)  # noqa: E712
+    # ONE CHANGE AT A TIME. Both arms carry the same upside cap and the same
+    # status; the ONLY difference between them is `past_winner`, so the
+    # comparison cannot hand the cap's benefit to the exclusion.
+    #
+    # The naming is the BOOKS' naming, because the code and the receipt have to
+    # agree about which arm is live: `buy_with_clause_f` is hack3, `buy_basket`
+    # (the status itself) is what hack4 and hack6 trade.
+    report["arm_definitions"] = {
+        "buy_basket": "tracker status in (BUY, STRONG_BUY). Clause (f) NOT applied. "
+                      "This is the hack4 / hack6 universe, and it is what the previous "
+                      "receipt called `buy_without_clause_f`.",
+        "buy_with_clause_f": "the same, minus every name flagged `past_winner`. "
+                             "This is hack3's universe, and it is what the previous "
+                             "receipt called `buy_basket`.",
+        "past_winners_only": "the names clause (f) throws away, on their own.",
+    }
+    report["buy_with_clause_f"] = basket(lab, is_cand_f, cost_bps)
+    report["past_winners_only"] = basket(
+        lab, is_cand & (lab["past_winner"] == True), cost_bps)          # noqa: E712
+    # kept under the old key so a reader of the previous receipt can line the
+    # two up rather than silently comparing different things.
+    report["buy_without_clause_f"] = report["buy_basket"]
     # THE DECISIVE TESTS -- paired, and the cross-sectional shape.
     report["paired_vs_market"] = {
         "buy_basket": paired_vs_market(lab, is_cand, market, cost_bps),
-        "buy_without_clause_f": paired_vs_market(lab, relaxed, market, cost_bps),
+        "buy_with_clause_f": paired_vs_market(lab, is_cand_f, market, cost_bps),
         "past_winners_only": paired_vs_market(
-            lab, relaxed & (lab["past_winner"] == True), market, cost_bps),  # noqa: E712
+            lab, is_cand & (lab["past_winner"] == True), market, cost_bps),  # noqa: E712
         "note": ("terminal wealth alone compares two correlated single draws; the market's own "
                  "t over this window is 1.72. The paired monthly spread removes the shared "
                  "market factor and is the number that decides."),
@@ -610,6 +668,85 @@ def run(start: int, end: int, cost_bps: float, lag_days: int) -> int:
         if m.sum() == 0:
             continue
         report["capped_by_era"][f"{lo}-{hi}"] = paired_vs_market(lab, m, market, cost_bps)
+    # ---------------------------------------------------------------------
+    # THE COST QUESTION. 10 bps a side is a fair number for a liquid name and
+    # an optimistic one for a stock four analysts follow -- and the whole
+    # thin-coverage result lives in exactly those names. A finding that only
+    # survives at a cost we would not actually pay is not a finding, so the
+    # rule is re-graded on a grid and every bucket reports where it dies.
+    #
+    # The market leg stays GROSS in the paired spread. That is deliberate and
+    # conservative in the honest direction: it charges the basket for its
+    # turnover and gives the benchmark its turnover free, so the spread below
+    # UNDERSTATES the strategy rather than flattering it.
+    report["cost_sensitivity"] = {}
+    for bps in (10.0, 25.0, 50.0, 100.0):
+        entry = {"all_candidates": {
+            "wealth": basket(lab, is_cand, bps).get("terminal_wealth"),
+            "cagr": basket(lab, is_cand, bps).get("cagr"),
+            **paired_vs_market(lab, is_cand, market, bps)},
+            "with_clause_f": {
+                "wealth": basket(lab, is_cand_f, bps).get("terminal_wealth"),
+                "cagr": basket(lab, is_cand_f, bps).get("cagr"),
+                **paired_vs_market(lab, is_cand_f, market, bps)}}
+        by_b = {}
+        for b in [x[0] for x in T.COVERAGE_BUCKETS]:
+            m = is_cand & (lab["coverage_bucket"] == b)
+            if m.sum() == 0:
+                continue
+            bk = basket(lab, m, bps)
+            by_b[b] = {"name_months": int(m.sum()),
+                       "wealth": bk.get("terminal_wealth"), "cagr": bk.get("cagr"),
+                       "mean_turnover": bk.get("mean_turnover"),
+                       **paired_vs_market(lab, m, market, bps)}
+        entry["by_coverage_bucket"] = by_b
+        report["cost_sensitivity"][f"{bps:g}bps_per_side"] = entry
+    report["cost_sensitivity_note"] = (
+        "the SAME capped BUY rule, re-graded at four cost levels. 10bps is the headline "
+        "number and is optimistic for the thin buckets; 25-50bps is a fairer read on a "
+        "name four analysts follow. A bucket whose paired t crosses zero between two "
+        "columns is a bucket whose edge is the spread, not the screen.")
+
+    # CAPACITY, which basis points do not answer. A 1-3-analyst edge that lives
+    # entirely in names trading $200k a day is not an edge this book can take.
+    report["volume_units"] = _VOLUME_UNITS
+    dv = lab["dollar_vol_20d"]
+    report["capacity"] = {"n_with_dollar_volume": int(dv.notna().sum()),
+                          "n_without": int(dv.isna().sum()),
+                          "note": ("20-session median dollar volume at entry, in the dollars of "
+                                   "the day -- NOT inflation-adjusted, so the early years look "
+                                   "thinner than they traded. Bands are absolute on purpose: a "
+                                   "per-month quantile would call the thinnest decile of 2013 "
+                                   "'liquid' merely because everything around it was thinner.")}
+    BANDS = ((0, 1e5, "<$100k/day"), (1e5, 1e6, "$100k-1m"), (1e6, 1e7, "$1m-10m"),
+             (1e7, 1e8, "$10m-100m"), (1e8, float("inf"), ">$100m"))
+    report["capacity"]["bands"] = {}
+    for lo, hi, lbl in BANDS:
+        m = is_cand & dv.notna() & (dv >= lo) & (dv < hi)
+        if m.sum() < 200:
+            report["capacity"]["bands"][lbl] = {"name_months": int(m.sum()),
+                                                "note": "too few to grade"}
+            continue
+        report["capacity"]["bands"][lbl] = {
+            "name_months": int(m.sum()),
+            "wealth": basket(lab, m, 25.0).get("terminal_wealth"),
+            **paired_vs_market(lab, m, market, 25.0)}
+    # and the cross of the two questions: is the thin-coverage edge only in the
+    # names nobody can buy? This is the one table that answers Murat directly.
+    report["capacity"]["thin_coverage_by_liquidity_at_25bps"] = {}
+    for b in ("1-3", "4-10"):
+        row = {}
+        for lo, hi, lbl in BANDS:
+            m = (is_cand & (lab["coverage_bucket"] == b) & dv.notna()
+                 & (dv >= lo) & (dv < hi))
+            if m.sum() < 200:
+                row[lbl] = {"name_months": int(m.sum()), "note": "too few to grade"}
+                continue
+            row[lbl] = {"name_months": int(m.sum()),
+                        "wealth": basket(lab, m, 25.0).get("terminal_wealth"),
+                        **paired_vs_market(lab, m, market, 25.0)}
+        report["capacity"]["thin_coverage_by_liquidity_at_25bps"][b] = row
+
     # DOES CONCENTRATION HELP? The basket above holds every candidate -- ~416
     # names. The live books hold 5 to 15. That is a different portfolio and it
     # has to be tested as one: the farm's standing result is that breadth raised
@@ -636,8 +773,9 @@ def run(start: int, end: int, cost_bps: float, lag_days: int) -> int:
         "so the rule lives entirely in the upper bands. `split_in_prior_year_share` separates "
         "'the rule buys bad names' from 'the rule buys a stale target across a split'.")
     report["buy_basket_note"] = (
-        "`buy_basket` applies clause (f); `buy_without_clause_f` is the same screen with the "
-        "past-winner exclusion removed. The DIFFERENCE between them is what clause (f) bought "
+        "`buy_basket` is the tracker status and does NOT apply clause (f) (hack4/hack6); "
+        "`buy_with_clause_f` is the same screen minus past winners (hack3). "
+        "The DIFFERENCE between them is what clause (f) bought "
         "or cost -- which is the only way to answer 'do not buy last year's winner' rather "
         "than assume it.")
 
@@ -680,12 +818,42 @@ def _print(rep: dict) -> None:
     print("\nHEADLINE")
     line("market (equal weighted)", rep["market_equal_weighted"])
     line("BUY basket (net)", rep["buy_basket"])
+    if "cost_sensitivity" in rep:
+        print("\nCOST -- the same capped rule at four cost levels (paired excess/yr, t)")
+        cols = list(rep["cost_sensitivity"].keys())
+        buckets = sorted({b for c in cols
+                          for b in rep["cost_sensitivity"][c]["by_coverage_bucket"]})
+        head = "  " + "coverage".ljust(10) + "".join(c.replace("_per_side", "").rjust(18)
+                                                     for c in cols)
+        print(head)
+        for b in ["ALL", "ALL+f"] + buckets:
+            cells = []
+            for c in cols:
+                cs = rep["cost_sensitivity"][c]
+                d = (cs["all_candidates"] if b == "ALL"
+                     else cs.get("with_clause_f", {}) if b == "ALL+f"
+                     else cs["by_coverage_bucket"].get(b, {}))
+                if not d or d.get("annualised_excess") is None:
+                    cells.append("--".rjust(18))
+                else:
+                    cells.append(f"{d['annualised_excess']:+7.2%} t{d['t_stat_paired']:+5.2f}"
+                                 .rjust(18))
+            print("  " + b.ljust(10) + "".join(cells))
+    if "capacity" in rep:
+        print("\nCAPACITY -- can the thin names actually be bought? (25bps/side)")
+        for lbl, d in rep["capacity"].get("bands", {}).items():
+            if d.get("note"):
+                print(f"  {lbl:14} {d['name_months']:>7,} name-months  {d['note']}")
+            else:
+                print(f"  {lbl:14} {d['name_months']:>7,} name-months  "
+                      f"{d['annualised_excess']:+7.2%}/yr  t {d['t_stat_paired']:+5.2f}")
+
     print("\nHYPOTHESIS 1 -- does thin coverage behave differently?")
     for b, d in rep["buy_basket_by_coverage_bucket"].items():
         line(f"  coverage {b}", d)
     print("\nHYPOTHESIS 2 -- is 'do not buy the past winner' right?")
-    line("BUY with clause (f)", rep["buy_basket"])
-    line("BUY without clause (f)", rep["buy_without_clause_f"])
+    line("BUY without clause (f)  [hack4/hack6]", rep["buy_basket"])
+    line("BUY with clause (f)     [hack3]", rep["buy_with_clause_f"])
     line("past winners only", rep["past_winners_only"])
     print("\nBY ERA (never pooled)")
     for era, d in rep["by_era"].items():
