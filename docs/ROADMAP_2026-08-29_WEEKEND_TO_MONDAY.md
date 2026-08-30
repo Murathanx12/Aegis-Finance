@@ -312,6 +312,38 @@ receipt under `state/`.
 | T9 | **Entry timing** | same signal filled at 09:45 / 10:30 / 15:50 (MOC): the overnight finding says MOC | shadow fills from minute bars | 09:45 | `runner.in_opening_range` is the first cut; T9 decides the rest |
 | T10 | **Asia lead** | do FXI/KWEB/EWJ/EWY moves and HK-listed supplier prints predict the US open gap of mapped names? | ETF closes + a hand-written edge table v0 (~200 edges) | unmapped names | premarket digest East pass gets a NUMBER, not a paragraph |
 
+**STATUS Sun 30 Aug (Opus): T2, T6, T3 RUN — AND ITEM 1'S RESULT IS WITHDRAWN.**
+The features panel was 23 symbols while the corpus covered 156. Rebuilt over the
+corpus universe (**152 symbols / 37,601 symbol-days**) and re-run through the
+SAME harness over the SAME period: **0 of 29 features have a 95% CI excluding
+zero, where 7 did on the 23.** `ev_insider_20d` +0.148 -> +0.023. It is the
+universe, not the harness — re-running the same 23 from the wide build
+reproduces +0.139. The 23 were Murat's own names over a window in which MU ran
++702.7%. Coverage is ruled out (coverage alone IC +0.0004; normalising moves the
+ICs by <0.005). Receipt:
+`aegis-alpha-terminal/docs/FINDING_2026-08-30_THE_EVENT_COUNTS_WERE_TWENTY_THREE_NAMES.md`.
+**T7's sealed book therefore CLAIMS NOTHING** — `CLAIMING` is derived from the
+CIs, so it turns itself on when a signal earns it (`scripts/prediction_book.py`,
+hashed + append-only seals, 151 considered / 0 claims). **T6:** condition (b)
+UNAVAILABLE (rating non-null on 135 of 37,601 — the PIT panel is 4 days old);
+(a)x(e) every cell below its own MDE, and "already down" ALONE loses money
+(0.92x), agreeing with the CRSP knife-basket adjudication. **T3:** 269 events,
+six real drivers — the laggard beats the leader but LOSES to the middle of the
+driver on mean, median and terminal wealth; no support for the laggard thesis.
+T3 could not be ASKED before the panel widened. **T2:** 13 refusal classes in
+three kinds (merit / book state / tournament), never pooled — a classifier bug
+had put 473 forecast-level rows into AGGREGATE_RISK. Every scored class is
+negative BUT the null is empty (the taken book's legs have expired), so it says
+what the refused ideas are worth, not that refusing beat trading. **T1's
+second-family control is BLOCKED**: hf_glm HTTP 402 (credits depleted),
+nvidia_kimi HTTP 429; `--provider` now pins the family and refuses to fall back,
+and the SPY control's blinding was deleting the macro story (`U.S`, `Iran`,
+`Bessent`) until index instruments were exempted from derived aliases. Also:
+four names in the 98-name trading universe are delisted/bankrupt and could never
+have filled (GES, GMS, SNBR, TPIC — now 94). Terminal commits `46b595e..cabdb06`;
+suite 51 -> **54 suites / 2,277 checks**. Full handoff:
+`aegis-alpha-terminal/docs/SESSION_2026-08-30_OPUS_ROADMAP.md`.
+
 **STATUS Sat 29 Aug 23:59 SGT:** items 1-3 SHIPPED (terminal commit "News becomes numbers…"): features panel + IC table (event counts carry; narrative does not), T1 blind tournament run = NO INFORMATION (receipt), sensors widened to 80,212 observations / 156 names / 149 with SEC filings. See `aegis-alpha-terminal/docs/FINDING_2026-08-29_BLINDED_NEWS_HAS_NO_DIRECTION_EVENT_COUNTS_DO.md`. T7 is now a CONTROL. Next: 4 → 5 → 6.
 
 Build order for Opus (Sun → Wed), gates not dates:
