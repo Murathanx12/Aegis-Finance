@@ -7,6 +7,7 @@ retrieval and load TIER 0 + the current TIER 1 verbatim.
 ## TIER 0 — CANON (changes a few times a year; read every session)
 - `AEGIS_STRATEGIC_INVARIANTS.md` — the sixteen points.
 - `AEGIS_VISION_2026-08-28_MURAT_IN_HIS_OWN_WORDS.md` — the intent, verbatim, with corrections and the one missing artery.
+- `AEGIS_VISION_2026-08-30_LOG_REVISION_ERA_REPLAY.md` -- TIER 0 addendum (30 Aug): two independent LLMs, the news funnel, the anonymised ERA REPLAY backtest (T13), and why the books were not deciding.
 - `OPTIMUS_OBJECTIVE.md` §0 — mission, utility, four personalities.
 - `../CLAUDE.md` — operating rules (335 lines since 2026-08-29) + `CLAUDE_LESSONS_2026-08.md` — the long form moved out of it verbatim (farm lessons, layout, tests).
 
