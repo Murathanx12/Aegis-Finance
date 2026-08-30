@@ -346,6 +346,8 @@ suite 51 -> **54 suites / 2,277 checks**. Full handoff:
 
 **STATUS Sat 29 Aug 23:59 SGT:** items 1-3 SHIPPED (terminal commit "News becomes numbers…"): features panel + IC table (event counts carry; narrative does not), T1 blind tournament run = NO INFORMATION (receipt), sensors widened to 80,212 observations / 156 names / 149 with SEC filings. See `aegis-alpha-terminal/docs/FINDING_2026-08-29_BLINDED_NEWS_HAS_NO_DIRECTION_EVENT_COUNTS_DO.md`. T7 is now a CONTROL. Next: 4 → 5 → 6.
 
+**STATUS Sun 30 Aug 11:00 SGT (Fable):** T1 negative (no information, blinding holds); T2 table only (null empty); T3 laggard negative, the shock itself untested; T6 (a)×(e) 1.49× below MDE, (b) untestable until ~30 panel vintages; T7 sealed book live, claims nothing by derivation; the 23-name event-count IC was WITHDRAWN on 152 names — the conditional question (by vol/coverage/sector tercile) is the next test, not a retraction. LEFT: T4, T5, T8 grade, T9, T10, generators, autopsy loop, T11 bias-state panel. Orders: `aegis-alpha-terminal/docs/NEXT_SESSION_2026-08-30_OPUS.md`. Providers: HF OFF; DeepSeek default+fallback → Featherless → NVIDIA.
+
 Build order for Opus (Sun → Wed), gates not dates:
 1. `scripts/corpus_features.py` panel + IC table (news → numbers; this decides
    which features enter the sealed book) — **being built 29 Aug**.
