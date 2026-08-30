@@ -152,3 +152,84 @@ catalyst inside the horizon, already down from the 60-day high), which claims
 Intuition generates, data adjudicates — but only if the intuition is allowed to
 speak. Details and the sizing arithmetic are in the terminal brief
 `docs/NEXT_SESSION_2026-08-30b_OPUS.md`.
+
+---
+
+## 5. REVISION 2 (Murat, 30 Aug, after reading §2c) — THE FANTASY TRANSPOSITION
+
+**Murat:** *Let's change everything then. Rather than hiding the year and the
+industry, create a new futuristic situation and wait for the model to find the
+connections. The year is made up (2050, or 1980), the company works in a
+made-up industry that matters to that time, the news is a made-up scenario
+that carries the same narrative. See if the LLM can turn that kind of context
+into usable data for the engine. Too many guardrails — the engine just says
+"I don't know, and this is why." It should say "I am X confident this might
+happen, with this risk and this profit," and choose the best of its choices.*
+
+### 5a. Why this is better than the year-canary
+
+The canary only DETECTS memorisation. Transposition REMOVES the thing being
+memorised: there is no 2016 to remember if the story is set in 2050 in the
+orbital-cooling industry. What survives the rewrite is the *shape* of the
+situation — a demand shock, a supply constraint, a bank pulling funding, a
+regulator, a war, consensus that is very high, a company that does one thing
+differently. If the decider can turn that shape into a good number, it is
+reading, not remembering. That is the cleanest test of Murat's claim that
+exists.
+
+### 5b. How it must be built (three rules, or it leaks)
+
+1. **The rewriter is point-in-time too.** LLM-A rewrites each window seeing
+   ONLY that window's items — never a later item, never a price. Otherwise the
+   rewriter, which knows how Micron ended, writes the ending into the tone.
+2. **One mapping per era, frozen and sealed.** Semiconductors → "orbital
+   cooling", Micron → "Company 7", 2016 → "2051", JPMorgan → "the Meridian
+   bank", Iran → "the Strait conflict". The map is a file, hashed, and only the
+   grader may open it. The same real entity always gets the same fantasy name
+   inside an era, so the decider can follow a company across windows.
+3. **Magnitudes are preserved, names are not.** "+40% consensus upside",
+   "revenue −18%", "third guidance cut in a year", "rating 4.6/5" go through
+   untouched. The numbers are the information; the nouns are the leak.
+
+Two controls run beside it, always:
+- **Real-anonymised arm** (§3): same windows, names stripped, year and industry
+  left in. The gap between the two arms = how much the model was using memory
+  or sector priors. Both numbers are reported; the fantasy arm is the claim.
+- **Rewriter-parity check:** rewrite the same window twice (two providers or
+  two seeds); if the decider's numbers differ more between rewrites than
+  between windows, the rewriter is adding information and the arm is marked
+  `REWRITER_LEAK`.
+
+Canary stays, cheaper: "Is this a real company? Which? What year?" — should
+be ~0 in the fantasy arm by construction, and the rate is printed.
+
+### 5c. "I don't know" is retired as an answer
+
+The decider must return, per company, per decision date:
+
+```
+p_up_21d        probability the name is higher in 21 sessions
+exp_return      expected return over the horizon
+downside_5pct   the loss it thinks is the bad case
+confidence      0..1 -- how much it trusts its own read
+horizon         sessions
+reason          one line
+```
+
+Uncertainty is expressed as `p_up ≈ 0.5, confidence low`, never as a refusal.
+Then the choosing is code, not prose: rank by expected utility under the
+declared personality (balanced: `exp_return − λ·|downside|`, aggressive:
+`p_up × exp_return`), take the top k, and grade two things — **wealth** (did
+the top k beat the same-era basket) and **calibration** (when it said 70%, was
+it right 70% of the time — Brier score and a reliability table). A model that
+is honest about its uncertainty and still ranks well is what we want; a model
+that is confident and wrong is what the calibration table exposes.
+
+### 5d. What this changes on the live books
+
+The guards on *money* stay (gross cap, stops, opening range) — they are what
+stopped Friday from being worse. The guard on *speaking* goes: the pre-open
+book always publishes a ranked list with `p_up / exp_return / downside /
+confidence` for every name it considered, and the selectors pick from that
+list. A book that chooses nothing must show the numbers it chose nothing
+from.
