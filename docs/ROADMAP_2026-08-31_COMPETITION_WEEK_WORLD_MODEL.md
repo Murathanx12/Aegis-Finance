@@ -46,7 +46,92 @@ This is P0 before calling any tracker portfolio a trading strategy.
 
 ---
 
-## 2. P0 — Monday before open: one exact portfolio reaches one paper account
+## 1b. ADDENDUM — measured after this roadmap was written (2026-08-31, same day)
+
+Everything below was verified in code or against the live deploy, not asserted.
+Where it contradicts a statement above, the measurement wins.
+
+### RESULTS SCOREBOARD (CLAUDE.md requires this before any plan)
+
+| | |
+|---|---|
+| Best historical net strategy vs market | analyst-upside basket capped at 4x: **+3.88%/yr, t 2.16** (IBES+CRSP 2013-24, 10bps/side) |
+| Best forward paper strategy | **none.** No tracker book has ever placed an order |
+| Independent selectors live | **0** of 3 built |
+| Farm candidates tested / promoted | 15 / 0 |
+| External execution drag | n/a — nothing executed |
+
+**RESULT IMPROVEMENT over the weekend: NONE.** Two days improved an orphan.
+
+### P0 IS BUILT (`aegis-alpha-terminal@26faa7b`) — §2 becomes *prove and finish*
+
+The seal now carries `portfolios[book]` — exact holdings and weights inside
+`content_sha256` — and `alpha/brains/tracker_portfolio.py` reads that block and
+nothing else. It never imports `alpha.tracker`, so it **cannot** re-rank at order
+time. Registered distinctly from `murat_rule`: enabling one does not enable the
+other. Verified identical to the `--portfolios` print for all three books.
+Three proofs (reachability / identity / mutation) in `tests_smoke_artery.py`.
+**60 suites, 2551 checks, ALL PASS. Nothing is enabled; nothing was redeployed.**
+
+Measured against §2's artifact spec, **11 of 15 fields are present**. Missing,
+and the first task: `driver exposure summary` · `derived gross` ·
+`worst_case bound` · `source commit / model / rule versions`.
+
+### A THIRD LAYER, under the two named above
+
+The **published** seed book was stale: `docs/seed/predictions/2026-08-30.json`
+held **302 considered / 1 claim (MU)** while local reseals held **749 / 10**.
+`--publish` was never run after the reseal. So enabling `murat_rule` would have
+traded **one name** — not ten, and not hack4's five.
+
+### A PUSH DOES NOT DEPLOY
+
+`df31a7f` was committed **20:58 +08** on 30 Aug; the newest Railway deployment
+was **12:44 +08 the same day — eight hours earlier**. It was pushed and never
+deployed. `prediction_book --publish` already prints "git push, **then
+redeploy**"; that line is load-bearing. Use `railway redeploy --from-source`.
+
+### THE THIN-NAME BAND IS UNOBSERVED, NOT MERELY UNBOUGHT
+
+`universe.MIN_DOLLAR_VOLUME = 3_000_000`, and the measured minimum across all
+**3,059** tracker rows is **$3.0m/day**. Zero names below it. So the $100k–$1m
+band carrying the largest measured 11-year edge is outside the universe we
+screen — and a proposed lane to log `spread_bps` for those names would have had
+**nothing to measure**. Widen the observation universe (§5-adjacent) *first*,
+then measure spreads, then decide whether the edge is buyable.
+
+### THE RULE THAT MAKES THIN NAMES INVESTABLE
+
+> **evidence density ≠ expected upside.** A biotech with 4 credible
+> observations: expected +70%, confidence 0.43. NVDA with thousands: +14%,
+> confidence 0.81. The biotech may rank higher and still take less capital.
+> Missing evidence lowers **certainty**, never **opportunity**.
+
+### CITATIONS ARE UNVERIFIED
+
+The review that produced much of this roadmap cited 2025-26 papers (Management
+Science on LLM earnings language; JFE on ChatGPT headline scores; a
+textual-novelty paper; an SSRN analyst-narrative study). **None has been opened
+by us.** They are leads, not support. **No AEGIS claim may cite them until
+someone reads the paper.** The same review also described two commits that did
+not exist at the time it was written.
+
+### THE RULE THIS WHOLE EPISODE EARNS
+
+> **A capability is not built until an entry point can reach it.** Every new
+> selector, collector or model names the entry point that consumes it, in the
+> same commit, or it is a print. `scripts.reachability` had been printing
+> `ORPHAN alpha.tracker` for weeks, buried among 22 other orphans — a permanent
+> red block teaches the reader to skim it.
+
+---
+
+## 2. P0 — one exact portfolio reaches one paper account  ✅ BUILT (see §1b), NOT ENABLED
+
+**Status changed the same day this was written.** The artery below exists and is
+proven (`26faa7b`); what remains is to prove it on today's data, finish the four
+missing artifact fields, and make the attended decision to enable ONE account.
+The requirements below stand as the spec it is measured against.
 
 Build the smallest auditable artery:
 
