@@ -2,7 +2,9 @@
 
 **Receipt:** `backend/data/optimus/wrds/holders_13f.json`
 **Code:** `scripts/holders_13f.py`
-**Licence:** PRODUCT_EXPERIMENT — cross-sectional, doubly controlled, gross of costs.
+**Licence:** PRODUCT_EXPERIMENT — cross-sectional; controlled for institutional
+popularity, trailing return AND liquidity band; net of measured quoted spread,
+gross of market impact.
 **Status:** Murat's hypothesis **inverted** — the effect is real and points the other way.
 
 ---
