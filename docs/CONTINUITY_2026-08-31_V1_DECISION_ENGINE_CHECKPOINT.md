@@ -350,3 +350,24 @@ Before either Fable/Opus edits a shared execution surface:
 7. no session-local memory is strategic authority — write result/decision/queue changes into the repo.
 
 This document exists specifically so closing a chat session does not erase AEGIS's intent or state.
+
+
+---
+
+## ADDENDUM 2026-08-31 ~10:30 ET (Fable, end of session)
+
+Queue item 1 (hack4 verification) is COMPLETE and exceeded: **hack4 and hack3
+hold live fills at exact sealed weights** (hack4: NB/LAES/ABAT/ALMU @10%,
+stops resting; hack3: LAES/ORCL/RZLT @8.3%). hack6 entered nothing CORRECTLY
+-- all 15 of its sealed names carry negative exp_return. Three runner gates
+(MDM 5pp, chain-width, cash-EV) had been re-adjudicating the seal and each
+refused the whole book in turn; fixed in terminal commit `34f08ca` (sealed
+expression = execution gates only, model dissent recorded not enforced).
+Queue item 5 (write-back) also SHIPPED early: terminal `bd719b1`.
+
+**New item 0 for the next session, before tomorrow's seal:** the rank
+(upside x consensus) and the calibrated exp_return disagree wholesale (RZLV
+ranked #1 with negative exp_return; exp_return is a constant 0.00246
+elsewhere). Full queue: terminal repo `docs/HANDOFF.md`, session 31. Murat's
+holder-provenance idea captured in
+`docs/IDEA_2026-08-31_HOLDER_PROVENANCE_TO_THE_ROOTS.md` (this repo).
