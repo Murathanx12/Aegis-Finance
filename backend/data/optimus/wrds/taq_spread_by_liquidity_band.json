@@ -26,8 +26,9 @@
    "median_of_median_bps": 148.9,
    "p25_bps": 88.5,
    "p75_bps": 203.3,
-   "round_trip_bps": 297.7,
-   "monthly_cost_pct_if_full_turnover": 2.98
+   "round_trip_bps": 148.9,
+   "round_trip_note": "one full quoted spread: half entering, half leaving",
+   "cost_pct_per_year_at_monthly_turnover": 17.86
   },
   "1m-5m": {
    "n_measured": 30,
@@ -35,8 +36,9 @@
    "median_of_median_bps": 38.7,
    "p25_bps": 28.9,
    "p75_bps": 60.1,
-   "round_trip_bps": 77.4,
-   "monthly_cost_pct_if_full_turnover": 0.77
+   "round_trip_bps": 38.7,
+   "round_trip_note": "one full quoted spread: half entering, half leaving",
+   "cost_pct_per_year_at_monthly_turnover": 4.64
   },
   "5m-10m": {
    "n_measured": 30,
@@ -44,8 +46,9 @@
    "median_of_median_bps": 21.0,
    "p25_bps": 15.0,
    "p75_bps": 31.1,
-   "round_trip_bps": 42.0,
-   "monthly_cost_pct_if_full_turnover": 0.42
+   "round_trip_bps": 21.0,
+   "round_trip_note": "one full quoted spread: half entering, half leaving",
+   "cost_pct_per_year_at_monthly_turnover": 2.52
   },
   "10m-50m": {
    "n_measured": 30,
@@ -53,8 +56,9 @@
    "median_of_median_bps": 20.2,
    "p25_bps": 9.2,
    "p75_bps": 28.3,
-   "round_trip_bps": 40.5,
-   "monthly_cost_pct_if_full_turnover": 0.4
+   "round_trip_bps": 20.2,
+   "round_trip_note": "one full quoted spread: half entering, half leaving",
+   "cost_pct_per_year_at_monthly_turnover": 2.43
   },
   "50m+": {
    "n_measured": 30,
@@ -62,8 +66,9 @@
    "median_of_median_bps": 6.7,
    "p25_bps": 3.7,
    "p75_bps": 9.4,
-   "round_trip_bps": 13.4,
-   "monthly_cost_pct_if_full_turnover": 0.13
+   "round_trip_bps": 6.7,
+   "round_trip_note": "one full quoted spread: half entering, half leaving",
+   "cost_pct_per_year_at_monthly_turnover": 0.8
   }
  },
  "rows": [
@@ -4704,5 +4709,6 @@
    "median_bps": 0.99,
    "mean_bps": 1.74
   }
- ]
+ ],
+ "corrected_2026_08_31": "round_trip_bps was 2x the quoted spread. A buy at the ask and a later sell at the bid costs ONE full spread, not two. Raw per-name measurements unchanged; only the derived round trip and the verdict for the $1m-5m band, which flips from -2.31%/yr to +2.34%/yr."
 }

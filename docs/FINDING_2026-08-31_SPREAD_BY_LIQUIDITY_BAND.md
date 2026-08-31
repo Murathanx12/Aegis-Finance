@@ -1,4 +1,12 @@
-# FINDING — 2026-08-31 — the thin-coverage edge is real, and not buyable at monthly turnover
+# FINDING — 2026-08-31 — only the THINNEST band fails at monthly turnover
+
+> **CORRECTED the same day.** The first version doubled the round-trip cost and
+> therefore retired a band that survives. A buy at the ask and a later sell at
+> the bid costs **one** full quoted spread — `(ask − mid) + (mid − bid) = ask − bid`
+> — not two. The raw per-name measurements were never wrong; the derived
+> round-trip was. The verdict for **$1m–5m flips from −2.31%/yr to +2.34%/yr**,
+> and the recommended execution floor drops from $5m to **$1m**. A costing error
+> is a verdict error.
 
 **Receipt:** `backend/data/optimus/wrds/taq_spread_by_liquidity_band.json`
 **Code:** `scripts/taq_spread_by_liquidity_band.py`
@@ -46,25 +54,27 @@ assumption**.
 
 Against the measured edge, at monthly rebalancing (12 full turnovers/yr):
 
-| band | round-trip | cost/yr @12× | edge %/yr | **net %/yr** | break-even rebalances/yr |
-|---|---|---|---|---|---|
-| $100k–1m | 297.7 bps | 35.7% | +6.98% | **−28.74%** | **2.3** |
-| $1m–5m | 77.4 bps | 9.3% | +6.98% | **−2.31%** | 9.0 |
-| $5m–10m | 42.0 bps | 5.0% | +6.98% | **+1.94%** | 16.6 |
-| $10m–50m | 40.5 bps | 4.9% | +5.79% | **+0.93%** | 14.3 |
-| $50m+ | 13.4 bps | 1.6% | +5.79% | **+4.18%** | 43.2 |
+| band | round-trip (1 spread) | cost/yr @12× | edge %/yr | **net %/yr** | affordable round trips/yr | min hold |
+|---|---|---|---|---|---|---|
+| $100k–1m | 148.9 bps | 17.87% | +6.98% | **−10.89%** | 4.7 | ~2.6 months |
+| $1m–5m | 38.7 bps | 4.64% | +6.98% | **+2.34%** | 18.0 | ~3 weeks |
+| $5m–10m | 21.0 bps | 2.52% | +6.98% | **+4.46%** | 33.2 | ~1.5 weeks |
+| $10m–50m | 20.2 bps | 2.42% | +5.79% | **+3.37%** | 28.7 | ~1.5 weeks |
+| $50m+ | 6.7 bps | 0.80% | +5.79% | **+4.99%** | 86.4 | days |
 
-**Two of the three bands the edge was attributed to lose money once the spread
-is real.** The thinnest band loses by a factor of five.
+**Only the thinnest band loses at monthly turnover.** $1m–5m survives with
++2.34%/yr — a thin margin, and one that market impact (excluded here) can still
+erase, but it is positive rather than negative.
 
 ## What follows — and the part that is not "don't touch it"
 
-1. **Do NOT widen `MIN_DOLLAR_VOLUME` to chase the thin band at monthly
-   turnover.** The current $3m floor is roughly right; for a monthly strategy
-   the *tradable* floor is better at **$5m**, where the net first turns positive.
-2. **The thin band is not refuted — its HOLDING PERIOD is.** The edge can pay
-   for **2.3 turnovers a year**, i.e. a ~5-month hold. A $100k–1m name is a
-   6-month position or it is nothing. That is a testable, specific claim
+1. **A $1m execution floor is defensible; $100k is not.** The net first turns
+   positive in the $1m–5m band, so lowering `MIN_DOLLAR_VOLUME` from $3m toward
+   **$1m** is supported — which is exactly the floor the 31 Aug brief chose and
+   that I had called inert. It is not inert; it is roughly the right line.
+2. **The thinnest band is not refuted — its HOLDING PERIOD is.** $100k–1m pays
+   for **4.7 round trips a year**, i.e. a ~2.6-month hold. It is a quarterly
+   position or it is nothing. That is a testable claim
    (`T24_HOLD_REUNDERWRITE`), not a closure.
 3. **Observation still widens.** These names should get a `CompanyState` row, a
    status and a forecast; they must not get a monthly order. Observation

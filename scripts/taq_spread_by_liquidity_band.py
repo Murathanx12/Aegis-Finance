@@ -188,9 +188,18 @@ def main() -> int:
                 "median_of_median_bps": round(st.median(vals), 1),
                 "p25_bps": round(sorted(vals)[len(vals) // 4], 1),
                 "p75_bps": round(sorted(vals)[3 * len(vals) // 4], 1),
-                "round_trip_bps": round(2 * st.median(vals), 1),
-                "monthly_cost_pct_if_full_turnover":
-                    round(2 * st.median(vals) / 100.0, 2),
+                # ROUND TRIP IS ONE FULL SPREAD, NOT TWO. Buy at the ask, sell
+                # later at the bid: the loss against mid is
+                # (ask - mid) + (mid - bid) = ask - bid, i.e. the quoted spread
+                # ONCE. The first version doubled it, which is four half-spreads
+                # for two trades, and it made the $1m-5m band read -2.31%/yr
+                # when the correct figure is +2.34%. A costing error is a
+                # verdict error: it retired a band that survives.
+                "round_trip_bps": round(st.median(vals), 1),
+                "round_trip_note": ("one full quoted spread: half paid entering, "
+                                    "half leaving"),
+                "cost_pct_per_year_at_monthly_turnover":
+                    round(st.median(vals) / 10000.0 * 12 * 100, 2),
             }
         else:
             summary[band] = {"n_measured": 0, "n_no_quotes": miss,
