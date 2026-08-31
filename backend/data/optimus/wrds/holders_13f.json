@@ -1,5 +1,122 @@
 {
- "receipt": "HOLDERS-13F-2",
+ "receipt": "HOLDERS-13F-3",
+ "sold_cell_by_liquidity_band": {
+  "<100k": {
+   "sold": {
+    "n": 1709,
+    "mean": 19.31,
+    "median": 3.68,
+    "p_up_100pct": 8.6
+   },
+   "flat": {
+    "n": 4435,
+    "mean": 18.22,
+    "median": 5.2,
+    "p_up_100pct": 6.63
+   },
+   "share_of_sold_cell": 22.7,
+   "round_trip_bps": null,
+   "cost_pct_yr_at_quarterly": null,
+   "sold_net_pct_yr": null,
+   "edge_over_flat_net_pp": null
+  },
+  "100k-1m": {
+   "sold": {
+    "n": 2170,
+    "mean": 32.09,
+    "median": -0.63,
+    "p_up_100pct": 14.01
+   },
+   "flat": {
+    "n": 6875,
+    "mean": 13.72,
+    "median": 3.01,
+    "p_up_100pct": 5.57
+   },
+   "share_of_sold_cell": 28.8,
+   "round_trip_bps": 148.9,
+   "cost_pct_yr_at_quarterly": 5.96,
+   "sold_net_pct_yr": 26.13,
+   "edge_over_flat_net_pp": 18.37
+  },
+  "1m-5m": {
+   "sold": {
+    "n": 1225,
+    "mean": 25.77,
+    "median": -4.57,
+    "p_up_100pct": 12.24
+   },
+   "flat": {
+    "n": 8764,
+    "mean": 10.17,
+    "median": 3.6,
+    "p_up_100pct": 4.71
+   },
+   "share_of_sold_cell": 16.2,
+   "round_trip_bps": 38.7,
+   "cost_pct_yr_at_quarterly": 1.55,
+   "sold_net_pct_yr": 24.22,
+   "edge_over_flat_net_pp": 15.6
+  },
+  "5m-10m": {
+   "sold": {
+    "n": 384,
+    "mean": 20.06,
+    "median": -1.7,
+    "p_up_100pct": 11.2
+   },
+   "flat": {
+    "n": 5161,
+    "mean": 10.16,
+    "median": 4.92,
+    "p_up_100pct": 3.88
+   },
+   "share_of_sold_cell": 5.1,
+   "round_trip_bps": 21.0,
+   "cost_pct_yr_at_quarterly": 0.84,
+   "sold_net_pct_yr": 19.22,
+   "edge_over_flat_net_pp": 9.9
+  },
+  "10m-50m": {
+   "sold": {
+    "n": 731,
+    "mean": 33.35,
+    "median": 2.85,
+    "p_up_100pct": 8.76
+   },
+   "flat": {
+    "n": 12179,
+    "mean": 10.43,
+    "median": 6.77,
+    "p_up_100pct": 3.1
+   },
+   "share_of_sold_cell": 9.7,
+   "round_trip_bps": 20.2,
+   "cost_pct_yr_at_quarterly": 0.81,
+   "sold_net_pct_yr": 32.54,
+   "edge_over_flat_net_pp": 22.92
+  },
+  "50m+": {
+   "sold": {
+    "n": 392,
+    "mean": 19.4,
+    "median": 11.49,
+    "p_up_100pct": 6.89
+   },
+   "flat": {
+    "n": 12981,
+    "mean": 11.31,
+    "median": 8.29,
+    "p_up_100pct": 2.13
+   },
+   "share_of_sold_cell": 5.2,
+   "round_trip_bps": 6.7,
+   "cost_pct_yr_at_quarterly": 0.27,
+   "sold_net_pct_yr": 19.13,
+   "edge_over_flat_net_pp": 8.09
+  }
+ },
+ "band_note": "the finding's own open question: a +26%/yr GROSS cell is not tradeable if it lives in the band that costs 149 bps a round trip. Costed at 4 quarterly round trips a year.",
  "controlled_by_trailing_return_quintile": {
   "trail_q0": {
    "inst_sold_10pct": {
@@ -108,7 +225,7 @@
   }
  },
  "why_trailing_control": "institutions buy what has already risen and sell what has fallen, so a 13F change is entangled with trailing return by construction. The popularity control does not touch that. Twice on 2026-08-31 an uncontrolled table in the liquidity study pointed the wrong way for exactly this reason.",
- "at": "2026-08-31T10:17:23.860132+00:00",
+ "at": "2026-08-31T10:19:57.351047+00:00",
  "hypothesis": "the largest holder adding or selling predicts forward return",
  "control": "institutional POPULARITY quintile (manager count) within each quarter -- the 13F-popularity corpse, held fixed rather than assumed away",
  "pit": {

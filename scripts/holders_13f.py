@@ -53,6 +53,25 @@ OUT = REPO / "backend" / "data" / "optimus" / "wrds"
 HOST, PORT, DB, USER = "wrds-pgdata.wharton.upenn.edu", 9737, "wrds", "murathan12"
 
 START = "2013-01-01"
+
+#: THE COST LADDER, from FINDING_2026-08-31_SPREAD_BY_LIQUIDITY_BAND. Carried
+#: here because a +26%/yr GROSS cell in a band that costs 149 bps a round trip
+#: is not the same claim as a tradeable one, and the difference is the whole
+#: question this study has to answer about itself.
+BAND_EDGES = (1e5, 1e6, 5e6, 1e7, 5e7)
+BAND_NAMES = ("<100k", "100k-1m", "1m-5m", "5m-10m", "10m-50m", "50m+")
+BAND_RT_BPS = {"<100k": None, "100k-1m": 148.9, "1m-5m": 38.7,
+               "5m-10m": 21.0, "10m-50m": 20.2, "50m+": 6.7}
+
+
+def band_of(mdv):
+    if mdv is None:
+        return None
+    b = 0
+    for e in BAND_EDGES:
+        if mdv >= e:
+            b += 1
+    return BAND_NAMES[min(b, len(BAND_NAMES) - 1)]
 #: The SEC deadline. `fdate` is unusable (see the docstring), so this is the
 #: knowability bound, and it is optimistic rather than conservative.
 FILING_LAG_DAYS = 45
@@ -99,8 +118,10 @@ def main() -> int:
         return 1
     panel = json.loads(panel_path.read_text(encoding="utf-8"))
     by_permno: dict[int, list] = defaultdict(list)
+    mdv_at: dict[tuple[int, str], float] = {}
     for permno, ym, _mdv, mret, _n in panel:
         by_permno[int(permno)].append((str(ym)[:7], float(mret)))
+        mdv_at[(int(permno), str(ym)[:7])] = float(_mdv)
     for v in by_permno.values():
         v.sort()
     print(f"panel: {len(panel):,} name-months, {len(by_permno):,} names", flush=True)
@@ -200,6 +221,7 @@ def main() -> int:
                 "top_share_of_inst": top / inst if inst > 0 else None,
                 "d_top_pct": (top - p_top) / p_top,
                 "fwd_12m": f12, "trail_12m": t12,
+                "band": band_of(mdv_at.get((permno, entry))),
             })
 
     print(f"  {len(obs):,} PIT-clean name-quarters with a 12m forward return", flush=True)
@@ -269,8 +291,34 @@ def main() -> int:
             "buy_minus_sell_pp": (round(a_b["mean"] - a_s["mean"], 2)
                                   if a_b and a_s else None)}
 
+    # IS THE SOLD CELL JUST THIN NAMES? The open question the finding named.
+    # Composition of the strongest cell by band, and what its own band's
+    # measured cost does to it at quarterly turnover (4 round trips a year).
+    sold = [o for o in obs if o["d_inst_pct"] < -0.10]
+    flat_ = [o for o in obs if -0.02 <= o["d_inst_pct"] < 0.02]
+    band_table = {}
+    for bn in BAND_NAMES:
+        sc = [o for o in sold if o["band"] == bn]
+        fc = [o for o in flat_ if o["band"] == bn]
+        a_s, a_f = agg(sc), agg(fc)
+        rt = BAND_RT_BPS.get(bn)
+        # 4 quarterly round trips a year at that band's measured spread.
+        cost = None if rt is None else round(rt / 10000.0 * 4 * 100, 2)
+        band_table[bn] = {
+            "sold": a_s, "flat": a_f,
+            "share_of_sold_cell": (round(100 * len(sc) / max(1, len(sold)), 1)),
+            "round_trip_bps": rt, "cost_pct_yr_at_quarterly": cost,
+            "sold_net_pct_yr": (None if (a_s is None or cost is None)
+                                else round(a_s["mean"] - cost, 2)),
+            "edge_over_flat_net_pp": (None if (a_s is None or a_f is None or cost is None)
+                                      else round(a_s["mean"] - a_f["mean"], 2))}
+
     payload = {
-        "receipt": "HOLDERS-13F-2",
+        "receipt": "HOLDERS-13F-3",
+        "sold_cell_by_liquidity_band": band_table,
+        "band_note": ("the finding's own open question: a +26%/yr GROSS cell is "
+                      "not tradeable if it lives in the band that costs 149 bps "
+                      "a round trip. Costed at 4 quarterly round trips a year."),
         "controlled_by_trailing_return_quintile": by_trail,
         "why_trailing_control": (
             "institutions buy what has already risen and sell what has fallen, "
@@ -331,6 +379,20 @@ def main() -> int:
               f"{f_(c['inst_sold_10pct']):>16} {f_(c['inst_flat']):>16} "
               f"{f_(c['inst_added_10pct']):>16} "
               f"{(f'{d:+6.2f}pp' if d is not None else '--'):>10}")
+    print("\n  IS THE SOLD CELL JUST THIN NAMES? composition and net of its own cost:")
+    print(f"  {'band':>10} {'% of sold':>10} {'sold gross':>12} {'flat':>12} "
+          f"{'cost/yr @4x':>12} {'sold NET':>10}")
+    for bn in BAND_NAMES:
+        b = band_table[bn]
+        if not b["sold"]:
+            continue
+        c = b["cost_pct_yr_at_quarterly"]
+        net = b["sold_net_pct_yr"]
+        print(f"  {bn:>10} {b['share_of_sold_cell']:>9.1f}% "
+              f"{b['sold']['mean']:>11.2f}% "
+              f"{(b['flat']['mean'] if b['flat'] else float('nan')):>11.2f}% "
+              f"{(f'{c:.2f}%' if c is not None else '--'):>12} "
+              f"{(f'{net:+.2f}%' if net is not None else '--'):>10}")
     print(f"\nreceipt -> {dst}")
     return 0
 

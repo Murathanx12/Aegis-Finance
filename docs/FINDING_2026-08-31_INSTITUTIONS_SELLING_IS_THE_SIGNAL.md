@@ -93,17 +93,38 @@ crowding signal.
 3. **It pairs with the coverage thesis.** Institutions leaving and analysts thin
    are two faces of "nobody is looking" — and both associate with the fat right
    tail. Worth testing jointly.
-4. **The next control is LIQUIDITY, and it is not optional.** Names institutions
-   dump >10% of are plausibly the smallest and widest-spread in the sample, and
-   today's TAQ study priced that band at **149 bps round trip**. A +40%/yr gross
-   cell in the thin band is not the same claim as a tradeable one. Until the
-   band composition of these cells is measured, this is a research result and
-   nothing more.
+4. **The liquidity control was run, and the effect is NOT a thin-name
+   artifact.** This was stated as the open question and is now answered.
+   Composition of the sold cell, with each band charged its own measured
+   round-trip cost at **4 quarterly turnovers a year**:
+
+   | band | % of sold cell | sold gross | flat | cost/yr @4× | **sold NET** |
+   |---|---|---|---|---|---|
+   | 100k–1m | 28.8% | +32.09% | +13.72% | 5.96% | **+26.13%** |
+   | 1m–5m | 16.2% | +25.77% | +10.17% | 1.55% | +24.22% |
+   | 5m–10m | 5.1% | +20.06% | +10.16% | 0.84% | +19.22% |
+   | **10m–50m** | 9.7% | **+33.35%** | +10.43% | **0.81%** | **+32.54%** |
+   | 50m+ | 5.2% | +19.40% | +11.31% | 0.27% | +19.13% |
+
+   It is present in **every** band, and it is *strongest* in `10m–50m` — a band
+   where cost is 0.81%/yr and the edge over flat names is **+22.9pp net**. The
+   `<100k` band (22.7% of the cell) is excluded from any net claim because the
+   TAQ study never measured it.
+
+   **Quarterly turnover is why this survives where the analyst-upside edge did
+   not.** 13F is quarterly by construction — 4 round trips a year, not 12 — so
+   even the 149 bps band costs 5.96%/yr against a +32% gross. The same cost
+   ladder that killed a monthly thin-band strategy leaves this one intact.
+5. **It is now a CAPITAL_CANDIDATE question rather than a research one** — but
+   the promotion gates still bind: forward evidence, calibration, drawdown
+   bounds and attended promotion. Nothing here has traded.
 
 ## Limits
 
-- **Gross of costs**, and the strongest cells are most likely to be where costs
-  are worst. See item 4 — this is the open question, stated rather than buried.
+- **Net of quoted spread, gross of MARKET IMPACT.** Item 4 charges each band its
+  measured round-trip spread. Impact is not included and binds hardest in the
+  thin bands, so the `100k–1m` net is an upper bound; the `10m–50m` result,
+  where impact is small at our size, is the one that carries the claim.
 - **Longs-only.** 13F does not show shorts, so "institutions sold" may mean
   rotated, redeemed or hedged. It is not a directional view by the manager.
 - **Optimistic PIT.** `rdate + 45d` assumes filing exactly on the deadline.
