@@ -1,0 +1,406 @@
+{
+ "receipt": "UPSIDE-BAND-DECON-1",
+ "generated_utc": "2026-08-31T12:14:21.061664+00:00",
+ "licence": "PRODUCT_EXPERIMENT",
+ "rules_sha256": "c18d5504c3ba493028060ca4f4243bc4641da22042cd0f636db6d8689cd3f275",
+ "window": [
+  2013,
+  2024
+ ],
+ "question": "how much of the +400%+ band's -26.47%/yr is opinion and how much is a stale target over a rebased/collapsed price?",
+ "control_discipline": "every cell graded twice: band-in-cell AND all-names-in-cell; the difference is what the extreme target ADDS holding the cell fixed",
+ "baseline": {
+  "band_400_plus": {
+   "name_months": 54310,
+   "months": 143,
+   "annualised_excess_vs_market": -0.2591,
+   "t_stat_paired": -4.431,
+   "median_fwd_1m": -0.0431,
+   "share_fwd_1m_over_50pct": 0.0384,
+   "share_fwd_1m_over_100pct": 0.0098
+  },
+  "band_200_400_control": {
+   "name_months": 10419,
+   "months": 143,
+   "annualised_excess_vs_market": 0.207,
+   "t_stat_paired": 2.948,
+   "median_fwd_1m": -0.0117,
+   "share_fwd_1m_over_50pct": 0.0581,
+   "share_fwd_1m_over_100pct": 0.0143
+  }
+ },
+ "cells": {
+  "price_under_1": {
+   "band_400_in_cell": {
+    "name_months": 12363,
+    "months": 143,
+    "annualised_excess_vs_market": 0.063,
+    "t_stat_paired": 0.394,
+    "median_fwd_1m": -0.0534,
+    "share_fwd_1m_over_50pct": 0.0682,
+    "share_fwd_1m_over_100pct": 0.0203
+   },
+   "all_names_in_cell": {
+    "name_months": 14584,
+    "months": 143,
+    "annualised_excess_vs_market": 0.1065,
+    "t_stat_paired": 0.675,
+    "median_fwd_1m": -0.0473,
+    "share_fwd_1m_over_50pct": 0.0717,
+    "share_fwd_1m_over_100pct": 0.0212
+   },
+   "band_200_400_in_cell": {
+    "name_months": 953,
+    "months": 132,
+    "annualised_excess_vs_market": 0.7776,
+    "t_stat_paired": 1.913,
+    "median_fwd_1m": -0.0108,
+    "share_fwd_1m_over_50pct": 0.1081,
+    "share_fwd_1m_over_100pct": 0.0388
+   },
+   "band_minus_cell_pp_yr": -0.0435,
+   "share_of_band": 0.2276
+  },
+  "price_1_to_2": {
+   "band_400_in_cell": {
+    "name_months": 11864,
+    "months": 143,
+    "annualised_excess_vs_market": -0.1936,
+    "t_stat_paired": -2.57,
+    "median_fwd_1m": -0.0455,
+    "share_fwd_1m_over_50pct": 0.0426,
+    "share_fwd_1m_over_100pct": 0.0106
+   },
+   "all_names_in_cell": {
+    "name_months": 19061,
+    "months": 143,
+    "annualised_excess_vs_market": -0.0401,
+    "t_stat_paired": -0.588,
+    "median_fwd_1m": -0.0308,
+    "share_fwd_1m_over_50pct": 0.0479,
+    "share_fwd_1m_over_100pct": 0.0118
+   },
+   "band_200_400_in_cell": {
+    "name_months": 1979,
+    "months": 143,
+    "annualised_excess_vs_market": 0.2352,
+    "t_stat_paired": 1.79,
+    "median_fwd_1m": -0.0084,
+    "share_fwd_1m_over_50pct": 0.0662,
+    "share_fwd_1m_over_100pct": 0.0157
+   },
+   "band_minus_cell_pp_yr": -0.1535,
+   "share_of_band": 0.2184
+  },
+  "price_2_to_5": {
+   "band_400_in_cell": {
+    "name_months": 15256,
+    "months": 143,
+    "annualised_excess_vs_market": -0.3304,
+    "t_stat_paired": -5.597,
+    "median_fwd_1m": -0.0442,
+    "share_fwd_1m_over_50pct": 0.0324,
+    "share_fwd_1m_over_100pct": 0.0074
+   },
+   "all_names_in_cell": {
+    "name_months": 40414,
+    "months": 143,
+    "annualised_excess_vs_market": -0.0526,
+    "t_stat_paired": -1.259,
+    "median_fwd_1m": -0.0184,
+    "share_fwd_1m_over_50pct": 0.0349,
+    "share_fwd_1m_over_100pct": 0.0068
+   },
+   "band_200_400_in_cell": {
+    "name_months": 3706,
+    "months": 143,
+    "annualised_excess_vs_market": 0.1922,
+    "t_stat_paired": 1.964,
+    "median_fwd_1m": -0.0195,
+    "share_fwd_1m_over_50pct": 0.0583,
+    "share_fwd_1m_over_100pct": 0.0124
+   },
+   "band_minus_cell_pp_yr": -0.2778,
+   "share_of_band": 0.2809
+  },
+  "price_5_plus": {
+   "band_400_in_cell": {
+    "name_months": 14827,
+    "months": 143,
+    "annualised_excess_vs_market": -0.4717,
+    "t_stat_paired": -8.452,
+    "median_fwd_1m": -0.0345,
+    "share_fwd_1m_over_50pct": 0.0162,
+    "share_fwd_1m_over_100pct": 0.0028
+   },
+   "all_names_in_cell": {
+    "name_months": 360153,
+    "months": 143,
+    "annualised_excess_vs_market": 0.0053,
+    "t_stat_paired": 0.44,
+    "median_fwd_1m": 0.0074,
+    "share_fwd_1m_over_50pct": 0.006,
+    "share_fwd_1m_over_100pct": 0.0008
+   },
+   "band_200_400_in_cell": {
+    "name_months": 3781,
+    "months": 143,
+    "annualised_excess_vs_market": 0.0613,
+    "t_stat_paired": 0.929,
+    "median_fwd_1m": -0.0064,
+    "share_fwd_1m_over_50pct": 0.041,
+    "share_fwd_1m_over_100pct": 0.0093
+   },
+   "band_minus_cell_pp_yr": -0.477,
+   "share_of_band": 0.273
+  },
+  "crashed_50pct_12m": {
+   "band_400_in_cell": {
+    "name_months": 22051,
+    "months": 143,
+    "annualised_excess_vs_market": -0.157,
+    "t_stat_paired": -1.724,
+    "median_fwd_1m": -0.0559,
+    "share_fwd_1m_over_50pct": 0.0586,
+    "share_fwd_1m_over_100pct": 0.0161
+   },
+   "all_names_in_cell": {
+    "name_months": 45803,
+    "months": 143,
+    "annualised_excess_vs_market": -0.0613,
+    "t_stat_paired": -0.869,
+    "median_fwd_1m": -0.0275,
+    "share_fwd_1m_over_50pct": 0.0525,
+    "share_fwd_1m_over_100pct": 0.0121
+   },
+   "band_200_400_in_cell": {
+    "name_months": 4496,
+    "months": 142,
+    "annualised_excess_vs_market": 0.3445,
+    "t_stat_paired": 1.698,
+    "median_fwd_1m": -0.0094,
+    "share_fwd_1m_over_50pct": 0.0763,
+    "share_fwd_1m_over_100pct": 0.0202
+   },
+   "band_minus_cell_pp_yr": -0.0957,
+   "share_of_band": 0.406
+  },
+  "not_crashed": {
+   "band_400_in_cell": {
+    "name_months": 32259,
+    "months": 143,
+    "annualised_excess_vs_market": -0.3322,
+    "t_stat_paired": -6.762,
+    "median_fwd_1m": -0.037,
+    "share_fwd_1m_over_50pct": 0.0245,
+    "share_fwd_1m_over_100pct": 0.0055
+   },
+   "all_names_in_cell": {
+    "name_months": 388409,
+    "months": 143,
+    "annualised_excess_vs_market": 0.0026,
+    "t_stat_paired": 0.257,
+    "median_fwd_1m": 0.0059,
+    "share_fwd_1m_over_50pct": 0.008,
+    "share_fwd_1m_over_100pct": 0.0014
+   },
+   "band_200_400_in_cell": {
+    "name_months": 5923,
+    "months": 143,
+    "annualised_excess_vs_market": 0.1476,
+    "t_stat_paired": 2.467,
+    "median_fwd_1m": -0.0121,
+    "share_fwd_1m_over_50pct": 0.0442,
+    "share_fwd_1m_over_100pct": 0.0098
+   },
+   "band_minus_cell_pp_yr": -0.3348,
+   "share_of_band": 0.594
+  },
+  "split_prior_year": {
+   "band_400_in_cell": {
+    "name_months": 4609,
+    "months": 143,
+    "annualised_excess_vs_market": -0.3018,
+    "t_stat_paired": -2.728,
+    "median_fwd_1m": -0.0769,
+    "share_fwd_1m_over_50pct": 0.059,
+    "share_fwd_1m_over_100pct": 0.02
+   },
+   "all_names_in_cell": {
+    "name_months": 15373,
+    "months": 143,
+    "annualised_excess_vs_market": -0.0891,
+    "t_stat_paired": -2.216,
+    "median_fwd_1m": -0.0095,
+    "share_fwd_1m_over_50pct": 0.0306,
+    "share_fwd_1m_over_100pct": 0.0092
+   },
+   "band_200_400_in_cell": {
+    "name_months": 970,
+    "months": 137,
+    "annualised_excess_vs_market": -0.0827,
+    "t_stat_paired": -0.603,
+    "median_fwd_1m": -0.0308,
+    "share_fwd_1m_over_50pct": 0.0619,
+    "share_fwd_1m_over_100pct": 0.0196
+   },
+   "band_minus_cell_pp_yr": -0.2127,
+   "share_of_band": 0.0849
+  },
+  "no_split": {
+   "band_400_in_cell": {
+    "name_months": 49701,
+    "months": 143,
+    "annualised_excess_vs_market": -0.2478,
+    "t_stat_paired": -4.34,
+    "median_fwd_1m": -0.0407,
+    "share_fwd_1m_over_50pct": 0.0364,
+    "share_fwd_1m_over_100pct": 0.0089
+   },
+   "all_names_in_cell": {
+    "name_months": 418839,
+    "months": 143,
+    "annualised_excess_vs_market": 0.0041,
+    "t_stat_paired": 2.527,
+    "median_fwd_1m": 0.0049,
+    "share_fwd_1m_over_50pct": 0.0121,
+    "share_fwd_1m_over_100pct": 0.0023
+   },
+   "band_200_400_in_cell": {
+    "name_months": 9449,
+    "months": 143,
+    "annualised_excess_vs_market": 0.2425,
+    "t_stat_paired": 3.353,
+    "median_fwd_1m": -0.0094,
+    "share_fwd_1m_over_50pct": 0.0577,
+    "share_fwd_1m_over_100pct": 0.0138
+   },
+   "band_minus_cell_pp_yr": -0.2519,
+   "share_of_band": 0.9151
+  },
+  "coverage_1": {
+   "band_400_in_cell": {
+    "name_months": 10542,
+    "months": 143,
+    "annualised_excess_vs_market": -0.2489,
+    "t_stat_paired": -3.645,
+    "median_fwd_1m": -0.0497,
+    "share_fwd_1m_over_50pct": 0.0446,
+    "share_fwd_1m_over_100pct": 0.0136
+   },
+   "all_names_in_cell": {
+    "name_months": 35195,
+    "months": 143,
+    "annualised_excess_vs_market": -0.035,
+    "t_stat_paired": -1.316,
+    "median_fwd_1m": -0.0065,
+    "share_fwd_1m_over_50pct": 0.0245,
+    "share_fwd_1m_over_100pct": 0.0062
+   },
+   "band_200_400_in_cell": {
+    "name_months": 1721,
+    "months": 143,
+    "annualised_excess_vs_market": 0.1954,
+    "t_stat_paired": 1.578,
+    "median_fwd_1m": -0.0237,
+    "share_fwd_1m_over_50pct": 0.0482,
+    "share_fwd_1m_over_100pct": 0.0122
+   },
+   "band_minus_cell_pp_yr": -0.2139,
+   "share_of_band": 0.1941
+  },
+  "coverage_2_plus": {
+   "band_400_in_cell": {
+    "name_months": 43768,
+    "months": 143,
+    "annualised_excess_vs_market": -0.2591,
+    "t_stat_paired": -4.399,
+    "median_fwd_1m": -0.0413,
+    "share_fwd_1m_over_50pct": 0.0369,
+    "share_fwd_1m_over_100pct": 0.0089
+   },
+   "all_names_in_cell": {
+    "name_months": 399017,
+    "months": 143,
+    "annualised_excess_vs_market": 0.0037,
+    "t_stat_paired": 1.585,
+    "median_fwd_1m": 0.0054,
+    "share_fwd_1m_over_50pct": 0.0117,
+    "share_fwd_1m_over_100pct": 0.0022
+   },
+   "band_200_400_in_cell": {
+    "name_months": 8698,
+    "months": 143,
+    "annualised_excess_vs_market": 0.2039,
+    "t_stat_paired": 2.548,
+    "median_fwd_1m": -0.0084,
+    "share_fwd_1m_over_50pct": 0.06,
+    "share_fwd_1m_over_100pct": 0.0147
+   },
+   "band_minus_cell_pp_yr": -0.2628,
+   "share_of_band": 0.8059
+  },
+  "CLEAN": {
+   "band_400_in_cell": {
+    "name_months": 19204,
+    "months": 143,
+    "annualised_excess_vs_market": -0.414,
+    "t_stat_paired": -8.943,
+    "median_fwd_1m": -0.0337,
+    "share_fwd_1m_over_50pct": 0.018,
+    "share_fwd_1m_over_100pct": 0.0033
+   },
+   "all_names_in_cell": {
+    "name_months": 341679,
+    "months": 143,
+    "annualised_excess_vs_market": 0.0037,
+    "t_stat_paired": 0.304,
+    "median_fwd_1m": 0.0071,
+    "share_fwd_1m_over_50pct": 0.0063,
+    "share_fwd_1m_over_100pct": 0.0009
+   },
+   "band_200_400_in_cell": {
+    "name_months": 3714,
+    "months": 143,
+    "annualised_excess_vs_market": 0.0995,
+    "t_stat_paired": 1.44,
+    "median_fwd_1m": -0.0117,
+    "share_fwd_1m_over_50pct": 0.0428,
+    "share_fwd_1m_over_100pct": 0.0083
+   },
+   "band_minus_cell_pp_yr": -0.4177,
+   "share_of_band": 0.3536
+  },
+  "DIRTY_any": {
+   "band_400_in_cell": {
+    "name_months": 35106,
+    "months": 143,
+    "annualised_excess_vs_market": -0.1703,
+    "t_stat_paired": -2.181,
+    "median_fwd_1m": -0.0496,
+    "share_fwd_1m_over_50pct": 0.0495,
+    "share_fwd_1m_over_100pct": 0.0134
+   },
+   "all_names_in_cell": {
+    "name_months": 92533,
+    "months": 143,
+    "annualised_excess_vs_market": -0.0129,
+    "t_stat_paired": -0.322,
+    "median_fwd_1m": -0.0112,
+    "share_fwd_1m_over_50pct": 0.0363,
+    "share_fwd_1m_over_100pct": 0.0085
+   },
+   "band_200_400_in_cell": {
+    "name_months": 6705,
+    "months": 143,
+    "annualised_excess_vs_market": 0.2806,
+    "t_stat_paired": 2.549,
+    "median_fwd_1m": -0.0117,
+    "share_fwd_1m_over_50pct": 0.0665,
+    "share_fwd_1m_over_100pct": 0.0176
+   },
+   "band_minus_cell_pp_yr": -0.1574,
+   "share_of_band": 0.6464
+  }
+ }
+}
