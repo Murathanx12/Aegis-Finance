@@ -135,6 +135,25 @@ def main() -> int:
     for v in series.values():
         v.sort()
 
+    def trail(permno: int, end_ym: str, months: int) -> float | None:
+        """Return over the `months` BEFORE `end_ym`. The control that decides
+        this study: institutions buy what has already gone up, and what has gone
+        up mean-reverts, so a 13F change is entangled with trailing return by
+        construction. Controlling only for POPULARITY leaves that untouched."""
+        ms = by_permno.get(permno)
+        if not ms:
+            return None
+        idx = [i for i, (ym, _r) in enumerate(ms) if ym >= end_ym]
+        if not idx:
+            return None
+        i = idx[0]
+        if i - months < 0:
+            return None
+        f = 1.0
+        for _ym, r in ms[i - months:i]:
+            f *= (1 + r)
+        return f - 1.0
+
     def fwd(permno: int, start_ym: str, months: int) -> float | None:
         ms = by_permno.get(permno)
         if not ms:
@@ -170,6 +189,9 @@ def main() -> int:
             f12 = fwd(permno, entry, 12)
             if f12 is None:
                 continue
+            t12 = trail(permno, entry, 12)
+            if t12 is None:
+                continue
             obs.append({
                 "cusip8": cusip8, "permno": permno, "rdate": rdate, "entry_ym": entry,
                 "n_managers": nmgr, "d_managers": nmgr - p_nmgr,
@@ -177,7 +199,7 @@ def main() -> int:
                 "d_inst_pct": (inst - p_inst) / p_inst,
                 "top_share_of_inst": top / inst if inst > 0 else None,
                 "d_top_pct": (top - p_top) / p_top,
-                "fwd_12m": f12,
+                "fwd_12m": f12, "trail_12m": t12,
             })
 
     print(f"  {len(obs):,} PIT-clean name-quarters with a 12m forward return", flush=True)
@@ -193,6 +215,12 @@ def main() -> int:
         n = len(g)
         for j, r in enumerate(g):
             r["pop_q"] = min(4, int(5 * j / max(1, n)))
+        # THE CONTROL THAT DECIDES IT. Same within-quarter cross-section, cut on
+        # what the name has already DONE. Without this, "institutions were
+        # selling" and "the stock had already fallen" are the same column.
+        g.sort(key=lambda r: r["trail_12m"])
+        for j, r in enumerate(g):
+            r["trail_q"] = min(4, int(5 * j / max(1, n)))
 
     def agg(sel):
         v = [r["fwd_12m"] for r in sel]
@@ -229,8 +257,27 @@ def main() -> int:
             "buy_minus_sell_pp": (round(a_b["mean"] - a_s["mean"], 2)
                                   if a_b and a_s else None)}
 
+    by_trail = {}
+    for q in range(5):
+        inq = [o for o in obs if o["trail_q"] == q]
+        sell = [o for o in inq if o["d_inst_pct"] < -0.10]
+        hold = [o for o in inq if -0.02 <= o["d_inst_pct"] < 0.02]
+        buy = [o for o in inq if o["d_inst_pct"] >= 0.10]
+        a_s, a_h, a_b = agg(sell), agg(hold), agg(buy)
+        by_trail[f"trail_q{q}"] = {
+            "inst_sold_10pct": a_s, "inst_flat": a_h, "inst_added_10pct": a_b,
+            "buy_minus_sell_pp": (round(a_b["mean"] - a_s["mean"], 2)
+                                  if a_b and a_s else None)}
+
     payload = {
-        "receipt": "HOLDERS-13F-1",
+        "receipt": "HOLDERS-13F-2",
+        "controlled_by_trailing_return_quintile": by_trail,
+        "why_trailing_control": (
+            "institutions buy what has already risen and sell what has fallen, "
+            "so a 13F change is entangled with trailing return by construction. "
+            "The popularity control does not touch that. Twice on 2026-08-31 an "
+            "uncontrolled table in the liquidity study pointed the wrong way for "
+            "exactly this reason."),
         "at": datetime.now(timezone.utc).isoformat(),
         "hypothesis": "the largest holder adding or selling predicts forward return",
         "control": ("institutional POPULARITY quintile (manager count) within each "
@@ -272,6 +319,17 @@ def main() -> int:
         print(f"  q{q} {'(least)' if q == 0 else '(most)' if q == 4 else '':<8} "
               f"{f_(c['top_holder_sold_20pct']):>15} {f_(c['top_holder_flat']):>15} "
               f"{f_(c['top_holder_added_20pct']):>15} "
+              f"{(f'{d:+6.2f}pp' if d is not None else '--'):>10}")
+    print("\n  CONTROLLED for TRAILING 12m return (the control that decides it):")
+    print(f"  {'quintile':<12} {'inst sold >10%':>16} {'inst flat':>16} "
+          f"{'inst added >10%':>16} {'buy-sell':>10}")
+    for q in range(5):
+        c = by_trail[f"trail_q{q}"]
+        f_ = lambda x: f"{x['mean']:+6.2f}% ({x['n']:,})" if x else "--"
+        d = c["buy_minus_sell_pp"]
+        print(f"  q{q} {'(worst)' if q == 0 else '(best)' if q == 4 else '':<8} "
+              f"{f_(c['inst_sold_10pct']):>16} {f_(c['inst_flat']):>16} "
+              f"{f_(c['inst_added_10pct']):>16} "
               f"{(f'{d:+6.2f}pp' if d is not None else '--'):>10}")
     print(f"\nreceipt -> {dst}")
     return 0
