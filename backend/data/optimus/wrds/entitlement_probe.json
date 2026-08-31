@@ -1,0 +1,161 @@
+{
+ "probe": "WRDS-ENTITLEMENT-PROBE-1",
+ "at": "2026-08-31T09:06:06.334061+00:00",
+ "method": "bounded SELECT per schema family. The catalogue lists every schema to every subscriber regardless of entitlement, and information_schema will describe columns of tables you may not read -- so a schema listing CANNOT answer this and the 2026-08-20 catalogue probe did not.",
+ "schemas_listed_by_catalogue": 1316,
+ "readable_families": [
+  "crsp-daily",
+  "ibes",
+  "ibes-detail",
+  "taq-ms",
+  "taq-liquidity",
+  "patents",
+  "boardex",
+  "13f",
+  "audit",
+  "compustat",
+  "optionmetrics"
+ ],
+ "denied_families": [
+  "ravenpack-full",
+  "ravenpack-dj",
+  "ravenpack-web",
+  "ravenpack-common",
+  "ibes-guidance"
+ ],
+ "results": [
+  {
+   "family": "ravenpack-full",
+   "schema": "ravenpack_full",
+   "table": "rpa_full_equities_2024",
+   "why": "the historical news archive the roadmap wants: 2000-2026, entity-tagged",
+   "readable": false,
+   "denial": "NOT_ENTITLED",
+   "detail": "permission denied for schema ravenpack_full"
+  },
+  {
+   "family": "ravenpack-dj",
+   "schema": "ravenpack_dj",
+   "table": "rpa_djpr_equities_2024",
+   "why": "Dow Jones press-release edition",
+   "readable": false,
+   "denial": "NOT_ENTITLED",
+   "detail": "permission denied for schema ravenpack_dj"
+  },
+  {
+   "family": "ravenpack-web",
+   "schema": "ravenpack_web",
+   "table": "rpa_web_equities_2024",
+   "why": "web edition",
+   "readable": false,
+   "denial": "NOT_ENTITLED",
+   "detail": "permission denied for schema ravenpack_web"
+  },
+  {
+   "family": "ravenpack-common",
+   "schema": "ravenpack_common",
+   "table": "rpa_taxonomy",
+   "why": "event taxonomy + entity mappings; useless without a data edition",
+   "readable": false,
+   "denial": "NOT_ENTITLED",
+   "detail": "permission denied for schema ravenpack_common"
+  },
+  {
+   "family": "crsp-daily",
+   "schema": "crsp",
+   "table": "dsf",
+   "why": "prices; already pulled 1993-2024",
+   "readable": true,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "ibes",
+   "schema": "ibes",
+   "table": "actu_epsus",
+   "why": "analyst actuals; the revision-velocity test",
+   "readable": true,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "ibes-detail",
+   "schema": "tr_ibes",
+   "table": "detu_epsus",
+   "why": "per-analyst detail -- what revision VELOCITY needs",
+   "readable": true,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "ibes-guidance",
+   "schema": "tr_ibes_guidance",
+   "table": "guidance",
+   "why": "company guidance events",
+   "readable": false,
+   "denial": "NOT_ENTITLED",
+   "detail": "permission denied for schema tr_ibes_guidance"
+  },
+  {
+   "family": "taq-ms",
+   "schema": "taqm_2024",
+   "table": "complete_nbbo_20240102",
+   "why": "millisecond NBBO: REAL quoted spreads, one day per table",
+   "readable": true,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "taq-liquidity",
+   "schema": "contrib_liquidity_taq",
+   "table": "ilc",
+   "why": "PRE-COMPUTED intraday liquidity measures -- answers the thin-name cost question without touching raw TAQ",
+   "readable": true,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "patents",
+   "schema": "wrdsapps_patents",
+   "table": "uspatents_meta",
+   "why": "innovation events",
+   "readable": true,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "boardex",
+   "schema": "boardex_na",
+   "table": "na_wrds_company_profile",
+   "why": "people/board network",
+   "readable": true,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "13f",
+   "schema": "tr_13f",
+   "table": "s34",
+   "why": "institutional holdings",
+   "readable": true,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "audit",
+   "schema": "audit_audit_comp",
+   "table": "f01_auditor_event",
+   "why": "auditor changes: a distress event",
+   "readable": true,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "compustat",
+   "schema": "comp",
+   "table": "funda",
+   "why": "fundamentals",
+   "readable": true,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "optionmetrics",
+   "schema": "optionm",
+   "table": "opprcd2023",
+   "why": "option chains",
+   "readable": true,
+   "detail": "SELECT returned"
+  }
+ ]
+}

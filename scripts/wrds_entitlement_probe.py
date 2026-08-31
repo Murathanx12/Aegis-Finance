@@ -1,11 +1,31 @@
-"""Probe what this WRDS account can actually SELECT — catalogue != entitlement.
+"""WRDS ENTITLEMENT PROBE — what we can actually READ, not what the catalogue lists.
 
-    python -m scripts.wrds_entitlement_probe
+WHY THIS EXISTS, AND WHY THE OBVIOUS PROBE IS WRONG
+===================================================
+On 2026-08-31 three checks disagreed about whether HKU's WRDS subscription
+includes RavenPack (the historical-news archive the roadmap wants, 2000-2026):
 
-For every schema on the server: does the account hold USAGE, and does a
-1-row SELECT on a representative table succeed? Receipt lands in
-backend/data/optimus/wrds/entitlement_map_<date>.json and is the ONLY
-authority future pull scripts may cite for "we have this data".
+  1. `catalogue_probe_2026-08-20.json` listed 46 schemas, no `ravenpack`.
+     -> read as NOT entitled.
+  2. A live `pg_namespace` query listed **1,316** schemas INCLUDING
+     `ravenpack_full`, `ravenpack_dj`, `ravenpack_web`, `rpna`.
+     -> read as entitled. The old probe looked partial.
+  3. `select * from ravenpack_full.rpa_full_equities_2024 limit 2`
+     -> **permission denied for schema ravenpack_full.**
+
+Check 3 is the only one that answers the question. WRDS shows every subscriber
+the FULL catalogue -- schema names, table names and even column definitions --
+regardless of entitlement, because the catalogue is documentation. Visibility is
+not access, and `information_schema` will happily describe 52 columns of a table
+you may not read a single row of.
+
+So this probe attempts an actual bounded SELECT against one table per schema
+family and records the grant. It is the same lesson as the artery: **verify a
+link at its FAR end.** A schema listing is the near end.
+
+`LIMIT 1` on an unqualified table can still plan a scan on a partitioned parent,
+so each probe runs under a statement timeout and its failure is recorded rather
+than raised -- a probe that dies on the first denial tells you about one schema.
 """
 
 from __future__ import annotations
@@ -13,177 +33,127 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
-if str(REPO) not in sys.path:
-    sys.path.insert(0, str(REPO))
+REPO = Path(__file__).resolve().parent.parent
+OUT = REPO / "backend" / "data" / "optimus" / "wrds"
 
-from backend import config as _config                        # noqa: E402
+HOST, PORT, DB, USER = "wrds-pgdata.wharton.upenn.edu", 9737, "wrds", "murathan12"
 
-OUT = _config.OPTIMUS_LEDGER_DIR / "wrds"
+#: (family, schema, table, why we care). One representative table per family --
+#: the grant is per SCHEMA, so a single readable table settles the family.
+TARGETS: tuple[tuple[str, str, str, str], ...] = (
+    ("ravenpack-full", "ravenpack_full", "rpa_full_equities_2024",
+     "the historical news archive the roadmap wants: 2000-2026, entity-tagged"),
+    ("ravenpack-dj", "ravenpack_dj", "rpa_djpr_equities_2024",
+     "Dow Jones press-release edition"),
+    ("ravenpack-web", "ravenpack_web", "rpa_web_equities_2024",
+     "web edition"),
+    ("ravenpack-common", "ravenpack_common", "rpa_taxonomy",
+     "event taxonomy + entity mappings; useless without a data edition"),
+    ("crsp-daily", "crsp", "dsf", "prices; already pulled 1993-2024"),
+    ("ibes", "ibes", "actu_epsus", "analyst actuals; the revision-velocity test"),
+    ("ibes-detail", "tr_ibes", "detu_epsus",
+     "per-analyst detail -- what revision VELOCITY needs"),
+    ("ibes-guidance", "tr_ibes_guidance", "guidance",
+     "company guidance events"),
+    # NOTE: these four table names were GUESSED in the first run and came back
+    # NO_SUCH_TABLE, which is NOT the same answer as NOT_ENTITLED and must never
+    # be recorded as one. Resolved against pg_tables and re-probed.
+    ("taq-ms", "taqm_2024", "complete_nbbo_20240102",
+     "millisecond NBBO: REAL quoted spreads, one day per table"),
+    ("taq-liquidity", "contrib_liquidity_taq", "ilc",
+     "PRE-COMPUTED intraday liquidity measures -- answers the thin-name cost "
+     "question without touching raw TAQ"),
+    ("patents", "wrdsapps_patents", "uspatents_meta", "innovation events"),
+    ("boardex", "boardex_na", "na_wrds_company_profile", "people/board network"),
+    ("13f", "tr_13f", "s34", "institutional holdings"),
+    ("audit", "audit_audit_comp", "f01_auditor_event",
+     "auditor changes: a distress event"),
+    ("compustat", "comp", "funda", "fundamentals"),
+    ("optionmetrics", "optionm", "opprcd2023", "option chains"),
+)
 
-#: Schemas worth probing for the NN training-data programme, with one
-#: representative table each. Names from WRDS's own postgres catalog
-#: conventions; a missing table is reported, not fatal.
-CANDIDATES = {
-    # core, believed entitled (reference_wrds_access)
-    "crsp": "dsf",
-    "crsp_a_stock": "dsf",
-    "comp": "fundq",
-    "comp_na_daily_all": "fundq",
-    "tr_ibes": "statsum_epsus",
-    "ibes": "statsum_epsus",
-    "optionm": "secprd1996",
-    "optionm_all": "secprd1996",
-    "taqm_2024": "wct_20240102",
-    # WRDS analytics products (Murat's 2026-08-19 list)
-    "wrdsapps_finratio": "firm_ratio",
-    "wrdsapps_finratio_ibes": "firm_ratio_ibes",
-    "wrdsapps": "firm_ratio",
-    "wrdsapps_link_crsp_ibes": "ibcrsphist",
-    "wrdsapps_link_crsp_optionm": "opcrsphist",
-    "wrdsapps_link_crsp_taq": "taqmclink",
-    "wrdsapps_link_crsp_bond": "bondcrsp_link",
-    "wrdsapps_eushort": "eushort",
-    "wrdsapps_patents": "patents_long",
-    "wrdsapps_subsidiary": "wrds_subsidiary",
-    "wrdsapps_evtstudy": "long_run",
-    "wrds_lib_internal": "cosine_sim",
-    "wrdssec": "wrds_forms",           # SEC filings / bag of words family
-    "wrdssec_all": "wrds_forms",
-    "wrds_insiders": "form345_table1",
-    "wrds_sec_bow": "bow10k",
-    "taqmsec": "cqm_20240102",
-    "taq": "cq_20141231",
-    "wrds_taq_iid": "iid_2024",        # intraday indicators
-    "betasuite": "ff3_daily",
-    "wrdsapps_betasuite": "ff3_daily",
-    "factors_wrds": "signals",
-    "wrdsapps_factors": "signals",
-    "bondret": "bondret",
-    "wrdsapps_bondret": "bondret",
-    "ff": "factors_daily",             # Fama-French
-    "ff_all": "factors_daily",
-    "fisd": "fisd_mergedissue",        # Mergent FISD
-    "trace": "trace_enhanced",
-    "boardex": "na_wrds_company_profile",
-    "audit": "auditnonreli",
-    "issm": "nyam_1990",
-    "phlx": "phlx_1980",
-    "otc": "endofday",
-    "msrb": "msrb",
-    "world_indices": "worldindices",
-    "wrdsapps_windices": "worldindices",
-    "iri": "iri",
-    "dmef": "dmef",
-    "sp_indices": "idx_ann",
-    "spgi": "idx_ann",
-    "comph": "funda",                  # Compustat historical
-    "compg": "g_funda",                # Compustat Global
-    "compseg": "wrds_segmerged",       # segments
-    "compa": "funda",
-    "ciq": "wrds_keydev",              # Capital IQ Key Developments
-    "ciq_keydev": "wrds_keydev",
-    "tfn": "s34",                      # Thomson 13F
-    "tr_13f": "s34",
-    "wrds_13f": "wrds_13f_holdings",
-    "lseg_esg": "esg_scores",
-    "trucost": "trucost",
-    "ravenpack_sample": "rp_equities",
-    "eventus": "eventus",
-    "fjc": "civil_terminations",
-    "frb": "rates_daily",
-    "phil_fed": "spf",
-    "public": "msf",
-    "macrofin": "cross_section",
-    "contrib": "contrib",
-    "contrib_general": "kfrench_factors",
-    "pwt": "pwt",
-    "zacks_sample": "zacks_prices",
-    "hfr_sample": "hfr",
-}
+
+def probe(cur, schema: str, table: str) -> dict:
+    """Attempt a bounded read. Returns the grant, never raises."""
+    try:
+        cur.execute("SET LOCAL statement_timeout = 20000")
+        cur.execute(f'SELECT 1 FROM "{schema}"."{table}" LIMIT 1')
+        cur.fetchall()
+        return {"readable": True, "detail": "SELECT returned"}
+    except Exception as exc:                                        # noqa: BLE001
+        msg = str(exc).strip().splitlines()[0][:200]
+        if "permission denied" in msg.lower():
+            kind = "NOT_ENTITLED"
+        elif "does not exist" in msg.lower():
+            kind = "NO_SUCH_TABLE"
+        elif "timeout" in msg.lower() or "canceling" in msg.lower():
+            kind = "TIMEOUT"
+        else:
+            kind = "ERROR"
+        return {"readable": False, "denial": kind, "detail": msg}
 
 
 def main() -> int:
     for s in (sys.stdout, sys.stderr):
         try:
             s.reconfigure(encoding="utf-8", errors="replace")
-        except Exception:                                      # noqa: BLE001
+        except Exception:                                           # noqa: BLE001
             pass
-    os.environ.setdefault("PGPASSFILE", os.path.expandvars(
-        r"%APPDATA%\postgresql\pgpass.conf"))
+    os.environ.setdefault("PGPASSFILE",
+                          os.path.expandvars(r"%APPDATA%\postgresql\pgpass.conf"))
     import psycopg2
 
-    conn = psycopg2.connect(host="wrds-pgdata.wharton.upenn.edu", port=9737,
-                            dbname="wrds", user="murathan12",
-                            sslmode="require", connect_timeout=15)
-    conn.set_session(readonly=True, autocommit=True)
+    conn = psycopg2.connect(host=HOST, port=PORT, dbname=DB, user=USER,
+                            sslmode="require", connect_timeout=20)
+    conn.autocommit = False
+    rows = []
+    print(f"WRDS entitlement probe -- {len(TARGETS)} families, bounded SELECT each\n")
+    for family, schema, table, why in TARGETS:
+        cur = conn.cursor()
+        r = probe(cur, schema, table)
+        conn.rollback()                 # a denial aborts the tx; clear it
+        cur.close()
+        mark = "READ " if r["readable"] else f"{r.get('denial', 'FAIL'):<12}"
+        print(f"  {mark}  {family:<16} {schema}.{table}")
+        if not r["readable"]:
+            print(f"                 {r['detail'][:110]}")
+        rows.append({"family": family, "schema": schema, "table": table,
+                     "why": why, **r})
+
+    # Which schemas the CATALOGUE lists, for the contrast that matters.
     cur = conn.cursor()
-
-    # 1) every schema the server has, with USAGE flag
-    cur.execute("""
-        SELECT nspname, has_schema_privilege(current_user, nspname, 'USAGE')
-        FROM pg_namespace
-        WHERE nspname NOT LIKE 'pg_%%' AND nspname <> 'information_schema'
-        ORDER BY nspname
-    """)
-    schemas = {r[0]: bool(r[1]) for r in cur.fetchall()}
-    usable = sorted(k for k, v in schemas.items() if v)
-    print(f"server schemas: {len(schemas)}, USAGE granted: {len(usable)}")
-
-    # 2) representative-table SELECT probe on candidates whose schema exists
-    results = {}
-    for schema, table in CANDIDATES.items():
-        if schema not in schemas:
-            results[schema] = {"exists": False}
-            continue
-        entry: dict = {"exists": True, "usage": schemas[schema]}
-        if schemas[schema]:
-            # find the actual table if the representative guess is off
-            cur.execute("""
-                SELECT tablename FROM pg_tables WHERE schemaname = %s
-                UNION SELECT viewname FROM pg_views WHERE schemaname = %s
-                LIMIT 400
-            """, (schema, schema))
-            tables = sorted(r[0] for r in cur.fetchall())
-            entry["n_tables_visible"] = len(tables)
-            entry["sample_tables"] = tables[:12]
-            probe = table if table in tables else (tables[0] if tables
-                                                   else None)
-            if probe:
-                try:
-                    cur.execute(
-                        f'SELECT * FROM "{schema}"."{probe}" LIMIT 1')
-                    cur.fetchall()
-                    entry["select_ok"] = probe
-                except Exception as e:                         # noqa: BLE001
-                    conn.rollback()
-                    entry["select_denied"] = f"{probe}: " + str(e).split(
-                        chr(10))[0][:120]
-        results[schema] = entry
-        tag = ("SELECT-OK" if entry.get("select_ok")
-               else "DENIED" if entry.get("select_denied")
-               else "no-usage" if entry["exists"] else "absent")
-        print(f"  {schema:<28} {tag}")
-
-    OUT.mkdir(parents=True, exist_ok=True)
-    receipt = {
-        "probe": "WRDS-ENTITLEMENT-MAP-1",
-        "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "user": "murathan12",
-        "n_schemas_on_server": len(schemas),
-        "n_usage": len(usable),
-        "usage_schemas": usable,
-        "candidates": results,
-        "rule": "catalogue is not entitlement; only select_ok rows may be "
-                "cited by pull scripts",
-    }
-    p = OUT / f"entitlement_map_{date.today().isoformat()}.json"
-    p.write_text(json.dumps(receipt, indent=2), encoding="utf-8")
-    print(f"receipt: {p}")
+    cur.execute("select nspname from pg_namespace where nspname !~ '^pg_' "
+                "and nspname <> 'information_schema'")
+    listed = sorted(r[0] for r in cur.fetchall())
+    cur.close()
     conn.close()
+
+    readable = [r["family"] for r in rows if r["readable"]]
+    denied = [r["family"] for r in rows if not r["readable"]]
+    payload = {
+        "probe": "WRDS-ENTITLEMENT-PROBE-1",
+        "at": datetime.now(timezone.utc).isoformat(),
+        "method": ("bounded SELECT per schema family. The catalogue lists every "
+                   "schema to every subscriber regardless of entitlement, and "
+                   "information_schema will describe columns of tables you may "
+                   "not read -- so a schema listing CANNOT answer this and the "
+                   "2026-08-20 catalogue probe did not."),
+        "schemas_listed_by_catalogue": len(listed),
+        "readable_families": readable,
+        "denied_families": denied,
+        "results": rows,
+    }
+    OUT.mkdir(parents=True, exist_ok=True)
+    dst = OUT / "entitlement_probe.json"
+    dst.write_text(json.dumps(payload, indent=1), encoding="utf-8")
+    print(f"\ncatalogue lists {len(listed)} schemas; "
+          f"{len(readable)} of {len(rows)} probed families are READABLE")
+    print(f"  readable: {', '.join(readable) or 'none'}")
+    print(f"  denied:   {', '.join(denied) or 'none'}")
+    print(f"\nreceipt -> {dst}")
     return 0
 
 
