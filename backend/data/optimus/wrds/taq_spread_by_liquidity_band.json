@@ -1,0 +1,4708 @@
+{
+ "receipt": "TAQ-SPREAD-BY-LIQUIDITY-BAND-1",
+ "at": "2026-08-31T09:12:36.925934+00:00",
+ "question": "what does a name in each dollar-volume band cost to touch, and does the +6.98%/yr thin-coverage edge survive it",
+ "statistic": "QUOTED spread (ask-bid)/mid in bps, regular hours, per name per day, aggregated server-side; an UPPER bound on touch cost",
+ "limits": [
+  "quoted, not effective -- marketable orders can execute inside",
+  "excludes market impact, which binds hardest in the thin bands",
+  "CRSP ends 2024-12-31 so both legs use 2024",
+  "equal-weighted over quotes; median reported beside mean"
+ ],
+ "universe_month": [
+  "2024-06-01",
+  "2024-06-28"
+ ],
+ "days": [
+  "20240610",
+  "20240618",
+  "20240625"
+ ],
+ "per_band": 30,
+ "summary": {
+  "100k-1m": {
+   "n_measured": 28,
+   "n_no_quotes": 2,
+   "median_of_median_bps": 148.9,
+   "p25_bps": 88.5,
+   "p75_bps": 203.3,
+   "round_trip_bps": 297.7,
+   "monthly_cost_pct_if_full_turnover": 2.98
+  },
+  "1m-5m": {
+   "n_measured": 30,
+   "n_no_quotes": 0,
+   "median_of_median_bps": 38.7,
+   "p25_bps": 28.9,
+   "p75_bps": 60.1,
+   "round_trip_bps": 77.4,
+   "monthly_cost_pct_if_full_turnover": 0.77
+  },
+  "5m-10m": {
+   "n_measured": 30,
+   "n_no_quotes": 0,
+   "median_of_median_bps": 21.0,
+   "p25_bps": 15.0,
+   "p75_bps": 31.1,
+   "round_trip_bps": 42.0,
+   "monthly_cost_pct_if_full_turnover": 0.42
+  },
+  "10m-50m": {
+   "n_measured": 30,
+   "n_no_quotes": 0,
+   "median_of_median_bps": 20.2,
+   "p25_bps": 9.2,
+   "p75_bps": 28.3,
+   "round_trip_bps": 40.5,
+   "monthly_cost_pct_if_full_turnover": 0.4
+  },
+  "50m+": {
+   "n_measured": 30,
+   "n_no_quotes": 0,
+   "median_of_median_bps": 6.7,
+   "p25_bps": 3.7,
+   "p75_bps": 9.4,
+   "round_trip_bps": 13.4,
+   "monthly_cost_pct_if_full_turnover": 0.13
+  }
+ },
+ "rows": [
+  {
+   "band": "100k-1m",
+   "ticker": "XOS",
+   "permno": 20310,
+   "mdv": 100540.0,
+   "px": 7.23,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 138,
+     "mean_bps": 252.5554908043779,
+     "median_bps": 260.4523646333105
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 170,
+     "mean_bps": 206.4291955159913,
+     "median_bps": 141.84397163120568
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 156,
+     "mean_bps": 361.32966453023323,
+     "median_bps": 306.3457330415755
+    }
+   ],
+   "median_bps": 260.45,
+   "mean_bps": 273.44
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "SPRU",
+   "permno": 18936,
+   "mdv": 110279.0,
+   "px": 3.46,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 265,
+     "mean_bps": 200.6721848954488,
+     "median_bps": 136.4256480218281
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 480,
+     "mean_bps": 193.4537743650467,
+     "median_bps": 62.11180124223602
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 334,
+     "mean_bps": 381.95086937248755,
+     "median_bps": 403.1007751937984
+    }
+   ],
+   "median_bps": 136.43,
+   "mean_bps": 258.69
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "WENA",
+   "permno": 23052,
+   "mdv": 120601.0,
+   "px": 5.8,
+   "days_measured": 1,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 0,
+     "no_quotes": true
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 0,
+     "no_quotes": true
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3440,
+     "mean_bps": 296.69093651446457,
+     "median_bps": 143.88489208633095
+    }
+   ],
+   "median_bps": 143.88,
+   "mean_bps": 296.69
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "AVAH",
+   "permno": 21026,
+   "mdv": 131268.0,
+   "px": 2.55,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 4724,
+     "mean_bps": 138.6165540267043,
+     "median_bps": 122.69938650306749
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 1856,
+     "mean_bps": 189.17485698403988,
+     "median_bps": 153.84615384615387
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 244,
+     "mean_bps": 201.49884313297824,
+     "median_bps": 166.66666666666666
+    }
+   ],
+   "median_bps": 153.85,
+   "mean_bps": 176.43
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "MBCN",
+   "permno": 14932,
+   "mdv": 145437.0,
+   "px": 21.18,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 139,
+     "mean_bps": 292.5655123148465,
+     "median_bps": 238.6634844868735
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 138,
+     "mean_bps": 387.4202351887605,
+     "median_bps": 336.16885194814324
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 172,
+     "mean_bps": 147.23895998455288,
+     "median_bps": 106.30922116940143
+    }
+   ],
+   "median_bps": 238.66,
+   "mean_bps": 275.74
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "ELA",
+   "permno": 10028,
+   "mdv": 156932.0,
+   "px": 4.73,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 466,
+     "mean_bps": 79.82467149990991,
+     "median_bps": 63.76195536663124
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 822,
+     "mean_bps": 116.69622588734299,
+     "median_bps": 43.956043956043956
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 666,
+     "mean_bps": 159.890143025699,
+     "median_bps": 147.21345951629863
+    }
+   ],
+   "median_bps": 63.76,
+   "mean_bps": 118.8
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "PFIE",
+   "permno": 14548,
+   "mdv": 172930.0,
+   "px": 1.42,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 748,
+     "mean_bps": 84.2662439429863,
+     "median_bps": 69.20415224913495
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 541,
+     "mean_bps": 73.46625005384413,
+     "median_bps": 72.20216606498195
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 520,
+     "mean_bps": 78.58670339599624,
+     "median_bps": 70.6713780918728
+    }
+   ],
+   "median_bps": 70.67,
+   "mean_bps": 78.77
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "TLSI",
+   "permno": 20612,
+   "mdv": 188231.0,
+   "px": 5.83,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 635,
+     "mean_bps": 642.3240474347576,
+     "median_bps": 487.8048780487805
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 793,
+     "mean_bps": 562.4265121355444,
+     "median_bps": 297.9842243645925
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 347,
+     "mean_bps": 329.0140650240692,
+     "median_bps": 213.14387211367674
+    }
+   ],
+   "median_bps": 297.98,
+   "mean_bps": 511.25
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "BSET",
+   "permno": 17137,
+   "mdv": 205270.0,
+   "px": 14.16,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 862,
+     "mean_bps": 426.0237511434762,
+     "median_bps": 514.9617258176758
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 222,
+     "mean_bps": 165.71794437731066,
+     "median_bps": 139.8093637189625
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 547,
+     "mean_bps": 150.67093016964782,
+     "median_bps": 171.30620985010708
+    }
+   ],
+   "median_bps": 171.31,
+   "mean_bps": 247.47
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "FONR",
+   "permno": 37154,
+   "mdv": 225630.0,
+   "px": 15.36,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 456,
+     "mean_bps": 123.52717792094514,
+     "median_bps": 111.0748121528912
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 902,
+     "mean_bps": 80.0924263560202,
+     "median_bps": 58.651026392961874
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 229,
+     "mean_bps": 163.04315459101616,
+     "median_bps": 177.22349852313752
+    }
+   ],
+   "median_bps": 111.07,
+   "mean_bps": 122.22
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "JAN",
+   "permno": 77202,
+   "mdv": 244911.0,
+   "px": 2.41,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 274,
+     "mean_bps": 247.06584457439692,
+     "median_bps": 255.94149908592323
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 357,
+     "mean_bps": 174.4787632476104,
+     "median_bps": 170.94017094017096
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 279,
+     "mean_bps": 254.8976645245901,
+     "median_bps": 177.77777777777777
+    }
+   ],
+   "median_bps": 177.78,
+   "mean_bps": 225.48
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "CODX",
+   "permno": 16820,
+   "mdv": 264011.0,
+   "px": 1.37,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 663,
+     "mean_bps": 185.1379749685227,
+     "median_bps": 148.14814814814815
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 750,
+     "mean_bps": 231.2361575978786,
+     "median_bps": 195.43973941368077
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 902,
+     "mean_bps": 243.56884119472107,
+     "median_bps": 218.1818181818182
+    }
+   ],
+   "median_bps": 195.44,
+   "mean_bps": 219.98
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "BMTX",
+   "permno": 18086,
+   "mdv": 279761.0,
+   "px": 3.13,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 634,
+     "mean_bps": 176.53131825692708,
+     "median_bps": 114.94252873563218
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 1504,
+     "mean_bps": 1160.6332008578124,
+     "median_bps": 348.1624758220503
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 611,
+     "mean_bps": 357.35402257204515,
+     "median_bps": 186.04651162790697
+    }
+   ],
+   "median_bps": 186.05,
+   "mean_bps": 564.84
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "FBIO",
+   "permno": 13159,
+   "mdv": 303888.0,
+   "px": 1.8,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 3323,
+     "mean_bps": 105.49136270132277,
+     "median_bps": 101.5228426395939
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 1934,
+     "mean_bps": 107.57695655066233,
+     "median_bps": 105.82010582010581
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 1158,
+     "mean_bps": 118.42883082968744,
+     "median_bps": 116.95906432748538
+    }
+   ],
+   "median_bps": 105.82,
+   "mean_bps": 110.5
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "NEOV",
+   "permno": 23236,
+   "mdv": 323854.0,
+   "px": 2.63,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 542,
+     "mean_bps": 833.9249004959078,
+     "median_bps": 245.9016393442623
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 1172,
+     "mean_bps": 316.89954017426214,
+     "median_bps": 33.277870216306155
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 1451,
+     "mean_bps": 3234.008155880389,
+     "median_bps": 1707.3170731707319
+    }
+   ],
+   "median_bps": 245.9,
+   "mean_bps": 1461.61
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "GSIT",
+   "permno": 91901,
+   "mdv": 339391.0,
+   "px": 2.64,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 2223,
+     "mean_bps": 110.46853719246661,
+     "median_bps": 117.87819253438114
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 1108,
+     "mean_bps": 87.39049048710422,
+     "median_bps": 74.6268656716418
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 669,
+     "mean_bps": 82.39980227549557,
+     "median_bps": 77.51937984496124
+    }
+   ],
+   "median_bps": 77.52,
+   "mean_bps": 93.42
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "GALT",
+   "permno": 13324,
+   "mdv": 370295.0,
+   "px": 2.6,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 1911,
+     "mean_bps": 125.02105574183751,
+     "median_bps": 112.14953271028037
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 1851,
+     "mean_bps": 117.05836356240097,
+     "median_bps": 85.1063829787234
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 2494,
+     "mean_bps": 86.09418364258272,
+     "median_bps": 88.49557522123894
+    }
+   ],
+   "median_bps": 88.5,
+   "mean_bps": 109.39
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "BSRR",
+   "permno": 87014,
+   "mdv": 403347.0,
+   "px": 20.71,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 1311,
+     "mean_bps": 172.20487674800154,
+     "median_bps": 158.80893300248138
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 642,
+     "mean_bps": 240.78547690221026,
+     "median_bps": 117.95234725171031
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 4788,
+     "mean_bps": 181.108971181067,
+     "median_bps": 181.90521780756342
+    }
+   ],
+   "median_bps": 158.81,
+   "mean_bps": 198.03
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "SNFCA",
+   "permno": 11593,
+   "mdv": 430179.0,
+   "px": 7.99,
+   "days_measured": 0,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 0,
+     "no_quotes": true
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 0,
+     "no_quotes": true
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 0,
+     "no_quotes": true
+    }
+   ]
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "AWIN",
+   "permno": 22225,
+   "mdv": 458122.0,
+   "px": 4.12,
+   "days_measured": 2,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 1974,
+     "mean_bps": 683.6112042116991,
+     "median_bps": 597.0149253731344
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 4021,
+     "mean_bps": 695.2478424345749,
+     "median_bps": 333.3333333333333
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 0,
+     "no_quotes": true
+    }
+   ],
+   "median_bps": 465.17,
+   "mean_bps": 689.43
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "SKIL",
+   "permno": 21416,
+   "mdv": 485845.0,
+   "px": 10.16,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 700,
+     "mean_bps": 212.81943006944195,
+     "median_bps": 182.69747447608813
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 358,
+     "mean_bps": 269.0144026417556,
+     "median_bps": 203.29524222314635
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 1737,
+     "mean_bps": 257.3392947984179,
+     "median_bps": 220.125786163522
+    }
+   ],
+   "median_bps": 203.3,
+   "mean_bps": 246.39
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "CARE",
+   "permno": 18459,
+   "mdv": 528452.0,
+   "px": 12.57,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 1154,
+     "mean_bps": 47.11179269806568,
+     "median_bps": 39.354584809130266
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 8078,
+     "mean_bps": 51.130370954658474,
+     "median_bps": 48.30917874396135
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 1970,
+     "mean_bps": 71.35559212215908,
+     "median_bps": 47.69475357710652
+    }
+   ],
+   "median_bps": 47.69,
+   "mean_bps": 56.53
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "GENC",
+   "permno": 52250,
+   "mdv": 571935.0,
+   "px": 19.25,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 785,
+     "mean_bps": 112.230428070444,
+     "median_bps": 106.24841892233746
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 849,
+     "mean_bps": 174.93650357257812,
+     "median_bps": 185.28049408131756
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 2566,
+     "mean_bps": 177.9235301469013,
+     "median_bps": 194.38444924406048
+    }
+   ],
+   "median_bps": 185.28,
+   "mean_bps": 155.03
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "PVBC",
+   "permno": 15539,
+   "mdv": 603154.0,
+   "px": 9.79,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 791,
+     "mean_bps": 57.32530776675472,
+     "median_bps": 50.890585241730285
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 1903,
+     "mean_bps": 70.86422795448578,
+     "median_bps": 61.09979633401222
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3106,
+     "mean_bps": 58.77118916303046,
+     "median_bps": 51.09862033725089
+    }
+   ],
+   "median_bps": 51.1,
+   "mean_bps": 62.32
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "MAPS",
+   "permno": 19025,
+   "mdv": 642564.0,
+   "px": 1.02,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 2147,
+     "mean_bps": 103.44307977999945,
+     "median_bps": 97.5609756097561
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 3872,
+     "mean_bps": 104.05768016576727,
+     "median_bps": 89.68609865470852
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 1477,
+     "mean_bps": 72.14537998826906,
+     "median_bps": 96.6183574879227
+    }
+   ],
+   "median_bps": 96.62,
+   "mean_bps": 93.22
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "RELL",
+   "permno": 66852,
+   "mdv": 677759.0,
+   "px": 11.55,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 3392,
+     "mean_bps": 58.66178493141657,
+     "median_bps": 53.05039787798408
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 2671,
+     "mean_bps": 43.6099458342212,
+     "median_bps": 33.52891869237217
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3810,
+     "mean_bps": 49.43467778362045,
+     "median_bps": 43.271311120726956
+    }
+   ],
+   "median_bps": 43.27,
+   "mean_bps": 50.57
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "ACU",
+   "permno": 60038,
+   "mdv": 728234.0,
+   "px": 34.8,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 1941,
+     "mean_bps": 139.92865473722924,
+     "median_bps": 135.72204125950054
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 5227,
+     "mean_bps": 102.0213633504997,
+     "median_bps": 93.48524685947999
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 1785,
+     "mean_bps": 177.88531131103932,
+     "median_bps": 143.8417740485466
+    }
+   ],
+   "median_bps": 135.72,
+   "mean_bps": 139.95
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "BGFV",
+   "permno": 89413,
+   "mdv": 781508.0,
+   "px": 3.1,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 2792,
+     "mean_bps": 35.31611067361182,
+     "median_bps": 30.721966205837173
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 2586,
+     "mean_bps": 37.55406685283682,
+     "median_bps": 32.62642740619902
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3206,
+     "mean_bps": 36.861923656139325,
+     "median_bps": 32.31017770597739
+    }
+   ],
+   "median_bps": 32.31,
+   "mean_bps": 36.58
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "BELFA",
+   "permno": 17444,
+   "mdv": 819249.0,
+   "px": 81.75,
+   "days_measured": 0,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 0,
+     "no_quotes": true
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 0,
+     "no_quotes": true
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 0,
+     "no_quotes": true
+    }
+   ]
+  },
+  {
+   "band": "100k-1m",
+   "ticker": "KEQU",
+   "permno": 47571,
+   "mdv": 899504.0,
+   "px": 39.81,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 361,
+     "mean_bps": 311.18305542310526,
+     "median_bps": 285.4996243425996
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 456,
+     "mean_bps": 413.08898176126894,
+     "median_bps": 420.92363529064403
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 412,
+     "mean_bps": 523.9335237235373,
+     "median_bps": 442.93015332197615
+    }
+   ],
+   "median_bps": 420.92,
+   "mean_bps": 416.07
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "MASS",
+   "permno": 20305,
+   "mdv": 1000164.0,
+   "px": 5.81,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 5069,
+     "mean_bps": 51.94853471432497,
+     "median_bps": 48.661800486618006
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 2836,
+     "mean_bps": 63.093037326368716,
+     "median_bps": 53.42831700801425
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3051,
+     "mean_bps": 53.757353950978214,
+     "median_bps": 39.29273084479371
+    }
+   ],
+   "median_bps": 48.66,
+   "mean_bps": 56.27
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "CLRB",
+   "permno": 14862,
+   "mdv": 1074535.0,
+   "px": 2.91,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 9642,
+     "mean_bps": 38.20955626559432,
+     "median_bps": 30.441400304414003
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 9775,
+     "mean_bps": 47.34388760484495,
+     "median_bps": 36.96857670979667
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3352,
+     "mean_bps": 64.9794326563499,
+     "median_bps": 69.20415224913495
+    }
+   ],
+   "median_bps": 36.97,
+   "mean_bps": 50.18
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "PGEN",
+   "permno": 14072,
+   "mdv": 1123948.0,
+   "px": 1.63,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 4912,
+     "mean_bps": 62.120734367785005,
+     "median_bps": 59.701492537313435
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 2595,
+     "mean_bps": 64.56432291945951,
+     "median_bps": 61.91950464396285
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 4844,
+     "mean_bps": 62.13762989222814,
+     "median_bps": 60.790273556231
+    }
+   ],
+   "median_bps": 60.79,
+   "mean_bps": 62.94
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "ALDX",
+   "permno": 14647,
+   "mdv": 1214407.0,
+   "px": 3.73,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 3944,
+     "mean_bps": 51.733150207989,
+     "median_bps": 51.94805194805195
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 4083,
+     "mean_bps": 45.136078621816154,
+     "median_bps": 53.90835579514825
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3031,
+     "mean_bps": 42.716454343445164,
+     "median_bps": 30.075187969924812
+    }
+   ],
+   "median_bps": 51.95,
+   "mean_bps": 46.53
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "MAIA",
+   "permno": 23216,
+   "mdv": 1328588.0,
+   "px": 3.54,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 3076,
+     "mean_bps": 132.09536005139975,
+     "median_bps": 125.78616352201259
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 1510,
+     "mean_bps": 118.92962785423511,
+     "median_bps": 108.40108401084011
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 1476,
+     "mean_bps": 115.02305344840448,
+     "median_bps": 93.3125972006221
+    }
+   ],
+   "median_bps": 108.4,
+   "mean_bps": 122.02
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "SPWH",
+   "permno": 14609,
+   "mdv": 1420702.0,
+   "px": 2.64,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 4933,
+     "mean_bps": 36.11578572465527,
+     "median_bps": 32.31017770597739
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 3043,
+     "mean_bps": 42.66061491931865,
+     "median_bps": 37.66478342749529
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 4734,
+     "mean_bps": 46.28191790676765,
+     "median_bps": 42.10526315789473
+    }
+   ],
+   "median_bps": 37.66,
+   "mean_bps": 41.69
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "TLS",
+   "permno": 20173,
+   "mdv": 1512347.0,
+   "px": 4.01,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 4810,
+     "mean_bps": 46.76753907309219,
+     "median_bps": 24.906600249066003
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 4000,
+     "mean_bps": 53.50210487267612,
+     "median_bps": 51.94805194805195
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 5216,
+     "mean_bps": 43.44800941924173,
+     "median_bps": 28.94356005788712
+    }
+   ],
+   "median_bps": 28.94,
+   "mean_bps": 47.91
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "LE",
+   "permno": 14544,
+   "mdv": 1607374.0,
+   "px": 13.82,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 4217,
+     "mean_bps": 83.15735303244604,
+     "median_bps": 57.761732851985556
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 3658,
+     "mean_bps": 73.99929957682396,
+     "median_bps": 54.384772263766145
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 6762,
+     "mean_bps": 72.6725090979932,
+     "median_bps": 65.86169045005488
+    }
+   ],
+   "median_bps": 57.76,
+   "mean_bps": 76.61
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "IHRT",
+   "permno": 18845,
+   "mdv": 1691492.0,
+   "px": 1.09,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 8565,
+     "mean_bps": 91.64594064543161,
+     "median_bps": 82.98755186721992
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 8543,
+     "mean_bps": 91.98213056771162,
+     "median_bps": 88.88888888888889
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3023,
+     "mean_bps": 104.19182907268079,
+     "median_bps": 97.5609756097561
+    }
+   ],
+   "median_bps": 88.89,
+   "mean_bps": 95.94
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "NKTR",
+   "permno": 80539,
+   "mdv": 1806695.0,
+   "px": 1.21,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 9693,
+     "mean_bps": 82.6596502305895,
+     "median_bps": 80.32128514056224
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 6868,
+     "mean_bps": 89.556738104412,
+     "median_bps": 88.1057268722467
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 7205,
+     "mean_bps": 92.93377687276448,
+     "median_bps": 91.32420091324201
+    }
+   ],
+   "median_bps": 88.11,
+   "mean_bps": 88.38
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "TSVT",
+   "permno": 22245,
+   "mdv": 1913796.0,
+   "px": 3.93,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 6221,
+     "mean_bps": 53.66230989162296,
+     "median_bps": 51.94805194805195
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 6276,
+     "mean_bps": 50.91105743831162,
+     "median_bps": 49.937655860349125
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 4951,
+     "mean_bps": 54.143290200337084,
+     "median_bps": 52.770448548812666
+    }
+   ],
+   "median_bps": 51.95,
+   "mean_bps": 52.91
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "TNXP",
+   "permno": 14107,
+   "mdv": 2066893.0,
+   "px": 1.21,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 6428,
+     "mean_bps": 89.286432662661,
+     "median_bps": 44.54342984409799
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 3647,
+     "mean_bps": 90.73028365585905,
+     "median_bps": 87.33624454148472
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 1327,
+     "mean_bps": 98.90653322537342,
+     "median_bps": 79.05138339920948
+    }
+   ],
+   "median_bps": 79.05,
+   "mean_bps": 92.97
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "ENTA",
+   "permno": 13825,
+   "mdv": 2161770.0,
+   "px": 12.39,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 3959,
+     "mean_bps": 81.01228139413432,
+     "median_bps": 61.72839506172839
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 8453,
+     "mean_bps": 99.55260595489575,
+     "median_bps": 61.53846153846154
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 4140,
+     "mean_bps": 86.5849423151254,
+     "median_bps": 65.14657980456026
+    }
+   ],
+   "median_bps": 61.73,
+   "mean_bps": 89.05
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "ATRO",
+   "permno": 15457,
+   "mdv": 2278693.0,
+   "px": 19.35,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 4904,
+     "mean_bps": 40.54919373741797,
+     "median_bps": 37.16485266790549
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 7853,
+     "mean_bps": 33.61811923271155,
+     "median_bps": 26.67377967457989
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 5392,
+     "mean_bps": 36.54342651998025,
+     "median_bps": 31.023784901758013
+    }
+   ],
+   "median_bps": 31.02,
+   "mean_bps": 36.9
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "GETY",
+   "permno": 23206,
+   "mdv": 2406956.0,
+   "px": 3.6,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 8198,
+     "mean_bps": 28.964614442042013,
+     "median_bps": 27.359781121751027
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 5206,
+     "mean_bps": 31.11031780787029,
+     "median_bps": 27.285129604365622
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 5898,
+     "mean_bps": 34.16398756982281,
+     "median_bps": 32.31017770597739
+    }
+   ],
+   "median_bps": 27.36,
+   "mean_bps": 31.41
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "GABC",
+   "permno": 79166,
+   "mdv": 2494160.0,
+   "px": 32.54,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 3874,
+     "mean_bps": 38.29749269569909,
+     "median_bps": 31.675641431738992
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 4016,
+     "mean_bps": 43.172692166520754,
+     "median_bps": 30.367446097783176
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3352,
+     "mean_bps": 39.90456556914946,
+     "median_bps": 29.69121140142518
+    }
+   ],
+   "median_bps": 30.37,
+   "mean_bps": 40.46
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "OABI",
+   "permno": 21907,
+   "mdv": 2605505.0,
+   "px": 4.22,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 5264,
+     "mean_bps": 37.93679062802081,
+     "median_bps": 21.953896816684964
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 4077,
+     "mean_bps": 71.71631048687493,
+     "median_bps": 23.668639053254438
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 8537,
+     "mean_bps": 41.391430036799335,
+     "median_bps": 26.07561929595828
+    }
+   ],
+   "median_bps": 23.67,
+   "mean_bps": 50.35
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "NRDY",
+   "permno": 20130,
+   "mdv": 2740371.0,
+   "px": 1.66,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 4813,
+     "mean_bps": 65.09663120739451,
+     "median_bps": 65.14657980456026
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 6096,
+     "mean_bps": 55.92187714763989,
+     "median_bps": 53.61930294906166
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 2867,
+     "mean_bps": 62.8309641450011,
+     "median_bps": 60.06006006006006
+    }
+   ],
+   "median_bps": 60.06,
+   "mean_bps": 61.28
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "WEAV",
+   "permno": 22416,
+   "mdv": 2885247.0,
+   "px": 8.84,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 3819,
+     "mean_bps": 23.725125399782716,
+     "median_bps": 22.05071664829107
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 5077,
+     "mean_bps": 21.217626379593295,
+     "median_bps": 22.172949002217294
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3335,
+     "mean_bps": 22.449246268973457,
+     "median_bps": 22.857142857142858
+    }
+   ],
+   "median_bps": 22.17,
+   "mean_bps": 22.46
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "GLDD",
+   "permno": 91665,
+   "mdv": 3035582.0,
+   "px": 8.89,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 5002,
+     "mean_bps": 26.04700967791019,
+     "median_bps": 21.953896816684964
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 3863,
+     "mean_bps": 24.169937313686543,
+     "median_bps": 22.52252252252252
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 4362,
+     "mean_bps": 21.616285959807858,
+     "median_bps": 22.701475595913735
+    }
+   ],
+   "median_bps": 22.52,
+   "mean_bps": 23.94
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "SAFT",
+   "permno": 89575,
+   "mdv": 3125093.0,
+   "px": 75.94,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 2751,
+     "mean_bps": 67.67026914749721,
+     "median_bps": 51.02374566625237
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 2975,
+     "mean_bps": 55.1782738262935,
+     "median_bps": 41.972717733473246
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 1622,
+     "mean_bps": 59.46503558852178,
+     "median_bps": 47.41833508956797
+    }
+   ],
+   "median_bps": 47.42,
+   "mean_bps": 60.77
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "MOV",
+   "permno": 79611,
+   "mdv": 3302307.0,
+   "px": 25.27,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 3640,
+     "mean_bps": 38.89716392605109,
+     "median_bps": 23.58490566037736
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 2313,
+     "mean_bps": 28.392916830254503,
+     "median_bps": 23.74356944994064
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3836,
+     "mean_bps": 37.716740478395344,
+     "median_bps": 31.923383878691144
+    }
+   ],
+   "median_bps": 23.74,
+   "mean_bps": 35.0
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "AVNS",
+   "permno": 14941,
+   "mdv": 3446910.0,
+   "px": 19.6,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 6093,
+     "mean_bps": 28.313582103826842,
+     "median_bps": 20.833333333333332
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 3907,
+     "mean_bps": 22.23890111331221,
+     "median_bps": 15.83531274742676
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 5491,
+     "mean_bps": 26.827699774893027,
+     "median_bps": 26.089225150013043
+    }
+   ],
+   "median_bps": 20.83,
+   "mean_bps": 25.79
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "ADV",
+   "permno": 18953,
+   "mdv": 3584393.0,
+   "px": 2.99,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 7662,
+     "mean_bps": 39.432009777299655,
+     "median_bps": 33.50083752093802
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 11595,
+     "mean_bps": 34.96617376240477,
+     "median_bps": 33.50083752093802
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 7735,
+     "mean_bps": 35.02372360374209,
+     "median_bps": 32.733224222585925
+    }
+   ],
+   "median_bps": 33.5,
+   "mean_bps": 36.47
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "OLO",
+   "permno": 20653,
+   "mdv": 3763590.0,
+   "px": 4.45,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 6329,
+     "mean_bps": 25.509723440295343,
+     "median_bps": 22.49718785151856
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 3961,
+     "mean_bps": 24.6336816962231,
+     "median_bps": 22.598870056497177
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 4769,
+     "mean_bps": 24.33810876168556,
+     "median_bps": 23.121387283236995
+    }
+   ],
+   "median_bps": 22.6,
+   "mean_bps": 24.83
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "HVT",
+   "permno": 41217,
+   "mdv": 3965623.0,
+   "px": 26.35,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 7539,
+     "mean_bps": 45.72117432473531,
+     "median_bps": 33.95585738539898
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 8283,
+     "mean_bps": 55.381168183472795,
+     "median_bps": 39.73270724218891
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 5812,
+     "mean_bps": 64.79838988960374,
+     "median_bps": 45.03582395087001
+    }
+   ],
+   "median_bps": 39.73,
+   "mean_bps": 55.3
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "TTEC",
+   "permno": 83916,
+   "mdv": 4129537.0,
+   "px": 6.42,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 15006,
+     "mean_bps": 34.956096131532135,
+     "median_bps": 31.948881789137378
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 7320,
+     "mean_bps": 32.84625847015528,
+     "median_bps": 30.303030303030305
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 9382,
+     "mean_bps": 26.230260730317788,
+     "median_bps": 18.39926402943882
+    }
+   ],
+   "median_bps": 30.3,
+   "mean_bps": 31.34
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "MLAB",
+   "permno": 53074,
+   "mdv": 4342298.0,
+   "px": 92.74,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 3765,
+     "mean_bps": 105.57708643669937,
+     "median_bps": 94.04543879621839
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 1986,
+     "mean_bps": 106.01755296403155,
+     "median_bps": 93.54943979114545
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 2101,
+     "mean_bps": 100.87253103184403,
+     "median_bps": 80.87161630910929
+    }
+   ],
+   "median_bps": 93.55,
+   "mean_bps": 104.16
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "NHC",
+   "permno": 72338,
+   "mdv": 4591813.0,
+   "px": 105.84,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 7479,
+     "mean_bps": 45.169211870985954,
+     "median_bps": 34.26501541925694
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 5777,
+     "mean_bps": 36.65952955316992,
+     "median_bps": 31.171775374297454
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3130,
+     "mean_bps": 41.7839656104137,
+     "median_bps": 32.83764131913497
+    }
+   ],
+   "median_bps": 32.84,
+   "mean_bps": 41.2
+  },
+  {
+   "band": "1m-5m",
+   "ticker": "VERU",
+   "permno": 76461,
+   "mdv": 4856167.0,
+   "px": 1.01,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 6203,
+     "mean_bps": 71.42284737784404,
+     "median_bps": 64.4814615797958
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 10736,
+     "mean_bps": 44.76122569173993,
+     "median_bps": 28.954491093346764
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 7724,
+     "mean_bps": 66.35537037710695,
+     "median_bps": 54.60171085360675
+    }
+   ],
+   "median_bps": 54.6,
+   "mean_bps": 60.85
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "ABSI",
+   "permno": 21604,
+   "mdv": 5016935.0,
+   "px": 3.98,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 13033,
+     "mean_bps": 28.171544706486984,
+     "median_bps": 22.44668911335578
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 12382,
+     "mean_bps": 31.037565842300378,
+     "median_bps": 28.694404591104735
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 9867,
+     "mean_bps": 35.62755338082044,
+     "median_bps": 32.84072249589491
+    }
+   ],
+   "median_bps": 28.69,
+   "mean_bps": 31.61
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "CRNC",
+   "permno": 18915,
+   "mdv": 5172289.0,
+   "px": 3.02,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 33328,
+     "mean_bps": 35.65670996501331,
+     "median_bps": 32.948929159802304
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 8486,
+     "mean_bps": 39.979915648092614,
+     "median_bps": 34.305317324185246
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 11634,
+     "mean_bps": 44.61092825513818,
+     "median_bps": 37.243947858473
+    }
+   ],
+   "median_bps": 34.31,
+   "mean_bps": 40.08
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "BKKT",
+   "permno": 20179,
+   "mdv": 5255134.0,
+   "px": 18.71,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 6772,
+     "mean_bps": 140.60130076421453,
+     "median_bps": 114.026941661005
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 6859,
+     "mean_bps": 102.13721736365332,
+     "median_bps": 86.78044547295342
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 5222,
+     "mean_bps": 112.26925585454634,
+     "median_bps": 81.34805345729227
+    }
+   ],
+   "median_bps": 86.78,
+   "mean_bps": 118.34
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "SCHL",
+   "permno": 77354,
+   "mdv": 5368754.0,
+   "px": 34.73,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 7476,
+     "mean_bps": 24.050607929987013,
+     "median_bps": 23.36448598130841
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 3194,
+     "mean_bps": 24.280108991426545,
+     "median_bps": 17.381228273464657
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3968,
+     "mean_bps": 28.014113924886633,
+     "median_bps": 20.114942943976725
+    }
+   ],
+   "median_bps": 20.11,
+   "mean_bps": 25.45
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "FULC",
+   "permno": 18838,
+   "mdv": 5501720.0,
+   "px": 7.4,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 6300,
+     "mean_bps": 34.089620752851026,
+     "median_bps": 24.570024570024568
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 8905,
+     "mean_bps": 35.01731477036727,
+     "median_bps": 30.120481927710845
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 14780,
+     "mean_bps": 24.395466256555665,
+     "median_bps": 16.764459346186086
+    }
+   ],
+   "median_bps": 24.57,
+   "mean_bps": 31.17
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "GOEV",
+   "permno": 18558,
+   "mdv": 5626080.0,
+   "px": 2.02,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 15047,
+     "mean_bps": 51.371578120684624,
+     "median_bps": 50.377833753148614
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 15827,
+     "mean_bps": 60.066062561907216,
+     "median_bps": 53.33333333333333
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 9150,
+     "mean_bps": 63.702314543922995,
+     "median_bps": 60.06006006006006
+    }
+   ],
+   "median_bps": 53.33,
+   "mean_bps": 58.38
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "RPAY",
+   "permno": 17976,
+   "mdv": 5757417.0,
+   "px": 10.58,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 12566,
+     "mean_bps": 14.996803095329534,
+     "median_bps": 9.474182851729038
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 9994,
+     "mean_bps": 11.681960449905768,
+     "median_bps": 9.306654257794323
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 8135,
+     "mean_bps": 13.067291240955573,
+     "median_bps": 9.573958831977022
+    }
+   ],
+   "median_bps": 9.47,
+   "mean_bps": 13.25
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "HAYN",
+   "permno": 91902,
+   "mdv": 5944605.0,
+   "px": 58.5,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 597,
+     "mean_bps": 18.558361864940302,
+     "median_bps": 10.198878123406425
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 785,
+     "mean_bps": 23.11292249663647,
+     "median_bps": 15.438716871086715
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 838,
+     "mean_bps": 25.68864464445183,
+     "median_bps": 17.14089818306479
+    }
+   ],
+   "median_bps": 15.44,
+   "mean_bps": 22.45
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "SASR",
+   "permno": 83414,
+   "mdv": 6098361.0,
+   "px": 22.76,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 6547,
+     "mean_bps": 25.684424231905226,
+     "median_bps": 18.281535648994517
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 6011,
+     "mean_bps": 27.344052783411136,
+     "median_bps": 13.230429988974644
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 7518,
+     "mean_bps": 17.615678300231483,
+     "median_bps": 13.001083423618637
+    }
+   ],
+   "median_bps": 13.23,
+   "mean_bps": 23.55
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "TREE",
+   "permno": 92775,
+   "mdv": 6254754.0,
+   "px": 41.98,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 2880,
+     "mean_bps": 50.47258467366309,
+     "median_bps": 43.27963452753066
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 3075,
+     "mean_bps": 85.12251799759001,
+     "median_bps": 71.59904534606206
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3772,
+     "mean_bps": 57.56200175796112,
+     "median_bps": 53.88761383447294
+    }
+   ],
+   "median_bps": 53.89,
+   "mean_bps": 64.39
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "TVTX",
+   "permno": 14440,
+   "mdv": 6338157.0,
+   "px": 7.33,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 11922,
+     "mean_bps": 23.539941210114563,
+     "median_bps": 14.234875444839858
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 12502,
+     "mean_bps": 23.315571277143434,
+     "median_bps": 14.154281670205238
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 16032,
+     "mean_bps": 19.403126255967045,
+     "median_bps": 12.539184952978058
+    }
+   ],
+   "median_bps": 14.15,
+   "mean_bps": 22.09
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "SFNC",
+   "permno": 91855,
+   "mdv": 6446704.0,
+   "px": 16.73,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 12332,
+     "mean_bps": 16.879295237757926,
+     "median_bps": 12.150668286755772
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 10444,
+     "mean_bps": 18.374035650744528,
+     "median_bps": 12.091898428053204
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 10043,
+     "mean_bps": 15.828258643250328,
+     "median_bps": 11.926058437686343
+    }
+   ],
+   "median_bps": 12.09,
+   "mean_bps": 17.03
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "ASTH",
+   "permno": 17133,
+   "mdv": 6574733.0,
+   "px": 40.56,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 10536,
+     "mean_bps": 51.92958133133322,
+     "median_bps": 43.99016690386855
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 9629,
+     "mean_bps": 65.6367979120777,
+     "median_bps": 38.53564547206166
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 4918,
+     "mean_bps": 51.475146297810994,
+     "median_bps": 42.78344029193406
+    }
+   ],
+   "median_bps": 42.78,
+   "mean_bps": 56.35
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "ANDE",
+   "permno": 83112,
+   "mdv": 6701937.0,
+   "px": 49.67,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 2895,
+     "mean_bps": 31.218695789541552,
+     "median_bps": 26.281208935611037
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 3098,
+     "mean_bps": 36.61020693088772,
+     "median_bps": 26.565853771084967
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 2892,
+     "mean_bps": 31.695809034341536,
+     "median_bps": 24.37043054427295
+    }
+   ],
+   "median_bps": 26.28,
+   "mean_bps": 33.17
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "PBI",
+   "permno": 24459,
+   "mdv": 6893689.0,
+   "px": 4.98,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 10218,
+     "mean_bps": 20.976149759167594,
+     "median_bps": 19.43634596695821
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 11112,
+     "mean_bps": 82.25305962639385,
+     "median_bps": 60.91370558375635
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 6991,
+     "mean_bps": 25.988373495924066,
+     "median_bps": 21.253985122210413
+    }
+   ],
+   "median_bps": 21.25,
+   "mean_bps": 43.07
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "EYPT",
+   "permno": 90542,
+   "mdv": 7053191.0,
+   "px": 9.08,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 15272,
+     "mean_bps": 27.979743062597112,
+     "median_bps": 22.197558268590456
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 11096,
+     "mean_bps": 29.83900496850256,
+     "median_bps": 22.753128555176335
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 16331,
+     "mean_bps": 31.545517251673076,
+     "median_bps": 23.894862604540023
+    }
+   ],
+   "median_bps": 22.75,
+   "mean_bps": 29.79
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "GTX",
+   "permno": 18065,
+   "mdv": 7283770.0,
+   "px": 8.61,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 13258,
+     "mean_bps": 12.029712189642828,
+     "median_bps": 11.179429849077698
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 8176,
+     "mean_bps": 13.048240338713866,
+     "median_bps": 11.757789535567314
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 10039,
+     "mean_bps": 14.630477648834256,
+     "median_bps": 11.702750146284377
+    }
+   ],
+   "median_bps": 11.7,
+   "mean_bps": 13.24
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "EB",
+   "permno": 18063,
+   "mdv": 7386890.0,
+   "px": 4.86,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 9842,
+     "mean_bps": 20.160988072831575,
+     "median_bps": 19.32367149758454
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 6257,
+     "mean_bps": 22.180522544443598,
+     "median_bps": 20.768431983385256
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 11210,
+     "mean_bps": 22.618639546903076,
+     "median_bps": 21.574973031283708
+    }
+   ],
+   "median_bps": 20.77,
+   "mean_bps": 21.65
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "UVV",
+   "permno": 16555,
+   "mdv": 7598219.0,
+   "px": 47.14,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 10409,
+     "mean_bps": 27.403056701369717,
+     "median_bps": 25.56455048998722
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 4824,
+     "mean_bps": 38.25198274941447,
+     "median_bps": 27.80748949375053
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 2656,
+     "mean_bps": 26.15436608121018,
+     "median_bps": 18.810743024349463
+    }
+   ],
+   "median_bps": 25.56,
+   "mean_bps": 30.6
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "DAVE",
+   "permno": 20975,
+   "mdv": 7811817.0,
+   "px": 37.23,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 4947,
+     "mean_bps": 164.66909027713857,
+     "median_bps": 123.81345439537762
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 6382,
+     "mean_bps": 126.68821743361613,
+     "median_bps": 113.08349769888231
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 5632,
+     "mean_bps": 93.20141310826021,
+     "median_bps": 83.9832622757165
+    }
+   ],
+   "median_bps": 113.08,
+   "mean_bps": 128.19
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "QTRX",
+   "permno": 17155,
+   "mdv": 8060749.0,
+   "px": 14.05,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 22110,
+     "mean_bps": 29.221047748621615,
+     "median_bps": 28.17695125387433
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 11115,
+     "mean_bps": 43.50419261375763,
+     "median_bps": 35.70153516601214
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 6455,
+     "mean_bps": 33.03520140879825,
+     "median_bps": 23.72479240806643
+    }
+   ],
+   "median_bps": 28.18,
+   "mean_bps": 35.25
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "OUST",
+   "permno": 19928,
+   "mdv": 8208922.0,
+   "px": 10.68,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 11252,
+     "mean_bps": 32.42703067171788,
+     "median_bps": 17.761989342806395
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 10636,
+     "mean_bps": 52.96067102308564,
+     "median_bps": 18.99335232668566
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 10594,
+     "mean_bps": 53.44334785255673,
+     "median_bps": 20.491803278688526
+    }
+   ],
+   "median_bps": 18.99,
+   "mean_bps": 46.28
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "FUBO",
+   "permno": 19893,
+   "mdv": 8472413.0,
+   "px": 1.2,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 8426,
+     "mean_bps": 85.9856894095667,
+     "median_bps": 85.83690987124463
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 6504,
+     "mean_bps": 84.54377992797603,
+     "median_bps": 84.38818565400844
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 5189,
+     "mean_bps": 88.04675188895936,
+     "median_bps": 88.1057268722467
+    }
+   ],
+   "median_bps": 85.84,
+   "mean_bps": 86.19
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "CMP",
+   "permno": 89952,
+   "mdv": 8640795.0,
+   "px": 11.88,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 18643,
+     "mean_bps": 24.6380665982427,
+     "median_bps": 16.39344262295082
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 10895,
+     "mean_bps": 23.321725149970554,
+     "median_bps": 18.13236627379873
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 18596,
+     "mean_bps": 24.86444021781477,
+     "median_bps": 18.535681186283597
+    }
+   ],
+   "median_bps": 18.13,
+   "mean_bps": 24.27
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "CERT",
+   "permno": 20195,
+   "mdv": 8781254.0,
+   "px": 14.64,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 16101,
+     "mean_bps": 28.827427030658917,
+     "median_bps": 24.84472049689441
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 15231,
+     "mean_bps": 19.431373059559093,
+     "median_bps": 14.970059880239521
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 11294,
+     "mean_bps": 18.74599669280636,
+     "median_bps": 14.836795252225519
+    }
+   ],
+   "median_bps": 14.97,
+   "mean_bps": 22.33
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "STC",
+   "permno": 72980,
+   "mdv": 8984598.0,
+   "px": 61.65,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 3715,
+     "mean_bps": 44.756598505909345,
+     "median_bps": 31.35572241934153
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 3091,
+     "mean_bps": 34.87519717497516,
+     "median_bps": 30.421903770714913
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 2449,
+     "mean_bps": 41.74752310383744,
+     "median_bps": 31.119482433871102
+    }
+   ],
+   "median_bps": 31.12,
+   "mean_bps": 40.46
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "CNNE",
+   "permno": 17036,
+   "mdv": 9080410.0,
+   "px": 17.86,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 8320,
+     "mean_bps": 13.7086972216685,
+     "median_bps": 11.337868480725623
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 9090,
+     "mean_bps": 13.851997319063948,
+     "median_bps": 11.56737998843262
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 7122,
+     "mean_bps": 12.098559680663337,
+     "median_bps": 11.22334455667789
+    }
+   ],
+   "median_bps": 11.34,
+   "mean_bps": 13.22
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "NUS",
+   "permno": 84172,
+   "mdv": 9201089.0,
+   "px": 12.44,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 11791,
+     "mean_bps": 17.18651151500564,
+     "median_bps": 15.16300227445034
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 9502,
+     "mean_bps": 17.629287334071204,
+     "median_bps": 16.46090534979424
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 11602,
+     "mean_bps": 17.880137533046327,
+     "median_bps": 17.98561151079137
+    }
+   ],
+   "median_bps": 16.46,
+   "mean_bps": 17.57
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "FWRG",
+   "permno": 22204,
+   "mdv": 9360304.0,
+   "px": 18.26,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 7427,
+     "mean_bps": 24.109181736384198,
+     "median_bps": 16.74574379012001
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 7789,
+     "mean_bps": 18.852836998281823,
+     "median_bps": 16.142050040355123
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 8926,
+     "mean_bps": 19.243759902691124,
+     "median_bps": 16.433853738701725
+    }
+   ],
+   "median_bps": 16.43,
+   "mean_bps": 20.74
+  },
+  {
+   "band": "5m-10m",
+   "ticker": "WTTR",
+   "permno": 16667,
+   "mdv": 9543963.0,
+   "px": 10.47,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 19576,
+     "mean_bps": 10.216972956195788,
+     "median_bps": 9.358914365933552
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 9397,
+     "mean_bps": 12.499667759551164,
+     "median_bps": 9.760858955588091
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 11996,
+     "mean_bps": 11.378943738478606,
+     "median_bps": 9.474182851729038
+    }
+   ],
+   "median_bps": 9.47,
+   "mean_bps": 11.37
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "BV",
+   "permno": 17867,
+   "mdv": 10001050.0,
+   "px": 13.79,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 9870,
+     "mean_bps": 7.734781874320122,
+     "median_bps": 7.165890361877464
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 9741,
+     "mean_bps": 10.1108194939415,
+     "median_bps": 7.296607077708865
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 8835,
+     "mean_bps": 10.103266792328983,
+     "median_bps": 7.270083605961468
+    }
+   ],
+   "median_bps": 7.27,
+   "mean_bps": 9.32
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "DNOW",
+   "permno": 14632,
+   "mdv": 10562174.0,
+   "px": 13.52,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 13513,
+     "mean_bps": 9.0333211824816,
+     "median_bps": 7.350238882763691
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 12986,
+     "mean_bps": 10.762350456334106,
+     "median_bps": 7.465472191116088
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 12207,
+     "mean_bps": 9.065615920723559,
+     "median_bps": 7.415647015202076
+    }
+   ],
+   "median_bps": 7.42,
+   "mean_bps": 9.62
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "GRPN",
+   "permno": 13108,
+   "mdv": 11061170.0,
+   "px": 14.89,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 16874,
+     "mean_bps": 17.82319882958323,
+     "median_bps": 14.144271570014144
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 16545,
+     "mean_bps": 18.211696982263945,
+     "median_bps": 13.30671989354624
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 15659,
+     "mean_bps": 18.318794132393474,
+     "median_bps": 13.995801259622112
+    }
+   ],
+   "median_bps": 14.0,
+   "mean_bps": 18.12
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "ROCK",
+   "permno": 79862,
+   "mdv": 11476603.0,
+   "px": 70.04,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 5870,
+     "mean_bps": 63.0368578909296,
+     "median_bps": 27.51031636863824
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 3871,
+     "mean_bps": 31.992749813853564,
+     "median_bps": 25.33783783783784
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 3644,
+     "mean_bps": 32.588527498311855,
+     "median_bps": 26.50566926814902
+    }
+   ],
+   "median_bps": 26.51,
+   "mean_bps": 42.54
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "ANNX",
+   "permno": 19544,
+   "mdv": 12412351.0,
+   "px": 5.36,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 23701,
+     "mean_bps": 28.931004690125064,
+     "median_bps": 17.84121320249777
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 16566,
+     "mean_bps": 26.04409394275718,
+     "median_bps": 19.550342130987293
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 16838,
+     "mean_bps": 31.753934891827324,
+     "median_bps": 21.762785636561482
+    }
+   ],
+   "median_bps": 19.55,
+   "mean_bps": 28.91
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "ATEN",
+   "permno": 14495,
+   "mdv": 12887248.0,
+   "px": 13.84,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 11332,
+     "mean_bps": 9.374947408085667,
+     "median_bps": 7.079646017699115
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 17772,
+     "mean_bps": 10.604102025644446,
+     "median_bps": 7.510326699211416
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 10663,
+     "mean_bps": 11.551016362794345,
+     "median_bps": 7.432181345224824
+    }
+   ],
+   "median_bps": 7.43,
+   "mean_bps": 10.51
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "ICFI",
+   "permno": 91468,
+   "mdv": 13630518.0,
+   "px": 142.78,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 4123,
+     "mean_bps": 44.310474595235696,
+     "median_bps": 31.54242456103459
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 4132,
+     "mean_bps": 51.30950455270045,
+     "median_bps": 33.39135377073639
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 5414,
+     "mean_bps": 49.14483032283392,
+     "median_bps": 44.91934935003062
+    }
+   ],
+   "median_bps": 33.39,
+   "mean_bps": 48.25
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "BHE",
+   "permno": 76224,
+   "mdv": 14075063.0,
+   "px": 40.18,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 4267,
+     "mean_bps": 27.89496838354437,
+     "median_bps": 19.579050416054823
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 5845,
+     "mean_bps": 18.077532665353633,
+     "median_bps": 15.071590052750565
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 5398,
+     "mean_bps": 18.064220086027294,
+     "median_bps": 12.795905310300704
+    }
+   ],
+   "median_bps": 15.07,
+   "mean_bps": 21.35
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "GATX",
+   "permno": 12036,
+   "mdv": 14940779.0,
+   "px": 132.16,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 11017,
+     "mean_bps": 28.518803217225184,
+     "median_bps": 23.675869706342844
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 5343,
+     "mean_bps": 24.23873103163177,
+     "median_bps": 20.964360587002098
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 5585,
+     "mean_bps": 25.512934320647567,
+     "median_bps": 22.161934966183942
+    }
+   ],
+   "median_bps": 22.16,
+   "mean_bps": 26.09
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "IPAR",
+   "permno": 11884,
+   "mdv": 16018677.0,
+   "px": 115.0,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 7002,
+     "mean_bps": 41.755862327016175,
+     "median_bps": 37.49400531891703
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 4915,
+     "mean_bps": 44.755952781804254,
+     "median_bps": 33.051945151636964
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 5149,
+     "mean_bps": 32.96642824014986,
+     "median_bps": 26.986001011975038
+    }
+   ],
+   "median_bps": 33.05,
+   "mean_bps": 39.83
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "SNDR",
+   "permno": 16648,
+   "mdv": 16975908.0,
+   "px": 22.51,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 13050,
+     "mean_bps": 7.296255413891524,
+     "median_bps": 4.365858982754857
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 12107,
+     "mean_bps": 7.494314401351244,
+     "median_bps": 4.552697473252903
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 16782,
+     "mean_bps": 7.734243257244249,
+     "median_bps": 4.423800044238001
+    }
+   ],
+   "median_bps": 4.42,
+   "mean_bps": 7.51
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "NTCT",
+   "permno": 87179,
+   "mdv": 17865729.0,
+   "px": 18.47,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 11458,
+     "mean_bps": 14.652640120647362,
+     "median_bps": 10.638297872340425
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 13851,
+     "mean_bps": 11.767042351551046,
+     "median_bps": 11.1731843575419
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 14999,
+     "mean_bps": 12.757702265283937,
+     "median_bps": 10.970927043335163
+    }
+   ],
+   "median_bps": 10.97,
+   "mean_bps": 13.06
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "CNO",
+   "permno": 89841,
+   "mdv": 18536755.0,
+   "px": 27.56,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 19521,
+     "mean_bps": 6.879397263198129,
+     "median_bps": 3.6920804873546245
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 13737,
+     "mean_bps": 16.428140691380346,
+     "median_bps": 3.6744442403086537
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 11759,
+     "mean_bps": 8.87895201302621,
+     "median_bps": 7.142857142857143
+    }
+   ],
+   "median_bps": 3.69,
+   "mean_bps": 10.73
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "ARCT",
+   "permno": 13918,
+   "mdv": 19447648.0,
+   "px": 31.0,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 15220,
+     "mean_bps": 53.44729696880261,
+     "median_bps": 47.02931493964571
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 11756,
+     "mean_bps": 34.77517006900478,
+     "median_bps": 29.673590504451038
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 8568,
+     "mean_bps": 46.83235972698127,
+     "median_bps": 41.22166010867528
+    }
+   ],
+   "median_bps": 41.22,
+   "mean_bps": 45.02
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "RYTM",
+   "permno": 17000,
+   "mdv": 20190510.0,
+   "px": 41.01,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 10615,
+     "mean_bps": 42.76936825315236,
+     "median_bps": 40.74357015533486
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 5978,
+     "mean_bps": 39.69931366351684,
+     "median_bps": 29.73240832507433
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 11474,
+     "mean_bps": 33.051615803419494,
+     "median_bps": 27.82931354359926
+    }
+   ],
+   "median_bps": 29.73,
+   "mean_bps": 38.51
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "TNL",
+   "permno": 91392,
+   "mdv": 21131977.0,
+   "px": 44.03,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 8836,
+     "mean_bps": 13.193775013200835,
+     "median_bps": 9.013068949977468
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 11605,
+     "mean_bps": 11.443797828892635,
+     "median_bps": 9.00900900900901
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 14312,
+     "mean_bps": 14.071941555266566,
+     "median_bps": 11.24985937675779
+    }
+   ],
+   "median_bps": 9.01,
+   "mean_bps": 12.9
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "SPWR",
+   "permno": 90978,
+   "mdv": 22236520.0,
+   "px": 3.03,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 60009,
+     "mean_bps": 30.953268880879282,
+     "median_bps": 29.985007496251875
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 17057,
+     "mean_bps": 37.20143373780984,
+     "median_bps": 35.52397868561279
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 18540,
+     "mean_bps": 37.568402688975844,
+     "median_bps": 37.10575139146568
+    }
+   ],
+   "median_bps": 35.52,
+   "mean_bps": 35.24
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "FOXF",
+   "permno": 14097,
+   "mdv": 23645607.0,
+   "px": 47.42,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 6006,
+     "mean_bps": 28.265713511933015,
+     "median_bps": 22.311468094600627
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 6662,
+     "mean_bps": 27.594084575859974,
+     "median_bps": 20.920502092050206
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 10199,
+     "mean_bps": 22.787290069738066,
+     "median_bps": 18.865946965726863
+    }
+   ],
+   "median_bps": 20.92,
+   "mean_bps": 26.22
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "FHI",
+   "permno": 86102,
+   "mdv": 25155608.0,
+   "px": 32.5,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 7319,
+     "mean_bps": 12.406299591026032,
+     "median_bps": 9.218005838070365
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 6938,
+     "mean_bps": 11.746925692491486,
+     "median_bps": 9.480170643071576
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 11604,
+     "mean_bps": 8.226234082842618,
+     "median_bps": 6.163328197226503
+    }
+   ],
+   "median_bps": 9.22,
+   "mean_bps": 10.79
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "JACK",
+   "permno": 77453,
+   "mdv": 25995418.0,
+   "px": 54.21,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 15730,
+     "mean_bps": 29.54572298958032,
+     "median_bps": 23.29957881530603
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 9235,
+     "mean_bps": 24.551931324028512,
+     "median_bps": 21.4738897022938
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 8908,
+     "mean_bps": 28.744843686240614,
+     "median_bps": 17.873100983020553
+    }
+   ],
+   "median_bps": 21.47,
+   "mean_bps": 27.61
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "MATX",
+   "permno": 11691,
+   "mdv": 27315457.0,
+   "px": 123.0,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 8268,
+     "mean_bps": 27.284265436075223,
+     "median_bps": 22.892650436330907
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 5406,
+     "mean_bps": 26.7137607899285,
+     "median_bps": 22.318660880347178
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 8032,
+     "mean_bps": 31.503867203260796,
+     "median_bps": 23.755699452086287
+    }
+   ],
+   "median_bps": 22.89,
+   "mean_bps": 28.5
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "CABO",
+   "permno": 15395,
+   "mdv": 28295867.0,
+   "px": 359.85,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 7590,
+     "mean_bps": 59.38915930954163,
+     "median_bps": 53.94230637587109
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 2327,
+     "mean_bps": 51.02370358564047,
+     "median_bps": 48.36961054123927
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 2724,
+     "mean_bps": 54.03241931088547,
+     "median_bps": 47.48731236024966
+    }
+   ],
+   "median_bps": 48.37,
+   "mean_bps": 54.82
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "AZTA",
+   "permno": 81241,
+   "mdv": 29800955.0,
+   "px": 54.12,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 18875,
+     "mean_bps": 17.210946187147805,
+     "median_bps": 14.654698662758747
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 17594,
+     "mean_bps": 19.394077861530352,
+     "median_bps": 16.226449112052645
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 17334,
+     "mean_bps": 19.025388557826098,
+     "median_bps": 13.078000934142924
+    }
+   ],
+   "median_bps": 14.65,
+   "mean_bps": 18.54
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "IRTC",
+   "permno": 16386,
+   "mdv": 31682531.0,
+   "px": 95.75,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 21164,
+     "mean_bps": 45.19397088730601,
+     "median_bps": 41.80602006688963
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 27217,
+     "mean_bps": 53.38375839492208,
+     "median_bps": 47.52034780850311
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 22044,
+     "mean_bps": 34.296297500798886,
+     "median_bps": 32.762472077438574
+    }
+   ],
+   "median_bps": 41.81,
+   "mean_bps": 44.29
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "AGIO",
+   "permno": 14044,
+   "mdv": 33136084.0,
+   "px": 45.22,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 15810,
+     "mean_bps": 30.644535730423375,
+     "median_bps": 29.787234042553195
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 8865,
+     "mean_bps": 26.523735141805222,
+     "median_bps": 21.395459408058954
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 25185,
+     "mean_bps": 30.434796068710764,
+     "median_bps": 28.28854314002829
+    }
+   ],
+   "median_bps": 28.29,
+   "mean_bps": 29.2
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "ABM",
+   "permno": 47730,
+   "mdv": 34277767.0,
+   "px": 50.57,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 14264,
+     "mean_bps": 12.793189589406277,
+     "median_bps": 8.030515960650472
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 9358,
+     "mean_bps": 13.745951355498665,
+     "median_bps": 9.864851533984414
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 16118,
+     "mean_bps": 8.761704525124998,
+     "median_bps": 7.87246604999016
+    }
+   ],
+   "median_bps": 8.03,
+   "mean_bps": 11.77
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "WGO",
+   "permno": 51086,
+   "mdv": 36173942.0,
+   "px": 56.7,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 9410,
+     "mean_bps": 18.8509466474137,
+     "median_bps": 15.32567049808429
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 15035,
+     "mean_bps": 16.527921902905316,
+     "median_bps": 12.476606363069244
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 11748,
+     "mean_bps": 18.032440440068964,
+     "median_bps": 15.094339622641508
+    }
+   ],
+   "median_bps": 15.09,
+   "mean_bps": 17.8
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "RBC",
+   "permno": 90870,
+   "mdv": 38831050.0,
+   "px": 274.86,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 7712,
+     "mean_bps": 24.143948052066552,
+     "median_bps": 19.883590673416375
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 10294,
+     "mean_bps": 30.664949152077412,
+     "median_bps": 24.59757654400663
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 7263,
+     "mean_bps": 26.78663142722301,
+     "median_bps": 23.568403608911805
+    }
+   ],
+   "median_bps": 23.57,
+   "mean_bps": 27.2
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "DY",
+   "permno": 12008,
+   "mdv": 41461857.0,
+   "px": 175.95,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 9757,
+     "mean_bps": 30.170150465074563,
+     "median_bps": 23.39311574022502
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 7546,
+     "mean_bps": 22.4506138056138,
+     "median_bps": 20.67885734542554
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 10053,
+     "mean_bps": 36.04441155639505,
+     "median_bps": 27.7343404242764
+    }
+   ],
+   "median_bps": 23.39,
+   "mean_bps": 29.56
+  },
+  {
+   "band": "10m-50m",
+   "ticker": "FLNC",
+   "permno": 22088,
+   "mdv": 44071265.0,
+   "px": 20.43,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 33495,
+     "mean_bps": 14.825205694324262,
+     "median_bps": 8.956560680698612
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 32397,
+     "mean_bps": 16.302684703204683,
+     "median_bps": 14.695077149155033
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 28473,
+     "mean_bps": 16.42408886199808,
+     "median_bps": 16.090104585679807
+    }
+   ],
+   "median_bps": 14.7,
+   "mean_bps": 15.85
+  },
+  {
+   "band": "50m+",
+   "ticker": "SEE",
+   "permno": 85926,
+   "mdv": 50101833.0,
+   "px": 36.61,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 25384,
+     "mean_bps": 9.550891855277662,
+     "median_bps": 7.764979940468487
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 13679,
+     "mean_bps": 7.5345474096870655,
+     "median_bps": 5.474952094169176
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 10609,
+     "mean_bps": 11.019923759305003,
+     "median_bps": 8.385744234800837
+    }
+   ],
+   "median_bps": 7.76,
+   "mean_bps": 9.37
+  },
+  {
+   "band": "50m+",
+   "ticker": "MSM",
+   "permno": 82777,
+   "mdv": 52435556.0,
+   "px": 80.57,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 12199,
+     "mean_bps": 11.042545202253843,
+     "median_bps": 9.524943445648292
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 17923,
+     "mean_bps": 16.68142666374035,
+     "median_bps": 13.785324895043548
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 11307,
+     "mean_bps": 13.584818718413569,
+     "median_bps": 10.112501580078373
+    }
+   ],
+   "median_bps": 10.11,
+   "mean_bps": 13.77
+  },
+  {
+   "band": "50m+",
+   "ticker": "CRI",
+   "permno": 89876,
+   "mdv": 55950787.0,
+   "px": 65.17,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 11614,
+     "mean_bps": 11.365830895097384,
+     "median_bps": 10.581210792835009
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 10008,
+     "mean_bps": 11.051302551209513,
+     "median_bps": 9.42951438000943
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 9967,
+     "mean_bps": 10.81140114251879,
+     "median_bps": 7.81921964187974
+    }
+   ],
+   "median_bps": 9.43,
+   "mean_bps": 11.08
+  },
+  {
+   "band": "50m+",
+   "ticker": "CINF",
+   "permno": 23473,
+   "mdv": 59897463.0,
+   "px": 114.94,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 18502,
+     "mean_bps": 10.182011901787408,
+     "median_bps": 6.097826560390261
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 8174,
+     "mean_bps": 11.045562900090266,
+     "median_bps": 8.797395970792646
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 8711,
+     "mean_bps": 11.340256955857594,
+     "median_bps": 9.495446501791186
+    }
+   ],
+   "median_bps": 8.8,
+   "mean_bps": 10.86
+  },
+  {
+   "band": "50m+",
+   "ticker": "HALO",
+   "permno": 90436,
+   "mdv": 63698619.0,
+   "px": 50.85,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 25219,
+     "mean_bps": 12.060324841529997,
+     "median_bps": 9.757049468240805
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 13915,
+     "mean_bps": 14.092593409871489,
+     "median_bps": 9.905894006934126
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 16040,
+     "mean_bps": 14.978869007904269,
+     "median_bps": 13.385600917869777
+    }
+   ],
+   "median_bps": 9.91,
+   "mean_bps": 13.71
+  },
+  {
+   "band": "50m+",
+   "ticker": "PLAY",
+   "permno": 15014,
+   "mdv": 67610234.0,
+   "px": 44.47,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 29577,
+     "mean_bps": 10.726695402229598,
+     "median_bps": 8.38750262109457
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 24039,
+     "mean_bps": 15.676270013485839,
+     "median_bps": 12.003360941063498
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 24396,
+     "mean_bps": 11.979051771075278,
+     "median_bps": 10.248526774276197
+    }
+   ],
+   "median_bps": 10.25,
+   "mean_bps": 12.79
+  },
+  {
+   "band": "50m+",
+   "ticker": "TXT",
+   "permno": 23579,
+   "mdv": 73134901.0,
+   "px": 86.26,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 14354,
+     "mean_bps": 6.013655478904696,
+     "median_bps": 4.6490004649000465
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 16102,
+     "mean_bps": 6.266666387827303,
+     "median_bps": 4.653327128897161
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 23473,
+     "mean_bps": 5.91405780897872,
+     "median_bps": 4.648460197559559
+    }
+   ],
+   "median_bps": 4.65,
+   "mean_bps": 6.06
+  },
+  {
+   "band": "50m+",
+   "ticker": "AZEK",
+   "permno": 19409,
+   "mdv": 78221405.0,
+   "px": 45.14,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 20648,
+     "mean_bps": 6.661351791510384,
+     "median_bps": 4.464285714285714
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 22419,
+     "mean_bps": 7.442970196933098,
+     "median_bps": 4.287245444801715
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 36463,
+     "mean_bps": 9.222685106669605,
+     "median_bps": 7.2245635159542445
+    }
+   ],
+   "median_bps": 4.46,
+   "mean_bps": 7.78
+  },
+  {
+   "band": "50m+",
+   "ticker": "FBIN",
+   "permno": 12981,
+   "mdv": 85673868.0,
+   "px": 67.11,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 18297,
+     "mean_bps": 11.713784328683346,
+     "median_bps": 6.108735491753207
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 22551,
+     "mean_bps": 8.33470154732733,
+     "median_bps": 7.417847340701728
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 35857,
+     "mean_bps": 8.823681903581114,
+     "median_bps": 4.7232937101472094
+    }
+   ],
+   "median_bps": 6.11,
+   "mean_bps": 9.62
+  },
+  {
+   "band": "50m+",
+   "ticker": "LPX",
+   "permno": 56223,
+   "mdv": 92002686.0,
+   "px": 89.98,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 17971,
+     "mean_bps": 9.46365658665998,
+     "median_bps": 6.661485511269013
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 13699,
+     "mean_bps": 10.384839245883597,
+     "median_bps": 7.918104179627849
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 14486,
+     "mean_bps": 10.685052429404076,
+     "median_bps": 7.230657989877079
+    }
+   ],
+   "median_bps": 7.23,
+   "mean_bps": 10.18
+  },
+  {
+   "band": "50m+",
+   "ticker": "CRL",
+   "permno": 88281,
+   "mdv": 99798732.0,
+   "px": 209.85,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 12577,
+     "mean_bps": 17.657812518938375,
+     "median_bps": 14.090460758066788
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 11375,
+     "mean_bps": 23.597082286363946,
+     "median_bps": 20.617073813918925
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 14470,
+     "mean_bps": 26.364756818824603,
+     "median_bps": 18.557405870000487
+    }
+   ],
+   "median_bps": 18.56,
+   "mean_bps": 22.54
+  },
+  {
+   "band": "50m+",
+   "ticker": "BF",
+   "permno": 29946,
+   "mdv": 107441933.0,
+   "px": 43.43,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 31897,
+     "mean_bps": 10.098284768925996,
+     "median_bps": 4.693733865289838
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 25987,
+     "mean_bps": 11.752159081405136,
+     "median_bps": 6.891007235557597
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 21795,
+     "mean_bps": 12.302439161313735,
+     "median_bps": 6.940427993059572
+    }
+   ],
+   "median_bps": 6.89,
+   "mean_bps": 11.38
+  },
+  {
+   "band": "50m+",
+   "ticker": "PTC",
+   "permno": 75912,
+   "mdv": 112848482.0,
+   "px": 174.6,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 11354,
+     "mean_bps": 10.723480668791748,
+     "median_bps": 8.598205841047834
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 10048,
+     "mean_bps": 11.776307544980646,
+     "median_bps": 9.24802034564476
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 12456,
+     "mean_bps": 13.666541367068179,
+     "median_bps": 11.874805620741327
+    }
+   ],
+   "median_bps": 9.25,
+   "mean_bps": 12.06
+  },
+  {
+   "band": "50m+",
+   "ticker": "SKX",
+   "permno": 86949,
+   "mdv": 123084542.0,
+   "px": 72.81,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 45653,
+     "mean_bps": 5.36456548747284,
+     "median_bps": 4.0830214358625385
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 21330,
+     "mean_bps": 6.032704029627649,
+     "median_bps": 4.1098705390780195
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 34300,
+     "mean_bps": 4.218961220190959,
+     "median_bps": 2.736726874657909
+    }
+   ],
+   "median_bps": 4.08,
+   "mean_bps": 5.21
+  },
+  {
+   "band": "50m+",
+   "ticker": "CASY",
+   "permno": 21742,
+   "mdv": 132541171.0,
+   "px": 372.02,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 17237,
+     "mean_bps": 23.02742045140942,
+     "median_bps": 19.02599195998404
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 16389,
+     "mean_bps": 18.707549642375984,
+     "median_bps": 16.08204479244935
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 11019,
+     "mean_bps": 23.959238756383247,
+     "median_bps": 17.310567314501533
+    }
+   ],
+   "median_bps": 17.31,
+   "mean_bps": 21.9
+  },
+  {
+   "band": "50m+",
+   "ticker": "CHD",
+   "permno": 23393,
+   "mdv": 141415270.0,
+   "px": 107.7,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 18399,
+     "mean_bps": 7.547614757347289,
+     "median_bps": 5.588153115395362
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 23323,
+     "mean_bps": 5.896023272567119,
+     "median_bps": 4.5543562417452295
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 29675,
+     "mean_bps": 5.911810521318134,
+     "median_bps": 3.8208042793007926
+    }
+   ],
+   "median_bps": 4.55,
+   "mean_bps": 6.45
+  },
+  {
+   "band": "50m+",
+   "ticker": "DD",
+   "permno": 16851,
+   "mdv": 151359114.0,
+   "px": 80.25,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 25522,
+     "mean_bps": 4.220958172911262,
+     "median_bps": 3.7601052829479227
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 24900,
+     "mean_bps": 3.5478335732940796,
+     "median_bps": 3.725088470851183
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 28206,
+     "mean_bps": 5.093260861338823,
+     "median_bps": 3.734362357627435
+    }
+   ],
+   "median_bps": 3.73,
+   "mean_bps": 4.29
+  },
+  {
+   "band": "50m+",
+   "ticker": "DRI",
+   "permno": 81655,
+   "mdv": 168013345.0,
+   "px": 151.14,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 12031,
+     "mean_bps": 6.190424752957734,
+     "median_bps": 4.748821274719311
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 27583,
+     "mean_bps": 5.784809994070016,
+     "median_bps": 3.9290157815467226
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 15320,
+     "mean_bps": 5.822279054581724,
+     "median_bps": 4.571727133200536
+    }
+   ],
+   "median_bps": 4.57,
+   "mean_bps": 5.93
+  },
+  {
+   "band": "50m+",
+   "ticker": "FICO",
+   "permno": 11533,
+   "mdv": 186329480.0,
+   "px": 1390.59,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 2709,
+     "mean_bps": 26.007250723782807,
+     "median_bps": 26.056745801968734
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 9574,
+     "mean_bps": 25.318427465621465,
+     "median_bps": 26.085127270177406
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 19489,
+     "mean_bps": 23.834465559592815,
+     "median_bps": 26.07847499101627
+    }
+   ],
+   "median_bps": 26.08,
+   "mean_bps": 25.05
+  },
+  {
+   "band": "50m+",
+   "ticker": "PPG",
+   "permno": 22509,
+   "mdv": 200002194.0,
+   "px": 128.46,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 27971,
+     "mean_bps": 3.8408168839546586,
+     "median_bps": 3.117206982543641
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 27390,
+     "mean_bps": 5.740496753858648,
+     "median_bps": 4.6929996089167
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 31172,
+     "mean_bps": 5.070777608865722,
+     "median_bps": 3.208213025344883
+    }
+   ],
+   "median_bps": 3.21,
+   "mean_bps": 4.88
+  },
+  {
+   "band": "50m+",
+   "ticker": "PNC",
+   "permno": 60442,
+   "mdv": 219394968.0,
+   "px": 153.18,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 31842,
+     "mean_bps": 7.799791943966495,
+     "median_bps": 5.911135923286592
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 18231,
+     "mean_bps": 7.798045270898486,
+     "median_bps": 6.496037417175523
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 23297,
+     "mean_bps": 7.79786941074307,
+     "median_bps": 6.54150585464774
+    }
+   ],
+   "median_bps": 6.5,
+   "mean_bps": 7.8
+  },
+  {
+   "band": "50m+",
+   "ticker": "HSY",
+   "permno": 16600,
+   "mdv": 242145607.0,
+   "px": 186.98,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 24979,
+     "mean_bps": 8.349699253689824,
+     "median_bps": 7.84047251914382
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 19276,
+     "mean_bps": 8.43588535394155,
+     "median_bps": 7.104795758343667
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 22930,
+     "mean_bps": 10.917342900922446,
+     "median_bps": 9.116503552755061
+    }
+   ],
+   "median_bps": 7.84,
+   "mean_bps": 9.23
+  },
+  {
+   "band": "50m+",
+   "ticker": "ELF",
+   "permno": 16318,
+   "mdv": 265807628.0,
+   "px": 197.32,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 30974,
+     "mean_bps": 23.673021687670957,
+     "median_bps": 19.90930206835527
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 70836,
+     "mean_bps": 28.76597051236875,
+     "median_bps": 25.263960721691255
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 30190,
+     "mean_bps": 23.51499948471689,
+     "median_bps": 20.769435119665758
+    }
+   ],
+   "median_bps": 20.77,
+   "mean_bps": 25.32
+  },
+  {
+   "band": "50m+",
+   "ticker": "BDX",
+   "permno": 39642,
+   "mdv": 299917460.0,
+   "px": 234.94,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 32310,
+     "mean_bps": 9.2607791123886,
+     "median_bps": 7.550335570469798
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 25988,
+     "mean_bps": 8.88456247084288,
+     "median_bps": 7.7038305157286535
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 15567,
+     "mean_bps": 13.061675617355112,
+     "median_bps": 8.119137662115676
+    }
+   ],
+   "median_bps": 7.7,
+   "mean_bps": 10.4
+  },
+  {
+   "band": "50m+",
+   "ticker": "GLW",
+   "permno": 22293,
+   "mdv": 325485922.0,
+   "px": 38.08,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 64245,
+     "mean_bps": 2.977913422660393,
+     "median_bps": 2.7214587018641994
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 119220,
+     "mean_bps": 2.8596245242568847,
+     "median_bps": 2.5262094227611467
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 70435,
+     "mean_bps": 2.787009858085261,
+     "median_bps": 2.51351011687822
+    }
+   ],
+   "median_bps": 2.53,
+   "mean_bps": 2.87
+  },
+  {
+   "band": "50m+",
+   "ticker": "MDLZ",
+   "permno": 89006,
+   "mdv": 378551281.0,
+   "px": 66.64,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 133310,
+     "mean_bps": 1.9180931713476612,
+     "median_bps": 1.4864362690449648
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 80688,
+     "mean_bps": 2.2153742023466942,
+     "median_bps": 1.5143484515787085
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 82206,
+     "mean_bps": 2.0345280042684397,
+     "median_bps": 1.4739479696366717
+    }
+   ],
+   "median_bps": 1.49,
+   "mean_bps": 2.06
+  },
+  {
+   "band": "50m+",
+   "ticker": "MCHP",
+   "permno": 78987,
+   "mdv": 455565386.0,
+   "px": 92.81,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 119392,
+     "mean_bps": 2.7113275227608455,
+     "median_bps": 2.1285653469561514
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 74287,
+     "mean_bps": 3.982520429115209,
+     "median_bps": 3.2518562679529563
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 82385,
+     "mean_bps": 5.712719755802621,
+     "median_bps": 5.574446736161436
+    }
+   ],
+   "median_bps": 3.25,
+   "mean_bps": 4.14
+  },
+  {
+   "band": "50m+",
+   "ticker": "FCX",
+   "permno": 81774,
+   "mdv": 552613500.0,
+   "px": 49.36,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 178146,
+     "mean_bps": 2.5379460938362928,
+     "median_bps": 2.0034057898427324
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 166455,
+     "mean_bps": 2.533520126022297,
+     "median_bps": 2.098415696149407
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 148462,
+     "mean_bps": 2.328088513534674,
+     "median_bps": 2.008637139700713
+    }
+   ],
+   "median_bps": 2.01,
+   "mean_bps": 2.47
+  },
+  {
+   "band": "50m+",
+   "ticker": "MRVL",
+   "permno": 88360,
+   "mdv": 743115599.0,
+   "px": 69.8,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 130957,
+     "mean_bps": 3.327080924015556,
+     "median_bps": 2.8905911258852437
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 112181,
+     "mean_bps": 3.8878978145342393,
+     "median_bps": 2.757859900717044
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 147263,
+     "mean_bps": 3.3403925174857934,
+     "median_bps": 2.931261908251502
+    }
+   ],
+   "median_bps": 2.89,
+   "mean_bps": 3.52
+  },
+  {
+   "band": "50m+",
+   "ticker": "DIS",
+   "permno": 26403,
+   "mdv": 911410214.0,
+   "px": 101.54,
+   "days_measured": 3,
+   "days_requested": 3,
+   "per_day": [
+    {
+     "day": "20240610",
+     "n_quotes": 65803,
+     "mean_bps": 1.7951100189001956,
+     "median_bps": 1.945903872348706
+    },
+    {
+     "day": "20240618",
+     "n_quotes": 91359,
+     "mean_bps": 1.5878127073963726,
+     "median_bps": 0.9908347783007183
+    },
+    {
+     "day": "20240625",
+     "n_quotes": 107545,
+     "mean_bps": 1.8508294519767057,
+     "median_bps": 0.9813061184436485
+    }
+   ],
+   "median_bps": 0.99,
+   "mean_bps": 1.74
+  }
+ ]
+}
