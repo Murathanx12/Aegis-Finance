@@ -365,3 +365,86 @@ Do not report “we scraped 5 million articles.” Report:
 - dollars and compute per useful canonical event.
 
 The goal is not the largest archive. It is the highest-value, point-in-time world state AEGIS can transform into repeatable decisions.
+---
+
+# Z. WRDS — MEASURED ENTITLEMENTS (2026-08-31)
+
+Added after the registry was written, because the RavenPack question was
+answered by a probe rather than by the catalogue, and the answer changed the
+plan. Receipt: `backend/data/optimus/wrds/entitlement_probe.json`; code:
+`scripts/wrds_entitlement_probe.py`.
+
+## Z1. Why a schema listing cannot answer "are we entitled?"
+
+Three checks disagreed:
+
+1. `catalogue_probe_2026-08-20.json` — 46 schemas, no `ravenpack` → read as NOT entitled.
+2. a live `pg_namespace` query — **1,316** schemas *including* `ravenpack_full`,
+   `ravenpack_dj`, `ravenpack_web`, `rpna` → read as entitled.
+3. `select * from ravenpack_full.rpa_full_equities_2024 limit 2`
+   → **`permission denied for schema ravenpack_full`**.
+
+Only (3) answers it. **WRDS shows every subscriber the whole catalogue** —
+schema names, table names, and even the 52 column definitions of a table you
+may not read one row of — because the catalogue is documentation. **Visibility
+is not access.** Verify a source at its FAR end: attempt the read.
+
+Corroborated independently the same day by a different route (`ravenpack_trial`
+/ `rpnasamp` hold exactly one day, 2020-09-30, ~409k events) — see
+`SOURCE_RECEIPT_2026-08-31_WRDS_RAVENPACK.md`.
+
+## Z2. The map — 11 of 16 families READABLE
+
+| family | schema | status | AEGIS role |
+|---|---|---|---|
+| RavenPack Full / DJ / Web / common | `ravenpack_*` | **DENIED** | the historical-news lane we wanted. Not available — EDGAR + GDELT + CC-NEWS replace it |
+| IBES guidance | `tr_ibes_guidance` | **DENIED** | company guidance events |
+| CRSP daily | `crsp` | READ | prices, dollar volume, the liquidity ladder |
+| IBES summary | `ibes` | READ | consensus, actuals |
+| **IBES detail** | `tr_ibes` | READ | **per-analyst estimates — what `T17_REVISION_VELOCITY` needs** |
+| **TAQ millisecond** | `taqm_2003..2026` | READ | **real quoted spreads; one table per day, symbol-filtered queries return in ~1s** |
+| TAQ liquidity | `contrib_liquidity_taq` | READ | pre-computed Amihud (`ilc`, monthly); `bbd` spread proxy but only 2001-2016, 3,607 permnos |
+| **13F holdings** | `tr_13f` | READ | **"what the biggest holder is doing" — institutional position changes** |
+| Patents | `wrdsapps_patents` | READ | innovation events (`uspatents_meta`, citations, gvkey link) |
+| BoardEx | `boardex_na` | READ | people/board network |
+| Audit | `audit_audit_comp` | READ | auditor changes — a distress event |
+| Compustat | `comp` | READ | fundamentals |
+| OptionMetrics | `optionm` | READ | option chains |
+
+Auth: `psycopg2` to `wrds-pgdata.wharton.upenn.edu:9737`, `sslmode=require`,
+user `murathan12`, password from `%APPDATA%\postgresql\pgpass.conf` via
+`PGPASSFILE`. Non-interactive; the `wrds` Python package prompts for a username
+and will hang a background job.
+
+**A `NO_SUCH_TABLE` is not a `NOT_ENTITLED`.** Four families first probed on
+guessed table names and came back missing; resolved against `pg_tables` and all
+four read. Never record a wrong guess as a denial.
+
+## Z3. What has been measured with these, and what it changed
+
+- `FINDING_2026-08-31_SPREAD_BY_LIQUIDITY_BAND.md` — quoted spread per
+  dollar-volume band from TAQ. Only the **$100k–1m** band fails at monthly
+  turnover (−10.9%/yr net); **$1m–5m survives** (+2.34%). Sets the execution
+  floor at ~$1m and prices every future backtest in this family at the band's
+  own cost instead of a flat 10–50 bps.
+- `liquidity_migration.json` — does climbing the ladder predict return, after
+  controlling for the trailing 12-month return? Consistent but small
+  (+0.1 to +1.4 pp/yr across quintiles), and climbers are right-skewed.
+
+## Z4. The lane this opens — "what the big holders will do"
+
+Murat, 2026-08-31: *"maybe the biggest holder sell or want more might be a good
+indicator. estimating what firms and hedge funds will do will show that too."*
+
+`tr_13f` is readable, so this is buildable now rather than aspirational:
+
+- position CHANGES per institution per quarter, not just holdings;
+- concentration: how much of the float one holder controls;
+- crowding: how many funds hold the same name — and the exit risk that implies;
+- **the 13F-popularity corpse is the mandatory control** (TIER 0), because
+  "funds are buying it" is a known non-signal on its own.
+
+Caveat that decides how it is used: 13F is filed **45 days after quarter end**
+and covers longs only. It is a slow, stale, one-sided sensor. Use it for
+structure — who owns this, how crowded, who is exiting — never as a fresh
+catalyst.
