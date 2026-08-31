@@ -108,15 +108,27 @@ def main() -> int:
 
     import psycopg2
 
-    conn = psycopg2.connect(host=HOST, port=PORT, dbname=DB, user=USER,
-                            sslmode="require", connect_timeout=25)
-    cur = conn.cursor()
-    cur.execute("SET statement_timeout = 1800000")
-    print(f"pulling crsp.dsf monthly {START}..{END} ...", flush=True)
-    cur.execute(MONTHLY_SQL)
-    raw = cur.fetchall()
-    conn.close()
-    print(f"  {len(raw):,} name-months", flush=True)
+    # CACHE THE PANEL. The pull is 520k name-months and several minutes, and it
+    # is the same panel every downstream study needs (CompanyState, the `fell`
+    # cut, revision velocity). Re-querying WRDS to re-slice numbers we already
+    # have is paying twice for a value that does not change.
+    cache = OUT / f"crsp_monthly_panel_{START[:4]}_{END[:4]}.json"
+    if cache.exists():
+        raw = json.loads(cache.read_text(encoding="utf-8"))
+        print(f"  panel from cache: {len(raw):,} name-months ({cache.name})", flush=True)
+    else:
+        conn = psycopg2.connect(host=HOST, port=PORT, dbname=DB, user=USER,
+                                sslmode="require", connect_timeout=25)
+        cur = conn.cursor()
+        cur.execute("SET statement_timeout = 1800000")
+        print(f"pulling crsp.dsf monthly {START}..{END} ...", flush=True)
+        cur.execute(MONTHLY_SQL)
+        raw = [[int(r[0]), str(r[1]), float(r[2]), float(r[3]), int(r[4])]
+               for r in cur.fetchall()]
+        conn.close()
+        OUT.mkdir(parents=True, exist_ok=True)
+        cache.write_text(json.dumps(raw), encoding="utf-8")
+        print(f"  {len(raw):,} name-months -> cached {cache.name}", flush=True)
 
     # permno -> ordered list of (ym, mdv, mret)
     by: dict[int, list] = defaultdict(list)
@@ -192,11 +204,17 @@ def main() -> int:
     for q in range(5):
         c = [r for r in climbed if r["trail_q"] == q]
         f = [r for r in flat if r["trail_q"] == q]
-        ac, af = agg(c, "fwd_12m"), agg(f, "fwd_12m")
+        # FELL gets the same control. The uncontrolled table showed fallers with
+        # the HIGHEST mean of the four groups and tails as fat as the climbers',
+        # which is the observation that turned this from a direction signal into
+        # a dispersion one. Leaving it uncontrolled would leave the claim
+        # resting on the one cut that was not tested.
+        d = [r for r in fell if r["trail_q"] == q]
+        ac, af, ad = agg(c, "fwd_12m"), agg(f, "fwd_12m"), agg(d, "fwd_12m")
         controlled[f"trail_q{q}"] = {
-            "climbed": ac, "flat": af,
-            "spread_pp": (round(ac["mean"] - af["mean"], 2)
-                          if ac and af else None)}
+            "climbed": ac, "flat": af, "fell": ad,
+            "spread_pp": (round(ac["mean"] - af["mean"], 2) if ac and af else None),
+            "fell_spread_pp": (round(ad["mean"] - af["mean"], 2) if ad and af else None)}
 
     payload = {
         "receipt": "LIQUIDITY-MIGRATION-1",
@@ -229,14 +247,18 @@ def main() -> int:
                   f"{v['p_up_50pct']:>6.1f}% {v['p_up_100pct']:>6.1f}% "
                   f"{v['p_dn_50pct']:>6.1f}% {v['p90']:+7.1f}%")
     print("\n  CONTROLLED for trailing 12m return (the whole test):")
-    print(f"  {'quintile':<10} {'climbed':>22} {'flat':>22} {'spread':>9}")
+    print(f"  {'quintile':<10} {'climbed':>13} {'flat':>13} {'fell':>13} "
+          f"{'climb-flat':>11} {'fell-flat':>10}   {'>+100%: cl/fl/fe':>18}")
     for q in range(5):
         c = controlled[f"trail_q{q}"]
-        cc, ff, sp = c["climbed"], c["flat"], c["spread_pp"]
-        cs = f"{cc['mean']:+6.2f}% (n={cc['n']:,})" if cc else "--"
-        fs = f"{ff['mean']:+6.2f}% (n={ff['n']:,})" if ff else "--"
-        ss = f"{sp:+6.2f}pp" if sp is not None else "--"
-        print(f"  q{q} {'(worst)' if q == 0 else '(best)' if q == 4 else '':<7} {cs:>22} {fs:>22} {ss:>9}")
+        cc, ff, dd = c["climbed"], c["flat"], c["fell"]
+        f_ = lambda x: f"{x['mean']:+6.2f}%" if x else "   --"
+        sp = lambda v: f"{v:+6.2f}pp" if v is not None else "    --"
+        tails = (f"{cc['p_up_100pct']:.1f}/{ff['p_up_100pct']:.1f}/{dd['p_up_100pct']:.1f}%"
+                 if cc and ff and dd else "--")
+        print(f"  q{q} {'(worst)' if q == 0 else '(best)' if q == 4 else '':<7} "
+              f"{f_(cc):>13} {f_(ff):>13} {f_(dd):>13} "
+              f"{sp(c['spread_pp']):>11} {sp(c['fell_spread_pp']):>10}   {tails:>18}")
     print(f"\nreceipt -> {dst}")
     return 0
 

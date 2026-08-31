@@ -32,15 +32,16 @@ Forward 12-month return, gross:
 | fell ≥1 band | 51,919 | +14.06% | −1.89% | 17.6% | 7.8% | 13.2% | +82.9% |
 
 Controlled for the trailing 12-month return (within-month quintiles), which is
-the test that separates this from momentum:
+the test that separates this from momentum — and with the `fell` group given the
+same control, which is what corrected this document:
 
-| trailing-return quintile | climbed | flat | spread |
-|---|---|---|---|
-| q0 (worst) | +21.03% | +20.92% | +0.11pp |
-| q1 | +13.43% | +12.83% | +0.60pp |
-| q2 | +12.88% | +11.48% | **+1.40pp** |
-| q3 | +11.98% | +10.88% | +1.10pp |
-| q4 (best) | +10.81% | +10.31% | +0.50pp |
+| trailing-return quintile | climbed | flat | fell | climb−flat | fell−flat | >+100% cl/fl/fe |
+|---|---|---|---|---|---|---|
+| q0 (worst) | +21.03% | +20.92% | +20.02% | +0.11pp | −0.90pp | 12.1 / 10.0 / 11.5% |
+| q1 | +13.43% | +12.83% | +8.34% | +0.60pp | **−4.49pp** | 6.4 / 4.3 / 4.9% |
+| q2 | +12.88% | +11.48% | +9.01% | **+1.40pp** | −2.47pp | 5.0 / 2.8 / 3.7% |
+| q3 | +11.98% | +10.88% | +7.33% | +1.10pp | −3.55pp | 4.5 / 2.7 / 3.5% |
+| q4 (best) | +10.81% | +10.31% | +10.84% | +0.50pp | +0.53pp | 6.9 / 3.9 / 5.9% |
 
 ### 1. As a directional signal it fails
 
@@ -60,20 +61,37 @@ Climbers reach **+100% in 12 months 1.5× as often** as flat names (6.7% vs
 fatter in *both* directions. This is the mean/median divergence the first pass
 surfaced and the reason a mean was the wrong statistic for the question.
 
-### 3. The control that redirects the whole idea
+### 3. The control, applied to the fallers too — and it corrected this document
 
-**Names that FELL a band look almost identical to names that CLIMBED one:**
->+100% at 7.8% vs 6.7%, <−50% at 13.2% vs 11.9%, p90 +82.9% vs +75.5% — and
-falling names have the *highest* mean of any group.
+The first version of this finding said climbers and fallers "look almost
+identical", on the strength of the UNCONTROLLED table where fallers had the
+highest mean of any group (+14.06%). Giving `fell` the same control the climbers
+got shows that was a **composition effect**: fallers cluster in the beaten-down
+trailing-return quintile, which is the quintile with the highest forward return
+for everyone. It was mean reversion being credited to falling liquidity.
 
-So the signal is not "climbing means growth." It is:
+Controlled, the two are **not** symmetric on the mean:
 
-> **A change in liquidity band — in either direction — marks a name whose
-> outcome distribution has widened. The stock is in play. It does not say which
-> way.**
+- **climbing is mildly POSITIVE** — +0.11 to +1.40pp, positive in all five
+  quintiles;
+- **falling is NEGATIVE** — −0.90 to −4.49pp, negative in four of five.
 
-That is a real, measured property and it is not what the hypothesis said. It is
-also a much more useful thing to know, because it is directly expressible.
+But on the tail they behave alike: **both climbers and fallers reach +100% more
+often than flat names in all five quintiles** (climbers most, fallers second,
+flat always last).
+
+So the corrected statement is narrower and more useful than either the
+hypothesis or the first draft:
+
+> **A change in liquidity band — either direction — widens the outcome
+> distribution: the right tail is fatter than a flat name's in every
+> trailing-return quintile. The DIRECTION of the change is a weak directional
+> signal on top of that — climbing mildly good, falling clearly bad — but it is
+> far too small to trade on its own.**
+
+The dispersion claim survives the control. The "identical" claim did not, and
+this is the second time in one study that an uncontrolled table pointed the
+wrong way.
 
 ## What follows
 
@@ -90,10 +108,15 @@ also a much more useful thing to know, because it is directly expressible.
 4. **It carries a cost forecast.** A name climbing band 0→2 sees its round trip
    fall from ~149 bps to ~21. Something unbuyable today may be buyable next year;
    that is a different statement from "the edge is not buyable".
-5. **The `fell` group deserves its own study.** It has the highest mean of all
-   four groups and fat tails. Falling liquidity is usually read as decay; here it
-   is not obviously worse than rising. That is a corpse worth opening, not a
-   conclusion.
+5. **The `fell` group is now controlled and is NOT a hidden opportunity.** Its
+   headline +14.06% mean was composition, not signal: −0.90 to −4.49pp against
+   flat peers once trailing return is held fixed. Falling liquidity is bad for
+   the mean and still fat-tailed — a short-side or volatility candidate, never a
+   long one.
+6. **Never read this family uncontrolled.** Both wrong turns in this study came
+   from a table without the trailing-return control: first the climbers looked
+   like momentum, then the fallers looked like an edge. The control is not a
+   formality here; it reverses the sign.
 
 ## Limits
 
