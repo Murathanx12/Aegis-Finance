@@ -1,0 +1,181 @@
+{
+ "probe": "WRDS-HOLDER-PROVENANCE-ENTITLEMENT-1",
+ "at": "2026-09-01T11:41:01.902852+00:00",
+ "method": "bounded SELECT per family; catalogue visibility is NOT access",
+ "readable": [
+  "13f-holdings",
+  "13f-mgr-names",
+  "13f-type3",
+  "tfn-s34",
+  "dealscan-facility",
+  "dealscan-lenders",
+  "dealscan-company",
+  "dealscan-covenant",
+  "ibes-detail",
+  "fisd-bonds",
+  "fisd-underwriter"
+ ],
+ "denied": {
+  "tfn-s12": "NOT_ENTITLED",
+  "tfn-company": "NOT_ENTITLED",
+  "dealscan-link": "NO_SUCH_TABLE",
+  "factset-own": "NOT_ENTITLED",
+  "sec-index": "NOT_ENTITLED",
+  "sec-insiders": "NOT_ENTITLED"
+ },
+ "rows": [
+  {
+   "family": "13f-holdings",
+   "schema": "tr_13f",
+   "table": "s34",
+   "why": "OWNER: manager x issuer x quarter holdings",
+   "readable": true,
+   "denial": null,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "13f-mgr-names",
+   "schema": "tr_13f",
+   "table": "s34names",
+   "why": "manager identity (mgrno -> name)",
+   "readable": true,
+   "denial": null,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "13f-type3",
+   "schema": "tr_13f",
+   "table": "s34type3",
+   "why": "holdings detail by manager",
+   "readable": true,
+   "denial": null,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "tfn-s34",
+   "schema": "tfn",
+   "table": "s34",
+   "why": "TFN edition of the same",
+   "readable": true,
+   "denial": null,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "tfn-s12",
+   "schema": "tfn",
+   "table": "s12",
+   "why": "MUTUAL FUND holdings (vehicle-level, not 13F aggregate)",
+   "readable": false,
+   "denial": "NOT_ENTITLED",
+   "detail": "permission denied for schema tr_mutualfunds"
+  },
+  {
+   "family": "tfn-company",
+   "schema": "tfn",
+   "table": "company",
+   "why": "fund/company master",
+   "readable": false,
+   "denial": "NOT_ENTITLED",
+   "detail": "permission denied for schema tr_insiders"
+  },
+  {
+   "family": "dealscan-facility",
+   "schema": "dealscan",
+   "table": "facility",
+   "why": "LENDER role: credit facilities",
+   "readable": true,
+   "denial": null,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "dealscan-lenders",
+   "schema": "dealscan",
+   "table": "lendershares",
+   "why": "WHICH institution lent WHAT share -- the lending tie",
+   "readable": true,
+   "denial": null,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "dealscan-company",
+   "schema": "dealscan",
+   "table": "company",
+   "why": "borrower master",
+   "readable": true,
+   "denial": null,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "dealscan-covenant",
+   "schema": "dealscan",
+   "table": "financialcovenant",
+   "why": "covenant tightening = the distress channel",
+   "readable": true,
+   "denial": null,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "dealscan-link",
+   "schema": "wrdsapps_link_dealscan_wscope",
+   "table": "wrds_ds_wscope_link",
+   "why": "dealscan -> security link",
+   "readable": false,
+   "denial": "NO_SUCH_TABLE",
+   "detail": "relation \"wrdsapps_link_dealscan_wscope.wrds_ds_wscope_link\" does not exist"
+  },
+  {
+   "family": "factset-own",
+   "schema": "factset_own",
+   "table": "own_inst_13f_detail",
+   "why": "FactSet ownership detail (independent of TR)",
+   "readable": false,
+   "denial": "NOT_ENTITLED",
+   "detail": "permission denied for schema factset_own"
+  },
+  {
+   "family": "sec-index",
+   "schema": "wrdssec_all",
+   "table": "dforms",
+   "why": "SEC filing index: 13D/13G/Form 4 by date",
+   "readable": false,
+   "denial": "NOT_ENTITLED",
+   "detail": "permission denied for schema wrdssec_all"
+  },
+  {
+   "family": "sec-insiders",
+   "schema": "wrdssec_insiders",
+   "table": "tfn1",
+   "why": "INSIDER role: Form 4",
+   "readable": false,
+   "denial": "NOT_ENTITLED",
+   "detail": "permission denied for schema wrdssec_insiders"
+  },
+  {
+   "family": "ibes-detail",
+   "schema": "tr_ibes",
+   "table": "ptgdetu",
+   "why": "ANALYST EMPLOYER role: per-analyst targets",
+   "readable": true,
+   "denial": null,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "fisd-bonds",
+   "schema": "fisd_fisd",
+   "table": "fisd_mergedissue",
+   "why": "BONDHOLDER role: bond issues",
+   "readable": true,
+   "denial": null,
+   "detail": "SELECT returned"
+  },
+  {
+   "family": "fisd-underwriter",
+   "schema": "fisd_fisd",
+   "table": "fisd_issuer",
+   "why": "UNDERWRITER role",
+   "readable": true,
+   "denial": null,
+   "detail": "SELECT returned"
+  }
+ ]
+}

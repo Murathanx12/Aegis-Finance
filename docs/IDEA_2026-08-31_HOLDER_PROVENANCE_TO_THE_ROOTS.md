@@ -74,6 +74,76 @@ concentrated managers) is the first typed distinction.
 - **PIT discipline:** every filing joins on FILING/PUBLICATION timestamp,
   never period-end or transaction date (the STOCK-Act rule generalises).
 
+## 4a. ENTITLEMENTS MEASURED (2026-09-01) — what we may actually read
+
+The 08-31 TCP timeout is resolved. Bounded `SELECT 1 ... LIMIT 1` per schema,
+receipt at `backend/data/optimus/wrds/holder_provenance_entitlement.json`.
+Visibility is not access: WRDS shows all 1,317 schemas to every subscriber.
+
+**READABLE (11)** — `tr_13f.s34` / `s34names` / `s34type3`, `tfn.s34`,
+`dealscan.facility` / `lendershares` / `company` / `financialcovenant`,
+`tr_ibes.ptgdetu`, `fisd_fisd.fisd_mergedissue` / `fisd_issuer`.
+
+**NOT ENTITLED (5)** — `tfn.s12` (denied via `tr_mutualfunds`), `tfn.company`
+(via `tr_insiders`), `factset_own`, `wrdssec_all`, `wrdssec_insiders`.
+
+So of the eight roles in Murat's relationship graph:
+
+| role | status |
+|---|---|
+| OWNER | **READ** (13F, filer level) |
+| LENDER | **READ** — `dealscan.lendershares` carries lender identity, role, bank allocation, agent/lead-arranger credit |
+| BONDHOLDER / UNDERWRITER | **READ** (FISD) |
+| ANALYST EMPLOYER | **READ** (`tr_ibes.ptgdetu`, 4.66m targets) |
+| ACTIVE vs PASSIVE | **NOT OBSERVABLE — see below** |
+| INSIDER | not from WRDS (`wrdssec_insiders` denied); EDGAR Form 4 as already planned |
+| ADVISER | not probed; no obvious entitled root |
+
+### The active/passive split is the one thing the data cannot give us
+
+This is the distinction §1 leans on hardest ("BlackRock owning 8% because index
+funds track an index is not the same as a specialist active fund initiating
+4%"), and three independent checks say it is not answerable from entitled WRDS:
+
+1. **`typecode` is not a manager classifier.** Measured on `s34names`, share of
+   distinct managers in typecode 5 by year: 11.9% (1995) → 44.4% (1998) →
+   **78.3% (2004)** → 36.6% (2019) → **5.3% (2025)**. That swings with
+   Thomson's classification regime, not with what managers are. BlackRock Inc
+   and Vanguard Group are **both typecode 5**, alongside thousands of others.
+2. **BlackRock files as ONE manager.** `BLACKROCK INC` = `mgrno 9385`,
+   2002-06-30 → 2025-12-31. Every subsidiary mgrno (Advisors 11386, Investment
+   Mgmt 39539, Japan 56790, UK 91430, Ireland 12588) **stops at 2017-03-31** —
+   consolidated into 9385. After 2017Q1 the index arm and the active arm are
+   one row. 13F is filed by the INSTITUTION, so this is structural, not a
+   coverage gap.
+3. **The table that would split it is denied.** `tfn.s12` is fund-vehicle-level
+   holdings — the right grain — and it is `NOT_ENTITLED`.
+
+**Therefore:** the passive/active split must come from EDGAR 13D vs 13G
+directly (free, already in §4), *not* from WRDS, and H1 cannot be tested at all
+until that ingest exists. Item 4 "Purpose of Transaction" — the written reason
+Murat wants — is likewise NOT in WRDS: `wrdssec_all` is denied.
+
+**Identity rule, learned here:** `mgrname` is a label and `mgrno` is the
+identity. `BLACKROCK INC` / `BLACKROCK, INC.` are one manager (9385);
+`VANGUARD GROUP` / `VANGUARD GROUP, INC.` / `THE VANGUARD GROUP` are one
+(90457). A name-keyed join fragments one manager into three and merges
+`VANGUARD V VENTURE PARTNERS` (90459, an unrelated VC) into the index giant.
+Same shape as `scripts/accounts.py`: the nickname is not the account number.
+
+### What this reprioritises
+
+- **GO now, filer level:** H2 (manager identity) and H3 (holding-period
+  fingerprint) — entries, adds, trims, exits, duration, concentration all
+  derive from `s34` + `s34names` on mgrno. State "filer, not vehicle" on every
+  result; a BlackRock duration is a blended index+active duration.
+- **GO now, and it is the differentiated one:** the LENDER tie. Nobody joins
+  `dealscan.lendershares` to 13F holdings by institution, and
+  `financialcovenant` gives the covenant-tightening channel §1 asks for.
+- **BLOCKED pending EDGAR:** H1 (BLK+VG ≥15% = safe) — not merely unproven,
+  **unmeasurable** from the entitled panel, because the split it depends on is
+  not in the data.
+
 ## 5. Guardrails inherited on day one
 
 - 13F is stale ≤45 days: it is OWNERSHIP STRUCTURE (crowding, who has exited,
