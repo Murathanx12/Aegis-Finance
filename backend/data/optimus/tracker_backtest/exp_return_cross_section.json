@@ -1,0 +1,675 @@
+{
+  "generated_utc": "2026-09-01T13:00:58.151710+00:00",
+  "licence": "PRODUCT_EXPERIMENT",
+  "window": "2013-2024",
+  "tracker_sha256": "3986bc082228613776db254902353c96df49b5b30266a7578340416eefca15e3",
+  "admissible_region": {
+    "upside_lo": 0.5,
+    "upside_hi": 4.0,
+    "min_price": 2.0,
+    "min_coverage": 2
+  },
+  "in_sample_note": "band thresholds were chosen from receipts measured on this panel; Q2 is a decomposition, not out-of-sample validation. The tilt-ranked book uses full-sample coefficients and is a CEILING.",
+  "region_counts": {
+    "panel_name_months": 434212,
+    "hygiene": 363708,
+    "admissible": 54177,
+    "band_3_5": 5888,
+    "toxic_ge_5": 24358
+  },
+  "q1_within_region_tilts_q5_minus_q1": {
+    "upside": {
+      "months": 143,
+      "annualised": 0.0797,
+      "t_stat": 1.264,
+      "share_months_positive": 0.4965,
+      "q5_annualised": 0.2626,
+      "q1_annualised": 0.1829
+    },
+    "consensus": {
+      "months": 143,
+      "annualised": 0.0181,
+      "t_stat": 0.31,
+      "share_months_positive": 0.5315,
+      "q5_annualised": 0.2213,
+      "q1_annualised": 0.2032
+    },
+    "ret_12m": {
+      "months": 143,
+      "annualised": 0.0638,
+      "t_stat": 0.828,
+      "share_months_positive": 0.5245,
+      "q5_annualised": 0.2686,
+      "q1_annualised": 0.2047
+    },
+    "drawdown_60d": {
+      "months": 143,
+      "annualised": 0.0216,
+      "t_stat": 0.324,
+      "share_months_positive": 0.5315,
+      "q5_annualised": 0.2144,
+      "q1_annualised": 0.1928
+    },
+    "log_coverage": {
+      "months": 143,
+      "annualised": -0.0337,
+      "t_stat": -0.619,
+      "share_months_positive": 0.4895,
+      "q5_annualised": 0.1416,
+      "q1_annualised": 0.1752
+    },
+    "log_dollar_vol": {
+      "months": 143,
+      "annualised": -0.0366,
+      "t_stat": -0.684,
+      "share_months_positive": 0.4336,
+      "q5_annualised": 0.1128,
+      "q1_annualised": 0.1494
+    }
+  },
+  "q1_fama_macbeth": {
+    "months": 143,
+    "name_months": 49044,
+    "features": {
+      "upside": {
+        "mean_monthly_coef_per_sd": 0.00288,
+        "t_stat_across_months": 1.357
+      },
+      "consensus": {
+        "mean_monthly_coef_per_sd": 0.00018,
+        "t_stat_across_months": 0.122
+      },
+      "ret_12m": {
+        "mean_monthly_coef_per_sd": 0.00266,
+        "t_stat_across_months": 1.46
+      },
+      "drawdown_60d": {
+        "mean_monthly_coef_per_sd": 0.00036,
+        "t_stat_across_months": 0.15
+      },
+      "log_coverage": {
+        "mean_monthly_coef_per_sd": -0.00214,
+        "t_stat_across_months": -1.062
+      },
+      "log_dollar_vol": {
+        "mean_monthly_coef_per_sd": -1e-05,
+        "t_stat_across_months": -0.004
+      }
+    },
+    "mean_coefs_vector": {
+      "upside": 0.002877,
+      "consensus": 0.000183,
+      "ret_12m": 0.002659,
+      "drawdown_60d": 0.000358,
+      "log_coverage": -0.002141,
+      "log_dollar_vol": -9e-06
+    }
+  },
+  "q2_books": {
+    "BAND_below_1_5": {
+      "months": 143,
+      "annualised": 0.0241,
+      "t_stat": 1.304,
+      "share_months_positive": 0.5874,
+      "name_months": 285173,
+      "avg_names_per_month": 1994.2,
+      "terminal_wealth": 4.12,
+      "terminal_wealth_market_same_months": 2.858,
+      "annualised_excess_by_year": {
+        "2013": -0.0078,
+        "2014": 0.0421,
+        "2015": 0.0626,
+        "2016": -0.0011,
+        "2017": 0.0118,
+        "2018": 0.016,
+        "2019": 0.013,
+        "2020": -0.1872,
+        "2021": 0.1608,
+        "2022": 0.0818,
+        "2023": 0.0923,
+        "2024": 0.0032
+      }
+    },
+    "BAND_1_5_to_3_alone": {
+      "months": 143,
+      "annualised": 0.0574,
+      "t_stat": 1.847,
+      "share_months_positive": 0.5385,
+      "name_months": 48289,
+      "avg_names_per_month": 337.7,
+      "terminal_wealth": 4.506,
+      "terminal_wealth_market_same_months": 2.858,
+      "annualised_excess_by_year": {
+        "2013": 0.2451,
+        "2014": 0.032,
+        "2015": -0.0095,
+        "2016": 0.0871,
+        "2017": 0.0942,
+        "2018": -0.014,
+        "2019": 0.1231,
+        "2020": 0.1553,
+        "2021": -0.116,
+        "2022": 0.0219,
+        "2023": 0.0497,
+        "2024": 0.0158
+      }
+    },
+    "ENGINE_TODAY_band_3_5": {
+      "months": 143,
+      "annualised": 0.1655,
+      "t_stat": 2.201,
+      "share_months_positive": 0.5105,
+      "name_months": 5888,
+      "avg_names_per_month": 41.2,
+      "terminal_wealth": 10.44,
+      "terminal_wealth_market_same_months": 2.858,
+      "annualised_excess_by_year": {
+        "2013": 0.3117,
+        "2014": -0.0578,
+        "2015": -0.1618,
+        "2016": 0.4379,
+        "2017": 0.2445,
+        "2018": -0.054,
+        "2019": 0.3956,
+        "2020": 0.6167,
+        "2021": 0.0173,
+        "2022": 0.0712,
+        "2023": 0.1995,
+        "2024": -0.0537
+      }
+    },
+    "ENGINE_admissible_region": {
+      "months": 143,
+      "annualised": 0.0699,
+      "t_stat": 2.161,
+      "share_months_positive": 0.5245,
+      "name_months": 54177,
+      "avg_names_per_month": 378.9,
+      "terminal_wealth": 5.115,
+      "terminal_wealth_market_same_months": 2.858,
+      "annualised_excess_by_year": {
+        "2013": 0.2549,
+        "2014": 0.0254,
+        "2015": -0.0271,
+        "2016": 0.1297,
+        "2017": 0.1104,
+        "2018": -0.0166,
+        "2019": 0.1473,
+        "2020": 0.2084,
+        "2021": -0.1033,
+        "2022": 0.0267,
+        "2023": 0.0735,
+        "2024": 0.0043
+      }
+    },
+    "ANALYST_rating_ge_4.1": {
+      "months": 143,
+      "annualised": 0.0062,
+      "t_stat": 0.374,
+      "share_months_positive": 0.5105,
+      "name_months": 95764,
+      "avg_names_per_month": 669.7,
+      "terminal_wealth": 2.94,
+      "terminal_wealth_market_same_months": 2.858,
+      "annualised_excess_by_year": {
+        "2013": 0.0723,
+        "2014": 0.0113,
+        "2015": 0.0036,
+        "2016": -0.0574,
+        "2017": 0.0545,
+        "2018": -0.0237,
+        "2019": 0.0767,
+        "2020": 0.0142,
+        "2021": -0.1432,
+        "2022": -0.0142,
+        "2023": 0.0964,
+        "2024": -0.0179
+      }
+    },
+    "ANALYST_strong_ge_4.5": {
+      "months": 143,
+      "annualised": -0.0014,
+      "t_stat": -0.058,
+      "share_months_positive": 0.5035,
+      "name_months": 28133,
+      "avg_names_per_month": 196.7,
+      "terminal_wealth": 2.62,
+      "terminal_wealth_market_same_months": 2.858,
+      "annualised_excess_by_year": {
+        "2013": 0.1392,
+        "2014": 0.0382,
+        "2015": -0.056,
+        "2016": -0.1175,
+        "2017": 0.0542,
+        "2018": -0.0186,
+        "2019": 0.0723,
+        "2020": -0.0372,
+        "2021": -0.1974,
+        "2022": 0.065,
+        "2023": 0.1039,
+        "2024": -0.0692
+      }
+    },
+    "ANALYST_top_target_quintile": {
+      "months": 143,
+      "annualised": -0.0751,
+      "t_stat": -2.091,
+      "share_months_positive": 0.3986,
+      "name_months": 72803,
+      "avg_names_per_month": 509.1,
+      "terminal_wealth": 0.867,
+      "terminal_wealth_market_same_months": 2.858,
+      "annualised_excess_by_year": {
+        "2013": 0.0614,
+        "2014": -0.1042,
+        "2015": -0.1625,
+        "2016": -0.0215,
+        "2017": -0.0381,
+        "2018": -0.1019,
+        "2019": -0.006,
+        "2020": 0.1486,
+        "2021": -0.4422,
+        "2022": -0.1327,
+        "2023": -0.0257,
+        "2024": -0.0764
+      }
+    },
+    "TOXIC_band_ge_5": {
+      "months": 143,
+      "annualised": -0.3777,
+      "t_stat": -7.745,
+      "share_months_positive": 0.2517,
+      "name_months": 24358,
+      "avg_names_per_month": 170.3,
+      "terminal_wealth": 0.021,
+      "terminal_wealth_market_same_months": 2.858,
+      "annualised_excess_by_year": {
+        "2013": -0.1942,
+        "2014": -0.2552,
+        "2015": -0.3551,
+        "2016": -0.3502,
+        "2017": -0.3101,
+        "2018": -0.3091,
+        "2019": -0.3156,
+        "2020": -0.0939,
+        "2021": -0.7573,
+        "2022": -0.4788,
+        "2023": -0.4413,
+        "2024": -0.6986
+      }
+    },
+    "TILT_RANKED_top_quintile_IN_SAMPLE_CEILING": {
+      "months": 143,
+      "annualised": 0.1301,
+      "t_stat": 2.25,
+      "share_months_positive": 0.5664,
+      "name_months": 9865,
+      "avg_names_per_month": 69.0,
+      "terminal_wealth": 8.75,
+      "terminal_wealth_market_same_months": 2.858,
+      "annualised_excess_by_year": {
+        "2013": 0.4842,
+        "2014": -0.1079,
+        "2015": -0.0984,
+        "2016": 0.183,
+        "2017": 0.0916,
+        "2018": 0.1229,
+        "2019": 0.1877,
+        "2020": 0.2447,
+        "2021": 0.0235,
+        "2022": 0.112,
+        "2023": 0.2761,
+        "2024": 0.0336
+      }
+    }
+  },
+  "q2_disagreement_2x2": {
+    "engine_yes_analyst_no": {
+      "months": 143,
+      "annualised": 0.0372,
+      "t_stat": 1.21,
+      "share_months_positive": 0.5385,
+      "name_months": 29010,
+      "avg_names_per_month": 202.9,
+      "terminal_wealth": 3.416,
+      "terminal_wealth_market_same_months": 2.858,
+      "annualised_excess_by_year": {
+        "2013": 0.0967,
+        "2014": -0.055,
+        "2015": -0.0751,
+        "2016": 0.1448,
+        "2017": -0.0178,
+        "2018": 0.0005,
+        "2019": 0.0404,
+        "2020": 0.1878,
+        "2021": 0.0254,
+        "2022": 0.0433,
+        "2023": -0.0074,
+        "2024": 0.0651
+      }
+    },
+    "engine_yes_analyst_yes": {
+      "months": 143,
+      "annualised": 0.1032,
+      "t_stat": 2.393,
+      "share_months_positive": 0.5455,
+      "name_months": 25167,
+      "avg_names_per_month": 176.0,
+      "terminal_wealth": 7.354,
+      "terminal_wealth_market_same_months": 2.858,
+      "annualised_excess_by_year": {
+        "2013": 0.4116,
+        "2014": 0.1044,
+        "2015": 0.0225,
+        "2016": 0.0935,
+        "2017": 0.2392,
+        "2018": -0.0373,
+        "2019": 0.2474,
+        "2020": 0.2632,
+        "2021": -0.2177,
+        "2022": 0.0069,
+        "2023": 0.1679,
+        "2024": -0.0787
+      }
+    },
+    "engine_toxic_analyst_yes": {
+      "months": 143,
+      "annualised": -0.3097,
+      "t_stat": -4.746,
+      "share_months_positive": 0.3217,
+      "name_months": 11154,
+      "avg_names_per_month": 78.0,
+      "terminal_wealth": 0.042,
+      "terminal_wealth_market_same_months": 2.858,
+      "annualised_excess_by_year": {
+        "2013": -0.1164,
+        "2014": -0.1973,
+        "2015": -0.3691,
+        "2016": -0.4204,
+        "2017": -0.1822,
+        "2018": -0.3471,
+        "2019": -0.1629,
+        "2020": -0.1501,
+        "2021": -0.8303,
+        "2022": -0.2687,
+        "2023": -0.193,
+        "2024": -0.4947
+      }
+    },
+    "engine_toxic_analyst_no": {
+      "months": 143,
+      "annualised": -0.4336,
+      "t_stat": -9.213,
+      "share_months_positive": 0.1958,
+      "name_months": 13204,
+      "avg_names_per_month": 92.3,
+      "terminal_wealth": 0.01,
+      "terminal_wealth_market_same_months": 2.858,
+      "annualised_excess_by_year": {
+        "2013": -0.2429,
+        "2014": -0.3088,
+        "2015": -0.3439,
+        "2016": -0.2825,
+        "2017": -0.3989,
+        "2018": -0.2799,
+        "2019": -0.4642,
+        "2020": -0.0498,
+        "2021": -0.6911,
+        "2022": -0.6669,
+        "2023": -0.6329,
+        "2024": -0.8787
+      }
+    }
+  },
+  "q2_calibration_engine": {
+    "claimed_monthly_exp_return_band_3_5": 0.01725,
+    "realized_mean_fwd_1m_band_3_5": 0.02783,
+    "realized_median_fwd_1m_band_3_5": -0.00782,
+    "n": 5888,
+    "note": "claimed is the RECEIPT mean (annualised excess/12) used as the sealed exp_return; realized here is RAW not excess -- the gap between raw and excess is the market's own monthly mean"
+  },
+  "q2_calibration_analyst_targets_12m": [
+    {
+      "upside_range": "-0.99..-0.04",
+      "implied_12m_return_median": -0.164,
+      "realized_12m_mean": 0.198,
+      "realized_12m_median": 0.122,
+      "n": 31433
+    },
+    {
+      "upside_range": "-0.04..0.03",
+      "implied_12m_return_median": -0.0,
+      "realized_12m_mean": 0.111,
+      "realized_12m_median": 0.078,
+      "n": 31432
+    },
+    {
+      "upside_range": "0.03..0.07",
+      "implied_12m_return_median": 0.052,
+      "realized_12m_mean": 0.105,
+      "realized_12m_median": 0.073,
+      "n": 31432
+    },
+    {
+      "upside_range": "0.07..0.12",
+      "implied_12m_return_median": 0.097,
+      "realized_12m_mean": 0.103,
+      "realized_12m_median": 0.073,
+      "n": 31432
+    },
+    {
+      "upside_range": "0.12..0.17",
+      "implied_12m_return_median": 0.143,
+      "realized_12m_mean": 0.109,
+      "realized_12m_median": 0.072,
+      "n": 31432
+    },
+    {
+      "upside_range": "0.17..0.24",
+      "implied_12m_return_median": 0.201,
+      "realized_12m_mean": 0.113,
+      "realized_12m_median": 0.068,
+      "n": 31432
+    },
+    {
+      "upside_range": "0.24..0.34",
+      "implied_12m_return_median": 0.282,
+      "realized_12m_mean": 0.111,
+      "realized_12m_median": 0.054,
+      "n": 31432
+    },
+    {
+      "upside_range": "0.34..0.54",
+      "implied_12m_return_median": 0.42,
+      "realized_12m_mean": 0.128,
+      "realized_12m_median": 0.035,
+      "n": 31432
+    },
+    {
+      "upside_range": "0.54..1.47",
+      "implied_12m_return_median": 0.784,
+      "realized_12m_mean": 0.167,
+      "realized_12m_median": -0.024,
+      "n": 31432
+    },
+    {
+      "upside_range": "1.47..36200472.93",
+      "implied_12m_return_median": 17.421,
+      "realized_12m_mean": -0.105,
+      "realized_12m_median": -0.333,
+      "n": 31433
+    }
+  ],
+  "examples_engine_yes_analyst_no": {
+    "best": [
+      {
+        "symbol": 57913,
+        "month": "2020-06",
+        "upside": 1.434,
+        "consensus": 4.0,
+        "fwd_1m": 4.689,
+        "name": "VXRT (Vaxart Inc)"
+      },
+      {
+        "symbol": 14328,
+        "month": "2021-05",
+        "upside": 2.138,
+        "consensus": 2.56,
+        "fwd_1m": 3.071,
+        "name": "AMC (A M C Entertainment Holdings Inc)"
+      },
+      {
+        "symbol": 22313,
+        "month": "2024-01",
+        "upside": 0.987,
+        "consensus": 4.0,
+        "fwd_1m": 2.925,
+        "name": "LUNR (Intuitive Machines Inc)"
+      },
+      {
+        "symbol": 20325,
+        "month": "2024-02",
+        "upside": 2.148,
+        "consensus": 3.5,
+        "fwd_1m": 2.797,
+        "name": "SMR (Nuscale Power Corp)"
+      },
+      {
+        "symbol": 14257,
+        "month": "2020-04",
+        "upside": 1.929,
+        "consensus": 4.0,
+        "fwd_1m": 2.729,
+        "name": "MGNX (Macrogenics Inc)"
+      }
+    ],
+    "worst": [
+      {
+        "symbol": 17900,
+        "month": "2022-09",
+        "upside": 0.852,
+        "consensus": 3.75,
+        "fwd_1m": -0.943,
+        "name": "TCDA (Tricida Inc)"
+      },
+      {
+        "symbol": 17948,
+        "month": "2021-12",
+        "upside": 0.768,
+        "consensus": 3.83,
+        "fwd_1m": -0.916,
+        "name": "ALLK (Allakos Inc)"
+      },
+      {
+        "symbol": 20611,
+        "month": "2022-04",
+        "upside": 1.143,
+        "consensus": 3.14,
+        "fwd_1m": -0.915,
+        "name": "ENJY (Enjoy Technology Inc)"
+      },
+      {
+        "symbol": 16111,
+        "month": "2024-10",
+        "upside": 3.911,
+        "consensus": 4.0,
+        "fwd_1m": -0.911,
+        "name": "SYRS (Syros Pharmaceuticals Inc)"
+      },
+      {
+        "symbol": 19024,
+        "month": "2024-11",
+        "upside": 2.974,
+        "consensus": 4.0,
+        "fwd_1m": -0.874,
+        "name": "RLMD (Relmada Therapeutics)"
+      }
+    ]
+  },
+  "examples_toxic_analyst_yes": {
+    "best": [
+      {
+        "symbol": 18195,
+        "month": "2020-06",
+        "upside": 5.489,
+        "consensus": 4.75,
+        "fwd_1m": 4.206,
+        "name": "EQ (Equillium Inc)"
+      },
+      {
+        "symbol": 15831,
+        "month": "2018-12",
+        "upside": 7.837,
+        "consensus": 4.5,
+        "fwd_1m": 2.963,
+        "name": "AXSM (Axsome Therapeutics Inc)"
+      },
+      {
+        "symbol": 18780,
+        "month": "2021-08",
+        "upside": 67.571,
+        "consensus": 4.4,
+        "fwd_1m": 2.643,
+        "name": "ATER (Aterian Inc)"
+      },
+      {
+        "symbol": 19568,
+        "month": "2024-11",
+        "upside": 4.618,
+        "consensus": 4.4,
+        "fwd_1m": 2.551,
+        "name": "PSTX (Poseida Therapeutics Inc)"
+      },
+      {
+        "symbol": 21729,
+        "month": "2022-11",
+        "upside": 9.127,
+        "consensus": 4.5,
+        "fwd_1m": 2.269,
+        "name": "ICVX (Icosavax Inc)"
+      }
+    ],
+    "worst": [
+      {
+        "symbol": 19402,
+        "month": "2024-04",
+        "upside": 114.163,
+        "consensus": 4.67,
+        "fwd_1m": -0.928,
+        "name": "LYRA (Lyra Therapeutics Inc)"
+      },
+      {
+        "symbol": 21518,
+        "month": "2024-05",
+        "upside": 76.508,
+        "consensus": 4.57,
+        "fwd_1m": -0.926,
+        "name": "AVTE (Aerovate Therapeutics Inc)"
+      },
+      {
+        "symbol": 90031,
+        "month": "2018-08",
+        "upside": 39.519,
+        "consensus": 5.0,
+        "fwd_1m": -0.9,
+        "name": "ONCT (Oncternal Therapeutics Inc)"
+      },
+      {
+        "symbol": 14927,
+        "month": "2022-06",
+        "upside": 295.296,
+        "consensus": 4.2,
+        "fwd_1m": -0.877,
+        "name": "CFRX (Contrafect Corp)"
+      },
+      {
+        "symbol": 16681,
+        "month": "2021-08",
+        "upside": 80.215,
+        "consensus": 4.2,
+        "fwd_1m": -0.876,
+        "name": "FBRX (Forte Biosciences Inc)"
+      }
+    ]
+  }
+}
