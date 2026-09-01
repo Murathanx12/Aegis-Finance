@@ -1,0 +1,1291 @@
+{
+  "generated_utc": "2026-09-01T13:26:50.882144+00:00",
+  "licence": "PRODUCT_EXPERIMENT",
+  "window": "2015-2024",
+  "tracker_sha256": "3986bc082228613776db254902353c96df49b5b30266a7578340416eefca15e3",
+  "eras": {
+    "2015-2018_preCOVID": [
+      2015,
+      2018
+    ],
+    "2019-2021_liquidity": [
+      2019,
+      2021
+    ],
+    "2022_rate_shock": [
+      2022,
+      2022
+    ],
+    "2023-2024_AI_megacap": [
+      2023,
+      2024
+    ]
+  },
+  "anachronism_note": "AEGIS band thresholds were chosen from receipts measured on this panel; this arena DECOMPOSES where they win/lose vs the street, it does not prove them out-of-sample. SKILL STREET and every other mind are fully PIT.",
+  "scoreboard": {
+    "2015-2018_preCOVID": {
+      "AEGIS_admissible": {
+        "avg_names_per_month": 275.4,
+        "1m": {
+          "months": 48,
+          "annualised_excess": 0.0491,
+          "t_overlapping": 0.94,
+          "t_nonoverlapping": 0.94,
+          "share_positive": 0.562
+        },
+        "3m": {
+          "months": 48,
+          "annualised_excess": 0.0316,
+          "t_overlapping": 1.24,
+          "t_nonoverlapping": 0.65,
+          "share_positive": 0.604
+        },
+        "6m": {
+          "months": 48,
+          "annualised_excess": 0.0254,
+          "t_overlapping": 1.39,
+          "t_nonoverlapping": 0.56,
+          "share_positive": 0.583
+        },
+        "12m": {
+          "months": 48,
+          "annualised_excess": 0.0446,
+          "t_overlapping": 3.02,
+          "t_nonoverlapping": null,
+          "share_positive": 0.625
+        }
+      },
+      "AEGIS_avoid_toxic": {
+        "avg_names_per_month": 182.3,
+        "1m": {
+          "months": 48,
+          "annualised_excess": -0.3311,
+          "t_overlapping": -4.81,
+          "t_nonoverlapping": -4.81,
+          "share_positive": 0.25
+        },
+        "3m": {
+          "months": 48,
+          "annualised_excess": -0.3301,
+          "t_overlapping": -10.72,
+          "t_nonoverlapping": -5.55,
+          "share_positive": 0.083
+        },
+        "6m": {
+          "months": 48,
+          "annualised_excess": -0.3392,
+          "t_overlapping": -21.6,
+          "t_nonoverlapping": -8.79,
+          "share_positive": 0.0
+        },
+        "12m": {
+          "months": 48,
+          "annualised_excess": -0.3248,
+          "t_overlapping": -33.45,
+          "t_nonoverlapping": null,
+          "share_positive": 0.0
+        }
+      },
+      "STREET_rating_buy": {
+        "avg_names_per_month": 639.7,
+        "1m": {
+          "months": 48,
+          "annualised_excess": -0.0058,
+          "t_overlapping": -0.22,
+          "t_nonoverlapping": -0.22,
+          "share_positive": 0.521
+        },
+        "3m": {
+          "months": 48,
+          "annualised_excess": -0.0186,
+          "t_overlapping": -1.38,
+          "t_nonoverlapping": -0.94,
+          "share_positive": 0.5
+        },
+        "6m": {
+          "months": 48,
+          "annualised_excess": -0.0198,
+          "t_overlapping": -2.13,
+          "t_nonoverlapping": -0.77,
+          "share_positive": 0.396
+        },
+        "12m": {
+          "months": 48,
+          "annualised_excess": -0.0288,
+          "t_overlapping": -4.71,
+          "t_nonoverlapping": null,
+          "share_positive": 0.188
+        }
+      },
+      "STREET_rating_sell": {
+        "avg_names_per_month": 19.2,
+        "1m": {
+          "months": 48,
+          "annualised_excess": -0.1169,
+          "t_overlapping": -1.64,
+          "t_nonoverlapping": -1.64,
+          "share_positive": 0.438
+        },
+        "3m": {
+          "months": 48,
+          "annualised_excess": -0.0665,
+          "t_overlapping": -1.28,
+          "t_nonoverlapping": -0.87,
+          "share_positive": 0.396
+        },
+        "6m": {
+          "months": 48,
+          "annualised_excess": -0.082,
+          "t_overlapping": -2.74,
+          "t_nonoverlapping": -1.37,
+          "share_positive": 0.354
+        },
+        "12m": {
+          "months": 48,
+          "annualised_excess": -0.0459,
+          "t_overlapping": -1.64,
+          "t_nonoverlapping": null,
+          "share_positive": 0.375
+        }
+      },
+      "STREET_target_top_quintile": {
+        "avg_names_per_month": 501.3,
+        "1m": {
+          "months": 48,
+          "annualised_excess": -0.081,
+          "t_overlapping": -1.54,
+          "t_nonoverlapping": -1.54,
+          "share_positive": 0.417
+        },
+        "3m": {
+          "months": 48,
+          "annualised_excess": -0.0968,
+          "t_overlapping": -3.96,
+          "t_nonoverlapping": -2.36,
+          "share_positive": 0.292
+        },
+        "6m": {
+          "months": 48,
+          "annualised_excess": -0.1082,
+          "t_overlapping": -7.67,
+          "t_nonoverlapping": -2.3,
+          "share_positive": 0.125
+        },
+        "12m": {
+          "months": 48,
+          "annualised_excess": -0.0976,
+          "t_overlapping": -11.35,
+          "t_nonoverlapping": null,
+          "share_positive": 0.062
+        }
+      },
+      "SKILL_STREET_top_quintile": {
+        "avg_names_per_month": 404.2,
+        "1m": {
+          "months": 48,
+          "annualised_excess": -0.0478,
+          "t_overlapping": -1.45,
+          "t_nonoverlapping": -1.45,
+          "share_positive": 0.438
+        },
+        "3m": {
+          "months": 48,
+          "annualised_excess": -0.0232,
+          "t_overlapping": -1.24,
+          "t_nonoverlapping": -1.14,
+          "share_positive": 0.417
+        },
+        "6m": {
+          "months": 48,
+          "annualised_excess": -0.0303,
+          "t_overlapping": -2.62,
+          "t_nonoverlapping": -0.6,
+          "share_positive": 0.312
+        },
+        "12m": {
+          "months": 48,
+          "annualised_excess": -0.0302,
+          "t_overlapping": -3.26,
+          "t_nonoverlapping": null,
+          "share_positive": 0.292
+        }
+      },
+      "MOMENTUM_top_quintile": {
+        "avg_names_per_month": 475.4,
+        "1m": {
+          "months": 48,
+          "annualised_excess": -0.0003,
+          "t_overlapping": -0.01,
+          "t_nonoverlapping": -0.01,
+          "share_positive": 0.521
+        },
+        "3m": {
+          "months": 48,
+          "annualised_excess": 0.0027,
+          "t_overlapping": 0.16,
+          "t_nonoverlapping": -0.06,
+          "share_positive": 0.542
+        },
+        "6m": {
+          "months": 48,
+          "annualised_excess": 0.0031,
+          "t_overlapping": 0.3,
+          "t_nonoverlapping": -0.81,
+          "share_positive": 0.542
+        },
+        "12m": {
+          "months": 48,
+          "annualised_excess": -0.002,
+          "t_overlapping": -0.35,
+          "t_nonoverlapping": null,
+          "share_positive": 0.625
+        }
+      }
+    },
+    "2019-2021_liquidity": {
+      "AEGIS_admissible": {
+        "avg_names_per_month": 430.5,
+        "1m": {
+          "months": 36,
+          "annualised_excess": 0.0841,
+          "t_overlapping": 1.13,
+          "t_nonoverlapping": 1.13,
+          "share_positive": 0.556
+        },
+        "3m": {
+          "months": 36,
+          "annualised_excess": 0.0179,
+          "t_overlapping": 0.44,
+          "t_nonoverlapping": 0.08,
+          "share_positive": 0.472
+        },
+        "6m": {
+          "months": 36,
+          "annualised_excess": -0.006,
+          "t_overlapping": -0.22,
+          "t_nonoverlapping": null,
+          "share_positive": 0.528
+        },
+        "12m": {
+          "months": 36,
+          "annualised_excess": -0.0013,
+          "t_overlapping": -0.05,
+          "t_nonoverlapping": null,
+          "share_positive": 0.556
+        }
+      },
+      "AEGIS_avoid_toxic": {
+        "avg_names_per_month": 189.6,
+        "1m": {
+          "months": 36,
+          "annualised_excess": -0.389,
+          "t_overlapping": -3.24,
+          "t_nonoverlapping": -3.24,
+          "share_positive": 0.333
+        },
+        "3m": {
+          "months": 36,
+          "annualised_excess": -0.4126,
+          "t_overlapping": -6.35,
+          "t_nonoverlapping": -3.95,
+          "share_positive": 0.194
+        },
+        "6m": {
+          "months": 36,
+          "annualised_excess": -0.4137,
+          "t_overlapping": -9.33,
+          "t_nonoverlapping": null,
+          "share_positive": 0.083
+        },
+        "12m": {
+          "months": 36,
+          "annualised_excess": -0.3881,
+          "t_overlapping": -11.49,
+          "t_nonoverlapping": null,
+          "share_positive": 0.0
+        }
+      },
+      "STREET_rating_buy": {
+        "avg_names_per_month": 729.5,
+        "1m": {
+          "months": 36,
+          "annualised_excess": -0.0174,
+          "t_overlapping": -0.45,
+          "t_nonoverlapping": -0.45,
+          "share_positive": 0.444
+        },
+        "3m": {
+          "months": 36,
+          "annualised_excess": -0.0409,
+          "t_overlapping": -1.57,
+          "t_nonoverlapping": -0.8,
+          "share_positive": 0.306
+        },
+        "6m": {
+          "months": 36,
+          "annualised_excess": -0.062,
+          "t_overlapping": -2.93,
+          "t_nonoverlapping": null,
+          "share_positive": 0.333
+        },
+        "12m": {
+          "months": 36,
+          "annualised_excess": -0.0723,
+          "t_overlapping": -3.92,
+          "t_nonoverlapping": null,
+          "share_positive": 0.389
+        }
+      },
+      "STREET_rating_sell": {
+        "avg_names_per_month": 19.8,
+        "1m": {
+          "months": 36,
+          "annualised_excess": 0.0663,
+          "t_overlapping": 0.51,
+          "t_nonoverlapping": 0.51,
+          "share_positive": 0.5
+        },
+        "3m": {
+          "months": 36,
+          "annualised_excess": 0.1328,
+          "t_overlapping": 1.64,
+          "t_nonoverlapping": 0.33,
+          "share_positive": 0.639
+        },
+        "6m": {
+          "months": 36,
+          "annualised_excess": 0.1903,
+          "t_overlapping": 2.99,
+          "t_nonoverlapping": null,
+          "share_positive": 0.722
+        },
+        "12m": {
+          "months": 36,
+          "annualised_excess": 0.1797,
+          "t_overlapping": 3.62,
+          "t_nonoverlapping": null,
+          "share_positive": 0.722
+        }
+      },
+      "STREET_target_top_quintile": {
+        "avg_names_per_month": 517.3,
+        "1m": {
+          "months": 36,
+          "annualised_excess": -0.0998,
+          "t_overlapping": -1.02,
+          "t_nonoverlapping": -1.02,
+          "share_positive": 0.417
+        },
+        "3m": {
+          "months": 36,
+          "annualised_excess": -0.1338,
+          "t_overlapping": -2.19,
+          "t_nonoverlapping": -1.46,
+          "share_positive": 0.278
+        },
+        "6m": {
+          "months": 36,
+          "annualised_excess": -0.152,
+          "t_overlapping": -3.74,
+          "t_nonoverlapping": null,
+          "share_positive": 0.25
+        },
+        "12m": {
+          "months": 36,
+          "annualised_excess": -0.1208,
+          "t_overlapping": -3.93,
+          "t_nonoverlapping": null,
+          "share_positive": 0.278
+        }
+      },
+      "SKILL_STREET_top_quintile": {
+        "avg_names_per_month": 428.4,
+        "1m": {
+          "months": 36,
+          "annualised_excess": -0.0199,
+          "t_overlapping": -0.36,
+          "t_nonoverlapping": -0.36,
+          "share_positive": 0.417
+        },
+        "3m": {
+          "months": 36,
+          "annualised_excess": -0.0484,
+          "t_overlapping": -1.52,
+          "t_nonoverlapping": -0.88,
+          "share_positive": 0.417
+        },
+        "6m": {
+          "months": 36,
+          "annualised_excess": -0.0638,
+          "t_overlapping": -2.28,
+          "t_nonoverlapping": null,
+          "share_positive": 0.306
+        },
+        "12m": {
+          "months": 36,
+          "annualised_excess": -0.0401,
+          "t_overlapping": -1.8,
+          "t_nonoverlapping": null,
+          "share_positive": 0.417
+        }
+      },
+      "MOMENTUM_top_quintile": {
+        "avg_names_per_month": 484.1,
+        "1m": {
+          "months": 36,
+          "annualised_excess": 0.0095,
+          "t_overlapping": 0.16,
+          "t_nonoverlapping": 0.16,
+          "share_positive": 0.528
+        },
+        "3m": {
+          "months": 36,
+          "annualised_excess": 0.002,
+          "t_overlapping": 0.06,
+          "t_nonoverlapping": -0.07,
+          "share_positive": 0.583
+        },
+        "6m": {
+          "months": 36,
+          "annualised_excess": -0.0206,
+          "t_overlapping": -0.69,
+          "t_nonoverlapping": null,
+          "share_positive": 0.583
+        },
+        "12m": {
+          "months": 36,
+          "annualised_excess": -0.0621,
+          "t_overlapping": -1.82,
+          "t_nonoverlapping": null,
+          "share_positive": 0.583
+        }
+      }
+    },
+    "2022_rate_shock": {
+      "AEGIS_admissible": {
+        "avg_names_per_month": 853.2,
+        "1m": {
+          "months": 12,
+          "annualised_excess": 0.0267,
+          "t_overlapping": 0.46,
+          "t_nonoverlapping": 0.46,
+          "share_positive": 0.5
+        },
+        "3m": {
+          "months": 12,
+          "annualised_excess": 0.0259,
+          "t_overlapping": 0.64,
+          "t_nonoverlapping": null,
+          "share_positive": 0.667
+        },
+        "6m": {
+          "months": 12,
+          "annualised_excess": 0.0491,
+          "t_overlapping": 2.02,
+          "t_nonoverlapping": null,
+          "share_positive": 0.667
+        },
+        "12m": null
+      },
+      "AEGIS_avoid_toxic": {
+        "avg_names_per_month": 219.1,
+        "1m": {
+          "months": 12,
+          "annualised_excess": -0.4788,
+          "t_overlapping": -2.78,
+          "t_nonoverlapping": -2.78,
+          "share_positive": 0.167
+        },
+        "3m": {
+          "months": 12,
+          "annualised_excess": -0.4079,
+          "t_overlapping": -4.5,
+          "t_nonoverlapping": null,
+          "share_positive": 0.167
+        },
+        "6m": {
+          "months": 12,
+          "annualised_excess": -0.3321,
+          "t_overlapping": -8.88,
+          "t_nonoverlapping": null,
+          "share_positive": 0.0
+        },
+        "12m": null
+      },
+      "STREET_rating_buy": {
+        "avg_names_per_month": 836.5,
+        "1m": {
+          "months": 12,
+          "annualised_excess": -0.0142,
+          "t_overlapping": -0.26,
+          "t_nonoverlapping": -0.26,
+          "share_positive": 0.417
+        },
+        "3m": {
+          "months": 12,
+          "annualised_excess": 0.0229,
+          "t_overlapping": 0.75,
+          "t_nonoverlapping": null,
+          "share_positive": 0.75
+        },
+        "6m": {
+          "months": 12,
+          "annualised_excess": 0.045,
+          "t_overlapping": 2.82,
+          "t_nonoverlapping": null,
+          "share_positive": 0.75
+        },
+        "12m": null
+      },
+      "STREET_rating_sell": {
+        "avg_names_per_month": 20.9,
+        "1m": null,
+        "3m": null,
+        "6m": null,
+        "12m": null
+      },
+      "STREET_target_top_quintile": {
+        "avg_names_per_month": 552.2,
+        "1m": {
+          "months": 12,
+          "annualised_excess": -0.1327,
+          "t_overlapping": -1.03,
+          "t_nonoverlapping": -1.03,
+          "share_positive": 0.25
+        },
+        "3m": {
+          "months": 12,
+          "annualised_excess": -0.1365,
+          "t_overlapping": -1.69,
+          "t_nonoverlapping": null,
+          "share_positive": 0.333
+        },
+        "6m": {
+          "months": 12,
+          "annualised_excess": -0.0969,
+          "t_overlapping": -2.71,
+          "t_nonoverlapping": null,
+          "share_positive": 0.25
+        },
+        "12m": null
+      },
+      "SKILL_STREET_top_quintile": {
+        "avg_names_per_month": 462.5,
+        "1m": {
+          "months": 12,
+          "annualised_excess": -0.0798,
+          "t_overlapping": -0.71,
+          "t_nonoverlapping": -0.71,
+          "share_positive": 0.417
+        },
+        "3m": {
+          "months": 12,
+          "annualised_excess": -0.1019,
+          "t_overlapping": -1.52,
+          "t_nonoverlapping": null,
+          "share_positive": 0.417
+        },
+        "6m": {
+          "months": 12,
+          "annualised_excess": -0.0432,
+          "t_overlapping": -1.16,
+          "t_nonoverlapping": null,
+          "share_positive": 0.25
+        },
+        "12m": null
+      },
+      "MOMENTUM_top_quintile": {
+        "avg_names_per_month": 518.8,
+        "1m": {
+          "months": 12,
+          "annualised_excess": 0.1347,
+          "t_overlapping": 0.9,
+          "t_nonoverlapping": 0.9,
+          "share_positive": 0.75
+        },
+        "3m": {
+          "months": 12,
+          "annualised_excess": 0.1152,
+          "t_overlapping": 1.55,
+          "t_nonoverlapping": null,
+          "share_positive": 0.583
+        },
+        "6m": {
+          "months": 12,
+          "annualised_excess": 0.0813,
+          "t_overlapping": 2.62,
+          "t_nonoverlapping": null,
+          "share_positive": 0.75
+        },
+        "12m": null
+      }
+    },
+    "2023-2024_AI_megacap": {
+      "AEGIS_admissible": {
+        "avg_names_per_month": 488.0,
+        "1m": {
+          "months": 23,
+          "annualised_excess": 0.0404,
+          "t_overlapping": 0.57,
+          "t_nonoverlapping": 0.57,
+          "share_positive": 0.478
+        },
+        "3m": {
+          "months": 20,
+          "annualised_excess": 0.0437,
+          "t_overlapping": 1.03,
+          "t_nonoverlapping": null,
+          "share_positive": 0.45
+        },
+        "6m": {
+          "months": 17,
+          "annualised_excess": 0.0096,
+          "t_overlapping": 0.49,
+          "t_nonoverlapping": null,
+          "share_positive": 0.588
+        },
+        "12m": null
+      },
+      "AEGIS_avoid_toxic": {
+        "avg_names_per_month": 73.2,
+        "1m": {
+          "months": 23,
+          "annualised_excess": -0.5644,
+          "t_overlapping": -3.75,
+          "t_nonoverlapping": -3.75,
+          "share_positive": 0.261
+        },
+        "3m": {
+          "months": 20,
+          "annualised_excess": -0.5639,
+          "t_overlapping": -5.16,
+          "t_nonoverlapping": null,
+          "share_positive": 0.1
+        },
+        "6m": {
+          "months": 17,
+          "annualised_excess": -0.4833,
+          "t_overlapping": -6.76,
+          "t_nonoverlapping": null,
+          "share_positive": 0.059
+        },
+        "12m": null
+      },
+      "STREET_rating_buy": {
+        "avg_names_per_month": 599.0,
+        "1m": {
+          "months": 23,
+          "annualised_excess": 0.0418,
+          "t_overlapping": 0.98,
+          "t_nonoverlapping": 0.98,
+          "share_positive": 0.609
+        },
+        "3m": {
+          "months": 20,
+          "annualised_excess": 0.0414,
+          "t_overlapping": 1.46,
+          "t_nonoverlapping": null,
+          "share_positive": 0.6
+        },
+        "6m": {
+          "months": 17,
+          "annualised_excess": 0.0217,
+          "t_overlapping": 1.24,
+          "t_nonoverlapping": null,
+          "share_positive": 0.588
+        },
+        "12m": null
+      },
+      "STREET_rating_sell": {
+        "avg_names_per_month": 22.3,
+        "1m": {
+          "months": 23,
+          "annualised_excess": 0.0055,
+          "t_overlapping": 0.05,
+          "t_nonoverlapping": 0.05,
+          "share_positive": 0.348
+        },
+        "3m": {
+          "months": 20,
+          "annualised_excess": 0.0294,
+          "t_overlapping": 0.49,
+          "t_nonoverlapping": null,
+          "share_positive": 0.55
+        },
+        "6m": {
+          "months": 17,
+          "annualised_excess": 0.0019,
+          "t_overlapping": 0.06,
+          "t_nonoverlapping": null,
+          "share_positive": 0.471
+        },
+        "12m": null
+      },
+      "STREET_target_top_quintile": {
+        "avg_names_per_month": 499.0,
+        "1m": {
+          "months": 23,
+          "annualised_excess": -0.05,
+          "t_overlapping": -0.59,
+          "t_nonoverlapping": -0.59,
+          "share_positive": 0.391
+        },
+        "3m": {
+          "months": 20,
+          "annualised_excess": -0.0373,
+          "t_overlapping": -0.67,
+          "t_nonoverlapping": null,
+          "share_positive": 0.35
+        },
+        "6m": {
+          "months": 17,
+          "annualised_excess": -0.0674,
+          "t_overlapping": -2.31,
+          "t_nonoverlapping": null,
+          "share_positive": 0.353
+        },
+        "12m": null
+      },
+      "SKILL_STREET_top_quintile": {
+        "avg_names_per_month": 416.1,
+        "1m": {
+          "months": 14,
+          "annualised_excess": 0.0196,
+          "t_overlapping": 0.25,
+          "t_nonoverlapping": 0.25,
+          "share_positive": 0.571
+        },
+        "3m": {
+          "months": 14,
+          "annualised_excess": 0.0177,
+          "t_overlapping": 0.49,
+          "t_nonoverlapping": null,
+          "share_positive": 0.5
+        },
+        "6m": {
+          "months": 14,
+          "annualised_excess": -0.0271,
+          "t_overlapping": -1.7,
+          "t_nonoverlapping": null,
+          "share_positive": 0.429
+        },
+        "12m": null
+      },
+      "MOMENTUM_top_quintile": {
+        "avg_names_per_month": 491.1,
+        "1m": {
+          "months": 23,
+          "annualised_excess": 0.0918,
+          "t_overlapping": 2.14,
+          "t_nonoverlapping": 2.14,
+          "share_positive": 0.696
+        },
+        "3m": {
+          "months": 20,
+          "annualised_excess": 0.0665,
+          "t_overlapping": 2.61,
+          "t_nonoverlapping": null,
+          "share_positive": 0.75
+        },
+        "6m": {
+          "months": 17,
+          "annualised_excess": 0.0623,
+          "t_overlapping": 4.27,
+          "t_nonoverlapping": null,
+          "share_positive": 0.824
+        },
+        "12m": null
+      }
+    },
+    "ALL": {
+      "AEGIS_admissible": {
+        "avg_names_per_month": 421.7,
+        "1m": {
+          "months": 119,
+          "annualised_excess": 0.0558,
+          "t_overlapping": 1.64,
+          "t_nonoverlapping": 1.64,
+          "share_positive": 0.538
+        },
+        "3m": {
+          "months": 116,
+          "annualised_excess": 0.0288,
+          "t_overlapping": 1.58,
+          "t_nonoverlapping": 0.86,
+          "share_positive": 0.543
+        },
+        "6m": {
+          "months": 113,
+          "annualised_excess": 0.0155,
+          "t_overlapping": 1.25,
+          "t_nonoverlapping": 0.69,
+          "share_positive": 0.575
+        },
+        "12m": {
+          "months": 107,
+          "annualised_excess": 0.0232,
+          "t_overlapping": 2.02,
+          "t_nonoverlapping": 0.69,
+          "share_positive": 0.598
+        }
+      },
+      "AEGIS_avoid_toxic": {
+        "avg_names_per_month": 167.1,
+        "1m": {
+          "months": 119,
+          "annualised_excess": -0.4086,
+          "t_overlapping": -7.2,
+          "t_nonoverlapping": -7.2,
+          "share_positive": 0.269
+        },
+        "3m": {
+          "months": 116,
+          "annualised_excess": -0.4041,
+          "t_overlapping": -12.54,
+          "t_nonoverlapping": -7.97,
+          "share_positive": 0.129
+        },
+        "6m": {
+          "months": 113,
+          "annualised_excess": -0.3838,
+          "t_overlapping": -19.43,
+          "t_nonoverlapping": -9.98,
+          "share_positive": 0.035
+        },
+        "12m": {
+          "months": 107,
+          "annualised_excess": -0.3581,
+          "t_overlapping": -26.1,
+          "t_nonoverlapping": -12.22,
+          "share_positive": 0.0
+        }
+      },
+      "STREET_rating_buy": {
+        "avg_names_per_month": 678.8,
+        "1m": {
+          "months": 119,
+          "annualised_excess": -0.001,
+          "t_overlapping": -0.05,
+          "t_nonoverlapping": -0.05,
+          "share_positive": 0.504
+        },
+        "3m": {
+          "months": 116,
+          "annualised_excess": -0.0109,
+          "t_overlapping": -0.94,
+          "t_nonoverlapping": -0.58,
+          "share_positive": 0.483
+        },
+        "6m": {
+          "months": 113,
+          "annualised_excess": -0.0201,
+          "t_overlapping": -2.25,
+          "t_nonoverlapping": -0.85,
+          "share_positive": 0.442
+        },
+        "12m": {
+          "months": 107,
+          "annualised_excess": -0.0347,
+          "t_overlapping": -4.61,
+          "t_nonoverlapping": -0.88,
+          "share_positive": 0.346
+        }
+      },
+      "STREET_rating_sell": {
+        "avg_names_per_month": 20.2,
+        "1m": {
+          "months": 119,
+          "annualised_excess": -0.025,
+          "t_overlapping": -0.46,
+          "t_nonoverlapping": -0.46,
+          "share_positive": 0.437
+        },
+        "3m": {
+          "months": 116,
+          "annualised_excess": 0.0163,
+          "t_overlapping": 0.45,
+          "t_nonoverlapping": -0.01,
+          "share_positive": 0.491
+        },
+        "6m": {
+          "months": 113,
+          "annualised_excess": 0.0212,
+          "t_overlapping": 0.78,
+          "t_nonoverlapping": -0.19,
+          "share_positive": 0.496
+        },
+        "12m": {
+          "months": 107,
+          "annualised_excess": 0.0293,
+          "t_overlapping": 1.25,
+          "t_nonoverlapping": 0.26,
+          "share_positive": 0.467
+        }
+      },
+      "STREET_target_top_quintile": {
+        "avg_names_per_month": 510.8,
+        "1m": {
+          "months": 119,
+          "annualised_excess": -0.0859,
+          "t_overlapping": -2.07,
+          "t_nonoverlapping": -2.07,
+          "share_positive": 0.395
+        },
+        "3m": {
+          "months": 116,
+          "annualised_excess": -0.1021,
+          "t_overlapping": -4.11,
+          "t_nonoverlapping": -2.65,
+          "share_positive": 0.302
+        },
+        "6m": {
+          "months": 113,
+          "annualised_excess": -0.1148,
+          "t_overlapping": -7.43,
+          "t_nonoverlapping": -3.66,
+          "share_positive": 0.212
+        },
+        "12m": {
+          "months": 107,
+          "annualised_excess": -0.1045,
+          "t_overlapping": -9.09,
+          "t_nonoverlapping": -2.38,
+          "share_positive": 0.14
+        }
+      },
+      "SKILL_STREET_top_quintile": {
+        "avg_names_per_month": 420.0,
+        "1m": {
+          "months": 110,
+          "annualised_excess": -0.0336,
+          "t_overlapping": -1.21,
+          "t_nonoverlapping": -1.21,
+          "share_positive": 0.445
+        },
+        "3m": {
+          "months": 110,
+          "annualised_excess": -0.0348,
+          "t_overlapping": -2.21,
+          "t_nonoverlapping": -2.11,
+          "share_positive": 0.427
+        },
+        "6m": {
+          "months": 110,
+          "annualised_excess": -0.0422,
+          "t_overlapping": -3.72,
+          "t_nonoverlapping": -1.4,
+          "share_positive": 0.318
+        },
+        "12m": {
+          "months": 107,
+          "annualised_excess": -0.0356,
+          "t_overlapping": -4.01,
+          "t_nonoverlapping": -0.4,
+          "share_positive": 0.318
+        }
+      },
+      "MOMENTUM_top_quintile": {
+        "avg_names_per_month": 485.4,
+        "1m": {
+          "months": 119,
+          "annualised_excess": 0.0341,
+          "t_overlapping": 1.22,
+          "t_nonoverlapping": 1.22,
+          "share_positive": 0.58
+        },
+        "3m": {
+          "months": 116,
+          "annualised_excess": 0.0251,
+          "t_overlapping": 1.56,
+          "t_nonoverlapping": 0.73,
+          "share_positive": 0.595
+        },
+        "6m": {
+          "months": 113,
+          "annualised_excess": 0.0128,
+          "t_overlapping": 1.1,
+          "t_nonoverlapping": 0.42,
+          "share_positive": 0.619
+        },
+        "12m": {
+          "months": 107,
+          "annualised_excess": -0.0091,
+          "t_overlapping": -0.72,
+          "t_nonoverlapping": 0.03,
+          "share_positive": 0.673
+        }
+      }
+    }
+  },
+  "disagreement_12m": {
+    "AEGIS_avoids_STREET_buys": {
+      "n": 8679,
+      "mean_fwd_12m": -0.2548,
+      "median_fwd_12m": -0.4561,
+      "best": [
+        {
+          "symbol": 15831,
+          "month": "2018-12",
+          "upside": 7.837,
+          "consensus": 4.5,
+          "fwd_12m": 44.926,
+          "ticker": "AXSM"
+        },
+        {
+          "symbol": 18780,
+          "month": "2020-02",
+          "upside": 30.0,
+          "consensus": 4.33,
+          "fwd_12m": 10.607,
+          "ticker": "ATER"
+        },
+        {
+          "symbol": 15303,
+          "month": "2022-05",
+          "upside": 6.803,
+          "consensus": 4.4,
+          "fwd_12m": 9.822,
+          "ticker": "VKTX"
+        },
+        {
+          "symbol": 15831,
+          "month": "2018-08",
+          "upside": 6.971,
+          "consensus": 4.67,
+          "fwd_12m": 9.809,
+          "ticker": "AXSM"
+        },
+        {
+          "symbol": 19488,
+          "month": "2023-10",
+          "upside": 6.341,
+          "consensus": 4.29,
+          "fwd_12m": 8.268,
+          "ticker": "RNA"
+        }
+      ],
+      "worst": [
+        {
+          "symbol": 19348,
+          "month": "2021-11",
+          "upside": 149840.27,
+          "consensus": 4.17,
+          "fwd_12m": -0.981,
+          "ticker": "GMBL"
+        },
+        {
+          "symbol": 19348,
+          "month": "2022-02",
+          "upside": 264869.932,
+          "consensus": 4.2,
+          "fwd_12m": -0.98,
+          "ticker": "GMBL"
+        },
+        {
+          "symbol": 16112,
+          "month": "2018-09",
+          "upside": 2399.31,
+          "consensus": 4.11,
+          "fwd_12m": -0.98,
+          "ticker": "VIVE"
+        },
+        {
+          "symbol": 19348,
+          "month": "2021-10",
+          "upside": 126510.628,
+          "consensus": 4.2,
+          "fwd_12m": -0.979,
+          "ticker": "GMBL"
+        },
+        {
+          "symbol": 19348,
+          "month": "2021-12",
+          "upside": 193759.263,
+          "consensus": 4.17,
+          "fwd_12m": -0.979,
+          "ticker": "GMBL"
+        }
+      ]
+    },
+    "AEGIS_buys_STREET_sells": {
+      "n": 49,
+      "mean_fwd_12m": 0.1859,
+      "median_fwd_12m": -0.2806,
+      "best": [
+        {
+          "symbol": 78664,
+          "month": "2020-09",
+          "upside": 0.557,
+          "consensus": 2.43,
+          "fwd_12m": 4.571,
+          "ticker": "DDD"
+        },
+        {
+          "symbol": 78664,
+          "month": "2020-03",
+          "upside": 0.511,
+          "consensus": 2.5,
+          "fwd_12m": 3.917,
+          "ticker": "DDD"
+        },
+        {
+          "symbol": 49429,
+          "month": "2020-04",
+          "upside": 0.825,
+          "consensus": 2.4,
+          "fwd_12m": 2.889,
+          "ticker": "DDS"
+        },
+        {
+          "symbol": 60186,
+          "month": "2019-07",
+          "upside": 0.564,
+          "consensus": 2.5,
+          "fwd_12m": 2.22,
+          "ticker": "OMI"
+        },
+        {
+          "symbol": 89244,
+          "month": "2015-07",
+          "upside": 0.501,
+          "consensus": 2.5,
+          "fwd_12m": 1.893,
+          "ticker": "WW"
+        }
+      ],
+      "worst": [
+        {
+          "symbol": 75261,
+          "month": "2018-12",
+          "upside": 1.39,
+          "consensus": 2.5,
+          "fwd_12m": -0.948,
+          "ticker": "MNI"
+        },
+        {
+          "symbol": 75261,
+          "month": "2018-11",
+          "upside": 1.786,
+          "consensus": 2.5,
+          "fwd_12m": -0.911,
+          "ticker": "MNI"
+        },
+        {
+          "symbol": 20751,
+          "month": "2023-11",
+          "upside": 0.575,
+          "consensus": 2.33,
+          "fwd_12m": -0.888,
+          "ticker": "SES"
+        },
+        {
+          "symbol": 23887,
+          "month": "2019-02",
+          "upside": 0.643,
+          "consensus": 2.31,
+          "fwd_12m": -0.789,
+          "ticker": "FTR"
+        },
+        {
+          "symbol": 19456,
+          "month": "2021-11",
+          "upside": 0.621,
+          "consensus": 2.4,
+          "fwd_12m": -0.772,
+          "ticker": "CLOV"
+        }
+      ]
+    },
+    "both_buy": {
+      "n": 19244,
+      "mean_fwd_12m": 0.1175,
+      "median_fwd_12m": -0.0767,
+      "best": [
+        {
+          "symbol": 88518,
+          "month": "2020-03",
+          "upside": 1.756,
+          "consensus": 4.5,
+          "fwd_12m": 21.735,
+          "ticker": "APPS"
+        },
+        {
+          "symbol": 19137,
+          "month": "2020-03",
+          "upside": 1.284,
+          "consensus": 4.2,
+          "fwd_12m": 16.034,
+          "ticker": "GRWG"
+        },
+        {
+          "symbol": 88518,
+          "month": "2020-04",
+          "upside": 0.887,
+          "consensus": 4.5,
+          "fwd_12m": 12.556,
+          "ticker": "APPS"
+        },
+        {
+          "symbol": 20834,
+          "month": "2023-10",
+          "upside": 2.708,
+          "consensus": 4.29,
+          "fwd_12m": 11.626,
+          "ticker": "LBPH"
+        },
+        {
+          "symbol": 19137,
+          "month": "2020-01",
+          "upside": 0.624,
+          "consensus": 4.25,
+          "fwd_12m": 10.522,
+          "ticker": "GRWG"
+        }
+      ],
+      "worst": [
+        {
+          "symbol": 16677,
+          "month": "2018-05",
+          "upside": 0.517,
+          "consensus": 4.5,
+          "fwd_12m": -0.983,
+          "ticker": "AMR"
+        },
+        {
+          "symbol": 13755,
+          "month": "2021-08",
+          "upside": 0.944,
+          "consensus": 4.22,
+          "fwd_12m": -0.982,
+          "ticker": "HGEN"
+        },
+        {
+          "symbol": 16677,
+          "month": "2018-07",
+          "upside": 0.581,
+          "consensus": 4.33,
+          "fwd_12m": -0.978,
+          "ticker": "AMR"
+        },
+        {
+          "symbol": 16677,
+          "month": "2018-04",
+          "upside": 0.517,
+          "consensus": 4.5,
+          "fwd_12m": -0.977,
+          "ticker": "AMR"
+        },
+        {
+          "symbol": 16677,
+          "month": "2018-06",
+          "upside": 0.631,
+          "consensus": 4.5,
+          "fwd_12m": -0.976,
+          "ticker": "AMR"
+        }
+      ]
+    },
+    "note": "every 'best' row in AEGIS_avoids_STREET_buys is research material: what did the street see that the band prior priced away? -- and every 'worst' row in AEGIS_buys_STREET_sells is the mirror question."
+  },
+  "row_level_parquet_local_only": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\time_machine_arena_rows.parquet"
+}

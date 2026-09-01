@@ -1,0 +1,53 @@
+{
+  "generated_utc": "2026-09-01T13:25:43.554143+00:00",
+  "licence": "PRODUCT_EXPERIMENT",
+  "window": "2005-2023 (anndats years)",
+  "min_targets_per_analyst": 20,
+  "implied_cap": 4.0,
+  "pooled": {
+    "n_targets_graded": 1333683,
+    "n_analysts_total": 9158,
+    "n_analysts_gradeable": 5365,
+    "mean_implied": 0.2276,
+    "mean_realized_12m": 0.1298,
+    "mean_bias": 0.0978,
+    "median_bias": 0.0692,
+    "pooled_ic_implied_vs_realized": 0.0289
+  },
+  "persistence_bias": {
+    "n_analysts": 5283,
+    "spearman_h1_h2": 0.3761,
+    "decile_h2_means": {
+      "d1": -0.0276,
+      "d2": 0.0321,
+      "d3": 0.039,
+      "d4": 0.0443,
+      "d5": 0.0641,
+      "d6": 0.1079,
+      "d7": 0.1321,
+      "d8": 0.2162,
+      "d9": 0.2663,
+      "d10": 0.803
+    },
+    "note": "analysts ranked by bias on their OWN first half; column is that decile's bias on the second half"
+  },
+  "persistence_accuracy": {
+    "n_analysts": 5283,
+    "spearman_h1_h2": 0.087,
+    "decile_h2_means": {
+      "d1": 0.0453,
+      "d2": 0.0401,
+      "d3": 0.0618,
+      "d4": 0.056,
+      "d5": 0.0803,
+      "d6": 0.076,
+      "d7": 0.0787,
+      "d8": 0.0882,
+      "d9": 0.0865,
+      "d10": 0.135
+    },
+    "note": "analysts ranked by acc on their OWN first half; column is that decile's acc on the second half"
+  },
+  "row_level_parquet_local_only": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\analyst_target_grades.parquet",
+  "read_me_first": "persistence_bias decides whether per-analyst bias correction is real; persistence_accuracy decides whether 'listen to the accurate analysts' is real. A near-zero spearman kills the corresponding design BEFORE it is built."
+}
