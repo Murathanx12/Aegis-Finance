@@ -184,11 +184,16 @@ def setup_scheduler():
     # the calibration clock read "still accruing". Daily after the close,
     # same timing convention as pi_daily_check; resolve_due() reports every
     # due record as resolved/pending/overdue/unpriceable, never silence.
+    # 17:30-19:30 are catch-up retries (the MTM pattern, adopted 2026-09-01):
+    # the app SLEEPS between wakes, and a single 16:30 slot with 1h grace
+    # missed four consecutive days (last receipt 08-27 while 42 forecasts went
+    # past due). resolve_due() is idempotent -- a retry after a clean run finds
+    # nothing due and writes a receipt saying so.
     _scheduler.add_job(
         _ledger_resolve,
-        CronTrigger(hour=16, minute=30, timezone="US/Eastern"),
+        CronTrigger(hour="16-19", minute=30, timezone="US/Eastern"),
         id="pi_ledger_resolve",
-        name="Prediction-ledger auto-resolution",
+        name="Prediction-ledger auto-resolution (+catch-up retries)",
         replace_existing=True,
         misfire_grace_time=3600,
     )

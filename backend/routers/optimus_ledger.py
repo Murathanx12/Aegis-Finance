@@ -120,3 +120,39 @@ async def get_digest(day: str | None = None):
             detail=(f"no digest for {day}" if day else
                     "no digests written yet — pi_daily_digest runs 18:15 ET"))
     return body
+
+
+@router.post("/run_job/{job_id}")
+async def run_job_now(job_id: str):
+    """Run one scheduled job INLINE, now, and return when it finishes.
+
+    WHY A TRIGGER ENDPOINT EXISTS (2026-09-01). The app sleeps between wakes,
+    so a job with one daily slot can miss for DAYS in a row: pi_ledger_resolve
+    last ran 08-27 while 42 live_forward forecasts went past due and the GitHub
+    monitor filed DEGRADED twice a day. The retry-slot fix helps tomorrow; this
+    endpoint repairs TODAY without waiting for a cron to coincide with a wake.
+
+    Allowlisted, idempotent jobs only -- each self-skips or no-ops when there
+    is nothing to do, and each writes the same dated receipt a scheduled run
+    would, so a triggered run is indistinguishable in the record (as it should
+    be: the evidence convention does not care who pressed the button).
+    """
+    from backend.services.portfolio_intelligence import scheduler as _sched
+
+    allowed = {
+        "pi_ledger_resolve": _sched._ledger_resolve,
+        "pi_hourly_mtm": _sched._hourly_mtm,
+        "pi_daily_check": _sched._daily_check,
+    }
+    fn = allowed.get(job_id)
+    if fn is None:
+        raise HTTPException(status_code=404,
+                            detail=f"unknown or non-triggerable job {job_id!r}; "
+                                   f"allowed: {sorted(allowed)}")
+    try:
+        await fn()
+    except Exception as e:                                     # noqa: BLE001
+        logger.error("run_job %s failed: %s", job_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"{job_id}: {type(e).__name__}: {e}")
+    return {"job": job_id, "ran": True,
+            "note": "receipt written by the job itself; read /api/optimus/job_receipts"}
