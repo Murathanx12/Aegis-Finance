@@ -1381,6 +1381,50 @@ async def _arena_daily():
     logs WARNING, not silence — the arena existing but never advancing would
     be COPY-LAB's six quiet days all over again.
     """
+    decided = await _arena_daily_pass()
+
+    # EXTERNAL PAPER EXECUTION, IN THE SAME PASS THAT DECIDED.
+    #
+    # The orders just queued fill at the NEXT open internally. Submitting them
+    # now — after the close, market-day orders — queues them for that same
+    # open, so the external account and the internal book are answering the
+    # same question. Mirroring settled positions from the 16:30 job instead put
+    # roughly two sessions between the decision and its external fill.
+    #
+    # Deliberately inside the arena job rather than on its own trigger: a
+    # separate schedule would drift out of step with the pass that produces
+    # the intent, and "submitted for an open the book did not decide for" is
+    # exactly the failure being fixed.
+    #
+    # ...WHICH THE ERROR PATH USED TO REINTRODUCE (fixed 2026-09-01). The pass
+    # above swallows its exception, and submission was called unconditionally
+    # underneath it. So a raised `run_daily` submitted the PREVIOUS session's
+    # queued intent for today's open — precisely the failure this comment says
+    # it exists to prevent. `decided_for` travelled onto the submission and the
+    # snapshot payload, correctly naming the stale session, and gated nothing:
+    # the provenance was right and nothing read it. A pass that did not produce
+    # a decision now submits nothing, loudly. This only ever CUTS order flow.
+    if not decided:
+        logger.error(
+            "ARENA broker submit SKIPPED: the daily pass did not complete, so the "
+            "only intent on the book is a previous session's. Submitting it would "
+            "queue orders for an open this book did not decide for.")
+        return
+    await _submit_arena_broker_intent()
+
+
+async def _arena_daily_pass() -> bool:
+    """The decision half of the arena pass: score, mature, grade, write.
+
+    Split out from `_arena_daily` (2026-09-01) for two reasons. It is the half
+    that is safe to TRIGGER — `/api/optimus/run_job/pi_arena_daily` repairs a
+    slept-through day without also submitting orders at an arbitrary hour — and
+    splitting it is what lets the submission half depend on whether this one
+    actually decided anything.
+
+    Returns True when the pass completed and produced a summary. False means no
+    new decision exists for this session, whatever is queued on the book.
+    """
     import asyncio
 
     try:
@@ -1400,22 +1444,15 @@ async def _arena_daily():
                 (summary.get("reliability") or {}).get("status"))
         degraded = (errors or summary.get("status") != "ok")
         (logger.warning if degraded else logger.info)(msg, *args)
+        # DEGRADED IS STILL A DECISION. A pass that completed with per-book
+        # errors produced fresh intent for the books that worked, so it still
+        # submits; only a pass that RAISED left no decision at all. Which of
+        # those two the submission gate should key on is a judgement for the
+        # human — this fixes the unambiguous half and says so.
+        return True
     except Exception as e:
         logger.error("ARENA daily pass failed: %s", e, exc_info=True)
-
-    # EXTERNAL PAPER EXECUTION, IN THE SAME PASS THAT DECIDED.
-    #
-    # The orders just queued fill at the NEXT open internally. Submitting them
-    # now — after the close, market-day orders — queues them for that same
-    # open, so the external account and the internal book are answering the
-    # same question. Mirroring settled positions from the 16:30 job instead put
-    # roughly two sessions between the decision and its external fill.
-    #
-    # Deliberately inside the arena job rather than on its own trigger: a
-    # separate schedule would drift out of step with the pass that produces
-    # the intent, and "submitted for an open the book did not decide for" is
-    # exactly the failure being fixed.
-    await _submit_arena_broker_intent()
+        return False
 
 
 async def _submit_arena_broker_intent():

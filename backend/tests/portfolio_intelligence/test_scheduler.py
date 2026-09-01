@@ -349,6 +349,61 @@ class TestPaperBrokerExecutionClock:
             "declaring an arena book did not reach the submit, or it "
             "hijacked the lane's declaration")
 
+    def test_a_RAISED_pass_submits_nothing(self, monkeypatch):
+        """The defect fixed 2026-09-01.
+
+        `_arena_daily` swallowed `run_daily`'s exception and then called the
+        submit unconditionally underneath it. A raised pass therefore queued
+        the PREVIOUS session's intent for today's open -- exactly the failure
+        the function's own comment says it exists to prevent. `decided_for`
+        travelled onto the submission and named the stale session correctly,
+        and gated nothing: the provenance was right and nobody read it.
+        """
+        from backend.services.arena import engine as arena_engine
+        calls = []
+        sched, _ = self._stub(monkeypatch, "arena:CURRENT_BEST_v1", calls)
+
+        def _boom():
+            raise RuntimeError("arena engine down")
+        monkeypatch.setattr(arena_engine, "run_daily", _boom)
+
+        asyncio.run(sched._arena_daily())          # must not raise
+        assert calls == [], (
+            "a pass that produced no decision still submitted orders -- that "
+            "is an order placed for an open no book decided for")
+
+    def test_a_pass_that_COMPLETED_still_submits(self, monkeypatch):
+        """The guard must only cut the unambiguous case. A completed pass --
+        even a degraded one -- produced fresh intent and must still reach the
+        broker, or the fix would silently stop the arena trading."""
+        from backend.services.arena import engine as arena_engine
+        calls = []
+        sched, _ = self._stub(monkeypatch, "arena:CURRENT_BEST_v1", calls)
+        monkeypatch.setattr(arena_engine, "run_daily",
+                            lambda: {"status": "ok", "receipts": [], "session": "2026-09-01"})
+        asyncio.run(sched._arena_daily())
+        assert calls == ["arena:CURRENT_BEST_v1"]
+
+    def test_the_triggerable_half_never_submits(self, monkeypatch):
+        """`/api/optimus/run_job/pi_arena_daily` is bound to
+        `_arena_daily_pass`, not `_arena_daily`. Pressing a button at 08:00
+        must repair the forecast record without placing a single order."""
+        from backend.services.arena import engine as arena_engine
+        calls = []
+        sched, _ = self._stub(monkeypatch, "arena:CURRENT_BEST_v1", calls)
+        monkeypatch.setattr(arena_engine, "run_daily",
+                            lambda: {"status": "ok", "receipts": [], "session": "2026-09-01"})
+        assert asyncio.run(sched._arena_daily_pass()) is True
+        assert calls == [], "the triggerable half submitted orders"
+
+    def test_the_allowlist_binds_the_decision_half_not_the_trading_one(self):
+        """Pinned because the difference is one underscore-suffixed name and
+        getting it wrong turns a repair endpoint into an order button."""
+        from backend.routers import optimus_ledger
+        import inspect
+        src = inspect.getsource(optimus_ledger.run_job_now)
+        assert '"pi_arena_daily": _sched._arena_daily_pass' in src, src
+
     def test_an_unresolvable_target_does_not_kill_the_arena_pass(
             self, monkeypatch):
         calls = []

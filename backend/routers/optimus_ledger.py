@@ -143,6 +143,15 @@ async def run_job_now(job_id: str):
         "pi_ledger_resolve": _sched._ledger_resolve,
         "pi_hourly_mtm": _sched._hourly_mtm,
         "pi_daily_check": _sched._daily_check,
+        # DECISION HALF ONLY, and that is the whole point (2026-09-01).
+        # `arena_forward` went 8 days without a forecast while its job sat in
+        # the schedule looking healthy, so this needs a repair trigger. But
+        # `_arena_daily` ends by SUBMITTING PAPER ORDERS, and an order queued
+        # because someone pressed a button at 08:00 is an order placed for an
+        # open no book decided for. `_arena_daily_pass` scores, matures, grades
+        # and writes; it submits nothing. A repaired day is a graded day, never
+        # a traded one.
+        "pi_arena_daily": _sched._arena_daily_pass,
     }
     fn = allowed.get(job_id)
     if fn is None:
