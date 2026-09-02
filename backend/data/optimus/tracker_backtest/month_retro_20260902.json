@@ -1,0 +1,3480 @@
+{
+ "receipt": "MONTH-RETRO-1",
+ "title": "The month of data: 2026-08-01 -> 2026-09-02",
+ "generated_utc": "2026-09-02T00:00:00Z",
+ "licence": "PRODUCT_EXPERIMENT (retrospective; no significance gate claimed)",
+ "narrative": "aegis-finance docs/RETRO_2026-09-02_THE_MONTH_OF_DATA.md",
+ "repos": {
+  "research": "C:\\Users\\mrthn\\aegis-finance",
+  "execution": "C:\\Users\\mrthn\\aegis-alpha-terminal"
+ },
+ "HONESTY_HEADER": {
+  "gradeable_forward_sessions": 2,
+  "which": [
+   "Mon 2026-08-31 session (tracker file 08-31 -> 09-01)",
+   "Tue 2026-09-01 session (tracker file 09-01 -> 09-02)"
+  ],
+  "why_only_two": "The tracker's first day file is 2026-08-30, NOT 2026-08-27 as the task brief assumed, and 2026-08-30 was a Sunday whose close column equals 2026-08-31's (2,997 of 3,059 closes identical). Every forward number below rests on n=2 sessions and is DIRECTIONAL EVIDENCE, not a result.",
+  "what_is_missing_locally": "state/decision_outcomes/ is EMPTY on this machine. The sealed-decision -> execution-outcome -> graded-return write-back runs in-container on the Railway volume at /app/state. This is a GAP, not a zero: no local artefact grades realised fills against sealed intent.",
+  "in_sample_warning": "BAND_PRIOR v2's thresholds were chosen from receipts measured on the SAME 2013-2024 panel (exp_return_cross_section.json: 'Q2 is a decomposition, not out-of-sample validation'). The 2-session replay below is the only out-of-sample evidence that exists for it."
+ },
+ "section_1_inventory": {
+  "note": "PIT-clean = the artefact could only have been built from information available at its stamped time. HINDSIGHT = built after the fact, valid for learning, invalid as a signal input without an as-of join.",
+  "rows": [
+   {
+    "dataset": "Tracker whole-market day files",
+    "files": 4,
+    "size_mb": 9.25,
+    "rows": 12233,
+    "span": "2026-08-30 .. 2026-09-02 (4 files, 2 tradable forward sessions)",
+    "pit_status": "PIT-CLEAN (observed pre-open each day; close column = PRIOR session close)",
+    "note": "One row per name per day. 3,059/3,059/3,059/3,056.",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\tracker\\2026-*.jsonl"
+    ]
+   },
+   {
+    "dataset": "Tracker transitions",
+    "files": 1,
+    "size_mb": 9.91,
+    "rows": 27537,
+    "span": "2026-08-27 .. 2026-09-02 (see file)",
+    "pit_status": "PIT-CLEAN (append-only status transitions)",
+    "note": "status-change log across tracker days",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\tracker\\transitions.jsonl"
+    ]
+   },
+   {
+    "dataset": "Tracker profiles / latest snapshot",
+    "files": 2,
+    "size_mb": 1.58,
+    "rows": null,
+    "span": "current only",
+    "pit_status": "HINDSIGHT (overwritten in place; only the current state survives)",
+    "note": "latest.json and profiles.json are mutable snapshots, NOT a replayable series",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\tracker\\profiles.json",
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\tracker\\latest.json"
+    ]
+   },
+   {
+    "dataset": "Sealed prediction books",
+    "files": 9,
+    "size_mb": 10.01,
+    "rows": 5740,
+    "span": "2026-08-30 .. 2026-09-02",
+    "pit_status": "PIT-CLEAN + TAMPER-EVIDENT (content_sha256 in state/predictions/seals.jsonl)",
+    "note": "9 files incl. 6 reseals of 2026-08-30/31; 4 distinct days. Total prediction rows across all files.",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\predictions\\2026-*.json"
+    ]
+   },
+   {
+    "dataset": "Seal ledger",
+    "files": 1,
+    "size_mb": 0.0,
+    "rows": 9,
+    "span": "2026-08-30 .. 2026-09-02",
+    "pit_status": "PIT-CLEAN (append-only)",
+    "note": "one line per seal incl. every reseal, with hash",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\predictions\\seals.jsonl"
+    ]
+   },
+   {
+    "dataset": "Published seed books (website surface)",
+    "files": 4,
+    "size_mb": 4.64,
+    "rows": null,
+    "span": "2026-08-30 .. 2026-09-02",
+    "pit_status": "PIT-CLEAN (mirror of the seal)",
+    "note": "the artery the tracker_portfolio brain reads",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-finance\\..\\aegis-alpha-terminal\\docs\\seed\\predictions\\*.json"
+    ]
+   },
+   {
+    "dataset": "Daily autopsies",
+    "files": 4,
+    "size_mb": 0.19,
+    "rows": null,
+    "span": "2026-08-25 .. 2026-08-28",
+    "pit_status": "HINDSIGHT BY CONSTRUCTION (post-hoc explanation)",
+    "note": "explanatory, not tradable; 4 days 08-25..08-28",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\autopsy\\2026-*.json"
+    ]
+   },
+   {
+    "dataset": "Discovery autopsies",
+    "files": 1,
+    "size_mb": 0.0,
+    "rows": null,
+    "span": "2026-08-28 only",
+    "pit_status": "HINDSIGHT BY CONSTRUCTION",
+    "note": "ONE file only (discovery_2026-08-28.json, 427 bytes) - the discovery-failure autopsy did NOT run daily",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\autopsy\\discovery_*.json"
+    ]
+   },
+   {
+    "dataset": "Return decomposition (market/sector/company)",
+    "files": 2,
+    "size_mb": 0.02,
+    "rows": null,
+    "span": "2026-08-31, 2026-09-01",
+    "pit_status": "HINDSIGHT (fitted on trailing 120 sessions, today excluded from the fit)",
+    "note": "the only artefact that separates beta from company news",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\decomposition\\2026-*.json"
+    ]
+   },
+   {
+    "dataset": "decision_outcomes write-back",
+    "files": 0,
+    "size_mb": 0.0,
+    "rows": 0,
+    "span": "n/a locally",
+    "pit_status": "NOT OBSERVABLE LOCALLY",
+    "note": "directory exists and is EMPTY on this machine; the rows live on the Railway volumes at /app/state. This is a GAP, not a zero.",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\decision_outcomes\\*"
+    ]
+   },
+   {
+    "dataset": "EDGAR ownership records",
+    "files": 6,
+    "size_mb": 2.06,
+    "rows": 2509,
+    "span": "2026-08-13, 08-14, 08-17, 08-18, 08-19, 08-20 (6 days)",
+    "pit_status": "PIT-CLEAN BY FILING DATE, BACKFILLED 2026-09-02 (file mtime != observation date)",
+    "note": "filed-date partitioned; 6 day-files. Backfilled, so it has NEVER been used prospectively.",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\research\\ownership\\2026-*.jsonl"
+    ]
+   },
+   {
+    "dataset": "Attention watchlist",
+    "files": 1,
+    "size_mb": 0.06,
+    "rows": 13,
+    "span": "built 2026-09-02",
+    "pit_status": "DERIVED from backfilled ownership - NOT yet prospective",
+    "note": "built 2026-09-02",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\research\\ownership\\attention_watchlist.json"
+    ]
+   },
+   {
+    "dataset": "PIT news corpus - uid index",
+    "files": 1,
+    "size_mb": 5.54,
+    "rows": null,
+    "span": "through 2026-08-31",
+    "pit_status": "PIT-CLEAN (uid + first-seen timestamp)",
+    "note": "the dedup/first-seen spine of the news corpus",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\corpus\\uid_index.json"
+    ]
+   },
+   {
+    "dataset": "PIT news corpus - observations",
+    "files": 21,
+    "size_mb": 152.14,
+    "rows": null,
+    "span": "",
+    "pit_status": "PIT-CLEAN",
+    "note": "per-day observation shards",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\corpus\\observations\\*"
+    ]
+   },
+   {
+    "dataset": "PIT news corpus - features",
+    "files": 311,
+    "size_mb": 125.71,
+    "rows": null,
+    "span": "",
+    "pit_status": "PIT-CLEAN (built from PIT observations)",
+    "note": "",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\corpus\\features\\*"
+    ]
+   },
+   {
+    "dataset": "PIT news corpus - relevance / digests",
+    "files": 35,
+    "size_mb": 20.96,
+    "rows": null,
+    "span": "",
+    "pit_status": "PIT-CLEAN inputs, LLM-LABELLED (labels are post-hoc but the inputs are frozen)",
+    "note": "",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\corpus\\relevance\\*",
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\corpus\\digests\\*"
+    ]
+   },
+   {
+    "dataset": "EDGAR / news backfill coverage receipts",
+    "files": 3,
+    "size_mb": 0.12,
+    "rows": null,
+    "span": "2026-08-29, 2026-08-31",
+    "pit_status": "HINDSIGHT (coverage audit)",
+    "note": "",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\corpus\\edgar_backfill_*.json",
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\corpus\\news_backfill_coverage_*.json"
+    ]
+   },
+   {
+    "dataset": "Era replay (two-LLM, anonymised)",
+    "files": 11,
+    "size_mb": 2.85,
+    "rows": {
+     "decisions_fantasy.jsonl": 178,
+     "decisions_fantasy_b.jsonl": 24,
+     "decisions_numbers_only.jsonl": 400,
+     "decisions_real.jsonl": 400,
+     "decisions_real_anon.jsonl": 166,
+     "rewritten_fantasy.jsonl": 240,
+     "rewritten_fantasy_b.jsonl": 38,
+     "rewritten_real_anon.jsonl": 200,
+     "windows.jsonl": 1001
+    },
+    "span": "2026-08-30 (built)",
+    "pit_status": "PIT-CLEAN BY CONSTRUCTION (frozen historical windows, entity-anonymised)",
+    "note": "windows.jsonl + 5 decision streams + grade.json",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\era_replay\\*.jsonl",
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\era_replay\\*.json"
+    ]
+   },
+   {
+    "dataset": "Decisions ledger",
+    "files": 1,
+    "size_mb": 17.81,
+    "rows": 9457,
+    "span": null,
+    "pit_status": "PIT-CLEAN (append-only)",
+    "note": "",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\decisions.jsonl"
+    ]
+   },
+   {
+    "dataset": "Fills ledger",
+    "files": 1,
+    "size_mb": 2.19,
+    "rows": 1378,
+    "span": null,
+    "pit_status": "PIT-CLEAN (append-only)",
+    "note": "",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\fills.jsonl"
+    ]
+   },
+   {
+    "dataset": "Counterfactual ledger",
+    "files": 1,
+    "size_mb": 1118.87,
+    "rows": 1062527,
+    "span": null,
+    "pit_status": "PIT-CLEAN inputs, HINDSIGHT marks",
+    "note": "marks are later prices",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\counterfactual.jsonl"
+    ]
+   },
+   {
+    "dataset": "Protective stops",
+    "files": 1,
+    "size_mb": 0.7,
+    "rows": 3122,
+    "span": null,
+    "pit_status": "PIT-CLEAN (append-only)",
+    "note": "",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\protective_stops.jsonl"
+    ]
+   },
+   {
+    "dataset": "Belief series",
+    "files": 1,
+    "size_mb": 4.99,
+    "rows": 14670,
+    "span": null,
+    "pit_status": "PIT-CLEAN (append-only)",
+    "note": "",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\belief_series.jsonl"
+    ]
+   },
+   {
+    "dataset": "State change ledger",
+    "files": 1,
+    "size_mb": 0.01,
+    "rows": 5,
+    "span": null,
+    "pit_status": "PIT-CLEAN (append-only)",
+    "note": "",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\state_change.jsonl"
+    ]
+   },
+   {
+    "dataset": "Psychohistory ledger",
+    "files": 1,
+    "size_mb": 0.07,
+    "rows": 6,
+    "span": null,
+    "pit_status": "PIT-CLEAN (append-only)",
+    "note": "",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\psychohistory.jsonl"
+    ]
+   },
+   {
+    "dataset": "LLM spend ledger",
+    "files": 1,
+    "size_mb": 1.78,
+    "rows": 3412,
+    "span": null,
+    "pit_status": "PIT-CLEAN (append-only)",
+    "note": "",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\llm_spend.jsonl"
+    ]
+   },
+   {
+    "dataset": "Alpha budget ledger",
+    "files": 1,
+    "size_mb": 0.0,
+    "rows": 4,
+    "span": null,
+    "pit_status": "PIT-CLEAN (append-only)",
+    "note": "",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\alpha_budget.jsonl"
+    ]
+   },
+   {
+    "dataset": "tracker_backtest receipts (finance)",
+    "files": 8,
+    "size_mb": 0.22,
+    "rows": null,
+    "span": "2013-2024 panels, built 2026-08-30..09-01",
+    "pit_status": "HINDSIGHT (11-year historical panels) - the PRIORS, not the decisions",
+    "note": "EXP-RETURN-XS-1, UPSIDE-BAND-DECON-1, analyst_target_grades, time_machine_arena, topn_concentration, ibes_status_rules",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\tracker_backtest\\*.json"
+    ]
+   },
+   {
+    "dataset": "WRDS panels (finance)",
+    "files": 130,
+    "size_mb": 4470.36,
+    "rows": null,
+    "span": "1990-2024",
+    "pit_status": "HINDSIGHT-CAPABLE substrate; PIT only if joined through join_pit_series",
+    "note": "CRSP dsf 1990-2024, IBES, Compustat, OptionMetrics, TAQ, 13F s34, JKP factors",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\*.parquet"
+    ]
+   },
+   {
+    "dataset": "Analyst target grades (WRDS, new this month)",
+    "files": 1,
+    "size_mb": 43.19,
+    "rows": null,
+    "span": "built 2026-09-01",
+    "pit_status": "HINDSIGHT PANEL (graded outcomes) - PIT only via as-of joins",
+    "note": "1.33m graded targets; bias Spearman 0.376 vs accuracy 0.087",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\analyst_target_grades.parquet"
+    ]
+   },
+   {
+    "dataset": "Holder provenance (WRDS/EDGAR, new this month)",
+    "files": 232,
+    "size_mb": 1378.44,
+    "rows": null,
+    "span": "built 2026-09-02",
+    "pit_status": "HINDSIGHT (13F is filed 45 days late by construction)",
+    "note": "built 2026-09-02; the 45-day filing lag is a hard PIT constraint",
+    "path_glob": [
+     "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\holder_fingerprints.parquet",
+     "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\holder_qsnap.parquet",
+     "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\holder_transitions\\*",
+     "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\holder_events\\*"
+    ]
+   }
+  ],
+  "news_corpus_composition_2026_08": {
+   "rows": 27778,
+   "by_kind": {
+    "filing": 14677,
+    "corporate": 7841,
+    "news": 5236,
+    "earnings": 24
+   },
+   "by_source_family": {
+    "sec_edgar": 22518,
+    "alpaca": 3796,
+    "finnhub": 1450,
+    "company_ir": 14
+   },
+   "pct_actual_news": 0.1885,
+   "note": "The \"news corpus\" is 81% SEC EDGAR filings. Only 5,236 of 27,778 August rows (18.8%) are wire news. Any claim about \"news coverage\" is really a claim about filing coverage unless it filters kind==\"news\"."
+  },
+  "news_corpus_totals": {
+   "per_month": {
+    "2022-09": 1,
+    "2025-06": 3,
+    "2025-08": 3936,
+    "2025-09": 5480,
+    "2025-10": 5411,
+    "2025-11": 5898,
+    "2025-12": 5658,
+    "2026-01": 4449,
+    "2026-02": 5191,
+    "2026-03": 37839,
+    "2026-04": 26396,
+    "2026-05": 36796,
+    "2026-06": 31269,
+    "2026-07": 26033,
+    "2026-08": 27778,
+    "2026-09": 475,
+    "2026-10": 1572,
+    "2026-11": 3166,
+    "2026-12": 375,
+    "2027-01": 788,
+    "2027-02": 2147
+   },
+   "total_rows": 230661,
+   "uid_index_len": 230661,
+   "future_dated_rows_2026_09_onward": 8523,
+   "note": "8,523 rows carry months from 2026-09 to 2027-02. These are FORWARD CALENDAR entries (dated catalysts), not news. Two clocks: a backward news bound and a forward calendar bound are different bounds."
+  }
+ },
+ "section_2_expected_vs_reality": {
+  "market_context": {
+   "2026-08-31": {
+    "cap_weighted": 0.01159971638767366,
+    "equal_weighted": -0.0051034104653892255,
+    "median": -0.005962521294718859,
+    "n": 3059
+   },
+   "2026-09-01": {
+    "cap_weighted": -0.007663774863675847,
+    "equal_weighted": -0.012000911585623978,
+    "median": -0.010799136069114423,
+    "n": 3045
+   }
+  },
+  "market_context_note": "SPY is not in the tracker universe; these are the 3,059-name tracker universe itself, cap- and equal-weighted. File day D close = prior session close, so file D -> file D+1 is session D. 2026-08-30 and 2026-08-31 files carry the SAME close (2,997/3,059 identical) because 2026-08-30 was a Sunday.",
+  "books": {
+   "2026-08-30": {
+    "sealed_at_utc": "2026-08-30T04:17:10.560904+00:00",
+    "sha": "c24e247bf5493c70be345164bd39f66114ca9c5a553cb92849b37e478b90ec2e",
+    "universe_considered": 151,
+    "claims_made": 0,
+    "graded_over_session": "file 2026-08-30 close -> file 2026-08-31 close",
+    "books": {}
+   },
+   "2026-08-31": {
+    "sealed_at_utc": "2026-08-31T11:56:59.540320+00:00",
+    "sha": "e0a749c3d8a7c0d59d5a3106ec516637fc3d29bcd3d653a02b150c2eb4e54676",
+    "universe_considered": 734,
+    "claims_made": 10,
+    "graded_over_session": "file 2026-08-31 close -> file 2026-09-01 close",
+    "books": {
+     "hack3": {
+      "n_selected": 0,
+      "k_target": 10,
+      "max_notional_each": 0.083,
+      "ranking": "risk_adjusted_ratio",
+      "rank_distinct_values": 0,
+      "ranking_is_degenerate": false,
+      "n_graded": 0,
+      "book_realized_1d_equal": null,
+      "book_realized_1d_notional_weighted": null,
+      "book_exp_1d_prorata": null,
+      "universe_ew_1d": -0.0051034104653892255,
+      "excess_vs_universe_ew": null,
+      "hit_rate_positive": null,
+      "n_breached_downside_5pct_in_one_day": 0,
+      "holdings": []
+     },
+     "hack4": {
+      "n_selected": 5,
+      "k_target": 5,
+      "max_notional_each": 0.1,
+      "ranking": "upside_x_consensus",
+      "rank_distinct_values": 33,
+      "ranking_is_degenerate": false,
+      "n_graded": 5,
+      "book_realized_1d_equal": 0.007832718744383248,
+      "book_realized_1d_notional_weighted": 0.003916359372191625,
+      "book_exp_1d_prorata": 0.0,
+      "universe_ew_1d": -0.0051034104653892255,
+      "excess_vs_universe_ew": 0.012936129209772475,
+      "hit_rate_positive": 0.6,
+      "n_breached_downside_5pct_in_one_day": 0,
+      "holdings": [
+       {
+        "symbol": "RZLV",
+        "notional": 0.1,
+        "exp_return_21d": null,
+        "downside_5pct": null,
+        "exp_return_1d_prorata": 0.0,
+        "realized_1d": -0.026936026936026924,
+        "miss_vs_exp_1d": -0.026936026936026924,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Technology",
+        "rank_value": 10.351848
+       },
+       {
+        "symbol": "ALMU",
+        "notional": 0.1,
+        "exp_return_21d": null,
+        "downside_5pct": null,
+        "exp_return_1d_prorata": 0.0,
+        "realized_1d": -0.003044140030441511,
+        "miss_vs_exp_1d": -0.003044140030441511,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Semiconductors",
+        "rank_value": 5.431275
+       },
+       {
+        "symbol": "LAES",
+        "notional": 0.1,
+        "exp_return_21d": null,
+        "downside_5pct": null,
+        "exp_return_1d_prorata": 0.0,
+        "realized_1d": 0.0040322580645162365,
+        "miss_vs_exp_1d": 0.0040322580645162365,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Semiconductors",
+        "rank_value": 5.646925
+       },
+       {
+        "symbol": "NB",
+        "notional": 0.1,
+        "exp_return_21d": null,
+        "downside_5pct": null,
+        "exp_return_1d_prorata": 0.0,
+        "realized_1d": 0.014527845036319764,
+        "miss_vs_exp_1d": 0.014527845036319764,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Metals & Mining",
+        "rank_value": 8.472245
+       },
+       {
+        "symbol": "ABAT",
+        "notional": 0.1,
+        "exp_return_21d": null,
+        "downside_5pct": null,
+        "exp_return_1d_prorata": 0.0,
+        "realized_1d": 0.05058365758754868,
+        "miss_vs_exp_1d": 0.05058365758754868,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Metals & Mining",
+        "rank_value": 5.50535
+       }
+      ]
+     },
+     "hack6": {
+      "n_selected": 0,
+      "k_target": 15,
+      "max_notional_each": 0.06,
+      "ranking": "upside_downside_ratio",
+      "rank_distinct_values": 0,
+      "ranking_is_degenerate": false,
+      "n_graded": 0,
+      "book_realized_1d_equal": null,
+      "book_realized_1d_notional_weighted": null,
+      "book_exp_1d_prorata": null,
+      "universe_ew_1d": -0.0051034104653892255,
+      "excess_vs_universe_ew": null,
+      "hit_rate_positive": null,
+      "n_breached_downside_5pct_in_one_day": 0,
+      "holdings": []
+     }
+    }
+   },
+   "2026-09-01": {
+    "sealed_at_utc": "2026-09-01T09:59:02.690590+00:00",
+    "sha": "ffcc74092174f1c2c75899f091bc6486247a1220a6793266115b7b96c1ed9671",
+    "universe_considered": 766,
+    "claims_made": 11,
+    "graded_over_session": "file 2026-09-01 close -> file 2026-09-02 close",
+    "books": {
+     "hack3": {
+      "n_selected": 9,
+      "k_target": 10,
+      "max_notional_each": 0.083,
+      "ranking": "risk_adjusted_ratio",
+      "rank_distinct_values": 17,
+      "ranking_is_degenerate": false,
+      "n_graded": 9,
+      "book_realized_1d_equal": -0.015469354700553982,
+      "book_realized_1d_notional_weighted": -0.011555607961313826,
+      "book_exp_1d_prorata": 0.0005824867724867725,
+      "universe_ew_1d": -0.012000911585623978,
+      "excess_vs_universe_ew": -0.0034684431149300046,
+      "hit_rate_positive": 0.4444444444444444,
+      "n_breached_downside_5pct_in_one_day": 0,
+      "holdings": [
+       {
+        "symbol": "ASPI",
+        "notional": 0.083,
+        "exp_return_21d": 0.01725,
+        "downside_5pct": -0.27771,
+        "exp_return_1d_prorata": 0.0008214285714285715,
+        "realized_1d": -0.05970149253731338,
+        "miss_vs_exp_1d": -0.06052292110874195,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Chemicals",
+        "rank_value": 0.062115
+       },
+       {
+        "symbol": "ORCL",
+        "notional": 0.083,
+        "exp_return_21d": 0.00191,
+        "downside_5pct": -0.19131,
+        "exp_return_1d_prorata": 9.095238095238095e-05,
+        "realized_1d": -0.05230686695278974,
+        "miss_vs_exp_1d": -0.05239781933374212,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Technology",
+        "rank_value": 0.009984
+       },
+       {
+        "symbol": "LAES",
+        "notional": 0.083,
+        "exp_return_21d": 0.00246,
+        "downside_5pct": -0.28148,
+        "exp_return_1d_prorata": 0.00011714285714285714,
+        "realized_1d": -0.04016064257028118,
+        "miss_vs_exp_1d": -0.04027778542742404,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Semiconductors",
+        "rank_value": 0.00874
+       },
+       {
+        "symbol": "LOVE",
+        "notional": 0.083,
+        "exp_return_21d": 0.00222,
+        "downside_5pct": -0.22298,
+        "exp_return_1d_prorata": 0.00010571428571428572,
+        "realized_1d": -0.013786470022443043,
+        "miss_vs_exp_1d": -0.013892184308157328,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Consumer products",
+        "rank_value": 0.009956
+       },
+       {
+        "symbol": "TNXP",
+        "notional": 0.083,
+        "exp_return_21d": 0.01725,
+        "downside_5pct": -0.22207,
+        "exp_return_1d_prorata": 0.0008214285714285715,
+        "realized_1d": -0.008510638297872242,
+        "miss_vs_exp_1d": -0.009332066869300814,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Biotechnology",
+        "rank_value": 0.077678
+       },
+       {
+        "symbol": "BIOA",
+        "notional": 0.083,
+        "exp_return_21d": 0.01725,
+        "downside_5pct": -0.2971,
+        "exp_return_1d_prorata": 0.0008214285714285715,
+        "realized_1d": 0.00210526315789461,
+        "miss_vs_exp_1d": 0.0012838345864660387,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Pharmaceuticals",
+        "rank_value": 0.058061
+       },
+       {
+        "symbol": "LENZ",
+        "notional": 0.083,
+        "exp_return_21d": 0.01725,
+        "downside_5pct": -0.25668,
+        "exp_return_1d_prorata": 0.0008214285714285715,
+        "realized_1d": 0.0038387715930903177,
+        "miss_vs_exp_1d": 0.003017343021661746,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Pharmaceuticals",
+        "rank_value": 0.067204
+       },
+       {
+        "symbol": "ELDN",
+        "notional": 0.083,
+        "exp_return_21d": 0.01725,
+        "downside_5pct": -0.21111,
+        "exp_return_1d_prorata": 0.0008214285714285715,
+        "realized_1d": 0.010067114093959662,
+        "miss_vs_exp_1d": 0.00924568552253109,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Biotechnology",
+        "rank_value": 0.081711
+       },
+       {
+        "symbol": "IVA",
+        "notional": 0.083,
+        "exp_return_21d": 0.01725,
+        "downside_5pct": -0.179,
+        "exp_return_1d_prorata": 0.0008214285714285715,
+        "realized_1d": 0.019230769230769162,
+        "miss_vs_exp_1d": 0.018409340659340592,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Biotechnology",
+        "rank_value": 0.096369
+       }
+      ]
+     },
+     "hack4": {
+      "n_selected": 5,
+      "k_target": 5,
+      "max_notional_each": 0.1,
+      "ranking": "upside_x_consensus",
+      "rank_distinct_values": 12,
+      "ranking_is_degenerate": false,
+      "n_graded": 5,
+      "book_realized_1d_equal": -0.06962255756368527,
+      "book_realized_1d_notional_weighted": -0.03481127878184263,
+      "book_exp_1d_prorata": 0.000258,
+      "universe_ew_1d": -0.012000911585623978,
+      "excess_vs_universe_ew": -0.05762164597806129,
+      "hit_rate_positive": 0.0,
+      "n_breached_downside_5pct_in_one_day": 0,
+      "holdings": [
+       {
+        "symbol": "RZLV",
+        "notional": 0.1,
+        "exp_return_21d": 0.01725,
+        "downside_5pct": -0.37551,
+        "exp_return_1d_prorata": 0.0008214285714285715,
+        "realized_1d": -0.17301038062283736,
+        "miss_vs_exp_1d": -0.17383180919426594,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Technology",
+        "rank_value": 10.751429
+       },
+       {
+        "symbol": "ALMU",
+        "notional": 0.1,
+        "exp_return_21d": 0.00246,
+        "downside_5pct": -0.38517,
+        "exp_return_1d_prorata": 0.00011714285714285714,
+        "realized_1d": -0.04885496183206095,
+        "miss_vs_exp_1d": -0.04897210468920381,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Semiconductors",
+        "rank_value": 5.460412
+       },
+       {
+        "symbol": "NB",
+        "notional": 0.1,
+        "exp_return_21d": 0.00246,
+        "downside_5pct": -0.40878,
+        "exp_return_1d_prorata": 0.00011714285714285714,
+        "realized_1d": -0.04534606205250602,
+        "miss_vs_exp_1d": -0.04546320490964888,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Metals & Mining",
+        "rank_value": 8.290337
+       },
+       {
+        "symbol": "ABAT",
+        "notional": 0.1,
+        "exp_return_21d": 0.00246,
+        "downside_5pct": -0.35237,
+        "exp_return_1d_prorata": 0.00011714285714285714,
+        "realized_1d": -0.040740740740740855,
+        "miss_vs_exp_1d": -0.04085788359788371,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Metals & Mining",
+        "rank_value": 5.041667
+       },
+       {
+        "symbol": "LAES",
+        "notional": 0.1,
+        "exp_return_21d": 0.00246,
+        "downside_5pct": -0.28148,
+        "exp_return_1d_prorata": 0.00011714285714285714,
+        "realized_1d": -0.04016064257028118,
+        "miss_vs_exp_1d": -0.04027778542742404,
+        "breached_downside_5pct_in_one_day": false,
+        "sector": "Semiconductors",
+        "rank_value": 5.607681
+       }
+      ]
+     },
+     "hack6": {
+      "n_selected": 0,
+      "k_target": 15,
+      "max_notional_each": 0.06,
+      "ranking": "upside_downside_ratio",
+      "rank_distinct_values": 0,
+      "ranking_is_degenerate": false,
+      "n_graded": 0,
+      "book_realized_1d_equal": null,
+      "book_realized_1d_notional_weighted": null,
+      "book_exp_1d_prorata": null,
+      "universe_ew_1d": -0.012000911585623978,
+      "excess_vs_universe_ew": null,
+      "hit_rate_positive": null,
+      "n_breached_downside_5pct_in_one_day": 0,
+      "holdings": []
+     }
+    }
+   },
+   "2026-09-02": {
+    "sealed_at_utc": "2026-09-02T07:05:01.804830+00:00",
+    "sha": "6e69c0af80a7ad5f2ccc9760dfbcb7069c0344d69e26f2603e1423e380dd6857",
+    "universe_considered": 806,
+    "claims_made": 11,
+    "status": "UNGRADED - no forward session observed yet as of 2026-09-02",
+    "books": {
+     "hack3": 10,
+     "hack4": 5,
+     "hack6": 15
+    }
+   }
+  },
+  "per_name_claims": {
+   "2026-08-30": {
+    "n_claims": 0,
+    "n_graded": 0,
+    "mean_realized_1d": null,
+    "median_realized_1d": null,
+    "universe_ew_1d": -0.0051034104653892255,
+    "hit_rate": null,
+    "rows": []
+   },
+   "2026-08-31": {
+    "n_claims": 10,
+    "n_graded": 10,
+    "mean_realized_1d": 0.008018842858805941,
+    "median_realized_1d": 0.004318760611205508,
+    "universe_ew_1d": -0.0051034104653892255,
+    "hit_rate": 0.7,
+    "rows": [
+     {
+      "symbol": "LOVE",
+      "exp_return_21d": null,
+      "p_up_21d": 0.5082,
+      "downside_5pct": null,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.024702939337085672,
+      "coverage": 6,
+      "sector": "Consumer products"
+     },
+     {
+      "symbol": "ORCL",
+      "exp_return_21d": null,
+      "p_up_21d": 0.5082,
+      "downside_5pct": null,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.011468346039111621,
+      "coverage": 42,
+      "sector": "Technology"
+     },
+     {
+      "symbol": "ALMU",
+      "exp_return_21d": null,
+      "p_up_21d": 0.5082,
+      "downside_5pct": null,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.003044140030441511,
+      "coverage": 2,
+      "sector": "Semiconductors"
+     },
+     {
+      "symbol": "AVAV",
+      "exp_return_21d": null,
+      "p_up_21d": 0.5082,
+      "downside_5pct": null,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": 0.002771393808300715,
+      "coverage": 19,
+      "sector": "Aerospace & Defense"
+     },
+     {
+      "symbol": "LAES",
+      "exp_return_21d": null,
+      "p_up_21d": 0.5082,
+      "downside_5pct": null,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": 0.0040322580645162365,
+      "coverage": 2,
+      "sector": "Semiconductors"
+     },
+     {
+      "symbol": "FPS",
+      "exp_return_21d": null,
+      "p_up_21d": 0.5082,
+      "downside_5pct": null,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": 0.004605263157894779,
+      "coverage": 10,
+      "sector": "Electrical Equipment"
+     },
+     {
+      "symbol": "NB",
+      "exp_return_21d": null,
+      "p_up_21d": 0.5082,
+      "downside_5pct": null,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": 0.014527845036319764,
+      "coverage": 5,
+      "sector": "Metals & Mining"
+     },
+     {
+      "symbol": "RZLT",
+      "exp_return_21d": null,
+      "p_up_21d": 0.5082,
+      "downside_5pct": null,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": 0.015151515151515138,
+      "coverage": 9,
+      "sector": "Biotechnology"
+     },
+     {
+      "symbol": "MU",
+      "exp_return_21d": null,
+      "p_up_21d": 0.5082,
+      "downside_5pct": null,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": 0.027731921188602904,
+      "coverage": 44,
+      "sector": "Semiconductors"
+     },
+     {
+      "symbol": "ABAT",
+      "exp_return_21d": null,
+      "p_up_21d": 0.5082,
+      "downside_5pct": null,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": 0.05058365758754868,
+      "coverage": 2,
+      "sector": "Metals & Mining"
+     }
+    ]
+   },
+   "2026-09-01": {
+    "n_claims": 11,
+    "n_graded": 11,
+    "mean_realized_1d": -0.03968142231942058,
+    "median_realized_1d": -0.040740740740740855,
+    "universe_ew_1d": -0.012000911585623978,
+    "hit_rate": 0.0,
+    "rows": [
+     {
+      "symbol": "LPTH",
+      "exp_return_21d": 0.00246,
+      "p_up_21d": 0.5082,
+      "downside_5pct": -0.61808,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.05864811133200798,
+      "coverage": 5,
+      "sector": "Electrical Equipment"
+     },
+     {
+      "symbol": "ORCL",
+      "exp_return_21d": 0.00191,
+      "p_up_21d": 0.5082,
+      "downside_5pct": -0.19131,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.05230686695278974,
+      "coverage": 42,
+      "sector": "Technology"
+     },
+     {
+      "symbol": "ALMU",
+      "exp_return_21d": 0.00246,
+      "p_up_21d": 0.5082,
+      "downside_5pct": -0.38517,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.04885496183206095,
+      "coverage": 2,
+      "sector": "Semiconductors"
+     },
+     {
+      "symbol": "NB",
+      "exp_return_21d": 0.00246,
+      "p_up_21d": 0.5082,
+      "downside_5pct": -0.40878,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.04534606205250602,
+      "coverage": 5,
+      "sector": "Metals & Mining"
+     },
+     {
+      "symbol": "FPS",
+      "exp_return_21d": 0.00246,
+      "p_up_21d": 0.5082,
+      "downside_5pct": -0.25563,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.04158480681073995,
+      "coverage": 10,
+      "sector": "Electrical Equipment"
+     },
+     {
+      "symbol": "ABAT",
+      "exp_return_21d": 0.00246,
+      "p_up_21d": 0.5082,
+      "downside_5pct": -0.35237,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.040740740740740855,
+      "coverage": 2,
+      "sector": "Metals & Mining"
+     },
+     {
+      "symbol": "RZLT",
+      "exp_return_21d": 0.00234,
+      "p_up_21d": 0.5082,
+      "downside_5pct": -0.23433,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.04051172707889139,
+      "coverage": 9,
+      "sector": "Biotechnology"
+     },
+     {
+      "symbol": "LAES",
+      "exp_return_21d": 0.00246,
+      "p_up_21d": 0.5082,
+      "downside_5pct": -0.28148,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.04016064257028118,
+      "coverage": 2,
+      "sector": "Semiconductors"
+     },
+     {
+      "symbol": "AVAV",
+      "exp_return_21d": 0.00246,
+      "p_up_21d": 0.5082,
+      "downside_5pct": -0.30896,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.028176609369733763,
+      "coverage": 19,
+      "sector": "Aerospace & Defense"
+     },
+     {
+      "symbol": "MU",
+      "exp_return_21d": 0.00246,
+      "p_up_21d": 0.5082,
+      "downside_5pct": -0.25584,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.026378646751431534,
+      "coverage": 44,
+      "sector": "Semiconductors"
+     },
+     {
+      "symbol": "LOVE",
+      "exp_return_21d": 0.00222,
+      "p_up_21d": 0.5082,
+      "downside_5pct": -0.22298,
+      "rule_variant": "a_b_d_e",
+      "realized_1d": -0.013786470022443043,
+      "coverage": 6,
+      "sector": "Consumer products"
+     }
+    ]
+   }
+  },
+  "book_gross_and_worst_case": {
+   "2026-08-31": {
+    "hack3": {
+     "n": 0,
+     "gross_notional_pct": 0,
+     "worst_case_all_names_hit_5pct_downside_pct": 0
+    },
+    "hack4": {
+     "n": 5,
+     "gross_notional_pct": 50.0,
+     "worst_case_all_names_hit_5pct_downside_pct": -0.0
+    },
+    "hack6": {
+     "n": 0,
+     "gross_notional_pct": 0,
+     "worst_case_all_names_hit_5pct_downside_pct": 0
+    }
+   },
+   "2026-09-01": {
+    "hack3": {
+     "n": 9,
+     "gross_notional_pct": 74.7,
+     "worst_case_all_names_hit_5pct_downside_pct": -17.76
+    },
+    "hack4": {
+     "n": 5,
+     "gross_notional_pct": 50.0,
+     "worst_case_all_names_hit_5pct_downside_pct": -18.03
+    },
+    "hack6": {
+     "n": 0,
+     "gross_notional_pct": 0,
+     "worst_case_all_names_hit_5pct_downside_pct": 0
+    }
+   },
+   "2026-09-02": {
+    "hack3": {
+     "n": 10,
+     "gross_notional_pct": 83.0,
+     "worst_case_all_names_hit_5pct_downside_pct": -14.16
+    },
+    "hack4": {
+     "n": 5,
+     "gross_notional_pct": 50.0,
+     "worst_case_all_names_hit_5pct_downside_pct": -14.98
+    },
+    "hack6": {
+     "n": 15,
+     "gross_notional_pct": 90.0,
+     "worst_case_all_names_hit_5pct_downside_pct": -13.23
+    }
+   }
+  },
+  "expectation_coverage": {
+   "2026-08-31": {
+    "hack3": {
+     "ranking": "risk_adjusted_ratio",
+     "rank_distinct_values": 0,
+     "n_holdings": 0,
+     "holdings_with_NO_exp_return": 0
+    },
+    "hack4": {
+     "ranking": "upside_x_consensus",
+     "rank_distinct_values": 33,
+     "n_holdings": 5,
+     "holdings_with_NO_exp_return": 5
+    },
+    "hack6": {
+     "ranking": "upside_downside_ratio",
+     "rank_distinct_values": 0,
+     "n_holdings": 0,
+     "holdings_with_NO_exp_return": 0
+    }
+   },
+   "2026-09-01": {
+    "hack3": {
+     "ranking": "risk_adjusted_ratio",
+     "rank_distinct_values": 17,
+     "n_holdings": 9,
+     "holdings_with_NO_exp_return": 0
+    },
+    "hack4": {
+     "ranking": "upside_x_consensus",
+     "rank_distinct_values": 12,
+     "n_holdings": 5,
+     "holdings_with_NO_exp_return": 0
+    },
+    "hack6": {
+     "ranking": "upside_downside_ratio",
+     "rank_distinct_values": 0,
+     "n_holdings": 0,
+     "holdings_with_NO_exp_return": 0
+    }
+   },
+   "2026-09-02": {
+    "hack3": {
+     "ranking": "risk_adjusted_ratio",
+     "rank_distinct_values": 414,
+     "n_holdings": 10,
+     "holdings_with_NO_exp_return": 0
+    },
+    "hack4": {
+     "ranking": "upside_x_consensus",
+     "rank_distinct_values": 31,
+     "n_holdings": 5,
+     "holdings_with_NO_exp_return": 0
+    },
+    "hack6": {
+     "ranking": "upside_downside_ratio",
+     "rank_distinct_values": 185,
+     "n_holdings": 15,
+     "holdings_with_NO_exp_return": 0
+    }
+   }
+  },
+  "decomposition": {
+   "2026-08-31": {
+    "spy_return": -0.00299,
+    "names": 29,
+    "mean_market_share_of_move": 0.461,
+    "beta_market_mean": 1.609,
+    "beta_market_median": 1.404,
+    "beta_market_max": 4.02,
+    "n_beta_over_2": 6,
+    "n": 29,
+    "worst": [
+     {
+      "symbol": "BUR",
+      "return": -0.04817,
+      "market_component": -0.01101,
+      "sector_component": -0.00643,
+      "company_component": -0.03072,
+      "beta_market": 3.684,
+      "company_share_of_move": 0.638
+     },
+     {
+      "symbol": "OFIX",
+      "return": -0.03196,
+      "market_component": -0.00403,
+      "sector_component": -0.00062,
+      "company_component": -0.02731,
+      "beta_market": 1.348,
+      "company_share_of_move": 0.855
+     },
+     {
+      "symbol": "MAZE",
+      "return": -0.03171,
+      "market_component": -0.00319,
+      "sector_component": -0.00024,
+      "company_component": -0.02828,
+      "beta_market": 1.067,
+      "company_share_of_move": 0.892
+     },
+     {
+      "symbol": "RZLV",
+      "return": -0.02694,
+      "market_component": -0.00485,
+      "sector_component": 0.00625,
+      "company_component": -0.02834,
+      "beta_market": 1.621,
+      "company_share_of_move": 1.052
+     }
+    ]
+   },
+   "2026-09-01": {
+    "spy_return": -0.00687,
+    "names": 13,
+    "mean_market_share_of_move": 1.49,
+    "beta_market_mean": 2.095,
+    "beta_market_median": 1.747,
+    "beta_market_max": 4.266,
+    "n_beta_over_2": 6,
+    "n": 13,
+    "worst": [
+     {
+      "symbol": "RZLV",
+      "return": -0.17301,
+      "market_component": -0.01126,
+      "sector_component": -0.0071,
+      "company_component": -0.15465,
+      "beta_market": 1.638,
+      "company_share_of_move": 0.894
+     },
+     {
+      "symbol": "ASPI",
+      "return": -0.0597,
+      "market_component": -0.02931,
+      "sector_component": -0.0018,
+      "company_component": -0.02859,
+      "beta_market": 4.266,
+      "company_share_of_move": 0.479
+     },
+     {
+      "symbol": "ORCL",
+      "return": -0.05231,
+      "market_component": -0.01043,
+      "sector_component": -0.00743,
+      "company_component": -0.03445,
+      "beta_market": 1.517,
+      "company_share_of_move": 0.659
+     },
+     {
+      "symbol": "ALMU",
+      "return": -0.04885,
+      "market_component": -0.01023,
+      "sector_component": -0.01599,
+      "company_component": -0.02263,
+      "beta_market": 1.489,
+      "company_share_of_move": 0.463
+     }
+    ]
+   }
+  },
+  "headline": {
+   "2026-08-31_session": {
+    "hack4_realized_ew": 0.007832718744383248,
+    "universe_ew": -0.0051034104653892255,
+    "excess": 0.012936129209772475,
+    "verdict": "hack4 BEAT the universe by +1.29pp on its first graded session"
+   },
+   "2026-09-01_session": {
+    "hack4_realized_ew": -0.06962255756368527,
+    "hack3_realized_ew": -0.015469354700553982,
+    "universe_ew": -0.012000911585623978,
+    "hack4_excess": -0.05762164597806129,
+    "hack3_excess": -0.0034684431149300046,
+    "verdict": "hack4 LOST 5.76pp to the universe, hit rate 0/5; RZLV -17.30% carried it"
+   },
+   "calibration": "Sealed exp_return is a 21-SESSION expectation of roughly +0.17% to +1.7%; pro-rata that is +0.008% to +0.08% per session. Realised single-session moves were 40x to 200x that magnitude in both directions. The books' EXPECTATIONS are not wrong in sign so much as they are not on the same SCALE as one day's noise -- a 21-day claim cannot be graded on a 1-day outcome, and the fact that our only forward evidence is 1-day outcomes is itself the finding."
+  },
+  "selector_disagreement": {
+   "2026-08-30": {},
+   "2026-08-31": {
+    "hack3": {
+     "n_held": 0,
+     "n_held_that_the_rule_DECLINED": 0,
+     "n_held_that_the_rule_CLAIMED": 0,
+     "declined_names": [],
+     "claimed_names": [],
+     "declined_mean_realized_1d": null,
+     "claimed_mean_realized_1d": null,
+     "failed_clause_histogram": {},
+     "rows": []
+    },
+    "hack4": {
+     "n_held": 5,
+     "n_held_that_the_rule_DECLINED": 1,
+     "n_held_that_the_rule_CLAIMED": 4,
+     "declined_names": [
+      "RZLV"
+     ],
+     "claimed_names": [
+      "NB",
+      "LAES",
+      "ABAT",
+      "ALMU"
+     ],
+     "declined_mean_realized_1d": -0.026936026936026924,
+     "claimed_mean_realized_1d": 0.016524905164485792,
+     "failed_clause_histogram": {
+      "b_rating": 1,
+      "e_drawdown": 1
+     },
+     "rows": [
+      {
+       "symbol": "RZLV",
+       "notional": 0.1,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "b_rating",
+        "e_drawdown"
+       ],
+       "rule_rank": 25,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": -0.026936026936026924
+      },
+      {
+       "symbol": "NB",
+       "notional": 0.1,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 1,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": 0.014527845036319764
+      },
+      {
+       "symbol": "LAES",
+       "notional": 0.1,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 2,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": 0.0040322580645162365
+      },
+      {
+       "symbol": "ABAT",
+       "notional": 0.1,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 3,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": 0.05058365758754868
+      },
+      {
+       "symbol": "ALMU",
+       "notional": 0.1,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 4,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": -0.003044140030441511
+      }
+     ]
+    },
+    "hack6": {
+     "n_held": 0,
+     "n_held_that_the_rule_DECLINED": 0,
+     "n_held_that_the_rule_CLAIMED": 0,
+     "declined_names": [],
+     "claimed_names": [],
+     "declined_mean_realized_1d": null,
+     "claimed_mean_realized_1d": null,
+     "failed_clause_histogram": {},
+     "rows": []
+    }
+   },
+   "2026-09-01": {
+    "hack3": {
+     "n_held": 9,
+     "n_held_that_the_rule_DECLINED": 6,
+     "n_held_that_the_rule_CLAIMED": 3,
+     "declined_names": [
+      "IVA",
+      "ELDN",
+      "TNXP",
+      "LENZ",
+      "ASPI",
+      "BIOA"
+     ],
+     "claimed_names": [
+      "ORCL",
+      "LOVE",
+      "LAES"
+     ],
+     "declined_mean_realized_1d": -0.005495035459911979,
+     "claimed_mean_realized_1d": -0.03541799318183799,
+     "failed_clause_histogram": {
+      "e_drawdown": 2,
+      "d_catalyst": 5
+     },
+     "rows": [
+      {
+       "symbol": "IVA",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "e_drawdown"
+       ],
+       "rule_rank": 124,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": 0.019230769230769162
+      },
+      {
+       "symbol": "ELDN",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 197,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": 0.010067114093959662
+      },
+      {
+       "symbol": "TNXP",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst",
+        "e_drawdown"
+       ],
+       "rule_rank": 226,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": -0.008510638297872242
+      },
+      {
+       "symbol": "LENZ",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 328,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": 0.0038387715930903177
+      },
+      {
+       "symbol": "ASPI",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 377,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": -0.05970149253731338
+      },
+      {
+       "symbol": "BIOA",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 427,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": 0.00210526315789461
+      },
+      {
+       "symbol": "ORCL",
+       "notional": 0.083,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 1,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": -0.05230686695278974
+      },
+      {
+       "symbol": "LOVE",
+       "notional": 0.083,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 2,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": -0.013786470022443043
+      },
+      {
+       "symbol": "LAES",
+       "notional": 0.083,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 6,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": -0.04016064257028118
+      }
+     ]
+    },
+    "hack4": {
+     "n_held": 5,
+     "n_held_that_the_rule_DECLINED": 1,
+     "n_held_that_the_rule_CLAIMED": 4,
+     "declined_names": [
+      "RZLV"
+     ],
+     "claimed_names": [
+      "NB",
+      "LAES",
+      "ALMU",
+      "ABAT"
+     ],
+     "declined_mean_realized_1d": -0.17301038062283736,
+     "claimed_mean_realized_1d": -0.04377560179889725,
+     "failed_clause_histogram": {
+      "b_rating": 1,
+      "e_drawdown": 1
+     },
+     "rows": [
+      {
+       "symbol": "RZLV",
+       "notional": 0.1,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "b_rating",
+        "e_drawdown"
+       ],
+       "rule_rank": 576,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": -0.17301038062283736
+      },
+      {
+       "symbol": "NB",
+       "notional": 0.1,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 10,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": -0.04534606205250602
+      },
+      {
+       "symbol": "LAES",
+       "notional": 0.1,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 6,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": -0.04016064257028118
+      },
+      {
+       "symbol": "ALMU",
+       "notional": 0.1,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 9,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": -0.04885496183206095
+      },
+      {
+       "symbol": "ABAT",
+       "notional": 0.1,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 8,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": -0.040740740740740855
+      }
+     ]
+    },
+    "hack6": {
+     "n_held": 0,
+     "n_held_that_the_rule_DECLINED": 0,
+     "n_held_that_the_rule_CLAIMED": 0,
+     "declined_names": [],
+     "claimed_names": [],
+     "declined_mean_realized_1d": null,
+     "claimed_mean_realized_1d": null,
+     "failed_clause_histogram": {},
+     "rows": []
+    }
+   },
+   "2026-09-02": {
+    "hack3": {
+     "n_held": 10,
+     "n_held_that_the_rule_DECLINED": 10,
+     "n_held_that_the_rule_CLAIMED": 0,
+     "declined_names": [
+      "IVA",
+      "TNXP",
+      "IMRX",
+      "LENZ",
+      "ASPI",
+      "DAKT",
+      "INVA",
+      "CRUS",
+      "VST",
+      "NPKI"
+     ],
+     "claimed_names": [],
+     "declined_mean_realized_1d": null,
+     "claimed_mean_realized_1d": null,
+     "failed_clause_histogram": {
+      "e_drawdown": 5,
+      "d_catalyst": 7,
+      "b_rating": 2
+     },
+     "rows": [
+      {
+       "symbol": "IVA",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "e_drawdown"
+       ],
+       "rule_rank": 122,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "TNXP",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst",
+        "e_drawdown"
+       ],
+       "rule_rank": 299,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "IMRX",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "e_drawdown"
+       ],
+       "rule_rank": 318,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "LENZ",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 424,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "ASPI",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 499,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "DAKT",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "e_drawdown"
+       ],
+       "rule_rank": 29,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "INVA",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "b_rating",
+        "d_catalyst",
+        "e_drawdown"
+       ],
+       "rule_rank": 34,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "CRUS",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "b_rating",
+        "d_catalyst"
+       ],
+       "rule_rank": 48,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "VST",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 61,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "NPKI",
+       "notional": 0.083,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 75,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      }
+     ]
+    },
+    "hack4": {
+     "n_held": 5,
+     "n_held_that_the_rule_DECLINED": 0,
+     "n_held_that_the_rule_CLAIMED": 5,
+     "declined_names": [],
+     "claimed_names": [
+      "NB",
+      "LAES",
+      "ALMU",
+      "ABAT",
+      "FPS"
+     ],
+     "declined_mean_realized_1d": null,
+     "claimed_mean_realized_1d": null,
+     "failed_clause_histogram": {},
+     "rows": [
+      {
+       "symbol": "NB",
+       "notional": 0.1,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 8,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": null
+      },
+      {
+       "symbol": "LAES",
+       "notional": 0.1,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 6,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": null
+      },
+      {
+       "symbol": "ALMU",
+       "notional": 0.1,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 10,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": null
+      },
+      {
+       "symbol": "ABAT",
+       "notional": 0.1,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 9,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": null
+      },
+      {
+       "symbol": "FPS",
+       "notional": 0.1,
+       "murat_rule_claims": true,
+       "failed_clauses": [],
+       "rule_rank": 2,
+       "rule_rank_basis_is_declined": false,
+       "realized_1d": null
+      }
+     ]
+    },
+    "hack6": {
+     "n_held": 15,
+     "n_held_that_the_rule_DECLINED": 15,
+     "n_held_that_the_rule_CLAIMED": 0,
+     "declined_names": [
+      "MAZE",
+      "NKTR",
+      "RARE",
+      "NAMS",
+      "AMSC",
+      "RUSHA",
+      "INVA",
+      "MLYS",
+      "BUR",
+      "TREE",
+      "HLMN",
+      "HDB",
+      "GRAB",
+      "CALX",
+      "VST"
+     ],
+     "claimed_names": [],
+     "declined_mean_realized_1d": null,
+     "claimed_mean_realized_1d": null,
+     "failed_clause_histogram": {
+      "d_catalyst": 12,
+      "e_drawdown": 6,
+      "b_rating": 3,
+      "a_target_ratio": 1
+     },
+     "rows": [
+      {
+       "symbol": "MAZE",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 254,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "NKTR",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst",
+        "e_drawdown"
+       ],
+       "rule_rank": 117,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "RARE",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 178,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "NAMS",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 160,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "AMSC",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [],
+       "rule_rank": 215,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "RUSHA",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst",
+        "e_drawdown"
+       ],
+       "rule_rank": 82,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "INVA",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "b_rating",
+        "d_catalyst",
+        "e_drawdown"
+       ],
+       "rule_rank": 34,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "MLYS",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 126,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "BUR",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "e_drawdown"
+       ],
+       "rule_rank": 224,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "TREE",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 218,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "HLMN",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "b_rating",
+        "d_catalyst"
+       ],
+       "rule_rank": 79,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "HDB",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "a_target_ratio"
+       ],
+       "rule_rank": 27,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "GRAB",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst",
+        "e_drawdown"
+       ],
+       "rule_rank": 109,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "CALX",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "b_rating",
+        "d_catalyst",
+        "e_drawdown"
+       ],
+       "rule_rank": 99,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      },
+      {
+       "symbol": "VST",
+       "notional": 0.06,
+       "murat_rule_claims": false,
+       "failed_clauses": [
+        "d_catalyst"
+       ],
+       "rule_rank": 61,
+       "rule_rank_basis_is_declined": true,
+       "realized_1d": null
+      }
+     ]
+    }
+   }
+  }
+ },
+ "section_3_counterfactual_replays": {
+  "3a_band_prior_v2_from_the_first_tracker_day": {
+   "question": "If BAND_PRIOR v2 (EXP-RETURN-XS-1) had been live from the first tracker day instead of the 2026-09-02 seal, how would the admitted set have differed each day?",
+   "method": "Replay of the BAND_PRIOR rules directly over each tracker day file. The tracker begins 2026-08-30 (NOT 2026-08-27 as the brief assumed) so the counterfactual can only run over 4 day-files / 2 tradable sessions. Clause inputs are re-derived from the day file (target_ratio = mean_target/close, rating = rec_counts weighted 5..1, drawdown = close/high_60d-1, catalyst = days_to_catalyst) and will not reproduce the seal exactly, which uses its own feature builder; treat the DELTA between v1 and v2 as the result, not the absolute counts.",
+   "per_day": {
+    "2026-08-30": {
+     "n_universe": 3059,
+     "n_rule_fires": 58,
+     "v1": {
+      "version": "v1 UPSIDE-BAND-DECON-1",
+      "band_histogram": {
+       "outside_every_measured_band": 2914,
+       "ratio_unreadable": 101,
+       "ratio 3..5.0": 35,
+       "ratio 5..inf": 9
+      },
+      "universe_positive_prior": 35,
+      "universe_negative_prior": 9,
+      "universe_silent": 3015,
+      "rule_fires_and_positive_prior": 5,
+      "rule_fires_and_negative_prior": 0,
+      "rule_fires_and_prior_silent": 53
+     },
+     "v2": {
+      "version": "v2 EXP-RETURN-XS-1",
+      "band_histogram": {
+       "ratio 0..1.5": 2313,
+       "ratio 1.5..3.0": 482,
+       "ratio_unreadable": 101,
+       "ratio 0..1.5 NOT_MEASURED_cov_lt2": 93,
+       "ratio 3..5.0": 34,
+       "ratio 1.5..3.0 NOT_MEASURED_cov_lt2": 25,
+       "ratio 5..inf": 9,
+       "ratio 0..1.5 UNINFORMATIVE_sub2": 1,
+       "ratio 3..5.0 NOT_MEASURED_cov_lt2": 1
+      },
+      "universe_positive_prior": 2829,
+      "universe_negative_prior": 9,
+      "universe_silent": 221,
+      "rule_fires_and_positive_prior": 55,
+      "rule_fires_and_negative_prior": 0,
+      "rule_fires_and_prior_silent": 3
+     },
+     "delta_admitted_with_a_priced_opinion": 2794,
+     "n_newly_priced_by_v2": 2795,
+     "n_newly_silent_under_v2": 1,
+     "n_sign_flipped": 0,
+     "n_rule_firing_names_newly_priced_by_v2": 50,
+     "rule_firing_names_newly_priced_by_v2_sample": [
+      "MU",
+      "SKHY",
+      "ORCL",
+      "CLS",
+      "FPS",
+      "USAR",
+      "AVAV",
+      "GLXY",
+      "QNT",
+      "FRVO",
+      "HIVE",
+      "MANE",
+      "MAIR",
+      "MWH",
+      "BRUN",
+      "GGAL",
+      "CRML",
+      "LAES",
+      "CDNL",
+      "AVEX",
+      "AMSC",
+      "EROC",
+      "HAWK",
+      "TRAX",
+      "DRUG",
+      "LFTO",
+      "CLYM",
+      "BBAR",
+      "GENB",
+      "ALMU",
+      "KLRA",
+      "ABAT",
+      "MRLN",
+      "MNSO",
+      "RZLT",
+      "ADUR",
+      "KARD",
+      "SLN",
+      "IA",
+      "SLI"
+     ],
+     "newly_silent_sample": [
+      "KULR"
+     ]
+    },
+    "2026-08-31": {
+     "n_universe": 3059,
+     "n_rule_fires": 58,
+     "v1": {
+      "version": "v1 UPSIDE-BAND-DECON-1",
+      "band_histogram": {
+       "outside_every_measured_band": 2911,
+       "ratio_unreadable": 104,
+       "ratio 3..5.0": 35,
+       "ratio 5..inf": 9
+      },
+      "universe_positive_prior": 35,
+      "universe_negative_prior": 9,
+      "universe_silent": 3015,
+      "rule_fires_and_positive_prior": 5,
+      "rule_fires_and_negative_prior": 0,
+      "rule_fires_and_prior_silent": 53
+     },
+     "v2": {
+      "version": "v2 EXP-RETURN-XS-1",
+      "band_histogram": {
+       "ratio 0..1.5": 2310,
+       "ratio 1.5..3.0": 482,
+       "ratio_unreadable": 104,
+       "ratio 0..1.5 NOT_MEASURED_cov_lt2": 93,
+       "ratio 3..5.0": 34,
+       "ratio 1.5..3.0 NOT_MEASURED_cov_lt2": 25,
+       "ratio 5..inf": 9,
+       "ratio 3..5.0 NOT_MEASURED_cov_lt2": 1,
+       "ratio 0..1.5 UNINFORMATIVE_sub2": 1
+      },
+      "universe_positive_prior": 2826,
+      "universe_negative_prior": 9,
+      "universe_silent": 224,
+      "rule_fires_and_positive_prior": 55,
+      "rule_fires_and_negative_prior": 0,
+      "rule_fires_and_prior_silent": 3
+     },
+     "delta_admitted_with_a_priced_opinion": 2791,
+     "n_newly_priced_by_v2": 2792,
+     "n_newly_silent_under_v2": 1,
+     "n_sign_flipped": 0,
+     "n_rule_firing_names_newly_priced_by_v2": 50,
+     "rule_firing_names_newly_priced_by_v2_sample": [
+      "MU",
+      "SKHY",
+      "ORCL",
+      "CLS",
+      "FPS",
+      "USAR",
+      "AVAV",
+      "GLXY",
+      "QNT",
+      "HIVE",
+      "MAIR",
+      "MWH",
+      "GGAL",
+      "HAWK",
+      "TRAX",
+      "BBAR",
+      "ABAT",
+      "MRLN",
+      "RZLT",
+      "SLN",
+      "SRZN",
+      "SUJA",
+      "GLAS",
+      "LAES",
+      "EROC",
+      "CLYM",
+      "KLRA",
+      "KARD",
+      "SLI",
+      "ELVA",
+      "DPRO",
+      "PICS",
+      "FRVO",
+      "MANE",
+      "CRML",
+      "AVEX",
+      "DRUG",
+      "LFTO",
+      "GENB",
+      "ALMU"
+     ],
+     "newly_silent_sample": [
+      "KULR"
+     ]
+    },
+    "2026-09-01": {
+     "n_universe": 3059,
+     "n_rule_fires": 61,
+     "v1": {
+      "version": "v1 UPSIDE-BAND-DECON-1",
+      "band_histogram": {
+       "outside_every_measured_band": 2914,
+       "ratio_unreadable": 101,
+       "ratio 3..5.0": 35,
+       "ratio 5..inf": 7,
+       "ratio 5..inf UNINFORMATIVE_sub2": 2
+      },
+      "universe_positive_prior": 35,
+      "universe_negative_prior": 7,
+      "universe_silent": 3017,
+      "rule_fires_and_positive_prior": 5,
+      "rule_fires_and_negative_prior": 0,
+      "rule_fires_and_prior_silent": 56
+     },
+     "v2": {
+      "version": "v2 EXP-RETURN-XS-1",
+      "band_histogram": {
+       "ratio 0..1.5": 2304,
+       "ratio 1.5..3.0": 492,
+       "ratio_unreadable": 101,
+       "ratio 0..1.5 NOT_MEASURED_cov_lt2": 92,
+       "ratio 3..5.0": 34,
+       "ratio 1.5..3.0 NOT_MEASURED_cov_lt2": 26,
+       "ratio 5..inf": 7,
+       "ratio 5..inf UNINFORMATIVE_sub2": 2,
+       "ratio 3..5.0 NOT_MEASURED_cov_lt2": 1
+      },
+      "universe_positive_prior": 2830,
+      "universe_negative_prior": 7,
+      "universe_silent": 222,
+      "rule_fires_and_positive_prior": 58,
+      "rule_fires_and_negative_prior": 0,
+      "rule_fires_and_prior_silent": 3
+     },
+     "delta_admitted_with_a_priced_opinion": 2795,
+     "n_newly_priced_by_v2": 2796,
+     "n_newly_silent_under_v2": 1,
+     "n_sign_flipped": 0,
+     "n_rule_firing_names_newly_priced_by_v2": 53,
+     "rule_firing_names_newly_priced_by_v2_sample": [
+      "MU",
+      "SKHY",
+      "ORCL",
+      "CLS",
+      "FPS",
+      "USAR",
+      "AVAV",
+      "GLXY",
+      "RBA",
+      "QNT",
+      "FRVO",
+      "HIVE",
+      "GDS",
+      "MANE",
+      "MAIR",
+      "MWH",
+      "BRUN",
+      "GGAL",
+      "CRML",
+      "LAES",
+      "LPTH",
+      "CDNL",
+      "AVEX",
+      "AMSC",
+      "EROC",
+      "HAWK",
+      "TRAX",
+      "DRUG",
+      "LFTO",
+      "CLYM",
+      "NB",
+      "BBAR",
+      "GENB",
+      "ALMU",
+      "KLRA",
+      "ABAT",
+      "GMRS",
+      "MNSO",
+      "RZLT",
+      "ADUR"
+     ],
+     "newly_silent_sample": [
+      "KULR"
+     ]
+    },
+    "2026-09-02": {
+     "n_universe": 3056,
+     "n_rule_fires": 59,
+     "v1": {
+      "version": "v1 UPSIDE-BAND-DECON-1",
+      "band_histogram": {
+       "outside_every_measured_band": 2907,
+       "ratio_unreadable": 101,
+       "ratio 3..5.0": 39,
+       "ratio 5..inf": 7,
+       "ratio 3..5.0 UNINFORMATIVE_sub2": 2
+      },
+      "universe_positive_prior": 39,
+      "universe_negative_prior": 7,
+      "universe_silent": 3010,
+      "rule_fires_and_positive_prior": 6,
+      "rule_fires_and_negative_prior": 0,
+      "rule_fires_and_prior_silent": 53
+     },
+     "v2": {
+      "version": "v2 EXP-RETURN-XS-1",
+      "band_histogram": {
+       "ratio 0..1.5": 2269,
+       "ratio 1.5..3.0": 520,
+       "ratio_unreadable": 101,
+       "ratio 0..1.5 NOT_MEASURED_cov_lt2": 92,
+       "ratio 3..5.0": 38,
+       "ratio 1.5..3.0 NOT_MEASURED_cov_lt2": 26,
+       "ratio 5..inf": 7,
+       "ratio 3..5.0 UNINFORMATIVE_sub2": 2,
+       "ratio 3..5.0 NOT_MEASURED_cov_lt2": 1
+      },
+      "universe_positive_prior": 2827,
+      "universe_negative_prior": 7,
+      "universe_silent": 222,
+      "rule_fires_and_positive_prior": 56,
+      "rule_fires_and_negative_prior": 0,
+      "rule_fires_and_prior_silent": 3
+     },
+     "delta_admitted_with_a_priced_opinion": 2788,
+     "n_newly_priced_by_v2": 2789,
+     "n_newly_silent_under_v2": 1,
+     "n_sign_flipped": 0,
+     "n_rule_firing_names_newly_priced_by_v2": 50,
+     "rule_firing_names_newly_priced_by_v2_sample": [
+      "MU",
+      "SKHY",
+      "CLS",
+      "FPS",
+      "USAR",
+      "Q",
+      "AVAV",
+      "GLXY",
+      "RBA",
+      "QNT",
+      "FRVO",
+      "MANE",
+      "HIVE",
+      "GDS",
+      "MAIR",
+      "MWH",
+      "BRUN",
+      "GGAL",
+      "CDNL",
+      "LAES",
+      "LPTH",
+      "AVEX",
+      "AMSC",
+      "EROC",
+      "HAWK",
+      "TRAX",
+      "CSQR",
+      "CLYM",
+      "DRUG",
+      "LFTO",
+      "GENB",
+      "BBAR",
+      "KLRA",
+      "ALMU",
+      "ABAT",
+      "MNSO",
+      "ADUR",
+      "RZLT",
+      "SLN",
+      "KARD"
+     ],
+     "newly_silent_sample": [
+      "KULR"
+     ]
+    }
+   },
+   "overnight_stability": {
+    "v1": {
+     "2026-08-30->2026-08-31": {
+      "n_a": 5,
+      "n_b": 5,
+      "kept": 5,
+      "dropped": 0,
+      "added": 0,
+      "turnover_pct": 0.0
+     },
+     "2026-08-31->2026-09-01": {
+      "n_a": 5,
+      "n_b": 5,
+      "kept": 4,
+      "dropped": 1,
+      "added": 1,
+      "turnover_pct": 33.33333333333333
+     },
+     "2026-09-01->2026-09-02": {
+      "n_a": 5,
+      "n_b": 6,
+      "kept": 5,
+      "dropped": 0,
+      "added": 1,
+      "turnover_pct": 16.666666666666664
+     }
+    },
+    "v2": {
+     "2026-08-30->2026-08-31": {
+      "n_a": 55,
+      "n_b": 55,
+      "kept": 55,
+      "dropped": 0,
+      "added": 0,
+      "turnover_pct": 0.0
+     },
+     "2026-08-31->2026-09-01": {
+      "n_a": 55,
+      "n_b": 58,
+      "kept": 54,
+      "dropped": 1,
+      "added": 4,
+      "turnover_pct": 8.47457627118644
+     },
+     "2026-09-01->2026-09-02": {
+      "n_a": 58,
+      "n_b": 56,
+      "kept": 53,
+      "dropped": 5,
+      "added": 3,
+      "turnover_pct": 13.114754098360656
+     }
+    }
+   },
+   "held_names_under_both_priors": {
+    "IVA": {
+     "target_ratio": 3.180275641025641,
+     "close": 4.68,
+     "coverage": 13,
+     "v1": [
+      "ratio 3..5.0",
+      0.017249999999999998
+     ],
+     "v2": [
+      "ratio 3..5.0",
+      0.013791666666666667
+     ],
+     "median_dollar_volume": 3612569.0
+    },
+    "ELDN": {
+     "target_ratio": 3.0201342281879193,
+     "close": 2.98,
+     "coverage": 5,
+     "v1": [
+      "ratio 3..5.0",
+      0.017249999999999998
+     ],
+     "v2": [
+      "ratio 3..5.0",
+      0.013791666666666667
+     ],
+     "median_dollar_volume": 3700841.0
+    },
+    "TNXP": {
+     "target_ratio": 3.00709219858156,
+     "close": 14.1,
+     "coverage": 5,
+     "v1": [
+      "ratio 3..5.0",
+      0.017249999999999998
+     ],
+     "v2": [
+      "ratio 3..5.0",
+      0.013791666666666667
+     ],
+     "median_dollar_volume": 5081687.0
+    },
+    "LENZ": {
+     "target_ratio": 4.606525911708253,
+     "close": 5.21,
+     "coverage": 7,
+     "v1": [
+      "ratio 3..5.0",
+      0.017249999999999998
+     ],
+     "v2": [
+      "ratio 3..5.0",
+      0.013791666666666667
+     ],
+     "median_dollar_volume": 4223855.0
+    },
+    "ASPI": {
+     "target_ratio": 3.2338308457711444,
+     "close": 4.02,
+     "coverage": 3,
+     "v1": [
+      "ratio 3..5.0",
+      0.017249999999999998
+     ],
+     "v2": [
+      "ratio 3..5.0",
+      0.013791666666666667
+     ],
+     "median_dollar_volume": 20480640.0
+    },
+    "BIOA": {
+     "target_ratio": 3.75,
+     "close": 9.5,
+     "coverage": 8,
+     "v1": [
+      "ratio 3..5.0",
+      0.017249999999999998
+     ],
+     "v2": [
+      "ratio 3..5.0",
+      0.013791666666666667
+     ],
+     "median_dollar_volume": 10424543.0
+    },
+    "ORCL": {
+     "target_ratio": 1.6370547880901287,
+     "close": 149.12,
+     "coverage": 42,
+     "v1": [
+      "outside_every_measured_band",
+      null
+     ],
+     "v2": [
+      "ratio 1.5..3.0",
+      0.004783333333333333
+     ],
+     "median_dollar_volume": 4947550015.0
+    },
+    "LOVE": {
+     "target_ratio": 1.5496421930105801,
+     "close": 15.595,
+     "coverage": 6,
+     "v1": [
+      "outside_every_measured_band",
+      null
+     ],
+     "v2": [
+      "ratio 1.5..3.0",
+      0.004783333333333333
+     ],
+     "median_dollar_volume": 3340539.0
+    },
+    "LAES": {
+     "target_ratio": 2.3594377510040156,
+     "close": 2.49,
+     "coverage": 2,
+     "v1": [
+      "outside_every_measured_band",
+      null
+     ],
+     "v2": [
+      "ratio 1.5..3.0",
+      0.004783333333333333
+     ],
+     "median_dollar_volume": 39221725.0
+    },
+    "RZLV": {
+     "target_ratio": 3.6332179930795845,
+     "close": 2.89,
+     "coverage": 5,
+     "v1": [
+      "ratio 3..5.0",
+      0.017249999999999998
+     ],
+     "v2": [
+      "ratio 3..5.0",
+      0.013791666666666667
+     ],
+     "median_dollar_volume": 24695319.0
+    },
+    "NB": {
+     "target_ratio": 2.959427207637231,
+     "close": 4.19,
+     "coverage": 5,
+     "v1": [
+      "outside_every_measured_band",
+      null
+     ],
+     "v2": [
+      "ratio 1.5..3.0",
+      0.004783333333333333
+     ],
+     "median_dollar_volume": 14718276.0
+    },
+    "ABAT": {
+     "target_ratio": 2.222222222222222,
+     "close": 2.7,
+     "coverage": 2,
+     "v1": [
+      "outside_every_measured_band",
+      null
+     ],
+     "v2": [
+      "ratio 1.5..3.0",
+      0.004783333333333333
+     ],
+     "median_dollar_volume": 8680030.0
+    },
+    "ALMU": {
+     "target_ratio": 2.3282442748091605,
+     "close": 13.1,
+     "coverage": 2,
+     "v1": [
+      "outside_every_measured_band",
+      null
+     ],
+     "v2": [
+      "ratio 1.5..3.0",
+      0.004783333333333333
+     ],
+     "median_dollar_volume": 9493690.0
+    }
+   },
+   "forward_returns_of_each_admitted_set": {
+    "2026-08-31": {
+     "universe_ew": -0.0051034104653892255,
+     "n_universe_graded": 3059,
+     "v1_UPSIDE_BAND_DECON": {
+      "all": {
+       "n": 5,
+       "ew_return": -0.00932194410501217,
+       "excess_vs_universe_ew": -0.004218533639622944,
+       "median": 0.014527845036319764,
+       "hit_rate": 0.6,
+       "worst": -0.0665188470066519,
+       "best": 0.0237868696479544
+      },
+      "mdv>=3m": {
+       "n": 5,
+       "ew_return": -0.00932194410501217,
+       "excess_vs_universe_ew": -0.004218533639622944,
+       "median": 0.014527845036319764,
+       "hit_rate": 0.6,
+       "worst": -0.0665188470066519,
+       "best": 0.0237868696479544
+      },
+      "mdv>=25m": {
+       "n": 0,
+       "ew_return": null,
+       "excess_vs_universe_ew": null,
+       "median": null,
+       "hit_rate": null,
+       "worst": null,
+       "best": null
+      },
+      "n_selected_before_grading": 5,
+      "names": [
+       "CATX",
+       "HELP",
+       "NB",
+       "TOYO",
+       "XNDU"
+      ]
+     },
+     "v2_EXP_RETURN_XS": {
+      "all": {
+       "n": 55,
+       "ew_return": 0.0010569610202909806,
+       "excess_vs_universe_ew": 0.006160371485680206,
+       "median": 0.002771393808300715,
+       "hit_rate": 0.5636363636363636,
+       "worst": -0.09970958373668914,
+       "best": 0.21388577827547595
+      },
+      "mdv>=3m": {
+       "n": 55,
+       "ew_return": 0.0010569610202909806,
+       "excess_vs_universe_ew": 0.006160371485680206,
+       "median": 0.002771393808300715,
+       "hit_rate": 0.5636363636363636,
+       "worst": -0.09970958373668914,
+       "best": 0.21388577827547595
+      },
+      "mdv>=25m": {
+       "n": 21,
+       "ew_return": 0.008071288052753594,
+       "excess_vs_universe_ew": 0.013174698518142819,
+       "median": 0.0040322580645162365,
+       "hit_rate": 0.7619047619047619,
+       "worst": -0.029288702928870314,
+       "best": 0.059887979319259044
+      },
+      "n_selected_before_grading": 55,
+      "names": [
+       "ABAT",
+       "ADUR",
+       "ALMU",
+       "AMSC",
+       "AVAV",
+       "AVEX",
+       "BBAR",
+       "BGSI",
+       "BRUN",
+       "CATX",
+       "CDNL",
+       "CEPU",
+       "CLS",
+       "CLYM",
+       "CRML",
+       "DPRO",
+       "DRUG",
+       "ELVA",
+       "EROC",
+       "FPS",
+       "FRVO",
+       "GENB",
+       "GGAL",
+       "GLAS",
+       "GLXY",
+       "HAWK",
+       "HELP",
+       "HIVE",
+       "HMH",
+       "IA",
+       "KARD",
+       "KLRA",
+       "LAES",
+       "LFTO",
+       "LOVE",
+       "MAIR",
+       "MANE",
+       "MNSO",
+       "MRLN",
+       "MU",
+       "MWH",
+       "NB",
+       "ORCL",
+       "PICS",
+       "QNT",
+       "RZLT",
+       "SKHY",
+       "SLI",
+       "SLN",
+       "SRZN",
+       "SUJA",
+       "TOYO",
+       "TRAX",
+       "USAR",
+       "XNDU"
+      ]
+     }
+    },
+    "2026-09-01": {
+     "universe_ew": -0.012000911585623978,
+     "n_universe_graded": 3045,
+     "v1_UPSIDE_BAND_DECON": {
+      "all": {
+       "n": 5,
+       "ew_return": -0.03789269637596775,
+       "excess_vs_universe_ew": -0.02589178479034377,
+       "median": -0.01898734177215189,
+       "hit_rate": 0.0,
+       "worst": -0.07713754646840154,
+       "best": -0.0071258907363420665
+      },
+      "mdv>=3m": {
+       "n": 5,
+       "ew_return": -0.03789269637596775,
+       "excess_vs_universe_ew": -0.02589178479034377,
+       "median": -0.01898734177215189,
+       "hit_rate": 0.0,
+       "worst": -0.07713754646840154,
+       "best": -0.0071258907363420665
+      },
+      "mdv>=25m": {
+       "n": 0,
+       "ew_return": null,
+       "excess_vs_universe_ew": null,
+       "median": null,
+       "hit_rate": null,
+       "worst": null,
+       "best": null
+      },
+      "n_selected_before_grading": 5,
+      "names": [
+       "CATX",
+       "HELP",
+       "MRLN",
+       "TOYO",
+       "XNDU"
+      ]
+     },
+     "v2_EXP_RETURN_XS": {
+      "all": {
+       "n": 58,
+       "ew_return": -0.012593233419313883,
+       "excess_vs_universe_ew": -0.0005923218336899051,
+       "median": -0.02520534290271126,
+       "hit_rate": 0.22413793103448276,
+       "worst": -0.07713754646840154,
+       "best": 0.28413524057217154
+      },
+      "mdv>=3m": {
+       "n": 58,
+       "ew_return": -0.012593233419313883,
+       "excess_vs_universe_ew": -0.0005923218336899051,
+       "median": -0.02520534290271126,
+       "hit_rate": 0.22413793103448276,
+       "worst": -0.07713754646840154,
+       "best": 0.28413524057217154
+      },
+      "mdv>=25m": {
+       "n": 24,
+       "ew_return": -0.01771782898694309,
+       "excess_vs_universe_ew": -0.0057169174013191135,
+       "median": -0.02858673728674771,
+       "hit_rate": 0.08333333333333333,
+       "worst": -0.05864811133200798,
+       "best": 0.28413524057217154
+      },
+      "n_selected_before_grading": 58,
+      "names": [
+       "ABAT",
+       "ADUR",
+       "ALMU",
+       "AMSC",
+       "AVAV",
+       "AVEX",
+       "BBAR",
+       "BGSI",
+       "BRUN",
+       "CATX",
+       "CDNL",
+       "CEPU",
+       "CLS",
+       "CLYM",
+       "CRML",
+       "DPRO",
+       "DRUG",
+       "ELVA",
+       "EROC",
+       "FPS",
+       "FRVO",
+       "GDS",
+       "GENB",
+       "GGAL",
+       "GLAS",
+       "GLXY",
+       "GMRS",
+       "HAWK",
+       "HELP",
+       "HIVE",
+       "IA",
+       "KARD",
+       "KLRA",
+       "LAES",
+       "LFTO",
+       "LOVE",
+       "LPTH",
+       "MAIR",
+       "MANE",
+       "MNSO",
+       "MRLN",
+       "MU",
+       "MWH",
+       "NB",
+       "ORCL",
+       "PICS",
+       "QNT",
+       "RBA",
+       "RZLT",
+       "SKHY",
+       "SLI",
+       "SLN",
+       "SRZN",
+       "SUJA",
+       "TOYO",
+       "TRAX",
+       "USAR",
+       "XNDU"
+      ]
+     }
+    }
+   },
+   "findings": [
+    "v1 (UPSIDE-BAND-DECON-1) had a priced opinion on 44 of 3,059 names (1.4%). v2 has one on ~2,836 (92.7%).",
+    "Names where the four clauses fire AND the prior is positive: 5 under v1, 55-58 under v2 -- an 11x wider opportunity set on every one of the four day-files.",
+    "Overnight turnover of the admitted set falls from 33.3% (v1, 08-31->09-01) to 8.5% (v2); 16.7% -> 13.1% on 09-01->09-02. v2 does what it was built to do: admission stops flipping overnight.",
+    "ZERO sign flips: v2 never reverses v1's opinion, it only extends it. The 3..5 band and the >=5 toxic band are identical in direction across versions.",
+    "FORWARD (n=2 sessions): v1 -0.93% then -3.79%; v2 +0.11% then -1.26%. v2 beat v1 on BOTH sessions, by +1.04pp and +2.53pp.",
+    "v2 restricted to median_dollar_volume >= $25m: +0.81% (hit 76%) then -1.77%. v1 has ZERO names above the $25m floor on either day -- v1's admitted set was structurally unbuyable at size.",
+    "COUNTER-EVIDENCE, stated plainly: RZLV sat in the 3..5 band under BOTH priors. Neither version of the band prior would have prevented the month's largest single loss."
+   ]
+  },
+  "3b_discovery_misses_observation_vs_admission": {
+   "source_autopsies": [
+    "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\autopsy\\2026-08-{25,26,27,28}.json",
+    "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\autopsy\\discovery_2026-08-28.json"
+   ],
+   "movers_examined": 150,
+   "movers_with_no_engine_view": 149,
+   "pct_no_view": 0.993,
+   "the_one_exception": {
+    "symbol": "STRT",
+    "day": "2026-08-28",
+    "ret_1d": 0.0676,
+    "engine_said": "DOWN",
+    "note": "the only view formed on an extreme mover was the WRONG WAY; candidates_right_way = 0 on all four days"
+   },
+   "distinct_no_view_symbols": 127,
+   "in_todays_tracker_universe": 127,
+   "never_observed_at_all": 0,
+   "verdict": "100% ADMISSION failure, 0% OBSERVATION failure -- among names the tracker carries.",
+   "caveat": "The tracker did not exist on 2026-08-25..28. Membership is 'would be observed today', not 'was observed then'.",
+   "discovery_autopsy_ran_once_ever": true,
+   "discovery_autopsy_contents": {
+    "counts": {
+     "NOT_GENERATED": 1
+    },
+    "symbol": "VISN",
+    "pct": -0.4506,
+    "news_before_open": 2,
+    "has_options": true
+   },
+   "unreconciled_contradiction": "discovery_2026-08-28.json records VISN as a LOSER at -45.06%; autopsy 2026-08-28.json records the same symbol on the same day as a WIN at +60.32%. Both cite the same headline. One is wrong and nothing caught it. This must be resolved before either file is used as evidence.",
+   "attention_watchlist": {
+    "path": "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\research\\ownership\\attention_watchlist.json",
+    "n_symbols": 200,
+    "n_before_cap": 1585,
+    "pct_discarded_by_cap": 0.874,
+    "n_filings_considered": 2509,
+    "n_filings_unresolved_subject_dropped": 129,
+    "forms": {
+     "SC 13G": 127,
+     "SC 13G/A": 38,
+     "SC 13D": 28,
+     "SC 13D/A": 7
+    },
+    "declared_window_days": 45,
+    "actual_filing_days_collected": 6,
+    "actual_span": "2026-08-13 .. 2026-08-20",
+    "guard_that_cannot_fire": "n_filings_out_of_window = 0 because nothing outside the collected range was ever fetched -- a gate that cannot go red",
+    "in_tracker_universe": 93,
+    "NOT_in_tracker_universe": 107,
+    "in_seal_universe_2026_09_02": 38,
+    "would_have_caught_of_the_127_no_view_movers": 5,
+    "which": [
+     "TENX +25.41% (08-25)",
+     "CAPR +21.91% (08-25)",
+     "RBRK -13.05% (08-28)",
+     "BETR +9.11% (08-26)",
+     "RXST +6.66% (08-28)"
+    ],
+    "GPRO": {
+     "in_attention_watchlist": true,
+     "in_tracker_universe": false,
+     "meaning": "the watchlist's real contribution is the 107 names the tracker never observes at all -- GPRO among them -- not the 5 it re-flags"
+    },
+    "verdict": "The watchlist answers a DIFFERENT question than the discovery misses. It would have caught 5 of 127 (3.9%) of the extreme movers we had no view on. Its value is the 107-name observation extension, and that value is UNMEASURED because the underlying ownership data was backfilled on 2026-09-02 and has never run prospectively."
+   }
+  },
+  "3c_refusals_counterfactuals_and_execution": {
+   "arithmetic_trap": {
+    "note": "Two of the four big ledgers are RE-MARK LOOPS, not event streams. Any figure quoted off row counts is wrong by two orders of magnitude.",
+    "counterfactual_jsonl": {
+     "rows": 1062527,
+     "distinct_decision_ids": 10083,
+     "duplication_factor": 105.4,
+     "naive_sum_usd": -292924821,
+     "deduplicated_last_mark_usd": -2181104
+    },
+    "fills_jsonl": {
+     "rows": 1378,
+     "distinct_order_ids": 22,
+     "duplication_factor": 62.6,
+     "naive_sum_usd": -35222,
+     "deduplicated_usd": -757.2
+    }
+   },
+   "refusal_counterfactual": {
+    "path": "C:/Users/mrthn/aegis-alpha-terminal/state/counterfactual.jsonl",
+    "sign_convention": "alpha/counterfactual.py: saved = refused worlds that lost; cost = refused worlds that won",
+    "n_refused_decisions": 6667,
+    "n_graded": 4790,
+    "saved_usd": 6710667,
+    "cost_usd": 5393830,
+    "net_usd": 1316837,
+    "by_guard_class": {
+     "TO/URNAMENT_book_limits": {
+      "n": 3958,
+      "graded": 2305,
+      "saved_usd": 4826747,
+      "cost_usd": 2592699,
+      "net_usd": 2234047
+     },
+     "EMPIRICAL_mdm_floor": {
+      "n": 2676,
+      "graded": 2458,
+      "saved_usd": 1842628,
+      "cost_usd": 2688877,
+      "net_usd": -846249,
+      "net_per_decision_usd": -344,
+      "convex_risk_ceiling_subfamily": {
+       "n": 1006,
+       "net_usd": -918930
+      }
+     },
+     "/UNCLASSIFIED": {
+      "n": 33,
+      "graded": 27,
+      "saved_usd": 41292,
+      "cost_usd": 112254,
+      "net_usd": -70962
+     }
+    },
+    "four_reasons_not_to_read_it_literally": [
+     "ONE TICKER carries it: PANW alone is -$1,182,417; net excluding PANW is +$2,499,254. PANW's own refusal reasons record a round-trip spread of 26-37% of max loss.",
+     "45.4% of decisions are /UNGRADEABLE and are counted anyway: mark_source is chain on 54.6%, unmarkable on 22.0%, null (hold-cash world) on 23.4%. Both non-chain classes carry pnl_usd = 0.0 AND still count toward n and win%. daily_latch reports 312 wins of 312 on $0.00 saved and $0.00 cost.",
+     "The one guard with near-complete grading is the one LOSING money: mdm_floor, 2,458 of 2,676 graded, -$846,249.",
+     "The sample is FO/UR CALENDAR DAYS and seventeen symbols (2026-08-25..08-28). CANON 58: effective n counts date blocks. This is n approx 4."
+    ],
+    "fresh_marks_caveat_DISCHARGED": {
+     "the_warning": "fresh marks on thinly-traded names reflect the bid-ask SPREAD, not skill",
+     "measured_exit_side": "alpha/counterfactual.py:147 -- longs leave at the BID, shorts are bought back at the ASK (crossed side, conservative)",
+     "elapsed_decision_to_final_mark_hours": {
+      "min": 21.5,
+      "median": 57.1,
+      "pct_under_4h": 0.0
+     },
+     "universe": "17 mega-cap symbols / ETFs, median dollar volume $2.06bn to $40.1bn per day",
+     "verdict": "The caveat does NOT bite on this ledger: these are real 1-3 day marks on liquid names, marked at the crossed side.",
+     "what_DOES_bite": {
+      "option_round_trip_spread_bps_median": 171.8,
+      "p75": 405.6,
+      "note": "the option chains are wide; the spread is the cost, not the fill"
+     }
+    }
+   },
+   "execution_quality": {
+    "orders": 22,
+    "filled_at_or_inside_limit": 22,
+    "total_slippage_vs_limit_usd": -757.2,
+    "realised_loss_it_sits_inside_usd": -23306,
+    "slippage_share_of_loss": 0.032,
+    "standing_action_threshold": "act if fill slippage exceeds ~15% of expected edge -- this is a fifth of the trigger",
+    "per_leg_vs_decision_mid": {
+     "n": 44,
+     "median_bps": 18.1,
+     "mean_bps": 70.0,
+     "adverse": 23,
+     "favourable": 20,
+     "slippage_over_half_spread_median": 0.2
+    },
+    "put_call_parity_probe": {
+     "NVDA_bps": 7,
+     "TSLA_bps": 2,
+     "quote_age_seconds": 3.4,
+     "path": "C:/Users/mrthn/aegis-alpha-terminal/state/parity_probe_open.json"
+    },
+    "one_artefact_to_discard": "a TSLA row reporting $4,005 slippage, caused by decision_ask = 0 on a 15.1-hour STALE quote; 3 of 1,378 rows; the final audit corrects it to $0",
+    "verdict": "Execution was never the story."
+   },
+   "decisions_ledger": {
+    "path": "C:/Users/mrthn/aegis-alpha-terminal/state/decisions.jsonl",
+    "lines": 9457,
+    "parsed": 9455,
+    "torn": 2,
+    "torn_cause": "concurrent appends without locking on a file that is supposed to be hash-chained",
+    "refused_total": 7698,
+    "submitted_total": 23,
+    "refusal_rate": 0.814,
+    "by_day": {
+     "2026-08-25": {
+      "refused": 4061,
+      "submitted": 22
+     },
+     "2026-08-26": {
+      "refused": 3103,
+      "submitted": 0,
+      "closed": 65,
+      "close_failed": 56
+     },
+     "2026-08-27": {
+      "refused": 143,
+      "submitted": 1,
+      "closed": 82,
+      "close_failed": 66
+     },
+     "2026-08-28": {
+      "refused": 286,
+      "submitted": 0,
+      "closed": 16,
+      "close_failed": 16
+     },
+     "2026-08-29": {
+      "refused": 6,
+      "submitted": 0,
+      "closed": 26,
+      "close_failed": 26
+     },
+     "2026-08-30": {
+      "refused": 0,
+      "submitted": 0,
+      "closed": 25,
+      "close_failed": 25
+     },
+     "2026-08-31": {
+      "refused": 99,
+      "submitted": 0,
+      "closed": 31,
+      "close_failed": 31
+     },
+     "2026-09-01": {
+      "refused": 0,
+      "submitted": 0,
+      "closed": 6,
+      "close_failed": 6
+     },
+     "2026-09-02": {
+      "refused": 0,
+      "submitted": 0,
+      "closed": 6,
+      "close_failed": 6
+     }
+    },
+    "close_failed_total": 232,
+    "close_failed_cause": "230 of 232 are 'protective stop cancel failed ... HTTP 500: venue' -- a venue error wearing a decision's clothes, printing daily for five days"
+   },
+   "arbiter": {
+    "arbiter_last_files": "state/arbiter_last_{dev,exp1,pead}.txt are 10-byte epoch markers, NOT ledgers",
+    "real_rows_in_decisions_jsonl": 213,
+    "hold": 184,
+    "close": 17,
+    "hedge": 12,
+    "graded_observations": 0,
+    "all_unmarkable": true
+   },
+   "decision_outcomes_gap": {
+    "path": "C:/Users/mrthn/aegis-alpha-terminal/state/decision_outcomes",
+    "exists": true,
+    "files": 0,
+    "statement": "CONFIRMED EMPTY on this machine. The sealed-decision -> execution-outcome -> graded-return write-back (bd719b1) runs in-container against the Railway volume at /app/state. This is a GAP, not a zero: no local artefact grades realised fills against sealed intent."
+   },
+   "era_replay_grade": {
+    "path": "C:/Users/mrthn/aegis-alpha-terminal/state/era_replay/grade.json",
+    "decisions_per_arm": 150,
+    "date_blocks": 11,
+    "arms": {
+     "real": {
+      "terminal_wealth": 1.67,
+      "t": 2.333,
+      "calibration_vs_climatology": -0.0084
+     },
+     "real_anon": {
+      "terminal_wealth": 1.756,
+      "t": 2.074,
+      "calibration_vs_climatology": -0.0105
+     },
+     "fantasy": {
+      "terminal_wealth": 1.567,
+      "t": 2.116,
+      "calibration_vs_climatology": -0.0088
+     },
+     "numbers_only": {
+      "terminal_wealth": 0.924,
+      "t": -0.156,
+      "calibration_vs_climatology": -0.0014
+     },
+     "null_basket": {
+      "terminal_wealth": 1.149,
+      "t": 0.971
+     }
+    },
+    "findings": [
+     "Prose beats numbers by +0.64 of terminal wealth; numbers_only is the only arm that loses money and the only one below the null.",
+     "But REAL prose beats FABRICATED prose by only +0.10, and ANONYMISING the true entities IMPROVED the result (1.756 vs 1.670). The gain is narrative STR/UCT/URE, not the events having happened.",
+     "Calibration is NEGATIVE in all four arms -- the model orders better than it prices.",
+     "It is a RIDGE at k=5 that collapses at k=10 (1.076, t 0.54).",
+     "The shuffled null is flagged informative in every arm, returning 1.423 for real against the arm's 1.670: most of real's wealth survives shuffling."
+    ]
+   }
+  }
+ },
+ "section_4_failure_taxonomy": {
+  "note": "Seven classes with counts. 'changed' means a commit exists; 'open' means it does not.",
+  "shape_of_the_month": {
+   "refusals": 7698,
+   "submissions": 23,
+   "refusal_rate": 0.814,
+   "counterfactual_rows": 1062527,
+   "counterfactual_decisions": 10083,
+   "date_blocks": 4,
+   "gradeable_forward_sessions": 2,
+   "one_line": "We built a great deal of apparatus and bought very little."
+  },
+  "classes": [
+   {
+    "n": 1,
+    "class": "Observation misses (GPRO class)",
+    "counts": {
+     "no_view_movers_unobservable": 0,
+     "no_view_movers_total": 127,
+     "watchlist_names_outside_tracker": 107,
+     "watchlist_total": 200
+    },
+    "changed": [
+     "tracker widened to 3,059 names",
+     "EDGAR 13D/13G watcher + attention watchlist (9aec2ad, 69bba25)"
+    ],
+    "open": [
+     "watchlist NEVER run prospectively",
+     "200-name cap discards 87.4% of 1,585 candidates",
+     "n_filings_out_of_window: 0 is a gate that cannot fire"
+    ]
+   },
+   {
+    "n": 2,
+    "class": "Admission-gate errors (coherence-floor era)",
+    "counts": {
+     "exp_return_non_positive": 722,
+     "of_candidates": 766,
+     "pct": 0.943,
+     "hack6_sealed_empty_with_reasons": 766,
+     "admitted_under_v1": 5,
+     "admitted_under_v2": "55-58",
+     "of_universe": 3059,
+     "priced_opinions_v1": 44,
+     "priced_opinions_v2": 2836,
+     "hack3_rank_distinct_17_to": 414,
+     "hack6_rank_distinct_0_to": 185
+    },
+    "changed": [
+     "BAND_PRIOR v2 (f83bd14)"
+    ],
+    "open": [
+     "v2 thresholds are IN-SAMPLE (exp_return_cross_section.json says so itself)",
+     "the refusal ledger that would price the old floor is only 4 date blocks deep"
+    ]
+   },
+   {
+    "n": 3,
+    "class": "Selector disagreement (FOUND BY THIS RETRO)",
+    "counts": {
+     "RZLV_return": -0.17301,
+     "RZLV_notional": 0.1,
+     "RZLV_claims": false,
+     "RZLV_rank": 576,
+     "RZLV_of": 766,
+     "RZLV_b_rating_margin": 0.017,
+     "holdings_rule_declined_2026_09_02": 25,
+     "of_hack3_plus_hack6_holdings": 30
+    },
+    "changed": [
+     "deliberate design: 34f08ca, dissent recorded not enforced"
+    ],
+    "open": [
+     "NEVER PRICED. 2 sessions give 2 opposite answers: RZLV -17.3% favours the rule; hack3 declined -0.55% vs claimed -3.54% opposes it"
+    ]
+   },
+   {
+    "n": 4,
+    "class": "Timing / horizon contamination (beta stop-outs)",
+    "counts": {
+     "mean_beta_market": 2.1,
+     "median": 1.75,
+     "n_over_2": 6,
+     "of": 13,
+     "max": 4.27,
+     "spy_return": -0.00687,
+     "mean_market_share_of_move": 1.49,
+     "stop_outs": "hack3 4->2, hack4 3->1 on the red macro open"
+    },
+    "changed": [
+     "09:30-09:45 no-share-entry guard",
+     "move_decomposition.py built (b1254e0, 4a96dd5)"
+    ],
+    "open": [
+     "stops still key on TOTAL RETURN, not the company component",
+     "no beta budget exists at all"
+    ]
+   },
+   {
+    "n": 5,
+    "class": "Execution issues -- few, and quote the rate",
+    "counts": {
+     "orders_filled_at_or_inside_limit": 22,
+     "of": 22,
+     "slippage_usd": -757.2,
+     "loss_it_sits_inside_usd": -23306,
+     "share_of_loss": 0.032,
+     "median_slippage_over_half_spread": 0.2,
+     "parity_bps": [
+      2,
+      7
+     ],
+     "option_round_trip_spread_bps_median": 171.8
+    },
+    "changed": [
+     "CLS-on-paper banned",
+     "phantom $0 decision quote fixed (539569d)"
+    ],
+    "open": [
+     "option spread (median 171.8 bps, p75 405.6) is the real cost and is unbudgeted",
+     "230 HTTP 500 venue stop-cancel failures in 5 days"
+    ]
+   },
+   {
+    "n": 6,
+    "class": "Delivery / artery",
+    "counts": {
+     "published_seed_was_stale": "302/1 vs local 749/10",
+     "seal_2026_09_02_exists": true,
+     "sealed_at_utc": "2026-09-02T07:05:01.804830+00:00",
+     "sha": "6e69c0af80a7ad5f2ccc9760dfbcb7069c0344d69e26f2603e1423e380dd6857",
+     "universe_considered": 806,
+     "claims": 11
+    },
+    "changed": [
+     "artery built 26faa7b -- seal carries exact holdings in content_sha256",
+     "THE BRIEF'S 'seal missing 09-02' IS CLOSED: it exists, and it is the first book under v2 (c525618)"
+    ],
+    "open": [
+     "P0.5 sealed symbols not yet added to run_pass's universe",
+     "P0.6 sizing reads risk_fraction, not sealed_notional"
+    ]
+   },
+   {
+    "n": 7,
+    "class": "Instrumentation absent / silently green",
+    "counts": {
+     "holdings_shipped_with_null_exp_return_2026_08_31": 5,
+     "of": 5,
+     "discovery_autopsy_runs_ever": 1,
+     "discovery_autopsy_rows": 1,
+     "bytes": 427,
+     "counterfactual_decisions_ungradeable_but_counted_pct": 0.454,
+     "daily_latch_wins": 312,
+     "daily_latch_of": 312,
+     "daily_latch_dollars": 0.0,
+     "torn_lines_in_hash_chained_ledger": 2,
+     "VISN_contradiction": {
+      "discovery_file": -0.4506,
+      "autopsy_file": 0.6032,
+      "same_symbol_same_day_same_headline": true
+     }
+    },
+    "changed": [
+     "expectations present on every holding from 2026-09-01 onward"
+    ],
+    "open": [
+     "discovery autopsy unscheduled",
+     "VISN contradiction unreconciled",
+     "decision_outcomes/ empty locally",
+     "unmarkable worlds still counted in win%"
+    ]
+   }
+  ],
+  "execution_was_never_the_story": "-$757 of a -$23,306 loss is 3.2%. Both bad sessions are explained by ADMISSION (classes 2/3) and BETA (class 4), not by fills."
+ },
+ "section_5_next_experiments": {
+  "ranking_rule": "P(changes the roadmap) x value of the decision improved - cost",
+  "constraint": "none of the three changes what trades on day one",
+  "experiments": [
+   {
+    "id": "E1",
+    "title": "Price the selector disagreement",
+    "p_changes_roadmap": "HIGH",
+    "motivated_by": {
+     "section": "2 / Miss #1",
+     "receipts": [
+      "C:/Users/mrthn/aegis-alpha-terminal/state/predictions/2026-09-01.json (RZLV row: claims false, rank 576/766, failed b_rating by 0.017)",
+      "C:/Users/mrthn/aegis-alpha-terminal/state/predictions/2026-09-02.json (25 of 30 hack3+hack6 holdings rule-declined)",
+      "month_retro_20260902.json section_2.selector_disagreement"
+     ],
+     "contradicting_datum": "on 2026-09-01 hack3 6 declined names averaged -0.55% vs -3.54% for its 3 claimed names"
+    },
+    "do": "stamp every sealed holding with the generator's claims verdict and failed_clauses (both already in the same JSON -- a join, not a model), then accrue two forward series: held-and-claimed vs held-and-declined",
+    "decision_rule": "after 21 sessions, if declined holdings underperform claimed holdings by more than the round-trip spread, promote dissent from RECORDED to a SIZE HAIRCUT -- not a veto, because 34f08ca decided deliberately that the runner expresses a sealed weight rather than re-adjudicating it",
+    "cost": "one field on the seal writer",
+    "why_it_matters": "it decides whether we are running one selector or two, currently unanswered while both spend money"
+   },
+   {
+    "id": "E2",
+    "title": "Decompose the stop",
+    "p_changes_roadmap": "HIGH",
+    "motivated_by": {
+     "section": "2 / Miss #2",
+     "receipts": [
+      "C:/Users/mrthn/aegis-alpha-terminal/state/decomposition/2026-09-01.json",
+      "month_retro_20260902.json section_2.decomposition"
+     ],
+     "numbers": {
+      "mean_beta": 2.1,
+      "median_beta": 1.75,
+      "n_over_2_of_13": 6,
+      "max_beta": 4.27,
+      "spy": -0.00687,
+      "book": -0.0696,
+      "mean_market_share_of_move": 1.49,
+      "RZLV_company_share": 0.894
+     }
+    },
+    "do": "run move_decomposition.py AT THE STOP CHECK rather than overnight, and shadow-log two policies against every live position: (a) today's total-return stop, (b) a stop on the COMPANY COMPONENT only, market leg widened by the name's own beta. Shadow only -- (b) places nothing.",
+    "decision_rule": "over 21 sessions, promote (b) only if it avoids more beta-driven exits than it misses company-driven ones AND terminal wealth is equal or better. Rank on TERMINAL WEALTH, not the mean.",
+    "guardrail": "print the worst case before any promotion. Today each book is under 100% gross with a -13% to -18% worst case; a wider stop on uncapped gross is a bigger loss (paid for 2026-08-28).",
+    "why_it_matters": "it separates a beta budget from a stock-selection loss, which is the entire difference between our two graded sessions"
+   },
+   {
+    "id": "E3",
+    "title": "Make a refusal gradeable, then re-price the guards",
+    "p_changes_roadmap": "HIGH",
+    "motivated_by": {
+     "section": "3c",
+     "receipts": [
+      "C:/Users/mrthn/aegis-alpha-terminal/state/counterfactual.jsonl (1,062,527 rows -> 10,083 decisions)",
+      "C:/Users/mrthn/aegis-alpha-terminal/state/refusal_regret.json",
+      "month_retro_20260902.json section_3.3c"
+     ],
+     "numbers": {
+      "mdm_floor_net_usd": -846249,
+      "mdm_floor_graded": 2458,
+      "of": 2676,
+      "per_decision_usd": -344,
+      "convex_risk_ceiling_net_usd": -918930,
+      "ungradeable_but_counted_pct": 0.454,
+      "daily_latch": "312 wins of 312 on $0.00 saved and $0.00 cost",
+      "refusals": 7698,
+      "submissions": 23
+     }
+    },
+    "do": [
+     "give every refusal a markable counterfactual -- where no option chain exists, mark the underlying stock quote (539569d already started this)",
+     "split win% into GRADED and UNGRADED so an unmarkable world can never contribute a win",
+     "re-run refusal_regret on the corrected ledger and put mdm_floor explicitly on trial"
+    ],
+    "decision_rule": "if mdm_floor stays net-negative once grading coverage exceeds 80% AND the sample spans more than four date blocks, the floor is RE-TUNED rather than defended. CANON 58: n counts date blocks, and today this ledger is n approx 4.",
+    "why_it_matters": "largest measured number in the retrospective, sits on data we already own, and decides whether our guards are protecting capital or starving it"
+   }
+  ],
+  "ranked_fourth_but_start_its_clock_anyway": {
+   "title": "Run the attention watchlist forward",
+   "why_it_ranked_below": "its value is currently UNMEASURABLE: backfilled 2026-09-02, would have re-flagged only 5 of 127 extreme movers (3.9%), and its real contribution -- the 107 of 200 names outside the tracker, GPRO among them -- has zero prospective observations",
+   "why_to_start_it_today_regardless": "prospective time is one of only TWO things that cannot be parallelised. Every day it does not run is evidence that cannot be recovered later, and the cost is a scheduler entry for a watcher that already exists (9aec2ad).",
+   "do": [
+    "schedule the 13D/13G watcher daily",
+    "inject the watchlist's non-tracker names as OBSERVE_ONLY",
+    "PRE-REGISTER the falsifier before the first observation: a material holder event predicts an extreme move within 21 sessions above the tracker base rate -- without it this is data collection wearing an experiment's clothes"
+   ],
+   "two_silent_defects_to_fix_in_the_same_pass": [
+    "the 200-name cap discarding 87.4% of 1,585 candidates",
+    "n_filings_out_of_window: 0, a gate that cannot fire because nothing outside the collected range was ever fetched"
+   ]
+  },
+  "repair_before_citing_as_evidence": [
+   {
+    "item": "the VISN contradiction",
+    "detail": "discovery_2026-08-28.json says -45.06%; autopsy/2026-08-28.json says +60.32% -- same symbol, same day, same headline. Neither file is usable until settled, and no check caught it."
+   },
+   {
+    "item": "the torn ledger",
+    "detail": "state/decisions.jsonl has 2 unparseable lines from concurrent appends without locking, on a file that is supposed to be hash-chained. Do NOT silently repair it -- repairing a tamper-evident chain is itself the tampering. Record it, then fix the writer."
+   }
+  ]
+ },
+ "what_this_retro_does_not_claim": [
+  "No result is significant. Two forward sessions.",
+  "BAND_PRIOR v2's superiority over v1 is measured on those same two sessions, and v2's thresholds were fitted IN-SAMPLE on the 2013-2024 panel.",
+  "No statement is made about realised fill quality on the two live days, because state/decision_outcomes/ is empty on this machine and the write-back lives on Railway. A gap is not a zero."
+ ]
+}
