@@ -1,0 +1,1860 @@
+{
+  "PREREGISTRATION": {
+    "hypothesis": "Murat: holding the S&P top 1 / top 3 / top 5 / top 10 stocks beats holding the S&P 500 itself over the long term.",
+    "written_before_computation": true,
+    "date_utc": "2026-09-02T04:42:57.497379+00:00",
+    "licence": "PRODUCT_EXPERIMENT (diagnostic; no significance gate, no costs)",
+    "objective": "TERMINAL WEALTH under buy-and-hold-the-rule, not mean monthly return",
+    "primary_metric": "terminal wealth multiple of TOPn / terminal wealth multiple of TOP500-VW",
+    "decision_rule": "CONFIRMED only if every era's ratio > 1. If the ratio flips below 1 in any era, the verdict is REGIME-CONDITIONAL, not a law.",
+    "expected_failure_era": "2000-2012: the top names of Dec-1999 (MSFT/CSCO/GE/INTC) were the epicentre of the crash. Pre-stated.",
+    "design": {
+      "universe": "top 500 US companies (permco) by month-end market cap; shrcd in (10, 11), exchcd in (1, 2, 3)",
+      "cap_aggregation": "permco (share classes summed: GOOG+GOOGL, BRK.A+BRK.B)",
+      "selection": "month-end cap rank; hold value-weighted for the NEXT calendar month",
+      "returns": "CRSP daily `ret` (total return) compounded within month; prc never differenced",
+      "benchmarks": [
+        "top500 value-weighted (S&P proxy)",
+        "top500 equal-weighted"
+      ],
+      "eras": {
+        "1993-1999_late_90s": [
+          1993,
+          1999
+        ],
+        "2000-2012_lost_decade": [
+          2000,
+          2012
+        ],
+        "2013-2019_megacap_era": [
+          2013,
+          2019
+        ],
+        "2020-2024_covid_to_ai": [
+          2020,
+          2024
+        ]
+      },
+      "eras_evaluated": [
+        "1993-1999_late_90s",
+        "2000-2012_lost_decade",
+        "2013-2019_megacap_era",
+        "2020-2024_covid_to_ai"
+      ],
+      "costs": "ZERO. No commissions, spread, or tax. Stated, not hidden.",
+      "turnover_note": "TOP1-TOP10 rebalance monthly; the benchmark barely trades. The gross gap overstates the net gap.",
+      "seed": 20260902
+    },
+    "known_limitations": [
+      "no CRSP delisting returns (daily dsf only)",
+      "missing daily ret treated as 0.0",
+      "'top 500 by cap' is a proxy for actual S&P 500 membership (no committee lag)",
+      "survivorship-free by construction (CRSP includes dead names) but merger-driven disappearance inside a month costs the partial month only"
+    ]
+  },
+  "verdict": {
+    "full_sample": "MIXED",
+    "every_era": "REGIME-CONDITIONAL",
+    "reading": "The claim is a REGIME observation unless every era's ratio exceeds 1. See era_ratio_vs_top500_vw before quoting the full-sample number."
+  },
+  "sample": {
+    "start_year": 1993,
+    "end_year": 2024,
+    "months_evaluated": 383,
+    "first_month_earned": "1993-02-01",
+    "last_month_earned": "2024-12-01",
+    "median_universe_size": 500,
+    "per_year_daily_diagnostics": [
+      {
+        "year": 1993,
+        "daily_rows": 1580038,
+        "daily_ret_nan": 30447
+      },
+      {
+        "year": 1994,
+        "daily_rows": 1707024,
+        "daily_ret_nan": 28554
+      },
+      {
+        "year": 1995,
+        "daily_rows": 1750653,
+        "daily_ret_nan": 29272
+      },
+      {
+        "year": 1996,
+        "daily_rows": 1859040,
+        "daily_ret_nan": 24624
+      },
+      {
+        "year": 1997,
+        "daily_rows": 1915433,
+        "daily_ret_nan": 24069
+      },
+      {
+        "year": 1998,
+        "daily_rows": 1867916,
+        "daily_ret_nan": 27467
+      },
+      {
+        "year": 1999,
+        "daily_rows": 1755075,
+        "daily_ret_nan": 36666
+      },
+      {
+        "year": 2000,
+        "daily_rows": 1700382,
+        "daily_ret_nan": 37815
+      },
+      {
+        "year": 2001,
+        "daily_rows": 1532778,
+        "daily_ret_nan": 41427
+      },
+      {
+        "year": 2002,
+        "daily_rows": 1420353,
+        "daily_ret_nan": 44492
+      },
+      {
+        "year": 2003,
+        "daily_rows": 1322895,
+        "daily_ret_nan": 50873
+      },
+      {
+        "year": 2004,
+        "daily_rows": 1279388,
+        "daily_ret_nan": 47767
+      },
+      {
+        "year": 2005,
+        "daily_rows": 1258321,
+        "daily_ret_nan": 40655
+      },
+      {
+        "year": 2006,
+        "daily_rows": 1231145,
+        "daily_ret_nan": 34837
+      },
+      {
+        "year": 2007,
+        "daily_rows": 1207165,
+        "daily_ret_nan": 30272
+      },
+      {
+        "year": 2008,
+        "daily_rows": 1171449,
+        "daily_ret_nan": 24271
+      },
+      {
+        "year": 2009,
+        "daily_rows": 1089576,
+        "daily_ret_nan": 26062
+      },
+      {
+        "year": 2010,
+        "daily_rows": 1045848,
+        "daily_ret_nan": 23810
+      },
+      {
+        "year": 2011,
+        "daily_rows": 1004618,
+        "daily_ret_nan": 20180
+      },
+      {
+        "year": 2012,
+        "daily_rows": 963303,
+        "daily_ret_nan": 20055
+      },
+      {
+        "year": 2013,
+        "daily_rows": 945529,
+        "daily_ret_nan": 20690
+      },
+      {
+        "year": 2014,
+        "daily_rows": 964000,
+        "daily_ret_nan": 16802
+      },
+      {
+        "year": 2015,
+        "daily_rows": 974223,
+        "daily_ret_nan": 12723
+      },
+      {
+        "year": 2016,
+        "daily_rows": 950131,
+        "daily_ret_nan": 11738
+      },
+      {
+        "year": 2017,
+        "daily_rows": 930380,
+        "daily_ret_nan": 11035
+      },
+      {
+        "year": 2018,
+        "daily_rows": 930152,
+        "daily_ret_nan": 10022
+      },
+      {
+        "year": 2019,
+        "daily_rows": 932809,
+        "daily_ret_nan": 10241
+      },
+      {
+        "year": 2020,
+        "daily_rows": 939339,
+        "daily_ret_nan": 10022
+      },
+      {
+        "year": 2021,
+        "daily_rows": 1060296,
+        "daily_ret_nan": 6612
+      },
+      {
+        "year": 2022,
+        "daily_rows": 1130412,
+        "daily_ret_nan": 2244
+      },
+      {
+        "year": 2023,
+        "daily_rows": 1058667,
+        "daily_ret_nan": 1003
+      },
+      {
+        "year": 2024,
+        "daily_rows": 998535,
+        "daily_ret_nan": 1194
+      }
+    ]
+  },
+  "full_sample_metrics": {
+    "top1_vw": {
+      "terminal_wealth_multiple": 22.6291,
+      "cagr": 0.102666,
+      "ann_vol": 0.25135,
+      "max_drawdown_monthly": -0.78929,
+      "worst_calendar_year": {
+        "year": 2002,
+        "return": -0.509526
+      },
+      "best_calendar_year": {
+        "year": 2020,
+        "return": 0.716242
+      },
+      "n_months": 383,
+      "sharpe_excess_of_zero": 0.4085
+    },
+    "top3_vw": {
+      "terminal_wealth_multiple": 43.4645,
+      "cagr": 0.125448,
+      "ann_vol": 0.202734,
+      "max_drawdown_monthly": -0.662335,
+      "worst_calendar_year": {
+        "year": 2000,
+        "return": -0.398817
+      },
+      "best_calendar_year": {
+        "year": 2020,
+        "return": 0.664177
+      },
+      "n_months": 383,
+      "sharpe_excess_of_zero": 0.6188
+    },
+    "top5_vw": {
+      "terminal_wealth_multiple": 28.9136,
+      "cagr": 0.111165,
+      "ann_vol": 0.183278,
+      "max_drawdown_monthly": -0.597137,
+      "worst_calendar_year": {
+        "year": 2022,
+        "return": -0.351723
+      },
+      "best_calendar_year": {
+        "year": 2023,
+        "return": 0.556725
+      },
+      "n_months": 383,
+      "sharpe_excess_of_zero": 0.6065
+    },
+    "top10_vw": {
+      "terminal_wealth_multiple": 29.5566,
+      "cagr": 0.111931,
+      "ann_vol": 0.167302,
+      "max_drawdown_monthly": -0.598612,
+      "worst_calendar_year": {
+        "year": 2022,
+        "return": -0.338345
+      },
+      "best_calendar_year": {
+        "year": 2023,
+        "return": 0.541267
+      },
+      "n_months": 383,
+      "sharpe_excess_of_zero": 0.669
+    },
+    "top500_vw": {
+      "terminal_wealth_multiple": 25.8889,
+      "cagr": 0.107325,
+      "ann_vol": 0.149483,
+      "max_drawdown_monthly": -0.496939,
+      "worst_calendar_year": {
+        "year": 2008,
+        "return": -0.364721
+      },
+      "best_calendar_year": {
+        "year": 1995,
+        "return": 0.383463
+      },
+      "n_months": 383,
+      "sharpe_excess_of_zero": 0.718
+    },
+    "top500_ew": {
+      "terminal_wealth_multiple": 25.5004,
+      "cagr": 0.106801,
+      "ann_vol": 0.160831,
+      "max_drawdown_monthly": -0.52958,
+      "worst_calendar_year": {
+        "year": 2008,
+        "return": -0.407668
+      },
+      "best_calendar_year": {
+        "year": 2013,
+        "return": 0.375444
+      },
+      "n_months": 383,
+      "sharpe_excess_of_zero": 0.6641
+    }
+  },
+  "ratio_vs_top500_vw_full_sample": {
+    "top1_vw": 0.8741,
+    "top3_vw": 1.6789,
+    "top5_vw": 1.1168,
+    "top10_vw": 1.1417,
+    "top500_vw": 1.0,
+    "top500_ew": 0.985
+  },
+  "concentration_grid": {
+    "why": "terminal wealth as a function of n. A MECHANISM gives a smooth plateau; a lucky draw gives a single spike. Read the shape before quoting any single n.",
+    "full_sample": {
+      "top1_vw": 22.6291,
+      "top2_vw": 42.6362,
+      "top3_vw": 43.4645,
+      "top4_vw": 35.6973,
+      "top5_vw": 28.9136,
+      "top6_vw": 30.2091,
+      "top7_vw": 26.603,
+      "top8_vw": 30.1312,
+      "top10_vw": 29.5566,
+      "top12_vw": 27.0356,
+      "top15_vw": 29.832,
+      "top20_vw": 28.4598,
+      "top25_vw": 27.7511,
+      "top30_vw": 29.7959,
+      "top50_vw": 28.8395,
+      "top100_vw": 26.3575,
+      "top200_vw": 25.8385,
+      "top500_vw": 25.8889
+    },
+    "by_era": {
+      "1993-1999_late_90s": {
+        "top1_vw": 7.1366,
+        "top2_vw": 5.7993,
+        "top3_vw": 5.6144,
+        "top4_vw": 4.9638,
+        "top5_vw": 4.1672,
+        "top6_vw": 4.4458,
+        "top7_vw": 4.6012,
+        "top8_vw": 4.8029,
+        "top10_vw": 4.7356,
+        "top12_vw": 5.0603,
+        "top15_vw": 5.1228,
+        "top20_vw": 4.8617,
+        "top25_vw": 4.772,
+        "top30_vw": 4.8944,
+        "top50_vw": 4.9002,
+        "top100_vw": 4.6638,
+        "top200_vw": 4.3085,
+        "top500_vw": 4.0334
+      },
+      "2000-2012_lost_decade": {
+        "top1_vw": 0.4267,
+        "top2_vw": 0.7301,
+        "top3_vw": 0.7597,
+        "top4_vw": 0.7171,
+        "top5_vw": 0.6851,
+        "top6_vw": 0.6883,
+        "top7_vw": 0.6415,
+        "top8_vw": 0.6484,
+        "top10_vw": 0.7017,
+        "top12_vw": 0.6696,
+        "top15_vw": 0.7501,
+        "top20_vw": 0.8595,
+        "top25_vw": 0.8758,
+        "top30_vw": 0.9079,
+        "top50_vw": 0.9461,
+        "top100_vw": 0.9717,
+        "top200_vw": 1.0805,
+        "top500_vw": 1.1941
+      },
+      "2013-2019_megacap_era": {
+        "top1_vw": 2.8385,
+        "top2_vw": 3.2836,
+        "top3_vw": 3.3422,
+        "top4_vw": 3.2739,
+        "top5_vw": 3.4006,
+        "top6_vw": 3.4274,
+        "top7_vw": 3.2103,
+        "top8_vw": 3.2286,
+        "top10_vw": 3.0076,
+        "top12_vw": 2.8349,
+        "top15_vw": 2.797,
+        "top20_vw": 2.591,
+        "top25_vw": 2.6115,
+        "top30_vw": 2.7041,
+        "top50_vw": 2.6896,
+        "top100_vw": 2.6552,
+        "top200_vw": 2.6635,
+        "top500_vw": 2.66
+      },
+      "2020-2024_covid_to_ai": {
+        "top1_vw": 2.6179,
+        "top2_vw": 3.0667,
+        "top3_vw": 3.0491,
+        "top4_vw": 3.0631,
+        "top5_vw": 2.978,
+        "top6_vw": 2.8805,
+        "top7_vw": 2.8075,
+        "top8_vw": 2.9967,
+        "top10_vw": 2.9573,
+        "top12_vw": 2.8145,
+        "top15_vw": 2.7755,
+        "top20_vw": 2.6287,
+        "top25_vw": 2.5425,
+        "top30_vw": 2.4797,
+        "top50_vw": 2.313,
+        "top100_vw": 2.1904,
+        "top200_vw": 2.0838,
+        "top500_vw": 2.0207
+      }
+    },
+    "shape_by_era": {
+      "1993-1999_late_90s": {
+        "spearman_n_vs_terminal_wealth": -0.496,
+        "reading": "no clean monotone relation - treat any single n as a path, not a rule"
+      },
+      "2000-2012_lost_decade": {
+        "spearman_n_vs_terminal_wealth": 0.773,
+        "reading": "concentration COST, smoothly"
+      },
+      "2013-2019_megacap_era": {
+        "spearman_n_vs_terminal_wealth": -0.808,
+        "reading": "concentration PAID, smoothly"
+      },
+      "2020-2024_covid_to_ai": {
+        "spearman_n_vs_terminal_wealth": -0.833,
+        "reading": "concentration PAID, smoothly"
+      }
+    },
+    "shape_full_sample": {
+      "spearman_n_vs_terminal_wealth": -0.496,
+      "note": "the full-sample curve averages two OPPOSITE regimes and should not be read as one mechanism"
+    }
+  },
+  "era_metrics": {
+    "1993-1999_late_90s": {
+      "top1_vw": {
+        "terminal_wealth_multiple": 7.1366,
+        "cagr": 0.328607,
+        "ann_vol": 0.254059,
+        "max_drawdown_monthly": -0.16958,
+        "worst_calendar_year": {
+          "year": 1994,
+          "return": -0.046283
+        },
+        "best_calendar_year": {
+          "year": 1999,
+          "return": 0.683649
+        },
+        "n_months": 83,
+        "sharpe_excess_of_zero": 1.2934
+      },
+      "top3_vw": {
+        "terminal_wealth_multiple": 5.6144,
+        "cagr": 0.283315,
+        "ann_vol": 0.19999,
+        "max_drawdown_monthly": -0.149167,
+        "worst_calendar_year": {
+          "year": 1994,
+          "return": -0.006078
+        },
+        "best_calendar_year": {
+          "year": 1999,
+          "return": 0.575315
+        },
+        "n_months": 83,
+        "sharpe_excess_of_zero": 1.4166
+      },
+      "top5_vw": {
+        "terminal_wealth_multiple": 4.1672,
+        "cagr": 0.229182,
+        "ann_vol": 0.186037,
+        "max_drawdown_monthly": -0.135607,
+        "worst_calendar_year": {
+          "year": 1993,
+          "return": -0.024523
+        },
+        "best_calendar_year": {
+          "year": 1998,
+          "return": 0.428379
+        },
+        "n_months": 83,
+        "sharpe_excess_of_zero": 1.2319
+      },
+      "top10_vw": {
+        "terminal_wealth_multiple": 4.7356,
+        "cagr": 0.252115,
+        "ann_vol": 0.16043,
+        "max_drawdown_monthly": -0.136984,
+        "worst_calendar_year": {
+          "year": 1993,
+          "return": -0.005695
+        },
+        "best_calendar_year": {
+          "year": 1998,
+          "return": 0.417786
+        },
+        "n_months": 83,
+        "sharpe_excess_of_zero": 1.5715
+      },
+      "top500_vw": {
+        "terminal_wealth_multiple": 4.0334,
+        "cagr": 0.223395,
+        "ann_vol": 0.133038,
+        "max_drawdown_monthly": -0.153514,
+        "worst_calendar_year": {
+          "year": 1994,
+          "return": 0.004195
+        },
+        "best_calendar_year": {
+          "year": 1995,
+          "return": 0.383463
+        },
+        "n_months": 83,
+        "sharpe_excess_of_zero": 1.6792
+      },
+      "top500_ew": {
+        "terminal_wealth_multiple": 3.3433,
+        "cagr": 0.190653,
+        "ann_vol": 0.134519,
+        "max_drawdown_monthly": -0.180757,
+        "worst_calendar_year": {
+          "year": 1994,
+          "return": -0.020862
+        },
+        "best_calendar_year": {
+          "year": 1995,
+          "return": 0.356916
+        },
+        "n_months": 83,
+        "sharpe_excess_of_zero": 1.4173
+      }
+    },
+    "2000-2012_lost_decade": {
+      "top1_vw": {
+        "terminal_wealth_multiple": 0.4267,
+        "cagr": -0.063413,
+        "ann_vol": 0.236117,
+        "max_drawdown_monthly": -0.768466,
+        "worst_calendar_year": {
+          "year": 2002,
+          "return": -0.509526
+        },
+        "best_calendar_year": {
+          "year": 2007,
+          "return": 0.243405
+        },
+        "n_months": 156,
+        "sharpe_excess_of_zero": -0.2686
+      },
+      "top3_vw": {
+        "terminal_wealth_multiple": 0.7597,
+        "cagr": -0.020922,
+        "ann_vol": 0.19777,
+        "max_drawdown_monthly": -0.662335,
+        "worst_calendar_year": {
+          "year": 2000,
+          "return": -0.398817
+        },
+        "best_calendar_year": {
+          "year": 2006,
+          "return": 0.205859
+        },
+        "n_months": 156,
+        "sharpe_excess_of_zero": -0.1058
+      },
+      "top5_vw": {
+        "terminal_wealth_multiple": 0.6851,
+        "cagr": -0.028669,
+        "ann_vol": 0.170254,
+        "max_drawdown_monthly": -0.597137,
+        "worst_calendar_year": {
+          "year": 2000,
+          "return": -0.317903
+        },
+        "best_calendar_year": {
+          "year": 2006,
+          "return": 0.218947
+        },
+        "n_months": 156,
+        "sharpe_excess_of_zero": -0.1684
+      },
+      "top10_vw": {
+        "terminal_wealth_multiple": 0.7017,
+        "cagr": -0.026879,
+        "ann_vol": 0.154632,
+        "max_drawdown_monthly": -0.598612,
+        "worst_calendar_year": {
+          "year": 2002,
+          "return": -0.27866
+        },
+        "best_calendar_year": {
+          "year": 2003,
+          "return": 0.179683
+        },
+        "n_months": 156,
+        "sharpe_excess_of_zero": -0.1738
+      },
+      "top500_vw": {
+        "terminal_wealth_multiple": 1.1941,
+        "cagr": 0.013741,
+        "ann_vol": 0.15767,
+        "max_drawdown_monthly": -0.496939,
+        "worst_calendar_year": {
+          "year": 2008,
+          "return": -0.364721
+        },
+        "best_calendar_year": {
+          "year": 2003,
+          "return": 0.282195
+        },
+        "n_months": 156,
+        "sharpe_excess_of_zero": 0.0871
+      },
+      "top500_ew": {
+        "terminal_wealth_multiple": 1.715,
+        "cagr": 0.042365,
+        "ann_vol": 0.176001,
+        "max_drawdown_monthly": -0.52958,
+        "worst_calendar_year": {
+          "year": 2008,
+          "return": -0.407668
+        },
+        "best_calendar_year": {
+          "year": 2003,
+          "return": 0.352094
+        },
+        "n_months": 156,
+        "sharpe_excess_of_zero": 0.2407
+      }
+    },
+    "2013-2019_megacap_era": {
+      "top1_vw": {
+        "terminal_wealth_multiple": 2.8385,
+        "cagr": 0.16072,
+        "ann_vol": 0.244893,
+        "max_drawdown_monthly": -0.292628,
+        "worst_calendar_year": {
+          "year": 2013,
+          "return": -0.151303
+        },
+        "best_calendar_year": {
+          "year": 2019,
+          "return": 0.496867
+        },
+        "n_months": 84,
+        "sharpe_excess_of_zero": 0.6563
+      },
+      "top3_vw": {
+        "terminal_wealth_multiple": 3.3422,
+        "cagr": 0.188124,
+        "ann_vol": 0.174763,
+        "max_drawdown_monthly": -0.22499,
+        "worst_calendar_year": {
+          "year": 2015,
+          "return": 0.01415
+        },
+        "best_calendar_year": {
+          "year": 2019,
+          "return": 0.558451
+        },
+        "n_months": 84,
+        "sharpe_excess_of_zero": 1.0765
+      },
+      "top5_vw": {
+        "terminal_wealth_multiple": 3.4006,
+        "cagr": 0.19107,
+        "ann_vol": 0.144455,
+        "max_drawdown_monthly": -0.186407,
+        "worst_calendar_year": {
+          "year": 2018,
+          "return": 0.058634
+        },
+        "best_calendar_year": {
+          "year": 2019,
+          "return": 0.438991
+        },
+        "n_months": 84,
+        "sharpe_excess_of_zero": 1.3227
+      },
+      "top10_vw": {
+        "terminal_wealth_multiple": 3.0076,
+        "cagr": 0.170353,
+        "ann_vol": 0.130617,
+        "max_drawdown_monthly": -0.175543,
+        "worst_calendar_year": {
+          "year": 2018,
+          "return": 0.004508
+        },
+        "best_calendar_year": {
+          "year": 2019,
+          "return": 0.395578
+        },
+        "n_months": 84,
+        "sharpe_excess_of_zero": 1.3042
+      },
+      "top500_vw": {
+        "terminal_wealth_multiple": 2.66,
+        "cagr": 0.150002,
+        "ann_vol": 0.112105,
+        "max_drawdown_monthly": -0.136819,
+        "worst_calendar_year": {
+          "year": 2018,
+          "return": -0.040208
+        },
+        "best_calendar_year": {
+          "year": 2013,
+          "return": 0.337752
+        },
+        "n_months": 84,
+        "sharpe_excess_of_zero": 1.338
+      },
+      "top500_ew": {
+        "terminal_wealth_multiple": 2.618,
+        "cagr": 0.147388,
+        "ann_vol": 0.119345,
+        "max_drawdown_monthly": -0.147361,
+        "worst_calendar_year": {
+          "year": 2018,
+          "return": -0.06678
+        },
+        "best_calendar_year": {
+          "year": 2013,
+          "return": 0.375444
+        },
+        "n_months": 84,
+        "sharpe_excess_of_zero": 1.235
+      }
+    },
+    "2020-2024_covid_to_ai": {
+      "top1_vw": {
+        "terminal_wealth_multiple": 2.6179,
+        "cagr": 0.212249,
+        "ann_vol": 0.277707,
+        "max_drawdown_monthly": -0.264038,
+        "worst_calendar_year": {
+          "year": 2022,
+          "return": -0.264038
+        },
+        "best_calendar_year": {
+          "year": 2020,
+          "return": 0.716242
+        },
+        "n_months": 60,
+        "sharpe_excess_of_zero": 0.7643
+      },
+      "top3_vw": {
+        "terminal_wealth_multiple": 3.0491,
+        "cagr": 0.249781,
+        "ann_vol": 0.238819,
+        "max_drawdown_monthly": -0.300517,
+        "worst_calendar_year": {
+          "year": 2022,
+          "return": -0.300517
+        },
+        "best_calendar_year": {
+          "year": 2020,
+          "return": 0.664177
+        },
+        "n_months": 60,
+        "sharpe_excess_of_zero": 1.0459
+      },
+      "top5_vw": {
+        "terminal_wealth_multiple": 2.978,
+        "cagr": 0.243895,
+        "ann_vol": 0.238132,
+        "max_drawdown_monthly": -0.351723,
+        "worst_calendar_year": {
+          "year": 2022,
+          "return": -0.351723
+        },
+        "best_calendar_year": {
+          "year": 2023,
+          "return": 0.556725
+        },
+        "n_months": 60,
+        "sharpe_excess_of_zero": 1.0242
+      },
+      "top10_vw": {
+        "terminal_wealth_multiple": 2.9573,
+        "cagr": 0.242166,
+        "ann_vol": 0.226651,
+        "max_drawdown_monthly": -0.338345,
+        "worst_calendar_year": {
+          "year": 2022,
+          "return": -0.338345
+        },
+        "best_calendar_year": {
+          "year": 2023,
+          "return": 0.541267
+        },
+        "n_months": 60,
+        "sharpe_excess_of_zero": 1.0685
+      },
+      "top500_vw": {
+        "terminal_wealth_multiple": 2.0207,
+        "cagr": 0.151069,
+        "ann_vol": 0.184298,
+        "max_drawdown_monthly": -0.247363,
+        "worst_calendar_year": {
+          "year": 2022,
+          "return": -0.198413
+        },
+        "best_calendar_year": {
+          "year": 2023,
+          "return": 0.276379
+        },
+        "n_months": 60,
+        "sharpe_excess_of_zero": 0.8197
+      },
+      "top500_ew": {
+        "terminal_wealth_multiple": 1.6988,
+        "cagr": 0.111802,
+        "ann_vol": 0.198708,
+        "max_drawdown_monthly": -0.233922,
+        "worst_calendar_year": {
+          "year": 2022,
+          "return": -0.162124
+        },
+        "best_calendar_year": {
+          "year": 2020,
+          "return": 0.225321
+        },
+        "n_months": 60,
+        "sharpe_excess_of_zero": 0.5626
+      }
+    }
+  },
+  "era_ratio_vs_top500_vw": {
+    "1993-1999_late_90s": {
+      "top1_vw": 1.7694,
+      "top3_vw": 1.392,
+      "top5_vw": 1.0332,
+      "top10_vw": 1.1741,
+      "top500_vw": 1.0,
+      "top500_ew": 0.8289
+    },
+    "2000-2012_lost_decade": {
+      "top1_vw": 0.3573,
+      "top3_vw": 0.6362,
+      "top5_vw": 0.5737,
+      "top10_vw": 0.5876,
+      "top500_vw": 1.0,
+      "top500_ew": 1.4362
+    },
+    "2013-2019_megacap_era": {
+      "top1_vw": 1.0671,
+      "top3_vw": 1.2565,
+      "top5_vw": 1.2784,
+      "top10_vw": 1.1307,
+      "top500_vw": 1.0,
+      "top500_ew": 0.9842
+    },
+    "2020-2024_covid_to_ai": {
+      "top1_vw": 1.2955,
+      "top3_vw": 1.5089,
+      "top5_vw": 1.4737,
+      "top10_vw": 1.4635,
+      "top500_vw": 1.0,
+      "top500_ew": 0.8407
+    }
+  },
+  "calendar_year_returns": {
+    "1993": {
+      "top1_vw": 0.16824,
+      "top3_vw": 0.065095,
+      "top5_vw": -0.024523,
+      "top10_vw": -0.005695,
+      "top500_vw": 0.086846,
+      "top500_ew": 0.111962
+    },
+    "1994": {
+      "top1_vw": -0.046283,
+      "top3_vw": -0.006078,
+      "top5_vw": -0.009023,
+      "top10_vw": 0.023821,
+      "top500_vw": 0.004195,
+      "top500_ew": -0.020862
+    },
+    "1995": {
+      "top1_vw": 0.451303,
+      "top3_vw": 0.389711,
+      "top5_vw": 0.415318,
+      "top10_vw": 0.370419,
+      "top500_vw": 0.383463,
+      "top500_ew": 0.356916
+    },
+    "1996": {
+      "top1_vw": 0.402809,
+      "top3_vw": 0.298298,
+      "top5_vw": 0.223937,
+      "top10_vw": 0.316234,
+      "top500_vw": 0.2245,
+      "top500_ew": 0.195447
+    },
+    "1997": {
+      "top1_vw": 0.509483,
+      "top3_vw": 0.282471,
+      "top5_vw": 0.299103,
+      "top10_vw": 0.330217,
+      "top500_vw": 0.335578,
+      "top500_ew": 0.30315
+    },
+    "1998": {
+      "top1_vw": 0.237952,
+      "top3_vw": 0.454964,
+      "top5_vw": 0.428379,
+      "top10_vw": 0.417786,
+      "top500_vw": 0.309237,
+      "top500_ew": 0.184461
+    },
+    "1999": {
+      "top1_vw": 0.683649,
+      "top3_vw": 0.575315,
+      "top5_vw": 0.341111,
+      "top10_vw": 0.367444,
+      "top500_vw": 0.247582,
+      "top500_ew": 0.226443
+    },
+    "2000": {
+      "top1_vw": -0.449003,
+      "top3_vw": -0.398817,
+      "top5_vw": -0.317903,
+      "top10_vw": -0.249188,
+      "top500_vw": -0.120765,
+      "top500_ew": -0.021076
+    },
+    "2001": {
+      "top1_vw": -0.150657,
+      "top3_vw": -0.120517,
+      "top5_vw": -0.077343,
+      "top10_vw": -0.092759,
+      "top500_vw": -0.138852,
+      "top500_ew": -0.106502
+    },
+    "2002": {
+      "top1_vw": -0.509526,
+      "top3_vw": -0.268619,
+      "top5_vw": -0.262542,
+      "top10_vw": -0.27866,
+      "top500_vw": -0.214331,
+      "top500_ew": -0.193042
+    },
+    "2003": {
+      "top1_vw": 0.063767,
+      "top3_vw": 0.119263,
+      "top5_vw": 0.143707,
+      "top10_vw": 0.179683,
+      "top500_vw": 0.282195,
+      "top500_ew": 0.352094
+    },
+    "2004": {
+      "top1_vw": 0.206826,
+      "top3_vw": 0.167211,
+      "top5_vw": 0.091183,
+      "top10_vw": 0.036544,
+      "top500_vw": 0.104211,
+      "top500_ew": 0.1623
+    },
+    "2005": {
+      "top1_vw": -0.12094,
+      "top3_vw": 0.030496,
+      "top5_vw": -0.012145,
+      "top10_vw": -0.021741,
+      "top500_vw": 0.057038,
+      "top500_ew": 0.101552
+    },
+    "2006": {
+      "top1_vw": 0.163135,
+      "top3_vw": 0.205859,
+      "top5_vw": 0.218947,
+      "top10_vw": 0.155269,
+      "top500_vw": 0.154521,
+      "top500_ew": 0.151382
+    },
+    "2007": {
+      "top1_vw": 0.243405,
+      "top3_vw": 0.158689,
+      "top5_vw": 0.095097,
+      "top10_vw": 0.026679,
+      "top500_vw": 0.070073,
+      "top500_ew": 0.066596
+    },
+    "2008": {
+      "top1_vw": -0.131361,
+      "top3_vw": -0.316461,
+      "top5_vw": -0.311674,
+      "top10_vw": -0.261142,
+      "top500_vw": -0.364721,
+      "top500_ew": -0.407668
+    },
+    "2009": {
+      "top1_vw": -0.126017,
+      "top3_vw": 0.049177,
+      "top5_vw": -0.018907,
+      "top10_vw": 0.03272,
+      "top500_vw": 0.254291,
+      "top500_ew": 0.344186
+    },
+    "2010": {
+      "top1_vw": 0.101403,
+      "top3_vw": 0.132486,
+      "top5_vw": 0.068049,
+      "top10_vw": 0.083668,
+      "top500_vw": 0.156118,
+      "top500_ew": 0.224868
+    },
+    "2011": {
+      "top1_vw": 0.172068,
+      "top3_vw": 0.138469,
+      "top5_vw": 0.132365,
+      "top10_vw": 0.084486,
+      "top500_vw": 0.014109,
+      "top500_ew": -0.001271
+    },
+    "2012": {
+      "top1_vw": 0.162201,
+      "top3_vw": 0.12951,
+      "top5_vw": 0.098315,
+      "top10_vw": 0.122496,
+      "top500_vw": 0.162158,
+      "top500_ew": 0.173421
+    },
+    "2013": {
+      "top1_vw": -0.151303,
+      "top3_vw": 0.12328,
+      "top5_vw": 0.184919,
+      "top10_vw": 0.247548,
+      "top500_vw": 0.337752,
+      "top500_ew": 0.375444
+    },
+    "2014": {
+      "top1_vw": 0.406179,
+      "top3_vw": 0.146095,
+      "top5_vw": 0.165774,
+      "top10_vw": 0.13012,
+      "top500_vw": 0.129512,
+      "top500_ew": 0.133834
+    },
+    "2015": {
+      "top1_vw": -0.030185,
+      "top3_vw": 0.01415,
+      "top5_vw": 0.059982,
+      "top10_vw": 0.066968,
+      "top500_vw": 0.011059,
+      "top500_ew": -0.013361
+    },
+    "2016": {
+      "top1_vw": 0.12481,
+      "top3_vw": 0.096693,
+      "top5_vw": 0.113511,
+      "top10_vw": 0.088822,
+      "top500_vw": 0.126109,
+      "top500_ew": 0.148668
+    },
+    "2017": {
+      "top1_vw": 0.484746,
+      "top3_vw": 0.416607,
+      "top5_vw": 0.369184,
+      "top10_vw": 0.309845,
+      "top500_vw": 0.231589,
+      "top500_ew": 0.225433
+    },
+    "2018": {
+      "top1_vw": -0.018939,
+      "top3_vw": 0.057292,
+      "top5_vw": 0.058634,
+      "top10_vw": 0.004508,
+      "top500_vw": -0.040208,
+      "top500_ew": -0.06678
+    },
+    "2019": {
+      "top1_vw": 0.496867,
+      "top3_vw": 0.558451,
+      "top5_vw": 0.438991,
+      "top10_vw": 0.395578,
+      "top500_vw": 0.308044,
+      "top500_ew": 0.295244
+    },
+    "2020": {
+      "top1_vw": 0.716242,
+      "top3_vw": 0.664177,
+      "top5_vw": 0.535965,
+      "top10_vw": 0.439239,
+      "top500_vw": 0.242859,
+      "top500_ew": 0.225321
+    },
+    "2021": {
+      "top1_vw": 0.216877,
+      "top3_vw": 0.266062,
+      "top5_vw": 0.319397,
+      "top10_vw": 0.363872,
+      "top500_vw": 0.253038,
+      "top500_ew": 0.214752
+    },
+    "2022": {
+      "top1_vw": -0.264038,
+      "top3_vw": -0.300517,
+      "top5_vw": -0.351723,
+      "top10_vw": -0.338345,
+      "top500_vw": -0.198413,
+      "top500_ew": -0.162124
+    },
+    "2023": {
+      "top1_vw": 0.490045,
+      "top3_vw": 0.544478,
+      "top5_vw": 0.556725,
+      "top10_vw": 0.541267,
+      "top500_vw": 0.276379,
+      "top500_ew": 0.171361
+    },
+    "2024": {
+      "top1_vw": 0.143088,
+      "top3_vw": 0.339539,
+      "top5_vw": 0.456096,
+      "top10_vw": 0.477348,
+      "top500_vw": 0.268207,
+      "top500_ew": 0.162867
+    }
+  },
+  "years_beating_benchmark": {
+    "top1_vw": {
+      "years_beating_top500_vw": 17,
+      "of_years": 32,
+      "hit_rate": 0.531
+    },
+    "top3_vw": {
+      "years_beating_top500_vw": 19,
+      "of_years": 32,
+      "hit_rate": 0.594
+    },
+    "top5_vw": {
+      "years_beating_top500_vw": 17,
+      "of_years": 32,
+      "hit_rate": 0.531
+    },
+    "top10_vw": {
+      "years_beating_top500_vw": 17,
+      "of_years": 32,
+      "hit_rate": 0.531
+    }
+  },
+  "modal_holdings": {
+    "top1": {
+      "1993-1999_late_90s": [
+        {
+          "ticker": "GE",
+          "company": "GENERAL ELECTRIC CO",
+          "months_held": 59,
+          "share_of_months": 0.702
+        },
+        {
+          "ticker": "MSFT",
+          "company": "MICROSOFT CORP",
+          "months_held": 15,
+          "share_of_months": 0.179
+        },
+        {
+          "ticker": "XON",
+          "company": "EXXON CORP",
+          "months_held": 4,
+          "share_of_months": 0.048
+        },
+        {
+          "ticker": "T",
+          "company": "AMERICAN TELEPHONE & TELEG CO",
+          "months_held": 4,
+          "share_of_months": 0.048
+        },
+        {
+          "ticker": "T",
+          "company": "A T & T CORP",
+          "months_held": 2,
+          "share_of_months": 0.024
+        }
+      ],
+      "2000-2012_lost_decade": [
+        {
+          "ticker": "XOM",
+          "company": "EXXON MOBIL CORP",
+          "months_held": 75,
+          "share_of_months": 0.481
+        },
+        {
+          "ticker": "GE",
+          "company": "GENERAL ELECTRIC CO",
+          "months_held": 58,
+          "share_of_months": 0.372
+        },
+        {
+          "ticker": "AAPL",
+          "company": "APPLE INC",
+          "months_held": 13,
+          "share_of_months": 0.083
+        },
+        {
+          "ticker": "MSFT",
+          "company": "MICROSOFT CORP",
+          "months_held": 10,
+          "share_of_months": 0.064
+        }
+      ],
+      "2013-2019_megacap_era": [
+        {
+          "ticker": "AAPL",
+          "company": "APPLE INC",
+          "months_held": 71,
+          "share_of_months": 0.845
+        },
+        {
+          "ticker": "MSFT",
+          "company": "MICROSOFT CORP",
+          "months_held": 10,
+          "share_of_months": 0.119
+        },
+        {
+          "ticker": "XOM",
+          "company": "EXXON MOBIL CORP",
+          "months_held": 2,
+          "share_of_months": 0.024
+        },
+        {
+          "ticker": "AMZN",
+          "company": "AMAZON COM INC",
+          "months_held": 1,
+          "share_of_months": 0.012
+        }
+      ],
+      "2020-2024_covid_to_ai": [
+        {
+          "ticker": "AAPL",
+          "company": "APPLE INC",
+          "months_held": 48,
+          "share_of_months": 0.814
+        },
+        {
+          "ticker": "MSFT",
+          "company": "MICROSOFT CORP",
+          "months_held": 11,
+          "share_of_months": 0.186
+        }
+      ]
+    },
+    "top3": {
+      "1993-1999_late_90s": [
+        {
+          "ticker": "GE",
+          "company": "GENERAL ELECTRIC CO",
+          "months_held": 83,
+          "share_of_months": 0.988
+        },
+        {
+          "ticker": "XON",
+          "company": "EXXON CORP",
+          "months_held": 54,
+          "share_of_months": 0.643
+        },
+        {
+          "ticker": "MSFT",
+          "company": "MICROSOFT CORP",
+          "months_held": 33,
+          "share_of_months": 0.393
+        },
+        {
+          "ticker": "KO",
+          "company": "COCA COLA CO",
+          "months_held": 28,
+          "share_of_months": 0.333
+        },
+        {
+          "ticker": "T",
+          "company": "A T & T CORP",
+          "months_held": 25,
+          "share_of_months": 0.298
+        },
+        {
+          "ticker": "T",
+          "company": "AMERICAN TELEPHONE & TELEG CO",
+          "months_held": 14,
+          "share_of_months": 0.167
+        },
+        {
+          "ticker": "INTC",
+          "company": "INTEL CORP",
+          "months_held": 8,
+          "share_of_months": 0.095
+        },
+        {
+          "ticker": "WMT",
+          "company": "WAL MART STORES INC",
+          "months_held": 3,
+          "share_of_months": 0.036
+        },
+        {
+          "ticker": "CSCO",
+          "company": "CISCO SYSTEMS INC",
+          "months_held": 2,
+          "share_of_months": 0.024
+        },
+        {
+          "ticker": "MRK",
+          "company": "MERCK & CO INC",
+          "months_held": 1,
+          "share_of_months": 0.012
+        },
+        {
+          "ticker": "IBM",
+          "company": "INTERNATIONAL BUSINESS MACHS COR",
+          "months_held": 1,
+          "share_of_months": 0.012
+        }
+      ],
+      "2000-2012_lost_decade": [
+        {
+          "ticker": "MSFT",
+          "company": "MICROSOFT CORP",
+          "months_held": 137,
+          "share_of_months": 0.878
+        },
+        {
+          "ticker": "XOM",
+          "company": "EXXON MOBIL CORP",
+          "months_held": 129,
+          "share_of_months": 0.827
+        },
+        {
+          "ticker": "GE",
+          "company": "GENERAL ELECTRIC CO",
+          "months_held": 105,
+          "share_of_months": 0.673
+        },
+        {
+          "ticker": "AAPL",
+          "company": "APPLE INC",
+          "months_held": 34,
+          "share_of_months": 0.218
+        },
+        {
+          "ticker": "WMT",
+          "company": "WAL MART STORES INC",
+          "months_held": 28,
+          "share_of_months": 0.179
+        },
+        {
+          "ticker": "CSCO",
+          "company": "CISCO SYSTEMS INC",
+          "months_held": 11,
+          "share_of_months": 0.071
+        },
+        {
+          "ticker": "PFE",
+          "company": "PFIZER INC",
+          "months_held": 10,
+          "share_of_months": 0.064
+        },
+        {
+          "ticker": "INTC",
+          "company": "INTEL CORP",
+          "months_held": 5,
+          "share_of_months": 0.032
+        },
+        {
+          "ticker": "C",
+          "company": "CITIGROUP INC",
+          "months_held": 3,
+          "share_of_months": 0.019
+        },
+        {
+          "ticker": "PG",
+          "company": "PROCTER & GAMBLE CO",
+          "months_held": 3,
+          "share_of_months": 0.019
+        },
+        {
+          "ticker": "CVX",
+          "company": "CHEVRON CORP NEW",
+          "months_held": 2,
+          "share_of_months": 0.013
+        },
+        {
+          "ticker": "IBM",
+          "company": "INTERNATIONAL BUSINESS MACHS COR",
+          "months_held": 1,
+          "share_of_months": 0.006
+        }
+      ],
+      "2013-2019_megacap_era": [
+        {
+          "ticker": "AAPL",
+          "company": "APPLE INC",
+          "months_held": 84,
+          "share_of_months": 1.0
+        },
+        {
+          "ticker": "MSFT",
+          "company": "MICROSOFT CORP",
+          "months_held": 70,
+          "share_of_months": 0.833
+        },
+        {
+          "ticker": "XOM",
+          "company": "EXXON MOBIL CORP",
+          "months_held": 30,
+          "share_of_months": 0.357
+        },
+        {
+          "ticker": "GOOG",
+          "company": "ALPHABET INC",
+          "months_held": 28,
+          "share_of_months": 0.333
+        },
+        {
+          "ticker": "AMZN",
+          "company": "AMAZON COM INC",
+          "months_held": 23,
+          "share_of_months": 0.274
+        },
+        {
+          "ticker": "GOOG",
+          "company": "GOOGLE INC",
+          "months_held": 9,
+          "share_of_months": 0.107
+        },
+        {
+          "ticker": "BRK",
+          "company": "BERKSHIRE HATHAWAY INC DEL",
+          "months_held": 8,
+          "share_of_months": 0.095
+        }
+      ],
+      "2020-2024_covid_to_ai": [
+        {
+          "ticker": "AAPL",
+          "company": "APPLE INC",
+          "months_held": 59,
+          "share_of_months": 1.0
+        },
+        {
+          "ticker": "MSFT",
+          "company": "MICROSOFT CORP",
+          "months_held": 59,
+          "share_of_months": 1.0
+        },
+        {
+          "ticker": "AMZN",
+          "company": "AMAZON COM INC",
+          "months_held": 21,
+          "share_of_months": 0.356
+        },
+        {
+          "ticker": "GOOG",
+          "company": "ALPHABET INC",
+          "months_held": 17,
+          "share_of_months": 0.288
+        },
+        {
+          "ticker": "GOOGL",
+          "company": "ALPHABET INC",
+          "months_held": 11,
+          "share_of_months": 0.186
+        },
+        {
+          "ticker": "NVDA",
+          "company": "NVIDIA CORP",
+          "months_held": 10,
+          "share_of_months": 0.169
+        }
+      ]
+    }
+  },
+  "top1_holding_by_month_sampled": [
+    {
+      "ym": "1993-01-01",
+      "name": "XON"
+    },
+    {
+      "ym": "1993-07-01",
+      "name": "T"
+    },
+    {
+      "ym": "1994-01-01",
+      "name": "GE"
+    },
+    {
+      "ym": "1994-07-01",
+      "name": "GE"
+    },
+    {
+      "ym": "1995-01-01",
+      "name": "GE"
+    },
+    {
+      "ym": "1995-07-01",
+      "name": "GE"
+    },
+    {
+      "ym": "1996-01-01",
+      "name": "GE"
+    },
+    {
+      "ym": "1996-07-01",
+      "name": "GE"
+    },
+    {
+      "ym": "1997-01-01",
+      "name": "GE"
+    },
+    {
+      "ym": "1997-07-01",
+      "name": "GE"
+    },
+    {
+      "ym": "1998-01-01",
+      "name": "GE"
+    },
+    {
+      "ym": "1998-07-01",
+      "name": "GE"
+    },
+    {
+      "ym": "1999-01-01",
+      "name": "MSFT"
+    },
+    {
+      "ym": "1999-07-01",
+      "name": "MSFT"
+    },
+    {
+      "ym": "2000-01-01",
+      "name": "MSFT"
+    },
+    {
+      "ym": "2000-07-01",
+      "name": "GE"
+    },
+    {
+      "ym": "2001-01-01",
+      "name": "GE"
+    },
+    {
+      "ym": "2001-07-01",
+      "name": "GE"
+    },
+    {
+      "ym": "2002-01-01",
+      "name": "GE"
+    },
+    {
+      "ym": "2002-07-01",
+      "name": "GE"
+    },
+    {
+      "ym": "2003-01-01",
+      "name": "MSFT"
+    },
+    {
+      "ym": "2003-07-01",
+      "name": "GE"
+    },
+    {
+      "ym": "2004-01-01",
+      "name": "GE"
+    },
+    {
+      "ym": "2004-07-01",
+      "name": "GE"
+    },
+    {
+      "ym": "2005-01-01",
+      "name": "GE"
+    },
+    {
+      "ym": "2005-07-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2006-01-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2006-07-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2007-01-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2007-07-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2008-01-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2008-07-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2009-01-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2009-07-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2010-01-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2010-07-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2011-01-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2011-07-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2012-01-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2012-07-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2013-01-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2013-07-01",
+      "name": "XOM"
+    },
+    {
+      "ym": "2014-01-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2014-07-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2015-01-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2015-07-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2016-01-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2016-07-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2017-01-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2017-07-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2018-01-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2018-07-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2019-01-01",
+      "name": "AMZN"
+    },
+    {
+      "ym": "2019-07-01",
+      "name": "MSFT"
+    },
+    {
+      "ym": "2020-01-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2020-07-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2021-01-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2021-07-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2022-01-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2022-07-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2023-01-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2023-07-01",
+      "name": "AAPL"
+    },
+    {
+      "ym": "2024-01-01",
+      "name": "MSFT"
+    },
+    {
+      "ym": "2024-07-01",
+      "name": "AAPL"
+    }
+  ],
+  "buy_and_hold_no_rebalance": {
+    "top1": {
+      "terminal_wealth_multiple": 19.7313,
+      "cagr": 0.097942,
+      "initial_names": [
+        "XON"
+      ],
+      "per_name_multiple": {
+        "XON": 19.731
+      },
+      "last_month_with_data": {
+        "XON": "2024-12-01"
+      },
+      "note": "a name whose CRSP data ends early is held FLAT thereafter (cash at 0%); mega caps exit by merger, so this understates nothing dramatic but is a stated assumption, not a fact"
+    },
+    "top3": {
+      "terminal_wealth_multiple": 19.0935,
+      "cagr": 0.096812,
+      "initial_names": [
+        "XON",
+        "WMT",
+        "GE"
+      ],
+      "per_name_multiple": {
+        "XON": 19.731,
+        "WMT": 27.023,
+        "GE": 10.366
+      },
+      "last_month_with_data": {
+        "XON": "2024-12-01",
+        "WMT": "2024-12-01",
+        "GE": "2024-12-01"
+      },
+      "note": "a name whose CRSP data ends early is held FLAT thereafter (cash at 0%); mega caps exit by merger, so this understates nothing dramatic but is a stated assumption, not a fact"
+    },
+    "top5": {
+      "terminal_wealth_multiple": 22.0518,
+      "cagr": 0.101773,
+      "initial_names": [
+        "XON",
+        "WMT",
+        "GE",
+        "T",
+        "MO"
+      ],
+      "per_name_multiple": {
+        "XON": 19.731,
+        "WMT": 27.023,
+        "GE": 10.366,
+        "T": 1.013,
+        "MO": 54.054
+      },
+      "last_month_with_data": {
+        "XON": "2024-12-01",
+        "WMT": "2024-12-01",
+        "GE": "2024-12-01",
+        "T": "2005-10-01",
+        "MO": "2024-12-01"
+      },
+      "note": "a name whose CRSP data ends early is held FLAT thereafter (cash at 0%); mega caps exit by merger, so this understates nothing dramatic but is a stated assumption, not a fact"
+    },
+    "top10": {
+      "terminal_wealth_multiple": 19.2744,
+      "cagr": 0.097136,
+      "initial_names": [
+        "XON",
+        "WMT",
+        "GE",
+        "T",
+        "MO",
+        "KO",
+        "MRK",
+        "GM",
+        "PG",
+        "PEP"
+      ],
+      "per_name_multiple": {
+        "XON": 19.731,
+        "WMT": 27.023,
+        "GE": 10.366,
+        "T": 1.013,
+        "MO": 54.054,
+        "KO": 12.772,
+        "MRK": 14.993,
+        "GM": 0.059,
+        "PG": 29.479,
+        "PEP": 16.35
+      },
+      "last_month_with_data": {
+        "XON": "2024-12-01",
+        "WMT": "2024-12-01",
+        "GE": "2024-12-01",
+        "T": "2005-10-01",
+        "MO": "2024-12-01",
+        "KO": "2024-12-01",
+        "MRK": "2024-12-01",
+        "GM": "2009-05-01",
+        "PG": "2024-12-01",
+        "PEP": "2024-12-01"
+      },
+      "note": "a name whose CRSP data ends early is held FLAT thereafter (cash at 0%); mega caps exit by merger, so this understates nothing dramatic but is a stated assumption, not a fact"
+    }
+  }
+}
