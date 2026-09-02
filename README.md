@@ -14,6 +14,15 @@ Aegis Finance is a free, open-source market-intelligence platform with an unusua
 
 **This is an educational tool, not financial advice.**
 
+**AI agents: read [`docs/INDEX.md`](docs/INDEX.md) first.** 268+ docs live in
+`docs/`; the index tiers them so a session loads TIER 0 (the canon and the
+vision) plus the ONE current TIER 1 roadmap, and retrieves everything else by
+question. **Session-start protocol:** `session_briefing()` +
+`aegis_verified_state()` (Optimus MCP) → `docs/INDEX.md` TIER 0 + TIER 1 →
+`brain_query` / `aegis_postmortems` before proposing any research, because the
+idea may already have a corpse with receipts. Execution (the six paper books)
+is a separate repo — enter it at `aegis-alpha-terminal/docs/INDEX.md`.
+
 ## Live
 
 | Surface | URL |
@@ -352,8 +361,8 @@ This repo doubles as an open research record. If you're studying retail-scale qu
 |---|---|
 | The complete project state: timeline, all 179 screened candidates, every bug found, testing infrastructure | [`docs/AEGIS_FINANCE_DOSSIER_2026-08-02.md`](docs/AEGIS_FINANCE_DOSSIER_2026-08-02.md) |
 | What did NOT work (35+ documented dead ends — the most reusable artifact here) | [`NEGATIVE_RESULTS.md`](NEGATIVE_RESULTS.md) |
-| The current research direction (post-GRAND-ARENA: four tracks + the Teacher Library) | [`docs/ROADMAP_BRAIN_V3_2026-08-14.md`](docs/ROADMAP_BRAIN_V3_2026-08-14.md) |
-| A guided map of the whole research record | [`docs/README.md`](docs/README.md) |
+| The current research direction | [`docs/INDEX.md`](docs/INDEX.md) — TIER 1 names the one active roadmap. (The old link here, `docs/ROADMAP_BRAIN_V3_2026-08-14.md`, moved to [`docs/archive/`](docs/archive/ROADMAP_BRAIN_V3_2026-08-14.md) and is no longer current.) |
+| A guided map of the whole research record | [`docs/INDEX.md`](docs/INDEX.md) (tiered, current) · [`docs/README.md`](docs/README.md) (older topic map, kept for its campaign tables) |
 | The current plan: gated fail-fast roadmap (data cert → method cert → trials) | [`docs/AEGIS_EXECUTION_ROADMAP.md`](docs/AEGIS_EXECUTION_ROADMAP.md) |
 | Five external AI reviews of this project, cross-verified, with their errors flagged | [`docs/AI_REVIEWS_SYNTHESIS_2026-08-03.md`](docs/AI_REVIEWS_SYNTHESIS_2026-08-03.md) + raw inputs in [`docs/external-reviews/`](docs/external-reviews/) |
 | The house rules (pre-registration, placebo gates, LLM-narrates-engine-computes) | [`docs/CANON.md`](docs/CANON.md) · [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) |

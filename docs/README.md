@@ -1,5 +1,12 @@
 # The research record — a map
 
+> **Navigation, 2026-09-02: `docs/INDEX.md` is the current entry point.** It
+> tiers all 268+ files and names the ONE active roadmap. This page is the older
+> topic map and is kept for the campaign tables below — but its "Start here"
+> row is stale: `ROADMAP_BRAIN_V3_2026-08-14.md` was moved to
+> `docs/archive/ROADMAP_BRAIN_V3_2026-08-14.md` and is no longer the current
+> plan. Read `INDEX.md` TIER 0 + TIER 1 first; use this page for retrieval.
+
 This directory is an append-only research record, not a documentation site.
 Nothing here is deleted when it goes stale — superseded documents get a banner
 pointing forward, and negative results are first-class citizens. This page is
@@ -9,7 +16,8 @@ the map.
 
 | Document | What it is |
 |---|---|
-| [`ROADMAP_BRAIN_V3_2026-08-14.md`](ROADMAP_BRAIN_V3_2026-08-14.md) | **The current plan** — post-GRAND-ARENA direction: four tracks (A–D) + the Teacher Library (E) |
+| [`INDEX.md`](INDEX.md) | **The current plan lives here** — TIER 1 names the one active roadmap |
+| [`archive/ROADMAP_BRAIN_V3_2026-08-14.md`](archive/ROADMAP_BRAIN_V3_2026-08-14.md) | **SUPERSEDED, archived** — post-GRAND-ARENA direction: four tracks (A–D) + the Teacher Library (E) |
 | [`CANON.md`](CANON.md) | The house rules, §13–§22 — each earned by a specific, cited failure |
 | [`../NEGATIVE_RESULTS.md`](../NEGATIVE_RESULTS.md) | 35+ documented dead ends — the most reusable artifact in the repo |
 | [`METHODOLOGY.md`](METHODOLOGY.md) | How trials are designed, powered, and graded |
@@ -24,7 +32,7 @@ the map.
 | [`GRAPH_COVARIANCE_1.md`](GRAPH_COVARIANCE_1.md) | Its first descendant, closed for $0: no headroom exists for *any* correlation predictor in a min-variance risk model at this scale |
 | [`REGIME_ARENA_1.md`](REGIME_ARENA_1.md) | Regime-conditioned selection: 35/36 arms not detectable; the permuted-label placebo discovery |
 | [`GRAND_ARENA_ABLATION.md`](GRAND_ARENA_ABLATION.md) · [`GRAND_ARENA_SWARM.md`](GRAND_ARENA_SWARM.md) · [`GRAND_ARENA_EXPOSURE.md`](GRAND_ARENA_EXPOSURE.md) · [`GRAND_ARENA_EXIT_LAB.md`](GRAND_ARENA_EXIT_LAB.md) · [`GRAND_ARENA_KNOWN_WORLDS.md`](GRAND_ARENA_KNOWN_WORLDS.md) · [`GRAND_ARENA_PORTFOLIO.md`](GRAND_ARENA_PORTFOLIO.md) | The six instruments, one document each |
-| [`NIGHT14_ARCHITECTURE_REVIEW.md`](NIGHT14_ARCHITECTURE_REVIEW.md) | Why the persona swarm was retired, and the silent model-alias discovery |
+| [`archive/NIGHT14_ARCHITECTURE_REVIEW.md`](archive/NIGHT14_ARCHITECTURE_REVIEW.md) | Why the persona swarm was retired, and the silent model-alias discovery |
 
 ## Live forward experiments
 
