@@ -1,13 +1,25 @@
-# docs/INDEX.md — what to read, in what order (2026-09-02)
+# docs/INDEX.md — what to read, in what order (2026-09-03)
 
 268+ markdown files live here; many are roadmaps or handoffs. A new session must
 NOT read them all. Tiers below; Optimus should embed TIER 2 and ARCHIVE for
 retrieval and load TIER 0 + the current TIER 1 verbatim.
 
-**Skim order:** TIER 0 (five files) → the ONE TIER 1 roadmap → then jump to a
-TIER 2 line by the question you arrived with. The execution repo has its own
-index now: `../aegis-alpha-terminal/docs/INDEX.md` (what seals a day, what
-places orders, what grades us, where the receipts are).
+## The skim → read ladder (four rungs, stop at the one that answers you)
+
+| Rung | Read | Cost | You now know |
+|---|---|---|---|
+| 0 | `../README.md` | 5 min | what Aegis is, the current headline results, the three licences |
+| 1 | **this file** | 3 min | which of 268 docs answers your question |
+| 2 | TIER 0 below (five files) + the ONE TIER 1 roadmap | 40 min | the invariants that outrank any roadmap, and the current plan |
+| 3 | the receipt named beside the number | varies | whether the number survives being looked at |
+
+**Never skip rung 3 for a number you are about to act on.** Every headline in
+this repo names a JSON receipt; prose is the summary, the receipt is the fact.
+
+Execution has its own index: `../aegis-alpha-terminal/docs/INDEX.md` (what seals
+a day, what places orders, what grades us, where the receipts are).
+Big local artefacts that are deliberately NOT committed are catalogued in
+**`DATA_MANIFEST.md`** — check it before concluding a dataset was never pulled.
 
 ## TIER 0 — CANON (changes a few times a year; read every session)
 - `AEGIS_STRATEGIC_INVARIANTS.md` — the sixteen points.
@@ -35,8 +47,26 @@ The standing artery remains:
 - SUE × reaction quadrants (commit 7db0126): the REACTION carries the information.
 - Everything else `FINDING_*.md` / `DECISION_*.md` by date.
 
-### NEWEST — landed 2026-09-01/02 (verified on disk 2026-09-02 unless noted)
-- `RETRO_2026-09-02_THE_MONTH_OF_DATA.md` — **LANDING TODAY** (being written as this index line is added; not yet on disk at 2026-09-02). The month-of-August retrospective: what the data programme bought and what it did not.
+### LANDING TODAY — 2026-09-03 (announced by their authors; NOT on disk when this line was written)
+
+Other sessions are writing these right now. **Verify before quoting**: if the
+file is not there, it is still being written, and a fact from a file that does
+not exist yet is not a fact. Listed so the next session finds them without a
+grep, and so a missing one is visibly missing rather than silently forgotten.
+
+- `FORENSICS_2026-09-03_HEALTH_EPISODE.md` — forensics on a health/uptime episode.
+- `TRIAL_RESULT_2026-09-03_BAND_HORIZON.md` — the readout of `PREREG_BAND_IS_BETA_1`: is BAND_PRIOR v2 a one-month selector at all, or a twelve-month prior being sampled monthly? Producer: `scripts/band_horizon_run.py`; the suspicion it tests is the horizon monotonicity in the chart at `assets/band_prior_by_horizon.png`.
+- `RESEARCH_2026-09-03_HOLDING_PERIOD_POLICY.md` — holding-period policy; the same question from the portfolio side.
+- `LEARNER_V2_2026-09-03.md` — the successor to LEARNER v1 below.
+- `STATES_2026-09-03_UNSUPERVISED_V1.md` — unsupervised state discovery (`learner/states.py`).
+
+### NEWEST — landed 2026-09-02 (verified on disk 2026-09-03)
+
+- **`backend/data/optimus/tracker_backtest/learner_v1.json` — LEARNER v1, the headline of the week.** `PRODUCT_EXPERIMENT`, pre-registered 2026-09-02 *before any model was fitted*; 441,278 name-months, 144 months, 5,713 names; 12 arms walk-forward 2016-2024 with a shuffled-target null. Champion `lgbm_clf`: rank IC **0.0954, t 8.21** (null 0.0046, t 0.81 — clean). **The money is the weaker claim**: the top-50 VW book is **t 1.49** paired vs the market, one arm of twelve. The finding that matters is *where* the skill is — IC **0.137 (t 8.79)** where the engine has NO OPINION, **0.058 (t 5.58)** in the band it calls toxic, and **0.002 (t 0.10)** inside ratio 3-5, the band it actually buys. Code: `learner/`, `scripts/learner_run.py`, `scripts/learner_shadow_seal.py`. Sealed shadow book: `backend/data/optimus/learner/shadow_book_2026-09-02.json`. Charts: `assets/learner_v1_engine_is_silent.png`, `assets/band_prior_by_horizon.png`. Train tables are parquet and NOT committed — see `DATA_MANIFEST.md`.
+- `REDTEAM_2026-09-02_ENGINE_AUDIT.md` — the money path attacked rather than reviewed: sizing arithmetic, the sealed-weight chain, gate ordering, stops, PIT integrity of the seal, ledger tearing, config drift. **20 findings (2 critical, 5 high)**, each tagged CONFIRMED-REPRODUCED / CONFIRMED-IN-SOURCE / PLAUSIBLE and each with a dollar shape. Four risk guards were found unable to fire at all. Scope is the OTHER repo's engine; findings are actioned there.
+- `HYPOTHESES_2026-09-02_HARVEST.md` — every receipt from 08-30 → 09-02 mined for observations that are surprising, **precursor-bearing** and killable. 17 typed candidates; the top two attack our own band prior. **Hypothesis generation only** — nothing pre-registered but the three drafts in §3, nothing traded, no lane seeded.
+- `RETRO_2026-09-02_THE_MONTH_OF_DATA.md` — the month-of-August retrospective. Receipt: `backend/data/optimus/tracker_backtest/month_retro_20260902.json`. ~6.0 GB across 31 dataset families bought **12,233 rows** of PIT-clean forward observation. The biggest single loss was a name **our own rule refused** (RZLV, −17.30%, `claims: false`, held at 10% anyway), and it was the only company-specific loss that day — the other twelve were leverage at **mean market beta 2.10**. BAND_PRIOR v2 is the month's best decision and it is measurable.
+- `backend/data/optimus/tracker_backtest/holder_h2_h3.json` — holder provenance H2/H3 on the full 13F panel, 23.3m events / 74.7M position-quarters. **Identity is thin** (t 2.24, ~5bps per 1sd — under costs); the duration intuition **inverts** (NEW by a long-duration filer underperforms — index-reconstitution confound, needs 13D/G to separate); a manager's own top-decile stake is **−1.21pp/252 sessions, t −3.95 — adverse**. Only matched differences are readable; the EW benchmark is a size artefact. Sibling summary: `holder_fingerprint_summary.json`. Raw panel is >20MB and untracked — `DATA_MANIFEST.md`.
 - `CASE_2026-09-02_GPRO_HOLDER_ATTENTION.md` — the first concrete instance of holder provenance. Miss type **NOT OBSERVED**, not wrongly rejected: the liquidity floor did NOT exclude GPRO (~$4.0m/day ADV clears the $3.0m floor) — **universe construction** did, and `alpha/sources/sec.py` watches 8-K Item 2.02 only, never 13D/13G. Case file + draft typed hypothesis; `PRODUCT_EXPERIMENT` sought, `RESEARCH_CLAIM` explicitly not. Sibling: `IDEA_2026-08-31_HOLDER_PROVENANCE_TO_THE_ROOTS.md` (H1–H7).
 - `backend/data/optimus/tracker_backtest/analyst_target_grades.json` — 1.33M individual 12-month analyst targets graded on `amaskcd` (the analyst as a person, across firms). **BIAS persists (Spearman 0.376, deciles −2.8pp → +80pp); ACCURACY barely does (0.087).** Skill-weighting must be bias-first. Row-level grades are local-only parquet — read `read_me_first` before quoting.
 - `backend/data/optimus/tracker_backtest/time_machine_arena.json` — monthly frozen dates 2015–2024, four eras, seven minds, four horizons, plus the disagreement miner. AEGIS-admissible positive at 1m in **all four eras**, decaying by 12m ⇒ a monthly-refresh signal. Carries an `anachronism_note`; row-level parquet is local-only.
@@ -50,7 +80,10 @@ re-verified against code or a receipt before it is acted on. Do not load the
 archive wholesale into context; retrieve by question through Optimus.
 
 ## Rules for this index
-- **Verify a pointer before writing it, and FLAG a broken one rather than deleting it.** A wrong path in an index costs more than a missing one; a silently deleted line loses the finding. Every path above was checked against disk on 2026-09-02 — one break is flagged in TIER 2 and one artifact is marked "landing today".
+- **Verify a pointer before writing it, and FLAG a broken one rather than deleting it.** A wrong path in an index costs more than a missing one; a silently deleted line loses the finding. Every path above was checked against disk on **2026-09-03** — one break is flagged in TIER 2, and the five "LANDING TODAY" files are flagged as absent-by-design because another session is writing them as this line is read.
+- **A number in this index carries its receipt path.** If you cannot name the receipt, the line does not belong here — it belongs in a handoff.
+- Data that is too big to commit is not missing; it is in `DATA_MANIFEST.md`.
+- Figures live in `assets/` and are regenerated, never hand-edited: `python tools/readme_charts.py [chart …]` reads the live track-record API and the frozen receipts. Numbers on a chart are read from JSON, never retyped.
 - One current roadmap at a time. A new roadmap file REPLACES the active TIER 1 line here or it is not the roadmap.
 - A handoff is a session's diary, not a source of truth; the truth is code, receipts and TIER 0.
 - Anything Murat says about intent goes into the VISION file (dated section), never only into a handoff.

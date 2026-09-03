@@ -10,18 +10,73 @@
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square"></a>
 </p>
 
-Aegis Finance is a free, open-source market-intelligence platform with an unusual spine: it **measures itself in public and tells you when it's wrong**. Every strategy idea is pre-registered before it touches data, tested on live forward paper portfolios (running since 2026-06-08), and published whether it works or not — the failures live in [NEGATIVE_RESULTS.md](NEGATIVE_RESULTS.md), at the top level, where a skeptic finds them first. Around that spine sits a full market dashboard: crash-risk and fragility measurement, Monte Carlo projections, portfolio construction, factor analysis, and a growing set of point-in-time data collectors — all on free data sources.
+Aegis Finance is a free, open-source **self-improving investment intelligence
+system** that measures itself in public and tells you when it is wrong. Its
+objective is compound return under explicit survival constraints — not
+classification accuracy, not a pretty backtest. It searches the *whole* market
+rather than the famous part of it, treats an LLM as something that proposes
+causal hypotheses while deterministic engines compute and grade them, and keeps
+its own corpses: a refused strategy with a written reason is an asset here, not
+an embarrassment. Every idea is pre-registered before it touches data, tested on
+live forward paper portfolios (running since **2026-06-08**), and published
+whether it works or not — the failures live in
+[NEGATIVE_RESULTS.md](NEGATIVE_RESULTS.md), at the top level, where a skeptic
+finds them first. Around that spine sits a full market dashboard: crash-risk and
+fragility measurement, Monte Carlo projections, portfolio construction, factor
+analysis, and point-in-time data collectors — all on free data sources.
+The twelve original + four added invariants are in
+[`docs/AEGIS_STRATEGIC_INVARIANTS.md`](docs/AEGIS_STRATEGIC_INVARIANTS.md); they
+outrank any roadmap in this repo.
 
 **This is an educational tool, not financial advice.**
 
-**AI agents: read [`docs/INDEX.md`](docs/INDEX.md) first.** 268+ docs live in
-`docs/`; the index tiers them so a session loads TIER 0 (the canon and the
-vision) plus the ONE current TIER 1 roadmap, and retrieves everything else by
-question. **Session-start protocol:** `session_briefing()` +
-`aegis_verified_state()` (Optimus MCP) → `docs/INDEX.md` TIER 0 + TIER 1 →
-`brain_query` / `aegis_postmortems` before proposing any research, because the
-idea may already have a corpse with receipts. Execution (the six paper books)
-is a separate repo — enter it at `aegis-alpha-terminal/docs/INDEX.md`.
+## Start here — the skim → read ladder
+
+Five rungs. **Stop at the one that answers your question**; each is a strict
+superset of the one above it. This is the same ladder for a human skimming on a
+phone and for an agent about to change something.
+
+| Rung | Read | Cost | You leave knowing |
+|---|---|---|---|
+| **1** | this README | 5 min | what Aegis is, the headline results, what it refuses to claim |
+| **2** | [`docs/INDEX.md`](docs/INDEX.md) | 3 min | which of 268+ docs answers your question |
+| **3** | **TIER 0** — [invariants](docs/AEGIS_STRATEGIC_INVARIANTS.md) · [the vision, verbatim](docs/AEGIS_VISION_2026-08-28_MURAT_IN_HIS_OWN_WORDS.md) · [objective §0](docs/OPTIMUS_OBJECTIVE.md) · [CLAUDE.md](CLAUDE.md) | 30 min | the constraints that outrank every plan |
+| **4** | the **ONE** current TIER 1 roadmap (INDEX names it; today [`ROADMAP_2026-08-31_COMPETITION_WEEK_WORLD_MODEL.md`](docs/ROADMAP_2026-08-31_COMPETITION_WEEK_WORLD_MODEL.md)) | 30 min | what is being built now and what gates it |
+| **5** | **the receipt** named beside the number | varies | whether the number survives being looked at |
+
+**Rung 5 is not optional for a number you are about to act on.** Every headline
+in this repo names a JSON receipt; prose is the summary, the receipt is the
+fact. A number that lives only in prose has already burned us once (`corr =
+0.516` turned out to be a filtered subset nobody had named).
+
+**Agents, additionally:** run `session_briefing()` + `aegis_verified_state()`
+(Optimus MCP) *before* reading code, and `brain_query` / `aegis_postmortems`
+*before* proposing any research — the idea may already have a corpse with
+receipts. Big datasets that are deliberately **not** committed are catalogued in
+[`docs/DATA_MANIFEST.md`](docs/DATA_MANIFEST.md); check there before concluding
+something was never pulled. Execution — the six live paper books — is a
+**separate repo**, entered at `aegis-alpha-terminal/docs/INDEX.md`. There is no
+`docs/HANDOFF.md` in this repo, on purpose.
+
+## Three licences — what a result is allowed to claim
+
+The single most useful thing this project did in 2026 was stop applying one
+evidence standard to everything. Research rigour determines what Aegis is
+allowed to **claim**; it must not determine what Aegis is allowed to **test** in
+paper. Every artefact here names one of these:
+
+| Licence | Permits | Required before it starts | Significance gate? |
+|---|---|---|---|
+| `PRODUCT_EXPERIMENT` | internal simulation + external **paper** brokerage | a frozen strategy contract *before the first decision*: policy hash, timestamp, inputs, costs, fill convention, objective | **No.** No MDE, no multiplicity control, no 24-month floor |
+| `CAPITAL_CANDIDATE` | candidacy for **real money** | matured forward evidence, realistic costs, calibration, utility improvement, drawdown/ruin bounds | Yes — and promotion stays **attended** by a human |
+| `RESEARCH_CLAIM` | "this is alpha" — a paper, a public skill claim | full pre-registration, MDE, multiplicity control, matched controls, holdout | Yes — every standing evidence rule binds |
+
+Four things never relax at any licence, and they are enforced in code rather
+than by intention: **no information acted on before it was public**; **no target
+leakage**; **costs are never omitted** (`portfolio_farm.Policy` *refuses* zero
+costs unless `zero_cost_diagnostic=True`, and the flag travels onto every result
+row); and **once a candidate enters forward paper, its version is frozen**.
+No LLM ever has authority over real capital.
 
 ## Live
 
@@ -30,6 +85,91 @@ is a separate repo — enter it at `aegis-alpha-terminal/docs/INDEX.md`.
 | Web app | https://aegis-finance-six.vercel.app |
 | API | Railway (FastAPI backend, auto-deployed from `main`) |
 | Optimus brain showcase | https://optimus-brain-alpha.vercel.app |
+
+## The newest results (September 2026)
+
+*Every figure below is generated from the frozen run artifacts and the live API
+by [`tools/readme_charts.py`](tools/readme_charts.py) — numbers are read from
+JSON, never retyped. Regenerate with `python tools/readme_charts.py`.*
+
+### 1. The skill lives where the engine is silent
+
+🔵 **BACKTEST · `PRODUCT_EXPERIMENT`** — receipt:
+[`backend/data/optimus/tracker_backtest/learner_v1.json`](backend/data/optimus/tracker_backtest/learner_v1.json)
+
+![LEARNER v1: rank IC by arm, and the champion's IC split by what the engine already said](docs/assets/learner_v1_engine_is_silent.png)
+
+LEARNER v1 asked whether a machine-learned model can add anything on top of the
+engine's own banded prior. It was pre-registered on 2026-09-02 *before any model
+was fitted*, then run walk-forward over **441,278 name-months / 144 months /
+5,713 names**, twelve arms, with a shuffled-target null running the identical
+pipeline. Three things came out, and only one of them is a good headline:
+
+- **The ordering is real.** Champion `lgbm_clf` reaches mean monthly rank IC
+  **0.0954, t 8.21** (t on months, n = 107) while the shuffled-target null sits
+  at **0.0046 (t 0.81)**. The null is clean.
+- **The money is not — yet.** The champion's top-50 value-weighted book is
+  **t 1.49** paired against the market. That is one arm of twelve, on one draw
+  of a correlated set. *IC is not P&L*, and this README does not claim it is.
+- **The interesting result is conditional.** Split by the engine's own bands,
+  the champion's IC is **0.137 (t 8.79)** where the engine has **no opinion**,
+  **0.058 (t 5.58)** in the band the engine calls toxic — and **0.002 (t 0.10)**
+  inside ratio 3–5, *the band the engine actually buys*. The learner is not
+  improving the engine's picks. It is seeing in the dark where the engine is
+  blind.
+
+### 2. The prior is a 12-month object running on a 1-month clock
+
+🔵 **BACKTEST** — same receipt (`scoreboard_other_horizons.prior`)
+
+![BAND_PRIOR v2 rank IC by forecast horizon: t 12.7 at 1m rising to t 34.5 at 12m](docs/assets/band_prior_by_horizon.png)
+
+The engine's banded analyst-target prior ranks the cross-section monotonically
+*better* the further out you look — **t 12.7 at one month rising to t 34.5 at
+twelve**, with all 96 twelve-month windows positive. The live books rebalance
+**monthly**. A signal being strongest at a horizon nobody trades it at is a
+construction bug, not a discovery, and the trial that separates "twelve-month
+prior sampled too often" from "beta exposure wearing a selection label" is
+running now (`scripts/band_horizon_run.py`, `PREREG_BAND_IS_BETA_1`).
+⚠ The 2013–2024 band constants were fitted in full sample, so the prior is
+**flattered** in this chart — read `prior.in_sample_warning` in the receipt
+before quoting it.
+
+### 3. The forward record, unedited
+
+🟢 **LIVE FORWARD** — source: the public
+[track-record API](https://aegis-finance-production.up.railway.app/api/pi/track-record)
+
+![Ten paper lanes, one panel each, each against SPY rebased to that lane's own start](docs/assets/lanes_small_multiples.png)
+
+Ten paper lanes, $100k each, marked daily since **2026-06-08**, configs
+hash-pinned so tampering is detectable. **The ordering here is noise** — at this
+window the standard error on an annualized Sharpe is about 2.1, which is wider
+than every gap on the chart, including the gap to SPY. What is *not* noise is
+that the record exists and cannot be edited backwards. The deeply underwater
+`mirror` lane stays on the chart on purpose: it is this project's own receipt
+for what concentrated idiosyncratic risk does to a book.
+
+### 4. What a month of data buying actually bought
+
+🔶 **EXPLORATORY** — receipt:
+[`backend/data/optimus/tracker_backtest/month_retro_20260902.json`](backend/data/optimus/tracker_backtest/month_retro_20260902.json)
+· writeup: [`docs/RETRO_2026-09-02_THE_MONTH_OF_DATA.md`](docs/RETRO_2026-09-02_THE_MONTH_OF_DATA.md)
+
+August 2026 acquired roughly **6.0 GB across 31 dataset families**. Only
+**12,233 rows** of it are point-in-time-clean *forward* observations; everything
+else is substrate or hindsight. The month's largest single loss was a name our
+own rule had **refused** (`claims: false`, rank 576 of 766) and the book held at
+10% anyway — and it was the only company-specific loss that day. The other
+twelve holdings were leverage: **mean market beta 2.10** into a −0.687% SPY.
+Two forward sessions exist; n = 2 decides nothing. That is the honest state.
+
+Related, same window: holder-provenance H2/H3 on the full 13F panel
+([`holder_h2_h3.json`](backend/data/optimus/tracker_backtest/holder_h2_h3.json))
+found holder identity **thin** (t 2.24, ~5 bps per 1sd — under costs), the
+long-duration-holder intuition **inverted**, and a manager's own top-decile
+stake **adverse** (−1.21pp per 252 sessions, t −3.95). Three intuitions, three
+adjudications, none of them the one we expected. That is the system working.
 
 ## The honesty machine
 
@@ -129,7 +269,7 @@ information — so the live experiments now test the uses that remain. Paper
 portfolios 🟢 will eventually say whether any of it makes money. No verdict
 before its clock.
 
-## Scoreboard — what the research has actually established (Aug 2026)
+## Scoreboard — what the research has actually established (through Aug 2026)
 
 The questions this project has spent real compute answering, with the honest
 verdicts. Receipts for every row live in [`docs/`](docs/README.md).
@@ -147,7 +287,7 @@ verdicts. Receipts for every row live in [`docs/`](docs/README.md).
 
 ### The findings, in pictures
 
-*Every figure is generated from the frozen run artifacts and the live API by
+*Same generator as the September figures above:
 [`tools/readme_charts.py`](tools/readme_charts.py) — numbers are read, never retyped.*
 
 ![The one clean positive: the semantic graph clears its MDE while both placebos sit at zero](docs/assets/finding_market_graph.png)
@@ -324,7 +464,7 @@ python -m pytest backend/tests/
 
 ```
 Next.js 14 (Vercel)  ──REST──►  FastAPI (Railway)
-                                 ├─ 19 routers / 130+ endpoints
+                                 ├─ 28 routers / 130+ endpoints
                                  ├─ 100+ services (MC, crash, portfolio, factors…)
                                  ├─ APScheduler → daily lane marks + PIT collectors
                                  └─ SQLite PIT store + paper-lane NAV (persistent volume)
@@ -339,9 +479,13 @@ Data: Yahoo Finance · FRED · SEC EDGAR · GDELT · Kenneth French · Polygon �
 
 ## The track record, precisely
 
-![Paper lanes vs SPY](docs/assets/paper_lanes_vs_spy.png)
+![Paper lanes vs SPY, all ten on one axis](docs/assets/paper_lanes_vs_spy.png)
 
-🟢 **LIVE FORWARD** — *the record above is regenerated from the public track-record API by `tools/readme_charts.py`. Read the title's caveat before reading the lines: at this window the standard error on an annualized Sharpe is ±2.1, so ordering is noise — including against SPY. The deeply underwater mirror lane is kept on the chart deliberately: it is the project's own receipt for what concentrated idiosyncratic risk does.*
+🟢 **LIVE FORWARD** — *the same data as the small-multiples chart above, on one
+axis. Regenerated from the public track-record API by `tools/readme_charts.py`.
+Read the title's caveat before reading the lines: at this window the standard
+error on an annualized Sharpe is ±2.1, so ordering is noise — including against
+SPY.*
 
 | Fact | Value |
 |---|---|
@@ -351,19 +495,63 @@ Data: Yahoo Finance · FRED · SEC EDGAR · GDELT · Kenneth French · Polygon �
 | Skill-claim policy | None before 24 months of forward record |
 | Registry | All trials pre-registered in `docs/TRIALS/` + experiment registry |
 
-Replay and comparison endpoints are methodology backtests, not the track record — the policy is written down in `docs/TRACK_RECORD_POLICY.md`.
+Replay and comparison endpoints are methodology backtests, not the track record — the policy is written down in [`docs/TRACK_RECORD_POLICY.md`](docs/TRACK_RECORD_POLICY.md).
+
+## Repo map — where things live
+
+```
+aegis-finance/
+├── README.md              ← rung 1 of the ladder (you are here)
+├── CLAUDE.md              ← operating rules for agents; TIER 0
+├── NEGATIVE_RESULTS.md    ← 35+ documented dead ends. The most reusable artifact here.
+│
+├── backend/               FastAPI service — what the website actually runs
+│   ├── main.py            app + APScheduler (daily lane marks, PIT collectors)
+│   ├── config.py          EVERY parameter lives here — never hardcode in a service
+│   ├── routers/           28 routers / 130+ endpoints (track record, health, screener…)
+│   ├── services/          100+ stateless services (Monte Carlo, crash, factors, portfolio)
+│   ├── tests/             the fast suite — OFFLINE and un-hangable by design
+│   └── data/optimus/      RECEIPTS. Every headline number in this repo resolves here.
+│       └── tracker_backtest/   learner_v1 · holder H2/H3 · analyst grades · band prior
+│
+├── learner/               the learned layer: dataset, prior, models, calibration,
+│                          shadow scoring, unsupervised states. Driven by scripts/learner_run.py
+├── engine/                offline research — training, purged CV, walk-forward. Not served.
+├── scripts/               one-shot research runs, each writing ONE receipt
+│                          (portfolio_farm_run · learner_run · band_horizon_run · llm_cost_audit)
+├── lab/                   the autonomous overnight R&D loop
+├── tools/                 readme_charts.py — every figure in this README
+├── sdk/                   pip-installable Python client for the REST API
+├── frontend/              Next.js 14 app (Vercel), shadcn/ui + Tailwind + Recharts
+└── docs/                  268+ files. ENTER AT docs/INDEX.md, never by grep.
+    ├── INDEX.md           the tiered map — rung 2
+    ├── AEGIS_STRATEGIC_INVARIANTS.md   TIER 0, outranks every roadmap
+    ├── DATA_MANIFEST.md   what is deliberately NOT committed, and how to rebuild it
+    ├── TRIALS/            pre-registrations with decision dates
+    ├── assets/            generated figures (never hand-edited)
+    └── archive/           a diary, not a source of truth
+```
+
+**The one repo-shaped thing to know:** live execution — the six paper books, the
+ledger, the order path — is a **different repository**
+(`aegis-alpha-terminal` locally, `github.com/Murathanx12/investing-bot-test-`
+public). Commits move between the two by hand, and a commit hash quoted in a
+handoff belongs to whichever repo that handoff lives in.
 
 ## Research corpus — start here (humans and AI agents)
 
-This repo doubles as an open research record. If you're studying retail-scale quant research discipline — or you're an AI agent asked to review, extend, or learn from this project — read in this order:
+This repo doubles as an open research record. If you're studying retail-scale quant research discipline — or you're an AI agent asked to review, extend, or learn from this project — read in this order. (For the short version, use the [skim → read ladder](#start-here--the-skim--read-ladder) at the top; this table is the by-question index.)
 
 | You want… | Read |
 |---|---|
+| **The tiered map of everything — the one entry point** | [`docs/INDEX.md`](docs/INDEX.md) · [`docs/README.md`](docs/README.md) (older topic map, kept for its campaign tables) |
+| **The invariants that outrank every roadmap** | [`docs/AEGIS_STRATEGIC_INVARIANTS.md`](docs/AEGIS_STRATEGIC_INVARIANTS.md) |
+| **The newest results and their receipts** | INDEX → "NEWEST" section · [`learner_v1.json`](backend/data/optimus/tracker_backtest/learner_v1.json) · [`RETRO_2026-09-02_THE_MONTH_OF_DATA.md`](docs/RETRO_2026-09-02_THE_MONTH_OF_DATA.md) · [`HYPOTHESES_2026-09-02_HARVEST.md`](docs/HYPOTHESES_2026-09-02_HARVEST.md) · [`REDTEAM_2026-09-02_ENGINE_AUDIT.md`](docs/REDTEAM_2026-09-02_ENGINE_AUDIT.md) |
 | The complete project state: timeline, all 179 screened candidates, every bug found, testing infrastructure | [`docs/AEGIS_FINANCE_DOSSIER_2026-08-02.md`](docs/AEGIS_FINANCE_DOSSIER_2026-08-02.md) |
 | What did NOT work (35+ documented dead ends — the most reusable artifact here) | [`NEGATIVE_RESULTS.md`](NEGATIVE_RESULTS.md) |
 | The current research direction | [`docs/INDEX.md`](docs/INDEX.md) — TIER 1 names the one active roadmap. (The old link here, `docs/ROADMAP_BRAIN_V3_2026-08-14.md`, moved to [`docs/archive/`](docs/archive/ROADMAP_BRAIN_V3_2026-08-14.md) and is no longer current.) |
-| A guided map of the whole research record | [`docs/INDEX.md`](docs/INDEX.md) (tiered, current) · [`docs/README.md`](docs/README.md) (older topic map, kept for its campaign tables) |
-| The current plan: gated fail-fast roadmap (data cert → method cert → trials) | [`docs/AEGIS_EXECUTION_ROADMAP.md`](docs/AEGIS_EXECUTION_ROADMAP.md) |
+| Which large datasets exist but are deliberately not committed, and how to rebuild them | [`docs/DATA_MANIFEST.md`](docs/DATA_MANIFEST.md) |
+| The older gated fail-fast roadmap (data cert → method cert → trials) — superseded by TIER 1, kept as a receipt | [`docs/AEGIS_EXECUTION_ROADMAP.md`](docs/AEGIS_EXECUTION_ROADMAP.md) |
 | Five external AI reviews of this project, cross-verified, with their errors flagged | [`docs/AI_REVIEWS_SYNTHESIS_2026-08-03.md`](docs/AI_REVIEWS_SYNTHESIS_2026-08-03.md) + raw inputs in [`docs/external-reviews/`](docs/external-reviews/) |
 | The house rules (pre-registration, placebo gates, LLM-narrates-engine-computes) | [`docs/CANON.md`](docs/CANON.md) · [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) |
 | Pre-registered trials with decision dates | [`docs/TRIALS/`](docs/TRIALS/) |
