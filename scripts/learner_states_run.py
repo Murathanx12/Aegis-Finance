@@ -75,18 +75,27 @@ ID_COLS = ["permno", "month", "entry_date", "band", "in_admissible", "sector",
 TARGET_COLS = ["excess_vw_1m", "excess_vw_3m", "excess_ew_1m",
                "fwd_1m", "fwd_3m", "prior_1m", "prior_3m", "mat_date_1m"]
 
-#: CRSP SIC 9999 = NONCLASSIFIABLE, and the panel's sector map labels it
-#: "Public Administration" -- 99,334 of 441,278 rows (22.51%). It is MISSINGNESS
-#: wearing an industry's name. Reported by a sibling session on 2026-09-03; the
-#: fix is queued centrally and this file does not edit the shared source.
+#: CRSP SIC 9999 = NONCLASSIFIABLE, and PRE-FIX panels label it
+#: "Public Administration" -- 99,334 of 441,278 rows (22.51%). That was
+#: MISSINGNESS wearing an industry's name. The source was fixed on 2026-09-03
+#: (`tracker_ibes_backtest.SIC_DIVISIONS` now sends 9900-9999 to
+#: "Unclassified" and keeps "Public Administration" for the genuine 9000-9899
+#: codes), but a built parquet is immutable, so BOTH vintages remain readable
+#: here: on a panel that carries the post-fix label, "Public Administration"
+#: is genuine and must NOT be relabelled; on an older panel it still means
+#: 98.8% code 9999 and is. The vintage is derived from the labels present,
+#: never assumed from a date.
 #:
-#: It does not touch the representation -- `sector` is not in
+#: None of this touches the representation -- `sector` is not in
 #: `S.STATE_FEATURES` and not in `S.MARKET_FEATURES`, so no state can be
-#: "the Public Administration state". It is relabelled only where a state's
+#: "the Public Administration state". Relabelling happens only where a state's
 #: composition is REPORTED, so a reader cannot mistake the bucket for an
 #: industry when interpreting what a state contains.
 MISLABELLED_SECTOR = "Public Administration"
 UNKNOWN_SECTOR_LABEL = "UNKNOWN_sic_9999 (panel mislabels this 'Public Administration')"
+#: The honest source label, post-fix. String pinned against the source by
+#: `backend/tests/test_sic_divisions.py`.
+SOURCE_UNCLASSIFIED_LABEL = "Unclassified"
 
 #: The model predictions graded per state. `NULL_shuffled_target__lgbm_raw` is
 #: v1's own null arm and is graded here for the same reason it was graded
@@ -656,10 +665,12 @@ def _grade(argv, receipt, df, A, MS, meta, k, mk, ks, t_start) -> int:
     }
 
     receipt["sector_caveat"] = {
-        "finding": ("CRSP SIC 9999 (NONCLASSIFIABLE) is labelled 'Public Administration' "
-                    "in the panel's sector map: 99,334 / 441,278 rows = 22.51%. It is "
-                    "missingness, not an industry. Reported by a sibling session 2026-09-03; "
-                    "the fix is queued centrally and this run does not edit the shared source."),
+        "finding": ("CRSP SIC 9999 (NONCLASSIFIABLE) was labelled 'Public Administration' "
+                    "in pre-fix panels: 99,334 / 441,278 rows = 22.51% -- missingness, "
+                    "not an industry. The source was fixed 2026-09-03 "
+                    "(tracker_ibes_backtest.SIC_DIVISIONS: 9900-9999 -> 'Unclassified'); "
+                    "already-built panels are immutable, so this run detects the vintage "
+                    "from the labels present and only relabels a pre-fix panel."),
         "effect_on_this_receipt": (
             "NONE on the representation. `sector` is not in STATE_FEATURES and not in "
             "MARKET_FEATURES, so no discovered state can be an artefact of the mislabel -- "
@@ -670,7 +681,12 @@ def _grade(argv, receipt, df, A, MS, meta, k, mk, ks, t_start) -> int:
                                 in df["sector"].value_counts().items()},
     }
     _sec = df[["permno", "month", "sector"]].copy()
-    _sec["sector"] = _sec["sector"].replace({MISLABELLED_SECTOR: UNKNOWN_SECTOR_LABEL})
+    # Vintage-aware: a post-fix panel (source fixed 2026-09-03) already says
+    # "Unclassified" honestly and its "Public Administration" is GENUINE, so
+    # relabelling it would put "unknown" on rows whose sector is known. Only a
+    # pre-fix panel carries the mislabel this rename exists to disarm.
+    if not bool((_sec["sector"] == SOURCE_UNCLASSIFIED_LABEL).any()):
+        _sec["sector"] = _sec["sector"].replace({MISLABELLED_SECTOR: UNKNOWN_SECTOR_LABEL})
     _gs = g[["permno", "month", state_col]].merge(_sec, on=["permno", "month"], how="left")
     receipt["state_sector_composition"] = {
         "note": ("DESCRIPTIVE ONLY -- sector did not enter the representation. The 9999 "

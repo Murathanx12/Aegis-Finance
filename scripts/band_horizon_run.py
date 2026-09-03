@@ -698,15 +698,19 @@ def run() -> dict:
             "why_it_is_stated": (
                 "a cross-agent finding on 2026-09-03: CRSP SIC 9000-9999 in this panel is "
                 "98.8% code 9999 = NONCLASSIFIABLE, and tracker_ibes_backtest.SIC_DIVISIONS "
-                "labels that whole range 'Public Administration' -- about 99,334 of 441,278 "
-                "rows (22.5%) carry a sector label that actually means UNKNOWN. Anything "
-                "sector-neutral built on that column is contaminated. Nothing here is."),
+                "labelled that whole range 'Public Administration' -- about 99,334 of "
+                "441,278 rows (22.5%) carried a sector label that actually means UNKNOWN. "
+                "Anything sector-neutral built on that column is contaminated. Nothing "
+                "here is. FIXED AT SOURCE later the same day: SIC_DIVISIONS now sends "
+                "9900-9999 to 'Unclassified'; panels built before the fix (including the "
+                "one this receipt was computed on) are immutable and keep the old label."),
             "what_the_matched_control_matches_on":
                 "pre-period beta decile x market-capitalisation decile x calendar month. "
                 "No industry leg, by design -- the prereg names beta, cap and month only.",
             "consequence_if_a_sector_leg_is_added_later":
                 "the 9999 block must be its own honest UNCLASSIFIED bucket, never folded "
-                "into Public Administration.",
+                "into Public Administration. (The source now enforces this; a pre-fix "
+                "panel still needs the relabel applied on the way in.)",
         },
         "statistics_note": (
             "t_naive is printed and is OVERSTATED for h>1 by construction. t_block "

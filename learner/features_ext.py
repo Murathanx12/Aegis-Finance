@@ -764,8 +764,12 @@ def describe() -> dict:
                 "'concentrated' when it is in fact concentrated in UNKNOWN. That "
                 "inflates the specialist flag for such filers and is a reason to read "
                 "the specialist features as noisier than the rest of the holder "
-                "family, not as a sector claim. The shared mapping is not edited here; "
-                "the central fix is queued elsewhere."),
+                "family, not as a sector claim. The shared LABEL mapping was fixed at "
+                "source on 2026-09-03 (tracker_ibes_backtest.SIC_DIVISIONS: 9900-9999 "
+                "-> 'Unclassified'), but that does not touch this caveat -- "
+                "sector_entropy is computed over numeric SIC-2 codes, so the 99 bucket "
+                "still reads as concentration-in-UNKNOWN regardless of what the label "
+                "map calls it."),
         },
         "licence": "PRODUCT_EXPERIMENT",
     }

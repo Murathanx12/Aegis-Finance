@@ -57,13 +57,17 @@ rate. The honest sentence is "N of M fields are DIRECT".
 
 A SECTOR LABEL THAT MEANS "WE DON'T KNOW"
 =========================================
-`tracker_ibes_backtest.SIC_DIVISIONS` sends SIC 9000-9999 to
+`tracker_ibes_backtest.SIC_DIVISIONS` USED TO send SIC 9000-9999 to
 "Public Administration". In CRSP that range is **98.8% code 9999 =
 NONCLASSIFIABLE ESTABLISHMENTS** (3,580 of 3,625 name-rows, measured here), so
-the panel's second-largest "sector" -- 99,334 of 441,278 rows, 22.5% -- is a
-label for absence of information. It is renamed `_UNCLASSIFIED_SIC9999` on the
-way in, a scenario is never allowed to map ONTO it, and it still works as a
-matching stratum (unknowns are compared with unknowns).
+the panel's second-largest "sector" -- 99,334 of 441,278 rows, 22.5% -- was a
+label for absence of information. The source was fixed on 2026-09-03 (9900-9999
+now emits "Unclassified"; genuine Public Administration keeps its name), but
+already-built panels are immutable, so `relabel_unknown_sectors` detects the
+vintage from the labels present and folds whichever unknown-flavoured labels
+that vintage carries into `_UNCLASSIFIED_SIC9999` on the way in. A scenario is
+never allowed to map ONTO it, and it still works as a matching stratum
+(unknowns are compared with unknowns).
 
 COSTS ARE NEVER OMITTED
 =======================
@@ -116,6 +120,52 @@ COST_BPS_ROUND_TRIP_PER_LEG = 25.0
 #: The label CRSP's 9999 "nonclassifiable" gets renamed to. See module docstring.
 UNCLASSIFIED_SECTOR = "_UNCLASSIFIED_SIC9999"
 
+#: The honest label the SOURCE now emits for SIC 9900-9999 (fixed 2026-09-03 in
+#: `scripts.tracker_ibes_backtest.SIC_DIVISIONS`). Pinned here as a string on
+#: purpose: importing the tracker module just for one constant would couple the
+#: bridge to that module's import-time environment, and the string is itself
+#: pinned against the source by `backend/tests/test_sic_divisions.py`.
+SOURCE_UNCLASSIFIED_LABEL = "Unclassified"
+
+
+def relabel_unknown_sectors(sector: "pd.Series") -> tuple["pd.Series", dict]:
+    """Fold every flavour of "sector not known" into `UNCLASSIFIED_SECTOR`.
+
+    Two panel vintages exist and are told apart by their labels, because a
+    built parquet is immutable and the fix landed at the source, not in the
+    artefacts:
+
+    - PRE-FIX (built before 2026-09-03): the sector map sent SIC 9000-9999 to
+      "Public Administration", so that label is 98.8% code 9999 =
+      NONCLASSIFIABLE and gets folded into the unknown bucket, exactly as this
+      file always did.
+    - POST-FIX: the source emits `SOURCE_UNCLASSIFIED_LABEL` for 9900-9999 and
+      "Public Administration" is now GENUINE (SIC 9000-9899, 33 name-rows).
+      Folding it in would repeat the original sin in the other direction --
+      putting "unknown" on rows whose sector IS known -- so it is kept.
+
+    The vintage is DERIVED from the data (presence of the post-fix label),
+    never assumed from a date: a guard derives its inputs or refuses.
+    """
+    post_fix = bool((sector == SOURCE_UNCLASSIFIED_LABEL).any())
+    if post_fix:
+        relabel_from = [SOURCE_UNCLASSIFIED_LABEL, "_UNKNOWN"]
+    else:
+        relabel_from = ["Public Administration", "_UNKNOWN"]
+    n_rows = int(sector.isin(relabel_from).sum())
+    out = sector.replace({s: UNCLASSIFIED_SECTOR for s in relabel_from})
+    report = {
+        "from": relabel_from, "to": UNCLASSIFIED_SECTOR, "rows": n_rows,
+        "panel_vintage": ("post-fix: source emits 'Unclassified' for SIC 9900-9999; "
+                          "'Public Administration' is genuine and KEPT") if post_fix else
+                         ("pre-fix: 'Public Administration' is 98.8% SIC 9999 = "
+                          "NONCLASSIFIABLE and is folded into the unknown bucket"),
+        "evidence": ("3,580 of 3,625 CRSP name-rows in SIC 9000-9999 are code "
+                     "9999 = NONCLASSIFIABLE ESTABLISHMENTS (98.8%); source fixed "
+                     "2026-09-03 in tracker_ibes_backtest.SIC_DIVISIONS"),
+    }
+    return out, report
+
 #: 13F quarter indexing, imported in spirit from `scripts/holder_fingerprint.py`
 #: (qidx 0 == 1995Q1) and the statutory 45-day filing deadline it applies.
 Q0_YEAR = 1995
@@ -159,8 +209,11 @@ ENUMS: dict[str, tuple[str, ...]] = {
     "attention_state": ("spiking", "elevated", "normal", "neglected", "unknown"),
     "expected_horizon_months": ("1", "3", "6", "12"),
     "direction": ("long", "short"),
-    #: The ten SIC divisions, MINUS "Public Administration" -- a scenario may
-    #: never map onto the label that means "CRSP did not classify this".
+    #: The ten SIC divisions, MINUS "Public Administration" -- on a pre-fix
+    #: panel that label means "CRSP did not classify this" (98.8% SIC 9999),
+    #: and on a post-fix panel the genuine division is 33 name-rows, far too
+    #: thin to be a matching stratum. Excluded either way, for different
+    #: reasons; a scenario may never map onto it.
     "sic_division_hint": (
         "Agriculture", "Mining", "Construction", "Manufacturing",
         "Transport & Utilities", "Wholesale", "Retail",
@@ -491,17 +544,10 @@ def load_panel(with_holders: bool = True) -> tuple[pd.DataFrame, dict]:
     p = pd.read_parquet(TRAIN_TABLE, columns=_PANEL_COLS)
     prov: dict = {"train_table": str(TRAIN_TABLE), "rows_raw": int(len(p))}
 
-    # The label that means "CRSP did not classify this". See module docstring.
-    n_pa = int((p["sector"] == "Public Administration").sum())
-    p["sector"] = p["sector"].replace(
-        {"Public Administration": UNCLASSIFIED_SECTOR,
-         "_UNKNOWN": UNCLASSIFIED_SECTOR})
-    prov["sector_relabel"] = {
-        "from": ["Public Administration", "_UNKNOWN"],
-        "to": UNCLASSIFIED_SECTOR, "rows": n_pa,
-        "evidence": ("3,580 of 3,625 CRSP name-rows in SIC 9000-9999 are code "
-                     "9999 = NONCLASSIFIABLE ESTABLISHMENTS (98.8%)"),
-    }
+    # The labels that mean "CRSP did not classify this", vintage-aware -- see
+    # `relabel_unknown_sectors` for why a pre-fix and a post-fix panel need
+    # different treatment.
+    p["sector"], prov["sector_relabel"] = relabel_unknown_sectors(p["sector"])
 
     # Matching strata. Terciles WITHIN MONTH so the stratum means the same thing
     # in 2013 and 2024 -- a raw cap cut-off would drift a decade of inflation
@@ -693,7 +739,8 @@ def universe_mask(panel: pd.DataFrame, s: dict) -> tuple[np.ndarray, dict]:
         "sector_stratum": None,
         "grade": "COARSE",
         "why": f"sic_division_hint={hint!r} is not one of the nine usable divisions "
-               f"(Public Administration is excluded: it means SIC 9999 unclassified)"}
+               f"(Public Administration is excluded: pre-fix panels use it for SIC 9999 "
+               f"unclassified, post-fix it is too thin to stratify on)"}
 
 
 def retrieve(panel: pd.DataFrame, s: dict, k: int = 20,

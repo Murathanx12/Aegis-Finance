@@ -182,6 +182,35 @@ def test_public_administration_is_not_an_offerable_sector():
     """A scenario may never map onto the label that means SIC 9999 unclassified."""
     assert "Public Administration" not in SB.ENUMS["sic_division_hint"]
     assert SB.UNCLASSIFIED_SECTOR not in SB.ENUMS["sic_division_hint"]
+    assert SB.SOURCE_UNCLASSIFIED_LABEL not in SB.ENUMS["sic_division_hint"]
+
+
+def test_relabel_on_a_pre_fix_panel_folds_public_administration():
+    """A panel built before the 2026-09-03 source fix carries 'Public
+    Administration' on the SIC 9999 block (98.8% nonclassifiable) and no
+    honest label -- both flavours of unknown must fold into the bucket."""
+    sec = pd.Series(["Public Administration", "Manufacturing", "_UNKNOWN",
+                     "Public Administration", "Services"])
+    out, rep = SB.relabel_unknown_sectors(sec)
+    assert (out == SB.UNCLASSIFIED_SECTOR).sum() == 3
+    assert set(out) == {SB.UNCLASSIFIED_SECTOR, "Manufacturing", "Services"}
+    assert rep["rows"] == 3
+    assert "Public Administration" in rep["from"]
+    assert "pre-fix" in rep["panel_vintage"]
+
+
+def test_relabel_on_a_post_fix_panel_keeps_genuine_public_administration():
+    """A panel built after the fix says 'Unclassified' honestly, so its
+    'Public Administration' is a real sector (SIC 9000-9899). Folding it in
+    would put 'unknown' on rows whose sector IS known -- the original sin
+    mirrored. The vintage is DERIVED from the labels, never assumed."""
+    sec = pd.Series([SB.SOURCE_UNCLASSIFIED_LABEL, "Public Administration",
+                     "_UNKNOWN", "Manufacturing"])
+    out, rep = SB.relabel_unknown_sectors(sec)
+    assert (out == SB.UNCLASSIFIED_SECTOR).sum() == 2
+    assert (out == "Public Administration").sum() == 1
+    assert "Public Administration" not in rep["from"]
+    assert "post-fix" in rep["panel_vintage"]
 
 
 # ------------------------------------------------------------------ mapping

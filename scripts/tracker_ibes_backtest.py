@@ -85,21 +85,45 @@ EXCHCD_MAIN = (1, 2, 3)
 #: and the same rule applies here.
 DEFAULT_COST_BPS = 10.0
 
+#: The honest label for CRSP's NONCLASSIFIABLE block. SIC 9900-9999 is the
+#: standard's own "Nonclassifiable Establishments" range -- 9999 is the code
+#: CRSP stamps on a name it could not classify, and this panel is dominated by
+#: it: 3,580 of the 3,625 filtered name-rows in 9000-9999 are exactly 9999
+#: (98.8%, measured on `crsp__stocknames.parquet` 2026-09-03; 9990 adds 12
+#: more rows and the 9995 placeholder some vendors use does NOT appear here).
+#: Until 2026-09-03 the whole 9000-9999 range was labelled "Public
+#: Administration", which put an industry's name on 22.5% of the training
+#: panel's rows when the truth was "we do not know". A sector label that means
+#: absence of information must SAY so -- anything sector-neutral built on the
+#: old label was quietly neutralising against a bucket of unknowns.
+#: Downstream readers key on this constant, not on the string.
+SIC_UNCLASSIFIED = "Unclassified"
+
 #: SIC division -> the sector label `past_winner` groups on. Coarse on purpose:
 #: the live tracker groups on Finnhub's industry string, which is coarser than
 #: a 4-digit SIC and finer than a 1-digit division. What matters for the test is
 #: that names are compared against LIKE names and that thin groups fall back to
 #: the market, which the imported rule already handles.
+#:
+#: Genuine Public Administration (Division J, 9100-9729 in the standard;
+#: everything observed here sits at 9199-9711, 33 name-rows) keeps its label.
+#: The Nonclassifiable range 9900-9999 gets `SIC_UNCLASSIFIED` -- see above.
 SIC_DIVISIONS = (
     (1, 999, "Agriculture"), (1000, 1499, "Mining"), (1500, 1799, "Construction"),
     (2000, 3999, "Manufacturing"), (4000, 4999, "Transport & Utilities"),
     (5000, 5199, "Wholesale"), (5200, 5999, "Retail"),
     (6000, 6799, "Finance & Real Estate"), (7000, 8999, "Services"),
-    (9000, 9999, "Public Administration"),
+    (9000, 9899, "Public Administration"), (9900, 9999, SIC_UNCLASSIFIED),
 )
 
 
 def sic_division(siccd) -> str:
+    """4-digit SIC -> division label. 9900-9999 is `SIC_UNCLASSIFIED`, never
+    "Public Administration" -- CRSP's 9999 means it did NOT classify the name,
+    and a label must not claim otherwise. Unparseable/absent codes (CRSP uses
+    0 for missing) stay "_UNKNOWN": distinct from `SIC_UNCLASSIFIED` because
+    "CRSP said nonclassifiable" and "no code at all" have different provenance
+    even though both mean the sector is not known."""
     try:
         s = int(siccd)
     except (TypeError, ValueError):
