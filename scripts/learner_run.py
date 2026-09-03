@@ -51,6 +51,7 @@ from learner import baselines as B                          # noqa: E402
 from learner import dataset as D                            # noqa: E402
 from learner import evaluate as E                           # noqa: E402
 from learner import models as M                             # noqa: E402
+from learner import nullbar as NB                           # noqa: E402
 from learner import prior as P                              # noqa: E402
 
 RECEIPT = REPO / "backend" / "data" / "optimus" / "tracker_backtest" / "learner_v1.json"
@@ -140,8 +141,14 @@ def prereg_header() -> dict:
             "`" + NULL_ARM + "` runs the SAME pipeline, rows and costs with the training "
             "target permuted WITHIN each month. It destroys the feature-outcome pairing and "
             "leaves the month structure, the market factor and every other moving part alone. "
-            "Any OOS rank IC it earns is plumbing, not signal. Expected: IC ~ 0, |t| < 2. If "
-            "the null scores, EVERY number in this receipt is void and says so."),
+            "Any OOS rank IC it earns is plumbing, not signal. It is a LEAK check on one "
+            "draw, and only that: S36 measured that a model fitted on noise holds ONE "
+            "persistent tilt, so a single draw's naive t spans -9..+12 across seeds and "
+            "`|t| < 2` on one draw is close to a coin flip. A SKILL claim owes the "
+            "model-null percentile instead: >= 64 fitted-on-shuffled draws, quote the "
+            "percentile (learner/nullbar.py; measured in learner_v2_20260903.json's "
+            "model_null_distribution)."),
+        "null_bar": NB.LEGACY_SHUFFLED_RANKING,
         "shadow": "learner/shadow.py scores the live tracker day file with a champion trained "
                   "on shadow-mappable features only, writes a top-10 @ 8.3% book to "
                   "backend/data/optimus/learner/, and PLACES NOTHING.",

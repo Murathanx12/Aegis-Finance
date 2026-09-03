@@ -85,6 +85,7 @@ from learner import dataset as D          # noqa: E402  READ-ONLY
 from learner import evaluate as E         # noqa: E402  READ-ONLY
 from learner import features_ext as F     # noqa: E402
 from learner import models as M           # noqa: E402  READ-ONLY
+from learner import nullbar as NB         # noqa: E402  READ-ONLY
 
 RECEIPT = (REPO / "backend" / "data" / "optimus" / "tracker_backtest"
            / "feature_ablation_20260903.json")
@@ -335,6 +336,14 @@ def null_check(df: pd.DataFrame, horizon: int = 1) -> dict:
 
     Within the date block, never across it: a shuffled DATE null controls for the
     calendar and not for the cross section, which is the error S24 paid for.
+
+    ONE draw, so it is a LEAK check and nothing more. S36: a model fitted on
+    noise holds one persistent tilt, its naive t spans -9..+12 across seeds,
+    and `|t| < 2` on a single draw is close to a coin flip. This study's
+    verdicts do not rest on this block -- they rest on PAIRED deltas between
+    feature sets on identical rows -- so the one-draw null was not re-run at
+    64 draws tonight; the output is stamped LEGACY instead so nobody reads its
+    t as a skill bar (learner/nullbar.py holds the correct one).
     """
     cols = D.feature_columns() + F.columns_for(("analyst", "holder", "interaction"))
     pred, _ = walk_forward_preds(df, cols, "lgbm", horizon, shuffle=True, verbose=False)
@@ -347,10 +356,15 @@ def null_check(df: pd.DataFrame, horizon: int = 1) -> dict:
             "mean_ic": round(float(ic.mean()), 5) if len(ic) else None,
             "t_stat": round(t, 3) if t is not None else None,
             "book": book_for_horizon(scored, "_pred", horizon),
+            "null_bar": NB.LEGACY_SHUFFLED_RANKING,
             "reads": ("the training target was permuted WITHIN each month, so the "
                       "cross-sectional pairing is destroyed while the calendar, the "
                       "market factor and the whole pipeline are untouched. A non-zero "
-                      "IC here would be a leak in the plumbing, not a signal.")}
+                      "IC here would be a leak in the plumbing, not a signal. ONE "
+                      "draw: a leak check, never a skill bar -- the null's own naive "
+                      "t has sd ~2-3 (S36), so |t|<2 on one draw is a coin flip. "
+                      "Skill claims owe >= 64 model-null draws and a percentile "
+                      "(learner/nullbar.py).")}
 
 
 def family_gain_shares(df: pd.DataFrame, horizon: int = 1) -> dict:
@@ -419,7 +433,9 @@ def prereg_header() -> dict:
                                            "-- the design is dead before it is built."),
         },
         "nulls": {
-            "shuffled_target_within_month": "run on the full feature set at h=1",
+            "shuffled_target_within_month": ("run on the full feature set at h=1 -- ONE "
+                                             "draw, a LEAK check only; the |t|<2 one-draw "
+                                             "bar is retired (S36, learner/nullbar.py)"),
             "complete_case_subsample": ("the h=1 ablation is re-run on rows where every "
                                         "family is present, so a negative cannot be a "
                                         "missingness artefact"),
@@ -581,7 +597,8 @@ def _print_scoreboard(r: dict, horizons, kinds) -> None:
     n = r.get("null_shuffled_within_month_1m")
     if n:
         print(f"\nNULL (shuffled target within month, 1m): mean IC {n['mean_ic']}, "
-              f"t {n['t_stat']} over {n['months']} months")
+              f"t {n['t_stat']} over {n['months']} months  "
+              f"[ONE draw: leak check only, never a skill bar -- see learner/nullbar.py]")
     print("\nbest single extension feature by |t| (1m univariate):")
     for row in r["univariate_scan"].get("1m", [])[:5]:
         print(f"  {row['feature']:<32}{row['family']:<12}"

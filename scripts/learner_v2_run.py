@@ -63,6 +63,7 @@ from learner import dataset as D                            # noqa: E402
 from learner import encoder as EN                           # noqa: E402
 from learner import evaluate as E                           # noqa: E402
 from learner import models as M                             # noqa: E402
+from learner import nullbar as NB                           # noqa: E402
 from learner import prior as P                              # noqa: E402
 
 RECEIPT = REPO / "backend" / "data" / "optimus" / "tracker_backtest" / "learner_v2_20260903.json"
@@ -1002,10 +1003,24 @@ def append_model_null(n_seeds: int = 16, horizons=HORIZONS, verbose: bool = True
     random ranking re-randomises monthly and its factor tilts wash out, while a
     model fitted on noise holds one persistent tilt for the whole window in a
     book whose effective breadth is 6-11 names.
+
+    The percentile arithmetic and the draw floor live in `learner/nullbar.py`
+    now -- single source of truth, so the next study does not re-derive the bar.
+    One draw here = one (seed, arm, head), so the per-horizon draw count is
+    n_seeds x len(EN.ARMS) x 2 heads; the default 16 seeds is exactly the
+    64-draw DEV gate. Capital-authoritative claims want >= 256 draws and the
+    `nullbar.family_max_p` correction when the quoted arm was selected for
+    winning (see that module's docstring).
     """
     receipt = _load_receipt()
     if not EN.torch_available():
         raise SystemExit("REFUSED: torch is absent; the model null IS the encoder")
+    draws_per_horizon = n_seeds * len(EN.ARMS) * 2
+    if draws_per_horizon < NB.MIN_DRAWS:
+        raise SystemExit(
+            f"REFUSED: {n_seeds} seeds x {len(EN.ARMS)} arms x 2 heads = "
+            f"{draws_per_horizon} draws/horizon < {NB.MIN_DRAWS} (nullbar's DEV "
+            f"gate). A p-value from fewer draws is the |t|<2 mistake in a new coat.")
     df = D.load()
     feature_cols = D.feature_columns()
     rows = []
@@ -1080,12 +1095,12 @@ def append_model_null(n_seeds: int = 16, horizons=HORIZONS, verbose: bool = True
             blk["arms"][a] = {
                 "paired_t": pt, "terminal_wealth_net": tw,
                 "annualised_excess": bk.get("annualised_excess"),
+                # add-one one-sided percentile, from the shared bar -- the
+                # identical formula this receipt was first sealed with
                 "p_vs_model_null_paired_t": (
-                    None if pt is None
-                    else round(float(((nt >= pt).sum() + 1) / (len(nt) + 1)), 4)),
+                    None if pt is None else round(NB.p_one_sided(pt, nt), 4)),
                 "p_vs_model_null_terminal_wealth": (
-                    None if tw is None
-                    else round(float(((ntw >= tw).sum() + 1) / (len(ntw) + 1)), 4)),
+                    None if tw is None else round(NB.p_one_sided(tw, ntw), 4)),
             }
         if blk["arms"]:
             best = max(blk["arms"].items(), key=lambda kv: (kv[1]["paired_t"] or -9))

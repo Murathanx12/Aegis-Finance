@@ -59,6 +59,7 @@ if str(REPO) not in sys.path:
 from sklearn.metrics import silhouette_score                           # noqa: E402
 
 from learner import dataset as D                                       # noqa: E402
+from learner import nullbar as NB                                      # noqa: E402
 from learner import prior as P                                         # noqa: E402
 from learner import states as S                                        # noqa: E402
 
@@ -418,7 +419,11 @@ def market_state_null(monthly: pd.DataFrame, value_col: str, state_col: str,
             "p_value_one_sided": round(float((draws >= obs).mean()), 4),
             "beats_random_month_partition": bool((draws >= obs).mean() < 0.05),
             "shuffle": "the month -> state map is permuted ACROSS months; the monthly "
-                       "values themselves are untouched"}
+                       "values themselves are untouched",
+            # S36 stamp: every draw re-randomises the map, so a PERSISTENT
+            # regime labelling holding one tilt for the window is exactly what
+            # this null cannot represent (learner/nullbar.py).
+            "null_bar": NB.LEGACY_SHUFFLED_RANKING}
 
 
 # --------------------------------------------------------------------- main

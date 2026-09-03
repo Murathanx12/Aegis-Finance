@@ -96,6 +96,7 @@ REPO = Path(__file__).resolve().parent.parent
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
+from learner import nullbar as NB                                     # noqa: E402
 from sklearn.cluster import KMeans                                    # noqa: E402
 from sklearn.ensemble import IsolationForest                          # noqa: E402
 from sklearn.decomposition import PCA                                 # noqa: E402
@@ -759,6 +760,16 @@ def shuffled_null(df: pd.DataFrame, state_col: str, target: str,
     rather than "would a random partition of a different market?".
     (S24: a shuffled-date null that did not hold the day fixed measured the
     calendar and reported it as a signal.)
+
+    KNOWN LIMIT (S36, stamped in the output): each draw RE-RANDOMISES the
+    labels, so any tilt a draw picks up washes out across months -- while the
+    real state assignment is PERSISTENT per name (that persistence is graded
+    as a virtue by `transition_matrix`). A random-but-persistent partition
+    could hold one tilt for the whole window and beat this null the same way
+    a model fitted on noise beats a random ranking (learner/nullbar.py). The
+    honest null here would permute the name -> state map while preserving
+    each name's transition structure; until that is built, `beats_random_
+    partition` reads "beats a random NON-persistent partition" and no more.
     """
     rng = np.random.default_rng(seed)
     sub = df[[state_col, "month", target]].dropna(subset=[target]).reset_index(drop=True)
@@ -784,6 +795,11 @@ def shuffled_null(df: pd.DataFrame, state_col: str, target: str,
         "percentile_of_observed_in_null": round(float((a < obs).mean()), 4) if len(a) else None,
         "p_value_one_sided": round(float((a >= obs).mean()), 4) if len(a) else None,
         "beats_random_partition": bool(len(a) and (a >= obs).mean() < 0.05),
+        # S36: each draw re-randomises, so this null cannot catch a PERSISTENT
+        # random partition -- the same wash-out that let a model fitted on
+        # noise beat every random ranking. Stamped so no reader trusts it as
+        # more than "beats a random non-persistent partition".
+        "null_bar": NB.LEGACY_SHUFFLED_RANKING,
     }
 
 

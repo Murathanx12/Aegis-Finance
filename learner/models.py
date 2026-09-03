@@ -238,7 +238,7 @@ def _predict_mlp(fitted, X):
 def fit_predict(kind: str, arm: str, train: pd.DataFrame, test: pd.DataFrame,
                 feature_cols: list[str], horizon_months: int,
                 benchmark: str = "vw", return_model: bool = False,
-                shuffle_target: bool = False):
+                shuffle_target: bool = False, shuffle_seed: int | None = None):
     """Fit one arm on `train`, predict EXCESS return on `test`.
 
     Returns (predicted excess, fit metadata) -- or (pred, meta, fitted) when
@@ -251,6 +251,14 @@ def fit_predict(kind: str, arm: str, train: pd.DataFrame, test: pd.DataFrame,
     exactly as they were. Any OOS rank IC that survives that is a leak in the
     plumbing, not a signal. (S24: a shuffled-DATE null was the calendar; the
     shuffle must be WITHIN the date block, or it tests the wrong thing.)
+
+    ONE shuffled draw is a LEAK check and nothing more. S36: a model fitted on
+    noise holds one persistent tilt, so a single draw's naive t spans -9..+12
+    across seeds and `|t| < 2` on one draw is close to a coin flip. A SKILL
+    claim owes the model-null percentile -- fit this same pipeline with >= 64
+    distinct `shuffle_seed`s and quote the percentile (learner/nullbar.py).
+    `shuffle_seed=None` keeps the historical fixed seed, so v1's single null
+    arm stays reproducible.
     """
     cols = arm_features(feature_cols, arm, horizon_months)
     y = arm_target(train, arm, horizon_months, benchmark)
@@ -258,7 +266,8 @@ def fit_predict(kind: str, arm: str, train: pd.DataFrame, test: pd.DataFrame,
     tr = train.loc[keep]
     y = y[keep]
     if shuffle_target:
-        rng = np.random.default_rng(SEED)     # never np.random.seed
+        rng = np.random.default_rng(SEED if shuffle_seed is None
+                                    else shuffle_seed)     # never np.random.seed
         y = pd.Series(y, index=tr.index).groupby(tr["month"]).transform(
             lambda s: s.to_numpy()[rng.permutation(len(s))]).to_numpy()
     yw, bounds = _winsorise(y)
@@ -286,6 +295,10 @@ def fit_predict(kind: str, arm: str, train: pd.DataFrame, test: pd.DataFrame,
                  "n_train_months": int(tr["month"].nunique()),
                  "winsor_bounds": bounds, "n_features": len(cols),
                  "shuffled_null": bool(shuffle_target), "feature_cols": cols})
+    if shuffle_target:
+        # which draw this was -- a null distribution is only auditable if every
+        # draw names its seed (learner/nullbar.py wants >= 64 of these)
+        meta["shuffle_seed"] = int(SEED if shuffle_seed is None else shuffle_seed)
     pred = arm_reconstruct(raw, test, arm, horizon_months)
     if return_model:
         return pred, meta, model

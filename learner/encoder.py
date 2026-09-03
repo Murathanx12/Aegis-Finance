@@ -451,6 +451,12 @@ def _shuffle_within_month(y: np.ndarray, b: np.ndarray, m: np.ndarray,
     plumbing. The permutation must live inside the date block, and the return
     and its sign must move TOGETHER or the two heads would be trained against
     each other's nulls.
+
+    S36's lesson: ONE such draw is a leak check, never a skill bar -- a model
+    fitted on the shuffled target holds one persistent tilt and its naive t
+    spans -9..+12 across seeds. Skill is judged against >= 64 of these draws
+    as a percentile (learner/nullbar.py; `scripts/learner_v2_run.py
+    --model-null` is the driver).
     """
     ys, bs = y.copy(), b.copy()
     order = np.argsort(month, kind="stable")

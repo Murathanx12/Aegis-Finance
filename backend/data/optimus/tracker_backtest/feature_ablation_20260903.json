@@ -5592,5 +5592,10 @@
    "what": "`h_specialist_frac` and `x_specialist_x_thincov` derive from the fingerprint's `sector_entropy`, an entropy over CRSP SIC-2 codes in which 99 (NONCLASSIFIABLE) is a bucket like any other. A filer concentrated in UNKNOWN reads as concentrated.",
    "effect": "read the two specialist features as noisier than the rest of the family."
   }
+ },
+ "null_bar_addendum_20260903": {
+  "null_bar": "LEGACY_SHUFFLED_RANKING (mis-specified, see learner/nullbar.py)",
+  "appended": "2026-09-03, build-queue item 4 (S36 handoff)",
+  "reads": "the shuffled null in this receipt is ONE draw (or a per-draw re-randomising permutation) and was originally read against a |t| < 2 bar. S36 measured that bar as mis-specified: a model fitted on noise holds one persistent tilt, its naive t spans -9..+12 across seeds, so |t| < 2 on one draw is close to a coin flip and a re-randomising null cannot catch a persistent tilt. The null here remains valid as a LEAK check only. Skill claims owe the model-null percentile: >= 64 fitted-on-shuffled draws (learner/nullbar.py; measured for v2 in learner_v2_20260903.json's model_null_distribution)."
  }
 }
