@@ -38,6 +38,8 @@ schema + every headline number is committed.
 | `backend/data/optimus/learner/beta_panel.parquet` | ~104 MB | `python -m scripts.band_horizon_run --build-betas` | rerun the script (~18 s from the CRSP daily files) |
 | `backend/data/optimus/learner/beta_panel.parquet` | ~104 MB | `python -m scripts.band_horizon_run` | rerun the script |
 | `backend/data/optimus/learner/oos_predictions_1m.parquet` | ~21.9 MB | `python -m scripts.learner_run` | rerun the script |
+| `backend/data/optimus/learner/states/company_states.parquet` | ~35.9 MB | `python -m scripts.learner_states_run` | rerun the script (~11 min) |
+| `backend/data/optimus/learner/states/market_states.parquet` | ~7 KB | `python -m scripts.learner_states_run` | rerun the script |
 | `backend/data/optimus/actor_corpus/ibes_graded.parquet` (row-level analyst target grades) | varies | `scripts/tracker_ibes_backtest.py` | rerun the script |
 
 Many more `*.parquet` panels live under `backend/data/optimus/` (aegis_panel,
@@ -49,6 +51,11 @@ Committed counterparts, which are what a session should read:
 
 - `backend/data/optimus/learner/train_table_schema.json` — the schema, the
   feature list, the missingness table, the schema hash.
+- `backend/data/optimus/tracker_backtest/unsupervised_states_20260903.json` — the
+  STATES v1 receipt: state definitions, sizes, transitions, per-state conditional
+  tables, the within-band control and the shuffled null. Written by
+  `scripts/learner_states_run.py`; read it before quoting anything from
+  `docs/STATES_2026-09-03_UNSUPERVISED_V1.md`.
 - `backend/data/optimus/tracker_backtest/learner_v1.json` — the full
   pre-registration header, every arm's scoreboard, the verdicts.
 - `backend/data/optimus/learner/shadow_book_2026-09-02.json` — the sealed

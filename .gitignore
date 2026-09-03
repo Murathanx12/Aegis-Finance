@@ -174,3 +174,7 @@ backend/data/optimus/wrds/tr13f_quarterly.json
 # by a session -- if one needs to leave the tree, a human moves it.
 .env.bak
 .env.bak.*
+
+# learner/states: the sweep cache that `--reuse-assignments` reads. Derived
+# from the parquets above and duplicated inside the receipt.
+backend/data/optimus/learner/states/sweep_meta*.json
