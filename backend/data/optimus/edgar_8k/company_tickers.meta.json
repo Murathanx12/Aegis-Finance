@@ -1,0 +1,6 @@
+{
+  "source": "https://www.sec.gov/files/company_tickers.json",
+  "fetched_at_utc": "2026-09-03T16:01:11.726816+00:00",
+  "n_entries": 10412,
+  "caveat": "CURRENT registrants only; a company delisted before today is absent, so any universe resolved through this map is survivor-tilted and the manifest counts the unresolved"
+}

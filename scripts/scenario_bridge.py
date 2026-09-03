@@ -397,8 +397,9 @@ RETRIEVAL_FIELDS: tuple[str, ...] = tuple(
     k for k in FIELD_MAP_DOC if k != "falsifier")
 
 
-def mappability_summary() -> dict:
-    grades = [FIELD_MAP_DOC[f]["grade"] for f in RETRIEVAL_FIELDS]
+def mappability_summary(field_map: dict[str, dict[str, str]] | None = None) -> dict:
+    fm = field_map if field_map is not None else FIELD_MAP_DOC
+    grades = [fm[f]["grade"] for f in RETRIEVAL_FIELDS]
     n = len(grades)
     return {
         "retrieval_fields": n,
@@ -415,6 +416,118 @@ def mappability_summary() -> dict:
             f"{grades.count('COARSE')} only coarsely, "
             f"{grades.count('UNMAPPABLE')} not at all."),
     }
+
+
+# ------------------------------------------- the 8-K item-code event lookup
+#
+# Scenario-bridge acquisition #1 (build queue item 9, 2026-09-03): the 20260903
+# receipt's biggest absence was `event_type` -- "no dated event tape covers
+# 2013-2024 in this repo". `scripts/edgar_8k_items.py` now collects a FREE,
+# DATED tape of 8-K filings with item codes from SEC EDGAR, and this table is
+# the documented bridge from an SEC item code to the scenario taxonomy.
+#
+# THE MAPPING IS A PROXY AND SAYS SO. An 8-K item code names a DISCLOSURE
+# CATEGORY, not a causal mechanism: "1.01 material agreement" could be a
+# capacity expansion, a customer win or a licensing deal. So each item maps to
+# the event_type values it can DEFENSIBLY stand in for -- an empty tuple means
+# the item is administrative (exhibit lists, votes, Reg FD) or an OUTCOME print
+# (2.02 results is what happened to earnings, not a mechanism family) and
+# carries no event_type at all. `event_type` therefore graduates from
+# UNMAPPABLE to PROXY when the tape exists on disk, never to DIRECT.
+
+EDGAR_8K_DIR = REPO / "backend" / "data" / "optimus" / "edgar_8k"
+EIGHTK_MANIFEST = EDGAR_8K_DIR / "manifest.json"
+EIGHTK_PARQUET = EDGAR_8K_DIR / "eightk_items.parquet"
+
+#: SEC 8-K item code -> candidate scenario `event_type` values (post-2004 item
+#: regime; the panel starts 2013 so the old bare-number regime never applies).
+#: Every value must be a member of ENUMS["event_type"]; pinned by test.
+EIGHTK_ITEM_EVENT_TYPE: dict[str, tuple[str, ...]] = {
+    # -- Section 1: business and operations
+    "1.01": ("other",),                    # material definitive agreement (family unknowable from the code)
+    "1.02": ("exclusivity_expiry", "customer_switch"),  # a material agreement TERMINATED
+    "1.03": ("liability_shock", "credit_tightening"),   # bankruptcy / receivership
+    "1.04": (),                            # mine-safety reporting requirement (administrative)
+    "1.05": ("liability_shock",),          # material cybersecurity incident
+    # -- Section 2: financial information
+    "2.01": ("consolidation",),            # completed acquisition or disposition of assets
+    "2.02": (),                            # results of operations: an OUTCOME print, not a mechanism
+    "2.03": (),                            # creation of a direct financial obligation (routine financing)
+    "2.04": ("credit_tightening", "liability_shock"),   # triggering event accelerating an obligation
+    "2.05": ("other",),                    # exit / disposal costs (restructuring, family unknowable)
+    "2.06": ("installed_base_obsolescence",),  # material impairment / write-down
+    # -- Section 3: securities and trading markets
+    "3.01": (), "3.02": (), "3.03": (),    # listing notices, unregistered sales, holder-rights mods
+    # -- Section 4: accountants and financial statements
+    "4.01": (),                            # auditor change
+    "4.02": ("liability_shock",),          # non-reliance on previously issued financials (restatement)
+    # -- Section 5: corporate governance
+    "5.01": ("consolidation",),            # change in control of registrant
+    "5.02": (),                            # officer/director changes -- TAXONOMY GAP, counted so the enum can grow
+    "5.03": (), "5.04": (), "5.05": (), "5.06": (), "5.07": (), "5.08": (),
+    # -- Section 6: asset-backed securities (not our universe)
+    "6.01": (), "6.02": (), "6.03": (), "6.04": (), "6.05": (), "6.06": (), "6.10": (),
+    # -- Sections 7-9
+    "7.01": (),                            # Reg FD disclosure (a channel, not an event)
+    "8.01": ("other",),                    # "Other Events" -- a dated event with no named family
+    "9.01": (),                            # financial statements and exhibits (an attachment list)
+}
+
+
+def eightk_items_for(event_type: str) -> tuple[str, ...]:
+    """Which 8-K item codes can stand in for a scenario event_type."""
+    return tuple(sorted(item for item, types in EIGHTK_ITEM_EVENT_TYPE.items()
+                        if event_type in types))
+
+
+def eightk_tape_status() -> dict:
+    """Does the 8-K item tape exist on disk, and what does it cover?
+
+    DERIVED from the collector's manifest, never assumed: a mapping table with
+    no tape behind it maps to nothing owned, and grading it PROXY would repeat
+    the original sin in the other direction.
+    """
+    if not EIGHTK_MANIFEST.exists():
+        return {"exists": False,
+                "why": f"{EIGHTK_MANIFEST} absent -- run scripts/edgar_8k_items.py"}
+    m = json.loads(EIGHTK_MANIFEST.read_text(encoding="utf-8"))
+    return {"exists": True, "rows": m.get("rows"), "ciks": m.get("ciks"),
+            "filing_date_min": m.get("filing_date_min"),
+            "filing_date_max": m.get("filing_date_max"),
+            "built_utc": m.get("built_utc"),
+            "coverage_truncation_caveat": m.get("coverage_truncation_caveat"),
+            "survivor_caveat": m.get("survivor_caveat")}
+
+
+def field_map_current() -> dict[str, dict[str, str]]:
+    """FIELD_MAP_DOC, with `event_type` upgraded to PROXY iff the EDGAR 8-K
+    item tape actually exists on disk.
+
+    PROXY, not DIRECT, for two named reasons: (1) an item code is a disclosure
+    category standing in for a causal mechanism family; (2) the first pull
+    covers the scenario-exemplar + tracker universe resolved through TODAY's
+    ticker->CIK map, so the tape is survivor-tilted and does not yet join to
+    the full 2013-2024 permno panel. It does NOT become a retrieval predicate
+    until a full-history, panel-joined pull exists -- retrieval still ignores
+    `event_type`, and `scenario_predicates` still reports it unmappable as a
+    FILTER. What changed is ownership: the concept now maps to a dated tape
+    we hold, with a documented item-code bridge.
+    """
+    fm = {k: dict(v) for k, v in FIELD_MAP_DOC.items()}
+    st = eightk_tape_status()
+    if st.get("exists"):
+        fm["event_type"] = {
+            "grade": "PROXY",
+            "panel": ("edgar_8k/eightk_items.parquet (dated 8-K item codes; "
+                      f"{st.get('rows')} rows, {st.get('ciks')} CIKs, "
+                      f"{st.get('filing_date_min')}..{st.get('filing_date_max')})"),
+            "note": ("8-K item codes stand in for the event taxonomy via "
+                     "EIGHTK_ITEM_EVENT_TYPE. Availability = EDGAR acceptance "
+                     "timestamp, never the event's own date. Not a retrieval "
+                     "predicate yet: the tape is survivor-tilted (current "
+                     "registrants only) and not panel-joined."),
+        }
+    return fm
 
 
 # ---------------------------------------------------- word -> quantile bands

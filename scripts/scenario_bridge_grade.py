@@ -41,7 +41,11 @@ if str(REPO) not in sys.path:
 from scripts import scenario_bridge as SB                       # noqa: E402
 
 
-def run(k: int = 20, with_holders: bool = True, verbose: bool = True) -> dict:
+def run(k: int = 20, with_holders: bool = True, verbose: bool = True,
+        receipt_path: Path | None = None,
+        field_map: dict | None = None,
+        run_tag: str | None = None,
+        extra: dict | None = None) -> dict:
     log = (lambda *a: print(*a, flush=True)) if verbose else (lambda *a: None)
 
     scenarios = SB.load_scenarios()
@@ -119,7 +123,7 @@ def run(k: int = 20, with_holders: bool = True, verbose: bool = True) -> dict:
 
     receipt = {
         "receipt": "scenario_bridge",
-        "run_tag": SB.RUN_TAG,
+        "run_tag": run_tag or SB.RUN_TAG,
         "licence": "PRODUCT_EXPERIMENT",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "schema_version": SB.SCHEMA_VERSION,
@@ -129,8 +133,8 @@ def run(k: int = 20, with_holders: bool = True, verbose: bool = True) -> dict:
             "value-weighted excess returns graded matched-vs-control, paired by "
             "month block. No scenario ever received an invented return."),
         "panel_provenance": prov,
-        "mappability": SB.mappability_summary(),
-        "field_map": SB.FIELD_MAP_DOC,
+        "mappability": SB.mappability_summary(field_map),
+        "field_map": field_map if field_map is not None else SB.FIELD_MAP_DOC,
         "retrieval_bands": SB._BANDS_DOC(),
         "floors": {
             "min_treated_rows": SB.MIN_TREATED_ROWS,
@@ -178,11 +182,14 @@ def run(k: int = 20, with_holders: bool = True, verbose: bool = True) -> dict:
         key = str(r["grade"].get("backoff_level"))
         lv[key] = lv.get(key, 0) + 1
     receipt["backoff"]["levels_used"] = lv
+    if extra:
+        receipt.update(extra)
 
-    SB.RECEIPT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    SB.RECEIPT_PATH.write_text(json.dumps(receipt, indent=1, default=str),
-                               encoding="utf-8")
-    log(f"\n[receipt] -> {SB.RECEIPT_PATH}")
+    out_path = receipt_path or SB.RECEIPT_PATH
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(receipt, indent=1, default=str),
+                        encoding="utf-8")
+    log(f"\n[receipt] -> {out_path}")
     return receipt
 
 
