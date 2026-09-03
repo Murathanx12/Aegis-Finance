@@ -493,6 +493,27 @@ def run_reference_check(
         conn.close()
 
 
+def _price_fetch_window(now: datetime | None = None) -> tuple[str, str]:
+    """(start, end) for the live daily-bar fetch, with an INCLUSIVE end.
+
+    yfinance's `end` is exclusive. Both helpers below used to pass
+    `end = today`, so the newest bar either could return was yesterday's — and
+    `mark_lane_to_market` stamps the NAV row with that bar's date, so every
+    close mark landed on the PREVIOUS session and `nav.all_fresh` was false for
+    all but ~30 minutes a day (diagnosed 2026-09-03).
+
+    One helper, because the two callers must agree: advancing the bar date
+    without advancing the price would stamp yesterday's close as today's row,
+    which is worse than the lag it replaces.
+    """
+    from backend.config import (PI_PRICE_FETCH_END_OFFSET_DAYS,
+                                PI_PRICE_FETCH_LOOKBACK_DAYS)
+    now = now or datetime.now()
+    end = now + timedelta(days=PI_PRICE_FETCH_END_OFFSET_DAYS)
+    start = now - timedelta(days=PI_PRICE_FETCH_LOOKBACK_DAYS)
+    return start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d")
+
+
 def _get_current_prices(tickers: list[str]) -> dict[str, float]:
     """Get current prices for trade computation.
 
@@ -502,9 +523,7 @@ def _get_current_prices(tickers: list[str]) -> dict[str, float]:
     prices: dict[str, float] = {}
     try:
         from backend.services.data_fetcher import fetch_safe
-        from datetime import timedelta
-        end = datetime.now().strftime("%Y-%m-%d")
-        start = (datetime.now() - timedelta(days=10)).strftime("%Y-%m-%d")
+        start, end = _price_fetch_window()
     except Exception as e:
         logger.warning("Price fetch unavailable: %s", e)
         return prices
@@ -530,8 +549,7 @@ def _get_latest_bar_date(tickers: list[str]) -> date | None:
     latest: date | None = None
     try:
         from backend.services.data_fetcher import fetch_safe
-        end = datetime.now().strftime("%Y-%m-%d")
-        start = (datetime.now() - timedelta(days=10)).strftime("%Y-%m-%d")
+        start, end = _price_fetch_window()
     except Exception as e:                                      # noqa: BLE001
         logger.warning("Bar-date fetch unavailable: %s", e)
         return None

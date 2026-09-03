@@ -2086,3 +2086,17 @@ ARENA_PERSONALITY_MIN_DAYS = 60
 #: row before this date: INSERT OR REPLACE would silently rewrite pre-flip
 #: history under the new semantics.
 PI_NAV_PRICED_DATE_FROM = "2026-08-23"
+
+#: How far back the live price/bar-date helpers ask for daily bars. Ten calendar
+#: days clears a long weekend plus a holiday and still costs one cached fetch.
+PI_PRICE_FETCH_LOOKBACK_DAYS = 10
+
+#: Days added to `today` to form the price fetch's `end`. yfinance's `end` is
+#: EXCLUSIVE, so an end of `today` returns bars up to YESTERDAY and the close
+#: mark can never see the session it is marking — which is exactly what
+#: P-day-2026-08-19a set out to fix and did not. Diagnosed 2026-09-03 from four
+#: consecutive prod MTM runs that each reported "marked: 10, failed: 0" while
+#: every lane's NAV sat one session behind. 1 makes the window inclusive of
+#: today; it is a constant rather than a literal so the two helpers that must
+#: agree on it cannot drift apart again.
+PI_PRICE_FETCH_END_OFFSET_DAYS = 1
