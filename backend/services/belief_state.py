@@ -878,9 +878,31 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
                 "persistence": persistence}
     last = max(r["made_at"][:10] for r in rows)
     quiet = (today - date.fromisoformat(last)).days
+    # STRICTLY GREATER, AND THE STRICTNESS IS THE POINT (2026-09-03).
+    #
+    # This used `today >= resolves_after` — the SAME predicate `resolve_due`
+    # uses to pick what to grade. But the resolver is a 16:30 ET cron and this
+    # is a clock, so from 00:00 UTC until 20:30 UTC every record maturing that
+    # day read as "past due and unresolved" and the deploy read DEGRADED: about
+    # 20.5 hours out of every 24 on which anything matures.
+    #
+    # Measured that morning: 15 records were reported past due whose
+    # `resolves_after` was that very date, while the resolver's own receipt
+    # from the previous evening reported `n_overdue_actionable: 0` over the
+    # same 237-record file — as does every receipt in its history. Nothing had
+    # failed to resolve; the canary was counting the resolver's WORK as its
+    # failure, and a canary that is red most of the day is alarm fatigue with
+    # extra steps (the argument this function already makes for the quarantine
+    # split, one screen down).
+    #
+    # `resolve_due` deliberately keeps `>=`: the resolver SHOULD grade on the
+    # maturity day. A fault is only established once a whole day has passed and
+    # the 16:30 slot plus all three catch-up retries have fired. This still
+    # catches a real stall within a day — the 2026-08-27→09-01 gap, where 42
+    # forecasts genuinely went ungraded, degrades exactly as before.
     overdue = [r for r in rows
                if r.get("outcome") is None and not r.get("void_reason")
-               and today >= date.fromisoformat(r["resolves_after"][:10])]
+               and today > date.fromisoformat(r["resolves_after"][:10])]
     quarantined_hashes = frozenset(quarantined_hashes or ())
     if quarantined_hashes:
         from backend.services.evidence_population import record_hash
@@ -934,6 +956,19 @@ def ledger_health(path: Path | None = None, *, max_quiet_days: int = 7,
         "n_overdue": len(overdue),
         "n_overdue_actionable": len(actionable),
         "n_overdue_quarantined": len(q_overdue),
+        # NAMED, not just counted. The quarantined records were already named
+        # (in the resolver's receipt) while the ACTIONABLE ones — the only ones
+        # anybody can do anything about — were a bare integer. Diagnosing the
+        # 2026-09-03 episode meant deriving which records were meant by
+        # differencing two receipts, because no read-only surface would say.
+        # Capped: this row is served on every health poll.
+        "overdue_actionable": [
+            {"prediction_id": r.get("prediction_id"),
+             "ticker": r.get("ticker"),
+             "specialist": r.get("specialist"),
+             "made_at": (r.get("made_at") or "")[:10],
+             "resolves_after": (r.get("resolves_after") or "")[:10]}
+            for r in actionable[:_config.LEDGER_HEALTH_MAX_NAMED_OVERDUE]],
         "last_written": last,
         "days_quiet": quiet,
         "distinct_specialists": len({r["specialist"] for r in rows}),

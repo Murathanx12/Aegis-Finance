@@ -217,6 +217,73 @@ def test_a_forecast_past_its_resolution_date_degrades_the_canary(tmp_path):
     assert out["n_overdue"] == 1
 
 
+def test_a_forecast_maturing_TODAY_is_due_not_overdue(tmp_path):
+    """"Due today" is the resolver's WORK, not its failure.
+
+    `ledger_health` counted a record overdue on `today >= resolves_after`, the
+    same predicate `resolve_due` uses to decide what to grade. But the resolver
+    is a 16:30 ET cron and the canary is a clock: from 00:00 UTC until 20:30
+    UTC, every record maturing that day read as "past due and unresolved" and
+    the whole deploy read DEGRADED — about 20.5 hours out of every 24 on which
+    anything matures.
+
+    That is what happened on 2026-09-03. The 15 "past due" forecasts were the
+    15 whose `resolves_after` was that very date; the resolver's own receipt
+    from 2026-09-02T23:32Z reported `n_overdue_actionable: 0` over the SAME
+    237-record file, and every receipt in the ledger's history reports 0. The
+    resolver had never once failed to grade an actionable record — it simply
+    had not had its slot yet.
+
+    A canary that is red most of the day is alarm fatigue with extra steps;
+    this file already made that argument, verbatim, for the quarantine split on
+    2026-08-17. So the fault predicate is STRICT: a record is overdue once a
+    whole day has passed since it matured, by which point the 16:30 slot and
+    all three catch-up retries have fired. `resolve_due` keeps `>=` — the
+    resolver should still grade on the maturity day.
+
+    This cannot mask a real stall for more than one day: the 2026-08-27→09-01
+    gap, where 42 forecasts genuinely went ungraded for days, still degrades.
+    """
+    from backend.services.belief_state import ledger_health
+    p = tmp_path / "today.jsonl"
+    today = date.today()
+    # horizon_days=1 makes resolves_after land on/near today; pin the clock
+    # rather than the calendar so this cannot rot (CLAUDE.md session rule 5).
+    append([_pred(made_at=datetime.now(timezone.utc).isoformat(),
+                  horizon_days=1)], p)
+    rows = [json.loads(l) for l in p.read_text(encoding="utf-8").splitlines() if l]
+    matures = date.fromisoformat(rows[0]["resolves_after"][:10])
+
+    on_maturity_day = ledger_health(p, today=matures)
+    assert on_maturity_day["n_overdue"] == 0, (
+        "a forecast maturing today is due, not overdue — the resolver's slot "
+        "has not come yet")
+    assert on_maturity_day["status"] == "ok"
+
+    the_day_after = ledger_health(p, today=matures + timedelta(days=1))
+    assert the_day_after["n_overdue"] == 1, (
+        "once a full day has passed the resolver has had its slot and its "
+        "retries; still-unresolved is now a genuine fault")
+    assert the_day_after["status"] == "DEGRADED"
+
+
+def test_actionable_overdue_records_are_NAMED_not_just_counted(tmp_path):
+    """The row named the QUARANTINED ids and left the actionable ones as a bare
+    count — backwards, because the actionable ones are the only ones anybody
+    can act on. Diagnosing the 2026-09-03 episode meant deriving which records
+    were meant by arithmetic across two receipts, because no read-only surface
+    would say."""
+    from backend.services.belief_state import ledger_health
+    p = tmp_path / "named.jsonl"
+    append([_pred(made_at="2025-02-03T00:00:00")], p)
+    out = ledger_health(p)
+    assert out["n_overdue_actionable"] == 1
+    assert out["overdue_actionable"], "the overdue records were not named"
+    first = out["overdue_actionable"][0]
+    assert first["prediction_id"] and first["ticker"] == "AAA"
+    assert first["resolves_after"]
+
+
 def test_the_live_ledger_canary_RUNS_and_returns_a_complete_report():
     """This asserted `status == "ok"` on the LIVE ledger until 2026-08-16, and
     it was a time bomb pointed at the deploy gate.

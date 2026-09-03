@@ -2100,3 +2100,9 @@ PI_PRICE_FETCH_LOOKBACK_DAYS = 10
 #: today; it is a constant rather than a literal so the two helpers that must
 #: agree on it cannot drift apart again.
 PI_PRICE_FETCH_END_OFFSET_DAYS = 1
+
+#: How many ACTIONABLE overdue forecasts `ledger_health` names on the health
+#: row. The count alone sent a 2026-09-03 forensic pass differencing receipts
+#: to work out which records were meant; the row is served on every poll, so
+#: the list is capped rather than unbounded.
+LEDGER_HEALTH_MAX_NAMED_OVERDUE = 20
